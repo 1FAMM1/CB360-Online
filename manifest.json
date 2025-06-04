@@ -2,7 +2,7 @@
   "name": "CB360 Mobile",
   "short_name": "CB360",
   "description": "Sistema de Gestão Operacional",
-  "start_url": "/CB360-Mobile/",
+  "start_url": "/CB360-Mobile/Index.html",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#8B0000",

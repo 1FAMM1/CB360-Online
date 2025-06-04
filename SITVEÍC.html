@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CB360_SITVEÍC</title>
+
+  <style>
+    /* ===== RESET E BASE ===== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+      min-height: 100vh;
+      user-select: none;
+      transition: all 0.3s ease;
+      padding-top: 100px;
+      padding-bottom: 60px;
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+    }
+
+    body::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+
+    /* ===== HEADER FIXO ===== */
+    .header {
+      background: linear-gradient(45deg, #d32f2f, #b71c1c);
+      color: white;
+      padding: 20px 15px;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      border-bottom: 2px solid #c62828;
+      transition: all 0.3s ease;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 1.8em;
+      font-weight: bold;
+    }
+
+    .header div {
+      margin-top: 10px;
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    /* ===== LOGO NO HEADER ===== */
+    .header-logo {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 80px;
+      width: auto;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      z-index: 1001;
+    }
+
+    .header-logo:hover {
+      transform: translateY(-50%) scale(1.1);
+    }
+
+    /* ===== RESPONSIVO MOBILE ===== */
+    @media (max-width: 480px) {
+      .header-logo {
+        left: 10px;
+        height: 70px;
+      }
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    .container {
+      padding: 10px;
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 160px);
+    }
+
+    /* ===== STATS FIXO ===== */
+    .stats {
+      background: white;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      position: sticky;
+      top: 100px;
+      z-index: 500;
+      flex-shrink: 0;
+    }
+
+    .stats-title {
+      margin-bottom: 15px;
+      color: #2c3e50;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+      text-align: center;
+    }
+
+    .stat-item {
+      padding: 10px;
+      border-radius: 8px;
+    }
+
+    .stat-disponivel {
+      background: #e8f5e8;
+      color: #27ae60;
+    }
+
+    .stat-servico {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .stat-inop {
+      background: #ffebee;
+      color: #c62828;
+    }
+
+    .stat-number {
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      margin-top: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    /* ===== ÁREA DE SCROLL SÓ PARA VEÍCULOS ===== */
+    .vehicle-scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 0 !important;
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+    }
+
+    .vehicle-scroll-area::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+      background: transparent !important;
+    }
+
+    .vehicle-scroll-area::-webkit-scrollbar-track {
+      display: none !important;
+    }
+
+    .vehicle-scroll-area::-webkit-scrollbar-thumb {
+      display: none !important;
+    }
+
+    /* ===== LISTA DE VEÍCULOS ===== */
+    .vehicle-list {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 15px;
+    }
+
+    /* ===== RESPONSIVE GRID ===== */
+    @media (min-width: 768px) {
+      .vehicle-list {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .vehicle-list {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    /* ===== ITENS DE VEÍCULOS ===== */
+    .vehicle-item {
+      background: #f8f9fa;
+      border: 2px solid #e9ecef;
+      border-radius: 10px;
+      padding: 15px;
+      transition: all 0.3s ease;
+    }
+
+    /* Cores por tipo de veículo */
+    .vehicle-item.vcot {
+      border-left: 5px solid #e74c3c;
+    }
+
+    .vehicle-item.vttp {
+      border-left: 5px solid #e74c3c;
+    }
+
+    .vehicle-item.vfci {
+      border-left: 5px solid #e74c3c;
+    }
+
+    .vehicle-item.vttu {
+      border-left: 5px solid #e74c3c;
+    }
+
+    .vehicle-item.vttf {
+      border-left: 5px solid #e74c3c;
+    }
+
+    .vehicle-item.vope {
+      border-left: 5px solid #e74c3c;
+    }
+
+    .vehicle-item.absc {
+      border-left: 5px solid #3498db;
+    }
+
+    .vehicle-item.abtm {
+      border-left: 5px solid #3498db;
+    }
+
+    .vehicle-item.vdtd {
+      border-left: 5px solid #3498db;
+    }
+
+    .vehicle-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .vehicle-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .vehicle-icon-large {
+      font-size: 30px;
+      margin-right: 15px;
+    }
+
+    .vehicle-name {
+      font-size: 18px;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+
+    .vehicle-type {
+      font-size: 14px;
+      color: #7f8c8d;
+      margin-top: 5px;
+    }
+
+    .vehicle-status {
+      display: flex;
+      align-items: center;
+      margin-top: 10px;
+      padding: 8px 12px;
+      background: #e8f5e8;
+      border-radius: 5px;
+      font-size: 12px;
+      color: #27ae60;
+      gap: 5px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: #27ae60;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+
+    /* ===== LOADING ===== */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #7f8c8d;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ===== BOTÃO REFRESH ===== */
+    .refresh-btn {
+      position: fixed;
+      bottom: 55px;
+      right: 5px;
+      background: linear-gradient(45deg, #d32f2f, #b71c1c);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      font-size: 24px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s ease;
+      z-index: 999;
+    }
+
+    .refresh-btn:hover {
+      transform: scale(1.1);
+    }
+
+    .refresh-btn.spinning {
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* ===== FOOTER ===== */
+    .footer {
+      background: linear-gradient(45deg, #d32f2f, #b71c1c);
+      color: white;
+      padding: 8px 15px;
+      text-align: center;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+      border-top: 2px solid #c62828;
+      transition: all 0.3s ease;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+    }
+
+    .footer-content {
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    .powered-by {
+      font-size: 13px;
+      font-weight: bold;
+      margin-bottom: 3px;
+      color: #ffffff;
+    }
+
+    .footer-year {
+      font-size: 10px;
+      opacity: 0.8;
+      color: #ffcdd2;
+    }
+
+    .footer strong {
+      color: #ffebee;
+    }
+
+    .footer:hover {
+      background: linear-gradient(45deg, #c62828, #a00000);
+      transition: all 0.3s ease;
+    }
+
+    /* ===== MODO ESCURO ===== */
+    body.dark-mode {
+      background: linear-gradient(135deg, #1a1a1a 0%, #2c2c2c 100%);
+      color: #ffffff;
+    }
+
+    body.dark-mode .stats {
+      background: rgba(45, 45, 45, 0.95);
+      color: #ffffff;
+    }
+
+    body.dark-mode .stats-title {
+      color: #ffffff !important;
+    }
+
+    body.dark-mode .vehicle-item {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+    }
+
+    body.dark-mode .vehicle-item.vcot {
+      border-left: 5px solid #e74c3c;
+    }
+
+    body.dark-mode .vehicle-item.vttp {
+      border-left: 5px solid #e74c3c;
+    }
+
+    body.dark-mode .vehicle-item.vfci {
+      border-left: 5px solid #e74c3c;
+    }
+
+    body.dark-mode .vehicle-item.vttu {
+      border-left: 5px solid #e74c3c;
+    }
+
+    body.dark-mode .vehicle-item.vttf {
+      border-left: 5px solid #e74c3c;
+    }
+
+    body.dark-mode .vehicle-item.vope {
+      border-left: 5px solid #e74c3c;
+    }
+
+    body.dark-mode .vehicle-item.absc {
+      border-left: 5px solid #3498db;
+    }
+
+    body.dark-mode .vehicle-item.abtm {
+      border-left: 5px solid #3498db;
+    }
+
+    body.dark-mode .vehicle-item.vdtd {
+      border-left: 5px solid #3498db;
+    }
+
+    body.dark-mode .vehicle-name {
+      color: #ffffff;
+    }
+
+    body.dark-mode .vehicle-type {
+      color: #b0b0b0;
+    }
+
+    body.dark-mode .stat-disponivel {
+      background: rgba(39, 174, 96, 0.3);
+      color: #58d68d;
+    }
+
+    body.dark-mode .stat-servico {
+      background: rgba(243, 156, 18, 0.3);
+      color: #f7dc6f;
+    }
+
+    body.dark-mode .stat-inop {
+      background: rgba(231, 76, 60, 0.3);
+      color: #ec7063;
+    }
+
+    body.dark-mode .vehicle-status {
+      background: rgba(39, 174, 96, 0.2) !important;
+      color: #58d68d !important;
+    }
+
+    body.dark-mode .vehicle-status .status-dot {
+      background: #58d68d !important;
+    }
+
+    body.dark-mode .vehicle-status[style*="background: #fff3cd"] {
+      background: rgba(243, 156, 18, 0.2) !important;
+      color: #f7dc6f !important;
+    }
+
+    body.dark-mode .vehicle-status[style*="background: #fff3cd"] .status-dot {
+      background: #f7dc6f !important;
+    }
+
+    body.dark-mode .vehicle-status[style*="background: #ffebee"] {
+      background: rgba(231, 76, 60, 0.2) !important;
+      color: #ec7063 !important;
+    }
+
+    body.dark-mode .vehicle-status[style*="background: #ffebee"] .status-dot {
+      background: #ec7063 !important;
+    }
+
+    body.dark-mode .vehicle-item:hover {
+      background: rgba(255, 255, 255, 0.15);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    body.dark-mode .loading {
+      color: #b0b0b0;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- ===== HEADER FIXO ===== -->
+  <header class="header">
+    <img src="https://i.imgur.com/4Ho5HRV.png" alt="CB Faro Cruz Lusa" class="header-logo">
+    <h1>SITVEÍC</h1>
+    <div class="header-subtitle">
+      Situação Operacional de Veículos
+    </div>
+  </header>
+
+  <!-- ===== CONTAINER PRINCIPAL ===== -->
+  <main class="container">
+    <!-- STATS FIXO -->
+    <section class="stats">
+      <h3 class="stats-title">📊 Resumo da Frota</h3>
+      <div class="stats-grid">
+        <div class="stat-item stat-disponivel">
+          <div class="stat-number" id="countDisponivel">0</div>
+          <div class="stat-label">✅ Disponível no Quartel</div>
+        </div>
+        <div class="stat-item stat-servico">
+          <div class="stat-number" id="countServico">0</div>
+          <div class="stat-label">🚨 Em Serviço</div>
+        </div>
+        <div class="stat-item stat-inop">
+          <div class="stat-number" id="countInop">0</div>
+          <div class="stat-label">⚠️ INOP</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ÁREA DE SCROLL SÓ PARA VEÍCULOS -->
+    <section class="vehicle-scroll-area">
+      <div id="loading" class="loading">
+        🔄 A Carregar Veículos...
+      </div>
+      <div class="vehicle-list" id="vehicleList" style="display: none;">
+        <!-- Veículos serão inseridos aqui via JavaScript -->
+      </div>
+    </section>
+  </main>
+
+  <!-- ===== BOTÃO DE REFRESH ===== -->
+  <button class="refresh-btn" onclick="refreshData()" id="refreshBtn">🔄</button>
+
+  <!-- ===== FOOTER FIXO ===== -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="powered-by">
+        <strong>Powered by:</strong> Fábio Martins - Grupo CB360
+      </div>
+      <div class="footer-year">
+        © 2025 - Sistema GEOSTAT 360
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // ===== CONFIGURAÇÕES DA API =====
+    const API_URL = 'https://geostat-360-api.vercel.app/api/vehicle_status';
+    const API_VEHICLES_URL = 'https://geostat-360-api.vercel.app/api/vehicles';
+    // ===== VARIÁVEIS GLOBAIS =====
+    let vehicleStatuses = {};
+    let vehicleINOP = {};
+    let vehicles = [];
+    // ===== INICIALIZAÇÃO =====
+    window.addEventListener('load', function() {
+      const savedTheme = localStorage.getItem('sgo-theme');
+      if (savedTheme === 'dark') {
+        document.body.classList.add('dark-mode');
+      }
+      loadVehicleData();
+    });
+    // ===== CARREGAMENTO DE DADOS =====
+    async function loadVehicles() {
+      try {
+        console.log('🔗 A Carregar Veículos da API...');
+        const response = await fetch(API_VEHICLES_URL);
+        const data = await response.json();
+        if (data.success && data.vehicles) {
+          vehicles = data.vehicles.map(vehicle => ({
+            code: vehicle.code,
+            icon: vehicle.icon,
+            type: vehicle.type,
+            class: vehicle.code.toLowerCase().substring(0, 4)
+          }));
+          console.log(`✅ ${vehicles.length} veículos carregados da API`);
+          return true;
+        }
+      } catch (error) {
+        console.error('❌ Erro ao carregar veículos:', error);
+      }
+      // FALLBACK - Lista manual de backup
+      vehicles = [{
+          code: 'VCOT-01',
+          icon: '🚒',
+          type: 'Veículo de Comando Operacional Tático',
+          class: 'vcot'
+        },
+        {
+          code: 'VCOT-02',
+          icon: '🚒',
+          type: 'Veículo de Comando Operacional Tático',
+          class: 'vcot'
+        },
+        {
+          code: 'VTTP-01',
+          icon: '🚒',
+          type: 'Veículo de Transporte Táctico de Pessoal',
+          class: 'vttp'
+        },
+        {
+          code: 'VTTP-02',
+          icon: '🚒',
+          type: 'Veículo de Transporte Táctico de Pessoal',
+          class: 'vttp'
+        },
+        {
+          code: 'VTTP-03',
+          icon: '🚒',
+          type: 'Veículo de Transporte Táctico de Pessoal',
+          class: 'vttp'
+        },
+        {
+          code: 'VFCI-01',
+          icon: '🚒',
+          type: 'Veículo de Combate a Incêndios Florestais',
+          class: 'vfci'
+        },
+        {
+          code: 'VFCI-02',
+          icon: '🚒',
+          type: 'Veículo de Combate a Incêndios Florestais',
+          class: 'vfci'
+        },
+        {
+          code: 'VTTU-01',
+          icon: '🚒',
+          type: 'Veículo Tanque Tático Urbano',
+          class: 'vttu'
+        },
+        {
+          code: 'VTTF-02',
+          icon: '🚒',
+          type: 'Veículo Tanque Tático Florestal',
+          class: 'vttf'
+        },
+        {
+          code: 'VOPE-02',
+          icon: '🚒',
+          type: 'Veículo para Operações Especiais ou Específicas',
+          class: 'vope'
+        },
+        {
+          code: 'ABSC-02',
+          icon: '🚑',
+          type: 'Ambulância de Socorro',
+          class: 'absc'
+        },
+        {
+          code: 'ABSC-03',
+          icon: '🚑',
+          type: 'Ambulância de Socorro',
+          class: 'absc'
+        },
+        {
+          code: 'ABSC-04',
+          icon: '🚑',
+          type: 'Ambulância de Socorro',
+          class: 'absc'
+        },
+        {
+          code: 'ABTM-06',
+          icon: '🚑',
+          type: 'Ambulância de Transporte Múltiplo',
+          class: 'abtm'
+        },
+        {
+          code: 'ABTM-08',
+          icon: '🚑',
+          type: 'Ambulância de Transporte Múltiplo',
+          class: 'abtm'
+        },
+        {
+          code: 'VDTD-07',
+          icon: '🚑',
+          type: 'Veículo Destinado ao Transporte de Doentes',
+          class: 'vdtd'
+        }
+      ];
+      console.log('⚠️ Usando lista manual de backup');
+      return false;
+    }
+    async function loadVehicleData() {
+      try {
+        await loadVehicles();
+        const response = await fetch(API_URL);
+        const data = await response.json();
+        if (data.success) {
+          vehicleStatuses = data.vehicleStatuses || {};
+          vehicleINOP = data.vehicleINOP || {};
+          renderVehicles();
+          updateStats();
+          console.log('✅ Status carregados do servidor');
+        }
+      } catch (error) {
+        console.error('❌ Erro ao carregar status:', error);
+        const backup = localStorage.getItem('geostat-backup-statuses');
+        const backupINOP = localStorage.getItem('geostat-backup-inop');
+        if (backup) {
+          vehicleStatuses = JSON.parse(backup);
+          vehicleINOP = backupINOP ? JSON.parse(backupINOP) : {};
+          renderVehicles();
+          updateStats();
+        }
+      } finally {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('vehicleList').style.display = 'grid';
+      }
+    }
+    // ===== RENDERIZAÇÃO =====
+    function renderVehicles() {
+      const vehicleList = document.getElementById('vehicleList');
+      vehicleList.innerHTML = '';
+      vehicles.forEach(vehicle => {
+        const vehicleItem = document.createElement('div');
+        vehicleItem.className = `vehicle-item ${vehicle.class}`;
+        let statusHTML;
+        if (vehicleINOP[vehicle.code] === true) {
+          statusHTML = `
+                        <div class="vehicle-status" style="background: #ffebee; color: #c62828;">
+                            <div class="status-dot" style="background: #c62828;"></div>
+                            ⚠️ INOP
+                        </div>
+                    `;
+        } else if (vehicleStatuses[vehicle.code] === "Em Serviço") {
+          statusHTML = `
+                        <div class="vehicle-status" style="background: #fff3cd; color: #856404;">
+                            <div class="status-dot" style="background: #f39c12;"></div>
+                            🚨 Em Serviço
+                        </div>
+                    `;
+        } else {
+          statusHTML = `
+                        <div class="vehicle-status">
+                            <div class="status-dot"></div>
+                            ✅ Disponível no Quartel
+                        </div>
+                    `;
+        }
+        vehicleItem.innerHTML = `
+                    <div class="vehicle-header">
+                        <div class="vehicle-icon-large">${vehicle.icon}</div>
+                        <div>
+                            <div class="vehicle-name">${vehicle.code}</div>
+                            <div class="vehicle-type">${vehicle.type}</div>
+                        </div>
+                    </div>
+                    ${statusHTML}
+                `;
+        vehicleList.appendChild(vehicleItem);
+      });
+    }
+    // ===== ESTATÍSTICAS =====
+    function updateStats() {
+      let disponivel = 0;
+      let servico = 0;
+      let inop = 0;
+      vehicles.forEach(vehicle => {
+        if (vehicleINOP[vehicle.code] === true) {
+          inop++;
+        } else if (vehicleStatuses[vehicle.code] === "Em Serviço") {
+          servico++;
+        } else {
+          disponivel++;
+        }
+      });
+      document.getElementById('countDisponivel').textContent = disponivel;
+      document.getElementById('countServico').textContent = servico;
+      document.getElementById('countInop').textContent = inop;
+    }
+    // ===== ATUALIZAÇÃO DE DADOS =====
+    async function refreshData() {
+      const refreshBtn = document.getElementById('refreshBtn');
+      refreshBtn.classList.add('spinning');
+      try {
+        await loadVehicleData();
+        console.log('🔄 Dados atualizados');
+      } catch (error) {
+        console.error('❌ Erro no refresh:', error);
+      } finally {
+        setTimeout(() => {
+          refreshBtn.classList.remove('spinning');
+        }, 1000);
+      }
+    }
+    // ===== AUTO-REFRESH =====
+    setInterval(loadVehicleData, 30000);
+  </script>
+</body>
+
+</html>

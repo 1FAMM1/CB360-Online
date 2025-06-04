@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CB360_FOMIO</title>
+
+  <style>
+    /* ===== RESET E BASE ===== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* ===== REMOVER SCROLL DO BODY ===== */
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+      min-height: 100vh;
+      user-select: none;
+      display: flex;
+      flex-direction: column;
+      transition: all 0.3s ease;
+      overflow: hidden;
+      /* ← IMPORTANTE: Remove scroll do body */
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+    }
+
+    body::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+
+    /* ===== HEADER PRINCIPAL ===== */
+    .header {
+      background: linear-gradient(45deg, #d32f2f, #b71c1c);
+      color: white;
+      padding: 20px 15px;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      border-bottom: 2px solid #c62828;
+      transition: all 0.3s ease;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 1.8em;
+      font-weight: bold;
+    }
+
+    .header div {
+      margin-top: 10px;
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    /* ===== LOGO NO HEADER ===== */
+    .header-logo {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 80px;
+      width: auto;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      z-index: 1001;
+    }
+
+    .header-logo:hover {
+      transform: translateY(-50%) scale(1.1);
+    }
+
+    /* ===== RESPONSIVO MOBILE ===== */
+    @media (max-width: 480px) {
+      .header-logo {
+        left: 10px;
+        height: 70px;
+      }
+    }
+
+    /* ===== HEADER DE PLANEAMENTO ===== */
+    .planning-header {
+      background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+      color: white;
+      padding: 15px 20px;
+      text-align: center;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      border-bottom: 3px solid #d32f2f;
+      position: fixed;
+      top: 100px;
+      /* Altura do .header fixo */
+      left: 0;
+      width: 100%;
+      z-index: 999;
+      margin-top: 0;
+    }
+
+    .planning-header h2 {
+      margin: 0;
+      font-size: 1.4em;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .planning-info {
+      font-size: 14px;
+      opacity: 0.9;
+      font-weight: 500;
+    }
+
+    /* ===== MAIN CONTENT COM SCROLL SELETIVO ===== */
+    .main-content {
+      flex: 1;
+      padding: 205px 20px 60px 20px;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      /* ← Altura total da tela */
+      overflow: hidden;
+      /* ← Importante */
+    }
+
+    /* ===== ÁREA DE SCROLL SÓ PARA TABELAS ===== */
+    .tables-scroll-area {
+      flex: 1;
+      overflow-y: scroll !important;
+      /* ← FORÇAR SCROLL */
+      overflow-x: hidden;
+      padding-bottom: 20px;
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+      min-height: 0;
+      max-height: calc(100vh - 265px);
+      /* ← Altura máxima definida */
+    }
+
+    .tables-scroll-area::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+      background: transparent !important;
+    }
+
+    .tables-scroll-area::-webkit-scrollbar-track {
+      display: none !important;
+    }
+
+    .tables-scroll-area::-webkit-scrollbar-thumb {
+      display: none !important;
+    }
+
+    /* ===== CONTAINER DAS TABELAS ===== */
+    .tables-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 10px;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+      min-height: 150vh;
+      /* ← FORÇAR CONTEÚDO GRANDE PARA TESTAR SCROLL */
+      padding-bottom: 50px;
+    }
+
+    /* ===== WRAPPER DAS TABELAS ===== */
+    .table-wrapper {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .table-wrapper:nth-child(7) .table-header {
+      background: linear-gradient(45deg, #ffd600, #ffb300);
+      color: black;
+      /* ← TEXTO PRETO */
+      font-weight: bold;
+    }
+
+    .table-header {
+      background: linear-gradient(45deg, #d32f2f, #b71c1c);
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    /* ===== ESTILOS DAS TABELAS ===== */
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .table th,
+    .table td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #ecf0f1;
+      border-right: 1px solid #ecf0f1;
+      /* Linha vertical */
+      transition: all 0.3s ease;
+    }
+
+    /* Remover borda da última coluna */
+    .table th:last-child,
+    .table td:last-child {
+      border-right: none;
+    }
+
+    .table th {
+      background: #f8f9fa;
+      font-weight: bold;
+      color: #2c3e50;
+      text-align: center;
+      /* Títulos centralizados */
+    }
+
+    .table tbody tr:hover {
+      background: #f1f2f6;
+    }
+
+    /* ===== LARGURAS DAS COLUNAS ===== */
+    .table th:first-child,
+    .table td:first-child {
+      width: 150px;
+      min-width: 100px;
+      max-width: 140px;
+    }
+
+    .table th:last-child,
+    .table td:last-child {
+      width: auto;
+    }
+
+    /* ===== FOOTER ===== */
+    .footer {
+      background: linear-gradient(45deg, #d32f2f, #b71c1c);
+      color: white;
+      padding: 8px 15px;
+      text-align: center;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+      border-top: 2px solid #c62828;
+      transition: all 0.3s ease;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+    }
+
+    .footer-content {
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    .powered-by {
+      font-size: 13px;
+      font-weight: bold;
+      margin-bottom: 3px;
+      color: #ffffff;
+    }
+
+    .footer-year {
+      font-size: 10px;
+      opacity: 0.8;
+      color: #ffcdd2;
+    }
+
+    .footer strong {
+      color: #ffebee;
+    }
+
+    .footer:hover {
+      background: linear-gradient(45deg, #c62828, #a00000);
+      transition: all 0.3s ease;
+    }
+
+    /* ===== MODO ESCURO ===== */
+    body.dark-mode {
+      background: linear-gradient(135deg, #1a1a1a 0%, #2c2c2c 100%);
+      color: #ffffff;
+    }
+
+    body.dark-mode .planning-header {
+      background: linear-gradient(135deg, #1a1a1a 0%, #2c2c2c 100%);
+      border-bottom-color: #d32f2f;
+    }
+
+    body.dark-mode .table-wrapper {
+      background: rgba(45, 45, 45, 0.95);
+    }
+
+    body.dark-mode .table th,
+    body.dark-mode .table td {
+      border-bottom-color: #444444;
+      border-right-color: #444444;
+      /* Linha vertical modo escuro */
+      color: #ffffff;
+    }
+
+    body.dark-mode .table th {
+      background: #3a3a3a;
+      color: #ffffff;
+      text-align: center;
+      /* Títulos centralizados */
+    }
+
+    body.dark-mode .table tbody tr:hover {
+      background: #4a4a4a;
+    }
+
+    /* ===== RESPONSIVO ===== */
+    @media (max-width: 768px) {
+      .tables-container {
+        grid-template-columns: 1fr;
+      }
+
+      .table th,
+      .table td {
+        padding: 8px 10px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- ===== HEADER PRINCIPAL ===== -->
+  <header class="header">
+    <img src="https://i.imgur.com/4Ho5HRV.png" alt="CB Faro Cruz Lusa" class="header-logo">
+    <h1>FOMIO</h1>
+    <div>Força Mínima de Intervenção</div>
+  </header>
+
+  <!-- ===== HEADER DE PLANEAMENTO ===== -->
+  <section class="planning-header">
+    <h2>Elementos de Serviço</h2>
+    <div class="planning-info" id="planning-info">
+      Carregando informações...
+    </div>
+  </section>
+
+  <!-- ===== CONTEÚDO PRINCIPAL ===== -->
+  <main class="main-content">
+    <!-- ===== ÁREA DE SCROLL SÓ PARA TABELAS ===== -->
+    <section class="tables-scroll-area">
+      <div class="tables-container">
+
+        <!-- TABELA 1: OFOPE -->
+        <div class="table-wrapper">
+          <div class="table-header">OFOPE</div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Patente</th>
+                <th>Nome</th>
+              </tr>
+            </thead>
+            <tbody id="ofope-tbody">
+              <!-- Dados serão carregados pelo endpoint -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- TABELA 2: Chefe de Serviço -->
+        <div class="table-wrapper">
+          <div class="table-header">Chefe de Serviço</div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Patente</th>
+                <th>Nome</th>
+              </tr>
+            </thead>
+            <tbody id="chefe_servico-tbody">
+              <!-- Dados serão carregados pelo endpoint -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- TABELA 3: OPTEL -->
+        <div class="table-wrapper">
+          <div class="table-header">OPTEL</div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Patente</th>
+                <th>Nome</th>
+              </tr>
+            </thead>
+            <tbody id="optel-tbody">
+              <!-- Dados serão carregados pelo endpoint -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- TABELA 4: Equipa 01 -->
+        <div class="table-wrapper">
+          <div class="table-header">Equipa 01</div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Patente</th>
+                <th>Nome</th>
+              </tr>
+            </thead>
+            <tbody id="equipa_01-tbody">
+              <!-- Dados serão carregados pelo endpoint -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- TABELA 5: Equipa 02 -->
+        <div class="table-wrapper">
+          <div class="table-header">Equipa 02</div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Patente</th>
+                <th>Nome</th>
+              </tr>
+            </thead>
+            <tbody id="equipa_02-tbody">
+              <!-- Dados serão carregados pelo endpoint -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- TABELA 6: Logística -->
+        <div class="table-wrapper">
+          <div class="table-header">Logística</div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Patente</th>
+                <th>Nome</th>
+              </tr>
+            </thead>
+            <tbody id="logistica-tbody">
+              <!-- Dados serão carregados pelo endpoint -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- TABELA 7: INEM -->
+        <div class="table-wrapper">
+          <div class="table-header">INEM</div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Patente</th>
+                <th>Nome</th>
+              </tr>
+            </thead>
+            <tbody id="inem-tbody">
+              <!-- Dados serão carregados pelo endpoint -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- TABELA 8: INEM Reserva -->
+        <div class="table-wrapper">
+          <div class="table-header">INEM Reserva</div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Patente</th>
+                <th>Nome</th>
+              </tr>
+            </thead>
+            <tbody id="inem_reserva-tbody">
+              <!-- Dados serão carregados pelo endpoint -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- TABELA 9: Serviço Geral -->
+        <div class="table-wrapper">
+          <div class="table-header">Serviço Geral</div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Patente</th>
+                <th>Nome</th>
+              </tr>
+            </thead>
+            <tbody id="servico_geral-tbody">
+              <!-- Dados serão carregados pelo endpoint -->
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="powered-by">
+        <strong>Powered by:</strong> Fábio Martins - Grupo CB360
+      </div>
+      <div class="footer-year">
+        © 2025 - Sistema GEOSTAT 360
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===== JAVASCRIPT ===== -->
+  <script>
+    // ===== CONFIGURAÇÕES DA API =====
+    const API_BASE_URL = 'https://geostat-360-api.vercel.app/api/fomio';
+    // ===== INICIALIZAÇÃO =====
+    window.addEventListener('load', function() {
+      const savedTheme = localStorage.getItem('sgo-theme');
+      if (savedTheme === 'dark') {
+        document.body.classList.add('dark-mode');
+      }
+      // Carregar dados das equipas E header
+      loadAllTeams();
+      loadPlanningHeader();
+    });
+    // ===== CARREGAMENTO DE DADOS =====
+    async function loadPlanningHeader() {
+      try {
+        const response = await fetch('https://geostat-360-api.vercel.app/api/fomio_getdate');
+        const result = await response.json();
+        if (result.success && result.header) {
+          document.getElementById('planning-info').textContent = result.header;
+        } else {
+          document.getElementById('planning-info').textContent = 'Informações não disponíveis';
+        }
+      } catch (error) {
+        console.error('Erro ao carregar header:', error);
+        document.getElementById('planning-info').textContent = 'Erro ao carregar informações';
+      }
+    }
+    async function loadAllTeams() {
+      try {
+        const response = await fetch(API_BASE_URL);
+        const result = await response.json();
+        if (result.success) {
+          // Popular todas as tabelas
+          populateTable('ofope', result.teams.ofope || []);
+          populateTable('chefe_servico', result.teams.chefe_servico || []);
+          populateTable('optel', result.teams.optel || []);
+          populateTable('servico_geral', result.teams.servico_geral || []);
+          populateTable('equipa_01', result.teams.equipa_01 || []);
+          populateTable('equipa_02', result.teams.equipa_02 || []);
+          populateTable('logistica', result.teams.logistica || []);
+          populateTable('inem', result.teams.inem || []);
+          populateTable('inem_reserva', result.teams.inem_reserva || []);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar equipas:', error);
+      }
+    }
+    // ===== ORDENAÇÃO POR PATENTE =====
+    function sortByPatente(data) {
+      const patenteOrder = [
+        'Comandante',
+        '2º Comandante',
+        'Adj. de Comando',
+        'Oficial Bº 2ª',
+        'Chefe',
+        'Subchefe',
+        'Bombeiro 1ª',
+        'Bombeira 1ª',
+        'Bombeiro 2ª', // ← Posição 8
+        'Bombeira 2ª',
+        'Bombeiro 3ª', // ← Posição 10
+        'Bombeira 3ª',
+        'Estagiário',
+        'Estagiária',
+        'Cadete'
+      ];
+      return data.sort((a, b) => {
+        const indexA = patenteOrder.indexOf(a.patente);
+        const indexB = patenteOrder.indexOf(b.patente);
+        // Se a patente não estiver na lista, coloca no final
+        const orderA = indexA === -1 ? 999 : indexA;
+        const orderB = indexB === -1 ? 999 : indexB;
+        // Se têm a mesma ordem, ordenar por nome (opcional)
+        if (orderA === orderB) {
+          return (a.nome || '').localeCompare(b.nome || '');
+        }
+        return orderA - orderB;
+      });
+    }
+    // ===== RENDERIZAÇÃO =====
+    function populateTable(teamName, data) {
+      const tbody = document.getElementById(`${teamName}-tbody`);
+      const tableWrapper = tbody?.closest('.table-wrapper');
+      if (!tbody || !tableWrapper) return;
+      tbody.innerHTML = '';
+      if (data.length === 0) {
+        tableWrapper.style.display = 'none';
+        return;
+      }
+      tableWrapper.style.display = 'block';
+      const sortedData = sortByPatente(data);
+      sortedData.forEach(member => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+        <td>${member.patente || ''}</td>
+        <td>${member.nome || ''}</td>
+      `;
+        tbody.appendChild(row);
+      });
+    }
+    // ===== AUTO-REFRESH =====
+    setInterval(() => {
+      loadAllTeams();
+      loadPlanningHeader();
+    }, 30000);
+  </script>
+</body>
+
+</html>

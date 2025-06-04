@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CB360 Mobile</title>
+  <style>
+    /* ========================================
+       🔄 RESET E CONFIGURAÇÕES BASE
+    ======================================== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+      min-height: 100vh;
+      user-select: none;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ========================================
+       🌙 MODO ESCURO - TODAS AS CONFIGURAÇÕES
+    ======================================== */
+    .dark-mode {
+      background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+      color: #ffffff;
+    }
+
+    .dark-mode .main-content {
+      background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    }
+
+    .dark-mode .cb-container {
+      background: rgba(45, 45, 45, 0.95);
+      color: #ffffff;
+    }
+
+    .dark-mode .cb-title {
+      color: #ff6b6b;
+    }
+
+    .dark-mode .cb-subtitle {
+      color: #e0e0e0;
+    }
+
+    .dark-mode .cb-buttons-container {
+      overflow-y: scroll !important;
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+    }
+
+    .dark-mode .cb-buttons-container::-webkit-scrollbar {
+      display: none !important;
+    }
+
+    .dark-mode .theme-toggle {
+      background: rgba(0, 0, 0, 0.3);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .dark-mode .theme-toggle::before {
+      left: 27px;
+      background: #2c2c2c;
+    }
+
+    .dark-mode .theme-toggle .sun-icon {
+      opacity: 0.5;
+    }
+
+    .dark-mode .theme-toggle .moon-icon {
+      opacity: 1;
+    }
+
+    .dark-mode .menu-dots {
+      background: rgba(0, 0, 0, 0.3);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .dark-mode .menu-dropdown {
+      background: #2c2c2c;
+      color: white;
+    }
+
+    .dark-mode .menu-item {
+      color: white;
+    }
+
+    .dark-mode .menu-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .dark-mode .cb-btn {
+      background: rgba(255, 255, 255, 0.08);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    .dark-mode .cb-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(52, 152, 219, 0.5);
+      transform: scale(1.02);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .dark-mode .cb-btn.selected {
+      background: linear-gradient(135deg, rgba(39, 174, 96, 0.25), rgba(34, 153, 84, 0.25));
+      border-color: rgba(39, 174, 96, 0.5);
+      transform: scale(1.03);
+      box-shadow: 0 6px 15px rgba(39, 174, 96, 0.25);
+      animation: selectedPulseDarkReduced 3s infinite;
+    }
+
+    .dark-mode .modal-content {
+      background: #2c2c2c;
+      color: white;
+    }
+
+    .dark-mode .modal-body {
+      color: #e0e0e0;
+    }
+
+    .dark-mode .modal-footer {
+      border-top-color: #444;
+    }
+
+    /* ========================================
+       📱 HEADER FIXO - TODAS AS CONFIGURAÇÕES
+    ======================================== */
+    .header {
+      background: linear-gradient(45deg, #d32f2f, #b71c1c);
+      color: white;
+      padding: 20px 15px;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      border-bottom: 2px solid #c62828;
+      transition: all 0.3s ease;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 1.5em;
+      font-weight: bold;
+    }
+
+    .header div {
+      margin-top: 5px;
+      font-size: 12px;
+      opacity: 0.9;
+    }
+
+    .header-logo {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 80px;
+      width: auto;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      z-index: 1001;
+    }
+
+    .header-logo:hover {
+      transform: translateY(-50%) scale(1.1);
+    }
+
+    /* ========================================
+       🎛️ TOGGLE DE TEMA - TODAS AS CONFIGURAÇÕES
+    ======================================== */
+    .theme-toggle {
+      position: fixed;
+      top: 40px;
+      right: 15px;
+      width: 50px;
+      height: 25px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 25px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      overflow: hidden;
+      z-index: 1002;
+    }
+
+    .theme-toggle::before {
+      content: '';
+      position: absolute;
+      top: 1px;
+      left: 1px;
+      width: 19px;
+      height: 19px;
+      background: white;
+      border-radius: 50%;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .theme-toggle .sun-icon,
+    .theme-toggle .moon-icon {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 11px;
+      transition: all 0.3s ease;
+    }
+
+    .theme-toggle .sun-icon {
+      left: 4px;
+      opacity: 1;
+    }
+
+    .theme-toggle .moon-icon {
+      right: 4px;
+      opacity: 0.5;
+    }
+
+    /* ========================================
+       ⋮ MENU 3 PONTOS - TODAS AS CONFIGURAÇÕES
+    ======================================== */
+    .menu-dots {
+      position: fixed;
+      top: 14px;
+      right: 15px;
+      width: 50px;
+      height: 25px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1002;
+      font-size: 16px;
+      color: white;
+    }
+
+    .menu-dots:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.1);
+    }
+
+    .menu-dropdown {
+      position: fixed;
+      top: 70px;
+      right: 15px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+      padding: 10px 0;
+      min-width: 200px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all 0.3s ease;
+      z-index: 1001;
+    }
+
+    .menu-dropdown.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .menu-item {
+      padding: 12px 20px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      font-size: 14px;
+      color: #2c3e50;
+    }
+
+    .menu-item:hover {
+      background: #f8f9fa;
+    }
+
+    /* ========================================
+       📄 CONTEÚDO PRINCIPAL - LAYOUT
+    ======================================== */
+    .main-content {
+      flex: 1;
+      overflow-y: auto;
+      padding-top: 150px;
+      padding-bottom: 100px;
+      padding-left: 20px;
+      padding-right: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .cb-container {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 40px 0px 0px 0px;
+      border-radius: 15px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+      max-width: 550px;
+      width: 100%;
+      transition: all 0.3s ease;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 250px);
+      max-height: 600px;
+    }
+
+    .cb-header {
+      flex-shrink: 0;
+      margin-bottom: 15px;
+    }
+
+    .cb-buttons-container {
+      flex: 1;
+      overflow-y: scroll;
+      overflow-x: hidden;
+      padding: 20px 10px 10px 10px;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      margin-top: 0;
+    }
+
+    .cb-buttons-container::-webkit-scrollbar {
+      display: none;
+    }
+
+    .cb-title {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+      color: #d32f2f;
+      font-weight: bold;
+      transition: color 0.3s ease;
+    }
+
+    .cb-subtitle {
+      font-size: 1.2em;
+      margin-bottom: 0;
+      color: #2c3e50;
+      transition: color 0.3s ease;
+    }
+
+    /* ========================================
+       🔘 BOTÕES - TODAS AS CONFIGURAÇÕES E EFEITOS
+    ======================================== */
+    .cb-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr !important;
+      gap: 20px;
+      margin-top: 0px;
+      padding: 0;
+    }
+
+    .cb-btn {
+      padding: 18px 12px;
+      border: 1px solid #bdc3c7;
+      border-radius: 10px;
+      background: white;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s ease;
+      font-weight: bold;
+      position: relative;
+      overflow: hidden;
+      height: 70px;
+      max-height: 70px;
+      min-height: 70px;
+      width: 150px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-size: 14px;
+      color: #2c3e50;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+      margin: 0 !important;
+    }
+
+    /* Efeito de brilho */
+    .cb-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.4s ease;
+      z-index: 1;
+    }
+
+    .cb-btn:hover::before {
+      left: 100%;
+    }
+
+    /* Efeito ripple */
+    .cb-btn::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: width 0.3s ease, height 0.3s ease;
+      z-index: 1;
+    }
+
+    .cb-btn:active::after {
+      width: 150px;
+      height: 150px;
+    }
+
+    .cb-btn:hover {
+      transform: scale(1.02);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      border-color: #3498db;
+      background: linear-gradient(135deg, #ffffff, #f8f9fa);
+      z-index: 1;
+    }
+
+    .cb-btn:active {
+      transform: scale(0.98);
+      transition: all 0.1s ease;
+    }
+
+    .cb-btn.selected {
+      color: white;
+      transform: scale(1.03);
+      box-shadow: 0 6px 15px rgba(39, 174, 96, 0.4);
+      background: linear-gradient(135deg, #27ae60, #229954);
+      border-color: #27ae60;
+      animation: selectedPulseReduced 3s infinite;
+    }
+
+    .cb-btn div {
+      position: relative;
+      z-index: 2;
+      line-height: 1.2;
+      margin: 0;
+      padding: 0;
+    }
+
+    .cb-btn span {
+      position: relative;
+      z-index: 2;
+    }
+
+    /* ========================================
+       🎬 ANIMAÇÕES - TODAS AS CONFIGURAÇÕES
+    ======================================== */
+    @keyframes selectedPulseReduced {
+
+      0%,
+      100% {
+        box-shadow: 0 6px 15px rgba(39, 174, 96, 0.4);
+        transform: scale(1.03);
+      }
+
+      50% {
+        box-shadow: 0 8px 20px rgba(39, 174, 96, 0.6);
+        transform: scale(1.04);
+      }
+    }
+
+    @keyframes selectedPulseDarkReduced {
+
+      0%,
+      100% {
+        box-shadow: 0 6px 15px rgba(39, 174, 96, 0.25);
+        transform: scale(1.03);
+      }
+
+      50% {
+        box-shadow: 0 8px 20px rgba(39, 174, 96, 0.4);
+        transform: scale(1.04);
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(-100%);
+      }
+
+      to {
+        transform: translateX(0);
+      }
+    }
+
+    /* ========================================
+       🦶 FOOTER - TODAS AS CONFIGURAÇÕES
+    ======================================== */
+    .footer {
+      background: linear-gradient(45deg, #d32f2f, #b71c1c);
+      color: white;
+      padding: 8px 15px;
+      text-align: center;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+      border-top: 2px solid #c62828;
+      transition: all 0.3s ease;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+    }
+
+    .footer-content {
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    .powered-by {
+      font-size: 13px;
+      font-weight: bold;
+      margin-bottom: 3px;
+      color: #ffffff;
+    }
+
+    .footer-year {
+      font-size: 10px;
+      opacity: 0.8;
+      color: #ffcdd2;
+    }
+
+    .footer strong {
+      color: #ffebee;
+    }
+
+    .footer:hover {
+      background: linear-gradient(45deg, #c62828, #a00000);
+      transition: all 0.3s ease;
+    }
+
+    /* ========================================
+       🪟 MODAL - TODAS AS CONFIGURAÇÕES
+    ======================================== */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 2000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(5px);
+      animation: fadeIn 0.3s ease;
+    }
+
+    .modal.show {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      background: white;
+      margin: 20px;
+      padding: 0;
+      border-radius: 15px;
+      width: 90%;
+      max-width: 500px;
+      max-height: 80vh;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      animation: slideIn 0.3s ease;
+    }
+
+    .modal-header {
+      background: linear-gradient(45deg, #d32f2f, #b71c1c);
+      color: white;
+      padding: 20px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .modal-body {
+      padding: 20px;
+      max-height: 400px;
+      overflow-y: auto;
+      line-height: 1.6;
+      color: #2c3e50;
+    }
+
+    .modal-footer {
+      padding: 15px 20px;
+      text-align: center;
+      border-top: 1px solid #eee;
+    }
+
+    .modal-close {
+      background: #d32f2f;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.3s ease;
+    }
+
+    .modal-close:hover {
+      background: #b71c1c;
+    }
+
+    /* ========================================
+       📱 MEDIA QUERIES - RESPONSIVIDADE COMPLETA
+    ======================================== */
+    /* Smartphones pequenos (até 480px) */
+    @media (max-width: 480px) {
+      .header {
+        padding: 8px 15px;
+      }
+
+      .header-logo {
+        height: 50px;
+        top: 32px;
+        left: 10px;
+      }
+
+      .cb-container {
+        padding: 20px 15px;
+      }
+
+      .cb-header {
+        flex-shrink: 0;
+        margin-bottom: 15px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        padding-bottom: 10px;
+      }
+
+      .dark-mode .cb-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .cb-title {
+        font-size: 2em;
+      }
+
+      .cb-subtitle {
+        font-size: 1em;
+        margin-top: -10px;
+      }
+
+      .cb-buttons-container {
+        padding: 5px 15px 2px 15px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+      }
+
+      .dark-mode .cb-buttons-container {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .cb-buttons {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 15px;
+      }
+
+      .cb-btn {
+        height: 65px;
+        font-size: 12px;
+        padding: 15px 10px;
+      }
+
+      .theme-toggle {
+        width: 45px;
+        height: 22px;
+        top: 35px;
+        right: 10px;
+      }
+
+      .theme-toggle::before {
+        width: 16px;
+        height: 16px;
+        top: 1px;
+        left: 0px;
+      }
+
+      .dark-mode .theme-toggle::before {
+        left: 25px;
+      }
+
+      .theme-toggle .sun-icon,
+      .theme-toggle .moon-icon {
+        font-size: 9px;
+      }
+
+      .theme-toggle .sun-icon {
+        left: 3px;
+      }
+
+      .theme-toggle .moon-icon {
+        right: 3px;
+      }
+
+      .menu-dots {
+        width: 45px;
+        height: 22px;
+        top: 12px;
+        right: 10px;
+        font-size: 14px;
+      }
+
+      .menu-dropdown {
+        right: 10px;
+        min-width: 180px;
+      }
+
+      .main-content {
+        padding-top: 130px;
+        padding-left: 10px;
+        padding-right: 10px;
+      }
+
+      }
+
+    /* Tablets pequenos (481px - 768px) */
+    @media (min-width: 481px) and (max-width: 768px) {
+      .cb-buttons {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 15px;
+      }
+
+      .cb-btn {
+        height: 68px;
+        font-size: 13.5px;
+      }
+
+      .cb-container {
+        padding: 30px 20px;
+      }
+
+      .cb-title {
+        font-size: 2.2em;
+      }
+
+      .header-logo {
+        height: 70px;
+      }
+    }
+
+    /* Tablets grandes (769px - 1024px) */
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .cb-buttons {
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 10px;
+      }
+
+      .cb-container {
+        max-width: 700px;
+        padding: 35px 25px;
+      }
+
+      .main-content {
+        padding-top: 180px;
+      }
+    }
+
+    /* Desktops (1025px+) */
+    @media (min-width: 1025px) {
+      .cb-buttons {
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 25px;
+      }
+
+      .cb-container {
+        max-width: 900px;
+        padding: 40px 30px;
+      }
+
+      .cb-btn {
+        height: 75px;
+        font-size: 11px;
+      }
+
+      .main-content {
+        padding-top: 150px;
+      }
+    }
+
+    /* Orientação paisagem para dispositivos móveis */
+    @media (orientation: landscape) and (max-height: 600px) {
+      .header {
+        padding: 10px 15px;
+      }
+
+      .header h1 {
+        font-size: 1.4em;
+      }
+
+      .header-logo {
+        height: 50px;
+      }
+
+      .main-content {
+        padding-top: 80px;
+        padding-bottom: 50px;
+      }
+
+      .cb-container {
+        height: calc(100vh - 150px);
+        padding-top: 10px;
+        max-width: 550px;
+      }
+
+      .cb-header {
+        margin-bottom: 5px;
+        margin-top: 0px;
+        padding: 0px 0;
+      }
+
+      .cb-title {
+        font-size: 1.3em;
+        margin-bottom: 3px;
+      }
+
+      .cb-subtitle {
+        font-size: 0.6em;
+        margin-bottom: -2px;
+      }
+
+      .cb-buttons-container {
+        padding: 10px 15px 2px 15px;
+        /* ✅ Padding otimizado */
+      }
+
+      .cb-buttons {
+        margin-top: 0px;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 6px;
+        /* ✅ ERA: 10px → AGORA: 8px (botões mais próximos) */
+      }
+
+      .cb-btn {
+        height: 55px;
+        /* ✅ ERA: 60px → AGORA: 55px (mais compacto) */
+        font-size: 9px;
+        /* ✅ ERA: 10px → AGORA: 9px (texto menor) */
+        padding: 4px 6px;
+        /* ✅ NOVO: Padding interno otimizado */
+        border-radius: 8px;
+        /* ✅ NOVO: Bordas mais suaves */
+        line-height: 1.1;
+        /* ✅ NOVO: Espaçamento de linha compacto */
+        display: flex;
+        /* ✅ NOVO: Flexbox para melhor alinhamento */
+        align-items: center;
+        /* ✅ NOVO: Centraliza verticalmente */
+        justify-content: center;
+        /* ✅ NOVO: Centraliza horizontalmente */
+        text-align: center;
+        /* ✅ NOVO: Texto centralizado */
+        min-height: 55px;
+        /* ✅ NOVO: Altura mínima consistente */
+      }
+
+      /* ✅ NOVO: Otimização para textos longos nos botões */
+      .cb-btn span {
+        display: block;
+        word-break: break-word;
+        hyphens: auto;
+      }
+
+      .footer {
+        padding: 8px 15px;
+      }
+
+      .powered-by {
+        font-size: 11px;
+      }
+
+      .footer-year {
+        font-size: 9px;
+      }
+    }
+
+    * {
+      -webkit-tap-highlight-color: transparent !important;
+      -webkit-touch-callout: none !important;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- ========================================
+       🎛️ CONTROLES DE INTERFACE
+  ======================================== -->
+
+  <!-- Toggle de Tema -->
+  <div class="theme-toggle" onclick="toggleTheme()">
+    <span class="sun-icon">☀️</span>
+    <span class="moon-icon">🌙</span>
+  </div>
+
+  <!-- Menu 3 Pontos -->
+  <div class="menu-dots" onclick="toggleMenu()">⋮</div>
+
+  <!-- Menu Dropdown -->
+  <div class="menu-dropdown" id="menuDropdown">
+    <div class="menu-item" onclick="showPolicies()">📋 Políticas de Privacidade</div>
+    <div class="menu-item" onclick="showTerms()">📄 Termos de Uso</div>
+    <div class="menu-item" onclick="showAbout()">ℹ️ Sobre o Sistema</div>
+    <div class="menu-item" onclick="showContact()">📞 Contacto</div>
+  </div>
+
+  <!-- ========================================
+       📱 HEADER PRINCIPAL
+  ======================================== -->
+  <div class="header">
+    <img src="https://i.imgur.com/4Ho5HRV.png" alt="CB Faro Cruz Lusa" class="header-logo">
+    <h1>CB360</h1>
+    <div class="header-subtitle">Mobile</div>
+  </div>
+
+  <!-- ========================================
+       📄 CONTEÚDO PRINCIPAL
+  ======================================== -->
+  <div class="main-content">
+    <div class="cb-container">
+      <!-- Cabeçalho -->
+      <div class="cb-header">
+        <h1 class="cb-title">CB Faro Cruz Lusa</h1>
+        <p class="cb-subtitle">Sistema de Gestão Operacional</p>
+      </div>
+
+      <!-- Área dos Botões -->
+      <div class="cb-buttons-container">
+        <div class="cb-buttons">
+          <button class="cb-btn" onclick="toggleButton(this); setTimeout(() => window.location.href='GeoStat.html', 300);">
+            <span style="font-size: 24px; margin-bottom: 8px;">🌍</span>
+            <div>Gestão de Status</div>
+          </button>
+
+          <button class="cb-btn" onclick="toggleButton(this); setTimeout(() => window.location.href='Sitveíc.html', 300);">
+            <span style="font-size: 24px; margin-bottom: 8px;">🚒</span>
+            <div>Situação Operacional de Veículos</div>
+          </button>
+
+          <button class="cb-btn" onclick="toggleButton(this); setTimeout(() => window.location.href='Fomio.html', 300);">
+            <span style="font-size: 24px; margin-bottom: 8px;">👨‍🚒👨‍🚒</span>
+            <div>FOMIO</div>
+          </button>
+
+          <button class="cb-btn" onclick="toggleButton(this); setTimeout(() => alert('Em desenvolvimento'), 300);">
+            <span style="font-size: 24px; margin-bottom: 8px;">📊</span>
+            <div>Relatórios</div>
+          </button>
+
+          <button class="cb-btn" onclick="toggleButton(this); setTimeout(() => alert('Em desenvolvimento'), 300);">
+            <span style="font-size: 24px; margin-bottom: 8px;">📈</span>
+            <div>Estatísticas</div>
+          </button>
+
+          <button class="cb-btn" onclick="toggleButton(this); setTimeout(() => alert('Em desenvolvimento'), 300);">
+            <span style="font-size: 24px; margin-bottom: 8px;">⚙️</span>
+            <div>Configurações</div>
+          </button>
+
+          <button class="cb-btn" onclick="toggleButton(this); setTimeout(() => alert('Em desenvolvimento'), 300);">
+            <span style="font-size: 24px; margin-bottom: 8px;">📋</span>
+            <div>Ocorrências</div>
+          </button>
+
+          <button class="cb-btn" onclick="toggleButton(this); setTimeout(() => alert('Em desenvolvimento'), 300);">
+            <span style="font-size: 24px; margin-bottom: 8px;">🔧</span>
+            <div>Manutenção</div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================
+       🦶 FOOTER
+  ======================================== -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="powered-by">
+        <strong>Powered by:</strong> Fábio Martins - Grupo CB360
+      </div>
+      <div class="footer-year">
+        © 2025 - Sistema GEOSTAT 360
+      </div>
+    </div>
+  </footer>
+
+  <!-- ========================================
+       🪟 MODAIS - TODAS AS JANELAS POPUP
+  ======================================== -->
+
+  <!-- Modal Políticas de Privacidade -->
+  <div id="policiesModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        📋 Políticas de Privacidade
+      </div>
+      <div class="modal-body">
+        <h3>Política de Privacidade - CB360</h3>
+        <p><strong>Última atualização:</strong> Janeiro 2025</p>
+
+        <h4>1. Informações que Coletamos</h4>
+        <p>• Dados de localização para funcionalidades de GPS<br>
+          • Informações de uso do sistema<br>
+          • Dados operacionais dos bombeiros</p>
+
+        <h4>2. Como Usamos as Informações</h4>
+        <p>• Melhorar a eficiência operacional<br>
+          • Garantir a segurança das equipas<br>
+          • Análise estatística de ocorrências</p>
+
+        <h4>3. Proteção de Dados</h4>
+        <p>Todos os dados são criptografados e armazenados de forma segura, seguindo as melhores práticas de segurança.</p>
+
+        <h4>4. Contacto</h4>
+        <p>Para questões sobre privacidade, contacte: privacy@cb360.pt</p>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-close" onclick="closeModal('policiesModal')">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Termos de Uso -->
+  <div id="termsModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        📄 Termos de Uso
+      </div>
+      <div class="modal-body">
+        <h3>Termos de Uso - CB360</h3>
+        <p><strong>Vigência:</strong> Janeiro 2025</p>
+
+        <h4>1. Aceitação dos Termos</h4>
+        <p>Ao usar o sistema CB360, você concorda com estes termos de uso.</p>
+
+        <h4>2. Uso Autorizado</h4>
+        <p>• Sistema destinado exclusivamente a bombeiros autorizados<br>
+          • Uso apenas para fins operacionais<br>
+          • Proibido compartilhar credenciais de acesso</p>
+
+        <h4>3. Responsabilidades</h4>
+        <p>• Manter informações atualizadas<br>
+          • Usar o sistema de forma responsável<br>
+          • Reportar problemas técnicos</p>
+
+        <h4>4. Limitações</h4>
+        <p>O sistema é fornecido "como está" e pode ter interrupções para manutenção.</p>
+
+        <h4>5. Modificações</h4>
+        <p>Estes termos podem ser atualizados sem aviso prévio.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-close" onclick="closeModal('termsModal')">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Sobre o Sistema -->
+  <div id="aboutModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        ℹ️ Sobre o Sistema
+      </div>
+      <div class="modal-body">
+        <h3>CB360 - Sistema de Gestão Operacional</h3>
+        <p><strong>Versão:</strong> 2.1.0</p>
+        <p><strong>Build:</strong> 2025.01.15</p>
+
+        <h4>📋 Funcionalidades</h4>
+        <p>• Gestão de Status Operacional<br>
+          • Controlo de Veículos<br>
+          • Sistema FOMIO<br>
+          • Relatórios e Estatísticas<br>
+          • Gestão de Ocorrências</p>
+
+        <h4>🛠️ Tecnologias</h4>
+        <p>• Interface Web Responsiva<br>
+          • Integração GPS<br>
+          • Base de Dados em Tempo Real<br>
+          • Sincronização Multi-dispositivo</p>
+
+        <h4>🏢 Desenvolvido para</h4>
+        <p><strong>CB Faro Cruz Lusa</strong><br>
+          Corpo de Bombeiros Voluntários</p>
+
+        <h4>👨‍💻 Desenvolvimento</h4>
+        <p><strong>Fábio Martins</strong><br>
+          Grupo CB360<br>
+          Email: dev@cb360.pt</p>
+
+        <h4>📅 Histórico de Versões</h4>
+        <p>• v2.1.0 - Interface mobile otimizada<br>
+          • v2.0.0 - Novo design e funcionalidades<br>
+          • v1.5.0 - Sistema FOMIO integrado<br>
+          • v1.0.0 - Versão inicial</p>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-close" onclick="closeModal('aboutModal')">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Contacto -->
+  <div id="contactModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        📞 Contacto
+      </div>
+      <div class="modal-body">
+        <h3>Informações de Contacto</h3>
+
+        <h4>🏢 CB Faro Cruz Lusa</h4>
+        <p><strong>Morada:</strong><br>
+          Rua dos Bombeiros, nº 123<br>
+          8000-000 Faro</p>
+
+        <p><strong>Telefone:</strong> +351 289 123 456<br>
+          <strong>Email:</strong> geral@cbfarocruzlusa.pt<br>
+          <strong>Website:</strong> www.cbfarocruzlusa.pt
+        </p>
+
+        <h4>💻 Suporte Técnico</h4>
+        <p><strong>Desenvolvedor:</strong> Fábio Martins<br>
+          <strong>Email:</strong> suporte@cb360.pt<br>
+          <strong>Telefone:</strong> +351 912 345 678
+        </p>
+
+        <h4>🚨 Emergências</h4>
+        <p><strong>Número Nacional de Emergência:</strong><br>
+          <span style="font-size: 24px; color: #d32f2f; font-weight: bold;">112</span>
+        </p>
+
+        <h4>⏰ Horários</h4>
+        <p><strong>Quartel:</strong> 24h/dia, 7 dias/semana<br>
+          <strong>Suporte Técnico:</strong> Segunda a Sexta, 9h-18h
+        </p>
+
+        <h4>🌐 Redes Sociais</h4>
+        <p>Facebook: @CBFaroCruzLusa<br>
+          Instagram: @cb_faro_cruzlusa<br>
+          Twitter: @CBFaroCruzLusa</p>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-close" onclick="closeModal('contactModal')">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ========================================
+    // 🌙 SISTEMA DE TEMA ESCURO/CLARO
+    // ========================================
+    function toggleTheme() {
+      const body = document.body;
+      const isDark = body.classList.contains('dark-mode');
+      if (isDark) {
+        body.classList.remove('dark-mode');
+        localStorage.setItem('sgo-theme', 'light');
+      } else {
+        body.classList.add('dark-mode');
+        localStorage.setItem('sgo-theme', 'dark');
+      }
+      // Efeito visual no toggle
+      const toggle = document.querySelector('.theme-toggle');
+      if (toggle) {
+        toggle.style.transform = 'scale(0.9)';
+        setTimeout(() => {
+          toggle.style.transform = 'scale(1)';
+        }, 150);
+      }
+      // Vibração como no script antigo
+      if (navigator.vibrate) {
+        navigator.vibrate(30);
+      }
+    }
+    // Carregar tema salvo
+    function loadTheme() {
+      const savedTheme = localStorage.getItem('sgo-theme');
+      if (savedTheme === 'dark') {
+        document.body.classList.add('dark-mode');
+      }
+    }
+    // ========================================
+    // ⋮ SISTEMA DE MENU DROPDOWN
+    // ========================================
+    function toggleMenu() {
+      const dropdown = document.getElementById('menuDropdown');
+      if (!dropdown) return;
+      const isVisible = dropdown.classList.contains('show');
+      if (isVisible) {
+        dropdown.classList.remove('show');
+      } else {
+        dropdown.classList.add('show');
+      }
+      // Vibração como no script antigo
+      if (navigator.vibrate) {
+        navigator.vibrate(30);
+      }
+    }
+    // Fechar menu ao clicar fora
+    document.addEventListener('click', function(event) {
+      const menuDots = document.querySelector('.menu-dots');
+      const dropdown = document.getElementById('menuDropdown');
+      if (menuDots && dropdown &&
+        !menuDots.contains(event.target) &&
+        !dropdown.contains(event.target)) {
+        dropdown.classList.remove('show');
+      }
+    });
+    // ========================================
+    // 🪟 SISTEMA DE MODAIS
+    // ========================================
+    function showModal(modalId) {
+      const modal = document.getElementById(modalId);
+      if (modal) {
+        modal.classList.add('show');
+        document.body.style.overflow = 'hidden';
+        // Vibração
+        if (navigator.vibrate) {
+          navigator.vibrate(50);
+        }
+      }
+    }
+
+    function closeModal(modalId) {
+      const modal = document.getElementById(modalId);
+      if (modal) {
+        modal.classList.remove('show');
+        document.body.style.overflow = 'auto';
+      }
+    }
+
+    function showPolicies() {
+      showModal('policiesModal');
+      toggleMenu();
+    }
+
+    function showTerms() {
+      showModal('termsModal');
+      toggleMenu();
+    }
+
+    function showAbout() {
+      showModal('aboutModal');
+      toggleMenu();
+    }
+
+    function showContact() {
+      showModal('contactModal');
+      toggleMenu();
+    }
+    // Fechar modal ao clicar no fundo
+    document.addEventListener('click', function(event) {
+      if (event.target.classList.contains('modal')) {
+        event.target.classList.remove('show');
+        document.body.style.overflow = 'auto';
+      }
+    });
+    // ========================================
+    // 🔘 SISTEMA DE BOTÕES INTERATIVOS
+    // ========================================
+    function toggleButton(button) {
+      // Remove seleção de outros botões
+      const allButtons = document.querySelectorAll('.cb-btn');
+      allButtons.forEach(btn => {
+        if (btn !== button) {
+          btn.classList.remove('selected');
+        }
+      });
+      // Adiciona seleção ao botão clicado
+      button.classList.add('selected');
+      // Efeito de vibração (como no script antigo)
+      if (navigator.vibrate) {
+        navigator.vibrate(100);
+      }
+      // Remove seleção após 2 segundos
+      setTimeout(() => {
+        button.classList.remove('selected');
+      }, 2000);
+    }
+    // Limpar seleções (função do script antigo)
+    function clearAllSelections() {
+      document.querySelectorAll('.cb-btn').forEach(btn => {
+        btn.classList.remove('selected');
+      });
+    }
+    // ========================================
+    // 🚀 INICIALIZAÇÃO DO SISTEMA
+    // ========================================    
+    // Inicialização no load (como no script antigo)
+    window.addEventListener('load', function() {
+      const savedTheme = localStorage.getItem('sgo-theme');
+      if (savedTheme === 'dark') {
+        document.body.classList.add('dark-mode');
+      }
+    });
+    document.addEventListener('DOMContentLoaded', function() {
+      // Carregar tema salvo (dupla verificação)
+      loadTheme();
+      // Animação de entrada dos botões
+      const buttons = document.querySelectorAll('.cb-btn');
+      buttons.forEach((button, index) => {
+        button.style.opacity = '0';
+        button.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+          button.style.transition = 'all 0.5s ease';
+          button.style.opacity = '1';
+          button.style.transform = 'translateY(0)';
+        }, index * 100);
+      });
+      // Prevenção de zoom duplo toque em dispositivos móveis
+      document.addEventListener('touchstart', function(event) {
+        if (event.touches.length > 1) {
+          event.preventDefault();
+        }
+      });
+      let lastTouchEnd = 0;
+      document.addEventListener('touchend', function(event) {
+        const now = (new Date()).getTime();
+        if (now - lastTouchEnd <= 300) {
+          event.preventDefault();
+        }
+        lastTouchEnd = now;
+      }, false);
+      // Log de sucesso (como no script antigo)
+      console.log('🚒 CB360 Mobile carregado com sucesso!');
+    });
+    // ========================================
+    // 🎯 EVENT LISTENERS GLOBAIS (do script antigo)
+    // ========================================    
+    // Limpar seleções ao clicar fora
+    window.addEventListener('click', function(event) {
+      const isButtonClick = event.target.closest('.cb-btn');
+      const isThemeToggle = event.target.closest('.theme-toggle');
+      const isMenuClick = event.target.closest('.menu-dots');
+      const isModalClick = event.target.closest('.modal-content');
+      if (!isButtonClick && !isThemeToggle && !isMenuClick && !isModalClick) {
+        clearAllSelections();
+      }
+    });
+    // Prevenção de seleção de texto (do script antigo)
+    document.addEventListener('selectstart', function(e) {
+      e.preventDefault();
+    });
+    // Prevenção de menu contexto (do script antigo)
+    document.addEventListener('contextmenu', function(e) {
+      e.preventDefault();
+    });
+  </script>
+</body>
+
+</html>

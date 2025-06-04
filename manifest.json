@@ -3,10 +3,11 @@
   "short_name": "CB360",
   "description": "Sistema de Gestão Operacional",
   "start_url": "/CB360-Mobile/Index.html",
-  "display": "standalone",
+  "display": "fullscreen",
   "orientation": "portrait",
   "background_color": "#8B0000",
   "theme_color": "#d32f2f",
+  "scope": "/CB360-Mobile/",
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/3039/3039008.png",

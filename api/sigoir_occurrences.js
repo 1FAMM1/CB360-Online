@@ -5,7 +5,6 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const supabase = createClient(supabaseUrl, supabaseKey)
 
 export default async function handler(req, res) {
-    // Permitir CORS
     res.setHeader('Access-Control-Allow-Origin', '*')
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
@@ -16,24 +15,22 @@ export default async function handler(req, res) {
     
     try {
         if (req.method === 'POST') {
-            // CRIAR/GUARDAR OCORRÊNCIA (COM UPSERT)
-            const { incident_number, group_indicator, gdh_activation, pco_indicator } = req.body
+            const { incident_number, group_indicator, gdh_activation, pco_indicator, ocorr_status } = req.body
             
-            // Validações
             if (!incident_number || !group_indicator) {
                 return res.status(400).json({
                     success: false,
                     error: 'Número da ocorrência e indicativo do grupo são obrigatórios'
                 })
             }
-            
-            // UPSERT: Inserir ou atualizar se já existir
+
             const { data, error } = await supabase
                 .from('incidents')
                 .upsert([{
                     incident_number,
                     group_indicator,
                     gdh_activation,
+                    ocorr_status: ocorr_status || null,
                     pco_indicator,
                     status: 'planning',
                     updated_at: new Date().toISOString()
@@ -58,11 +55,9 @@ export default async function handler(req, res) {
             })
             
         } else if (req.method === 'GET') {
-            // LISTAR OU BUSCAR OCORRÊNCIA
             const { incident_number } = req.query
             
             if (incident_number) {
-                // Buscar ocorrência específica
                 const { data, error } = await supabase
                     .from('incidents')
                     .select('*')
@@ -88,7 +83,6 @@ export default async function handler(req, res) {
                 })
                 
             } else {
-                // Listar todas as ocorrências
                 const { data, error } = await supabase
                     .from('incidents')
                     .select('*')

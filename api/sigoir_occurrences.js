@@ -2,7 +2,6 @@ import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = 'https://onunffdpdnqkpogmhlti.supabase.co'
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9udW5mZmRwZG5xa3BvZ21obHRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA5MzkxNTIsImV4cCI6MjA2NjUxNTE1Mn0.qupKAwPZXR7NtgypQl8d0YhKZN9msABkknQ2Po3irbU'
-
 const supabase = createClient(supabaseUrl, supabaseKey)
 
 export default async function handler(req, res) {
@@ -17,7 +16,7 @@ export default async function handler(req, res) {
     
     try {
         if (req.method === 'POST') {
-            // CRIAR/GUARDAR OCORRÊNCIA
+            // CRIAR/GUARDAR OCORRÊNCIA (COM UPSERT)
             const { incident_number, group_indicator, gdh_activation, pco_indicator } = req.body
             
             // Validações
@@ -28,44 +27,24 @@ export default async function handler(req, res) {
                 })
             }
             
-            // Verificar se já existe
-            const { data: existingIncident, error: checkError } = await supabase
-                .from('incidents')
-                .select('id, incident_number')
-                .eq('incident_number', incident_number)
-                .single()
-            
-            if (checkError && checkError.code !== 'PGRST116') {
-                console.error('Erro ao verificar:', checkError)
-                return res.status(500).json({
-                    success: false,
-                    error: 'Erro ao verificar ocorrência: ' + checkError.message
-                })
-            }
-            
-            if (existingIncident) {
-                return res.status(409).json({
-                    success: false,
-                    error: `Ocorrência ${incident_number} já existe no sistema`
-                })
-            }
-            
-            // Inserir nova ocorrência
+            // UPSERT: Inserir ou atualizar se já existir
             const { data, error } = await supabase
                 .from('incidents')
-                .insert([{
+                .upsert([{
                     incident_number,
                     group_indicator,
                     gdh_activation,
                     pco_indicator,
                     status: 'planning',
-                    created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString()
-                }])
+                }], { 
+                    onConflict: 'incident_number',
+                    ignoreDuplicates: false 
+                })
                 .select()
             
             if (error) {
-                console.error('Erro ao inserir:', error)
+                console.error('Erro ao inserir/atualizar:', error)
                 return res.status(500).json({
                     success: false,
                     error: 'Erro ao salvar: ' + error.message
@@ -74,7 +53,7 @@ export default async function handler(req, res) {
             
             return res.status(200).json({
                 success: true,
-                message: `Ocorrência ${incident_number} guardada com sucesso!`,
+                message: `Ocorrência ${incident_number} guardada/atualizada com sucesso!`,
                 data: data[0]
             })
             

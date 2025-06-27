@@ -58,7 +58,7 @@ export default async function handler(req, res) {
                     group_indicator,
                     gdh_activation,
                     pco_indicator,
-                    status: 'active',
+                    status: 'planning',
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString()
                 }])

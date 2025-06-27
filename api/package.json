@@ -1,5 +1,5 @@
 {
-  "name": "cb360-mobile-api",
+  "name": "CB360-Mobile",
   "version": "1.0.0",
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0"

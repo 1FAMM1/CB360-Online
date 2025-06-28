@@ -16,7 +16,6 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === 'POST') {
-      // GUARDAR LOGÍSTICA
       const { incident_number, logistics } = req.body;
 
       if (!incident_number || !logistics || !Array.isArray(logistics)) {
@@ -26,19 +25,17 @@ export default async function handler(req, res) {
         });
       }
 
-      // Preparar dados para a tabela field_plan
       const logisticsToInsert = logistics.map(item => ({
         incident_number,
         vehicle: item.vehicle,
-        timestamp: item.gdh_logistics, // GDH da logística
-        liters_refueled: item.liters_supplied, // Litros abastecidos
-        full_fuel: item.full_capacity, // Capacidade total
-        recalculated_autonomy: item.autonomy_after, // Autonomia após abastecimento
-        next_logistics_forecast: item.next_logistics_prediction, // Previsão próxima logística
+        timestamp: item.gdh_logistics,
+        liters_refueled: item.liters_supplied,
+        full_fuel: item.full_capacity,
+        recalculated_autonomy: item.autonomy_after,
+        next_logistics_forecast: item.next_logistics_prediction,
         created_at: new Date().toISOString()
       }));
 
-      // Inserir na tabela field_plan
       const { data, error } = await supabase
         .from('field_plan')
         .insert(logisticsToInsert)
@@ -59,7 +56,7 @@ export default async function handler(req, res) {
       });
 
     } else if (req.method === 'GET') {
-      // CONSULTAR LOGÍSTICA
+
       const { incident_number } = req.query;
 
       if (!incident_number) {

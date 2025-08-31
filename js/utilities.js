@@ -138,7 +138,8 @@
         });
       });
     });
-    
+    /* ---- ESTADOS OPERACIONAIS DE VEÍCULOS ----*/
+    /* --- Controlo de Status de Veículos ---*/
     const API_URL = 'https://geostat-360-api.vercel.app/api/vehicle_control';
     let currentVehicleList = [];
     let vehicleStatuses = {};

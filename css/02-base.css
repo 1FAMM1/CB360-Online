@@ -226,140 +226,9 @@
       100% {
         transform: translateX(100%) translateY(100%) rotate(45deg);
       }
-    }
+    }   
 
-    .digital-panel-container {
-      display: flex;
-      height: 550px;
-      position: relative;
-    }
-
-    .panel-sidebar {
-      width: 200px;
-      background: rgba(52, 58, 64, 0.95);
-      backdrop-filter: blur(10px);
-      display: flex;
-      flex-direction: column;
-      padding: 0;
-    }
-
-    .panel-menu-button {
-      width: 100%;
-      height: 50px;
-      background: transparent;
-      color: #fff;
-      border: none;
-      text-align: left;
-      padding: 0 20px;
-      margin: 0;
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 500;
-      transition: all 0.3s ease;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .panel-menu-button:hover {
-      background: rgba(255, 255, 255, 0.1);
-      transform: translateX(3px);
-    }
-
-    .panel-menu-button.active {
-      background: rgba(220, 53, 69, 0.8);
-      border-left: 4px solid #fff;
-      font-weight: 600;
-    }
-
-    .panel-menu-button::before {
-      content: '▶';
-      font-size: 10px;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-
-    .panel-menu-button.active::before {
-      opacity: 1;
-    }
-
-    .panel-content {
-      flex: 1;
-      background: rgba(248, 249, 250, 0.95);
-      position: relative;
-      overflow-y: auto;
-    }
-
-    .panel-card {
-      display: none;
-      background: rgba(235, 235, 235, 0.85);
-      padding: 25px;
-      height: 100%;
-      animation: cardFadeIn 0.4s ease-out;
-    }
-
-    .panel-card.active {
-      display: block;
-    }
-
-    .panel-card h3 {
-      color: #343A40;
-      font-size: 18px;
-      margin-bottom: 20px;
-      border-bottom: 2px solid #DC3545;
-      padding-bottom: 10px;
-    }
-
-    .panel-card p {
-      color: #495057;
-      line-height: 1.6;
-      margin-bottom: 15px;
-    }
-
-    .data-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 15px;
-      margin: 20px 0;
-    }
-
-    .data-item {
-      background: rgba(255, 255, 255, 0.8);
-      padding: 15px;
-      border-radius: 8px;
-      text-align: center;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      transition: transform 0.3s ease;
-      height: 160px;
-    }
-
-    .data-item:hover {
-      transform: translateY(-2px);
-    }
-
-    .data-value {
-      font-size: 24px;
-      font-weight: bold;
-      color: #DC3545;
-      display: block;
-    }
-
-    .data-label {
-      font-size: 12px;
-      color: #6C757D;
-      margin-top: 5px;
-    }
-
-    .button-container {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 4px;
-      margin-top: 10px;
-      width: 100%;
-      height: 60px;
-    }    
-
+   
     .vehicle-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
@@ -521,16 +390,6 @@
       50% {
         border-color: #e67e22
       }
-    }
-
-    .loading {
-      text-align: center;
-      color: #7f8c8d;
-      font-style: italic;
-      margin: 20px 0;
-      padding: 20px;
-      background: #f0f0f0;
-      border-radius: 8px;
     }
 
     .vehicle-btn.vcot,

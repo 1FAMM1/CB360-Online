@@ -1,150 +1,188 @@
-/* Sistema de veículos e estados */
-.vehicle-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 15px;
-  margin-top: 20px;
-}
+    .vehicle-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
 
-.vehicle-btn {
-  padding: 15px 15px;
-  border: 1.5px solid #bdc3c7;
-  border-radius: 8px;
-  background: #bdc3c7;
-  cursor: pointer;
-  text-align: center;
-  transition: all 0.3s ease;
-  font-weight: bold;
-  position: relative;
-  overflow: hidden;
-  height: 80px !important;
-  max-height: 80px !important;
-  min-height: 80px !important;
-  display: flex !important;
-  flex-direction: column !important;
-  justify-content: center !important;
-  align-items: center !important;
-}
+    .vehicle-btn {
+      padding: 15px 15px;
+      border: 1.5px solid #bdc3c7;
+      border-radius: 8px;
+      background: #bdc3c7;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.3s ease;
+      font-weight: bold;
+      position: relative;
+      overflow: hidden;
+      height: 80px !important;
+      max-height: 80px !important;
+      min-height: 80px !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      align-items: center !important;
+    }
 
-.vehicle-icon {
-  font-size: 24px;
-  display: block;
-  margin-bottom: 8px;
-  position: relative;
-  z-index: 2;
-  transition: all 0.3s ease;
-}
+    .vehicle-icon {
+      font-size: 24px;
+      display: block;
+      margin-bottom: 8px;
+      position: relative;
+      z-index: 2;
+      transition: all 0.3s ease;
+    }
 
-.vehicle-code {
-  font-size: 14px;
-  font-weight: bold;
-  color: #2c3e50;
-  transition: all 0.3s ease;
-  position: relative;
-  z-index: 2;
-}
+    .vehicle-code {
+      font-size: 14px;
+      font-weight: bold;
+      color: #2c3e50;
+      transition: all 0.3s ease;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .vehicle-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transition: left 0.5s ease;
+      z-index: 1;
+    }
 
-.vehicle-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-  transition: left 0.5s ease;
-  z-index: 1;
-}
+    .vehicle-btn:hover::before {
+      left: 100%;
+    }
 
-.vehicle-btn:hover::before {
-  left: 100%;
-}
+    .vehicle-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      filter: brightness(1.1);
+    }
 
-.vehicle-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-  filter: brightness(1.1);
-}
+    .vehicle-btn:active {
+      animation: buttonBounce 0.3s ease;
+      box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.3);
+    }
 
-.vehicle-btn:active {
-  animation: buttonBounce 0.3s ease;
-  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.3);
-}
+    .vehicle-btn.inop {
+      border-color: #7f8c8d !important;
+      color: #2c3e50 !important;
+      opacity: 0.6;      
+      position: relative;
+      animation: inopFade 2s infinite;
+    }
 
-/* Estados dos Veículos */
-.vehicle-btn.inop {
-  border-color: #7f8c8d !important;
-  color: #2c3e50 !important;
-  opacity: 0.6;      
-  position: relative;
-  animation: inopFade 2s infinite;
-}
+    .vehicle-btn.inop::before {
+      content: "⚠️ INOP";
+      position: absolute;
+      top: 0px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      background: #e74c3c;
+      color: white;
+      padding: 2px 4px;
+      border-radius: 3px;
+      font-weight: bold;
+      z-index: 10;
+      opacity: 0.5;
+    }    
 
-.vehicle-btn.inop::before {
-  content: "⚠️ INOP";
-  position: absolute;
-  top: 0px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 10px;
-  background: #e74c3c;
-  color: white;
-  padding: 2px 4px;
-  border-radius: 3px;
-  font-weight: bold;
-  z-index: 10;
-  opacity: 0.5;
-}    
+    .vehicle-btn.inop .vehicle-code {
+      color: #7f8c8d !important;
+      text-decoration: line-through;
+    }
 
-.vehicle-btn.inop .vehicle-code {
-  color: #7f8c8d !important;
-  text-decoration: line-through;
-}
+    @keyframes inopFade {
 
-.vehicle-btn.em-servico {
-  border: 2px solid #f1c40f;
-  animation: borderBlink 1.5s infinite, gentleShake 3s infinite;
-}
+      0%,
+      100% {
+        opacity: 1
+      }
 
-.vehicle-btn.em-servico::before {
-  content: "🚨 Em Serviço";
-  position: absolute;
-  top: 0px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 9px;
-  background: rgba(241, 196, 15, 0.8);
-  color: #2c3e50;
-  padding: 2px 4px;
-  border-radius: 2px;
-  font-weight: bold;
-  z-index: 10;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-}
+      50% {
+        opacity: 0.5
+      }
+    }
 
-/* Cores por Tipo de Veículo */
-.vehicle-btn.vcot,
-.vehicle-btn.vcoc,
-.vehicle-btn.vttp,
-.vehicle-btn.vfci,
-.vehicle-btn.veci,
-.vehicle-btn.vuci,
-.vehicle-btn.vrci,
-.vehicle-btn.vsat,
-.vehicle-btn.vsae,
-.vehicle-btn.vttu,
-.vehicle-btn.vttf,
-.vehicle-btn.vale,
-.vehicle-btn.vttr,
-.vehicle-btn.veta,
-.vehicle-btn.vope {
-  border-color: #e74c3c;
-}
+    /* STATUS EM SERVIÇO */
+    .vehicle-btn.em-servico {
+      border: 2px solid #f1c40f;
+      animation: borderBlink 1.5s infinite, gentleShake 3s infinite;
+    }
+    
+     .vehicle-btn.em-servico::before {
+      content: "🚨 Em Serviço";
+      position: absolute;
+      top: 0px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 9px;
+      background: rgba(241, 196, 15, 0.8);
+      color: #2c3e50;
+      padding: 2px 4px;
+      border-radius: 2px;
+      font-weight: bold;
+      z-index: 10;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
 
-.vehicle-btn.abci,
-.vehicle-btn.absc,
-.vehicle-btn.abtd,
-.vehicle-btn.abtm,
-.vehicle-btn.vdtd {
-  border-color: #3498db;
-}
+    @keyframes gentleShake {
+
+      0%,
+      100% {
+        transform: translateX(0)
+      }
+
+      25% {
+        transform: translateX(-1px)
+      }
+
+      75% {
+        transform: translateX(1px)
+      }
+    }
+
+    @keyframes borderBlink {
+
+      0%,
+      100% {
+        border-color: #f1c40f
+      }
+
+      50% {
+        border-color: #e67e22
+      }
+    }
+
+    .vehicle-btn.vcot,
+    .vehicle-btn.vcoc,
+    .vehicle-btn.vttp,
+    .vehicle-btn.vfci,
+    .vehicle-btn.veci,
+    .vehicle-btn.vuci,
+    .vehicle-btn.vrci,
+    .vehicle-btn.vsat,
+    .vehicle-btn.vsae,
+    .vehicle-btn.vttu,
+    .vehicle-btn.vttf,
+    .vehicle-btn.vale,
+    .vehicle-btn.vttr,
+    .vehicle-btn.veta,
+    .vehicle-btn.vope {
+      border-color: #e74c3c;
+    }
+
+    .vehicle-btn.abci,
+    .vehicle-btn.absc,
+    .vehicle-btn.abtd,
+    .vehicle-btn.abtm,
+    .vehicle-btn.vdtd {
+      border-color: #3498db;
+    }

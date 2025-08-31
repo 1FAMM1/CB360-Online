@@ -19,7 +19,7 @@
       cursor: default;
       user-select: none;
     }
-    
+
     /* ---- HEADER ---- */
     .header {
       width: 100%;
@@ -37,24 +37,30 @@
       margin-left: 0px;
     }
 
-    .title-container {
+    .header-title-container {
       flex-grow: 1;
     }
 
-    .title {
+    .header-title {
       color: white;
       font-size: 16px;
       font-weight: bold;
       margin: 0 15px;
     }
 
-    .subtitle {
+    .header-subtitle,
+    .header-authorization {
       color: #FFE6E6;
       font-size: 12px;
       margin: 0 15px;
     }
 
-    .badge-360 {
+    .header-authorization {
+      font-style: italic;
+      font-size: 10px;
+    }
+
+    .header-badge-360 {
       background-color: #B02A37;
       color: white;
       padding: 8px 12px;
@@ -74,7 +80,7 @@
       padding: 20px 10px;
     }
 
-    .menu-button {
+    .sidebar-menu-button {
       width: 200px;
       height: 45px;
       background-color: #343A40;
@@ -88,11 +94,11 @@
       transition: background-color 0.2s;
     }
 
-    .menu-button:hover {
+    .sidebar-menu-button:hover {
       background-color: #495057;
     }
 
-    .menu-button.active {
+    .sidebar-menu-button.active {
       background-color: #DC3545;
     }
 
@@ -224,26 +230,16 @@
       box-shadow: 0 0 0 1px rgba(0, 123, 255, 0.25);
     }
 
-    .vehicles-grid {
+    .grid-2fr {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
     }
 
-    .grid-2columns {
+    .grid-3fr {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: 1fr 1fr 1fr;
       gap: 0px;
-      padding: 0 20px 20px 20px;
-      margin-top: -25px;
-    }
-
-    .grid-3columns {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 0px;
-      padding: 0 15px;
-      margin-top: -25px;
     }
 
     .vehicle-card,
@@ -330,6 +326,14 @@
       box-shadow: 0 0 0 1px rgba(0, 123, 255, 0.25);
     }
 
+    .warning-text {
+      color: #DC3545;
+      font-weight: bold;
+      font-size: 10px;
+      max-width: 700px;
+      padding: 0 20px;
+    }
+
     .status-bar {
       position: absolute;
       bottom: 0;
@@ -344,12 +348,12 @@
       justify-content: space-between;
     }
 
-    .warning-text {
-      color: #DC3545;
-      font-weight: bold;
-      font-size: 10px;
-      max-width: 700px;
-      padding: 0 20px;
+    .system-info {
+      position: absolute;
+      bottom: 5px;
+      left: 20px;
+      font-size: 12px;
+      color: #6C757D;
     }
 
     .action-buttons {
@@ -393,14 +397,6 @@
       background-color: #C82333;
     }
 
-    .system-info {
-      position: absolute;
-      bottom: 5px;
-      left: 20px;
-      font-size: 10px;
-      color: #6C757D;
-    }
-
     .popup-modal {
       display: none;
       position: fixed;
@@ -429,7 +425,7 @@
     }
 
     .popup-content h3 {
-      margin-bottom: 15px;
+      margin-bottom: 20px;
       color: #DC3545;
     }
 
@@ -442,22 +438,13 @@
       color: #495057;
     }
 
-    .popup-content button,
-    .close-btn {
+    .popup-content button {
       cursor: pointer;
       font-weight: bold;
       margin-top: 20px;
       padding: 8px 15px;
       max-width: 100px;
       width: 100%;
-    }
-
-    .close-btn {
-      position: absolute;
-      top: 10px;
-      right: 15px;
-      font-size: 18px;
-      color: #DC3545;
     }
 
     #popup-ok-btn {
@@ -467,12 +454,6 @@
       padding: 8px 20px;
       border-radius: 5px;
       font-size: 12px;
-    }
-
-    .responsive-input {
-      flex: 1;
-      max-width: 600px;
-      min-width: 200px;
     }
 
     /* ---- ANIMAÇÃO PÁGINA PRINCIPAL ----*/
@@ -629,32 +610,13 @@
     ul {
       list-style: none;
     }
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
     .digital-panel-container {
       display: flex;
       height: 550px;
       position: relative;
     }
 
-    /* Sidebar interna */
     .panel-sidebar {
       width: 200px;
       background: rgba(52, 58, 64, 0.95);
@@ -664,7 +626,6 @@
       padding: 0;
     }
 
-    /* Botões da sidebar */
     .panel-menu-button {
       width: 100%;
       height: 50px;
@@ -706,7 +667,6 @@
       opacity: 1;
     }
 
-    /* Área de conteúdo */
     .panel-content {
       flex: 1;
       background: rgba(248, 249, 250, 0.95);
@@ -714,7 +674,6 @@
       overflow-y: auto;
     }
 
-    /* Cards internos */
     .panel-card {
       display: none;
       background: rgba(235, 235, 235, 0.85);
@@ -741,7 +700,6 @@
       margin-bottom: 15px;
     }
 
-    /* Componentes especiais para cada seção */
     .data-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -776,7 +734,6 @@
       margin-top: 5px;
     }
 
-    /* CORREÇÃO: Container para os botões - grade 2x3 (2 linhas, 3 colunas) */
     .button-container {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -784,13 +741,11 @@
       margin-top: 10px;
       width: 100%;
       height: 60px;
-      /* Altura fixa para 2 linhas */
     }
 
-    /* CORREÇÃO: Ajuste nos botões para ficarem em grade de 3 */
     .panel-btn {
       padding: 6px 8px;
-      border: 2px solid #bdc3c7;
+      border: 1px solid #bdc3c7;
       border-radius: 6px;
       background: white;
       cursor: pointer;
@@ -805,7 +760,6 @@
       position: relative;
       overflow: hidden;
       min-width: 0;
-      /* Permite que os botões encolham se necessário */
     }
 
     .panel-btn:hover {
@@ -813,27 +767,19 @@
       box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
       filter: brightness(1.1);
     }
-    
-    
-    
-    
-    
-    
-  
-    
-    
- .vehicle-grid { 
-display: grid; 
-grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); 
-gap: 15px; 
-margin-top: 20px; 
-}
+
+    .vehicle-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
 
     .vehicle-btn {
       padding: 15px 15px;
-      border: 2px solid #bdc3c7;
-      border-radius: 12px;
-      background: white;
+      border: 1.5px solid #bdc3c7;
+      border-radius: 8px;
+      background: #bdc3c7;
       cursor: pointer;
       text-align: center;
       transition: all 0.3s ease;
@@ -866,8 +812,8 @@ margin-top: 20px;
       position: relative;
       z-index: 2;
     }
-
- .vehicle-btn::before {
+    
+    .vehicle-btn::before {
       content: '';
       position: absolute;
       top: 0;
@@ -878,7 +824,8 @@ margin-top: 20px;
       transition: left 0.5s ease;
       z-index: 1;
     }
-.vehicle-btn:hover::before {
+
+    .vehicle-btn:hover::before {
       left: 100%;
     }
 
@@ -888,25 +835,15 @@ margin-top: 20px;
       filter: brightness(1.1);
     }
 
-    .vehicle-btn:hover .vehicle-icon {
-      transform: rotate(5deg) scale(1.1);
-    }
-
-    .vehicle-btn:hover .vehicle-code {
-      transform: scale(1.1);
-    }
-
     .vehicle-btn:active {
       animation: buttonBounce 0.3s ease;
-      box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.3);
+      box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.3);
     }
 
-
-      .vehicle-btn.inop {
+    .vehicle-btn.inop {
       border-color: #7f8c8d !important;
       color: #2c3e50 !important;
-      opacity: 0.6;
-      cursor: not-allowed !important;
+      opacity: 0.6;      
       position: relative;
       animation: inopFade 2s infinite;
     }
@@ -914,7 +851,7 @@ margin-top: 20px;
     .vehicle-btn.inop::before {
       content: "⚠️ INOP";
       position: absolute;
-      top: 5px;
+      top: 0px;
       left: 50%;
       transform: translateX(-50%);
       font-size: 10px;
@@ -925,140 +862,110 @@ margin-top: 20px;
       font-weight: bold;
       z-index: 10;
       opacity: 0.5;
-    }
+    }    
 
     .vehicle-btn.inop .vehicle-code {
       color: #7f8c8d !important;
       text-decoration: line-through;
     }
-    @keyframes inopFade { 0%,100%{opacity:1}50%{opacity:0.5} }
+
+    @keyframes inopFade {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0.5
+      }
+    }
 
     /* STATUS EM SERVIÇO */
-    .vehicle-btn.em-servico { 
-border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s infinite; }
-    .vehicle-btn.em-servico::before { content: "🚨 Em Serviço"; position: absolute; top: 5px; left: 50%; transform: translateX(-50%); font-size: 9px; background: rgba(241,196,15,0.8); color: #2c3e50; padding: 2px 4px; border-radius: 2px; font-weight: bold; z-index: 10; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
-    @keyframes gentleShake { 0%,100%{transform:translateX(0)}25%{transform:translateX(-1px)}75%{transform:translateX(1px)} }
-    @keyframes borderBlink { 0%,100%{border-color:#f1c40f}50%{border-color:#e67e22} }
-
-    .loading { text-align:center; color:#7f8c8d; font-style:italic; margin:20px 0; padding:20px; background:#f0f0f0; border-radius:8px; }.vehicle-grid { 
-display: grid; 
-grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); 
-gap: 15px; 
-margin-top: 20px; 
-}
-
-    .vehicle-btn {
-      padding: 15px 15px;
-      border: 2px solid #bdc3c7;
-      border-radius: 12px;
-      background: white;
-      cursor: pointer;
-      text-align: center;
-      transition: all 0.3s ease;
-      font-weight: bold;
-      position: relative;
-      overflow: hidden;
-      height: 80px !important;
-      max-height: 80px !important;
-      min-height: 80px !important;
-      display: flex !important;
-      flex-direction: column !important;
-      justify-content: center !important;
-      align-items: center !important;
+    .vehicle-btn.em-servico {
+      border: 2px solid #f1c40f;
+      animation: borderBlink 1.5s infinite, gentleShake 3s infinite;
     }
-
-    .vehicle-icon {
-      font-size: 24px;
-      display: block;
-      margin-bottom: 8px;
-      position: relative;
-      z-index: 2;
-      transition: all 0.3s ease;
-    }
-
-    .vehicle-code {
-      font-size: 14px;
-      font-weight: bold;
+    
+     .vehicle-btn.em-servico::before {
+      content: "🚨 Em Serviço";
+      position: absolute;
+      top: 0px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 9px;
+      background: rgba(241, 196, 15, 0.8);
       color: #2c3e50;
-      transition: all 0.3s ease;
-      position: relative;
-      z-index: 2;
-    }
-
- .vehicle-btn::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-      transition: left 0.5s ease;
-      z-index: 1;
-    }
-.vehicle-btn:hover::before {
-      left: 100%;
-    }
-
-    .vehicle-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-      filter: brightness(1.1);
-    }
-
-    .vehicle-btn:hover .vehicle-icon {
-      transform: rotate(5deg) scale(1.1);
-    }
-
-    .vehicle-btn:hover .vehicle-code {
-      transform: scale(1.1);
-    }
-
-    .vehicle-btn:active {
-      animation: buttonBounce 0.3s ease;
-      box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.3);
-    }
-
-
-      .vehicle-btn.inop {
-      border-color: #7f8c8d !important;
-      color: #2c3e50 !important;
-      opacity: 0.6;
-      cursor: not-allowed !important;
-      position: relative;
-      animation: inopFade 2s infinite;
-    }
-
-    .vehicle-btn.inop::before {
-      content: "⚠️ INOP";
-      position: absolute;
-      top: 5px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 10px;
-      background: #e74c3c;
-      color: white;
       padding: 2px 4px;
-      border-radius: 3px;
+      border-radius: 2px;
       font-weight: bold;
       z-index: 10;
-      opacity: 0.5;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     }
 
-    .vehicle-btn.inop .vehicle-code {
-      color: #7f8c8d !important;
-      text-decoration: line-through;
+    @keyframes gentleShake {
+
+      0%,
+      100% {
+        transform: translateX(0)
+      }
+
+      25% {
+        transform: translateX(-1px)
+      }
+
+      75% {
+        transform: translateX(1px)
+      }
     }
-    @keyframes inopFade { 0%,100%{opacity:1}50%{opacity:0.5} }
 
-    /* STATUS EM SERVIÇO */
-    .vehicle-btn.em-servico { 
-border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s infinite; }
-    .vehicle-btn.em-servico::before { content: "🚨 Em Serviço"; position: absolute; top: 5px; left: 50%; transform: translateX(-50%); font-size: 9px; background: rgba(241,196,15,0.8); color: #2c3e50; padding: 2px 4px; border-radius: 2px; font-weight: bold; z-index: 10; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
-    @keyframes gentleShake { 0%,100%{transform:translateX(0)}25%{transform:translateX(-1px)}75%{transform:translateX(1px)} }
-    @keyframes borderBlink { 0%,100%{border-color:#f1c40f}50%{border-color:#e67e22} }
+    @keyframes borderBlink {
 
-    .loading { text-align:center; color:#7f8c8d; font-style:italic; margin:20px 0; padding:20px; background:#f0f0f0; border-radius:8px; }
+      0%,
+      100% {
+        border-color: #f1c40f
+      }
+
+      50% {
+        border-color: #e67e22
+      }
+    }
+
+    .loading {
+      text-align: center;
+      color: #7f8c8d;
+      font-style: italic;
+      margin: 20px 0;
+      padding: 20px;
+      background: #f0f0f0;
+      border-radius: 8px;
+    }
+
+    .vehicle-btn.vcot,
+    .vehicle-btn.vcoc,
+    .vehicle-btn.vttp,
+    .vehicle-btn.vfci,
+    .vehicle-btn.veci,
+    .vehicle-btn.vuci,
+    .vehicle-btn.vrci,
+    .vehicle-btn.vsat,
+    .vehicle-btn.vsae,
+    .vehicle-btn.vttu,
+    .vehicle-btn.vttf,
+    .vehicle-btn.vale,
+    .vehicle-btn.vttr,
+    .vehicle-btn.veta,
+    .vehicle-btn.vope {
+      border-color: #e74c3c;
+    }
+
+    .vehicle-btn.abci,
+    .vehicle-btn.absc,
+    .vehicle-btn.abtd,
+    .vehicle-btn.abtm,
+    .vehicle-btn.vdtd {
+      border-color: #3498db;
+    }
   </style>
 </head>
 
@@ -1068,28 +975,29 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
       <div class="logo">
         <img src="https://i.imgur.com/4Ho5HRV.png" alt="CB Faro Cruz Lusa" class="header-logo">
       </div>
-      <div class="title-container">
-        <h1 class="title">CORPO DE BOMBEIROS DE FARO - CRUZ LUSA</h1>
-        <p class="subtitle">WSMS Auto Creator</p>
+      <div class="header-title-container">
+        <h1 class="header-title">CORPO DE BOMBEIROS DE FARO - CRUZ LUSA</h1>
+        <p class="header-subtitle">WSMS Auto Creator</p>
+        <p class="header-authorization">Acesso Autorizado: <span id="authName"></span></p>
       </div>
-      <div class="badge-360">Grupo CB360</div>
+      <div class="header-badge-360">Grupo CB360</div>
     </header>
+    <div class="header-authorization">Acesso Autorizado: <span id="authName"></span></div>
     <!---- MÓDULO SIDEBAR ---->
     <aside class="sidebar">
-      <button class="menu-button active" data-page="page-main">🏠 Menu Principal</button>
-      <button class="menu-button" data-page="active_occurrences">🔥 Ocorrências em Curso</button>
-      <button class="menu-button" data-page="page_insert_occurrence">✏️ Inserir/Alterar Ocorrência</button>
-      <button class="menu-button" data-page="page_close_occurrence">🔐 Encerrar Ocorrência</button>
-      <button class="menu-button" data-page="page-solicitation">📋 Solicitação Disponibilidades</button>
-      <button class="menu-button" data-page="page-indisp">⚠️ Indisponibilidade Veículos</button>
-      <button class="menu-button" data-page="page-municipality-grid">🗂️ Info. Grelha Município</button>
-      <button class="menu-button" data-page="page-digital-panel">📱 Painel Diginal (Consola)</button>
-      <button class="menu-button" data-page="page-data">💾 Data Center</button>
+      <button class="sidebar-menu-button active" data-page="page-main">🏠 Menu Principal</button>
+      <button class="sidebar-menu-button" data-page="page-active_occurrences">🔥 Ocorrências em Curso</button>
+      <button class="sidebar-menu-button" data-page="page_insert_occurrence">✏️ Inserir/Alterar Ocorrência</button>
+      <button class="sidebar-menu-button" data-page="page_close_occurrence">🔐 Encerrar Ocorrência</button>
+      <button class="sidebar-menu-button" data-page="page-solicitation">📋 Solicitação Disponibilidades</button>
+      <button class="sidebar-menu-button" data-page="page-indisp">⚠️ Indisponibilidade Veículos</button>
+      <button class="sidebar-menu-button" data-page="page-municipality-grid">🗂️ Info. Grelha Município</button>
+      <button class="sidebar-menu-button" data-page="page-utilities">📱 Utilitários</button>
+      <button class="sidebar-menu-button" data-page="page-data">💾 Data Center</button>
     </aside>
     <!---- MÓDULO POPUPS ---->
     <div id="popup-modal" class="popup-modal">
       <div class="popup-content">
-        <span class="close-btn">&times;</span>
         <h3>Campos em falta</h3>
         <ul id="missing-fields-list"></ul>
         <button id="popup-ok-btn">OK</button>
@@ -1097,7 +1005,6 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
     </div>
     <div id="popup-warning-modal" class="popup-modal">
       <div class="popup-content">
-        <span class="close-btn" id="warning-close-btn">&times;</span>
         <h3>AVISO</h3>
         <p></p>
         <button id="popup-warning-ok-btn" class="btn btn-danger">OK</button>
@@ -1105,29 +1012,41 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
     </div>
     <div id="popup-success-modal" class="popup-modal">
       <div class="popup-content">
-        <span class="close-btn" id="success-close-btn">&times;</span>
         <h3>SUCESSO</h3>
         <p>Mensagem criada com sucesso! Abra o WhatsApp e prima CTRL+V</p>
         <button id="popup-success-ok-btn" class="btn btn-success">OK</button>
       </div>
     </div>
+     <div id="popup-success-modal" class="popup-modal">
+      <div class="popup-content">
+        <h3>SUCESSO</h3>
+        <p>Mensagem criada com sucesso! Abra o WhatsApp e prima CTRL+V</p>
+        <button id="popup-success-ok-btn" class="btn btn-success">OK</button>
+      </div>
+    </div>
+    
+    
     <!---- MÓDULO COUNTEÚDO PRINCIPAL ---->
     <main class="main-content">
-
       <div id="page-main" class="page active">
-        <div class="card">
-          <div class="card-header">BEM-VINDO AO SISTEMA WSMS Auto Creator</div>
+        <div class="card last-card">
+          <div class="card-header">BEM-VINDO AO SISTEMA CB360 ONLINE</div>
           <div class="card-body">
-            <p style="margin-bottom: 15px;">Sistema automatizado para criação de mensagens para WhatsApp do Corpo de Bombeiros de Faro - Cruz Lusa.</p>
-            <p style="margin-bottom: 15px;"><strong>Funcionalidades de mensagens disponíveis:</strong></p>
+            <p style="margin-bottom: 15px;">Sistema automatizado para gestão operaional diária do Corpo de Bombeiros de Faro - Cruz Lusa.</p>
+            <p style="margin-bottom: 15px;"><strong>Funcionalidades disponíveis:</strong></p>
             <p style="margin-bottom: 0px;"><strong>WSMS Auto Creator:</strong></p>
             <ul style="padding-left: 20px; margin-bottom: 15px;">
               <li>Ocorrências em Curso</li>
               <li>Inserir/Alterar Ocorrências</li>
               <li>Encerrar Ocorrências</li>
               <li>Solicitação de Disponibilidades</li>
-              <li>Emissão de CTOs</li>
               <li>Indisponibilidade de Veículos</li>
+              <li>Info. Grelha do Município</li>
+            </ul>
+            <p style="margin-bottom: 0px;"><strong>Painel de Utilitários:</strong></p>
+            <ul style="padding-left: 20px; margin-bottom: 15px;">
+              <li>Visualização de estados dos EPEs e PPIs</li>
+              <li>Visualização dos estados operacionais dos veículos</li>
             </ul>
             <p style="margin-bottom: 0px; margin-top: 15px;"><strong>Brevemente:</strong></p>
             <ul style="padding-left: 20px; margin-bottom: 15px;">
@@ -1140,10 +1059,10 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
         </div>
       </div>
       <!---- MÓDULO OCORRÊNCIAS EM CURSO ---->
-      <div id="active_occurrences" class="page">
+      <div id="page-active_occurrences" class="page">
         <h2 class="section-title">Ocorrências em Curso</h2>
         <div class="card">
-          <div class="card-header">LISTAGEM DE OCORRÊNCIAS ATIVAS</div>
+          <div class="card-header">LISTA DE OCORRÊNCIAS ATIVAS</div>
           <div class="card-body">
             <div style="overflow-x: auto;">
               <table id="active-occurrences-table" style="width: 100%; border-collapse: collapse; font-size: 11px;">
@@ -1325,7 +1244,7 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
         <div class="card last-card">
           <div class="card-header">VEÍCULOS AFETOS À OCORRÊNCIA</div>
           <div class="card-body">
-            <div class="vehicles-grid">
+            <div class="grid-2fr">
               <div class="vehicle-card">
                 <div class="field-card-title">1º VEÍCULO</div>
                 <div class="vehicle-fields">
@@ -1489,8 +1408,8 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
               </div>
             </div>
           </div>
-          <div class="grid-3columns">
-            <div class="vehicle-card" style="min-height: 190px; margin: 5px;">
+          <div class="grid-3fr" style="margin: -20px 15px 15px 15px;">
+            <div class="vehicle-card" style="min-height: 190px;  margin: 5px;">
               <div class="field-card-title">1º VEÍCULO</div>
               <div class="vehicle-field-horizontal" style="width: 150px;">
                 <label>Veículo:</label>
@@ -1705,11 +1624,9 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
         <div class="card last-card">
           <div class="card-header">DADOS ADICIONAIS</div>
           <div class="card-body">
-            <div class="victims-card" style="min-height: 100px; margin: 5px;">
-              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-                <div class="field-card-title">
-                  <label style="font-size: 12px;">VÍTIMAS</label>
-                </div>
+            <div class="victims-card" style="min-height: 100px; margin: 5px 0 5px 0;">
+              <div class="field-card-title">
+                <label style="font-size: 12px;">VÍTIMAS</label>
               </div>
               <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
                 <div class="global-field-horizontal">
@@ -1792,17 +1709,17 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
               </div>
             </div>
           </div>
-          <div class="grid-2columns">
-            <div class="extras-card" style="min-height: 100px; margin: 5px;">
-              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 5px;">
+          <div class="grid-2fr" style="margin: -20px 15px 15px 15px;">
+            <div class="extras-card" style="min-height: 100px;  max-width: 100%; margin: 5px 0 0 5px ;">
+              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px;">
                 <div class="field-card-title">
                   <label style="font-size: 12px;">OUTROS MEIOS NO TO</label>
                 </div>
               </div>
               <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal">
+                <div class="global-field-horizontal" style="flex:1;">
                   <label>01.:</label>
-                  <input type="text" style="width: 400px;">
+                  <input type="text" style="width: 100%;">
                 </div>
                 <div class="global-field-horizontal">
                   <label>Veícs.:</label>
@@ -1814,9 +1731,9 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
                 </div>
               </div>
               <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal">
+                <div class="global-field-horizontal" style="flex:1;">
                   <label>02.:</label>
-                  <input type="text" style="width: 400px;">
+                  <input type="text" style="width: 100%;">
                 </div>
                 <div class="global-field-horizontal">
                   <label>Veícs.:</label>
@@ -1828,9 +1745,9 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
                 </div>
               </div>
               <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal">
+                <div class="global-field-horizontal" style="flex:1;">
                   <label>03.:</label>
-                  <input type="text" style="width: 400px;">
+                  <input type="text" style="width: 100%;">
                 </div>
                 <div class="global-field-horizontal">
                   <label>Veícs.:</label>
@@ -1842,9 +1759,9 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
                 </div>
               </div>
               <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal">
+                <div class="global-field-horizontal" style="flex:1;">
                   <label>04.:</label>
-                  <input type="text" style="width: 400px;">
+                  <input type="text" style="width: 100%;">
                 </div>
                 <div class="global-field-horizontal">
                   <label>Veícs.:</label>
@@ -1856,9 +1773,9 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
                 </div>
               </div>
               <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal">
+                <div class="global-field-horizontal" style="flex:1;">
                   <label>05.:</label>
-                  <input type="text" style="width: 400px;">
+                  <input type="text" style="width: 100%;">
                 </div>
                 <div class="global-field-horizontal">
                   <label>Veícs.:</label>
@@ -1870,9 +1787,9 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
                 </div>
               </div>
               <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal">
+                <div class="global-field-horizontal" style="flex:1;">
                   <label>06.:</label>
-                  <input type="text" style="width: 400px;">
+                  <input type="text" style="width: 100%;">
                 </div>
                 <div class="global-field-horizontal">
                   <label>Veícs.:</label>
@@ -1884,9 +1801,9 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
                 </div>
               </div>
               <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal">
+                <div class="global-field-horizontal" style="flex:1;">
                   <label>07.:</label>
-                  <input type="text" style="width: 400px;">
+                  <input type="text" style="width: 100%;">
                 </div>
                 <div class="global-field-horizontal">
                   <label>Veícs.:</label>
@@ -1898,9 +1815,9 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
                 </div>
               </div>
               <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal">
+                <div class="global-field-horizontal" style="flex:1;">
                   <label>08.:</label>
-                  <input type="text" style="width: 400px;">
+                  <input type="text" style="width: 100%;">
                 </div>
                 <div class="global-field-horizontal">
                   <label>Veícs.:</label>
@@ -1912,7 +1829,7 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
                 </div>
               </div>
             </div>
-            <div class="demage-card" style="min-height: 100px; margin: 5px;">
+            <div class="demage-card" style="min-height: 100px; max-width: 100%; margin: 5px 5px 0 0 ;">
               <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px;">
                 <div class="field-card-title">
                   <label style="font-size: 12px;">DANOS CAUSADOS</label>
@@ -1921,77 +1838,78 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
               <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 0px;">
                 <div class="global-field-horizontal" style="flex:1;">
                   <label>01.:</label>
-                  <input type="text" class="responsive-input">
+                  <input type="text" style="width: 100%;">
                 </div>
               </div>
               <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 0px;">
-                <div class="global-field-horizontal">
+                <div class="global-field-horizontal" style="flex:1;">
                   <label>02.:</label>
-                  <input type="text" style="width: 600px;">
+                  <input type="text" style="width: 100%;">
                 </div>
               </div>
               <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal">
+                <div class="global-field-horizontal" style="flex:1;">
                   <label>03.:</label>
-                  <input type="text" style="width: 600px;">
+                  <input type="text" style="width: 100%;">
                 </div>
               </div>
               <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal">
+                <div class="global-field-horizontal" style="flex:1;">
                   <label>04.:</label>
-                  <input type="text" style="width: 600px;">
+                  <input type="text" style="width: 100%;">
                 </div>
               </div>
               <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal">
+                <div class="global-field-horizontal" style="flex:1;">
                   <label>05.:</label>
-                  <input type="text" style="width: 600px;">
+                  <input type="text" style="width: 100%;">
                 </div>
               </div>
               <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal">
+                <div class="global-field-horizontal" style="flex:1;">
                   <label>06.:</label>
-                  <input type="text" style="width: 600px;">
+                  <input type="text" style="width: 100%;">
                 </div>
               </div>
               <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal">
+                <div class="global-field-horizontal" style="flex:1;">
                   <label>07.:</label>
-                  <input type="text" style="width: 600px;">
+                  <input type="text" style="width: 100%;">
                 </div>
               </div>
               <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal">
+                <div class="global-field-horizontal" style="flex:1;">
                   <label>08.:</label>
-                  <input type="text" style="width: 600px;">
+                  <input type="text" style="width: 100%;">
                 </div>
               </div>
             </div>
           </div>
-          <div class="grid-2columns">
-            <div class="burned-card" style="min-height: 100px; margin: 5px;">
-              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
+
+          <div class="grid-2fr" style="margin: -10px 15px 15px 15px;">
+            <div class="burned-card" style="min-height: 100px;  max-width: 100%; margin: 5px 0 15px 5px ;">
+              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px;">
                 <div class="field-card-title">
                   <label style="font-size: 12px;">ÁREA ARDIDA</label>
                 </div>
               </div>
               <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal">
+                <div class="global-field-horizontal" style="flex:1;">
                   <label>01.:</label>
-                  <input type="number" id="area_m2" placeholder="0" style="width: 100px; text-align: center;" oninput="updateHectares()">
+                  <input type="number" id="area_m2" placeholder="0" style="width: 15%; text-align: center;" oninput="updateHectares()">
                   <label>Mts.2</label>
                 </div>
               </div>
               <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal">
+                <div class="global-field-horizontal" style="flex:1;">
                   <label>02.:</label>
-                  <input type="text" id="area_ha" placeholder="0" style="width: 100px; text-align: center;" readonly>
+                  <input type="text" id="area_ha" placeholder="0" style="width: 15%; text-align: center;" readonly>
                   <label>Ha.</label>
                 </div>
               </div>
             </div>
-            <div class="observ-card" style="min-height: 100px; margin: 5px;">
-              <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 0px;">
+            <div class="demage-card" style="min-height: 100px; max-width: 100%; margin: 5px 5px 15px 0 ;">
+              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px;">
                 <div class="field-card-title">
                   <label style="font-size: 12px;">OBSERVAÇÕES</label>
                 </div>
@@ -2003,13 +1921,14 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
               </div>
             </div>
           </div>
-          <div class="form-row" style="margin-top: 20px; margin-right: 5px; display: flex; justify-content: flex-end;">
+          <div class="form-row" style="margin: 33px 0 0 0; display: flex; flex-wrap: wrap; justify-content: flex-end;">
             <div class="action-buttons">
               <button class="btn btn-danger" onclick="generateCloseCREPCMessage()">COMUNICAR CREPC</button>
             </div>
           </div>
         </div>
       </div>
+
       <!---- MÓDULO SOLICITAÇÃO DE DISPONIBILIDADES ---->
       <div id="page-solicitation" class="page">
         <h2 class="section-title">Solicitação de Disponibilidades para Serviços</h2>
@@ -2089,6 +2008,7 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
           </div>
         </div>
       </div>
+
       <!---- MÓDULO INDISPONIBILIDADE DE VEÍCULOS ---->
       <div id="page-indisp" class="page">
         <h2 class="section-title">Indisponibilidade Veículos</h2>
@@ -2201,10 +2121,11 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
           </div>
         </div>
       </div>
+
       <!---- MÓDULO INFORMAÇÃO DE ESTADO GRELHA DO MUNICÍPIO ---->
       <div id="page-municipality-grid" class="page">
         <h2 class="section-title">Info. Grelha Município</h2>
-        <div class="card">
+        <div class="card" style="margin: 0 0 25px 0;">
           <div class="card-header">ESTADO OPERACIONAL DA GRELHA DO MUNICÍPIO</div>
           <div class="card-body">
             <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
@@ -2216,11 +2137,11 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
             </div>
             <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
               <div class="global-field-horizontal">
-                <label style="font-size: 12px;">Motivo do Estado:</label>                
+                <label style="font-size: 12px;">Motivo do Estado:</label>
                 <input type="text" id="municipality_grid_output" placeholder="Indique um motivo para o estado da grelha." style="width: 700px;">
               </div>
             </div>
-            <div class="form-row" style="margin-top: 30px; margin-bottom: -25px; margin-right: -25px; display: flex; justify-content: flex-end;">
+            <div class="form-row" style="margin: 30px -25px -25px 0;display: flex; justify-content: flex-end;">
               <div class="action-buttons">
                 <button class="btn btn-success" onclick="generateMunicipalityGridMessage()">ENVIAR ESTADO</button>
               </div>
@@ -2228,17 +2149,11 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
           </div>
         </div>
       </div>
-      
-      
-      
-      
-      
-      
-      <!-- MÓDULO CONSOLA PAINEL DIGITAL -->
-      <div id="page-digital-panel" class="page">
-        <div class="card">
-          <div class="card-header">CONSOLA PAINEL DIGITAL</div>
 
+      <div id="page-utilities" class="page">
+        <h2 class="section-title">Utiliários</h2>
+        <div class="card card last-card">
+          <div class="card-header">CONSOLA DE UTILITÁRIOS</div>
           <div class="digital-panel-container">
             <div class="panel-sidebar">
               <button class="panel-menu-button active" onclick="showPanelCard('epe')">Estado EPE/PPI</button>
@@ -2257,8 +2172,10 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
                 <p>Visão geral dos Estados de Prontidão Especiais e Planos Prévios de Intervenção.</p>
 
                 <div class="data-grid">
+
                   <div class="data-item">
                     <span class="data-value" style="font-size: 15px;">EPE SIOPS DECIR</span>
+
                     <div class="button-container" id="epe-decir">
                       <button class="panel-btn" style="background-color: lightgrey; color: black;">MONITORIZAÇÃO</button>
                       <button class="panel-btn" style="background-color: lightgrey; color: black;">NÍVEL I</button>
@@ -2268,6 +2185,7 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
                       <button class="panel-btn" style="background-color: lightgrey; color: black;"></button>
                     </div>
                   </div>
+
                   <div class="data-item">
                     <span class="data-value" style="font-size: 15px;">EPE SIOPS DIOPS</span>
                     <div class="button-container" id="epe-diops">
@@ -2279,6 +2197,7 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
                       <button class="panel-btn" style="background-color: lightgrey; color: black;"></button>
                     </div>
                   </div>
+
                   <div class="data-item">
                     <span class="data-value" style="font-size: 15px;">EPE SIOPS NRBQ</span>
                     <div class="button-container" id="epe-nrbq">
@@ -2304,6 +2223,7 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
                       <button class="panel-btn" style="background-color: lightgrey; color: black;"></button>
                     </div>
                   </div>
+
                   <div class="data-item">
                     <span class="data-value" style="font-size: 15px;">PPI A22</span>
                     <div class="button-container" id="ppi-a22">
@@ -2315,6 +2235,7 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
                       <button class="panel-btn" style="background-color: lightgrey; color: black;"></button>
                     </div>
                   </div>
+
                   <div class="data-item">
                     <span class="data-value" style="font-size: 15px;">PPI LINHA FÉRREA</span>
                     <div class="button-container" id="ppi-linfer">
@@ -2326,6 +2247,7 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
                       <button class="panel-btn" style="background-color: lightgrey; color: black;"></button>
                     </div>
                   </div>
+
                 </div>
               </div>
 
@@ -2334,14 +2256,13 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
                 <h3>SITUAÇÃO OPERACIONAL DE VEÍCULOS</h3>
                 <p>Informações detalhadas sobre o funcionamento dos módulos.</p>
                 <div id="vehicleStatus" class="loading">A carregar veículos...</div>
-    <div class="vehicle-grid" id="vehicleGrid"></div>
+                <div class="vehicle-grid" id="vehicleGrid"></div>
               </div>
 
               <!-- Card: Monitorização -->
               <div id="panel-monitoring" class="panel-card">
                 <h3>Monitorização em Tempo Real</h3>
                 <p>Acompanhamento das operações críticas do sistema.</p>
-
                 <div class="data-grid">
                   <div class="data-item">
                     <span class="data-value">2.3s</span>
@@ -2352,7 +2273,6 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
                     <div class="data-label">Tráfego/Hora</div>
                   </div>
                 </div>
-
                 <p><strong>Últimas Atividades:</strong></p>
                 <ul style="list-style: none; padding-left: 0;">
                   <li style="padding: 5px 0; border-bottom: 1px solid #eee;">15:34 - Nova ocorrência registrada</li>
@@ -2365,7 +2285,6 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
               <div id="panel-logs" class="panel-card">
                 <h3>Logs do Sistema</h3>
                 <p>Registo detalhado das operações do sistema.</p>
-
                 <div class="system-log">
                   <div class="log-entry">[2024-08-29 15:34:12] INFO: Sistema iniciado com sucesso</div>
                   <div class="log-entry">[2024-08-29 15:34:15] INFO: Conexão WhatsApp API estabelecida</div>
@@ -2379,7 +2298,6 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
               <div id="panel-settings" class="panel-card">
                 <h3>Configurações do Sistema</h3>
                 <p>Definições e parâmetros de funcionamento.</p>
-
                 <div style="margin: 20px 0;">
                   <p><strong>Configurações Ativas:</strong></p>
                   <ul style="list-style: none; padding-left: 0;">
@@ -2390,25 +2308,27 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
                   </ul>
                 </div>
               </div>
-
               <!-- Card: Análises -->
               <div id="panel-analytics" class="panel-card">
                 <h3>Análises e Relatórios</h3>
                 <p>Estatísticas e métricas de performance do sistema.</p>
-
                 <div class="data-grid">
+
                   <div class="data-item">
                     <span class="data-value">1,247</span>
                     <div class="data-label">Total Mensagens</div>
                   </div>
+
                   <div class="data-item">
                     <span class="data-value">892</span>
                     <div class="data-label">Ocorrências Processadas</div>
                   </div>
+
                   <div class="data-item">
                     <span class="data-value">45</span>
                     <div class="data-label">CTOs Emitidas</div>
                   </div>
+
                   <div class="data-item">
                     <span class="data-value">23</span>
                     <div class="data-label">Utilizadores Ativos</div>
@@ -2419,18 +2339,7 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
           </div>
         </div>
       </div>
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
+
       <!---- MÓDULO GESTÃO DE DADOS ---->
       <div id="page-data" class="page">
         <h2 class="section-title">Data Center</h2>
@@ -2441,20 +2350,28 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
           </div>
         </div>
       </div>
-
     </main>
-
     <footer class="status-bar">
       <div class="system-info">
-        WSMS Auto Creator v3.147.24 | Powered by: Fábio Martins | Connected As: DESKTOP
+        WSMS Auto Creator v3.147.24 | Powered by: Fábio Martins | Sistemas de Informação
       </div>
     </footer>
   </div>
-
-  <script src="config.js"></script>
+  <script src="cfgsbauth.js"></script>
+  <script src="messages.js"></script>
   <script>
     const SUPABASE_URL = 'https://rjkbodfqsvckvnhjwmhg.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqa2JvZGZxc3Zja3ZuaGp3bWhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgxNjM3NjQsImV4cCI6MjA2MzczOTc2NH0.jX5OPZkz1JSSwrahCoFzqGYw8tYkgE8isbn12uP43-0';
+
+    function getSupabaseHeaders() {
+      return {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json'
+      };
+    }
+    const AUTH = 'Fábio Martins (Bombeiro de 2ª)';
+    document.getElementById('authName').textContent = AUTH;
     /* ==============================
         GRUPO UTILITÁRIOS
      ============================== */
@@ -2495,21 +2412,21 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
       });
     }
     document.addEventListener('DOMContentLoaded', () => {
-      document.querySelectorAll('.menu-button[data-page]').forEach(btn => {
+      document.querySelectorAll('.sidebar-menu-button[data-page]').forEach(btn => {
         btn.addEventListener('click', (e) => {
           const pageId = btn.getAttribute('data-page');
           if (!pageId) return;
           showPageAndResetScroll(pageId, {
             smooth: false
           });
-          document.querySelectorAll('.menu-button').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.sidebar-menu-button').forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
         });
       });
     });
     /* ---- NAVEGAÇÃO DA SIDEBAR ----*/
     document.addEventListener("DOMContentLoaded", () => {
-      const buttons = document.querySelectorAll(".menu-button");
+      const buttons = document.querySelectorAll(".sidebar-menu-button");
       const pages = document.querySelectorAll(".page");
 
       function hideAllPages() {
@@ -2555,11 +2472,7 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
     async function fetchVehiclesFromSupabase() {
       try {
         const response = await fetch(`${SUPABASE_URL}/rest/v1/vehicle_status?select=vehicle`, {
-          headers: {
-            'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-            'Content-Type': 'application/json'
-          }
+          headers: getSupabaseHeaders()
         });
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const vehicles = await response.json();
@@ -2592,11 +2505,7 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
     async function fetchClassOccorrById(classId) {
       try {
         const response = await fetch(`${SUPABASE_URL}/rest/v1/class_occorr?select=occorr_descr&class_occorr=eq.${encodeURIComponent(classId)}`, {
-          headers: {
-            'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-            'Content-Type': 'application/json'
-          }
+          headers: getSupabaseHeaders()
         });
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
@@ -2623,11 +2532,7 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
     async function fetchCouncilsFromSupabase() {
       try {
         const resp = await fetch(`${SUPABASE_URL}/rest/v1/councils_select?select=id,council`, {
-          headers: {
-            'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-            'Content-Type': 'application/json'
-          }
+          headers: getSupabaseHeaders()
         });
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const councils = await resp.json();
@@ -2665,11 +2570,7 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
       if (!councilId) return [];
       try {
         const resp = await fetch(`${SUPABASE_URL}/rest/v1/parishes_select?select=parish&council_id=eq.${councilId}`, {
-          headers: {
-            'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-            'Content-Type': 'application/json'
-          }
+          headers: getSupabaseHeaders()
         });
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const parishes = await resp.json();
@@ -2715,11 +2616,7 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
     async function fetchGlobalOptions(category) {
       try {
         const resp = await fetch(`${SUPABASE_URL}/rest/v1/static_options?select=value&category=eq.${category}`, {
-          headers: {
-            'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-            'Content-Type': 'application/json'
-          }
+          headers: getSupabaseHeaders()
         });
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const data = await resp.json();
@@ -2801,7 +2698,7 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
       }
     }
     document.addEventListener('DOMContentLoaded', populateGlobalSelects);
-    /* ---- POPUPUS E AVISSOS ----*/
+    /* ---- POPUPUS E AVISOS ----*/
     function showPopupMissingFields(fields) {
       const modal = document.getElementById('popup-modal');
       const list = document.getElementById('missing-fields-list');
@@ -2813,9 +2710,7 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
         list.appendChild(li);
       });
       modal.classList.add('show');
-      const closeBtn = document.querySelector('.close-btn');
       const okBtn = document.getElementById('popup-ok-btn');
-      if (closeBtn) closeBtn.onclick = () => modal.classList.remove('show');
       if (okBtn) okBtn.onclick = () => modal.classList.remove('show');
     }
 
@@ -2823,14 +2718,13 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
       const modal = document.getElementById('popup-success-modal');
       if (!modal) return;
       modal.classList.add('show');
-      const closeBtn = document.getElementById('success-close-btn');
       const okBtn = document.getElementById('popup-success-ok-btn');
-      const closeAndClear = () => {
-        modal.classList.remove('show');
-        if (clearFields) clearFormFields();
-      };
-      if (closeBtn) closeBtn.onclick = closeAndClear;
-      if (okBtn) okBtn.onclick = closeAndClear;
+      if (okBtn) {
+        okBtn.onclick = () => {
+          modal.classList.remove('show');
+          if (clearFields) clearFormFields();
+        };
+      }
     }
 
     function showPopupWarning(message) {
@@ -2839,15 +2733,12 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
       const textElem = modal.querySelector('p');
       if (textElem) textElem.textContent = message;
       modal.classList.add('show');
-      const closeBtn = document.getElementById('warning-close-btn');
       const okBtn = document.getElementById('popup-warning-ok-btn');
-      const closeModal = () => modal.classList.remove('show');
-      if (closeBtn) closeBtn.onclick = closeModal;
-      if (okBtn) okBtn.onclick = closeModal;
+      if (okBtn) okBtn.onclick = () => modal.classList.remove('show');
     }
     /* ==============================
        GRUPO OCORRÊNCIAS EM CURSO
-    ============================== */ 
+    ============================== */
     function parseDateTime(dateTimeStr) {
       if (!dateTimeStr) return null;
       const [datePart, timePart] = dateTimeStr.split(' ');
@@ -2860,7 +2751,7 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
     let blinkInterval = null;
 
     function startBlinkingSidebarButton() {
-      const btn = document.querySelector('.menu-button[data-page="active_occurrences"]');
+      const btn = document.querySelector('.sidebar-menu-button[data-page="page-active_occurrences"]');
       if (!btn || blinkInterval) return;
       const originalColor = '#343A40';
       const activeColor = '#DC3545';
@@ -2872,7 +2763,7 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
     }
 
     function stopBlinkingSidebarButton() {
-      const btn = document.querySelector('.menu-button[data-page="active_occurrences"]');
+      const btn = document.querySelector('.sidebar-menu-button[data-page="page-active_occurrences"]');
       if (!btn) return;
       clearInterval(blinkInterval);
       blinkInterval = null;
@@ -2898,11 +2789,7 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
       tbody.innerHTML = '';
       try {
         const resp = await fetch(`${SUPABASE_URL}/rest/v1/occurrences_control?select=*,vehicles&status=in.(Em Curso,Em Resolução,Em Conclusão)`, {
-          headers: {
-            'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-            'Content-Type': 'application/json'
-          }
+          headers: getSupabaseHeaders()
         });
         if (!resp.ok) throw new Error(`HTTP error! status: ${resp.status}`);
         const occurrences = await resp.json();
@@ -2949,7 +2836,7 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
       </tr>`;
       }
     }
-    /* ---- POUP ESPECIAL DE  POSIT ---- */
+    /* ---- POPUP ESPECIAL DE  POSIT ---- */
     let currentPositId = null;
 
     function openPositPopup(occurrence) {
@@ -2993,18 +2880,14 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
       const positText = document.getElementById('posit-text').value;
       const desmobilizacao = document.getElementById('desmobilizacao').checked;
       let mensagem = `*🚨🚨INFORMAÇÃO🚨🚨*\n\n`;
-      mensagem += `*Ocorrência: ${occorrence}, ${local}, ${localidade}.*\n`;
-      mensagem += `*\\\\POSIT: ${horaPosit}, ${positText}*`;
-      if (desmobilizacao) mensagem += ` *Desmobilização dos Meios Integrantes.*`;
+      mensagem += `*Ocorrência: ${occorrence}, _${local}, ${localidade}._*\n`;
+      mensagem += `*\\\\POSIT: ${horaPosit},* _${positText}_`;
+      if (desmobilizacao) mensagem += ` _*Desmobilização dos Meios Integrantes.*_`;
       try {
         if (status === "Encerrada") {
           const resp = await fetch(`${SUPABASE_URL}/rest/v1/occurrences_control?id=eq.${currentPositId}`, {
             method: "DELETE",
-            headers: {
-              'apikey': SUPABASE_ANON_KEY,
-              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-              'Content-Type': 'application/json'
-            }
+            headers: getSupabaseHeaders()
           });
           if (!resp.ok) throw new Error(`Erro ao apagar ocorrência: ${resp.status}`);
         } else if (status !== document.getElementById('posit-status').defaultValue) {
@@ -3035,7 +2918,7 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
       }
     };
     document.addEventListener('DOMContentLoaded', () => {
-      const btnActive = document.querySelector('button[data-page="active_occurrences"]');
+      const btnActive = document.querySelector('button[data-page="page-active_occurrences"]');
       if (btnActive) {
         btnActive.addEventListener('click', () => {
           loadActiveOccurrences();
@@ -3334,7 +3217,20 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
         const bbs = card.querySelector('input[type="text"]')?.value?.trim() || '';
         if (vehicle) vehicles.push(bbs ? `${vehicle}|${bbs} BBs.` : vehicle);
       });
-      const currentData = {alertType, alertSource, descrOccorr, localitie, localOccorr, ppiType, alertLevel, ppiGrid, ppiKm, ppiDirection, ppiIncident, vehicles: vehicles.join(',')};
+      const currentData = {
+        alertType,
+        alertSource,
+        descrOccorr,
+        localitie,
+        localOccorr,
+        ppiType,
+        alertLevel,
+        ppiGrid,
+        ppiKm,
+        ppiDirection,
+        ppiIncident,
+        vehicles: vehicles.join(',')
+      };
       if (lastWSMSData && JSON.stringify(lastWSMSData) === JSON.stringify(currentData)) {
         showPopupWarning("Já existe uma ocorrência com as mesmas características.");
         return document.getElementById('wsms_output')?.value || '';
@@ -3386,11 +3282,7 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
           `${String(startDateTime.getHours()).padStart(2,'0')}:${String(startDateTime.getMinutes()).padStart(2,'0')}`;
         const query = `occorrence=eq.${encodeURIComponent(data.descrOccorr)}&local=eq.${encodeURIComponent(data.localOccorr)}&localitie=eq.${encodeURIComponent(data.localitie)}&start_date=eq.${encodeURIComponent(formattedDate)}`;
         const checkResp = await fetch(`${SUPABASE_URL}/rest/v1/occurrences_control?${query}`, {
-          headers: {
-            'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-            'Content-Type': 'application/json'
-          }
+          headers: getSupabaseHeaders()
         });
         const existing = await checkResp.json();
         if (existing.length > 0) {
@@ -3698,15 +3590,17 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
         vehicle = 'INEM';
       }
       const gdh = formatGDH(startDate, startHour);
-      const currentData = {vehicle, startDate, startHour, motive, local};
+      const currentData = {
+        vehicle,
+        startDate,
+        startHour,
+        motive,
+        local
+      };
       try {
         const query = `vehicle=eq.${encodeURIComponent(vehicle)}&start_unavailability_date=eq.${encodeURIComponent(startDate)}&start_unavailability_hour=eq.${encodeURIComponent(startHour)}`;
         const checkResp = await fetch(`${SUPABASE_URL}/rest/v1/vehicle_unavailability?${query}`, {
-          headers: {
-            'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-            'Content-Type': 'application/json'
-          }
+          headers: getSupabaseHeaders()
         });
         const existing = await checkResp.json();
         console.log("🔍 Query usada:", query);
@@ -3770,11 +3664,7 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
       if (!tbody) return;
       try {
         const resp = await fetch(`${SUPABASE_URL}/rest/v1/vehicle_unavailability?status=eq.Em%20Aberto`, {
-          headers: {
-            'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-            'Content-Type': 'application/json'
-          }
+          headers: getSupabaseHeaders()
         });
         const data = await resp.json();
         tbody.innerHTML = '';
@@ -3836,11 +3726,7 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
       try {
         const query = `vehicle=eq.${encodeURIComponent(vehicle)}&unavailability_motive=eq.${encodeURIComponent(motive)}&status=eq.Em%20Aberto`;
         const resp = await fetch(`${SUPABASE_URL}/rest/v1/vehicle_unavailability?${query}`, {
-          headers: {
-            'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-            'Content-Type': 'application/json'
-          }
+          headers: getSupabaseHeaders()
         });
         const data = await resp.json();
         if (data.length === 0) {
@@ -3875,11 +3761,7 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
         showPopupSuccess(true);
         await fetch(`${SUPABASE_URL}/rest/v1/vehicle_unavailability?id=eq.${record.id}`, {
           method: 'DELETE',
-          headers: {
-            'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-            'Content-Type': 'application/json'
-          }
+          headers: getSupabaseHeaders()
         });
         console.log("✅ Indisponibilidade finalizada e removida:", record);
         const endCard = document.getElementById('availability-card');
@@ -3912,6 +3794,7 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
       }
     }
     document.getElementById('state_municipality_grid').addEventListener('change', autoFillMunicipalityGrid);
+
     function toggleMunicipalityGridOutput() {
       const state = document.getElementById('state_municipality_grid')?.value?.trim();
       const motive = document.getElementById('municipality_grid_output');
@@ -3930,11 +3813,11 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
       const motive = document.getElementById('municipality_grid_output');
       let message = '';
       if (state === 'Sem Constrangimentos') {
-        message = `*🚨INFORMAÇÃO🚨*\n\n*✅ Grelha Municipal 100% assegurada sem qualquer constrangimento.*\n*_Planeamento será emitido oportunamente._*`;
+        message = `*🚨INFORMAÇÃO🚨*\n\n*✅ Grelha do Município 100% assegurada sem qualquer constrangimento.*\n\n_Planeamento será emitido oportunamente._`;
       } else if (state === 'Com Constrangimentos') {
-        message = `*🚨INFORMAÇÃO🚨*\n\n*⚠️ Grelha do Município irá encontrar-se com constrangimentos.*\n\n*Motivo: ${motive.value}*\n*_Planeamento será emitido oportunamente._*`;
+        message = `*🚨INFORMAÇÃO🚨*\n\n*⚠️ Grelha do Município irá encontrar-se com constrangimentos.*\n\n*Motivo: ${motive.value}*\n\n_Planeamento será emitido oportunamente._`;
       } else if (state === 'Inoperacional') {
-        message = `*🚨INFORMAÇÃO🚨*\n\n*❌ Grelha do Município irá ficar Inoperacional.*\n\n*Motivo: ${motive.value}*\n*_Planeamento será emitido oportunamente._*`;
+        message = `*🚨INFORMAÇÃO🚨*\n\n*❌ Grelha do Município irá ficar Inoperacional.*\n\n*Motivo: ${motive.value}*\n\n_Planeamento será emitido oportunamente._`;
       }
       if (navigator.clipboard?.writeText) {
         navigator.clipboard.writeText(message).catch(() => {});
@@ -3942,20 +3825,6 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
       showPopupSuccess(false);
       return message;
     }
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     /* ===============================
        GRUPO CONSOLA DO PAINEL DIGITAL      
     =============================== */
@@ -3985,23 +3854,23 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
           {
             bg: 'blue',
             text: 'white'
-          }, // NÍVEL I
+          },
           {
             bg: 'yellow',
             text: 'black'
-          }, // NÍVEL II
+          },
           {
             bg: 'orange',
             text: 'black'
-          }, // NÍVEL III
+          },
           {
             bg: 'red',
             text: 'white'
-          }, // NÍVEL IV
+          },
           {
-            bg: 'purple',
-            text: 'white'
-          } // extra
+            bg: 'lightgrey',
+            text: 'black'
+          }
         ];
         const ppiAeroColors = [{
             bg: 'green',
@@ -4118,11 +3987,7 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
       async loadFromSupabase() {
         try {
           const resp = await fetch(`${this.SUPABASE_URL}/rest/v1/epe_status`, {
-            headers: {
-              'apikey': this.SUPABASE_ANON_KEY,
-              'Authorization': `Bearer ${this.SUPABASE_ANON_KEY}`,
-              'Content-Type': 'application/json'
-            }
+            headers: getSupabaseHeaders()
           });
           if (!resp.ok) throw new Error(`Erro ao ler EPE: ${resp.status}`);
           const data = await resp.json();
@@ -4153,10 +4018,10 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
     document.addEventListener('DOMContentLoaded', () => {
       window.colorManager = new EPEButtonColorManager(SUPABASE_URL, SUPABASE_ANON_KEY);
       window.colorManager.loadFromSupabase();
-      document.querySelectorAll('.menu-button').forEach(btn => {
+      document.querySelectorAll('.sidebar-menu-button').forEach(btn => {
         btn.addEventListener('click', () => {
           const page = btn.dataset.page;
-          if (page === 'page-digital-panel') {
+          if (page === 'page-utilities') {
             if (window.colorManager) {
               window.colorManager.loadFromSupabase();
             }
@@ -4165,21 +4030,10 @@ border: 2px solid #f1c40f; animation: borderBlink 1.5s infinite, gentleShake 3s 
       });
     });
     
-    
-    
-    
-    
-    
-    
- 
-    
-    
-    
-const API_URL = 'https://geostat-360-api.vercel.app/api/vehicle_control';
+    const API_URL = 'https://geostat-360-api.vercel.app/api/vehicle_control';
     let currentVehicleList = [];
     let vehicleStatuses = {};
     let vehicleINOP = {};
-
     async function loadVehiclesFromAPI() {
       try {
         const response = await fetch(API_URL);
@@ -4207,25 +4061,21 @@ const API_URL = 'https://geostat-360-api.vercel.app/api/vehicle_control';
         const type = vehicleCode.split('-')[0];
         const icon = getVehicleIcon(type);
         const btn = document.createElement('div');
-        btn.className = 'vehicle-btn';
+        const typeClass = type.toLowerCase();
+        btn.className = `vehicle-btn ${typeClass}`;
         btn.dataset.vehicle = vehicleCode;
         btn.innerHTML = `<span class="vehicle-icon">${icon}</span><div class="vehicle-code">${vehicleCode}</div>`;
+        btn.addEventListener('click', () => {
+          showVehicleStatusPopup(vehicleCode);
+        });
         vehicleGrid.appendChild(btn);
       });
     }
 
     function getVehicleIcon(type) {
-      const icons = { 'VCOT':'🚒','VCOC':'🚒','VTTP':'🚒','VFCI':'🚒','VECI':'🚒','VRCI':'🚒','VUCI':'🚒','VSAT':'🚒','VSAE':'🚒','VTTU':'🚒','VTTF':'🚒','VTTR':'🚒','VALE':'🚒','VOPE':'🚒','VETA':'🚒','ABCI':'🚑','ABSC':'🚑','ABTM':'🚑','ABTD':'🚑','VDTD':'🚑' };
-      return icons[type] || '🚗';
-    }
-
-    function loadBackupVehicles() {
-      const backupVehicles = ['VCOT-01','VCOT-02','VTTP-01','VTTP-02','VTTP-03','VFCI-01','VFCI-02','VTTU-01','VTTF-02','ABSC-02','ABSC-03','ABSC-04'];
-      currentVehicleList = [...backupVehicles];
-      generateVehicleButtons(backupVehicles);
-      document.getElementById('vehicleStatus').style.display = 'none';
-    }
-
+      const icons = {'VCOT': '🚒', 'VCOC': '🚒', 'VTTP': '🚒', 'VFCI': '🚒', 'VECI': '🚒', 'VRCI': '🚒', 'VUCI': '🚒', 'VSAT': '🚒', 'VSAE': '🚒', 'VTTU': '🚒', 
+                     'VTTF': '🚒', 'VTTR': '🚒', 'VALE': '🚒', 'VOPE': '🚒', 'VETA': '🚒', 'ABCI': '🚑', 'ABSC': '🚑', 'ABTM': '🚑', 'ABTD': '🚑', 'VDTD': '🚑'};
+      return icons[type] || '🚗';}    
     async function loadVehicleStatuses() {
       try {
         const response = await fetch(API_URL);
@@ -4244,7 +4094,7 @@ const API_URL = 'https://geostat-360-api.vercel.app/api/vehicle_control';
       document.querySelectorAll('.vehicle-btn').forEach(btn => {
         const vehicleCode = btn.dataset.vehicle;
         if (!vehicleCode) return;
-        btn.classList.remove('inop','em-servico');
+        btn.classList.remove('inop', 'em-servico');
         if (vehicleINOP[vehicleCode] === true) {
           btn.classList.add('inop');
         } else if (vehicleStatuses[vehicleCode] === 'Em Serviço') {
@@ -4252,14 +4102,10 @@ const API_URL = 'https://geostat-360-api.vercel.app/api/vehicle_control';
         }
       });
     }
-
-    // Inicialização
     window.addEventListener('load', async () => {
       await loadVehiclesFromAPI();
       await loadVehicleStatuses();
     });
-
-    // Auto-refresh dos status a cada 5s
     setInterval(loadVehicleStatuses, 5000);
   </script>
 

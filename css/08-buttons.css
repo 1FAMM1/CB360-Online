@@ -1,0 +1,8 @@
+.action-buttons { display: flex; gap: 10px; justify-content: flex-end; margin: -25px 20px 15px 0; }
+.action-buttons button { min-width: 100px; }
+
+.btn { padding: 8px 20px; border: none; border-radius: 4px; font-weight: bold; font-size: 10px; cursor: pointer; }
+.btn-success { background-color: #28A745; color: white; }
+.btn-success:hover { background-color: #218838; }
+.btn-danger { background-color: #DC3545; color: white; }
+.btn-danger:hover { background-color: #C82333; }

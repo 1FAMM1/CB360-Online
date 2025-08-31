@@ -20,89 +20,25 @@
       constructor(supabaseUrl, supabaseKey) {
         this.SUPABASE_URL = supabaseUrl;
         this.SUPABASE_ANON_KEY = supabaseKey;
-        const epeColors = [{
-            bg: 'green',
-            text: 'white'
-          },
-          {
-            bg: 'blue',
-            text: 'white'
-          },
-          {
-            bg: 'yellow',
-            text: 'black'
-          },
-          {
-            bg: 'orange',
-            text: 'black'
-          },
-          {
-            bg: 'red',
-            text: 'white'
-          },
-          {
-            bg: 'lightgrey',
-            text: 'black'
-          }
-        ];
-        const ppiAeroColors = [{
-            bg: 'green',
-            text: 'white'
-          },
-          {
-            bg: 'yellow',
-            text: 'black'
-          },
-          {
-            bg: 'red',
-            text: 'white'
-          },
-          {
-            bg: 'lightgrey',
-            text: 'black'
-          },
-          {
-            bg: 'lightgrey',
-            text: 'black'
-          },
-          {
-            bg: 'lightgrey',
-            text: 'black'
-          }
-        ];
-        const ppiA22LinferColors = [{
-            bg: 'green',
-            text: 'white'
-          },
-          {
-            bg: 'yellow',
-            text: 'black'
-          },
-          {
-            bg: 'orange',
-            text: 'black'
-          },
-          {
-            bg: 'red',
-            text: 'white'
-          },
-          {
-            bg: 'lightgrey',
-            text: 'black'
-          },
-          {
-            bg: 'lightgrey',
-            text: 'black'
-          }
-        ];
-        this.buttonColors = {
-          "epe-decir": epeColors,
-          "epe-diops": epeColors,
-          "epe-nrbq": epeColors,
-          "ppi-aero": ppiAeroColors,
-          "ppi-a22": ppiA22LinferColors,
-          "ppi-linfer": ppiA22LinferColors
-        };
+        const epeColors = [{bg: 'green', text: 'white'},
+                           {bg: 'blue', text: 'white'},
+                           {bg: 'yellow', text: 'black'},
+                           {bg: 'orange', text: 'black'},
+                           {bg: 'red', text: 'white'},
+                           {bg: 'lightgrey',text: 'black'}];
+        const ppiAeroColors = [{bg: 'green', text: 'white'},
+                               {bg: 'yellow', text: 'black'},
+                               {bg: 'red', text: 'white'},
+                               {bg: 'lightgrey', text: 'black'},
+                               {bg: 'lightgrey', text: 'black'},
+                               {bg: 'lightgrey', text: 'black'}];
+        const ppiA22LinferColors = [{bg: 'green', text: 'white'},
+                                    {bg: 'yellow', text: 'black'},
+                                    {bg: 'orange', text: 'black'},
+                                    {bg: 'red', text: 'white'},
+                                    {bg: 'lightgrey', text: 'black'},
+                                    {bg: 'lightgrey', text: 'black'}];
+        this.buttonColors = {"epe-decir": epeColors, "epe-diops": epeColors, "epe-nrbq": epeColors, "ppi-aero": ppiAeroColors, "ppi-a22": ppiA22LinferColors, "ppi-linfer": ppiA22LinferColors};
         this.initializeButtons();
       }
       initializeButtons() {

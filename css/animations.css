@@ -1,8 +1,6 @@
 /* ============================================
    ANIMATIONS-FIXED.CSS - Animações Corrigidas
    ============================================ */
-
-/* SOLUÇÃO 1: Usar nth-of-type() para contar apenas elementos <p> */
 #page-main {
   opacity: 0;
   animation: pageEnter 1s ease-out forwards;
@@ -31,7 +29,6 @@
   animation: shimmer 3s infinite 1.5s;
 }
 
-/* Animação sequencial para parágrafos usando nth-of-type */
 #page-main .card-body p {
   opacity: 0;
   transform: translateX(-20px);
@@ -62,7 +59,6 @@
   animation-delay: 1.8s;
 }
 
-/* Animação para listas usando nth-of-type */
 #page-main .card-body ul {
   opacity: 0;
   transform: translateX(-20px);
@@ -81,7 +77,6 @@
   animation-delay: 1.7s;
 }
 
-/* Último parágrafo - pode usar :last-of-type também */
 #page-main .card-body p:last-of-type {
   opacity: 0;
   transform: translateY(20px);
@@ -114,56 +109,11 @@
   transform: scale(1.2);
 }
 
-/* Keyframes */
-@keyframes pageEnter {
-  from {
-    opacity: 0;
-    transform: scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes cardSlideUp {
-  from {
-    transform: translateY(50px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-@keyframes textSlideIn {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes finalTextAppear {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes shimmer {
-  0% {
-    transform: translateX(-100%) translateY(-100%) rotate(45deg);
-  }
-  100% {
-    transform: translateX(100%) translateY(100%) rotate(45deg);
-  }
-}
+@keyframes pageEnter {from {opacity: 0;transform: scale(0.98);}to {opacity: 1;transform: scale(1);}}
+@keyframes cardSlideUp {from {transform: translateY(50px);opacity: 0;}to {transform: translateY(0);opacity: 1;}}
+@keyframes textSlideIn {from {opacity: 0;transform: translateX(-20px);}to {opacity: 1;transform: translateX(0);}}
+@keyframes finalTextAppear {from {opacity: 0;transform: translateY(20px);}to {opacity: 1;transform: translateY(0);}}
+@keyframes shimmer {0% {transform: translateX(-100%) translateY(-100%) rotate(45deg);}100% {transform: translateX(100%) translateY(100%) rotate(45deg);}}
+@keyframes inopFade {0%,100% {opacity: 1}50% {opacity: 0.5}}
+@keyframes gentleShake {0%, 100% {transform: translateX(0)}25% {transform: translateX(-1px)}75% {transform: translateX(1px)}}
+@keyframes borderBlink {0%, 100% {border-color: #f1c40f}50% {border-color: #e67e22}}

@@ -140,64 +140,20 @@
     });
     /* ---- ESTADOS OPERACIONAIS DE VEÍCULOS ----*/
     /* --- Controlo de Status de Veículos ---*/
-    const API_URL = 'https://geostat-360-api.vercel.app/api/vehicle_control';
+        const API_URL = 'https://geostat-360-api.vercel.app/api/vehicle_control';
     let currentVehicleList = [];
     let vehicleStatuses = {};
     let vehicleINOP = {};
-    async function loadVehiclesFromAPI() {
-      try {
-        const response = await fetch(API_URL);
-        if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        const data = await response.json();
-        if (data.success && data.vehicles && Array.isArray(data.vehicles)) {
-          currentVehicleList = data.vehicles.sort();
-          if (data.vehicleStatuses) vehicleStatuses = data.vehicleStatuses;
-          if (data.vehicleINOP) vehicleINOP = data.vehicleINOP;
-          generateVehicleButtons(currentVehicleList);
-          document.getElementById('vehicleStatus').style.display = 'none';
-          updateVehicleButtonColors();
-        } else {
-          throw new Error('Formato de resposta inválido');
-        }
-      } catch (e) {
-        loadBackupVehicles();
-      }
-    }
-
-    function generateVehicleButtons(vehicles) {
-      const vehicleGrid = document.getElementById('vehicleGrid');
-      vehicleGrid.innerHTML = '';
-      vehicles.forEach(vehicleCode => {
-        const type = vehicleCode.split('-')[0];
-        const icon = getVehicleIcon(type);
-        const btn = document.createElement('div');
-        const typeClass = type.toLowerCase();
-        btn.className = `vehicle-btn ${typeClass}`;
-        btn.dataset.vehicle = vehicleCode;
-        btn.innerHTML = `<span class="vehicle-icon">${icon}</span><div class="vehicle-code">${vehicleCode}</div>`;
-        btn.addEventListener('click', () => {
-          showVehicleStatusPopup(vehicleCode);
-        });
-        vehicleGrid.appendChild(btn);
-      });
-    }
-
+    let selectedVehicleCode = null;
+    const vehicleStatusModal = document.getElementById('popup-vehicle-status');
+    const vehicleStatusTitle = document.getElementById('popup-vehicle-title');
+    const vehicleStatusSelect = document.getElementById('vehicle-status-select');
+    const vehicleStatusOkBtn = document.getElementById('popup-vehicle-ok-btn');
+    const vehicleStatusCancelBtn = document.getElementById('popup-vehicle-cancel-btn');
     function getVehicleIcon(type) {
       const icons = {'VCOT': '🚒', 'VCOC': '🚒', 'VTTP': '🚒', 'VFCI': '🚒', 'VECI': '🚒', 'VRCI': '🚒', 'VUCI': '🚒', 'VSAT': '🚒', 'VSAE': '🚒', 'VTTU': '🚒', 
                      'VTTF': '🚒', 'VTTR': '🚒', 'VALE': '🚒', 'VOPE': '🚒', 'VETA': '🚒', 'ABCI': '🚑', 'ABSC': '🚑', 'ABTM': '🚑', 'ABTD': '🚑', 'VDTD': '🚑'};
-      return icons[type] || '🚗';}    
-    async function loadVehicleStatuses() {
-      try {
-        const response = await fetch(API_URL);
-        const data = await response.json();
-        if (data.success) {
-          vehicleStatuses = data.vehicleStatuses || {};
-          vehicleINOP = data.vehicleINOP || {};
-          updateVehicleButtonColors();
-        }
-      } catch (error) {
-        console.error('Erro ao carregar status:', error);
-      }
+      return icons[type] || '🚗';
     }
 
     function updateVehicleButtonColors() {
@@ -212,8 +168,123 @@
         }
       });
     }
+    async function loadVehiclesFromAPI() {
+      try {
+        const response = await fetch(API_URL);
+        if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const data = await response.json();
+        if (data.success && Array.isArray(data.vehicles)) {
+          currentVehicleList = data.vehicles.sort();
+          vehicleStatuses = data.vehicleStatuses || {};
+          vehicleINOP = data.vehicleINOP || {};
+          generateVehicleButtons(currentVehicleList);
+          updateVehicleButtonColors();
+          document.getElementById('vehicleStatus').style.display = 'none';
+        } else {
+          throw new Error('Formato de resposta inválido');
+        }
+      } catch (e) {
+        loadBackupVehicles(); // fallback
+      }
+    }
+    async function loadVehicleStatuses() {
+      try {
+        const response = await fetch(API_URL);
+        const data = await response.json();
+        if (data.success) {
+          vehicleStatuses = data.vehicleStatuses || {};
+          vehicleINOP = data.vehicleINOP || {};
+          updateVehicleButtonColors();
+        }
+      } catch (error) {
+        console.error('Erro ao carregar status:', error);
+      }
+    }
+    async function updateVehicleStatusAPI(vehicleCode, newStatus) {
+      let dados = {};
+      if (newStatus === "Inop") {
+        dados.inop = true;
+      } else if (newStatus === "Em Serviço") {
+        dados.current_status = "Em Serviço";
+        dados.inop = false;
+      } else {
+        dados.inop = false;
+        dados.current_status = "Disponível no Quartel";
+      }
+      try {
+        const response = await fetch(API_URL, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            vehicle: vehicleCode,
+            ...dados
+          })
+        });
+        const result = await response.json();
+        if (result.success) {
+          if (dados.inop) {
+            vehicleINOP[vehicleCode] = true;
+            vehicleStatuses[vehicleCode] = "Inop";
+          } else {
+            vehicleINOP[vehicleCode] = false;
+            vehicleStatuses[vehicleCode] = dados.current_status;
+          }
+          updateVehicleButtonColors();
+        } else {
+          alert('Erro ao atualizar status: ' + (result.error || 'Desconhecido'));
+        }
+      } catch (error) {
+        alert('Erro na requisição: ' + error.message);
+      }
+    }
+    function generateVehicleButtons(vehicles) {
+      const vehicleGrid = document.getElementById('vehicleGrid');
+      vehicleGrid.innerHTML = '';
+      vehicles.forEach(vehicleCode => {
+        const type = vehicleCode.split('-')[0];
+        const icon = getVehicleIcon(type);
+        const btn = document.createElement('div');
+        const typeClass = type.toLowerCase();
+        btn.className = `vehicle-btn ${typeClass}`;
+        btn.dataset.vehicle = vehicleCode;
+        btn.innerHTML = `<span class="vehicle-icon">${icon}</span><div class="vehicle-code">${vehicleCode}</div>`;
+        btn.addEventListener('click', () => openVehicleStatusModal(vehicleCode));
+        vehicleGrid.appendChild(btn);
+      });
+    }
+
+    function openVehicleStatusModal(vehicleCode) {
+      selectedVehicleCode = vehicleCode;
+      vehicleStatusTitle.textContent = `${vehicleCode}`;
+      if (vehicleINOP[vehicleCode]) {
+        vehicleStatusSelect.value = "Inop";
+      } else if (vehicleStatuses[vehicleCode] === "Em Serviço") {
+        vehicleStatusSelect.value = "Em Serviço";
+      } else {
+        vehicleStatusSelect.value = "Disponível no Quartel";
+      }
+      vehicleStatusModal.classList.add('show');
+    }
+
+    function closeVehicleStatusModal() {
+      vehicleStatusModal.classList.remove('show');
+      selectedVehicleCode = null;
+    }
+    vehicleStatusOkBtn.addEventListener('click', async () => {
+      if (!selectedVehicleCode) return;
+      const newStatus = vehicleStatusSelect.value;
+      await updateVehicleStatusAPI(selectedVehicleCode, newStatus);
+      closeVehicleStatusModal();
+    });
+    vehicleStatusCancelBtn.addEventListener('click', closeVehicleStatusModal);
+    window.addEventListener('click', (e) => {
+      if (e.target === vehicleStatusModal) closeVehicleStatusModal();
+    });
     window.addEventListener('load', async () => {
       await loadVehiclesFromAPI();
       await loadVehicleStatuses();
     });
+    // Atualização automática a cada 5s
     setInterval(loadVehicleStatuses, 5000);

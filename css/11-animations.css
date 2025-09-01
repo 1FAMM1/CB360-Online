@@ -6,7 +6,7 @@
   animation: pageEnter 1s ease-out forwards;
 }
 
-#page-main .card {
+#page-main > .card {
   transform: translateY(50px);
   opacity: 0;
   animation: cardSlideUp 0.8s ease-out 0.3s forwards;

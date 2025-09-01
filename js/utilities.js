@@ -174,7 +174,18 @@
         if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         const data = await response.json();
         if (data.success && Array.isArray(data.vehicles)) {
-          currentVehicleList = data.vehicles.sort();
+          const typeOrder = {'VCOT': 1, 'VCOC': 2, 'VTTP': 3, 'VFCI': 4, 'VECI': 5, 'VRCI': 6, 'VUCI': 7, 'VSAT': 8, 'VSAE': 9, 'VTTU': 10,
+                             'VTTF': 11, 'VTTR': 12, 'VALE': 13, 'VOPE': 14, 'VETA': 15,  'ABSC': 20, 'ABCI': 21, 'ABTM': 22, 'ABTD': 23, 'VDTD': 24};
+          currentVehicleList = data.vehicles.sort((a, b) => {
+            const [typeA, numA] = a.split('-');
+            const [typeB, numB] = b.split('-');
+            const orderA = typeOrder[typeA] || 999;
+            const orderB = typeOrder[typeB] || 999;
+            if (orderA === orderB) {
+              return parseInt(numA) - parseInt(numB);
+            }
+            return orderA - orderB;
+          });
           vehicleStatuses = data.vehicleStatuses || {};
           vehicleINOP = data.vehicleINOP || {};
           generateVehicleButtons(currentVehicleList);
@@ -184,7 +195,7 @@
           throw new Error('Formato de resposta inválido');
         }
       } catch (e) {
-        loadBackupVehicles(); // fallback
+        console.error('❌ Erro ao carregar veículos:', e);
       }
     }
     async function loadVehicleStatuses() {

@@ -1,0 +1,75 @@
+/* ============================================
+   ANIMATIONS.CSS - Animações e Efeitos
+   ============================================ */
+
+/* Animação da Página Principal */
+#page-main {
+  opacity: 0;
+  animation: pageEnter 1s ease-out forwards;
+}
+
+#page-main .card {
+  transform: translateY(50px);
+  opacity: 0;
+  animation: cardSlideUp 0.8s ease-out 0.3s forwards;
+}
+
+#page-main .card-header {
+  position: relative;
+  overflow: hidden;
+}
+
+#page-main .card-header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transform: rotate(45deg);
+  animation: shimmer 3s infinite 1.5s;
+}
+
+#page-main .card-body p {
+  opacity: 0;
+  transform: translateX(-20px);
+  animation: textSlideIn 0.6s ease-out forwards;
+}
+
+#page-main .card-body p:nth-child(1) {
+  animation-delay: 0.8s;
+}
+
+#page-main .card-body p:nth-child(2) {
+  animation-delay: 1s;
+}
+
+#page-main .card-body p:nth-child(3) {
+  animation-delay: 1.2s;
+}
+
+#page-main .card-body p:nth-child(5) {
+  animation-delay: 1.6s;
+}
+
+#page-main .card-body p:nth-child(7) {
+  animation-delay: 2.0s;
+}
+
+#page-main .card-body ul {
+  opacity: 0;
+  transform: translateX(-20px);
+  animation: textSlideIn 0.6s ease-out forwards;
+}
+
+#page-main .card-body ul:nth-of-type(1) {
+  animation-delay: 1.4s;
+}
+
+#page-main .card-body ul:nth-of-type(2) {
+  animation-delay: 1.8s;
+}
+
+#page-main .card-body ul:nth-of-type(3) {
+  animation-delay: 2.

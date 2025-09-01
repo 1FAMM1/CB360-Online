@@ -1,4 +1,7 @@
-/* Sistema de veículos e estados */
+/* ============================================
+   VEHICLES.CSS - Estilos dos Veículos
+   ============================================ */
+
 .vehicle-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
@@ -75,7 +78,7 @@
 .vehicle-btn.inop {
   border-color: #7f8c8d !important;
   color: #2c3e50 !important;
-  opacity: 0.6;      
+  opacity: 0.6;
   position: relative;
   animation: inopFade 2s infinite;
 }
@@ -94,7 +97,7 @@
   font-weight: bold;
   z-index: 10;
   opacity: 0.5;
-}    
+}
 
 .vehicle-btn.inop .vehicle-code {
   color: #7f8c8d !important;

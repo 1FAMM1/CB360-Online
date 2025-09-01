@@ -99,15 +99,7 @@
   opacity: 0.5;
 }
 
-.vehicle-btn.inop .vehicle-code {
-  color: #7f8c8d !important;
-  text-decoration: line-through;
-}
-
-.vehicle-btn.em-servico {
-  border: 2px solid #f1c40f;
-  animation: borderBlink 1.5s infinite, gentleShake 3s infinite;
-}
+@keyframes inopFade {0%,100% {opacity: 1}50% {opacity: 0.5}}
 
 .vehicle-btn.em-servico::before {
   content: "🚨 Em Serviço";
@@ -123,6 +115,19 @@
   font-weight: bold;
   z-index: 10;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+ @keyframes gentleShake {0%, 100% {transform: translateX(0)}25% {transform: translateX(-1px)}75% {transform: translateX(1px)}}
+ @keyframes borderBlink {0%, 100% {border-color: #f1c40f}50% {border-color: #e67e22}}
+
+.vehicle-btn.inop .vehicle-code {
+  color: #7f8c8d !important;
+  text-decoration: line-through;
+}
+
+.vehicle-btn.em-servico {
+  border: 2px solid #f1c40f;
+  animation: borderBlink 1.5s infinite, gentleShake 3s infinite;
 }
 
 /* Cores por Tipo de Veículo */

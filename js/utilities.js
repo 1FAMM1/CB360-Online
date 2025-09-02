@@ -361,4 +361,4 @@
     // INICIALIZAÇÃO
     // ===============================
     window.addEventListener('load', loadVehiclesFromAPI);
-    setInterval(loadVehiclesFromAPI, 5000);
+    setInterval(loadVehiclesFromAPI, 10 * 60 * 1000);

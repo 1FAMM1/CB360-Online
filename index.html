@@ -1311,19 +1311,41 @@
                 <div class="vehicle-grid" id="vehicleGrid"></div>
               </div>
 
+              <!-- Card: Monitorização -->
               <div id="panel-monitoring" class="panel-card">
                 <h3>GESTÃO DE VEÍCULOS DO CORPO DE BOMBEIROS</h3>
                 <p>Adição / Remoção de veículos da frota do Corpo de Bobeiros.</p>
                 <div class="data-grid">
                   <div class="data-item">
-                    <span class="data-value" style="font-size: 15px; margin-bottom:20px;">REMOVER VEÍCULO</span>
-                    <div class="data-label">Selecione o veículo a remover</div>
+                    <span class="data-value" style="font-size: 15px; margin-bottom:10px;">REMOVER VEÍCULO</span>
+                    <div class="data-label" style="font-size: 12px; margin-bottom:5px;">Selecione o veículo a remover</div>
+                    <div class="form-row" style="justify-content: center;">
+                    <div class="vehicle-field-horizontal">
+                      <select id="remove_vehicle" style="width: 200px;">
+                      </select>
+                    </div>
+                      </div>
+                    <div class="form-row" style="margin: 40px 0 0 25px; justify-content: center;">
+                      <div class="action-buttons">
+                        <button class="btn btn-danger" onclick="generateCloseCREPCMessage()">REMOVER</button>
+                      </div>
+                    </div>
                   </div>
                   <div class="data-item">
-                    <span class="data-value" style="font-size: 15px; margin-bottom:20px;">ADICIONAR VEÍCULO</span>
-                    <div class="data-label">Designe o veículo a adionar</div>
+                    <span class="data-value" style="font-size: 15px; margin-bottom:10px;">ADICIONAR VEÍCULO</span>
+                    <div class="data-label" style="font-size: 12px; margin-bottom:5px;">Designe o veículo a adionar</div>
+                    <div class="form-row" style="justify-content: center;">
+                    <div class="global-field-horizontal">
+                    <input type="text" id="add_vehicle" placeholder="Ex. ABSC-01" style="width: 200px;">
+                       </div>
+                      </div>
+                    <div class="form-row" style="margin: 40px 0 0 25px; justify-content: center;">
+                      <div class="action-buttons">
+                        <button class="btn btn-success" onclick="generateCloseCREPCMessage()">ADICIONAR</button>
+                      </div>
+                    </div>
                   </div>
-                </div>                
+                </div>
               </div>
 
               <!-- Card: Logs -->
@@ -1379,3 +1401,4 @@
   <script></script>
 </body>
 </html>
+

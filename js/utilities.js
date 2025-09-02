@@ -139,21 +139,21 @@
       });
     });
 // ===============================
-// CONFIG GLOBAL
+// CONFIGURAÇÃO GLOBAL
 // ===============================
 const API_URL = 'https://geostat-360-api.vercel.app/api/vehicle_control';
-// Ordem de prioridade dos veículos
 const TYPE_ORDER = {
   'VCOT': 1, 'VCOC': 2, 'VTTP': 3, 'VFCI': 4, 'VECI': 5, 'VRCI': 6, 'VUCI': 7,
   'VSAT': 8, 'VSAE': 9, 'VTTU': 10, 'VTTF': 11, 'VTTR': 12, 'VALE': 13, 'VOPE': 14,
   'VETA': 15, 'ABSC': 20, 'ABCI': 21, 'ABTM': 22, 'ABTD': 23, 'VDTD': 24
 };
+
 // Estado global
 let vehicles = [];
 let vehicleStatuses = {};
 let vehicleINOP = {};
 let selectedVehicleCode = null;
-let reloadTimer;
+
 // Referências UI
 const vehicleGrid = document.getElementById('vehicleGrid');
 const vehicleStatusModal = document.getElementById('popup-vehicle-status');
@@ -172,10 +172,9 @@ const statusMessage = document.getElementById('vehicle_status_message');
 // ===============================
 function getVehicleIcon(type) {
   const icons = {
-    'VCOT': '🚒', 'VCOC': '🚒', 'VTTP': '🚒', 'VFCI': '🚒', 'VECI': '🚒',
-    'VRCI': '🚒', 'VUCI': '🚒', 'VSAT': '🚒', 'VSAE': '🚒', 'VTTU': '🚒',
-    'VTTF': '🚒', 'VTTR': '🚒', 'VALE': '🚒', 'VOPE': '🚒', 'VETA': '🚒',
-    'ABCI': '🚑', 'ABSC': '🚑', 'ABTM': '🚑', 'ABTD': '🚑', 'VDTD': '🚑'
+    'VCOT':'🚒','VCOC':'🚒','VTTP':'🚒','VFCI':'🚒','VECI':'🚒','VRCI':'🚒','VUCI':'🚒',
+    'VSAT':'🚒','VSAE':'🚒','VTTU':'🚒','VTTF':'🚒','VTTR':'🚒','VALE':'🚒','VOPE':'🚒',
+    'VETA':'🚒','ABCI':'🚑','ABSC':'🚑','ABTM':'🚑','ABTD':'🚑','VDTD':'🚑'
   };
   return icons[type] || '🚗';
 }
@@ -186,191 +185,237 @@ function sortVehicles(list) {
     const [typeB, numB] = b.split('-');
     const orderA = TYPE_ORDER[typeA] || 999;
     const orderB = TYPE_ORDER[typeB] || 999;
-    if (orderA === orderB) return parseInt(numA) - parseInt(numB);
+    if(orderA === orderB) return parseInt(numA) - parseInt(numB);
     return orderA - orderB;
   });
 }
 
-function showStatus(message, type = '') {
-  statusMessage.textContent = message;
-  statusMessage.className = 'status ' + type;
+function showStatus(message, type='') {
+  if(statusMessage){
+    statusMessage.textContent = message;
+    statusMessage.className = 'status ' + type;
+  }
 }
 
 // ===============================
-// API
+// FUNÇÕES DE API
 // ===============================
 async function loadVehiclesFromAPI() {
   try {
-    const response = await fetch(API_URL);
-    if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    const data = await response.json();
-    if (data.success && Array.isArray(data.vehicles)) {
+    const res = await fetch(API_URL);
+    if(!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    const data = await res.json();
+    if(data.success && Array.isArray(data.vehicles)){
       vehicles = sortVehicles(data.vehicles);
       vehicleStatuses = data.vehicleStatuses || {};
       vehicleINOP = data.vehicleINOP || {};
       generateVehicleButtons();
       populateVehicleSelect();
       updateVehicleButtonColors();
-      document.getElementById('vehicleStatus').style.display = 'none';
     } else {
       throw new Error('Formato de resposta inválido');
     }
-  } catch (e) {
-    console.error('❌ Erro ao carregar veículos:', e);
+  } catch(e){
+    console.error('Erro ao carregar veículos:', e);
+    showStatus('❌ Erro ao carregar veículos', 'error');
   }
 }
 
-async function updateVehicleStatusAPI(vehicleCode, newStatus) {
-  let dados = {};
-  if (newStatus === "Inop") dados.inop = true;
-  else if (newStatus === "Em Serviço") {
-    dados.current_status = "Em Serviço";
-    dados.inop = false;
-  } else {
-    dados.current_status = "Disponível no Quartel";
-    dados.inop = false;
-  }
-  try {
-    const response = await fetch(API_URL, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ vehicle: vehicleCode, ...dados })
+async function updateVehicleStatusAPI(vehicleCode, newStatus){
+  const payload = newStatus === "Inop" ? {inop:true} :
+                  newStatus === "Em Serviço" ? {inop:false, current_status:"Em Serviço"} :
+                  {inop:false, current_status:"Disponível no Quartel"};
+  try{
+    const res = await fetch(API_URL,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({vehicle:vehicleCode,...payload})
     });
-    const result = await response.json();
-    if (result.success) {
-      vehicleINOP[vehicleCode] = dados.inop;
-      vehicleStatuses[vehicleCode] = dados.inop ? "Inop" : dados.current_status;
+    const data = await res.json();
+    if(data.success){
+      vehicleINOP[vehicleCode] = payload.inop;
+      vehicleStatuses[vehicleCode] = payload.inop ? "Inop" : payload.current_status;
       updateVehicleButtonColors();
-      restartReloadTimer(); // Atualiza imediatamente e reinicia o timer
     } else {
-      alert('Erro ao atualizar status: ' + (result.error || 'Desconhecido'));
+      alert('Erro ao atualizar status: ' + (data.error || 'Desconhecido'));
     }
-  } catch (error) {
-    alert('Erro na requisição: ' + error.message);
+  } catch(e){
+    alert('Erro na requisição: ' + e.message);
   }
 }
 
-async function addVehicle() {
-  const novoVeiculo = vehicleInput.value.trim().toUpperCase();
-  if (!novoVeiculo) return showStatus('❌ Informe o código do veículo.', 'error');
-  if (vehicles.includes(novoVeiculo)) return showStatus(`⚠️ O veículo "${novoVeiculo}" já existe.`, 'error');
+async function addVehicle(){
+  const newVehicle = vehicleInput.value.trim().toUpperCase();
+  if(!newVehicle) return showStatus('❌ Informe o código do veículo.', 'error');
+  if(vehicles.includes(newVehicle)) return showStatus(`⚠️ Veículo "${newVehicle}" já existe.`, 'error');
   showStatus('➕ Adicionando veículo...', 'loading');
   btnAdd.disabled = btnRemove.disabled = true;
-  try {
-    const res = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ vehicle: novoVeiculo, status: "Disponível no Quartel", action: "add" }),
+  try{
+    const res = await fetch(API_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({vehicle:newVehicle,status:"Disponível no Quartel",action:"add"})
     });
     const data = await res.json();
-    if (data.success) {
-      showStatus(`✅ Veículo "${novoVeiculo}" adicionado!`, 'success');
+    if(data.success){
+      showStatus(`✅ Veículo "${newVehicle}" adicionado!`, 'success');
       vehicleInput.value = '';
-      await refreshVehicles();
-    } else showStatus('❌ Erro ao adicionar: ' + (data.error || 'Desconhecido'), 'error');
-  } catch (error) {
-    showStatus('❌ Erro ao adicionar veículo: ' + error.message, 'error');
-  } finally {
+      await loadVehiclesFromAPI();
+    } else {
+      showStatus('❌ Erro ao adicionar: ' + (data.error || 'Desconhecido'), 'error');
+    }
+  } catch(e){
+    showStatus('❌ Erro ao adicionar veículo: ' + e.message, 'error');
+  } finally{
     btnAdd.disabled = btnRemove.disabled = false;
   }
 }
 
-async function removeVehicle() {
-  const veiculoSelecionado = vehicleSelect.value;
-  if (!veiculoSelecionado) return showStatus('❌ Selecione um veículo para remover.', 'error');
-  if (!confirm(`Remover veículo "${veiculoSelecionado}"?`)) return;
+async function removeVehicle(){
+  const selected = vehicleSelect.value;
+  if(!selected) return showStatus('❌ Selecione um veículo para remover.', 'error');
+  if(!confirm(`Remover veículo "${selected}"?`)) return;
   showStatus('❌ Removendo veículo...', 'loading');
   btnAdd.disabled = btnRemove.disabled = true;
-  try {
-    const res = await fetch(`${API_URL}?vehicle=${encodeURIComponent(veiculoSelecionado)}`, { method: 'DELETE' });
+  try{
+    const res = await fetch(`${API_URL}?vehicle=${encodeURIComponent(selected)}`,{method:'DELETE'});
     const data = await res.json();
-    if (data.success) {
-      showStatus(`✅ Veículo "${veiculoSelecionado}" removido!`, 'success');
-      await refreshVehicles();
-    } else showStatus('❌ Erro ao remover: ' + (data.error || 'Desconhecido'), 'error');
-  } catch (error) {
-    showStatus('❌ Erro ao remover veículo: ' + error.message, 'error');
-  } finally {
+    if(data.success){
+      showStatus(`✅ Veículo "${selected}" removido!`, 'success');
+      await loadVehiclesFromAPI();
+    } else {
+      showStatus('❌ Erro ao remover: ' + (data.error || 'Desconhecido'), 'error');
+    }
+  } catch(e){
+    showStatus('❌ Erro ao remover veículo: ' + e.message, 'error');
+  } finally{
     btnAdd.disabled = btnRemove.disabled = false;
   }
 }
 
 // ===============================
-// UI
+// FUNÇÕES DE UI
 // ===============================
-function generateVehicleButtons() {
+function generateVehicleButtons(){
   vehicleGrid.innerHTML = '';
-  vehicles.forEach(vehicleCode => {
-    const type = vehicleCode.split('-')[0];
+  vehicles.forEach(code=>{
+    const type = code.split('-')[0];
     const btn = document.createElement('div');
     btn.className = `vehicle-btn ${type.toLowerCase()}`;
-    btn.dataset.vehicle = vehicleCode;
-    btn.innerHTML = `<span class="vehicle-icon">${getVehicleIcon(type)}</span><div class="vehicle-code">${vehicleCode}</div>`;
-    btn.addEventListener('click', () => openVehicleStatusModal(vehicleCode));
+    btn.dataset.vehicle = code;
+    btn.innerHTML = `<span class="vehicle-icon">${getVehicleIcon(type)}</span><div class="vehicle-code">${code}</div>`;
+    btn.addEventListener('click',()=>openVehicleStatusModal(code));
     vehicleGrid.appendChild(btn);
   });
 }
 
-function populateVehicleSelect() {
+function populateVehicleSelect(){
   vehicleSelect.innerHTML = '';
-  vehicles.forEach(vehicle => {
-    const option = document.createElement('option');
-    option.value = vehicle;
-    option.textContent = vehicle;
-    vehicleSelect.appendChild(option);
+  vehicles.forEach(vehicle=>{
+    const opt = document.createElement('option');
+    opt.value = vehicle;
+    opt.textContent = vehicle;
+    vehicleSelect.appendChild(opt);
   });
 }
 
-function updateVehicleButtonColors() {
-  document.querySelectorAll('.vehicle-btn').forEach(btn => {
+function updateVehicleButtonColors(){
+  document.querySelectorAll('.vehicle-btn').forEach(btn=>{
     const code = btn.dataset.vehicle;
-    btn.classList.remove('inop', 'em-servico');
-    if (vehicleINOP[code]) btn.classList.add('inop');
-    else if (vehicleStatuses[code] === 'Em Serviço') btn.classList.add('em-servico');
+    btn.classList.remove('inop','em-servico');
+    if(vehicleINOP[code]) btn.classList.add('inop');
+    else if(vehicleStatuses[code]==='Em Serviço') btn.classList.add('em-servico');
   });
 }
 
-function openVehicleStatusModal(vehicleCode) {
+function openVehicleStatusModal(vehicleCode){
   selectedVehicleCode = vehicleCode;
   vehicleStatusTitle.textContent = vehicleCode;
-  if (vehicleINOP[vehicleCode]) vehicleStatusSelect.value = "Inop";
+  if(vehicleINOP[vehicleCode]) vehicleStatusSelect.value = "Inop";
   else vehicleStatusSelect.value = vehicleStatuses[vehicleCode] || "Disponível no Quartel";
   vehicleStatusModal.classList.add('show');
 }
 
-function closeVehicleStatusModal() {
+function closeVehicleStatusModal(){
   vehicleStatusModal.classList.remove('show');
   selectedVehicleCode = null;
 }
 
 // ===============================
-// REFRESH COM TIMER DINÂMICO
-// ===============================
-async function refreshVehicles() {
-  await loadVehiclesFromAPI();
-  restartReloadTimer();
-}
-
-function restartReloadTimer() {
-  if (reloadTimer) clearTimeout(reloadTimer);
-  reloadTimer = setTimeout(refreshVehicles, 10 * 60 * 1000); // 10 minutos
-}
-
-// ===============================
 // EVENTOS
 // ===============================
-vehicleStatusOkBtn.addEventListener('click', async () => {
-  if (!selectedVehicleCode) return;
+vehicleStatusOkBtn.addEventListener('click', async ()=>{
+  if(!selectedVehicleCode) return;
   await updateVehicleStatusAPI(selectedVehicleCode, vehicleStatusSelect.value);
   closeVehicleStatusModal();
 });
 vehicleStatusCancelBtn.addEventListener('click', closeVehicleStatusModal);
-window.addEventListener('click', (e) => { if (e.target === vehicleStatusModal) closeVehicleStatusModal(); });
+window.addEventListener('click', (e) => {
+  if (e.target === vehicleStatusModal) closeVehicleStatusModal();
+});
 
 btnAdd.addEventListener('click', addVehicle);
 btnRemove.addEventListener('click', removeVehicle);
 
 // ===============================
-// INICIALIZAÇÃO
+// ATUALIZAÇÃO AUTOMÁTICA
 // ===============================
-window.addEventListener('load', refreshVehicles);
+let autoUpdateTimer = null;
+const AUTO_UPDATE_INTERVAL = 10 * 60 * 1000; // 10 minutos
+
+async function refreshVehicles() {
+  await loadVehiclesFromAPI();
+  restartAutoUpdateTimer();
+}
+
+function restartAutoUpdateTimer() {
+  if (autoUpdateTimer) clearTimeout(autoUpdateTimer);
+  autoUpdateTimer = setTimeout(refreshVehicles, AUTO_UPDATE_INTERVAL);
+}
+
+// Inicialização
+window.addEventListener('load', async () => {
+  await loadVehiclesFromAPI();
+  restartAutoUpdateTimer();
+});
+
+// ===============================
+// INTEGRAR ATUALIZAÇÃO IMEDIATA AO DETECTAR ALTERAÇÕES
+// ===============================
+
+// Aqui, sempre que addVehicle, removeVehicle ou updateVehicleStatusAPI for chamado
+// chamamos refreshVehicles() no final para atualizar imediatamente
+// Exemplo:
+
+async function addVehicleWithRefresh() {
+  await addVehicle();
+  await refreshVehicles();
+}
+
+async function removeVehicleWithRefresh() {
+  await removeVehicle();
+  await refreshVehicles();
+}
+
+async function updateVehicleStatusWithRefresh(vehicleCode, newStatus) {
+  await updateVehicleStatusAPI(vehicleCode, newStatus);
+  await refreshVehicles();
+}
+
+// Substituir os event listeners originais por estas funções:
+btnAdd.removeEventListener('click', addVehicle);
+btnAdd.addEventListener('click', addVehicleWithRefresh);
+
+btnRemove.removeEventListener('click', removeVehicle);
+btnRemove.addEventListener('click', removeVehicleWithRefresh);
+
+vehicleStatusOkBtn.removeEventListener('click', async ()=>{
+  if(!selectedVehicleCode) return;
+  await updateVehicleStatusAPI(selectedVehicleCode, vehicleStatusSelect.value);
+  closeVehicleStatusModal();
+});
+vehicleStatusOkBtn.addEventListener('click', async ()=>{
+  if(!selectedVehicleCode) return;
+  await updateVehicleStatusWithRefresh(selectedVehicleCode, vehicleStatusSelect.value);
+  closeVehicleStatusModal();
+});

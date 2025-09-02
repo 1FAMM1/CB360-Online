@@ -50,28 +50,35 @@
         });
       });
     });
-    /* ---- NAVEGAÇÃO DA SIDEBAR ----*/
     document.addEventListener("DOMContentLoaded", () => {
-      const buttons = document.querySelectorAll(".sidebar-menu-button");
-      const pages = document.querySelectorAll(".page");
+    const buttons = document.querySelectorAll(".sidebar-menu-button");
+    const pages = document.querySelectorAll(".page");
 
-      function hideAllPages() {
-        pages.forEach(p => p.classList.remove("active"));
-      }
+    function hideAllPages() {
+      pages.forEach(p => p.classList.remove("active"));
+    }
 
-      function removeActiveFromButtons() {
-        buttons.forEach(btn => btn.classList.remove("active"));
+  function removeActiveFromButtons() {
+      buttons.forEach(btn => btn.classList.remove("active"));
+  }
+
+    buttons.forEach(btn => {
+      btn.addEventListener("click", () => {
+      hideAllPages();
+      removeActiveFromButtons();
+      btn.classList.add("active");
+
+    const pageId = btn.getAttribute("data-page"); // define pageId
+    const page = document.getElementById(pageId);
+      if (page) page.classList.add("active");
+
+      // Atualiza veículos só se for a página do painel
+      if (pageId === "page-utilities") {
+        loadVehiclesFromAPI();
       }
-      buttons.forEach(btn => {
-        btn.addEventListener("click", () => {
-          hideAllPages();
-          removeActiveFromButtons();
-          btn.classList.add("active");
-          const page = document.getElementById(btn.getAttribute("data-page"));
-          if (page) page.classList.add("active");
-        });
-      });
     });
+  });
+});
     /* ---- OBTENÇÃO E FORMATAÇÃO DE DATAS ----*/
     function padNumber(num) {
       return String(num).padStart(2, '0');

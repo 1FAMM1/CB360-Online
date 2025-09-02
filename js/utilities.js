@@ -403,4 +403,4 @@
     // INICIALIZAÇÃO
     // ===============================
     window.addEventListener('load', loadVehiclesFromAPI);
-    setInterval(loadVehiclesFromAPI, 3000); // 🔄 apenas 1 intervalo global
+    setInterval(loadVehiclesFromAPI, 10 * 60 * 1000);

@@ -142,18 +142,19 @@
 // CONFIG GLOBAL
 // ===============================
 const API_URL = 'https://geostat-360-api.vercel.app/api/vehicle_control';
+// Ordem de prioridade dos veículos
 const TYPE_ORDER = {
   'VCOT': 1, 'VCOC': 2, 'VTTP': 3, 'VFCI': 4, 'VECI': 5, 'VRCI': 6, 'VUCI': 7,
   'VSAT': 8, 'VSAE': 9, 'VTTU': 10, 'VTTF': 11, 'VTTR': 12, 'VALE': 13, 'VOPE': 14,
   'VETA': 15, 'ABSC': 20, 'ABCI': 21, 'ABTM': 22, 'ABTD': 23, 'VDTD': 24
 };
-
+// Estado global
 let vehicles = [];
 let vehicleStatuses = {};
 let vehicleINOP = {};
-let vehiclesHash = ''; // hash para detetar mudanças
 let selectedVehicleCode = null;
-
+let reloadTimer;
+// Referências UI
 const vehicleGrid = document.getElementById('vehicleGrid');
 const vehicleStatusModal = document.getElementById('popup-vehicle-status');
 const vehicleStatusTitle = document.getElementById('popup-vehicle-title');
@@ -165,14 +166,16 @@ const vehicleInput = document.getElementById('add_vehicle');
 const btnAdd = document.getElementById('add_vehicle_btn');
 const btnRemove = document.getElementById('remove_vehicle_btn');
 const statusMessage = document.getElementById('vehicle_status_message');
+
 // ===============================
 // FUNÇÕES AUXILIARES
 // ===============================
 function getVehicleIcon(type) {
   const icons = {
-    'VCOT': '🚒','VCOC': '🚒','VTTP': '🚒','VFCI': '🚒','VECI': '🚒','VRCI': '🚒','VUCI': '🚒',
-    'VSAT': '🚒','VSAE': '🚒','VTTU': '🚒','VTTF': '🚒','VTTR': '🚒','VALE': '🚒','VOPE': '🚒','VETA': '🚒',
-    'ABCI': '🚑','ABSC': '🚑','ABTM': '🚑','ABTD': '🚑','VDTD': '🚑'
+    'VCOT': '🚒', 'VCOC': '🚒', 'VTTP': '🚒', 'VFCI': '🚒', 'VECI': '🚒',
+    'VRCI': '🚒', 'VUCI': '🚒', 'VSAT': '🚒', 'VSAE': '🚒', 'VTTU': '🚒',
+    'VTTF': '🚒', 'VTTR': '🚒', 'VALE': '🚒', 'VOPE': '🚒', 'VETA': '🚒',
+    'ABCI': '🚑', 'ABSC': '🚑', 'ABTM': '🚑', 'ABTD': '🚑', 'VDTD': '🚑'
   };
   return icons[type] || '🚗';
 }
@@ -192,33 +195,23 @@ function showStatus(message, type = '') {
   statusMessage.textContent = message;
   statusMessage.className = 'status ' + type;
 }
+
 // ===============================
-// FUNÇÕES DE API
+// API
 // ===============================
 async function loadVehiclesFromAPI() {
   try {
     const response = await fetch(API_URL);
     if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     const data = await response.json();
-
     if (data.success && Array.isArray(data.vehicles)) {
-      const sortedVehicles = sortVehicles(data.vehicles);
-
-      // Gerar hash simples da lista e status
-      const newHash = JSON.stringify(sortedVehicles) + JSON.stringify(data.vehicleStatuses) + JSON.stringify(data.vehicleINOP);
-
-      if (newHash !== vehiclesHash) {
-        vehicles = sortedVehicles;
-        vehicleStatuses = data.vehicleStatuses || {};
-        vehicleINOP = data.vehicleINOP || {};
-        generateVehicleButtons();
-        populateVehicleSelect();
-        updateVehicleButtonColors();
-        vehiclesHash = newHash; // atualizar hash
-        console.log('📌 Lista alterada, UI atualizada');
-      } else {
-        console.log('🟢 Sem alterações na frota');
-      }
+      vehicles = sortVehicles(data.vehicles);
+      vehicleStatuses = data.vehicleStatuses || {};
+      vehicleINOP = data.vehicleINOP || {};
+      generateVehicleButtons();
+      populateVehicleSelect();
+      updateVehicleButtonColors();
+      document.getElementById('vehicleStatus').style.display = 'none';
     } else {
       throw new Error('Formato de resposta inválido');
     }
@@ -229,9 +222,8 @@ async function loadVehiclesFromAPI() {
 
 async function updateVehicleStatusAPI(vehicleCode, newStatus) {
   let dados = {};
-  if (newStatus === "Inop") {
-    dados.inop = true;
-  } else if (newStatus === "Em Serviço") {
+  if (newStatus === "Inop") dados.inop = true;
+  else if (newStatus === "Em Serviço") {
     dados.current_status = "Em Serviço";
     dados.inop = false;
   } else {
@@ -249,6 +241,7 @@ async function updateVehicleStatusAPI(vehicleCode, newStatus) {
       vehicleINOP[vehicleCode] = dados.inop;
       vehicleStatuses[vehicleCode] = dados.inop ? "Inop" : dados.current_status;
       updateVehicleButtonColors();
+      restartReloadTimer(); // Atualiza imediatamente e reinicia o timer
     } else {
       alert('Erro ao atualizar status: ' + (result.error || 'Desconhecido'));
     }
@@ -261,7 +254,6 @@ async function addVehicle() {
   const novoVeiculo = vehicleInput.value.trim().toUpperCase();
   if (!novoVeiculo) return showStatus('❌ Informe o código do veículo.', 'error');
   if (vehicles.includes(novoVeiculo)) return showStatus(`⚠️ O veículo "${novoVeiculo}" já existe.`, 'error');
-
   showStatus('➕ Adicionando veículo...', 'loading');
   btnAdd.disabled = btnRemove.disabled = true;
   try {
@@ -274,10 +266,8 @@ async function addVehicle() {
     if (data.success) {
       showStatus(`✅ Veículo "${novoVeiculo}" adicionado!`, 'success');
       vehicleInput.value = '';
-      await loadVehiclesFromAPI();
-    } else {
-      showStatus('❌ Erro ao adicionar: ' + (data.error || 'Desconhecido'), 'error');
-    }
+      await refreshVehicles();
+    } else showStatus('❌ Erro ao adicionar: ' + (data.error || 'Desconhecido'), 'error');
   } catch (error) {
     showStatus('❌ Erro ao adicionar veículo: ' + error.message, 'error');
   } finally {
@@ -289,7 +279,6 @@ async function removeVehicle() {
   const veiculoSelecionado = vehicleSelect.value;
   if (!veiculoSelecionado) return showStatus('❌ Selecione um veículo para remover.', 'error');
   if (!confirm(`Remover veículo "${veiculoSelecionado}"?`)) return;
-
   showStatus('❌ Removendo veículo...', 'loading');
   btnAdd.disabled = btnRemove.disabled = true;
   try {
@@ -297,18 +286,17 @@ async function removeVehicle() {
     const data = await res.json();
     if (data.success) {
       showStatus(`✅ Veículo "${veiculoSelecionado}" removido!`, 'success');
-      await loadVehiclesFromAPI();
-    } else {
-      showStatus('❌ Erro ao remover: ' + (data.error || 'Desconhecido'), 'error');
-    }
+      await refreshVehicles();
+    } else showStatus('❌ Erro ao remover: ' + (data.error || 'Desconhecido'), 'error');
   } catch (error) {
     showStatus('❌ Erro ao remover veículo: ' + error.message, 'error');
   } finally {
     btnAdd.disabled = btnRemove.disabled = false;
   }
 }
+
 // ===============================
-// FUNÇÕES DE UI
+// UI
 // ===============================
 function generateVehicleButtons() {
   vehicleGrid.innerHTML = '';
@@ -354,6 +342,20 @@ function closeVehicleStatusModal() {
   vehicleStatusModal.classList.remove('show');
   selectedVehicleCode = null;
 }
+
+// ===============================
+// REFRESH COM TIMER DINÂMICO
+// ===============================
+async function refreshVehicles() {
+  await loadVehiclesFromAPI();
+  restartReloadTimer();
+}
+
+function restartReloadTimer() {
+  if (reloadTimer) clearTimeout(reloadTimer);
+  reloadTimer = setTimeout(refreshVehicles, 10 * 60 * 1000); // 10 minutos
+}
+
 // ===============================
 // EVENTOS
 // ===============================
@@ -363,13 +365,12 @@ vehicleStatusOkBtn.addEventListener('click', async () => {
   closeVehicleStatusModal();
 });
 vehicleStatusCancelBtn.addEventListener('click', closeVehicleStatusModal);
-window.addEventListener('click', (e) => {
-  if (e.target === vehicleStatusModal) closeVehicleStatusModal();
-});
+window.addEventListener('click', (e) => { if (e.target === vehicleStatusModal) closeVehicleStatusModal(); });
+
 btnAdd.addEventListener('click', addVehicle);
 btnRemove.addEventListener('click', removeVehicle);
+
 // ===============================
 // INICIALIZAÇÃO
 // ===============================
-window.addEventListener('load', loadVehiclesFromAPI);
-setInterval(loadVehiclesFromAPI, 10 * 60 * 1000);
+window.addEventListener('load', refreshVehicles);

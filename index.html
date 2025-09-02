@@ -1221,24 +1221,20 @@
             <div class="panel-sidebar">
               <button class="panel-menu-button active" onclick="showPanelCard('epe')">Estado EPE/PPI</button>
               <button class="panel-menu-button" onclick="showPanelCard('system')">Sitop. Veículos</button>
-              <button class="panel-menu-button" onclick="showPanelCard('monitoring')">Monitorização</button>
+              <button class="panel-menu-button" onclick="showPanelCard('monitoring')">Gestão de Frota</button>
               <button class="panel-menu-button" onclick="showPanelCard('logs')">Logs do Sistema</button>
               <button class="panel-menu-button" onclick="showPanelCard('settings')">Configurações</button>
               <button class="panel-menu-button" onclick="showPanelCard('analytics')">Análises</button>
             </div>
 
-            <!-- Área de Conteúdo -->
             <div class="panel-content">
               <!-- Card: Dashboard -->
               <div id="panel-epe" class="panel-card active">
                 <h3>ESTADOS DE PRONTIDÃO ESPECIAL / PLANOS PRÉVIOS DE INTERVENÇÃO</h3>
                 <p>Visão geral dos Estados de Prontidão Especiais e Planos Prévios de Intervenção.</p>
-
                 <div class="data-grid">
-
                   <div class="data-item">
                     <span class="data-value" style="font-size: 15px;">EPE SIOPS DECIR</span>
-
                     <div class="button-container" id="epe-decir">
                       <button class="panel-btn" style="background-color: lightgrey; color: black;">MONITORIZAÇÃO</button>
                       <button class="panel-btn" style="background-color: lightgrey; color: black;">NÍVEL I</button>
@@ -1248,7 +1244,6 @@
                       <button class="panel-btn" style="background-color: lightgrey; color: black;"></button>
                     </div>
                   </div>
-
                   <div class="data-item">
                     <span class="data-value" style="font-size: 15px;">EPE SIOPS DIOPS</span>
                     <div class="button-container" id="epe-diops">
@@ -1260,7 +1255,6 @@
                       <button class="panel-btn" style="background-color: lightgrey; color: black;"></button>
                     </div>
                   </div>
-
                   <div class="data-item">
                     <span class="data-value" style="font-size: 15px;">EPE SIOPS NRBQ</span>
                     <div class="button-container" id="epe-nrbq">
@@ -1273,7 +1267,6 @@
                     </div>
                   </div>
                 </div>
-
                 <div class="data-grid">
                   <div class="data-item">
                     <span class="data-value" style="font-size: 15px;">PPI AEROPORTO</span>
@@ -1286,7 +1279,6 @@
                       <button class="panel-btn" style="background-color: lightgrey; color: black;"></button>
                     </div>
                   </div>
-
                   <div class="data-item">
                     <span class="data-value" style="font-size: 15px;">PPI A22</span>
                     <div class="button-container" id="ppi-a22">
@@ -1298,7 +1290,6 @@
                       <button class="panel-btn" style="background-color: lightgrey; color: black;"></button>
                     </div>
                   </div>
-
                   <div class="data-item">
                     <span class="data-value" style="font-size: 15px;">PPI LINHA FÉRREA</span>
                     <div class="button-container" id="ppi-linfer">
@@ -1313,7 +1304,6 @@
                 </div>
               </div>
 
-              <!-- Card: Sistema -->
               <div id="panel-system" class="panel-card">
                 <h3>SITUAÇÃO OPERACIONAL DE VEÍCULOS</h3>
                 <p>Visão geral do estado operacional dos veículos.</p>
@@ -1321,10 +1311,19 @@
                 <div class="vehicle-grid" id="vehicleGrid"></div>
               </div>
 
-              <!-- Card: Monitorização -->
               <div id="panel-monitoring" class="panel-card">
-                <h3>Monitorização em Tempo Real</h3>
-                <p>Acompanhamento das operações críticas do sistema.</p>                
+                <h3>GESTÃO DE VEÍCULOS DO CORPO DE BOMBEIROS</h3>
+                <p>Adição / Remoção de veículos da frota do Corpo de Bobeiros.</p>
+                <div class="data-grid">
+                  <div class="data-item">
+                    <span class="data-value" style="font-size: 15px; margin-bottom:20px;">REMOVER VEÍCULO</span>
+                    <div class="data-label">Selecione o veículo a remover</div>
+                  </div>
+                  <div class="data-item">
+                    <span class="data-value" style="font-size: 15px; margin-bottom:20px;">ADICIONAR VEÍCULO</span>
+                    <div class="data-label">Designe o veículo a adionar</div>
+                  </div>
+                </div>                
               </div>
 
               <!-- Card: Logs -->
@@ -1380,15 +1379,3 @@
   <script></script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-

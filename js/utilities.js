@@ -138,16 +138,39 @@
         });
       });
     });
-    // ===============================
+// ===============================
     // CONFIG GLOBAL
     // ===============================
     const API_URL = 'https://geostat-360-api.vercel.app/api/vehicle_control';
-    const TYPE_ORDER = {'VCOT': 1, 'VCOC': 2, 'VTTP': 3, 'VFCI': 4, 'VECI': 5, 'VRCI': 6, 'VUCI': 7, 'VSAT': 8, 'VSAE': 9, 'VTTU': 10,
-                        'VTTF': 11, 'VTTR': 12, 'VALE': 13, 'VOPE': 14, 'VETA': 15, 'ABSC': 20, 'ABCI': 21, 'ABTM': 22, 'ABTD': 23, 'VDTD': 24};
-    let vehicles = [];
-    let vehicleStatuses = {};
-    let vehicleINOP = {};
-    let selectedVehicleCode = null;
+    // Ordem de prioridade dos veículos
+    const TYPE_ORDER = {
+      'VCOT': 1,
+      'VCOC': 2,
+      'VTTP': 3,
+      'VFCI': 4,
+      'VECI': 5,
+      'VRCI': 6,
+      'VUCI': 7,
+      'VSAT': 8,
+      'VSAE': 9,
+      'VTTU': 10,
+      'VTTF': 11,
+      'VTTR': 12,
+      'VALE': 13,
+      'VOPE': 14,
+      'VETA': 15,
+      'ABSC': 20,
+      'ABCI': 21,
+      'ABTM': 22,
+      'ABTD': 23,
+      'VDTD': 24
+    };
+    // Estado global
+    let vehicles = []; // Lista ordenada de veículos
+    let vehicleStatuses = {}; // Status atuais
+    let vehicleINOP = {}; // Veículos inoperacionais
+    let selectedVehicleCode = null; // Veículo selecionado no modal
+    // Referências UI
     const vehicleGrid = document.getElementById('vehicleGrid');
     const vehicleStatusModal = document.getElementById('popup-vehicle-status');
     const vehicleStatusTitle = document.getElementById('popup-vehicle-title');
@@ -159,10 +182,32 @@
     const btnAdd = document.getElementById('add_vehicle_btn');
     const btnRemove = document.getElementById('remove_vehicle_btn');
     const statusMessage = document.getElementById('vehicle_status_message');
-
+    // ===============================
+    // FUNÇÕES AUXILIARES
+    // ===============================
     function getVehicleIcon(type) {
-      const icons = {'VCOT': '🚒', 'VCOC': '🚒', 'VTTP': '🚒', 'VFCI': '🚒', 'VECI': '🚒', 'VRCI': '🚒', 'VUCI': '🚒', 'VSAT': '🚒',  'VSAE': '🚒',  'VTTU': '🚒',
-                     'VTTF': '🚒', 'VTTR': '🚒', 'VALE': '🚒', 'VOPE': '🚒', 'VETA': '🚒', 'ABCI': '🚑', 'ABSC': '🚑', 'ABTM': '🚑', 'ABTD': '🚑', 'VDTD': '🚑'};
+      const icons = {
+        'VCOT': '🚒',
+        'VCOC': '🚒',
+        'VTTP': '🚒',
+        'VFCI': '🚒',
+        'VECI': '🚒',
+        'VRCI': '🚒',
+        'VUCI': '🚒',
+        'VSAT': '🚒',
+        'VSAE': '🚒',
+        'VTTU': '🚒',
+        'VTTF': '🚒',
+        'VTTR': '🚒',
+        'VALE': '🚒',
+        'VOPE': '🚒',
+        'VETA': '🚒',
+        'ABCI': '🚑',
+        'ABSC': '🚑',
+        'ABTM': '🚑',
+        'ABTD': '🚑',
+        'VDTD': '🚑'
+      };
       return icons[type] || '🚗';
     }
 
@@ -181,7 +226,9 @@
       statusMessage.textContent = message;
       statusMessage.className = 'status ' + type;
     }
-
+    // ===============================
+    // API
+    // ===============================
     async function loadVehiclesFromAPI() {
       try {
         const response = await fetch(API_URL);
@@ -291,7 +338,9 @@
         btnAdd.disabled = btnRemove.disabled = false;
       }
     }
-
+    // ===============================
+    // UI
+    // ===============================
     function generateVehicleButtons() {
       vehicleGrid.innerHTML = '';
       vehicles.forEach(vehicleCode => {
@@ -335,6 +384,10 @@
     function closeVehicleStatusModal() {
       vehicleStatusModal.classList.remove('show');
       selectedVehicleCode = null;
+    }
+    // ===============================
+    // EVENTOS
+    // ===============================
     vehicleStatusOkBtn.addEventListener('click', async () => {
       if (!selectedVehicleCode) return;
       await updateVehicleStatusAPI(selectedVehicleCode, vehicleStatusSelect.value);
@@ -346,5 +399,8 @@
     });
     btnAdd.addEventListener('click', addVehicle);
     btnRemove.addEventListener('click', removeVehicle);
+    // ===============================
+    // INICIALIZAÇÃO
+    // ===============================
     window.addEventListener('load', loadVehiclesFromAPI);
-    setInterval(loadVehiclesFromAPI, 2000);
+    setInterval(loadVehiclesFromAPI, 3000); // 🔄 apenas 1 intervalo global

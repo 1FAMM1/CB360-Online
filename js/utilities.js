@@ -199,6 +199,8 @@
           generateVehicleButtons();
           populateVehicleSelect();
           updateVehicleButtonColors();
+          updateVehicleCount();
+          updateVehicleStats(); 
           document.getElementById('vehicleStatus').style.display = 'none';
         } else {
           throw new Error('Formato de resposta inválido');
@@ -207,6 +209,46 @@
         console.error('❌ Erro ao carregar veículos:', e);
       }
     }
+
+    function updateVehicleCount() {
+      const totalVehicles = vehicles.length;
+      const sumVehiclesElement = document.getElementById('sum-vehicles');
+      if (sumVehiclesElement) {
+        sumVehiclesElement.textContent = totalVehicles;
+      }
+    }
+
+    function updateVehicleCount() {
+      const totalVehicles = vehicles.length;
+      const sumVehiclesElement = document.getElementById('sum-vehicles');
+      if (sumVehiclesElement) {
+        sumVehiclesElement.textContent = totalVehicles;
+      }
+    }
+
+    function updateVehicleStats() {
+      let countQuartel = 0;
+      let countServico = 0;
+      let countInop = 0;
+
+      vehicles.forEach(vehicleCode => {
+      if (vehicleINOP[vehicleCode]) {
+      countInop++;
+      } else if (vehicleStatuses[vehicleCode] === 'Em Serviço') {
+      countServico++;
+      } else {
+      countQuartel++;
+      }
+    });
+           
+    const quartelElement = document.getElementById('count-quartel');
+    const servicoElement = document.getElementById('count-servico');
+    const inopElement = document.getElementById('count-inop');
+    if (quartelElement) quartelElement.textContent = countQuartel;
+    if (servicoElement) servicoElement.textContent = countServico;
+    if (inopElement) inopElement.textContent = countInop;
+    }
+
     async function updateVehicleStatusAPI(vehicleCode, newStatus) {
       let dados = {};
       if (newStatus === "Inop") {
@@ -234,6 +276,7 @@
           vehicleINOP[vehicleCode] = dados.inop;
           vehicleStatuses[vehicleCode] = dados.inop ? "Inop" : dados.current_status;
           updateVehicleButtonColors();
+          updateVehicleStats();
         } else {
           alert('Erro ao atualizar status: ' + (result.error || 'Desconhecido'));
         }

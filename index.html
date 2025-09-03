@@ -1223,8 +1223,8 @@
               <button class="panel-menu-button active" onclick="showPanelCard('epe')">Estados de EPE/PPI</button>
               <button class="panel-menu-button" onclick="showPanelCard('fleet-management')">Gestão de Frota</button>
               <button class="panel-menu-button" onclick="showPanelCard('vehicle-operational-status')">Sitop. Veículos</button>
-              <button class="panel-menu-button" onclick="showPanelCard('logs')">Informações Relevantes</button>
-              <button class="panel-menu-button" onclick="showPanelCard('settings')">Cortes de Vias/Arruamentos</button>
+              <button class="panel-menu-button" onclick="showPanelCard('relev-info')">Informações Relevantes</button>
+              <button class="panel-menu-button" onclick="showPanelCard('interruption-roads-streets')">Cortes de Vias/Arruamentos</button>
               <button class="panel-menu-button" onclick="showPanelCard('air-centers')">Centros de Meios Aéreos</button>
               <button class="panel-menu-button" onclick="showPanelCard('analytics')">Disponibilidade de Elementos</button>
             </div>
@@ -1375,7 +1375,7 @@
               </div>
 
               <!-- Card: Informações Relevantes-->
-              <div id="panel-logs" class="panel-card">
+              <div id="panel-relev-info" class="panel-card">
                 <h3>INFORMAÇÕES RELEVANTES</h3>
                 <p>Informações de carater relevante para conhecimento geral.</p>
                 <div class="data-grid">
@@ -1456,12 +1456,16 @@
                 </div>
               </div>
               
+              <!-- Card: Cortes de Vias -->
+              <div id="panel-interruption-roads-streets" class="panel-card">
+                <h3>CORTES DE VIAS E/OU ARRUAMANETOS</h3>
+                <p>Vias ou Arruamentos inpedidos ao trânsito (Obras, Eventos, Etc..</p>
+              </div>
 
-              <!-- Card: Configurações -->
-              <div id="panel-settings" class="panel-card">
-                <h3>Configurações do Sistema</h3>
-                <p>Definições e parâmetros de funcionamento.</p>
-               
+              <!-- Card: Centros de Meios Aéreos -->
+              <div id="panel-air-centers" class="panel-card">
+                <h3>CENTROS DE MEIOS AÉREOS</h3>
+                <p>CMA's Ativos na Região.</p>
               </div>
               
               <!-- Card: Análises -->
@@ -1504,10 +1508,3 @@
   <script></script>
 </body>
 </html>
-
-
-
-
-
-
-

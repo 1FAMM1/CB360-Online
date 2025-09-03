@@ -1364,7 +1364,7 @@
                 </div>
                </div>                                            
               </div>                
-                <div id="vehicle_status_message" class="status"></div>
+              <div id="vehicle_status_message" class="status"></div>
               </div>              
 
               <div id="panel-vehicle-operational-status" class="panel-card">
@@ -1374,10 +1374,86 @@
                 <div class="vehicle-grid" id="vehicleGrid"></div>
               </div>
               
-              <!-- Card: Logs -->
+              <!-- Card: Informações Relevantes-->
               <div id="panel-logs" class="panel-card">
-                <h3>Logs do Sistema</h3>
-                <p>Registo detalhado das operações do sistema.</p>                      
+                <h3>INFORMAÇÕES RELEVANTES</h3>
+                <p>Informações de carater relevante para conhecimento geral.</p>
+                <div class="data-grid">
+                  <div class="data-item" id="relev-info-01" data-row-id="1">
+                    <div class="global-field-horizontal">
+                      <label>De:</label>
+                      <input type="text" id="from-01" style="width: 207px;">
+                    </div>
+                    <div class="global-field-horizontal">
+                      <label>Para:</label>
+                      <input type="text" id="to-01" style="width: 200px;">
+                    </div>
+                    <div class="global-field-horizontal">
+                      <label>Info:</label>
+                      <textarea id="info-01" placeholder="Escreva a info..." rows="4" style="width: 100%; height: 75px; resize: vertical;"></textarea>
+                    </div>
+                    <div class="action-buttons" style="margin: 10px 0 0 0;">
+                      <button class="btn btn-danger" onclick="clearInfoGroupFields('01')">LIMPAR</button>
+                      <button class="btn btn-success" onclick="saveInfoGroupFields('01')">EMITIR</button>
+                    </div>
+                  </div>
+                  <div class="data-item" id="relev-info-02" data-row-id="2">
+                    <div class="global-field-horizontal">
+                      <label>De:</label>
+                      <input type="text" id="from-02" style="width: 207px;">
+                    </div>
+                    <div class="global-field-horizontal">
+                      <label>Para:</label>
+                      <input type="text" id="to-02" style="width: 200px;">
+                    </div>
+                    <div class="global-field-horizontal">
+                      <label>Info:</label>
+                      <textarea id="info-02" placeholder="Escreva a info..." rows="4" style="width: 100%; height: 75px; resize: vertical;"></textarea>
+                    </div>
+                    <div class="action-buttons" style="margin: 10px 0 0 0;">
+                      <button class="btn btn-danger" onclick="clearInfoGroupFields('02')">LIMPAR</button>
+                      <button class="btn btn-success" onclick="saveInfoGroupFields('02')">EMITIR</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="data-grid">
+                  <div class="data-item" id="relev-info-03" data-row-id="3">
+                    <div class="global-field-horizontal">
+                      <label>De:</label>
+                      <input type="text" id="from-03" style="width: 200px;">
+                    </div>
+                    <div class="global-field-horizontal">
+                      <label>Para:</label>
+                      <input type="text" id="to-03" style="width: 200px;">
+                    </div>
+                    <div class="global-field-horizontal">
+                      <label>Info:</label>
+                      <textarea id="info-03" placeholder="Escreva a info..." rows="4" style="width: 100%; height: 75px; resize: vertical;"></textarea>
+                    </div>
+                    <div class="action-buttons" style="margin: 10px 0 0 0;">
+                      <button class="btn btn-danger" onclick="clearInfoGroupFields('03')">LIMPAR</button>
+                      <button class="btn btn-success" onclick="saveInfoGroupFields('03')">EMITIR</button>
+                    </div>
+                  </div>
+                  <div class="data-item" id="relev-info-04" data-row-id="4">
+                    <div class="global-field-horizontal">
+                      <label>De:</label>
+                      <input type="text" id="from-04" style="width: 207px;">
+                    </div>
+                    <div class="global-field-horizontal">
+                      <label>Para:</label>
+                      <input type="text" id="to-04" style="width: 200px;">
+                    </div>
+                    <div class="global-field-horizontal">
+                      <label>Info:</label>
+                      <textarea id="info-04" placeholder="Escreva a info..." rows="4" style="width: 100%; height: 75px; resize: vertical;"></textarea>
+                    </div>
+                    <div class="action-buttons" style="margin: 10px 0 0 0;">
+                      <button class="btn btn-danger" onclick="clearInfoGroupFields('04')">LIMPAR</button>
+                      <button class="btn btn-success" onclick="saveInfoGroupFields('04')">EMITIR</button>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <!-- Card: Configurações -->
@@ -1427,6 +1503,7 @@
   <script></script>
 </body>
 </html>
+
 
 
 

@@ -1,4 +1,4 @@
-/* ===============================
+   /* ===============================
        GRUPO CONSOLA DO PAINEL DIGITAL      
     =============================== */
     /* ---- CONTROLO DOS BOTÕES DA SIDEBAR ----*/
@@ -139,7 +139,7 @@
       });
     });
     // ===============================
-    // CONFIG GLOBAL
+    // STATUS DE VEÍCULOS
     // ===============================
     const API_URL = 'https://geostat-360-api.vercel.app/api/vehicle_control';
     const TYPE_ORDER = {'VCOT': 1, 'VCOC': 2, 'VTTP': 3, 'VFCI': 4, 'VECI': 5, 'VRCI': 6, 'VUCI': 7, 'VSAT': 8, 'VSAE': 9, 'VTTU': 10, 'VTTF': 11,
@@ -159,9 +159,7 @@
     const btnAdd = document.getElementById('add_vehicle_btn');
     const btnRemove = document.getElementById('remove_vehicle_btn');
     const statusMessage = document.getElementById('vehicle_status_message');
-    // ===============================
-    // FUNÇÕES AUXILIARES
-    // ===============================
+
     function getVehicleIcon(type) {
       const icons = {'VCOT': '🚒', 'VCOC': '🚒', 'VTTP': '🚒', 'VFCI': '🚒', 'VECI': '🚒', 'VRCI': '🚒', 'VUCI': '🚒', 'VSAT': '🚒', 'VSAE': '🚒',
                      'VTTU': '🚒', 'VTTF': '🚒', 'VTTR': '🚒', 'VALE': '🚒', 'VOPE': '🚒', 'VETA': '🚒', 'ABCI': '🚑', 'ABSC': '🚑', 'ABTM': '🚑',
@@ -184,9 +182,7 @@
       statusMessage.textContent = message;
       statusMessage.className = 'status ' + type;
     }
-    // ===============================
-    // API
-    // ===============================
+
     async function loadVehiclesFromAPI() {
       try {
         const response = await fetch(API_URL);
@@ -339,9 +335,7 @@
         btnAdd.disabled = btnRemove.disabled = false;
       }
     }
-    // ===============================
-    // UI
-    // ===============================
+
     function generateVehicleButtons() {
       vehicleGrid.innerHTML = '';
       vehicles.forEach(vehicleCode => {
@@ -386,9 +380,6 @@
       vehicleStatusModal.classList.remove('show');
       selectedVehicleCode = null;
     }
-    // ===============================
-    // EVENTOS
-    // ===============================
     vehicleStatusOkBtn.addEventListener('click', async () => {
       if (!selectedVehicleCode) return;
       await updateVehicleStatusAPI(selectedVehicleCode, vehicleStatusSelect.value);
@@ -400,8 +391,108 @@
     });
     btnAdd.addEventListener('click', addVehicle);
     btnRemove.addEventListener('click', removeVehicle);
-    // ===============================
-    // INICIALIZAÇÃO
-    // ===============================
     window.addEventListener('load', loadVehiclesFromAPI);
     setInterval(loadVehiclesFromAPI, 10 * 60 * 1000);
+    
+
+    // ===============================
+    // INFORMAÇÕES RELEVANTES
+    // ===============================
+    async function loadInfosFromSupabase() {
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/infos_select?select=id,from,destination,info&order=id.asc`, {
+          method: 'GET',
+          headers: getSupabaseHeaders(),
+        });
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(`Erro HTTP ${res.status}: ${errText}`);
+        }
+        const rows = await res.json();
+        console.log('✅ Rows recebidas:', rows);
+        ['01', '02', '03', '04'].forEach(n => {
+          const group = document.getElementById(`relev-info-${n}`);
+          if (!group) return;
+          group.dataset.rowId = '';
+          const fromInput = document.getElementById(`from-${n}`);
+          const toInput = document.getElementById(`to-${n}`);
+          const infoTA = document.getElementById(`info-${n}`);
+          if (fromInput) fromInput.value = '';
+          if (toInput) toInput.value = '';
+          if (infoTA) infoTA.value = '';
+        });
+        rows.forEach(row => {
+          const n = String(row.id).padStart(2, '0'); // transforma 1 -> "01"
+          const group = document.getElementById(`relev-info-${n}`);
+          if (!group) return console.warn(`⚠️ Não existe grupo HTML para a row id=${row.id}`);
+          group.dataset.rowId = row.id;
+          const fromInput = document.getElementById(`from-${n}`);
+          const toInput = document.getElementById(`to-${n}`);
+          const infoTA = document.getElementById(`info-${n}`);
+          if (fromInput) fromInput.value = row.from || '';
+          if (toInput) toInput.value = row.destination || '';
+          if (infoTA) infoTA.value = row.info || '';
+        });
+      } catch (e) {
+        console.error('❌ Erro ao carregar infos:', e);
+      }
+    }
+    async function saveInfoGroupFields(n) {
+      const group = document.getElementById(`relev-info-${n}`);
+      if (!group) return;
+      const rowId = group.dataset.rowId;
+      if (!rowId) return console.error(`⚠️ Grupo relev-info-${n} não tem rowId!`);
+      const fromVal = document.getElementById(`from-${n}`)?.value || '';
+      const toVal = document.getElementById(`to-${n}`)?.value || '';
+      const infoVal = document.getElementById(`info-${n}`)?.value || '';
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/infos_select?id=eq.${rowId}`, {
+          method: 'PATCH',
+          headers: getSupabaseHeaders({
+            returnRepresentation: true
+          }),
+          body: JSON.stringify({
+            from: fromVal,
+            destination: toVal,
+            info: infoVal
+          })
+        });
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(`Erro HTTP ${res.status}: ${errText}`);
+        }
+        showPopupSuccess(`A informação ${n} foi atualizada com sucesso.`, false);
+        console.log(`✅ Row ${rowId} atualizada no Supabase`);
+      } catch (e) {
+        console.error('❌ Erro ao atualizar Supabase:', e);
+      }
+    }
+    async function clearInfoGroupFields(n) {
+      const group = document.getElementById(`relev-info-${n}`);
+      if (!group) return;
+      group.querySelectorAll('input[type="text"]').forEach(i => i.value = '');
+      group.querySelectorAll('textarea').forEach(t => t.value = '');
+      const rowId = group.dataset.rowId;
+      if (!rowId) return console.error(`⚠️ Nenhum rowId definido para relev-info-${n}`);
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/infos_select?id=eq.${rowId}`, {
+          method: 'PATCH',
+          headers: getSupabaseHeaders({
+            returnRepresentation: true
+          }),
+          body: JSON.stringify({
+            from: '',
+            destination: '',
+            info: ''
+          })
+        });
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(`Erro HTTP ${res.status}: ${errText}`);
+        }
+        showPopupWarning(`Os campos da informação ${n} foram limpos com sucesso. Pode usar novamente o grupo de informação ${n}.`);
+        console.log(`✅ Row ${rowId} limpa no Supabase`);
+      } catch (e) {
+        console.error('❌ Erro ao atualizar Supabase:', e);
+      }
+    }

@@ -310,7 +310,7 @@ for (let i = 1; i <= victimsCount; i++) { for (let cat of victimCategories) { co
   if (clearFields) clearFormFields();
   };
   }
-  }}
+  }
 
   function showPopupWarning(message) {
   const modal = document.getElementById('popup-warning-modal');

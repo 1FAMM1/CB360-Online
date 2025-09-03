@@ -1,4 +1,4 @@
-   /* ==============================
+/* ==============================
 GRUPO UTILITÁRIOS
 ============================== */
 /* ---- TRATAMENTO SCROLL BAR ----*/
@@ -297,9 +297,11 @@ for (let i = 1; i <= victimsCount; i++) { for (let cat of victimCategories) { co
   if (okBtn) okBtn.onclick = () => modal.classList.remove('show');
   }
 
-  function showPopupSuccess(clearFields = false) {
+  function showPopupSuccess(message = "", clearFields = false) {
   const modal = document.getElementById('popup-success-modal');
   if (!modal) return;
+  const textElem = modal.querySelector('p');
+  if (textElem) textElem.textContent = message;
   modal.classList.add('show');
   const okBtn = document.getElementById('popup-success-ok-btn');
   if (okBtn) {
@@ -308,7 +310,7 @@ for (let i = 1; i <= victimsCount; i++) { for (let cat of victimCategories) { co
   if (clearFields) clearFormFields();
   };
   }
-  }
+  }}
 
   function showPopupWarning(message) {
   const modal = document.getElementById('popup-warning-modal');

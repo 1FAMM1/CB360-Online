@@ -1221,8 +1221,8 @@
           <div class="digital-panel-container">
             <div class="panel-sidebar">
               <button class="panel-menu-button active" onclick="showPanelCard('epe')">Estado EPE/PPI</button>
-              <button class="panel-menu-button" onclick="showPanelCard('system')">Sitop. Veículos</button>
-              <button class="panel-menu-button" onclick="showPanelCard('monitoring')">Gestão de Frota</button>
+              <button class="panel-menu-button" onclick="showPanelCard('fleet-management')">Gestão de Frota</button>
+              <button class="panel-menu-button" onclick="showPanelCard('vehicle-operational-status')">Sitop. Veículos</button>
               <button class="panel-menu-button" onclick="showPanelCard('logs')">Informações Relevantes</button>
               <button class="panel-menu-button" onclick="showPanelCard('settings')">Cortes de Vias/Arruamentos</button>
               <button class="panel-menu-button" onclick="showPanelCard('analytics')">Centros de Meios Aéreos</button>
@@ -1305,35 +1305,18 @@
                   </div>
                 </div>
               </div>
-
-              <div id="panel-system" class="panel-card">
-                <h3>SITUAÇÃO OPERACIONAL DE VEÍCULOS</h3>
-                <p>Visão geral do estado operacional dos veículos.</p>
-                <div id="vehicleStatus" class="loading">A carregar veículos...</div>
-                <div class="vehicle-grid" id="vehicleGrid"></div>
-              </div>
-
-              <!-- Card: Monitorização -->
-              <div id="panel-monitoring" class="panel-card">
+              
+              <!-- Card: Gestão de Frota -->
+              <div id="panel-fleet-management" class="panel-card">
                 <h3>GESTÃO DE VEÍCULOS DO CORPO DE BOMBEIROS</h3>
-                <p>Adição / Remoção de veículos da frota do Corpo de Bombeiros.</p>
-                <div class="data-grid">
-                  <!-- Remover veículo -->
+                <p>Adição / Remoção de veículos da frota do Corpo de Bombeiros.</p>              
+                  <!-- Contagem veículos -->
                   <div class="data-item">
-                    <span class="data-value" style="font-size: 15px; margin-bottom:10px;">REMOVER VEÍCULO</span>
-                    <div class="data-label" style="font-size: 12px; margin-bottom:5px;">Selecione o veículo a remover</div>
-                    <div class="form-row" style="justify-content: center;">
-                      <div class="vehicle-field-horizontal">
-                        <select id="remove_vehicle" style="width: 200px;"></select>
-                      </div>
-                    </div>
-                    <div class="form-row" style="margin: 40px 0 0 25px; justify-content: center;">
-                      <div class="action-buttons">
-                        <button id="remove_vehicle_btn" class="btn btn-danger">REMOVER</button>
-                      </div>
-                    </div>
+                    <span class="data-value" style="font-size: 20px; margin:13px 0 10px 0;">VEÍCULOS</span>
+                    <div class="data-label" style="margin-bottom:5px;">Total de veículos</div>
+                    <span class="data-value" id="sum-vehicles" style="font-size: 45px; color: purple; margin-bottom:10px;"></span>
                   </div>
-
+                  <div class="data-grid">   
                   <!-- Adicionar veículo -->
                   <div class="data-item">
                     <span class="data-value" style="font-size: 15px; margin-bottom:10px;">ADICIONAR VEÍCULO</span>
@@ -1348,11 +1331,50 @@
                         <button id="add_vehicle_btn" class="btn btn-success">ADICIONAR</button>
                       </div>
                     </div>
+                  </div>                  
+                  <!-- Remover veículo -->
+                  <div class="data-item">
+                    <span class="data-value" style="font-size: 15px; margin-bottom:10px;">REMOVER VEÍCULO</span>
+                    <div class="data-label" style="font-size: 12px; margin-bottom:5px;">Selecione o veículo a remover</div>
+                    <div class="form-row" style="justify-content: center;">
+                      <div class="vehicle-field-horizontal">
+                        <select id="remove_vehicle" style="width: 200px;"></select>
+                      </div>
+                    </div>
+                    <div class="form-row" style="margin: 40px 0 0 25px; justify-content: center;">
+                      <div class="action-buttons">
+                        <button id="remove_vehicle_btn" class="btn btn-danger">REMOVER</button>
+                      </div>
+                    </div>
+                  </div>                  
+                  <div class="data-item">
+                     <span class="data-value" style="font-size: 17px; margin-bottom:35px;">ESTATÍSTICAS DE VEÍCULOS</span>
+                     <div class="vehicle-stats-grid" style="display: flex; justify-content: center; gap: 50px; margin-top: 5x;">
+                       <div class="stat-item" style="text-align: center;">
+                       <div class="stat-label" style="font-size: 15px; color: #666; margin-bottom: 5px;">NO QUARTEL</div>
+                       <div class="stat-value" id="count-quartel" style="font-size: 30px; font-weight: bold; color: #28a745;">0</div>
+                     </div>
+                     <div class="stat-item" style="text-align: center;">
+                       <div class="stat-label" style="font-size: 15px; color: #666; margin-bottom: 5px;">EM SERVIÇO</div>
+                       <div class="stat-value" id="count-servico" style="font-size: 30px; font-weight: bold; color: #007bff;">0</div>
+                    </div>
+                    <div class="stat-item" style="text-align: center;">
+                      <div class="stat-label" style="font-size: 15px; color: #666; margin-bottom: 5px;">INOP</div>
+                    <div class="stat-value" id="count-inop" style="font-size: 30px; font-weight: bold; color: #dc3545;">0</div>
                   </div>
                 </div>
+               </div>                                            
+              </div>                
                 <div id="vehicle_status_message" class="status"></div>
-              </div>
+              </div>              
 
+              <div id="panel-vehicle-operational-status" class="panel-card">
+                <h3>SITUAÇÃO OPERACIONAL DE VEÍCULOS</h3>
+                <p>Visão geral do estado operacional dos veículos.</p>
+                <div id="vehicleStatus" class="loading">A carregar veículos...</div>
+                <div class="vehicle-grid" id="vehicleGrid"></div>
+              </div>
+              
               <!-- Card: Logs -->
               <div id="panel-logs" class="panel-card">
                 <h3>Logs do Sistema</h3>
@@ -1406,3 +1428,4 @@
   <script></script>
 </body>
 </html>
+

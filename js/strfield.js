@@ -73,7 +73,8 @@ if (page) page.classList.add("active");
 // Se clicou em "📱 Utilitários", ativa o painel EPE/PPI
 if (btn.getAttribute("data-page") === "page-utilities") {
 const epeButton = document.querySelector('.panel-menu-button[onclick*="showPanelCard(\'epe\'"]');
-if (epeButton) epeButton.click(); // dispara o clique no painel
+if (epeButton) epeButton.click();
+loadInfosFromSupabase()
 }
 });
 });

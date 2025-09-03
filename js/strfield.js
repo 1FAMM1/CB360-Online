@@ -74,6 +74,7 @@ if (page) page.classList.add("active");
 if (btn.getAttribute("data-page") === "page-utilities") {
 const epeButton = document.querySelector('.panel-menu-button[onclick*="showPanelCard(\'epe\'"]');
 if (epeButton) epeButton.click();
+loadVehiclesFromAPI()
 loadInfosFromSupabase()
 }
 });

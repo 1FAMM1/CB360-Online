@@ -17,7 +17,6 @@
     <link rel="stylesheet" href="css/vehicles.css">
     <link rel="stylesheet" href="css/animations.css">
 </head>
-
 <body>
   <div class="container">
     <header class="header">
@@ -52,7 +51,6 @@
         <button id="popup-ok-btn">OK</button>
       </div>
     </div>
-
     <div id="popup-warning-modal" class="popup-modal">
       <div class="popup-content">
         <h3>AVISO</h3>
@@ -60,7 +58,6 @@
         <button id="popup-warning-ok-btn" class="btn btn-danger">OK</button>
       </div>
     </div>
-
     <div id="popup-success-modal" class="popup-modal">
       <div class="popup-content">
         <h3>SUCESSO</h3>
@@ -68,7 +65,6 @@
         <button id="popup-success-ok-btn" class="btn btn-success">OK</button>
       </div>
     </div>
-
     <div id="popup-success-modal" class="popup-modal">
       <div class="popup-content">
         <h3>SUCESSO</h3>
@@ -76,7 +72,6 @@
         <button id="popup-success-ok-btn" class="btn btn-success">OK</button>
       </div>
     </div>
-
     <div id="popup-vehicle-status" class="popup-modal">
       <div class="popup-content">
         <h3 id="popup-vehicle-title">XYZ</h3>
@@ -92,20 +87,14 @@
         </div>
       </div>
     </div>
-
     <!---- MÓDULO COUNTEÚDO PRINCIPAL ---->
     <main class="main-content">
       <div id="page-main" class="page active">
-
         <div class="card last-card">
-
           <div class="card-header">BEM-VINDO AO SISTEMA CB360 ONLINE</div>
-
           <div class="card-body">
             <p style="margin-bottom: 15px;">Sistema automatizado para gestão operaional diária do Corpo de Bombeiros de Faro - Cruz Lusa.</p>
-
             <p style="margin-bottom: 15px;"><strong>Funcionalidades disponíveis:</strong></p>
-
             <p style="margin-bottom: 0px;"><strong>WSMS Auto Creator:</strong></p>
             <ul style="padding-left: 20px; margin-bottom: 15px;">
               <li>Ocorrências em Curso</li>
@@ -115,23 +104,21 @@
               <li>Indisponibilidade de Veículos</li>
               <li>Info. Grelha do Município</li>
             </ul>
-
             <p style="margin-bottom: 0px;"><strong>Painel de Utilitários:</strong></p>
             <ul style="padding-left: 20px; margin-bottom: 15px;">
               <li>Visualização de estados dos EPEs e PPIs</li>
               <li>Visualização dos estados operacionais dos veículos</li>
               <li>Adição e remoção de veículos</li>
+              <li>Informações Relevantes</li>
+              <li>Cortes de Vias/Arruamentos</li>
             </ul>
-
             <p style="margin-bottom: 0px; margin-top: 15px;"><strong>Brevemente:</strong></p>
             <ul style="padding-left: 20px; margin-bottom: 15px;">
               <li><em>SALOC 360</em></li>
               <li><em>DECIR 360</em></li>
               <li><em>FOMIO 360</em></li>
             </ul>
-
             <p style="margin-top: 50px;"><em>Selecione uma opção no menu lateral para começar.</em></p>
-
           </div>
         </div>
       </div>
@@ -333,7 +320,6 @@
           </div>
         </div>
       </div>
-
       <!---- MÓDULO ENCERRAR OCORRÊNCIA ---->
       <div id="page_close_occurrence" class="page">
         <h2 class="section-title">Dados para Encerramento da Ocorrência</h2>
@@ -361,7 +347,7 @@
               <div id="victims-container"></div>
             </div>
             <div class="grid-2fr" style="margin: -10px 0px 15px 0px;">
-              <!-- Outros Meios no TO-->
+              <!-- Outros Meios no TO -->
               <div class="extras-card" style="min-height: 100px;">
                 <div class="field-card-title">
                   <label style="font-size: 12px;">OUTROS MEIOS NO TO</label>
@@ -376,6 +362,7 @@
                 <div id="damages-container"></div>
               </div>
             </div>
+            <!-- Área Ardida e Observações -->
             <div class="grid-2fr" style="margin: -10px 0 15px 0;">
               <div class="burned-card" style="min-height: 100px;  max-width: 100%; margin: 5px 0 0 0;">
                 <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px;">
@@ -397,7 +384,7 @@
                     <label>Ha.</label>
                   </div>
                 </div>
-              </div>
+              </div>              
               <div class="burned-card" style="min-height: 100px; max-width: 100%; margin: 5px 0 0 0;">
                 <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px;">
                   <div class="field-card-title">
@@ -653,14 +640,13 @@
               <button class="panel-menu-button" onclick="showPanelCard('analytics')">Disponibilidade de Elementos</button>
             </div>
             <div class="panel-content">
+              <!-- Card: Estados de Prontidão Especiais e PPIs -->
               <div id="panel-epe" class="panel-card active">
                 <h3>ESTADOS DE PRONTIDÃO ESPECIAL / PLANOS PRÉVIOS DE INTERVENÇÃO</h3>
                 <p>Visão geral dos Estados de Prontidão Especiais e Planos Prévios de Intervenção.</p>
-
                 <div id="epe-container" class="data-grid"></div>
                 <div id="ppi-container" class="data-grid" style="margin-top: 20px;"></div>
               </div>
-
               <!-- Card: Situação Opercaional de Veículos -->
               <div id="panel-vehicle-operational-status" class="panel-card">
                 <h3>SITUAÇÃO OPERACIONAL DE VEÍCULOS</h3>
@@ -740,31 +726,25 @@
                 <p>Vias ou Arruamentos impedidos ao trânsito (Obras, Eventos, Etc.)</p>
                 <div id="routes-container"></div>
               </div>
-
               <!-- Card: Centros de Meios Aéreos -->
               <div id="panel-air-centers" class="panel-card">
                 <h3>CENTROS DE MEIOS AÉREOS</h3>
                 <p>CMA's Ativos na Região.</p>
               </div>
-
               <!-- Card: Análises -->
               <div id="panel-analytics" class="panel-card">
                 <h3>Análises e Relatórios</h3>
                 <p>Estatísticas e métricas de performance do sistema.</p>
-
               </div>
-
               <!-- Card: Análises -->
               <div id="panel-analytics" class="panel-card">
                 <h3>Análises e Relatórios</h3>
                 <p>Estatísticas e métricas de performance do sistema.</p>
-
               </div>
             </div>
           </div>
         </div>
-      </div>
-      
+      </div>      
       <!---- MÓDULO GESTÃO DE DADOS ---->
       <div id="page-data" class="page">
         <h2 class="section-title">Data Center</h2>

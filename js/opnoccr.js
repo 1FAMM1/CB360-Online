@@ -260,7 +260,7 @@
       const out = document.getElementById('wsms_output');
       if (out) out.value = message;
       if (navigator.clipboard?.writeText) navigator.clipboard.writeText(message).catch(() => {});
-      showPopupSuccess(true);
+      showPopupSuccess("Mensagem criada com sucesso! Abra o WhatsApp e prima CTRL+V", true);
       return message;
     }
     /* ---- CRIAÇÃO DE MENSAGEM DE NOVA OCORRÊNCIA GLOBAL ----*/
@@ -318,7 +318,7 @@
       const out = document.getElementById('wsms_output');
       if (out) out.value = message;
       if (navigator.clipboard?.writeText) navigator.clipboard.writeText(message).catch(() => {});
-      showPopupSuccess(false);
+      showPopupSuccess("Mensagem criada com sucesso! Abra o WhatsApp e prima CTRL+V", false);
       await saveOccurrenceToSupabase(currentData, vehicles.length);
       loadActiveOccurrences();
       return message;

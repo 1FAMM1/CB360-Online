@@ -285,7 +285,7 @@
           <span class="data-value" style="font-size: 17px; margin-bottom:15px;">${cma.name}</span>
           <div class="cma-box">
             <div class="cma-left">
-              <img src="https://i.imgur.com/4Ho5HRV.png" alt="Foto CMA">
+              <img src="https://i.imgur.com/4Ho5HRV.png" alt="Foto CMA" style="object-fit:contain;">
             </div>
             <div class="cma-right">
               <div class="cma-fields">

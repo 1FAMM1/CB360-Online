@@ -270,7 +270,10 @@ const globalFields = [{id: 'alert_type', category: 'alert_type'},
 {id: 'solicitation_shift', category: 'solicitation_shift'},
 {id: 'new_reason_unavailability', category: 'reason_unavailability'},
 {id: 'new_unavailability_local', category: 'local_unavailability'},
-{id: 'state_municipality_grid', category: 'municipality_grid'}];
+{id: 'state_municipality_grid', category: 'municipality_grid'},
+{id: 'cma_type_01', category: 'cma_type'}, { id: 'cma_type_02', category: 'cma_type'},
+{id: 'cma_type_03', category: 'cma_type'}, { id: 'cma_type_04', category: 'cma_type'},
+{id: 'cma_type_05', category: 'cma_type'}, { id: 'cma_type_06', category: 'cma_type'},];
 const victimCategories = ['victim_gender', 'victim_age', 'victim_type', 'victim_status'];
 const victimsCount = 3;
 const victimFields = [];

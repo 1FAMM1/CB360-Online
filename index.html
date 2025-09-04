@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="css/animations.css">
 </head>
 
-  <body>
+<body>
   <div class="container">
     <header class="header">
       <div class="logo">
@@ -52,6 +52,7 @@
         <button id="popup-ok-btn">OK</button>
       </div>
     </div>
+
     <div id="popup-warning-modal" class="popup-modal">
       <div class="popup-content">
         <h3>AVISO</h3>
@@ -59,6 +60,15 @@
         <button id="popup-warning-ok-btn" class="btn btn-danger">OK</button>
       </div>
     </div>
+
+    <div id="popup-success-modal" class="popup-modal">
+      <div class="popup-content">
+        <h3>SUCESSO</h3>
+        <p></p>
+        <button id="popup-success-ok-btn" class="btn btn-success">OK</button>
+      </div>
+    </div>
+
     <div id="popup-success-modal" class="popup-modal">
       <div class="popup-content">
         <h3>SUCESSO</h3>
@@ -66,13 +76,7 @@
         <button id="popup-success-ok-btn" class="btn btn-success">OK</button>
       </div>
     </div>
-     <div id="popup-success-modal" class="popup-modal">
-      <div class="popup-content">
-        <h3>SUCESSO</h3>
-        <p>Mensagem criada com sucesso! Abra o WhatsApp e prima CTRL+V</p>
-        <button id="popup-success-ok-btn" class="btn btn-success">OK</button>
-      </div>
-    </div>
+
     <div id="popup-vehicle-status" class="popup-modal">
       <div class="popup-content">
         <h3 id="popup-vehicle-title">XYZ</h3>
@@ -88,15 +92,20 @@
         </div>
       </div>
     </div>
-    
+
     <!---- MÓDULO COUNTEÚDO PRINCIPAL ---->
     <main class="main-content">
       <div id="page-main" class="page active">
+
         <div class="card last-card">
+
           <div class="card-header">BEM-VINDO AO SISTEMA CB360 ONLINE</div>
+
           <div class="card-body">
             <p style="margin-bottom: 15px;">Sistema automatizado para gestão operaional diária do Corpo de Bombeiros de Faro - Cruz Lusa.</p>
+
             <p style="margin-bottom: 15px;"><strong>Funcionalidades disponíveis:</strong></p>
+
             <p style="margin-bottom: 0px;"><strong>WSMS Auto Creator:</strong></p>
             <ul style="padding-left: 20px; margin-bottom: 15px;">
               <li>Ocorrências em Curso</li>
@@ -106,19 +115,23 @@
               <li>Indisponibilidade de Veículos</li>
               <li>Info. Grelha do Município</li>
             </ul>
+
             <p style="margin-bottom: 0px;"><strong>Painel de Utilitários:</strong></p>
             <ul style="padding-left: 20px; margin-bottom: 15px;">
               <li>Visualização de estados dos EPEs e PPIs</li>
               <li>Visualização dos estados operacionais dos veículos</li>
               <li>Adição e remoção de veículos</li>
             </ul>
+
             <p style="margin-bottom: 0px; margin-top: 15px;"><strong>Brevemente:</strong></p>
             <ul style="padding-left: 20px; margin-bottom: 15px;">
               <li><em>SALOC 360</em></li>
               <li><em>DECIR 360</em></li>
               <li><em>FOMIO 360</em></li>
             </ul>
+
             <p style="margin-top: 50px;"><em>Selecione uma opção no menu lateral para começar.</em></p>
+
           </div>
         </div>
       </div>
@@ -308,691 +321,104 @@
         <div class="card last-card">
           <div class="card-header">VEÍCULOS AFETOS À OCORRÊNCIA</div>
           <div class="card-body">
-            <div class="grid-2fr">
-              <div class="vehicle-card">
-                <div class="field-card-title">1º VEÍCULO</div>
-                <div class="vehicle-fields">
-                  <div class="vehicle-field" style="width: 120px;">
-                    <label>Data Saída:</label>
-                    <input type="date" value="">
-                  </div>
-                  <div class="vehicle-field" style="width: 150px;">
-                    <label>Veículo:</label>
-                    <select>
-                      <option></option>
-                    </select>
-                  </div>
-                  <div class="vehicle-field" style="width: 75px;">
-                    <label>BBs:</label>
-                    <input type="text" placeholder="00" style="width: 100%; text-align: center;" maxlength="2" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 2)">
-                  </div>
-                  <div class="vehicle-field" style="width: 100px;">
-                    <label>Hora Saída:</label>
-                    <input type="time">
-                  </div>
-                </div>
-              </div>
-              <div class="vehicle-card">
-                <div class="field-card-title">2º VEÍCULO</div>
-                <div class="vehicle-fields">
-                  <div class="vehicle-field" style="width: 120px;">
-                    <label>Data Saída:</label>
-                    <input type="date" value="">
-                  </div>
-                  <div class="vehicle-field" style="width: 150px;">
-                    <label>Veículo:</label>
-                    <select>
-                      <option></option>
-                    </select>
-                  </div>
-                  <div class="vehicle-field" style="width: 75px;">
-                    <label>BBs:</label>
-                    <input type="text" placeholder="00" style="width: 100%; text-align: center;" maxlength="2" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 2)">
-                  </div>
-                  <div class="vehicle-field" style="width: 100px;">
-                    <label>Hora Saída:</label>
-                    <input type="time">
-                  </div>
-                </div>
-              </div>
-              <div class="vehicle-card">
-                <div class="field-card-title">3º VEÍCULO</div>
-                <div class="vehicle-fields">
-                  <div class="vehicle-field" style="width: 120px;">
-                    <label>Data Saída:</label>
-                    <input type="date" value="">
-                  </div>
-                  <div class="vehicle-field" style="width: 150px;">
-                    <label>Veículo:</label>
-                    <select>
-                      <option></option>
-                    </select>
-                  </div>
-                  <div class="vehicle-field" style="width: 75px;">
-                    <label>BBs:</label>
-                    <input type="text" placeholder="00" style="width: 100%; text-align: center;" maxlength="2" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 2)">
-                  </div>
-                  <div class="vehicle-field" style="width: 100px;">
-                    <label>Hora Saída:</label>
-                    <input type="time">
-                  </div>
-                </div>
-              </div>
-              <div class="vehicle-card">
-                <div class="field-card-title">4º VEÍCULO</div>
-                <div class="vehicle-fields">
-                  <div class="vehicle-field" style="width: 120px;">
-                    <label>Data Saída:</label>
-                    <input type="date" value="">
-                  </div>
-                  <div class="vehicle-field" style="width: 150px;">
-                    <label>Veículo:</label>
-                    <select>
-                      <option></option>
-                    </select>
-                  </div>
-                  <div class="vehicle-field" style="width: 75px;">
-                    <label>BBs:</label>
-                    <input type="text" placeholder="00" style="width: 100%; text-align: center;" maxlength="2" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 2)">
-                  </div>
-                  <div class="vehicle-field" style="width: 100px;">
-                    <label>Hora Saída:</label>
-                    <input type="time">
-                  </div>
-                </div>
-              </div>
-              <div class="vehicle-card">
-                <div class="field-card-title">5º VEÍCULO</div>
-                <div class="vehicle-fields">
-                  <div class="vehicle-field" style="width: 120px;">
-                    <label>Data Saída:</label>
-                    <input type="date" value="">
-                  </div>
-                  <div class="vehicle-field" style="width: 150px;">
-                    <label>Veículo:</label>
-                    <select>
-                      <option></option>
-                    </select>
-                  </div>
-                  <div class="vehicle-field" style="width: 75px;">
-                    <label>BBs:</label>
-                    <input type="text" placeholder="00" style="width: 100%; text-align: center;" maxlength="2" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 2)">
-                  </div>
-                  <div class="vehicle-field" style="width: 100px;">
-                    <label>Hora Saída:</label>
-                    <input type="time">
-                  </div>
-                </div>
-              </div>
-              <div class="vehicle-card">
-                <div class="field-card-title">6º VEÍCULO</div>
-                <div class="vehicle-fields">
-                  <div class="vehicle-field" style="width: 120px;">
-                    <label>Data Saída:</label>
-                    <input type="date" value="">
-                  </div>
-                  <div class="vehicle-field" style="width: 150px;">
-                    <label>Veículo:</label>
-                    <select>
-                      <option></option>
-                    </select>
-                  </div>
-                  <div class="vehicle-field" style="width: 75px;">
-                    <label>BBs:</label>
-                    <input type="text" placeholder="00" style="width: 100%; text-align: center;" maxlength="2" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 2)">
-                  </div>
-                  <div class="vehicle-field" style="width: 100px;">
-                    <label>Hora Saída:</label>
-                    <input type="time">
-                  </div>
-                </div>
-              </div>
+            <div class="grid-2fr" id="vehicle-container"></div>
+            <div class="warning-text">
+              Caso o Tipo de Mensagem seja para enviar igualmente para o GRUPO OCORRÊNCIAS. Preencha todos os campos necessários, e prima em primeiro lugar botão, "WSMS BOMBEIROS", Obrigado.
             </div>
-          </div>
-          <div class="warning-text">
-            Caso o Tipo de Mensagem seja para enviar igualmente para o GRUPO OCORRÊNCIAS. Preencha todos os campos necessários, e prima em primeiro lugar botão, "WSMS BOMBEIROS", Obrigado.
-          </div>
-          <textarea id="wsms_output" rows="4" cols="50" readonly style="display: none;"></textarea>
-          <div class="action-buttons">
-            <button class="btn btn-success" onclick="generateWSMSMessage()">BOMBEIROS</button>
-            <button class="btn btn-danger" onclick="generateNewCREPCMessage()">COMUNICAR CREPC</button>
+            <textarea id="wsms_output" rows="4" cols="50" readonly style="display: none;"></textarea>
+            <div class="action-buttons">
+              <button class="btn btn-success" onclick="generateWSMSMessage()">BOMBEIROS</button>
+              <button class="btn btn-danger" onclick="generateNewCREPCMessage()">COMUNICAR CREPC</button>
+            </div>
           </div>
         </div>
       </div>
+
       <!---- MÓDULO ENCERRAR OCORRÊNCIA ---->
       <div id="page_close_occurrence" class="page">
         <h2 class="section-title">Dados para Encerramento da Ocorrência</h2>
         <div class="card">
           <div class="card-header">DADOS GLOBAIS</div>
           <div class="card-body">
-            <div class="form-row" style="display: flex;">
+            <div class="form-row">
               <div class="form-group" style="width: 200px;">
                 <label>Nr. Ocorrência:</label>
                 <input type="text" id="close_nr_occurrence" placeholder="Ex. 123456789" style="width: 100%; text-align: center;" maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11)">
               </div>
             </div>
           </div>
-          <div class="grid-3fr" style="margin: -20px 15px 15px 15px;">
-            <div class="vehicle-card" style="min-height: 190px;  margin: 5px;">
-              <div class="field-card-title">1º VEÍCULO</div>
-              <div class="vehicle-field-horizontal" style="width: 150px;">
-                <label>Veículo:</label>
-                <select style="width: 150px;">
-                </select>
-              </div>
-              <div class="global-field-horizontal">
-                <label>Dt. Ch. TO:</label>
-                <input type="date" style="width: 100px;">
-                <label>Hr. Ch. TO:</label>
-                <input type="time" style="width: 75px;">
-              </div>
-              <div class="global-field-horizontal">
-                <label>Dt. Sd. TO:</label>
-                <input type="date" style="width: 100px;">
-                <label>Hr. Sd. TO:</label>
-                <input type="time" style="width: 75px;">
-              </div>
-              <div class="global-field-horizontal">
-                <label>Dt. Ch. Und.:</label>
-                <input type="date" style="width: 100px;">
-                <label>Hr. Ch. Und.:</label>
-                <input type="time" style="width: 75px;">
-                <label>Kms.:</label>
-                <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="4" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,4)">
-              </div>
-              <div class="global-field-horizontal">
-                <label>Tempo Bomba:</label>
-                <label>Hr:</label>
-                <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="3" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,3)">
-                <label>Mins:</label>
-                <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="2" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,2)">
-              </div>
-            </div>
-            <div class="vehicle-card" style="min-height: 190px; margin: 5px;">
-              <div class="field-card-title">2º VEÍCULO</div>
-              <div class="vehicle-field-horizontal" style="width: 150px;">
-                <label>Veículo:</label>
-                <select style="width: 150px;">
-                </select>
-              </div>
-              <div class="global-field-horizontal">
-                <label>Dt. Ch. TO:</label>
-                <input type="date" style="width: 100px;">
-                <label>Hr. Ch. TO:</label>
-                <input type="time" style="width: 75px;">
-              </div>
-              <div class="global-field-horizontal">
-                <label>Dt. Sd. TO:</label>
-                <input type="date" style="width: 100px;">
-                <label>Hr. Sd. TO:</label>
-                <input type="time" style="width: 75px;">
-              </div>
-              <div class="global-field-horizontal">
-                <label>Dt. Ch. Und.:</label>
-                <input type="date" style="width: 100px;">
-                <label>Hr. Ch. Und.:</label>
-                <input type="time" style="width: 75px;">
-                <label>Kms.:</label>
-                <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="4" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,4)">
-              </div>
-              <div class="global-field-horizontal">
-                <label>Tempo Bomba:</label>
-                <label>Hr:</label>
-                <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="3" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,3)">
-                <label>Mins:</label>
-                <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="2" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,2)">
-              </div>
-            </div>
-            <div class="vehicle-card" style="min-height: 190px; margin: 5px;">
-              <div class="field-card-title">3º VEÍCULO</div>
-              <div class="vehicle-field-horizontal" style="width: 150px;">
-                <label>Veículo:</label>
-                <select style="width: 150px;">
-                </select>
-              </div>
-              <div class="global-field-horizontal">
-                <label>Dt. Ch. TO:</label>
-                <input type="date" style="width: 100px;">
-                <label>Hr. Ch. TO:</label>
-                <input type="time" style="width: 75px;">
-              </div>
-              <div class="global-field-horizontal">
-                <label>Dt. Sd. TO:</label>
-                <input type="date" style="width: 100px;">
-                <label>Hr. Sd. TO:</label>
-                <input type="time" style="width: 75px;">
-              </div>
-              <div class="global-field-horizontal">
-                <label>Dt. Ch. Und.:</label>
-                <input type="date" style="width: 100px;">
-                <label>Hr. Ch. Und.:</label>
-                <input type="time" style="width: 75px;">
-                <label>Kms.:</label>
-                <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="4" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,4)">
-              </div>
-              <div class="global-field-horizontal">
-                <label>Tempo Bomba:</label>
-                <label>Hr:</label>
-                <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="3" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,3)">
-                <label>Mins:</label>
-                <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="2" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,2)">
-              </div>
-            </div>
-            <div class="vehicle-card" style="min-height: 190px; margin: 5px;">
-              <div class="field-card-title">4º VEÍCULO</div>
-              <div class="vehicle-field-horizontal" style="width: 150px;">
-                <label>Veículo:</label>
-                <select style="width: 150px;">
-                </select>
-              </div>
-              <div class="global-field-horizontal">
-                <label>Dt. Ch. TO:</label>
-                <input type="date" style="width: 100px;">
-                <label>Hr. Ch. TO:</label>
-                <input type="time" style="width: 75px;">
-              </div>
-              <div class="global-field-horizontal">
-                <label>Dt. Sd. TO:</label>
-                <input type="date" style="width: 100px;">
-                <label>Hr. Sd. TO:</label>
-                <input type="time" style="width: 75px;">
-              </div>
-              <div class="global-field-horizontal">
-                <label>Dt. Ch. Und.:</label>
-                <input type="date" style="width: 100px;">
-                <label>Hr. Ch. Und.:</label>
-                <input type="time" style="width: 75px;">
-                <label>Kms.:</label>
-                <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="4" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,4)">
-              </div>
-              <div class="global-field-horizontal">
-                <label>Tempo Bomba:</label>
-                <label>Hr:</label>
-                <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="3" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,3)">
-                <label>Mins:</label>
-                <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="2" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,2)">
-              </div>
-            </div>
-            <div class="vehicle-card" style="min-height: 190px; margin: 5px;">
-              <div class="field-card-title">5º VEÍCULO</div>
-              <div class="vehicle-field-horizontal" style="width: 150px;">
-                <label>Veículo:</label>
-                <select style="width: 150px;">
-                </select>
-              </div>
-              <div class="global-field-horizontal">
-                <label>Dt. Ch. TO:</label>
-                <input type="date" style="width: 100px;">
-                <label>Hr. Ch. TO:</label>
-                <input type="time" style="width: 75px;">
-              </div>
-              <div class="global-field-horizontal">
-                <label>Dt. Sd. TO:</label>
-                <input type="date" style="width: 100px;">
-                <label>Hr. Sd. TO:</label>
-                <input type="time" style="width: 75px;">
-              </div>
-              <div class="global-field-horizontal">
-                <label>Dt. Ch. Und.:</label>
-                <input type="date" style="width: 100px;">
-                <label>Hr. Ch. Und.:</label>
-                <input type="time" style="width: 75px;">
-                <label>Kms.:</label>
-                <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="4" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,4)">
-              </div>
-              <div class="global-field-horizontal">
-                <label>Tempo Bomba:</label>
-                <label>Hr:</label>
-                <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="3" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,3)">
-                <label>Mins:</label>
-                <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="2" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,2)">
-              </div>
-            </div>
-            <div class="vehicle-card" style="min-height: 190px; margin: 5px;">
-              <div class="field-card-title">6º VEÍCULO</div>
-              <div class="vehicle-field-horizontal" style="width: 150px;">
-                <label>Veículo:</label>
-                <select style="width: 150px;">
-                </select>
-              </div>
-              <div class="global-field-horizontal">
-                <label>Dt. Ch. TO:</label>
-                <input type="date" style="width: 100px;">
-                <label>Hr. Ch. TO:</label>
-                <input type="time" style="width: 75px;">
-              </div>
-              <div class="global-field-horizontal">
-                <label>Dt. Sd. TO:</label>
-                <input type="date" style="width: 100px;">
-                <label>Hr. Sd. TO:</label>
-                <input type="time" style="width: 75px;">
-              </div>
-              <div class="global-field-horizontal">
-                <label>Dt. Ch. Und.:</label>
-                <input type="date" style="width: 100px;">
-                <label>Hr. Ch. Und.:</label>
-                <input type="time" style="width: 75px;">
-                <label>Kms.:</label>
-                <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="4" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,4)">
-              </div>
-              <div class="global-field-horizontal">
-                <label>Tempo Bomba:</label>
-                <label>Hr:</label>
-                <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="3" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,3)">
-                <label>Mins:</label>
-                <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="2" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,2)">
-              </div>
-            </div>
-          </div>
+          <!-- Veículos -->
+          <div class="grid-3fr" id="vehicles-container" style="margin: -15px 15px 15px 15px;"></div>
         </div>
         <div class="card last-card">
           <div class="card-header">DADOS ADICIONAIS</div>
           <div class="card-body">
-            <div class="victims-card" style="min-height: 100px; margin: 5px 0 5px 0;">
+            <!-- Vítimas -->
+            <div class="victims-card" style="min-height: 100px; margin: 0 0 20px 0;">
               <div class="field-card-title">
                 <label style="font-size: 12px;">VÍTIMAS</label>
               </div>
-              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal">
-                  <label>Género:</label>
-                  <select id="victim_1_gender" style="width: 120px;">
-                  </select>
-                </div>
-                <div class="global-field-horizontal">
-                  <label>Idade:</label>
-                  <input type="text" id="victim_1_age_unit" placeholder="0" style="width: 50px; text-align: center;" maxlength="3" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,3)"> <select id="victim_1_age" style="width: 120px;">
-                  </select>
-                </div>
-                <div class="global-field-horizontal">
-                  <label>Nacion:</label>
-                  <input type="text" id="victim_1_nation" style="width: 175px;">
-                </div>
-                <div class="global-field-horizontal">
-                  <label>Tipo:</label>
-                  <select id="victim_1_type" style="width: 120px;">
-                  </select>
-                </div>
-                <div class="global-field-horizontal">
-                  <label>Estado:</label>
-                  <select id="victim_1_status" style="width: 120px;">
-                  </select>
-                </div>
-              </div>
-              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal">
-                  <label>Género:</label>
-                  <select id="victim_2_gender" style="width: 120px;">
-                  </select>
-                </div>
-                <div class="global-field-horizontal">
-                  <label>Idade:</label>
-                  <input type="text" id="victim_2_age_unit" placeholder="0" style="width: 50px; text-align: center;" maxlength="3" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,3)">
-                  <select id="victim_2_age" style="width: 120px;">
-                  </select>
-                </div>
-                <div class="global-field-horizontal">
-                  <label>Nacion:</label>
-                  <input type="text" id="victim_2_nation" style="width: 175px;">
-                </div>
-                <div class="global-field-horizontal">
-                  <label>Tipo:</label>
-                  <select id="victim_2_type" style="width: 120px;">
-                  </select>
-                </div>
-                <div class="global-field-horizontal">
-                  <label>Estado:</label>
-                  <select id="victim_2_status" style="width: 120px;">
-                  </select>
-                </div>
-              </div>
-              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal">
-                  <label>Género:</label>
-                  <select id="victim_3_gender" style="width: 120px;">
-                  </select>
-                </div>
-                <div class="global-field-horizontal">
-                  <label>Idade:</label>
-                  <input type="text" id="victim_3_age_unit" placeholder="0" style="width: 50px; text-align: center;" maxlength="3" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,3)">
-                  <select id="victim_3_age" style="width: 120px;">
-                  </select>
-                </div>
-                <div class="global-field-horizontal">
-                  <label>Nacion:</label>
-                  <input type="text" id="victim_3_nation" style="width: 175px;">
-                </div>
-                <div class="global-field-horizontal">
-                  <label>Tipo:</label> <select id="victim_3_type" style="width: 120px;">
-                  </select>
-                </div>
-                <div class="global-field-horizontal">
-                  <label>Estado:</label>
-                  <select id="victim_3_status" style="width: 120px;">
-                  </select>
-                </div>
-              </div>
+              <div id="victims-container"></div>
             </div>
-          </div>
-          <div class="grid-2fr" style="margin: -20px 15px 15px 15px;">
-            <div class="extras-card" style="min-height: 100px;  max-width: 100%; margin: 5px 0 0 5px ;">
-              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px;">
+            <div class="grid-2fr" style="margin: -10px 0px 15px 0px;">
+              <!-- Outros Meios no TO-->
+              <div class="extras-card" style="min-height: 100px;">
                 <div class="field-card-title">
                   <label style="font-size: 12px;">OUTROS MEIOS NO TO</label>
                 </div>
+                <div id="extras-container"></div>
               </div>
-              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal" style="flex:1;">
-                  <label>01.:</label>
-                  <input type="text" style="width: 100%;">
-                </div>
-                <div class="global-field-horizontal">
-                  <label>Veícs.:</label>
-                  <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
-                </div>
-                <div class="global-field-horizontal">
-                  <label>Elems.:</label>
-                  <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
-                </div>
-              </div>
-              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal" style="flex:1;">
-                  <label>02.:</label>
-                  <input type="text" style="width: 100%;">
-                </div>
-                <div class="global-field-horizontal">
-                  <label>Veícs.:</label>
-                  <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
-                </div>
-                <div class="global-field-horizontal">
-                  <label>Elems.:</label>
-                  <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
-                </div>
-              </div>
-              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal" style="flex:1;">
-                  <label>03.:</label>
-                  <input type="text" style="width: 100%;">
-                </div>
-                <div class="global-field-horizontal">
-                  <label>Veícs.:</label>
-                  <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
-                </div>
-                <div class="global-field-horizontal">
-                  <label>Elems.:</label>
-                  <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
-                </div>
-              </div>
-              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal" style="flex:1;">
-                  <label>04.:</label>
-                  <input type="text" style="width: 100%;">
-                </div>
-                <div class="global-field-horizontal">
-                  <label>Veícs.:</label>
-                  <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
-                </div>
-                <div class="global-field-horizontal">
-                  <label>Elems.:</label>
-                  <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
-                </div>
-              </div>
-              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal" style="flex:1;">
-                  <label>05.:</label>
-                  <input type="text" style="width: 100%;">
-                </div>
-                <div class="global-field-horizontal">
-                  <label>Veícs.:</label>
-                  <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
-                </div>
-                <div class="global-field-horizontal">
-                  <label>Elems.:</label>
-                  <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
-                </div>
-              </div>
-              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal" style="flex:1;">
-                  <label>06.:</label>
-                  <input type="text" style="width: 100%;">
-                </div>
-                <div class="global-field-horizontal">
-                  <label>Veícs.:</label>
-                  <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
-                </div>
-                <div class="global-field-horizontal">
-                  <label>Elems.:</label>
-                  <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
-                </div>
-              </div>
-              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal" style="flex:1;">
-                  <label>07.:</label>
-                  <input type="text" style="width: 100%;">
-                </div>
-                <div class="global-field-horizontal">
-                  <label>Veícs.:</label>
-                  <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
-                </div>
-                <div class="global-field-horizontal">
-                  <label>Elems.:</label>
-                  <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
-                </div>
-              </div>
-              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal" style="flex:1;">
-                  <label>08.:</label>
-                  <input type="text" style="width: 100%;">
-                </div>
-                <div class="global-field-horizontal">
-                  <label>Veícs.:</label>
-                  <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
-                </div>
-                <div class="global-field-horizontal">
-                  <label>Elems.:</label>
-                  <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
-                </div>
-              </div>
-            </div>
-            <div class="demage-card" style="min-height: 100px; max-width: 100%; margin: 5px 5px 0 0 ;">
-              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px;">
+              <!-- Danos Cuausados -->
+              <div class="demage-card" style="min-height: 100px;">
                 <div class="field-card-title">
                   <label style="font-size: 12px;">DANOS CAUSADOS</label>
                 </div>
+                <div id="damages-container"></div>
               </div>
-              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 0px;">
-                <div class="global-field-horizontal" style="flex:1;">
-                  <label>01.:</label>
-                  <input type="text" style="width: 100%;">
+            </div>
+            <div class="grid-2fr" style="margin: -10px 0 15px 0;">
+              <div class="burned-card" style="min-height: 100px;  max-width: 100%; margin: 5px 0 0 0;">
+                <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px;">
+                  <div class="field-card-title">
+                    <label style="font-size: 12px;">ÁREA ARDIDA</label>
+                  </div>
+                </div>
+                <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 0px;">
+                  <div class="global-field-horizontal" style="flex:1;">
+                    <label>01.:</label>
+                    <input type="number" id="area_m2" placeholder="0" style="width: 15%; text-align: center;" oninput="updateHectares()">
+                    <label>Mts.2</label>
+                  </div>
+                </div>
+                <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 0px;">
+                  <div class="global-field-horizontal" style="flex:1;">
+                    <label>02.:</label>
+                    <input type="text" id="area_ha" placeholder="0" style="width: 15%; text-align: center;" readonly>
+                    <label>Ha.</label>
+                  </div>
                 </div>
               </div>
-              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 0px;">
-                <div class="global-field-horizontal" style="flex:1;">
-                  <label>02.:</label>
-                  <input type="text" style="width: 100%;">
+              <div class="burned-card" style="min-height: 100px; max-width: 100%; margin: 5px 0 0 0;">
+                <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px;">
+                  <div class="field-card-title">
+                    <label style="font-size: 12px;">OBSERVAÇÕES</label>
+                  </div>
                 </div>
-              </div>
-              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal" style="flex:1;">
-                  <label>03.:</label>
-                  <input type="text" style="width: 100%;">
-                </div>
-              </div>
-              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal" style="flex:1;">
-                  <label>04.:</label>
-                  <input type="text" style="width: 100%;">
-                </div>
-              </div>
-              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal" style="flex:1;">
-                  <label>05.:</label>
-                  <input type="text" style="width: 100%;">
-                </div>
-              </div>
-              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal" style="flex:1;">
-                  <label>06.:</label>
-                  <input type="text" style="width: 100%;">
-                </div>
-              </div>
-              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal" style="flex:1;">
-                  <label>07.:</label>
-                  <input type="text" style="width: 100%;">
-                </div>
-              </div>
-              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal" style="flex:1;">
-                  <label>08.:</label>
-                  <input type="text" style="width: 100%;">
+                <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
+                  <div class="global-field-horizontal" style="width: 100%;">
+                    <textarea placeholder="Escreva suas observações..." rows="4" style="width: 100%; resize: vertical;"></textarea>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-
-          <div class="grid-2fr" style="margin: -10px 15px 15px 15px;">
-            <div class="burned-card" style="min-height: 100px;  max-width: 100%; margin: 5px 0 15px 5px ;">
-              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px;">
-                <div class="field-card-title">
-                  <label style="font-size: 12px;">ÁREA ARDIDA</label>
-                </div>
+            <div class="form-row" style="margin: 25px 0 0px 0px; display: flex; flex-wrap: wrap; justify-content: flex-end;">
+              <div class="action-buttons">
+                <button class="btn btn-danger" onclick="generateCloseCREPCMessage()">COMUNICAR CREPC</button>
               </div>
-              <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal" style="flex:1;">
-                  <label>01.:</label>
-                  <input type="number" id="area_m2" placeholder="0" style="width: 15%; text-align: center;" oninput="updateHectares()">
-                  <label>Mts.2</label>
-                </div>
-              </div>
-              <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal" style="flex:1;">
-                  <label>02.:</label>
-                  <input type="text" id="area_ha" placeholder="0" style="width: 15%; text-align: center;" readonly>
-                  <label>Ha.</label>
-                </div>
-              </div>
-            </div>
-            <div class="demage-card" style="min-height: 100px; max-width: 100%; margin: 5px 5px 15px 0 ;">
-              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px;">
-                <div class="field-card-title">
-                  <label style="font-size: 12px;">OBSERVAÇÕES</label>
-                </div>
-              </div>
-              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal" style="width: 100%;">
-                  <textarea placeholder="Escreva suas observações..." rows="4" style="width: 100%; resize: vertical;"></textarea>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="form-row" style="margin: 33px 0 0 0; display: flex; flex-wrap: wrap; justify-content: flex-end;">
-            <div class="action-buttons">
-              <button class="btn btn-danger" onclick="generateCloseCREPCMessage()">COMUNICAR CREPC</button>
             </div>
           </div>
         </div>
       </div>
-
       <!---- MÓDULO SOLICITAÇÃO DE DISPONIBILIDADES ---->
       <div id="page-solicitation" class="page">
         <h2 class="section-title">Solicitação de Disponibilidades para Serviços</h2>
@@ -1072,7 +498,6 @@
           </div>
         </div>
       </div>
-
       <!---- MÓDULO INDISPONIBILIDADE DE VEÍCULOS ---->
       <div id="page-indisp" class="page">
         <h2 class="section-title">Indisponibilidade Veículos</h2>
@@ -1185,7 +610,6 @@
           </div>
         </div>
       </div>
-
       <!---- MÓDULO INFORMAÇÃO DE ESTADO GRELHA DO MUNICÍPIO ---->
       <div id="page-municipality-grid" class="page">
         <h2 class="section-title">Info. Grelha Município</h2>
@@ -1213,7 +637,7 @@
           </div>
         </div>
       </div>
-
+      <!---- MÓDULO UTILITÁRIOS ---->
       <div id="page-utilities" class="page">
         <h2 class="section-title">Utiliários</h2>
         <div class="card card last-card">
@@ -1228,94 +652,32 @@
               <button class="panel-menu-button" onclick="showPanelCard('air-centers')">Centros de Meios Aéreos</button>
               <button class="panel-menu-button" onclick="showPanelCard('analytics')">Disponibilidade de Elementos</button>
             </div>
-
             <div class="panel-content">
-              <!-- Card: Dashboard -->
               <div id="panel-epe" class="panel-card active">
                 <h3>ESTADOS DE PRONTIDÃO ESPECIAL / PLANOS PRÉVIOS DE INTERVENÇÃO</h3>
                 <p>Visão geral dos Estados de Prontidão Especiais e Planos Prévios de Intervenção.</p>
-                <div class="data-grid">
-                  <div class="data-item">
-                    <span class="data-value" style="font-size: 15px;">EPE SIOPS DECIR</span>
-                    <div class="button-container" id="epe-decir">
-                      <button class="panel-btn" style="background-color: lightgrey; color: black;">MONITORIZAÇÃO</button>
-                      <button class="panel-btn" style="background-color: lightgrey; color: black;">NÍVEL I</button>
-                      <button class="panel-btn" style="background-color: lightgrey; color: black;">NÍVEL II</button>
-                      <button class="panel-btn" style="background-color: lightgrey; color: black;">NÍVEL III</button>
-                      <button class="panel-btn" style="background-color: lightgrey; color: black;">NÍVEL IV</button>
-                      <button class="panel-btn" style="background-color: lightgrey; color: black;"></button>
-                    </div>
-                  </div>
-                  <div class="data-item">
-                    <span class="data-value" style="font-size: 15px;">EPE SIOPS DIOPS</span>
-                    <div class="button-container" id="epe-diops">
-                      <button class="panel-btn" style="background-color: lightgrey; color: black;">MONITORIZAÇÃO</button>
-                      <button class="panel-btn" style="background-color: lightgrey; color: black;">NÍVEL I</button>
-                      <button class="panel-btn" style="background-color: lightgrey; color: black;">NÍVEL II</button>
-                      <button class="panel-btn" style="background-color: lightgrey; color: black;">NÍVEL III</button>
-                      <button class="panel-btn" style="background-color: lightgrey; color: black;">NÍVEL IV</button>
-                      <button class="panel-btn" style="background-color: lightgrey; color: black;"></button>
-                    </div>
-                  </div>
-                  <div class="data-item">
-                    <span class="data-value" style="font-size: 15px;">EPE SIOPS NRBQ</span>
-                    <div class="button-container" id="epe-nrbq">
-                      <button class="panel-btn" style="background-color: lightgrey; color: black;">MONITORIZAÇÃO</button>
-                      <button class="panel-btn" style="background-color: lightgrey; color: black;">NÍVEL I</button>
-                      <button class="panel-btn" style="background-color: lightgrey; color: black;">NÍVEL II</button>
-                      <button class="panel-btn" style="background-color: lightgrey; color: black;">NÍVEL III</button>
-                      <button class="panel-btn" style="background-color: lightgrey; color: black;">NÍVEL IV</button>
-                      <button class="panel-btn" style="background-color: lightgrey; color: black;"></button>
-                    </div>
-                  </div>
-                </div>
-                <div class="data-grid">
-                  <div class="data-item">
-                    <span class="data-value" style="font-size: 15px;">PPI AEROPORTO</span>
-                    <div class="button-container" id="ppi-aero">
-                      <button class="panel-btn" style="background-color: lightgrey; color: black;">MONITORIZAÇÃO</button>
-                      <button class="panel-btn" style="background-color: lightgrey; color: black;">AMARELO</button>
-                      <button class="panel-btn" style="background-color: lightgrey; color: black;">VERMELHO</button>
-                      <button class="panel-btn" style="background-color: lightgrey; color: black;"></button>
-                      <button class="panel-btn" style="background-color: lightgrey; color: black;"></button>
-                      <button class="panel-btn" style="background-color: lightgrey; color: black;"></button>
-                    </div>
-                  </div>
-                  <div class="data-item">
-                    <span class="data-value" style="font-size: 15px;">PPI A22</span>
-                    <div class="button-container" id="ppi-a22">
-                      <button class="panel-btn" style="background-color: lightgrey; color: black;">MONITORIZAÇÃO</button>
-                      <button class="panel-btn" style="background-color: lightgrey; color: black;">1º ALARME</button>
-                      <button class="panel-btn" style="background-color: lightgrey; color: black;">2º ALARME</button>
-                      <button class="panel-btn" style="background-color: lightgrey; color: black;">ALARME ESPECIAL</button>
-                      <button class="panel-btn" style="background-color: lightgrey; color: black;"></button>
-                      <button class="panel-btn" style="background-color: lightgrey; color: black;"></button>
-                    </div>
-                  </div>
-                  <div class="data-item">
-                    <span class="data-value" style="font-size: 15px;">PPI LINHA FÉRREA</span>
-                    <div class="button-container" id="ppi-linfer">
-                      <button class="panel-btn" style="background-color: lightgrey; color: black;">MONITORIZAÇÃO</button>
-                      <button class="panel-btn" style="background-color: lightgrey; color: black;">1º ALARME</button>
-                      <button class="panel-btn" style="background-color: lightgrey; color: black;">2º ALARME</button>
-                      <button class="panel-btn" style="background-color: lightgrey; color: black;">ALARME ESPECIAL</button>
-                      <button class="panel-btn" style="background-color: lightgrey; color: black;"></button>
-                      <button class="panel-btn" style="background-color: lightgrey; color: black;"></button>
-                    </div>
-                  </div>
-                </div>
+
+                <div id="epe-container" class="data-grid"></div>
+                <div id="ppi-container" class="data-grid" style="margin-top: 20px;"></div>
               </div>
-              
+
+              <!-- Card: Situação Opercaional de Veículos -->
+              <div id="panel-vehicle-operational-status" class="panel-card">
+                <h3>SITUAÇÃO OPERACIONAL DE VEÍCULOS</h3>
+                <p>Informações detalhadas sobre o funcionamento dos módulos.</p>
+                <div id="vehicleStatus" class="loading">A carregar veículos...</div>
+                <div class="vehicle-grid" id="vehicleGrid"></div>
+              </div>
               <!-- Card: Gestão de Frota -->
               <div id="panel-fleet-management" class="panel-card">
                 <h3>GESTÃO DE VEÍCULOS DO CORPO DE BOMBEIROS</h3>
                 <p>Adição, Remoção e Estatísticas de veículos do Corpo de Bombeiros.</p>
-                  <!-- Contagem veículos -->
-                  <div class="data-item">
-                    <span class="data-value" style="font-size: 25px; margin:5px 0 10px 0;">TOTAL DE VEÍCULOS</span>
-                    <span class="data-value" id="sum-vehicles" style="font-size: 45px; color: purple; margin-bottom:10px;"></span>
-                  </div>
-                  <div class="data-grid">
+                <!-- Contagem veículos -->
+                <div class="data-item">
+                  <span class="data-value" style="font-size: 25px; margin:5px 0 10px 0;">TOTAL DE VEÍCULOS</span>
+                  <span class="data-value" id="sum-vehicles" style="font-size: 45px; color: purple; margin-bottom:10px;"></span>
+                </div>
+                <div class="data-grid">
                   <!-- Adicionar veículo -->
                   <div class="data-item">
                     <span class="data-value" style="font-size: 15px; margin-bottom:10px;">ADICIONAR VEÍCULO</span>
@@ -1330,7 +692,7 @@
                         <button id="add_vehicle_btn" class="btn btn-success">ADICIONAR</button>
                       </div>
                     </div>
-                  </div>                  
+                  </div>
                   <!-- Remover veículo -->
                   <div class="data-item">
                     <span class="data-value" style="font-size: 15px; margin-bottom:10px;">REMOVER VEÍCULO</span>
@@ -1345,121 +707,38 @@
                         <button id="remove_vehicle_btn" class="btn btn-danger">REMOVER</button>
                       </div>
                     </div>
-                  </div>                  
+                  </div>
                   <div class="data-item">
-                     <span class="data-value" style="font-size: 17px; margin-bottom:35px;">ESTATÍSTICAS DE VEÍCULOS</span>
-                     <div class="vehicle-stats-grid" style="display: flex; justify-content: center; gap: 50px; margin-top: 5x;">
-                       <div class="stat-item" style="text-align: center;">
-                       <div class="stat-label" style="font-size: 15px; color: #666; margin-bottom: 5px;">NO QUARTEL</div>
-                       <div class="stat-value" id="count-quartel" style="font-size: 30px; font-weight: bold; color: #28a745;">0</div>
-                     </div>
-                     <div class="stat-item" style="text-align: center;">
-                       <div class="stat-label" style="font-size: 15px; color: #666; margin-bottom: 5px;">EM SERVIÇO</div>
-                       <div class="stat-value" id="count-servico" style="font-size: 30px; font-weight: bold; color: #007bff;">0</div>
+                    <span class="data-value" style="font-size: 17px; margin-bottom:35px;">ESTATÍSTICAS DE VEÍCULOS</span>
+                    <div class="vehicle-stats-grid" style="display: flex; justify-content: center; gap: 50px; margin-top: 5x;">
+                      <div class="stat-item" style="text-align: center;">
+                        <div class="stat-label" style="font-size: 15px; color: #666; margin-bottom: 5px;">NO QUARTEL</div>
+                        <div class="stat-value" id="count-quartel" style="font-size: 30px; font-weight: bold; color: #28a745;">0</div>
+                      </div>
+                      <div class="stat-item" style="text-align: center;">
+                        <div class="stat-label" style="font-size: 15px; color: #666; margin-bottom: 5px;">EM SERVIÇO</div>
+                        <div class="stat-value" id="count-servico" style="font-size: 30px; font-weight: bold; color: #007bff;">0</div>
+                      </div>
+                      <div class="stat-item" style="text-align: center;">
+                        <div class="stat-label" style="font-size: 15px; color: #666; margin-bottom: 5px;">INOP</div>
+                        <div class="stat-value" id="count-inop" style="font-size: 30px; font-weight: bold; color: #dc3545;">0</div>
+                      </div>
                     </div>
-                    <div class="stat-item" style="text-align: center;">
-                      <div class="stat-label" style="font-size: 15px; color: #666; margin-bottom: 5px;">INOP</div>
-                    <div class="stat-value" id="count-inop" style="font-size: 30px; font-weight: bold; color: #dc3545;">0</div>
                   </div>
                 </div>
-               </div>                                            
-              </div>                
-              <div id="vehicle_status_message" class="status"></div>
-              </div>              
-
-              <div id="panel-vehicle-operational-status" class="panel-card">
-                <h3>SITUAÇÃO OPERACIONAL DE VEÍCULOS</h3>
-                <p>Visão geral do estado operacional dos veículos.</p>
-                <div id="vehicleStatus" class="loading">A carregar veículos...</div>
-                <div class="vehicle-grid" id="vehicleGrid"></div>
+                <div id="vehicle_status_message" class="status"></div>
               </div>
-
-              <!-- Card: Informações Relevantes-->
+              <!-- Card: Informações Relevantes -->
               <div id="panel-relev-info" class="panel-card">
                 <h3>INFORMAÇÕES RELEVANTES</h3>
-                <p>Informações de carater relevante para conhecimento geral.</p>
-                <div class="data-grid">
-                  <div class="data-item" id="relev-info-01" data-row-id="1">
-                    <div class="global-field-horizontal">
-                      <label>De:</label>
-                      <input type="text" id="from-01" style="width: 207px;">
-                    </div>
-                    <div class="global-field-horizontal">
-                      <label>Para:</label>
-                      <input type="text" id="to-01" style="width: 200px;">
-                    </div>
-                    <div class="global-field-horizontal">
-                      <label>Info:</label>
-                      <textarea id="info-01" placeholder="Escreva a info..." rows="4" style="width: 100%; height: 75px; resize: vertical;"></textarea>
-                    </div>
-                    <div class="action-buttons" style="margin: 10px 0 0 0;">
-                      <button class="btn btn-danger" onclick="clearInfoGroupFields('01')">LIMPAR</button>
-                      <button class="btn btn-success" onclick="saveInfoGroupFields('01')">EMITIR</button>
-                    </div>
-                  </div>
-                  <div class="data-item" id="relev-info-02" data-row-id="2">
-                    <div class="global-field-horizontal">
-                      <label>De:</label>
-                      <input type="text" id="from-02" style="width: 207px;">
-                    </div>
-                    <div class="global-field-horizontal">
-                      <label>Para:</label>
-                      <input type="text" id="to-02" style="width: 200px;">
-                    </div>
-                    <div class="global-field-horizontal">
-                      <label>Info:</label>
-                      <textarea id="info-02" placeholder="Escreva a info..." rows="4" style="width: 100%; height: 75px; resize: vertical;"></textarea>
-                    </div>
-                    <div class="action-buttons" style="margin: 10px 0 0 0;">
-                      <button class="btn btn-danger" onclick="clearInfoGroupFields('02')">LIMPAR</button>
-                      <button class="btn btn-success" onclick="saveInfoGroupFields('02')">EMITIR</button>
-                    </div>
-                  </div>
-                </div>
-                <div class="data-grid">
-                  <div class="data-item" id="relev-info-03" data-row-id="3">
-                    <div class="global-field-horizontal">
-                      <label>De:</label>
-                      <input type="text" id="from-03" style="width: 200px;">
-                    </div>
-                    <div class="global-field-horizontal">
-                      <label>Para:</label>
-                      <input type="text" id="to-03" style="width: 200px;">
-                    </div>
-                    <div class="global-field-horizontal">
-                      <label>Info:</label>
-                      <textarea id="info-03" placeholder="Escreva a info..." rows="4" style="width: 100%; height: 75px; resize: vertical;"></textarea>
-                    </div>
-                    <div class="action-buttons" style="margin: 10px 0 0 0;">
-                      <button class="btn btn-danger" onclick="clearInfoGroupFields('03')">LIMPAR</button>
-                      <button class="btn btn-success" onclick="saveInfoGroupFields('03')">EMITIR</button>
-                    </div>
-                  </div>
-                  <div class="data-item" id="relev-info-04" data-row-id="4">
-                    <div class="global-field-horizontal">
-                      <label>De:</label>
-                      <input type="text" id="from-04" style="width: 207px;">
-                    </div>
-                    <div class="global-field-horizontal">
-                      <label>Para:</label>
-                      <input type="text" id="to-04" style="width: 200px;">
-                    </div>
-                    <div class="global-field-horizontal">
-                      <label>Info:</label>
-                      <textarea id="info-04" placeholder="Escreva a info..." rows="4" style="width: 100%; height: 75px; resize: vertical;"></textarea>
-                    </div>
-                    <div class="action-buttons" style="margin: 10px 0 0 0;">
-                      <button class="btn btn-danger" onclick="clearInfoGroupFields('04')">LIMPAR</button>
-                      <button class="btn btn-success" onclick="saveInfoGroupFields('04')">EMITIR</button>
-                    </div>
-                  </div>
-                </div>
+                <p>Informações de caráter relevante para conhecimento geral.</p>
+                <div id="info-container"></div>
               </div>
-              
               <!-- Card: Cortes de Vias -->
               <div id="panel-interruption-roads-streets" class="panel-card">
-                <h3>CORTES DE VIAS E/OU ARRUAMANETOS</h3>
-                <p>Vias ou Arruamentos inpedidos ao trânsito (Obras, Eventos, Etc..</p>
+                <h3>CORTES DE VIAS E/OU ARRUAMENTOS</h3>
+                <p>Vias ou Arruamentos impedidos ao trânsito (Obras, Eventos, Etc.)</p>
+                <div id="routes-container"></div>
               </div>
 
               <!-- Card: Centros de Meios Aéreos -->
@@ -1467,18 +746,24 @@
                 <h3>CENTROS DE MEIOS AÉREOS</h3>
                 <p>CMA's Ativos na Região.</p>
               </div>
-              
+
               <!-- Card: Análises -->
               <div id="panel-analytics" class="panel-card">
                 <h3>Análises e Relatórios</h3>
                 <p>Estatísticas e métricas de performance do sistema.</p>
-                
+
+              </div>
+
+              <!-- Card: Análises -->
+              <div id="panel-analytics" class="panel-card">
+                <h3>Análises e Relatórios</h3>
+                <p>Estatísticas e métricas de performance do sistema.</p>
+
               </div>
             </div>
           </div>
         </div>
       </div>
-
       <!---- MÓDULO GESTÃO DE DADOS ---->
       <div id="page-data" class="page">
         <h2 class="section-title">Data Center</h2>
@@ -1508,4 +793,3 @@
   <script></script>
 </body>
 </html>
-

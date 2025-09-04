@@ -269,41 +269,76 @@
     }
     // ===============================
     // CENTROS DE MEIOS AÉREOS
-    // =============================== 
-    const cmas = [
-      { name: 'BHSP LOULÉ' },
-      { name: 'CMA S.B. ALPORTEL' },
-      { name: 'CMA CACHOPO' },
-      { name: 'CMA MONCHIQUE' },
-      { name: 'AERODROMO PORTIMÃO' },
-      { name: '' }];
-    const container = document.getElementById('cma-container');
-    cmas.forEach((cma, index) => {
-      const id = String(index + 1).padStart(2, '0');
-      container.innerHTML += `
-        <div class="data-item">
-          <span class="data-value" style="font-size: 17px; margin-bottom:15px;">${cma.name}</span>
-          <div class="cma-box">
-            <div class="cma-left">
-              <img src="https://i.imgur.com/4Ho5HRV.png" alt="Foto CMA" style="object-fit:contain;">
+    // ===============================      
+    document.addEventListener("DOMContentLoaded", () => {
+    const cmas = [{ name: 'BHSP LOULÉ' },
+                  { name: 'CMA S.B. ALPORTEL' },
+                  { name: 'CMA CACHOPO' },
+                  { name: 'CMA MONCHIQUE' },
+                  { name: 'AERODROMO PORTIMÃO' },
+                  { name: '' }];
+    const container = document.getElementById("cma-container");
+      if (!container) return;
+        cmas.forEach((cma, index) => {
+        const id = String(index + 1).padStart(2, '0');
+        const itemDiv = document.createElement("div");
+    itemDiv.classList.add("data-item");
+    itemDiv.innerHTML = `
+      <span class="data-value" style="font-size: 17px; margin-bottom:15px;">${cma.name}</span>
+      <div class="cma-box">
+        <div class="cma-left">
+          <img id="cma_image_${id}" src="https://i.imgur.com/4Ho5HRV.png" alt="Foto CMA" style="object-fit:contain; width:125px;">
+        </div>
+        <div class="cma-right">
+          <div class="cma-fields">
+            <div class="global-field-horizontal" style="flex:1;">
+              <label>AERONAVE:</label>
+              <input id="cma_aero_type_${id}" type="text" style="width:100%; text-align:center; margin: 0 20px 0 0;">
             </div>
-            <div class="cma-right">
-              <div class="cma-fields">
-                <div class="global-field-horizontal" style="flex:1;">
-                  <label>AERONAVE:</label>
-                  <input id="cma_aero_type_${id}" type="text" style="width:100%; text-align:center; margin: 0 20px 0 0;">
-                </div>
-                <div class="global-field-horizontal" style="flex:1;">
-                  <label>TIPOLOGIA:</label>
-                  <select id="cma_type_${id}" style="width: 100%; margin: 0 20px 0 0;"></select>
-                </div>
-                <div class="global-field-horizontal" style="flex:1;">
-                  <label>AUTONOMIA:</label>
-                  <input id="cma_auto_${id}" type="text" style="width:100%; text-align:center; margin: 0 20px 0 0;">
-                </div>
-              </div>
+            <div class="global-field-horizontal" style="flex:1;">
+              <label>TIPOLOGIA:</label>
+              <select id="cma_type_${id}" style="width:100%; margin: 0 20px 0 0;"></select>
+            </div>
+            <div class="global-field-horizontal" style="flex:1;">
+              <label>AUTONOMIA:</label>
+              <input id="cma_auto_${id}" type="text" style="width:100%; text-align:center; margin: 0 20px 0 0;">
             </div>
           </div>
         </div>
-      `;
+      </div>
+    `;
+    container.appendChild(itemDiv);
+    const selectElement = document.getElementById(`cma_type_${id}`);
+    const optionNames = ["Selecionar...", "Heli Ligeiro", "Heli Médio", "Heli Pesado", "Avião de Asa Fixa Médio", "Avião de Asa Fixa Pesado"];
+    optionNames.forEach(name => {
+      const opt = document.createElement("option");
+      opt.value = name;
+      opt.textContent = name;
+      selectElement.appendChild(opt);
     });
+    const imageElement = document.getElementById(`cma_image_${id}`);
+    selectElement.addEventListener("change", () => {
+      let src;
+      switch (selectElement.value) {
+        case "Heli Ligeiro":
+          src = "https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/img/heli_ligeiro.jpg";
+          break;
+        case "Heli Médio":
+          src = "https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/img/heli_medio.jpg";
+          break;
+        case "Heli Pesado":
+          src = "https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/img/heli_pesado.jpg";
+          break;
+        case "Avião de Asa Fixa Médio":
+          src = "https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/img/aviao_asa_fixa_medio.png";
+          break;
+        case "Avião de Asa Fixa Pesado":
+          src = "https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/img/aviao_asa_fixa_pesado.png";
+          break;
+        default:
+          src = "https://i.imgur.com/4Ho5HRV.png";
+      }
+      imageElement.src = src;
+    });
+  });
+});

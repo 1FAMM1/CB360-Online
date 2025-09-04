@@ -302,16 +302,15 @@
           <div class="card-header">VEÍCULOS AFETOS À OCORRÊNCIA</div>
           <div class="card-body">
             <div class="grid-2fr" id="vehicle-container"></div>
-            <div class="warning-text">
-              Caso o Tipo de Mensagem seja para enviar igualmente para o GRUPO OCORRÊNCIAS. Preencha todos os campos necessários, e prima em primeiro lugar botão, "WSMS BOMBEIROS", Obrigado.
-            </div>
             <textarea id="wsms_output" rows="4" cols="50" readonly style="display: none;"></textarea>
+            <div class="form-row" style="margin: 10px 0 -10px 0; display: flex; flex-wrap: wrap; justify-content: flex-end;">
             <div class="action-buttons">
-              <button class="btn btn-success" style="margin: -10px 0 -10px 0px;" onclick="generateWSMSMessage()">BOMBEIROS</button>
-              <button class="btn btn-danger" style="margin: -10px 0 -10px 0px;" onclick="generateNewCREPCMessage()">COMUNICAR CREPC</button>
+              <button class="btn btn-success" onclick="generateWSMSMessage()">BOMBEIROS</button>
+              <button class="btn btn-danger" onclick="generateNewCREPCMessage()">COMUNICAR CREPC</button>
             </div>
           </div>
         </div>
+      </div>
       </div>
       <!---- MÓDULO ENCERRAR OCORRÊNCIA ---->
       <div id="page_close_occurrence" class="page">
@@ -391,7 +390,7 @@
                 </div>
               </div>
             </div>
-            <div class="form-row" style="margin: 10px 0 -10px 0px; display: flex; flex-wrap: wrap; justify-content: flex-end;">
+            <div class="form-row" style="margin: 10px 0 -10px 0; display: flex; flex-wrap: wrap; justify-content: flex-end;">
               <div class="action-buttons">
                 <button class="btn btn-danger" onclick="generateCloseCREPCMessage()">COMUNICAR CREPC</button>
               </div>
@@ -609,7 +608,7 @@
                 <input type="text" id="municipality_grid_output" placeholder="Indique um motivo para o estado da grelha." style="width: 700px;">
               </div>
             </div>
-            <div class="form-row" style="margin: 0 0 -10px 0; display: flex; flex-wrap: wrap; justify-content: flex-end;">
+            <div class="form-row" style="margin: 10px 0 -10px 0; display: flex; flex-wrap: wrap; justify-content: flex-end;">
               <div class="action-buttons">
                 <button class="btn btn-success" onclick="generateMunicipalityGridMessage()">ENVIAR ESTADO</button>
               </div>
@@ -766,4 +765,5 @@
   <script></script>
 </body>
 </html>
+
 

@@ -314,8 +314,8 @@
             </div>
             <textarea id="wsms_output" rows="4" cols="50" readonly style="display: none;"></textarea>
             <div class="action-buttons">
-              <button class="btn btn-success" onclick="generateWSMSMessage()">BOMBEIROS</button>
-              <button class="btn btn-danger" onclick="generateNewCREPCMessage()">COMUNICAR CREPC</button>
+              <button class="btn btn-success" style="margin: -10px 0 -10px 0px;" onclick="generateWSMSMessage()">BOMBEIROS</button>
+              <button class="btn btn-danger" style="margin: -10px 0 -10px 0px;" onclick="generateNewCREPCMessage()">COMUNICAR CREPC</button>
             </div>
           </div>
         </div>
@@ -365,7 +365,7 @@
             <!-- Área Ardida e Observações -->
             <div class="grid-2fr" style="margin: -10px 0 15px 0;">
               <div class="burned-card" style="min-height: 100px;  max-width: 100%; margin: 5px 0 0 0;">
-                <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px;">
+                <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin: 0 0 0 0;">
                   <div class="field-card-title">
                     <label style="font-size: 12px;">ÁREA ARDIDA</label>
                   </div>
@@ -386,7 +386,7 @@
                 </div>
               </div>              
               <div class="burned-card" style="min-height: 100px; max-width: 100%; margin: 5px 0 0 0;">
-                <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px;">
+                <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin: 0 0 0 0;">
                   <div class="field-card-title">
                     <label style="font-size: 12px;">OBSERVAÇÕES</label>
                   </div>
@@ -398,7 +398,7 @@
                 </div>
               </div>
             </div>
-            <div class="form-row" style="margin: 25px 0 0px 0px; display: flex; flex-wrap: wrap; justify-content: flex-end;">
+            <div class="form-row" style="margin: 10px 0 -10px 0px; display: flex; flex-wrap: wrap; justify-content: flex-end;">
               <div class="action-buttons">
                 <button class="btn btn-danger" onclick="generateCloseCREPCMessage()">COMUNICAR CREPC</button>
               </div>
@@ -479,7 +479,7 @@
             </div>
           </div>
         </div>
-        <div class="form-row" style="margin-top: 35px; margin-right: -20px; display: flex; justify-content: flex-end;">
+        <div class="form-row" style="margin: 10px 0 10px 10px; display: flex; flex-wrap: wrap; justify-content: flex-end;">
           <div class="action-buttons">
             <button class="btn btn-success" onclick="generateAvailability()">SOLICITAR</button>
           </div>
@@ -525,7 +525,7 @@
               </div>
             </div>
           </div>
-          <div class="form-row" style="margin-top: 20px; margin-bottom: 0px; display: flex; justify-content: flex-end;">
+          <div class="form-row" style="margin: 10px 10px 10px 10px; display: flex; justify-content: flex-end;">
             <div class="action-buttons">
               <button class="btn btn-danger" onclick="generateNewUnvailability()">ENVIAR INDISPONIBILIDADE</button>
             </div>
@@ -548,7 +548,7 @@
               </tbody>
             </table>
           </div>
-          <div class="form-row" style="margin-top: 20px; margin-bottom: 0px; display: flex; justify-content: flex-end;">
+          <div class="form-row" style="margin: 10px 10px 10px 10px; display: flex; flex-wrap: wrap; justify-content: flex-end;">
             <div class="action-buttons">
               <button class="btn btn-success" onclick="loadActiveUnavailability()">ATUALIZAR LISTA</button>
             </div>
@@ -590,7 +590,7 @@
               </div>
             </div>
           </div>
-          <div class="form-row" style="margin-top: 20px; margin-bottom: 15px; display: flex; justify-content: flex-end;">
+          <div class="form-row" style="margin: 10px 10px 10px 10px; display: flex; flex-wrap: wrap; justify-content: flex-end;">
             <div class="action-buttons">
               <button class="btn btn-success" onclick="generateEndUnavailability()">ENVIAR DISPONIBILIDADE</button>
             </div>
@@ -616,7 +616,7 @@
                 <input type="text" id="municipality_grid_output" placeholder="Indique um motivo para o estado da grelha." style="width: 700px;">
               </div>
             </div>
-            <div class="form-row" style="margin: 30px -25px -25px 0;display: flex; justify-content: flex-end;">
+            <div class="form-row" style="margin: 0 0 -10px 0; display: flex; flex-wrap: wrap; justify-content: flex-end;">
               <div class="action-buttons">
                 <button class="btn btn-success" onclick="generateMunicipalityGridMessage()">ENVIAR ESTADO</button>
               </div>
@@ -775,3 +775,4 @@
   <script></script>
 </body>
 </html>
+

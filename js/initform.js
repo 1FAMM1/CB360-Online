@@ -1,0 +1,269 @@
+    // ===============================
+    // INSERIR OCORRÊNCIA
+    // ===============================    
+    const vehicleContainer = document.getElementById('vehicle-container');
+    const totalVehicles = 6;
+    for (let i = 1; i <= totalVehicles; i++) {
+      const card = document.createElement('div');
+      card.className = 'vehicle-card';
+      card.innerHTML = `
+    <div class="field-card-title">${i}º VEÍCULO</div>
+    <div class="vehicle-fields">
+      <div class="vehicle-field" style="width: 120px;">
+        <label>Data Saída:</label>
+        <input type="date" value="">
+      </div>
+      <div class="vehicle-field" style="width: 150px;">
+        <label>Veículo:</label>
+        <select><option></option></select>
+      </div>
+      <div class="vehicle-field" style="width: 75px;">
+        <label>BBs:</label>
+        <input type="text" placeholder="00" style="width:100%; text-align:center;" maxlength="2" 
+               oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
+      </div>
+      <div class="vehicle-field" style="width: 100px;">
+        <label>Hora Saída:</label>
+        <input type="time">
+      </div>
+    </div>
+  `;
+      vehicleContainer.appendChild(card);
+    }
+    // ===============================
+    // ENCERRAR COCORRÊNCIA
+    // =============================== 
+    // ===============================
+    // VEÍCULOS
+    // =============================== 
+    const vehiclesContainer = document.getElementById('vehicles-container');
+    for (let i = 1; i <= 6; i++) {
+      vehiclesContainer.innerHTML += `
+      <div class="vehicle-card" style="min-height: 190px; margin: 5px;">
+        <div class="field-card-title">${i}º VEÍCULO</div>
+        <div class="vehicle-field-horizontal" style="width: 150px;">
+          <label>Veículo:</label>
+          <select style="width: 150px;"></select>
+        </div>
+        <div class="global-field-horizontal">
+          <label>Dt. Ch. TO:</label>
+          <input type="date" style="width: 100px;">
+          <label>Hr. Ch. TO:</label>
+          <input type="time" style="width: 75px;">
+        </div>
+        <div class="global-field-horizontal">
+          <label>Dt. Sd. TO:</label>
+          <input type="date" style="width: 100px;">
+          <label>Hr. Sd. TO:</label>
+          <input type="time" style="width: 75px;">
+        </div>
+        <div class="global-field-horizontal">
+          <label>Dt. Ch. Und.:</label>
+          <input type="date" style="width: 100px;">
+          <label>Hr. Ch. Und.:</label>
+          <input type="time" style="width: 75px;">
+          <label>Kms.:</label>
+          <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="4" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,4)">
+        </div>
+        <div class="global-field-horizontal">
+          <label>Tempo Bomba:</label>
+          <label>Hr:</label>
+          <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)">
+          <label>Mins:</label>
+          <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
+        </div>
+      </div>
+    `;
+    }
+    // ===============================
+    // VÍTIMAS
+    // ===============================    
+    const victimsContainer = document.getElementById('victims-container');
+    const numberOfVictims = 3; // Alterar para o número de vítimas que desejar
+    for (let i = 1; i <= numberOfVictims; i++) {
+      const div = document.createElement('div');
+      div.className = 'form-row';
+      div.style.display = 'flex';
+      div.style.flexWrap = 'wrap';
+      div.style.gap = '15px';
+      div.style.marginBottom = '0px';
+      div.innerHTML = `
+      <div class="global-field-horizontal">
+        <label>Género:</label>
+        <select id="victim_${i}_gender" style="width: 120px;"></select>
+      </div>
+      <div class="global-field-horizontal">
+        <label>Idade:</label>
+        <input type="text" id="victim_${i}_age_unit" placeholder="0" style="width: 50px; text-align: center;" maxlength="3"
+          oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,3)">
+        <select id="victim_${i}_age" style="width: 120px;"></select>
+      </div>
+      <div class="global-field-horizontal">
+        <label>Nacion:</label>
+        <input type="text" id="victim_${i}_nation" style="width: 175px;">
+      </div>
+      <div class="global-field-horizontal">
+        <label>Tipo:</label>
+        <select id="victim_${i}_type" style="width: 120px;"></select>
+      </div>
+      <div class="global-field-horizontal">
+        <label>Estado:</label>
+        <select id="victim_${i}_status" style="width: 120px;"></select>
+      </div>
+    `;
+      victimsContainer.appendChild(div);
+    }
+    // ===============================
+    // DANOS E EXTRAS
+    // =============================== 
+    const extrasContainer = document.getElementById('extras-container');
+    const damagesContainer = document.getElementById('damages-container');
+    for (let i = 1; i <= 8; i++) {
+      const div = document.createElement('div');
+      div.className = 'form-row';
+      div.style.display = 'flex';
+      div.style.flexWrap = 'wrap';
+      div.style.gap = '15px';
+      div.style.marginBottom = '0px';
+      div.innerHTML = `
+      <div class="global-field-horizontal" style="flex:1;">
+        <label>${i.toString().padStart(2,'0')}.:</label>
+        <input type="text" style="width: 100%;">
+      </div>
+      <div class="global-field-horizontal">
+        <label>Veícs.:</label>
+        <input type="text" placeholder="0" style="width:50px; text-align:center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
+      </div>
+      <div class="global-field-horizontal">
+        <label>Elems.:</label>
+        <input type="text" placeholder="0" style="width:50px; text-align:center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
+      </div>
+    `;
+      extrasContainer.appendChild(div);
+    }
+    for (let i = 1; i <= 8; i++) {
+      const div = document.createElement('div');
+      div.className = 'form-row';
+      div.style.display = 'flex';
+      div.style.flexWrap = 'wrap';
+      div.style.gap = '5px';
+      div.style.marginBottom = '0px';
+      div.innerHTML = `
+      <div class="global-field-horizontal" style="flex:1;">
+        <label>${i.toString().padStart(2,'0')}.:</label>
+        <input type="text" style="width:100%;">
+      </div>
+    `;
+      damagesContainer.appendChild(div);
+    }
+    // ===============================
+    // EPE E PPI
+    // ===============================   
+    const epeCards = [{
+        id: "epe-decir",
+        label: "EPE SIOPS DECIR",
+        buttons: ["MONITORIZAÇÃO", "NÍVEL I", "NÍVEL II", "NÍVEL III", "NÍVEL IV", ""]
+      },
+      {
+        id: "epe-diops",
+        label: "EPE SIOPS DIOPS",
+        buttons: ["MONITORIZAÇÃO", "NÍVEL I", "NÍVEL II", "NÍVEL III", "NÍVEL IV", ""]
+      },
+      {
+        id: "epe-nrbq",
+        label: "EPE SIOPS NRBQ",
+        buttons: ["MONITORIZAÇÃO", "NÍVEL I", "NÍVEL II", "NÍVEL III", "NÍVEL IV", ""]
+      }
+    ];
+    const ppiCards = [{
+        id: "ppi-aero",
+        label: "PPI AEROPORTO",
+        buttons: ["MONITORIZAÇÃO", "AMARELO", "VERMELHO", "", "", ""]
+      },
+      {
+        id: "ppi-a22",
+        label: "PPI A22",
+        buttons: ["MONITORIZAÇÃO", "1º ALARME", "2º ALARME", "ALARME ESPECIAL", "", ""]
+      },
+      {
+        id: "ppi-linfer",
+        label: "PPI LINHA FÉRREA",
+        buttons: ["MONITORIZAÇÃO", "1º ALARME", "2º ALARME", "ALARME ESPECIAL", "", ""]
+      }
+    ];
+
+    function createCard(cardData) {
+      const divItem = document.createElement("div");
+      divItem.className = "data-item";
+      const spanLabel = document.createElement("span");
+      spanLabel.className = "data-value";
+      spanLabel.style.fontSize = "15px";
+      spanLabel.textContent = cardData.label;
+      divItem.appendChild(spanLabel);
+      const buttonContainer = document.createElement("div");
+      buttonContainer.className = "button-container";
+      buttonContainer.id = cardData.id;
+      cardData.buttons.forEach(text => {
+        const btn = document.createElement("button");
+        btn.className = "panel-btn";
+        btn.style.backgroundColor = "lightgrey";
+        btn.style.color = "black";
+        btn.textContent = text;
+        buttonContainer.appendChild(btn);
+      });
+      divItem.appendChild(buttonContainer);
+      return divItem;
+    }
+    const epeContainer = document.getElementById("epe-container");
+    epeCards.forEach(card => epeContainer.appendChild(createCard(card)));
+    const ppiContainer = document.getElementById("ppi-container");
+    ppiCards.forEach(card => ppiContainer.appendChild(createCard(card)));
+    // ===============================
+    // INFORMAÇÕES RELEVANTES
+    // =============================== 
+    const infoContainer = document.getElementById('info-container');
+    const totalRelevInfos = 4;
+    for (let i = 1; i <= totalRelevInfos; i += 2) {
+      let rowHtml = '<div class="data-grid">';
+      for (let j = i; j < i + 2 && j <= totalRelevInfos; j++) {
+        const n = String(j).padStart(2, '0');
+        rowHtml += `
+      <div class="data-item" id="relev-info-${n}" data-row-id="${j}">
+        <div class="global-field-horizontal">
+          <label>De:</label>
+          <input type="text" id="from-${n}" style="width: 207px;">
+        </div>
+        <div class="global-field-horizontal">
+          <label>Para:</label>
+          <input type="text" id="to-${n}" style="width: 200px;">
+        </div>
+        <div class="global-field-horizontal">
+          <label>Info:</label>
+          <textarea id="info-${n}" placeholder="Escreva a info..." rows="4"
+            style="width: 100%; height: 75px; resize: vertical;"></textarea>
+        </div>
+        <div class="action-buttons" style="margin: 10px 0 0 0;">
+          <button class="btn btn-danger" onclick="clearInfoGroupFields('${n}')">LIMPAR</button>
+          <button class="btn btn-success" onclick="saveInfoGroupFields('${n}')">EMITIR</button>
+        </div>
+      </div>
+    `;
+      }
+      rowHtml += '</div>';
+      infoContainer.innerHTML += rowHtml;
+    }
+    // ===============================
+    // CORTES DE VIAS
+    // ===============================   
+    const routesContainer = document.getElementById('routes-container');
+    for (let i = 1; i <= 12; i++) {
+      const n = String(i).padStart(2, '0');
+      routesContainer.innerHTML += `
+      <div class="global-field-horizontal" style="flex:1;">
+        <label>${n}:</label>
+        <input type="text" id="route-${n}-name" style="width: 250%;">
+        <input type="text" id="route-${n}-from" style="width: 200%;">
+        <input type="text" id="route-${n}-to" style="width: 100%;">
+      </div>
+    `;
+    }

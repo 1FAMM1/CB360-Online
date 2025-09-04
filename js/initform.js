@@ -267,3 +267,43 @@
       </div>
     `;
     }
+    // ===============================
+    // CENTROS DE MEIOS AÉREOS
+    // =============================== 
+    const cmas = [
+      { name: 'BHSP LOULÉ' },
+      { name: 'CMA S.B. ALPORTEL' },
+      { name: 'CMA CACHOPO' },
+      { name: 'CMA MONCHIQUE' },
+      { name: 'AERODROMO PORTIMÃO' },
+      { name: '' }];
+    const container = document.getElementById('cma-container');
+    cmas.forEach((cma, index) => {
+      const id = String(index + 1).padStart(2, '0');
+      container.innerHTML += `
+        <div class="data-item">
+          <span class="data-value" style="font-size: 17px; margin-bottom:15px;">${cma.name}</span>
+          <div class="cma-box">
+            <div class="cma-left">
+              <img src="https://i.imgur.com/4Ho5HRV.png" alt="Foto CMA">
+            </div>
+            <div class="cma-right">
+              <div class="cma-fields">
+                <div class="global-field-horizontal" style="flex:1;">
+                  <label>AERONAVE:</label>
+                  <input id="cma_aero_type_${id}" type="text" style="width:100%; text-align:center; margin: 0 20px 0 0;">
+                </div>
+                <div class="global-field-horizontal" style="flex:1;">
+                  <label>TIPOLOGIA:</label>
+                  <select id="cma_type_${id}" style="width: 100%; margin: 0 20px 0 0;"></select>
+                </div>
+                <div class="global-field-horizontal" style="flex:1;">
+                  <label>AUTONOMIA:</label>
+                  <input id="cma_auto_${id}" type="text" style="width:100%; text-align:center; margin: 0 20px 0 0;">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    });

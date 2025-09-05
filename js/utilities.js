@@ -494,6 +494,9 @@
         console.error('❌ Erro ao atualizar Supabase:', e);
       }
     }
+    // ===============================
+    // CORTES DE VIAS
+    // ===============================
     async function loadRoutesFromSupabase() {
       try {
         const response = await fetch(`${SUPABASE_URL}/rest/v1/street_cut?order=id.asc`, {
@@ -519,7 +522,7 @@
       }
     }
     document.addEventListener("DOMContentLoaded", loadRoutesFromSupabase);
-    
+
     async function saveRoutesGroupFields() {
       try {
         for (let i = 1; i <= 12; i++) {
@@ -537,20 +540,68 @@
             cut_motive: cutMotive || "",
             cut_until: cutUntil || ""
           })
+         }
+        );
+        let data = null;
+        if (response.headers.get("content-type")?.includes("application/json")) {
+          data = await response.json();
         }
-      );
-      let data = null;
-      if (response.headers.get("content-type")?.includes("application/json")) {
-        data = await response.json();
+        if (!response.ok) {
+          throw new Error(`Erro Supabase: ${response.status} - ${response.statusText} - ${JSON.stringify(data)}`);
+        }      
       }
-
-      if (!response.ok) {
-        throw new Error(`Erro Supabase: ${response.status} - ${response.statusText} - ${JSON.stringify(data)}`);
-      }      
+        showPopupSuccess("Todos os cortes de Vias/Arruamentos atualizados com sucesso!");
+      } catch (error) {
+        console.error("❌ Erro ao gravar no Supabase:", error);
     }
-    showPopupSuccess("Todos os cortes de Vias/Arruamentos atualizados com sucesso!");
-  } catch (error) {
-    console.error("❌ Erro ao gravar no Supabase:", error);
-    alert("Erro ao gravar no Supabase. Ver consola.");
-  }
-}    
+    }     
+    // ===============================
+    // CENTROS DE MEIOS AÉREOS
+    // ===============================
+    async function loadCMAsFromSupabase() {
+      try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/air_centers?order=id.asc`, {
+          method: "GET",
+          headers: getSupabaseHeaders()
+          });
+        if (!response.ok) throw new Error(`Erro Supabase: ${response.status}`);
+        const data = await response.json();
+        data.forEach(row => {
+        const n = String(row.id).padStart(2, '0');
+        const nameInput = document.getElementById(`cma_aero_type_${n}`);
+        const typeSelect = document.getElementById(`cma_type_${n}`);
+        const autoInput = document.getElementById(`cma_auto_${n}`);
+        if (nameInput) nameInput.value = row.aero_name || "";
+        if (typeSelect) typeSelect.value = row.aero_type || "";
+        if (autoInput) autoInput.value = row.aero_autonomy || "";
+      });
+        console.log("✅ CMAs carregados:", data);
+      } catch (error) {
+        console.error("❌ Erro ao carregar CMAs:", error);
+      }
+    }
+    document.addEventListener("DOMContentLoaded", loadCMAs); 
+        
+    async function saveCMAsGroupFields() {
+      try {
+        for (let i = 1; i <= 6; i++) {
+          const n = String(i).padStart(2, '0');
+          const aeroName = document.getElementById(`cma_aero_type_${n}`).value.trim();
+          const aeroType = document.getElementById(`cma_type_${n}`).value;
+          const aeroAutonomy = document.getElementById(`cma_auto_${n}`).value.trim();
+          const response = await fetch(`${SUPABASE_URL}/rest/v1/air_centers?id=eq.${i}`, {
+            method: "PATCH",
+            headers: getSupabaseHeaders({ returnRepresentation: true }),
+            body: JSON.stringify({
+              aero_name: aeroName || "",
+              aero_type: aeroType || "",
+              aero_autonomy: aeroAutonomy || ""
+          })
+        });
+        if (!response.ok) throw new Error(`Erro Supabase: ${response.status}`);
+      }
+        showPopupSuccess("Todos os CMAs foram atualizados com sucesso!");
+      } catch (error) {
+        console.error("❌ Erro ao gravar CMAs:", error);
+      }
+    }

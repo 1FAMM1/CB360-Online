@@ -606,7 +606,7 @@
       }
     }
 
-    async function loadElemsButtons() {
+      async function loadElemsButtons() {
         try {
           const response = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?select=*&order=id.asc`, {
             method: "GET",

@@ -65,12 +65,7 @@ async function saveUnavailabilityToSupabase(data) {
 try {
 const insertResp = await fetch(`${SUPABASE_URL}/rest/v1/vehicle_unavailability`, {
 method: 'POST',
-headers: {
-'apikey': SUPABASE_ANON_KEY,
-'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-'Content-Type': 'application/json',
-'Prefer': 'return=representation'
-},
+headers: getSupabaseHeaders({returnRepresentation: true}),
 body: JSON.stringify({
 vehicle: data.vehicle,
 start_unavailability_date: data.startDate,

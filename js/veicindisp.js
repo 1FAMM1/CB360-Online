@@ -97,11 +97,9 @@ let blinkIntervalUnavailability = null;
 function startBlinkingUnavailabilityButton() {
 const btn = document.querySelector('.sidebar-menu-button[data-page="page-indisp"]');
 if (!btn || blinkIntervalUnavailability) return;
-
 const originalColor = '#343A40';
 const activeColor = '#DC3545';
 let isOriginal = false;
-
 blinkIntervalUnavailability = setInterval(() => {
 btn.style.backgroundColor = isOriginal ? originalColor : activeColor;
 isOriginal = !isOriginal;
@@ -111,7 +109,6 @@ isOriginal = !isOriginal;
 function stopBlinkingUnavailabilityButton() {
 const btn = document.querySelector('.sidebar-menu-button[data-page="page-indisp"]');
 if (!btn) return;
-
 clearInterval(blinkIntervalUnavailability);
 blinkIntervalUnavailability = null;
 btn.style.backgroundColor = '';
@@ -130,11 +127,7 @@ startBlinkingUnavailabilityButton();
 stopBlinkingUnavailabilityButton();
 }
 }
-
-/* chama logo ao carregar */
 loadActiveUnavailability().then(() => updateUnavailabilityBlinking());
-
-/* verifica a cada 1s */
 setInterval(updateUnavailabilityBlinking, 1000);
 
 async function loadActiveUnavailability() {
@@ -236,7 +229,7 @@ message = `*🚨INFORMAÇÃO🚨*\n\n*${vehicle}:*\nFim de Inoperacionalidade po
 const out = document.getElementById('wsms_output');
 if (out) out.value = message;
 if (navigator.clipboard?.writeText) navigator.clipboard.writeText(message).catch(() => {});
-showPopupSuccess(true);
+showPopupSuccess("Mensagem criada com sucesso! Abra o WhatsApp e prima CTRL+V", true);
 await fetch(`${SUPABASE_URL}/rest/v1/vehicle_unavailability?id=eq.${record.id}`, {
 method: 'DELETE',
 headers: getSupabaseHeaders()

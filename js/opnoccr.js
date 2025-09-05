@@ -355,12 +355,7 @@
           } else {
             const updateResp = await fetch(`${SUPABASE_URL}/rest/v1/occurrences_control?id=eq.${existingOccurrence.id}`, {
               method: 'PATCH',
-              headers: {
-                'apikey': SUPABASE_ANON_KEY,
-                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                'Content-Type': 'application/json',
-                'Prefer': 'return=representation'
-              },
+              headers: getSupabaseHeaders({ returnRepresentation: true }),
               body: JSON.stringify({
                 vehicles: vehiclesCount
               })
@@ -370,12 +365,7 @@
         }
         const insertResp = await fetch(`${SUPABASE_URL}/rest/v1/occurrences_control`, {
           method: 'POST',
-          headers: {
-            'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-            'Content-Type': 'application/json',
-            'Prefer': 'return=representation'
-          },
+          headers: getSupabaseHeaders({ returnRepresentation: true }),
           body: JSON.stringify({
             start_date: formattedDate,
             occorrence: data.descrOccorr,

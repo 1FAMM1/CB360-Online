@@ -159,8 +159,8 @@
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
-  margin: 40px 0 0 20px;
-      }     
+  margin: 40px 0 0 0;
+}     
 
 .btn-elem {
   position: relative;

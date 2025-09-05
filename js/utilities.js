@@ -508,7 +508,7 @@
         const n = String(row.id).padStart(2, '0');
         const nameInput = document.getElementById(`route-${n}-name`);
         const motiveInput = document.getElementById(`route-${n}-motive`);
-        const untilInput = document.getElementById(`route-${n}-util`);
+        const untilInput = document.getElementById(`route-${n}-until`);
           if (nameInput) nameInput.value = row.street_name || "";
           if (motiveInput) motiveInput.value = row.cut_motive || "";
           if (untilInput) untilInput.value = row.cut_until || "";
@@ -526,7 +526,7 @@
           const n = String(i).padStart(2, '0');
           const streetName = document.getElementById(`route-${n}-name`).value.trim();
           const cutMotive = document.getElementById(`route-${n}-motive`).value.trim();
-          const cutUntil = document.getElementById(`route-${n}-util`).value.trim();
+          const cutUntil = document.getElementById(`route-${n}-until`).value.trim();
           const response = await fetch(
           `${SUPABASE_URL}/rest/v1/street_cut?id=eq.${i}`,
         {

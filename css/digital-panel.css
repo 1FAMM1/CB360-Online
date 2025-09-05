@@ -158,9 +158,8 @@
 .elems-container {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
   gap: 5px;
-  margin-top: 40px;
+  margin-top: 40px  20px 0 0;
       }     
 
 .btn-elem {

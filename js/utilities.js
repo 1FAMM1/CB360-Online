@@ -494,7 +494,7 @@
         console.error('❌ Erro ao atualizar Supabase:', e);
       }
     }
-    async function loadRoutsFromSupabase() {
+    async function loadRoutesFromSupabase() {
       try {
         const response = await fetch(`${SUPABASE_URL}/rest/v1/street_cut?order=id.asc`, {
           method: "GET",
@@ -518,7 +518,7 @@
         console.error("❌ Erro ao carregar dados do Supabase:", error);
       }
     }
-    document.addEventListener("DOMContentLoaded", loadRoutes);
+    document.addEventListener("DOMContentLoaded", loadRoutesFromSupabase);
     
     async function saveRoutesGroupFields() {
       try {
@@ -529,7 +529,7 @@
           const cutUntil = document.getElementById(`route-${n}-util`).value.trim();
           const response = await fetch(
           `${SUPABASE_URL}/rest/v1/street_cut?id=eq.${i}`,
-          {
+        {
           method: "PATCH",
           headers: getSupabaseHeaders({ returnRepresentation: true }),
           body: JSON.stringify({
@@ -543,13 +543,14 @@
       if (response.headers.get("content-type")?.includes("application/json")) {
         data = await response.json();
       }
+
       if (!response.ok) {
         throw new Error(`Erro Supabase: ${response.status} - ${response.statusText} - ${JSON.stringify(data)}`);
       }      
     }
     showPopupSuccess("Todos os cortes de Vias/Arruamentos atualizados com sucesso!");
-    } catch (error) {
+  } catch (error) {
     console.error("❌ Erro ao gravar no Supabase:", error);
     alert("Erro ao gravar no Supabase. Ver consola.");
-      }
-    }
+  }
+}    

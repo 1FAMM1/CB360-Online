@@ -76,6 +76,7 @@ const epeButton = document.querySelector('.panel-menu-button[onclick*="showPanel
 if (epeButton) epeButton.click();
 loadVehiclesFromAPI()
 loadInfosFromSupabase()
+loadRoutesFromSupabase()
 }
 });
 });

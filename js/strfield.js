@@ -78,6 +78,7 @@ loadVehiclesFromAPI()
 loadInfosFromSupabase()
 loadRoutesFromSupabase()
 loadCMAsFromSupabase()
+loadElemsButtons()
 }
 });
 });

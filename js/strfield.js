@@ -77,6 +77,7 @@ if (epeButton) epeButton.click();
 loadVehiclesFromAPI()
 loadInfosFromSupabase()
 loadRoutesFromSupabase()
+loadCMAsFromSupabase()
 }
 });
 });

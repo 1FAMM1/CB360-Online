@@ -155,12 +155,7 @@
         } else if (status !== document.getElementById('posit-status').defaultValue) {
           const resp = await fetch(`${SUPABASE_URL}/rest/v1/occurrences_control?id=eq.${currentPositId}`, {
             method: "PATCH",
-            headers: {
-              'apikey': SUPABASE_ANON_KEY,
-              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-              'Content-Type': 'application/json',
-              'Prefer': 'return=representation'
-            },
+            headers: getSupabaseHeaders({ returnRepresentation: true }),
             body: JSON.stringify({
               status
             })

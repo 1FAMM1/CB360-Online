@@ -55,7 +55,7 @@ message = `*🚨INFORMAÇÃO🚨*\n\n*${vehicle}:*\nInoperacional por: ${motive}
 const out = document.getElementById('wsms_output');
 if (out) out.value = message;
 if (navigator.clipboard?.writeText) navigator.clipboard.writeText(message).catch(() => {});
-showPopupSuccess(true);
+showPopupSuccess("Mensagem criada com sucesso! Abra o WhatsApp e prima CTRL+V", true);
 await saveUnavailabilityToSupabase(currentData);
 loadActiveUnavailability();
 return message;

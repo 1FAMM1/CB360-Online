@@ -297,7 +297,7 @@
             </div>
             <div class="global-field-horizontal" style="flex:1;">
               <label>TIPOLOGIA:</label>
-              <select id="cma_type_${id}" text-align:center; style="width:100%; margin: 0 20px 0 0;"></select>
+              <select id="cma_type_${id}" style="width:100%; text-align:center; margin: 0 20px 0 0;"></select>
             </div>
             <div class="global-field-horizontal" style="flex:1;">
               <label>AUTONOMIA:</label>

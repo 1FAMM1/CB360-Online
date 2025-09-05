@@ -41,6 +41,6 @@
       if (navigator.clipboard?.writeText) {
         navigator.clipboard.writeText(message).catch(() => {});
       }
-      showPopupSuccess(false);
+      showPopupSuccess("Mensagem criada com sucesso! Abra o WhatsApp e prima CTRL+V", false);
       return message;
     }  

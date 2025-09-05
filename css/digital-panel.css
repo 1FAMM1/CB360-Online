@@ -154,3 +154,41 @@
   display: flex;
   flex-direction: column;
 }
+
+.elems-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 40px;
+      }     
+
+.btn-elem {
+  position: relative;
+  padding: 17px 27px;
+  cursor: pointer;
+  border: none;
+  border-radius: 5px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.btn-elem::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 120%; /* acima do botão */
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.75);
+  color: #fff;
+  padding: 5px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  font-size: 12px;
+  z-index: 10;
+}
+
+.btn-elem:hover::after {
+  opacity: 1;
+}

@@ -261,9 +261,9 @@
       routesContainer.innerHTML += `
       <div class="global-field-horizontal" style="flex:1;">
         <label>${n}:</label>
-        <input type="text" id="route-${n}-name" style="width: 250%;">
-        <input type="text" id="route-${n}-from" style="width: 200%;">
-        <input type="text" id="route-${n}-to" style="width: 100%;">
+        <input type="text" id="route-${n}-name" placeholder="Indique a via ou Arruamento" style="width: 250%;">
+        <input type="text" id="route-${n}-motive" placeholder="Indique o motivo" style="width: 200%;">
+        <input type="text" id="route-${n}-until" placeholder="Indique a previsão de términus" style="width: 100%;">
       </div>
     `;
     }

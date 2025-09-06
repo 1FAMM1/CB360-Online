@@ -159,7 +159,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
-  margin: 40px 0 0 40px;
+  margin: 40px 0 0 30px;
   justify-content: flex-start;
 }     
 

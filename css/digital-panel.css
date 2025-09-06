@@ -159,16 +159,25 @@
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
-  margin: 40px 0 0 0;
+  margin: 40px 0 0 10px;
+  justify-content: flex-start;
 }     
 
 .btn-elem {
   position: relative;
-  padding: 17px 27px;
+  padding: 15px 25px;
   cursor: pointer;
-  border: none;
+  border: 1px;
   border-radius: 5px;
   transition: background 0.2s, color 0.2s;
+}
+      
+.btn-elem:hover {
+  border-color: #555555;
+  transform: scale(1.05);
+  transition: all 0.3s ease; 
+  background: rgba(60,60,60,0.75) !important;
+  color: white !important
 }
 
 .btn-elem::after {

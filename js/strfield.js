@@ -132,6 +132,25 @@
         select.appendChild(option);
       });
     }
+    async function populateIndependentVehicleSelect() {
+      const selectId = 'new_vehicle_unavailable';
+      const select = document.getElementById(selectId);
+      if (!select) return console.warn(`Select com id "${selectId}" não encontrado.`);
+      const vehicles = await fetchVehiclesFromSupabase();
+      vehicles.sort((a, b) => a.localeCompare(b, 'pt', {
+        sensitivity: 'base'
+      }));
+      select.innerHTML = '<option value=""></option>';
+      vehicles.forEach(vehicle => {
+        const option = document.createElement('option');
+        option.value = vehicle;
+        option.textContent = vehicle;
+        select.appendChild(option);
+      });
+    }
+    document.addEventListener('DOMContentLoaded', async () => {
+      await populateIndependentVehicleSelect();
+    });
     /* --- Tratamento Tipo de Ocorrência --- */
     async function fetchClassOccorrById(classId) {
       try {

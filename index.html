@@ -35,8 +35,8 @@
     <aside class="sidebar">
       <button class="sidebar-menu-button active" data-page="page-main">🏠 Menu Principal</button>
       <button class="sidebar-menu-button" data-page="page-active_occurrences">🔥 Ocorrências em Curso</button>
-      <button class="sidebar-menu-button" data-page="page_insert_occurrence">✏️ Inserir/Alterar Ocorrência</button>
-      <button class="sidebar-menu-button" data-page="page_close_occurrence">🔐 Encerrar Ocorrência</button>
+      <button class="sidebar-menu-button" data-page="page_insert_occurrence" onclick="NewOCRresetVehicles()">✏️ Inserir/Alterar Ocorrência</button>
+      <button class="sidebar-menu-button" data-page="page_close_occurrence" onclick="CloseOCRresetAll()">🔐 Encerrar Ocorrência</button>
       <button class="sidebar-menu-button" data-page="page-solicitation">📋 Solicitação Disponibilidades</button>
       <button class="sidebar-menu-button" data-page="page-indisp">⚠️ Indisponibilidade Veículos</button>
       <button class="sidebar-menu-button" data-page="page-municipality-grid">🗂️ Info. Grelha Município</button>
@@ -301,11 +301,12 @@
           </div>
         </div>
         <div class="card last-card">
-          <div class="card-header">VEÍCULOS AFETOS À OCORRÊNCIA</div>
-          <div class="card-body">
-            <div class="grid-2fr" id="vehicle-container"></div>
-            <textarea id="wsms_output" rows="4" cols="50" readonly style="display: none;"></textarea>
-            <div class="form-row" style="margin: 10px 0 -10px 0; display: flex; flex-wrap: wrap; justify-content: flex-end;">
+        <div class="card-header" style="margin: 0 0 -10px 0;">VEÍCULOS AFETOS À OCORRÊNCIA</div>
+        <div class="card-body">
+          <button class="btn btn-add" style="margin: 0 0 10px 0;" onclick="NewOCRaddVehicle()">ADICIONAR</button>
+          <div class="grid-2fr" id="vehicle-container"></div>
+          <textarea id="wsms_output" rows="4" cols="50" readonly style="display: none;"></textarea>
+          <div class="form-row" style="margin: 15px 0 -10px 0; display: flex; flex-wrap: wrap; justify-content: flex-end;">
             <div class="action-buttons">
               <button class="btn btn-success" onclick="generateWSMSMessage()">BOMBEIROS</button>
               <button class="btn btn-danger" onclick="generateNewCREPCMessage()">COMUNICAR CREPC</button>
@@ -313,93 +314,96 @@
           </div>
         </div>
       </div>
+    </div>
+    <!---- MÓDULO ENCERRAR OCORRÊNCIA ---->
+    <div id="page_close_occurrence" class="page">
+      <h2 class="section-title">Dados para Encerramento da Ocorrência</h2>
+      <div class="card">
+        <div class="card-header">DADOS GLOBAIS</div>
+        <div class="card-body">
+          <div class="form-row">
+            <div class="form-group" style="width: 200px;">
+              <label>Nr. Ocorrência:</label>
+              <input type="text" id="close_nr_occurrence" placeholder="Ex. 123456789" style="width: 100%; text-align: center;" maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11)">
+            </div>
+          </div>
+          <button class="btn btn-add" style="margin: 0 0 0 0;" onclick="CloseOCRaddVehicle()">ADICIONAR</button>
+        </div>
+        <!-- Veículos -->
+        <div class="grid-3fr" id="vehicles-container" style="margin: -15px 15px 15px 15px;"></div>
       </div>
-      <!---- MÓDULO ENCERRAR OCORRÊNCIA ---->
-      <div id="page_close_occurrence" class="page">
-        <h2 class="section-title">Dados para Encerramento da Ocorrência</h2>
-        <div class="card">
-          <div class="card-header">DADOS GLOBAIS</div>
-          <div class="card-body">
-            <div class="form-row">
-              <div class="form-group" style="width: 200px;">
-                <label>Nr. Ocorrência:</label>
-                <input type="text" id="close_nr_occurrence" placeholder="Ex. 123456789" style="width: 100%; text-align: center;" maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11)">
+      <div class="card last-card">
+        <div class="card-header">DADOS ADICIONAIS</div>
+        <div class="card-body">
+          <!-- Vítimas -->
+          <div class="victims-card">
+            <div class="field-card-title" style="display: flex; align-items: center; gap: 10px;">
+              <label style="font-size: 13px;">VÍTIMAS</label>
+              <button class="btn btn-add" style="width: 70px; height: 20px; padding: 0; line-height: 20px;" onclick="addVictim()">ADICIONAR</button>
+            </div>
+            <div id="victims-container"></div>
+          </div>
+          <div class="grid-2fr" style="margin: 10px 0px 15px 0px;">
+            <!-- Outros Meios no TO-->
+            <div class="extras-card">
+              <div class="field-card-title" style="display: flex; align-items: center; gap: 10px;">
+                <label style="font-size: 13px;">OUTROS MEIOS NO TO</label>
+                <button class="btn btn-add" style="width: 70px; height: 20px; padding: 0; line-height: 20px;" onclick="addExtra()">ADICIONAR</button>
+              </div>
+              <div id="extras-container"></div>
+            </div>
+            <!-- Danos Cuausados -->
+            <div class="demage-card">
+              <div class="field-card-title" style="display: flex; align-items: center; gap: 10px;">
+                <label style="font-size: 13px;">DANOS CAUSADOS</label>
+                <button class="btn btn-add" style="width: 70px; height: 20px; padding: 0; line-height: 20px;" onclick="addDamage()">ADICIONAR</button>
+              </div>
+              <div id="damages-container"></div>
+            </div>
+          </div>
+          <div class="grid-2fr" style="margin: -10px 0 0 0;">
+            <div class="burned-card" style="min-height: 100px;  max-width: 100%; margin: 5px 0 0 0;">
+              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin: 0 0 0 0;">
+                <div class="field-card-title">
+                  <label style="font-size: 12px;">ÁREA ARDIDA</label>
+                </div>
+              </div>
+              <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 0px;">
+                <div class="global-field-horizontal" style="flex:1;">
+                  <label>01.:</label>
+                  <input type="number" id="area_m2" placeholder="0" style="width: 15%; text-align: center;" oninput="updateHectares()">
+                  <label>Mts.2</label>
+                </div>
+              </div>
+              <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 0px;">
+                <div class="global-field-horizontal" style="flex:1;">
+                  <label>02.:</label>
+                  <input type="text" id="area_ha" placeholder="0" style="width: 15%; text-align: center;" readonly>
+                  <label>Ha.</label>
+                </div>
+              </div>
+            </div>
+            <div class="burned-card" style="min-height: 100px; max-width: 100%; margin: 5px 0 0 0;">
+              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin: 0 0 0 0;">
+                <div class="field-card-title">
+                  <label style="font-size: 12px;">OBSERVAÇÕES</label>
+                </div>
+              </div>
+              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
+                <div class="global-field-horizontal" style="width: 100%;">
+                  <textarea placeholder="Escreva suas observações..." rows="4" style="width: 100%; resize: vertical;"></textarea>
+                </div>
               </div>
             </div>
           </div>
-          <!-- Veículos -->
-          <div class="grid-3fr" id="vehicles-container" style="margin: -15px 15px 15px 15px;"></div>
-        </div>
-        <div class="card last-card">
-          <div class="card-header">DADOS ADICIONAIS</div>
-          <div class="card-body">
-            <!-- Vítimas -->
-            <div class="victims-card" style="min-height: 100px; margin: 0 0 20px 0;">
-              <div class="field-card-title">
-                <label style="font-size: 12px;">VÍTIMAS</label>
-              </div>
-              <div id="victims-container"></div>
-            </div>
-            <div class="grid-2fr" style="margin: -10px 0px 15px 0px;">
-              <!-- Outros Meios no TO -->
-              <div class="extras-card" style="min-height: 100px;">
-                <div class="field-card-title">
-                  <label style="font-size: 12px;">OUTROS MEIOS NO TO</label>
-                </div>
-                <div id="extras-container"></div>
-              </div>
-              <!-- Danos Cuausados -->
-              <div class="demage-card" style="min-height: 100px;">
-                <div class="field-card-title">
-                  <label style="font-size: 12px;">DANOS CAUSADOS</label>
-                </div>
-                <div id="damages-container"></div>
-              </div>
-            </div>
-            <!-- Área Ardida e Observações -->
-            <div class="grid-2fr" style="margin: -10px 0 15px 0;">
-              <div class="burned-card" style="min-height: 100px;  max-width: 100%; margin: 5px 0 0 0;">
-                <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin: 0 0 0 0;">
-                  <div class="field-card-title">
-                    <label style="font-size: 12px;">ÁREA ARDIDA</label>
-                  </div>
-                </div>
-                <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 0px;">
-                  <div class="global-field-horizontal" style="flex:1;">
-                    <label>01.:</label>
-                    <input type="number" id="area_m2" placeholder="0" style="width: 15%; text-align: center;" oninput="updateHectares()">
-                    <label>Mts.2</label>
-                  </div>
-                </div>
-                <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 0px;">
-                  <div class="global-field-horizontal" style="flex:1;">
-                    <label>02.:</label>
-                    <input type="text" id="area_ha" placeholder="0" style="width: 15%; text-align: center;" readonly>
-                    <label>Ha.</label>
-                  </div>
-                </div>
-              </div>              
-              <div class="burned-card" style="min-height: 100px; max-width: 100%; margin: 5px 0 0 0;">
-                <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin: 0 0 0 0;">
-                  <div class="field-card-title">
-                    <label style="font-size: 12px;">OBSERVAÇÕES</label>
-                  </div>
-                </div>
-                <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-                  <div class="global-field-horizontal" style="width: 100%;">
-                    <textarea placeholder="Escreva suas observações..." rows="4" style="width: 100%; resize: vertical;"></textarea>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="form-row" style="margin: 10px 0 -10px 0; display: flex; flex-wrap: wrap; justify-content: flex-end;">
-              <div class="action-buttons">
-                <button class="btn btn-danger" onclick="generateCloseCREPCMessage()">COMUNICAR CREPC</button>
-              </div>
+          <div class="form-row" style="margin: 15px 0 -10px 0; display: flex; flex-wrap: wrap; justify-content: flex-end;">
+            <div class="action-buttons">
+              <button class="btn btn-danger" onclick="generateCloseCREPCMessage()">COMUNICAR CREPC</button>
             </div>
           </div>
         </div>
       </div>
+    </div>
       <!---- MÓDULO SOLICITAÇÃO DE DISPONIBILIDADES ---->
       <div id="page-solicitation" class="page">
         <h2 class="section-title">Solicitação de Disponibilidades para Serviços</h2>
@@ -771,3 +775,4 @@
   <script></script>
 </body>
 </html>
+

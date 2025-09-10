@@ -405,84 +405,80 @@
       </div>
     </div>
       <!---- MÓDULO SOLICITAÇÃO DE DISPONIBILIDADES ---->
-      <div id="page-solicitation" class="page">
-        <h2 class="section-title">Solicitação de Disponibilidades para Serviços</h2>
-        <div class="card">
-          <div class="card-header">TIPO DE SOLICITAÇÃO</div>
-          <div class="card-body">
-            <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-              <div class="global-field-horizontal">
-                <label>Data do Serviço:</label>
-                <input type="date" id="solicitation_date" style="width: 100px;">
-              </div>
+    <div id="page-solicitation" class="page">
+      <h2 class="section-title">Solicitação de Disponibilidades para Serviços</h2>
+      <div class="card">
+        
+        <div class="card-header">TIPO DE SOLICITAÇÃO</div>
+        
+        <div class="card-body">
+          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: -10px;">            
+            <div class="global-field-horizontal">
+              <label>Data do Serviço:</label>
+              <input type="date" id="solicitation_date" style="width: 110px;">
+            </div>            
+            <div class="global-field-horizontal">
+              <label>Tipo de Solicitação:</label>
+              <select id="solicitation_type" style="width: 200px;">
+              </select>
+            </div>            
+            <div class="global-field-horizontal">
+              <label>Motivo da Solicitação:</label>
+              <select id="solicitation_motive" style="width: 200px;">
+              </select>
+            </div>            
+            <div class="global-field-horizontal">
+              <label>Turno:</label>
+              <select id="solicitation_shift" style="width: 75px;">
+              </select>
             </div>
-            <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-              <div class="global-field-horizontal">
-                <label>Tipo de Solicitação:</label>
-                <select id="solicitation_type" style="width: 200px;">
-                </select>
-              </div>
-            </div>
-            <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-              <div class="global-field-horizontal">
-                <label>Motivo da Solicitação:</label>
-                <select id="solicitation_motive" style="width: 200px;">
-                </select>
-              </div>
-            </div>
-            <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-              <div class="global-field-horizontal">
-                <label>Turno:</label>
-                <select id="solicitation_shift" style="width: 75px;">
-                </select>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-header">MEIOS SOLICITADOS</div>
-          <div class="card-body">
-            <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-              <div class="global-field-horizontal">
-                <label>Motoritas:</label>
-                <div class="global-field-horizontal">
-                  <input type="text" id="drivers" placeholder="0" style="width: 75px; text-align: center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
-                </div>
-              </div>
-              <div class="global-field-horizontal">
-                <label>Elementos:</label>
-                <div class="global-field-horizontal">
-                  <input type="text" id="elements" placeholder="0" style="width: 75px; text-align: center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-header">DESTINO DO SERVIÇO</div>
-          <div class="card-body">
-            <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-              <div class="global-field-horizontal">
-                <label>Hora de Saída:</label>
-                <div class="global-field-horizontal">
-                  <input type="time" id="exit_hour" style="width: 75px;">
-                </div>
-              </div>
-              <div class="global-field-horizontal">
-                <label>ULS Destino:</label>
-                <div class="global-field-horizontal">
-                  <input type="text" id="uls_desteny" placeholder="Ex. IPO Lisboa" style="width: 250px; text-align: center;">
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="form-row" style="margin: 10px 0 10px 10px; display: flex; flex-wrap: wrap; justify-content: flex-end;">
-          <div class="action-buttons">
-            <button class="btn btn-success" onclick="generateAvailability()">SOLICITAR</button>
           </div>
         </div>
       </div>
+      <div class="card">
+        <div class="card-header">MEIOS SOLICITADOS</div>
+        <div class="card-body">
+          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: -10px;">
+            <div class="global-field-horizontal">
+              <label>Motoritas:</label>
+              <div class="global-field-horizontal">
+                <input type="text" id="drivers" placeholder="0" style="width: 75px; text-align: center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
+              </div>
+            </div>
+            <div class="global-field-horizontal">
+              <label>Elementos:</label>
+              <div class="global-field-horizontal">
+                <input type="text" id="elements" placeholder="0" style="width: 75px; text-align: center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">DESTINO DO SERVIÇO</div>
+        <div class="card-body">
+          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: -10px;">
+            <div class="global-field-horizontal">
+              <label>Hora de Saída:</label>
+              <div class="global-field-horizontal">
+                <input type="time" id="exit_hour" style="width: 75px;">
+              </div>
+            </div>
+            <div class="global-field-horizontal">
+              <label>ULS Destino:</label>
+              <div class="global-field-horizontal">
+                <input type="text" id="uls_desteny" placeholder="Ex. IPO Lisboa" style="width: 250px; text-align: center;">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="form-row" style="margin: 10px 0 10px 10px; display: flex; flex-wrap: wrap; justify-content: flex-end;">
+        <div class="action-buttons">
+          <button class="btn btn-success" onclick="generateAvailability()">SOLICITAR</button>
+        </div>
+      </div>
+    </div>
       <!---- MÓDULO INDISPONIBILIDADE DE VEÍCULOS ---->
       <div id="page-indisp" class="page">
         <h2 class="section-title">Indisponibilidade Veículos</h2>
@@ -775,4 +771,5 @@
   <script></script>
 </body>
 </html>
+
 

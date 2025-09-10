@@ -40,6 +40,15 @@
   background-color: #C82333;
 }
 
+.btn-add {
+  background-color: #3354a1;
+  color: white;
+}
+
+.btn-add:hover {
+  background-color: #284078;
+}
+
 .button-container {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

@@ -1,10 +1,10 @@
     // ===============================
-    // INSERIR OCORRÊNCIA
-    // ===============================    
+    // NOVA OCORRÊNCIA
+    // ===============================
     /* ---- VEÍCULOS ---- */
     const vehicleContainer = document.getElementById('vehicle-container');
     let vehicleCount = 0;
-    function NewOCRaddVehicle() {
+    async function NewOCRaddVehicle() {
       vehicleCount++;
       const card = document.createElement('div');
       card.className = 'vehicle-card';
@@ -31,7 +31,10 @@
     </div>
   `;
       vehicleContainer.appendChild(card);
+      const select = card.querySelector("select");
+      await populateSingleVehicleSelect(select);
     }
+
     function NewOCRresetVehicles() {
       vehicleContainer.innerHTML = "";
       vehicleCount = 0;
@@ -41,64 +44,71 @@
     }
     // ===============================
     // ENCERRAR OCORRÊNCIA
-    // =============================== 
+    // ===============================
     /* ---- VEÍCULOS ---- */
     const vehiclesContainer = document.getElementById('vehicles-container');
-    let vehiclesCount = 0;
-    function CloseOCRaddVehicle() {
-      vehiclesCount++;
-      vehiclesContainer.innerHTML += `
-    <div class="vehicle-card" style="min-height: 190px; margin: 5px;">
-      <div class="field-card-title">${vehiclesCount}º VEÍCULO</div>
-      <div class="vehicle-field-horizontal" style="width: 150px;">
-        <label>Veículo:</label>
-        <select style="width: 150px;"></select>
-      </div>
-      <div class="global-field-horizontal">
-        <label>Dt. Ch. TO:</label>
-        <input type="date" style="width: 100px;">
-        <label>Hr. Ch. TO:</label>
-        <input type="time" style="width: 75px;">
-      </div>
-      <div class="global-field-horizontal">
-        <label>Dt. Sd. TO:</label>
-        <input type="date" style="width: 100px;">
-        <label>Hr. Sd. TO:</label>
-        <input type="time" style="width: 75px;">
-      </div>
-      <div class="global-field-horizontal">
-        <label>Dt. Ch. Und.:</label>
-        <input type="date" style="width: 100px;">
-        <label>Hr. Ch. Und.:</label>
-        <input type="time" style="width: 75px;">
-        <label>Kms.:</label>
-        <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="4"
-               oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,4)">
-      </div>
-      <div class="global-field-horizontal">
-        <label>Tempo Bomba:</label>
-        <label>Hr:</label>
-        <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="3"
-               oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)">
-        <label>Mins:</label>
-        <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="2"
-               oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
-      </div>
+    let closeVehicleCount = 0;
+    async function CloseOCRaddVehicle() {
+      closeVehicleCount++;
+      const card = document.createElement('div');
+      card.className = 'vehicle-card';
+      card.style.minHeight = "190px";
+      card.style.margin = "5px";
+      card.innerHTML = `
+    <div class="field-card-title">${closeVehicleCount}º VEÍCULO</div>
+    <div class="vehicle-field-horizontal" style="width: 150px;">
+      <label>Veículo:</label>
+      <select style="width: 150px;"></select>
+    </div>
+    <div class="global-field-horizontal">
+      <label>Dt. Ch. TO:</label>
+      <input type="date" style="width: 100px;">
+      <label>Hr. Ch. TO:</label>
+      <input type="time" style="width: 75px;">
+    </div>
+    <div class="global-field-horizontal">
+      <label>Dt. Sd. TO:</label>
+      <input type="date" style="width: 100px;">
+      <label>Hr. Sd. TO:</label>
+      <input type="time" style="width: 75px;">
+    </div>
+    <div class="global-field-horizontal">
+      <label>Dt. Ch. Und.:</label>
+      <input type="date" style="width: 100px;">
+      <label>Hr. Ch. Und.:</label>
+      <input type="time" style="width: 75px;">
+      <label>Kms.:</label>
+      <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="4" 
+             oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,4)">
+    </div>
+    <div class="global-field-horizontal">
+      <label>Tempo Bomba:</label>
+      <label>Hr:</label>
+      <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="3" 
+             oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)">
+      <label>Mins:</label>
+      <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="2" 
+             oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
     </div>
   `;
+      vehiclesContainer.appendChild(card);
+      const select = card.querySelector("select");
+      await populateSingleVehicleSelect(select);
     }
+
     function CloseOCRresetVehicles() {
       vehiclesContainer.innerHTML = "";
-      vehiclesCount = 0;
+      closeVehicleCount = 0;
       for (let i = 0; i < 3; i++) {
         CloseOCRaddVehicle();
       }
     }
-    /* ---- VÍTIMAS ---- */    
+    /* ---- VÍTIMAS ---- */
     const victimsContainer = document.getElementById('victims-container');
     let victimsCount = 0;
-    function addVictim() {
+    async function addVictim() {
       victimsCount++;
+      const idx = victimsCount;
       const div = document.createElement('div');
       div.className = 'form-row';
       div.style.display = 'flex';
@@ -108,40 +118,43 @@
       div.innerHTML = `
     <div class="global-field-horizontal">
       <label>Género:</label>
-      <select id="victim_${victimsCount}_gender" style="width: 120px;"></select>
+      <select id="victim_${idx}_gender" style="width: 120px;"></select>
     </div>
     <div class="global-field-horizontal">
       <label>Idade:</label>
-      <input type="text" 
-             id="victim_${victimsCount}_age_unit" 
-             placeholder="0" 
-             style="width: 50px; text-align: center;" 
-             maxlength="3" 
-             oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,3)">
-      <select id="victim_${victimsCount}_age" style="width: 120px;"></select>
+      <input type="text" id="victim_${idx}_age_unit" placeholder="0" style="width: 50px; text-align: center;" maxlength="3">
+      <select id="victim_${idx}_age" style="width: 120px;"></select>
     </div>
     <div class="global-field-horizontal">
       <label>Nacion:</label>
-      <input type="text" id="victim_${victimsCount}_nation" style="width: 175px;">
+      <input type="text" id="victim_${idx}_nation" style="width: 175px;">
     </div>
     <div class="global-field-horizontal">
       <label>Tipo:</label>
-      <select id="victim_${victimsCount}_type" style="width: 120px;"></select>
+      <select id="victim_${idx}_type" style="width: 120px;"></select>
     </div>
     <div class="global-field-horizontal">
       <label>Estado:</label>
-      <select id="victim_${victimsCount}_status" style="width: 120px;"></select>
+      <select id="victim_${idx}_status" style="width: 120px;"></select>
     </div>
   `;
       victimsContainer.appendChild(div);
+      // Popular cada select específico desta vítima
+      await populateSingleVictimSelect(document.getElementById(`victim_${idx}_gender`), 'victim_gender');
+      await populateSingleVictimSelect(document.getElementById(`victim_${idx}_age`), 'victim_age');
+      await populateSingleVictimSelect(document.getElementById(`victim_${idx}_type`), 'victim_type');
+      await populateSingleVictimSelect(document.getElementById(`victim_${idx}_status`), 'victim_status');
     }
-    function resetVictims() {
+    async function resetVictims(initialCount = 1) {
       victimsContainer.innerHTML = "";
       victimsCount = 0;
-      for (let i = 0; i < 1; i++) {
-        addVictim();
+      for (let i = 0; i < initialCount; i++) {
+        await addVictim();
       }
     }
+    document.addEventListener('DOMContentLoaded', async () => {
+      await resetVictims(3); // inicia com 3 vítimas
+    });
     /* ---- OUTROS MEIOS NO TO ---- */ 
     const extrasContainer = document.getElementById('extras-container');
     let extrasCount = 0;

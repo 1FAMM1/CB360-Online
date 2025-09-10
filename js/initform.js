@@ -1,17 +1,19 @@
     // ===============================
     // INSERIR OCORRÊNCIA
     // ===============================    
+    /* ---- VEÍCULOS ---- */
     const vehicleContainer = document.getElementById('vehicle-container');
-    const totalVehicles = 6;
-    for (let i = 1; i <= totalVehicles; i++) {
+    let vehicleCount = 0;
+    function NewOCRaddVehicle() {
+      vehicleCount++;
       const card = document.createElement('div');
       card.className = 'vehicle-card';
       card.innerHTML = `
-    <div class="field-card-title">${i}º VEÍCULO</div>
+    <div class="field-card-title">${vehicleCount}º VEÍCULO</div>
     <div class="vehicle-fields">
       <div class="vehicle-field" style="width: 120px;">
         <label>Data Saída:</label>
-        <input type="date" value="">
+        <input type="date">
       </div>
       <div class="vehicle-field" style="width: 150px;">
         <label>Veículo:</label>
@@ -19,7 +21,7 @@
       </div>
       <div class="vehicle-field" style="width: 75px;">
         <label>BBs:</label>
-        <input type="text" placeholder="00" style="width:100%; text-align:center;" maxlength="2" 
+        <input type="text" placeholder="00" style="width:100%; text-align:center;" maxlength="2"
                oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
       </div>
       <div class="vehicle-field" style="width: 100px;">
@@ -30,57 +32,73 @@
   `;
       vehicleContainer.appendChild(card);
     }
-    // ===============================
-    // ENCERRAR COCORRÊNCIA
-    // =============================== 
-    // ===============================
-    // VEÍCULOS
-    // =============================== 
-    const vehiclesContainer = document.getElementById('vehicles-container');
-    for (let i = 1; i <= 6; i++) {
-      vehiclesContainer.innerHTML += `
-      <div class="vehicle-card" style="min-height: 190px; margin: 5px;">
-        <div class="field-card-title">${i}º VEÍCULO</div>
-        <div class="vehicle-field-horizontal" style="width: 150px;">
-          <label>Veículo:</label>
-          <select style="width: 150px;"></select>
-        </div>
-        <div class="global-field-horizontal">
-          <label>Dt. Ch. TO:</label>
-          <input type="date" style="width: 100px;">
-          <label>Hr. Ch. TO:</label>
-          <input type="time" style="width: 75px;">
-        </div>
-        <div class="global-field-horizontal">
-          <label>Dt. Sd. TO:</label>
-          <input type="date" style="width: 100px;">
-          <label>Hr. Sd. TO:</label>
-          <input type="time" style="width: 75px;">
-        </div>
-        <div class="global-field-horizontal">
-          <label>Dt. Ch. Und.:</label>
-          <input type="date" style="width: 100px;">
-          <label>Hr. Ch. Und.:</label>
-          <input type="time" style="width: 75px;">
-          <label>Kms.:</label>
-          <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="4" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,4)">
-        </div>
-        <div class="global-field-horizontal">
-          <label>Tempo Bomba:</label>
-          <label>Hr:</label>
-          <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)">
-          <label>Mins:</label>
-          <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
-        </div>
-      </div>
-    `;
+    function NewOCRresetVehicles() {
+      vehicleContainer.innerHTML = "";
+      vehicleCount = 0;
+      for (let i = 0; i < 3; i++) {
+        NewOCRaddVehicle();
+      }
     }
     // ===============================
-    // VÍTIMAS
-    // ===============================    
+    // ENCERRAR OCORRÊNCIA
+    // =============================== 
+    /* ---- VEÍCULOS ---- */
+    const vehiclesContainer = document.getElementById('vehicles-container');
+    let vehiclesCount = 0;
+    function CloseOCRaddVehicle() {
+      vehiclesCount++;
+      vehiclesContainer.innerHTML += `
+    <div class="vehicle-card" style="min-height: 190px; margin: 5px;">
+      <div class="field-card-title">${vehiclesCount}º VEÍCULO</div>
+      <div class="vehicle-field-horizontal" style="width: 150px;">
+        <label>Veículo:</label>
+        <select style="width: 150px;"></select>
+      </div>
+      <div class="global-field-horizontal">
+        <label>Dt. Ch. TO:</label>
+        <input type="date" style="width: 100px;">
+        <label>Hr. Ch. TO:</label>
+        <input type="time" style="width: 75px;">
+      </div>
+      <div class="global-field-horizontal">
+        <label>Dt. Sd. TO:</label>
+        <input type="date" style="width: 100px;">
+        <label>Hr. Sd. TO:</label>
+        <input type="time" style="width: 75px;">
+      </div>
+      <div class="global-field-horizontal">
+        <label>Dt. Ch. Und.:</label>
+        <input type="date" style="width: 100px;">
+        <label>Hr. Ch. Und.:</label>
+        <input type="time" style="width: 75px;">
+        <label>Kms.:</label>
+        <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="4"
+               oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,4)">
+      </div>
+      <div class="global-field-horizontal">
+        <label>Tempo Bomba:</label>
+        <label>Hr:</label>
+        <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="3"
+               oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)">
+        <label>Mins:</label>
+        <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="2"
+               oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
+      </div>
+    </div>
+  `;
+    }
+    function CloseOCRresetVehicles() {
+      vehiclesContainer.innerHTML = "";
+      vehiclesCount = 0;
+      for (let i = 0; i < 3; i++) {
+        CloseOCRaddVehicle();
+      }
+    }
+    /* ---- VÍTIMAS ---- */    
     const victimsContainer = document.getElementById('victims-container');
-    const numberOfVictims = 3; // Alterar para o número de vítimas que desejar
-    for (let i = 1; i <= numberOfVictims; i++) {
+    let victimsCount = 0;
+    function addVictim() {
+      victimsCount++;
       const div = document.createElement('div');
       div.className = 'form-row';
       div.style.display = 'flex';
@@ -88,37 +106,48 @@
       div.style.gap = '15px';
       div.style.marginBottom = '0px';
       div.innerHTML = `
-      <div class="global-field-horizontal">
-        <label>Género:</label>
-        <select id="victim_${i}_gender" style="width: 120px;"></select>
-      </div>
-      <div class="global-field-horizontal">
-        <label>Idade:</label>
-        <input type="text" id="victim_${i}_age_unit" placeholder="0" style="width: 50px; text-align: center;" maxlength="3"
-          oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,3)">
-        <select id="victim_${i}_age" style="width: 120px;"></select>
-      </div>
-      <div class="global-field-horizontal">
-        <label>Nacion:</label>
-        <input type="text" id="victim_${i}_nation" style="width: 175px;">
-      </div>
-      <div class="global-field-horizontal">
-        <label>Tipo:</label>
-        <select id="victim_${i}_type" style="width: 120px;"></select>
-      </div>
-      <div class="global-field-horizontal">
-        <label>Estado:</label>
-        <select id="victim_${i}_status" style="width: 120px;"></select>
-      </div>
-    `;
+    <div class="global-field-horizontal">
+      <label>Género:</label>
+      <select id="victim_${victimsCount}_gender" style="width: 120px;"></select>
+    </div>
+    <div class="global-field-horizontal">
+      <label>Idade:</label>
+      <input type="text" 
+             id="victim_${victimsCount}_age_unit" 
+             placeholder="0" 
+             style="width: 50px; text-align: center;" 
+             maxlength="3" 
+             oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,3)">
+      <select id="victim_${victimsCount}_age" style="width: 120px;"></select>
+    </div>
+    <div class="global-field-horizontal">
+      <label>Nacion:</label>
+      <input type="text" id="victim_${victimsCount}_nation" style="width: 175px;">
+    </div>
+    <div class="global-field-horizontal">
+      <label>Tipo:</label>
+      <select id="victim_${victimsCount}_type" style="width: 120px;"></select>
+    </div>
+    <div class="global-field-horizontal">
+      <label>Estado:</label>
+      <select id="victim_${victimsCount}_status" style="width: 120px;"></select>
+    </div>
+  `;
       victimsContainer.appendChild(div);
     }
-    // ===============================
-    // DANOS E EXTRAS
-    // =============================== 
+    function resetVictims() {
+      victimsContainer.innerHTML = "";
+      victimsCount = 0;
+      for (let i = 0; i < 1; i++) {
+        addVictim();
+      }
+    }
+    /* ---- OUTROS MEIOS NO TO ---- */ 
     const extrasContainer = document.getElementById('extras-container');
-    const damagesContainer = document.getElementById('damages-container');
-    for (let i = 1; i <= 8; i++) {
+    let extrasCount = 0;
+    function addExtra(index = null) {
+      extrasCount++;
+      const i = index || extrasCount;
       const div = document.createElement('div');
       div.className = 'form-row';
       div.style.display = 'flex';
@@ -126,22 +155,32 @@
       div.style.gap = '15px';
       div.style.marginBottom = '0px';
       div.innerHTML = `
-      <div class="global-field-horizontal" style="flex:1;">
-        <label>${i.toString().padStart(2,'0')}.:</label>
-        <input type="text" style="width: 100%;">
-      </div>
-      <div class="global-field-horizontal">
-        <label>Veícs.:</label>
-        <input type="text" placeholder="0" style="width:50px; text-align:center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
-      </div>
-      <div class="global-field-horizontal">
-        <label>Elems.:</label>
-        <input type="text" placeholder="0" style="width:50px; text-align:center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
-      </div>
-    `;
+    <div class="global-field-horizontal" style="flex:1;"> 
+      <label>${i.toString().padStart(2, '0')}.:</label> 
+      <input type="text" style="width: 100%;"> 
+    </div>
+    <div class="global-field-horizontal">
+      <label>Veícs.:</label>
+      <input type="text" placeholder="0" style="width:50px; text-align:center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0, 2)">
+    </div>
+    <div class="global-field-horizontal">
+      <label>Elems.:</label>
+      <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="2" oninput="this.value = this.value.replace(/[^0-9]/g,'').slice(0, 2)">
+    </div>
+  `;
       extrasContainer.appendChild(div);
     }
-    for (let i = 1; i <= 8; i++) {
+    function resetExtras() {
+      extrasContainer.innerHTML = "";
+      extrasCount = 0;
+      for (let i = 1; i <= 1; i++) addExtra(i);
+    }
+    /* ---- DANOS CAUSADOS ---- */
+    const damagesContainer = document.getElementById('damages-container');
+    let damagesCount = 0;
+    function addDamage(index = null) {
+      damagesCount++;
+      const i = index || damagesCount;
       const div = document.createElement('div');
       div.className = 'form-row';
       div.style.display = 'flex';
@@ -149,48 +188,34 @@
       div.style.gap = '5px';
       div.style.marginBottom = '0px';
       div.innerHTML = `
-      <div class="global-field-horizontal" style="flex:1;">
-        <label>${i.toString().padStart(2,'0')}.:</label>
-        <input type="text" style="width:100%;">
-      </div>
-    `;
+    <div class="global-field-horizontal" style="flex: 1;">
+      <label>${i.toString().padStart(2,'0')}.:</label>
+      <input type="text" style="width: 100%;">
+    </div>
+  `;
       damagesContainer.appendChild(div);
+    }
+    function resetDamages() {
+      damagesContainer.innerHTML = "";
+      damagesCount = 0;
+      for (let i = 1; i <= 1; i++) addDamage(i); // inicia com 8
+    }
+    /* ---- RESET DE CAMPOS ---- */
+    function CloseOCRresetAll() {
+      CloseOCRresetVehicles();
+      resetVictims();
+      resetExtras()
+      resetDamages();
     }
     // ===============================
     // EPE E PPI
     // ===============================   
-    const epeCards = [{
-        id: "epe-decir",
-        label: "EPE SIOPS DECIR",
-        buttons: ["MONITORIZAÇÃO", "NÍVEL I", "NÍVEL II", "NÍVEL III", "NÍVEL IV", ""]
-      },
-      {
-        id: "epe-diops",
-        label: "EPE SIOPS DIOPS",
-        buttons: ["MONITORIZAÇÃO", "NÍVEL I", "NÍVEL II", "NÍVEL III", "NÍVEL IV", ""]
-      },
-      {
-        id: "epe-nrbq",
-        label: "EPE SIOPS NRBQ",
-        buttons: ["MONITORIZAÇÃO", "NÍVEL I", "NÍVEL II", "NÍVEL III", "NÍVEL IV", ""]
-      }
-    ];
-    const ppiCards = [{
-        id: "ppi-aero",
-        label: "PPI AEROPORTO",
-        buttons: ["MONITORIZAÇÃO", "AMARELO", "VERMELHO", "", "", ""]
-      },
-      {
-        id: "ppi-a22",
-        label: "PPI A22",
-        buttons: ["MONITORIZAÇÃO", "1º ALARME", "2º ALARME", "ALARME ESPECIAL", "", ""]
-      },
-      {
-        id: "ppi-linfer",
-        label: "PPI LINHA FÉRREA",
-        buttons: ["MONITORIZAÇÃO", "1º ALARME", "2º ALARME", "ALARME ESPECIAL", "", ""]
-      }
-    ];
+    const epeCards = [{id: "epe-decir", label: "EPE SIOPS DECIR", buttons: ["MONITORIZAÇÃO", "NÍVEL I", "NÍVEL II", "NÍVEL III", "NÍVEL IV", ""]},
+                      {id: "epe-diops", label: "EPE SIOPS DIOPS", buttons: ["MONITORIZAÇÃO", "NÍVEL I", "NÍVEL II", "NÍVEL III", "NÍVEL IV", ""]},
+                      {id: "epe-nrbq", label: "EPE SIOPS NRBQ", buttons: ["MONITORIZAÇÃO", "NÍVEL I", "NÍVEL II", "NÍVEL III", "NÍVEL IV", ""]}];
+    const ppiCards = [{id: "ppi-aero", label: "PPI AEROPORTO", buttons: ["MONITORIZAÇÃO", "AMARELO", "VERMELHO", "", "", ""]},
+                      {id: "ppi-a22", label: "PPI A22", buttons: ["MONITORIZAÇÃO", "1º ALARME", "2º ALARME", "ALARME ESPECIAL", "", ""]},
+                      {id: "ppi-linfer", label: "PPI LINHA FÉRREA", buttons: ["MONITORIZAÇÃO", "1º ALARME", "2º ALARME", "ALARME ESPECIAL", "", ""]}];
 
     function createCard(cardData) {
       const divItem = document.createElement("div");

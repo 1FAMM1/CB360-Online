@@ -152,6 +152,18 @@
         contactNr.value = '';
       }
     }
+    function toggleAnimalTypeField() {
+      const clsOcorr = document.getElementById('class_occorr_input')?.value;
+      const animalType = document.getElementById('animal-type');
+      if (!animalType) return;
+      if (clsOcorr === '4331' || clsOcorr === '4333') {
+        animalType.disabled = false;
+      } else {
+        animalType.disabled = true;
+        animalType.value = '';
+      }
+    }
+    
     document.addEventListener('DOMContentLoaded', () => {
       toggleAlertTypeFields();
       document.getElementById('alert_type')?.addEventListener('change', toggleAlertTypeFields);
@@ -165,6 +177,8 @@
           toggleContactFields();
         });
       }
+      toggleAnimalTypeField();
+      document.getElementById('class_occorr_input')?.addEventListener('change', toggleAnimalTypeField);
     });
     /* ---- LIMPEZA E VALIDALÇÃO DE CAMPOS ---- */
     function getAlertTime() {

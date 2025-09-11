@@ -9,31 +9,17 @@
   flex-wrap: wrap;
 }
 
-.form-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.form-group label {
-  font-size: 11px;
-  font-weight: bold;
-  color: #6C757D;
-}
-
-.form-group input,
-.form-group select {
-  height: 25px;
-  border: 1px solid #CED4DA;
-  padding: 0 8px;
-  font-size: 10px;
-  background: white;
-}
-
-.form-group input:focus,
-.form-group select:focus {
-  outline: none;
-  border-color: #80BDFF;
-  box-shadow: 0 0 0 1px rgba(0, 123, 255, 0.25);
+.type-separator {
+  background: linear-gradient(270deg, #d9d9d9, #261461);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  padding: 3px 20px;
+  color: #ddd;
+  font-size: 13px;
+  border-radius: 5px 5px 0 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  border-bottom: 3px solid rgba(0, 0, 0, 0.1);
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
 }
 
 .grid-2fr {

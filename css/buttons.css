@@ -49,6 +49,12 @@
   background-color: #284078;
 }
 
+.btn-add.active {
+  background-color: #bf2828;
+  color: #fff;
+  font-weight: bold;
+}
+
 .button-container {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

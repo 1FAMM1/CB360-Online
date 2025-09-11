@@ -123,28 +123,16 @@
   animation: borderBlink 1.5s infinite, gentleShake 3s infinite;
 }
 
-.vehicle-btn.vcot,
-.vehicle-btn.vcoc,
-.vehicle-btn.vttp,
-.vehicle-btn.vfci,
-.vehicle-btn.veci,
-.vehicle-btn.vuci,
-.vehicle-btn.vrci,
-.vehicle-btn.vsat,
-.vehicle-btn.vsae,
-.vehicle-btn.vttu,
-.vehicle-btn.vttf,
-.vehicle-btn.vale,
-.vehicle-btn.vttr,
-.vehicle-btn.veta,
-.vehicle-btn.vope {
+.vehicle-btn.vcot, .vehicle-btn.vcoc, .vehicle-btn.vttp, .vehicle-btn.vfci, .vehicle-btn.veci, .vehicle-btn.vuci,
+.vehicle-btn.vrci, .vehicle-btn.vsat, .vehicle-btn.vsae, .vehicle-btn.vttu, .vehicle-btn.vttf, .vehicle-btn.vale,
+.vehicle-btn.vttr, .vehicle-btn.veta, .vehicle-btn.vope {
   border-color: #e74c3c;
 }
 
-.vehicle-btn.abci,
-.vehicle-btn.absc,
-.vehicle-btn.abtd,
-.vehicle-btn.abtm,
-.vehicle-btn.vdtd {
+.vehicle-btn.abci, .vehicle-btn.absc, .vehicle-btn.abtd, .vehicle-btn.abtm, .vehicle-btn.vdtd {
   border-color: #3498db;
+}
+
+.vehicle-btn.atrl {
+  border-color: #377d37;
 }

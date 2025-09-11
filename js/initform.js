@@ -45,6 +45,11 @@
     // ===============================
     // ENCERRAR OCORRÊNCIA
     // ===============================
+    /* ---- BOTÕES OPÇÕES ---- */
+    function resetButtons() {
+      const buttons = document.querySelectorAll('.action-buttons .btn-add');
+      buttons.forEach(btn => btn.classList.remove('active'));
+    }
     /* ---- VEÍCULOS ---- */
     const vehiclesContainer = document.getElementById('vehicles-container');
     let closeVehicleCount = 0;
@@ -56,30 +61,30 @@
       card.style.margin = "5px";
       card.innerHTML = `
     <div class="field-card-title">${closeVehicleCount}º VEÍCULO</div>
-    <div class="vehicle-field-horizontal" style="width: 150px;">
+    <div class="vehicle-field-horizontal" style="width: 175px;">
       <label>Veículo:</label>
       <select style="width: 150px;"></select>
     </div>
     <div class="global-field-horizontal">
       <label>Dt. Ch. TO:</label>
-      <input type="date" style="width: 100px;">
+      <input type="date" style="width: 110px;">
       <label>Hr. Ch. TO:</label>
       <input type="time" style="width: 75px;">
     </div>
     <div class="global-field-horizontal">
       <label>Dt. Sd. TO:</label>
-      <input type="date" style="width: 100px;">
+      <input type="date" style="width: 110px;">
       <label>Hr. Sd. TO:</label>
       <input type="time" style="width: 75px;">
     </div>
     <div class="global-field-horizontal">
       <label>Dt. Ch. Und.:</label>
-      <input type="date" style="width: 100px;">
+      <input type="date" style="width: 110px;">
       <label>Hr. Ch. Und.:</label>
       <input type="time" style="width: 75px;">
       <label>Kms.:</label>
-      <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="4" 
-             oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,4)">
+      <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="5" 
+             oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,5)">
     </div>
     <div class="global-field-horizontal">
       <label>Tempo Bomba:</label>
@@ -139,13 +144,14 @@
     </div>
   `;
       victimsContainer.appendChild(div);
-      // Popular cada select específico desta vítima
       await populateSingleVictimSelect(document.getElementById(`victim_${idx}_gender`), 'victim_gender');
       await populateSingleVictimSelect(document.getElementById(`victim_${idx}_age`), 'victim_age');
       await populateSingleVictimSelect(document.getElementById(`victim_${idx}_type`), 'victim_type');
       await populateSingleVictimSelect(document.getElementById(`victim_${idx}_status`), 'victim_status');
     }
     async function resetVictims(initialCount = 1) {
+      const victimsCard = document.querySelector('.victims-card');
+      if (victimsCard) victimsCard.classList.add('hidden');
       victimsContainer.innerHTML = "";
       victimsCount = 0;
       for (let i = 0; i < initialCount; i++) {
@@ -153,11 +159,12 @@
       }
     }
     document.addEventListener('DOMContentLoaded', async () => {
-      await resetVictims(3); // inicia com 3 vítimas
+      await resetVictims(1);
     });
-    /* ---- OUTROS MEIOS NO TO ---- */ 
+    /* ---- OUTROS MEIOS NO TO ---- */
     const extrasContainer = document.getElementById('extras-container');
     let extrasCount = 0;
+
     function addExtra(index = null) {
       extrasCount++;
       const i = index || extrasCount;
@@ -183,14 +190,18 @@
   `;
       extrasContainer.appendChild(div);
     }
+
     function resetExtras() {
+      const victimsCard = document.querySelector('.extras-card');
+      if (victimsCard) victimsCard.classList.add('hidden');
       extrasContainer.innerHTML = "";
       extrasCount = 0;
-      for (let i = 1; i <= 1; i++) addExtra(i);
+      for (let i = 1; i <= 1; i++) addExtra(i); // inicia com 8
     }
     /* ---- DANOS CAUSADOS ---- */
     const damagesContainer = document.getElementById('damages-container');
     let damagesCount = 0;
+
     function addDamage(index = null) {
       damagesCount++;
       const i = index || damagesCount;
@@ -208,17 +219,33 @@
   `;
       damagesContainer.appendChild(div);
     }
+
     function resetDamages() {
+      const victimsCard = document.querySelector('.demage-card');
+      if (victimsCard) victimsCard.classList.add('hidden');
       damagesContainer.innerHTML = "";
       damagesCount = 0;
       for (let i = 1; i <= 1; i++) addDamage(i); // inicia com 8
     }
-    /* ---- RESET DE CAMPOS ---- */
+    /* ---- ÁREA ARDIDA ---- */
+    function resetBurned() {
+      const burnedCard = document.querySelector('.burned-card');
+      if (burnedCard) burnedCard.classList.add('hidden');
+    }
+    /* ---- OSERVAÇÕES ---- */
+    function resetObservations() {
+      const observCard = document.querySelector('.observ-card');
+      if (observCard) observCard.classList.add('hidden');
+    }
+    /* ---- RESET GLOBAL ---- */
     function CloseOCRresetAll() {
       CloseOCRresetVehicles();
       resetVictims();
-      resetExtras()
+      resetExtras();
       resetDamages();
+      resetBurned();
+      resetObservations();
+      resetButtons();
     }
     // ===============================
     // EPE E PPI

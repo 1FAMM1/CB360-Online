@@ -237,6 +237,13 @@
           vehicles.push(`*GDH Sd Und:* ${vehicle} | ${gdhVehicle} | ${bbs ? bbs + ' BBs.' : ''}`);
         }
       });
+      let contacInfo = '';
+      const alertSourceTrimmed = alertSource.trim();
+      if (alertSourceTrimmed === 'Popular' || alertSourceTrimmed === 'Particular') {
+        const contactName = document.getElementById('contact_name')?.value?.trim() || '';
+        const contacNr = document.getElementById('contact_nr')?.value?.trim() || '';
+        contacInfo = `*CONTACTANTE:* ${contactName} - ${contacNr}.\n\n`;
+      } else {}
       let message = '';
       if (nrOccurrence) {
         message =
@@ -255,6 +262,7 @@
           `*CLASS OC:* ${classOccorr}\n` +
           `*LOCAL:* ${localOccorr} - ${localitie} - ${council} - ${parish}\n` +
           `${vehicles.join('\n')}\n\n` +
+          `${contacInfo}` +
           `*Agradeço N. OC:*`;
       }
       const out = document.getElementById('wsms_output');

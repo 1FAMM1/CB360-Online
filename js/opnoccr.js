@@ -208,16 +208,26 @@
       if (!alertSource) missingFields.push("Fonte do Alerta");
       const emsGroup = document.getElementById('ems_group');
       const emsNr = document.getElementById('ems_nr');
-      if (emsGroup && emsGroup.style.display !== 'none' && !emsNr.value.trim()) missingFields.push("Nr. CODU");
+      if (emsGroup && emsGroup.style.display !== 'none' && !emsNr.value.trim()) {
+        missingFields.push("Nr. CODU");
+      }
+      const classOccorr = document.getElementById('class_occorr_input')?.value;
       if (!document.getElementById('alert_time')?.value) missingFields.push("Hora do Alerta");
-      if (!document.getElementById('class_occorr_input')?.value) missingFields.push("Classificação da Ocorrência");
+      if (!classOccorr) missingFields.push("Classificação da Ocorrência");
       if (!document.getElementById('occorr_local_input')?.value) missingFields.push("Local da Ocorrência");
       if (!document.getElementById('occorr_localitie_input')?.value) missingFields.push("Localidade da Ocorrência");
       if (alertSource === 'Popular') {
         if (!document.getElementById('contact_name')?.value.trim()) missingFields.push("Nome do Contactante");
         if (!document.getElementById('contact_nr')?.value.trim()) missingFields.push("Contacto do Contactante");
       }
-      const hasVehicle = Array.from(document.querySelectorAll('.vehicle-card select')).some(sel => sel.value.trim() !== '');
+      if (classOccorr === '4331' || classOccorr === '4333') {
+        const animalType = document.getElementById('animal-type')?.value.trim();
+        if (!animalType) {
+          missingFields.push("Tipo de Animal");
+        }
+      }
+      const hasVehicle = Array.from(document.querySelectorAll('.vehicle-card select'))
+        .some(sel => sel.value.trim() !== '');
       if (!hasVehicle) missingFields.push("A ocorrência deve conter pelo menos 1 Veículo");
       if (missingFields.length > 0) {
         showPopupMissingFields(missingFields);

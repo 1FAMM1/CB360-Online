@@ -340,16 +340,23 @@
               <input type="text" id="close_nr_occurrence" placeholder="Ex. 2025123456789" style="width: 150px; text-align: center;" maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11)">
             </div>
           </div>
-          <button class="btn btn-add" style="margin: 0 0 0 0;" onclick="CloseOCRaddVehicle()">ADICIONAR</button>
+          <button class="btn btn-add" style="margin: 5px 0 0 0;" onclick="CloseOCRaddVehicle()">ADICIONAR</button>
         </div>
         <!-- Veículos -->
         <div class="grid-3fr" id="vehicles-container" style="margin: -15px 15px 15px 15px;"></div>
       </div>
       <div class="card last-card">
         <div class="card-header">DADOS ADICIONAIS</div>
+        <div class="action-buttons" style="margin: 10px 0 0 0; display: flex; flex-wrap: wrap; justify-content: flex-start;">
+          <button class="btn btn-add" onclick="toggleClsOcorrSection('victims-card', this)">VÍTIMAS</button>
+          <button class="btn btn-add" onclick="toggleClsOcorrSection('extras-card', this)">OUTROS MEIOS</button>
+          <button class="btn btn-add" onclick="toggleClsOcorrSection('demage-card', this)">DANOS</button>
+          <button class="btn btn-add" onclick="toggleClsOcorrSection('burned-card', this)">ÁREA ARDIDA</button>
+          <button class="btn btn-add" onclick="toggleClsOcorrSection('observ-card', this)">OBSERVAÇÕES</button>
+        </div>
         <div class="card-body">
           <!-- Vítimas -->
-          <div class="victims-card">
+          <div class="victims-card hidden">
             <div class="field-card-title" style="display: flex; align-items: center; gap: 10px;">
               <label style="font-size: 13px;">VÍTIMAS</label>
               <button class="btn btn-add" style="width: 70px; height: 20px; padding: 0; line-height: 20px;" onclick="addVictim()">ADICIONAR</button>
@@ -358,7 +365,7 @@
           </div>
           <div class="grid-2fr" style="margin: 10px 0px 15px 0px;">
             <!-- Outros Meios no TO-->
-            <div class="extras-card">
+            <div class="extras-card hidden">
               <div class="field-card-title" style="display: flex; align-items: center; gap: 10px;">
                 <label style="font-size: 13px;">OUTROS MEIOS NO TO</label>
                 <button class="btn btn-add" style="width: 70px; height: 20px; padding: 0; line-height: 20px;" onclick="addExtra()">ADICIONAR</button>
@@ -366,7 +373,7 @@
               <div id="extras-container"></div>
             </div>
             <!-- Danos Cuausados -->
-            <div class="demage-card">
+            <div class="demage-card hidden">
               <div class="field-card-title" style="display: flex; align-items: center; gap: 10px;">
                 <label style="font-size: 13px;">DANOS CAUSADOS</label>
                 <button class="btn btn-add" style="width: 70px; height: 20px; padding: 0; line-height: 20px;" onclick="addDamage()">ADICIONAR</button>
@@ -375,10 +382,10 @@
             </div>
           </div>
           <div class="grid-2fr" style="margin: -10px 0 0 0;">
-            <div class="burned-card" style="min-height: 100px;  max-width: 100%; margin: 5px 0 0 0;">
+            <div class="burned-card hidden" style="min-height: 100px;  max-width: 100%; margin: 5px 0 0 0;">
               <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin: 0 0 0 0;">
                 <div class="field-card-title">
-                  <label style="font-size: 12px;">ÁREA ARDIDA</label>
+                  <label style="font-size: 13px;">ÁREA ARDIDA</label>
                 </div>
               </div>
               <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 0px;">
@@ -396,10 +403,10 @@
                 </div>
               </div>
             </div>
-            <div class="burned-card" style="min-height: 100px; max-width: 100%; margin: 5px 0 0 0;">
+            <div class="observ-card hidden" style="min-height: 100px; max-width: 100%; margin: 5px 0 0 0;">
               <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin: 0 0 0 0;">
                 <div class="field-card-title">
-                  <label style="font-size: 12px;">OBSERVAÇÕES</label>
+                  <label style="font-size: 13px;">OBSERVAÇÕES</label>
                 </div>
               </div>
               <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
@@ -409,12 +416,10 @@
               </div>
             </div>
           </div>
-          <div class="form-row" style="margin: 15px 0 -10px 0; display: flex; flex-wrap: wrap; justify-content: flex-end;">
-            <div class="action-buttons">
-              <button class="btn btn-danger" onclick="generateCloseCREPCMessage()">COMUNICAR CREPC</button>
-            </div>
-          </div>
         </div>
+      </div>
+      <div class="action-buttons" style="margin: -35px 0 50px 0;">
+        <button class="btn btn-danger" onclick="generateCloseCREPCMessage()">COMUNICAR CREPC</button>
       </div>
     </div>
       <!---- MÓDULO SOLICITAÇÃO DE DISPONIBILIDADES ---->
@@ -784,6 +789,7 @@
   <script></script>
 </body>
 </html>
+
 
 
 

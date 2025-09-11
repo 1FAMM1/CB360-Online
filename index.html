@@ -185,122 +185,135 @@
         </div>
       </div>
       <!---- MÓDULO NOVA OCORRÊNCIA ---->
-      <div id="page_insert_occurrence" class="page">
-        <h2 class="section-title">Dados para Nova Ocorrência</h2>
-        <div class="card">
-          <div class="card-header">DADOS GLOBAIS</div>
-          <div class="card-body">
-            <div class="form-row">
-              <div class="form-group" style="width: 200px;">
-                <label>Tipo Alerta:</label>
-                <select id="alert_type">
-                </select>
-              </div>
-              <div class="form-group" style="width: 200px;">
-                <label>Fonte Alerta:</label>
-                <select id="alert_source">
-                </select>
-              </div>
-              <div class="form-group" id="ems_group" style="width: 100px;">
-                <label>Nr. CODU:</label>
-                <input type="text" id="ems_nr" placeholder="Ex. 123456789">
-              </div>
+    <div id="page_insert_occurrence" class="page">
+      <h2 class="section-title">Dados para Nova Ocorrência</h2>
+      <div class="card">
+        <div class="card-header">DADOS GLOBAIS</div>
+        <div class="card-body">
+          <div class="type-separator" style="margin: -10px 0 15px 0; font-style: italic;">Local da Ocorrência</div>
+          <div class="form-row">
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-style: italic; color: #070f3d;">Tipo Alerta:</label>
+              <select id="alert_type">
+              </select>
             </div>
-            <div class="form-row">
-              <div class="form-group" style="width: 120px;">
-                <label>Data Alerta:</label>
-                <input type="date" id="alert_date" value="">
-              </div>
-              <div class="form-group" style="width: 80px;">
-                <label>Hora Alerta:</label>
-                <input type="time" id="alert_time" value="">
-              </div>
-              <div class="form-group" style="width: 100px;">
-                <label>Class. Ocorrência:</label>
-                <input type="text" id="class_occorr_input" placeholder="Ex. 3103" style="width: 100%; text-align: center;" maxlength="4" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 4)">
-              </div>
-              <div class="form-group" style="width: 100px;">
-                <label>Nr. Ocorrência:</label>
-                <input type="text" id="nr_occurrence_input" placeholder="Ex. 123456789" style="width: 100%; text-align: center;" maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11)">
-              </div>
-              <div class="form-group" style="width: 300px; display: none;">
-                <label>Descr. Ocorrência:</label>
-                <input type="text" id="occorr_descr_input" placeholder="Inc. Mato">
-              </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-style: italic; color: #070f3d;">Fonte Alerta:</label>
+              <select id="alert_source">
+              </select>
             </div>
-            <div class="form-row">
-              <div class="form-group" style="width: 350px;">
-                <label>Morada Ocorrência:</label>
-                <input type="text" id="occorr_local_input" placeholder="Ex. Rua Serpa Pinto, 00">
-              </div>
-              <div class="form-group" style="width: 200px;">
-                <label>Localidade:</label>
-                <input type="text" id="occorr_localitie_input" placeholder="Ex. Faro">
-              </div>
-              <div class="form-group" style="width: 150px;">
-                <label>Concelho:</label>
-                <select id="council_select">
-                  <option></option>
-                </select>
-              </div>
-              <div class="form-group" style="width: 175px;">
-                <label>Freguesia:</label>
-                <select id="parish_select">
-                </select>
-              </div>
-              <div class="form-group" style="width: 100px;">
-                <label>Canal Manobra:</label>
-                <select id="channel_maneuver">
-                  <option></option>
-                </select>
-              </div>
+            <div class="global-field-horizontal" id="ems_group">
+              <label style="font-size: 12px; font-style: italic; color: #070f3d;">Nr. CODU:</label>
+              <input type="text" id="ems_nr" placeholder="Ex. 123456789">
             </div>
-            <div class="form-row">
-              <div class="form-group" style="width: 200px;">
-                <label>Tipo PPI:</label>
-                <select id="ppi_type">
-                </select>
-              </div>
-              <div class="form-group" style="width: 140px;">
-                <label>Nível Alerta:</label>
-                <select id="alert_level">
-                  <option></option>
-                </select>
-              </div>
-              <div class="form-group" style="width: 140px;">
-                <label>Grelha Alarme:</label>
-                <select id="alarm_grid">
-                  <option></option>
-                </select>
-              </div>
-              <div class="form-group" style="width: 80px;">
-                <label>Km:</label>
-                <input type="text" id="km">
-              </div>
-              <div class="form-group" style="width: 200px;">
-                <label>Sentido:</label>
-                <select id="on_going">
-                </select>
-              </div>
-              <div class="form-group" style="width: 200px;">
-                <label>Tipo Incidente:</label>
-                <select id="incident_type">
-                </select>
-              </div>
+          </div>
+          <div class="form-row">
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-style: italic; color: #070f3d;">Data Alerta:</label>
+              <input type="date" id="alert_date" value="">
             </div>
-            <div class="form-row">
-              <div class="form-group" style="width: 300px;">
-                <label>Nome Contactante:</label>
-                <input type="text" id="contact_name" placeholder="Ex. João Sousa">
-              </div>
-              <div class="form-group" style="width: 120px;">
-                <label>Nr. Contactante:</label>
-                <input type="text" id="contact_nr" placeholder="Ex. 910 000 000" style="width: 100%; text-align: center;" maxlength="9" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 9)">
-              </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-style: italic; color: #070f3d;">Hora Alerta:</label>
+              <input type="time" id="alert_time" value="">
+            </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-style: italic; color: #070f3d;">Class. Ocorrência:</label>
+              <input type="text" id="class_occorr_input" placeholder="Ex. 3103" style="width: 80px; text-align: center;" maxlength="4" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 4)">
+            </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-style: italic; color: #070f3d;">Nr. Ocorrência:</label>
+              <input type="text" id="nr_occurrence_input" placeholder="Ex. 123456789" style="width: 100px; text-align: center;" maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11)">
+            </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 13px; font-style: italic; color: #070f3d;">Canal Manobra:</label>
+              <select id="channel_maneuver" style="width: 75px;">
+                <option></option>
+              </select>
+            </div>
+            <div class="global-field-horizontal" style="display: none;">
+              <label style="font-size: 12px; font-style: italic; color: #070f3d;">Descr. Ocorrência:</label>
+              <input type="text" id="occorr_descr_input" placeholder="Inc. Mato">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-style: italic; color: #070f3d;">Morada Ocorrência:</label>
+              <input type="text" id="occorr_local_input" style="width: 350px;" placeholder="Ex. Rua Serpa Pinto, 00">
+            </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-style: italic; color: #070f3d;">Localidade:</label>
+              <input type="text" id="occorr_localitie_input" placeholder="Ex. Faro">
+            </div style="font-size: 13px; font-style: italic;">
+            <div class="global-field-horizontal">
+              <label style="font-size: 13px; font-style: italic; color: #070f3d;">Concelho:</label>
+              <select id="council_select" style="width: 190px;">
+                <option></option>
+              </select>
+            </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-style: italic; color: #070f3d;">Freguesia:</label>
+              <select id="parish_select" style="width: 220px;">
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-style: italic; color: #070f3d;">Nome Contactante:</label>
+              <input type="text" id="contact_name" style="width: 250px;" placeholder="Ex. João Sousa">
+            </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-style: italic; color: #070f3d;">Nr. Contactante:</label>
+              <input type="text" id="contact_nr" placeholder="Ex. 910 000 000" style="width: 120px; text-align: center;" maxlength="9" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 9)">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-style: italic; font-weight: bold; color: #c70c0c;">Caso a classificação de ocorrência seja salvamento animal, por favor indique o tipo</label>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-style: italic; color: #070f3d;">Tipo Animal:</label>
+              <input type="text" id="animal-type" style="width: 250px;" placeholder="Ex. Canideo">
+            </div>
+          </div>
+          <div class="type-separator" style="margin: 10px 0 15px 0; font-style: italic;">Planos Prévios de Intervenção</div>
+          <div class="form-row">
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-style: italic; color: #070f3d;">Tipo PPI:</label>
+              <select id="ppi_type">
+              </select>
+            </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 13px; font-style: italic; color: #070f3d;">Nível Alerta:</label>
+              <select id="alert_level" style="width: 175px;">
+                <option></option>
+              </select>
+            </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-style: italic; color: #070f3d;">Grelha Alarme:</label>
+              <select id="alarm_grid" style="width: 75px;">
+                <option></option>
+              </select>
+            </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-style: italic; color: #070f3d;">Km:</label>
+              <input type="text" id="km" placeholder="00" style="width: 75px; text-align: center;" maxlength="6" oninput="this.value = this.value.replace(/[^0-9.]/g, '') .replace(/(\..*)\./g, '$1') .slice(0, 6)">
+            </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 13px; font-style: italic; color: #070f3d;">Sentido:</label>
+              <select id="on_going" style="width: 230px;">
+              </select>
+            </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-style: italic; color: #070f3d;">Tipo Incidente:</label>
+              <select id="incident_type" style="width: 175px;">
+              </select>
             </div>
           </div>
         </div>
-        <div class="card last-card">
+      </div>
+      <div class="card last-card">
         <div class="card-header" style="margin: 0 0 -10px 0;">VEÍCULOS AFETOS À OCORRÊNCIA</div>
         <div class="card-body">
           <button class="btn btn-add" style="margin: 0 0 10px 0;" onclick="NewOCRaddVehicle()">ADICIONAR</button>
@@ -322,9 +335,9 @@
         <div class="card-header">DADOS GLOBAIS</div>
         <div class="card-body">
           <div class="form-row">
-            <div class="form-group" style="width: 200px;">
-              <label>Nr. Ocorrência:</label>
-              <input type="text" id="close_nr_occurrence" placeholder="Ex. 123456789" style="width: 100%; text-align: center;" maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11)">
+            <div class="global-field-horizontal">
+              <label style="font-size: 13px; font-style: italic; color: #070f3d;">Nr. Ocorrência:</label>
+              <input type="text" id="close_nr_occurrence" placeholder="Ex. 2025123456789" style="width: 150px; text-align: center;" maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11)">
             </div>
           </div>
           <button class="btn btn-add" style="margin: 0 0 0 0;" onclick="CloseOCRaddVehicle()">ADICIONAR</button>
@@ -771,5 +784,6 @@
   <script></script>
 </body>
 </html>
+
 
 

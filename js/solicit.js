@@ -48,9 +48,13 @@
         partes.push(`afim de assegurar a ${motiveRequest}`);
       }
       message += partes.join(' ') + '. ';
-      let destinatario = 'SALOC';
-      if (typeRequest === 'DECIR' || typeRequest === 'DIOPS') destinatario = 'Sr. Adjunto de Comando';
-      message += `As disponibilidades deverão ser remetidas ao ${destinatario}, com a maior brevidade possível. Obrigado!`;
+      let destinatario = '';
+      if (typeRequest === 'DECIR' || typeRequest === 'DIOPS') {
+        destinatario = 'ao Sr. Adjunto de Comando';
+      } else {
+        destinatario = 'à SALOC';
+      }
+      message += `As disponibilidades deverão ser remetidas ${destinatario}, com a maior brevidade possível. Obrigado!`;
       const out = document.getElementById('wsms_output');
       if (out) out.value = message;
       if (navigator.clipboard?.writeText) {

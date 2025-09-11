@@ -13,7 +13,7 @@
   background: linear-gradient(270deg, #d9d9d9, #261461);
   backdrop-filter: blur(12px) saturate(180%);
   -webkit-backdrop-filter: blur(12px) saturate(180%);
-  padding: 3px 20px;
+  padding: 0 20px;
   color: #ddd;
   font-size: 13px;
   border-radius: 5px 5px 0 0;

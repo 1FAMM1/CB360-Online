@@ -336,12 +336,7 @@
     // CENTROS DE MEIOS AÉREOS
     // ===============================      
     document.addEventListener("DOMContentLoaded", () => {
-    const cmas = [{ name: 'BHSP LOULÉ' },
-                  { name: 'CMA S.B. ALPORTEL' },
-                  { name: 'CMA CACHOPO' },
-                  { name: 'CMA MONCHIQUE' },
-                  { name: 'AERODROMO PORTIMÃO' },
-                  { name: '' }];
+    const cmas = [{ name: 'BHSP LOULÉ' }, { name: 'CMA S.B. ALPORTEL' }, { name: 'CMA CACHOPO' }, { name: 'CMA MONCHIQUE' }, { name: 'AERODROMO PORTIMÃO' }, { name: '' }];
     const container = document.getElementById("cma-container");
       if (!container) return;
         cmas.forEach((cma, index) => {

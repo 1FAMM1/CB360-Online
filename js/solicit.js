@@ -67,21 +67,21 @@
     function toggleFields() {
       const typeSelect = document.getElementById('solicitation_type');
       const motiveSelect = document.getElementById('solicitation_motive');
-      const shieftSelect = document.getElementById('solicitation_shift');
+      const shiftSelect = document.getElementById('solicitation_shift');
       const hourOutInput = document.getElementById('exit_hour');
       const destinationInput = document.getElementById('uls_desteny');
+      [motiveSelect, shiftSelect, hourOutInput, destinationInput].forEach(el => {
+        if (el) el.disabled = true;
+      });
+      if (!typeSelect || !typeSelect.value) return;
       if (typeSelect.value === 'Transporte de Doentes') {
-        hourOutInput.disabled = false;
-        destinationInput.disabled = false;
-        motiveSelect.disabled = true;
-        shieftSelect.disabled = true;
-      } else if (typeSelect.value) {
-        hourOutInput.disabled = true;
-        destinationInput.disabled = true;
-        motiveSelect.disabled = false;
-        shieftSelect.disabled = false;
-        hourOutInput.value = '';
-        destinationInput.value = '';
+        if (hourOutInput) hourOutInput.disabled = false;
+        if (destinationInput) destinationInput.disabled = false;
+      } else {
+        if (motiveSelect) motiveSelect.disabled = false;
+        if (shiftSelect) shiftSelect.disabled = false;
+        if (hourOutInput) hourOutInput.value = '';
+        if (destinationInput) destinationInput.value = '';
       }
     }
     document.addEventListener('DOMContentLoaded', () => {

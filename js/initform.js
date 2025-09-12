@@ -259,7 +259,7 @@
 
     function createCard(cardData) {
       const divItem = document.createElement("div");
-      divItem.className = "data-item";
+      divItem.className = "main-card";
       const spanLabel = document.createElement("span");
       spanLabel.className = "data-value";
       spanLabel.style.fontSize = "15px";
@@ -293,7 +293,7 @@
       for (let j = i; j < i + 2 && j <= totalRelevInfos; j++) {
         const n = String(j).padStart(2, '0');
         rowHtml += `
-      <div class="data-item" id="relev-info-${n}" data-row-id="${j}">
+      <div class="main-card" id="relev-info-${n}" data-row-id="${j}">
         <div class="global-field-horizontal">
           <label>De:</label>
           <input type="text" id="from-${n}" style="width: 207px;">
@@ -342,7 +342,7 @@
         cmas.forEach((cma, index) => {
         const id = String(index + 1).padStart(2, '0');
         const itemDiv = document.createElement("div");
-    itemDiv.classList.add("data-item");
+    itemDiv.classList.add("main-card");
     itemDiv.innerHTML = `
       <span class="data-value" style="font-size: 17px; margin-bottom:15px;">${cma.name}</span>
       <div class="cma-box">

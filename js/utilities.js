@@ -606,59 +606,67 @@
       }
     }
 
-      async function loadElemsButtons() {
-        try {
-          const response = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?select=*&order=id.asc`, {
-            method: "GET",
-            headers: getSupabaseHeaders()
+    async function loadElemsButtons() {
+      try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?select=*`, {
+          method: "GET",
+          headers: getSupabaseHeaders()
+        });
+        if (!response.ok) throw new Error(`Erro Supabase: ${response.status}`);
+        const data = await response.json();
+        console.log("✅ Registos carregados:", data);
+        data.sort((a, b) => {
+          const aVal = a.n_int ?? "";
+          const bVal = b.n_int ?? "";
+          if (!isNaN(aVal) && !isNaN(bVal)) {
+            return Number(aVal) - Number(bVal);
+          }
+          return aVal.toString().localeCompare(bVal.toString(), "pt", { numeric: true });
+        });
+        const container = document.getElementById("elems-container");
+        container.innerHTML = "";
+        data.forEach(row => {
+          const btn = document.createElement("button");
+          btn.classList.add("btn-elem");
+          btn.textContent = row.n_int || row.id;
+          btn.dataset.tooltip = row.abv_name || "";
+          applyButtonStyle(btn, row.situation);
+          btn.addEventListener("click", async () => {
+            const newSituation = row.situation === "available" ? "unavailable" : "available";
+            try {
+              const updateResp = await fetch(
+                `${SUPABASE_URL}/rest/v1/reg_elems?id=eq.${row.id}`, {
+                  method: "PATCH",
+                  headers: getSupabaseHeaders({returnRepresentation: true}),
+                  body: JSON.stringify({ situation: newSituation })
+                }
+              );
+              if (!updateResp.ok) throw new Error(`Erro Supabase: ${updateResp.status}`);
+              row.situation = newSituation;
+              applyButtonStyle(btn, newSituation);
+            } catch (err) {
+              console.error("❌ Erro ao atualizar situação:", err);
+              alert("Erro ao atualizar situação.");
+            }
           });
-          if (!response.ok) throw new Error(`Erro Supabase: ${response.status}`);
-          const data = await response.json();
-          console.log("✅ Registos carregados:", data);
-          const container = document.getElementById("elems-container");
-          container.innerHTML = "";
-          data.forEach(row => {
-            const btn = document.createElement("button");
-            btn.classList.add("btn-elem");
-            btn.textContent = row.n_int || row.id;
-            btn.dataset.tooltip = row.abv_name || "";
-            applyButtonStyle(btn, row.situation);
-            btn.addEventListener("click", async () => {
-              const newSituation = row.situation === "available" ? "unavailable" : "available";
-              try {
-                const updateResp = await fetch(
-                  `${SUPABASE_URL}/rest/v1/reg_elems?id=eq.${row.id}`,
-                  {
-                    method: "PATCH",
-                    headers: getSupabaseHeaders({ returnRepresentation: true }),
-                    body: JSON.stringify({ situation: newSituation })
-                  }
-                );
-                if (!updateResp.ok) throw new Error(`Erro Supabase: ${updateResp.status}`);
-                row.situation = newSituation;
-                applyButtonStyle(btn, newSituation);
-              } catch (err) {
-                console.error("❌ Erro ao atualizar situação:", err);
-                alert("Erro ao atualizar situação.");
-              }
-            });
-            container.appendChild(btn);
-          });
-        } catch (error) {
-          console.error("❌ Erro ao carregar elementos:", error);
-        }
-      }
 
-      function applyButtonStyle(btn, situation) {
-        if (situation?.toLowerCase().includes("out")) {
-          btn.style.backgroundColor = "red";
-          btn.style.color = "white";
-        } else if (situation === "available") {
-          btn.style.backgroundColor = "green";
-          btn.style.color = "white";
-        } else {
-          btn.style.backgroundColor = "rgb(158, 158, 158)";
-          btn.style.color = "black";
-        }
-      }      
-      document.addEventListener("DOMContentLoaded", loadElemsButtons);
+          container.appendChild(btn);
+        });
+      } catch (error) {
+        console.error("❌ Erro ao carregar elementos:", error);
+      }
+    }
+
+    function applyButtonStyle(btn, situation) {
+      if (situation?.toLowerCase().includes("out")) {
+        btn.style.backgroundColor = "red";
+        btn.style.color = "white";
+      } else if (situation === "available") {
+        btn.style.backgroundColor = "green";
+        btn.style.color = "white";
+      } else {
+        btn.style.backgroundColor = "rgb(158, 158, 158)";
+        btn.style.color = "black";
+      }
+    }
+    document.addEventListener("DOMContentLoaded", loadElemsButtons);

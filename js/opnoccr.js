@@ -238,7 +238,7 @@
     /* ---- CRIAÇÃO DE MENSAGEM DE NOVA OCORRÊNCIA CREPC ----*/
     function generateNewCREPCMessage() {
       if (!validateRequiredFields()) return '';
-      const alertSource = 'CREPC Algarve';
+      const alertSource = document.getElementById('alert_source')?.value || '';
       const alertDate = document.getElementById('alert_date')?.value || '';
       const alertTime = document.getElementById('alert_time')?.value || '';
       const classOccorr = document.getElementById('class_occorr_input')?.value || '';
@@ -267,7 +267,12 @@
         const contactName = document.getElementById('contact_name')?.value?.trim() || '';
         const contacNr = document.getElementById('contact_nr')?.value?.trim() || '';
         contacInfo = `*CONTACTANTE:* ${contactName} - ${contacNr}.\n\n`;
-      } else {}
+      }
+      let animalInfo = '';
+      const animalType = document.getElementById('animal-type')?.value?.trim() || '';
+      if (animalType) {
+        animalInfo = `*Ser Vivo Não-Humano:* ${animalType}\n\n`;
+      }
       let message = '';
       if (nrOccurrence) {
         message =
@@ -287,13 +292,14 @@
           `*LOCAL:* ${localOccorr} - ${localitie} - ${council} - ${parish}\n` +
           `${vehicles.join('\n')}\n\n` +
           `${contacInfo}` +
+          `${animalInfo}` +
           `*Agradeço N. OC:*`;
-      }
+        }
       const out = document.getElementById('wsms_output');
       if (out) out.value = message;
       if (navigator.clipboard?.writeText) navigator.clipboard.writeText(message).catch(() => {});
-      showPopupSuccess("Mensagem criada com sucesso! Abra o WhatsApp e prima CTRL+V", true);
-      return message;
+        showPopupSuccess("Mensagem criada com sucesso! Abra o WhatsApp e prima CTRL+V", true);
+        return message;
     }
     /* ---- CRIAÇÃO DE MENSAGEM DE NOVA OCORRÊNCIA GLOBAL ----*/
     let lastWSMSData = null;

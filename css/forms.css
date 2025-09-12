@@ -9,19 +9,6 @@
   flex-wrap: wrap;
 }
 
-.type-separator {
-  background: linear-gradient(270deg, #d9d9d9, #261461);
-  backdrop-filter: blur(12px) saturate(180%);
-  -webkit-backdrop-filter: blur(12px) saturate(180%);
-  padding: 0 20px;
-  color: #ddd;
-  font-size: 13px;
-  border-radius: 5px 5px 0 0;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-  border-bottom: 3px solid rgba(0, 0, 0, 0.1);
-  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
-}
-
 .grid-2fr {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));

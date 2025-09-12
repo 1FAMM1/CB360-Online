@@ -68,6 +68,11 @@
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
+.main-card {
+  min-height: 160px;
+  text-align: center;
+}
+
 .main-card:hover, .vehicle-card:hover, .victims-card:hover, .extras-card:hover, .demage-card:hover, .burned-card:hover, .observ-card:hover, .data-item:hover {
   transform: translateY(-1px);
   box-shadow: 0 8px 15px rgba(0, 0, 0, 0.12);

@@ -21,7 +21,7 @@
   background: rgba(220, 53, 69, 0.85);
   backdrop-filter: blur(12px) saturate(180%);
   -webkit-backdrop-filter: blur(12px) saturate(180%);
-  padding: 9px 20px;
+  padding: 6px 15px;
   font-weight: 600;
   color: #fff;
   font-size: 13px;

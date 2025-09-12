@@ -56,7 +56,7 @@
   display: none;
 }
 
-.vehicle-card, .victims-card, .extras-card, .demage-card, .burned-card, .observ-card, .data-item {
+.main-card, .vehicle-card, .victims-card, .extras-card, .demage-card, .burned-card, .observ-card, .data-item {
   background: linear-gradient(135deg, #f9f9f9, #ececec);
   backdrop-filter: blur(8px) saturate(150%);
   -webkit-backdrop-filter: blur(8px) saturate(150%);
@@ -68,7 +68,7 @@
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
-.vehicle-card:hover, .victims-card:hover, .extras-card:hover, .demage-card:hover, .burned-card:hover, .observ-card:hover, .data-item:hover {
+.main-card:hover, .vehicle-card:hover, .victims-card:hover, .extras-card:hover, .demage-card:hover, .burned-card:hover, .observ-card:hover, .data-item:hover {
   transform: translateY(-1px);
   box-shadow: 0 8px 15px rgba(0, 0, 0, 0.12);
 }

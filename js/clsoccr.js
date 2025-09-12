@@ -48,7 +48,7 @@
         sections.push(vehicleBlocks.join('\n\n'));
       }
       const victimLines = [];
-      for (let i = 1; i <= 3; i++) {
+      for (let i = 1; i <= victimsCount; i++) {
         const gender = document.getElementById(`victim_${i}_gender`)?.value?.trim();
         const age = document.getElementById(`victim_${i}_age`)?.value?.trim();
         const ageUnit = document.getElementById(`victim_${i}_age_unit`)?.value?.trim();

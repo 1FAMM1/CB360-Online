@@ -10,12 +10,29 @@
       haInput.value = ha.toFixed(2);
     }
     /* ---- CRIAÇÃO DE MENSAGEM DE ENCERRAMENTO DE OCORRÊNCIA CREPC ----*/
+    function validateVehicles() {
+      const vehicleCards = document.querySelectorAll('.vehicle-card');
+      for (const card of vehicleCards) {
+        const vehicle = card.querySelector('select')?.value?.trim();
+        if (!vehicle) {
+          return false;
+        }
+      }
+      return true;
+    }
+
     function generateCloseCREPCMessage() {
       const nrOccurrence = document.getElementById('close_nr_occurrence')?.value?.trim();
       if (!nrOccurrence) {
         showPopupWarning("Por favor, preencha o Nr. de Ocorrência para poder encerrar a ocorrência.");
         return;
       }
+
+      if (!validateVehicles()) {
+        showPopupWarning("Por favor, preencha todos os veículos antes de gerar a mensagem.");
+        return;
+      }
+      
       const sections = [];
       sections.push(`*❌ Encerramento de Ocorrência*`);
       sections.push(`*N. OC:* ${nrOccurrence}`);

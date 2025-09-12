@@ -30,7 +30,6 @@
       </div>
       <div class="header-badge-360">Grupo CB360</div>
     </header>
-    <div class="header-authorization">Acesso Autorizado: <span id="authName"></span></div>
     <!---- MÓDULO SIDEBAR ---->
     <aside class="sidebar">
       <button class="sidebar-menu-button active" data-page="page-main">🏠 Menu Principal</button>
@@ -65,126 +64,125 @@
         <button id="popup-success-ok-btn" class="btn btn-success">OK</button>
       </div>
     </div>
-    <div id="popup-vehicle-status" class="popup-modal">
-      <div class="popup-content">
-        <h3 id="popup-vehicle-title">XYZ</h3>
-        <label for="vehicle-status-select">Selecione o estado:</label>
-        <select id="vehicle-status-select">
-          <option value="Disponível no Quartel">Disponível no Quartel</option>
-          <option value="Em Serviço">Em Serviço</option>
-          <option value="Inop">Inop</option>
-        </select>
-        <div style="margin-top: 10px; text-align: center;">
-          <button id="popup-vehicle-ok-btn" class="btn btn-success">OK</button>
-          <button id="popup-vehicle-cancel-btn" class="btn btn-danger">Cancelar</button>
+  </div>
+  <div id="popup-vehicle-status" class="popup-modal">
+    <div class="popup-content">
+      <h3 id="popup-vehicle-title">XYZ</h3>
+      <label for="vehicle-status-select">Selecione o estado:</label>
+      <select id="vehicle-status-select">
+        <option value="Disponível no Quartel">Disponível no Quartel</option>
+        <option value="Em Serviço">Em Serviço</option>
+        <option value="Inop">Inop</option>
+      </select>
+      <div style="margin-top: 10px; text-align: center;">
+        <button id="popup-vehicle-ok-btn" class="btn btn-success">OK</button>
+        <button id="popup-vehicle-cancel-btn" class="btn btn-danger">Cancelar</button>
+      </div>
+    </div>
+  </div>
+  <!---- MÓDULO COUNTEÚDO PRINCIPAL ---->
+  <main class="main-content">
+    <div id="page-main" class="page active">
+      <div class="card last-card">
+        <div class="card-header">BEM-VINDO AO SISTEMA CB360 ONLINE</div>
+        <div class="card-body">
+          <p style="margin-bottom: 15px;">Sistema automatizado para gestão operaional diária do Corpo de Bombeiros de Faro - Cruz Lusa.</p>
+          <p style="margin-bottom: 15px;"><strong>Funcionalidades disponíveis:</strong></p>
+          <p style="margin-bottom: 0px;"><strong>WSMS Auto Creator:</strong></p>
+          <ul style="padding-left: 20px; margin-bottom: 15px;">
+            <li>Ocorrências em Curso</li>
+            <li>Inserir/Alterar Ocorrências</li>
+            <li>Encerrar Ocorrências</li>
+            <li>Solicitação de Disponibilidades</li>
+            <li>Indisponibilidade de Veículos</li>
+            <li>Info. Grelha do Município</li>
+          </ul>
+          <p style="margin-bottom: 0px;"><strong>Painel de Utilitários:</strong></p>
+          <ul style="padding-left: 20px; margin-bottom: 15px;">
+            <li>Visualização de estados dos EPEs e PPIs</li>
+            <li>Visualização dos estados operacionais dos veículos</li>
+            <li>Adição e remoção de veículos</li>
+            <li>Informações Relevantes</li>
+            <li>Cortes de Vias/Arruamentos</li>
+          </ul>
+          <p style="margin-bottom: 0px; margin-top: 15px;"><strong>Brevemente:</strong></p>
+          <ul style="padding-left: 20px; margin-bottom: 15px;">
+            <li><em>SALOC 360</em></li>
+            <li><em>DECIR 360</em></li>
+            <li><em>FOMIO 360</em></li>
+          </ul>
+          <p style="margin-top: 50px;"><em>Selecione uma opção no menu lateral para começar.</em></p>
         </div>
       </div>
     </div>
-    <!---- MÓDULO COUNTEÚDO PRINCIPAL ---->
-    <main class="main-content">
-      <div id="page-main" class="page active">
-        <div class="card last-card">
-          <div class="card-header">BEM-VINDO AO SISTEMA CB360 ONLINE</div>
-          <div class="card-body">
-            <p style="margin-bottom: 15px;">Sistema automatizado para gestão operaional diária do Corpo de Bombeiros de Faro - Cruz Lusa.</p>
-            <p style="margin-bottom: 15px;"><strong>Funcionalidades disponíveis:</strong></p>
-            <p style="margin-bottom: 0px;"><strong>WSMS Auto Creator:</strong></p>
-            <ul style="padding-left: 20px; margin-bottom: 15px;">
-              <li>Ocorrências em Curso</li>
-              <li>Inserir/Alterar Ocorrências</li>
-              <li>Encerrar Ocorrências</li>
-              <li>Solicitação de Disponibilidades</li>
-              <li>Indisponibilidade de Veículos</li>
-              <li>Info. Grelha do Município</li>
-            </ul>
-            <p style="margin-bottom: 0px;"><strong>Painel de Utilitários:</strong></p>
-            <ul style="padding-left: 20px; margin-bottom: 15px;">
-              <li>Visualização de estados dos EPEs e PPIs</li>
-              <li>Visualização dos estados operacionais dos veículos</li>
-              <li>Adição e remoção de veículos</li>
-              <li>Informações Relevantes</li>
-              <li>Cortes de Vias/Arruamentos</li>
-              <li>Centros de Meios Aéreos</li>
-              <li>Elementos Disponíveis</li>
-            </ul>
-            <p style="margin-bottom: 0px; margin-top: 15px;"><strong>Brevemente:</strong></p>
-            <ul style="padding-left: 20px; margin-bottom: 15px;">
-              <li><em>SALOC 360</em></li>
-              <li><em>DECIR 360</em></li>
-              <li><em>FOMIO 360</em></li>
-            </ul>
-            <p style="margin-top: 50px;"><em>Selecione uma opção no menu lateral para começar.</em></p>
+    <!---- MÓDULO OCORRÊNCIAS EM CURSO ---->
+    <div id="page-active_occurrences" class="page">
+      <h2 class="section-title">Ocorrências em Curso</h2>
+      <div class="card">
+        <div class="card-header">LISTA DE OCORRÊNCIAS ATIVAS</div>
+        <div class="card-body">
+          <div style="overflow-x: auto;">
+            <table id="active-occurrences-table" style="width: 100%; border-collapse: collapse; font-size: 11px;">
+              <thead>
+                <tr style="background-color: #F8F9FA; border-bottom: 2px solid #DEE2E6;">
+                  <th style="width: 150px; padding: 8px; text-align: center; border: 1px solid #DEE2E6;">Data/Hora Alerta</th>
+                  <th style="width: 250px; padding: 8px; text-align: center; border: 1px solid #DEE2E6;">Descrição</th>
+                  <th style="width: 350px; padding: 8px; text-align: center; border: 1px solid #DEE2E6;">Local</th>
+                  <th style="width: 300px; padding: 8px; text-align: center; border: 1px solid #DEE2E6;">Localidade</th>
+                  <th style="width: 75px; padding: 8px; text-align: center; border: 1px solid #DEE2E6;">Veículos</th>
+                  <th style="width: 125px; padding: 8px; text-align: center; border: 1px solid #DEE2E6;">Estado</th>
+                  <th style="width: 100px; padding: 8px; text-align: center; border: 1px solid #DEE2E6;">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="active-occurrences-tbody">
+              </tbody>
+            </table>
           </div>
-        </div>
-      </div>
-      <!---- MÓDULO OCORRÊNCIAS EM CURSO ---->
-      <div id="page-active_occurrences" class="page">
-        <h2 class="section-title">Ocorrências em Curso</h2>
-        <div class="card">
-          <div class="card-header">LISTA DE OCORRÊNCIAS ATIVAS</div>
-          <div class="card-body">
-            <div style="overflow-x: auto;">
-              <table id="active-occurrences-table" style="width: 100%; border-collapse: collapse; font-size: 11px;">
-                <thead>
-                  <tr style="background-color: #F8F9FA; border-bottom: 2px solid #DEE2E6;">
-                    <th style="width: 150px; padding: 8px; text-align: center; border: 1px solid #DEE2E6;">Data/Hora Alerta</th>
-                    <th style="width: 250px; padding: 8px; text-align: center; border: 1px solid #DEE2E6;">Descrição</th>
-                    <th style="width: 350px; padding: 8px; text-align: center; border: 1px solid #DEE2E6;">Local</th>
-                    <th style="width: 300px; padding: 8px; text-align: center; border: 1px solid #DEE2E6;">Localidade</th>
-                    <th style="width: 75px; padding: 8px; text-align: center; border: 1px solid #DEE2E6;">Veículos</th>
-                    <th style="width: 125px; padding: 8px; text-align: center; border: 1px solid #DEE2E6;">Estado</th>
-                    <th style="width: 100px; padding: 8px; text-align: center; border: 1px solid #DEE2E6;">Ações</th>
-                  </tr>
-                </thead>
-                <tbody id="active-occurrences-tbody">
-                </tbody>
-              </table>
-            </div>
-            <div class="form-row" style="margin: 20px -5px -15px 0; display: flex; justify-content: flex-end;">
-              <div class="action-buttons">
+          <div class="form-row" style="margin: 20px -5px -15px 0; display: flex; justify-content: flex-end;">
+            <div class="action-buttons">
               <button class="btn btn-success" onclick="loadActiveOccurrences()">ATUALIZAR LISTA</button>
             </div>
           </div>
         </div>
-        </div>
-        <!---- Popup Especial POSIT ---->
-        <div id="popup-posit-modal" class="popup-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; ">
-          <div class="popup-content" style="background-color: white; padding: 20px; border-radius: 12px; text-align: center; max-width: 400px; width: 90%; position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.3); ">
-            <h3 style="margin-bottom: 15px;">POSIT</h3>
-            <div style="display: flex; justify-content: center; align-items: center; width: 100%; margin: 5px 0;">
-              <label for="posit-description" style="width: 90px; text-align: left;">Descrição:</label>
-              <input type="text" id="posit-description" style="flex: 1; padding: 5px; border-radius: 6px; border: 1px solid #ccc; text-align: center;" readonly />
-            </div>
-            <div style="display: flex; justify-content: center; align-items: center; width: 100%; margin: 5px 0;">
-              <label for="posit-local" style="width: 90px; text-align: left;">Local:</label>
-              <input type="text" id="posit-local" style="flex: 1; padding: 5px; border-radius: 6px; border: 1px solid #ccc; text-align: center;" readonly />
-            </div>
-            <input type="hidden" id="posit-localidade-hidden" value="" />
-            <div style="display: flex; justify-content: center; align-items: center; width: 100%; margin: 5px 0;">
-              <label for="posit-status" style="width: 90px; text-align: left;">Estado:</label>
-              <select id="posit-status" style="flex: 1; padding: 5px; border-radius: 6px; border: 1px solid #ccc;">
-                <option value="Em Curso">Em Curso</option>
-                <option value="Em Resolução">Em Resolução</option>
-                <option value="Em Conclusão">Em Conclusão</option>
-                <option value="Encerrada">Encerrada</option>
-              </select>
-            </div>
-            <div style="display: flex; justify-content: left; align-items: center; width: 100%; margin: 5px 0;">
-              <label for="posit-time" style="width: 90px; text-align: left;">Hora POSIT:</label>
-              <input type="text" id="posit-time" style="width: 60px; padding: 5px; border-radius: 6px; border: 1px solid #ccc; text-align: center;" />
-            </div>
-            <div style="margin-top: 10px; text-align: left;">
-              <label for="posit-text" style="display:block; margin-bottom: 5px;">POSIT:</label>
-              <textarea id="posit-text" rows="5" style="width: 100%; padding: 5px; border-radius: 6px; border: 1px solid #ccc; resize: vertical;"></textarea>
-            </div>
-            <div style="margin-top: 5px; text-align: left;"> <input type="checkbox" id="desmobilizacao" />
-              <label for="desmobilizacao" style="margin-left: 5px;">Desmobilização de meios</label>
-            </div>
-            <button id="posit-send-btn" class="btn btn-danger" style="width: 50%; margin-top: 10px;">Enviar POSIT</button>
+      </div>
+      <!---- Popup Especial POSIT ---->
+      <div id="popup-posit-modal" class="popup-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; ">
+        <div class="popup-content" style="background-color: white; padding: 20px; border-radius: 12px; text-align: center; max-width: 400px; width: 90%; position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.3); ">
+          <h3 style="margin-bottom: 15px;">POSIT</h3>
+          <div style="display: flex; justify-content: center; align-items: center; width: 100%; margin: 5px 0;">
+            <label for="posit-description" style="width: 90px; text-align: left;">Descrição:</label>
+            <input type="text" id="posit-description" style="flex: 1; padding: 5px; border-radius: 6px; border: 1px solid #ccc; text-align: center;" readonly />
           </div>
+          <div style="display: flex; justify-content: center; align-items: center; width: 100%; margin: 5px 0;">
+            <label for="posit-local" style="width: 90px; text-align: left;">Local:</label>
+            <input type="text" id="posit-local" style="flex: 1; padding: 5px; border-radius: 6px; border: 1px solid #ccc; text-align: center;" readonly />
+          </div>
+          <input type="hidden" id="posit-localidade-hidden" value="" />
+          <div style="display: flex; justify-content: center; align-items: center; width: 100%; margin: 5px 0;">
+            <label for="posit-status" style="width: 90px; text-align: left;">Estado:</label>
+            <select id="posit-status" style="flex: 1; padding: 5px; border-radius: 6px; border: 1px solid #ccc;">
+              <option value="Em Curso">Em Curso</option>
+              <option value="Em Resolução">Em Resolução</option>
+              <option value="Em Conclusão">Em Conclusão</option>
+              <option value="Encerrada">Encerrada</option>
+            </select>
+          </div>
+          <div style="display: flex; justify-content: left; align-items: center; width: 100%; margin: 5px 0;">
+            <label for="posit-time" style="width: 90px; text-align: left;">Hora POSIT:</label>
+            <input type="text" id="posit-time" style="width: 60px; padding: 5px; border-radius: 6px; border: 1px solid #ccc; text-align: center;" />
+          </div>
+          <div style="margin-top: 10px; text-align: left;">
+            <label for="posit-text" style="display:block; margin-bottom: 5px;">POSIT:</label>
+            <textarea id="posit-text" rows="5" style="width: 100%; padding: 5px; border-radius: 6px; border: 1px solid #ccc; resize: vertical;"></textarea>
+          </div>
+          <div style="margin-top: 5px; text-align: left;"> <input type="checkbox" id="desmobilizacao" />
+            <label for="desmobilizacao" style="margin-left: 5px;">Desmobilização de meios</label>
+          </div>
+          <button id="posit-send-btn" class="btn btn-danger" style="width: 50%; margin-top: 10px;">Enviar POSIT</button>
         </div>
       </div>
-      <!---- MÓDULO NOVA OCORRÊNCIA ---->
+    </div>
+    <!---- MÓDULO NOVA OCORRÊNCIA ---->
     <div id="page_insert_occurrence" class="page">
       <h2 class="section-title">Dados para Nova Ocorrência</h2>
       <div class="card">
@@ -193,76 +191,76 @@
           <div class="type-separator" style="margin: -10px 0 15px 0; font-style: italic;">Local da Ocorrência</div>
           <div class="form-row">
             <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-style: italic; color: #070f3d;">Tipo Alerta:</label>
+              <label style="font-size: 12px; font-style: italic; color: #333333;">Tipo Alerta:</label>
               <select id="alert_type">
               </select>
             </div>
             <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-style: italic; color: #070f3d;">Fonte Alerta:</label>
+              <label style="font-size: 12px; font-style: italic; color: #333333;">Fonte Alerta:</label>
               <select id="alert_source">
               </select>
             </div>
             <div class="global-field-horizontal" id="ems_group">
-              <label style="font-size: 12px; font-style: italic; color: #070f3d;">Nr. CODU:</label>
+              <label style="font-size: 12px; font-style: italic; color: #333333;">Nr. CODU:</label>
               <input type="text" id="ems_nr" placeholder="Ex. 123456789">
             </div>
           </div>
           <div class="form-row">
             <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-style: italic; color: #070f3d;">Data Alerta:</label>
+              <label style="font-size: 12px; font-style: italic; color: #333333;">Data Alerta:</label>
               <input type="date" id="alert_date" value="">
             </div>
             <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-style: italic; color: #070f3d;">Hora Alerta:</label>
+              <label style="font-size: 12px; font-style: italic; color: #333333;">Hora Alerta:</label>
               <input type="time" id="alert_time" value="">
             </div>
             <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-style: italic; color: #070f3d;">Class. Ocorrência:</label>
+              <label style="font-size: 12px; font-style: italic; color: #333333;">Class. Ocorrência:</label>
               <input type="text" id="class_occorr_input" placeholder="Ex. 3103" style="width: 80px; text-align: center;" maxlength="4" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 4)">
             </div>
             <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-style: italic; color: #070f3d;">Nr. Ocorrência:</label>
+              <label style="font-size: 12px; font-style: italic; color: #333333;">Nr. Ocorrência:</label>
               <input type="text" id="nr_occurrence_input" placeholder="Ex. 123456789" style="width: 100px; text-align: center;" maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11)">
             </div>
             <div class="global-field-horizontal">
-              <label style="font-size: 13px; font-style: italic; color: #070f3d;">Canal Manobra:</label>
+              <label style="font-size: 13px; font-style: italic; color: #333333;">Canal Manobra:</label>
               <select id="channel_maneuver" style="width: 75px;">
                 <option></option>
               </select>
             </div>
             <div class="global-field-horizontal" style="display: none;">
-              <label style="font-size: 12px; font-style: italic; color: #070f3d;">Descr. Ocorrência:</label>
+              <label style="font-size: 12px; font-style: italic; color: #333333;">Descr. Ocorrência:</label>
               <input type="text" id="occorr_descr_input" placeholder="Inc. Mato">
             </div>
           </div>
           <div class="form-row">
             <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-style: italic; color: #070f3d;">Morada Ocorrência:</label>
+              <label style="font-size: 12px; font-style: italic; color: #333333;">Morada Ocorrência:</label>
               <input type="text" id="occorr_local_input" style="width: 350px;" placeholder="Ex. Rua Serpa Pinto, 00">
             </div>
             <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-style: italic; color: #070f3d;">Localidade:</label>
+              <label style="font-size: 12px; font-style: italic; color: #333333;">Localidade:</label>
               <input type="text" id="occorr_localitie_input" placeholder="Ex. Faro">
             </div>
             <div class="global-field-horizontal">
-              <label style="font-size: 13px; font-style: italic; color: #070f3d;">Concelho:</label>
+              <label style="font-size: 13px; font-style: italic; color: #333333;">Concelho:</label>
               <select id="council_select" style="width: 190px;">
                 <option></option>
               </select>
             </div>
             <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-style: italic; color: #070f3d;">Freguesia:</label>
+              <label style="font-size: 12px; font-style: italic; color: #333333;">Freguesia:</label>
               <select id="parish_select" style="width: 220px;">
               </select>
             </div>
           </div>
           <div class="form-row">
             <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-style: italic; color: #070f3d;">Nome Contactante:</label>
+              <label style="font-size: 12px; font-style: italic; color: #333333;">Nome Contactante:</label>
               <input type="text" id="contact_name" style="width: 250px;" placeholder="Ex. João Sousa">
             </div>
             <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-style: italic; color: #070f3d;">Nr. Contactante:</label>
+              <label style="font-size: 12px; font-style: italic; color: #333333;">Nr. Contactante:</label>
               <input type="text" id="contact_nr" placeholder="Ex. 910 000 000" style="width: 120px; text-align: center;" maxlength="9" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 9)">
             </div>
           </div>
@@ -273,40 +271,40 @@
           </div>
           <div class="form-row">
             <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-style: italic; color: #070f3d;">Tipo Animal:</label>
+              <label style="font-size: 12px; font-style: italic; color: #333333;">Tipo Animal:</label>
               <input type="text" id="animal-type" style="width: 250px;" placeholder="Ex. Canideo">
             </div>
           </div>
           <div class="type-separator" style="margin: 10px 0 15px 0; font-style: italic;">Planos Prévios de Intervenção</div>
           <div class="form-row" style="margin: 0 0 -15px 0;">
             <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-style: italic; color: #070f3d;">Tipo PPI:</label>
+              <label style="font-size: 12px; font-style: italic; color: #333333;">Tipo PPI:</label>
               <select id="ppi_type">
               </select>
             </div>
             <div class="global-field-horizontal">
-              <label style="font-size: 13px; font-style: italic; color: #070f3d;">Nível Alerta:</label>
+              <label style="font-size: 13px; font-style: italic; color: #333333;">Nível Alerta:</label>
               <select id="alert_level" style="width: 175px;">
                 <option></option>
               </select>
             </div>
             <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-style: italic; color: #070f3d;">Grelha Alarme:</label>
+              <label style="font-size: 12px; font-style: italic; color: #333333;">Grelha Alarme:</label>
               <select id="alarm_grid" style="width: 75px;">
                 <option></option>
               </select>
             </div>
             <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-style: italic; color: #070f3d;">Km:</label>
+              <label style="font-size: 12px; font-style: italic; color: #333333;">Km:</label>
               <input type="text" id="km" placeholder="00" style="width: 75px; text-align: center;" maxlength="6" oninput="this.value = this.value.replace(/[^0-9.]/g, '') .replace(/(\..*)\./g, '$1') .slice(0, 6)">
             </div>
             <div class="global-field-horizontal">
-              <label style="font-size: 13px; font-style: italic; color: #070f3d;">Sentido:</label>
+              <label style="font-size: 13px; font-style: italic; color: #333333;">Sentido:</label>
               <select id="on_going" style="width: 230px;">
               </select>
             </div>
             <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-style: italic; color: #070f3d;">Tipo Incidente:</label>
+              <label style="font-size: 12px; font-style: italic; color: #333333;">Tipo Incidente:</label>
               <select id="incident_type" style="width: 175px;">
               </select>
             </div>
@@ -336,7 +334,7 @@
         <div class="card-body">
           <div class="form-row">
             <div class="global-field-horizontal">
-              <label style="font-size: 13px; font-style: italic; color: #070f3d;">Nr. Ocorrência:</label>
+              <label style="font-size: 12px; font-style: italic; color: #333333;">Nr. Ocorrência:</label>
               <input type="text" id="close_nr_occurrence" placeholder="Ex. 2025123456789" style="width: 150px; text-align: center;" maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11)">
             </div>
           </div>
@@ -411,7 +409,7 @@
               </div>
               <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
                 <div class="global-field-horizontal" style="width: 100%;">
-                  <textarea placeholder="Escreva suas observações..." rows="4" style="width: 100%; resize: vertical;"></textarea>
+                  <textarea placeholder="Escreva suas observações..." rows="4" style="width: 100%; height: 45px; resize: vertical;"></textarea>
                 </div>
               </div>
             </div>
@@ -422,31 +420,29 @@
         <button class="btn btn-danger" onclick="generateCloseCREPCMessage()">COMUNICAR CREPC</button>
       </div>
     </div>
-      <!---- MÓDULO SOLICITAÇÃO DE DISPONIBILIDADES ---->
+    <!---- MÓDULO SOLICITAÇÃO DE DISPONIBILIDADES ---->
     <div id="page-solicitation" class="page">
       <h2 class="section-title">Solicitação de Disponibilidades para Serviços</h2>
       <div class="card">
-        
         <div class="card-header">TIPO DE SOLICITAÇÃO</div>
-        
         <div class="card-body">
-          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: -10px;">            
+          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: -10px;">
             <div class="global-field-horizontal">
-              <label>Data do Serviço:</label>
+              <label style="font-size: 12px; font-style: italic; color: #333333;">Data do Serviço:</label>
               <input type="date" id="solicitation_date" style="width: 110px;">
-            </div>            
+            </div>
             <div class="global-field-horizontal">
-              <label>Tipo de Solicitação:</label>
+              <label style="font-size: 12px; font-style: italic; color: #333333;">Tipo de Solicitação:</label>
               <select id="solicitation_type" style="width: 200px;">
               </select>
-            </div>            
+            </div>
             <div class="global-field-horizontal">
-              <label>Motivo da Solicitação:</label>
+              <label style="font-size: 12px; font-style: italic; color: #333333;">Motivo da Solicitação:</label>
               <select id="solicitation_motive" style="width: 200px;">
               </select>
-            </div>            
+            </div>
             <div class="global-field-horizontal">
-              <label>Turno:</label>
+              <label style="font-size: 12px; font-style: italic; color: #333333;">Turno:</label>
               <select id="solicitation_shift" style="width: 75px;">
               </select>
             </div>
@@ -458,13 +454,13 @@
         <div class="card-body">
           <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: -10px;">
             <div class="global-field-horizontal">
-              <label>Motoritas:</label>
+              <label style="font-size: 12px; font-style: italic; color: #333333;">Motoritas:</label>
               <div class="global-field-horizontal">
                 <input type="text" id="drivers" placeholder="0" style="width: 75px; text-align: center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
               </div>
             </div>
             <div class="global-field-horizontal">
-              <label>Elementos:</label>
+              <label style="font-size: 12px; font-style: italic; color: #333333;">Elementos:</label>
               <div class="global-field-horizontal">
                 <input type="text" id="elements" placeholder="0" style="width: 75px; text-align: center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
               </div>
@@ -477,13 +473,13 @@
         <div class="card-body">
           <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: -10px;">
             <div class="global-field-horizontal">
-              <label>Hora de Saída:</label>
+              <label style="font-size: 12px; font-style: italic; color: #333333;">Hora de Saída:</label>
               <div class="global-field-horizontal">
                 <input type="time" id="exit_hour" style="width: 75px;">
               </div>
             </div>
             <div class="global-field-horizontal">
-              <label>ULS Destino:</label>
+              <label style="font-size: 12px; font-style: italic; color: #333333;">ULS Destino:</label>
               <div class="global-field-horizontal">
                 <input type="text" id="uls_desteny" placeholder="Ex. IPO Lisboa" style="width: 250px; text-align: center;">
               </div>
@@ -497,104 +493,101 @@
         </div>
       </div>
     </div>
-      <!---- MÓDULO INDISPONIBILIDADE DE VEÍCULOS ---->
-      <div id="page-indisp" class="page">
-        <h2 class="section-title">Indisponibilidade Veículos</h2>
-        <div class="card">
-          <div class="card-header">NOVA INDISPONIBILIDADE DE VÉICULO</div>
-          <div class="card-body">
-            <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-              <div class="vehicle-field-horizontal" style="width: 150px;">
-                <label>Veículo:</label>
-                <select id="new_vehicle_unavailable" style="width: 150px;">
-                </select>
-              </div>
-              <div class="global-field-horizontal" style="width: 300px;">
-                <label>Motivo da Indisponibilidade:</label>
-                <select id="new_reason_unavailability" style="width: 150px;">
-                </select>
-              </div>
-            </div>
-            <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: -3px;">
-              <div class="global-field-horizontal">
-                <label>Data da Indisponibilidade:</label>
-                <div class="extras-field-horizontal">
-                  <input type="date" id="new_unavailability_date" style="width: 100px;">
-                </div>
-              </div>
-              <div class="global-field-horizontal">
-                <label>Hora da Indisponibilidade:</label>
-                <div class="global-field-horizontal">
-                  <input type="time" id="new_unavailability_hour" style="width: 75px;">
-                </div>
-              </div>
-            </div>
-            <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-              <div class="global-field-horizontal" style="width: 300px;">
-                <label>Local da Indisponibilidade:</label>
-                <select id="new_unavailability_local" style="width: 150px;">
-                </select>
-              </div>
+    <!---- MÓDULO INDISPONIBILIDADE DE VEÍCULOS ---->
+    <div id="page-indisp" class="page">
+      <h2 class="section-title">Indisponibilidade Veículos</h2>
+      <div class="card">
+        <div class="card-header">NOVA INDISPONIBILIDADE DE VÉICULO</div>
+        <div class="card-body">
+          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
+            <div class="vehicle-field-horizontal">
+              <label style="font-size: 12px; font-style: italic; color: #333333;">Veículo:</label>
+              <select id="new_vehicle_unavailable" style="width: 120px;">
+              </select>
             </div>
           </div>
-          <div class="form-row" style="margin: 10px 10px 10px 10px; display: flex; justify-content: flex-end;">
-            <div class="action-buttons">
-              <button class="btn btn-danger" onclick="generateNewUnvailability()">ENVIAR INDISPONIBILIDADE</button>
+          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: -3px;">
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-style: italic; color: #333333;">Data da Indisponibilidade:</label>
+              <div class="extras-field-horizontal">
+                <input type="date" id="new_unavailability_date" style="width: 110px;">
+              </div>
+            </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-style: italic; color: #333333;">Hora da Indisponibilidade:</label>
+              <div class="global-field-horizontal">
+                <input type="time" id="new_unavailability_hour" style="width: 75px;">
+              </div>
+            </div>
+            <div class="global-field-horizontal" style="width: 350px;">
+              <label style="font-size: 12px; font-style: italic; color: #333333;">Motivo da Indisponibilidade:</label>
+              <select id="new_reason_unavailability" style="width: 175px;">
+              </select>
+            </div>
+            <div class="global-field-horizontal" style="width: 350px;">
+              <label style="font-size: 12px; font-style: italic; color: #333333;">Local da Indisponibilidade:</label>
+              <select id="new_unavailability_local" style="width: 150px;">
+              </select>
             </div>
           </div>
         </div>
-        <div class="card">
-          <div class="card-header">VEÍCULOS INDISPONÍVEIS</div>
-          <div class="card-body">
-            <table id="active-unavailability-table" style="width: 100%; border-collapse: collapse; font-size: 11px;">
-              <thead>
-                <tr style="background-color: #F8F9FA; border-bottom: 2px solid #DEE2E6;">
-                  <th style="width: 150px; padding: 8px; text-align: center; border: 1px solid #DEE2E6;">Data/Hora</th>
-                  <th style="width: 200px; padding: 8px; text-align: center; border: 1px solid #DEE2E6;">Veículo</th>
-                  <th style="width: 400px; padding: 8px; text-align: center; border: 1px solid #DEE2E6;">Motivo</th>
-                  <th style="width: 200px; padding: 8px; text-align: center; border: 1px solid #DEE2E6;">Estado</th>
-                  <th style="width: 200px; padding: 8px; text-align: center; border: 1px solid #DEE2E6;">Parar</th>
-                </tr>
-              </thead>
-              <tbody id="active-unavailability-tbody">
-              </tbody>
-            </table>
-          </div>
-          <div class="form-row" style="margin: 10px 10px 10px 10px; display: flex; flex-wrap: wrap; justify-content: flex-end;">
-            <div class="action-buttons">
-              <button class="btn btn-success" onclick="loadActiveUnavailability()">ATUALIZAR LISTA</button>
-            </div>
+        <div class="form-row" style="margin: 0 10px 10px 10px; display: flex; flex-wrap: wrap; justify-content: flex-end;">
+          <div class="action-buttons">
+            <button class="btn btn-danger" onclick="generateNewUnvailability()">ENVIAR INDISPONIBILIDADE</button>
           </div>
         </div>
-        <div id="availability-card" class="card last-card">
-          <div class="card-header">FIM DE INDISPONIBILIDADE DE VÉICULO DE VÉICULO</div>
-          <div class="card-body">
-            <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-              <div class="global-field-horizontal" style="width: 150px;">
-                <label>Veículo:</label>
-                <div class="global-field-horizontal">
-                  <input type="text" id="end_vehicle_unavailable" style="width: 100px; text-align: center;">
-                </div>
+      </div>
+      <div class="card">
+        <div class="card-header">VEÍCULOS INDISPONÍVEIS</div>
+        <div class="card-body">
+          <table id="active-unavailability-table" style="width: 100%; border-collapse: collapse; font-size: 11px;">
+            <thead>
+              <tr style="background-color: #F8F9FA; border-bottom: 2px solid #DEE2E6;">
+                <th style="width: 150px; padding: 8px; text-align: center; border: 1px solid #DEE2E6;">Data/Hora</th>
+                <th style="width: 200px; padding: 8px; text-align: center; border: 1px solid #DEE2E6;">Veículo</th>
+                <th style="width: 400px; padding: 8px; text-align: center; border: 1px solid #DEE2E6;">Motivo</th>
+                <th style="width: 200px; padding: 8px; text-align: center; border: 1px solid #DEE2E6;">Estado</th>
+                <th style="width: 200px; padding: 8px; text-align: center; border: 1px solid #DEE2E6;">Parar</th>
+              </tr>
+            </thead>
+            <tbody id="active-unavailability-tbody">
+            </tbody>
+          </table>
+        </div>
+        <div class="form-row" style="margin: 10px 10px 10px 10px; display: flex; justify-content: flex-end;">
+          <div class="action-buttons">
+            <button class="btn btn-success" onclick="loadActiveUnavailability()">ATUALIZAR LISTA</button>
+          </div>
+        </div>
+      </div>
+      <div id="availability-card" class="card last-card">
+        <div class="card-header">FIM DE INDISPONIBILIDADE DE VÉICULO DE VÉICULO</div>
+        <div class="card-body">
+          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-style: italic; color: #333333;">Veículo:</label>
+              <div class="global-field-horizontal">
+                <input type="text" id="end_vehicle_unavailable" style="width: 100px; text-align: center;">
               </div>
-              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal" style="width: 300px;">
-                  <label>Motivo da Indisponibilidade:</label>
-                  <div class="extras-field-horizontal">
-                    <input type="text" id="end_reason_unavailability" style="width: 150px; text-align: center;">
-                  </div>
-                </div>
+            </div>
+          </div>
+          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-style: italic; color: #333333;">Motivo da Indisponibilidade:</label>
+              <div class="extras-field-horizontal">
+                <input type="text" id="end_reason_unavailability" style="width: 175px; text-align: center;">
               </div>
             </div>
             <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
               <div class="global-field-horizontal">
-                <label>Data da Disponibilidade:</label>
+                <label style="font-size: 12px; font-style: italic; color: #333333;">Data da Disponibilidade:</label>
                 <div class="global-field-horizontal">
-                  <input type="date" id="end_unavailability_date" style="width: 100px;">
+                  <input type="date" id="end_unavailability_date" style="width: 120px;">
                 </div>
               </div>
               <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
                 <div class="global-field-horizontal">
-                  <label>Hora da Disponibilidade:</label>
+                  <label style="font-size: 12px; font-style: italic; color: #333333;">Hora da Disponibilidade:</label>
                   <div class="global-field-horizontal">
                     <input type="time" id="end_unavailability_hour" style="width: 75px;">
                   </div>
@@ -602,179 +595,180 @@
               </div>
             </div>
           </div>
-          <div class="form-row" style="margin: 10px 10px 10px 10px; display: flex; flex-wrap: wrap; justify-content: flex-end;">
+        </div>
+        <div class="form-row" style="margin: 0 10px 10px 10px; display: flex; flex-wrap: wrap; justify-content: flex-end;">
+          <div class="action-buttons">
+            <button class="btn btn-success" onclick="generateEndUnavailability()">ENVIAR DISPONIBILIDADE</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!---- MÓDULO INFORMAÇÃO DE ESTADO GRELHA DO MUNICÍPIO ---->
+    <div id="page-municipality-grid" class="page">
+      <h2 class="section-title">Info. Grelha Município</h2>
+      <div class="card" style="margin: 0 0 25px 0;">
+        <div class="card-header">ESTADO OPERACIONAL DA GRELHA DO MUNICÍPIO</div>
+        <div class="card-body">
+          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-style: italic; color: #333333;">Estado Operacional:</label>
+              <select id="state_municipality_grid" style="width: 200px;" onchange="toggleMunicipalityGridOutput()">
+              </select>
+            </div>
+          </div>
+          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-style: italic; color: #333333;">Motivo do Estado:</label>
+              <input type="text" id="municipality_grid_output" placeholder="Indique um motivo para o estado da grelha." style="width: 700px;">
+            </div>
+          </div>
+          <div class="form-row" style="margin: 10px 0 -10px 0; display: flex; flex-wrap: wrap; justify-content: flex-end;">
             <div class="action-buttons">
-              <button class="btn btn-success" onclick="generateEndUnavailability()">ENVIAR DISPONIBILIDADE</button>
+              <button class="btn btn-success" onclick="generateMunicipalityGridMessage()">ENVIAR ESTADO</button>
             </div>
           </div>
         </div>
       </div>
-      <!---- MÓDULO INFORMAÇÃO DE ESTADO GRELHA DO MUNICÍPIO ---->
-      <div id="page-municipality-grid" class="page">
-        <h2 class="section-title">Info. Grelha Município</h2>
-        <div class="card" style="margin: 0 0 25px 0;">
-          <div class="card-header">ESTADO OPERACIONAL DA GRELHA DO MUNICÍPIO</div>
-          <div class="card-body">
-            <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-              <div class="global-field-horizontal">
-                <label style="font-size: 12px;">Estado Operacional:</label>
-                <select id="state_municipality_grid" style="width: 200px;" onchange="toggleMunicipalityGridOutput()">
-                </select>
-              </div>
-            </div>
-            <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-              <div class="global-field-horizontal">
-                <label style="font-size: 12px;">Motivo do Estado:</label>
-                <input type="text" id="municipality_grid_output" placeholder="Indique um motivo para o estado da grelha." style="width: 700px;">
-              </div>
-            </div>
-            <div class="form-row" style="margin: 10px 0 -10px 0; display: flex; flex-wrap: wrap; justify-content: flex-end;">
-              <div class="action-buttons">
-                <button class="btn btn-success" onclick="generateMunicipalityGridMessage()">ENVIAR ESTADO</button>
-              </div>
-            </div>
+    </div>
+    <!---- MÓDULO UTILITÁRIOS ---->
+    <div id="page-utilities" class="page">
+      <h2 class="section-title">Utiliários</h2>
+      <div class="card card last-card">
+        <div class="card-header">CONSOLA DE UTILITÁRIOS</div>
+        <div class="digital-panel-container">
+          <div class="panel-sidebar">
+            <button class="panel-menu-button active" onclick="showPanelCard('epe')">Estados de EPE/PPI</button>
+            <button class="panel-menu-button" onclick="showPanelCard('fleet-management')">Gestão de Frota</button>
+            <button class="panel-menu-button" onclick="showPanelCard('vehicle-operational-status')">Sitop. Veículos</button>
+            <button class="panel-menu-button" onclick="showPanelCard('relev-info')">Informações Relevantes</button>
+            <button class="panel-menu-button" onclick="showPanelCard('interruption-roads-streets')">Cortes de Vias/Arruamentos</button>
+            <button class="panel-menu-button" onclick="showPanelCard('air-centers')">Centros de Meios Aéreos</button>
+            <button class="panel-menu-button" onclick="showPanelCard('analytics')">Disponibilidade de Elementos</button>
           </div>
-        </div>
-      </div>
-      <!---- MÓDULO UTILITÁRIOS ---->
-      <div id="page-utilities" class="page">
-        <h2 class="section-title">Utiliários</h2>
-        <div class="card card last-card">
-          <div class="card-header">CONSOLA DE UTILITÁRIOS</div>
-          <div class="digital-panel-container">
-            <div class="panel-sidebar">
-              <button class="panel-menu-button active" onclick="showPanelCard('epe')">Estados de EPE/PPI</button>
-              <button class="panel-menu-button" onclick="showPanelCard('fleet-management')">Gestão de Frota</button>
-              <button class="panel-menu-button" onclick="showPanelCard('vehicle-operational-status')">Sitop. Veículos</button>
-              <button class="panel-menu-button" onclick="showPanelCard('relev-info')">Informações Relevantes</button>
-              <button class="panel-menu-button" onclick="showPanelCard('interruption-roads-streets')">Cortes de Vias/Arruamentos</button>
-              <button class="panel-menu-button" onclick="showPanelCard('air-centers')">Centros de Meios Aéreos</button>
-              <button class="panel-menu-button" onclick="showPanelCard('analytics')">Disponibilidade de Elementos</button>
+          <div class="panel-content">
+            <div id="panel-epe" class="panel-card active">
+              <h3>ESTADOS DE PRONTIDÃO ESPECIAL / PLANOS PRÉVIOS DE INTERVENÇÃO</h3>
+              <p>Visão geral dos Estados de Prontidão Especiais e Planos Prévios de Intervenção.</p>
+              <div id="epe-container" class="data-grid"></div>
+              <div id="ppi-container" class="data-grid" style="margin-top: 20px;"></div>
             </div>
-            <div class="panel-content">
-              <!-- Card: Estados de Prontidão Especiais e PPIs -->
-              <div id="panel-epe" class="panel-card active">
-                <h3>ESTADOS DE PRONTIDÃO ESPECIAL / PLANOS PRÉVIOS DE INTERVENÇÃO</h3>
-                <p>Visão geral dos Estados de Prontidão Especiais e Planos Prévios de Intervenção.</p>
-                <div id="epe-container" class="data-grid"></div>
-                <div id="ppi-container" class="data-grid" style="margin-top: 20px;"></div>
+            <!-- Card: Situação Opercaional de Veículos -->
+            <div id="panel-vehicle-operational-status" class="panel-card">
+              <h3>SITUAÇÃO OPERACIONAL DE VEÍCULOS</h3>
+              <p>Informações detalhadas sobre o funcionamento dos módulos.</p>
+              <div id="vehicleStatus" class="loading">A carregar veículos...</div>
+              <div class="vehicle-grid" id="vehicleGrid"></div>
+            </div>
+            <!-- Card: Gestão de Frota -->
+            <div id="panel-fleet-management" class="panel-card">
+              <h3>GESTÃO DE VEÍCULOS DO CORPO DE BOMBEIROS</h3>
+              <p>Adição, Remoção e Estatísticas de veículos do Corpo de Bombeiros.</p>
+              <!-- Contagem veículos -->
+              <div class="main-card" style="margin:5px 0 -5px 0;">
+                <span class="data-value" style="font-size: 25px; margin:5px 0 15px 0;">TOTAL DE VEÍCULOS</span>
+                <span class="data-value" id="sum-vehicles" style="font-size: 45px; color: purple; margin-bottom:10px;"></span>
               </div>
-              <!-- Card: Situação Opercaional de Veículos -->
-              <div id="panel-vehicle-operational-status" class="panel-card">
-                <h3>SITUAÇÃO OPERACIONAL DE VEÍCULOS</h3>
-                <p>Informações detalhadas sobre o funcionamento dos módulos.</p>
-                <div id="vehicleStatus" class="loading">A carregar veículos...</div>
-                <div class="vehicle-grid" id="vehicleGrid"></div>
-              </div>
-              <!-- Card: Gestão de Frota -->
-              <div id="panel-fleet-management" class="panel-card">
-                <h3>GESTÃO DE VEÍCULOS DO CORPO DE BOMBEIROS</h3>
-                <p>Adição, Remoção e Estatísticas de veículos do Corpo de Bombeiros.</p>
-                <!-- Contagem veículos -->
-                <div class="main-card" style="margin:5px 0 -5px 0;">
-                  <span class="data-value" style="font-size: 25px; margin:5px 0 10px 0;">TOTAL DE VEÍCULOS</span>
-                  <span class="data-value" id="sum-vehicles" style="font-size: 45px; color: purple; margin-bottom:10px;"></span>
-                </div>
-                <div class="data-grid">
-                  <!-- Adicionar veículo -->
-                  <div class="main-card">
-                    <span class="data-value" style="font-size: 15px; margin-bottom:10px;">ADICIONAR VEÍCULO</span>
-                    <div class="data-label" style="font-size: 12px; margin-bottom:5px;">Designe o veículo a adicionar</div>
-                    <div class="form-row" style="justify-content: center;">
-                      <div class="global-field-horizontal">
-                        <input type="text" id="add_vehicle" placeholder="Ex. ABSC-01" style="width: 200px;">
-                      </div>
-                    </div>
-                    <div class="form-row" style="margin: 15px 0 0 0; justify-content: center;">
-                      <div class="action-buttons">
-                        <button id="add_vehicle_btn" class="btn btn-success">ADICIONAR</button>
-                      </div>
+              <div class="data-grid">
+                <!-- Adicionar veículo -->
+                <div class="main-card">
+                  <span class="data-value" style="font-size: 15px; margin-bottom:10px;">ADICIONAR VEÍCULO</span>
+                  <div class="data-label" style="font-size: 12px; margin-bottom:5px;">Designe o veículo a adicionar</div>
+                  <div class="form-row" style="justify-content: center;">
+                    <div class="global-field-horizontal">
+                      <input type="text" id="add_vehicle" placeholder="Ex. ABSC-01" style="width: 200px;">
                     </div>
                   </div>
-                  <!-- Remover veículo -->
-                  <div class="main-card">
-                    <span class="data-value" style="font-size: 15px; margin-bottom:10px;">REMOVER VEÍCULO</span>
-                    <div class="data-label" style="font-size: 12px; margin-bottom:5px;">Selecione o veículo a remover</div>
-                    <div class="form-row" style="justify-content: center;">
-                      <div class="vehicle-field-horizontal">
-                        <select id="remove_vehicle" style="width: 200px;"></select>
-                      </div>
-                    </div>
-                    <div class="form-row" style="margin: 15px 0 0 0; justify-content: center;">
-                      <div class="action-buttons">
-                        <button id="remove_vehicle_btn" class="btn btn-danger">REMOVER</button>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="main-card">
-                    <span class="data-value" style="font-size: 17px; margin-bottom:35px;">ESTATÍSTICAS DE VEÍCULOS</span>
-                    <div class="vehicle-stats-grid" style="display: flex; justify-content: center; gap: 50px; margin-top: 5x;">
-                      <div class="stat-item" style="text-align: center;">
-                        <div class="stat-label" style="font-size: 15px; color: #666; margin-bottom: 5px;">NO QUARTEL</div>
-                        <div class="stat-value" id="count-quartel" style="font-size: 30px; font-weight: bold; color: #28a745;">0</div>
-                      </div>
-                      <div class="stat-item" style="text-align: center;">
-                        <div class="stat-label" style="font-size: 15px; color: #666; margin-bottom: 5px;">EM SERVIÇO</div>
-                        <div class="stat-value" id="count-servico" style="font-size: 30px; font-weight: bold; color: #007bff;">0</div>
-                      </div>
-                      <div class="stat-item" style="text-align: center;">
-                        <div class="stat-label" style="font-size: 15px; color: #666; margin-bottom: 5px;">INOP</div>
-                        <div class="stat-value" id="count-inop" style="font-size: 30px; font-weight: bold; color: #dc3545;">0</div>
-                      </div>
+                  <div class="form-row" style="margin: 15px 0 0 0; justify-content: center;">
+                    <div class="action-buttons">
+                      <button id="add_vehicle_btn" class="btn btn-success">ADICIONAR</button>
                     </div>
                   </div>
                 </div>
-                <div id="vehicle_status_message" class="status"></div>
+                <!-- Remover veículo -->
+                <div class="main-card">
+                  <span class="data-value" style="font-size: 15px; margin-bottom:10px;">REMOVER VEÍCULO</span>
+                  <div class="data-label" style="font-size: 12px; margin-bottom:5px;">Selecione o veículo a remover</div>
+                  <div class="form-row" style="justify-content: center;">
+                    <div class="vehicle-field-horizontal">
+                      <select id="remove_vehicle" style="width: 200px;"></select>
+                    </div>
+                  </div>
+                  <div class="form-row" style="margin: 15px 0 0 0; justify-content: center;">
+                    <div class="action-buttons">
+                      <button id="remove_vehicle_btn" class="btn btn-danger">REMOVER</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="main-card">
+                  <span class="data-value" style="font-size: 17px; margin-bottom:35px;">ESTATÍSTICAS DE VEÍCULOS</span>
+                  <div class="vehicle-stats-grid" style="display: flex; justify-content: center; gap: 50px; margin-top: 5x;">
+                    <div class="stat-item" style="text-align: center;">
+                      <div class="stat-label" style="font-size: 15px; color: #666; margin-bottom: 5px;">NO QUARTEL</div>
+                      <div class="stat-value" id="count-quartel" style="font-size: 30px; font-weight: bold; color: #28a745;">0</div>
+                    </div>
+                    <div class="stat-item" style="text-align: center;">
+                      <div class="stat-label" style="font-size: 15px; color: #666; margin-bottom: 5px;">EM SERVIÇO</div>
+                      <div class="stat-value" id="count-servico" style="font-size: 30px; font-weight: bold; color: #007bff;">0</div>
+                    </div>
+                    <div class="stat-item" style="text-align: center;">
+                      <div class="stat-label" style="font-size: 15px; color: #666; margin-bottom: 5px;">INOP</div>
+                      <div class="stat-value" id="count-inop" style="font-size: 30px; font-weight: bold; color: #dc3545;">0</div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <!-- Card: Informações Relevantes -->
-              <div id="panel-relev-info" class="panel-card">
-                <h3>INFORMAÇÕES RELEVANTES</h3>
-                <p>Informações de caráter relevante para conhecimento geral.</p>
-                <div id="info-container"></div>
-              </div>
-              <!-- Card: Cortes de Vias -->
-              <div id="panel-interruption-roads-streets" class="panel-card">
-                <h3>CORTES DE VIAS E/OU ARRUAMENTOS</h3>
-                <p>Vias ou Arruamentos impedidos ao trânsito (Obras, Eventos, Etc.)</p>
-                <div id="routes-container"></div>
+              <div id="vehicle_status_message" class="status"></div>
+            </div>
+            <!-- Card: Informações Relevantes -->
+            <div id="panel-relev-info" class="panel-card">
+              <h3>INFORMAÇÕES RELEVANTES</h3>
+              <p>Informações de caráter relevante para conhecimento geral.</p>
+              <div id="info-container"></div>
+            </div>
+            <!-- Card: Cortes de Vias -->
+            <div id="panel-interruption-roads-streets" class="panel-card">
+              <h3>CORTES DE VIAS E/OU ARRUAMENTOS</h3>
+              <p>Vias ou Arruamentos impedidos ao trânsito (Obras, Eventos, Etc.)</p>
+              <div id="routes-container"></div>
               <div class="action-buttons" style="margin: 20px 0 0 0;">
-                 <button class="btn btn-success" onclick="saveRoutesGroupFields()">ATUALIZAR</button>
+                <button class="btn btn-success" onclick="saveRoutesGroupFields()">ATUALIZAR</button>
               </div>
-              </div>
-              <div id="panel-air-centers" class="panel-card">
-                <h3>CENTROS DE MEIOS AÉREOS</h3>
-                <p>CMA's Ativos na Região.</p>
+            </div>
+            <!-- Card: Centros de Meios Aéreos -->
+            <div id="panel-air-centers" class="panel-card">
+              <h3>CENTROS DE MEIOS AÉREOS</h3>
+              <p>CMA's Ativos na Região.</p>
               <div id="cma-container" class="grid-3fr" style="gap: 10px;"></div>
               <div class="action-buttons" style="margin: 20px 0 0 0;">
                 <button class="btn btn-success" onclick="saveCMAsGroupFields()">ATUALIZAR</button>
               </div>
-              </div>
-              <!-- Card: Elementos Disponiveis -->
-              <div id="panel-analytics" class="panel-card">
-                <h3>DISPONIBILIDADE DE ELEMENTOS</h3>
-                <p>Elementos disponiveis para situações de exceção.</p>
-                <div id="elems-container" class="elems-container"></div>
-              </div>
+            </div>
+            <!-- Card: Análises -->
+            <div id="panel-analytics" class="panel-card">
+              <h3>DISPONIBILIDADE DE ELEMENTOS</h3>
+              <p>Elementos disponiveis para situações de exceção.</p>
+              <div id="elems-container" class="elems-container"></div>
             </div>
           </div>
         </div>
-      </div>      
-      <!---- MÓDULO GESTÃO DE DADOS ---->
-      <div id="page-data" class="page">
-        <h2 class="section-title">Data Center</h2>
-        <div class="card">
-          <div class="card-header">CENTRO DE DADOS</div>
-          <div class="card-body">
-            <p>Centro de dados do sistema em desenvolvimento.</p>
-          </div>
+      </div>
+    </div>
+    <!---- MÓDULO GESTÃO DE DADOS ---->
+    <div id="page-data" class="page">
+      <h2 class="section-title">Data Center</h2>
+      <div class="card">
+        <div class="card-header">CENTRO DE DADOS</div>
+        <div class="card-body">
+          <p>Centro de dados do sistema em desenvolvimento.</p>
         </div>
       </div>
-    </main>
-    <footer class="status-bar">
-      <div class="system-info">
-        WSMS Auto Creator v3.147.24 | Powered by: Fábio Martins | Sistemas de Informação
-      </div>
-    </footer>
+    </div>
+  </main>
+  <footer class="status-bar">
+    <div class="system-info">
+      WSMS Auto Creator v3.147.24 | Powered by: Fábio Martins | Sistemas de Informação
+    </div>
+  </footer>
     
   <script src="js/initcfg.js"></script>
   <script src="js/initform.js"></script>
@@ -789,6 +783,7 @@
   <script></script>
 </body>
 </html>
+
 
 
 

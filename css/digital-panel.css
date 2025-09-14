@@ -143,10 +143,10 @@
 .elems-container {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
-  margin: 40px 0 0 30px;
+  gap: 4px;
+  margin: 25px 0 0 7px;
   justify-content: flex-start;
-}     
+}    
 
 .btn-elem {
   position: relative;

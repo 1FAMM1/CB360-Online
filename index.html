@@ -729,8 +729,10 @@
             <div id="panel-interruption-roads-streets" class="panel-card">
               <h3>CORTES DE VIAS E/OU ARRUAMENTOS</h3>
               <p>Vias ou Arruamentos impedidos ao trânsito (Obras, Eventos, Etc.)</p>
-              <div id="routes-container"></div>
-              <div class="action-buttons" style="margin: 20px 0 0 0;">
+              <div class="main-card">
+                <div id="routes-container" style="margin: 5px 0 0 0;"></div>
+              </div>
+              <div class="action-buttons" style="margin: 15px 0 0 0;">
                 <button class="btn btn-success" onclick="saveRoutesGroupFields()">ATUALIZAR</button>
               </div>
             </div>
@@ -743,11 +745,13 @@
                 <button class="btn btn-success" onclick="saveCMAsGroupFields()">ATUALIZAR</button>
               </div>
             </div>
-            <!-- Card: Análises -->
+            <!-- Card: Disponibilidades de Elementos -->
             <div id="panel-analytics" class="panel-card">
               <h3>DISPONIBILIDADE DE ELEMENTOS</h3>
               <p>Elementos disponiveis para situações de exceção.</p>
-              <div id="elems-container" class="elems-container"></div>
+              <div class="main-card">
+                <div id="elems-container" class="elems-container"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -783,6 +787,7 @@
   <script></script>
 </body>
 </html>
+
 
 
 

@@ -424,7 +424,7 @@
       document.querySelectorAll('input[type="date"]').forEach(i => i.value = getCurrentDateStr());
       document.querySelectorAll('input[type="time"]').forEach(i => i.value = '');
       await populateCouncilSelect();
-      await populateVehicleSelects();
+      await populateIndependentVehicleSelect();
       toggleEMSNrField();
       toggleContactFields();
       document.getElementById('alert_source')?.addEventListener('change', () => {

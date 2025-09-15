@@ -580,7 +580,7 @@
         console.error("❌ Erro ao carregar CMAs:", error);
       }
     }
-    document.addEventListener("DOMContentLoaded", loadCMAs); 
+    document.addEventListener("DOMContentLoaded", loadCMAsFromSupabase); 
         
     async function saveCMAsGroupFields() {
       try {

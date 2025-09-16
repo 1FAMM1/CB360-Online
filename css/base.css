@@ -1,7 +1,6 @@
 /* ============================================
    BASE.CSS - Estilos Base e Reset
    ============================================ */
-
 * {
   margin: 0;
   padding: 0;
@@ -16,13 +15,20 @@ body {
   user-select: none;
 }
 
-.container {
-  width: 100vw;
-  height: 100vh;
-  background-color: #F8F9FA;
-  position: relative;
-  margin: 0;
-  box-shadow: none;
+body, body * {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  cursor: default;
+}
+
+input, textarea, select {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  cursor: text !important;
 }
 
 ul {

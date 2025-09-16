@@ -23,12 +23,14 @@ body, body * {
   cursor: default;
 }
 
-input, textarea, select {
+input, textarea {
   user-select: text !important;
-  -webkit-user-select: text !important;
-  -moz-user-select: text !important;
-  -ms-user-select: text !important;
   cursor: text !important;
+}
+
+select {
+  user-select: text !important;
+  cursor: default !important;
 }
 
 ul {

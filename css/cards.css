@@ -56,6 +56,19 @@
   display: none;
 }
 
+.card-type-separator {
+  background: linear-gradient(270deg, #d9d9d9, #292c4a);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  padding: 0 20px;
+  color: #ddd;
+  font-size: 13px;
+  border-radius: 5px 5px 0 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  border-bottom: 3px solid rgba(0, 0, 0, 0.1);
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
+}
+
 .main-card, .vehicle-card, .victims-card, .extras-card, .demage-card, .burned-card, .observ-card, .data-item {
   background: linear-gradient(135deg, #f9f9f9, #ececec);
   backdrop-filter: blur(8px) saturate(150%);
@@ -83,17 +96,4 @@
   font-weight: bold;
   color: #495057;
   margin-bottom: 10px;
-}
-
-.type-separator {
-  background: linear-gradient(270deg, #d9d9d9, #292c4a);
-  backdrop-filter: blur(12px) saturate(180%);
-  -webkit-backdrop-filter: blur(12px) saturate(180%);
-  padding: 0 20px;
-  color: #ddd;
-  font-size: 13px;
-  border-radius: 5px 5px 0 0;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-  border-bottom: 3px solid rgba(0, 0, 0, 0.1);
-  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
 }

@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="css/modals.css">
     <link rel="stylesheet" href="css/digital-panel.css">
     <link rel="stylesheet" href="css/vehicles.css">
+    <link rel="stylesheet" href="css/window.css">
     <link rel="stylesheet" href="css/animations.css">
 </head>
 <body>
@@ -80,6 +81,62 @@
       </div>
     </div>
   </div>
+
+  <!---- MÓDULO JANELA ---->
+  <div class="window" role="dialog" aria-labelledby="win-title" id="editWindow">
+    <div class="window-titlebar">
+      <div class="window-title-left">
+        <div class="window-app-icon">✏️</div>
+        <span id="windowTitle"></span>
+      </div>
+      <div class="window-title-controls">
+        <button id="closeWindow">×</button>
+      </div>
+    </div>
+    <div class="window-content">
+      <form id="winForm">
+        <div class="window-field-horizontal">
+          <label>Nº Interno:</label>
+          <input type="text" id="win_n_int" placeholder="Ex. 000" style="width:80px; text-align:center;" maxlength="3" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 3)">
+          <label>Nº Mecanográfico:</label>
+          <input type="text" id="win_n_file" placeholder="Ex. 20070000" style="width:120px; text-align:center;" maxlength="8" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 8)">
+        </div>
+        <div class="window-field-horizontal">
+          <label>Patente:</label>
+          <select id="win_patent" style="width:150px;"></select>
+        </div>
+        <div class="window-field-horizontal">
+          <label>Nome:</label>
+          <input type="text" id="win_abv_name" style="flex:1">
+        </div>
+        <div class="window-field-horizontal">
+          <label>Nome Completo:</label>
+          <input type="text" id="win_full_name" style="flex:1">
+        </div>
+        <div class="window-field-horizontal">
+          <label>Motorista de Pesados:</label>
+          <select id="win_MP">
+            <option value="true">Sim</option>
+            <option value="false">Não</option>
+          </select>
+        </div>
+        <div class="window-field-horizontal">
+          <label>Tripulante TAS:</label>
+          <select id="win_TAS">
+            <option value="true">Sim</option>
+            <option value="false">Não</option>
+          </select>
+        </div>
+      </form>
+    </div>
+    <div class="window-action-bar">
+      <button type="submit" form="winForm" class="btn btn-success">💾 Guardar</button>
+    </div>
+    <div class="window-bottom-bar">
+      <span>🕘 Última alteração: <b></b></span>
+    </div>
+  </div>
+  
   <!---- MÓDULO COUNTEÚDO PRINCIPAL ---->
   <main class="main-content">
     <div id="page-main" class="page active">
@@ -788,17 +845,3 @@
   <script></script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-

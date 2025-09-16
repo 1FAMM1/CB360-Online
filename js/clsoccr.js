@@ -13,14 +13,15 @@
     function validateClsVehicle() {
       const firstCard = document.querySelector('.vehicle-card');
       if (!firstCard) return false;
-      const selects = firstCard.querySelectorAll('select');
-      const textInputs = firstCard.querySelectorAll('input[type="text"]');
-      const fieldsToCheck = [...selects, textInputs[0]].filter(Boolean);
-      for (const f of fieldsToCheck) {
-        if (!f.value?.trim()) {
-          return false;
-        }
-      }
+      const vehicleSelect = firstCard.querySelector('select')?.value?.trim();
+      if (!vehicleSelect) return false;
+      const dates = firstCard.querySelectorAll('input[type="date"]');
+      const times = firstCard.querySelectorAll('input[type="time"]');
+      if (!dates[0]?.value || !times[0]?.value) return false;
+      if (!dates[1]?.value || !times[1]?.value) return false;
+      if (!dates[2]?.value || !times[2]?.value) return false;
+      const kms = firstCard.querySelectorAll('input[type="text"]')[0]?.value?.trim();
+      if (!kms) return false;
       return true;
     }
 

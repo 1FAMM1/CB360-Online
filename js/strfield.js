@@ -80,6 +80,10 @@
             loadCMAsFromSupabase()
             loadElemsButtons()
           }
+          if (btn.getAttribute("data-page") === "page-data") {
+          const elemsButton = document.querySelector('.panel-menu-button[onclick*="showPanelCard(\'elems\'"]');
+          if (elemsButton) elemsButton.click();
+          }
         });
       });
     });

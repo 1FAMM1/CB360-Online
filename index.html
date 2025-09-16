@@ -818,10 +818,28 @@
     <!---- MÓDULO GESTÃO DE DADOS ---->
     <div id="page-data" class="page">
       <h2 class="section-title">Data Center</h2>
-      <div class="card">
+      <div class="card last-card">
         <div class="card-header">CENTRO DE DADOS</div>
-        <div class="card-body">
-          <p>Centro de dados do sistema em desenvolvimento.</p>
+        <div class="digital-panel-container">
+          <div class="panel-sidebar">
+            <button class="panel-menu-button active" onclick="showPanelCard('elems')">Bombeiros</button>
+            <button class="panel-menu-button" onclick="showPanelCard('-)">Dados</button>
+            <button class="panel-menu-button" onclick="showPanelCard('-')"></button>
+            <button class="panel-menu-button" onclick="showPanelCard('-')"></button>
+            <button class="panel-menu-button" onclick="showPanelCard('-')"</button>
+            <button class="panel-menu-button" onclick="showPanelCard('-')"></button>
+            <button class="panel-menu-button" onclick="showPanelCard('-')"></button>
+          </div>
+          <div class="panel-content">
+            <div id="panel-elems" class="panel-card active">
+              <h3>LISTAGEM DE BOMBEIROS</h3>
+              <p>Adição, Remoção e Edição de elementos.</p>
+              <button class="btn btn-add" style="margin: 0 0 20px 0;" onclick="openNewWindow()">ADICIONAR</button>
+              <div class="main-card" style="max-height: 370px; overflow-y: auto; overflow-x: hidden;">
+                <div id="table-container"></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -846,4 +864,5 @@
   <script></script>
 </body>
 </html>
+
 

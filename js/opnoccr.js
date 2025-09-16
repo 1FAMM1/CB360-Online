@@ -250,6 +250,11 @@
       const parish = parishSelect ? parishSelect.options[parishSelect.selectedIndex]?.text || '' : '';
       const nrOccurrence = document.getElementById('nr_occurrence_input')?.value?.trim() || '';
       const gdhAlerta = formatGDH(alertDate, alertTime);
+      const emsNr = document.getElementById('ems_nr')?.value?.trim() || '';
+      let emsInfo = '';
+      if (emsNr) {
+        emsInfo = `*Nr. CODU:* ${emsNr}\n`;
+      }
       const vehicles = [];
       document.querySelectorAll('.vehicle-card').forEach(card => {
         const vehicle = card.querySelector('select')?.value?.trim() || '';
@@ -287,6 +292,7 @@
         message =
           `*✅ Registo de Nova Ocorrência*\n\n` +
           `*FONTE ALERTA:* ${alertSource}\n` +
+          emsInfo +
           `*GDH ALERTA:* ${gdhAlerta}\n` +
           `*CLASS OC:* ${classOccorr}\n` +
           `*LOCAL:* ${localOccorr} - ${localitie} - ${council} - ${parish}\n` +
@@ -294,12 +300,12 @@
           `${contacInfo}` +
           `${animalInfo}` +
           `*Agradeço N. OC:*`;
-        }
+      }
       const out = document.getElementById('wsms_output');
       if (out) out.value = message;
       if (navigator.clipboard?.writeText) navigator.clipboard.writeText(message).catch(() => {});
-        showPopupSuccess("Mensagem criada com sucesso! Abra o WhatsApp e prima CTRL+V", true);
-        return message;
+      showPopupSuccess("Mensagem criada com sucesso! Abra o WhatsApp e prima CTRL+V", true);
+      return message;
     }
     /* ---- CRIAÇÃO DE MENSAGEM DE NOVA OCORRÊNCIA GLOBAL ----*/
     let lastWSMSData = null;

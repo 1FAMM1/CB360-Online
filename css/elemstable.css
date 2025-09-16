@@ -1,0 +1,22 @@
+    .reg-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .reg-table th,
+    .reg-table td {
+      border: 1px solid #ccc;
+      padding: 2px;
+      text-align: center;
+    }
+
+    .reg-table th {
+      background-color: #f2f2f2;
+    }
+
+    .btn-edit {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+    }

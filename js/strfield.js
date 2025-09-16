@@ -313,7 +313,8 @@
                             {id: 'state_municipality_grid', category: 'municipality_grid'},
                             {id: 'cma_type_01', category: 'cma_type'}, {id: 'cma_type_02', category: 'cma_type'},
                             {id: 'cma_type_03', category: 'cma_type'}, {id: 'cma_type_04', category: 'cma_type'},
-                            {id: 'cma_type_05', category: 'cma_type'}, {id: 'cma_type_06', category: 'cma_type'}];
+                            {id: 'cma_type_05', category: 'cma_type'}, {id: 'cma_type_06', category: 'cma_type'},
+                            {id: 'win_patent', category: 'patent_choice'}];
       for (let field of globalFields) {
         const select = document.getElementById(field.id);
         if (!select) {

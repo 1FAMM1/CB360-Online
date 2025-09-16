@@ -69,19 +69,19 @@
       <label>Dt. Ch. TO:</label>
       <input type="date" style="width: 110px;">
       <label>Hr. Ch. TO:</label>
-      <input type="time" style="width: 75px;">
+      <input type="time" style="width: 80px;">
     </div>
     <div class="global-field-horizontal">
       <label>Dt. Sd. TO:</label>
       <input type="date" style="width: 110px;">
       <label>Hr. Sd. TO:</label>
-      <input type="time" style="width: 75px;">
+      <input type="time" style="width: 80px;">
     </div>
     <div class="global-field-horizontal">
       <label>Dt. Ch. Und.:</label>
       <input type="date" style="width: 110px;">
       <label>Hr. Ch. Und.:</label>
-      <input type="time" style="width: 75px;">
+      <input type="time" style="width: 80px;">
       <label>Kms.:</label>
       <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="5" 
              oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,5)">

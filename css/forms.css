@@ -53,7 +53,7 @@
 .vehicle-field-horizontal select,
 .global-field-horizontal input,
 .global-field-horizontal select {
-  height: 25px;
+  height: 23px;
   border: 1px solid #CED4DA;
   border-radius: 4px;
   padding: 0 8px;

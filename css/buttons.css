@@ -31,6 +31,11 @@
   background-color: #218838;
 }
 
+.btn-success:focus {
+  outline: 1px solid #218838;
+   outline-offset: 1px;
+}
+
 .btn-danger {
   background-color: #DC3545;
   color: white;
@@ -40,6 +45,11 @@
   background-color: #C82333;
 }
 
+.btn-danger:focus {
+  outline: 1px solid #C82333;
+  outline-offset: 1px;
+}
+
 .btn-add {
   background-color: #3354a1;
   color: white;
@@ -47,6 +57,11 @@
 
 .btn-add:hover {
   background-color: #284078;
+}
+
+.btn-add:focus {
+  outline: 1px solid #284078;
+  outline-offset: 1px;
 }
 
 .btn-add.active {

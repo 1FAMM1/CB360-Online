@@ -189,79 +189,79 @@
       <div class="card">
         <div class="card-header">DADOS GLOBAIS</div>
         <div class="card-body">
-          <div class="type-separator" style="margin: -10px 0 15px 0; font-style: italic;">Local da Ocorrência</div>
+          <div class="card-type-separator" style="margin: -10px 0 15px 0; font-style: italic;">Local da Ocorrência</div>
           <div class="form-row">
             <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-style: italic; color: #333333;">Tipo Alerta:</label>
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Tipo Alerta:</label>
               <select id="alert_type">
               </select>
             </div>
             <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-style: italic; color: #333333;">Fonte Alerta:</label>
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Fonte Alerta:</label>
               <select id="alert_source">
               </select>
             </div>
             <div class="global-field-horizontal" id="ems_group">
-              <label style="font-size: 12px; font-style: italic; color: #333333;">Nr. CODU:</label>
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Nr. CODU:</label>
               <input type="text" id="ems_nr" placeholder="Ex. 123456789">
             </div>
           </div>
           <div class="form-row">
             <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-style: italic; color: #333333;">Data Alerta:</label>
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Data Alerta:</label>
               <input type="date" id="alert_date" value="">
             </div>
             <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-style: italic; color: #333333;">Hora Alerta:</label>
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Hora Alerta:</label>
               <input type="time" id="alert_time" value="">
             </div>
             <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-style: italic; color: #333333;">Class. Ocorrência:</label>
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Class. Ocorrência:</label>
               <input type="text" id="class_occorr_input" placeholder="Ex. 3103" style="width: 80px; text-align: center;" maxlength="4" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 4)">
             </div>
             <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-style: italic; color: #333333;">Nr. Ocorrência:</label>
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Nr. Ocorrência:</label>
               <input type="text" id="nr_occurrence_input" placeholder="Ex. 123456789" style="width: 100px; text-align: center;" maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11)">
             </div>
             <div class="global-field-horizontal">
-              <label style="font-size: 13px; font-style: italic; color: #333333;">Canal Manobra:</label>
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Canal Manobra:</label>
               <select id="channel_maneuver" style="width: 75px;">
                 <option></option>
               </select>
             </div>
             <div class="global-field-horizontal" style="display: none;">
-              <label style="font-size: 12px; font-style: italic; color: #333333;">Descr. Ocorrência:</label>
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Descr. Ocorrência:</label>
               <input type="text" id="occorr_descr_input" placeholder="Inc. Mato">
             </div>
           </div>
           <div class="form-row">
             <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-style: italic; color: #333333;">Morada Ocorrência:</label>
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Morada Ocorrência:</label>
               <input type="text" id="occorr_local_input" style="width: 350px;" placeholder="Ex. Rua Serpa Pinto, 00">
             </div>
             <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-style: italic; color: #333333;">Localidade:</label>
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Localidade:</label>
               <input type="text" id="occorr_localitie_input" placeholder="Ex. Faro">
             </div>
             <div class="global-field-horizontal">
-              <label style="font-size: 13px; font-style: italic; color: #333333;">Concelho:</label>
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Concelho:</label>
               <select id="council_select" style="width: 190px;">
                 <option></option>
               </select>
             </div>
             <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-style: italic; color: #333333;">Freguesia:</label>
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Freguesia:</label>
               <select id="parish_select" style="width: 220px;">
               </select>
             </div>
           </div>
           <div class="form-row">
             <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-style: italic; color: #333333;">Nome Contactante:</label>
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Nome Contactante:</label>
               <input type="text" id="contact_name" style="width: 250px;" placeholder="Ex. João Sousa">
             </div>
             <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-style: italic; color: #333333;">Nr. Contactante:</label>
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Nr. Contactante:</label>
               <input type="text" id="contact_nr" placeholder="Ex. 910 000 000" style="width: 120px; text-align: center;" maxlength="9" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 9)">
             </div>
           </div>
@@ -272,40 +272,40 @@
           </div>
           <div class="form-row">
             <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-style: italic; color: #333333;">Tipo Animal:</label>
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Tipo Animal:</label>
               <input type="text" id="animal-type" style="width: 250px;" placeholder="Ex. Canideo">
             </div>
           </div>
-          <div class="type-separator" style="margin: 10px 0 15px 0; font-style: italic;">Planos Prévios de Intervenção</div>
+          <div class="card-type-separator" style="margin: 10px 0 15px 0; font-style: italic;">Planos Prévios de Intervenção</div>
           <div class="form-row" style="margin: 0 0 -15px 0;">
             <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-style: italic; color: #333333;">Tipo PPI:</label>
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Tipo PPI:</label>
               <select id="ppi_type">
               </select>
             </div>
             <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-style: italic; color: #333333;">Nível Alerta:</label>
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Nível Alerta:</label>
               <select id="alert_level" style="width: 175px;">
                 <option></option>
               </select>
             </div>
             <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-style: italic; color: #333333;">Grelha Alarme:</label>
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Grelha Alarme:</label>
               <select id="alarm_grid" style="width: 75px;">
                 <option></option>
               </select>
             </div>
             <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-style: italic; color: #333333;">Km:</label>
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Km:</label>
               <input type="text" id="km" placeholder="00" style="width: 75px; text-align: center;" maxlength="6" oninput="this.value = this.value.replace(/[^0-9.]/g, '') .replace(/(\..*)\./g, '$1') .slice(0, 6)">
             </div>
             <div class="global-field-horizontal">
-              <label style="font-size: 13px; font-style: italic; color: #333333;">Sentido:</label>
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Sentido:</label>
               <select id="on_going" style="width: 230px;">
               </select>
             </div>
             <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-style: italic; color: #333333;">Tipo Incidente:</label>
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Tipo Incidente:</label>
               <select id="incident_type" style="width: 175px;">
               </select>
             </div>
@@ -788,6 +788,7 @@
   <script></script>
 </body>
 </html>
+
 
 
 

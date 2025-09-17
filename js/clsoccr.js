@@ -13,14 +13,17 @@
     function validateClsVehicle() {
       const firstCard = document.querySelector('.vehicle-card');
       if (!firstCard) return false;
-      const vehicleSelect = firstCard.querySelector('select[name="vehicle"]')?.value?.trim();
-      const chTODate = firstCard.querySelector('input[name="chTO_date"]')?.value?.trim();
-      const chTOTime = firstCard.querySelector('input[name="chTO_time"]')?.value?.trim();
-      const sdTODate = firstCard.querySelector('input[name="sdTO_date"]')?.value?.trim();
-      const sdTOTime = firstCard.querySelector('input[name="sdTO_time"]')?.value?.trim();
-      const chUndDate = firstCard.querySelector('input[name="chUnd_date"]')?.value?.trim();
-      const chUndTime = firstCard.querySelector('input[name="chUnd_time"]')?.value?.trim();
-      const kms = firstCard.querySelector('input[name="kms"]')?.value?.trim();
+      const vehicleSelect = firstCard.querySelector('select')?.value?.trim();
+      const dates = firstCard.querySelectorAll('input[type="date"]');
+      const times = firstCard.querySelectorAll('input[type="time"]');
+      const texts = firstCard.querySelectorAll('input[type="text"]');
+      const chTODate = dates[0]?.value?.trim();
+      const chTOTime = times[0]?.value?.trim();
+      const sdTODate = dates[1]?.value?.trim();
+      const sdTOTime = times[1]?.value?.trim();
+      const chUndDate = dates[2]?.value?.trim();
+      const chUndTime = times[2]?.value?.trim();
+      const kms = texts[0]?.value?.trim();
       if (!vehicleSelect) return false;
       if (!chTODate || !chTOTime) return false;
       if (!sdTODate || !sdTOTime) return false;

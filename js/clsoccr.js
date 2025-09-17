@@ -13,14 +13,18 @@
     function validateClsVehicle() {
       const firstCard = document.querySelector('.vehicle-card');
       if (!firstCard) return false;
-      const vehicleSelect = firstCard.querySelector('select')?.value?.trim();
+      const vehicleSelect = firstCard.querySelector('select[name="vehicle"]')?.value?.trim();
+      const chTODate = firstCard.querySelector('input[name="chTO_date"]')?.value?.trim();
+      const chTOTime = firstCard.querySelector('input[name="chTO_time"]')?.value?.trim();
+      const sdTODate = firstCard.querySelector('input[name="sdTO_date"]')?.value?.trim();
+      const sdTOTime = firstCard.querySelector('input[name="sdTO_time"]')?.value?.trim();
+      const chUndDate = firstCard.querySelector('input[name="chUnd_date"]')?.value?.trim();
+      const chUndTime = firstCard.querySelector('input[name="chUnd_time"]')?.value?.trim();
+      const kms = firstCard.querySelector('input[name="kms"]')?.value?.trim();
       if (!vehicleSelect) return false;
-      const dates = firstCard.querySelectorAll('input[type="date"]');
-      const times = firstCard.querySelectorAll('input[type="time"]');
-      if (!dates[0]?.value || !times[0]?.value) return false;
-      if (!dates[1]?.value || !times[1]?.value) return false;
-      if (!dates[2]?.value || !times[2]?.value) return false;
-      const kms = firstCard.querySelectorAll('input[type="text"]')[0]?.value?.trim();
+      if (!chTODate || !chTOTime) return false;
+      if (!sdTODate || !sdTOTime) return false;
+      if (!chUndDate || !chUndTime) return false;
       if (!kms) return false;
       return true;
     }

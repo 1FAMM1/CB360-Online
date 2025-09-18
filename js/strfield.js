@@ -182,10 +182,11 @@
         descrInput.value = descr;
       });
     }
-    /* --- Carregamento de Concelhos --- */
-    async function fetchCouncilsFromSupabase() {
+    /* --- Busca Concelhos por Distrito --- */
+    async function fetchCouncilsByDistrict(districtId) {
+      if (!districtId) return [];
       try {
-        const resp = await fetch(`${SUPABASE_URL}/rest/v1/councils_select?select=id,council`, {
+        const resp = await fetch(`${SUPABASE_URL}/rest/v1/councils_select?select=id,council&district_id=eq.${districtId}`, {
           headers: getSupabaseHeaders()
         });
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -196,30 +197,36 @@
         }));
       } catch (e) {
         console.error("Erro ao buscar concelhos:", e);
-        return fallbackCouncils;
+        return fallbackCouncils[districtId] || [];
       }
     }
-    async function populateCouncilSelect() {
+    /* --- Popula Concelhos --- */
+    async function populateCouncilSelectByDistrict(districtId) {
       const sel = document.getElementById('council_select');
       if (!sel) return;
-      sel.innerHTML = '<option></option>';
-      const councils = (await fetchCouncilsFromSupabase()).sort((a, b) =>
-        a.name.localeCompare(b.name, 'pt', {
-          sensitivity: 'base'
-        })
-      );
-      sel.innerHTML = '<option></option>';
-      councils.forEach(c => {
-        const o = document.createElement('option');
-        o.value = c.id;
-        o.textContent = c.name;
-        sel.appendChild(o);
-      });
-      if (sel.value) {
-        populateParishes(sel.value);
+      const councils = await fetchCouncilsByDistrict(districtId);
+      // Limpa select de concelhos
+      sel.innerHTML = '';
+      const emptyOption = document.createElement('option');
+      emptyOption.value = '';
+      emptyOption.textContent = '';
+      sel.appendChild(emptyOption);
+      const parishSelect = document.getElementById('parish_select');
+      if (parishSelect) {
+        parishSelect.innerHTML = '';
       }
+      if (!councils.length) return;
+      const orderedC = councils.sort((a, b) => a.name.localeCompare(b.name, 'pt', {
+        sensitivity: 'base'
+      }));
+      orderedC.forEach(c => {
+        const option = document.createElement('option');
+        option.value = String(c.id);
+        option.textContent = c.name;
+        sel.appendChild(option);
+      });
     }
-    /* --- Carregamento de Freguesias ---*/
+    /* --- Busca Freguesias por Concelho --- */
     async function fetchParishesByCouncil(councilId) {
       if (!councilId) return [];
       try {
@@ -234,37 +241,42 @@
         return fallbackParishes[councilId] || [];
       }
     }
+    /* --- Popula Freguesias --- */
     async function populateParishes(councilId) {
       const sel = document.getElementById('parish_select');
       if (!sel) return;
-      sel.innerHTML = '';
-      const parishes = (await fetchParishesByCouncil(councilId)).sort((a, b) =>
-        a.localeCompare(b, 'pt', {
+      const parishes = (await fetchParishesByCouncil(councilId))
+        .sort((a, b) => a.localeCompare(b, 'pt', {
           sensitivity: 'base'
-        })
-      );
+        }));
       sel.innerHTML = '';
       parishes.forEach(p => {
-        const o = document.createElement('option');
-        o.value = p;
-        o.textContent = p;
-        sel.appendChild(o);
+        const option = document.createElement('option');
+        option.value = p;
+        option.textContent = p;
+        sel.appendChild(option);
       });
     }
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
+      const districtSelect = document.getElementById('district_select');
       const councilSelect = document.getElementById('council_select');
-      if (councilSelect) {
-        populateCouncilSelect();
-        councilSelect.addEventListener('change', async (e) => {
-          const councilId = e.target.value;
-          const parishSelect = document.getElementById('parish_select');
-          if (!councilId) {
-            parishSelect.innerHTML = '<option value=""></option>';
-            return;
-          }
-          await populateParishes(councilId);
-        });
-      }
+      if (!districtSelect || !councilSelect) return;
+      const defaultDistrictId = 8;
+      districtSelect.addEventListener('change', async (e) => {
+        const districtId = e.target.value;
+        await populateCouncilSelectByDistrict(districtId);
+      });
+      councilSelect.addEventListener('change', async (e) => {
+        const councilId = e.target.value;
+        const parishSelect = document.getElementById('parish_select');
+        if (parishSelect) {
+          parishSelect.innerHTML = '';
+        }
+        if (!councilId) return;
+        await populateParishes(councilId);
+      });
+      await populateDistrictSelect(defaultDistrictId);
+      await populateCouncilSelectByDistrict(districtSelect.value);
     });
     /* --- Carregamento de vítimas ---*/
     async function fetchVictimOptions(category) {

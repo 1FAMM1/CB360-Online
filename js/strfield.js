@@ -245,7 +245,6 @@
       const sel = document.getElementById('council_select');
       if (!sel) return;
       const councils = await fetchCouncilsByDistrict(districtId);
-      // Limpa select de concelhos
       sel.innerHTML = '';
       const emptyOption = document.createElement('option');
       emptyOption.value = '';

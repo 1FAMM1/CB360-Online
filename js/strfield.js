@@ -182,6 +182,46 @@
         descrInput.value = descr;
       });
     }
+    /* --- Busca Distritos --- */
+    async function fetchDistrictsFromSupabase() {
+      try {
+        const resp = await fetch(`${SUPABASE_URL}/rest/v1/districts_select?select=id,district`, {
+          headers: getSupabaseHeaders()
+        });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const districts = await resp.json();
+        return districts.map(d => ({
+          id: d.id,
+          name: d.district
+        }));
+      } catch (e) {
+        console.error("Erro ao buscar distritos:", e);
+        return fallbackDistricts || [];
+      }
+    }
+    /* --- Popula Distritos --- */
+    async function populateDistrictSelect(defaultDistrictId = 8) { // Faro = 8
+      const sel = document.getElementById('district_select');
+      if (!sel) return console.warn("Select de distritos não encontrado");
+      const districts = await fetchDistrictsFromSupabase();
+      const defaultDistrict = districts.find(d => d.id === defaultDistrictId);
+      if (!defaultDistrict) return console.warn(`⚠ Distrito com ID ${defaultDistrictId} não encontrado`);
+      const otherDistricts = districts
+        .filter(d => d.id !== defaultDistrictId)
+        .sort((a, b) => a.name.localeCompare(b.name, 'pt', {
+          sensitivity: 'base'
+        }));
+      const orderedDistricts = [defaultDistrict, ...otherDistricts];
+      sel.innerHTML = '';
+      orderedDistricts.forEach(d => {
+        const option = document.createElement('option');
+        option.value = String(d.id);
+        option.textContent = d.name;
+        sel.appendChild(option);
+      });
+      sel.value = String(defaultDistrictId);
+      console.log(`✅ Distrito selecionado: ${sel.options[sel.selectedIndex].textContent}`);
+    }
     /* --- Busca Concelhos por Distrito --- */
     async function fetchCouncilsByDistrict(districtId) {
       if (!districtId) return [];

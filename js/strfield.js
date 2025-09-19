@@ -182,6 +182,7 @@
         descrInput.value = descr;
       });
     }
+    /* --- Sistema de Selects Hierárquicos Múltiplos --- */
     /* --- Busca Distritos --- */
     async function fetchDistrictsFromSupabase() {
       try {
@@ -199,28 +200,37 @@
         return fallbackDistricts || [];
       }
     }
-    /* --- Popula Distritos --- */
-    async function populateDistrictSelect(defaultDistrictId = 8) { // Faro = 8
-      const sel = document.getElementById('district_select');
-      if (!sel) return console.warn("Select de distritos não encontrado");
+    /* --- Popula TODOS os Selects de Distritos --- */
+    async function populateAllDistrictSelects(defaultDistrictId = 8) { // Faro = 8
+      // Busca TODOS os selects com ID que contenha 'district_select'
+      const districtSelects = document.querySelectorAll('[id*="district_select"]');
+      if (districtSelects.length === 0) {
+        return console.warn("Nenhum select de distritos encontrado");
+      }
+      console.log(`🔍 Encontrados ${districtSelects.length} select(s) de distritos`);
       const districts = await fetchDistrictsFromSupabase();
       const defaultDistrict = districts.find(d => d.id === defaultDistrictId);
-      if (!defaultDistrict) return console.warn(`⚠ Distrito com ID ${defaultDistrictId} não encontrado`);
+      if (!defaultDistrict) {
+        return console.warn(`⚠ Distrito com ID ${defaultDistrictId} não encontrado`);
+      }
       const otherDistricts = districts
         .filter(d => d.id !== defaultDistrictId)
         .sort((a, b) => a.name.localeCompare(b.name, 'pt', {
           sensitivity: 'base'
         }));
       const orderedDistricts = [defaultDistrict, ...otherDistricts];
-      sel.innerHTML = '';
-      orderedDistricts.forEach(d => {
-        const option = document.createElement('option');
-        option.value = String(d.id);
-        option.textContent = d.name;
-        sel.appendChild(option);
+      // Popula CADA select de distrito encontrado
+      districtSelects.forEach((sel, index) => {
+        sel.innerHTML = '';
+        orderedDistricts.forEach(d => {
+          const option = document.createElement('option');
+          option.value = String(d.id);
+          option.textContent = d.name;
+          sel.appendChild(option);
+        });
+        sel.value = String(defaultDistrictId);
+        console.log(`✅ Select ${index + 1} (ID: ${sel.id}) - Distrito selecionado: ${sel.options[sel.selectedIndex].textContent}`);
       });
-      sel.value = String(defaultDistrictId);
-      console.log(`✅ Distrito selecionado: ${sel.options[sel.selectedIndex].textContent}`);
     }
     /* --- Busca Concelhos por Distrito --- */
     async function fetchCouncilsByDistrict(districtId) {
@@ -240,29 +250,45 @@
         return fallbackCouncils[districtId] || [];
       }
     }
-    /* --- Popula Concelhos --- */
-    async function populateCouncilSelectByDistrict(districtId) {
-      const sel = document.getElementById('council_select');
-      if (!sel) return;
-      const councils = await fetchCouncilsByDistrict(districtId);
-      sel.innerHTML = '';
-      const emptyOption = document.createElement('option');
-      emptyOption.value = '';
-      emptyOption.textContent = '';
-      sel.appendChild(emptyOption);
-      const parishSelect = document.getElementById('parish_select');
-      if (parishSelect) {
-        parishSelect.innerHTML = '';
+    /* --- Popula Concelhos Relacionados a um Distrito Específico --- */
+    async function populateCouncilSelectsByDistrict(districtId, triggerSelectId = null) {
+      // Se um select específico foi o trigger, busca o select de concelho relacionado
+      let councilSelects;
+      if (triggerSelectId) {
+        // Estratégia: busca select com ID similar (troca 'district' por 'council')
+        const councilSelectId = triggerSelectId.replace('district', 'council');
+        const specificSelect = document.getElementById(councilSelectId);
+        councilSelects = specificSelect ? [specificSelect] : [];
+      } else {
+        // Busca todos os selects de concelho
+        councilSelects = document.querySelectorAll('[id*="council_select"]');
       }
-      if (!councils.length) return;
-      const orderedC = councils.sort((a, b) => a.name.localeCompare(b.name, 'pt', {
-        sensitivity: 'base'
-      }));
-      orderedC.forEach(c => {
-        const option = document.createElement('option');
-        option.value = String(c.id);
-        option.textContent = c.name;
-        sel.appendChild(option);
+      if (councilSelects.length === 0) return;
+      const councils = await fetchCouncilsByDistrict(districtId);
+      councilSelects.forEach(sel => {
+        // Limpa select de concelhos
+        sel.innerHTML = '';
+        const emptyOption = document.createElement('option');
+        emptyOption.value = '';
+        emptyOption.textContent = '';
+        sel.appendChild(emptyOption);
+        // Limpa select de freguesias relacionado
+        const parishSelectId = sel.id.replace('council', 'parish');
+        const parishSelect = document.getElementById(parishSelectId);
+        if (parishSelect) {
+          parishSelect.innerHTML = '';
+        }
+        if (!councils.length) return;
+        const orderedC = councils.sort((a, b) => a.name.localeCompare(b.name, 'pt', {
+          sensitivity: 'base'
+        }));
+        orderedC.forEach(c => {
+          const option = document.createElement('option');
+          option.value = String(c.id);
+          option.textContent = c.name;
+          sel.appendChild(option);
+        });
+        console.log(`✅ Concelhos populados para select: ${sel.id}`);
       });
     }
     /* --- Busca Freguesias por Concelho --- */
@@ -280,43 +306,97 @@
         return fallbackParishes[councilId] || [];
       }
     }
-    /* --- Popula Freguesias --- */
-    async function populateParishes(councilId) {
-      const sel = document.getElementById('parish_select');
-      if (!sel) return;
+    /* --- Popula Freguesias Relacionadas a um Concelho Específico --- */
+    async function populateParishesByCouncil(councilId, triggerSelectId) {
+      // Busca o select de freguesia relacionado
+      const parishSelectId = triggerSelectId.replace('council', 'parish');
+      const parishSelect = document.getElementById(parishSelectId);
+      if (!parishSelect) return;
       const parishes = (await fetchParishesByCouncil(councilId))
         .sort((a, b) => a.localeCompare(b, 'pt', {
           sensitivity: 'base'
         }));
-      sel.innerHTML = '';
+      parishSelect.innerHTML = '';
       parishes.forEach(p => {
         const option = document.createElement('option');
         option.value = p;
         option.textContent = p;
-        sel.appendChild(option);
+        parishSelect.appendChild(option);
+      });
+      console.log(`✅ Freguesias populadas para select: ${parishSelect.id}`);
+    }
+    /* --- Configuração de Event Listeners --- */
+    function setupHierarchicalSelects() {
+      // Event listeners para TODOS os selects de distrito
+      document.querySelectorAll('[id*="district_select"]').forEach(districtSelect => {
+        districtSelect.addEventListener('change', async (e) => {
+          const districtId = e.target.value;
+          await populateCouncilSelectsByDistrict(districtId, e.target.id);
+        });
+      });
+      // Event listeners para TODOS os selects de concelho
+      document.querySelectorAll('[id*="council_select"]').forEach(councilSelect => {
+        councilSelect.addEventListener('change', async (e) => {
+          const councilId = e.target.value;
+          // Limpa freguesias se não há concelho selecionado
+          if (!councilId) {
+            const parishSelectId = e.target.id.replace('council', 'parish');
+            const parishSelect = document.getElementById(parishSelectId);
+            if (parishSelect) {
+              parishSelect.innerHTML = '';
+            }
+            return;
+          }
+          await populateParishesByCouncil(councilId, e.target.id);
+        });
       });
     }
+    /* --- Inicialização --- */
     document.addEventListener('DOMContentLoaded', async () => {
-      const districtSelect = document.getElementById('district_select');
-      const councilSelect = document.getElementById('council_select');
-      if (!districtSelect || !councilSelect) return;
-      const defaultDistrictId = 8;
-      districtSelect.addEventListener('change', async (e) => {
-        const districtId = e.target.value;
-        await populateCouncilSelectByDistrict(districtId);
-      });
-      councilSelect.addEventListener('change', async (e) => {
-        const councilId = e.target.value;
-        const parishSelect = document.getElementById('parish_select');
-        if (parishSelect) {
-          parishSelect.innerHTML = '';
-        }
-        if (!councilId) return;
-        await populateParishes(councilId);
-      });
-      await populateDistrictSelect(defaultDistrictId);
-      await populateCouncilSelectByDistrict(districtSelect.value);
+      const defaultDistrictId = 8; // Faro
+      console.log('🚀 Inicializando sistema de selects hierárquicos múltiplos...');
+      // Popula todos os selects de distrito
+      await populateAllDistrictSelects(defaultDistrictId);
+      // Configura event listeners
+      setupHierarchicalSelects();
+      // Popula concelhos iniciais para todos os selects de distrito
+      const districtSelects = document.querySelectorAll('[id*="district_select"]');
+      for (const select of districtSelects) {
+        await populateCouncilSelectsByDistrict(select.value, select.id);
+      }
+      console.log('✅ Sistema inicializado com sucesso!');
     });
+    /* --- Função auxiliar para adicionar novos selects dinamicamente --- */
+    function initializeNewSelectGroup(containerSelector) {
+      const container = document.querySelector(containerSelector);
+      if (!container) return;
+      const districtSelects = container.querySelectorAll('[id*="district_select"]');
+      const councilSelects = container.querySelectorAll('[id*="council_select"]');
+      // Adiciona event listeners aos novos selects
+      districtSelects.forEach(select => {
+        select.addEventListener('change', async (e) => {
+          const districtId = e.target.value;
+          await populateCouncilSelectsByDistrict(districtId, e.target.id);
+        });
+      });
+      councilSelects.forEach(select => {
+        select.addEventListener('change', async (e) => {
+          const councilId = e.target.value;
+          if (!councilId) {
+            const parishSelectId = e.target.id.replace('council', 'parish');
+            const parishSelect = document.getElementById(parishSelectId);
+            if (parishSelect) parishSelect.innerHTML = '';
+            return;
+          }
+          await populateParishesByCouncil(councilId, e.target.id);
+        });
+      });
+      // Popula os novos selects
+      districtSelects.forEach(async (select) => {
+        await populateAllDistrictSelects(8); // Faro como padrão
+        await populateCouncilSelectsByDistrict(select.value, select.id);
+      });
+    }
     /* --- Carregamento de vítimas ---*/
     async function fetchVictimOptions(category) {
       try {

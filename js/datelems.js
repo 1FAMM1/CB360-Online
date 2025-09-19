@@ -236,29 +236,8 @@
           });
         document.getElementById("editWindow").style.display = "none";
         loadElementsTable();
-        loadSummaryCounts();
       } catch (err) {
         console.error(err);
         alert("Erro ao gravar registro.");
       }
     });
-    /* ---- Lista de Valências ---- */
-    async function loadSummaryCounts() {
-      try {
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?select=MP,TAS`, {
-          headers: getSupabaseHeaders()
-        });
-        if (!response.ok) throw new Error("Erro ao carregar contagem");
-        const data = await response.json();
-        const totalBombeiros = data.length;
-        const totalMP = data.filter(r => r.MP === true || r.MP === "true").length;
-        const totalTAS = data.filter(r => r.TAS === true || r.TAS === "true").length;
-        const totalTAT = data.filter(r => r.TAS === false || r.TAS === "false").length;
-        document.getElementById("win_bombeiros_display").textContent = totalBombeiros;
-        document.getElementById("win_mp_display").textContent = totalMP;
-        document.getElementById("win_tas_display").textContent = totalTAS;
-        document.getElementById("win_tat_display").textContent = totalTAT;
-      } catch (err) {
-        console.error("❌ Erro loadSummaryCounts:", err);
-      }
-    }

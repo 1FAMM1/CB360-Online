@@ -81,7 +81,7 @@
             loadElemsButtons()
           }
           if (btn.getAttribute("data-page") === "page-data") {
-          const elemsButton = document.querySelector('.panel-menu-button[onclick*="showPanelCard(\'elems\'"]');
+          const elemsButton = document.querySelector('.panel-menu-button[onclick*="showPanelCard(\'assoc\'"]');
           if (elemsButton) elemsButton.click();
           }
         });

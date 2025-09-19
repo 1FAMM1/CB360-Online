@@ -267,6 +267,18 @@
     function showPanelCard(panelId) {
       document.querySelectorAll(".panel-card").forEach(el => el.classList.remove("active"));
       document.getElementById(`panel-${panelId}`).classList.add("active");
+      // Se for o painel da corporação -> carregar dados
+      if (panelId === "assoc") {
+        loadCorporationData();
+      }
+    }
+
+    function showPanelCard(panelId) {
+      document.querySelectorAll(".panel-card").forEach(el => el.classList.remove("active"));
+      document.getElementById(`panel-${panelId}`).classList.add("active");
+      document.querySelectorAll(".panel-menu-button").forEach(btn => btn.classList.remove("active"));
+      const activeBtn = document.querySelector(`.panel-menu-button[onclick="showPanelCard('${panelId}')"]`);
+      if (activeBtn) activeBtn.classList.add("active");
       if (panelId === "assoc") {
         loadCorporationData();
       }

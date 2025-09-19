@@ -841,13 +841,29 @@
             <div id="panel-assoc" class="panel-card active">
               <h3>DADOS DA CORPORAÇÃO</h3>
               <p>Dados Gerais do Corpo de Bombeiros.</p>
-
-              <div style="display: flex; gap: 20px; align-items: flex-start;">
-                <!-- Coluna do logo -->
-                <div style="flex: 0 0 150px; text-align: center;  margin: 10px 0 0 0;">
-                  <img src="https://i.imgur.com/4Ho5HRV.png" alt="CB Faro Cruz Lusa" class="header-logo" style="width: 150px; height: 150px;">
+              <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+                <div class="transparent-card" style="
+          flex: 0 0 auto;
+          border: 2px solid #ccc; 
+          border-radius: 8px; 
+          background-color: transparent; 
+          padding: 10px; 
+          max-width: 250px;
+      ">
+                  <div class="card-header" style="text-align: center; font-weight: bold; font-size: 16px; margin-bottom: 10px;">
+                    LOGO
+                  </div>
+                  <div class="card-content" style="text-align: center;">
+                    <div style="margin: 10px 0;">
+                      <img src="https://i.imgur.com/4Ho5HRV.png" alt="CB Faro Cruz Lusa" class="header-logo" style="width: 140px; height: 140px;">
+                    </div>
+                    <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 5px;">
+                      <button class="btn btn-success" style="width: 100%;">ALTERAR LOGO</button>
+                      <button class="btn btn-danger" style="width: 100%;">REMOVER LOGO</button>
+                    </div>
+                  </div>
                 </div>
-                <div class="main-card" style="flex: 1; max-width: 720px; max-height: 260px; overflow-y: auto; overflow-x: hidden;">
+                <div class="main-card" style="flex: 1; max-width: 720px; height: 218px; overflow-y: auto; overflow-x: hidden; margin: 0 0 0 -10px;">
                   <div class="global-field-horizontal">
                     <label for="assoc-nome">Nome do CB:</label>
                     <input type="text" id="assoc-nome" style="width: 608px">
@@ -884,25 +900,27 @@
                     <button class="btn btn-success" onclick="saveCorpGroupFields()">ATUALIZAR</button>
                   </div>
                 </div>
-                <div class="main-card" style="flex: 1; max-width: 441px; max-height: 500px; overflow-y: auto; overflow-x: hidden; margin: 0 0 0 -10px;">
+                <div class="main-card" style="flex: 1; max-width: 435px; height: 218px; overflow-y: auto; overflow-x: hidden; margin: 0 -20px 0 -10px;">
+                  <div class="global-field-horizontal">
+                    <label for="assoc-nif">Card under development, information on the number of firefighters and vehicles in the department will be available shortly. We apologize for the inconvenience.
+                  </div>
                 </div>
               </div>
             </div>
-
-            <div class="panel-content">
-              <div id="panel-elems" class="panel-card active">
-                <h3>LISTAGEM DE BOMBEIROS</h3>
-                <p>Adição, Remoção e Edição de elementos.</p>
-                <button class="btn btn-add" style="margin: 0 0 20px 0;" onclick="openNewWindow()">ADICIONAR</button>
-                <div class="main-card" style="max-height: 370px; overflow-y: auto; overflow-x: hidden;">
-                  <div id="table-container"></div>
-                </div>
+          </div>
+          <div class="panel-content">
+            <div id="panel-elems" class="panel-card active">
+              <h3>LISTAGEM DE BOMBEIROS</h3>
+              <p>Adição, Remoção e Edição de elementos.</p>
+              <button class="btn btn-add" style="margin: 0 0 20px 0;" onclick="openNewWindow()">ADICIONAR</button>
+              <div class="main-card" style="max-height: 370px; overflow-y: auto; overflow-x: hidden;">
+                <div id="table-container"></div>
               </div>
             </div>
-
           </div>
         </div>
       </div>
+    </div>
   </main>
   <footer class="status-bar">
     <div class="system-info">
@@ -925,4 +943,5 @@
   <script></script>
 </body>
 </html>
+
 

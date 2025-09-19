@@ -369,6 +369,13 @@
       return message;
     }
     /* ---- GRAVAÇÃO DE OCORRÊNCIA EM DB ----*/
+    async function safeJson(resp) {
+      try {
+        return await resp.json();
+      } catch {
+        return null;
+      }
+    }
     async function saveOccurrenceToSupabase(data, vehiclesCount) {
       try {
         const alertDate = document.getElementById('alert_date')?.value || '';
@@ -385,8 +392,8 @@
         const checkResp = await fetch(`${SUPABASE_URL}/rest/v1/occurrences_control?${query}`, {
           headers: getSupabaseHeaders()
         });
-        const existing = await checkResp.json();
-        if (existing.length > 0) {
+        const existing = await safeJson(checkResp);
+        if (existing && existing.length > 0) {
           const existingOccurrence = existing[0];
           let existingVehiclesCount = 0;
           if (Array.isArray(existingOccurrence.vehicles)) {
@@ -400,17 +407,21 @@
           } else {
             const updateResp = await fetch(`${SUPABASE_URL}/rest/v1/occurrences_control?id=eq.${existingOccurrence.id}`, {
               method: 'PATCH',
-              headers: getSupabaseHeaders({ returnRepresentation: true }),
+              headers: getSupabaseHeaders({
+                returnRepresentation: true
+              }),
               body: JSON.stringify({
                 vehicles: vehiclesCount
               })
             });
-            return await updateResp.json();
+            return await safeJson(updateResp);
           }
         }
         const insertResp = await fetch(`${SUPABASE_URL}/rest/v1/occurrences_control`, {
           method: 'POST',
-          headers: getSupabaseHeaders({ returnRepresentation: true }),
+          headers: getSupabaseHeaders({
+            returnRepresentation: true
+          }),
           body: JSON.stringify({
             start_date: formattedDate,
             occorrence: data.descrOccorr,
@@ -420,8 +431,11 @@
             status: "Em Curso"
           })
         });
-        return await insertResp.json();
+        return await safeJson(insertResp);
       } catch (e) {
+        if (e instanceof SyntaxError && e.message.includes('Unexpected end of JSON input')) {
+          return null;
+        }
         console.error("Erro ao gravar ocorrência:", e);
         showPopupWarning("❌ Erro inesperado.");
         return null;

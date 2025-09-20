@@ -171,7 +171,6 @@
       } else {
         document.querySelector('.window-bottom-bar b').textContent = "";
       }
-      loadSummaryCounts();
     }
     /* ---- Fechar Janela ---- */
     document.getElementById("closeWindow").addEventListener("click", () => {

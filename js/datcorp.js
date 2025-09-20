@@ -30,9 +30,7 @@
           response = await createCorporationData(corporationData);
         }
         showSuccessMessage('Dados da corporação salvos com sucesso!');
-        console.log('✅ Dados salvos:', corporationData);
       } catch (error) {
-        console.error('❌ Erro ao salvar dados da corporação:', error);
         showErrorMessage(error.message || 'Erro ao salvar dados da corporação');
       } finally {
         if (saveButton) {
@@ -128,7 +126,6 @@
         const data = await response.json();
         return data.length > 0 ? data[0] : null;
       } catch (error) {
-        console.error('Erro ao verificar corporação existente:', error);
         return null;
       }
     }
@@ -179,7 +176,6 @@
       try {
         const existingData = await checkExistingCorporation();
         if (!existingData) {
-          console.log('ℹ️ Nenhum dado de corporação encontrado');
           return;
         }
         const response = await fetch(`${SUPABASE_URL}/rest/v1/corporation_data?id=eq.${existingData.id}&select=*`, {
@@ -201,9 +197,7 @@
         document.getElementById('assoc-cp1').value = cp1;
         document.getElementById('assoc-cp2').value = cp2;
         await loadHierarchicalSelects(corporation);
-        console.log('✅ Dados da corporação carregados');
       } catch (error) {
-        console.error('❌ Erro ao carregar dados da corporação:', error);
       }
     }
 
@@ -227,7 +221,6 @@
           document.getElementById('parish_select_corp').value = corporation.corp_parish;
         }
       } catch (error) {
-        console.error('❌ Erro ao carregar selects hierárquicos:', error);
       }
     }
 
@@ -240,7 +233,6 @@
         const data = await response.json();
         return data.length > 0 ? data[0].id : null;
       } catch (error) {
-        console.error('Erro ao buscar ID do distrito:', error);
         return null;
       }
     }
@@ -254,7 +246,6 @@
         const data = await response.json();
         return data.length > 0 ? data[0].id : null;
       } catch (error) {
-        console.error('Erro ao buscar ID do concelho:', error);
         return null;
       }
     }
@@ -267,7 +258,6 @@
     function showPanelCard(panelId) {
       document.querySelectorAll(".panel-card").forEach(el => el.classList.remove("active"));
       document.getElementById(`panel-${panelId}`).classList.add("active");
-      // Se for o painel da corporação -> carregar dados
       if (panelId === "assoc") {
         loadCorporationData();
       }

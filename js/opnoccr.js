@@ -444,7 +444,7 @@
     document.addEventListener('DOMContentLoaded', async () => {
       document.querySelectorAll('input[type="date"]').forEach(i => i.value = getCurrentDateStr());
       document.querySelectorAll('input[type="time"]').forEach(i => i.value = '');
-      await populateCouncilSelectByDistrict();
+      await populateCouncilSelectsByDistrict();
       await populateIndependentVehicleSelect();
       toggleEMSNrField();
       toggleContactFields();

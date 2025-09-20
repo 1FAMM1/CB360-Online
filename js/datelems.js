@@ -90,7 +90,6 @@
         if (!response.ok) throw new Error(`Erro ao remover registro: ${response.status}`);
         alert("Registro removido com sucesso!");
         loadElementsTable();
-        loadSummaryCounts();
       } catch (err) {
         console.error("❌ Erro ao remover registro:", err);
         alert("Erro ao remover registro.");
@@ -145,7 +144,6 @@
       document.getElementById("windowTitle").textContent = "Novo Registo";
       // Limpa a última alteração
       document.querySelector('.window-bottom-bar b').textContent = "";
-      loadSummaryCounts();
     }
     /* ---- Abertura para Edição ---- */
     function openEditWindow(row) {
@@ -223,7 +221,6 @@
           if (!createResponse.ok) throw new Error(`Erro ao criar: ${createResponse.status}`);
           alert("Novo registro criado com sucesso!");
         }
-        // Atualiza a última alteração
         lastUpdated = payload.last_updated;
         document.querySelector('.window-bottom-bar b').textContent =
           new Date(lastUpdated).toLocaleString('pt-PT', {

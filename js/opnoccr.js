@@ -311,12 +311,31 @@
     let lastWSMSData = null;
     async function generateWSMSMessage() {
       if (!validateRequiredFields()) return '';
-      const alertTime = getAlertTime();
+      // Espera o DOM e os campos dinâmicos estarem prontos
+      await new Promise(resolve => {
+        const interval = setInterval(() => {
+          const vehicleCards = document.querySelectorAll('.vehicle-card');
+          const allFieldsReady =
+            document.getElementById('alert_type') &&
+            document.getElementById('alert_source') &&
+            document.getElementById('alert_level') &&
+            document.getElementById('ppi_type') &&
+            document.getElementById('km') &&
+            document.getElementById('on_going') &&
+            document.getElementById('incident_type');
+          if (allFieldsReady) {
+            clearInterval(interval);
+            resolve(true);
+          }
+        }, 50);
+      });
+      // Pega os valores dos campos
       const alertType = document.getElementById('alert_type')?.value || '';
       const alertSource = document.getElementById('alert_source')?.value || '';
+      const alertTime = getAlertTime();
       const descrOccorr = document.getElementById('occorr_descr_input')?.value || '';
-      const localitie = document.getElementById('occorr_localitie_input')?.value || '';
       const localOccorr = document.getElementById('occorr_local_input')?.value || '';
+      const localitie = document.getElementById('occorr_localitie_input')?.value || '';
       const ppiType = document.getElementById('ppi_type')?.value || '';
       const alertLevel = document.getElementById('alert_level')?.value || '';
       const ppiGrid = document.getElementById('alarm_grid')?.value || '';
@@ -324,20 +343,27 @@
       const ppiDirection = document.getElementById('on_going')?.value || '';
       const ppiIncident = document.getElementById('incident_type')?.value || '';
       const channelManeuver = document.getElementById('channel_maneuver')?.value?.trim() || '';
+      // Coleta os veículos
       const vehicles = [];
       document.querySelectorAll('.vehicle-card').forEach(card => {
         const vehicle = card.querySelector('select')?.value?.trim() || '';
         const bbs = card.querySelector('input[type="text"]')?.value?.trim() || '';
         if (vehicle) vehicles.push(bbs ? `${vehicle}|${bbs} BBs.` : vehicle);
       });
-      const checkResult = await saveOccurrenceToSupabase({
-        descrOccorr,
-        localOccorr,
-        localitie
-      }, vehicles.length);
-      if (!checkResult) {
-        return '';
+      // Grava no Supabase com try/catch para evitar falso erro
+      try {
+        await saveOccurrenceToSupabase({
+            descrOccorr,
+            localOccorr,
+            localitie
+          },
+          vehicles.length
+        );
+      } catch (e) {
+        console.warn("Erro ao gravar no Supabase:", e);
+        showPopupWarning("Erro ao gravar no Supabase, mas a mensagem será criada.");
       }
+      // Monta a mensagem
       let message = '';
       const vehicleText = vehicles.length ? `Saída de ${vehicles.join(', ')}` : '';
       const vehicleSufix = vehicleText ? `, ${vehicleText}` : '';
@@ -345,9 +371,9 @@
         message = `*🚨🚨INFORMAÇÃO🚨🚨*\n\n*\\\\${alertSource}, HI: ${alertTime}, Ativação para ${descrOccorr} em Faro\\${localitie}\\${localOccorr}${vehicleSufix}* `;
       } else if (alertType === 'Plano Prévio de Intervenção') {
         if (ppiType === 'PPI Aeroporto Gago Coutinho') {
-          if (alertLevel === 'AMARELO') {
-            message = `*🚨🚨INFORMAÇÃO🚨🚨*\n\n*\\\\${alertSource}, HI: ${alertTime}, Ativação do ${ppiType} de nível ${alertLevel}, para a Grelha ${ppiGrid}, PREVENÇÃO LOCAL.*`;
-          } else if (alertLevel === 'VERMELHO') {
+          if (alertLevel.toUpperCase() === 'AMARELO') {
+            message = `*🚨🚨INFORMAÇÃO🚨🚨*\n\n*\\\\${alertSource}, HI: ${alertTime}, Ativação do ${ppiType} de nível ${alertLevel.toUpperCase()}, para a Grelha ${ppiGrid}, PREVENÇÃO LOCAL.*`;
+          } else if (alertLevel.toUpperCase() === 'VERMELHO') {
             const zoneLRT = "37.020046,-7.973326";
             const zoneZCR = "37.019382,-7.977624";
             const vehiclesLRT = "VCOT, ABSC - Devem Posicionar-se na LRT";
@@ -358,9 +384,8 @@
           message = `*🚨🚨INFORMAÇÃO🚨🚨*\n\n*\\\\${alertSource}, HI: ${alertTime}, Ativação do ${alertLevel} para o ${ppiType}, para a Grelha ${ppiGrid}, ao km: ${ppiKm}, no sentido ${ppiDirection} para ${ppiIncident}*`;
         }
       }
-      if (channelManeuver) {
-        message += `*Canal Manobra:${channelManeuver}*`;
-      }
+      if (channelManeuver) message += `\n*Canal Manobra:* ${channelManeuver}`;
+      // Coloca no output e copia para clipboard
       const out = document.getElementById('wsms_output');
       if (out) out.value = message;
       if (navigator.clipboard?.writeText) navigator.clipboard.writeText(message).catch(() => {});

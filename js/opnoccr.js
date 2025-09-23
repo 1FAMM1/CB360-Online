@@ -243,7 +243,7 @@
       const alertTime = document.getElementById('alert_time')?.value || '';
       const classOccorr = document.getElementById('class_occorr_input')?.value || '';
       const localOccorr = document.getElementById('occorr_local_input')?.value || '';
-      const districtSelect = document.getElementById('district_select');
+      const districtSelect = document.getElementById('district_select'); 
       const localitie = districtSelect ? districtSelect.options[districtSelect.selectedIndex].text : '';
       const councilSelect = document.getElementById('council_select');
       const council = councilSelect ? councilSelect.options[councilSelect.selectedIndex]?.text || '' : '';

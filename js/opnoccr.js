@@ -345,9 +345,9 @@
         message = `*🚨🚨INFORMAÇÃO🚨🚨*\n\n*\\\\${alertSource}, HI: ${alertTime}, Ativação para ${descrOccorr} em Faro\\${localitie}\\${localOccorr}${vehicleSufix}* `;
       } else if (alertType === 'Plano Prévio de Intervenção') {
         if (ppiType === 'PPI Aeroporto Gago Coutinho') {
-          if (alertLevel === 'Amarelo') {
+          if (alertLevel === 'AMARELO') {
             message = `*🚨🚨INFORMAÇÃO🚨🚨*\n\n*\\\\${alertSource}, HI: ${alertTime}, Ativação do ${ppiType} de nível ${alertLevel}, para a Grelha ${ppiGrid}, PREVENÇÃO LOCAL.*`;
-          } else if (alertLevel === 'Vermelho') {
+          } else if (alertLevel === 'VERMELHO') {
             const zoneLRT = "37.020046,-7.973326";
             const zoneZCR = "37.019382,-7.977624";
             const vehiclesLRT = "VCOT, ABSC - Devem Posicionar-se na LRT";

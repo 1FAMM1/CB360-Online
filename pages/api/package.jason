@@ -1,8 +1,0 @@
-{
-  "name": "CB360-Mobile",
-  "version": "1.0.0",
-  "dependencies": {
-    "@supabase/supabase-js": "^2.39.0",
-    "exceljs": "^4.4.0"
-  }
-}

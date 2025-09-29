@@ -2,30 +2,38 @@ import ExcelJS from "exceljs";
 
 export default async function handler(req, res) {
   try {
-    // 1. Buscar o template diretamente do GitHub raw
+    const { shift, date } = req.body || {};
+    if (!shift || !date) {
+      return res.status(400).json({ error: "Faltam shift ou date" });
+    }
+
+    // 1. Buscar template
     const response = await fetch(
       "https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/templates/template_planeamento.xlsx"
     );
     const buffer = Buffer.from(await response.arrayBuffer());
 
-    // 2. Carregar o workbook
+    // 2. Carregar workbook
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(buffer);
-    const sheet = workbook.getWorksheet(1); // primeira sheet
+    const sheet = workbook.getWorksheet(1);
 
-    // 3. Preencher dados (exemplo estático)
-    sheet.getCell("B2").value = "29 SET 2025"; // Dia
-    sheet.getCell("C2").value = "Turno D";     // Turno
-    sheet.getCell("D2").value = "08:00-20:00"; // Horário
+    // 3. Preencher B14
+    const hora = shift === "D" ? "08:00-20:00" : "20:00-08:00";
+    sheet.getCell("B14").value = `Caso ${shift}\nDia: ${date} | Turno ${shift} | ${hora}`;
 
-    // Aqui podes ciclar as tuas tabelas e meter nomes, n_int, etc
-
-    // 4. Gerar o novo Excel em memória
+    // 4. Gerar Excel
     const outputBuffer = await workbook.xlsx.writeBuffer();
 
-    // 5. Enviar como download
-    res.setHeader("Content-Disposition", "attachment; filename=planeamento.xlsx");
-    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    // 5. Enviar para download
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=planeamento.xlsx"
+    );
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
     res.send(Buffer.from(outputBuffer));
   } catch (err) {
     console.error("❌ Erro a emitir planeamento:", err);

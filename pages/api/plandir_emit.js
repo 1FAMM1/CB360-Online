@@ -1,6 +1,15 @@
 import ExcelJS from "exceljs";
 
 export default async function handler(req, res) {
+  // ======== CORS ========
+  res.setHeader('Access-Control-Allow-Origin', '*'); // permite qualquer origem para teste local
+  res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end(); // responde preflight
+  }
+
   try {
     const { shift, date } = req.body || {};
     if (!shift || !date) {

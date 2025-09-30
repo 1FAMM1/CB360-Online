@@ -48,7 +48,6 @@ export default async function handler(req, res) {
       for (let i = 0; i < tbl.rows.length; i++) {
         const rowData = tbl.rows[i];
         const rowNum = startRow + i;
-
         sheet.getCell(`B${rowNum}`).value = rowData.n_int || "";
         sheet.getCell(`C${rowNum}`).value = rowData.patente || "";
         sheet.getCell(`D${rowNum}`).value = rowData.nome || "";
@@ -60,35 +59,33 @@ export default async function handler(req, res) {
       }
     }
 
-    // 2️⃣ Gerar buffer XLSX atualizado
+    // 2️⃣ Gerar XLSX buffer
     const xlsxBuffer = await workbook.xlsx.writeBuffer();
-    const xlsxBase64 = xlsxBuffer.toString("base64");
 
     // 3️⃣ Converter para PDF usando Puppeteer
     const browser = await puppeteer.launch({
       args: chromium.args,
       defaultViewport: chromium.defaultViewport,
       executablePath: await chromium.executablePath,
-      headless: true
+      headless: true,
     });
 
     const page = await browser.newPage();
+    const xlsxBase64 = xlsxBuffer.toString("base64");
 
-    // Criar uma página HTML temporária para o XLSX convertido
     const htmlContent = `
       <html>
-      <body>
-        <embed src="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,${xlsxBase64}" width="100%" height="1000px" type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
-      </body>
+        <body>
+          <embed src="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,${xlsxBase64}" width="100%" height="1000px" type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
+        </body>
       </html>
     `;
 
     await page.setContent(htmlContent, { waitUntil: "networkidle0" });
-
     const pdfBuffer = await page.pdf({ format: "A4" });
     await browser.close();
 
-    // 4️⃣ Enviar por email com Nodemailer
+    // 4️⃣ Enviar por email
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {

@@ -45,20 +45,25 @@ export default async function handler(req, res) {
       if (!startRow) continue;
 
       for (let i = 0; i < tbl.rows.length; i++) {
-        const rowData = tbl.rows[i];
-        const row = sheet.getRow(startRow + i);
-
-       row.getCell(2).value = rowData.n_int || "";   // N° Interno
-row.getCell(3).value = rowData.patente || ""; // Patente
-row.getCell(4).value = rowData.nome || "";    // Nome
-row.getCell(5).value = rowData.entrada || ""; // Entrada
-row.getCell(6).value = rowData.saida || "";   // Saída
-row.getCell(7).value = rowData.MP ? "X" : ""; // MP
-row.getCell(8).value = rowData.TAS ? "X" : ""; // TAS
-row.getCell(9).value = rowData.obs || "";    // Observações
-
-        row.commit();
-      }
+  const rowData = tbl.rows[i];
+  const row = sheet.getRow(startRow + i);
+  
+  // 🔍 DEBUG: ver que linha está a escrever
+  console.log(`Tabela: ${tbl.title}, Linha Excel: ${startRow + i}`);
+  console.log('Dados:', rowData);
+  
+  // Tentar escrever diretamente pelo índice da coluna (1-based)
+  row.getCell(2).value = rowData.n_int || "";   
+  row.getCell(3).value = rowData.patente || ""; 
+  row.getCell(4).value = rowData.nome || "";    
+  row.getCell(5).value = rowData.entrada || ""; 
+  row.getCell(6).value = rowData.saida || "";   
+  row.getCell(7).value = rowData.MP ? "X" : ""; 
+  row.getCell(8).value = rowData.TAS ? "X" : ""; 
+  row.getCell(9).value = rowData.obs || "";    
+  
+  row.commit();
+}
     }
 
     const outputBuffer = await workbook.xlsx.writeBuffer();

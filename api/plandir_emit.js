@@ -1,18 +1,13 @@
 import ExcelJS from "exceljs";
-import nodemailer from "nodemailer";
 
 export default async function handler(req, res) {
-  // ✅ CORS - headers para TODAS as respostas
+  // ✅ CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   
   if (req.method === "OPTIONS") {
     return res.status(200).end();
-  }
-
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
@@ -66,39 +61,19 @@ export default async function handler(req, res) {
 
     const outputBuffer = await workbook.xlsx.writeBuffer();
 
-    // 📧 Enviar Email via GMAIL
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.GMAIL_EMAIL,
-        pass: process.env.GMAIL_APP_PASSWORD
-      }
-    });
-
-    await transporter.sendMail({
-      from: process.env.GMAIL_EMAIL,
-      to: process.env.GMAIL_EMAIL,
-      subject: "AUTO_PLANEAMENTO",
-      text: `Planeamento ${shift} - ${date}`,
-      attachments: [
-        {
-          filename: `planeamento_${date}_${shift}.xlsx`,
-          content: outputBuffer
-        }
-      ]
-    });
-
-    // ✅ Resposta de sucesso
-    return res.status(200).json({ 
-      success: true, 
-      message: "Planeamento enviado com sucesso!" 
-    });
+    // 📥 Download do Excel
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=planeamento_${date}_${shift}.xlsx`
+    );
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.send(Buffer.from(outputBuffer));
 
   } catch (err) {
     console.error("❌ Erro a emitir planeamento:", err);
-    return res.status(500).json({ 
-      error: "Erro a gerar/enviar planeamento",
-      details: err.message 
-    });
+    res.status(500).json({ error: "Erro a gerar planeamento" });
   }
 }

@@ -1,8 +1,6 @@
 import ExcelJS from "exceljs";
-import nodemailer from "nodemailer";
 
 export default async function handler(req, res) {
-  // ✅ CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -17,7 +15,6 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Faltam shift, date ou tables" });
     }
 
-    // 📊 Gerar Excel
     const response = await fetch(
       "https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/templates/template_planeamento.xlsx"
     );
@@ -62,10 +59,6 @@ export default async function handler(req, res) {
 
     const outputBuffer = await workbook.xlsx.writeBuffer();
 
-    // 📧 Enviar Email em background (não bloqueia o download)
-    sendEmailInBackground(outputBuffer, shift, date);
-
-    // 📥 Download do Excel (resposta imediata)
     res.setHeader(
       "Content-Disposition",
       `attachment; filename=planeamento_${date}_${shift}.xlsx`
@@ -77,38 +70,7 @@ export default async function handler(req, res) {
     res.send(Buffer.from(outputBuffer));
 
   } catch (err) {
-    console.error("❌ Erro a emitir planeamento:", err);
-    res.status(500).json({ error: "Erro a gerar planeamento" });
-  }
-}
-
-// 📧 Função para enviar email em background
-async function sendEmailInBackground(excelBuffer, shift, date) {
-  try {
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.GMAIL_EMAIL,
-        pass: process.env.GMAIL_APP_PASSWORD
-      }
-    });
-
-    await transporter.sendMail({
-      from: process.env.GMAIL_EMAIL,
-      to: process.env.GMAIL_EMAIL,
-      subject: "AUTO_PLANEAMENTO",
-      text: `Planeamento ${shift} - ${date}`,
-      attachments: [
-        {
-          filename: `planeamento_${date}_${shift}.xlsx`,
-          content: excelBuffer
-        }
-      ]
-    });
-
-    console.log("✅ Email enviado com sucesso!");
-  } catch (err) {
-    console.error("❌ Erro ao enviar email:", err);
-    // Não falha a resposta - email é secundário
+    console.error("Erro a emitir planeamento:", err);
+    res.status(500).json({ error: "Erro a gerar planeamento", details: err.message });
   }
 }

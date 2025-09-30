@@ -1,15 +1,15 @@
+// pages/api/emitir_planeamento.js
 import ExcelJS from "exceljs";
+import nodemailer from "nodemailer";
+import puppeteer from "puppeteer-core";
+import chromium from "chrome-aws-lambda";
 
 export default async function handler(req, res) {
-  // Configura CORS
-  res.setHeader("Access-Control-Allow-Origin", "*"); // permite qualquer domínio
+  res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  // Responde imediatamente a preflight requests
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
+  if (req.method === "OPTIONS") return res.status(200).end();
 
   try {
     const { shift, date, tables } = req.body || {};
@@ -17,13 +17,13 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Faltam shift, date ou tables" });
     }
 
-    // Carrega o template do Excel
-    const response = await fetch(
-      "https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/templates/template_planeamento.xlsx"
-    );
-    const buffer = Buffer.from(await response.arrayBuffer());
+    // 1️⃣ Carregar template XLSX
+    const templateUrl = "https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/templates/template_planeamento.xlsx";
+    const templateResponse = await fetch(templateUrl);
+    const templateBuffer = Buffer.from(await templateResponse.arrayBuffer());
+
     const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(buffer);
+    await workbook.xlsx.load(templateBuffer);
     const sheet = workbook.getWorksheet(1);
 
     const hora = shift === "D" ? "08:00-20:00" : "20:00-08:00";
@@ -60,21 +60,59 @@ export default async function handler(req, res) {
       }
     }
 
-    const outputBuffer = await workbook.xlsx.writeBuffer();
+    // 2️⃣ Gerar buffer XLSX atualizado
+    const xlsxBuffer = await workbook.xlsx.writeBuffer();
+    const xlsxBase64 = xlsxBuffer.toString("base64");
 
-    // Define headers para download
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename=planeamento_${date}_${shift}.xlsx`
-    );
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    );
+    // 3️⃣ Converter para PDF usando Puppeteer
+    const browser = await puppeteer.launch({
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath,
+      headless: true
+    });
 
-    res.send(Buffer.from(outputBuffer));
+    const page = await browser.newPage();
+
+    // Criar uma página HTML temporária para o XLSX convertido
+    const htmlContent = `
+      <html>
+      <body>
+        <embed src="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,${xlsxBase64}" width="100%" height="1000px" type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
+      </body>
+      </html>
+    `;
+
+    await page.setContent(htmlContent, { waitUntil: "networkidle0" });
+
+    const pdfBuffer = await page.pdf({ format: "A4" });
+    await browser.close();
+
+    // 4️⃣ Enviar por email com Nodemailer
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.GMAIL_EMAIL,
+        pass: process.env.GMAIL_APP_PASSWORD
+      }
+    });
+
+    await transporter.sendMail({
+      from: process.env.GMAIL_EMAIL,
+      to: process.env.GMAIL_EMAIL, // ou outro destinatário
+      subject: `Planeamento Diário - ${shift} ${date}`,
+      text: `Segue em anexo o planeamento diário ${shift} - ${date}`,
+      attachments: [
+        {
+          filename: `planeamento_${date}_${shift}.pdf`,
+          content: pdfBuffer
+        }
+      ]
+    });
+
+    return res.status(200).json({ success: true, message: "PDF gerado e email enviado!" });
   } catch (err) {
-    console.error("Erro a emitir planeamento:", err);
-    res.status(500).json({ error: "Erro a gerar planeamento", details: err.message });
+    console.error("Erro:", err);
+    return res.status(500).json({ error: err.message });
   }
 }

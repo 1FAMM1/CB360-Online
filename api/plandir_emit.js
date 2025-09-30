@@ -2,6 +2,7 @@ import ExcelJS from "exceljs";
 import nodemailer from "nodemailer";
 
 export default async function handler(req, res) {
+  // ✅ CORS - headers para TODAS as respostas
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -10,12 +11,17 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
   try {
     const { shift, date, tables } = req.body || {};
     if (!shift || !date || !tables) {
       return res.status(400).json({ error: "Faltam shift, date ou tables" });
     }
 
+    // 📊 Gerar Excel
     const response = await fetch(
       "https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/templates/template_planeamento.xlsx"
     );
@@ -59,6 +65,8 @@ export default async function handler(req, res) {
     }
 
     const outputBuffer = await workbook.xlsx.writeBuffer();
+
+    // 📧 Enviar Email via GMAIL
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -80,13 +88,17 @@ export default async function handler(req, res) {
       ]
     });
 
-    res.status(200).json({ 
+    // ✅ Resposta de sucesso
+    return res.status(200).json({ 
       success: true, 
       message: "Planeamento enviado com sucesso!" 
     });
 
   } catch (err) {
     console.error("❌ Erro a emitir planeamento:", err);
-    res.status(500).json({ error: "Erro a gerar/enviar planeamento" });
+    return res.status(500).json({ 
+      error: "Erro a gerar/enviar planeamento",
+      details: err.message 
+    });
   }
 }

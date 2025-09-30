@@ -1,9 +1,7 @@
-import fs from "fs";
-import path from "path";
 import ExcelJS from "exceljs";
 
 export default async function handler(req, res) {
-    res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   
@@ -24,10 +22,10 @@ export default async function handler(req, res) {
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(buffer);
     const sheet = workbook.getWorksheet(1);
-
+    
     const hora = shift === "D" ? "08:00-20:00" : "20:00-08:00";
     sheet.getCell("B14").value = `Caso ${shift}\nDia: ${date} | Turno ${shift} | ${hora}`;
-
+    
     const tableStartRows = {
       "OFOPE": 19,
       "CHEFE DE SERVIÇO": 24,
@@ -43,11 +41,11 @@ export default async function handler(req, res) {
     for (let tbl of tables) {
       const startRow = tableStartRows[tbl.title];
       if (!startRow) continue;
-
+      
       for (let i = 0; i < tbl.rows.length; i++) {
         const rowData = tbl.rows[i];
         const rowNum = startRow + i;
-
+        
         sheet.getCell(`B${rowNum}`).value = rowData.n_int || "";
         sheet.getCell(`C${rowNum}`).value = rowData.patente || "";
         sheet.getCell(`D${rowNum}`).value = rowData.nome || "";
@@ -59,19 +57,17 @@ export default async function handler(req, res) {
       }
     }
 
-    // Caminho da pasta Processar
-    const pastaProcessar = "C:\\Planeamentos\\Processar\\";
-    if (!fs.existsSync(pastaProcessar)) {
-      fs.mkdirSync(pastaProcessar, { recursive: true });
-    }
+    const outputBuffer = await workbook.xlsx.writeBuffer();
 
-    const fileName = `Planeamento Diário ${date} ${shift}.xlsx`;
-    const filePath = path.join(pastaProcessar, fileName);
-
-    await workbook.xlsx.writeFile(filePath);
-
-    // Retornar apenas status de sucesso
-    res.status(200).json({ message: "Ficheiro criado na pasta Processar", path: filePath });
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=planeamento_${date}_${shift}.xlsx`
+    );
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.send(Buffer.from(outputBuffer));
 
   } catch (err) {
     console.error("Erro a emitir planeamento:", err);

@@ -1,13 +1,14 @@
-import ExcelJS from "exceljs";
+// pages/api/emitir_planeamento.js
+import puppeteer from "puppeteer-core";
+import chromium from "chrome-aws-lambda";
+import nodemailer from "nodemailer";
 
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
+
+  if (req.method === "OPTIONS") return res.status(200).end();
 
   try {
     const { shift, date, tables } = req.body || {};
@@ -15,62 +16,98 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Faltam shift, date ou tables" });
     }
 
-    const response = await fetch(
-      "https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/templates/template_planeamento.xlsx"
-    );
-    const buffer = Buffer.from(await response.arrayBuffer());
-    const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(buffer);
-    const sheet = workbook.getWorksheet(1);
-    
-    const hora = shift === "D" ? "08:00-20:00" : "20:00-08:00";
-    sheet.getCell("B14").value = `Caso ${shift}\nDia: ${date} | Turno ${shift} | ${hora}`;
-    
-    const tableStartRows = {
-      "OFOPE": 19,
-      "CHEFE DE SERVIÇO": 24,
-      "OPTEL": 29,
-      "EQUIPA 01": 34,
-      "EQUIPA 02": 43,
-      "LOGÍSTICA": 52,
-      "INEM": 58,
-      "INEM - Reserva": 65,
-      "SERVIÇO GERAL": 72
-    };
+    // 1️⃣ Gerar HTML do planeamento
+    let html = `
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; font-size: 12px; }
+          h2, h3 { margin: 5px 0; }
+          table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+          th, td { border: 1px solid #000; padding: 4px; text-align: center; }
+          th { background-color: #eee; }
+        </style>
+      </head>
+      <body>
+        <h2>Planeamento Diário - Turno ${shift} - ${date}</h2>
+    `;
 
-    for (let tbl of tables) {
-      const startRow = tableStartRows[tbl.title];
-      if (!startRow) continue;
-      
-      for (let i = 0; i < tbl.rows.length; i++) {
-        const rowData = tbl.rows[i];
-        const rowNum = startRow + i;
-        
-        sheet.getCell(`B${rowNum}`).value = rowData.n_int || "";
-        sheet.getCell(`C${rowNum}`).value = rowData.patente || "";
-        sheet.getCell(`D${rowNum}`).value = rowData.nome || "";
-        sheet.getCell(`E${rowNum}`).value = rowData.entrada || "";
-        sheet.getCell(`F${rowNum}`).value = rowData.saida || "";
-        sheet.getCell(`G${rowNum}`).value = rowData.MP ? "X" : "";
-        sheet.getCell(`H${rowNum}`).value = rowData.TAS ? "X" : "";
-        sheet.getCell(`I${rowNum}`).value = rowData.obs || "";
+    tables.forEach(tbl => {
+      html += `<h3>${tbl.title}</h3>`;
+      html += `<table>
+        <thead>
+          <tr>
+            <th>Nº Int</th>
+            <th>Patente</th>
+            <th>Nome</th>
+            <th>Entrada</th>
+            <th>Saída</th>
+            <th>MP</th>
+            <th>TAS</th>
+            <th>Obs</th>
+          </tr>
+        </thead>
+        <tbody>`;
+
+      tbl.rows.forEach(r => {
+        html += `<tr>
+          <td>${r.n_int || ''}</td>
+          <td>${r.patente || ''}</td>
+          <td>${r.nome || ''}</td>
+          <td>${r.entrada || ''}</td>
+          <td>${r.saida || ''}</td>
+          <td>${r.MP ? 'X' : ''}</td>
+          <td>${r.TAS ? 'X' : ''}</td>
+          <td>${r.obs || ''}</td>
+        </tr>`;
+      });
+
+      html += `</tbody></table>`;
+    });
+
+    html += `</body></html>`;
+
+    // 2️⃣ Gerar PDF com Puppeteer
+    const browser = await puppeteer.launch({
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath,
+      headless: true
+    });
+
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: "networkidle0" });
+
+    const pdfBuffer = await page.pdf({
+      format: "A4",
+      printBackground: true,
+      margin: { top: "20px", bottom: "20px", left: "10px", right: "10px" }
+    });
+
+    await browser.close();
+
+    // 3️⃣ Enviar email com PDF
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.GMAIL_EMAIL,
+        pass: process.env.GMAIL_APP_PASSWORD
       }
-    }
+    });
 
-    const outputBuffer = await workbook.xlsx.writeBuffer();
+    await transporter.sendMail({
+      from: process.env.GMAIL_EMAIL,
+      to: process.env.GMAIL_EMAIL, // ou outro destinatário
+      subject: `Planeamento Diário - ${shift} ${date}`,
+      text: "Segue em anexo o planeamento diário.",
+      attachments: [
+        { filename: `planeamento_${date}_${shift}.pdf`, content: pdfBuffer }
+      ]
+    });
 
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename=planeamento_${date}_${shift}.xlsx`
-    );
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    );
-    res.send(Buffer.from(outputBuffer));
-
+    return res.status(200).json({ success: true, message: "PDF gerado e email enviado!" });
   } catch (err) {
-    console.error("Erro a emitir planeamento:", err);
-    res.status(500).json({ error: "Erro a gerar planeamento", details: err.message });
+    console.error("Erro:", err);
+    return res.status(500).json({ error: err.message });
   }
 }

@@ -24,7 +24,7 @@ export default async function handler(req, res) {
     const sheet = workbook.getWorksheet(1);
     
     const hora = shift === "D" ? "08:00-20:00" : "20:00-08:00";
-    sheet.getCell("B14").value = `Caso ${shift}\nDia: ${date} | Turno ${shift} | ${hora}`;
+    sheet.getCell("B14").value = `Dia: ${date} | Turno ${shift} | ${hora}`;
     
     const tableStartRows = {
       "OFOPE": 19,

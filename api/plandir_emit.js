@@ -1,13 +1,13 @@
 import ExcelJS from "exceljs";
+import nodemailer from "nodemailer";
 
 export default async function handler(req, res) {
-  // ✅ CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
+  
   if (req.method === "OPTIONS") {
-    return res.status(200).end(); // responde ao preflight
+    return res.status(200).end();
   }
 
   try {
@@ -20,14 +20,13 @@ export default async function handler(req, res) {
       "https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/templates/template_planeamento.xlsx"
     );
     const buffer = Buffer.from(await response.arrayBuffer());
-
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(buffer);
     const sheet = workbook.getWorksheet(1);
-
+    
     const hora = shift === "D" ? "08:00-20:00" : "20:00-08:00";
     sheet.getCell("B14").value = `Caso ${shift}\nDia: ${date} | Turno ${shift} | ${hora}`;
-
+    
     const tableStartRows = {
       "OFOPE": 19,
       "CHEFE DE SERVIÇO": 24,
@@ -43,34 +42,51 @@ export default async function handler(req, res) {
     for (let tbl of tables) {
       const startRow = tableStartRows[tbl.title];
       if (!startRow) continue;
-
+      
       for (let i = 0; i < tbl.rows.length; i++) {
-  const rowData = tbl.rows[i];
-  const rowNum = startRow + i;
-  
-  sheet.getCell(`B${rowNum}`).value = rowData.n_int || "";
-  sheet.getCell(`C${rowNum}`).value = rowData.patente || "";
-  sheet.getCell(`D${rowNum}`).value = rowData.nome || "";
-  sheet.getCell(`E${rowNum}`).value = rowData.entrada || "";
-  sheet.getCell(`F${rowNum}`).value = rowData.saida || "";
-  sheet.getCell(`G${rowNum}`).value = rowData.MP ? "X" : "";
-  sheet.getCell(`H${rowNum}`).value = rowData.TAS ? "X" : "";
-  sheet.getCell(`I${rowNum}`).value = rowData.obs || "";
-}
+        const rowData = tbl.rows[i];
+        const rowNum = startRow + i;
+        
+        sheet.getCell(`B${rowNum}`).value = rowData.n_int || "";
+        sheet.getCell(`C${rowNum}`).value = rowData.patente || "";
+        sheet.getCell(`D${rowNum}`).value = rowData.nome || "";
+        sheet.getCell(`E${rowNum}`).value = rowData.entrada || "";
+        sheet.getCell(`F${rowNum}`).value = rowData.saida || "";
+        sheet.getCell(`G${rowNum}`).value = rowData.MP ? "X" : "";
+        sheet.getCell(`H${rowNum}`).value = rowData.TAS ? "X" : "";
+        sheet.getCell(`I${rowNum}`).value = rowData.obs || "";
+      }
     }
 
     const outputBuffer = await workbook.xlsx.writeBuffer();
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename=planeamento_${date}_${shift}.xlsx`
-    );
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    );
-    res.send(Buffer.from(outputBuffer));
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.GMAIL_EMAIL,
+        pass: process.env.GMAIL_APP_PASSWORD
+      }
+    });
+
+    await transporter.sendMail({
+      from: process.env.GMAIL_EMAIL,
+      to: process.env.GMAIL_EMAIL,
+      subject: "AUTO_PLANEAMENTO",
+      text: `Planeamento ${shift} - ${date}`,
+      attachments: [
+        {
+          filename: `planeamento_${date}_${shift}.xlsx`,
+          content: outputBuffer
+        }
+      ]
+    });
+
+    res.status(200).json({ 
+      success: true, 
+      message: "Planeamento enviado com sucesso!" 
+    });
+
   } catch (err) {
     console.error("❌ Erro a emitir planeamento:", err);
-    res.status(500).json({ error: "Erro a gerar planeamento" });
+    res.status(500).json({ error: "Erro a gerar/enviar planeamento" });
   }
 }

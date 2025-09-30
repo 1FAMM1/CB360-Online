@@ -5,12 +5,20 @@ export default async function handler(req, res) {
   
   try {
     const transporter = nodemailer.createTransport({
-      service: "gmail",
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false,
       auth: {
         user: process.env.GMAIL_EMAIL,
         pass: process.env.GMAIL_APP_PASSWORD
+      },
+      tls: {
+        rejectUnauthorized: false
       }
     });
+
+    // Verifica conexão
+    await transporter.verify();
 
     const info = await transporter.sendMail({
       from: process.env.GMAIL_EMAIL,
@@ -28,7 +36,8 @@ export default async function handler(req, res) {
     console.error("Erro:", err);
     return res.status(500).json({ 
       error: err.message,
-      code: err.code
+      code: err.code,
+      command: err.command
     });
   }
 }

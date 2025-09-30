@@ -48,14 +48,14 @@ export default async function handler(req, res) {
         const rowData = tbl.rows[i];
         const row = sheet.getRow(startRow + i);
 
-       row.getCell("A").value = rowData.n_int || "";
-        row.getCell("A").value = rowData.patente || "";
-        row.getCell("A").value = rowData.nome || "";
-        row.getCell("A").value = rowData.entrada || "";
-        row.getCell("A").value = rowData.saida || "";
-        row.getCell("A").value = rowData.MP ? "X" : "";
-        row.getCell("A").value = rowData.TAS ? "X" : "";
-        row.getCell("A").value = rowData.obs || "";
+       row.getCell("A").value = rowData.n_int || ""; // coluna A 
+        row.getCell("B").value = rowData.patente || ""; // coluna B
+        row.getCell("C").value = rowData.nome || ""; // coluna C 
+        row.getCell("D").value = rowData.entrada || ""; // coluna D 
+        row.getCell("E").value = rowData.saida || ""; // coluna E 
+        row.getCell("F").value = rowData.MP ? "X" : ""; // coluna F 
+        row.getCell("G").value = rowData.TAS ? "X" : ""; // coluna G 
+        row.getCell("H").value = rowData.obs || "";
 
         row.commit();
       }

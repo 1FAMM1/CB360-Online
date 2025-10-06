@@ -85,7 +85,7 @@ export default async function handler(req, res) {
           row.n_int || "",
           row.patente || "",
           row.nome || "",
-          row.entraNCE || "",
+          row.entrance || "",
           row.saida || "",
           row.MP ? "X" : "",
           row.TAS ? "X" : "",

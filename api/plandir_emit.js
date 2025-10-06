@@ -1,13 +1,14 @@
-import ExcelJS from "exceljs";
+import PDFDocument from "pdfkit";
+import getStream from "get-stream";
+import fs from "fs";
+import path from "path";
 
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
+
+  if (req.method === "OPTIONS") return res.status(200).end();
 
   try {
     const { shift, date, tables } = req.body || {};
@@ -15,62 +16,128 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Faltam shift, date ou tables" });
     }
 
-    const response = await fetch(
-      "https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/templates/template_planeamento.xlsx"
-    );
-    const buffer = Buffer.from(await response.arrayBuffer());
-    const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(buffer);
-    const sheet = workbook.getWorksheet(1);
-    
-    const hora = shift === "D" ? "08:00-20:00" : "20:00-08:00";
-    sheet.getCell("B14").value = `Dia: ${date} | Turno ${shift} | ${hora}`;
-    
-    const tableStartRows = {
-      "OFOPE": 19,
-      "CHEFE DE SERVIÇO": 24,
-      "OPTEL": 29,
-      "EQUIPA 01": 34,
-      "EQUIPA 02": 43,
-      "LOGÍSTICA": 52,
-      "INEM": 58,
-      "INEM - Reserva": 65,
-      "SERVIÇO GERAL": 72
-    };
+    // Criação do documento PDF
+    const doc = new PDFDocument({ size: "A4", margin: 40 });
+    const primaryColor = "#1E293B";
+    const accentColor = "#2563EB";
+    const textGray = "#374151";
+    const lightGray = "#E5E7EB";
 
-    for (let tbl of tables) {
-      const startRow = tableStartRows[tbl.title];
-      if (!startRow) continue;
-      
-      for (let i = 0; i < tbl.rows.length; i++) {
-        const rowData = tbl.rows[i];
-        const rowNum = startRow + i;
-        
-        sheet.getCell(`B${rowNum}`).value = rowData.n_int || "";
-        sheet.getCell(`C${rowNum}`).value = rowData.patente || "";
-        sheet.getCell(`D${rowNum}`).value = rowData.nome || "";
-        sheet.getCell(`E${rowNum}`).value = rowData.entrada || "";
-        sheet.getCell(`F${rowNum}`).value = rowData.saida || "";
-        sheet.getCell(`G${rowNum}`).value = rowData.MP ? "X" : "";
-        sheet.getCell(`H${rowNum}`).value = rowData.TAS ? "X" : "";
-        sheet.getCell(`I${rowNum}`).value = rowData.obs || "";
-      }
+    // Logotipo (opcional)
+    const logoPath = path.join(process.cwd(), "public", "logo.png");
+    if (fs.existsSync(logoPath)) {
+      doc.image(logoPath, 40, 35, { width: 70 });
     }
 
-    const outputBuffer = await workbook.xlsx.writeBuffer();
+    // Cabeçalho
+    doc.font("Helvetica-Bold").fontSize(18).fillColor(primaryColor);
+    doc.text("PLANEAMENTO DIÁRIO", 120, 50, { align: "center" });
+    const hora = shift === "D" ? "08:00 - 20:00" : "20:00 - 08:00";
+    doc.moveDown(0.8);
+    doc.font("Helvetica").fontSize(12).fillColor(textGray);
+    doc.text(`Dia: ${date} | Turno ${shift} | ${hora}`, { align: "center" });
+    doc.moveDown(1);
+    doc.moveTo(40, doc.y).lineTo(555, doc.y).strokeColor(accentColor).stroke();
+    doc.moveDown(1.5);
 
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename=planeamento_${date}_${shift}.xlsx`
-    );
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    );
-    res.send(Buffer.from(outputBuffer));
+    // Corpo
+    for (const tbl of tables) {
+      const startY = doc.y + 8;
+      const estimatedHeight = 30 + tbl.rows.length * 18;
+      doc.save()
+        .roundedRect(40, startY, 515, estimatedHeight, 8)
+        .fillOpacity(0.04)
+        .fill(accentColor)
+        .restore();
 
+      doc.font("Helvetica-Bold").fontSize(13).fillColor(accentColor);
+      doc.text(tbl.title.toUpperCase(), 50, startY + 8);
+      doc.moveDown(0.8);
+
+      const headers = ["Nº", "Patente", "Nome", "Entrada", "Saída", "MP", "TAS", "Obs"];
+      const colWidths = [30, 70, 150, 55, 55, 30, 30, 80];
+      const colX = [50];
+      for (let i = 1; i < colWidths.length; i++) {
+        colX.push(colX[i - 1] + colWidths[i - 1]);
+      }
+
+      let y = doc.y;
+      doc.font("Helvetica-Bold").fontSize(10).fillColor(primaryColor);
+      headers.forEach((h, i) => {
+        doc.text(h, colX[i] + 2, y, { width: colWidths[i], align: "left" });
+      });
+
+      y += 14;
+      doc.moveTo(50, y).lineTo(530, y).strokeColor(lightGray).stroke();
+
+      doc.font("Helvetica").fontSize(9).fillColor(textGray);
+      tbl.rows.forEach((row, rowIndex) => {
+        y += 4;
+        if (y > 760) {
+          doc.addPage();
+          y = 60;
+        }
+
+        const rowData = [
+          row.n_int || "",
+          row.patente || "",
+          row.nome || "",
+          row.entrada || "",
+          row.saida || "",
+          row.MP ? "X" : "",
+          row.TAS ? "X" : "",
+          row.obs || ""
+        ];
+
+        if (rowIndex % 2 === 1) {
+          doc.save()
+            .rect(50, y - 2, 480, 14)
+            .fillOpacity(0.03)
+            .fill(primaryColor)
+            .restore();
+        }
+
+        rowData.forEach((t, i) => {
+          doc.text(t, colX[i] + 2, y, { width: colWidths[i], align: "left" });
+        });
+
+        y += 14;
+        doc.moveTo(50, y).lineTo(530, y).strokeColor("#D1D5DB").stroke();
+      });
+
+      doc.save().strokeColor("#D1D5DB");
+      colX.forEach(x => {
+        doc.moveTo(x, y - (tbl.rows.length * 18 + 14))
+           .lineTo(x, y)
+           .stroke();
+      });
+      doc.moveTo(530, y - (tbl.rows.length * 18 + 14))
+         .lineTo(530, y)
+         .stroke();
+      doc.restore();
+
+      doc.moveDown(1.5);
+    }
+
+    const horaAtual = new Date().toLocaleTimeString("pt-PT", {
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+    doc.moveDown(2);
+    doc.fontSize(9).fillColor("#6B7280");
+    doc.text(
+      `Processado automaticamente por SALOC 360  |  Emitido em: ${date} às ${horaAtual}`,
+      { align: "center" }
+    );
+
+    doc.end();
+    const pdfBuffer = await getStream.buffer(doc);
+
+    res.setHeader("Content-Disposition", `attachment; filename=planeamento_${date}_${shift}.pdf`);
+    res.setHeader("Content-Type", "application/pdf");
+    res.send(pdfBuffer);
   } catch (err) {
-    console.error("Erro a emitir planeamento:", err);
-    res.status(500).json({ error: "Erro a gerar planeamento", details: err.message });
+    console.error("Erro ao gerar PDF:", err);
+    res.status(500).json({ error: "Erro ao gerar PDF", details: err.message });
   }
 }

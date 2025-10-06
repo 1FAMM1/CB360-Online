@@ -39,7 +39,7 @@ export default async function handler(req, res) {
         sheet.getCell(`B${rowNum}`).value = rowData.n_int || "";
         sheet.getCell(`C${rowNum}`).value = rowData.patente || "";
         sheet.getCell(`D${rowNum}`).value = rowData.nome || "";
-        sheet.getCell(`E${rowNum}`).value = rowData.entrada || "";
+        sheet.getCell(`E${rowNum}`).value = rowData.entrance || "";
         sheet.getCell(`F${rowNum}`).value = rowData.saida || "";
         sheet.getCell(`G${rowNum}`).value = rowData.MP ? "X" : "";
         sheet.getCell(`H${rowNum}`).value = rowData.TAS ? "X" : "";

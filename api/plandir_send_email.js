@@ -1,68 +1,48 @@
 import nodemailer from "nodemailer";
+import formidable from "formidable";
+
+export const config = { api: { bodyParser: false } };
 
 export default async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  if (req.method !== "POST") return res.status(405).end();
 
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
+  const form = new formidable.IncomingForm();
+  form.parse(req, async (err, fields, files) => {
+    if (err) return res.status(500).json({ error: err.message });
 
-  try {
-    const { pdfBase64, shift, date, recipients } = req.body || {};
+    const { shift, date } = fields;
+    const file = files.file;
 
-    if (!pdfBase64 || !shift || !date) {
+    if (!file || !shift || !date) {
       return res.status(400).json({ error: "Faltam dados" });
     }
 
-    // Para teste, variáveis direto no código
-    const GMAIL_EMAIL = "fmartins.ahbfaro@gmail.com";
-    const GMAIL_APP_PASSWORD = "xsimbfgitjbmrruf";
-
-    // Se não passar destinatários, envia para você mesmo
-    const toEmails = Array.isArray(recipients) && recipients.length > 0
-      ? recipients.join(", ")
-      : GMAIL_EMAIL;
-
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true, // true para SSL
-      auth: {
-        user: GMAIL_EMAIL,
-        pass: GMAIL_APP_PASSWORD
-      }
-    });
-
-    const mailOptions = {
-      from: GMAIL_EMAIL,
-      to: toEmails,
-      subject: `AUTO_PLANEAMENTO - ${shift} - ${date}`,
-      text: `Segue em anexo o planeamento do turno ${shift} do dia ${date}.`,
-      attachments: [
-        {
-          filename: `planeamento_${date}_${shift}.pdf`,
-          content: Buffer.from(pdfBase64, "base64")
+    try {
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.GMAIL_EMAIL,
+          pass: process.env.GMAIL_APP_PASSWORD
         }
-      ]
-    };
+      });
 
-    const info = await transporter.sendMail(mailOptions);
+      await transporter.sendMail({
+        from: process.env.GMAIL_EMAIL,
+        to: process.env.GMAIL_EMAIL, // ou múltiplos separados por vírgula
+        subject: "AUTO_PLANEAMENTO",
+        text: `Planeamento ${shift} - ${date}`,
+        attachments: [
+          {
+            filename: file.originalFilename,
+            path: file.filepath
+          }
+        ]
+      });
 
-    console.log("Email enviado:", info);
-
-    return res.status(200).json({
-      success: true,
-      message: "Email enviado com sucesso!",
-      info
-    });
-
-  } catch (err) {
-    console.error("Erro ao enviar email:", err);
-    return res.status(500).json({
-      error: "Erro ao enviar email",
-      details: err.toString()
-    });
-  }
+      res.status(200).json({ success: true, message: "Email enviado!" });
+    } catch (err) {
+      console.error("Erro ao enviar email:", err);
+      res.status(500).json({ error: "Erro ao enviar email", details: err.message });
+    }
+  });
 }

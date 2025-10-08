@@ -11,5 +11,3 @@ function getSupabaseHeaders(options = {}) {
       }
       return headers;
     }
-const AUTH = 'SALOC 0805 (Fase de Testes)';
-document.getElementById('authName').textContent = AUTH;

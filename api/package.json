@@ -2,7 +2,7 @@
   "name": "CB360-Mobile",
   "version": "1.0.0",
   "dependencies": {
-    "@adobe/pdfservices-sdk": "^3.0.0",  <-- NOVO MÓDULO ADICIONADO AQUI
+    "@adobe/pdfservices-sdk": "^3.0.0",
     "@supabase/supabase-js": "^2.39.0",
     "exceljs": "^4.4.0",
     "nodemailer": "^6.9.0"

@@ -132,12 +132,120 @@ export default async function handler(req, res) {
         
         console.log('✅ Template preenchido');
         
-        // 5. Guardar o XLSX preenchido
+        // 5. Limpar workbook para evitar corrupção
+        // Remove propriedades que podem causar problemas
+        sheet.properties.outlineLevelCol = undefined;
+        sheet.properties.outlineLevelRow = undefined;
+        
+        // Percorrer todas as células e limpar valores vazios/undefined
+        sheet.eachRow((row, rowNumber) => {
+            row.eachCell((cell, colNumber) => {
+                if (cell.value === undefined || cell.value === null) {
+                    cell.value = '';
+                }
+            });
+        });
+        
+        console.log('✅ Workbook limpo e validado');
+        
+        // 6. Guardar o XLSX preenchido COM VALIDAÇÃO
         inputFilePath = path.join(tempDir, `${data.fileName}_${Date.now()}.xlsx`);
         outputFilePath = path.join(tempDir, `${data.fileName}_${Date.now()}.pdf`);
         
-        await workbook.xlsx.writeFile(inputFilePath);
-        console.log(`✅ XLSX guardado: ${inputFilePath}`);
+        // Tentar guardar e validar
+        try {
+            await workbook.xlsx.writeFile(inputFilePath);
+            
+            // Verificar tamanho do ficheiro
+            const stats = fs.statSync(inputFilePath);
+            console.log(`✅ XLSX guardado: ${inputFilePath} (${stats.size} bytes)`);
+            
+            if (stats.size < 5000) {
+                throw new Error('Ficheiro XLSX muito pequeno, pode estar corrompido');
+            }
+            
+            // Tentar recarregar para validar
+            const testWorkbook = new ExcelJS.Workbook();
+            await testWorkbook.xlsx.readFile(inputFilePath);
+            console.log('✅ XLSX validado com sucesso');
+            
+        } catch (validationError) {
+            console.error('❌ XLSX inválido, a criar novo ficheiro do zero:', validationError);
+            
+            // Criar XLSX do zero sem template
+            const newWorkbook = new ExcelJS.Workbook();
+            const newSheet = newWorkbook.addWorksheet('Escala');
+            
+            // Configurar larguras de colunas
+            newSheet.columns = [
+                { width: 5 },  // A
+                { width: 5 },  // B
+                { width: 8 },  // C - NI
+                { width: 20 }, // D - Nome
+                { width: 8 },  // E - Catg
+            ];
+            
+            // Adicionar colunas para os dias
+            for (let d = 1; d <= data.daysInMonth; d++) {
+                newSheet.getColumn(5 + d).width = 5;
+            }
+            
+            // Título
+            newSheet.mergeCells('C9:H9');
+            const titleCell = newSheet.getCell('C9');
+            titleCell.value = `ESCALA DE SERVIÇO - ${data.monthName} ${data.year}`;
+            titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+            titleCell.font = { bold: true, size: 14 };
+            
+            // Cabeçalhos
+            newSheet.getCell('C11').value = 'NI';
+            newSheet.getCell('D11').value = 'Nome';
+            newSheet.getCell('E11').value = 'Catg.';
+            
+            // Dias da semana e números
+            for (let d = 1; d <= data.daysInMonth; d++) {
+                const col = 6 + (d - 1);
+                const colLetter = String.fromCharCode(64 + col);
+                newSheet.getCell(`${colLetter}11`).value = data.weekdays[d - 1] || '';
+                newSheet.getCell(`${colLetter}12`).value = d;
+            }
+            
+            // Preencher dados
+            let currentRow = 15;
+            
+            // Fixed rows
+            data.fixedRows.forEach(fixedRow => {
+                newSheet.getCell(`C${currentRow}`).value = fixedRow.ni;
+                newSheet.getCell(`D${currentRow}`).value = fixedRow.nome;
+                newSheet.getCell(`E${currentRow}`).value = fixedRow.catg;
+                
+                for (let d = 1; d <= data.daysInMonth; d++) {
+                    const col = 6 + (d - 1);
+                    const colLetter = String.fromCharCode(64 + col);
+                    newSheet.getCell(`${colLetter}${currentRow}`).value = fixedRow.days[d] || '';
+                }
+                currentRow++;
+            });
+            
+            // Normal rows
+            currentRow = 18;
+            data.normalRows.forEach(normalRow => {
+                newSheet.getCell(`C${currentRow}`).value = normalRow.ni;
+                newSheet.getCell(`D${currentRow}`).value = normalRow.nome;
+                newSheet.getCell(`E${currentRow}`).value = normalRow.catg;
+                
+                for (let d = 1; d <= data.daysInMonth; d++) {
+                    const col = 6 + (d - 1);
+                    const colLetter = String.fromCharCode(64 + col);
+                    newSheet.getCell(`${colLetter}${currentRow}`).value = normalRow.days[d] || '';
+                }
+                currentRow++;
+            });
+            
+            // Guardar novo workbook
+            await newWorkbook.xlsx.writeFile(inputFilePath);
+            console.log('✅ Novo XLSX criado do zero');
+        }
 
         // 6. Converter para PDF com Adobe
         const credentials = new ServicePrincipalCredentials({

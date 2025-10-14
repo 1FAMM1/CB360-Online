@@ -3,10 +3,8 @@ import {
     ServicePrincipalCredentials,
     PDFServices,
     MimeType,
-    ExportPDFJob,
-    ExportPDFParams,
-    ExportPDFTargetFormat,
-    ExportPDFResult,
+    CreatePDFJob,
+    CreatePDFResult,
     SDKError,
     ServiceUsageError,
     ServiceApiError
@@ -88,12 +86,8 @@ export default async function handler(req, res) {
         });
         console.log(`✅ Ficheiro enviado para Adobe. Asset ID: ${inputAsset}`);
 
-        // 6. Criar parâmetros e job de exportação
-        const params = new ExportPDFParams({
-            targetFormat: ExportPDFTargetFormat.PDF
-        });
-
-        const job = new ExportPDFJob({ inputAsset, params });
+        // 6. Criar job de criação de PDF (XLSX -> PDF)
+        const job = new CreatePDFJob({ inputAsset });
 
         // 7. Submeter o job e aguardar resultado
         const pollingURL = await pdfServices.submit({ job });
@@ -101,7 +95,7 @@ export default async function handler(req, res) {
 
         const pdfServicesResponse = await pdfServices.getJobResult({
             pollingURL,
-            resultType: ExportPDFResult
+            resultType: CreatePDFResult
         });
 
         // 8. Obter o asset resultante

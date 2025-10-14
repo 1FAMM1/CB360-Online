@@ -247,7 +247,9 @@ export default async function handler(req, res) {
             console.log('✅ Novo XLSX criado do zero');
         }
 
-        // 6. Converter para PDF com Adobe
+        // 7. Converter para PDF com Adobe
+        console.log('🔄 A iniciar conversão para PDF...');
+        
         const credentials = new ServicePrincipalCredentials({
             clientId: CLIENT_ID,
             clientSecret: CLIENT_SECRET
@@ -255,24 +257,31 @@ export default async function handler(req, res) {
 
         const pdfServices = new PDFServices({ credentials });
 
+        // Upload do ficheiro XLSX
         const inputAsset = await pdfServices.upload({
             readStream: fs.createReadStream(inputFilePath),
             mimeType: MimeType.XLSX
         });
-        console.log(`✅ Ficheiro enviado para Adobe`);
+        console.log(`✅ Ficheiro XLSX enviado para Adobe. Asset ID: ${inputAsset}`);
 
+        // Criar job de conversão
         const job = new CreatePDFJob({ inputAsset });
+        console.log('✅ Job de conversão criado');
+
+        // Submeter e aguardar
         const pollingURL = await pdfServices.submit({ job });
-        console.log(`✅ Job submetido`);
+        console.log(`✅ Job submetido. A aguardar resultado...`);
 
         const pdfServicesResponse = await pdfServices.getJobResult({
             pollingURL,
             resultType: CreatePDFResult
         });
+        console.log('✅ Resultado recebido');
 
         const resultAsset = pdfServicesResponse.result.asset;
         const streamAsset = await pdfServices.getContent({ asset: resultAsset });
 
+        // Guardar o PDF
         const writeStream = fs.createWriteStream(outputFilePath);
         streamAsset.readStream.pipe(writeStream);
 
@@ -281,7 +290,7 @@ export default async function handler(req, res) {
             writeStream.on('error', reject);
         });
 
-        console.log(`✅ PDF gerado: ${outputFilePath}`);
+        console.log(`✅ PDF gerado com sucesso: ${outputFilePath}`);
 
         // 7. Enviar o PDF
         const pdfBuffer = fs.readFileSync(outputFilePath);

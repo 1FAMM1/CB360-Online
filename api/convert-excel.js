@@ -75,8 +75,16 @@ export default async function handler(req, res) {
         // 3. Carregar o template com ExcelJS
         const workbook = new ExcelJS.Workbook();
         await workbook.xlsx.load(templateBuffer);
+        
+        console.log(`✅ Workbook carregado. Total de sheets: ${workbook.worksheets.length}`);
+        
+        // Remover todas as sheets extra (deixar só a primeira)
+        while (workbook.worksheets.length > 1) {
+            workbook.removeWorksheet(workbook.worksheets[1].id);
+        }
+        
         const sheet = workbook.worksheets[0];
-        console.log(`✅ Workbook carregado: ${sheet.name}`);
+        console.log(`✅ A trabalhar com: ${sheet.name}`);
         
         // 4. Preencher o template
         // Título do mês em C9

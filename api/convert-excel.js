@@ -9,38 +9,42 @@ import {
     ServiceUsageError,
     ServiceApiError
 } from "@adobe/pdfservices-node-sdk";
+import ExcelJS from 'exceljs';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import https from 'https';
 
-// Acesso às variáveis de ambiente configuradas no Vercel
 const CLIENT_ID = process.env.ADOBE_CLIENT_ID;
 const CLIENT_SECRET = process.env.ADOBE_CLIENT_SECRET;
+const TEMPLATE_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/templates/fomio_template.xlsx";
 
-// ⚠️ IMPORTANTE: Configuração para Next.js API Routes
 export const config = {
     api: {
-        bodyParser: false, // Desabilita o parser automático para receber dados binários
-    },
+        bodyParser: {
+            sizeLimit: '10mb'
+        }
+    }
 };
 
-// Função auxiliar para ler o stream do req.body
-async function getRawBody(req) {
+// Função para descarregar o template
+async function downloadTemplate(url) {
     return new Promise((resolve, reject) => {
-        const chunks = [];
-        req.on('data', chunk => chunks.push(chunk));
-        req.on('end', () => resolve(Buffer.concat(chunks)));
-        req.on('error', reject);
+        https.get(url, (response) => {
+            const chunks = [];
+            response.on('data', (chunk) => chunks.push(chunk));
+            response.on('end', () => resolve(Buffer.concat(chunks)));
+            response.on('error', reject);
+        }).on('error', reject);
     });
 }
 
 export default async function handler(req, res) {
-    // ✅ CORS Headers - ADICIONA LOGO NO INÍCIO
+    // CORS Headers
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-File-Name');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-    // ✅ Handler para OPTIONS (CORS preflight)
     if (req.method === 'OPTIONS') {
         return res.status(200).end();
     }
@@ -50,7 +54,7 @@ export default async function handler(req, res) {
     }
     
     if (!CLIENT_ID || !CLIENT_SECRET) {
-        console.error("Erro: ADOBE_CLIENT_ID ou ADOBE_CLIENT_SECRET não configurados");
+        console.error("Erro: Credenciais Adobe não configuradas");
         return res.status(500).json({ error: "Erro: Chaves da Adobe não configuradas." });
     }
 
@@ -59,52 +63,108 @@ export default async function handler(req, res) {
     let outputFilePath = null;
 
     try {
-        // 1. Receber o buffer XLSX do Frontend
-        const xlsxBuffer = await getRawBody(req);
-        const fileName = req.headers['x-file-name'] || 'Escala';
+        // 1. Receber os dados JSON
+        const data = req.body;
+        console.log(`✅ Dados recebidos: ${data.fileName}`);
         
-        inputFilePath = path.join(tempDir, `${fileName}_input_${Date.now()}.xlsx`);
-        outputFilePath = path.join(tempDir, `${fileName}_output_${Date.now()}.pdf`);
+        // 2. Descarregar o template
+        console.log('📥 A descarregar template...');
+        const templateBuffer = await downloadTemplate(TEMPLATE_URL);
+        console.log(`✅ Template descarregado. Tamanho: ${templateBuffer.byteLength} bytes`);
+        
+        // 3. Carregar o template com ExcelJS
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.load(templateBuffer);
+        const sheet = workbook.worksheets[0];
+        console.log(`✅ Workbook carregado: ${sheet.name}`);
+        
+        // 4. Preencher o template
+        // Título do mês em C9
+        sheet.getCell("C9").value = `${data.monthName} ${data.year}`;
+        
+        // Cabeçalhos (dias da semana e números)
+        const row11 = sheet.getRow(11);
+        const row12 = sheet.getRow(12);
+        
+        for (let d = 1; d <= data.daysInMonth; d++) {
+            const col = 6 + (d - 1);
+            row11.getCell(col).value = data.weekdays[d - 1] || '';
+            row12.getCell(col).value = d;
+        }
+        row11.commit();
+        row12.commit();
+        
+        // Linhas fixas (OFOPE) - começam na linha 15
+        let currentRow = 15;
+        data.fixedRows.forEach(fixedRow => {
+            if (fixedRow.type === 'header') {
+                // Ignora headers por agora
+                return;
+            }
+            const row = sheet.getRow(currentRow);
+            row.getCell(3).value = fixedRow.ni;
+            row.getCell(4).value = fixedRow.nome;
+            row.getCell(5).value = fixedRow.catg;
+            
+            for (let d = 1; d <= data.daysInMonth; d++) {
+                const col = 6 + (d - 1);
+                row.getCell(col).value = fixedRow.days[d] || '';
+            }
+            row.commit();
+            currentRow++;
+        });
+        
+        // Linhas normais - começam na linha 18
+        currentRow = 18;
+        data.normalRows.forEach(normalRow => {
+            const row = sheet.getRow(currentRow);
+            row.getCell(3).value = normalRow.ni;
+            row.getCell(4).value = normalRow.nome;
+            row.getCell(5).value = normalRow.catg;
+            
+            for (let d = 1; d <= data.daysInMonth; d++) {
+                const col = 6 + (d - 1);
+                row.getCell(col).value = normalRow.days[d] || '';
+            }
+            row.commit();
+            currentRow++;
+        });
+        
+        console.log('✅ Template preenchido');
+        
+        // 5. Guardar o XLSX preenchido
+        inputFilePath = path.join(tempDir, `${data.fileName}_${Date.now()}.xlsx`);
+        outputFilePath = path.join(tempDir, `${data.fileName}_${Date.now()}.pdf`);
+        
+        await workbook.xlsx.writeFile(inputFilePath);
+        console.log(`✅ XLSX guardado: ${inputFilePath}`);
 
-        // 2. Guardar o buffer XLSX num ficheiro temporário
-        fs.writeFileSync(inputFilePath, xlsxBuffer);
-        console.log(`✅ Ficheiro XLSX guardado em: ${inputFilePath}`);
-
-        // 3. Criar credenciais da Adobe
+        // 6. Converter para PDF com Adobe
         const credentials = new ServicePrincipalCredentials({
             clientId: CLIENT_ID,
             clientSecret: CLIENT_SECRET
         });
 
-        // 4. Criar instância do PDFServices
         const pdfServices = new PDFServices({ credentials });
 
-        // 5. Criar um asset de input a partir do ficheiro XLSX
         const inputAsset = await pdfServices.upload({
             readStream: fs.createReadStream(inputFilePath),
             mimeType: MimeType.XLSX
         });
-        console.log(`✅ Ficheiro enviado para Adobe. Asset ID: ${inputAsset}`);
+        console.log(`✅ Ficheiro enviado para Adobe`);
 
-        // 6. Criar job de criação de PDF (XLSX -> PDF)
         const job = new CreatePDFJob({ inputAsset });
-
-        // 7. Submeter o job e aguardar resultado
         const pollingURL = await pdfServices.submit({ job });
-        console.log(`✅ Job submetido. Polling URL: ${pollingURL}`);
+        console.log(`✅ Job submetido`);
 
         const pdfServicesResponse = await pdfServices.getJobResult({
             pollingURL,
             resultType: CreatePDFResult
         });
 
-        // 8. Obter o asset resultante
         const resultAsset = pdfServicesResponse.result.asset;
-
-        // 9. Fazer download do PDF
         const streamAsset = await pdfServices.getContent({ asset: resultAsset });
 
-        // Guardar o stream no ficheiro de output
         const writeStream = fs.createWriteStream(outputFilePath);
         streamAsset.readStream.pipe(writeStream);
 
@@ -113,47 +173,34 @@ export default async function handler(req, res) {
             writeStream.on('error', reject);
         });
 
-        console.log(`✅ PDF gerado com sucesso em: ${outputFilePath}`);
+        console.log(`✅ PDF gerado: ${outputFilePath}`);
 
-        // 10. Ler o PDF e enviar como resposta
+        // 7. Enviar o PDF
         const pdfBuffer = fs.readFileSync(outputFilePath);
 
-        // 11. Limpeza de ficheiros temporários
+        // 8. Limpeza
         try {
             fs.unlinkSync(inputFilePath);
             fs.unlinkSync(outputFilePath);
             console.log('✅ Ficheiros temporários removidos');
         } catch (cleanupError) {
-            console.warn('⚠️ Erro ao limpar ficheiros temporários:', cleanupError);
+            console.warn('⚠️ Erro ao limpar:', cleanupError);
         }
 
-        // 12. Enviar resposta com o PDF
         res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename="${fileName}.pdf"`);
+        res.setHeader('Content-Disposition', `attachment; filename="${data.fileName}.pdf"`);
         return res.status(200).send(pdfBuffer);
 
     } catch (error) {
-        console.error('❌ Erro na conversão:', error);
+        console.error('❌ Erro:', error);
 
         // Limpeza de emergência
         try {
-            if (inputFilePath && fs.existsSync(inputFilePath)) {
-                fs.unlinkSync(inputFilePath);
-            }
-            if (outputFilePath && fs.existsSync(outputFilePath)) {
-                fs.unlinkSync(outputFilePath);
-            }
-        } catch (cleanupError) {
-            console.warn('⚠️ Erro ao limpar ficheiros de emergência:', cleanupError);
-        }
+            if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
+            if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
+        } catch (e) {}
 
-        // Tratamento de erros específicos da Adobe
         if (error instanceof SDKError || error instanceof ServiceUsageError || error instanceof ServiceApiError) {
-            console.error('Erro da Adobe PDF Services:', {
-                message: error.message,
-                statusCode: error.statusCode,
-                requestTrackingId: error.requestTrackingId
-            });
             return res.status(500).json({ 
                 error: "Erro no serviço Adobe PDF Services",
                 details: error.message 

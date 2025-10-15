@@ -46,25 +46,20 @@ async function convertXLSXToPDF(xlsxBuffer, fileName) {
     let pdfBuffer = null;
     
     try {
-        // 1. Autenticação (Sintaxe v3.x)
         const credentials = new ServicePrincipalCredentials({ clientId: CLIENT_ID, clientSecret: CLIENT_SECRET });
         const pdfServices = new PDFServices({ credentials });
         
-        // 2. Upload
         const inputAsset = await pdfServices.upload({ 
             readStream: fs.createReadStream(inputFilePath), 
             mimeType: MimeType.XLSX 
         });
         
-        // 3. Conversão
         const job = new CreatePDFJob({ inputAsset });
         
-        // 4. Submissão e Poll do resultado
         const pollingURL = await pdfServices.submit({ job });
         const pdfServicesResponse = await pdfServices.getJobResult({ pollingURL, resultType: CreatePDFResult });
         const resultAsset = pdfServicesResponse.result.asset;
         
-        // 5. Download do PDF para a memória
         const streamAsset = await pdfServices.getContent({ asset: resultAsset });
         
         const chunks = [];
@@ -79,7 +74,6 @@ async function convertXLSXToPDF(xlsxBuffer, fileName) {
         console.error('Erro na API da Adobe:', error);
         throw new Error('Falha na conversão XLSX para PDF. Verifique as credenciais e o limite de uso da Adobe.');
     } finally {
-        // Limpeza
         try {
             if (fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
         } catch(e) { 
@@ -103,12 +97,17 @@ export default async function handler(req, res) {
     if (req.method === "OPTIONS") return res.status(200).end();
 
     try {
-        const { shift, date, tables, recipients } = req.body || {};
+        // 🚨 NOVO: Recebe todos os campos de e-mail dinâmicos do Frontend
+        const { 
+            shift, date, tables, 
+            recipients, ccRecipients, bccRecipients, 
+            emailBody // A string HTML/Corpo da mensagem
+        } = req.body || {};
         
         if (!shift || !date || !tables || !recipients || recipients.length === 0) {
             return res.status(400).json({ 
-                error: "Faltam dados essenciais ou a lista de destinatários está vazia.",
-                details: "Certifique-se que 'shift', 'date', 'tables' e 'recipients' foram enviados." 
+                error: "Faltam dados essenciais ou a lista de destinatários principais está vazia.",
+                details: "Certifique-se que todos os dados do planeamento e destinatários 'TO' foram enviados." 
             });
         }
         
@@ -152,13 +151,12 @@ export default async function handler(req, res) {
             }
         }
         
-        // 🚨 NOVO: Configurações de página para garantir o layout correto do PDF
         sheet.pageSetup = {
             orientation: 'portrait',
-            paperSize: 9, // A4
+            paperSize: 9, 
             fitToPage: true,
-            fitToWidth: 1, // Garantir que cabe na largura
-            fitToHeight: 0, // Sem limite de altura (deixar a altura expandir)
+            fitToWidth: 1, 
+            fitToHeight: 0, 
             horizontalCentered: true,
             verticalCentered: true,
             margins: {
@@ -192,12 +190,28 @@ export default async function handler(req, res) {
         
         await transporter.sendMail({
             from: GMAIL_EMAIL,
+            
+            // 1. Destinatários Principais (TO)
             to: recipients.join(', '), 
+            
+            // 2. Cópia (CC) - Dinâmico
+            cc: ccRecipients && ccRecipients.length > 0 ? ccRecipients.join(', ') : '', 
+            
+            // 3. Cópia Oculta (BCC) - Dinâmico
+            bcc: bccRecipients && bccRecipients.length > 0 ? bccRecipients.join(', ') : '',
+            
+            // 4. Assunto
             subject: `[PLANEAMENTO] - ${shift} - ${date}`,
-            text: `Segue em anexo o Planeamento para ${shift} - ${date}, no formato PDF.`,
+            
+            // 5. Corpo (BODY) - Usa o HTML dinâmico enviado do Frontend
+            html: emailBody,
+            
+            // Texto alternativo (fallback)
+            text: 'Segue em anexo o documento de planeamento.', 
+            
             attachments: [
                 {
-                    filename: `${finalFileName}.pdf`, // Envia como PDF
+                    filename: `${finalFileName}.pdf`, 
                     content: pdfBuffer, 
                     contentType: 'application/pdf'
                 }
@@ -209,7 +223,7 @@ export default async function handler(req, res) {
         // ----------------------------------------------------
         return res.status(200).json({
             success: true,
-            message: `PDF gerado e enviado com sucesso para ${recipients.length} destinatário(s) (${recipients.join(', ')}).`
+            message: `PDF gerado e enviado com sucesso para ${recipients.length} destinatário(s).`
         });
 
     } catch (err) {

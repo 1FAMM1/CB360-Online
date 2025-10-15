@@ -1,16 +1,18 @@
 import ExcelJS from "exceljs";
 import nodemailer from "nodemailer";
-// Importações necessárias para o SDK da Adobe
-import { 
-    ExecutionContext, 
-    PDFServices, 
-    CreatePDF, 
-    CreatePDFMimeType 
-} from '@adobe/pdfservices-node-sdk';
 // Módulos Node.js para lidar com ficheiros temporários no Vercel
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+
+// 🚨 CORRIGIDO: Usar a importação padrão (default) para o módulo CommonJS da Adobe
+import pdfServicesSdk from '@adobe/pdfservices-node-sdk';
+const { 
+    ExecutionContext, 
+    PDFServices, 
+    CreatePDF, 
+    CreatePDFMimeType 
+} = pdfServicesSdk;
 
 // =========================================================================
 // VARIÁVEIS DE AMBIENTE (Lidas a partir do Vercel Settings)
@@ -76,7 +78,7 @@ async function convertXLSXToPDF(xlsxBuffer, fileName) {
         
     } catch (error) {
         console.error('Erro na API da Adobe:', error);
-        throw new Error('Falha na conversão XLSX para PDF.');
+        throw new Error('Falha na conversão XLSX para PDF. Verifique as credenciais e o limite de uso da Adobe.');
     } finally {
         // Limpeza dos ficheiros temporários locais
         try {
@@ -116,7 +118,7 @@ export default async function handler(req, res) {
         }
         
         // ----------------------------------------------------
-        // A. PREENCHIMENTO DO EXCELJS (Copiado de plandir_emit.js)
+        // A. PREENCHIMENTO DO EXCELJS
         // ----------------------------------------------------
         
         const response = await fetch("https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/templates/template_planeamento.xlsx");
@@ -147,7 +149,7 @@ export default async function handler(req, res) {
                 sheet.getCell(`B${rowNum}`).value = rowData.n_int || "";
                 sheet.getCell(`C${rowNum}`).value = rowData.patente || "";
                 sheet.getCell(`D${rowNum}`).value = rowData.nome || "";
-                sheet.getCell(`E${rowNum}`).value = rowData.entrada || ""; // Corrigido de rowData.entrance
+                sheet.getCell(`E${rowNum}`).value = rowData.entrada || "";
                 sheet.getCell(`F${rowNum}`).value = rowData.saida || "";
                 sheet.getCell(`G${rowNum}`).value = rowData.MP ? "X" : "";
                 sheet.getCell(`H${rowNum}`).value = rowData.TAS ? "X" : "";

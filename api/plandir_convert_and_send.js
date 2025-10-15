@@ -142,7 +142,7 @@ export default async function handler(req, res) {
         
         // 🚨 NOVO FORMATO COMPACTO PARA FICHEIRO/ASSUNTO: AnoMêsDia Turno
         const compactDate = year + month.padStart(2, '0') + day.padStart(2, '0');
-        const fileAndSubjectSuffix = `${compactDate} ${shift}`;
+        const fileAndSubjectSuffix = `${compactDate} Turno ${shift}`;
         const finalFileName = `Planeamento Diário ${fileAndSubjectSuffix}`; 
         
         sheet.getCell("B14").value = `Dia: ${formattedDate} | Turno ${shift} | ${shiftHours}`;

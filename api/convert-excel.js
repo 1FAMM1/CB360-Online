@@ -158,7 +158,7 @@ export default async function handler(req, res) {
     orientation: 'portrait',       // Vertical
     paperSize: 9,                  // A4
     fitToPage: true,               // Ajustar para caber numa página
-    fitToWidth: 1,                 // 1 página na largura
+    fitToWidth: 0,                 // 1 página na largura
     fitToHeight: 1,                // 1 página na altura
     horizontalCentered: true,
     verticalCentered: true,

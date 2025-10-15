@@ -160,17 +160,18 @@ export default async function handler(req, res) {
     fitToPage: true,               // Ajustar para caber numa página
     fitToWidth: 1,                 // 1 página na largura
     fitToHeight: 1,                // 1 página na altura
-    horizontalCentered: true,      // Centralizar horizontalmente
-    verticalCentered: true,        // Centralizar verticalmente
-    margins: {                     // 🔧 Margens mínimas
-        left: 0.15,                // ~3,8 mm
-        right: 0.15,               // ~3,8 mm
-        top: 0.25,                 // ~6,3 mm
-        bottom: 0.25,              // ~6,3 mm
-        header: 0.1,               // ~2,5 mm
-        footer: 0.1                // ~2,5 mm
+    horizontalCentered: true,
+    verticalCentered: true,
+    margins: {
+        left: 0.059,               // 1,5 mm
+        right: 0.059,              // 1,5 mm
+        top: 0.25,                 // 6,3 mm (mantemos para não cortar)
+        bottom: 0.25,              // 6,3 mm
+        header: 0.1,               // 2,5 mm
+        footer: 0.1                // 2,5 mm
     }
 };
+
 
 
         console.log('✅ Configuração de página ajustada para caber em uma folha');

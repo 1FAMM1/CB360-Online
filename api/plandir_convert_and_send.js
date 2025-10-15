@@ -5,18 +5,16 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 
-// 🚨 CORREÇÃO FINAL: Usar a importação padrão e aceder explicitamente
-import pdfServicesSdk from '@adobe/pdfservices-node-sdk';
-
-const { 
-    PDFServices, 
-    CreatePDF, 
-    CreatePDFMimeType 
-} = pdfServicesSdk;
-
-// Garantir que o ExecutionContext está corretamente referenciado
-const ExecutionContext = pdfServicesSdk.ExecutionContext; 
-
+// 🚨 CORREÇÃO FINAL: Usamos a sintaxe de importação v3.x do SDK da Adobe,
+// que é compatível com o seu projeto de Escalas.
+import { 
+    ServicePrincipalCredentials, 
+    PDFServices,                 
+    MimeType,
+    CreatePDFResult,
+    CreatePDFJob,
+    // Não precisamos de ExecutionContext, CreatePDF, etc.
+} from "@adobe/pdfservices-node-sdk"; 
 
 // =========================================================================
 // VARIÁVEIS DE AMBIENTE (Lidas a partir do Vercel Settings)
@@ -36,11 +34,11 @@ export const config = {
 };
 
 // =========================================================================
-// FUNÇÃO AUXILIAR: CONVERSÃO XLSX -> PDF (Usando Adobe SDK)
+// FUNÇÃO AUXILIAR: CONVERSÃO XLSX -> PDF (Sintaxe v3.x da Adobe)
 // =========================================================================
 
 /**
- * Converte um Buffer XLSX para um Buffer PDF usando a Adobe Cloud Services.
+ * Converte um Buffer XLSX para um Buffer PDF usando a Adobe Cloud Services (v3.x syntax).
  * @param {Buffer} xlsxBuffer - O buffer binário do ficheiro XLSX preenchido.
  * @param {string} fileName - Nome base para os ficheiros temporários.
  * @returns {Promise<Buffer>} O buffer binário do PDF resultante.
@@ -50,44 +48,53 @@ async function convertXLSXToPDF(xlsxBuffer, fileName) {
         throw new Error("Erro de Configuração Adobe: As chaves não estão definidas.");
     }
     
-    // O SDK da Adobe requer que os ficheiros existam localmente antes do upload
-    // Usamos /tmp diretamente, que é a pasta temporária de eleição no Vercel
+    // É obrigatório escrever o Buffer para um ficheiro temporário para o SDK da Adobe 
+    // o poder ler como stream para o upload.
     const inputFilePath = `/tmp/${fileName}_input_${Date.now()}.xlsx`; 
-    const outputFilePath = `/tmp/${fileName}_output_${Date.now()}.pdf`; 
     
     // Escreve o XLSX recebido para um ficheiro temporário
     fs.writeFileSync(inputFilePath, xlsxBuffer); 
 
     let pdfBuffer = null;
+    
     try {
-        // 1. Autenticação (Acesso a ExecutionContext agora deve funcionar)
-        const credentials = ExecutionContext.authenticator.getServicePrincipalCredentials(CLIENT_ID, CLIENT_SECRET);
-        const pdfServices = new PDFServices(credentials);
+        // 1. Autenticação (Sintaxe v3.x)
+        const credentials = new ServicePrincipalCredentials({ clientId: CLIENT_ID, clientSecret: CLIENT_SECRET });
+        const pdfServices = new PDFServices({ credentials });
         
-        // 2. Upload
-        const inputAsset = await pdfServices.uploadAssets(inputFilePath, CreatePDFMimeType.XLSX);
+        // 2. Upload (Criação de um stream de leitura)
+        const inputAsset = await pdfServices.upload({ 
+            readStream: fs.createReadStream(inputFilePath), 
+            mimeType: MimeType.XLSX 
+        });
         
-        // 3. Conversão (operação CreatePDF para converter Office para PDF)
-        const createPdfOperation = CreatePDF.createNew();
-        createPdfOperation.setInputAsset(inputAsset);
+        // 3. Conversão (Usa CreatePDFJob, o equivalente ao CreatePDF.createNew() na v3.x)
+        const job = new CreatePDFJob({ inputAsset });
         
-        const resultAsset = await pdfServices.process(createPdfOperation);
-
-        // 4. Download
-        await resultAsset.downloadAsset(outputFilePath);
-        pdfBuffer = fs.readFileSync(outputFilePath); // Lê o PDF para a memória
-
-        // 5. Limpeza de Assets na Cloud
-        await pdfServices.deleteAsset(inputAsset);
+        // 4. Submissão e Poll do resultado
+        const pollingURL = await pdfServices.submit({ job });
+        const pdfServicesResponse = await pdfServices.getJobResult({ pollingURL, resultType: CreatePDFResult });
+        const resultAsset = pdfServicesResponse.result.asset;
+        
+        // 5. Download do PDF para a memória (não para o disco)
+        const streamAsset = await pdfServices.getContent({ asset: resultAsset });
+        
+        const chunks = [];
+        await new Promise((resolve, reject) => {
+            streamAsset.readStream.on('data', (chunk) => chunks.push(chunk));
+            streamAsset.readStream.on('end', resolve);
+            streamAsset.readStream.on('error', reject);
+        });
+        pdfBuffer = Buffer.concat(chunks);
         
     } catch (error) {
+        // Lida com erros específicos da Adobe se a variável error for uma das classes
         console.error('Erro na API da Adobe:', error);
         throw new Error('Falha na conversão XLSX para PDF. Verifique as credenciais e o limite de uso da Adobe.');
     } finally {
-        // Limpeza dos ficheiros temporários locais
+        // Limpeza do ficheiro temporário local
         try {
             if (fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
-            if (fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
         } catch(e) { 
             console.warn("Falha na limpeza de ficheiros temporários:", e);
         }
@@ -102,7 +109,7 @@ async function convertXLSXToPDF(xlsxBuffer, fileName) {
 // =========================================================================
 
 export default async function handler(req, res) {
-    // Headers CORS (necessários como nas suas APIs antigas)
+    // Headers CORS 
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -110,10 +117,8 @@ export default async function handler(req, res) {
     if (req.method === "OPTIONS") return res.status(200).end();
 
     try {
-        // Recebe os dados, incluindo os novos 'recipients' do frontend
         const { shift, date, tables, recipients } = req.body || {};
         
-        // Verificação de dados essenciais
         if (!shift || !date || !tables || !recipients || recipients.length === 0) {
             return res.status(400).json({ 
                 error: "Faltam dados essenciais ou a lista de destinatários está vazia.",

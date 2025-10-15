@@ -5,14 +5,18 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 
-// 🚨 CORRIGIDO: Usar a importação padrão (default) para o módulo CommonJS da Adobe
+// 🚨 CORREÇÃO FINAL: Usar a importação padrão e aceder explicitamente
 import pdfServicesSdk from '@adobe/pdfservices-node-sdk';
+
 const { 
-    ExecutionContext, 
     PDFServices, 
     CreatePDF, 
     CreatePDFMimeType 
 } = pdfServicesSdk;
+
+// Garantir que o ExecutionContext está corretamente referenciado
+const ExecutionContext = pdfServicesSdk.ExecutionContext; 
+
 
 // =========================================================================
 // VARIÁVEIS DE AMBIENTE (Lidas a partir do Vercel Settings)
@@ -47,16 +51,16 @@ async function convertXLSXToPDF(xlsxBuffer, fileName) {
     }
     
     // O SDK da Adobe requer que os ficheiros existam localmente antes do upload
-    const tempDir = os.tmpdir();
-    const inputFilePath = path.join(tempDir, `${fileName}_input_${Date.now()}.xlsx`);
-    const outputFilePath = path.join(tempDir, `${fileName}_output_${Date.now()}.pdf`);
+    // Usamos /tmp diretamente, que é a pasta temporária de eleição no Vercel
+    const inputFilePath = `/tmp/${fileName}_input_${Date.now()}.xlsx`; 
+    const outputFilePath = `/tmp/${fileName}_output_${Date.now()}.pdf`; 
     
     // Escreve o XLSX recebido para um ficheiro temporário
     fs.writeFileSync(inputFilePath, xlsxBuffer); 
 
     let pdfBuffer = null;
     try {
-        // 1. Autenticação
+        // 1. Autenticação (Acesso a ExecutionContext agora deve funcionar)
         const credentials = ExecutionContext.authenticator.getServicePrincipalCredentials(CLIENT_ID, CLIENT_SECRET);
         const pdfServices = new PDFServices(credentials);
         

@@ -155,20 +155,20 @@ export default async function handler(req, res) {
 
         // ✅ Forçar configuração de página para caber tudo numa única folha
         sheet.pageSetup = {
-    orientation: 'portrait',       // Modo vertical
+    orientation: 'portrait',       // Vertical
     paperSize: 9,                  // A4
     fitToPage: true,               // Ajustar para caber numa página
     fitToWidth: 1,                 // 1 página na largura
     fitToHeight: 1,                // 1 página na altura
     horizontalCentered: true,      // Centralizar horizontalmente
     verticalCentered: true,        // Centralizar verticalmente
-    margins: {                     // 🔧 Margens personalizadas
-        left: 0.3,                 // Margem esquerda (padrão é 0.7)
-        right: 0.3,                // Margem direita (padrão é 0.7)
-        top: 0.5,                  // Margem superior
-        bottom: 0.5,               // Margem inferior
-        header: 0.3,               // Cabeçalho
-        footer: 0.3                // Rodapé
+    margins: {                     // 🔧 Margens mínimas
+        left: 0.15,                // ~3,8 mm
+        right: 0.15,               // ~3,8 mm
+        top: 0.25,                 // ~6,3 mm
+        bottom: 0.25,              // ~6,3 mm
+        header: 0.1,               // ~2,5 mm
+        footer: 0.1                // ~2,5 mm
     }
 };
 

@@ -44,11 +44,16 @@ export default async function handler(req, res) {
 
         const workbook = new ExcelJS.Workbook();
         await workbook.xlsx.load(templateBuffer);
+
+        if (!workbook.worksheets.length) workbook.addWorksheet('Escala');
         while (workbook.worksheets.length > 1) workbook.removeWorksheet(workbook.worksheets[1].id);
 
         const sheet = workbook.worksheets[0];
 
+        // Preencher título
         sheet.getCell("C9").value = `${data.monthName} ${data.year}`;
+
+        // Cabeçalhos
         const row11 = sheet.getRow(11);
         const row12 = sheet.getRow(12);
         for (let d = 1; d <= data.daysInMonth; d++) {
@@ -58,28 +63,24 @@ export default async function handler(req, res) {
         }
         row11.commit(); row12.commit();
 
-        let currentRow = 15;
-        data.fixedRows.forEach(f => {
-            if (f.type !== 'header') {
+        // Função auxiliar para preencher linhas
+        const fillRows = (rows, startRow) => {
+            let currentRow = startRow;
+            rows.forEach(r => {
                 const row = sheet.getRow(currentRow);
-                row.getCell(3).value = f.ni;
-                row.getCell(4).value = f.nome;
-                row.getCell(5).value = f.catg;
-                for (let d = 1; d <= data.daysInMonth; d++) row.getCell(6 + (d - 1)).value = f.days[d] || '';
-                row.commit(); currentRow++;
-            }
-        });
+                row.getCell(3).value = r.ni || '';
+                row.getCell(4).value = r.nome || '';
+                row.getCell(5).value = r.catg || '';
+                for (let d = 1; d <= data.daysInMonth; d++) row.getCell(6 + (d - 1)).value = r.days[d] || '';
+                row.commit();
+                currentRow++;
+            });
+        };
 
-        currentRow = 18;
-        data.normalRows.forEach(n => {
-            const row = sheet.getRow(currentRow);
-            row.getCell(3).value = n.ni;
-            row.getCell(4).value = n.nome;
-            row.getCell(5).value = n.catg;
-            for (let d = 1; d <= data.daysInMonth; d++) row.getCell(6 + (d - 1)).value = n.days[d] || '';
-            row.commit(); currentRow++;
-        });
+        fillRows(data.fixedRows.filter(r => r.type !== 'header'), 15);
+        fillRows(data.normalRows, 18);
 
+        // Ajuste página
         sheet.pageSetup = {
             orientation: 'portrait',
             paperSize: 9,
@@ -90,6 +91,9 @@ export default async function handler(req, res) {
             verticalCentered: true,
             margins: { left: 0.059, right: 0.059, top: 0.25, bottom: 0.25, header: 0.1, footer: 0.1 }
         };
+
+        // Limpar células vazias
+        sheet.eachRow(row => row.eachCell(cell => { if (cell.value == null) cell.value = ''; }));
 
         inputFilePath = path.join(tempDir, `${data.fileName}_${Date.now()}.xlsx`);
         outputFilePath = path.join(tempDir, `${data.fileName}_${Date.now()}.pdf`);

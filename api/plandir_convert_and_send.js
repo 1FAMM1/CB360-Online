@@ -5,7 +5,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 
-// Usamos a sintaxe de importação v3.x do SDK da Adobe (compatível com o seu projeto de Escalas)
+// SDK da Adobe PDF Services (Versão 3.x)
 import { 
     ServicePrincipalCredentials, 
     PDFServices,                 
@@ -15,14 +15,14 @@ import {
 } from "@adobe/pdfservices-node-sdk"; 
 
 // =========================================================================
-// VARIÁVEIS DE AMBIENTE
+// VARIÁVEIS DE AMBIENTE (Lidas a partir do Vercel Settings)
 // =========================================================================
 const CLIENT_ID = process.env.ADOBE_CLIENT_ID;
 const CLIENT_SECRET = process.env.ADOBE_CLIENT_SECRET;
 const GMAIL_EMAIL = process.env.GMAIL_EMAIL;
 const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
 
-// Configuração para payloads maiores
+// Configuração para garantir que o Vercel pode lidar com payloads maiores
 export const config = {
   api: {
     bodyParser: {
@@ -35,6 +35,12 @@ export const config = {
 // FUNÇÃO AUXILIAR: CONVERSÃO XLSX -> PDF (Sintaxe v3.x da Adobe)
 // =========================================================================
 
+/**
+ * Converte um Buffer XLSX para um Buffer PDF usando a Adobe Cloud Services (v3.x syntax).
+ * @param {Buffer} xlsxBuffer - O buffer binário do ficheiro XLSX preenchido.
+ * @param {string} fileName - Nome base para os ficheiros temporários.
+ * @returns {Promise<Buffer>} O buffer binário do PDF resultante.
+ */
 async function convertXLSXToPDF(xlsxBuffer, fileName) {
     if (!CLIENT_ID || !CLIENT_SECRET) {
         throw new Error("Erro de Configuração Adobe: As chaves não estão definidas.");
@@ -46,20 +52,25 @@ async function convertXLSXToPDF(xlsxBuffer, fileName) {
     let pdfBuffer = null;
     
     try {
+        // 1. Autenticação
         const credentials = new ServicePrincipalCredentials({ clientId: CLIENT_ID, clientSecret: CLIENT_SECRET });
         const pdfServices = new PDFServices({ credentials });
         
+        // 2. Upload
         const inputAsset = await pdfServices.upload({ 
             readStream: fs.createReadStream(inputFilePath), 
             mimeType: MimeType.XLSX 
         });
         
+        // 3. Conversão
         const job = new CreatePDFJob({ inputAsset });
         
+        // 4. Submissão e Poll do resultado
         const pollingURL = await pdfServices.submit({ job });
         const pdfServicesResponse = await pdfServices.getJobResult({ pollingURL, resultType: CreatePDFResult });
         const resultAsset = pdfServicesResponse.result.asset;
         
+        // 5. Download do PDF para a memória
         const streamAsset = await pdfServices.getContent({ asset: resultAsset });
         
         const chunks = [];
@@ -74,6 +85,7 @@ async function convertXLSXToPDF(xlsxBuffer, fileName) {
         console.error('Erro na API da Adobe:', error);
         throw new Error('Falha na conversão XLSX para PDF. Verifique as credenciais e o limite de uso da Adobe.');
     } finally {
+        // Limpeza
         try {
             if (fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
         } catch(e) { 
@@ -90,6 +102,7 @@ async function convertXLSXToPDF(xlsxBuffer, fileName) {
 // =========================================================================
 
 export default async function handler(req, res) {
+    // Configuração CORS
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -97,11 +110,11 @@ export default async function handler(req, res) {
     if (req.method === "OPTIONS") return res.status(200).end();
 
     try {
-        // 🚨 NOVO: Recebe todos os campos de e-mail dinâmicos do Frontend
+        // 🚨 RECEBE TODOS OS CAMPOS DINÂMICOS DO FRONTEND
         const { 
             shift, date, tables, 
             recipients, ccRecipients, bccRecipients, 
-            emailBody // A string HTML/Corpo da mensagem
+            emailBody 
         } = req.body || {};
         
         if (!shift || !date || !tables || !recipients || recipients.length === 0) {
@@ -126,7 +139,11 @@ export default async function handler(req, res) {
         const monthName = monthNames[parseInt(month, 10) - 1] || month;
         const formattedDate = `${day} ${monthName} ${year}`;
         const shiftHours = shift === "D" ? "08:00-20:00" : "20:00-08:00";
-        const finalFileName = `planeamento_${day}_${monthName}_${year}_${shift}`;
+        
+        // 🚨 NOVO FORMATO COMPACTO PARA FICHEIRO/ASSUNTO: AnoMêsDia Turno
+        const compactDate = year + month.padStart(2, '0') + day.padStart(2, '0');
+        const fileAndSubjectSuffix = `${compactDate} ${shift}`;
+        const finalFileName = `Planeamento Diário ${fileAndSubjectSuffix}`; 
         
         sheet.getCell("B14").value = `Dia: ${formattedDate} | Turno ${shift} | ${shiftHours}`;
 
@@ -151,6 +168,7 @@ export default async function handler(req, res) {
             }
         }
         
+        // 🚨 CONFIGURAÇÕES DE PÁGINA PARA O LAYOUT DO PDF
         sheet.pageSetup = {
             orientation: 'portrait',
             paperSize: 9, 
@@ -191,26 +209,25 @@ export default async function handler(req, res) {
         await transporter.sendMail({
             from: GMAIL_EMAIL,
             
-            // 1. Destinatários Principais (TO)
+            // 1. Destinatários TO (Dinâmico)
             to: recipients.join(', '), 
             
-            // 2. Cópia (CC) - Dinâmico
+            // 2. Cópia CC (Dinâmico, ignora se vazio)
             cc: ccRecipients && ccRecipients.length > 0 ? ccRecipients.join(', ') : '', 
             
-            // 3. Cópia Oculta (BCC) - Dinâmico
+            // 3. Cópia Oculta BCC (Dinâmico, ignora se vazio)
             bcc: bccRecipients && bccRecipients.length > 0 ? bccRecipients.join(', ') : '',
             
-            // 4. Assunto
-            subject: `[PLANEAMENTO] - ${shift} - ${date}`,
+            // 4. Assunto (Novo formato)
+            subject: `Planeamento Diário ${fileAndSubjectSuffix}`,
             
-            // 5. Corpo (BODY) - Usa o HTML dinâmico enviado do Frontend
+            // 5. Corpo (BODY) - Usa o HTML dinâmico enviado
             html: emailBody,
-            
-            // Texto alternativo (fallback)
             text: 'Segue em anexo o documento de planeamento.', 
             
             attachments: [
                 {
+                    // 6. Anexo (Novo formato)
                     filename: `${finalFileName}.pdf`, 
                     content: pdfBuffer, 
                     contentType: 'application/pdf'

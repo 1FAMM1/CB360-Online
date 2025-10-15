@@ -1,5 +1,18 @@
 {
   "version": 2,
+  "builds": [
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node",
+      "config": {
+        // ESSENCIAL: Garante que o Vercel pode encontrar as dependências
+        "includeFiles": [
+          "package.json", 
+          "node_modules/**"
+        ] 
+      }
+    }
+  ],
   "functions": {
     "api/**/*.js": {
       "runtime": "nodejs20.x",

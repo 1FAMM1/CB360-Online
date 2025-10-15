@@ -5,26 +5,24 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 
-// 🚨 CORREÇÃO FINAL: Usamos a sintaxe de importação v3.x do SDK da Adobe,
-// que é compatível com o seu projeto de Escalas.
+// Usamos a sintaxe de importação v3.x do SDK da Adobe (compatível com o seu projeto de Escalas)
 import { 
     ServicePrincipalCredentials, 
     PDFServices,                 
     MimeType,
     CreatePDFResult,
     CreatePDFJob,
-    // Não precisamos de ExecutionContext, CreatePDF, etc.
 } from "@adobe/pdfservices-node-sdk"; 
 
 // =========================================================================
-// VARIÁVEIS DE AMBIENTE (Lidas a partir do Vercel Settings)
+// VARIÁVEIS DE AMBIENTE
 // =========================================================================
 const CLIENT_ID = process.env.ADOBE_CLIENT_ID;
 const CLIENT_SECRET = process.env.ADOBE_CLIENT_SECRET;
 const GMAIL_EMAIL = process.env.GMAIL_EMAIL;
 const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
 
-// Configuração para garantir que o Vercel pode lidar com payloads maiores
+// Configuração para payloads maiores
 export const config = {
   api: {
     bodyParser: {
@@ -37,22 +35,12 @@ export const config = {
 // FUNÇÃO AUXILIAR: CONVERSÃO XLSX -> PDF (Sintaxe v3.x da Adobe)
 // =========================================================================
 
-/**
- * Converte um Buffer XLSX para um Buffer PDF usando a Adobe Cloud Services (v3.x syntax).
- * @param {Buffer} xlsxBuffer - O buffer binário do ficheiro XLSX preenchido.
- * @param {string} fileName - Nome base para os ficheiros temporários.
- * @returns {Promise<Buffer>} O buffer binário do PDF resultante.
- */
 async function convertXLSXToPDF(xlsxBuffer, fileName) {
     if (!CLIENT_ID || !CLIENT_SECRET) {
         throw new Error("Erro de Configuração Adobe: As chaves não estão definidas.");
     }
     
-    // É obrigatório escrever o Buffer para um ficheiro temporário para o SDK da Adobe 
-    // o poder ler como stream para o upload.
     const inputFilePath = `/tmp/${fileName}_input_${Date.now()}.xlsx`; 
-    
-    // Escreve o XLSX recebido para um ficheiro temporário
     fs.writeFileSync(inputFilePath, xlsxBuffer); 
 
     let pdfBuffer = null;
@@ -62,13 +50,13 @@ async function convertXLSXToPDF(xlsxBuffer, fileName) {
         const credentials = new ServicePrincipalCredentials({ clientId: CLIENT_ID, clientSecret: CLIENT_SECRET });
         const pdfServices = new PDFServices({ credentials });
         
-        // 2. Upload (Criação de um stream de leitura)
+        // 2. Upload
         const inputAsset = await pdfServices.upload({ 
             readStream: fs.createReadStream(inputFilePath), 
             mimeType: MimeType.XLSX 
         });
         
-        // 3. Conversão (Usa CreatePDFJob, o equivalente ao CreatePDF.createNew() na v3.x)
+        // 3. Conversão
         const job = new CreatePDFJob({ inputAsset });
         
         // 4. Submissão e Poll do resultado
@@ -76,7 +64,7 @@ async function convertXLSXToPDF(xlsxBuffer, fileName) {
         const pdfServicesResponse = await pdfServices.getJobResult({ pollingURL, resultType: CreatePDFResult });
         const resultAsset = pdfServicesResponse.result.asset;
         
-        // 5. Download do PDF para a memória (não para o disco)
+        // 5. Download do PDF para a memória
         const streamAsset = await pdfServices.getContent({ asset: resultAsset });
         
         const chunks = [];
@@ -88,11 +76,10 @@ async function convertXLSXToPDF(xlsxBuffer, fileName) {
         pdfBuffer = Buffer.concat(chunks);
         
     } catch (error) {
-        // Lida com erros específicos da Adobe se a variável error for uma das classes
         console.error('Erro na API da Adobe:', error);
         throw new Error('Falha na conversão XLSX para PDF. Verifique as credenciais e o limite de uso da Adobe.');
     } finally {
-        // Limpeza do ficheiro temporário local
+        // Limpeza
         try {
             if (fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
         } catch(e) { 
@@ -109,7 +96,6 @@ async function convertXLSXToPDF(xlsxBuffer, fileName) {
 // =========================================================================
 
 export default async function handler(req, res) {
-    // Headers CORS 
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -166,6 +152,25 @@ export default async function handler(req, res) {
             }
         }
         
+        // 🚨 NOVO: Configurações de página para garantir o layout correto do PDF
+        sheet.pageSetup = {
+            orientation: 'portrait',
+            paperSize: 9, // A4
+            fitToPage: true,
+            fitToWidth: 1, // Garantir que cabe na largura
+            fitToHeight: 0, // Sem limite de altura (deixar a altura expandir)
+            horizontalCentered: true,
+            verticalCentered: true,
+            margins: {
+                left: 0.059,
+                right: 0.059,
+                top: 0.25,
+                bottom: 0.25,
+                header: 0.1,
+                footer: 0.1
+            }
+        };
+
         const finalXLSXBuffer = await workbook.xlsx.writeBuffer();
         
         // ----------------------------------------------------

@@ -106,7 +106,6 @@ export default async function handler(req, res) {
         let currentRow = 15;
         data.fixedRows.forEach(fixedRow => {
             if (fixedRow.type === 'header') {
-                // Ignora headers por agora
                 return;
             }
             const row = sheet.getRow(currentRow);
@@ -141,11 +140,9 @@ export default async function handler(req, res) {
         console.log('✅ Template preenchido');
         
         // 5. Limpar workbook para evitar corrupção
-        // Remove propriedades que podem causar problemas
         sheet.properties.outlineLevelCol = undefined;
         sheet.properties.outlineLevelRow = undefined;
         
-        // Percorrer todas as células e limpar valores vazios/undefined
         sheet.eachRow((row, rowNumber) => {
             row.eachCell((cell, colNumber) => {
                 if (cell.value === undefined || cell.value === null) {
@@ -155,16 +152,26 @@ export default async function handler(req, res) {
         });
         
         console.log('✅ Workbook limpo e validado');
-        
+
+        // ✅ Forçar configuração de página para caber tudo numa única folha
+        sheet.pageSetup = {
+            orientation: 'landscape',      // modo paisagem
+            paperSize: 9,                  // A4
+            fitToPage: true,               // ajustar à página
+            fitToWidth: 1,                 // 1 página na largura
+            fitToHeight: 1,                // 1 página na altura
+            horizontalCentered: true,      // centralizar horizontalmente
+            verticalCentered: true         // centralizar verticalmente
+        };
+        console.log('✅ Configuração de página ajustada para caber em uma folha');
+
         // 6. Guardar o XLSX preenchido COM VALIDAÇÃO
         inputFilePath = path.join(tempDir, `${data.fileName}_${Date.now()}.xlsx`);
         outputFilePath = path.join(tempDir, `${data.fileName}_${Date.now()}.pdf`);
         
-        // Tentar guardar e validar
         try {
             await workbook.xlsx.writeFile(inputFilePath);
             
-            // Verificar tamanho do ficheiro
             const stats = fs.statSync(inputFilePath);
             console.log(`✅ XLSX guardado: ${inputFilePath} (${stats.size} bytes)`);
             
@@ -172,61 +179,40 @@ export default async function handler(req, res) {
                 throw new Error('Ficheiro XLSX muito pequeno, pode estar corrompido');
             }
             
-            // Tentar recarregar para validar
             const testWorkbook = new ExcelJS.Workbook();
             await testWorkbook.xlsx.readFile(inputFilePath);
             console.log('✅ XLSX validado com sucesso');
             
         } catch (validationError) {
             console.error('❌ XLSX inválido, a criar novo ficheiro do zero:', validationError);
-            
-            // Criar XLSX do zero sem template
             const newWorkbook = new ExcelJS.Workbook();
             const newSheet = newWorkbook.addWorksheet('Escala');
-            
-            // Configurar larguras de colunas
             newSheet.columns = [
-                { width: 5 },  // A
-                { width: 5 },  // B
-                { width: 8 },  // C - NI
-                { width: 20 }, // D - Nome
-                { width: 8 },  // E - Catg
+                { width: 5 }, { width: 5 },
+                { width: 8 }, { width: 20 }, { width: 8 }
             ];
-            
-            // Adicionar colunas para os dias
             for (let d = 1; d <= data.daysInMonth; d++) {
                 newSheet.getColumn(5 + d).width = 5;
             }
-            
-            // Título
             newSheet.mergeCells('C9:H9');
             const titleCell = newSheet.getCell('C9');
             titleCell.value = `ESCALA DE SERVIÇO - ${data.monthName} ${data.year}`;
             titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
             titleCell.font = { bold: true, size: 14 };
-            
-            // Cabeçalhos
             newSheet.getCell('C11').value = 'NI';
             newSheet.getCell('D11').value = 'Nome';
             newSheet.getCell('E11').value = 'Catg.';
-            
-            // Dias da semana e números
             for (let d = 1; d <= data.daysInMonth; d++) {
                 const col = 6 + (d - 1);
                 const colLetter = String.fromCharCode(64 + col);
                 newSheet.getCell(`${colLetter}11`).value = data.weekdays[d - 1] || '';
                 newSheet.getCell(`${colLetter}12`).value = d;
             }
-            
-            // Preencher dados
             let currentRow = 15;
-            
-            // Fixed rows
             data.fixedRows.forEach(fixedRow => {
                 newSheet.getCell(`C${currentRow}`).value = fixedRow.ni;
                 newSheet.getCell(`D${currentRow}`).value = fixedRow.nome;
                 newSheet.getCell(`E${currentRow}`).value = fixedRow.catg;
-                
                 for (let d = 1; d <= data.daysInMonth; d++) {
                     const col = 6 + (d - 1);
                     const colLetter = String.fromCharCode(64 + col);
@@ -234,14 +220,11 @@ export default async function handler(req, res) {
                 }
                 currentRow++;
             });
-            
-            // Normal rows
             currentRow = 18;
             data.normalRows.forEach(normalRow => {
                 newSheet.getCell(`C${currentRow}`).value = normalRow.ni;
                 newSheet.getCell(`D${currentRow}`).value = normalRow.nome;
                 newSheet.getCell(`E${currentRow}`).value = normalRow.catg;
-                
                 for (let d = 1; d <= data.daysInMonth; d++) {
                     const col = 6 + (d - 1);
                     const colLetter = String.fromCharCode(64 + col);
@@ -249,8 +232,6 @@ export default async function handler(req, res) {
                 }
                 currentRow++;
             });
-            
-            // Guardar novo workbook
             await newWorkbook.xlsx.writeFile(inputFilePath);
             console.log('✅ Novo XLSX criado do zero');
         }
@@ -265,18 +246,15 @@ export default async function handler(req, res) {
 
         const pdfServices = new PDFServices({ credentials });
 
-        // Upload do ficheiro XLSX
         const inputAsset = await pdfServices.upload({
             readStream: fs.createReadStream(inputFilePath),
             mimeType: MimeType.XLSX
         });
         console.log(`✅ Ficheiro XLSX enviado para Adobe. Asset ID: ${inputAsset}`);
 
-        // Criar job de conversão
         const job = new CreatePDFJob({ inputAsset });
         console.log('✅ Job de conversão criado');
 
-        // Submeter e aguardar
         const pollingURL = await pdfServices.submit({ job });
         console.log(`✅ Job submetido. A aguardar resultado...`);
 
@@ -289,7 +267,6 @@ export default async function handler(req, res) {
         const resultAsset = pdfServicesResponse.result.asset;
         const streamAsset = await pdfServices.getContent({ asset: resultAsset });
 
-        // Guardar o PDF
         const writeStream = fs.createWriteStream(outputFilePath);
         streamAsset.readStream.pipe(writeStream);
 
@@ -300,10 +277,8 @@ export default async function handler(req, res) {
 
         console.log(`✅ PDF gerado com sucesso: ${outputFilePath}`);
 
-        // 7. Enviar o PDF
         const pdfBuffer = fs.readFileSync(outputFilePath);
 
-        // 8. Limpeza
         try {
             fs.unlinkSync(inputFilePath);
             fs.unlinkSync(outputFilePath);
@@ -318,20 +293,16 @@ export default async function handler(req, res) {
 
     } catch (error) {
         console.error('❌ Erro:', error);
-
-        // Limpeza de emergência
         try {
             if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
             if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
         } catch (e) {}
-
         if (error instanceof SDKError || error instanceof ServiceUsageError || error instanceof ServiceApiError) {
             return res.status(500).json({ 
                 error: "Erro no serviço Adobe PDF Services",
                 details: error.message 
             });
         }
-
         return res.status(500).json({ 
             error: "Erro interno ao converter para PDF",
             details: error.message 

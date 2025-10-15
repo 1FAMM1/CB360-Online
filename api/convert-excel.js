@@ -155,14 +155,15 @@ export default async function handler(req, res) {
 
         // ✅ Forçar configuração de página para caber tudo numa única folha
         sheet.pageSetup = {
-            orientation: 'landscape',      // modo paisagem
-            paperSize: 9,                  // A4
-            fitToPage: true,               // ajustar à página
-            fitToWidth: 1,                 // 1 página na largura
-            fitToHeight: 1,                // 1 página na altura
-            horizontalCentered: true,      // centralizar horizontalmente
-            verticalCentered: true         // centralizar verticalmente
-        };
+    orientation: 'portrait',       // modo retrato (vertical)
+    paperSize: 9,                  // A4
+    fitToPage: true,               // ajustar à página
+    fitToWidth: 1,                 // 1 página na largura
+    fitToHeight: 1,                // 1 página na altura
+    horizontalCentered: true,      // centralizar horizontalmente
+    verticalCentered: true         // centralizar verticalmente
+};
+
         console.log('✅ Configuração de página ajustada para caber em uma folha');
 
         // 6. Guardar o XLSX preenchido COM VALIDAÇÃO

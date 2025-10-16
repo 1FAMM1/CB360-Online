@@ -37,13 +37,13 @@ export default async function handler(req, res) {
         const sheet = workbook.worksheets[0];
 
         // Preenche células
-        sheet.getCell('P11').value = data.vehicle || '';
+        sheet.getCell('S11').value = data.vehicle || '';
         sheet.getCell('E17').value = data.registration || '';
         sheet.getCell('B17').value = data.gdh_inop || '';
         sheet.getCell('O14').value = data.failure_type || '';
         sheet.getCell('K16').value = data.failure_description ? `Descrição: ${data.failure_description}` : '';
-        sheet.getCell('G23').value = data.gdh_op || '';
-        sheet.getCell('E28').value = data.optel || '';
+        sheet.getCell('G30').value = data.gdh_op || '';
+        sheet.getCell('E41').value = data.optel || '';
 
         // Marcações de PPI e substituição (X em células específicas)
         if (data.ppi_part) {

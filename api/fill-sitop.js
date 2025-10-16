@@ -45,21 +45,33 @@ export default async function handler(req, res) {
         sheet.getCell('G23').value = data.gdh_op || '';
         sheet.getCell('E28').value = data.optel || '';
 
-        // Checkboxes - valores booleanos
-        sheet.getCell('S1').value = Boolean(data.ppi_airport);
-        sheet.getCell('S2').value = Boolean(data.ppi_a22);
-        sheet.getCell('S3').value = Boolean(data.ppi_a2);
-        sheet.getCell('S4').value = Boolean(data.ppi_linfer);
-        sheet.getCell('S5').value = Boolean(data.ppi_airfield);
-        sheet.getCell('S6').value = Boolean(data.ppi_part);
-        sheet.getCell('S7').value = !Boolean(data.ppi_part);
-        sheet.getCell('S8').value = Boolean(data.ppi_subs);
-        sheet.getCell('S9').value = !Boolean(data.ppi_subs);
+        // Marcações de PPI e substituição (X em células específicas)
+        if (data.ppi_part) {
+            sheet.getCell('R20').value = 'X';
+            sheet.getCell('T20').value = '';
+        } else {
+            sheet.getCell('R20').value = '';
+            sheet.getCell('T20').value = 'X';
+        }
 
+        sheet.getCell('Q23').value = data.ppi_airport ? 'X' : '';
+        sheet.getCell('Q26').value = data.ppi_a22 ? 'X' : '';
+        sheet.getCell('Q29').value = data.ppi_a2 ? 'X' : '';
+        sheet.getCell('Q32').value = data.ppi_linfer ? 'X' : '';
+        sheet.getCell('Q35').value = data.ppi_airfield ? 'X' : '';
+
+        if (data.ppi_subs) {
+            sheet.getCell('R38').value = 'X';
+            sheet.getCell('T38').value = '';
+        } else {
+            sheet.getCell('R38').value = '';
+            sheet.getCell('T38').value = 'X';
+        }
+
+        // Gera o ficheiro Excel atualizado
         const xlsxBuffer = await workbook.xlsx.writeBuffer();
-
         const fileName = `SITOP_${data.vehicle}_${Date.now()}.xlsx`;
-        
+
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
         return res.status(200).send(xlsxBuffer);

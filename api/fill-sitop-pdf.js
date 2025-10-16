@@ -90,7 +90,7 @@ export default async function handler(req, res) {
 
         // Configuração de página
         sheet.pageSetup = {
-            orientation: 'portrait',
+            orientation: 'landscape',
             paperSize: 9,
             fitToPage: true,
             fitToWidth: 1,

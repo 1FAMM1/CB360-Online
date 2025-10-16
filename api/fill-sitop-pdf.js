@@ -90,7 +90,7 @@ export default async function handler(req, res) {
 
         // Configuração de página
         sheet.pageSetup = {
-            orientation: 'portrait',
+            orientation: 'landscape',
             paperSize: 9,
             fitToPage: true,
             fitToWidth: 1,
@@ -107,27 +107,9 @@ export default async function handler(req, res) {
             }
         };
 
-        // Extrai dia e mês do GDH_INOP (formato: DDHHMMMMMYYYY)
-        const gdh = data.gdh_inop || '';
-        const dia = gdh.substring(0, 2);
-        
-        const mesMap = {
-            'JAN': '01', 'FEV': '02', 'MAR': '03', 'ABR': '04',
-            'MAI': '05', 'JUN': '06', 'JUL': '07', 'AGO': '08',
-            'SET': '09', 'OUT': '10', 'NOV': '11', 'DEZ': '12'
-        };
-        
-        const mesStr = gdh.substring(6, 9);
-        const mes = mesMap[mesStr] || '00';
-        const dataFormatada = `${dia}${mes}`;
-
-        // Nome do ficheiro baseado no estado
-        let fileName;
-        if (!data.gdh_op || data.gdh_op.trim() === '') {
-            fileName = `INOP_${data.vehicle}_${dataFormatada}`;
-        } else {
-            fileName = `OP_${data.vehicle}_${dataFormatada}`;
-        }
+        // 🚨 NOME FIXO: apenas prefixo + veículo + 0805
+        const prefix = (!data.gdh_op || data.gdh_op.trim() === '') ? 'INOP' : 'OP';
+        const fileName = `${prefix}_${data.vehicle}_0805`;
 
         inputFilePath = path.join(tempDir, `${fileName}.xlsx`);
         outputFilePath = path.join(tempDir, `${fileName}.pdf`);

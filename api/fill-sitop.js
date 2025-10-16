@@ -40,10 +40,9 @@ export default async function handler(req, res) {
         const sheet = workbook.worksheets[0];
 
         // ====================================================
-        // PREENCHIMENTO DAS CÉLULAS
+        // PREENCHIMENTO DAS CÉLULAS DE TEXTO
         // ====================================================
         
-        // Dados principais
         sheet.getCell('P11').value = data.vehicle || '';
         sheet.getCell('E17').value = data.registration || '';
         sheet.getCell('B17').value = data.gdh_inop || '';
@@ -52,30 +51,25 @@ export default async function handler(req, res) {
         sheet.getCell('G23').value = data.gdh_op || '';
         sheet.getCell('E28').value = data.optel || '';
 
+        // ====================================================
+        // PREENCHIMENTO DAS CÉLULAS VINCULADAS ÀS CHECKBOXES
+        // Usando valores BOOLEANOS (true/false) em vez de strings
+        // ====================================================
+        
         // Checkboxes PPI individuais (coluna S)
-        sheet.getCell('S1').value = data.ppi_airport ? 'VERDADEIRO' : 'FALSO';
-        sheet.getCell('S2').value = data.ppi_a22 ? 'VERDADEIRO' : 'FALSO';
-        sheet.getCell('S3').value = data.ppi_a2 ? 'VERDADEIRO' : 'FALSO';
-        sheet.getCell('S4').value = data.ppi_linfer ? 'VERDADEIRO' : 'FALSO';
-        sheet.getCell('S5').value = data.ppi_airfield ? 'VERDADEIRO' : 'FALSO';
+        sheet.getCell('S1').value = Boolean(data.ppi_airport);
+        sheet.getCell('S2').value = Boolean(data.ppi_a22);
+        sheet.getCell('S3').value = Boolean(data.ppi_a2);
+        sheet.getCell('S4').value = Boolean(data.ppi_linfer);
+        sheet.getCell('S5').value = Boolean(data.ppi_airfield);
 
-        // Faz parte de PPI? (S6 ou S7)
-        if (data.ppi_part) {
-            sheet.getCell('S6').value = 'VERDADEIRO';
-            sheet.getCell('S7').value = 'FALSO';
-        } else {
-            sheet.getCell('S6').value = 'FALSO';
-            sheet.getCell('S7').value = 'VERDADEIRO';
-        }
+        // Faz parte de PPI? (S6 = SIM, S7 = NÃO)
+        sheet.getCell('S6').value = Boolean(data.ppi_part);
+        sheet.getCell('S7').value = !Boolean(data.ppi_part);
 
-        // Tem substituição? (S8 ou S9)
-        if (data.ppi_subs) {
-            sheet.getCell('S8').value = 'VERDADEIRO';
-            sheet.getCell('S9').value = 'FALSO';
-        } else {
-            sheet.getCell('S8').value = 'FALSO';
-            sheet.getCell('S9').value = 'VERDADEIRO';
-        }
+        // Tem substituição? (S8 = SIM, S9 = NÃO)
+        sheet.getCell('S8').value = Boolean(data.ppi_subs);
+        sheet.getCell('S9').value = !Boolean(data.ppi_subs);
 
         // ====================================================
         // GERA O BUFFER DO EXCEL PREENCHIDO

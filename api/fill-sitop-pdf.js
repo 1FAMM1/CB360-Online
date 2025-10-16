@@ -36,12 +36,19 @@ async function downloadTemplate(url) {
 }
 
 export default async function handler(req, res) {
+    // 🚨 CORS HEADERS - SEMPRE PRIMEIRO
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-    if (req.method === 'OPTIONS') return res.status(200).end();
-    if (req.method !== 'POST') return res.status(405).json({ error: 'Método não permitido' });
+    // 🚨 HANDLE OPTIONS PREFLIGHT
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Método não permitido' });
+    }
     
     if (!CLIENT_ID || !CLIENT_SECRET) {
         return res.status(500).json({ error: "Erro: Chaves da Adobe não configuradas." });
@@ -62,7 +69,7 @@ export default async function handler(req, res) {
         await workbook.xlsx.load(templateBuffer);
         const sheet = workbook.worksheets[0];
 
-        // Preenche células (mesmo mapeamento da API de Excel)
+        // Preenche células
         sheet.getCell('S11').value = data.vehicle || '';
         sheet.getCell('E17').value = data.registration || '';
         sheet.getCell('B17').value = data.gdh_inop || '';
@@ -71,7 +78,7 @@ export default async function handler(req, res) {
         sheet.getCell('G30').value = data.gdh_op || '';
         sheet.getCell('E41').value = data.optel || '';
 
-        // Marcações de PPI e substituição (X em células específicas)
+        // Marcações de PPI e substituição
         if (data.ppi_part) {
             sheet.getCell('R20').value = 'X';
             sheet.getCell('T20').value = '';
@@ -94,7 +101,7 @@ export default async function handler(req, res) {
             sheet.getCell('T38').value = 'X';
         }
 
-        // Configurações de página para o PDF
+        // Configurações de página
         sheet.pageSetup = {
             orientation: 'portrait',
             paperSize: 9,
@@ -113,14 +120,14 @@ export default async function handler(req, res) {
             }
         };
 
-        // Salva o Excel temporário
+        // Salva Excel temporário
         const fileName = `SITOP_${data.vehicle}_${Date.now()}`;
         inputFilePath = path.join(tempDir, `${fileName}.xlsx`);
         outputFilePath = path.join(tempDir, `${fileName}.pdf`);
 
         await workbook.xlsx.writeFile(inputFilePath);
 
-        // Conversão para PDF usando Adobe
+        // Conversão para PDF
         const credentials = new ServicePrincipalCredentials({ 
             clientId: CLIENT_ID, 
             clientSecret: CLIENT_SECRET 
@@ -142,7 +149,6 @@ export default async function handler(req, res) {
         const resultAsset = pdfServicesResponse.result.asset;
         const streamAsset = await pdfServices.getContent({ asset: resultAsset });
 
-        // Salva o PDF
         const writeStream = fs.createWriteStream(outputFilePath);
         streamAsset.readStream.pipe(writeStream);
         
@@ -151,7 +157,6 @@ export default async function handler(req, res) {
             writeStream.on('error', reject);
         });
 
-        // Lê o PDF e envia
         const pdfBuffer = fs.readFileSync(outputFilePath);
 
         // Limpeza
@@ -167,7 +172,7 @@ export default async function handler(req, res) {
         return res.status(200).send(pdfBuffer);
 
     } catch (error) {
-        // Limpeza em caso de erro
+        // Limpeza
         try {
             if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
             if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);

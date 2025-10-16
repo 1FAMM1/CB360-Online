@@ -8,13 +8,14 @@ TEMPLATE_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/templ
 
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
-        content_length = int(self.headers['Content-Length'])
-        post_data = self.rfile.read(content_length)
-        data = json.loads(post_data)
-        
         try:
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode('utf-8'))
+            
             # Download do template
-            with urllib.request.urlopen(TEMPLATE_URL) as response:
+            req = urllib.request.Request(TEMPLATE_URL)
+            with urllib.request.urlopen(req) as response:
                 template_data = response.read()
             
             # Carrega o workbook (preserva form controls)
@@ -47,28 +48,40 @@ class handler(BaseHTTPRequestHandler):
             # Salva em buffer
             output = io.BytesIO()
             wb.save(output)
-            output.seek(0)
+            excel_data = output.getvalue()  # Pega os bytes diretamente
             
             # Nome do ficheiro
             vehicle = data.get('vehicle', 'vehicle')
             gdh = data.get('gdh_inop', '')
             filename = f"SITOP_{vehicle}_{gdh}.xlsx"
             
-            # Retorna o ficheiro
+            # Retorna o ficheiro (IMPORTANTE: sem encoding, dados binários puros)
             self.send_response(200)
             self.send_header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            self.send_header('Content-Length', str(len(excel_data)))
             self.send_header('Content-Disposition', f'attachment; filename="{filename}"')
             self.send_header('Access-Control-Allow-Origin', '*')
+            self.send_header('Access-Control-Expose-Headers', 'Content-Disposition')
             self.end_headers()
-            self.wfile.write(output.read())
+            
+            # Escreve os dados binários diretamente
+            self.wfile.write(excel_data)
             
         except Exception as e:
+            import traceback
+            error_detail = traceback.format_exc()
+            
             self.send_response(500)
             self.send_header('Content-Type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
-            error_response = json.dumps({'error': str(e), 'type': type(e).__name__})
-            self.wfile.write(error_response.encode())
+            
+            error_response = json.dumps({
+                'error': str(e), 
+                'type': type(e).__name__,
+                'detail': error_detail
+            })
+            self.wfile.write(error_response.encode('utf-8'))
     
     def do_OPTIONS(self):
         self.send_response(200)

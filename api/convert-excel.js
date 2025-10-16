@@ -63,6 +63,7 @@ export default async function handler(req, res) {
         const sheet = workbook.worksheets[0];
 
         sheet.getCell("C9").value = `${data.monthName} ${data.year}`;
+        
         const row11 = sheet.getRow(11);
         const row12 = sheet.getRow(12);
         for (let d = 1; d <= data.daysInMonth; d++) {
@@ -72,6 +73,19 @@ export default async function handler(req, res) {
         }
         row11.commit();
         row12.commit();
+
+        // ADICIONA FERIADOS NA ROW 8
+        const holidayDays = data.holidayDays || [];
+        console.log('Feriados recebidos:', holidayDays);
+        
+        const row8 = sheet.getRow(8);
+        holidayDays.forEach(day => {
+            const col = 6 + (day - 1);
+            const cell = row8.getCell(col);
+            console.log(`Colocando FR na row 8, dia ${day}, coluna ${col}`);
+            cell.value = 'FR';
+        });
+        row8.commit();
 
         let currentRow = 15;
         data.fixedRows.forEach(fixedRow => {
@@ -153,12 +167,19 @@ export default async function handler(req, res) {
             newSheet.getCell('C11').value = 'NI';
             newSheet.getCell('D11').value = 'Nome';
             newSheet.getCell('E11').value = 'Catg.';
+            
+            // ADICIONA FERIADOS NA ROW 8 DO FALLBACK
             for (let d = 1; d <= data.daysInMonth; d++) {
                 const col = 6 + (d - 1);
                 const colLetter = String.fromCharCode(64 + col);
                 newSheet.getCell(`${colLetter}11`).value = data.weekdays[d - 1] || '';
                 newSheet.getCell(`${colLetter}12`).value = d;
+                
+                if (holidayDays.includes(d)) {
+                    newSheet.getCell(`${colLetter}8`).value = 'FR';
+                }
             }
+            
             let rowNum = 15;
             data.fixedRows.forEach(fixedRow => {
                 newSheet.getCell(`C${rowNum}`).value = fixedRow.ni;

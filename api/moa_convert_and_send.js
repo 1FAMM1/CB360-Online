@@ -190,11 +190,12 @@ export default async function handler(req, res) {
     // OPTEL / signature-like field (se existir no template)
    
 
-     orientation: "portrait",
+     sheet.pageSetup = {
+  orientation: "portrait",
   paperSize: 9,       // A4
   fitToPage: true,
   fitToWidth: 1,
-  fitToHeight: 1,     // <-- forçar altura em 1 página
+  fitToHeight: 1,     // força altura em 1 página
   horizontalCentered: true,
   verticalCentered: false, // evita deslocamento estranho
   margins: {

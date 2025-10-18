@@ -188,7 +188,7 @@ export default async function handler(req, res) {
     sheet.getCell("O58").value = data.moa_otr_obs_03 || "";
 
     // OPTEL / signature-like field (se existir no template)
-    if (sheet.getCell("E41")) sheet.getCell("E41").value = data.moa_optel || "";
+   
 
     // ajustes de pagina (opcional copy do sitop)
     sheet.pageSetup = {
@@ -200,8 +200,8 @@ export default async function handler(req, res) {
       horizontalCentered: true,
       verticalCentered: true,
       margins: {
-        left: 0.059,
-        right: 0.059,
+        left: 0.1,
+        right: 0.1,
         top: 0.25,
         bottom: 0.25,
         header: 0.1,

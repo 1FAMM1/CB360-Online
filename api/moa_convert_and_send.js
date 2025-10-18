@@ -190,22 +190,21 @@ export default async function handler(req, res) {
     // OPTEL / signature-like field (se existir no template)
    
 
-    // ajustes de pagina (opcional copy do sitop)
     sheet.pageSetup = {
   orientation: "portrait",
-  paperSize: 9,          // Geralmente A4
-  fitToPage: true,        // Ajusta tudo na página
-  fitToWidth: 1,          // Cabe em 1 página na largura
-  fitToHeight: 0,         // Altura ilimitada (0 = auto)
+  paperSize: 9,        // A4
+  fitToPage: true,
+  fitToWidth: 1,
+  fitToHeight: 0,
   horizontalCentered: true,
   verticalCentered: true,
   margins: {
-    left: 0.1,            // polegadas
-    right: 0.1,
-    top: 0.25,
-    bottom: 0.25,
-    header: 0.1,
-    footer: 0.1,
+    left: 0.5,         // 1,27 cm
+    right: 0.5,
+    top: 0.75,         // 1,9 cm
+    bottom: 0.75,
+    header: 0.3,       // 0,76 cm
+    footer: 0.3,
   },
 };
 

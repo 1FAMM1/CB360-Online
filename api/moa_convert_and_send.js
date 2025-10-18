@@ -192,22 +192,23 @@ export default async function handler(req, res) {
 
     // ajustes de pagina (opcional copy do sitop)
     sheet.pageSetup = {
-      orientation: "portrait",
-      paperSize: 9,
-      fitToPage: true,
-      fitToWidth: 1,
-      fitToHeight: 0,
-      horizontalCentered: true,
-      verticalCentered: true,
-      margins: {
-        left: 0.1,
-        right: 0.1,
-        top: 0.25,
-        bottom: 0.25,
-        header: 0.1,
-        footer: 0.1,
-      },
-    };
+  orientation: "portrait",
+  paperSize: 9,          // Geralmente A4
+  fitToPage: true,        // Ajusta tudo na página
+  fitToWidth: 1,          // Cabe em 1 página na largura
+  fitToHeight: 0,         // Altura ilimitada (0 = auto)
+  horizontalCentered: true,
+  verticalCentered: true,
+  margins: {
+    left: 0.1,            // polegadas
+    right: 0.1,
+    top: 0.25,
+    bottom: 0.25,
+    header: 0.1,
+    footer: 0.1,
+  },
+};
+
 
     // Construir nome do ficheiro
     const cbSafe = (data.moa_cb || data.moa_device_type || "MOA").replace(/\s+/g, "_");

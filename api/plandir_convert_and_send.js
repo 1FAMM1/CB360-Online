@@ -128,7 +128,7 @@ export default async function handler(req, res) {
         // A. PREENCHIMENTO DO EXCELJS
         // ----------------------------------------------------
         
-        const response = await fetch("https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/templates/template_planeamento.xlsx");
+        const response = await fetch("https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/templates/planeamento_template.xlsx");
         const baseBuffer = Buffer.from(await response.arrayBuffer());
         const workbook = new ExcelJS.Workbook();
         await workbook.xlsx.load(baseBuffer);

@@ -192,7 +192,7 @@ export default async function handler(req, res) {
 
     // ajustes de pagina (opcional copy do sitop)
     sheet.pageSetup = {
-      orientation: "landscape",
+      orientation: "portrait",
       paperSize: 9,
       fitToPage: true,
       fitToWidth: 1,

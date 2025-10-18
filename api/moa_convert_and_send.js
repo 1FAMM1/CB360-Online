@@ -210,8 +210,10 @@ export default async function handler(req, res) {
 
 
     // Construir nome do ficheiro
-    const cbSafe = (data.moa_cb || data.moa_device_type || "MOA").replace(/\s+/g, "_");
-    const fileName = `MOA_${cbSafe}_${data.moa_gdh_init || ""}`;
+     const deviceSafe = (data.moa_device_type || data.moa_cb || "MOA").replace(/\s+/g, "_");
+    const gdhInit = data.moa_gdh_init || "";
+    const gdhEnd = data.moa_gdh_end || "";
+    const fileName = `MOA_${deviceSafe}_de_${gdhInit}_a_${gdhEnd}_0805`;
 
     const xlsxBuffer = await workbook.xlsx.writeBuffer();
 

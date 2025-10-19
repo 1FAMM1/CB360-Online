@@ -1,0 +1,1960 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>CB360 Online</title>
+  <link rel="stylesheet" href="css/bs_01x.css">
+  <link rel="stylesheet" href="css/hd_01x.css">
+  <link rel="stylesheet" href="css/anm_01x.css">
+  <link rel="stylesheet" href="css/btn_01x.css">
+  <link rel="stylesheet" href="css/crd_01x.css">
+  <link rel="stylesheet" href="css/dP_01x.css">
+  <link rel="stylesheet" href="css/fld_01x.css">
+  <link rel="stylesheet" href="css/lyt_01x.css">
+  <link rel="stylesheet" href="css/mdl_01x.css">
+  <link rel="stylesheet" href="css/mJ_01x.css">
+  <link rel="stylesheet" href="css/pD_01x.css">
+  <link rel="stylesheet" href="css/sb_01x.css">
+  <link rel="stylesheet" href="css/tB_01x.css">
+  <link rel="stylesheet" href="css/rId_01x.css">
+</head>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="logo">
+        <img src="...." alt="CB Faro Cruz Lusa" class="header-logo">
+      </div>
+      <div class="header-title-container">
+        <h1 class="header-title"></h1>
+        <p class="header-subtitle">CB360 Online</p>
+        <p class="header-authorization">Acesso Autorizado: <span id="authName"></span></p>
+      </div>
+      <div class="header-badge-360">Grupo CB360</div>
+      <button id="logoutBtn" class="fa fa-power-off" style="margin: 0 10px 0 15px; font-size: 20px; background: none; border: none; color: white; cursor: pointer;"></button>
+    </header>
+    <!---- SIDEBAR MODULE ---->
+    <aside class="sidebar">
+      <button class="sidebar-menu-button active" data-page="page-main">🏠 Menu Principal</button>
+      <button class="sidebar-menu-button" data-page="" data-access="DECIR 360" onclick="showTempWarning('MÓDULO BREVEMENTE DISPONÍVEL EM CB360 ONLINE')">👥 DECIR 360</button>
+      <button class="sidebar-menu-button sub-submenu-toggle" data-page="page-fomio" data-access="FOMIO 360">👥 FOMIO 360</button>
+      <div class="sub-submenu">
+        <button class="sidebar-sub-submenu-button" data-page="page-scales" data-access="DECIR">DECIR</button>
+        <button class="sidebar-sub-submenu-button" data-page="page-scales" data-access="1ª Secção">1ª Secção</button>
+        <button class="sidebar-sub-submenu-button" data-page="page-scales" data-access="2ª Secção">2ª Secção</button>
+        <button class="sidebar-sub-submenu-button" data-page="page-scales" data-access="Emissão Escala">Emissão Escala</button>
+        <button class="sidebar-sub-submenu-button" data-page="page-scales" data-access="Consultar Escalas">Consultar Escalas</button>
+      </div>
+      <button class="sidebar-menu-button sub-submenu-toggle" data-page="" data-access="EMPLOYEES 360" onclick="showTempWarning('MÓDULO BREVEMENTE DISPONÍVEL EM CB360 ONLINE')">👥 EMPLOYEES 360</button>
+      <button class="sidebar-menu-button sub-submenu-toggle" data-page="page-saloc" data-access="SALOC 360">👥 SALOC 360</button>
+      <div class="submenu">
+        <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-ppis">Planos Prévios de Intervenção</button>
+        <div class="sub-submenu">
+          <button class="sidebar-sub-submenu-button" data-page="page-ppia2">PPI A2</button>
+          <button class="sidebar-sub-submenu-button" data-page="page-ppia22">PPI A22</button>
+          <button class="sidebar-sub-submenu-button" data-page="page-ppiaero">PPI Aeroporto de Faro</button>
+          <button class="sidebar-sub-submenu-button" data-page="page-ppilinfer">PPI Linha Férrea</button>
+          <button class="sidebar-sub-submenu-button" data-page="page-ppiaeropor">PPI Aeródromo Portimão</button>
+        </div>
+        <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-recservdescr">Registos Recusas/INOPS</button>
+        <div class="sub-submenu">
+          <button class="sidebar-sub-submenu-button" data-page="page-recserv">Recusas de Seviços</button>
+          <button class="sidebar-sub-submenu-button" data-page="page-ineminop">Inoperacionalidades INEM</button>
+          <button class="sidebar-sub-submenu-button" data-page="page-recinoreports">Relatórios Mensais</button>
+          <button class="sidebar-sub-submenu-button" data-page="page-dashboard">DashBoard</button>
+        </div>
+        <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-docimport">Documentação Importante</button>
+        <div class="sub-submenu">
+          <button class="sidebar-sub-submenu-button" data-page="page-crepcalg">CREPC Algarve</button>
+          <button class="sidebar-sub-submenu-button" data-page="page-plandir">Planeamento Diário</button>
+          <button class="sidebar-sub-submenu-button" data-page="page-inocrepc">Sitop de Veículos</button>
+          <button class="sidebar-sub-submenu-button" data-page="page-advanced-4" onclick="showTempWarning('MÓDULO BREVEMENTE DISPONÍVEL EM CB360 ONLINE')">Refeições DECIR</button>
+        </div>
+        <button class="sidebar-submenu-button" data-page="" onclick="showTempWarning('MÓDULO BREVEMENTE DISPONÍVEL EM CB360 ONLINE')">Consola de Alarmes</button>
+      </div>
+      <button class="sidebar-menu-button submenu-toggle" data-page="page-wsms" data-access="WSMS 360">⚠️ WSMS 360</button>
+      <div class="submenu">
+        <button class="sidebar-submenu-button" data-page="page-active_occurrences">🔥 Ocorrências em Curso</button>
+        <button class="sidebar-submenu-button" data-page="page_insert_occurrence" onclick="NewOCRresetVehicles()">✏️ Inserir/Alterar Ocorrência</button>
+        <button class="sidebar-submenu-button" data-page="page_close_occurrence" onclick="CloseOCRresetAll()">🔐 Encerrar Ocorrência</button>
+        <button class="sidebar-submenu-button" data-page="page-solicitation">📋 Solicitar Disponibilidades</button>
+        <button class="sidebar-submenu-button" data-page="page-indisp">⚠️ Indisponibilidade Veículos</button>
+        <button class="sidebar-submenu-button" data-page="page-municipality-grid">🗂️ Info. Grelha Município</button>
+      </div>
+      <button class="sidebar-menu-button" data-page="page-utilities" data-access="Utilitários">📱 Utilitários</button>
+      <button class="sidebar-menu-button" data-page="page-data" data-access="Data Center">💾 Data Center</button>
+    </aside>
+    <!---- MODAL POPUP MODULE ---->
+    <div id="popup-modal" class="popup-modal" tabindex="0">
+      <div class="popup-content">
+        <h3>CAMPOS EM FALTA</h3>
+        <ul id="missing-fields-list"></ul>
+        <button id="popup-ok-btn">OK</button>
+      </div>
+    </div>
+    <div id="popup-warning-modal" class="popup-modal" tabindex="0">
+      <div class="popup-content">
+        <h3>AVISO</h3>
+        <p></p>
+        <button id="popup-warning-ok-btn" class="btn btn-danger">OK</button>
+      </div>
+    </div>
+    <div id="popup-success-modal" class="popup-modal" tabindex="0">
+      <div class="popup-content">
+        <h3>SUCESSO</h3>
+        <p></p>
+        <button id="popup-success-ok-btn" class="btn btn-success">OK</button>
+      </div>
+    </div>
+  </div>
+  <div id="popup-vehicle-status" class="popup-modal" tabindex="0">
+    <div class="popup-content">
+      <h3 id="popup-vehicle-title"></h3>
+      <label for="vehicle-status-select">Selecione o estado:</label>
+      <select id="vehicle-status-select">
+        <option value="Disponível no Quartel">Disponível no Quartel</option>
+        <option value="Em Serviço">Em Serviço</option>
+        <option value="Inop">Inop</option>
+      </select>
+      <div style="margin-top: 10px; text-align: center;">
+        <button id="popup-vehicle-ok-btn" class="btn btn-success">OK</button>
+        <button id="popup-vehicle-cancel-btn" class="btn btn-danger">Cancelar</button>
+      </div>
+    </div>
+  </div>
+  <!---------------------------->
+  <!---- TEMP POPUP MODULE ---->
+  <div id="popup-temp-modal" class="popup-modal" tabindex="0">
+    <div class="popup-content">
+      <h3>BREVEMENTE</h3>
+      <p>MÓDULO BREVEMENTE DISPONÍVEL EM CB360 ONLINE</p>
+      <button id="popup-temp-ok-btn" class="btn btn-success">OK</button>
+    </div>
+  </div>
+  <!---------------------------->
+  <!---------------------------->
+  <!---- REGISTRATION WINDOW MODULE ---->
+  <div class="window" role="dialog" aria-labelledby="win-title" id="editWindow">
+    <div class="window-titlebar">
+      <div class="window-title-left">
+        <div class="window-app-icon">✏️</div>
+        <span id="windowTitle">Registo de Elementos</span>
+      </div>
+      <div class="window-title-controls">
+        <button id="closeWindow">×</button>
+      </div>
+    </div>
+    <div class="window-content">
+      <div class="tab-header">
+        <button class="tab-btn active" data-tab="dados">Dados Gerais</button>
+        <button class="tab-btn" data-tab="acessos">Acessos</button>
+        <button class="tab-btn" data-tab="acessos">Dados Pessoais</button>
+        <button class="tab-btn" data-tab="acessos">Outros Dados</button>
+      </div>
+      <form id="winForm">
+        <div class="tab-content active" id="tab-dados">
+          <div class="window-field-horizontal">
+            <label>Estado:</label>
+            <select id="win_state" style="width:100px;">
+              <option></option>
+              <option>Ativo</option>
+              <option>Inativo</option>
+            </select>
+          </div>
+          <div class="window-field-horizontal">
+            <label>Nº Interno:</label>
+            <input type="text" id="win_n_int" style="width:80px; text-align:center;" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)">
+            <label style="width:115px;">Nº Mecanográfico:</label>
+            <input type="text" id="win_n_file" style="width:120px; text-align:center;" maxlength="8" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,8)">
+          </div>
+          <div class="window-field-horizontal">
+            <label>Patente:</label>
+            <select id="win_patent" style="width:150px;"></select>
+            <input type="text" id="win_patent_abv" style="width:75px; text-align:center;">
+            <label style="width:45px;">Secção:</label>
+            <select id="win_section" style="width:100px;">
+              <option></option>
+              <option>1ª Secção</option>
+              <option>2ª Secção</option>
+            </select>
+          </div>
+          <div class="window-field-horizontal">
+            <label>Nome Abreviado:</label>
+            <input type="text" id="win_abv_name" style="flex:1">
+          </div>
+          <div class="window-field-horizontal">
+            <label>Nome Completo:</label>
+            <input type="text" id="win_full_name" style="flex:1">
+          </div>
+          <div class="window-field-horizontal">
+            <label>Motorista de Pesados:</label>
+            <select id="win_MP">
+              <option value="true">Sim</option>
+              <option value="false">Não</option>
+            </select>
+            <label style="width:90px;">Tripulante TAS:</label>
+            <select id="win_TAS">
+              <option value="true">Sim</option>
+              <option value="false">Não</option>
+            </select>
+          </div>
+          <div class="window-field-horizontal">
+            <label>Username:</label>
+            <input type="text" id="win_user_name" style="flex:1" placeholder="Nome de utilizador">
+          </div>
+          <div class="window-field-horizontal">
+            <label>Password:</label>
+            <input type="password" id="win_password" style="flex:1" placeholder="Senha">
+          </div>
+        </div>
+        <div class="tab-content" id="tab-acessos">
+          <div class="window-field-horizontal" id="win_accesses">
+            <label>Acessos:</label>
+            <div class="checkbox-group" id="access-container"></div>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="window-action-bar">
+      <button type="submit" form="winForm" class="btn btn-success">💾 Guardar</button>
+    </div>
+    <div class="window-bottom-bar">
+      <span>🕘 Última alteração: <b></b></span>
+    </div>
+  </div>
+  <!---- DISPLAY CARDS MODULE ---->
+  <!----- MAIN CARD ----->
+  <main class="main-content">
+    <div id="page-main" class="page active">
+      <div class="card last-card">
+        <div class="card-header">BEM-VINDO AO SISTEMA CB360 ONLINE</div>
+        <div class="card-body">
+          <p style="font-size: 15px; margin-bottom: 35px;">
+            O <strong>CB360 Online</strong> é um sistema integrado e modular desenvolvido para apoiar a gestão operacional e administrativa
+            do <strong>Corpo de Bombeiros de Faro – Cruz Lusa</strong>. Concebido como uma plataforma centralizada e intuitiva,
+            permite a coordenação digital das diversas áreas funcionais da SALOC, garantindo eficiência, rastreabilidade e
+            otimização de recursos em tempo real.
+          </p>
+          <p style="margin-bottom: 35px;">
+            Através de uma interface moderna e responsiva, o sistema proporciona acesso rápido a informação operacional crítica,
+            como <em>planos prévios de intervenção</em>, <em>inoperacionalidades</em>, <em>recusas de serviços</em> e
+            <em>gestão de meios disponíveis</em>. Cada módulo foi projetado para simplificar os processos do dia-a-dia,
+            assegurando uma visão global e dinâmica da atividade do corpo de bombeiros.
+          </p>
+          <p style="margin-bottom: 35px;">
+            O CB360 integra também funcionalidades de análise estatística e relatórios automáticos, permitindo a avaliação contínua
+            do desempenho operacional e o suporte à tomada de decisão estratégica. O sistema está em constante evolução,
+            incorporando novos módulos e melhoramentos conforme as necessidades da corporação e as exigências das operações
+            de proteção e socorro.
+          </p>
+          <p style="margin-bottom: 45px;">
+            Este projeto representa um passo importante na transição digital das operações da Cruz Lusa, reforçando a eficiência,
+            a comunicação interna e a capacidade de resposta perante qualquer cenário de emergência.
+          </p>
+          <div style="text-align: center; font-style: italic; color: #555;">
+            Selecione uma opção no menu lateral para começar a utilizar o sistema.
+          </div>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+    </div>
+    <!---- CARD DECIR 360 ---->
+    <!---- FUTURE INSERTION ---->
+    <!---- CARD FOMIO 360 ---->
+    <div id="page-fomio" class="page">
+      <div class="card last-card">
+        <div class="card-header">BEM-VINDO AO FOMIO 360</div>
+        <div class="card-body" style="font-family: 'Segoe UI', sans-serif;">
+          <p style="font-size: 15px; margin-bottom: 20px; color: #333;">
+            O <strong>FOMIO 360</strong> é o módulo digital responsável pela gestão integral das
+            <strong>Escalas Operacionais</strong> do Corpo de Bombeiros de Faro – Cruz Lusa.
+            Este sistema centraliza todo o processo de planeamento, controlo e emissão das escalas,
+            garantindo uma gestão eficiente e transparente dos recursos humanos e operacionais.
+          </p>
+          <div style="background: linear-gradient(90deg, #e0e0e0, #d6d6d6); padding: 15px 20px; border-left: 5px solid #007bff; border-radius: 6px; margin-bottom: 20px;">
+            <strong>Funcionalidades Principais:</strong>
+          </div>
+          <div style="margin-bottom: 20px;">
+            <ul style="list-style: none; padding-left: 10px; line-height: 1.8;">
+              <li style="color:#0d630e;">📋 Criação e gestão de escalas mensais</li>
+              <li style="color:#0d630e;">👨‍🚒 Gestão de elementos por secção e disponibilidade</li>
+              <li style="color:#0d630e;">🧾 Emissão automática das escalas oficiais (PDF / Excel)</li>
+              <li style="color:#0d630e;">🗂️ Consulta detalhada das escalas da <strong>1ª Secção</strong>, <strong>2ª Secção</strong> e <strong>DECIR</strong></li>
+              <li style="color:#0d630e;">⚙️ Ferramentas de verificação e validação antes da emissão</li>
+            </ul>
+          </div>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+    </div>
+    <!---- CARD EMPLOYEES 360 ---->
+    <!---- FUTURE INSERTION ---->
+    <!---- CARD SALOC 360 ---->
+    <div id="page-saloc" class="page">
+      <div class="card last-card">
+        <div class="card-header">BEM-VINDO AO SALOC 360</div>
+        <div class="card-body" style="font-family: 'Segoe UI', sans-serif;">
+          <p style="font-size: 15px; margin-bottom: 20px; color: #333;">
+            O <strong>SALOC 360</strong> é um sistema digital de gestão operacional diária da
+            <strong>Sala de Operações e Comunicações (SALOC)</strong> do Corpo de Bombeiros de Faro – Cruz Lusa.
+            Este sistema integra as principais ferramentas de apoio à decisão, planeamento e monitorização das atividades
+            logísticas e operacionais em tempo real.
+          </p>
+          <div style="background: linear-gradient(90deg, #e0e0e0, #d6d6d6); padding: 15px 20px; border-left: 5px solid #dc3545; border-radius: 6px; margin-bottom: 20px;">
+            <strong>Funcionalidades Principais:</strong>
+          </div>
+          <div style="margin-bottom: 20px;">
+            <ul style="list-style: none; padding-left: 10px; line-height: 1.8;">
+              <li style="color:#0d630e;">🗺️ Consulta e gestão dos Planos Prévios de Intervenção (PPI)</li>
+              <li style="color:#0d630e;">📝 Registo e análise de Recusas de Serviços</li>
+              <li style="color:#0d630e;">🚑 Registo e análise de Inoperacionalidades (INEM)</li>
+              <li style="color:#0d630e;">📊 Dashboard de Estatísticas Operacionais</li>
+              <li style="color:#0d630e;">📁 Acesso e Gestão de Documentação Operacional e Interna</li>
+              <li style="color:#0d630e;">📅 Planeamentos Diários e gestão de turnos</li>
+              <li style="color:#0d630e;">📨 Gestão e envio de documentação importante ao CREPC Algarve</li>
+            </ul>
+          </div>
+          <p style="margin-top: 30px; color: #444;">
+            Estas funcionalidades proporcionam uma visão integrada do estado operacional da corporação,
+            reforçando a capacidade de planeamento, comunicação e resposta coordenada em tempo real.
+          </p>
+          <div style="margin-top: 40px; text-align:center; font-style: italic; color: #6c757d;">
+            Selecione uma opção no menu lateral para começar.
+          </div>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+    </div>
+    <!---- SUB-CARD PPI's 360 ---->
+    <div id="page-ppis" class="page">
+      <div class="card last-card">
+        <div class="card-header">PLANOS PRÉVIOS DE INTERVENÇÃO (PPI) – ALGARVE</div>
+        <div class="card-body" style="font-family: 'Segoe UI', sans-serif;">
+          <p style="font-size: 15px; margin-bottom: 20px; color: #333;">
+            O módulo <strong>PPI 360</strong> integra o sistema de gestão e visualização dos
+            <strong>Planos Prévios de Intervenção (PPI)</strong> da região do Algarve,
+            permitindo o acesso rápido e atualizado à informação estratégica de apoio à decisão operacional
+            e à gestão de emergências complexas.
+          </p>
+          <div style="background: linear-gradient(90deg, #e0e0e0, #d6d6d6); padding: 15px 20px; border-left: 5px solid #dc3545; border-radius: 6px; margin-bottom: 20px;">
+            <strong>Planos Disponíveis:</strong>
+          </div>
+          <ul style="list-style: none; padding-left: 20px; line-height: 1.7; font-size: 14.5px;">
+            <li style="color:#c20c0c;">🛣️ PPI - Autoestrada do Sul (A2) <em>(Em atualização pela ANEPC)</em></li>
+            <li style="color:#0d630e;">🛣️ PPI - Via do Infante de Sagres (A22)</li>
+            <li style="color:#0d630e;">✈️ PPI - Aeroporto Internacional Gago Coutinho</li>
+            <li style="color:#0d630e;">🚆 PPI - Linha Ferroviária do Algarve</li>
+            <li style="color:#c20c0c;">🛩️ PPI - Aeródromo de Portimão <em>(Brevemente)</em></li>
+          </ul>
+          <div style="background: linear-gradient(90deg, #e0e0e0, #d6d6d6); padding: 15px 20px; border-left: 5px solid #0d630e; border-radius: 6px; margin: 25px 0 20px 0;">
+            <strong>Funcionalidades do Módulo:</strong>
+          </div>
+          <ul style="list-style: none; padding-left: 20px; line-height: 1.7; font-size: 14.5px;">
+            <li style="color:#0d630e;">📍 Consulta geográfica interativa dos PPIs</li>
+            <li style="color:#0d630e;">📑 Acesso a fichas técnicas e recursos associados</li>
+            <li style="color:#0d630e;">🧭 Identificação de meios e acessos operacionais</li>
+            <li style="color:#0d630e;">🔄 Atualização e integração contínua de dados</li>
+          </ul>
+          <p style="margin-top: 30px; color: #444;">
+            Os PPIs são uma ferramenta fundamental para garantir a resposta coordenada e eficiente em situações
+            de emergência, assegurando o conhecimento prévio do terreno, acessos, riscos e recursos disponíveis.
+          </p>
+          <div style="margin-top: 40px; text-align:center; font-style: italic; color: #6c757d;">
+            Selecione um PPI no menu lateral para visualizar os detalhes.
+          </div>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+    </div>
+    <!---- SUB-CARD REFUSALS AND INOPERACIONALITIES ---->
+    <div id="page-recservdescr" class="page">
+      <div class="card last-card">
+        <div class="card-header">GESTÃO DE RECUSAS DE SERVIÇOS E INOPERACIONALIDADES (INEM)</div>
+        <div class="card-body" style="font-family: 'Segoe UI', sans-serif;">
+          <p style="font-size: 15px; margin-bottom: 20px; color: #333;">
+            O módulo <strong>REGOPS 360</strong> centraliza a <strong>gestão de recusas de serviços</strong> e
+            <strong>inoperacionalidades de meios INEM</strong>, permitindo um controlo detalhado e
+            automatizado da disponibilidade operacional das viaturas integradas no
+            protocolo de emergência médica, bem como a recusa de serviços do <strong>Corpo de Bombeiros de Faro – Cruz Lusa</strong>.
+          </p>
+          <div style="background: linear-gradient(90deg, #e0e0e0, #d6d6d6); padding: 15px 20px; border-left: 5px solid #dc3545; border-radius: 6px; margin-bottom: 20px;">
+            <strong>Funcionalidades Principais:</strong>
+          </div>
+          <ul style="list-style: none; padding-left: 20px; line-height: 1.7; font-size: 14.5px;">
+            <li style="color:#0d630e;">📝 Registo de Recusas de Serviços</li>
+            <li style="color:#0d630e;">🚑 Registo de Inoperacionalidades (INEM)</li>
+            <li style="color:#0d630e;">📊 Dashboard Gráfico de Estatísticas</li>
+            <li style="color:#c20c0c;">📅 Relatórios Mensais <em>(Brevemente)</em></li>
+          </ul>
+          <div style="background: linear-gradient(90deg, #e0e0e0, #d6d6d6); padding: 15px 20px; border-left: 5px solid #0d630e; border-radius: 6px; margin: 25px 0 20px 0;">
+            <strong>Objetivo do Módulo:</strong>
+          </div>
+          <p style="font-size: 14.5px; color: #444; line-height: 1.6; margin-bottom: 20px;">
+            Este módulo visa garantir o <strong>acompanhamento em tempo real</strong> da disponibilidade operacional,
+            reduzindo o impacto das inoperacionalidades no sistema de resposta pré-hospitalar e recusas de serviços.
+            Permite ainda a análise de padrões, apoio à decisão e criação de relatórios estatísticos.
+          </p>
+          <ul style="list-style: none; padding-left: 20px; line-height: 1.7; font-size: 14.5px;">
+            <li style="color:#0d630e;">📈 Monitorização contínua da disponibilidade operacional do veículo INEM</li>
+            <li style="color:#0d630e;">📋 Monitorização contínua das recusas de serviços</li>
+            <li style="color:#0d630e;">🕓 Histórico de eventos e registos detalhados</li>
+          </ul>
+          <div style="margin-top: 40px; text-align:center; font-style: italic; color: #6c757d;">
+            Selecione uma opção no menu lateral para começar a gestão dos registos.
+          </div>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+    </div>
+    <!---- SUB-CARD IMPORTANT DOCUMENTATTION ---->
+    <div id="page-docimport" class="page">
+      <div class="card last-card">
+        <div class="card-header">GESTÃO DE DOCUMENTAÇÃO OPERACIONAL E INSTITUCIONAL (DOC 360)</div>
+        <div class="card-body" style="font-family: 'Segoe UI', sans-serif;">
+          <p style="font-size: 15px; margin-bottom: 20px; color: #333;">
+            O módulo <strong>DOCS 360</strong> é o módulo responsável pela <strong>gestão e comunicação documental</strong> essencial à atividade operacional e administrativa do Corpo de Bombeiros de Faro – Cruz Lusa.
+            Este sistema integra processos de reporte, planeamento e envio de documentação às entidades competentes, garantindo rigor e rastreabilidade em todas as comunicações oficiais.
+          </p>
+          <div style="background: linear-gradient(90deg, #d5d5d5, #c9c9c9); padding: 15px 20px; border-left: 5px solid #171d8f; border-radius: 6px; margin-bottom: 20px;">
+            <strong>Funcionalidades Principais:</strong>
+          </div>
+          <ul style="padding-left: 25px; line-height: 1.6;">
+            <li style="margin-bottom: 8px;">📄 <strong>Formulários Oficiais CREPC Algarve</strong> – envio e atualização de documentação obrigatória, como <em>MOA</em>, <em>Anexo G2</em> e outros formulários operacionais.</li>
+            <li style="margin-bottom: 8px;">📅 <strong>Planeamentos Diários</strong> – gestão estruturada de recursos e previsões do serviço diário do CB Faro - Cruz Lusa.</li>
+            <li style="margin-bottom: 8px;">🚒 <strong>Comunicação de Inoperacionalidades e Operacionalidades</strong> – automatização do envio de estados de veículos e equipamentos às entidades designadas (CREPC, CHEFIAS, COMANDO, etc.).</li>
+          </ul>
+          <div style="margin-top: 40px; text-align:center; font-style: italic; color: #6c757d;">
+            Selecione uma opção no menu lateral para aceder à documentação correspondente.
+          </div>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+    </div>
+    <!---- CARD WSMS ---->
+    <div id="page-wsms" class="page">
+      <div class="card last-card">
+        <div class="card-header">BEM VINDO WSMS 360</div>
+        <div class="card-body" style="font-family: 'Segoe UI', sans-serif;">
+          <p style="font-size: 15px; margin-bottom: 20px; color: #333;">
+            O módulo <strong>WSMS</strong> foi desenvolvido para garantir uma <strong>gestão simplificada, eficaz e de máxima precisão</strong> nas comunicações operacionais do Corpo de Bombeiros de Faro – Cruz Lusa.            
+            Desenvolvido para garantir <strong>simplicidade, eficácia e máxima precisão</strong>, este sistema assegura que todas as comunicações sigam um formato padronizado, reduzindo erros e otimizando o fluxo 
+            informativo entre as entidades competentes, de forma automatizada e integrada.
+          </p>
+          <div style="background: linear-gradient(90deg, #d5d5d5, #c9c9c9); padding: 15px 20px; border-left: 5px solid #171d8f; border-radius: 6px; margin-bottom: 20px;">
+            <strong>Funcionalidades Principais:</strong>
+          </div>
+          <ul style="padding-left: 25px; line-height: 1.6;">
+            <li style="margin-bottom: 8px;">🚨 <strong>Ocorrências em Curso</strong> – visualização dinâmica e em tempo real de todas as ocorrências ativas.</li>
+            <li style="margin-bottom: 8px;">📝 <strong>Nova ou Alteração de Ocorrência</strong> – criação e atualização de ocorrências com fluxos simplificados e validados automaticamente.</li>
+            <li style="margin-bottom: 8px;">✅ <strong>Encerramento de Ocorrências</strong> – finalização estruturada de registos com histórico e rastreabilidade total.</li>
+            <li style="margin-bottom: 8px;">📋 <strong>Solicitação de Disponibilidades</strong> – comunicação direta com as equipas para recolha de disponibilidades operacionais.</li>
+            <li style="margin-bottom: 8px;">🚒 <strong>Indisponibilidade de Veículos</strong> – registo rápido e envio automático do estado dos meios às entidades competentes.</li>
+            <li style="margin-bottom: 8px;">📊 <strong>Informação do Estado da Grelha Intermunicipal</strong> – atualização e consulta imediata da disponibilidade regional de recursos.</li>
+          </ul>
+          <div style="margin-top: 40px; text-align:center; font-style: italic; color: #6c757d;">
+            Utilize o menu lateral para aceder às ferramentas de gestão e comunicação do módulo WSMS.
+          </div>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+    </div>
+    <!---- PROGRAM MODULES ---->
+    <!---- SCALE CREATION MODULE ---->
+    <div id="page-scales" class="page">
+      <div class="card last-card">
+        <div class="card-header" id="scales-card-header">ESCALAS DE SERVIÇO POR SECÇÃO</div>
+        <div class="card-body">
+          <div id="months-container" style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 0 0 0 0;"></div>
+          <div id="table-container" style="margin: 0 30px 0 30px"></div>
+          <div id="save-container" style="display:flex; justify-content:flex-end; margin: 0 30px 0 30px;">
+            <button id="save-button" class="btn btn-success" style="font-size: 11px; padding: 10px 25px; display: none">Guardar Escala</button>
+            <button id="emit-button" class="btn btn-success" style="font-size: 11px; padding: 10px 25px; display: none">Emitir Escala</button>
+          </div>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+    </div>
+    <!---- SALOC 360 MODULE ---->
+    <!---- PPI'S SUB-MODULE ---->
+    <div id="page-ppia2" class="page">
+      <h2 class="section-title">Planos Prévios de Intervenção</h2>
+      <div class="card last-card">
+        <div class="card-header">PLANO PRÉVIO DE INTERVENÇÃO - AUTO ESTRADA DO SUL - A2</div>
+        <div class="card-body">
+          <label style="margin-bottom: 10px; font-size: 14px; font-weight: bold; color: #aaa">⟳ PPI EM ATUALIZAÇÃO PELA ANEPC</label>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+    </div>
+    <div id="page-ppia22" class="page">
+      <h2 class="section-title">Planos Prévios de Intervenção</h2>
+      <div class="card last-card">
+        <div class="card-header">PLANO PRÉVIO DE INTERVENÇÃO - VIA DO INFANTE DE SAGRES - A22</div>
+        <div class="card-body">
+          <div class="form-row" style="margin: 3px 0 0 0; display: flex; justify-content: center;">
+            <div class="main-card" id="ppia22-main-options" style="display: flex; flex-direction: column; align-items: center;">
+              <label style="margin-bottom: 10px; font-size: 14px; font-weight: bold;">Selecione uma Opção</label>
+              <div class="action-buttons" style="gap: 5px;">
+                <button class="btn btn-add shift-btn" style="height: 35px;" onclick="consultationGridA22KmType()">Cosulta por Km</button>
+                <button class="btn btn-add shift-btn" style="height: 35px;" onclick="consultationGridA22ButtonType()">Consulta por Grelha</button>
+              </div>
+            </div>
+          </div>
+          <div id="ppia22-grid-controls"></div>
+          <div id="ppia22-grid-references"></div>
+          <div id="ppia22-grid-container"></div>
+          <div id="ppia22-specials-container"></div>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+    </div>
+    <div id="page-ppiaero" class="page">
+      <h2 class="section-title">Planos Prévios de Intervenção</h2>
+      <div class="card last-card">
+        <div class="card-header">PLANO PRÉVIO DE INTERVENÇÃO - AEROPORTO GAGO COUTINHO</div>
+        <div class="card-body">
+          <div id="ppiaero-grid-controls"></div>
+          <div id="ppiaero-grid-info-container"></div>
+          <div id="ppiaero-grid-container"></div>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+    </div>
+    <div id="page-ppilinfer" class="page">
+      <h2 class="section-title">Planos Prévios de Intervenção</h2>
+      <div class="card last-card">
+        <div class="card-header">PLANO PRÉVIO DE INTERVENÇÃO - LINHA FERROVIÁRIA DO ALGARVE</div>
+        <div class="card-body">
+          <div class="form-row" style="margin: 3px 0 0 0; display: flex; justify-content: center;">
+            <div class="main-card" id="ppilinfer-main-options" style="display: flex; flex-direction: column; align-items: center;">
+              <label style="margin-bottom: 10px; font-size: 14px; font-weight: bold;">Selecione uma Opção</label>
+              <div class="action-buttons" style="gap: 5px;">
+                <button class="btn btn-add shift-btn" style="height: 35px;" onclick="consultationGridLinFerKmType()">Cosulta por PKm</button>
+                <button class="btn btn-add shift-btn" style="height: 35px;" onclick="consultationGridLinFerButtonType()">Consulta por Grelha</button>
+              </div>
+            </div>
+          </div>
+          <div id="ppilinfer-grid-controls"></div>
+          <div id="ppilinfer-grid-references"></div>
+          <div id="ppilinfer-specials-container"></div>
+          <div id="ppilinfer-grid-container"></div>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+    </div>
+    <div id="page-ppiaeropor" class="page">
+      <h2 class="section-title">Planos Prévios de Intervenção</h2>
+      <div class="card last-card">
+        <div class="card-header">PLANO PRÉVIO DE INTERVENÇÃO - AERÓDROMO DE PORTIMÃO</div>
+        <div class="card-body">
+          <label style="margin-bottom: 10px; font-size: 14px; font-weight: bold; color: #aaa">⟳ BREVEMENTE</label>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+    </div>
+    <!---- REFUSALS AND INOPERATIONALITIES SUB-MODULE ---->
+    <!---- SERVICE REFUSALS SUB SUB-MODULE ---->
+    <div id="page-recserv" class="page">
+      <h2 class="section-title">SALOC 360</h2>
+      <div class="card last-card">
+        <div class="card-header">RECUSAS DE SERVIÇOS DE TRANPORTE DE DOENTES</div>
+        <div class="card-body">
+          <div class="form-row">
+            <div class="main-card" style="width: 100%;">
+              <h3 style="font-size: 13px; color: #666; margin: -12px -12px 30px -12px; background: radial-gradient(circle, #e8eef5 0%, #c7d4e6 40%, #a7bcd9 100%);">REGISTO DE RECUSAS DE SERVIÇOS</h3>
+              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin: 0 0 0 0;">
+                <div class="global-field-horizontal">
+                  <label style="font-size: 12px; font-weight: bold; color: #444;">Data da Recusa:</label>
+                  <input type="date" id="service_refusal_date" style="width: 110px;">
+                </div>
+                <div class="global-field-horizontal">
+                  <label style="font-size: 12px; font-weight: bold; color: #444;">Hora da Recusa:</label>
+                  <input type="time" id="service_refusal_time" style="width: 75px;">
+                </div>
+                <div class="global-field-horizontal">
+                  <label style="font-size: 12px; font-weight: bold; color: #444;">Tipo de Serviço:</label>
+                  <select id="service_refusal_type" style="width: 200px;"></select>
+                </div>
+                <div class="global-field-horizontal">
+                  <label style="font-size: 12px; font-weight: bold; color: #444;">Motivo da Recusa:</label>
+                  <select id="service_refusal_motive" style="width: 200px;"></select>
+                </div>
+              </div>
+              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin: 0 0 0 0;">
+                <div class="global-field-horizontal">
+                  <label style="font-size: 12px; font-weight: bold; color: #444;">Origem do Serviço:</label>
+                  <input type="text" id="service_refusal_origin" style="width: 200px;">
+                </div>
+                <div class="global-field-horizontal">
+                  <label style="font-size: 12px; font-weight: bold; color: #444;">Destino do Serviço:</label>
+                  <input type="text" id="service_refusal_destination" style="width: 200px;">
+                </div>
+              </div>
+              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px;">
+                <div class="global-field-horizontal">
+                  <label style="font-size: 12px; font-weight: bold; color: #444;">Optel de Serviço:</label>
+                  <input type="text" id="service_refusal_optel" style="width: 200px;">
+                </div>
+                <div class="global-field-horizontal">
+                  <label style="font-size: 12px; font-weight: bold; color: #444;">Validado por:</label>
+                  <input type="text" id="service_refusal_validation" style="width: 200px;">
+                </div>
+              </div>
+              <div class="action-buttons">
+                <button class="btn btn-success" onclick="insertServiceRefusal()">Validar</button>
+              </div>
+            </div>
+          </div>
+          <hr style="margin: 20px 0;">
+          <div class="table-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <div>
+              <h3 style="font-size: 16px; color: #444; margin: 0;">Listagem de Recusas de Serviços</h3>
+            </div>
+            <div class="global-field-horizontal" style="gap: 4px;">
+              <label style="font-size: 14px; min-width: 20px; color: #444; white-space: nowrap;">Ano:</label>
+              <select id="refusals_year_filter" style="height: 25px; padding: 2px 6px; font-size: 14px;">
+              </select>
+            </div>
+          </div>
+          <div class="table-container">
+            <table id="service-refusals-table">
+              <thead>
+                <tr>
+                  <th style="width: 70px;">Data</th>
+                  <th style="width: 50px;">Hora</th>
+                  <th style="width: 170px;">Tipo</th>
+                  <th style="width: 150px;">Origem</th>
+                  <th style="width: 150px;">Destino</th>
+                  <th style="width: 180px;">Motivo</th>
+                  <th style="width: 120px;">Optel</th>
+                  <th style="width: 120px;">Validação</th>
+                  <td></td>
+                </tr>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+    </div>
+    <!---- INOPS INEM SUB SUB-MODULE ---->
+    <div id="page-ineminop" class="page">
+      <h2 class="section-title">SALOC 360</h2>
+      <div class="card last-card">
+        <div class="card-header">INOPERACIONALIDADES VEÍCULO (INEM)</div>
+        <div class="card-body">
+          <div class="form-row">
+            <div class="main-card" style="width: 100%;">
+              <h3 style="font-size: 13px; color: #666; margin: -12px -12px 30px -12px; background: radial-gradient(circle, #e8eef5 0%, #c7d4e6 40%, #a7bcd9 100%);">REGISTO DE INOPERACIONALIDADES (INEM)</h3>
+              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin: 0 0 0 0;">
+                <div class="global-field-horizontal">
+                  <label style="font-size: 12px; font-weight: bold; color: #444;">Data da Inoperacionalidade:</label>
+                  <input type="date" id="ineinop_date" style="width: 110px;">
+                </div>
+                <div class="global-field-horizontal">
+                  <label style="font-size: 12px; min-width: 20px; font-weight: bold; color: #444;">Turno:</label>
+                  <select id="ineinop_shift" style="width: 50px;">
+                    <option></option>
+                    <option>D</option>
+                    <option>N</option>
+                  </select>
+                </div>
+                <div class="global-field-horizontal">
+                  <label style="font-size: 12px; min-width: 20px; font-weight: bold; color: #444;">Qtd Horas:</label>
+                  <input type="time" id="ineinop_hour_qtd" style="width: 75px;">
+                </div>
+                <div class="global-field-horizontal">
+                  <label style="font-size: 12px; min-width: 20px; font-weight: bold; color: #444;">Motivo da Inopercacionalidade:</label>
+                  <select id="reason_for_ineinop" style="width: 200px;"></select>
+                </div>
+              </div>
+              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px;">
+                <div class="global-field-horizontal">
+                  <label style="font-size: 12px; min-width: 20px; font-weight: bold; color: #444;">Tripulante:</label>
+                  <input type="text" id="ineinop_crew" style="width: 200px;">
+                </div>
+                <div class="global-field-horizontal">
+                  <label style="font-size: 12px; min-width: 20px; font-weight: bold; color: #444;">Optel de Serviço:</label>
+                  <input type="text" id="ineinop_optel" style="width: 200px;">
+                </div>
+                <div class="global-field-horizontal">
+                  <label style="font-size: 12px; min-width: 20px; font-weight: bold; color: #444;">Validado por:</label>
+                  <input type="text" id="ineinop_validation" style="width: 200px;">
+                </div>
+              </div>
+              <div class="action-buttons">
+                <button class="btn btn-success" onclick="insertIneInop()">Validar</button>
+              </div>
+            </div>
+          </div>
+          <hr style="margin: 20px 0;">
+          <div class="table-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <div>
+              <h3 style="font-size: 16px; color: #444; margin: 0;">Listagem de Inoperacionalidades (INEM)</h3>
+            </div>
+            <div class="global-field-horizontal" style="gap: 4px;">
+              <label style="font-size: 14px; min-width: 20px; color: #444; white-space: nowrap;">Ano:</label>
+              <select id="ineinop_year_filter" style="height: 25px; padding: 2px 6px; font-size: 14px;">
+              </select>
+            </div>
+          </div>
+          <div class="table-container">
+            <table id="ineinop-table">
+              <thead>
+                <tr>
+                  <th style="width: 70px;">Data</th>
+                  <th style="width: 50px;">Turno</th>
+                  <th style="width: 50px;">Qtd. Horas</th>
+                  <th style="width: 250px;">Motivo</th>
+                  <th style="width: 250px;">Tripulante</th>
+                  <th style="width: 200px;">Optel</th>
+                  <th style="width: 200px;">Validação</th>
+                  <td></td>
+                </tr>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+    </div>
+    <!---- MONTHLY REPORTS OF REFUSALS AND INOPS SUB SUB-MODULE ---->
+    <div id="page-recinoreports" class="page">
+      <h2 class="section-title">SALOC 360</h2>
+      <div class="card last-card">
+        <div class="card-header">RELATÓRIOS MENSAIS DE RECUSAS DE SERVÇOS E INOPERACIONALIDADES (INEM)</div>
+        <div class="card-body">
+          <div class="global-field-horizontal">
+            <label style="font-size: 12px; min-width: 20px; font-weight: bold; color: #444;">Mês:</label>
+            <select id="refusal_month_filter" style="width: 100px;"></select>
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; min-width: 20px; font-weight: bold; color: #444;">Ano:</label>
+              <select id="refusal_year_filter" style="width: 70px;"></select>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+    </div>
+    <!---- STATISTICS GRAPHIC DASHBOARD SUB SUB-MODULE ---->
+    <div id="page-dashboard" class="page">
+      <div class="card last-card">
+        <div class="card-header">DASHBOARD GRÁFICO DE ESTATÍSTICAS</div>
+        <div class="card-body">
+          <h4 style="font-size: 20px; font-weight: 600; color: #2c3e50; text-align: center; text-transform: uppercase; letter-spacing: 0.5px; padding: 16px 20px; margin: 0 0 15px 0; border-radius: 4px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-left: 4px solid #3498db; box-shadow: 0 2px 4px rgba(0,0,0,0.08);">Representação Gráfica de Inoperacionalidades INEM e Recusas de Serviços</h4>
+          <div class="dashboard-container" style="padding: 0px; display: flex; flex-direction: column; gap: 10px;">
+            <div class="dashboard-summary" style="display: flex; gap: 12px; justify-content: space-between;">
+              <div class="summary-card" style="flex: 1; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); color: #2c3e50; padding: 20px 16px; border-radius: 8px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-top: 3px solid #e74c3c;">
+              <h4 style="font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; color: #7f8c8d; margin: 0 0 10px 0;">Inoperacionalidade (INEM) Turno D</h4>
+              <p id="sum-inop-d" style="font-size: 36px; font-weight: 700; margin: 0; color: #2c3e50; line-height: 1;">0</p>
+            </div>
+            <div class="summary-card" style="flex: 1; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); color: #2c3e50; padding: 20px 16px; border-radius: 8px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-top: 3px solid #e74c3c;">
+              <h4 style="font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; color: #7f8c8d; margin: 0 0 10px 0;">Inoperacionalidade (INEM) Turno N</h4>
+              <p id="sum-inop-n" style="font-size: 36px; font-weight: 700; margin: 0; color: #2c3e50; line-height: 1;">0</p>
+            </div>
+            <div class="summary-card" style="flex: 1; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); color: #2c3e50; padding: 20px 16px; border-radius: 8px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-top: 3px solid #c0392b;">
+              <h4 style="font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; color: #7f8c8d; margin: 0 0 10px 0;">Global de Inoperacionalidade (INEM)</h4>
+              <p id="sum-inop-total" style="font-size: 36px; font-weight: 700; margin: 0; color: #c0392b; line-height: 1;">0</p>
+            </div>
+            <div class="summary-card" style="flex: 1; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); color: #2c3e50; padding: 20px 16px; border-radius: 8px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-top: 3px solid #e67e22;">
+              <h4 style="font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; color: #7f8c8d; margin: 0 0 10px 0;">Total de Serviços Recusados</h4>
+              <p id="sum-refusals-total" style="font-size: 36px; font-weight: 700; margin: 0; color: #e67e22; line-height: 1;">0</p>
+            </div> 
+          </div>
+            <div class="dashboard-row" style="display: flex; gap: 12px; justify-content: space-between; margin-bottom: 12px;">  
+              <div class="chart-card" style="flex: 1; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-top: 3px solid #3498db;">
+                <h4 style="font-size: 12px; font-weight: 600; color: #5a6c7d; text-align: center; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 15px 0;">Inoperacionalidades INEM Turno "D"</h4>
+                <canvas id="chart-ine-d" style="height: 150px;"></canvas>
+              </div>  
+              <div class="chart-card" style="flex: 1; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-top: 3px solid #3498db;">
+                <h4 style="font-size: 15px; font-weight: 600; color: #5a6c7d; text-align: center; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 15px 0;">Inoperacionalidades INEM Turno "N"</h4>
+                <canvas id="chart-ine-n" style="height: 150px;"></canvas>
+              </div>  
+              <div class="chart-card" style="flex: 1; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-top: 3px solid #e74c3c;">
+                <h4 style="font-size: 15px; font-weight: 600; color: #5a6c7d; text-align: center; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 15px 0;">Total Inoperacionalidades INEM</h4>
+                <canvas id="chart-ine-total" style="height: 150px;"></canvas>
+              </div>  
+            </div>
+            <div class="dashboard-row" style="display: flex; gap: 12px; justify-content: space-between;">  
+              <div class="chart-card" style="flex: 1; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-top: 3px solid #9b59b6;">
+                <h4 style="font-size: 15px; font-weight: 600; color: #5a6c7d; text-align: center; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 15px 0;">Recusas de Serviços por Entidade</h4>
+                <canvas id="chart-refusals-type" style="height: 150px;"></canvas>
+              </div>  
+              <div class="chart-card" style="flex: 1; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-top: 3px solid #e67e22;">
+                <h4 style="font-size: 15px; font-weight: 600; color: #5a6c7d; text-align: center; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 15px 0;">Total de Recusas de Serviços</h4>
+                <canvas id="chart-refusals-total" style="height: 150px;"></canvas>
+              </div>  
+              <div class="chart-card" style="flex: 1; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-top: 3px solid #95a5a6;">
+                <h4 style="font-size: 15px; font-weight: 600; color: #5a6c7d; text-align: center; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 15px 0;">Reservado</h4>
+                <canvas id="" style="height: 150px;"></canvas>
+              </div>  
+            </div>
+          </div>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+    </div>
+    <!---- IMPORTANT DOCUMENTATION SUB MODULE ---->
+    <!---- CREPC DOCUMENTATION SUB SUB-MODULE ---->
+    <div id="page-crepcalg" class="page">
+      <h2 class="section-title">SALOC 360</h2>
+      <div class="card last-card">
+        <div class="card-header">DOCUMENTAÇÃO CREPC ALGARVE</div>
+        <div class="card-body">
+          <div id="crepcbtn-container">
+            <div class="form-row" style="margin: 0; display: flex; justify-content: center;">
+              <div class="main-card" style="display: flex; flex-direction: column; align-items: center;">
+                <label style="margin-bottom: 10px; font-size: 14px; font-weight: bold;">Selecione uma Opção</label>
+                <div class="action-buttons" style="gap: 5px;">
+                  <button id="NewMOABtn" class="btn btn-add moa-btn" style="height: 35px;">MOA's</button>
+                  <button class="btn btn-add anxg2-btn" style="height: 35px;" onclick="">ANEXO G2</button>
+                  <button class="btn btn-add assdec-btn" style="height: 35px;" onclick="">ASSINATURAS DECIR</button>
+                </div>
+              </div>
+            </div>
+            <!---- MOA (CREPC SUB SUB-MODULE) ---->
+            <div id="moa-container" style="margin: 20px 0 0 0; display: none;">
+              <div class="card last-card" style="margin:0 0 0 0;">
+                <div class="card-header" style="display: flex; justify-content: center;">MEDIDAS OPERACIONAIS DE ANTECIPAÇÃO (MOA)</div>
+                <div class="card-body">
+                  <div class="form-row" style="margin: 0 0 0 0;">
+                    <div class="global-field-horizontal">
+                      <label style="font-size: 13px; font-weight: bold; color: #444;">Selecione o Corpo de Bombeiros:</label>
+                      <select id="moa_cb" style="width: 200px;"></select>
+                    </div>
+                    <div class="global-field-horizontal">
+                      <label style="font-size: 13px; font-weight: bold; color: #444;">Selecione o Dispositivo:</label>
+                      <select id="moa_device_type" style="width: 155px;"></select>
+                    </div>
+                    <div class="global-field-horizontal">
+                      <label style="font-size: 13px; font-weight: bold; color: #444;">Selecione o Estado de Prontidão Especial (EPE):</label>
+                      <select id="moa_epe_type" style="width: 155px;"></select>
+                    </div>
+                  </div>
+                  <div class="form-row" style="margin: 10px 0 0 0;">
+                    <div class="global-field-horizontal">
+                      <label style="font-size: 13px; font-weight: bold; color: #444;">Indique o período:</label>
+                    </div>
+                    <div class="global-field-horizontal">
+                      <label style="font-size: 13px; font-weight: bold; color: #444;">De:</label>
+                      <input type="date" id="moa_date_init" style="width: 100px;">
+                      <input type="time" id="moa_time_init" style="width: 80px;">
+                      <label style="font-size: 13px; font-weight: bold; color: #444;">Até:</label>
+                      <input type="date" id="moa_date_end" style="width: 100px;">
+                      <input type="time" id="moa_time_end" style="width: 80px;">
+                      <input type="text" id="moa_gdh_init" style="width: 170px; display: none;">
+                      <input type="text" id="moa_gdh_end" style="width: 170px; display: none;">
+                    </div>
+                  </div>
+                  <div class="grid-2fr">
+                    <div class="main-card main-card-left" style="margin: 20px 0 0 0; align-items: flex-start; text-align: left;">
+                      <div class="form-row" style="margin: 5px 0 0 0;">
+                        <div class="global-field-horizontal">
+                          <label style="font-size: 15px; font-weight: bold; color: #444;">Indique as Medidas:</label>
+                        </div>
+                      </div>
+                      <div class="form-row" style="margin: 10px 0 0 0;">
+                        <label style="width: 250px;"><input id="moa_eco" type="checkbox" style="cursor: pointer !important;"> Elemento de Comando às operações:</label>
+                        <div class="global-field-horizontal">
+                          <select id="moa_eco_sit" style="width: 130px;"></select>
+                          <select id="moa_eco_pront" style="width: 185px;"></select>
+                          <input id="moa_eco_observ" type="text" style="width: 165px;" placeholder="Observações">
+                        </div>
+                      </div>
+                      <div class="form-row" style="display: flex; align-items: center; margin: 2px 0;">
+                        <label style="width: 250px;"><input id="moa_ned" type="checkbox" style="cursor: pointer !important;"> Notificação à Entidade Detentora:</label>
+                        <div class="global-field-horizontal">
+                          <select id="moa_ned_sit" style="width: 130px; background: #5e5e5e;" disabled></select>
+                          <select id="moa_ned_pront" style="width: 185px;"></select>
+                          <input id="moa_ned_observ" type="text" style="width: 165px;" placeholder="Observações">
+                        </div>
+                      </div>
+                      <div class="form-row" style="display: flex; align-items: center; margin: 2px 0;">
+                        <label style="width: 250px;"><input id="moa_oco" type="checkbox" style="cursor: pointer !important;"> Ofícial / Chefe em ordenança:</label>
+                        <div class="global-field-horizontal">
+                          <select id="moa_oco_sit" style="width: 130px;"></select>
+                          <select id="moa_oco_pront" style="width: 185px;"></select>
+                          <input id="moa_oco_observ" type="text" style="width: 165px;" placeholder="Observações">
+                        </div>
+                      </div>
+                      <div class="form-row" style="display: flex; align-items: center; margin: 2px 0;">
+                        <label style="width: 250px;"><input id="moa_era" type="checkbox" style="cursor: pointer !important;"> ERAS Locais:</label>
+                        <div class="global-field-horizontal">
+                          <select id="moa_era_sit" style="width: 130px;"></select>
+                          <select id="moa_era_pront" style="width: 185px;"></select>
+                          <input id="moa_era_observ" type="text" style="width: 165px;" placeholder="Observações">
+                        </div>
+                      </div>
+                      <div class="form-row" style="display: flex; align-items: center; margin: 2px 0;">
+                        <label style="width: 250px;"><input id="moa_eob" type="checkbox" style="cursor: pointer !important;"> Equipas de Observação:</label>
+                        <div class="global-field-horizontal">
+                          <select id="moa_eob_sit" style="width: 130px;"></select>
+                          <select id="moa_eob_pront" style="width: 185px;"></select>
+                          <input id="moa_eob_observ" type="text" style="width: 165px;" placeholder="Observações">
+                        </div>
+                      </div>
+                      <div class="form-row" style="display: flex; align-items: center; margin: 2px 0;">
+                        <label style="width: 250px;"><input id="moa_rsc" type="checkbox" style="cursor: pointer !important;"> Reforço da SALOC:</label>
+                        <div class="global-field-horizontal">
+                          <select id="moa_rsc_sit" style="width: 130px; background: #5e5e5e;" disabled></select>
+                          <select id="moa_rsc_pront" style="width: 185px;"></select>
+                          <input id="moa_rsc_observ" type="text" style="width: 165px;" placeholder="Observações">
+                        </div>
+                      </div>
+                      <div class="form-row" style="display: flex; align-items: center; margin: 2px 0;">
+                        <label style="width: 250px;"><input id="moa_mef" type="checkbox" style="cursor: pointer !important;"> Mobilização do efetivo:</label>
+                        <div class="global-field-horizontal">
+                          <select id="moa_mef_sit" style="width: 130px;"></select>
+                          <select id="moa_mef_pront" type="text" style="width: 185px; background: #5e5e5e;" disabled></select>
+                          <input id="moa_mef_observ" type="text" style="width: 165px; background: #909090" placeholder="Observações" disabled>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="main-card main-card-left" style="margin: 20px 0 0 0; align-items: flex-start; text-align: left;">
+                      <div class="form-row" style="margin: 5px 0 0 0;">
+                        <div class="global-field-horizontal">
+                          <label style="font-size: 15px; font-weight: bold; color: #444; margin: 0 0 8px 0;">Reforço de Equipas de Intervenção Extraordinárias:</label>
+                        </div>
+                      </div>
+                      <div class="form-row" style="display: flex; align-items: center; margin: 2px 0;">
+                        <label> Tipologia:</label>
+                        <div class="global-field-horizontal">
+                          <input type="text" id="moa_reie_type_01" style="width: 90px;">
+                        </div>
+                        <label> Período:</label>
+                        <div class="global-field-horizontal">
+                          <input type="text" id="moa_reie_time_01" style="width: 150px;">
+                        </div>
+                        <label> Nº Operacionais:</label>
+                        <div class="global-field-horizontal">
+                          <input type="text" id="moa_reie_nop_01" style="width: 30px; text-align: center;">
+                        </div>
+                        <label> Observações:</label>
+                        <div class="global-field-horizontal">
+                          <input type="text" id="moa_reie_obs_01" style="width: 140px;">
+                        </div>
+                      </div>
+                      <div class="form-row" style="display: flex; align-items: center; margin: 2px 0;">
+                        <label> Tipologia:</label>
+                        <div class="global-field-horizontal">
+                          <input type="text" id="moa_reie_type_02" style="width: 90px;">
+                        </div>
+                        <label> Período:</label>
+                        <div class="global-field-horizontal">
+                          <input type="text" id="moa_reie_time_02" style="width: 150px;">
+                        </div>
+                        <label> Nº Operacionais:</label>
+                        <div class="global-field-horizontal">
+                          <input type="text" id="moa_reie_nop_02" style="width: 30px; text-align: center;">
+                        </div>
+                        <label> Observações:</label>
+                        <div class="global-field-horizontal">
+                          <input type="text" id="moa_reie_obs_02" style="width: 140px;">
+                        </div>
+                      </div>
+                      <div class="form-row" style="display: flex; align-items: center; margin: 2px 0;">
+                        <label> Tipologia:</label>
+                        <div class="global-field-horizontal">
+                          <input type="text" id="moa_reie_type_03" style="width: 90px;">
+                        </div>
+                        <label> Período:</label>
+                        <div class="global-field-horizontal">
+                          <input type="text" id="moa_reie_time_03" style="width: 150px;">
+                        </div>
+                        <label> Nº Operacionais:</label>
+                        <div class="global-field-horizontal">
+                          <input type="text" id="moa_reie_nop_03" style="width: 30px; text-align: center;">
+                        </div>
+                        <label> Observações:</label>
+                        <div class="global-field-horizontal">
+                          <input type="text" id="moa_reie_obs_03" style="width: 140px;">
+                        </div>
+                      </div>
+                      <div class="form-row" style="margin: 5px 0 0 0;">
+                        <div class="global-field-horizontal">
+                          <label style="font-size: 15px; font-weight: bold; color: #444; margin: 0 0 8px 0;">Outras:</label>
+                        </div>
+                      </div>
+                      <div class="form-row" style="display: flex; align-items: center; margin: 2px 0;">
+                        <div class="global-field-horizontal">
+                          <input type="text" id="moa_otr_type_01" style="width: 150px;">
+                        </div>
+                        <label> Período:</label>
+                        <div class="global-field-horizontal">
+                          <input type="text" id="moa_otr_time_01" style="width: 150px;">
+                        </div>
+                        <label> Observações:</label>
+                        <div class="global-field-horizontal">
+                          <input type="text" id="moa_otr_obs_01" style="width: 150px;">
+                        </div>
+                      </div>
+                      <div class="form-row" style="display: flex; align-items: center; margin: 2px 0;">
+                        <div class="global-field-horizontal">
+                          <input type="text" id="moa_otr_type_02" style="width: 150px;">
+                        </div>
+                        <label> Período:</label>
+                        <div class="global-field-horizontal">
+                          <input type="text" id="moa_otr_time_02" style="width: 150px;">
+                        </div>
+                        <label> Observações:</label>
+                        <div class="global-field-horizontal">
+                          <input type="text" id="moa_otr_obs_02" style="width: 150px;">
+                        </div>
+                      </div>
+                      <div class="form-row" style="display: flex; align-items: center; margin: 2px 0;">
+                        <div class="global-field-horizontal">
+                          <input type="text" id="moa_otr_type_03" style="width: 150px;">
+                        </div>
+                        <label> Período:</label>
+                        <div class="global-field-horizontal">
+                          <input type="text" id="moa_otr_time_03" style="width: 150px;">
+                        </div>
+                        <label> Observações:</label>
+                        <div class="global-field-horizontal">
+                          <input type="text" id="moa_otr_obs_03" style="width: 150px;">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="global-field-horizontal" style="margin: 15px 0 0 0;">
+                    <label> OPTEL:</label>
+                    <input type="text" id="moa_optel" style="width: 150px;">
+                  </div>
+                  <div class="action-buttons" style="gap: 5px;">
+                    <button class="btn btn-success" id="saveMOABtn" style="height: 35px;">Emitir MOA</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+    </div>
+    <!---- DAYLY PLANS SUB-MODULE ---->
+    <div id="page-plandir" class="page">
+      <h2 class="section-title">SALOC 360</h2>
+      <div class="card last-card">
+        <div class="card-header">PLANEAMENTOS DIÁRIOS</div>
+        <div class="card-body">
+          <div class="form-row" style="margin: 0 0 0 0; display: flex; justify-content: center;">
+            <div class="main-card" style="display: flex; flex-direction: column; align-items: center;">
+              <label style="margin-bottom: 10px; font-size: 14px; font-weight: bold;">Selecione um Turno</label>
+              <div class="action-buttons" style="gap: 5px;">
+                <button class="btn btn-add shift-btn" style="height: 35px;" data-shift="D" onclick="loadShift('D')">TURNO "D"</button>
+                <button class="btn btn-add shift-btn" style="height: 35px;" data-shift="N" onclick="loadShift('N')">TURNO "N"</button>
+                <button class="btn btn-add shift-btn" style="height: 35px; background: orange; color: black;" data-shift="LAST" onclick="loadShift('LAST')">ÚLTIMO</button>
+              </div>
+            </div>
+          </div>
+          <div id="plandir_container">
+            <div class="form-row" style="margin: 0 0 0 0; display: flex; flex-wrap: wrap; justify-content: flex-end;">
+              <div class="action-buttons" style="gap: 5px;">
+                <button id="emit-pp" class="btn btn-success" style="display: none;">Emitir Planeamento</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+    </div>
+    <!---- VEHICLE OPERATIONAL STATUS SUB-MODULE ---->
+    <div id="page-inocrepc" class="page">
+      <h2 class="section-title">SALOC 360</h2>
+      <div class="card last-card">
+        <div class="card-header">SITUAÇÃO OPERACIONAL DE VEÍCULOS (CREPC)</div>
+        <div class="card-body">
+          <div class="form-row" style="margin: 0; display: flex; justify-content: center;">
+            <div class="main-card" style="display: flex; flex-direction: column; align-items: center;">
+              <label style="margin-bottom: 10px; font-size: 14px; font-weight: bold;">Selecione uma Opção</label>
+              <div class="action-buttons" style="gap: 5px;">
+                <button class="btn btn-add oldinop" style="height: 35px;">EM CURSO</button>
+                <button class="btn btn-add newinop" style="height: 35px;" id="NewInopBtn">NOVA</button>
+              </div>
+            </div>
+          </div>
+          <div id="inopsTableContainer" style="display: none; margin-top: 20px;">
+            <h3>Inoperacionalidades em Curso</h3>
+            <table id="inopsTable" class="table-container" border="1" style="width: 100%; border-collapse: collapse;">
+              <thead>
+                <tr>
+                  <th style="width: 100px;">Veículo</th>
+                  <th style="width: 150px;">GDH INOP</th>
+                  <th style="width: 250px;">Tipo de Avaria</th>
+                  <th style="width: 500px;">Descrição da Avaria</th>
+                  <th style="width: 150px;">Ação</th>
+                </tr>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>
+          </div>
+          <div id="sitop_container" style="display: none; margin-top: 20px;">
+            <div class="card-header">INSERÇÃO DE NOVA INOPERACIONALIDADE</div>
+            <div class="card-body" style="background: #ddd">
+              <div class="form-row">
+                <div class="global-field-horizontal">
+                  <label style="font-size: 13px; font-weight: bold; color: #444;">Veículo:</label>
+                  <select id="sitop_veíc" style="width: 90px;"></select>
+                </div>
+                <div class="global-field-horizontal">
+                  <label style="font-size: 13px; font-weight: bold; color: #444;">Matrícula:</label>
+                  <input type="text" id="sitop_veíc_registration" style="width: 100px; text-align: center;" readonly tabindex="-1">
+                  <input type="text" id="sitop_gdh_inop" style="width: 100px; text-align: center; display: none;" readonly tabindex="-1">
+                  <input type="text" id="sitop_gdh_op" style="width: 100px; text-align: center; display: none;" readonly tabindex="-1">
+                </div>
+              </div>
+              <div class="form-row" style="margin-top: 5px;">
+                <div class="global-field-horizontal">
+                  <label style="font-size: 13px; font-weight: bold; color: #444;">Tipo de Avaria:</label>
+                  <select id="sitop_type_failure" style="width: 150px;"></select>
+                </div>
+                <div class="global-field-horizontal">
+                  <label style="font-size: 13px; font-weight: bold; color: #444;">Descrição da Avaria:</label>
+                  <input type="text" id="sitop_failure_description" style="width: 450px;">
+                </div>
+              </div>
+              <label style="font-weight: bold; font-size: 13px; display: block; margin-top: 15px; margin-bottom: 5px;">
+                O Veículo indicado faz parte de algum PPI?
+              </label>
+              <div class="checkbox-vertical" style="margin-left: 10px;">
+                <label><input id="ppi_yes" type="checkbox"> SIM</label>
+                <label><input id="ppi_no" type="checkbox" style="margin-left: 10px;"> NÃO</label>
+              </div>
+              <label style="font-weight: bold; font-size: 13px; display: block; margin-top: 15px; margin-bottom: 5px;">
+                Qual ou Quais:
+              </label>
+              <div class="checkbox-vertical" style="margin-left: 10px;">
+                <label style="display: block; margin-left: 40px;">
+                  <input type="checkbox" id="ppi_airport"> Aeroporto
+                </label>
+                <label style="display: block; margin-left: 40px;">
+                  <input type="checkbox" id="ppi_a22"> A22
+                </label>
+                <label style="display: block; margin-left: 40px;">
+                  <input type="checkbox" id="ppi_a2"> A2
+                </label>
+                <label style="display: block; margin-left: 40px;">
+                  <input type="checkbox" id="ppi_linfer"> Linha Férrea do Algarve
+                </label>
+                <label style="display: block; margin-left: 40px;">
+                  <input type="checkbox" id="ppi_airfield"> Aeródromo Portimão
+                </label>
+              </div>
+              <label style="font-weight: bold; font-size: 13px; display: block; margin-top: 15px; margin-bottom: 5px;">
+                O Corpo de Bombeiros tem capacidade de substituição por veículo similar?
+              </label>
+              <div class="checkbox-vertical" style="margin-left: 10px;">
+                <label><input id="ppi_subs_yes" type="checkbox"> SIM</label>
+                <label><input id="ppi_subs_no" type="checkbox" style="margin-left: 10px;"> NÃO</label>
+              </div>
+              <div class="global-field-horizontal" style="margin-top: 15px;">
+                <label style="font-size: 13px; font-weight: bold; color: #444;">OPTEL:</label>
+                <input type="text" id="sitop_optel" style="width: 250px;">
+              </div>
+            </div>
+            <div class="card-footer" style="display: flex; flex-wrap: wrap; justify-content: flex-end;">
+              <button class="btn btn-danger" id="saveBtn" style="font-size: 12px; wight: 25px;">Salvar</button>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+    </div>
+    <!---- WSMS 360 MODULE ---->
+    <!---- ON-GOING OCCURRENCES SUB-MODULE ---->
+    <div id="page-active_occurrences" class="page">
+      <h2 class="section-title">Ocorrências em Curso</h2>
+      <div class="card">
+        <div class="card-header">LISTA DE OCORRÊNCIAS ATIVAS</div>
+        <div class="card-body">
+          <div style="overflow-x: auto;">
+            <div class="table-container">
+              <table id="active-occurrences-table">
+                <thead>
+                  <tr>
+                    <th style="width: 150px;">Data/Hora Alerta</th>
+                    <th style="width: 300px;">Descrição</th>
+                    <th style="width: 350px;">Local</th>
+                    <th style="width: 300px;">Localidade</th>
+                    <th style="width: 70px;">Veículos</th>
+                    <th style="width: 100px;">Estado</th>
+                    <th style="width: 80px;">POSIT</th>
+                  </tr>
+                </thead>
+                <tbody id="active-occurrences-tbody">
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="form-row" style="margin: 10px 0 -8px 0; display: flex; justify-content: flex-end;">
+            <div class="action-buttons">
+              <button class="btn btn-success" onclick="loadActiveOccurrences()">ATUALIZAR LISTA</button>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+      <div id="popup-posit-modal" class="popup-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; ">
+        <div class="popup-content" style="background-color: white; padding: 20px; border-radius: 12px; text-align: center; max-width: 400px; width: 90%; position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.3); ">
+          <h3 style="margin-bottom: 15px;">POSIT</h3>
+          <div style="display: flex; justify-content: center; align-items: center; width: 100%; margin: 5px 0;">
+            <label for="posit-description" style="width: 90px; text-align: left;">Descrição:</label>
+            <input type="text" id="posit-description" style="flex: 1; padding: 5px; border-radius: 6px; border: 1px solid #ccc; text-align: center;" readonly />
+          </div>
+          <div style="display: flex; justify-content: center; align-items: center; width: 100%; margin: 5px 0;">
+            <label for="posit-local" style="width: 90px; text-align: left;">Local:</label>
+            <input type="text" id="posit-local" style="flex: 1; padding: 5px; border-radius: 6px; border: 1px solid #ccc; text-align: center;" readonly />
+          </div>
+          <input type="hidden" id="posit-localidade-hidden" value="" />
+          <div style="display: flex; justify-content: center; align-items: center; width: 100%; margin: 5px 0;">
+            <label for="posit-status" style="width: 90px; text-align: left;">Estado:</label>
+            <select id="posit-status" style="flex: 1; padding: 5px; border-radius: 6px; border: 1px solid #ccc;">
+              <option value="Em Curso">Em Curso</option>
+              <option value="Em Resolução">Em Resolução</option>
+              <option value="Em Conclusão">Em Conclusão</option>
+              <option value="Encerrada">Encerrada</option>
+            </select>
+          </div>
+          <div style="display: flex; justify-content: left; align-items: center; width: 100%; margin: 5px 0;">
+            <label for="posit-time" style="width: 90px; text-align: left;">Hora POSIT:</label>
+            <input type="text" id="posit-time" style="width: 60px; padding: 5px; border-radius: 6px; border: 1px solid #ccc; text-align: center;" />
+          </div>
+          <div style="margin-top: 10px; text-align: left;">
+            <label for="posit-text" style="display:block; margin-bottom: 5px;">POSIT:</label>
+            <textarea id="posit-text" rows="5" style="width: 100%; padding: 5px; border-radius: 6px; border: 1px solid #ccc; resize: vertical;"></textarea>
+          </div>
+          <div style="margin-top: 5px; text-align: left;"> <input type="checkbox" id="desmobilizacao" />
+            <label for="desmobilizacao" style="margin-left: 5px;">Desmobilização de meios</label>
+          </div>
+          <button id="posit-send-btn" class="btn btn-danger" style="width: 50%; margin-top: 10px;">Enviar POSIT</button>
+        </div>
+      </div>
+    </div>
+    <!---- NEW OCCURRENCE SUB-MODULE ---->
+    <div id="page_insert_occurrence" class="page">
+      <h2 class="section-title">Dados para Nova Ocorrência</h2>
+      <div class="card">
+        <div class="card-header">DADOS GLOBAIS</div>
+        <div class="card-body">
+          <div class="card-type-separator" style="margin: -19px -20px 15px -20px; font-style: italic;">Local da Ocorrência</div>
+          <div class="form-row">
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Tipo Alerta:</label>
+              <select id="alert_type">
+              </select>
+            </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Fonte Alerta:</label>
+              <select id="alert_source">
+              </select>
+            </div>
+            <div class="global-field-horizontal" id="ems_group">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Nr. CODU:</label>
+              <input type="text" id="ems_nr" placeholder="Ex. 123456789">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Data Alerta:</label>
+              <input type="date" id="alert_date" value="">
+            </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Hora Alerta:</label>
+              <input type="time" id="alert_time" value="">
+            </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Class. Ocorrência:</label>
+              <input type="text" id="class_occorr_input" placeholder="Ex. 3103" style="width: 80px; text-align: center;" maxlength="4" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 4)">
+            </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Nr. Ocorrência:</label>
+              <input type="text" id="nr_occurrence_input" placeholder="Ex. 123456789" style="width: 100px; text-align: center;" maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11)">
+            </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Canal Manobra:</label>
+              <select id="channel_maneuver" style="width: 75px;">
+                <option></option>
+              </select>
+            </div>
+            <div class="global-field-horizontal" style="display: none;">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Descr. Ocorrência:</label>
+              <input type="text" id="occorr_descr_input" placeholder="Inc. Mato">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Morada Ocorrência:</label>
+              <input type="text" id="occorr_local_input" style="width: 350px;" placeholder="Ex. Rua Serpa Pinto, 00">
+            </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Localidade:</label>
+              <input type="text" id="occorr_localitie_input" placeholder="Ex. Faro">
+            </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Distrito:</label>
+              <select id="district_select" style="width: 190px;">
+              </select>
+            </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Concelho:</label>
+              <select id="council_select" style="width: 190px;">
+                <option></option>
+              </select>
+            </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Freguesia:</label>
+              <select id="parish_select" style="width: 220px;">
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Nome Contactante:</label>
+              <input type="text" id="contact_name" style="width: 250px;" placeholder="Ex. João Sousa">
+            </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Nr. Contactante:</label>
+              <input type="text" id="contact_nr" placeholder="Ex. 910 000 000" style="width: 120px; text-align: center;" maxlength="9" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 9)">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-style: italic; font-weight: bold; color: #c70c0c;">Caso a classificação de ocorrência seja salvamento animal, por favor indique o tipo</label>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Tipo Animal:</label>
+              <input type="text" id="animal-type" style="width: 250px;" placeholder="Ex. Canideo">
+            </div>
+          </div>
+          <div class="card-type-separator" style="margin: 10px -20px 15px -20px; font-style: italic;">Planos Prévios de Intervenção</div>
+          <div class="form-row" style="margin: 0 0 -10px 0;">
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Tipo PPI:</label>
+              <select id="ppi_type">
+              </select>
+            </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Nível Alerta:</label>
+              <select id="alert_level" style="width: 175px;">
+                <option></option>
+              </select>
+            </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Grelha Alarme:</label>
+              <select id="alarm_grid" style="width: 75px;">
+                <option></option>
+              </select>
+            </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Km:</label>
+              <input type="text" id="km" placeholder="00" style="width: 75px; text-align: center;" maxlength="6" oninput="this.value = this.value.replace(/[^0-9.]/g, '') .replace(/(\..*)\./g, '$1') .slice(0, 6)">
+            </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Sentido:</label>
+              <select id="on_going" style="width: 230px;">
+              </select>
+            </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Tipo Incidente:</label>
+              <select id="incident_type" style="width: 175px;">
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+      <div class="card last-card">
+        <div class="card-header" style="margin: 0 0 -10px 0;">VEÍCULOS AFETOS À OCORRÊNCIA</div>
+        <div class="card-body">
+          <button id="add-new-vehicle-btn" class="btn btn-add" style="margin: 0 0 10px 0;" onclick="NewOCRaddVehicle()">ADICIONAR</button>
+          <div class="grid-2fr" id="vehicle-container"></div>
+          <textarea id="wsms_output" rows="4" cols="50" readonly style="display: none;"></textarea>
+          <div class="form-row" style="margin: 15px 0 -5px 0; display: flex; flex-wrap: wrap; justify-content: flex-end;">
+            <div class="action-buttons">
+              <button class="btn btn-success" onclick="generateWSMSMessage()">BOMBEIROS</button>
+              <button class="btn btn-danger" onclick="generateNewCREPCMessage()">COMUNICAR CREPC</button>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+    </div>
+    <!---- CLOSE OCCURRENCE SUB-MODULE ---->
+    <div id="page_close_occurrence" class="page">
+      <h2 class="section-title">Dados para Encerramento da Ocorrência</h2>
+      <div class="card">
+        <div class="card-header">DADOS GLOBAIS</div>
+        <div class="card-body">
+          <div class="form-row">
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Nr. Ocorrência:</label>
+              <input type="text" id="close_nr_occurrence" placeholder="Ex. 2025123456789" style="width: 150px; text-align: center;" maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11)">
+            </div>
+          </div>
+          <button id="add-close-vehicle-btn" class="btn btn-add" style="margin: 5px 0 0 0;" onclick="CloseOCRaddVehicle()">ADICIONAR</button>
+        </div>
+        <div class="grid-3fr" id="vehicles-container" style="margin: -15px 15px 15px 15px;"></div>
+        <div class="card-footer"></div>
+      </div>
+      <div class="card last-card">
+        <div class="card-header">DADOS ADICIONAIS</div>
+        <div class="form-row" style="margin: 15px 0 -40px 0; display: flex; flex-wrap: wrap; justify-content: center;">
+          <div class="action-buttons">
+            <button class="btn btn-add" onclick="toggleClsOcorrSection('victims-card', this)">VÍTIMAS</button>
+            <button class="btn btn-add" onclick="toggleClsOcorrSection('extras-card', this)">OUTROS MEIOS</button>
+            <button class="btn btn-add" onclick="toggleClsOcorrSection('demage-card', this)">DANOS</button>
+            <button class="btn btn-add" onclick="toggleClsOcorrSection('burned-card', this)">ÁREA ARDIDA</button>
+            <button class="btn btn-add" onclick="toggleClsOcorrSection('observ-card', this)">OBSERVAÇÕES</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="victims-card hidden" style="margin: 35px 0 0 0;">
+            <div class="field-card-title" style="display: flex; align-items: center; gap: 10px;">
+              <label style="font-size: 13px;">VÍTIMAS</label>
+              <button class="btn btn-add" style="width: 70px; height: 20px; padding: 0; line-height: 20px;" onclick="addVictim()">ADICIONAR</button>
+            </div>
+            <div id="victims-container"></div>
+          </div>
+          <div class="grid-2fr" style="margin: 10px 0px 15px 0px;">
+            <div class="extras-card hidden">
+              <div class="field-card-title" style="display: flex; align-items: center; gap: 10px;">
+                <label style="font-size: 13px;">OUTROS MEIOS NO TO</label>
+                <button class="btn btn-add" style="width: 70px; height: 20px; padding: 0; line-height: 20px;" onclick="addExtra()">ADICIONAR</button>
+              </div>
+              <div id="extras-container"></div>
+            </div>
+            <div class="demage-card hidden">
+              <div class="field-card-title" style="display: flex; align-items: center; gap: 10px;">
+                <label style="font-size: 13px;">DANOS CAUSADOS</label>
+                <button class="btn btn-add" style="width: 70px; height: 20px; padding: 0; line-height: 20px;" onclick="addDamage()">ADICIONAR</button>
+              </div>
+              <div id="damages-container"></div>
+            </div>
+          </div>
+          <div class="grid-2fr" style="margin: -10px 0 0 0;">
+            <div class="burned-card hidden" style="min-height: 100px;  max-width: 100%; margin: 5px 0 0 0;">
+              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin: 0 0 0 0;">
+                <div class="field-card-title">
+                  <label style="font-size: 13px;">ÁREA ARDIDA</label>
+                </div>
+              </div>
+              <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 0px;">
+                <div class="global-field-horizontal" style="flex:1;">
+                  <label>01.:</label>
+                  <input type="number" id="area_m2" placeholder="0" style="width: 15%; text-align: center;" oninput="updateHectares()">
+                  <label>Mts.2</label>
+                </div>
+              </div>
+              <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 0px;">
+                <div class="global-field-horizontal" style="flex:1;">
+                  <label>02.:</label>
+                  <input type="text" id="area_ha" placeholder="0" style="width: 15%; text-align: center;" readonly>
+                  <label>Ha.</label>
+                </div>
+              </div>
+            </div>
+            <div class="observ-card hidden" style="min-height: 100px; max-width: 100%; margin: 5px 0 0 0;">
+              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin: 0 0 0 0;">
+                <div class="field-card-title">
+                  <label style="font-size: 13px;">OBSERVAÇÕES</label>
+                </div>
+              </div>
+              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
+                <div class="global-field-horizontal" style="width: 100%;">
+                  <textarea placeholder="Escreva suas observações..." rows="4" style="width: 100%; height: 45px; resize: vertical;"></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+      <div class="action-buttons" style="margin: -35px 0 50px 0;">
+        <button class="btn btn-danger" onclick="generateCloseCREPCMessage()">COMUNICAR CREPC</button>
+      </div>
+    </div>
+    <!---- AVAILABILITY REQUEST SUB-MODULE ---->
+    <div id="page-solicitation" class="page">
+      <h2 class="section-title">Solicitação de Disponibilidades para Serviços</h2>
+      <div class="card">
+        <div class="card-header">TIPO DE SOLICITAÇÃO</div>
+        <div class="card-body">
+          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: -5px;">
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Data do Serviço:</label>
+              <input type="date" id="solicitation_date" style="width: 110px;">
+            </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Tipo de Solicitação:</label>
+              <select id="solicitation_type" style="width: 200px;">
+              </select>
+            </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Motivo da Solicitação:</label>
+              <select id="solicitation_motive" style="width: 200px;">
+              </select>
+            </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Turno:</label>
+              <select id="solicitation_shift" style="width: 75px;">
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+      <div class="card">
+        <div class="card-header">MEIOS SOLICITADOS</div>
+        <div class="card-body">
+          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: -5px;">
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Motoritas:</label>
+              <div class="global-field-horizontal">
+                <input type="text" id="drivers" placeholder="0" style="width: 75px; text-align: center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
+              </div>
+            </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Elementos:</label>
+              <div class="global-field-horizontal">
+                <input type="text" id="elements" placeholder="0" style="width: 75px; text-align: center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+      <div class="card">
+        <div class="card-header">DESTINO DO SERVIÇO</div>
+        <div class="card-body">
+          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: -5px;">
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Hora de Saída:</label>
+              <div class="global-field-horizontal">
+                <input type="time" id="exit_hour" style="width: 80px;">
+              </div>
+            </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">ULS Destino:</label>
+              <div class="global-field-horizontal">
+                <input type="text" id="uls_desteny" placeholder="Ex. IPO Lisboa" style="width: 250px; text-align: center;">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+      <div class="form-row" style="margin: 10px 0 10px 10px; display: flex; flex-wrap: wrap; justify-content: flex-end;">
+        <div class="action-buttons">
+          <button class="btn btn-success" onclick="generateAvailability()">SOLICITAR</button>
+        </div>
+      </div>
+    </div>
+    <!---- VEHICLE UNAVAILABILITY SUB-MODULE ---->
+    <div id="page-indisp" class="page">
+      <h2 class="section-title">Indisponibilidade Veículos</h2>
+      <div class="card">
+        <div class="card-header">NOVA INDISPONIBILIDADE DE VÉICULO</div>
+        <div class="card-body">
+          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
+            <div class="vehicle-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Veículo:</label>
+              <select id="new_vehicle_unavailable" style="width: 120px;">
+              </select>
+            </div>
+          </div>
+          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: -3px;">
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Data da Indisponibilidade:</label>
+              <div class="extras-field-horizontal">
+                <input type="date" id="new_unavailability_date" style="width: 110px;">
+              </div>
+            </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Hora da Indisponibilidade:</label>
+              <div class="global-field-horizontal">
+                <input type="time" id="new_unavailability_hour" style="width: 80px;">
+              </div>
+            </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Motivo da Indisponibilidade:</label>
+              <select id="new_reason_unavailability" style="width: 175px;">
+              </select>
+            </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Local da Indisponibilidade:</label>
+              <select id="new_unavailability_local" style="width: 175px;">
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="form-row" style="margin: 0 15px 15px 0; display: flex; flex-wrap: wrap; justify-content: flex-end;">
+          <div class="action-buttons">
+            <button class="btn btn-danger" onclick="generateNewUnvailability()">ENVIAR INDISPONIBILIDADE</button>
+          </div>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+      <div class="card">
+        <div class="card-header">VEÍCULOS INDISPONÍVEIS</div>
+        <div class="card-body">
+          <div class="table-container">
+            <table id="active-unavailability-table">
+              <thead>
+                <tr>
+                  <th style="width: 150px;">Data/Hora</th>
+                  <th style="width: 200px;">Veículo</th>
+                  <th style="width: 400px;">Motivo</th>
+                  <th style="width: 200px;">Estado</th>
+                  <th style="width: 200px;">Finalizar</th>
+                </tr>
+              </thead>
+              <tbody id="active-unavailability-tbody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="form-row" style="margin: -5px 20px 15px 0; display: flex; justify-content: flex-end;">
+          <div class="action-buttons">
+            <button class="btn btn-success" onclick="loadActiveUnavailability()">ATUALIZAR LISTA</button>
+          </div>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+      <div id="availability-card" class="card last-card">
+        <div class="card-header">FIM DE INDISPONIBILIDADE DE VÉICULO DE VÉICULO</div>
+        <div class="card-body">
+          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Veículo:</label>
+              <div class="global-field-horizontal">
+                <input type="text" id="end_vehicle_unavailable" style="width: 100px; text-align: center;">
+              </div>
+            </div>
+          </div>
+          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Motivo da Indisponibilidade:</label>
+              <div class="extras-field-horizontal">
+                <input type="text" id="end_reason_unavailability" style="width: 175px; text-align: center;">
+              </div>
+            </div>
+            <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
+              <div class="global-field-horizontal">
+                <label style="font-size: 12px; font-weight: bold; color: #444;">Data da Disponibilidade:</label>
+                <div class="global-field-horizontal">
+                  <input type="date" id="end_unavailability_date" style="width: 120px;">
+                </div>
+              </div>
+              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
+                <div class="global-field-horizontal">
+                  <label style="font-size: 12px; font-weight: bold; color: #444;">Hora da Disponibilidade:</label>
+                  <div class="global-field-horizontal">
+                    <input type="time" id="end_unavailability_hour" style="width: 80px;">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="form-row" style="margin: 0 15px 15px 0; display: flex; flex-wrap: wrap; justify-content: flex-end;">
+          <div class="action-buttons">
+            <button class="btn btn-success" onclick="generateEndUnavailability()">ENVIAR DISPONIBILIDADE</button>
+          </div>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+    </div>
+    <!---- STATUS INFORMATION MUNICIPALITY GRID SUB-MODULE ---->
+    <div id="page-municipality-grid" class="page">
+      <h2 class="section-title">Info. Grelha Município</h2>
+      <div class="card" style="margin: 0 0 25px 0;">
+        <div class="card-header">ESTADO OPERACIONAL DA GRELHA DO MUNICÍPIO</div>
+        <div class="card-body">
+          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Estado Operacional:</label>
+              <select id="state_municipality_grid" style="width: 200px;" onchange="toggleMunicipalityGridOutput()">
+              </select>
+            </div>
+          </div>
+          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Motivo do Estado:</label>
+              <input type="text" id="municipality_grid_output" placeholder="Indique um motivo para o estado da grelha." style="width: 700px;">
+            </div>
+          </div>
+          <div class="form-row" style="margin: 0 0 -5px 0; display: flex; flex-wrap: wrap; justify-content: flex-end;">
+            <div class="action-buttons">
+              <button class="btn btn-success" onclick="generateMunicipalityGridMessage()">ENVIAR ESTADO</button>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+    </div>
+    <!---- UTILITIES MODULE ---->
+    <div id="page-utilities" class="page">
+      <h2 class="section-title">Utiliários</h2>
+      <div class="card card last-card">
+        <div class="card-header">CONSOLA DE UTILITÁRIOS</div>
+        <div class="options-panel-container">
+          <div class="panel-sidebar">
+            <button class="panel-sidebar-menu-button active" onclick="showPanelCard('epe')">Estados de EPE/PPI</button>
+            <button class="panel-sidebar-menu-button" onclick="showPanelCard('fleet-management')">Gestão de Frota</button>
+            <button class="panel-sidebar-menu-button" onclick="showPanelCard('vehicle-operational-status')">Sitop. Veículos</button>
+            <button class="panel-sidebar-menu-button" onclick="showPanelCard('relev-info')">Informações Relevantes</button>
+            <button class="panel-sidebar-menu-button" onclick="showPanelCard('interruption-roads-streets')">Cortes de Vias/Arruamentos</button>
+            <button class="panel-sidebar-menu-button" onclick="showPanelCard('air-centers')">Centros de Meios Aéreos</button>
+            <button class="panel-sidebar-menu-button" onclick="showPanelCard('analytics')">Disponibilidade de Elementos</button>
+          </div>
+          <div class="panel-content">
+            <div id="panel-epe" class="panel-card active">
+              <h3>ESTADOS DE PRONTIDÃO ESPECIAL / PLANOS PRÉVIOS DE INTERVENÇÃO</h3>
+              <p>Visão geral dos Estados de Prontidão Especiais e Planos Prévios de Intervenção.</p>
+              <div id="epe-container" class="data-grid"></div>
+              <div id="ppi-container" class="data-grid" style="margin-top: 20px;"></div>
+            </div>
+            <div id="panel-vehicle-operational-status" class="panel-card">
+              <h3>SITUAÇÃO OPERACIONAL DE VEÍCULOS</h3>
+              <p>Informações detalhadas sobre o funcionamento dos módulos.</p>
+              <div id="vehicleStatus" class="loading">A carregar veículos...</div>
+              <div class="vehicle-grid" id="vehicleGrid"></div>
+            </div>
+            <div id="panel-fleet-management" class="panel-card">
+              <h3>GESTÃO DE VEÍCULOS DO CORPO DE BOMBEIROS</h3>
+              <p>Adição, Remoção e Estatísticas de veículos do Corpo de Bombeiros.</p>
+              <div class="main-card" style="margin:5px 0 -5px 0;">
+                <span class="data-value" style="font-size: 25px; margin:5px 0 15px 0;">TOTAL DE VEÍCULOS</span>
+                <span class="data-value" id="sum-vehicles" style="font-size: 45px; color: purple; margin-bottom:10px;"></span>
+              </div>
+              <div class="data-grid">
+                <div class="main-card">
+                  <span class="data-value" style="font-size: 15px; margin-bottom:10px;">ADICIONAR VEÍCULO</span>
+                  <div class="data-label" style="font-size: 12px; margin-bottom:5px;">Designe o veículo a adicionar</div>
+                  <div class="form-row" style="justify-content: center;">
+                    <div class="global-field-horizontal">
+                      <input type="text" id="add_vehicle" placeholder="Ex. ABSC-01" style="width: 200px;">
+                    </div>
+                  </div>
+                  <div class="form-row" style="margin: 15px 0 0 0; justify-content: center;">
+                    <div class="action-buttons">
+                      <button id="add_vehicle_btn" class="btn btn-success">ADICIONAR</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="main-card">
+                  <span class="data-value" style="font-size: 15px; margin-bottom:10px;">REMOVER VEÍCULO</span>
+                  <div class="data-label" style="font-size: 12px; margin-bottom:5px;">Selecione o veículo a remover</div>
+                  <div class="form-row" style="justify-content: center;">
+                    <div class="vehicle-field-horizontal">
+                      <select id="remove_vehicle" style="width: 200px;"></select>
+                    </div>
+                  </div>
+                  <div class="form-row" style="margin: 15px 0 0 0; justify-content: center;">
+                    <div class="action-buttons">
+                      <button id="remove_vehicle_btn" class="btn btn-danger">REMOVER</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="main-card">
+                  <span class="data-value" style="font-size: 17px; margin-bottom:35px;">ESTATÍSTICAS DE VEÍCULOS</span>
+                  <div class="vehicle-stats-grid" style="display: flex; justify-content: center; gap: 50px; margin-top: 5x;">
+                    <div class="stat-item" style="text-align: center;">
+                      <div class="stat-label" style="font-size: 15px; color: #666; margin-bottom: 5px;">NO QUARTEL</div>
+                      <div class="stat-value" id="count-quartel" style="font-size: 30px; font-weight: bold; color: #28a745;">0</div>
+                    </div>
+                    <div class="stat-item" style="text-align: center;">
+                      <div class="stat-label" style="font-size: 15px; color: #666; margin-bottom: 5px;">EM SERVIÇO</div>
+                      <div class="stat-value" id="count-servico" style="font-size: 30px; font-weight: bold; color: #007bff;">0</div>
+                    </div>
+                    <div class="stat-item" style="text-align: center;">
+                      <div class="stat-label" style="font-size: 15px; color: #666; margin-bottom: 5px;">INOP</div>
+                      <div class="stat-value" id="count-inop" style="font-size: 30px; font-weight: bold; color: #dc3545;">0</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div id="vehicle_status_message" class="status"></div>
+            </div>
+            <div id="panel-relev-info" class="panel-card">
+              <h3>INFORMAÇÕES RELEVANTES</h3>
+              <p>Informações de caráter relevante para conhecimento geral.</p>
+              <div id="info-container"></div>
+            </div>
+            <div id="panel-interruption-roads-streets" class="panel-card">
+              <h3>CORTES DE VIAS E/OU ARRUAMENTOS</h3>
+              <p>Vias ou Arruamentos impedidos ao trânsito (Obras, Eventos, Etc.)</p>
+              <div class="main-card">
+                <div id="routes-container" style="margin: 5px 0 0 0;"></div>
+              </div>
+              <div class="action-buttons" style="margin: 15px 0 0 0;">
+                <button class="btn btn-success" onclick="saveRoutesGroupFields()">ATUALIZAR</button>
+              </div>
+            </div>
+            <div id="panel-air-centers" class="panel-card">
+              <h3>CENTROS DE MEIOS AÉREOS</h3>
+              <p>CMA's Ativos na Região.</p>
+              <div id="cma-container" class="grid-3fr" style="gap: 10px;"></div>
+              <div class="action-buttons" style="margin: 20px 0 0 0;">
+                <button class="btn btn-success" onclick="saveCMAsGroupFields()">ATUALIZAR</button>
+              </div>
+            </div>
+            <div id="panel-analytics" class="panel-card">
+              <h3>DISPONIBILIDADE DE ELEMENTOS</h3>
+              <p>Elementos disponiveis para situações de exceção.</p>
+              <div class="main-card">
+                <div id="elems-container" class="elems-container"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+    </div>
+    <!---- DATA MANAGEMENT MODULE ---->
+    <div id="page-data" class="page">
+      <h2 class="section-title">Data Center</h2>
+      <div class="card last-card">
+        <div class="card-header">CENTRO DE DADOS</div>
+        <div class="options-panel-container">
+          <div class="panel-sidebar">
+            <button class="panel-sidebar-menu-button active" onclick="showPanelCard('assoc')">Corporação</button>
+            <button class="panel-sidebar-menu-button" onclick="showPanelCard('elems')">Bombeiros</button>
+          </div>
+          <div class="panel-content">
+            <div id="panel-assoc" class="panel-card active">
+              <h3>DADOS DA CORPORAÇÃO</h3>
+              <p>Dados Gerais do Corpo de Bombeiros.</p>
+              <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+                <div class="transparent-card" style="flex: 0 0 auto; border: 2px solid #ccc; border-radius: 8px; background-color: transparent; padding: 10px; max-width: 250px;">
+                  <div class="card-header" style="text-align: center; font-weight: bold; font-size: 16px; margin-bottom: 10px;">
+                    LOGO
+                  </div>
+                  <div class="card-content" style="text-align: center;">
+                    <div style="margin: 10px 0;">
+                      <img src="...." alt="CB Faro Cruz Lusa" class="data-logo" style="width: 140px; height: 140px;">
+                    </div>
+                    <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 5px;">
+                      <button class="btn btn-success" style="width: 100%;">ALTERAR LOGO</button>
+                      <button class="btn btn-danger" style="width: 100%;">REMOVER LOGO</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="main-card" style="flex: 1; max-width: 720px; height: 218px; overflow-y: auto; overflow-x: hidden; margin: 0 0 0 -10px;">
+                  <div class="global-field-horizontal">
+                    <label>Nome do CB:</label>
+                    <input type="text" id="assoc-nome" style="width: 608px">
+                  </div>
+                  <div class="global-field-horizontal">
+                    <label for="assoc-morada">Morada do CB:</label>
+                    <input type="text" id="assoc-morada" style="width: 600px">
+                  </div>
+                  <div class="global-field-horizontal">
+                    <label>Localidade:</label>
+                    <input type="text" id="assoc-localidade" style="width: 372px;">
+                    <label>Código-Postal:</label>
+                    <input type="text" id="assoc-cp1" style="max-width: 80px; text-align: center;">
+                    <span>-</span>
+                    <input type="text" id="assoc-cp2" style="max-width: 60px; text-align: center;">
+                  </div>
+                  <div class="global-field-horizontal">
+                    <label>Distrito:</label>
+                    <select id="district_select_corp" style="width: 200px;"></select>
+                    <label>Concelho:</label>
+                    <select id="council_select_corp" style="width: 300px;"></select>
+                  </div>
+                  <div class="global-field-horizontal">
+                    <label>Freguesia:</label>
+                    <select id="parish_select_corp" style="width: 400px;"></select>
+                  </div>
+                  <div class="global-field-horizontal">
+                    <label>NIF:</label>
+                    <input type="text" id="assoc-nif" style="width: 150px; text-align: center;">
+                    <label>Núm. Operacional:</label>
+                    <input type="text" id="assoc-operacional" style="width: 100px; text-align: center;">
+                  </div>
+                  <div style="flex-basis: 100%; text-align: right; margin-top: 10px;">
+                    <button class="btn btn-success" onclick="saveCorpGroupFields()">ATUALIZAR</button>
+                  </div>
+                </div>
+                <div class="main-card" style="flex: 1; max-width: 450px; height: 218px; overflow-y: auto; overflow-x: hidden; margin: 0 0 0 -10px;">
+                  <div class="global-field-horizontal">
+                    <label>Card under development, information on the number of firefighters and vehicles in the department will be available shortly. We apologize for the inconvenience.</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div id="panel-elems" class="panel-card">
+              <h3>LISTAGEM DE BOMBEIROS</h3>
+              <p>Adição, Remoção e Edição de elementos.</p>
+              <button class="btn btn-add" style="margin: 0 0 20px 0;" onclick="openNewWindow()">ADICIONAR</button>
+              <div class="table-container">
+                <table id="elements-container">
+                  <thead>
+                    <tr>
+                      <th>Nº Interno</th>
+                      <th>Nº Mecanográfico</th>
+                      <th>Patente</th>
+                      <th>Nome Completo</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+    </div>
+  </main>
+  <footer class="status-bar">
+    <div class="system-info">
+      CB360 Online v9.184.71 | Powered by: Fábio Martins | Sistemas de Informação
+    </div>
+  </footer>
+  
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="js/mainparogramatics/initcfg_ltsc_x07.js"></script>
+  <script src="js/mainparogramatics/contcrea_ltsc_x21.js"></script>
+  <script src="js/mainparogramatics/loadmain_ltsc_x07.js"></script>
+  <script src="js/mainparogramatics/loadmainfields_ltsc_x07.js"></script>
+  <script src="js/mainparogramatics/sidebars_ltsc_x07.js"></script>
+  <script src="js/mainparogramatics/popups_ltsc_x07.js"></script>
+  <script src="js/mainparogramatics/generics_ltsc_x07.js"></script>
+  <script src="js/fomioprogramatics/scales_ltsc_x09.js"></script>
+  <script src="js/salocprogamatics/ppiload_ltsc_x10.js"></script>
+  <script src="js/salocprogamatics/refusals_ltsc_x10.js"></script>
+  <script src="js/salocprogamatics/moa_ltsc_x10.js"></script>
+  <script src="js/salocprogamatics/dailyplan_ltsc_x10.js"></script>
+  <script src="js/salocprogamatics/inopform_ltsc_x10.js"></script>
+  <script src="js/wsmsprogramatics/currevents_ltsc_x17.js"></script>
+  <script src="js/wsmsprogramatics/newevent_ltsc_x17.js"></script>
+  <script src="js/wsmsprogramatics/clsevent_ltsc_x17.js"></script>
+  <script src="js/wsmsprogramatics/request_ltsc_x17.js"></script>
+  <script src="js/wsmsprogramatics/unavail_ltsc_x17.js"></script>
+  <script src="js/wsmsprogramatics/mgrid_ltsc_x17.js"></script>
+  <script src="js/utilitiesprogramatics/dpconsole_ltsc_x14.js"></script>
+  <script src="js/utilitiesprogramatics/epetstat_ltsc_x14.js"></script>
+  <script src="js/utilitiesprogramatics/veícstat_ltsc_x14.js"></script>
+  <script src="js/utilitiesprogramatics/infrelev_ltsc_x14.js"></script>
+  <script src="js/utilitiesprogramatics/roacut_ltsc_x14.js"></script>
+  <script src="js/utilitiesprogramatics/macent_ltsc_x14.js"></script>
+  <script src="js/datacenterprogramatics/corpdata_ltsc_x06.js"></script>
+  <script src="js/datacenterprogramatics/elemdata_ltsc_x06.js"></script>
+  <script></script>
+</body>
+</html>

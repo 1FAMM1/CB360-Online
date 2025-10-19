@@ -1,0 +1,65 @@
+    .form-row {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 5px;
+      flex-wrap: wrap;
+    }
+
+    .grid-2fr {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 10px;
+    }
+
+    .grid-3fr {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 0px;
+    }
+
+    .field-card-title {
+      font-size: 12px;
+      font-weight: bold;
+      color: #495057;
+      margin-bottom: 10px;
+    }
+
+    .vehicle-fields {
+      display: flex;
+      gap: 5px;
+    }
+
+    .vehicle-field {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .vehicle-field-horizontal, .global-field-horizontal {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-bottom: 3px;
+    }
+
+    .vehicle-field label, .vehicle-field-horizontal label, .global-field-horizontal label {
+      font-size: 13px;
+      color: #6C757D;
+      width: auto;
+    }
+
+    .vehicle-field input, .vehicle-field select, .vehicle-field-horizontal input, .vehicle-field-horizontal select, .global-field-horizontal input, .global-field-horizontal select {
+      height: 23px;
+      border: 1px solid #b3b3b3;
+      border-radius: 4px;
+      padding: 1px 8px 1px 8px;
+      font-size: 11px;
+      background: white;
+      box-sizing: border-box;
+    }
+
+    .vehicle-field input:focus, .vehicle-field select:focus, .vehicle-field-horizontal input:focus, .vehicle-field-horizontal select:focus, .global-field-horizontal input:focus, .global-field-horizontal select:focus {
+      outline: none;
+      border-color: #80BDFF;
+      border-RADIUS: 0px;
+      box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.25);
+    }

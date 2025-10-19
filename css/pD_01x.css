@@ -1,0 +1,130 @@
+    .plandir-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+
+    .plandir-table th {
+      padding: 2px;
+      text-align: center;
+      border: 1px solid #878787;
+      background-color: #a1a1a1;
+      font-size: 13px;
+    }
+
+    .plandir-table col:nth-child(1) {
+      width: 75px;
+    }
+
+    .plandir-table col:nth-child(2) {
+      width: 200px;
+    }
+
+    .plandir-table col:nth-child(3) {
+      width: 300px;
+    }
+
+    .plandir-table col:nth-child(4) {
+      width: 75px;
+    }
+
+    .plandir-table col:nth-child(5) {
+      width: 75px;
+    }
+
+    .plandir-table col:nth-child(6) {
+      width: 75px;
+    }
+
+    .plandir-table col:nth-child(7) {
+      width: 75px;
+    }
+
+    .plandir-table col:nth-child(8) {
+      width: 500px;
+    }
+
+    .plandir-table .special {
+      background-color: #3c3a8c;
+    }
+
+    .plandir-table td {
+      border: 1px solid #878787;
+      padding: 0;
+    }
+
+    .plandir-table input {
+      width: 100%;
+      padding: 4px;
+      border: none;
+      outline: none;
+      background: transparent;
+    }
+
+    .plandir-table input:nth-child(1) {
+      text-align: center;
+    }
+
+    .plandir-table td:nth-child(1) input,
+    .plandir-table td:nth-child(4) input,
+    .plandir-table td:nth-child(5) input,
+    .plandir-table td:nth-child(6) input,
+    .plandir-table td:nth-child(7) input {
+      text-align: center;
+    }
+
+    .plandir-table td:nth-child(2) input,
+    .plandir-table td:nth-child(3) input,
+    .plandir-table td:nth-child(8) input {
+      text-align: left;
+    }
+
+    .plandir-shift-header {
+      width: 900px;
+      margin: 10px auto;
+      text-align: center;
+      padding: 1px;
+      border-radius: 8px;
+      border: 2px solid #999;
+      background: linear-gradient(90deg, #bfbfbf, #d4d4d4, #c6c6c6, #d9d9d9);
+    }
+
+    .plandir-shift-header .plandir-header-title {
+      font-size: 20px;
+      font-weight: bold;
+      color: #222;
+      margin-bottom: 6px;
+    }
+
+    .plandir-shift-header .plandir-header-date {
+      font-size: 14px;
+      color: #333;
+    }
+
+    .plandir-mp-active {
+      background: red;
+      color: white;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .plandir-tas-active {
+      background: red;
+      color: white;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .plandir-nint-input {
+      width: 100%;
+    }
+
+    .plandir-readonly-field {
+      background: #f0f0f0;
+    }
+
+    .plandir-entrance-input,
+    .plandir-exit-input,
+    .plandir-obs-input {
+      width: 100%;
+    }

@@ -1,0 +1,123 @@
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .action-buttons button {
+      min-width: 100px;
+    }
+
+    .btn {
+      padding: 8px 20px;
+      border: none;
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 10px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .btn-success {
+      background-color: #28A745;
+      color: white;
+    }
+
+    .btn-success:hover {
+      background-color: #218838;
+    }
+
+    .btn-success:focus {
+      outline: 1px solid #218838;
+      outline-offset: 1px;
+    }
+
+    .btn-danger {
+      background-color: #DC3545;
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background-color: #C82333;
+    }
+
+    .btn-danger:focus {
+      outline: 1px solid #C82333;
+      outline-offset: 1px;
+    }
+
+    .btn-add {
+      background-color: #3354a1;
+      color: white;
+    }
+
+    .btn-add:hover {
+      background-color: #284078;
+    }
+
+    .btn-add:focus {
+      outline: 1px solid #284078;
+      outline-offset: 1px;
+    }
+
+    .btn-add.active {
+      background-color: #bf2828;
+      color: #fff;
+      font-weight: bold;
+    }
+    
+    .btn-special {
+      background-color: #fac30f;
+      color: black;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .btn-special:hover {
+      background-color: #e0ac0a;
+    }
+
+    .btn-special:focus {
+      outline: 1px solid #284078;
+      outline-offset: 1px;
+    }
+    
+    .btn-special.active {
+      background-color: #bf2828;
+    }
+    
+    .button-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      margin-top: 10px;
+      width: 100%;
+      height: 60px;
+    }
+
+    .panel-btn {
+      padding: 6px 8px;
+      border: 1px solid #bdc3c7;
+      border-radius: 6px;
+      background: white;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.3s ease;
+      font-weight: bold;
+      font-size: 11px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    .panel-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      filter: brightness(1.1);
+    }

@@ -1,0 +1,27 @@
+    .table-elements {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .table-elements th,
+    .table-elements td {
+      border: 1px solid #ccc;
+      padding: 2px;
+      text-align: center;
+    }
+
+    .table-elements th {
+      background-color: #f2f2f2;
+    }
+
+    .month-table td[contenteditable="true"]:focus {
+      outline: none;
+      box-shadow: inset 0 0 0 1px #aaa;
+      transition: box-shadow 0.2s ease;
+    }
+
+    .checkbox-vertical input[type="checkbox"] {
+      cursor: pointer !important;
+      margin-right: 5px;
+      vertical-align: middle;
+    }

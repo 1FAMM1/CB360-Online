@@ -1,0 +1,39 @@
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #F8F9FA;
+      overflow-x: auto;
+      cursor: default;
+      user-select: none;
+    }
+
+    body, body * {
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      cursor: default;
+    }
+
+    input, textarea {
+      user-select: text !important;
+      cursor: text !important;
+    }
+
+    select {
+      user-select: text !important;
+      cursor: default !important;
+    }
+
+    ul {
+      list-style: none;
+    }
+    
+    .hidden {
+      display: none !important;
+    }

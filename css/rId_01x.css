@@ -1,0 +1,123 @@
+    .table-container {
+      margin-top: 20px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      overflow: hidden auto;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      background-color: #fff;
+      max-height: 300px;
+      transition: all 0.3s ease;
+    }
+
+    .table-container::-webkit-scrollbar {
+      height: 8px;
+      width: 8px;
+    }
+    
+    .table-container::-webkit-scrollbar-thumb {
+      background-color: #bbb;
+      border-radius: 4px;
+    }
+    
+    .table-container::-webkit-scrollbar-thumb:hover {
+      background-color: #999;
+    }
+
+    .table-container table {
+      width: 100%;
+      font-size: 13px;
+      text-align: center;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+
+    .table-container thead {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background-color: #f4f6f8;
+    }
+
+    .table-container th,
+    .table-container td {
+      padding: 8px 10px;
+      border: 1px solid #ddd;
+      border-top: none;
+      border-left: none;
+      border-bottom: 1px solid #ddd;
+      white-space: nowrap;
+      color: #444;
+    }
+
+    .table-container tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .table-container th:last-child,
+    .table-container td:last-child {
+      border-right: none;
+    }
+
+    .table-container th {
+      font-weight: bold;
+      color: #333;
+      font-size: 12.5px;
+      letter-spacing: 0.2px;
+      background-color: #f4f6f8;
+    }
+
+    .table-container tbody tr:nth-child(even) {
+      background-color: #fafafa;
+    }
+    
+    .table-container tbody tr:hover {
+      background-color: #eef4fb;
+      transition: background-color 0.2s ease;
+    }
+
+    #page-recserv .global-field-horizontal,
+    #page-ineminop .global-field-horizontal {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 20px;
+    }
+
+    #page-recserv .global-field-horizontal label,
+    #page-ineminop .global-field-horizontal label {
+      display: inline-block;
+      min-width: 130px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: bold;
+      color: #444;
+      white-space: nowrap;
+    }
+
+    #page-recserv .global-field-horizontal input,
+    #page-recserv .global-field-horizontal select,
+    #page-ineminop .global-field-horizontal input,
+    #page-ineminop .global-field-horizontal select {
+      height: 23px;
+      padding: 0 6px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      outline: none;
+      transition: border-color 0.2s ease;
+      box-sizing: border-box;
+      vertical-align: middle;
+    }
+
+    #page-recserv .global-field-horizontal input:focus,
+    #page-recserv .global-field-horizontal select:focus,
+    #page-ineminop .global-field-horizontal input:focus,
+    #page-ineminop .global-field-horizontal select:focus {
+      border-color: #80BDFF;
+      border-radius: 0px;
+    }
+
+    #service_refusal_time,
+    #service_refusal_type,
+    #service_refusal_motive {
+      margin-left: -25px;
+    }

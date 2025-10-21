@@ -156,7 +156,7 @@
       if (document.getElementById('emit-pp')) return;
       const btnWrapper = document.createElement('div');
       btnWrapper.style.display = 'flex';
-      btnWrapper.style.justifyContent = 'flex-end';
+      btnWrapper.style.justifyContent = 'center';
       btnWrapper.style.marginTop = '10px';
       const emitBtn = document.createElement('button');
       emitBtn.id = 'emit-pp';
@@ -406,4 +406,5 @@
         container.innerHTML = '';
         document.querySelectorAll('.shift-btn').forEach(btn => btn.classList.remove('active'));
       }
+
     });

@@ -51,12 +51,10 @@
         sitopContainer.style.opacity = "0";
         setTimeout(() => {
           sitopContainer.style.display = "none";
-          actionButtons.style.display = "flex";
           clearSitopForm();
         }, 250);
       } else {
         inopsTableContainer.style.display = "none";
-        actionButtons.style.display = "none";
         sitopContainer.style.display = "block";
         sitopContainer.style.opacity = "0";
         setTimeout(() => sitopContainer.style.opacity = "1", 10);
@@ -242,11 +240,9 @@
         NewInopBtn.classList.remove("active");    
         if (!isActive) {
           inopsTableContainer.style.display = "none";
-          actionButtons.style.display = "flex";
           return;
         }
         sitopContainer.style.display = "none";
-        actionButtons.style.display = "none";
         inopsTableBody.innerHTML =
           "<tr><td colspan='5' style='text-align:center;'>Carregando...</td></tr>";
         try {
@@ -313,5 +309,4 @@
     document.querySelector('[data-page="page-inocrepc"]').addEventListener('click', () => {
       sitopContainer.style.display = 'none';
       inopsTableContainer.style.display = 'none';
-      actionButtons.style.display = 'flex';
     });

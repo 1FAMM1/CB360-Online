@@ -9,7 +9,7 @@
     const backBtn = document.getElementById("backBtn");
     const backFromTableBtn = document.getElementById("backFromTableBtn");
     const saveBtn = document.getElementById("saveBtn");
-    const actionButtons = document.querySelector(".action-buttons");
+    const actionButtons = document.getElementById("inop-action-buttons");
     const sitopContainer = document.getElementById("sitop_container");
     const inopsTableContainer = document.getElementById("inopsTableContainer");
     const inopsTableBody = document.querySelector("#inopsTable tbody");
@@ -67,13 +67,12 @@
       const recordAttr = btn.getAttribute("data-record");
       if (!recordAttr) return console.error("Erro: Atributo data-record não encontrado.");
       const record = JSON.parse(recordAttr);
-      inopsTableContainer.style.display = "none";
-      actionButtons.style.display = "none";
-      NewInopBtn.classList.add("active");
+      inopsTableContainer.style.display = "none";      
       oldInopBtn.classList.remove("active");
       sitopContainer.style.display = "block";
       sitopContainer.style.opacity = "0";
       setTimeout(() => sitopContainer.style.opacity = "1", 10);
+      document.querySelector("#sitop_container .card-header").textContent = "COMUNICAR OPERACIONALIDADE";
       document.getElementById("sitop_veíc").value = record.vehicle || "";
       document.getElementById("sitop_veíc_registration").value = record.registration || "";
       document.getElementById("sitop_gdh_inop").value = record.gdh_inop || "";
@@ -112,18 +111,18 @@
           if (row.category.endsWith("_cc")) recipients.cc = emails;
           if (row.category.endsWith("_bcc")) recipients.bcc = emails;
         });
-        if (recipients.to.length === 0) recipients.to = ["fmartins.ahbfaro@gmail.com"];
+        if (recipients.to.length === 0) recipients.to = [""];
         cachedRecipients = recipients;
         return recipients;
       } catch (err) {
         console.error("Erro ao buscar e-mails:", err);
-        return { to: ["fmartins.ahbfaro@gmail.com"], cc: [], bcc: [] };
+        return { to: ["central0805.ahbfaro@gmail.com"], cc: [], bcc: [] };
       }
     }
     /* =======================================
                LÓGICA DE EMISSÃO
     ======================================= */
-    async function emitSitop() {      
+    async function emitSitop() {
       const vehicle = document.getElementById("sitop_veíc").value.trim();
       showPopupSuccess(`Estado Operacional do veículo ${vehicle} criado com sucesso. Por favor agurade uns segundos, receberá uma nova notificação após o envio para as entidades estar concluído!`);
       const registration = document.getElementById("sitop_veíc_registration").value.trim();
@@ -229,6 +228,7 @@
       if (isActive) {
         toggleSitopContainer(false);
         inopsTableContainer.style.display = "none";
+        document.querySelector("#sitop_container .card-header").textContent = "INSERÇÃO DE NOVA INOPERACIONALIDADE";
       } else {
         toggleSitopContainer(true);
       }

@@ -89,6 +89,7 @@
       document.getElementById("ppi_airfield").checked = record.ppi_airfield === true;
       document.getElementById("ppi_subs_yes").checked = record.ppi_subs === true;
       document.getElementById("ppi_subs_no").checked = record.ppi_subs === false;
+      NewInopBtn.classList.add("active");    
       sitopContainer.setAttribute("data-record-id", record.id);
       saveBtn.textContent = "Emitir Operacionalidade";
       saveBtn.classList.remove("btn-danger");
@@ -310,3 +311,4 @@
       sitopContainer.style.display = 'none';
       inopsTableContainer.style.display = 'none';
     });
+

@@ -137,7 +137,7 @@
           console.error(`Tipo de PPI não reconhecido: ${type}`);
           return;
       }
-      const audioPath = `https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/sounds/${soundFolder}/${fileName}`;
+      const audioPath = `sounds/${soundFolder}/${fileName}`;
       const audio = new Audio(audioPath);
       audio.play()
         .then(() => console.log(`▶️ A tocar: ${fileName}`))
@@ -2212,4 +2212,5 @@
       tr.appendChild(td);
       table.appendChild(tr);
       container.appendChild(table);
+
     }

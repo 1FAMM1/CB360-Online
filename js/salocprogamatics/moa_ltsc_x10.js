@@ -96,7 +96,6 @@
         if (NewMOABtn) NewMOABtn.classList.remove("active");
       };
       window.showMOAContainer = function() {
-        if (actionButtonsContainer) actionButtonsContainer.style.display = "none";
         if (moaContainer) {
           moaContainer.style.opacity = "0";
           moaContainer.style.removeProperty('display');
@@ -227,4 +226,5 @@
         return false;
       };
       console.log("✅ MOA inicializado com sucesso!");
+
     });

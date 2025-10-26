@@ -423,6 +423,7 @@
         });
         if (!response.ok) throw new Error(`Erro Supabase: ${response.status}`);
         const data = await response.json();
+        console.log("✅ Registos carregados:", data);
         data.sort((a, b) => {
           const aVal = a.n_int ?? "";
           const bVal = b.n_int ?? "";
@@ -444,10 +445,9 @@
             btn.dataset.tooltip = row.abv_name || "";
             btn.disabled = false;
           }
-          applyButtonStyle(btn, row.elem_state);
+          applyButtonStyle(btn, row.elem_state, row.situation);
           btn.addEventListener("click", async () => {
             if (row.elem_state === false) return;
-    
             const newSituation = row.situation === "available" ? "unavailable" : "available";
             try {
               const updateResp = await fetch(
@@ -459,6 +459,7 @@
               );
               if (!updateResp.ok) throw new Error(`Erro Supabase: ${updateResp.status}`);
               row.situation = newSituation;
+              applyButtonStyle(btn, row.elem_state, row.situation);
             } catch (err) {
               console.error("❌ Erro ao atualizar situação:", err);
               alert("Erro ao atualizar situação.");
@@ -470,16 +471,19 @@
         console.error("❌ Erro ao carregar elementos:", error);
       }
     }
-    /* =======================================
-              APPLY BUTTON STYLE
-    ======================================= */
-    function applyButtonStyle(btn, elemState) {
+
+    function applyButtonStyle(btn, elemState, situation) {
       if (elemState === false) {
         btn.style.backgroundColor = "red";
         btn.style.color = "white";
       } else {
-        btn.style.backgroundColor = "rgb(158, 158, 158)";
-        btn.style.color = "black";
+        if (situation === "available") {
+          btn.style.backgroundColor = "green";
+          btn.style.color = "white";
+        } else {
+          btn.style.backgroundColor = "rgb(158, 158, 158)";
+          btn.style.color = "black";
+        }
       }
     }
     document.addEventListener("DOMContentLoaded", loadElemsButtons);

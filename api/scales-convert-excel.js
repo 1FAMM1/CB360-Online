@@ -117,6 +117,15 @@ export default async function handler(req, res) {
             currentRow++;
         });
 
+        // 🔽 Oculta linhas vazias entre 18 e 117 (C está vazia)
+        for (let r = 18; r <= 117; r++) {
+            const row = sheet.getRow(r);
+            const cellC = row.getCell(3);
+            if (!cellC.value || cellC.value.toString().trim() === '') {
+                row.hidden = true;
+            }
+        }
+
         sheet.properties.outlineLevelCol = undefined;
         sheet.properties.outlineLevelRow = undefined;
         sheet.eachRow(row => row.eachCell(cell => {
@@ -204,6 +213,15 @@ export default async function handler(req, res) {
                 }
                 rowNum++;
             });
+
+            // 🔽 Oculta linhas vazias entre 18 e 117 (C está vazia) no fallback também
+            for (let r = 18; r <= 117; r++) {
+                const cellC = newSheet.getCell(`C${r}`);
+                if (!cellC.value || cellC.value.toString().trim() === '') {
+                    newSheet.getRow(r).hidden = true;
+                }
+            }
+
             await newWorkbook.xlsx.writeFile(inputFilePath);
         }
 
@@ -222,14 +240,20 @@ export default async function handler(req, res) {
 
         const pdfBuffer = fs.readFileSync(outputFilePath);
 
-        try { if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath); if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath); } catch {}
+        try { 
+            if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath); 
+            if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath); 
+        } catch {}
 
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename="${data.fileName}.pdf"`);
         return res.status(200).send(pdfBuffer);
 
     } catch (error) {
-        try { if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath); if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath); } catch {}
+        try { 
+            if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath); 
+            if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath); 
+        } catch {}
         if (error instanceof SDKError || error instanceof ServiceUsageError || error instanceof ServiceApiError) {
             return res.status(500).json({ error: "Erro no serviço Adobe PDF Services", details: error.message });
         }

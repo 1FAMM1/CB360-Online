@@ -44,9 +44,45 @@
           }
           if (autoInput) autoInput.value = row.aero_autonomy || "";
         });
-        console.log("✅ CMAs carregados com dados do Supabase:", data);
       } catch (error) {
-        console.error("❌ Erro ao carregar CMAs do Supabase:", error);
       }
     }
     document.addEventListener("DOMContentLoaded", loadCMAsFromSupabase);
+    /* =======================================
+          SAVE (UPDATE) AIR CENTERS
+    ======================================= */
+    async function saveCMAsGroupFields() {
+      try {
+        for (let i = 1; i <= 6; i++) {
+          const n = String(i).padStart(2, '0');
+          const nameInput = document.getElementById(`cma_aero_type_${n}`);
+          const typeSelect = document.getElementById(`cma_type_${n}`);
+          const autoInput = document.getElementById(`cma_auto_${n}`);
+          if (!nameInput || !typeSelect || !autoInput) continue;
+          const payload = {
+            aero_name: nameInput.value || null,
+            aero_type: typeSelect.value || null,
+            aero_autonomy: autoInput.value || null
+          };
+          const response = await fetch(`${SUPABASE_URL}/rest/v1/air_centers?id=eq.${i}`, {
+            method: "PATCH",
+            headers: {
+              ...getSupabaseHeaders(),
+              "Content-Type": "application/json",
+              "Prefer": "return=representation"
+            },
+            body: JSON.stringify(payload)
+          });
+    
+          if (!response.ok) throw new Error(`Erro ao atualizar ID ${i}: ${response.status}`);
+          const text = await response.text();
+          if (text) {
+            const json = JSON.parse(text);
+          } else {
+          }
+        }
+        showPopupSuccess("✅ Dados dos CMAs guardados com sucesso!");
+      } catch (error) {
+        showPopupWarning("❌ Ocorreu um erro ao guardar os dados!");
+      }
+    }

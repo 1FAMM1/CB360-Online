@@ -413,7 +413,7 @@
       });
     });
     /* =======================================
-            AVAILABILITY OF ELEMENTS
+          AVAILABILITY OF ELEMENTS
     ======================================= */
     async function loadElemsButtons() {
       try {
@@ -423,16 +423,13 @@
         });
         if (!response.ok) throw new Error(`Erro Supabase: ${response.status}`);
         const data = await response.json();
-        console.log("✅ Registos carregados:", data);
         data.sort((a, b) => {
           const aVal = a.n_int ?? "";
           const bVal = b.n_int ?? "";
           if (!isNaN(aVal) && !isNaN(bVal)) {
             return Number(aVal) - Number(bVal);
           }
-          return aVal.toString().localeCompare(bVal.toString(), "pt", {
-            numeric: true
-          });
+          return aVal.toString().localeCompare(bVal.toString(), "pt", { numeric: true });
         });
         const container = document.getElementById("elems-container");
         container.innerHTML = "";
@@ -440,25 +437,28 @@
           const btn = document.createElement("button");
           btn.classList.add("btn-elem");
           btn.textContent = row.n_int || row.id;
-          btn.dataset.tooltip = row.abv_name || "";
+          if (row.elem_state === false) {
+            btn.dataset.tooltip = "";
+            btn.disabled = true;
+          } else {
+            btn.dataset.tooltip = row.abv_name || "";
+            btn.disabled = false;
+          }
           applyButtonStyle(btn, row.elem_state);
           btn.addEventListener("click", async () => {
+            if (row.elem_state === false) return;
+    
             const newSituation = row.situation === "available" ? "unavailable" : "available";
             try {
               const updateResp = await fetch(
                 `${SUPABASE_URL}/rest/v1/reg_elems?id=eq.${row.id}`, {
                   method: "PATCH",
-                  headers: getSupabaseHeaders({
-                    returnRepresentation: true
-                  }),
-                  body: JSON.stringify({
-                    situation: newSituation
-                  })
+                  headers: getSupabaseHeaders({ returnRepresentation: true }),
+                  body: JSON.stringify({ situation: newSituation })
                 }
               );
               if (!updateResp.ok) throw new Error(`Erro Supabase: ${updateResp.status}`);
               row.situation = newSituation;
-              applyButtonStyle(btn, newSituation);
             } catch (err) {
               console.error("❌ Erro ao atualizar situação:", err);
               alert("Erro ao atualizar situação.");
@@ -470,7 +470,9 @@
         console.error("❌ Erro ao carregar elementos:", error);
       }
     }
-
+    /* =======================================
+              APPLY BUTTON STYLE
+    ======================================= */
     function applyButtonStyle(btn, elemState) {
       if (elemState === false) {
         btn.style.backgroundColor = "red";

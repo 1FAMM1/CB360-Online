@@ -1164,7 +1164,7 @@
         normalRows.push(rowData);
       });
       const payload = {year, month, monthName: monthNames[month - 1], fileName, daysInMonth, weekdays, fixedRows, normalRows};
-      const vercelApiEndpoint = 'https://cb360-mobile.vercel.app/api/scales-convert-exceL';
+      const vercelApiEndpoint = 'https://cb360-mobile.vercel.app/api/scales-convert-excel';
       try {
         const response = await fetch(vercelApiEndpoint, {
           method: 'POST',
@@ -1197,3 +1197,4 @@
       }
 
     }
+

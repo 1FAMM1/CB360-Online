@@ -1,4 +1,3 @@
-// api/convert-excel.js
 import {
     ServicePrincipalCredentials,
     PDFServices,
@@ -74,7 +73,6 @@ export default async function handler(req, res) {
         row11.commit();
         row12.commit();
 
-        // ADICIONA FERIADOS NA ROW 8
         const holidayDays = data.holidayDays || [];
         console.log('Feriados recebidos:', holidayDays);
         
@@ -117,12 +115,20 @@ export default async function handler(req, res) {
             currentRow++;
         });
 
-        // 🔽 Oculta linhas vazias entre 18 e 117 (C está vazia)
         for (let r = 18; r <= 117; r++) {
             const row = sheet.getRow(r);
             const cellC = row.getCell(3);
             if (!cellC.value || cellC.value.toString().trim() === '') {
                 row.hidden = true;
+            }
+        }
+
+        const colStart = 6; // F
+        const colEnd = 36;  // AJ
+        for (let c = colStart; c <= colEnd; c++) {
+            const cell = sheet.getRow(11).getCell(c);
+            if (!cell.value || cell.value.toString().trim() === '') {
+                sheet.getColumn(c).hidden = true;
             }
         }
 
@@ -177,7 +183,6 @@ export default async function handler(req, res) {
             newSheet.getCell('D11').value = 'Nome';
             newSheet.getCell('E11').value = 'Catg.';
             
-            // ADICIONA FERIADOS NA ROW 8 DO FALLBACK
             for (let d = 1; d <= data.daysInMonth; d++) {
                 const col = 6 + (d - 1);
                 const colLetter = String.fromCharCode(64 + col);
@@ -214,11 +219,17 @@ export default async function handler(req, res) {
                 rowNum++;
             });
 
-            // 🔽 Oculta linhas vazias entre 18 e 117 (C está vazia) no fallback também
             for (let r = 18; r <= 117; r++) {
                 const cellC = newSheet.getCell(`C${r}`);
                 if (!cellC.value || cellC.value.toString().trim() === '') {
                     newSheet.getRow(r).hidden = true;
+                }
+            }
+
+            for (let c = 6; c <= 36; c++) {
+                const cell = newSheet.getRow(11).getCell(c);
+                if (!cell.value || cell.value.toString().trim() === '') {
+                    newSheet.getColumn(c).hidden = true;
                 }
             }
 

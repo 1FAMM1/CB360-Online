@@ -441,7 +441,7 @@
           btn.classList.add("btn-elem");
           btn.textContent = row.n_int || row.id;
           btn.dataset.tooltip = row.abv_name || "";
-          applyButtonStyle(btn, row.situation);
+          applyButtonStyle(btn, row.elem_state);
           btn.addEventListener("click", async () => {
             const newSituation = row.situation === "available" ? "unavailable" : "available";
             try {
@@ -471,12 +471,9 @@
       }
     }
 
-    function applyButtonStyle(btn, situation) {
-      if (situation?.toLowerCase().includes("out")) {
+    function applyButtonStyle(btn, elemState) {
+      if (elemState === false) {
         btn.style.backgroundColor = "red";
-        btn.style.color = "white";
-      } else if (situation === "available") {
-        btn.style.backgroundColor = "green";
         btn.style.color = "white";
       } else {
         btn.style.backgroundColor = "rgb(158, 158, 158)";

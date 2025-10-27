@@ -298,6 +298,7 @@
         if (value === "ET") return 2;
       } else {
         if (["PN", "EP", "N"].includes(value)) return 1;
+        if (value === "PT") return 2;
       }
       return 0;
     }
@@ -1197,4 +1198,5 @@
       }
 
     }
+
 

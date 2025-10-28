@@ -183,7 +183,7 @@
     /* =======================================
        PPI INFO WITH/WITHOUT INTERVENTION
     ========================================*/
-    const INTERVENTION_NOTICE_STYLE = "padding: 10px; margin: 20px 0 5px 0; border-radius: 3px; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: bold; font-size: 18px; color: white;"
+    const INTERVENTION_NOTICE_STYLE = "padding: 10px; margin: 20px 0 5px 0; border-radius: 3px; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: bold; font-size: 18px;"
     function createOrUpdateInterventionNotice(parentContainer, isIntervention) {
       let notice = parentContainer.querySelector(".intervention-notice");  
       if (!notice) {
@@ -196,10 +196,11 @@
       }
       if (isIntervention) {
         notice.style.backgroundColor = "#229941";
+        notice.style.color = "#fff";  
         notice.textContent = "COM INTERVENÇÃO DO C.B. Faro - Cruz Lusa";
       } else {
         notice.style.backgroundColor = "#cc1d1d";
-        notice.style.color = "#f2b30a";
+        notice.style.color = "#f2b30a";  
         notice.textContent = "SEM INTERVENÇÃO DO C.B. Faro - Cruz Lusa";
       }
     }
@@ -2214,3 +2215,4 @@
       container.appendChild(table);
 
     }
+

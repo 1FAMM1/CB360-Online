@@ -11,3 +11,18 @@ function getSupabaseHeaders(options = {}) {
       }
       return headers;
     }
+
+
+document.addEventListener('DOMContentLoaded', () => {
+  const currentUser = sessionStorage.getItem("currentUserName");
+  const currentUserDisplay = sessionStorage.getItem("currentUserDisplay");
+  
+  // Se não houver usuário logado, redireciona imediatamente
+  if (!currentUser) {
+    window.location.replace("index.html");
+    return; // Para a execução de qualquer código seguinte
+  }
+  
+  // Se chegou aqui, está autenticado - atualiza o nome
+  const authNameEl = document.getElementById('authName');
+  if (authNameEl) authNameEl.textContent = currentUserDisplay || "";

@@ -312,20 +312,24 @@
       if (type === "success") toast.classList.add("success");
       setTimeout(() => toast.classList.remove("show"), duration);
     }
-    window.history.pushState(null, "", window.location.href);
+    window.history.pushState(null, null, window.location.href);
     window.onpopstate = function() {
-      window.history.pushState(null, "", window.location.href);
+      window.history.go(1);
     };
-    document.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('pageshow', function(event) {
+      const usernameField = document.getElementById("username");
+      const passwordField = document.getElementById("password");
+      if (usernameField) usernameField.value = "";
+      if (passwordField) passwordField.value = "";
+      if (event.persisted) {
+        window.location.reload();
+      }
+    });
+    document.addEventListener('DOMContentLoaded', function() {
       document.getElementById("username").value = "";
       document.getElementById("password").value = "";
-      window.addEventListener('pageshow', function(event) {
-        if (event.persisted) {
-          document.getElementById("username").value = "";
-          document.getElementById("password").value = "";
-        }
-      });
     });
   </script>
 </body>
+
 </html>

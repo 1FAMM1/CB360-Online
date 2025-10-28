@@ -48,7 +48,7 @@
         <button class="sidebar-sub-submenu-button" data-page="page-scales" data-access="Emissão Escala">Emissão Escala</button>
         <button class="sidebar-sub-submenu-button" data-page="page-scales" data-access="Consultar Escalas">Consultar Escalas</button>
       </div>
-      <button class="sidebar-menu-button sub-submenu-toggle" data-page="" data-access="EMPLOYEES 360" onclick="showTempWarning('MÓDULO BREVEMENTE DISPONÍVEL EM CB360 ONLINE')">👥 EMPLOYEES 360</button>
+      <button class="sidebar-menu-button" data-page="" data-access="EMPLOYEES 360" onclick="showTempWarning('MÓDULO BREVEMENTE DISPONÍVEL EM CB360 ONLINE')">👥 EMPLOYEES 360</button>
       <button class="sidebar-menu-button sub-submenu-toggle" data-page="page-saloc" data-access="SALOC 360">👥 SALOC 360</button>
       <div class="submenu">
         <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-ppis">Planos Prévios de Intervenção</button>
@@ -73,7 +73,7 @@
           <button class="sidebar-sub-submenu-button" data-page="page-inocrepc">Sitop de Veículos</button>
           <button class="sidebar-sub-submenu-button" data-page="page-advanced-4" onclick="showTempWarning('MÓDULO BREVEMENTE DISPONÍVEL EM CB360 ONLINE')">Refeições DECIR</button>
         </div>
-        <button class="sidebar-submenu-button" data-page="" onclick="showTempWarning('MÓDULO BREVEMENTE DISPONÍVEL EM CB360 ONLINE')">Consola de Alarmes</button>
+        <button class="sidebar-submenu-button" data-page="page-alarm-console">Consola de Alarmes</button>
       </div>
       <button class="sidebar-menu-button submenu-toggle" data-page="page-wsms" data-access="WSMS 360">⚠️ WSMS 360</button>
       <div class="submenu">
@@ -125,8 +125,9 @@
       </div>
     </div>
   </div>
-  <!---------------------------->
-  <!---- TEMP POPUP MODULE ---->
+  
+  <!--------------------------->
+  <!---- TEMP POPUP MODULE ---->  
   <div id="popup-temp-modal" class="popup-modal" tabindex="0">
     <div class="popup-content">
       <h3>BREVEMENTE</h3>
@@ -134,8 +135,10 @@
       <button id="popup-temp-ok-btn" class="btn btn-success">OK</button>
     </div>
   </div>
-  <!---------------------------->
-  <!---------------------------->
+  <!--------------------------->
+  <!--------------------------->
+  
+  
   <!---- REGISTRATION WINDOW MODULE ---->
   <div class="window" role="dialog" aria-labelledby="win-title" id="editWindow">
     <div class="window-titlebar">
@@ -497,9 +500,9 @@
           <div class="form-row" style="margin: 3px 0 0 0; display: flex; justify-content: center;">
             <div class="main-card" id="ppia22-main-options" style="display: flex; flex-direction: column; align-items: center;">
               <label style="margin-bottom: 10px; font-size: 14px; font-weight: bold;">Selecione uma Opção</label>
-              <div class="action-buttons" style="gap: 5px;">
-                <button class="btn btn-add shift-btn" style="height: 35px;" onclick="consultationGridA22KmType()">Cosulta por Km</button>
-                <button class="btn btn-add shift-btn" style="height: 35px;" onclick="consultationGridA22ButtonType()">Consulta por Grelha</button>
+              <div class="action-buttons" id="ppia22-options" style="gap: 5px;">
+                <button id="ppi_a22_by_km" class="btn btn-add" style="height: 35px;" onclick="consultationGridA22KmType()">Cosulta por Km</button>
+                <button id="ppi_a22_by_grid" class="btn btn-add" style="height: 35px;" onclick="consultationGridA22ButtonType()">Consulta por Grelha</button>
               </div>
             </div>
           </div>
@@ -531,9 +534,9 @@
           <div class="form-row" style="margin: 3px 0 0 0; display: flex; justify-content: center;">
             <div class="main-card" id="ppilinfer-main-options" style="display: flex; flex-direction: column; align-items: center;">
               <label style="margin-bottom: 10px; font-size: 14px; font-weight: bold;">Selecione uma Opção</label>
-              <div class="action-buttons" style="gap: 5px;">
-                <button class="btn btn-add shift-btn" style="height: 35px;" onclick="consultationGridLinFerKmType()">Cosulta por PKm</button>
-                <button class="btn btn-add shift-btn" style="height: 35px;" onclick="consultationGridLinFerButtonType()">Consulta por Grelha</button>
+              <div class="action-buttons" id="ppilinfer-options" style="gap: 5px;">
+                <button class="btn btn-add" style="height: 35px;" onclick="consultationGridLinFerKmType()">Cosulta por PKm</button>
+                <button class="btn btn-add" style="height: 35px;" onclick="consultationGridLinFerButtonType()">Consulta por Grelha</button>
               </div>
             </div>
           </div>
@@ -603,7 +606,7 @@
                   <input type="text" id="service_refusal_validation" style="width: 200px;">
                 </div>
               </div>
-              <div class="action-buttons">
+              <div class="action-buttons" id="service-refusal">
                 <button class="btn btn-success" onclick="insertServiceRefusal()">Validar</button>
               </div>
             </div>
@@ -687,7 +690,7 @@
                   <input type="text" id="ineinop_validation" style="width: 200px;">
                 </div>
               </div>
-              <div class="action-buttons">
+              <div class="action-buttons" id="inem-inop">
                 <button class="btn btn-success" onclick="insertIneInop()">Validar</button>
               </div>
             </div>
@@ -812,7 +815,7 @@
             <div class="form-row" style="margin: 0; display: flex; justify-content: center;">
               <div class="main-card" style="display: flex; flex-direction: column; align-items: center;">
                 <label style="margin-bottom: 10px; font-size: 14px; font-weight: bold;">Selecione uma Opção</label>
-                <div class="action-buttons" style="gap: 5px;">
+                <div class="action-buttons" id="docs-crepc" style="gap: 5px;">
                   <button id="NewMOABtn" class="btn btn-add moa-btn" style="height: 35px;">MOA's</button>
                   <button class="btn btn-add anxg2-btn" style="height: 35px;" onclick="">ANEXO G2</button>
                   <button class="btn btn-add assdec-btn" style="height: 35px;" onclick="">ASSINATURAS DECIR</button>
@@ -1027,7 +1030,7 @@
                     <label> OPTEL:</label>
                     <input type="text" id="moa_optel" style="width: 150px;">
                   </div>
-                  <div class="action-buttons" style="gap: 5px;">
+                  <div class="action-buttons" id="moa-emit" style="gap: 5px;">
                     <button class="btn btn-success" id="saveMOABtn" style="height: 35px;">Emitir MOA</button>
                   </div>
                 </div>
@@ -1047,7 +1050,7 @@
           <div class="form-row" style="margin: 0 0 0 0; display: flex; justify-content: center;">
             <div class="main-card" style="display: flex; flex-direction: column; align-items: center;">
               <label style="margin-bottom: 10px; font-size: 14px; font-weight: bold;">Selecione um Turno</label>
-              <div class="action-buttons" style="gap: 5px;">
+              <div class="action-buttons" id="plandir-shift" style="gap: 5px;">
                 <button class="btn btn-add shift-btn" style="height: 35px;" data-shift="D" onclick="loadShift('D')">TURNO "D"</button>
                 <button class="btn btn-add shift-btn" style="height: 35px;" data-shift="N" onclick="loadShift('N')">TURNO "N"</button>
                 <button class="btn btn-add shift-btn" style="height: 35px; background: orange; color: black;" data-shift="LAST" onclick="loadShift('LAST')">ÚLTIMO</button>
@@ -1056,7 +1059,7 @@
           </div>
           <div id="plandir_container">
             <div class="form-row" style="margin: 0 0 0 0; display: flex; flex-wrap: wrap; justify-content: flex-end;">
-              <div class="action-buttons" style="gap: 5px;">
+              <div class="action-buttons" id="plandir-emit" style="gap: 5px;">
                 <button id="emit-pp" class="btn btn-success" style="display: none;">Emitir Planeamento</button>
               </div>
             </div>
@@ -1074,7 +1077,7 @@
           <div class="form-row" style="margin: 0; display: flex; justify-content: center;">
             <div class="main-card" style="display: flex; flex-direction: column; align-items: center;">
               <label style="margin-bottom: 10px; font-size: 14px; font-weight: bold;">Selecione uma Opção</label>
-              <div class="action-buttons" style="gap: 5px;">
+              <div class="action-buttons" id="inop-action-buttons" style="gap: 5px;">
                 <button class="btn btn-add oldinop" style="height: 35px;">EM CURSO</button>
                 <button class="btn btn-add newinop" style="height: 35px;" id="NewInopBtn">NOVA</button>
               </div>
@@ -1082,19 +1085,20 @@
           </div>
           <div id="inopsTableContainer" style="display: none; margin-top: 20px;">
             <h3>Inoperacionalidades em Curso</h3>
-            <table id="inopsTable" class="table-container" border="1" style="width: 100%; border-collapse: collapse;">
-              <thead>
-                <tr>
-                  <th style="width: 100px;">Veículo</th>
-                  <th style="width: 150px;">GDH INOP</th>
-                  <th style="width: 250px;">Tipo de Avaria</th>
-                  <th style="width: 500px;">Descrição da Avaria</th>
-                  <th style="width: 150px;">Ação</th>
-                </tr>
-              </thead>
-              <tbody>
-              </tbody>
-            </table>
+            <div class="table-container" style="border: 1px solid #ccc; border-radius: 6px; overflow: hidden;">
+              <table id="inopsTable" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                  <tr>
+                    <th style="width: 100px;">Veículo</th>
+                    <th style="width: 150px;">GDH INOP</th>
+                    <th style="width: 250px;">Tipo de Avaria</th>
+                    <th style="width: 500px;">Descrição da Avaria</th>
+                    <th style="width: 150px;">Ação</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
           </div>
           <div id="sitop_container" style="display: none; margin-top: 20px;">
             <div class="card-header">INSERÇÃO DE NOVA INOPERACIONALIDADE</div>
@@ -1168,6 +1172,70 @@
         <div class="card-footer"></div>
       </div>
     </div>
+    <!---- ALARM CONSOLE SUB-MODULE ---->
+    <div id="page-alarm-console" class="page">
+      <h2 class="section-title">SALOC 360</h2>
+      <div class="card">
+        <div class="card-header">CONSOLA DE ALARMES INTERNA</div>
+        <div class="card-body">
+          <div class="grid-2fr">
+            <div class="main-card" id="cons-indiv" style="display: flex; flex-direction: column; align-items: center;">
+              <h3 style="font-size: 16px; font-weight: bold; margin: 10px 0 15px 0; color: #828282;">CHAMADA INDIVIDUAL</h3>
+              <label style="margin-bottom: 15px; font-size: 14px;">Selecione uma Opção</label>
+              <div class="action-buttons" id="alarm-console-indiv" style="gap: 5px;">
+                <button id="ca-indiv-pv" class="btn btn-add" style="height: 40px; width: 110px;" onclick="">Parque de Viaturas</button>
+                <button id="ca-indiv-cc" class="btn btn-add" style="height: 40px; width: 110px;" onclick="">Contacto com a Central</button>
+                <button id="ca-indiv-sb" class="btn btn-add" style="height: 40px; width: 110px;" onclick="">Sala do Bombeiro</button>
+                <button id="ca-indiv-gch" class="btn btn-add" style="height: 40px; width: 110px;" onclick="">Gabinete de Chefes</button>
+                <button id="ca-indiv-gcm" class="btn btn-add" style="height: 40px; width: 110px;" onclick="">Gabinete de Comando</button>
+              </div>
+              <div class="form-row" style="margin: 20px 0 0 0;">
+                <div class="global-field-horizontal">
+                  <label style="font-size: 12px; font-weight: bold; color: #444;">Selecione o Elemento:</label>
+                  <select id="ca-indiv-catch" style="font-size: 14px; height: 25px;"></select>
+                </div>
+              </div>
+              <div class="form-row" style="margin: 20px 0 0 0;">
+                <button id="ca-call-indiv" class="btn btn-success" style="height: 40px;" onclick="">Chamar Elemento</button>
+              </div>
+            </div>
+            <div class="main-card" id="cons-group" style="display: flex; flex-direction: column; align-items: center;">
+              <h3 style="font-size: 16px; font-weight: bold; margin: 10px 0 15px 0; color: #828282;">CHAMADA DE GRUPO</h3>
+              <label style="margin-bottom: 15px; font-size: 14px;">Selecione uma Opção</label>
+              <div class="action-buttons" id="alarm-console-group" style="gap: 5px;">
+                <button id="ca-glob-pv" class="btn btn-add" style="height: 40px; width: 110px;" onclick="">Parque de Viaturas</button>
+                <button id="ca-glob-sb" class="btn btn-add" style="height: 40px; width: 110px;" onclick="">Sala do Bombeiro</button>
+                <button id="ca-glob-sn" class="btn btn-add" style="height: 40px; width: 110px;" onclick="">Salão Nobre</button>
+                <button id="ca-glob-gch" class="btn btn-add" style="height: 40px; width: 110px;" onclick="">Gabinete de Chefes</button>
+                <button id="ca-glob-gcm" class="btn btn-add" style="height: 40px; width: 110px;" onclick="">Gabinete de Comando</button>
+              </div>
+              <div class="form-row" style="margin: 20px 0 0 0;">
+                <div class="global-field-horizontal">
+                  <label style="font-size: 12px; font-weight: bold; color: #444;">Selecione o Grupo:</label>
+                  <select id="ca-group-catch" style="font-size: 14px; height: 25px;">
+                    <option></option>
+                    <option>Elementos de Serviço</option>
+                    <option>EIP</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-row" style="margin: 20px 0 0 0;">
+                <button id="ca-call-group" class="btn btn-success" style="height: 40px;" onclick="">Chamar Grupo</button>
+              </div>
+            </div>            
+          </div>
+          <div class="main-card" id="cons-internal" style="margin: 10px 0 0 0; display: flex; flex-direction: column; align-items: center;">
+            <h3 style="font-size: 16px; font-weight: bold; margin: 10px 0 15px 0; color: #828282;">ALARMES INTERNOS</h3>
+            <label style="margin-bottom: 15px; font-size: 14px;">Selecione uma Opção</label>
+            <div class="action-buttons" id="alarm-console-internal" style="gap: 5px;">
+              <button id="ca-format" class="btn btn-add" style="height: 40px; width: 110px;" onclick="">Formatura</button>
+              <button id="ca-alvor" class="btn btn-add" style="height: 40px; width: 110px;" onclick="">Alvorada</button>
+            </div>              
+          </div>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+    </div>
     <!---- WSMS 360 MODULE ---->
     <!---- ON-GOING OCCURRENCES SUB-MODULE ---->
     <div id="page-active_occurrences" class="page">
@@ -1195,7 +1263,7 @@
             </div>
           </div>
           <div class="form-row" style="margin: 10px 0 -8px 0; display: flex; justify-content: flex-end;">
-            <div class="action-buttons">
+            <div class="action-buttons" id="ongoing-occorrences-refresh">
               <button class="btn btn-success" onclick="loadActiveOccurrences()">ATUALIZAR LISTA</button>
             </div>
           </div>
@@ -1380,7 +1448,7 @@
           <div class="grid-2fr" id="vehicle-container"></div>
           <textarea id="wsms_output" rows="4" cols="50" readonly style="display: none;"></textarea>
           <div class="form-row" style="margin: 15px 0 -5px 0; display: flex; flex-wrap: wrap; justify-content: flex-end;">
-            <div class="action-buttons">
+            <div class="action-buttons" id="newoccurrence-sendgroup" >
               <button class="btn btn-success" onclick="generateWSMSMessage()">BOMBEIROS</button>
               <button class="btn btn-danger" onclick="generateNewCREPCMessage()">COMUNICAR CREPC</button>
             </div>
@@ -1409,7 +1477,7 @@
       <div class="card last-card">
         <div class="card-header">DADOS ADICIONAIS</div>
         <div class="form-row" style="margin: 15px 0 -40px 0; display: flex; flex-wrap: wrap; justify-content: center;">
-          <div class="action-buttons">
+          <div class="action-buttons" id="closeoccurrence-extra-options" >
             <button class="btn btn-add" onclick="toggleClsOcorrSection('victims-card', this)">VÍTIMAS</button>
             <button class="btn btn-add" onclick="toggleClsOcorrSection('extras-card', this)">OUTROS MEIOS</button>
             <button class="btn btn-add" onclick="toggleClsOcorrSection('demage-card', this)">DANOS</button>
@@ -1479,7 +1547,7 @@
         </div>
         <div class="card-footer"></div>
       </div>
-      <div class="action-buttons" style="margin: -35px 0 50px 0;">
+      <div class="action-buttons" id="closeoccurrence-sendgroup" style="margin: -35px 0 50px 0;">
         <button class="btn btn-danger" onclick="generateCloseCREPCMessage()">COMUNICAR CREPC</button>
       </div>
     </div>
@@ -1554,7 +1622,7 @@
         <div class="card-footer"></div>
       </div>
       <div class="form-row" style="margin: 10px 0 10px 10px; display: flex; flex-wrap: wrap; justify-content: flex-end;">
-        <div class="action-buttons">
+        <div class="action-buttons" id="solicitation-sendgroup" >
           <button class="btn btn-success" onclick="generateAvailability()">SOLICITAR</button>
         </div>
       </div>
@@ -1598,7 +1666,7 @@
           </div>
         </div>
         <div class="form-row" style="margin: 0 15px 15px 0; display: flex; flex-wrap: wrap; justify-content: flex-end;">
-          <div class="action-buttons">
+          <div class="action-buttons" id="veícunavailable-sendgroup">
             <button class="btn btn-danger" onclick="generateNewUnvailability()">ENVIAR INDISPONIBILIDADE</button>
           </div>
         </div>
@@ -1624,7 +1692,7 @@
           </div>
         </div>
         <div class="form-row" style="margin: -5px 20px 15px 0; display: flex; justify-content: flex-end;">
-          <div class="action-buttons">
+          <div class="action-buttons" id="veícunavailable-refresh">
             <button class="btn btn-success" onclick="loadActiveUnavailability()">ATUALIZAR LISTA</button>
           </div>
         </div>
@@ -1667,7 +1735,7 @@
           </div>
         </div>
         <div class="form-row" style="margin: 0 15px 15px 0; display: flex; flex-wrap: wrap; justify-content: flex-end;">
-          <div class="action-buttons">
+          <div class="action-buttons" id="veícavailable-sendgroup">
             <button class="btn btn-success" onclick="generateEndUnavailability()">ENVIAR DISPONIBILIDADE</button>
           </div>
         </div>
@@ -1694,7 +1762,7 @@
             </div>
           </div>
           <div class="form-row" style="margin: 0 0 -5px 0; display: flex; flex-wrap: wrap; justify-content: flex-end;">
-            <div class="action-buttons">
+            <div class="action-buttons" id="municipalgrid-sendgroup">
               <button class="btn btn-success" onclick="generateMunicipalityGridMessage()">ENVIAR ESTADO</button>
             </div>
           </div>
@@ -1747,7 +1815,7 @@
                     </div>
                   </div>
                   <div class="form-row" style="margin: 15px 0 0 0; justify-content: center;">
-                    <div class="action-buttons">
+                    <div class="action-buttons" id="add-new-veíc">
                       <button id="add_vehicle_btn" class="btn btn-success">ADICIONAR</button>
                     </div>
                   </div>
@@ -1761,7 +1829,7 @@
                     </div>
                   </div>
                   <div class="form-row" style="margin: 15px 0 0 0; justify-content: center;">
-                    <div class="action-buttons">
+                    <div class="action-buttons" id="remove-veíc">
                       <button id="remove_vehicle_btn" class="btn btn-danger">REMOVER</button>
                     </div>
                   </div>
@@ -1797,7 +1865,7 @@
               <div class="main-card">
                 <div id="routes-container" style="margin: 5px 0 0 0;"></div>
               </div>
-              <div class="action-buttons" style="margin: 15px 0 0 0;">
+              <div class="action-buttons" id="street-cut" style="margin: 15px 0 0 0;">
                 <button class="btn btn-success" onclick="saveRoutesGroupFields()">ATUALIZAR</button>
               </div>
             </div>
@@ -1805,7 +1873,7 @@
               <h3>CENTROS DE MEIOS AÉREOS</h3>
               <p>CMA's Ativos na Região.</p>
               <div id="cma-container" class="grid-3fr" style="gap: 10px;"></div>
-              <div class="action-buttons" style="margin: 20px 0 0 0;">
+              <div class="action-buttons" id="present-cmas" style="margin: 20px 0 0 0;">
                 <button class="btn btn-success" onclick="saveCMAsGroupFields()">ATUALIZAR</button>
               </div>
             </div>
@@ -1901,11 +1969,12 @@
               <div class="table-container">
                 <table id="elements-container">
                   <thead>
-                    <tr>
+                    <tr style="height: 40px;">
                       <th>Nº Interno</th>
                       <th>Nº Mecanográfico</th>
                       <th>Patente</th>
                       <th>Nome Completo</th>
+                      <th>Estado</th>
                       <th>Ações</th>
                     </tr>
                   </thead>
@@ -1941,6 +2010,7 @@
   <script src="js/salocprogamatics/moa_ltsc_x10.js"></script>
   <script src="js/salocprogamatics/dailyplan_ltsc_x10.js"></script>
   <script src="js/salocprogamatics/inopform_ltsc_x10.js"></script>
+  <script src="js/salocprogamatics/alarmconsole_ltsc_x10.js"></script>
   <script src="js/wsmsprogramatics/currevents_ltsc_x17.js"></script>
   <script src="js/wsmsprogramatics/newevent_ltsc_x17.js"></script>
   <script src="js/wsmsprogramatics/clsevent_ltsc_x17.js"></script>
@@ -1957,4 +2027,5 @@
   <script src="js/datacenterprogramatics/elemdata_ltsc_x06.js"></script>
   <script></script>
 </body>
+
 </html>

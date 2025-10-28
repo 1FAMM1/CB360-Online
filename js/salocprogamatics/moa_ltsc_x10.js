@@ -144,7 +144,7 @@
           data[`moa_${field}`] = el ? (el.value || '').toString().trim() : "";
         });
         try {
-          const categories = ['moa_mail_to', 'moa_mail_cc', 'moa_mail_bcc'];
+          const categories = ['crepcmoa_mail_to', 'crepcmoa_mail_cc', 'crepcmoa_mail_bcc'];
           const url = `${SUPABASE_URL}/rest/v1/static_options?category=in.(${categories.join(',')})&select=category,value`;
           const response = await fetch(url, { headers: getSupabaseHeaders() });
           const emailData = await response.json();
@@ -228,3 +228,4 @@
       console.log("✅ MOA inicializado com sucesso!");
 
     });
+

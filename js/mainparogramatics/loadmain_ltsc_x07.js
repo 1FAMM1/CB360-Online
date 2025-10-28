@@ -70,10 +70,11 @@
       });
       /* ============== LOGOUT ============== */
       const logoutBtn = document.getElementById("logoutBtn");
-if (logoutBtn) {
-  logoutBtn.addEventListener("click", () => {
-    sessionStorage.removeItem("currentUserName");
-    sessionStorage.removeItem("currentUserDisplay");
-    window.location.replace("index.html");
-  });
-}
+      if (logoutBtn) {
+        logoutBtn.addEventListener("click", () => {
+          sessionStorage.removeItem("currentUserName");
+          sessionStorage.removeItem("currentUserDisplay");
+          window.location.replace("index.html");
+        });
+      }
+    });

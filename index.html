@@ -19,7 +19,7 @@
       color: #fff;
       text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
     }
-    
+
     body,
     body * {
       user-select: none;
@@ -47,7 +47,7 @@
       display: inline-block;
       min-width: 90px;
     }
-    
+
     .prepare {
       text-align: center;
       margin: 0px 0 100px 0;
@@ -213,10 +213,10 @@
 <body>
   <div id="greeting" class="greeting">
     <span id="greetingText"></span>, são <span id="clock"></span>.
-  </div>  
+  </div>
   <div id="prepare" class="prepare">
     <span id="prepareText">Preparae-se para dinamizar o seu Corpo de Bombeiros.</span>
-  </div>   
+  </div>
   <div class="login-container">
     <h1>↪ ACESSO AO</h1>
     <img class="logo" src="https://rjkbodfqsvckvnhjwmhg.supabase.co/storage/v1/object/public/cb_logos/logo_cb_360.png" alt="Logo CB 360">
@@ -234,98 +234,98 @@
 
   <script>
     function updateGreeting() {
-    const now = new Date();
-    const hour = now.getHours();
-    let greetingText = "🌙 Boa noite";
-    if (hour >= 6 && hour < 12) greetingText = "☀️ Bom dia";
-    else if (hour >= 12 && hour < 19) greetingText = "🌤️ Boa tarde";
-    document.getElementById("greetingText").textContent = greetingText;
-    const time = now.toLocaleTimeString('pt-PT', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
-    document.getElementById("clock").textContent = time;
-  }
-
-  function startClock() {
-    updateGreeting();
-    const now = new Date();
-    const delay = 1000 - now.getMilliseconds();
-    setTimeout(() => {
-      updateGreeting();
-      setInterval(updateGreeting, 1000);
-    }, delay);
-  }
-  startClock();
-
-  const SUPABASE_URL = 'https://rjkbodfqsvckvnhjwmhg.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqa2JvZGZxc3Zja3ZuaGp3bWhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgxNjM3NjQsImV4cCI6MjA2MzczOTc2NH0.jX5OPZkz1JSSwrahCoFzqGYw8tYkgE8isbn12uP43-0';
-
-  function getSupabaseHeaders(options = {}) {
-    const headers = {
-      'apikey': SUPABASE_ANON_KEY,
-      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-      'Content-Type': 'application/json'
-    };
-    if (options.returnRepresentation) headers['Prefer'] = 'return=representation';
-    return headers;
-  }
-
-  document.getElementById("loginForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const user = document.getElementById("username").value.trim();
-    const pass = document.getElementById("password").value.trim();
-
-    try {
-      const response = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?select=user_name,password,full_name,patent&user_name=eq.${user}`, {
-        headers: getSupabaseHeaders()
+      const now = new Date();
+      const hour = now.getHours();
+      let greetingText = "🌙 Boa noite";
+      if (hour >= 6 && hour < 12) greetingText = "☀️ Bom dia";
+      else if (hour >= 12 && hour < 19) greetingText = "🌤️ Boa tarde";
+      document.getElementById("greetingText").textContent = greetingText;
+      const time = now.toLocaleTimeString('pt-PT', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
       });
+      document.getElementById("clock").textContent = time;
+    }
 
-      if (!response.ok) throw new Error(`Erro ao buscar utilizador: ${response.status}`);
+    function startClock() {
+      updateGreeting();
+      const now = new Date();
+      const delay = 1000 - now.getMilliseconds();
+      setTimeout(() => {
+        updateGreeting();
+        setInterval(updateGreeting, 1000);
+      }, delay);
+    }
+    startClock();
+    const SUPABASE_URL = 'https://rjkbodfqsvckvnhjwmhg.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqa2JvZGZxc3Zja3ZuaGp3bWhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgxNjM3NjQsImV4cCI6MjA2MzczOTc2NH0.jX5OPZkz1JSSwrahCoFzqGYw8tYkgE8isbn12uP43-0';
 
-      const data = await response.json();
-
-      if (data.length && data[0].password === pass) {
-        const fullName = data[0].full_name || user;
-        const patent = data[0].patent || "";
-        const displayName = patent ? `${fullName} (${patent})` : fullName;
-
-        showToast("✔ Login efetuado com sucesso!", 2000, "success");
-
-        setTimeout(() => {
-          sessionStorage.setItem("currentUserDisplay", displayName);
-          sessionStorage.setItem("currentUserName", user);
-          window.location.href = "main.html";
-          
-        }, 2000);
-      } else {
-        showToast("✖ Utilizador ou password incorretos.", 2000, "error");
+    function getSupabaseHeaders(options = {}) {
+      const headers = {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json'
+      };
+      if (options.returnRepresentation) headers['Prefer'] = 'return=representation';
+      return headers;
+    }
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const user = document.getElementById("username").value.trim();
+      const pass = document.getElementById("password").value.trim();
+      try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?select=user_name,password,full_name,patent&user_name=eq.${user}`, {
+          headers: getSupabaseHeaders()
+        });
+        if (!response.ok) throw new Error(`Erro ao buscar utilizador: ${response.status}`);
+        const data = await response.json();
+        if (data.length && data[0].password === pass) {
+          const fullName = data[0].full_name || user;
+          const patent = data[0].patent || "";
+          const displayName = patent ? `${fullName} (${patent})` : fullName;
+          showToast("✔ Login efetuado com sucesso!", 2000, "success");
+          setTimeout(() => {
+            sessionStorage.setItem("currentUserDisplay", displayName);
+            sessionStorage.setItem("currentUserName", user);
+            window.location.href = "main.html";
+          }, 2000);
+        } else {
+          showToast("✖ Utilizador ou password incorretos.", 2000, "error");
+        }
+      } catch (err) {
+        console.error(err);
+        showToast("Erro de conexão. Tente novamente.", 2000, "error");
       }
+    });
 
-    } catch (err) {
-      console.error(err);
-      showToast("Erro de conexão. Tente novamente.", 2000, "error");
+    function showToast(message, duration = 2000, type = "error") {
+      let toast = document.getElementById("toast");
+      if (!toast) {
+        toast = document.createElement("div");
+        toast.id = "toast";
+        toast.className = "toast";
+        document.body.appendChild(toast);
+      }
+      toast.textContent = message;
+      toast.className = "toast show";
+      if (type === "success") toast.classList.add("success");
+      setTimeout(() => toast.classList.remove("show"), duration);
     }
-  });
-
-  function showToast(message, duration = 2000, type = "error") {
-    let toast = document.getElementById("toast");
-    if (!toast) {
-      toast = document.createElement("div");
-      toast.id = "toast";
-      toast.className = "toast";
-      document.body.appendChild(toast);
-    }
-    toast.textContent = message;
-    toast.className = "toast show";
-    if (type === "success") toast.classList.add("success");
-    setTimeout(() => toast.classList.remove("show"), duration);
-  }
-    window.history.pushState(null, "", window.location.href);  
-    window.onpopstate = function() {
     window.history.pushState(null, "", window.location.href);
-  };
+    window.onpopstate = function() {
+      window.history.pushState(null, "", window.location.href);
+    };
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById("username").value = "";
+      document.getElementById("password").value = "";
+      window.addEventListener('pageshow', function(event) {
+        if (event.persisted) {
+          document.getElementById("username").value = "";
+          document.getElementById("password").value = "";
+        }
+      });
+    });
   </script>
 </body>
-
-
 </html>
-
-

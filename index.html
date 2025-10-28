@@ -317,10 +317,15 @@
     toast.className = "toast show";
     if (type === "success") toast.classList.add("success");
     setTimeout(() => toast.classList.remove("show"), duration);
-  }    
+  }
+    window.history.pushState(null, "", window.location.href);  
+    window.onpopstate = function() {
+    window.history.pushState(null, "", window.location.href);
+  };
   </script>
 </body>
 
 
 </html>
+
 

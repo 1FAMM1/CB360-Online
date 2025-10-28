@@ -69,12 +69,11 @@
         }
       });
       /* ============== LOGOUT ============== */
-      document.addEventListener('DOMContentLoaded', () => {
-        const currentUser = sessionStorage.getItem("currentUserName");
-        const currentUserDisplay = sessionStorage.getItem("currentUserDisplay");
-         if (!currentUser) {
-      window.location.replace("index.html");
-      return;
-      }
-      const authNameEl = document.getElementById('authName');
-      if (authNameEl) authNameEl.textContent = currentUserDisplay || "";
+      const logoutBtn = document.getElementById("logoutBtn");
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", () => {
+    sessionStorage.removeItem("currentUserName");
+    sessionStorage.removeItem("currentUserDisplay");
+    window.location.replace("index.html");
+  });
+}

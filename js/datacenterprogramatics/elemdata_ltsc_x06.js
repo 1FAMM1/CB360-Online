@@ -1,4 +1,4 @@
-    /* =======================================
+/* =======================================
                 FIREFIGHTER LISTING
     ======================================= */
     const ACCESS_OPTIONS = [
@@ -27,7 +27,7 @@
         });
         if (!response.ok) throw new Error(`Erro Supabase: ${response.status}`);
         let data = await response.json();
-        data = data.filter(row => row.elem_state === true);
+        //data = data.filter(row => row.elem_state === true);
         const tbody = document.querySelector("#elements-container tbody");
         tbody.innerHTML = "";
         if (!data.length) {
@@ -48,9 +48,14 @@
         });
         data.forEach(row => {
           const tr = document.createElement("tr");
-          ["n_int", "n_file", "patent", "full_name"].forEach(field => {
+          ["n_int", "n_file", "patent", "full_name", "elem_state",].forEach(field => {
             const td = document.createElement("td");
-            td.textContent = row[field] ?? "";
+            if (field === "elem_state") {
+              td.textContent = row[field] ? "ATIVO" : "INATIVO";
+              td.style.color = row[field] ? "green" : "red";
+            } else {
+              td.textContent = row[field] ?? "";
+            }
             td.style.textAlign = "center";
             tr.appendChild(td);
           });

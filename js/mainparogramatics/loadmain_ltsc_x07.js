@@ -69,12 +69,27 @@
         }
       });
       /* ============== LOGOUT ============== */
-      const logoutBtn = document.getElementById("logoutBtn");
-      if (logoutBtn) {
-        logoutBtn.addEventListener("click", () => {
-          sessionStorage.removeItem("currentUserName");
-          sessionStorage.removeItem("currentUserDisplay");
-          window.location.replace("index.html");
-        });
-      }
+      document.addEventListener('DOMContentLoaded', () => {
+  const currentUser = sessionStorage.getItem("currentUserName");
+  const currentUserDisplay = sessionStorage.getItem("currentUserDisplay");
+  
+  // Se não houver usuário logado, volta para login
+  if (!currentUser) {
+    window.location.replace("index.html");
+    return;
+  }
+  
+  // Se chegou aqui, está autenticado
+  const authNameEl = document.getElementById('authName');
+  if (authNameEl) authNameEl.textContent = currentUserDisplay || "";
+  
+  // Configurar botão de logout
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+      sessionStorage.removeItem("currentUserName");
+      sessionStorage.removeItem("currentUserDisplay");
+      window.location.replace("index.html");
     });
+  }
+});

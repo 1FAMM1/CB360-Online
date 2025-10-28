@@ -317,28 +317,10 @@
     toast.className = "toast show";
     if (type === "success") toast.classList.add("success");
     setTimeout(() => toast.classList.remove("show"), duration);
-  }
-
-
-
-
-document.addEventListener('DOMContentLoaded', () => {
-  const currentUser = sessionStorage.getItem("currentUserName");
-  const currentUserDisplay = sessionStorage.getItem("currentUserDisplay");
-  
-  if (!currentUser) {
-    // Também use replace aqui para não criar loops no histórico
-    window.location.replace("index.html");
-    return;
-  }
-  
-  const authNameEl = document.getElementById('authName');
-  if (authNameEl) authNameEl.textContent = currentUserDisplay || "";
-})
-
-    
+  }    
   </script>
 </body>
 
 
 </html>
+

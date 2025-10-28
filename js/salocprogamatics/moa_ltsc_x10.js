@@ -154,7 +154,7 @@
             if (row.category.endsWith("_to")) recipients.to = emails;
             if (row.category.endsWith("_cc")) recipients.cc = emails;
             if (row.category.endsWith("_bcc")) recipients.bcc = emails;});
-          if (recipients.to.length === 0) recipients.to = ["fmartins.ahbfaro@gmail.com"];
+          if (recipients.to.length === 0) recipients.to = [""];
           const signature = getEmailSignature();
           const greeting = getGreeting();
           const emailBodyHTML = `${greeting}<br><br>
@@ -228,4 +228,5 @@
       console.log("✅ MOA inicializado com sucesso!");
 
     });
+
 

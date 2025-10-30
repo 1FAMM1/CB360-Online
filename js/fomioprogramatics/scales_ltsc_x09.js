@@ -126,7 +126,7 @@
     async function loadSetionData(secao) {
       try {
         const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/reg_elems?select=n_int,abv_name,patent_abv&section=eq.${secao}&n_int=lt.500&elem_state=eq.true`, {
+          `${SUPABASE_URL}/rest/v1/reg_elems?select=n_int,abv_name,patent_abv,MP,TAS&section=eq.${secao}&n_int=lt.500&elem_state=eq.true`, {
             headers: getSupabaseHeaders()
           }
         );
@@ -727,63 +727,207 @@
       return totalsRow;
     }
     /* === CREATION OF MP ROWS (DECIR) ==== */
-    function createMPRows(tbody, daysInMonth) {
-      let mpDiaRow = tbody.querySelector(".mp-dia-row");
-      if (!mpDiaRow) {
-        mpDiaRow = document.createElement("tr");
-        mpDiaRow.className = "mp-dia-row";
+    function createMPRows(tbody, daysInMonth, currentSection) {
+      const isDecir = currentSection === "DECIR";
+      if (isDecir) {
+        let mpDiaRow = tbody.querySelector(".mp-dia-row");
+        if (!mpDiaRow) {
+          mpDiaRow = document.createElement("tr");
+          mpDiaRow.className = "mp-dia-row";
+          const tdLabel = document.createElement("td");
+          tdLabel.textContent = "Motoristas de Pesados Turno D";
+          tdLabel.colSpan = 3;
+          tdLabel.style.cssText = COMMON_TDLABEL_STYLE;
+          tdLabel.style.background = "#fde8a3";
+          mpDiaRow.appendChild(tdLabel);
+          for (let d = 1; d <= 31; d++) {
+            const td = document.createElement("td");
+            td.className = `mp-dia-${d}`;
+            td.style.cssText = COMMON_TD_STYLE;
+            td.style.background = "#fde8a390";
+            mpDiaRow.appendChild(td);
+          }
+          const tdEmpty = document.createElement("td");
+          tdEmpty.style.border = "none";
+          tdEmpty.style.background = "#ebebebd9";
+          mpDiaRow.appendChild(tdEmpty);
+          tbody.appendChild(mpDiaRow);
+        }    
+        let mpNoiteRow = tbody.querySelector(".mp-noite-row");
+        if (!mpNoiteRow) {
+          mpNoiteRow = document.createElement("tr");
+          mpNoiteRow.className = "mp-noite-row";
+          const tdLabel = document.createElement("td");
+          tdLabel.textContent = "Motoristas de Pesados Turno N";
+          tdLabel.colSpan = 3;
+          tdLabel.style.cssText = COMMON_TDLABEL_STYLE;
+          tdLabel.style.background = "#466c9a";
+          tdLabel.style.color = "#eee";
+          mpNoiteRow.appendChild(tdLabel);
+          for (let d = 1; d <= 31; d++) {
+            const td = document.createElement("td");
+            td.className = `mp-noite-${d}`;
+            td.style.cssText = COMMON_TD_STYLE;
+            td.style.background = "#466c9a50";
+            mpNoiteRow.appendChild(td);
+          }
+          const tdEmpty = document.createElement("td");
+          tdEmpty.style.border = "none";
+          tdEmpty.style.background = "#ebebebd9";
+          mpNoiteRow.appendChild(tdEmpty);
+          tbody.appendChild(mpNoiteRow);
+        }    
+        for (let d = 1; d <= 31; d++) {
+          const mpDiaCell = mpDiaRow.querySelector(`.mp-dia-${d}`);
+          const mpNoiteCell = mpNoiteRow.querySelector(`.mp-noite-${d}`);
+          if (d <= daysInMonth) {
+            mpDiaCell.style.display = "";
+            mpNoiteCell.style.display = "";
+          } else {
+            mpDiaCell.style.display = "none";
+            mpNoiteCell.style.display = "none";
+          }
+        }    
+      } else {
+        let mpRow = tbody.querySelector(".mp-row");
+        if (!mpRow) {
+          mpRow = document.createElement("tr");
+          mpRow.className = "mp-row";
+          const tdLabel = document.createElement("td");
+          tdLabel.textContent = "Motoristas de Pesados";
+          tdLabel.colSpan = 3;
+          tdLabel.style.cssText = COMMON_TDLABEL_STYLE;
+          tdLabel.style.background = "#fde8a3";
+          mpRow.appendChild(tdLabel);
+          for (let d = 1; d <= 31; d++) {
+            const td = document.createElement("td");
+            td.className = `mp-${d}`;
+            td.style.cssText = COMMON_TD_STYLE;
+            td.style.background = "#fde8a390";
+            mpRow.appendChild(td);
+          }
+          const tdEmpty = document.createElement("td");
+          tdEmpty.style.border = "none";
+          tdEmpty.style.background = "#ebebebd9";
+          mpRow.appendChild(tdEmpty);
+          tbody.appendChild(mpRow);
+        }    
+        for (let d = 1; d <= 31; d++) {
+          const mpCell = mpRow.querySelector(`.mp-${d}`);
+          mpCell.style.display = d <= daysInMonth ? "" : "none";
+        }
+      }
+    }
+    
+    function calculateMPTotals(tbody, daysInMonth, data, currentSection) {
+      const isDecir = currentSection === "DECIR";    
+      if (isDecir) {
+        const mpDiaRow = tbody.querySelector(".mp-dia-row");
+        const mpNoiteRow = tbody.querySelector(".mp-noite-row");
+        if (!mpDiaRow || !mpNoiteRow) return;    
+        for (let d = 1; d <= daysInMonth; d++) {
+          let mpDiaCount = 0;
+          let mpNoiteCount = 0;
+          const rows = tbody.querySelectorAll("tr:not(.totals-row):not(.mp-dia-row):not(.mp-noite-row):not(.fixed-row)");
+          rows.forEach(tr => {
+            const nInt = parseInt(tr.getAttribute("data-nint"), 10);
+            const person = data.find(item => parseInt(item.n_int, 10) === nInt);
+            if (person && person.MP === true) {
+              const td = tr.querySelector(`.day-cell-${d}`);
+              if (td && td.style.display !== "none") {
+                const value = td.textContent.toUpperCase().trim();
+                if (value === "ED") mpDiaCount++;
+                else if (value === "EN") mpNoiteCount++;
+                else if (value === "ET") {
+                  mpDiaCount++;
+                  mpNoiteCount++;
+                }
+              }
+            }
+          });
+          const mpDiaCell = mpDiaRow.querySelector(`.mp-dia-${d}`);
+          const mpNoiteCell = mpNoiteRow.querySelector(`.mp-noite-${d}`);
+          if (mpDiaCell) mpDiaCell.textContent = mpDiaCount;
+          if (mpNoiteCell) mpNoiteCell.textContent = mpNoiteCount;
+        }    
+      } else {
+        const mpRow = tbody.querySelector(".mp-row");
+        if (!mpRow) return;    
+        for (let d = 1; d <= daysInMonth; d++) {
+          let totalCount = 0;
+          const rows = tbody.querySelectorAll("tr:not(.totals-row):not(.mp-row):not(.fixed-row)");
+          rows.forEach(tr => {
+            const nInt = parseInt(tr.getAttribute("data-nint"), 10);
+            const person = data.find(item => parseInt(item.n_int, 10) === nInt);
+            if (person && person.MP === true) {
+              const td = tr.querySelector(`.day-cell-${d}`);
+              if (td && td.style.display !== "none") {
+                const value = td.textContent.toUpperCase().trim();
+                if (value === "PN") totalCount++;
+              }
+            }
+          });    
+          const mpCell = mpRow.querySelector(`.mp-${d}`);
+          if (mpCell) {
+            mpCell.textContent = totalCount;
+            mpCell.style.fontWeight = "bold";
+          }
+        }
+      }
+    }
+    
+    function createTASRows(tbody, daysInMonth) {
+      let tasRow = tbody.querySelector(".tas-row");
+      if (!tasRow) {
+        tasRow = document.createElement("tr");
+        tasRow.className = "tas-row";    
         const tdLabel = document.createElement("td");
-        tdLabel.textContent = "Moristas de Pesados Turno D";
+        tdLabel.textContent = "Tripulantes de Ambulância de Socorro (TAS)";
         tdLabel.colSpan = 3;
         tdLabel.style.cssText = COMMON_TDLABEL_STYLE;
-        tdLabel.style.background = "#fde8a3";
-        mpDiaRow.appendChild(tdLabel);
+        tdLabel.style.background = "#b5e4b5";
+        tdLabel.style.fontWeight = "bold";
+        tasRow.appendChild(tdLabel);    
         for (let d = 1; d <= 31; d++) {
           const td = document.createElement("td");
-          td.className = `mp-dia-${d}`;
+          td.className = `tas-${d}`;
           td.style.cssText = COMMON_TD_STYLE;
-          td.style.background = "#fde8a390";
-          mpDiaRow.appendChild(td);
-        }
+          td.style.background = "#b5e4b550";
+          tasRow.appendChild(td);
+        }    
         const tdEmpty = document.createElement("td");
         tdEmpty.style.border = "none";
         tdEmpty.style.background = "#ebebebd9";
-        mpDiaRow.appendChild(tdEmpty);
-        tbody.appendChild(mpDiaRow);
-      }
-      let mpNoiteRow = tbody.querySelector(".mp-noite-row");
-      if (!mpNoiteRow) {
-        mpNoiteRow = document.createElement("tr");
-        mpNoiteRow.className = "mp-noite-row";
-        const tdLabel = document.createElement("td");
-        tdLabel.textContent = "Moristas de Pesados Turno N";
-        tdLabel.colSpan = 3;
-        tdLabel.style.cssText = COMMON_TDLABEL_STYLE;
-        tdLabel.style.background = "#466c9a";
-        tdLabel.style.color = "#eee";
-        mpNoiteRow.appendChild(tdLabel);
-        for (let d = 1; d <= 31; d++) {
-          const td = document.createElement("td");
-          td.className = `mp-noite-${d}`;
-          td.style.cssText = COMMON_TD_STYLE;
-          td.style.background = "#466c9a50";
-          mpNoiteRow.appendChild(td);
-        }
-        const tdEmpty = document.createElement("td");
-        tdEmpty.style.border = "none";
-        tdEmpty.style.background = "#ebebebd9";
-        mpNoiteRow.appendChild(tdEmpty);
-        tbody.appendChild(mpNoiteRow);
-      }
+        tasRow.appendChild(tdEmpty);    
+        tbody.appendChild(tasRow);
+      }    
       for (let d = 1; d <= 31; d++) {
-        const mpDiaCell = mpDiaRow.querySelector(`.mp-dia-${d}`);
-        const mpNoiteCell = mpNoiteRow.querySelector(`.mp-noite-${d}`);
-        if (d <= daysInMonth) {
-          mpDiaCell.style.display = "";
-          mpNoiteCell.style.display = "";
-        } else {
-          mpDiaCell.style.display = "none";
-          mpNoiteCell.style.display = "none";
+        const tasCell = tasRow.querySelector(`.tas-${d}`);
+        tasCell.style.display = d <= daysInMonth ? "" : "none";
+      }
+    }
+    
+    function calculateTASTotals(tbody, daysInMonth, data) {
+      const tasRow = tbody.querySelector(".tas-row");
+      if (!tasRow) return;    
+      for (let d = 1; d <= daysInMonth; d++) {
+        let totalCount = 0;
+        const rows = tbody.querySelectorAll("tr:not(.totals-row):not(.tas-row):not(.fixed-row)");    
+        rows.forEach(tr => {
+          const nInt = parseInt(tr.getAttribute("data-nint"), 10);
+          const person = data.find(item => parseInt(item.n_int, 10) === nInt);
+          if (person && person.TAS === true) {
+            const td = tr.querySelector(`.day-cell-${d}`);
+            if (td && td.style.display !== "none") {
+              const value = td.textContent.toUpperCase().trim();
+              if (value !== "") totalCount++;
+            }
+          }
+        });    
+        const tasCell = tasRow.querySelector(`.tas-${d}`);
+        if (tasCell) {
+          tasCell.textContent = totalCount;
+          tasCell.style.fontWeight = "bold";
         }
       }
     }
@@ -802,46 +946,7 @@
       applyTotalCellStyle(tdTotal, total, section === "DECIR");
       return total;
     }
-
-    function calculateMPTotals(tbody, daysInMonth, data) {
-      const mpDiaRow = tbody.querySelector(".mp-dia-row");
-      const mpNoiteRow = tbody.querySelector(".mp-noite-row");
-      if (!mpDiaRow || !mpNoiteRow) return;
-      for (let d = 1; d <= daysInMonth; d++) {
-        let mpDiaCount = 0;
-        let mpNoiteCount = 0;
-        const rows = tbody.querySelectorAll("tr:not(.totals-row):not(.mp-dia-row):not(.mp-noite-row):not(.fixed-row)");
-        rows.forEach(tr => {
-          const nInt = parseInt(tr.getAttribute("data-nint"), 10);
-          const person = data.find(item => parseInt(item.n_int, 10) === nInt);
-          if (person && person.MP === true) {
-            const td = tr.querySelector(`.day-cell-${d}`);
-            if (td && td.style.display !== "none") {
-              const value = td.textContent.toUpperCase().trim();
-              if (value === "ED") {
-                mpDiaCount++;
-              } else if (value === "EN") {
-                mpNoiteCount++;
-              } else if (value === "ET") {
-                mpDiaCount++;
-                mpNoiteCount++;
-              }
-            }
-          }
-        });
-        const mpDiaCell = mpDiaRow.querySelector(`.mp-dia-${d}`);
-        if (mpDiaCell) {
-          mpDiaCell.textContent = mpDiaCount;
-          mpDiaCell.style.fontWeight = "bold";
-        }
-        const mpNoiteCell = mpNoiteRow.querySelector(`.mp-noite-${d}`);
-        if (mpNoiteCell) {
-          mpNoiteCell.textContent = mpNoiteCount;
-          mpNoiteCell.style.fontWeight = "bold";
-        }
-      }
-    }
-
+    
     function calculateColumnTotals(tbody, section, daysInMonth) {
       const totalsRow = tbody.querySelector(".totals-row");
       if (!totalsRow) return;
@@ -868,26 +973,58 @@
       const container = document.getElementById(containerId);
       if (!container) return;
       container.innerHTML = "";
+    
       createTableHeaders(container, year, month, currentSection);
       const wrapper = createTableWrapper(container);
       const table = createTableStructure(wrapper);
       const daysInMonth = new Date(year, month, 0).getDate();
+    
       updateDayHeaders(table, year, month, daysInMonth);
-      const sectionToLoad = (currentSection === "Consultar Escalas") ? "Emissão Escala" : currentSection;
+    
+      const sectionToLoad =
+        currentSection === "Consultar Escalas" ? "Emissão Escala" : currentSection;
+    
       const savedMap = await loadSavedData(sectionToLoad, year, month);
       const tbody = table.querySelector("tbody");
-      const isEscalaSection = currentSection === "Emissão Escala" || currentSection === "Consultar Escalas";
+    
+      const isEscalaSection =
+        currentSection === "Emissão Escala" ||
+        currentSection === "Consultar Escalas";
+    
       if (isEscalaSection) {
-        createFixedRows(tbody, data, savedMap, year, month, daysInMonth, currentSection, calculateRowTotal, calculateColumnTotals);
+        createFixedRows(tbody, data, savedMap, year, month, daysInMonth,
+          currentSection,
+          calculateRowTotal,
+          calculateColumnTotals
+        );
       }
-      createDataRows(tbody, data, savedMap, year, month, daysInMonth, currentSection, calculateRowTotal, calculateColumnTotals);
+    
+      createDataRows(tbody, data, savedMap, year, month, daysInMonth,
+        currentSection,
+        calculateRowTotal,
+        calculateColumnTotals
+      );    
       createTotalsRow(tbody, daysInMonth);
-      if (currentSection === "DECIR") {
-        createMPRows(tbody, daysInMonth);
+      if (
+        currentSection === "DECIR" ||
+        currentSection === "1ª Secção" ||
+        currentSection === "2ª Secção"
+      ) {
+        createMPRows(tbody, daysInMonth, currentSection);
+      }
+      if (currentSection === "1ª Secção" || currentSection === "2ª Secção") {
+        createTASRows(tbody, daysInMonth);
       }
       calculateColumnTotals(tbody, currentSection, daysInMonth);
-      if (currentSection === "DECIR") {
-        calculateMPTotals(tbody, daysInMonth, data);
+      if (
+        currentSection === "DECIR" ||
+        currentSection === "1ª Secção" ||
+        currentSection === "2ª Secção"
+      ) {
+        calculateMPTotals(tbody, daysInMonth, data, currentSection);
+      }
+      if (currentSection === "1ª Secção" || currentSection === "2ª Secção") {
+        calculateTASTotals(tbody, daysInMonth, data);
       }
     }
     /* =======================================
@@ -1165,7 +1302,7 @@
         normalRows.push(rowData);
       });
       const payload = {year, month, monthName: monthNames[month - 1], fileName, daysInMonth, weekdays, fixedRows, normalRows};
-      const vercelApiEndpoint = 'https://cb360-mobile.vercel.app/api/scales-convert-excel';
+      const vercelApiEndpoint = 'https://cb360-mobile.vercel.app/api/convert-excel';
       try {
         const response = await fetch(vercelApiEndpoint, {
           method: 'POST',
@@ -1196,7 +1333,4 @@
       } catch (error) {
         alert(`❌ Erro: Não foi possível comunicar com o serviço de conversão.\n\nTipo: ${error.name}\nMensagem: ${error.message}`);
       }
-
     }
-
-

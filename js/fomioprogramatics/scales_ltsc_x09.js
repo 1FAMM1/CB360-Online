@@ -291,14 +291,16 @@
     const COMMON_TDLABEL_STYLE = "border: 1px solid #ccc; border-top: 0px solid #ccc; border-bottom: 0px solid #ccc; border-left: 0px solid #ccc; padding: 4px; width: 30px; text-align: center; font-weight: bold";
     const MONTH_NAMES = ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"];
     /* == AUXILIARY CALCULATION FUNCTIONS = */
-    function computeTotalValue(value, isDecir) {
+    function computeTotalValue(value, isDecir, isRow = false) {
       if (!value) return 0;
       if (isDecir) {
         if (["ED", "EN", "EP"].includes(value)) return 1;
         if (value === "ET") return 2;
       } else {
         if (["PN", "EP", "N"].includes(value)) return 1;
-        if (value === "PT") return 2;
+        if (value === "PT") {
+          return isRow ? 2 : 1;
+        }
       }
       return 0;
     }
@@ -820,15 +822,17 @@
     }
     
     function calculateMPTotals(tbody, daysInMonth, data, currentSection) {
-      const isDecir = currentSection === "DECIR";    
+      const isDecir = currentSection === "DECIR";
       if (isDecir) {
         const mpDiaRow = tbody.querySelector(".mp-dia-row");
         const mpNoiteRow = tbody.querySelector(".mp-noite-row");
-        if (!mpDiaRow || !mpNoiteRow) return;    
-        for (let d = 1; d <= daysInMonth; d++) {
-          let mpDiaCount = 0;
+        if (!mpDiaRow || !mpNoiteRow) return;
+    
+        for (let d = 1; d <= daysInMonth; d++) {      let mpDiaCount = 0;
           let mpNoiteCount = 0;
-          const rows = tbody.querySelectorAll("tr:not(.totals-row):not(.mp-dia-row):not(.mp-noite-row):not(.fixed-row)");
+          const rows = tbody.querySelectorAll(
+            "tr:not(.totals-row):not(.mp-dia-row):not(.mp-noite-row):not(.fixed-row)"
+          );
           rows.forEach(tr => {
             const nInt = parseInt(tr.getAttribute("data-nint"), 10);
             const person = data.find(item => parseInt(item.n_int, 10) === nInt);
@@ -849,13 +853,15 @@
           const mpNoiteCell = mpNoiteRow.querySelector(`.mp-noite-${d}`);
           if (mpDiaCell) mpDiaCell.textContent = mpDiaCount;
           if (mpNoiteCell) mpNoiteCell.textContent = mpNoiteCount;
-        }    
+        }
       } else {
         const mpRow = tbody.querySelector(".mp-row");
-        if (!mpRow) return;    
+        if (!mpRow) return;
         for (let d = 1; d <= daysInMonth; d++) {
           let totalCount = 0;
-          const rows = tbody.querySelectorAll("tr:not(.totals-row):not(.mp-row):not(.fixed-row)");
+          const rows = tbody.querySelectorAll(
+            "tr:not(.totals-row):not(.mp-row):not(.fixed-row)"
+          );
           rows.forEach(tr => {
             const nInt = parseInt(tr.getAttribute("data-nint"), 10);
             const person = data.find(item => parseInt(item.n_int, 10) === nInt);
@@ -863,10 +869,12 @@
               const td = tr.querySelector(`.day-cell-${d}`);
               if (td && td.style.display !== "none") {
                 const value = td.textContent.toUpperCase().trim();
-                if (value === "PN") totalCount++;
+                if (["PD", "PN", "PT"].includes(value)) {
+                  totalCount++;
+                }
               }
             }
-          });    
+          });
           const mpCell = mpRow.querySelector(`.mp-${d}`);
           if (mpCell) {
             mpCell.textContent = totalCount;
@@ -909,10 +917,10 @@
     
     function calculateTASTotals(tbody, daysInMonth, data) {
       const tasRow = tbody.querySelector(".tas-row");
-      if (!tasRow) return;    
+      if (!tasRow) return;
       for (let d = 1; d <= daysInMonth; d++) {
         let totalCount = 0;
-        const rows = tbody.querySelectorAll("tr:not(.totals-row):not(.tas-row):not(.fixed-row)");    
+        const rows = tbody.querySelectorAll("tr:not(.totals-row):not(.tas-row):not(.fixed-row)");
         rows.forEach(tr => {
           const nInt = parseInt(tr.getAttribute("data-nint"), 10);
           const person = data.find(item => parseInt(item.n_int, 10) === nInt);
@@ -920,10 +928,12 @@
             const td = tr.querySelector(`.day-cell-${d}`);
             if (td && td.style.display !== "none") {
               const value = td.textContent.toUpperCase().trim();
-              if (value !== "") totalCount++;
+              if (["PD", "PN", "PT"].includes(value)) {
+                totalCount++;
+              }
             }
           }
-        });    
+        });
         const tasCell = tasRow.querySelector(`.tas-${d}`);
         if (tasCell) {
           tasCell.textContent = totalCount;
@@ -931,6 +941,7 @@
         }
       }
     }
+
     /* === TOTAL CALCULATION FUNCTIONS ==== */
     function calculateRowTotal(tr, section, daysInMonth) {
       let total = 0;
@@ -938,7 +949,7 @@
         const td = tr.querySelector(`.day-cell-${d}, .fixed-day-cell-${d}`);
         if (td && td.style.display !== "none") {
           const value = td.textContent.toUpperCase().trim();
-          total += computeTotalValue(value, section === "DECIR");
+          total += computeTotalValue(value, section === "DECIR", true);
         }
       }
       const tdTotal = tr.cells[tr.cells.length - 1];
@@ -946,20 +957,20 @@
       applyTotalCellStyle(tdTotal, total, section === "DECIR");
       return total;
     }
-    
+
     function calculateColumnTotals(tbody, section, daysInMonth) {
       const totalsRow = tbody.querySelector(".totals-row");
-      if (!totalsRow) return;
+      if (!totalsRow) return;    
       for (let d = 1; d <= daysInMonth; d++) {
         let dayTotal = 0;
         const rows = tbody.querySelectorAll("tr:not(.totals-row):not(.fixed-row)");
         rows.forEach(tr => {
           const td = tr.querySelector(`.day-cell-${d}, .fixed-day-cell-${d}`);
           if (td && td.style.display !== "none") {
-            const value = td.textContent.toUpperCase().trim();
-            dayTotal += computeTotalValue(value, section === "DECIR");
+            const value = td.textContent.toUpperCase().trim();           
+            dayTotal += computeTotalValue(value, section === "DECIR", false);
           }
-        });
+        });    
         const totalCell = totalsRow.querySelector(`.total-day-${d}`);
         if (totalCell) {
           totalCell.textContent = dayTotal;
@@ -1334,4 +1345,3 @@
         alert(`❌ Erro: Não foi possível comunicar com o serviço de conversão.\n\nTipo: ${error.name}\nMensagem: ${error.message}`);
       }
     }
-

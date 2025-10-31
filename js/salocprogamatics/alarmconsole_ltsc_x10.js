@@ -4,7 +4,8 @@
     async function fetchRegElemsFromSupabase() {
       try {
         const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/reg_elems?select=abv_name,n_int,elem_state&elem_state=eq.true&order=n_int.asc`, {
+          `${SUPABASE_URL}/rest/v1/reg_elems?select=abv_name,n_int&order=n_int.asc`,
+          {
             method: 'GET',
             headers: getSupabaseHeaders(),
           }
@@ -13,11 +14,13 @@
           throw new Error(`Erro HTTP: ${response.status}`);
         }
         const data = await response.json();
-        return data;
+        const filteredData = data.filter(item => item.abv_name !== "Cargo Aberto");
+        return filteredData;
       } catch (error) {
         return [];
       }
     }
+    
     async function populateIndivSelect(select) {
       const elems = await fetchRegElemsFromSupabase();
       elems.sort((a, b) => (a.n_int || 9999) - (b.n_int || 9999));
@@ -93,7 +96,7 @@
       const soundKey = soundKeys[selectedButton];
       if (!soundKey) return showPopupWarning("Opção de chamada inválida!");
       const fileName = `${selectedElement}_${soundKey}.mp3`;
-      const baseUrl = 'sounds/Internal/';
+      const baseUrl = 'https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/sounds/Internal/';
       isPlaying = true;
       disableAllControls(true);
       fetch(`${baseUrl}${fileName}`, {
@@ -156,10 +159,14 @@
           }
           isPlaying = true;
           disableAllControls(true);
-          const audio = new Audio(`sounds/Internal/${key}.mp3`);
+          const audio = new Audio(`https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/sounds/Internal/${key}.mp3`);
           audio.onerror = () => alert(`Ficheiro de som "${key}.mp3" não encontrado!`);
           audio.play();
           audio.onended = () => {
+            document
+              .querySelectorAll('#alarm-console-indiv button, #alarm-console-group button, #alarm-console-internal button')
+              .forEach(btn => btn.classList.remove('active'));
+            selectedButton = null;
             disableAllControls(false);
             isPlaying = false;
           };

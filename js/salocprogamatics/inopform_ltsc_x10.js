@@ -265,6 +265,7 @@
                 <td style="text-align:center;">${item.gdh_inop || ''}</td>
                 <td style="text-align:center;">${item.failure_type || ''}</td>
                 <td>${item.failure_description || ''}</td>
+                <td>${item.optel || ''}</td>
                 <td style="text-align:center;">
                   <button class="btn btn-danger validate-btn" 
                           data-record='${JSON.stringify(item)}'
@@ -311,4 +312,5 @@
       sitopContainer.style.display = 'none';
       inopsTableContainer.style.display = 'none';
     });
+
 

@@ -455,6 +455,8 @@
         updateCellColor(td, value, new Date(year, month - 1, dayNum));
         calculateRowTotal(tr, section, daysInMonth);
         calculateColumnTotals(tr.parentElement, section, daysInMonth);
+        calculateMPTotals(tr.parentElement, daysInMonth, currentTableData, section);
+        calculateTASTotals(tr.parentElement, daysInMonth, currentTableData);
         if (section === "DECIR") {
           calculateMPTotals(tr.parentElement, daysInMonth, currentTableData);
         }
@@ -1345,3 +1347,4 @@
         alert(`❌ Erro: Não foi possível comunicar com o serviço de conversão.\n\nTipo: ${error.name}\nMensagem: ${error.message}`);
       }
     }
+

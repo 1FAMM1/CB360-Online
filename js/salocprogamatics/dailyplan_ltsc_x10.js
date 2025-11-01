@@ -163,13 +163,23 @@
       emitBtn.className = 'btn btn-success';
       emitBtn.textContent = 'EMITIR PLANEAMENTO';
       emitBtn.addEventListener('click', () => {
-        const shift = document.querySelector('.shift-btn.active').dataset.shift;
+        let shift = document.querySelector('.shift-btn.active').dataset.shift;
         const date = new Date().toISOString().slice(0, 10);
+        if (shift === "LAST") {
+          const storedShift = sessionStorage.getItem("originalShift");
+          if (storedShift) {
+            shift = storedShift; // assume o turno real
+          } else {
+            showPopupWarning("Não foi possível determinar o turno original.");
+            return;
+          }
+        }
         emitPlanning(shift, date);
       });
       btnWrapper.appendChild(emitBtn);
       container.appendChild(btnWrapper);
     }
+
     async function fetchRecipientsFromSupabase() {
       const categories = ['plandir_mail_to', 'plandir_mail_cc', 'plandir_mail_bcc'];
       const filterQuery = `category=in.(${categories.join(',')})&select=category,value`;
@@ -408,3 +418,4 @@
       }
 
     });
+

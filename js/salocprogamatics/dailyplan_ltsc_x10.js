@@ -1,11 +1,11 @@
     /* =======================================
        DAILY PLANNING
     ======================================= */
-    const tableConfig = [{rows: 1, special: false, title: "OFOPE"}, {rows: 1, special: false,title: "CHEFE DE SERVIÇO"}, {rows: 1, special: false, title: "OPTEL"},
+    const tableConfig = [{rows: 1, special: false, title: "OFOPE"}, {rows: 1, special: false, title: "CHEFE DE SERVIÇO"}, {rows: 1, special: false, title: "OPTEL"},
                          {rows: 5, special: true, title: "EQUIPA 01"}, {rows: 5, special: false, title: "EQUIPA 02"}, {rows: 2, special: false, title: "LOGÍSTICA"},
                          {rows: 3, special: false, title: "INEM"}, {rows: 3, special: false, title: "INEM - Reserva"}, {rows: 10, special: false, title: "SERVIÇO GERAL"}];
 
-    function createInputCell({type = 'text', readonly = false, className = '', tabindex = 0}) {
+    function createInputCell({type = 'text', readonly = false, className = '',tabindex = 0}) {
       return `<td><input type="${type}" class="${className}" ${readonly ? 'readonly' : ''} tabindex="${tabindex}"></td>`;
     }
 
@@ -144,8 +144,16 @@
           const inputs = tr.querySelectorAll('input');
           const mpCell = tr.querySelector('.mp-cell');
           const tasCell = tr.querySelector('.tas-cell');
-          return {n_int: inputs[0]?.value?.trim() || "", patente: inputs[1]?.value?.trim() || "", nome: inputs[2]?.value?.trim() || "", entrada: inputs[3]?.value?.trim() || "",
-                  saida: inputs[4]?.value?.trim() || "", MP: mpCell?.textContent === "X", TAS: tasCell?.textContent === "X", obs: inputs[5]?.value?.trim() || ""};
+          return {
+            n_int: inputs[0]?.value?.trim() || "",
+            patente: inputs[1]?.value?.trim() || "",
+            nome: inputs[2]?.value?.trim() || "",
+            entrada: inputs[3]?.value?.trim() || "",
+            saida: inputs[4]?.value?.trim() || "",
+            MP: mpCell?.textContent === "X",
+            TAS: tasCell?.textContent === "X",
+            obs: inputs[5]?.value?.trim() || ""
+          };
         });
         return {title, rows};
       });
@@ -166,9 +174,12 @@
         let shift = document.querySelector('.shift-btn.active').dataset.shift;
         const date = new Date().toISOString().slice(0, 10);
         if (shift === "LAST") {
-          const storedShift = sessionStorage.getItem("originalShift");
+          let storedShift = sessionStorage.getItem("originalShift");
+          if (!storedShift) {
+            storedShift = localStorage.getItem("originalShift");
+          }
           if (storedShift) {
-            shift = storedShift; // assume o turno real
+            shift = storedShift;
           } else {
             showPopupWarning("Não foi possível determinar o turno original.");
             return;
@@ -179,7 +190,6 @@
       btnWrapper.appendChild(emitBtn);
       container.appendChild(btnWrapper);
     }
-
     async function fetchRecipientsFromSupabase() {
       const categories = ['plandir_mail_to', 'plandir_mail_cc', 'plandir_mail_bcc'];
       const filterQuery = `category=in.(${categories.join(',')})&select=category,value`;
@@ -200,8 +210,7 @@
             String(row.value)
             .split(',')
             .map(e => e.trim())
-            .filter(e => e) :
-            [];
+            .filter(e => e) : [];
           if (row.category === 'plandir_mail_to') {
             recipients.to = emails;
           } else if (row.category === 'plandir_mail_cc') {
@@ -230,7 +239,6 @@
       const optelName = optelRow.nome || "";
       return optelName;
     }
-    
     async function emitPlanning(shift, date, baixar = false) {
       const tables = collectTableData();
       const optelName = getOptelName();
@@ -257,22 +265,30 @@
           method: "DELETE",
           headers: getSupabaseHeaders()
         });
-    if (nonEmptyRows.length > 0) {
-      await fetch(`${SUPABASE_URL}/rest/v1/fomio_teams`, {
+        if (nonEmptyRows.length > 0) {
+          await fetch(`${SUPABASE_URL}/rest/v1/fomio_teams`, {
+            method: "POST",
+            headers: {
+              ...getSupabaseHeaders(),
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(
+              nonEmptyRows.map(r => ({team_name, n_int: r.n_int || '', patente: r.patente || '', nome: r.nome || '', h_entrance: r.entrada || '', h_exit: r.saida || '',
+                                      MP: !!r.MP, TAS: !!r.TAS, observ: r.obs || ''})))});}}
+      await fetch(`${SUPABASE_URL}/rest/v1/fomio_date?header_text=neq.null`, {
+        method: "DELETE",
+        headers: getSupabaseHeaders()
+      });
+      await fetch(`${SUPABASE_URL}/rest/v1/fomio_date`, {
         method: "POST",
-        headers: { ...getSupabaseHeaders(), "Content-Type": "application/json" },
-        body: JSON.stringify(
-          nonEmptyRows.map(r => ({team_name, n_int: r.n_int || '', patente: r.patente || '', nome: r.nome || '', h_entrance: r.entrada || '', h_exit: r.saida || '',
-                                  MP: !!r.MP, TAS: !!r.TAS, observ: r.obs || ''})))});}}
-    await fetch(`${SUPABASE_URL}/rest/v1/fomio_date?header_text=neq.null`, {
-      method: "DELETE",
-      headers: getSupabaseHeaders()
-    });
-    await fetch(`${SUPABASE_URL}/rest/v1/fomio_date`, {
-      method: "POST",
-      headers: { ...getSupabaseHeaders(), "Content-Type": "application/json" },
-      body: JSON.stringify([{ header_text: `Dia: ${formattedDate} | Turno ${shift} | ${shiftHours}` }])
-    });      
+        headers: {
+          ...getSupabaseHeaders(),
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify([{
+          header_text: `Dia: ${formattedDate} | Turno ${shift} | ${shiftHours}`
+        }])
+      });
       const finalFileName = `Planeamento_${day}_${monthName}_${year}_${shift}`;
       const fileDisplayName = `Planeamento Diário ${formattedDate} Turno ${shift}`;
       const greeting = getGreeting();
@@ -282,15 +298,18 @@
         Remeto em anexo a Vossas Exª.s o ${fileDisplayName}<br><br>
         Com os melhores cumprimentos,<br><br>
         OPTEL<br>
-        ${optelName}<br>
+        ${optelName}<br><br>
+        
         ${signature}
       `;
       try {
         const response = await fetch(
           'https://corsproxy.io/?' + encodeURIComponent('https://cb360-mobile.vercel.app/api/plandir_convert_and_send'), {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({shift, date, tables, recipients: RECIPIENTS, ccRecipients: CC_RECIPIENTS, bccRecipients: BCC_RECIPIENTS, emailBody: emailBodyHTML})
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({shift, date, tables, recipients: RECIPIENTS,  ccRecipients: CC_RECIPIENTS, bccRecipients: BCC_RECIPIENTS, emailBody: emailBodyHTML})
           }
         );
         const result = await response.json();
@@ -304,7 +323,6 @@
         alert('Erro ao contactar o servidor de planeamento. Por favor, tente novamente.');
       }
     }
-
     async function loadShift(shift) {
       const container = document.getElementById('plandir_container');
       const activeBtn = document.querySelector('.shift-btn.active');
@@ -315,6 +333,10 @@
       }
       activateShiftButton(shift);
       container.innerHTML = '';
+      if (shift !== 'LAST') {
+        sessionStorage.setItem("originalShift", shift);
+        localStorage.setItem("originalShift", shift);
+      }
       let header;
       if (shift === 'LAST') {
         try {
@@ -403,11 +425,6 @@
           }
         });
       });
-      container.querySelectorAll('input').forEach(input => {
-        input.addEventListener('focus', function() {
-          this.scrollIntoView({behavior: 'smooth',block: 'center'});
-        });
-      });
       createEmitButton(container);
     }
     document.querySelector('[data-page="page-plandir"]').addEventListener('click', () => {
@@ -416,6 +433,4 @@
         container.innerHTML = '';
         document.querySelectorAll('.shift-btn').forEach(btn => btn.classList.remove('active'));
       }
-
     });
-

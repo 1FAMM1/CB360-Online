@@ -131,7 +131,7 @@
         }
         navigator.clipboard.writeText(mensagem).then(() => {
           if (typeof showPopupSuccess === 'function') {}
-          showPopupSuccess("POSIT copiada!");
+          showPopupSuccess("POSIT criado com sucesso, entre no WhatsApp e cole no grupo interno Ocorrências!");
           setTimeout(() => closePositPopup(), 500);
         }).catch(err => {
           console.error("Erro ao copiar POSIT:", err);
@@ -152,4 +152,5 @@
     document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('popup-posit-modal').style.display = 'none';
       loadActiveOccurrences();
+
     });

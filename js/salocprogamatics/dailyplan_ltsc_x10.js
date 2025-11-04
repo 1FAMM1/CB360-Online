@@ -252,7 +252,7 @@
       const CC_RECIPIENTS = cc;
       const BCC_RECIPIENTS = bcc;
       if (RECIPIENTS.length === 0) {
-        alert("Erro: Defina pelo menos um destinatário principal (TO).");
+        showPopupWarning("Erro: Defina pelo menos um destinatário.");
         return;
       }
       const teamNameMap = {"OFOPE": "ofope", "CHEFE DE SERVIÇO": "chefe_servico", "OPTEL": "optel", "EQUIPA 01": "equipa_01", "EQUIPA 02": "equipa_02",
@@ -303,6 +303,7 @@
         ${signature}
       `;
       try {
+        showPopupSuccess(`Planeamento gerado com sucesso. O mesmo está a ser enviado para as entidades. Será notificado após o envio estar finalizado.`);
         const response = await fetch(
           'https://corsproxy.io/?' + encodeURIComponent('https://cb360-mobile.vercel.app/api/plandir_convert_and_send'), {
             method: 'POST',
@@ -314,13 +315,13 @@
         );
         const result = await response.json();
         if (!response.ok) {
-          alert(`ERRO! O planeamento não foi enviado. Detalhes: ${result.details || 'Verificar consola.'}`);
+          showPopupWarning(`ERRO! O planeamento não foi enviado. Detalhes: ${result.details || 'Verificar consola.'}`);
           console.error('Erro de API (código ' + response.status + '):', result);
           return;
         }
-        alert(result.message);
+        showPopupSuccess(`✅ Planeamento do dia ${day}/${month}/${year} (Turno ${shift}) emitido e enviado com sucesso!`);
       } catch (err) {
-        alert('Erro ao contactar o servidor de planeamento. Por favor, tente novamente.');
+        showPopupWarning('Erro ao contactar o servidor de planeamento. Por favor, tente novamente.');
       }
     }
     async function loadShift(shift) {
@@ -434,3 +435,4 @@
         document.querySelectorAll('.shift-btn').forEach(btn => btn.classList.remove('active'));
       }
     });
+

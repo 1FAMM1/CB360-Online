@@ -137,7 +137,7 @@
             return;
           }    
           if (currentSection === "DECIR" && blockedMonthsForDecir.includes(index)) {
-            showPopupWarning(`Durante o mês de ${month}, não existe DECIR.`);
+            showPopupWarning(`Durante o mês de ${month}, não existe DECIR. Salvo prolongamaneto declarado pela ANEPC.`);
             return;
           }    
           clearActiveState();
@@ -1394,5 +1394,6 @@
         alert(`❌ Erro: Não foi possível comunicar com o serviço de conversão.\n\nTipo: ${error.name}\nMensagem: ${error.message}`);
       }
     }
+
 
 

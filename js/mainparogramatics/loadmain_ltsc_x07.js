@@ -60,7 +60,6 @@
       /* ======== USER APPLY ACESSES ======== */
       function applyAccesses(accesses) {
         document.querySelectorAll('[data-access]').forEach(el => blockIfNoAccess(el, accesses));
-        console.log("✅ Acessos aplicados:", accesses);
       }
       loadUserAccesses(currentUser).then(userData => {
         if (userData) {
@@ -78,3 +77,4 @@
         });
       }
     });
+

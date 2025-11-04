@@ -1,4 +1,7 @@
     /* =======================================
+       UTILITY GROUP
+    ======================================= */
+    /* =======================================
             CREATION OF DYNAMIC CONTAINERS
     ======================================= */
     /* =======================================
@@ -7,33 +10,37 @@
     /* ========== VEHICLES ========== */
     const vehicleContainer = document.getElementById('vehicle-container');
     let vehicleCount = 0;
+    
     async function NewOCRaddVehicle() {
       vehicleCount++;
       const card = document.createElement('div');
       card.className = 'vehicle-card';
       card.innerHTML = `
-    <div class="field-card-title">${vehicleCount}º VEÍCULO</div>
-    <div class="vehicle-fields">
-      <div class="vehicle-field" style="width: 120px;">
-        <label>Data Saída:</label>
-        <input type="date">
-      </div>
-      <div class="vehicle-field" style="width: 150px;">
-        <label>Veículo:</label>
-        <select><option></option></select>
-      </div>
-      <div class="vehicle-field" style="width: 75px;">
-        <label>BBs:</label>
-        <input type="text" placeholder="00" style="width:100%; text-align:center;" maxlength="2"
-               oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
-      </div>
-      <div class="vehicle-field" style="width: 100px;">
-        <label>Hora Saída:</label>
-        <input type="time">
-      </div>
-    </div>
-  `;
+        <div class="field-card-title">${vehicleCount}º VEÍCULO</div>
+        <div class="vehicle-fields">
+          <div class="vehicle-field" style="width: 120px;">
+            <label>Data Saída:</label>
+            <input type="date">
+          </div>
+          <div class="vehicle-field" style="width: 150px;">
+            <label>Veículo:</label>
+            <select><option></option></select>
+          </div>
+          <div class="vehicle-field" style="width: 75px;">
+            <label>BBs:</label>
+            <input type="text" placeholder="00" style="width:100%; text-align:center;" maxlength="2"
+                   oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
+          </div>
+          <div class="vehicle-field" style="width: 100px;">
+            <label>Hora Saída:</label>
+            <input type="time">
+          </div>
+        </div>
+      `;
       vehicleContainer.appendChild(card);
+      const dateInput = card.querySelector('input[type="date"]');
+      const today = new Date().toISOString().split('T')[0];
+      dateInput.value = today;
       const select = card.querySelector("select");
       await populateSingleVehicleSelect(select);
     }
@@ -63,43 +70,45 @@
       card.style.minHeight = "190px";
       card.style.margin = "5px";
       card.innerHTML = `
-    <div class="field-card-title">${closeVehicleCount}º VEÍCULO</div>
-    <div class="vehicle-field-horizontal" style="width: 175px;">
-      <label>Veículo:</label>
-      <select style="width: 150px;"></select>
-    </div>
-    <div class="global-field-horizontal">
-      <label>Dt. Ch. TO:</label>
-      <input type="date" style="width: 110px;">
-      <label>Hr. Ch. TO:</label>
-      <input type="time" style="width: 80px;">
-    </div>
-    <div class="global-field-horizontal">
-      <label>Dt. Sd. TO:</label>
-      <input type="date" style="width: 110px;">
-      <label>Hr. Sd. TO:</label>
-      <input type="time" style="width: 80px;">
-    </div>
-    <div class="global-field-horizontal">
-      <label>Dt. Ch. Und.:</label>
-      <input type="date" style="width: 110px;">
-      <label>Hr. Ch. Und.:</label>
-      <input type="time" style="width: 80px;">
-      <label>Kms.:</label>
-      <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="5" 
-             oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,5)">
-    </div>
-    <div class="global-field-horizontal">
-      <label>Tempo Bomba:</label>
-      <label>Hr:</label>
-      <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="3" 
-             oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)">
-      <label>Mins:</label>
-      <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="2" 
-             oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
-    </div>
-  `;
+        <div class="field-card-title">${closeVehicleCount}º VEÍCULO</div>
+        <div class="vehicle-field-horizontal" style="width: 175px;">
+          <label>Veículo:</label>
+          <select style="width: 150px;"></select>
+        </div>
+        <div class="global-field-horizontal">
+          <label>Dt. Ch. TO:</label>
+          <input type="date" style="width: 110px;">
+          <label>Hr. Ch. TO:</label>
+          <input type="time" style="width: 80px;">
+        </div>
+        <div class="global-field-horizontal">
+          <label>Dt. Sd. TO:</label>
+          <input type="date" style="width: 110px;">
+          <label>Hr. Sd. TO:</label>
+          <input type="time" style="width: 80px;">
+        </div>
+        <div class="global-field-horizontal">
+          <label>Dt. Ch. Und.:</label>
+          <input type="date" style="width: 110px;">
+          <label>Hr. Ch. Und.:</label>
+          <input type="time" style="width: 80px;">
+          <label>Kms.:</label>
+          <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="5" 
+                 oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,5)">
+        </div>
+        <div class="global-field-horizontal">
+          <label>Tempo Bomba:</label>
+          <label>Hr:</label>
+          <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="3" 
+                 oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)">
+          <label>Mins:</label>
+          <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="2" 
+                 oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
+        </div>
+      `;
       vehiclesContainer.appendChild(card);
+      const today = new Date().toISOString().split('T')[0];
+      card.querySelectorAll('input[type="date"]').forEach(input => input.value = today);
       const select = card.querySelector("select");
       await populateSingleVehicleSelect(select);
     }
@@ -124,34 +133,35 @@
       div.style.gap = '15px';
       div.style.marginBottom = '0px';
       div.innerHTML = `
-    <div class="global-field-horizontal">
-      <label>Género:</label>
-      <select id="victim_${idx}_gender" style="width: 120px;"></select>
-    </div>
-    <div class="global-field-horizontal">
-      <label>Idade:</label>
-      <input type="text" id="victim_${idx}_age_unit" placeholder="0" style="width: 50px; text-align: center;" maxlength="3">
-      <select id="victim_${idx}_age" style="width: 120px;"></select>
-    </div>
-    <div class="global-field-horizontal">
-      <label>Nacion:</label>
-      <input type="text" id="victim_${idx}_nation" style="width: 175px;">
-    </div>
-    <div class="global-field-horizontal">
-      <label>Tipo:</label>
-      <select id="victim_${idx}_type" style="width: 120px;"></select>
-    </div>
-    <div class="global-field-horizontal">
-      <label>Estado:</label>
-      <select id="victim_${idx}_status" style="width: 120px;"></select>
-    </div>
-  `;
+        <div class="global-field-horizontal">
+          <label>Género:</label>
+          <select id="victim_${idx}_gender" style="width: 120px;"></select>
+        </div>
+        <div class="global-field-horizontal">
+          <label>Idade:</label>
+          <input type="text" id="victim_${idx}_age_unit" placeholder="0" style="width: 50px; text-align: center;" maxlength="3">
+          <select id="victim_${idx}_age" style="width: 120px;"></select>
+        </div>
+        <div class="global-field-horizontal">
+          <label>Nacion:</label>
+          <input type="text" id="victim_${idx}_nation" style="width: 175px;">
+        </div>
+        <div class="global-field-horizontal">
+          <label>Tipo:</label>
+          <select id="victim_${idx}_type" style="width: 120px;"></select>
+        </div>
+        <div class="global-field-horizontal">
+          <label>Estado:</label>
+          <select id="victim_${idx}_status" style="width: 120px;"></select>
+        </div>
+      `;
       victimsContainer.appendChild(div);
       await populateSingleVictimSelect(document.getElementById(`victim_${idx}_gender`), 'victim_gender');
       await populateSingleVictimSelect(document.getElementById(`victim_${idx}_age`), 'victim_age');
       await populateSingleVictimSelect(document.getElementById(`victim_${idx}_type`), 'victim_type');
       await populateSingleVictimSelect(document.getElementById(`victim_${idx}_status`), 'victim_status');
     }
+    
     async function resetVictims(initialCount = 1) {
       const victimsCard = document.querySelector('.victims-card');
       if (victimsCard) victimsCard.classList.add('hidden');
@@ -178,19 +188,19 @@
       div.style.gap = '15px';
       div.style.marginBottom = '0px';
       div.innerHTML = `
-    <div class="global-field-horizontal" style="flex:1;"> 
-      <label>${i.toString().padStart(2, '0')}.:</label> 
-      <input type="text" style="width: 100%;"> 
-    </div>
-    <div class="global-field-horizontal">
-      <label>Veícs.:</label>
-      <input type="text" placeholder="0" style="width:50px; text-align:center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0, 2)">
-    </div>
-    <div class="global-field-horizontal">
-      <label>Elems.:</label>
-      <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="2" oninput="this.value = this.value.replace(/[^0-9]/g,'').slice(0, 2)">
-    </div>
-  `;
+        <div class="global-field-horizontal" style="flex:1;"> 
+          <label>${i.toString().padStart(2, '0')}.:</label> 
+          <input type="text" style="width: 100%;"> 
+        </div>
+        <div class="global-field-horizontal">
+          <label>Veícs.:</label>
+          <input type="text" placeholder="0" style="width:50px; text-align:center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0, 2)">
+        </div>
+        <div class="global-field-horizontal">
+          <label>Elems.:</label>
+          <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="2" oninput="this.value = this.value.replace(/[^0-9]/g,'').slice(0, 2)">
+        </div>
+      `;
       extrasContainer.appendChild(div);
     }
 
@@ -215,11 +225,11 @@
       div.style.gap = '5px';
       div.style.marginBottom = '0px';
       div.innerHTML = `
-    <div class="global-field-horizontal" style="flex: 1;">
-      <label>${i.toString().padStart(2,'0')}.:</label>
-      <input type="text" style="width: 100%;">
-    </div>
-  `;
+        <div class="global-field-horizontal" style="flex: 1;">
+          <label>${i.toString().padStart(2,'0')}.:</label>
+          <input type="text" style="width: 100%;">
+        </div>
+      `;
       damagesContainer.appendChild(div);
     }
 
@@ -487,3 +497,4 @@
       }
     }
     document.addEventListener("DOMContentLoaded", loadElemsButtons);
+

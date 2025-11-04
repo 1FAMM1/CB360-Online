@@ -20,7 +20,6 @@
           if (motiveInput) motiveInput.value = row.cut_motive || "";
           if (untilInput) untilInput.value = row.cut_until || "";
         });
-        console.log("✅ Dados carregados:", data);
       } catch (error) {
         console.error("❌ Erro ao carregar dados do Supabase:", error);
       }
@@ -59,4 +58,5 @@
         console.error("❌ Erro ao gravar no Supabase:", error);
         alert("Erro ao gravar no Supabase. Ver consola.");
       }
+
     }

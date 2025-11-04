@@ -433,7 +433,6 @@
         });
         if (!response.ok) throw new Error(`Erro Supabase: ${response.status}`);
         const data = await response.json();
-        console.log("✅ Registos carregados:", data);
         data.sort((a, b) => {
           const aVal = a.n_int ?? "";
           const bVal = b.n_int ?? "";
@@ -497,4 +496,3 @@
       }
     }
     document.addEventListener("DOMContentLoaded", loadElemsButtons);
-

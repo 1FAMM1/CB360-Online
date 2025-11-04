@@ -201,7 +201,6 @@
         document.getElementById('assoc-cp1').value = cp1;
         document.getElementById('assoc-cp2').value = cp2;
         await loadHierarchicalSelects(corporation);
-        console.log('✅ Dados da corporação carregados');
       } catch (error) {
         console.error('❌ Erro ao carregar dados da corporação:', error);
       }
@@ -289,4 +288,5 @@
       if (panelId === "assoc") {
         loadCorporationData();
       }
+
     }

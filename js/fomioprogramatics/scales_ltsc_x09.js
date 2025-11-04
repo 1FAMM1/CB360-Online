@@ -79,7 +79,7 @@
       const yearSelect = document.createElement("select");
       yearSelect.id = "year-selector";
       yearSelect.style.padding = "6px 10px";
-      yearSelect.style.borderRadius = "6px";
+      yearSelect.style.borderRadius = "4px";
       yearSelect.style.border = "1px solid #ccc";
       yearSelect.style.cursor = "pointer";    
       const currentYear = new Date().getFullYear();
@@ -1394,6 +1394,7 @@
         alert(`❌ Erro: Não foi possível comunicar com o serviço de conversão.\n\nTipo: ${error.name}\nMensagem: ${error.message}`);
       }
     }
+
 
 
 

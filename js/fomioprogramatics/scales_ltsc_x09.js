@@ -56,20 +56,60 @@
     /* ==========  MONTH BUTTONS =========== */
     function createMonthButtons(containerId, tableContainerId, year) {
       const container = document.getElementById(containerId);
-      if (!container) return;
+      if (!container) return;    
       const saveBtn = document.getElementById("save-button");
       const emitBtn = document.getElementById("emit-button");
       container.innerHTML = "";
       if (emitBtn) emitBtn.style.marginTop = "20px";
+      /* ============ MAIN BLOCK ============ */
+      const mainWrapper = document.createElement("div");
+      mainWrapper.style.display = "flex";
+      mainWrapper.style.flexDirection = "column";
+      mainWrapper.style.alignItems = "center";
+      mainWrapper.style.gap = "12px";
+      /* ========= YEAR SELECT BLOCK ======== */
+      const yearContainer = document.createElement("div");
+      yearContainer.style.marginBottom = "10px";
+      yearContainer.style.display = "flex";
+      yearContainer.style.alignItems = "center";
+      yearContainer.style.gap = "8px";    
+      const yearLabel = document.createElement("label");
+      yearLabel.textContent = "Ano:";
+      yearLabel.style.fontWeight = "bold";    
+      const yearSelect = document.createElement("select");
+      yearSelect.id = "year-selector";
+      yearSelect.style.padding = "6px 10px";
+      yearSelect.style.borderRadius = "6px";
+      yearSelect.style.border = "1px solid #ccc";
+      yearSelect.style.cursor = "pointer";    
+      const currentYear = new Date().getFullYear();
+      for (let y = currentYear; y <= currentYear + 10; y++) {
+        const opt = document.createElement("option");
+        opt.value = y;
+        opt.textContent = y;
+        if (y === year) opt.selected = true;
+        yearSelect.appendChild(opt);
+      }    
+      yearContainer.appendChild(yearLabel);
+      yearContainer.appendChild(yearSelect);
+      /* =========== MONTH BUTTONS ========== */
+      const monthsWrapper = document.createElement("div");
+      monthsWrapper.style.display = "flex";
+      monthsWrapper.style.flexWrap = "wrap";
+      monthsWrapper.style.justifyContent = "center";
+      monthsWrapper.style.gap = "3px";
+      monthsWrapper.style.maxWidth = "800px";    
       const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-      const blockedMonthsForDecir = [0, 1, 2, 10, 11];
+      const blockedMonthsForDecir = [0, 1, 2, 10, 11];    
       const toggleButtonsVisibility = (showSave, showEmit) => {
         if (saveBtn) saveBtn.style.display = showSave ? "inline-block" : "none";
         if (emitBtn) emitBtn.style.display = showEmit ? "inline-block" : "none";
       };
+    
       const clearActiveState = () => {
-        container.querySelectorAll(".btn.btn-add").forEach(b => b.classList.remove("active"));
+        monthsWrapper.querySelectorAll(".btn.btn-add").forEach(b => b.classList.remove("active"));
       };
+    
       const loadSectionData = async () => {
         switch (currentSection) {
           case "Emissão Escala":
@@ -84,43 +124,50 @@
       monthNames.forEach((month, index) => {
         const btn = document.createElement("button");
         btn.textContent = month;
-        Object.assign(btn, {
-          className: "btn btn-add",
-        });
-        Object.assign(btn.style, {
-          fontSize: "14px",
-          fontWeight: "bold",
-          width: "122px",
-          height: "40px",
-        });
+        btn.className = "btn btn-add";
+        Object.assign(btn.style, {fontSize: "14px", fontWeight: "bold", width: "110px", height: "40px", borderRadius: "4px", margin: "2px"});    
         btn.addEventListener("click", async () => {
+          const selectedYear = parseInt(yearSelect.value, 10);
           const tableContainer = document.getElementById(tableContainerId);
-          const isActive = btn.classList.contains("active");
+          const isActive = btn.classList.contains("active");    
           if (isActive) {
             btn.classList.remove("active");
             tableContainer.innerHTML = "";
             toggleButtonsVisibility(false, false);
             return;
-          }
+          }    
           if (currentSection === "DECIR" && blockedMonthsForDecir.includes(index)) {
             showPopupWarning(`Durante o mês de ${month}, não existe DECIR.`);
             return;
-          }
+          }    
           clearActiveState();
-          btn.classList.add("active");
+          btn.classList.add("active");    
           if (currentSection === "Emissão Escala") {
             toggleButtonsVisibility(false, true);
           } else if (currentSection === "Consultar Escalas") {
             toggleButtonsVisibility(false, false);
           } else {
             toggleButtonsVisibility(true, false);
-          }
+          }    
           const data = await loadSectionData();
-          createMonthTable(tableContainerId, year, index + 1, data);
+          createMonthTable(tableContainerId, selectedYear, index + 1, data);
           handleLegend(tableContainerId);
-        });
-        container.appendChild(btn);
+        });    
+        monthsWrapper.appendChild(btn);
       });
+      /* ========= NEW YEAR'S EVENT ========= */
+      yearSelect.addEventListener("change", () => {
+        const newYear = parseInt(yearSelect.value, 10);
+        createMonthButtons(containerId, tableContainerId, newYear);
+        const tableContainer = document.getElementById(tableContainerId);
+        if (tableContainer) tableContainer.innerHTML = "";    
+        if (saveBtn) saveBtn.style.display = "none";
+        if (emitBtn) emitBtn.style.display = "none";
+      });
+      /* ======= ASSEMBLE THE ELEMENTS ====== */
+      mainWrapper.appendChild(yearContainer);
+      mainWrapper.appendChild(monthsWrapper);
+      container.appendChild(mainWrapper);
     }
     /* ============  LOAD DATA ============ */
     async function loadSetionData(secao) {
@@ -1347,4 +1394,5 @@
         alert(`❌ Erro: Não foi possível comunicar com o serviço de conversão.\n\nTipo: ${error.name}\nMensagem: ${error.message}`);
       }
     }
+
 

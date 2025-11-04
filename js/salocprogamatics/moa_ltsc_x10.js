@@ -225,8 +225,6 @@
         window.emitMOAGlobal();
         return false;
       };
-      console.log("✅ MOA inicializado com sucesso!");
-
     });
 
 

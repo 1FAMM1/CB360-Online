@@ -138,7 +138,6 @@
       if (districtSelects.length === 0) {
         return console.warn("Nenhum select de distritos encontrado");
       }
-      console.log(`🔍 Encontrados ${districtSelects.length} select(s) de distritos`);
       const districts = await fetchDistrictsFromSupabase();
       const defaultDistrict = districts.find(d => d.id === defaultDistrictId);
       if (!defaultDistrict) {
@@ -159,7 +158,6 @@
           sel.appendChild(option);
         });
         sel.value = String(defaultDistrictId);
-        console.log(`✅ Select ${index + 1} (ID: ${sel.id}) - Distrito selecionado: ${sel.options[sel.selectedIndex].textContent}`);
       });
     }
     /* ============= COUNCILS ============= */
@@ -212,7 +210,6 @@
           option.textContent = c.name;
           sel.appendChild(option);
         });
-        console.log(`✅ Concelhos populados para select: ${sel.id}`);
       });
     }
     /* ============= PARISHES ============= */
@@ -245,7 +242,6 @@
         option.textContent = p;
         parishSelect.appendChild(option);
       });
-      console.log(`✅ Freguesias populadas para select: ${parishSelect.id}`);
     }
 
     function setupHierarchicalSelects() {
@@ -271,15 +267,13 @@
       });
     }
     document.addEventListener('DOMContentLoaded', async () => {
-      const defaultDistrictId = 8; // Faro
-      console.log('🚀 Inicializando sistema de selects hierárquicos múltiplos...');
+      const defaultDistrictId = 8;
       await populateAllDistrictSelects(defaultDistrictId);
       setupHierarchicalSelects();
       const districtSelects = document.querySelectorAll('[id*="district_select"]');
       for (const select of districtSelects) {
         await populateCouncilSelectByDistrict(select.value, select.id);
       }
-      console.log('✅ Sistema inicializado com sucesso!');
     });
 
     function initializeNewSelectGroup(containerSelector) {
@@ -379,4 +373,5 @@
         });
       }
     }
+
     document.addEventListener('DOMContentLoaded', populateGlobalSelects);

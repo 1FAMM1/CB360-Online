@@ -83,7 +83,7 @@
       yearSelect.style.border = "1px solid #ccc";
       yearSelect.style.cursor = "pointer";    
       const currentYear = new Date().getFullYear();
-      for (let y = 2025; y <= currentYear + 10; y++) {
+      for (let y = 2025; y <= 2035; y++) {
         const opt = document.createElement("option");
         opt.value = y;
         opt.textContent = y;
@@ -1394,4 +1394,5 @@
         alert(`❌ Erro: Não foi possível comunicar com o serviço de conversão.\n\nTipo: ${error.name}\nMensagem: ${error.message}`);
       }
     }
+
 

@@ -1759,6 +1759,83 @@
         <div class="card-footer"></div>
       </div>
     </div>
+    <!---- IMEM SERVICES SUB-MODULE ---->
+    <div id="page-inem-services" class="page">
+      <h2 class="section-title">Serviços PEM</h2>
+      <div class="card" style="margin: 0 0 25px 0;">
+        <div class="card-header">SERVIÇOS ATRIBUIDOS AO PEM PELO CODU</div>
+        <div class="card-body">
+          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Hora Alerta:</label>
+              <input type="time" id="alert-service" placeholder="Indique um motivo para o estado da grelha." style="width: 75px;">
+            </div>
+          </div>
+          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Morada:</label>
+              <input type="text" id="address-service" placeholder="Indique a moarada." style="width: 500px;">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Localidade:</label>
+              <input type="text" id="location-service" placeholder="Indique a  localidade." style="width: 300px;">
+            </div>
+          </div>
+          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Pontos de Referência:</label>
+              <input type="text" id="reference-address-service" placeholder="Indique um ponto de referência." style="width: 500px;">
+            </div>
+          </div>
+          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Género:</label>
+              <select id="victim-gender-service" style="width: 75px;">
+                <option></option>
+                <option>Masc.</option>
+                <option>Fem.</option>
+                <option>Desc.</option>
+                <option>Outro</option>
+              </select>
+            </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Idade:</label>
+              <input type="text" id="victim-age-service" placeholder="00" style="width: 50px; margin: 0 -10px 0 0; text-align: center;">
+            </div>
+            <div class="global-field-horizontal">
+              <select id="victim-age-type-service" style="width: 75px;">
+                <option></option>
+                <option>Dias</option>
+                <option>Meses</option>
+                <option>Anos</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Situação:</label>
+              <input type="text" id="situation-service" placeholder="Indique a situação." style="width: 900px;">
+            </div>
+          </div>
+          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Nr. CODU:</label>
+              <input type="text" id="nr-codu-service" placeholder="123456789" style="width: 100px; text-align: center;">
+            </div>
+          </div>
+          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Observações:</label>
+              <input type="text" id="observations-service" placeholder="Indique um observação." style="width: 400px;">
+            </div>
+          </div>
+          <div class="form-row" style="margin: 0 0 -5px 0; display: flex; flex-wrap: wrap; justify-content: flex-end;">
+            <div class="action-buttons" id="codu-service-sendgroup">
+              <button class="btn btn-success" onclick="generateCODUserviceMessage()">ENVIAR SERVIÇO</button>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+    </div>
     <!---- UTILITIES MODULE ---->
     <div id="page-utilities" class="page">
       <h2 class="section-title">Utiliários</h2>
@@ -2018,6 +2095,7 @@
 </body>
 
 </html>
+
 
 
 

@@ -1799,7 +1799,7 @@
             </div>
             <div class="global-field-horizontal">
               <label style="font-size: 12px; font-weight: bold; color: #444;">Idade:</label>
-              <input type="text" id="victim-age-service" placeholder="00" style="width: 50px; margin: 0 -10px 0 0; text-align: center;">
+              <input type="text" id="victim-age-service" placeholder="00" maxlength="3" inputmode="numeric" style="width: 50px; margin: 0 -10px 0 0; text-align: center;" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 3)">
             </div>
             <div class="global-field-horizontal">
               <select id="victim-age-type-service" style="width: 75px;">
@@ -1819,7 +1819,7 @@
           <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
             <div class="global-field-horizontal">
               <label style="font-size: 12px; font-weight: bold; color: #444;">Nr. CODU:</label>
-              <input type="text" id="nr-codu-service" placeholder="123456789" style="width: 100px; text-align: center;">
+              <input type="text" id="nr-codu-service" placeholder="123456789" maxlength="9" inputmode="numeric" style="width: 100px; text-align: center;" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 9)">
             </div>
           </div>
           <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
@@ -2097,4 +2097,5 @@
 </body>
 
 </html>
+
 

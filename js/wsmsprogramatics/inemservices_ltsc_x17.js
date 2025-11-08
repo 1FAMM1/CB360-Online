@@ -23,11 +23,11 @@
       if (observations) message += `*Observações:* ${observations}`;
       if (navigator.clipboard?.writeText) {
         navigator.clipboard.writeText(message).then(() => {
-          alert("Mensagem criada e copiada! Pode colar no WhatsApp (CTRL+V).");
+          showPopupSuccess("Mensagem criada e copiada! Pode colar no WhatsApp (CTRL+V).");
           clearFormFields();
-        }).catch(() => alert("Não foi possível copiar automaticamente. Copie manualmente."));
+        }).catch(() => showPopupWarning("Não foi possível copiar automaticamente. Copie manualmente."));
       } else {
-        alert("Mensagem criada! Copie manualmente o texto.");
+        showPopupSuccess("Mensagem criada! Copie manualmente o texto.");
       }
       console.log(message);
       return message;

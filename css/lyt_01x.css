@@ -54,27 +54,36 @@
     }
     
     .status-bar {
-      position: absolute;
+      position: fixed;
       bottom: 0;
       left: 0;
       right: 0;
       height: 40px;
       background: #F8F9FA;
       border-top: 3px solid #DC3545;
-      padding: 20px;
+      padding: 0 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
 
     .system-info {
-      position: absolute;
-      bottom: 5px;
-      left: 20px;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       font-size: 12px;
       color: #6C757D;
     }
     
+    .left-info {
+      font-weight: 500;
+    }
+
+    .right-info {
+      font-style: italic;
+    }
+
     .loading {
       text-align: center;
       color: #7f8c8d;

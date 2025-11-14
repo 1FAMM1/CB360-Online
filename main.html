@@ -82,7 +82,7 @@
         <button class="sidebar-submenu-button" data-page="page-solicitation">📋 Solicitar Disponibilidades</button>
         <button class="sidebar-submenu-button" data-page="page-indisp">⚠️ Indisponibilidade Veículos</button>
         <button class="sidebar-submenu-button" data-page="page-municipality-grid">🗂️ Info. Grelha Município</button>
-        <button class="sidebar-submenu-button" data-page="page-inem-services">🚑 Serviços INEM</button>
+        <button class="sidebar-submenu-button" data-page="page-inem-services">🚑 Serviços EMS</button>
       </div>
       <button class="sidebar-menu-button" data-page="page-utilities" data-access="Utilitários">📱 Utilitários</button>
       <button class="sidebar-menu-button" data-page="page-data" data-access="Data Center">💾 Data Center</button>
@@ -1760,12 +1760,22 @@
         <div class="card-footer"></div>
       </div>
     </div>
-    <!---- IMEM SERVICES SUB-MODULE ---->
+    <!---- EMS SERVICES SUB-MODULE ---->
     <div id="page-inem-services" class="page">
-      <h2 class="section-title">Serviços PEM</h2>
+      <h2 class="section-title">Serviços EMS</h2>
       <div class="card" style="margin: 0 0 25px 0;">
-        <div class="card-header">SERVIÇOS ATRIBUIDOS AO PEM PELO CODU</div>
+        <div class="card-header">SERVIÇOS EMERGÊNCIA MÉDICA</div>
         <div class="card-body">
+           <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 10px;">
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">INEM:</label>
+              <input type="checkbox" id="alert-inem" style="width: 15px; height: 15px; cursor: pointer !important;">
+            </div>
+            <div class="global-field-horizontal">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">RESERVA:</label>
+              <input type="checkbox" id="alert-reserv" style="width: 15px; height: 15px; cursor: pointer !important;">
+            </div>
+          </div>
           <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
             <div class="global-field-horizontal">
               <label style="font-size: 12px; font-weight: bold; color: #444;">Hora Alerta:</label>
@@ -1825,7 +1835,7 @@
           <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
             <div class="global-field-horizontal">
               <label style="font-size: 12px; font-weight: bold; color: #444;">Observações:</label>
-              <input type="text" id="observations-service" placeholder="Indique um observação." style="width: 400px;">
+              <input type="text" id="observations-service" placeholder="Indique uma observação." style="width: 400px;">
             </div>
           </div>
           <div class="form-row" style="margin: 0 0 -5px 0; display: flex; flex-wrap: wrap; justify-content: flex-end;">
@@ -1834,6 +1844,15 @@
             </div>
           </div>
         </div>
+        <div class="card-footer"></div>
+      </div>
+    </div>
+    <!---- WEATHER WARNINGS SUB-MODULE ---->
+    <div id="page-weather-warnings" class="page">
+      <h2 class="section-title">Avisos Meteorológicos</h2>
+      <div class="card" style="margin: 0 0 25px 0;">
+        <div class="card-header">AVISOS METEOROLÓGICOS PARA A REGIÃO DO ALGARVE</div>
+        <div class="card-body" id="ipma-alerts"></div>
         <div class="card-footer"></div>
       </div>
     </div>
@@ -2097,6 +2116,7 @@
 </body>
 
 </html>
+
 
 
 

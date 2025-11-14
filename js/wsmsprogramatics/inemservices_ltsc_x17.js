@@ -1,7 +1,15 @@
     /* =======================================
-              INEM SERVICES
+              EMS SERVICES
     ======================================= */
-    /* ================ CREATION OF INEM SERVICES MESSAGE =============== */
+    const inem = document.getElementById('alert-inem');
+    const reserv = document.getElementById('alert-reserv');
+    inem.addEventListener('change', () => {
+      if (inem.checked) reserv.checked = false;
+    });
+    reserv.addEventListener('change', () => {
+      if (reserv.checked) inem.checked = false;
+    });
+    /* ================ CREATION OF EMS SERVICES MESSAGE =============== */
     function generateCODUserviceMessage() {
       const hourAlert = document.getElementById('alert-service')?.value || '';
       const address = document.getElementById('address-service')?.value?.trim() || '';
@@ -13,7 +21,11 @@
       const situation = document.getElementById('situation-service')?.value?.trim() || '';
       const nrCODU = document.getElementById('nr-codu-service')?.value?.trim() || '';
       const observations = document.getElementById('observations-service')?.value?.trim() || '';
-      let message = `*🚨⚠️ SERVIÇO INEM ⚠️🚨*\n\n`;
+      let messageTitle = `*🚨⚠️ SERVIÇO INEM ⚠️🚨*\n\n`;
+      if (reserv.checked) {
+        messageTitle = '*🚨⚠️ SERVIÇO INEM-Reserva ⚠️🚨*';
+      }
+      let message = `${messageTitle}\n\n`;
       if (nrCODU) message += `*Nr. CODU:* ${nrCODU}\n`;
       if (hourAlert) message += `*Hora Alerta:* ${hourAlert}\n`;
       if (address || locality) message += `*Local:* ${address}${address && locality ? ' - ' : ''}${locality}\n`;
@@ -32,7 +44,7 @@
       console.log(message);
       return message;
     }    
-    /* ============== INEM SERVICES FIELDS CONFIGURATIONS =============== */
+    /* ============== EMS SERVICES FIELDS CONFIGURATIONS =============== */
     function focusAddressField() {
       const addressInput = document.getElementById("address-service");
       if (addressInput) {

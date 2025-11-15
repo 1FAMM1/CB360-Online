@@ -152,5 +152,11 @@
     document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('popup-posit-modal').style.display = 'none';
       loadActiveOccurrences();
-
     });
+
+    async function refreshOccurrencesAndBlinker() {
+      await loadActiveOccurrences();
+      await occurrencesBlinker.update();
+    }
+    refreshOccurrencesAndBlinker();
+    setInterval(refreshOccurrencesAndBlinker, 8000);

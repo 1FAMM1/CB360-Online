@@ -21,6 +21,11 @@
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25), 0 0 12px rgba(255, 255, 255, 0.15) inset;
       transition: transform 0.25s ease, box-shadow 0.25s ease;
     }
+
+    .ipma-green {
+      border-color: #4caf50;
+      background: linear-gradient(135deg, #e4f8e4 0%, #4caf5033 100%);
+    }
     
     .ipma-yellow {
       border-color: #f9e15b;

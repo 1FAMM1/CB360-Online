@@ -5,20 +5,38 @@
     }
     
     .ipma-card {
-      border-radius: 6px;
-      padding: 12px;
+      border-radius: 8px;
+      padding: 18px;
       font-size: 14px;
-      border-left: 6px solid;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       min-height: 180px;
       position: relative;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);  
+      border: 1px solid;
+      border-left: 10px solid;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25), 0 0 12px rgba(255, 255, 255, 0.15) inset;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    
+    .ipma-yellow {
+      border-color: #f9e15b;
+      background: linear-gradient(135deg, #fffce1 0%, #f9e15b33 100%);
     }
 
-    .ipma-yellow { background: #fffde7; border-color: #f9a825; }
-    .ipma-orange { background: #fff3e0; border-color: #ef6c00; }
-    .ipma-red    { background: #ffebee; border-color: #c62828; }
+    .ipma-orange {
+      border-color: #ff8f3d;
+      background: linear-gradient(135deg, #ffe8d1 0%, #ff8f3d33 100%);
+    }
+
+    .ipma-red {
+      border-color: #ff4d5c;
+      background: linear-gradient(135deg, #ffd4d6 0%, #ff4d5c33 100%);
+    }
+
     .ipma-title { font-weight: bold; font-size: 15px; margin-bottom: 4px; }
     .ipma-time  { font-size: 12px; color: #555; }
 

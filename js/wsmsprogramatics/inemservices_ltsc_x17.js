@@ -21,7 +21,7 @@
       const situation = document.getElementById('situation-service')?.value?.trim() || '';
       const nrCODU = document.getElementById('nr-codu-service')?.value?.trim() || '';
       const observations = document.getElementById('observations-service')?.value?.trim() || '';
-      let messageTitle = `*🚨⚠️ SERVIÇO INEM ⚠️🚨*\n\n`;
+      let messageTitle = `*🚨⚠️ SERVIÇO INEM ⚠️🚨*`;
       if (reserv.checked) {
         messageTitle = '*🚨⚠️ SERVIÇO INEM-Reserva ⚠️🚨*';
       }

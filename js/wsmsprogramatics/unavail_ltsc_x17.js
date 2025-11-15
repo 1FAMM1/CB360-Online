@@ -193,3 +193,10 @@
     document.addEventListener('DOMContentLoaded', () => {
       loadActiveUnavailability();
     });
+
+    async function refreshVehícIndispAndBlinker() {
+      await loadActiveUnavailability();
+      await veícIndispBlinker.update();
+    }
+    refreshVehícIndispAndBlinker();
+    setInterval(refreshVehícIndispAndBlinker, 8000);

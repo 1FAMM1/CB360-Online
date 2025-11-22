@@ -55,11 +55,21 @@ export default async function handler(req, res) {
       r.commit();
     });
 
-    for (let r = startRow; r < startRow + data.rows.length; r++) {
+    const startRow = 10;
+const endRow = 113;
+
+for (let r = startRow; r <= endRow; r++) {
   const row = sheet.getRow(r);
   const cellG = row.getCell(7);
-  const valor = Number(cellG.value) || 0; // Se for vazio, undefined ou não-numérico, vira 0
-  if (valor === 0) {
+  const valor = Number(cellG.value) || 0;
+
+  // Verifica se todas as células da linha (colunas 2 a 7) estão vazias
+  const allEmpty = [2,3,4,5,6,7].every(c => {
+    const v = row.getCell(c).value;
+    return v === null || v === undefined || v === '';
+  });
+
+  if (valor === 0 || allEmpty) {
     row.hidden = true;
   }
 }

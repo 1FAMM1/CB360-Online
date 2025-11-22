@@ -102,7 +102,7 @@ export default async function handler(req, res) {
         });
 
         // --- Ocultar linhas vazias ---
-        for (let r = currentRow; r <= 117; r++) {
+        for (let r = currentRow; r <= 214; r++) {
             const cellB = sheet.getCell(`B${r}`);
             if (!cellB.value || cellB.value.toString().trim() === '') {
                 sheet.getRow(r).hidden = true;

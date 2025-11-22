@@ -33,7 +33,7 @@ export default async function handler(req, res) {
     let outputFilePath = null;
 
     try {
-        const data = req.body; // year, monthName, daysInMonth, weekdays[], holidayDays[], fixedRows[], normalRows[], fileName
+        const data = req.body; // { monthName, year, daysInMonth, weekdays, holidayDays, fixedRows, normalRows, fileName }
         const templateBuffer = await downloadTemplate(TEMPLATE_URL);
 
         const workbook = new ExcelJS.Workbook();
@@ -62,24 +62,42 @@ export default async function handler(req, res) {
 
         // --- Escalas D/N ---
         let currentRow = 11;
-        const allRows = [...data.fixedRows, ...data.normalRows];
-        allRows.forEach(person => {
+
+        // Combinar fixedRows e normalRows em um único array por pessoa
+        const allPersons = {};
+        (data.fixedRows || []).forEach(p => {
+            allPersons[p.ni] = { ...p, days: p.days };
+        });
+        (data.normalRows || []).forEach(p => {
+            if (!allPersons[p.ni]) allPersons[p.ni] = { ...p, days: {} };
+            Object.keys(p.days).forEach(d => {
+                if (!allPersons[p.ni].days[d]) allPersons[p.ni].days[d] = {};
+                allPersons[p.ni].days[d].N = p.days[d].N || '';
+            });
+        });
+
+        // Iterar por pessoa e preencher D e N
+        Object.values(allPersons).forEach(person => {
             // Linha D
             let rowD = sheet.getRow(currentRow);
-            rowD.getCell(2).value = person.ni; // coluna B
-            rowD.getCell(3).value = person.nome; // coluna C
+            rowD.getCell(2).value = person.ni;
+            rowD.getCell(3).value = person.nome;
             for (let d = 1; d <= data.daysInMonth; d++) {
                 const col = 6 + (d - 1);
                 rowD.getCell(col).value = person.days[d]?.D || '';
             }
             rowD.commit();
+
             // Linha N
             let rowN = sheet.getRow(currentRow + 1);
+            rowN.getCell(2).value = person.ni; // opcional repetir NI
+            rowN.getCell(3).value = person.nome; // opcional repetir nome
             for (let d = 1; d <= data.daysInMonth; d++) {
                 const col = 6 + (d - 1);
                 rowN.getCell(col).value = person.days[d]?.N || '';
             }
             rowN.commit();
+
             currentRow += 2;
         });
 

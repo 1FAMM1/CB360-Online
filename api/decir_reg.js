@@ -45,7 +45,7 @@ export default async function handler(req, res) {
         const rowWeekdays = sheet.getRow(9);
         const rowNumbers = sheet.getRow(10);
         for (let d = 1; d <= data.daysInMonth; d++) {
-            const col = 6 + (d - 1);
+            const col = 6 + (d - 1); // Coluna F = 6
             rowWeekdays.getCell(col).value = data.weekdays[d - 1] || '';
             rowNumbers.getCell(col).value = d;
         }
@@ -63,7 +63,7 @@ export default async function handler(req, res) {
         // --- Escalas D/N ---
         let currentRow = 11;
 
-        // Combinar fixedRows e normalRows em um único array por pessoa
+        // Combinar fixedRows e normalRows
         const allPersons = {};
         (data.fixedRows || []).forEach(p => {
             allPersons[p.ni] = { ...p, days: p.days };
@@ -76,28 +76,39 @@ export default async function handler(req, res) {
             });
         });
 
-        // Iterar por pessoa e preencher D e N
         Object.values(allPersons).forEach(person => {
-            // Linha D
+            // --- Linha D ---
             let rowD = sheet.getRow(currentRow);
             rowD.getCell(2).value = person.ni;
             rowD.getCell(3).value = person.nome;
+
             for (let d = 1; d <= data.daysInMonth; d++) {
                 const col = 6 + (d - 1);
                 rowD.getCell(col).value = person.days[d]?.D || '';
             }
+
+            // Colunas adicionais: AL, AM, AN
+            rowD.getCell(38).value = person.AMAL || '';
+            rowD.getCell(39).value = person.ANEPC || '';
+            rowD.getCell(40).value = person.GLOBAL || '';
+
             rowD.commit();
 
-            // Linha N
+            // --- Linha N ---
             let rowN = sheet.getRow(currentRow + 1);
-            rowN.getCell(2).value = person.ni; // opcional repetir NI
-            rowN.getCell(3).value = person.nome; // opcional repetir nome
+            rowN.getCell(2).value = person.ni;
+            rowN.getCell(3).value = person.nome;
+
             for (let d = 1; d <= data.daysInMonth; d++) {
                 const col = 6 + (d - 1);
                 rowN.getCell(col).value = person.days[d]?.N || '';
             }
-            rowN.commit();
 
+            rowN.getCell(38).value = person.AMAL || '';
+            rowN.getCell(39).value = person.ANEPC || '';
+            rowN.getCell(40).value = person.GLOBAL || '';
+
+            rowN.commit();
             currentRow += 2;
         });
 
@@ -109,7 +120,7 @@ export default async function handler(req, res) {
             }
         }
 
-        // --- Ocultar colunas sem dias ---
+        // --- Ocultar colunas sem dias (F a AJ) ---
         for (let c = 6; c <= 36; c++) {
             const cell = sheet.getRow(10).getCell(c);
             if (!cell.value || cell.value.toString().trim() === '') {

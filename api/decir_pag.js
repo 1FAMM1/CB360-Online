@@ -56,9 +56,11 @@ export default async function handler(req, res) {
     });
 
     for (let r = startRow; r < startRow + data.rows.length; r++) {
-  const cellG = sheet.getRow(r).getCell(7);
-  if (!cellG.value || Number(cellG.value) === 0) {
-    sheet.getRow(r).hidden = true;
+  const row = sheet.getRow(r);
+  const cellG = row.getCell(7);
+  const valor = Number(cellG.value) || 0; // Se for vazio, undefined ou não-numérico, vira 0
+  if (valor === 0) {
+    row.hidden = true;
   }
 }
 

@@ -33,46 +33,40 @@ export default async function handler(req, res) {
   let outputFilePath = null;
 
   try {
-    const data = req.body;
-    const templateBuffer = await downloadTemplate(TEMPLATE_URL);
+    const data = req.body; // { fileName, rows: [{ni,nome,nif,nib,qtdTurnos,valor},...] }
+    if (!data || !data.rows || !Array.isArray(data.rows)) {
+      return res.status(400).json({ error: "Dados inválidos" });
+    }
 
+    const templateBuffer = await downloadTemplate(TEMPLATE_URL);
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(templateBuffer);
     const sheet = workbook.worksheets[0];
 
-    // Começa a escrever no row 10
-    let startRow = 10;
-
-    data.table.forEach((item, index) => {
-      const row = sheet.getRow(startRow + index);
-
-      // Assumindo colunas:
-      // B = NI, C = Nome, D = NIF, E = NIB, F = Qtd Turnos, G = Valor
-      row.getCell(2).value = String(item.ni).padStart(3, "0");
-      row.getCell(3).value = item.nome;
-      row.getCell(4).value = item.nif;
-      row.getCell(5).value = item.nib;
-      row.getCell(6).value = item.turnos;
-      row.getCell(7).value = item.valor;
-
-      row.commit();
+    let startRow = 10; // B10 começa o NI
+    data.rows.forEach((row, idx) => {
+      const r = sheet.getRow(startRow + idx);
+      r.getCell(2).value = String(row.ni).padStart(3,'0'); // NI
+      r.getCell(3).value = row.nome || '';
+      r.getCell(4).value = row.nif || '';
+      r.getCell(5).value = row.nib || '';
+      r.getCell(6).value = row.qtdTurnos || 0;
+      r.getCell(7).value = row.valor || 0;
+      r.commit();
     });
 
-    // Guarda o ficheiro gerado
     outputFilePath = path.join(tempDir, `${data.fileName}_${Date.now()}.xlsx`);
     await workbook.xlsx.writeFile(outputFilePath);
 
     const excelBuffer = fs.readFileSync(outputFilePath);
-    try { fs.unlinkSync(outputFilePath); } catch {}
+    try { if (fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath); } catch {}
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename="${data.fileName}.xlsx"`);
-    res.status(200).send(excelBuffer);
+    return res.status(200).send(excelBuffer);
 
   } catch (error) {
-    if (outputFilePath && fs.existsSync(outputFilePath)) {
-      try { fs.unlinkSync(outputFilePath); } catch {}
-    }
-    res.status(500).json({ error: "Erro interno", details: error.message });
+    try { if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath); } catch {}
+    return res.status(500).json({ error: "Erro interno ao gerar Excel", details: error.message });
   }
 }

@@ -55,6 +55,13 @@ export default async function handler(req, res) {
       r.commit();
     });
 
+    for (let r = startRow; r < startRow + data.rows.length; r++) {
+  const cellG = sheet.getRow(r).getCell(7);
+  if (!cellG.value || Number(cellG.value) === 0) {
+    sheet.getRow(r).hidden = true;
+  }
+}
+
     outputFilePath = path.join(tempDir, `${data.fileName}_${Date.now()}.xlsx`);
     await workbook.xlsx.writeFile(outputFilePath);
 

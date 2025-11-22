@@ -41,7 +41,7 @@ export default async function handler(req, res) {
         const sheet = workbook.worksheets[0];
 
         // --- Cabeçalho ---
-        sheet.getCell("C9").value = `${data.monthName} ${data.year}`;
+        sheet.getCell("B7").value = `REGISTO DE ELEMENTOS - ${data.monthName} ${data.year}`;
         const rowWeekdays = sheet.getRow(9);
         const rowNumbers = sheet.getRow(10);
         for (let d = 1; d <= data.daysInMonth; d++) {

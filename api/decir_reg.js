@@ -77,23 +77,23 @@ export default async function handler(req, res) {
     });
 
     Object.values(allPersons).forEach(person => {
-      // Linha D
+      // --- Linha D ---
       const rowD = sheet.getRow(currentRow);
-      rowD.getCell(2).value = String(person.ni).padStart(3, "0"); 
+      rowD.getCell(2).value = String(person.ni).padStart(3, "0"); // NI formatado com 3 dígitos
       rowD.getCell(3).value = person.nome;
       for (let d = 1; d <= data.daysInMonth; d++) {
         const col = 6 + (d - 1);
         rowD.getCell(col).value = person.days[d]?.D || '';
       }
-      // Valores extras AMAL/ANEPC/GLOBAL
-      rowD.getCell(38).value = person.amal || '';   // AL na planilha
-      rowD.getCell(39).value = person.anepc || '';  // AM na planilha
-      rowD.getCell(40).value = person.global || ''; // AN na planilha
+      // Valores extras AL/AM/AN
+      rowD.getCell(38).value = person.amal || '';   // AL
+      rowD.getCell(39).value = person.anepc || '';  // AM
+      rowD.getCell(40).value = person.global || ''; // AN
       rowD.commit();
 
-      // Linha N
+      // --- Linha N ---
       const rowN = sheet.getRow(currentRow + 1);
-      rowN.getCell(2).value = person.ni;
+      // NÃO preencher NI para manter a célula mesclada
       rowN.getCell(3).value = person.nome;
       for (let d = 1; d <= data.daysInMonth; d++) {
         const col = 6 + (d - 1);

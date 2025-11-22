@@ -43,7 +43,7 @@ export default async function handler(req, res) {
     await workbook.xlsx.load(templateBuffer);
     const sheet = workbook.worksheets[0];
 
-    let startRow = 10; // B10 começa o NI
+    const startRow = 10; // B10 começa o NI
     data.rows.forEach((row, idx) => {
       const r = sheet.getRow(startRow + idx);
       r.getCell(2).value = String(row.ni).padStart(3,'0'); // NI
@@ -55,24 +55,22 @@ export default async function handler(req, res) {
       r.commit();
     });
 
-    const startRow = 10;
-const endRow = 113;
+    const endRow = 113; // Limite do template
+    for (let r = startRow; r <= endRow; r++) {
+      const row = sheet.getRow(r);
+      const cellG = row.getCell(7);
+      const valor = Number(cellG.value) || 0;
 
-for (let r = startRow; r <= endRow; r++) {
-  const row = sheet.getRow(r);
-  const cellG = row.getCell(7);
-  const valor = Number(cellG.value) || 0;
+      // Verifica se todas as células da linha (colunas 2 a 7) estão vazias
+      const allEmpty = [2,3,4,5,6,7].every(c => {
+        const v = row.getCell(c).value;
+        return v === null || v === undefined || v === '';
+      });
 
-  // Verifica se todas as células da linha (colunas 2 a 7) estão vazias
-  const allEmpty = [2,3,4,5,6,7].every(c => {
-    const v = row.getCell(c).value;
-    return v === null || v === undefined || v === '';
-  });
-
-  if (valor === 0 || allEmpty) {
-    row.hidden = true;
-  }
-}
+      if (valor === 0 || allEmpty) {
+        row.hidden = true;
+      }
+    }
 
     outputFilePath = path.join(tempDir, `${data.fileName}_${Date.now()}.xlsx`);
     await workbook.xlsx.writeFile(outputFilePath);

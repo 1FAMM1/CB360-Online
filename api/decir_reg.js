@@ -79,7 +79,7 @@ export default async function handler(req, res) {
     Object.values(allPersons).forEach(person => {
       // Linha D
       const rowD = sheet.getRow(currentRow);
-      rowD.getCell(2).value = person.ni;
+      rowD.getCell(2).value = String(person.ni).padStart(3, "0"); 
       rowD.getCell(3).value = person.nome;
       for (let d = 1; d <= data.daysInMonth; d++) {
         const col = 6 + (d - 1);

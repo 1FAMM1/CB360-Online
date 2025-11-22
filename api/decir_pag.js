@@ -43,6 +43,7 @@ export default async function handler(req, res) {
     await workbook.xlsx.load(templateBuffer);
     const sheet = workbook.worksheets[0];
 
+    sheet.getCell("B7").value = `PAGAMENTOS DECIR - ${data.monthName} ${data.year}`;
     const startRow = 10; // B10 começa o NI
     data.rows.forEach((row, idx) => {
       const r = sheet.getRow(startRow + idx);

@@ -159,7 +159,7 @@ export default async function handler(req, res) {
       sheet.getCell("B7").value = `Cod.A33 - ${data.year}`;
 
       const startRow = 11;
-      const endRowTemplate = 114;
+      const endRowTemplate = 112;
       let currentRow = startRow;
 
       for (const person of data.rows) {

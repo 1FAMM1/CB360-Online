@@ -164,7 +164,7 @@ export default async function handler(req, res) {
         const row = sheet.getRow(currentRow);
         row.getCell("B").value = String(person.ni).padStart(3,'0');
         row.getCell("C").value = person.nome || '';
-        row.getCell("D").value = person.nif || '';
+        row.getCell("G").value = person.nif || '';
 
         const monthsMap = { ABRIL: "J", MAIO: "L", JUNHO: "N", JULHO: "P", AGOSTO: "R", SETEMBRO: "T", OUTUBRO: "V" };
         let hasNonZero = false;

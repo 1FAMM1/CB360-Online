@@ -6,6 +6,7 @@ import https from 'https';
 
 const TEMPLATE_PAG_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/templates/decir_pag_template.xlsx";
 const TEMPLATE_REG_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/templates/decir_reg_template.xlsx";
+const TEMPLATE_CODE_A33_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/templates/cod_a33_template.xlsx";
 
 export const config = { api: { bodyParser: { sizeLimit: '10mb' } } };
 
@@ -46,13 +47,11 @@ export default async function handler(req, res) {
       await workbook.xlsx.load(templateBuffer);
       sheet = workbook.worksheets[0];
 
-      // Título
       sheet.getCell("B7").value = `PAGAMENTOS DECIR - ${data.monthName} ${data.year}`;
 
       const startRow = 10;
       const endRowTemplate = 113;
 
-      // Preenche linhas
       data.rows.forEach((row, idx) => {
         const r = sheet.getRow(startRow + idx);
         r.getCell(2).value = String(row.ni).padStart(3,'0'); // NI
@@ -64,15 +63,12 @@ export default async function handler(req, res) {
         r.commit();
       });
 
-      // Ocultar linhas com valor 0 ou vazias (somente do template)
+      // Ocultar linhas vazias
       for (let r = startRow; r <= endRowTemplate; r++) {
         const row = sheet.getRow(r);
         const cellG = row.getCell(7);
         const valor = Number(cellG.value) || 0;
-        const allEmpty = [2,3,4,5,6,7].every(c => {
-          const v = row.getCell(c).value;
-          return v === null || v === undefined || v === '';
-        });
+        const allEmpty = [2,3,4,5,6,7].every(c => !row.getCell(c).value);
         if (valor === 0 || allEmpty) row.hidden = true;
       }
 
@@ -86,10 +82,8 @@ export default async function handler(req, res) {
       await workbook.xlsx.load(templateBuffer);
       sheet = workbook.worksheets[0];
 
-      // Título
       sheet.getCell("B7").value = `Registo Diário de Elementos - ${data.monthName} ${data.year}`;
 
-      // Cabeçalho dias e weekdays
       const rowWeekdays = sheet.getRow(9);
       const rowNumbers = sheet.getRow(10);
       for (let d = 1; d <= data.daysInMonth; d++) {
@@ -100,7 +94,6 @@ export default async function handler(req, res) {
       rowWeekdays.commit();
       rowNumbers.commit();
 
-      // Feriados
       if (Array.isArray(data.holidayDays)) {
         const rowHolidays = sheet.getRow(8);
         data.holidayDays.forEach(day => {
@@ -110,7 +103,6 @@ export default async function handler(req, res) {
         rowHolidays.commit();
       }
 
-      // Combinar fixedRows e normalRows
       const allPersons = {};
       (data.fixedRows || []).forEach(p => allPersons[p.ni] = { ...p, days: p.days });
       (data.normalRows || []).forEach(p => {
@@ -123,7 +115,6 @@ export default async function handler(req, res) {
 
       let currentRow = 11;
       Object.values(allPersons).forEach(person => {
-        // Linha D
         const rowD = sheet.getRow(currentRow);
         rowD.getCell(2).value = String(person.ni).padStart(3,"0");
         rowD.getCell(3).value = person.nome;
@@ -136,7 +127,6 @@ export default async function handler(req, res) {
         rowD.getCell(40).value = person.global || '';
         rowD.commit();
 
-        // Linha N
         const rowN = sheet.getRow(currentRow + 1);
         rowN.getCell(3).value = person.nome;
         for (let d = 1; d <= data.daysInMonth; d++) {
@@ -144,19 +134,50 @@ export default async function handler(req, res) {
           rowN.getCell(col).value = person.days[d]?.N || '';
         }
         rowN.commit();
+
         currentRow += 2;
       });
 
-      // Ocultar linhas vazias restantes
       for (let r = currentRow; r <= 214; r++) {
         const cellB = sheet.getCell(`B${r}`);
         if (!cellB.value || cellB.value.toString().trim() === '') sheet.getRow(r).hidden = true;
       }
 
-      // Ocultar colunas sem dias
       for (let c = 6; c <= 36; c++) {
         const cell = sheet.getRow(10).getCell(c);
         if (!cell.value || cell.value.toString().trim() === '') sheet.getColumn(c).hidden = true;
+      }
+    } 
+    // ---------- CODE A33 ----------
+    else if (data.type === 'code_a33') {
+      if (!Array.isArray(data.rows)) return res.status(400).json({ error: "Rows inválidas para code_a33" });
+
+      const templateBuffer = await downloadTemplate(TEMPLATE_CODE_A33_URL);
+      await workbook.xlsx.load(templateBuffer);
+      sheet = workbook.worksheets[0];
+
+      sheet.getCell("B7").value = `Cod.A33 - ${data.year}`;
+
+      let currentRow = 11;
+
+      for (const person of data.rows) {
+        const row = sheet.getRow(currentRow);
+        row.getCell("B").value = String(person.ni).padStart(3,'0');
+        row.getCell("C").value = person.nome || '';
+        row.getCell("D").value = person.nif || '';
+
+        const monthsMap = { ABRIL: "J", MAIO: "L", JUNHO: "N", JULHO: "P", AGOSTO: "R", SETEMBRO: "T", OUTUBRO: "V" };
+        let hasNonZero = false;
+
+        Object.entries(monthsMap).forEach(([month, colLetter]) => {
+          const value = Number(person[month]) || 0;
+          row.getCell(colLetter).value = value;
+          if (value !== 0) hasNonZero = true;
+        });
+
+        if (!hasNonZero) row.hidden = true; // oculta se todos os meses forem 0
+        row.commit();
+        currentRow++;
       }
     } 
     else {

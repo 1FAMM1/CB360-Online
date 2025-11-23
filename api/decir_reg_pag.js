@@ -158,7 +158,9 @@ export default async function handler(req, res) {
 
       sheet.getCell("B7").value = `Cod.A33 - ${data.year}`;
 
-      let currentRow = 11;
+      const startRow = 11;
+      const endRowTemplate = 114;
+      let currentRow = startRow;
 
       for (const person of data.rows) {
         const row = sheet.getRow(currentRow);
@@ -167,17 +169,32 @@ export default async function handler(req, res) {
         row.getCell("G").value = person.nif || '';
 
         const monthsMap = { ABRIL: "J", MAIO: "L", JUNHO: "N", JULHO: "P", AGOSTO: "R", SETEMBRO: "T", OUTUBRO: "V" };
-        let hasNonZero = false;
 
         Object.entries(monthsMap).forEach(([month, colLetter]) => {
           const value = Number(person[month]) || 0;
           row.getCell(colLetter).value = value;
-          if (value !== 0) hasNonZero = true;
         });
 
-        if (!hasNonZero) row.hidden = true; // oculta se todos os meses forem 0
         row.commit();
         currentRow++;
+      }
+
+      // OCULTAR LINHAS VAZIAS OU COM TODOS OS MESES A ZERO
+      for (let r = startRow; r <= endRowTemplate; r++) {
+        const row = sheet.getRow(r);
+        
+        // Verificar se TODOS os meses (colunas J, L, N, P, R, T, V) estão vazios ou zero
+        const monthColumns = ["J", "L", "N", "P", "R", "T", "V"];
+        const allZeroOrEmpty = monthColumns.every(col => {
+          const cell = row.getCell(col);
+          const value = Number(cell.value) || 0;
+          return value === 0;
+        });
+        
+        // Se todos os meses estão a zero/vazio, oculta a linha
+        if (allZeroOrEmpty) {
+          row.hidden = true;
+        }
       }
     } 
     else {

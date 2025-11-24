@@ -40,7 +40,16 @@
     <!---- SIDEBAR MODULE ---->
     <aside class="sidebar">
       <button class="sidebar-menu-button active" data-page="page-main">🏠 Menu Principal</button>
-      <button class="sidebar-menu-button" data-page="" data-access="DECIR 360" onclick="showTempWarning('MÓDULO BREVEMENTE DISPONÍVEL EM CB360 ONLINE')">👥 DECIR 360</button>
+      <button class="sidebar-menu-button sub-submenu-toggle" data-page="page-decir" data-access="DECIR 360">👥 DECIR 360</button>
+      <div class="sub-submenu">
+        <button class="sidebar-submenu-button sub-submenu-toggle" data-page="" data-access="Controlo de Pagamentos">Controlo de Pagamentos</button>
+        <div class="sub-submenu">
+          <button class="sidebar-sub-submenu-button" data-page="decir-reg">Registo por Elemento</button>
+          <button class="sidebar-sub-submenu-button" data-page="decir-pag">Núcleo Financeiro</button>    
+          <button class="sidebar-sub-submenu-button" data-page="decir-anepc">Relatórios ANEPC</button>
+        </div>
+        <button class="sidebar-submenu-button" data-page="page-scales" data-access="1ª Secção">Escalas e Assinaturas</button>
+      </div>
       <button class="sidebar-menu-button sub-submenu-toggle" data-page="page-fomio" data-access="FOMIO 360">👥 FOMIO 360</button>
       <div class="sub-submenu">
         <button class="sidebar-sub-submenu-button" data-page="page-scales" data-access="DECIR">DECIR</button>
@@ -267,7 +276,32 @@
       </div>
     </div>
     <!---- CARD DECIR 360 ---->
-    <!---- FUTURE INSERTION ---->
+    <div id="page-decir" class="page">
+      <div class="card last-card">
+        <div class="card-header">BEM-VINDO AO DECIR 360</div>
+        <div class="card-body" style="font-family: 'Segoe UI', sans-serif;">
+          <p style="font-size: 15px; margin-bottom: 20px; color: #333;">
+            O <strong>DECIR 360</strong> é o módulo digital responsável pela gestão integral da
+            <strong>Inserção e Validação</strong> dos elementos afetos ao <strong>DISPOSITIVO ESPECIAL DE 
+            COMBATE A INCÊNDIOS RURAIS.</strong>
+            Este sistema centraliza todo o processo de registo, controlo e pagamentos aos elementos afetos
+            ao DECIR, garantindo uma gestão eficiente e transparente dos recursos humanos e operacionais.
+          </p>
+          <div style="background: linear-gradient(90deg, #e0e0e0, #d6d6d6); padding: 15px 20px; border-left: 5px solid #007bff; border-radius: 6px; margin-bottom: 20px;">
+            <strong>Funcionalidades Principais:</strong>
+          </div>
+          <div style="margin-bottom: 20px;">
+            <ul style="list-style: none; padding-left: 10px; line-height: 1.8;">
+              <li style="color:#0d630e;">📋 Criação e gestão de relatórios para pagamentos</li>
+              <li style="color:#0d630e;">👨‍🚒 Gestão e confirmação de pagamentos</li>
+              <li style="color:#0d630e;">🧾 Emissão de listas para pagamentos</li>
+              <li style="color:#0d630e;">🧾 Emissão de escalas e assinaturas (Ficheiros Oficiais da ANEPC)</li>
+            </ul>
+          </div>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+    </div>
     <!---- CARD FOMIO 360 ---->
     <div id="page-fomio" class="page">
       <div class="card last-card">
@@ -2121,5 +2155,6 @@
   <script></script>
 </body>
 </html>
+
 
 

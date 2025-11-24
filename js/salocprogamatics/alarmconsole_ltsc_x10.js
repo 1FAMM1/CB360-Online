@@ -96,7 +96,7 @@
       const soundKey = soundKeys[selectedButton];
       if (!soundKey) return showPopupWarning("Opção de chamada inválida!");
       const fileName = `${selectedElement}_${soundKey}.mp3`;
-      const baseUrl = 'https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/sounds/Internal/';
+      const baseUrl = 'https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/sounds/Internal/';
       isPlaying = true;
       disableAllControls(true);
       fetch(`${baseUrl}${fileName}`, {
@@ -159,7 +159,7 @@
           }
           isPlaying = true;
           disableAllControls(true);
-          const audio = new Audio(`https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/sounds/Internal/${key}.mp3`);
+          const audio = new Audio(`https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/sounds/Internal/${key}.mp3`);
           audio.onerror = () => alert(`Ficheiro de som "${key}.mp3" não encontrado!`);
           audio.play();
           audio.onended = () => {

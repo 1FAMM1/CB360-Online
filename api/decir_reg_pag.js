@@ -25,31 +25,24 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Método não permitido' });
-
   const tempDir = os.tmpdir();
   let outputFilePath = null;
-
   try {
     const data = req.body;
     if (!data || !data.type) return res.status(400).json({ error: "Dados inválidos" });
-
     let workbook = new ExcelJS.Workbook();
     let sheet;
 
-    // ---------- REGISTO DIÁRIO ----------
+    // ---------- DAILY REGISTRY ----------
     if (data.type === 'reg') {
       const requiredFields = ['monthName','year','daysInMonth','weekdays','fixedRows','normalRows'];
       if (!requiredFields.every(f => f in data)) return res.status(400).json({ error: "Dados incompletos para registo diário" });
-
       const templateBuffer = await downloadTemplate(TEMPLATE_REG_URL);
       await workbook.xlsx.load(templateBuffer);
       sheet = workbook.worksheets[0];
-
       sheet.getCell("B7").value = `Registo Diário de Elementos - ${data.monthName} ${data.year}`;
-
       const rowWeekdays = sheet.getRow(9);
       const rowNumbers = sheet.getRow(10);
       for (let d = 1; d <= data.daysInMonth; d++) {
@@ -59,7 +52,6 @@ export default async function handler(req, res) {
       }
       rowWeekdays.commit();
       rowNumbers.commit();
-
       if (Array.isArray(data.holidayDays)) {
         const rowHolidays = sheet.getRow(8);
         data.holidayDays.forEach(day => {
@@ -68,7 +60,6 @@ export default async function handler(req, res) {
         });
         rowHolidays.commit();
       }
-
       const allPersons = {};
       (data.fixedRows || []).forEach(p => allPersons[p.ni] = { ...p, days: p.days });
       (data.normalRows || []).forEach(p => {
@@ -78,7 +69,6 @@ export default async function handler(req, res) {
           allPersons[p.ni].days[d].N = p.days[d].N || '';
         });
       });
-
       let currentRow = 11;
       Object.values(allPersons).forEach(person => {
         const rowD = sheet.getRow(currentRow);
@@ -92,7 +82,6 @@ export default async function handler(req, res) {
         rowD.getCell(39).value = person.anepc || '';
         rowD.getCell(40).value = person.global || '';
         rowD.commit();
-
         const rowN = sheet.getRow(currentRow + 1);
         rowN.getCell(3).value = person.nome;
         for (let d = 1; d <= data.daysInMonth; d++) {
@@ -100,34 +89,27 @@ export default async function handler(req, res) {
           rowN.getCell(col).value = person.days[d]?.N || '';
         }
         rowN.commit();
-
         currentRow += 2;
       });
-
       for (let r = currentRow; r <= 214; r++) {
         const cellB = sheet.getCell(`B${r}`);
         if (!cellB.value || cellB.value.toString().trim() === '') sheet.getRow(r).hidden = true;
       }
-
       for (let c = 6; c <= 36; c++) {
         const cell = sheet.getRow(10).getCell(c);
         if (!cell.value || cell.value.toString().trim() === '') sheet.getColumn(c).hidden = true;
       }
     } 
 
-    // ---------- PAGAMENTOS ----------
+    // ---------- PAYMENTS ----------
     else if (data.type === 'pag') {
       if (!Array.isArray(data.rows)) return res.status(400).json({ error: "Rows inválidas para pagamentos" });
-
       const templateBuffer = await downloadTemplate(TEMPLATE_PAG_URL);
       await workbook.xlsx.load(templateBuffer);
       sheet = workbook.worksheets[0];
-
       sheet.getCell("B7").value = `PAGAMENTOS DECIR - ${data.monthName} ${data.year}`;
-
       const startRow = 10;
       const endRowTemplate = 113;
-
       data.rows.forEach((row, idx) => {
         const r = sheet.getRow(startRow + idx);
         r.getCell(2).value = String(row.ni).padStart(3,'0'); // NI
@@ -138,8 +120,6 @@ export default async function handler(req, res) {
         r.getCell(7).value = row.valor || 0;
         r.commit();
       });
-
-      // Ocultar linhas vazias
       for (let r = startRow; r <= endRowTemplate; r++) {
         const row = sheet.getRow(r);
         const cellG = row.getCell(7);
@@ -147,54 +127,40 @@ export default async function handler(req, res) {
         const allEmpty = [2,3,4,5,6,7].every(c => !row.getCell(c).value);
         if (valor === 0 || allEmpty) row.hidden = true;
       }
-
     } 
     
     // ---------- CODE A33 ----------
     else if (data.type === 'code_a33') {
       if (!Array.isArray(data.rows)) return res.status(400).json({ error: "Rows inválidas para code_a33" });
-
       const templateBuffer = await downloadTemplate(TEMPLATE_CODE_A33_URL);
       await workbook.xlsx.load(templateBuffer);
       sheet = workbook.worksheets[0];
-
       sheet.getCell("B7").value = `Cod.A33 - ${data.year}`;
       sheet.getCell("D3").value = `Pagamentos DECIR_${data.year} Cód.A33`;
-
       const startRow = 11;
       const endRowTemplate = 112;
       let currentRow = startRow;
-
       for (const person of data.rows) {
         const row = sheet.getRow(currentRow);
         row.getCell("B").value = String(person.ni).padStart(3,'0');
         row.getCell("C").value = person.nome || '';
         row.getCell("G").value = person.nif || '';
-
         const monthsMap = { ABRIL: "J", MAIO: "L", JUNHO: "N", JULHO: "P", AGOSTO: "R", SETEMBRO: "T", OUTUBRO: "V" };
-
         Object.entries(monthsMap).forEach(([month, colLetter]) => {
           const value = Number(person[month]) || 0;
           row.getCell(colLetter).value = value;
         });
-
         row.commit();
         currentRow++;
       }
-
-      // OCULTAR LINHAS VAZIAS OU COM TODOS OS MESES A ZERO
       for (let r = startRow; r <= endRowTemplate; r++) {
         const row = sheet.getRow(r);
-        
-        // Verificar se TODOS os meses (colunas J, L, N, P, R, T, V) estão vazios ou zero
         const monthColumns = ["J", "L", "N", "P", "R", "T", "V"];
         const allZeroOrEmpty = monthColumns.every(col => {
           const cell = row.getCell(col);
           const value = Number(cell.value) || 0;
           return value === 0;
         });
-        
-        // Se todos os meses estão a zero/vazio, oculta a linha
         if (allZeroOrEmpty) {
           row.hidden = true;
         }
@@ -204,17 +170,14 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Tipo inválido' });
     }
 
-    // ---------- Salvar XLSX ----------
+    // ---------- SAVE XLSX ----------
     outputFilePath = path.join(tempDir, `${data.fileName}_${Date.now()}.xlsx`);
     await workbook.xlsx.writeFile(outputFilePath);
-
     const excelBuffer = fs.readFileSync(outputFilePath);
     try { if (fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath); } catch {}
-
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename="${data.fileName}.xlsx"`);
     return res.status(200).send(excelBuffer);
-
   } catch (error) {
     try { if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath); } catch {}
     return res.status(500).json({ error: "Erro interno ao gerar Excel", details: error.message });

@@ -174,7 +174,7 @@ export default async function handler(req, res) {
       }
       const mm = String(mIdx).padStart(2,'0');
       const periodStr = `Período: ${String(firstDay).padStart(2,'0')} / ${mm} / ${year} a ${String(lastDay).padStart(2,'0')} / ${mm} / ${year}`;
-      sheet.getCell("B7").value = `Dispositivo Especial Combate Incêndios Rurais (DECIR)     ${periodStr}`;
+      sheet.getCell("B7").value = `Dispositivo Especial Combate Incêndios Rurais (DECIR ${year})       ${periodStr}`;
       let row = 10;
       data.rows.forEach(r => {
         const line = sheet.getRow(row);

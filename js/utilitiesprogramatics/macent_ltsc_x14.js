@@ -22,19 +22,19 @@
               let src;
               switch (typeSelect.value) {
                 case "Heli Ligeiro":
-                  src = "https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/img/heli_ligeiro.jpg";
+                  src = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/heli_ligeiro.jpg";
                   break;
                 case "Heli Médio":
-                  src = "https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/img/heli_medio.jpg";
+                  src = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/heli_medio.jpg";
                   break;
                 case "Heli Pesado":
-                  src = "https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/img/heli_pesado.jpg";
+                  src = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/heli_pesado.jpg";
                   break;
                 case "Avião de Asa Fixa Médio":
-                  src = "https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/img/aviao_asa_fixa_medio.jpg";
+                  src = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/aviao_asa_fixa_medio.jpg";
                   break;
                 case "Avião de Asa Fixa Pesado":
-                  src = "https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/img/aviao_asa_fixa_pesado.png";
+                  src = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/aviao_asa_fixa_pesado.png";
                   break;
                 default:
                   src = "https://i.imgur.com/4Ho5HRV.png";
@@ -86,3 +86,4 @@
         showPopupWarning("❌ Ocorreu um erro ao guardar os dados!");
       }
     }
+

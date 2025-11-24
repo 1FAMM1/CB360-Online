@@ -3,7 +3,9 @@
     ======================================= */
     const ACCESS_OPTIONS = [
     {label: "DECIR 360",
-      children: [{label: "Controlo de Pagamentos"}, {label: "Escalas e Assinaturas"}]},
+      children: [{label: "Controlo de Pagamentos",
+                 children: [{label: "Registo por Elemento"}, {label: "Núcleo Financeiro"}, {label: "Relatórios ANEPC"}]},
+    {label: "Escalas e Assinaturas"}]},
     {label: "FOMIO 360",
       children: [{label: "DECIR"}, {label: "1ª Secção"}, {label: "2ª Secção"}, {label: "Emissão Escala"}, {label: "Consultar Escalas"}]},
     {label: "EMPLOYEES 360"},
@@ -397,4 +399,5 @@
         }
       }
     }
+
 

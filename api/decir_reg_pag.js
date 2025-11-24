@@ -250,8 +250,8 @@ export default async function handler(req, res) {
         r.getCell("B").value = rowData.niFile || '';
         r.getCell("C").value = rowData.funcao || '';
         r.getCell("D").value = rowData.nome || '';
-        r.getCell("E").value = Number(rowData.qtdTurnos) || 0;
-        r.getCell("F").value = Number(rowData.valor) || 0;
+        r.getCell("F").value = Number(rowData.qtdTurnos) || 0;
+        r.getCell("H").value = Number(rowData.valor) || 0;
         r.commit();
         currentRow++;
       }
@@ -263,7 +263,7 @@ export default async function handler(req, res) {
         const cellF = row.getCell("F");
         const qtd = Number(cellE.value) || 0;
         const val = Number(cellF.value) || 0;
-        const allEmpty = [ "B","C","D","E","F" ].every(col => {
+        const allEmpty = [ "B","C","D","F","H" ].every(col => {
           const v = row.getCell(col).value;
           return v === null || v === undefined || v === '';
         });

@@ -161,9 +161,6 @@ export default async function handler(req, res) {
       const buffer = await downloadTemplate(TEMPLATE_ANEPC_URL);
       await workbook.xlsx.load(buffer);
       sheet = workbook.worksheets[0];
-      [9, 10, 11, 12].forEach(r => {
-        sheet.getRow(r).hidden = true;
-      });
       const monthName = data.monthName;
       const year = Number(data.year);
       const mIdx = monthNameToIndex(monthName);
@@ -178,7 +175,7 @@ export default async function handler(req, res) {
       const mm = String(mIdx).padStart(2,'0');
       const periodStr = `Período: ${String(firstDay).padStart(2,'0')} / ${mm} / ${year} a ${String(lastDay).padStart(2,'0')} / ${mm} / ${year}`;
       sheet.getCell("B7").value = `Dispositivo Especial Combate Incêndios Rurais (DECIR)     ${periodStr}`;
-      let row = 14;
+      let row = 10;
       data.rows.forEach(r => {
         const line = sheet.getRow(row);
         line.getCell("B").value = r.niFile;
@@ -189,7 +186,7 @@ export default async function handler(req, res) {
         line.commit();
         row++;
       });
-      for (let r = 14; r <= 115; r++) {
+      for (let r = 10; r <= 111; r++) {
         const line = sheet.getRow(r);
         const empty =
           (!line.getCell("B").value || line.getCell("B").value === "") &&

@@ -51,57 +51,86 @@ export default async function handler(req, res) {
     /* ============================================================
                           REGISTO DIÁRIO
     ============================================================ */
-    if (data.type === "reg") {
-      const buffer = await downloadTemplate(TEMPLATE_REG_URL);
-      await workbook.xlsx.load(buffer);
+    // ---------- REGISTO DIÁRIO ----------
+    if (data.type === 'reg') {
+      const requiredFields = ['monthName','year','daysInMonth','weekdays','fixedRows','normalRows'];
+      if (!requiredFields.every(f => f in data)) return res.status(400).json({ error: "Dados incompletos para registo diário" });
+
+      const templateBuffer = await downloadTemplate(TEMPLATE_REG_URL);
+      await workbook.xlsx.load(templateBuffer);
       sheet = workbook.worksheets[0];
-      sheet.getCell("B7").value = `Registo Diário - ${data.monthName} ${data.year}`;
+
+      // Título
+      sheet.getCell("B7").value = `Registo Diário de Elementos - ${data.monthName} ${data.year}`;
+
+      // Cabeçalho dias e weekdays
       const rowWeekdays = sheet.getRow(9);
       const rowNumbers = sheet.getRow(10);
       for (let d = 1; d <= data.daysInMonth; d++) {
         const col = 6 + (d - 1);
-        rowWeekdays.getCell(col).value = data.weekdays[d-1] || "";
+        rowWeekdays.getCell(col).value = data.weekdays[d - 1] || '';
         rowNumbers.getCell(col).value = d;
       }
       rowWeekdays.commit();
       rowNumbers.commit();
+
+      // Feriados
       if (Array.isArray(data.holidayDays)) {
-        const rowH = sheet.getRow(8);
+        const rowHolidays = sheet.getRow(8);
         data.holidayDays.forEach(day => {
           const col = 6 + (day - 1);
-          rowH.getCell(col).value = "FR";
+          rowHolidays.getCell(col).value = 'FR';
         });
-        rowH.commit();
+        rowHolidays.commit();
       }
-      let currentRow = 11;
-      const people = {};
-      data.fixedRows.forEach(p => people[p.ni] = p);
-      data.normalRows.forEach(p => {
-        if (!people[p.ni]) people[p.ni] = { ...p, days: {} };
-        Object.entries(p.days).forEach(([d, v]) => {
-          if (!people[p.ni].days[d]) people[p.ni].days[d] = {};
-          people[p.ni].days[d].N = v.N || "";
+
+      // Combinar fixedRows e normalRows
+      const allPersons = {};
+      (data.fixedRows || []).forEach(p => allPersons[p.ni] = { ...p, days: p.days });
+      (data.normalRows || []).forEach(p => {
+        if (!allPersons[p.ni]) allPersons[p.ni] = { ...p, days: {} };
+        Object.keys(p.days).forEach(d => {
+          if (!allPersons[p.ni].days[d]) allPersons[p.ni].days[d] = {};
+          allPersons[p.ni].days[d].N = p.days[d].N || '';
         });
       });
-      for (const person of Object.values(people)) {
+
+      let currentRow = 11;
+      Object.values(allPersons).forEach(person => {
+        // Linha D
         const rowD = sheet.getRow(currentRow);
-        rowD.getCell(2).value = String(person.ni).padStart(3,'0');
+        rowD.getCell(2).value = String(person.ni).padStart(3,"0");
         rowD.getCell(3).value = person.nome;
-
-        for (let d=1; d<=data.daysInMonth; d++) {
-          const col = 6 + (d-1);
-          rowD.getCell(col).value = person.days[d]?.D || "";
+        for (let d = 1; d <= data.daysInMonth; d++) {
+          const col = 6 + (d - 1);
+          rowD.getCell(col).value = person.days[d]?.D || '';
         }
+        rowD.getCell(38).value = person.amal || '';
+        rowD.getCell(39).value = person.anepc || '';
+        rowD.getCell(40).value = person.global || '';
         rowD.commit();
-        const rowN = sheet.getRow(currentRow+1);
-        rowN.getCell(3).value = person.nome;
 
-        for (let d=1; d<=data.daysInMonth; d++) {
-          const col = 6 + (d-1);
-          rowN.getCell(col).value = person.days[d]?.N || "";
+        // Linha N
+        const rowN = sheet.getRow(currentRow + 1);
+        rowN.getCell(3).value = person.nome;
+        for (let d = 1; d <= data.daysInMonth; d++) {
+          const col = 6 + (d - 1);
+          rowN.getCell(col).value = person.days[d]?.N || '';
         }
         rowN.commit();
         currentRow += 2;
+      });
+
+      // Ocultar linhas vazias restantes
+      for (let r = currentRow; r <= 214; r++) {
+        const cellB = sheet.getCell(`B${r}`);
+        if (!cellB.value || cellB.value.toString().trim() === '') sheet.getRow(r).hidden = true;
+      }
+
+      // Ocultar colunas sem dias
+      for (let c = 6; c <= 36; c++) {
+        const cell = sheet.getRow(10).getCell(c);
+        if (!cell.value || cell.value.toString().trim() === '') sheet.getColumn(c).hidden = true;
       }
     }
     /* ============================================================

@@ -80,6 +80,8 @@ export default async function handler(req, res) {
           allPersons[p.ni].days[d].N = p.days[d].N || '';
         });
       });
+      // Parte do código de REGISTO (dentro do if data.type === 'reg')
+      
       let currentRow = 11;
       Object.values(allPersons).forEach(person => {
         const rowD = sheet.getRow(currentRow);
@@ -104,14 +106,25 @@ export default async function handler(req, res) {
       });
       
       // Ocultar linhas se QUALQUER das 3 colunas (AL=38, AM=39, AN=40) estiver vazia/zero
-      for (let r = currentRow; r <= 214; r++) {
-  const cellB = sheet.getCell(`B${r}`);
-  if (!cellB.value || cellB.value.toString().trim() === '') sheet.getRow(r).hidden = true;
-}
+      for (let r = 11; r <= 214; r++) {
+        const cellAL = sheet.getRow(r).getCell(38);  // AMAL
+        const cellAM = sheet.getRow(r).getCell(39);  // ANEPC
+        const cellAN = sheet.getRow(r).getCell(40);  // Global
+        
+        const amalEmpty = !cellAL.value || cellAL.value === '' || Number(cellAL.value) === 0;
+        const anepcEmpty = !cellAM.value || cellAM.value === '' || Number(cellAM.value) === 0;
+        const globalEmpty = !cellAN.value || cellAN.value === '' || Number(cellAN.value) === 0;
+        
+        // Se QUALQUER uma das 3 estiver vazia/zero, oculta
+        if (amalEmpty || anepcEmpty || globalEmpty) {
+          sheet.getRow(r).hidden = true;
+        }
+      }
       
       for (let c = 6; c <= 36; c++) {
         const cell = sheet.getRow(10).getCell(c);
         if (!cell.value || cell.value.toString().trim() === '') sheet.getColumn(c).hidden = true;
+      }
       }
     // ---------- PAYMENTS ----------
     else if (data.type === 'pag') {

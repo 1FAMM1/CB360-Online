@@ -7,6 +7,7 @@ import https from 'https';
 const TEMPLATE_PAG_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/templates/decir_pag_template.xlsx";
 const TEMPLATE_REG_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/templates/decir_reg_template.xlsx";
 const TEMPLATE_CODE_A33_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/templates/cod_a33_template.xlsx";
+const TEMPLATE_ANEPC_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/templates/anepc_template.xlsx";
 
 export const config = { api: { bodyParser: { sizeLimit: '10mb' } } };
 
@@ -21,28 +22,47 @@ async function downloadTemplate(url) {
   });
 }
 
+function monthNameToIndex(ptName) {
+  if (!ptName) return null;
+  const m = ptName.trim().toLowerCase();
+  const map = {
+    'janeiro': 1,'fevereiro': 2,'março': 3,'marco': 3,'abril': 4,'maio': 5,'junho': 6,
+    'julho': 7,'agosto': 8,'setembro': 9,'outubro': 10,'novembro': 11,'dezembro': 12
+  };
+  return map[m] || null;
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Método não permitido' });
+
   const tempDir = os.tmpdir();
   let outputFilePath = null;
+
   try {
     const data = req.body;
     if (!data || !data.type) return res.status(400).json({ error: "Dados inválidos" });
+
     let workbook = new ExcelJS.Workbook();
     let sheet;
 
-    // ---------- DAILY REGISTRY ----------
+    // ---------- REGISTO DIÁRIO ----------
     if (data.type === 'reg') {
       const requiredFields = ['monthName','year','daysInMonth','weekdays','fixedRows','normalRows'];
       if (!requiredFields.every(f => f in data)) return res.status(400).json({ error: "Dados incompletos para registo diário" });
+
       const templateBuffer = await downloadTemplate(TEMPLATE_REG_URL);
       await workbook.xlsx.load(templateBuffer);
       sheet = workbook.worksheets[0];
+
+      // Título
       sheet.getCell("B7").value = `Registo Diário de Elementos - ${data.monthName} ${data.year}`;
+
+      // Cabeçalho dias e weekdays
       const rowWeekdays = sheet.getRow(9);
       const rowNumbers = sheet.getRow(10);
       for (let d = 1; d <= data.daysInMonth; d++) {
@@ -52,6 +72,8 @@ export default async function handler(req, res) {
       }
       rowWeekdays.commit();
       rowNumbers.commit();
+
+      // Feriados
       if (Array.isArray(data.holidayDays)) {
         const rowHolidays = sheet.getRow(8);
         data.holidayDays.forEach(day => {
@@ -60,6 +82,8 @@ export default async function handler(req, res) {
         });
         rowHolidays.commit();
       }
+
+      // Combinar fixedRows e normalRows
       const allPersons = {};
       (data.fixedRows || []).forEach(p => allPersons[p.ni] = { ...p, days: p.days });
       (data.normalRows || []).forEach(p => {
@@ -69,8 +93,10 @@ export default async function handler(req, res) {
           allPersons[p.ni].days[d].N = p.days[d].N || '';
         });
       });
+
       let currentRow = 11;
       Object.values(allPersons).forEach(person => {
+        // Linha D
         const rowD = sheet.getRow(currentRow);
         rowD.getCell(2).value = String(person.ni).padStart(3,"0");
         rowD.getCell(3).value = person.nome;
@@ -82,6 +108,8 @@ export default async function handler(req, res) {
         rowD.getCell(39).value = person.anepc || '';
         rowD.getCell(40).value = person.global || '';
         rowD.commit();
+
+        // Linha N
         const rowN = sheet.getRow(currentRow + 1);
         rowN.getCell(3).value = person.nome;
         for (let d = 1; d <= data.daysInMonth; d++) {
@@ -91,25 +119,34 @@ export default async function handler(req, res) {
         rowN.commit();
         currentRow += 2;
       });
+
+      // Ocultar linhas vazias restantes
       for (let r = currentRow; r <= 214; r++) {
         const cellB = sheet.getCell(`B${r}`);
         if (!cellB.value || cellB.value.toString().trim() === '') sheet.getRow(r).hidden = true;
       }
+
+      // Ocultar colunas sem dias
       for (let c = 6; c <= 36; c++) {
         const cell = sheet.getRow(10).getCell(c);
         if (!cell.value || cell.value.toString().trim() === '') sheet.getColumn(c).hidden = true;
       }
-    } 
+    }
 
-    // ---------- PAYMENTS ----------
+    // ---------- PAGAMENTOS ----------
     else if (data.type === 'pag') {
       if (!Array.isArray(data.rows)) return res.status(400).json({ error: "Rows inválidas para pagamentos" });
+
       const templateBuffer = await downloadTemplate(TEMPLATE_PAG_URL);
       await workbook.xlsx.load(templateBuffer);
       sheet = workbook.worksheets[0];
+
       sheet.getCell("B7").value = `PAGAMENTOS DECIR - ${data.monthName} ${data.year}`;
+
       const startRow = 10;
       const endRowTemplate = 113;
+
+      // Preenche linhas
       data.rows.forEach((row, idx) => {
         const r = sheet.getRow(startRow + idx);
         r.getCell(2).value = String(row.ni).padStart(3,'0'); // NI
@@ -120,39 +157,53 @@ export default async function handler(req, res) {
         r.getCell(7).value = row.valor || 0;
         r.commit();
       });
+
+      // Ocultar linhas com valor 0 ou vazias (somente do template)
       for (let r = startRow; r <= endRowTemplate; r++) {
         const row = sheet.getRow(r);
         const cellG = row.getCell(7);
         const valor = Number(cellG.value) || 0;
-        const allEmpty = [2,3,4,5,6,7].every(c => !row.getCell(c).value);
+        const allEmpty = [2,3,4,5,6,7].every(c => {
+          const v = row.getCell(c).value;
+          return v === null || v === undefined || v === '';
+        });
         if (valor === 0 || allEmpty) row.hidden = true;
       }
-    } 
-    
+    }
+
     // ---------- CODE A33 ----------
     else if (data.type === 'code_a33') {
       if (!Array.isArray(data.rows)) return res.status(400).json({ error: "Rows inválidas para code_a33" });
+
       const templateBuffer = await downloadTemplate(TEMPLATE_CODE_A33_URL);
       await workbook.xlsx.load(templateBuffer);
       sheet = workbook.worksheets[0];
+
       sheet.getCell("B7").value = `Cod.A33 - ${data.year}`;
       sheet.getCell("D3").value = `Pagamentos DECIR_${data.year} Cód.A33`;
+
       const startRow = 11;
       const endRowTemplate = 112;
       let currentRow = startRow;
+
       for (const person of data.rows) {
         const row = sheet.getRow(currentRow);
         row.getCell("B").value = String(person.ni).padStart(3,'0');
         row.getCell("C").value = person.nome || '';
         row.getCell("G").value = person.nif || '';
+
+        // Map months as provided by server-side format (person.ABRIL etc.)
         const monthsMap = { ABRIL: "J", MAIO: "L", JUNHO: "N", JULHO: "P", AGOSTO: "R", SETEMBRO: "T", OUTUBRO: "V" };
         Object.entries(monthsMap).forEach(([month, colLetter]) => {
           const value = Number(person[month]) || 0;
           row.getCell(colLetter).value = value;
         });
+
         row.commit();
         currentRow++;
       }
+
+      // Ocultar linhas quando todos os meses são 0
       for (let r = startRow; r <= endRowTemplate; r++) {
         const row = sheet.getRow(r);
         const monthColumns = ["J", "L", "N", "P", "R", "T", "V"];
@@ -165,19 +216,78 @@ export default async function handler(req, res) {
           row.hidden = true;
         }
       }
-    } 
+    }
+
+    // ---------- ANEPC ----------
+    else if (data.type === 'anepc') {
+      // Expect rows: [{ niFile, funcao, nome, qtdTurnos, valor }, ...]
+      if (!Array.isArray(data.rows)) return res.status(400).json({ error: "Rows inválidas para ANEPC" });
+
+      const templateBuffer = await downloadTemplate(TEMPLATE_ANEPC_URL);
+      await workbook.xlsx.load(templateBuffer);
+      sheet = workbook.worksheets[0];
+
+      // Título + período (B7)
+      // Calculamos período como 1º do mês até último dia do mês a partir de monthName/year (best-effort)
+      const monthName = data.monthName || '';
+      const year = Number(data.year) || new Date().getFullYear();
+      const mIdx = monthNameToIndex(monthName) || (new Date().getMonth() + 1);
+      const firstDay = 1;
+      const lastDay = new Date(year, mIdx, 0).getDate();
+      const mm = String(mIdx).padStart(2, '0');
+      const periodStr = `Período: ${String(firstDay).padStart(2,'0')} / ${mm} / ${year} a ${String(lastDay).padStart(2,'0')} / ${mm} / ${year}`;
+      sheet.getCell("B7").value = `Dispositivo Especial Combate Incêndios Rurais (DECIR)    ${periodStr}`;
+
+      // Preencher tabela a partir da linha 14
+      const startRow = 14;
+      const endRowTemplate = 200; // defensivo — depende do template
+      let currentRow = startRow;
+
+      for (const rowData of data.rows) {
+        const r = sheet.getRow(currentRow);
+        // Mapeamento assumido conforme front-end:
+        // B = niFile, C = funcao, D = nome, E = qtdTurnos, F = valor
+        r.getCell("B").value = rowData.niFile || '';
+        r.getCell("C").value = rowData.funcao || '';
+        r.getCell("D").value = rowData.nome || '';
+        r.getCell("E").value = Number(rowData.qtdTurnos) || 0;
+        r.getCell("F").value = Number(rowData.valor) || 0;
+        r.commit();
+        currentRow++;
+      }
+
+      // Ocultar linhas vazias / com zeros (quando qtdTurnos e valor todos zero)
+      for (let r = startRow; r <= endRowTemplate; r++) {
+        const row = sheet.getRow(r);
+        const cellE = row.getCell("E");
+        const cellF = row.getCell("F");
+        const qtd = Number(cellE.value) || 0;
+        const val = Number(cellF.value) || 0;
+        const allEmpty = [ "B","C","D","E","F" ].every(col => {
+          const v = row.getCell(col).value;
+          return v === null || v === undefined || v === '';
+        });
+        if ((qtd === 0 && val === 0) || allEmpty) {
+          row.hidden = true;
+        }
+      }
+    }
+
     else {
       return res.status(400).json({ error: 'Tipo inválido' });
     }
 
-    // ---------- SAVE XLSX ----------
+    // ---------- SALVAR XLSX ----------
     outputFilePath = path.join(tempDir, `${data.fileName}_${Date.now()}.xlsx`);
     await workbook.xlsx.writeFile(outputFilePath);
+
     const excelBuffer = fs.readFileSync(outputFilePath);
     try { if (fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath); } catch {}
+
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename="${data.fileName}.xlsx"`);
     return res.status(200).send(excelBuffer);
+
   } catch (error) {
     try { if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath); } catch {}
     return res.status(500).json({ error: "Erro interno ao gerar Excel", details: error.message });

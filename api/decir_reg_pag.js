@@ -48,9 +48,6 @@ export default async function handler(req, res) {
     if (!data || !data.type) return res.status(400).json({ error: "Tipo não especificado" });
     const workbook = new ExcelJS.Workbook();
     let sheet;
-    /* ============================================================
-                          REGISTO DIÁRIO
-    ============================================================ */
     // ---------- REGISTO DIÁRIO ----------
     if (data.type === 'reg') {
       const requiredFields = ['monthName','year','daysInMonth','weekdays','fixedRows','normalRows'];
@@ -132,57 +129,90 @@ export default async function handler(req, res) {
         const cell = sheet.getRow(10).getCell(c);
         if (!cell.value || cell.value.toString().trim() === '') sheet.getColumn(c).hidden = true;
       }
-    }
-    /* ============================================================
-                           PAGAMENTOS DECIR
-    ============================================================ */
-    else if (data.type === "pag") {
-      const buffer = await downloadTemplate(TEMPLATE_PAG_URL);
-      await workbook.xlsx.load(buffer);
+    }// ---------- PAGAMENTOS ----------
+    else if (data.type === 'pag') {
+      if (!Array.isArray(data.rows)) return res.status(400).json({ error: "Rows inválidas para pagamentos" });
+
+      const templateBuffer = await downloadTemplate(TEMPLATE_PAG_URL);
+      await workbook.xlsx.load(templateBuffer);
       sheet = workbook.worksheets[0];
-      sheet.getCell("B7").value = `Pagamentos DECIR - ${data.monthName} ${data.year}`;
-      let row = 10;
-      data.rows.forEach(r => {
-        const line = sheet.getRow(row);
-        line.getCell(2).value = String(r.ni).padStart(3,'0');
-        line.getCell(3).value = r.nome;
-        line.getCell(4).value = r.nif;
-        line.getCell(5).value = r.nib;
-        line.getCell(6).value = r.qtdTurnos;
-        line.getCell(7).value = r.valor;
-        line.commit();
-        row++;
+
+      sheet.getCell("B7").value = `PAGAMENTOS DECIR - ${data.monthName} ${data.year}`;
+
+      const startRow = 10;
+      const endRowTemplate = 113;
+
+      // Preenche linhas
+      data.rows.forEach((row, idx) => {
+        const r = sheet.getRow(startRow + idx);
+        r.getCell(2).value = String(row.ni).padStart(3,'0'); // NI
+        r.getCell(3).value = row.nome || '';
+        r.getCell(4).value = row.nif || '';
+        r.getCell(5).value = row.nib || '';
+        r.getCell(6).value = row.qtdTurnos || 0;
+        r.getCell(7).value = row.valor || 0;
+        r.commit();
       });
+
+      // Ocultar linhas com valor 0 ou vazias (somente do template)
+      for (let r = startRow; r <= endRowTemplate; r++) {
+        const row = sheet.getRow(r);
+        const cellG = row.getCell(7);
+        const valor = Number(cellG.value) || 0;
+        const allEmpty = [2,3,4,5,6,7].every(c => {
+          const v = row.getCell(c).value;
+          return v === null || v === undefined || v === '';
+        });
+        if (valor === 0 || allEmpty) row.hidden = true;
+      }
     }
-    /* ============================================================
-                             CÓDIGO A33
-    ============================================================ */
-    else if (data.type === "code_a33") {
-      const buffer = await downloadTemplate(TEMPLATE_CODE_A33_URL);
-      await workbook.xlsx.load(buffer);
+
+    // ---------- CODE A33 ----------
+    else if (data.type === 'code_a33') {
+      if (!Array.isArray(data.rows)) return res.status(400).json({ error: "Rows inválidas para code_a33" });
+
+      const templateBuffer = await downloadTemplate(TEMPLATE_CODE_A33_URL);
+      await workbook.xlsx.load(templateBuffer);
       sheet = workbook.worksheets[0];
+
       sheet.getCell("B7").value = `Cod.A33 - ${data.year}`;
       sheet.getCell("D3").value = `Pagamentos DECIR_${data.year} Cód.A33`;
-      let row = 11;
-      for (const p of data.rows) {
-        const r = sheet.getRow(row);
-        r.getCell("B").value = String(p.ni).padStart(3,'0');
-        r.getCell("C").value = p.nome;
-        r.getCell("G").value = p.nif;
-        const map = { ABRIL:"J", MAIO:"L", JUNHO:"N", JULHO:"P", AGOSTO:"R", SETEMBRO:"T", OUTUBRO:"V" };
-        Object.entries(map).forEach(([m, col]) => {
-          r.getCell(col).value = Number(p[m]) || 0;
+
+      const startRow = 11;
+      const endRowTemplate = 112;
+      let currentRow = startRow;
+
+      for (const person of data.rows) {
+        const row = sheet.getRow(currentRow);
+        row.getCell("B").value = String(person.ni).padStart(3,'0');
+        row.getCell("C").value = person.nome || '';
+        row.getCell("G").value = person.nif || '';
+
+        // Map months as provided by server-side format (person.ABRIL etc.)
+        const monthsMap = { ABRIL: "J", MAIO: "L", JUNHO: "N", JULHO: "P", AGOSTO: "R", SETEMBRO: "T", OUTUBRO: "V" };
+        Object.entries(monthsMap).forEach(([month, colLetter]) => {
+          const value = Number(person[month]) || 0;
+          row.getCell(colLetter).value = value;
         });
-        r.commit();
-        row++;
+
+        row.commit();
+        currentRow++;
       }
-      for (let r = 11; r <= 112; r++) {
-        const rowX = sheet.getRow(r);
-        const monthlyCols = ["J","L","N","P","R","T","V"];
-        const all0 = monthlyCols.every(c => (Number(rowX.getCell(c).value) || 0) === 0);
-        if (all0) rowX.hidden = true;
+
+      // Ocultar linhas quando todos os meses são 0
+      for (let r = startRow; r <= endRowTemplate; r++) {
+        const row = sheet.getRow(r);
+        const monthColumns = ["J", "L", "N", "P", "R", "T", "V"];
+        const allZeroOrEmpty = monthColumns.every(col => {
+          const cell = row.getCell(col);
+          const value = Number(cell.value) || 0;
+          return value === 0;
+        });
+        if (allZeroOrEmpty) {
+          row.hidden = true;
+        }
       }
-    }
+    }    
     /* ============================================================
                                  ANEPC
     ============================================================ */

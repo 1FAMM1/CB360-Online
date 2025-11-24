@@ -240,7 +240,7 @@ export default async function handler(req, res) {
 
       // Preencher tabela a partir da linha 14
       const startRow = 14;
-      const endRowTemplate = 200; // defensivo — depende do template
+      const endRowTemplate = 115; // defensivo — depende do template
       let currentRow = startRow;
 
       for (const rowData of data.rows) {

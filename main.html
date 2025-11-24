@@ -502,6 +502,70 @@
       </div>
     </div>
     <!---- PROGRAM MODULES ---->
+    <!---- DECIR 360 ---->
+    <div id="decir-reg" class="page">
+      <div class="card last-card">
+      <div class="card-header">REGISTO MENSAL DE ELEMENTOS AFETOS AO DECIR</div>
+        <div class="card-body" style="font-family: 'Segoe UI', sans-serif;">
+          <div class="global-field-horizontal" style="display:none;">
+            <label style="font-size: 12px; font-weight: bold; color: #444;">Valor Amal</label>
+            <input type="text" id="amal-value-reg" style="width: 75px;">
+            <label style="font-size: 12px; font-weight: bold; color: #444;">Valor Anepc</label>
+            <input type="text" id="anepc-value-reg" style="width: 75px;">
+          </div>
+          <div id="months-container-dec-reg" style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 0 0 0 0;"></div>
+          <div id="table-container-dec-reg"></div>
+        </div>
+        <div class="action-buttons" id="decir-reg-options" style="margin: 0 20px 15px 0; display: none;">
+          <button class="btn btn-add" id="delete-dec-btn" onclick="clearDecirTable()">Limpar</button>
+          <button class="btn btn-danger" id="emit-reg-dec-btn">Emitir</button>
+          <button class="btn btn-success" id="guardar-dec-btn" onclick="saveDecirFull()">Guardar</button>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+    </div>
+    <div id="decir-pag" class="page">
+      <div class="card last-card">
+      <div class="card-header">RELATÓRIOS MENSAIS PARA PAGAMENTO DECIR</div>
+        <div class="card-body" style="font-family: 'Segoe UI', sans-serif;">
+          <div class="global-field-horizontal" style="display:none;">
+            <label style="font-size: 12px; font-weight: bold; color: #444;">Valor Amal</label>
+            <input type="text" id="amal-value-pag" style="width: 75px;">
+            <label style="font-size: 12px; font-weight: bold; color: #444;">Valor Anepc</label>
+            <input type="text" id="anepc-value-pag" style="width: 75px;">
+          </div>
+          <div id="months-container-dec-pag" style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 0 0 0 0;"></div>
+          <div id="table-container-dec-pag"></div>
+          <div id="table-container-dec-coda33"></div>           
+        </div>
+        <div class="action-buttons" id="decir-pag-options" style="margin: 0 20px 15px 0; display: none;">
+          <button class="btn btn-success" id="emit-pag-dec-btn">Emitir</button>
+        </div>
+        <div class="action-buttons" id="decir-coda33-options" style="margin: 0 20px 15px 0; display: none;">
+          <button class="btn btn-success" id="emit-coda33-dec-btn">Emitir</button>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+    </div>
+    <div id="decir-anepc" class="page">
+      <div class="card last-card">
+      <div class="card-header">RELATÓRIOS MENSAIS ANEPC</div>
+        <div class="card-body" style="font-family: 'Segoe UI', sans-serif;">
+          <div class="global-field-horizontal" style="display:none;">
+            <label style="font-size: 12px; font-weight: bold; color: #444;">Valor Amal</label>
+            <input type="text" id="amal-value-anepc" style="width: 75px;">
+            <label style="font-size: 12px; font-weight: bold; color: #444;">Valor Anepc</label>
+            <input type="text" id="anepc-value-anepc" style="width: 75px;">
+          </div>
+          <div id="months-container-dec-anepc" style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 0 0 0 0;"></div>
+          <div id="table-container-dec-anepc"></div>
+        </div>
+        <div class="action-buttons" id="decir-anepc-options" style="margin: 0 20px 15px 0; display: none;">
+          <button class="btn btn-success" id="emit-anepc-dec-btn">Emitir</button>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+    </div>
     <!---- SCALE CREATION MODULE ---->
     <div id="page-scales" class="page">
       <div class="card last-card">
@@ -2156,5 +2220,6 @@
   <script></script>
 </body>
 </html>
+
 
 

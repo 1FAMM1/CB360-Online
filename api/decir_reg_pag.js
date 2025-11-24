@@ -39,42 +39,8 @@ export default async function handler(req, res) {
     let workbook = new ExcelJS.Workbook();
     let sheet;
 
-    // ---------- PAGAMENTOS ----------
-    if (data.type === 'pag') {
-      if (!Array.isArray(data.rows)) return res.status(400).json({ error: "Rows inválidas para pagamentos" });
-
-      const templateBuffer = await downloadTemplate(TEMPLATE_PAG_URL);
-      await workbook.xlsx.load(templateBuffer);
-      sheet = workbook.worksheets[0];
-
-      sheet.getCell("B7").value = `PAGAMENTOS DECIR - ${data.monthName} ${data.year}`;
-
-      const startRow = 10;
-      const endRowTemplate = 113;
-
-      data.rows.forEach((row, idx) => {
-        const r = sheet.getRow(startRow + idx);
-        r.getCell(2).value = String(row.ni).padStart(3,'0'); // NI
-        r.getCell(3).value = row.nome || '';
-        r.getCell(4).value = row.nif || '';
-        r.getCell(5).value = row.nib || '';
-        r.getCell(6).value = row.qtdTurnos || 0;
-        r.getCell(7).value = row.valor || 0;
-        r.commit();
-      });
-
-      // Ocultar linhas vazias
-      for (let r = startRow; r <= endRowTemplate; r++) {
-        const row = sheet.getRow(r);
-        const cellG = row.getCell(7);
-        const valor = Number(cellG.value) || 0;
-        const allEmpty = [2,3,4,5,6,7].every(c => !row.getCell(c).value);
-        if (valor === 0 || allEmpty) row.hidden = true;
-      }
-
-    } 
     // ---------- REGISTO DIÁRIO ----------
-    else if (data.type === 'reg') {
+    if (data.type === 'reg') {
       const requiredFields = ['monthName','year','daysInMonth','weekdays','fixedRows','normalRows'];
       if (!requiredFields.every(f => f in data)) return res.status(400).json({ error: "Dados incompletos para registo diário" });
 
@@ -148,6 +114,42 @@ export default async function handler(req, res) {
         if (!cell.value || cell.value.toString().trim() === '') sheet.getColumn(c).hidden = true;
       }
     } 
+
+    // ---------- PAGAMENTOS ----------
+    else if (data.type === 'pag') {
+      if (!Array.isArray(data.rows)) return res.status(400).json({ error: "Rows inválidas para pagamentos" });
+
+      const templateBuffer = await downloadTemplate(TEMPLATE_PAG_URL);
+      await workbook.xlsx.load(templateBuffer);
+      sheet = workbook.worksheets[0];
+
+      sheet.getCell("B7").value = `PAGAMENTOS DECIR - ${data.monthName} ${data.year}`;
+
+      const startRow = 10;
+      const endRowTemplate = 113;
+
+      data.rows.forEach((row, idx) => {
+        const r = sheet.getRow(startRow + idx);
+        r.getCell(2).value = String(row.ni).padStart(3,'0'); // NI
+        r.getCell(3).value = row.nome || '';
+        r.getCell(4).value = row.nif || '';
+        r.getCell(5).value = row.nib || '';
+        r.getCell(6).value = row.qtdTurnos || 0;
+        r.getCell(7).value = row.valor || 0;
+        r.commit();
+      });
+
+      // Ocultar linhas vazias
+      for (let r = startRow; r <= endRowTemplate; r++) {
+        const row = sheet.getRow(r);
+        const cellG = row.getCell(7);
+        const valor = Number(cellG.value) || 0;
+        const allEmpty = [2,3,4,5,6,7].every(c => !row.getCell(c).value);
+        if (valor === 0 || allEmpty) row.hidden = true;
+      }
+
+    } 
+    
     // ---------- CODE A33 ----------
     else if (data.type === 'code_a33') {
       if (!Array.isArray(data.rows)) return res.status(400).json({ error: "Rows inválidas para code_a33" });

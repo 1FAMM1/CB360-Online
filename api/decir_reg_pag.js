@@ -102,31 +102,10 @@ export default async function handler(req, res) {
         rowN.commit();
         currentRow += 2;
       });
-      for (let r = currentRow; r <= 214; r += 2) {
-    const rowD = sheet.getRow(r);     // Linha Diurna (D)
-    const rowN = sheet.getRow(r + 1); // Linha Noturna (N)
-
-    // Colunas de Total: AL (38), AM (39), AN (40) — Estão sempre na Linha D.
-    
-    // Obter os valores dos Totais. Usamos 'Number(...)' para garantir que vazios ou nulls contam como 0.
-    const totalAL = Number(rowD.getCell(38).value) || 0;
-    const totalAM = Number(rowD.getCell(39).value) || 0;
-    const totalAN = Number(rowD.getCell(40).value) || 0;
-    
-    // Condição: Ocultar se TODOS os totais forem 0. 
-    // Esta condição esconde tanto as linhas que estavam preenchidas mas não têm totais, como as linhas vazias no final.
-    const allTotalsZero = (totalAL === 0 && totalAM === 0 && totalAN === 0);
-
-    if (allTotalsZero) {
-        // Ocultar a Linha Diurna (D)
-        rowD.hidden = true;
-        
-        // Ocultar a Linha Noturna (N) associada (r + 1), se existir (o que deve ocorrer até r=213)
-        if (rowN) {
-            rowN.hidden = true;
-        }
-    }
-}
+      for (let r = currentRow; r <= 214; r++) {
+        const cellB = sheet.getCell(`B${r}`);
+        if (!cellB.value || cellB.value.toString().trim() === '') sheet.getRow(r).hidden = true;
+      }
       for (let c = 6; c <= 36; c++) {
         const cell = sheet.getRow(10).getCell(c);
         if (!cell.value || cell.value.toString().trim() === '') sheet.getColumn(c).hidden = true;

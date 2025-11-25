@@ -100,7 +100,7 @@
       monthsWrapper.style.gap = "3px";
       monthsWrapper.style.maxWidth = "800px";    
       const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-      const blockedMonthsForDecir = [0, 1, 2, 10, 11];    
+      const blockedMonthsForDecir = [0,1,2,3,10,11];    
       const toggleButtonsVisibility = (showSave, showEmit) => {
         if (saveBtn) saveBtn.style.display = showSave ? "inline-block" : "none";
         if (emitBtn) emitBtn.style.display = showEmit ? "inline-block" : "none";
@@ -1398,6 +1398,7 @@
         alert(`❌ Erro: Não foi possível comunicar com o serviço de conversão.\n\nTipo: ${error.name}\nMensagem: ${error.message}`);
       }
     }
+
 
 
 

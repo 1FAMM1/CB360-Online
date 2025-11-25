@@ -1181,7 +1181,7 @@
     function getActiveMonthIndex() {
       const activeBtn = document.querySelector(".btn.btn-add.active");
       if (!activeBtn) return null;
-      return Array.from(document.querySelectorAll(".btn.btn-add")).indexOf(activeBtn) + 1;
+      return Array.from(document.querySelectorAll(".btn.btn-add")).indexOf(activeBtn);
     }
     async function fetchSavedData(section, year, month) {
       const url = `${SUPABASE_URL}/rest/v1/reg_serv?select=n_int,day,value&section=eq.${section}&year=eq.${year}&month=eq.${month}`;
@@ -1394,5 +1394,6 @@
         alert(`❌ Erro: Não foi possível comunicar com o serviço de conversão.\n\nTipo: ${error.name}\nMensagem: ${error.message}`);
       }
     }
+
 
 

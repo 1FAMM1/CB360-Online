@@ -1179,10 +1179,14 @@
     }
 
     function getActiveMonthIndex() {
-      const activeBtn = document.querySelector(".btn.btn-add.active");
-      if (!activeBtn) return null;
-      return Array.from(document.querySelectorAll(".btn.btn-add")).indexOf(activeBtn);
-    }
+      const monthsContainer = document.getElementById("months-container"); 
+      if (!monthsContainer) return null;
+      const activeBtn = monthsContainer.querySelector(".btn.btn-add.active");
+      if (!activeBtn) return null;
+      const allMonthBtns = Array.from(monthsContainer.querySelectorAll(".btn.btn-add"));
+      const index = allMonthBtns.indexOf(activeBtn);
+      return index + 1;
+    }
     async function fetchSavedData(section, year, month) {
       const url = `${SUPABASE_URL}/rest/v1/reg_serv?select=n_int,day,value&section=eq.${section}&year=eq.${year}&month=eq.${month}`;
       const response = await fetch(url, {
@@ -1394,6 +1398,7 @@
         alert(`❌ Erro: Não foi possível comunicar com o serviço de conversão.\n\nTipo: ${error.name}\nMensagem: ${error.message}`);
       }
     }
+
 
 
 

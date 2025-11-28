@@ -24,6 +24,7 @@
     setupPopup("popup-modal", "popup-ok-btn");
     setupPopup("popup-success-modal", "popup-success-ok-btn", true);
     setupPopup("popup-warning-modal", "popup-warning-ok-btn");
+    setupPopup("popup-temp-modal", "popup-temp-ok-btn");
 
     function showPopupMissingFields(fields) {
       const modal = document.getElementById("popup-modal");
@@ -62,7 +63,6 @@
       if (textElem) textElem.innerHTML = message;
       modal.classList.add("show");
       modal.focus();
-
     }
     
     
@@ -105,8 +105,3 @@
       });
     }
     setupTempPopup();
-    
-    
-    
-    
-    

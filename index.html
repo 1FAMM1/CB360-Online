@@ -271,7 +271,7 @@
       const user = document.getElementById("username").value.trim();
       const pass = document.getElementById("password").value.trim();
       try {
-        const response = await fetch(`${SUPABASE_URL}rest/v1/users?select=user_name,password,full_name,patent&user_name=eq.${user}`, {
+        const response = await fetch(`${SUPABASE_URL}rest/v1/users?select=username,password,full_name,patent&username=eq.${user}`, {
           headers: getSupabaseHeaders()
         });
         if (!response.ok) throw new Error(`Erro ao buscar utilizador: ${response.status}`);
@@ -329,6 +329,7 @@
 </body>
 
 </html>
+
 
 
 

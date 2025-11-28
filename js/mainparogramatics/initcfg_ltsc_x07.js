@@ -1,4 +1,4 @@
-const SUPABASE_URL = '/api/supabase-proxy?path=';
+const SUPABASE_URL = '/api/supabase-proxy?path=/';
 function getSupabaseHeaders(prefer) {
      const headers = {
        'Content-Type': 'application/json'

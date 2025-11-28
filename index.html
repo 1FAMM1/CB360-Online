@@ -267,39 +267,41 @@
   return headers;
 }
     document.getElementById("loginForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const user = document.getElementById("username").value.trim();
-      const pass = document.getElementById("password").value.trim();
-      try {
-        const response = await fetch(`${SUPABASE_URL}rest/v1/users?select=username,password,full_name,patent&username=eq.${user}`, {
-          headers: getSupabaseHeaders()
-        });
-        if (!response.ok) throw new Error(`Erro ao buscar utilizador: ${response.status}`);
-        const response = await fetch(
-  `${SUPABASE_URL}rest/v1/users?select=username,password,full_name,patent&username=eq.${encodeURIComponent(user)}`,
-  { headers: getSupabaseHeaders() }
-);
-const data = await response.json();
-console.log('Dados recebidos do Supabase:', data);
+  e.preventDefault();
+  const user = document.getElementById("username").value.trim();
+  const pass = document.getElementById("password").value.trim();
 
-if (data.length && data[0].password.trim() === pass.trim()) {
-  const fullName = data[0].full_name || user;
-  const patent = data[0].patent || "";
-  const displayName = patent ? `${fullName} (${patent})` : fullName;
-  showToast("✔ Login efetuado com sucesso!", 2000, "success");
-  setTimeout(() => {
-    sessionStorage.setItem("currentUserDisplay", displayName);
-    sessionStorage.setItem("currentUserName", user);
-    window.location.href = "main.html";
-  }, 2000);
-} else {
-  showToast("✖ Utilizador ou password incorretos.", 2000, "error");
-}
-      } catch (err) {
-        console.error(err);
-        showToast("Erro de conexão. Tente novamente.", 2000, "error");
-      }
-    });
+  try {
+    // fetch correto com username URL-encoded
+    const response = await fetch(
+      `${SUPABASE_URL}rest/v1/users?select=username,password,full_name,patent&username=eq.${encodeURIComponent(user)}`,
+      { headers: getSupabaseHeaders() }
+    );
+
+    if (!response.ok) throw new Error(`Erro ao buscar utilizador: ${response.status}`);
+
+    const data = await response.json();
+    console.log('Dados recebidos do Supabase:', data);
+
+    if (data.length && data[0].password.trim() === pass.trim()) {
+      const fullName = data[0].full_name || user;
+      const patent = data[0].patent || "";
+      const displayName = patent ? `${fullName} (${patent})` : fullName;
+      showToast("✔ Login efetuado com sucesso!", 2000, "success");
+      setTimeout(() => {
+        sessionStorage.setItem("currentUserDisplay", displayName);
+        sessionStorage.setItem("currentUserName", user);
+        window.location.href = "main.html";
+      }, 2000);
+    } else {
+      showToast("✖ Utilizador ou password incorretos.", 2000, "error");
+    }
+  } catch (err) {
+    console.error(err);
+    showToast("Erro de conexão. Tente novamente.", 2000, "error");
+  }
+});
+
 
     function showToast(message, duration = 2000, type = "error") {
       let toast = document.getElementById("toast");
@@ -335,6 +337,7 @@ if (data.length && data[0].password.trim() === pass.trim()) {
 </body>
 
 </html>
+
 
 
 

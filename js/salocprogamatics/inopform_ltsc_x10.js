@@ -1,4 +1,4 @@
-    /* =======================================
+/* =======================================
        INOP CREPC
     ======================================= */   
     /* =======================================
@@ -89,7 +89,7 @@
       document.getElementById("ppi_airfield").checked = record.ppi_airfield === true;
       document.getElementById("ppi_subs_yes").checked = record.ppi_subs === true;
       document.getElementById("ppi_subs_no").checked = record.ppi_subs === false;
-      NewInopBtn.classList.add("active");    
+      NewInopBtn.classList.add("active");      
       sitopContainer.setAttribute("data-record-id", record.id);
       saveBtn.textContent = "Emitir Operacionalidade";
       saveBtn.classList.remove("btn-danger");
@@ -146,62 +146,73 @@
         alert("Por favor preencha os campos obrigatórios: Veículo, Matrícula e GDH INOP.");
         return;
       }
-      saveBtn.disabled = true; 
-      const data = { vehicle, registration, gdh_inop, gdh_op: gdh_op || null, 
-        failure_type, failure_description, ppi_part, ppi_a2, ppi_a22,
-        ppi_airport, ppi_linfer, ppi_airfield, ppi_subs, optel };
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      if (!corpOperNr) {
+        alert("❌ Erro: O número da corporação não foi encontrado. Por favor, faça login novamente.");
+        return;
+      }
+      saveBtn.disabled = true; 
+      const data = {vehicle, registration, gdh_inop, gdh_op: gdh_op || null, failure_type, failure_description, ppi_part,
+                    ppi_a2, ppi_a22,ppi_airport, ppi_linfer, ppi_airfield, ppi_subs, optel, corp_oper_nr: corpOperNr };
+      let response;
+      let supabaseAction = 'INSERIR';
       try {
-        let response;
-        let supabaseAction = 'INSERIR';
         if (!isUpdate && !isOperational) {
-          const check = await fetch(`${SUPABASE_URL}/rest/v1/sitop_vehicles?select=vehicle&vehicle=eq.${encodeURIComponent(vehicle)}&gdh_op=is.null`, { headers: getSupabaseHeaders() });
+          const check = await fetch(
+            `${SUPABASE_URL}/rest/v1/sitop_vehicles?select=vehicle&vehicle=eq.${encodeURIComponent(vehicle)}&gdh_op=is.null&corp_oper_nr=eq.${corpOperNr}`, {
+              headers: getSupabaseHeaders()
+            }
+          );
           if (!check.ok) throw new Error("Erro ao verificar duplicado.");
           const existing = await check.json();
           if (existing.length > 0) {
-            alert(`❌ O veículo ${vehicle} já se encontra INOP!`);
+            alert(`❌ O veículo ${vehicle} já se encontra INOP nesta corporação!`);
             saveBtn.disabled = false;
             return;
           }
         }
         if (isUpdate) {
-          response = await fetch(`${SUPABASE_URL}/rest/v1/sitop_vehicles?id=eq.${recordId}`, {
-            method: "PATCH", headers: { ...getSupabaseHeaders(), "Content-Type": "application/json" },
-            body: JSON.stringify(data)
-          });
+          response = await fetch(
+            `${SUPABASE_URL}/rest/v1/sitop_vehicles?id=eq.${recordId}`, {
+              method: "PATCH", headers: { ...getSupabaseHeaders(), "Content-Type": "application/json"},
+              body: JSON.stringify(data)
+            }
+          );
           supabaseAction = isOperational ? 'VALIDAR/ATUALIZAR' : 'ATUALIZAR';
         } else {
-          response = await fetch(`${SUPABASE_URL}/rest/v1/sitop_vehicles`, {
-            method: "POST", headers: { ...getSupabaseHeaders(), "Content-Type": "application/json" },
-            body: JSON.stringify(data)
-          });
-        }    
+          response = await fetch(
+            `${SUPABASE_URL}/rest/v1/sitop_vehicles`, {
+              method: "POST", headers: { ...getSupabaseHeaders(), "Content-Type": "application/json" },
+              body: JSON.stringify(data)
+            }
+          );
+        }        
         if (!response.ok) throw new Error("Erro ao enviar dados ao Supabase.");
-        const statusRes = await fetch(`${SUPABASE_URL}/rest/v1/vehicle_status?vehicle=eq.${encodeURIComponent(vehicle)}`, {
-          method: "PATCH", headers: { ...getSupabaseHeaders(), "Content-Type": "application/json" },
-          body: JSON.stringify({ is_inop: !isOperational })
-        });
+        const statusRes = await fetch(
+          `${SUPABASE_URL}/rest/v1/vehicle_status?vehicle=eq.${encodeURIComponent(vehicle)}`, {
+            method: "PATCH", headers: { ...getSupabaseHeaders(), "Content-Type": "application/json" },
+            body: JSON.stringify({ is_inop: !isOperational })
+          }
+        );
         if (!statusRes.ok) console.warn("⚠️ Erro ao atualizar status do veículo.");
         const { to, cc, bcc } = await fetchCREPCSitopRecipientsFromSupabase();
         const signature = getEmailSignature();
-        const greeting = getGreeting();        
-        const prefix = isOperational ? 'OP' : 'INOP';
-        const fileName = `${prefix}_${vehicle}_0805.pdf`;
+        const greeting = getGreeting();        
+        const prefix = isOperational ? 'OP' : 'INOP';        
+        const fileName = `${prefix}_${vehicle}_${corpOperNr}.pdf`;
         const emailBodyHTML = `${greeting}<br><br>
-          Encarrega-me o Sr. Comandante Jorge Carmo de remeter em anexo a Vossas Exª.s o Formulário de Situação Operacional do veículo ${vehicle} do Corpo de Bombeiros de Faro Cruz Lusa.<br><br>
-          Com os melhores cumprimentos,<br><br>
-          OPTEL<br>${optel}<br><br>
-          <span style="font-family: 'Arial'; font-size: 10px; color: gray;">
-          Este email foi processado automaticamente por: CB360 Online<br><br>
-          </span>
-          ${signature}
+            Encarrega-me o Sr. Comandante Jorge Carmo de remeter em anexo a Vossas Exª.s o Formulário de Situação Operacional do veículo ${vehicle} do Corpo de Bombeiros de Faro Cruz Lusa.<br><br>
+            Com os melhores cumprimentos,<br><br>
+            OPTEL<br>${optel}<br><br>
+            <span style="font-family: 'Arial'; font-size: 10px; color: gray;">
+            Este email foi processado automaticamente por: CB360 Online<br><br>
+            </span>
+            ${signature}
         `;
         const emailRes = await fetch('https://cb360-mobile.vercel.app/api/sitop_covert_and_send', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            data, recipients: to, ccRecipients: cc, bccRecipients: bcc,
-            emailSubject: `Situação Operacional do Veículo ${vehicle}_0805`,
-            emailBody: emailBodyHTML, fileName
-          })
+          body: JSON.stringify({data, recipients: to, ccRecipients: cc, bccRecipients: bcc,
+                                emailSubject: `Situação Operacional do Veículo ${vehicle}_${corpOperNr}`, emailBody: emailBodyHTML, fileName})
         });
         const result = await emailRes.json();
         showPopupSuccess(`A situação operacional do veículo ${vehicle} foi enviada para as entidades.`);
@@ -209,7 +220,7 @@
           await fetch(`${SUPABASE_URL}/rest/v1/sitop_vehicles?id=eq.${recordId}`, {
             method: 'DELETE', headers: getSupabaseHeaders()
           });
-        }    
+        }
         toggleSitopContainer(true);
         NewInopBtn.classList.remove("active");
         oldInopBtn?.classList.remove("active");
@@ -247,16 +258,17 @@
         inopsTableBody.innerHTML =
           "<tr><td colspan='5' style='text-align:center;'>Carregando...</td></tr>";
         try {
-          const res = await fetch(
-            `${SUPABASE_URL}/rest/v1/sitop_vehicles?select=*&gdh_op=is.null`,
-            { headers: getSupabaseHeaders() }
-          );
+            const corpOperNr = sessionStorage.getItem("currentCorpOperNr");            
+            const res = await fetch(
+              `${SUPABASE_URL}/rest/v1/sitop_vehicles?select=*&gdh_op=is.null&corp_oper_nr=eq.${corpOperNr}`, // << ALTERAÇÃO AQUI
+              { headers: getSupabaseHeaders() }
+            );
           if (!res.ok) throw new Error("Erro ao buscar inoperacionalidades");
           const data = await res.json();
           inopsTableBody.innerHTML = "";
           if (data.length === 0) {
             inopsTableBody.innerHTML =
-              `<tr><td colspan="5" style="text-align:center;">Nenhum registro em curso</td></tr>`;
+              `<tr><td colspan="5" style="text-align:center;">Nenhum veículo inperacional encotrado</td></tr>`;
           } else {
             data.forEach(item => {
               const tr = document.createElement("tr");
@@ -312,5 +324,3 @@
       sitopContainer.style.display = 'none';
       inopsTableContainer.style.display = 'none';
     });
-
-

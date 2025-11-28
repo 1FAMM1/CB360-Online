@@ -1,4 +1,4 @@
-/* =======================================
+    /* =======================================
               GROUP INSERT OCCURRENCES
     ======================================= */
     /* ========== DYNAMIC FIELDS TOOGLE ========== */
@@ -382,6 +382,7 @@
         return null;
       }
     }
+    
     async function saveOccurrenceToSupabase(data, vehiclesCount) {
       try {
         const alertDate = document.getElementById('alert_date')?.value || '';
@@ -390,15 +391,17 @@
           console.error("Data ou hora do alerta em falta");
           return null;
         }
+        const currentCorpNr = sessionStorage.getItem("currentCorpOperNr");
         const startDateTime = new Date(`${alertDate}T${alertTime}`);
         const formattedDate =
-          `${String(startDateTime.getDate()).padStart(2,'0')}/${String(startDateTime.getMonth()+1).padStart(2,'0')}/${startDateTime.getFullYear()} ` +
-          `${String(startDateTime.getHours()).padStart(2,'0')}:${String(startDateTime.getMinutes()).padStart(2,'0')}`;
-        const query = `occorrence=eq.${encodeURIComponent(data.descrOccorr)}&local=eq.${encodeURIComponent(data.localOccorr)}&localitie=eq.${encodeURIComponent(data.localitie)}&start_date=eq.${encodeURIComponent(formattedDate)}`;
+              `${String(startDateTime.getDate()).padStart(2,'0')}/${String(startDateTime.getMonth()+1).padStart(2,'0')}/${startDateTime.getFullYear()} ` +
+              `${String(startDateTime.getHours()).padStart(2,'0')}:${String(startDateTime.getMinutes()).padStart(2,'0')}`;
+        const query = `occorrence=eq.${encodeURIComponent(data.descrOccorr)}&local=eq.${encodeURIComponent(data.localOccorr)}&localitie=eq.${encodeURIComponent(data.localitie)}&start_date=eq.${encodeURIComponent(formattedDate)}&corp_oper_nr=eq.${encodeURIComponent(currentCorpNr)}`;
         const checkResp = await fetch(`${SUPABASE_URL}/rest/v1/occurrences_control?${query}`, {
           headers: getSupabaseHeaders()
-        });
-        const existing = await safeJson(checkResp);
+        }
+      );
+      const existing = await safeJson(checkResp);
         if (existing && existing.length > 0) {
           const existingOccurrence = existing[0];
           let existingVehiclesCount = 0;
@@ -411,39 +414,49 @@
             showPopupWarning("Já existe uma ocorrência com estas características.");
             return "DUPLICATE";
           } else {
-            const updateResp = await fetch(`${SUPABASE_URL}/rest/v1/occurrences_control?id=eq.${existingOccurrence.id}`, {
-              method: 'PATCH',
-              headers: getSupabaseHeaders({
-                returnRepresentation: true
-              }),
-              body: JSON.stringify({
-                vehicles: vehiclesCount
-              })
-            });
+            const updateResp = await fetch(
+              `${SUPABASE_URL}/rest/v1/occurrences_control?id=eq.${existingOccurrence.id}`, {
+                method: 'PATCH',
+                headers: getSupabaseHeaders({
+                  returnRepresentation: true
+                }),
+                body: JSON.stringify({
+                  vehicles: vehiclesCount
+                })
+              });
             return await safeJson(updateResp);
           }
         }
-        const insertResp = await fetch(`${SUPABASE_URL}/rest/v1/occurrences_control`, {
-          method: 'POST',
-          headers: getSupabaseHeaders({
-            returnRepresentation: true
-          }),
-          body: JSON.stringify({
-            start_date: formattedDate,
-            occorrence: data.descrOccorr,
-            local: data.localOccorr,
-            localitie: data.localitie,
-            vehicles: vehiclesCount,
-            status: "Em Curso"
-          })
-        });
+        const insertData = {
+          start_date: formattedDate,
+          occorrence: data.descrOccorr,
+          local: data.localOccorr,
+          localitie: data.localitie,
+          vehicles: vehiclesCount,
+          corp_oper_nr: currentCorpNr,
+          status: "Em Curso"
+        };
+        const insertResp = await fetch(
+          `${SUPABASE_URL}/rest/v1/occurrences_control`, {
+            method: 'POST',
+            headers: getSupabaseHeaders({
+              returnRepresentation: true
+            }),
+            body: JSON.stringify(insertData)
+          });    
+        if (!insertResp.ok) {
+          const errorText = await insertResp.text();
+          console.error('❌ Erro do Supabase:', errorText);
+          throw new Error(`Erro HTTP ${insertResp.status}: ${errorText}`);
+        }
         return await safeJson(insertResp);
       } catch (e) {
+        console.error("❌ Erro completo:", e);
         if (e instanceof SyntaxError && e.message.includes('Unexpected end of JSON input')) {
           return null;
         }
         console.error("Erro ao gravar ocorrência:", e);
-        showPopupWarning("❌ Erro inesperado.");
+        showPopupWarning("❌ Erro inesperado: " + e.message);
         return null;
       }
     }

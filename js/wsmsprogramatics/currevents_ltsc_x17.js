@@ -1,3 +1,6 @@
+/* =======================================
+              WSMS 360
+    ======================================= */    
     /* =======================================
               GROUP CURRENT EVENTS
     ======================================= */
@@ -10,14 +13,17 @@
       return new Date(year, month - 1, day, hours, minutes);
     }
     /* ========== READING AND CHARGING ========== */
+    const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "";
     async function loadActiveOccurrences() {
       const tbody = document.getElementById('active-occurrences-tbody');
       if (!tbody) return;
       tbody.innerHTML = '';
       try {
-        const resp = await fetch(`${SUPABASE_URL}/rest/v1/occurrences_control?select=*,vehicles&status=in.(Em Curso,Em Resolução,Em Conclusão)`, {
-          headers: getSupabaseHeaders()
-        });
+        const resp = await fetch(
+          `${SUPABASE_URL}/rest/v1/occurrences_control?select=*,vehicles&corp_oper_nr=eq.${currentCorpOperNr}&status=in.(Em Curso,Em Resolução,Em Conclusão)`, {
+            headers: getSupabaseHeaders()
+          }
+        );
         if (!resp.ok) throw new Error(`HTTP error! status: ${resp.status}`);
         const occurrences = await resp.json();
         if (occurrences.length === 0) {
@@ -65,7 +71,6 @@
     }
     /* ========== POSIT SPECIAL POPUP ========== */
     let currentPositId = null;
-
     function openPositPopup(occurrence) {
       currentPositId = occurrence.id;
       document.getElementById('posit-description').value = occurrence.occorrence || '';
@@ -153,7 +158,7 @@
       document.getElementById('popup-posit-modal').style.display = 'none';
       loadActiveOccurrences();
     });
-
+    
     async function refreshOccurrencesAndBlinker() {
       await loadActiveOccurrences();
       await occurrencesBlinker.update();

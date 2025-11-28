@@ -275,7 +275,7 @@
                       {id: "ppi-a22", label: "PPI A22", buttons: ["MONITORIZAÇÃO", "1º ALARME", "2º ALARME", "ALARME ESPECIAL", "", ""]},
                       {id: "ppi-linfer", label: "PPI LINHA FÉRREA", buttons: ["MONITORIZAÇÃO", "1º ALARME", "2º ALARME", "ALARME ESPECIAL", "", ""]}];
 
-    function createCard(cardData) {
+    function createEPEPPICard(cardData) {
       const divItem = document.createElement("div");
       divItem.className = "main-card";
       divItem.style.height = "160px";
@@ -300,9 +300,9 @@
       return divItem;
     }
     const epeContainer = document.getElementById("epe-container");
-    epeCards.forEach(card => epeContainer.appendChild(createCard(card)));
+    epeCards.forEach(card => epeContainer.appendChild(createEPEPPICard(card)));
     const ppiContainer = document.getElementById("ppi-container");
-    ppiCards.forEach(card => ppiContainer.appendChild(createCard(card)));
+    ppiCards.forEach(card => ppiContainer.appendChild(createEPEPPICard(card)));
     /* =======================================
             RELEVANT INFORMATION
     ======================================= */
@@ -327,7 +327,7 @@
           <textarea id="info-${n}" placeholder="Escreva a info..." rows="4"
             style="width: 100%; height: 75px; resize: vertical;"></textarea>
         </div>
-        <div class="action-buttons" style="margin: 10px 0 0 0;">
+        <div class="action-buttons"  id="cmas-options" style="margin: 10px 0 0 0;">
           <button class="btn btn-danger" onclick="clearInfoGroupFields('${n}')">LIMPAR</button>
           <button class="btn btn-success" onclick="saveInfoGroupFields('${n}')">EMITIR</button>
         </div>
@@ -401,19 +401,19 @@
           let src;
           switch (selectElement.value) {
             case "Heli Ligeiro":
-              src = "https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/img/heli_ligeiro.jpg";
+              src = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/heli_ligeiro.jpg";
               break;
             case "Heli Médio":
-              src = "https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/img/heli_medio.jpg";
+              src = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/heli_medio.jpg";
               break;
             case "Heli Pesado":
-              src = "https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/img/heli_pesado.jpg";
+              src = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/heli_pesado.jpg";
               break;
             case "Avião de Asa Fixa Médio":
-              src = "https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/img/aviao_asa_fixa_medio.jpg";
+              src = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/aviao_asa_fixa_medio.jpg";
               break;
             case "Avião de Asa Fixa Pesado":
-              src = "https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/img/aviao_asa_fixa_pesado.png";
+              src = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/aviao_asa_fixa_pesado.png";
               break;
             default:
               src = "https://i.imgur.com/4Ho5HRV.png";

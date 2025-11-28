@@ -8,7 +8,7 @@
       try {
         const currentCorpNr = sessionStorage.getItem("currentUserCorpNr");
         const response = await fetch(
-          ``${SUPABASE_URL}rest/v1/corporation_data?select=id&corp_oper_nr=eq.${currentCorpNr}&limit=1`, { 
+          `${SUPABASE_URL}rest/v1/corporation_data?select=id&corp_oper_nr=eq.${currentCorpNr}&limit=1`, { 
             headers: getSupabaseHeaders() }
         );
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -285,4 +285,5 @@
       if (panelId === "assoc") {
         loadCorporationData();
       }
+
     }

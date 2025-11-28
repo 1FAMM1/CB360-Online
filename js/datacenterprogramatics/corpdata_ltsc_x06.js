@@ -8,7 +8,7 @@
       try {
         const currentCorpNr = sessionStorage.getItem("currentUserCorpNr");
         const response = await fetch(
-          `${SUPABASE_URL}rest/v1/corporation_data?select=id&corp_oper_nr=eq.${currentCorpNr}&limit=1`, { 
+          `${SUPABASE_URL}rest/v1/corporation_data?select=id&corp_oper_nr=eq.${currentCorpOperNr}&limit=1`, { 
             headers: getSupabaseHeaders() }
         );
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -33,7 +33,7 @@
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
         if (!data.length) {
-          console.log(`ℹ️ Nenhum dado de corporação encontrado para corpOperNr: ${currentCorpNr}`);
+          console.log(`ℹ️ Nenhum dado de corporação encontrado para corpOperNr: ${currentCorpOperNr}`);
           return;
         }
         const corporation = data[0];
@@ -60,7 +60,7 @@
           return;
         }
         const response = await fetch(
-          `${SUPABASE_URL}rest/v1/corporation_data?select=logo_url&corp_oper_nr=eq.${corpOperNr}&limit=1`, {
+          `${SUPABASE_URL}rest/v1/corporation_data?select=logo_url&corp_oper_nr=eq.${currentCorpOperNr}&limit=1`, {
             headers: getSupabaseHeaders()
           }
         );        
@@ -285,4 +285,5 @@
       if (panelId === "assoc") {
         loadCorporationData();
       }
+
     }

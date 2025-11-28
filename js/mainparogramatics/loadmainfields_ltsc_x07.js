@@ -1,3 +1,26 @@
+/* =======================================
+       DATE CONFIGURATION
+    ======================================= */
+    function padNumber(num) {
+      return String(num).padStart(2, '0');
+    }
+
+    function getCurrentDateStr() {
+      const d = new Date();
+      return `${d.getFullYear()}-${padNumber(d.getMonth()+1)}-${padNumber(d.getDate())}`;
+    }
+
+    function formatWSMSGDH(dateStr, timeStr) {
+      if (!dateStr || !timeStr) return '';
+      const date = new Date(dateStr + 'T' + timeStr);
+      const day = padNumber(date.getDate());
+      const hours = padNumber(date.getHours());
+      const minutes = padNumber(date.getMinutes());
+      const monthNames = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
+      const month = monthNames[date.getMonth()];
+      const year = String(date.getFullYear()).slice(-2);
+      return `${day} *${hours}${minutes}* ${month}${year}`;
+    }
     /* =======================================
         DATA LOADING FIELDS
     ======================================= */
@@ -6,7 +29,7 @@
       if (!corpOperNr) return [];
       try {
         const response = await fetch(
-          ``${SUPABASE_URL}rest/v1/vehicle_status?select=vehicle&corp_oper_nr=eq.${corpOperNr}`, {
+          `${SUPABASE_URL}/rest/v1/vehicle_status?select=vehicle&corp_oper_nr=eq.${corpOperNr}`, {
             headers: getSupabaseHeaders()
           }
         );
@@ -61,7 +84,7 @@
     /* ===== OCCORRNECE DESCRIPTIONS ====== */
     async function fetchClassOccorrById(classId) {
       try {
-        const response = await fetch(``${SUPABASE_URL}rest/v1/class_occorr?select=occorr_descr&class_occorr=eq.${encodeURIComponent(classId)}`, {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/class_occorr?select=occorr_descr&class_occorr=eq.${encodeURIComponent(classId)}`, {
           headers: getSupabaseHeaders()
         });
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -88,7 +111,7 @@
     /* ============= DISTRICTS ============ */    
     async function fetchDistrictsFromSupabase() {
       try {
-        const resp = await fetch(``${SUPABASE_URL}rest/v1/districts_select?select=id,district`, {
+        const resp = await fetch(`${SUPABASE_URL}/rest/v1/districts_select?select=id,district`, {
           headers: getSupabaseHeaders()
         });
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -135,7 +158,7 @@
     async function fetchCouncilsByDistrict(districtId) {
       if (!districtId) return [];
       try {
-        const resp = await fetch(``${SUPABASE_URL}rest/v1/councils_select?select=id,council&district_id=eq.${districtId}`, {
+        const resp = await fetch(`${SUPABASE_URL}/rest/v1/councils_select?select=id,council&district_id=eq.${districtId}`, {
           headers: getSupabaseHeaders()
         });
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -188,7 +211,7 @@
     async function fetchParishesByCouncil(councilId) {
       if (!councilId) return [];
       try {
-        const resp = await fetch(``${SUPABASE_URL}rest/v1/parishes_select?select=parish&council_id=eq.${councilId}`, {
+        const resp = await fetch(`${SUPABASE_URL}/rest/v1/parishes_select?select=parish&council_id=eq.${councilId}`, {
           headers: getSupabaseHeaders()
         });
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -282,7 +305,7 @@
     /* ============= VICTIMS ============== */
     async function fetchVictimOptions(category) {
       try {
-        const resp = await fetch(``${SUPABASE_URL}rest/v1/static_options?select=value&category=eq.${category}`, {
+        const resp = await fetch(`${SUPABASE_URL}/rest/v1/static_options?select=value&category=eq.${category}`, {
           headers: getSupabaseHeaders()
         });
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -306,7 +329,7 @@
     /* ======== GLOBAL PARAMETRES ========= */
     async function fetchGlobalOptions(category) {
       try {
-        const resp = await fetch(``${SUPABASE_URL}rest/v1/static_options?select=value&category=eq.${category}`, {
+        const resp = await fetch(`${SUPABASE_URL}/rest/v1/static_options?select=value&category=eq.${category}`, {
           headers: getSupabaseHeaders()
         });
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);

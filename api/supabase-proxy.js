@@ -1,9 +1,19 @@
 // api/supabase-proxy.js
 
+// A sua chave DEVE ser carregada pelo ambiente de execução (Vercel, Netlify, .env, etc.)
 const SUPABASE_URL = 'https://rjkbodfqsvckvnhjwmhg.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
 
 export default async function handler(req, res) {
+  // ADICIONADO: Verificação de segurança e depuração
+  if (!SUPABASE_KEY) {
+    console.error("ERRO DE CONFIGURAÇÃO: SUPABASE_ANON_KEY não está definida.");
+    return res.status(500).json({ 
+      error: 'Variável de ambiente de segurança em falta.',
+      details: 'SUPABASE_ANON_KEY não carregada. Por favor, verifique o seu ficheiro .env ou as variáveis de ambiente na plataforma de hosting.' 
+    });
+  }
+
   try {
     // 1) Ler path via query
     let path = req.query.path;
@@ -20,23 +30,34 @@ export default async function handler(req, res) {
 
     // 4) Preparar headers
     const headers = {
+      // O Supabase precisa da chave nos headers 'apikey' e 'Authorization'
       'apikey': SUPABASE_KEY,
       'Authorization': `Bearer ${SUPABASE_KEY}`,
       'Content-Type': 'application/json'
     };
+    
+    // 5) Headers opcionais do frontend (como 'Prefer' para formato de resposta)
+    if (req.headers['prefer']) {
+        headers['Prefer'] = req.headers['prefer'];
+    }
 
-    // 5) Preparar opções do fetch
+    // 6) Preparar opções do fetch
     const options = { method: req.method, headers };
 
-    // 6) Incluir body se não for GET
+    // 7) Incluir body se não for GET
     if (req.method !== 'GET' && req.body && Object.keys(req.body).length > 0) {
       options.body = JSON.stringify(req.body);
     }
-
-    // 7) Fazer request ao Supabase
+    
+    // 8) Fazer request ao Supabase
     const supabaseResponse = await fetch(supabaseURL, options);
 
-    // 8) Ler corpo da resposta
+    // 9) Copiar headers de volta para o cliente (ex: headers de erros do Supabase)
+    supabaseResponse.headers.forEach((value, name) => {
+        res.setHeader(name, value);
+    });
+
+    // 10) Processar a resposta
     const contentType = supabaseResponse.headers.get('content-type') || '';
     let body;
     if (contentType.includes('application/json')) {
@@ -48,7 +69,7 @@ export default async function handler(req, res) {
     }
 
   } catch (err) {
-    console.error("Proxy Error:", err);
+    console.error("Proxy Internal Error:", err);
     res.status(500).json({ error: "Proxy internal error", details: err.message });
   }
 }

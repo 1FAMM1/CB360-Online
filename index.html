@@ -19,7 +19,7 @@
       color: #fff;
       text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
     }
-    
+
     body,
     body * {
       user-select: none;
@@ -47,7 +47,7 @@
       display: inline-block;
       min-width: 90px;
     }
-    
+
     .prepare {
       text-align: center;
       margin: 0px 0 100px 0;
@@ -61,17 +61,7 @@
       transition: none;
     }
 
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(-15px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
+    @keyframes fadeIn {from {opacity: 0; transform: translateY(-15px);} to {opacity: 1; transform: translateY(0);}}
 
     .login-container {
       position: relative;
@@ -99,17 +89,7 @@
       animation: sparkleBorder 2s linear infinite;
     }
 
-    @keyframes sparkleBorder {
-
-      0%,
-      100% {
-        box-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #fff;
-      }
-
-      50% {
-        box-shadow: 0 0 8px #fff, 0 0 16px #fff, 0 0 24px #fff;
-      }
-    }
+    @keyframes sparkleBorder {0%, 100% {box-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #fff;} 50% {box-shadow: 0 0 8px #fff, 0 0 16px #fff, 0 0 24px #fff;}}
 
     .login-container h1 {
       font-size: 17px;
@@ -233,113 +213,80 @@
   </div>
 
   <script>
-const SUPABASE_URL = 'https://rjkbodfqsvckvnhjwmhg.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqa2JvZGZxc3Zja3ZuaGp3bWhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgxNjM3NjQsImV4cCI6MjA2MzczOTc2NH0.jX5OPZkz1JSSwrahCoFzqGYw8tYkgE8isbn12uP43-0';
-
-// Credenciais master temporário (fornecidas por você)
-const MASTER_USER = "teste";
-const MASTER_PASS = "teste";
-
-function getSupabaseHeaders() {
-  return {
-    'apikey': SUPABASE_ANON_KEY,
-    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-    'Content-Type': 'application/json'
-  };
-}
-
-async function loginUser(user, pass) {
-  try {
-    // Se for o master temporário, vai para setup_corporation
-    if (user === MASTER_USER && pass === MASTER_PASS) {
-      sessionStorage.setItem("masterUserTemp", "true");
-      showToast("✔ Login master temporário, redirecionando para configuração...", 2000, "success");
-      setTimeout(() => window.location.href = "setup_corporation.html", 2000);
-      return;
+    function updateGreeting() {
+      const now = new Date();
+      const hour = now.getHours();
+      let greetingText = "🌙 Boa noite";
+      if (hour >= 6 && hour < 12) greetingText = "☀️ Bom dia";
+      else if (hour >= 12 && hour < 19) greetingText = "🌤️ Boa tarde";
+      document.getElementById("greetingText").textContent = greetingText;
+      document.getElementById("clock").textContent = now.toLocaleTimeString('pt-PT', {hour: '2-digit', minute:'2-digit', second:'2-digit'});
     }
+    function startClock() { updateGreeting(); setInterval(updateGreeting, 1000); }
+    startClock();
+    const SUPABASE_URL = '/api/supabase-proxy?path=';
+    function getSupabaseHeaders(prefer) {
+      const headers = {'Content-Type':'application/json'};
+      if (prefer) headers['Prefer'] = prefer;
+      return headers;
+    }
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const user = document.getElementById("username").value.trim();
+      const pass = document.getElementById("password").value.trim();
+      if (user.toLowerCase() === "admin" && pass === "admin") {
+    showToast("✔ Login admin efetuado com sucesso!", 2000, "success");
+    setTimeout(() => {
+      sessionStorage.setItem("currentUserDisplay", "Administrador");
+      sessionStorage.setItem("currentUserName", "admin");
+      window.location.href = "system_admin.html";
+    }, 2000);
+    return;
+  }
+      try {
+        const response = await fetch(
+          `${SUPABASE_URL}rest/v1/users?select=username,password,full_name,patent&username=eq.${encodeURIComponent(user)}`,
+          { headers: getSupabaseHeaders() }
+        );
+        if (!response.ok) throw new Error(`Erro ao buscar utilizador: ${response.status}`);
 
-    // Usuário normal → verifica na tabela users
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/users?select=username,password,full_name,corp_oper_nr,patent&username=eq.${user}`, {
-      headers: getSupabaseHeaders()
+        const data = await response.json();
+        console.log('Dados recebidos do Supabase:', data);
+        const foundUser = data.find(u => u.username.trim().toLowerCase() === user.toLowerCase());
+        if (foundUser && foundUser.password.trim() === pass) {
+          const fullName = foundUser.full_name || user;
+          const patent = foundUser.patent || "";
+          const displayName = patent ? `${fullName} (${patent})` : fullName;
+          showToast("✔ Login efetuado com sucesso!", 2000, "success");
+          setTimeout(() => {
+            sessionStorage.setItem("currentUserDisplay", displayName);
+            sessionStorage.setItem("currentUserName", user);
+            window.location.href = "main.html";
+          }, 2000);
+        } else {
+          showToast("✖ Utilizador ou password incorretos.", 2000, "error");
+        }
+
+      } catch (err) {
+        console.error(err);
+        showToast("Erro de conexão. Tente novamente.", 2000, "error");
+      }
     });
-
-    if (!response.ok) throw new Error(`Erro ao buscar utilizador: ${response.status}`);
-
-    const data = await response.json();
-
-    if (data.length === 0) {
-      showToast("✖ Utilizador não encontrado.", 2000, "error");
-      return;
+    function showToast(message, duration=2000, type="error") {
+      let toast = document.getElementById("toast");
+      if (!toast) {
+        toast = document.createElement("div");
+        toast.id = "toast";
+        toast.className = "toast";
+        document.body.appendChild(toast);
+      }
+      toast.textContent = message;
+      toast.className = "toast show";
+      if (type==="success") toast.classList.add("success");
+      setTimeout(()=>toast.classList.remove("show"), duration);
     }
-
-    const userData = data[0];
-
-    if (userData.password !== pass) {
-      showToast("✖ Password incorreta.", 2000, "error");
-      return;
-    }
-
-    const fullName = userData.full_name || user;
-    const patent = userData.patent || "";
-    const displayName = patent ? `${fullName}` : fullName;
-
-    sessionStorage.setItem("currentUserDisplay", displayName);
-    sessionStorage.setItem("currentUserName", user);
-    sessionStorage.setItem("currentCorpOperNr", userData.corp_oper_nr || "");
-
-    showToast("✔ Login efetuado com sucesso!", 2000, "success");
-    setTimeout(() => window.location.href = "main.html", 2000);
-
-  } catch (err) {
-    console.error(err);
-    showToast("Erro de conexão. Verifique a tabela e a RLS.", 3000, "error");
-  }
-}
-
-// Form submit
-document.getElementById("loginForm").addEventListener("submit", e => {
-  e.preventDefault();
-  const user = document.getElementById("username").value.trim();
-  const pass = document.getElementById("password").value.trim();
-  loginUser(user, pass);
-});
-
-// Toast
-function showToast(message, duration = 2000, type = "error") {
-  let toast = document.getElementById("toast");
-  if (!toast) {
-    toast = document.createElement("div");
-    toast.id = "toast";
-    toast.className = "toast";
-    document.body.appendChild(toast);
-  }
-  toast.textContent = message;
-  toast.className = "toast show";
-  if (type === "success") toast.classList.add("success");
-  setTimeout(() => toast.classList.remove("show"), duration);
-}
-
-// Clock + greeting
-function updateGreeting() {
-  const now = new Date();
-  const hour = now.getHours();
-  let greetingText = "🌙 Boa noite";
-  if (hour >= 6 && hour < 12) greetingText = "☀️ Bom dia";
-  else if (hour >= 12 && hour < 19) greetingText = "🌤️ Boa tarde";
-  document.getElementById("greetingText").textContent = greetingText;
-  document.getElementById("clock").textContent = now.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-}
-
-function startClock() {
-  updateGreeting();
-  const now = new Date();
-  setTimeout(() => {
-    updateGreeting();
-    setInterval(updateGreeting, 1000);
-  }, 1000 - now.getMilliseconds());
-}
-startClock();
-
   </script>
 </body>
+
 </html>
+

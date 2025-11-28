@@ -1,11 +1,28 @@
 /* =======================================
        LOAD MAIN DATA
     ======================================= */
-    document.addEventListener('DOMContentLoaded', () => {
-      const currentUser = sessionStorage.getItem("currentUserName");
-      const currentUserDisplay = sessionStorage.getItem("currentUserDisplay");
-      const authNameEl = document.getElementById('authName');
-      if (authNameEl) authNameEl.textContent = currentUserDisplay || "";
+    document.addEventListener('DOMContentLoaded', async () => {
+  const currentUserDisplay = sessionStorage.getItem("currentUserDisplay");
+  const currentFullName = currentUserDisplay;
+  const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
+
+  const authNameEl = document.getElementById('authName');
+  if (authNameEl) authNameEl.textContent = currentUserDisplay || "";
+
+  // 1️⃣ Carrega header da corporação
+  await loadCorporationHeader();
+
+  // 2️⃣ Carrega tabela de elementos
+  await loadElementsTable(); // Se for async
+
+  // 3️⃣ Carrega acessos do usuário
+  if (currentFullName && currentCorpOperNr) {
+    const userData = await loadUserAccesses(currentFullName, currentCorpOperNr);
+    if (userData) {
+      const accesses = userData.acess ? userData.acess.split(',').map(a => a.trim()) : [];
+      applyAccesses(accesses);
+    }
+  }
     /* ====================== SINCRONIZAÇÃO SIDEBAR ====================== */
     function updateSidebarAccess(allowedModules) {
       const sidebarButtons = document.querySelectorAll(".sidebar-menu-button, .sidebar-submenu-button, .sidebar-sub-submenu-button");
@@ -25,7 +42,7 @@
       try {
         const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const response = await fetch(
-          `${SUPABASE_URL}rest/v1/corporation_data?select=corporation,logo_url,corp_oper_nr,allowed_modules&corp_oper_nr=eq.${corpOperNr}`, {
+          `${SUPABASE_URL}/rest/v1/corporation_data?select=corporation,logo_url,corp_oper_nr,allowed_modules&corp_oper_nr=eq.${corpOperNr}`, {
             headers: getSupabaseHeaders()
           }
         );
@@ -56,7 +73,7 @@
       if (!fullName || !corpOperNr) return null;
       try {
         const response = await fetch(
-          `${SUPABASE_URL}rest/v1/reg_elems?select=acess,section&full_name=eq.${encodeURIComponent(fullName)}&corp_oper_nr=eq.${corpOperNr}`, {
+          `${SUPABASE_URL}/rest/v1/reg_elems?select=acess,section&full_name=eq.${encodeURIComponent(fullName)}&corp_oper_nr=eq.${corpOperNr}`, {
             headers: getSupabaseHeaders()
           }
         );
@@ -111,5 +128,4 @@
        });
       }
     });
-
 

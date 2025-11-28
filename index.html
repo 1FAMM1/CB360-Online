@@ -61,17 +61,7 @@
       transition: none;
     }
 
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(-15px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
+    @keyframes fadeIn {from {opacity: 0; transform: translateY(-15px);} to {opacity: 1; transform: translateY(0);}}
 
     .login-container {
       position: relative;
@@ -99,17 +89,7 @@
       animation: sparkleBorder 2s linear infinite;
     }
 
-    @keyframes sparkleBorder {
-
-      0%,
-      100% {
-        box-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #fff;
-      }
-
-      50% {
-        box-shadow: 0 0 8px #fff, 0 0 16px #fff, 0 0 24px #fff;
-      }
-    }
+    @keyframes sparkleBorder {0%, 100% {box-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #fff;} 50% {box-shadow: 0 0 8px #fff, 0 0 16px #fff, 0 0 24px #fff;}}
 
     .login-container h1 {
       font-size: 17px;
@@ -244,38 +224,30 @@
     }
     function startClock() { updateGreeting(); setInterval(updateGreeting, 1000); }
     startClock();
-
     const SUPABASE_URL = '/api/supabase-proxy?path=';
     function getSupabaseHeaders(prefer) {
       const headers = {'Content-Type':'application/json'};
       if (prefer) headers['Prefer'] = prefer;
       return headers;
     }
-
     document.getElementById("loginForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const user = document.getElementById("username").value.trim();
       const pass = document.getElementById("password").value.trim();
-
       try {
         const response = await fetch(
           `${SUPABASE_URL}rest/v1/users?select=username,password,full_name,patent&username=eq.${encodeURIComponent(user)}`,
           { headers: getSupabaseHeaders() }
         );
-
         if (!response.ok) throw new Error(`Erro ao buscar utilizador: ${response.status}`);
 
         const data = await response.json();
         console.log('Dados recebidos do Supabase:', data);
-
-        // Encontrar usuário correto
         const foundUser = data.find(u => u.username.trim().toLowerCase() === user.toLowerCase());
-
         if (foundUser && foundUser.password.trim() === pass) {
           const fullName = foundUser.full_name || user;
           const patent = foundUser.patent || "";
           const displayName = patent ? `${fullName} (${patent})` : fullName;
-
           showToast("✔ Login efetuado com sucesso!", 2000, "success");
           setTimeout(() => {
             sessionStorage.setItem("currentUserDisplay", displayName);
@@ -291,7 +263,6 @@
         showToast("Erro de conexão. Tente novamente.", 2000, "error");
       }
     });
-
     function showToast(message, duration=2000, type="error") {
       let toast = document.getElementById("toast");
       if (!toast) {
@@ -309,11 +280,3 @@
 </body>
 
 </html>
-
-
-
-
-
-
-
-

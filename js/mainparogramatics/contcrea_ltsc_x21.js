@@ -427,7 +427,7 @@
     ======================================= */
     async function loadElemsButtons() {
       try {
-        const response = await fetch(``${SUPABASE_URL}rest/v1/reg_elems?select=*`, {
+        const response = await fetch(`${SUPABASE_URL}rest/v1/reg_elems?select=*`, {
           method: "GET",
           headers: getSupabaseHeaders()
         });
@@ -461,7 +461,7 @@
             const newSituation = row.situation === "available" ? "unavailable" : "available";
             try {
               const updateResp = await fetch(
-                ``${SUPABASE_URL}rest/v1/reg_elems?id=eq.${row.id}`, {
+                `${SUPABASE_URL}rest/v1/reg_elems?id=eq.${row.id}`, {
                   method: "PATCH",
                   headers: getSupabaseHeaders({ returnRepresentation: true }),
                   body: JSON.stringify({ situation: newSituation })

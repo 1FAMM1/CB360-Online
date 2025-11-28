@@ -25,7 +25,7 @@
       try {
         const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const response = await fetch(
-          ``${SUPABASE_URL}rest/v1/corporation_data?select=corporation,logo_url,corp_oper_nr,allowed_modules&corp_oper_nr=eq.${corpOperNr}`, {
+          `${SUPABASE_URL}rest/v1/corporation_data?select=corporation,logo_url,corp_oper_nr,allowed_modules&corp_oper_nr=eq.${corpOperNr}`, {
             headers: getSupabaseHeaders()
           }
         );
@@ -55,7 +55,7 @@
       if (!fullName || !corpOperNr) return null;
       try {
         const response = await fetch(
-          ``${SUPABASE_URL}rest/v1/reg_elems?select=acess,section&full_name=eq.${encodeURIComponent(fullName)}&corp_oper_nr=eq.${corpOperNr}`, {
+          `${SUPABASE_URL}rest/v1/reg_elems?select=acess,section&full_name=eq.${encodeURIComponent(fullName)}&corp_oper_nr=eq.${corpOperNr}`, {
             headers: getSupabaseHeaders()
           }
         );

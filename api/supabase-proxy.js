@@ -1,4 +1,4 @@
-// api/supabase-proxy.js - Versão Node 18+ (fetch global)
+// api/supabase-proxy.js - Proxy seguro Node 18+
 
 const SUPABASE_URL = 'https://rjkbodfqsvckvnhjwmhg.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
@@ -7,10 +7,10 @@ export default async function handler(req, res) {
   console.log("CHAVE SUPABASE_ANON_KEY CARREGADA:", !!SUPABASE_KEY); 
 
   if (!SUPABASE_KEY) {
-    console.error("ERRO DE CONFIGURAÇÃO: SUPABASE_ANON_KEY não está definida.");
+    console.error("ERRO: SUPABASE_ANON_KEY não definida.");
     return res.status(500).json({ 
-      error: 'Variável de ambiente de segurança em falta.',
-      details: 'SUPABASE_ANON_KEY não carregada. Por favor, verifique se a variável está definida no Vercel.' 
+      error: 'Variável de ambiente em falta.',
+      details: 'SUPABASE_ANON_KEY não carregada no Vercel.'
     });
   }
 
@@ -33,26 +33,24 @@ export default async function handler(req, res) {
       'Content-Type': 'application/json'
     };
     
-    if (req.headers['prefer']) {
-        headers['Prefer'] = req.headers['prefer'];
-    }
+    if (req.headers['prefer']) headers['Prefer'] = req.headers['prefer'];
 
     const options = { method: req.method, headers };
 
-    // Adiciona corpo para POST, PATCH, etc.
     if (req.method !== 'GET' && req.body && Object.keys(req.body).length > 0) {
       options.body = JSON.stringify(req.body);
     }
-    
+
     console.log(`Enviando pedido para: ${supabaseURL}`);
-    
-    // fetch global do Node 18+
+
     const supabaseResponse = await fetch(supabaseURL, options);
     console.log(`Resposta do Supabase Status: ${supabaseResponse.status}`);
 
-    // Replicar headers
+    // Replicar headers, ignorando content-encoding (gzip/br)
     supabaseResponse.headers.forEach((value, name) => {
+      if (!['content-encoding', 'transfer-encoding', 'connection'].includes(name.toLowerCase())) {
         res.setHeader(name, value);
+      }
     });
 
     const contentType = supabaseResponse.headers.get('content-type') || '';

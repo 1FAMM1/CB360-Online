@@ -50,6 +50,7 @@
     }
     loadCorporationHeader(); 
     loadElementsTable();
+        loadUserAccesses();
     /* ========== USER ACCESSES =========== */
     async function loadUserAccesses(fullName, corpOperNr) {
       if (!fullName || !corpOperNr) return null;
@@ -110,3 +111,4 @@
        });
       }
     });
+

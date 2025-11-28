@@ -240,70 +240,59 @@
       if (hour >= 6 && hour < 12) greetingText = "☀️ Bom dia";
       else if (hour >= 12 && hour < 19) greetingText = "🌤️ Boa tarde";
       document.getElementById("greetingText").textContent = greetingText;
-      const time = now.toLocaleTimeString('pt-PT', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      });
-      document.getElementById("clock").textContent = time;
+      document.getElementById("clock").textContent = now.toLocaleTimeString('pt-PT', {hour: '2-digit', minute:'2-digit', second:'2-digit'});
     }
-
-    function startClock() {
-      updateGreeting();
-      const now = new Date();
-      const delay = 1000 - now.getMilliseconds();
-      setTimeout(() => {
-        updateGreeting();
-        setInterval(updateGreeting, 1000);
-      }, delay);
-    }
+    function startClock() { updateGreeting(); setInterval(updateGreeting, 1000); }
     startClock();
+
     const SUPABASE_URL = '/api/supabase-proxy?path=';
     function getSupabaseHeaders(prefer) {
-  const headers = {
-    'Content-Type': 'application/json'
-  };
-  if (prefer) headers['Prefer'] = prefer;
-  return headers;
-}
-    document.getElementById("loginForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const user = document.getElementById("username").value.trim();
-  const pass = document.getElementById("password").value.trim();
-
-  try {
-    // fetch correto com username URL-encoded
-    const response = await fetch(
-      `${SUPABASE_URL}rest/v1/users?select=username,password,full_name,patent&username=eq.${encodeURIComponent(user)}`,
-      { headers: getSupabaseHeaders() }
-    );
-
-    if (!response.ok) throw new Error(`Erro ao buscar utilizador: ${response.status}`);
-
-    const data = await response.json();
-    console.log('Dados recebidos do Supabase:', data);
-
-    if (data.length && data[0].password.trim() === pass.trim()) {
-      const fullName = data[0].full_name || user;
-      const patent = data[0].patent || "";
-      const displayName = patent ? `${fullName} (${patent})` : fullName;
-      showToast("✔ Login efetuado com sucesso!", 2000, "success");
-      setTimeout(() => {
-        sessionStorage.setItem("currentUserDisplay", displayName);
-        sessionStorage.setItem("currentUserName", user);
-        window.location.href = "main.html";
-      }, 2000);
-    } else {
-      showToast("✖ Utilizador ou password incorretos.", 2000, "error");
+      const headers = {'Content-Type':'application/json'};
+      if (prefer) headers['Prefer'] = prefer;
+      return headers;
     }
-  } catch (err) {
-    console.error(err);
-    showToast("Erro de conexão. Tente novamente.", 2000, "error");
-  }
-});
 
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const user = document.getElementById("username").value.trim();
+      const pass = document.getElementById("password").value.trim();
 
-    function showToast(message, duration = 2000, type = "error") {
+      try {
+        const response = await fetch(
+          `${SUPABASE_URL}rest/v1/users?select=username,password,full_name,patent&username=eq.${encodeURIComponent(user)}`,
+          { headers: getSupabaseHeaders() }
+        );
+
+        if (!response.ok) throw new Error(`Erro ao buscar utilizador: ${response.status}`);
+
+        const data = await response.json();
+        console.log('Dados recebidos do Supabase:', data);
+
+        // Encontrar usuário correto
+        const foundUser = data.find(u => u.username.trim().toLowerCase() === user.toLowerCase());
+
+        if (foundUser && foundUser.password.trim() === pass) {
+          const fullName = foundUser.full_name || user;
+          const patent = foundUser.patent || "";
+          const displayName = patent ? `${fullName} (${patent})` : fullName;
+
+          showToast("✔ Login efetuado com sucesso!", 2000, "success");
+          setTimeout(() => {
+            sessionStorage.setItem("currentUserDisplay", displayName);
+            sessionStorage.setItem("currentUserName", user);
+            window.location.href = "main.html";
+          }, 2000);
+        } else {
+          showToast("✖ Utilizador ou password incorretos.", 2000, "error");
+        }
+
+      } catch (err) {
+        console.error(err);
+        showToast("Erro de conexão. Tente novamente.", 2000, "error");
+      }
+    });
+
+    function showToast(message, duration=2000, type="error") {
       let toast = document.getElementById("toast");
       if (!toast) {
         toast = document.createElement("div");
@@ -313,30 +302,14 @@
       }
       toast.textContent = message;
       toast.className = "toast show";
-      if (type === "success") toast.classList.add("success");
-      setTimeout(() => toast.classList.remove("show"), duration);
+      if (type==="success") toast.classList.add("success");
+      setTimeout(()=>toast.classList.remove("show"), duration);
     }
-    window.history.pushState(null, null, window.location.href);
-    window.onpopstate = function() {
-      window.history.go(1);
-    };
-    window.addEventListener('pageshow', function(event) {
-      const usernameField = document.getElementById("username");
-      const passwordField = document.getElementById("password");
-      if (usernameField) usernameField.value = "";
-      if (passwordField) passwordField.value = "";
-      if (event.persisted) {
-        window.location.reload();
-      }
-    });
-    document.addEventListener('DOMContentLoaded', function() {
-      document.getElementById("username").value = "";
-      document.getElementById("password").value = "";
-    });
   </script>
 </body>
 
 </html>
+
 
 
 

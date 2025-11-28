@@ -1,5 +1,3 @@
-import fetch from 'node-fetch';
-
 const SUPABASE_URL = 'https://rjkbodfqsvckvnhjwmhg.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
 

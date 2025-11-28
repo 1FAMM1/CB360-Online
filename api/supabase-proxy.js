@@ -2,7 +2,7 @@
 
 // A sua chave DEVE ser carregada pelo ambiente de execução (Vercel, Netlify, .env, etc.)
 const SUPABASE_URL = 'https://rjkbodfqsvckvnhjwmhg.supabase.co';
-const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
+const SUPABASE_KEY = process.env.CB_ANON_KEY;
 
 export default async function handler(req, res) {
   // ADICIONADO: Verificação de segurança e depuração

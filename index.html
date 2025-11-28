@@ -275,20 +275,26 @@
           headers: getSupabaseHeaders()
         });
         if (!response.ok) throw new Error(`Erro ao buscar utilizador: ${response.status}`);
-        const data = await response.json();
-        if (data.length && data[0].password === pass) {
-          const fullName = data[0].full_name || user;
-          const patent = data[0].patent || "";
-          const displayName = patent ? `${fullName} (${patent})` : fullName;
-          showToast("✔ Login efetuado com sucesso!", 2000, "success");
-          setTimeout(() => {
-            sessionStorage.setItem("currentUserDisplay", displayName);
-            sessionStorage.setItem("currentUserName", user);
-            window.location.href = "main.html";
-          }, 2000);
-        } else {
-          showToast("✖ Utilizador ou password incorretos.", 2000, "error");
-        }
+        const response = await fetch(
+  `${SUPABASE_URL}rest/v1/users?select=username,password,full_name,patent&username=eq.${encodeURIComponent(user)}`,
+  { headers: getSupabaseHeaders() }
+);
+const data = await response.json();
+console.log('Dados recebidos do Supabase:', data);
+
+if (data.length && data[0].password.trim() === pass.trim()) {
+  const fullName = data[0].full_name || user;
+  const patent = data[0].patent || "";
+  const displayName = patent ? `${fullName} (${patent})` : fullName;
+  showToast("✔ Login efetuado com sucesso!", 2000, "success");
+  setTimeout(() => {
+    sessionStorage.setItem("currentUserDisplay", displayName);
+    sessionStorage.setItem("currentUserName", user);
+    window.location.href = "main.html";
+  }, 2000);
+} else {
+  showToast("✖ Utilizador ou password incorretos.", 2000, "error");
+}
       } catch (err) {
         console.error(err);
         showToast("Erro de conexão. Tente novamente.", 2000, "error");
@@ -329,6 +335,7 @@
 </body>
 
 </html>
+
 
 
 

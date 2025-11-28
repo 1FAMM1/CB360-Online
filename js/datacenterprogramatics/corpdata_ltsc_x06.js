@@ -6,9 +6,9 @@
     ======================================= */
     async function checkExistingCorporation() {
       try {
-        const currentCorpNr = sessionStorage.getItem("currentCorpOperNr");
+        const currentCorpNr = sessionStorage.getItem("currentUserCorpNr");
         const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/corporation_data?select=id&corp_oper_nr=eq.${currentCorpNr}&limit=1`, { 
+          `${SUPABASE_URL}rest/v1/corporation_data?select=id&corp_oper_nr=eq.${currentCorpNr}&limit=1`, { 
             headers: getSupabaseHeaders() }
         );
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -27,7 +27,7 @@
           console.warn('⚠️ Nenhuma corporação identificada. Faça login novamente.');
           return;
         }
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${encodeURIComponent(currentCorpNr)}&select=*`, {
+        const response = await fetch(`${SUPABASE_URL}rest/v1/corporation_data?corp_oper_nr=eq.${encodeURIComponent(currentCorpNr)}&select=*`, {
           headers: getSupabaseHeaders()
         });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -60,7 +60,7 @@
           return;
         }
         const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/corporation_data?select=logo_url&corp_oper_nr=eq.${corpOperNr}&limit=1`, {
+          `${SUPABASE_URL}rest/v1/corporation_data?select=logo_url&corp_oper_nr=eq.${corpOperNr}&limit=1`, {
             headers: getSupabaseHeaders()
           }
         );        
@@ -100,7 +100,7 @@
         const validation = validateCorporationData(corporationData);
         if (!validation.isValid) throw new Error(validation.message);
         let response;
-        const existingResponse = await fetch(`${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${encodeURIComponent(corporationData.corp_oper_nr)}&select=id&limit=1`, {
+        const existingResponse = await fetch(`${SUPABASE_URL}rest/v1/corporation_data?corp_oper_nr=eq.${encodeURIComponent(corporationData.corp_oper_nr)}&select=id&limit=1`, {
           headers: getSupabaseHeaders()
         });
         const existingData = await existingResponse.json();
@@ -123,7 +123,7 @@
     }
     
     async function createCorporationData(data) {
-      const response = await fetch(`${SUPABASE_URL}/rest/v1/corporation_data`, {
+      const response = await fetch(`${SUPABASE_URL}rest/v1/corporation_data`, {
         method: 'POST',
         headers: {
           ...getSupabaseHeaders(),
@@ -140,7 +140,7 @@
     }
     
     async function updateCorporationData(id, data) {
-      const response = await fetch(`${SUPABASE_URL}/rest/v1/corporation_data?id=eq.${id}`, {
+      const response = await fetch(`${SUPABASE_URL}rest/v1/corporation_data?id=eq.${id}`, {
         method: 'PATCH',
         headers: {
           ...getSupabaseHeaders(),
@@ -212,7 +212,7 @@
     
     async function findDistrictIdByName(districtName) {
       try {
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/districts_select?select=id&district=eq.${encodeURIComponent(districtName)}`, {
+        const response = await fetch(`${SUPABASE_URL}rest/v1/districts_select?select=id&district=eq.${encodeURIComponent(districtName)}`, {
           headers: getSupabaseHeaders()
         });
         if (!response.ok) return null;
@@ -226,7 +226,7 @@
     
     async function findCouncilIdByName(councilName) {
       try {
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/councils_select?select=id&council=eq.${encodeURIComponent(councilName)}`, {
+        const response = await fetch(`${SUPABASE_URL}rest/v1/councils_select?select=id&council=eq.${encodeURIComponent(councilName)}`, {
           headers: getSupabaseHeaders()
         });
         if (!response.ok) return null;

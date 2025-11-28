@@ -27,6 +27,10 @@
       margin: 0 15px;
     }
 
+    .header-nr {
+      display: none;
+    }
+
     .header-subtitle,
     .header-authorization {
       color: #FFE6E6;
@@ -50,4 +54,5 @@
 
     #logoutBtn:hover {
       transform: scale(1.2); 
+
     }   

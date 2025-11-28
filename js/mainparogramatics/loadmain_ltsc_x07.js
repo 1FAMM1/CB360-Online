@@ -1,28 +1,11 @@
 /* =======================================
        LOAD MAIN DATA
     ======================================= */
-    document.addEventListener('DOMContentLoaded', async () => {
-  const currentUserDisplay = sessionStorage.getItem("currentUserDisplay");
-  const currentFullName = currentUserDisplay;
-  const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
-
-  const authNameEl = document.getElementById('authName');
-  if (authNameEl) authNameEl.textContent = currentUserDisplay || "";
-
-  // 1️⃣ Carrega header da corporação
-  await loadCorporationHeader();
-
-  // 2️⃣ Carrega tabela de elementos
-  await loadElementsTable(); // Se for async
-
-  // 3️⃣ Carrega acessos do usuário
-  if (currentFullName && currentCorpOperNr) {
-    const userData = await loadUserAccesses(currentFullName, currentCorpOperNr);
-    if (userData) {
-      const accesses = userData.acess ? userData.acess.split(',').map(a => a.trim()) : [];
-      applyAccesses(accesses);
-    }
-  }
+    document.addEventListener('DOMContentLoaded', () => {
+      const currentUser = sessionStorage.getItem("currentUserName");
+      const currentUserDisplay = sessionStorage.getItem("currentUserDisplay");
+      const authNameEl = document.getElementById('authName');
+      if (authNameEl) authNameEl.textContent = currentUserDisplay || "";
     /* ====================== SINCRONIZAÇÃO SIDEBAR ====================== */
     function updateSidebarAccess(allowedModules) {
       const sidebarButtons = document.querySelectorAll(".sidebar-menu-button, .sidebar-submenu-button, .sidebar-sub-submenu-button");
@@ -67,7 +50,6 @@
     }
     loadCorporationHeader(); 
     loadElementsTable();
-        loadUserAccesses();
     /* ========== USER ACCESSES =========== */
     async function loadUserAccesses(fullName, corpOperNr) {
       if (!fullName || !corpOperNr) return null;
@@ -128,4 +110,3 @@
        });
       }
     });
-

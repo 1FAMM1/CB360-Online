@@ -109,7 +109,7 @@
         });
         if (!delReg.ok) throw new Error("Erro ao remover da reg_elems");
         const debugCheck = await fetch(
-          `${SUPABASE_URL}rest/v1/users?full_name=eq.${encodeURIComponent(fullName)}&corp_oper_nr=eq.${corpOperNr}`, { 
+          `${SUPABASE_URL}/rest/v1/users?full_name=eq.${encodeURIComponent(fullName)}&corp_oper_nr=eq.${corpOperNr}`, { 
             headers: getSupabaseHeaders() }
         );
         const debugUsers = await debugCheck.json();

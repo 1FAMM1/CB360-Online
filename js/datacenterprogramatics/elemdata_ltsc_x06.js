@@ -26,7 +26,7 @@
       try {
         const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         if (!corpOperNr) throw new Error("Corporação não definida");
-        const response = await fetch(``${SUPABASE_URL}rest/v1/reg_elems?select=*&corp_oper_nr=eq.${corpOperNr}`, {
+        const response = await fetch(`${SUPABASE_URL}rest/v1/reg_elems?select=*&corp_oper_nr=eq.${corpOperNr}`, {
           method: "GET",
           headers: getSupabaseHeaders()
         });
@@ -88,7 +88,7 @@
     async function loadUserLogin(fullName, corpOperNr) {
       if (!fullName || !corpOperNr) return null;
       const encodedFullName = encodeURIComponent(fullName);
-      const url = ``${SUPABASE_URL}rest/v1/users?select=username,password&full_name=eq.${encodedFullName}&corp_oper_nr=eq.${corpOperNr}`;
+      const url = `${SUPABASE_URL}rest/v1/users?select=username,password&full_name=eq.${encodedFullName}&corp_oper_nr=eq.${corpOperNr}`;
       const response = await fetch(url, {
         headers: getSupabaseHeaders()
       });
@@ -103,19 +103,19 @@
         const confirmDelete = confirm(`Tem certeza que deseja remover "${fullName}"?`);
         if (!confirmDelete) return;
         const delReg = await fetch(
-          ``${SUPABASE_URL}rest/v1/reg_elems?id=eq.${recordId}`, {
+          `${SUPABASE_URL}rest/v1/reg_elems?id=eq.${recordId}`, {
             method: "DELETE",
             headers: getSupabaseHeaders()
         });
         if (!delReg.ok) throw new Error("Erro ao remover da reg_elems");
         const debugCheck = await fetch(
-          ``${SUPABASE_URL}rest/v1/users?full_name=eq.${encodeURIComponent(fullName)}&corp_oper_nr=eq.${corpOperNr}`, { 
+          `${SUPABASE_URL}rest/v1/users?full_name=eq.${encodeURIComponent(fullName)}&corp_oper_nr=eq.${corpOperNr}`, { 
             headers: getSupabaseHeaders() }
         );
         const debugUsers = await debugCheck.json();
         console.log("DEBUG USERS ENCONTRADOS PARA APAGAR:", debugUsers);
         const delUser = await fetch(
-          ``${SUPABASE_URL}rest/v1/users?full_name=eq.${encodeURIComponent(fullName)}&corp_oper_nr=eq.${corpOperNr}`, {
+          `${SUPABASE_URL}rest/v1/users?full_name=eq.${encodeURIComponent(fullName)}&corp_oper_nr=eq.${corpOperNr}`, {
             method: "DELETE", headers: getSupabaseHeaders() }
         );
         if (!delUser.ok) console.warn("⚠️ User não removido:", delUser);
@@ -272,7 +272,7 @@
         corp_oper_nr: corpOperNr
       };
       try {
-        const checkFirefighter = await fetch(``${SUPABASE_URL}rest/v1/reg_elems?n_int=eq.${n_intValue}`, {
+        const checkFirefighter = await fetch(`${SUPABASE_URL}rest/v1/reg_elems?n_int=eq.${n_intValue}`, {
           headers: getSupabaseHeaders()
         });
         if (!checkFirefighter.ok) throw new Error(`Erro ao verificar reg_elems: ${checkFirefighter.status}`);
@@ -281,7 +281,7 @@
           const confirmUpdate = confirm(`O nº interno "${n_intValue}" já existe. Deseja atualizar o registro existente?`);
           if (!confirmUpdate) return;
           const recordId = existingFirefighter[0].id;
-          const updateFirefighter = await fetch(``${SUPABASE_URL}rest/v1/reg_elems?id=eq.${recordId}`, {
+          const updateFirefighter = await fetch(`${SUPABASE_URL}rest/v1/reg_elems?id=eq.${recordId}`, {
             method: "PATCH",
             headers: getSupabaseHeaders({ Prefer: "return=representation" }),
             body: JSON.stringify(payloadRegElems)
@@ -290,7 +290,7 @@
           await safeJson(updateFirefighter);
           alert("Bombeiro atualizado com sucesso!");
         } else {
-          const createBombeiro = await fetch(``${SUPABASE_URL}rest/v1/reg_elems`, {
+          const createBombeiro = await fetch(`${SUPABASE_URL}rest/v1/reg_elems`, {
             method: "POST",
             headers: getSupabaseHeaders({ Prefer: "return=representation" }),
             body: JSON.stringify(payloadRegElems)
@@ -300,7 +300,7 @@
           alert("Novo bombeiro criado com sucesso!");
         }
         const checkUserGlobal = await fetch(
-          ``${SUPABASE_URL}rest/v1/users?username=eq.${payloadUsers.username}`, { 
+          `${SUPABASE_URL}rest/v1/users?username=eq.${payloadUsers.username}`, { 
             headers: getSupabaseHeaders() }
         );
         if (!checkUserGlobal.ok)
@@ -315,7 +315,7 @@
             return;
           }
           const updateUser = await fetch(
-            ``${SUPABASE_URL}rest/v1/users?id=eq.${userSameCorp.id}`, {
+            `${SUPABASE_URL}rest/v1/users?id=eq.${userSameCorp.id}`, {
               method: "PATCH",
               headers: getSupabaseHeaders({ Prefer: "return=representation" }),
               body: JSON.stringify(payloadUsers)
@@ -326,7 +326,7 @@
           await safeJson(updateUser);
         } else {
           const createUser = await fetch(
-            ``${SUPABASE_URL}rest/v1/users`, {
+            `${SUPABASE_URL}rest/v1/users`, {
               method: "POST",
               headers: getSupabaseHeaders({ Prefer: "return=representation" }),
               body: JSON.stringify(payloadUsers)

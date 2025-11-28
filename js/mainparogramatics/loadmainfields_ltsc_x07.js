@@ -1,32 +1,49 @@
     /* =======================================
+       DATE CONFIGURATION
+    ======================================= */
+    function padNumber(num) {
+      return String(num).padStart(2, '0');
+    }
+
+    function getCurrentDateStr() {
+      const d = new Date();
+      return `${d.getFullYear()}-${padNumber(d.getMonth()+1)}-${padNumber(d.getDate())}`;
+    }
+
+    function formatWSMSGDH(dateStr, timeStr) {
+      if (!dateStr || !timeStr) return '';
+      const date = new Date(dateStr + 'T' + timeStr);
+      const day = padNumber(date.getDate());
+      const hours = padNumber(date.getHours());
+      const minutes = padNumber(date.getMinutes());
+      const monthNames = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
+      const month = monthNames[date.getMonth()];
+      const year = String(date.getFullYear()).slice(-2);
+      return `${day} *${hours}${minutes}* ${month}${year}`;
+    }
+    /* =======================================
         DATA LOADING FIELDS
     ======================================= */
-    /* ================== VEHICLES ================== */
-    async function fetchVehiclesFromSupabase(corpOperNr = sessionStorage.getItem("currentCorpOperNr")) {
-      if (!corpOperNr) return [];
+    /* ============= VEHICLES ============= */
+    async function fetchVehiclesFromSupabase() {
       try {
-        const response = await fetch(
-          ``${SUPABASE_URL}rest/v1/vehicle_status?select=vehicle&corp_oper_nr=eq.${corpOperNr}`, {
-            headers: getSupabaseHeaders()
-          }
-        );
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/vehicle_status?select=vehicle`, {
+          headers: getSupabaseHeaders()
+        });
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const vehicles = await response.json();
-        return vehicles.map(item => item.vehicle);
+        return vehicles.map(vehicle => vehicle.vehicle);
       } catch (error) {
         console.error('Erro ao carregar veículos do Supabase:', error);
-        return [];
+        return fallbackVehicles;
       }
     }
-    /* ================== FUNÇÃO PARA PREENCHER SELECT ================== */
-    function fillSelectWithVehicles(select, vehicles) {
-      select.innerHTML = '';
-      const emptyOption = document.createElement('option');
-      emptyOption.value = '';
-      emptyOption.textContent = '';
-      select.appendChild(emptyOption);
-      if (!vehicles || vehicles.length === 0) return;
-      vehicles.sort((a, b) => a.localeCompare(b, 'pt', { sensitivity: 'base' }));
+    async function populateSingleVehicleSelect(select) {
+      let vehicles = await fetchVehiclesFromSupabase();
+      vehicles.sort((a, b) => a.localeCompare(b, 'pt', {
+        sensitivity: 'base'
+      }));
+      select.innerHTML = '<option value=""></option>';
       vehicles.forEach(vehicle => {
         const option = document.createElement('option');
         option.value = vehicle;
@@ -34,34 +51,48 @@
         select.appendChild(option);
       });
     }
-    /* ================== SELECTS ================== */
-    async function populateSingleVehicleSelect(select) {
-      const vehicles = await fetchVehiclesFromSupabase();
-      fillSelectWithVehicles(select, vehicles);
-    }
     async function populateIndependentVehicleSelect() {
       const selectId = 'new_vehicle_unavailable';
       const select = document.getElementById(selectId);
       if (!select) return console.warn(`Select com id "${selectId}" não encontrado.`);
       const vehicles = await fetchVehiclesFromSupabase();
-      fillSelectWithVehicles(select, vehicles);
+      vehicles.sort((a, b) => a.localeCompare(b, 'pt', {
+        sensitivity: 'base'
+      }));
+      select.innerHTML = '<option value=""></option>';
+      vehicles.forEach(vehicle => {
+        const option = document.createElement('option');
+        option.value = vehicle;
+        option.textContent = vehicle;
+        select.appendChild(option);
+      });
     }
+    document.addEventListener('DOMContentLoaded', async () => {
+      await populateIndependentVehicleSelect();
+    });
     async function populateSitopVehicleSelect() {
       const selectId = 'sitop_veíc';
       const select = document.getElementById(selectId);
       if (!select) return console.warn(`Select com id "${selectId}" não encontrado.`);
       const vehicles = await fetchVehiclesFromSupabase();
-      fillSelectWithVehicles(select, vehicles);
+      vehicles.sort((a, b) => a.localeCompare(b, 'pt', {
+        sensitivity: 'base'
+      }));
+      select.innerHTML = '<option value=""></option>';
+      vehicles.forEach(vehicle => {
+        const option = document.createElement('option');
+        option.value = vehicle;
+        option.textContent = vehicle;
+        select.appendChild(option);
+      });
     }
-    /* ================== ON LOAD ================== */
     document.addEventListener('DOMContentLoaded', async () => {
-      await populateIndependentVehicleSelect();
       await populateSitopVehicleSelect();
     });
     /* ===== OCCORRNECE DESCRIPTIONS ====== */
     async function fetchClassOccorrById(classId) {
       try {
-        const response = await fetch(``${SUPABASE_URL}rest/v1/class_occorr?select=occorr_descr&class_occorr=eq.${encodeURIComponent(classId)}`, {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/class_occorr?select=occorr_descr&class_occorr=eq.${encodeURIComponent(classId)}`, {
           headers: getSupabaseHeaders()
         });
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -88,7 +119,7 @@
     /* ============= DISTRICTS ============ */    
     async function fetchDistrictsFromSupabase() {
       try {
-        const resp = await fetch(``${SUPABASE_URL}rest/v1/districts_select?select=id,district`, {
+        const resp = await fetch(`${SUPABASE_URL}/rest/v1/districts_select?select=id,district`, {
           headers: getSupabaseHeaders()
         });
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -107,7 +138,6 @@
       if (districtSelects.length === 0) {
         return console.warn("Nenhum select de distritos encontrado");
       }
-      console.log(`🔍 Encontrados ${districtSelects.length} select(s) de distritos`);
       const districts = await fetchDistrictsFromSupabase();
       const defaultDistrict = districts.find(d => d.id === defaultDistrictId);
       if (!defaultDistrict) {
@@ -128,14 +158,13 @@
           sel.appendChild(option);
         });
         sel.value = String(defaultDistrictId);
-        console.log(`✅ Select ${index + 1} (ID: ${sel.id}) - Distrito selecionado: ${sel.options[sel.selectedIndex].textContent}`);
       });
     }
     /* ============= COUNCILS ============= */
     async function fetchCouncilsByDistrict(districtId) {
       if (!districtId) return [];
       try {
-        const resp = await fetch(``${SUPABASE_URL}rest/v1/councils_select?select=id,council&district_id=eq.${districtId}`, {
+        const resp = await fetch(`${SUPABASE_URL}/rest/v1/councils_select?select=id,council&district_id=eq.${districtId}`, {
           headers: getSupabaseHeaders()
         });
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -181,14 +210,13 @@
           option.textContent = c.name;
           sel.appendChild(option);
         });
-        console.log(`✅ Concelhos populados para select: ${sel.id}`);
       });
     }
     /* ============= PARISHES ============= */
     async function fetchParishesByCouncil(councilId) {
       if (!councilId) return [];
       try {
-        const resp = await fetch(``${SUPABASE_URL}rest/v1/parishes_select?select=parish&council_id=eq.${councilId}`, {
+        const resp = await fetch(`${SUPABASE_URL}/rest/v1/parishes_select?select=parish&council_id=eq.${councilId}`, {
           headers: getSupabaseHeaders()
         });
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -214,7 +242,6 @@
         option.textContent = p;
         parishSelect.appendChild(option);
       });
-      console.log(`✅ Freguesias populadas para select: ${parishSelect.id}`);
     }
 
     function setupHierarchicalSelects() {
@@ -241,14 +268,12 @@
     }
     document.addEventListener('DOMContentLoaded', async () => {
       const defaultDistrictId = 8;
-      console.log('🚀 Inicializando sistema de selects hierárquicos múltiplos...');
       await populateAllDistrictSelects(defaultDistrictId);
       setupHierarchicalSelects();
       const districtSelects = document.querySelectorAll('[id*="district_select"]');
       for (const select of districtSelects) {
         await populateCouncilSelectByDistrict(select.value, select.id);
       }
-      console.log('✅ Sistema inicializado com sucesso!');
     });
 
     function initializeNewSelectGroup(containerSelector) {
@@ -282,7 +307,7 @@
     /* ============= VICTIMS ============== */
     async function fetchVictimOptions(category) {
       try {
-        const resp = await fetch(``${SUPABASE_URL}rest/v1/static_options?select=value&category=eq.${category}`, {
+        const resp = await fetch(`${SUPABASE_URL}/rest/v1/static_options?select=value&category=eq.${category}`, {
           headers: getSupabaseHeaders()
         });
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -306,7 +331,7 @@
     /* ======== GLOBAL PARAMETRES ========= */
     async function fetchGlobalOptions(category) {
       try {
-        const resp = await fetch(``${SUPABASE_URL}rest/v1/static_options?select=value&category=eq.${category}`, {
+        const resp = await fetch(`${SUPABASE_URL}/rest/v1/static_options?select=value&category=eq.${category}`, {
           headers: getSupabaseHeaders()
         });
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -348,4 +373,5 @@
         });
       }
     }
+
     document.addEventListener('DOMContentLoaded', populateGlobalSelects);

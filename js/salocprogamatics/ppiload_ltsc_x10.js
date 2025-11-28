@@ -28,10 +28,9 @@
       }
     });
     /* =======================================
-        PPI RENDER GENERIC CELLS
+       PPI RENDER GENERIC CELLS
     ======================================= */
     function renderGenericAlarmCells(tr, alarmArray, i, skipState) {
-      const currentCorpNr = sessionStorage.getItem("currentCorpOperNr");
       if (skipState.count > 0) {
         skipState.count--;
         return;
@@ -62,7 +61,7 @@
       const td2 = document.createElement("td");
       td2.textContent = corp;
       td2.style.textAlign = "left";
-      if (currentCorpNr && corp.includes(currentCorpNr)) {
+      if (corp.includes("0805 - CB Faro Cruz Lusa")) {
         [td1, td2].forEach(td => {
           td.style.backgroundColor = "#839ec9";
           td.style.color = "white";
@@ -73,7 +72,7 @@
       tr.appendChild(td2);
     }
     /* =======================================
-        PPI INFO CUMULATIVE ALERTS
+       PPI INFO CUMULATIVE ALERTS
     ========================================*/
     const CUMULATIVE_ALERT_STYLE = "padding: 10px; margin: 5px 0 -5px 0; border-radius: 3px; font-weight: bold; background: #b30000; color: white; text-align: center;"
     function createOrUpdateCumulativeAlert(parentContainer) {
@@ -98,17 +97,13 @@
         }
       }
     }
-    
+
     function checkIfHasCBIntervention(parentContainer) {
-      const currentCorpNr = sessionStorage.getItem("currentCorpOperNr");
-      if (!currentCorpNr) {
-        return false;
-      }
       const tables = parentContainer.querySelectorAll('table');
       for (const table of tables) {
         const cells = table.querySelectorAll('td');
         for (const cell of cells) {
-          if (cell.textContent && cell.textContent.includes(currentCorpNr)) {
+          if (cell.textContent && cell.textContent.includes('0805 - CB Faro Cruz Lusa')) {
             return true;
           }
         }
@@ -142,7 +137,7 @@
           console.error(`Tipo de PPI não reconhecido: ${type}`);
           return;
       }
-      const audioPath = `https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/sounds/${soundFolder}/${fileName}`;
+      const audioPath = `sounds/${soundFolder}/${fileName}`;
       const audio = new Audio(audioPath);
       audio.play()
         .then(() => console.log(`▶️ A tocar: ${fileName}`))
@@ -201,12 +196,12 @@
       }
       if (isIntervention) {
         notice.style.backgroundColor = "#229941";
-        notice.style.color = "#fff";
-        notice.textContent = "COM INTERVENÇÃO DO CORPO DE BOMBEIROS";
+        notice.style.color = "#fff";  
+        notice.textContent = "COM INTERVENÇÃO DO C.B. Faro - Cruz Lusa";
       } else {
         notice.style.backgroundColor = "#cc1d1d";
-        notice.style.color = "#f2b30a";
-        notice.textContent = "SEM INTERVENÇÃO DO CORPO DE BOMBEIROS";
+        notice.style.color = "#f2b30a";  
+        notice.textContent = "SEM INTERVENÇÃO DO C.B. Faro - Cruz Lusa";
       }
     }
     /* =======================================
@@ -540,92 +535,99 @@
       ppia22ABSNoteTable(absContainer, buttonId);
     }
     /* =======================================
-        PPI A22 INFO TABLE
+       PPI A22 INFO TABLE
     ========================================*/
     async function loadPPIA22DataInfoGrid(gridId) {
       const container = document.getElementById("ppia22-grid-references");
       if (!container) return;
-        ensureLoadingMarker(container);
-        const loading = container.querySelector(".loading-mark");
-        loading.style.display = "block";
-        try {
-          const currentCorpNr = sessionStorage.getItem("currentCorpOperNr");
-          const data = await fetchFromSupabase("ppia22_data", `ppi_grid=eq.${gridId}`);
-          const refs = await fetchFromSupabase("ppia22_references", `grid_code=eq.${gridId}`);
-          const refIds = refs.map(r => r.id);
-          let means = [];
-          if (refIds.length) {
-            means = await fetchFromSupabase("ppia22_means", `reference_id=in.(${refIds.join(",")})`);
-          }
-          const hasIntervention = currentCorpNr && means.some(
-            m => typeof m.means === "string" && m.means.includes(currentCorpNr)
-          );
-          createOrUpdateInterventionNotice(container, hasIntervention);
-          if (!data.length) return renderNoData(container);
-          const ppi = data[0];
-          let table = container.querySelector("table");
-          if (!table) {
-            table = document.createElement("table");
-            table.className = "table-elements";
-            table.style.cssText = "width:100%;table-layout:fixed;border-collapse:collapse;margin:20px 0 10px";
-            container.appendChild(table);
-          }
-          table.innerHTML = "";
-          table.appendChild(createColGroup(["260px", "262px", "calc(33% - 40px)", "calc(33% - 40px)"]));
-          const tr1 = document.createElement("tr");
-          tr1.append(
-            createCell(`GRELHA ${ppi.ppi_grid} - CB`, {rowSpan: 2, bold: true, center: true}),
-            createDirectionCell(ppi),
-            createCell("TROÇO", {colSpan: 2, bold: true, center: true})
-          );
-          table.appendChild(tr1);
-          const tr2 = document.createElement("tr");
-          tr2.append(
-            createNodeCell(ppi.ppi_first_node),
-            createNodeCell(ppi.ppi_secound_node)
-          );
-          table.appendChild(tr2);
-          [["COORDENADAS LAT/LONG", ppi.ppi_first_coordinate, ppi.ppi_secound_coordinate],
-           ["ALTITUDE (m)", ppi.ppi_first_height, ppi.ppi_secound_height],
-           ["Ponto de Trânsito (PT) / Local de Reforço Tático (LRT)", ppi.ppi_ptlrt_coordinates, ppi.ppi_ptlrt_coordinates]
-          ].forEach(([label, left, right], index) => {
-            const tr = document.createElement("tr");
-            const tdLabel = document.createElement("td");
-            tdLabel.colSpan = 2;
-            tdLabel.style.border = "1px solid #bbb";
-            tdLabel.style.padding = "5px";
-            tdLabel.style.fontWeight = "bold";
-            tdLabel.style.textAlign = "left";
-            tdLabel.style.setProperty("text-align", "left", "important");
-            tdLabel.textContent = label || "";
-            const tdLeft = document.createElement("td");
-            tdLeft.textContent = left || "";
-            tdLeft.style.border = "1px solid #bbb";
-            tdLeft.style.padding = "5px";
-            tdLeft.style.fontWeight = "bold";
-            tdLeft.style.textAlign = "center";
-            if (index === 2) {
-              tdLeft.colSpan = 2;
-              tr.append(tdLabel, tdLeft);
-            } else {
-              const tdRight = document.createElement("td");
-              tdRight.textContent = right || "";
-              tdRight.style.border = "1px solid #bbb";
-              tdRight.style.padding = "5px";
-              tdRight.style.fontWeight = "bold";
-              tdRight.style.textAlign = "center";
-              tr.append(tdLabel, tdLeft, tdRight);
-            }
-            table.appendChild(tr);
-          });
-        } catch (err) {
-          console.error("❌ Erro ao carregar PPI data:", err);
-          showError(container, "Erro ao carregar PPI data. Veja o console.");
-        } finally {
-          loading.style.display = "none";
+      ensureLoadingMarker(container);
+      const loading = container.querySelector(".loading-mark");
+      loading.style.display = "block";
+      try {
+        const data = await fetchFromSupabase("ppia22_data", `ppi_grid=eq.${gridId}`);
+        const refs = await fetchFromSupabase("ppia22_references", `grid_code=eq.${gridId}`);
+        const refIds = refs.map(r => r.id);
+        let means = [];
+        if (refIds.length) {
+          means = await fetchFromSupabase("ppia22_means", `reference_id=in.(${refIds.join(",")})`);
         }
+        const hasIntervention = means.some(
+          m => typeof m.means === "string" && m.means.includes("0805 - CB Faro Cruz Lusa")
+        );
+        createOrUpdateInterventionNotice(container, hasIntervention);
+        if (!data.length) return renderNoData(container);
+        const ppi = data[0];
+        let table = container.querySelector("table");
+        if (!table) {
+          table = document.createElement("table");
+          table.className = "table-elements";
+          table.style.cssText = "width:100%;table-layout:fixed;border-collapse:collapse;margin:20px 0 10px";
+          container.appendChild(table);
+        }
+        table.innerHTML = "";
+        table.appendChild(createColGroup(["260px", "262px", "calc(33% - 40px)", "calc(33% - 40px)"]));
+        const tr1 = document.createElement("tr");
+        tr1.append(
+          createCell(`GRELHA ${ppi.ppi_grid} - CB`, {
+            rowSpan: 2,
+            bold: true,
+            center: true
+          }),
+          createDirectionCell(ppi),
+          createCell("TROÇO", {
+            colSpan: 2,
+            bold: true,
+            center: true
+          }));
+        table.appendChild(tr1);
+        const tr2 = document.createElement("tr");
+        tr2.append(
+          createNodeCell(ppi.ppi_first_node),
+          createNodeCell(ppi.ppi_secound_node)
+        );
+        table.appendChild(tr2);
+        [
+          ["COORDENADAS LAT/LONG", ppi.ppi_first_coordinate, ppi.ppi_secound_coordinate],
+          ["ALTITUDE (m)", ppi.ppi_first_height, ppi.ppi_secound_height],
+          ["Ponto de Trânsito (PT) / Local de Reforço Tático (LRT)", ppi.ppi_ptlrt_coordinates, ppi.ppi_ptlrt_coordinates]
+        ].forEach(([label, left, right], index) => {
+          const tr = document.createElement("tr");
+          const tdLabel = document.createElement("td");
+          tdLabel.colSpan = 2;
+          tdLabel.style.border = "1px solid #bbb";
+          tdLabel.style.padding = "5px";
+          tdLabel.style.fontWeight = "bold";
+          tdLabel.style.textAlign = "left";
+          tdLabel.style.setProperty("text-align", "left", "important");
+          tdLabel.textContent = label || "";
+          const tdLeft = document.createElement("td");
+          tdLeft.textContent = left || "";
+          tdLeft.style.border = "1px solid #bbb";
+          tdLeft.style.padding = "5px";
+          tdLeft.style.fontWeight = "bold";
+          tdLeft.style.textAlign = "center";
+          if (index === 2) {
+            tdLeft.colSpan = 2;
+            tr.append(tdLabel, tdLeft);
+          } else {
+            const tdRight = document.createElement("td");
+            tdRight.textContent = right || "";
+            tdRight.style.border = "1px solid #bbb";
+            tdRight.style.padding = "5px";
+            tdRight.style.fontWeight = "bold";
+            tdRight.style.textAlign = "center";
+            tr.append(tdLabel, tdLeft, tdRight);
+          }
+          table.appendChild(tr);
+        });
+      } catch (err) {
+        console.error("❌ Erro ao carregar PPI data:", err);
+        showError(container, "Erro ao carregar PPI data. Veja o console.");
+      } finally {
+        loading.style.display = "none";
+      }
     }
-    
+
     function ensureLoadingMarker(container) {
       if (!container.querySelector(".loading-mark")) {
         const lm = document.createElement("div");
@@ -634,16 +636,14 @@
         container.appendChild(lm);
       }
     }
-    
     async function fetchFromSupabase(table, filter) {
-      const res = await fetch(
-        ``${SUPABASE_URL}rest/v1/${table}?select=*&${filter}`, {
-          headers: getSupabaseHeaders()
-        });
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?select=*&${filter}`, {
+        headers: getSupabaseHeaders()
+      });
       if (!res.ok) throw new Error(`Erro ao buscar ${table}: ${res.status}`);
       return res.json();
     }
-    
+
     function renderNoData(container) {
       container.querySelector("table")?.remove();
       let noData = container.querySelector(".no-data-msg");
@@ -655,7 +655,7 @@
       }
       noData.textContent = "Sem dados na tabela ppi_data.";
     }
-    
+
     function showError(container, message) {
       let errDiv = container.querySelector(".data-error");
       if (!errDiv) {
@@ -667,7 +667,7 @@
       }
       errDiv.textContent = message;
     }
-    
+
     function createColGroup(widths) {
       const colgroup = document.createElement("colgroup");
       widths.forEach(w => {
@@ -677,7 +677,7 @@
       });
       return colgroup;
     }
-    
+
     function createCell(text, {
       colSpan = 1,
       rowSpan = 1,
@@ -694,7 +694,7 @@
       td.style.textAlign = center ? "center" : "inherit";
       return td;
     }
-    
+
     function createDirectionCell(ppi) {
       const td = createCell("", {
         rowSpan: 2,
@@ -716,7 +716,7 @@
       td.append(top, mid, bot);
       return td;
     }
-    
+
     function createNodeCell(nodeStr = "") {
       const [main, km] = nodeStr.split("(");
       const td = createCell("", {
@@ -743,7 +743,14 @@
       if (!container.querySelector(".ppia22-title")) {
         const titleDiv = document.createElement("div");
         titleDiv.textContent = "SITUAÇÕES ESPECIAIS";
-        Object.assign(titleDiv.style, {backgroundColor: "#fff3b0", fontWeight: "bold", textAlign: "center", padding: "4px", margin: "-5px 0 -1px 0", border: "1px solid #bbb"});
+        Object.assign(titleDiv.style, {
+          backgroundColor: "#fff3b0",
+          fontWeight: "bold",
+          textAlign: "center",
+          padding: "4px",
+          margin: "-5px 0 -1px 0",
+          border: "1px solid #bbb"
+        });
         titleDiv.classList.add("ppia22-title");
         container.appendChild(titleDiv);
       }
@@ -766,7 +773,12 @@
         let p1Div = dataContainer.querySelector(".ppia22-part1");
         if (!p1Div) {
           p1Div = document.createElement("div");
-          Object.assign(p1Div.style, {border: "1px solid #bbb", padding: "0 0 0 8px", marginBottom: "-5px", textAlign: "left"});
+          Object.assign(p1Div.style, {
+            border: "1px solid #bbb",
+            padding: "0 0 0 8px",
+            marginBottom: "-5px",
+            textAlign: "left"
+          });
           p1Div.classList.add("ppia22-part1");
           dataContainer.appendChild(p1Div);
         }
@@ -776,7 +788,11 @@
         if (!table) {
           table = document.createElement("table");
           table.classList.add("table-elements");
-          Object.assign(table.style, {width: "100%", borderCollapse: "collapse", margin: "4px 0 5px 0"});
+          Object.assign(table.style, {
+            width: "100%",
+            borderCollapse: "collapse",
+            margin: "4px 0 5px 0"
+          });
           dataContainer.appendChild(table);
         }
         const rowsMap = groupByRow(part2);
@@ -791,7 +807,7 @@
       }
     }
     async function fetchFromSupabase(table, filter) {
-      const res = await fetch(``${SUPABASE_URL}rest/v1/${table}?select=*&${filter}`, {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?select=*&${filter}`, {
         headers: getSupabaseHeaders()
       });
       if (!res.ok) throw new Error(`Erro ao buscar ${table}: ${res.status}`);
@@ -833,7 +849,12 @@
     }
 
     function applySpecialsCellStyle(td) {
-      Object.assign(td.style, {border: "1px solid #bbb", padding: "0 0 0 8px", textAlign: "left", verticalAlign: "top"});
+      Object.assign(td.style, {
+        border: "1px solid #bbb",
+        padding: "0 0 0 8px",
+        textAlign: "left",
+        verticalAlign: "top"
+      });
     }
     /* =======================================
        PPI A22 PAGINATION +1000 RECORDS
@@ -844,7 +865,7 @@
       const pageSize = 1000;
       while (true) {
         const end = start + pageSize - 1;
-        const res = await fetch(``${SUPABASE_URL}rest/v1/ppia22_means?select=*`, {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/ppia22_means?select=*`, {
           headers: {
             ...getSupabaseHeaders(),
             Range: `${start}-${end}`
@@ -859,7 +880,7 @@
       return all;
     }
     /* =======================================
-        PPI A22 LOAD GRIDS 1A-2S
+       PPI A22 LOAD GRIDS 1A-2S
     =======================================*/
     async function loadPPIA22GridSeparated(gridId) {
       const container = document.getElementById("ppia22-grid-container");
@@ -870,14 +891,22 @@
         const references = await fetchFromSupabase("ppia22_references", `grid_code=eq.${gridId}`);
         if (!references.length) return;
         const means = await fetchRelevantMeans(references.map(r => r.id));
-        const occurrenceTypes = {"Acidente": "#a5d6a7", "Substâncias Perigosas": "#ffcc80", "Incêndio em Transportes": "#90caf9"};
+        const occurrenceTypes = {
+          "Acidente": "#a5d6a7",
+          "Substâncias Perigosas": "#ffcc80",
+          "Incêndio em Transportes": "#90caf9"
+        };
         for (const [type, bgColor] of Object.entries(occurrenceTypes)) {
           const refs = references.filter(r => r.occurrence_type === type);
           if (!refs.length) continue;
           tempContainer.appendChild(createA22Header(`TIPO DE OCORRÊNCIA: ${type}`, bgColor));
           const table = document.createElement("table");
           table.classList.add("table-elements");
-          Object.assign(table.style, {tableLayout: "fixed", width: "100%", marginBottom: "10px"});
+          Object.assign(table.style, {
+            tableLayout: "fixed",
+            width: "100%",
+            marginBottom: "10px"
+          });
           table.appendChild(createColGroup(["80px", "calc(33% - 40px)", "80px", "calc(33% - 40px)", "33%"]));
           const thead = table.createTHead();
           thead.appendChild(createTableHeaderRow(refs, means, gridId, type));
@@ -887,8 +916,12 @@
             const secondAlarm = means.filter(m => m.reference_id === ref.id && m.alarm_level === "2º Alarme").sort((a, b) => (a.display_order ?? 1) - (b.display_order ?? 1));
             const specialAlarm = means.filter(m => m.reference_id === ref.id && m.alarm_level === "Alarme Especial").sort((a, b) => (a.display_order ?? 1) - (b.display_order ?? 1));
             const maxRows = Math.max(firstAlarm.length, secondAlarm.length, specialAlarm.length);
-            let skipFirst = {count: 0};
-            let skipSecond = {count: 0};
+            let skipFirst = {
+              count: 0
+            };
+            let skipSecond = {
+              count: 0
+            };
             for (let i = 0; i < maxRows; i++) {
               const tr = tbody.insertRow();
               renderGenericAlarmCells(tr, firstAlarm, i, skipFirst);
@@ -913,22 +946,45 @@
         container.textContent = "Erro ao carregar grelha. Veja o console.";
       }
     }
-    
+    async function fetchFromSupabase(table, filter) {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?select=*&${filter}`, {
+        headers: getSupabaseHeaders()
+      });
+      if (!res.ok) throw new Error(`Erro ao buscar ${table}: ${res.status}`);
+      return res.json();
+    }
     async function fetchRelevantMeans(ids) {
       if (!ids.length) return [];
       return fetchFromSupabase("ppia22_means", `reference_id=in.(${ids.join(",")})`);
     }
-    
+
     function createA22Header(text, bgColor) {
       const h3 = document.createElement("h3");
       h3.textContent = text;
-      Object.assign(h3.style, {fontSize: "15px", fontWeight: "bold", margin: "10px 0 0 0", padding: "3px 5px", backgroundColor: bgColor, color: "black", borderRadius: "2px"});
+      Object.assign(h3.style, {
+        fontSize: "15px",
+        fontWeight: "bold",
+        margin: "10px 0 0 0",
+        padding: "3px 5px",
+        backgroundColor: bgColor,
+        color: "black",
+        borderRadius: "2px"
+      });
       return h3;
     }
-    
+
+    function createColGroup(widths) {
+      const colgroup = document.createElement("colgroup");
+      widths.forEach(w => {
+        const col = document.createElement("col");
+        col.style.width = w;
+        colgroup.appendChild(col);
+      });
+      return colgroup;
+    }
+
     function createTableHeaderRow(refs, means, gridId, type) {
       const tr = document.createElement("tr");
-      const currentCorpNr = sessionStorage.getItem("currentCorpOperNr"); 
       ["1º Alarme", "2º Alarme", "Alarme Especial"].forEach(level => {
         const th = document.createElement("th");
         th.style.textAlign = "center";
@@ -938,12 +994,20 @@
         if (level === "Alarme Especial") th.style.backgroundColor = "red";
         th.style.color = level === "Alarme Especial" ? "white" : "black";
         if (level !== "Alarme Especial") th.colSpan = 2;
-        const hasCB = currentCorpNr && refs.some(ref =>means.some(m => m.reference_id === ref.id && m.alarm_level === level && m.means?.includes(currentCorpNr)));
+        const hasCB = refs.some(ref =>
+          means.some(m => m.reference_id === ref.id && m.alarm_level === level && m.means?.includes("0805 - CB Faro Cruz Lusa"))
+        );
         if (hasCB) {
           const wrapper = document.createElement("div");
-          Object.assign(wrapper.style, {display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px"});
+          Object.assign(wrapper.style, {
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "8px"
+          });
           const titleDiv = document.createElement("div");
-          titleDiv.textContent = level; titleDiv.style.flex = "1";
+          titleDiv.textContent = level;
+          titleDiv.style.flex = "1";
           titleDiv.style.textAlign = "center";
           const btn = createAudioButton('A22', gridId, level, type, `Toque rápido ${level}`);
           btn.style.marginLeft = "8px";
@@ -958,16 +1022,21 @@
       });
       return tr;
     }
-    
+
     function renderAlarmCell(tr, alarmMeans, idx, colSpan = 1, center = false) {
       const td = tr.insertCell();
       td.colSpan = colSpan;
       applyTdStyle(td, center);
       if (alarmMeans[idx]) td.textContent = alarmMeans[idx].means;
     }
-    
+
     function applyTdStyle(td, center = false) {
-      Object.assign(td.style, {border: "1px solid #bbb", padding: "4px", textAlign: center ? "center" : "left", verticalAlign: center ? "middle" : "top"});
+      Object.assign(td.style, {
+        border: "1px solid #bbb",
+        padding: "4px",
+        textAlign: center ? "center" : "left",
+        verticalAlign: center ? "middle" : "top"
+      });
     }
     /* =======================================
        PPI A22 ABSC's NOTE
@@ -1182,44 +1251,51 @@
       table.style.display = "table";
     }
     /* =======================================
-        PPI AIRPORT RENDER CELLS
+       PPI AIRPORT RENDER CELLS
     =======================================*/
     function renderPPIAeroAlarmCells(tr, item) {
-      const currentCorpNr = sessionStorage.getItem("currentCorpOperNr");
-      let meio = "", corp = "";
-        if (item?.means) {
-          if (item.means.includes("**")) {
-            [meio, corp] = item.means.split("**");
-            meio += "**";
-          } else if (item.means.includes("*")) {
-            [meio, corp] = item.means.split("*");
-            meio += "*";
-          } else {
-            const parts = item.means.trim().split(/\s+(.+)/);
-            meio = parts[0] || ""; corp = parts[1] ? parts[1].trim() : "";
-          }
-          corp = corp || "";
+      let meio = "",
+        corp = "";
+      if (item?.means) {
+        if (item.means.includes("**")) {
+          [meio, corp] = item.means.split("**");
+          meio += "**";
+        } else if (item.means.includes("*")) {
+          [meio, corp] = item.means.split("*");
+          meio += "*";
+        } else {
+          const parts = item.means.trim().split(/\s+(.+)/);
+          meio = parts[0] || "";
+          corp = parts[1] ? parts[1].trim() : "";
         }
+        corp = corp || "";
+      }
       const createCell = (text) => {
         const td = document.createElement("td");
         td.textContent = text;
-        Object.assign(td.style, {textAlign: "left", padding: "4px", border: "1px solid #bbb", minHeight: "25px", verticalAlign: "top"});
+        Object.assign(td.style, {
+          textAlign: "left",
+          padding: "4px",
+          border: "1px solid #bbb",
+          minHeight: "25px",
+          verticalAlign: "top"
+        });
         return td;
       };
       const td1 = createCell(meio);
       const td2 = createCell(corp);
-      if (currentCorpNr && corp.includes(currentCorpNr)) {
+      if (corp.includes("0805 - CB Faro Cruz Lusa")) {
         [td1, td2].forEach(td => Object.assign(td.style, {
           backgroundColor: "#839ec9",
           color: "white",
           fontWeight: "bold"
-            }));
-        }
+        }));
+      }
       tr.appendChild(td1);
       tr.appendChild(td2);
     }
     /* =======================================
-        PPI AIRPORT LOAD GRIDS A1-A4
+       PPI AIRPORT LOAD GRIDS A1-A4
     ======================================= */
     async function loadPPIAeroGridSeparated(gridId) {
       const container = document.getElementById("ppiaero-grid-container");
@@ -1228,12 +1304,16 @@
       tempContainer.style.display = "none";
       try {
         const [references, means] = await Promise.all([
-          fetchJSON(``${SUPABASE_URL}rest/v1/ppiaero_references?select=*&grid_code=eq.${gridId}`),
-          fetchJSON(``${SUPABASE_URL}rest/v1/ppiaero_means?select=*`)
+          fetchJSON(`${SUPABASE_URL}/rest/v1/ppiaero_references?select=*&grid_code=eq.${gridId}`),
+          fetchJSON(`${SUPABASE_URL}/rest/v1/ppiaero_means?select=*`)
         ]);
         const table = document.createElement("table");
         table.classList.add("table-elements");
-        Object.assign(table.style, {tableLayout: "fixed", width: "100%", margin: "10px 0 5px 0"});
+        Object.assign(table.style, {
+          tableLayout: "fixed",
+          width: "100%",
+          margin: "10px 0 5px 0"
+        });
         const colgroup = document.createElement("colgroup");
         ["10%", "40%", "10%", "40%"].forEach(w => {
           const col = document.createElement("col");
@@ -1271,12 +1351,12 @@
         tempContainer.style.display = "block";
         container.appendChild(tempContainer);
         createOrUpdateCumulativeAlert(tempContainer);
+        ppiaeroABSNoteTable(tempContainer);
       } catch (err) {
         console.error("❌ Erro ao carregar grelha PPIAero:", err);
         container.textContent = "Erro ao carregar grelha. Veja o console.";
       }
     }
-    
     async function fetchJSON(url) {
       const res = await fetch(url, {
         headers: getSupabaseHeaders()
@@ -1309,10 +1389,8 @@
         const titleDiv = document.createElement("div");
         titleDiv.textContent = title;
         titleDiv.style.flex = "1";
-        titleDiv.style.textAlign = "center";        
-        const btn = document.createElement('button');
-        btn.textContent = '🔊';
-        Object.assign(btn.style, {backgroundColor: 'transparent', border: 'none', cursor: 'pointer', fontSize: '18px'});
+        titleDiv.style.textAlign = "center";
+        const btn = createAudioButton('Aeroporto', gridId, title.toUpperCase(), null, `Toque rápido ${title}`);
         wrapper.appendChild(titleDiv);
         wrapper.appendChild(btn);
         th.innerHTML = "";
@@ -1323,21 +1401,26 @@
     }
 
     function appendPPIAeroCells(tr, item) {
-      const currentCorpNr = sessionStorage.getItem("currentCorpOperNr");      
       if (!item) {
         appendEmptyCells(tr, 2);
         return;
-      }      
-      const {meio, corp} = splitMeans(item.means);      
+      }
+      const {meio, corp} = splitMeans(item.means);
       [meio, corp].forEach(content => {
         const td = document.createElement("td");
         td.textContent = content;
-        Object.assign(td.style, {textAlign: "left", padding: "4px", border: "1px solid #bbb", minHeight: "25px", verticalAlign: "top"});
-        if (currentCorpNr && corp.includes(currentCorpNr)) {
+        Object.assign(td.style, {
+          textAlign: "left",
+          padding: "4px",
+          border: "1px solid #bbb",
+          minHeight: "25px",
+          verticalAlign: "top"
+        });
+        if (corp.includes("0805 - CB Faro Cruz Lusa")) {
           td.style.backgroundColor = "#839ec9";
           td.style.color = "white";
           td.style.fontWeight = "bold";
-        }        
+        }
         tr.appendChild(td);
       });
     }
@@ -1367,13 +1450,13 @@
     function splitMeans(means) {
       let meio = "", corp = "";
       if (!means) return {meio, corp};
-      if (means.includes("**")) [meio, corp] = means.split("**").map((s, i) => i ? s.trim() : s + "**");
-      else if (means.includes("*")) [meio, corp] = means.split("*").map((s, i) => i ? s.trim() : s + "*");
+      if (means.includes("**"))[meio, corp] = means.split("**").map((s, i) => i ? s.trim() : s + "**");
+      else if (means.includes("*"))[meio, corp] = means.split("*").map((s, i) => i ? s.trim() : s + "*");
       else [meio, corp] = (means.trim().split(/\s+(.+)/) || ["", ""]).map(s => s || "");
       return {meio, corp};
     }
     /* =======================================
-        PPI AIRPORT LOAD SPECIAL GRID B1
+       PPI AIRPORT LOAD SPECIAL GRID B1
     ======================================= */
     async function loadPPIAeroGridB1(gridId) {
       const container = document.getElementById("ppiaero-grid-container");
@@ -1381,12 +1464,12 @@
       const tempContainer = document.createElement("div");
       tempContainer.style.display = "none";
       try {
-        const referencesRes = await fetch(``${SUPABASE_URL}rest/v1/ppiaero_references?select=*&grid_code=eq.${gridId}`, {
+        const referencesRes = await fetch(`${SUPABASE_URL}/rest/v1/ppiaero_references?select=*&grid_code=eq.${gridId}`, {
           headers: getSupabaseHeaders()
         });
         if (!referencesRes.ok) throw new Error(`Erro ao buscar ppiaero_references: ${referencesRes.status}`);
         const references = await referencesRes.json();
-        const meansRes = await fetch(``${SUPABASE_URL}rest/v1/ppiaero_means?select=*`, {
+        const meansRes = await fetch(`${SUPABASE_URL}/rest/v1/ppiaero_means?select=*`, {
           headers: getSupabaseHeaders()
         });
         if (!meansRes.ok) throw new Error(`Erro ao buscar ppiaero_means: ${meansRes.status}`);
@@ -1458,7 +1541,6 @@
             const cidadeItem = cidadeMeans.find(m => (m.display_order ?? 1) === i);
             renderPPIAeroAlarmCells(tr, aeroItem);
             renderPPIAeroAlarmCells(tr, cidadeItem);
-            
             tbody.appendChild(tr);
           }
         });
@@ -1472,102 +1554,6 @@
         console.error("❌ Erro ao carregar grelha B1:", err);
         container.textContent = "Erro ao carregar grelha. Veja o console.";
       }
-    }
-    
-    async function fetchJSON(url) {
-      const res = await fetch(url, {
-        headers: getSupabaseHeaders()
-      });
-      if (!res.ok) throw new Error(`Erro ao buscar ${url}: ${res.status}`);
-      return res.json();
-    }
-
-    function sortedMeans(means, refId, alarmLevel) {
-      return means
-        .filter(m => m.reference_id === refId && (m.alarm_level || "").toUpperCase() === alarmLevel)
-        .sort((a, b) => (a.display_order ?? 1) - (b.display_order ?? 1));
-    }
-
-    function createAeroHeaderRow(gridId) {
-      const tr = document.createElement("tr");
-      ["ALERTA AMARELO", "ALERTA VERMELHO"].forEach(title => {
-        const th = document.createElement("th");
-        th.colSpan = 2;
-        th.style.textAlign = "center";
-        th.style.padding = "4px";
-        th.style.fontWeight = "bold";
-        th.style.backgroundColor = title.includes("AMARELO") ? "yellow" : "red";
-        th.style.color = title.includes("AMARELO") ? "black" : "white";
-        const wrapper = document.createElement("div");
-        wrapper.style.display = "flex";
-        wrapper.style.alignItems = "center";
-        wrapper.style.justifyContent = "space-between";
-        wrapper.style.gap = "6px";
-        const titleDiv = document.createElement("div");
-        titleDiv.textContent = title;
-        titleDiv.style.flex = "1";
-        titleDiv.style.textAlign = "center";
-        const btn = document.createElement('button');
-        btn.textContent = '🔊';
-        Object.assign(btn.style, {backgroundColor: 'transparent', border: 'none', cursor: 'pointer', fontSize: '18px'});
-        wrapper.appendChild(titleDiv);
-        wrapper.appendChild(btn);
-        th.innerHTML = "";
-        th.appendChild(wrapper);
-        tr.appendChild(th);
-      });
-      return tr;
-    }
-
-    function appendPPIAeroCells(tr, item) {
-      const currentCorpNr = sessionStorage.getItem("currentCorpOperNr");      
-      if (!item) {
-        appendEmptyCells(tr, 2);
-        return;
-      }      
-      const {meio, corp} = splitMeans(item.means);      
-      [meio, corp].forEach(content => {
-        const td = document.createElement("td");
-        td.textContent = content;
-        Object.assign(td.style, {textAlign: "left", padding: "4px", border: "1px solid #bbb", minHeight: "25px", verticalAlign: "top"});
-        if (currentCorpNr && corp.includes(currentCorpNr)) {
-          td.style.backgroundColor = "#839ec9";
-          td.style.color = "white";
-          td.style.fontWeight = "bold";
-        }        
-        tr.appendChild(td);
-      });
-    }
-
-    function appendEmptyCells(tr, count) {
-      for (let i = 0; i < count; i++) {
-        const td = document.createElement("td");
-        td.textContent = "";
-        td.style.border = "1px solid #bbb";
-        tr.appendChild(td);
-      }
-    }
-
-    function appendReservaCell(tr) {
-      const td = document.createElement("td");
-      td.textContent = "RESERVA";
-      td.colSpan = 2;
-      td.style.textAlign = "center";
-      td.style.padding = "4px";
-      td.style.border = "1px solid #bbb";
-      td.style.backgroundColor = "green";
-      td.style.color = "white";
-      td.style.fontWeight = "bold";
-      tr.appendChild(td);
-    }
-
-    function splitMeans(means) {
-      let meio = "", corp = "";
-      if (!means) return {meio, corp};
-      if (means.includes("**")) [meio, corp] = means.split("**").map((s, i) => i ? s.trim() : s + "**");
-      else if (means.includes("*")) [meio, corp] = means.split("*").map((s, i) => i ? s.trim() : s + "*");
-      else [meio, corp] = (means.trim().split(/\s+(.+)/) || ["", ""]).map(s => s || "");
-      return {meio, corp};
     }
     /* =======================================
        PPI AIRPORT ABSC's NOTE
@@ -1893,54 +1879,56 @@
     ========================================*/
     async function loadPPILinFerDataInfoGrid(gridId) {
       const container = document.getElementById("ppilinfer-grid-references");
-      if (!container) return;      
-      ensureLoadingMarker(container);
-      const loading = container.querySelector(".loading-mark");
-      loading.style.display = "block";      
+      if (!container) return;
       try {
-        const currentCorpNr = sessionStorage.getItem("currentCorpOperNr");        
-        const data = await fetchFromSupabase("ppilinfer_data", `grid_id=eq.${gridId}`);
-        const refs = await fetchFromSupabase("ppilinfer_references", `grid_code=eq.${gridId}`);
-        const refIds = refs.map(r => r.id);        
-        let means = [];
-        if (refIds.length) {
-          means = await fetchFromSupabase("ppilinfer_means", `reference_id=in.(${refIds.join(",")})`);
-        }        
-        const hasIntervention = currentCorpNr && means.some(
-          m => typeof m.means === "string" && m.means.includes(currentCorpNr)
-        );        
-        createOrUpdateInterventionNotice(container, hasIntervention);        
-        if (!data.length) return renderNoData(container);        
+        let loading = container.querySelector(".loading-mark");
+        if (!loading) {
+          loading = document.createElement("div");
+          loading.className = "loading-mark";
+          loading.textContent = "A carregar...";
+          loading.style.display = "none";
+          container.appendChild(loading);
+        }
+        const data = await fetchFromSupabase(`ppilinfer_data`, `grid_id=eq.${gridId}`);
+        const refs = await fetchFromSupabase(`ppilinfer_references`, `grid_code=eq.${gridId}`);
+        const refIds = refs.map(r => r.id);
+        const means = refIds.length ? await fetchFromSupabase(`ppilinfer_means`, `reference_id=in.(${refIds.join(",")})`) : [];
+        const hasIntervention = means.some(m => typeof m.means === "string" && m.means.includes("0805 - CB Faro Cruz Lusa"));
+        createOrUpdateInterventionNotice(container, hasIntervention);
+        if (!data.length) return renderNoData(container, "Sem dados na tabela ppi_data.");
         const ppi = data[0];
         let table = container.querySelector("table");
         if (!table) {
           table = document.createElement("table");
-          table.className = "table-elements";
-          table.style.cssText = "width:100%;table-layout:fixed;border-collapse:collapse;margin:20px 0 10px";
+          table.classList.add("table-elements");
+          Object.assign(table.style, {
+            width: "100%",
+            tableLayout: "fixed",
+            borderCollapse: "collapse",
+            margin: "20px 0 10px 0"
+          });
           container.appendChild(table);
-        }        
+        }
         table.innerHTML = "";
-        table.appendChild(createColGroup(["200px", "200px", "calc(33% - 40px)", "calc(33% - 40px)"]));        
+        table.appendChild(createColGroup(["200px", "200px", "calc(33% - 40px)", "calc(33% - 40px)"]));
         const tr1 = document.createElement("tr");
         tr1.append(
           createTd("", 2, 2, "center", "bold", "0px"),
           createTd(`GRELHA ${ppi.grid_id} - ${ppi.ppi_sence || "TROÇO"}`, 2, 1, "center", "bold", "1px", "#323ac2", "#e6e6e6", "16px")
         );
-        table.appendChild(tr1);        
+        table.appendChild(tr1);
         const tr2 = document.createElement("tr");
         tr2.append(
           createPkmTd(ppi.ppi_first_pkm),
           createPkmTd(ppi.ppi_secound_pkm)
         );
-        table.appendChild(tr2);        
-        const municipalities = (Array.isArray(ppi.ppi_municipalities) 
-          ? ppi.ppi_municipalities 
-          : (ppi.ppi_municipalities || "{}").replace(/[{}"]/g, "").split(",").map(s => s.trim()));        
+        table.appendChild(tr2);
+        const municipalities = (Array.isArray(ppi.ppi_municipalities) ? ppi.ppi_municipalities : (ppi.ppi_municipalities || "{}").replace(/[{}"]/g, "").split(",").map(s => s.trim()));
         const rowsData = [
           ["COORDENADAS", ppi.ppi_first_coordinate, ppi.ppi_secound_coordinate, ""],
           ["ALTITUDE(m)", ppi.ppi_first_height ?? "", ppi.ppi_secound_height ?? "", ""],
           ["MUNICÍPIOS(s)", municipalities.join(", ") || "", "", ""]
-        ];        
+        ];
         rowsData.forEach(([labelText, col1, col2, col3], idx) => {
           const tr = document.createElement("tr");
           tr.appendChild(createTd(labelText, 2, 1, "left", "bold"));
@@ -1952,36 +1940,38 @@
             tr.appendChild(createTd(col2, 1, 1, "center", "bold"));
           }
           table.appendChild(tr);
-        });        
+        });
       } catch (err) {
         console.error("❌ Erro ao carregar PPI Linha Férrea:", err);
-        showError(container, "Erro ao carregar PPI data. Veja o console.");
-      } finally {
-        loading.style.display = "none";
+        renderError(container, "Erro ao carregar PPI data. Veja o console.");
       }
     }
-    
-    function ensureLoadingMarker(container) {
-      if (!container.querySelector(".loading-mark")) {
-        const lm = document.createElement("div");
-        lm.className = "loading-mark";
-        lm.style.display = "none";
-        container.appendChild(lm);
-      }
-    }
-    
+
     function createTd(text = "", colSpan = 1, rowSpan = 1, align = "left", bold = false, border = "1px", bgColor = "", color = "", fontSize = "14px") {
       const td = document.createElement("td");
       td.colSpan = colSpan;
       td.rowSpan = rowSpan;
       td.textContent = text;
-      Object.assign(td.style, {border: `${border} solid #bbb`, padding: "5px", textAlign: align, fontWeight: bold ? "bold" : "normal", background: bgColor, color, fontSize});
+      Object.assign(td.style, {
+        border: `${border} solid #bbb`,
+        padding: "5px",
+        textAlign: align,
+        fontWeight: bold ? "bold" : "normal",
+        background: bgColor,
+        color,
+        fontSize
+      });
       return td;
     }
-    
+
     function createPkmTd(pkmStr) {
       const td = document.createElement("td");
-      Object.assign(td.style, {border: "1px solid #bbb", padding: "5px", textAlign: "center", verticalAlign: "middle"});
+      Object.assign(td.style, {
+        border: "1px solid #bbb",
+        padding: "5px",
+        textAlign: "center",
+        verticalAlign: "middle"
+      });
       if (!pkmStr) return td;
       const parts = pkmStr.split('\\n');
       const firstLine = document.createElement("div");
@@ -1999,7 +1989,7 @@
       }
       return td;
     }
-    
+
     function createColGroup(widths) {
       const colgroup = document.createElement("colgroup");
       widths.forEach(w => {
@@ -2009,33 +1999,26 @@
       });
       return colgroup;
     }
-    
-    function renderNoData(container) {
+
+    function renderNoData(container, message) {
       container.querySelector("table")?.remove();
-      let noData = container.querySelector(".no-data-msg");
-      if (!noData) {
-        noData = document.createElement("div");
-        noData.className = "no-data-msg";
-        noData.style.padding = "10px 0";
-        container.appendChild(noData);
-      }
-      noData.textContent = "Sem dados na tabela ppi_data.";
+      const noData = container.querySelector(".no-data-msg") || document.createElement("div");
+      noData.className = "no-data-msg";
+      noData.textContent = message;
+      noData.style.padding = "10px 0";
+      container.appendChild(noData);
     }
-    
-    function showError(container, message) {
-      let errDiv = container.querySelector(".data-error");
-      if (!errDiv) {
-        errDiv = document.createElement("div");
-        errDiv.className = "data-error";
-        errDiv.style.color = "red";
-        errDiv.style.padding = "8px 0";
-        container.appendChild(errDiv);
-      }
+
+    function renderError(container, message) {
+      const errDiv = container.querySelector(".data-error") || document.createElement("div");
+      errDiv.className = "data-error";
       errDiv.textContent = message;
+      errDiv.style.color = "red";
+      errDiv.style.padding = "8px 0";
+      container.appendChild(errDiv);
     }
-    
     async function fetchFromSupabase(table, filter) {
-      const res = await fetch(``${SUPABASE_URL}rest/v1/${table}?select=*&${filter}`, {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?select=*&${filter}`, {
         headers: getSupabaseHeaders()
       });
       if (!res.ok) throw new Error(`Erro ao buscar ${table}: ${res.status}`);
@@ -2075,7 +2058,7 @@
       }
       try {
         const res = await fetch(
-          ``${SUPABASE_URL}rest/v1/ppilinfer_specials?select=*&grid_code=eq.${gridId}&order=row_order`, {
+          `${SUPABASE_URL}/rest/v1/ppilinfer_specials?select=*&grid_code=eq.${gridId}&order=row_order`, {
             headers: getSupabaseHeaders()
           }
         );
@@ -2101,9 +2084,8 @@
       const container = document.getElementById("ppilinfer-grid-container");
       if (!container) return;
       const tempContainer = document.createElement("div");
-      tempContainer.style.display = "none";  
+      tempContainer.style.display = "none";
       try {
-        const currentCorpNr = sessionStorage.getItem("currentCorpOperNr");    
         const references = await fetchFromSupabase(
           "ppilinfer_references",
           `grid_code=eq.${gridId}`
@@ -2111,35 +2093,33 @@
         if (!references.length) {
           container.innerHTML = "Sem referências para esta grelha.";
           return;
-        }    
+        }
         const means = await fetchFromSupabase(
           "ppilinfer_means",
           `reference_id=in.(${references.map(r => r.id).join(",")})`
-        );    
-        const occurrenceTypes = {
-          "Acidente - Abalroamento, Choque e Descarrilamento": "#a5d6a7",
-          "Substâncias Perigosas - Produtos Químicos/Produtos Biológicos": "#ffcc80",
-          "Incêndio em Transportes": "#90caf9"
-        };    
+        );
+        const occurrenceTypes = {"Acidente - Abalroamento, Choque e Descarrilamento": "#a5d6a7",
+                                 "Substâncias Perigosas - Produtos Químicos/Produtos Biológicos": "#ffcc80",
+                                 "Incêndio em Transportes": "#90caf9"};
         for (const [type, bgColor] of Object.entries(occurrenceTypes)) {
           const refs = references.filter(r => r.occurrence_type === type);
-          if (!refs.length) continue;      
+          if (!refs.length) continue;
           const h3 = document.createElement("h3");
           h3.dataset.type = type;
           h3.textContent = `TIPO DE OCORRÊNCIA: ${type}`;
           h3.style.cssText = "font-size:15px;font-weight:bold;margin-top:10px;margin-bottom:0;padding:3px 5px;background-color:" + bgColor + ";color:black;border-radius:2px";
-          tempContainer.appendChild(h3);      
+          tempContainer.appendChild(h3);
           const table = document.createElement("table");
           table.dataset.type = type;
           table.classList.add("table-elements");
-          table.style.cssText = "table-layout:fixed;width:100%;margin-bottom:10px";      
+          table.style.cssText = "table-layout:fixed;width:100%;margin-bottom:10px";
           const colgroup = document.createElement("colgroup");
           ["80px", "calc(33% - 40px)", "80px", "calc(33% - 40px)", "33%"].forEach(w => {
             const col = document.createElement("col");
             col.style.width = w;
             colgroup.appendChild(col);
           });
-          table.appendChild(colgroup);      
+          table.appendChild(colgroup);
           const thead = document.createElement("thead");
           const trHead1 = document.createElement("tr");
           ["1º Alarme", "2º Alarme", "Alarme Especial"].forEach(alarm => {
@@ -2151,13 +2131,9 @@
             if (alarm === "Alarme Especial") th.style.backgroundColor = "red";
             th.style.color = alarm === "Alarme Especial" ? "white" : "black";
             if (alarm !== "Alarme Especial") th.colSpan = 2;
-            const hasCB = currentCorpNr && refs.some(ref =>
-              means.some(m => 
-                m.reference_id === ref.id && 
-                m.alarm_level === alarm && 
-                m.means?.includes(currentCorpNr)
-              )
-            );        
+            const hasCB = refs.some(ref =>
+              means.some(m => m.reference_id === ref.id && m.alarm_level === alarm && typeof m.means === "string" && m.means.includes("0805 - CB Faro Cruz Lusa"))
+            );
             if (hasCB) {
               const wrapper = document.createElement("div");
               wrapper.style.cssText = "display:flex;align-items:center;justify-content:space-between;gap:8px";
@@ -2177,15 +2153,19 @@
             trHead1.appendChild(th);
           });
           thead.appendChild(trHead1);
-          table.appendChild(thead);      
+          table.appendChild(thead);
           const tbody = document.createElement("tbody");
           refs.forEach(ref => {
             const firstAlarm = means.filter(m => m.reference_id === ref.id && m.alarm_level === "1º Alarme").sort((a, b) => (a.display_order ?? 1) - (b.display_order ?? 1));
             const secondAlarm = means.filter(m => m.reference_id === ref.id && m.alarm_level === "2º Alarme").sort((a, b) => (a.display_order ?? 1) - (b.display_order ?? 1));
             const specialAlarm = means.filter(m => m.reference_id === ref.id && m.alarm_level === "Alarme Especial").sort((a, b) => (a.display_order ?? 1) - (b.display_order ?? 1));
-            const maxRows = Math.max(firstAlarm.length, secondAlarm.length, specialAlarm.length);        
-            let skipFirst = { count: 0 };
-            let skipSecond = { count: 0 };        
+            const maxRows = Math.max(firstAlarm.length, secondAlarm.length, specialAlarm.length);
+            let skipFirst = {
+              count: 0
+            };
+            let skipSecond = {
+              count: 0
+            };
             for (let i = 0; i < maxRows; i++) {
               const tr = document.createElement("tr");
               renderGenericAlarmCells(tr, firstAlarm, i, skipFirst);
@@ -2203,11 +2183,11 @@
           });
           table.appendChild(tbody);
           tempContainer.appendChild(table);
-        }    
+        }
         container.innerHTML = "";
         container.appendChild(tempContainer);
         tempContainer.style.display = "block";
-        createOrUpdateCumulativeAlert(tempContainer);    
+        createOrUpdateCumulativeAlert(tempContainer);
       } catch (err) {
         console.error("❌ Erro ao carregar grelha Linha Férrea:", err);
         container.textContent = "Erro ao carregar grelha. Veja o console.";
@@ -2233,4 +2213,6 @@
       tr.appendChild(td);
       table.appendChild(tr);
       container.appendChild(table);
+
     }
+

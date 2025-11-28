@@ -15,7 +15,7 @@
       if (!tbody) return;
       tbody.innerHTML = '';
       try {
-        const resp = await fetch(``${SUPABASE_URL}rest/v1/occurrences_control?select=*,vehicles&status=in.(Em Curso,Em Resolução,Em Conclusão)`, {
+        const resp = await fetch(`${SUPABASE_URL}/rest/v1/occurrences_control?select=*,vehicles&status=in.(Em Curso,Em Resolução,Em Conclusão)`, {
           headers: getSupabaseHeaders()
         });
         if (!resp.ok) throw new Error(`HTTP error! status: ${resp.status}`);
@@ -112,13 +112,13 @@
       if (desmobilizacao) mensagem += ` _*Desmobilização dos Meios Integrantes.*_`;
       try {
         if (status === "Encerrada") {
-          const resp = await fetch(``${SUPABASE_URL}rest/v1/occurrences_control?id=eq.${currentPositId}`, {
+          const resp = await fetch(`${SUPABASE_URL}/rest/v1/occurrences_control?id=eq.${currentPositId}`, {
             method: "DELETE",
             headers: getSupabaseHeaders()
           });
           if (!resp.ok) throw new Error(`Erro ao apagar ocorrência: ${resp.status}`);
         } else if (status !== document.getElementById('posit-status').defaultValue) {
-          const resp = await fetch(``${SUPABASE_URL}rest/v1/occurrences_control?id=eq.${currentPositId}`, {
+          const resp = await fetch(`${SUPABASE_URL}/rest/v1/occurrences_control?id=eq.${currentPositId}`, {
             method: "PATCH",
             headers: getSupabaseHeaders({
               returnRepresentation: true
@@ -153,7 +153,7 @@
       document.getElementById('popup-posit-modal').style.display = 'none';
       loadActiveOccurrences();
     });
-    
+
     async function refreshOccurrencesAndBlinker() {
       await loadActiveOccurrences();
       await occurrencesBlinker.update();

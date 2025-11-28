@@ -47,7 +47,7 @@
     /* ========== RECORDING UNAVAILABLE VEHICLES IN DATABASE ========== */
     async function saveUnavailabilityToSupabase(data) {
       try {
-        const insertResp = await fetch(``${SUPABASE_URL}rest/v1/vehicle_unavailability`, {
+        const insertResp = await fetch(`${SUPABASE_URL}/rest/v1/vehicle_unavailability`, {
           method: 'POST',
           headers: getSupabaseHeaders({
             returnRepresentation: true
@@ -77,7 +77,7 @@
       const tbody = document.getElementById('active-unavailability-tbody');
       if (!tbody) return;
       try {
-        const resp = await fetch(``${SUPABASE_URL}rest/v1/vehicle_unavailability?status=eq.Em%20Aberto`, {
+        const resp = await fetch(`${SUPABASE_URL}/rest/v1/vehicle_unavailability?status=eq.Em%20Aberto`, {
           headers: getSupabaseHeaders()
         });
         const data = await resp.json();
@@ -139,7 +139,7 @@
       }
       try {
         const query = `vehicle=eq.${encodeURIComponent(vehicle)}&unavailability_motive=eq.${encodeURIComponent(motive)}&status=eq.Em%20Aberto`;
-        const resp = await fetch(``${SUPABASE_URL}rest/v1/vehicle_unavailability?${query}`, {
+        const resp = await fetch(`${SUPABASE_URL}/rest/v1/vehicle_unavailability?${query}`, {
           headers: getSupabaseHeaders()
         });
         const data = await resp.json();
@@ -173,7 +173,7 @@
         if (out) out.value = message;
         if (navigator.clipboard?.writeText) navigator.clipboard.writeText(message).catch(() => {});
         showPopupSuccess("Mensagem criada com sucesso! Abra o WhatsApp e prima CTRL+V", true);
-        await fetch(``${SUPABASE_URL}rest/v1/vehicle_unavailability?id=eq.${record.id}`, {
+        await fetch(`${SUPABASE_URL}/rest/v1/vehicle_unavailability?id=eq.${record.id}`, {
           method: 'DELETE',
           headers: getSupabaseHeaders()
         });
@@ -192,8 +192,8 @@
     }
     document.addEventListener('DOMContentLoaded', () => {
       loadActiveUnavailability();
-    });    
-    
+    });
+
     async function refreshVehícIndispAndBlinker() {
       await loadActiveUnavailability();
       await veícIndispBlinker.update();

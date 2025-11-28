@@ -6,7 +6,7 @@
     ======================================= */
     async function checkExistingCorporation() {
       try {
-        const currentCorpNr = sessionStorage.getItem("currentUserCorpNr");
+        const currentCorpNr = sessionStorage.getItem("currentCorpOperNr");
         const response = await fetch(
           `${SUPABASE_URL}rest/v1/corporation_data?select=id&corp_oper_nr=eq.${currentCorpOperNr}&limit=1`, { 
             headers: getSupabaseHeaders() }
@@ -287,3 +287,4 @@
       }
 
     }
+

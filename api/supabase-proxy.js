@@ -1,16 +1,16 @@
 // api/supabase-proxy.js - Versão Node 18+ (fetch global)
 
 const SUPABASE_URL = 'https://rjkbodfqsvckvnhjwmhg.supabase.co';
-const SUPABASE_KEY = process.env.CB_ANON_KEY;
+const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
 
 export default async function handler(req, res) {
-  console.log("CHAVE CB_ANON_KEY CARREGADA:", !!SUPABASE_KEY); 
+  console.log("CHAVE SUPABASE_ANON_KEY CARREGADA:", !!SUPABASE_KEY); 
 
   if (!SUPABASE_KEY) {
-    console.error("ERRO DE CONFIGURAÇÃO: CB_ANON_KEY não está definida.");
+    console.error("ERRO DE CONFIGURAÇÃO: SUPABASE_ANON_KEY não está definida.");
     return res.status(500).json({ 
       error: 'Variável de ambiente de segurança em falta.',
-      details: 'CB_ANON_KEY não carregada. Por favor, verifique se a variável está definida no Vercel.' 
+      details: 'SUPABASE_ANON_KEY não carregada. Por favor, verifique se a variável está definida no Vercel.' 
     });
   }
 

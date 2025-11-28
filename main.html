@@ -27,10 +27,11 @@
   <div class="container">
     <header class="header">
       <div class="logo">
-        <img src="" alt="CB Faro Cruz Lusa" class="header-logo">
+        <img src="..." alt="CB Logo" class="header-logo">
       </div>
       <div class="header-title-container">
         <h1 class="header-title"></h1>
+        <h2 class="header-nr" ></h2>
         <p class="header-subtitle">CB360 Online</p>
         <p class="header-authorization">Acesso Autorizado: <span id="authName"></span></p>
       </div>
@@ -40,16 +41,18 @@
     <!---- SIDEBAR MODULE ---->
     <aside class="sidebar">
       <button class="sidebar-menu-button active" data-page="page-main">🏠 Menu Principal</button>
+      <!-- ======================= DECIR 360 ======================= -->
       <button class="sidebar-menu-button sub-submenu-toggle" data-page="page-decir" data-access="DECIR 360">👥 DECIR 360</button>
       <div class="sub-submenu">
-        <button class="sidebar-submenu-button sub-submenu-toggle" data-page="" data-access="Controlo de Pagamentos">Controlo de Pagamentos</button>
+        <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-decir" data-access="Controlo de Pagamentos">Controlo de Pagamentos</button>
         <div class="sub-submenu">
-          <button class="sidebar-sub-submenu-button" data-page="decir-reg">Registo por Elemento</button>
-          <button class="sidebar-sub-submenu-button" data-page="decir-pag">Núcleo Financeiro</button>    
-          <button class="sidebar-sub-submenu-button" data-page="decir-anepc">Relatórios ANEPC</button>
-        </div>
-        <button class="sidebar-submenu-button" data-page="page-scales" data-access="Escalas e Assinaturas">Escalas e Assinaturas</button>
+          <button class="sidebar-sub-submenu-button" data-page="decir-reg" data-access="Registo por Elemento">Registo por Elemento</button>
+          <button class="sidebar-sub-submenu-button" data-page="decir-pag" data-access="Núcleo Financeiro">Núcleo Financeiro</button>
+          <button class="sidebar-sub-submenu-button" data-page="decir-anepc" data-access="Relatórios ANEPC">Relatórios ANEPC</button>
+       </div>
+        <button class="sidebar-submenu-button" data-page="page-decir" data-access="Assinaturas Diárias">Assinaturas Diárias</button>
       </div>
+      <!-- ======================= FOMIO 360 ======================= -->
       <button class="sidebar-menu-button sub-submenu-toggle" data-page="page-fomio" data-access="FOMIO 360">👥 FOMIO 360</button>
       <div class="sub-submenu">
         <button class="sidebar-sub-submenu-button" data-page="page-scales" data-access="DECIR">DECIR</button>
@@ -58,44 +61,48 @@
         <button class="sidebar-sub-submenu-button" data-page="page-scales" data-access="Emissão Escala">Emissão Escala</button>
         <button class="sidebar-sub-submenu-button" data-page="page-scales" data-access="Consultar Escalas">Consultar Escalas</button>
       </div>
+      <!-- ======================= EMPLOYEES 360 ======================= -->
       <button class="sidebar-menu-button" data-page="" data-access="EMPLOYEES 360" onclick="showTempWarning('MÓDULO BREVEMENTE DISPONÍVEL EM CB360 ONLINE')">👥 EMPLOYEES 360</button>
+      <!-- ======================= SALOC 360 ======================= -->
       <button class="sidebar-menu-button sub-submenu-toggle" data-page="page-saloc" data-access="SALOC 360">👥 SALOC 360</button>
       <div class="submenu">
-        <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-ppis">Planos Prévios de Intervenção</button>
+        <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-ppis" data-access="Planos Prévios de Intervenção">Planos Prévios de Intervenção</button>
         <div class="sub-submenu">
-          <!-- <button class="sidebar-sub-submenu-button" data-page="page-ppia2">PPI A2</button> -->
-          <button class="sidebar-sub-submenu-button" data-page="page-ppia22">PPI A22</button>
-          <button class="sidebar-sub-submenu-button" data-page="page-ppiaero">PPI Aeroporto de Faro</button>
-          <button class="sidebar-sub-submenu-button" data-page="page-ppilinfer">PPI Linha Férrea</button>
+          <button class="sidebar-sub-submenu-button" data-page="page-ppia22" data-access="PPI A22">PPI A22</button>
+          <button class="sidebar-sub-submenu-button" data-page="page-ppiaero" data-access="PPI Aeroporto de Faro">PPI Aeroporto de Faro</button>
+          <button class="sidebar-sub-submenu-button" data-page="page-ppilinfer" data-access="PPI Linha Férrea">PPI Linha Férrea</button>
         </div>
-        <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-recservdescr">Registos Recusas/INOPS</button>
+        <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-recservdescr" data-access="Registos Recusas/INOPS">Registos Recusas/INOPS</button>
         <div class="sub-submenu">
-          <button class="sidebar-sub-submenu-button" data-page="page-recserv">Recusas de Seviços</button>
-          <button class="sidebar-sub-submenu-button" data-page="page-ineminop">Inoperacionalidades INEM</button>
-          <button class="sidebar-sub-submenu-button" data-page="page-recinoreports">Relatórios Mensais</button>
-          <button class="sidebar-sub-submenu-button" data-page="page-dashboard">DashBoard</button>
+          <button class="sidebar-sub-submenu-button" data-page="page-recserv" data-access="Recusas de Serviços">Recusas de Serviços</button>
+          <button class="sidebar-sub-submenu-button" data-page="page-ineminop" data-access="Inoperacionalidades INEM">Inoperacionalidades INEM</button>
+          <button class="sidebar-sub-submenu-button" data-page="page-recinoreports" data-access="Relatórios Mensais">Relatórios Mensais</button>
+          <button class="sidebar-sub-submenu-button" data-page="page-dashboard" data-access="DashBoard">DashBoard</button>
         </div>
-        <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-docimport">Documentação Importante</button>
+        <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-docimport" data-access="Documentação Importante">Documentação Importante</button>
         <div class="sub-submenu">
-          <button class="sidebar-sub-submenu-button" data-page="page-crepcalg">CREPC Algarve</button>
-          <button class="sidebar-sub-submenu-button" data-page="page-plandir">Planeamento Diário</button>
-          <button class="sidebar-sub-submenu-button" data-page="page-inocrepc">Sitop de Veículos</button>
-          <button class="sidebar-sub-submenu-button" data-page="page-advanced-4" onclick="showTempWarning('MÓDULO BREVEMENTE DISPONÍVEL EM CB360 ONLINE')">Refeições DECIR</button>
+          <button class="sidebar-sub-submenu-button" data-page="page-crepcalg" data-access="CREPC Algarve">CREPC Algarve</button>
+          <button class="sidebar-sub-submenu-button" data-page="page-plandir" data-access="Planeamento Diário">Planeamento Diário</button>
+          <button class="sidebar-sub-submenu-button" data-page="page-inocrepc" data-access="Sitop de Veículos">Sitop de Veículos</button>
+          <button class="sidebar-sub-submenu-button" data-page="page-advanced-4" data-access="Refeições DECIR" onclick="showTempWarning('MÓDULO BREVEMENTE DISPONÍVEL EM CB360 ONLINE')">Refeições DECIR</button>
         </div>
-        <button class="sidebar-submenu-button" data-page="page-alarm-console">Consola de Alarmes</button>
+        <button class="sidebar-submenu-button" data-page="page-alarm-console" data-access="Consola de Alarmes">Consola de Alarmes</button>
       </div>
+      <!-- ======================= WSMS 360 ======================= -->
       <button class="sidebar-menu-button submenu-toggle" data-page="page-wsms" data-access="WSMS 360">⚠️ WSMS 360</button>
       <div class="submenu">
-        <button class="sidebar-submenu-button" data-page="page-active_occurrences">🔥 Ocorrências em Curso</button>
-        <button class="sidebar-submenu-button" data-page="page_insert_occurrence" onclick="NewOCRresetVehicles()">✏️ Inserir/Alterar Ocorrência</button>
-        <button class="sidebar-submenu-button" data-page="page_close_occurrence" onclick="CloseOCRresetAll()">🔐 Encerrar Ocorrência</button>
-        <button class="sidebar-submenu-button" data-page="page-solicitation">📋 Solicitar Disponibilidades</button>
-        <button class="sidebar-submenu-button" data-page="page-indisp">⚠️ Indisponibilidade Veículos</button>
-        <button class="sidebar-submenu-button" data-page="page-municipality-grid">🗂️ Info. Grelha Município</button>
-        <button class="sidebar-submenu-button" data-page="page-inem-services">🚑 Serviços EMS</button>
-        <button class="sidebar-submenu-button" data-page="page-weather-warnings">🚨 Avisos METEO</button>
+        <button class="sidebar-submenu-button" data-page="page-active_occurrences" data-access="Ocorrências em Curso">🔥 Ocorrências em Curso</button>
+        <button class="sidebar-submenu-button" data-page="page_insert_occurrence" data-access="Inserir/Alterar Ocorrência" onclick="NewOCRresetVehicles()">✏️ Inserir/Alterar Ocorrência</button>
+        <button class="sidebar-submenu-button" data-page="page_close_occurrence" data-access="Encerrar Ocorrência" onclick="CloseOCRresetAll()">🔐 Encerrar Ocorrência</button>
+        <button class="sidebar-submenu-button" data-page="page-solicitation" data-access="Solicitar Disponibilidades">📋 Solicitar Disponibilidades</button>
+        <button class="sidebar-submenu-button" data-page="page-indisp" data-access="Indisponibilidade Veículos">⚠️ Indisponibilidade Veículos</button>
+        <button class="sidebar-submenu-button" data-page="page-municipality-grid" data-access="Info. Grelha Município">🗂️ Info. Grelha Município</button>
+        <button class="sidebar-submenu-button" data-page="page-inem-services" data-access="Serviços EMS">🚑 Serviços EMS</button>
+        <button class="sidebar-submenu-button" data-page="page-weather-warnings" data-access="Avisos METEO">🚨 Avisos METEO</button>
       </div>
+      <!-- ======================= UTILITÁRIOS ======================= -->
       <button class="sidebar-menu-button" data-page="page-utilities" data-access="Utilitários">📱 Utilitários</button>
+      <!-- ======================= DATA CENTER ======================= -->
       <button class="sidebar-menu-button" data-page="page-data" data-access="Data Center">💾 Data Center</button>
     </aside>
     <!---- MODAL POPUP MODULE ---->
@@ -320,7 +327,7 @@
             <ul style="list-style: none; padding-left: 10px; line-height: 1.8;">
               <li style="color:#0d630e;">📋 Criação e gestão de escalas mensais</li>
               <li style="color:#0d630e;">👨‍🚒 Gestão de elementos por secção e disponibilidade</li>
-              <li style="color:#0d630e;">🧾 Emissão automática das escalas oficiais (PDF / Excel)</li>
+              <li style="color:#0d630e;">🧾 Emissão automática das escalas oficiais</li>
               <li style="color:#0d630e;">🗂️ Consulta detalhada das escalas da <strong>1ª Secção</strong>, <strong>2ª Secção</strong> e <strong>DECIR</strong></li>
               <li style="color:#0d630e;">⚙️ Ferramentas de verificação e validação antes da emissão</li>
             </ul>
@@ -490,7 +497,7 @@
             <li style="margin-bottom: 8px;">✅ <strong>Encerramento de Ocorrências</strong> – finalização estruturada de registos com histórico e rastreabilidade total.</li>
             <li style="margin-bottom: 8px;">📋 <strong>Solicitação de Disponibilidades</strong> – comunicação direta com os elementos, para recolha de disponibilidades operacionais.</li>
             <li style="margin-bottom: 8px;">🚒 <strong>Indisponibilidade de Veículos</strong> – registo rápido e envio automático do estado dos meios às entidades competentes.</li>
-             <li style="margin-bottom: 8px;">📊 <strong>Informação do Estado da Grelha Intermunicipal</strong> – atualização e consulta imediata da disponibilidade municipal de recursos.</li>
+            <li style="margin-bottom: 8px;">📊 <strong>Informação do Estado da Grelha Intermunicipal</strong> – atualização e consulta imediata da disponibilidade municipal de recursos.</li>
             <li style="margin-bottom: 8px;">🚑 <strong>Serviços EMS</strong> – Disponibilização via WSMS de serviços de Emergência Médica, facilitando asu melhor percepção de escrita.</li>
             <li style="margin-bottom: 8px;">⛈️ <strong>Avisos METEO</strong> – Automatização de avisos meteorológicos via IPMA, com envio automático via WSMS, para mobilização de elementos, para eventos extremos.</li>
           </ul>
@@ -648,7 +655,7 @@
         </div>
         <div class="card-footer"></div>
       </div>
-    </div>
+    </div>    
     <!---- REFUSALS AND INOPERATIONALITIES SUB-MODULE ---->
     <!---- SERVICE REFUSALS SUB SUB-MODULE ---->
     <div id="page-recserv" class="page">
@@ -876,7 +883,7 @@
                 <canvas id="chart-ine-total" style="height: 150px;"></canvas>
               </div>  
             </div>
-            <div class="dashboard-row" style="display: flex; gap: 12px; justify-content: space-between;">  
+            <div class="dashboard-row" style="display: flex; gap: 12px; justify-content: space-between;">
               <div class="chart-card" style="flex: 1; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-top: 3px solid #9b59b6;">
                 <h4 style="font-size: 15px; font-weight: 600; color: #5a6c7d; text-align: center; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 15px 0;">Recusas de Serviços por Entidade</h4>
                 <canvas id="chart-refusals-type" style="height: 150px;"></canvas>
@@ -2085,7 +2092,8 @@
         <div class="options-panel-container">
           <div class="panel-sidebar">
             <button class="panel-sidebar-menu-button active" onclick="showPanelCard('assoc')">Corporação</button>
-            <button class="panel-sidebar-menu-button" onclick="showPanelCard('elems')">Bombeiros</button>
+            <button class="panel-sidebar-menu-button" onclick="showPanelCard('elems')">Elementos</button>
+            <button class="panel-sidebar-menu-button" onclick="showPanelCard('elems')">Veículos</button>
           </div>
           <div class="panel-content">
             <div id="panel-assoc" class="panel-card active">
@@ -2098,7 +2106,7 @@
                   </div>
                   <div class="card-content" style="text-align: center;">
                     <div style="margin: 10px 0;">
-                      <img src="" alt="CB Faro Cruz Lusa" class="data-logo" style="width: 140px; height: 140px;">
+                      <img src="...." alt="CB Faro Cruz Lusa" class="data-logo" style="width: 140px; height: 140px;">
                     </div>
                     <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 5px;">
                       <button class="btn btn-success" style="width: 100%;">ALTERAR LOGO</button>
@@ -2140,7 +2148,7 @@
                     <input type="text" id="assoc-operacional" style="width: 100px; text-align: center;">
                   </div>
                   <div style="flex-basis: 100%; text-align: right; margin-top: 10px;">
-                    <button class="btn btn-success" onclick="saveCorpGroupFields()">ATUALIZAR</button>
+                    <button class="btn btn-success" onclick="saveCorporationData()">ATUALIZAR</button>
                   </div>
                 </div>
                 <div class="main-card" style="flex: 1; max-width: 450px; height: 218px; overflow-y: auto; overflow-x: hidden; margin: 0 0 0 -10px;">
@@ -2151,16 +2159,16 @@
               </div>
             </div>
             <div id="panel-elems" class="panel-card">
-              <h3>LISTAGEM DE BOMBEIROS</h3>
+              <h3>LISTAGEM DE ELEMENTOS</h3>
               <p>Adição, Remoção e Edição de elementos.</p>
-              <button class="btn btn-add" style="margin: 0 0 20px 0;" onclick="openNewWindow()">ADICIONAR</button>
+              <button class="btn btn-add" style="margin: 0 0 0 0;" onclick="openNewWindow()">ADICIONAR</button>
               <div class="table-container">
                 <table id="elements-container">
                   <thead>
                     <tr style="height: 40px;">
                       <th>Nº Interno</th>
                       <th>Nº Mecanográfico</th>
-                      <th>Patente</th>
+                      <th>Patente/Função</th>
                       <th>Nome Completo</th>
                       <th>Estado</th>
                       <th>Ações</th>
@@ -2180,7 +2188,7 @@
   <footer class="status-bar">
     <div class="system-info">
      <span class="left-info">© 2025 | Fábio Martins | Sistemas de Informação</span>
-     <span class="right-info">CB360 Online v11.007.93</span>
+     <span class="right-info">CB360 Online v10.748.43</span>
     </div>
   </footer>
   

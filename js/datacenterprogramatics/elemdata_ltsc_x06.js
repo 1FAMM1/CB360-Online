@@ -184,7 +184,7 @@
     document.getElementById("win_patent").addEventListener("change", mapPatentToAbv);
 
     function openNewWindow() {
-      ["win_n_int", "win_n_file", "win_patent", "win_patent_abv", "win_abv_name", "win_full_name", "win_MP", "win_TAS", "win_user_name", "win_password", "win_section"].forEach(id => {
+      ["win_n_int", "win_n_file", "win_patent", "win_patent_abv", "win_abv_name", "win_full_name", "win_MP", "win_TAS", "win_user_name_main", "win_password_main", "win_section"].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = "";
       });
@@ -216,14 +216,14 @@
       currentEditId = row.id;
       document.getElementById("editWindow").style.display = "flex";
       document.getElementById("windowTitle").textContent = "Editar Registo";
-      document.getElementById("win_user_name").value = "";
-      document.getElementById("win_password").value = "";
+      document.getElementById("win_user_name_main").value = "";
+      document.getElementById("win_password_main").value = "";
       const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       try {
         const userLogin = await loadUserLogin(row.full_name, corpOperNr);
         if (userLogin) {
-          document.getElementById("win_user_name").value = userLogin.username ?? "";
-          document.getElementById("win_password").value = userLogin.password ?? "";
+          document.getElementById("win_user_name_main").value = userLogin.username ?? "";
+          document.getElementById("win_password_main").value = userLogin.password ?? "";
         }
       } catch (err) {
         console.error("Erro ao carregar user login:", err);
@@ -265,8 +265,8 @@
         corp_oper_nr: corpOperNr
       };
       const payloadUsers = {
-        username: document.getElementById("win_user_name").value,
-        password: document.getElementById("win_password").value,
+        username: document.getElementById("win_user_name_main").value,
+        password: document.getElementById("win_password_main").value,
         full_name: document.getElementById("win_full_name").value,
         patent: document.getElementById("win_patent").value,
         corp_oper_nr: corpOperNr
@@ -310,8 +310,8 @@
           const userSameCorp = usersFound.find(u => u.corp_oper_nr === corpOperNr);
           if (!userSameCorp) {
             alert("⚠️ Já existe um utilizador com estas credênciais para utilização da App.\nAs credênciais ão podem ser reutilizadas.\nPor favor introduza outras credênciais para utilização da App. Obrigado.");
-            document.getElementById("win_user_name").value = "";
-            document.getElementById("win_password").value = "";
+            document.getElementById("win_user_name_main").value = "";
+            document.getElementById("win_password_main").value = "";
             return;
           }
           const updateUser = await fetch(

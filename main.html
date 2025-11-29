@@ -169,78 +169,105 @@
       </div>
     </div>
     <div class="window-content">
-      <div class="tab-header">
-        <button class="tab-btn active" data-tab="tab-main-data">Dados Gerais</button>
-        <button class="tab-btn" data-tab="tab-other-data">Outros Dados</button>
-        <button class="tab-btn" data-tab="tab-credencials-app">Credênciais App</button>
-        <button class="tab-btn" data-tab="tab-acesses-app">Acessos App</button>        
+  <div class="tab-header">
+    <button class="tab-btn active" data-tab="main-data">Dados Gerais</button>
+    <button class="tab-btn" data-tab="other-data">Outros Dados</button>
+    <button class="tab-btn" data-tab="credencials-app">Credênciais App</button>
+    <button class="tab-btn" data-tab="acesses-app">Acessos App</button>
+  </div>
+
+  <form id="winForm">
+
+    <!-- TAB 1 - Dados Gerais -->
+    <div class="tab-content active" id="tab-main-data">
+
+      <div class="window-field-horizontal">
+        <label>Estado:</label>
+        <select id="win_state" style="width:100px;">
+          <option></option>
+          <option>Ativo</option>
+          <option>Inativo</option>
+        </select>
       </div>
-      <form id="winForm">
-        <div class="tab-content active" id="tab-main-data">
-          <div class="window-field-horizontal">
-            <label>Estado:</label>
-            <select id="win_state" style="width:100px;">
-              <option></option>
-              <option>Ativo</option>
-              <option>Inativo</option>
-            </select>
-          </div>
-          <div class="window-field-horizontal">
-            <label>Nº Interno:</label>
-            <input type="text" id="win_n_int" style="width:80px; text-align:center;" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)">
-            <label style="width:115px;">Nº Mecanográfico:</label>
-            <input type="text" id="win_n_file" style="width:120px; text-align:center;" maxlength="8" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,8)">
-          </div>
-          <div class="window-field-horizontal">
-            <label>Patente:</label>
-            <select id="win_patent" style="width:150px;"></select>
-            <input type="text" id="win_patent_abv" style="width:75px; text-align:center;">
-            <label style="width:45px;">Secção:</label>
-            <select id="win_section" style="width:100px;">
-              <option></option>
-              <option>1ª Secção</option>
-              <option>2ª Secção</option>
-            </select>
-          </div>
-          <div class="window-field-horizontal">
-            <label>Nome Abreviado:</label>
-            <input type="text" id="win_abv_name" style="flex:1">
-          </div>
-          <div class="window-field-horizontal">
-            <label>Nome Completo:</label>
-            <input type="text" id="win_full_name" style="flex:1">
-          </div>
-          <div class="window-field-horizontal">
-            <label>Motorista de Pesados:</label>
-            <select id="win_MP">
-              <option value="true">Sim</option>
-              <option value="false">Não</option>
-            </select>
-            <label style="width:90px;">Tripulante TAS:</label>
-            <select id="win_TAS">
-              <option value="true">Sim</option>
-              <option value="false">Não</option>
-            </select>
-          </div>
-          <div class="tab-content" id="tab-other-data">
-          <div class="window-field-horizontal">
-            <label>Username:</label>
-            <input type="text" id="win_user_name" style="flex:1" placeholder="Nome de utilizador">
-          </div>
-          <div class="window-field-horizontal">
-            <label>Password:</label>
-            <input type="password" id="win_password" style="flex:1" placeholder="Senha">
-          </div>
-        </div>
-        </div>
-        <div class="tab-content" id="tab-acesses-app">
-          <div class="window-field-horizontal" id="win_accesses">
-            <label>Acessos:</label>
-            <div class="checkbox-group" id="access-container"></div>
-          </div>
-        </div>
-      </form>
+
+      <div class="window-field-horizontal">
+        <label>Nº Interno:</label>
+        <input type="text" id="win_n_int" style="width:80px; text-align:center;" maxlength="3"
+               oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)">
+        <label style="width:115px;">Nº Mecanográfico:</label>
+        <input type="text" id="win_n_file" style="width:120px; text-align:center;" maxlength="8"
+               oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,8)">
+      </div>
+
+      <div class="window-field-horizontal">
+        <label>Patente:</label>
+        <select id="win_patent" style="width:150px;"></select>
+        <input type="text" id="win_patent_abv" style="width:75px; text-align:center;">
+        <label style="width:45px;">Secção:</label>
+        <select id="win_section" style="width:100px;">
+          <option></option>
+          <option>1ª Secção</option>
+          <option>2ª Secção</option>
+        </select>
+      </div>
+
+      <div class="window-field-horizontal">
+        <label>Nome Abreviado:</label>
+        <input type="text" id="win_abv_name" style="flex:1">
+      </div>
+
+      <div class="window-field-horizontal">
+        <label>Nome Completo:</label>
+        <input type="text" id="win_full_name" style="flex:1">
+      </div>
+
+      <div class="window-field-horizontal">
+        <label>Motorista de Pesados:</label>
+        <select id="win_MP">
+          <option value="true">Sim</option>
+          <option value="false">Não</option>
+        </select>
+
+        <label style="width:90px;">Tripulante TAS:</label>
+        <select id="win_TAS">
+          <option value="true">Sim</option>
+          <option value="false">Não</option>
+        </select>
+      </div>
+
     </div>
+
+    <!-- TAB 2 - Outros Dados -->
+    <div class="tab-content" id="tab-other-data">
+      <p>Sem campos ainda…</p>
+    </div>
+
+    <!-- TAB 3 - Credenciais -->
+    <div class="tab-content" id="tab-credencials-app">
+
+      <div class="window-field-horizontal">
+        <label>Username:</label>
+        <input type="text" id="win_user_name" style="flex:1" placeholder="Nome de utilizador">
+      </div>
+
+      <div class="window-field-horizontal">
+        <label>Password:</label>
+        <input type="password" id="win_password" style="flex:1" placeholder="Senha">
+      </div>
+
+    </div>
+
+    <!-- TAB 4 - Acessos -->
+    <div class="tab-content" id="tab-acesses-app">
+      <div class="window-field-horizontal" id="win_accesses">
+        <label>Acessos:</label>
+        <div class="checkbox-group" id="access-container"></div>
+      </div>
+    </div>
+
+  </form>
+</div>
+
     <div class="window-action-bar">
       <button type="submit" form="winForm" class="btn btn-success">💾 Guardar</button>
     </div>
@@ -2230,6 +2257,7 @@
   <script></script>
 </body>
 </html>
+
 
 
 

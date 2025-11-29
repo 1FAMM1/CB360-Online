@@ -170,10 +170,10 @@
     </div>
     <div class="window-content">
       <div class="tab-header">
-        <button class="tab-btn active" data-tab="dados">Dados Gerais</button>
-        <button class="tab-btn" data-tab="acessos">Outros Dados</button>
-        <button class="tab-btn" data-tab="acessos">Credênciais App</button>
-        <button class="tab-btn" data-tab="acessos">Acessos App</button> 
+        <button class="tab-btn active" data-tab="main-data">Dados Gerais</button>
+        <button class="tab-btn" data-tab="other-data">Outros Dados</button>
+        <button class="tab-btn" data-tab="credencials-app">Credênciais App</button>
+        <button class="tab-btn" data-tab="acesses-app">Acessos App</button>        
       </div>
       <form id="winForm">
         <div class="tab-content active" id="tab-dados">
@@ -222,6 +222,7 @@
               <option value="false">Não</option>
             </select>
           </div>
+          <div class="tab-content" id="tab-credecials">
           <div class="window-field-horizontal">
             <label>Username:</label>
             <input type="text" id="win_user_name" style="flex:1" placeholder="Nome de utilizador">
@@ -230,6 +231,7 @@
             <label>Password:</label>
             <input type="password" id="win_password" style="flex:1" placeholder="Senha">
           </div>
+        </div>
         </div>
         <div class="tab-content" id="tab-acessos">
           <div class="window-field-horizontal" id="win_accesses">
@@ -2228,3 +2230,4 @@
   <script></script>
 </body>
 </html>
+

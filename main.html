@@ -170,13 +170,13 @@
     </div>
     <div class="window-content">
       <div class="tab-header">
-        <button class="tab-btn active" data-tab="main-data">Dados Gerais</button>
-        <button class="tab-btn" data-tab="other-data">Outros Dados</button>
-        <button class="tab-btn" data-tab="credencials-app">Credênciais App</button>
-        <button class="tab-btn" data-tab="acesses-app">Acessos App</button>        
+        <button class="tab-btn active" data-tab="tab-main-data">Dados Gerais</button>
+        <button class="tab-btn" data-tab="tab-other-data">Outros Dados</button>
+        <button class="tab-btn" data-tab="tab-credencials-app">Credênciais App</button>
+        <button class="tab-btn" data-tab="tab-acesses-app">Acessos App</button>        
       </div>
       <form id="winForm">
-        <div class="tab-content active" id="main-data">
+        <div class="tab-content active" id="tab-main-data">
           <div class="window-field-horizontal">
             <label>Estado:</label>
             <select id="win_state" style="width:100px;">
@@ -222,7 +222,7 @@
               <option value="false">Não</option>
             </select>
           </div>
-          <div class="tab-content" id="other-data">
+          <div class="tab-content" id="tab-other-data">
           <div class="window-field-horizontal">
             <label>Username:</label>
             <input type="text" id="win_user_name" style="flex:1" placeholder="Nome de utilizador">
@@ -233,7 +233,7 @@
           </div>
         </div>
         </div>
-        <div class="tab-content" id="acesses-app">
+        <div class="tab-content" id="tab-acesses-app">
           <div class="window-field-horizontal" id="win_accesses">
             <label>Acessos:</label>
             <div class="checkbox-group" id="access-container"></div>
@@ -2230,6 +2230,7 @@
   <script></script>
 </body>
 </html>
+
 
 
 

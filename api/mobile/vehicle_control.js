@@ -29,7 +29,7 @@ export default async function handler(req, res) {
     if (req.method === 'GET' && !req.query.action) {
       const { data: vehicles, error } = await supabase
         .from('vehicle_status')
-        .select('vehicle, current_status, is_inop, veic_id')
+        .select('vehicle, current_status, is_inop, vehic_id')
   
       if (error) throw error
   
@@ -42,7 +42,7 @@ export default async function handler(req, res) {
         allVehicles.push(vehicle.vehicle)
         vehicleStatuses[vehicle.vehicle] = vehicle.current_status || 'Disponível'
         vehicleINOP[vehicle.vehicle] = vehicle.is_inop
-        vehicleIDs[vehicle.vehicle] = vehicle.veic_id || null
+        vehicleIDs[vehicle.vehicle] = vehicle.vehic_id || null
       })
   
       return res.json({

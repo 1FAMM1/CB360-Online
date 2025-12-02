@@ -111,7 +111,6 @@ export default async function handler(req, res) {
         sheet.getCell('O29').value = data.ppi_a2 ? 'X' : '';
         sheet.getCell('O32').value = data.ppi_linfer ? 'X' : '';
         sheet.getCell('O35').value = data.ppi_airfield ? 'X' : '';
-
         if (data.ppi_subs) {
             sheet.getCell('R38').value = 'X';
             sheet.getCell('T38').value = '';

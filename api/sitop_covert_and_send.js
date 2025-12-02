@@ -38,13 +38,10 @@ async function downloadTemplate(url) {
 async function convertXLSXToPDF(xlsxBuffer, fileName) {
     if (!CLIENT_ID || !CLIENT_SECRET) {
         throw new Error("Erro de Configuração Adobe: As chaves não estão definidas.");
-    }
-    
+    }    
     const inputFilePath = `/tmp/${fileName}_input_${Date.now()}.xlsx`; 
     fs.writeFileSync(inputFilePath, xlsxBuffer); 
-
-    let pdfBuffer = null;
-    
+    let pdfBuffer = null;    
     try {
         const credentials = new ServicePrincipalCredentials({ clientId: CLIENT_ID, clientSecret: CLIENT_SECRET });
         const pdfServices = new PDFServices({ credentials });
@@ -52,22 +49,19 @@ async function convertXLSXToPDF(xlsxBuffer, fileName) {
         const inputAsset = await pdfServices.upload({ 
             readStream: fs.createReadStream(inputFilePath), 
             mimeType: MimeType.XLSX 
-        });
-        
+        });        
         const job = new CreatePDFJob({ inputAsset });
         const pollingURL = await pdfServices.submit({ job });
         const pdfServicesResponse = await pdfServices.getJobResult({ pollingURL, resultType: CreatePDFResult });
         const resultAsset = pdfServicesResponse.result.asset;
-        const streamAsset = await pdfServices.getContent({ asset: resultAsset });
-        
+        const streamAsset = await pdfServices.getContent({ asset: resultAsset });        
         const chunks = [];
         await new Promise((resolve, reject) => {
             streamAsset.readStream.on('data', (chunk) => chunks.push(chunk));
             streamAsset.readStream.on('end', resolve);
             streamAsset.readStream.on('error', reject);
         });
-        pdfBuffer = Buffer.concat(chunks);
-        
+        pdfBuffer = Buffer.concat(chunks);        
     } catch (error) {
         console.error('Erro na API da Adobe:', error);
         throw new Error('Falha na conversão XLSX para PDF.');
@@ -77,41 +71,27 @@ async function convertXLSXToPDF(xlsxBuffer, fileName) {
         } catch(e) { 
             console.warn("Falha na limpeza de ficheiros temporários:", e);
         }
-    }
-    
+    }    
     return pdfBuffer;
 }
-
 export default async function handler(req, res) {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
     if (req.method === "OPTIONS") return res.status(200).end();
-
     try {
-        const { 
-            data,
-            recipients, 
-            ccRecipients, 
-            bccRecipients, 
-            emailBody,
-            emailSubject 
-        } = req.body || {};
-        
+        const {data, recipients, ccRecipients, bccRecipients, emailBody, emailSubject} = req.body || {};        
         if (!data || !recipients || recipients.length === 0) {
             return res.status(400).json({ 
                 error: "Faltam dados essenciais ou a lista de destinatários principais está vazia."
             });
         }
-        
-        // A. PREENCHIMENTO DO TEMPLATE
         const templateBuffer = await downloadTemplate(TEMPLATE_URL);
         const workbook = new ExcelJS.Workbook();
         await workbook.xlsx.load(templateBuffer);
         const sheet = workbook.worksheets[0];
-
-        // Preenche células
+        sheet.getCell('F11').value = data.cb_type || '';
         sheet.getCell('S11').value = data.vehicle || '';
         sheet.getCell('E17').value = data.registration || '';
         sheet.getCell('B17').value = data.gdh_inop || '';
@@ -119,8 +99,6 @@ export default async function handler(req, res) {
         sheet.getCell('K16').value = data.failure_description ? `Descrição: ${data.failure_description}` : '';
         sheet.getCell('G30').value = data.gdh_op || '';
         sheet.getCell('E41').value = data.optel || '';
-
-        // Marcações de PPI
         if (data.ppi_part) {
             sheet.getCell('R20').value = 'X';
             sheet.getCell('T20').value = '';
@@ -128,7 +106,6 @@ export default async function handler(req, res) {
             sheet.getCell('R20').value = '';
             sheet.getCell('T20').value = 'X';
         }
-
         sheet.getCell('O23').value = data.ppi_airport ? 'X' : '';
         sheet.getCell('O26').value = data.ppi_a22 ? 'X' : '';
         sheet.getCell('O29').value = data.ppi_a2 ? 'X' : '';
@@ -142,42 +119,20 @@ export default async function handler(req, res) {
             sheet.getCell('R38').value = '';
             sheet.getCell('T38').value = 'X';
         }
-
-        sheet.pageSetup = {
-            orientation: 'landscape',
-            paperSize: 9,
-            fitToPage: true,
-            fitToWidth: 1,
-            fitToHeight: 0,
-            horizontalCentered: true,
-            verticalCentered: true,
-            margins: {
-                left: 0.059,
-                right: 0.059,
-                top: 0.25,
-                bottom: 0.25,
-                header: 0.1,
-                footer: 0.1
-            }
-        };
-
+        sheet.pageSetup = {orientation: 'landscape', paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0,
+                           horizontalCentered: true, verticalCentered: true,
+                           margins: {left: 0.059, right: 0.059, top: 0.25, bottom: 0.25, header: 0.1, footer: 0.1}};
         const prefix = (!data.gdh_op || data.gdh_op.trim() === '') ? 'INOP' : 'OP';
-        const fileName = `${prefix}_${data.vehicle}_0805`;
-
+        const fileName = `${prefix}_${data.vehicle}_${data.corp_oper_nr}`;
         const xlsxBuffer = await workbook.xlsx.writeBuffer();
-        
-        // B. CONVERSÃO PARA PDF
         const pdfBuffer = await convertXLSXToPDF(xlsxBuffer, fileName);
-        
-        // C. ENVIO DO PDF POR EMAIL
         const transporter = nodemailer.createTransport({
             service: "gmail",
             auth: {
                 user: GMAIL_EMAIL,
                 pass: GMAIL_APP_PASSWORD
             }
-        });
-        
+        });        
         await transporter.sendMail({
             from: GMAIL_EMAIL,
             to: recipients.join(', '), 
@@ -194,13 +149,10 @@ export default async function handler(req, res) {
                 }
             ]
         });
-
-        // D. RESPOSTA DE SUCESSO
         return res.status(200).json({
             success: true,
             message: `PDF gerado e enviado com sucesso para ${recipients.length} destinatário(s).`
         });
-
     } catch (err) {
         console.error("Erro no processo de conversão/envio:", err);
         return res.status(500).json({

@@ -83,7 +83,6 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(200).end();
   try {
     const { data, recipients, ccRecipients, bccRecipients, emailBody, emailSubject } = req.body || {};
-
     if (!data || !recipients || recipients.length === 0) {
       return res.status(400).json({
         error: "Faltam dados essenciais ou a lista de destinatários principais está vazia.",
@@ -163,7 +162,6 @@ export default async function handler(req, res) {
         pass: GMAIL_APP_PASSWORD
       }
     });
-
     await transporter.sendMail({
       from: GMAIL_EMAIL,
       to: recipients.join(", "),

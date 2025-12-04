@@ -59,3 +59,19 @@
         </div>
       `;
     }
+
+async function getCommanderName(corpOperNr) {
+      try {
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/reg_elems?select=abv_name&corp_oper_nr=eq.${corpOperNr}&patent=eq.Comandante`, {
+            headers: getSupabaseHeaders()
+          }
+        );
+        if (!res.ok) throw new Error("Erro ao buscar o comandante");
+        const data = await res.json();
+        return data[0]?.abv_name || "Comandante";
+      } catch (err) {
+        console.error(err);
+        return "Comandante";
+      }
+    }

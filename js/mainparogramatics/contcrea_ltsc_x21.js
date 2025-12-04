@@ -306,87 +306,94 @@
     /* =======================================
             RELEVANT INFORMATION
     ======================================= */
-    const infoContainer = document.getElementById('info-container');
-    const totalRelevInfos = 4;
-    for (let i = 1; i <= totalRelevInfos; i += 2) {
-      let rowHtml = '<div class="data-grid">';
-      for (let j = i; j < i + 2 && j <= totalRelevInfos; j++) {
-        const n = String(j).padStart(2, '0');
-        rowHtml += `
-      <div class="main-card" id="relev-info-${n}" data-row-id="${j}">
-        <div class="global-field-horizontal">
-          <label>De:</label>
-          <input type="text" id="from-${n}" style="width: 207px;">
-        </div>
-        <div class="global-field-horizontal">
-          <label>Para:</label>
-          <input type="text" id="to-${n}" style="width: 200px;">
-        </div>
-        <div class="global-field-horizontal">
-          <label>Info:</label>
-          <textarea id="info-${n}" placeholder="Escreva a info..." rows="4"
-            style="width: 100%; height: 75px; resize: vertical;"></textarea>
-        </div>
-        <div class="action-buttons"  id="cmas-options" style="margin: 10px 0 0 0;">
-          <button class="btn btn-danger" onclick="clearInfoGroupFields('${n}')">LIMPAR</button>
-          <button class="btn btn-success" onclick="saveInfoGroupFields('${n}')">EMITIR</button>
-        </div>
-      </div>
-    `;
+    function createRelevInfoInputs() {
+      const infoContainer = document.getElementById('info-container');
+      const totalRelevInfos = 4;
+      infoContainer.innerHTML = '';
+      for (let i = 1; i <= totalRelevInfos; i += 2) {
+        let rowHtml = '<div class="data-grid">';
+        for (let j = i; j < i + 2 && j <= totalRelevInfos; j++) {
+          const n = String(j).padStart(2, '0');
+          rowHtml += `
+            <div class="main-card" id="relev-info-${n}" data-row-id="">
+              <div class="global-field-horizontal">
+                <label>De:</label>
+                <input type="text" id="from-${n}" style="width: 207px;">
+              </div>
+              <div class="global-field-horizontal">
+                <label>Para:</label>
+                <input type="text" id="to-${n}" style="width: 200px;">
+              </div>
+              <div class="global-field-horizontal">
+                <label>Info:</label>
+                <textarea id="info-${n}" placeholder="Escreva a info..." rows="4"
+                  style="width: 100%; height: 75px; resize: vertical;"></textarea>
+              </div>
+              <div class="action-buttons" style="margin: 10px 0 0 0;">
+                <button class="btn btn-danger" onclick="clearInfoGroupFields('${n}')">LIMPAR</button>
+                <button class="btn btn-success" onclick="saveInfoGroupFields('${n}')">EMITIR</button>
+              </div>
+            </div>
+          `;
+        }
+        rowHtml += '</div>';
+        infoContainer.innerHTML += rowHtml;
       }
-      rowHtml += '</div>';
-      infoContainer.innerHTML += rowHtml;
     }
     /* =======================================
             ROAD CLOSURES
     ======================================= */
-    const routesContainer = document.getElementById('routes-container');
-    for (let i = 1; i <= 13; i++) {
-      const n = String(i).padStart(2, '0');
-      routesContainer.innerHTML += `
-      <div class="global-field-horizontal" style="flex:1;">
-        <label>${n}:</label>
-        <input type="text" id="route-${n}-name" placeholder="Indique a via ou Arruamento" style="width: 250%;">
-        <input type="text" id="route-${n}-motive" placeholder="Indique o motivo" style="width: 200%;">
-        <input type="text" id="route-${n}-until" placeholder="Indique a previsão de términus" style="width: 100%;">
-      </div>
-    `;
+    function createRouteInputs(total = 13) {
+      const routesContainer = document.getElementById('routes-container');
+      routesContainer.innerHTML = '';
+      for (let i = 1; i <= total; i++) {
+        const n = String(i).padStart(2, '0');
+        routesContainer.innerHTML += `
+          <div class="global-field-horizontal" style="flex:1;">
+            <label>${n}:</label>
+            <input type="text" id="route-${n}-name" placeholder="Indique a via ou Arruamento" style="width: 250%;">
+            <input type="text" id="route-${n}-motive" placeholder="Indique o motivo" style="width: 200%;">
+            <input type="text" id="route-${n}-until" placeholder="Indique a previsão de términus" style="width: 100%;">
+          </div>
+        `;
+      }
     }
     /* =======================================
             AIR RESOURCE CENTERS
     ======================================= */
-    document.addEventListener("DOMContentLoaded", () => {
+    function createCmaInputs() {
       const cmas = [{name: 'BHSP LOULÉ'}, {name: 'CMA S.B. ALPORTEL'}, {name: 'CMA CACHOPO'}, {name: 'CMA MONCHIQUE'}, {name: 'AERODROMO PORTIMÃO'}, {name: '-'}];
       const container = document.getElementById("cma-container");
       if (!container) return;
+      container.innerHTML = '';
       cmas.forEach((cma, index) => {
         const id = String(index + 1).padStart(2, '0');
         const itemDiv = document.createElement("div");
         itemDiv.classList.add("main-card");
         itemDiv.innerHTML = `
-      <span class="data-value" style="font-size: 17px; margin-bottom:15px;">${cma.name}</span>
-      <div class="cma-box">
-        <div class="cma-left">
-          <img id="cma_image_${id}" src="https://i.imgur.com/4Ho5HRV.png" alt="Foto CMA" style="object-fit:contain; width:125px;">
-        </div>
-        <div class="cma-right">
-          <div class="cma-fields">
-            <div class="global-field-horizontal" style="flex:1;">
-              <label>AERONAVE:</label>
-              <input id="cma_aero_type_${id}" type="text" style="width:100%; text-align:center; margin: 0 20px 0 0;">
+          <span class="data-value" style="font-size: 17px; margin-bottom:15px;">${cma.name}</span>
+          <div class="cma-box">
+            <div class="cma-left">
+              <img id="cma_image_${id}" src="https://i.imgur.com/4Ho5HRV.png" alt="Foto CMA" style="object-fit:contain; width:125px;">
             </div>
-            <div class="global-field-horizontal" style="flex:1;">
-              <label>TIPOLOGIA:</label>
-              <select id="cma_type_${id}" style="width:100%; text-align:center; margin: 0 20px 0 0;"></select>
-            </div>
-            <div class="global-field-horizontal" style="flex:1;">
-              <label>AUTONOMIA:</label>
-              <input id="cma_auto_${id}" type="text" style="width:100%; text-align:center; margin: 0 20px 0 0;">
+            <div class="cma-right">
+              <div class="cma-fields">
+                <div class="global-field-horizontal" style="flex:1;">
+                  <label>AERONAVE:</label>
+                  <input id="cma_aero_type_${id}" type="text" style="width:100%; text-align:center; margin: 0 20px 0 0;">
+                </div>
+                <div class="global-field-horizontal" style="flex:1;">
+                  <label>TIPOLOGIA:</label>
+                  <select id="cma_type_${id}" style="width:100%; text-align:center; margin: 0 20px 0 0;"></select>
+                </div>
+                <div class="global-field-horizontal" style="flex:1;">
+                  <label>AUTONOMIA:</label>
+                  <input id="cma_auto_${id}" type="text" style="width:100%; text-align:center; margin: 0 20px 0 0;">
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
-    `;
+        `;
         container.appendChild(itemDiv);
         const selectElement = document.getElementById(`cma_type_${id}`);
         const optionNames = ["Selecionar...", "Heli Ligeiro", "Heli Médio", "Heli Pesado", "Avião de Asa Fixa Médio", "Avião de Asa Fixa Pesado"];
@@ -400,87 +407,94 @@
         selectElement.addEventListener("change", () => {
           let src;
           switch (selectElement.value) {
-            case "Heli Ligeiro":
-              src = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/heli_ligeiro.jpg";
-              break;
-            case "Heli Médio":
-              src = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/heli_medio.jpg";
-              break;
-            case "Heli Pesado":
-              src = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/heli_pesado.jpg";
-              break;
-            case "Avião de Asa Fixa Médio":
-              src = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/aviao_asa_fixa_medio.jpg";
-              break;
-            case "Avião de Asa Fixa Pesado":
-              src = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/aviao_asa_fixa_pesado.png";
-              break;
-            default:
-              src = "https://i.imgur.com/4Ho5HRV.png";
+            case "Heli Ligeiro": src = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/heli_ligeiro.jpg"; break;
+            case "Heli Médio": src = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/heli_medio.jpg"; break;
+            case "Heli Pesado": src = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/heli_pesado.jpg"; break;
+            case "Avião de Asa Fixa Médio": src = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/aviao_asa_fixa_medio.jpg"; break;
+            case "Avião de Asa Fixa Pesado": src = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/aviao_asa_fixa_pesado.png";  break;
+            default: src = "https://i.imgur.com/4Ho5HRV.png";
           }
           imageElement.src = src;
         });
       });
-    });
+    }
     /* =======================================
-          AVAILABILITY OF ELEMENTS
+            AVAILABILITY OF ELEMENTS
     ======================================= */
-    async function loadElemsButtons() {
-      try {
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?select=*`, {
+    async function fetchElemsFromSupabase() {
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      if (!currentCorpOperNr) return [];
+      const response = await fetch(
+        `${SUPABASE_URL}/rest/v1/reg_elems?select=*`, {
           method: "GET",
           headers: getSupabaseHeaders()
-        });
-        if (!response.ok) throw new Error(`Erro Supabase: ${response.status}`);
-        const data = await response.json();
-        data.sort((a, b) => {
-          const aVal = a.n_int ?? "";
-          const bVal = b.n_int ?? "";
-          if (!isNaN(aVal) && !isNaN(bVal)) {
-            return Number(aVal) - Number(bVal);
-          }
-          return aVal.toString().localeCompare(bVal.toString(), "pt", { numeric: true });
-        });
-        const container = document.getElementById("elems-container");
-        container.innerHTML = "";
-        data.forEach(row => {
-          const btn = document.createElement("button");
-          btn.classList.add("btn-elem");
-          btn.textContent = row.n_int || row.id;
-          if (row.elem_state === false) {
-            btn.dataset.tooltip = "";
-            btn.disabled = true;
-          } else {
-            btn.dataset.tooltip = row.abv_name || "";
-            btn.disabled = false;
-          }
-          applyButtonStyle(btn, row.elem_state, row.situation);
-          btn.addEventListener("click", async () => {
-            if (row.elem_state === false) return;
-            const newSituation = row.situation === "available" ? "unavailable" : "available";
-            try {
-              const updateResp = await fetch(
-                `${SUPABASE_URL}/rest/v1/reg_elems?id=eq.${row.id}`, {
-                  method: "PATCH",
-                  headers: getSupabaseHeaders({ returnRepresentation: true }),
-                  body: JSON.stringify({ situation: newSituation })
-                }
-              );
-              if (!updateResp.ok) throw new Error(`Erro Supabase: ${updateResp.status}`);
-              row.situation = newSituation;
-              applyButtonStyle(btn, row.elem_state, row.situation);
-            } catch (err) {
-              console.error("❌ Erro ao atualizar situação:", err);
-              alert("Erro ao atualizar situação.");
-            }
-          });
-          container.appendChild(btn);
-        });
+        }
+      );
+      if (!response.ok) throw new Error(`Erro Supabase: ${response.status}`);
+      let data = await response.json();
+      return data.filter(elem => elem.corp_oper_nr == currentCorpOperNr);
+    }
+    
+    async function loadElemsButtons() {
+      try {
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
+        if (!currentCorpOperNr) {
+          const container = document.getElementById("elems-container");
+          container.style.display = "block";
+          container.innerHTML = `
+            <div style="padding: 10px; font-size: 16px; color: #333;">
+              ⚠️ Nenhuma corporação selecionada. Selecione uma corporação para visualizar os elementos.
+            </div>
+          `;
+          return;
+        }
+        let elems = await fetchElemsFromSupabase();
+        elems = sortElems(elems);
+        createElemButtons(elems);        
       } catch (error) {
         console.error("❌ Erro ao carregar elementos:", error);
       }
     }
-
+    
+    function createElemButtons(sortedElems) {
+      const container = document.getElementById("elems-container");
+      if (!container) return;
+      if (!sortedElems || sortedElems.length === 0) {
+        container.style.display = "block";
+        container.innerHTML = `
+          <div style="padding: 10px; font-size: 16px; color: #333;">
+            🚫 Não existem elementos registados para esta corporação.
+          </div>
+        `;
+        return;
+      }
+      container.innerHTML = "";
+      sortedElems.forEach(row => {
+        const btn = document.createElement("button");
+        btn.classList.add("btn-elem");
+        btn.textContent = row.n_int || row.id;
+        if (row.elem_state === false) {
+          btn.dataset.tooltip = "";
+          btn.disabled = true;
+        } else {
+          btn.dataset.tooltip = row.abv_name || "";
+          btn.disabled = false;
+        }
+        applyButtonStyle(btn, row.elem_state, row.situation);
+        btn.addEventListener("click", () => toggleElemSituation(row, btn));
+        container.appendChild(btn);
+      });
+    }
+    
+    function sortElems(list) {
+      return list.sort((a, b) => {
+        const aVal = a.n_int ?? "";
+        const bVal = b.n_int ?? "";
+        if (!isNaN(aVal) && !isNaN(bVal)) return Number(aVal) - Number(bVal);
+        return aVal.toString().localeCompare(bVal.toString(), "pt", { numeric: true });
+      });
+    }
+    
     function applyButtonStyle(btn, elemState, situation) {
       if (elemState === false) {
         btn.style.backgroundColor = "red";
@@ -493,6 +507,27 @@
           btn.style.backgroundColor = "rgb(158, 158, 158)";
           btn.style.color = "black";
         }
+      }
+    }
+    
+    async function toggleElemSituation(row, btn) {
+      if (row.elem_state === false) return;
+      const newSituation = row.situation === "available" ? "unavailable" : "available";
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      try {
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${encodeURIComponent(row.n_int)}&corp_oper_nr=eq.${currentCorpOperNr}`, {
+            method: "PATCH",
+            headers: getSupabaseHeaders({ returnRepresentation: true }),
+            body: JSON.stringify({ situation: newSituation })
+          }
+        );
+        if (!response.ok) throw new Error(`Erro Supabase: ${response.status}`);
+        row.situation = newSituation;
+        applyButtonStyle(btn, row.elem_state, row.situation);
+      } catch (err) {
+        console.error("❌ Erro ao atualizar situação:", err);
+        alert("Erro ao atualizar situação.");
       }
     }
     document.addEventListener("DOMContentLoaded", loadElemsButtons);

@@ -1,9 +1,26 @@
-/* =======================================
-       INOP CREPC
-    ======================================= */   
     /* =======================================
-       VARIÁVEIS DE ELEMENTOS
+    INOP CREPC
     ======================================= */
+    function preselectCorpInSitopCB() {
+      const current = sessionStorage.getItem("currentCorpOperNr");
+      if (!current) {
+        return;
+      }
+      const select = document.getElementById("sitop_cb");
+      if (!select) {
+        return;
+      }
+      const clean = str => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+      for (const option of select.options) {
+        const optionText = clean(option.textContent);
+        if (optionText.startsWith(clean(current))) {
+          option.selected = true;
+          console.log("✔ Selecionado:", option.textContent);
+          return;
+        }
+      }
+    }
+    /* =============== ELEMENT VARIABLES =============== */
     const NewInopBtn = document.getElementById("NewInopBtn");
     const oldInopBtn = document.querySelector(".oldinop");
     const backBtn = document.getElementById("backBtn");
@@ -13,6 +30,7 @@
     const sitopContainer = document.getElementById("sitop_container");
     const inopsTableContainer = document.getElementById("inopsTableContainer");
     const inopsTableBody = document.querySelector("#inopsTable tbody");
+    const sitopCbSelect = document.getElementById("sitop_cb");
     const sitopVeicSelect = document.getElementById("sitop_veíc");
     const sitopVeicRegInput = document.getElementById("sitop_veíc_registration");
     const sitopGdhInopInput = document.getElementById("sitop_gdh_inop");
@@ -20,9 +38,7 @@
     const noCheckbox = document.getElementById("ppi_no");
     const subsYesCheckbox = document.getElementById("ppi_subs_yes");
     const subsNoCheckbox = document.getElementById("ppi_subs_no");
-    /* =======================================
-             FUNÇÕES DE UTILIDADE E UI
-    ======================================= */
+    /* =========== UTILITY FUNCTIONS AND UI ============ */
     function formatSITOPGDH() {
       const now = new Date();
       const day = String(now.getDate()).padStart(2, "0");
@@ -63,6 +79,7 @@
     }
 
     function handleValidateOperationality(event) {
+      preselectCorpInSitopCB();
       const btn = event.target;
       const recordAttr = btn.getAttribute("data-record");
       if (!recordAttr) return console.error("Erro: Atributo data-record não encontrado.");
@@ -94,38 +111,36 @@
       saveBtn.textContent = "Emitir Operacionalidade";
       saveBtn.classList.remove("btn-danger");
       saveBtn.classList.add("btn-success");
-    }
-
-    let cachedRecipients = null;
-    async function fetchCREPCSitopRecipientsFromSupabase() {
-      if (cachedRecipients) return cachedRecipients;
-      const categories = ['crepcsitop_mail_to','crepcsitop_mail_cc','crepcsitop_mail_bcc'];
-      const url = `${SUPABASE_URL}/rest/v1/static_options?category=in.(${categories.join(',')})&select=category,value`;
+    }    
+    
+    async function fetchCREPCSitopRecipientsFromSupabase(corpOperNr) {
+      const categories = ['crepcsitop_mail_to', 'crepcsitop_mail_cc', 'crepcsitop_mail_bcc'];
+      const url = `${SUPABASE_URL}/rest/v1/mails_config` + `?category=in.(${categories.join(',')})` + `&corp_oper_nr=eq.${corpOperNr}` + `&select=category,value`;
       try {
         const response = await fetch(url, { headers: getSupabaseHeaders() });
         if (!response.ok) throw new Error("Falha ao conectar ao Supabase.");
         const data = await response.json();
         const recipients = { to: [], cc: [], bcc: [] };
         data.forEach(row => {
-          const emails = row.value?.split(",").map(e => e.trim()).filter(e => e) || [];
+          const emails = row.value?.split(",")
+          .map(e => e.trim())
+          .filter(e => e) || [];
           if (row.category.endsWith("_to")) recipients.to = emails;
           if (row.category.endsWith("_cc")) recipients.cc = emails;
           if (row.category.endsWith("_bcc")) recipients.bcc = emails;
         });
         if (recipients.to.length === 0) recipients.to = [""];
-        cachedRecipients = recipients;
         return recipients;
       } catch (err) {
         console.error("Erro ao buscar e-mails:", err);
         return { to: ["central0805.ahbfaro@gmail.com"], cc: [], bcc: [] };
       }
     }
-    /* =======================================
-               LÓGICA DE EMISSÃO
-    ======================================= */
+    /* ================= EMISSION LOGIC ================ */
     async function emitSitop() {
       const vehicle = document.getElementById("sitop_veíc").value.trim();
-      showPopupSuccess(`Estado Operacional do veículo ${vehicle} criado com sucesso. Por favor agurade uns segundos, receberá uma nova notificação após o envio para as entidades estar concluído!`);
+      showPopupSuccess(`Estado Operacional do veículo ${vehicle} criado com sucesso. Por favor aguarde uns segundos, receberá uma nova notificação após o envio para as entidades estar concluído!`);
+      const cb_type = document.getElementById("sitop_cb").value.trim();
       const registration = document.getElementById("sitop_veíc_registration").value.trim();
       const gdh_inop = document.getElementById("sitop_gdh_inop").value.trim();
       const gdh_op = document.getElementById("sitop_gdh_op").value.trim();
@@ -151,15 +166,13 @@
         alert("❌ Erro: O número da corporação não foi encontrado. Por favor, faça login novamente.");
         return;
       }
-      saveBtn.disabled = true; 
-      const data = {vehicle, registration, gdh_inop, gdh_op: gdh_op || null, failure_type, failure_description, ppi_part,
-                    ppi_a2, ppi_a22,ppi_airport, ppi_linfer, ppi_airfield, ppi_subs, optel, corp_oper_nr: corpOperNr };
-      let response;
-      let supabaseAction = 'INSERIR';
+      saveBtn.disabled = true;
+      const data = {cb_type, vehicle, registration, gdh_inop, gdh_op: gdh_op || null, failure_type, failure_description, ppi_part, ppi_a2, ppi_a22,
+                    ppi_airport, ppi_linfer, ppi_airfield, ppi_subs, optel, corp_oper_nr: corpOperNr};
       try {
         if (!isUpdate && !isOperational) {
           const check = await fetch(
-            `${SUPABASE_URL}/rest/v1/sitop_vehicles?select=vehicle&vehicle=eq.${encodeURIComponent(vehicle)}&gdh_op=is.null&corp_oper_nr=eq.${corpOperNr}`, {
+            `${SUPABASE_URL}/rest/v1/sitop_vehicles?select=vehicle&vehicle=eq.${encodeURIComponent(vehicle)}&gdh_op=is.null&corp_oper_nr=eq.${corpOperNr}`, { 
               headers: getSupabaseHeaders()
             }
           );
@@ -171,10 +184,13 @@
             return;
           }
         }
+        let response;
+        let supabaseAction = 'INSERIR';
         if (isUpdate) {
           response = await fetch(
             `${SUPABASE_URL}/rest/v1/sitop_vehicles?id=eq.${recordId}`, {
-              method: "PATCH", headers: { ...getSupabaseHeaders(), "Content-Type": "application/json"},
+              method: "PATCH",
+              headers: { ...getSupabaseHeaders(), "Content-Type": "application/json"},
               body: JSON.stringify(data)
             }
           );
@@ -182,44 +198,52 @@
         } else {
           response = await fetch(
             `${SUPABASE_URL}/rest/v1/sitop_vehicles`, {
-              method: "POST", headers: { ...getSupabaseHeaders(), "Content-Type": "application/json" },
+              method: "POST",
+              headers: { ...getSupabaseHeaders(), "Content-Type": "application/json" },
               body: JSON.stringify(data)
             }
           );
-        }        
+        }
         if (!response.ok) throw new Error("Erro ao enviar dados ao Supabase.");
         const statusRes = await fetch(
           `${SUPABASE_URL}/rest/v1/vehicle_status?vehicle=eq.${encodeURIComponent(vehicle)}`, {
-            method: "PATCH", headers: { ...getSupabaseHeaders(), "Content-Type": "application/json" },
+            method: "PATCH",
+            headers: { ...getSupabaseHeaders(), "Content-Type": "application/json" },
             body: JSON.stringify({ is_inop: !isOperational })
           }
         );
         if (!statusRes.ok) console.warn("⚠️ Erro ao atualizar status do veículo.");
-        const { to, cc, bcc } = await fetchCREPCSitopRecipientsFromSupabase();
+        const { to, cc, bcc } = await fetchCREPCSitopRecipientsFromSupabase(corpOperNr);
         const signature = getEmailSignature();
-        const greeting = getGreeting();        
-        const prefix = isOperational ? 'OP' : 'INOP';        
-        const fileName = `${prefix}_${vehicle}_${corpOperNr}.pdf`;
+        const greeting = getGreeting();
+        const commanderName = await getCommanderName(corpOperNr);
+        const fullCorpText = document.getElementById("sitop_cb").value.trim();
+        const corpName = fullCorpText.includes(" - ") ? fullCorpText.split(" - ").slice(1).join(" - ") : fullCorpText;
+        const article = corpName.includes("Companhia") ? "da" : "do";
         const emailBodyHTML = `${greeting}<br><br>
-            Encarrega-me o Sr. Comandante Jorge Carmo de remeter em anexo a Vossas Exª.s o Formulário de Situação Operacional do veículo ${vehicle} do Corpo de Bombeiros de Faro Cruz Lusa.<br><br>
-            Com os melhores cumprimentos,<br><br>
-            OPTEL<br>${optel}<br><br>
-            <span style="font-family: 'Arial'; font-size: 10px; color: gray;">
-            Este email foi processado automaticamente por: CB360 Online<br><br>
-            </span>
-            ${signature}
+        Encarrega-me o Sr. Comandante ${commanderName} de remeter em anexo a Vossas Exª.s o Formulário de Situação Operacional 
+        do veículo ${vehicle} ${article} ${corpName}.<br><br>
+        Com os melhores cumprimentos,<br><br>
+        OPTEL<br>${optel}<br><br>
+        <span style="font-family: 'Arial'; font-size: 10px; color: gray;">
+        Este email foi processado automaticamente por: CB360 Online<br><br>
+        </span>
+        ${signature}
         `;
         const emailRes = await fetch('https://cb360-mobile.vercel.app/api/sitop_covert_and_send', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({data, recipients: to, ccRecipients: cc, bccRecipients: bcc,
-                                emailSubject: `Situação Operacional do Veículo ${vehicle}_${corpOperNr}`, emailBody: emailBodyHTML, fileName})
-        });
+          method: 'POST', 
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({data, recipients: to, ccRecipients: cc, bccRecipients: bcc, emailSubject: `Situação Operacional do Veículo ${vehicle}`, 
+                                emailBody: emailBodyHTML})});
         const result = await emailRes.json();
         showPopupSuccess(`A situação operacional do veículo ${vehicle} foi enviada para as entidades.`);
         if (isOperational && isUpdate) {
-          await fetch(`${SUPABASE_URL}/rest/v1/sitop_vehicles?id=eq.${recordId}`, {
-            method: 'DELETE', headers: getSupabaseHeaders()
-          });
+          await fetch(
+            `${SUPABASE_URL}/rest/v1/sitop_vehicles?id=eq.${recordId}`, {
+              method: 'DELETE',
+              headers: getSupabaseHeaders()
+            }
+          );
         }
         toggleSitopContainer(true);
         NewInopBtn.classList.remove("active");
@@ -231,16 +255,16 @@
         saveBtn.disabled = false;
       }
     }
-    /* =======================================
-               EVENT LISTENERS
-    ======================================= */
+    /* ================ EVENT LISTENERS ================ */
     NewInopBtn.addEventListener("click", () => {
+      preselectCorpInSitopCB();
       const isActive = NewInopBtn.classList.toggle("active");
       oldInopBtn.classList.remove("active");
       if (isActive) {
         toggleSitopContainer(false);
         inopsTableContainer.style.display = "none";
         document.querySelector("#sitop_container .card-header").textContent = "INSERÇÃO DE NOVA INOPERACIONALIDADE";
+        preselectCorpInSitopCB() ;
       } else {
         toggleSitopContainer(true);
       }
@@ -260,7 +284,7 @@
         try {
             const corpOperNr = sessionStorage.getItem("currentCorpOperNr");            
             const res = await fetch(
-              `${SUPABASE_URL}/rest/v1/sitop_vehicles?select=*&gdh_op=is.null&corp_oper_nr=eq.${corpOperNr}`, // << ALTERAÇÃO AQUI
+              `${SUPABASE_URL}/rest/v1/sitop_vehicles?select=*&gdh_op=is.null&corp_oper_nr=eq.${corpOperNr}`,
               { headers: getSupabaseHeaders() }
             );
           if (!res.ok) throw new Error("Erro ao buscar inoperacionalidades");
@@ -268,7 +292,7 @@
           inopsTableBody.innerHTML = "";
           if (data.length === 0) {
             inopsTableBody.innerHTML =
-              `<tr><td colspan="5" style="text-align:center;">Nenhum veículo inperacional encotrado</td></tr>`;
+              `<tr><td colspan="6" style="text-align:center;">Não foram encontrados veículos inoperacionais.</td></tr>`;
           } else {
             data.forEach(item => {
               const tr = document.createElement("tr");
@@ -290,8 +314,7 @@
             document.querySelectorAll(".validate-btn").forEach(btn =>
               btn.addEventListener("click", handleValidateOperationality)
             );
-          }
-    
+          }    
           inopsTableContainer.style.display = "block";
         } catch (err) {
           console.error(err);
@@ -308,7 +331,11 @@
       sitopGdhInopInput.value = formatSITOPGDH();
       if (!selectedVehicle) return sitopVeicRegInput.value = "";
       try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/vehicle_status?select=vehicle_registration&vehicle=eq.${encodeURIComponent(selectedVehicle)}`, { headers: getSupabaseHeaders() });
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/vehicle_status?select=vehicle_registration&vehicle=eq.${encodeURIComponent(selectedVehicle)}`, {
+            headers: getSupabaseHeaders()
+          }
+        );
         if (!res.ok) throw new Error("Erro ao buscar matrícula");
         const data = await res.json();
         sitopVeicRegInput.value = data[0]?.vehicle_registration || "";
@@ -317,9 +344,7 @@
         sitopVeicRegInput.value = "";
       }
     });
-    /* =======================================
-               RESTART PAGE
-    ======================================= */
+    /* ================== RESTART PAGE ================= */
     document.querySelector('[data-page="page-inocrepc"]').addEventListener('click', () => {
       sitopContainer.style.display = 'none';
       inopsTableContainer.style.display = 'none';

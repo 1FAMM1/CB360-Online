@@ -131,6 +131,7 @@
             const interval = setInterval(() => {
               if (clickWhenExists(".panel-sidebar-menu-button[onclick*=\"showPanelCard('epe')\"]", page, () => {
                   if (typeof loadVehiclesFromAPI === "function") loadVehiclesFromAPI();
+                  if (typeof createRelevInfoInputs === "function") createRelevInfoInputs();
                   if (typeof loadInfosFromSupabase === "function") loadInfosFromSupabase();
                   if (typeof loadRoutesFromSupabase === "function") loadRoutesFromSupabase();
                   if (typeof loadCMAsFromSupabase === "function") loadCMAsFromSupabase();

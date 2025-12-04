@@ -387,21 +387,22 @@
       try {
         const alertDate = document.getElementById('alert_date')?.value || '';
         const alertTime = document.getElementById('alert_time')?.value || '';
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || '';
         if (!alertDate || !alertTime) {
           console.error("Data ou hora do alerta em falta");
           return null;
         }
-        const currentCorpNr = sessionStorage.getItem("currentCorpOperNr");
         const startDateTime = new Date(`${alertDate}T${alertTime}`);
         const formattedDate =
               `${String(startDateTime.getDate()).padStart(2,'0')}/${String(startDateTime.getMonth()+1).padStart(2,'0')}/${startDateTime.getFullYear()} ` +
               `${String(startDateTime.getHours()).padStart(2,'0')}:${String(startDateTime.getMinutes()).padStart(2,'0')}`;
-        const query = `occorrence=eq.${encodeURIComponent(data.descrOccorr)}&local=eq.${encodeURIComponent(data.localOccorr)}&localitie=eq.${encodeURIComponent(data.localitie)}&start_date=eq.${encodeURIComponent(formattedDate)}&corp_oper_nr=eq.${encodeURIComponent(currentCorpNr)}`;
-        const checkResp = await fetch(`${SUPABASE_URL}/rest/v1/occurrences_control?${query}`, {
-          headers: getSupabaseHeaders()
-        }
-      );
-      const existing = await safeJson(checkResp);
+        const query = `occorrence=eq.${encodeURIComponent(data.descrOccorr)}&local=eq.${encodeURIComponent(data.localOccorr)}&localitie=eq.${encodeURIComponent(data.localitie)}&start_date=eq.${encodeURIComponent(formattedDate)}&corp_oper_nr=eq.${currentCorpOperNr}`;
+        const checkResp = await fetch(
+          `${SUPABASE_URL}/rest/v1/occurrences_control?${query}`, {
+            headers: getSupabaseHeaders()
+          }
+        );
+        const existing = await safeJson(checkResp);
         if (existing && existing.length > 0) {
           const existingOccurrence = existing[0];
           let existingVehiclesCount = 0;
@@ -411,7 +412,7 @@
             existingVehiclesCount = existingOccurrence.vehicles.split(',').filter(v => v.trim() !== '').length;
           }
           if (existingVehiclesCount === vehiclesCount) {
-            showPopupWarning("Já existe uma ocorrência com estas características.");
+            showPopupWarning("Já existe uma ocorrência com estas características para a mesma corporação.");
             return "DUPLICATE";
           } else {
             const updateResp = await fetch(
@@ -421,42 +422,29 @@
                   returnRepresentation: true
                 }),
                 body: JSON.stringify({
-                  vehicles: vehiclesCount
+                  vehicles: vehiclesCount,
+                  corp_oper_nr: currentCorpOperNr
                 })
               });
             return await safeJson(updateResp);
           }
         }
-        const insertData = {
-          start_date: formattedDate,
-          occorrence: data.descrOccorr,
-          local: data.localOccorr,
-          localitie: data.localitie,
-          vehicles: vehiclesCount,
-          corp_oper_nr: currentCorpNr,
-          status: "Em Curso"
-        };
         const insertResp = await fetch(
           `${SUPABASE_URL}/rest/v1/occurrences_control`, {
             method: 'POST',
             headers: getSupabaseHeaders({
               returnRepresentation: true
             }),
-            body: JSON.stringify(insertData)
-          });    
-        if (!insertResp.ok) {
-          const errorText = await insertResp.text();
-          console.error('❌ Erro do Supabase:', errorText);
-          throw new Error(`Erro HTTP ${insertResp.status}: ${errorText}`);
-        }
+            body: JSON.stringify({start_date: formattedDate, occorrence: data.descrOccorr, local: data.localOccorr, localitie: data.localitie,
+                                  vehicles: vehiclesCount, status: "Em Curso", corp_oper_nr: currentCorpOperNr})
+          });
         return await safeJson(insertResp);
       } catch (e) {
-        console.error("❌ Erro completo:", e);
         if (e instanceof SyntaxError && e.message.includes('Unexpected end of JSON input')) {
           return null;
         }
         console.error("Erro ao gravar ocorrência:", e);
-        showPopupWarning("❌ Erro inesperado: " + e.message);
+        showPopupWarning("❌ Erro inesperado.");
         return null;
       }
     }

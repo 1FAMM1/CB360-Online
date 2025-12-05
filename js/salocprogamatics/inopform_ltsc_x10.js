@@ -138,12 +138,11 @@
     }
     /* ================= EMISSION LOGIC ================ */
     async function emitSitop() {
-      const vehicle = document.getElementById("sitop_veíc").value.trim();
-      showPopupSuccess(`Estado Operacional do veículo ${vehicle} criado com sucesso. Por favor aguarde uns segundos, receberá uma nova notificação após o envio para as entidades estar concluído!`);
       const cb_type = document.getElementById("sitop_cb").value.trim();
+      const vehicle = document.getElementById("sitop_veíc").value.trim();
       const registration = document.getElementById("sitop_veíc_registration").value.trim();
       const gdh_inop = document.getElementById("sitop_gdh_inop").value.trim();
-      const gdh_op = document.getElementById("sitop_gdh_op").value.trim();
+      const gdh_op = document.getElementById("sitop_gdh_op").value.trim() || null;
       const failure_type = document.getElementById("sitop_type_failure").value.trim();
       const failure_description = document.getElementById("sitop_failure_description").value.trim();
       const ppi_part = document.getElementById("ppi_yes").checked;
@@ -154,57 +153,50 @@
       const ppi_airfield = document.getElementById("ppi_airfield").checked;
       const ppi_subs = document.getElementById("ppi_subs_yes").checked;
       const optel = document.getElementById("sitop_optel").value.trim();
-      const recordId = sitopContainer.getAttribute("data-record-id");
-      const isUpdate = !!recordId;
-      const isOperational = !!gdh_op;
       if (!vehicle || !registration || !gdh_inop) {
         alert("Por favor preencha os campos obrigatórios: Veículo, Matrícula e GDH INOP.");
         return;
       }
+      showPopupSuccess(`Estado Operacional do veículo ${vehicle} criado com sucesso. Por favor aguarde uns segundos, receberá uma nova notificação após o envio para as entidades estar concluído!`);
       const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       if (!corpOperNr) {
         alert("❌ Erro: O número da corporação não foi encontrado. Por favor, faça login novamente.");
         return;
       }
       saveBtn.disabled = true;
-      const data = {cb_type, vehicle, registration, gdh_inop, gdh_op: gdh_op || null, failure_type, failure_description, ppi_part, ppi_a2, ppi_a22,
-                    ppi_airport, ppi_linfer, ppi_airfield, ppi_subs, optel, corp_oper_nr: corpOperNr};
+      const recordId = sitopContainer.getAttribute("data-record-id");
+      const isUpdate = !!recordId;
+      const isOperational = !!gdh_op;
+      const data = {cb_type, vehicle, registration, gdh_inop, gdh_op, failure_type, failure_description, ppi_part, ppi_a2, 
+                    ppi_a22, ppi_airport, ppi_linfer, ppi_airfield, ppi_subs, optel, corp_oper_nr: corpOperNr};
+      const supabaseData = { ...data };
+      delete supabaseData.cb_type;
       try {
         if (!isUpdate && !isOperational) {
-          const check = await fetch(
-            `${SUPABASE_URL}/rest/v1/sitop_vehicles?select=vehicle&vehicle=eq.${encodeURIComponent(vehicle)}&gdh_op=is.null&corp_oper_nr=eq.${corpOperNr}`, { 
-              headers: getSupabaseHeaders()
-            }
-          );
-          if (!check.ok) throw new Error("Erro ao verificar duplicado.");
-          const existing = await check.json();
+          const checkUrl = `${SUPABASE_URL}/rest/v1/sitop_vehicles?select=vehicle&vehicle=eq.${encodeURIComponent(vehicle)}&gdh_op=is.null&corp_oper_nr=eq.${encodeURIComponent(corpOperNr)}`;
+          const checkRes = await fetch(checkUrl, { headers: getSupabaseHeaders() });
+          if (!checkRes.ok) {
+            const errText = await checkRes.text();
+            throw new Error(`Erro ao verificar duplicado: ${checkRes.status} - ${errText}`);
+          }
+          const existing = await checkRes.json();
           if (existing.length > 0) {
             alert(`❌ O veículo ${vehicle} já se encontra INOP nesta corporação!`);
             saveBtn.disabled = false;
             return;
           }
         }
-        let response;
-        let supabaseAction = 'INSERIR';
-        if (isUpdate) {
-          response = await fetch(
-            `${SUPABASE_URL}/rest/v1/sitop_vehicles?id=eq.${recordId}`, {
-              method: "PATCH",
-              headers: { ...getSupabaseHeaders(), "Content-Type": "application/json"},
-              body: JSON.stringify(data)
-            }
-          );
-          supabaseAction = isOperational ? 'VALIDAR/ATUALIZAR' : 'ATUALIZAR';
-        } else {
-          response = await fetch(
-            `${SUPABASE_URL}/rest/v1/sitop_vehicles`, {
-              method: "POST",
-              headers: { ...getSupabaseHeaders(), "Content-Type": "application/json" },
-              body: JSON.stringify(data)
-            }
-          );
+        const supabaseUrl = isUpdate ? `${SUPABASE_URL}/rest/v1/sitop_vehicles?id=eq.${recordId}` : `${SUPABASE_URL}/rest/v1/sitop_vehicles`;
+        const method = isUpdate ? "PATCH" : "POST";
+        const response = await fetch(supabaseUrl, {
+          method,
+          headers: { ...getSupabaseHeaders(), "Content-Type": "application/json" },
+          body: JSON.stringify(supabaseData)
+        });
+        if (!response.ok) {
+          const errText = await response.text();
+          throw new Error(`Erro ao enviar dados ao Supabase: ${response.status} - ${errText}`);
         }
-        if (!response.ok) throw new Error("Erro ao enviar dados ao Supabase.");
         const statusRes = await fetch(
           `${SUPABASE_URL}/rest/v1/vehicle_status?vehicle=eq.${encodeURIComponent(vehicle)}`, {
             method: "PATCH",
@@ -217,7 +209,7 @@
         const signature = getEmailSignature();
         const greeting = getGreeting();
         const commanderName = await getCommanderName(corpOperNr);
-        const fullCorpText = document.getElementById("sitop_cb").value.trim();
+        const fullCorpText = cb_type;
         const corpName = fullCorpText.includes(" - ") ? fullCorpText.split(" - ").slice(1).join(" - ") : fullCorpText;
         const article = corpName.includes("Companhia") ? "da" : "do";
         const emailBodyHTML = `${greeting}<br><br>
@@ -228,14 +220,14 @@
         <span style="font-family: 'Arial'; font-size: 10px; color: gray;">
         Este email foi processado automaticamente por: CB360 Online<br><br>
         </span>
-        ${signature}
-        `;
+        ${signature}`;
         const emailRes = await fetch('https://cb360-mobile.vercel.app/api/sitop_covert_and_send', {
-          method: 'POST', 
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({data, recipients: to, ccRecipients: cc, bccRecipients: bcc, emailSubject: `Situação Operacional do Veículo ${vehicle}`, 
-                                emailBody: emailBodyHTML})});
-        const result = await emailRes.json();
+          body: JSON.stringify({data, recipients: to, ccRecipients: cc, bccRecipients: bcc, emailSubject: `Situação Operacional do Veículo ${vehicle}`, emailBody: emailBodyHTML})
+        });
+        const emailResult = await emailRes.json();
+        if (!emailRes.ok) throw new Error(`Erro ao enviar email: ${JSON.stringify(emailResult)}`);
         showPopupSuccess(`A situação operacional do veículo ${vehicle} foi enviada para as entidades.`);
         if (isOperational && isUpdate) {
           await fetch(
@@ -249,8 +241,8 @@
         NewInopBtn.classList.remove("active");
         oldInopBtn?.classList.remove("active");
       } catch (err) {
-        alert(`❌ Erro: ${err.message}`);
         console.error(err);
+        alert(`❌ Erro: ${err.message}`);
       } finally {
         saveBtn.disabled = false;
       }

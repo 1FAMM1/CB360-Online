@@ -303,7 +303,7 @@
         if (usersFound && usersFound.length > 0) {
           const userSameCorp = usersFound.find(u => u.corp_oper_nr === corpOperNr);
           if (!userSameCorp) {
-            alert("⚠️ Já existe um utilizador com estas credênciais para outra corporação.\nPor favor introduza outras credenciais.");
+            alert("⚠️ Já existe um utilizador com estas credênciais.\nPor favor introduza outras credenciais.");
             document.getElementById("win_user_name_main").value = "";
             document.getElementById("win_password_main").value = "";
             return;

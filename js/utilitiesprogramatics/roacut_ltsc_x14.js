@@ -1,5 +1,5 @@
-    /* =======================================
-            ROAD CLOSURES
+/* =======================================
+    ROAD CLOSURES
     ======================================= */
     async function waitForRouteInputs(total = 13) {
       const requiredIds = Array.from({ length: total }, (_, i) => `route-${String(i + 1).padStart(2, '0')}-name`);
@@ -11,9 +11,10 @@
           }
         }, 50);
       });
-    }
+    }   
 
     async function loadRoutesFromSupabase(total = 13) {
+      createRouteInputs(total);
       const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
       if (!currentCorpOperNr) return console.error("❌ currentCorpOperNr não definido!");    
       try {

@@ -1,8 +1,9 @@
     /* =======================================
             VEHICLE OPERATIONAL STATUS
     ======================================= */
-    const TYPE_ORDER = {'VCOT': 1, 'VCOC': 2, 'VTTP': 3, 'VFCI': 4, 'VECI': 5, 'VRCI': 6, 'VUCI': 7, 'VSAT': 8, 'VSAE': 9, 'VTTU': 10, 'VTTF': 11, 'VTTR': 12,
-                                                  'VALE': 13, 'VOPE': 14, 'VETA': 15, 'ABSC': 20, 'ABCI': 21, 'ABTM': 22, 'ABTD': 23, 'VDTD': 24, 'ATRL': 25};
+    const TYPE_ORDER = {'VCOT': 1, 'VCOC': 2, 'VTTP': 3, 'VLCI': 4, 'VFCI': 5, 'VECI': 6, 'VRCI': 7, 'VUCI': 8, 'VSAT': 9, 'VSAE': 10, 'VTTU': 11,
+                        'VTTF': 12, 'VTTR': 13, 'VALE': 14, 'VOPE': 15, 'VETA': 16, 'VE30': 17, 'VE32': 18, 'VP00': 19, 
+                        'ABSC': 20, 'ABCI': 21, 'ABTM': 22, 'ABTD': 23, 'VDTD': 24, 'ATRL': 25};
     let vehicles = [];
     let vehicleStatuses = {};
     let vehicleINOP = {};
@@ -15,8 +16,10 @@
     const vehicleStatusCancelBtn = document.getElementById('popup-vehicle-cancel-btn');
 
     function getVehicleIcon(type) {
-      const icons = {'VCOT': '🚒', 'VCOC': '🚒', 'VTTP': '🚒', 'VFCI': '🚒', 'VECI': '🚒', 'VRCI': '🚒', 'VUCI': '🚒', 'VSAT': '🚒', 'VSAE': '🚒', 'VTTU': '🚒',
-                                   'VTTF': '🚒', 'VTTR': '🚒', 'VALE': '🚒', 'VOPE': '🚒', 'VETA': '🚒', 'ABCI': '🚑', 'ABSC': '🚑', 'ABTM': '🚑', 'ABTD': '🚑', 'VDTD': '🚑'};
+      const icons = {'VCOT': '🚒', 'VCOC': '🚒', 'VTTP': '🚒', 'VFCI': '🚒', 'VLCI': '🚒', 'VECI': '🚒', 'VRCI': '🚒', 'VUCI': '🚒', 'VSAT': '🚒', 'VSAE': '🚒', 
+                     'VTTU': '🚒', 'VTTF': '🚒', 'VTTR': '🚒', 'VALE': '🚒', 'VOPE': '🚒', 'VETA': '🚒', 'VE30': '🚒', 'VE32': '🚒', 'VP00': '🚒', 'ABCI': '🚑', 
+                     'ABSC': '🚑', 'ABTM': '🚑', 'ABTD': '🚑', 
+                     'VDTD': '🚑'};
       return icons[type] || '🚗';
     }
 

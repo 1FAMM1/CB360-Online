@@ -4,20 +4,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300&family=Roboto+Mono:wght@300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <title>Login</title>
   <style>
     body {
       margin: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: url('https://rjkbodfqsvckvnhjwmhg.supabase.co/storage/v1/object/public/cb_logos/back_ground.jpg') no-repeat center center fixed;
+      background: url('https://rjkbodfqsvckvnhjwmhg.supabase.co/storage/v1/object/public/cb_logos/christmas.jpg') no-repeat center center fixed;
       background-size: cover;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       height: 100vh;
-      color: #fff;
-      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+      color: #fff;      
     }
     
     body,
@@ -34,7 +35,7 @@
       margin: -100px 0 20px 0;
       font-size: 27px;
       font-weight: 100;
-      font-family: "Arial", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-family: "Roboto";
       letter-spacing: 0.5px;
       color: #fff;
       text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
@@ -43,7 +44,7 @@
     }
 
     #greeting #clock {
-      font-family: "Arial", monospace;
+      font-family: "Roboto";
       display: inline-block;
       min-width: 90px;
     }
@@ -53,100 +54,86 @@
       margin: 0px 0 100px 0;
       font-size: 27px;
       font-weight: 100;
-      font-family: "Arial", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-family: "Roboto";
       letter-spacing: 0.5px;
       color: #fff;
       text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
       animation: fadeIn 1.2s ease;
       transition: none;
     }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(-15px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+    
+    .header-fade {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      padding: 12px 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      text-align: center;
+      z-index: 999;
+      backdrop-filter: blur(4px);
     }
+    
+    .header-fade .greeting,
+    .header-fade .prepare {
+      margin: 10px 0 0 0;
+      color: #fff;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+      font-weight: 100;
+    }
+
+    @keyframes fadeIn {from {opacity: 0; transform: translateY(-15px);}
+                       to {opacity: 1; transform: translateY(0);}}
 
     .login-container {
       position: relative;
-      background: rgba(238, 238, 238, 0.95);
-      padding: 40px 30px;
-      border-radius: 8px;
-      width: 320px;
+      background: #eeee;
+      padding: 10px 15px;
+      border-radius: 6px;
+      width: 285px;
       text-align: center;
       z-index: 1;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+      box-shadow: none;
+      margin: -50px 0 125px 0;
     }
-
-    .login-container::before {
-      content: '';
-      position: absolute;
-      top: -4px;
-      left: -4px;
-      right: -4px;
-      bottom: -4px;
-      border-radius: 12px;
-      pointer-events: none;
-      background: transparent;
-      border: 2px solid #fff;
-      box-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #fff;
-      animation: sparkleBorder 2s linear infinite;
-    }
-
-    @keyframes sparkleBorder {
-
-      0%,
-      100% {
-        box-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #fff;
-      }
-
-      50% {
-        box-shadow: 0 0 8px #fff, 0 0 16px #fff, 0 0 24px #fff;
-      }
-    }
-
+    
     .login-container h1 {
       font-size: 17px;
       font-weight: normal;
       text-align: left;
-      margin: -10px 0 20px 0;
-      color: #dc3545;
+      padding: -10px;
+      color: #2c3e50;
     }
 
     .login-container .logo {
       display: block;
-      margin: -50px auto -50px auto;
-      width: 200px;
+      margin: -30px auto -40px auto;
+      width: 175px;
       height: auto;
     }
 
     .login-container .separator {
-      width: 100%;
+      width: calc(100% + 30px);
       height: 1px;
       background: rgba(0, 0, 0, 0.1);
-      margin: 24px 0;
+      margin: 24px -15px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
     }
-
+    
     .login-container label {
       display: block;
       margin-bottom: 6px;
       text-align: left;
       font-weight: normal;
       font-size: 13px;
-      color: #333;
+      color: #666;
     }
 
     .login-container input {
       width: 100%;
       padding: 10px 12px;
       margin-bottom: 16px;
-      border-radius: 6px;
+      border-radius: 4px;
       border: 1px solid #ccc;
       font-size: 14px;
       box-sizing: border-box;
@@ -161,10 +148,10 @@
     .login-container button {
       width: 100%;
       padding: 10px 0;
-      background: #dc3545;
+      background: #2c3e50;
       color: #fff;
       border: none;
-      border-radius: 6px;
+      border-radius: 4px;
       font-size: 16px;
       font-weight: 600;
       cursor: pointer;
@@ -172,7 +159,7 @@
     }
 
     .login-container button:hover {
-      background: #b02a37;
+      background: #1a252f;
     }
 
     .login-footer {
@@ -186,39 +173,82 @@
       position: fixed;
       top: 20px;
       left: 50%;
-      transform: translateX(-50%) translateY(-20px);
-      background-color: #dc3545;
-      color: #fff;
-      padding: 12px 24px;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      transform: translateX(-50%) translateY(-100px);
+      background-color: rgba(220, 53, 69, 0.92);
+      color: #fff;    
+      padding: 8px 22px;    
+      border-radius: 10px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25), 0 2px 6px rgba(0, 0, 0, 0.15);
       font-size: 14px;
+      font-weight: 500;
       opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s ease, transform 0.3s ease;
-      z-index: 9999;
+      pointer-events: none;    
+      transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      z-index: 9999;    
+      display: flex;
+      align-items: center;
+      gap: 10px;    
+      min-width: 400px;
+      max-width: 750px;    
+      overflow: hidden;
     }
 
     .toast.show {
       opacity: 1;
       transform: translateX(-50%) translateY(0);
     }
-
+    
     .toast.success {
-      background-color: #28a745;
+      background-color: rgba(40, 167, 69, 0.92);
     }
+
+    .toast.success::before,
+    .toast:not(.success)::before {
+      font-size: 16px;
+      background: rgba(255, 255, 255, 0.2);
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .toast.success::before {
+      content: "✓";
+    }
+    
+    .toast:not(.success)::before {
+      content: "✕";
+    }
+
+    .toast::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 2px;
+      background: rgba(255, 255, 255, 0.6);
+      width: 100%;
+      animation: progressBar linear forwards;
+      animation-duration: var(--toast-duration, 2s);
+    }
+    
+    @keyframes progressBar {from {width: 100%;} to {width: 0%;}}
   </style>
 </head>
 
 <body>
+  <div class="header-fade">
   <div id="greeting" class="greeting">
     <span id="greetingText"></span>, são <span id="clock"></span>.
   </div>
   <div id="prepare" class="prepare">
     <span id="prepareText">Prepare-se para dinamizar o seu Corpo de Bombeiros.</span>
   </div>
+</div>
   <div class="login-container">
-    <h1>↪ ACESSO AO</h1>
+    <h1 style="margin: 5px 0 0 0;"><i class="fa-solid fa-right-to-bracket"></i>&nbsp;&nbsp;&nbsp;ACESSO AO</h1>
     <img class="logo" src="https://rjkbodfqsvckvnhjwmhg.supabase.co/storage/v1/object/public/cb_logos/logo_cb_360.png" alt="Logo CB 360">
     <div class="separator"></div>
     <form id="loginForm">
@@ -231,115 +261,97 @@
     <div class="separator"></div>
     <div class="login-footer">2025 © Fábio Martins | Sistemas de Informação</div>
   </div>
-
-  <script>
-const SUPABASE_URL = 'https://rjkbodfqsvckvnhjwmhg.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqa2JvZGZxc3Zja3ZuaGp3bWhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgxNjM3NjQsImV4cCI6MjA2MzczOTc2NH0.jX5OPZkz1JSSwrahCoFzqGYw8tYkgE8isbn12uP43-0';
-
-// Credenciais master temporário (fornecidas por você)
-const MASTER_USER = "teste";
-const MASTER_PASS = "teste";
-
-function getSupabaseHeaders() {
-  return {
-    'apikey': SUPABASE_ANON_KEY,
-    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-    'Content-Type': 'application/json'
-  };
-}
-
-async function loginUser(user, pass) {
-  try {
-    // Se for o master temporário, vai para setup_corporation
-    if (user === MASTER_USER && pass === MASTER_PASS) {
-      sessionStorage.setItem("masterUserTemp", "true");
-      showToast("✔ Login master temporário, redirecionando para configuração...", 2000, "success");
-      setTimeout(() => window.location.href = "setup_corporation.html", 2000);
-      return;
+  
+  <script src="js/mainparogramatics/initcfg_ltsc_x07.js"></script>
+  <script>    
+    async function loginUser(user, pass) {
+      try {
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/users?select=username,password,full_name,corp_oper_nr,patent&username=eq.${user}`, {
+            headers: getSupabaseHeaders()
+          }
+        );
+        if (!response.ok) {
+          throw new Error(`Erro ao buscar utilizador: ${response.status}`);
+        }
+        const data = await response.json();
+        if (data.length === 0) {
+          showToast("Utilizador não encontrado.", 2000, "error");
+          return;
+        }
+        const userData = data[0];
+        if (userData.password !== pass) {
+          showToast("Password incorreta.", 2000, "error");
+          return;
+        }
+        const corp = String(userData.corp_oper_nr || "").padStart(4, "0");
+        if (corp === "0000") {
+          sessionStorage.setItem("isMasterUser", "true");
+          sessionStorage.setItem("currentUserDisplay", userData.full_name || user);
+          sessionStorage.setItem("currentUserName", user);
+          sessionStorage.setItem("currentCorpOperNr", "0000");
+          showToast("Bem-vindo à administração do CB360 Online!", 2000, "success");
+          setTimeout(() => {
+            window.location.href = "system_admin.html";
+          }, 2000);
+          return;
+        }
+        const fullName = userData.full_name || user;
+        const displayName = fullName;
+        sessionStorage.setItem("currentUserDisplay", displayName);
+        sessionStorage.setItem("currentUserName", user);
+        sessionStorage.setItem("currentCorpOperNr", corp);
+        showToast("Login efetuado com sucesso!", 2000, "success");
+        setTimeout(() => {
+          window.location.href = "main.html";}, 2000);
+      } catch (err) {
+        console.error(err);
+        showToast("Erro de conexão. Verifique a tabela e a RLS.", 3000, "error");
+      }
     }
-
-    // Usuário normal → verifica na tabela users
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/users?select=username,password,full_name,corp_oper_nr,patent&username=eq.${user}`, {
-      headers: getSupabaseHeaders()
+    document.getElementById("loginForm").addEventListener("submit", e => {
+      e.preventDefault();
+      const user = document.getElementById("username").value.trim();
+      const pass = document.getElementById("password").value.trim();
+      loginUser(user, pass);
     });
-
-    if (!response.ok) throw new Error(`Erro ao buscar utilizador: ${response.status}`);
-
-    const data = await response.json();
-
-    if (data.length === 0) {
-      showToast("✖ Utilizador não encontrado.", 2000, "error");
-      return;
+    
+    function showToast(message, duration = 2000, type = "error") {
+      let toast = document.getElementById("toast");
+      if (!toast) {
+        toast = document.createElement("div");
+        toast.id = "toast";
+        toast.className = "toast";
+        document.body.appendChild(toast);
+      }
+      toast.textContent = message;
+      toast.className = "toast show";
+      if (type === "success") toast.classList.add("success");
+      setTimeout(() => toast.classList.remove("show"), duration);
     }
-
-    const userData = data[0];
-
-    if (userData.password !== pass) {
-      showToast("✖ Password incorreta.", 2000, "error");
-      return;
+    
+    function updateGreeting() {
+      const now = new Date();
+      const hour = now.getHours();
+      let greetingText = "🌙 Boa noite";
+      if (hour >= 6 && hour < 12) greetingText = "☀️ Bom dia";
+      else if (hour >= 12 && hour < 19) greetingText = "🌤️ Boa tarde";
+      document.getElementById("greetingText").textContent = greetingText;
+      document.getElementById("clock").textContent = now.toLocaleTimeString('pt-PT', { 
+        hour: '2-digit', minute: '2-digit', second: '2-digit' 
+      });
     }
-
-    const fullName = userData.full_name || user;
-    const patent = userData.patent || "";
-    const displayName = patent ? `${fullName}` : fullName;
-
-    sessionStorage.setItem("currentUserDisplay", displayName);
-    sessionStorage.setItem("currentUserName", user);
-    sessionStorage.setItem("currentCorpOperNr", userData.corp_oper_nr || "");
-
-    showToast("✔ Login efetuado com sucesso!", 2000, "success");
-    setTimeout(() => window.location.href = "main.html", 2000);
-
-  } catch (err) {
-    console.error(err);
-    showToast("Erro de conexão. Verifique a tabela e a RLS.", 3000, "error");
-  }
-}
-
-// Form submit
-document.getElementById("loginForm").addEventListener("submit", e => {
-  e.preventDefault();
-  const user = document.getElementById("username").value.trim();
-  const pass = document.getElementById("password").value.trim();
-  loginUser(user, pass);
-});
-
-// Toast
-function showToast(message, duration = 2000, type = "error") {
-  let toast = document.getElementById("toast");
-  if (!toast) {
-    toast = document.createElement("div");
-    toast.id = "toast";
-    toast.className = "toast";
-    document.body.appendChild(toast);
-  }
-  toast.textContent = message;
-  toast.className = "toast show";
-  if (type === "success") toast.classList.add("success");
-  setTimeout(() => toast.classList.remove("show"), duration);
-}
-
-// Clock + greeting
-function updateGreeting() {
-  const now = new Date();
-  const hour = now.getHours();
-  let greetingText = "🌙 Boa noite";
-  if (hour >= 6 && hour < 12) greetingText = "☀️ Bom dia";
-  else if (hour >= 12 && hour < 19) greetingText = "🌤️ Boa tarde";
-  document.getElementById("greetingText").textContent = greetingText;
-  document.getElementById("clock").textContent = now.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-}
-
-function startClock() {
-  updateGreeting();
-  const now = new Date();
-  setTimeout(() => {
-    updateGreeting();
-    setInterval(updateGreeting, 1000);
-  }, 1000 - now.getMilliseconds());
-}
-startClock();
-
+    
+    function startClock() {
+      updateGreeting();
+      const now = new Date();
+      setTimeout(() => {
+        updateGreeting();
+        setInterval(updateGreeting, 1000);
+      }, 1000 - now.getMilliseconds());
+    }
+    startClock();
+    document.getElementById("username").focus();
   </script>
 </body>
 </html>

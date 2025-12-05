@@ -6,6 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gestão de Acessos</title>
   <style>
+    /*========================================
+    BASE
+    ========================================*/
     * {
       margin: 0;
       padding: 0;
@@ -18,28 +21,83 @@
       display: flex;
       flex-direction: column;
       min-height: 100vh;
+      -ms-overflow-style: none;
     }
-
-    /* ========================= HEADER ========================= */
+    
+    body::-webkit-scrollbar {
+      width: 0px;
+      height: 0px;
+    }
+    /*========================================
+    HEADER
+    ========================================*/
     header {
-      background: #dc3545;
-      color: #fff;
-      padding: 15px 30px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      width: 100%;
+      height: 70px;
+      background-color: #DC3545;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
       position: fixed;
       top: 0;
       left: 0;
       right: 0;
       z-index: 1000;
-      height: 60px;
+      border-bottom: 4px solid #f55145;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
     }
 
     header h1 {
       font-size: 24px;
       font-weight: 600;
+      color: white;
     }
-
-    /* ========================= MAIN LAYOUT ========================= */
+    
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .header-badge-360 {
+      background-color: #B02A37;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    
+    .header-logout-btn {
+      background-color: #DC3545;
+      border: none;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .header-logout-btn:hover {
+      transform: scale(1.2);
+    }
+    /*========================================
+    FOOTER
+    ========================================*/
+    footer {
+      background: #2c3e50;
+      color: #fff;
+      text-align: center;
+      padding: 15px;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 50px;
+      font-size: 14px;
+    }
+    /*========================================
+    MAIN LAYOUT
+    ========================================*/
     .main-layout {
       display: flex;
       margin-top: 60px;
@@ -47,8 +105,9 @@
       min-height: calc(100vh - 60px - 50px);
       /* Altura total - header - footer */
     }
-
-    /* ========================= SIDEBAR ========================= */
+    /*========================================
+    SIDEBAR
+    ========================================*/
     .sidebar {
       width: 250px;
       background: #2c3e50;
@@ -76,8 +135,9 @@
       background: rgba(220, 53, 69, 0.3);
       border-left-color: #dc3545;
     }
-
-    /* ========================= CONTENT AREA ========================= */
+    /*========================================
+    CONTENT AREA
+    ========================================*/
     .content {
       margin-left: 250px;
       padding: 30px;
@@ -92,22 +152,9 @@
     .content-section.active {
       display: block;
     }
-
-    /* ========================= FOOTER ========================= */
-    footer {
-      background: #2c3e50;
-      color: #fff;
-      text-align: center;
-      padding: 15px;
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 50px;
-      font-size: 14px;
-    }
-    
-    /* ========================= CORPORATION CARD ========================= */
+    /*========================================
+    CORPORATION CARD
+    ========================================*/
     .corporation-card {
       background: #fff;
       border-radius: 8px;
@@ -133,8 +180,9 @@
       gap: 20px;
       flex-wrap: wrap;
     }
-
-    /* ========================= LOGO CARD ========================= */
+    /*========================================
+    LOGO CARD
+    ========================================*/
     .logo-card {
       flex: 0 0 250px;
       border: 2px solid #ccc;
@@ -170,8 +218,9 @@
       justify-content: space-between;
       gap: 8px;
     }
-
-    /* ========================= INFO CARD ========================= */
+    /*========================================
+    INFO CARD
+    ========================================*/
     .info-card {
       flex: 1;
       max-width: 100%;
@@ -227,8 +276,9 @@
       padding-top: 10px;
       border-top: 1px solid #e0e0e0;
     }
-
-    /* ========================= BUTTONS ========================= */
+    /*========================================
+    BUTTONS
+    ========================================*/
     .btn {
       padding: 8px 16px;
       border: none;
@@ -247,8 +297,9 @@
     .btn-success:hover {
       background: #218838;
     }
-
-    /* ========================= TABLE ========================= */
+    /*========================================
+    INFO CARD
+    ========================================*/
     #access-management {
       padding-bottom: 30px;
     }
@@ -291,8 +342,9 @@
     tr.active-corp td {
       color: #fff !important;
     }
-
-    /* ========================= CHECKBOX CONTAINER ========================= */
+    /*========================================
+    CHECKBOX CONTAINER
+    ========================================*/
     td.checkbox-cell {
       padding: 0 !important;
       background: transparent !important;
@@ -311,8 +363,9 @@
       color: #333;
       font-family: "Roboto", sans-serif;
     }
-
-    /* ========================= TREE NODE ========================= */
+    /*========================================
+    TREE NODE
+    ========================================*/
     .tree-node {
       display: flex;
       align-items: center;
@@ -328,8 +381,9 @@
       background: rgba(255, 255, 255, 0.05);
       border-radius: 6px;
     }
-
-    /* ========================= SLIDE DOWN ANIMATION ========================= */
+    /*========================================
+    SLIDE DOWN ANIMATION
+    ========================================*/
     .children-container {
       margin-left: 22px;
       border-left: 1px dashed rgba(100, 150, 255, 0.25);
@@ -345,8 +399,9 @@
       opacity: 1;
       margin-top: 6px;
     }
-
-    /* ========================= TOGGLE BUTTON ========================= */
+    /*========================================
+    TOGGLE BUTTON
+    ========================================*/
     .toggle-btn {
       background: rgba(80, 130, 255, 0.15);
       border: 1px solid rgba(80, 130, 255, 0.5);
@@ -366,15 +421,17 @@
       box-shadow: 0 0 8px rgba(80, 130, 255, 0.7);
       transform: scale(1.12);
     }
-
-    /* ========================= CHECKBOXES ========================= */
+    /*========================================
+    CHECKBOXES
+    ========================================*/
     .tree-node input[type="checkbox"] {
       transform: scale(1.2);
       accent-color: #4e8dff;
       cursor: pointer;
     }
-
-    /* ========================= SAVE BUTTON ========================= */
+    /*========================================
+    SAVE BUTTON
+    ========================================*/
     .save-btn {
       margin-top: 20px;
       padding: 12px 22px;
@@ -394,80 +451,77 @@
       transform: scale(1.04);
       box-shadow: 0 0 12px rgba(255, 70, 70, 0.9);
     }
-
-    /* ========================= PLACEHOLDER ========================= */
+    /*========================================
+    PLACEHOLDER
+    ========================================*/
     .placeholder {
       text-align: center;
       padding: 50px;
       color: #999;
       font-size: 18px;
     }
-    
+    /*========================================
+    TOAST CONTAINER
+    ========================================*/    
     .toast-container {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 9999;
-}
-
-.toast {
-  background-color: #333;
-  color: #fff;
-  padding: 12px 20px;
-  margin-top: 10px;
-  border-radius: 5px;
-  opacity: 0;
-  transform: translateX(100%);
-  transition: all 0.5s ease;
-  min-width: 200px;
-}
-
-.toast.show {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-.toast.success {
-  background-color: #4CAF50;
-}
-
-.toast.error {
-  background-color: #f44336;
-}
-
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+    }
     
+    .toast {
+      background-color: #333;
+      color: #fff;
+      padding: 12px 20px;
+      margin-top: 10px;
+      border-radius: 5px;
+      opacity: 0;
+      transform: translateX(100%);
+      transition: all 0.5s ease;
+      min-width: 200px;
+    }
+    
+    .toast.show {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    
+    .toast.success {
+      background-color: #4CAF50;
+    }
+    
+    .toast.error {
+      background-color: #f44336;
+    }    
   </style>
 </head>
-
 <body>
-  <!-- HEADER -->
   <header>
     <h1>🔥 CB 360 - Administração</h1>
+    <div class="header-right">
+      <div class="header-badge-360">Grupo CB360</div>
+      <button id="logoutBtn" class="header-logout-btn fa fa-power-off"></button>
+    </div>
   </header>
-
-  <!-- MAIN LAYOUT -->
   <div class="main-layout">
-    <!-- SIDEBAR -->
     <aside class="sidebar">
       <div class="sidebar-item active" data-section="add-corporation">➕ Adicionar Corporação</div>
       <div class="sidebar-item" data-section="access-management">🔐 Gestão de Acessos</div>
       <div class="sidebar-item" data-section="user-management">👥 Gestão de Utilizadores</div>
     </aside>
-    <!-- CONTENT AREA -->
     <main class="content">
-      <!-- ADICIONAR CORPORAÇÃO -->
       <section id="add-corporation" class="content-section active">
         <h2>Adicionar Corporação</h2>
         <div class="corporation-card">
           <h3>DADOS DA CORPORAÇÃO</h3>
           <p>Dados Gerais do Corpo de Bombeiros.</p>
           <div class="card-layout">
-            <!-- LOGO CARD -->
             <div class="logo-card">
               <div class="card-header">LOGO</div>
               <div class="card-content">
                 <div class="logo-preview">
-                  <img src="https://via.placeholder.com/140" alt="Logo CB" id="corp-logo">
+                  <img src="https://rjkbodfqsvckvnhjwmhg.supabase.co/storage/v1/object/public/cb_logos/logo_cb_360.png" id="corp-logo">
                 </div>
                 <div class="logo-buttons">
                   <button class="btn btn-success" id="add-logo-btn">ADICIONAR LOGO</button>
@@ -475,7 +529,6 @@
                 </div>
               </div>
             </div>
-            <!-- MAIN INFO CARD -->
             <div class="info-card">
               <div class="form-row">
                 <label>Nome do CB:</label>
@@ -510,19 +563,18 @@
                 <input type="text" id="assoc-operacional" style="width: 100px; text-align: center;">
               </div>
               <div class="form-actions">
-                <button class="btn btn-success" onclick="saveCorporationData()">ADICIONAR</button>
+                <button class="btn btn-success" style="margin:15px 0 0 0;" onclick="saveCorporationData()">ADICIONAR</button>
               </div>
             </div>
           </div>
         </div>
       </section>
-      <!-- GESTÃO DE ACESSOS -->
       <section id="access-management" class="content-section">
         <h2>Gestão de Acessos por Corporação</h2>
         <table id="corpTable">
           <thead>
             <tr>
-              <th>ID</th>
+              <th>Nr. Oper.</th>
               <th>Corporação</th>
               <th>Ações</th>
             </tr>
@@ -530,7 +582,7 @@
           <tbody>
           </tbody>
         </table>
-      </section>
+      </section> 
       <!-- GESTÃO DE UTILIZADORES -->
       <section id="user-management" class="content-section">
         <h2>Gestão de Utilizadores</h2>
@@ -545,9 +597,13 @@
     2025 © Fábio Martins | Sistemas de Informação
   </footer>
   <div id="toast-container" class="toast-container"></div>
-
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  
+  <script src="js/mainparogramatics/initcfg_ltsc_x07.js"></script>
   <script>
-    /* ========================= SIDEBAR NAVIGATION ========================= */
+    /*========================================
+    SIDEBAR NAVIGATION
+    ========================================*/
     document.querySelectorAll('.sidebar-item').forEach(item => {
       item.addEventListener('click', () => {
         document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
@@ -557,16 +613,9 @@
         document.getElementById(sectionId).classList.add('active');
       });
     });
-    /* ========================= INITIAL SETTINGS ========================= */
-    const SUPABASE_URL = '/api/supabase-proxy?path=';
-    function getSupabaseHeaders(prefer) {
-      const headers = {
-        'Content-Type': 'application/json'
-      };
-      if (prefer) headers['Prefer'] = prefer;
-      return headers;
-    }    
-    
+    /*========================================
+    TOASTER's
+    ========================================*/    
     function showToast(message, type = 'success', duration = 3000) {
       const container = document.getElementById('toast-container');
       if (!container) return;
@@ -581,9 +630,8 @@
       }, duration);
     }
     /* =======================================
-                ADD NEW CORPORATION
+    ADD NEW CORPORATIONS
     ======================================= */
-    /* ==================== LOGO PREVIEW FUNCTIONALITY ==================== */
     document.addEventListener('DOMContentLoaded', () => {
       const addLogoBtn = document.getElementById('add-logo-btn');
       const logoInput = document.getElementById('logo-input');
@@ -601,11 +649,11 @@
       }
       initHierarchicalSelects();
     });
-    /* ========================== LOAD DISTRICTS ========================== */
+    /* ============== LOAD DISTRICTS =============== */
     async function loadDistricts(selectId) {
       try {
         const response = await fetch(
-          `${SUPABASE_URL}rest/v1/districts_select?select=id,district`,
+          `${SUPABASE_URL}/rest/v1/districts_select?select=id,district`,
           { headers: getSupabaseHeaders() }
         );
         const data = await response.json();
@@ -625,7 +673,7 @@
     async function findDistrictIdByName(districtName) {
       try {
         const response = await fetch(
-          `${SUPABASE_URL}rest/v1/districts_select?select=id&district=eq.${encodeURIComponent(districtName)}`, {
+          `${SUPABASE_URL}/rest/v1/districts_select?select=id&district=eq.${encodeURIComponent(districtName)}`, {
             headers: getSupabaseHeaders()
           }
         );
@@ -642,11 +690,11 @@
       if (!districtSelect || !districtSelect.value) return null;
       return districtSelect.options[districtSelect.selectedIndex].textContent.trim();
     }
-    /* =========================== LOAD COUNCILS ========================== */
+    /* =============== LOAD COUNCILS =============== */
     async function populateCouncilSelectByDistrict(districtId, selectId) {
       try {
         const response = await fetch(
-          `${SUPABASE_URL}rest/v1/councils_select?select=id,council&district_id=eq.${districtId}`,
+          `${SUPABASE_URL}/rest/v1/councils_select?select=id,council&district_id=eq.${districtId}`,
           { headers: getSupabaseHeaders() }
         );
         const data = await response.json();
@@ -667,7 +715,7 @@
     async function findCouncilIdByName(councilName) {
       try {
         const response = await fetch(
-          `${SUPABASE_URL}rest/v1/councils_select?select=id&council=eq.${encodeURIComponent(councilName)}`, {
+          `${SUPABASE_URL}/rest/v1/councils_select?select=id&council=eq.${encodeURIComponent(councilName)}`, {
             headers: getSupabaseHeaders()
           }
         );
@@ -684,11 +732,11 @@
       if (!councilSelect || !councilSelect.value) return null;
       return councilSelect.options[councilSelect.selectedIndex].textContent.trim();
     }
-    /* =========================== LOAD PARISHES =========================== */
+    /* =============== LOAD PARISHES =============== */
     async function populateParishesByCouncil(councilId, selectId) {
       try {
         const response = await fetch(
-          `${SUPABASE_URL}rest/v1/parishes_select?select=id,parish&council_id=eq.${councilId}`, {
+          `${SUPABASE_URL}/rest/v1/parishes_select?select=id,parish&council_id=eq.${councilId}`, {
             headers: getSupabaseHeaders()
           }
         );
@@ -704,8 +752,8 @@
       } catch (error) {
         console.error("Erro ao carregar Freguesias:", error);
       }
-    }
-    /* ========================= HIERARCHICAL SELECTS ========================= */
+    }   
+    /* ========= LOAD HIERARCHICAL SELECTS ========= */
     async function initHierarchicalSelects() {
       await loadDistricts("district_select_corp");    
       document.getElementById("district_select_corp").addEventListener("change", async (e) => {
@@ -719,21 +767,13 @@
         }
       });
     }
-    /* ========================== MESSAGING FUNCTIONS ========================= */    
-    function showSuccessMessage(message) {
-      showToast(`${message}`);
-    }
-
-    function showErrorMessage(message) {
-      showToast(`❌ ${message}`);
-    }
-    /* ========================= POSTAL CODE ========================= */
+    /* =========== POSTAL CODE FUNCTIONS =========== */
     function splitPostalCode(fullPostalCode) {
       if (!fullPostalCode) return { cp1: '', cp2: '' };
       if (fullPostalCode.includes('-')) {
         const [cp1, cp2] = fullPostalCode.split('-');
         return { cp1: cp1 || '', cp2: cp2 || '' };
-      }
+      } 
       if (fullPostalCode.length === 7 && /^\d{7}$/.test(fullPostalCode)) {
         return { cp1: fullPostalCode.substring(0, 4), cp2: fullPostalCode.substring(4, 7) };
       }
@@ -754,7 +794,16 @@
       if (cp2 && /^\d{3}$/.test(cp2)) return cp2;    
       return null;
     }
-    /* ========================= SAVE CORPORATION ========================= */
+    /* ============ VALIDATION FUNCTION ============ */    
+    function validateCorporationData(data) {
+      if (!data.corporation) return { isValid: false, message: 'Nome da corporação é obrigatório' };
+      if (!data.corp_fiscal_nr) return { isValid: false, message: 'NIF é obrigatório' };
+      if (!/^\d{9}$/.test(data.corp_fiscal_nr.replace(/\s/g, ''))) return { isValid: false, message: 'NIF deve ter 9 dígitos' };
+      if (!data.corp_oper_nr) return { isValid: false, message: 'Número Operacional da corporação é obrigatório' };
+      if (data.corp_cp && !/^\d{4}-\d{3}$/.test(data.corp_cp)) return { isValid: false, message: 'Código postal deve ter o formato XXXX-XXX' };
+      return { isValid: true };
+    }
+    /* ============= SAVE CORPORATION ============== */
     async function saveCorporationData() {
       const saveButton = document.querySelector('button[onclick="saveCorporationData()"]');
       const originalText = saveButton ? saveButton.textContent : 'GRAVAR';    
@@ -765,20 +814,20 @@
         }    
         const corporationData = {
           corporation: document.getElementById('assoc-name')?.value?.trim() || null,
-          corp_address: document.getElementById('assoc-address')?.value?.trim() || null,
-          corp_locality: document.getElementById('assoc-locality')?.value?.trim() || null,
+          corp_adress: document.getElementById('assoc-address')?.value?.trim() || null,
+          corp_localitie: document.getElementById('assoc-locality')?.value?.trim() || null,
           corp_cp: getCombinedPostalCode(),
           corp_district: getSelectedDistrictName(),
           corp_council: getSelectedCouncilName(),
           corp_parish: document.getElementById('parish_select_corp')?.value?.trim() || null,
-          corp_fiscal_nr: document.getElementById('assoc-nif')?.value?.trim() || null,
+          corp_fiscal_nr: document.getElementById('assoc-nif')?.value?.trim() ||  null,
           corp_oper_nr: document.getElementById('assoc-operacional')?.value?.trim() || null,
         };    
         const validation = validateCorporationData(corporationData);
         if (!validation.isValid) throw new Error(validation.message);
         const encodedCorpName = encodeURIComponent(corporationData.corporation);
         const encodedOperNr = encodeURIComponent(corporationData.corp_oper_nr);
-        const checkUrl = `${SUPABASE_URL}rest/v1/corporation_data?or=(corporation.eq.${encodedCorpName},corp_oper_nr.eq.${encodedOperNr})&select=id`;    
+        const checkUrl = `${SUPABASE_URL}/rest/v1/corporation_data?or=(corporation.eq.${encodedCorpName},corp_oper_nr.eq.${encodedOperNr})&select=id`;    
         const existingResponse = await fetch(checkUrl, { headers: getSupabaseHeaders() });
         const existingData = await existingResponse.json();    
         if (existingData.length > 0) {
@@ -798,7 +847,7 @@
     }
 
     async function createCorporationData(data) {
-      const response = await fetch(`${SUPABASE_URL}rest/v1/corporation_data`, {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/corporation_data`, {
         method: 'POST',
         headers: { ...getSupabaseHeaders(), 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
         body: JSON.stringify(data),
@@ -809,22 +858,13 @@
       }
       return await response.json();
     }    
-    /* ========================= VALIDATION ========================= */
-    function validateCorporationData(data) {
-      if (!data.corporation) return { isValid: false, message: 'Nome da corporação é obrigatório' };
-      if (!data.corp_fiscal_nr) return { isValid: false, message: 'NIF é obrigatório' };
-      if (!/^\d{9}$/.test(data.corp_fiscal_nr.replace(/\s/g, ''))) return { isValid: false, message: 'NIF deve ter 9 dígitos' };
-      if (!data.corp_oper_nr) return { isValid: false, message: 'Número Operacional da corporação é obrigatório' };
-      if (data.corp_cp && !/^\d{4}-\d{3}$/.test(data.corp_cp)) return { isValid: false, message: 'Código postal deve ter o formato XXXX-XXX' };
-      return { isValid: true };
-    }
     /* =======================================
-                ACCESS ASSIGNMENT
+    GRANTING OF ACCESS BY CORPORATION
     ======================================= */
-    /* ======================== LOAD CORPORATIONS ========================= */
+    /* ============= LOAD CORPORATIONS ============= */
     async function loadCorporations() {
       try {
-        const res = await fetch(`${SUPABASE_URL}rest/v1/corporation_data`, {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/corporation_data`, {
           headers: getSupabaseHeaders()
         });
         if (!res.ok) throw new Error("Erro ao buscar corporações");
@@ -894,58 +934,58 @@
         console.error(err);
       }
     }
-    /* ======================== CHECKBOX HIERARCHY ======================== */
+    /* ============ CHECKBOX HIERARCHY ============= */    
     const modulesHierarchy = [
-      { name: 'DECIR 360', children: [
-          { name: 'Controlo de Pagamentos', children: [
-              { name: 'Registo por Elemento' },
-              { name: 'Núcleo Financeiro' },
-              { name: 'Relatórios ANEPC' }
+      {name: 'DECIR 360', children: [
+          {name: 'Controlo de Pagamentos', children: [
+              {name: 'Registo por Elemento'},
+              {name: 'Núcleo Financeiro'},
+              {name: 'Relatórios ANEPC'}
           ]},
-          { name: 'Assinaturas Diárias' }
+          {name: 'Assinaturas Diárias'}
       ]},
-      { name: 'FOMIO 360', children: [
-          { name: 'DECIR' },
-          { name: '1ª Secção' },
-          { name: '2ª Secção' },
-          { name: 'Emissão Escala' },
-          { name: 'Consultar Escalas' }
+      {name: 'FOMIO 360', children: [
+          {name: 'DECIR'},
+          {name: '1ª Secção'},
+          {name: '2ª Secção'},
+          {name: 'Emissão Escala'},
+          {name: 'Consultar Escalas'}
       ]},
-      { name: 'EMPLOYEES 360' },
-      { name: 'SALOC 360', children: [
-          { name: 'Planos Prévios de Intervenção', children: [
-              { name: 'PPI A22' },
-              { name: 'PPI Aeroporto de Faro' },
-              { name: 'PPI Linha Férrea' }
+      {name: 'EMPLOYEES 360'},
+      {name: 'SALOC 360', children: [
+          {name: 'Planos Prévios de Intervenção', children: [
+              {name: 'PPI A22'},
+              {name: 'PPI Aeroporto de Faro'},
+              {name: 'PPI Linha Férrea'}
           ]},
-          { name: 'Registos Recusas/INOPS', children: [
-              { name: 'Recusas de Serviços' },
-              { name: 'Inoperacionalidades INEM' },
-              { name: 'Relatórios Mensais' },
-              { name: 'DashBoard' }
+          {name: 'Registos Recusas/INOPS', children: [
+              {name: 'Recusas de Serviços'},
+              {name: 'Inoperacionalidades INEM'},
+              {name: 'Relatórios Mensais'},
+              {name: 'DashBoard'}
           ]},
-          { name: 'Documentação Importante', children: [
-              { name: 'CREPC Algarve' },
-              { name: 'Planeamento Diário' },
-              { name: 'Sitop de Veículos' },
-              { name: 'Refeições DECIR' }
+          {name: 'Documentação Importante', children: [
+              {name: 'CREPC Algarve'},
+              {name: 'Planeamento Diário'},
+              {name: 'Sitop de Veículos'},
+              {name: 'Refeições DECIR'}
           ]},
-          { name: 'Consola de Alarmes' }
+          {name: 'Consola de Alarmes' }
       ]},
-      { name: 'WSMS 360', children: [
-          { name: 'Ocorrências em Curso' },
-          { name: 'Inserir/Alterar Ocorrência' },
-          { name: 'Encerrar Ocorrência' },
-          { name: 'Solicitar Disponibilidades' },
-          { name: 'Indisponibilidade Veículos' },
-          { name: 'Info. Grelha Município' },
-          { name: 'Serviços EMS' },
-          { name: 'Avisos METEO' }
+      {name: 'WSMS 360', children: [
+          {name: 'Ocorrências em Curso'},
+          {name: 'Inserir/Alterar Ocorrência'},
+          {name: 'Encerrar Ocorrência'},
+          {name: 'Solicitar Disponibilidades'},
+          {name: 'Indisponibilidade Veículos'},
+          {name: 'Info. Grelha Município'},
+          {name: 'Serviços EMS'},
+          {name: 'Avisos METEO'}
       ]},
-      { name: 'Utilitários' },
-      { name: 'Data Center' }
-    ];
-    /* ====================== CREATION CHECKBOX TREE ====================== */
+      {name: 'Utilitários'},
+      {name: 'Data Center'}
+    ];    
+    /* ========== CREATION CHECKBOX TREE =========== */
     function createCheckboxTree(node, container, level = 0, allowed = []) {
       const nodeDiv = document.createElement("div");
       nodeDiv.className = "tree-node";
@@ -1006,12 +1046,12 @@
         }
       });
     }    
-    /* ====================== SAVE ASSIGNED ACCESSES ====================== */    
+    /* ========== SAVE ASSIGNED ACCESSES =========== */
     async function saveAccesses(corpId, container) {
       const checked = [...container.querySelectorAll("input[type='checkbox']:checked")]
         .map(cb => cb.value);
       try {
-        const res = await fetch(`${SUPABASE_URL}rest/v1/corporation_data?id=eq.${corpId}`, {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/corporation_data?id=eq.${corpId}`, {
           method: "PATCH",
           headers: getSupabaseHeaders("return=representation"),
           body: JSON.stringify({
@@ -1025,7 +1065,37 @@
         console.error(err);
       }
     }
-    loadCorporations();    
+    loadCorporations();
+    /* =======================================
+    ADD USERS BY CORPORATION
+    ======================================= */
+    
+    
+    /* =======================================
+    LOGOUT FUNCTION
+    ======================================= */
+    document.addEventListener('DOMContentLoaded', () => {
+      const logoutBtn = document.getElementById("logoutBtn");
+      if (logoutBtn) {
+        logoutBtn.addEventListener("click", () => {
+          sessionStorage.removeItem("currentUserName");
+          sessionStorage.removeItem("currentUserDisplay");
+          sessionStorage.removeItem("currentUserCorpNr");
+          sessionStorage.removeItem("currentUserPatent");
+          window.location.replace("index.html");
+        });
+      }
+    });
+    /* =======================================
+    MESSAGING FUNCTIONS
+    ======================================= */    
+    function showSuccessMessage(message) {
+      showToast(`${message}`);
+    }
+
+    function showErrorMessage(message) {
+      showToast(`❌ ${message}`);
+    }
   </script>
 </body>
 

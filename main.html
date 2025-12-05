@@ -42,7 +42,7 @@
     <aside class="sidebar">
       <button class="sidebar-menu-button active" data-page="page-main">🏠 Menu Principal</button>
       <!-- ======================= DECIR 360 ======================= -->
-      <button class="sidebar-menu-button sub-submenu-toggle" data-page="page-decir" data-access="DECIR 360">👥 DECIR 360</button>
+      <button class="sidebar-menu-button sub-submenu-toggle" data-page="page-decir" data-access="DECIR 360">💶 Gestão Financeira</button>
       <div class="sub-submenu">
         <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-decir" data-access="Controlo de Pagamentos">Controlo de Pagamentos</button>
         <div class="sub-submenu">
@@ -53,18 +53,18 @@
         <button class="sidebar-submenu-button" data-page="page-decir" data-access="Assinaturas Diárias">Assinaturas Diárias</button>
       </div>
       <!-- ======================= FOMIO 360 ======================= -->
-      <button class="sidebar-menu-button sub-submenu-toggle" data-page="page-fomio" data-access="FOMIO 360">👥 FOMIO 360</button>
+      <button class="sidebar-menu-button sub-submenu-toggle" data-page="page-fomio" data-access="FOMIO 360">👨🏻‍🚒👩🏻‍🚒 Gestão Operacional</button>
       <div class="sub-submenu">
-        <button class="sidebar-sub-submenu-button" data-page="page-scales" data-access="DECIR">DECIR</button>
-        <button class="sidebar-sub-submenu-button" data-page="page-scales" data-access="1ª Secção">1ª Secção</button>
-        <button class="sidebar-sub-submenu-button" data-page="page-scales" data-access="2ª Secção">2ª Secção</button>
-        <button class="sidebar-sub-submenu-button" data-page="page-scales" data-access="Emissão Escala">Emissão Escala</button>
+        <button class="sidebar-sub-submenu-button" data-page="page-scales" data-access="DECIR">Escala DECIR</button>
+        <button class="sidebar-sub-submenu-button" data-page="page-scales" data-access="1ª Secção">Escala 1ª Secção</button>
+        <button class="sidebar-sub-submenu-button" data-page="page-scales" data-access="2ª Secção">Escala 2ª Secção</button>
+        <button class="sidebar-sub-submenu-button" data-page="page-scales" data-access="Emissão Escala">Emissão Escalas</button>
         <button class="sidebar-sub-submenu-button" data-page="page-scales" data-access="Consultar Escalas">Consultar Escalas</button>
       </div>
       <!-- ======================= EMPLOYEES 360 ======================= -->
-      <button class="sidebar-menu-button" data-page="" data-access="EMPLOYEES 360" onclick="showTempWarning('MÓDULO BREVEMENTE DISPONÍVEL EM CB360 ONLINE')">👥 EMPLOYEES 360</button>
+      <button class="sidebar-menu-button" data-page="" data-access="EMPLOYEES 360" onclick="showTempWarning('MÓDULO BREVEMENTE DISPONÍVEL EM CB360 ONLINE')">👷🏻‍♂️👷🏻‍♀️ Gestão Funcionários</button>
       <!-- ======================= SALOC 360 ======================= -->
-      <button class="sidebar-menu-button sub-submenu-toggle" data-page="page-saloc" data-access="SALOC 360">👥 SALOC 360</button>
+      <button class="sidebar-menu-button sub-submenu-toggle" data-page="page-saloc" data-access="SALOC 360">📡 SALOC 360</button>
       <div class="submenu">
         <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-ppis" data-access="Planos Prévios de Intervenção">Planos Prévios de Intervenção</button>
         <div class="sub-submenu">
@@ -89,7 +89,7 @@
         <button class="sidebar-submenu-button" data-page="page-alarm-console" data-access="Consola de Alarmes">Consola de Alarmes</button>
       </div>
       <!-- ======================= WSMS 360 ======================= -->
-      <button class="sidebar-menu-button submenu-toggle" data-page="page-wsms" data-access="WSMS 360">⚠️ WSMS 360</button>
+      <button class="sidebar-menu-button submenu-toggle" data-page="page-wsms" data-access="WSMS 360">💬 Comunicação WSMS</button>
       <div class="submenu">
         <button class="sidebar-submenu-button" data-page="page-active_occurrences" data-access="Ocorrências em Curso">🔥 Ocorrências em Curso</button>
         <button class="sidebar-submenu-button" data-page="page_insert_occurrence" data-access="Inserir/Alterar Ocorrência" onclick="NewOCRresetVehicles()">✏️ Inserir/Alterar Ocorrência</button>
@@ -225,31 +225,33 @@
         </div>
         <div class="tab-content" id="tab-other-data">
           <div class="window-field-horizontal">
-            <label>NIF:</label>
-            <input type="text" id="win_nif" style="flex:1">
+            <label style="width: 50px;">NIF:</label>
+            <input type="text" id="win_nif" style="flex:1;">
+            <label style="width: 50px;">NISS:</label>
+            <input type="text" id="win_niss" style="flex:1;">
           </div>
           <div class="window-field-horizontal">
-            <label>NIB:</label>
+            <label style="width: 50px;">IBAN/NIB:</label>
             <input type="text" id="win_nib" style="flex:1">
           </div>
         </div>
         <div class="tab-content" id="tab-credencials-app">
-          <label>Acessos CB360 Online</label>
+          <div style="margin:0 0 15px 0; font-size:14px; color: #777;">Acessos CB360 Online</div>
           <div class="window-field-horizontal">
-            <label>Username:</label>
+            <label style="width:60px;">Username:</label>
             <input type="text" id="win_user_name_main" style="flex:1" placeholder="Nome de utilizador">
           </div>
           <div class="window-field-horizontal">
-            <label>Password:</label>
-            <input type="password" id="win_password_main" style="flex:1" placeholder="Senha">
+            <label style="width:60px;">Password:</label>
+            <input type="password" id="win_password_main" style="flex:1;" placeholder="Senha">
           </div>
-          <label>Acessos CB360 Mobile</label>
+          <div style="margin:15px 0 15px 0; font-size:14px; color: #777;">Acessos CB360 Mobile</div>
           <div class="window-field-horizontal">
-            <label>Username:</label>
-            <input type="text" id="win_user_name_mobile" style="flex:1" placeholder="Nome de utilizador">
+            <label style="width:60px;">Username:</label>
+            <input type="text" id="win_user_name_mobile" style="flex:1;" placeholder="Nome de utilizador">
           </div>
           <div class="window-field-horizontal">
-            <label>Password:</label>
+            <label style="width:60px;">Password:</label>
             <input type="password" id="win_password_mobile" style="flex:1" placeholder="Senha">
           </div>
         </div>
@@ -277,7 +279,7 @@
         <div class="card-body">
           <p style="font-size: 15px; margin-bottom: 35px;">
             O <strong>CB360 Online</strong> é um sistema integrado e modular desenvolvido para apoiar a gestão operacional e administrativa
-            do <strong>Corpo de Bombeiros de Faro – Cruz Lusa</strong>. Concebido como uma plataforma centralizada e intuitiva,
+            do seu <strong>Corpo de Bombeiros</strong>. Concebido como uma plataforma centralizada e intuitiva,
             permite a coordenação digital das diversas áreas funcionais da SALOC, garantindo eficiência, rastreabilidade e
             otimização de recursos em tempo real.
           </p>
@@ -307,14 +309,14 @@
     <!---- CARD DECIR 360 ---->
     <div id="page-decir" class="page">
       <div class="card last-card">
-        <div class="card-header">BEM-VINDO AO DECIR 360</div>
+        <div class="card-header">BEM-VINDO À GESTÃO FINANCEIRA</div>
         <div class="card-body" style="font-family: 'Segoe UI', sans-serif;">
           <p style="font-size: 15px; margin-bottom: 20px; color: #333;">
-            O <strong>DECIR 360</strong> é o módulo digital responsável pela gestão integral da
+            A <strong>GESTÃO FINANCEIRA</strong> é o módulo digital responsável pela gestão integral da
             <strong>Inserção e Validação</strong> dos elementos afetos ao <strong>DISPOSITIVO ESPECIAL DE 
             COMBATE A INCÊNDIOS RURAIS.</strong>
             Este sistema centraliza todo o processo de registo, controlo e pagamentos aos elementos afetos
-            ao DECIR, garantindo uma gestão eficiente e transparente dos recursos humanos e operacionais.
+            ao DECIR, garantindo uma gestão eficiente e transparente entre recursos humanos e operacionais.
           </p>
           <div style="background: linear-gradient(90deg, #e0e0e0, #d6d6d6); padding: 15px 20px; border-left: 5px solid #007bff; border-radius: 6px; margin-bottom: 20px;">
             <strong>Funcionalidades Principais:</strong>
@@ -334,11 +336,11 @@
     <!---- CARD FOMIO 360 ---->
     <div id="page-fomio" class="page">
       <div class="card last-card">
-        <div class="card-header">BEM-VINDO AO FOMIO 360</div>
+        <div class="card-header">BEM-VINDO À GESTÃO OPERACIONAL</div>
         <div class="card-body" style="font-family: 'Segoe UI', sans-serif;">
           <p style="font-size: 15px; margin-bottom: 20px; color: #333;">
-            O <strong>FOMIO 360</strong> é o módulo digital responsável pela gestão integral das
-            <strong>Escalas Operacionais</strong> do Corpo de Bombeiros de Faro – Cruz Lusa.
+            A <strong>GESTÃO OPERACIONAL</strong> é o módulo digital responsável pela gestão integral das
+            <strong>Escalas Operacionais</strong> do seu Corpo de Bombeiros.
             Este sistema centraliza todo o processo de planeamento, controlo e emissão das escalas,
             garantindo uma gestão eficiente e transparente dos recursos humanos e operacionais.
           </p>
@@ -367,7 +369,7 @@
         <div class="card-body" style="font-family: 'Segoe UI', sans-serif;">
           <p style="font-size: 15px; margin-bottom: 20px; color: #333;">
             O <strong>SALOC 360</strong> é um sistema digital de gestão operacional diária da
-            <strong>Sala de Operações e Comunicações (SALOC)</strong> do Corpo de Bombeiros de Faro – Cruz Lusa.
+            <strong>Sala de Operações e Comunicações (SALOC)</strong> do seu Corpo de Bombeiros.
             Este sistema integra as principais ferramentas de apoio à decisão, planeamento e monitorização das atividades
             logísticas e operacionais em tempo real.
           </p>
@@ -382,7 +384,7 @@
               <li style="color:#0d630e;">📊 Dashboard de Estatísticas Operacionais</li>
               <li style="color:#0d630e;">📁 Acesso e Gestão de Documentação Operacional e Interna</li>
               <li style="color:#0d630e;">📅 Planeamentos Diários e gestão de turnos</li>
-              <li style="color:#0d630e;">📨 Gestão e envio de documentação importante ao CREPC Algarve</li>
+              <li style="color:#0d630e;">📨 Gestão e envio de documentação importante ao COMANDO SUB-REGIONAL</li>
             </ul>
           </div>
           <p style="margin-top: 30px; color: #444;">
@@ -421,7 +423,7 @@
           </div>
           <ul style="list-style: none; padding-left: 20px; line-height: 1.7; font-size: 14.5px;">
             <li style="color:#0d630e;">📍 Consulta geográfica interativa dos PPIs</li>
-            <li style="color:#0d630e;">📑 Acesso a fichas técnicas e recursos associados</li>
+            <li style="color:#0d630e;">📑 Acesso a tabelas técnicas e recursos associados</li>
             <li style="color:#0d630e;">🧭 Identificação de meios e acessos operacionais</li>
             <li style="color:#0d630e;">🔄 Atualização e integração contínua de dados</li>
           </ul>
@@ -445,7 +447,7 @@
             O módulo <strong>REGOPS 360</strong> centraliza a <strong>gestão de recusas de serviços</strong> e
             <strong>inoperacionalidades de meios INEM</strong>, permitindo um controlo detalhado e
             automatizado da disponibilidade operacional das viaturas integradas no
-            protocolo de emergência médica, bem como a recusa de serviços do <strong>Corpo de Bombeiros de Faro – Cruz Lusa</strong>.
+            protocolo de emergência médica, bem como a recusa de serviços do seu <strong>Corpo de Bombeiros</strong>.
           </p>
           <div style="background: linear-gradient(90deg, #e0e0e0, #d6d6d6); padding: 15px 20px; border-left: 5px solid #dc3545; border-radius: 6px; margin-bottom: 20px;">
             <strong>Funcionalidades Principais:</strong>
@@ -482,7 +484,7 @@
         <div class="card-header">GESTÃO DE DOCUMENTAÇÃO OPERACIONAL E INSTITUCIONAL (DOC 360)</div>
         <div class="card-body" style="font-family: 'Segoe UI', sans-serif;">
           <p style="font-size: 15px; margin-bottom: 20px; color: #333;">
-            O módulo <strong>DOCS 360</strong> é o módulo responsável pela <strong>gestão e comunicação documental</strong> essencial à atividade operacional e administrativa do Corpo de Bombeiros de Faro – Cruz Lusa.
+            O módulo <strong>DOCS 360</strong> é o módulo responsável pela <strong>gestão e comunicação documental</strong> essencial à atividade operacional e administrativa do seu Corpo de Bombeiros.
             Este sistema integra processos de reporte, planeamento e envio de documentação às entidades competentes, garantindo rigor e rastreabilidade em todas as comunicações oficiais.
           </p>
           <div style="background: linear-gradient(90deg, #d5d5d5, #c9c9c9); padding: 15px 20px; border-left: 5px solid #171d8f; border-radius: 6px; margin-bottom: 20px;">
@@ -503,10 +505,10 @@
     <!---- CARD WSMS ---->
     <div id="page-wsms" class="page">
       <div class="card last-card">
-        <div class="card-header">BEM VINDO WSMS 360</div>
+        <div class="card-header">BEM VINDO À COMUNICAÇÃO WSMS</div>
         <div class="card-body" style="font-family: 'Segoe UI', sans-serif;">
           <p style="font-size: 15px; margin-bottom: 20px; color: #333;">
-            O módulo <strong>WSMS</strong> foi desenvolvido para garantir uma <strong>gestão simplificada, eficaz e de máxima precisão</strong> nas comunicações operacionais do Corpo de Bombeiros de Faro – Cruz Lusa.            
+            O módulo <strong>COMUNICAÇÃO WSMS</strong> foi desenvolvido para garantir uma <strong>gestão simplificada, eficaz e de máxima precisão</strong> nas comunicações operacionais do seu Corpo de Bombeiros.            
             Desenvolvido para garantir <strong>simplicidade, eficácia e máxima precisão</strong>, este sistema assegura que todas as comunicações sigam um formato padronizado, reduzindo erros e otimizando o fluxo 
             informativo entre as entidades competentes, de forma automatizada e integrada.
           </p>
@@ -1248,7 +1250,7 @@
                   </select>
                 </div>                
               </div>
-              <div class="form-row">
+              <div class="form-row" style="margin-top: 5px;">
                 <div class="global-field-horizontal">
                   <label style="font-size: 13px; font-weight: bold; color: #444;">Veículo:</label>
                   <select id="sitop_veíc" style="width: 90px;"></select>
@@ -2019,7 +2021,6 @@
         <div class="options-panel-container">
           <div class="panel-sidebar">
             <button class="panel-sidebar-menu-button active" onclick="showPanelCard('epe')">Estados de EPE/PPI</button>
-            <button class="panel-sidebar-menu-button" onclick="showPanelCard('fleet-management')">Gestão de Frota</button>
             <button class="panel-sidebar-menu-button" onclick="showPanelCard('vehicle-operational-status')">Sitop. Veículos</button>
             <button class="panel-sidebar-menu-button" onclick="showPanelCard('relev-info')">Informações Relevantes</button>
             <button class="panel-sidebar-menu-button" onclick="showPanelCard('interruption-roads-streets')">Cortes de Vias/Arruamentos</button>
@@ -2039,62 +2040,7 @@
               <div id="vehicleStatus" class="loading">A carregar veículos...</div>
               <div class="vehicle-grid" id="vehicleGrid"></div>
             </div>
-            <div id="panel-fleet-management" class="panel-card">
-              <h3>GESTÃO DE VEÍCULOS DO CORPO DE BOMBEIROS</h3>
-              <p>Adição, Remoção e Estatísticas de veículos do Corpo de Bombeiros.</p>
-              <div class="main-card" style="margin:5px 0 -5px 0;">
-                <span class="data-value" style="font-size: 25px; margin:5px 0 15px 0;">TOTAL DE VEÍCULOS</span>
-                <span class="data-value" id="sum-vehicles" style="font-size: 45px; color: purple; margin-bottom:10px;"></span>
-              </div>
-              <div class="data-grid">
-                <div class="main-card">
-                  <span class="data-value" style="font-size: 15px; margin-bottom:10px;">ADICIONAR VEÍCULO</span>
-                  <div class="data-label" style="font-size: 12px; margin-bottom:5px;">Designe o veículo a adicionar</div>
-                  <div class="form-row" style="justify-content: center;">
-                    <div class="global-field-horizontal">
-                      <input type="text" id="add_vehicle" placeholder="Ex. ABSC-01" style="width: 200px;">
-                    </div>
-                  </div>
-                  <div class="form-row" style="margin: 15px 0 0 0; justify-content: center;">
-                    <div class="action-buttons" id="add-new-veíc">
-                      <button id="add_vehicle_btn" class="btn btn-success">ADICIONAR</button>
-                    </div>
-                  </div>
-                </div>
-                <div class="main-card">
-                  <span class="data-value" style="font-size: 15px; margin-bottom:10px;">REMOVER VEÍCULO</span>
-                  <div class="data-label" style="font-size: 12px; margin-bottom:5px;">Selecione o veículo a remover</div>
-                  <div class="form-row" style="justify-content: center;">
-                    <div class="vehicle-field-horizontal">
-                      <select id="remove_vehicle" style="width: 200px;"></select>
-                    </div>
-                  </div>
-                  <div class="form-row" style="margin: 15px 0 0 0; justify-content: center;">
-                    <div class="action-buttons" id="remove-veíc">
-                      <button id="remove_vehicle_btn" class="btn btn-danger">REMOVER</button>
-                    </div>
-                  </div>
-                </div>
-                <div class="main-card">
-                  <span class="data-value" style="font-size: 17px; margin-bottom:35px;">ESTATÍSTICAS DE VEÍCULOS</span>
-                  <div class="vehicle-stats-grid" style="display: flex; justify-content: center; gap: 50px; margin-top: 5x;">
-                    <div class="stat-item" style="text-align: center;">
-                      <div class="stat-label" style="font-size: 15px; color: #666; margin-bottom: 5px;">NO QUARTEL</div>
-                      <div class="stat-value" id="count-quartel" style="font-size: 30px; font-weight: bold; color: #28a745;">0</div>
-                    </div>
-                    <div class="stat-item" style="text-align: center;">
-                      <div class="stat-label" style="font-size: 15px; color: #666; margin-bottom: 5px;">EM SERVIÇO</div>
-                      <div class="stat-value" id="count-servico" style="font-size: 30px; font-weight: bold; color: #007bff;">0</div>
-                    </div>
-                    <div class="stat-item" style="text-align: center;">
-                      <div class="stat-label" style="font-size: 15px; color: #666; margin-bottom: 5px;">INOP</div>
-                      <div class="stat-value" id="count-inop" style="font-size: 30px; font-weight: bold; color: #dc3545;">0</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div id="vehicle_status_message" class="status"></div>
-            </div>
+            
             <div id="panel-relev-info" class="panel-card">
               <h3>INFORMAÇÕES RELEVANTES</h3>
               <p>Informações de caráter relevante para conhecimento geral.</p>
@@ -2139,7 +2085,7 @@
           <div class="panel-sidebar">
             <button class="panel-sidebar-menu-button active" onclick="showPanelCard('assoc')">Corporação</button>
             <button class="panel-sidebar-menu-button" onclick="showPanelCard('elems')">Elementos</button>
-            <button class="panel-sidebar-menu-button" onclick="showPanelCard('elems')">Veículos</button>
+            <button class="panel-sidebar-menu-button" onclick="showPanelCard('veícs')">Veículos</button>
           </div>
           <div class="panel-content">
             <div id="panel-assoc" class="panel-card active">
@@ -2225,6 +2171,62 @@
                 </table>
               </div>
             </div>
+            <div id="panel-veícs" class="panel-card">
+              <h3>LISTAGEM DE VEÍCULOS</h3>
+                <p>Adição, Remoção e Edição de Veículos.</p>
+              <div class="card">
+                <div class="card-header">NOVO VEÍCULO</div>
+                  <div class="card-body">
+                    <div class="global-field-horizontal">
+                      <label>Nomenclatura:</label>
+                      <input type="text" id="new-veíc-name" style="width: 100px; text-align: center;">
+                      <label>Matrícula:</label>
+                      <input type="text" id="new-veíc-registration" style="width: 100px; text-align: center;">
+                    </div>
+                    <div class="global-field-horizontal">
+                      <label>Marca:</label>
+                      <input type="text" id="new-veíc-brand" style="width: 250px;">
+                      <label>Modelo:</label>
+                      <input type="text" id="new-veíc-model" style="width: 250px;">
+                    </div>
+                    <div class="global-field-horizontal">
+                      <label>Data Compra:</label>
+                      <input type="date" id="new-veíc-buy-date" style="width: 100px;">
+                      <label>Data Matrícula:</label>
+                      <input type="date" id="new-veíc-registration-date" style="width: 100px;">
+                    </div>
+                    <div class="global-field-horizontal">
+                      <label>Estado Operacional:</label>
+                      <select id="new-veíc-state" style="width: 150px;">
+                        <option></option>
+                        <option>Disponível no Quartel</option>
+                        <option>Em Serviço</option>
+                        <option>Inoperacional</option>                        
+                      </select>
+                    </div>          
+                  </div>
+                  <div class="form-row" style="margin: 0 10px 10px 10px; display: flex; flex-wrap: wrap; justify-content: flex-end;">
+                    <div class="action-buttons" id="new-veíc-save" >
+                      <button class="btn btn-add" id="new-veíc-save-update">ADICIONAR</button>
+                    </div>
+                  </div>                
+                <div class="card-footer"></div>
+              </div>              
+              <div class="table-container" style="height:170px;">
+                <table id="veícs-container">
+                  <thead>
+                    <tr style="height: 40px;">
+                      <th>Veículo</th>
+                      <th>Matrícula</th>
+                      <th>Estado Operacional</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  </tbody>
+                </table>
+              </div>              
+            </div>
           </div>
         </div>
         <div class="card-footer"></div>
@@ -2271,15 +2273,7 @@
   <script src="js/utilitiesprogramatics/macent_ltsc_x14.js"></script>
   <script src="js/datacenterprogramatics/corpdata_ltsc_x06.js"></script>
   <script src="js/datacenterprogramatics/elemdata_ltsc_x06.js"></script>
+  <script src="js/datacenterprogramatics/veícdata_ltsc_x06.js"></script>
   <script></script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-

@@ -1,504 +1,14 @@
 <!DOCTYPE html>
 <html lang="pt-PT">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gestão de Acessos</title>
-  <style>
-    /*========================================
-    BASE
-    ========================================*/
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f5f5f5;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-      -ms-overflow-style: none;
-    }
-    
-    body::-webkit-scrollbar {
-      width: 0px;
-      height: 0px;
-    }
-    /*========================================
-    HEADER
-    ========================================*/
-    header {
-      width: 100%;
-      height: 70px;
-      background-color: #DC3545;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 20px;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 1000;
-      border-bottom: 4px solid #f55145;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
-    }
-
-    header h1 {
-      font-size: 24px;
-      font-weight: 600;
-      color: white;
-    }
-    
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    
-    .header-badge-360 {
-      background-color: #B02A37;
-      color: white;
-      padding: 8px 12px;
-      border-radius: 4px;
-      font-weight: bold;
-      font-size: 14px;
-    }
-    
-    .header-logout-btn {
-      background-color: #DC3545;
-      border: none;
-      color: white;
-      font-size: 20px;
-      cursor: pointer;
-      transition: transform 0.2s;
-    }
-    .header-logout-btn:hover {
-      transform: scale(1.2);
-    }
-    /*========================================
-    FOOTER
-    ========================================*/
-    footer {
-      background: #2c3e50;
-      color: #fff;
-      text-align: center;
-      padding: 15px;
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 50px;
-      font-size: 14px;
-    }
-    /*========================================
-    MAIN LAYOUT
-    ========================================*/
-    .main-layout {
-      display: flex;
-      margin-top: 60px;
-      /* Altura do header */
-      min-height: calc(100vh - 60px - 50px);
-      /* Altura total - header - footer */
-    }
-    /*========================================
-    SIDEBAR
-    ========================================*/
-    .sidebar {
-      width: 250px;
-      background: #2c3e50;
-      color: #fff;
-      padding: 20px 0;
-      position: fixed;
-      top: 60px;
-      bottom: 50px;
-      left: 0;
-      overflow-y: auto;
-    }
-
-    .sidebar-item {
-      padding: 15px 30px;
-      cursor: pointer;
-      transition: background 0.2s;
-      border-left: 4px solid transparent;
-    }
-
-    .sidebar-item:hover {
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    .sidebar-item.active {
-      background: rgba(220, 53, 69, 0.3);
-      border-left-color: #dc3545;
-    }
-    /*========================================
-    CONTENT AREA
-    ========================================*/
-    .content {
-      margin-left: 250px;
-      padding: 30px;
-      flex: 1;
-      width: calc(100% - 250px);
-    }
-
-    .content-section {
-      display: none;
-    }
-
-    .content-section.active {
-      display: block;
-    }
-    /*========================================
-    CORPORATION CARD
-    ========================================*/
-    .corporation-card {
-      background: #fff;
-      border-radius: 8px;
-      padding: 25px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      margin: 15px 0 30px 0;
-    }
-
-    .corporation-card h3 {
-      margin: 0 0 5px 0;
-      font-size: 20px;
-      color: #dc3545;
-    }
-
-    .corporation-card>p {
-      margin: 0 0 20px 0;
-      color: #666;
-      font-size: 14px;
-    }
-
-    .card-layout {
-      display: flex;
-      gap: 20px;
-      flex-wrap: wrap;
-    }
-    /*========================================
-    LOGO CARD
-    ========================================*/
-    .logo-card {
-      flex: 0 0 250px;
-      border: 2px solid #ccc;
-      border-radius: 8px;
-      padding: 15px;
-      background: transparent;
-    }
-
-    .logo-card .card-header {
-      text-align: center;
-      font-weight: bold;
-      font-size: 16px;
-      margin-bottom: 15px;
-      color: #333;
-    }
-
-    .logo-preview {
-      text-align: center;
-      margin-bottom: 15px;
-    }
-
-    .logo-preview img {
-      width: 140px;
-      height: 140px;
-      border-radius: 4px;
-      object-fit: cover;
-      border: 1px solid #ccc;
-    }
-
-    .logo-buttons {
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      gap: 8px;
-    }
-    /*========================================
-    INFO CARD
-    ========================================*/
-    .info-card {
-      flex: 1;
-      max-width: 100%;
-      max-height: 400px;
-      overflow-y: auto;
-      overflow-x: hidden;
-      padding: 10px;
-      border: 1px solid #e0e0e0;
-      border-radius: 6px;
-      background: #fafafa;
-    }
-
-    .form-row {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      margin-bottom: 5px;
-      flex-wrap: wrap;
-    }
-
-    .form-row label {
-      font-weight: 500;
-      font-size: 14px;
-      color: #333;
-      white-space: nowrap;
-    }
-
-    .form-row input,
-    .form-row select {
-      padding: 3px 10px;
-      border: 1px solid #ccc;
-      border-radius: 3px;
-      font-size: 12px;
-    }
-    
-
-    .form-row input:focus,
-    .form-row select:focus {
-      outline: none;
-      border-color: #80BDFF;
-      border-radius: 0px;
-      box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.25);
-    }  
-    
-    .form-row input[type="text"]:not([style*="width"]) {
-      flex: 1;
-      min-width: 200px;
-    }
-
-    .form-actions {
-      text-align: right;
-      margin-top: 15px;
-      padding-top: 10px;
-      border-top: 1px solid #e0e0e0;
-    }
-    /*========================================
-    BUTTONS
-    ========================================*/
-    .btn {
-      padding: 8px 16px;
-      border: none;
-      border-radius: 4px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .btn-success {
-      background: #28a745;
-      color: #fff;
-    }
-
-    .btn-success:hover {
-      background: #218838;
-    }
-    /*========================================
-    INFO CARD
-    ========================================*/
-    #access-management {
-      padding-bottom: 30px;
-    }
-
-    table {
-      width: 100%;
-      margin: 10px 0 20px 0;
-      border-collapse: collapse;
-      background: #fff;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    th,
-    td {
-      padding: 12px 15px;
-      border-bottom: 1px solid #ddd;
-    }
-
-    th {
-      background: #dc3545;
-      color: #fff;
-      text-align: left;
-    }
-
-    tr:hover {
-      background: #f1f1f1;
-    }
-
-    .edit-icon {
-      cursor: pointer;
-      font-size: 18px;
-      color: #dc3545;
-    }
-
-    tr.active-corp {
-      background-color: #28a745 !important;
-      color: #fff !important;
-    }
-
-    tr.active-corp td {
-      color: #fff !important;
-    }
-    /*========================================
-    CHECKBOX CONTAINER
-    ========================================*/
-    td.checkbox-cell {
-      padding: 0 !important;
-      background: transparent !important;
-    }
-
-    .checkbox-container {
-      background: rgba(240, 242, 245, 0.95);
-      backdrop-filter: blur(10px);
-      border-radius: 6px;
-      padding: 20px;
-      margin: 10px 10px;
-      width: calc(100% - 20px);
-      box-sizing: border-box;
-      border: 1px solid rgba(200, 210, 220, 0.6);
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
-      color: #333;
-      font-family: "Roboto", sans-serif;
-    }
-    /*========================================
-    TREE NODE
-    ========================================*/
-    .tree-node {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin: 6px 0;
-      padding: 6px 10px;
-      padding-left: 14px;
-      border-left: 1px solid rgba(100, 150, 255, 0.35);
-      transition: background 0.2s ease;
-    }
-
-    .tree-node:hover {
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 6px;
-    }
-    /*========================================
-    SLIDE DOWN ANIMATION
-    ========================================*/
-    .children-container {
-      margin-left: 22px;
-      border-left: 1px dashed rgba(100, 150, 255, 0.25);
-      padding-left: 14px;
-      overflow: hidden;
-      max-height: 0;
-      opacity: 0;
-      transition: max-height 0.35s ease, opacity 0.35s ease, margin 0.25s ease;
-    }
-
-    .children-container.open {
-      max-height: 2000px;
-      opacity: 1;
-      margin-top: 6px;
-    }
-    /*========================================
-    TOGGLE BUTTON
-    ========================================*/
-    .toggle-btn {
-      background: rgba(80, 130, 255, 0.15);
-      border: 1px solid rgba(80, 130, 255, 0.5);
-      color: #8ab4ff;
-      border-radius: 6px;
-      cursor: pointer;
-      width: 22px;
-      height: 22px;
-      font-size: 15px;
-      line-height: 17px;
-      text-align: center;
-      transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
-    }
-
-    .toggle-btn:hover {
-      background: rgba(80, 130, 255, 0.25);
-      box-shadow: 0 0 8px rgba(80, 130, 255, 0.7);
-      transform: scale(1.12);
-    }
-    /*========================================
-    CHECKBOXES
-    ========================================*/
-    .tree-node input[type="checkbox"] {
-      transform: scale(1.2);
-      accent-color: #4e8dff;
-      cursor: pointer;
-    }
-    /*========================================
-    SAVE BUTTON
-    ========================================*/
-    .save-btn {
-      margin-top: 20px;
-      padding: 12px 22px;
-      background: linear-gradient(135deg, #ff4e4e, #c70000);
-      border: none;
-      color: white;
-      font-size: 14px;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: 0.25s;
-      display: block;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    .save-btn:hover {
-      transform: scale(1.04);
-      box-shadow: 0 0 12px rgba(255, 70, 70, 0.9);
-    }
-    /*========================================
-    PLACEHOLDER
-    ========================================*/
-    .placeholder {
-      text-align: center;
-      padding: 50px;
-      color: #999;
-      font-size: 18px;
-    }
-    /*========================================
-    TOAST CONTAINER
-    ========================================*/    
-    .toast-container {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      z-index: 9999;
-    }
-    
-    .toast {
-      background-color: #333;
-      color: #fff;
-      padding: 12px 20px;
-      margin-top: 10px;
-      border-radius: 5px;
-      opacity: 0;
-      transform: translateX(100%);
-      transition: all 0.5s ease;
-      min-width: 200px;
-    }
-    
-    .toast.show {
-      opacity: 1;
-      transform: translateX(0);
-    }
-    
-    .toast.success {
-      background-color: #4CAF50;
-    }
-    
-    .toast.error {
-      background-color: #f44336;
-    }    
-  </style>
+  <link rel="stylesheet" href="css/Adm/adm_11x.css">
 </head>
 <body>
   <header>
-    <h1>🔥 CB 360 - Administração</h1>
+    <h1>🔥 CB 360 Online - Administração</h1>
     <div class="header-right">
       <div class="header-badge-360">Grupo CB360</div>
       <button id="logoutBtn" class="header-logout-btn fa fa-power-off"></button>
@@ -507,8 +17,8 @@
   <div class="main-layout">
     <aside class="sidebar">
       <div class="sidebar-item active" data-section="add-corporation">➕ Adicionar Corporação</div>
-      <div class="sidebar-item" data-section="access-management">🔐 Gestão de Acessos</div>
       <div class="sidebar-item" data-section="user-management">👥 Gestão de Utilizadores</div>
+      <div class="sidebar-item" data-section="access-management">🔐 Gestão de Acessos</div>      
     </aside>
     <main class="content">
       <section id="add-corporation" class="content-section active">
@@ -516,7 +26,7 @@
         <div class="corporation-card">
           <h3>DADOS DA CORPORAÇÃO</h3>
           <p>Dados Gerais do Corpo de Bombeiros.</p>
-          <div class="card-layout">
+          <div class="card-layout" style="margin: 15px 0 0 0;">
             <div class="logo-card">
               <div class="card-header">LOGO</div>
               <div class="card-content">
@@ -524,7 +34,7 @@
                   <img src="https://rjkbodfqsvckvnhjwmhg.supabase.co/storage/v1/object/public/cb_logos/logo_cb_360.png" id="corp-logo">
                 </div>
                 <div class="logo-buttons">
-                  <button class="btn btn-success" id="add-logo-btn">ADICIONAR LOGO</button>
+                  <button class="btn btn-success" id="add-logo-btn" style:"margin:25px 0 0 0;">ADICIONAR LOGO</button>
                   <input type="file" id="logo-input" accept="image/*" style="display: none;">
                 </div>
               </div>
@@ -542,9 +52,9 @@
                 <label>Localidade:</label>
                 <input type="text" id="assoc-locality" style="width: 372px;">
                 <label>Código-Postal:</label>
-                <input type="text" id="assoc-cp1" style="max-width: 80px; text-align: center;">
+                <input type="text" id="assoc-cp1" style="max-width: 80px; text-align: center;" maxlength="4" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 4)">
                 <span>-</span>
-                <input type="text" id="assoc-cp2" style="max-width: 60px; text-align: center;">
+                <input type="text" id="assoc-cp2" style="max-width: 60px; text-align: center;" maxlength="3" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 3)">
               </div>
               <div class="form-row">
                 <label>Distrito:</label>
@@ -558,12 +68,12 @@
               </div>
               <div class="form-row">
                 <label>NIF:</label>
-                <input type="text" id="assoc-nif" style="width: 150px; text-align: center;">
+                <input type="text" id="assoc-nif" style="width: 150px; text-align: center;" maxlength="9" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 9)">
                 <label>Núm. Operacional:</label>
-                <input type="text" id="assoc-operacional" style="width: 100px; text-align: center;">
+                <input type="text" id="assoc-operacional" style="width: 100px; text-align: center;" maxlength="4" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 4)">
               </div>
               <div class="form-actions">
-                <button class="btn btn-success" style="margin:15px 0 0 0;" onclick="saveCorporationData()">ADICIONAR</button>
+                <button class="btn btn-success" style="margin:15px 0 0 0;" onclick="saveCorporationDataWithLogo()">ADICIONAR</button>
               </div>
             </div>
           </div>
@@ -579,18 +89,53 @@
               <th>Ações</th>
             </tr>
           </thead>
-          <tbody>
-          </tbody>
+          <tbody></tbody>
         </table>
       </section> 
       <!-- GESTÃO DE UTILIZADORES -->
       <section id="user-management" class="content-section">
         <h2>Gestão de Utilizadores</h2>
-        <div class="placeholder">
-          Funcionalidade em desenvolvimento...
+        <div class="card-layout" style="margin: 15px 0 0 0;">
+          <div class="info-card">
+            <div class="form-row">
+              <label>Selecione o Corpo de Bombeiros:</label>
+              <select id="cb_select"></select>
+            </div>
+            <div class="form-row">
+              <label>Nome Completo:</label>
+              <input type="text" id="new-user-name" style="width: 400px;">
+            </div>
+            <div class="form-row">
+              <label>Username App Online:</label>
+              <input type="text" id="user-online" style="width: 200px;">
+              <label>Username App Mobile:</label>
+              <input type="text" id="user-mobile" placeholder="A App Mobile ''Brevemente''." style="width: 200px;" disabled>    
+            </div>
+            <div class="form-row">
+              <label>Password App Online:</label>
+              <input type="password" id="pass-online" style="width: 200px;">
+              <label>Password App Mobile:</label>
+              <input type="password" id="pass-mobile" placeholder="A App Mobile ''Brevemente''." style="width: 200px;" disabled>    
+            </div>
+            <div class="form-actions">
+              <button class="btn btn-success" style="margin:15px 0 0 0;" onclick="saveUserData()">ADICIONAR</button>
+            </div>
+          </div>
         </div>
       </section>
     </main>
+  </div>
+  <div id="logoWarningModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        ⚠️ Aviso de Upload do Logo ⚠️
+      </div>
+      <div class="modal-body">
+        <p>Para a melhor qualidade e transparência na visualização do seu logotipo, recomendamos o formato <strong>PNG</strong>.</p>
+        <p>Por favor, certifique-se de que o ficheiro escolhido tem um fundo transparente se necessário.</p>
+        <button id="modalConfirmBtn" class="confirm-btn">OK</button>
+      </div>
+    </div>
   </div>
   <!-- FOOTER -->
   <footer>
@@ -598,505 +143,9 @@
   </footer>
   <div id="toast-container" class="toast-container"></div>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  
-  <script src="js/mainparogramatics/initcfg_ltsc_x07.js"></script>
-  <script>
-    /*========================================
-    SIDEBAR NAVIGATION
-    ========================================*/
-    document.querySelectorAll('.sidebar-item').forEach(item => {
-      item.addEventListener('click', () => {
-        document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
-        document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
-        item.classList.add('active');
-        const sectionId = item.dataset.section;
-        document.getElementById(sectionId).classList.add('active');
-      });
-    });
-    /*========================================
-    TOASTER's
-    ========================================*/    
-    function showToast(message, type = 'success', duration = 3000) {
-      const container = document.getElementById('toast-container');
-      if (!container) return;
-      const toast = document.createElement('div');
-      toast.className = `toast ${type}`;
-      toast.textContent = message;
-      container.appendChild(toast);
-      setTimeout(() => toast.classList.add('show'), 100);
-      setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => container.removeChild(toast), 500);
-      }, duration);
-    }
-    /* =======================================
-    ADD NEW CORPORATIONS
-    ======================================= */
-    document.addEventListener('DOMContentLoaded', () => {
-      const addLogoBtn = document.getElementById('add-logo-btn');
-      const logoInput = document.getElementById('logo-input');
-      const corpLogoImg = document.getElementById('corp-logo');    
-      if (addLogoBtn && logoInput && corpLogoImg) {
-        addLogoBtn.addEventListener('click', () => logoInput.click());
-        logoInput.addEventListener('change', (event) => {
-          const file = event.target.files[0];
-          if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => (corpLogoImg.src = e.target.result);
-            reader.readAsDataURL(file);
-          }
-        });
-      }
-      initHierarchicalSelects();
-    });
-    /* ============== LOAD DISTRICTS =============== */
-    async function loadDistricts(selectId) {
-      try {
-        const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/districts_select?select=id,district`,
-          { headers: getSupabaseHeaders() }
-        );
-        const data = await response.json();
-        const select = document.getElementById(selectId);
-        select.innerHTML = `<option value="">Selecione o Distrito...</option>`;
-        data.forEach((d) => {
-          const opt = document.createElement("option");
-          opt.value = d.id;
-          opt.textContent = d.district;
-          select.appendChild(opt);
-        });
-      } catch (error) {
-        console.error("Erro ao carregar Distritos:", error);
-      }
-    }
-
-    async function findDistrictIdByName(districtName) {
-      try {
-        const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/districts_select?select=id&district=eq.${encodeURIComponent(districtName)}`, {
-            headers: getSupabaseHeaders()
-          }
-        );
-        const data = await response.json();
-        return data.length ? data[0].id : null;
-      } catch (error) {
-        console.error("Erro ao buscar ID do distrito:", error);
-        return null;
-      }
-    }
-
-    function getSelectedDistrictName() {
-      const districtSelect = document.getElementById('district_select_corp');
-      if (!districtSelect || !districtSelect.value) return null;
-      return districtSelect.options[districtSelect.selectedIndex].textContent.trim();
-    }
-    /* =============== LOAD COUNCILS =============== */
-    async function populateCouncilSelectByDistrict(districtId, selectId) {
-      try {
-        const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/councils_select?select=id,council&district_id=eq.${districtId}`,
-          { headers: getSupabaseHeaders() }
-        );
-        const data = await response.json();
-        const select = document.getElementById(selectId);
-        select.innerHTML = `<option value="">Selecione o Concelho...</option>`;
-        data.forEach((c) => {
-          const opt = document.createElement("option");
-          opt.value = c.id;
-          opt.textContent = c.council;
-          select.appendChild(opt);
-        });
-        document.getElementById("parish_select_corp").innerHTML = `<option value="">Selecione a Freguesia...</option>`;
-      } catch (error) {
-        console.error("Erro ao carregar Concelhos:", error);
-      }
-    }
-
-    async function findCouncilIdByName(councilName) {
-      try {
-        const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/councils_select?select=id&council=eq.${encodeURIComponent(councilName)}`, {
-            headers: getSupabaseHeaders()
-          }
-        );
-        const data = await response.json();
-        return data.length ? data[0].id : null;
-      } catch (error) {
-        console.error("Erro ao buscar ID do concelho:", error);
-        return null;
-      }
-    }
-
-    function getSelectedCouncilName() {
-      const councilSelect = document.getElementById('council_select_corp');
-      if (!councilSelect || !councilSelect.value) return null;
-      return councilSelect.options[councilSelect.selectedIndex].textContent.trim();
-    }
-    /* =============== LOAD PARISHES =============== */
-    async function populateParishesByCouncil(councilId, selectId) {
-      try {
-        const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/parishes_select?select=id,parish&council_id=eq.${councilId}`, {
-            headers: getSupabaseHeaders()
-          }
-        );
-        const data = await response.json();
-        const select = document.getElementById(selectId);
-        select.innerHTML = `<option value="">Selecione a Freguesia...</option>`;
-        data.forEach((p) => {
-          const opt = document.createElement("option");
-          opt.value = p.id;
-          opt.textContent = p.parish;
-          select.appendChild(opt);
-        });
-      } catch (error) {
-        console.error("Erro ao carregar Freguesias:", error);
-      }
-    }   
-    /* ========= LOAD HIERARCHICAL SELECTS ========= */
-    async function initHierarchicalSelects() {
-      await loadDistricts("district_select_corp");    
-      document.getElementById("district_select_corp").addEventListener("change", async (e) => {
-        if (e.target.value) {
-          await populateCouncilSelectByDistrict(e.target.value, "council_select_corp");
-        }
-      });    
-      document.getElementById("council_select_corp").addEventListener("change", async (e) => {
-        if (e.target.value) {
-          await populateParishesByCouncil(e.target.value, "parish_select_corp");
-        }
-      });
-    }
-    /* =========== POSTAL CODE FUNCTIONS =========== */
-    function splitPostalCode(fullPostalCode) {
-      if (!fullPostalCode) return { cp1: '', cp2: '' };
-      if (fullPostalCode.includes('-')) {
-        const [cp1, cp2] = fullPostalCode.split('-');
-        return { cp1: cp1 || '', cp2: cp2 || '' };
-      } 
-      if (fullPostalCode.length === 7 && /^\d{7}$/.test(fullPostalCode)) {
-        return { cp1: fullPostalCode.substring(0, 4), cp2: fullPostalCode.substring(4, 7) };
-      }
-      return { cp1: fullPostalCode, cp2: '' };
-    }
-
-    function getCombinedPostalCode() {
-      const cp1 = document.getElementById('assoc-cp1')?.value?.trim();
-      const cp2 = document.getElementById('assoc-cp2')?.value?.trim();
-      if (cp1 && cp2) {
-        if (/^\d{4}$/.test(cp1) && /^\d{3}$/.test(cp2)) {
-          return `${cp1}-${cp2}`;
-        } else {
-          return null;
-        }
-      }
-      if (cp1 && /^\d{4}$/.test(cp1)) return cp1;
-      if (cp2 && /^\d{3}$/.test(cp2)) return cp2;    
-      return null;
-    }
-    /* ============ VALIDATION FUNCTION ============ */    
-    function validateCorporationData(data) {
-      if (!data.corporation) return { isValid: false, message: 'Nome da corporação é obrigatório' };
-      if (!data.corp_fiscal_nr) return { isValid: false, message: 'NIF é obrigatório' };
-      if (!/^\d{9}$/.test(data.corp_fiscal_nr.replace(/\s/g, ''))) return { isValid: false, message: 'NIF deve ter 9 dígitos' };
-      if (!data.corp_oper_nr) return { isValid: false, message: 'Número Operacional da corporação é obrigatório' };
-      if (data.corp_cp && !/^\d{4}-\d{3}$/.test(data.corp_cp)) return { isValid: false, message: 'Código postal deve ter o formato XXXX-XXX' };
-      return { isValid: true };
-    }
-    /* ============= SAVE CORPORATION ============== */
-    async function saveCorporationData() {
-      const saveButton = document.querySelector('button[onclick="saveCorporationData()"]');
-      const originalText = saveButton ? saveButton.textContent : 'GRAVAR';    
-      try {
-        if (saveButton) {
-          saveButton.disabled = true;
-          saveButton.textContent = 'A GRAVAR...';
-        }    
-        const corporationData = {
-          corporation: document.getElementById('assoc-name')?.value?.trim() || null,
-          corp_adress: document.getElementById('assoc-address')?.value?.trim() || null,
-          corp_localitie: document.getElementById('assoc-locality')?.value?.trim() || null,
-          corp_cp: getCombinedPostalCode(),
-          corp_district: getSelectedDistrictName(),
-          corp_council: getSelectedCouncilName(),
-          corp_parish: document.getElementById('parish_select_corp')?.value?.trim() || null,
-          corp_fiscal_nr: document.getElementById('assoc-nif')?.value?.trim() ||  null,
-          corp_oper_nr: document.getElementById('assoc-operacional')?.value?.trim() || null,
-        };    
-        const validation = validateCorporationData(corporationData);
-        if (!validation.isValid) throw new Error(validation.message);
-        const encodedCorpName = encodeURIComponent(corporationData.corporation);
-        const encodedOperNr = encodeURIComponent(corporationData.corp_oper_nr);
-        const checkUrl = `${SUPABASE_URL}/rest/v1/corporation_data?or=(corporation.eq.${encodedCorpName},corp_oper_nr.eq.${encodedOperNr})&select=id`;    
-        const existingResponse = await fetch(checkUrl, { headers: getSupabaseHeaders() });
-        const existingData = await existingResponse.json();    
-        if (existingData.length > 0) {
-          throw new Error("Esta corporação já existe (nome ou número operacional já registado).");
-        }    
-        await createCorporationData(corporationData);
-        showSuccessMessage('Dados da corporação gravados com sucesso!');
-      } catch (error) {
-        console.error('❌ Erro ao gravar dados da corporação:', error);
-        showErrorMessage(error.message || 'Erro ao gravar dados da corporação');
-      } finally {
-        if (saveButton) {
-          saveButton.disabled = false;
-          saveButton.textContent = originalText;
-        }
-      }
-    }
-
-    async function createCorporationData(data) {
-      const response = await fetch(`${SUPABASE_URL}/rest/v1/corporation_data`, {
-        method: 'POST',
-        headers: { ...getSupabaseHeaders(), 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
-        body: JSON.stringify(data),
-      });    
-      if (!response.ok) {
-        const errorData = await response.text();
-        throw new Error(`Erro ao criar corporação: ${response.status} - ${errorData}`);
-      }
-      return await response.json();
-    }    
-    /* =======================================
-    GRANTING OF ACCESS BY CORPORATION
-    ======================================= */
-    /* ============= LOAD CORPORATIONS ============= */
-    async function loadCorporations() {
-      try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/corporation_data`, {
-          headers: getSupabaseHeaders()
-        });
-        if (!res.ok) throw new Error("Erro ao buscar corporações");
-        let corps = await res.json();
-        corps.sort((a, b) => {
-          if (a.corp_oper_nr < b.corp_oper_nr) return -1;
-          if (a.corp_oper_nr > b.corp_oper_nr) return 1;
-          return 0;
-        });
-        const tbody = document.querySelector("#corpTable tbody");
-        tbody.innerHTML = "";
-        corps.forEach(corp => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${corp.corp_oper_nr}</td>
-            <td>${corp.corporation}</td>
-            <td><span class="edit-icon" data-corpid="${corp.id}">✏️</span></td>
-          `;
-          tbody.appendChild(tr);
-          const trTree = document.createElement("tr");
-          const tdTree = document.createElement("td");
-          tdTree.colSpan = 3;
-          tdTree.className = "checkbox-cell";
-          tdTree.style.display = "none";
-          const containerDiv = document.createElement("div");
-          containerDiv.className = "checkbox-container";
-          containerDiv.dataset.corpid = corp.id;
-          const allowedModules = (corp.allowed_modules || "")
-            .split(",")
-            .map(s => s.trim());
-          modulesHierarchy.forEach(parent =>
-            createCheckboxTree(parent, containerDiv, 0, allowedModules)
-          );
-          const saveBtn = document.createElement("button");
-          saveBtn.className = "save-btn";
-          saveBtn.textContent = "Gravar Acessos";
-          saveBtn.addEventListener("click", () =>
-            saveAccesses(corp.id, containerDiv)
-          );
-          containerDiv.appendChild(saveBtn);
-          tdTree.appendChild(containerDiv);
-          trTree.appendChild(tdTree);
-          tbody.appendChild(trTree);
-          const icon = tr.querySelector(".edit-icon");
-          icon.addEventListener("click", () => {
-            const cell = tdTree;
-            document.querySelectorAll("td.checkbox-cell").forEach(c => {
-              if (c !== cell) {
-                c.style.display = "none";
-                const prevRow = c.previousElementSibling;
-                if (prevRow) prevRow.classList.remove("active-corp");
-              }
-            });
-            const isOpening = cell.style.display === "none";
-            cell.style.display = isOpening ? "table-cell" : "none";
-            document.querySelectorAll("#corpTable tbody tr").forEach(r => {
-              if (r !== tr && !r.classList.contains("checkbox-cell")) {
-                r.classList.remove("active-corp");
-              }
-            });
-            if (isOpening) tr.classList.add("active-corp");
-            else tr.classList.remove("active-corp");
-          });
-        });
-      } catch (err) {
-        showErrorMessage("Erro ao carregar corporações.");
-        console.error(err);
-      }
-    }
-    /* ============ CHECKBOX HIERARCHY ============= */    
-    const modulesHierarchy = [
-      {name: 'DECIR 360', children: [
-          {name: 'Controlo de Pagamentos', children: [
-              {name: 'Registo por Elemento'},
-              {name: 'Núcleo Financeiro'},
-              {name: 'Relatórios ANEPC'}
-          ]},
-          {name: 'Assinaturas Diárias'}
-      ]},
-      {name: 'FOMIO 360', children: [
-          {name: 'DECIR'},
-          {name: '1ª Secção'},
-          {name: '2ª Secção'},
-          {name: 'Emissão Escala'},
-          {name: 'Consultar Escalas'}
-      ]},
-      {name: 'EMPLOYEES 360'},
-      {name: 'SALOC 360', children: [
-          {name: 'Planos Prévios de Intervenção', children: [
-              {name: 'PPI A22'},
-              {name: 'PPI Aeroporto de Faro'},
-              {name: 'PPI Linha Férrea'}
-          ]},
-          {name: 'Registos Recusas/INOPS', children: [
-              {name: 'Recusas de Serviços'},
-              {name: 'Inoperacionalidades INEM'},
-              {name: 'Relatórios Mensais'},
-              {name: 'DashBoard'}
-          ]},
-          {name: 'Documentação Importante', children: [
-              {name: 'CREPC Algarve'},
-              {name: 'Planeamento Diário'},
-              {name: 'Sitop de Veículos'},
-              {name: 'Refeições DECIR'}
-          ]},
-          {name: 'Consola de Alarmes' }
-      ]},
-      {name: 'WSMS 360', children: [
-          {name: 'Ocorrências em Curso'},
-          {name: 'Inserir/Alterar Ocorrência'},
-          {name: 'Encerrar Ocorrência'},
-          {name: 'Solicitar Disponibilidades'},
-          {name: 'Indisponibilidade Veículos'},
-          {name: 'Info. Grelha Município'},
-          {name: 'Serviços EMS'},
-          {name: 'Avisos METEO'}
-      ]},
-      {name: 'Utilitários'},
-      {name: 'Data Center'}
-    ];    
-    /* ========== CREATION CHECKBOX TREE =========== */
-    function createCheckboxTree(node, container, level = 0, allowed = []) {
-      const nodeDiv = document.createElement("div");
-      nodeDiv.className = "tree-node";
-      nodeDiv.dataset.level = level;
-      const hasChildren = node.children && node.children.length > 0;
-      const toggleBtn = document.createElement("button");
-      toggleBtn.type = "button";
-      toggleBtn.className = "toggle-btn";
-      toggleBtn.textContent = hasChildren ? "+" : "";
-      if (!hasChildren) toggleBtn.style.visibility = "hidden";
-      const checkbox = document.createElement("input");
-      checkbox.type = "checkbox";
-      checkbox.value = node.name;
-      checkbox.checked = allowed.includes(node.name);
-      const label = document.createTextNode(" " + node.name);
-      nodeDiv.appendChild(toggleBtn);
-      nodeDiv.appendChild(checkbox);
-      nodeDiv.appendChild(label);
-      container.appendChild(nodeDiv);
-      let childrenContainer;
-      if (hasChildren) {
-        childrenContainer = document.createElement("div");
-        childrenContainer.className = "children-container";
-        node.children.forEach(child => createCheckboxTree(child, childrenContainer, level + 1, allowed));
-        container.appendChild(childrenContainer);
-        toggleBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          if (level === 0 && !childrenContainer.classList.contains("open")) {
-            let rootContainer = container;
-            while (rootContainer && !rootContainer.classList.contains('checkbox-container')) {
-              rootContainer = rootContainer.parentElement;
-            }
-            if (rootContainer) {
-              rootContainer.querySelectorAll('.children-container').forEach(cc => {
-                cc.classList.remove('open');
-                const btn = cc.previousElementSibling?.querySelector('.toggle-btn');
-                if (btn) btn.textContent = '+';
-              });
-            }
-          }
-          childrenContainer.classList.toggle("open");
-          toggleBtn.textContent = childrenContainer.classList.contains("open") ? "−" : "+";
-        });
-      }
-      checkbox.addEventListener("change", () => {
-        if (hasChildren && !checkbox.checked) {
-          childrenContainer.querySelectorAll("input[type='checkbox']").forEach(cb => cb.checked = false);
-        }
-        if (checkbox.checked) {
-          let parent = nodeDiv.parentElement;
-          while (parent && !parent.classList.contains('checkbox-container')) {
-            const parentNodeDiv = parent.previousElementSibling;
-            if (parentNodeDiv && parentNodeDiv.querySelector("input[type='checkbox']")) {
-              parentNodeDiv.querySelector("input[type='checkbox']").checked = true;
-            }
-            parent = parent.parentElement;
-          }
-        }
-      });
-    }    
-    /* ========== SAVE ASSIGNED ACCESSES =========== */
-    async function saveAccesses(corpId, container) {
-      const checked = [...container.querySelectorAll("input[type='checkbox']:checked")]
-        .map(cb => cb.value);
-      try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/corporation_data?id=eq.${corpId}`, {
-          method: "PATCH",
-          headers: getSupabaseHeaders("return=representation"),
-          body: JSON.stringify({
-            allowed_modules: checked.join(",")
-          })
-        });
-        if (!res.ok) throw new Error("Erro ao gravar acessos");
-        showSuccessMessage("Acessos gravados!");
-      } catch (err) {
-        showErrorMessage("Erro ao gravar!");
-        console.error(err);
-      }
-    }
-    loadCorporations();
-    /* =======================================
-    ADD USERS BY CORPORATION
-    ======================================= */
-    
-    
-    /* =======================================
-    LOGOUT FUNCTION
-    ======================================= */
-    document.addEventListener('DOMContentLoaded', () => {
-      const logoutBtn = document.getElementById("logoutBtn");
-      if (logoutBtn) {
-        logoutBtn.addEventListener("click", () => {
-          sessionStorage.removeItem("currentUserName");
-          sessionStorage.removeItem("currentUserDisplay");
-          sessionStorage.removeItem("currentUserCorpNr");
-          sessionStorage.removeItem("currentUserPatent");
-          window.location.replace("index.html");
-        });
-      }
-    });
-    /* =======================================
-    MESSAGING FUNCTIONS
-    ======================================= */    
-    function showSuccessMessage(message) {
-      showToast(`${message}`);
-    }
-
-    function showErrorMessage(message) {
-      showToast(`❌ ${message}`);
-    }
-  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/mainprogramatics/initcfg_ltsc_x07.js"></script>
+  <script src="js/admprogramatics/adm_ltsc_x46.js"></script>
+  <script></script>
 </body>
-
 </html>

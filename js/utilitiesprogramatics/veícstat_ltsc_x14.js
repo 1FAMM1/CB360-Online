@@ -177,6 +177,7 @@
       await updateVehicleStatussessionStorage(selectedVehicleCode, vehicleStatusSelect.value);
       closeVehicleStatusModal();
     });
+
     vehicleStatusCancelBtn.addEventListener('click', closeVehicleStatusModal);
     window.addEventListener('click', (e) => {
       if (e.target === vehicleStatusModal) closeVehicleStatusModal();
@@ -184,5 +185,3 @@
     window.addEventListener('load', loadVehiclesFromsessionStorage);
 
     setInterval(loadVehiclesFromsessionStorage, 10 * 60 * 1000);
-
-

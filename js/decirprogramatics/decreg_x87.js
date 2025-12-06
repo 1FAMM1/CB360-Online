@@ -132,7 +132,7 @@
             tableContainerId: "table-container-dec-pag",
             yearSelectId: "year-dec-pag",
             optionsContainerId: "decir-pag-options",
-            blockedMonths: [0,1,2,10,11],
+            blockedMonths: [0,1,2,3,10,11],
             monthNames: ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro","Cod.A33"],
             includeExtraButton: true,
             extraButtonFunc: handleCodA33Button,

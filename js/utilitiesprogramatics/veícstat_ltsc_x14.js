@@ -93,39 +93,44 @@
     }
     
     async function updateVehicleStatussessionStorage(vehicleCode, newStatus) {
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
-      let statusData = {corp_oper_nr: currentCorpOperNr};
-      if (newStatus === "Inop") {
-        statusData.is_inop = true;
-        statusData.current_status = "Inoperacional";
-      } else if (newStatus === "Em Serviço") {
-        statusData.current_status = "Em Serviço";
-        statusData.is_inop = false;
-      } else {
-        statusData.current_status = "Disponível no Quartel";
-        statusData.is_inop = false;
+  const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
+  let statusData = {corp_oper_nr: currentCorpOperNr};
+  if (newStatus === "Inop") {
+    statusData.is_inop = true;
+    statusData.current_status = "Inoperacional";
+  } else if (newStatus === "Em Serviço") {
+    statusData.current_status = "Em Serviço";
+    statusData.is_inop = false;
+  } else {
+    statusData.current_status = "Disponível no Quartel";
+    statusData.is_inop = false;
+  }
+
+  try {
+    const response = await fetch(
+      `${SUPABASE_URL}/rest/v1/vehicle_status?vehicle=eq.${encodeURIComponent(vehicleCode)}&corp_oper_nr=eq.${currentCorpOperNr}`, {
+        method: 'PATCH',
+        headers: getSupabaseHeaders({ Prefer: 'return=representation' }),
+        body: JSON.stringify(statusData)
       }
-      try {
-        const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/vehicle_status?vehicle=eq.${encodeURIComponent(vehicleCode)}&corp_oper_nr=eq.${currentCorpOperNr}`, {
-            method: 'PATCH',
-            headers: getSupabaseHeaders({ Prefer: 'return=representation' }),
-            body: JSON.stringify(statusData)
-          }
-        );
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`Erro ${response.status}: ${errorText}`);
-        }
-        const result = await response.json();
-        vehicleINOP[vehicleCode] = statusData.is_inop;
-        vehicleStatuses[vehicleCode] = statusData.current_status;
-        updateVehicleButtonColors();
-      } catch (error) {
-        console.error('❌ Erro ao atualizar:', error);
-        alert('Erro ao atualizar status: ' + error.message);
-      }
+    );
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Erro ${response.status}: ${errorText}`);
     }
+
+    // Safe JSON parsing
+    const result = await safeJson(response);
+
+    vehicleINOP[vehicleCode] = statusData.is_inop;
+    vehicleStatuses[vehicleCode] = statusData.current_status;
+    updateVehicleButtonColors();
+  } catch (error) {
+    console.error('❌ Erro ao atualizar:', error);
+    alert('Erro ao atualizar status: ' + error.message);
+  }
+}
+
 
     function generateVehicleButtons() {
       vehicleGrid.innerHTML = '';
@@ -172,4 +177,5 @@
       if (e.target === vehicleStatusModal) closeVehicleStatusModal();
     });
     window.addEventListener('load', loadVehiclesFromsessionStorage);
+
     setInterval(loadVehiclesFromsessionStorage, 10 * 60 * 1000);

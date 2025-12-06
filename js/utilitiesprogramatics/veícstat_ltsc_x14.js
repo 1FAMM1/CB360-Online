@@ -94,19 +94,26 @@
     
     async function updateVehicleStatussessionStorage(vehicleCode, newStatus) {
   const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
-  let statusData = {corp_oper_nr: currentCorpOperNr};
+  if (!currentCorpOperNr) {
+    alert("⚠️ Nenhuma corporação selecionada.");
+    return;
+  }
+
+  // Monta payload de status
+  let statusData = { corp_oper_nr: currentCorpOperNr };
   if (newStatus === "Inop") {
     statusData.is_inop = true;
     statusData.current_status = "Inoperacional";
   } else if (newStatus === "Em Serviço") {
+    statusData.is_inop = false;
     statusData.current_status = "Em Serviço";
-    statusData.is_inop = false;
   } else {
-    statusData.current_status = "Disponível no Quartel";
     statusData.is_inop = false;
+    statusData.current_status = "Disponível no Quartel";
   }
 
   try {
+    // Faz PATCH no Supabase
     const response = await fetch(
       `${SUPABASE_URL}/rest/v1/vehicle_status?vehicle=eq.${encodeURIComponent(vehicleCode)}&corp_oper_nr=eq.${currentCorpOperNr}`, {
         method: 'PATCH',
@@ -114,22 +121,35 @@
         body: JSON.stringify(statusData)
       }
     );
+
+    // Se status diferente de 2xx, mostra erro
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(`Erro ${response.status}: ${errorText}`);
     }
 
-    // Safe JSON parsing
-    const result = await safeJson(response);
+    // Tenta parsear JSON, mas ignora erro se não houver corpo
+    let result = null;
+    try {
+      result = await response.json();
+    } catch (e) {
+      result = null;
+    }
 
+    // Atualiza os objetos locais e cores dos botões
     vehicleINOP[vehicleCode] = statusData.is_inop;
     vehicleStatuses[vehicleCode] = statusData.current_status;
     updateVehicleButtonColors();
+
+    // Opcional: alerta de sucesso
+    // alert(`Status do veículo ${vehicleCode} atualizado para "${statusData.current_status}"`);
+
   } catch (error) {
     console.error('❌ Erro ao atualizar:', error);
     alert('Erro ao atualizar status: ' + error.message);
   }
 }
+
 
 
     function generateVehicleButtons() {
@@ -179,3 +199,4 @@
     window.addEventListener('load', loadVehiclesFromsessionStorage);
 
     setInterval(loadVehiclesFromsessionStorage, 10 * 60 * 1000);
+

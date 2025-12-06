@@ -7,7 +7,7 @@
       padding: 0 20px;
       position: relative;
       border-bottom: 4px solid #f55145;
-      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.5);
     }
 
     .header-logo {
@@ -56,3 +56,4 @@
       transform: scale(1.2); 
 
     }   
+

@@ -18,6 +18,7 @@ export default async function handler(req, res) {
       const { data, error } = await supabase
         .from('vehicle_status')
         .select('vehicle')
+        .eq('corp_oper_nr', '0805')
         .order('vehicle', { ascending: true })
       
       if (error) throw error

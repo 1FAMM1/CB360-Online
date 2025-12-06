@@ -1,7 +1,7 @@
     body {
       margin: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: url('https://rjkbodfqsvckvnhjwmhg.supabase.co/storage/v1/object/public/cb_logos/christmas.jpg') no-repeat center center fixed;
+      background: url('https://rjkbodfqsvckvnhjwmhg.supabase.co/storage/v1/object/public/cb_logos/backgroud_christmas.jpg') no-repeat center center fixed;
       background-size: cover;
       display: flex;
       flex-direction: column;
@@ -223,4 +223,5 @@
       animation-duration: var(--toast-duration, 2s);
     }
     
+
     @keyframes progressBar {from {width: 100%;} to {width: 0%;}}

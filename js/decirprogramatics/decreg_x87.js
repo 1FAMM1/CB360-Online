@@ -107,7 +107,7 @@
             tableContainerId: "table-container-dec-reg",
             yearSelectId: "year-dec-reg",
             optionsContainerId: "decir-reg-options",
-            blockedMonths: [0,1,2,10,11],
+            blockedMonths: [0,1,2,3,10,11],
             loadDataFunc: async (year, month) => await loadDecirRegData(),
             createTableFunc: createDecirRegTable,
             loadByMonthFunc: async (year, month) => window.loadDecirByMonth?.(year, month)
@@ -158,7 +158,7 @@
             tableContainerId: "table-container-dec-anepc",
             yearSelectId: "year-dec-anepc",
             optionsContainerId: "decir-anepc-options",
-            blockedMonths: [0,1,2,10,11],
+            blockedMonths: [0,1,2,3,10,11],
             loadDataFunc: async (year, month) => ({
               elems: await loadDecirANEPCElements(),
               turnos: await loadShiftsByNI(year, month)

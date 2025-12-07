@@ -55,7 +55,7 @@
           if (data && data.length > 0) {
             const corp = data[0];
             const titleEl = document.querySelector('.header-title');
-            const logoEl = document.querySelector('.cb-logo');
+            const logoEl = document.querySelector('.cb-logo img');
             const nrEl = document.querySelector('.header-nr');
             if (titleEl) titleEl.textContent = corp.corporation;
             if (logoEl && corp.logo_url) logoEl.src = corp.logo_url;
@@ -178,5 +178,6 @@
       }
 
     });
+
 
 

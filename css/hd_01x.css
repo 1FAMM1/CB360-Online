@@ -1,3 +1,6 @@
+    /*========================================
+    HEADER
+    ========================================*/
     .header {
       width: 100%;
       height: 70px;
@@ -9,23 +12,31 @@
       border-bottom: 4px solid #f55145;
       box-shadow: 0 3px 6px rgba(0, 0, 0, 0.5);
     }
+    
+    .cb-logo {
+      position: absolute;
+      top: 0px;
+      left: 65px;
+      z-index: 10;
+    }
 
     .header-logo {
-      height: 60px;
+      height: 75px;
       margin-top: 4px;
-      margin-left: 0px;
     }
 
     .header-title-container {
       flex-grow: 1;
+      left: 55px;
     }
 
     .header-title {
       color: white;
       font-size: 16px;
       font-weight: bold;
-      margin: 0 15px;
-    }
+      margin: 0 60px;
+      margin-left: 130px;
+    }        
 
     .header-nr {
       display: none;
@@ -36,6 +47,7 @@
       color: #FFE6E6;
       font-size: 12px;
       margin: 0 15px;
+      margin-left:  130px;
     }
 
     .header-authorization {
@@ -52,8 +64,16 @@
       font-size: 14px;
     }
 
+    .header-logout-btn {
+      background-color: #B02A37;
+      border: none;
+      color: white;
+      font-size: 20px;
+      margin-left: 10px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
     #logoutBtn:hover {
-      transform: scale(1.2); 
-
-    }   
-
+      transform: scale(1.2);
+    }

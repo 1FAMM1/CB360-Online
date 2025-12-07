@@ -15,14 +15,19 @@
     
     .cb-logo {
       position: absolute;
-      top: 0px;
-      left: 65px;
+      height: 75px;
+      top: 3px;
+      left: 35px;
       z-index: 10;
     }
-
-    .header-logo {
+    
+    .mark-logo {
+      position: absolute;
+      top: 0px;
+      left: 4px;
+      z-index: 10;
       height: 75px;
-      margin-top: 4px;
+      width: 60px;
     }
 
     .header-title-container {
@@ -35,7 +40,7 @@
       font-size: 16px;
       font-weight: bold;
       margin: 0 60px;
-      margin-left: 130px;
+      margin-left: 135px;
     }        
 
     .header-nr {
@@ -47,7 +52,7 @@
       color: #FFE6E6;
       font-size: 12px;
       margin: 0 15px;
-      margin-left:  130px;
+      margin-left:  135px;
     }
 
     .header-authorization {

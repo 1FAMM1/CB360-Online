@@ -79,7 +79,7 @@
       position: relative;
       background: #eeee;
       padding: 10px 15px;
-      border-radius: 6px;
+      border-radius: 0 0 8px 8px;
       width: 285px;
       text-align: center;
       z-index: 1;
@@ -149,11 +149,23 @@
 
     .login-container button:hover {
       background: #1a252f;
+    }   
+    
+    .login-container::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 50px;
+      background: #2c3e50;
+      border-radius: 0 0 6px 5px;
+      z-index: -1
     }
-
+    
     .login-footer {
       font-size: 11px;
-      color: #666;
+      color: #aaa;
       margin-top: 16px;
       text-align: center;
     }
@@ -223,5 +235,4 @@
       animation-duration: var(--toast-duration, 2s);
     }
     
-
     @keyframes progressBar {from {width: 100%;} to {width: 0%;}}

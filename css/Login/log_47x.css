@@ -126,6 +126,7 @@
       border: 1px solid #ccc;
       font-size: 14px;
       box-sizing: border-box;
+      color: #777;
     }
 
     .login-container input:focus {
@@ -236,4 +237,5 @@
     }
     
     @keyframes progressBar {from {width: 100%;} to {width: 0%;}}
+
 

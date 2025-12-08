@@ -21,19 +21,18 @@
   <link rel="stylesheet" href="css/rId_01x.css">
   <link rel="stylesheet" href="css/ww_01x.css">
 </head>
-
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <body>
   <div class="container">
     <div class="cb-logo">
-      <img src="" alt="Logo CB" class="cb-logo">
+      <img src="https://rjkbodfqsvckvnhjwmhg.supabase.co/storage/v1/object/public/cb_logos/logo_cb_0805.png" alt="Logo CB" class="cb-logo">
     </div>
     <div class="mark-logo">
       <img src="https://rjkbodfqsvckvnhjwmhg.supabase.co/storage/v1/object/public/cb_logos/Mark_Logo_White.png" alt="Logo CB" class="mark-logo">
     </div>
     <header class="header">      
       <div class="header-title-container">
-        <h1 class="header-title"></h1>
+        <h1 class="header-title">Nome do CB</h1>
         <h2 class="header-nr" ></h2>
         <p class="header-subtitle">CB360 Online</p>
         <p class="header-authorization">Acesso Autorizado: <span id="authName"></span></p>
@@ -46,7 +45,7 @@
       <button class="sidebar-menu-button active" data-page="page-main">🏠 Menu Principal</button>
       <!-- ======================= DECIR 360 ======================= -->
       <button class="sidebar-menu-button sub-submenu-toggle" data-page="page-decir" data-access="DECIR 360">💶 Gestão Financeira</button>
-      <div class="sub-submenu">
+      <div class="submenu">
         <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-decir" data-access="Controlo de Pagamentos">Controlo de Pagamentos</button>
         <div class="sub-submenu">
           <button class="sidebar-sub-submenu-button" data-page="decir-reg" data-access="Registo por Elemento">Registo por Elemento</button>
@@ -57,12 +56,12 @@
       </div>
       <!-- ======================= FOMIO 360 ======================= -->
       <button class="sidebar-menu-button sub-submenu-toggle" data-page="page-fomio" data-access="FOMIO 360">👨🏻‍🚒👩🏻‍🚒 Gestão Operacional</button>
-      <div class="sub-submenu">
-        <button class="sidebar-sub-submenu-button" data-page="page-scales" data-access="DECIR">Escala DECIR</button>
-        <button class="sidebar-sub-submenu-button" data-page="page-scales" data-access="1ª Secção">Escala 1ª Secção</button>
-        <button class="sidebar-sub-submenu-button" data-page="page-scales" data-access="2ª Secção">Escala 2ª Secção</button>
-        <button class="sidebar-sub-submenu-button" data-page="page-scales" data-access="Emissão Escala">Emissão Escalas</button>
-        <button class="sidebar-sub-submenu-button" data-page="page-scales" data-access="Consultar Escalas">Consultar Escalas</button>
+      <div class="submenu">
+        <button class="sidebar-submenu-button" data-page="page-scales" data-access="DECIR">Escala DECIR</button>
+        <button class="sidebar-submenu-button" data-page="page-scales" data-access="1ª Secção">Escala 1ª Secção</button>
+        <button class="sidebar-submenu-button" data-page="page-scales" data-access="2ª Secção">Escala 2ª Secção</button>
+        <button class="sidebar-submenu-button" data-page="page-scales" data-access="Emissão Escala">Emissão Escalas</button>
+        <button class="sidebar-submenu-button" data-page="page-scales" data-access="Consultar Escalas">Consultar Escalas</button>
       </div>
       <!-- ======================= EMPLOYEES 360 ======================= -->
       <button class="sidebar-menu-button" data-page="" data-access="EMPLOYEES 360" onclick="showTempWarning('MÓDULO BREVEMENTE DISPONÍVEL EM CB360 ONLINE')">👷🏻‍♂️👷🏻‍♀️ Gestão Funcionários</button>
@@ -145,8 +144,7 @@
         <button id="popup-vehicle-cancel-btn" class="btn btn-danger">Cancelar</button>
       </div>
     </div>
-  </div>
-  
+  </div>  
   <!--------------------------->
   <!---- TEMP POPUP MODULE ---->  
   <div id="popup-temp-modal" class="popup-modal" tabindex="0">
@@ -157,9 +155,7 @@
     </div>
   </div>
   <!--------------------------->
-  <!--------------------------->
-  
-  
+  <!--------------------------->  
   <!---- REGISTRATION WINDOW MODULE ---->
   <div class="window" role="dialog" aria-labelledby="win-title" id="editWindow">
     <div class="window-titlebar">
@@ -282,7 +278,7 @@
         <div class="card-body">
           <p style="font-size: 15px; margin-bottom: 35px;">
             O <strong>CB360 Online</strong> é um sistema integrado e modular desenvolvido para apoiar a gestão operacional e administrativa
-            do seu <strong>Corpo de Bombeiros</strong>. Concebido como uma plataforma centralizada e intuitiva,
+            do seu Corpo de Bombeiros. Concebido como uma plataforma centralizada e intuitiva,
             permite a coordenação digital das diversas áreas funcionais da SALOC, garantindo eficiência, rastreabilidade e
             otimização de recursos em tempo real.
           </p>
@@ -299,7 +295,7 @@
             de proteção e socorro.
           </p>
           <p style="margin-bottom: 45px;">
-            Este projeto representa um passo importante na transição digital das operações da Cruz Lusa, reforçando a eficiência,
+            Este projeto representa um passo importante na transição digital das operações do seu Corpo de Bombeiros, reforçando a eficiência,
             a comunicação interna e a capacidade de resposta perante qualquer cenário de emergência.
           </p>
           <div style="text-align: center; font-style: italic; color: #555;">
@@ -450,7 +446,7 @@
             O módulo <strong>REGOPS 360</strong> centraliza a <strong>gestão de recusas de serviços</strong> e
             <strong>inoperacionalidades de meios INEM</strong>, permitindo um controlo detalhado e
             automatizado da disponibilidade operacional das viaturas integradas no
-            protocolo de emergência médica, bem como a recusa de serviços do seu <strong>Corpo de Bombeiros</strong>.
+            protocolo de emergência médica, bem como a recusa de serviços do seu Corpo de Bombeiros.
           </p>
           <div style="background: linear-gradient(90deg, #e0e0e0, #d6d6d6); padding: 15px 20px; border-left: 5px solid #dc3545; border-radius: 6px; margin-bottom: 20px;">
             <strong>Funcionalidades Principais:</strong>
@@ -1420,9 +1416,10 @@
         </div>
         <div class="card-footer"></div>
       </div>
-      <div id="popup-posit-modal" class="popup-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; ">
-        <div class="popup-content" style="background-color: white; padding: 20px; border-radius: 12px; text-align: center; max-width: 400px; width: 90%; position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.3); ">
+      <div id="popup-posit-modal" class="popup-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000;">
+        <div class="popup-content" style="background-color: white; padding: 20px; border-radius: 12px; text-align: center; max-width: 400px; width: 90%; position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
           <h3 style="margin-bottom: 15px;">POSIT</h3>
+          <div id="posit-error" style="display:none; color:#D8000C; background:#FFD2D2; padding:8px 12px; border-radius:6px; margin-bottom:10px; font-size:13px; text-align:center;"></div>
           <div style="display: flex; justify-content: center; align-items: center; width: 100%; margin: 5px 0;">
             <label for="posit-description" style="width: 90px; text-align: left;">Descrição:</label>
             <input type="text" id="posit-description" style="flex: 1; padding: 5px; border-radius: 6px; border: 1px solid #ccc; text-align: center;" readonly />
@@ -1449,7 +1446,8 @@
             <label for="posit-text" style="display:block; margin-bottom: 5px;">POSIT:</label>
             <textarea id="posit-text" rows="5" style="width: 100%; padding: 5px; border-radius: 6px; border: 1px solid #ccc; resize: vertical;"></textarea>
           </div>
-          <div style="margin-top: 5px; text-align: left;"> <input type="checkbox" id="desmobilizacao" />
+          <div style="margin-top: 5px; text-align: left;">
+            <input type="checkbox" id="desmobilizacao" />
             <label for="desmobilizacao" style="margin-left: 5px;">Desmobilização de meios</label>
           </div>
           <button id="posit-send-btn" class="btn btn-danger" style="width: 50%; margin-top: 10px;">Enviar POSIT</button>
@@ -2241,8 +2239,7 @@
      <span class="left-info">© 2025 | Fábio Martins | Sistemas de Informação</span>
      <span class="right-info">CB360 Online v10.748.43</span>
     </div>
-  </footer>
-  
+  </footer>  
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="js/mainprogramatics/initcfg_ltsc_x07.js"></script>
@@ -2279,6 +2276,4 @@
   <script src="js/datacenterprogramatics/veícdata_ltsc_x06.js"></script>
   <script></script>
 </body>
-
 </html>
-

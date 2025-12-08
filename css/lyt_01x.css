@@ -58,8 +58,8 @@
       bottom: 0;
       left: 0;
       right: 0;
-      height: 40px;
-      background: #F8F9FA;
+      height: 25px;
+      background: linear-gradient(135deg, #343A40, #2d3237);
       border-top: 3px solid #DC3545;
       padding: 0 20px;
       display: flex;
@@ -73,7 +73,7 @@
       justify-content: space-between;
       align-items: center;
       font-size: 12px;
-      color: #6C757D;
+      color: #aaa;
     }
     
     .left-info {
@@ -93,3 +93,4 @@
       background: #f0f0f0;
       border-radius: 8px;
     }
+

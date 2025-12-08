@@ -84,6 +84,13 @@
       font-style: italic;
     }
 
+    .left-info,
+    .right-info {
+      line-height: 25px;
+      display: flex;
+      align-items: center;
+    }
+
     .loading {
       text-align: center;
       color: #7f8c8d;
@@ -93,4 +100,3 @@
       background: #f0f0f0;
       border-radius: 8px;
     }
-

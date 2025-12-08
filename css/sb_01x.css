@@ -6,7 +6,7 @@
       left: 0;
       top: 70px;
       width: 220px;
-      height: calc(100vh - 110px);
+      height: calc(100vh - 80px);
       background-color: #343A40;
       padding: 20px 10px;
     }
@@ -190,3 +190,4 @@
     .panel-sidebar-menu-button.active::before {
       opacity: 1;
     }
+

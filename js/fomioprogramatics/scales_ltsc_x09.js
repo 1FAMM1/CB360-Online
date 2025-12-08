@@ -5,7 +5,7 @@
        SCALES MOULE
     ======================================= */
     /* =  SCALES DYNAMIC TABLE - MAIN INIT  */
-    document.querySelectorAll('.sidebar-sub-submenu-button').forEach(btn => {
+    document.querySelectorAll('.sidebar-submenu-button').forEach(btn => {
       btn.addEventListener('click', () => {
         const page = btn.dataset.page;
         const access = btn.dataset.access;
@@ -40,7 +40,7 @@
     });
     /* =========  SIDEBAR BUTTONS ========== */
     function initSidebarSecaoButtons() {
-      document.querySelectorAll(".sidebar-sub-submenu-button").forEach(btn => {
+      document.querySelectorAll(".sidebar-submenu-button").forEach(btn => {
         btn.addEventListener("click", async () => {
           currentSection = btn.getAttribute("data-access");
           createMonthButtons("months-container", "table-container", yearAtual);
@@ -1398,6 +1398,7 @@
         alert(`❌ Erro: Não foi possível comunicar com o serviço de conversão.\n\nTipo: ${error.name}\nMensagem: ${error.message}`);
       }
     }
+
 
 
 

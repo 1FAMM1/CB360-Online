@@ -23,10 +23,10 @@
     
     .mark-logo {
       position: absolute;
-      top: 0px;
+      top: 3px;
       left: 4px;
       z-index: 10;
-      height: 75px;
+      height: 65px;
       width: 60px;
     }
 

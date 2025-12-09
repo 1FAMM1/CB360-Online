@@ -180,7 +180,7 @@
       const initialActive = sidebar.querySelector("button.active");
       if (initialActive) navigateToPage(initialActive);
     });
-/* =======================================
+    /* =======================================
     SIDEBAR BLINKER
     ======================================= */
     function createBlinker({pageId, tableId, blinkClass, primaryColor = "#343A40", blinkColor = "#DC3545"}) {
@@ -189,32 +189,21 @@
       let currentlyBlinkingTargets = [];
 
       function ensureBlinkStyle() {
-  const styleId = `${blinkClass}-style`;
-  const existingStyle = document.getElementById(styleId);
-  
-  if (existingStyle) {
-    existingStyle.remove();
-  }
-  
-  const style = document.createElement("style");
-  style.id = styleId;
-  style.textContent = `
-    .sidebar-menu-button.${blinkClass},
-    .sidebar-menu-button.${blinkClass}:hover,
-    .sidebar-submenu-button.${blinkClass},
-    .sidebar-submenu-button.${blinkClass}:hover {
-      animation: ${blinkClass}-anim 0.9s infinite !important;
-      transition: none !important;
-      background-image: none !important;
-    }
-    @keyframes ${blinkClass}-anim {
-      0% { background-color: ${primaryColor} !important; }
-      50% { background-color: ${blinkColor} !important; }
-      100% { background-color: ${primaryColor} !important; }
-    }
-  `;
-  document.head.appendChild(style);
-}
+        if (document.getElementById(`${blinkClass}-style`)) return;
+        const style = document.createElement("style");
+        style.id = `${blinkClass}-style`;
+        style.textContent = `
+          .${blinkClass} {
+            animation: ${blinkClass}-anim 0.9s infinite;
+          }
+          @keyframes ${blinkClass}-anim {
+            0% { background-color: ${primaryColor}; }
+            50% { background-color: ${blinkColor}; }
+            100% { background-color: ${primaryColor}; }
+          }
+        `;
+        document.head.appendChild(style);
+      }
 
       function isVisible(el) {
         return !!(el && (el.offsetWidth || el.offsetHeight || el.getClientRects().length));
@@ -345,7 +334,3 @@
       primaryColor: "#343A40",
       blinkColor: "#DC3545"
     });
-
-
-
-

@@ -275,11 +275,18 @@ function decideAndStartBlink() {
 }
 
       function startBlinkOnTargets(targets) {
-        stopBlinking();
-        ensureBlinkStyle();
-        targets.forEach(el => el && el.classList.add(blinkClass));
-        currentlyBlinkingTargets = targets.filter(Boolean);
-      }
+  console.log("🎨 startBlinkOnTargets chamada com:", targets);
+  stopBlinking();
+  ensureBlinkStyle();
+  targets.forEach(el => {
+    if (el) {
+      console.log("   Adicionando classe", blinkClass, "a:", el.textContent.trim());
+      el.classList.add(blinkClass);
+    }
+  });
+  currentlyBlinkingTargets = targets.filter(Boolean);
+  console.log("   currentlyBlinkingTargets atualizado:", currentlyBlinkingTargets.length, "elementos");
+}
 
       function stopBlinking() {
         currentlyBlinkingTargets.forEach(el => el?.classList.remove(blinkClass));
@@ -382,3 +389,4 @@ function decideAndStartBlink() {
       primaryColor: "#343A40",
       blinkColor: "#DC3545"
     });
+

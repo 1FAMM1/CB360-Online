@@ -224,7 +224,7 @@
         const emailRes = await fetch('https://cb360-mobile.vercel.app/api/sitop_covert_and_send', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({data, recipients: to, ccRecipients: cc, bccRecipients: bcc, emailSubject: `Situação Operacional do Veículo ${vehicle}`, emailBody: emailBodyHTML})
+          body: JSON.stringify({data, recipients: to, ccRecipients: cc, bccRecipients: bcc, emailSubject: `Situação Operacional do Veículo ${vehicle}_${corpOperNr}`, emailBody: emailBodyHTML})
         });
         const emailResult = await emailRes.json();
         if (!emailRes.ok) throw new Error(`Erro ao enviar email: ${JSON.stringify(emailResult)}`);
@@ -340,4 +340,5 @@
     document.querySelector('[data-page="page-inocrepc"]').addEventListener('click', () => {
       sitopContainer.style.display = 'none';
       inopsTableContainer.style.display = 'none';
+
     });

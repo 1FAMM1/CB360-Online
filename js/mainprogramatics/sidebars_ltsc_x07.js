@@ -241,11 +241,23 @@
       }
 
      function decideAndStartBlink() {
-       const btn = findSubmenuButton();
-       const parentToggle = findParentToggle();
-       startBlinkOnTargets([parentToggle, btn].filter(Boolean));
-       return !!(btn || parentToggle);
-     }
+  const btn = findSubmenuButton();
+  if (btn && isVisible(btn)) {
+    startBlinkOnTargets([btn]); // filho visível → pisca filho
+    const parent = findParentToggle();
+    if (parent) startBlinkOnTargets([parent, btn]); // pai e filho
+    return true;
+  }
+
+  const parentToggle = findParentToggle();
+  if (parentToggle) {
+    startBlinkOnTargets([parentToggle]); // pai mesmo que filho invisível
+    return true;
+  }
+
+  return false;
+}
+
            
       function startDiscovery() {
         if (discoveryInterval || discoveryObserver) return;
@@ -330,6 +342,7 @@
       blinkColor: "#DC3545"
 
     });
+
 
 
 

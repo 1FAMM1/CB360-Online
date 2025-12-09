@@ -181,7 +181,7 @@
       if (initialActive) navigateToPage(initialActive);
     });
     /* =======================================
-       SIDEBAR BLINKER
+    SIDEBAR BLINKER
     ======================================= */
     function createBlinker({pageId, tableId, blinkClass, primaryColor = "#343A40", blinkColor = "#DC3545"}) {
       let discoveryInterval = null;
@@ -226,40 +226,32 @@
   return null;
 }
 
+      function startBlinkOnTargets(targets) {
+        stopBlinking();
+        ensureBlinkStyle();
+        targets.forEach(el => el && el.classList.add(blinkClass));
+        currentlyBlinkingTargets = targets.filter(Boolean);
+      }
 
+      function stopBlinking() {
+        currentlyBlinkingTargets.forEach(el => el?.classList.remove(blinkClass));
+        currentlyBlinkingTargets = [];
+      }
 
       function decideAndStartBlink() {
-  const btn = findSubmenuButton();
-  const parentToggle = findParentToggle();
-  
-  console.log("🔍 DEBUG decideAndStartBlink:");
-  console.log("  pageId:", pageId);
-  console.log("  btn encontrado:", btn);
-  console.log("  btn visível:", btn ? isVisible(btn) : "N/A");
-  console.log("  parentToggle encontrado:", parentToggle);
-  
-  if (btn && isVisible(btn)) {
-    console.log("✅ Caso 1: filho visível");
-    if (parentToggle) {
-      startBlinkOnTargets([parentToggle, btn]);
-    } else {
-      startBlinkOnTargets([btn]);
-    }
-    return true;
-  }
-  
-  if (parentToggle) {
-    console.log("✅ Caso 2: só pai (submenu fechado)");
-    startBlinkOnTargets([parentToggle]);
-    return true;
-  }
-  
-  console.log("❌ Nenhum caso aplicável");
-  return false;
-}
+        const btn = findSubmenuButton();
+        if (btn && isVisible(btn)) {
+          startBlinkOnTargets([btn]);
+          return true;
+        }
+        const parentToggle = findParentToggle();
+        if (parentToggle) {
+          startBlinkOnTargets([parentToggle]);
+          return true;
+        }
+        return false;
+      }
 
-
-           
       function startDiscovery() {
         if (discoveryInterval || discoveryObserver) return;
         if (decideAndStartBlink()) return;
@@ -341,15 +333,4 @@
       blinkClass: "blink-active-occ-js",
       primaryColor: "#343A40",
       blinkColor: "#DC3545"
-
     });
-
-
-
-
-
-
-
-
-
-

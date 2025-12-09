@@ -241,19 +241,17 @@
       }
 
      function decideAndStartBlink() {
-  const btn = findSubmenuButton();
+  const btn = findSubmenuButton(); // filho/neto
+  const parentToggle = findParentToggle(); // pai/submenu-toggle
+
   if (btn && isVisible(btn)) {
-    // Filho ou neto visível → pisca nele
-    startBlinkOnTargets([btn]);
-    const parentToggle = findParentToggle();
-    if (parentToggle) startBlinkOnTargets([parentToggle, btn]); // Pai também pisca
+    startBlinkOnTargets([btn, parentToggle].filter(Boolean));
     return true;
   }
 
-  // Caso o filho/neto não esteja visível, mas exista, pai ainda deve piscar
-  const parentToggle = findParentToggle();
   if (parentToggle) {
-    startBlinkOnTargets([parentToggle]); // Pai pisca mesmo sem filho visível
+    // filho/neto não visível, mas pai deve piscar
+    startBlinkOnTargets([parentToggle]);
     return true;
   }
 
@@ -345,6 +343,7 @@
       blinkColor: "#DC3545"
 
     });
+
 
 
 

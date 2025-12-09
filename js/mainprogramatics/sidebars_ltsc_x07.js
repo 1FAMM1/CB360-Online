@@ -200,7 +200,9 @@
   style.id = styleId;
   style.textContent = `
     .sidebar-menu-button.${blinkClass},
-    .sidebar-menu-button.${blinkClass}:hover {
+    .sidebar-menu-button.${blinkClass}:hover,
+    .sidebar-submenu-button.${blinkClass},
+    .sidebar-submenu-button.${blinkClass}:hover {
       animation: ${blinkClass}-anim 0.9s infinite !important;
       transition: none !important;
     }
@@ -342,5 +344,6 @@
       primaryColor: "#343A40",
       blinkColor: "#DC3545"
     });
+
 
 

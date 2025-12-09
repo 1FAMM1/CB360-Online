@@ -192,7 +192,6 @@
   const styleId = `${blinkClass}-style`;
   const existingStyle = document.getElementById(styleId);
   
-  // Remove estilo antigo se existir
   if (existingStyle) {
     existingStyle.remove();
   }
@@ -200,7 +199,8 @@
   const style = document.createElement("style");
   style.id = styleId;
   style.textContent = `
-    .${blinkClass} {
+    .sidebar-menu-button.${blinkClass},
+    .sidebar-menu-button.${blinkClass}:hover {
       animation: ${blinkClass}-anim 0.9s infinite !important;
       transition: none !important;
     }
@@ -342,4 +342,5 @@
       primaryColor: "#343A40",
       blinkColor: "#DC3545"
     });
+
 

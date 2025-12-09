@@ -452,7 +452,6 @@
       document.getElementById("ppia22-grid-controls").style.display = "block";
       ShowA22GridButtons();
     }
-
     function createRowA22SenceTitle(justify = "flex-start") {
       const row = document.createElement("div");
       row.className = "form-row";
@@ -461,7 +460,6 @@
       row.style.margin = "0";
       return row;
     }
-
     function createA22SenceTitle(text, isTop) {
       const row = createRowA22SenceTitle("center");
       row.style.cssText = A22_TITLE_STYLE;
@@ -470,15 +468,17 @@
       label.textContent = text;
       row.appendChild(label);
       return row;
-    }
-    
+    }    
     function createA22GridButtons(id, specialButtons) {
       const btn = document.createElement("button");
       btn.id = id;
       btn.textContent = id;
       btn.className = "btn btn-add";
       btn.style.cssText = A22_GRID_BUTTON_STYLE;
-      if (specialButtons.has(id)) btn.classList.add("btn-special");
+      const currentCorpNr = sessionStorage.getItem("currentCorpOperNr");
+      if (specialButtons.has(id) && currentCorpNr === "0805") {
+        btn.classList.add("btn-special");
+      }
       btn.onclick = (e) => {
         e.preventDefault();
         const isActive = btn.classList.contains("active");
@@ -493,8 +493,7 @@
         }
       };
       return btn;
-    }
-    
+    }    
     function ShowA22GridButtons() {
       const container = document.getElementById("ppia22-grid-controls");
       if (!container) return;
@@ -1864,4 +1863,5 @@
       tr.appendChild(td);
       table.appendChild(tr);
       container.appendChild(table);
+
     }

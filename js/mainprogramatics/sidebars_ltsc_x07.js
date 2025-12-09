@@ -192,7 +192,6 @@
   const styleId = `${blinkClass}-style`;
   const existingStyle = document.getElementById(styleId);
   
-  // Remove estilo antigo se existir
   if (existingStyle) {
     console.log("🗑️ Removendo estilo antigo");
     existingStyle.remove();
@@ -203,6 +202,7 @@
   style.textContent = `
     .${blinkClass} {
       animation: ${blinkClass}-anim 0.9s infinite !important;
+      transition: none !important;  /* ← DESATIVA A TRANSIÇÃO */
     }
     @keyframes ${blinkClass}-anim {
       0% { background: ${primaryColor} !important; }
@@ -398,6 +398,7 @@ function decideAndStartBlink() {
       primaryColor: "#343A40",
       blinkColor: "#DC3545"
     });
+
 
 
 

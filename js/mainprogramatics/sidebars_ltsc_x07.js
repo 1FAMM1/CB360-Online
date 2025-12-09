@@ -180,7 +180,7 @@
       const initialActive = sidebar.querySelector("button.active");
       if (initialActive) navigateToPage(initialActive);
     });
-    /* =======================================
+/* =======================================
     SIDEBAR BLINKER
     ======================================= */
     function createBlinker({pageId, tableId, blinkClass, primaryColor = "#343A40", blinkColor = "#DC3545"}) {
@@ -189,28 +189,21 @@
       let currentlyBlinkingTargets = [];
 
       function ensureBlinkStyle() {
-  const styleId = `${blinkClass}-style`;
-  const existingStyle = document.getElementById(styleId);
-  
-  if (existingStyle) {
-    existingStyle.remove();
-  }
-  
-  const style = document.createElement("style");
-  style.id = styleId;
-  style.textContent = `
-    .${blinkClass} {
-      animation: ${blinkClass}-anim 0.9s infinite !important;
-      transition: none !important;
-    }
-    @keyframes ${blinkClass}-anim {
-      0% { background: ${primaryColor} !important; }
-      50% { background: ${blinkColor} !important; }
-      100% { background: ${primaryColor} !important; }
-    }
-  `;
-  document.head.appendChild(style);
-}
+        if (document.getElementById(`${blinkClass}-style`)) return;
+        const style = document.createElement("style");
+        style.id = `${blinkClass}-style`;
+        style.textContent = `
+          .${blinkClass} {
+            animation: ${blinkClass}-anim 0.9s infinite;
+          }
+          @keyframes ${blinkClass}-anim {
+            0% { background-color: ${primaryColor}; }
+            50% { background-color: ${blinkColor}; }
+            100% { background-color: ${primaryColor}; }
+          }
+        `;
+        document.head.appendChild(style);
+      }
 
       function isVisible(el) {
         return !!(el && (el.offsetWidth || el.offsetHeight || el.getClientRects().length));
@@ -221,79 +214,24 @@
       }
 
       function findParentToggle() {
-  console.log("🔍 findParentToggle chamada para pageId:", pageId);
-  
-  const sidebar = document.querySelector(".sidebar");
-  if (!sidebar) {
-    console.log("❌ Sidebar não encontrada");
-    return null;
-  }
-  
-  const tops = sidebar.querySelectorAll(".sidebar-menu-button");
-  console.log("📋 Botões top-level encontrados:", tops.length);
-  
-  for (const t of tops) {
-    const next = t.nextElementSibling;
-    console.log("  Verificando botão:", t.textContent.trim());
-    console.log("    nextElementSibling:", next);
-    
-    if (next && (next.classList.contains("submenu") || next.classList.contains("sub-submenu"))) {
-      console.log("    ✓ É um submenu");
-      const foundButton = next.querySelector(`button[data-page="${pageId}"]`);
-      console.log("    Procurando button[data-page='${pageId}']:", foundButton);
-      
-      if (foundButton) {
-        console.log("✅ PAI ENCONTRADO:", t.textContent.trim());
-        return t;
+        const sidebar = document.querySelector(".sidebar");
+        if (!sidebar) return null;
+        const tops = sidebar.querySelectorAll(".sidebar-menu-button");
+        for (const t of tops) {
+          const next = t.nextElementSibling;
+          if (next && (next.classList.contains("submenu") || next.classList.contains("sub-submenu"))) {
+            if (next.querySelector(`button[data-page="${pageId}"]`)) return t;
+          }
+        }
+        return null;
       }
-    }
-  }
-  
-  console.log("❌ Nenhum pai encontrado");
-  return null;
-}
-
-function decideAndStartBlink() {
-  console.log("🎯 decideAndStartBlink iniciada");
-  console.log("   pageId:", pageId);
-  console.log("   tableId:", tableId);
-  
-  const btn = findSubmenuButton();
-  console.log("   Botão filho encontrado:", btn);
-  console.log("   Botão filho visível:", btn ? isVisible(btn) : "N/A");
-  
-  const parentToggle = findParentToggle();
-  console.log("   Botão pai encontrado:", parentToggle);
-  
-  if (btn && isVisible(btn)) {
-    console.log("✅ CASO 1: Filho visível - piscando filho");
-    startBlinkOnTargets([btn]);
-    return true;
-  }
-  
-  if (parentToggle) {
-    console.log("✅ CASO 2: Pai encontrado - piscando pai");
-    startBlinkOnTargets([parentToggle]);
-    return true;
-  }
-  
-  console.log("❌ Nenhum caso aplicável");
-  return false;
-}
 
       function startBlinkOnTargets(targets) {
-  console.log("🎨 startBlinkOnTargets chamada com:", targets);
-  stopBlinking();
-  ensureBlinkStyle();
-  targets.forEach(el => {
-    if (el) {
-      console.log("   Adicionando classe", blinkClass, "a:", el.textContent.trim());
-      el.classList.add(blinkClass);
-    }
-  });
-  currentlyBlinkingTargets = targets.filter(Boolean);
-  console.log("   currentlyBlinkingTargets atualizado:", currentlyBlinkingTargets.length, "elementos");
-}
+        stopBlinking();
+        ensureBlinkStyle();
+        targets.forEach(el => el && el.classList.add(blinkClass));
+        currentlyBlinkingTargets = targets.filter(Boolean);
+      }
 
       function stopBlinking() {
         currentlyBlinkingTargets.forEach(el => el?.classList.remove(blinkClass));
@@ -396,8 +334,3 @@ function decideAndStartBlink() {
       primaryColor: "#343A40",
       blinkColor: "#DC3545"
     });
-
-
-
-
-

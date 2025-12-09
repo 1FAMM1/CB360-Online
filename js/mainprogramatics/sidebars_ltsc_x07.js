@@ -240,19 +240,13 @@
         currentlyBlinkingTargets = [];
       }
 
-      function decideAndStartBlink() {
-        const btn = findSubmenuButton();
-        if (btn && isVisible(btn)) {
-          startBlinkOnTargets([btn]);
-          return true;
-        }
-        const parentToggle = findParentToggle();
-        if (parentToggle) {
-          startBlinkOnTargets([parentToggle]);
-          return true;
-        }
-        return false;
-      }
+     function decideAndStartBlink() {
+    const btn = findSubmenuButton();
+    const parentToggle = findParentToggle();
+    startBlinkOnTargets([parentToggle, btn].filter(Boolean));
+    return !!(btn || parentToggle);
+}
+
 
       function startDiscovery() {
         if (discoveryInterval || discoveryObserver) return;
@@ -337,4 +331,5 @@
       blinkColor: "#DC3545"
 
     });
+
 

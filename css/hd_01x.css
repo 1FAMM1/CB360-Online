@@ -17,7 +17,7 @@
       position: absolute;
       height: 75px;
       top: 3px;
-      left: 35px;
+      left: 8px;
       z-index: 10;
     }
     
@@ -40,7 +40,7 @@
       font-size: 16px;
       font-weight: bold;
       margin: 0 60px;
-      margin-left: 135px;
+      margin-left: 85px;
     }        
 
     .header-nr {
@@ -52,7 +52,7 @@
       color: #FFE6E6;
       font-size: 12px;
       margin: 0 15px;
-      margin-left:  135px;
+      margin-left: 85px;
     }
 
     .header-authorization {
@@ -82,3 +82,4 @@
     #logoutBtn:hover {
       transform: scale(1.2);
     }
+

@@ -228,24 +228,18 @@
 
 
 
-      function startBlinkOnTargets(targets) {
-        stopBlinking();
-        ensureBlinkStyle();
-        targets.forEach(el => el && el.classList.add(blinkClass));
-        currentlyBlinkingTargets = targets.filter(Boolean);
-      }
-
-      function stopBlinking() {
-        currentlyBlinkingTargets.forEach(el => el?.classList.remove(blinkClass));
-        currentlyBlinkingTargets = [];
-      }
-
-     function decideAndStartBlink() {
+      function decideAndStartBlink() {
   const btn = findSubmenuButton();
   const parentToggle = findParentToggle();
   
+  console.log("🔍 DEBUG decideAndStartBlink:");
+  console.log("  pageId:", pageId);
+  console.log("  btn encontrado:", btn);
+  console.log("  btn visível:", btn ? isVisible(btn) : "N/A");
+  console.log("  parentToggle encontrado:", parentToggle);
+  
   if (btn && isVisible(btn)) {
-    // Filho visível → pisca filho (e pai se existir)
+    console.log("✅ Caso 1: filho visível");
     if (parentToggle) {
       startBlinkOnTargets([parentToggle, btn]);
     } else {
@@ -254,12 +248,13 @@
     return true;
   }
   
-  // Filho não visível, mas pai existe → pisca só o pai
   if (parentToggle) {
+    console.log("✅ Caso 2: só pai (submenu fechado)");
     startBlinkOnTargets([parentToggle]);
     return true;
   }
   
+  console.log("❌ Nenhum caso aplicável");
   return false;
 }
 
@@ -348,6 +343,7 @@
       blinkColor: "#DC3545"
 
     });
+
 
 
 

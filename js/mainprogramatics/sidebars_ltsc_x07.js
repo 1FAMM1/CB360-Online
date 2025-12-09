@@ -214,16 +214,64 @@
       }
 
       function findParentToggle() {
+  console.log("🔍 findParentToggle chamada para pageId:", pageId);
+  
   const sidebar = document.querySelector(".sidebar");
-  if (!sidebar) return null;
+  if (!sidebar) {
+    console.log("❌ Sidebar não encontrada");
+    return null;
+  }
+  
   const tops = sidebar.querySelectorAll(".sidebar-menu-button");
+  console.log("📋 Botões top-level encontrados:", tops.length);
+  
   for (const t of tops) {
     const next = t.nextElementSibling;
+    console.log("  Verificando botão:", t.textContent.trim());
+    console.log("    nextElementSibling:", next);
+    
     if (next && (next.classList.contains("submenu") || next.classList.contains("sub-submenu"))) {
-      if (next.querySelector(`button[data-page="${pageId}"]`)) return t;
+      console.log("    ✓ É um submenu");
+      const foundButton = next.querySelector(`button[data-page="${pageId}"]`);
+      console.log("    Procurando button[data-page='${pageId}']:", foundButton);
+      
+      if (foundButton) {
+        console.log("✅ PAI ENCONTRADO:", t.textContent.trim());
+        return t;
+      }
     }
   }
+  
+  console.log("❌ Nenhum pai encontrado");
   return null;
+}
+
+function decideAndStartBlink() {
+  console.log("🎯 decideAndStartBlink iniciada");
+  console.log("   pageId:", pageId);
+  console.log("   tableId:", tableId);
+  
+  const btn = findSubmenuButton();
+  console.log("   Botão filho encontrado:", btn);
+  console.log("   Botão filho visível:", btn ? isVisible(btn) : "N/A");
+  
+  const parentToggle = findParentToggle();
+  console.log("   Botão pai encontrado:", parentToggle);
+  
+  if (btn && isVisible(btn)) {
+    console.log("✅ CASO 1: Filho visível - piscando filho");
+    startBlinkOnTargets([btn]);
+    return true;
+  }
+  
+  if (parentToggle) {
+    console.log("✅ CASO 2: Pai encontrado - piscando pai");
+    startBlinkOnTargets([parentToggle]);
+    return true;
+  }
+  
+  console.log("❌ Nenhum caso aplicável");
+  return false;
 }
 
       function startBlinkOnTargets(targets) {

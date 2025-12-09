@@ -189,21 +189,26 @@
       let currentlyBlinkingTargets = [];
 
       function ensureBlinkStyle() {
-        if (document.getElementById(`${blinkClass}-style`)) return;
-        const style = document.createElement("style");
-        style.id = `${blinkClass}-style`;
-        style.textContent = `
-          .${blinkClass} {
-            animation: ${blinkClass}-anim 0.9s infinite;
-          }
-          @keyframes ${blinkClass}-anim {
-            0% { background-color: ${primaryColor}; }
-            50% { background-color: ${blinkColor}; }
-            100% { background-color: ${primaryColor}; }
-          }
-        `;
-        document.head.appendChild(style);
-      }
+  const existingStyle = document.getElementById(`${blinkClass}-style`);
+  console.log("🎨 ensureBlinkStyle - estilo já existe?", !!existingStyle);
+  
+  if (existingStyle) return;
+  
+  const style = document.createElement("style");
+  style.id = `${blinkClass}-style`;
+  style.textContent = `
+    .${blinkClass} {
+      animation: ${blinkClass}-anim 0.9s infinite !important;
+    }
+    @keyframes ${blinkClass}-anim {
+      0% { background: ${primaryColor} !important; }
+      50% { background: ${blinkColor} !important; }
+      100% { background: ${primaryColor} !important; }
+    }
+  `;
+  document.head.appendChild(style);
+  console.log("✅ Estilo de blink criado:", `${blinkClass}-style`);
+}
 
       function isVisible(el) {
         return !!(el && (el.offsetWidth || el.offsetHeight || el.getClientRects().length));
@@ -389,4 +394,5 @@ function decideAndStartBlink() {
       primaryColor: "#343A40",
       blinkColor: "#DC3545"
     });
+
 

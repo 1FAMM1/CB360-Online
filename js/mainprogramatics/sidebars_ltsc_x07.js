@@ -189,13 +189,17 @@
       let currentlyBlinkingTargets = [];
 
       function ensureBlinkStyle() {
-  const existingStyle = document.getElementById(`${blinkClass}-style`);
-  console.log("🎨 ensureBlinkStyle - estilo já existe?", !!existingStyle);
+  const styleId = `${blinkClass}-style`;
+  const existingStyle = document.getElementById(styleId);
   
-  if (existingStyle) return;
+  // Remove estilo antigo se existir
+  if (existingStyle) {
+    console.log("🗑️ Removendo estilo antigo");
+    existingStyle.remove();
+  }
   
   const style = document.createElement("style");
-  style.id = `${blinkClass}-style`;
+  style.id = styleId;
   style.textContent = `
     .${blinkClass} {
       animation: ${blinkClass}-anim 0.9s infinite !important;
@@ -207,7 +211,7 @@
     }
   `;
   document.head.appendChild(style);
-  console.log("✅ Estilo de blink criado:", `${blinkClass}-style`);
+  console.log("✅ Estilo de blink criado/recriado:", styleId);
 }
 
       function isVisible(el) {
@@ -394,5 +398,6 @@ function decideAndStartBlink() {
       primaryColor: "#343A40",
       blinkColor: "#DC3545"
     });
+
 
 

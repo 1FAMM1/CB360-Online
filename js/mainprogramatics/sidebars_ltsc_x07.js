@@ -205,11 +205,12 @@
     .sidebar-submenu-button.${blinkClass}:hover {
       animation: ${blinkClass}-anim 0.9s infinite !important;
       transition: none !important;
+      background-image: none !important;
     }
     @keyframes ${blinkClass}-anim {
-      0% { background: ${primaryColor} !important; }
-      50% { background: ${blinkColor} !important; }
-      100% { background: ${primaryColor} !important; }
+      0% { background-color: ${primaryColor} !important; }
+      50% { background-color: ${blinkColor} !important; }
+      100% { background-color: ${primaryColor} !important; }
     }
   `;
   document.head.appendChild(style);
@@ -344,6 +345,7 @@
       primaryColor: "#343A40",
       blinkColor: "#DC3545"
     });
+
 
 
 

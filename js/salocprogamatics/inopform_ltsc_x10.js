@@ -308,10 +308,10 @@
             );
           }    
           inopsTableContainer.style.display = "block";
-             requestAnimationFrame(() => {
-      const tableContainer = inopsTableContainer.querySelector('.table-container');
-      if (tableContainer) tableContainer.style.overflow = 'auto';
-    });
+          requestAnimationFrame(() => {
+            const tableContainer = inopsTableContainer.querySelector('.table-container');
+            if (tableContainer) tableContainer.style.overflow = 'auto';
+          });
         } catch (err) {
           console.error(err);
           alert("❌ Erro ao carregar inoperacionalidades: " + err.message);
@@ -346,5 +346,3 @@
       inopsTableContainer.style.display = 'none';
 
     });
-
-

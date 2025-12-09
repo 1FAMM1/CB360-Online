@@ -214,18 +214,18 @@
       }
 
       function findParentToggle() {
-  const btn = findSubmenuButton();
-  if (!btn) return null;
-  let parent = btn.parentElement;
-  while (parent && !parent.classList.contains("sidebar")) {
-    const siblingButton = parent.previousElementSibling;
-    if (siblingButton && siblingButton.classList.contains("sidebar-menu-button")) {
-      return siblingButton;
+  const sidebar = document.querySelector(".sidebar");
+  if (!sidebar) return null;
+  const tops = sidebar.querySelectorAll(".sidebar-menu-button");
+  for (const t of tops) {
+    const next = t.nextElementSibling;
+    if (next && (next.classList.contains("submenu") || next.classList.contains("sub-submenu"))) {
+      if (next.querySelector(`button[data-page="${pageId}"]`)) return t;
     }
-    parent = parent.parentElement;
   }
   return null;
 }
+
 
 
       function startBlinkOnTargets(targets) {
@@ -330,6 +330,7 @@
       blinkColor: "#DC3545"
 
     });
+
 
 
 

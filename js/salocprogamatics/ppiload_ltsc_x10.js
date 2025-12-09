@@ -1501,7 +1501,10 @@
       btn.textContent = id;
       btn.className = "btn btn-add";
       btn.style.cssText = LINFER_GRID_BUTTON_STYLE;
-      if (specialButtons.has(id)) btn.classList.add("btn-special");
+      const currentCorpNr = sessionStorage.getItem("currentCorpOperNr");
+      if (specialButtons.has(id) && currentCorpNr === "0805") {
+        btn.classList.add("btn-special");
+      }
       btn.onclick = (e) => {
         e.preventDefault();
         const isActive = btn.classList.contains("active");
@@ -1537,7 +1540,6 @@
     }
     
     async function loadPPILinFerDataFromButton(buttonId) {
-      console.log("Carregar grelha para:", buttonId);
       await loadPPILinFerDataInfoGrid(buttonId);
       await loadPPILinFerDataSpecials(buttonId);
       await loadPPILinFerGridSeparated(buttonId);
@@ -1869,4 +1871,5 @@
       container.appendChild(table);
 
     }
+
 

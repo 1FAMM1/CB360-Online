@@ -214,9 +214,8 @@
       }
 
       function findParentToggle() {
-        const btn = findSubmenuButton();
-        if (!btn) return null;
-
+  const btn = findSubmenuButton();
+  if (!btn) return null;
   let parent = btn.parentElement;
   while (parent && !parent.classList.contains("sidebar")) {
     const siblingButton = parent.previousElementSibling;
@@ -227,6 +226,7 @@
   }
   return null;
 }
+
 
       function startBlinkOnTargets(targets) {
         stopBlinking();
@@ -330,6 +330,7 @@
       blinkColor: "#DC3545"
 
     });
+
 
 
 

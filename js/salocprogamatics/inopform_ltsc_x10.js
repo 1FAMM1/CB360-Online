@@ -70,7 +70,7 @@
           clearSitopForm();
         }, 250);
       } else {
-        inopsTableContainer.style.display = "none";
+        inopsTableContainer.style.display = "block";
         sitopContainer.style.display = "block";
         sitopContainer.style.opacity = "0";
         setTimeout(() => sitopContainer.style.opacity = "1", 10);
@@ -84,7 +84,7 @@
       const recordAttr = btn.getAttribute("data-record");
       if (!recordAttr) return console.error("Erro: Atributo data-record não encontrado.");
       const record = JSON.parse(recordAttr);
-      inopsTableContainer.style.display = "none";      
+      inopsTableContainer.style.display = "block";      
       oldInopBtn.classList.remove("active");
       sitopContainer.style.display = "block";
       sitopContainer.style.opacity = "0";
@@ -254,7 +254,7 @@
       oldInopBtn.classList.remove("active");
       if (isActive) {
         toggleSitopContainer(false);
-        inopsTableContainer.style.display = "none";
+        inopsTableContainer.style.display = "block";
         document.querySelector("#sitop_container .card-header").textContent = "INSERÇÃO DE NOVA INOPERACIONALIDADE";
         preselectCorpInSitopCB() ;
       } else {
@@ -267,7 +267,7 @@
         const isActive = oldInopBtn.classList.toggle("active");
         NewInopBtn.classList.remove("active");    
         if (!isActive) {
-          inopsTableContainer.style.display = "none";
+          inopsTableContainer.style.display = "block";
           return;
         }
         sitopContainer.style.display = "none";
@@ -342,3 +342,4 @@
       inopsTableContainer.style.display = 'none';
 
     });
+

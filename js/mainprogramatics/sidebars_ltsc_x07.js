@@ -193,7 +193,6 @@
   const existingStyle = document.getElementById(styleId);
   
   if (existingStyle) {
-    console.log("🗑️ Removendo estilo antigo");
     existingStyle.remove();
   }
   
@@ -202,7 +201,7 @@
   style.textContent = `
     .${blinkClass} {
       animation: ${blinkClass}-anim 0.9s infinite !important;
-      transition: none !important;  /* ← DESATIVA A TRANSIÇÃO */
+      transition: none !important;
     }
     @keyframes ${blinkClass}-anim {
       0% { background: ${primaryColor} !important; }
@@ -211,7 +210,6 @@
     }
   `;
   document.head.appendChild(style);
-  console.log("✅ Estilo de blink criado/recriado:", styleId);
 }
 
       function isVisible(el) {
@@ -398,6 +396,7 @@ function decideAndStartBlink() {
       primaryColor: "#343A40",
       blinkColor: "#DC3545"
     });
+
 
 
 

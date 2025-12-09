@@ -243,20 +243,23 @@
      function decideAndStartBlink() {
   const btn = findSubmenuButton();
   if (btn && isVisible(btn)) {
-    startBlinkOnTargets([btn]); // filho visível → pisca filho
-    const parent = findParentToggle();
-    if (parent) startBlinkOnTargets([parent, btn]); // pai e filho
+    // Filho ou neto visível → pisca nele
+    startBlinkOnTargets([btn]);
+    const parentToggle = findParentToggle();
+    if (parentToggle) startBlinkOnTargets([parentToggle, btn]); // Pai também pisca
     return true;
   }
 
+  // Caso o filho/neto não esteja visível, mas exista, pai ainda deve piscar
   const parentToggle = findParentToggle();
   if (parentToggle) {
-    startBlinkOnTargets([parentToggle]); // pai mesmo que filho invisível
+    startBlinkOnTargets([parentToggle]); // Pai pisca mesmo sem filho visível
     return true;
   }
 
   return false;
 }
+
 
            
       function startDiscovery() {
@@ -342,6 +345,7 @@
       blinkColor: "#DC3545"
 
     });
+
 
 
 

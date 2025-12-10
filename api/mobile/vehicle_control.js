@@ -15,10 +15,11 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === 'GET' && req.query.action === 'list') {
+      const corpOperNr = req.query.corp_oper_nr;
       const { data, error } = await supabase
         .from('vehicle_status')
         .select('vehicle')
-        .eq('corp_oper_nr', '0805')
+        .eq('corp_oper_nr', corpOperNr)
         .order('vehicle', { ascending: true })
       
       if (error) throw error

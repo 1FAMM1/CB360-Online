@@ -341,7 +341,7 @@
       let header;
       if (shift === 'LAST') {
         try {
-          const res = await fetch('https://geostat-360-api.vercel.app/api/fomio_control?action=get_header');
+          const res = await fetch('https://cb360-online.vercel.app/api/fomio_control?action=get_header');
           const data = await res.json();
           let formattedHeader = null;
           if (data && data.header) {
@@ -367,7 +367,7 @@
       container.insertAdjacentHTML('beforeend', tableConfig.map(cfg => createTable(cfg.rows, cfg.special, cfg.title)).join(''));
       if (shift === 'LAST') {
         try {
-          const res = await fetch('https://geostat-360-api.vercel.app/api/fomio_control?action=get_teams');
+          const res = await fetch('https://cb360-online.vercel.app/api/fomio_control?action=get_teams');
           const savedData = await res.json();
           if (savedData && savedData.success && savedData.teams) {
             const teamNameMap = {"ofope": "OFOPE", "chefe_servico": "CHEFE DE SERVIÇO", "optel": "OPTEL", "equipa_01": "EQUIPA 01", "equipa_02": "EQUIPA 02",
@@ -435,5 +435,6 @@
         document.querySelectorAll('.shift-btn').forEach(btn => btn.classList.remove('active'));
       }
     });
+
 
 

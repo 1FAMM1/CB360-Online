@@ -25,6 +25,7 @@
       font-size: 10pt;
       transition: all 0.25s ease;
       box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+      display: none;
     }
     
     .sidebar-menu-button:hover {
@@ -190,6 +191,7 @@
     .panel-sidebar-menu-button.active::before {
       opacity: 1;
     }
+
 
 
 

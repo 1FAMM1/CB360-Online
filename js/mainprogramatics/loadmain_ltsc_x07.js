@@ -39,8 +39,10 @@
         const sidebarButtons = document.querySelectorAll(".sidebar-menu-button, .sidebar-submenu-button, .sidebar-sub-submenu-button");
         sidebarButtons.forEach(btn => {
           const access = btn.dataset.access;
-          if (access) {
-            btn.style.display = allowedModules.includes(access) ? "block" : "none";
+          if (access && allowedModules.includes(access)) {
+            btn.style.display = "block";
+          } else {
+            btn.style.display = "none";
           }
         });
       }
@@ -206,3 +208,4 @@
         });
       }
     });
+

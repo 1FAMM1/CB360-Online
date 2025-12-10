@@ -2,6 +2,7 @@
               FIREFIGHTER LISTING
     ======================================= */
     const ACCESS_OPTIONS = [
+      {label: "Menu Principal"},
       {label: "DECIR 360", children: [
         {label: "Controlo de Pagamentos", children: [
           {label: "Registo por Elemento"},
@@ -510,4 +511,5 @@
         }
       }
     }
+
 

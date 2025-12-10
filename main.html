@@ -2229,6 +2229,64 @@
                 </table>
               </div>              
             </div>
+
+            
+
+            <div id="panel-mails" class="panel-card">
+              <h3>CONFIGURAÇÃO DE EMAILS</h3>
+              <p>Configuração de emails para envio das Situações Operacionais de Veículos e Medidas Operacionais de Antecipação.</p>
+              <p style="color: red; font-weight: bold; font-style: italic; font-size: 12px;">Os emails inseridsos, deverão ser separados apenas por uma virgula como indicado em exemplo na textbox.</p>
+              <div class="card">                
+                <div class="card-header">CONFIGURAÇÃO DE EMAILS PARA SITUAÇÃO OPRACIONAL DE VEÍCULOS (CREPC).</div>
+                  <div class="card-body">
+                    <div class="global-field-horizontal">
+                      <label style="width: 80px;">Emails Para:</label>
+                      <input type="text" id="config_sitop_mail_to" placeholder="exemplo@mail.com,exemplo2@mail.com" style="width: 100%;">
+                    </div>
+                    <div class="global-field-horizontal">
+                      <label style="width: 190px;">Emails com Conhecimento:</label>
+                      <input type="text" id="config_sitop_mail_cc" placeholder="exemplo@mail.com,exemplo2@mail.com" style="width: 100%;">
+                    </div>
+                    <div class="global-field-horizontal">
+                      <label style="width: 240px;">Emails com Conhecimento (BCC):</label>
+                      <input type="text" id="config_sitop_mail_bcc" placeholder="exemplo@mail.com,exemplo2@mail.com" style="width: 100%;">
+                    </div>                 
+                  </div>
+                  <div class="form-row" style="margin: -15px 20px 10px 10px; display: flex; flex-wrap: wrap; justify-content: flex-end;">
+                    <div class="action-buttons" id="new-veíc-save" >
+                      <button class="btn btn-add" id="config_sitop_mail_save">ADICIONAR</button>
+                    </div>
+                  </div>                
+                <div class="card-footer"></div>
+              </div>       
+              <div class="card">
+                <div class="card-header">CONFIGURAÇÃO DE EMAILS PARA MEDIDAS OPERACIONAIS DE ANTECIPAÇÃO (CREPC).</div>
+                  <div class="card-body">
+                    <div class="global-field-horizontal">
+                      <label style="width: 80px;">Emails Para:</label>
+                      <input type="text" id="config_moa_mail_to" placeholder="exemplo@mail.com,exemplo2@mail.com" style="width: 100%;">
+                    </div>
+                    <div class="global-field-horizontal">
+                      <label style="width: 190px;">Emails com Conhecimento:</label>
+                      <input type="text" id="config_moa_mail_cc" placeholder="exemplo@mail.com,exemplo2@mail.com" style="width: 100%;">
+                    </div>
+                    <div class="global-field-horizontal">
+                      <label style="width: 240px;">Emails com Conhecimento (BCC):</label>
+                      <input type="text" id="config_moa_mail_bcc" placeholder="exemplo@mail.com,exemplo2@mail.com" style="width: 100%;">
+                    </div>                 
+                  </div>
+                  <div class="form-row" style="margin: -15px 20px 10px 10px; display: flex; flex-wrap: wrap; justify-content: flex-end;">
+                    <div class="action-buttons" id="new-veíc-save" >
+                      <button class="btn btn-add" id="config_moa_mail_save">ADICIONAR</button>
+                    </div>
+                  </div>                
+                <div class="card-footer"></div>
+              </div>              
+            </div>
+
+
+
+            
           </div>
         </div>
         <div class="card-footer"></div>
@@ -2275,8 +2333,7 @@
   <script src="js/datacenterprogramatics/corpdata_ltsc_x06.js"></script>
   <script src="js/datacenterprogramatics/elemdata_ltsc_x06.js"></script>
   <script src="js/datacenterprogramatics/veícdata_ltsc_x06.js"></script>
+  <script src="js/datacenterprogramatics/mailsdata_ltsc_x06.js"></script>
   <script></script>
 </body>
 </html>
-
-

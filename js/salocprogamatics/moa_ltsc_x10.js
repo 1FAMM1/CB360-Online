@@ -106,7 +106,7 @@
     /* =================== SEND EMAIL ================== */
     async function sendMOAEmail(data, recipients, corpOperNr) {
       const emailBodyHTML = await buildMOAEmailHTML(data, corpOperNr);
-      const result = await fetch("https://cb360-mobile.vercel.app/api/moa_convert_and_send", {
+      const result = await fetch("https://cb360-online.vercel.app/api/moa_convert_and_send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({data, recipients: recipients.to, ccRecipients: recipients.cc, bccRecipients: recipients.bcc,
@@ -212,4 +212,5 @@
       if (crepcAlgBtn) {
         crepcAlgBtn.addEventListener('click', () => { window.hideMOAContainer(); });
       }
+
     });

@@ -155,8 +155,12 @@
     /* ========= EVENT LISTENERS ========== */
     document.getElementById("config_sitop_mail_save").addEventListener("click", saveSitopMails);
     document.getElementById("config_moa_mail_save").addEventListener("click", saveMoaMails);
-    const btnLoadMails = document.querySelector("button[onclick*='showPanelCard(\"mails\")']");
-    btnLoadMails.addEventListener("click", () => {
-      showPanelCard("mails");
-      loadMailsConfig();
-    });
+    const btnLoadMails = document.querySelector("button[onclick*=\"showPanelCard('mails')\"]");
+    if (btnLoadMails) {
+      btnLoadMails.addEventListener("click", () => {
+        showPanelCard("mails");
+        loadMailsConfig();
+      });
+    } else {
+      console.warn("Botão Emails Config não encontrado!");
+    }

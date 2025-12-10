@@ -70,7 +70,7 @@
           clearSitopForm();
         }, 250);
       } else {
-        inopsTableContainer.style.display = "block";
+        inopsTableContainer.style.display = "none";
         sitopContainer.style.display = "block";
         sitopContainer.style.opacity = "0";
         setTimeout(() => sitopContainer.style.opacity = "1", 10);
@@ -84,7 +84,7 @@
       const recordAttr = btn.getAttribute("data-record");
       if (!recordAttr) return console.error("Erro: Atributo data-record não encontrado.");
       const record = JSON.parse(recordAttr);
-      inopsTableContainer.style.display = "block";      
+      inopsTableContainer.style.display = "none";      
       oldInopBtn.classList.remove("active");
       sitopContainer.style.display = "block";
       sitopContainer.style.opacity = "0";
@@ -224,7 +224,7 @@
         const emailRes = await fetch('https://cb360-mobile.vercel.app/api/sitop_covert_and_send', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({data, recipients: to, ccRecipients: cc, bccRecipients: bcc, emailSubject: `Situação Operacional do Veículo ${vehicle}_${corpOperNr}`, emailBody: emailBodyHTML})
+          body: JSON.stringify({data, recipients: to, ccRecipients: cc, bccRecipients: bcc, emailSubject: `Situação Operacional do Veículo ${vehicle}`, emailBody: emailBodyHTML})
         });
         const emailResult = await emailRes.json();
         if (!emailRes.ok) throw new Error(`Erro ao enviar email: ${JSON.stringify(emailResult)}`);
@@ -254,7 +254,7 @@
       oldInopBtn.classList.remove("active");
       if (isActive) {
         toggleSitopContainer(false);
-        inopsTableContainer.style.display = "block";
+        inopsTableContainer.style.display = "none";
         document.querySelector("#sitop_container .card-header").textContent = "INSERÇÃO DE NOVA INOPERACIONALIDADE";
         preselectCorpInSitopCB() ;
       } else {
@@ -267,7 +267,7 @@
         const isActive = oldInopBtn.classList.toggle("active");
         NewInopBtn.classList.remove("active");    
         if (!isActive) {
-          inopsTableContainer.style.display = "block";
+          inopsTableContainer.style.display = "none";
           return;
         }
         sitopContainer.style.display = "none";
@@ -308,10 +308,6 @@
             );
           }    
           inopsTableContainer.style.display = "block";
-          requestAnimationFrame(() => {
-            const tableContainer = inopsTableContainer.querySelector('.table-container');
-            if (tableContainer) tableContainer.style.overflow = 'auto';
-          });
         } catch (err) {
           console.error(err);
           alert("❌ Erro ao carregar inoperacionalidades: " + err.message);
@@ -344,5 +340,4 @@
     document.querySelector('[data-page="page-inocrepc"]').addEventListener('click', () => {
       sitopContainer.style.display = 'none';
       inopsTableContainer.style.display = 'none';
-
     });

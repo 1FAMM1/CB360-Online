@@ -22,11 +22,11 @@
           const diffTime = expireDate - today;
           const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
           if (diffDays < 0) {
-            alert("❌ Sua conta expirou. Todos os acessos foram bloqueados.");
+            ShowPopupWarning("❌ Sua conta expirou. Todos os acessos foram bloqueados. Porfavor contacte a administração do CB360 Online");
             blockAllSidebar();
             return false;
           } else if (diffDays <= 30) {
-            alert(`⚠️ Sua conta expira em ${diffDays} dias.`);
+            ShowPopupWarning(`⚠️ Sua conta irá expirar dentro de ${diffDays} dias. Porfavor contacte a administração do CB360 Online`);
           }
           return true;
         } catch (err) {
@@ -208,4 +208,5 @@
         });
       }
     });
+
 

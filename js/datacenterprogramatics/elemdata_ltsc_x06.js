@@ -2,16 +2,58 @@
               FIREFIGHTER LISTING
     ======================================= */
     const ACCESS_OPTIONS = [
-      {name: 'DECIR 360', children: [{name: 'Controlo de Pagamentos', children: [{name: 'Registo por Elemento'}, {name: 'Núcleo Financeiro'}, {name: 'Relatórios ANEPC'}]},{name: 'Assinaturas Diárias'}]},
-      {name: 'FOMIO 360', children: [{name: 'DECIR'}, {name: '1ª Secção'}, {name: '2ª Secção'}, {name: '3ª Secção'}, {name: '4ª Secção'}, {name: 'Emissão Escala'}, {name: 'Consultar Escalas'}]},
-      {name: 'EMPLOYEES 360'},
-      {name: 'SALOC 360', children: [{name: 'Planos Prévios de Intervenção', children: [{name: 'PPI A22'}, {name: 'PPI Aeroporto de Faro'}, {name: 'PPI Linha Férrea'}]},
-        {name: 'Registos Recusas/INOPS', children: [{name: 'Recusas de Serviços'}, {name: 'Inoperacionalidades INEM'}, {name: 'Relatórios Mensais'}, {name: 'DashBoard'}]},
-        {name: 'Documentação Importante', children: [{name: 'CREPC Algarve'}, {name: 'Planeamento Diário'}, {name: 'Sitop de Veículos'}, {name: 'Refeições DECIR'}]},
-        {name: 'Consola de Alarmes' }]},
-      {name: 'WSMS 360', children: [{name: 'Ocorrências em Curso'}, {name: 'Inserir/Alterar Ocorrência'}, {name: 'Encerrar Ocorrência'}, {name: 'Solicitar Disponibilidades'}, {name: 'Indisponibilidade Veículos'}, {name: 'Info. Grelha Município'}, {name: 'Serviços EMS'}, {name: 'Avisos METEO'}]},
-      {name: 'Utilitários'},
-      {name: 'Data Center'}];
+      {label: "DECIR 360", children: [
+        {label: "Controlo de Pagamentos", children: [
+          {label: "Registo por Elemento"},
+          {label: "Núcleo Financeiro"},
+          {label: "Relatórios ANEPC"}
+        ]},
+        {label: "Assinaturas Diárias"}
+      ]},
+      {label: "FOMIO 360", children: [
+        {label: "DECIR"},
+        {label: "1ª Secção"},
+        {label: "2ª Secção"},
+        {label: "3ª Secção"},
+        {label: "4ª Secção"},
+        {label: "Emissão Escala"},
+        {label: "Consultar Escalas"}
+      ]},
+      {label: "EMPLOYEES 360"},
+      {label: "SALOC 360", children: [
+        {label: "Planos Prévios de Intervenção", children: [
+          {label: "PPI A2"},
+          {label: "PPI A22"},
+          {label: "PPI Aeroporto de Faro"},
+          {label: "PPI Linha Férrea"},
+          {label: "PPI Aérodromo de Portimão"}
+        ]},
+        {label: "Registos Recusas/INOPS", children: [
+          {label: "Recusas de Serviços"}, 
+          {label: "Inoperacionalidades INEM"}, 
+          {label: "Relatórios Mensais"}, 
+          {label: "DashBoard"}
+        ]},
+        {label: "Documentação Importante", children: [
+          {label: "CREPC Algarve"},
+          {label: "Planeamento Diário"},
+          {label: "Sitop de Veículos"},
+          {label: "Refeições DECIR"}
+        ]},
+        {label: "Consola de Alarmes"}
+      ]},
+      {label: "WSMS 360", children: [
+        {label: "Ocorrências em Curso"},
+        {label: "Inserir/Alterar Ocorrência"},
+        {label: "Encerrar Ocorrência"},
+        {label: "Solicitar Disponibilidades"},
+        {label: "Indisponibilidade Veículos"},
+        {label: "Info. Grelha Município"},
+        {label: "Serviços EMS"},
+        {label: "Avisos METEO"}]},
+      {label: "Utilitários"},
+      {label: "Data Center"}
+    ];
     /* ================= LOAD TABLE ================= */
     async function loadElementsTable() {
       try {
@@ -468,3 +510,4 @@
         }
       }
     }
+

@@ -1,52 +1,36 @@
 import { createClient } from '@supabase/supabase-js';
-
 const supabaseUrl = 'https://rjkbodfqsvckvnhjwmhg.supabase.co'
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqa2JvZGZxc3Zja3ZuaGp3bWhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgxNjM3NjQsImV4cCI6MjA2MzczOTc2NH0.jX5OPZkz1JSSwrahCoFzqGYw8tYkgE8isbn12uP43-0'
 const supabase = createClient(supabaseUrl, supabaseKey)
-
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
-
-  try {
-    
+  try {    
     const action = req.query.action || req.body?.action;
-
     switch (action) {
       case 'get_teams':
-        return await handleGetTeams(req, res);
-      
+        return await handleGetTeams(req, res);      
       case 'update_team':
-        return await handleUpdateTeam(req, res);
-      
+        return await handleUpdateTeam(req, res);      
       case 'delete_team':
-        return await handleDeleteTeam(req, res);
-      
+        return await handleDeleteTeam(req, res);      
       case 'insert_member':
-        return await handleInsertMember(req, res);
-      
+        return await handleInsertMember(req, res);      
       case 'clear_all':
-        return await handleClearAll(req, res);
-      
+        return await handleClearAll(req, res);      
       case 'reset_sequence':
-        return await handleResetSequence(req, res);
-      
+        return await handleResetSequence(req, res);      
       case 'save_header':
-        return await handleSaveHeader(req, res);
-      
+        return await handleSaveHeader(req, res);      
       case 'get_header':
-        return await handleGetHeader(req, res);
-      
+        return await handleGetHeader(req, res);      
       default:
-
         return await handleLegacyRouting(req, res);
     }
-
   } catch (error) {
     console.error('FOMIO Unified API Error:', error);
     return res.status(500).json({
@@ -55,11 +39,8 @@ export default async function handler(req, res) {
     });
   }
 }
-
 async function handleGetTeams(req, res) {
   const corpOperNr = req.query.corp_oper_nr || req.body?.corp_oper_nr;
-
-  // Se não houver corpOperNr, retorna vazio
   if (!corpOperNr) {
     return res.json({
       success: true,
@@ -67,16 +48,13 @@ async function handleGetTeams(req, res) {
       timestamp: Date.now()
     });
   }
-
   const { data: teams, error } = await supabase
     .from('fomio_teams')
     .select('id, team_name, n_int, patente, nome, h_entrance, h_exit, MP, TAS, observ, corp_oper_nr')
-    .eq('corp_oper_nr', corpOperNr)  // filtra pelo corp_oper_nr
+    .eq('corp_oper_nr', corpOperNr)
     .order('team_name', { ascending: true })
     .order('id', { ascending: true });
-
   if (error) throw error;
-
   const teamData = {};
   teams.forEach(member => {
     if (!teamData[member.team_name]) teamData[member.team_name] = [];
@@ -92,34 +70,25 @@ async function handleGetTeams(req, res) {
       observ: member.observ
     });
   });
-
   return res.json({
     success: true,
     teams: teamData,
     timestamp: Date.now()
   });
 }
-
-
-
-
 async function handleUpdateTeam(req, res) {
   const { team_name, members } = req.body;
-
   if (!team_name || !Array.isArray(members)) {
     return res.status(400).json({
       success: false,
       error: 'team_name e members (array) são obrigatórios'
     });
   }
-
   const { error: deleteError } = await supabase
     .from('fomio_teams')
     .delete()
     .eq('team_name', team_name);
-
   if (deleteError) throw deleteError;
-
   if (members.length > 0) {
     const membersToInsert = members.map(member => ({
       team_name,
@@ -132,48 +101,38 @@ async function handleUpdateTeam(req, res) {
       TAS: member.TAS || '',
       observ: member.observ || ''
     }));
-
     const { error: insertError } = await supabase
       .from('fomio_teams')
       .insert(membersToInsert);
 
     if (insertError) throw insertError;
   }
-
   return res.json({
     success: true,
     message: `Equipa ${team_name} atualizada com ${members.length} membros`
   });
 }
-
 async function handleDeleteTeam(req, res) {
   const { team_name } = req.body;
-
   if (!team_name) {
     return res.status(400).json({
       success: false,
       error: 'team_name é obrigatório'
     });
   }
-
   const { error } = await supabase
     .from('fomio_teams')
     .delete()
     .eq('team_name', team_name);
-
   if (error) throw error;
-
   return res.json({
     success: true,
     message: `Equipa ${team_name} limpa com sucesso`
   });
 }
-
 async function handleInsertMember(req, res) {
   const { team_name, patente, nome } = req.body;
-
   console.log('Inserindo:', { team_name, patente, nome });
-
   const { data, error } = await supabase
     .from('fomio_teams')
     .insert([{
@@ -188,27 +147,20 @@ async function handleInsertMember(req, res) {
       observ
     }])
     .select();
-
   if (error) throw error;
-
-  console.log('Inserido com sucesso:', data);
-  
+  console.log('Inserido com sucesso:', data);  
   return res.status(200).json({ 
     success: true, 
     data 
   });
 }
-
 async function handleClearAll(req, res) {
-  console.log('Iniciando limpeza da tabela...');
-  
+  console.log('Iniciando limpeza da tabela...');  
   try {
-
     const { data: truncateData, error: truncateError } = await supabase
       .rpc('sql', { 
         query: 'TRUNCATE TABLE fomio_teams RESTART IDENTITY CASCADE;' 
       });
-
     if (!truncateError) {
       console.log('TRUNCATE executado com sucesso');
       return res.status(200).json({ 
@@ -217,12 +169,9 @@ async function handleClearAll(req, res) {
         method: 'truncate_sql'
       });
     }
-
-    console.log('TRUNCATE falhou, tentando função personalizada...');
-    
+    console.log('TRUNCATE falhou, tentando função personalizada...');    
     const { data: funcData, error: funcError } = await supabase
       .rpc('truncate_fomio_teams');
-
     if (!funcError) {
       console.log('Função personalizada executada');
       return res.status(200).json({ 
@@ -231,84 +180,62 @@ async function handleClearAll(req, res) {
         method: 'custom_function'
       });
     }
-
-    console.log('Função falhou, usando DELETE + reset manual...');
-    
+    console.log('Função falhou, usando DELETE + reset manual...');    
     const { data: deleteData, error: deleteError } = await supabase
       .from('fomio_teams')
       .delete()
-      .neq('id', 0);
-    
-    if (deleteError) throw deleteError;
-    
+      .neq('id', 0);    
+    if (deleteError) throw deleteError;    
     const { data: resetData, error: resetError } = await supabase
       .rpc('sql', { 
         query: "SELECT setval('fomio_teams_id_seq', 1, false);" 
       });
-
-    console.log('DELETE + reset manual executado');
-    
+    console.log('DELETE + reset manual executado');    
     return res.status(200).json({ 
       success: true, 
       message: 'Data cleared with DELETE + manual reset',
       method: 'delete_reset'
     });
-
   } catch (error) {
     console.error('Clear Error:', error);
     throw error;
   }
 }
-
 async function handleResetSequence(req, res) {
-  const { data, error } = await supabase.rpc('reset_fomio_sequence');
-  
+  const { data, error } = await supabase.rpc('reset_fomio_sequence');  
   if (error) {
     console.error('Reset error:', error);
     throw error;
-  }
-  
-  console.log('Sequence reset executado com sucesso');
-  
+  }  
+  console.log('Sequence reset executado com sucesso');  
   return res.status(200).json({ 
     success: true, 
     message: 'Sequence reset com sucesso' 
   });
 }
-
 async function handleSaveHeader(req, res) {
   const { header_text } = req.body;
-
   if (!header_text) {
     return res.status(400).json({ 
       error: 'Header text é obrigatório' 
     });
   }
-
   console.log('Salvando header:', header_text);
-
-  await supabase.from('fomio_date').delete().neq('id', 0);
-  
+  await supabase.from('fomio_date').delete().neq('id', 0);  
   const { data, error } = await supabase
     .from('fomio_date')
     .insert({ header_text })
     .select();
-
   if (error) throw error;
-
   console.log('Header salvo com sucesso');
-
   return res.status(200).json({ 
     success: true, 
     message: 'Header salvo com sucesso',
     data 
   });
 }
-
 async function handleGetHeader(req, res) {
   const corpOperNr = req.query.corp_oper_nr || req.body?.corp_oper_nr;
-
-  // Se não houver corpOperNr, retorna vazio
   if (!corpOperNr) {
     return res.status(200).json({
       success: true,
@@ -316,33 +243,25 @@ async function handleGetHeader(req, res) {
       updated_at: null
     });
   }
-
   const { data, error } = await supabase
     .from('fomio_date')
     .select('header_text, corp_oper_nr, updated_at')
     .eq('corp_oper_nr', corpOperNr)  // filtra pelo corp_oper_nr
     .order('updated_at', { ascending: false })
     .limit(1);
-
   if (error) throw error;
-
   const header = data.length > 0 ? data[0].header_text : null;
   const updatedAt = data.length > 0 ? data[0].updated_at : null;
-
   return res.status(200).json({
     success: true,
     header,
     updated_at: updatedAt
   });
 }
-
-
-
 async function handleLegacyRouting(req, res) {
   if (req.method === 'GET') {
     return await handleGetTeams(req, res);
   }
-
   if (req.method === 'POST') {
     if (req.body.team_name && req.body.members) {
       return await handleUpdateTeam(req, res);
@@ -354,14 +273,12 @@ async function handleLegacyRouting(req, res) {
       return await handleInsertMember(req, res);
     }
   }
-
   if (req.method === 'DELETE') {
     if (req.body.team_name) {
       return await handleDeleteTeam(req, res);
     }
     return await handleClearAll(req, res);
   }
-
   return res.status(405).json({ 
     error: 'Method not allowed or missing parameters' 
   });

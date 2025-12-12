@@ -80,7 +80,8 @@
       .eq('team_name', team_name);
       if (deleteError) throw deleteError;
       if (members.length > 0) {
-        const membersToInsert = members.map(member => ({team_name, n_int: member.n_int || '', patente: member.patente || '', nome: member.nome || '', h_entrance: member.h_entrance || '',
+        const corpOperNr = req.body.corp_oper_nr;
+        const membersToInsert = members.map(member => ({corp_oper_nr: corpOperNr, team_name, n_int: member.n_int || '', patente: member.patente || '', nome: member.nome || '', h_entrance: member.h_entrance || '',
                                                         h_exit: member.h_exit || '', MP: member.MP || '', TAS: member.TAS || '', observ: member.observ || ''}));
         const { error: insertError } = await supabase
         .from('fomio_teams')

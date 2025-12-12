@@ -240,6 +240,11 @@
       return optelName;
     }
     async function emitPlanning(shift, date, baixar = false) {
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      if (!corpOperNr) {
+        alert("❌ Erro: O número da corporação não foi encontrado. Por favor, faça login novamente.");
+        return;
+      }
       const tables = collectTableData();
       const optelName = getOptelName();
       const [year, month, day] = date.split('-');
@@ -274,7 +279,7 @@
             },
             body: JSON.stringify(
               nonEmptyRows.map(r => ({team_name, n_int: r.n_int || '', patente: r.patente || '', nome: r.nome || '', h_entrance: r.entrada || '', h_exit: r.saida || '',
-                                      MP: !!r.MP, TAS: !!r.TAS, observ: r.obs || ''})))});}}
+                                      MP: !!r.MP, TAS: !!r.TAS, observ: r.obs || '', corp_oper_nr: corpOperNr})))});}}
       await fetch(`${SUPABASE_URL}/rest/v1/fomio_date?header_text=neq.null`, {
         method: "DELETE",
         headers: getSupabaseHeaders()
@@ -286,7 +291,7 @@
           "Content-Type": "application/json"
         },
         body: JSON.stringify([{
-          header_text: `Dia: ${day} ${monthName} ${year} | Turno ${shift} | ${shiftHours}`
+          header_text: `Dia: ${day} ${monthName} ${year} | Turno ${shift} | ${shiftHours}`,  corp_oper_nr: corpOperNr
         }])
       });
       const finalFileName = `Planeamento_${day}_${monthName}_${year}_${shift}`;
@@ -341,7 +346,7 @@
       let header;
       if (shift === 'LAST') {
         try {
-          const res = await fetch('https://cb360-online.vercel.app/api/mobile/fomio_control?action=get_header');
+          const res = await fetch('https://cb360-online.vercel.app/api/fomio_control?action=get_header');
           const data = await res.json();
           let formattedHeader = null;
           if (data && data.header) {
@@ -367,7 +372,7 @@
       container.insertAdjacentHTML('beforeend', tableConfig.map(cfg => createTable(cfg.rows, cfg.special, cfg.title)).join(''));
       if (shift === 'LAST') {
         try {
-          const res = await fetch('https://cb360-online.vercel.app/api/mobile/fomio_control?action=get_teams');
+          const res = await fetch('https://cb360-mobile.vercel.app/api/fomio_control?action=get_teams');
           const savedData = await res.json();
           if (savedData && savedData.success && savedData.teams) {
             const teamNameMap = {"ofope": "OFOPE", "chefe_servico": "CHEFE DE SERVIÇO", "optel": "OPTEL", "equipa_01": "EQUIPA 01", "equipa_02": "EQUIPA 02",
@@ -435,6 +440,3 @@
         document.querySelectorAll('.shift-btn').forEach(btn => btn.classList.remove('active'));
       }
     });
-
-
-

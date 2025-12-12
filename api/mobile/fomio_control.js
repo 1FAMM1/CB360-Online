@@ -13,7 +13,6 @@ export default async function handler(req, res) {
 
   try {
     const action = req.query.action || req.body?.action;
-
     switch (action) {
       case 'get_teams':
         return await handleGetTeams(req, res);
@@ -34,105 +33,161 @@ export default async function handler(req, res) {
       default:
         return await handleLegacyRouting(req, res);
     }
-
   } catch (error) {
     console.error('FOMIO Unified API Error:', error);
-    return res.status(500).json({ success: false, error: error.message });
+    return res.status(500).json({
+      success: false,
+      error: error.message
+    });
   }
 }
 
-// ====== TEAMS ======
+// =========================================
+// Funções de leitura
+// =========================================
+
 async function handleGetTeams(req, res) {
-  const corp_oper_nr = req.query.corp_oper_nr || req.body?.corp_oper_nr;
+  const corpOperNr = req.query.corp_oper_nr || req.body?.corp_oper_nr;
+  if (!corpOperNr) {
+    return res.json({ success: true, teams: {}, timestamp: Date.now() });
+  }
 
   const { data: teams, error } = await supabase
     .from('fomio_teams')
-    .select('id, team_name, n_int, patente, nome, h_entrance, h_exit, MP, TAS, observ')
-    .eq('corp_oper_nr', corp_oper_nr)
-    .order('team_name')
-    .order('id');
+    .select('id, team_name, n_int, patente, nome, h_entrance, h_exit, MP, TAS, observ, corp_oper_nr')
+    .eq('corp_oper_nr', corpOperNr)
+    .order('team_name', { ascending: true })
+    .order('id', { ascending: true });
 
   if (error) throw error;
 
   const teamData = {};
   teams.forEach(member => {
     if (!teamData[member.team_name]) teamData[member.team_name] = [];
-    teamData[member.team_name].push(member);
+    teamData[member.team_name].push({
+      id: member.id,
+      n_int: member.n_int,
+      patente: member.patente,
+      nome: member.nome,
+      h_entrance: member.h_entrance,
+      h_exit: member.h_exit,
+      MP: member.MP,
+      TAS: member.TAS,
+      observ: member.observ
+    });
   });
 
   return res.json({ success: true, teams: teamData, timestamp: Date.now() });
 }
 
+async function handleGetHeader(req, res) {
+  const corpOperNr = req.query.corp_oper_nr || req.body?.corp_oper_nr;
+  if (!corpOperNr) {
+    return res.status(200).json({ success: true, header: null, updated_at: null });
+  }
+
+  const { data, error } = await supabase
+    .from('fomio_date')
+    .select('header_text, corp_oper_nr, updated_at')
+    .eq('corp_oper_nr', corpOperNr)
+    .order('updated_at', { ascending: false })
+    .limit(1);
+
+  if (error) throw error;
+
+  const header = data.length > 0 ? data[0].header_text : null;
+  const updatedAt = data.length > 0 ? data[0].updated_at : null;
+
+  return res.status(200).json({ success: true, header, updated_at: updatedAt });
+}
+
+// =========================================
+// Funções de gravação
+// =========================================
+
 async function handleUpdateTeam(req, res) {
   const { team_name, members, corp_oper_nr } = req.body;
+  if (!corp_oper_nr) return res.status(400).json({ success: false, error: 'corp_oper_nr é obrigatório' });
+  if (!team_name || !Array.isArray(members)) return res.status(400).json({ success: false, error: 'team_name e members são obrigatórios' });
 
-  if (!team_name || !Array.isArray(members) || !corp_oper_nr)
-    return res.status(400).json({ success: false, error: 'team_name, members e corp_oper_nr são obrigatórios' });
-
-  await supabase
+  // Remove membros existentes da equipa para a corperação específica
+  const { error: deleteError } = await supabase
     .from('fomio_teams')
     .delete()
     .eq('team_name', team_name)
     .eq('corp_oper_nr', corp_oper_nr);
+  if (deleteError) throw deleteError;
 
   if (members.length > 0) {
-    const membersToInsert = members.map(m => ({
-      corp_oper_nr,
+    const membersToInsert = members.map(member => ({
       team_name,
-      n_int: m.n_int || '',
-      patente: m.patente || '',
-      nome: m.nome || '',
-      h_entrance: m.h_entrance || '',
-      h_exit: m.h_exit || '',
-      MP: m.MP || '',
-      TAS: m.TAS || '',
-      observ: m.observ || ''
+      n_int: member.n_int || '',
+      patente: member.patente || '',
+      nome: member.nome || '',
+      h_entrance: member.h_entrance || '',
+      h_exit: member.h_exit || '',
+      MP: member.MP || false,
+      TAS: member.TAS || false,
+      observ: member.observ || '',
+      corp_oper_nr
     }));
 
-    const { error } = await supabase.from('fomio_teams').insert(membersToInsert);
-    if (error) throw error;
+    const { error: insertError } = await supabase
+      .from('fomio_teams')
+      .insert(membersToInsert);
+    if (insertError) throw insertError;
   }
 
   return res.json({ success: true, message: `Equipa ${team_name} atualizada com ${members.length} membros` });
 }
 
+async function handleInsertMember(req, res) {
+  const { team_name, n_int, patente, nome, h_entrance, h_exit, MP, TAS, observ, corp_oper_nr } = req.body;
+  if (!corp_oper_nr) return res.status(400).json({ success: false, error: 'corp_oper_nr é obrigatório' });
+  if (!team_name) return res.status(400).json({ success: false, error: 'team_name é obrigatório' });
+
+  const { data, error } = await supabase
+    .from('fomio_teams')
+    .insert([{ team_name, n_int, patente, nome, h_entrance, h_exit, MP, TAS, observ, corp_oper_nr }])
+    .select();
+
+  if (error) throw error;
+  return res.status(200).json({ success: true, data });
+}
+
 async function handleDeleteTeam(req, res) {
   const { team_name, corp_oper_nr } = req.body;
-
-  if (!team_name || !corp_oper_nr)
-    return res.status(400).json({ success: false, error: 'team_name e corp_oper_nr são obrigatórios' });
+  if (!corp_oper_nr) return res.status(400).json({ success: false, error: 'corp_oper_nr é obrigatório' });
+  if (!team_name) return res.status(400).json({ success: false, error: 'team_name é obrigatório' });
 
   const { error } = await supabase
     .from('fomio_teams')
     .delete()
     .eq('team_name', team_name)
     .eq('corp_oper_nr', corp_oper_nr);
-
   if (error) throw error;
+
   return res.json({ success: true, message: `Equipa ${team_name} limpa com sucesso` });
 }
 
-async function handleInsertMember(req, res) {
-  const { corp_oper_nr, team_name, n_int, patente, nome, h_entrance, h_exit, MP, TAS, observ } = req.body;
+async function handleClearAll(req, res) {
+  const { corp_oper_nr } = req.body;
+  if (!corp_oper_nr) return res.status(400).json({ success: false, error: 'corp_oper_nr é obrigatório' });
 
-  if (!corp_oper_nr || !team_name || !nome)
-    return res.status(400).json({ success: false, error: 'corp_oper_nr, team_name e nome são obrigatórios' });
-
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('fomio_teams')
-    .insert([{ corp_oper_nr, team_name, n_int, patente, nome, h_entrance, h_exit, MP, TAS, observ }])
-    .select();
+    .delete()
+    .eq('corp_oper_nr', corp_oper_nr);
 
   if (error) throw error;
-  return res.json({ success: true, data });
+
+  return res.status(200).json({ success: true, message: 'Todos os dados da corperação foram limpos' });
 }
 
-// ====== HEADER ======
 async function handleSaveHeader(req, res) {
   const { header_text, corp_oper_nr } = req.body;
-
-  if (!header_text || !corp_oper_nr)
-    return res.status(400).json({ success: false, error: 'header_text e corp_oper_nr são obrigatórios' });
+  if (!corp_oper_nr) return res.status(400).json({ success: false, error: 'corp_oper_nr é obrigatório' });
+  if (!header_text) return res.status(400).json({ success: false, error: 'header_text é obrigatório' });
 
   await supabase.from('fomio_date').delete().eq('corp_oper_nr', corp_oper_nr);
 
@@ -140,41 +195,21 @@ async function handleSaveHeader(req, res) {
     .from('fomio_date')
     .insert([{ header_text, corp_oper_nr }])
     .select();
-
   if (error) throw error;
-  return res.json({ success: true, data });
+
+  return res.status(200).json({ success: true, message: 'Header salvo com sucesso', data });
 }
 
-async function handleGetHeader(req, res) {
-  const corp_oper_nr = req.query.corp_oper_nr || req.body?.corp_oper_nr;
-
-  const { data, error } = await supabase
-    .from('fomio_date')
-    .select('header_text, updated_at')
-    .eq('corp_oper_nr', corp_oper_nr)
-    .order('updated_at', { ascending: false })
-    .limit(1);
-
-  if (error) throw error;
-  return res.json({ success: true, header: data?.[0]?.header_text || null, updated_at: data?.[0]?.updated_at || null });
-}
-
-// ====== OTHER ======
-async function handleClearAll(req, res) {
-  const { corp_oper_nr } = req.body;
-  if (!corp_oper_nr) return res.status(400).json({ success: false, error: 'corp_oper_nr obrigatório' });
-
-  await supabase.from('fomio_teams').delete().eq('corp_oper_nr', corp_oper_nr);
-  return res.json({ success: true, message: 'Todos os dados do operador apagados' });
-}
+// =========================================
+// Funções auxiliares
+// =========================================
 
 async function handleResetSequence(req, res) {
   const { data, error } = await supabase.rpc('reset_fomio_sequence');
   if (error) throw error;
-  return res.json({ success: true, message: 'Sequence reset com sucesso' });
+  return res.status(200).json({ success: true, message: 'Sequence reset com sucesso' });
 }
 
-// ====== LEGACY ======
 async function handleLegacyRouting(req, res) {
   if (req.method === 'GET') return await handleGetTeams(req, res);
   if (req.method === 'POST') {

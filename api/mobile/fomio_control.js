@@ -112,45 +112,38 @@
     }
     async function handleInsertMember(req, res) {
       const { team_name, patente, nome } = req.body;
-      console.log('Inserindo:', { team_name, patente, nome });
       const { data, error } = await supabase
       .from('fomio_teams')
       .insert([{n_int, team_name, patente, nome, h_entrance, h_exit, MP, TAS, observ}])
       .select();
       if (error) throw error;
-      console.log('Inserido com sucesso:', data);  
       return res.status(200).json({
         success: true,
         data
       });
     }
     async function handleClearAll(req, res) {
-      console.log('Iniciando limpeza da tabela...');
       try {
         const { data: truncateData, error: truncateError } = await supabase
         .rpc('sql', {
           query: 'TRUNCATE TABLE fomio_teams RESTART IDENTITY CASCADE;'
         });
         if (!truncateError) {
-          console.log('TRUNCATE executado com sucesso');
           return res.status(200).json({
             success: true,
             message: 'Data cleared with TRUNCATE',
             method: 'truncate_sql'
           });
         }
-        console.log('TRUNCATE falhou, tentando função personalizada...');
         const { data: funcData, error: funcError } = await supabase
         .rpc('truncate_fomio_teams');
         if (!funcError) {
-          console.log('Função personalizada executada');
           return res.status(200).json({
             success: true,
             message: 'Data cleared with custom function',
             method: 'custom_function'
           });
         }
-        console.log('Função falhou, usando DELETE + reset manual...');
         const { data: deleteData, error: deleteError } = await supabase
         .from('fomio_teams')
         .delete()
@@ -160,7 +153,6 @@
         .rpc('sql', {
           query: "SELECT setval('fomio_teams_id_seq', 1, false);"
         });
-        console.log('DELETE + reset manual executado');    
         return res.status(200).json({
           success: true,
           message: 'Data cleared with DELETE + manual reset',
@@ -177,7 +169,6 @@
         console.error('Reset error:', error);
         throw error;
       }
-      console.log('Sequence reset executado com sucesso');
       return res.status(200).json({
         success: true,
         message: 'Sequence reset com sucesso'
@@ -190,14 +181,12 @@
           error: 'Header text é obrigatório'
         });
       }
-      console.log('Salvando header:', header_text);
       await supabase.from('fomio_date').delete().neq('id', 0);
       const { data, error } = await supabase
       .from('fomio_date')
       .insert({ header_text })
       .select();
       if (error) throw error;
-      console.log('Header salvo com sucesso');
       return res.status(200).json({
         success: true,
         message: 'Header salvo com sucesso',

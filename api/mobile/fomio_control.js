@@ -67,22 +67,43 @@ async function handleGetTeams(req, res) {
     });
   }
   
+  // CORREÇÃO: Usar um array de strings para 'select' para maior clareza e garantir que todos os campos são selecionados.
+  const columnsToSelect = [
+    'id', 'team_name', 'n_int', 'patente', 'nome', 
+    'h_entrance', 'h_exit', 'MP', 'TAS', 'observ', 'corp_oper_nr'
+  ];
+  
   const { data: teams, error } = await supabase
     .from('fomio_teams')
-    .select('id, team_name, n_int, patente, nome, h_entrance, h_exit, MP, TAS, observ, corp_oper_nr')
+    // Usamos .select(columnsToSelect.join(',')) para garantir que a query está bem formada
+    .select(columnsToSelect.join(',')) 
     .eq('corp_oper_nr', corpOperNr)
-    .order('team_name', { ascending: true })
+    // Mantemos a ordenação para o frontend receber de forma consistente
+    .order('team_name', { ascending: true }) 
     .order('id', { ascending: true });
   
   if (error) {
-    console.error('❌ Erro Supabase:', error);
+    // Melhorar o log de erro para incluir o código da query
+    console.error('❌ Erro Supabase ao buscar teams:', error.message, error.details);
     throw error;
   }
   
-  console.log('📦 Teams encontradas:', teams?.length || 0);
+  // NOVO LOG: Verificação imediata do número de registos retornados
+  if (teams.length === 0) {
+      console.log('⚠️ Query Supabase não retornou registos para:', corpOperNr);
+  } else {
+      console.log('📦 Teams encontradas (Supabase):', teams.length);
+  }
   
   const teamData = {};
   teams.forEach(member => {
+    // NOTE: Se 'team_name' estiver NULL no Supabase, este agrupamento falha.
+    // É crucial que a coluna team_name tenha um valor.
+    if (!member.team_name) {
+        console.warn('⚠️ Membro com team_name NULL ignorado:', member.id, member.nome);
+        return; 
+    }
+    
     if (!teamData[member.team_name]) {
       teamData[member.team_name] = [];
     }
@@ -99,7 +120,7 @@ async function handleGetTeams(req, res) {
     });
   });
   
-  console.log('✅ TeamData processado:', Object.keys(teamData));
+  console.log('✅ TeamData processado, chaves:', Object.keys(teamData));
   
   return res.json({
     success: true,

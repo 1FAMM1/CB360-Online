@@ -1,18 +1,28 @@
-    import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = 'https://rjkbodfqsvckvnhjwmhg.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqa2JvZGZxc3Zja3ZuaGp3bWhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgxNjM3NjQsImV4cCI6MjA2MzczOTc2NH0.jX5OPZkz1JSSwrahCoFzqGYw8tYkgE8isbn12uP43-0';
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabaseUrl = 'https://rjkbodfqsvckvnhjwmhg.supabase.co'
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqa2JvZGZxc3Zja3ZuaGp3bWhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgxNjM3NjQsImV4cCI6MjA2MzczOTc2NH0.jX5OPZkz1JSSwrahCoFzqGYw8tYkgE8isbn12uP43-0'
+const supabase = createClient(supabaseUrl, supabaseKey)
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  if (req.method === 'OPTIONS') return res.status(200).end();
-
+  
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
   try {
     const action = req.query.action || req.body?.action;
+    
+    console.log('📍 FOMIO API Called:', {
+      method: req.method,
+      action: action,
+      query: req.query,
+      body: req.body
+    });
+    
     switch (action) {
       case 'get_teams':
         return await handleGetTeams(req, res);
@@ -37,33 +47,45 @@ export default async function handler(req, res) {
     console.error('FOMIO Unified API Error:', error);
     return res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message,
+      stack: error.stack
     });
   }
 }
 
-// =========================================
-// Funções de leitura
-// =========================================
-
 async function handleGetTeams(req, res) {
   const corpOperNr = req.query.corp_oper_nr || req.body?.corp_oper_nr;
+  
+  console.log('🔍 GET_TEAMS:', { corpOperNr });
+  
   if (!corpOperNr) {
-    return res.json({ success: true, teams: {}, timestamp: Date.now() });
+    console.log('⚠️ Sem corpOperNr - retornando vazio');
+    return res.json({
+      success: true,
+      teams: {},
+      timestamp: Date.now()
+    });
   }
-
+  
   const { data: teams, error } = await supabase
     .from('fomio_teams')
     .select('id, team_name, n_int, patente, nome, h_entrance, h_exit, MP, TAS, observ, corp_oper_nr')
     .eq('corp_oper_nr', corpOperNr)
     .order('team_name', { ascending: true })
     .order('id', { ascending: true });
-
-  if (error) throw error;
-
+  
+  if (error) {
+    console.error('❌ Erro Supabase:', error);
+    throw error;
+  }
+  
+  console.log('📦 Teams encontradas:', teams?.length || 0);
+  
   const teamData = {};
   teams.forEach(member => {
-    if (!teamData[member.team_name]) teamData[member.team_name] = [];
+    if (!teamData[member.team_name]) {
+      teamData[member.team_name] = [];
+    }
     teamData[member.team_name].push({
       id: member.id,
       n_int: member.n_int,
@@ -76,150 +98,368 @@ async function handleGetTeams(req, res) {
       observ: member.observ
     });
   });
-
-  return res.json({ success: true, teams: teamData, timestamp: Date.now() });
+  
+  console.log('✅ TeamData processado:', Object.keys(teamData));
+  
+  return res.json({
+    success: true,
+    teams: teamData,
+    timestamp: Date.now()
+  });
 }
-
-async function handleGetHeader(req, res) {
-  const corpOperNr = req.query.corp_oper_nr || req.body?.corp_oper_nr;
-  if (!corpOperNr) {
-    return res.status(200).json({ success: true, header: null, updated_at: null });
-  }
-
-  const { data, error } = await supabase
-    .from('fomio_date')
-    .select('header_text, corp_oper_nr, updated_at')
-    .eq('corp_oper_nr', corpOperNr)
-    .order('updated_at', { ascending: false })
-    .limit(1);
-
-  if (error) throw error;
-
-  const header = data.length > 0 ? data[0].header_text : null;
-  const updatedAt = data.length > 0 ? data[0].updated_at : null;
-
-  return res.status(200).json({ success: true, header, updated_at: updatedAt });
-}
-
-// =========================================
-// Funções de gravação
-// =========================================
 
 async function handleUpdateTeam(req, res) {
   const { team_name, members, corp_oper_nr } = req.body;
-  if (!corp_oper_nr) return res.status(400).json({ success: false, error: 'corp_oper_nr é obrigatório' });
-  if (!team_name || !Array.isArray(members)) return res.status(400).json({ success: false, error: 'team_name e members são obrigatórios' });
-
-  // Remove membros existentes da equipa para a corperação específica
+  
+  console.log('📝 UPDATE_TEAM:', { team_name, membersCount: members?.length, corp_oper_nr });
+  
+  if (!team_name || !Array.isArray(members)) {
+    return res.status(400).json({
+      success: false,
+      error: 'team_name e members (array) são obrigatórios'
+    });
+  }
+  
+  // Delete existing team members
   const { error: deleteError } = await supabase
     .from('fomio_teams')
     .delete()
     .eq('team_name', team_name)
     .eq('corp_oper_nr', corp_oper_nr);
-  if (deleteError) throw deleteError;
-
+  
+  if (deleteError) {
+    console.error('❌ Erro ao deletar:', deleteError);
+    throw deleteError;
+  }
+  
+  // Insert new members if any
   if (members.length > 0) {
     const membersToInsert = members.map(member => ({
+      corp_oper_nr: corp_oper_nr,
       team_name,
       n_int: member.n_int || '',
       patente: member.patente || '',
       nome: member.nome || '',
       h_entrance: member.h_entrance || '',
       h_exit: member.h_exit || '',
-      MP: member.MP || false,
-      TAS: member.TAS || false,
-      observ: member.observ || '',
-      corp_oper_nr
+      MP: member.MP || '',
+      TAS: member.TAS || '',
+      observ: member.observ || ''
     }));
-
+    
     const { error: insertError } = await supabase
       .from('fomio_teams')
       .insert(membersToInsert);
-    if (insertError) throw insertError;
+    
+    if (insertError) {
+      console.error('❌ Erro ao inserir:', insertError);
+      throw insertError;
+    }
   }
-
-  return res.json({ success: true, message: `Equipa ${team_name} atualizada com ${members.length} membros` });
-}
-
-async function handleInsertMember(req, res) {
-  const { team_name, n_int, patente, nome, h_entrance, h_exit, MP, TAS, observ, corp_oper_nr } = req.body;
-  if (!corp_oper_nr) return res.status(400).json({ success: false, error: 'corp_oper_nr é obrigatório' });
-  if (!team_name) return res.status(400).json({ success: false, error: 'team_name é obrigatório' });
-
-  const { data, error } = await supabase
-    .from('fomio_teams')
-    .insert([{ team_name, n_int, patente, nome, h_entrance, h_exit, MP, TAS, observ, corp_oper_nr }])
-    .select();
-
-  if (error) throw error;
-  return res.status(200).json({ success: true, data });
+  
+  console.log('✅ Team atualizada:', team_name);
+  
+  return res.json({
+    success: true,
+    message: `Equipa ${team_name} atualizada com ${members.length} membros`
+  });
 }
 
 async function handleDeleteTeam(req, res) {
   const { team_name, corp_oper_nr } = req.body;
-  if (!corp_oper_nr) return res.status(400).json({ success: false, error: 'corp_oper_nr é obrigatório' });
-  if (!team_name) return res.status(400).json({ success: false, error: 'team_name é obrigatório' });
-
-  const { error } = await supabase
+  
+  console.log('🗑️ DELETE_TEAM:', { team_name, corp_oper_nr });
+  
+  if (!team_name) {
+    return res.status(400).json({
+      success: false,
+      error: 'team_name é obrigatório'
+    });
+  }
+  
+  const query = supabase
     .from('fomio_teams')
     .delete()
-    .eq('team_name', team_name)
-    .eq('corp_oper_nr', corp_oper_nr);
-  if (error) throw error;
+    .eq('team_name', team_name);
+  
+  if (corp_oper_nr) {
+    query.eq('corp_oper_nr', corp_oper_nr);
+  }
+  
+  const { error } = await query;
+  
+  if (error) {
+    console.error('❌ Erro ao deletar team:', error);
+    throw error;
+  }
+  
+  console.log('✅ Team deletada:', team_name);
+  
+  return res.json({
+    success: true,
+    message: `Equipa ${team_name} limpa com sucesso`
+  });
+}
 
-  return res.json({ success: true, message: `Equipa ${team_name} limpa com sucesso` });
+async function handleInsertMember(req, res) {
+  const { 
+    team_name, 
+    patente, 
+    nome, 
+    n_int = '', 
+    h_entrance = '', 
+    h_exit = '', 
+    MP = '', 
+    TAS = '', 
+    observ = '',
+    corp_oper_nr 
+  } = req.body;
+  
+  console.log('➕ INSERT_MEMBER:', { team_name, patente, nome, corp_oper_nr });
+  
+  if (!team_name || !patente || !nome) {
+    return res.status(400).json({
+      success: false,
+      error: 'team_name, patente e nome são obrigatórios'
+    });
+  }
+  
+  const { data, error } = await supabase
+    .from('fomio_teams')
+    .insert([{
+      corp_oper_nr,
+      team_name, 
+      patente, 
+      nome, 
+      n_int,
+      h_entrance, 
+      h_exit, 
+      MP, 
+      TAS, 
+      observ
+    }])
+    .select();
+  
+  if (error) {
+    console.error('❌ Erro ao inserir membro:', error);
+    throw error;
+  }
+  
+  console.log('✅ Membro inserido:', nome);
+  
+  return res.status(200).json({
+    success: true,
+    data
+  });
 }
 
 async function handleClearAll(req, res) {
   const { corp_oper_nr } = req.body;
-  if (!corp_oper_nr) return res.status(400).json({ success: false, error: 'corp_oper_nr é obrigatório' });
+  
+  console.log('🧹 CLEAR_ALL:', { corp_oper_nr });
+  
+  try {
+    // Try TRUNCATE first (if you have RPC function)
+    const { data: truncateData, error: truncateError } = await supabase
+      .rpc('sql', {
+        query: 'TRUNCATE TABLE fomio_teams RESTART IDENTITY CASCADE;'
+      });
+    
+    if (!truncateError) {
+      console.log('✅ TRUNCATE executado');
+      return res.status(200).json({
+        success: true,
+        message: 'Data cleared with TRUNCATE',
+        method: 'truncate_sql'
+      });
+    }
+    
+    // Try custom function
+    const { data: funcData, error: funcError } = await supabase
+      .rpc('truncate_fomio_teams');
+    
+    if (!funcError) {
+      console.log('✅ Custom function executada');
+      return res.status(200).json({
+        success: true,
+        message: 'Data cleared with custom function',
+        method: 'custom_function'
+      });
+    }
+    
+    // Fallback to DELETE
+    const deleteQuery = supabase
+      .from('fomio_teams')
+      .delete()
+      .neq('id', 0);
+    
+    if (corp_oper_nr) {
+      deleteQuery.eq('corp_oper_nr', corp_oper_nr);
+    }
+    
+    const { data: deleteData, error: deleteError } = await deleteQuery;
+    
+    if (deleteError) {
+      console.error('❌ Erro no DELETE:', deleteError);
+      throw deleteError;
+    }
+    
+    console.log('✅ DELETE executado');
+    
+    // Try to reset sequence
+    try {
+      await supabase.rpc('sql', {
+        query: "SELECT setval('fomio_teams_id_seq', 1, false);"
+      });
+    } catch (seqError) {
+      console.log('⚠️ Não foi possível resetar sequence:', seqError);
+    }
+    
+    return res.status(200).json({
+      success: true,
+      message: 'Data cleared with DELETE',
+      method: 'delete_fallback'
+    });
+  } catch (error) {
+    console.error('💥 Erro no Clear:', error);
+    throw error;
+  }
+}
 
-  const { error } = await supabase
-    .from('fomio_teams')
-    .delete()
-    .eq('corp_oper_nr', corp_oper_nr);
-
-  if (error) throw error;
-
-  return res.status(200).json({ success: true, message: 'Todos os dados da corperação foram limpos' });
+async function handleResetSequence(req, res) {
+  console.log('🔄 RESET_SEQUENCE');
+  
+  const { data, error } = await supabase.rpc('reset_fomio_sequence');
+  
+  if (error) {
+    console.error('❌ Erro ao resetar sequence:', error);
+    throw error;
+  }
+  
+  console.log('✅ Sequence resetada');
+  
+  return res.status(200).json({
+    success: true,
+    message: 'Sequence reset com sucesso'
+  });
 }
 
 async function handleSaveHeader(req, res) {
   const { header_text, corp_oper_nr } = req.body;
-  if (!corp_oper_nr) return res.status(400).json({ success: false, error: 'corp_oper_nr é obrigatório' });
-  if (!header_text) return res.status(400).json({ success: false, error: 'header_text é obrigatório' });
-
-  await supabase.from('fomio_date').delete().eq('corp_oper_nr', corp_oper_nr);
-
+  
+  console.log('💾 SAVE_HEADER:', { header_text, corp_oper_nr });
+  
+  if (!header_text) {
+    return res.status(400).json({
+      success: false,
+      error: 'Header text é obrigatório'
+    });
+  }
+  
+  // Delete existing headers for this corp
+  if (corp_oper_nr) {
+    await supabase
+      .from('fomio_date')
+      .delete()
+      .eq('corp_oper_nr', corp_oper_nr);
+  } else {
+    await supabase
+      .from('fomio_date')
+      .delete()
+      .neq('id', 0);
+  }
+  
   const { data, error } = await supabase
     .from('fomio_date')
-    .insert([{ header_text, corp_oper_nr }])
+    .insert({ 
+      header_text,
+      corp_oper_nr 
+    })
     .select();
-  if (error) throw error;
-
-  return res.status(200).json({ success: true, message: 'Header salvo com sucesso', data });
+  
+  if (error) {
+    console.error('❌ Erro ao salvar header:', error);
+    throw error;
+  }
+  
+  console.log('✅ Header salvo');
+  
+  return res.status(200).json({
+    success: true,
+    message: 'Header salvo com sucesso',
+    data
+  });
 }
 
-// =========================================
-// Funções auxiliares
-// =========================================
-
-async function handleResetSequence(req, res) {
-  const { data, error } = await supabase.rpc('reset_fomio_sequence');
-  if (error) throw error;
-  return res.status(200).json({ success: true, message: 'Sequence reset com sucesso' });
+async function handleGetHeader(req, res) {
+  const corpOperNr = req.query.corp_oper_nr || req.body?.corp_oper_nr;
+  
+  console.log('📋 GET_HEADER:', { corpOperNr });
+  
+  if (!corpOperNr) {
+    console.log('⚠️ Sem corpOperNr para header');
+    return res.status(200).json({
+      success: true,
+      header: null,
+      updated_at: null
+    });
+  }
+  
+  const { data, error } = await supabase
+    .from('fomio_date')
+    .select('header_text, corp_oper_nr, updated_at')
+    .eq('corp_oper_nr', corpOperNr)
+    .order('updated_at', { ascending: false })
+    .limit(1);
+  
+  if (error) {
+    console.error('❌ Erro ao buscar header:', error);
+    throw error;
+  }
+  
+  const header = data.length > 0 ? data[0].header_text : null;
+  const updatedAt = data.length > 0 ? data[0].updated_at : null;
+  
+  console.log('✅ Header encontrado:', header);
+  
+  return res.status(200).json({
+    success: true,
+    header,
+    updated_at: updatedAt
+  });
 }
 
 async function handleLegacyRouting(req, res) {
-  if (req.method === 'GET') return await handleGetTeams(req, res);
-  if (req.method === 'POST') {
-    if (req.body.team_name && req.body.members) return await handleUpdateTeam(req, res);
-    if (req.body.header_text) return await handleSaveHeader(req, res);
-    if (req.body.team_name && req.body.patente && req.body.nome) return await handleInsertMember(req, res);
+  console.log('🔀 LEGACY_ROUTING:', req.method);
+  
+  if (req.method === 'GET') {
+    return await handleGetTeams(req, res);
   }
+  
+  if (req.method === 'POST') {
+    if (req.body.team_name && req.body.members) {
+      return await handleUpdateTeam(req, res);
+    }
+    if (req.body.header_text) {
+      return await handleSaveHeader(req, res);
+    }
+    if (req.body.team_name && req.body.patente && req.body.nome) {
+      return await handleInsertMember(req, res);
+    }
+  }
+  
   if (req.method === 'DELETE') {
-    if (req.body.team_name) return await handleDeleteTeam(req, res);
+    if (req.body.team_name) {
+      return await handleDeleteTeam(req, res);
+    }
     return await handleClearAll(req, res);
   }
-  return res.status(405).json({ error: 'Method not allowed or missing parameters' });
+  
+  console.log('❌ Method not allowed');
+  
+  return res.status(405).json({ 
+    error: 'Method not allowed or missing parameters',
+    method: req.method,
+    body: req.body
+  });
 }

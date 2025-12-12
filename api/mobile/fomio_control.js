@@ -59,25 +59,27 @@ export default async function handler(req, res) {
 async function handleGetTeams(req, res) {
   const corpOperNr = req.query.corp_oper_nr || req.body?.corp_oper_nr;
 
-  let query = supabase
-    .from('fomio_teams')
-    .select('id, team_name, n_int, patente, nome, h_entrance, h_exit, MP, TAS, observ, corp_oper_nr')
-    .order('team_name', { ascending: true })
-    .order('id', { ascending: true });
-
-  if (corpOperNr) {
-    query = query.eq('corp_oper_nr', corpOperNr);
+  // Se não houver corpOperNr, retorna vazio
+  if (!corpOperNr) {
+    return res.json({
+      success: true,
+      teams: {},
+      timestamp: Date.now()
+    });
   }
 
-  const { data: teams, error } = await query;
+  const { data: teams, error } = await supabase
+    .from('fomio_teams')
+    .select('id, team_name, n_int, patente, nome, h_entrance, h_exit, MP, TAS, observ, corp_oper_nr')
+    .eq('corp_oper_nr', corpOperNr)  // filtra pelo corp_oper_nr
+    .order('team_name', { ascending: true })
+    .order('id', { ascending: true });
 
   if (error) throw error;
 
   const teamData = {};
   teams.forEach(member => {
-    if (!teamData[member.team_name]) {
-      teamData[member.team_name] = [];
-    }
+    if (!teamData[member.team_name]) teamData[member.team_name] = [];
     teamData[member.team_name].push({
       id: member.id,
       n_int: member.n_int,
@@ -97,6 +99,7 @@ async function handleGetTeams(req, res) {
     timestamp: Date.now()
   });
 }
+
 
 
 
@@ -305,16 +308,21 @@ async function handleSaveHeader(req, res) {
 async function handleGetHeader(req, res) {
   const corpOperNr = req.query.corp_oper_nr || req.body?.corp_oper_nr;
 
-  let query = supabase
-    .from('fomio_date')
-    .select('header_text, corp_oper_nr, updated_at')
-    .order('updated_at', { ascending: false });
-
-  if (corpOperNr) {
-    query = query.eq('corp_oper_nr', corpOperNr);
+  // Se não houver corpOperNr, retorna vazio
+  if (!corpOperNr) {
+    return res.status(200).json({
+      success: true,
+      header: null,
+      updated_at: null
+    });
   }
 
-  const { data, error } = await query;
+  const { data, error } = await supabase
+    .from('fomio_date')
+    .select('header_text, corp_oper_nr, updated_at')
+    .eq('corp_oper_nr', corpOperNr)  // filtra pelo corp_oper_nr
+    .order('updated_at', { ascending: false })
+    .limit(1);
 
   if (error) throw error;
 

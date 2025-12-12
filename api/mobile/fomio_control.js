@@ -42,7 +42,11 @@
     async function handleGetTeams(req, res) {
       const corpOperNr = req.query.corp_oper_nr || req.body?.corp_oper_nr;
       if (!corpOperNr) {
-        return res.json({success: true, teams: {}, timestamp: Date.now()});
+        return res.json({
+          success: true,
+          teams: {},
+          timestamp: Date.now()
+        });
       }
       const { data: teams, error } = await supabase
       .from('fomio_teams')
@@ -56,9 +60,13 @@
         if (!teamData[member.team_name]) teamData[member.team_name] = [];
         teamData[member.team_name].push({id: member.id, n_int: member.n_int, patente: member.patente, nome: member.nome, h_entrance: member.h_entrance,
                                          h_exit: member.h_exit, MP: member.MP, TAS: member.TAS, observ: member.observ});});
-      return res.json({success: true, teams: teamData, timestamp: Date.now()});
-    }    
-    sync function handleUpdateTeam(req, res) {
+      return res.json({
+        success: true,
+        teams: teamData,
+        timestamp: Date.now()
+      });
+    }
+    async function handleUpdateTeam(req, res) {
       const { team_name, members } = req.body;
       if (!team_name || !Array.isArray(members)) {
         return res.status(400).json({
@@ -72,9 +80,8 @@
       .eq('team_name', team_name);
       if (deleteError) throw deleteError;
       if (members.length > 0) {
-        const membersToInsert = members.map(member => ({team_name, n_int: member.n_int || '', patente: member.patente || '', nome: member.nome || '',
-                                                        h_entrance: member.h_entrance || '', h_exit: member.h_exit || '', MP: member.MP || '', TAS: member.TAS || '',
-                                                        observ: member.observ || ''}));
+        const membersToInsert = members.map(member => ({team_name, n_int: member.n_int || '', patente: member.patente || '', nome: member.nome || '', h_entrance: member.h_entrance || '',
+                                                        h_exit: member.h_exit || '', MP: member.MP || '', TAS: member.TAS || '', observ: member.observ || ''}));
         const { error: insertError } = await supabase
         .from('fomio_teams')
         .insert(membersToInsert);
@@ -112,89 +119,89 @@
       .select();
       if (error) throw error;
       console.log('Inserido com sucesso:', data);  
-      return res.status(200).json({ 
-        success: true, 
-        data 
+      return res.status(200).json({
+        success: true,
+        data
       });
     }
     async function handleClearAll(req, res) {
-      console.log('Iniciando limpeza da tabela...');  
+      console.log('Iniciando limpeza da tabela...');
       try {
         const { data: truncateData, error: truncateError } = await supabase
         .rpc('sql', {
-          query: 'TRUNCATE TABLE fomio_teams RESTART IDENTITY CASCADE;' 
-      });
+          query: 'TRUNCATE TABLE fomio_teams RESTART IDENTITY CASCADE;'
+        });
         if (!truncateError) {
           console.log('TRUNCATE executado com sucesso');
-          return res.status(200).json({ 
-            success: true, 
-        message: 'Data cleared with TRUNCATE',
-        method: 'truncate_sql'
-      });
-    }
-    console.log('TRUNCATE falhou, tentando função personalizada...');    
-    const { data: funcData, error: funcError } = await supabase
-      .rpc('truncate_fomio_teams');
-    if (!funcError) {
-      console.log('Função personalizada executada');
-      return res.status(200).json({ 
-        success: true, 
-        message: 'Data cleared with custom function',
-        method: 'custom_function'
-      });
-    }
-    console.log('Função falhou, usando DELETE + reset manual...');    
-    const { data: deleteData, error: deleteError } = await supabase
-      .from('fomio_teams')
-      .delete()
-      .neq('id', 0);    
-    if (deleteError) throw deleteError;    
-    const { data: resetData, error: resetError } = await supabase
-      .rpc('sql', { 
-        query: "SELECT setval('fomio_teams_id_seq', 1, false);" 
-      });
-    console.log('DELETE + reset manual executado');    
-    return res.status(200).json({ 
-      success: true, 
-      message: 'Data cleared with DELETE + manual reset',
-      method: 'delete_reset
-    });
+          return res.status(200).json({
+            success: true,
+            message: 'Data cleared with TRUNCATE',
+            method: 'truncate_sql'
+          });
+        }
+        console.log('TRUNCATE falhou, tentando função personalizada...');
+        const { data: funcData, error: funcError } = await supabase
+        .rpc('truncate_fomio_teams');
+        if (!funcError) {
+          console.log('Função personalizada executada');
+          return res.status(200).json({
+            success: true,
+            message: 'Data cleared with custom function',
+            method: 'custom_function'
+          });
+        }
+        console.log('Função falhou, usando DELETE + reset manual...');
+        const { data: deleteData, error: deleteError } = await supabase
+        .from('fomio_teams')
+        .delete()
+        .neq('id', 0);
+        if (deleteError) throw deleteError;
+        const { data: resetData, error: resetError } = await supabase
+        .rpc('sql', {
+          query: "SELECT setval('fomio_teams_id_seq', 1, false);"
+        });
+        console.log('DELETE + reset manual executado');    
+        return res.status(200).json({
+          success: true,
+          message: 'Data cleared with DELETE + manual reset',
+          method: 'delete_reset'
+        });
       } catch (error) {
         console.error('Clear Error:', error);
         throw error;
       }
     }
     async function handleResetSequence(req, res) {
-      const { data, error } = await supabase.rpc('reset_fomio_sequence');  
+      const { data, error } = await supabase.rpc('reset_fomio_sequence');
       if (error) {
         console.error('Reset error:', error);
         throw error;
       }
-      console.log('Sequence reset executado com sucesso');  
-      return res.status(200).json({ 
+      console.log('Sequence reset executado com sucesso');
+      return res.status(200).json({
         success: true,
-        message: 'Sequence reset com sucesso' 
+        message: 'Sequence reset com sucesso'
       });
     }
     async function handleSaveHeader(req, res) {
       const { header_text } = req.body;
       if (!header_text) {
-        return res.status(400).json({ 
+        return res.status(400).json({
           error: 'Header text é obrigatório'
         });
       }
       console.log('Salvando header:', header_text);
-      await supabase.from('fomio_date').delete().neq('id', 0);  
+      await supabase.from('fomio_date').delete().neq('id', 0);
       const { data, error } = await supabase
       .from('fomio_date')
       .insert({ header_text })
       .select();
       if (error) throw error;
       console.log('Header salvo com sucesso');
-      return res.status(200).json({ 
-        success: true, 
+      return res.status(200).json({
+        success: true,
         message: 'Header salvo com sucesso',
-        data 
+        data
       });
     }
     async function handleGetHeader(req, res) {
@@ -223,7 +230,7 @@
     }
     async function handleLegacyRouting(req, res) {
       if (req.method === 'GET') {
-        return await handleGetTeams(req, res); 
+        return await handleGetTeams(req, res);
       }
       if (req.method === 'POST') {
         if (req.body.team_name && req.body.members) {
@@ -243,6 +250,6 @@
         return await handleClearAll(req, res);
       }
       return res.status(405).json({ 
-        error: 'Method not allowed or missing parameters' 
+        error: 'Method not allowed or missing parameters'
       });
     }

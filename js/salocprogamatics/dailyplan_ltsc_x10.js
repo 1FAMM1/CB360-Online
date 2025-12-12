@@ -305,7 +305,7 @@
       try {
         showPopupSuccess(`Planeamento gerado com sucesso. O mesmo está a ser enviado para as entidades. Será notificado após o envio estar finalizado.`);
         const response = await fetch(
-          'https://corsproxy.io/?' + encodeURIComponent('https://cb360-online.vercel.app/api/mobile/plandir_convert_and_send'), {
+          'https://corsproxy.io/?' + encodeURIComponent('https://cb360-online.vercel.app/api/plandir_convert_and_send'), {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
@@ -435,4 +435,5 @@
         document.querySelectorAll('.shift-btn').forEach(btn => btn.classList.remove('active'));
       }
     });
+
 

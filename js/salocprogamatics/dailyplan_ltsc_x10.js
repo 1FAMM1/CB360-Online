@@ -286,7 +286,7 @@
           "Content-Type": "application/json"
         },
         body: JSON.stringify([{
-          header_text: `Dia: ${formattedDate} | Turno ${shift} | ${shiftHours}`
+          header_text: `Dia: ${day} ${monthName} ${year} | Turno ${shift} | ${shiftHours}`
         }])
       });
       const finalFileName = `Planeamento_${day}_${monthName}_${year}_${shift}`;
@@ -435,5 +435,6 @@
         document.querySelectorAll('.shift-btn').forEach(btn => btn.classList.remove('active'));
       }
     });
+
 
 

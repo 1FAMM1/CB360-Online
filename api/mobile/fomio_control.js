@@ -112,17 +112,49 @@
       });
     }
     async function handleInsertMember(req, res) {
-      const { team_name, patente, nome } = req.body;
-      const { data, error } = await supabase
-      .from('fomio_teams')
-      .insert([{n_int, team_name, patente, nome, h_entrance, h_exit, MP, TAS, observ}])
-      .select();
-      if (error) throw error;
-      return res.status(200).json({
-        success: true,
-        data
-      });
-    }
+  const { 
+    team_name, 
+    patente, 
+    nome, 
+    n_int = '', 
+    h_entrance = '', 
+    h_exit = '', 
+    MP = '', 
+    TAS = '', 
+    observ = '',
+    corp_oper_nr 
+  } = req.body;
+
+  if (!team_name || !patente || !nome) {
+    return res.status(400).json({
+      success: false,
+      error: 'team_name, patente e nome são obrigatórios'
+    });
+  }
+
+  const { data, error } = await supabase
+    .from('fomio_teams')
+    .insert([{
+      corp_oper_nr,
+      team_name, 
+      patente, 
+      nome, 
+      n_int,
+      h_entrance, 
+      h_exit, 
+      MP, 
+      TAS, 
+      observ
+    }])
+    .select();
+
+  if (error) throw error;
+
+  return res.status(200).json({
+    success: true,
+    data
+  });
+}
     async function handleClearAll(req, res) {
       try {
         const { data: truncateData, error: truncateError } = await supabase

@@ -374,7 +374,7 @@
       if (shift === 'LAST') {
         try {
           const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
-          const res = await fetch(`https://cb360-mobile.vercel.app/api/mobile/fomio_control?action=get_teams&corp_oper_nr=${corpOperNr}`);
+          const res = await fetch(`https://cb360-online.vercel.app/api/mobile/fomio_control?action=get_teams&corp_oper_nr=${corpOperNr}`);
           const savedData = await res.json();
           if (savedData && savedData.success && savedData.teams) {
             const teamNameMap = {"ofope": "OFOPE", "chefe_servico": "CHEFE DE SERVIÇO", "optel": "OPTEL", "equipa_01": "EQUIPA 01", "equipa_02": "EQUIPA 02",
@@ -442,5 +442,6 @@
         document.querySelectorAll('.shift-btn').forEach(btn => btn.classList.remove('active'));
       }
     });
+
 
 

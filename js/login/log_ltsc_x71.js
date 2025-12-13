@@ -26,7 +26,7 @@
           sessionStorage.setItem("currentCorpOperNr", "0000");
           showToast("Bem-vindo à administração do CB360 Online!", 2000, "success");
           setTimeout(() => {
-            window.location.href = "system_admin.html";
+            window.location.href = "main - Cópia.html";
           }, 2000);
           return;
         }
@@ -85,4 +85,5 @@
       }, 1000 - now.getMilliseconds());
     }
     startClock();
+
     document.getElementById("username").focus();

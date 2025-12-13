@@ -10,6 +10,6 @@
     "next-connect": "^0.12.2",
     "multer": "^2.0.2",
     "form-data": "^4.0.0",
-    "node-fetch": "^3.4.0"
+    "node-fetch": "^3.3.2"
   }
 }

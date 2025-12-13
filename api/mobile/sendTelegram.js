@@ -13,8 +13,8 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Mensagem ou foto vazia' });
   }
   
-  const TOKEN = 'YOUR_BOT_TOKEN_HERE';
-  const CHAT_ID = 'YOUR_CHAT_ID_HERE';
+  const TOKEN = '8014555896:AAEb3ulaMJknmxvLKMln0H4N_lmZ7U0z6rI';
+      const CHAT_ID = '7961378096';
   
   let endpoint = '';
   let body = { chat_id: CHAT_ID };

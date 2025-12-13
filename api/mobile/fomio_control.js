@@ -48,25 +48,58 @@
       return res.json({ success: true, teams: teamData, timestamp: Date.now() });
     }
     async function handleUpdateTeam(req, res) {
-      const { team_name, members } = req.body;
-      if (!team_name || !Array.isArray(members)) {
-        return res.status(400).json({ success: false, error: 'team_name e members (array) são obrigatórios' });
-      }
-      const { error: deleteError } = await supabase
+  const { team_name, members, corp_oper_nr } = req.body;
+
+  if (!team_name || !Array.isArray(members)) {
+    return res.status(400).json({
+      success: false,
+      error: 'team_name e members (array) são obrigatórios'
+    });
+  }
+
+  if (!corp_oper_nr) {
+    return res.status(400).json({
+      success: false,
+      error: 'corp_oper_nr obrigatório'
+    });
+  }
+
+  // 🔥 apaga apenas a equipa DA corporação correta
+  const { error: deleteError } = await supabase
+    .from('fomio_teams')
+    .delete()
+    .eq('team_name', team_name)
+    .eq('corp_oper_nr', corp_oper_nr);
+
+  if (deleteError) throw deleteError;
+
+  if (members.length > 0) {
+    const membersToInsert = members.map(member => ({
+      team_name,
+      corp_oper_nr,
+      n_int: member.n_int || '',
+      patente: member.patente || '',
+      nome: member.nome || '',
+      h_entrance: member.h_entrance || '',
+      h_exit: member.h_exit || '',
+      MP: !!member.MP,
+      TAS: !!member.TAS,
+      observ: member.observ || ''
+    }));
+
+    const { error: insertError } = await supabase
       .from('fomio_teams')
-      .delete()
-      .eq('team_name', team_name);
-      if (deleteError) throw deleteError;
-      if (members.length > 0) {
-        const membersToInsert = members.map(member => ({team_name, n_int: member.n_int || '', patente: member.patente || '', nome: member.nome || '', h_entrance: member.h_entrance || '',
-                                                        h_exit: member.h_exit || '', MP: member.MP || '', TAS: member.TAS || '', observ: member.observ || ''}));
-        const { error: insertError } = await supabase
-        .from('fomio_teams')
-        .insert(membersToInsert);
-        if (insertError) throw insertError;
-      }
-      return res.json({ success: true, message: `Equipa ${team_name} atualizada com ${members.length} membros` });
-    }
+      .insert(membersToInsert);
+
+    if (insertError) throw insertError;
+  }
+
+  return res.json({
+    success: true,
+    message: `Equipa ${team_name} atualizada com ${members.length} membros`
+  });
+}
+
     async function handleDeleteTeam(req, res) {
       const { team_name } = req.body;
       if (!team_name) {

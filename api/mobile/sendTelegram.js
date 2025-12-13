@@ -14,9 +14,10 @@ const apiRoute = nextConnect({
   },
 });
 
+// Middleware para processar múltiplos arquivos
 apiRoute.use(upload.array('photos')); // campo 'photos'
 
-// CORS
+/* ================= CORS ================= */
 apiRoute.options((req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -24,6 +25,7 @@ apiRoute.options((req, res) => {
   res.status(200).end();
 });
 
+/* ================= POST ================= */
 apiRoute.post(async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
 
@@ -35,11 +37,11 @@ apiRoute.post(async (req, res) => {
   }
 
   const TOKEN = '8014555896:AAEb3ulaMJknmxvLKMln0H4N_lmZ7U0z6rI';
-      const CHAT_ID = '7961378096';
+  const CHAT_ID = '7961378096';
 
   try {
     if (files.length > 0) {
-      // Telegram aceita até 10 fotos em sendMediaGroup
+      // Limite de 10 fotos no Telegram
       const media = files.slice(0, 10).map((file, index) => ({
         type: 'photo',
         media: `attach://photo${index}`,
@@ -51,7 +53,7 @@ apiRoute.post(async (req, res) => {
       formData.append('chat_id', CHAT_ID);
       formData.append('media', JSON.stringify(media));
 
-      // Adiciona cada foto ao FormData
+      // Adiciona cada arquivo ao FormData com o nome correto
       files.slice(0, 10).forEach((file, index) => {
         formData.append(`photo${index}`, file.buffer, { filename: file.originalname });
       });
@@ -67,7 +69,7 @@ apiRoute.post(async (req, res) => {
         return res.status(500).json({ success: false, error: text });
       }
     } else {
-      // Apenas mensagem
+      // Apenas mensagem de texto
       const telegramRes = await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -86,5 +88,9 @@ apiRoute.post(async (req, res) => {
   }
 });
 
-export const config = { api: { bodyParser: false } };
+/* ================= CONFIG ================= */
+export const config = {
+  api: { bodyParser: false }, // necessário para multer
+};
+
 export default apiRoute;

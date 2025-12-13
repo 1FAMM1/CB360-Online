@@ -29,76 +29,50 @@
     }
     
     async function handleGetTeams(req, res) {
-      const corpOperNr = req.query.corp_oper_nr || req.body?.corp_oper_nr;
-      if (!corpOperNr) {
-        return res.json({ success: true, teams: {}, timestamp: Date.now() });
-      }
-      const { data: teams, error } = await supabase
+  try {
+    const corpOperNr = req.query.corp_oper_nr || req.body?.corp_oper_nr;
+
+    // Monta a query base
+    let query = supabase
       .from('fomio_teams')
-      .select('id, team_name, n_int, patente, nome, h_entrance, h_exit, MP, TAS, observ, corp_oper_nr')
-      .eq('corp_oper_nr', corpOperNr)
+      .select('id, team_name, n_int, patente, nome, h_entrance, h_exit, MP, TAS, observ, corp_oper_nr');
+
+    // Aplica filtro se corpOperNr existir
+    if (corpOperNr) {
+      query = query.eq('corp_oper_nr', corpOperNr);
+    }
+
+    // Ordena os resultados
+    const { data: teams, error } = await query
       .order('team_name', { ascending: true })
       .order('id', { ascending: true });
-      if (error) throw error;
-      const teamData = {};
-      teams.forEach(member => {
-        if (!teamData[member.team_name]) teamData[member.team_name] = [];
-        teamData[member.team_name].push({id: member.id, n_int: member.n_int, patente: member.patente, nome: member.nome, h_entrance: member.h_entrance, 
-                                         h_exit: member.h_exit, MP: member.MP, TAS: member.TAS, observ: member.observ});});
-      return res.json({ success: true, teams: teamData, timestamp: Date.now() });
-    }
-    async function handleUpdateTeam(req, res) {
-  const { team_name, members, corp_oper_nr } = req.body;
 
-  if (!team_name || !Array.isArray(members)) {
-    return res.status(400).json({
-      success: false,
-      error: 'team_name e members (array) são obrigatórios'
+    if (error) throw error;
+
+    // Organiza os dados por equipa
+    const teamData = {};
+    teams.forEach(member => {
+      if (!teamData[member.team_name]) teamData[member.team_name] = [];
+      teamData[member.team_name].push({
+        id: member.id,
+        n_int: member.n_int,
+        patente: member.patente,
+        nome: member.nome,
+        h_entrance: member.h_entrance,
+        h_exit: member.h_exit,
+        MP: member.MP,
+        TAS: member.TAS,
+        observ: member.observ
+      });
     });
+
+    return res.json({ success: true, teams: teamData, timestamp: Date.now() });
+  } catch (err) {
+    console.error('Erro ao buscar teams:', err);
+    return res.status(500).json({ success: false, error: err.message });
   }
-
-  if (!corp_oper_nr) {
-    return res.status(400).json({
-      success: false,
-      error: 'corp_oper_nr obrigatório'
-    });
-  }
-
-  // 🔥 apaga apenas a equipa DA corporação correta
-  const { error: deleteError } = await supabase
-    .from('fomio_teams')
-    .delete()
-    .eq('team_name', team_name)
-    .eq('corp_oper_nr', corp_oper_nr);
-
-  if (deleteError) throw deleteError;
-
-  if (members.length > 0) {
-    const membersToInsert = members.map(member => ({
-      team_name,
-      corp_oper_nr,
-      n_int: member.n_int || '',
-      patente: member.patente || '',
-      nome: member.nome || '',
-      h_entrance: member.h_entrance || '',
-      h_exit: member.h_exit || '',
-      MP: !!member.MP,
-      TAS: !!member.TAS,
-      observ: member.observ || ''
-    }));
-
-    const { error: insertError } = await supabase
-      .from('fomio_teams')
-      .insert(membersToInsert);
-
-    if (insertError) throw insertError;
-  }
-
-  return res.json({
-    success: true,
-    message: `Equipa ${team_name} atualizada com ${members.length} membros`
-  });
 }
+
 
     async function handleDeleteTeam(req, res) {
       const { team_name } = req.body;

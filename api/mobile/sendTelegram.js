@@ -1,8 +1,9 @@
 import nextConnect from 'next-connect';
 import multer from 'multer';
+import FormData from 'form-data';
 import fetch from 'node-fetch';
 
-const upload = multer();
+const upload = multer(); // para processar uploads multipart/form-data
 
 const apiRoute = nextConnect({
   onError(error, req, res) {
@@ -15,8 +16,8 @@ const apiRoute = nextConnect({
 
 apiRoute.use(upload.array('photos')); // campo 'photos'
 
+// CORS
 apiRoute.options((req, res) => {
-  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -34,11 +35,11 @@ apiRoute.post(async (req, res) => {
   }
 
   const TOKEN = '8014555896:AAEb3ulaMJknmxvLKMln0H4N_lmZ7U0z6rI';
-  const CHAT_ID = '7961378096';
+      const CHAT_ID = '7961378096';
 
   try {
     if (files.length > 0) {
-      // Telegram só aceita até 10 fotos por sendMediaGroup
+      // Telegram aceita até 10 fotos em sendMediaGroup
       const media = files.slice(0, 10).map((file, index) => ({
         type: 'photo',
         media: `attach://photo${index}`,
@@ -50,6 +51,7 @@ apiRoute.post(async (req, res) => {
       formData.append('chat_id', CHAT_ID);
       formData.append('media', JSON.stringify(media));
 
+      // Adiciona cada foto ao FormData
       files.slice(0, 10).forEach((file, index) => {
         formData.append(`photo${index}`, file.buffer, { filename: file.originalname });
       });
@@ -84,10 +86,5 @@ apiRoute.post(async (req, res) => {
   }
 });
 
-export const config = {
-  api: {
-    bodyParser: false, // necessário para multer
-  },
-};
-
+export const config = { api: { bodyParser: false } };
 export default apiRoute;

@@ -12,7 +12,11 @@ apiRoute.use(upload.array('photos')); // campo 'photos'
 apiRoute.post(async (req, res) => {
   const { message } = req.body;
   const files = req.files;
-      try {
+
+  const TOKEN = '8014555896:AAEb3ulaMJknmxvLKMln0H4N_lmZ7U0z6rI';
+      const CHAT_ID = '7961378096';
+
+  try {
     if (files && files.length > 0) {
       for (const file of files) {
         const form = new FormData();

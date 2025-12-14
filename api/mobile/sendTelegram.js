@@ -50,7 +50,7 @@ apiRoute.post(async (req, res) => {
   try {
     // 1️⃣ Buscar chat_id da corporação no Supabase
     const { data, error } = await supabase
-      .from('corporation_chats')
+      .from('corporation_data')
       .select('chat_id')
       .eq('corp_oper_nr', corp_oper_nr)
       .single();

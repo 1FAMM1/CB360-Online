@@ -36,8 +36,8 @@ apiRoute.post(async (req, res) => {
     return res.status(400).json({ success: false, error: 'Mensagem ou fotos vazias' });
   }
 
-  const TOKEN = '8014555896:AAEb3ulaMJknmxvLKMln0H4N_lmZ7U0z6rI';
-  const CHAT_ID = '7961378096';
+  const TOKEN = '8411352322:AAGlROALJiNcy4HgP4_Pkod30kQr85QHKxo';
+  const CHAT_ID = '-5062800071';
 
   try {
     if (files.length > 0) {

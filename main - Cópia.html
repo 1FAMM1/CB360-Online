@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CB360_OCORRÊNCIAS</title>
-   <style>
+  <style>
     /* ==================== BODY ==================== */
     * {margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent !important; -webkit-touch-callout: none !important;}
     body {font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%); min-height: 100vh; user-select: none;
@@ -23,6 +23,13 @@
     .dark-mode td {color: #fff; border-color: #555;}
     .dark-mode tr:nth-child(even) {background: rgba(255, 255, 255, 0.05);}
     .dark-mode tr:hover {background: rgba(255, 255, 255, 0.1);}
+    .dark-mode .popup-content {background: #2d2d2d; color: #fff;}
+    .dark-mode .popup-content h2 {color: #fff;}
+    .dark-mode .occurrence-info {background: rgba(255, 255, 255, 0.05); border-color: #555;}
+    .dark-mode .occurrence-info strong {color: #3498db;}
+    .dark-mode textarea {background: #3a3a3a; border-color: #555; color: #fff;}
+    .dark-mode .attachment-preview {background: rgba(255, 255, 255, 0.05); border-color: #555;}
+    .dark-mode .attachment-item {background: rgba(255, 255, 255, 0.1);}
     /* ============= LIGHT MODE OPTIONS ============= */
     .header {background: linear-gradient(45deg, #d32f2f, #b71c1c); color: white; padding: 20px 15px; text-align: center; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); border-bottom: 2px solid #c62828;
              transition: all 0.3s ease; position: fixed; top: 0; left: 0; right: 0; z-index: 1000;}
@@ -52,75 +59,80 @@
                             animation: fadeIn 0.5s ease-out;}
     .occurrences-container h1 {color: #2c3e50; margin-bottom: 20px; text-align: center; font-size: 1.8em;}
     .occurrences-container h1::after {content: ""; display: block; height: 1px; background: rgba(255, 255, 255, 0.2); margin: 15px auto; width: 95%;}
-    .no-occurrences {text-align: center; padding: 20px 15px; background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; border-radius: 5px; font-size: 1.0em; font-weight: bold; width: 300px;
+    .no-occurrences {text-align: center; padding: 20px 15px; background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; border-radius: 5px; font-size: 1.0em; font-weight: bold; width: 350px;
                      height: 40px; margin: 10px auto; box-shadow: 0 8px 25px rgba(39, 174, 96, 0.3); animation: fadeIn 0.5s ease-out; line-height: 40px; padding:0;}
     .table-container {display: none; background: white; border-radius: 5px; overflow: hidden; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); transition: all 0.3s ease;}
     table {width: 100%; border-collapse: collapse; background: transparent;}
     th {background: linear-gradient(45deg, #d32f78, #b71c1c); color: white; padding: 15px 12px; text-align: center; font-weight: bold; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;}
     td {padding: 15px 12px; text-align: center; border-bottom: 1px solid #ecf0f1; font-size: 14px; color: #2c3e50; transition: all 0.3s ease;}
     tr:nth-child(even) {background: #f8f9fa;}
+    tr:hover {background: #e8f4f8; cursor: pointer;}
     .message.loading {background: linear-gradient(45deg, #3498db, #2980b9); color: white;}
     .message.error {background: linear-gradient(45deg, #e74c3c, #c0392b); color: white;}
     .message.empty {background: linear-gradient(45deg, #95a5a6, #7f8c8d); color: white;}
-    .popup-overlay {display: none; position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center;}
-    .popup-container {background: #ddd; color: #000; padding: 0; border-radius: 20px; width: 90%; max-width: 400px; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.3);}
-    .popup-header {background: linear-gradient(145deg, rgba(211, 47, 47, 0.8), rgba(183, 28, 28, 0.8)); padding: 12px 20px; border-top-left-radius: 12px; border-top-right-radius: 12px; font-size: 1.3em;
-                   font-weight: bold; text-align: center; color: #fff; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
-                   border-bottom: 2px solid rgba(255, 255, 255, 0.2);}
-    .popup-details {margin: 10px 20px; font-size: 0.9em; line-height: 1.4;}
-    .popup-message {width: calc(100% - 40px); height: 100px; margin: 10px 20px; padding: 10px 15px; background: rgba(0, 0, 0, 0.1); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-                    color: #000; font-size: 0.95em; border: 1px solid rgba(0, 0, 0, 0.3); border-radius: 3px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); transition: border 0.3s, box-shadow 0.3s;}
-    .popup-message:focus {outline: none; border-color: #ddd; box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);}
-    .popup-file {margin: 0 20px 20px 20px;}    
-    .popup-file::-webkit-file-upload-button {background: #2c80b4; border: none; padding: 6px 12px; color: #fff; border-radius: 4px; cursor: pointer; font-weight: bold; transition: background 0.3s;}
-    .popup-file::-webkit-file-upload-button:hover {background: #24618f;}
-    .popup-file::-moz-file-upload-button {background: #3498db; border: none; padding: 6px 12px; color: #fff; border-radius: 8px; cursor: pointer; font-weight: bold; transition: background 0.3s;}
-    .popup-file::-moz-file-upload-button:hover {background: #24618f;}
-    .popup-buttons {display: flex; justify-content: flex-end; gap: 10px; margin: 0 20px 20px 20px;}
-    .btn-cancel {padding: 6px 12px; background: #e74c3c; color: #fff; border: none; border-radius: 6px; cursor: pointer; transition: background 0.3s;}
-    .btn-cancel:hover {background: #c0392b;}
-    .btn-send {padding: 6px 12px; background: #27ae60; color: #fff; border: none; border-radius: 6px; cursor: pointer; transition: background 0.3s;}
-    .btn-send:hover {background: #1e8449;}
-    /* =================================================
-    MEDIA QUERIES - FULL RESPONSIVENESS
-    ================================================= */    
+    
+    /* ==================== POPUP STYLES ==================== */
+    .popup-overlay {position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); display: none; justify-content: center; align-items: center; z-index: 9999;
+                    animation: fadeIn 0.3s ease-out;}
+    .popup-overlay.active {display: flex;}
+    .popup-content {background: white; padding: 25px; border-radius: 15px; max-width: 500px; width: 90%; max-height: 85vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                    animation: slideUp 0.3s ease-out; position: relative;}
+    .popup-content::-webkit-scrollbar {width: 6px;}
+    .popup-content::-webkit-scrollbar-track {background: rgba(0, 0, 0, 0.1); border-radius: 10px;}
+    .popup-content::-webkit-scrollbar-thumb {background: linear-gradient(45deg, #d32f2f, #b71c1c); border-radius: 10px;}
+    .popup-header {display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #e74c3c; padding-bottom: 10px;}
+    .popup-header h2 {color: #2c3e50; font-size: 1.5em; margin: 0;}
+    .close-btn {background: #e74c3c; color: white; border: none; border-radius: 50%; width: 35px; height: 35px; font-size: 20px; cursor: pointer; transition: all 0.3s ease;
+                display: flex; align-items: center; justify-content: center;}
+    .close-btn:hover {background: #c0392b; transform: rotate(90deg);}
+    .occurrence-info {background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #3498db;}
+    .occurrence-info p {margin: 8px 0; font-size: 14px; color: #2c3e50;}
+    .occurrence-info strong {color: #e74c3c;}
+    textarea {width: 100%; min-height: 120px; padding: 12px; border: 2px solid #bdc3c7; border-radius: 8px; font-size: 14px; font-family: inherit; resize: vertical; margin-bottom: 15px;
+              transition: all 0.3s ease;}
+    textarea:focus {border-color: #3498db; outline: none; box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);}
+    .attachment-section {margin-bottom: 15px;}
+    .attachment-label {display: block; font-weight: bold; margin-bottom: 8px; color: #2c3e50;}
+    .attachment-btn {background: linear-gradient(45deg, #3498db, #2980b9); color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold;
+                     display: flex; align-items: center; gap: 8px; transition: all 0.3s ease; width: 100%; justify-content: center;}
+    .attachment-btn:hover {background: linear-gradient(45deg, #2980b9, #21618c); transform: translateY(-2px);}
+    .attachment-btn:active {transform: translateY(0);}
+    .attachment-preview {margin-top: 10px; padding: 10px; background: #f8f9fa; border: 2px dashed #bdc3c7; border-radius: 8px; display: none;}
+    .attachment-preview.has-files {display: block;}
+    .attachment-item {display: flex; align-items: center; justify-content: space-between; padding: 8px; background: white; border-radius: 5px; margin-bottom: 8px;}
+    .attachment-item:last-child {margin-bottom: 0;}
+    .attachment-info {display: flex; align-items: center; gap: 8px; flex: 1;}
+    .attachment-icon {font-size: 20px;}
+    .attachment-name {font-size: 13px; color: #2c3e50; font-weight: 500;}
+    .remove-attachment {background: #e74c3c; color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; font-size: 16px; display: flex;
+                        align-items: center; justify-content: center; transition: all 0.3s ease;}
+    .remove-attachment:hover {background: #c0392b; transform: scale(1.1);}
+    .popup-actions {display: flex; gap: 10px; margin-top: 20px;}
+    .send-btn {flex: 1; background: linear-gradient(45deg, #27ae60, #229954); color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; font-size: 16px;
+               cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; gap: 8px;}
+    .send-btn:hover {background: linear-gradient(45deg, #229954, #1e8449); transform: translateY(-2px);}
+    .send-btn:active {transform: translateY(0);}
+    .send-btn:disabled {opacity: 0.5; cursor: not-allowed;}
+    .cancel-btn {flex: 1; background: linear-gradient(45deg, #95a5a6, #7f8c8d); color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; font-size: 16px;
+                 cursor: pointer; transition: all 0.3s ease;}
+    .cancel-btn:hover {background: linear-gradient(45deg, #7f8c8d, #6c7a7d);}
+    
+    @keyframes fadeIn {from {opacity: 0;} to {opacity: 1;}}
+    @keyframes slideUp {from {transform: translateY(50px); opacity: 0;} to {transform: translateY(0); opacity: 1;}}
+    
     /* ============ RESPONSIVENESS 480px ============ */
     @media (max-width: 480px) {
-      html, body {height: 100vh; max-height: 100vh; overflow-x: hidden; overflow-y: auto;}
+      .popup-content {padding: 20px; max-width: 95%; max-height: 90vh;}
+      .popup-header h2 {font-size: 1.2em;}
+      textarea {min-height: 100px;}
+      .send-btn, .cancel-btn {padding: 12px; font-size: 14px;}
       .header {padding: 8px 15px;}
-      .header h1, .header h2 {font-size: 1.3em !important; margin: 0 !important;}
-      .header-logo {height: 50px; top: 32px; left: 10px;}
-      .epe-container {margin-top: -10px; margin-bottom: 10px;}
-      .epe-container h1 {margin-top: 5px; margin-bottom: 10px;}
-      .message {padding: 8px 12px; margin: 8px auto; max-width: 250px; width: fit-content;}
-      .occurrences-container {padding: 8px 15px; margin: 0px 0;}
-      .occurrences-container h1 {margin-top: 5px; margin-bottom: 10px;}
-      .mobile-card {padding: 12px; position: relative; margin: 8px 0;}
-      .mobile-card h3 {font-size: 12px;}
-      .main-content h1 {font-size: 20px;}
-      th {font-size: 12px;}
-      td {font-size: 11px;}
-      .mobile-card p {font-size: 10px;}
+      .header h1, .header h2 {font-size: 1.3em !important;}
+      .header-logo {height: 50px; top: 32px;}
       .footer {padding: 5px 15px;}
       .powered-by {font-size: 11px;}
       .footer-year {font-size: 9px;}
-    /* ======== RESPONSIVENESS 481px TO 768px ======= */
-    @media (min-width: 481px) and (max-width: 768px) {}    
-    /* ======= RESPONSIVENESS 769px TO 1024px ======= */
-    @media (min-width: 769px) and (max-width: 1024px) {}
-    /* =========== RESPONSIVENESS +1025px =========== */
-    @media (min-width: 1025px) {}
-    /* =========== RESPONSIVENESS +1440px =========== */
-    @media (min-width: 1440px) {}    
-    /* ================= LANDSCAPE ================== */
-    @media screen and (orientation: landscape) and (max-height: 500px) {
-      .header {padding: 8px 15px !important; position: fixed !important; top: 0 !important; z-index: 1000 !important;}
-      .header h1, .header h2 {font-size: 1.3em !important; margin: 0 !important;}
-      .header-logo {height: 45px !important; left: 8px !important;}
-      .header div {font-size: 11px !important; margin-top: 5px !important;}
-      .footer {padding: 4px 15px !important;}
-      .powered-by {font-size: 10px !important; margin-bottom: 1px !important;}
-      .footer-year {font-size: 8px !important;}}
+    }
   </style>
 </head>
 <body>
@@ -130,6 +142,7 @@
     <h2 id="corpInfo" style="display: none;"></h2>
     <div>Sistema de Visualização de Ocorrências</div>
   </header>
+  
   <div class="main-content">
     <div class="epe-container">
       <h1>⚠️ Estados de Prontidão Especial ⚠️</h1>
@@ -138,6 +151,7 @@
       <div class="epe-title">EPE DIOPS</div>
       <div id="epediops" class="message loading">Carregando...</div>
     </div>
+    
     <div class="occurrences-container">
       <h1>🔥 Ocorrências em Curso 🔥</h1>
       <div id="messageContainer"></div>
@@ -150,41 +164,73 @@
               <th>Estado</th>
             </tr>
           </thead>
-          <tbody>
-          </tbody>
+          <tbody></tbody>
         </table>
-      </div>
-      <div id="occurrencePopupOverlay" class="popup-overlay">
-        <div class="popup-container">
-          <div id="popupTitle" class="popup-header">Título da Ocorrência</div>
-          <div id="popupDetails" class="popup-details"></div>
-          <textarea id="popupMessageInput" class="popup-message" placeholder="Descrição da Ocorrência..."></textarea>
-          <input type="file" id="popupPhotoInput" class="popup-file" accept="image/*" multiple>
-          <div class="popup-buttons">
-            <button id="popupCancelBtn" class="btn-cancel">Cancelar</button>
-            <button id="popupSendBtn" class="btn-send">Enviar</button>
-          </div>
-        </div>
-      </div>
-      <div class="footer">
-        <div class="footer-content">
-          <div class="powered-by">
-            <strong>Powered by:</strong> Fábio Martins | Sistemas de Informação - Grupo CB360
-          </div>
-          <div class="footer-year">
-            © 2023-2025 - Sistema CB360 Mobile
-          </div>
-        </div>
       </div>
       <div id="noOccurrencesMessage" class="no-occurrences" style="display: none;">
         ✅ Não Existem Ocorrências em Curso
       </div>
     </div>
   </div>
+  
+  <!-- POPUP DE OCORRÊNCIA -->
+  <div id="occurrencePopup" class="popup-overlay">
+    <div class="popup-content">
+      <div class="popup-header">
+        <h2>📋 Detalhes da Ocorrência</h2>
+        <button class="close-btn" onclick="closeOccurrencePopup()">×</button>
+      </div>
+      
+      <div class="occurrence-info" id="occurrenceDetails">
+        <p><strong>Ocorrência:</strong> <span id="detailOccurrence">-</span></p>
+        <p><strong>Local:</strong> <span id="detailLocal">-</span></p>
+        <p><strong>Estado:</strong> <span id="detailStatus">-</span></p>
+      </div>
+      
+      <div class="attachment-section">
+        <label class="attachment-label">📝 Mensagem:</label>
+        <textarea id="messageText" placeholder="Escreva aqui informações adicionais sobre a ocorrência..."></textarea>
+      </div>
+      
+      <div class="attachment-section">
+        <label class="attachment-label">📎 Anexos: <span style="font-size: 12px; color: #7f8c8d;">(Clique várias vezes para adicionar mais fotos)</span></label>
+        <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
+        <button class="attachment-btn" onclick="document.getElementById('fileInput').click()">
+          <span>📎</span>
+          <span>Adicionar Foto (<span id="photoCount">0</span>/10)</span>
+        </button>
+        <div id="attachmentPreview" class="attachment-preview"></div>
+      </div>
+      
+      <div class="popup-actions">
+        <button class="cancel-btn" onclick="closeOccurrencePopup()">❌ Cancelar</button>
+        <button class="send-btn" onclick="sendOccurrenceReport()">
+          <span>📤</span>
+          <span>Enviar Relatório</span>
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <div class="footer">
+    <div class="footer-content">
+      <div class="powered-by">
+        <strong>Powered by:</strong> Fábio Martins | Sistemas de Informação - Grupo CB360
+      </div>
+      <div class="footer-year">
+        © 2023-2025 - Sistema CB360 Mobile
+      </div>
+    </div>
+  </div>
+  
   <script>
-    /* ===================== SUPABASE CONFIGURATION ====================== */
     const SUPABASE_URL = 'https://rjkbodfqsvckvnhjwmhg.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqa2JvZGZxc3Zja3ZuaGp3bWhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgxNjM3NjQsImV4cCI6MjA2MzczOTc2NH0.jX5OPZkz1JSSwrahCoFzqGYw8tYkgE8isbn12uP43-0';
+    const TELEGRAM_API = 'https://cb360-online.vercel.app/api/mobile/sendTelegram';
+    
+    let selectedFiles = [];
+    let currentOccurrence = null;
+    
     function getSupabaseHeaders(options = {}) {
       const headers = {
         'apikey': SUPABASE_ANON_KEY,
@@ -194,86 +240,10 @@
       if (options.returnRepresentation) headers['Prefer'] = 'return=representation';
       return headers;
     }
-    /* ================= POPUP ================= */
-    const popupOverlay = document.getElementById('occurrencePopupOverlay');
-    const popupTitle = document.getElementById('popupTitle');
-    const popupDetails = document.getElementById('popupDetails');
-    const popupMessageInput = document.getElementById('popupMessageInput');
-    const popupPhotoInput = document.getElementById('popupPhotoInput');
-    const popupCancelBtn = document.getElementById('popupCancelBtn');
-    const popupSendBtn = document.getElementById('popupSendBtn');
-    let ocorrenciasData = [];
-    let ocorrenciaSelecionada = null;
-    const table = document.getElementById('ocorrenciasTable');
-    table.querySelector('tbody').addEventListener('click', function(e) {
-      const tr = e.target.closest('tr');
-      if (!tr) return;
-      const index = tr.dataset.index;
-      ocorrenciaSelecionada = ocorrenciasData[index];
-      popupTitle.textContent = ocorrenciaSelecionada.occorrence;
-      popupDetails.innerHTML = `
-      <strong>Local:</strong> ${ocorrenciaSelecionada.local}<br>
-      <strong>Estado:</strong> ${ocorrenciaSelecionada.status}
-      `;
-      popupMessageInput.value = '';
-      popupPhotoInput.value = '';
-      popupOverlay.style.display = 'flex';
-    });
-    popupCancelBtn.addEventListener('click', () => {
-      popupOverlay.style.display = 'none';
-    });
-    popupSendBtn.addEventListener('click', async () => {
-      if (!ocorrenciaSelecionada) return;
-      const userMessage = popupMessageInput.value.trim();
-      const files = popupPhotoInput.files;
-      if (!userMessage && files.length === 0) {
-        alert('Escreve uma mensagem ou adiciona pelo menos uma foto!');
-        return;
-      }
-      if (files.length > 10) {
-        alert('Só é permitido enviar no máximo 10 fotos de uma vez.');
-        return;
-      }
-      const finalMessage = `
-      <b>📢 Atualização de Ocorrência</b>
-      <b>Ocorrência:</b> ${ocorrenciaSelecionada.occorrence}
-      <b>Local:</b> ${ocorrenciaSelecionada.local}
-      <b>Estado:</b> ${ocorrenciaSelecionada.status}
-      <b>Observações:</b>
-      ${userMessage || '—'}
-      `;
-      const formData = new FormData();
-      formData.append('message', finalMessage);
-      for (let i = 0; i < files.length; i++) {
-        formData.append('photos', files[i]);
-      }
-      try {
-        const res = await fetch('https://cb360-online.vercel.app/api/mobile/sendTelegram', {
-          method: 'POST',
-          body: formData
-        });
-        const result = await res.json();
-        if (result.success) {
-          alert('✅ Mensagem enviada com sucesso!');
-          popupOverlay.style.display = 'none';
-        } else {
-          alert('❌ Erro ao enviar: ' + result.error);
-        }
-      } catch (err) {
-        console.error('❌ Erro ao enviar:', err);
-        alert('❌ Erro de conexão: ' + err.message);
-      }
-    });
-    popupOverlay.addEventListener('click', (e) => {
-      if (e.target === popupOverlay) {
-        popupOverlay.style.display = 'none';
-      }
-    });
-    /* ======================= CORPORATION LOADING ======================= */
+    
     async function loadCorpInfo() {
       const corpOperNr = localStorage.getItem("currentCorpOperNr");
       const h2 = document.getElementById("corpInfo");
-      const titleEl = document.querySelector(".cb-title");
       const logoEl = document.getElementById("corpLogo");
       if (!corpOperNr) {
         if (h2) h2.textContent = "Não definido";
@@ -281,27 +251,22 @@
       }
       try {
         const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/corporation_data?select=corporation,corp_oper_nr,logo_url&corp_oper_nr=eq.${corpOperNr}`, {
-            headers: getSupabaseHeaders()
-          }
+          `${SUPABASE_URL}/rest/v1/corporation_data?select=corporation,corp_oper_nr,logo_url&corp_oper_nr=eq.${corpOperNr}`,
+          { headers: getSupabaseHeaders() }
         );
         const data = await response.json();
         if (data && data.length > 0) {
           const corp = data[0];
           if (h2) h2.textContent = corp.corp_oper_nr || "N/D";
           if (logoEl && corp.logo_url) logoEl.src = corp.logo_url.trim();
-          if (titleEl && corp.corporation) titleEl.textContent = formatCorpName(corp.corporation);
-        } else {
-          if (h2) h2.textContent = "Não encontrado";
         }
       } catch (err) {
         console.error('Erro no loadCorpInfo:', err);
-        if (h2) h2.textContent = corpOperNr;
       }
     }
-    /* =========================== EPE LOADING =========================== */
-    let controllerEpe;
-    let controllerOcorrencias;
+    
+    let controllerEpe, controllerOcorrencias;
+    
     async function LoadEPE() {
       if (controllerEpe) controllerEpe.abort();
       controllerEpe = new AbortController();
@@ -314,35 +279,37 @@
         const epeDiopsStatus = document.getElementById('epediops');
         epeDecirStatus.className = 'message';
         epeDiopsStatus.className = 'message';
+        
         if (result.success && Array.isArray(result.epeData) && result.epeData.length > 0) {
           const epeDecir = result.epeData.find(item => item.epe_type === 'epe-decir');
           if (epeDecir) {
             const epeNivel = epeDecir.epe;
             epeDecirStatus.textContent = epeNivel;
-            switch (epeNivel) {
-              case 'Monitorização': case 'MONITORIZAÇÃO': epeDecirStatus.classList.add('epe-level-0'); break;
-              case 'Nível I': case 'NÍVEL I': epeDecirStatus.classList.add('epe-level-1'); break;
-              case 'Nível II': case 'NÍVEL II': epeDecirStatus.classList.add('epe-level-2'); break;
-              case 'Nível III': case 'NÍVEL III': epeDecirStatus.classList.add('epe-level-3'); break;
-              case 'Nível IV': case 'NÍVEL IV': epeDecirStatus.classList.add('epe-level-4'); break;
-              default: epeDecirStatus.classList.add('empty'); break;
-            }
+            const levelMap = {
+              'Monitorização': 'epe-level-0', 'MONITORIZAÇÃO': 'epe-level-0',
+              'Nível I': 'epe-level-1', 'NÍVEL I': 'epe-level-1',
+              'Nível II': 'epe-level-2', 'NÍVEL II': 'epe-level-2',
+              'Nível III': 'epe-level-3', 'NÍVEL III': 'epe-level-3',
+              'Nível IV': 'epe-level-4', 'NÍVEL IV': 'epe-level-4'
+            };
+            epeDecirStatus.classList.add(levelMap[epeNivel] || 'empty');
           } else {
             epeDecirStatus.textContent = 'EPE-DECIR não encontrado';
             epeDecirStatus.classList.add('empty');
           }
+          
           const epeDiops = result.epeData.find(item => item.epe_type === 'epe-diops');
           if (epeDiops) {
             const epeNivelDiops = epeDiops.epe;
             epeDiopsStatus.textContent = epeNivelDiops;
-            switch (epeNivelDiops) {
-              case 'Monitorização': case 'MONITORIZAÇÃO': epeDiopsStatus.classList.add('epe-level-0'); break;
-              case 'Nível I': case 'NÍVEL I': epeDiopsStatus.classList.add('epe-level-1'); break;
-              case 'Nível II': case 'NÍVEL II': epeDiopsStatus.classList.add('epe-level-2'); break;
-              case 'Nível III': case 'NÍVEL III': epeDiopsStatus.classList.add('epe-level-3'); break;
-              case 'Nível IV': case 'NÍVEL IV': epeDiopsStatus.classList.add('epe-level-4'); break;
-              default: epeDiopsStatus.classList.add('empty'); break;
-            }
+            const levelMap = {
+              'Monitorização': 'epe-level-0', 'MONITORIZAÇÃO': 'epe-level-0',
+              'Nível I': 'epe-level-1', 'NÍVEL I': 'epe-level-1',
+              'Nível II': 'epe-level-2', 'NÍVEL II': 'epe-level-2',
+              'Nível III': 'epe-level-3', 'NÍVEL III': 'epe-level-3',
+              'Nível IV': 'epe-level-4', 'NÍVEL IV': 'epe-level-4'
+            };
+            epeDiopsStatus.classList.add(levelMap[epeNivelDiops] || 'empty');
           } else {
             epeDiopsStatus.textContent = 'EPE-DIOPS não encontrado';
             epeDiopsStatus.classList.add('empty');
@@ -354,17 +321,12 @@
           epeDiopsStatus.classList.add('empty');
         }
       } catch (error) {
-        if (error.name === 'AbortError') return;
-        const epeDecirStatus = document.getElementById('epedecir');
-        const epeDiopsStatus = document.getElementById('epediops');
-        epeDecirStatus.className = 'message error';
-        epeDiopsStatus.className = 'message error';
-        epeDecirStatus.textContent = 'Erro ao carregar EPE';
-        epeDiopsStatus.textContent = 'Erro ao carregar EPE';
-        console.error('Erro ao carregar EPE:', error);
+        if (error.name !== 'AbortError') {
+          console.error('Erro ao carregar EPE:', error);
+        }
       }
     }
-    /* ======================= OCCURRENCES LOADING ======================= */
+    
     async function LoadOccurrences() {
       if (controllerOcorrencias) controllerOcorrencias.abort();
       controllerOcorrencias = new AbortController();
@@ -373,47 +335,187 @@
           signal: controllerOcorrencias.signal
         });
         const result = await response.json();
-        if (!result.success) {
-          console.warn('Erro ao carregar ocorrências: ' + result.error);
-          return;
-        }
+        if (!result.success) return;
+        
         const tabela = document.getElementById('ocorrenciasTable');
         const tableContainer = document.querySelector('.table-container');
         const tbody = tabela.querySelector('tbody');
         const noMsg = document.getElementById('noOccurrencesMessage');
+        
         tableContainer.style.display = 'none';
         noMsg.style.display = 'none';
         tbody.innerHTML = '';
-        ocorrenciasData = result.ocorrencias || [];
-        if (!ocorrenciasData.length) {
+        
+        if (!result.ocorrencias || result.ocorrencias.length === 0) {
           noMsg.style.display = 'block';
           return;
         }
+        
         tableContainer.style.display = 'block';
         tabela.style.display = 'table';
-        ocorrenciasData.forEach((item, index) => {
+        
+        result.ocorrencias.forEach(item => {
           const tr = document.createElement('tr');
-          tr.dataset.index = index;
           tr.innerHTML = `
-          <td data-label="Ocorrência">${item.occorrence}</td>
-          <td data-label="Local">${item.local}</td>
-          <td data-label="Estado">${item.status}</td>
+            <td data-label="Ocorrência">${item.occorrence}</td>
+            <td data-label="Local">${item.local}</td>
+            <td data-label="Estado">${item.status}</td>
           `;
+          tr.onclick = () => openOccurrencePopup(item);
           tbody.appendChild(tr);
         });
       } catch (error) {
-        if (error.name === 'AbortError') return;
-        console.error('Erro ao carregar ocorrências:', error);
+        if (error.name !== 'AbortError') {
+          console.error('Erro ao carregar ocorrências:', error);
+        }
       }
     }
+    
+    function openOccurrencePopup(occurrence) {
+      currentOccurrence = occurrence;
+      document.getElementById('detailOccurrence').textContent = occurrence.occorrence;
+      document.getElementById('detailLocal').textContent = occurrence.local;
+      document.getElementById('detailStatus').textContent = occurrence.status;
+      document.getElementById('messageText').value = '';
+      selectedFiles = [];
+      updateAttachmentPreview();
+      document.getElementById('occurrencePopup').classList.add('active');
+    }
+    
+    function closeOccurrencePopup() {
+      document.getElementById('occurrencePopup').classList.remove('active');
+      currentOccurrence = null;
+      selectedFiles = [];
+      updateAttachmentPreview();
+    }
+    
+    function handleFileSelect(event) {
+      const files = Array.from(event.target.files);
+      selectedFiles = [...selectedFiles, ...files];
+      if (selectedFiles.length > 10) {
+        alert('⚠️ Máximo de 10 fotos permitidas!');
+        selectedFiles = selectedFiles.slice(0, 10);
+      }
+      updateAttachmentPreview();
+      event.target.value = '';
+    }
+    
+    function updateAttachmentPreview() {
+      const preview = document.getElementById('attachmentPreview');
+      const counter = document.getElementById('photoCount');
+      if (counter) counter.textContent = selectedFiles.length;
+      if (selectedFiles.length === 0) {
+        preview.classList.remove('has-files');
+        preview.innerHTML = '';
+        return;
+      }
+      preview.classList.add('has-files');
+      preview.innerHTML = selectedFiles.map((file, index) => `
+        <div class="attachment-item">
+          <div class="attachment-info">
+            <span class="attachment-icon">📷</span>
+            <span class="attachment-name">${file.name}</span>
+          </div>
+          <button class="remove-attachment" onclick="removeAttachment(${index})">×</button>
+        </div>
+      `).join('');
+    }
+    
+    function removeAttachment(index) {
+      selectedFiles.splice(index, 1);
+      updateAttachmentPreview();
+    }
+    
+    async function sendOccurrenceReport() {
+      if (!currentOccurrence) return;
+      const messageText = document.getElementById('messageText').value.trim();
+      if (!messageText && selectedFiles.length === 0) {
+        alert('❌ Escreva uma mensagem ou adicione anexos!');
+        return;
+      }
+      const now = new Date();
+      const time = now.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
+      const date = now.toLocaleDateString('pt-PT');
+      let message = `🚨 <b>RELATÓRIO DE OCORRÊNCIA</b>\n\n`;
+      message += `📋 <b>Ocorrência:</b> ${currentOccurrence.occorrence}\n`;
+      message += `📍 <b>Local:</b> ${currentOccurrence.local}\n`;
+      message += `📊 <b>Estado:</b> ${currentOccurrence.status}\n`;
+      message += `⏰ ${time}\n`;
+      message += `📅 ${date}`;
+      if (messageText) {
+        message += `\n\n💬 <b>Mensagem:</b>\n${messageText}`;
+      }
+      const sendBtn = document.querySelector('.send-btn');
+      sendBtn.disabled = true;
+      sendBtn.innerHTML = '<span>⏳</span><span>Enviando...</span>';
+      try {
+        if (selectedFiles.length === 0) {
+          const res = await fetch(TELEGRAM_API, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: message, photo: null })
+          });
+          if (res.ok) {
+            alert('✅ Relatório enviado com sucesso!');
+            closeOccurrencePopup();
+          } else {
+            throw new Error('Erro ao enviar');
+          }
+        } else {
+          await fetch(TELEGRAM_API, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: message, photo: null })
+          });
+          for (let i = 0; i < selectedFiles.length; i++) {
+            const file = selectedFiles[i];
+            const base64 = await fileToBase64(file);
+            await fetch(TELEGRAM_API, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                message: `📎 Anexo ${i + 1}/${selectedFiles.length}`,
+                photo: base64
+              })
+            });
+          }
+          alert('✅ Relatório e anexos enviados com sucesso!');
+          closeOccurrencePopup();
+        }
+      } catch (err) {
+        console.error('❌ Erro ao enviar:', err);
+        alert('❌ Erro ao enviar relatório!');
+      } finally {
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = '<span>📤</span><span>Enviar Relatório</span>';
+      }
+    }
+    
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+    
     window.addEventListener('load', function() {
       const savedTheme = localStorage.getItem('sgo-theme');
-      if (savedTheme === 'dark') document.body.classList.add('dark-mode');
+      if (savedTheme === 'dark') {
+        document.body.classList.add('dark-mode');
+      }
       loadCorpInfo();
       LoadEPE();
       LoadOccurrences();
       setInterval(LoadEPE, 2000);
       setInterval(LoadOccurrences, 2000);
+    });
+    
+    document.getElementById('occurrencePopup').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeOccurrencePopup();
+      }
     });
   </script>
 </body>

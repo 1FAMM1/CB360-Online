@@ -2,8 +2,17 @@ import nextConnect from 'next-connect';
 import multer from 'multer';
 import FormData from 'form-data';
 import fetch from 'node-fetch';
+import { createClient } from '@supabase/supabase-js';
 
-const upload = multer(); // para processar uploads multipart/form-data
+const upload = multer(); // processa uploads multipart/form-data
+
+// Config Supabase
+const SUPABASE_URL = 'https://rjkbodfqsvckvnhjwmhg.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqa2JvZGZxc3Zja3ZuaGp3bWhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgxNjM3NjQsImV4cCI6MjA2MzczOTc2NH0.jX5OPZkz1JSSwrahCoFzqGYw8tYkgE8isbn12uP43-0';
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Token do bot
+const TOKEN = '8411352322:AAGlROALJiNcy4HgP4_Pkod30kQr85QHKxo';
 
 const apiRoute = nextConnect({
   onError(error, req, res) {
@@ -14,10 +23,10 @@ const apiRoute = nextConnect({
   },
 });
 
-// Middleware para processar múltiplos arquivos
-apiRoute.use(upload.array('photos')); // campo 'photos'
+// Middleware para múltiplos arquivos
+apiRoute.use(upload.array('photos'));
 
-/* ================= CORS ================= */
+// CORS
 apiRoute.options((req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -25,72 +34,62 @@ apiRoute.options((req, res) => {
   res.status(200).end();
 });
 
-/* ================= POST ================= */
 apiRoute.post(async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
 
-  const { message } = req.body;
+  const { message, corp_oper_nr } = req.body;
   const files = req.files || [];
 
+  if (!corp_oper_nr) {
+    return res.status(400).json({ success: false, error: 'corp_oper_nr é obrigatório' });
+  }
   if (!message && files.length === 0) {
     return res.status(400).json({ success: false, error: 'Mensagem ou fotos vazias' });
   }
 
-  const TOKEN = '8411352322:AAGlROALJiNcy4HgP4_Pkod30kQr85QHKxo';
-  const CHAT_ID = '-5062800071';
-
   try {
-    if (files.length > 0) {
-      // Limite de 10 fotos no Telegram
-      const media = files.slice(0, 10).map((file, index) => ({
-        type: 'photo',
-        media: `attach://photo${index}`,
-        caption: index === 0 && message ? message : undefined,
-        parse_mode: index === 0 && message ? 'HTML' : undefined,
-      }));
+    // 1️⃣ Buscar chat_id da corporação no Supabase
+    const { data, error } = await supabase
+      .from('corporation_chats')
+      .select('chat_id')
+      .eq('corp_oper_nr', corp_oper_nr)
+      .single();
 
-      const formData = new FormData();
-      formData.append('chat_id', CHAT_ID);
-      formData.append('media', JSON.stringify(media));
-
-      // Adiciona cada arquivo ao FormData com o nome correto
-      files.slice(0, 10).forEach((file, index) => {
-        formData.append(`photo${index}`, file.buffer, { filename: file.originalname });
-      });
-
-      const telegramRes = await fetch(`https://api.telegram.org/bot${TOKEN}/sendMediaGroup`, {
-        method: 'POST',
-        body: formData,
-        headers: formData.getHeaders(),
-      });
-
-      if (!telegramRes.ok) {
-        const text = await telegramRes.text();
-        return res.status(500).json({ success: false, error: text });
-      }
-    } else {
-      // Apenas mensagem de texto
-      const telegramRes = await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: CHAT_ID, text: message, parse_mode: 'HTML' }),
-      });
-
-      if (!telegramRes.ok) {
-        const text = await telegramRes.text();
-        return res.status(500).json({ success: false, error: text });
-      }
+    if (error || !data?.chat_id) {
+      return res.status(404).json({ success: false, error: 'Chat ID não encontrado para a corporação' });
     }
 
-    return res.status(200).json({ success: true });
+    const CHAT_ID = data.chat_id;
+
+    // 2️⃣ Criar item na "fila" (simples: tabela no Supabase)
+    const { error: queueError } = await supabase
+      .from('telegram_queue')
+      .insert({
+        corp_oper_nr,
+        chat_id: CHAT_ID,
+        message,
+        files: files.length > 0 ? JSON.stringify(files.map(f => ({
+          originalname: f.originalname,
+          buffer: f.buffer.toString('base64'), // salva em base64 temporariamente
+          mimetype: f.mimetype
+        }))) : null,
+        status: 'pending', // pending -> worker vai processar
+      });
+
+    if (queueError) {
+      return res.status(500).json({ success: false, error: queueError.message });
+    }
+
+    // ✅ Resposta imediata: request recebeu, envio será feito pelo worker
+    return res.status(200).json({ success: true, queued: true });
+
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message });
   }
 });
 
-/* ================= CONFIG ================= */
 export const config = {
-  api: { bodyParser: false }, // necessário para multer
+  api: { bodyParser: false },
 };
 
 export default apiRoute;

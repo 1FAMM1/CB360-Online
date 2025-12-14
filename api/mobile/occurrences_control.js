@@ -11,9 +11,11 @@
       }
       if (req.method === 'GET') {
         try {
+          const corpOperNr = req.query.corp_oper_nr;
           const { data: ocorrencias, error: errorOcorrencias } = await supabase
           .from('occurrences_control')
           .select('*')
+          .eq('corp_oper_nr', corpOperNr)
           .order('created_at', { ascending: false })
           if (errorOcorrencias) {
             console.error('Erro Supabase ao buscar ocorrências:', errorOcorrencias)

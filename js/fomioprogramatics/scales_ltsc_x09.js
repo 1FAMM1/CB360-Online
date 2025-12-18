@@ -1,5 +1,5 @@
     /* =======================================
-       FOMIO 360 PROGRAMATICS
+    FOMIO 360 PROGRAMATICS
     ======================================= */
     /* =======================================
     SCALES MOULE
@@ -32,7 +32,7 @@
     let currentTableData = [];
     const yearAtual = new Date().getFullYear();
     document.addEventListener("DOMContentLoaded", () => {
-      createMonthButtons("months-container", "table-container", yearAtual);
+      createMonthButtons("months-container", "table-container", getSelectedYear());
       initSidebarSecaoButtons();
       initSaveButton();
       const emitBtn = document.getElementById("emit-button");
@@ -48,7 +48,7 @@
       document.querySelectorAll(".sidebar-submenu-button").forEach(btn => {
         btn.addEventListener("click", async () => {
           currentSection = btn.getAttribute("data-access");
-          createMonthButtons("months-container", "table-container", yearAtual);
+          createMonthButtons("months-container", "table-container", getSelectedYear());
           document.getElementById("table-container").innerHTML = "";
           document.querySelectorAll(".btn.btn-add").forEach(b => b.classList.remove("active"));
           const saveButton = document.getElementById("save-button");

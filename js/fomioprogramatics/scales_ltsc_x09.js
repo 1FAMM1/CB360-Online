@@ -1182,14 +1182,16 @@
     }
 
     function getActiveMonthIndex() {
-      const monthsContainer = document.getElementById("months-container-scales"); 
-      if (!monthsContainer) return null;
-      const activeBtn = monthsContainer.querySelector(".btn.btn-add.active");
-      if (!activeBtn) return null;
-      const allMonthBtns = Array.from(monthsContainer.querySelectorAll(".btn.btn-add"));
-      const index = allMonthBtns.indexOf(activeBtn);
-      return index + 1;
-    }
+  // tenta encontrar o container correto
+  const monthsContainer = document.querySelector("#months-container, #months-container-scales");
+  if (!monthsContainer) return null;
+
+  const activeBtn = monthsContainer.querySelector(".btn.btn-add.active");
+  if (!activeBtn) return null;
+
+  const allMonthBtns = Array.from(monthsContainer.querySelectorAll(".btn.btn-add"));
+  return allMonthBtns.indexOf(activeBtn) + 1;
+}
     
     async function fetchSavedData(section, year, month) {
       const url = `${SUPABASE_URL}/rest/v1/reg_serv?select=n_int,day,value&section=eq.${section}&year=eq.${year}&month=eq.${month}`;
@@ -1402,3 +1404,4 @@
         alert(`❌ Erro: Não foi possível comunicar com o serviço de conversão.\n\nTipo: ${error.name}\nMensagem: ${error.message}`);
       }
     }
+

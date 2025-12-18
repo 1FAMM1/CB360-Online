@@ -1288,14 +1288,18 @@
         saveBtn.disabled = true;
         saveBtn.textContent = "A guardar...";
       }
+      
       try {
+        const yearSelect = document.getElementById("year-selector");
+        if (!yearSelect) throw new Error("Year selector não encontrado");
+        const selectedYear = parseInt(yearSelect.value, 10);
         const monthIndex = getActiveMonthIndex();
         if (!monthIndex) throw new Error("Nenhum mês selecionado.");  
-        const savedMap = await fetchSavedData(currentSection, yearAtual, monthIndex);
+        const savedMap = await fetchSavedData(currentSection, selectedYear, monthIndex);
         const {toInsert, toUpdate, toDelete} = diffFixedRowsChanges(table, savedMap);
-        await saveChanges({toInsert, toUpdate, toDelete, section: currentSection, year: yearAtual, month: monthIndex});
+        await saveChanges({toInsert, toUpdate, toDelete, section: currentSection, year: selectedYear, month: monthIndex});
         showPopupSuccess("✅ Escala emitida com sucesso! Por favor agurde uns breves segundos pelo download automático. Obrigado.");
-        await exportScheduleToExcel(table, yearAtual, monthIndex);
+        await exportScheduleToExcel(table, selectedYear, monthIndex);
       } catch (err) {
         console.error(err);
         alert("❌ Erro ao salvar as linhas fixas: " + err.message);
@@ -1405,6 +1409,7 @@
         alert(`❌ Erro: Não foi possível comunicar com o serviço de conversão.\n\nTipo: ${error.name}\nMensagem: ${error.message}`);
       }
     }
+
 
 
 

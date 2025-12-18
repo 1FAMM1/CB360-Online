@@ -1287,15 +1287,14 @@
         saveBtn.disabled = true;
         saveBtn.textContent = "A guardar...";
       }
+      const selectedYear = getSelectedYear();
       try {
         const monthIndex = getActiveMonthIndex();
-        if (!monthIndex) throw new Error("Nenhum mês selecionado.");  
-        const selectedYear = getSelectedYear();
+        if (!monthIndex) throw new Error("Nenhum mês selecionado.");          
         const savedMap = await fetchSavedData(currentSection, selectedYear, monthIndex);
         const {toInsert, toUpdate, toDelete} = diffFixedRowsChanges(table, savedMap);
         await saveChanges({toInsert, toUpdate, toDelete, section: currentSection, year: selectedYear, month: monthIndex});
-        showPopupSuccess("✅ Escala emitida com sucesso! Por favor agurde uns breves segundos pelo download automático. Obrigado.");
-        const selectedYear = getSelectedYear();
+        showPopupSuccess("✅ Escala emitida com sucesso! Por favor agurde uns breves segundos pelo download automático. Obrigado.");        
         await exportScheduleToExcel(table, selectedYear, monthIndex);
       } catch (err) {
         console.error(err);
@@ -1405,3 +1404,4 @@
         alert(`❌ Erro: Não foi possível comunicar com o serviço de conversão.\n\nTipo: ${error.name}\nMensagem: ${error.message}`);
       }
     }
+

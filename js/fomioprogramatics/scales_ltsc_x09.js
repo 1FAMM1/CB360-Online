@@ -1168,7 +1168,7 @@
         try {
           const monthIndex = getActiveMonthIndex();
           if (!monthIndex) throw new Error("Nenhum mês selecionado.");
-          const savedMap = await fetchSavedData(currentSection, yearAtual, monthIndex);
+          const savedMap = await fetchSavedData(currentSection, selectedYear, monthIndex);
           const {toInsert, toUpdate, toDelete} = diffTableChanges(table, savedMap);
           await saveChanges({toInsert, toUpdate, toDelete, section: currentSection, year: selectedYear, month: monthIndex});
           showPopupSuccess("✅ Escala gravada com sucesso!");
@@ -1405,6 +1405,7 @@
         alert(`❌ Erro: Não foi possível comunicar com o serviço de conversão.\n\nTipo: ${error.name}\nMensagem: ${error.message}`);
       }
     }
+
 
 
 

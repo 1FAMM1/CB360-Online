@@ -26,7 +26,7 @@
           sessionStorage.setItem("currentCorpOperNr", "0000");
           showToast("Bem-vindo à administração do CB360 Online!", 2000, "success");
           setTimeout(() => {
-            window.location.href = "main - Cópia.html";
+            window.location.href = "system_admin.html";
           }, 2000);
           return;
         }
@@ -49,7 +49,14 @@
       const pass = document.getElementById("password").value.trim();
       loginUser(user, pass);
     });
-    
+    const togglePassword = document.getElementById("togglePassword");
+    const passwordInput = document.getElementById("password");
+    togglePassword.addEventListener("click", () => {
+      const type = passwordInput.type === "password" ? "text" : "password";
+      passwordInput.type = type;
+      togglePassword.classList.toggle("fa-eye");
+      togglePassword.classList.toggle("fa-eye-slash");
+    });
     function showToast(message, duration = 2000, type = "error") {
       let toast = document.getElementById("toast");
       if (!toast) {
@@ -62,8 +69,7 @@
       toast.className = "toast show";
       if (type === "success") toast.classList.add("success");
       setTimeout(() => toast.classList.remove("show"), duration);
-    }
-    
+    }    
     function updateGreeting() {
       const now = new Date();
       const hour = now.getHours();
@@ -74,8 +80,7 @@
       document.getElementById("clock").textContent = now.toLocaleTimeString('pt-PT', { 
         hour: '2-digit', minute: '2-digit', second: '2-digit' 
       });
-    }
-    
+    }    
     function startClock() {
       updateGreeting();
       const now = new Date();
@@ -85,5 +90,4 @@
       }, 1000 - now.getMilliseconds());
     }
     startClock();
-
     document.getElementById("username").focus();

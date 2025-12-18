@@ -1,16 +1,16 @@
     body {
       margin: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: url('https://rjkbodfqsvckvnhjwmhg.supabase.co/storage/v1/object/public/cb_logos/backgroud_christmas.jpg') no-repeat center center fixed;
+      background: url('https://rjkbodfqsvckvnhjwmhg.supabase.co/storage/v1/object/public/cb_logos/background_main.jpg') no-repeat center center fixed;
       background-size: cover;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       height: 100vh;
-      color: #fff;      
+      color: #fff;
     }
-    
+
     body,
     body * {
       user-select: none;
@@ -38,7 +38,7 @@
       display: inline-block;
       min-width: 90px;
     }
-    
+
     .prepare {
       text-align: center;
       margin: 0px 0 100px 0;
@@ -51,7 +51,7 @@
       animation: fadeIn 1.2s ease;
       transition: none;
     }
-    
+
     .header-fade {
       position: fixed;
       top: 0;
@@ -63,17 +63,26 @@
       z-index: 999;
       backdrop-filter: blur(4px);
     }
-    
+
     .header-fade .greeting,
     .header-fade .prepare {
       margin: 10px 0 0 0;
       color: #fff;
-      text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
       font-weight: 100;
     }
 
-    @keyframes fadeIn {from {opacity: 0; transform: translateY(-15px);}
-                       to {opacity: 1; transform: translateY(0);}}
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-15px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
 
     .login-container {
       position: relative;
@@ -84,9 +93,9 @@
       text-align: center;
       z-index: 1;
       box-shadow: none;
-      margin: -50px 0 125px 0;
+      margin: 50px 0 125px 0;
     }
-    
+
     .login-container::before {
       content: "";
       position: absolute;
@@ -97,7 +106,7 @@
       height: 0;
       border-left: 10px solid transparent;
       border-right: 10px solid transparent;
-      border-bottom: 10px solid #eeee;  
+      border-bottom: 10px solid #eeee;
       z-index: 10;
     }
 
@@ -112,7 +121,7 @@
       border-radius: 0 0 6px 5px;
       z-index: -1
     }
-    
+
     .login-container h1 {
       font-size: 17px;
       font-weight: normal;
@@ -134,7 +143,7 @@
       margin: 24px -15px;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
     }
-    
+
     .login-container label {
       display: block;
       margin-bottom: 6px;
@@ -157,8 +166,8 @@
 
     .login-container input:focus {
       border: 1px solid #2c3e50;
-      border-radius: 6px;    
-      outline: none; 
+      border-radius: 6px;
+      outline: none;
     }
 
     .login-container button {
@@ -176,7 +185,7 @@
     .login-container button:hover {
       background: #1a252f;
     }
-    
+
     .login-footer {
       font-size: 11px;
       color: #aaa;
@@ -190,21 +199,21 @@
       left: 50%;
       transform: translateX(-50%) translateY(-100px);
       background-color: rgba(220, 53, 69, 0.92);
-      color: #fff;    
-      padding: 8px 22px;    
+      color: #fff;
+      padding: 8px 22px;
       border-radius: 10px;
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25), 0 2px 6px rgba(0, 0, 0, 0.15);
       font-size: 14px;
       font-weight: 500;
       opacity: 0;
-      pointer-events: none;    
+      pointer-events: none;
       transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-      z-index: 9999;    
+      z-index: 9999;
       display: flex;
       align-items: center;
-      gap: 10px;    
+      gap: 10px;
       min-width: 400px;
-      max-width: 750px;    
+      max-width: 750px;
       overflow: hidden;
     }
 
@@ -212,7 +221,7 @@
       opacity: 1;
       transform: translateX(-50%) translateY(0);
     }
-    
+
     .toast.success {
       background-color: rgba(40, 167, 69, 0.92);
     }
@@ -228,11 +237,11 @@
       align-items: center;
       justify-content: center;
     }
-    
+
     .toast.success::before {
       content: "✓";
     }
-    
+
     .toast:not(.success)::before {
       content: "✕";
     }
@@ -249,12 +258,36 @@
       animation-duration: var(--toast-duration, 2s);
     }
 
+    .password-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
 
-.password-wrapper {position: relative;display: flex; align-items: center;}
-    .password-wrapper input {flex: 1; padding-right: 35px; box-sizing: border-box; -webkit-appearance: none;}
-    .password-wrapper i {position: absolute; right: 10px; font-size: 15px; color: #555; cursor: pointer; margin-bottom: 15px; -webkit-appearance: none; -webkit-tap-highlight-color: transparent;}
-    
-    @keyframes progressBar {from {width: 100%;} to {width: 0%;}}
+    .password-wrapper input {
+      flex: 1;
+      padding-right: 35px;
+      box-sizing: border-box;
+      -webkit-appearance: none;
+    }
 
+    .password-wrapper i {
+      position: absolute;
+      right: 10px;
+      font-size: 15px;
+      color: #555;
+      cursor: pointer;
+      margin-bottom: 15px;
+      -webkit-appearance: none;
+      -webkit-tap-highlight-color: transparent;
+    }
 
+    @keyframes progressBar {
+      from {
+        width: 100%;
+      }
 
+      to {
+        width: 0%;
+      }
+    }

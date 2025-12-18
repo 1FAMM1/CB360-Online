@@ -93,7 +93,7 @@
       text-align: center;
       z-index: 1;
       box-shadow: none;
-      margin: -20px 0 125px 0;
+      margin: -40px 0 125px 0;
     }
 
     .login-container::before {
@@ -291,6 +291,3 @@
         width: 0%;
       }
     }
-
-
-

@@ -1,4 +1,7 @@
     /* =======================================
+    FOMIO 360 PROGRAMATICS
+    ======================================= */
+    /* =======================================
     SCALES MOULE
     ======================================= */
     /* = SCALES DYNAMIC TABLE - MAIN INIT = */    
@@ -20,14 +23,9 @@
         }
       });
     });
-    function getSelectedYear() { 
-      const el = document.getElementById("year-selector"); 
-      if (!el) throw new Error("Year selector não encontrado"); 
-      return parseInt(el.value, 10);
-    }
     let currentSection = "1ª Secção";
     let currentTableData = [];
-    const yearAtual = getSelectedYear();
+    const yearAtual = new Date().getFullYear();
     document.addEventListener("DOMContentLoaded", () => {
       createMonthButtons("months-container", "table-container", yearAtual);
       initSidebarSecaoButtons();
@@ -1160,6 +1158,10 @@
       saveBtn.addEventListener("click", async () => {
         const table = document.querySelector(".month-table tbody");
         if (!table) return;
+        
+        const yearSelect = document.getElementById("year-selector");
+    const selectedYear = yearSelect ? parseInt(yearSelect.value, 10) : yearAtual;
+        
         saveBtn.disabled = true;
         saveBtn.textContent = "A guardar...";
         try {

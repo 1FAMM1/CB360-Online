@@ -1154,9 +1154,7 @@
         titleDiv.textContent = title;
         titleDiv.style.flex = "1";
         titleDiv.style.textAlign="center";
-        const btn = document.createElement("button");
-        btn.textContent='🔊';
-        Object.assign(btn.style, {backgroundColor:'transparent', border:'none', cursor:'pointer', fontSize:'18px'});
+        const btn = createAudioButton('Aeroporto', gridId, 'ALERTA VERMELHO', null, 'Toque rápido VERMELHO');
         wrapper.appendChild(titleDiv);
         wrapper.appendChild(btn);
         th.innerHTML="";
@@ -1871,5 +1869,6 @@
       container.appendChild(table);
 
     }
+
 
 

@@ -2,9 +2,14 @@
        FOMIO 360 PROGRAMATICS
     ======================================= */
     /* =======================================
-       SCALES MOULE
+    SCALES MOULE
     ======================================= */
-    /* =  SCALES DYNAMIC TABLE - MAIN INIT  */
+    function getSelectedYear() {
+      const el = document.getElementById("year-selector");
+      if (!el) throw new Error("Year selector não encontrado");
+      return parseInt(el.value, 10);
+    }
+    /* = SCALES DYNAMIC TABLE - MAIN INIT = */    
     document.querySelectorAll('.sidebar-submenu-button').forEach(btn => {
       btn.addEventListener('click', () => {
         const page = btn.dataset.page;
@@ -877,7 +882,8 @@
         const mpNoiteRow = tbody.querySelector(".mp-noite-row");
         if (!mpDiaRow || !mpNoiteRow) return;
     
-        for (let d = 1; d <= daysInMonth; d++) {      let mpDiaCount = 0;
+        for (let d = 1; d <= daysInMonth; d++) {
+          let mpDiaCount = 0;
           let mpNoiteCount = 0;
           const rows = tbody.querySelectorAll(
             "tr:not(.totals-row):not(.mp-dia-row):not(.mp-noite-row):not(.fixed-row)"
@@ -990,7 +996,6 @@
         }
       }
     }
-
     /* === TOTAL CALCULATION FUNCTIONS ==== */
     function calculateRowTotal(tr, section, daysInMonth) {
       let total = 0;
@@ -1057,8 +1062,7 @@
           calculateRowTotal,
           calculateColumnTotals
         );
-      }
-    
+      }    
       createDataRows(tbody, data, savedMap, year, month, daysInMonth,
         currentSection,
         calculateRowTotal,
@@ -1164,9 +1168,10 @@
         try {
           const monthIndex = getActiveMonthIndex();
           if (!monthIndex) throw new Error("Nenhum mês selecionado.");
-          const savedMap = await fetchSavedData(currentSection, yearAtual, monthIndex);
+          const selectedYear = getSelectedYear();
+          const savedMap = await fetchSavedData(currentSection, selectedYear, monthIndex);
           const {toInsert, toUpdate, toDelete} = diffTableChanges(table, savedMap);
-          await saveChanges({toInsert, toUpdate, toDelete, section: currentSection, year: yearAtual, month: monthIndex});
+          await saveChanges({toInsert, toUpdate, toDelete, section: currentSection, year: selectedYear, month: monthIndex});
           showPopupSuccess("✅ Escala gravada com sucesso!");
         } catch (err) {
           console.error(err);
@@ -1179,7 +1184,7 @@
     }
 
     function getActiveMonthIndex() {
-      const monthsContainer = document.getElementById("months-container"); 
+      const monthsContainer = document.getElementById("months-container-scales"); 
       if (!monthsContainer) return null;
       const activeBtn = monthsContainer.querySelector(".btn.btn-add.active");
       if (!activeBtn) return null;
@@ -1187,6 +1192,7 @@
       const index = allMonthBtns.indexOf(activeBtn);
       return index + 1;
     }
+    
     async function fetchSavedData(section, year, month) {
       const url = `${SUPABASE_URL}/rest/v1/reg_serv?select=n_int,day,value&section=eq.${section}&year=eq.${year}&month=eq.${month}`;
       const response = await fetch(url, {
@@ -1284,11 +1290,13 @@
       try {
         const monthIndex = getActiveMonthIndex();
         if (!monthIndex) throw new Error("Nenhum mês selecionado.");  
-        const savedMap = await fetchSavedData(currentSection, yearAtual, monthIndex);
+        const selectedYear = getSelectedYear();
+        const savedMap = await fetchSavedData(currentSection, selectedYear, monthIndex);
         const {toInsert, toUpdate, toDelete} = diffFixedRowsChanges(table, savedMap);
-        await saveChanges({toInsert, toUpdate, toDelete, section: currentSection, year: yearAtual, month: monthIndex});
+        await saveChanges({toInsert, toUpdate, toDelete, section: currentSection, year: selectedYear, month: monthIndex});
         showPopupSuccess("✅ Escala emitida com sucesso! Por favor agurde uns breves segundos pelo download automático. Obrigado.");
-        await exportScheduleToExcel(table, yearAtual, monthIndex);
+        const selectedYear = getSelectedYear();
+        await exportScheduleToExcel(table, selectedYear, monthIndex);
       } catch (err) {
         console.error(err);
         alert("❌ Erro ao salvar as linhas fixas: " + err.message);
@@ -1299,7 +1307,6 @@
         }
       }
     }
-
     function diffFixedRowsChanges(table, savedMap) {
       const toInsert = [];
       const toUpdate = [];
@@ -1366,7 +1373,7 @@
         normalRows.push(rowData);
       });
       const payload = {year, month, monthName: monthNames[month - 1], fileName, daysInMonth, weekdays, fixedRows, normalRows};
-      const vercelApiEndpoint = 'https://cb360-mobile.vercel.app/api/scales-convert-excel';
+      const vercelApiEndpoint = 'https://cb360-online.vercel.app/api/scales-convert-excel';
       try {
         const response = await fetch(vercelApiEndpoint, {
           method: 'POST',
@@ -1398,11 +1405,3 @@
         alert(`❌ Erro: Não foi possível comunicar com o serviço de conversão.\n\nTipo: ${error.name}\nMensagem: ${error.message}`);
       }
     }
-
-
-
-
-
-
-
-

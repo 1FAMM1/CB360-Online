@@ -1,14 +1,6 @@
     /* =======================================
-    FOMIO 360 PROGRAMATICS
-    ======================================= */
-    /* =======================================
     SCALES MOULE
     ======================================= */
-    function getSelectedYear() {
-      const el = document.getElementById("year-selector");
-      if (!el) throw new Error("Year selector não encontrado");
-      return parseInt(el.value, 10);
-    }
     /* = SCALES DYNAMIC TABLE - MAIN INIT = */    
     document.querySelectorAll('.sidebar-submenu-button').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -32,7 +24,7 @@
     let currentTableData = [];
     const yearAtual = new Date().getFullYear();
     document.addEventListener("DOMContentLoaded", () => {
-      createMonthButtons("months-container", "table-container", getSelectedYear());
+      createMonthButtons("months-container", "table-container", yearAtual);
       initSidebarSecaoButtons();
       initSaveButton();
       const emitBtn = document.getElementById("emit-button");
@@ -48,7 +40,7 @@
       document.querySelectorAll(".sidebar-submenu-button").forEach(btn => {
         btn.addEventListener("click", async () => {
           currentSection = btn.getAttribute("data-access");
-          createMonthButtons("months-container", "table-container", getSelectedYear());
+          createMonthButtons("months-container", "table-container", yearAtual);
           document.getElementById("table-container").innerHTML = "";
           document.querySelectorAll(".btn.btn-add").forEach(b => b.classList.remove("active"));
           const saveButton = document.getElementById("save-button");
@@ -1168,7 +1160,8 @@
         try {
           const monthIndex = getActiveMonthIndex();
           if (!monthIndex) throw new Error("Nenhum mês selecionado.");
-          const selectedYear = getSelectedYear();
+          const yearSelector = document.getElementById("year-selector");
+          const selectedYear = yearSelector ? parseInt(yearSelector.value, 10) : yearAtual;
           const savedMap = await fetchSavedData(currentSection, selectedYear, monthIndex);
           const {toInsert, toUpdate, toDelete} = diffTableChanges(table, savedMap);
           await saveChanges({toInsert, toUpdate, toDelete, section: currentSection, year: selectedYear, month: monthIndex});
@@ -1287,15 +1280,14 @@
         saveBtn.disabled = true;
         saveBtn.textContent = "A guardar...";
       }
-      const selectedYear = getSelectedYear();
       try {
         const monthIndex = getActiveMonthIndex();
-        if (!monthIndex) throw new Error("Nenhum mês selecionado.");          
-        const savedMap = await fetchSavedData(currentSection, selectedYear, monthIndex);
+        if (!monthIndex) throw new Error("Nenhum mês selecionado.");  
+        const savedMap = await fetchSavedData(currentSection, yearAtual, monthIndex);
         const {toInsert, toUpdate, toDelete} = diffFixedRowsChanges(table, savedMap);
-        await saveChanges({toInsert, toUpdate, toDelete, section: currentSection, year: selectedYear, month: monthIndex});
-        showPopupSuccess("✅ Escala emitida com sucesso! Por favor agurde uns breves segundos pelo download automático. Obrigado.");        
-        await exportScheduleToExcel(table, selectedYear, monthIndex);
+        await saveChanges({toInsert, toUpdate, toDelete, section: currentSection, year: yearAtual, month: monthIndex});
+        showPopupSuccess("✅ Escala emitida com sucesso! Por favor agurde uns breves segundos pelo download automático. Obrigado.");
+        await exportScheduleToExcel(table, yearAtual, monthIndex);
       } catch (err) {
         console.error(err);
         alert("❌ Erro ao salvar as linhas fixas: " + err.message);
@@ -1306,6 +1298,7 @@
         }
       }
     }
+
     function diffFixedRowsChanges(table, savedMap) {
       const toInsert = [];
       const toUpdate = [];
@@ -1404,4 +1397,3 @@
         alert(`❌ Erro: Não foi possível comunicar com o serviço de conversão.\n\nTipo: ${error.name}\nMensagem: ${error.message}`);
       }
     }
-

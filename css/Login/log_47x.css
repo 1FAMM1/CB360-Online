@@ -248,7 +248,13 @@
       animation: progressBar linear forwards;
       animation-duration: var(--toast-duration, 2s);
     }
+
+
+.password-wrapper {position: relative;display: flex; align-items: center;}
+    .password-wrapper input {flex: 1; padding-right: 35px; box-sizing: border-box; -webkit-appearance: none;}
+    .password-wrapper i {position: absolute; right: 10px; font-size: 15px; color: #555; cursor: pointer; margin-bottom: 15px; -webkit-appearance: none; -webkit-tap-highlight-color: transparent;}
     
     @keyframes progressBar {from {width: 100%;} to {width: 0%;}}
+
 
 

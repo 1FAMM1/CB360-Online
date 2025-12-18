@@ -20,9 +20,14 @@
         }
       });
     });
+    function getSelectedYear() { 
+      const el = document.getElementById("year-selector"); 
+      if (!el) throw new Error("Year selector não encontrado"); 
+      return parseInt(el.value, 10);
+    }
     let currentSection = "1ª Secção";
     let currentTableData = [];
-    const yearAtual = new Date().getFullYear();
+    const yearAtual = getSelectedYear();
     document.addEventListener("DOMContentLoaded", () => {
       createMonthButtons("months-container", "table-container", yearAtual);
       initSidebarSecaoButtons();
@@ -1160,11 +1165,9 @@
         try {
           const monthIndex = getActiveMonthIndex();
           if (!monthIndex) throw new Error("Nenhum mês selecionado.");
-          const yearSelector = document.getElementById("year-selector");
-          const selectedYear = yearSelector ? parseInt(yearSelector.value, 10) : yearAtual;
-          const savedMap = await fetchSavedData(currentSection, selectedYear, monthIndex);
+          const savedMap = await fetchSavedData(currentSection, yearAtual, monthIndex);
           const {toInsert, toUpdate, toDelete} = diffTableChanges(table, savedMap);
-          await saveChanges({toInsert, toUpdate, toDelete, section: currentSection, year: selectedYear, month: monthIndex});
+          await saveChanges({toInsert, toUpdate, toDelete, section: currentSection, year: yearAtual, month: monthIndex});
           showPopupSuccess("✅ Escala gravada com sucesso!");
         } catch (err) {
           console.error(err);

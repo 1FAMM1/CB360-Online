@@ -351,7 +351,6 @@
       }
       return 0;
     }
-
     function applyTotalCellStyle(cell, total, isDecir, threshold = 4) {
       if (cell.parentElement.classList.contains("totals-row")) {
         return;
@@ -401,7 +400,6 @@
       wrapper.style.overflowY = "auto";
       return wrapper;
     }
-
     function createTableStructure(wrapper) {
       const table = document.createElement("table");
       table.className = "month-table";
@@ -868,15 +866,13 @@
           mpCell.style.display = d <= daysInMonth ? "" : "none";
         }
       }
-    }
-    
+    }    
     function calculateMPTotals(tbody, daysInMonth, data, currentSection) {
       const isDecir = currentSection === "DECIR";
       if (isDecir) {
         const mpDiaRow = tbody.querySelector(".mp-dia-row");
         const mpNoiteRow = tbody.querySelector(".mp-noite-row");
-        if (!mpDiaRow || !mpNoiteRow) return;
-    
+        if (!mpDiaRow || !mpNoiteRow) return;    
         for (let d = 1; d <= daysInMonth; d++) {
           let mpDiaCount = 0;
           let mpNoiteCount = 0;
@@ -932,8 +928,7 @@
           }
         }
       }
-    }
-    
+    }    
     function createTASRows(tbody, daysInMonth) {
       let tasRow = tbody.querySelector(".tas-row");
       if (!tasRow) {
@@ -963,8 +958,7 @@
         const tasCell = tasRow.querySelector(`.tas-${d}`);
         tasCell.style.display = d <= daysInMonth ? "" : "none";
       }
-    }
-    
+    }    
     function calculateTASTotals(tbody, daysInMonth, data) {
       const tasRow = tbody.querySelector(".tas-row");
       if (!tasRow) return;
@@ -1006,7 +1000,6 @@
       applyTotalCellStyle(tdTotal, total, section === "DECIR");
       return total;
     }
-
     function calculateColumnTotals(tbody, section, daysInMonth) {
       const totalsRow = tbody.querySelector(".totals-row");
       if (!totalsRow) return;    
@@ -1032,25 +1025,18 @@
       currentTableData = data;
       const container = document.getElementById(containerId);
       if (!container) return;
-      container.innerHTML = "";
-    
+      container.innerHTML = "";    
       createTableHeaders(container, year, month, currentSection);
       const wrapper = createTableWrapper(container);
       const table = createTableStructure(wrapper);
-      const daysInMonth = new Date(year, month, 0).getDate();
-    
-      updateDayHeaders(table, year, month, daysInMonth);
-    
-      const sectionToLoad =
-        currentSection === "Consultar Escalas" ? "Emissão Escala" : currentSection;
-    
+      const daysInMonth = new Date(year, month, 0).getDate();    
+      updateDayHeaders(table, year, month, daysInMonth);    
+      const sectionToLoad = currentSection === "Consultar Escalas" ? "Emissão Escala" : currentSection;    
       const savedMap = await loadSavedData(sectionToLoad, year, month);
-      const tbody = table.querySelector("tbody");
-    
+      const tbody = table.querySelector("tbody");    
       const isEscalaSection =
         currentSection === "Emissão Escala" ||
-        currentSection === "Consultar Escalas";
-    
+        currentSection === "Consultar Escalas";    
       if (isEscalaSection) {
         createFixedRows(tbody, data, savedMap, year, month, daysInMonth,
           currentSection,
@@ -1157,12 +1143,10 @@
       saveBtn.style.marginTop = "20px";
       saveBtn.addEventListener("click", async () => {
         const table = document.querySelector(".month-table tbody");
-        if (!table) return;
-        
+        if (!table) return;        
         const yearSelect = document.getElementById("year-selector");
         if (!yearSelect) throw new Error("Year selector não encontrado");
-        const selectedYear = parseInt(yearSelect.value, 10);
-        
+        const selectedYear = parseInt(yearSelect.value, 10);        
         saveBtn.disabled = true;
         saveBtn.textContent = "A guardar...";
         try {
@@ -1181,19 +1165,14 @@
         }
       });
     }
-
     function getActiveMonthIndex() {
-  // tenta encontrar o container correto
-  const monthsContainer = document.querySelector("#months-container, #months-container-scales");
-  if (!monthsContainer) return null;
-
-  const activeBtn = monthsContainer.querySelector(".btn.btn-add.active");
-  if (!activeBtn) return null;
-
-  const allMonthBtns = Array.from(monthsContainer.querySelectorAll(".btn.btn-add"));
-  return allMonthBtns.indexOf(activeBtn) + 1;
-}
-    
+      const monthsContainer = document.querySelector("#months-container, #months-container-scales");
+      if (!monthsContainer) return null;
+      const activeBtn = monthsContainer.querySelector(".btn.btn-add.active");
+      if (!activeBtn) return null;
+      const allMonthBtns = Array.from(monthsContainer.querySelectorAll(".btn.btn-add"));
+      return allMonthBtns.indexOf(activeBtn) + 1;
+    }    
     async function fetchSavedData(section, year, month) {
       const url = `${SUPABASE_URL}/rest/v1/reg_serv?select=n_int,day,value&section=eq.${section}&year=eq.${year}&month=eq.${month}`;
       const response = await fetch(url, {
@@ -1207,7 +1186,6 @@
       });
       return map;
     }
-
     function diffTableChanges(table, savedMap) {
       const toInsert = [];
       const toUpdate = [];
@@ -1287,8 +1265,7 @@
       if (saveBtn) {
         saveBtn.disabled = true;
         saveBtn.textContent = "A guardar...";
-      }
-      
+      }      
       try {
         const yearSelect = document.getElementById("year-selector");
         if (!yearSelect) throw new Error("Year selector não encontrado");
@@ -1310,7 +1287,6 @@
         }
       }
     }
-
     function diffFixedRowsChanges(table, savedMap) {
       const toInsert = [];
       const toUpdate = [];
@@ -1409,10 +1385,3 @@
         alert(`❌ Erro: Não foi possível comunicar com o serviço de conversão.\n\nTipo: ${error.name}\nMensagem: ${error.message}`);
       }
     }
-
-
-
-
-
-
-

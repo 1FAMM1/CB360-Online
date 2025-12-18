@@ -1236,10 +1236,10 @@
       }
       return {toInsert, toUpdate, toDelete};
     }
-    async function saveChanges({toInsert, toUpdate, toDelete, section, selectedYear, month}) {
+    async function saveChanges({toInsert, toUpdate, toDelete, section, year, month}) {
       const requests = [];
       if (toInsert.length) {
-        const insertBody = toInsert.map(item => ({section, n_int: item.n_int, abv_name: item.abv_name, year, month, day: item.day, value: item.value,}));
+        const insertBody = toInsert.map(item => ({section, n_int: item.n_int, abv_name: item.abv_name, selectedYear, month, day: item.day, value: item.value,}));
         requests.push(
           fetch(`${SUPABASE_URL}/rest/v1/reg_serv`, {
             method: "POST",
@@ -1405,6 +1405,7 @@
         alert(`❌ Erro: Não foi possível comunicar com o serviço de conversão.\n\nTipo: ${error.name}\nMensagem: ${error.message}`);
       }
     }
+
 
 
 

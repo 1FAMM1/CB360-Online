@@ -2,25 +2,29 @@ import fetch from "node-fetch";
 
 export default async function handler(req, res) {
   // === CORS ===
-  res.setHeader("Access-Control-Allow-Origin", "*"); // ou restringir para o domínio da AppCreator24
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Origin", "*"); // ou restrinja ao seu domínio
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
+  // Preflight request
   if (req.method === "OPTIONS") {
-    // Preflight request
     return res.status(200).end();
   }
 
-  if (req.method !== "POST") return res.status(405).json({ error: "Método não permitido" });
-
-  const SUPABASE_URL = "https://rjkbodfqsvckvnhjwmhg.supabase.co";
-  const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
-
   try {
-    const { path, method = "GET", body = null } = req.body;
-    if (!path) return res.status(400).json({ error: "É necessário informar o path" });
+    const SUPABASE_URL = "https://rjkbodfqsvckvnhjwmhg.supabase.co";
+    const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 
-    const supaRes = await fetch(`${SUPABASE_URL}${path}`, {
+    // Pegando informações do body ou query
+    const { path, method = req.method, body = null } = req.body || {};
+
+    if (!path && ["POST","PATCH","DELETE"].includes(req.method)) {
+      return res.status(400).json({ error: "É necessário informar o path" });
+    }
+
+    const url = path ? `${SUPABASE_URL}${path}` : SUPABASE_URL;
+
+    const supaRes = await fetch(url, {
       method,
       headers: {
         "apikey": SUPABASE_ANON_KEY,
@@ -31,9 +35,7 @@ export default async function handler(req, res) {
     });
 
     const data = await supaRes.json();
-    if (!supaRes.ok) return res.status(supaRes.status).json(data);
-
-    return res.status(200).json(data);
+    return res.status(supaRes.ok ? 200 : supaRes.status).json(data);
 
   } catch(err) {
     console.error(err);

@@ -7,26 +7,34 @@ export default async function handler(req, res) {
     }
 
     const { path, method = "GET", body = null } = req.body;
-
     if (!path) return res.status(400).json({ error: "Falta o path" });
 
     const SUPABASE_URL = "https://rjkbodfqsvckvnhjwmhg.supabase.co";
     const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 
-    const supabaseRes = await fetch(`${SUPABASE_URL}${path}`, {
-      method,
-      headers: {
-        "apikey": SUPABASE_ANON_KEY,
-        "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: body ? JSON.stringify(body) : null,
-    });
+    const headers = {
+      "apikey": SUPABASE_ANON_KEY,
+      "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+      "Content-Type": "application/json",
+    };
 
-    const data = await supabaseRes.json();
+    const options = { method, headers };
+    if (body && method !== "GET") options.body = JSON.stringify(body);
 
-    return res.status(200).json(data);
+    const supabaseRes = await fetch(`${SUPABASE_URL}${path}`, options);
+
+    const text = await supabaseRes.text();
+    try {
+      // Tenta converter para JSON
+      const data = JSON.parse(text);
+      return res.status(200).json(data);
+    } catch {
+      // Retorna texto cru se não for JSON
+      return res.status(200).send(text);
+    }
+
   } catch (err) {
-    console.error(err);
+    console.error("Erro na API:", err);
     return res.status(500).json({ error: "Erro ao conectar com o Supabase" });
   }
+}

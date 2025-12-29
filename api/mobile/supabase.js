@@ -1,31 +1,32 @@
 import fetch from "node-fetch";
 
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
-
 export default async function handler(req, res) {
   try {
-    const { method = "GET", path, body } = req.body;
+    if (req.method !== "POST") {
+      return res.status(405).json({ error: "Método não permitido" });
+    }
 
-    if (!path) return res.status(400).json({ error: "O path do Supabase é obrigatório" });
+    const { path, method = "GET", body = null } = req.body;
 
-    const headers = {
-      'apikey': SUPABASE_ANON_KEY,
-      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-      'Content-Type': 'application/json'
-    };
+    if (!path) return res.status(400).json({ error: "Falta o path" });
 
-    const response = await fetch(`${SUPABASE_URL}${path}`, {
+    const SUPABASE_URL = "https://rjkbodfqsvckvnhjwmhg.supabase.co";
+    const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+
+    const supabaseRes = await fetch(`${SUPABASE_URL}${path}`, {
       method,
-      headers,
-      body: body ? JSON.stringify(body) : undefined
+      headers: {
+        "apikey": SUPABASE_ANON_KEY,
+        "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: body ? JSON.stringify(body) : null,
     });
 
-    const data = await response.json();
-    res.status(response.status).json(data);
+    const data = await supabaseRes.json();
 
+    return res.status(200).json(data);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Erro ao conectar ao Supabase" });
+    return res.status(500).json({ error: "Erro ao conectar com o Supabase" });
   }
-}

@@ -16,7 +16,7 @@
           .from('occurrences_control')
           .select('*')
           .eq('corp_oper_nr', corpOperNr)
-          .order('created_at', { ascending: false })
+          .order('id', { ascending: false })
           if (errorOcorrencias) {
             console.error('Erro Supabase ao buscar ocorrências:', errorOcorrencias)
             return res.status(500).json({ 

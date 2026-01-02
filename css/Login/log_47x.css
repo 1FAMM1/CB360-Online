@@ -1,7 +1,7 @@
     body {
       margin: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: url('https://rjkbodfqsvckvnhjwmhg.supabase.co/storage/v1/object/public/cb_logos/background_main.jpg') no-repeat center center fixed;
+      background: url('https://rjkbodfqsvckvnhjwmhg.supabase.co/storage/v1/object/public/cb_logos/background_mobile.jpg') no-repeat center center fixed;
       background-size: cover;
       display: flex;
       flex-direction: column;
@@ -291,4 +291,5 @@
         width: 0%;
       }
     }
+
 

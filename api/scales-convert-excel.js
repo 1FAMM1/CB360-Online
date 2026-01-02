@@ -139,20 +139,20 @@ export default async function handler(req, res) {
         }));
 
         sheet.pageSetup = {
-            orientation: 'landscape', // MUDANÇA: Horizontal é obrigatório para 31 dias
+            orientation: 'portrait',
             paperSize: 9,             // A4
             fitToPage: true,
-            fitToWidth: 1,            // FORÇA a largura a caber em 1 folha
-            fitToHeight: 0,           // Deixa a altura crescer se houver muitas linhas
+            fitToWidth: 1,            // FORÇA a largura a caber em 1 folha (Crucial)
+            fitToHeight: 0,           // Permite que cresça para baixo se necessário
             horizontalCentered: true,
-            verticalCentered: false,  // Melhor deixar falso para começar no topo
+            verticalCentered: false,
             margins: {
-                left: 0.2,
-                right: 0.2,
-                top: 0.3,
-                bottom: 0.3,
-                header: 0.1,
-                footer: 0.1
+                left: 0.1,            // Margens quase inexistentes para ganhar espaço
+                right: 0.1,
+                top: 0.2,
+                bottom: 0.2,
+                header: 0,
+                footer: 0
             }
         };
 

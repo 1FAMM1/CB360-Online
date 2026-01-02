@@ -5,7 +5,7 @@
     SCALES MOULE
     ======================================= */
     /* = SCALES DYNAMIC TABLE - MAIN INIT = */    
-    document.querySelectorAll('.sidebar-submenu-button').forEach(btn => {
+    document.querySelectorAll('.sidebar-sub-submenu-button').forEach(btn => {
       btn.addEventListener('click', () => {
         const page = btn.dataset.page;
         const access = btn.dataset.access;
@@ -40,7 +40,7 @@
     });
     /* =========  SIDEBAR BUTTONS ========== */
     function initSidebarSecaoButtons() {
-      document.querySelectorAll(".sidebar-submenu-button").forEach(btn => {
+      document.querySelectorAll(".sidebar-sub-submenu-button").forEach(btn => {
         btn.addEventListener("click", async () => {
           currentSection = btn.getAttribute("data-access");
           createMonthButtons("months-container", "table-container", yearAtual);
@@ -170,10 +170,12 @@
       container.appendChild(mainWrapper);
     }
     /* ============  LOAD DATA ============ */
+    const getCorpId = () => sessionStorage.getItem('currentCorpOperNr') || "0805";
     async function loadSetionData(secao) {
       try {
+        const corp = getCorpId();
         const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/reg_elems?select=n_int,abv_name,patent_abv,MP,TAS&section=eq.${secao}&n_int=lt.500&elem_state=eq.true`, {
+          `${SUPABASE_URL}/rest/v1/reg_elems?select=n_int,abv_name,patent_abv,MP,TAS&section=eq.${secao}&corp_oper_nr=eq.${corp}&n_int=lt.500&elem_state=eq.true`, {
             headers: getSupabaseHeaders()
           }
         );
@@ -187,8 +189,9 @@
     }
     async function loadDecirData() {
       try {
+        const corp = getCorpId();
         const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/reg_elems?select=n_int,abv_name,patent_abv,MP&elem_state=eq.true`, {
+          `${SUPABASE_URL}/rest/v1/reg_elems?select=n_int,abv_name,patent_abv,MP&corp_oper_nr=eq.${corp}&elem_state=eq.true`, {
             headers: getSupabaseHeaders()
           }
         );
@@ -204,8 +207,9 @@
     }
     async function loadAllSectionsData() {
       try {
+        const corp = getCorpId();
         const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/reg_elems?select=n_int,abv_name,patent_abv&n_int=gte.003&n_int=lt.500&elem_state=eq.true`, {
+          `${SUPABASE_URL}/rest/v1/reg_elems?select=n_int,abv_name,patent_abv&corp_oper_nr=eq.${corp}&n_int=gte.003&n_int=lt.500&elem_state=eq.true`, {
             headers: getSupabaseHeaders()
           }
         );
@@ -228,15 +232,14 @@
     }
     async function loadSavedData(section, year, month) {
       try {
-        let query = `${SUPABASE_URL}/rest/v1/reg_serv?select=n_int,day,value`;
+        const corp = getCorpId();
+        let query = `${SUPABASE_URL}/rest/v1/reg_serv?select=n_int,day,value&corp_oper_nr=eq.${corp}`;
         if (section === "Emissão Escala") {
           query += `&year=eq.${year}&month=eq.${month}`;
         } else {
           query += `&section=eq.${section}&year=eq.${year}&month=eq.${month}`;
         }
-        const response = await fetch(query, {
-          headers: getSupabaseHeaders()
-        });
+        const response = await fetch(query, { headers: getSupabaseHeaders() });
         if (!response.ok) throw new Error("Erro ao buscar dados salvos");
         const data = await response.json();
         const map = {};
@@ -289,17 +292,15 @@
     async function checkConflict(section, n_int, year, month, day, newValue) {
       try {
         const value = newValue.toUpperCase();
-        const params = {n_int, year, month, day};
+        const corp = getCorpId();
+        const params = { n_int, year, month, day, corp_oper_nr: corp };
         if (section === "DECIR" && ["EN", "ET"].includes(value)) {
           if (await hasConflict(params, "PN")) {
             return CONFLICT_MESSAGES.DECIR_TO_PIQUETE;
           }
         }
         if (section !== "DECIR" && value === "PN") {
-          if (await hasConflict({
-              ...params,
-              section: "DECIR"
-            }, ["EN", "ET"])) {
+          if (await hasConflict({ ...params, section: "DECIR" }, ["EN", "ET"])) {
             return CONFLICT_MESSAGES.PIQUETE_TO_DECIR;
           }
         }
@@ -310,12 +311,10 @@
       }
     }
     async function hasConflict(params, values) {
-      const valueQuery = Array.isArray(values) ?
-        `in.(${values.join(",")})` :
-        `eq.${values}`;
+      const valueQuery = Array.isArray(values) ? `in.(${values.join(",")})` : `eq.${values}`;
       const query = Object.entries(params)
-        .map(([k, v]) => `${k}=eq.${v}`)
-        .join("&");
+      .map(([k, v]) => `${k}=eq.${v}`)
+      .join("&");
       const resp = await fetch(
         `${SUPABASE_URL}/rest/v1/reg_serv?select=value&${query}&value=${valueQuery}`, {
           headers: getSupabaseHeaders()
@@ -632,8 +631,8 @@
     /* ====== CREATION OF FIXED LINES ===== */
     function createFixedRows(tbody, data, savedMap, year, month, daysInMonth, section, calculateRowTotal, calculateColumnTotals) {
       const fixedRowsData = [{idx: 0, text: savedMap[`fixed_0_text`] || "OFOPE", isHeader: true},
-                             {idx: 1, dataIndex: 0}, {idx: 2, dataIndex: 1},
-                             {idx: 3, text: savedMap[`fixed_3_text`] || "CORPO ATIVO", isHeader: true}];
+                             {idx: 1, dataIndex: 0}, {idx: 2, dataIndex: 1}, {idx: 3, dataIndex: 2},
+                             {idx: 5, text: savedMap[`fixed_3_text`] || "CORPO ATIVO", isHeader: true}];
       fixedRowsData.forEach(rowInfo => {
         let fixedRow = tbody.querySelector(`tr.fixed-row[data-fixed="${rowInfo.idx}"]`);
         if (!fixedRow) {
@@ -688,7 +687,7 @@
       const isEditable = section === "Emissão Escala";
       const isEscalaSection = isEditable || section === "Consultar Escalas";
       for (let dataIdx = 0; dataIdx < data.length; dataIdx++) {
-        if (isEscalaSection && dataIdx < 2) continue;
+        if (isEscalaSection && dataIdx < 3) continue;
         const item = data[dataIdx];
         const nIntStr = String(item.n_int).padStart(3, "0");
         let tr = tbody.querySelector(`tr[data-nint="${nIntStr}"]`);
@@ -706,7 +705,7 @@
           for (let d = 1; d <= 31; d++) {
             const td = createDayCellWithListeners(
               d, tr, year, month, savedMap, section, daysInMonth,
-              calculateRowTotal, calculateColumnTotals, isEditable // Passa a flag
+              calculateRowTotal, calculateColumnTotals, isEditable
             );
             tr.appendChild(td);
           }
@@ -1174,14 +1173,13 @@
       return allMonthBtns.indexOf(activeBtn) + 1;
     }    
     async function fetchSavedData(section, year, month) {
-      const url = `${SUPABASE_URL}/rest/v1/reg_serv?select=n_int,day,value&section=eq.${section}&year=eq.${year}&month=eq.${month}`;
-      const response = await fetch(url, {
-        headers: getSupabaseHeaders()
-      });
+      const corp = getCorpId();
+      const url = `${SUPABASE_URL}/rest/v1/reg_serv?select=n_int,day,value&section=eq.${section}&year=eq.${year}&month=eq.${month}&corp_oper_nr=eq.${corp}`;
+      const response = await fetch(url, { headers: getSupabaseHeaders() });
       if (!response.ok) throw new Error("Erro ao carregar dados do mês.");
       const data = await response.json();
       const map = {};
-      data.forEach(({n_int, day, value}) => {
+      data.forEach(({ n_int, day, value }) => {
         map[`${n_int}_${day}`] = value;
       });
       return map;
@@ -1216,42 +1214,29 @@
     }
     async function saveChanges({toInsert, toUpdate, toDelete, section, year, month}) {
       const requests = [];
+      const corp = getCorpId();
       if (toInsert.length) {
-        const insertBody = toInsert.map(item => ({section, n_int: item.n_int, abv_name: item.abv_name, year, month, day: item.day, value: item.value,}));
-        requests.push(
-          fetch(`${SUPABASE_URL}/rest/v1/reg_serv`, {
-            method: "POST",
-            headers: {
-              ...getSupabaseHeaders(),
-              "Content-Type": "application/json",
-              "Prefer": "return=minimal",
-            },
-            body: JSON.stringify(insertBody),
-          })
-        );
+        const insertBody = toInsert.map(item => ({section, n_int: item.n_int, abv_name: item.abv_name, year, month, day: item.day, value: item.value,corp_oper_nr: corp}));
+        requests.push(fetch(`${SUPABASE_URL}/rest/v1/reg_serv`, {
+          method: "POST",
+          headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
+          body: JSON.stringify(insertBody)
+        }));
       }
-      for (const {n_int, day, value} of toUpdate) {
-        const filter = `section=eq.${section}&n_int=eq.${n_int}&year=eq.${year}&month=eq.${month}&day=eq.${day}`;
-        requests.push(
-          fetch(`${SUPABASE_URL}/rest/v1/reg_serv?${filter}`, {
-            method: "PATCH",
-            headers: {
-              ...getSupabaseHeaders(),
-              "Content-Type": "application/json",
-              "Prefer": "return=minimal",
-            },
-            body: JSON.stringify({value}),
-          })
-        );
+      for (const item of toUpdate) {
+        const filter = `section=eq.${section}&n_int=eq.${item.n_int}&year=eq.${year}&month=eq.${month}&day=eq.${item.day}&corp_oper_nr=eq.${corp}`;
+        requests.push(fetch(`${SUPABASE_URL}/rest/v1/reg_serv?${filter}`, {
+          method: "PATCH",
+          headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
+          body: JSON.stringify({ value: item.value })
+        }));
       }
-      for (const {n_int, day} of toDelete) {
-        const filter = `section=eq.${section}&n_int=eq.${n_int}&year=eq.${year}&month=eq.${month}&day=eq.${day}`;
-        requests.push(
-          fetch(`${SUPABASE_URL}/rest/v1/reg_serv?${filter}`, {
-            method: "DELETE",
-            headers: getSupabaseHeaders(),
-          })
-        );
+      for (const item of toDelete) {
+        const filter = `section=eq.${section}&n_int=eq.${item.n_int}&year=eq.${year}&month=eq.${month}&day=eq.${item.day}&corp_oper_nr=eq.${corp}`;
+        requests.push(fetch(`${SUPABASE_URL}/rest/v1/reg_serv?${filter}`, {
+          method: "DELETE",
+          headers: getSupabaseHeaders()
+        }));
       }
       if (requests.length > 0) await Promise.all(requests);
     }
@@ -1287,32 +1272,37 @@
         }
       }
     }
-    function diffFixedRowsChanges(table, savedMap) {
-      const toInsert = [];
-      const toUpdate = [];
-      const toDelete = [];
-      const rows = table.querySelectorAll("tr.fixed-row");
-      for (const row of rows) {
-        const fixedId = row.getAttribute("data-fixed");
-        if (fixedId !== "1" && fixedId !== "2") continue;
-        const n_int = fixedId === "1" ? 3 : 4;
-        const abv_name = row.cells[1].textContent;
-        for (let d = 3; d < row.cells.length - 1; d++) {
-          const value = row.cells[d].textContent.toUpperCase().slice(0, 1).trim();
-          const day = d - 2;
-          const key = `${n_int}_${day}`;
-          const existingVal = savedMap[key];
-          if (existingVal) {
-            if (!value) toDelete.push({n_int, day});
-            else if (existingVal.toUpperCase() !== value)
-              toUpdate.push({n_int, day, value});
-          } else if (value) {
-            toInsert.push({n_int, abv_name, day, value});
-          }
-        }
-      }
-      return {toInsert, toUpdate, toDelete};
-    }
+   function diffFixedRowsChanges(table, savedMap) {
+     const toInsert = [];
+     const toUpdate = [];
+     const toDelete = [];
+     const rows = table.querySelectorAll("tr.fixed-row");
+     for (const row of rows) {
+       const fixedId = row.getAttribute("data-fixed");
+       if (fixedId !== "1" && fixedId !== "2" && fixedId !== "3") continue;
+       if (row.cells.length < 10) {
+         continue;
+       }
+       const n_int = fixedId === "1" ? 3 : (fixedId === "2" ? 4 : 9);
+       const abv_name = row.cells[1] ? row.cells[1].textContent.trim() : "FIXO";
+       for (let d = 3; d < row.cells.length - 1; d++) {
+         const cell = row.cells[d];
+         if (!cell) continue;
+         const value = cell.textContent.toUpperCase().slice(0, 1).trim();
+         const day = d - 2;
+         const key = `${n_int}_${day}`;
+         const existingVal = savedMap[key];
+         if (existingVal) {
+           if (!value) toDelete.push({ n_int, day });
+           else if (existingVal.toUpperCase() !== value)
+             toUpdate.push({ n_int, day, value });
+         } else if (value) {
+           toInsert.push({ n_int, abv_name, day, value });
+         }
+       }
+     }
+     return { toInsert, toUpdate, toDelete };
+   }
     /* =======================================
        CONVERT SCALE
     ======================================= */

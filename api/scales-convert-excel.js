@@ -139,18 +139,18 @@ export default async function handler(req, res) {
         }));
 
         sheet.pageSetup = {
-            orientation: 'portrait',
-            paperSize: 9,
+            orientation: 'landscape', // MUDANÇA: Horizontal é obrigatório para 31 dias
+            paperSize: 9,             // A4
             fitToPage: true,
-            fitToWidth: 0,
-            fitToHeight: 1,
+            fitToWidth: 1,            // FORÇA a largura a caber em 1 folha
+            fitToHeight: 0,           // Deixa a altura crescer se houver muitas linhas
             horizontalCentered: true,
-            verticalCentered: true,
+            verticalCentered: false,  // Melhor deixar falso para começar no topo
             margins: {
-                left: 0.059,
-                right: 0.059,
-                top: 0.25,
-                bottom: 0.25,
+                left: 0.2,
+                right: 0.2,
+                top: 0.3,
+                bottom: 0.3,
                 header: 0.1,
                 footer: 0.1
             }

@@ -25,13 +25,13 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <body>
   <div class="container">
+    <div class="cb-logo">
+      <img src="https://rjkbodfqsvckvnhjwmhg.supabase.co/storage/v1/object/public/cb_logos/logo_cb_0805.png" alt="Logo CB" class="cb-logo">
+    </div>
     <!--<div class="mark-logo">
       <img src="https://rjkbodfqsvckvnhjwmhg.supabase.co/storage/v1/object/public/cb_logos/Mark_Logo_White.png" alt="Logo CB" class="mark-logo">
     </div>-->
-    <div class="cb-logo">
-      <img src="" alt="Logo CB" class="cb-logo">
-    </div>    
-    <header class="header">
+    <header class="header">      
       <div class="header-title-container">
         <h1 class="header-title">Nome do CB</h1>
         <h2 class="header-nr" ></h2>
@@ -45,7 +45,7 @@
     <aside class="sidebar">
       <button class="sidebar-menu-button active" data-page="page-main" data-access="Menu Principal">🏠 Menu Principal</button>
       <!-- ======================= DECIR 360 ======================= -->
-      <button class="sidebar-menu-button sub-submenu-toggle" data-page="page-decir" data-access="DECIR 360">💶 Gestão Financeira</button>
+      <button class="sidebar-menu-button sub-submenu-toggle" data-page="page-decir" data-access="Gestão Financeira">💶 Gestão Financeira</button>
       <div class="submenu">
         <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-decir" data-access="Controlo de Pagamentos">Controlo de Pagamentos</button>
         <div class="sub-submenu">
@@ -56,18 +56,28 @@
         <button class="sidebar-submenu-button" data-page="page-decir" data-access="Assinaturas Diárias">Assinaturas Diárias</button>
       </div>
       <!-- ======================= FOMIO 360 ======================= -->
-      <button class="sidebar-menu-button sub-submenu-toggle" data-page="page-fomio" data-access="FOMIO 360">👨🏻‍🚒👩🏻‍🚒 Gestão Operacional</button>
+      <button class="sidebar-menu-button sub-submenu-toggle" data-page="page-fomio" data-access="Gestão Operacional">👨🏻‍🚒👩🏻‍🚒 Gestão Operacional</button>
       <div class="submenu">
-        <button class="sidebar-submenu-button" data-page="page-scales" data-access="DECIR">Escala DECIR</button>
-        <button class="sidebar-submenu-button" data-page="page-scales" data-access="1ª Secção">Escala 1ª Secção</button>
-        <button class="sidebar-submenu-button" data-page="page-scales" data-access="2ª Secção">Escala 2ª Secção</button>
-        <button class="sidebar-submenu-button" data-page="page-scales" data-access="Emissão Escala">Emissão Escalas</button>
-        <button class="sidebar-submenu-button" data-page="page-scales" data-access="Consultar Escalas">Consultar Escalas</button>
+        <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-fomio" data-access="Escalas">Escalas de Serviço</button>
+        <div class="sub-submenu">
+          <button class="sidebar-sub-submenu-button" data-page="page-scales" data-access="DECIR">Escala DECIR</button>
+          <button class="sidebar-sub-submenu-button" data-page="page-scales" data-access="1ª Secção">Escala 1ª Secção</button>
+          <button class="sidebar-sub-submenu-button" data-page="page-scales" data-access="2ª Secção">Escala 2ª Secção</button>        
+          <button class="sidebar-sub-submenu-button" data-page="page-scales" data-access="3ª Secção">Escala 3ª Secção</button>
+          <button class="sidebar-sub-submenu-button" data-page="page-scales" data-access="4ª Secção">Escala 4ª Secção</button>        
+          <button class="sidebar-sub-submenu-button" data-page="page-scales" data-access="Emissão Escala">Emissão Escalas</button>
+          <button class="sidebar-sub-submenu-button" data-page="page-scales" data-access="Consultar Escalas">Consultar Escalas</button>
+        </div>
+        <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-fomio" data-access="FOMIO 360">Eventos</button>
+        <div class="sub-submenu">
+          <button class="sidebar-sub-submenu-button" data-page="page-events" data-access="DECIR">Criação de Eventos</button>
+          <button class="sidebar-sub-submenu-button" data-page="page-event-disp" data-access="1ª Secção">Consulta Disponibilidades</button>
+        </div>
       </div>
       <!-- ======================= EMPLOYEES 360 ======================= -->
       <button class="sidebar-menu-button" data-page="" data-access="EMPLOYEES 360" onclick="showTempWarning('MÓDULO BREVEMENTE DISPONÍVEL EM CB360 ONLINE')">👷🏻‍♂️👷🏻‍♀️ Gestão Funcionários</button>
       <!-- ======================= SALOC 360 ======================= -->
-      <button class="sidebar-menu-button sub-submenu-toggle" data-page="page-saloc" data-access="SALOC 360">📡 SALOC</button>
+      <button class="sidebar-menu-button sub-submenu-toggle" data-page="page-saloc" data-access="SALOC 360">📡 SALOC 360</button>
       <div class="submenu">
         <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-ppis" data-access="Planos Prévios de Intervenção">Planos Prévios de Intervenção</button>
         <div class="sub-submenu">
@@ -159,6 +169,7 @@
   <!--------------------------->
   <!--------------------------->
   
+  
   <!---- REGISTRATION WINDOW MODULE ---->
   <div class="window" role="dialog" aria-labelledby="win-title" id="editWindow">
     <div class="window-titlebar">
@@ -177,7 +188,7 @@
         <button class="tab-btn" data-tab="credencials-app">Credênciais App</button>
         <button class="tab-btn" data-tab="acesses-app">Acessos App</button>
       </div>    
-      <form id="winForm" data-single-action="true">
+      <form id="winForm">
         <div class="tab-content active" id="tab-main-data">    
           <div class="window-field-horizontal">
             <label>Estado:</label>
@@ -281,7 +292,7 @@
         <div class="card-body">
           <p style="font-size: 15px; margin-bottom: 35px;">
             O <strong>CB360 Online</strong> é um sistema integrado e modular desenvolvido para apoiar a gestão operacional e administrativa
-            do seu <strong>Corpo de Bombeiros</strong>. Concebido como uma plataforma centralizada e intuitiva,
+            do seu Corpo de Bombeiros. Concebido como uma plataforma centralizada e intuitiva,
             permite a coordenação digital das diversas áreas funcionais da SALOC, garantindo eficiência, rastreabilidade e
             otimização de recursos em tempo real.
           </p>
@@ -342,7 +353,7 @@
         <div class="card-body" style="font-family: 'Segoe UI', sans-serif;">
           <p style="font-size: 15px; margin-bottom: 20px; color: #333;">
             A <strong>GESTÃO OPERACIONAL</strong> é o módulo digital responsável pela gestão integral das
-            <strong>Escalas Operacionais</strong> do seu Corpo de Bombeiros.
+            <strong>Escalas Operacionais</strong> e <strong>Eventos(Prevenções,...)</strong> do seu Corpo de Bombeiros.
             Este sistema centraliza todo o processo de planeamento, controlo e emissão das escalas,
             garantindo uma gestão eficiente e transparente dos recursos humanos e operacionais.
           </p>
@@ -354,8 +365,10 @@
               <li style="color:#0d630e;">📋 Criação e gestão de escalas mensais</li>
               <li style="color:#0d630e;">👨‍🚒 Gestão de elementos por secção e disponibilidade</li>
               <li style="color:#0d630e;">🧾 Emissão automática das escalas oficiais</li>
-              <li style="color:#0d630e;">🗂️ Consulta detalhada das escalas da <strong>1ª Secção</strong>, <strong>2ª Secção</strong> e <strong>DECIR</strong></li>
+              <li style="color:#0d630e;">🗂️ Consulta detalhada das escalas das respetivas <strong>SECÇÕES</strong> e <strong>DECIR</strong></li>
               <li style="color:#0d630e;">⚙️ Ferramentas de verificação e validação antes da emissão</li>
+              <li style="color:#0d630e;">📋 Craiação e gestão de eventos</li>
+              <li style="color:#0d630e;">👨‍🚒 Gestão de elementos por evento e disponibilidade</li>
             </ul>
           </div>
         </div>
@@ -449,7 +462,7 @@
             O módulo <strong>REGOPS 360</strong> centraliza a <strong>gestão de recusas de serviços</strong> e
             <strong>inoperacionalidades de meios INEM</strong>, permitindo um controlo detalhado e
             automatizado da disponibilidade operacional das viaturas integradas no
-            protocolo de emergência médica, bem como a recusa de serviços do seu <strong>Corpo de Bombeiros</strong>.
+            protocolo de emergência médica, bem como a recusa de serviços do seu Corpo de Bombeiros.
           </p>
           <div style="background: linear-gradient(90deg, #e0e0e0, #d6d6d6); padding: 15px 20px; border-left: 5px solid #dc3545; border-radius: 6px; margin-bottom: 20px;">
             <strong>Funcionalidades Principais:</strong>
@@ -612,6 +625,101 @@
           </div>
         </div>
         <div class="card-footer"></div>
+      </div>
+    </div>
+    <!---- EVENT CREATION MODULE ---->
+    <div id="page-events" class="page">
+      <div class="card last-card">
+        <div class="card-header">➕ CRIAR NOVO EVENTO</div>
+        <div class="card-body admin-container-event">
+          <div class="row-event">
+            <div class="form-group-event" style="flex: 2;">
+              <label>Nome do Evento</label>
+              <input type="text" id="eventName" placeholder="Ex: Concerto de Verão">
+            </div>
+            <div class="form-group-event" style="flex: 1;">
+              <label>Tipo</label>
+              <select id="eventType">
+                <option value="">Selecione...</option>
+                <option value="PREVENÇÃO">PREVENÇÃO</option>
+                <option value="TRANSPORTE">TRANSPORTE</option>
+                <option value="OUTRO">OUTRO</option>
+              </select>
+            </div>
+            <div class="form-group-event" style="flex: 0.5;">
+              <label>Operacionais</label>
+              <input type="number" id="operational" min="1" placeholder="Qtd.">
+            </div>
+            <div class="form-group-event" style="flex: 0.5;">
+              <label>Valor Hora (€)</label>
+              <input type="number" id="valueHour" step="0.50" placeholder="0.00">
+            </div>
+          </div>
+          <div class="row-event">
+            <div class="form-group-event" style="flex: 2;">
+              <label>Localidade / Morada</label>
+              <input type="text" id="eventLocation" placeholder="Cidade ou Recinto">
+            </div>
+            <div class="form-group-event" style="flex: 1;">
+              <label>Início</label>
+              <input type="date" id="eventStartDate">
+            </div>
+            <div class="form-group-event" style="flex: 1;">
+              <label>Fim</label>
+              <input type="date" id="eventEndDate">
+            </div>
+          </div>
+          <div class="turnos-wrapper">
+            <label class="turnos-title">PLANEAMENTO DE TURNOS <span id="turno-count" style="float: right; color: #3182ce;">(0 Inseridos)</span></label>
+            <div id="shiftsList"></div>
+            <button type="button" class="add-shift-btn" onclick="addShift()">+ Adicionar Turno</button>
+          </div>
+        </div>
+        <div class="card-footer" style="display: flex; justify-content: flex-end; padding: 10px;">
+          <button class="btn btn-success" onclick="submitEvent()" style="width: 200px;">Finalizar Evento</button>
+        </div>
+      </div>
+    </div>
+    <div id="page-event-disp" class="page">
+      <div class="card last-card">
+        <div class="card-header">📋 CONSULTA DE DISPONIBILIDADES</div>
+        <div class="card-body admin-container-disp">
+          <div class="table-responsive-event">
+            <table id="eventTable">
+              <thead>
+                <tr>
+                  <th>Evento</th>
+                  <th>Local</th>
+                  <th style="width: 100px;">Data Início</th>
+                  <th style="width: 100px;">Data Fim</th>
+                  <th style="width: 180px;">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Concerto de Verão</td>
+                  <td>Estádio Municipal</td>
+                  <td>2024-06-15</td>
+                  <td>2024-06-16</td>
+                  <td>
+                    <div class="action-btn-container">
+                      <button class="view-btn" onclick="toggleDetails(1)">Ver Turnos</button>
+                      <button class="delete-event-btn" onclick="deleteEvent(1)">Eliminar</button>
+                    </div>
+                  </td>
+                </tr>
+                <tr id="details-1" class="expandable-row">
+                  <td colspan="5">
+                    <div class="details-content"></div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>    
+        <div class="card-footer">
+          <span style="font-size: 11px; color: #fff;">* Clique em 'Ver Turnos' para gerir aprovações.</span>
+        </div>
       </div>
     </div>
     <!---- SALOC 360 MODULE ---->
@@ -1419,9 +1527,10 @@
         </div>
         <div class="card-footer"></div>
       </div>
-      <div id="popup-posit-modal" class="popup-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; ">
-        <div class="popup-content" style="background-color: white; padding: 20px; border-radius: 12px; text-align: center; max-width: 400px; width: 90%; position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.3); ">
+      <div id="popup-posit-modal" class="popup-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000;">
+        <div class="popup-content" style="background-color: white; padding: 20px; border-radius: 12px; text-align: center; max-width: 400px; width: 90%; position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
           <h3 style="margin-bottom: 15px;">POSIT</h3>
+          <div id="posit-error" style="display:none; color:#D8000C; background:#FFD2D2; padding:8px 12px; border-radius:6px; margin-bottom:10px; font-size:13px; text-align:center;"></div>
           <div style="display: flex; justify-content: center; align-items: center; width: 100%; margin: 5px 0;">
             <label for="posit-description" style="width: 90px; text-align: left;">Descrição:</label>
             <input type="text" id="posit-description" style="flex: 1; padding: 5px; border-radius: 6px; border: 1px solid #ccc; text-align: center;" readonly />
@@ -1448,7 +1557,8 @@
             <label for="posit-text" style="display:block; margin-bottom: 5px;">POSIT:</label>
             <textarea id="posit-text" rows="5" style="width: 100%; padding: 5px; border-radius: 6px; border: 1px solid #ccc; resize: vertical;"></textarea>
           </div>
-          <div style="margin-top: 5px; text-align: left;"> <input type="checkbox" id="desmobilizacao" />
+          <div style="margin-top: 5px; text-align: left;">
+            <input type="checkbox" id="desmobilizacao" />
             <label for="desmobilizacao" style="margin-left: 5px;">Desmobilização de meios</label>
           </div>
           <button id="posit-send-btn" class="btn btn-danger" style="width: 50%; margin-top: 10px;">Enviar POSIT</button>
@@ -2176,7 +2286,7 @@
             </div>
             <div id="panel-veícs" class="panel-card">
               <h3>LISTAGEM DE VEÍCULOS</h3>
-                <p>Adição, Remoção e Edição de Veículos.</p>
+              <p>Adição, Remoção e Edição de Veículos.</p>
               <div class="card">
                 <div class="card-header">NOVO VEÍCULO</div>
                   <div class="card-body">
@@ -2230,9 +2340,11 @@
                 </table>
               </div>              
             </div>
-
             
-
+            
+            
+            
+            
             <div id="panel-mails" class="panel-card">
               <h3>CONFIGURAÇÃO DE EMAILS</h3>
               <p>Configuração de emails para envio das Situações Operacionais de Veículos e Medidas Operacionais de Antecipação.</p>
@@ -2284,9 +2396,10 @@
                 <div class="card-footer"></div>
               </div>              
             </div>
-
-
-
+            
+            
+            
+            
             
           </div>
         </div>
@@ -2310,6 +2423,7 @@
   <script src="js/mainprogramatics/popups_ltsc_x07.js"></script>
   <script src="js/mainprogramatics/generics_ltsc_x07.js"></script>
   <script src="js/decirprogramatics/decreg_x87.js"></script>
+  <script src="js/fomioprogramatics/events_ltsc_x09.js"></script>
   <script src="js/fomioprogramatics/scales_ltsc_x09.js"></script>
   <script src="js/salocprogamatics/ppiload_ltsc_x10.js"></script>
   <script src="js/salocprogamatics/refusals_ltsc_x10.js"></script>
@@ -2338,7 +2452,3 @@
   <script></script>
 </body>
 </html>
-
-
-
-

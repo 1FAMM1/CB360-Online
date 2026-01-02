@@ -147,8 +147,8 @@ export default async function handler(req, res) {
             horizontalCentered: true,
             verticalCentered: true,
             margins: {
-                left: 0.59,
-                right: 0.59,
+                left: 0.059,
+                right: 0.059,
                 top: 0.25,
                 bottom: 0.25,
                 header: 0.1,

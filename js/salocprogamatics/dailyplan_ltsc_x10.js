@@ -7,8 +7,99 @@
 
     function createInputCell({type = 'text', readonly = false, className = '',tabindex = 0}) {
       return `<td><input type="${type}" class="${className}" ${readonly ? 'readonly' : ''} tabindex="${tabindex}"></td>`;
+    }    
+    function calculateWorkHours(checkIn, checkOut, shift) {
+      if (!checkIn || !checkOut) return 0;
+      const [checkInH, checkInM] = checkIn.split(':').map(Number);
+      const [checkOutH, checkOutM] = checkOut.split(':').map(Number);
+      let checkInMinutes = checkInH * 60 + checkInM;
+      let checkOutMinutes = checkOutH * 60 + checkOutM;
+      if (shift === 'N' && checkOutMinutes < checkInMinutes) {
+        checkOutMinutes += 1440;
+      }
+      const diffMinutes = checkOutMinutes - checkInMinutes;
+      const hours = diffMinutes / 60;
+      return Math.round(hours * 100) / 100;
     }
-
+    function normalizeText(text) {
+      if (!text) return '';
+      return text
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+    function hasOnCallStatus(obs) {
+      if (!obs) return false;
+      const normalized = normalizeText(obs);
+      return /piq(uete|te|u)?/i.test(normalized);
+    }
+    function hasAbsenceStatus(obs) {
+      if (!obs) return false;
+      const normalized = normalizeText(obs);
+      return /falt(a|as|a\s)?/i.test(normalized);
+    }
+    function hasReinforcementStatus(obs) {
+      if (!obs) return false;
+      const normalized = normalizeText(obs);
+      return /refor(c|ç)o(s)?|ref\b/i.test(normalized);
+    }
+    async function saveAttendance(tables, shift, corpOperNr, month, year) {
+      const attendanceRecords = [];
+      const currentDay = new Date().getDate();
+      for (const table of tables) {
+        for (const row of table.rows) {
+          const nInt = row.n_int?.trim();
+          const checkIn = row.entrada?.trim();
+          const checkOut = row.saida?.trim();
+          const obs = row.obs?.trim();
+          if (!nInt) continue;
+          const isAbsent = hasAbsenceStatus(obs);
+          const isOnCall = hasOnCallStatus(obs);
+          const isReinforcement = hasReinforcementStatus(obs);
+          let totalHours = 0;
+          let recordType = '';
+          if (isAbsent) {
+            recordType = 'Falta';
+            totalHours = 0;
+          } else if (isOnCall) {
+            recordType = 'Piquete';
+          } else if (isReinforcement) {
+            recordType = 'Reforço';
+          } else {
+            continue; 
+          }
+          if ((recordType === 'Piquete' || recordType === 'Reforço') && checkIn && checkOut) {
+            totalHours = calculateWorkHours(checkIn, checkOut, shift);
+          }
+          attendanceRecords.push({n_int: nInt, day: currentDay, month: month, year: year, shift: shift, shift_type: recordType, qtd_hours: totalHours, corp_oper_nr: corpOperNr, observ: obs || ''});
+        }
+      }
+      if (attendanceRecords.length > 0) {
+        try {
+          const response = await fetch(`${SUPABASE_URL}/rest/v1/reg_assid`, {
+            method: "POST",
+            headers: {
+              ...getSupabaseHeaders(),
+              "Content-Type": "application/json",
+              "Prefer": "resolution=merge-duplicates"
+            },
+            body: JSON.stringify(attendanceRecords)
+          });
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText);
+          }
+          return true;
+        } catch (err) {
+          console.error('❌ Erro na gravação/upsert:', err);
+          showPopupWarning("Erro ao gravar assiduidade. Verifique a consola.");
+          return false;
+        }
+      }
+      return true;
+    }
     function createTable(rows, isSpecial, title) {
       const specialClass = isSpecial ? ' special' : '';
       const rowsHTML = Array(rows).fill().map(() => `
@@ -59,7 +150,6 @@
       </div>
       `;
     }
-
     function updateRowFields(row, data, shift) {
       const entrada = row.querySelector('.plandir-entrance-input');
       const saida = row.querySelector('.plandir-exit-input');
@@ -102,13 +192,11 @@
         if (obsInput) obsInput.value = "";
       }
     }
-
     function activateShiftButton(shift) {
       document.querySelectorAll('.shift-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.shift === shift);
       });
     }
-
     function createPlanDirHeader(shift, customTitle = null) {
       const now = new Date();
       const day = String(now.getDate()).padStart(2, '0');
@@ -135,7 +223,6 @@
       `;
       return headerDiv;
     }
-
     function collectTableData() {
       const tables = [...document.querySelectorAll('.main-card')].map(card => {
         const titleEl = card.querySelector('.card-title');
@@ -159,7 +246,6 @@
       });
       return tables;
     }
-
     function createEmitButton(container) {
       if (document.getElementById('emit-pp')) return;
       const btnWrapper = document.createElement('div');
@@ -228,7 +314,6 @@
         return {to: ["fmartins.ahbfaro@gmail.com"], cc: [], bcc: []};
       }
     }
-
     function getOptelName() {
       const tables = collectTableData();
       const optelTable = tables.find(t => t.title === "OPTEL");
@@ -240,7 +325,7 @@
       return optelName;
     }
     async function emitPlanning(shift, date, baixar = false) {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       if (!corpOperNr) {
         alert("❌ Erro: O número da corporação não foi encontrado. Por favor, faça login novamente.");
         return;
@@ -279,7 +364,9 @@
             },
             body: JSON.stringify(
               nonEmptyRows.map(r => ({team_name, n_int: r.n_int || '', patente: r.patente || '', nome: r.nome || '', h_entrance: r.entrada || '', h_exit: r.saida || '',
-                                      MP: !!r.MP, TAS: !!r.TAS, observ: r.obs || '', corp_oper_nr: corpOperNr})))});}}
+                                      MP: !!r.MP, TAS: !!r.TAS, observ: r.obs || '', corp_oper_nr: corpOperNr})))});
+        }
+      }
       await fetch(`${SUPABASE_URL}/rest/v1/fomio_date?header_text=neq.null`, {
         method: "DELETE",
         headers: getSupabaseHeaders()
@@ -291,9 +378,13 @@
           "Content-Type": "application/json"
         },
         body: JSON.stringify([{
-          header_text: `Dia: ${day} ${monthName} ${year} | Turno ${shift} | ${shiftHours}`,  corp_oper_nr: corpOperNr
+          header_text: `Dia: ${day} ${monthName} ${year} | Turno ${shift} | ${shiftHours}`, corp_oper_nr: corpOperNr
         }])
-      });
+      });     
+      const attendanceSaved = await saveAttendance(tables, shift, corpOperNr);
+      if (!attendanceSaved) {
+        console.warn('⚠️ Aviso: Falha ao gravar dados de assiduidade');
+      }     
       const finalFileName = `Planeamento_${day}_${monthName}_${year}_${shift}`;
       const fileDisplayName = `Planeamento Diário ${formattedDate} Turno ${shift}`;
       const greeting = getGreeting();
@@ -303,8 +394,7 @@
         Remeto em anexo a Vossas Exª.s o ${fileDisplayName}<br><br>
         Com os melhores cumprimentos,<br><br>
         OPTEL<br>
-        ${optelName}<br><br>
-        
+        ${optelName}<br><br>        
         ${signature}
       `;
       try {
@@ -346,7 +436,7 @@
       let header;
       if (shift === 'LAST') {
         try {
-          const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+          const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
           const res = await fetch( `https://cb360-online.vercel.app/api/mobile/fomio_control?action=get_header&corp_oper_nr=${corpOperNr}`);
           const data = await res.json();
           let formattedHeader = null;
@@ -373,7 +463,7 @@
       container.insertAdjacentHTML('beforeend', tableConfig.map(cfg => createTable(cfg.rows, cfg.special, cfg.title)).join(''));
       if (shift === 'LAST') {
         try {
-          const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+          const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
           const res = await fetch(`https://cb360-online.vercel.app/api/mobile/fomio_control?action=get_teams&corp_oper_nr=${corpOperNr}`);
           const savedData = await res.json();
           if (savedData && savedData.success && savedData.teams) {
@@ -442,6 +532,3 @@
         document.querySelectorAll('.shift-btn').forEach(btn => btn.classList.remove('active'));
       }
     });
-
-
-

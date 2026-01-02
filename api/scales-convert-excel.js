@@ -85,7 +85,7 @@ export default async function handler(req, res) {
         });
         row8.commit();
 
-        let currentRow = 15;
+        let currentRow = 14;
         data.fixedRows.forEach(fixedRow => {
             if (fixedRow.type !== 'header') {
                 const row = sheet.getRow(currentRow);

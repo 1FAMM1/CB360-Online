@@ -128,7 +128,6 @@
         });
       }
     }
-
     function toggleEMSNrField() {
       const alertSource = document.getElementById('alert_source')?.value;
       const emsGroup = document.getElementById('ems_group');
@@ -151,7 +150,6 @@
         contactNr.value = '';
       }
     }
-
     function toggleAnimalTypeField() {
       const clsOcorr = document.getElementById('class_occorr_input')?.value;
       const animalType = document.getElementById('animal-type');
@@ -179,12 +177,10 @@
       toggleAnimalTypeField();
       document.getElementById('class_occorr_input')?.addEventListener('change', toggleAnimalTypeField);
     });
-
     function getAlertTime() {
       const t = document.getElementById('alert_time')?.value;
       return t || '';
-    }   
-    
+    }       
     function validateRequiredFields() {
       const missingFields = [];
       const alertType = document.getElementById('alert_type')?.value;
@@ -381,13 +377,12 @@
       } catch {
         return null;
       }
-    }
-    
+    }    
     async function saveOccurrenceToSupabase(data, vehiclesCount) {
       try {
         const alertDate = document.getElementById('alert_date')?.value || '';
         const alertTime = document.getElementById('alert_time')?.value || '';
-        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || '';
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
         if (!alertDate || !alertTime) {
           console.error("Data ou hora do alerta em falta");
           return null;
@@ -396,7 +391,13 @@
         const formattedDate =
               `${String(startDateTime.getDate()).padStart(2,'0')}/${String(startDateTime.getMonth()+1).padStart(2,'0')}/${startDateTime.getFullYear()} ` +
               `${String(startDateTime.getHours()).padStart(2,'0')}:${String(startDateTime.getMinutes()).padStart(2,'0')}`;
-        const query = `occorrence=eq.${encodeURIComponent(data.descrOccorr)}&local=eq.${encodeURIComponent(data.localOccorr)}&localitie=eq.${encodeURIComponent(data.localitie)}&start_date=eq.${encodeURIComponent(formattedDate)}&corp_oper_nr=eq.${currentCorpOperNr}`;
+        let totalElements = 0;
+        document.querySelectorAll('.vehicle-card').forEach(card => {
+          const bbs = parseInt(card.querySelector('input[type="text"]')?.value || '0', 10);
+          if (!isNaN(bbs)) totalElements += bbs;
+        });
+        const query = `occorrence=eq.${encodeURIComponent(data.descrOccorr)}&local=eq.${encodeURIComponent(data.localOccorr)}&localitie=eq.${encodeURIComponent(data.localitie)}` +
+              `&start_date=eq.${encodeURIComponent(formattedDate)}&corp_oper_nr=eq.${currentCorpOperNr}`;
         const checkResp = await fetch(
           `${SUPABASE_URL}/rest/v1/occurrences_control?${query}`, {
             headers: getSupabaseHeaders()
@@ -406,38 +407,41 @@
         if (existing && existing.length > 0) {
           const existingOccurrence = existing[0];
           let existingVehiclesCount = 0;
+          let existingElementsCount = 0;
           if (Array.isArray(existingOccurrence.vehicles)) {
             existingVehiclesCount = existingOccurrence.vehicles.length;
           } else if (typeof existingOccurrence.vehicles === 'string') {
             existingVehiclesCount = existingOccurrence.vehicles.split(',').filter(v => v.trim() !== '').length;
           }
-          if (existingVehiclesCount === vehiclesCount) {
+          if (Array.isArray(existingOccurrence.elements)) {
+            existingElementsCount = existingOccurrence.elements.reduce((sum, n) => sum + Number(n || 0), 0);
+          } else if (typeof existingOccurrence.elements === 'string') {
+            existingElementsCount = existingOccurrence.elements.split(',').reduce((sum, n) => sum + Number(n || 0), 0);
+          }
+          if (existingVehiclesCount === vehiclesCount && existingElementsCount === totalElements) {
             showPopupWarning("Já existe uma ocorrência com estas características para a mesma corporação.");
             return "DUPLICATE";
           } else {
             const updateResp = await fetch(
               `${SUPABASE_URL}/rest/v1/occurrences_control?id=eq.${existingOccurrence.id}`, {
                 method: 'PATCH',
-                headers: getSupabaseHeaders({
-                  returnRepresentation: true
-                }),
+                headers: getSupabaseHeaders({ returnRepresentation: true }),
                 body: JSON.stringify({
                   vehicles: vehiclesCount,
+                  elements: totalElements,
                   corp_oper_nr: currentCorpOperNr
                 })
-              });
+              }
+            );
             return await safeJson(updateResp);
           }
         }
         const insertResp = await fetch(
           `${SUPABASE_URL}/rest/v1/occurrences_control`, {
             method: 'POST',
-            headers: getSupabaseHeaders({
-              returnRepresentation: true
-            }),
-            body: JSON.stringify({start_date: formattedDate, occorrence: data.descrOccorr, local: data.localOccorr, localitie: data.localitie,
-                                  vehicles: vehiclesCount, status: "Em Curso", corp_oper_nr: currentCorpOperNr})
-          });
+            headers: getSupabaseHeaders({returnRepresentation: true}),
+            body: JSON.stringify({start_date: formattedDate, occorrence: data.descrOccorr, local: data.localOccorr, localitie: data.localitie, vehicles: vehiclesCount, elements: totalElements,
+                                  status: "Em Curso", corp_oper_nr: currentCorpOperNr})});
         return await safeJson(insertResp);
       } catch (e) {
         if (e instanceof SyntaxError && e.message.includes('Unexpected end of JSON input')) {
@@ -459,4 +463,5 @@
         toggleEMSNrField();
         toggleContactFields();
       });
+
     });

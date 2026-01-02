@@ -289,7 +289,7 @@
       showPopupSuccess("Mensagem criada com sucesso! Abra o WhatsApp e prima CTRL+V", true);
       return message;
     }
-    /* ========== CREATION OF NEW GLOBAL EVENT MESSAGE ========== */
+/* ========== CREATION OF NEW GLOBAL EVENT MESSAGE ========== */
     async function generateWSMSMessage() {
       if (!validateRequiredFields()) return '';
       await new Promise(resolve => {
@@ -328,11 +328,7 @@
         if (vehicle) vehicles.push(bbs ? `${vehicle}|${bbs} BBs.` : vehicle);
       });
       try {
-        const saveResult = await saveOccurrenceToSupabase({
-            descrOccorr,
-            localOccorr,
-            localitie
-          },
+        const saveResult = await saveOccurrenceToSupabase({descrOccorr, localOccorr, localitie},
           vehicles.length
         );
         if (saveResult === "DUPLICATE") {
@@ -463,5 +459,4 @@
         toggleEMSNrField();
         toggleContactFields();
       });
-
     });

@@ -13,17 +13,14 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import https from 'https';
-
 const CLIENT_ID = process.env.ADOBE_CLIENT_ID;
 const CLIENT_SECRET = process.env.ADOBE_CLIENT_SECRET;
 const TEMPLATE_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/templates/fomio_template.xlsx";
-
 export const config = {
     api: {
         bodyParser: { sizeLimit: '10mb' }
     }
 };
-
 async function downloadTemplate(url) {
     return new Promise((resolve, reject) => {
         https.get(url, (response) => {
@@ -34,7 +31,6 @@ async function downloadTemplate(url) {
         }).on('error', reject);
     });
 }
-
 export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -43,26 +39,19 @@ export default async function handler(req, res) {
     if (req.method === 'OPTIONS') return res.status(200).end();
     if (req.method !== 'POST') return res.status(405).json({ error: 'Método não permitido' });
     if (!CLIENT_ID || !CLIENT_SECRET) return res.status(500).json({ error: "Erro: Chaves da Adobe não configuradas." });
-
     const tempDir = os.tmpdir();
     let inputFilePath = null;
     let outputFilePath = null;
-
     try {
         const data = req.body;
         const templateBuffer = await downloadTemplate(TEMPLATE_URL);
-
         const workbook = new ExcelJS.Workbook();
         await workbook.xlsx.load(templateBuffer);
-
         while (workbook.worksheets.length > 1) {
             workbook.removeWorksheet(workbook.worksheets[1].id);
         }
-
         const sheet = workbook.worksheets[0];
-
-        sheet.getCell("C9").value = `${data.monthName} ${data.year}`;
-        
+        sheet.getCell("C9").value = `${data.monthName} ${data.year}`;        
         const row11 = sheet.getRow(11);
         const row12 = sheet.getRow(12);
         for (let d = 1; d <= data.daysInMonth; d++) {
@@ -72,10 +61,8 @@ export default async function handler(req, res) {
         }
         row11.commit();
         row12.commit();
-
         const holidayDays = data.holidayDays || [];
-        console.log('Feriados recebidos:', holidayDays);
-        
+        console.log('Feriados recebidos:', holidayDays);        
         const row8 = sheet.getRow(8);
         holidayDays.forEach(day => {
             const col = 6 + (day - 1);
@@ -84,7 +71,6 @@ export default async function handler(req, res) {
             cell.value = 'FR';
         });
         row8.commit();
-
         let currentRow = 14;
         data.fixedRows.forEach(fixedRow => {
             if (fixedRow.type !== 'header') {
@@ -100,7 +86,6 @@ export default async function handler(req, res) {
                 currentRow++;
             }
         });
-
         currentRow = 18;
         data.normalRows.forEach(normalRow => {
             const row = sheet.getRow(currentRow);
@@ -114,7 +99,6 @@ export default async function handler(req, res) {
             row.commit();
             currentRow++;
         });
-
         for (let r = 18; r <= 117; r++) {
             const row = sheet.getRow(r);
             const cellC = row.getCell(3);
@@ -122,7 +106,6 @@ export default async function handler(req, res) {
                 row.hidden = true;
             }
         }
-
         const colStart = 6; // F
         const colEnd = 36;  // AJ
         for (let c = colStart; c <= colEnd; c++) {
@@ -131,23 +114,21 @@ export default async function handler(req, res) {
                 sheet.getColumn(c).hidden = true;
             }
         }
-
         sheet.properties.outlineLevelCol = undefined;
         sheet.properties.outlineLevelRow = undefined;
         sheet.eachRow(row => row.eachCell(cell => {
             if (cell.value === undefined || cell.value === null) cell.value = '';
         }));
-
         sheet.pageSetup = {
             orientation: 'portrait',
-            paperSize: 9,             // A4
+            paperSize: 9,
             fitToPage: true,
-            fitToWidth: 1,            // FORÇA a largura a caber em 1 folha (Crucial)
-            fitToHeight: 0,           // Permite que cresça para baixo se necessário
+            fitToWidth: 1,
+            fitToHeight: 0,
             horizontalCentered: true,
             verticalCentered: false,
             margins: {
-                left: 0.1,            // Margens quase inexistentes para ganhar espaço
+                left: 0.1,
                 right: 0.1,
                 top: 0.2,
                 bottom: 0.2,
@@ -155,10 +136,8 @@ export default async function handler(req, res) {
                 footer: 0
             }
         };
-
         inputFilePath = path.join(tempDir, `${data.fileName}_${Date.now()}.xlsx`);
         outputFilePath = path.join(tempDir, `${data.fileName}_${Date.now()}.pdf`);
-
         try {
             await workbook.xlsx.writeFile(inputFilePath);
             const stats = fs.statSync(inputFilePath);
@@ -181,8 +160,7 @@ export default async function handler(req, res) {
             titleCell.font = { bold: true, size: 14 };
             newSheet.getCell('C11').value = 'NI';
             newSheet.getCell('D11').value = 'Nome';
-            newSheet.getCell('E11').value = 'Catg.';
-            
+            newSheet.getCell('E11').value = 'Catg.';            
             for (let d = 1; d <= data.daysInMonth; d++) {
                 const col = 6 + (d - 1);
                 const colLetter = String.fromCharCode(64 + col);
@@ -192,8 +170,7 @@ export default async function handler(req, res) {
                 if (holidayDays.includes(d)) {
                     newSheet.getCell(`${colLetter}8`).value = 'FR';
                 }
-            }
-            
+            }            
             let rowNum = 15;
             data.fixedRows.forEach(fixedRow => {
                 newSheet.getCell(`C${rowNum}`).value = fixedRow.ni;
@@ -218,24 +195,20 @@ export default async function handler(req, res) {
                 }
                 rowNum++;
             });
-
             for (let r = 18; r <= 117; r++) {
                 const cellC = newSheet.getCell(`C${r}`);
                 if (!cellC.value || cellC.value.toString().trim() === '') {
                     newSheet.getRow(r).hidden = true;
                 }
             }
-
             for (let c = 6; c <= 36; c++) {
                 const cell = newSheet.getRow(11).getCell(c);
                 if (!cell.value || cell.value.toString().trim() === '') {
                     newSheet.getColumn(c).hidden = true;
                 }
             }
-
             await newWorkbook.xlsx.writeFile(inputFilePath);
         }
-
         const credentials = new ServicePrincipalCredentials({ clientId: CLIENT_ID, clientSecret: CLIENT_SECRET });
         const pdfServices = new PDFServices({ credentials });
         const inputAsset = await pdfServices.upload({ readStream: fs.createReadStream(inputFilePath), mimeType: MimeType.XLSX });
@@ -244,22 +217,17 @@ export default async function handler(req, res) {
         const pdfServicesResponse = await pdfServices.getJobResult({ pollingURL, resultType: CreatePDFResult });
         const resultAsset = pdfServicesResponse.result.asset;
         const streamAsset = await pdfServices.getContent({ asset: resultAsset });
-
         const writeStream = fs.createWriteStream(outputFilePath);
         streamAsset.readStream.pipe(writeStream);
         await new Promise((resolve, reject) => { writeStream.on('finish', resolve); writeStream.on('error', reject); });
-
         const pdfBuffer = fs.readFileSync(outputFilePath);
-
         try { 
             if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath); 
             if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath); 
         } catch {}
-
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename="${data.fileName}.pdf"`);
         return res.status(200).send(pdfBuffer);
-
     } catch (error) {
         try { 
             if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath); 

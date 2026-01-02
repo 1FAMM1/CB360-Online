@@ -1308,7 +1308,7 @@
     ======================================= */
     async function exportScheduleToExcel(tbody, year, month) {
       const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-      const fileName = `Escala_FOMIO_${monthNames[month - 1]}_${year}`;
+      const fileName = `Escala FOMIO ${monthNames[month - 1]} ${year}`;
       const daysInMonth = new Date(year, month, 0).getDate();
       const weekdays = [];
       const table = tbody.parentElement;
@@ -1375,3 +1375,4 @@
         alert(`❌ Erro: Não foi possível comunicar com o serviço de conversão.\n\nTipo: ${error.name}\nMensagem: ${error.message}`);
       }
     }
+

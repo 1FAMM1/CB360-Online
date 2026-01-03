@@ -1,4 +1,4 @@
-    /* =======================================
+    /* ======================================
     EVENTS
     =======================================*/
     document.addEventListener('click', async function(e) {
@@ -157,7 +157,7 @@
     /* ===================== DISPLAY EVENTS TABLE ====================== */
     async function buildDispTable(eventName) {
       const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
-      const encodedName = encodeURIComponent(eventName);    
+      const encodedName = encodeURIComponent(eventName);
       try {
         const [rShifts, rDisp] = await Promise.all([
           fetch(
@@ -176,32 +176,50 @@
         if (disps.length === 0) {
           return "<div style='padding:10px; color:#666;'>Sem disponibilidades registadas para este evento.</div>";
         }
+        const nInts = disps.map(d => d.n_int);
+        const rElems = await fetch(
+          `${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${corp_oper_nr}&n_int=in.(${nInts.join(',')})&select=n_int,full_name,patent`, {
+            headers: getSupabaseHeaders()
+          }
+        );
+        const elems = await rElems.json();
+        const elemMap = {};
+        elems.forEach(e => {
+          elemMap[e.n_int] = {full_name: e.full_name, patent: e.patent};
+        });
         let html = `
-          <div class="table-responsive-event">
-            <table>
-              <thead>
-                <tr>
-                  <th>Nº Int</th>
-                  <th>Data</th>
-                  <th>Turno</th>
-                  <th>Estado</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
+        <div class="table-responsive-event">
+          <table>
+            <thead>
+              <tr>
+                <th>Nº Int</th>
+                <th>Patente</th>
+                <th>Nome</th>
+                <th>Data</th>
+                <th>Turno</th>
+                <th>Estado</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+          <tbody>
         `;    
         disps.forEach(d => {
-          const sInfo = shifts.find(s => s.event_shift_date === d.event_shift_date && s.event_shift === d.event_shift);          
+          const sInfo = shifts.find(s => s.event_shift_date === d.event_shift_date && s.event_shift === d.event_shift);
           const act = sInfo ? parseInt(sInfo.act_oper || 0) : 0;
-          const nec = sInfo ? parseInt(sInfo.nec_oper || 0) : 0;          
+          const nec = sInfo ? parseInt(sInfo.nec_oper || 0) : 0;
           const isFull = act >= nec;
           const canAction = !isFull || d.shift_state === 'Aprovado';
           const rowClass = (isFull && d.shift_state !== 'Aprovado') ? 'row-full' : '';
           const statusClass = (isFull && d.shift_state !== 'Aprovado') ? 'bg-default' : getStatusClass(d.shift_state);
-          const statusText = (isFull && d.shift_state !== 'Aprovado') ? 'Turno Cheio' : d.shift_state;    
+          const statusText = (isFull && d.shift_state !== 'Aprovado') ? 'Turno Cheio' : d.shift_state;
+          const elemData = elemMap[d.n_int] || {};
+          const elemName = elemData.full_name || d.n_int;
+          const elemPatent = elemData.patent || '---';    
           html += `
             <tr id="disp-row-${d.id}" class="${rowClass}">
               <td>${d.n_int}</td>
+              <td>${elemPatent}</td>
+              <td>${elemName}</td>
               <td>${formatDateDisplay(d.event_shift_date)}</td>
               <td>${d.event_shift} <br><small style="color:#666">Vagas: ${act}/${nec}</small></td>
               <td>
@@ -278,8 +296,9 @@
       try {
         if (newState === 'Aprovado') {
           const r = await fetch(
-            `${SUPABASE_URL}/rest/v1/event_shifts?event=eq.${encodeURIComponent(evName)}&event_shift_date=eq.${sDate}&event_shift=eq.${sTime}&corp_oper_nr=eq.${corp_oper_nr}`, 
-            { headers: getSupabaseHeaders() }
+            `${SUPABASE_URL}/rest/v1/event_shifts?event=eq.${encodeURIComponent(evName)}&event_shift_date=eq.${sDate}&event_shift=eq.${sTime}&corp_oper_nr=eq.${corp_oper_nr}`,  {
+              headers: getSupabaseHeaders()
+            }
           );
           const s = await r.json();          
           if (s.length > 0) {

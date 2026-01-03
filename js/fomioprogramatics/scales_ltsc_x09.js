@@ -170,7 +170,7 @@
       container.appendChild(mainWrapper);
     }
     /* ============  LOAD DATA ============ */
-    const getCorpId = () => sessionStorage.getItem('currentCorpOperNr') || "0805";
+    const getCorpId = () => sessionStorage.getItem('currentCorpOperNr');
     async function loadSetionData(secao) {
       try {
         const corp = getCorpId();
@@ -1375,4 +1375,5 @@
         alert(`❌ Erro: Não foi possível comunicar com o serviço de conversão.\n\nTipo: ${error.name}\nMensagem: ${error.message}`);
       }
     }
+
 

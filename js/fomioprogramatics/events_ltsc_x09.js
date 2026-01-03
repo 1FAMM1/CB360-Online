@@ -56,7 +56,7 @@
       const endDate = document.getElementById('eventEndDate').value;
       const operational = parseInt(document.getElementById('operational').value);
       const valueHour = parseFloat(document.getElementById('valueHour').value);
-      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr') || "0805";
+      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
       if (!eventName || !eventType || !location || !startDate || !endDate || isNaN(operational) || isNaN(valueHour)) {
         alert("Preencha todos os campos corretamente!"); 
         return;

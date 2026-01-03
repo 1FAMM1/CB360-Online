@@ -378,7 +378,7 @@
       try {
         const alertDate = document.getElementById('alert_date')?.value || '';
         const alertTime = document.getElementById('alert_time')?.value || '';
-        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
         if (!alertDate || !alertTime) {
           console.error("Data ou hora do alerta em falta");
           return null;
@@ -460,3 +460,4 @@
         toggleContactFields();
       });
     });
+

@@ -118,7 +118,7 @@
     }
     async function loadEvents() {
       const tbody = document.querySelector('#eventTable tbody');
-      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr') || "0805";
+      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
       
       tbody.innerHTML = '<tr><td colspan="5">A carregar...</td></tr>';      
       try {
@@ -156,7 +156,7 @@
     }
     /* ===================== DISPLAY EVENTS TABLE ====================== */
     async function buildDispTable(eventName) {
-      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr') || "0805";
+      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
       const encodedName = encodeURIComponent(eventName);    
       try {
         const [rShifts, rDisp] = await Promise.all([
@@ -273,7 +273,7 @@
       const row = document.getElementById(`disp-row-${id}`);
       const badge = row.querySelector('.status-badge');
       const oldState = badge.dataset.state;
-      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr') || "0805";    
+      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');    
       if (oldState === newState) return;    
       try {
         if (newState === 'Aprovado') {
@@ -329,7 +329,7 @@
     }
     /* ========================= DELETE EVENT ========================= */
     async function deleteFullEvent(eventName) {
-      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr') || "0805";
+      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
       const confirmation = confirm(`Deseja eliminar o evento "${eventName}"?`);
       if (!confirmation) return;    
       try {

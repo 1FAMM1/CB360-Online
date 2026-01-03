@@ -381,7 +381,7 @@
           header_text: `Dia: ${day} ${monthName} ${year} | Turno ${shift} | ${shiftHours}`, corp_oper_nr: corpOperNr
         }])
       });     
-      const attendanceSaved = await saveAttendance(tables, shift, corpOperNr);
+      const attendanceSaved = await saveAttendance(tables, shift, corpOperNr, parseInt(day), parseInt(month), parseInt(year));
       if (!attendanceSaved) {
         console.warn('⚠️ Aviso: Falha ao gravar dados de assiduidade');
       }     
@@ -532,4 +532,5 @@
         document.querySelectorAll('.shift-btn').forEach(btn => btn.classList.remove('active'));
       }
     });
+
 

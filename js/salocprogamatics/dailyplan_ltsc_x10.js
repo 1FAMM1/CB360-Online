@@ -325,7 +325,7 @@
       return optelName;
     }
     async function emitPlanning(shift, date, baixar = false) {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       if (!corpOperNr) {
         alert("❌ Erro: O número da corporação não foi encontrado. Por favor, faça login novamente.");
         return;
@@ -436,7 +436,7 @@
       let header;
       if (shift === 'LAST') {
         try {
-          const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+          const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
           const res = await fetch( `https://cb360-online.vercel.app/api/mobile/fomio_control?action=get_header&corp_oper_nr=${corpOperNr}`);
           const data = await res.json();
           let formattedHeader = null;
@@ -463,7 +463,7 @@
       container.insertAdjacentHTML('beforeend', tableConfig.map(cfg => createTable(cfg.rows, cfg.special, cfg.title)).join(''));
       if (shift === 'LAST') {
         try {
-          const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+          const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
           const res = await fetch(`https://cb360-online.vercel.app/api/mobile/fomio_control?action=get_teams&corp_oper_nr=${corpOperNr}`);
           const savedData = await res.json();
           if (savedData && savedData.success && savedData.teams) {
@@ -532,3 +532,4 @@
         document.querySelectorAll('.shift-btn').forEach(btn => btn.classList.remove('active'));
       }
     });
+

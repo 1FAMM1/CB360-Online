@@ -1,7 +1,10 @@
+    /* =======================================
+           VEHICLE LISTING
+   ======================================= */
     /* ================= LOAD VEHICLES TABLE ================= */
     async function loadVehiclesTable() {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
         if (!corpOperNr) throw new Error("Corporação não definida");
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/vehicle_status?select=*&corp_oper_nr=eq.${encodeURIComponent(corpOperNr)}`, {
@@ -57,9 +60,9 @@
       }
     }
     /* ================= FILL FORM FOR EDIT ================= */
-    let editingVehicleId = null;
+    let editVehicleId = null;
     function fillVehicleForm(vehicle) {
-      editingVehicleId = vehicle.id;
+      editVehicleId = vehicle.id;
       document.getElementById("new-veíc-name").value = vehicle.vehicle ?? "";
       document.getElementById("new-veíc-registration").value = vehicle.vehicle_registration ?? "";
       document.getElementById("new-veíc-brand").value = vehicle.vehicle_brand ?? "";
@@ -72,7 +75,7 @@
     document.querySelector("#new-veíc-save-update").addEventListener("click", async () => {
       const vehicleName = document.getElementById("new-veíc-name").value.trim();
       const vehicleRegistration = document.getElementById("new-veíc-registration").value.trim();
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       if (!vehicleName || !vehicleRegistration) {
         alert("Nome e matrícula são obrigatórios!");
         return;
@@ -94,9 +97,9 @@
       };
       try {
         let method, url;
-        if (editingVehicleId) {
+        if (editVehicleId) {
           method = "PATCH";
-          url = `${SUPABASE_URL}/rest/v1/vehicle_status?id=eq.${editingVehicleId}`;
+          url = `${SUPABASE_URL}/rest/v1/vehicle_status?id=eq.${editVehicleId}`;
         } else {
           method = "POST";
           url = `${SUPABASE_URL}/rest/v1/vehicle_status`;
@@ -110,8 +113,8 @@
           const errorData = await response.json();
           throw new Error(`${response.status} - ${errorData.message || ''}`);
         }
-        alert(editingVehicleId ? "Veículo atualizado com sucesso!" : "Veículo adicionado com sucesso!");
-        editingVehicleId = null;
+        alert(editVehicleId ? "Veículo atualizado com sucesso!" : "Veículo adicionado com sucesso!");
+        editVehicleId = null;
         ["new-veíc-name","new-veíc-registration","new-veíc-brand","new-veíc-model","new-veíc-buy-date","new-veíc-registration-date","new-veíc-state"]
           .forEach(id => document.getElementById(id).value = "");
         loadVehiclesTable();
@@ -142,5 +145,4 @@
     /* ================= INITIAL LOAD ================= */
     document.addEventListener("DOMContentLoaded", () => {
       loadVehiclesTable();
-
     });

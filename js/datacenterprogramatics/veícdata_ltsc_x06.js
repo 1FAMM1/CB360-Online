@@ -1,6 +1,3 @@
-    /* =======================================
-           VEHICLE LISTING
-    ======================================= */
     /* ================= LOAD VEHICLES TABLE ================= */
     async function loadVehiclesTable() {
       try {
@@ -145,4 +142,5 @@
     /* ================= INITIAL LOAD ================= */
     document.addEventListener("DOMContentLoaded", () => {
       loadVehiclesTable();
+
     });

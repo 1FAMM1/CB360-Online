@@ -1325,7 +1325,7 @@
       }
       /* ========================== FETCH API ========================= */
       try {
-        const res = await fetch("https://cb360-mobile.vercel.app/api/decir_reg_pag", {
+        const res = await fetch("https://cb360-mobile.vercel.app/api/decir_reg_pag/", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data)

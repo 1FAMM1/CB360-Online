@@ -1,4 +1,4 @@
-          /* =======================================
+ /* =======================================
        DAILY PLANNING
     ======================================= */
     const tableConfig = [{rows: 1, special: false, title: "OFOPE"}, {rows: 1, special: false, title: "CHEFE DE SERVIÇO"}, {rows: 1, special: false, title: "OPTEL"},
@@ -450,6 +450,8 @@
               const [_, day, month, year, shiftLetter, hours] = match;
               const monthNames = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
               const monthName = monthNames[parseInt(month, 10) - 1] || month;
+              sessionStorage.setItem("originalShift", shiftLetter);
+              localStorage.setItem("originalShift", shiftLetter);
               formattedHeader = `Dia: ${day} ${monthName} ${year} | Turno ${shiftLetter} | ${hours}`;
             } else {
               formattedHeader = data.header;

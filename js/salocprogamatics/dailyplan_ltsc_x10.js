@@ -1,4 +1,4 @@
- /* =======================================
+    /* =======================================
        DAILY PLANNING
     ======================================= */
     const tableConfig = [{rows: 1, special: false, title: "OFOPE"}, {rows: 1, special: false, title: "CHEFE DE SERVIÇO"}, {rows: 1, special: false, title: "OPTEL"},
@@ -80,17 +80,16 @@
       }
       try {
         const response = await fetch(
-  `${SUPABASE_URL}/rest/v1/reg_assid?on_conflict=n_int,day,month,year,corp_oper_nr,shift_type`,
-  {
-    method: 'POST',
-    headers: {
-      ...getSupabaseHeaders(),
-      'Content-Type': 'application/json',
-      'Prefer': 'resolution=merge-duplicates'
-    },
-    body: JSON.stringify(attendanceRecords)
-  }
-);
+          `${SUPABASE_URL}/rest/v1/reg_assid?on_conflict=n_int,day,month,year,corp_oper_nr,shift_type`, {
+            method: 'POST',
+            headers: {
+              ...getSupabaseHeaders(),
+              'Content-Type': 'application/json',
+              'Prefer': 'resolution=merge-duplicates'
+            },
+            body: JSON.stringify(attendanceRecords)
+          }
+        );
         if (!response.ok) {
           const errorText = await response.text();
           throw new Error(errorText);

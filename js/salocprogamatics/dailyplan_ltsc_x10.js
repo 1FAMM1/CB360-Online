@@ -1,4 +1,4 @@
-         /* =======================================
+          /* =======================================
        DAILY PLANNING
     ======================================= */
     const tableConfig = [{rows: 1, special: false, title: "OFOPE"}, {rows: 1, special: false, title: "CHEFE DE SERVIÇO"}, {rows: 1, special: false, title: "OPTEL"},
@@ -45,9 +45,12 @@
       const normalized = normalizeText(obs);
       return /refor(c|ç)o(s)?|ref\b/i.test(normalized);
     }
-    async function saveAttendance(tables, shift, corpOperNr, month, year) {
-      const attendanceRecords = [];
-      const currentDay = new Date().getDate();
+    async function saveAttendance(tables, shift, corpOperNr, day, month, year) {
+      const recordsMap = new Map();
+      const now = new Date();
+      const currentDay = day ?? String(now.getDate());
+      const currentMonth = month ?? String(now.getMonth() + 1);
+      const currentYear = year ?? String(now.getFullYear());
       for (const table of tables) {
         for (const row of table.rows) {
           const nInt = row.n_int?.trim();
@@ -58,47 +61,48 @@
           const isAbsent = hasAbsenceStatus(obs);
           const isOnCall = hasOnCallStatus(obs);
           const isReinforcement = hasReinforcementStatus(obs);
-          let totalHours = 0;
           let recordType = '';
-          if (isAbsent) {
-            recordType = 'Falta';
-            totalHours = 0;
-          } else if (isOnCall) {
-            recordType = 'Piquete';
-          } else if (isReinforcement) {
-            recordType = 'Reforço';
-          } else {
-            continue; 
-          }
-          if ((recordType === 'Piquete' || recordType === 'Reforço') && checkIn && checkOut) {
-            totalHours = calculateWorkHours(checkIn, checkOut, shift);
-          }
-          attendanceRecords.push({n_int: nInt, day: currentDay, month: month, year: year, shift: shift, shift_type: recordType, qtd_hours: totalHours, corp_oper_nr: corpOperNr, observ: obs || ''});
-        }
+          let totalHours = '0';
+          if (isAbsent) {recordType = 'Falta';
+          } else if (isOnCall) {recordType = 'Piquete';
+          } else if (isReinforcement) {recordType = 'Reforço';
+          } else {continue;}
+          if ((recordType === 'Piquete' || recordType === 'Reforço') && checkIn && checkOut) 
+          {totalHours = String(calculateWorkHours(checkIn, checkOut, shift));}
+          const key = `${nInt}_${currentDay}_${currentMonth}_${currentYear}_${corpOperNr}_${recordType}`;
+          if (recordsMap.has(key)) continue;
+          recordsMap.set(key, {n_int: String(nInt), day: String(currentDay), month: String(currentMonth), year: String(currentYear), shift: String(shift), shift_type: String(recordType),
+                               qtd_hours: String(totalHours), corp_oper_nr: String(corpOperNr), observ: obs || ''});}}
+      const attendanceRecords = Array.from(recordsMap.values());
+      if (attendanceRecords.length === 0) {
+        console.warn('⚠️ Nenhum registo de assiduidade para gravar.');
+        return true;
       }
-      if (attendanceRecords.length > 0) {
-        try {
-          const response = await fetch(`${SUPABASE_URL}/rest/v1/reg_assid`, {
-            method: "POST",
-            headers: {
-              ...getSupabaseHeaders(),
-              "Content-Type": "application/json",
-              "Prefer": "resolution=merge-duplicates"
-            },
-            body: JSON.stringify(attendanceRecords)
-          });
-          if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(errorText);
-          }
-          return true;
-        } catch (err) {
-          console.error('❌ Erro na gravação/upsert:', err);
-          showPopupWarning("Erro ao gravar assiduidade. Verifique a consola.");
-          return false;
+      try {
+        const response = await fetch(
+  `${SUPABASE_URL}/rest/v1/reg_assid?on_conflict=n_int,day,month,year,corp_oper_nr,shift_type`,
+  {
+    method: 'POST',
+    headers: {
+      ...getSupabaseHeaders(),
+      'Content-Type': 'application/json',
+      'Prefer': 'resolution=merge-duplicates'
+    },
+    body: JSON.stringify(attendanceRecords)
+  }
+);
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText);
         }
+        return true;
+      } catch (err) {
+        console.error('❌ Erro ao gravar reg_assid:', err);
+        showPopupWarning(
+          'Erro ao gravar assiduidade. Verifique a consola.'
+        );
+        return false;
       }
-      return true;
     }
     function createTable(rows, isSpecial, title) {
       const specialClass = isSpecial ? ' special' : '';
@@ -325,7 +329,7 @@
       return optelName;
     }
     async function emitPlanning(shift, date, baixar = false) {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       if (!corpOperNr) {
         alert("❌ Erro: O número da corporação não foi encontrado. Por favor, faça login novamente.");
         return;
@@ -381,7 +385,7 @@
           header_text: `Dia: ${day} ${monthName} ${year} | Turno ${shift} | ${shiftHours}`, corp_oper_nr: corpOperNr
         }])
       });     
-      const attendanceSaved = await saveAttendance(tables, shift, corpOperNr);
+      const attendanceSaved = await saveAttendance(tables, shift, corpOperNr, day, month, year);
       if (!attendanceSaved) {
         console.warn('⚠️ Aviso: Falha ao gravar dados de assiduidade');
       }     
@@ -463,7 +467,7 @@
       container.insertAdjacentHTML('beforeend', tableConfig.map(cfg => createTable(cfg.rows, cfg.special, cfg.title)).join(''));
       if (shift === 'LAST') {
         try {
-          const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+          const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
           const res = await fetch(`https://cb360-online.vercel.app/api/mobile/fomio_control?action=get_teams&corp_oper_nr=${corpOperNr}`);
           const savedData = await res.json();
           if (savedData && savedData.success && savedData.teams) {

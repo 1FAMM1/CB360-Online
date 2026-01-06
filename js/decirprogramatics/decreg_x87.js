@@ -1,107 +1,111 @@
-/* =======================================
-                DECIR FUNCTIONS
-    ======================================= */
-    /* ======= GENERIC FUNCTION TO CREATE DECIR MONTH BUTTONS ======= */
-    function createDecirButtonsGeneric({
-      containerId,
-      tableContainerId,
-      yearSelectId,
-      optionsContainerId,      
-      blockedMonths = [],
-      monthNames = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"],
-      loadDataFunc,
-      createTableFunc,
-      loadByMonthFunc = null,
-      includeExtraButton = false,
-      extraButtonFunc = null,
-      totalContainerId = null
-    }) {
-      const container = document.getElementById(containerId);
-      if (!container) return;
-      container.innerHTML = "";    
-      const mainWrapper = document.createElement("div");
-      Object.assign(mainWrapper.style, {display: "flex", flexDirection: "column", alignItems: "center", gap: "12px"});
-      const yearContainer = document.createElement("div");
-      Object.assign(yearContainer.style, {display: "flex", alignItems: "center", gap: "8px"});    
-      const yearLabel = document.createElement("label");
-      yearLabel.textContent = "Ano:";
-      yearLabel.style.fontWeight = "bold";    
-      const yearSelect = document.createElement("select");
-      yearSelect.id = yearSelectId;
-      Object.assign(yearSelect.style, {padding: "6px 10px", borderRadius: "4px", border: "1px solid #ccc"});    
-      const currentYear = new Date().getFullYear();
-      for (let y = 2025; y <= 2035; y++) {
-        const opt = document.createElement("option");
-        opt.value = y;
-        opt.textContent = y;
-        if (y === currentYear) opt.selected = true;
-        yearSelect.appendChild(opt);
-      }    
-      yearContainer.append(yearLabel, yearSelect);
-      const monthsWrapper = document.createElement("div");
-      Object.assign(monthsWrapper.style, {display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "4px", maxWidth: "800px"});    
-      monthNames.forEach((month, idx) => {
-        const btn = document.createElement("button");
-        btn.textContent = month;
-        btn.className = "btn btn-add";
-        Object.assign(btn.style, {fontSize: "14px", fontWeight: "bold", width: "110px", height: "40px", borderRadius: "4px", margin: "2px"});    
-        btn.addEventListener("click", async () => {
-          const tableContainer = document.getElementById(tableContainerId);
-          const tableCodA33Container = document.getElementById("table-container-dec-coda33");          
-          const optionsContainer = document.getElementById(optionsContainerId);
-          const optionsCodA33Container = document.getElementById("decir-coda33-options");
-          const totalContainer = totalContainerId ? document.getElementById(totalContainerId) : null;
-          const isExtra = includeExtraButton && idx === monthNames.length - 1;
-          const isActive = btn.classList.contains("active");
-          if (tableCodA33Container) tableCodA33Container.innerHTML = "";
-          if (optionsContainer) optionsContainer.style.display = "none";
-          if (optionsCodA33Container) optionsCodA33Container.style.display = "none";
-          if (totalContainer) totalContainer.style.display = "none";          
-          if (isActive) {
-            if (tableContainer) tableContainer.innerHTML = "";
-            btn.classList.remove("active");
-            return;
-          }          
-          monthsWrapper.querySelectorAll(".btn").forEach(b => b.classList.remove("active"));
-          btn.classList.add("active");          
-          if (isExtra) {
-            if (extraButtonFunc) await extraButtonFunc();
-            if (tableContainer) tableContainer.innerHTML = "";
-            if (optionsContainer) optionsContainer.style.display = "none";
-            if (optionsCodA33Container) optionsCodA33Container.style.display = "flex";
+    /* =======================================
+    DECIR FUNCTIONS
+    ======================================= */
+    /* ======= GENERIC FUNCTION TO CREATE DECIR MONTH BUTTONS ======= */
+    function createDecirButtonsGeneric({
+      containerId,
+      tableContainerId,
+      yearSelectId,
+      optionsContainerId,      
+      blockedMonths = [],
+      monthNames = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"],
+      loadDataFunc,
+      createTableFunc,
+      loadByMonthFunc = null,
+      includeExtraButton = false,
+      extraButtonFunc = null,
+      totalContainerId = null
+    }) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.innerHTML = "";
+      const mainWrapper = document.createElement("div");
+      Object.assign(mainWrapper.style, {display: "flex", flexDirection: "column", alignItems: "center", gap: "12px"});      
+      const yearContainer = document.createElement("div");
+      Object.assign(yearContainer.style, {display: "flex", alignItems: "center", gap: "8px"});      
+      const yearLabel = document.createElement("label");
+      yearLabel.textContent = "Ano:";
+      yearLabel.style.fontWeight = "bold";      
+      const yearSelect = document.createElement("select");
+      yearSelect.id = yearSelectId;
+      Object.assign(yearSelect.style, {padding: "6px 10px", borderRadius: "4px", border: "1px solid #ccc", cursor: "pointer"});
+      const targetYear = new Date().getFullYear();
+      for (let y = 2025; y <= 2035; y++) {
+        const opt = document.createElement("option");
+        opt.value = y;
+        opt.textContent = y;
+        if (y === targetYear) opt.selected = true;
+        yearSelect.appendChild(opt);
+      }
+      yearSelect.value = targetYear;
+      yearContainer.append(yearLabel, yearSelect);      
+      const monthsWrapper = document.createElement("div");
+      Object.assign(monthsWrapper.style, {display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "4px", maxWidth: "800px"});      
+      monthNames.forEach((month, idx) => {
+        const btn = document.createElement("button");
+        btn.textContent = month;
+        btn.className = "btn btn-add";
+        Object.assign(btn.style, {fontSize: "14px", fontWeight: "bold", width: "110px", height: "40px", borderRadius: "4px", margin: "2px"});        
+        btn.addEventListener("click", async () => {
+          const tableContainer = document.getElementById(tableContainerId);
+          const tableCodA33Container = document.getElementById("table-container-dec-coda33");          
+          const optionsContainer = document.getElementById(optionsContainerId);
+          const optionsCodA33Container = document.getElementById("decir-coda33-options");
+          const totalContainer = totalContainerId ? document.getElementById(totalContainerId) : null;          
+          const isExtra = includeExtraButton && idx === monthNames.length - 1;
+          const isActive = btn.classList.contains("active");
+          if (tableCodA33Container) tableCodA33Container.innerHTML = "";
+          if (optionsContainer) optionsContainer.style.display = "none";
+          if (optionsCodA33Container) optionsCodA33Container.style.display = "none";
+          if (totalContainer) totalContainer.style.display = "none";          
+          if (isActive) {
+            if (tableContainer) tableContainer.innerHTML = "";
+            btn.classList.remove("active");
+            return;
+          }          
+          monthsWrapper.querySelectorAll(".btn").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");          
+          if (isExtra) {
+            if (extraButtonFunc) await extraButtonFunc();
+            if (tableContainer) tableContainer.innerHTML = "";
+            if (optionsContainer) optionsContainer.style.display = "none";
+            if (optionsCodA33Container) optionsCodA33Container.style.display = "flex";
             if (totalContainer) totalContainer.style.display = "none";
-            return;
-          }          
-          if (blockedMonths.includes(idx)) {
-            if (tableContainer) tableContainer.innerHTML = "";
-            setTimeout(() => {
-              showPopupWarning(`⛔ Durante o mês de ${month}, não existe DECIR. Salvo prolongamento ou antecipação declarados pela ANEPC.`);
-            }, 10);
-            return;
-          }
-          const year = parseInt(yearSelect.value, 10);
-          const data = await loadDataFunc(year, idx + 1);
-          await createTableFunc(tableContainerId, year, idx + 1, data);
-          if (loadByMonthFunc) await loadByMonthFunc(year, idx + 1);          
-          if (optionsContainer) optionsContainer.style.display = "flex";
-          if (totalContainer) totalContainer.style.display = "flex";
-        });
-        monthsWrapper.appendChild(btn);
-      });    
-      mainWrapper.append(yearContainer, monthsWrapper);
-      container.appendChild(mainWrapper);
-    }
+            return;
+          }    
+          if (blockedMonths.includes(idx)) {
+            if (tableContainer) tableContainer.innerHTML = "";
+            setTimeout(() => {
+              showPopupWarning(`⛔ Durante o mês de ${month}, não existe DECIR. Salvo prolongamento ou antecipação declarados pela ANEPC.`);
+            }, 10);
+            return;
+          }          
+          const yearVal = parseInt(yearSelect.value, 10);
+          const data = await loadDataFunc(yearVal, idx + 1);
+          await createTableFunc(tableContainerId, yearVal, idx + 1, data);
+          if (loadByMonthFunc) await loadByMonthFunc(yearVal, idx + 1);          
+          if (optionsContainer) optionsContainer.style.display = "flex";
+          if (totalContainer) totalContainer.style.display = "flex";
+        });
+        monthsWrapper.appendChild(btn);
+      });
+      mainWrapper.append(yearContainer, monthsWrapper);
+      container.appendChild(mainWrapper);
+      setTimeout(() => {
+        yearSelect.value = targetYear;
+      }, 0);
+    }
     /* ======== MENU SIDEBAR CLICK HANDLER PARA DECIR MONTHS ======== */
     document.querySelectorAll(".sidebar-sub-submenu-button").forEach(btn => {
       btn.addEventListener("click", () => {
-        const page = btn.dataset.page;
+        const page = btn.dataset.page;        
         /* ===== PAGE REGISTERS ===== */    
         if (page === "decir-reg") {
           const tableContainer = document.getElementById("table-container-dec-reg");
           const optionsContainer = document.getElementById("decir-reg-options");
           if (tableContainer) tableContainer.innerHTML = "";
           if (optionsContainer) optionsContainer.style.display = "none";
-          document.querySelectorAll("#months-container-dec-reg .btn").forEach(b => b.classList.remove("active"));    
+          document.querySelectorAll("#months-container-dec-reg .btn").forEach(b => b.classList.remove("active"));          
           createDecirButtonsGeneric({
             containerId: "months-container-dec-reg",
             tableContainerId: "table-container-dec-reg",
@@ -120,13 +124,13 @@
           const tableCodA33Container = document.getElementById("table-container-dec-coda33");
           const optionsCodA33Container = document.getElementById("decir-coda33-options");
           const optionsContainer = document.getElementById("decir-pag-options");
-          const totalContainer = document.getElementById("decir-payment-totals");
+          const totalContainer = document.getElementById("decir-payment-totals");          
           if (tableContainer) tableContainer.innerHTML = "";
           if (tableCodA33Container) tableCodA33Container.innerHTML = "";
           if (optionsCodA33Container) optionsCodA33Container.style.display = "none"; 
           if (optionsContainer) optionsContainer.style.display = "none";
-          if (totalContainer) totalContainer.style.display = "none";
-          document.querySelectorAll("#months-container-dec-pag .btn").forEach(b => b.classList.remove("active"));    
+          if (totalContainer) totalContainer.style.display = "none";          
+          document.querySelectorAll("#months-container-dec-pag .btn").forEach(b => b.classList.remove("active"));          
           createDecirButtonsGeneric({
             containerId: "months-container-dec-pag",
             tableContainerId: "table-container-dec-pag",
@@ -152,7 +156,7 @@
           const optionsContainer = document.getElementById("decir-anepc-options");
           if (tableContainer) tableContainer.innerHTML = "";
           if (optionsContainer) optionsContainer.style.display = "none";
-          document.querySelectorAll("#months-container-dec-anepc .btn").forEach(b => b.classList.remove("active"));    
+          document.querySelectorAll("#months-container-dec-anepc .btn").forEach(b => b.classList.remove("active"));          
           createDecirButtonsGeneric({
             containerId: "months-container-dec-anepc",
             tableContainerId: "table-container-dec-anepc",
@@ -229,7 +233,6 @@
           return {};
         }
       }
-
       function applyDecirMapToTable(map) {
         const rows = document.querySelectorAll("#table-container-dec-reg table tbody tr");
         if (rows.length === 0) return;    
@@ -285,8 +288,7 @@
         if (typeof window.updateAllValues === 'function') {
           window.updateAllValues();
         }
-      }
-  
+      }  
       async function loadDecirByMonth(year, month) {
         try {
           await new Promise(resolve => setTimeout(resolve, 200));      
@@ -785,7 +787,7 @@
       ["amal-value-pag", "anepc-value-pag"].forEach(id => {
         const input = document.getElementById(id);
         if (input) input.addEventListener("input", updateAllValues);
-      });
+      }); 
       if (typeof updateDECIRTotalPaymentsByMonth === 'function') {
         updateDECIRTotalPaymentsByMonth();
       }
@@ -912,7 +914,6 @@
       }  
       setTimeout(updateGeneralTotals, 0);
     }
-
     function updateGeneralTotals() {
       const tbody = document.querySelector("table.month-table tbody");
       if (!tbody) return;  
@@ -961,15 +962,13 @@
           `).join('')}
         </table>
       `;
-    }
-    
+    }    
     function formatNumber(value) {
       return new Intl.NumberFormat('pt-PT', {
         minimumFractionDigits: 0,
         maximumFractionDigits: 0
       }).format(value);
-    }
-    
+    }    
     function formatCurrency(value) {
       return new Intl.NumberFormat('pt-PT', {
         style: 'currency',
@@ -978,8 +977,7 @@
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
       }).format(value);
-    }
-    
+    }    
     function updateDECIRTotalPaymentsByMonth() {
       const table = document.querySelector("table.pag-table");
       if (!table) return;
@@ -1020,8 +1018,7 @@
       `;
       totalContainer.style.display = "flex";
       totalContainer.style.justifyContent = "flex-end";
-    }
-    
+    }    
     function updateDECIRTotalCodA33() {
       const table = document.querySelector("#table-container-dec-coda33 table");
       if (!table) return;
@@ -1235,7 +1232,7 @@
           }          
           const rowObj = {ni: nInt, nome, days: daysData, amal: lastAmal, anepc: lastAnepc, global: lastGlobal};          
           turno === 'D' ? fixedRows.push(rowObj) : normalRows.push(rowObj);
-        });        
+        });
         data = {...data, fileName: `REGISTOS_DECIR_${monthName}_${year}`, monthName, year, daysInMonth, weekdays, holidayDays, fixedRows, normalRows };
       /* ========================== PAYMENTS ========================== */
       } else if (type === 'pag') {
@@ -1263,7 +1260,7 @@
               || 0
             )
           };
-        });        
+        });
         data = {...data, fileName: `PAGAMENTOS_DECIR_${monthName}_${year}`, monthName, year, rows};
       /* ========================== COD A33 =========================== */
       } else if (type === 'code_a33') {
@@ -1325,7 +1322,7 @@
       }
       /* ========================== FETCH API ========================= */
       try {
-        const res = await fetch("https://cb360-online.vercel.app/api/decir_reg_pag", {
+        const res = await fetch("https://cb360-mobile.vercel.app/api/decir_reg_pag", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data)
@@ -1346,7 +1343,7 @@
       } catch (err) {
         alert("Erro ao gerar Excel: " + err.message);
       }
-    }
+    } 
     /* ========================== EVENT LISTENERS ========================= */
     document.getElementById("emit-pag-dec-btn")?.addEventListener("click", () => generateDECIRFiles('pag'));
     document.getElementById("emit-reg-dec-btn")?.addEventListener("click", () => generateDECIRFiles('reg'));

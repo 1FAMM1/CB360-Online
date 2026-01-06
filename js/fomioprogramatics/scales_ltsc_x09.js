@@ -81,15 +81,18 @@
       yearSelect.style.padding = "6px 10px";
       yearSelect.style.borderRadius = "4px";
       yearSelect.style.border = "1px solid #ccc";
-      yearSelect.style.cursor = "pointer";    
-      const currentYear = new Date().getFullYear();
-      for (let y = 2025; y <= 2035; y++) {
+      yearSelect.style.cursor = "pointer";
+      const targetYear = parseInt(year || new Date().getFullYear(), 10);
+      const years = [];
+      for (let y = 2025; y <= 2035; y++) years.push(y);
+      years.forEach(y => {
         const opt = document.createElement("option");
         opt.value = y;
         opt.textContent = y;
-        if (y === year) opt.selected = true;
+        if (y === targetYear) opt.selected = true;
         yearSelect.appendChild(opt);
-      }    
+      });
+      yearSelect.value = targetYear;
       yearContainer.appendChild(yearLabel);
       yearContainer.appendChild(yearSelect);
       /* =========== MONTH BUTTONS ========== */
@@ -104,12 +107,10 @@
       const toggleButtonsVisibility = (showSave, showEmit) => {
         if (saveBtn) saveBtn.style.display = showSave ? "inline-block" : "none";
         if (emitBtn) emitBtn.style.display = showEmit ? "inline-block" : "none";
-      };
-    
+      };    
       const clearActiveState = () => {
         monthsWrapper.querySelectorAll(".btn.btn-add").forEach(b => b.classList.remove("active"));
-      };
-    
+      };    
       const loadSectionData = async () => {
         switch (currentSection) {
           case "Emissão Escala":
@@ -168,9 +169,10 @@
       mainWrapper.appendChild(yearContainer);
       mainWrapper.appendChild(monthsWrapper);
       container.appendChild(mainWrapper);
+      setTimeout(() => { yearSelect.value = targetYear; }, 0);
     }
     /* ============  LOAD DATA ============ */
-    const getCorpId = () => sessionStorage.getItem('currentCorpOperNr');
+    const getCorpId = () => sessionStorage.getItem('currentCorpOperNr') || "0805";
     async function loadSetionData(secao) {
       try {
         const corp = getCorpId();
@@ -1375,5 +1377,3 @@
         alert(`❌ Erro: Não foi possível comunicar com o serviço de conversão.\n\nTipo: ${error.name}\nMensagem: ${error.message}`);
       }
     }
-
-

@@ -1,56 +1,58 @@
 /* =======================================
             AIR RESOURCE CENTERS
     ======================================= */
-    async function loadCMAsFromSupabase() {
+   async function loadCMAsFromSupabase() {
+  console.log("🚀 [CMA] Iniciando leitura segura...");
   try {
-    createCmaInputs();
-    
-    // USAR LOCALSTORAGE para coincidir com os teus headers
-    const corp_oper_nr = localStorage.getItem('currentCorpOperNr'); 
-    
-    console.log("🚀 [CMA] A ler com ID:", corp_oper_nr);
+    if (typeof createCmaInputs === "function") createCmaInputs();
+
+    const corpId = sessionStorage.getItem('currentCorpOperNr'); // Ex: "0805"
+    if (!corpId) {
+      console.error("❌ Erro: currentCorpOperNr não encontrado no session!");
+      return;
+    }
+
+    // Prepara os headers e garante que o x-my-corpo está lá
+    const headers = getSupabaseHeaders();
+    headers['x-my-corpo'] = corpId; 
 
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/air_centers?corp_oper_nr=eq.${corp_oper_nr}&order=id.asc`, 
+      `${SUPABASE_URL}/rest/v1/air_centers?corp_oper_nr=eq.${corpId}&order=id.asc`, 
       {
         method: "GET",
-        headers: getSupabaseHeaders() // Já inclui o x-my-corpo: 0805
+        headers: headers
       }
     );
 
-    if (!res.ok) throw new Error(`Erro: ${res.status}`);
-    
+    if (!res.ok) throw new Error(`Erro Supabase: ${res.status}`);
+
     const data = await res.json();
-    console.log("📦 [CMA] Dados recebidos:", data);
+    console.log("📦 Dados recebidos:", data);
 
-    if (data.length > 0) {
-      data.forEach((row, index) => {
-        // Usamos o index para preencher os cartões 01 a 06
-        const n = String(index + 1).padStart(2, '0');
-        const nameInput = document.getElementById(`cma_aero_type_${n}`);
-        const typeSelect = document.getElementById(`cma_type_${n}`);
-        const autoInput = document.getElementById(`cma_auto_${n}`);
-        const imageElement = document.getElementById(`cma_image_${n}`);
-
-        if (nameInput) {
-          nameInput.value = row.aero_name || "";
-          nameInput.dataset.rowId = row.id; // Guarda o ID para o SAVE
-        }
-        if (typeSelect) {
-          typeSelect.value = row.aero_type || "";
-          // Atualização da imagem
-          const imgs = {
-            "Heli Ligeiro": "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/heli_ligeiro.jpg",
-            "Heli Médio": "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/heli_medio.jpg",
-            "Heli Pesado": "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/heli_pesado.jpg",
-            "Avião de Asa Fixa Médio": "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/aviao_asa_fixa_medio.jpg",
-            "Avião de Asa Fixa Pesado": "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/aviao_asa_fixa_pesado.png"
-          };
-          if (imageElement) imageElement.src = imgs[typeSelect.value] || "https://i.imgur.com/4Ho5HRV.png";
-        }
-        if (autoInput) autoInput.value = row.aero_autonomy || "";
-      });
+    if (data.length === 0) {
+      console.warn("⚠️ O banco devolveu 0 linhas. Verifique se a coluna corp_oper_nr no Supabase tem o valor:", corpId);
+      return;
     }
+
+    // Preencher os campos
+    data.forEach((row, index) => {
+      const n = String(index + 1).padStart(2, '0');
+      const nameInput = document.getElementById(`cma_aero_type_${n}`);
+      const typeSelect = document.getElementById(`cma_type_${n}`);
+      const autoInput = document.getElementById(`cma_auto_${n}`);
+      const imageElement = document.getElementById(`cma_image_${n}`);
+
+      if (nameInput) {
+        nameInput.value = row.aero_name || "";
+        nameInput.dataset.rowId = row.id; // Guarda o ID para o SAVE
+      }
+      if (typeSelect) {
+        typeSelect.value = row.aero_type || "";
+        // Atualiza a imagem (usa o teu switch original ou função auxiliar)
+      }
+      if (autoInput) autoInput.value = row.aero_autonomy || "";
+    });
+
   } catch (error) {
     console.error("❌ Erro no load:", error);
   }
@@ -83,5 +85,6 @@
       }
     }
     document.addEventListener("DOMContentLoaded", loadCMAsFromSupabase);
+
 
 

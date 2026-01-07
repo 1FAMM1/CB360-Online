@@ -8,78 +8,113 @@
       if (authNameEl) authNameEl.textContent = currentUserDisplay || "";
       /* ===================== VERIFICAÇÃO DE VALIDADE ===================== */
       /* ===================== VERIFICAÇÃO DE VALIDADE E CARGO ===================== */
-/* ================= CHECK USER VALIDITY (CORRIGIDO) ================= */
+//* ================= CHECK USER VALIDITY (VERSÃO FINAL) ================= */
 async function checkUserValidity() {
-  try {
-    const nInt = sessionStorage.getItem("currentNInt");
-    const corpNr = sessionStorage.getItem("currentCorpOperNr");
-    const full_name = sessionStorage.getItem("currentUserName");
+    try {
+        const nInt = sessionStorage.getItem("currentNInt");
+        const corpNr = sessionStorage.getItem("currentCorpOperNr");
 
-    // Se não houver dados básicos na sessão, redireciona para o login
-    if (!nInt || !corpNr) {
-      console.error("Sessão inválida: nInt ou corpNr ausentes.");
-      window.location.href = "login.html";
-      return;
+        if (!nInt || !corpNr) {
+            console.error("Sessão inválida.");
+            window.location.href = "login.html";
+            return false;
+        }
+
+        // URLSearchParams evita erros de sintaxe (como o Erro 400)
+        const params = new URLSearchParams({
+            n_int: `eq.${nInt}`,
+            corp_oper_nr: `eq.${corpNr}`,
+            select: 'user_role,elem_state,acess'
+        });
+
+        const url = `${SUPABASE_URL}/rest/v1/reg_elems?${params.toString()}`;
+
+        const response = await fetch(url, {
+            method: "GET",
+            headers: getSupabaseHeaders()
+        });
+
+        if (!response.ok) throw new Error(`Erro: ${response.status}`);
+
+        const data = await response.json();
+
+        if (!data || data.length === 0) {
+            alert("Ficha de elemento não encontrada.");
+            window.location.href = "login.html";
+            return false;
+        }
+
+        const user = data[0];
+
+        // 1. Bloqueio de utilizador inativo
+        if (user.elem_state !== true) {
+            alert("A sua conta está INATIVA.");
+            window.location.href = "login.html";
+            return false;
+        }
+
+        // 2. Sincronizar Permissões e Role
+        // Se o campo 'acess' estiver vazio na DB, damos acesso ao Menu Principal por defeito
+        const permissoes = user.acess ? user.acess : "Menu Principal";
+        sessionStorage.setItem("allowedModules", permissoes);
+        
+        if (user.user_role) {
+            sessionStorage.setItem("currentUserRole", user.user_role);
+        }
+
+        console.log("✅ Validação concluída.");
+        return true;
+
+    } catch (error) {
+        console.error("❌ Erro ao verificar validade:", error);
+        return false;
     }
-
-    // Criamos os parâmetros da query de forma limpa para evitar Erro 400
-    const params = new URLSearchParams({
-      n_int: `eq.${nInt}`,
-      corp_oper_nr: `eq.${corpNr}`,
-      select: 'user_role,elem_state,acess' // Pedimos também os acessos
-    });
-
-    const url = `${SUPABASE_URL}/rest/v1/reg_elems?${params.toString()}`;
-
-    const response = await fetch(url, {
-      method: "GET",
-      headers: getSupabaseHeaders()
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Erro Supabase (${response.status}): ${errorText}`);
-    }
-
-    const data = await response.json();
-
-    if (!data || data.length === 0) {
-      console.warn("Utilizador não encontrado na tabela reg_elems.");
-      alert("Erro: Ficha de elemento não encontrada.");
-      window.location.href = "login.html";
-      return;
-    }
-
-    const user = data[0];
-
-    // 1. Verificar se o elemento está Ativo
-    if (user.elem_state !== true) {
-      alert("A sua conta está INATIVA. Contacte o administrador.");
-      window.location.href = "login.html";
-      return;
-    }
-
-    // 2. Sincronizar Permissões (Caso tenham sido alteradas no painel admin)
-    // Isso garante que se o admin mudar os teus acessos, eles atualizam no próximo refresh
-    if (user.acess) {
-      sessionStorage.setItem("allowedModules", user.acess);
-    }
-    
-    if (user.user_role) {
-      sessionStorage.setItem("currentUserRole", user.user_role);
-    }
-
-    console.log("✅ Validação concluída: Utilizador Ativo e Autorizado.");
-
-  } catch (error) {
-    console.error("❌ Erro ao verificar validade:", error);
-    // Em caso de erro crítico de rede, não expulsamos logo o user, 
-    // mas podes optar por window.location.href se quiseres segurança máxima.
-  }
 }
-// Chamar a função usando o n_int que injetámos no login
-const currentNInt = sessionStorage.getItem("currentNInt");
-checkUserValidity(currentNInt);
+
+/* ================= INICIALIZAÇÃO DA SIDEBAR ================= */
+// Esta função substitui a lógica que estava a falhar
+async function initApp() {
+    // 1. Aguarda primeiro a validação (O AWAIT É CRÍTICO AQUI)
+    const isValid = await checkUserValidity();
+
+    if (isValid) {
+        // 2. Só depois de validar é que carregamos a tabela e a sidebar
+        if (typeof loadElementsTable === "function") loadElementsTable();
+        
+        // 3. Gerar os checkboxes de acesso (se estiveres na página de edição)
+        if (typeof generateAccessCheckboxes === "function") {
+            generateAccessCheckboxes();
+        }
+
+        // 4. FORÇAR a sidebar a atualizar os botões visíveis
+        // Nota: Se a tua função de desenhar a sidebar tiver outro nome, altera aqui:
+        updateSidebarVisibility();
+    }
+}
+
+/* ================= CONTROLO DE VISIBILIDADE DA SIDEBAR ================= */
+function updateSidebarVisibility() {
+    const allowedModulesString = sessionStorage.getItem("allowedModules") || "";
+    const allowedModules = allowedModulesString.split(",").map(a => a.trim());
+    
+    // Procuramos todos os botões ou links da tua sidebar
+    // Ajusta o seletor '.sidebar-item' para o nome da classe dos teus botões
+    const menuButtons = document.querySelectorAll(".sidebar-btn, .menu-item"); 
+
+    menuButtons.forEach(btn => {
+        const menuLabel = btn.textContent.trim();
+        
+        // Se o nome do botão estiver na lista de permitidos, mostra. Se não, esconde.
+        if (allowedModules.includes(menuLabel)) {
+            btn.style.display = "block";
+        } else {
+            btn.style.display = "none";
+        }
+    });
+}
+
+// Iniciar tudo quando o documento carregar
+document.addEventListener("DOMContentLoaded", initApp);
       /* ====================== SINCRONIZAÇÃO SIDEBAR ====================== */
       function updateSidebarAccess(allowedModules) {
         const sidebarButtons = document.querySelectorAll(".sidebar-menu-button, .sidebar-submenu-button, .sidebar-sub-submenu-button");
@@ -254,6 +289,7 @@ checkUserValidity(currentNInt);
         });
       }
     });
+
 
 
 

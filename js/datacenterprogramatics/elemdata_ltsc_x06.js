@@ -493,3 +493,30 @@
         container.appendChild(createCheckbox(option));
       });
     }
+    /* ================= TAB SWITCH ================= */
+    const tabs = document.querySelectorAll('.tab-btn');
+    const contents = document.querySelectorAll('.tab-content');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        contents.forEach(c => c.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+        closeAllCheckboxContainers();
+      });
+    });    
+    function resetToFirstTab() {
+      const tabs = document.querySelectorAll('.tab-btn');
+      const contents = document.querySelectorAll('.tab-content');
+      if (!tabs.length || !contents.length) return;
+      tabs.forEach(t => t.classList.remove('active'));
+      contents.forEach(c => c.classList.remove('active'));
+      const firstTab = tabs[0];
+      if (firstTab) {
+        firstTab.classList.add('active');
+        const firstContent = document.getElementById('tab-' + firstTab.dataset.tab);
+        if (firstContent) {
+          firstContent.classList.add('active');
+        }
+      }
+    }

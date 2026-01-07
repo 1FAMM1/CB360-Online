@@ -7,33 +7,53 @@
       const authNameEl = document.getElementById('authName');
       if (authNameEl) authNameEl.textContent = currentUserDisplay || "";
       /* ===================== VERIFICAÇÃO DE VALIDADE ===================== */
-      async function checkUserValidity(fullName) {
-        if (!fullName) return true;
-        try {
-          const url = `${SUPABASE_URL}/rest/v1/users?select=validate&full_name=eq.${encodeURIComponent(fullName)}`;
-          const response = await fetch(url, { headers: getSupabaseHeaders() });
-          if (!response.ok) throw new Error("Erro ao buscar validade do usuário");
-          const data = await response.json();
-          if (!data || data.length === 0) return true;
-          const validade = data[0].validate;
-          if (!validade) return true;
-          const today = new Date();
-          const expireDate = new Date(validade);
-          const diffTime = expireDate - today;
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-          if (diffDays < 0) {
-            alert("❌ Sua conta expirou. Todos os acessos foram bloqueados. Porfavor contacte a administração do CB360 Online");
-            blockAllSidebar();
-            return false;
-          } else if (diffDays <= 30) {
-            alert(`⚠️ Sua conta irá expirar dentro de ${diffDays} dias. Porfavor contacte a administração do CB360 Online`);
-          }
-          return true;
-        } catch (err) {
-          console.error("Erro ao verificar validade do usuário:", err);
-          return true;
-        }
+      /* ===================== VERIFICAÇÃO DE VALIDADE E CARGO ===================== */
+async function checkUserValidity(nInt) {
+  // Se não houver n_int, algo correu mal no login
+  if (!nInt) return true; 
+
+  try {
+    // Agora buscamos na reg_elems porque é lá que está o user_role e o n_int
+    const url = `${SUPABASE_URL}/rest/v1/reg_elems?select=validate,user_role&n_int=eq.${encodeURIComponent(nInt)}`;
+    const response = await fetch(url, { headers: getSupabaseHeaders() });
+    
+    if (!response.ok) throw new Error("Erro ao buscar validade do utilizador");
+    
+    const data = await response.json();
+    if (!data || data.length === 0) return true;
+
+    const userEntry = data[0];
+    
+    // 1. ATUALIZA O CARGO EM TEMPO REAL (Garante que se fores promovido a admin, funciona logo)
+    sessionStorage.setItem("currentUserRole", userEntry.user_role || "user");
+
+    // 2. VERIFICAÇÃO DE EXPIRAÇÃO (A tua lógica original)
+    if (userEntry.validate) {
+      const today = new Date();
+      const expireDate = new Date(userEntry.validate);
+      const diffTime = expireDate - today;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays < 0) {
+        alert("❌ Sua conta expirou. Todos os acessos foram bloqueados.");
+        if (typeof blockAllSidebar === "function") blockAllSidebar();
+        return false;
+      } else if (diffDays <= 30) {
+        // Opcional: mostrar aviso apenas uma vez por sessão para não chatear
+        console.warn(`Aviso: Conta expira em ${diffDays} dias.`);
       }
+    }
+
+    return true;
+  } catch (err) {
+    console.error("Erro ao verificar validade:", err);
+    return true; // Em caso de erro de rede, deixa passar para não bloquear o user
+  }
+}
+
+// Chamar a função usando o n_int que injetámos no login
+const currentNInt = sessionStorage.getItem("currentNInt");
+checkUserValidity(currentNInt);
       /* ====================== SINCRONIZAÇÃO SIDEBAR ====================== */
       function updateSidebarAccess(allowedModules) {
         const sidebarButtons = document.querySelectorAll(".sidebar-menu-button, .sidebar-submenu-button, .sidebar-sub-submenu-button");
@@ -208,6 +228,7 @@
         });
       }
     });
+
 
 
 

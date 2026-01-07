@@ -2,47 +2,61 @@
             AIR RESOURCE CENTERS
     ======================================= */
     async function loadCMAsFromSupabase() {
-      try {
-        createCmaInputs();
-        const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
-        const res = await fetch(
-          `${SUPABASE_URL}/rest/v1/air_centers?corp_oper_nr=eq.${corp_oper_nr}&order=id.asc`, {
-            method: "GET",
-            headers: getSupabaseHeaders()
-          }
-        );
-        if (!res.ok) throw new Error(`Erro Supabase: ${res.status}`);
-        const data = await res.json();
-        data.forEach(row => {
-          const n = String(row.id).padStart(2, '0');
-          const nameInput = document.getElementById(`cma_aero_type_${n}`);
-          const typeSelect = document.getElementById(`cma_type_${n}`);
-          const autoInput = document.getElementById(`cma_auto_${n}`);
-          const imageElement = document.getElementById(`cma_image_${n}`);
-          if (nameInput) nameInput.value = row.aero_name || "";
+  console.log("🚀 [CMA] Iniciando leitura segura...");
+  try {
+    if (typeof createCmaInputs === "function") createCmaInputs();
 
-          if (typeSelect) {
-            typeSelect.value = row.aero_type || "";
-            nameInput.dataset.rowId = row.id;
-          }
-          if (imageElement) {
-            let src;
-            switch (typeSelect.value) {
-              case "Heli Ligeiro": src = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/heli_ligeiro.jpg"; break;
-              case "Heli Médio": src = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/heli_medio.jpg"; break;
-              case "Heli Pesado": src = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/heli_pesado.jpg"; break;
-              case "Avião de Asa Fixa Médio": src = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/aviao_asa_fixa_medio.jpg"; break;
-              case "Avião de Asa Fixa Pesado": src = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/aviao_asa_fixa_pesado.png"; break;
-              default: src = "https://i.imgur.com/4Ho5HRV.png";
-            }
-            imageElement.src = src;
-          }
-          if (autoInput) autoInput.value = row.aero_autonomy || "";
-        });
-      } catch (error) {
-        console.error("❌ Erro ao carregar CMAs:", error);
-      }
+    const corpId = sessionStorage.getItem('currentCorpOperNr'); // Ex: "0805"
+    if (!corpId) {
+      console.error("❌ Erro: currentCorpOperNr não encontrado no session!");
+      return;
     }
+
+    // Prepara os headers e garante que o x-my-corpo está lá
+    const headers = getSupabaseHeaders();
+    headers['x-my-corpo'] = corpId; 
+
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/air_centers?corp_oper_nr=eq.${corpId}&order=id.asc`, 
+      {
+        method: "GET",
+        headers: headers
+      }
+    );
+
+    if (!res.ok) throw new Error(`Erro Supabase: ${res.status}`);
+
+    const data = await res.json();
+    console.log("📦 Dados recebidos:", data);
+
+    if (data.length === 0) {
+      console.warn("⚠️ O banco devolveu 0 linhas. Verifique se a coluna corp_oper_nr no Supabase tem o valor:", corpId);
+      return;
+    }
+
+    // Preencher os campos
+    data.forEach((row, index) => {
+      const n = String(index + 1).padStart(2, '0');
+      const nameInput = document.getElementById(`cma_aero_type_${n}`);
+      const typeSelect = document.getElementById(`cma_type_${n}`);
+      const autoInput = document.getElementById(`cma_auto_${n}`);
+      const imageElement = document.getElementById(`cma_image_${n}`);
+
+      if (nameInput) {
+        nameInput.value = row.aero_name || "";
+        nameInput.dataset.rowId = row.id; // Guarda o ID para o SAVE
+      }
+      if (typeSelect) {
+        typeSelect.value = row.aero_type || "";
+        // Atualiza a imagem (usa o teu switch original ou função auxiliar)
+      }
+      if (autoInput) autoInput.value = row.aero_autonomy || "";
+    });
+
+  } catch (error) {
+    console.error("❌ Erro no load:", error);
+  }
+}
     
     async function saveCMAsGroupFields() {
       try {
@@ -71,3 +85,4 @@
       }
     }
     document.addEventListener("DOMContentLoaded", loadCMAsFromSupabase);
+

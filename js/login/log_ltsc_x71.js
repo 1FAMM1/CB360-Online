@@ -1,73 +1,71 @@
     async function loginUser(user, pass) {
   try {
-    // PASSO 1: Validar username e password na tabela 'users'
-    // Aqui só pedimos o que existe na 'users': username, password e n_int
-    const resUser = await fetch(
-      `${SUPABASE_URL}/rest/v1/users?select=username,password,n_int&username=eq.${encodeURIComponent(user)}`, {
+    // 1. PASSO: Validar credenciais na tabela 'users'
+    // Mantemos apenas as colunas que existem na tabela 'users'
+    const response = await fetch(
+      `${SUPABASE_URL}/rest/v1/users?select=username,password&username=eq.${encodeURIComponent(user)}`, {
         headers: getSupabaseHeaders()
       }
     );
 
-    if (!resUser.ok) {
-      const errorDetail = await resUser.json();
-      console.error("Erro na tabela users:", errorDetail);
-      throw new Error("Erro ao consultar tabela users");
-    }
+    if (!response.ok) throw new Error(`Erro na tabela users: ${response.status}`);
+    const data = await response.json();
 
-    const dataUser = await resUser.json();
-
-    if (dataUser.length === 0) {
+    if (data.length === 0) {
       showToast("Utilizador não encontrado.", 2000, "error");
       return;
     }
 
-    const userData = dataUser[0];
-
-    // Verificar password
+    const userData = data[0];
     if (userData.password !== pass) {
       showToast("Password incorreta.", 2000, "error");
       return;
     }
 
-    // PASSO 2: Agora que sabemos o n_int, vamos buscar o user_role à 'reg_elems'
-    const resElems = await fetch(
-      `${SUPABASE_URL}/rest/v1/reg_elems?select=full_name,corp_oper_nr,user_role&n_int=eq.${userData.n_int}`, {
+    // 2. PASSO: Buscar os detalhes e o CARGO (Admin/User) na tabela 'reg_elems'
+    // Ligamos as duas tabelas pelo 'username'
+    const responseElems = await fetch(
+      `${SUPABASE_URL}/rest/v1/reg_elems?select=full_name,corp_oper_nr,user_role,n_int,patent&username=eq.${encodeURIComponent(user)}`, {
         headers: getSupabaseHeaders()
       }
     );
 
-    if (!resElems.ok) {
-      console.error("Erro ao buscar dados em reg_elems");
-      throw new Error("Erro na tabela reg_elems");
+    if (!responseElems.ok) throw new Error(`Erro na tabela reg_elems: ${responseElems.status}`);
+    const dataElems = await responseElems.json();
+
+    if (dataElems.length === 0) {
+      showToast("Aviso: Utilizador sem ficha de elemento ativa.", 3000, "error");
+      return;
     }
 
-    const dataElems = await resElems.json();
-    const detalhes = dataElems[0] || {};
+    const elemData = dataElems[0];
+    const corp = String(elemData.corp_oper_nr || "").padStart(4, "0");
+    const role = elemData.user_role || "user";
+    const displayName = elemData.full_name || user;
 
-    // PASSO 3: Guardar tudo no SessionStorage
-    const corp = String(detalhes.corp_oper_nr || "").padStart(4, "0");
-    const role = detalhes.user_role || "user"; // Aqui sim, usamos a coluna que só existe na reg_elems
-
+    // 3. PASSO: Gravar Sessão (incluindo o novo user_role e n_int)
+    sessionStorage.setItem("currentUserDisplay", displayName);
     sessionStorage.setItem("currentUserName", user);
-    sessionStorage.setItem("currentNInt", userData.n_int);
     sessionStorage.setItem("currentCorpOperNr", corp);
+    sessionStorage.setItem("currentNInt", elemData.n_int);
     sessionStorage.setItem("currentUserRole", role);
-    sessionStorage.setItem("currentUserDisplay", detalhes.full_name || user);
 
-    showToast("Bem-vindo!", 2000, "success");
-
-    // Redirecionamento
-    setTimeout(() => {
-      if (role === "admin" || corp === "0000") {
-        window.location.href = "system_admin.html";
-      } else {
-        window.location.href = "main.html";
-      }
-    }, 1500);
+    // 4. PASSO: Lógica de Redirecionamento original + Admin
+    if (corp === "0000") {
+      sessionStorage.setItem("isMasterUser", "true");
+      showToast("Bem-vindo à administração do CB360 Online!", 2000, "success");
+      setTimeout(() => { window.location.href = "system_admin.html"; }, 1500);
+    } else {
+      showToast("Login efetuado com sucesso!", 2000, "success");
+      setTimeout(() => { 
+        // Se for admin da própria corporação, também pode ir para o admin
+        window.location.href = (role === "admin") ? "system_admin.html" : "main.html";
+      }, 1500);
+    }
 
   } catch (err) {
     console.error("Erro detalhado:", err);
-    showToast("Erro ao processar login. Verifique a consola.", 3000, "error");
+    showToast("Erro de conexão. Verifique a consola.", 3000, "error");
   }
 }
     document.getElementById("loginForm").addEventListener("submit", e => {
@@ -123,6 +121,7 @@
     }
     startClock();
     document.getElementById("username").focus();
+
 
 
 

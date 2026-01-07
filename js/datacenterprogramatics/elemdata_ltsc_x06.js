@@ -288,98 +288,111 @@
       const text = await response.text();
       return text ? JSON.parse(text) : null;
     }
-    document.getElementById("winForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const n_intValue = document.getElementById("win_n_int").value;
-      const corpOperNr = document.querySelector('.header-nr')?.textContent.trim() || sessionStorage.getItem("currentCorpOperNr");
-      const payloadRegElems = {n_int: n_intValue, n_file: document.getElementById("win_n_file").value, patent: document.getElementById("win_patent").value,
-                               patent_abv: document.getElementById("win_patent_abv").value, abv_name: document.getElementById("win_abv_name").value,
-                               full_name: document.getElementById("win_full_name").value, MP: document.getElementById("win_MP").value === "true",
-                               TAS: document.getElementById("win_TAS").value === "true", section: document.getElementById("win_section").value,
-                               nif: document.getElementById("win_nif").value,
-                               nib: document.getElementById("win_nib").value, elem_state: document.getElementById("win_state").value === "Ativo",
-                               acess: Array.from(document.querySelectorAll('.access-checkbox:checked')).map(cb => cb.value).join(", "),
-                               last_updated: new Date().toISOString(), corp_oper_nr: corpOperNr};
-      const payloadUsers = {username: document.getElementById("win_user_name_main").value, password: document.getElementById("win_password_main").value,
-                            full_name: document.getElementById("win_full_name").value, patent: document.getElementById("win_patent").value, corp_oper_nr: corpOperNr};
-      try {
-        const checkFirefighter = await fetch(
-          `${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${n_intValue}&corp_oper_nr=eq.${corpOperNr}`, {
-            headers: getSupabaseHeaders()
-          }
-        );
-        if (!checkFirefighter.ok) throw new Error(`Erro ao verificar reg_elems: ${checkFirefighter.status}`);
-        const existingFirefighter = await safeJson(checkFirefighter);
-        if (existingFirefighter && existingFirefighter.length > 0) {
-          const confirmUpdate = confirm(`O nº interno "${n_intValue}" já existe nesta corporação. Deseja atualizar o registro existente?`);
-          if (!confirmUpdate) return;
-          const recordId = existingFirefighter[0].id;
-          const updateFirefighter = await fetch(
-            `${SUPABASE_URL}/rest/v1/reg_elems?id=eq.${recordId}`, {
-              method: "PATCH",
-              headers: getSupabaseHeaders({ Prefer: "return=representation" }),
-              body: JSON.stringify(payloadRegElems)
-            }
-          );
-          if (!updateFirefighter.ok) throw new Error(`Erro ao atualizar reg_elems: ${updateFirefighter.status}`);
-          await safeJson(updateFirefighter);
-          alert("Bombeiro atualizado com sucesso!");
+    /* ================= FORM SUBMIT (CORRIGIDO) ================= */
+document.getElementById("winForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const n_intValue = document.getElementById("win_n_int").value;
+    const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+    
+    // Dados para as RLS (Quem está a fazer a operação)
+    const meuCargo = sessionStorage.getItem("currentUserRole");
+    const meuNInt = sessionStorage.getItem("currentNInt");
+
+    // Cabeçalhos de Autorização com cargo injetado
+    const customHeaders = {
+        ...getSupabaseHeaders(),
+        "Prefer": "return=representation",
+        "x-my-role": meuCargo,
+        "x-my-nint": meuNInt
+    };
+
+    const payloadRegElems = {
+        n_int: n_intValue,
+        n_file: document.getElementById("win_n_file").value,
+        patent: document.getElementById("win_patent").value,
+        patent_abv: document.getElementById("win_patent_abv").value,
+        abv_name: document.getElementById("win_abv_name").value,
+        full_name: document.getElementById("win_full_name").value,
+        MP: document.getElementById("win_MP").value === "true",
+        TAS: document.getElementById("win_TAS").value === "true",
+        section: document.getElementById("win_section").value,
+        nif: document.getElementById("win_nif").value,
+        nib: document.getElementById("win_nib").value,
+        elem_state: document.getElementById("win_state").value === "Ativo",
+        acess: Array.from(document.querySelectorAll('.access-checkbox:checked')).map(cb => cb.value).join(", "),
+        last_updated: new Date().toISOString(),
+        corp_oper_nr: corpOperNr,
+        user_role: "user" // Role padrão para o novo bombeiro, a menos que definas outra
+    };
+
+    const payloadUsers = {
+        username: document.getElementById("win_user_name_main").value,
+        password: document.getElementById("win_password_main").value,
+        full_name: document.getElementById("win_full_name").value,
+        patent: document.getElementById("win_patent").value,
+        corp_oper_nr: corpOperNr,
+        n_int: n_intValue // Importante para o link de login
+    };
+
+    try {
+        // 1. Verificar se o Bombeiro já existe
+        const checkRes = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${n_intValue}&corp_oper_nr=eq.${corpOperNr}`, {
+            headers: customHeaders
+        });
+        const existing = await checkRes.json();
+
+        if (existing && existing.length > 0) {
+            // ATUALIZAR (PATCH)
+            const confirmUpdate = confirm(`O nº interno "${n_intValue}" já existe. Atualizar registro?`);
+            if (!confirmUpdate) return;
+
+            const resUpdate = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?id=eq.${existing[0].id}`, {
+                method: "PATCH",
+                headers: customHeaders,
+                body: JSON.stringify(payloadRegElems)
+            });
+            if (!resUpdate.ok) throw new Error(`Erro 401/400 no Update: ${resUpdate.status}`);
+            alert("Bombeiro atualizado!");
         } else {
-          const createBombeiro = await fetch(
-            `${SUPABASE_URL}/rest/v1/reg_elems`, {
-              method: "POST",
-              headers: getSupabaseHeaders({ Prefer: "return=representation" }),
-              body: JSON.stringify(payloadRegElems)
-            }
-          );
-          if (!createBombeiro.ok) throw new Error(`Erro ao criar reg_elems: ${createBombeiro.status}`);
-          await safeJson(createBombeiro);
-          alert("Novo bombeiro criado com sucesso!");
+            // CRIAR NOVO (POST)
+            const resCreate = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems`, {
+                method: "POST",
+                headers: customHeaders,
+                body: JSON.stringify(payloadRegElems)
+            });
+            if (!resCreate.ok) throw new Error(`Erro 401/400 no Create: ${resCreate.status}`);
+            alert("Novo bombeiro criado!");
         }
-        const checkUserGlobal = await fetch(
-          `${SUPABASE_URL}/rest/v1/users?username=eq.${payloadUsers.username}`, {
-            headers: getSupabaseHeaders()
-          }
-        );
-        if (!checkUserGlobal.ok) throw new Error(`Erro ao verificar user: ${checkUserGlobal.status}`);
-        const usersFound = await safeJson(checkUserGlobal);
+
+        // 2. Sincronizar com a tabela 'users' (Credenciais de Acesso)
+        const checkUser = await fetch(`${SUPABASE_URL}/rest/v1/users?username=eq.${payloadUsers.username}`, {
+            headers: customHeaders
+        });
+        const usersFound = await checkUser.json();
+
         if (usersFound && usersFound.length > 0) {
-          const userSameCorp = usersFound.find(u => u.corp_oper_nr === corpOperNr);
-          if (!userSameCorp) {
-            alert("⚠️ Já existe um utilizador com estas credênciais.\nPor favor introduza outras credenciais.");
-            document.getElementById("win_user_name_main").value = "";
-            document.getElementById("win_password_main").value = "";
-            return;
-          }
-          const updateUser = await fetch(
-            `${SUPABASE_URL}/rest/v1/users?id=eq.${userSameCorp.id}`, {
-              method: "PATCH",
-              headers: getSupabaseHeaders({ Prefer: "return=representation" }),
-              body: JSON.stringify(payloadUsers)
-            }
-          );
-          if (!updateUser.ok) throw new Error(`Erro ao atualizar user: ${updateUser.status}`);
-          await safeJson(updateUser);
+            await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${usersFound[0].id}`, {
+                method: "PATCH",
+                headers: customHeaders,
+                body: JSON.stringify(payloadUsers)
+            });
         } else {
-          const createUser = await fetch(
-            `${SUPABASE_URL}/rest/v1/users`, {
-              method: "POST",
-              headers: getSupabaseHeaders({ Prefer: "return=representation" }),
-              body: JSON.stringify(payloadUsers)
-            }
-          );
-          if (!createUser.ok) throw new Error(`Erro ao criar user: ${createUser.status}`);
-          await safeJson(createUser);
+            await fetch(`${SUPABASE_URL}/rest/v1/users`, {
+                method: "POST",
+                headers: customHeaders,
+                body: JSON.stringify(payloadUsers)
+            });
         }
-        document.querySelector('.window-bottom-bar b').textContent =
-          new Date(payloadRegElems.last_updated).toLocaleString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
         document.getElementById("editWindow").style.display = "none";
         loadElementsTable();
-      } catch (err) {
-        console.error("Erro geral ao gravar registro:", err);
-        alert("Erro ao gravar registro.");
-      }
-    });
+
+    } catch (err) {
+        console.error("Erro fatal na operação:", err);
+        alert("Erro ao gravar dados. Verifique a consola (F12) para detalhes do erro 401.");
+    }
+});
     /* ================= GENERATE ACCESS CHECKBOXES ================= */
     const TOGGLE_BTN_STYLE = "color: #eee; margin-right: 6px; margin-left: -20px; width: 14px; height: 14px; border-radius: 50%; border: 0; background: #1f4b91; cursor: pointer;"
     function closeSiblingContainers(currentContainer) {
@@ -520,4 +533,5 @@
         }
       }
     }
+
 

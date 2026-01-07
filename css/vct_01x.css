@@ -1,0 +1,104 @@
+/* ============================================================
+   CARD: GESTÃO DE FÉRIAS (.admin-container-vacat)
+   ============================================================ */
+
+.admin-container-vacat {
+    padding: 10px !important;
+}
+
+.admin-container-vacat table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 5px;
+    background: #fff;
+}
+
+.admin-container-vacat th {
+    background: #f1f3f5;
+    padding: 8px 5px;
+    border: 1px solid #dee2e6;
+    text-align: center;
+    font-size: 11px;
+    text-transform: uppercase;
+    color: #495057;
+}
+
+.admin-container-vacat td {
+    padding: 6px 5px;
+    border: 1px solid #dee2e6;
+    text-align: center;
+    font-size: 12px;
+    color: #333;
+}
+
+/* --- Lógica de Expansão --- */
+.admin-container-vacat .expandable-row {
+    display: none;
+}
+
+/* Mostra a linha quando ativa */
+.admin-container-vacat .expandable-row.is-visible {
+    display: table-row !important;
+}
+
+.admin-container-vacat .details-content {
+    padding: 10px;
+    border: 1px inset #eee;
+    background: #ffffff;
+    margin: 5px;
+    border-radius: 4px;
+}
+
+/* Botões de Ação */
+.admin-container-vacat .view-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 26px;
+    padding: 0 12px;
+    font-size: 11px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    background: #1976d2;
+    color: white;
+    transition: opacity 0.2s;
+}
+
+.admin-container-vacat .action-btn-container { 
+    display: flex; 
+    gap: 4px; 
+    justify-content: center; 
+}
+
+.admin-container-vacat .action-btn {
+    padding: 4px 8px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: bold;
+}
+
+.admin-container-vacat .approve-btn { background: #2e7d32; color: white; }
+.admin-container-vacat .reject-btn { background: #e53935; color: white; }
+
+/* Status Badges para Férias */
+.admin-container-vacat .status-badge {
+    padding: 3px 8px;
+    border-radius: 10px;
+    color: white;
+    font-weight: bold;
+    font-size: 10px;
+    display: inline-block;
+    min-width: 90px;
+    text-align: center;
+}
+
+/* Cores específicas baseadas no teu estado das férias */
+.admin-container-vacat .bg-approved { background-color: #2e7d32 !important; }
+.admin-container-vacat .bg-rejected { background-color: #e53935 !important; }
+.admin-container-vacat .bg-pending { background-color: #7f0000 !important; }
+
+.admin-container-vacat .table-responsive-event { overflow-x: auto; }

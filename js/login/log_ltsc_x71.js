@@ -1,46 +1,62 @@
     async function loginUser(user, pass) {
   try {
-    // 1. Validar as credenciais na tabela 'users'
+    // PASSO 1: Validar username e password na tabela 'users'
+    // Aqui só pedimos o que existe na 'users': username, password e n_int
     const resUser = await fetch(
-      `${SUPABASE_URL}/rest/v1/users?select=username,password,n_int&username=eq.${user}`, {
+      `${SUPABASE_URL}/rest/v1/users?select=username,password,n_int&username=eq.${encodeURIComponent(user)}`, {
         headers: getSupabaseHeaders()
       }
     );
-    
-    if (!resUser.ok) throw new Error(`Erro na tabela users: ${resUser.status}`);
+
+    if (!resUser.ok) {
+      const errorDetail = await resUser.json();
+      console.error("Erro na tabela users:", errorDetail);
+      throw new Error("Erro ao consultar tabela users");
+    }
+
     const dataUser = await resUser.json();
 
-    if (dataUser.length === 0 || dataUser[0].password !== pass) {
-      showToast("Credenciais inválidas.", 2000, "error");
+    if (dataUser.length === 0) {
+      showToast("Utilizador não encontrado.", 2000, "error");
       return;
     }
 
-    const nIntLogado = dataUser[0].n_int;
+    const userData = dataUser[0];
 
-    // 2. Buscar permissões e dados na 'reg_elems' usando o n_int obtido
+    // Verificar password
+    if (userData.password !== pass) {
+      showToast("Password incorreta.", 2000, "error");
+      return;
+    }
+
+    // PASSO 2: Agora que sabemos o n_int, vamos buscar o user_role à 'reg_elems'
     const resElems = await fetch(
-      `${SUPABASE_URL}/rest/v1/reg_elems?select=full_name,corp_oper_nr,user_role&n_int=eq.${nIntLogado}`, {
+      `${SUPABASE_URL}/rest/v1/reg_elems?select=full_name,corp_oper_nr,user_role&n_int=eq.${userData.n_int}`, {
         headers: getSupabaseHeaders()
       }
     );
-    
-    if (!resElems.ok) throw new Error(`Erro na tabela reg_elems: ${resElems.status}`);
-    const dataElems = await resElems.json();
-    
-    const detalhes = dataElems[0] || {};
-    const corp = String(detalhes.corp_oper_nr || "").padStart(4, "0");
-    const role = detalhes.user_role || "user"; // Agora usando user_role
 
-    // 3. GRAVAÇÃO NO SESSION STORAGE
+    if (!resElems.ok) {
+      console.error("Erro ao buscar dados em reg_elems");
+      throw new Error("Erro na tabela reg_elems");
+    }
+
+    const dataElems = await resElems.json();
+    const detalhes = dataElems[0] || {};
+
+    // PASSO 3: Guardar tudo no SessionStorage
+    const corp = String(detalhes.corp_oper_nr || "").padStart(4, "0");
+    const role = detalhes.user_role || "user"; // Aqui sim, usamos a coluna que só existe na reg_elems
+
     sessionStorage.setItem("currentUserName", user);
-    sessionStorage.setItem("currentNInt", nIntLogado);
+    sessionStorage.setItem("currentNInt", userData.n_int);
     sessionStorage.setItem("currentCorpOperNr", corp);
     sessionStorage.setItem("currentUserRole", role);
     sessionStorage.setItem("currentUserDisplay", detalhes.full_name || user);
 
-    showToast("Bem-vindo ao CB360!", 2000, "success");
-    
-    // 4. Redirecionamento Inteligente
+    showToast("Bem-vindo!", 2000, "success");
+
+    // Redirecionamento
     setTimeout(() => {
       if (role === "admin" || corp === "0000") {
         window.location.href = "system_admin.html";
@@ -107,5 +123,6 @@
     }
     startClock();
     document.getElementById("username").focus();
+
 
 

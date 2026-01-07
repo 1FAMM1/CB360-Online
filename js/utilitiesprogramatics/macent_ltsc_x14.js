@@ -4,15 +4,15 @@
     async function loadCMAsFromSupabase() {
       try {
         if (typeof createCmaInputs === "function") createCmaInputs();
-        const corpId = sessionStorage.getItem('currentCorpOperNr');
-        if (!corpId) {
+        const currentCorpOperNr = sessionStorage.getItem('currentCorpOperNr');
+        if (!currentCorpOperNr) {
           console.error("❌ Erro: currentCorpOperNr não encontrado!");
           return;
         }
         const headers = getSupabaseHeaders();
-        headers['x-my-corpo'] = corpId; 
+        headers['x-my-corpo'] = currentCorpOperNr; 
         const res = await fetch(
-          `${SUPABASE_URL}/rest/v1/air_centers?corp_oper_nr=eq.${corpId}&order=id.asc`, {
+          `${SUPABASE_URL}/rest/v1/air_centers?corp_oper_nr=eq.${currentCorpOperNr}&order=id.asc`, {
             method: "GET",
             headers: headers
           }
@@ -20,7 +20,7 @@
         if (!res.ok) throw new Error(`Erro Supabase: ${res.status}`);
         const data = await res.json();
         if (data.length === 0) {
-          console.warn("⚠️ O banco devolveu 0 linhas para a corp:", corpId);
+          console.warn("⚠️ O banco devolveu 0 linhas para a corp:", currentCorpOperNr);
           return;
         }
         const imagensAeronaves = {
@@ -57,13 +57,13 @@
     }
     async function saveCMAsGroupFields() {
       try {
-        const corpId = localStorage.getItem('currentCorpOperNr') || sessionStorage.getItem('currentCorpOperNr');
-        if (!corpId) {
+        const currentCorpOperNr = sessionStorage.getItem('currentCorpOperNr');
+        if (!currentCorpOperNr) {
           showPopupWarning("❌ Erro: Sessão expirada. Faça login novamente.");
           return;
         }
         const headers = getSupabaseHeaders();
-        headers['x-my-corpo'] = corpId;
+        headers['x-my-corpo'] = currentCorpOperNr;
         for (let i = 1; i <= 6; i++) {
           const n = String(i).padStart(2, '0');
           const nameInput = document.getElementById(`cma_aero_type_${n}`);
@@ -71,7 +71,7 @@
           const autoInput = document.getElementById(`cma_auto_${n}`);
           if (nameInput && nameInput.dataset.rowId) {
             const dbId = nameInput.dataset.rowId;
-            const payload = {aero_name: nameInput.value || "", aero_type: typeSelect.value || "", aero_autonomy: autoInput.value || "", corp_oper_nr: corpId};
+            const payload = {aero_name: nameInput.value || "", aero_type: typeSelect.value || "", aero_autonomy: autoInput.value || "", corp_oper_nr: currentCorpOperNr};
             const res = await fetch(
               `${SUPABASE_URL}/rest/v1/air_centers?id=eq.${dbId}`, {
                 method: "PATCH",

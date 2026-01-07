@@ -172,7 +172,7 @@
       setTimeout(() => { yearSelect.value = targetYear; }, 0);
     }
     /* ============  LOAD DATA ============ */
-    const getCorpId = () => sessionStorage.getItem('currentCorpOperNr') || "0805";
+    const getCorpId = () => sessionStorage.getItem('currentCorpOperNr');
     async function loadSetionData(secao) {
       try {
         const corp = getCorpId();
@@ -1243,8 +1243,8 @@
       if (requests.length > 0) await Promise.all(requests);
     }
     /* =======================================
-       EMIT SCALE
-    ======================================= */
+      EMIT SCALE (COMPLETA COM NOTIFICAÇÃO)
+   ======================================= */
     async function initScaleEmission() {
       const table = document.querySelector(".month-table tbody");
       if (!table) return;
@@ -1252,17 +1252,41 @@
       if (saveBtn) {
         saveBtn.disabled = true;
         saveBtn.textContent = "A guardar...";
-      }      
+      }
       try {
         const yearSelect = document.getElementById("year-selector");
         if (!yearSelect) throw new Error("Year selector não encontrado");
         const selectedYear = parseInt(yearSelect.value, 10);
         const monthIndex = getActiveMonthIndex();
-        if (!monthIndex) throw new Error("Nenhum mês selecionado.");  
+        if (!monthIndex) throw new Error("Nenhum mês selecionado.");
+        const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
+        const headers = getSupabaseHeaders();
         const savedMap = await fetchSavedData(currentSection, selectedYear, monthIndex);
-        const {toInsert, toUpdate, toDelete} = diffFixedRowsChanges(table, savedMap);
+        const { toInsert, toUpdate, toDelete } = diffFixedRowsChanges(table, savedMap);
         await saveChanges({toInsert, toUpdate, toDelete, section: currentSection, year: selectedYear, month: monthIndex});
-        showPopupSuccess("✅ Escala emitida com sucesso! Por favor agurde uns breves segundos pelo download automático. Obrigado.");
+        try {
+          const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+          const nomeMes = monthNames[parseInt(monthIndex) - 1];
+          const respUsers = await fetch(
+            `${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${corp_oper_nr}&elem_state=eq.true&select=n_int`, {
+              headers: headers
+            }
+          );
+          const activeUsers = await respUsers.json();
+          if (activeUsers.length > 0) {
+            const now = new Date().toISOString();
+            const msgNotif = `📅 A escala de Serviço para ${nomeMes}/${selectedYear} foi emitida. Consulta a área "Escalas"!`;
+            const notifications = activeUsers.map(u => ({n_int: u.n_int, corp_oper_nr: corp_oper_nr, title: "Escala Emitida", message: msgNotif, is_read: false, created_at: now}));
+            await fetch(`${SUPABASE_URL}/rest/v1/user_notifications`, {
+              method: 'POST',
+              headers: headers,
+              body: JSON.stringify(notifications)
+            });
+          }
+        } catch (errNotif) {
+          console.error("Erro no envio das notificações:", errNotif);
+        }
+        showPopupSuccess("✅ Escala emitida com sucesso! Por favor aguarde uns breves segundos pelo download automático. Obrigado.");
         await exportScheduleToExcel(table, selectedYear, monthIndex);
       } catch (err) {
         console.error(err);
@@ -1274,37 +1298,37 @@
         }
       }
     }
-   function diffFixedRowsChanges(table, savedMap) {
-     const toInsert = [];
-     const toUpdate = [];
-     const toDelete = [];
-     const rows = table.querySelectorAll("tr.fixed-row");
-     for (const row of rows) {
-       const fixedId = row.getAttribute("data-fixed");
-       if (fixedId !== "1" && fixedId !== "2" && fixedId !== "3") continue;
-       if (row.cells.length < 10) {
-         continue;
-       }
-       const n_int = fixedId === "1" ? 3 : (fixedId === "2" ? 4 : 9);
-       const abv_name = row.cells[1] ? row.cells[1].textContent.trim() : "FIXO";
-       for (let d = 3; d < row.cells.length - 1; d++) {
-         const cell = row.cells[d];
-         if (!cell) continue;
-         const value = cell.textContent.toUpperCase().slice(0, 1).trim();
-         const day = d - 2;
-         const key = `${n_int}_${day}`;
-         const existingVal = savedMap[key];
-         if (existingVal) {
-           if (!value) toDelete.push({ n_int, day });
-           else if (existingVal.toUpperCase() !== value)
-             toUpdate.push({ n_int, day, value });
-         } else if (value) {
-           toInsert.push({ n_int, abv_name, day, value });
-         }
-       }
-     }
-     return { toInsert, toUpdate, toDelete };
-   }
+    function diffFixedRowsChanges(table, savedMap) {
+      const toInsert = [];
+      const toUpdate = [];
+      const toDelete = [];
+      const rows = table.querySelectorAll("tr.fixed-row");
+      for (const row of rows) {
+        const fixedId = row.getAttribute("data-fixed");
+        if (fixedId !== "1" && fixedId !== "2" && fixedId !== "3") continue;
+        if (row.cells.length < 10) {
+          continue;
+        }
+        const n_int = fixedId === "1" ? 3 : (fixedId === "2" ? 4 : 9);
+        const abv_name = row.cells[1] ? row.cells[1].textContent.trim() : "FIXO";
+        for (let d = 3; d < row.cells.length - 1; d++) {
+          const cell = row.cells[d];
+          if (!cell) continue;
+          const value = cell.textContent.toUpperCase().slice(0, 1).trim();
+          const day = d - 2;
+          const key = `${n_int}_${day}`;
+          const existingVal = savedMap[key];
+          if (existingVal) {
+            if (!value) toDelete.push({ n_int, day });
+            else if (existingVal.toUpperCase() !== value)
+              toUpdate.push({ n_int, day, value });
+          } else if (value) {
+            toInsert.push({ n_int, abv_name, day, value });
+          }
+        }
+      }
+      return { toInsert, toUpdate, toDelete };
+    }
     /* =======================================
        CONVERT SCALE
     ======================================= */

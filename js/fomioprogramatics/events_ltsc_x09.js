@@ -1,6 +1,6 @@
-    /* ======================================
-    EVENTS
-    =======================================*/
+    /* =======================================
+    EVENTS
+    ======================================= */
     document.addEventListener('click', async function(e) {
       const btn = e.target.closest('.sidebar-sub-submenu-button');
       if (btn && btn.getAttribute('data-page') === 'page-event-disp') {
@@ -8,7 +8,7 @@
         await loadEvents();
       }
     });
-    /* =========================== ADD SHIFT =========================== */
+    /* ============ ADD SHIFT ============= */
     function addShift() {
       const container = document.getElementById('shiftsList');
       const div = document.createElement('div');
@@ -36,18 +36,18 @@
       const totalShifs = document.querySelectorAll('.shift-item').length;
       document.getElementById('turno-count').innerText = `(${totalShifs} Inseridos)`;
     }
-    /* ========================= REMOVE SHIFT ========================== */
+    /* =========== REMOVE SHIFT =========== */
     function removeShift(btn) {
       btn.parentElement.remove();
       updateCounter();
     }
-    /* ========================== CLEAR FORM =========================== */
+    /* ============ CLEAR FORM ============ */
     function clearForm() {
       document.querySelectorAll('.admin-container input').forEach(i => i.value = '');
       document.getElementById('eventType').value = '';
       document.getElementById('shiftsList').innerHTML = '';
     }
-    /* ========================= SUBMIT EVENT ========================== */
+    /* =========== SUBMIT EVENT =========== */
     async function submitEvent() {
       const eventName = document.getElementById('eventName').value.trim();
       const eventType = document.getElementById('eventType').value;
@@ -78,39 +78,59 @@
           `${SUPABASE_URL}/rest/v1/event_list?event=eq.${encodeURIComponent(eventName)}&corp_oper_nr=eq.${corp_oper_nr}`, {
             headers: headers
           }
-        );        
+        );
         const existingEvents = await respCheck.json();
         if (existingEvents.length > 0) { 
-          alert(`O evento "${eventName}" já existe na sua corporação!`); 
+          alert(`O evento "${eventName}" já existe na sua corporação!`);
           return;
         }
         const respEvent = await fetch(`${SUPABASE_URL}/rest/v1/event_list`, {
-          method: 'POST', 
+          method: 'POST',
           headers: headers,
           body: JSON.stringify({event: eventName, event_type: eventType, corp_oper_nr: corp_oper_nr, date_start: startDate, date_end: endDate, value: valueHour, location: location})
         });    
         if (!respEvent.ok) throw new Error("Erro ao criar cabeçalho do evento");
         const shiftPromises = shifts.map(shift => fetch(`${SUPABASE_URL}/rest/v1/event_shifts`, {
-          method: 'POST', 
+          method: 'POST',
           headers: headers,
-          body: JSON.stringify({event: eventName,  event_shift_date: shift.event_shift_date, event_shift: shift.event_shift, nec_oper: shift.nec_oper, act_oper: 0, corp_oper_nr: corp_oper_nr})
-        }));    
-        await Promise.all(shiftPromises);    
-        alert("Evento e turnos criados com sucesso!"); 
+          body: JSON.stringify({event: eventName, event_shift_date: shift.event_shift_date, event_shift: shift.event_shift, nec_oper: shift.nec_oper, act_oper: 0, corp_oper_nr: corp_oper_nr})
+        }));
+        await Promise.all(shiftPromises);
+        try {
+          const respUsers = await fetch(
+            `${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${corp_oper_nr}&elem_state=eq.true&select=n_int`, {
+              headers: headers
+            }
+          );
+          const activeUsers = await respUsers.json();
+          if (activeUsers.length > 0) {
+            const now = new Date().toISOString();
+            const notifications = activeUsers.map(u => ({n_int: u.n_int, corp_oper_nr: corp_oper_nr, title: "Novo Evento", message: `📢 Novo evento: "${eventName}". Inscrições abertas na área de eventos!`,
+                                                         is_read: false, created_at: now}));
+            await fetch(`${SUPABASE_URL}/rest/v1/user_notifications`, {
+              method: 'POST',
+              headers: headers,
+              body: JSON.stringify(notifications)
+            });
+          }
+        } catch (errNotif) {
+          console.error("Erro ao notificar elementos:", errNotif);
+        }
+        alert("Evento criado e operacionais notificados com sucesso!");
         clearForm();
-        if (typeof loadEvents === "function") loadEvents();    
+        if (typeof loadEvents === "function") loadEvents();
       } catch(e) { 
         console.error("Erro no submitEvent:", e);
-        alert("Erro ao criar evento. Verifique a consola para mais detalhes."); 
+        alert("Erro ao criar evento.");
       }
     }
-    /* ========================= EVENT LOADING ========================= */
+    /* ========== LOADING EVENT =========== */    
     function formatDateDisplay(dateStr) {
       if (!dateStr) return '---';
       const parts = dateStr.split('-');
       return parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : dateStr;
     }
-    function getStatusClass(state) {
+    function getEventsStatusClass(state) {
       if (state === 'Aprovado') return 'bg-aprovado';
       if (state === 'Não Aprovado') return 'bg-rejeitado';
       if (state === 'Em Aprovação') return 'bg-pendente';
@@ -118,8 +138,7 @@
     }
     async function loadEvents() {
       const tbody = document.querySelector('#eventTable tbody');
-      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
-      
+      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');      
       tbody.innerHTML = '<tr><td colspan="5">A carregar...</td></tr>';      
       try {
         const resp = await fetch(
@@ -153,8 +172,8 @@
         console.error(e);
         tbody.innerHTML = '<tr><td colspan="5">Erro ao carregar dados.</td></tr>'; 
       }
-    }
-    /* ===================== DISPLAY EVENTS TABLE ====================== */
+    }    
+    /* ======= DISPLAY EVENTS TABLE ======= */
     async function buildDispTable(eventName) {
       const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
       const encodedName = encodeURIComponent(eventName);
@@ -170,7 +189,7 @@
               headers: getSupabaseHeaders()
             }
           )
-        ]);    
+        ]);
         const shifts = await rShifts.json();
         const disps = await rDisp.json();    
         if (disps.length === 0) {
@@ -202,7 +221,7 @@
               </tr>
             </thead>
           <tbody>
-        `;    
+        `;
         disps.forEach(d => {
           const sInfo = shifts.find(s => s.event_shift_date === d.event_shift_date && s.event_shift === d.event_shift);
           const act = sInfo ? parseInt(sInfo.act_oper || 0) : 0;
@@ -210,7 +229,7 @@
           const isFull = act >= nec;
           const canAction = !isFull || d.shift_state === 'Aprovado';
           const rowClass = (isFull && d.shift_state !== 'Aprovado') ? 'row-full' : '';
-          const statusClass = (isFull && d.shift_state !== 'Aprovado') ? 'bg-default' : getStatusClass(d.shift_state);
+          const statusClass = (isFull && d.shift_state !== 'Aprovado') ? 'bg-default' : getEventsStatusClass(d.shift_state);
           const statusText = (isFull && d.shift_state !== 'Aprovado') ? 'Turno Cheio' : d.shift_state;
           const elemData = elemMap[d.n_int] || {};
           const elemName = elemData.full_name || d.n_int;
@@ -246,8 +265,8 @@
         console.error("Erro em buildDispTable:", e);
         return "<div style='color:red; padding:10px;'>Erro ao processar tabela de detalhes.</div>";
       }
-    }
-    /* ======================== TOGGLE DISPLAY ========================= */
+    }    
+    /* ========== TOGGLE DISPLAY ========== */
     async function toggleDisp(eventName, btn) {
       const safeId = eventName.replace(/\W/g,'');
       const container = document.getElementById(`container-${safeId}`);
@@ -276,7 +295,7 @@
         container.innerHTML = "Erro ao carregar detalhes.";
       }
     }
-    /* ========================= REFRESH TABLE ========================= */
+    /* ========== REFRESH TABLE =========== */
     async function refreshTableOnly(eventName, safeId) {
       const container = document.getElementById(`container-${safeId}`);
       try {
@@ -285,68 +304,75 @@
       } catch(e) { 
         console.error(e);
       }
-    }
-    /* ========================= UPDATE STATE ========================= */
+    }    
+    /* =========== UPDATE STATE =========== */
     async function updateState(id, newState, evName, sDate, sTime) {
       const row = document.getElementById(`disp-row-${id}`);
       const badge = row.querySelector('.status-badge');
       const oldState = badge.dataset.state;
-      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');    
-      if (oldState === newState) return;    
+      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
+      const userNInt = row.cells[0].innerText;
+      if (oldState === newState) return;
       try {
         if (newState === 'Aprovado') {
           const r = await fetch(
-            `${SUPABASE_URL}/rest/v1/event_shifts?event=eq.${encodeURIComponent(evName)}&event_shift_date=eq.${sDate}&event_shift=eq.${sTime}&corp_oper_nr=eq.${corp_oper_nr}`,  {
+            `${SUPABASE_URL}/rest/v1/event_shifts?event=eq.${encodeURIComponent(evName)}&event_shift_date=eq.${sDate}&event_shift=eq.${sTime}&corp_oper_nr=eq.${corp_oper_nr}`, {
               headers: getSupabaseHeaders()
             }
           );
-          const s = await r.json();          
+          const s = await r.json();
           if (s.length > 0) {
             const currentAct = parseInt(s[0].act_oper) || 0;
             const currentNec = parseInt(s[0].nec_oper) || 0;
-            
-            if (currentAct >= currentNec) { 
-              alert("Turno já está preenchido! Não há vagas disponíveis.");
+            if (currentAct >= currentNec) {
+              alert("Atenção: Este turno já atingiu o limite de vagas!");
               return;
             }
           }
         }
         const rUp = await fetch(`${SUPABASE_URL}/rest/v1/event_disp?id=eq.${id}`, {
-          method: 'PATCH', 
-          headers: getSupabaseHeaders(), 
+          method: 'PATCH',
+          headers: getSupabaseHeaders(),
           body: JSON.stringify({ shift_state: newState })
-        });        
-        if (!rUp.ok) throw new Error("Erro ao atualizar estado");
+        });
+        if (!rUp.ok) throw new Error("Erro ao atualizar o estado da disponibilidade");
+        const msgNotif = newState === 'Aprovado' 
+        ? `✅ A tua disponibilidade para o evento "${evName}" (${formatDateDisplay(sDate)}) foi APROVADA.`
+        : `❌ A tua disponibilidade para o evento "${evName}" (${formatDateDisplay(sDate)}) não foi aprovada.`;
+        await fetch(`${SUPABASE_URL}/rest/v1/user_notifications`, {
+          method: 'POST',
+          headers: getSupabaseHeaders(),
+          body: JSON.stringify({n_int: userNInt, corp_oper_nr: corp_oper_nr, title: "Escala de Evento", message: msgNotif, is_read: false, created_at: new Date().toISOString()})
+        });
         let inc = 0;
-        if (newState === 'Aprovado' && oldState !== 'Aprovado') {
-          inc = 1;
-        } else if (newState !== 'Aprovado' && oldState === 'Aprovado') {
-          inc = -1;
-        }
+        if (newState === 'Aprovado' && oldState !== 'Aprovado') inc = 1;
+        else if (newState !== 'Aprovado' && oldState === 'Aprovado') inc = -1;
         if (inc !== 0) {
           const rGet = await fetch(
-            `${SUPABASE_URL}/rest/v1/event_shifts?event=eq.${encodeURIComponent(evName)}&event_shift_date=eq.${sDate}&event_shift=eq.${sTime}&corp_oper_nr=eq.${corp_oper_nr}`, 
-            { headers: getSupabaseHeaders() }
+            `${SUPABASE_URL}/rest/v1/event_shifts?event=eq.${encodeURIComponent(evName)}&event_shift_date=eq.${sDate}&event_shift=eq.${sTime}&corp_oper_nr=eq.${corp_oper_nr}`, {
+              headers: getSupabaseHeaders()
+            }
           );
-          const cur = await rGet.json();          
+          const cur = await rGet.json();
           if (cur.length > 0) {
             const currentActOper = parseInt(cur[0].act_oper) || 0;
-            const newActOper = Math.max(0, currentActOper + inc);            
+            const newActOper = Math.max(0, currentActOper + inc);
             await fetch(`${SUPABASE_URL}/rest/v1/event_shifts?id=eq.${cur[0].id}`, {
-              method: 'PATCH', 
-              headers: getSupabaseHeaders(), 
+              method: 'PATCH',
+              headers: getSupabaseHeaders(),
               body: JSON.stringify({ act_oper: newActOper })
             });
           }
         }
-        const safeId = evName.replace(/\W/g,'');
-        await refreshTableOnly(evName, safeId);    
-      } catch (e) { 
-        console.error("Erro no updateState:", e);
-        alert("Erro ao atualizar disponibilidade. Verifique a sua ligação.");
+        const safeId = evName.replace(/\W/g, '');
+        await refreshTableOnly(evName, safeId);
+        console.log(`Estado atualizado: ${userNInt} -> ${newState}`);
+      } catch (e) {
+        console.error("Erro crítico no updateState:", e);
+        alert("Ocorreu um erro ao processar o estado ou a notificação.");
       }
     }
-    /* ========================= DELETE EVENT ========================= */
+    /* =========== DELETE EVENT =========== */
     async function deleteFullEvent(eventName) {
       const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
       const confirmation = confirm(`Deseja eliminar o evento "${eventName}"?`);

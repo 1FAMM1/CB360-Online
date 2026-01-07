@@ -43,20 +43,36 @@
       const imageElement = document.getElementById(`cma_image_${n}`);
 
       if (nameInput) {
-        nameInput.value = row.aero_name || "";
-        nameInput.dataset.rowId = row.id; // Guarda o ID para o SAVE
-      }
-      if (typeSelect) {
-        typeSelect.value = row.aero_type || "";
-        // Atualiza a imagem (usa o teu switch original ou função auxiliar)
-      }
-      if (autoInput) autoInput.value = row.aero_autonomy || "";
-    });
-
+          nameInput.value = row.aero_name || "";
+          nameInput.dataset.rowId = row.id; // Guarda o ID para o SAVE
+        }
+        if (typeSelect) {
+          typeSelect.value = row.aero_type || "";
+          // Atualização da imagem
+          const imgs = {
+            "Heli Ligeiro": "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/heli_ligeiro.jpg",
+            "Heli Médio": "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/heli_medio.jpg",
+            "Heli Pesado": "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/heli_pesado.jpg",
+            "Avião de Asa Fixa Médio": "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/aviao_asa_fixa_medio.jpg",
+            "Avião de Asa Fixa Pesado": "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/aviao_asa_fixa_pesado.png"
+          };
+          if (imageElement) imageElement.src = imgs[typeSelect.value] || "https://i.imgur.com/4Ho5HRV.png";
+        }
+        if (autoInput) autoInput.value = row.aero_autonomy || "";
+      });
+    }
   } catch (error) {
     console.error("❌ Erro no load:", error);
   }
 }
+
+
+
+
+
+
+
+
     
     async function saveCMAsGroupFields() {
       try {
@@ -85,6 +101,7 @@
       }
     }
     document.addEventListener("DOMContentLoaded", loadCMAsFromSupabase);
+
 
 
 

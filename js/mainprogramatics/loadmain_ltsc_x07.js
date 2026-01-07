@@ -8,49 +8,75 @@
       if (authNameEl) authNameEl.textContent = currentUserDisplay || "";
       /* ===================== VERIFICAÇÃO DE VALIDADE ===================== */
       /* ===================== VERIFICAÇÃO DE VALIDADE E CARGO ===================== */
-async function checkUserValidity(nInt) {
-  // Se não houver n_int, algo correu mal no login
-  if (!nInt) return true; 
-
+/* ================= CHECK USER VALIDITY (CORRIGIDO) ================= */
+async function checkUserValidity() {
   try {
-    // Agora buscamos na reg_elems porque é lá que está o user_role e o n_int
-    const url = `${SUPABASE_URL}/rest/v1/reg_elems?select=validate,user_role&n_int=eq.${encodeURIComponent(nInt)}`;
-    const response = await fetch(url, { headers: getSupabaseHeaders() });
-    
-    if (!response.ok) throw new Error("Erro ao buscar validade do utilizador");
-    
-    const data = await response.json();
-    if (!data || data.length === 0) return true;
+    const nInt = sessionStorage.getItem("currentNInt");
+    const corpNr = sessionStorage.getItem("currentCorpOperNr");
+    const full_name = sessionStorage.getItem("currentUserName");
 
-    const userEntry = data[0];
-    
-    // 1. ATUALIZA O CARGO EM TEMPO REAL (Garante que se fores promovido a admin, funciona logo)
-    sessionStorage.setItem("currentUserRole", userEntry.user_role || "user");
-
-    // 2. VERIFICAÇÃO DE EXPIRAÇÃO (A tua lógica original)
-    if (userEntry.validate) {
-      const today = new Date();
-      const expireDate = new Date(userEntry.validate);
-      const diffTime = expireDate - today;
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-      if (diffDays < 0) {
-        alert("❌ Sua conta expirou. Todos os acessos foram bloqueados.");
-        if (typeof blockAllSidebar === "function") blockAllSidebar();
-        return false;
-      } else if (diffDays <= 30) {
-        // Opcional: mostrar aviso apenas uma vez por sessão para não chatear
-        console.warn(`Aviso: Conta expira em ${diffDays} dias.`);
-      }
+    // Se não houver dados básicos na sessão, redireciona para o login
+    if (!nInt || !corpNr) {
+      console.error("Sessão inválida: nInt ou corpNr ausentes.");
+      window.location.href = "login.html";
+      return;
     }
 
-    return true;
-  } catch (err) {
-    console.error("Erro ao verificar validade:", err);
-    return true; // Em caso de erro de rede, deixa passar para não bloquear o user
+    // Criamos os parâmetros da query de forma limpa para evitar Erro 400
+    const params = new URLSearchParams({
+      n_int: `eq.${nInt}`,
+      corp_oper_nr: `eq.${corpNr}`,
+      select: 'user_role,elem_state,acess' // Pedimos também os acessos
+    });
+
+    const url = `${SUPABASE_URL}/rest/v1/reg_elems?${params.toString()}`;
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: getSupabaseHeaders()
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Erro Supabase (${response.status}): ${errorText}`);
+    }
+
+    const data = await response.json();
+
+    if (!data || data.length === 0) {
+      console.warn("Utilizador não encontrado na tabela reg_elems.");
+      alert("Erro: Ficha de elemento não encontrada.");
+      window.location.href = "login.html";
+      return;
+    }
+
+    const user = data[0];
+
+    // 1. Verificar se o elemento está Ativo
+    if (user.elem_state !== true) {
+      alert("A sua conta está INATIVA. Contacte o administrador.");
+      window.location.href = "login.html";
+      return;
+    }
+
+    // 2. Sincronizar Permissões (Caso tenham sido alteradas no painel admin)
+    // Isso garante que se o admin mudar os teus acessos, eles atualizam no próximo refresh
+    if (user.acess) {
+      sessionStorage.setItem("allowedModules", user.acess);
+    }
+    
+    if (user.user_role) {
+      sessionStorage.setItem("currentUserRole", user.user_role);
+    }
+
+    console.log("✅ Validação concluída: Utilizador Ativo e Autorizado.");
+
+  } catch (error) {
+    console.error("❌ Erro ao verificar validade:", error);
+    // Em caso de erro crítico de rede, não expulsamos logo o user, 
+    // mas podes optar por window.location.href se quiseres segurança máxima.
   }
 }
-
 // Chamar a função usando o n_int que injetámos no login
 const currentNInt = sessionStorage.getItem("currentNInt");
 checkUserValidity(currentNInt);
@@ -228,6 +254,7 @@ checkUserValidity(currentNInt);
         });
       }
     });
+
 
 
 

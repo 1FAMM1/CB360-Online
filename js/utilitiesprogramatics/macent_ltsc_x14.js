@@ -52,7 +52,7 @@
           const autoInput = document.getElementById(`cma_auto_${n}`);
           if (!nameInput || !typeSelect || !autoInput) continue;
           const payload = {
-            aero_name: nameInput.value || null, aero_type: typeSelect.value || null, aero_autonomy: autoInput.value || null};
+            aero_name: nameInput.value || null, aero_type: typeSelect.value || null, aero_autonomy: autoInput.value || null, corp_oper_nr: localStorage.getItem("currentCorpOperNr")};
           const resPatch = await fetch(
             `${SUPABASE_URL}/rest/v1/air_centers?id=eq.${i}`, {
               method: "PATCH",
@@ -69,3 +69,4 @@
       }
     }
     document.addEventListener("DOMContentLoaded", loadCMAsFromSupabase);
+

@@ -3,68 +3,42 @@
 ======================================= */
 
 async function loadCMAsFromSupabase() {
-  console.log("🚀 [CMA] Iniciando carga...");
-  try {
-    // 1. LER DA SESSION (Igual aos Eventos)
-    const corpOperNr = sessionStorage.getItem('currentCorpOperNr');
-    console.log("🔍 [CMA] Corporação detetada:", corpOperNr);
+    console.log("🚀 [CMA] Iniciando carga...");
 
-    if (!corpOperNr) {
-      console.warn("⚠️ [CMA] Sem corp_oper_nr no sessionStorage. Re-tentando...");
-      return; 
+    try {
+        // 1. PRIMEIRO: Criar o HTML (essencial)
+        if (typeof createCmaInputs === "function") {
+            createCmaInputs(); 
+            console.log("✅ [CMA] HTML dos inputs gerado.");
+        }
+
+        // 2. SEGUNDO: Preencher as opções do Select (se tiveres uma função global)
+        // Só chamamos isto DEPOIS do createCmaInputs
+        if (typeof populateGlobalSelects === "function") {
+            populateGlobalSelects();
+        }
+
+        const corpOperNr = sessionStorage.getItem('currentCorpOperNr');
+        
+        // 3. TERCEIRO: Buscar dados no Supabase
+        const res = await fetch(
+            `${SUPABASE_URL}/rest/v1/air_centers?corp_oper_nr=eq.${corpOperNr}&order=id.asc`, 
+            { headers: getSupabaseHeaders() }
+        );
+
+        const data = await res.json();
+
+        // 4. QUARTO: Inserir os dados nos campos já criados
+        if (data && data.length > 0) {
+            fillCmaFields(data);
+        } else {
+            console.log("ℹ️ [CMA] Sem dados, criando iniciais...");
+            await seedInitialCMAs(corpOperNr);
+        }
+
+    } catch (error) {
+        console.error("❌ [CMA] Erro no fluxo:", error);
     }
-
-    if (typeof createCmaInputs === "function") createCmaInputs();
-
-    // 2. FETCH
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/air_centers?corp_oper_nr=eq.${corpOperNr}&order=id.asc`, 
-      { headers: getSupabaseHeaders() }
-    );
-
-    let data = await res.json();
-    console.log("📦 [CMA] Dados recebidos:", data);
-
-    // 3. SE VAZIO: Criar 6 linhas padrão
-    if (data.length === 0) {
-      console.log("🌱 [CMA] Criando linhas iniciais...");
-      const rows = Array.from({ length: 6 }, () => ({
-        corp_oper_nr: corpOperNr,
-        aero_name: "",
-        aero_type: "",
-        aero_autonomy: ""
-      }));
-
-      const resPost = await fetch(`${SUPABASE_URL}/rest/v1/air_centers`, {
-        method: "POST",
-        headers: getSupabaseHeaders({ returnRepresentation: true }),
-        body: JSON.stringify(rows)
-      });
-      data = await resPost.json();
-    }
-
-    // 4. PREENCHER INPUTS
-    data.forEach((row, index) => {
-      const n = String(index + 1).padStart(2, '0');
-      const nameInput = document.getElementById(`cma_aero_type_${n}`);
-      const typeSelect = document.getElementById(`cma_type_${n}`);
-      const autoInput = document.getElementById(`cma_auto_${n}`);
-      const imageElement = document.getElementById(`cma_image_${n}`);
-
-      if (nameInput) {
-        nameInput.value = row.aero_name || "";
-        nameInput.dataset.rowId = row.id; // Crucial para o SAVE
-      }
-      if (typeSelect) {
-        typeSelect.value = row.aero_type || "";
-        updateCMAImage(typeSelect.value, imageElement);
-      }
-      if (autoInput) autoInput.value = row.aero_autonomy || "";
-    });
-
-  } catch (error) {
-    console.error("❌ [CMA] Erro:", error);
-  }
 }
 
 async function saveCMAsGroupFields() {
@@ -114,4 +88,5 @@ function updateCMAImage(type, imgEl) {
 document.addEventListener("DOMContentLoaded", loadCMAsFromSupabase);
     loadCMAsFromSupabase();
 });
+
 

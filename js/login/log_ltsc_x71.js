@@ -1,63 +1,64 @@
-    async function loginUser(user, pass) {
+   async function loginUser(user, pass) {
   try {
-    // 1. Busca na tabela 'users' (agora com n_int)
+    // 1. Validar na tabela 'users'
     const resUser = await fetch(
       `${SUPABASE_URL}/rest/v1/users?select=username,password,n_int&username=eq.${encodeURIComponent(user)}`, {
         headers: getSupabaseHeaders()
       }
     );
 
+    if (!resUser.ok) throw new Error(`Erro na tabela users: ${resUser.status}`);
     const dataUser = await resUser.json();
+
     if (dataUser.length === 0 || dataUser[0].password !== pass) {
       showToast("Credenciais inválidas.", 2000, "error");
       return;
     }
 
-    const userNInt = dataUser[0].n_int;
+    const userData = dataUser[0];
 
-    // 2. Busca na tabela 'reg_elems' usando o n_int que acabámos de obter
-    // Aqui usei exatamente os campos que listaste
+    // 2. Buscar detalhes na tabela 'reg_elems' para injeção de dados
     const resElems = await fetch(
-      `${SUPABASE_URL}/rest/v1/reg_elems?select=n_int,full_name,patent,corp_oper_nr,user_role&n_int=eq.${userNInt}`, {
+      `${SUPABASE_URL}/rest/v1/reg_elems?select=n_int,full_name,corp_oper_nr,user_role&n_int=eq.${userData.n_int}`, {
         headers: getSupabaseHeaders()
       }
     );
 
-    if (!resElems.ok) {
-      const errorDetail = await resElems.json();
-      console.error("Erro detalhado reg_elems:", errorDetail);
-      throw new Error("Erro 400");
-    }
-
+    if (!resElems.ok) throw new Error("Erro ao aceder a reg_elems");
     const dataElems = await resElems.json();
+
     if (dataElems.length === 0) {
-      showToast("Elemento não encontrado na base de dados geral.", 3000, "error");
+      showToast("Utilizador sem ficha de elemento.", 3000, "error");
       return;
     }
 
     const elem = dataElems[0];
     const corp = String(elem.corp_oper_nr || "").padStart(4, "0");
 
-    // 3. Guardar Sessão
+    // 3. Injeção de dados na sessão (Para as RLS funcionarem internamente)
     sessionStorage.setItem("currentUserName", user);
     sessionStorage.setItem("currentNInt", elem.n_int);
-    sessionStorage.setItem("currentUserRole", elem.user_role || "user");
     sessionStorage.setItem("currentCorpOperNr", corp);
+    sessionStorage.setItem("currentUserRole", elem.user_role || "user");
     sessionStorage.setItem("currentUserDisplay", elem.full_name);
 
-    // 4. Redirecionar
-    showToast("Sucesso!", 2000, "success");
+    showToast("Login efetuado com sucesso!", 2000, "success");
+
+    // 4. Redirecionamento restrito pelo Número de Corporação
     setTimeout(() => {
-      if (elem.user_role === "admin" || corp === "0000") {
+      if (corp === "0000") {
+        // Apenas o nr 0000 vai para a administração
+        sessionStorage.setItem("isMasterUser", "true");
         window.location.href = "system_admin.html";
       } else {
+        // Todos os outros (mesmo que sejam admin no user_role) vão para a main
         window.location.href = "main.html";
       }
     }, 1500);
 
   } catch (err) {
-    console.error("Erro no processo:", err);
-    showToast("Erro ao validar acesso. Verifique o n_int na tabela users.", 4000, "error");
+    console.error("Erro:", err);
+    showToast("Erro ao validar acesso.", 3000, "error");
   }
 }
     document.getElementById("loginForm").addEventListener("submit", e => {
@@ -113,6 +114,7 @@
     }
     startClock();
     document.getElementById("username").focus();
+
 
 
 

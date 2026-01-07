@@ -292,14 +292,12 @@
       e.preventDefault();
       const meuCargo = sessionStorage.getItem("currentUserRole");
       if (meuCargo !== 'admin') {
-        alert("❌ Acesso negado: Não tem permissões de Administrador para efetuar esta operação.");
+        alert("❌ Não tem permissões para efetuar esta operação.");
         return;
       }
       const n_intValue = document.getElementById("win_n_int").value;
       const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const meuNInt = sessionStorage.getItem("currentNInt");
-      const valDate = document.getElementById("win_validate")?.value || null;
-      const selectedRole = document.getElementById("win_user_role")?.value || "user";
       const customHeaders = {
         ...getSupabaseHeaders(),
         "Prefer": "return=representation",
@@ -320,10 +318,9 @@
         nib: document.getElementById("win_nib").value,
         elem_state: document.getElementById("win_state").value === "Ativo",
         acess: Array.from(document.querySelectorAll('.access-checkbox:checked')).map(cb => cb.value).join(", "),
-        validate: valDate,
-        user_role: selectedRole,
         last_updated: new Date().toISOString(),
-        corp_oper_nr: corpOperNr
+        corp_oper_nr: corpOperNr,
+        user_role: "user"
       };
       const payloadUsers = {
         username: document.getElementById("win_user_name_main").value,
@@ -331,56 +328,52 @@
         full_name: document.getElementById("win_full_name").value,
         patent: document.getElementById("win_patent").value,
         corp_oper_nr: corpOperNr,
-        n_int: n_intValue,
-        validate: valDate,
-        user_role: selectedRole
+        n_int: n_intValue
       };
       try {
         const checkRes = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${n_intValue}&corp_oper_nr=eq.${corpOperNr}`, {
           headers: customHeaders
         });
         const existing = await checkRes.json();
-        let resReg;
+        let resAction;
         if (existing && existing.length > 0) {
           if (!confirm(`O nº interno "${n_intValue}" já existe. Atualizar registro?`)) return;
-          resReg = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?id=eq.${existing[0].id}`, {
+          resAction = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?id=eq.${existing[0].id}`, {
             method: "PATCH",
             headers: customHeaders,
             body: JSON.stringify(payloadRegElems)
           });
         } else {
-          resReg = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems`, {
+          resAction = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems`, {
             method: "POST",
             headers: customHeaders,
             body: JSON.stringify(payloadRegElems)
           });
         }
-        if (!resReg.ok) throw new Error(`Falha ao gravar na reg_elems (Status: ${resReg.status})`);
+        if (!resAction.ok) throw new Error(`Erro na operação: ${resAction.status}`);
         const checkUser = await fetch(`${SUPABASE_URL}/rest/v1/users?username=eq.${payloadUsers.username}`, {
           headers: customHeaders
         });
         const usersFound = await checkUser.json();
-        let resUser;
         if (usersFound && usersFound.length > 0) {
-          resUser = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${usersFound[0].id}`, {
+          await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${usersFound[0].id}`, {
             method: "PATCH",
             headers: customHeaders,
             body: JSON.stringify(payloadUsers)
           });
         } else {
-          resUser = await fetch(`${SUPABASE_URL}/rest/v1/users`, {
+          await fetch(`${SUPABASE_URL}/rest/v1/users`, {
             method: "POST",
             headers: customHeaders,
             body: JSON.stringify(payloadUsers)
           });
         }
-        if (!resUser.ok) throw new Error(`Bombeiro salvo, mas erro ao criar/atualizar login (Status: ${resUser.status})`);
-        alert("✅ Operação concluída com sucesso!");
+        alert("✅ Operação realizada com sucesso!");
         document.getElementById("editWindow").style.display = "none";
-        if (typeof loadElementsTable === "function") loadElementsTable();
+        loadElementsTable();
       } catch (err) {
-        console.error("Erro fatal na operação:", err);
-        alert(`❌ Erro: ${err.message}`);
+        console.error("Erro fatal:", err);
+        alert("❌ Erro ao gravar dados. Verifique se tem permissões de Administrador.");
       }
     });
     /* ================= GENERATE ACCESS CHECKBOXES ================= */
@@ -523,6 +516,7 @@
         }
       }
     }
+
 
 
 

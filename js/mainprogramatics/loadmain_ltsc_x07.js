@@ -7,56 +7,70 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (authNameEl) authNameEl.textContent = currentUserDisplay || "";
 
     /* ===================== VERIFICAÇÃO DE VALIDADE ===================== */
-    async function checkUserValidity() {
-        try {
-            const nInt = sessionStorage.getItem("currentNInt");
-            const corpNr = sessionStorage.getItem("currentCorpOperNr");
+   /* ===================== VERIFICAÇÃO DE VALIDADE & DATA ===================== */
+async function checkUserValidity() {
+    try {
+        const nInt = sessionStorage.getItem("currentNInt");
+        const corpNr = sessionStorage.getItem("currentCorpOperNr");
 
-            if (!nInt || !corpNr) {
-                console.error("Sessão inválida.");
-                window.location.href = "login.html";
-                return false;
-            }
-
-            const params = new URLSearchParams({
-                n_int: `eq.${nInt}`,
-                corp_oper_nr: `eq.${corpNr}`,
-                select: 'user_role,elem_state,acess'
-            });
-
-            const url = `${SUPABASE_URL}/rest/v1/reg_elems?${params.toString()}`;
-            const response = await fetch(url, {
-                method: "GET",
-                headers: getSupabaseHeaders()
-            });
-
-            if (!response.ok) throw new Error(`Erro: ${response.status}`);
-            const data = await response.json();
-
-            if (!data || data.length === 0) {
-                alert("Ficha de elemento não encontrada.");
-                window.location.href = "login.html";
-                return false;
-            }
-
-            const user = data[0];
-            if (user.elem_state !== true) {
-                alert("A sua conta está INATIVA.");
-                window.location.href = "login.html";
-                return false;
-            }
-
-            // Sincroniza permissões
-            const permissoes = user.acess ? user.acess : "Menu Principal";
-            sessionStorage.setItem("allowedModules", permissoes);
-            if (user.user_role) sessionStorage.setItem("currentUserRole", user.user_role);
-
-            return true;
-        } catch (error) {
-            console.error("❌ Erro ao verificar validade:", error);
+        if (!nInt || !corpNr) {
+            window.location.href = "login.html";
             return false;
         }
+
+        // Adicionámos 'validate' (ou o nome exato da tua coluna) no select
+        // Se a coluna estiver na reg_elems, este código funciona:
+        const params = new URLSearchParams({
+            n_int: `eq.${nInt}`,
+            corp_oper_nr: `eq.${corpNr}`,
+            select: 'user_role,elem_state,acess,validate' 
+        });
+
+        const url = `${SUPABASE_URL}/rest/v1/reg_elems?${params.toString()}`;
+        const response = await fetch(url, {
+            method: "GET",
+            headers: getSupabaseHeaders()
+        });
+
+        if (!response.ok) throw new Error(`Erro: ${response.status}`);
+        const data = await response.json();
+
+        if (!data || data.length === 0) {
+            window.location.href = "login.html";
+            return false;
+        }
+
+        const user = data[0];
+
+        // 1. Verificação de Estado (Ativo/Inativo)
+        if (user.elem_state !== true) {
+            alert("A sua conta está INATIVA.");
+            window.location.href = "login.html";
+            return false;
+        }
+
+        // 2. Verificação de Data de Validade (Coluna 'validate')
+        if (user.validate) {
+            const dataAtual = new Date();
+            const dataExpiracao = new Date(user.validate);
+
+            // Se a data atual for maior que a data de expiração, bloqueia
+            if (dataAtual > dataExpiracao) {
+                alert("O seu acesso expirou em: " + dataExpiracao.toLocaleDateString('pt-PT'));
+                window.location.href = "login.html";
+                return false;
+            }
+        }
+
+        // Sincroniza permissões se passar nos testes acima
+        sessionStorage.setItem("allowedModules", user.acess || "Menu Principal");
+        return true;
+
+    } catch (error) {
+        console.error("❌ Erro ao verificar validade:", error);
+        return false;
     }
+}
 
     /* ====================== SINCRONIZAÇÃO SIDEBAR ====================== */
     function updateSidebarAccess(allowedModules) {
@@ -187,3 +201,4 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 });
+

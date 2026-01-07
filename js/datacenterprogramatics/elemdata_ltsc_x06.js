@@ -288,26 +288,25 @@
       const text = await response.text();
       return text ? JSON.parse(text) : null;
     }
-    /* ================= FORM SUBMIT (CORRIGIDO) ================= */
-document.getElementById("winForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const n_intValue = document.getElementById("win_n_int").value;
-    const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
-    
-    // Dados para as RLS (Quem está a fazer a operação)
-    const meuCargo = sessionStorage.getItem("currentUserRole");
-    const meuNInt = sessionStorage.getItem("currentNInt");
-
-    // Cabeçalhos de Autorização com cargo injetado
-    const customHeaders = {
+    document.getElementById("winForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const meuCargo = sessionStorage.getItem("currentUserRole");
+      if (meuCargo !== 'admin') {
+        alert("❌ Acesso negado: Não tem permissões de Administrador para efetuar esta operação.");
+        return;
+      }
+      const n_intValue = document.getElementById("win_n_int").value;
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const meuNInt = sessionStorage.getItem("currentNInt");
+      const valDate = document.getElementById("win_validate")?.value || null;
+      const selectedRole = document.getElementById("win_user_role")?.value || "user";
+      const customHeaders = {
         ...getSupabaseHeaders(),
         "Prefer": "return=representation",
         "x-my-role": meuCargo,
         "x-my-nint": meuNInt
-    };
-
-    const payloadRegElems = {
+      };
+      const payloadRegElems = {
         n_int: n_intValue,
         n_file: document.getElementById("win_n_file").value,
         patent: document.getElementById("win_patent").value,
@@ -321,78 +320,69 @@ document.getElementById("winForm").addEventListener("submit", async (e) => {
         nib: document.getElementById("win_nib").value,
         elem_state: document.getElementById("win_state").value === "Ativo",
         acess: Array.from(document.querySelectorAll('.access-checkbox:checked')).map(cb => cb.value).join(", "),
+        validate: valDate,
+        user_role: selectedRole,
         last_updated: new Date().toISOString(),
-        corp_oper_nr: corpOperNr,
-        user_role: "user" // Role padrão para o novo bombeiro, a menos que definas outra
-    };
-
-    const payloadUsers = {
+        corp_oper_nr: corpOperNr
+      };
+      const payloadUsers = {
         username: document.getElementById("win_user_name_main").value,
         password: document.getElementById("win_password_main").value,
         full_name: document.getElementById("win_full_name").value,
         patent: document.getElementById("win_patent").value,
         corp_oper_nr: corpOperNr,
-        n_int: n_intValue // Importante para o link de login
-    };
-
-    try {
-        // 1. Verificar se o Bombeiro já existe
+        n_int: n_intValue,
+        validate: valDate,
+        user_role: selectedRole
+      };
+      try {
         const checkRes = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${n_intValue}&corp_oper_nr=eq.${corpOperNr}`, {
-            headers: customHeaders
+          headers: customHeaders
         });
         const existing = await checkRes.json();
-
+        let resReg;
         if (existing && existing.length > 0) {
-            // ATUALIZAR (PATCH)
-            const confirmUpdate = confirm(`O nº interno "${n_intValue}" já existe. Atualizar registro?`);
-            if (!confirmUpdate) return;
-
-            const resUpdate = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?id=eq.${existing[0].id}`, {
-                method: "PATCH",
-                headers: customHeaders,
-                body: JSON.stringify(payloadRegElems)
-            });
-            if (!resUpdate.ok) throw new Error(`Erro 401/400 no Update: ${resUpdate.status}`);
-            alert("Bombeiro atualizado!");
+          if (!confirm(`O nº interno "${n_intValue}" já existe. Atualizar registro?`)) return;
+          resReg = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?id=eq.${existing[0].id}`, {
+            method: "PATCH",
+            headers: customHeaders,
+            body: JSON.stringify(payloadRegElems)
+          });
         } else {
-            // CRIAR NOVO (POST)
-            const resCreate = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems`, {
-                method: "POST",
-                headers: customHeaders,
-                body: JSON.stringify(payloadRegElems)
-            });
-            if (!resCreate.ok) throw new Error(`Erro 401/400 no Create: ${resCreate.status}`);
-            alert("Novo bombeiro criado!");
+          resReg = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems`, {
+            method: "POST",
+            headers: customHeaders,
+            body: JSON.stringify(payloadRegElems)
+          });
         }
-
-        // 2. Sincronizar com a tabela 'users' (Credenciais de Acesso)
+        if (!resReg.ok) throw new Error(`Falha ao gravar na reg_elems (Status: ${resReg.status})`);
         const checkUser = await fetch(`${SUPABASE_URL}/rest/v1/users?username=eq.${payloadUsers.username}`, {
-            headers: customHeaders
+          headers: customHeaders
         });
         const usersFound = await checkUser.json();
-
+        let resUser;
         if (usersFound && usersFound.length > 0) {
-            await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${usersFound[0].id}`, {
-                method: "PATCH",
-                headers: customHeaders,
-                body: JSON.stringify(payloadUsers)
-            });
+          resUser = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${usersFound[0].id}`, {
+            method: "PATCH",
+            headers: customHeaders,
+            body: JSON.stringify(payloadUsers)
+          });
         } else {
-            await fetch(`${SUPABASE_URL}/rest/v1/users`, {
-                method: "POST",
-                headers: customHeaders,
-                body: JSON.stringify(payloadUsers)
-            });
+          resUser = await fetch(`${SUPABASE_URL}/rest/v1/users`, {
+            method: "POST",
+            headers: customHeaders,
+            body: JSON.stringify(payloadUsers)
+          });
         }
-
+        if (!resUser.ok) throw new Error(`Bombeiro salvo, mas erro ao criar/atualizar login (Status: ${resUser.status})`);
+        alert("✅ Operação concluída com sucesso!");
         document.getElementById("editWindow").style.display = "none";
-        loadElementsTable();
-
-    } catch (err) {
+        if (typeof loadElementsTable === "function") loadElementsTable();
+      } catch (err) {
         console.error("Erro fatal na operação:", err);
-        alert("Erro ao gravar dados. Verifique a consola (F12) para detalhes do erro 401.");
-    }
-});
+        alert(`❌ Erro: ${err.message}`);
+      }
+    });
     /* ================= GENERATE ACCESS CHECKBOXES ================= */
     const TOGGLE_BTN_STYLE = "color: #eee; margin-right: 6px; margin-left: -20px; width: 14px; height: 14px; border-radius: 50%; border: 0; background: #1f4b91; cursor: pointer;"
     function closeSiblingContainers(currentContainer) {
@@ -533,5 +523,6 @@ document.getElementById("winForm").addEventListener("submit", async (e) => {
         }
       }
     }
+
 
 

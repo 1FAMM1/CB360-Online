@@ -1,43 +1,23 @@
 /* =======================================
            AIR RESOURCE CENTERS
 ======================================= */
-
 async function loadCMAsFromSupabase() {
   try {
+    createCmaInputs();
     const corpOperNr = localStorage.getItem("currentCorpOperNr");
-    if (!corpOperNr) return;
 
-    createCmaInputs(); // Gera o HTML
-
-    // 1. Tentar ler os dados
-    let res = await fetch(
-      `${SUPABASE_URL}/rest/v1/air_centers?corp_oper_nr=eq.${corpOperNr}&order=id.asc`, 
-      { headers: getSupabaseHeaders() }
+    // FILTRO ADICIONADO: corp_oper_nr=eq.XXXX
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/air_centers?corp_oper_nr=eq.${corpOperNr}&order=id.asc`, {
+        method: "GET",
+        headers: getSupabaseHeaders()
+      }
     );
-    
-    let data = await res.json();
 
-    // 2. SE ESTIVER VAZIO PARA ESTA CORPORAÇÃO: Criar 6 linhas padrão
-    if (data.length === 0) {
-      console.log("CMA vazio. A criar 6 registos para a corporação:", corpOperNr);
-      const rowsToCreate = Array.from({ length: 6 }, () => ({
-        corp_oper_nr: corpOperNr,
-        aero_name: "",
-        aero_type: "",
-        aero_autonomy: ""
-      }));
+    if (!res.ok) throw new Error(`Erro Supabase: ${res.status}`);
+    const data = await res.json();
 
-      const postRes = await fetch(`${SUPABASE_URL}/rest/v1/air_centers`, {
-        method: "POST",
-        headers: getSupabaseHeaders({ returnRepresentation: true }),
-        body: JSON.stringify(rowsToCreate)
-      });
-
-      if (!postRes.ok) throw new Error("Falha ao inicializar linhas");
-      data = await postRes.json();
-    }
-
-    // 3. Preencher os inputs com os dados (reais ou recém-criados)
+    // Mapeamos os dados para os inputs (01 a 06) baseado na ordem que chegam
     data.forEach((row, index) => {
       const n = String(index + 1).padStart(2, '0');
       const nameInput = document.getElementById(`cma_aero_type_${n}`);
@@ -47,70 +27,67 @@ async function loadCMAsFromSupabase() {
 
       if (nameInput) {
         nameInput.value = row.aero_name || "";
-        nameInput.dataset.rowId = row.id; // GUARDA O ID PARA O SAVE
+        // GUARDAMOS O ID REAL: Crucial para o SAVE saber qual linha editar
+        nameInput.dataset.rowId = row.id; 
       }
+
       if (typeSelect) {
         typeSelect.value = row.aero_type || "";
-        updateCmaVisuals(typeSelect.value, imageElement);
+        // Lógica de imagens mantida...
+        let src;
+        switch (typeSelect.value) {
+          case "Heli Ligeiro": src = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/heli_ligeiro.jpg"; break;
+          case "Heli Médio": src = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/heli_medio.jpg"; break;
+          case "Heli Pesado": src = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/heli_pesado.jpg"; break;
+          case "Avião de Asa Fixa Médio": src = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/aviao_asa_fixa_medio.jpg"; break;
+          case "Avião de Asa Fixa Pesado": src = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/aviao_asa_fixa_pesado.png"; break;
+          default: src = "https://i.imgur.com/4Ho5HRV.png";
+        }
+        if (imageElement) imageElement.src = src;
       }
       if (autoInput) autoInput.value = row.aero_autonomy || "";
     });
-
   } catch (error) {
-    console.error("❌ Erro no loadCMAs:", error);
+    console.error("❌ Erro ao carregar CMAs:", error);
   }
 }
-
 async function saveCMAsGroupFields() {
   try {
     const corpOperNr = localStorage.getItem("currentCorpOperNr");
-    
+
     for (let i = 1; i <= 6; i++) {
       const n = String(i).padStart(2, '0');
       const nameInput = document.getElementById(`cma_aero_type_${n}`);
       const typeSelect = document.getElementById(`cma_type_${n}`);
       const autoInput = document.getElementById(`cma_auto_${n}`);
 
-      // Crucial: Usa o ID que o Load guardou no dataset
+      // SÓ AVANÇA SE O INPUT EXISTIR E TIVER UM ID VINCULADO
       if (!nameInput || !nameInput.dataset.rowId) continue;
 
+      const realDbId = nameInput.dataset.rowId;
+
       const payload = {
-        aero_name: nameInput.value || "",
-        aero_type: typeSelect.value || "",
-        aero_autonomy: autoInput.value || ""
+        aero_name: nameInput.value || null,
+        aero_type: typeSelect.value || null,
+        aero_autonomy: autoInput.value || null,
+        corp_oper_nr: corpOperNr
       };
 
+      // PATCH usando o ID real da base de dados e garantindo a corporação
       const resPatch = await fetch(
-        `${SUPABASE_URL}/rest/v1/air_centers?id=eq.${nameInput.dataset.rowId}&corp_oper_nr=eq.${corpOperNr}`, 
-        {
+        `${SUPABASE_URL}/rest/v1/air_centers?id=eq.${realDbId}&corp_oper_nr=eq.${corpOperNr}`, {
           method: "PATCH",
-          headers: getSupabaseHeaders(),
+          headers: getSupabaseHeaders({ returnRepresentation: true }),
           body: JSON.stringify(payload)
         }
       );
 
-      if (!resPatch.ok) console.error(`Erro ao gravar linha ${i}`);
+      if (!resPatch.ok) throw new Error(`Erro ao atualizar linha ID ${realDbId}`);
     }
-    showToast("Dados guardados com sucesso!", "success");
+    showPopupSuccess("✅ Dados guardados com sucesso!");
   } catch (error) {
-    console.error("❌ Erro ao salvar:", error);
-    showToast("Erro ao guardar dados!", "error");
+    console.error("❌ Erro ao salvar CMAs:", error);
+    showPopupWarning("❌ Erro ao guardar os dados!");
   }
 }
-
-// Função para centralizar a lógica de imagem
-function updateCmaVisuals(type, imgEl) {
-  if (!imgEl) return;
-  const map = {
-    "Heli Ligeiro": "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/heli_ligeiro.jpg",
-    "Heli Médio": "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/heli_medio.jpg",
-    "Heli Pesado": "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/heli_pesado.jpg",
-    "Avião de Asa Fixa Médio": "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/aviao_asa_fixa_medio.jpg",
-    "Avião de Asa Fixa Pesado": "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/aviao_asa_fixa_pesado.png"
-  };
-  imgEl.src = map[type] || "https://i.imgur.com/4Ho5HRV.png";
-}
-
 document.addEventListener("DOMContentLoaded", loadCMAsFromSupabase);
-
-

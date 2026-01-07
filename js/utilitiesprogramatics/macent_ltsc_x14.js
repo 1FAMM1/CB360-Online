@@ -2,17 +2,18 @@
             AIR RESOURCE CENTERS
     ======================================= */
    async function loadCMAsFromSupabase() {
-  console.log("🚀 [CMA] Iniciando leitura segura...");
+  console.log("🚀 [CMA] Iniciando leitura segura com imagens...");
   try {
     if (typeof createCmaInputs === "function") createCmaInputs();
 
-    const corpId = sessionStorage.getItem('currentCorpOperNr'); // Ex: "0805"
+    // Nota: Certifica-te se usas sessionStorage ou localStorage (vimos anteriormente que o teu getHeaders usa localStorage)
+    const corpId = localStorage.getItem('currentCorpOperNr') || sessionStorage.getItem('currentCorpOperNr'); 
+    
     if (!corpId) {
-      console.error("❌ Erro: currentCorpOperNr não encontrado no session!");
+      console.error("❌ Erro: currentCorpOperNr não encontrado!");
       return;
     }
 
-    // Prepara os headers e garante que o x-my-corpo está lá
     const headers = getSupabaseHeaders();
     headers['x-my-corpo'] = corpId; 
 
@@ -30,11 +31,19 @@
     console.log("📦 Dados recebidos:", data);
 
     if (data.length === 0) {
-      console.warn("⚠️ O banco devolveu 0 linhas. Verifique se a coluna corp_oper_nr no Supabase tem o valor:", corpId);
+      console.warn("⚠️ O banco devolveu 0 linhas para a corp:", corpId);
       return;
     }
 
-    // Preencher os campos
+    // Mapeamento das imagens
+    const imagensAeronaves = {
+      "Heli Ligeiro": "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/heli_ligeiro.jpg",
+      "Heli Médio": "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/heli_medio.jpg",
+      "Heli Pesado": "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/heli_pesado.jpg",
+      "Avião de Asa Fixa Médio": "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/aviao_asa_fixa_medio.jpg",
+      "Avião de Asa Fixa Pesado": "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/aviao_asa_fixa_pesado.png"
+    };
+
     data.forEach((row, index) => {
       const n = String(index + 1).padStart(2, '0');
       const nameInput = document.getElementById(`cma_aero_type_${n}`);
@@ -43,29 +52,31 @@
       const imageElement = document.getElementById(`cma_image_${n}`);
 
       if (nameInput) {
-          nameInput.value = row.aero_name || "";
-          nameInput.dataset.rowId = row.id; // Guarda o ID para o SAVE
+        nameInput.value = row.aero_name || "";
+        nameInput.dataset.rowId = row.id; 
+      }
+
+      if (typeSelect) {
+        typeSelect.value = row.aero_type || "";
+        
+        // --- PARTE DAS IMAGENS ---
+        if (imageElement) {
+          const src = imagensAeronaves[row.aero_type] || "https://i.imgur.com/4Ho5HRV.png";
+          imageElement.src = src;
         }
-        if (typeSelect) {
-          typeSelect.value = row.aero_type || "";
-          // Atualização da imagem
-          const imgs = {
-            "Heli Ligeiro": "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/heli_ligeiro.jpg",
-            "Heli Médio": "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/heli_medio.jpg",
-            "Heli Pesado": "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/heli_pesado.jpg",
-            "Avião de Asa Fixa Médio": "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/aviao_asa_fixa_medio.jpg",
-            "Avião de Asa Fixa Pesado": "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/aviao_asa_fixa_pesado.png"
-          };
-          if (imageElement) imageElement.src = imgs[typeSelect.value] || "https://i.imgur.com/4Ho5HRV.png";
-        }
-        if (autoInput) autoInput.value = row.aero_autonomy || "";
-      });
-    }
+      }
+
+      if (autoInput) {
+        autoInput.value = row.aero_autonomy || "";
+      }
+    });
+
+    console.log("✅ [CMA] Dados e imagens carregados com sucesso.");
+
   } catch (error) {
     console.error("❌ Erro no load:", error);
   }
 }
-
 
 
 
@@ -101,6 +112,7 @@
       }
     }
     document.addEventListener("DOMContentLoaded", loadCMAsFromSupabase);
+
 
 
 

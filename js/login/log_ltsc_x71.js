@@ -1,71 +1,63 @@
     async function loginUser(user, pass) {
   try {
-    // 1. PASSO: Validar credenciais na tabela 'users'
-    // Mantemos apenas as colunas que existem na tabela 'users'
-    const response = await fetch(
-      `${SUPABASE_URL}/rest/v1/users?select=username,password&username=eq.${encodeURIComponent(user)}`, {
+    // 1. Busca na tabela 'users' (agora com n_int)
+    const resUser = await fetch(
+      `${SUPABASE_URL}/rest/v1/users?select=username,password,n_int&username=eq.${encodeURIComponent(user)}`, {
         headers: getSupabaseHeaders()
       }
     );
 
-    if (!response.ok) throw new Error(`Erro na tabela users: ${response.status}`);
-    const data = await response.json();
-
-    if (data.length === 0) {
-      showToast("Utilizador não encontrado.", 2000, "error");
+    const dataUser = await resUser.json();
+    if (dataUser.length === 0 || dataUser[0].password !== pass) {
+      showToast("Credenciais inválidas.", 2000, "error");
       return;
     }
 
-    const userData = data[0];
-    if (userData.password !== pass) {
-      showToast("Password incorreta.", 2000, "error");
-      return;
-    }
+    const userNInt = dataUser[0].n_int;
 
-    // 2. PASSO: Buscar os detalhes e o CARGO (Admin/User) na tabela 'reg_elems'
-    // Ligamos as duas tabelas pelo 'username'
-    const responseElems = await fetch(
-      `${SUPABASE_URL}/rest/v1/reg_elems?select=full_name,corp_oper_nr,user_role,n_int,patent&username=eq.${encodeURIComponent(user)}`, {
+    // 2. Busca na tabela 'reg_elems' usando o n_int que acabámos de obter
+    // Aqui usei exatamente os campos que listaste
+    const resElems = await fetch(
+      `${SUPABASE_URL}/rest/v1/reg_elems?select=n_int,full_name,patent,corp_oper_nr,user_role&n_int=eq.${userNInt}`, {
         headers: getSupabaseHeaders()
       }
     );
 
-    if (!responseElems.ok) throw new Error(`Erro na tabela reg_elems: ${responseElems.status}`);
-    const dataElems = await responseElems.json();
+    if (!resElems.ok) {
+      const errorDetail = await resElems.json();
+      console.error("Erro detalhado reg_elems:", errorDetail);
+      throw new Error("Erro 400");
+    }
 
+    const dataElems = await resElems.json();
     if (dataElems.length === 0) {
-      showToast("Aviso: Utilizador sem ficha de elemento ativa.", 3000, "error");
+      showToast("Elemento não encontrado na base de dados geral.", 3000, "error");
       return;
     }
 
-    const elemData = dataElems[0];
-    const corp = String(elemData.corp_oper_nr || "").padStart(4, "0");
-    const role = elemData.user_role || "user";
-    const displayName = elemData.full_name || user;
+    const elem = dataElems[0];
+    const corp = String(elem.corp_oper_nr || "").padStart(4, "0");
 
-    // 3. PASSO: Gravar Sessão (incluindo o novo user_role e n_int)
-    sessionStorage.setItem("currentUserDisplay", displayName);
+    // 3. Guardar Sessão
     sessionStorage.setItem("currentUserName", user);
+    sessionStorage.setItem("currentNInt", elem.n_int);
+    sessionStorage.setItem("currentUserRole", elem.user_role || "user");
     sessionStorage.setItem("currentCorpOperNr", corp);
-    sessionStorage.setItem("currentNInt", elemData.n_int);
-    sessionStorage.setItem("currentUserRole", role);
+    sessionStorage.setItem("currentUserDisplay", elem.full_name);
 
-    // 4. PASSO: Lógica de Redirecionamento original + Admin
-    if (corp === "0000") {
-      sessionStorage.setItem("isMasterUser", "true");
-      showToast("Bem-vindo à administração do CB360 Online!", 2000, "success");
-      setTimeout(() => { window.location.href = "system_admin.html"; }, 1500);
-    } else {
-      showToast("Login efetuado com sucesso!", 2000, "success");
-      setTimeout(() => { 
-        // Se for admin da própria corporação, também pode ir para o admin
-        window.location.href = (role === "admin") ? "system_admin.html" : "main.html";
-      }, 1500);
-    }
+    // 4. Redirecionar
+    showToast("Sucesso!", 2000, "success");
+    setTimeout(() => {
+      if (elem.user_role === "admin" || corp === "0000") {
+        window.location.href = "system_admin.html";
+      } else {
+        window.location.href = "main.html";
+      }
+    }, 1500);
 
   } catch (err) {
-    console.error("Erro detalhado:", err);
-    showToast("Erro de conexão. Verifique a consola.", 3000, "error");
+    console.error("Erro no processo:", err);
+    showToast("Erro ao validar acesso. Verifique o n_int na tabela users.", 4000, "error");
   }
 }
     document.getElementById("loginForm").addEventListener("submit", e => {
@@ -121,6 +113,7 @@
     }
     startClock();
     document.getElementById("username").focus();
+
 
 
 

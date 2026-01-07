@@ -4,21 +4,24 @@
 async function loadCMAsFromSupabase() {
   try {
     createCmaInputs();
-    const corpOperNr = localStorage.getItem("currentCorpOperNr");
-
-    // FILTRO ADICIONADO: corp_oper_nr=eq.XXXX
+    
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/air_centers?corp_oper_nr=eq.${corpOperNr}&order=id.asc`, {
+      `${SUPABASE_URL}/rest/v1/air_centers?order=id.asc`, {
         method: "GET",
         headers: getSupabaseHeaders()
       }
     );
 
-    if (!res.ok) throw new Error(`Erro Supabase: ${res.status}`);
     const data = await res.json();
+    console.log("🔍 Dados recebidos do Supabase:", data); // Vê o que aparece na consola (F12)
 
-    // Mapeamos os dados para os inputs (01 a 06) baseado na ordem que chegam
+    if (data.length === 0) {
+      console.warn("⚠️ A base de dados não devolveu nenhuma linha para esta corporação.");
+      return;
+    }
+
     data.forEach((row, index) => {
+      // Usamos o index + 1 para garantir que preenchemos os campos 01 a 06
       const n = String(index + 1).padStart(2, '0');
       const nameInput = document.getElementById(`cma_aero_type_${n}`);
       const typeSelect = document.getElementById(`cma_type_${n}`);
@@ -27,28 +30,18 @@ async function loadCMAsFromSupabase() {
 
       if (nameInput) {
         nameInput.value = row.aero_name || "";
-        // GUARDAMOS O ID REAL: Crucial para o SAVE saber qual linha editar
-        nameInput.dataset.rowId = row.id; 
+        nameInput.dataset.rowId = row.id; // IMPORTANTE guardar o ID real para gravar
       }
-
+      
       if (typeSelect) {
         typeSelect.value = row.aero_type || "";
-        // Lógica de imagens mantida...
-        let src;
-        switch (typeSelect.value) {
-          case "Heli Ligeiro": src = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/heli_ligeiro.jpg"; break;
-          case "Heli Médio": src = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/heli_medio.jpg"; break;
-          case "Heli Pesado": src = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/heli_pesado.jpg"; break;
-          case "Avião de Asa Fixa Médio": src = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/aviao_asa_fixa_medio.jpg"; break;
-          case "Avião de Asa Fixa Pesado": src = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/img/aviao_asa_fixa_pesado.png"; break;
-          default: src = "https://i.imgur.com/4Ho5HRV.png";
-        }
-        if (imageElement) imageElement.src = src;
+        // Atualiza a imagem (podes manter o teu switch aqui)
       }
+      
       if (autoInput) autoInput.value = row.aero_autonomy || "";
     });
   } catch (error) {
-    console.error("❌ Erro ao carregar CMAs:", error);
+    console.error("❌ Erro no loadCMAs:", error);
   }
 }
 async function saveCMAsGroupFields() {
@@ -91,3 +84,4 @@ async function saveCMAsGroupFields() {
   }
 }
 document.addEventListener("DOMContentLoaded", loadCMAsFromSupabase);
+

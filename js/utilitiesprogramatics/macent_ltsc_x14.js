@@ -86,32 +86,69 @@
 
     
     async function saveCMAsGroupFields() {
-      try {
-        for (let i = 1; i <= 6; i++) {
-          const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
-          const n = String(i).padStart(2, '0');
-          const nameInput = document.getElementById(`cma_aero_type_${n}`);
-          const typeSelect = document.getElementById(`cma_type_${n}`);
-          const autoInput = document.getElementById(`cma_auto_${n}`);
-          if (!nameInput || !typeSelect || !autoInput) continue;
-          const payload = {
-            aero_name: nameInput.value || null, aero_type: typeSelect.value || null, aero_autonomy: autoInput.value || null, corp_oper_nr: corp_oper_nr};
-          const resPatch = await fetch(
-            `${SUPABASE_URL}/rest/v1/air_centers?id=eq.${i}`, {
-              method: "PATCH",
-              headers: getSupabaseHeaders({ Prefer: "return=representation" }),
-              body: JSON.stringify(payload)
-            }
-          );
-          if (!resPatch.ok) throw new Error(`Erro ao atualizar CMA ${i}: ${resPatch.status}`);
+    console.log("💾 [CMA] A iniciar gravação segura...");
+    try {
+        // 1. Obter o ID da corporação (prioridade ao localStorage que o teu header usa)
+        const corpId = localStorage.getItem('currentCorpOperNr') || sessionStorage.getItem('currentCorpOperNr');
+        
+        if (!corpId) {
+            showPopupWarning("❌ Erro: Sessão expirada. Faça login novamente.");
+            return;
         }
-        showPopupSuccess("✅ Dados dos CMAs guardados com sucesso!");
-      } catch (error) {
-        console.error("❌ Erro ao salvar CMAs:", error);
-        showPopupWarning("❌ Ocorreu um erro ao guardar os dados!");
-      }
+
+        const headers = getSupabaseHeaders();
+        // Garantir que o header de segurança vai no pedido
+        headers['x-my-corpo'] = corpId;
+
+        // 2. Loop pelos 6 cards
+        for (let i = 1; i <= 6; i++) {
+            const n = String(i).padStart(2, '0');
+            const nameInput = document.getElementById(`cma_aero_type_${n}`);
+            const typeSelect = document.getElementById(`cma_type_${n}`);
+            const autoInput = document.getElementById(`cma_auto_${n}`);
+
+            // Só tentamos gravar se o input existir e tiver o ID que veio do Load
+            if (nameInput && nameInput.dataset.rowId) {
+                const dbId = nameInput.dataset.rowId;
+
+                const payload = {
+                    aero_name: nameInput.value || "",
+                    aero_type: typeSelect.value || "",
+                    aero_autonomy: autoInput.value || "",
+                    corp_oper_nr: corpId // Mantém o vínculo de segurança
+                };
+
+                console.log(`📡 A atualizar Card ${n} (ID Banco: ${dbId})...`);
+
+                const res = await fetch(
+                    `${SUPABASE_URL}/rest/v1/air_centers?id=eq.${dbId}`, 
+                    {
+                        method: "PATCH",
+                        headers: headers,
+                        body: JSON.stringify(payload)
+                    }
+                );
+
+                if (!res.ok) {
+                    const errorData = await res.json();
+                    console.error(`❌ Erro no Card ${n}:`, errorData.message);
+                    throw new Error(`Falha ao gravar card ${n}`);
+                }
+            }
+        }
+
+        showPopupSuccess("✅ Todos os dados foram guardados com sucesso!");
+        
+        // 3. Recarregar os dados para confirmar que o banco aceitou tudo
+        loadCMAsFromSupabase();
+
+    } catch (error) {
+        console.error("❌ Erro fatal na gravação:", error);
+        showPopupWarning("❌ Ocorreu um erro ao guardar os dados. Verifique a consola.");
     }
+}
     document.addEventListener("DOMContentLoaded", loadCMAsFromSupabase);
+
 
 
 

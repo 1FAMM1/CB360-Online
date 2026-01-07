@@ -1,13 +1,15 @@
     async function loginUser(user, pass) {
   try {
-    // 1. Buscamos agora também o n_int e o user_role (ou access_level)
+    // 1. Procuramos na tabela 'users' e trazemos os dados da 'reg_elems' ligada pelo n_int
+    // Nota: Certifica-te que a coluna n_int existe em ambas as tabelas para eles se "falarem"
     const response = await fetch(
-      `${SUPABASE_URL}/rest/v1/reg_elems?select=username,password,full_name,corp_oper_nr,n_int,user_role&username=eq.${user}`, {
+      `${SUPABASE_URL}/rest/v1/users?select=username,password,n_int,reg_elems(full_name,corp_oper_nr,user_role)&username=eq.${user}`, {
         headers: getSupabaseHeaders()
       }
     );
 
-    if (!response.ok) throw new Error(`Erro: ${response.status}`);
+    if (!response.ok) throw new Error(`Erro na rede: ${response.status}`);
+    
     const data = await response.json();
 
     if (data.length === 0) {
@@ -23,29 +25,32 @@
       return;
     }
 
-    // 3. Preparação dos dados da Corporação
-    const corp = String(userData.corp_oper_nr || "").padStart(4, "0");
+    // 3. Extração dos dados (que vêm dentro do objeto reg_elems devido ao join)
+    const detalhes = userData.reg_elems; 
+    const corp = String(detalhes?.corp_oper_nr || "").padStart(4, "0");
+    const role = detalhes?.user_role || "user";
 
-    // 4. INJEÇÃO DE DADOS NO SESSION STORAGE
-    // Estes dados serão usados pelo teu código para filtrar o que o user vê
-    sessionStorage.setItem("currentUserDisplay", userData.full_name || user);
+    // 4. Gravação no SessionStorage
     sessionStorage.setItem("currentUserName", user);
+    sessionStorage.setItem("currentNInt", userData.n_int);
     sessionStorage.setItem("currentCorpOperNr", corp);
-    sessionStorage.setItem("currentNInt", userData.n_int); // FUNDAMENTAL PARA RLS
-    sessionStorage.setItem("currentUserRole", userData.user_role || "user"); // FUNDAMENTAL PARA ADMIN
+    sessionStorage.setItem("currentUserRole", role);
+    sessionStorage.setItem("currentUserDisplay", detalhes?.full_name || user);
 
-    // 5. Redirecionamento baseado no tipo de utilizador
-    if (corp === "0000" || userData.user_role === "admin") {
-      showToast("Bem-vindo, Administrador!", 2000, "success");
-      setTimeout(() => { window.location.href = "system_admin.html"; }, 1500);
-    } else {
-      showToast("Login efetuado com sucesso!", 2000, "success");
-      setTimeout(() => { window.location.href = "main.html"; }, 1500);
-    }
+    // 5. Redirecionamento
+    showToast("Bem-vindo!", 2000, "success");
+    
+    setTimeout(() => {
+      if (role === "admin" || corp === "0000") {
+        window.location.href = "system_admin.html";
+      } else {
+        window.location.href = "main.html";
+      }
+    }, 1500);
 
   } catch (err) {
-    console.error(err);
-    showToast("Erro ao validar acesso.", 3000, "error");
+    console.error("Erro no login:", err);
+    showToast("Erro ao validar acesso. Verifique a consola.", 3000, "error");
   }
 }
     document.getElementById("loginForm").addEventListener("submit", e => {
@@ -101,3 +106,4 @@
     }
     startClock();
     document.getElementById("username").focus();
+

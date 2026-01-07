@@ -29,8 +29,8 @@
           {label: "Consultar Pedidos"}
         ]}, 
       ]},
-      {label: "EMPLOYEES 360"},
-      {label: "SALOC 360", children: [
+      {label: "Gestão Funcionários"},
+      {label: "SALOC", children: [
         {label: "Planos Prévios de Intervenção", children: [
           {label: "PPI A2"},
           {label: "PPI A22"},
@@ -52,7 +52,7 @@
         ]},
         {label: "Consola de Alarmes"}
       ]},
-      {label: "WSMS 360", children: [
+      {label: "Comunicação WSMS", children: [
         {label: "Ocorrências em Curso"},
         {label: "Inserir/Alterar Ocorrência"},
         {label: "Encerrar Ocorrência"},
@@ -520,3 +520,4 @@
         }
       }
     }
+

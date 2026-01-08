@@ -480,16 +480,31 @@
     }
     
     function generateAccessCheckboxes() {
-      const container = document.getElementById("access-container");
-      container.innerHTML = '';
-      closeAllCheckboxContainers();
-      const allowedModulesString = sessionStorage.getItem("allowedModules") || "";
-      const allowedModules = allowedModulesString.split(",").map(a => a.trim());
-      const filteredAccessOptions = filterAccessOptions(ACCESS_OPTIONS, allowedModules);
-      filteredAccessOptions.forEach(option => {
-        container.appendChild(createCheckbox(option));
-      });
+    const container = document.getElementById("access-container");
+    if (!container) return;
+    
+    container.innerHTML = '';
+    closeAllCheckboxContainers();
+
+    const meuCargo = sessionStorage.getItem("currentUserRole");
+    
+    let optionsToRender;
+
+    if (meuCargo === 'admin') {
+        // Se és ADMIN, vês TUDO o que existe no ACCESS_OPTIONS
+        optionsToRender = ACCESS_OPTIONS;
+    } else {
+        // Se não fores admin, vês apenas o que te é permitido
+        const allowedModulesString = sessionStorage.getItem("allowedModules") || "";
+        const allowedModules = allowedModulesString.split(",").map(a => a.trim());
+        optionsToRender = filterAccessOptions(ACCESS_OPTIONS, allowedModules);
     }
+
+    // Renderiza as opções decididas acima
+    optionsToRender.forEach(option => {
+        container.appendChild(createCheckbox(option));
+    });
+}
     /* ================= TAB SWITCH ================= */
     const tabs = document.querySelectorAll('.tab-btn');
     const contents = document.querySelectorAll('.tab-content');
@@ -517,6 +532,7 @@
         }
       }
     }
+
 
 
 

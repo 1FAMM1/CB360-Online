@@ -22,6 +22,7 @@
   <link rel="stylesheet" href="css/ww_01x.css">
   <link rel="stylesheet" href="css/ev_01x.css">
   <link rel="stylesheet" href="css/vct_01x.css">
+  <link rel="stylesheet" href="css/dmd_01x.css">
   <link rel="icon" type="image/png" href="favicon-96x96.png" sizes="96x96">
 </head>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -49,6 +50,7 @@
       <!-- ======================= DECIR 360 ======================= -->
       <button class="sidebar-menu-button sub-submenu-toggle" data-page="page-decir" data-access="Gestão Financeira">💶 Gestão Financeira</button>
       <div class="submenu">
+        <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-decir" data-access="Atualização de Valores">Atualização de Valores</button>
         <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-decir" data-access="Controlo de Pagamentos">Controlo de Pagamentos</button>
         <div class="sub-submenu">
           <button class="sidebar-sub-submenu-button" data-page="decir-reg" data-access="Registo por Elemento">Registo por Elemento</button>
@@ -555,6 +557,29 @@
     </div>
     <!---- PROGRAM MODULES ---->
     <!---- DECIR 360 ---->
+    <div id="modalConfigDecir" class="decir-modal-custom">
+      <div class="decir-modal-content">
+        <h3>
+          <i class="fas fa-cog"></i> Configuração de Valores DECIR
+        </h3>        
+        <div class="decir-form-group">
+          <label for="amal_value">Valor Diário AMAL</label>
+          <div class="decir-input-wrapper">
+              <input type="number" id="amal_value" step="0.01" placeholder="0.00">
+          </div>
+        </div>
+        <div class="decir-form-group">
+          <label for="anepc_value">Valor Diário ANEPC</label>
+          <div class="decir-input-wrapper">
+            <input type="number" id="anepc_value" step="0.01" placeholder="0.00">
+          </div>
+        </div>        
+        <div class="decir-modal-footer">
+          <button type="button" class="decir-btn decir-btn-secondary" onclick="closeConfigModal()">Cancelar</button>
+          <button type="button" id="btnSaveConfig" class="decir-btn decir-btn-primary" onclick="updateDecirValues()">Gravar Alterações</button>
+        </div>
+      </div>
+    </div>
     <div id="decir-reg" class="page">
       <div class="card last-card">
       <div class="card-header">REGISTO MENSAL DE ELEMENTOS AFETOS AO DECIR</div>
@@ -2483,6 +2508,7 @@
   <script></script>
 </body>
 </html>
+
 
 
 

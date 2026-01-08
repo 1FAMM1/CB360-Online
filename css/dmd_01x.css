@@ -1,0 +1,136 @@
+/* Container de Fundo (Overlay) */
+.decir-modal-custom {
+    display: none; 
+    position: fixed !important;
+    z-index: 999999 !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px); /* Efeito blur moderno */
+}
+
+/* Estado Ativo do Modal */
+.decir-modal-custom.show {
+    display: block !important;
+}
+
+/* Caixa de Conteúdo (Centramento Matemático) */
+.decir-modal-content {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 16px; /* Cantos mais arredondados */
+    width: 380px;
+    max-width: 90%;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    animation: decirModalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Título */
+.decir-modal-content h3 {
+    margin: 0 0 20px 0;
+    color: #1a202c;
+    font-size: 1.1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Grupos de Formulário */
+.decir-form-group {
+    margin-bottom: 18px;
+}
+
+.decir-form-group label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #4a5568;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Wrapper para o símbolo de Euro */
+.decir-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.decir-input-wrapper input {
+    width: 100%;
+    padding: 12px 35px 12px 12px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #2d3748;
+    transition: all 0.2s ease;
+}
+
+.decir-input-wrapper input:focus {
+    border-color: #3182ce;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15);
+}
+
+.decir-input-wrapper::after {
+    content: "€";
+    position: absolute;
+    right: 15px;
+    color: #a0aec0;
+    font-weight: 600;
+}
+
+/* Footer e Botões */
+.decir-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 25px;
+}
+
+.decir-btn {
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.decir-btn-secondary {
+    background-color: #edf2f7;
+    color: #4a5568;
+}
+
+.decir-btn-secondary:hover {
+    background-color: #e2e8f0;
+}
+
+.decir-btn-primary {
+    background-color: #3182ce;
+    color: white;
+}
+
+.decir-btn-primary:hover {
+    background-color: #2b6cb0;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(49, 130, 206, 0.3);
+}
+
+/* Animação de Entrada */
+@keyframes decirModalPop {
+    from { opacity: 0; transform: translate(-50%, -45%) scale(0.95); }
+    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}

@@ -1,6 +1,74 @@
     /* =======================================
     DECIR FUNCTIONS
     ======================================= */
+    document.querySelectorAll(".sidebar-submenu-button").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        const accessType = btn.getAttribute("data-access");
+        if (accessType === "Atualização de Valores") {
+          e.preventDefault();
+          e.stopPropagation();
+          openConfigDecirModal();
+          return false; 
+        }
+        const targetModule = btn.getAttribute("data-page");
+        if (targetModule) loadModule(targetModule);
+      });
+    });
+    async function openConfigDecirModal() {
+      const modal = document.getElementById('modalConfigDecir');
+      modal.classList.add('show');
+      const corp = localStorage.getItem("currentCorpOperNr") || sessionStorage.getItem("currentCorpOperNr");
+      try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/decir_values_config?corp_oper_nr=eq.${corp}`, {
+          method: 'GET',
+          headers: getSupabaseHeaders()
+        });
+        const data = await response.json();
+        if (data && data.length > 0) {
+          document.getElementById('amal_value').value = data[0].amal_value;
+          document.getElementById('anepc_value').value = data[0].anepc_value;
+        }
+      } catch (error) {
+        console.error("Erro ao carregar dados:", error);
+      }
+    }
+    function closeConfigModal() {
+      document.getElementById('modalConfigDecir').classList.remove('show');
+    }
+    async function updateDecirValues() {
+      const btn = document.getElementById('btnSaveConfig');
+      const amal = document.getElementById('amal_value').value.replace(',', '.');
+      const anepc = document.getElementById('anepc_value').value.replace(',', '.');
+      const corp = localStorage.getItem("currentCorpOperNr") || sessionStorage.getItem("currentCorpOperNr");
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A guardar...';
+      try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/decir_values_config?corp_oper_nr=eq.${corp}`, {
+          method: 'PATCH',
+          headers: {
+            ...getSupabaseHeaders(),
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({amal_value: parseFloat(amal), anepc_value: parseFloat(anepc), updated_at: new Date().toISOString()})
+        });
+        if (response.ok) {
+          alert("✅ Configurações guardadas com sucesso!");
+          closeConfigModal();
+        }
+      } catch (error) {
+        alert("❌ Erro ao ligar ao servidor.");
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Gravar Alterações";
+      }
+    }
+
+
+
+
+
+
     /* ======= GENERIC FUNCTION TO CREATE DECIR MONTH BUTTONS ======= */
     function createDecirButtonsGeneric({
       containerId,

@@ -49,7 +49,6 @@
       const year = String(now.getFullYear()).slice(-2);
       return `${day}${hour}${minutes}${month}${year}`;
     }
-
     function clearSitopForm() {
       document.querySelectorAll("#sitop_container input, #sitop_container textarea").forEach(el => el.value = "");
       document.querySelectorAll('#sitop_container input[type="checkbox"]').forEach(cb => cb.checked = false);
@@ -59,7 +58,6 @@
       saveBtn.classList.remove("btn-success");
       saveBtn.classList.add("btn-danger");
     }
-
     function toggleSitopContainer(forceClose = false) {
       const isVisible = sitopContainer.style.display === "block";
       sitopContainer.style.transition = "opacity 0.25s ease";
@@ -77,7 +75,6 @@
         clearSitopForm();
       }
     }
-
     function handleValidateOperationality(event) {
       preselectCorpInSitopCB();
       const btn = event.target;
@@ -111,8 +108,7 @@
       saveBtn.textContent = "Emitir Operacionalidade";
       saveBtn.classList.remove("btn-danger");
       saveBtn.classList.add("btn-success");
-    }    
-    
+    }
     async function fetchCREPCSitopRecipientsFromSupabase(corpOperNr) {
       const categories = ['crepcsitop_mail_to', 'crepcsitop_mail_cc', 'crepcsitop_mail_bcc'];
       const url = `${SUPABASE_URL}/rest/v1/mails_config` + `?category=in.(${categories.join(',')})` + `&corp_oper_nr=eq.${corpOperNr}` + `&select=category,value`;
@@ -154,34 +150,31 @@
       const ppi_subs = document.getElementById("ppi_subs_yes").checked;
       const optel = document.getElementById("sitop_optel").value.trim();
       if (!vehicle || !registration || !gdh_inop) {
-        alert("Por favor preencha os campos obrigatórios: Veículo, Matrícula e GDH INOP.");
+        showPopupWarning("Por favor preencha os campos obrigatórios: Veículo, Matrícula e GDH INOP.");
         return;
       }
       showPopupSuccess(`Estado Operacional do veículo ${vehicle} criado com sucesso. Por favor aguarde uns segundos, receberá uma nova notificação após o envio para as entidades estar concluído!`);
       const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       if (!corpOperNr) {
-        alert("❌ Erro: O número da corporação não foi encontrado. Por favor, faça login novamente.");
+        showPopupWarning("❌ Erro: O número da corporação não foi encontrado. Por favor, faça login novamente.");
         return;
       }
       saveBtn.disabled = true;
       const recordId = sitopContainer.getAttribute("data-record-id");
       const isUpdate = !!recordId;
       const isOperational = !!gdh_op;
-      const data = {cb_type, vehicle, registration, gdh_inop, gdh_op, failure_type, failure_description, ppi_part, ppi_a2, 
-                    ppi_a22, ppi_airport, ppi_linfer, ppi_airfield, ppi_subs, optel, corp_oper_nr: corpOperNr};
+      const data = {cb_type, vehicle, registration, gdh_inop, gdh_op, failure_type, failure_description, ppi_part, 
+                    ppi_a2, ppi_a22, ppi_airport, ppi_linfer, ppi_airfield, ppi_subs, optel, corp_oper_nr: corpOperNr};
       const supabaseData = { ...data };
-      delete supabaseData.cb_type;
+      delete supabaseData.cb_type; // O Supabase não precisa do nome da corporação formatado, apenas do NR
       try {
         if (!isUpdate && !isOperational) {
           const checkUrl = `${SUPABASE_URL}/rest/v1/sitop_vehicles?select=vehicle&vehicle=eq.${encodeURIComponent(vehicle)}&gdh_op=is.null&corp_oper_nr=eq.${encodeURIComponent(corpOperNr)}`;
           const checkRes = await fetch(checkUrl, { headers: getSupabaseHeaders() });
-          if (!checkRes.ok) {
-            const errText = await checkRes.text();
-            throw new Error(`Erro ao verificar duplicado: ${checkRes.status} - ${errText}`);
-          }
+          if (!checkRes.ok) throw new Error(`Erro ao verificar duplicado.`);
           const existing = await checkRes.json();
           if (existing.length > 0) {
-            alert(`❌ O veículo ${vehicle} já se encontra INOP nesta corporação!`);
+            showPopupWarning(`❌ O veículo ${vehicle} já se encontra INOP!`);
             saveBtn.disabled = false;
             return;
           }
@@ -193,24 +186,18 @@
           headers: { ...getSupabaseHeaders(), "Content-Type": "application/json" },
           body: JSON.stringify(supabaseData)
         });
-        if (!response.ok) {
-          const errText = await response.text();
-          throw new Error(`Erro ao enviar dados ao Supabase: ${response.status} - ${errText}`);
-        }
-        const statusRes = await fetch(
-          `${SUPABASE_URL}/rest/v1/vehicle_status?vehicle=eq.${encodeURIComponent(vehicle)}`, {
-            method: "PATCH",
-            headers: { ...getSupabaseHeaders(), "Content-Type": "application/json" },
-            body: JSON.stringify({ is_inop: !isOperational })
-          }
-        );
+        if (!response.ok) throw new Error("Erro ao enviar dados ao Supabase.");
+        const statusRes = await fetch(`${SUPABASE_URL}/rest/v1/vehicle_status?vehicle=eq.${encodeURIComponent(vehicle)}`, {
+          method: "PATCH",
+          headers: { ...getSupabaseHeaders(), "Content-Type": "application/json" },
+          body: JSON.stringify({ is_inop: !isOperational })
+        });
         if (!statusRes.ok) console.warn("⚠️ Erro ao atualizar status do veículo.");
         const { to, cc, bcc } = await fetchCREPCSitopRecipientsFromSupabase(corpOperNr);
         const signature = getEmailSignature();
         const greeting = getGreeting();
         const commanderName = await getCommanderName(corpOperNr);
-        const fullCorpText = cb_type;
-        const corpName = fullCorpText.includes(" - ") ? fullCorpText.split(" - ").slice(1).join(" - ") : fullCorpText;
+        const corpName = cb_type.includes(" - ") ? cb_type.split(" - ").slice(1).join(" - ") : cb_type;
         const article = corpName.includes("Companhia") ? "da" : "do";
         const emailBodyHTML = `${greeting}<br><br>
         Encarrega-me o Sr. Comandante ${commanderName} de remeter em anexo a Vossas Exª.s o Formulário de Situação Operacional 
@@ -221,25 +208,22 @@
         Este email foi processado automaticamente por: CB360 Online<br><br>
         </span>
         ${signature}`;
-        const emailRes = await fetch('https://cb360-online.vercel.app/api/sitop_covert_and_send', {
+        const emailRes = await fetch('https://cb360-mobile.vercel.app/api/sitop_covert_and_send', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({data, recipients: to, ccRecipients: cc, bccRecipients: bcc, emailSubject: `Situação Operacional do Veículo ${vehicle}`, emailBody: emailBodyHTML})
         });
-        const emailResult = await emailRes.json();
-        if (!emailRes.ok) throw new Error(`Erro ao enviar email: ${JSON.stringify(emailResult)}`);
+        if (!emailRes.ok) throw new Error("Erro ao enviar email via Vercel.");
         showPopupSuccess(`A situação operacional do veículo ${vehicle} foi enviada para as entidades.`);
         if (isOperational && isUpdate) {
-          await fetch(
-            `${SUPABASE_URL}/rest/v1/sitop_vehicles?id=eq.${recordId}`, {
-              method: 'DELETE',
-              headers: getSupabaseHeaders()
-            }
-          );
+          await fetch(`${SUPABASE_URL}/rest/v1/sitop_vehicles?id=eq.${recordId}`, {
+            method: 'DELETE',
+            headers: getSupabaseHeaders()
+          });
         }
         toggleSitopContainer(true);
         NewInopBtn.classList.remove("active");
-        oldInopBtn?.classList.remove("active");
+        if (oldInopBtn) oldInopBtn.classList.remove("active");
       } catch (err) {
         console.error(err);
         alert(`❌ Erro: ${err.message}`);

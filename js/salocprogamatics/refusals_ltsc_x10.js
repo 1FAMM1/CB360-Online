@@ -32,7 +32,7 @@ async function insertServiceRefusal() {
   if (!validateRequiredServiceRefusalFields()) return;
 
   // Obtemos a corporação ativa do localStorage
-  const corpOperNr = localStorage.getItem('currentCorpOperNr') || "0805";
+  const corpOperNr = sessionStorage.getItem('currentCorpOperNr');
 
   const payload = {
     corp_oper_nr: corpOperNr, // <--- ADICIONADO AQUI
@@ -102,7 +102,7 @@ async function insertServiceRefusal() {
     /* ================= LOADING REFUSALS ================= */
     async function loadServiceRefusals() {
   try {
-    const corpOperNr = localStorage.getItem('currentCorpOperNr') || "0805";
+    const corpOperNr = sessionStorage.getItem('currentCorpOperNr');
     
     // Adicionado o filtro eq. na URL para ver apenas os dados da minha corporação
     const url = `${SUPABASE_URL}/rest/v1/service_refusals?corp_oper_nr=eq.${corpOperNr}&order=refusal_date.desc`;
@@ -212,7 +212,7 @@ async function insertServiceRefusal() {
   if (!validateRequiredIneInopFields()) return;
   
   // Obtém a corporação ativa
-  const corpOperNr = localStorage.getItem('currentCorpOperNr') || "0805";
+  const corpOperNr = sessionStorage.getItem('currentCorpOperNr');
 
   const payload = {
     corp_oper_nr: corpOperNr, // <--- Vínculo com a corporação
@@ -280,7 +280,7 @@ async function insertServiceRefusal() {
     /* =========== LOADING NON-OPERATIONALITIES =========== */
     async function loadIneInops(yearFilter = null) {
   try {
-    const corpOperNr = localStorage.getItem('currentCorpOperNr') || "0805";
+    const corpOperNr = sessionStorage.getItem('currentCorpOperNr');
     
     // URL com filtro de corporação obrigatório
     let url = `${SUPABASE_URL}/rest/v1/inem_inop?corp_oper_nr=eq.${corpOperNr}&order=ineinop_date.desc`;
@@ -420,7 +420,7 @@ async function insertServiceRefusal() {
     /* ================== SUMARY DATA ===================== */
     async function loadSummaryData() {
   try {
-    const corpOperNr = localStorage.getItem('currentCorpOperNr') || "0805";
+    const corpOperNr = sessionStorage.getItem('currentCorpOperNr');
     
     // Filtro de corporação adicionado no select
     const inemRes = await fetch(`${SUPABASE_URL}/rest/v1/inem_inop?select=ineinop_shift,ineinop_hour_qtd&corp_oper_nr=eq.${corpOperNr}`, {
@@ -472,7 +472,7 @@ async function insertServiceRefusal() {
                            'rgba(186, 85, 211, 0.7)', 'rgba(46, 139, 87, 0.7)', 'rgba(70, 130, 180, 0.7)'];
     async function loadServiceRefusalsCharts() {
   try {
-    const corpOperNr = localStorage.getItem('currentCorpOperNr') || "0805";
+    const corpOperNr = sessionStorage.getItem('currentCorpOperNr');
     
     // Filtro de corporação na URL
     const res = await fetch(`${SUPABASE_URL}/rest/v1/service_refusals?select=refusal_date,service_type&corp_oper_nr=eq.${corpOperNr}`, {
@@ -510,7 +510,7 @@ async function insertServiceRefusal() {
     /* ========= INEM NON-OPERATIONALITIES CHARTS ========= */
     async function loadIneInopsCharts() {
   try {
-    const corpOperNr = localStorage.getItem('currentCorpOperNr') || "0805";
+    const corpOperNr = sessionStorage.getItem('currentCorpOperNr');
 
     // Filtro de corporação na URL
     const res = await fetch(`${SUPABASE_URL}/rest/v1/inem_inop?select=ineinop_date,ineinop_shift&corp_oper_nr=eq.${corpOperNr}`, {

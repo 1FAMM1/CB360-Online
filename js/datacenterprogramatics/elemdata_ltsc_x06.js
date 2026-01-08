@@ -4,7 +4,7 @@
     const ACCESS_OPTIONS = [
       {label: "Menu Principal"},
       {label: "Gestão Financeira", children: [
-        {label: "Atualização de Valores"},
+        {label: "fff"},
         {label: "Controlo de Pagamentos", children: [
           {label: "Registo por Elemento"},
           {label: "Núcleo Financeiro"},
@@ -517,6 +517,7 @@
         }
       }
     }
+
 
 
 

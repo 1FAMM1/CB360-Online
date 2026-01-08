@@ -197,7 +197,7 @@
     /* ======= INSERTION OF NEW NON-OPERATIONALITY ======== */
     async function insertIneInop() {
       if (!validateRequiredIneInopFields()) return;
-      const corpOperNr = localStorage.getItem('currentCorpOperNr');    
+      const corpOperNr = sessionStorage.getItem('currentCorpOperNr');    
       const payload = {
         corp_oper_nr: corpOperNr,
         ineinop_date: document.getElementById('ineinop_date').value,
@@ -261,7 +261,7 @@
     /* =========== LOADING NON-OPERATIONALITIES =========== */
     async function loadIneInops(yearFilter = null) {
       try {
-        const corpOperNr = localStorage.getItem('currentCorpOperNr');
+        const corpOperNr = sessionStorage.getItem('currentCorpOperNr');
         let url = `${SUPABASE_URL}/rest/v1/inem_inop?corp_oper_nr=eq.${corpOperNr}&order=ineinop_date.desc`;
         if (yearFilter) url += `&ineinop_date=ilike.${yearFilter}%`;    
         const res = await fetch(url, {
@@ -389,7 +389,7 @@
     /* ================== SUMARY DATA ===================== */
     async function loadSummaryData() {
       try {
-        const corpOperNr = localStorage.getItem('currentCorpOperNr');
+        const corpOperNr = sessionStorage.getItem('currentCorpOperNr');
         const inemRes = await fetch(`${SUPABASE_URL}/rest/v1/inem_inop?select=ineinop_shift,ineinop_hour_qtd&corp_oper_nr=eq.${corpOperNr}`, {
           headers: getSupabaseHeaders()
         });        
@@ -431,7 +431,7 @@
                            'rgba(186, 85, 211, 0.7)', 'rgba(46, 139, 87, 0.7)', 'rgba(70, 130, 180, 0.7)'];
     async function loadServiceRefusalsCharts() {
       try {
-        const corpOperNr = localStorage.getItem('currentCorpOperNr');
+        const corpOperNr = sessionStorage.getItem('currentCorpOperNr');
         const res = await fetch(`${SUPABASE_URL}/rest/v1/service_refusals?select=refusal_date,service_type&corp_oper_nr=eq.${corpOperNr}`, {
           headers: getSupabaseHeaders()
         });        
@@ -462,7 +462,7 @@
     /* ========= INEM NON-OPERATIONALITIES CHARTS ========= */
     async function loadIneInopsCharts() {
       try {
-        const corpOperNr = localStorage.getItem('currentCorpOperNr');
+        const corpOperNr = sessionStorage.getItem('currentCorpOperNr');
         const res = await fetch(`${SUPABASE_URL}/rest/v1/inem_inop?select=ineinop_date,ineinop_shift&corp_oper_nr=eq.${corpOperNr}`, {
           headers: getSupabaseHeaders()
         });        
@@ -494,4 +494,5 @@
         }
       });
     });
+
 

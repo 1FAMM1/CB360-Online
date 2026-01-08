@@ -424,28 +424,28 @@
         localStorage.setItem("originalShift", shift);
       }
       let header;
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       if (shift === 'LAST') {
         try {
-          const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
-          const res = await fetch( `https://cb360-online.vercel.app/api/mobile/fomio_control?action=get_header&corp_oper_nr=${corpOperNr}`);
-          const data = await res.json();
+          const res = await fetch(`${SUPABASE_URL}/rest/v1/fomio_date?select=header_text&limit=1`, {
+            method: 'GET',
+            headers: getSupabaseHeaders()
+          });
+          const dataArr = await res.json();
           let formattedHeader = null;
-          if (data && data.header) {
-            const match = data.header.match(/Dia: (\d{2})-(\d{2})-(\d{4}) \| Turno (.) \| (.+)/);
+          if (dataArr && dataArr.length > 0) {
+            const headerText = dataArr[0].header_text;
+            const match = headerText.match(/Dia: (\d{2}) (\w{3}) (\d{4}) \| Turno (.) \| (.+)/);
             if (match) {
               const [_, day, month, year, shiftLetter, hours] = match;
-              const monthNames = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
-              const monthName = monthNames[parseInt(month, 10) - 1] || month;
               sessionStorage.setItem("originalShift", shiftLetter);
               localStorage.setItem("originalShift", shiftLetter);
-              formattedHeader = `Dia: ${day} ${monthName} ${year} | Turno ${shiftLetter} | ${hours}`;
-            } else {
-              formattedHeader = data.header;
             }
+            formattedHeader = headerText;
           }
           header = createPlanDirHeader('LAST', formattedHeader);
         } catch (err) {
-          console.error('Erro ao carregar header:', err);
+          console.error('Erro ao carregar header direto:', err);
           header = createPlanDirHeader('LAST');
         }
       } else {
@@ -455,13 +455,21 @@
       container.insertAdjacentHTML('beforeend', tableConfig.map(cfg => createTable(cfg.rows, cfg.special, cfg.title)).join(''));
       if (shift === 'LAST') {
         try {
-          const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
-          const res = await fetch(`https://cb360-online.vercel.app/api/mobile/fomio_control?action=get_teams&corp_oper_nr=${corpOperNr}`);
-          const savedData = await res.json();
-          if (savedData && savedData.success && savedData.teams) {
-            const teamNameMap = {"ofope": "OFOPE", "chefe_servico": "CHEFE DE SERVIÇO", "optel": "OPTEL", "equipa_01": "EQUIPA 01", "equipa_02": "EQUIPA 02",
-                                 "logistica": "LOGÍSTICA", "inem": "INEM", "inem_reserva": "INEM - Reserva", "servico_geral": "SERVIÇO GERAL"};
-            Object.keys(savedData.teams).forEach(dbTeamName => {
+          const res = await fetch(`${SUPABASE_URL}/rest/v1/fomio_teams?select=*`, {
+            method: 'GET',
+            headers: getSupabaseHeaders()
+          });
+          const allMembers = await res.json();
+          if (allMembers && allMembers.length > 0) {
+            const teamNameMap = {"ofope": "OFOPE", "chefe_servico": "CHEFE DE SERVIÇO", "optel": "OPTEL", 
+                                 "equipa_01": "EQUIPA 01", "equipa_02": "EQUIPA 02", "logistica": "LOGÍSTICA", 
+                                 "inem": "INEM", "inem_reserva": "INEM - Reserva", "servico_geral": "SERVIÇO GERAL"};
+            const teamsData = allMembers.reduce((acc, member) => {
+              if (!acc[member.team_name]) acc[member.team_name] = [];
+              acc[member.team_name].push(member);
+              return acc;
+            }, {});
+            Object.keys(teamsData).forEach(dbTeamName => {
               const displayTitle = teamNameMap[dbTeamName];
               if (!displayTitle) return;
               const card = Array.from(document.querySelectorAll('.main-card')).find(
@@ -469,7 +477,7 @@
               );
               if (!card) return;
               const rows = Array.from(card.querySelectorAll('tbody tr'));
-              savedData.teams[dbTeamName].forEach((member, i) => {
+              teamsData[dbTeamName].forEach((member, i) => {
                 const tr = rows[i];
                 if (!tr) return;
                 const inputs = tr.querySelectorAll('input');
@@ -493,7 +501,7 @@
             });
           }
         } catch (err) {
-          console.error('Erro ao carregar dados salvos:', err);
+          console.error('Erro ao carregar dados salvos direto:', err);
         }
       }
       container.querySelectorAll('.plandir-nint-input').forEach(input => {
@@ -524,4 +532,3 @@
         document.querySelectorAll('.shift-btn').forEach(btn => btn.classList.remove('active'));
       }
     });
-

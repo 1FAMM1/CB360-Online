@@ -328,9 +328,9 @@
       return optelName;
     }
     async function emitPlanning(shift, date, baixar = false) {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       if (!corpOperNr) {
-        alert("❌ Erro: O número da corporação não foi encontrado. Por favor, faça login novamente.");
+        showPopupWarning("❌ Erro: Sessão expirada. Por favor, faça login novamente.");
         return;
       }
       const tables = collectTableData();
@@ -340,7 +340,7 @@
       const monthName = monthNames[parseInt(month, 10) - 1] || month;
       const formattedDate = `${year}${month}${day}`;
       const shiftHours = (shift === 'D') ? '08:00-20:00' : '20:00-08:00';
-      const {to, cc, bcc} = await fetchRecipientsFromSupabase();
+      const { to, cc, bcc } = await fetchRecipientsFromSupabase();
       const RECIPIENTS = to;
       const CC_RECIPIENTS = cc;
       const BCC_RECIPIENTS = bcc;
@@ -348,78 +348,65 @@
         showPopupWarning("Erro: Defina pelo menos um destinatário.");
         return;
       }
-      const teamNameMap = {"OFOPE": "ofope", "CHEFE DE SERVIÇO": "chefe_servico", "OPTEL": "optel", "EQUIPA 01": "equipa_01", "EQUIPA 02": "equipa_02",
-                           "LOGÍSTICA": "logistica", "INEM": "inem", "INEM - Reserva": "inem_reserva", "SERVIÇO GERAL": "servico_geral"};
-      for (let table of tables) {
-        const team_name = teamNameMap[table.title];
-        if (!team_name) continue;
-        const nonEmptyRows = table.rows.filter(r => r.n_int || r.patente || r.nome || r.entrada || r.saida || r.MP || r.TAS || r.obs);
-        await fetch(`${SUPABASE_URL}/rest/v1/fomio_teams?team_name=eq.${encodeURIComponent(team_name)}`, {
+     const teamNameMap = {"OFOPE": "ofope", "CHEFE DE SERVIÇO": "chefe_servico", "OPTEL": "optel",
+                          "EQUIPA 01": "equipa_01", "EQUIPA 02": "equipa_02", "LOGÍSTICA": "logistica",
+                          "INEM": "inem", "INEM - Reserva": "inem_reserva", "SERVIÇO GERAL": "servico_geral"};
+      try {
+        for (let table of tables) {
+          const team_name = teamNameMap[table.title];
+          if (!team_name) continue;
+          const nonEmptyRows = table.rows.filter(r => r.n_int || r.patente || r.nome || r.entrada || r.saida || r.MP || r.TAS || r.obs);
+          await fetch(`${SUPABASE_URL}/rest/v1/fomio_teams?team_name=eq.${encodeURIComponent(team_name)}&corp_oper_nr=eq.${corpOperNr}`, {
+            method: "DELETE",
+            headers: getSupabaseHeaders()
+          });
+          if (nonEmptyRows.length > 0) {
+            await fetch(`${SUPABASE_URL}/rest/v1/fomio_teams`, {
+              method: "POST",
+              headers: getSupabaseHeaders(),
+              body: JSON.stringify(
+                nonEmptyRows.map(r => ({team_name, n_int: r.n_int || '', patente: r.patente || '', nome: r.nome || '', h_entrance: r.entrada || '', h_exit: r.saida || '', MP: !!r.MP,
+                                        TAS: !!r.TAS, observ: r.obs || '', corp_oper_nr: corpOperNr})))});}}
+        await fetch(`${SUPABASE_URL}/rest/v1/fomio_date?corp_oper_nr=eq.${corpOperNr}`, {
           method: "DELETE",
           headers: getSupabaseHeaders()
         });
-        if (nonEmptyRows.length > 0) {
-          await fetch(`${SUPABASE_URL}/rest/v1/fomio_teams`, {
-            method: "POST",
-            headers: {
-              ...getSupabaseHeaders(),
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify(
-              nonEmptyRows.map(r => ({team_name, n_int: r.n_int || '', patente: r.patente || '', nome: r.nome || '', h_entrance: r.entrada || '', h_exit: r.saida || '',
-                                      MP: !!r.MP, TAS: !!r.TAS, observ: r.obs || '', corp_oper_nr: corpOperNr})))});
+        await fetch(`${SUPABASE_URL}/rest/v1/fomio_date`, {
+          method: "POST",
+          headers: getSupabaseHeaders(),
+          body: JSON.stringify([{header_text: `Dia: ${day} ${monthName} ${year} | Turno ${shift} | ${shiftHours}`, corp_oper_nr: corpOperNr}])
+        });
+        const attendanceSaved = await saveAttendance(tables, shift, corpOperNr, day, month, year);
+        if (!attendanceSaved) {
+          console.warn('⚠️ Aviso: Falha ao gravar dados de assiduidade na tabela reg_assid.');
         }
-      }
-      await fetch(`${SUPABASE_URL}/rest/v1/fomio_date?header_text=neq.null`, {
-        method: "DELETE",
-        headers: getSupabaseHeaders()
-      });
-      await fetch(`${SUPABASE_URL}/rest/v1/fomio_date`, {
-        method: "POST",
-        headers: {
-          ...getSupabaseHeaders(),
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify([{
-          header_text: `Dia: ${day} ${monthName} ${year} | Turno ${shift} | ${shiftHours}`, corp_oper_nr: corpOperNr
-        }])
-      });     
-      const attendanceSaved = await saveAttendance(tables, shift, corpOperNr, day, month, year);
-      if (!attendanceSaved) {
-        console.warn('⚠️ Aviso: Falha ao gravar dados de assiduidade');
-      }     
-      const finalFileName = `Planeamento_${day}_${monthName}_${year}_${shift}`;
-      const fileDisplayName = `Planeamento Diário ${formattedDate} Turno ${shift}`;
-      const greeting = getGreeting();
-      const signature = getEmailSignature();
-      const emailBodyHTML = `
-        ${greeting}<br><br>
-        Remeto em anexo a Vossas Exª.s o ${fileDisplayName}<br><br>
-        Com os melhores cumprimentos,<br><br>
-        OPTEL<br>
-        ${optelName}<br><br>        
-        ${signature}
-      `;
-      try {
-        showPopupSuccess(`Planeamento gerado com sucesso. O mesmo está a ser enviado para as entidades. Será notificado após o envio estar finalizado.`);
+        const finalFileName = `Planeamento_${day}_${monthName}_${year}_${shift}`;
+        const fileDisplayName = `Planeamento Diário ${formattedDate} Turno ${shift}`;
+        const greeting = getGreeting();
+        const signature = getEmailSignature();
+        const emailBodyHTML = `
+            ${greeting}<br><br>
+            Remeto em anexo a Vossas Exª.s o ${fileDisplayName}<br><br>
+            Com os melhores cumprimentos,<br><br>
+            OPTEL<br>
+            ${optelName}<br><br>        
+            ${signature}
+        `;
+        showPopupSuccess(`Planeamento gerado com sucesso. O mesmo está a ser enviado para as entidades.`);
         const response = await fetch(
           'https://corsproxy.io/?' + encodeURIComponent('https://cb360-online.vercel.app/api/plandir_convert_and_send'), {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({shift, date, tables, recipients: RECIPIENTS,  ccRecipients: CC_RECIPIENTS, bccRecipients: BCC_RECIPIENTS, emailBody: emailBodyHTML})
-          }
-        );
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({shift, date, tables, recipients: RECIPIENTS, ccRecipients: CC_RECIPIENTS, bccRecipients: BCC_RECIPIENTS, emailBody: emailBodyHTML})});
         const result = await response.json();
         if (!response.ok) {
           showPopupWarning(`ERRO! O planeamento não foi enviado. Detalhes: ${result.details || 'Verificar consola.'}`);
-          console.error('Erro de API (código ' + response.status + '):', result);
           return;
         }
         showPopupSuccess(`✅ Planeamento do dia ${day}/${month}/${year} (Turno ${shift}) emitido e enviado com sucesso!`);
       } catch (err) {
-        showPopupWarning('Erro ao contactar o servidor de planeamento. Por favor, tente novamente.');
+        console.error('Erro no processo de emissão:', err);
+        showPopupWarning('Erro ao processar o planeamento. Por favor, tente novamente.');
       }
     }
     async function loadShift(shift) {
@@ -537,3 +524,4 @@
         document.querySelectorAll('.shift-btn').forEach(btn => btn.classList.remove('active'));
       }
     });
+

@@ -380,7 +380,7 @@
     const alertTime = document.getElementById('alert_time')?.value || '';
     
     // 1. ALTERADO: Ler do localStorage (onde o login gravou)
-    const currentCorpOperNr = localStorage.getItem("currentCorpOperNr");
+    const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
     
     if (!alertDate || !alertTime || !currentCorpOperNr) {
       console.error("Dados em falta: Data, Hora ou Corp ID");
@@ -472,5 +472,6 @@
         toggleContactFields();
       });
     });
+
 
 

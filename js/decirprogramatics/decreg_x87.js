@@ -219,10 +219,11 @@
     (function() {
       async function loadDecirSavedData(year, month) {
         try {
+          const corpOperNr = sessionStorage.getItem('currentCorpOperNr');
           const supabaseUrl = window.SUPABASE_URL || SUPABASE_URL;
-          const query = `${supabaseUrl}/rest/v1/decir_reg_pag?select=n_int,day,turno&year=eq.${year}&month=eq.${month}`;
+          const query = `${supabaseUrl}/rest/v1/decir_reg_pag?select=n_int,day,turno&year=eq.${year}&month=eq.${month}&corp_oper_nr=eq.${corpOperNr}`;
           const headers = window.getSupabaseHeaders ? window.getSupabaseHeaders() : getSupabaseHeaders();
-          const response = await fetch(query, { headers });      
+          const response = await fetch(query, { headers });
           if (!response.ok) return {};      
           const data = await response.json();
           return data.reduce((map, item) => {
@@ -867,7 +868,7 @@
         if (input) input.addEventListener("input", updateValor);    
         tr.appendChild(tdValue);
         tbody.appendChild(tr);
-      }  
+      }
       table.appendChild(tbody);
       wrapper.appendChild(table);  
       wrapper.style.height = "380px";
@@ -887,8 +888,7 @@
         amalValue: getValue("amal-value-reg"),
         anepcValue: getValue("anepc-value-reg")
       };
-    }
-    
+    }    
     function updateAllValues() {
       const {amalValue, anepcValue} = getValuesFromInputs();
       const amalCents = Math.round(amalValue * 100);
@@ -1074,7 +1074,7 @@
       if (!tableContainer) return;    
       const monthBtn = document.querySelector("#months-container-dec-reg .btn.active");
       if (!monthBtn) {
-        alert("Nenhum mês selecionado.");
+        showPopupWarning("Nenhum mês selecionado.");
         return;
       }    
       const month = Array.from(document.querySelectorAll("#months-container-dec-reg .btn")).indexOf(monthBtn) + 1;
@@ -1089,20 +1089,25 @@
         showPopupSuccess(`✅ Dados de ${monthBtn.textContent.trim()} de ${year} apagados com sucesso!`);
       } catch (err) {
         console.error(err);
-        alert("❌ Erro ao apagar: " + err.message);
+        showPopupWarning("❌ Erro ao apagar: " + err.message);
       }
     }
     /* =================== SAVE DATA RECORD TABLE =================== */
     async function saveDecirFull() {
       const table = document.querySelector("#table-container-dec-reg table tbody");
       if (!table) {
-        alert("Nenhuma tabela aberta.");
+        showPopupWarning("Nenhuma tabela aberta.");
+        return;
+      }
+      const corpOperNr = sessionStorage.getItem('currentCorpOperNr');
+      if (!corpOperNr) {
+        showPopupWarning("Erro: Corporação não identificada na sessão.");
         return;
       }
       const year = parseInt(document.getElementById("year-dec-reg").value, 10);
       const monthBtn = document.querySelector("#months-container-dec-reg .btn.active");
       if (!monthBtn) {
-        alert("Nenhum mês selecionado.");
+        showPopupWarning("Nenhum mês selecionado.");
         return;
       }
       const month = Array.from(document.querySelectorAll("#months-container-dec-reg .btn")).indexOf(monthBtn) + 1;
@@ -1136,16 +1141,15 @@
           const dayCells = cells.filter(td => td.isContentEditable);
           dayCells.forEach((cell, index) => {
             if (cell.textContent.trim().toUpperCase() === "X") {
-              payload.push({n_int, abv_name, year, month, day: index + 1, turno});
+              payload.push({n_int, abv_name, year, month, day: index + 1, turno, corp_oper_nr: corpOperNr});
             }
           });
         });
-        const deleteRes = await fetch(
-          `${SUPABASE_URL}/rest/v1/decir_reg_pag?year=eq.${year}&month=eq.${month}`, {
-            method: "DELETE",
-            headers: getSupabaseHeaders()
-          }
-        );
+        const deleteUrl = `${SUPABASE_URL}/rest/v1/decir_reg_pag?year=eq.${year}&month=eq.${month}&corp_oper_nr=eq.${corpOperNr}`;
+        const deleteRes = await fetch(deleteUrl, {
+          method: "DELETE",
+          headers: getSupabaseHeaders()
+        });
         if (!deleteRes.ok) {
           const errText = await deleteRes.text();
           throw new Error("Erro ao limpar registos antigos: " + errText);
@@ -1168,7 +1172,7 @@
         showPopupSuccess("✅ Registo DECIR gravado com sucesso!");
       } catch (err) {
         console.error(err);
-        alert("❌ Erro ao gravar: " + err.message);
+        showPopupWarning("❌ Erro ao gravar: " + err.message);
       } finally {
         if (guardarBtn) {
           guardarBtn.disabled = false;
@@ -1322,7 +1326,7 @@
       }
       /* ========================== FETCH API ========================= */
       try {
-        const res = await fetch("https://cb360-mobile.vercel.app/api/decir_reg_pag", {
+        const res = await fetch("https://cb360-online.vercel.app/api/decir_reg_pag", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data)

@@ -96,7 +96,7 @@
     /* ================= LOADING REFUSALS ================= */
     async function loadServiceRefusals() {
       try {
-        const corpOperNr = sessionStorage.getItem('currentCorpOperNr')";
+        const corpOperNr = sessionStorage.getItem('currentCorpOperNr');
         const url = `${SUPABASE_URL}/rest/v1/service_refusals?corp_oper_nr=eq.${corpOperNr}&order=refusal_date.desc`;
         const res = await fetch(url, {
           headers: getSupabaseHeaders()
@@ -494,3 +494,4 @@
         }
       });
     });
+

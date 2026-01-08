@@ -6,9 +6,12 @@
       constructor(supabaseUrl, supabaseKey) {
         this.SUPABASE_URL = supabaseUrl;
         this.SUPABASE_ANON_KEY = supabaseKey;
-        const epeColors = [{bg: 'green', text: 'white'}, {bg: 'blue', text: 'white'}, {bg: 'yellow', text: 'black'}, {bg: 'orange', text: 'black'}, {bg: 'red', text: 'white'}, {bg: 'lightgrey', text: 'black'}];
-        const ppiAeroColors = [{bg: 'green', text: 'white'}, {bg: 'yellow', text: 'black'}, {bg: 'red', text: 'white'}, {bg: 'lightgrey', text: 'black'}, {bg: 'lightgrey', text: 'black'}, {bg: 'lightgrey', text: 'black'}];
-        const ppiA22LinferColors = [{bg: 'green', text: 'white'}, {bg: 'yellow', text: 'black'}, {bg: 'orange', text: 'black'}, {bg: 'red', text: 'white'}, {bg: 'lightgrey', text: 'black'}, {bg: 'lightgrey', text: 'black'}];
+        const epeColors = [{bg: 'green', text: 'white'}, {bg: 'blue', text: 'white'}, {bg: 'yellow', text: 'black'}, 
+                           {bg: 'orange', text: 'black'}, {bg: 'red', text: 'white'}, {bg: 'lightgrey', text: 'black'}];
+        const ppiAeroColors = [{bg: 'green', text: 'white'}, {bg: 'yellow', text: 'black'}, {bg: 'red', text: 'white'}, 
+                               {bg: 'lightgrey', text: 'black'}, {bg: 'lightgrey', text: 'black'}, {bg: 'lightgrey', text: 'black'}];
+        const ppiA22LinferColors = [{bg: 'green', text: 'white'}, {bg: 'yellow', text: 'black'}, {bg: 'orange', text: 'black'}, 
+                                    {bg: 'red', text: 'white'}, {bg: 'lightgrey', text: 'black'}, {bg: 'lightgrey', text: 'black'}];
         this.buttonColors = {"epe-decir": epeColors, "epe-diops": epeColors, "epe-nrbq": epeColors, "ppi-aero": ppiAeroColors, "ppi-a22": ppiA22LinferColors, "ppi-linfer": ppiA22LinferColors};
         this.initializeButtons();
       }
@@ -40,31 +43,14 @@
         const epe_value = button.textContent.trim();
         this.saveToSupabase(epe_type, epe_value);
       }
-      async saveToSupabase(epe_type, epe_value) {
-        try {
-          const body = {
-            epe: epe_value
-          };
-          const resp = await fetch(`${this.SUPABASE_URL}/rest/v1/epe_status?epe_type=eq.${encodeURIComponent(epe_type)}`, {
-            method: 'PATCH',
-            headers: getSupabaseHeaders({
-              returnRepresentation: true
-            }),
-            body: JSON.stringify(body)
-          });
-          if (!resp.ok) {
-            console.error('Erro ao atualizar EPE no Supabase', resp.status, await resp.text());
-          } else {
-            console.log(`EPE atualizado: ${epe_type} = ${epe_value}`);
-          }
-        } catch (e) {
-          console.error('Erro na requisição Supabase:', e);
-        }
-      }
       async loadFromSupabase() {
         try {
-          const resp = await fetch(`${this.SUPABASE_URL}/rest/v1/epe_status`, {
-            headers: getSupabaseHeaders()
+          const corpId = sessionStorage.getItem('currentCorpOperNr');
+          const headers = getSupabaseHeaders();
+          headers['x-my-corpo'] = corpId;
+          const resp = await fetch(`${this.SUPABASE_URL}/rest/v1/epe_status?corp_oper_nr=eq.${corpId}`, {
+            method: 'GET',
+            headers: headers
           });
           if (!resp.ok) throw new Error(`Erro ao ler EPE: ${resp.status}`);
           const data = await resp.json();
@@ -88,9 +74,27 @@
             });
           });
         } catch (e) {
-          console.error('Erro ao carregar estados do Supabase:', e);
+          console.error('❌ Erro ao carregar estados EPE:', e);
         }
       }
+      async saveToSupabase(epe_type, epe_value) {
+        try {
+          const corpId = sessionStorage.getItem('currentCorpOperNr');
+          const headers = getSupabaseHeaders({ returnRepresentation: true });
+          headers['x-my-corpo'] = corpId;
+          const body = {epe: epe_value, corp_oper_nr: corpId};
+          const resp = await fetch(`${this.SUPABASE_URL}/rest/v1/epe_status?epe_type=eq.${encodeURIComponent(epe_type)}&corp_oper_nr=eq.${corpId}`, {
+            method: 'PATCH',
+            headers: headers,
+            body: JSON.stringify(body)
+          });
+          if (!resp.ok) {
+            console.error('❌ Erro RLS ao atualizar EPE:', resp.status);
+          }
+        } catch (e) {
+          console.error('❌ Erro na requisição EPE:', e);
+        }
+      }      
     }
     document.addEventListener('DOMContentLoaded', () => {
       window.colorManager = new EPEButtonColorManager(SUPABASE_URL, SUPABASE_ANON_KEY);

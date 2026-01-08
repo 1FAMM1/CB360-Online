@@ -48,39 +48,56 @@
     async function saveAttendance(tables, shift, corpOperNr, day, month, year) {
       const recordsMap = new Map();
       const now = new Date();
-      const currentDay = day ?? String(now.getDate());
-      const currentMonth = month ?? String(now.getMonth() + 1);
+      const currentDay = day ?? String(now.getDate()).padStart(2, '0');
+      const currentMonth = month ?? String(now.getMonth() + 1).padStart(2, '0');
       const currentYear = year ?? String(now.getFullYear());
       for (const table of tables) {
         for (const row of table.rows) {
           const nInt = row.n_int?.trim();
           const checkIn = row.entrada?.trim();
           const checkOut = row.saida?.trim();
-          const obs = row.obs?.trim();
+          const rawObs = (row.obs || '').trim();
+          const obs = rawObs.toLowerCase();
           if (!nInt) continue;
+          let recordType = '';
+          let totalHours = '0';
           const isAbsent = hasAbsenceStatus(obs);
           const isOnCall = hasOnCallStatus(obs);
           const isReinforcement = hasReinforcementStatus(obs);
-          let recordType = '';
-          let totalHours = '0';
-          if (isAbsent) {recordType = 'Falta';
-          } else if (isOnCall) {recordType = 'Piquete';
-          } else if (isReinforcement) {recordType = 'Reforço';
-          } else {continue;}
-          if ((recordType === 'Piquete' || recordType === 'Reforço') && checkIn && checkOut) 
-          {totalHours = String(calculateWorkHours(checkIn, checkOut, shift));}
+          const isSickLeave = obs.includes('baixa');
+          const isLicence = obs.includes('licença') || obs.includes('licenca');
+          const isDispense = obs.includes('dispensa');
+          if (isSickLeave) {
+            recordType = 'Baixa';
+          } else if (isLicence) {
+            recordType = 'Licença';
+          } else if (isDispense) {
+            recordType = 'Dispensa';
+          } else if (isAbsent) {
+            recordType = 'Falta';
+          } else if (isOnCall) {
+            recordType = 'Piquete';
+          } else if (isReinforcement) {
+            recordType = 'Reforço';
+          } else {
+            continue;
+          }
+          if ((recordType === 'Piquete' || recordType === 'Reforço') && checkIn && checkOut) {
+            totalHours = String(calculateWorkHours(checkIn, checkOut, shift));
+          }
           const key = `${nInt}_${currentDay}_${currentMonth}_${currentYear}_${corpOperNr}_${recordType}`;
           if (recordsMap.has(key)) continue;
           recordsMap.set(key, {n_int: String(nInt), day: String(currentDay), month: String(currentMonth), year: String(currentYear), shift: String(shift), shift_type: String(recordType),
-                               qtd_hours: String(totalHours), corp_oper_nr: String(corpOperNr), observ: obs || ''});}}
+                               qtd_hours: String(totalHours), observ: rawObs, corp_oper_nr: String(corpOperNr)});
+        }
+      }
       const attendanceRecords = Array.from(recordsMap.values());
       if (attendanceRecords.length === 0) {
-        console.warn('⚠️ Nenhum registo de assiduidade para gravar.');
         return true;
       }
       try {
         const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/reg_assid?on_conflict=n_int,day,month,year,corp_oper_nr,shift_type`, {
+          `${SUPABASE_URL}/rest/v1/reg_assid`, {
             method: 'POST',
             headers: {
               ...getSupabaseHeaders(),
@@ -91,15 +108,13 @@
           }
         );
         if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(errorText);
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Erro na comunicação com a base de dados.');
         }
         return true;
       } catch (err) {
-        console.error('❌ Erro ao gravar reg_assid:', err);
-        showPopupWarning(
-          'Erro ao gravar assiduidade. Verifique a consola.'
-        );
+        console.error('❌ Erro em saveAttendance:', err);
+        showPopupWarning('O planeamento foi enviado, mas houve um erro ao registar as faltas/piquetes no sistema central.');
         return false;
       }
     }

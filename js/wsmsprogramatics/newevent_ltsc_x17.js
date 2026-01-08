@@ -134,7 +134,6 @@
       if (!emsGroup) return;
       emsGroup.style.display = (alertSource === 'CODU' || alertSource === 'INEM') ? 'flex' : 'none';
     }
-
     function toggleContactFields() {
       const alertSource = document.getElementById('alert_source')?.value;
       const contactName = document.getElementById('contact_name');
@@ -289,7 +288,7 @@
       showPopupSuccess("Mensagem criada com sucesso! Abra o WhatsApp e prima CTRL+V", true);
       return message;
     }
-/* ========== CREATION OF NEW GLOBAL EVENT MESSAGE ========== */
+    /* ========== CREATION OF NEW GLOBAL EVENT MESSAGE ========== */
     async function generateWSMSMessage() {
       if (!validateRequiredFields()) return '';
       await new Promise(resolve => {
@@ -375,91 +374,65 @@
       }
     }    
     async function saveOccurrenceToSupabase(data, vehiclesCount) {
-  try {
-    const alertDate = document.getElementById('alert_date')?.value || '';
-    const alertTime = document.getElementById('alert_time')?.value || '';
-    
-    // 1. ALTERADO: Ler do localStorage (onde o login gravou)
-    const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
-    
-    if (!alertDate || !alertTime || !currentCorpOperNr) {
-      console.error("Dados em falta: Data, Hora ou Corp ID");
-      return null;
-    }
-
-    const startDateTime = new Date(`${alertDate}T${alertTime}`);
-    const formattedDate =
-          `${String(startDateTime.getDate()).padStart(2,'0')}/${String(startDateTime.getMonth()+1).padStart(2,'0')}/${startDateTime.getFullYear()} ` +
-          `${String(startDateTime.getHours()).padStart(2,'0')}:${String(startDateTime.getMinutes()).padStart(2,'0')}`;
-
-    let totalElements = 0;
-    document.querySelectorAll('.vehicle-card').forEach(card => {
-      const bbs = parseInt(card.querySelector('input[type="text"]')?.value || '0', 10);
-      if (!isNaN(bbs)) totalElements += bbs;
-    });
-
-    // 2. VERIFICAÇÃO: A RLS vai filtrar automaticamente pela corporação via header
-    const query = `occorrence=eq.${encodeURIComponent(data.descrOccorr)}&local=eq.${encodeURIComponent(data.localOccorr)}&start_date=eq.${encodeURIComponent(formattedDate)}`;
-    
-    const checkResp = await fetch(
-      `${SUPABASE_URL}/rest/v1/occurrences_control?${query}`, {
-        headers: getSupabaseHeaders() // Já envia o x-my-corpo
-      }
-    );
-
-    const existing = await safeJson(checkResp);
-
-    if (existing && existing.length > 0) {
-      const existingOccurrence = existing[0];
-      
-      // Simplificação da lógica de comparação (assumindo que guardas números)
-      const existingVehicles = Number(existingOccurrence.vehicles || 0);
-      const existingElements = Number(existingOccurrence.elements || 0);
-
-      if (existingVehicles === vehiclesCount && existingElements === totalElements) {
-        showPopupWarning("Já existe uma ocorrência idêntica registada.");
-        return "DUPLICATE";
-      } else {
-        // 3. UPDATE: Atualizar dados se houver alterações
-        const updateResp = await fetch(
-          `${SUPABASE_URL}/rest/v1/occurrences_control?id=eq.${existingOccurrence.id}`, {
-            method: 'PATCH',
-            headers: getSupabaseHeaders({ returnRepresentation: true }),
-            body: JSON.stringify({
-              vehicles: vehiclesCount,
-              elements: totalElements
-            }) // A RLS garante que só editamos a nossa própria corporação
+      try {
+        const alertDate = document.getElementById('alert_date')?.value || '';
+        const alertTime = document.getElementById('alert_time')?.value || '';
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
+        if (!alertDate || !alertTime || !currentCorpOperNr) {
+          console.error("Dados em falta: Data, Hora ou Corp ID");
+          return null;
+        }
+        const startDateTime = new Date(`${alertDate}T${alertTime}`);
+        const formattedDate =
+              `${String(startDateTime.getDate()).padStart(2,'0')}/${String(startDateTime.getMonth()+1).padStart(2,'0')}/${startDateTime.getFullYear()} ` +
+              `${String(startDateTime.getHours()).padStart(2,'0')}:${String(startDateTime.getMinutes()).padStart(2,'0')}`;
+        let totalElements = 0;
+        document.querySelectorAll('.vehicle-card').forEach(card => {
+          const bbs = parseInt(card.querySelector('input[type="text"]')?.value || '0', 10);
+          if (!isNaN(bbs)) totalElements += bbs;
+        });
+        const query = `occorrence=eq.${encodeURIComponent(data.descrOccorr)}&local=eq.${encodeURIComponent(data.localOccorr)}&start_date=eq.${encodeURIComponent(formattedDate)}`;
+        const checkResp = await fetch(
+          `${SUPABASE_URL}/rest/v1/occurrences_control?${query}`, {
+            headers: getSupabaseHeaders()
           }
         );
-        return await safeJson(updateResp);
+        const existing = await safeJson(checkResp);
+        if (existing && existing.length > 0) {
+          const existingOccurrence = existing[0];
+          const existingVehicles = Number(existingOccurrence.vehicles || 0);
+          const existingElements = Number(existingOccurrence.elements || 0);
+          if (existingVehicles === vehiclesCount && existingElements === totalElements) {
+            showPopupWarning("Já existe uma ocorrência idêntica registada.");
+            return "DUPLICATE";
+          } else {
+            const updateResp = await fetch(
+              `${SUPABASE_URL}/rest/v1/occurrences_control?id=eq.${existingOccurrence.id}`, {
+                method: 'PATCH',
+                headers: getSupabaseHeaders({ returnRepresentation: true }),
+                body: JSON.stringify({
+                  vehicles: vehiclesCount,
+                  elements: totalElements
+                })
+              }
+            );
+            return await safeJson(updateResp);
+          }
+        }
+        const insertResp = await fetch(
+          `${SUPABASE_URL}/rest/v1/occurrences_control`, {
+            method: 'POST',
+            headers: getSupabaseHeaders({returnRepresentation: true}),
+            body: JSON.stringify({start_date: formattedDate, occorrence: data.descrOccorr, local: data.localOccorr, localitie: data.localitie, vehicles: vehiclesCount, elements: totalElements,
+                                  status: "Em Curso", corp_oper_nr: currentCorpOperNr})
+          });
+        return await safeJson(insertResp);
+      } catch (e) {
+        console.error("Erro ao gravar ocorrência:", e);
+        showPopupWarning("❌ Erro ao comunicar com a base de dados.");
+        return null;
       }
     }
-
-    // 4. INSERT: Nova ocorrência
-    const insertResp = await fetch(
-      `${SUPABASE_URL}/rest/v1/occurrences_control`, {
-        method: 'POST',
-        headers: getSupabaseHeaders({ returnRepresentation: true }),
-        body: JSON.stringify({
-          start_date: formattedDate,
-          occorrence: data.descrOccorr,
-          local: data.localOccorr,
-          localitie: data.localitie,
-          vehicles: vehiclesCount,
-          elements: totalElements,
-          status: "Em Curso",
-          corp_oper_nr: currentCorpOperNr // Importante para a RLS
-        })
-      });
-
-    return await safeJson(insertResp);
-
-  } catch (e) {
-    console.error("Erro ao gravar ocorrência:", e);
-    showPopupWarning("❌ Erro ao comunicar com a base de dados.");
-    return null;
-  }
-}
     document.addEventListener('DOMContentLoaded', async () => {
       document.querySelectorAll('input[type="date"]').forEach(i => i.value = getCurrentDateStr());
       document.querySelectorAll('input[type="time"]').forEach(i => i.value = '');
@@ -472,6 +445,3 @@
         toggleContactFields();
       });
     });
-
-
-

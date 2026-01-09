@@ -15,7 +15,7 @@
             window.location.href = "login.html";
             return false;
           }
-          const params = new URLSearchParams({n_int: `eq.${nInt}`, corp_oper_nr: `eq.${corpNr}`, select: 'user_role,elem_state,acess'});
+          const params = new URLSearchParams({n_int: `eq.${nInt}`, corp_oper_nr: `eq.${corpNr}`, select: 'user_role,elem_state,acess,validate'});
           const url = `${SUPABASE_URL}/rest/v1/reg_elems?${params.toString()}`;
           const response = await fetch(url, {
             method: "GET",
@@ -34,12 +34,28 @@
             window.location.href = "login.html";
             return false;
           }
+          if (user.validate) {
+            const today = new Date();
+            const expireDate = new Date(user.validate);
+            const diffTime = expireDate - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            if (diffDays < 0) {
+              alert("❌ A sua conta expirou a " + expireDate.toLocaleDateString() + ". Acesso bloqueado.");
+              window.location.href = "login.html";
+              return false;
+            } else if (diffDays <= 30) {
+              console.warn(`Atenção: A conta expira em ${diffDays} dias.`);
+              sessionStorage.setItem("daysToExpire", diffDays);
+            }
+          }
           const permissoes = user.acess ? user.acess : "Menu Principal";
           sessionStorage.setItem("allowedModules", permissoes);
-          if (user.user_role) sessionStorage.setItem("currentUserRole", user.user_role);
+          if (user.user_role) {
+            sessionStorage.setItem("currentUserRole", user.user_role);
+          }
           return true;
         } catch (error) {
-          console.error("❌ Erro ao verificar validade:", error);
+          console.error("❌ Erro crítico na validação:", error);
           return false;
         }
       }
@@ -156,3 +172,4 @@
         });
       }
     });
+

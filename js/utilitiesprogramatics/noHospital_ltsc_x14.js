@@ -1,7 +1,7 @@
     /* =======================================
     NO HOSPITAL
     ======================================= */    
-    async function loadNoHospFromSupabase(total = 13) {
+    async function loadNoHospFromSupabase(total = 12) {
       createNoHospInputs(total);
       const currentCorpOperNr = sessionStorage.getItem('currentCorpOperNr');
       if (!currentCorpOperNr) return console.error("❌ [NOHOSP] CorpOperNr não definido!");
@@ -42,7 +42,7 @@
         console.error("❌ [NOHOSP] Erro ao carregar:", e);
       }
     }
-    async function saveNoHospGroupFields(total = 13) {
+    async function saveNoHospGroupFields(total = 12) {
       const currentCorpOperNr = sessionStorage.getItem('currentCorpOperNr');
       if (!currentCorpOperNr) {
         showPopupWarning("❌ Erro: Sessão não identificada.");

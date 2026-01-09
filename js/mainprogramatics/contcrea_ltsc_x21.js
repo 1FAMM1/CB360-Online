@@ -520,7 +520,7 @@
     /* =======================================
     UNAVAILABILITY OF HOSPITALS
     ======================================= */
-    function createNoHospInputs(total = 13) {
+    function createNoHospInputs(total = 12) {
       const noHospital = document.getElementById('no-hosp');      
       if (!noHospital) return;
       noHospital.innerHTML = '';

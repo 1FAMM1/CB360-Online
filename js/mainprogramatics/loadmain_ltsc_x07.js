@@ -10,7 +10,6 @@
   try {
     const nInt = sessionStorage.getItem("currentNInt");
     const corpNr = sessionStorage.getItem("currentCorpOperNr");
-    const fullName = sessionStorage.getItem("currentFullName");
 
     if (!nInt || !corpNr) {
       window.location.href = "login.html";
@@ -19,64 +18,61 @@
 
     const headers = getSupabaseHeaders();
 
-    // --- 1. VALIDAR NA TABELA reg_elems ---
-    // Filtro rigoroso por n_int E corp_oper_nr
-    const urlReg = `${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${nInt}&corp_oper_nr=eq.${corpNr}&select=user_role,elem_state,acess`;
+    // --- 1. BUSCAR O NOME CORRETO NA reg_elems ---
+    // Filtramos por n_int e corp para ter a certeza que pegamos o Jorge da 0801
+    const urlReg = `${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${nInt}&corp_oper_nr=eq.${corpNr}&select=full_name,user_role,elem_state,acess`;
     const respReg = await fetch(urlReg, { headers });
     const dataReg = await respReg.json();
 
     if (!dataReg || dataReg.length === 0) {
-      alert("Ficha de elemento não encontrada para esta corporação.");
+      alert("Utilizador não encontrado nesta corporação.");
       window.location.href = "login.html";
       return false;
     }
 
-    if (dataReg[0].elem_state === false) {
-      alert("A sua conta está INATIVA nesta corporação.");
+    const userReg = dataReg[0];
+    const officialFullName = userReg.full_name; // "Jorge Miguel Pinto Ribeirinho"
+
+    if (userReg.elem_state === false) {
+      alert("Conta INATIVA.");
       window.location.href = "login.html";
       return false;
     }
 
-    // --- 2. VALIDAR NA TABELA users (EXPIRAÇÃO) ---
-    if (fullName) {
-      // AJUSTE AQUI: Filtramos por Nome E pela Corporação da Sessão
-      const urlUsers = `${SUPABASE_URL}/rest/v1/users?full_name=eq.${encodeURIComponent(fullName)}&corp_oper_nr=eq.${corpNr}&select=validate`;
-      const respUsers = await fetch(urlUsers, { headers });
-      const dataUsers = await respUsers.json();
+    // --- 2. BUSCAR VALIDADE NA users USANDO NOME + CORP ---
+    // ATENÇÃO: O full_name na tabela 'users' TEM de ser igual ao da 'reg_elems'
+    const urlUsers = `${SUPABASE_URL}/rest/v1/users?full_name=eq.${encodeURIComponent(officialFullName)}&corp_oper_nr=eq.${corpNr}&select=validate`;
+    
+    const respUsers = await fetch(urlUsers, { headers });
+    const dataUsers = await respUsers.json();
 
-      // Se encontrar o registo específico desta corporação
-      if (dataUsers && dataUsers.length > 0) {
-        const userDate = dataUsers[0].validate;
-        if (userDate) {
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          const expireDate = new Date(userDate);
-          expireDate.setHours(0, 0, 0, 0);
+    if (dataUsers && dataUsers.length > 0) {
+      const userDate = dataUsers[0].validate;
+      if (userDate) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const expireDate = new Date(userDate);
+        expireDate.setHours(0, 0, 0, 0);
 
-          if (expireDate < today) {
-            alert(`❌ ACESSO BLOQUEADO\n\nA sua conta na corporação ${corpNr} expirou em ${expireDate.toLocaleDateString()}.`);
-            
-            // Limpa o ecrã para garantir que nada carrega por trás
-            document.body.innerHTML = ""; 
-            window.location.href = "login.html";
-            return false;
-          }
+        if (expireDate < today) {
+          alert(`❌ ACESSO BLOQUEADO\nA conta de ${officialFullName} expirou na corporação ${corpNr}.`);
+          document.body.innerHTML = ""; 
+          window.location.href = "login.html";
+          return false;
         }
-      } else {
-        // Opcional: o que fazer se o user não estiver na tabela 'users' para esta corp?
-        console.warn("Aviso: Registo de validade não encontrado para esta corporação.");
       }
+    } else {
+      // Se cair aqui, é porque na tabela 'users' o nome não é "Jorge Miguel..." 
+      // mas sim "JRibeirinho", e o filtro por full_name não encontrou nada.
+      console.warn(`Aviso: Não existe um registo na tabela 'users' com o nome '${officialFullName}' para a corp ${corpNr}`);
     }
 
-    // --- 3. SUCESSO: CONFIGURAR SESSÃO ---
-    sessionStorage.setItem("allowedModules", dataReg[0].acess || "Menu Principal");
-    if (dataReg[0].user_role) sessionStorage.setItem("currentUserRole", dataReg[0].user_role);
-
+    sessionStorage.setItem("allowedModules", userReg.acess || "Menu Principal");
     return true;
 
   } catch (error) {
-    console.error("Erro crítico na validação:", error);
-    return false; 
+    console.error("Erro:", error);
+    return false;
   }
 }
       /* ===== SIDEBAR SYNCHRONIZATION ====== */
@@ -192,6 +188,7 @@
         });
       }
     });
+
 
 
 

@@ -10,7 +10,7 @@
   try {
     const nInt = sessionStorage.getItem("currentNInt");
     const corpNr = sessionStorage.getItem("currentCorpOperNr");
-    const fullName = sessionStorage.getItem("currentFullName"); // Precisamos do nome para a tabela users
+    const fullName = sessionStorage.getItem("currentFullName");
 
     if (!nInt || !corpNr) {
       window.location.href = "login.html";
@@ -19,57 +19,50 @@
 
     const headers = getSupabaseHeaders();
 
-    // --- 1. PEDIDO À TABELA reg_elems (Estado e Permissões) ---
+    // 1. Verificar Estado Operacional
     const urlReg = `${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${nInt}&corp_oper_nr=eq.${corpNr}&select=user_role,elem_state,acess`;
     const respReg = await fetch(urlReg, { headers });
-    
-    if (!respReg.ok) throw new Error("Erro ao aceder a reg_elems");
     const dataReg = await respReg.json();
 
-    if (!dataReg || dataReg.length === 0) {
+    if (!dataReg || dataReg.length === 0 || dataReg[0].elem_state === false) {
+      alert("Conta Inativa ou não encontrada.");
       window.location.href = "login.html";
       return false;
     }
 
-    const userReg = dataReg[0];
-
-    // Bloqueio se estiver inativo
-    if (userReg.elem_state === false) {
-      alert("A sua conta está INATIVA.");
-      window.location.href = "login.html";
-      return false;
-    }
-
-    // --- 2. PEDIDO À TABELA users (Data de Validade) ---
-    // Usamos o fullName ou outro identificador comum para cruzar
+    // 2. Verificar Validade (Tabela Users)
     if (fullName) {
       const urlUsers = `${SUPABASE_URL}/rest/v1/users?full_name=eq.${encodeURIComponent(fullName)}&select=validate`;
       const respUsers = await fetch(urlUsers, { headers });
-      
-      if (respUsers.ok) {
-        const dataUsers = await respUsers.json();
-        if (dataUsers && dataUsers.length > 0 && dataUsers[0].validate) {
-          const today = new Date();
-          const expireDate = new Date(dataUsers[0].validate);
+      const dataUsers = await respUsers.json();
+
+      if (dataUsers && dataUsers.length > 0 && dataUsers[0].validate) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Zera as horas para comparar apenas os dias
+        
+        const expireDate = new Date(dataUsers[0].validate);
+        expireDate.setHours(0, 0, 0, 0);
+
+        if (expireDate < today) {
+          // AQUI ESTÁ O BLOQUEIO REAL
+          alert(`❌ ACESSO BLOQUEADO\n\nA sua conta expirou a ${expireDate.toLocaleDateString()}.\nContacte a administração para renovar.`);
           
-          if (expireDate < today) {
-            alert(`⚠️ Atenção: O seu acesso expirou a ${expireDate.toLocaleDateString()}. Contacte a administração.`);
-            // Se quiseres que ele NÃO entre se expirar, descomenta a linha abaixo:
-            // window.location.href = "login.html"; return false;
-          }
+          // Impede a entrada
+          window.location.href = "login.html"; 
+          return false; 
         }
       }
     }
 
-    // Grava o que é necessário para a sessão
-    sessionStorage.setItem("allowedModules", userReg.acess || "Menu Principal");
-    if (userReg.user_role) sessionStorage.setItem("currentUserRole", userReg.user_role);
+    // Se passou em tudo, guarda os acessos e retorna true
+    sessionStorage.setItem("allowedModules", dataReg[0].acess || "Menu Principal");
+    if (dataReg[0].user_role) sessionStorage.setItem("currentUserRole", dataReg[0].user_role);
 
     return true;
 
   } catch (error) {
-    console.error("❌ Erro na validação cruzada:", error);
-    return true; // Deixa passar em caso de erro técnico para não bloquear o utilizador
+    console.error("Erro na validação:", error);
+    return false; // Em caso de erro, por segurança, não deixa entrar
   }
 }
       /* ===== SIDEBAR SYNCHRONIZATION ====== */
@@ -185,5 +178,6 @@
         });
       }
     });
+
 
 

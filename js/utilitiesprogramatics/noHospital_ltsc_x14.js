@@ -9,7 +9,7 @@
         const headers = getSupabaseHeaders();
         headers['x-my-corpo'] = currentCorpOperNr;
         const res = await fetch(
-          `${SUPABASE_URL}/rest/v1/inops_hospital?select=*&corp_oper_nr=eq.${currentCorpOperNr}&order=group_nr.asc`, { 
+          `${SUPABASE_URL}/rest/v1/hospital_restrictions?select=*&corp_oper_nr=eq.${currentCorpOperNr}&order=group_nr.asc`, { 
             method: "GET", 
             headers: headers
           }
@@ -70,13 +70,13 @@
             if (dataCheck.length > 0) rowId = dataCheck[0].id;
           }
           if (!rowId) {
-            await fetch(`${SUPABASE_URL}/rest/v1/inops_hospital`, {
+            await fetch(`${SUPABASE_URL}/rest/v1/hospital_restrictions`, {
               method: "POST",
               headers: {...headers, "Prefer": "return=representation"},
               body: JSON.stringify([payload])
             });
           } else {
-            await fetch(`${SUPABASE_URL}/rest/v1/inops_hospital?id=eq.${rowId}`, {
+            await fetch(`${SUPABASE_URL}/rest/v1/hospital_restrictions?id=eq.${rowId}`, {
               method: "PATCH",
               headers: headers,
               body: JSON.stringify(payload)

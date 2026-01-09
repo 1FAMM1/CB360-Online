@@ -6,68 +6,70 @@
       const authNameEl = document.getElementById('authName');
       if (authNameEl) authNameEl.textContent = currentUserDisplay || "";
       /* ========== VALIDITY CHECK ========== */
-      async function checkUserValidity() {
+     async function checkUserValidity() {
   try {
-    // 1. Pegamos os valores que estão no sessionStorage NESTE MOMENTO
+    // 1. Puxar os dados que o utilizador inseriu no login (e que guardaste na sessão)
     const nInt = sessionStorage.getItem("currentNInt");
     const corpNr = sessionStorage.getItem("currentCorpOperNr");
 
     if (!nInt || !corpNr) {
-        window.location.href = "login.html";
-        return false;
-    }
-
-    const headers = getSupabaseHeaders();
-
-    // --- PASSO 1: Identificar o Utilizador na reg_elems ---
-    // Forçamos o filtro pelo n_int e pela corp_oper_nr da sessão
-    const urlReg = `${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${nInt}&corp_oper_nr=eq.${corpNr}&select=full_name,elem_state,acess`;
-    const respReg = await fetch(urlReg, { headers });
-    const dataReg = await respReg.json();
-
-    if (!dataReg || dataReg.length === 0) {
-      console.error(`❌ Erro: Não existe o elemento ${nInt} na corporação ${corpNr}`);
-      alert("Acesso negado: Este utilizador não pertence a esta corporação.");
       window.location.href = "login.html";
       return false;
     }
 
-    // O Nome que vamos usar tem de vir DIRECTAMENTE da base de dados (reg_elems)
-    const nameFromDB = dataReg[0].full_name;
-    console.log(`✅ Identificado: ${nameFromDB} na Corp ${corpNr}`);
+    const headers = getSupabaseHeaders();
 
-    // --- PASSO 2: Validar na Users ---
-    // Aqui é onde o erro acontece. Vamos forçar o filtro de Nome E Corporação.
-    const urlUsers = `${SUPABASE_URL}/rest/v1/users?full_name=eq.${encodeURIComponent(nameFromDB)}&corp_oper_nr=eq.${corpNr}&select=validate`;
+    // --- PASSO 1: O FILTRO "MATADOR" ---
+    // Aqui dizemos ao Supabase: "Dá-me o registo onde o N_INT é X E a CORP é Y"
+    // Se não baterem os dois, ele não devolve NADA.
+    const urlReg = `${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${nInt}&corp_oper_nr=eq.${corpNr}&select=full_name,elem_state,acess`;
+    
+    const respReg = await fetch(urlReg, { headers });
+    const dataReg = await respReg.json();
+
+    // Se o Jorge da 0801 tentar entrar mas o sistema procurar na 0805 por erro, 
+    // ou se os dados não baterem, o array vem vazio [].
+    if (!dataReg || dataReg.length === 0) {
+      console.error(`❌ Acesso Negado: O utilizador ${nInt} não existe na corporação ${corpNr}`);
+      alert("Erro: Utilizador ou Corporação inválidos para este acesso.");
+      window.location.href = "login.html";
+      return false;
+    }
+
+    const userReg = dataReg[0];
+    
+    // Agora que temos o NOME exato que está ligado a este N_INT nesta CORP:
+    const officialName = userReg.full_name;
+
+    // --- PASSO 2: VALIDAR A DATA NA TABELA USERS ---
+    // Usamos o NOME e a CORP para garantir que pegamos a validade da 0801 e não da 0805
+    const urlUsers = `${SUPABASE_URL}/rest/v1/users?full_name=eq.${encodeURIComponent(officialName)}&corp_oper_nr=eq.${corpNr}&select=validate`;
     
     const respUsers = await fetch(urlUsers, { headers });
     const dataUsers = await respUsers.json();
 
-    console.log("Resultado da procura na tabela Users:", dataUsers);
-
     if (dataUsers && dataUsers.length > 0) {
-      const expireDateStr = dataUsers[0].validate;
-      if (expireDateStr) {
+      const validade = dataUsers[0].validate;
+      if (validade) {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const expireDate = new Date(expireDateStr);
+        const expireDate = new Date(validade);
         expireDate.setHours(0, 0, 0, 0);
 
         if (expireDate < today) {
-          alert(`❌ CONTA EXPIRADA\n\nCorporação: ${corpNr}\nData: ${expireDate.toLocaleDateString()}`);
-          document.body.innerHTML = "";
+          alert(`❌ CONTA EXPIRADA (${corpNr})\nO seu acesso terminou a ${expireDate.toLocaleDateString()}.`);
           window.location.href = "login.html";
           return false;
         }
       }
     }
 
-    // Se chegou aqui, os dados da 0801 são válidos
-    sessionStorage.setItem("allowedModules", dataReg[0].acess || "");
+    // Se chegou aqui, ele validou o N_INT certo na CORP certa
+    sessionStorage.setItem("allowedModules", userReg.acess || "");
     return true;
 
   } catch (error) {
-    console.error("Erro na validação:", error);
+    console.error("Erro crítico no login/validação:", error);
     return false;
   }
 }
@@ -184,6 +186,7 @@
         });
       }
     });
+
 
 
 

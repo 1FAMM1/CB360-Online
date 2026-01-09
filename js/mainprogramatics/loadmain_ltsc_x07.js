@@ -38,7 +38,7 @@
               expireDate.setHours(0, 0, 0, 0);
               if (expireDate < today) {
                 alert(`❌ CONTA EXPIRADA (${corpNr})\nO seu acesso terminou a ${expireDate.toLocaleDateString()}.`);
-                window.location.href = "login.html";
+                window.location.href = "index.html";
                 return false;
               }
             }
@@ -163,6 +163,7 @@
         });
       }
     });
+
 
 
 

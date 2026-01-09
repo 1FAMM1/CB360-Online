@@ -7,73 +7,77 @@
       if (authNameEl) authNameEl.textContent = currentUserDisplay || "";
       /* ========== VALIDITY CHECK ========== */
       async function checkUserValidity() {
-    try {
-        const nInt = sessionStorage.getItem("currentNInt");
-        const corpNr = sessionStorage.getItem("currentCorpOperNr");
-        const fullName = sessionStorage.getItem("currentFullName");
+  try {
+    const nInt = sessionStorage.getItem("currentNInt");
+    const corpNr = sessionStorage.getItem("currentCorpOperNr");
+    const fullName = sessionStorage.getItem("currentFullName");
 
-        if (!nInt || !corpNr) {
-            window.location.href = "login.html";
-            return false;
-        }
-
-        const headers = getSupabaseHeaders();
-
-        // 1. Verificar Estado Operacional
-        const urlReg = `${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${nInt}&corp_oper_nr=eq.${corpNr}&select=user_role,elem_state,acess`;
-        const respReg = await fetch(urlReg, { headers });
-        const dataReg = await respReg.json();
-
-        if (!dataReg || dataReg.length === 0 || dataReg[0].elem_state === false) {
-            alert("Conta Inativa ou não encontrada.");
-            window.location.href = "login.html";
-            return false;
-        }
-
-        // 2. Verificar Validade (Tabela Users)
-        if (fullName) {
-            const urlUsers = `${SUPABASE_URL}/rest/v1/users?full_name=eq.${encodeURIComponent(fullName)}&select=validate`;
-            const respUsers = await fetch(urlUsers, { headers });
-            const dataUsers = await respUsers.json();
-
-            // 🔍 DEBUG: Ver o que está a vir
-            console.log("🔍 Resposta da tabela users:", dataUsers);
-
-            if (!dataUsers || dataUsers.length === 0) {
-                console.warn("⚠️ Utilizador não encontrado na tabela users");
-                // Se não encontrar, continua (pode adicionar bloqueio aqui se preferir)
-            } else if (dataUsers[0].validate) {
-                console.log("📅 Data de validade encontrada:", dataUsers[0].validate);
-
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                const expireDate = new Date(dataUsers[0].validate);
-                expireDate.setHours(0, 0, 0, 0);
-
-                console.log("📅 Hoje:", today);
-                console.log("📅 Expira em:", expireDate);
-                console.log("📅 Comparação (expirou?):", expireDate < today);
-
-                if (expireDate < today) {
-                    alert(`❌ ACESSO BLOQUEADO\n\nA sua conta expirou a ${expireDate.toLocaleDateString()}.\nContacte a administração para renovar.`);
-                    window.location.href = "login.html";
-                    return false;
-                }
-            } else {
-                console.log("✅ Sem data de validade - acesso ilimitado");
-            }
-        }
-
-        // Se passou em tudo, guarda os acessos e retorna true
-        sessionStorage.setItem("allowedModules", dataReg[0].acess || "Menu Principal");
-        if (dataReg[0].user_role) sessionStorage.setItem("currentUserRole", dataReg[0].user_role);
-
-        return true;
-
-    } catch (error) {
-        console.error("Erro na validação:", error);
-        return false; // Em caso de erro, por segurança, não deixa entrar
+    if (!nInt || !corpNr) {
+      window.location.href = "login.html";
+      return false;
     }
+
+    const headers = getSupabaseHeaders();
+
+    // --- 1. VALIDAR NA TABELA reg_elems ---
+    // Filtro rigoroso por n_int E corp_oper_nr
+    const urlReg = `${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${nInt}&corp_oper_nr=eq.${corpNr}&select=user_role,elem_state,acess`;
+    const respReg = await fetch(urlReg, { headers });
+    const dataReg = await respReg.json();
+
+    if (!dataReg || dataReg.length === 0) {
+      alert("Ficha de elemento não encontrada para esta corporação.");
+      window.location.href = "login.html";
+      return false;
+    }
+
+    if (dataReg[0].elem_state === false) {
+      alert("A sua conta está INATIVA nesta corporação.");
+      window.location.href = "login.html";
+      return false;
+    }
+
+    // --- 2. VALIDAR NA TABELA users (EXPIRAÇÃO) ---
+    if (fullName) {
+      // AJUSTE AQUI: Filtramos por Nome E pela Corporação da Sessão
+      const urlUsers = `${SUPABASE_URL}/rest/v1/users?full_name=eq.${encodeURIComponent(fullName)}&corp_oper_nr=eq.${corpNr}&select=validate`;
+      const respUsers = await fetch(urlUsers, { headers });
+      const dataUsers = await respUsers.json();
+
+      // Se encontrar o registo específico desta corporação
+      if (dataUsers && dataUsers.length > 0) {
+        const userDate = dataUsers[0].validate;
+        if (userDate) {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const expireDate = new Date(userDate);
+          expireDate.setHours(0, 0, 0, 0);
+
+          if (expireDate < today) {
+            alert(`❌ ACESSO BLOQUEADO\n\nA sua conta na corporação ${corpNr} expirou em ${expireDate.toLocaleDateString()}.`);
+            
+            // Limpa o ecrã para garantir que nada carrega por trás
+            document.body.innerHTML = ""; 
+            window.location.href = "login.html";
+            return false;
+          }
+        }
+      } else {
+        // Opcional: o que fazer se o user não estiver na tabela 'users' para esta corp?
+        console.warn("Aviso: Registo de validade não encontrado para esta corporação.");
+      }
+    }
+
+    // --- 3. SUCESSO: CONFIGURAR SESSÃO ---
+    sessionStorage.setItem("allowedModules", dataReg[0].acess || "Menu Principal");
+    if (dataReg[0].user_role) sessionStorage.setItem("currentUserRole", dataReg[0].user_role);
+
+    return true;
+
+  } catch (error) {
+    console.error("Erro crítico na validação:", error);
+    return false; 
+  }
 }
       /* ===== SIDEBAR SYNCHRONIZATION ====== */
       function updateSidebarAccess(allowedModules) {
@@ -188,6 +192,7 @@
         });
       }
     });
+
 
 
 

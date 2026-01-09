@@ -1,78 +1,55 @@
-/* =======================================
+    /* =======================================
     LOAD MAIN DATA
     ======================================= */
     document.addEventListener('DOMContentLoaded', async () => {
       const currentUserDisplay = sessionStorage.getItem("currentUserDisplay");
       const authNameEl = document.getElementById('authName');
       if (authNameEl) authNameEl.textContent = currentUserDisplay || "";
-      /* ========== VALIDITY CHECK ========== */
+     /* ========== VALIDITY CHECK ========== */
      async function checkUserValidity() {
-  try {
-    // 1. Puxar os dados que o utilizador inseriu no login (e que guardaste na sessão)
-    const nInt = sessionStorage.getItem("currentNInt");
-    const corpNr = sessionStorage.getItem("currentCorpOperNr");
-
-    if (!nInt || !corpNr) {
-      window.location.href = "login.html";
-      return false;
-    }
-
-    const headers = getSupabaseHeaders();
-
-    // --- PASSO 1: O FILTRO "MATADOR" ---
-    // Aqui dizemos ao Supabase: "Dá-me o registo onde o N_INT é X E a CORP é Y"
-    // Se não baterem os dois, ele não devolve NADA.
-    const urlReg = `${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${nInt}&corp_oper_nr=eq.${corpNr}&select=full_name,elem_state,acess`;
-    
-    const respReg = await fetch(urlReg, { headers });
-    const dataReg = await respReg.json();
-
-    // Se o Jorge da 0801 tentar entrar mas o sistema procurar na 0805 por erro, 
-    // ou se os dados não baterem, o array vem vazio [].
-    if (!dataReg || dataReg.length === 0) {
-      console.error(`❌ Acesso Negado: O utilizador ${nInt} não existe na corporação ${corpNr}`);
-      alert("Erro: Utilizador ou Corporação inválidos para este acesso.");
-      window.location.href = "login.html";
-      return false;
-    }
-
-    const userReg = dataReg[0];
-    
-    // Agora que temos o NOME exato que está ligado a este N_INT nesta CORP:
-    const officialName = userReg.full_name;
-
-    // --- PASSO 2: VALIDAR A DATA NA TABELA USERS ---
-    // Usamos o NOME e a CORP para garantir que pegamos a validade da 0801 e não da 0805
-    const urlUsers = `${SUPABASE_URL}/rest/v1/users?full_name=eq.${encodeURIComponent(officialName)}&corp_oper_nr=eq.${corpNr}&select=validate`;
-    
-    const respUsers = await fetch(urlUsers, { headers });
-    const dataUsers = await respUsers.json();
-
-    if (dataUsers && dataUsers.length > 0) {
-      const validade = dataUsers[0].validate;
-      if (validade) {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const expireDate = new Date(validade);
-        expireDate.setHours(0, 0, 0, 0);
-
-        if (expireDate < today) {
-          alert(`❌ CONTA EXPIRADA (${corpNr})\nO seu acesso terminou a ${expireDate.toLocaleDateString()}.`);
-          window.location.href = "login.html";
+        try {
+          const nInt = sessionStorage.getItem("currentNInt");
+          const corpNr = sessionStorage.getItem("currentCorpOperNr");
+          if (!nInt || !corpNr) {
+            window.location.href = "login.html";
+            return false;
+          }
+          const headers = getSupabaseHeaders();
+          const urlReg = `${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${nInt}&corp_oper_nr=eq.${corpNr}&select=full_name,elem_state,acess`;
+          const respReg = await fetch(urlReg, { headers });
+          const dataReg = await respReg.json();
+          if (!dataReg || dataReg.length === 0) {
+            console.error(`❌ Acesso Negado: O utilizador ${nInt} não existe na corporação ${corpNr}`);
+            alert("Erro: Utilizador ou Corporação inválidos para este acesso.");
+            window.location.href = "login.html";
+            return false;
+          }
+          const userReg = dataReg[0];
+          const officialName = userReg.full_name;
+          const urlUsers = `${SUPABASE_URL}/rest/v1/users?full_name=eq.${encodeURIComponent(officialName)}&corp_oper_nr=eq.${corpNr}&select=validate`;
+          const respUsers = await fetch(urlUsers, { headers });
+          const dataUsers = await respUsers.json();
+          if (dataUsers && dataUsers.length > 0) {
+            const validade = dataUsers[0].validate;
+            if (validade) {
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              const expireDate = new Date(validade);
+              expireDate.setHours(0, 0, 0, 0);
+              if (expireDate < today) {
+                alert(`❌ CONTA EXPIRADA (${corpNr})\nO seu acesso terminou a ${expireDate.toLocaleDateString()}.`);
+                window.location.href = "login.html";
+                return false;
+              }
+            }
+          }
+          sessionStorage.setItem("allowedModules", userReg.acess || "");
+          return true;
+        } catch (error) {
+          console.error("Erro crítico no login/validação:", error);
           return false;
         }
       }
-    }
-
-    // Se chegou aqui, ele validou o N_INT certo na CORP certa
-    sessionStorage.setItem("allowedModules", userReg.acess || "");
-    return true;
-
-  } catch (error) {
-    console.error("Erro crítico no login/validação:", error);
-    return false;
-  }
-}
       /* ===== SIDEBAR SYNCHRONIZATION ====== */
       function updateSidebarAccess(allowedModules) {
         const sidebarButtons = document.querySelectorAll(".sidebar-menu-button, .sidebar-submenu-button, .sidebar-sub-submenu-button");
@@ -186,6 +163,7 @@
         });
       }
     });
+
 
 
 

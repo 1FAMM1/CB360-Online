@@ -11,7 +11,7 @@
           const nInt = sessionStorage.getItem("currentNInt");
           const corpNr = sessionStorage.getItem("currentCorpOperNr");
           if (!nInt || !corpNr) {
-            window.location.href = "login.html";
+            window.location.href = "index.html";
             return false;
           }
           const headers = getSupabaseHeaders();
@@ -21,7 +21,7 @@
           if (!dataReg || dataReg.length === 0) {
             console.error(`❌ Acesso Negado: O utilizador ${nInt} não existe na corporação ${corpNr}`);
             alert("Erro: Utilizador ou Corporação inválidos para este acesso.");
-            window.location.href = "login.html";
+            window.location.href = "index.html";
             return false;
           }
           const userReg = dataReg[0];
@@ -163,6 +163,7 @@
         });
       }
     });
+
 
 
 

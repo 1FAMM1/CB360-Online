@@ -7,58 +7,71 @@
       if (authNameEl) authNameEl.textContent = currentUserDisplay || "";
       /* ========== VALIDITY CHECK ========== */
       async function checkUserValidity() {
-        try {
-          const nInt = sessionStorage.getItem("currentNInt");
-          const corpNr = sessionStorage.getItem("currentCorpOperNr");
-          if (!nInt || !corpNr) {
-            console.error("Sessão inválida.");
-            window.location.href = "login.html";
-            return false;
+  try {
+    const nInt = sessionStorage.getItem("currentNInt");
+    const corpNr = sessionStorage.getItem("currentCorpOperNr");
+    const fullName = sessionStorage.getItem("currentFullName"); // Precisamos do nome para a tabela users
+
+    if (!nInt || !corpNr) {
+      window.location.href = "login.html";
+      return false;
+    }
+
+    const headers = getSupabaseHeaders();
+
+    // --- 1. PEDIDO À TABELA reg_elems (Estado e Permissões) ---
+    const urlReg = `${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${nInt}&corp_oper_nr=eq.${corpNr}&select=user_role,elem_state,acess`;
+    const respReg = await fetch(urlReg, { headers });
+    
+    if (!respReg.ok) throw new Error("Erro ao aceder a reg_elems");
+    const dataReg = await respReg.json();
+
+    if (!dataReg || dataReg.length === 0) {
+      window.location.href = "login.html";
+      return false;
+    }
+
+    const userReg = dataReg[0];
+
+    // Bloqueio se estiver inativo
+    if (userReg.elem_state === false) {
+      alert("A sua conta está INATIVA.");
+      window.location.href = "login.html";
+      return false;
+    }
+
+    // --- 2. PEDIDO À TABELA users (Data de Validade) ---
+    // Usamos o fullName ou outro identificador comum para cruzar
+    if (fullName) {
+      const urlUsers = `${SUPABASE_URL}/rest/v1/users?full_name=eq.${encodeURIComponent(fullName)}&select=validate`;
+      const respUsers = await fetch(urlUsers, { headers });
+      
+      if (respUsers.ok) {
+        const dataUsers = await respUsers.json();
+        if (dataUsers && dataUsers.length > 0 && dataUsers[0].validate) {
+          const today = new Date();
+          const expireDate = new Date(dataUsers[0].validate);
+          
+          if (expireDate < today) {
+            alert(`⚠️ Atenção: O seu acesso expirou a ${expireDate.toLocaleDateString()}. Contacte a administração.`);
+            // Se quiseres que ele NÃO entre se expirar, descomenta a linha abaixo:
+            // window.location.href = "login.html"; return false;
           }
-          const params = new URLSearchParams({n_int: `eq.${nInt}`, corp_oper_nr: `eq.${corpNr}`, select: 'user_role,elem_state,acess,validate'});
-          const url = `${SUPABASE_URL}/rest/v1/reg_elems?${params.toString()}`;
-          const response = await fetch(url, {
-            method: "GET",
-            headers: getSupabaseHeaders()
-          });
-          if (!response.ok) throw new Error(`Erro: ${response.status}`);
-          const data = await response.json();
-          if (!data || data.length === 0) {
-            alert("Ficha de elemento não encontrada.");
-            window.location.href = "login.html";
-            return false;
-          }
-          const user = data[0];
-          if (user.elem_state !== true) {
-            alert("A sua conta está INATIVA.");
-            window.location.href = "login.html";
-            return false;
-          }
-          if (user.validate) {
-            const today = new Date();
-            const expireDate = new Date(user.validate);
-            const diffTime = expireDate - today;
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            if (diffDays < 0) {
-              alert("❌ A sua conta expirou a " + expireDate.toLocaleDateString() + ". Acesso bloqueado.");
-              window.location.href = "login.html";
-              return false;
-            } else if (diffDays <= 30) {
-              console.warn(`Atenção: A conta expira em ${diffDays} dias.`);
-              sessionStorage.setItem("daysToExpire", diffDays);
-            }
-          }
-          const permissoes = user.acess ? user.acess : "Menu Principal";
-          sessionStorage.setItem("allowedModules", permissoes);
-          if (user.user_role) {
-            sessionStorage.setItem("currentUserRole", user.user_role);
-          }
-          return true;
-        } catch (error) {
-          console.error("❌ Erro crítico na validação:", error);
-          return false;
         }
       }
+    }
+
+    // Grava o que é necessário para a sessão
+    sessionStorage.setItem("allowedModules", userReg.acess || "Menu Principal");
+    if (userReg.user_role) sessionStorage.setItem("currentUserRole", userReg.user_role);
+
+    return true;
+
+  } catch (error) {
+    console.error("❌ Erro na validação cruzada:", error);
+    return true; // Deixa passar em caso de erro técnico para não bloquear o utilizador
+  }
+}
       /* ===== SIDEBAR SYNCHRONIZATION ====== */
       function updateSidebarAccess(allowedModules) {
         const sidebarButtons = document.querySelectorAll(".sidebar-menu-button, .sidebar-submenu-button, .sidebar-sub-submenu-button");
@@ -172,4 +185,5 @@
         });
       }
     });
+
 

@@ -9,8 +9,7 @@
     ======================================= */
     /* ========== VEHICLES ========== */
     const vehicleContainer = document.getElementById('vehicle-container');
-    let vehicleCount = 0;
-    
+    let vehicleCount = 0;    
     async function NewOCRaddVehicle() {
       vehicleCount++;
       const card = document.createElement('div');
@@ -44,7 +43,6 @@
       const select = card.querySelector("select");
       await populateSingleVehicleSelect(select);
     }
-
     function NewOCRresetVehicles() {
       vehicleContainer.innerHTML = "";
       vehicleCount = 0;
@@ -112,7 +110,6 @@
       const select = card.querySelector("select");
       await populateSingleVehicleSelect(select);
     }
-
     function CloseOCRresetVehicles() {
       vehiclesContainer.innerHTML = "";
       closeVehicleCount = 0;
@@ -160,8 +157,7 @@
       await populateSingleVictimSelect(document.getElementById(`victim_${idx}_age`), 'victim_age');
       await populateSingleVictimSelect(document.getElementById(`victim_${idx}_type`), 'victim_type');
       await populateSingleVictimSelect(document.getElementById(`victim_${idx}_status`), 'victim_status');
-    }
-    
+    }    
     async function resetVictims(initialCount = 1) {
       const victimsCard = document.querySelector('.victims-card');
       if (victimsCard) victimsCard.classList.add('hidden');
@@ -177,7 +173,6 @@
     /* ========== OTHER MEANS IN THE TO ========== */
     const extrasContainer = document.getElementById('extras-container');
     let extrasCount = 0;
-
     function addExtra(index = null) {
       extrasCount++;
       const i = index || extrasCount;
@@ -203,7 +198,6 @@
       `;
       extrasContainer.appendChild(div);
     }
-
     function resetExtras() {
       const victimsCard = document.querySelector('.extras-card');
       if (victimsCard) victimsCard.classList.add('hidden');
@@ -214,7 +208,6 @@
     /* ========== DAMAGE CAUSED ========== */
     const damagesContainer = document.getElementById('damages-container');
     let damagesCount = 0;
-
     function addDamage(index = null) {
       damagesCount++;
       const i = index || damagesCount;
@@ -232,7 +225,6 @@
       `;
       damagesContainer.appendChild(div);
     }
-
     function resetDamages() {
       const victimsCard = document.querySelector('.demage-card');
       if (victimsCard) victimsCard.classList.add('hidden');
@@ -274,7 +266,6 @@
     const ppiCards = [{id: "ppi-aero", label: "PPI AEROPORTO", buttons: ["MONITORIZAÇÃO", "AMARELO", "VERMELHO", "", "", ""]},
                       {id: "ppi-a22", label: "PPI A22", buttons: ["MONITORIZAÇÃO", "1º ALARME", "2º ALARME", "ALARME ESPECIAL", "", ""]},
                       {id: "ppi-linfer", label: "PPI LINHA FÉRREA", buttons: ["MONITORIZAÇÃO", "1º ALARME", "2º ALARME", "ALARME ESPECIAL", "", ""]}];
-
     function createEPEPPICard(cardData) {
       const divItem = document.createElement("div");
       divItem.className = "main-card";
@@ -433,8 +424,7 @@
       if (!response.ok) throw new Error(`Erro Supabase: ${response.status}`);
       let data = await response.json();
       return data.filter(elem => elem.corp_oper_nr == currentCorpOperNr);
-    }
-    
+    }    
     async function loadElemsButtons() {
       try {
         const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
@@ -454,8 +444,7 @@
       } catch (error) {
         console.error("❌ Erro ao carregar elementos:", error);
       }
-    }
-    
+    }    
     function createElemButtons(sortedElems) {
       const container = document.getElementById("elems-container");
       if (!container) return;
@@ -484,8 +473,7 @@
         btn.addEventListener("click", () => toggleElemSituation(row, btn));
         container.appendChild(btn);
       });
-    }
-    
+    }    
     function sortElems(list) {
       return list.sort((a, b) => {
         const aVal = a.n_int ?? "";
@@ -493,8 +481,7 @@
         if (!isNaN(aVal) && !isNaN(bVal)) return Number(aVal) - Number(bVal);
         return aVal.toString().localeCompare(bVal.toString(), "pt", { numeric: true });
       });
-    }
-    
+    }    
     function applyButtonStyle(btn, elemState, situation) {
       if (elemState === false) {
         btn.style.backgroundColor = "red";
@@ -508,8 +495,7 @@
           btn.style.color = "black";
         }
       }
-    }
-    
+    }    
     async function toggleElemSituation(row, btn) {
       if (row.elem_state === false) return;
       const newSituation = row.situation === "available" ? "unavailable" : "available";
@@ -531,3 +517,43 @@
       }
     }
     document.addEventListener("DOMContentLoaded", loadElemsButtons);
+    /* =======================================
+    UNAVAILABILITY OF HOSPITALS
+    ======================================= */
+    function createNoHospInputs(total = 13) {
+      const noHospital = document.getElementById('no-hosp');      
+      if (!noHospital) return;
+      noHospital.innerHTML = '';
+      const numColWidth = "5px";
+      const gridLayout = `${numColWidth} 2fr 2fr 1fr 0.8fr 1fr 0.8fr 1.5fr`;
+      const gap = "5px";
+      const header = document.createElement('div');
+      header.style.cssText = `display: grid; grid-template-columns: ${gridLayout}; gap: ${gap}; align-items: center; margin-bottom: 5px; font-size: 11px; 
+                              font-weight: bold; color: #1f4b91; text-transform: uppercase; text-align: center;`;
+      header.innerHTML = `
+        <div></div> 
+        <div>Hospital</div>
+        <div>Serviço</div>
+        <div style="grid-column: span 2; background: #d1d9e6; border-radius: 2px; margin-left: -5px;">Início (Deste)</div>
+        <div style="grid-column: span 2; background: #d1d9e6; border-radius: 2px; margin-right: -5px;">Fim (Até)</div>
+        <div>Referência</div>
+      `;
+      noHospital.appendChild(header);
+      for (let i = 1; i <= total; i++) {
+        const n = String(i).padStart(2, '0');
+        const row = document.createElement('div');
+        row.className = 'global-field-horizontal';
+        row.style.cssText = "display: flex; gap: 5px; align-items: center; margin-bottom: 3px; flex-wrap: nowrap;";
+        row.innerHTML = `
+          <label style="font-weight: bold; min-width: 30px;">${n}:</label>
+            <input type="text" id="nohosp-${n}" placeholder="Local/Ref." style="flex: 2;">
+            <input type="text" id="nohosp-serv-${n}" placeholder="Serviço" style="flex: 2;">
+            <input type="date" id="nohosp-form-date-${n}" style="flex: 1;">
+            <input type="time" id="nohosp-form-time-${n}" style="flex: 0.8;">
+            <input type="date" id="nohosp-to-date-${n}" style="flex: 1;">
+            <input type="time" id="nohosp-to-time-${n}" style="flex: 0.8;">
+            <input type="text" id="nextHosp-${n}" placeholder="Próximo Hosp." style="flex: 1.5;">
+        `;
+        noHospital.appendChild(row);
+      }
+    }

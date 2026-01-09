@@ -1,12 +1,11 @@
-/* =======================================
-       SIDEBAR AND PANEL SIDEBAR
+    /* =======================================
+    MAIN SIDEBAR AND PANEL SIDEBAR
     ======================================= */
     document.addEventListener("DOMContentLoaded", () => {
       const sidebar = document.querySelector(".sidebar");
       if (!sidebar) return;
       const pages = document.querySelectorAll(".page");
       const specialAvos = ["page-main", "page-utilities", "page-data"];
-
       function showPageAndResetScroll(pageId) {
         if (!pageId) return;
         pages.forEach(p => {
@@ -25,7 +24,6 @@
           if (typeof clearFormFields === "function") clearFormFields();
         });
       }
-
       function closeSubmenuRecursive(menu) {
         if (!menu) return;
         menu.style.display = "none";
@@ -34,7 +32,6 @@
         ).forEach(b => b.classList.remove("active"));
         menu.querySelectorAll(".submenu, .sub-submenu").forEach(sub => closeSubmenuRecursive(sub));
       }
-
       function deactivateSiblings(button) {
         let container = null;
         let selector = "";
@@ -62,7 +59,6 @@
           }
         });
       }
-
       function openParentHierarchy(button) {
         let node = button.parentElement;
         while (node && node !== document.body) {
@@ -74,7 +70,6 @@
           node = node.parentElement;
         }
       }
-
       function clickWhenExists(selector, container = document, callback) {
         const button = container.querySelector(selector);
         if (button) {
@@ -84,7 +79,6 @@
         }
         return false;
       }
-
       function navigateToPage(button) {
         if (!button) return;
         const isToggle = button.classList.contains("submenu-toggle") || button.classList.contains("sub-submenu-toggle");
@@ -130,12 +124,12 @@
           if (page) {
             const interval = setInterval(() => {
               if (clickWhenExists(".panel-sidebar-menu-button[onclick*=\"showPanelCard('epe')\"]", page, () => {
-                  if (typeof loadVehiclesFromAPI === "function") loadVehiclesFromAPI();
-                  if (typeof createRelevInfoInputs === "function") createRelevInfoInputs();
-                  if (typeof loadInfosFromSupabase === "function") loadInfosFromSupabase();
-                  if (typeof loadRoutesFromSupabase === "function") loadRoutesFromSupabase();
-                  if (typeof loadCMAsFromSupabase === "function") loadCMAsFromSupabase();
-                  if (typeof loadElemsButtons === "function") loadElemsButtons();
+                if (typeof loadVehiclesFromAPI === "function") loadVehiclesFromAPI();
+                if (typeof loadInfosFromSupabase === "function") loadInfosFromSupabase();
+                if (typeof loadRoutesFromSupabase === "function") loadRoutesFromSupabase();
+                if (typeof loadCMAsFromSupabase === "function") loadCMAsFromSupabase();
+                if (typeof loadElemsButtons === "function") loadElemsButtons();
+                if (typeof loadNoHospFromSupabase === "function") loadNoHospFromSupabase();
                 })) {
                 clearInterval(interval);
               }
@@ -187,7 +181,6 @@
       let discoveryInterval = null;
       let discoveryObserver = null;
       let currentlyBlinkingTargets = [];
-
       function ensureBlinkStyle() {
         if (document.getElementById(`${blinkClass}-style`)) return;
         const style = document.createElement("style");
@@ -204,15 +197,12 @@
         `;
         document.head.appendChild(style);
       }
-
       function isVisible(el) {
         return !!(el && (el.offsetWidth || el.offsetHeight || el.getClientRects().length));
       }
-
       function findSubmenuButton() {
         return document.querySelector(`.sidebar-submenu-button[data-page="${pageId}"]`);
       }
-
       function findParentToggle() {
         const sidebar = document.querySelector(".sidebar");
         if (!sidebar) return null;
@@ -225,19 +215,16 @@
         }
         return null;
       }
-
       function startBlinkOnTargets(targets) {
         stopBlinking();
         ensureBlinkStyle();
         targets.forEach(el => el && el.classList.add(blinkClass));
         currentlyBlinkingTargets = targets.filter(Boolean);
       }
-
       function stopBlinking() {
         currentlyBlinkingTargets.forEach(el => el?.classList.remove(blinkClass));
         currentlyBlinkingTargets = [];
       }
-
       function decideAndStartBlink() {
         const btn = findSubmenuButton();
         if (btn && isVisible(btn)) {
@@ -251,7 +238,6 @@
         }
         return false;
       }
-
       function startDiscovery() {
         if (discoveryInterval || discoveryObserver) return;
         if (decideAndStartBlink()) return;
@@ -276,7 +262,6 @@
           attributeFilter: ['style', 'class']
         });
       }
-
       function stopDiscovery() {
         if (discoveryInterval) {
           clearInterval(discoveryInterval);
@@ -287,7 +272,6 @@
           discoveryObserver = null;
         }
       }
-
       function startBlinkingSidebarButton() {
         if (!decideAndStartBlink()) startDiscovery();
       }

@@ -8,70 +8,66 @@
       /* ========== VALIDITY CHECK ========== */
       async function checkUserValidity() {
   try {
+    // 1. Pegamos os valores que estão no sessionStorage NESTE MOMENTO
     const nInt = sessionStorage.getItem("currentNInt");
     const corpNr = sessionStorage.getItem("currentCorpOperNr");
 
     if (!nInt || !corpNr) {
-      window.location.href = "login.html";
-      return false;
+        window.location.href = "login.html";
+        return false;
     }
 
     const headers = getSupabaseHeaders();
 
-    // --- 1. BUSCAR O NOME CORRETO NA reg_elems ---
-    // Filtramos por n_int e corp para ter a certeza que pegamos o Jorge da 0801
-    const urlReg = `${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${nInt}&corp_oper_nr=eq.${corpNr}&select=full_name,user_role,elem_state,acess`;
+    // --- PASSO 1: Identificar o Utilizador na reg_elems ---
+    // Forçamos o filtro pelo n_int e pela corp_oper_nr da sessão
+    const urlReg = `${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${nInt}&corp_oper_nr=eq.${corpNr}&select=full_name,elem_state,acess`;
     const respReg = await fetch(urlReg, { headers });
     const dataReg = await respReg.json();
 
     if (!dataReg || dataReg.length === 0) {
-      alert("Utilizador não encontrado nesta corporação.");
+      console.error(`❌ Erro: Não existe o elemento ${nInt} na corporação ${corpNr}`);
+      alert("Acesso negado: Este utilizador não pertence a esta corporação.");
       window.location.href = "login.html";
       return false;
     }
 
-    const userReg = dataReg[0];
-    const officialFullName = userReg.full_name; // "Jorge Miguel Pinto Ribeirinho"
+    // O Nome que vamos usar tem de vir DIRECTAMENTE da base de dados (reg_elems)
+    const nameFromDB = dataReg[0].full_name;
+    console.log(`✅ Identificado: ${nameFromDB} na Corp ${corpNr}`);
 
-    if (userReg.elem_state === false) {
-      alert("Conta INATIVA.");
-      window.location.href = "login.html";
-      return false;
-    }
-
-    // --- 2. BUSCAR VALIDADE NA users USANDO NOME + CORP ---
-    // ATENÇÃO: O full_name na tabela 'users' TEM de ser igual ao da 'reg_elems'
-    const urlUsers = `${SUPABASE_URL}/rest/v1/users?full_name=eq.${encodeURIComponent(officialFullName)}&corp_oper_nr=eq.${corpNr}&select=validate`;
+    // --- PASSO 2: Validar na Users ---
+    // Aqui é onde o erro acontece. Vamos forçar o filtro de Nome E Corporação.
+    const urlUsers = `${SUPABASE_URL}/rest/v1/users?full_name=eq.${encodeURIComponent(nameFromDB)}&corp_oper_nr=eq.${corpNr}&select=validate`;
     
     const respUsers = await fetch(urlUsers, { headers });
     const dataUsers = await respUsers.json();
 
+    console.log("Resultado da procura na tabela Users:", dataUsers);
+
     if (dataUsers && dataUsers.length > 0) {
-      const userDate = dataUsers[0].validate;
-      if (userDate) {
+      const expireDateStr = dataUsers[0].validate;
+      if (expireDateStr) {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const expireDate = new Date(userDate);
+        const expireDate = new Date(expireDateStr);
         expireDate.setHours(0, 0, 0, 0);
 
         if (expireDate < today) {
-          alert(`❌ ACESSO BLOQUEADO\nA conta de ${officialFullName} expirou na corporação ${corpNr}.`);
-          document.body.innerHTML = ""; 
+          alert(`❌ CONTA EXPIRADA\n\nCorporação: ${corpNr}\nData: ${expireDate.toLocaleDateString()}`);
+          document.body.innerHTML = "";
           window.location.href = "login.html";
           return false;
         }
       }
-    } else {
-      // Se cair aqui, é porque na tabela 'users' o nome não é "Jorge Miguel..." 
-      // mas sim "JRibeirinho", e o filtro por full_name não encontrou nada.
-      console.warn(`Aviso: Não existe um registo na tabela 'users' com o nome '${officialFullName}' para a corp ${corpNr}`);
     }
 
-    sessionStorage.setItem("allowedModules", userReg.acess || "Menu Principal");
+    // Se chegou aqui, os dados da 0801 são válidos
+    sessionStorage.setItem("allowedModules", dataReg[0].acess || "");
     return true;
 
   } catch (error) {
-    console.error("Erro:", error);
+    console.error("Erro na validação:", error);
     return false;
   }
 }
@@ -188,6 +184,7 @@
         });
       }
     });
+
 
 
 

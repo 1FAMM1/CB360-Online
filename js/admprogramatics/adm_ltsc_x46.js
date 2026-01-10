@@ -12,7 +12,7 @@
     });
     /*========================================
     TOASTER's
-    ========================================*/    
+    ========================================*/
     function showToast(message, type = 'success', duration = 3000) {
       const container = document.getElementById('toast-container');
       if (!container) return;
@@ -113,19 +113,27 @@
         const resizedBlob = await resizeAndCompressImage(file);
         const fileExt = file.type.split('/')[1];
         const fileName = `logo_cb_${corpOperNr}.${fileExt}`;
-        const { data, error } = await supabase.storage
-        .from('cb_logos')
-        .upload(fileName, resizedBlob, { upsert: true });
+        const {
+          data,
+          error
+        } = await supabase.storage
+          .from('cb_logos')
+          .upload(fileName, resizedBlob, {
+            upsert: true
+          });
         if (error) {
           console.error("❌ Erro no Upload para Storage:", error.message);
           throw error;
         }
-        const { data: urlData, error: urlError } = supabase
-        .storage
-        .from('cb_logos')
-        .getPublicUrl(fileName);
+        const {
+          data: urlData,
+          error: urlError
+        } = supabase
+          .storage
+          .from('cb_logos')
+          .getPublicUrl(fileName);
         if (urlError) {
-          console.error("❌ ERRO NO GET PUBLIC URL (Verificar políticas RLS):", urlError.message); 
+          console.error("❌ ERRO NO GET PUBLIC URL (Verificar políticas RLS):", urlError.message);
           throw urlError;
         }
         return urlData.publicUrl;
@@ -139,8 +147,9 @@
     async function loadDistricts(selectId) {
       try {
         const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/districts_select?select=id,district`,
-          { headers: getSupabaseHeaders() }
+          `${SUPABASE_URL}/rest/v1/districts_select?select=id,district`, {
+            headers: getSupabaseHeaders()
+          }
         );
         const data = await response.json();
         const select = document.getElementById(selectId);
@@ -155,7 +164,6 @@
         console.error("Erro ao carregar Distritos:", error);
       }
     }
-
     async function findDistrictIdByName(districtName) {
       try {
         const response = await fetch(
@@ -170,7 +178,6 @@
         return null;
       }
     }
-
     function getSelectedDistrictName() {
       const districtSelect = document.getElementById('district_select_corp');
       if (!districtSelect || !districtSelect.value) return null;
@@ -180,8 +187,9 @@
     async function populateCouncilSelectByDistrict(districtId, selectId) {
       try {
         const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/councils_select?select=id,council&district_id=eq.${districtId}`,
-          { headers: getSupabaseHeaders() }
+          `${SUPABASE_URL}/rest/v1/councils_select?select=id,council&district_id=eq.${districtId}`, {
+            headers: getSupabaseHeaders()
+          }
         );
         const data = await response.json();
         const select = document.getElementById(selectId);
@@ -197,7 +205,6 @@
         console.error("Erro ao carregar Concelhos:", error);
       }
     }
-
     async function findCouncilIdByName(councilName) {
       try {
         const response = await fetch(
@@ -212,7 +219,6 @@
         return null;
       }
     }
-
     function getSelectedCouncilName() {
       const councilSelect = document.getElementById('council_select_corp');
       if (!councilSelect || !councilSelect.value) return null;
@@ -239,7 +245,6 @@
         console.error("Erro ao carregar Freguesias:", error);
       }
     }
-    
     function getSelectedParishName() {
       const parishSelect = document.getElementById('parish_select_corp');
       if (!parishSelect || !parishSelect.value) return null;
@@ -247,12 +252,12 @@
     }
     /* ========= LOAD HIERARCHICAL SELECTS ========= */
     async function initHierarchicalSelects() {
-      await loadDistricts("district_select_corp");    
+      await loadDistricts("district_select_corp");
       document.getElementById("district_select_corp").addEventListener("change", async (e) => {
         if (e.target.value) {
           await populateCouncilSelectByDistrict(e.target.value, "council_select_corp");
         }
-      });    
+      });
       document.getElementById("council_select_corp").addEventListener("change", async (e) => {
         if (e.target.value) {
           await populateParishesByCouncil(e.target.value, "parish_select_corp");
@@ -261,17 +266,16 @@
     }
     /* =========== POSTAL CODE FUNCTIONS =========== */
     function splitPostalCode(fullPostalCode) {
-      if (!fullPostalCode) return { cp1: '', cp2: '' };
+      if (!fullPostalCode) return {cp1: '', cp2: ''};
       if (fullPostalCode.includes('-')) {
         const [cp1, cp2] = fullPostalCode.split('-');
-        return { cp1: cp1 || '', cp2: cp2 || '' };
-      } 
-      if (fullPostalCode.length === 7 && /^\d{7}$/.test(fullPostalCode)) {
-        return { cp1: fullPostalCode.substring(0, 4), cp2: fullPostalCode.substring(4, 7) };
+        return {cp1: cp1 || '', cp2: cp2 || ''};
       }
-      return { cp1: fullPostalCode, cp2: '' };
+      if (fullPostalCode.length === 7 && /^\d{7}$/.test(fullPostalCode)) {
+        return {cp1: fullPostalCode.substring(0, 4), cp2: fullPostalCode.substring(4, 7)};
+      }
+      return {cp1: fullPostalCode, cp2: ''};
     }
-
     function getCombinedPostalCode() {
       const cp1 = document.getElementById('assoc-cp1')?.value?.trim();
       const cp2 = document.getElementById('assoc-cp2')?.value?.trim();
@@ -283,10 +287,10 @@
         }
       }
       if (cp1 && /^\d{4}$/.test(cp1)) return cp1;
-      if (cp2 && /^\d{3}$/.test(cp2)) return cp2;    
+      if (cp2 && /^\d{3}$/.test(cp2)) return cp2;
       return null;
     }
-    /* ============ VALIDATION FUNCTION ============ */    
+    /* ============ VALIDATION FUNCTION ============ */
     function validateCorporationData(data) {
       for (let key in data) {
         if (typeof data[key] === "string") {
@@ -304,7 +308,7 @@
       if (!data.corp_fiscal_nr) return {isValid: false, message: 'O NIF da corporação é de caracter obrigatório'};
       if (!/^\d{9}$/.test(data.corp_fiscal_nr)) return {isValid: false, message: 'O NIF da corporação deve ter 9 dígitos'};
       if (!data.corp_oper_nr) return {isValid: false, message: 'O número Operacional da corporação é de caracter obrigatório'};
-      return { isValid: true };
+      return {isValid: true};
     }
     /* ============= SAVE CORPORATION ============== */
     async function saveCorporationDataWithLogo() {
@@ -327,26 +331,36 @@
           corp_parish: getSelectedParishName(),
           corp_fiscal_nr: document.getElementById('assoc-nif')?.value?.trim() || null,
           corp_oper_nr: corpOperNr,
-          logo_url: null
+          logo_url: null,
+          allowed_modules: ""
         };
         const validation = validateCorporationData(corporationData);
         if (!validation.isValid) throw new Error(validation.message);
         if (logoInput?.files?.length > 0) {
           corporationData.logo_url = await uploadLogoToSupabase(logoInput.files[0], corpOperNr);
         }
-        const encodedCorpName = encodeURIComponent(corporationData.corporation);
-        const encodedOperNr = encodeURIComponent(corpOperNr);
-        const checkUrl = `${SUPABASE_URL}/rest/v1/corporation_data?or=(corporation.eq.${encodedCorpName},corp_oper_nr.eq.${encodedOperNr})&select=id`;    
-        const existingResponse = await fetch(checkUrl, { headers: getSupabaseHeaders() });
-        const existingData = await existingResponse.json();    
-        if (existingData.length > 0) {
-          throw new Error("Esta corporação já existe (nome ou número operacional já registado).");
-        }    
-        await createCorporationData(corporationData);
-        showSuccessMessage('Dados da corporação gravados com sucesso!');    
+        const checkUrl = `${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${corpOperNr}&select=id`;
+        const checkRes = await fetch(checkUrl, {
+          headers: getSupabaseHeaders()
+        });
+        const existing = await checkRes.json();
+        if (existing.length > 0) throw new Error("Número Operacional já registado!");
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/corporation_data`, {
+          method: "POST",
+          headers: getSupabaseHeaders({
+            returnRepresentation: true
+          }),
+          body: JSON.stringify(corporationData)
+        });
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Erro ao inserir na base de dados");
+        }
+        showSuccessMessage('Dados da corporação gravados com sucesso!');
+        loadCorporations();
       } catch (err) {
         console.error(err);
-        showErrorMessage(err.message || "Erro ao gravar dados da corporação");
+        showErrorMessage(err.message || "Erro ao gravar dados");
       } finally {
         if (saveButton) {
           saveButton.disabled = false;
@@ -430,57 +444,72 @@
         console.error(err);
       }
     }
-    /* ============ CHECKBOX HIERARCHY ============= */    
+    /* ============ CHECKBOX HIERARCHY ============= */
     const modulesHierarchy = [
-      {name: 'DECIR 360', children: [
+      {name: "Menu Principal"},
+      {name: 'Gestão Financeira', children: [
+        {name: 'Atualização de Valores'},
           {name: 'Controlo de Pagamentos', children: [
-              {name: 'Registo por Elemento'},
-              {name: 'Núcleo Financeiro'},
-              {name: 'Relatórios ANEPC'}
+            {name: 'Registo por Elemento'},
+            {name: 'Núcleo Financeiro'},
+            {name: 'Relatórios ANEPC'}
           ]},
-          {name: 'Assinaturas Diárias'}
+        {name: 'Assinaturas Diárias'}
       ]},
-      {name: 'FOMIO 360', children: [
+      {name: 'Gestão Operacional', children: [
+        {name: 'Escalas', children: [
           {name: 'DECIR'},
           {name: '1ª Secção'},
           {name: '2ª Secção'},
+          {name: '3ª Secção'},
+          {name: '4ª Secção'},
           {name: 'Emissão Escala'},
           {name: 'Consultar Escalas'}
+        ]},
+        {name: "Eventos", children: [
+          {name: "Criação de Eventos"},
+          {name: "Consultar Disponibilidades"}
+        ]},
+        {name: "Pedidos de Férias", children: [
+          {name: "Consultar Pedidos"}
+        ]},
       ]},
-      {name: 'EMPLOYEES 360'},
-      {name: 'SALOC 360', children: [
-          {name: 'Planos Prévios de Intervenção', children: [
-              {name: 'PPI A22'},
-              {name: 'PPI Aeroporto de Faro'},
-              {name: 'PPI Linha Férrea'}
-          ]},
-          {name: 'Registos Recusas/INOPS', children: [
-              {name: 'Recusas de Serviços'},
-              {name: 'Inoperacionalidades INEM'},
-              {name: 'Relatórios Mensais'},
-              {name: 'DashBoard'}
-          ]},
-          {name: 'Documentação Importante', children: [
-              {name: 'CREPC Algarve'},
-              {name: 'Planeamento Diário'},
-              {name: 'Sitop de Veículos'},
-              {name: 'Refeições DECIR'}
-          ]},
-          {name: 'Consola de Alarmes' }
+      {name: 'Gestão Funcionários'},
+      {name: 'SALOC', children: [
+        {name: 'Planos Prévios de Intervenção', children: [
+          {name: "PPI A2"},
+          {name: 'PPI A22'},
+          {name: 'PPI Aeroporto de Faro'},
+          {name: 'PPI Linha Férrea'},
+          {name: "PPI Aérodromo de Portimão"}
+        ]},
+        {name: 'Registos Recusas/INOPS', children: [
+          {name: 'Recusas de Serviços'},
+          {name: 'Inoperacionalidades INEM'},
+          {name: 'Relatórios Mensais'},
+          {name: 'DashBoard'}
+        ]},
+        {name: 'Documentação Importante', children: [
+          {name: 'CREPC Algarve'},
+          {name: 'Planeamento Diário'},
+          {name: 'Sitop de Veículos'},
+          {name: 'Refeições DECIR'}
+        ]},
+        {name: 'Consola de Alarmes'}
       ]},
-      {name: 'WSMS 360', children: [
-          {name: 'Ocorrências em Curso'},
-          {name: 'Inserir/Alterar Ocorrência'},
-          {name: 'Encerrar Ocorrência'},
-          {name: 'Solicitar Disponibilidades'},
-          {name: 'Indisponibilidade Veículos'},
-          {name: 'Info. Grelha Município'},
-          {name: 'Serviços EMS'},
-          {name: 'Avisos METEO'}
+      {name: 'Comunicação WSMS', children: [
+        {name: 'Ocorrências em Curso'},
+        {name: 'Inserir/Alterar Ocorrência'},
+        {name: 'Encerrar Ocorrência'},
+        {name: 'Solicitar Disponibilidades'},
+        {name: 'Indisponibilidade Veículos'},
+        {name: 'Info. Grelha Município'},
+        {name: 'Serviços EMS'},
+        {name: 'Avisos METEO'}
       ]},
       {name: 'Utilitários'},
       {name: 'Data Center'}
-    ];    
+    ];
     /* ========== CREATION CHECKBOX TREE =========== */
     function createCheckboxTree(node, container, level = 0, allowed = []) {
       const nodeDiv = document.createElement("div");
@@ -541,7 +570,7 @@
           }
         }
       });
-    }    
+    }
     /* ========== SAVE ASSIGNED ACCESSES =========== */
     async function saveAccesses(corpId, container) {
       const checked = [...container.querySelectorAll("input[type='checkbox']:checked")]
@@ -572,7 +601,6 @@
         loadCorpOperSelect("cb_select");
       });
     }
-    
     async function loadCorpOperSelect(cb_select_id) {
       const selectEl = document.getElementById(cb_select_id);
       if (!selectEl) return;
@@ -612,14 +640,20 @@
       if (!password) return showErrorMessage("Digite a password App Online.");
       try {
         const checkUrl = `${SUPABASE_URL}/rest/v1/users?select=username&username=eq.${username}`;
-        const checkResponse = await fetch(checkUrl, { headers: getSupabaseHeaders() });
+        const checkResponse = await fetch(checkUrl, {
+          headers: getSupabaseHeaders()
+        });
         if (!checkResponse.ok) throw new Error("Erro ao verificar username.");
         const existing = await checkResponse.json();
         if (existing.length > 0) {
           return showErrorMessage(`❌ O username "${username}" já existe. Escolha outro.`);
         }
-        const body = {corp_oper_nr: corpOper, full_name: fullName, username: username, password: password};
-                      // Os outros campos (user-mobile, pass-mobile) virão depois
+        const body = {
+          corp_oper_nr: corpOper,
+          full_name: fullName,
+          username: username,
+          password: password
+        };
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/users`, {
             method: "POST",
@@ -662,11 +696,10 @@
     });
     /* =======================================
     MESSAGING FUNCTIONS
-    ======================================= */    
+    ======================================= */
     function showSuccessMessage(message) {
       showToast(`${message}`);
     }
-
     function showErrorMessage(message) {
       showToast(`❌ ${message}`);
     }

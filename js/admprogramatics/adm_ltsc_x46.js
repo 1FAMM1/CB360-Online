@@ -1,3 +1,15 @@
+function getSupabaseHeaders(options = {}) {
+      const headers = {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+        'x-my-corpo': 'MASTER'
+      };
+      if (options.returnRepresentation || options === "return=representation") {
+        headers['Prefer'] = 'return=representation';
+      }
+      return headers;
+    }
     /*========================================
     SIDEBAR NAVIGATION
     ========================================*/
@@ -703,3 +715,4 @@
     function showErrorMessage(message) {
       showToast(`❌ ${message}`);
     }
+

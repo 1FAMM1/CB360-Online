@@ -15,7 +15,7 @@ import path from 'path';
 import https from 'https';
 const CLIENT_ID = process.env.ADOBE_CLIENT_ID;
 const CLIENT_SECRET = process.env.ADOBE_CLIENT_SECRET;
-const TEMPLATE_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/templates/fomio_template.xlsx";
+const TEMPLATE_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/fomio_template.xlsx";
 export const config = {
     api: {
         bodyParser: { sizeLimit: '10mb' }

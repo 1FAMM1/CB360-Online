@@ -4,10 +4,10 @@ import os from 'os';
 import path from 'path';
 import https from 'https';
 
-const TEMPLATE_PAG_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/templates/decir_pag_template.xlsx";
-const TEMPLATE_REG_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/templates/decir_reg_template.xlsx";
-const TEMPLATE_CODE_A33_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/templates/cod_a33_template.xlsx";
-const TEMPLATE_ANEPC_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Mobile/main/templates/anepc_template.xlsx";
+const TEMPLATE_PAG_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/decir_pag_template.xlsx";
+const TEMPLATE_REG_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/decir_reg_template.xlsx";
+const TEMPLATE_CODE_A33_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/cod_a33_template.xlsx";
+const TEMPLATE_ANEPC_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/anepc_template.xlsx";
 
 export const config = { api: { bodyParser: { sizeLimit: '10mb' } } };
 

@@ -123,7 +123,7 @@
 
     // ✨ NOVO: Enviar push notification para todos os operacionais
     try {
-      await fetch('https://cb360-mobile.vercel.app/api/sendPush', {
+      await fetch('https://cb-360-app.vercel.app/api/sendPush', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

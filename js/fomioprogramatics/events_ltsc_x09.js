@@ -332,87 +332,106 @@
       }
     }    
     /* =========== UPDATE STATE =========== */
-    async function updateState(id, newState, evName, sDate, sTime) {
-      const row = document.getElementById(`disp-row-${id}`);
-      const badge = row.querySelector('.status-badge');
-      const oldState = badge.dataset.state;
-      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
-      const userNInt = row.cells[0].innerText;
-      if (oldState === newState) return;
-      try {
-        if (newState === 'Aprovado') {
-          const r = await fetch(
-            `${SUPABASE_URL}/rest/v1/event_shifts?event=eq.${encodeURIComponent(evName)}&event_shift_date=eq.${sDate}&event_shift=eq.${sTime}&corp_oper_nr=eq.${corp_oper_nr}`, {
-              headers: getSupabaseHeaders()
-            }
-          );
-          const s = await r.json();
-          if (s.length > 0) {
-            const currentAct = parseInt(s[0].act_oper) || 0;
-            const currentNec = parseInt(s[0].nec_oper) || 0;
-            if (currentAct >= currentNec) {
-              alert("Atenção: Este turno já atingiu o limite de vagas!");
-              return;
-            }
-          }
+async function updateState(id, newState, evName, sDate, sTime) {
+  const row = document.getElementById(`disp-row-${id}`);
+  const badge = row.querySelector('.status-badge');
+  const oldState = badge.dataset.state;
+  const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
+  const userNInt = row.cells[0].innerText;
+  
+  if (oldState === newState) return;
+  
+  try {
+    if (newState === 'Aprovado') {
+      const r = await fetch(
+        `${SUPABASE_URL}/rest/v1/event_shifts?event=eq.${encodeURIComponent(evName)}&event_shift_date=eq.${sDate}&event_shift=eq.${sTime}&corp_oper_nr=eq.${corp_oper_nr}`, {
+          headers: getSupabaseHeaders()
         }
-        const rUp = await fetch(`${SUPABASE_URL}/rest/v1/event_disp?id=eq.${id}`, {
+      );
+      const s = await r.json();
+      if (s.length > 0) {
+        const currentAct = parseInt(s[0].act_oper) || 0;
+        const currentNec = parseInt(s[0].nec_oper) || 0;
+        if (currentAct >= currentNec) {
+          alert("Atenção: Este turno já atingiu o limite de vagas!");
+          return;
+        }
+      }
+    }
+    
+    const rUp = await fetch(`${SUPABASE_URL}/rest/v1/event_disp?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: getSupabaseHeaders(),
+      body: JSON.stringify({ shift_state: newState })
+    });
+    
+    if (!rUp.ok) throw new Error("Erro ao atualizar o estado da disponibilidade");
+    
+    const msgNotif = newState === 'Aprovado' 
+      ? `✅ A tua disponibilidade para o evento "${evName}" (${formatDateDisplay(sDate)}) foi APROVADA.`
+      : `❌ A tua disponibilidade para o evento "${evName}" (${formatDateDisplay(sDate)}) não foi aprovada.`;
+
+    // Inserir notificação na base de dados
+    await fetch(`${SUPABASE_URL}/rest/v1/user_notifications`, {
+      method: 'POST',
+      headers: getSupabaseHeaders(),
+      body: JSON.stringify({
+        n_int: userNInt, 
+        corp_oper_nr: corp_oper_nr, 
+        title: "Escala de Evento", 
+        message: msgNotif, 
+        is_read: false, 
+        created_at: new Date().toISOString()
+      })
+    });
+
+    // ✨ NOVO: Enviar push notification para o operacional específico
+    try {
+      await fetch('https://cb-360-app.vercel.app/api/sendPush', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipient_nint: userNInt, // Envia só para este operacional
+          corp_nr: corp_oper_nr,
+          sender_name: 'Escala de Evento',
+          message_text: msgNotif,
+          sender_nint: '0' // Não é uma pessoa específica
+        })
+      });
+      console.log(`Push notification enviada para ${userNInt}`);
+    } catch (errPush) {
+      console.error('Erro ao enviar push notification:', errPush);
+    }
+    
+    let inc = 0;
+    if (newState === 'Aprovado' && oldState !== 'Aprovado') inc = 1;
+    else if (newState !== 'Aprovado' && oldState === 'Aprovado') inc = -1;
+    
+    if (inc !== 0) {
+      const rGet = await fetch(
+        `${SUPABASE_URL}/rest/v1/event_shifts?event=eq.${encodeURIComponent(evName)}&event_shift_date=eq.${sDate}&event_shift=eq.${sTime}&corp_oper_nr=eq.${corp_oper_nr}`, {
+          headers: getSupabaseHeaders()
+        }
+      );
+      const cur = await rGet.json();
+      if (cur.length > 0) {
+        const currentActOper = parseInt(cur[0].act_oper) || 0;
+        const newActOper = Math.max(0, currentActOper + inc);
+        await fetch(`${SUPABASE_URL}/rest/v1/event_shifts?id=eq.${cur[0].id}`, {
           method: 'PATCH',
           headers: getSupabaseHeaders(),
-          body: JSON.stringify({ shift_state: newState })
+          body: JSON.stringify({ act_oper: newActOper })
         });
-        if (!rUp.ok) throw new Error("Erro ao atualizar o estado da disponibilidade");
-        
-  ? `✅ A tua disponibilidade para o evento "${evName}" (${formatDateDisplay(sDate)}) foi APROVADA.`
-  : `❌ A tua disponibilidade para o evento "${evName}" (${formatDateDisplay(sDate)}) não foi aprovada.`;
-
-await fetch(`${SUPABASE_URL}/rest/v1/user_notifications`, {
-  method: 'POST',
-  headers: getSupabaseHeaders(),
-  body: JSON.stringify({
-    n_int: userNInt, 
-    corp_oper_nr: corp_oper_nr, 
-    title: "Escala de Evento", 
-    message: msgNotif, 
-    is_read: false, 
-    created_at: new Date().toISOString()
-  })
-});
-SUBSTITUI por:
-javascriptconst msgNotif = newState === 'Aprovado' 
-  ? `✅ A tua disponibilidade para o evento "${evName}" (${formatDateDisplay(sDate)}) foi APROVADA.`
-  : `❌ A tua disponibilidade para o evento "${evName}" (${formatDateDisplay(sDate)}) não foi aprovada.`;
-
-// Inserir notificação na base de dados
-await fetch(`${SUPABASE_URL}/rest/v1/user_notifications`, {
-  method: 'POST',
-  headers: getSupabaseHeaders(),
-  body: JSON.stringify({
-    n_int: userNInt, 
-    corp_oper_nr: corp_oper_nr, 
-    title: "Escala de Evento", 
-    message: msgNotif, 
-    is_read: false, 
-    created_at: new Date().toISOString()
-  })
-});
-
-// ✨ NOVO: Enviar push notification para o operacional específico
-try {
-  await fetch('https://cb-360-app.vercel.app/api/sendPush', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      recipient_nint: userNInt, // Envia só para este operacional
-      corp_nr: corp_oper_nr,
-      sender_name: 'Escala de Evento',
-      message_text: msgNotif,
-      sender_nint: '0' // Não é uma pessoa específica
-    })
-  });
-  console.log(`Push notification enviada para ${userNInt}`);
-} catch (errPush) {
-  console.error('Erro ao enviar push notification:', errPush);
+      }
+    }
+    
+    const safeId = evName.replace(/\W/g, '');
+    await refreshTableOnly(evName, safeId);
+    console.log(`Estado atualizado: ${userNInt} -> ${newState}`);
+  } catch (e) {
+    console.error("Erro crítico no updateState:", e);
+    alert("Ocorreu um erro ao processar o estado ou a notificação.");
+  }
 }
         let inc = 0;
         if (newState === 'Aprovado' && oldState !== 'Aprovado') inc = 1;

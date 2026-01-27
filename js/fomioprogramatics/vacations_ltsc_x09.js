@@ -177,7 +177,7 @@ try {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      recipient_nint: Number(request.n_int),
+      n_int: Number(request.n_int),
       corp_nr: String(request.corp_oper_nr),
       sender_name: "Gestão de Férias",
       message_text: msgNotif,

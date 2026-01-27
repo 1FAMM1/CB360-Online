@@ -140,7 +140,7 @@
         console.error(e);
         return "<div style='color:red;'>Erro ao processar detalhes.</div>";
       }
-    }    
+    }
     /* ====== UPDATE VACATIONS STATE ====== */
     async function updateVacatState(id, newState, year, month) {
       try {
@@ -171,6 +171,22 @@
             headers: getSupabaseHeaders(),
             body: JSON.stringify({n_int: request.n_int, corp_oper_nr: request.corp_oper_nr, title: "Gestão de Férias", message: msgNotif, is_read: false, created_at: new Date().toISOString()})
           });
+          // Disparo do Push para o telemóvel
+try {
+  await fetch('https://cb-360-app.vercel.app/api/sendPush', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      recipient_nint: Number(request.n_int),
+      corp_nr: String(request.corp_oper_nr),
+      sender_name: "Gestão de Férias",
+      message_text: msgNotif,
+      sender_nint: 0 // Remetente sistema/comando
+    })
+  });
+} catch (e) {
+  console.error("Erro no Push de férias:", e);
+}
           if (badge) {
             badge.textContent = newState;
             badge.className = `status-badge ${getVacatiosStatusClass(newState)}`;
@@ -195,8 +211,8 @@
         console.error("Erro no fluxo updateVacatState:", err);
         alert("Erro ao processar alteração.");
       }
-    }    
-    /* ========== SAVA VACATIONS ========== */
+    }
+    /* ========== SAVE VACATIONS ========== */
     async function recordDaysOnVacation(request) {
       const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
       const respElem = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${request.n_int}&corp_oper_nr=eq.${corp_oper_nr}`, {

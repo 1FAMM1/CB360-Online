@@ -97,25 +97,51 @@
         }));
         await Promise.all(shiftPromises);
         try {
-          const respUsers = await fetch(
-            `${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${corp_oper_nr}&elem_state=eq.true&select=n_int`, {
-              headers: headers
-            }
-          );
-          const activeUsers = await respUsers.json();
-          if (activeUsers.length > 0) {
-            const now = new Date().toISOString();
-            const notifications = activeUsers.map(u => ({n_int: u.n_int, corp_oper_nr: corp_oper_nr, title: "Novo Evento", message: `📢 Novo evento: "${eventName}". Inscrições abertas na área de eventos!`,
-                                                         is_read: false, created_at: now}));
-            await fetch(`${SUPABASE_URL}/rest/v1/user_notifications`, {
-              method: 'POST',
-              headers: headers,
-              body: JSON.stringify(notifications)
-            });
-          }
-        } catch (errNotif) {
-          console.error("Erro ao notificar elementos:", errNotif);
-        }
+  const respUsers = await fetch(
+    `${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${corp_oper_nr}&elem_state=eq.true&select=n_int`, {
+      headers: headers
+    }
+  );
+  const activeUsers = await respUsers.json();
+  if (activeUsers.length > 0) {
+    const now = new Date().toISOString();
+    const notifications = activeUsers.map(u => ({
+      n_int: u.n_int, 
+      corp_oper_nr: corp_oper_nr, 
+      title: "Novo Evento", 
+      message: `📢 Novo evento: "${eventName}". Inscrições abertas na área de eventos!`,
+      is_read: false, 
+      created_at: now
+    }));
+    
+    // Inserir notificações na base de dados
+    await fetch(`${SUPABASE_URL}/rest/v1/user_notifications`, {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify(notifications)
+    });
+
+    // ✨ NOVO: Enviar push notification para todos os operacionais
+    try {
+      await fetch('https://cb360-mobile.vercel.app/api/sendPush', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipient_nint: 'geral', // Envia para todos da empresa
+          corp_nr: corp_oper_nr,
+          sender_name: 'Administração',
+          message_text: `📢 Novo evento: "${eventName}". Inscrições abertas!`,
+          sender_nint: '0' // Não é uma pessoa específica
+        })
+      });
+      console.log('Push notifications enviadas com sucesso!');
+    } catch (errPush) {
+      console.error('Erro ao enviar push notifications:', errPush);
+    }
+  }
+} catch (errNotif) {
+  console.error("Erro ao notificar elementos:", errNotif);
+}
         alert("Evento criado e operacionais notificados com sucesso!");
         clearForm();
         if (typeof loadEvents === "function") loadEvents();

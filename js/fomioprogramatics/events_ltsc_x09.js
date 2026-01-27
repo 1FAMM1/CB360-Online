@@ -362,14 +362,58 @@
           body: JSON.stringify({ shift_state: newState })
         });
         if (!rUp.ok) throw new Error("Erro ao atualizar o estado da disponibilidade");
-        const msgNotif = newState === 'Aprovado' 
-        ? `✅ A tua disponibilidade para o evento "${evName}" (${formatDateDisplay(sDate)}) foi APROVADA.`
-        : `❌ A tua disponibilidade para o evento "${evName}" (${formatDateDisplay(sDate)}) não foi aprovada.`;
-        await fetch(`${SUPABASE_URL}/rest/v1/user_notifications`, {
-          method: 'POST',
-          headers: getSupabaseHeaders(),
-          body: JSON.stringify({n_int: userNInt, corp_oper_nr: corp_oper_nr, title: "Escala de Evento", message: msgNotif, is_read: false, created_at: new Date().toISOString()})
-        });
+        
+  ? `✅ A tua disponibilidade para o evento "${evName}" (${formatDateDisplay(sDate)}) foi APROVADA.`
+  : `❌ A tua disponibilidade para o evento "${evName}" (${formatDateDisplay(sDate)}) não foi aprovada.`;
+
+await fetch(`${SUPABASE_URL}/rest/v1/user_notifications`, {
+  method: 'POST',
+  headers: getSupabaseHeaders(),
+  body: JSON.stringify({
+    n_int: userNInt, 
+    corp_oper_nr: corp_oper_nr, 
+    title: "Escala de Evento", 
+    message: msgNotif, 
+    is_read: false, 
+    created_at: new Date().toISOString()
+  })
+});
+SUBSTITUI por:
+javascriptconst msgNotif = newState === 'Aprovado' 
+  ? `✅ A tua disponibilidade para o evento "${evName}" (${formatDateDisplay(sDate)}) foi APROVADA.`
+  : `❌ A tua disponibilidade para o evento "${evName}" (${formatDateDisplay(sDate)}) não foi aprovada.`;
+
+// Inserir notificação na base de dados
+await fetch(`${SUPABASE_URL}/rest/v1/user_notifications`, {
+  method: 'POST',
+  headers: getSupabaseHeaders(),
+  body: JSON.stringify({
+    n_int: userNInt, 
+    corp_oper_nr: corp_oper_nr, 
+    title: "Escala de Evento", 
+    message: msgNotif, 
+    is_read: false, 
+    created_at: new Date().toISOString()
+  })
+});
+
+// ✨ NOVO: Enviar push notification para o operacional específico
+try {
+  await fetch('https://cb-360-app.vercel.app/api/sendPush', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      recipient_nint: userNInt, // Envia só para este operacional
+      corp_nr: corp_oper_nr,
+      sender_name: 'Escala de Evento',
+      message_text: msgNotif,
+      sender_nint: '0' // Não é uma pessoa específica
+    })
+  });
+  console.log(`Push notification enviada para ${userNInt}`);
+} catch (errPush) {
+  console.error('Erro ao enviar push notification:', errPush);
+}
         let inc = 0;
         if (newState === 'Aprovado' && oldState !== 'Aprovado') inc = 1;
         else if (newState !== 'Aprovado' && oldState === 'Aprovado') inc = -1;

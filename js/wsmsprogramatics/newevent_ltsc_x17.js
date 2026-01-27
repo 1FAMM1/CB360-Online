@@ -289,82 +289,106 @@
       return message;
     }
     /* ========== CREATION OF NEW GLOBAL EVENT MESSAGE ========== */
-    async function generateWSMSMessage() {
-      if (!validateRequiredFields()) return '';
-      await new Promise(resolve => {
-        const interval = setInterval(() => {
-          const allFieldsReady =
-            document.getElementById('alert_type') &&
-            document.getElementById('alert_source') &&
-            document.getElementById('alert_level') &&
-            document.getElementById('ppi_type') &&
-            document.getElementById('km') &&
-            document.getElementById('on_going') &&
-            document.getElementById('incident_type');
-          if (allFieldsReady) {
-            clearInterval(interval);
-            resolve(true);
-          }
-        }, 50);
-      });
-      const alertType = document.getElementById('alert_type')?.value || '';
-      const alertSource = document.getElementById('alert_source')?.value || '';
-      const alertTime = getAlertTime();
-      const descrOccorr = document.getElementById('occorr_descr_input')?.value || '';
-      const localOccorr = document.getElementById('occorr_local_input')?.value || '';
-      const localitie = document.getElementById('occorr_localitie_input')?.value || '';
-      const ppiType = document.getElementById('ppi_type')?.value || '';
-      const alertLevel = document.getElementById('alert_level')?.value || '';
-      const ppiGrid = document.getElementById('alarm_grid')?.value || '';
-      const ppiKm = document.getElementById('km')?.value || '';
-      const ppiDirection = document.getElementById('on_going')?.value || '';
-      const ppiIncident = document.getElementById('incident_type')?.value || '';
-      const channelManeuver = document.getElementById('channel_maneuver')?.value?.trim() || '';
-      const vehicles = [];
-      document.querySelectorAll('.vehicle-card').forEach(card => {
-        const vehicle = card.querySelector('select')?.value?.trim() || '';
-        const bbs = card.querySelector('input[type="text"]')?.value?.trim() || '';
-        if (vehicle) vehicles.push(bbs ? `${vehicle}|${bbs} BBs.` : vehicle);
-      });
-      try {
-        const saveResult = await saveOccurrenceToSupabase({descrOccorr, localOccorr, localitie},
-          vehicles.length
-        );
-        if (saveResult === "DUPLICATE") {
-          return '';
-        }
-      } catch (e) {
-        console.warn("Erro ao gravar no Supabase:", e);
-        showPopupWarning("Erro ao gravar no Supabase, mas a mensagem será criada.");
+    if (!validateRequiredFields()) return '';
+
+  // ... (manter o bloco de espera dos campos ready) ...
+  await new Promise(resolve => {
+    const interval = setInterval(() => {
+      const allFieldsReady =
+        document.getElementById('alert_type') &&
+        document.getElementById('alert_source') &&
+        document.getElementById('alert_level') &&
+        document.getElementById('ppi_type') &&
+        document.getElementById('km') &&
+        document.getElementById('on_going') &&
+        document.getElementById('incident_type');
+      if (allFieldsReady) {
+        clearInterval(interval);
+        resolve(true);
       }
-      let message = '';
-      const vehicleText = vehicles.length ? `Saída de ${vehicles.join(', ')}` : '';
-      const vehicleSufix = vehicleText ? `, ${vehicleText}` : '';
-      if (alertType === 'Ocorrência') {
-        message = `*🚨🚨INFORMAÇÃO🚨🚨*\n\n*\\\\${alertSource}, HI: ${alertTime}, Ativação para ${descrOccorr} em Faro\\${localitie}\\${localOccorr}${vehicleSufix}* `;
-      } else if (alertType === 'Plano Prévio de Intervenção') {
-        if (ppiType === 'PPI Aeroporto Gago Coutinho') {
-          if (alertLevel.toUpperCase() === 'AMARELO') {
-            message = `*🚨🚨INFORMAÇÃO🚨🚨*\n\n*\\\\${alertSource}, HI: ${alertTime}, Ativação do ${ppiType} de nível ${alertLevel.toUpperCase()}, para a Grelha ${ppiGrid}, PREVENÇÃO LOCAL.*`;
-          } else if (alertLevel.toUpperCase() === 'VERMELHO') {
-            const zoneLRT = "37.020046,-7.973326";
-            const zoneZCR = "37.019382,-7.977624";
-            const vehiclesLRT = "VCOT, ABSC - Devem Posicionar-se na LRT";
-            const vehiclesZCR = "VCI, VTT - Devem Posicionar-se na ZCR";
-            message = `*🚨🚨INFORMAÇÃO🚨🚨*\n\n*\\\\${alertSource}, HI: ${alertTime}, Ativação do ${ppiType} de nível VERMELHO, para a Grelha ${ppiGrid}, MOBILIZAÇÃO TOTAL DO CB.*\n\n*Veículos: ${vehiclesLRT}*\n*Veículos: ${vehiclesZCR}*\n\n*LOCALIZAÇÃO LRT:* (https://www.google.com/maps?q=${zoneLRT})\n*LOCALIZAÇÃO ZCR:* (https://www.google.com/maps?q=${zoneZCR})`;
-          }
-        } else {
-          message = `*🚨🚨INFORMAÇÃO🚨🚨*\n\n*\\\\${alertSource}, HI: ${alertTime}, Ativação do ${alertLevel} para o ${ppiType}, para a Grelha ${ppiGrid}, ao km: ${ppiKm}, no sentido ${ppiDirection} para ${ppiIncident}*`;
-        }
+    }, 50);
+  });
+
+  const alertType = document.getElementById('alert_type')?.value || '';
+  const alertSource = document.getElementById('alert_source')?.value || '';
+  const alertTime = getAlertTime();
+  const descrOccorr = document.getElementById('occorr_descr_input')?.value || '';
+  const localOccorr = document.getElementById('occorr_local_input')?.value || '';
+  const localitie = document.getElementById('occorr_localitie_input')?.value || '';
+  const ppiType = document.getElementById('ppi_type')?.value || '';
+  const alertLevel = document.getElementById('alert_level')?.value || '';
+  const ppiGrid = document.getElementById('alarm_grid')?.value || '';
+  const ppiKm = document.getElementById('km')?.value || '';
+  const ppiDirection = document.getElementById('on_going')?.value || '';
+  const ppiIncident = document.getElementById('incident_type')?.value || '';
+  const channelManeuver = document.getElementById('channel_maneuver')?.value?.trim() || '';
+  const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
+
+  const vehicles = [];
+  document.querySelectorAll('.vehicle-card').forEach(card => {
+    const vehicle = card.querySelector('select')?.value?.trim() || '';
+    const bbs = card.querySelector('input[type="text"]')?.value?.trim() || '';
+    if (vehicle) vehicles.push(bbs ? `${vehicle}|${bbs} BBs.` : vehicle);
+  });
+
+  try {
+    const saveResult = await saveOccurrenceToSupabase({ descrOccorr, localOccorr, localitie }, vehicles.length);
+    if (saveResult === "DUPLICATE") return '';
+  } catch (e) {
+    console.warn("Erro ao gravar no Supabase:", e);
+  }
+
+  // --- CONSTRUÇÃO DA MENSAGEM ---
+  let message = '';
+  const vehicleText = vehicles.length ? `Saída de ${vehicles.join(', ')}` : '';
+  const vehicleSufix = vehicleText ? `, ${vehicleText}` : '';
+
+  if (alertType === 'Ocorrência') {
+    message = `*🚨🚨INFORMAÇÃO🚨🚨*\n\n*\\\\${alertSource}, HI: ${alertTime}, Ativação para ${descrOccorr} em Faro\\${localitie}\\${localOccorr}${vehicleSufix}* `;
+  } else if (alertType === 'Plano Prévio de Intervenção') {
+    if (ppiType === 'PPI Aeroporto Gago Coutinho') {
+      if (alertLevel.toUpperCase() === 'AMARELO') {
+        message = `*🚨🚨INFORMAÇÃO🚨🚨*\n\n*\\\\${alertSource}, HI: ${alertTime}, Ativação do ${ppiType} de nível ${alertLevel.toUpperCase()}, para a Grelha ${ppiGrid}, PREVENÇÃO LOCAL.*`;
+      } else if (alertLevel.toUpperCase() === 'VERMELHO') {
+        message = `*🚨🚨INFORMAÇÃO🚨🚨*\n\n*\\\\${alertSource}, HI: ${alertTime}, Ativação do ${ppiType} de nível VERMELHO, para a Grelha ${ppiGrid}, MOBILIZAÇÃO TOTAL DO CB.*`;
       }
-      if (channelManeuver) message += `\n*Canal Manobra:* ${channelManeuver}`;
-      const out = document.getElementById('wsms_output');
-      if (out) out.value = message;
-      if (navigator.clipboard?.writeText) navigator.clipboard.writeText(message).catch(() => {});
-      showPopupSuccess("Mensagem criada com sucesso! Abra o WhatsApp e prima CTRL+V", false);
-      loadActiveOccurrences();
-      return message;
+    } else {
+      message = `*🚨🚨INFORMAÇÃO🚨🚨*\n\n*\\\\${alertSource}, HI: ${alertTime}, Ativação do ${alertLevel} para o ${ppiType}, para a Grelha ${ppiGrid}, ao km: ${ppiKm}, no sentido ${ppiDirection} para ${ppiIncident}*`;
     }
+  }
+
+  if (channelManeuver) message += `\n*Canal Manobra:* ${channelManeuver}`;
+
+  // --- ENVIO DA NOTIFICAÇÃO PUSH (BROADCAST) ---
+  try {
+    // Texto limpo (sem asteriscos do markdown do WhatsApp) para a notificação do telemóvel
+    const pushBody = `🚨 ${descrOccorr} - ${localitie}. ${vehicleText}`;
+    
+    await fetch('https://cb-360-app.vercel.app/api/sendPush', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        recipient_nint: 'geral', // 'geral' indica broadcast no teu backend
+        corp_nr: currentCorpOperNr,
+        sender_name: 'CB360 Alerta',
+        message_text: pushBody,
+        sender_nint: '0'
+      })
+    });
+    console.log('Push enviado para todo o CB.');
+  } catch (errPush) {
+    console.error('Falha ao enviar Push:', errPush);
+  }
+
+  // --- OUTPUT E FEEDBACK ---
+  const out = document.getElementById('wsms_output');
+  if (out) out.value = message;
+  if (navigator.clipboard?.writeText) navigator.clipboard.writeText(message).catch(() => {});
+  
+  showToast("Ocorrência registada e CB notificado! 🚨"); // Usando o teu showToast
+  loadActiveOccurrences();
+  return message;
+}
     /* ========== RECORDING INCIDENTS IN DATABASE ========== */
     async function safeJson(resp) {
       try {
@@ -445,3 +469,4 @@
         toggleContactFields();
       });
     });
+

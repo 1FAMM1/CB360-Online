@@ -354,13 +354,13 @@
         await fetch(`${SUPABASE_URL}/rest/v1/user_notifications`, {
           method: 'POST',
           headers: getSupabaseHeaders(),
-          body: JSON.stringify({n_int: userNInt, corp_oper_nr: corp_oper_nr, title: "Escala de Evento", message: msgNotif, is_read: false, created_at: new Date().toISOString()})
+          body: JSON.stringify({n_int: userNInt, corp_oper_nr: corp_oper_nr, title: "Evenveos", message: msgNotif, is_read: false, created_at: new Date().toISOString()})
         });
         try {
           await fetch('https://cb-360-app.vercel.app/api/sendPush', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({recipient_nint: userNInt, corp_nr: corp_oper_nr, sender_name: 'Escala de Evento', message_text: msgNotif, sender_nint: '0'})
+            body: JSON.stringify({recipient_nint: userNInt, corp_nr: corp_oper_nr, sender_name: 'CB360 Online', message_text: msgNotif, sender_nint: '0'})
           });
           console.log(`Push notification enviada para ${userNInt}`);
         } catch (errPush) {

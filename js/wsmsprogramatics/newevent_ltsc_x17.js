@@ -289,7 +289,8 @@
       return message;
     }
     /* ========== CREATION OF NEW GLOBAL EVENT MESSAGE ========== */
-    if (!validateRequiredFields()) return '';
+async function generateWSMSMessage() {   
+if (!validateRequiredFields()) return '';
 
   // ... (manter o bloco de espera dos campos ready) ...
   await new Promise(resolve => {
@@ -469,4 +470,5 @@
         toggleContactFields();
       });
     });
+
 

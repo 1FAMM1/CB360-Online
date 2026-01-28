@@ -175,7 +175,7 @@
             await fetch('https://cb-360-app.vercel.app/api/sendPush', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({n_int: Number(request.n_int), corp_nr: String(request.corp_oper_nr), sender_name: "Gestão de Férias", message_text: msgNotif, sender_nint: 0})
+              body: JSON.stringify({recipient_nint: Number(request.n_int), corp_nr: String(request.corp_oper_nr), sender_name: "Gestão de Férias", message_text: msgNotif, sender_nint: 0})
             });
           } catch (e) {
             console.error("Erro no Push de férias:", e);

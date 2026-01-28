@@ -557,3 +557,27 @@
         noHospital.appendChild(row);
       }
     }
+    /* =======================================
+    OCCURRENCE REPORTS MISSING
+    ======================================= */
+    function createOcrReportsInputs(total = 24) {
+      const ocrReportsContainer = document.getElementById('ocrReport');
+      if (!ocrReportsContainer) return;
+      ocrReportsContainer.innerHTML = '';
+      for (let i = 1; i <= total; i++) {
+        const n = String(i).padStart(2, '0');
+        ocrReportsContainer.insertAdjacentHTML('beforeend', `
+          <div class="global-field-horizontal ocr-item">
+            <label style="font-weight: bold; min-width: 30px;">${n}:</label>
+            <input type="text" id="report-${n}-nint" placeholder="Nº Int." style="width: 100%;">
+            <input type="text" id="report-${n}-nr" placeholder="Nr. SADO" style="width: 200%;">
+            <input type="date" id="report-${n}-date"style="width: 100%;">
+            <select id="report-${n}-status" style="width: 120%; font-weight: 600;">
+               <option value="">Estado</option>
+               <option value="done">Efetuado</option>
+               <option value="pending">Por Efetuar</option>
+            </select>
+          </div>
+        `);
+      }
+    }

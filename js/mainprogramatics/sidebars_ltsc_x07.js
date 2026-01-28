@@ -130,6 +130,7 @@
                 if (typeof loadCMAsFromSupabase === "function") loadCMAsFromSupabase();
                 if (typeof loadElemsButtons === "function") loadElemsButtons();
                 if (typeof loadNoHospFromSupabase === "function") loadNoHospFromSupabase();
+                if (typeof loadocrReportsFromSupabase === "function") loadocrReportsFromSupabase();
                 })) {
                 clearInterval(interval);
               }
@@ -318,3 +319,4 @@
       primaryColor: "#343A40",
       blinkColor: "#DC3545"
     });
+

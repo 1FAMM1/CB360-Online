@@ -1243,8 +1243,8 @@
       if (requests.length > 0) await Promise.all(requests);
     }
     /* =======================================
-      EMIT SCALE (COMPLETA COM NOTIFICAÇÃO)
-   ======================================= */
+      EMIT SCALE
+    ======================================= */
     async function initScaleEmission() {
       const table = document.querySelector(".month-table tbody");
       if (!table) return;
@@ -1263,7 +1263,7 @@
         const headers = getSupabaseHeaders();
         const savedMap = await fetchSavedData(currentSection, selectedYear, monthIndex);
         const { toInsert, toUpdate, toDelete } = diffFixedRowsChanges(table, savedMap);
-        await saveChanges({toInsert, toUpdate, toDelete, section: currentSection, year: selectedYear, month: monthIndex});
+        await saveChanges({ toInsert, toUpdate, toDelete, section: currentSection, year: selectedYear, month: monthIndex });
         try {
           const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
           const nomeMes = monthNames[parseInt(monthIndex) - 1];
@@ -1282,9 +1282,18 @@
               headers: headers,
               body: JSON.stringify(notifications)
             });
+            try {
+              await fetch('https://cb-360-app.vercel.app/api/sendPush', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({recipient_nint: 'geral', corp_nr: corp_oper_nr, sender_name: 'CB360 Online', message_text: msgNotif, sender_nint: '0'})
+              });
+            } catch (errPush) {
+              console.error('Erro ao enviar push:', errPush);
+            }
           }
         } catch (errNotif) {
-          console.error("Erro no envio das notificações:", errNotif);
+          console.error("Erro no fluxo de notificações:", errNotif);
         }
         showPopupSuccess("✅ Escala emitida com sucesso! Por favor aguarde uns breves segundos pelo download automático. Obrigado.");
         await exportScheduleToExcel(table, selectedYear, monthIndex);
@@ -1401,3 +1410,4 @@
         alert(`❌ Erro: Não foi possível comunicar com o serviço de conversão.\n\nTipo: ${error.name}\nMensagem: ${error.message}`);
       }
     }
+

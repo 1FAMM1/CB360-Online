@@ -98,7 +98,7 @@
           const now = new Date().toISOString();
           const uniqueNints = [...new Set(rows.map(r => r.n_int).filter(n => Number.isInteger(n)))];
           if (uniqueNints.length > 0) {
-            const msgNotif = `📄 Existem atualizações nos seus relatórios de ocorrência pendentes. Consulte "Relatórios".`;
+            const msgNotif = `⚠️ ATENÇÃO! Tem Relatórios de Ocorrência Pendentes. Consulte o menú "Relatórios de Ocorrência".`;
             const notifications = uniqueNints.map(nint => ({n_int: nint, corp_oper_nr: corp_oper_nr, title: "Relatórios de Ocorrência", message: msgNotif,
                                                             is_read: false, created_at: now}));
             const notifRes = await fetch(`${SUPABASE_URL}/rest/v1/user_notifications`, {

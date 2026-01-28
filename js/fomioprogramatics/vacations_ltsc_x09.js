@@ -1,4 +1,4 @@
-/* =======================================
+    /* =======================================
     VACATIONS
     ======================================= */
      document.addEventListener('click', async function(e) {
@@ -164,29 +164,22 @@
             await deleteDaysOnVacation(request);
           }
           const msgNotif = newState === 'Aprovadas' 
-            ? `As tuas férias de ${month}/${year} foram aprovadas! ✅` 
-            : `O teu pedido de férias para ${month}/${year} foi colocado como: ${newState}.`;    
+            ? `As tuas férias de voluntariado para ${month}/${year} foram aprovadas! ✅` 
+            : `O teu pedido de férias de voluntariado para ${month}/${year} foi colocado como: ${newState}.`;    
           await fetch(`${SUPABASE_URL}/rest/v1/user_notifications`, {
             method: 'POST',
             headers: getSupabaseHeaders(),
             body: JSON.stringify({n_int: request.n_int, corp_oper_nr: request.corp_oper_nr, title: "Gestão de Férias", message: msgNotif, is_read: false, created_at: new Date().toISOString()})
           });
-          // Disparo do Push para o telemóvel
-try {
-  await fetch('https://cb-360-app.vercel.app/api/sendPush', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      n_int: Number(request.n_int),
-      corp_nr: String(request.corp_oper_nr),
-      sender_name: "Gestão de Férias",
-      message_text: msgNotif,
-      sender_nint: 0 // Remetente sistema/comando
-    })
-  });
-} catch (e) {
-  console.error("Erro no Push de férias:", e);
-}
+          try {
+            await fetch('https://cb-360-app.vercel.app/api/sendPush', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({n_int: Number(request.n_int), corp_nr: String(request.corp_oper_nr), sender_name: "Gestão de Férias", message_text: msgNotif, sender_nint: 0})
+            });
+          } catch (e) {
+            console.error("Erro no Push de férias:", e);
+          }
           if (badge) {
             badge.textContent = newState;
             badge.className = `status-badge ${getVacatiosStatusClass(newState)}`;

@@ -42,51 +42,83 @@
         console.error("❌ [NOHOSP] Erro ao carregar:", e);
       }
     }
-    async function saveNoHospGroupFields(total = 12) {
-      const currentCorpOperNr = sessionStorage.getItem('currentCorpOperNr');
-      if (!currentCorpOperNr) {
-        showPopupWarning("❌ Erro: Sessão não identificada.");
-        return;
+    /* ====== SAVE NO HOSP GROUP FIELDS (VERSÃO OTIMIZADA) ====== */
+async function saveNoHospGroupFields(total = 12) {
+  const currentCorpOperNr = sessionStorage.getItem('currentCorpOperNr');
+  if (!currentCorpOperNr) {
+    showPopupWarning("❌ Erro: Sessão não identificada.");
+    return;
+  }
+  
+  try {
+    const headers = getSupabaseHeaders();
+    headers['x-my-corpo'] = currentCorpOperNr;
+
+    for (let i = 1; i <= total; i++) {
+      const n = String(i).padStart(2, '0');
+      const mainInput = document.getElementById(`nohosp-${n}`);
+      if (!mainInput) continue;
+
+      const hospitalValue = mainInput.value.trim();
+      
+      // --- REGRA DE OURO: Se o hospital estiver vazio, não gravamos esta linha ---
+      if (hospitalValue === "") {
+        console.log(`[NOHOSP] Linha ${n} vazia, a saltar...`);
+        continue; 
       }
-      try {
-        const headers = getSupabaseHeaders();
-        headers['x-my-corpo'] = currentCorpOperNr;
-        for (let i = 1; i <= total; i++) {
-          const n = String(i).padStart(2, '0');
-          const mainInput = document.getElementById(`nohosp-${n}`);
-          if (!mainInput) continue;
-          const payload = {corp_oper_nr: currentCorpOperNr, group_nr: i, hospital: mainInput.value.trim(), service: document.getElementById(`nohosp-serv-${n}`).value.trim(), 
-                           start_date: document.getElementById(`nohosp-form-date-${n}`).value, start_time: document.getElementById(`nohosp-form-time-${n}`).value,
-                           end_date: document.getElementById(`nohosp-to-date-${n}`).value, end_time: document.getElementById(`nohosp-to-time-${n}`).value,
-                           next_hospital: document.getElementById(`nextHosp-${n}`).value.trim()};
-          let rowId = mainInput.dataset.rowId;
-          if (!rowId) {
-            const resCheck = await fetch(
-              `${SUPABASE_URL}/rest/v1/hospital_restrictions?select=id&corp_oper_nr=eq.${currentCorpOperNr}&group_nr=eq.${i}`, {
-                headers: headers
-              }
-            );
-            const dataCheck = await resCheck.json();
-            if (dataCheck.length > 0) rowId = dataCheck[0].id;
-          }
-          if (!rowId) {
-            await fetch(`${SUPABASE_URL}/rest/v1/hospital_restrictions`, {
-              method: "POST",
-              headers: {...headers, "Prefer": "return=representation"},
-              body: JSON.stringify([payload])
-            });
-          } else {
-            await fetch(`${SUPABASE_URL}/rest/v1/hospital_restrictions?id=eq.${rowId}`, {
-              method: "PATCH",
-              headers: headers,
-              body: JSON.stringify(payload)
-            });
-          }
-        }
-        showPopupSuccess("✅ Dados hospitalares atualizados!");
-        loadNoHospFromSupabase(total);
-      } catch (error) {
-        console.error("❌ [NOHOSP] Erro ao gravar:", error);
-        showPopupWarning("Erro ao gravar dados hospitalares.");
+
+      const clean = (id) => {
+        const el = document.getElementById(id);
+        if (!el) return null;
+        const val = el.value.trim();
+        return val === "" ? null : val;
+      };
+
+      const payload = {
+        corp_oper_nr: currentCorpOperNr,
+        group_nr: i,
+        hospital: hospitalValue,
+        service: clean(`nohosp-serv-${n}`),
+        start_date: clean(`nohosp-form-date-${n}`),
+        start_time: clean(`nohosp-form-time-${n}`),
+        end_date: clean(`nohosp-to-date-${n}`),
+        end_time: clean(`nohosp-to-time-${n}`),
+        next_hospital: clean(`nextHosp-${n}`)
+      };
+
+      let rowId = mainInput.dataset.rowId;
+
+      // Se não temos o ID, verificamos se já existe no banco para decidir entre POST ou PATCH
+      if (!rowId) {
+        const resCheck = await fetch(
+          `${SUPABASE_URL}/rest/v1/hospital_restrictions?select=id&corp_oper_nr=eq.${currentCorpOperNr}&group_nr=eq.${i}`, 
+          { headers: headers }
+        );
+        const dataCheck = await resCheck.json();
+        if (dataCheck && dataCheck.length > 0) rowId = dataCheck[0].id;
+      }
+
+      if (!rowId) {
+        // Criar nova entrada
+        await fetch(`${SUPABASE_URL}/rest/v1/hospital_restrictions`, {
+          method: "POST",
+          headers: { ...headers, "Prefer": "return=representation" },
+          body: JSON.stringify([payload])
+        });
+      } else {
+        // Atualizar existente
+        await fetch(`${SUPABASE_URL}/rest/v1/hospital_restrictions?id=eq.${rowId}`, {
+          method: "PATCH",
+          headers: headers,
+          body: JSON.stringify(payload)
+        });
       }
     }
+
+    showPopupSuccess("✅ Dados hospitalares atualizados!");
+    loadNoHospFromSupabase(total);
+  } catch (error) {
+    console.error("❌ [NOHOSP] Erro ao gravar:", error);
+    showPopupWarning("Erro ao gravar dados hospitalares.");
+  }
+}

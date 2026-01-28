@@ -2194,6 +2194,7 @@
             <button class="panel-sidebar-menu-button" onclick="showPanelCard('air-centers')">Centros de Meios Aéreos</button>
             <button class="panel-sidebar-menu-button" onclick="showPanelCard('analytics')">Disponibilidade de Elementos</button>
             <button class="panel-sidebar-menu-button" onclick="showPanelCard('nohosp')">Constrangimentos Hospitalares</button>
+            <button class="panel-sidebar-menu-button" onclick="showPanelCard('ocrReport')">Relatórios de Ocorrência</button>
           </div>
           <div class="panel-content">
             <div id="panel-epe" class="panel-card active">
@@ -2248,6 +2249,16 @@
               <div class="action-buttons" id="street-cut" style="margin: 15px 0 0 0;">
                 <button class="btn btn-success" onclick="saveNoHospGroupFields()">ATUALIZAR</button>
               </div>              
+            </div>
+            <div id="panel-ocrReport" class="panel-card">
+              <h3>RELATÓRIOS DE OCORRÊNCIA</h3>
+              <p>Relatórios de Ocorrência em incumprimento.</p>
+              <div class="main-card">
+                <div id="ocrReport" style="margin: 5px 0 0 0;"></div> 
+              </div>
+              <div class="action-buttons" style="margin: 15px 0 0 0;">
+                <button class="btn btn-success" onclick="saveOcrReportsGroupFields()">ATUALIZAR</button>
+              </div>                
             </div>
           </div>
         </div>
@@ -2520,4 +2531,3 @@
   <script></script>
 </body>
 </html>
-

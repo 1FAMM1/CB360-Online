@@ -177,7 +177,7 @@
       try {
         const corp = getCorpId();
         const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/reg_elems?select=n_int,abv_name,patent_abv,MP,TAS&section=eq.${secao}&corp_oper_nr=eq.${corp}&n_int=lt.500&elem_state=eq.true`, {
+          `${SUPABASE_URL}/rest/v1/reg_elems?select=n_int,abv_name,patent_abv,MP,TAS&section=eq.${secao}&corp_oper_nr=eq.${corp}&n_int=lt.900&elem_state=eq.true`, {
             headers: getSupabaseHeaders()
           }
         );
@@ -211,7 +211,7 @@
       try {
         const corp = getCorpId();
         const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/reg_elems?select=n_int,abv_name,patent_abv&corp_oper_nr=eq.${corp}&n_int=gte.003&n_int=lt.500&elem_state=eq.true`, {
+          `${SUPABASE_URL}/rest/v1/reg_elems?select=n_int,abv_name,patent_abv&corp_oper_nr=eq.${corp}&n_int=gte.003&n_int=lt.900&elem_state=eq.true`, {
             headers: getSupabaseHeaders()
           }
         );
@@ -1410,4 +1410,5 @@
         alert(`❌ Erro: Não foi possível comunicar com o serviço de conversão.\n\nTipo: ${error.name}\nMensagem: ${error.message}`);
       }
     }
+
 

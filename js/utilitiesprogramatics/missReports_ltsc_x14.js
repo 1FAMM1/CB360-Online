@@ -80,21 +80,25 @@
       }
       const headers = getSupabaseHeaders();
       try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/reports_control`, {
-          method: "POST",
-          headers: {
-            ...headers,
-            "Content-Type": "application/json",
-            Prefer: "resolution=merge-duplicates"
-          },
-          body: JSON.stringify(rows)
-        });
-        const out = await res.json();
-        if (!res.ok) {
-          console.error("Erro ao guardar reports_control:", out);
-          showPopupWarning(`❌ Erro ao guardar: ${out?.message || res.status}`);
-          return;
-        }
+        
+  method: "POST",
+  headers: {
+    ...headers,
+    "Content-Type": "application/json",
+    Prefer: "resolution=merge-duplicates,return=representation"
+  },
+  body: JSON.stringify(rows)
+});
+
+// ler body de forma segura
+const raw = await res.text();
+const out = raw ? JSON.parse(raw) : null;
+
+if (!res.ok) {
+  console.error("Erro ao guardar reports_control:", out || raw);
+  showPopupWarning(`❌ Erro ao guardar: ${(out && out.message) ? out.message : res.status}`);
+  return;
+}
         try {
           const now = new Date().toISOString();
           const uniqueNints = [...new Set(

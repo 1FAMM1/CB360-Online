@@ -409,7 +409,7 @@
         `;
         showPopupSuccess(`Planeamento gerado com sucesso. O mesmo está a ser enviado para as entidades.`);
         const response = await fetch(
-          'https://corsproxy.io/?' + encodeURIComponent('https://cb360-online.vercel.app/api/plandir_convert_and_send'), {
+          "/api/plandir_convert_and_send",), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({shift, date, tables, recipients: RECIPIENTS, ccRecipients: CC_RECIPIENTS, bccRecipients: BCC_RECIPIENTS, emailBody: emailBodyHTML})});
@@ -547,3 +547,4 @@
         document.querySelectorAll('.shift-btn').forEach(btn => btn.classList.remove('active'));
       }
     });
+

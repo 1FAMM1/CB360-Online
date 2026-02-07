@@ -62,7 +62,7 @@
         if (gender || age || nation || type || status) {
           const parts = [];
           if (gender) parts.push(gender);
-          if (age) parts.push(`${age}${ageUnit ? ' ' + ageUnit : ''}`);
+          if (age) parts.push(`${ageUnit ? ' ' + ageUnit : ''}${age}`);
           if (nation) parts.push(`Nacion: ${nation}`);
           if (type) parts.push(type);
           if (status) parts.push(status);
@@ -134,4 +134,5 @@
       if (!el) return;
       const isHidden = el.classList.toggle('hidden');
       button.classList.toggle('active', !isHidden);
+
     }

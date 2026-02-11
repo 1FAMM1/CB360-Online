@@ -9,9 +9,7 @@
           e.stopPropagation();
           openConfigDecirModal();
           return false; 
-        }
-        const targetModule = btn.getAttribute("data-page");
-        if (targetModule) loadModule(targetModule);
+        }        
       });
     });
     async function openConfigDecirModal() {

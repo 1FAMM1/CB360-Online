@@ -1,4 +1,4 @@
-    /* =======================================
+/* =======================================
               FIREFIGHTER LISTING
     ======================================= */
     const ACCESS_OPTIONS = [
@@ -68,7 +68,7 @@
     /* ================= LOAD TABLE ================= */
     async function loadElementsTable() {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
         if (!corpOperNr) throw new Error("Corporação não definida");
         const response = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?select=*&corp_oper_nr=eq.${corpOperNr}`, {
           method: "GET",
@@ -132,7 +132,7 @@
     async function loadUserLogin(fullName, corpOperNr) {
       if (!fullName || !corpOperNr) return null;
       const encodedFullName = encodeURIComponent(fullName);
-      const url = `${SUPABASE_URL}/rest/v1/users?select=username,password&full_name=eq.${encodedFullName}&corp_oper_nr=eq.${corpOperNr}`;
+      const url = `${SUPABASE_URL}/rest/v1/users?select=username,password,user_role&full_name=eq.${encodedFullName}&corp_oper_nr=eq.${corpOperNr}`;
       const response = await fetch(url, {
         headers: getSupabaseHeaders()
       });
@@ -228,7 +228,7 @@
     document.getElementById("win_patent").addEventListener("change", mapPatentToAbv);
 
     function openNewWindow() {
-      ["win_n_int", "win_n_file", "win_patent", "win_patent_abv", "win_abv_name", "win_full_name", "win_MP", "win_TAS", "win_user_name_main", "win_password_main", "win_section", "win_nif", "win_niss", "win_nib"].forEach(id => {
+      ["win_n_int", "win_n_file", "win_patent", "win_patent_abv", "win_abv_name", "win_full_name", "win_MP", "win_TAS", "win_user_name_main", "win_password_main", "win_section", "win_nif", "win_niss", "win_nib", "win_type"].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = "";
       });
@@ -244,7 +244,7 @@
     }
 
     async function openEditWindow(row) {
-      ["win_n_int","win_n_file","win_patent","win_patent_abv","win_abv_name","win_full_name","win_MP","win_TAS","win_section", "win_nif", "win_niss", "win_nib"].forEach(id => {
+      ["win_n_int","win_n_file","win_patent","win_patent_abv","win_abv_name","win_full_name","win_MP","win_TAS","win_section", "win_nif", "win_niss", "win_nib", "win_type"].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = row[id.replace("win_", "")] ?? "";
       });
@@ -262,12 +262,20 @@
       document.getElementById("windowTitle").textContent = "Editar Registo";
       document.getElementById("win_user_name_main").value = "";
       document.getElementById("win_password_main").value = "";
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       try {
         const userLogin = await loadUserLogin(row.full_name, corpOperNr);
         if (userLogin) {
           document.getElementById("win_user_name_main").value = userLogin.username ?? "";
           document.getElementById("win_password_main").value = userLogin.password ?? "";
+          if (userLogin.user_role) {
+      const roleMap = {
+        admin: "Administrador",
+        subadmin: "Sub-Administrador",
+        user: "Utilizador"
+      };
+      document.getElementById("win_type").value = roleMap[userLogin.user_role] || "";
+    }
         }
       } catch (err) {
         console.error("Erro ao carregar user login:", err);
@@ -285,96 +293,107 @@
       document.getElementById("editWindow").style.display = "none";
     });
     /* ================= FORM SUBMIT ================= */
+    function mapUserRole() {
+      const type = document.getElementById("win_type").value;
+      if (type === "Administrador") return "admin";
+      if (type === "Sub-Administrador") return "subadmin";
+      if (type === "Utilizador") return "user";
+      return null;
+    }
     async function safeJson(response) {
       const text = await response.text();
       return text ? JSON.parse(text) : null;
     }
-    document.getElementById("winForm").addEventListener("submit", async (e) => {
+    document.getElementById("winForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const meuCargo = sessionStorage.getItem("currentUserRole");
-      if (meuCargo !== 'admin') {
-        alert("❌ Não tem permissões para efetuar esta operação.");
-        return;
-      }
       const n_intValue = document.getElementById("win_n_int").value;
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
-      const meuNInt = sessionStorage.getItem("currentNInt");
-      const customHeaders = {
-        ...getSupabaseHeaders(),
-        "Prefer": "return=representation",
-        "x-my-role": meuCargo,
-        "x-my-nint": meuNInt
-      };
-      const payloadRegElems = {
-        n_int: n_intValue,
-        n_file: document.getElementById("win_n_file").value,
-        patent: document.getElementById("win_patent").value,
-        patent_abv: document.getElementById("win_patent_abv").value,
-        abv_name: document.getElementById("win_abv_name").value,
-        full_name: document.getElementById("win_full_name").value,
-        MP: document.getElementById("win_MP").value === "true",
-        TAS: document.getElementById("win_TAS").value === "true",
-        section: document.getElementById("win_section").value,
-        nif: document.getElementById("win_nif").value,
-        nib: document.getElementById("win_nib").value,
-        elem_state: document.getElementById("win_state").value === "Ativo",
-        acess: Array.from(document.querySelectorAll('.access-checkbox:checked')).map(cb => cb.value).join(", "),
-        last_updated: new Date().toISOString(),
-        corp_oper_nr: corpOperNr,
-        user_role: "user"
-      };
-      const payloadUsers = {
-        username: document.getElementById("win_user_name_main").value,
-        password: document.getElementById("win_password_main").value,
-        full_name: document.getElementById("win_full_name").value,
-        patent: document.getElementById("win_patent").value,
-        corp_oper_nr: corpOperNr,
-        n_int: n_intValue
-      };
+      const corpOperNr = document.querySelector('.header-nr')?.textContent.trim() || sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const payloadRegElems = {n_int: n_intValue, n_file: document.getElementById("win_n_file").value, patent: document.getElementById("win_patent").value,
+                               patent_abv: document.getElementById("win_patent_abv").value, abv_name: document.getElementById("win_abv_name").value,
+                               full_name: document.getElementById("win_full_name").value, MP: document.getElementById("win_MP").value === "true",
+                               TAS: document.getElementById("win_TAS").value === "true", section: document.getElementById("win_section").value,
+                               nif: document.getElementById("win_nif").value,
+                               nib: document.getElementById("win_nib").value, elem_state: document.getElementById("win_state").value === "Ativo",
+                               acess: Array.from(document.querySelectorAll('.access-checkbox:checked')).map(cb => cb.value).join(", "),
+                               last_updated: new Date().toISOString(), corp_oper_nr: corpOperNr};
+      const payloadUsers = {username: document.getElementById("win_user_name_main").value, password: document.getElementById("win_password_main").value,
+                            full_name: document.getElementById("win_full_name").value, patent: document.getElementById("win_patent").value, corp_oper_nr: corpOperNr, user_role: mapUserRole()};
       try {
-        const checkRes = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${n_intValue}&corp_oper_nr=eq.${corpOperNr}`, {
-          headers: customHeaders
-        });
-        const existing = await checkRes.json();
-        let resAction;
-        if (existing && existing.length > 0) {
-          if (!confirm(`O nº interno "${n_intValue}" já existe. Atualizar registro?`)) return;
-          resAction = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?id=eq.${existing[0].id}`, {
-            method: "PATCH",
-            headers: customHeaders,
-            body: JSON.stringify(payloadRegElems)
-          });
+        const checkFirefighter = await fetch(
+          `${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${n_intValue}&corp_oper_nr=eq.${corpOperNr}`, {
+            headers: getSupabaseHeaders()
+          }
+        );
+        if (!checkFirefighter.ok) throw new Error(`Erro ao verificar reg_elems: ${checkFirefighter.status}`);
+        const existingFirefighter = await safeJson(checkFirefighter);
+        if (existingFirefighter && existingFirefighter.length > 0) {
+          const confirmUpdate = confirm(`O nº interno "${n_intValue}" já existe nesta corporação. Deseja atualizar o registro existente?`);
+          if (!confirmUpdate) return;
+          const recordId = existingFirefighter[0].id;
+          const updateFirefighter = await fetch(
+            `${SUPABASE_URL}/rest/v1/reg_elems?id=eq.${recordId}`, {
+              method: "PATCH",
+              headers: getSupabaseHeaders({ Prefer: "return=representation" }),
+              body: JSON.stringify(payloadRegElems)
+            }
+          );
+          if (!updateFirefighter.ok) throw new Error(`Erro ao atualizar reg_elems: ${updateFirefighter.status}`);
+          await safeJson(updateFirefighter);
+          alert("Bombeiro atualizado com sucesso!");
         } else {
-          resAction = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems`, {
-            method: "POST",
-            headers: customHeaders,
-            body: JSON.stringify(payloadRegElems)
-          });
+          const createBombeiro = await fetch(
+            `${SUPABASE_URL}/rest/v1/reg_elems`, {
+              method: "POST",
+              headers: getSupabaseHeaders({ Prefer: "return=representation" }),
+              body: JSON.stringify(payloadRegElems)
+            }
+          );
+          if (!createBombeiro.ok) throw new Error(`Erro ao criar reg_elems: ${createBombeiro.status}`);
+          await safeJson(createBombeiro);
+          alert("Novo bombeiro criado com sucesso!");
         }
-        if (!resAction.ok) throw new Error(`Erro na operação: ${resAction.status}`);
-        const checkUser = await fetch(`${SUPABASE_URL}/rest/v1/users?username=eq.${payloadUsers.username}`, {
-          headers: customHeaders
-        });
-        const usersFound = await checkUser.json();
+        const checkUserGlobal = await fetch(
+          `${SUPABASE_URL}/rest/v1/users?username=eq.${payloadUsers.username}`, {
+            headers: getSupabaseHeaders()
+          }
+        );
+        if (!checkUserGlobal.ok) throw new Error(`Erro ao verificar user: ${checkUserGlobal.status}`);
+        const usersFound = await safeJson(checkUserGlobal);
         if (usersFound && usersFound.length > 0) {
-          await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${usersFound[0].id}`, {
-            method: "PATCH",
-            headers: customHeaders,
-            body: JSON.stringify(payloadUsers)
-          });
+          const userSameCorp = usersFound.find(u => u.corp_oper_nr === corpOperNr);
+          if (!userSameCorp) {
+            alert("⚠️ Já existe um utilizador com estas credênciais.\nPor favor introduza outras credenciais.");
+            document.getElementById("win_user_name_main").value = "";
+            document.getElementById("win_password_main").value = "";
+            return;
+          }
+          const updateUser = await fetch(
+            `${SUPABASE_URL}/rest/v1/users?id=eq.${userSameCorp.id}`, {
+              method: "PATCH",
+              headers: getSupabaseHeaders({ Prefer: "return=representation" }),
+              body: JSON.stringify(payloadUsers)
+            }
+          );
+          if (!updateUser.ok) throw new Error(`Erro ao atualizar user: ${updateUser.status}`);
+          await safeJson(updateUser);
         } else {
-          await fetch(`${SUPABASE_URL}/rest/v1/users`, {
-            method: "POST",
-            headers: customHeaders,
-            body: JSON.stringify(payloadUsers)
-          });
+          const createUser = await fetch(
+            `${SUPABASE_URL}/rest/v1/users`, {
+              method: "POST",
+              headers: getSupabaseHeaders({ Prefer: "return=representation" }),
+              body: JSON.stringify(payloadUsers)
+            }
+          );
+          if (!createUser.ok) throw new Error(`Erro ao criar user: ${createUser.status}`);
+          await safeJson(createUser);
         }
-        alert("✅ Operação realizada com sucesso!");
+        document.querySelector('.window-bottom-bar b').textContent =
+          new Date(payloadRegElems.last_updated).toLocaleString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
         document.getElementById("editWindow").style.display = "none";
         loadElementsTable();
       } catch (err) {
-        console.error("Erro fatal:", err);
-        alert("❌ Erro ao gravar dados. Verifique se tem permissões de Administrador.");
+        console.error("Erro geral ao gravar registro:", err);
+        alert("Erro ao gravar registro.");
       }
     });
     /* ================= GENERATE ACCESS CHECKBOXES ================= */
@@ -391,8 +410,7 @@
           if (siblingBtn) siblingBtn.textContent = "+";
         }
       });
-    }
-    
+    }    
     function closeAllCheckboxContainers() {
       document.querySelectorAll(".access-checkbox-container > div[style*='flex-direction: column']").forEach(container => {
         if (container.style.marginLeft === "20px") {
@@ -402,8 +420,7 @@
       document.querySelectorAll(".access-checkbox-container button").forEach(btn => {
         btn.textContent = "+";
       });
-    }
-    
+    }    
     function createCheckbox(option) {
       const container = document.createElement("div");
       container.style.display = "flex";
@@ -460,8 +477,7 @@
           container.appendChild(labelEl);
         }
       return container;
-    }
-    
+    }    
     function filterAccessOptions(options, allowedModules) {
       if (!options || options.length === 0) {
         return [];
@@ -477,7 +493,7 @@
         acc.push(filteredOption);
         return acc;
       }, []);
-    }
+    }    
     function generateAccessCheckboxes() {
       const container = document.getElementById("access-container");
       if (!container) return;
@@ -523,12 +539,3 @@
         }
       }
     }
-
-
-
-
-
-
-
-
-

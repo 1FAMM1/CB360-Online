@@ -132,7 +132,7 @@
     async function loadUserLogin(fullName, corpOperNr) {
       if (!fullName || !corpOperNr) return null;
       const encodedFullName = encodeURIComponent(fullName);
-      const url = `${SUPABASE_URL}/rest/v1/users?select=username,password,user_role&full_name=eq.${encodedFullName}&corp_oper_nr=eq.${corpOperNr}`;
+      const url = `${SUPABASE_URL}/rest/v1/reg_elems?select=username,password,user_role&full_name=eq.${encodedFullName}&corp_oper_nr=eq.${corpOperNr}`;
       const response = await fetch(url, {
         headers: getSupabaseHeaders()
       });
@@ -539,3 +539,4 @@
         }
       }
     }
+

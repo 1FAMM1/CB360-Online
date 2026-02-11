@@ -315,9 +315,9 @@
                                nif: document.getElementById("win_nif").value,
                                nib: document.getElementById("win_nib").value, elem_state: document.getElementById("win_state").value === "Ativo",
                                acess: Array.from(document.querySelectorAll('.access-checkbox:checked')).map(cb => cb.value).join(", "),
-                               last_updated: new Date().toISOString(), corp_oper_nr: corpOperNr};
+                               last_updated: new Date().toISOString(), corp_oper_nr: corpOperNr, user_role: mapUserRole()};
       const payloadUsers = {username: document.getElementById("win_user_name_main").value, password: document.getElementById("win_password_main").value,
-                            full_name: document.getElementById("win_full_name").value, patent: document.getElementById("win_patent").value, corp_oper_nr: corpOperNr, user_role: mapUserRole()};
+                            full_name: document.getElementById("win_full_name").value, patent: document.getElementById("win_patent").value, corp_oper_nr: corpOperNr};
       try {
         const checkFirefighter = await fetch(
           `${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${n_intValue}&corp_oper_nr=eq.${corpOperNr}`, {
@@ -539,6 +539,7 @@
         }
       }
     }
+
 
 
 

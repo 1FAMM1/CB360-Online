@@ -244,50 +244,87 @@
     }
 
     async function openEditWindow(row) {
-      ["win_n_int","win_n_file","win_patent","win_patent_abv","win_abv_name","win_full_name","win_MP","win_TAS","win_section", "win_nif", "win_niss", "win_nib", "win_type"].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = row[id.replace("win_", "")] ?? "";
-      });
-      const stateSelect = document.getElementById("win_state");
-      if (stateSelect) {
-        stateSelect.value = row.elem_state === true ? "Ativo" : row.elem_state === false ? "Inativo" : "";
-      }
-      mapPatentToAbv();
-      const userAccesses = row.acess ? row.acess.split(",").map(a => a.trim()) : [];
-      document.querySelectorAll('.access-checkbox').forEach(cb => {
-        cb.checked = userAccesses.includes(cb.value);
-      });
-      currentEditId = row.id;
-      document.getElementById("editWindow").style.display = "flex";
-      document.getElementById("windowTitle").textContent = "Editar Registo";
-      document.getElementById("win_user_name_main").value = "";
-      document.getElementById("win_password_main").value = "";
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
-      try {
-        const userLogin = await loadUserLogin(row.full_name, corpOperNr);
-        if (userLogin) {
-          document.getElementById("win_user_name_main").value = userLogin.username ?? "";
-          document.getElementById("win_password_main").value = userLogin.password ?? "";
-          if (userLogin.user_role) {
-      const roleMap = {
-        admin: "Administrador",
-        subadmin: "Sub-Administrador",
-        user: "Utilizador"
-      };
-      document.getElementById("win_type").value = roleMap[userLogin.user_role] || "";
+  // 1) Preencher campos que vêm de reg_elems
+  [
+    "win_n_int",
+    "win_n_file",
+    "win_patent",
+    "win_patent_abv",
+    "win_abv_name",
+    "win_full_name",
+    "win_MP",
+    "win_TAS",
+    "win_section",
+    "win_nif",
+    "win_niss",
+    "win_nib"
+  ].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = row[id.replace("win_", "")] ?? "";
+  });
+
+  // 2) Preencher o select do tipo (user_role vem de reg_elems)
+  const roleMap = {
+    admin: "Administrador",
+    subadmin: "Sub-Administrador",
+    user: "Utilizador"
+  };
+  const typeSelect = document.getElementById("win_type");
+  if (typeSelect) typeSelect.value = roleMap[row.user_role] || "";
+
+  // 3) Estado
+  const stateSelect = document.getElementById("win_state");
+  if (stateSelect) {
+    stateSelect.value =
+      row.elem_state === true ? "Ativo" :
+      row.elem_state === false ? "Inativo" : "";
+  }
+
+  mapPatentToAbv();
+
+  // 4) Acessos (checkboxes)
+  const userAccesses = row.acess ? row.acess.split(",").map(a => a.trim()) : [];
+  document.querySelectorAll(".access-checkbox").forEach(cb => {
+    cb.checked = userAccesses.includes(cb.value);
+  });
+
+  // 5) Abrir janela
+  currentEditId = row.id;
+  document.getElementById("editWindow").style.display = "flex";
+  document.getElementById("windowTitle").textContent = "Editar Registo";
+
+  // 6) Limpar e carregar login (username/password vêm de users)
+  document.getElementById("win_user_name_main").value = "";
+  document.getElementById("win_password_main").value = "";
+
+  const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+  try {
+    const userLogin = await loadUserLogin(row.full_name, corpOperNr);
+    if (userLogin) {
+      document.getElementById("win_user_name_main").value = userLogin.username ?? "";
+      document.getElementById("win_password_main").value = userLogin.password ?? "";
     }
-        }
-      } catch (err) {
-        console.error("Erro ao carregar user login:", err);
-      }
-      if (row.last_updated) {
-        document.querySelector('.window-bottom-bar b').textContent =
-          new Date(row.last_updated).toLocaleString('pt-PT', {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit'});
-      } else {
-        document.querySelector('.window-bottom-bar b').textContent = "";
-      }
-      resetToFirstTab();
-    }
+  } catch (err) {
+    console.error("Erro ao carregar user login:", err);
+  }
+
+  // 7) Last updated
+  if (row.last_updated) {
+    document.querySelector(".window-bottom-bar b").textContent =
+      new Date(row.last_updated).toLocaleString("pt-PT", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      });
+  } else {
+    document.querySelector(".window-bottom-bar b").textContent = "";
+  }
+
+  resetToFirstTab();
+}
     /* ================= CLOSE WINDOW ================= */
     document.getElementById("closeWindow").addEventListener("click", () => {
       document.getElementById("editWindow").style.display = "none";
@@ -539,6 +576,7 @@
         }
       }
     }
+
 
 
 

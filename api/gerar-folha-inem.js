@@ -1,16 +1,13 @@
     import ExcelJS from "exceljs";
-import fetch from "node-fetch";
-
-export default async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
-  if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "POST") return res.status(405).json({ error: "Método não permitido" });
-
-  try {
-    const { year, month, employees, workingHours } = req.body;
+    import fetch from "node-fetch";
+    export default async function handler(req, res) {
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+        if (req.method === "OPTIONS") return res.status(200).end();
+        if (req.method !== "POST") return res.status(405).json({ error: "Método não permitido" });
+        try {
+            const {year, month, employees, workingHours } = req.body;
 
     if (!year || !month || !employees || workingHours === undefined || workingHours === null) {
       return res.status(400).json({ error: "Dados incompletos" });
@@ -67,7 +64,7 @@ export default async function handler(req, res) {
       cell.font = {
         ...base,
         ...(bold === null ? {} : { bold: !!bold }),
-        italic: !!italic, // vamos sempre passar false
+        italic: !!italic, // passamos sempre false
         color: { argb: dark ? "FFFFFFFF" : "FF000000" },
       };
     }
@@ -171,7 +168,7 @@ export default async function handler(req, res) {
         const v = ws.getCell(r, c).value;
         if (v === 1 || v === "1") return c;
       }
-      return 7; // fallback
+      return 7;
     }
     const DAY_START_COL = detectDayStartCol(worksheet);
 
@@ -227,15 +224,15 @@ export default async function handler(req, res) {
       }
     }
 
-    // ====== NOVO: Preencher por blocos (mantendo títulos do template) ======
-    // Blocos fixos do teu template:
+    // ====== Preencher por blocos (mantendo títulos do template) ======
+    // ✅ RANGES CORRIGIDOS (não apagam títulos nem texto legal)
     const GROUP_RANGES = {
-  INEM: { start: 13, end: 32 },
-  TDNU: { start: 34, end: 39 }, // ajusta se for 5; se for 6 usa 39
-  OPC:  { start: 41, end: 45 },
-  EP1:  { start: 47, end: 51 },
-  EP2:  { start: 53, end: 57 },
-};
+      INEM: { start: 13, end: 32 },  // 20 linhas
+      TDNU: { start: 34, end: 39 },  // 6 linhas (título: 33)
+      OPC:  { start: 41, end: 46 },  // 6 linhas (título: 40)
+      EP1:  { start: 48, end: 53 },  // 6 linhas (título: 47)
+      EP2:  { start: 55, end: 61 },  // 7 linhas (título: 54) — não tocar em 62+
+    };
 
     function normalizeTeam(t) {
       return String(t || "")
@@ -257,11 +254,20 @@ export default async function handler(req, res) {
       return null;
     }
 
+    // ✅ Evita lixo tipo "FO" virar funcionário no Excel
+    function isValidEmployee(emp) {
+      const n = String(emp?.n_int ?? "").trim();
+      const team = String(emp?.team ?? "").trim();
+      return /^\d+$/.test(n) && team.length > 0;
+    }
+
     const byGroup = { INEM: [], TDNU: [], OPC: [], EP1: [], EP2: [] };
-    (employees || []).forEach((emp) => {
-      const key = getGroupKey(emp.team);
-      if (key) byGroup[key].push(emp);
-    });
+    (employees || [])
+      .filter(isValidEmployee)
+      .forEach((emp) => {
+        const key = getGroupKey(emp.team);
+        if (key) byGroup[key].push(emp);
+      });
 
     function fillEmployeeAtRow(emp, excelRow) {
       const infoCols = [2, 3, 4, 5, 38];
@@ -283,7 +289,7 @@ export default async function handler(req, res) {
         setBorder(cell);
       });
 
-      // Turnos
+      // Turnos (cor final vem do frontend)
       for (let d = 0; d < daysInMonth; d++) {
         const colIndex = DAY_START_COL + d;
         const cell = worksheet.getCell(excelRow, colIndex);
@@ -332,10 +338,7 @@ export default async function handler(req, res) {
 
     // ===== Output =====
     const buffer = await workbook.xlsx.writeBuffer();
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    );
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     res.setHeader(
       "Content-Disposition",
       `attachment; filename="Folha_${MONTH_NAMES[month - 1]}_${year}.xlsx"`

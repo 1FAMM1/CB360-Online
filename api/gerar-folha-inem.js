@@ -232,9 +232,9 @@ export default async function handler(req, res) {
     const GROUP_RANGES = {
       INEM: { start: 13, end: 32 },  // 20 linhas
       TDNU: { start: 34, end: 39 },  // 6 linhas
-      OPC:  { start: 41, end: 46 },  // 6 linhas
-      EP1:  { start: 48, end: 53 },  // 6 linhas
-      EP2:  { start: 55, end: 61 },  // 7 linhas (até antes do texto na 62)
+      OPC:  { start: 41, end: 45 },  // ✅ 5 linhas
+  EP1:  { start: 47, end: 51 },  // ✅ 5 linhas
+  EP2:  { start: 53, end: 57 },   // 7 linhas (até antes do texto na 62)
     };
 
     function normalizeTeam(t) {

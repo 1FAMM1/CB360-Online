@@ -3,6 +3,38 @@
 import ExcelJS from 'exceljs';
 import fetch from 'node-fetch';
 
+// Função para converter RGB para ARGB hex
+function rgbToArgb(rgbString) {
+  if (!rgbString || rgbString === 'rgb(255, 255, 255)' || rgbString === '') {
+    return null; // Sem cor (branco ou vazio)
+  }
+  
+  const match = rgbString.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+  if (!match) return null;
+  
+  const r = parseInt(match[1]).toString(16).padStart(2, '0');
+  const g = parseInt(match[2]).toString(16).padStart(2, '0');
+  const b = parseInt(match[3]).toString(16).padStart(2, '0');
+  
+  return 'FF' + r.toUpperCase() + g.toUpperCase() + b.toUpperCase();
+}
+
+// Calcular se o texto deve ser preto ou branco baseado no brilho do fundo
+function getTextColor(argbBg) {
+  if (!argbBg || argbBg.length < 8) return 'FF000000';
+  
+  // Pegar RGB (ignorar alpha)
+  const r = parseInt(argbBg.substring(2, 4), 16);
+  const g = parseInt(argbBg.substring(4, 6), 16);
+  const b = parseInt(argbBg.substring(6, 8), 16);
+  
+  // Calcular brilho (luminosidade)
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+  
+  // Se fundo claro -> texto preto, se escuro -> texto branco
+  return brightness > 128 ? 'FF000000' : 'FFFFFFFF';
+}
+
 export default async function handler(req, res) {
   // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -73,29 +105,12 @@ export default async function handler(req, res) {
 
     // 6. Preencher funcionários
     const maxEmployees = Math.min(employees.length, 20);
-    
-    const colorMap = {
-      "D": { bg: "FFFF00", color: "000000" },
-      "N": { bg: "00008B", color: "FFFFFF" },
-      "M": { bg: "D3D3D3", color: "000000" },
-      "FR": { bg: "FFA500", color: "000000" },
-      "FO": { bg: "008000", color: "FFFFFF" },
-      "FE": { bg: "00FFFF", color: "000000" },
-      "BX": { bg: "FF0000", color: "FFFFFF" },
-      "LC": { bg: "FF0000", color: "FFFFFF" },
-      "LN": { bg: "FF0000", color: "FFFFFF" },
-      "LP": { bg: "FF0000", color: "FFFFFF" },
-      "FI": { bg: "FF0000", color: "FFFFFF" },
-      "FJ": { bg: "FF0000", color: "FFFFFF" },
-      "FOR": { bg: "808080", color: "FFFFFF" },
-      "DP": { bg: "000000", color: "FFFFFF" }
-    };
 
     for (let idx = 0; idx < maxEmployees; idx++) {
       const emp = employees[idx];
       const excelRow = 13 + idx;
 
-      // Dados básicos - LIMPAR qualquer formatação
+      // Dados básicos - SEM cores
       const cellB = worksheet.getCell(excelRow, 2);
       cellB.value = emp.n_int;
       cellB.fill = null;
@@ -121,27 +136,32 @@ export default async function handler(req, res) {
       cellAL.fill = null;
       cellAL.font = { bold: false, color: { argb: 'FF000000' } };
 
-      // Turnos - APENAS colunas G-AK (7-37)
+      // Turnos - COM cores do frontend
       for (let d = 0; d < daysInMonth; d++) {
         const turno = emp.shifts[d] || "";
+        const colorRgb = emp.colors ? emp.colors[d] : "";
         const colIndex = 7 + d;
         
         const cell = worksheet.getCell(excelRow, colIndex);
         cell.value = turno;
         
-        // Aplicar cores APENAS se turno existir no mapa
-        if (turno && colorMap[turno]) {
-          const color = colorMap[turno];
-          
+        // Converter cor RGB do frontend para ARGB do Excel
+        const argbColor = rgbToArgb(colorRgb);
+        
+        if (argbColor) {
+          // Aplicar cor de fundo
           cell.fill = {
             type: 'pattern',
             pattern: 'solid',
-            fgColor: { argb: 'FF' + color.bg }
+            fgColor: { argb: argbColor }
           };
+          
+          // Calcular cor do texto (preto ou branco)
+          const textColor = getTextColor(argbColor);
           
           cell.font = {
             bold: true,
-            color: { argb: 'FF' + color.color }
+            color: { argb: textColor }
           };
           
           cell.alignment = { 
@@ -149,9 +169,13 @@ export default async function handler(req, res) {
             vertical: 'middle' 
           };
         } else {
-          // Limpar formatação se não tiver turno
+          // Sem cor - limpar formatação
           cell.fill = null;
           cell.font = { bold: false, color: { argb: 'FF000000' } };
+          cell.alignment = { 
+            horizontal: 'center', 
+            vertical: 'middle' 
+          };
         }
       }
     }

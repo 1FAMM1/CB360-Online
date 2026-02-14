@@ -17,39 +17,37 @@ export default async function handler(req, res) {
     await workbook.xlsx.load(await templateResponse.arrayBuffer());
     const worksheet = workbook.worksheets[0];
 
-    // Preenchimento básico
-    worksheet.getCell('B7').value = `FEVEREIRO ${year}`; // Exemplo simplificado
-    worksheet.getCell('B68').value = workingHours;
-
     employees.forEach((emp, idx) => {
       const excelRow = 13 + idx;
       
-      // Escrever dados (SEM cor de fundo aqui para as primeiras colunas ficarem limpas)
-      worksheet.getCell(excelRow, 2).value = emp.n_int;
-      worksheet.getCell(excelRow, 3).value = emp.abv_name;
-      worksheet.getCell(excelRow, 4).value = emp.function;
-      worksheet.getCell(excelRow, 5).value = emp.team;
-      worksheet.getCell(excelRow, 38).value = emp.total;
+      // 1. Dados Básicos (NI, Nome, etc) - Garantir que fiquem SEM COR de fundo
+      const colsInfo = [2, 3, 4, 5, 38];
+      colsInfo.forEach(col => {
+        const cell = worksheet.getCell(excelRow, col);
+        cell.value = (col === 38) ? emp.total : (col === 2 ? emp.n_int : col === 3 ? emp.abv_name : col === 4 ? emp.function : emp.team);
+        cell.fill = { type: 'none' }; // Remove cor do template
+        cell.font = { color: { argb: 'FF000000' }, bold: false };
+      });
 
-      // Aplicar Turnos e Cores INDIVIDUAIS
+      // 2. Turnos e Cores Dinâmicas
       emp.shifts.forEach((turno, dIdx) => {
-        const colIndex = 7 + dIdx; // Começa na coluna G
+        const colIndex = 7 + dIdx;
         const cell = worksheet.getCell(excelRow, colIndex);
-        const color = emp.colors[dIdx];
+        const hexColor = emp.colors[dIdx];
 
         cell.value = turno;
         cell.alignment = { horizontal: 'center', vertical: 'middle' };
 
-        if (color && color !== "FFFFFF") {
+        // Só pinta se a cor não for branca (FFFFFF)
+        if (hexColor && hexColor !== "FFFFFF") {
           cell.fill = {
             type: 'pattern',
             pattern: 'solid',
-            fgColor: { argb: 'FF' + color }
+            fgColor: { argb: 'FF' + hexColor }
           };
-          // Borda fina para separar os dias coloridos
-          cell.border = {
-            top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}
-          };
+          cell.font = { bold: true, color: { argb: 'FF000000' } };
+        } else {
+          cell.fill = { type: 'none' }; // Limpa a cor se for branco/folga
         }
       });
     });

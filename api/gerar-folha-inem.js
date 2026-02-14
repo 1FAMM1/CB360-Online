@@ -9,78 +9,49 @@ export default async function handler(req, res) {
     if (req.method === 'OPTIONS') return res.status(200).end();
 
     try {
-        const { year, month, employees, workingHours } = req.body;
-        const MONTH_NAMES = ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"];
-        const WEEKDAY_NAMES = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-
-        const templateUrl = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/employees_template.xlsx";
-        const templateResponse = await fetch(templateUrl);
+        const { year, month, employees } = req.body;
         const workbook = new ExcelJS.Workbook();
+        const templateResponse = await fetch("https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/employees_template.xlsx");
         await workbook.xlsx.load(await templateResponse.arrayBuffer());
         const worksheet = workbook.worksheets[0];
 
-        // Cabeçalhos
-        worksheet.getCell('B7').value = `${MONTH_NAMES[month - 1]} ${year}`;
-        worksheet.getCell('B68').value = workingHours;
-
-        const daysInMonth = new Date(year, month, 0).getDate();
-
-        // Datas e Dias da Semana
-        for (let d = 1; d <= 31; d++) {
-            const colIndex = 6 + d;
-            if (d <= daysInMonth) {
-                const date = new Date(year, month - 1, d, 12, 0, 0);
-                worksheet.getCell(10, colIndex).value = WEEKDAY_NAMES[date.getDay()];
-                worksheet.getCell(11, colIndex).value = d;
-            } else {
-                worksheet.getCell(10, colIndex).value = "";
-                worksheet.getCell(11, colIndex).value = "";
-            }
-        }
-
-        // Preenchimento de Funcionários
         employees.forEach((emp, idx) => {
-            const excelRow = 13 + idx;
-            if (idx >= 20) return;
-
-            // ✨ CORREÇÃO: Forçar colunas NI, Nome, Função e Equipa a ficarem BRANCAS (sem cor de turno)
-            [2, 3, 4, 5, 38].forEach(col => {
+            const excelRow = 13 + idx; // Linha 13, 14, 15...
+            
+            // Preencher dados das colunas A-E (Sempre limpo/branco)
+            const infoCols = [2, 3, 4, 5, 38];
+            infoCols.forEach(col => {
                 const cell = worksheet.getCell(excelRow, col);
+                cell.value = (col === 2) ? emp.n_int : (col === 3) ? emp.abv_name : (col === 4) ? emp.function : (col === 5) ? emp.team : emp.total;
                 cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFFFF' } };
-                cell.font = { color: { argb: 'FF000000' }, bold: false };
-                
-                if (col === 2) cell.value = emp.n_int;
-                if (col === 3) cell.value = emp.abv_name;
-                if (col === 4) cell.value = emp.function;
-                if (col === 5) cell.value = emp.team;
-                if (col === 38) cell.value = emp.total;
             });
 
-            // Turnos com as cores enviadas
+            // ✨ APLICAÇÃO CELULAR: Mapeia cada cor do site para a célula do Excel
             emp.shifts.forEach((turno, dIdx) => {
-                const colIndex = 7 + dIdx;
+                const colIndex = 7 + dIdx; // Coluna G(7), H(8)...
                 const cell = worksheet.getCell(excelRow, colIndex);
-                const hexColor = emp.colors[dIdx] || "FFFFFF";
+                const hexColor = emp.cellColors[dIdx] || "FFFFFF";
 
                 cell.value = turno;
                 cell.alignment = { horizontal: 'center', vertical: 'middle' };
 
-                // Aplica a cor do turno apenas se não for branca
-                if (hexColor !== "FFFFFF") {
-                    cell.fill = {
-                        type: 'pattern',
-                        pattern: 'solid',
-                        fgColor: { argb: 'FF' + hexColor }
-                    };
-                    // Texto branco para turnos escuros (ex: Azul Noite)
-                    const isDark = (hexColor === "00008B" || hexColor === "0000FF");
-                    cell.font = { bold: true, color: { argb: isDark ? 'FFFFFFFF' : 'FF000000' } };
-                } else {
-                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFFFF' } };
-                }
+                // Aplica a cor que veio do site para ESTA célula específica
+                cell.fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FF' + hexColor }
+                };
 
+                // Define a borda para manter a grelha
                 cell.border = {
                     top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}
+                };
+
+                // Se a cor for muito escura (como o azul do motorista), coloca texto branco
+                const isDark = (hexColor === "00008B" || hexColor === "0000FF");
+                cell.font = { 
+                    bold: true, 
+                    color: { argb: isDark ? 'FFFFFFFF' : 'FF000000' } 
                 };
             });
         });
@@ -88,7 +59,6 @@ export default async function handler(req, res) {
         const buffer = await workbook.xlsx.writeBuffer();
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.send(Buffer.from(buffer));
-
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

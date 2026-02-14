@@ -230,12 +230,12 @@ export default async function handler(req, res) {
     // ====== NOVO: Preencher por blocos (mantendo títulos do template) ======
     // Blocos fixos do teu template:
     const GROUP_RANGES = {
-      INEM: { start: 13, end: 32 },  // 20 linhas
-      TDNU: { start: 34, end: 39 },  // 6 linhas
-      OPC:  { start: 41, end: 45 },  // ✅ 5 linhas
-  EP1:  { start: 47, end: 51 },  // ✅ 5 linhas
-  EP2:  { start: 53, end: 57 },   // 7 linhas (até antes do texto na 62)
-    };
+  INEM: { start: 13, end: 32 },
+  TDNU: { start: 34, end: 39 }, // ajusta se for 5; se for 6 usa 39
+  OPC:  { start: 41, end: 45 },
+  EP1:  { start: 47, end: 51 },
+  EP2:  { start: 53, end: 57 },
+};
 
     function normalizeTeam(t) {
       return String(t || "")

@@ -4,7 +4,7 @@ import ExcelJS from 'exceljs';
 import fetch from 'node-fetch';
 
 export default async function handler(req, res) {
-  // ✨ ADICIONAR CORS
+  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -80,52 +80,63 @@ export default async function handler(req, res) {
       const emp = employees[idx];
       const excelRow = 13 + idx;
 
-      // Dados básicos
+      // Dados básicos (SEM CORES)
       worksheet.getCell(excelRow, 2).value = emp.n_int;        // B
       worksheet.getCell(excelRow, 3).value = emp.abv_name;     // C
       worksheet.getCell(excelRow, 4).value = emp.function;     // D
       worksheet.getCell(excelRow, 5).value = emp.team;         // E
       worksheet.getCell(excelRow, 38).value = emp.total;       // AL
 
-      // Turnos (G-AK) = colunas 7-37
+      // Turnos (G-AK) = colunas 7-37 - SÓ AQUI TEM CORES
       for (let d = 0; d < emp.shifts.length && d < daysInMonth; d++) {
         const turno = emp.shifts[d];
+        if (!turno) continue; // Pular dias vazios
+        
         const colIndex = 7 + d; // G=7, H=8...
 
         const excelCell = worksheet.getCell(excelRow, colIndex);
         excelCell.value = turno;
 
-        // Aplicar cores
+        // Aplicar cores APENAS aos turnos
         const colorMap = {
-  "D": { bg: "FFFFFF00", color: "FF000000" },   // Amarelo
-  "N": { bg: "FF00008B", color: "FFFFFFFF" },   // Azul escuro
-  "M": { bg: "FFD3D3D3", color: "FF000000" },   // Cinza claro
-  "FR": { bg: "FFFFA500", color: "FF000000" },  // Laranja
-  "FO": { bg: "FF008000", color: "FFFFFFFF" },  // Verde
-  "FE": { bg: "FF00FFFF", color: "FF000000" },  // Cyan
-  "BX": { bg: "FFFF0000", color: "FFFFFFFF" },  // Vermelho
-  "LC": { bg: "FFFF0000", color: "FFFFFFFF" },  // Vermelho
-  "LN": { bg: "FFFF0000", color: "FFFFFFFF" },  // Vermelho
-  "LP": { bg: "FFFF0000", color: "FFFFFFFF" },  // Vermelho
-  "FI": { bg: "FFFF0000", color: "FFFFFFFF" },  // Vermelho
-  "FJ": { bg: "FFFF0000", color: "FFFFFFFF" },  // Vermelho
-  "FOR": { bg: "FF808080", color: "FFFFFFFF" }, // Cinza
-  "DP": { bg: "FF000000", color: "FFFFFFFF" }   // Preto
-};
+          "D": { bg: "FFFF00", color: "000000" },
+          "N": { bg: "00008B", color: "FFFFFF" },
+          "M": { bg: "D3D3D3", color: "000000" },
+          "FR": { bg: "FFA500", color: "000000" },
+          "FO": { bg: "008000", color: "FFFFFF" },
+          "FE": { bg: "00FFFF", color: "000000" },
+          "BX": { bg: "FF0000", color: "FFFFFF" },
+          "LC": { bg: "FF0000", color: "FFFFFF" },
+          "LN": { bg: "FF0000", color: "FFFFFF" },
+          "LP": { bg: "FF0000", color: "FFFFFF" },
+          "FI": { bg: "FF0000", color: "FFFFFF" },
+          "FJ": { bg: "FF0000", color: "FFFFFF" },
+          "FOR": { bg: "808080", color: "FFFFFF" },
+          "DP": { bg: "000000", color: "FFFFFF" }
+        };
 
-if (turno && colorMap[turno]) {
-  const color = colorMap[turno];
-  excelCell.fill = {
-    type: 'pattern',
-    pattern: 'solid',
-    fgColor: { argb: color.bg }  // ← Removi o 'FF' + 
-  };
-  excelCell.font = {
-    bold: true,
-    color: { argb: color.color }  // ← Removi o 'FF' + 
-  };
-  excelCell.alignment = { horizontal: 'center', vertical: 'middle' };
-}
+        if (colorMap[turno]) {
+          const color = colorMap[turno];
+          
+          const bgArgb = color.bg.length === 6 ? 'FF' + color.bg : color.bg;
+          const fontArgb = color.color.length === 6 ? 'FF' + color.color : color.color;
+          
+          excelCell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: bgArgb }
+          };
+          
+          excelCell.font = {
+            bold: true,
+            color: { argb: fontArgb }
+          };
+          
+          excelCell.alignment = { 
+            horizontal: 'center', 
+            vertical: 'middle' 
+          };
+        }
       }
     }
 

@@ -97,35 +97,35 @@ export default async function handler(req, res) {
 
         // Aplicar cores
         const colorMap = {
-          "D": { bg: "FFFF00", color: "000000" },
-          "N": { bg: "00008B", color: "FFFFFF" },
-          "M": { bg: "D3D3D3", color: "000000" },
-          "FR": { bg: "FFA500", color: "000000" },
-          "FO": { bg: "008000", color: "FFFFFF" },
-          "FE": { bg: "00FFFF", color: "000000" },
-          "BX": { bg: "FF0000", color: "FFFFFF" },
-          "LC": { bg: "FF0000", color: "FFFFFF" },
-          "LN": { bg: "FF0000", color: "FFFFFF" },
-          "LP": { bg: "FF0000", color: "FFFFFF" },
-          "FI": { bg: "FF0000", color: "FFFFFF" },
-          "FJ": { bg: "FF0000", color: "FFFFFF" },
-          "FOR": { bg: "808080", color: "FFFFFF" },
-          "DP": { bg: "000000", color: "FFFFFF" }
-        };
+  "D": { bg: "FFFFFF00", color: "FF000000" },   // Amarelo
+  "N": { bg: "FF00008B", color: "FFFFFFFF" },   // Azul escuro
+  "M": { bg: "FFD3D3D3", color: "FF000000" },   // Cinza claro
+  "FR": { bg: "FFFFA500", color: "FF000000" },  // Laranja
+  "FO": { bg: "FF008000", color: "FFFFFFFF" },  // Verde
+  "FE": { bg: "FF00FFFF", color: "FF000000" },  // Cyan
+  "BX": { bg: "FFFF0000", color: "FFFFFFFF" },  // Vermelho
+  "LC": { bg: "FFFF0000", color: "FFFFFFFF" },  // Vermelho
+  "LN": { bg: "FFFF0000", color: "FFFFFFFF" },  // Vermelho
+  "LP": { bg: "FFFF0000", color: "FFFFFFFF" },  // Vermelho
+  "FI": { bg: "FFFF0000", color: "FFFFFFFF" },  // Vermelho
+  "FJ": { bg: "FFFF0000", color: "FFFFFFFF" },  // Vermelho
+  "FOR": { bg: "FF808080", color: "FFFFFFFF" }, // Cinza
+  "DP": { bg: "FF000000", color: "FFFFFFFF" }   // Preto
+};
 
-        if (turno && colorMap[turno]) {
-          const color = colorMap[turno];
-          excelCell.fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: { argb: 'FF' + color.bg }
-          };
-          excelCell.font = {
-            bold: true,
-            color: { argb: 'FF' + color.color }
-          };
-          excelCell.alignment = { horizontal: 'center', vertical: 'middle' };
-        }
+if (turno && colorMap[turno]) {
+  const color = colorMap[turno];
+  excelCell.fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: color.bg }  // ← Removi o 'FF' + 
+  };
+  excelCell.font = {
+    bold: true,
+    color: { argb: color.color }  // ← Removi o 'FF' + 
+  };
+  excelCell.alignment = { horizontal: 'center', vertical: 'middle' };
+}
       }
     }
 

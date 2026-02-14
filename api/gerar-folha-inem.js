@@ -17,37 +17,53 @@ export default async function handler(req, res) {
     await workbook.xlsx.load(await templateResponse.arrayBuffer());
     const worksheet = workbook.worksheets[0];
 
+    // Mapeamento de cores baseado no texto do turno (ajusta os códigos Hex se precisares)
+    const SHIFT_COLORS = {
+      'D': 'FFFF00',  // Amarelo
+      'N': '0000FF',  // Azul (podes usar '1E90FF' para azul mais claro)
+      'FO': '00FF00', // Verde
+      'P': 'FF0000',  // Vermelho
+    };
+
     employees.forEach((emp, idx) => {
       const excelRow = 13 + idx;
       
-      // 1. Dados Básicos (NI, Nome, etc) - Garantir que fiquem SEM COR de fundo
-      const colsInfo = [2, 3, 4, 5, 38];
-      colsInfo.forEach(col => {
+      // Limpar e preencher dados básicos (NI, Nome, Função, Equipa)
+      [2, 3, 4, 5, 38].forEach(col => {
         const cell = worksheet.getCell(excelRow, col);
-        cell.value = (col === 38) ? emp.total : (col === 2 ? emp.n_int : col === 3 ? emp.abv_name : col === 4 ? emp.function : emp.team);
-        cell.fill = { type: 'none' }; // Remove cor do template
+        cell.fill = { type: 'none' }; // Garante que fica branco
         cell.font = { color: { argb: 'FF000000' }, bold: false };
+        
+        if (col === 2) cell.value = emp.n_int;
+        if (col === 3) cell.value = emp.abv_name;
+        if (col === 4) cell.value = emp.function;
+        if (col === 5) cell.value = emp.team;
+        if (col === 38) cell.value = emp.total;
       });
 
-      // 2. Turnos e Cores Dinâmicas
+      // Preencher turnos com cores inteligentes
       emp.shifts.forEach((turno, dIdx) => {
         const colIndex = 7 + dIdx;
         const cell = worksheet.getCell(excelRow, colIndex);
-        const hexColor = emp.colors[dIdx];
-
         cell.value = turno;
         cell.alignment = { horizontal: 'center', vertical: 'middle' };
 
-        // Só pinta se a cor não for branca (FFFFFF)
-        if (hexColor && hexColor !== "FFFFFF") {
+        const color = SHIFT_COLORS[turno];
+
+        if (color) {
           cell.fill = {
             type: 'pattern',
             pattern: 'solid',
-            fgColor: { argb: 'FF' + hexColor }
+            fgColor: { argb: 'FF' + color }
           };
-          cell.font = { bold: true, color: { argb: 'FF000000' } };
+          // Se o fundo for Azul (N), colocar o texto em Branco para ler melhor
+          cell.font = { 
+            bold: true, 
+            color: { argb: turno === 'N' ? 'FFFFFFFF' : 'FF000000' } 
+          };
         } else {
-          cell.fill = { type: 'none' }; // Limpa a cor se for branco/folga
+          cell.fill = { type: 'none' };
+          cell.font = { color: { argb: 'FF000000' } };
         }
       });
     });

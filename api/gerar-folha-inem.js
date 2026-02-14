@@ -24,10 +24,11 @@ export default async function handler(req, res) {
     ];
     const WEEKDAY_NAMES = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
-    // Cores (iguais às tuas no frontend)
+    // Cores (iguais às do teu frontend)
     const HOLIDAY_COLOR = "F7C6C7";           // obrigatório
     const HOLIDAY_OPTIONAL_COLOR = "D6ECFF";  // facultativo
-    const WEEKEND_COLOR = "F9E0B0";           // fim-de-semana (se quiseres outra, troca aqui)
+    const WEEKEND_COLOR = "F9E0B0";           // fim-de-semana
+    const DRIVER_BG = "FF69B4";               // motorista (rosa)
 
     // ===== Helpers (fix style shared do template) =====
     function breakStyle(cell) {
@@ -61,14 +62,16 @@ export default async function handler(req, res) {
       return luminance < 150;
     }
 
-    function setFont(cell, { bold = false, bgHex = "FFFFFF" } = {}) {
+    // ✅ Mantém o tipo de letra do TEMPLATE:
+    // só altera bold/italic/cor, preservando name/size/etc.
+    function setFontKeepTemplate(cell, { bold = null, italic = false, bgHex = "FFFFFF" } = {}) {
       breakStyle(cell);
+      const base = cell.font || {};
       const dark = isDarkHex(bgHex);
       cell.font = {
-        name: "Calibri",
-        size: 11,
-        bold: !!bold,
-        italic: false, // ✅ garante que não fica em itálico
+        ...base,
+        ...(bold === null ? {} : { bold: !!bold }),
+        italic: !!italic, // nós vamos sempre passar false
         color: { argb: dark ? "FFFFFFFF" : "FF000000" },
       };
     }
@@ -95,12 +98,6 @@ export default async function handler(req, res) {
       d.setDate(d.getDate() + days);
       return d;
     }
-    function toLocalYMD(date) {
-      const y = date.getFullYear();
-      const m = String(date.getMonth() + 1).padStart(2, "0");
-      const d = String(date.getDate()).padStart(2, "0");
-      return `${y}-${m}-${d}`;
-    }
     function getPortugalHolidays(y) {
       const fixed = [
         { month: 1, day: 1, name: "Ano Novo" },
@@ -116,7 +113,7 @@ export default async function handler(req, res) {
         { month: 12, day: 25, name: "Natal" },
       ];
 
-      // algoritmo da Páscoa (igual ao teu)
+      // algoritmo da Páscoa
       const a = y % 19;
       const b = Math.floor(y / 100);
       const c = y % 100;
@@ -174,16 +171,27 @@ export default async function handler(req, res) {
 
     const worksheet = workbook.worksheets[0];
 
+    // Detecta a coluna real onde começa o dia 1 (linha 11 do template)
+    function detectDayStartCol(ws) {
+      const r = 11;
+      for (let c = 1; c <= 150; c++) {
+        const v = ws.getCell(r, c).value;
+        if (v === 1 || v === "1") return c;
+      }
+      return 7; // fallback
+    }
+    const DAY_START_COL = detectDayStartCol(worksheet);
+
     // 2) Cabeçalho
     worksheet.getCell("B7").value = `${MONTH_NAMES[month - 1]} ${year}`;
     worksheet.getCell("B68").value = workingHours;
 
-    // 3) Dias + pintar cabeçalhos de fim-de-semana/feriado
+    // 3) Dias + pintar cabeçalhos de fim-de-semana/feriado (SEM comentários)
     const daysInMonth = new Date(year, month, 0).getDate();
     const holidayMap = getHolidayMapForMonth(year, month);
 
     for (let d = 1; d <= 31; d++) {
-      const colIndex = 6 + d; // igual ao teu template
+      const colIndex = DAY_START_COL + (d - 1); // ✅ alinha corretamente com o template
       const cellWeek = worksheet.getCell(10, colIndex);
       const cellDay = worksheet.getCell(11, colIndex);
 
@@ -198,14 +206,12 @@ export default async function handler(req, res) {
         cellWeek.value = weekday;
         cellDay.value = d;
 
-        // decidir cor do cabeçalho
+        // prioridade: feriado > fim-de-semana
         const holiday = holidayMap.get(d);
         let headerBg = null;
 
         if (holiday) {
           headerBg = holiday.optional ? HOLIDAY_OPTIONAL_COLOR : HOLIDAY_COLOR;
-          cellWeek.note = holiday.name; // opcional
-          cellDay.note = holiday.name;  // opcional
         } else if (weekdayIndex === 0 || weekdayIndex === 6) {
           headerBg = WEEKEND_COLOR;
         }
@@ -213,12 +219,12 @@ export default async function handler(req, res) {
         if (headerBg) {
           setFill(cellWeek, headerBg);
           setFill(cellDay, headerBg);
-          setFont(cellWeek, { bold: true, bgHex: headerBg });
-          setFont(cellDay, { bold: true, bgHex: headerBg });
+          setFontKeepTemplate(cellWeek, { bold: true, italic: false, bgHex: headerBg });
+          setFontKeepTemplate(cellDay, { bold: true, italic: false, bgHex: headerBg });
         } else {
-          // força fonte normal (sem itálico)
-          setFont(cellWeek, { bold: true, bgHex: "FFFFFF" });
-          setFont(cellDay, { bold: true, bgHex: "FFFFFF" });
+          // garante NÃO itálico
+          setFontKeepTemplate(cellWeek, { bold: true, italic: false, bgHex: "FFFFFF" });
+          setFontKeepTemplate(cellDay, { bold: true, italic: false, bgHex: "FFFFFF" });
         }
 
         setBorder(cellWeek);
@@ -226,9 +232,9 @@ export default async function handler(req, res) {
       } else {
         cellWeek.value = "";
         cellDay.value = "";
-        // mantém visual limpo
-        setFont(cellWeek, { bold: true, bgHex: "FFFFFF" });
-        setFont(cellDay, { bold: true, bgHex: "FFFFFF" });
+        // garante visual limpo e não itálico
+        setFontKeepTemplate(cellWeek, { bold: true, italic: false, bgHex: "FFFFFF" });
+        setFontKeepTemplate(cellDay, { bold: true, italic: false, bgHex: "FFFFFF" });
         setBorder(cellWeek);
         setBorder(cellDay);
       }
@@ -255,16 +261,18 @@ export default async function handler(req, res) {
           emp.total;
 
         setFill(cell, "FFFFFF");
-        setFont(cell, { bold: false, bgHex: "FFFFFF" });
+        // mantém fonte do template (só garante não itálico)
+        setFontKeepTemplate(cell, { bold: null, italic: false, bgHex: "FFFFFF" });
         setBorder(cell);
       });
 
-      // Turnos (G...)
+      // Turnos (começam na coluna do dia 1, mas aqui d é 0..daysInMonth-1)
       for (let d = 0; d < daysInMonth; d++) {
-        const colIndex = 7 + d;
+        const colIndex = DAY_START_COL + d; // ✅ alinhado
         const cell = worksheet.getCell(excelRow, colIndex);
 
         breakStyle(cell);
+
         const turno = (emp.shifts?.[d] || "").toString();
         cell.value = turno;
         cell.alignment = { horizontal: "center", vertical: "middle" };
@@ -274,14 +282,16 @@ export default async function handler(req, res) {
 
         // se vier drivers, força rosa motorista
         const isDriver = !!(emp.drivers && emp.drivers[d]);
-        if (isDriver) bg = "FF69B4";
+        if (isDriver) bg = DRIVER_BG;
 
         setFill(cell, bg);
         setBorder(cell);
-        setFont(cell, { bold: true, bgHex: bg });
+
+        // mantém fonte do template, só ajusta cor/bold e remove itálico
+        setFontKeepTemplate(cell, { bold: true, italic: false, bgHex: bg });
       }
 
-      // reforço final
+      // reforço final info cols brancas
       infoCols.forEach((col) => setFill(worksheet.getCell(excelRow, col), "FFFFFF"));
     }
 
@@ -293,7 +303,7 @@ export default async function handler(req, res) {
         breakStyle(cell);
         cell.value = "";
         setFill(cell, "FFFFFF");
-        setFont(cell, { bold: false, bgHex: "FFFFFF" });
+        setFontKeepTemplate(cell, { bold: null, italic: false, bgHex: "FFFFFF" });
         setBorder(cell);
       }
     }

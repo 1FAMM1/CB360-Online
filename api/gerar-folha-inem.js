@@ -22,13 +22,13 @@ export default async function handler(req, res) {
       "JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO",
       "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO",
     ];
-    const WEEKDAY_NAMES = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
+    const WEEKDAY_NAMES = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
-    // Cores (iguais às do teu frontend)
-    const HOLIDAY_COLOR = "F7C6C7";           // obrigatório
-    const HOLIDAY_OPTIONAL_COLOR = "D6ECFF";  // facultativo
-    const WEEKEND_COLOR = "F9E0B0";           // fim-de-semana
-    const DRIVER_BG = "FF69B4";               // motorista (rosa)
+    // (sem Páscoa / sem feriados no backend)
+    const WEEKEND_COLOR = "F9E0B0"; // cor do cabeçalho para sáb/dom (se quiseres)
+
+    const DRIVER_BG = "FF69B4"; // motorista (rosa)
+    const BORDER_COLOR = { argb: "FFBFBFBF" };
 
     // ===== Helpers (fix style shared do template) =====
     function breakStyle(cell) {
@@ -71,7 +71,7 @@ export default async function handler(req, res) {
       cell.font = {
         ...base,
         ...(bold === null ? {} : { bold: !!bold }),
-        italic: !!italic, // nós vamos sempre passar false
+        italic: !!italic, // nós passamos sempre false
         color: { argb: dark ? "FFFFFFFF" : "FF000000" },
       };
     }
@@ -79,84 +79,12 @@ export default async function handler(req, res) {
     // ✅ Bordas #BFBFBF
     function setBorder(cell) {
       breakStyle(cell);
-      const c = { argb: "FFBFBFBF" };
       cell.border = {
-        top: { style: "thin", color: c },
-        left: { style: "thin", color: c },
-        bottom: { style: "thin", color: c },
-        right: { style: "thin", color: c },
+        top: { style: "thin", color: BORDER_COLOR },
+        left: { style: "thin", color: BORDER_COLOR },
+        bottom: { style: "thin", color: BORDER_COLOR },
+        right: { style: "thin", color: BORDER_COLOR },
       };
-    }
-
-    // ===== Feriados PT (igual lógica do teu frontend) =====
-    function atNoonLocal(y, mIndex, d) {
-      return new Date(y, mIndex, d, 12, 0, 0, 0);
-    }
-    function addDays(baseDate, days) {
-      const d = new Date(baseDate);
-      d.setHours(12, 0, 0, 0);
-      d.setDate(d.getDate() + days);
-      return d;
-    }
-    function getPortugalHolidays(y) {
-      const fixed = [
-        { month: 1, day: 1, name: "Ano Novo" },
-        { month: 4, day: 25, name: "Dia da Liberdade" },
-        { month: 5, day: 1, name: "Dia do Trabalhador" },
-        { month: 6, day: 10, name: "Dia de Portugal" },
-        { month: 8, day: 15, name: "Assunção de Nossa Senhora" },
-        { month: 9, day: 7, name: "Dia da Cidade de Faro" },
-        { month: 10, day: 5, name: "Implantação da República" },
-        { month: 11, day: 1, name: "Todos os Santos" },
-        { month: 12, day: 1, name: "Restauração da Independência" },
-        { month: 12, day: 8, name: "Imaculada Conceição" },
-        { month: 12, day: 25, name: "Natal" },
-      ];
-
-      // algoritmo da Páscoa
-      const a = y % 19;
-      const b = Math.floor(y / 100);
-      const c = y % 100;
-      const d = Math.floor(b / 4);
-      const e = b % 4;
-      const f = Math.floor((b + 8) / 25);
-      const g = Math.floor((b - f + 1) / 3);
-      const h = (19 * a + b - d - g + 15) % 30;
-      const i = Math.floor(c / 4);
-      const k = c % 4;
-      const l = (32 + 2 * e + 2 * i - h - k) % 7;
-      const m = Math.floor((a + 11 * h + 22 * l) / 451);
-      const emonth = Math.floor((h + l - 7 * m + 114) / 31);
-      const eday = ((h + l - 7 * m + 114) % 31) + 1;
-
-      const easter = atNoonLocal(y, emonth - 1, eday);
-
-      const mobile = [
-        { date: addDays(easter, -47), name: "Carnaval", optional: true },
-        { date: addDays(easter, -2), name: "Sexta-feira Santa", optional: false },
-        { date: easter, name: "Páscoa", optional: false },
-        { date: addDays(easter, 60), name: "Corpo de Deus", optional: false },
-      ];
-
-      const fixedDates = fixed.map((x) => ({
-        date: atNoonLocal(y, x.month - 1, x.day),
-        name: x.name,
-        optional: false,
-      }));
-
-      return [...fixedDates, ...mobile];
-    }
-
-    function getHolidayMapForMonth(y, mo) {
-      const holidays = getPortugalHolidays(y);
-      const map = new Map(); // day -> {name, optional}
-      holidays.forEach((h) => {
-        const dt = h.date;
-        if (dt.getFullYear() === y && dt.getMonth() === mo - 1) {
-          map.set(dt.getDate(), { name: h.name, optional: !!h.optional });
-        }
-      });
-      return map;
     }
 
     // 1) Buscar template
@@ -186,12 +114,11 @@ export default async function handler(req, res) {
     worksheet.getCell("B7").value = `${MONTH_NAMES[month - 1]} ${year}`;
     worksheet.getCell("B68").value = workingHours;
 
-    // 3) Dias + pintar cabeçalhos de fim-de-semana/feriado (SEM comentários)
+    // 3) Dias do mês (cabeçalhos) — sem feriados no backend
     const daysInMonth = new Date(year, month, 0).getDate();
-    const holidayMap = getHolidayMapForMonth(year, month);
 
     for (let d = 1; d <= 31; d++) {
-      const colIndex = DAY_START_COL + (d - 1); // ✅ alinha corretamente com o template
+      const colIndex = DAY_START_COL + (d - 1);
       const cellWeek = worksheet.getCell(10, colIndex);
       const cellDay = worksheet.getCell(11, colIndex);
 
@@ -206,15 +133,9 @@ export default async function handler(req, res) {
         cellWeek.value = weekday;
         cellDay.value = d;
 
-        // prioridade: feriado > fim-de-semana
-        const holiday = holidayMap.get(d);
+        // Se quiseres a API a pintar sáb/dom no cabeçalho:
         let headerBg = null;
-
-        if (holiday) {
-          headerBg = holiday.optional ? HOLIDAY_OPTIONAL_COLOR : HOLIDAY_COLOR;
-        } else if (weekdayIndex === 0 || weekdayIndex === 6) {
-          headerBg = WEEKEND_COLOR;
-        }
+        if (weekdayIndex === 0 || weekdayIndex === 6) headerBg = WEEKEND_COLOR;
 
         if (headerBg) {
           setFill(cellWeek, headerBg);
@@ -222,7 +143,7 @@ export default async function handler(req, res) {
           setFontKeepTemplate(cellWeek, { bold: true, italic: false, bgHex: headerBg });
           setFontKeepTemplate(cellDay, { bold: true, italic: false, bgHex: headerBg });
         } else {
-          // garante NÃO itálico
+          // garante NÃO itálico (mantém fonte do template)
           setFontKeepTemplate(cellWeek, { bold: true, italic: false, bgHex: "FFFFFF" });
           setFontKeepTemplate(cellDay, { bold: true, italic: false, bgHex: "FFFFFF" });
         }
@@ -232,7 +153,6 @@ export default async function handler(req, res) {
       } else {
         cellWeek.value = "";
         cellDay.value = "";
-        // garante visual limpo e não itálico
         setFontKeepTemplate(cellWeek, { bold: true, italic: false, bgHex: "FFFFFF" });
         setFontKeepTemplate(cellDay, { bold: true, italic: false, bgHex: "FFFFFF" });
         setBorder(cellWeek);
@@ -261,14 +181,13 @@ export default async function handler(req, res) {
           emp.total;
 
         setFill(cell, "FFFFFF");
-        // mantém fonte do template (só garante não itálico)
         setFontKeepTemplate(cell, { bold: null, italic: false, bgHex: "FFFFFF" });
         setBorder(cell);
       });
 
-      // Turnos (começam na coluna do dia 1, mas aqui d é 0..daysInMonth-1)
+      // Turnos (coluna do dia 1 em diante)
       for (let d = 0; d < daysInMonth; d++) {
-        const colIndex = DAY_START_COL + d; // ✅ alinhado
+        const colIndex = DAY_START_COL + d;
         const cell = worksheet.getCell(excelRow, colIndex);
 
         breakStyle(cell);
@@ -277,7 +196,7 @@ export default async function handler(req, res) {
         cell.value = turno;
         cell.alignment = { horizontal: "center", vertical: "middle" };
 
-        // cor por célula do site
+        // cor final vem do frontend (inclui turnos/fds/feriados)
         let bg = normalizeHex6(emp.cellColors?.[d] || "FFFFFF");
 
         // se vier drivers, força rosa motorista
@@ -287,11 +206,11 @@ export default async function handler(req, res) {
         setFill(cell, bg);
         setBorder(cell);
 
-        // mantém fonte do template, só ajusta cor/bold e remove itálico
+        // mantém fonte do template, remove itálico, ajusta cor/bold
         setFontKeepTemplate(cell, { bold: true, italic: false, bgHex: bg });
       }
 
-      // reforço final info cols brancas
+      // reforço final: info cols brancas
       infoCols.forEach((col) => setFill(worksheet.getCell(excelRow, col), "FFFFFF"));
     }
 

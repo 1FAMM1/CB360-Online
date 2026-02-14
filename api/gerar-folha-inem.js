@@ -9,7 +9,6 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  // Handle preflight
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
@@ -32,7 +31,7 @@ export default async function handler(req, res) {
 
     const WEEKDAY_NAMES = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
-    // 1. Buscar template do GitHub
+    // 1. Buscar template
     const templateUrl = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/employees_template.xlsx";
     const templateResponse = await fetch(templateUrl);
     if (!templateResponse.ok) {
@@ -40,7 +39,7 @@ export default async function handler(req, res) {
     }
     const templateBuffer = await templateResponse.arrayBuffer();
 
-    // 2. Carregar template com ExcelJS
+    // 2. Carregar com ExcelJS
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(templateBuffer);
 
@@ -50,21 +49,20 @@ export default async function handler(req, res) {
 
     const worksheet = workbook.worksheets[0];
 
-    // 3. Preencher cabeçalho
+    // 3. Cabeçalho
     worksheet.getCell('B7').value = `${MONTH_NAMES[month - 1]} ${year}`;
     worksheet.getCell('B68').value = workingHours;
 
-    // 4. Calcular dias do mês
+    // 4. Dias do mês
     const daysInMonth = new Date(year, month, 0).getDate();
 
-    // 5. Preencher dias da semana e números (G10-AK10 e G11-AK11)
+    // 5. Dias da semana e números
     for (let d = 1; d <= 31; d++) {
-      const colIndex = 6 + d; // G=7, H=8... AK=37
+      const colIndex = 6 + d;
 
       if (d <= daysInMonth) {
         const date = new Date(year, month - 1, d, 12, 0, 0);
         const weekday = WEEKDAY_NAMES[date.getDay()];
-
         worksheet.getCell(10, colIndex).value = weekday;
         worksheet.getCell(11, colIndex).value = d;
       } else {
@@ -73,92 +71,107 @@ export default async function handler(req, res) {
       }
     }
 
-    // 6. Preencher dados dos funcionários (rows 13-32, máximo 20)
+    // 6. Preencher funcionários
     const maxEmployees = Math.min(employees.length, 20);
+    
+    const colorMap = {
+      "D": { bg: "FFFF00", color: "000000" },
+      "N": { bg: "00008B", color: "FFFFFF" },
+      "M": { bg: "D3D3D3", color: "000000" },
+      "FR": { bg: "FFA500", color: "000000" },
+      "FO": { bg: "008000", color: "FFFFFF" },
+      "FE": { bg: "00FFFF", color: "000000" },
+      "BX": { bg: "FF0000", color: "FFFFFF" },
+      "LC": { bg: "FF0000", color: "FFFFFF" },
+      "LN": { bg: "FF0000", color: "FFFFFF" },
+      "LP": { bg: "FF0000", color: "FFFFFF" },
+      "FI": { bg: "FF0000", color: "FFFFFF" },
+      "FJ": { bg: "FF0000", color: "FFFFFF" },
+      "FOR": { bg: "808080", color: "FFFFFF" },
+      "DP": { bg: "000000", color: "FFFFFF" }
+    };
 
     for (let idx = 0; idx < maxEmployees; idx++) {
       const emp = employees[idx];
       const excelRow = 13 + idx;
 
-      // Dados básicos (SEM CORES)
-      worksheet.getCell(excelRow, 2).value = emp.n_int;        // B
-      worksheet.getCell(excelRow, 3).value = emp.abv_name;     // C
-      worksheet.getCell(excelRow, 4).value = emp.function;     // D
-      worksheet.getCell(excelRow, 5).value = emp.team;         // E
-      worksheet.getCell(excelRow, 38).value = emp.total;       // AL
+      // Dados básicos - LIMPAR qualquer formatação
+      const cellB = worksheet.getCell(excelRow, 2);
+      cellB.value = emp.n_int;
+      cellB.fill = null;
+      cellB.font = { bold: false, color: { argb: 'FF000000' } };
+      
+      const cellC = worksheet.getCell(excelRow, 3);
+      cellC.value = emp.abv_name;
+      cellC.fill = null;
+      cellC.font = { bold: false, color: { argb: 'FF000000' } };
+      
+      const cellD = worksheet.getCell(excelRow, 4);
+      cellD.value = emp.function;
+      cellD.fill = null;
+      cellD.font = { bold: false, color: { argb: 'FF000000' } };
+      
+      const cellE = worksheet.getCell(excelRow, 5);
+      cellE.value = emp.team;
+      cellE.fill = null;
+      cellE.font = { bold: false, color: { argb: 'FF000000' } };
+      
+      const cellAL = worksheet.getCell(excelRow, 38);
+      cellAL.value = emp.total;
+      cellAL.fill = null;
+      cellAL.font = { bold: false, color: { argb: 'FF000000' } };
 
-      // Turnos (G-AK) = colunas 7-37 - SÓ AQUI TEM CORES
-      for (let d = 0; d < emp.shifts.length && d < daysInMonth; d++) {
-        const turno = emp.shifts[d];
-        if (!turno) continue; // Pular dias vazios
+      // Turnos - APENAS colunas G-AK (7-37)
+      for (let d = 0; d < daysInMonth; d++) {
+        const turno = emp.shifts[d] || "";
+        const colIndex = 7 + d;
         
-        const colIndex = 7 + d; // G=7, H=8...
-
-        const excelCell = worksheet.getCell(excelRow, colIndex);
-        excelCell.value = turno;
-
-        // Aplicar cores APENAS aos turnos
-        const colorMap = {
-          "D": { bg: "FFFF00", color: "000000" },
-          "N": { bg: "00008B", color: "FFFFFF" },
-          "M": { bg: "D3D3D3", color: "000000" },
-          "FR": { bg: "FFA500", color: "000000" },
-          "FO": { bg: "008000", color: "FFFFFF" },
-          "FE": { bg: "00FFFF", color: "000000" },
-          "BX": { bg: "FF0000", color: "FFFFFF" },
-          "LC": { bg: "FF0000", color: "FFFFFF" },
-          "LN": { bg: "FF0000", color: "FFFFFF" },
-          "LP": { bg: "FF0000", color: "FFFFFF" },
-          "FI": { bg: "FF0000", color: "FFFFFF" },
-          "FJ": { bg: "FF0000", color: "FFFFFF" },
-          "FOR": { bg: "808080", color: "FFFFFF" },
-          "DP": { bg: "000000", color: "FFFFFF" }
-        };
-
-        if (colorMap[turno]) {
+        const cell = worksheet.getCell(excelRow, colIndex);
+        cell.value = turno;
+        
+        // Aplicar cores APENAS se turno existir no mapa
+        if (turno && colorMap[turno]) {
           const color = colorMap[turno];
           
-          const bgArgb = color.bg.length === 6 ? 'FF' + color.bg : color.bg;
-          const fontArgb = color.color.length === 6 ? 'FF' + color.color : color.color;
-          
-          excelCell.fill = {
+          cell.fill = {
             type: 'pattern',
             pattern: 'solid',
-            fgColor: { argb: bgArgb }
+            fgColor: { argb: 'FF' + color.bg }
           };
           
-          excelCell.font = {
+          cell.font = {
             bold: true,
-            color: { argb: fontArgb }
+            color: { argb: 'FF' + color.color }
           };
           
-          excelCell.alignment = { 
+          cell.alignment = { 
             horizontal: 'center', 
             vertical: 'middle' 
           };
+        } else {
+          // Limpar formatação se não tiver turno
+          cell.fill = null;
+          cell.font = { bold: false, color: { argb: 'FF000000' } };
         }
       }
     }
 
-    // 7. Limpar linhas vazias (se houver menos de 20 pessoas)
+    // 7. Limpar linhas vazias
     for (let i = maxEmployees; i < 20; i++) {
       const excelRow = 13 + i;
-      worksheet.getCell(excelRow, 2).value = "";
-      worksheet.getCell(excelRow, 3).value = "";
-      worksheet.getCell(excelRow, 4).value = "";
-      worksheet.getCell(excelRow, 5).value = "";
-      worksheet.getCell(excelRow, 38).value = "";
-
-      for (let d = 1; d <= 31; d++) {
-        const colIndex = 6 + d;
-        worksheet.getCell(excelRow, colIndex).value = "";
+      
+      for (let col = 2; col <= 38; col++) {
+        const cell = worksheet.getCell(excelRow, col);
+        cell.value = "";
+        cell.fill = null;
+        cell.font = { bold: false, color: { argb: 'FF000000' } };
       }
     }
 
     // 8. Gerar Excel
     const buffer = await workbook.xlsx.writeBuffer();
 
-    // 9. Retornar como download
+    // 9. Download
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename="Folha_INEM_${MONTH_NAMES[month - 1]}_${year}.xlsx"`);
     res.send(Buffer.from(buffer));

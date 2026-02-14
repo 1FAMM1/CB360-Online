@@ -6,32 +6,37 @@ import fetch from 'node-fetch';
 // Função para converter RGB para ARGB hex
 function rgbToArgb(rgbString) {
   if (!rgbString || rgbString === 'rgb(255, 255, 255)' || rgbString === '') {
-    return null; // Sem cor (branco ou vazio)
+    return null;
   }
   
-  const match = rgbString.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
-  if (!match) return null;
+  // Remover espaços extras
+  const cleaned = rgbString.replace(/\s+/g, '');
+  
+  const match = cleaned.match(/rgb\((\d+),(\d+),(\d+)\)/);
+  if (!match) {
+    console.log(`❌ ERRO: RGB inválido: "${rgbString}"`);
+    return null;
+  }
   
   const r = parseInt(match[1]).toString(16).padStart(2, '0');
   const g = parseInt(match[2]).toString(16).padStart(2, '0');
   const b = parseInt(match[3]).toString(16).padStart(2, '0');
   
-  return 'FF' + r.toUpperCase() + g.toUpperCase() + b.toUpperCase();
+  const result = 'FF' + r.toUpperCase() + g.toUpperCase() + b.toUpperCase();
+  
+  return result;
 }
 
-// Calcular se o texto deve ser preto ou branco baseado no brilho do fundo
+// Calcular se o texto deve ser preto ou branco
 function getTextColor(argbBg) {
   if (!argbBg || argbBg.length < 8) return 'FF000000';
   
-  // Pegar RGB (ignorar alpha)
   const r = parseInt(argbBg.substring(2, 4), 16);
   const g = parseInt(argbBg.substring(4, 6), 16);
   const b = parseInt(argbBg.substring(6, 8), 16);
   
-  // Calcular brilho (luminosidade)
   const brightness = (r * 299 + g * 587 + b * 114) / 1000;
   
-  // Se fundo claro -> texto preto, se escuro -> texto branco
   return brightness > 128 ? 'FF000000' : 'FFFFFFFF';
 }
 
@@ -55,6 +60,8 @@ export default async function handler(req, res) {
     if (!year || !month || !employees || !workingHours) {
       return res.status(400).json({ error: 'Dados incompletos' });
     }
+
+    console.log(`📊 Gerando folha para ${month}/${year} com ${employees.length} funcionários`);
 
     const MONTH_NAMES = [
       "JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO",
@@ -87,6 +94,7 @@ export default async function handler(req, res) {
 
     // 4. Dias do mês
     const daysInMonth = new Date(year, month, 0).getDate();
+    console.log(`📅 Dias no mês: ${daysInMonth}`);
 
     // 5. Dias da semana e números
     for (let d = 1; d <= 31; d++) {
@@ -110,42 +118,39 @@ export default async function handler(req, res) {
       const emp = employees[idx];
       const excelRow = 13 + idx;
 
+      console.log(`👤 Processando: ${emp.abv_name} (row ${excelRow})`);
+
       // Dados básicos - SEM cores
-      const cellB = worksheet.getCell(excelRow, 2);
-      cellB.value = emp.n_int;
-      cellB.fill = null;
-      cellB.font = { bold: false, color: { argb: 'FF000000' } };
+      worksheet.getCell(excelRow, 2).value = emp.n_int;
+      worksheet.getCell(excelRow, 2).fill = null;
+      worksheet.getCell(excelRow, 2).font = { bold: false, color: { argb: 'FF000000' } };
       
-      const cellC = worksheet.getCell(excelRow, 3);
-      cellC.value = emp.abv_name;
-      cellC.fill = null;
-      cellC.font = { bold: false, color: { argb: 'FF000000' } };
+      worksheet.getCell(excelRow, 3).value = emp.abv_name;
+      worksheet.getCell(excelRow, 3).fill = null;
+      worksheet.getCell(excelRow, 3).font = { bold: false, color: { argb: 'FF000000' } };
       
-      const cellD = worksheet.getCell(excelRow, 4);
-      cellD.value = emp.function;
-      cellD.fill = null;
-      cellD.font = { bold: false, color: { argb: 'FF000000' } };
+      worksheet.getCell(excelRow, 4).value = emp.function;
+      worksheet.getCell(excelRow, 4).fill = null;
+      worksheet.getCell(excelRow, 4).font = { bold: false, color: { argb: 'FF000000' } };
       
-      const cellE = worksheet.getCell(excelRow, 5);
-      cellE.value = emp.team;
-      cellE.fill = null;
-      cellE.font = { bold: false, color: { argb: 'FF000000' } };
+      worksheet.getCell(excelRow, 5).value = emp.team;
+      worksheet.getCell(excelRow, 5).fill = null;
+      worksheet.getCell(excelRow, 5).font = { bold: false, color: { argb: 'FF000000' } };
       
-      const cellAL = worksheet.getCell(excelRow, 38);
-      cellAL.value = emp.total;
-      cellAL.fill = null;
-      cellAL.font = { bold: false, color: { argb: 'FF000000' } };
+      worksheet.getCell(excelRow, 38).value = emp.total;
+      worksheet.getCell(excelRow, 38).fill = null;
+      worksheet.getCell(excelRow, 38).font = { bold: false, color: { argb: 'FF000000' } };
 
       // Turnos - COM cores do frontend
       for (let d = 0; d < daysInMonth; d++) {
         const turno = emp.shifts[d] || "";
-        const colorRgb = emp.colors ? emp.colors[d] : "";
+        const colorRgb = emp.colors && emp.colors[d] ? emp.colors[d] : "";
         const colIndex = 7 + d;
         
         const cell = worksheet.getCell(excelRow, colIndex);
         cell.value = turno;
         
-        // Converter cor RGB do frontend para ARGB do Excel
+        // Converter cor RGB para ARGB
         const argbColor = rgbToArgb(colorRgb);
         
         if (argbColor) {
@@ -156,7 +161,7 @@ export default async function handler(req, res) {
             fgColor: { argb: argbColor }
           };
           
-          // Calcular cor do texto (preto ou branco)
+          // Calcular cor do texto
           const textColor = getTextColor(argbColor);
           
           cell.font = {
@@ -168,6 +173,10 @@ export default async function handler(req, res) {
             horizontal: 'center', 
             vertical: 'middle' 
           };
+          
+          if (d < 3) {
+            console.log(`  Dia ${d+1}: turno="${turno}", RGB="${colorRgb}", ARGB="${argbColor}"`);
+          }
         } else {
           // Sem cor - limpar formatação
           cell.fill = null;
@@ -192,6 +201,8 @@ export default async function handler(req, res) {
       }
     }
 
+    console.log(`✅ Excel gerado com sucesso`);
+
     // 8. Gerar Excel
     const buffer = await workbook.xlsx.writeBuffer();
 
@@ -201,7 +212,7 @@ export default async function handler(req, res) {
     res.send(Buffer.from(buffer));
 
   } catch (error) {
-    console.error('Erro ao gerar folha:', error);
+    console.error('❌ Erro ao gerar folha:', error);
     res.status(500).json({ error: error.message });
   }
 }

@@ -67,12 +67,16 @@ export default async function handler(req, res) {
   const base = cell.font || {};
 
   let colorArgb;
-  if (forceTextColor) {
-    colorArgb = forceTextColor.toUpperCase().startsWith("FF") ? forceTextColor : ("FF" + forceTextColor);
-  } else {
-    const dark = isDarkHex(bgHex);
-    colorArgb = dark ? "FFFFFFFF" : "FF000000";
-  }
+  if (normalizeHex6(bgHex) === normalizeHex6(DRIVER_BG)) {
+  colorArgb = "FF000000";
+}
+else if (forceTextColor) {
+  colorArgb = forceTextColor.toUpperCase().startsWith("FF") ? forceTextColor : ("FF" + forceTextColor);
+}
+else {
+  const dark = isDarkHex(bgHex);
+  colorArgb = dark ? "FFFFFFFF" : "FF000000";
+}
 
   cell.font = {
     ...base,

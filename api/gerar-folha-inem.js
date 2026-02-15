@@ -229,7 +229,7 @@ export default async function handler(req, res) {
     // ====== Preencher por blocos + OCULTAR linhas em branco ======
     const GROUP_RANGES = {
       INEM: { start: 13, end: 32 }, // 20 linhas
-      TDNU: { start: 34, end: 38 }, // 5 linhas
+      TDNU: { start: 34, end: 39 }, // 5 linhas
       OPC:  { start: 41, end: 45 }, // 5 linhas
       EP1:  { start: 47, end: 51 }, // 5 linhas (título: 47)
       EP2:  { start: 53, end: 57 }, // 5 linhas (título: 54)

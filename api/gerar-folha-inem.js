@@ -321,7 +321,7 @@ export default async function handler(req, res) {
 
         setFill(cell, bg);
         setBorder(cell);
-        setFontKeepTemplate(cell, { bold: true, italic: false, bgHex: bg });
+        setFontKeepTemplate(cell, { bold: true, italic: false, bgHex: bg, forceTextColor: isDriver ? "FF000000" : null, });
       }
 
       // Reforço final (infos brancas)

@@ -201,6 +201,11 @@ import ExcelJS from "exceljs";
             setBorder(cellDay);
           }
         }
+        for (let d = 1; d <= 31; d++) {
+          const colIndex = DAY_START_COL + (d - 1);
+          const col = worksheet.getColumn(colIndex);
+          col.hidden = d > daysInMonth;
+        }          
         const GROUP_RANGES = {INEM: {start: 13, end: 32}, TDNU: {start: 34, end: 39}, OPC: {start: 41, end: 45}, 
                               EP1: {start: 47, end: 51}, EP2: {start: 53, end: 57},};
         function normalizeTeam(t) {

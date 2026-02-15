@@ -59,7 +59,7 @@ export default async function handler(req, res) {
     }
 
     // Mantém fonte do template: só mexe em bold/italic/cor
-    function setFontKeepTemplate(cell, { bold = null, italic = false, bgHex = "FFFFFF" } = {}) {
+    function setFontKeepTemplate(cell, { bold = null, italic = false, bgHex = "FFFFFF", forceTextColor: isDriver ? "FF000000" : null, } = {}) {
       breakStyle(cell);
       const base = cell.font || {};
       const dark = isDarkHex(bgHex);

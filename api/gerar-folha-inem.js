@@ -201,8 +201,8 @@ import ExcelJS from "exceljs";
             setBorder(cellDay);
           }
         }
-        const GROUP_RANGES = {INEM: {start: 13, end: 32}, TDNU: {start: 34, end: 38}, OPC: {start: 41, end: 45},
-                              EP1: {start: 48, end: 52}, EP2: {start: 55, end: 59},};
+        const GROUP_RANGES = {INEM: {start: 13, end: 32}, TDNU: {start: 34, end: 39}, OPC: {start: 41, end: 45},
+                              EP1: {start: 47, end: 51}, EP2: {start: 53, end: 57},};
         function normalizeTeam(t) {
           return String(t || "").trim().toUpperCase().replace(/\s+/g, "").replace(/[-_]/g, "");
         }

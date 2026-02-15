@@ -227,12 +227,13 @@
     // ====== Preencher por blocos (mantendo títulos do template) ======
     // ✅ RANGES CORRIGIDOS (não apagam títulos nem texto legal)
     const GROUP_RANGES = {
-      INEM: { start: 13, end: 32 },  // 20 linhas
-      TDNU: { start: 34, end: 39 },  // 6 linhas (título: 33)
-      OPC:  { start: 41, end: 46 },  // 6 linhas (título: 40)
-      EP1:  { start: 48, end: 53 },  // 6 linhas (título: 47)
-      EP2:  { start: 55, end: 61 },  // 7 linhas (título: 54) — não tocar em 62+
-    };
+  INEM: { start: 13, end: 32 },  // 20 linhas
+
+  TDNU: { start: 34, end: 38 },  // ✅ 5 linhas (34,35,36,37,38)
+  OPC:  { start: 41, end: 45 },  // ✅ 5 linhas (41..45)
+  EP1:  { start: 48, end: 52 },  // ✅ 5 linhas (48..52)  (título é 47)
+  EP2:  { start: 55, end: 59 },  // ✅ 5 linhas (55..59)  (título é 54)  (não toca em 62+)
+};
 
     function normalizeTeam(t) {
       return String(t || "")

@@ -59,17 +59,28 @@ export default async function handler(req, res) {
     }
 
     // Mantém fonte do template: só mexe em bold/italic/cor
-    function setFontKeepTemplate(cell, { bold = null, italic = false, bgHex = "FFFFFF", forceTextColor: isDriver ? "FF000000" : null, } = {}) {
-      breakStyle(cell);
-      const base = cell.font || {};
-      const dark = isDarkHex(bgHex);
-      cell.font = {
-        ...base,
-        ...(bold === null ? {} : { bold: !!bold }),
-        italic: !!italic, // passamos sempre false
-        color: { argb: dark ? "FFFFFFFF" : "FF000000" },
-      };
-    }
+    function setFontKeepTemplate(
+  cell,
+  { bold = null, italic = false, bgHex = "FFFFFF", forceTextColor = null } = {}
+) {
+  breakStyle(cell);
+  const base = cell.font || {};
+
+  let colorArgb;
+  if (forceTextColor) {
+    colorArgb = forceTextColor.toUpperCase().startsWith("FF") ? forceTextColor : ("FF" + forceTextColor);
+  } else {
+    const dark = isDarkHex(bgHex);
+    colorArgb = dark ? "FFFFFFFF" : "FF000000";
+  }
+
+  cell.font = {
+    ...base,
+    ...(bold === null ? {} : { bold: !!bold }),
+    italic: !!italic,
+    color: { argb: colorArgb },
+  };
+}
 
     function setBorder(cell) {
       breakStyle(cell);

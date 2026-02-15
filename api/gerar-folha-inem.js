@@ -1,13 +1,15 @@
-    import ExcelJS from "exceljs";
-    import fetch from "node-fetch";
-    export default async function handler(req, res) {
-      res.setHeader("Access-Control-Allow-Origin", "*");
-      res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-        if (req.method === "OPTIONS") return res.status(200).end();
-        if (req.method !== "POST") return res.status(405).json({ error: "Método não permitido" });
-        try {
-            const {year, month, employees, workingHours } = req.body;
+import ExcelJS from "exceljs";
+import fetch from "node-fetch";
+export default async function handler(req, res) {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method !== "POST") return res.status(405).json({ error: "Método não permitido" });
+
+  try {
+    const { year, month, employees, workingHours } = req.body;
 
     if (!year || !month || !employees || workingHours === undefined || workingHours === null) {
       return res.status(400).json({ error: "Dados incompletos" });
@@ -224,16 +226,14 @@
       }
     }
 
-    // ====== Preencher por blocos (mantendo títulos do template) ======
-    // ✅ RANGES CORRIGIDOS (não apagam títulos nem texto legal)
+    // ====== Preencher por blocos + OCULTAR linhas em branco ======
     const GROUP_RANGES = {
-  INEM: { start: 13, end: 32 },  // 20 linhas
-
-  TDNU: { start: 34, end: 38 },  // ✅ 5 linhas (34,35,36,37,38)
-  OPC:  { start: 41, end: 45 },  // ✅ 5 linhas (41..45)
-  EP1:  { start: 48, end: 52 },  // ✅ 5 linhas (48..52)  (título é 47)
-  EP2:  { start: 55, end: 59 },  // ✅ 5 linhas (55..59)  (título é 54)  (não toca em 62+)
-};
+      INEM: { start: 13, end: 32 }, // 20 linhas
+      TDNU: { start: 34, end: 38 }, // 5 linhas
+      OPC:  { start: 41, end: 45 }, // 5 linhas
+      EP1:  { start: 48, end: 52 }, // 5 linhas (título: 47)
+      EP2:  { start: 55, end: 59 }, // 5 linhas (título: 54)
+    };
 
     function normalizeTeam(t) {
       return String(t || "")
@@ -255,7 +255,7 @@
       return null;
     }
 
-    // ✅ Evita lixo tipo "FO" virar funcionário no Excel
+    // Evita lixo tipo "FO" virar funcionário no Excel
     function isValidEmployee(emp) {
       const n = String(emp?.n_int ?? "").trim();
       const team = String(emp?.team ?? "").trim();
@@ -271,6 +271,9 @@
       });
 
     function fillEmployeeAtRow(emp, excelRow) {
+      // ✅ garante visível
+      worksheet.getRow(excelRow).hidden = false;
+
       const infoCols = [2, 3, 4, 5, 38];
 
       // Info cols sempre brancas
@@ -314,18 +317,23 @@
       infoCols.forEach((col) => setFill(worksheet.getCell(excelRow, col), "FFFFFF"));
     }
 
-    function clearRow(excelRow) {
+    function clearAndHideRow(excelRow) {
+      const row = worksheet.getRow(excelRow);
+
       for (let col = 2; col <= 38; col++) {
-        const cell = worksheet.getCell(excelRow, col);
+        const cell = row.getCell(col);
         breakStyle(cell);
         cell.value = "";
         setFill(cell, "FFFFFF");
         setFontKeepTemplate(cell, { bold: null, italic: false, bgHex: "FFFFFF" });
         setBorder(cell);
       }
+
+      // ✅ ocultar linha
+      row.hidden = true;
     }
 
-    // Preencher cada bloco
+    // Preencher cada bloco e ocultar sobrantes
     const ORDER = ["INEM", "TDNU", "OPC", "EP1", "EP2"];
     ORDER.forEach((key) => {
       const range = GROUP_RANGES[key];
@@ -334,7 +342,7 @@
 
       const n = Math.min(list.length, capacity);
       for (let i = 0; i < n; i++) fillEmployeeAtRow(list[i], range.start + i);
-      for (let i = n; i < capacity; i++) clearRow(range.start + i);
+      for (let i = n; i < capacity; i++) clearAndHideRow(range.start + i);
     });
 
     // ===== Output =====

@@ -232,7 +232,7 @@ export default async function handler(req, res) {
       TDNU: { start: 34, end: 38 }, // 5 linhas
       OPC:  { start: 41, end: 45 }, // 5 linhas
       EP1:  { start: 47, end: 51 }, // 5 linhas (título: 47)
-      EP2:  { start: 55, end: 59 }, // 5 linhas (título: 54)
+      EP2:  { start: 53, end: 57 }, // 5 linhas (título: 54)
     };
 
     function normalizeTeam(t) {

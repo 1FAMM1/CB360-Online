@@ -6,16 +6,14 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 import {
-  ServicePrincipalCredentials,
   PDFServices,
   MimeType,
+  ServicePrincipalCredentials,
   CreatePDFJob,
-  CreatePDFResult,
+  CreatePDFParams,
   CombinePDFJob,
-  CombinePDFResult,
-  SDKError,
-  ServiceUsageError,
-  ServiceApiError,
+  CombinePDFParams,
+  Asset
 } from "@adobe/pdfservices-node-sdk";
 
 export const config = {
@@ -57,7 +55,6 @@ export default async function handler(req, res) {
 
     const WEEKDAY_NAMES = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
-    // Cores dos turnos (HEX sem #)
     const SHIFT_COLORS = {
       "D": "FFFF00",
       "N": "00008B",
@@ -85,26 +82,27 @@ export default async function handler(req, res) {
 
     const daysInMonth = new Date(year, month, 0).getDate();
 
+    // ✨ ADOBE SDK V4 - Nova inicialização
     const credentials = new ServicePrincipalCredentials({
       clientId: CLIENT_ID,
       clientSecret: CLIENT_SECRET,
     });
+
     const pdfServices = new PDFServices({ credentials });
 
     const pdfAssets = [];
     const tempDir = os.tmpdir();
 
-    // ✨ GERAR PDF PARA CADA FUNCIONÁRIO (TEMPLATE FRESCO)
+    // Gerar PDF para cada funcionário
     for (let empIdx = 0; empIdx < employees.length; empIdx++) {
       const emp = employees[empIdx];
       console.log(`📄 Processando: ${emp.abv_name} (${empIdx + 1}/${employees.length})`);
 
-      // ✨ BUSCAR TEMPLATE NOVO PARA CADA FUNCIONÁRIO
+      // Buscar template fresco
       const freshTemplateResponse = await fetch(TEMPLATE_URL);
       if (!freshTemplateResponse.ok) throw new Error("Erro ao carregar template");
       const freshTemplateBuffer = await freshTemplateResponse.arrayBuffer();
 
-      // Criar workbook a partir do template FRESCO
       const workbook = new ExcelJS.Workbook();
       await workbook.xlsx.load(freshTemplateBuffer);
 
@@ -121,25 +119,20 @@ export default async function handler(req, res) {
 
       // Preencher dias e turnos
       for (let d = 1; d <= 31; d++) {
-        const row = 11 + d; // B12 = dia 1, então row 12
+        const row = 11 + d;
 
         if (d <= daysInMonth) {
           const date = new Date(year, month - 1, d, 12, 0, 0);
           const weekdayIndex = date.getDay();
           const weekday = WEEKDAY_NAMES[weekdayIndex];
 
-          // Dia (número)
-          worksheet.getCell(row, 2).value = d; // Coluna B
+          worksheet.getCell(row, 2).value = d;
+          worksheet.getCell(row, 3).value = weekday;
 
-          // Dia (nome)
-          worksheet.getCell(row, 3).value = weekday; // Coluna C
-
-          // Turno
           const turno = emp.shifts?.[d - 1] || "";
-          const cellTurno = worksheet.getCell(row, 4); // Coluna D
+          const cellTurno = worksheet.getCell(row, 4);
           cellTurno.value = turno;
 
-          // Aplicar cor ao turno
           if (turno && SHIFT_COLORS[turno]) {
             const colorHex = SHIFT_COLORS[turno];
             cellTurno.fill = {
@@ -160,14 +153,12 @@ export default async function handler(req, res) {
             };
           }
         } else {
-          // Limpar linhas de dias que não existem no mês
           worksheet.getCell(row, 2).value = "";
           worksheet.getCell(row, 3).value = "";
           worksheet.getCell(row, 4).value = "";
         }
       }
 
-      // Total de horas
       worksheet.getCell("L44").value = emp.total || 0;
 
       // Salvar Excel temporário
@@ -178,36 +169,43 @@ export default async function handler(req, res) {
       tempFiles.push(xlsxPath);
       await workbook.xlsx.writeFile(xlsxPath);
 
-      // Converter para PDF
+      // ✨ ADOBE SDK V4 - Upload
+      const readStream = fs.createReadStream(xlsxPath);
       const inputAsset = await pdfServices.upload({
-        readStream: fs.createReadStream(xlsxPath),
+        readStream,
         mimeType: MimeType.XLSX,
       });
 
-      const createJob = new CreatePDFJob({ inputAsset });
-      const pollingURL = await pdfServices.submit({ job: createJob });
-      const pdfResponse = await pdfServices.getJobResult({
+      // ✨ ADOBE SDK V4 - Criar PDF
+      const params = new CreatePDFParams({ inputDocumentType: MimeType.XLSX });
+      const job = new CreatePDFJob({ inputAsset, params });
+      
+      const pollingURL = await pdfServices.submit({ job });
+      const pdfServicesResponse = await pdfServices.getJobResult({
         pollingURL,
-        resultType: CreatePDFResult,
+        resultType: Asset,
       });
 
-      pdfAssets.push(pdfResponse.result.asset);
+      pdfAssets.push(pdfServicesResponse.result.asset);
+      console.log(`✅ PDF ${empIdx + 1}/${employees.length} criado`);
     }
 
     console.log(`🔗 Merging ${pdfAssets.length} PDFs...`);
 
-    // Combinar todos os PDFs
-    const combineJob = new CombinePDFJob({ assets: pdfAssets });
+    // ✨ ADOBE SDK V4 - Combinar PDFs
+    const combineParams = new CombinePDFParams({ assets: pdfAssets });
+    const combineJob = new CombinePDFJob({ params: combineParams });
+    
     const combinePollingURL = await pdfServices.submit({ job: combineJob });
     const combineResponse = await pdfServices.getJobResult({
       pollingURL: combinePollingURL,
-      resultType: CombinePDFResult,
+      resultType: Asset,
     });
 
+    // Baixar PDF final
     const finalAsset = combineResponse.result.asset;
     const streamAsset = await pdfServices.getContent({ asset: finalAsset });
 
-    // Salvar PDF final temporariamente
     const finalPdfPath = path.join(
       tempDir,
       `Folhas_Ponto_${month}_${year}_${Date.now()}.pdf`
@@ -243,7 +241,6 @@ export default async function handler(req, res) {
     return res.status(200).send(pdfBuffer);
 
   } catch (error) {
-    // Cleanup em caso de erro
     tempFiles.forEach((file) => {
       try {
         if (fs.existsSync(file)) fs.unlinkSync(file);
@@ -251,17 +248,6 @@ export default async function handler(req, res) {
     });
 
     console.error("❌ Erro ao gerar folhas:", error);
-
-    if (
-      error instanceof SDKError ||
-      error instanceof ServiceUsageError ||
-      error instanceof ServiceApiError
-    ) {
-      return res.status(500).json({
-        error: "Erro no serviço Adobe PDF Services",
-        details: error.message,
-      });
-    }
 
     return res.status(500).json({
       error: "Erro ao gerar folhas de ponto",

@@ -85,11 +85,6 @@ export default async function handler(req, res) {
 
     const daysInMonth = new Date(year, month, 0).getDate();
 
-    // Buscar template
-    const templateResponse = await fetch(TEMPLATE_URL);
-    if (!templateResponse.ok) throw new Error("Erro ao carregar template");
-    const templateBuffer = await templateResponse.arrayBuffer();
-
     const credentials = new ServicePrincipalCredentials({
       clientId: CLIENT_ID,
       clientSecret: CLIENT_SECRET,
@@ -99,14 +94,19 @@ export default async function handler(req, res) {
     const pdfAssets = [];
     const tempDir = os.tmpdir();
 
-    // Gerar PDF para cada funcionário
+    // ✨ GERAR PDF PARA CADA FUNCIONÁRIO (TEMPLATE FRESCO)
     for (let empIdx = 0; empIdx < employees.length; empIdx++) {
       const emp = employees[empIdx];
       console.log(`📄 Processando: ${emp.abv_name} (${empIdx + 1}/${employees.length})`);
 
-      // Criar workbook a partir do template
+      // ✨ BUSCAR TEMPLATE NOVO PARA CADA FUNCIONÁRIO
+      const freshTemplateResponse = await fetch(TEMPLATE_URL);
+      if (!freshTemplateResponse.ok) throw new Error("Erro ao carregar template");
+      const freshTemplateBuffer = await freshTemplateResponse.arrayBuffer();
+
+      // Criar workbook a partir do template FRESCO
       const workbook = new ExcelJS.Workbook();
-      await workbook.xlsx.load(templateBuffer);
+      await workbook.xlsx.load(freshTemplateBuffer);
 
       if (workbook.worksheets.length === 0) {
         throw new Error("Template não tem worksheets");
@@ -173,7 +173,7 @@ export default async function handler(req, res) {
       // Salvar Excel temporário
       const xlsxPath = path.join(
         tempDir,
-        `folha_${emp.abv_name}_${Date.now()}_${empIdx}.xlsx`
+        `folha_${emp.abv_name.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}_${empIdx}.xlsx`
       );
       tempFiles.push(xlsxPath);
       await workbook.xlsx.writeFile(xlsxPath);

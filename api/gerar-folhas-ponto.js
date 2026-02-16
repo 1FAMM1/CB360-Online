@@ -38,8 +38,6 @@ export default async function handler(req, res) {
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(await templateResponse.arrayBuffer());
     const worksheet = workbook.worksheets[0];
-
-    // --- FUNÇÕES DE ESTILO ---
     function breakStyle(cell) {
       cell.style = { ...(cell.style || {}) };
       if (cell.style.fill) cell.style.fill = { ...cell.style.fill };

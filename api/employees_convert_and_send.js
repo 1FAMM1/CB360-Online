@@ -89,10 +89,10 @@ function setBorder(cell) {
   breakStyle(cell);
   const c = { argb: "FFBFBFBF" };
   cell.border = {
-    top: { style: "hair", color: c },
-    left: { style: "hair", color: c },
-    bottom: { style: "hair", color: c },
-    right: { style: "hair", color: c },
+    top: { style: "thin", color: c },
+    left: { style: "thin", color: c },
+    bottom: { style: "thin", color: c },
+    right: { style: "thin", color: c },
   };
 }
 

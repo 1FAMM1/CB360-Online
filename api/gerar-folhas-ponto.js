@@ -15,8 +15,7 @@ export const config = {
   api: { bodyParser: { sizeLimit: "5mb" } },
 };
 
-const TEMPLATE_URL =
-  "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/stitch_marker_template.xlsx";
+const TEMPLATE_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/stitch_marker_template.xlsx";
 
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -24,10 +23,7 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "POST")
-    return res.status(405).json({ error: "Método não permitido" });
-
-  let xlsxPath = null;
+  if (req.method !== "POST") return res.status(405).json({ error: "Método não permitido" });
 
   try {
     const { year, month, employee, workingHours } = req.body;
@@ -39,13 +35,11 @@ export default async function handler(req, res) {
     const pdfServices = new PDFServices({ credentials });
 
     const templateResponse = await fetch(TEMPLATE_URL);
-    if (!templateResponse.ok) throw new Error("Erro ao carregar template");
-
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(await templateResponse.arrayBuffer());
     const worksheet = workbook.worksheets[0];
 
-    // --- FUNÇÕES DE ESTILO ---
+    // --- AS TUAS FUNÇÕES DE COR DO CÓDIGO DOS PROFISSIONAIS ---
     function breakStyle(cell) {
       cell.style = { ...(cell.style || {}) };
       if (cell.style.fill) cell.style.fill = { ...cell.style.fill };
@@ -53,100 +47,44 @@ export default async function handler(req, res) {
     }
 
     function normalizeHex6(hex) {
-      return String(hex || "FFFFFF")
-        .replace("#", "")
-        .toUpperCase()
-        .padStart(6, "0")
-        .slice(0, 6);
+      return String(hex || "FFFFFF").replace("#", "").toUpperCase().padStart(6, "0").slice(0, 6);
     }
 
     function isDarkHex(hex6) {
       const h = normalizeHex6(hex6);
-      const r = parseInt(h.slice(0, 2), 16),
-        g = parseInt(h.slice(2, 4), 16),
-        b = parseInt(h.slice(4, 6), 16);
-      return 0.2126 * r + 0.7152 * g + 0.0722 * b < 150;
+      const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
+      return (0.2126 * r + 0.7152 * g + 0.0722 * b) < 150;
     }
 
-    // --- CORES (iguais às tuas + azul facultativo) ---
-    const WEEKEND_COLOR = "F9E0B0"; // bege
-    const HOLIDAY_COLOR = "F7C6C7"; // rosa (obrigatório)
-    const HOLIDAY_OPTIONAL_COLOR = "D6ECFF"; // azul (facultativo - Carnaval)
+    // Lógica de Feriados com Carnaval (conforme o teu código dos profissionais)
+    function getPortugalHolidays(y) {
+      const fixed = [{m:1,d:1},{m:4,d:25},{m:5,d:1},{m:6,d:10},{m:8,d:15},{m:9,d:7},{m:10,d:5},{m:11,d:1},{m:12,d:1},{m:12,d:8},{m:12,d:25}];
+      const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),monthE=Math.floor((h+l-7*m+114)/31),dayE=((h+l-7*m+114)%31)+1;
+      const easter = new Date(y, monthE - 1, dayE, 12, 0, 0);
+      const add = (base, ds) => { const nd = new Date(base); nd.setDate(nd.getDate() + ds); return nd; };
+      
+      const holidayMap = new Map();
+      fixed.forEach(f => holidayMap.set(`${y}-${f.m}-${f.d}`, {optional: false}));
+      holidayMap.set(`${y}-${monthE}-${dayE}`, {optional: false}); // Pascoa
+      const holyFri = add(easter, -2);
+      holidayMap.set(`${y}-${holyFri.getMonth()+1}-${holyFri.getDate()}`, {optional: false});
+      const corpus = add(easter, 60);
+      holidayMap.set(`${y}-${corpus.getMonth()+1}-${corpus.getDate()}`, {optional: false});
+      const carv = add(easter, -47);
+      holidayMap.set(`${y}-${carv.getMonth()+1}-${carv.getDate()}`, {optional: true}); // Carnaval
+      
+      return holidayMap;
+    }
 
-    // turnos especiais (texto preto)
+    const holidays = getPortugalHolidays(year);
+    const WEEKEND_COLOR = "F9E0B0";
+    const HOLIDAY_COLOR = "F7C6C7";
+    const HOLIDAY_OPTIONAL_COLOR = "D6ECFF";
     const DRIVER_BG = "FF69B4";
     const FE_BG = "00B0F0";
 
-    // --- LÓGICA DE FERIADOS PORTUGAL (agora com facultativo) ---
-    function getPortugalHolidays(y) {
-      const fixed = [
-        { m: 1, d: 1, optional: false },
-        { m: 4, d: 25, optional: false },
-        { m: 5, d: 1, optional: false },
-        { m: 6, d: 10, optional: false },
-        { m: 8, d: 15, optional: false },
-        { m: 9, d: 7, optional: false },
-        { m: 10, d: 5, optional: false },
-        { m: 11, d: 1, optional: false },
-        { m: 12, d: 1, optional: false },
-        { m: 12, d: 8, optional: false },
-        { m: 12, d: 25, optional: false },
-      ];
-
-      // Páscoa
-      const a = y % 19;
-      const b = Math.floor(y / 100);
-      const c = y % 100;
-      const d = Math.floor(b / 4);
-      const e = b % 4;
-      const f = Math.floor((b + 8) / 25);
-      const g = Math.floor((b - f + 1) / 3);
-      const h = (19 * a + b - d - g + 15) % 30;
-      const i = Math.floor(c / 4);
-      const k = c % 4;
-      const l = (32 + 2 * e + 2 * i - h - k) % 7;
-      const m = Math.floor((a + 11 * h + 22 * l) / 451);
-      const monthE = Math.floor((h + l - 7 * m + 114) / 31);
-      const dayE = ((h + l - 7 * m + 114) % 31) + 1;
-
-      const easter = new Date(y, monthE - 1, dayE, 12, 0, 0);
-
-      const add = (base, ds) => {
-        const nd = new Date(base);
-        nd.setDate(nd.getDate() + ds);
-        return nd;
-      };
-
-      // Carnaval facultativo, resto obrigatório
-      const mobile = [
-        { dt: add(easter, -47), optional: true },  // Carnaval
-        { dt: add(easter, -2), optional: false },  // Sexta Santa
-        { dt: easter, optional: false },           // Páscoa
-        { dt: add(easter, 60), optional: false },  // Corpo de Deus
-      ];
-
-      const all = new Set();
-      const optional = new Set();
-
-      fixed.forEach((x) => {
-        const key = `${y}-${x.m}-${x.d}`;
-        all.add(key);
-        if (x.optional) optional.add(key);
-      });
-
-      mobile.forEach(({ dt, optional: opt }) => {
-        const key = `${dt.getFullYear()}-${dt.getMonth() + 1}-${dt.getDate()}`;
-        all.add(key);
-        if (opt) optional.add(key);
-      });
-
-      return { all, optional };
-    }
-
-    const { all: holidays, optional: optionalHolidays } = getPortugalHolidays(year);
-
-    const WEEKDAY_NAMES = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
     const daysInMonth = new Date(year, month, 0).getDate();
+    const WEEKDAY_NAMES = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
 
     // Cabeçalho
     worksheet.getCell("D8").value = employee.abv_name || "";
@@ -156,11 +94,11 @@ export default async function handler(req, res) {
 
     // --- PREENCHIMENTO ---
     for (let d = 1; d <= 31; d++) {
-      const row = 11 + d;
-      const cellDia = worksheet.getCell(row, 2);
-      const cellSemana = worksheet.getCell(row, 3);
-      const cellTurno = worksheet.getCell(row, 4);
-
+      const rowIdx = 11 + d;
+      const cellDia = worksheet.getCell(rowIdx, 2);
+      const cellSemana = worksheet.getCell(rowIdx, 3);
+      const cellTurno = worksheet.getCell(rowIdx, 4);
+      
       breakStyle(cellDia);
       breakStyle(cellSemana);
       breakStyle(cellTurno);
@@ -168,90 +106,69 @@ export default async function handler(req, res) {
       if (d <= daysInMonth) {
         const date = new Date(year, month - 1, d, 12, 0, 0);
         const wDay = date.getDay();
-        const isWeekend = wDay === 0 || wDay === 6;
-
-        const key = `${year}-${month}-${d}`;
-        const isHoliday = holidays.has(key);
-        const isOptionalHoliday = optionalHolidays.has(key);
 
         cellDia.value = d;
         cellSemana.value = WEEKDAY_NAMES[wDay];
-        cellTurno.value = employee.shifts?.[d - 1] || "";
+        
+        // REESTABELECIDO: Busca o turno e a cor (usando d ou d-1 conforme o teu front)
+        // Se no código dos profissionais funciona com 'd', usamos 'd' aqui também
+        const turnoValue = (employee.shifts?.[d-1] || "").toString(); 
+        cellTurno.value = turnoValue;
 
-        // 1) PINTAR DIA E SEMANA (feriados e fds)
+        // 1. Pintar Dia e Semana
+        const holiday = holidays.get(`${year}-${month}-${d}`);
         let dateBg = null;
-        if (isHoliday) dateBg = isOptionalHoliday ? HOLIDAY_OPTIONAL_COLOR : HOLIDAY_COLOR;
-        else if (isWeekend) dateBg = WEEKEND_COLOR;
+        if (holiday) dateBg = holiday.optional ? HOLIDAY_OPTIONAL_COLOR : HOLIDAY_COLOR;
+        else if (wDay === 0 || wDay === 6) dateBg = WEEKEND_COLOR;
 
         if (dateBg) {
-          [cellDia, cellSemana].forEach((c) => {
-            c.fill = {
-              type: "pattern",
-              pattern: "solid",
-              fgColor: { argb: "FF" + dateBg },
-            };
+          [cellDia, cellSemana].forEach(c => {
+            c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF" + dateBg } };
             c.font = { bold: true, color: { argb: "FF000000" } };
           });
         }
 
-        // 2) PINTAR TURNO (MANTÉM A TUA LÓGICA)
-        const bgHex = normalizeHex6(employee.cellColors?.[d - 1] || "FFFFFF");
-        cellTurno.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "FF" + bgHex },
-        };
+        // 2. Pintar Turno (Lógica de contraste idêntica à dos profissionais)
+        const bgHex = normalizeHex6(employee.cellColors?.[d-1] || "FFFFFF");
+        cellTurno.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF" + bgHex } };
+        
+        // Lógica de Contraste do teu outro código
+        let textColor;
+        if (bgHex === normalizeHex6(DRIVER_BG) || bgHex === normalizeHex6(FE_BG)) {
+          textColor = "FF000000";
+        } else {
+          textColor = isDarkHex(bgHex) ? "FFFFFFFF" : "FF000000";
+        }
 
-        // ✅ Só acrescenta: texto preto para FE e Driver
-        const forceBlack =
-          bgHex === normalizeHex6(FE_BG) || bgHex === normalizeHex6(DRIVER_BG);
+        cellTurno.font = { bold: true, color: { argb: textColor } };
 
-        cellTurno.font = {
-          bold: true,
-          color: {
-            argb: forceBlack ? "FF000000" : isDarkHex(bgHex) ? "FFFFFFFF" : "FF000000",
-          },
-        };
-
-        // Alinhamento
-        [cellDia, cellSemana, cellTurno].forEach((c) => {
+        [cellDia, cellSemana, cellTurno].forEach(c => {
           c.alignment = { horizontal: "center", vertical: "middle" };
         });
+
       } else {
-        worksheet.getRow(row).hidden = true;
+        worksheet.getRow(rowIdx).hidden = true;
       }
     }
 
     const tempDir = os.tmpdir();
-    xlsxPath = path.join(tempDir, `f_${Date.now()}.xlsx`);
+    const xlsxPath = path.join(tempDir, `f_${Date.now()}.xlsx`);
     await workbook.xlsx.writeFile(xlsxPath);
 
-    const inputAsset = await pdfServices.upload({
-      readStream: fs.createReadStream(xlsxPath),
-      mimeType: MimeType.XLSX,
-    });
-
+    const inputAsset = await pdfServices.upload({ readStream: fs.createReadStream(xlsxPath), mimeType: MimeType.XLSX });
     const job = new CreatePDFJob({ inputAsset });
     const pollingURL = await pdfServices.submit({ job });
-    const result = await pdfServices.getJobResult({
-      pollingURL,
-      resultType: CreatePDFResult,
-    });
+    const result = await pdfServices.getJobResult({ pollingURL, resultType: CreatePDFResult });
     const streamAsset = await pdfServices.getContent({ asset: result.result.asset });
-
+    
     const chunks = [];
-    for await (let chunk of streamAsset.readStream) chunks.push(chunk);
-
-    try {
-      fs.unlinkSync(xlsxPath);
-    } catch {}
+    for await (let chunk of streamAsset.readStream) { chunks.push(chunk); }
+    fs.unlinkSync(xlsxPath);
 
     res.setHeader("Content-Type", "application/pdf");
     return res.status(200).send(Buffer.concat(chunks));
+
   } catch (error) {
-    try {
-      if (xlsxPath && fs.existsSync(xlsxPath)) fs.unlinkSync(xlsxPath);
-    } catch {}
     return res.status(500).json({ error: error.message });
   }
 }

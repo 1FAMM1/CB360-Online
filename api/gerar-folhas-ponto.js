@@ -39,7 +39,13 @@ export default async function handler(req, res) {
     await workbook.xlsx.load(await templateResponse.arrayBuffer());
     const worksheet = workbook.worksheets[0];
 
-    // --- FUNÇÕES DE AUXÍLIO ---
+    // --- FUNÇÕES DE ESTILO ---
+    function breakStyle(cell) {
+      cell.style = { ...(cell.style || {}) };
+      if (cell.style.fill) cell.style.fill = { ...cell.style.fill };
+      if (cell.style.font) cell.style.font = { ...cell.style.font };
+    }
+
     function normalizeHex6(hex) {
       return String(hex || "FFFFFF").replace("#", "").toUpperCase().padStart(6, "0").slice(0, 6);
     }
@@ -50,92 +56,84 @@ export default async function handler(req, res) {
       return (0.2126 * r + 0.7152 * g + 0.0722 * b) < 150;
     }
 
-    // --- LÓGICA DE FERIADOS (IGUAL À ESCALA) ---
+    // --- LÓGICA DE FERIADOS PORTUGAL ---
     function getPortugalHolidays(y) {
-      const fixed = [
-        {m:1, d:1}, {m:4, d:25}, {m:5, d:1}, {m:6, d:10}, {m:8, d:15}, 
-        {m:9, d:7}, {m:10, d:5}, {m:11, d:1}, {m:12, d:1}, {m:12, d:8}, {m:12, d:25}
-      ];
-      const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4,
-            f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30,
-            i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451),
-            monthE = Math.floor((h + l - 7 * m + 114) / 31), dayE = ((h + l - 7 * m + 114) % 31) + 1;
+      const fixed = [{m:1,d:1},{m:4,d:25},{m:5,d:1},{m:6,d:10},{m:8,d:15},{m:9,d:7},{m:10,d:5},{m:11,d:1},{m:12,d:1},{m:12,d:8},{m:12,d:25}];
+      const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),monthE=Math.floor((h+l-7*m+114)/31),dayE=((h+l-7*m+114)%31)+1;
       const easter = new Date(y, monthE - 1, dayE, 12, 0, 0);
-      const add = (base, days) => { const nd = new Date(base); nd.setDate(nd.getDate() + days); return nd; };
-      const mobile = [add(easter, -47), add(easter, -2), easter, add(easter, 60)];
+      const add = (base, ds) => { const nd = new Date(base); nd.setDate(nd.getDate() + ds); return nd; };
+      const mobile = [add(easter,-47), add(easter,-2), easter, add(easter,60)];
       const holidaySet = new Set(fixed.map(f => `${y}-${f.m}-${f.d}`));
       mobile.forEach(dt => holidaySet.add(`${dt.getFullYear()}-${dt.getMonth()+1}-${dt.getDate()}`));
       return holidaySet;
     }
 
     const holidays = getPortugalHolidays(year);
-    const WEEKEND_COLOR = "F9E0B0";
-    const HOLIDAY_COLOR = "F7C6C7";
+    const WEEKEND_COLOR = "F9E0B0"; // Cor Bege das escalas
+    const HOLIDAY_COLOR = "F7C6C7"; // Cor Rosa das escalas
     const WEEKDAY_NAMES = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
     const daysInMonth = new Date(year, month, 0).getDate();
 
-    // --- PREENCHIMENTO DO CABEÇALHO ---
+    // Cabeçalho
     worksheet.getCell("D8").value = employee.abv_name || "";
     worksheet.getCell("J8").value = employee.function || "";
     worksheet.getCell("L46").value = workingHours;
     worksheet.getCell("L44").value = employee.total || 0;
 
-    // --- PREENCHIMENTO DOS DIAS (LINHAS 12 A 42) ---
+    // --- PREENCHIMENTO ---
     for (let d = 1; d <= 31; d++) {
-      const rowIdx = 11 + d;
-      const row = worksheet.getRow(rowIdx);
-      const cellDia = worksheet.getCell(rowIdx, 2);
-      const cellDiaSemana = worksheet.getCell(rowIdx, 3);
-      const cellTurno = worksheet.getCell(rowIdx, 4);
-      const turno = employee.shifts?.[d - 1] || "";
+      const row = 11 + d;
+      const cellDia = worksheet.getCell(row, 2);
+      const cellSemana = worksheet.getCell(row, 3);
+      const cellTurno = worksheet.getCell(row, 4);
+      
+      breakStyle(cellDia);
+      breakStyle(cellSemana);
+      breakStyle(cellTurno);
 
-      // 1. OCULTAR SE O DIA NÃO EXISTE OU SE O TURNO ESTÁ VAZIO
-      if (d > daysInMonth || turno === "") {
-        row.hidden = true;
-        continue;
-      }
+      if (d <= daysInMonth) {
+        const date = new Date(year, month - 1, d, 12, 0, 0);
+        const wDay = date.getDay();
+        const isWeekend = (wDay === 0 || wDay === 6);
+        const isHoliday = holidays.has(`${year}-${month}-${d}`);
 
-      row.hidden = false;
-      const date = new Date(year, month - 1, d, 12, 0, 0);
-      const wDay = date.getDay();
-      const isWeekend = (wDay === 0 || wDay === 6);
-      const isHoliday = holidays.has(`${year}-${month}-${d}`);
+        cellDia.value = d;
+        cellSemana.value = WEEKDAY_NAMES[wDay];
+        cellTurno.value = employee.shifts?.[d - 1] || "";
 
-      // Preencher valores
-      cellDia.value = d;
-      cellDiaSemana.value = WEEKDAY_NAMES[wDay];
-      cellTurno.value = turno;
+        // 1. PINTAR DIA E SEMANA (Feriados e FDS)
+        let dateBg = null;
+        if (isHoliday) dateBg = HOLIDAY_COLOR;
+        else if (isWeekend) dateBg = WEEKEND_COLOR;
 
-      // 2. PINTAR DIA E DIA DA SEMANA (Feriados ou Fim de Semana)
-      let dateBg = null;
-      if (isHoliday) dateBg = HOLIDAY_COLOR;
-      else if (isWeekend) dateBg = WEEKEND_COLOR;
+        if (dateBg) {
+          [cellDia, cellSemana].forEach(c => {
+            c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF" + dateBg } };
+            c.font = { bold: true, color: { argb: "FF000000" } };
+          });
+        }
 
-      if (dateBg) {
-        [cellDia, cellDiaSemana].forEach(cell => {
-          cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF" + dateBg } };
-          cell.font = { bold: true, color: { argb: "FF000000" } };
+        // 2. PINTAR TURNO (Cor que vem do Frontend)
+        const bgHex = normalizeHex6(employee.cellColors?.[d - 1] || "FFFFFF");
+        cellTurno.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF" + bgHex } };
+        cellTurno.font = { 
+          bold: true, 
+          color: { argb: isDarkHex(bgHex) ? "FFFFFFFF" : "FF000000" } 
+        };
+
+        // Alinhamento
+        [cellDia, cellSemana, cellTurno].forEach(c => {
+          c.alignment = { horizontal: "center", vertical: "middle" };
         });
+
+      } else {
+        // Oculta linhas de dias inexistentes (ex: 31 de Abril)
+        worksheet.getRow(row).hidden = true;
       }
-
-      // 3. PINTAR TURNO (Cor que vem do Frontend)
-      const shiftBg = normalizeHex6(employee.cellColors?.[d - 1] || "FFFFFF");
-      cellTurno.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF" + shiftBg } };
-      cellTurno.font = { 
-        bold: true, 
-        color: { argb: isDarkHex(shiftBg) ? "FFFFFFFF" : "FF000000" } 
-      };
-
-      // Bordas e Alinhamento
-      [cellDia, cellDiaSemana, cellTurno].forEach(c => {
-        c.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-        c.alignment = { horizontal: "center", vertical: "middle" };
-      });
     }
 
-    // --- GERAR PDF ---
     const tempDir = os.tmpdir();
-    const xlsxPath = path.join(tempDir, `folha_${Date.now()}.xlsx`);
+    const xlsxPath = path.join(tempDir, `f_${Date.now()}.xlsx`);
     await workbook.xlsx.writeFile(xlsxPath);
 
     const inputAsset = await pdfServices.upload({
@@ -156,7 +154,6 @@ export default async function handler(req, res) {
     return res.status(200).send(Buffer.concat(chunks));
 
   } catch (error) {
-    console.error(error);
     return res.status(500).json({ error: error.message });
   }
 }

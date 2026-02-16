@@ -6,14 +6,14 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 import {
+  ServicePrincipalCredentials,
   PDFServices,
   MimeType,
-  ServicePrincipalCredentials,
   CreatePDFJob,
-  CreatePDFParams,
-  CombinePDFJob,
-  CombinePDFParams,
-  Asset
+  CreatePDFResult,
+  SDKError,
+  ServiceUsageError,
+  ServiceApiError,
 } from "@adobe/pdfservices-node-sdk";
 
 export const config = {
@@ -46,7 +46,8 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "Chaves Adobe não configuradas" });
     }
 
-    console.log(`📊 Gerando ${employees.length} folhas de ponto para ${month}/${year}`);
+    // ✨ TESTAR SÓ COM 1 FUNCIONÁRIO
+    console.log(`📊 TESTE: Gerando folha para 1 funcionário (${month}/${year})`);
 
     const MONTH_NAMES = [
       "JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO",
@@ -82,147 +83,130 @@ export default async function handler(req, res) {
 
     const daysInMonth = new Date(year, month, 0).getDate();
 
-    // ✨ ADOBE SDK V4 - Nova inicialização
+    // Buscar template
+    const templateResponse = await fetch(TEMPLATE_URL);
+    if (!templateResponse.ok) throw new Error("Erro ao carregar template");
+    const templateBuffer = await templateResponse.arrayBuffer();
+
     const credentials = new ServicePrincipalCredentials({
       clientId: CLIENT_ID,
       clientSecret: CLIENT_SECRET,
     });
-
     const pdfServices = new PDFServices({ credentials });
 
-    const pdfAssets = [];
     const tempDir = os.tmpdir();
 
-    // Gerar PDF para cada funcionário
-    for (let empIdx = 0; empIdx < employees.length; empIdx++) {
-      const emp = employees[empIdx];
-      console.log(`📄 Processando: ${emp.abv_name} (${empIdx + 1}/${employees.length})`);
+    // ✨ SÓ O PRIMEIRO FUNCIONÁRIO
+    const emp = employees[0];
+    console.log(`📄 Processando: ${emp.abv_name}`);
 
-      // Buscar template fresco
-      const freshTemplateResponse = await fetch(TEMPLATE_URL);
-      if (!freshTemplateResponse.ok) throw new Error("Erro ao carregar template");
-      const freshTemplateBuffer = await freshTemplateResponse.arrayBuffer();
+    // Criar workbook
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(templateBuffer);
 
-      const workbook = new ExcelJS.Workbook();
-      await workbook.xlsx.load(freshTemplateBuffer);
-
-      if (workbook.worksheets.length === 0) {
-        throw new Error("Template não tem worksheets");
-      }
-
-      const worksheet = workbook.worksheets[0];
-
-      // Preencher cabeçalho
-      worksheet.getCell("D8").value = emp.abv_name || "";
-      worksheet.getCell("J8").value = emp.function || "";
-      worksheet.getCell("L46").value = workingHours;
-
-      // Preencher dias e turnos
-      for (let d = 1; d <= 31; d++) {
-        const row = 11 + d;
-
-        if (d <= daysInMonth) {
-          const date = new Date(year, month - 1, d, 12, 0, 0);
-          const weekdayIndex = date.getDay();
-          const weekday = WEEKDAY_NAMES[weekdayIndex];
-
-          worksheet.getCell(row, 2).value = d;
-          worksheet.getCell(row, 3).value = weekday;
-
-          const turno = emp.shifts?.[d - 1] || "";
-          const cellTurno = worksheet.getCell(row, 4);
-          cellTurno.value = turno;
-
-          if (turno && SHIFT_COLORS[turno]) {
-            const colorHex = SHIFT_COLORS[turno];
-            cellTurno.fill = {
-              type: "pattern",
-              pattern: "solid",
-              fgColor: { argb: "FF" + colorHex },
-            };
-
-            const isDark = isDarkColor(colorHex);
-            cellTurno.font = {
-              bold: true,
-              color: { argb: isDark ? "FFFFFFFF" : "FF000000" },
-            };
-
-            cellTurno.alignment = {
-              horizontal: "center",
-              vertical: "middle",
-            };
-          }
-        } else {
-          worksheet.getCell(row, 2).value = "";
-          worksheet.getCell(row, 3).value = "";
-          worksheet.getCell(row, 4).value = "";
-        }
-      }
-
-      worksheet.getCell("L44").value = emp.total || 0;
-
-      // Salvar Excel temporário
-      const xlsxPath = path.join(
-        tempDir,
-        `folha_${emp.abv_name.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}_${empIdx}.xlsx`
-      );
-      tempFiles.push(xlsxPath);
-      await workbook.xlsx.writeFile(xlsxPath);
-
-      // ✨ ADOBE SDK V4 - Upload
-      const readStream = fs.createReadStream(xlsxPath);
-      const inputAsset = await pdfServices.upload({
-        readStream,
-        mimeType: MimeType.XLSX,
-      });
-
-      // ✨ ADOBE SDK V4 - Criar PDF
-      const params = new CreatePDFParams({ inputDocumentType: MimeType.XLSX });
-      const job = new CreatePDFJob({ inputAsset, params });
-      
-      const pollingURL = await pdfServices.submit({ job });
-      const pdfServicesResponse = await pdfServices.getJobResult({
-        pollingURL,
-        resultType: Asset,
-      });
-
-      pdfAssets.push(pdfServicesResponse.result.asset);
-      console.log(`✅ PDF ${empIdx + 1}/${employees.length} criado`);
+    if (workbook.worksheets.length === 0) {
+      throw new Error("Template não tem worksheets");
     }
 
-    console.log(`🔗 Merging ${pdfAssets.length} PDFs...`);
+    const worksheet = workbook.worksheets[0];
 
-    // ✨ ADOBE SDK V4 - Combinar PDFs
-    const combineParams = new CombinePDFParams({ assets: pdfAssets });
-    const combineJob = new CombinePDFJob({ params: combineParams });
+    // Preencher cabeçalho
+    worksheet.getCell("D8").value = emp.abv_name || "";
+    worksheet.getCell("J8").value = emp.function || "";
+    worksheet.getCell("L46").value = workingHours;
+
+    // Preencher dias e turnos
+    for (let d = 1; d <= 31; d++) {
+      const row = 11 + d;
+
+      if (d <= daysInMonth) {
+        const date = new Date(year, month - 1, d, 12, 0, 0);
+        const weekdayIndex = date.getDay();
+        const weekday = WEEKDAY_NAMES[weekdayIndex];
+
+        worksheet.getCell(row, 2).value = d;
+        worksheet.getCell(row, 3).value = weekday;
+
+        const turno = emp.shifts?.[d - 1] || "";
+        const cellTurno = worksheet.getCell(row, 4);
+        cellTurno.value = turno;
+
+        if (turno && SHIFT_COLORS[turno]) {
+          const colorHex = SHIFT_COLORS[turno];
+          cellTurno.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FF" + colorHex },
+          };
+
+          const isDark = isDarkColor(colorHex);
+          cellTurno.font = {
+            bold: true,
+            color: { argb: isDark ? "FFFFFFFF" : "FF000000" },
+          };
+
+          cellTurno.alignment = {
+            horizontal: "center",
+            vertical: "middle",
+          };
+        }
+      } else {
+        worksheet.getCell(row, 2).value = "";
+        worksheet.getCell(row, 3).value = "";
+        worksheet.getCell(row, 4).value = "";
+      }
+    }
+
+    worksheet.getCell("L44").value = emp.total || 0;
+
+    // Salvar Excel temporário
+    const xlsxPath = path.join(
+      tempDir,
+      `folha_teste_${Date.now()}.xlsx`
+    );
+    tempFiles.push(xlsxPath);
     
-    const combinePollingURL = await pdfServices.submit({ job: combineJob });
-    const combineResponse = await pdfServices.getJobResult({
-      pollingURL: combinePollingURL,
-      resultType: Asset,
+    console.log(`💾 Salvando Excel em: ${xlsxPath}`);
+    await workbook.xlsx.writeFile(xlsxPath);
+    
+    // Verificar tamanho
+    const stats = fs.statSync(xlsxPath);
+    console.log(`📊 Tamanho do Excel: ${stats.size} bytes`);
+
+    // Converter para PDF
+    console.log(`🔄 Enviando para Adobe PDF Services...`);
+    const inputAsset = await pdfServices.upload({
+      readStream: fs.createReadStream(xlsxPath),
+      mimeType: MimeType.XLSX,
     });
 
-    // Baixar PDF final
-    const finalAsset = combineResponse.result.asset;
-    const streamAsset = await pdfServices.getContent({ asset: finalAsset });
+    const createJob = new CreatePDFJob({ inputAsset });
+    const pollingURL = await pdfServices.submit({ job: createJob });
+    
+    console.log(`⏳ Aguardando conversão...`);
+    const pdfResponse = await pdfServices.getJobResult({
+      pollingURL,
+      resultType: CreatePDFResult,
+    });
+
+    console.log(`✅ PDF gerado com sucesso!`);
+
+    // Baixar PDF
+    const streamAsset = await pdfServices.getContent({ asset: pdfResponse.result.asset });
 
     const finalPdfPath = path.join(
       tempDir,
-      `Folhas_Ponto_${month}_${year}_${Date.now()}.pdf`
+      `Folha_Ponto_TESTE_${month}_${year}.pdf`
     );
     tempFiles.push(finalPdfPath);
-
     const writeStream = fs.createWriteStream(finalPdfPath);
     streamAsset.readStream.pipe(writeStream);
-
     await new Promise((resolve, reject) => {
       writeStream.on("finish", resolve);
       writeStream.on("error", reject);
     });
-
     const pdfBuffer = fs.readFileSync(finalPdfPath);
-
-    // Cleanup
+    console.log(`📄 PDF final: ${pdfBuffer.length} bytes`);
     tempFiles.forEach((file) => {
       try {
         if (fs.existsSync(file)) fs.unlinkSync(file);
@@ -231,12 +215,10 @@ export default async function handler(req, res) {
       }
     });
 
-    console.log(`✅ PDF final gerado com sucesso!`);
-
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename="Folhas_Ponto_${MONTH_NAMES[month - 1]}_${year}.pdf"`
+      `attachment; filename="Folha_Ponto_TESTE_${MONTH_NAMES[month - 1]}_${year}.pdf"`
     );
     return res.status(200).send(pdfBuffer);
 
@@ -247,11 +229,25 @@ export default async function handler(req, res) {
       } catch {}
     });
 
-    console.error("❌ Erro ao gerar folhas:", error);
+    console.error("❌ Erro detalhado:", error);
+    console.error("Stack:", error.stack);
+
+    if (
+      error instanceof SDKError ||
+      error instanceof ServiceUsageError ||
+      error instanceof ServiceApiError
+    ) {
+      return res.status(500).json({
+        error: "Erro no serviço Adobe PDF Services",
+        details: error.message,
+        stack: error.stack
+      });
+    }
 
     return res.status(500).json({
-      error: "Erro ao gerar folhas de ponto",
+      error: "Erro ao gerar folha de ponto",
       details: error?.message || String(error),
+      stack: error?.stack
     });
   }
 }

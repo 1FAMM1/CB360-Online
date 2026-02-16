@@ -93,12 +93,12 @@ export default async function handler(req, res) {
     const pdfAssets = [];
     const tempDir = os.tmpdir();
 
-    // ✨ GERAR PDF PARA CADA FUNCIONÁRIO COM TEMPLATE FRESCO
+    // Gerar PDF para cada funcionário
     for (let empIdx = 0; empIdx < employees.length; empIdx++) {
       const emp = employees[empIdx];
       console.log(`📄 [${empIdx + 1}/${employees.length}] Processando: ${emp.abv_name}`);
 
-      // ✨ BUSCAR TEMPLATE FRESCO PARA CADA FUNCIONÁRIO
+      // Buscar template fresco para cada funcionário
       console.log(`  🔄 Buscando template fresco...`);
       const freshTemplateResponse = await fetch(TEMPLATE_URL);
       if (!freshTemplateResponse.ok) {
@@ -107,7 +107,7 @@ export default async function handler(req, res) {
       const freshTemplateBuffer = await freshTemplateResponse.arrayBuffer();
       console.log(`  ✅ Template carregado: ${freshTemplateBuffer.byteLength} bytes`);
 
-      // Criar workbook com template FRESCO
+      // Criar workbook com template fresco
       const workbook = new ExcelJS.Workbook();
       await workbook.xlsx.load(freshTemplateBuffer);
 
@@ -197,7 +197,9 @@ export default async function handler(req, res) {
     console.log(`🔗 Merging ${pdfAssets.length} PDFs...`);
 
     // Combinar todos os PDFs
-    const combineJob = new CombinePDFJob({ assets: pdfAssets });
+    const combineParams = { assets: pdfAssets };
+    const combineJob = new CombinePDFJob(combineParams);
+    
     const combinePollingURL = await pdfServices.submit({ job: combineJob });
     const combineResponse = await pdfServices.getJobResult({
       pollingURL: combinePollingURL,

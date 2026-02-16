@@ -87,7 +87,7 @@ function setFontKeepTemplate(cell, { bold = null, italic = false, bgHex = "FFFFF
 
 function setBorder(cell) {
   breakStyle(cell);
-  const c = { argb: "FFBFBFBF" };
+  const c = { argb: "FFD1D1D1" };
   cell.border = {
     top: { style: "thin", color: c },
     left: { style: "thin", color: c },

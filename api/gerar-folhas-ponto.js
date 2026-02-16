@@ -68,15 +68,16 @@ export default async function handler(req, res) {
       return 0.2126 * r + 0.7152 * g + 0.0722 * b < 150;
     }
 
-    // --- CORES ---
-    const WEEKEND_COLOR = "F9E0B0"; // Bege
-    const HOLIDAY_COLOR = "F7C6C7"; // Rosa (obrigatório)
-    const HOLIDAY_OPTIONAL_COLOR = "D6ECFF"; // Azul (facultativo - Carnaval)
+    // --- CORES (iguais às tuas + azul facultativo) ---
+    const WEEKEND_COLOR = "F9E0B0"; // bege
+    const HOLIDAY_COLOR = "F7C6C7"; // rosa (obrigatório)
+    const HOLIDAY_OPTIONAL_COLOR = "D6ECFF"; // azul (facultativo - Carnaval)
 
-    const DRIVER_BG = "FF69B4"; // driver => texto preto
-    const FE_BG = "00B0F0"; // FE => texto preto
+    // turnos especiais (texto preto)
+    const DRIVER_BG = "FF69B4";
+    const FE_BG = "00B0F0";
 
-    // --- LÓGICA DE FERIADOS PORTUGAL (com facultativos) ---
+    // --- LÓGICA DE FERIADOS PORTUGAL (agora com facultativo) ---
     function getPortugalHolidays(y) {
       const fixed = [
         { m: 1, d: 1, optional: false },
@@ -92,35 +93,36 @@ export default async function handler(req, res) {
         { m: 12, d: 25, optional: false },
       ];
 
-      // Páscoa (mesma fórmula que tens)
-      const a = y % 19,
-        b = Math.floor(y / 100),
-        c = y % 100,
-        d = Math.floor(b / 4),
-        e = b % 4,
-        f = Math.floor((b + 8) / 25),
-        g = Math.floor((b - f + 1) / 3),
-        h = (19 * a + b - d - g + 15) % 30,
-        i = Math.floor(c / 4),
-        k = c % 4,
-        l = (32 + 2 * e + 2 * i - h - k) % 7,
-        m = Math.floor((a + 11 * h + 22 * l) / 451),
-        monthE = Math.floor((h + l - 7 * m + 114) / 31),
-        dayE = ((h + l - 7 * m + 114) % 31) + 1;
+      // Páscoa
+      const a = y % 19;
+      const b = Math.floor(y / 100);
+      const c = y % 100;
+      const d = Math.floor(b / 4);
+      const e = b % 4;
+      const f = Math.floor((b + 8) / 25);
+      const g = Math.floor((b - f + 1) / 3);
+      const h = (19 * a + b - d - g + 15) % 30;
+      const i = Math.floor(c / 4);
+      const k = c % 4;
+      const l = (32 + 2 * e + 2 * i - h - k) % 7;
+      const m = Math.floor((a + 11 * h + 22 * l) / 451);
+      const monthE = Math.floor((h + l - 7 * m + 114) / 31);
+      const dayE = ((h + l - 7 * m + 114) % 31) + 1;
 
       const easter = new Date(y, monthE - 1, dayE, 12, 0, 0);
+
       const add = (base, ds) => {
         const nd = new Date(base);
         nd.setDate(nd.getDate() + ds);
         return nd;
       };
 
-      // Carnaval opcional; resto obrigatório
+      // Carnaval facultativo, resto obrigatório
       const mobile = [
-        { dt: add(easter, -47), optional: true }, // Carnaval
-        { dt: add(easter, -2), optional: false }, // Sexta Santa
-        { dt: easter, optional: false }, // Páscoa
-        { dt: add(easter, 60), optional: false }, // Corpo de Deus
+        { dt: add(easter, -47), optional: true },  // Carnaval
+        { dt: add(easter, -2), optional: false },  // Sexta Santa
+        { dt: easter, optional: false },           // Páscoa
+        { dt: add(easter, 60), optional: false },  // Corpo de Deus
       ];
 
       const all = new Set();
@@ -132,10 +134,10 @@ export default async function handler(req, res) {
         if (x.optional) optional.add(key);
       });
 
-      mobile.forEach((x) => {
-        const key = `${x.dt.getFullYear()}-${x.dt.getMonth() + 1}-${x.dt.getDate()}`;
+      mobile.forEach(({ dt, optional: opt }) => {
+        const key = `${dt.getFullYear()}-${dt.getMonth() + 1}-${dt.getDate()}`;
         all.add(key);
-        if (x.optional) optional.add(key);
+        if (opt) optional.add(key);
       });
 
       return { all, optional };
@@ -176,7 +178,7 @@ export default async function handler(req, res) {
         cellSemana.value = WEEKDAY_NAMES[wDay];
         cellTurno.value = employee.shifts?.[d - 1] || "";
 
-        // 1) PINTAR DIA E SEMANA (Feriados e FDS)
+        // 1) PINTAR DIA E SEMANA (feriados e fds)
         let dateBg = null;
         if (isHoliday) dateBg = isOptionalHoliday ? HOLIDAY_OPTIONAL_COLOR : HOLIDAY_COLOR;
         else if (isWeekend) dateBg = WEEKEND_COLOR;
@@ -192,7 +194,7 @@ export default async function handler(req, res) {
           });
         }
 
-        // 2) PINTAR TURNO (MANTÉM A TUA LÓGICA 1:1)
+        // 2) PINTAR TURNO (MANTÉM A TUA LÓGICA)
         const bgHex = normalizeHex6(employee.cellColors?.[d - 1] || "FFFFFF");
         cellTurno.fill = {
           type: "pattern",
@@ -200,7 +202,7 @@ export default async function handler(req, res) {
           fgColor: { argb: "FF" + bgHex },
         };
 
-        // ✅ texto preto para FE e Driver
+        // ✅ Só acrescenta: texto preto para FE e Driver
         const forceBlack =
           bgHex === normalizeHex6(FE_BG) || bgHex === normalizeHex6(DRIVER_BG);
 
@@ -216,7 +218,6 @@ export default async function handler(req, res) {
           c.alignment = { horizontal: "center", vertical: "middle" };
         });
       } else {
-        // Oculta linhas de dias inexistentes
         worksheet.getRow(row).hidden = true;
       }
     }

@@ -30,7 +30,16 @@
           {label: "Consultar Pedidos"}
         ]}, 
       ]},
-      {label: "Gestão Funcionários"},
+      {label: "Gestão Funcionários", children: [
+        {label: "Escalas Mensais"},
+        {label: "Controlo de Horas Extras"},
+        {label: "Registos Individuais"},
+        {label: "Gestão de Férias", children: [
+          {label: "Marcação de Férias"},
+          {label: "Mapa de Férias"}
+        ]},
+        {label: "Cadátro de Funcionários"}
+      ]},
       {label: "SALOC", children: [
         {label: "Planos Prévios de Intervenção", children: [
           {label: "PPI A2"},
@@ -539,3 +548,4 @@
         }
       }
     }
+

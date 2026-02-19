@@ -82,8 +82,19 @@
           <button class="sidebar-sub-submenu-button" data-page="page-vacations-request" data-access="Consultar Pedidos">Consultar Pedidos</button>
         </div>
       </div>
-      <!-- ======================= EMPLOYEES 360 ======================= -->
-      <button class="sidebar-menu-button" data-page="" data-access="Gestão Funcionários" onclick="showTempWarning('MÓDULO BREVEMENTE DISPONÍVEL EM CB360 ONLINE')">👷🏻‍♂️👷🏻‍♀️ Gestão Funcionários</button>
+      <!-- ======================= EMPLOYEES 360 ======================= -->      
+      <button class="sidebar-menu-button sub-submenu-toggle" data-page="page-employees" data-access="Gestão Funcionários">👷🏻‍♂️👷🏻‍♀️ Gestão Funcionários</button>
+      <div class="submenu">
+        <button class="sidebar-submenu-button" data-page="page-employee-scales" data-access="Escalas">Escalas Mensais</button>
+        <button class="sidebar-submenu-button" data-page="page-employee-extra-hour" data-access="Escalas">Controlo de Horas Extras</button>
+        <button class="sidebar-submenu-button" data-page="" data-access="">Registos Individuais</button>
+        <button class="sidebar-submenu-button sub-submenu-toggle" data-page="" data-access="Escalas">Gestão de Férias</button>
+        <div class="sub-submenu">
+          <button class="sidebar-sub-submenu-button" data-page="" data-access="Criação de Eventos">Marcação de Férias</button>
+          <button class="sidebar-sub-submenu-button" data-page="" data-access="Criação de Eventos">Mapa de Férias</button>
+        </div>
+        <button class="sidebar-submenu-button" data-page="" data-access="Escalas">Escalas de Serviço</button>
+      </div>
       <!-- ======================= SALOC 360 ======================= -->
       <button class="sidebar-menu-button sub-submenu-toggle" data-page="page-saloc" data-access="SALOC">📡 SALOC</button>
       <div class="submenu">
@@ -390,8 +401,33 @@
         <div class="card-footer"></div>
       </div>
     </div>
-    <!---- CARD EMPLOYEES 360 ---->
-    <!---- FUTURE INSERTION ---->
+    <!---- CARD EMPLOYEES 360 ---->  
+    <div id="page-employees" class="page">
+      <div class="card last-card">
+        <div class="card-header">BEM-VINDO À GESTÃO DE FUNCIONÁRIOS</div>
+        <div class="card-body" style="font-family: 'Segoe UI', sans-serif;">
+          <p style="font-size: 15px; margin-bottom: 20px; color: #333;">
+            A <strong>GESTÃO DE FUNCIONÁRIOS</strong> é o módulo digital responsável pela gestão integral da
+            <strong>Inserção e Validação</strong> dos elementos afetos às <strong>EQUIPAS DE INEM, SERVIÇO GERAL,
+            SALOC, E EQUIPAS DE INTERVEÇÃO PERMANTENTE.</strong>
+            Este sistema centraliza todo o processo de registo, controlo e e manutenção para o serviço operacional diário, garantindo uma gestão eficiente e transparente 
+            entre recursos humanos e operacionais.
+          </p>
+          <div style="background: linear-gradient(90deg, #e0e0e0, #d6d6d6); padding: 15px 20px; border-left: 5px solid #007bff; border-radius: 6px; margin-bottom: 20px;">
+            <strong>Funcionalidades Principais:</strong>
+          </div>
+          <div style="margin-bottom: 20px;">
+            <ul style="list-style: none; padding-left: 10px; line-height: 1.8;">
+              <li style="color:#0d630e;">📋 Emissão e gestão de escalas mensais.</li>
+              <li style="color:#0d630e;">👨‍🚒 Gestão e confirmação de horas extraordinárias.</li>
+              <li style="color:#0d630e;">🧾 Formulários de Ponto Mensais.</li>
+              <li style="color:#0d630e;">🧾 Gestão e controlo de turnos</li>
+            </ul>
+          </div>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+    </div>
     <!---- CARD SALOC 360 ---->
     <div id="page-saloc" class="page">
       <div class="card last-card">
@@ -782,6 +818,37 @@
         <div class="card-footer">
           <span style="font-size: 11px; color: #fff;">* Expanda o mês para gerir as aprovações.</span>
         </div>
+      </div>
+    </div>
+    <!---- EMPLOYEES 360 MODULE ---->
+    <div id="page-employee-scales" class="page">
+      <div class="card last-card" id="employee-monthly-schedules">
+        <div class="card-header">📅 Escalas Mensais</div>
+        <div class="card-body">
+          <div id="months-container-scales-employees"></div>
+          <div id="table-container-employees"></div>
+          <div id="employee-scales-options" style="display: none; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+            <button id="employees-clean-btn" class="btn btn-danger">Limpar</button>
+            <button id="employees-save-btn" class="btn btn-add">Guardar</button>
+            <button id="employees-emit-pdf-btn" class="btn btn-success">Emitir PDF</button>
+            <button id="employees-emit-xlsx-btn" class="btn btn-success">Emitir XLSX</button>
+            <button id="employees-emit-stitch-marker-btn" class="btn btn-success" style="background: #666;">Folhas de Ponto</button>
+          </div>
+        </div>
+        <div class="card-footer"></div>          
+      </div>
+    </div>   
+    <div id="page-employee-extra-hour" class="page">
+      <div class="card last-card" id="employee-monthly-extra-hour-schedules">
+        <div class="card-header">⌚ Controlo de Horas Extraordinárias</div>
+        <div class="card-body">
+          <div id="months-container-extra-hour-employees"></div>
+          <div id="table-container-extra-hour-employees"></div>
+          <div id="employee-extra-hours-options" style="display: none; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+            <button id="employees-extra-save-btn" class="btn btn-add">Guardar</button>
+          </div>
+        </div>
+        <div class="card-footer"></div>           
       </div>
     </div>
     <!---- SALOC 360 MODULE ---->
@@ -2510,6 +2577,7 @@
   <script src="js/fomioprogramatics/scales_ltsc_x09.js"></script>
   <script src="js/fomioprogramatics/events_ltsc_x09.js"></script>
   <script src="js/fomioprogramatics/vacations_ltsc_x09.js"></script>
+  <script src="js/employeesprogramatics/employees_ltsc_x27.js"></script>
   <script src="js/salocprogamatics/ppiload_ltsc_x10.js"></script>
   <script src="js/salocprogamatics/refusals_ltsc_x10.js"></script>
   <script src="js/salocprogamatics/moa_ltsc_x10.js"></script>
@@ -2539,4 +2607,3 @@
   <script></script>
 </body>
 </html>
-

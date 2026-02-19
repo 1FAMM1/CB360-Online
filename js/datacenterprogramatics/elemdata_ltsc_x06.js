@@ -38,7 +38,7 @@
           {label: "Marcação de Férias"},
           {label: "Mapa de Férias"}
         ]},
-        {label: "Cadátro de Funcionários"}
+        {label: "Cadastro de Funcionários"}
       ]},
       {label: "SALOC", children: [
         {label: "Planos Prévios de Intervenção", children: [
@@ -548,4 +548,5 @@
         }
       }
     }
+
 

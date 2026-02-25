@@ -1,7 +1,7 @@
-/* =======================================
-    EMPLOYEE SCALES
-    ======================================= */
-    /* == EMPLOYEES SCALES MONTH BUTTONS == */
+/* ============================================
+    FASE 01 - CREATE AND CONTROL EMPLOYEE SCALES
+    ============================================ */
+    /* ==== EMPLOYEES SCALES MONTH BUTTONS ===== */    
     function createEmployeeScalesMonthButtons({
       monthsContainerId, 
       tableContainerId,
@@ -67,7 +67,7 @@
         yearSelect.value = targetYear;
       }, 0);
     }
-    /* =============== CREATE AND EMIT SCALES =============== */
+    /* ======== CREATE AND EMIT SCALES ========= */
     function toLocalYMD(date) {
       const y = date.getFullYear();
       const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -87,7 +87,7 @@
     const SHIFT_VALUES = {"D": 12, "N": 12, "FR": 24, "FE": 8, "M": 8, "BX": 8, "FOR": 8, 
                           "FO": 0, "LC": 8, "LP": 8, "DP": 0, "LN": 8, "FI": 8, "FJ": 8};
     const SHIFT_COLORS = {"D": {bg: "#FFFF00", color: "#000000"}, "N": {bg: "#00008B", color: "#FFFFFF"}, "M": {bg: "#D3D3D3", color: "#000000"}, "FR": {bg: "#FFA500", color: "#000000"},
-                          "FO": {bg: "#0fbd0f", color: "#FFFFFF"}, "FE": {bg: "#00B0F0", color: "#000000"}, "BX": {bg: "#FF0000", color: "#FFFFFF"}, "LC": {bg: "#FF0000", color: "#FFFFFF"},
+                          "FO": {bg: "#92D050", color: "#000000"}, "FE": {bg: "#00B0F0", color: "#000000"}, "BX": {bg: "#FF0000", color: "#FFFFFF"}, "LC": {bg: "#FF0000", color: "#FFFFFF"},
                           "LN": {bg: "#FF0000", color: "#FFFFFF"}, "LP": {bg: "#FF0000", color: "#FFFFFF"}, "FI": {bg: "#FF0000", color: "#FFFFFF"}, "FJ": {bg: "#FF0000", color: "#FFFFFF"},
                           "FOR": {bg: "#808080", color: "#FFFFFF"}, "DP": {bg: "#000000", color: "#FFFFFF"}};
     const HOLIDAY_COLOR = "#f7c6c7";
@@ -148,16 +148,11 @@
       }
       return {workingDays, workingHours: workingDays * 8, holidaysInMonth, allHolidayDates};
     }
-    function getHolidayMapForMonth(year, month) {
-      const { holidaysInMonth } = calculateWorkingHours(year, month);
-      const map = new Map();
-      holidaysInMonth.forEach(h => map.set(h.day, {name: h.name, optional: !!h.optional}));
-      return map;
-    }
     function applyBaseDayColor(td, year, month, dayNum, holidayMap) {
       const val = (td.textContent || "").trim().toUpperCase();
       const hasShift = !!SHIFT_VALUES[val] || !!SHIFT_COLORS[val];
-      if (hasShift) return;
+      const hasCustomColors = td.dataset.customBg || td.dataset.customColor;
+      if (hasShift || hasCustomColors) return;      
       td.style.color = "";
       td.style.fontWeight = "";
       const holiday = holidayMap?.get(dayNum);
@@ -183,19 +178,19 @@
       infoDiv.style.cssText = `margin-top: 15px; padding: 12px; background: #f0f8ff; border: 2px solid #4682b4; border-radius: 5px; font-family: 'Segoe UI', sans-serif;
                                display: inline-block; width: fit-content; max-width: 100%;`;
       const monthLabel = `${MONTH_NAMES[month - 1]} ${year}`;
-      let feriadosHTML = '';
+      let holidaysHTML = '';
       if (info.holidaysInMonth.length > 0) {
-        feriadosHTML = `
+        holidaysHTML = `
           <div>
             <strong style="color:#1e3a8a;">🎉 Feriados:</strong>
             <span style="color:#6b7280;">
               ${info.holidaysInMonth
-                  .map(h => `${h.day} (${h.name}${h.optional ? " - Facultativo" : ""})`)
-                  .join(", ")}
+                .map(h => `${h.day} (${h.name}${h.optional ? " - Facultativo" : ""})`)
+                .join(", ")}
             </span>
           </div>
         `;
-      }
+      }  
       infoDiv.innerHTML = `
         <div style="display:flex; flex-direction:column; gap:8px; align-items:flex-start;">
           <div>
@@ -210,7 +205,7 @@
             <strong style="color:#1e3a8a;">⏰ Carga Mensal:</strong>
             <span style="font-size:16px; font-weight:bold; color:#dc2626;">${info.workingHours}h</span>
           </div>
-          ${feriadosHTML}
+          ${holidaysHTML}
         </div>
       `;
       container.appendChild(infoDiv);
@@ -237,13 +232,89 @@
     function ensureDriverMenu() {
       if (__driverMenu) return;
       const menu = document.createElement("div");
-      menu.style.cssText = `position: fixed; z-index: 99999; display: none; background: #fff; border: 1px solid #ccc; border-radius: 6px; box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-                            font-family: 'Segoe UI', sans-serif; padding: 4px; flex-direction: column; gap: 2px;`;
+      menu.style.cssText = `position: fixed; z-index: 99999; display: none; background: #fff; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+                            font-family: 'Segoe UI', sans-serif; padding: 8px; flex-direction: column; gap: 6px; min-width: 280px;`;
       menu.addEventListener("mousedown", (e) => e.stopPropagation());
       menu.addEventListener("click", (e) => e.stopPropagation());
+      const bgSection = document.createElement("div");
+      bgSection.innerHTML = `<div style="font-size: 11px; font-weight: bold; color: #666; margin-bottom: 4px; padding: 0 4px;">🎨 COR DE FUNDO:</div>`;      
+      const bgGrid = document.createElement("div");
+      bgGrid.style.cssText = "display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; padding: 4px;";      
+      const shiftsList = [{code: "M", desc: "Manhã"}, {code: "D", desc: "Dia"}, {code: "N", desc: "Noite"}, {code: "FR", desc: "Feriado"}, {code: "FO", desc: "Folga"},
+                          {code: "FE", desc: "Férias"}, {code: "FOR", desc: "Formação"}, {code: "BX", desc: "Baixa"}, {code: "DP", desc: "Dispensa"},
+                          {code: "DRIVER", desc: "Motorista", bg: DRIVER_BG, color: DRIVER_TEXT}, {code: "OTHER", desc: "Outro Tipo", bg: OTHER_BG, color: OTHER_TEXT},
+                          {code: "RESET", desc: "Limpar Cor", bg: "#ffffff", color: "#000000"}];      
+      shiftsList.forEach(shift => {
+        const colors = SHIFT_COLORS[shift.code] || {bg: shift.bg || "#ffffff", color: shift.color || "#000000"};
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.title = shift.desc;
+        btn.textContent = shift.code === "RESET" ? "✖" : "";
+        btn.style.cssText = `border: 1px solid #ddd; background: ${colors.bg}; color: ${colors.color}; 
+                             padding: 6px 4px; cursor: pointer; font-size: 11px; font-weight: bold; border-radius: 4px;
+                             transition: transform 0.1s; min-height: 32px; min-width: 32px;`;
+        btn.addEventListener("mouseover", () => btn.style.transform = "scale(1.1)");
+        btn.addEventListener("mouseout", () => btn.style.transform = "scale(1)");
+        btn.addEventListener("click", () => {
+          if (!__driverMenuCell) return;
+          if (shift.code === "RESET") {
+            delete __driverMenuCell.dataset.customBg;
+            delete __driverMenuCell.dataset.customColor;
+            const val = __driverMenuCell.textContent.trim().toUpperCase();
+            applyCellColor(__driverMenuCell, val);
+            if (__driverMenuCell.dataset.driver === "1") applyDriverStyle(__driverMenuCell);
+          } else {
+            __driverMenuCell.dataset.customBg = colors.bg;
+            __driverMenuCell.dataset.customColor = colors.color;
+            __driverMenuCell.style.backgroundColor = colors.bg;
+            __driverMenuCell.style.color = colors.color;
+            __driverMenuCell.style.fontWeight = "bold";
+          }
+          hideDriverMenu();
+        });
+        bgGrid.appendChild(btn);
+      });      
+      bgSection.appendChild(bgGrid);
+      menu.appendChild(bgSection);
+      const textSection = document.createElement("div");
+      textSection.innerHTML = `<div style="font-size: 11px; font-weight: bold; color: #666; margin: 4px 0 4px 4px;">🖍️ COR DE LETRA:</div>`;      
+      const textGrid = document.createElement("div");
+      textGrid.style.cssText = "display: flex; gap: 4px; padding: 4px;";      
+      [{label: "Preto", color: "#000000"}, {label: "Branco", color: "#FFFFFF"}, {label: "Vermelho", color: "#FF0000"}].forEach(item => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.textContent = item.label;
+        let bgColor = "#fff";
+        let textColor = "#000";
+        if (item.color === "#000000") {
+          bgColor = "#000";
+          textColor = "#fff";
+        } else if (item.color === "#FF0000") {
+          bgColor = "#fff";
+          textColor = "#FF0000";
+        }
+        btn.style.cssText = `border: 1px solid #ddd; background: ${bgColor}; 
+                             color: ${textColor}; padding: 6px 12px; cursor: pointer; 
+                             font-size: 11px; font-weight: bold; border-radius: 4px; flex: 1;`;
+        btn.addEventListener("click", () => {
+          if (!__driverMenuCell) return;
+          __driverMenuCell.dataset.customColor = item.color;
+          __driverMenuCell.style.color = item.color;
+          hideDriverMenu();
+        });
+        textGrid.appendChild(btn);
+      });      
+      textSection.appendChild(textGrid);
+      menu.appendChild(textSection);
+      const separator = document.createElement("div");
+      separator.style.cssText = "height: 1px; background: #ddd; margin: 4px 0;";
+      menu.appendChild(separator);
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.style.cssText = `border: none; background: transparent; padding: 8px 12px; cursor: pointer; width: 100%; text-align: left; display: block;`;
+      btn.style.cssText = `border: none; background: #f0f0f0; padding: 8px 12px; cursor: pointer; width: 100%; 
+                           text-align: left; display: block; border-radius: 4px; font-size: 12px;`;
+      btn.addEventListener("mouseover", () => btn.style.background = "#e0e0e0");
+      btn.addEventListener("mouseout", () => btn.style.background = "#f0f0f0");
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
         if (!__driverMenuCell) return;
@@ -262,7 +333,10 @@
       menu.appendChild(btn);
       const btnOutro = document.createElement("button");
       btnOutro.type = "button";
-      btnOutro.style.cssText = `border: none; background: transparent; padding: 8px 12px; cursor: pointer; width: 100%; text-align: left; display: block;`;
+      btnOutro.style.cssText = `border: none; background: #f0f0f0; padding: 8px 12px; cursor: pointer; width: 100%; 
+                                text-align: left; display: block; border-radius: 4px; font-size: 12px;`;
+      btnOutro.addEventListener("mouseover", () => btnOutro.style.background = "#e0e0e0");
+      btnOutro.addEventListener("mouseout", () => btnOutro.style.background = "#f0f0f0");
       btnOutro.addEventListener("click", (e) => {
         e.stopPropagation();
         if (!__driverMenuCell) return;
@@ -280,7 +354,7 @@
         }
         hideDriverMenu();
       });
-      menu.appendChild(btnOutro);
+      menu.appendChild(btnOutro);      
       document.body.appendChild(menu);
       __driverMenu = menu;
       __driverMenu._btn = btn;
@@ -324,36 +398,35 @@
     }
     function calculateRowTotal(row) {
       const dayCells = row.querySelectorAll("td[contenteditable='true']");
-      const year = __currentYear;
-      const month = __currentMonth;
-      const daysInMonth = __currentDaysInMonth;
-      const holidayMap = __currentHolidayMap;
       let total = 0;
-      dayCells.forEach((cell, index) => {
-        const dayNum = index + 1;
-        if (dayNum > daysInMonth) return;
+      dayCells.forEach(cell => {
         const val = (cell.textContent || "").trim().toUpperCase();
-        let hours = SHIFT_VALUES[val];
-        if (hours === undefined) return;
-        if (val === "N") {
-          const holiday = holidayMap?.get(dayNum);
-          const nextDayHoliday = holidayMap?.get(dayNum + 1);      
-          if (holiday && !holiday.optional) {
-            hours = 16;
-          }
-          else if (nextDayHoliday && !nextDayHoliday.optional) {
-            hours = 20;
-          }
-          else if (dayNum === daysInMonth) {
-            const nextMonthHolidays = getHolidayMapForMonth(year, month + 1);
-            const jan1Holiday = nextMonthHolidays?.get(1);
-            if (jan1Holiday && !jan1Holiday.optional) {
-              hours = 20;
-            }
-          }
-        }
+        const hours = SHIFT_VALUES[val] || 0;
         total += hours;
       });
+      const nInt = parseInt(row.getAttribute("data-nint"), 10);
+      const entryDate = row.dataset.entryDate;
+      if (entryDate) {
+        const entry = new Date(entryDate);
+        const entryYear = entry.getFullYear();
+        const entryMonth = entry.getMonth() + 1;
+        const entryDay = entry.getDate();
+        if (entryYear === __currentYear && entryMonth === __currentMonth) {
+          if (entryDay > 1) {
+            let workingDaysNotWorked = 0;
+            for (let d = 1; d < entryDay; d++) {
+              const date = new Date(__currentYear, __currentMonth - 1, d);
+              const dayOfWeek = date.getDay();
+              const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+              const isHoliday = __currentHolidayMap?.has(d);
+              if (!isWeekend && !isHoliday) {
+                workingDaysNotWorked++;
+              }
+            }
+            total += workingDaysNotWorked * 8;
+          }
+        }
+      }
       return total;
     }
     function getHolidayMapForMonth(year, month) {
@@ -384,7 +457,17 @@
       if (totalAcumCell) {
         const acumuladoBase = parseFloat(totalAcumCell.dataset.base || 0);
         const horasExtra = parseFloat(totalAcumCell.dataset.horasExtra || 0);
-        const totalAcumulado = acumuladoBase + horasExtra + totalMensal;
+        const isJaneiro = (totalAcumCell.dataset.isJaneiro === "1");        
+        const year = __currentYear;
+        const month = __currentMonth;
+        const cargaObrigatoria = calculateWorkingHours(year, month).workingHours;        
+        const diferencaMes = totalMensal - cargaObrigatoria + horasExtra;        
+        let totalAcumulado;
+        if (isJaneiro) {
+          totalAcumulado = diferencaMes;
+        } else {
+          totalAcumulado = acumuladoBase + diferencaMes;
+        }
         totalAcumCell.textContent = totalAcumulado;
       }
     }
@@ -437,14 +520,14 @@
         const thNum = table.querySelector(`th.day-number-${d}`);
         if (thTop) {thTop.style.backgroundColor = bg; thTop.title = title;}
         if (thNum) {thNum.style.backgroundColor = bg; thNum.title = title;}
-        tbody.querySelectorAll(`.day-cell-${d}`).forEach((td) => {
-          const val = (td.textContent || "").trim().toUpperCase();
-          const hasShift = !!SHIFT_VALUES[val] || !!SHIFT_COLORS[val];
-          if (!hasShift) {
-            td.style.backgroundColor = bg;
-            td.title = title;
-          }
-        });
+         tbody.querySelectorAll(`.day-cell-${d}`).forEach((td) => {
+           const val = (td.textContent || "").trim().toUpperCase();
+           const hasShift = !!SHIFT_VALUES[val] || !!SHIFT_COLORS[val];
+           const hasCustomColors = td.dataset.customBg || td.dataset.customColor;
+           if (hasShift || hasCustomColors) return;
+           td.style.backgroundColor = bg;
+           td.title = title;
+         });
       }
     }
     async function loadScalesShifts(year, month) {
@@ -464,7 +547,8 @@
         const employeeData = {};
         data.forEach(item => {
           const key = `${item.n_int}_${item.day}`;
-          shifts[key] = {shift: item.shift, is_driver: !!item.is_driver, is_other: !!item.is_other};
+          shifts[key] = {shift: item.shift, is_driver: !!item.is_driver, is_other: !!item.is_other, custom_bg_color: item.custom_bg_color || null,
+                         custom_text_color: item.custom_text_color || null};
           if (!(item.n_int in employeeData)) {
             employeeData[item.n_int] = {
               position: item.position,
@@ -482,7 +566,11 @@
     async function loadScalesEmployees(year, month) {
       try {
         const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
-        const url = `${SUPABASE_URL}/rest/v1/reg_employees` + `?select=n_int,abv_name,function,team` + `&corp_oper_nr=eq.${encodeURIComponent(corpOperNr)}`;
+        const monthStart = `${year}-${String(month).padStart(2, '0')}-01`;
+        const lastDayOfMonth = new Date(year, month, 0).getDate();
+        const monthEnd = `${year}-${String(month).padStart(2, '0')}-${lastDayOfMonth}`;
+        const url = `${SUPABASE_URL}/rest/v1/reg_employees` +  `?select=n_int,abv_name,function,team,entry_date,exit_date` +  `&corp_oper_nr=eq.${corpOperNr}` +
+                    `&or=(entry_date.is.null,entry_date.lte.${monthEnd})` + `&or=(exit_date.is.null,exit_date.gte.${monthStart})`;
         const response = await fetch(url, {headers: getSupabaseHeaders()});
         if (!response.ok) {
           const body = await response.text();
@@ -528,11 +616,13 @@
             }
             emp._acumulado = acumuladosMap[emp.n_int] || 0;
             emp._horasExtra = horasExtraMap[emp.n_int] || 0;
+            emp._isJaneiro = isJaneiro;
           });
         } else {
           data.forEach((emp) => {
             emp._acumulado = acumuladosMap[emp.n_int] || 0;
             emp._horasExtra = horasExtraMap[emp.n_int] || 0;
+            emp._isJaneiro = isJaneiro;
           });
         }
         const idx = (key) => {
@@ -545,9 +635,6 @@
           const ia = idx(ka);
           const ib = idx(kb);
           if (ia !== ib) return ia - ib;
-          const posA = a._position ?? 9999;
-          const posB = b._position ?? 9999;
-          if (posA !== posB) return posA - posB;
           return parseInt(a.n_int, 10) - parseInt(b.n_int, 10);
         });
         data._shifts = shifts;
@@ -570,13 +657,22 @@
             const rec = shifts[key];
             const shiftVal = (rec.shift || "").toUpperCase();
             cell.textContent = shiftVal;
-            applyCellColor(cell, shiftVal);
+            if (!rec.custom_bg_color && !rec.custom_text_color) {
+              applyCellColor(cell, shiftVal);
+            }
+            if (rec.custom_bg_color) {
+              cell.dataset.customBg = rec.custom_bg_color;
+              cell.style.backgroundColor = rec.custom_bg_color;
+            }
+            if (rec.custom_text_color) {
+              cell.dataset.customColor = rec.custom_text_color;
+              cell.style.color = rec.custom_text_color;
+            }
             if (rec.is_driver) {
               cell.dataset.driver = "1";
-          cell.dataset.outro = "0";
-              applyDriverStyle(cell); 
-            }
-            else if (rec.is_other) {
+              cell.dataset.outro = "0";
+              applyDriverStyle(cell);
+            } else if (rec.is_other) {
               cell.dataset.outro = "1";
               cell.dataset.driver = "0";
               applyOtherStyle(cell);
@@ -893,21 +989,128 @@
     }
     function applyWeekendSpecialColors(tbody, year, month) {
       const SPECIAL_TURNOS_FDS = ["BX", "FI", "FJ", "LC", "LP", "LN"];
+      const SPECIAL_BEFORE_HOLIDAY_RED = ["FI", "FJ", "LC", "LP", "LN"];
       const daysInMonth = new Date(year, month, 0).getDate();
       const holidayMap = __currentHolidayMap;
       const rows = tbody.querySelectorAll("tr.data-row");
       rows.forEach(row => {
         for (let d = 1; d <= daysInMonth; d++) {
+          const cell = row.querySelector(`.day-cell-${d}`);
+          if (!cell) continue;
+          const value = cell.textContent.trim().toUpperCase();
+          const hasShiftColor = !!value && !!SHIFT_COLORS[value];
+          const hasCustomColors = cell.dataset.customBg || cell.dataset.customColor;
+          if (hasShiftColor || hasCustomColors) continue;          
+          const holiday = holidayMap?.get(d);
+          if (holiday) {
+            cell.style.backgroundColor = holiday.optional ? HOLIDAY_OPTIONAL_COLOR : HOLIDAY_COLOR;
+            continue;
+          }
           const date = atNoonLocal(year, month - 1, d);
           const dayOfWeek = date.getDay();
-          if (dayOfWeek === 6 || dayOfWeek === 0) {
+          const isWeekend = (dayOfWeek === 6 || dayOfWeek === 0);
+          if (isWeekend) {
+            cell.style.backgroundColor = WEEKEND_COLOR || "#f9e0b0";
+          } else {
+            cell.style.backgroundColor = "";
+          }
+        }
+      });
+      rows.forEach(row => {
+        const rowNInt = parseInt(row.getAttribute("data-nint"), 10);
+        if (!rowNInt) return;
+        const lastDayPrevMonth = new Date(year, month - 1, 0).getDate();
+        const turnoLastDayPrev = __prevMonthShiftsCache[`${rowNInt}_${lastDayPrevMonth}`] || null;
+        if (turnoLastDayPrev === "FE" || turnoLastDayPrev === "BX") {
+          let continuePainting = true;
+          const corPintar = (turnoLastDayPrev === "FE") ? "#00B0F0" : "#FF0000";
+          for (let d = 1; d <= daysInMonth && continuePainting; d++) {
+            const date = atNoonLocal(year, month - 1, d);
+            const dayOfWeek = date.getDay();
+            const isWeekend = (dayOfWeek === 6 || dayOfWeek === 0);
+            const isHoliday = holidayMap?.has(d);
+            if (!isWeekend && !isHoliday) {
+              continuePainting = false;
+              break;
+            }
             const cell = row.querySelector(`.day-cell-${d}`);
-            if (!cell) continue;
-            const value = cell.textContent.trim().toUpperCase();
-            if (!value || !SHIFT_COLORS[value]) {
-              const holiday = holidayMap?.get(d);
-              if (holiday) { cell.style.backgroundColor = holiday.optional ? HOLIDAY_OPTIONAL_COLOR : HOLIDAY_COLOR; }
-              else { cell.style.backgroundColor = WEEKEND_COLOR || "#f9e0b0"; }
+            if (cell) {
+              const cellValue = cell.textContent.trim().toUpperCase();
+              if (!cellValue || !SHIFT_COLORS[cellValue]) {
+                cell.style.backgroundColor = corPintar;
+                if (turnoLastDayPrev === "BX") {
+                  cell.style.color = "#FFFFFF";
+                  cell.style.fontWeight = "bold";
+                }
+              }
+            }
+          }
+        }      
+      });
+      rows.forEach(row => {
+        for (let d = 1; d <= daysInMonth; d++) {
+          const cell = row.querySelector(`.day-cell-${d}`);
+          if (!cell) continue;
+          const turno = cell.textContent.trim().toUpperCase();
+          const nextDay = d + 1;
+          if (nextDay > daysInMonth) continue;
+          const isNextDayHoliday = holidayMap?.has(nextDay);
+          if (!isNextDayHoliday) continue;
+          if (turno === "FE" || turno === "BX") {
+            const corPintar = (turno === "FE") ? "#00B0F0" : "#FF0000";
+            const nextCell = row.querySelector(`.day-cell-${nextDay}`);
+            if (nextCell) {
+              const nextValue = nextCell.textContent.trim().toUpperCase();
+              if (!nextValue || !SHIFT_COLORS[nextValue]) {
+                nextCell.style.backgroundColor = corPintar;
+                if (turno === "BX") {
+                  nextCell.style.color = "#FFFFFF";
+                  nextCell.style.fontWeight = "bold";
+                }
+              }
+            }
+            const nextDate = atNoonLocal(year, month - 1, nextDay);
+            if (nextDate.getDay() === 5) {
+              const sabado = nextDay + 1;
+              const domingo = nextDay + 2;
+              if (sabado <= daysInMonth) {
+                const sabCell = row.querySelector(`.day-cell-${sabado}`);
+                if (sabCell) {
+                  const sabValue = sabCell.textContent.trim().toUpperCase();
+                  if (!sabValue || !SHIFT_COLORS[sabValue]) {
+                    sabCell.style.backgroundColor = corPintar;
+                    if (turno === "BX") {
+                      sabCell.style.color = "#FFFFFF";
+                      sabCell.style.fontWeight = "bold";
+                    }
+                  }
+                }
+              }
+              if (domingo <= daysInMonth) {
+                const domCell = row.querySelector(`.day-cell-${domingo}`);
+                if (domCell) {
+                  const domValue = domCell.textContent.trim().toUpperCase();
+                  if (!domValue || !SHIFT_COLORS[domValue]) {
+                    domCell.style.backgroundColor = corPintar;
+                    if (turno === "BX") {
+                      domCell.style.color = "#FFFFFF";
+                      domCell.style.fontWeight = "bold";
+                    }
+                  }
+                }
+              }
+            }
+            continue;
+          }
+          if (SPECIAL_BEFORE_HOLIDAY_RED.includes(turno)) {
+            const nextCell = row.querySelector(`.day-cell-${nextDay}`);
+            if (nextCell) {
+              const nextValue = nextCell.textContent.trim().toUpperCase();
+              if (!nextValue || !SHIFT_COLORS[nextValue]) {
+                nextCell.style.backgroundColor = "#FF0000";
+                nextCell.style.color = "#FFFFFF";
+                nextCell.style.fontWeight = "bold";
+              }
             }
           }
         }
@@ -952,7 +1155,34 @@
           if (!cellFDS) continue;
           const cellValue = cellFDS.textContent.trim().toUpperCase();
           if (cellValue && SHIFT_COLORS[cellValue]) continue;
-          if (turnoSexta === "FE") { cellFDS.style.backgroundColor = "#00B0F0"; continue; }
+          if (turnoSexta === "FE" || turnoSexta === "BX") {
+            const corPintar = (turnoSexta === "FE") ? "#00B0F0" : "#FF0000";
+            cellFDS.style.backgroundColor = corPintar;
+            if (turnoSexta === "BX") {
+              cellFDS.style.color = "#FFFFFF";
+              cellFDS.style.fontWeight = "bold";
+            }
+            if (dayOfWeek === 6) {
+              const segunda = d + 2;
+              if (segunda <= daysInMonth) {
+                const isSegundaHoliday = holidayMap?.has(segunda);
+                if (isSegundaHoliday) {
+                  const segCell = row.querySelector(`.day-cell-${segunda}`);
+                  if (segCell) {
+                    const segValue = segCell.textContent.trim().toUpperCase();
+                    if (!segValue || !SHIFT_COLORS[segValue]) {
+                      segCell.style.backgroundColor = corPintar;
+                      if (turnoSexta === "BX") {
+                        segCell.style.color = "#FFFFFF";
+                        segCell.style.fontWeight = "bold";
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            continue;
+          }
           if (SPECIAL_TURNOS_FDS.includes(turnoSexta) && SPECIAL_TURNOS_FDS.includes(turnoSegunda)) {
             if (dayOfWeek === 6) {
               const corSexta = SHIFT_COLORS[turnoSexta];
@@ -1295,6 +1525,7 @@
         const tr = document.createElement("tr");
         tr.className = "data-row";
         tr.setAttribute("data-nint", item.n_int);
+        tr.dataset.entryDate = item.entry_date || null;
         const tdNI = document.createElement("td");
         tdNI.textContent = String(item.n_int).padStart(3, "0");
         tdNI.style.cssText = COMMON_TD_STYLE;
@@ -1326,6 +1557,7 @@
         tdTotalAcum.textContent = acumuladoBase + horasExtra;
         tdTotalAcum.dataset.base = acumuladoBase;
         tdTotalAcum.dataset.horasExtra = horasExtra;
+        tdTotalAcum.dataset.isJaneiro = item._isJaneiro ? "1" : "0";
         tdTotalAcum.style.cssText = COMMON_TD_STYLE + "text-align:center; font-weight:bold; background:#ffe6e6;";
         tr.appendChild(tdTotalAcum);
         tbody.appendChild(tr);
@@ -1400,7 +1632,16 @@
         if (totalAcumCell) {
           const acumuladoBase = parseFloat(totalAcumCell.dataset.base || 0);
           const horasExtra = parseFloat(totalAcumCell.dataset.horasExtra || 0);
-          totalAcumCell.textContent = String(acumuladoBase + horasExtra);
+          const isJaneiro = (totalAcumCell.dataset.isJaneiro === "1");
+          const cargaObrigatoria = calculateWorkingHours(year, month).workingHours;          
+          const diferencaMes = 0 - cargaObrigatoria + horasExtra;
+          let totalAcumulado;
+          if (isJaneiro) {
+            totalAcumulado = diferencaMes;
+          } else {
+            totalAcumulado = acumuladoBase + diferencaMes;
+          }
+          totalAcumCell.textContent = String(totalAcumulado);
         }
       });
       if (table) {
@@ -1445,9 +1686,13 @@
           dayCells.forEach((cell, idx) => {
             const day = idx + 1;
             const shift = cell.textContent.trim().toUpperCase();
-            if (shift) {
-              shiftsPayload.push({n_int: nInt, abv_name: abvName, day: day, month: month, year: year, shift: shift, team: team, function: func,
-                                  position: position, corp_oper_nr: corpOperNr, is_driver: (cell.dataset.driver === "1"), is_other: (cell.dataset.outro === "1")});}});
+            const customBg = cell.dataset.customBg || null;
+            const customColor = cell.dataset.customColor || null;
+            const hasCustomColors = customBg || customColor;
+            if (shift || hasCustomColors) {
+              shiftsPayload.push({n_int: nInt, abv_name: abvName, day: day, month: month, year: year, shift: shift === "" ? " " : shift, team: team, function: func, position: position, 
+                                  corp_oper_nr: corpOperNr, is_driver: (cell.dataset.driver === "1"), is_other: (cell.dataset.outro === "1"), custom_bg_color: customBg,
+                                  custom_text_color: customColor});}});
           const totalMensal = calculateRowTotal(row);
           const celulas = row.cells;
           const totalAcumuladoTexto = celulas[celulas.length - 1].textContent.trim();
@@ -1750,506 +1995,376 @@
     
     
     
-  
     
     
     
-    
-    
-    
-    
-    
-   /* == EMPLOYEES EXTRA HOURS MONTH BUTTONS == */
-function createEmployeeExtraHourMonthButtons({
-  monthsContainerId,
-  tableContainerId,
-  yearSelectId,
-  optionsContainerId,
-  loadDataFunc,
-  createTableFunc
-}) {
-  const container = document.getElementById(monthsContainerId);
-  if (!container) return;
-  container.innerHTML = "";
-  const mainWrapper = document.createElement("div");
-  Object.assign(mainWrapper.style, {display: "flex", flexDirection: "column", alignItems: "center", gap: "12px"});
-
-  const yearContainer = document.createElement("div");
-  Object.assign(yearContainer.style, {display: "flex", alignItems: "center", gap: "8px"});
-  const yearLabel = document.createElement("label");
-  yearLabel.textContent = "Ano:";
-  yearLabel.style.fontWeight = "bold";
-  const yearSelect = document.createElement("select");
-  yearSelect.id = yearSelectId;
-  Object.assign(yearSelect.style, {padding: "6px 10px", borderRadius: "4px", border: "1px solid #ccc", cursor: "pointer"});
-  const targetYear = new Date().getFullYear();
-
-  for (let y = 2025; y <= 2035; y++) {
-    const opt = document.createElement("option");
-    opt.value = y;
-    opt.textContent = y;
-    if (y === targetYear) opt.selected = true;
-    yearSelect.appendChild(opt);
-  }
-  yearSelect.value = targetYear;
-  yearContainer.append(yearLabel, yearSelect);
-
-  const monthsWrapper = document.createElement("div");
-  Object.assign(monthsWrapper.style, {display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "4px", maxWidth: "800px"});
-
-  const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-
-  monthNames.forEach((month, idx) => {
-    const btn = document.createElement("button");
-    btn.textContent = month;
-    btn.className = "btn btn-add";
-    Object.assign(btn.style, {fontSize: "14px", fontWeight: "bold", width: "110px", height: "40px", borderRadius: "4px", margin: "2px"});
-
-    btn.addEventListener("click", async () => {
-      const tableContainer = document.getElementById(tableContainerId);
-      const optionsContainer = document.getElementById(optionsContainerId);
-      const isActive = btn.classList.contains("active");
-
-      if (isActive) {
-        if (tableContainer) tableContainer.innerHTML = "";
-        if (optionsContainer) optionsContainer.style.display = "none";
-        btn.classList.remove("active");
-        return;
+    /* ============================================
+    FASE 02 - EMPLOYEE EXTRA HOURS CONTROL
+    ============================================ */  
+    /* == EMPLOYEES EXTRA HOURS MONTH BUTTONS == */
+    function createEmployeeExtraHourMonthButtons({
+      monthsContainerId,
+      tableContainerId,
+      yearSelectId,
+      optionsContainerId,
+      loadDataFunc,
+      createTableFunc
+    }) {
+      const container = document.getElementById(monthsContainerId);
+      if (!container) return;
+      container.innerHTML = "";
+      const mainWrapper = document.createElement("div");
+      Object.assign(mainWrapper.style, {display: "flex", flexDirection: "column", alignItems: "center", gap: "12px"});
+      const yearContainer = document.createElement("div");
+      Object.assign(yearContainer.style, {display: "flex", alignItems: "center", gap: "8px"});
+      const yearLabel = document.createElement("label");
+      yearLabel.textContent = "Ano:";
+      yearLabel.style.fontWeight = "bold";
+      const yearSelect = document.createElement("select");
+      yearSelect.id = yearSelectId;
+      Object.assign(yearSelect.style, {padding: "6px 10px", borderRadius: "4px", border: "1px solid #ccc", cursor: "pointer"});
+      const targetYear = new Date().getFullYear();
+      for (let y = 2025; y <= 2035; y++) {
+        const opt = document.createElement("option");
+        opt.value = y;
+        opt.textContent = y;
+        if (y === targetYear) opt.selected = true;
+        yearSelect.appendChild(opt);
       }
-
-      monthsWrapper.querySelectorAll(".btn").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      const yearVal = parseInt(yearSelect.value, 10);
-      const monthNum = idx + 1;
-      const data = await loadDataFunc(yearVal, monthNum);
-      await createTableFunc(tableContainerId, yearVal, monthNum, data);
-      if (optionsContainer) optionsContainer.style.display = "flex";
-    });
-    monthsWrapper.appendChild(btn);
-  });
-
-  mainWrapper.append(yearContainer, monthsWrapper);
-  container.appendChild(mainWrapper);
-  setTimeout(() => { yearSelect.value = targetYear; }, 0);
-}
-
-/* ========== HELPERS DE CONVERSÃO ========== */
-function horasDecimaisToMinutes(horas) {
-  if (!horas || horas <= 0) return 0;
-  return Math.round(horas * 60);
-}
-
-function minutesToHHCommaMM(totalMinutes) {
-  if (!totalMinutes || totalMinutes < 0) totalMinutes = 0;
-  const h = Math.floor(totalMinutes / 60);
-  const m = totalMinutes % 60;
-  return `${h},${String(m).padStart(2, "0")}`;
-}
-
-function minutesToHHMM(minutes) {
-  if (!minutes || minutes <= 0) return "";
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-}
-
-function isValidHHMM(value) {
-  return /^\d{1,2}:\d{2}$/.test(value);
-}
-
-/* ========== CRIAR TABELA DE HORAS EXTRA ========== */
-async function createExtraHoursTable(containerId, year, month, data) {
-  const container = document.getElementById(containerId);
-  if (!container) return;
-
-  const rowsData = data?.employees || [];
-  container.innerHTML = "";
-
-  const MONTH_NAMES = ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"];
-  const WEEKDAY_NAMES = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
-  const daysInMonth = new Date(year, month, 0).getDate();
-  const holidayMap = getHolidayMapForMonth(year, month);
-
-  const title = document.createElement("h3");
-  title.textContent = `HORAS EXTRA - ${MONTH_NAMES[month - 1]} ${year}`;
-  Object.assign(title.style, {
-    textAlign: "center", margin: "20px 0 -15px 0",
-    background: "#667eea", height: "30px",
-    borderRadius: "3px", lineHeight: "30px", color: "white"
-  });
-  container.appendChild(title);
-
-  const wrapper = createTableWrapper(container);
-  wrapper.style.height = "500px";
-  wrapper.style.overflowY = "auto";
-
-  const table = document.createElement("table");
-  table.className = "employees-table extra-hours-table";
-  Object.assign(table.style, { width: "100%", borderCollapse: "separate" });
-
-  const thead = document.createElement("thead");
-
-  function getDayStyle(d, extraCss = "") {
-    const date = new Date(year, month - 1, d, 12, 0, 0);
-    const dow = date.getDay();
-    const holiday = holidayMap.get(d);
-    let bg = null;
-    if (holiday) bg = holiday.optional ? "#d6ecff" : "#f7c6c7";
-    else if (dow === 0 || dow === 6) bg = "#f9e0b0";
-    return bg
-      ? COMMON_TH_STYLE + `background: ${bg}; color: #000; ${extraCss}`
-      : COMMON_TH_STYLE + extraCss;
-  }
-
-  const trWeek = document.createElement("tr");
-  ["NI", "Nome"].forEach((h, i) => {
-    const th = document.createElement("th");
-    th.textContent = h;
-    th.rowSpan = 2;
-    th.style.cssText = COMMON_TH_STYLE + "border-bottom: 2px solid #ccc;";
-    if (i === 0) th.style.width = "40px";
-    if (i === 1) th.style.width = "140px";
-    trWeek.appendChild(th);
-  });
-
-  for (let d = 1; d <= 31; d++) {
-    const th = document.createElement("th");
-    if (d > daysInMonth) {
-      th.style.display = "none";
-    } else {
-      const dow = new Date(year, month - 1, d, 12, 0, 0).getDay();
-      th.textContent = WEEKDAY_NAMES[dow];
-      th.style.cssText = getDayStyle(d);
+      yearSelect.value = targetYear;
+      yearContainer.append(yearLabel, yearSelect);
+      const monthsWrapper = document.createElement("div");
+      Object.assign(monthsWrapper.style, {display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "4px", maxWidth: "800px"});
+      const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+      monthNames.forEach((month, idx) => {
+        const btn = document.createElement("button");
+        btn.textContent = month;
+        btn.className = "btn btn-add";
+        Object.assign(btn.style, {fontSize: "14px", fontWeight: "bold", width: "110px", height: "40px", borderRadius: "4px", margin: "2px"});
+        btn.addEventListener("click", async () => {
+          const tableContainer = document.getElementById(tableContainerId);
+          const optionsContainer = document.getElementById(optionsContainerId);
+          const isActive = btn.classList.contains("active");
+          if (isActive) {
+            if (tableContainer) tableContainer.innerHTML = "";
+            if (optionsContainer) optionsContainer.style.display = "none";
+            btn.classList.remove("active");
+            return;
+          }
+          monthsWrapper.querySelectorAll(".btn").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          const yearVal = parseInt(yearSelect.value, 10);
+          const monthNum = idx + 1;
+          const data = await loadDataFunc(yearVal, monthNum);
+          await createTableFunc(tableContainerId, yearVal, monthNum, data);
+          if (optionsContainer) optionsContainer.style.display = "flex";
+        });
+        monthsWrapper.appendChild(btn);
+      });
+      mainWrapper.append(yearContainer, monthsWrapper);
+      container.appendChild(mainWrapper);
+      setTimeout(() => { yearSelect.value = targetYear; }, 0);
     }
-    trWeek.appendChild(th);
-  }
-
-  const thTotalMensal = document.createElement("th");
-  thTotalMensal.innerHTML = "TOTAL<br>Mês";
-  thTotalMensal.rowSpan = 2;
-  thTotalMensal.style.cssText = COMMON_TH_STYLE + "border-bottom: 2px solid #ccc; width: 70px; background: #131a69; color: #fff; line-height: 16px;";
-  trWeek.appendChild(thTotalMensal);
-
-  const thTotalAcum = document.createElement("th");
-  thTotalAcum.innerHTML = "TOTAL<br>Acumulado";
-  thTotalAcum.rowSpan = 2;
-  thTotalAcum.style.cssText = COMMON_TH_STYLE + "border-bottom: 2px solid #ccc; width: 70px; background: #8B0000; color: #fff; line-height: 16px;";
-  trWeek.appendChild(thTotalAcum);
-
-  thead.appendChild(trWeek);
-
-  const trNums = document.createElement("tr");
-  for (let d = 1; d <= 31; d++) {
-    const th = document.createElement("th");
-    th.textContent = d;
-    if (d > daysInMonth) {
-      th.style.display = "none";
-    } else {
-      th.style.cssText = getDayStyle(d, "border-bottom: 2px solid #ccc;");
+    function horasDecimaisToMinutes(horas) {
+      if (!horas || horas <= 0) return 0;
+      return Math.round(horas * 60);
     }
-    trNums.appendChild(th);
-  }
-  thead.appendChild(trNums);
-  table.appendChild(thead);
-
-  const tbody = document.createElement("tbody");
-  table.appendChild(tbody);
-  wrapper.appendChild(table);
-
-  Array.from(thead.querySelectorAll("th")).forEach((th) => {
-    th.style.position = "sticky";
-    th.style.top = "0";
-    th.style.zIndex = "10";
-  });
-
-  function getDayCellBg(d) {
-    const date = new Date(year, month - 1, d, 12, 0, 0);
-    const dow = date.getDay();
-    const holiday = holidayMap.get(d);
-    if (holiday) return holiday.optional ? "#d6ecff" : "#f7c6c7";
-    if (dow === 0 || dow === 6) return "#f9e0b0";
-    return null;
-  }
-
-  rowsData.forEach((item) => {
-    const tr = document.createElement("tr");
-    tr.className = "data-row";
-    tr.setAttribute("data-nint", item.n_int);
-
-    const tdNI = document.createElement("td");
-    tdNI.textContent = String(item.n_int).padStart(3, "0");
-    tdNI.style.cssText = COMMON_TD_STYLE;
-    tr.appendChild(tdNI);
-
-    const tdNome = document.createElement("td");
-    tdNome.textContent = item.abv_name || "";
-    tdNome.style.cssText = COMMON_TD_STYLE;
-    tr.appendChild(tdNome);
-
-    for (let d = 1; d <= daysInMonth; d++) {
-      const td = document.createElement("td");
-      td.className = `day-cell-${d}`;
-      td.contentEditable = true;
-
-      const savedMinutes = item.extra_hours?.[d - 1] || 0;
-      td.textContent = minutesToHHMM(savedMinutes);
-
-      const bgColor = getDayCellBg(d);
-      td.style.cssText = COMMON_TD_STYLE + "text-align: center;";
-      if (bgColor) td.style.backgroundColor = bgColor;
-
-      td.addEventListener("blur", () => {
-        const raw = td.textContent.trim();
-        if (raw === "" || !isValidHHMM(raw)) {
-          td.textContent = "";
+    function minutesToHHMM(minutes) {
+      if (!minutes || minutes <= 0) return "";
+      const h = Math.floor(minutes / 60);
+      const m = minutes % 60;
+      return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+    }
+    function isValidHHMM(value) {
+      return /^\d{1,2}:\d{2}$/.test(value);
+    }
+    /* ====== CREATE AND SAVE EXTRA HOURS ====== */
+    async function createExtraHoursTable(containerId, year, month, data) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      const rowsData = data?.employees || [];
+      container.innerHTML = "";
+      const MONTH_NAMES = ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"];
+      const WEEKDAY_NAMES = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
+      const daysInMonth = new Date(year, month, 0).getDate();
+      const holidayMap = getHolidayMapForMonth(year, month);
+      const title = document.createElement("h3");
+      title.textContent = `HORAS EXTRA - ${MONTH_NAMES[month - 1]} ${year}`;
+      Object.assign(title.style, {textAlign: "center", margin: "20px 0 -15px 0", background: "#667eea", height: "30px", borderRadius: "3px", lineHeight: "30px", color: "white"});
+      container.appendChild(title);
+      const wrapper = createTableWrapper(container);
+      wrapper.style.height = "500px";
+      wrapper.style.overflowY = "auto";
+      const table = document.createElement("table");
+      table.className = "employees-table extra-hours-table";
+      Object.assign(table.style, { width: "100%", borderCollapse: "separate" });
+      const thead = document.createElement("thead");
+      function getDayStyle(d, extraCss = "") {
+        const date = new Date(year, month - 1, d, 12, 0, 0);
+        const dow = date.getDay();
+        const holiday = holidayMap.get(d);
+        let bg = null;
+        if (holiday) bg = holiday.optional ? "#d6ecff" : "#f7c6c7";
+        else if (dow === 0 || dow === 6) bg = "#f9e0b0";
+        return bg
+          ? COMMON_TH_STYLE + `background: ${bg}; color: #000; ${extraCss}`
+        : COMMON_TH_STYLE + extraCss;
+      }
+      const trWeek = document.createElement("tr");
+      ["NI", "Nome"].forEach((h, i) => {
+        const th = document.createElement("th");
+        th.textContent = h;
+        th.rowSpan = 2;
+        th.style.cssText = COMMON_TH_STYLE + "border-bottom: 2px solid #ccc;";
+        if (i === 0) th.style.width = "40px";
+        if (i === 1) th.style.width = "140px";
+        trWeek.appendChild(th);
+      });
+      for (let d = 1; d <= 31; d++) {
+        const th = document.createElement("th");
+        if (d > daysInMonth) {
+          th.style.display = "none";
         } else {
-          const [h, m] = raw.split(":").map(Number);
-          td.textContent = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+          const dow = new Date(year, month - 1, d, 12, 0, 0).getDay();
+          th.textContent = WEEKDAY_NAMES[dow];
+          th.style.cssText = getDayStyle(d);
         }
+        trWeek.appendChild(th);
+      }
+      const thTotalMensal = document.createElement("th");
+      thTotalMensal.innerHTML = "TOTAL<br>Mês";
+      thTotalMensal.rowSpan = 2;
+      thTotalMensal.style.cssText = COMMON_TH_STYLE + "border-bottom: 2px solid #ccc; width: 70px; background: #131a69; color: #fff; line-height: 16px;";
+      trWeek.appendChild(thTotalMensal);
+      thead.appendChild(trWeek);
+      const trNums = document.createElement("tr");
+      for (let d = 1; d <= 31; d++) {
+        const th = document.createElement("th");
+        th.textContent = d;
+        if (d > daysInMonth) {
+          th.style.display = "none";
+        } else {
+          th.style.cssText = getDayStyle(d, "border-bottom: 2px solid #ccc;");
+        }
+        trNums.appendChild(th);
+      }
+      thead.appendChild(trNums);
+      table.appendChild(thead);
+      const tbody = document.createElement("tbody");
+      table.appendChild(tbody);
+      wrapper.appendChild(table);
+      Array.from(thead.querySelectorAll("th")).forEach((th) => {
+        th.style.position = "sticky";
+        th.style.top = "0";
+        th.style.zIndex = "10";
+      });
+      function getDayCellBg(d) {
+        const date = new Date(year, month - 1, d, 12, 0, 0);
+        const dow = date.getDay();
+        const holiday = holidayMap.get(d);
+        if (holiday) return holiday.optional ? "#d6ecff" : "#f7c6c7";
+        if (dow === 0 || dow === 6) return "#f9e0b0";
+        return null;
+      }
+      rowsData.forEach((item) => {
+        const tr = document.createElement("tr");
+        tr.className = "data-row";
+        tr.setAttribute("data-nint", item.n_int);
+        const tdNI = document.createElement("td");
+        tdNI.textContent = String(item.n_int).padStart(3, "0");
+        tdNI.style.cssText = COMMON_TD_STYLE;
+        tr.appendChild(tdNI);
+        const tdNome = document.createElement("td");
+        tdNome.textContent = item.abv_name || "";
+        tdNome.style.cssText = COMMON_TD_STYLE;
+        tr.appendChild(tdNome);
+        for (let d = 1; d <= daysInMonth; d++) {
+          const td = document.createElement("td");
+          td.className = `day-cell-${d}`;
+          td.contentEditable = true;
+          const savedMinutes = item.extra_hours?.[d - 1] || 0;
+          td.textContent = minutesToHHMM(savedMinutes);
+          const bgColor = getDayCellBg(d);
+          td.style.cssText = COMMON_TD_STYLE + "text-align: center;";
+          if (bgColor) td.style.backgroundColor = bgColor;
+          td.addEventListener("blur", () => {
+            const raw = td.textContent.trim();
+            if (raw === "" || !isValidHHMM(raw)) {
+              td.textContent = "";
+            } else {
+              const [h, m] = raw.split(":").map(Number);
+              td.textContent = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+            }
+            updateExtraHoursTotals(tr);
+          });
+          td.addEventListener("keydown", (ev) => {
+            if (!["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown", "Enter"].includes(ev.key)) return;
+            ev.preventDefault();
+            const rows = Array.from(tbody.querySelectorAll("tr.data-row"));
+            const cells = Array.from(tr.querySelectorAll("td[contenteditable='true']"));
+            const currentIdx = cells.indexOf(td);
+            const rowIdx = rows.indexOf(tr);
+            let nextCell = null;
+            if (ev.key === "ArrowRight" || ev.key === "Enter") {
+              nextCell = currentIdx < cells.length - 1 ? cells[currentIdx + 1] : rows[rowIdx + 1]?.querySelectorAll("td[contenteditable='true']")[0];
+            } else if (ev.key === "ArrowLeft") {
+              nextCell = currentIdx > 0 ? cells[currentIdx - 1] : null;
+            } else if (ev.key === "ArrowDown") {
+              const nextCells = Array.from(rows[rowIdx + 1]?.querySelectorAll("td[contenteditable='true']") || []);
+              nextCell = nextCells[Math.min(currentIdx, nextCells.length - 1)];
+            } else if (ev.key === "ArrowUp") {
+              const prevCells = Array.from(rows[rowIdx - 1]?.querySelectorAll("td[contenteditable='true']") || []);
+              nextCell = prevCells[Math.min(currentIdx, prevCells.length - 1)];
+            }
+            if (nextCell) {
+              nextCell.focus();
+              const range = document.createRange();
+              range.selectNodeContents(nextCell);
+              const sel = window.getSelection();
+              sel.removeAllRanges();
+              sel.addRange(range);
+            }
+          });
+          tr.appendChild(td);
+        }
+        const tdTotalMensal = document.createElement("td");
+        tdTotalMensal.className = "total-mensal-extra-cell";
+        tdTotalMensal.style.cssText = COMMON_TD_STYLE + "text-align: center; font-weight: bold; background: #f0f0f0;";
+        tr.appendChild(tdTotalMensal);
+        tbody.appendChild(tr);
         updateExtraHoursTotals(tr);
       });
-
-      // Navegação por setas e Enter
-      td.addEventListener("keydown", (ev) => {
-        if (!["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown", "Enter"].includes(ev.key)) return;
-        ev.preventDefault();
-        const rows = Array.from(tbody.querySelectorAll("tr.data-row"));
-        const cells = Array.from(tr.querySelectorAll("td[contenteditable='true']"));
-        const currentIdx = cells.indexOf(td);
-        const rowIdx = rows.indexOf(tr);
-        let nextCell = null;
-
-        if (ev.key === "ArrowRight" || ev.key === "Enter") {
-          nextCell = currentIdx < cells.length - 1 ? cells[currentIdx + 1] : rows[rowIdx + 1]?.querySelectorAll("td[contenteditable='true']")[0];
-        } else if (ev.key === "ArrowLeft") {
-          nextCell = currentIdx > 0 ? cells[currentIdx - 1] : null;
-        } else if (ev.key === "ArrowDown") {
-          const nextCells = Array.from(rows[rowIdx + 1]?.querySelectorAll("td[contenteditable='true']") || []);
-          nextCell = nextCells[Math.min(currentIdx, nextCells.length - 1)];
-        } else if (ev.key === "ArrowUp") {
-          const prevCells = Array.from(rows[rowIdx - 1]?.querySelectorAll("td[contenteditable='true']") || []);
-          nextCell = prevCells[Math.min(currentIdx, prevCells.length - 1)];
-        }
-
-        if (nextCell) {
-          nextCell.focus();
-          const range = document.createRange();
-          range.selectNodeContents(nextCell);
-          const sel = window.getSelection();
-          sel.removeAllRanges();
-          sel.addRange(range);
+      const firstEditable = tbody.querySelector("tr.data-row td[contenteditable='true']");
+      if (firstEditable) firstEditable.focus();
+    }
+    function updateExtraHoursTotals(row) {
+      const cells = row.querySelectorAll("td[contenteditable='true']");
+      let totalMinutes = 0;
+      cells.forEach(cell => {
+        const value = (cell.textContent || "").trim();
+        if (/^\d{1,2}:\d{2}$/.test(value)) {
+          const [h, m] = value.split(":").map(Number);
+          totalMinutes += h * 60 + m;
         }
       });
-
-      tr.appendChild(td);
+      const totalMonthCell = row.querySelector(".total-mensal-extra-cell");
+      if (totalMonthCell) {
+        const h = Math.floor(totalMinutes / 60);
+        const m = totalMinutes % 60;
+        totalMonthCell.textContent = totalMinutes > 0 ? (m > 0 ? `${h}h${String(m).padStart(2, "0")}m` : `${h}h`) : "0h";
+      }
     }
-
-    const tdTotalMensal = document.createElement("td");
-    tdTotalMensal.className = "total-mensal-extra-cell";
-    tdTotalMensal.style.cssText = COMMON_TD_STYLE + "text-align: center; font-weight: bold; background: #f0f0f0;";
-    tr.appendChild(tdTotalMensal);
-
-    const tdTotalAcum = document.createElement("td");
-    tdTotalAcum.className = "total-acumulado-extra-cell";
-    const dbAcumMinutes = horasDecimaisToMinutes(item.total_acumulado || 0);
-    tdTotalAcum.textContent = minutesToHHCommaMM(dbAcumMinutes);
-    tdTotalAcum.style.cssText = COMMON_TD_STYLE + "text-align: center; font-weight: bold; background: #ffe6e6;";
-    tr.appendChild(tdTotalAcum);
-
-    // ✨ Cálculo da Base: Acumulado total da DB menos o que foi carregado no mês atual
-    const loadedMonthMinutes = (item.extra_hours || []).reduce((acc, v) => acc + (v || 0), 0);
-    const baseMinutes = Math.max(0, dbAcumMinutes - loadedMonthMinutes);
-    tr.dataset.acumBaseMinutes = String(baseMinutes);
-
-    tbody.appendChild(tr);
-    updateExtraHoursTotals(tr);
-  });
-
-  const firstEditable = tbody.querySelector("tr.data-row td[contenteditable='true']");
-  if (firstEditable) firstEditable.focus();
-}
-
-function updateExtraHoursTotals(row) {
-  const cells = row.querySelectorAll("td[contenteditable='true']");
-  let totalMinutes = 0;
-  cells.forEach(cell => {
-    const value = (cell.textContent || "").trim();
-    if (/^\d{1,2}:\d{2}$/.test(value)) {
-      const [h, m] = value.split(":").map(Number);
-      totalMinutes += h * 60 + m;
-    }
-  });
-
-  const totalMonthCell = row.querySelector(".total-mensal-extra-cell");
-  if (totalMonthCell) {
-    const h = Math.floor(totalMinutes / 60);
-    const m = totalMinutes % 60;
-    totalMonthCell.textContent = totalMinutes > 0 ? (m > 0 ? `${h}h${String(m).padStart(2, "0")}m` : `${h}h`) : "0h";
-  }
-
-  const baseMinutes = parseInt(row.dataset.acumBaseMinutes, 10) || 0;
-  const acumMinutes = baseMinutes + totalMinutes;
-  const totalAcumCell = row.querySelector(".total-acumulado-extra-cell");
-  if (totalAcumCell) {
-    totalAcumCell.textContent = minutesToHHCommaMM(acumMinutes);
-  }
-}
-
-/* ========== GUARDAR HORAS EXTRA (VERSÃO FINAL COM DELETE SELETIVO) ========== */
-async function saveExtraHours() {
-  const tbody = document.querySelector("table.extra-hours-table tbody");
-  if (!tbody) { showPopupWarning("Nenhuma tabela aberta."); return; }
-
-  const yearSelect = document.getElementById("year-extra-hour-employees");
-  const monthBtn = document.querySelector("#months-container-extra-hour-employees .btn.active");
-  if (!monthBtn || !yearSelect) { showPopupWarning("Selecione mês e ano primeiro."); return; }
-
-  const year = parseInt(yearSelect.value, 10);
-  const month = Array.from(document.querySelectorAll("#months-container-extra-hour-employees .btn")).indexOf(monthBtn) + 1;
-  const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
-
-  const guardarBtn = document.getElementById("employees-extra-save-btn");
-  if (guardarBtn) { 
-    guardarBtn.disabled = true; 
-    guardarBtn.textContent = "A guardar..."; 
-  }
-
-  try {
-    const rows = Array.from(tbody.querySelectorAll("tr.data-row"));
-    const recordsDiarios = [];
-    const acumuladosPayload = [];
-    const listaNIs = [];
-
-    rows.forEach(row => {
-      const n_int = parseInt(row.querySelector("td:nth-child(1)")?.textContent.trim());
-      const abv_name = row.querySelector("td:nth-child(2)")?.textContent.trim();
-      const cells = row.querySelectorAll("td[contenteditable='true']");
-      let totalMinutosMes = 0;
-
-      if (!isNaN(n_int)) listaNIs.push(n_int);
-
-      cells.forEach((cell, idx) => {
-        const value = cell.textContent.trim();
-        if (value && isValidHHMM(value)) {
-          const [h, m] = value.split(":").map(Number);
-          const totalMinutes = h * 60 + m;
-          if (totalMinutes > 0) {
-            totalMinutosMes += totalMinutes;
-            recordsDiarios.push({
-              n_int, abv_name, year, month,
-              day: idx + 1,
-              qtd_hours: parseFloat((totalMinutes / 60).toFixed(2)),
-              corp_oper_nr: corpOperNr
-            });
+    async function saveExtraHours() {
+      const tbody = document.querySelector("table.extra-hours-table tbody");
+      if (!tbody) {
+        showPopupWarning("Nenhuma tabela aberta."); 
+        return; 
+      }
+      const yearSelect = document.getElementById("year-extra-hour-employees");
+      const monthBtn = document.querySelector("#months-container-extra-hour-employees .btn.active");
+      if (!monthBtn || !yearSelect) {
+        showPopupWarning("Selecione mês e ano primeiro."); 
+        return; 
+      }
+      const year = parseInt(yearSelect.value, 10);
+      const month = Array.from(document.querySelectorAll("#months-container-extra-hour-employees .btn")).indexOf(monthBtn) + 1;
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const guardarBtn = document.getElementById("employees-extra-save-btn");
+      if (guardarBtn) { 
+        guardarBtn.disabled = true; 
+        guardarBtn.textContent = "A guardar..."; 
+      }
+      try {
+        const rows = Array.from(tbody.querySelectorAll("tr.data-row"));
+        const recordsDiarios = [];
+        const acumuladosPayload = [];
+        const listaNIs = [];
+        rows.forEach(row => {
+          const n_int = parseInt(row.querySelector("td:nth-child(1)")?.textContent.trim());
+          const abv_name = row.querySelector("td:nth-child(2)")?.textContent.trim();
+          const cells = row.querySelectorAll("td[contenteditable='true']");
+          let totalMinutosMes = 0;
+          if (!isNaN(n_int)) listaNIs.push(n_int);
+          cells.forEach((cell, idx) => {
+            const value = cell.textContent.trim();
+            if (value && isValidHHMM(value)) {
+              const [h, m] = value.split(":").map(Number);
+              const totalMinutes = h * 60 + m;
+              if (totalMinutes > 0) {
+                totalMinutosMes += totalMinutes;
+                recordsDiarios.push({n_int, abv_name, year, month, day: idx + 1, qtd_hours: parseFloat((totalMinutes / 60).toFixed(2)), corp_oper_nr: corpOperNr});
+              }
+            }
+          });
+          acumuladosPayload.push({n_int, abv_name, year, month, total_mensal: 0, horas_extra: parseFloat((totalMinutosMes / 60).toFixed(2)), total_acumulado: 0, corp_oper_nr: corpOperNr});
+        });
+        await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_extra_hours?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`, { 
+          method: "DELETE", 
+          headers: getSupabaseHeaders() 
+        });
+        if (recordsDiarios.length > 0) {
+          await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_extra_hours`, {
+            method: "POST",
+            headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
+            body: JSON.stringify(recordsDiarios)
+          });
+        }
+        if (acumuladosPayload.length > 0) {
+          const stringNIs = listaNIs.join(",");
+          await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}&n_int=in.(${stringNIs})`, {
+            method: "DELETE",
+            headers: getSupabaseHeaders()
+          });
+          const respAcum = await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul`, {
+            method: "POST",
+            headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
+            body: JSON.stringify(acumuladosPayload)
+          });
+          if (!respAcum.ok) {
+            const errorText = await respAcum.text();
+            console.error("Erro ao inserir acumulados:", errorText);
+            throw new Error("Erro na inserção final.");
           }
         }
-      });
-
-      const baseMinutes = parseInt(row.dataset.acumBaseMinutes, 10) || 0;
-      const totalAcumMinutos = baseMinutes + totalMinutosMes;
-
-      acumuladosPayload.push({
-        n_int, abv_name, year, month,
-        total_mensal: 0,
-        horas_extra: parseFloat((totalMinutosMes / 60).toFixed(2)),
-        total_acumulado: parseFloat((totalAcumMinutos / 60).toFixed(2)),
-        corp_oper_nr: corpOperNr
-      });
-    });
-
-    // --- 1. GRAVAÇÃO DOS DIÁRIOS (Sempre DELETE + INSERT) ---
-    await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_extra_hours?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`, { 
-      method: "DELETE", 
-      headers: getSupabaseHeaders() 
-    });
-    
-    if (recordsDiarios.length > 0) {
-      await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_extra_hours`, {
-        method: "POST",
-        headers: { ...getSupabaseHeaders(), "Content-Type": "application/json" },
-        body: JSON.stringify(recordsDiarios)
-      });
-    }
-
-    // --- 2. GRAVAÇÃO DOS ACUMULADOS (PLANO B: DELETE SELETIVO + INSERT) ---
-    // Isto evita o erro 409 de duplicados pois limpamos antes de inserir
-    if (acumuladosPayload.length > 0) {
-      const stringNIs = listaNIs.join(",");
-      
-      // Apaga apenas os registos dos funcionários que estamos a processar agora
-      await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}&n_int=in.(${stringNIs})`, {
-        method: "DELETE",
-        headers: getSupabaseHeaders()
-      });
-
-      // Insere os novos valores (agora sem risco de conflito)
-      const respAcum = await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul`, {
-        method: "POST",
-        headers: { ...getSupabaseHeaders(), "Content-Type": "application/json" },
-        body: JSON.stringify(acumuladosPayload)
-      });
-
-      if (!respAcum.ok) {
-        const errorText = await respAcum.text();
-        console.error("Erro ao inserir acumulados:", errorText);
-        throw new Error("Erro na inserção final.");
+        showPopupSuccess(`✅ Dados atualizados com sucesso!`);
+      } catch (error) {
+        console.error(error);
+        showPopupWarning("❌ Erro ao atualizar dados.");
+      } finally {
+        if (guardarBtn) { 
+          guardarBtn.disabled = false; 
+          guardarBtn.textContent = "Guardar"; 
+        }
       }
     }
-
-    showPopupSuccess(`✅ Dados atualizados com sucesso!`);
-  } catch (error) {
-    console.error(error);
-    showPopupWarning("❌ Erro ao atualizar dados.");
-  } finally {
-    if (guardarBtn) { 
-      guardarBtn.disabled = false; 
-      guardarBtn.textContent = "Guardar"; 
-    }
-  }
-}
-
-/* ========== CARREGAR HORAS EXTRA ========== */
-async function loadExtraHours(year, month) {
-  try {
-    const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
-    const [empRes, hoursRes, acumRes] = await Promise.all([
-      fetch(`${SUPABASE_URL}/rest/v1/reg_employees?select=n_int,abv_name&corp_oper_nr=eq.${corpOperNr}`, {headers: getSupabaseHeaders()}),
-      fetch(`${SUPABASE_URL}/rest/v1/reg_employees_extra_hours?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`, {headers: getSupabaseHeaders()}),
-      fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`, {headers: getSupabaseHeaders()})
-    ]);
-
-    const allEmployees = await empRes.json();
-    const hoursData = await hoursRes.json();
-    const acumData = acumRes.ok ? await acumRes.json() : [];
-    const acumMap = {};
-    acumData.forEach(item => acumMap[item.n_int] = item.total_acumulado || 0);
-
-    const employeesMap = new Map();
-    allEmployees.forEach(emp => {
-      employeesMap.set(emp.n_int, {
-        n_int: emp.n_int,
-        abv_name: emp.abv_name,
-        extra_hours: new Array(31).fill(0),
-        total_acumulado: acumMap[emp.n_int] || 0
-      });
-    });
-
-    hoursData.forEach(record => {
-      if (employeesMap.has(record.n_int)) {
-        employeesMap.get(record.n_int).extra_hours[record.day - 1] = Math.round(record.qtd_hours * 60);
+    async function loadExtraHours(year, month) {
+      try {
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const [empRes, hoursRes] = await Promise.all([
+          fetch(`${SUPABASE_URL}/rest/v1/reg_employees?select=n_int,abv_name&corp_oper_nr=eq.${corpOperNr}`, {
+            headers: getSupabaseHeaders()
+          }),
+          fetch(`${SUPABASE_URL}/rest/v1/reg_employees_extra_hours?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`, {
+            headers: getSupabaseHeaders()
+          })
+        ]);
+        const allEmployees = await empRes.json();
+        const hoursData = await hoursRes.json();
+        const employeesMap = new Map();
+        allEmployees.forEach(emp => {
+          employeesMap.set(emp.n_int, {n_int: emp.n_int, abv_name: emp.abv_name, extra_hours: new Array(31).fill(0)});
+        });
+        hoursData.forEach(record => {
+          if (employeesMap.has(record.n_int)) {
+            employeesMap.get(record.n_int).extra_hours[record.day - 1] = Math.round(record.qtd_hours * 60);
+          }
+        });
+        const employeesList = Array.from(employeesMap.values()).sort((a, b) => a.n_int - b.n_int);
+        return {employees: employeesList};
+      } catch (error) {
+        return {employees: []};
       }
-    });
-
-    const employeesList = Array.from(employeesMap.values()).sort((a, b) => a.n_int - b.n_int);
-    return {employees: employeesList};
-  } catch (error) {
-    return {employees: []};
-  }
-}
-
-/* ========== EVENT LISTENERS ========== */
-  
-    
+    }
     document.querySelectorAll(".sidebar-submenu-button").forEach((btn) => {
       btn.addEventListener("click", () => {
         const page = btn.dataset.page;
@@ -2269,6 +2384,18 @@ async function loadExtraHours(year, month) {
         }
       });
     });
+    document.getElementById("employees-extra-save-btn")?.addEventListener("click", saveExtraHours);
     
     
-document.getElementById("employees-extra-save-btn")?.addEventListener("click", saveExtraHours);
+    
+    
+    
+    
+    
+    
+    
+    
+    /* ============================================
+    FASE 03 - EMPLOYEE INDIVIDUAL REGISTERS
+    ============================================ */  
+    /* ====== CREATE AND SAVE EXTRA HOURS ====== */

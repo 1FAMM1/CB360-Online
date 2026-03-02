@@ -90,6 +90,7 @@
                           "FO": {bg: "#92D050", color: "#000000"}, "FE": {bg: "#00B0F0", color: "#000000"}, "BX": {bg: "#FF0000", color: "#FFFFFF"}, "LC": {bg: "#FF0000", color: "#FFFFFF"},
                           "LN": {bg: "#FF0000", color: "#FFFFFF"}, "LP": {bg: "#FF0000", color: "#FFFFFF"}, "FI": {bg: "#FF0000", color: "#FFFFFF"}, "FJ": {bg: "#FF0000", color: "#FFFFFF"},
                           "FOR": {bg: "#808080", color: "#FFFFFF"}, "DP": {bg: "#000000", color: "#FFFFFF"}};
+    const WEEKEND_EMPLOYEES_COLOR = "#f9e0b0";
     const HOLIDAY_COLOR = "#f7c6c7";
     const HOLIDAY_OPTIONAL_COLOR = "#d6ecff";
     const DRIVER_BG = "#ff69b4";
@@ -164,7 +165,7 @@
       const date = atNoonLocal(year, month - 1, dayNum);
       const isWeekend = (date.getDay() === 0 || date.getDay() === 6);
       if (isWeekend) {
-        td.style.backgroundColor = WEEKEND_COLOR || "#f9e0b0";
+        td.style.backgroundColor = WEEKEND_EMPLOYEES_COLOR || "#f9e0b0";
         td.title = "";
         return;
       }
@@ -175,8 +176,8 @@
       const info = calculateWorkingHours(year, month);
       const MONTH_NAMES = ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"];
       const infoDiv = document.createElement("div");
-      infoDiv.style.cssText = `margin-top: 15px; padding: 12px; background: #f0f8ff; border: 2px solid #4682b4; border-radius: 5px; font-family: 'Segoe UI', sans-serif;
-                               display: inline-block; width: fit-content; max-width: 100%;`;
+      infoDiv.style.cssText = `margin-top: 5px; padding: 12px; background: #f0f8ff; border: 1px solid #4682b4; border-radius: 5px; font-family: 'Segoe UI', sans-serif;
+                               display: inline-block; width: fit-content; width: 315px; height: 150px;`;
       const monthLabel = `${MONTH_NAMES[month - 1]} ${year}`;
       let holidaysHTML = '';
       if (info.holidaysInMonth.length > 0) {
@@ -185,7 +186,7 @@
             <strong style="color:#1e3a8a;">🎉 Feriados:</strong>
             <span style="color:#6b7280;">
               ${info.holidaysInMonth
-                .map(h => `${h.day} (${h.name}${h.optional ? " - Facultativo" : ""})`)
+                .map(h => `Dia: ${h.day}`)
                 .join(", ")}
             </span>
           </div>
@@ -222,7 +223,7 @@
       td.style.fontWeight = "bold";
     }
     function applyOtherStyle(td) {
-      if (td.dataset.outro !== "1") return;
+      if (td.dataset.other !== "1") return;
       td.style.backgroundColor = OTHER_BG;
       td.style.color = OTHER_TEXT;
       td.style.fontWeight = "bold";
@@ -309,13 +310,13 @@
       const separator = document.createElement("div");
       separator.style.cssText = "height: 1px; background: #ddd; margin: 4px 0;";
       menu.appendChild(separator);
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.style.cssText = `border: none; background: #f0f0f0; padding: 8px 12px; cursor: pointer; width: 100%; 
+      const btnDriver = document.createElement("button");
+      btnDriver.type = "button";
+      btnDriver.style.cssText = `border: none; background: #f0f0f0; padding: 8px 12px; cursor: pointer; width: 100%; 
                            text-align: left; display: block; border-radius: 4px; font-size: 12px;`;
-      btn.addEventListener("mouseover", () => btn.style.background = "#e0e0e0");
-      btn.addEventListener("mouseout", () => btn.style.background = "#f0f0f0");
-      btn.addEventListener("click", (e) => {
+      btnDriver.addEventListener("mouseover", () => btnDriver.style.background = "#e0e0e0");
+      btnDriver.addEventListener("mouseout", () => btnDriver.style.background = "#f0f0f0");
+      btnDriver.addEventListener("click", (e) => {
         e.stopPropagation();
         if (!__driverMenuCell) return;
         const isDriver = __driverMenuCell.dataset.driver === "1";
@@ -325,28 +326,28 @@
           applyCellColor(__driverMenuCell, val);
         } else {
           __driverMenuCell.dataset.driver = "1";
-          __driverMenuCell.dataset.outro = "0"; 
+          __driverMenuCell.dataset.other = "0"; 
           applyDriverStyle(__driverMenuCell);
         }
         hideDriverMenu();
       });
-      menu.appendChild(btn);
-      const btnOutro = document.createElement("button");
-      btnOutro.type = "button";
-      btnOutro.style.cssText = `border: none; background: #f0f0f0; padding: 8px 12px; cursor: pointer; width: 100%; 
+      menu.appendChild(btnDriver);
+      const btnOther = document.createElement("button");
+      btnOther.type = "button";
+      btnOther.style.cssText = `border: none; background: #f0f0f0; padding: 8px 12px; cursor: pointer; width: 100%; 
                                 text-align: left; display: block; border-radius: 4px; font-size: 12px;`;
-      btnOutro.addEventListener("mouseover", () => btnOutro.style.background = "#e0e0e0");
-      btnOutro.addEventListener("mouseout", () => btnOutro.style.background = "#f0f0f0");
-      btnOutro.addEventListener("click", (e) => {
+      btnOther.addEventListener("mouseover", () => btnOther.style.background = "#e0e0e0");
+      btnOther.addEventListener("mouseout", () => btnOther.style.background = "#f0f0f0");
+      btnOther.addEventListener("click", (e) => {
         e.stopPropagation();
         if (!__driverMenuCell) return;
-        const isOutro = __driverMenuCell.dataset.outro === "1";
-        if (isOutro) {
-          __driverMenuCell.dataset.outro = "0";
+        const isOther = __driverMenuCell.dataset.other === "1";
+        if (isOther) {
+          __driverMenuCell.dataset.other = "0";
           const val = (__driverMenuCell.textContent || "").trim().toUpperCase();
           applyCellColor(__driverMenuCell, val);
         } else {
-          __driverMenuCell.dataset.outro = "1";
+          __driverMenuCell.dataset.other = "1";
           __driverMenuCell.dataset.driver = "0";
           __driverMenuCell.style.backgroundColor = "#800080";
           __driverMenuCell.style.color = "#ffffff";
@@ -354,11 +355,11 @@
         }
         hideDriverMenu();
       });
-      menu.appendChild(btnOutro);      
+      menu.appendChild(btnOther);      
       document.body.appendChild(menu);
       __driverMenu = menu;
-      __driverMenu._btn = btn;
-      __driverMenu._btnOutro = btnOutro;
+      __driverMenu._btnDriver = btnDriver;
+      __driverMenu._btnOther = btnOther;
       document.addEventListener("click", hideDriverMenu);
       document.addEventListener("scroll", hideDriverMenu, true);
     }
@@ -368,14 +369,14 @@
       const tr = cell.closest("tr");
       const isInem = isINEMRow(tr);
       if (isInem) {
-        __driverMenu._btn.style.display = "block";
+        __driverMenu._btnDriver.style.display = "block";
         const isDriver = cell.dataset.driver === "1";
-        __driverMenu._btn.textContent = isDriver ? "Remover Motorista INEM" : "Motorista INEM";
+        __driverMenu._btnDriver.textContent = isDriver ? "Remover Motorista INEM" : "Motorista INEM";
       } else {
-        __driverMenu._btn.style.display = "none";
+        __driverMenu._btnDriver.style.display = "none";
       }
-      const isOutro = cell.dataset.outro === "1";
-      __driverMenu._btnOutro.textContent = isOutro ? "Remover Outra Necessidade" : "Outra Necessidade";
+      const isOther = cell.dataset.other === "1";
+      __driverMenu._btnOther.textContent = isOther ? "Remover Outra Necessidade" : "Outra Necessidade";
       __driverMenu.style.left = x + "px";
       __driverMenu.style.top = y + "px";
       __driverMenu.style.display = "flex"; 
@@ -396,29 +397,51 @@
         cell.style.fontWeight = "";
       }
     }
-    function calculateRowTotal(row) {
+    function calculateProfessionalsRowTotal(row) {
       const dayCells = row.querySelectorAll("td[contenteditable='true']");
+      const year = __currentYear;
+      const month = __currentMonth;
+      const daysInMonth = __currentDaysInMonth;
+      const holidayMap = __currentHolidayMap;
       let total = 0;
-      dayCells.forEach(cell => {
+      dayCells.forEach((cell, index) => {
+        const dayNum = index + 1;
+        if (dayNum > daysInMonth) return;
         const val = (cell.textContent || "").trim().toUpperCase();
-        const hours = SHIFT_VALUES[val] || 0;
-        total += hours;
+        let hours = SHIFT_VALUES[val];
+        if (hours !== undefined) {
+          if (val === "N") {
+            const holiday = holidayMap?.get(dayNum);
+            const nextDayHoliday = holidayMap?.get(dayNum + 1);
+            if (holiday && !holiday.optional) {
+              hours = 16;
+            } else if (nextDayHoliday && !nextDayHoliday.optional) {
+              hours = 20;
+            } else if (dayNum === daysInMonth) {
+              const nextMonthHolidays = typeof getHolidayMapForMonth === "function" ? getHolidayMapForMonth(year, month + 1) : null;
+              const firstDayNextMonth = nextMonthHolidays?.get(1);
+              if (firstDayNextMonth && !firstDayNextMonth.optional) {
+                hours = 20;
+              }
+            }
+          }
+          total += hours;
+        }
       });
-      const nInt = parseInt(row.getAttribute("data-nint"), 10);
-      const entryDate = row.dataset.entryDate;
-      if (entryDate) {
-        const entry = new Date(entryDate);
+      const entryDateStr = row.dataset.entryDate;
+      if (entryDateStr) {
+        const entry = new Date(entryDateStr);
         const entryYear = entry.getFullYear();
         const entryMonth = entry.getMonth() + 1;
         const entryDay = entry.getDate();
-        if (entryYear === __currentYear && entryMonth === __currentMonth) {
+        if (entryYear === year && entryMonth === month) {
           if (entryDay > 1) {
             let workingDaysNotWorked = 0;
             for (let d = 1; d < entryDay; d++) {
-              const date = new Date(__currentYear, __currentMonth - 1, d);
+              const date = new Date(year, month - 1, d);
               const dayOfWeek = date.getDay();
               const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
-              const isHoliday = __currentHolidayMap?.has(d);
+              const isHoliday = holidayMap?.has(d) && !holidayMap.get(d).optional;
               if (!isWeekend && !isHoliday) {
                 workingDaysNotWorked++;
               }
@@ -450,25 +473,25 @@
       return map;
     }
     function updateRowTotal(row) {
-      const totalMensal = calculateRowTotal(row);
-      const totalMensalCell = row.querySelector(".total-mensal-cell");
-      if (totalMensalCell) totalMensalCell.textContent = totalMensal;      
-      const totalAcumCell = row.querySelector(".total-acumulado-cell");
+      const totalMonthly = calculateProfessionalsRowTotal(row);
+      const totalMonthlyCell = row.querySelector(".total-monthly-cell");
+      if (totalMonthlyCell) totalMonthlyCell.textContent = totalMonthly;      
+      const totalAcumCell = row.querySelector(".total-accumulated-cell");
       if (totalAcumCell) {
-        const acumuladoBase = parseFloat(totalAcumCell.dataset.base || 0);
-        const horasExtra = parseFloat(totalAcumCell.dataset.horasExtra || 0);
-        const isJaneiro = (totalAcumCell.dataset.isJaneiro === "1");        
+        const accumulatedBase = parseFloat(totalAcumCell.dataset.base || 0);
+        const extraHours = parseFloat(totalAcumCell.dataset.extraHours || 0);
+        const isJanuary = (totalAcumCell.dataset.isJanuary === "1");        
         const year = __currentYear;
         const month = __currentMonth;
-        const cargaObrigatoria = calculateWorkingHours(year, month).workingHours;        
-        const diferencaMes = totalMensal - cargaObrigatoria + horasExtra;        
-        let totalAcumulado;
-        if (isJaneiro) {
-          totalAcumulado = diferencaMes;
+        const mandatoryCargo = calculateWorkingHours(year, month).workingHours;        
+        const differenceMonth = totalMonthly - mandatoryCargo + extraHours;        
+        let totalAccumulated;
+        if (isJanuary) {
+          totalAccumulated = differenceMonth;
         } else {
-          totalAcumulado = acumuladoBase + diferencaMes;
+          totalAccumulated = accumulatedBase + differenceMonth;
         }
-        totalAcumCell.textContent = totalAcumulado;
+        totalAcumCell.textContent = totalAccumulated;
       }
     }
     function normalizeTeam(t) {
@@ -505,8 +528,8 @@
         if (!isWeekend) continue;
         const thTop = table.querySelector(`th.day-header-${d}`);
         const thNum = table.querySelector(`th.day-number-${d}`);
-        if (thTop) thTop.style.backgroundColor = WEEKEND_COLOR || "#f9e0b0";
-        if (thNum) thNum.style.backgroundColor = WEEKEND_COLOR || "#f9e0b0";
+        if (thTop) thTop.style.backgroundColor = WEEKEND_EMPLOYEES_COLOR || "#f9e0b0";
+        if (thNum) thNum.style.backgroundColor = WEEKEND_EMPLOYEES_COLOR || "#f9e0b0";
       }
     }
     function paintHolidaysOnTable(tbody, table, year, month, daysInMonth, holidayMap) {
@@ -579,10 +602,10 @@
         }
         const data = await response.json();
         if (!Array.isArray(data)) return [];        
-        const isJaneiro = (month === 1);
-        const acumuladosMap = {};
-        const horasExtraMap = {};        
-        if (!isJaneiro) {
+        const isJanuary = (month === 1);
+        const accumulatedMap = {};
+        const extraHoursMap = {};        
+        if (!isJanuary) {
           const acumPrevMonth = month - 1;
           const acumResponse = await fetch(
             `${SUPABASE_URL}/rest/v1/reg_employees_acumul?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${acumPrevMonth}`,
@@ -591,18 +614,21 @@
           if (acumResponse.ok) {
             const acumData = await acumResponse.json();
             acumData.forEach(item => {
-              acumuladosMap[item.n_int] = item.total_acumulado || 0;
+              accumulatedMap[item.n_int] = item.total_accumulated || 0;
             });
           }
         }
-        const horasExtraResponse = await fetch(
-          `${SUPABASE_URL}/rest/v1/reg_employees_acumul?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`,
+        const extraHoursResponse = await fetch(
+          `${SUPABASE_URL}/rest/v1/reg_employees_extra_hours?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`,
           { headers: getSupabaseHeaders() }
         );
-        if (horasExtraResponse.ok) {
-          const horasExtraData = await horasExtraResponse.json();
-          horasExtraData.forEach(item => {
-            horasExtraMap[item.n_int] = item.horas_extra || 0;
+        if (extraHoursResponse.ok) {
+          const extraHoursData = await extraHoursResponse.json();
+          extraHoursData.forEach(item => {
+            if (!extraHoursMap[item.n_int]) {
+              extraHoursMap[item.n_int] = 0;
+            }
+            extraHoursMap[item.n_int] += item.qtd_hours;
           });
         }        
         const { shifts, employeeData } = await loadScalesShifts(year, month);        
@@ -614,15 +640,15 @@
               emp.function = ed.function;
               emp._position = ed.position;
             }
-            emp._acumulado = acumuladosMap[emp.n_int] || 0;
-            emp._horasExtra = horasExtraMap[emp.n_int] || 0;
-            emp._isJaneiro = isJaneiro;
+            emp._accumulated = accumulatedMap[emp.n_int] || 0;
+            emp._extraHours = extraHoursMap[emp.n_int] || 0;
+            emp._isJanuary = isJanuary;
           });
         } else {
           data.forEach((emp) => {
-            emp._acumulado = acumuladosMap[emp.n_int] || 0;
-            emp._horasExtra = horasExtraMap[emp.n_int] || 0;
-            emp._isJaneiro = isJaneiro;
+            emp._accumulated = accumulatedMap[emp.n_int] || 0;
+            emp._extraHours = extraHoursMap[emp.n_int] || 0;
+            emp._isJanuary = isJanuary;
           });
         }
         const idx = (key) => {
@@ -670,15 +696,15 @@
             }
             if (rec.is_driver) {
               cell.dataset.driver = "1";
-              cell.dataset.outro = "0";
+              cell.dataset.other = "0";
               applyDriverStyle(cell);
             } else if (rec.is_other) {
-              cell.dataset.outro = "1";
+              cell.dataset.other = "1";
               cell.dataset.driver = "0";
               applyOtherStyle(cell);
             } else {
               cell.dataset.driver = "0";
-              cell.dataset.outro = "0";
+              cell.dataset.other = "0";
             }
           }
         });
@@ -714,20 +740,20 @@
           e.preventDefault();
           if (!globalDraggedRow || globalDraggedRow === row) return;
           const dNI = globalDraggedRow.cells[0].textContent.trim();
-          const dNome = globalDraggedRow.cells[1].textContent.trim();
-          const dFuncao = globalDraggedRow.cells[2].textContent.trim();
+          const dName = globalDraggedRow.cells[1].textContent.trim();
+          const dFunction = globalDraggedRow.cells[2].textContent.trim();
           const dNint = globalDraggedRow.getAttribute("data-nint");
           const tNI = row.cells[0].textContent.trim();
-          const tNome = row.cells[1].textContent.trim();
-          const tFuncao = row.cells[2].textContent.trim();
+          const tName = row.cells[1].textContent.trim();
+          const tFunction = row.cells[2].textContent.trim();
           const tNint = row.getAttribute("data-nint");
           globalDraggedRow.cells[0].textContent = tNI;
-          globalDraggedRow.cells[1].textContent = tNome;
-          globalDraggedRow.cells[2].textContent = tFuncao;
+          globalDraggedRow.cells[1].textContent = tName;
+          globalDraggedRow.cells[2].textContent = tFunction;
           globalDraggedRow.setAttribute("data-nint", tNint);
           row.cells[0].textContent = dNI;
-          row.cells[1].textContent = dNome;
-          row.cells[2].textContent = dFuncao;
+          row.cells[1].textContent = dName;
+          row.cells[2].textContent = dFunction;
           row.setAttribute("data-nint", dNint);
           const dShifts = Array.from(globalDraggedRow.querySelectorAll("td[contenteditable='true']"));
           const tShifts = Array.from(row.querySelectorAll("td[contenteditable='true']"));
@@ -814,14 +840,14 @@
         tdNI.textContent = "";
         tdNI.style.cssText = COMMON_TD_STYLE;
         tr.appendChild(tdNI);
-        const tdNome = document.createElement("td");
-        tdNome.textContent = "";
-        tdNome.style.cssText = COMMON_TD_STYLE;
-        tr.appendChild(tdNome);
-        const tdFuncao = document.createElement("td");
-        tdFuncao.textContent = "";
-        tdFuncao.style.cssText = COMMON_TD_STYLE + "text-align:center;";
-        tr.appendChild(tdFuncao);
+        const tdName = document.createElement("td");
+        tdName.textContent = "";
+        tdName.style.cssText = COMMON_TD_STYLE;
+        tr.appendChild(tdName);
+        const tdFunction = document.createElement("td");
+        tdFunction.textContent = "";
+        tdFunction.style.cssText = COMMON_TD_STYLE + "text-align:center;";
+        tr.appendChild(tdFunction);
         const tdEq = document.createElement("td");
         tdEq.textContent = teamCode;
         tdEq.style.cssText = COMMON_TD_STYLE + "text-align:center;";
@@ -896,13 +922,13 @@
           });
           tr.appendChild(td);
         }        
-        const tdTotalMensal = document.createElement("td");
-        tdTotalMensal.className = "total-mensal-cell";
-        tdTotalMensal.textContent = "0";
-        tdTotalMensal.style.cssText = COMMON_TD_STYLE + "text-align:center; font-weight:bold; background:#f0f0f0;";
-        tr.appendChild(tdTotalMensal);        
+        const tdTotalMonthly = document.createElement("td");
+        tdTotalMonthly.className = "total-monthly-cell";
+        tdTotalMonthly.textContent = "0";
+        tdTotalMonthly.style.cssText = COMMON_TD_STYLE + "text-align:center; font-weight:bold; background:#f0f0f0;";
+        tr.appendChild(tdTotalMonthly);        
         const tdTotalAcum = document.createElement("td");
-        tdTotalAcum.className = "total-acumulado-cell";
+        tdTotalAcum.className = "total-accumulated-cell";
         tdTotalAcum.textContent = "0";
         tdTotalAcum.style.cssText = COMMON_TD_STYLE + "text-align:center; font-weight:bold; background:#ffe6e6;";
         tr.appendChild(tdTotalAcum);        
@@ -916,7 +942,7 @@
           tbody.querySelectorAll(`.day-cell-${d}`).forEach((td) => {
             const val = (td.textContent || "").trim().toUpperCase();
             const hasShift = !!SHIFT_VALUES[val] || !!SHIFT_COLORS[val];
-            if (!hasShift) td.style.backgroundColor = WEEKEND_COLOR || "#f9e0b0";
+            if (!hasShift) td.style.backgroundColor = WEEKEND_EMPLOYEES_COLOR || "#f9e0b0";
           });
         }
       }
@@ -988,7 +1014,7 @@
       } catch (err) { console.error("Erro ao carregar dados mês anterior/seguinte:", err); }
     }
     function applyWeekendSpecialColors(tbody, year, month) {
-      const SPECIAL_TURNOS_FDS = ["BX", "FI", "FJ", "LC", "LP", "LN"];
+      const SPECIAL_SHIFTS_FDS = ["BX", "FI", "FJ", "LC", "LP", "LN"];
       const SPECIAL_BEFORE_HOLIDAY_RED = ["FI", "FJ", "LC", "LP", "LN"];
       const daysInMonth = new Date(year, month, 0).getDate();
       const holidayMap = __currentHolidayMap;
@@ -1010,7 +1036,7 @@
           const dayOfWeek = date.getDay();
           const isWeekend = (dayOfWeek === 6 || dayOfWeek === 0);
           if (isWeekend) {
-            cell.style.backgroundColor = WEEKEND_COLOR || "#f9e0b0";
+            cell.style.backgroundColor = WEEKEND_EMPLOYEES_COLOR || "#f9e0b0";
           } else {
             cell.style.backgroundColor = "";
           }
@@ -1020,10 +1046,10 @@
         const rowNInt = parseInt(row.getAttribute("data-nint"), 10);
         if (!rowNInt) return;
         const lastDayPrevMonth = new Date(year, month - 1, 0).getDate();
-        const turnoLastDayPrev = __prevMonthShiftsCache[`${rowNInt}_${lastDayPrevMonth}`] || null;
-        if (turnoLastDayPrev === "FE" || turnoLastDayPrev === "BX") {
+        const shiftLastDayPrev = __prevMonthShiftsCache[`${rowNInt}_${lastDayPrevMonth}`] || null;
+        if (shiftLastDayPrev === "FE" || shiftLastDayPrev === "BX") {
           let continuePainting = true;
-          const corPintar = (turnoLastDayPrev === "FE") ? "#00B0F0" : "#FF0000";
+          const corPintar = (shiftLastDayPrev === "FE") ? "#00B0F0" : "#FF0000";
           for (let d = 1; d <= daysInMonth && continuePainting; d++) {
             const date = atNoonLocal(year, month - 1, d);
             const dayOfWeek = date.getDay();
@@ -1038,7 +1064,7 @@
               const cellValue = cell.textContent.trim().toUpperCase();
               if (!cellValue || !SHIFT_COLORS[cellValue]) {
                 cell.style.backgroundColor = corPintar;
-                if (turnoLastDayPrev === "BX") {
+                if (shiftLastDayPrev === "BX") {
                   cell.style.color = "#FFFFFF";
                   cell.style.fontWeight = "bold";
                 }
@@ -1051,19 +1077,19 @@
         for (let d = 1; d <= daysInMonth; d++) {
           const cell = row.querySelector(`.day-cell-${d}`);
           if (!cell) continue;
-          const turno = cell.textContent.trim().toUpperCase();
+          const shift = cell.textContent.trim().toUpperCase();
           const nextDay = d + 1;
           if (nextDay > daysInMonth) continue;
           const isNextDayHoliday = holidayMap?.has(nextDay);
           if (!isNextDayHoliday) continue;
-          if (turno === "FE" || turno === "BX") {
-            const corPintar = (turno === "FE") ? "#00B0F0" : "#FF0000";
+          if (shift === "FE" || shift === "BX") {
+            const corPintar = (shift === "FE") ? "#00B0F0" : "#FF0000";
             const nextCell = row.querySelector(`.day-cell-${nextDay}`);
             if (nextCell) {
               const nextValue = nextCell.textContent.trim().toUpperCase();
               if (!nextValue || !SHIFT_COLORS[nextValue]) {
                 nextCell.style.backgroundColor = corPintar;
-                if (turno === "BX") {
+                if (shift === "BX") {
                   nextCell.style.color = "#FFFFFF";
                   nextCell.style.fontWeight = "bold";
                 }
@@ -1071,30 +1097,30 @@
             }
             const nextDate = atNoonLocal(year, month - 1, nextDay);
             if (nextDate.getDay() === 5) {
-              const sabado = nextDay + 1;
-              const domingo = nextDay + 2;
-              if (sabado <= daysInMonth) {
-                const sabCell = row.querySelector(`.day-cell-${sabado}`);
-                if (sabCell) {
-                  const sabValue = sabCell.textContent.trim().toUpperCase();
+              const saturday = nextDay + 1;
+              const sunday = nextDay + 2;
+              if (saturday <= daysInMonth) {
+                const satCell = row.querySelector(`.day-cell-${saturday}`);
+                if (satCell) {
+                  const sabValue = satCell.textContent.trim().toUpperCase();
                   if (!sabValue || !SHIFT_COLORS[sabValue]) {
-                    sabCell.style.backgroundColor = corPintar;
-                    if (turno === "BX") {
-                      sabCell.style.color = "#FFFFFF";
-                      sabCell.style.fontWeight = "bold";
+                    satCell.style.backgroundColor = corPintar;
+                    if (shift === "BX") {
+                      satCell.style.color = "#FFFFFF";
+                      satCell.style.fontWeight = "bold";
                     }
                   }
                 }
               }
-              if (domingo <= daysInMonth) {
-                const domCell = row.querySelector(`.day-cell-${domingo}`);
-                if (domCell) {
-                  const domValue = domCell.textContent.trim().toUpperCase();
+              if (sunday <= daysInMonth) {
+                const sunCell = row.querySelector(`.day-cell-${sunday}`);
+                if (sunCell) {
+                  const domValue = sunCell.textContent.trim().toUpperCase();
                   if (!domValue || !SHIFT_COLORS[domValue]) {
-                    domCell.style.backgroundColor = corPintar;
-                    if (turno === "BX") {
-                      domCell.style.color = "#FFFFFF";
-                      domCell.style.fontWeight = "bold";
+                    sunCell.style.backgroundColor = corPintar;
+                    if (shift === "BX") {
+                      sunCell.style.color = "#FFFFFF";
+                      sunCell.style.fontWeight = "bold";
                     }
                   }
                 }
@@ -1102,7 +1128,7 @@
             }
             continue;
           }
-          if (SPECIAL_BEFORE_HOLIDAY_RED.includes(turno)) {
+          if (SPECIAL_BEFORE_HOLIDAY_RED.includes(shift)) {
             const nextCell = row.querySelector(`.day-cell-${nextDay}`);
             if (nextCell) {
               const nextValue = nextCell.textContent.trim().toUpperCase();
@@ -1122,59 +1148,59 @@
           const date = atNoonLocal(year, month - 1, d);
           const dayOfWeek = date.getDay();
           if (dayOfWeek !== 6 && dayOfWeek !== 0) continue;
-          let turnoSexta = null;
-          let turnoSegunda = null;
+          let shiftFriday = null;
+          let shiftMonday = null;
           if (dayOfWeek === 6) {
             if (d === 1 && __lastFridayPrevCache) {
-              turnoSexta = __prevMonthShiftsCache[`${rowNInt}_${__lastFridayPrevCache}`] || null;
+              shiftFriday = __prevMonthShiftsCache[`${rowNInt}_${__lastFridayPrevCache}`] || null;
             } else if (d > 1) {
-              const cellSexta = row.querySelector(`.day-cell-${d - 1}`);
-              turnoSexta = cellSexta ? cellSexta.textContent.trim().toUpperCase() : null;
+              const cellFriday = row.querySelector(`.day-cell-${d - 1}`);
+              shiftFriday = cellFriday ? cellFriday.textContent.trim().toUpperCase() : null;
             }
             if (d + 2 <= daysInMonth) {
               const cellSegunda = row.querySelector(`.day-cell-${d + 2}`);
-              turnoSegunda = cellSegunda ? cellSegunda.textContent.trim().toUpperCase() : null;
+              shiftMonday = cellSegunda ? cellSegunda.textContent.trim().toUpperCase() : null;
             } else if (__firstMondayNextCache) {
-              turnoSegunda = __nextMonthShiftsCache[`${rowNInt}_${__firstMondayNextCache}`] || null;
+              shiftMonday = __nextMonthShiftsCache[`${rowNInt}_${__firstMondayNextCache}`] || null;
             }
           } else {
             if (d <= 2 && __lastFridayPrevCache) {
-              turnoSexta = __prevMonthShiftsCache[`${rowNInt}_${__lastFridayPrevCache}`] || null;
+              shiftFriday = __prevMonthShiftsCache[`${rowNInt}_${__lastFridayPrevCache}`] || null;
             } else if (d > 2) {
-              const cellSexta = row.querySelector(`.day-cell-${d - 2}`);
-              turnoSexta = cellSexta ? cellSexta.textContent.trim().toUpperCase() : null;
+              const cellFriday = row.querySelector(`.day-cell-${d - 2}`);
+              shiftFriday = cellFriday ? cellFriday.textContent.trim().toUpperCase() : null;
             }
             if (d + 1 <= daysInMonth) {
               const cellSegunda = row.querySelector(`.day-cell-${d + 1}`);
-              turnoSegunda = cellSegunda ? cellSegunda.textContent.trim().toUpperCase() : null;
+              shiftMonday = cellSegunda ? cellSegunda.textContent.trim().toUpperCase() : null;
             } else if (__firstMondayNextCache) {
-              turnoSegunda = __nextMonthShiftsCache[`${rowNInt}_${__firstMondayNextCache}`] || null;
+              shiftMonday = __nextMonthShiftsCache[`${rowNInt}_${__firstMondayNextCache}`] || null;
             }
           }
           const cellFDS = row.querySelector(`.day-cell-${d}`);
           if (!cellFDS) continue;
           const cellValue = cellFDS.textContent.trim().toUpperCase();
           if (cellValue && SHIFT_COLORS[cellValue]) continue;
-          if (turnoSexta === "FE" || turnoSexta === "BX") {
-            const corPintar = (turnoSexta === "FE") ? "#00B0F0" : "#FF0000";
-            cellFDS.style.backgroundColor = corPintar;
-            if (turnoSexta === "BX") {
+          if (shiftFriday === "FE" || shiftFriday === "BX") {
+            const colorPaint = (shiftFriday === "FE") ? "#00B0F0" : "#FF0000";
+            cellFDS.style.backgroundColor = colorPaint;
+            if (shiftFriday === "BX") {
               cellFDS.style.color = "#FFFFFF";
               cellFDS.style.fontWeight = "bold";
             }
             if (dayOfWeek === 6) {
-              const segunda = d + 2;
-              if (segunda <= daysInMonth) {
-                const isSegundaHoliday = holidayMap?.has(segunda);
-                if (isSegundaHoliday) {
-                  const segCell = row.querySelector(`.day-cell-${segunda}`);
-                  if (segCell) {
-                    const segValue = segCell.textContent.trim().toUpperCase();
-                    if (!segValue || !SHIFT_COLORS[segValue]) {
-                      segCell.style.backgroundColor = corPintar;
-                      if (turnoSexta === "BX") {
-                        segCell.style.color = "#FFFFFF";
-                        segCell.style.fontWeight = "bold";
+              const monday = d + 2;
+              if (monday <= daysInMonth) {
+                const isMondayHoliday = holidayMap?.has(monday);
+                if (isMondayHoliday) {
+                  const monCell = row.querySelector(`.day-cell-${monday}`);
+                  if (monCell) {
+                    const monValue = monCell.textContent.trim().toUpperCase();
+                    if (!monValue || !SHIFT_COLORS[monValue]) {
+                      monCell.style.backgroundColor = colorPaint;
+                      if (shiftFriday === "BX") {
+                        monCell.style.color = "#FFFFFF";
+                        monCell.style.fontWeight = "bold";
                       }
                     }
                   }
@@ -1183,64 +1209,64 @@
             }
             continue;
           }
-          if (SPECIAL_TURNOS_FDS.includes(turnoSexta) && SPECIAL_TURNOS_FDS.includes(turnoSegunda)) {
+          if (SPECIAL_SHIFTS_FDS.includes(shiftFriday) && SPECIAL_SHIFTS_FDS.includes(shiftMonday)) {
             if (dayOfWeek === 6) {
-              const corSexta = SHIFT_COLORS[turnoSexta];
-              if (corSexta) cellFDS.style.backgroundColor = corSexta.bg;
+              const colorFriday = SHIFT_COLORS[shiftFriday];
+              if (colorFriday) cellFDS.style.backgroundColor = colorFriday.bg;
             } else {
-              const corSegunda = SHIFT_COLORS[turnoSegunda];
-              if (corSegunda) cellFDS.style.backgroundColor = corSegunda.bg;
+              const colorMonday = SHIFT_COLORS[shiftMonday];
+              if (colorMonday) cellFDS.style.backgroundColor = colorMonday.bg;
             }
           }
         }
       });
     }
-    function displayTurnosLegend(container) {
+    function displayShiftsLegend(container) {
       const legendDiv = document.createElement("div");
-      legendDiv.style.cssText = `margin-top: 15px; padding: 12px; background: #f0f8ff; border: 2px solid #4682b4; border-radius: 5px; font-family: 'Segoe UI', sans-serif;
-                                 display: inline-block; width: fit-content; margin-left: 15px; vertical-align: top;`;
-      const turnos = [{code: "FR", desc: "Feriado"}, {code: "M", desc: "08:00 - 15:00"}, {code: "D", desc: "08:00 - 20:00"}, {code: "N", desc: "20:00 - 08:00"}, {code: "", desc: "Condutor INEM", special: "driver"},
+      legendDiv.style.cssText = `margin-top: 5px; padding: 12px; background: #f0f8ff; border: 1px solid #4682b4; border-radius: 5px; font-family: 'Segoe UI', sans-serif;
+                                 display: inline-block; width: fit-content; margin-left: 5px; vertical-align: top; height: 150px;`;
+      const shifts = [{code: "FR", desc: "Feriado"}, {code: "M", desc: "08:00 - 15:00"}, {code: "D", desc: "08:00 - 20:00"}, {code: "N", desc: "20:00 - 08:00"}, {code: "", desc: "Condutor INEM", special: "driver"},
                       {code: "FO", desc: "Folga"}, {code: "FE", desc: "Férias"}, {code: "FOR", desc: "Formação"}, {code: "BX", desc: "Baixa"}, {code: "FI", desc: "Falta Injustificada"},
                       {code: "FJ", desc: "Falta Justificada"}, {code: "LP", desc: "Lic. Paternidade"}, {code: "LN", desc: "Lic. Nojo"}, {code: "LC", desc: "Lic. Casamento"}, {code: "DP", desc: "Dispensa"}];
       let html = `
         <div style="font-weight: bold; font-size: 14px; color: #1e3a8a; margin-bottom: 10px; text-align: center;">LEGENDA DE TURNOS</div>
         <div style="display: flex; flex-direction: column; gap: 6px;">
       `;
-      const createItem = (turno) => {
-        if (turno.special === "driver") {
+      const createItem = (shift) => {
+        if (shift.special === "driver") {
           return `
-            <div style="display: flex; align-items: stretch; background: #f5f5f5; border: 1px solid #ccc; border-radius: 4px; overflow: hidden; width: 165px;">
-              <div style="background: ${DRIVER_BG}; color: ${DRIVER_TEXT}; font-weight: bold; font-size: 14px; padding: 1px 0; width: 50px; text-align: center; display: flex; 
+            <div style="display: flex; align-items: stretch; background: #f5f5f5; border: 1px solid #ccc; border-radius: 4px; overflow: hidden; width: 140px;">
+              <div style="background: ${DRIVER_BG}; color: ${DRIVER_TEXT}; font-weight: bold; font-size: 14px; padding: 1px 0; width: 30px; text-align: center; display: flex; 
                           align-items: center; justify-content: center;">&nbsp;</div>
-              <div style="font-size: 12px; color: #000; flex: 1; text-align: center; padding: 1px 8px; display: flex; align-items: center; justify-content: center;">${turno.desc}</div>
+              <div style="font-size: 12px; color: #000; flex: 1; text-align: center; padding: 1px 8px; display: flex; align-items: center; justify-content: center;">${shift.desc}</div>
             </div>
           `;
         } else {
-          const colors = SHIFT_COLORS[turno.code];
+          const colors = SHIFT_COLORS[shift.code];
           const codeBg = colors ? colors.bg : "#FFFFFF";
           const codeColor = colors ? colors.color : "#000000";
           return `
-            <div style="display: flex; align-items: stretch; background: #f5f5f5; border: 1px solid #ccc; border-radius: 4px; overflow: hidden; width: 165px;">
-              <div style="background: ${codeBg}; color: ${codeColor}; font-weight: bold; font-size: 14px; padding: 1px 0; width: 50px; text-align: center; display: flex; 
-                          align-items: center; justify-content: center;">${turno.code}</div>
-              <div style="font-size: 12px; color: #000; flex: 1; text-align: center; padding: 1px 8px; display: flex; align-items: center; justify-content: center;">${turno.desc}</div>
+            <div style="display: flex; align-items: stretch; background: #f5f5f5; border: 1px solid #ccc; border-radius: 4px; overflow: hidden; width: 140px;">
+              <div style="background: ${codeBg}; color: ${codeColor}; font-weight: bold; font-size: 14px; padding: 1px 0; width: 30px; text-align: center; display: flex; 
+                          align-items: center; justify-content: center;">${shift.code}</div>
+              <div style="font-size: 12px; color: #000; flex: 1; text-align: center; padding: 1px 8px; display: flex; align-items: center; justify-content: center;">${shift.desc}</div>
             </div>
           `;
         }
       };
       html += `<div style="display: flex; gap: 6px;">`;
       for (let i = 0; i < 5; i++) {
-        html += createItem(turnos[i]);
+        html += createItem(shifts[i]);
       }
       html += `</div>`;
       html += `<div style="display: flex; gap: 6px;">`;
       for (let i = 5; i < 10; i++) {
-        html += createItem(turnos[i]);
+        html += createItem(shifts[i]);
       }
       html += `</div>`;
       html += `<div style="display: flex; gap: 6px;">`;
       for (let i = 10; i < 15; i++) {
-        html += createItem(turnos[i]);
+        html += createItem(shifts[i]);
       }
       html += `</div>`;
       html += `</div>`;
@@ -1251,7 +1277,7 @@
     let __nextMonthShiftsCache = {};
     let __lastFridayPrevCache = null;
     let __firstMondayNextCache = null;
-    async function createEscalasTable(containerId, year, month, data) {
+    async function createEmployeeScalesTable(containerId, year, month, data) {
       const container = document.getElementById(containerId);
       if (!container) return;
       const rowsData = Array.isArray(data) ? data : [];
@@ -1277,7 +1303,8 @@
       __currentHolidayMap = holidayMap;
       const title = document.createElement("h3");
       title.textContent = `ESCALA - ${MONTH_NAMES[month - 1]} ${year}`;
-      Object.assign(title.style, {textAlign: "center", margin: "20px 0 -15px 0", background: "#3ac55b", height: "30px", borderRadius: "3px", lineHeight: "30px"});
+      Object.assign(title.style, {textAlign: "center", margin: "20px 0 -15px 0", background: "radial-gradient(circle, #ff4d4d 0%, #b30000 100%)", height: "30px", 
+                                  borderRadius: "3px", lineHeight: "30px", color: "#fff"});
       tableHost.appendChild(title);
       const wrapper = createTableWrapper(tableHost);
       wrapper.style.height = "500px";
@@ -1304,11 +1331,11 @@
         th.style.cssText = COMMON_TH_STYLE;
         trTop.appendChild(th);
       }
-      const thTotalMensal = document.createElement("th");
-      thTotalMensal.innerHTML = "TOTAL<br>Mensal";
-      thTotalMensal.rowSpan = 2;
-      thTotalMensal.style.cssText = COMMON_TH_STYLE + "border-bottom:2px solid #ccc; width:70px; background:#131a69; color:#fff; line-height:16px;";
-      trTop.appendChild(thTotalMensal);
+      const thMonthlyTotal = document.createElement("th");
+      thMonthlyTotal.innerHTML = "TOTAL<br>Mensal";
+      thMonthlyTotal.rowSpan = 2;
+      thMonthlyTotal.style.cssText = COMMON_TH_STYLE + "border-bottom:2px solid #ccc; width:70px; background:#131a69; color:#fff; line-height:16px;";
+      trTop.appendChild(thMonthlyTotal);
       const thTotalAcum = document.createElement("th");
       thTotalAcum.innerHTML = "TOTAL<br>Acumulado";
       thTotalAcum.rowSpan = 2;
@@ -1530,14 +1557,14 @@
         tdNI.textContent = String(item.n_int).padStart(3, "0");
         tdNI.style.cssText = COMMON_TD_STYLE;
         tr.appendChild(tdNI);
-        const tdNome = document.createElement("td");
-        tdNome.textContent = item.abv_name || "";
-        tdNome.style.cssText = COMMON_TD_STYLE;
-        tr.appendChild(tdNome);
-        const tdFuncao = document.createElement("td");
-        tdFuncao.textContent = item.function || "";
-        tdFuncao.style.cssText = COMMON_TD_STYLE + "text-align:center;";
-        tr.appendChild(tdFuncao);
+        const tdName = document.createElement("td");
+        tdName.textContent = item.abv_name || "";
+        tdName.style.cssText = COMMON_TD_STYLE;
+        tr.appendChild(tdName);
+        const tdFunction = document.createElement("td");
+        tdFunction.textContent = item.function || "";
+        tdFunction.style.cssText = COMMON_TD_STYLE + "text-align:center;";
+        tr.appendChild(tdFunction);
         const tdEq = document.createElement("td");
         tdEq.textContent = normalizeTeam(item.team);
         tdEq.style.cssText = COMMON_TD_STYLE + "text-align:center;";
@@ -1545,19 +1572,19 @@
         for (let d = 1; d <= daysInMonth; d++) {
           tr.appendChild(createDayCell(d, tr));
         }
-        const tdTotalMensal = document.createElement("td");
-        tdTotalMensal.className = "total-mensal-cell";
-        tdTotalMensal.textContent = "0";
-        tdTotalMensal.style.cssText = COMMON_TD_STYLE + "text-align:center; font-weight:bold; background:#f0f0f0;";
-        tr.appendChild(tdTotalMensal);
+        const tdMonthlyTotal = document.createElement("td");
+        tdMonthlyTotal.className = "total-monthly-cell";
+        tdMonthlyTotal.textContent = "0";
+        tdMonthlyTotal.style.cssText = COMMON_TD_STYLE + "text-align:center; font-weight:bold; background:#f0f0f0;";
+        tr.appendChild(tdMonthlyTotal);
         const tdTotalAcum = document.createElement("td");
-        tdTotalAcum.className = "total-acumulado-cell";
-        const acumuladoBase = item._acumulado || 0;
-        const horasExtra = item._horasExtra || 0;
-        tdTotalAcum.textContent = acumuladoBase + horasExtra;
-        tdTotalAcum.dataset.base = acumuladoBase;
-        tdTotalAcum.dataset.horasExtra = horasExtra;
-        tdTotalAcum.dataset.isJaneiro = item._isJaneiro ? "1" : "0";
+        tdTotalAcum.className = "total-accumulated-cell";
+        const accumulatedBase = item._accumulated || 0;
+        const extraHours = item._extraHours || 0;
+        tdTotalAcum.textContent = accumulatedBase + extraHours;
+        tdTotalAcum.dataset.base = accumulatedBase;
+        tdTotalAcum.dataset.extraHours = extraHours;
+        tdTotalAcum.dataset.isJanuary = item._isJanuary ? "1" : "0";
         tdTotalAcum.style.cssText = COMMON_TD_STYLE + "text-align:center; font-weight:bold; background:#ffe6e6;";
         tr.appendChild(tdTotalAcum);
         tbody.appendChild(tr);
@@ -1568,7 +1595,7 @@
           tbody.querySelectorAll(`.day-cell-${d}`).forEach((td) => {
             const val = (td.textContent || "").trim().toUpperCase();
             const hasShift = !!SHIFT_VALUES[val] || !!SHIFT_COLORS[val];
-            if (!hasShift) td.style.backgroundColor = WEEKEND_COLOR || "#f9e0b0";
+            if (!hasShift) td.style.backgroundColor = WEEKEND_EMPLOYEES_COLOR || "#f9e0b0";
           });
         }
       }
@@ -1593,7 +1620,7 @@
       const temp = document.createElement("div");
       temp.style.cssText = infoHost.style.cssText;
       displayWorkingHoursInfo(temp, year, month);
-      displayTurnosLegend(temp, year, month);
+      displayShiftsLegend(temp, year, month);
       infoHost.replaceChildren(...temp.childNodes);
     }
     async function cleanEmployeeScales({ autoSave = false } = {}) {
@@ -1626,22 +1653,22 @@
           cell.title = "";
           applyBaseDayColor(cell, year, month, dayNum, holidayMap);
         });
-        const totalMensalCell = row.querySelector(".total-mensal-cell");
-        if (totalMensalCell) totalMensalCell.textContent = "0";
-        const totalAcumCell = row.querySelector(".total-acumulado-cell");
+        const totalMonthlyCell = row.querySelector(".total-monthly-cell");
+        if (totalMonthlyCell) totalMonthlyCell.textContent = "0";
+        const totalAcumCell = row.querySelector(".total-accumulated-cell");
         if (totalAcumCell) {
-          const acumuladoBase = parseFloat(totalAcumCell.dataset.base || 0);
-          const horasExtra = parseFloat(totalAcumCell.dataset.horasExtra || 0);
-          const isJaneiro = (totalAcumCell.dataset.isJaneiro === "1");
-          const cargaObrigatoria = calculateWorkingHours(year, month).workingHours;          
-          const diferencaMes = 0 - cargaObrigatoria + horasExtra;
-          let totalAcumulado;
-          if (isJaneiro) {
-            totalAcumulado = diferencaMes;
+          const accumulatedBase = parseFloat(totalAcumCell.dataset.base || 0);
+          const extraHours = parseFloat(totalAcumCell.dataset.extraHours || 0);
+          const isJanuary = (totalAcumCell.dataset.isJanuary === "1");
+          const mandatoryCargo = calculateWorkingHours(year, month).workingHours;          
+          const differenceMonth = 0 - mandatoryCargo + extraHours;
+          let totalAccumulated;
+          if (isJanuary) {
+            totalAccumulated = differenceMonth;
           } else {
-            totalAcumulado = acumuladoBase + diferencaMes;
+            totalAccumulated = accumulatedBase + differenceMonth;
           }
-          totalAcumCell.textContent = String(totalAcumulado);
+          totalAcumCell.textContent = String(totalAccumulated);
         }
       });
       if (table) {
@@ -1665,16 +1692,16 @@
       const year = parseInt(yearSelect.value, 10);
       const month = Array.from(document.querySelectorAll("#months-container-scales-employees .btn")).indexOf(monthBtn) + 1;
       const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
-      const guardarBtn = document.getElementById("guardar-escala-btn");
-      if (guardarBtn) {
-        guardarBtn.disabled = true;
-        guardarBtn.textContent = "A guardar...";
+      const saveBtn = document.getElementById("employees-save-btn");
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.textContent = "A guardar...";
       }
       try {
         const rows = Array.from(tbody.querySelectorAll("tr.data-row"));
         const shiftsPayload = [];
         const employeesUpdate = [];
-        const acumuladosPayload = [];
+        const accumulatedPayload = [];
         rows.forEach((row, position) => {
           const nInt = parseInt(row.getAttribute("data-nint"), 10);
           const abvName = row.querySelector("td:nth-child(2)")?.textContent.trim() || "";
@@ -1691,14 +1718,14 @@
             const hasCustomColors = customBg || customColor;
             if (shift || hasCustomColors) {
               shiftsPayload.push({n_int: nInt, abv_name: abvName, day: day, month: month, year: year, shift: shift === "" ? " " : shift, team: team, function: func, position: position, 
-                                  corp_oper_nr: corpOperNr, is_driver: (cell.dataset.driver === "1"), is_other: (cell.dataset.outro === "1"), custom_bg_color: customBg,
+                                  corp_oper_nr: corpOperNr, is_driver: (cell.dataset.driver === "1"), is_other: (cell.dataset.other === "1"), custom_bg_color: customBg,
                                   custom_text_color: customColor});}});
-          const totalMensal = calculateRowTotal(row);
-          const celulas = row.cells;
-          const totalAcumuladoTexto = celulas[celulas.length - 1].textContent.trim();
-          const totalAcumulado = parseFloat(totalAcumuladoTexto.replace(',', '.')) || 0;
-          acumuladosPayload.push({n_int: nInt, abv_name: abvName, year: year, month: month, total_mensal: totalMensal, horas_extra: 0, 
-                                  total_acumulado: totalAcumulado, corp_oper_nr: corpOperNr});});
+          const totalMonthly = calculateProfessionalsRowTotal(row);
+          const cells = row.cells;
+          const totalAccumulatedText = cells[cells.length - 1].textContent.trim();
+          const totalAccumulated = parseFloat(totalAccumulatedText.replace(',', '.')) || 0;
+          accumulatedPayload.push({n_int: nInt, abv_name: abvName, year: year, month: month, monthly_total: totalMonthly,
+                                   total_accumulated: totalAccumulated, corp_oper_nr: corpOperNr});});
         const deleteShifts = await fetch(
           `${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`, {
             method: "DELETE",
@@ -1745,7 +1772,7 @@
           }
         );
         if (!deleteAcum.ok) console.warn("⚠️ Erro ao limpar acumulados antigos");
-        if (acumuladosPayload.length > 0) {
+        if (accumulatedPayload.length > 0) {
           const insertAcum = await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul`, {
             method: "POST",
             headers: {
@@ -1753,7 +1780,7 @@
               "Content-Type": "application/json",
               "Prefer": "return=minimal"
             },
-            body: JSON.stringify(acumuladosPayload)
+            body: JSON.stringify(accumulatedPayload)
           });
           if (!insertAcum.ok) {
             const errText = await insertAcum.text();
@@ -1766,9 +1793,9 @@
         console.error("Erro ao guardar escala:", err);
         showPopupWarning("❌ Erro ao guardar: " + err.message);
       } finally {
-        if (guardarBtn) {
-          guardarBtn.disabled = false;
-          guardarBtn.textContent = "Guardar";
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.textContent = "Guardar";
         }
       }
     }
@@ -1789,6 +1816,7 @@
       const year = parseInt(yearEl.value, 10);
       const month = Array.from(monthsContainer.querySelectorAll(".btn")).indexOf(monthBtn) + 1;
       try {
+        showLoadingPopup("🔄 A preparar escala...");
         const rows = Array.from(tbody.querySelectorAll("tr.data-row"));
         if (rows.length === 0) {
           console.error("Erro: não encontrei linhas .data-row na tabela.");
@@ -1802,7 +1830,7 @@
             abv_name: row.querySelector("td:nth-child(2)")?.textContent.trim() || "",
             function: row.querySelector("td:nth-child(3)")?.textContent.trim() || "",
             team: row.querySelector("td:nth-child(4)")?.textContent.trim() || "",
-            total: parseInt(row.querySelector(".total-mensal-cell")?.textContent.trim() || "0", 10),
+            total: parseInt(row.querySelector(".total-monthly-cell")?.textContent.trim() || "0", 10),
             shifts: dayCells.map(c => c.textContent.trim().toUpperCase()),
             cellColors: dayCells.map(cell => {
               const bg = getComputedStyle(cell).backgroundColor;
@@ -1813,6 +1841,7 @@
           };
         });
         const {workingHours} = calculateWorkingHours(year, month);
+        updateLoadingPopup(`📊 A gerar escala em ${format === "pdf" ? "PDF" : "Excel"}...`);
         const response = await fetch("https://cb360-online.vercel.app/api/employees_convert_and_send", {
           method: "POST",
           headers: {"Content-Type": "application/json"},
@@ -1826,50 +1855,79 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `Escala_Funcionários_${month}_${year}.${format === "pdf" ? "pdf" : "xlsx"}`;
+        const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+        const fullMonthNames = monthNames[month - 1];        
+        a.download = `Escala_Funcionários_${fullMonthNames}_${year}.${format === "pdf" ? "pdf" : "xlsx"}`;
         a.click();
         URL.revokeObjectURL(url);
+        hideLoadingPopup();
+        showPopupSuccess(`✅ Escala gerada com sucesso!`);
       } catch (err) {
+        hideLoadingPopup();
         console.error("Erro ao gerar folha:", err);
+        showPopupWarning(`❌ Erro: ${err.message}`);
       }
     }
     function showLoadingPopup(message) {
       const existingPopup = document.getElementById("loading-popup");
-      if (existingPopup) existingPopup.remove();
+      if (existingPopup) existingPopup.remove();      
       const popup = document.createElement("div");
       popup.id = "loading-popup";
-      popup.style.cssText = `position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px 40px; border-radius: 12px;
-                             box-shadow: 0 8px 32px rgba(0,0,0,0.3); z-index: 10000; text-align: center; min-width: 350px;`;
+      popup.style.cssText = `position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 50px; 
+                             border-radius: 20px; box-shadow: 0 20px 60px rgba(102, 126, 234, 0.4); z-index: 10000; text-align: center; min-width: 400px; animation: popupFadeIn 0.3s ease-out;`;      
       const spinner = document.createElement("div");
-      spinner.style.cssText = `border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite;
-                               margin: 0 auto 20px;`;
+      spinner.style.cssText = `border: 5px solid rgba(255, 255, 255, 0.3); border-top: 5px solid #ffffff; border-radius: 50%; width: 60px; height: 60px; animation: spin 0.8s linear infinite;
+                               margin: 0 auto 25px;`;      
       const text = document.createElement("p");
       text.id = "loading-popup-text";
       text.textContent = message;
-      text.style.cssText = `font-size: 16px; font-weight: bold; color: #333; margin: 0;`;
+      text.style.cssText = `font-size: 18px; font-weight: 600; color: #ffffff; margin: 0 0 15px 0; text-shadow: 0 2px 4px rgba(0,0,0,0.2);`;      
+      const progressBar = document.createElement("div");
+      progressBar.id = "loading-progress-bar";
+      progressBar.style.cssText = `width: 100%; height: 4px; background: rgba(255, 255, 255, 0.3); border-radius: 2px; overflow: hidden; margin-top: 15px;`;      
+      const progressFill = document.createElement("div");
+      progressFill.id = "loading-progress-fill";
+      progressFill.style.cssText = `width: 0%; height: 100%; background: #ffffff; border-radius: 2px; transition: width 0.3s ease;`;
+      progressBar.appendChild(progressFill);      
       popup.appendChild(spinner);
       popup.appendChild(text);
+      popup.appendChild(progressBar);      
       const overlay = document.createElement("div");
       overlay.id = "loading-overlay";
-      overlay.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999;`;
+      overlay.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); z-index: 9999; animation: overlayFadeIn 0.3s ease-out;`;      
       document.body.appendChild(overlay);
-      document.body.appendChild(popup);
-      if (!document.getElementById("spinner-style")) {
+      document.body.appendChild(popup);      
+      if (!document.getElementById("popup-animations")) {
         const style = document.createElement("style");
-        style.id = "spinner-style";
-        style.textContent = `@keyframes spin {0% {transform: rotate(0deg);} 100% {transform: rotate(360deg);}}`;
+        style.id = "popup-animations";
+        style.textContent = `@keyframes spin {0% {transform: rotate(0deg);} 100% {transform: rotate(360deg);}}
+                             @keyframes popupFadeIn {from {opacity: 0; transform: translate(-50%, -45%);} to {opacity: 1; transform: translate(-50%, -50%);}}
+                             @keyframes overlayFadeIn {from {opacity: 0;} to {opacity: 1;}}
+                             @keyframes popupFadeOut {from {opacity: 1; transform: translate(-50%, -50%);} to {opacity: 0; transform: translate(-50%, -55%);}}
+                             @keyframes overlayFadeOut {from {opacity: 1;} to {opacity: 0;}}`;
         document.head.appendChild(style);
       }
     }
-    function updateLoadingPopup(message) {
+    function updateLoadingPopup(message, progress = null) {
       const text = document.getElementById("loading-popup-text");
       if (text) text.textContent = message;
+      
+      if (progress !== null) {
+        const fill = document.getElementById("loading-progress-fill");
+        if (fill) fill.style.width = `${progress}%`;
+      }
     }
     function hideLoadingPopup() {
       const popup = document.getElementById("loading-popup");
       const overlay = document.getElementById("loading-overlay");
-      if (popup) popup.remove();
-      if (overlay) overlay.remove();
+      if (popup) {
+        popup.style.animation = "popupFadeOut 0.3s ease-out";
+        setTimeout(() => popup.remove(), 300);
+      }
+      if (overlay) {
+        overlay.style.animation = "overlayFadeOut 0.3s ease-out";
+        setTimeout(() => overlay.remove(), 300);
+      }
     }
     async function emitStitchSheets() {
       const tbody = document.querySelector("table.employees-table tbody");
@@ -1917,7 +1975,7 @@
             function: row.querySelector("td:nth-child(3)")?.textContent.trim() || "",
             shifts: shifts,
             cellColors: cellColors,
-            total: parseInt(row.querySelector(".total-mensal-cell")?.textContent.trim() || "0", 10)
+            total: parseInt(row.querySelector(".total-monthly-cell")?.textContent.trim() || "0", 10)
           };
         }).filter(emp => emp.abv_name);
         if (employees.length === 0) {
@@ -1930,7 +1988,8 @@
         const mergedPdf = await PDFDocument.create();
         for (let i = 0; i < employees.length; i++) {
           const emp = employees[i];
-          updateLoadingPopup(`📄 A processar [${i + 1}/${employees.length}]: ${emp.abv_name}`);
+          const progress = Math.round(((i + 1) / employees.length) * 100);
+          updateLoadingPopup(`📄 A processar [${i + 1}/${employees.length}]: ${emp.abv_name}`, progress);
           const response = await fetch('https://cb360-online.vercel.app/api/employees_convert_and_send', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1978,7 +2037,7 @@
             yearSelectId: "year-employees",
             optionsContainerId: "employee-scales-options",
             loadDataFunc: async (year, month) => await loadScalesEmployees(year, month),
-            createTableFunc: createEscalasTable
+            createTableFunc: createEmployeeScalesTable
           });
         }
       });
@@ -1988,19 +2047,26 @@
     document.getElementById("employees-emit-xlsx-btn")?.addEventListener("click", () => emitEmployeesScale("xlsx"));
     document.getElementById("employees-emit-pdf-btn")?.addEventListener("click", () => emitEmployeesScale("pdf"));
     document.getElementById("employees-emit-stitch-marker-btn")?.addEventListener("click", emitStitchSheets);
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     /* ============================================
     FASE 02 - EMPLOYEE EXTRA HOURS CONTROL
-    ============================================ */  
+    ============================================ */
+    function maskTimeExtraHours(event) {
+      const cell = event.target;
+      let value = cell.textContent.replace(/\D/g, "");
+      if (value.length > 4) value = value.slice(0, 4);
+      if (value.length > 2) {
+        value = value.slice(0, 2) + ":" + value.slice(2);
+      }
+      if (cell.textContent !== value) {
+        cell.textContent = value;
+        const selection = window.getSelection();
+        const range = document.createRange();
+        range.selectNodeContents(cell);
+        range.collapse(false);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+    }
     /* == EMPLOYEES EXTRA HOURS MONTH BUTTONS == */
     function createEmployeeExtraHourMonthButtons({
       monthsContainerId,
@@ -2065,9 +2131,9 @@
       container.appendChild(mainWrapper);
       setTimeout(() => { yearSelect.value = targetYear; }, 0);
     }
-    function horasDecimaisToMinutes(horas) {
-      if (!horas || horas <= 0) return 0;
-      return Math.round(horas * 60);
+    function decimalHoursToMinutes(hours) {
+      if (!hours || hours <= 0) return 0;
+      return Math.round(hours * 60);
     }
     function minutesToHHMM(minutes) {
       if (!minutes || minutes <= 0) return "";
@@ -2131,11 +2197,11 @@
         }
         trWeek.appendChild(th);
       }
-      const thTotalMensal = document.createElement("th");
-      thTotalMensal.innerHTML = "TOTAL<br>Mês";
-      thTotalMensal.rowSpan = 2;
-      thTotalMensal.style.cssText = COMMON_TH_STYLE + "border-bottom: 2px solid #ccc; width: 70px; background: #131a69; color: #fff; line-height: 16px;";
-      trWeek.appendChild(thTotalMensal);
+      const thMonthlyTotal = document.createElement("th");
+      thMonthlyTotal.innerHTML = "TOTAL<br>Mês";
+      thMonthlyTotal.rowSpan = 2;
+      thMonthlyTotal.style.cssText = COMMON_TH_STYLE + "border-bottom: 2px solid #ccc; width: 70px; background: #131a69; color: #fff; line-height: 16px;";
+      trWeek.appendChild(thMonthlyTotal);
       thead.appendChild(trWeek);
       const trNums = document.createElement("tr");
       for (let d = 1; d <= 31; d++) {
@@ -2174,10 +2240,10 @@
         tdNI.textContent = String(item.n_int).padStart(3, "0");
         tdNI.style.cssText = COMMON_TD_STYLE;
         tr.appendChild(tdNI);
-        const tdNome = document.createElement("td");
-        tdNome.textContent = item.abv_name || "";
-        tdNome.style.cssText = COMMON_TD_STYLE;
-        tr.appendChild(tdNome);
+        const tdName = document.createElement("td");
+        tdName.textContent = item.abv_name || "";
+        tdName.style.cssText = COMMON_TD_STYLE;
+        tr.appendChild(tdName);
         for (let d = 1; d <= daysInMonth; d++) {
           const td = document.createElement("td");
           td.className = `day-cell-${d}`;
@@ -2186,7 +2252,8 @@
           td.textContent = minutesToHHMM(savedMinutes);
           const bgColor = getDayCellBg(d);
           td.style.cssText = COMMON_TD_STYLE + "text-align: center;";
-          if (bgColor) td.style.backgroundColor = bgColor;
+          if (bgColor) td.style.backgroundColor = bgColor;          
+          td.addEventListener("input", maskTimeExtraHours);
           td.addEventListener("blur", () => {
             const raw = td.textContent.trim();
             if (raw === "" || !isValidHHMM(raw)) {
@@ -2227,10 +2294,10 @@
           });
           tr.appendChild(td);
         }
-        const tdTotalMensal = document.createElement("td");
-        tdTotalMensal.className = "total-mensal-extra-cell";
-        tdTotalMensal.style.cssText = COMMON_TD_STYLE + "text-align: center; font-weight: bold; background: #f0f0f0;";
-        tr.appendChild(tdTotalMensal);
+        const tdMonthlyTotal = document.createElement("td");
+        tdMonthlyTotal.className = "total-monthly-extra-cell";
+        tdMonthlyTotal.style.cssText = COMMON_TD_STYLE + "text-align: center; font-weight: bold; background: #f0f0f0;";
+        tr.appendChild(tdMonthlyTotal);
         tbody.appendChild(tr);
         updateExtraHoursTotals(tr);
       });
@@ -2247,7 +2314,7 @@
           totalMinutes += h * 60 + m;
         }
       });
-      const totalMonthCell = row.querySelector(".total-mensal-extra-cell");
+      const totalMonthCell = row.querySelector(".total-monthly-extra-cell");
       if (totalMonthCell) {
         const h = Math.floor(totalMinutes / 60);
         const m = totalMinutes % 60;
@@ -2258,7 +2325,7 @@
       const tbody = document.querySelector("table.extra-hours-table tbody");
       if (!tbody) {
         showPopupWarning("Nenhuma tabela aberta."); 
-        return; 
+        return;
       }
       const yearSelect = document.getElementById("year-extra-hour-employees");
       const monthBtn = document.querySelector("#months-container-extra-hour-employees .btn.active");
@@ -2269,71 +2336,114 @@
       const year = parseInt(yearSelect.value, 10);
       const month = Array.from(document.querySelectorAll("#months-container-extra-hour-employees .btn")).indexOf(monthBtn) + 1;
       const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
-      const guardarBtn = document.getElementById("employees-extra-save-btn");
-      if (guardarBtn) { 
-        guardarBtn.disabled = true; 
-        guardarBtn.textContent = "A guardar..."; 
+      const saveExtraHoursBtn = document.getElementById("employees-extra-save-btn");
+      if (saveExtraHoursBtn) {
+        saveExtraHoursBtn.disabled = true; 
+        saveExtraHoursBtn.textContent = "A guardar..."; 
       }
       try {
         const rows = Array.from(tbody.querySelectorAll("tr.data-row"));
-        const recordsDiarios = [];
-        const acumuladosPayload = [];
-        const listaNIs = [];
+        const dailyRecords = [];
         rows.forEach(row => {
           const n_int = parseInt(row.querySelector("td:nth-child(1)")?.textContent.trim());
           const abv_name = row.querySelector("td:nth-child(2)")?.textContent.trim();
           const cells = row.querySelectorAll("td[contenteditable='true']");
-          let totalMinutosMes = 0;
-          if (!isNaN(n_int)) listaNIs.push(n_int);
           cells.forEach((cell, idx) => {
             const value = cell.textContent.trim();
             if (value && isValidHHMM(value)) {
               const [h, m] = value.split(":").map(Number);
               const totalMinutes = h * 60 + m;
               if (totalMinutes > 0) {
-                totalMinutosMes += totalMinutes;
-                recordsDiarios.push({n_int, abv_name, year, month, day: idx + 1, qtd_hours: parseFloat((totalMinutes / 60).toFixed(2)), corp_oper_nr: corpOperNr});
+                dailyRecords.push({n_int, abv_name, year, month, day: idx + 1, qtd_hours: parseFloat((totalMinutes / 60).toFixed(2)), corp_oper_nr: corpOperNr});
               }
             }
           });
-          acumuladosPayload.push({n_int, abv_name, year, month, total_mensal: 0, horas_extra: parseFloat((totalMinutosMes / 60).toFixed(2)), total_acumulado: 0, corp_oper_nr: corpOperNr});
         });
         await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_extra_hours?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`, { 
           method: "DELETE", 
           headers: getSupabaseHeaders() 
         });
-        if (recordsDiarios.length > 0) {
+        if (dailyRecords.length > 0) {
           await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_extra_hours`, {
             method: "POST",
             headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
-            body: JSON.stringify(recordsDiarios)
+            body: JSON.stringify(dailyRecords)
           });
         }
-        if (acumuladosPayload.length > 0) {
-          const stringNIs = listaNIs.join(",");
-          await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}&n_int=in.(${stringNIs})`, {
-            method: "DELETE",
-            headers: getSupabaseHeaders()
+        try {
+          let prevMonth = month - 1;
+          let prevYear = year;
+          if (prevMonth === 0) { prevMonth = 12; prevYear--; }
+          const [shiftsRes, acumPrevRes] = await Promise.all([
+            fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`, {
+              headers: getSupabaseHeaders()
+            }),
+            month > 1
+            ? fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul?corp_oper_nr=eq.${corpOperNr}&year=eq.${prevYear}&month=eq.${prevMonth}`, { 
+              headers: getSupabaseHeaders()
+            })
+            : Promise.resolve(null)
+          ]);
+          const allShifts = shiftsRes.ok ? await shiftsRes.json() : [];
+          const acumPrevData = (acumPrevRes && acumPrevRes.ok) ? await acumPrevRes.json() : [];
+          const acumPrevMap = {};
+          acumPrevData.forEach(r => {acumPrevMap[r.n_int] = r.total_accumulated || 0;});
+          const newExtraMap = {};
+          dailyRecords.forEach(r => {
+            newExtraMap[r.n_int] = (newExtraMap[r.n_int] || 0) + r.qtd_hours;
           });
-          const respAcum = await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul`, {
-            method: "POST",
-            headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
-            body: JSON.stringify(acumuladosPayload)
+          const {workingHours: mandatoryCargo} = calculateWorkingHours(year, month);
+          const holidayMap = getHolidayMapForMonth(year, month);
+          const daysInMonth = new Date(year, month, 0).getDate();
+          const isJanuary = (month === 1);
+          const shiftsByEmp = {};
+          allShifts.forEach(s => {
+            if (!shiftsByEmp[s.n_int]) shiftsByEmp[s.n_int] = {abv_name: s.abv_name, shifts: {}};
+            shiftsByEmp[s.n_int].shifts[s.day] = s.shift;
           });
-          if (!respAcum.ok) {
-            const errorText = await respAcum.text();
-            console.error("Erro ao inserir acumulados:", errorText);
-            throw new Error("Erro na inserção final.");
+          const newAccumulatedPayload = Object.entries(shiftsByEmp).map(([nIntStr, empData]) => {
+            const nInt = parseInt(nIntStr, 10);
+            let totalMonthly = 0;
+            for (let d = 1; d <= daysInMonth; d++) {
+              const shift = (empData.shifts[d] || "").trim().toUpperCase();
+              if (!shift || shift === " ") {
+                const date = atNoonLocal(year, month - 1, d);
+                const dow = date.getDay();
+                const isHoliday = holidayMap?.has(d) && !holidayMap.get(d).optional;
+                if (dow !== 0 && dow !== 6 && !isHoliday) totalMonthly += 8;
+              } else {
+                totalMonthly += (SHIFT_VALUES[shift] !== undefined ? SHIFT_VALUES[shift] : 0);
+              }
+            }
+            const extraHours = newExtraMap[nInt] || 0;
+            const accumulatedBase = isJanuary ? 0 : (acumPrevMap[nInt] || 0);
+            const totalAccumulated = isJanuary
+            ? (totalMonthly - mandatoryCargo + extraHours)
+            : (accumulatedBase + totalMonthly - mandatoryCargo + extraHours);
+            return { n_int: nInt, abv_name: empData.abv_name, year, month, monthly_total: totalMonthly, total_accumulated: totalAccumulated, corp_oper_nr: corpOperNr };
+          });
+          if (newAccumulatedPayload.length > 0) {
+            await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`, { 
+              method: "DELETE", 
+              headers: getSupabaseHeaders()
+            });
+            await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul`, {
+              method: "POST",
+              headers: { ...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
+              body: JSON.stringify(newAccumulatedPayload)
+            });
           }
+        } catch (acumErr) {
+          console.warn("⚠️ Horas extra guardadas, mas erro ao atualizar acumulados:", acumErr);
         }
         showPopupSuccess(`✅ Dados atualizados com sucesso!`);
       } catch (error) {
         console.error(error);
         showPopupWarning("❌ Erro ao atualizar dados.");
       } finally {
-        if (guardarBtn) { 
-          guardarBtn.disabled = false; 
-          guardarBtn.textContent = "Guardar"; 
+        if (saveExtraHoursBtn) { 
+          saveExtraHoursBtn.disabled = false; 
+          saveExtraHoursBtn.textContent = "Guardar"; 
         }
       }
     }
@@ -2385,17 +2495,368 @@
       });
     });
     document.getElementById("employees-extra-save-btn")?.addEventListener("click", saveExtraHours);
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     /* ============================================
     FASE 03 - EMPLOYEE INDIVIDUAL REGISTERS
-    ============================================ */  
+    ============================================ */
     /* ====== CREATE AND SAVE EXTRA HOURS ====== */
+    function createEmployeePersonalGraphic() {
+      const cardBody = document.querySelector("#individual-records .card-body");
+      if (!cardBody) return;
+      cardBody.innerHTML = "";
+      const mainWrapper = document.createElement("div");
+      mainWrapper.style.cssText = `display: flex; flex-direction: column; gap: 20px; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;`;
+      const selectorSection = document.createElement("div");
+      selectorSection.style.cssText = `display: flex; align-items: center; gap: 15px; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);`;
+      const label = document.createElement("label");
+      label.textContent = "Selecionar Funcionário:";
+      label.style.cssText = "font-weight: bold; font-size: 14px;";
+      const select = document.createElement("select");
+      select.id = "employee-graphic-select";
+      select.style.cssText = `padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; min-width: 250px; cursor: pointer;`;
+      const yearLabel = document.createElement("label");
+      yearLabel.textContent = "Ano:";
+      yearLabel.style.cssText = "font-weight: bold; font-size: 14px; margin-left: 20px;";
+      const yearSelect = document.createElement("select");
+      yearSelect.id = "year-personal-graphic";
+      yearSelect.style.cssText = `padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; cursor: pointer;`;
+      const currentYear = new Date().getFullYear();
+      for (let y = 2026; y <= 2036; y++) {
+        const opt = document.createElement("option");
+        opt.value = y;
+        opt.textContent = y;
+        if (y === currentYear) opt.selected = true;
+        yearSelect.appendChild(opt);
+      }
+      selectorSection.append(label, select, yearLabel, yearSelect);
+      const contentWrapper = document.createElement("div");
+      contentWrapper.id = "personal-graphic-content";
+      contentWrapper.style.cssText = `display: none; grid-template-columns: auto 1fr; gap: 20px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);`;
+      mainWrapper.append(selectorSection, contentWrapper);
+      cardBody.appendChild(mainWrapper);
+      loadEmployeesForGraphic();
+      select.addEventListener("change", () => {
+        const yearSel = document.getElementById("year-personal-graphic");
+        if (select.value && yearSel.value) {
+          loadPersonalGraphicData(select.value, parseInt(yearSel.value));
+        }
+      });
+      yearSelect.addEventListener("change", () => {
+        if (select.value && yearSelect.value) {
+          loadPersonalGraphicData(select.value, parseInt(yearSelect.value));
+        }
+      });
+    }
+    async function loadEmployeesForGraphic() {
+      try {
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/reg_employees?select=n_int,abv_name&corp_oper_nr=eq.${corpOperNr}&order=n_int`, { 
+            headers: getSupabaseHeaders()
+          }
+        );
+        if (!response.ok) throw new Error("Error loading employees");
+        const employees = await response.json();
+        const select = document.getElementById("employee-graphic-select");
+        if (!select) return;
+        select.innerHTML = '<option value="">-- Selecionar --</option>';
+        employees.forEach(emp => {
+          const option = document.createElement("option");
+          option.value = emp.n_int;
+          option.textContent = emp.abv_name;
+          select.appendChild(option);
+        });
+      } catch (error) {
+        console.error("Error loading employees:", error);
+        showPopupWarning && showPopupWarning("Error loading employees list");
+      }
+    }
+    async function loadPersonalGraphicData(nInt, year) {
+      try {
+        const contentWrapper = document.getElementById("personal-graphic-content");
+        if (!contentWrapper) return;
+        contentWrapper.style.display = "grid";
+        if (!contentWrapper.dataset.loaded) {
+          contentWrapper.innerHTML = "A Carregar...";
+        }
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const [employeeRes, accumulatedRes, shiftsRes, extraHoursRes] = await Promise.all([
+          fetch(
+            `${SUPABASE_URL}/rest/v1/reg_employees?select=n_int,abv_name&corp_oper_nr=eq.${corpOperNr}&n_int=eq.${nInt}`, { 
+              headers: getSupabaseHeaders()
+            }
+          ),
+          fetch(
+            `${SUPABASE_URL}/rest/v1/reg_employees_acumul?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&n_int=eq.${nInt}&order=month`, {
+              headers: getSupabaseHeaders()
+            }
+          ),
+          fetch(
+            `${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&n_int=eq.${nInt}`, {
+              headers: getSupabaseHeaders()
+            }
+          ),
+          fetch(
+            `${SUPABASE_URL}/rest/v1/reg_employees_extra_hours?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&n_int=eq.${nInt}&select=month,qtd_hours`, {
+              headers: getSupabaseHeaders()
+            }
+          )
+        ]);
+        const employeeData = await employeeRes.json();
+        const accumulatedData = await accumulatedRes.json();
+        const shiftsData = await shiftsRes.json();
+        const extraHoursData = await extraHoursRes.json();
+        const extraHoursByMonth = {};
+        for (let m = 1; m <= 12; m++) extraHoursByMonth[m] = 0;
+        extraHoursData.forEach(record => {
+          if (extraHoursByMonth[record.month] !== undefined) {
+            extraHoursByMonth[record.month] += parseFloat(record.qtd_hours) || 0;
+          }
+        });
+        if (employeeData.length === 0) {
+          contentWrapper.innerHTML = "Funcionário não encontrado";
+          return;
+        }
+        const employee = employeeData[0];
+        const shiftTotalsByMonth = {};
+        for (let m = 1; m <= 12; m++) {
+          shiftTotalsByMonth[m] = {FE: 0, FOR: 0, BX: 0, FJ: 0, FI: 0};
+        }
+        shiftsData.forEach(shift => {
+          const m = shift.month;
+          const type = shift.shift;
+          if (shiftTotalsByMonth[m] && shiftTotalsByMonth[m][type] !== undefined) {
+            shiftTotalsByMonth[m][type]++;
+          }
+        });
+        const monthsData = [];
+        const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+        for (let m = 1; m <= 12; m++) {
+          const monthData = accumulatedData.find(d => d.month === m);
+          const shiftMonth = shiftTotalsByMonth[m];
+          const monthlyHours = monthData ? monthData.monthly_total : 0;
+          const extraHours = extraHoursByMonth[m] || 0;
+          monthsData.push({month: m, name: monthNames[m - 1], monthlyHours: monthlyHours, extraHours: extraHours,
+                           accumulatedHours: 0, holidays: shiftMonth.FE, training: shiftMonth.FOR, sick: shiftMonth.BX,
+                           justifiedAbsences: shiftMonth.FJ, unjustifiedAbsences: shiftMonth.FI});
+        }
+        // Acumulado reinicia no 2º semestre (Julho)
+        let runningTotal = 0;
+        monthsData.forEach(d => {
+          if (d.month === 7) runningTotal = 0;
+          runningTotal += d.monthlyHours + d.extraHours;
+          d.accumulatedHours = runningTotal;
+        });
+        contentWrapper.dataset.loaded = "true";
+        let tableContainer = contentWrapper.querySelector("#personal-table-container");
+        let chartContainer = contentWrapper.querySelector("#personal-chart-container");
+        if (!tableContainer) {
+          tableContainer = document.createElement("div");
+          tableContainer.id = "personal-table-container";
+          chartContainer = document.createElement("div");
+          chartContainer.id = "personal-chart-container";
+          chartContainer.style.cssText = "min-height: 500px;";
+          contentWrapper.innerHTML = "";
+          contentWrapper.append(tableContainer, chartContainer);
+        }
+        createPersonalGraphicTable(tableContainer, employee, monthsData);
+        createPersonalGraphicChart(chartContainer, monthsData);
+      } catch (error) {
+        console.error("Error loading personal graphic data:", error);
+        showPopupWarning && showPopupWarning("Error loading data");
+      }
+    }
+    function calculateWorkingHoursIndividual(startDate, endDate, year) {
+      function getEasterDate(y) {
+        const a = y % 19;
+        const b = Math.floor(y / 100);
+        const c = y % 100;
+        const d = Math.floor(b / 4);
+        const e = b % 4;
+        const f = Math.floor((b + 8) / 25);
+        const g = Math.floor((b - f + 1) / 3);
+        const h = (19 * a + b - d - g + 15) % 30;
+        const i = Math.floor(c / 4);
+        const k = c % 4;
+        const l = (32 + 2 * e + 2 * i - h - k) % 7;
+        const m = Math.floor((a + 11 * h + 22 * l) / 451);
+        const month = Math.floor((h + l - 7 * m + 114) / 31);
+        const day = ((h + l - 7 * m + 114) % 31) + 1;
+        return new Date(y, month - 1, day);
+      }
+      const easter = getEasterDate(year);
+      const goodFriday = new Date(easter);
+      goodFriday.setDate(easter.getDate() - 2);
+      const corpusChristi = new Date(easter);
+      corpusChristi.setDate(easter.getDate() + 60);
+      const fixedHolidays = ["01-01", "04-25", "05-01", "06-10", "08-15", "09-07", "10-05","11-01", "12-01", "12-08", "12-25"];
+      function formatMD(date) {
+        return String(date.getMonth() + 1).padStart(2, '0') + "-" + String(date.getDate()).padStart(2, '0');
+      }
+      const mobileHolidays = [
+        formatMD(goodFriday),
+        formatMD(corpusChristi)
+      ];
+      let totalHours = 0;
+      let current = new Date(startDate);
+      while (current <= endDate) {
+        const day = current.getDay();
+        const md = formatMD(current);
+        const isWeekend = (day === 0 || day === 6);
+        const isFixedHoliday = fixedHolidays.includes(md);
+        const isMobileHoliday = mobileHolidays.includes(md);
+        if (!isWeekend && !isFixedHoliday && !isMobileHoliday) {
+          totalHours += 8;
+        }
+        current.setDate(current.getDate() + 1);
+      }
+      return totalHours;
+    }
+    function createPersonalGraphicTable(container, employee, monthsData) {
+      container.innerHTML = "";
+      const table = document.createElement("table");
+      table.style.cssText = `border-collapse: collapse; font-family: 'Segoe UI', sans-serif; font-size: 13px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); border-radius: 8px; overflow: hidden;`;
+      const colgroup = document.createElement("colgroup");
+      const widths = ["100px", "80px", "80px", "80px", "75px", "75px", "75px", "75px", "75px"];
+      widths.forEach(w => {
+        const col = document.createElement("col");
+        col.style.width = w;
+        colgroup.appendChild(col);
+      });
+      table.appendChild(colgroup);
+      const thead = document.createElement("thead");
+      const headerRow = document.createElement("tr");
+      const headers = [{label: "Meses", bg: "#f0f0f0", color: "#333"}, {label: "Total<br>Mensal", bg: "#ffdd00", color: "#333" }, {label: "Horas<br>Extra", bg: "#ff6600", color: "#fff"},
+                       {label: "Total<br>Acumulado", bg: "#00c07f", color: "#fff"}, {label: "Férias", bg: "#0099ff", color: "#fff"}, {label: "Formação", bg: "#888888", color: "#fff"},
+                       { label: "Baixa<br>Médica", bg: "#e02020", color: "#fff"}, {label: "Falta<br>Justificada", bg: "#aa0000", color: "#fff"}, {label: "Falta<br>Injustificada", bg: "#ffcc00", color: "#333"},];
+      headers.forEach(h => {
+        const th = document.createElement("th");
+        th.innerHTML = h.label;
+        th.style.cssText = `background:${h.bg}; color:${h.color}; padding:10px 8px; text-align:center; font-weight:700; font-size:12px; letter-spacing:0.3px; border-bottom: 2px solid rgba(0,0,0,0.1);`;
+      headerRow.appendChild(th);
+      });
+      thead.appendChild(headerRow);
+      table.appendChild(thead);
+      const tbody = document.createElement("tbody");
+      monthsData.forEach((data, idx) => {
+        const row = document.createElement("tr");
+        row.style.cssText = `background: ${idx % 2 === 0 ? "#ffffff" : "#f8f9fa"}; transition: background 0.15s;`;
+        row.addEventListener("mouseover", () => row.style.background = "#e8f4ff");
+        row.addEventListener("mouseout",  () => row.style.background = idx % 2 === 0 ? "#ffffff" : "#f8f9fa");
+        const values = [data.name, formatHoursIndividual(data.monthlyHours), formatHoursIndividual(data.extraHours), formatHoursIndividual(data.accumulatedHours), data.holidays, data.training,
+                        data.sick, data.justifiedAbsences, data.unjustifiedAbsences];
+        values.forEach((val, i) => {
+          const td = document.createElement("td");
+          td.textContent = val;
+          td.style.cssText = `border-bottom: 1px solid #eee; padding: 8px; text-align:center; color:#333;`;
+          if (i === 0) {
+            td.style.textAlign = "left";
+            td.style.fontWeight = "600";
+            td.style.color = "#444";
+            td.style.paddingLeft = "12px";
+          }
+          row.appendChild(td);
+        });
+        tbody.appendChild(row);
+      });
+      const selectedYear = parseInt(document.getElementById("year-personal-graphic").value);
+      const semester1Hours = calculateWorkingHoursIndividual(
+        new Date(selectedYear, 0, 1),
+        new Date(selectedYear, 5, 30),
+        selectedYear
+      );
+      const semester2Hours = calculateWorkingHoursIndividual(
+        new Date(selectedYear, 6, 1),
+        new Date(selectedYear, 11, 31),
+        selectedYear
+      );
+      const totalsData = calculateTotals(monthsData, semester1Hours, semester2Hours);
+      function createSummaryRow(title, data, bgColor, textColor) {
+        const row = document.createElement("tr");
+        const values = [title, formatHoursIndividual(data.monthly), formatHoursIndividual(data.extra), formatHoursIndividual(data.accumulated), data.holidays, data.training, data.sick,
+                        data.justified, data.unjustified];
+        values.forEach((val, i) => {
+          const td = document.createElement("td");
+          td.textContent = val;
+          const cellBg = i === 0 ? bgColor : "#f0f0f0";
+          const cellColor = i === 0 ? (textColor || "#222") : "#222";
+          td.style.cssText = `padding:9px 8px; text-align:center; font-weight:700; font-size:13px; background:${cellBg}; color:${cellColor} !important; border-top: 2px solid rgba(0,0,0,0.1);`;
+          if (i === 0) { td.style.textAlign = "left"; td.style.paddingLeft = "12px"; }
+          row.appendChild(td);
+        });
+        return row;
+      }
+      tbody.appendChild(createSummaryRow("1º Semestre", totalsData.semester1, "#c8e6ff", "#1a5276"));
+      tbody.appendChild(createSummaryRow("2º Semestre", totalsData.semester2, "#c8e6ff", "#1a5276"));
+      tbody.appendChild(createSummaryRow("Final Ano",   totalsData.year,       "#1a5276", "#ffffff"));
+      table.appendChild(tbody);
+      container.appendChild(table);
+    }
+    function createPersonalGraphicChart(container, monthsData) {
+      container.innerHTML = "";
+      const chartWrapper = document.createElement("div");
+      chartWrapper.style.cssText = `background: #2d2d2d; padding: 20px; border-radius: 8px; display: flex; flex-direction: column;`;
+      const title = document.createElement("div");
+      title.textContent = "Gráfico Pessoal";
+      title.style.cssText = `color: white; font-size: 18px; font-weight: bold; text-align: center; margin-bottom: 10px;`;
+      const canvasWrapper = document.createElement("div");
+      canvasWrapper.style.cssText = `position: relative; height: 450px; width: 100%;`;
+      const canvas = document.createElement("canvas");
+      canvas.id = "personal-chart-canvas";
+      canvasWrapper.appendChild(canvas);
+      chartWrapper.append(title, canvasWrapper);
+      container.appendChild(chartWrapper);
+      drawPersonalChart(canvas, monthsData);
+    }
+    function drawPersonalChart(canvas, monthsData) {
+      const labels = monthsData.map(d => d.name.substring(0, 3));
+      if (window._personalChart) {
+        window._personalChart.destroy();
+        window._personalChart = null;
+      }
+      window._personalChart = new Chart(canvas, {
+        data: {labels: labels, datasets: [{type: "bar", label: "Horas Mensais", data: monthsData.map(d => d.monthlyHours), backgroundColor: "#ffff00", yAxisID: "y", order: 2,},
+                                          {type: "bar", label: "Horas Extra", data: monthsData.map(d => d.extraHours), backgroundColor: "#ff6600", yAxisID: "y", order: 2,},
+                                          {type: "line", label: "Total Acumulado", data: monthsData.map(d => d.accumulatedHours), borderColor: "#00ff99", backgroundColor: "rgba(0,255,153,0.1)",
+                                           borderWidth: 2, pointRadius: 4, pointBackgroundColor: "#00ff99", fill: false, tension: 0.3, yAxisID: "y2", order: 1,},
+                                          {type: "bar", label: "Férias (FE)", data: monthsData.map(d => d.holidays), backgroundColor: "#0099ff", yAxisID: "y", order: 2,},
+                                          {type: "bar", label: "Formação (FOR)", data: monthsData.map(d => d.training), backgroundColor: "#999999", yAxisID: "y", order: 2,},
+                                          {type: "bar", label: "Baixa (BX)", data: monthsData.map(d => d.sick), backgroundColor: "#ff0000", yAxisID: "y", order: 2,},
+                                          {type: "bar", label: "Falta Just. (FJ)", data: monthsData.map(d => d.justifiedAbsences), backgroundColor: "#cc0000", yAxisID: "y", order: 2,},
+                                          {type: "bar", label: "Falta Injust. (FI)", data: monthsData.map(d => d.unjustifiedAbsences), backgroundColor: "#ffcc00", yAxisID: "y", order: 2,},]},
+        options: {responsive: true, maintainAspectRatio: false, interaction: { mode: "index", intersect: false },
+                  plugins: {legend: {labels: {color: "#ffffff", font: {size: 11}}},
+                            tooltip: {mode: "index", intersect: false}},
+                  scales: {x: {ticks: {color: "#cccccc"},
+                               grid: {color: "rgba(255,255,255,0.1)"}},
+                           y: {position: "left", title: {display: true, text: "Horas", color: "#cccccc"}, ticks: {color: "#cccccc"},
+                               grid: {color: "rgba(255,255,255,0.1)"}},
+                           y2: {position: "right", title: {display: true, text: "Acumulado", color: "#00ff99"}, ticks: {color: "#00ff99"},
+                                grid: {drawOnChartArea: false}}}}});}
+    function calculateTotals(monthsData, semester1Hours, semester2Hours) {
+      const semester1 = monthsData.slice(0, 6);
+      const semester2 = monthsData.slice(6, 12);
+      const sum = (arr, key) => arr.reduce((acc, m) => acc + (m[key] || 0), 0);      
+      const s1Monthly = sum(semester1, 'monthlyHours');
+      const s2Monthly = sum(semester2, 'monthlyHours');
+      const totalMonthly = sum(monthsData, 'monthlyHours');
+      return {
+        semester1: {monthly: s1Monthly - semester1Hours, extra: sum(semester1, 'extraHours'), accumulated: semester1[5]?.accumulatedHours || 0, holidays: sum(semester1, 'holidays'),
+                    training: sum(semester1, 'training'), sick: sum(semester1, 'sick'), justified: sum(semester1, 'justifiedAbsences'), unjustified: sum(semester1, 'unjustifiedAbsences')},
+        semester2: {monthly: s2Monthly - semester2Hours, extra: sum(semester2, 'extraHours'), accumulated: semester2[5]?.accumulatedHours || 0, 
+                    holidays: sum(semester2, 'holidays'), training: sum(semester2, 'training'), sick: sum(semester2, 'sick'), justified: sum(semester2, 'justifiedAbsences'),
+                    unjustified: sum(semester2, 'unjustifiedAbsences')},
+        year: {monthly: totalMonthly - (semester1Hours + semester2Hours), extra: sum(monthsData, 'extraHours'), accumulated: (semester1[5]?.accumulatedHours || 0) + (semester2[5]?.accumulatedHours || 0), 
+               holidays: sum(monthsData, 'holidays'), training: sum(monthsData, 'training'), sick: sum(monthsData, 'sick'), justified: sum(monthsData, 'justifiedAbsences'),
+               unjustified: sum(monthsData, 'unjustifiedAbsences')}};}
+    function formatHoursIndividual(value) {
+      if (!value) return "0";
+      return parseFloat(value).toFixed(2);
+    }
+    document.querySelectorAll(".sidebar-submenu-button").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const access = btn.dataset.access;
+        if (access === "Registos Individuais") {
+          createEmployeePersonalGraphic();
+        }
+      });
+    });

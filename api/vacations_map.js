@@ -6,7 +6,6 @@ import path from "path";
 import { ServicePrincipalCredentials, PDFServices, MimeType, CreatePDFJob, CreatePDFResult } from "@adobe/pdfservices-node-sdk";
 
 export default async function handler(req, res) {
-  // CONFIGURAÇÃO DE CORS PARA EVITAR BLOQUEIO NO CODEPEN
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -16,8 +15,6 @@ export default async function handler(req, res) {
   let inputPath = null;
   try {
     const { year, employees } = req.body;
-    if (!employees) throw new Error("Sem dados de funcionários.");
-
     const templateURL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/vacation_map_template.xlsx";
     const templateResponse = await fetch(templateURL);
     const workbook = new ExcelJS.Workbook();
@@ -31,28 +28,35 @@ export default async function handler(req, res) {
       worksheet.getCell(row, 2).value = emp.name;
       worksheet.getCell(row, 15).value = emp.totalDays;
 
-      const periods = emp.periods.map(p => ({ s: new Date(p.s), e: new Date(p.e) }));
+      // Converter strings "YYYY-MM-DD" em objetos numéricos simples (imune a fuso horário)
+      const periods = emp.periods.map(p => {
+        const sParts = p.s.split('-');
+        const eParts = p.e.split('-');
+        return {
+          sDay: parseInt(sParts[2]), sMonth: parseInt(sParts[1]),
+          eDay: parseInt(eParts[2]), eMonth: parseInt(eParts[1])
+        };
+      });
 
-      // LÓGICA DE PREENCHIMENTO E MERGE IGUAL AO FRONTEND
       for (let m = 1; m <= 12; m++) {
-        // Encontrar períodos que começam neste mês
-        let mP = periods.filter(x => (x.s.getMonth() + 1) === m);
+        let mP = periods.filter(x => x.sMonth === m);
         
         if (mP.length > 0) {
           let last = mP[mP.length - 1];
-          // Calcula o span de colunas (se atravessa meses)
-          let span = (last.e.getMonth() + 1 - m) + 1;
+          let span = (last.eMonth - m) + 1;
+          
           let txt = mP.map(x => {
-            const dS = x.s.getDate().toString().padStart(2, '0');
-            const dE = x.e.getDate().toString().padStart(2, '0');
+            const dS = x.sDay.toString().padStart(2, '0');
+            const dE = x.eDay.toString().padStart(2, '0');
             return dS === dE ? dS : `${dS} a ${dE}`;
           }).join(' e ');
-
-          const startCol = 2 + m; // Jan = Col 3
+          
+          const startCol = 2 + m;
           const endCol = startCol + (span - 1);
 
+          // Realizar o merge (União de colunas) conforme o span
           if (span > 1) {
-            try { worksheet.mergeCells(row, startCol, row, endCol); } catch(e){}
+            try { worksheet.mergeCells(row, startCol, row, endCol); } catch(e) {}
           }
 
           const cell = worksheet.getCell(row, startCol);
@@ -64,7 +68,6 @@ export default async function handler(req, res) {
       }
     });
 
-    // CONVERSÃO ADOBE PDF
     const tempDir = os.tmpdir();
     inputPath = path.join(tempDir, `mapa_${Date.now()}.xlsx`);
     await workbook.xlsx.writeFile(inputPath);
@@ -73,7 +76,6 @@ export default async function handler(req, res) {
       clientId: process.env.ADOBE_CLIENT_ID,
       clientSecret: process.env.ADOBE_CLIENT_SECRET
     });
-    
     const pdfServices = new PDFServices({ credentials });
     const inputAsset = await pdfServices.upload({ readStream: fs.createReadStream(inputPath), mimeType: MimeType.XLSX });
     const job = new CreatePDFJob({ inputAsset });
@@ -90,7 +92,6 @@ export default async function handler(req, res) {
 
   } catch (err) {
     if (inputPath && fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
-    console.error(err);
     res.status(500).json({ error: err.message });
   }
 }

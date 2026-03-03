@@ -423,72 +423,54 @@
         throw error;
       }
     }
-
-
-async function handleVacation(req, res) {
-  let inputFilePath = null;
-  try {
-    const { employeeName, nInt, periods } = req.body;
-
-    if (!employeeName || !nInt || !periods) {
-      return res.status(400).json({ error: "Dados incompletos para férias" });
+    async function handleVacation(req, res) {
+      let inputFilePath = null;
+      try {
+        const { employeeName, nInt, periods } = req.body;
+        if (!employeeName || !nInt || !periods) {
+          return res.status(400).json({error: "Dados incompletos para férias"});
+        }
+        const templateResponse = await fetch(TEMPLATES["formulário_férias"]);
+        if (!templateResponse.ok) throw new Error("Erro ao carregar template de férias");
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.load(await templateResponse.arrayBuffer());
+        const worksheet = workbook.worksheets[0];
+        worksheet.getCell("F7").value = String(employeeName);
+        worksheet.getCell("Q7").value = String(nInt);
+        periods.forEach((p, i) => {
+          if (i > 2) return;
+          const row = 11 + (i * 2);
+          if (p.start && typeof p.start === "object") {
+            worksheet.getCell(`C${row}`).value = p.start.day;
+            worksheet.getCell(`E${row}`).value = p.start.month;
+            worksheet.getCell(`G${row}`).value = p.start.year;
+          }
+          if (p.end && typeof p.end === "object") {
+            worksheet.getCell(`I${row}`).value = p.end.day;
+            worksheet.getCell(`K${row}`).value = p.end.month;
+            worksheet.getCell(`M${row}`).value = p.end.year;
+          }
+          worksheet.getCell(`Q${row}`).value = Number(p.days) || 0;
+        });
+        worksheet.pageSetup = {orientation: "portrait", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 1};
+        const tempDir = os.tmpdir();
+        inputFilePath = path.join(tempDir, `vac_${Date.now()}.xlsx`);
+        await workbook.xlsx.writeFile(inputFilePath);
+        const credentials = new ServicePrincipalCredentials({clientId: CLIENT_ID, clientSecret: CLIENT_SECRET});
+        const pdfServices = new PDFServices({credentials });
+        const inputAsset = await pdfServices.upload({readStream: fs.createReadStream(inputFilePath), mimeType: MimeType.XLSX});
+        const job = new CreatePDFJob({inputAsset});
+        const pollingURL = await pdfServices.submit({job});
+        const result = await pdfServices.getJobResult({pollingURL, resultType: CreatePDFResult});
+        const streamAsset = await pdfServices.getContent({asset: result.result.asset});
+        const chunks = [];
+        for await (let chunk of streamAsset.readStream) {chunks.push(chunk);}
+        if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
+        res.setHeader("Content-Type", "application/pdf");
+        return res.status(200).send(Buffer.concat(chunks));
+      } catch (error) {
+        if (inputFilePath && fs.existsSync(inputFilePath)) try { fs.unlinkSync(inputFilePath); } catch(e) {}
+        console.error("Erro Vacation:", error);
+        return res.status(500).json({ error: error.message });
+      }
     }
-
-    const templateResponse = await fetch(TEMPLATES["formulário_férias"]);
-    if (!templateResponse.ok) throw new Error("Erro ao carregar template de férias");
-
-    const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(await templateResponse.arrayBuffer());
-    const worksheet = workbook.worksheets[0];
-
-    // Preenchimento do cabeçalho
-    worksheet.getCell("F7").value = String(employeeName);
-    worksheet.getCell("Q7").value = String(nInt);
-
-    // Preenchimento dos períodos
-    periods.forEach((p, i) => {
-      if (i > 2) return; // máximo 3 períodos
-      const row = 11 + (i * 2);
-      if (p.start && typeof p.start === "object") {
-        worksheet.getCell(`C${row}`).value = p.start.day;
-        worksheet.getCell(`E${row}`).value = p.start.month;
-        worksheet.getCell(`G${row}`).value = p.start.year;
-      }
-      if (p.end && typeof p.end === "object") {
-        worksheet.getCell(`I${row}`).value = p.end.day;
-        worksheet.getCell(`K${row}`).value = p.end.month;
-        worksheet.getCell(`M${row}`).value = p.end.year;
-      }
-      worksheet.getCell(`Q${row}`).value = Number(p.days) || 0;
-    });
-
-    // Página
-    worksheet.pageSetup = { orientation: "portrait", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 1 };
-
-    const tempDir = os.tmpdir();
-    inputFilePath = path.join(tempDir, `vac_${Date.now()}.xlsx`);
-    await workbook.xlsx.writeFile(inputFilePath);
-
-    // Adobe PDF
-    const credentials = new ServicePrincipalCredentials({ clientId: CLIENT_ID, clientSecret: CLIENT_SECRET });
-    const pdfServices = new PDFServices({ credentials });
-    const inputAsset = await pdfServices.upload({ readStream: fs.createReadStream(inputFilePath), mimeType: MimeType.XLSX });
-    const job = new CreatePDFJob({ inputAsset });
-    const pollingURL = await pdfServices.submit({ job });
-    const result = await pdfServices.getJobResult({ pollingURL, resultType: CreatePDFResult });
-    const streamAsset = await pdfServices.getContent({ asset: result.result.asset });
-
-    const chunks = [];
-    for await (let chunk of streamAsset.readStream) { chunks.push(chunk); }
-
-    if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
-
-    res.setHeader("Content-Type", "application/pdf");
-    return res.status(200).send(Buffer.concat(chunks));
-
-  } catch (error) {
-    if (inputFilePath && fs.existsSync(inputFilePath)) try { fs.unlinkSync(inputFilePath); } catch(e) {}
-    console.error("Erro Vacation:", error);
-    return res.status(500).json({ error: error.message });
-  }
-}

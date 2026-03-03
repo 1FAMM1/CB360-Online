@@ -451,38 +451,71 @@ async function handleFormularioFerias(req, res) {
   let inputFilePath = null;
   try {
     const { employeeName, nInt, periods } = req.body;
+    
+    // 1. Validar se os dados chegaram
+    if (!employeeName || !periods) {
+      return res.status(400).json({ error: "Dados de funcionário ou períodos ausentes." });
+    }
+
     const templateResponse = await fetch(TEMPLATES.formulario_ferias);
+    if (!templateResponse.ok) throw new Error("Não foi possível carregar o template de férias do GitHub.");
+    
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(await templateResponse.arrayBuffer());
     const worksheet = workbook.worksheets[0];
 
-    // Cabeçalho
-    worksheet.getCell("F7").value = employeeName;
-    worksheet.getCell("Q7").value = nInt;
+    // Cabeçalho - Usando toString() para garantir que não vai null
+    worksheet.getCell("F7").value = String(employeeName);
+    worksheet.getCell("Q7").value = String(nInt || "");
 
     // Períodos (Linhas 11, 13, 15)
-    periods.forEach((p, index) => {
-      if (index > 2) return;
-      const row = 11 + (index * 2);
-      const start = new Date(p.start);
-      const end = new Date(p.end);
+    if (Array.isArray(periods)) {
+      periods.forEach((p, index) => {
+        if (index > 2) return; // Limite do template
+        const row = 11 + (index * 2);
+        
+        // CORREÇÃO CRÍTICA: Tratar a string da data para evitar NaNs
+        // O replace(/-/g, '/') garante que o motor JS trate como data local
+        const start = p.start ? new Date(p.start.replace(/-/g, '/')) : null;
+        const end = p.end ? new Date(p.end.replace(/-/g, '/')) : null;
 
-      worksheet.getCell(`C${row}`).value = start.getDate();
-      worksheet.getCell(`E${row}`).value = start.getMonth() + 1;
-      worksheet.getCell(`G${row}`).value = start.getFullYear();
-      worksheet.getCell(`I${row}`).value = end.getDate();
-      worksheet.getCell(`K${row}`).value = end.getMonth() + 1;
-      worksheet.getCell(`M${row}`).value = end.getFullYear();
-      worksheet.getCell(`Q${row}`).value = p.days;
-    });
+        if (start && !isNaN(start) && end && !isNaN(end)) {
+          worksheet.getCell(`C${row}`).value = start.getDate();
+          worksheet.getCell(`E${row}`).value = start.getMonth() + 1;
+          worksheet.getCell(`G${row}`).value = start.getFullYear();
+
+          worksheet.getCell(`I${row}`).value = end.getDate();
+          worksheet.getCell(`K${row}`).value = end.getMonth() + 1;
+          worksheet.getCell(`M${row}`).value = end.getFullYear();
+
+          // Garantir que days é um número ou 0
+          worksheet.getCell(`Q${row}`).value = Number(p.days) || 0;
+        }
+      });
+    }
+
+    // Configuração de Impressão (Igual às outras que funcionam)
+    worksheet.pageSetup = {
+      orientation: "landscape",
+      paperSize: 9,
+      fitToPage: true,
+      fitToWidth: 1,
+      fitToHeight: 1
+    };
 
     const tempDir = os.tmpdir();
     inputFilePath = path.join(tempDir, `vac_${Date.now()}.xlsx`);
     await workbook.xlsx.writeFile(inputFilePath);
 
+    // Adobe SDK
     const credentials = new ServicePrincipalCredentials({ clientId: CLIENT_ID, clientSecret: CLIENT_SECRET });
     const pdfServices = new PDFServices({ credentials });
-    const inputAsset = await pdfServices.upload({ readStream: fs.createReadStream(inputFilePath), mimeType: MimeType.XLSX });
+    
+    const inputAsset = await pdfServices.upload({ 
+      readStream: fs.createReadStream(inputFilePath), 
+      mimeType: MimeType.XLSX 
+    });
+    
     const job = new CreatePDFJob({ inputAsset });
     const pollingURL = await pdfServices.submit({ job });
     const result = await pdfServices.getJobResult({ pollingURL, resultType: CreatePDFResult });
@@ -490,11 +523,19 @@ async function handleFormularioFerias(req, res) {
 
     const chunks = [];
     for await (let chunk of streamAsset.readStream) { chunks.push(chunk); }
-    fs.unlinkSync(inputFilePath);
+    
+    // Limpeza
+    if (fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
+    
     res.setHeader("Content-Type", "application/pdf");
     return res.status(200).send(Buffer.concat(chunks));
+
   } catch (error) {
+    console.error("ERRO FORMULARIO FERIAS:", error);
     if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
-    throw error;
+    return res.status(500).json({ 
+      error: "Erro ao processar formulário de férias", 
+      details: error.message 
+    });
   }
 }

@@ -481,121 +481,93 @@
       }
     }
     async function handleMapaFerias(req, res) {
-  let inputPath = null;
-  try {
-    const { year, employees } = req.body;
-
-    const templateResponse = await fetch(TEMPLATES.mapa_ferias);
-    if (!templateResponse.ok) throw new Error("Erro ao carregar template mapa férias");
-
-    const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(await templateResponse.arrayBuffer());
-    const worksheet = workbook.worksheets[0];
-
-    worksheet.getCell("B6").value = `MAPA DE FÉRIAS - ${year}`;
-
-    const ROW_START = 10;
-    const ROW_END = 49;
-
-    employees.forEach((emp, index) => {
-      const row = ROW_START + index;
-      if (row <= ROW_END) {
-        worksheet.getCell(row, 2).value = emp.name;
-        worksheet.getCell(row, 15).value = emp.totalDays;
-
-        const periods = emp.periods.map(p => {
-          const sP = p.s.split('-');
-          const eP = p.e.split('-');
-          return {
-            sD: parseInt(sP[2]),
-            sM: parseInt(sP[1]),
-            eD: parseInt(eP[2]),
-            eM: parseInt(eP[1])
-          };
-        });
-
-        for (let m = 1; m <= 12; m++) {
-          let mP = periods.filter(x => x.sM === m);
-          if (mP.length > 0) {
-            let last = mP[mP.length - 1];
-            let span = (last.eM - m) + 1;
-
-            let txt = mP.map(x => {
-              const dS = x.sD.toString().padStart(2,'0');
-              const dE = x.eD.toString().padStart(2,'0');
-              return dS === dE ? dS : `${dS} a ${dE}`;
-            }).join(' e ');
-
-            const sCol = 2 + m;
-            const eCol = sCol + (span - 1);
-
-            if (span > 1) {
-              try { worksheet.mergeCells(row, sCol, row, eCol); } catch(e){}
+      let inputPath = null;
+      try {
+        const { year, employees } = req.body;
+        const templateResponse = await fetch(TEMPLATES.mapa_ferias);
+        if (!templateResponse.ok) throw new Error("Erro ao carregar template mapa férias");
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.load(await templateResponse.arrayBuffer());
+        const worksheet = workbook.worksheets[0];
+        worksheet.getCell("B6").value = `MAPA DE FÉRIAS - ${year}`;
+        const ROW_START = 10;
+        const ROW_END = 49;
+        employees.forEach((emp, index) => {
+          const row = ROW_START + index;
+          if (row <= ROW_END) {
+            worksheet.getCell(row, 2).value = emp.name;
+            worksheet.getCell(row, 15).value = emp.totalDays;
+            const periods = emp.periods.map(p => {
+              const sP = p.s.split('-');
+              const eP = p.e.split('-');
+              return {
+                sD: parseInt(sP[2]),
+                sM: parseInt(sP[1]),
+                eD: parseInt(eP[2]),
+                eM: parseInt(eP[1])
+              };
+            });
+            for (let m = 1; m <= 12; m++) {
+              let mP = periods.filter(x => x.sM === m);
+              if (mP.length > 0) {
+                let last = mP[mP.length - 1];
+                let span = (last.eM - m) + 1;
+                let txt = mP.map(x => {
+                  const dS = x.sD.toString().padStart(2,'0');
+                  const dE = x.eD.toString().padStart(2,'0');
+                  return dS === dE ? dS : `${dS} a ${dE}`;
+                }).join(' e ');
+                const sCol = 2 + m;
+                const eCol = sCol + (span - 1);
+                if (span > 1) {
+                  try { worksheet.mergeCells(row, sCol, row, eCol); } catch(e){}
+                }
+                const cell = worksheet.getCell(row, sCol);
+                cell.value = txt;
+                cell.alignment = {horizontal: 'center', vertical: 'middle', wrapText: true};
+                m += (span - 1);
+              }
             }
-
-            const cell = worksheet.getCell(row, sCol);
-            cell.value = txt;
-            cell.alignment = {
-              horizontal: 'center',
-              vertical: 'middle',
-              wrapText: true
-            };
-
-            m += (span - 1);
+          }
+        });
+        for (let i = ROW_START; i <= ROW_END; i++) {
+          const cellValue = worksheet.getCell(i, 2).value;
+          if (!cellValue || cellValue.toString().trim() === "") {
+            worksheet.getRow(i).hidden = true;
           }
         }
+        const tempDir = os.tmpdir();
+        inputPath = path.join(tempDir, `mapa_${Date.now()}.xlsx`);
+        await workbook.xlsx.writeFile(inputPath);
+        const credentials = new ServicePrincipalCredentials({
+          clientId: CLIENT_ID,
+          clientSecret: CLIENT_SECRET
+        });
+        const pdfServices = new PDFServices({credentials});
+        const inputAsset = await pdfServices.upload({
+          readStream: fs.createReadStream(inputPath),
+          mimeType: MimeType.XLSX
+        });
+        const job = new CreatePDFJob({inputAsset});
+        const pollingURL = await pdfServices.submit({job});
+        const result = await pdfServices.getJobResult({
+          pollingURL,
+          resultType: CreatePDFResult
+        });
+        const streamAsset = await pdfServices.getContent({
+          asset: result.result.asset
+        });
+        const chunks = [];
+        for await (let chunk of streamAsset.readStream) {
+          chunks.push(chunk);
+        }
+        if (inputPath && fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
+        res.setHeader("Content-Type", "application/pdf");
+        return res.status(200).send(Buffer.concat(chunks));
+      } catch (err) {
+        if (inputPath && fs.existsSync(inputPath)) {
+          try { fs.unlinkSync(inputPath); } catch(e){}
+        }
+        return res.status(500).json({error: err.message});
       }
-    });
-
-    for (let i = ROW_START; i <= ROW_END; i++) {
-      const cellValue = worksheet.getCell(i, 2).value;
-      if (!cellValue || cellValue.toString().trim() === "") {
-        worksheet.getRow(i).hidden = true;
-      }
     }
-
-    const tempDir = os.tmpdir();
-    inputPath = path.join(tempDir, `mapa_${Date.now()}.xlsx`);
-    await workbook.xlsx.writeFile(inputPath);
-
-    const credentials = new ServicePrincipalCredentials({
-      clientId: CLIENT_ID,
-      clientSecret: CLIENT_SECRET
-    });
-
-    const pdfServices = new PDFServices({ credentials });
-
-    const inputAsset = await pdfServices.upload({
-      readStream: fs.createReadStream(inputPath),
-      mimeType: MimeType.XLSX
-    });
-
-    const job = new CreatePDFJob({ inputAsset });
-    const pollingURL = await pdfServices.submit({ job });
-
-    const result = await pdfServices.getJobResult({
-      pollingURL,
-      resultType: CreatePDFResult
-    });
-
-    const streamAsset = await pdfServices.getContent({
-      asset: result.result.asset
-    });
-
-    const chunks = [];
-    for await (let chunk of streamAsset.readStream) {
-      chunks.push(chunk);
-    }
-
-    if (inputPath && fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
-
-    res.setHeader("Content-Type", "application/pdf");
-    return res.status(200).send(Buffer.concat(chunks));
-
-  } catch (err) {
-    if (inputPath && fs.existsSync(inputPath)) {
-      try { fs.unlinkSync(inputPath); } catch(e){}
-    }
-    return res.status(500).json({ error: err.message });
-  }
-}

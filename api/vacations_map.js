@@ -14,7 +14,6 @@ export default async function handler(req, res) {
   let inputPath = null;
   try {
     const { year, employees } = req.body;
-
     const templateURL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/vacation_map_template.xlsx";
     const templateResponse = await fetch(templateURL);
     const workbook = new ExcelJS.Workbook();
@@ -25,29 +24,27 @@ export default async function handler(req, res) {
 
     employees.forEach((emp, index) => {
       const row = ROW_START + index;
-      
-      // Preenche Nome e Total de Dias
       worksheet.getCell(row, 2).value = emp.name;
       worksheet.getCell(row, 15).value = emp.totalDays;
 
-      // Agrupa os textos por mês para evitar sobreposição
-      const monthsData = {};
       if (emp.periods) {
         emp.periods.forEach(p => {
-          if (!monthsData[p.month]) monthsData[p.month] = [];
-          monthsData[p.month].push(p.text);
+          const startCol = 2 + Number(p.startMonth);
+          const endCol = 2 + Number(p.endMonth);
+
+          // Realiza a união das células se o período abranger mais que uma
+          if (startCol !== endCol) {
+            worksheet.mergeCells(row, startCol, row, endCol);
+          }
+
+          const cell = worksheet.getCell(row, startCol);
+          cell.value = p.text;
+          cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+          
+          // Nota: O preenchimento visual (cor) deve vir do template ou 
+          // ser adicionado aqui se o merge "limpar" a formatação.
         });
       }
-
-      // Preenche apenas o texto nas colunas dos meses (3 a 14)
-      Object.keys(monthsData).forEach(m => {
-        const col = 2 + Number(m);
-        const cell = worksheet.getCell(row, col);
-        // Une os intervalos se houver mais do que um no mesmo mês
-        cell.value = monthsData[m].join(' e ');
-        // Alinhamento básico para garantir que o texto fica visível
-        cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
-      });
     });
 
     const tempDir = os.tmpdir();

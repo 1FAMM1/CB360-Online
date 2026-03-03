@@ -448,54 +448,96 @@ async function handleFolhaPonto(req, res) {
 
 // --- HANDLE FORMULÁRIO FÉRIAS ---
 
+// --- HANDLE FORMULÁRIO FÉRIAS (COM LOGS DETALHADOS) ---
+
 async function handleFormularioFerias(req, res) {
   let templatePath = null;
   let inputFilePath = null;
 
   try {
+    console.log("📋 INÍCIO - handleFormularioFerias");
+    
     const { employeeName, nInt, periods } = req.body;
+    console.log("📦 Dados recebidos:", { employeeName, nInt, periodsCount: periods?.length });
 
+    // VALIDAÇÃO 1: Dados básicos
     if (!employeeName || !Array.isArray(periods)) {
+      console.error("❌ ERRO: Dados inválidos", { employeeName, periods });
       return res.status(400).json({
         error: "Dados inválidos: nome ou períodos ausentes."
       });
     }
 
+    // VALIDAÇÃO 2: Credenciais Adobe
     if (!process.env.ADOBE_CLIENT_ID || !process.env.ADOBE_CLIENT_SECRET) {
+      console.error("❌ ERRO: Credenciais Adobe ausentes");
       return res.status(500).json({
         error: "Credenciais Adobe não configuradas."
       });
     }
+    console.log("✅ Credenciais Adobe encontradas");
 
-    // 1️⃣ Download do template
+    // PASSO 1: Download do template
+    console.log("📥 Baixando template...");
     const templateResponse = await fetch(TEMPLATES.formulario_ferias);
-    if (!templateResponse.ok) throw new Error("Falha ao obter template de férias.");
+    if (!templateResponse.ok) {
+      console.error("❌ ERRO: Falha ao baixar template", templateResponse.status);
+      throw new Error("Falha ao obter template de férias.");
+    }
+    console.log("✅ Template baixado com sucesso");
 
     const templateBuffer = Buffer.from(await templateResponse.arrayBuffer());
     const tempDir = os.tmpdir();
     templatePath = path.join(tempDir, `vac_template_${Date.now()}.xlsx`);
     fs.writeFileSync(templatePath, templateBuffer);
+    console.log("✅ Template salvo em:", templatePath);
 
+    // PASSO 2: Carregar workbook
+    console.log("📖 Carregando workbook...");
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.readFile(templatePath);
+    
     const worksheet = workbook.worksheets[0];
-    if (!worksheet) throw new Error("Template inválido: sem worksheets.");
+    if (!worksheet) {
+      console.error("❌ ERRO: Template sem worksheets");
+      throw new Error("Template inválido: sem worksheets.");
+    }
+    console.log("✅ Worksheet carregada:", worksheet.name);
 
-    // 2️⃣ Cabeçalho
+    // PASSO 3: Preencher cabeçalho
+    console.log("📝 Preenchendo cabeçalho...");
+    console.log("   Nome:", employeeName, "→ Célula F7");
+    console.log("   N.Int:", nInt, "→ Célula Q7");
+    
     worksheet.getCell("F7").value = String(employeeName || "");
     worksheet.getCell("Q7").value = Number(nInt) || "";
+    console.log("✅ Cabeçalho preenchido");
 
-    // 3️⃣ Períodos (linhas 11, 13, 15)
+    // PASSO 4: Preencher períodos
+    console.log("📅 Preenchendo períodos...");
     periods.forEach((p, index) => {
-      if (index > 2) return;
-      if (!p || !p.start || !p.end) return;
+      if (index > 2) {
+        console.log(`⚠️ Período ${index + 1} ignorado (máximo 3)`);
+        return;
+      }
+      
+      if (!p || !p.start || !p.end) {
+        console.log(`⚠️ Período ${index + 1} inválido (dados em falta)`);
+        return;
+      }
 
       const row = 11 + index * 2;
+      console.log(`   Período ${index + 1} → Linha ${row}`);
 
-      // ✅ Converter datas separadas para Date
+      // Converter datas
       const startDate = new Date(p.start.year, p.start.month - 1, p.start.day);
       const endDate = new Date(p.end.year, p.end.month - 1, p.end.day);
+      
+      console.log(`     Início: ${startDate.getDate()}/${startDate.getMonth() + 1}/${startDate.getFullYear()}`);
+      console.log(`     Fim: ${endDate.getDate()}/${endDate.getMonth() + 1}/${endDate.getFullYear()}`);
+      console.log(`     Dias: ${p.days}`);
 
+      // Preencher células
       worksheet.getCell(`C${row}`).value = startDate.getDate();
       worksheet.getCell(`E${row}`).value = startDate.getMonth() + 1;
       worksheet.getCell(`G${row}`).value = startDate.getFullYear();
@@ -505,9 +547,13 @@ async function handleFormularioFerias(req, res) {
       worksheet.getCell(`M${row}`).value = endDate.getFullYear();
 
       worksheet.getCell(`Q${row}`).value = Number(p.days) || 0;
+      
+      console.log(`   ✅ Período ${index + 1} preenchido`);
     });
+    console.log("✅ Todos os períodos preenchidos");
 
-    // 4️⃣ Configuração de impressão
+    // PASSO 5: Configurar impressão
+    console.log("🖨️ Configurando página...");
     worksheet.pageSetup = {
       orientation: "portrait",
       paperSize: 9,
@@ -516,46 +562,84 @@ async function handleFormularioFerias(req, res) {
       fitToHeight: 1,
       margins: { left: 0.1, right: 0.1, top: 0.1, bottom: 0.1, header: 0, footer: 0 }
     };
+    console.log("✅ Página configurada");
 
-    // 5️⃣ Guardar XLSX temporário
+    // PASSO 6: Salvar XLSX
+    console.log("💾 Salvando XLSX...");
     inputFilePath = path.join(tempDir, `vac_${Date.now()}.xlsx`);
     await workbook.xlsx.writeFile(inputFilePath);
+    console.log("✅ XLSX salvo em:", inputFilePath);
 
-    // 6️⃣ Converter com Adobe PDF
+    // PASSO 7: Converter para PDF com Adobe
+    console.log("🔄 Iniciando conversão Adobe PDF...");
     const credentials = new ServicePrincipalCredentials({
       clientId: process.env.ADOBE_CLIENT_ID,
       clientSecret: process.env.ADOBE_CLIENT_SECRET
     });
     const pdfServices = new PDFServices({ credentials });
+    console.log("✅ PDFServices inicializado");
 
+    console.log("📤 Fazendo upload do XLSX...");
     const inputAsset = await pdfServices.upload({
       readStream: fs.createReadStream(inputFilePath),
       mimeType: MimeType.XLSX
     });
+    console.log("✅ Upload concluído");
+
+    console.log("⚙️ Criando job de conversão...");
     const job = new CreatePDFJob({ inputAsset });
     const pollingURL = await pdfServices.submit({ job });
+    console.log("✅ Job submetido, aguardando resultado...");
 
     const result = await pdfServices.getJobResult({
       pollingURL,
       resultType: CreatePDFResult
     });
+    console.log("✅ Conversão concluída");
+
+    console.log("📥 Baixando PDF...");
     const streamAsset = await pdfServices.getContent({ asset: result.result.asset });
 
     const chunks = [];
     for await (let chunk of streamAsset.readStream) chunks.push(chunk);
+    console.log("✅ PDF baixado");
 
-    // 7️⃣ Limpeza
+    // PASSO 8: Limpeza
+    console.log("🧹 Limpando arquivos temporários...");
     [templatePath, inputFilePath].forEach(p => {
-      if (p && fs.existsSync(p)) try { fs.unlinkSync(p); } catch {}
+      if (p && fs.existsSync(p)) {
+        try { 
+          fs.unlinkSync(p);
+          console.log(`   ✅ Removido: ${p}`);
+        } catch (err) {
+          console.log(`   ⚠️ Erro ao remover: ${p}`);
+        }
+      }
     });
+    console.log("✅ Limpeza concluída");
 
+    // PASSO 9: Enviar resposta
+    console.log("✅ SUCESSO - Enviando PDF ao cliente");
     res.setHeader("Content-Type", "application/pdf");
     return res.status(200).send(Buffer.concat(chunks));
 
   } catch (error) {
-    console.error("ERRO CRÍTICO FÉRIAS:", error);
-    if (templatePath && fs.existsSync(templatePath)) try { fs.unlinkSync(templatePath); } catch {}
-    if (inputFilePath && fs.existsSync(inputFilePath)) try { fs.unlinkSync(inputFilePath); } catch {}
-    return res.status(500).json({ error: "Erro ao gerar PDF de férias", details: error.message });
+    console.error("❌ ERRO CRÍTICO:");
+    console.error("   Mensagem:", error.message);
+    console.error("   Stack:", error.stack);
+    
+    // Limpeza em caso de erro
+    if (templatePath && fs.existsSync(templatePath)) {
+      try { fs.unlinkSync(templatePath); } catch {}
+    }
+    if (inputFilePath && fs.existsSync(inputFilePath)) {
+      try { fs.unlinkSync(inputFilePath); } catch {}
+    }
+    
+    return res.status(500).json({ 
+      error: "Erro ao gerar PDF de férias", 
+      details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 }

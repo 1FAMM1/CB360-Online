@@ -434,7 +434,7 @@ async function handleVacation(req, res) {
       return res.status(400).json({ error: "Dados incompletos para férias" });
     }
 
-    const templateResponse = await fetch(TEMPLATES.vacation);
+    const templateResponse = await fetch(TEMPLATES["formulário_férias"]);
     if (!templateResponse.ok) throw new Error("Erro ao carregar template de férias");
 
     const workbook = new ExcelJS.Workbook();

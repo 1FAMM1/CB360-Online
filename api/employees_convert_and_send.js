@@ -449,105 +449,162 @@ async function handleFolhaPonto(req, res) {
 // --- HANDLE FORMULÁRIO FÉRIAS ---
 
 async function handleFormularioFerias(req, res) {
+  let templatePath = null;
   let inputFilePath = null;
+
   try {
     const { employeeName, nInt, periods } = req.body;
 
-    // 1. Validação de segurança para evitar Erro 500 imediato
-    if (!employeeName || !periods || !Array.isArray(periods)) {
-      return res.status(400).json({ error: "Dados incompletos: nome ou períodos ausentes." });
+    if (!employeeName || !Array.isArray(periods)) {
+      return res.status(400).json({
+        error: "Dados inválidos: nome ou períodos ausentes."
+      });
     }
 
+    if (!CLIENT_ID || !CLIENT_SECRET) {
+      return res.status(500).json({
+        error: "Credenciais Adobe não configuradas."
+      });
+    }
+
+    // ================================
+    // 1️⃣ Download seguro do template
+    // ================================
     const templateResponse = await fetch(TEMPLATES.formulario_ferias);
-    if (!templateResponse.ok) throw new Error("Não foi possível carregar o template de férias do GitHub.");
-    
+    if (!templateResponse.ok) {
+      throw new Error("Falha ao obter template de férias.");
+    }
+
+    const templateBuffer = Buffer.from(await templateResponse.arrayBuffer());
+
+    const tempDir = os.tmpdir();
+    templatePath = path.join(tempDir, `vac_template_${Date.now()}.xlsx`);
+    fs.writeFileSync(templatePath, templateBuffer);
+
     const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(await templateResponse.arrayBuffer());
+    await workbook.xlsx.readFile(templatePath);
+
+    if (!workbook.worksheets.length) {
+      throw new Error("Template inválido: sem worksheets.");
+    }
+
     const worksheet = workbook.worksheets[0];
 
-    // 2. Preenchimento do Cabeçalho
-    worksheet.getCell("F7").value = String(employeeName);
-    worksheet.getCell("Q7").value = String(nInt || "");
+    // ================================
+    // 2️⃣ Cabeçalho
+    // ================================
+    worksheet.getCell("F7").value = String(employeeName || "");
+    worksheet.getCell("Q7").value = Number(nInt) || "";
 
-    // 3. Preenchimento dos Períodos (Linhas 11, 13, 15)
+    // ================================
+    // 3️⃣ Períodos (linhas 11, 13, 15)
+    // ================================
     periods.forEach((p, index) => {
-      if (index > 2) return; // O template só tem 3 blocos
+      if (index > 2) return;
+      if (!p || !p.start || !p.end) return;
+
       const row = 11 + (index * 2);
-      
-      // TRATAMENTO DOS INPUTS: O replace(/-/g, '/') evita que a data mude de dia 
-      // devido ao fuso horário do servidor Vercel
-      if (p.start && p.end) {
-        const startDate = new Date(p.start.replace(/-/g, '/'));
-        const endDate = new Date(p.end.replace(/-/g, '/'));
 
-        // Só escreve se as datas forem válidas (evita o crash do ExcelJS)
-        if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
-          // Início
-          worksheet.getCell(`C${row}`).value = startDate.getDate();
-          worksheet.getCell(`E${row}`).value = startDate.getMonth() + 1;
-          worksheet.getCell(`G${row}`).value = startDate.getFullYear();
+      const startDate = new Date(p.start.replace(/-/g, "/"));
+      const endDate = new Date(p.end.replace(/-/g, "/"));
 
-          // Fim
-          worksheet.getCell(`I${row}`).value = endDate.getDate();
-          worksheet.getCell(`K${row}`).value = endDate.getMonth() + 1;
-          worksheet.getCell(`M${row}`).value = endDate.getFullYear();
+      if (isNaN(startDate) || isNaN(endDate)) return;
 
-          // Total de dias (convertido para número)
-          worksheet.getCell(`Q${row}`).value = Number(p.days) || 0;
-        }
-      }
+      worksheet.getCell(`C${row}`).value = startDate.getDate();
+      worksheet.getCell(`E${row}`).value = startDate.getMonth() + 1;
+      worksheet.getCell(`G${row}`).value = startDate.getFullYear();
+
+      worksheet.getCell(`I${row}`).value = endDate.getDate();
+      worksheet.getCell(`K${row}`).value = endDate.getMonth() + 1;
+      worksheet.getCell(`M${row}`).value = endDate.getFullYear();
+
+      worksheet.getCell(`Q${row}`).value = Number(p.days) || 0;
     });
 
-    // 4. Configuração de Impressão (garante que o PDF sai bem formatado)
+    // ================================
+    // 4️⃣ Configuração de impressão
+    // ================================
     worksheet.pageSetup = {
       orientation: "landscape",
-      paperSize: 9, // A4
+      paperSize: 9,
       fitToPage: true,
       fitToWidth: 1,
       fitToHeight: 1,
-      margins: { left: 0.1, right: 0.1, top: 0.1, bottom: 0.1, header: 0, footer: 0 }
+      margins: {
+        left: 0.1,
+        right: 0.1,
+        top: 0.1,
+        bottom: 0.1,
+        header: 0,
+        footer: 0
+      }
     };
 
-    // 5. Gestão de Ficheiros Temporários (obrigatório na Vercel usar /tmp/)
-    const tempDir = os.tmpdir();
+    // ================================
+    // 5️⃣ Guardar XLSX válido
+    // ================================
     inputFilePath = path.join(tempDir, `vac_${Date.now()}.xlsx`);
     await workbook.xlsx.writeFile(inputFilePath);
 
-    // 6. Integração com Adobe PDF Services
-    const credentials = new ServicePrincipalCredentials({ 
-      clientId: CLIENT_ID, 
-      clientSecret: CLIENT_SECRET 
+    if (!fs.existsSync(inputFilePath)) {
+      throw new Error("Falha ao gerar ficheiro Excel.");
+    }
+
+    // ================================
+    // 6️⃣ Converter com Adobe
+    // ================================
+    const credentials = new ServicePrincipalCredentials({
+      clientId: CLIENT_ID,
+      clientSecret: CLIENT_SECRET
     });
+
     const pdfServices = new PDFServices({ credentials });
-    
-    const inputAsset = await pdfServices.upload({ 
-      readStream: fs.createReadStream(inputFilePath), 
-      mimeType: MimeType.XLSX 
+
+    const inputAsset = await pdfServices.upload({
+      readStream: fs.createReadStream(inputFilePath),
+      mimeType: MimeType.XLSX
     });
-    
+
     const job = new CreatePDFJob({ inputAsset });
     const pollingURL = await pdfServices.submit({ job });
-    const result = await pdfServices.getJobResult({ pollingURL, resultType: CreatePDFResult });
-    const streamAsset = await pdfServices.getContent({ asset: result.result.asset });
 
-    // 7. Resposta em PDF
+    const result = await pdfServices.getJobResult({
+      pollingURL,
+      resultType: CreatePDFResult
+    });
+
+    const streamAsset = await pdfServices.getContent({
+      asset: result.result.asset
+    });
+
     const chunks = [];
-    for await (let chunk of streamAsset.readStream) { chunks.push(chunk); }
-    
-    // Limpeza do ficheiro Excel temporário
+    for await (let chunk of streamAsset.readStream) {
+      chunks.push(chunk);
+    }
+
+    // ================================
+    // 7️⃣ Limpeza
+    // ================================
+    if (fs.existsSync(templatePath)) fs.unlinkSync(templatePath);
     if (fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
-    
+
     res.setHeader("Content-Type", "application/pdf");
     return res.status(200).send(Buffer.concat(chunks));
 
   } catch (error) {
     console.error("ERRO CRÍTICO FÉRIAS:", error);
-    if (inputFilePath && fs.existsSync(inputFilePath)) {
-      try { fs.unlinkSync(inputFilePath); } catch(e) {}
+
+    if (templatePath && fs.existsSync(templatePath)) {
+      try { fs.unlinkSync(templatePath); } catch {}
     }
-    return res.status(500).json({ 
-      error: "Erro ao gerar PDF de férias", 
-      details: error.message 
+
+    if (inputFilePath && fs.existsSync(inputFilePath)) {
+      try { fs.unlinkSync(inputFilePath); } catch {}
+    }
+
+    return res.status(500).json({
+      error: "Erro ao gerar PDF de férias",
+      details: error.message
     });
   }
 }

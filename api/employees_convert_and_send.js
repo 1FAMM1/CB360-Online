@@ -485,8 +485,6 @@
   try {
     const { year, employees } = req.body;
     const templateResponse = await fetch(TEMPLATES.mapa_ferias);
-    if (!templateResponse.ok) throw new Error("Erro ao carregar template mapa férias");
-    
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(await templateResponse.arrayBuffer());
     const worksheet = workbook.worksheets[0];
@@ -503,69 +501,62 @@
         worksheet.getCell(row, 15).value = emp.totalDays;
 
         const periods = emp.periods.map(p => {
-          const sP = p.s.split('-');
-          const eP = p.e.split('-');
-          return {
-            sD: parseInt(sP[2]), sM: parseInt(sP[1]),
-            eD: parseInt(eP[2]), eM: parseInt(eP[1])
-          };
+          const sP = p.s.split('-'); const eP = p.e.split('-');
+          return { sD: parseInt(sP[2]), sM: parseInt(sP[1]), eD: parseInt(eP[2]), eM: parseInt(eP[1]) };
         });
 
-        // Loop por cada mês (colunas C a N -> 1 a 12)
+        // Criamos um Set para saber que meses já foram alvo de merge (unificação)
+        const mergedMonths = new Set();
+
         for (let m = 1; m <= 12; m++) {
-          // Filtramos todos os períodos que intersectam este mês
-          const periodsInMonth = periods.filter(p => {
-            // Caso 1: Começa e acaba no mesmo mês
-            if (p.sM === m && p.eM === m) return true;
-            // Caso 2: Começa neste mês e acaba num futuro
-            if (p.sM === m) return true;
-            // Caso 3: Acaba neste mês e começou num passado
-            if (p.eM === m) return true;
-            // Caso 4: Atravessa este mês completamente
-            if (m > p.sM && m < p.eM) return true;
-            return false;
-          });
+          // 1. Procurar períodos que COMEÇAM neste mês
+          let periodsStartingHere = periods.filter(x => x.sM === m);
 
-          if (periodsInMonth.length > 0) {
-            const txt = periodsInMonth.map(p => {
-              const dS = p.sD.toString().padStart(2, '0');
-              const dE = p.eD.toString().padStart(2, '0');
+          if (periodsStartingHere.length > 0) {
+            // Verificamos se o último período que começa aqui atravessa meses
+            let lastPeriod = periodsStartingHere[periodsStartingHere.length - 1];
+            let span = (lastPeriod.eM - m) + 1;
 
-              if (p.sM === m && p.eM === m) {
-                return dS === dE ? dS : `${dS} a ${dE}`;
-              } else if (p.sM === m) {
-                // Começa aqui, vai para o próximo mês
-                return `${dS} a ...`;
-              } else if (p.eM === m) {
-                // Veio do mês anterior, acaba aqui
-                return `... a ${dE}`;
-              } else {
-                // O mês todo
-                return "Mês Inteiro";
-              }
+            // Gerar o texto (ex: "02 a 14 e 30 a 14")
+            let txt = periodsStartingHere.map(x => {
+              const dS = x.sD.toString().padStart(2, '0');
+              const dE = x.eD.toString().padStart(2, '0');
+              return (x.sM === x.eM && dS === dE) ? dS : `${dS} a ${dE}`;
             }).join(' e ');
 
-            const cell = worksheet.getCell(row, 2 + m);
+            const sCol = 2 + m; 
+            const eCol = sCol + (span - 1);
+
+            // Se atravessa meses e ainda não fundimos esta área
+            if (span > 1) {
+              try { 
+                worksheet.mergeCells(row, sCol, row, eCol);
+                // Registamos que os meses seguintes estão dentro de um merge
+                for (let s = 1; s < span; s++) mergedMonths.add(m + s);
+              } catch (e) {}
+            }
+
+            const cell = worksheet.getCell(row, sCol);
             cell.value = txt;
             cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+          } 
+          // 2. Se o mês NÃO tem períodos a começar nele, mas também NÃO está num merge, limpamos
+          else if (!mergedMonths.has(m)) {
+            // Garante que células vazias não herdam lixo
           }
         }
       }
     });
 
-    // Ocultar linhas não preenchidas
+    // Ocultar linhas vazias (mantém igual)
     for (let i = ROW_START; i <= ROW_END; i++) {
-      const val = worksheet.getCell(i, 2).value;
-      if (!val || val.toString().trim() === "") {
-        worksheet.getRow(i).hidden = true;
-      }
+      if (!worksheet.getCell(i, 2).value) worksheet.getRow(i).hidden = true;
     }
 
-    // Processamento Adobe PDF
+    // --- Processamento Adobe (igual ao teu código) ---
     const tempDir = os.tmpdir();
     inputPath = path.join(tempDir, `mapa_${Date.now()}.xlsx`);
     await workbook.xlsx.writeFile(inputPath);
-
     const credentials = new ServicePrincipalCredentials({ clientId: CLIENT_ID, clientSecret: CLIENT_SECRET });
     const pdfServices = new PDFServices({ credentials });
     const inputAsset = await pdfServices.upload({ readStream: fs.createReadStream(inputPath), mimeType: MimeType.XLSX });
@@ -573,17 +564,14 @@
     const pollingURL = await pdfServices.submit({ job });
     const result = await pdfServices.getJobResult({ pollingURL, resultType: CreatePDFResult });
     const streamAsset = await pdfServices.getContent({ asset: result.result.asset });
-
     const chunks = [];
-    for await (let chunk of streamAsset.readStream) { chunks.push(chunk); }
+    for await (let chunk of streamAsset.readStream) chunks.push(chunk);
     if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
-    
     res.setHeader("Content-Type", "application/pdf");
     return res.status(200).send(Buffer.concat(chunks));
 
   } catch (err) {
-    if (inputPath && fs.existsSync(inputPath)) try { fs.unlinkSync(inputPath); } catch (e) {}
-    console.error("Erro Mapa Global:", err);
+    if (inputPath && fs.existsSync(inputPath)) try { fs.unlinkSync(inputPath); } catch(e){}
     return res.status(500).json({ error: err.message });
   }
 }

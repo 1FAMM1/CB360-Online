@@ -461,54 +461,40 @@ async function handleFormularioFerias(req, res) {
       });
     }
 
-    if (!CLIENT_ID || !CLIENT_SECRET) {
+    if (!process.env.ADOBE_CLIENT_ID || !process.env.ADOBE_CLIENT_SECRET) {
       return res.status(500).json({
         error: "Credenciais Adobe não configuradas."
       });
     }
 
-    // ================================
-    // 1️⃣ Download seguro do template
-    // ================================
+    // 1️⃣ Download do template
     const templateResponse = await fetch(TEMPLATES.formulario_ferias);
-    if (!templateResponse.ok) {
-      throw new Error("Falha ao obter template de férias.");
-    }
+    if (!templateResponse.ok) throw new Error("Falha ao obter template de férias.");
 
     const templateBuffer = Buffer.from(await templateResponse.arrayBuffer());
-
     const tempDir = os.tmpdir();
     templatePath = path.join(tempDir, `vac_template_${Date.now()}.xlsx`);
     fs.writeFileSync(templatePath, templateBuffer);
 
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.readFile(templatePath);
-
-    if (!workbook.worksheets.length) {
-      throw new Error("Template inválido: sem worksheets.");
-    }
-
     const worksheet = workbook.worksheets[0];
+    if (!worksheet) throw new Error("Template inválido: sem worksheets.");
 
-    // ================================
     // 2️⃣ Cabeçalho
-    // ================================
     worksheet.getCell("F7").value = String(employeeName || "");
     worksheet.getCell("Q7").value = Number(nInt) || "";
 
-    // ================================
     // 3️⃣ Períodos (linhas 11, 13, 15)
-    // ================================
     periods.forEach((p, index) => {
       if (index > 2) return;
       if (!p || !p.start || !p.end) return;
 
-      const row = 11 + (index * 2);
+      const row = 11 + index * 2;
 
-      const startDate = new Date(p.start.replace(/-/g, "/"));
-      const endDate = new Date(p.end.replace(/-/g, "/"));
-
-      if (isNaN(startDate) || isNaN(endDate)) return;
+      // ✅ Converter datas separadas para Date
+      const startDate = new Date(p.start.year, p.start.month - 1, p.start.day);
+      const endDate = new Date(p.end.year, p.end.month - 1, p.end.day);
 
       worksheet.getCell(`C${row}`).value = startDate.getDate();
       worksheet.getCell(`E${row}`).value = startDate.getMonth() + 1;
@@ -521,50 +507,31 @@ async function handleFormularioFerias(req, res) {
       worksheet.getCell(`Q${row}`).value = Number(p.days) || 0;
     });
 
-    // ================================
     // 4️⃣ Configuração de impressão
-    // ================================
     worksheet.pageSetup = {
-      orientation: "landscape",
+      orientation: "portrait",
       paperSize: 9,
       fitToPage: true,
       fitToWidth: 1,
       fitToHeight: 1,
-      margins: {
-        left: 0.1,
-        right: 0.1,
-        top: 0.1,
-        bottom: 0.1,
-        header: 0,
-        footer: 0
-      }
+      margins: { left: 0.1, right: 0.1, top: 0.1, bottom: 0.1, header: 0, footer: 0 }
     };
 
-    // ================================
-    // 5️⃣ Guardar XLSX válido
-    // ================================
+    // 5️⃣ Guardar XLSX temporário
     inputFilePath = path.join(tempDir, `vac_${Date.now()}.xlsx`);
     await workbook.xlsx.writeFile(inputFilePath);
 
-    if (!fs.existsSync(inputFilePath)) {
-      throw new Error("Falha ao gerar ficheiro Excel.");
-    }
-
-    // ================================
-    // 6️⃣ Converter com Adobe
-    // ================================
+    // 6️⃣ Converter com Adobe PDF
     const credentials = new ServicePrincipalCredentials({
-      clientId: CLIENT_ID,
-      clientSecret: CLIENT_SECRET
+      clientId: process.env.ADOBE_CLIENT_ID,
+      clientSecret: process.env.ADOBE_CLIENT_SECRET
     });
-
     const pdfServices = new PDFServices({ credentials });
 
     const inputAsset = await pdfServices.upload({
       readStream: fs.createReadStream(inputFilePath),
       mimeType: MimeType.XLSX
     });
-
     const job = new CreatePDFJob({ inputAsset });
     const pollingURL = await pdfServices.submit({ job });
 
@@ -572,39 +539,23 @@ async function handleFormularioFerias(req, res) {
       pollingURL,
       resultType: CreatePDFResult
     });
-
-    const streamAsset = await pdfServices.getContent({
-      asset: result.result.asset
-    });
+    const streamAsset = await pdfServices.getContent({ asset: result.result.asset });
 
     const chunks = [];
-    for await (let chunk of streamAsset.readStream) {
-      chunks.push(chunk);
-    }
+    for await (let chunk of streamAsset.readStream) chunks.push(chunk);
 
-    // ================================
     // 7️⃣ Limpeza
-    // ================================
-    if (fs.existsSync(templatePath)) fs.unlinkSync(templatePath);
-    if (fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
+    [templatePath, inputFilePath].forEach(p => {
+      if (p && fs.existsSync(p)) try { fs.unlinkSync(p); } catch {}
+    });
 
     res.setHeader("Content-Type", "application/pdf");
     return res.status(200).send(Buffer.concat(chunks));
 
   } catch (error) {
     console.error("ERRO CRÍTICO FÉRIAS:", error);
-
-    if (templatePath && fs.existsSync(templatePath)) {
-      try { fs.unlinkSync(templatePath); } catch {}
-    }
-
-    if (inputFilePath && fs.existsSync(inputFilePath)) {
-      try { fs.unlinkSync(inputFilePath); } catch {}
-    }
-
-    return res.status(500).json({
-      error: "Erro ao gerar PDF de férias",
-      details: error.message
-    });
+    if (templatePath && fs.existsSync(templatePath)) try { fs.unlinkSync(templatePath); } catch {}
+    if (inputFilePath && fs.existsSync(inputFilePath)) try { fs.unlinkSync(inputFilePath); } catch {}
+    return res.status(500).json({ error: "Erro ao gerar PDF de férias", details: error.message });
   }
 }

@@ -21,7 +21,7 @@ export default async function handler(req, res) {
             throw new Error("Credenciais Adobe não configuradas nas Environment Variables da Vercel.");
         }
 
-        const templateURL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/vacation_template.xlsx";
+        const templateURL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/vacation_map_template.xlsx";
         const response = await fetch(templateURL);
         const workbook = new ExcelJS.Workbook();
         await workbook.xlsx.load(await response.arrayBuffer());

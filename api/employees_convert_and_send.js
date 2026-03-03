@@ -24,7 +24,7 @@ const CLIENT_SECRET = process.env.ADOBE_CLIENT_SECRET;
 const TEMPLATES = {
   escalas: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/employees_template.xlsx",
   folha_ponto: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/stitch_marker_template.xlsx",
-  formulario_ferias: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/vacation_form_template.xlsx"
+  formulario_ferias: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/employee_vacations_mark_template.xlsx"
 };
 
 const HOLIDAY_COLOR = "F7C6C7";

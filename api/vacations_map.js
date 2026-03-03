@@ -5,123 +5,82 @@ import os from "os";
 import path from "path";
 import { ServicePrincipalCredentials, PDFServices, MimeType, CreatePDFJob, CreatePDFResult } from "@adobe/pdfservices-node-sdk";
 
-// --- Constantes de Layout (Nuances do teu Template) ---
-const HOLIDAY_COLOR = "F7C6C7"; // Rosa para férias
-const ROW_START = 10;
-const COL_NOME = 2; // B
-const COL_JAN = 3;  // C
-const COL_TOTAL = 15; // O
-
-// --- Funções de Estilo (Mantendo o teu padrão breakStyle) ---
-function breakStyle(cell) {
-    cell.style = { ...(cell.style || {}) };
-    if (cell.style.fill) cell.style.fill = { ...cell.style.fill };
-    if (cell.style.border) cell.style.border = { ...cell.style.border };
-}
-
+// Funções de estilo idênticas às tuas outras APIs
 function setFill(cell, hex) {
-    breakStyle(cell);
     cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF" + hex.replace("#", "") } };
 }
 
 function setBorder(cell) {
-    breakStyle(cell);
     const c = { argb: "FFD1D1D1" };
     cell.border = {
-        top: { style: "thin", color: c },
-        left: { style: "thin", color: c },
-        bottom: { style: "thin", color: c },
-        right: { style: "thin", color: c },
+        top: { style: "thin", color: c }, left: { style: "thin", color: c },
+        bottom: { style: "thin", color: c }, right: { style: "thin", color: c }
     };
 }
 
 export default async function handler(req, res) {
-    // Configurações de CORS para o teu CodePen
+    // CORS
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type");
     if (req.method === "OPTIONS") return res.status(200).end();
 
-    let inputFilePath = null;
-    let outputFilePath = null;
+    let inputPath = null;
 
     try {
         const { year, employees } = req.body;
 
-        // 1. Carregar Template do GitHub
-        const templateURL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/vacation_template.xlsx";
-        const templateResponse = await fetch(templateURL);
+        // 1. Carregar o Template (Verifica se este link abre no browser!)
+        const templateURL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/global_vacation_template.xlsx";
+        const response = await fetch(templateURL);
+        if (!response.ok) throw new Error("Template Excel não encontrado no GitHub.");
+        
         const workbook = new ExcelJS.Workbook();
-        await workbook.xlsx.load(await templateResponse.arrayBuffer());
+        await workbook.xlsx.load(await response.arrayBuffer());
         const worksheet = workbook.worksheets[0];
 
-        // 2. Título do Mapa
-        worksheet.getCell("B7").value = `PLANO ANUAL DE FÉRIAS - ${year}`;
-
-        // 3. Preenchimento dos Dados e Merges
+        // 2. Preencher Dados
+        const ROW_START = 10;
         employees.forEach((emp, index) => {
-            const currentRow = ROW_START + index;
+            const row = ROW_START + index;
             
-            // Coluna Nome
-            const cellNome = worksheet.getCell(currentRow, COL_NOME);
+            // Coluna B: Nome
+            const cellNome = worksheet.getCell(row, 2);
             cellNome.value = emp.name;
             setBorder(cellNome);
 
-            // Borda padrão para os 12 meses
-            for (let m = 0; m < 12; m++) {
-                setBorder(worksheet.getCell(currentRow, COL_JAN + m));
-            }
+            // Pintar os 12 meses (Colunas C a N)
+            for (let m = 3; m <= 14; m++) setBorder(worksheet.getCell(row, m));
 
-            // Lógica de Férias e União de Células (A Nuance!)
-            if (emp.periods && emp.periods.length > 0) {
+            // Merges de Férias
+            if (emp.periods) {
                 emp.periods.forEach(p => {
-                    const startCol = COL_JAN + (p.startMonth - 1);
-                    const endCol = COL_JAN + (p.endMonth - 1);
-
+                    const startCol = 2 + p.startMonth; // Jan=3
+                    const endCol = 2 + p.endMonth;
+                    
                     if (startCol === endCol) {
-                        // Férias num único mês: Pinta e coloca os dias
-                        const cell = worksheet.getCell(currentRow, startCol);
-                        cell.value = p.days;
-                        setFill(cell, HOLIDAY_COLOR);
-                        cell.alignment = { horizontal: 'center', vertical: 'middle' };
-                        cell.font = { bold: true, size: 10 };
+                        const cell = worksheet.getCell(row, startCol);
+                        setFill(cell, "F7C6C7");
+                        setBorder(cell);
                     } else {
-                        // Férias atravessam meses: UNE as células
-                        worksheet.mergeCells(currentRow, startCol, currentRow, endCol);
-                        const mergedCell = worksheet.getCell(currentRow, startCol);
-                        mergedCell.value = p.days;
-                        setFill(mergedCell, HOLIDAY_COLOR);
-                        mergedCell.alignment = { horizontal: 'center', vertical: 'middle' };
-                        mergedCell.font = { bold: true, size: 10 };
-                        // Re-aplicar bordas na união (o ExcelJS às vezes perde-as no merge)
-                        setBorder(mergedCell);
+                        worksheet.mergeCells(row, startCol, row, endCol);
+                        const merged = worksheet.getCell(row, startCol);
+                        setFill(merged, "F7C6C7");
+                        setBorder(merged);
                     }
                 });
             }
 
-            // Coluna Total de Dias
-            const cellTotal = worksheet.getCell(currentRow, COL_TOTAL);
+            // Coluna O: Total
+            const cellTotal = worksheet.getCell(row, 15);
             cellTotal.value = emp.totalDays;
             setBorder(cellTotal);
-            cellTotal.font = { bold: true };
         });
 
-        // 4. Configuração de Impressão para o PDF
-        worksheet.pageSetup = { 
-            orientation: "landscape", 
-            paperSize: 9, // A4
-            fitToPage: true, 
-            fitToWidth: 1, 
-            fitToHeight: 0 
-        };
-
-        // 5. Integração com ADOBE PDF SERVICES (O que pediste)
+        // 3. Adobe PDF Services
         const tempDir = os.tmpdir();
-        inputFilePath = path.join(tempDir, `global_${Date.now()}.xlsx`);
-        outputFilePath = path.join(tempDir, `global_${Date.now()}.pdf`);
-
-        // Grava o Excel temporário para o Adobe ler
-        await workbook.xlsx.writeFile(inputFilePath);
+        inputPath = path.join(tempDir, `mapa_${Date.now()}.xlsx`);
+        await workbook.xlsx.writeFile(inputPath);
 
         const credentials = new ServicePrincipalCredentials({
             clientId: process.env.ADOBE_CLIENT_ID,
@@ -129,36 +88,27 @@ export default async function handler(req, res) {
         });
         const pdfServices = new PDFServices({ credentials });
 
-        // Upload do Excel para a Adobe
         const inputAsset = await pdfServices.upload({
-            readStream: fs.createReadStream(inputFilePath),
-            mimeType: MimeType.XLSX,
+            readStream: fs.createReadStream(inputPath),
+            mimeType: MimeType.XLSX
         });
 
-        // Cria o Job de conversão
         const job = new CreatePDFJob({ inputAsset });
         const pollingURL = await pdfServices.submit({ job });
         const result = await pdfServices.getJobResult({ pollingURL, resultType: CreatePDFResult });
         const streamAsset = await pdfServices.getContent({ asset: result.result.asset });
 
-        // Coleta o PDF resultante em Chunks
         const chunks = [];
-        for await (let chunk of streamAsset.readStream) {
-            chunks.push(chunk);
-        }
+        for await (let chunk of streamAsset.readStream) chunks.push(chunk);
 
-        // Limpeza dos ficheiros temporários do servidor
-        if (fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
+        if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
 
-        // Envia o PDF final para o Browser
         res.setHeader("Content-Type", "application/pdf");
-        res.setHeader("Content-Disposition", `attachment; filename="Mapa_Global_Ferias_${year}.pdf"`);
         return res.status(200).send(Buffer.concat(chunks));
 
-    } catch (error) {
-        console.error("Erro Crítico na API:", error);
-        // Tenta limpar ficheiros se houver erro
-        if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
-        return res.status(500).json({ error: "Erro na conversão PDF", details: error.message });
+    } catch (err) {
+        console.error("ERRO API:", err.message);
+        if (inputPath && fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
+        return res.status(500).json({ error: err.message });
     }
 }

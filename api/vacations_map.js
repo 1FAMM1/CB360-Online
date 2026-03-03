@@ -5,79 +5,57 @@ import os from "os";
 import path from "path";
 import { ServicePrincipalCredentials, PDFServices, MimeType, CreatePDFJob, CreatePDFResult } from "@adobe/pdfservices-node-sdk";
 
-// Funções de estilo idênticas às tuas outras APIs
-function setFill(cell, hex) {
-    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF" + hex.replace("#", "") } };
-}
-
-function setBorder(cell) {
-    const c = { argb: "FFD1D1D1" };
-    cell.border = {
-        top: { style: "thin", color: c }, left: { style: "thin", color: c },
-        bottom: { style: "thin", color: c }, right: { style: "thin", color: c }
-    };
-}
-
 export default async function handler(req, res) {
-    // CORS
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type");
     if (req.method === "OPTIONS") return res.status(200).end();
 
     let inputPath = null;
-
     try {
         const { year, employees } = req.body;
+        console.log(`Iniciando geração para o ano ${year} com ${employees?.length} funcionários`);
 
-        // 1. Carregar o Template (Verifica se este link abre no browser!)
+        // 1. Validar Credenciais Adobe (Se faltar, dá erro 500 imediato)
+        if (!process.env.ADOBE_CLIENT_ID || !process.env.ADOBE_CLIENT_SECRET) {
+            throw new Error("Credenciais Adobe não configuradas nas Environment Variables da Vercel.");
+        }
+
         const templateURL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/global_vacation_template.xlsx";
         const response = await fetch(templateURL);
-        if (!response.ok) throw new Error("Template Excel não encontrado no GitHub.");
-        
         const workbook = new ExcelJS.Workbook();
         await workbook.xlsx.load(await response.arrayBuffer());
         const worksheet = workbook.worksheets[0];
 
-        // 2. Preencher Dados
+        // 2. Preenchimento (Com proteção contra dados nulos)
         const ROW_START = 10;
         employees.forEach((emp, index) => {
             const row = ROW_START + index;
+            worksheet.getCell(row, 2).value = emp.name || "N/A";
             
-            // Coluna B: Nome
-            const cellNome = worksheet.getCell(row, 2);
-            cellNome.value = emp.name;
-            setBorder(cellNome);
+            // Desenhar bordas base
+            for (let m = 3; m <= 14; m++) {
+                const cell = worksheet.getCell(row, m);
+                cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+            }
 
-            // Pintar os 12 meses (Colunas C a N)
-            for (let m = 3; m <= 14; m++) setBorder(worksheet.getCell(row, m));
-
-            // Merges de Férias
-            if (emp.periods) {
+            if (emp.periods && Array.isArray(emp.periods)) {
                 emp.periods.forEach(p => {
-                    const startCol = 2 + p.startMonth; // Jan=3
-                    const endCol = 2 + p.endMonth;
+                    const startCol = 2 + parseInt(p.startMonth);
+                    const endCol = 2 + parseInt(p.endMonth);
                     
-                    if (startCol === endCol) {
+                    if (startCol >= 3 && endCol <= 14) {
+                        if (startCol !== endCol) worksheet.mergeCells(row, startCol, row, endCol);
                         const cell = worksheet.getCell(row, startCol);
-                        setFill(cell, "F7C6C7");
-                        setBorder(cell);
-                    } else {
-                        worksheet.mergeCells(row, startCol, row, endCol);
-                        const merged = worksheet.getCell(row, startCol);
-                        setFill(merged, "F7C6C7");
-                        setBorder(merged);
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF7C6C7' } };
+                        cell.alignment = { horizontal: 'center' };
                     }
                 });
             }
-
-            // Coluna O: Total
-            const cellTotal = worksheet.getCell(row, 15);
-            cellTotal.value = emp.totalDays;
-            setBorder(cellTotal);
+            worksheet.getCell(row, 15).value = emp.totalDays || 0;
         });
 
-        // 3. Adobe PDF Services
+        // 3. Conversão Adobe
         const tempDir = os.tmpdir();
         inputPath = path.join(tempDir, `mapa_${Date.now()}.xlsx`);
         await workbook.xlsx.writeFile(inputPath);
@@ -87,7 +65,6 @@ export default async function handler(req, res) {
             clientSecret: process.env.ADOBE_CLIENT_SECRET
         });
         const pdfServices = new PDFServices({ credentials });
-
         const inputAsset = await pdfServices.upload({
             readStream: fs.createReadStream(inputPath),
             mimeType: MimeType.XLSX
@@ -102,13 +79,10 @@ export default async function handler(req, res) {
         for await (let chunk of streamAsset.readStream) chunks.push(chunk);
 
         if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
-
-        res.setHeader("Content-Type", "application/pdf");
         return res.status(200).send(Buffer.concat(chunks));
 
     } catch (err) {
-        console.error("ERRO API:", err.message);
-        if (inputPath && fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
-        return res.status(500).json({ error: err.message });
+        console.error("ERRO DETALHADO:", err);
+        return res.status(500).json({ error: err.message, stack: err.stack });
     }
 }

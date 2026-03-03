@@ -12,8 +12,8 @@
     const CLIENT_SECRET = process.env.ADOBE_CLIENT_SECRET;
     const TEMPLATES = {
       escalas: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/employees_template.xlsx",
-      folha_ponto: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/stitch_marker_template.xlsx"
-  vacation: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/employee_vacations_mark_template.xlsx"
+      folha_ponto: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/stitch_marker_template.xlsx",
+      formulário_férias: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/employee_vacations_mark_template.xlsx"
     };
     const HOLIDAY_COLOR = "F7C6C7";
     const HOLIDAY_OPTIONAL_COLOR = "D6ECFF";
@@ -131,15 +131,15 @@
       try {
         const {mode} = req.body;
         if (!mode || !["escalas", "folha_ponto", "vacation"].includes(mode)) {
-  return res.status(400).json({error: "Modo inválido. Use 'escalas', 'folha_ponto' ou 'vacation'"});
-}
-if (mode === "escalas") {
-  return await handleEscalas(req, res);
-} else if (mode === "folha_ponto") {
-  return await handleFolhaPonto(req, res);
-} else {
-  return await handleVacation(req, res);
-}
+            return res.status(400).json({error: "Modo inválido. Use 'escalas', 'folha_ponto' ou 'formulário_férias'"});
+        }
+          if (mode === "escalas") {
+              return await handleEscalas(req, res);
+          } else if (mode === "folha_ponto") {
+              return await handleFolhaPonto(req, res);
+          } else {
+              return await handleVacation(req, res);
+          }
       } catch (error) {
         if (error instanceof SDKError || error instanceof ServiceUsageError || error instanceof ServiceApiError) {
           return res.status(500).json({error: "Erro no serviço Adobe", details: error.message});

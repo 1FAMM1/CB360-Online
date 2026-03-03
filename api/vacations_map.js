@@ -25,31 +25,29 @@ export default async function handler(req, res) {
 
     employees.forEach((emp, index) => {
       const row = ROW_START + index;
+      
+      // Preenche Nome e Total de Dias
       worksheet.getCell(row, 2).value = emp.name;
       worksheet.getCell(row, 15).value = emp.totalDays;
 
-      // Estilo das bordas para a linha toda
-      for (let m = 3; m <= 15; m++) {
-        worksheet.getCell(row, m).border = {
-          top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}
-        };
-      }
-
+      // Agrupa os textos por mês para evitar sobreposição
+      const monthsData = {};
       if (emp.periods) {
         emp.periods.forEach(p => {
-          const col = 2 + Number(p.month);
-          const cell = worksheet.getCell(row, col);
-          
-          cell.value = p.text; // Escreve "15 a 22"
-          cell.fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: { argb: 'FFE0F2F1' } // Verde clarinho igual à imagem
-          };
-          cell.font = { size: 8, bold: true, color: { argb: 'FF004D40' } };
-          cell.alignment = { horizontal: 'center', vertical: 'middle' };
+          if (!monthsData[p.month]) monthsData[p.month] = [];
+          monthsData[p.month].push(p.text);
         });
       }
+
+      // Preenche apenas o texto nas colunas dos meses (3 a 14)
+      Object.keys(monthsData).forEach(m => {
+        const col = 2 + Number(m);
+        const cell = worksheet.getCell(row, col);
+        // Une os intervalos se houver mais do que um no mesmo mês
+        cell.value = monthsData[m].join(' e ');
+        // Alinhamento básico para garantir que o texto fica visível
+        cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+      });
     });
 
     const tempDir = os.tmpdir();

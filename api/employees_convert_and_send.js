@@ -130,7 +130,7 @@
       if (req.method !== "POST") return res.status(405).json({error: "Método não permitido"});
       try {
         const {mode} = req.body;
-        if (!mode || !["escalas", "folha_ponto", "vacation"].includes(mode)) {
+        if (!mode || !["escalas", "folha_ponto", "formulário_férias"].includes(mode)) {
             return res.status(400).json({error: "Modo inválido. Use 'escalas', 'folha_ponto' ou 'formulário_férias'"});
         }
           if (mode === "escalas") {

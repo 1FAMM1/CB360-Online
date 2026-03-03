@@ -342,6 +342,7 @@ async function handleEscalas(req, res) {
 
     if (format !== "pdf") {
       const buffer = await workbook.xlsx.writeBuffer();
+        const nodeBuffer = Buffer.from(buffer);
       res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
       res.setHeader("Content-Disposition", `attachment; filename="Escala_${MONTH_NAMES[month - 1]}_${year}.xlsx"`);
       return res.status(200).send(Buffer.from(buffer));

@@ -17,7 +17,7 @@ export default async function handler(req, res) {
     const { priorityYear, employees } = req.body;
     
     // URL do teu novo template de prioridades
-    const templateURL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/priority_map_template.xlsx";
+    const templateURL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/priority-vacation-template.xlsx";
     
     const templateResponse = await fetch(templateURL);
     const workbook = new ExcelJS.Workbook();

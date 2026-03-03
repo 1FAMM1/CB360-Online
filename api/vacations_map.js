@@ -20,14 +20,13 @@ export default async function handler(req, res) {
     await workbook.xlsx.load(await templateResponse.arrayBuffer());
     const worksheet = workbook.worksheets[0];
 
-    // 1. Limpar o intervalo de nomes primeiro para garantir que lixo do template não interfere
+    // --- NOVIDADE: PREENCHER O TÍTULO NA CÉLULA B6 ---
+    worksheet.getCell("B6").value = `MAPA DE FÉRIAS - ${year}`;
+
     const ROW_START = 10;
     const ROW_END = 49;
-    for (let i = ROW_START; i <= ROW_END; i++) {
-        worksheet.getCell(i, 2).value = null; // Coluna B
-    }
 
-    // 2. Preencher os dados dos funcionários recebidos (já filtrados pelo frontend)
+    // 1. Preencher os dados dos funcionários
     employees.forEach((emp, index) => {
       const row = ROW_START + index;
       if (row <= ROW_END) {
@@ -51,9 +50,7 @@ export default async function handler(req, res) {
             }).join(' e ');
 
             const sCol = 2 + m; const eCol = sCol + (span - 1);
-            if (span > 1) { 
-                try { worksheet.mergeCells(row, sCol, row, eCol); } catch(e){} 
-            }
+            if (span > 1) { try { worksheet.mergeCells(row, sCol, row, eCol); } catch(e){} }
             const cell = worksheet.getCell(row, sCol);
             cell.value = txt;
             cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
@@ -63,7 +60,7 @@ export default async function handler(req, res) {
       }
     });
 
-    // 3. OCULTAR LINHAS QUE NÃO FORAM PREENCHIDAS
+    // 2. OCULTAR LINHAS VAZIAS (B10 a B49)
     for (let i = ROW_START; i <= ROW_END; i++) {
       const cellValue = worksheet.getCell(i, 2).value;
       if (!cellValue || cellValue.toString().trim() === "") {
@@ -71,7 +68,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // 4. Conversão Adobe PDF
+    // 3. Conversão Adobe PDF
     const tempDir = os.tmpdir();
     inputPath = path.join(tempDir, `mapa_${Date.now()}.xlsx`);
     await workbook.xlsx.writeFile(inputPath);

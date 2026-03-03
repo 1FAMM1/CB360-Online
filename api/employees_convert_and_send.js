@@ -451,10 +451,10 @@ async function handleFormularioFerias(req, res) {
   let inputFilePath = null;
   try {
     const { employeeName, nInt, periods } = req.body;
-    
-    // 1. Validar se os dados chegaram
-    if (!employeeName || !periods) {
-      return res.status(400).json({ error: "Dados de funcionário ou períodos ausentes." });
+
+    // 1. Validação de segurança para evitar Erro 500 imediato
+    if (!employeeName || !periods || !Array.isArray(periods)) {
+      return res.status(400).json({ error: "Dados incompletos: nome ou períodos ausentes." });
     }
 
     const templateResponse = await fetch(TEMPLATES.formulario_ferias);
@@ -464,51 +464,59 @@ async function handleFormularioFerias(req, res) {
     await workbook.xlsx.load(await templateResponse.arrayBuffer());
     const worksheet = workbook.worksheets[0];
 
-    // Cabeçalho - Usando toString() para garantir que não vai null
+    // 2. Preenchimento do Cabeçalho
     worksheet.getCell("F7").value = String(employeeName);
     worksheet.getCell("Q7").value = String(nInt || "");
 
-    // Períodos (Linhas 11, 13, 15)
-    if (Array.isArray(periods)) {
-      periods.forEach((p, index) => {
-        if (index > 2) return; // Limite do template
-        const row = 11 + (index * 2);
-        
-        // CORREÇÃO CRÍTICA: Tratar a string da data para evitar NaNs
-        // O replace(/-/g, '/') garante que o motor JS trate como data local
-        const start = p.start ? new Date(p.start.replace(/-/g, '/')) : null;
-        const end = p.end ? new Date(p.end.replace(/-/g, '/')) : null;
+    // 3. Preenchimento dos Períodos (Linhas 11, 13, 15)
+    periods.forEach((p, index) => {
+      if (index > 2) return; // O template só tem 3 blocos
+      const row = 11 + (index * 2);
+      
+      // TRATAMENTO DOS INPUTS: O replace(/-/g, '/') evita que a data mude de dia 
+      // devido ao fuso horário do servidor Vercel
+      if (p.start && p.end) {
+        const startDate = new Date(p.start.replace(/-/g, '/'));
+        const endDate = new Date(p.end.replace(/-/g, '/'));
 
-        if (start && !isNaN(start) && end && !isNaN(end)) {
-          worksheet.getCell(`C${row}`).value = start.getDate();
-          worksheet.getCell(`E${row}`).value = start.getMonth() + 1;
-          worksheet.getCell(`G${row}`).value = start.getFullYear();
+        // Só escreve se as datas forem válidas (evita o crash do ExcelJS)
+        if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+          // Início
+          worksheet.getCell(`C${row}`).value = startDate.getDate();
+          worksheet.getCell(`E${row}`).value = startDate.getMonth() + 1;
+          worksheet.getCell(`G${row}`).value = startDate.getFullYear();
 
-          worksheet.getCell(`I${row}`).value = end.getDate();
-          worksheet.getCell(`K${row}`).value = end.getMonth() + 1;
-          worksheet.getCell(`M${row}`).value = end.getFullYear();
+          // Fim
+          worksheet.getCell(`I${row}`).value = endDate.getDate();
+          worksheet.getCell(`K${row}`).value = endDate.getMonth() + 1;
+          worksheet.getCell(`M${row}`).value = endDate.getFullYear();
 
-          // Garantir que days é um número ou 0
+          // Total de dias (convertido para número)
           worksheet.getCell(`Q${row}`).value = Number(p.days) || 0;
         }
-      });
-    }
+      }
+    });
 
-    // Configuração de Impressão (Igual às outras que funcionam)
+    // 4. Configuração de Impressão (garante que o PDF sai bem formatado)
     worksheet.pageSetup = {
       orientation: "landscape",
-      paperSize: 9,
+      paperSize: 9, // A4
       fitToPage: true,
       fitToWidth: 1,
-      fitToHeight: 1
+      fitToHeight: 1,
+      margins: { left: 0.1, right: 0.1, top: 0.1, bottom: 0.1, header: 0, footer: 0 }
     };
 
+    // 5. Gestão de Ficheiros Temporários (obrigatório na Vercel usar /tmp/)
     const tempDir = os.tmpdir();
     inputFilePath = path.join(tempDir, `vac_${Date.now()}.xlsx`);
     await workbook.xlsx.writeFile(inputFilePath);
 
-    // Adobe SDK
-    const credentials = new ServicePrincipalCredentials({ clientId: CLIENT_ID, clientSecret: CLIENT_SECRET });
+    // 6. Integração com Adobe PDF Services
+    const credentials = new ServicePrincipalCredentials({ 
+      clientId: CLIENT_ID, 
+      clientSecret: CLIENT_SECRET 
+    });
     const pdfServices = new PDFServices({ credentials });
     
     const inputAsset = await pdfServices.upload({ 
@@ -521,20 +529,23 @@ async function handleFormularioFerias(req, res) {
     const result = await pdfServices.getJobResult({ pollingURL, resultType: CreatePDFResult });
     const streamAsset = await pdfServices.getContent({ asset: result.result.asset });
 
+    // 7. Resposta em PDF
     const chunks = [];
     for await (let chunk of streamAsset.readStream) { chunks.push(chunk); }
     
-    // Limpeza
+    // Limpeza do ficheiro Excel temporário
     if (fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
     
     res.setHeader("Content-Type", "application/pdf");
     return res.status(200).send(Buffer.concat(chunks));
 
   } catch (error) {
-    console.error("ERRO FORMULARIO FERIAS:", error);
-    if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
+    console.error("ERRO CRÍTICO FÉRIAS:", error);
+    if (inputFilePath && fs.existsSync(inputFilePath)) {
+      try { fs.unlinkSync(inputFilePath); } catch(e) {}
+    }
     return res.status(500).json({ 
-      error: "Erro ao processar formulário de férias", 
+      error: "Erro ao gerar PDF de férias", 
       details: error.message 
     });
   }

@@ -491,7 +491,6 @@
 
     worksheet.getCell("B6").value = `MAPA DE FÉRIAS - ${year}`;
     const ROW_START = 10, ROW_END = 49;
-    const mesesAbv = ["", "Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
     employees.forEach((emp, index) => {
       const row = ROW_START + index;
@@ -509,36 +508,31 @@
         for (let m = 1; m <= 12; m++) {
           if (processedMonths.has(m)) continue;
 
-          // Encontrar períodos que começam neste mês
-          let startingHere = periods.filter(p => p.sM === m);
+          // Filtra períodos que começam neste mês ou que "atravessam" este mês vindos de um merge
+          let startPeriods = periods.filter(p => p.sM === m);
 
-          if (startingHere.length > 0) {
-            // Determinar o alcance inicial
-            let maxEM = Math.max(...startingHere.map(p => p.eM));
+          if (startPeriods.length > 0) {
+            let maxEM = Math.max(...startPeriods.map(p => p.eM));
             
-            // Capturar TODOS os períodos que começam dentro do bloco de meses que vamos fundir
-            let allPeriodsInBlock = periods.filter(p => p.sM >= m && p.sM <= maxEM);
-            
-            // Recalcular o maxEM caso algum desses novos períodos vá mais longe
-            maxEM = Math.max(maxEM, ...allPeriodsInBlock.map(p => p.eM));
-            allPeriodsInBlock = periods.filter(p => p.sM >= m && p.sM <= maxEM);
+            // Pega todos os períodos que iniciam até ao mês final deste bloco
+            let allInBlock = periods.filter(p => p.sM >= m && p.sM <= maxEM);
+            maxEM = Math.max(maxEM, ...allInBlock.map(p => p.eM));
+            allInBlock = periods.filter(p => p.sM >= m && p.sM <= maxEM);
 
             let span = (maxEM - m) + 1;
             const sCol = 2 + m;
-            const eCol = sCol + (span - 1);
 
-            let txt = allPeriodsInBlock
+            // Gerar texto apenas com os dias (removido /MMM)
+            let txt = allInBlock
               .sort((a, b) => (a.sM * 100 + a.sD) - (b.sM * 100 + b.sD))
               .map(x => {
                 const dS = x.sD.toString().padStart(2, '0');
                 const dE = x.eD.toString().padStart(2, '0');
-                // Se atravessa meses, mostramos o mês para clareza
-                if (x.sM !== x.eM) return `${dS}/${mesesAbv[x.sM]} a ${dE}/${mesesAbv[x.eM]}`;
-                return (x.sD === x.eD) ? dS : `${dS} a ${dE}`;
+                return (x.sM === x.eM && x.sD === x.eD) ? dS : `${dS} a ${dE}`;
               }).join(' e ');
 
             if (span > 1) {
-              try { worksheet.mergeCells(row, sCol, row, eCol); } catch (e) {}
+              try { worksheet.mergeCells(row, sCol, row, sCol + (span - 1)); } catch (e) {}
             }
 
             const cell = worksheet.getCell(row, sCol);
@@ -551,10 +545,12 @@
       }
     });
 
+    // Ocultar linhas vazias
     for (let i = ROW_START; i <= ROW_END; i++) {
       if (!worksheet.getCell(i, 2).value) worksheet.getRow(i).hidden = true;
     }
 
+    // Exportação para PDF (Adobe)
     const tempDir = os.tmpdir();
     inputPath = path.join(tempDir, `mapa_${Date.now()}.xlsx`);
     await workbook.xlsx.writeFile(inputPath);
@@ -570,10 +566,12 @@
     const chunks = [];
     for await (let chunk of streamAsset.readStream) chunks.push(chunk);
     if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
+    
     res.setHeader("Content-Type", "application/pdf");
     return res.status(200).send(Buffer.concat(chunks));
   } catch (err) {
-    if (inputPath && fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
-    throw err;
+    if (inputPath && fs.existsSync(inputPath)) try { fs.unlinkSync(inputPath); } catch(e) {}
+    console.error(err);
+    res.status(500).json({ error: err.message });
   }
 }

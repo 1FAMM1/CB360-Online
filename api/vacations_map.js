@@ -6,9 +6,6 @@ import path from "path";
 import { ServicePrincipalCredentials, PDFServices, MimeType, CreatePDFJob, CreatePDFResult } from "@adobe/pdfservices-node-sdk";
 
 export default async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(200).end();
 
   let inputPath = null;
@@ -27,23 +24,29 @@ export default async function handler(req, res) {
       worksheet.getCell(row, 2).value = emp.name;
       worksheet.getCell(row, 15).value = emp.totalDays;
 
-      if (emp.periods) {
-        emp.periods.forEach(p => {
-          const startCol = 2 + Number(p.startMonth);
-          const endCol = 2 + Number(p.endMonth);
+      const periods = emp.periods.map(p => ({ s: new Date(p.s), e: new Date(p.e) }));
 
-          // Realiza a união das células se o período abranger mais que uma
-          if (startCol !== endCol) {
+      for (let m = 1; m <= 12; m++) {
+        let mP = periods.filter(x => (x.s.getMonth() + 1) === m);
+        if (mP.length > 0) {
+          let last = mP[mP.length - 1];
+          let span = (last.e.getMonth() + 1 - m) + 1;
+          let txt = mP.map(x => `${x.s.getDate().toString().padStart(2,'0')} a ${x.e.getDate().toString().padStart(2,'0')}`).join(' e ');
+          
+          const startCol = 2 + m;
+          const endCol = 2 + m + (span - 1);
+
+          // Executa a união de células (o teu colspan)
+          if (span > 1) {
             worksheet.mergeCells(row, startCol, row, endCol);
           }
 
           const cell = worksheet.getCell(row, startCol);
-          cell.value = p.text;
+          cell.value = txt;
           cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
           
-          // Nota: O preenchimento visual (cor) deve vir do template ou 
-          // ser adicionado aqui se o merge "limpar" a formatação.
-        });
+          m += (span - 1);
+        }
       }
     });
 

@@ -15,70 +15,71 @@ export default async function handler(req, res) {
 
   try {
     const { year, employees } = req.body;
-    if (!year || !employees) {
-      throw new Error("Parâmetros obrigatórios 'year' e 'employees' não foram fornecidos.");
-    }
+    if (!year || !employees) throw new Error("Dados incompletos.");
 
-    console.log(`Gerando PDF para o ano ${year} com ${employees.length} funcionários`);
-
-    // 1. Verificar credenciais Adobe
-    if (!process.env.ADOBE_CLIENT_ID || !process.env.ADOBE_CLIENT_SECRET) {
-      throw new Error("Credenciais Adobe não configuradas.");
-    }
-
-    // 2. Carregar template Excel
+    // 1. Carregar Template
     const templateURL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/vacation_map_template.xlsx";
     const templateResponse = await fetch(templateURL);
-    if (!templateResponse.ok) throw new Error("Falha ao baixar template Excel.");
-
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(await templateResponse.arrayBuffer());
     const worksheet = workbook.worksheets[0];
 
     const ROW_START = 10;
 
-    // 3. Preencher dados
+    // 2. Processar Funcionários
     employees.forEach((emp, index) => {
       const row = ROW_START + index;
 
+      // Nome e Total
       worksheet.getCell(row, 2).value = emp.name || "N/A";
+      worksheet.getCell(row, 15).value = emp.totalDays || 0;
 
-      // Criar bordas
+      // Estilo base para os meses
       for (let m = 3; m <= 14; m++) {
         const cell = worksheet.getCell(row, m);
-        cell.border = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } };
+        cell.border = { 
+          top: { style: "thin" }, left: { style: "thin" }, 
+          bottom: { style: "thin" }, right: { style: "thin" } 
+        };
       }
 
+      // Pintar Meses de Férias
       if (Array.isArray(emp.periods)) {
         emp.periods.forEach((p) => {
-          const startCol = 2 + (parseInt(p.startMonth) || 0);
-          const endCol = 2 + (parseInt(p.endMonth) || 0);
+          const startCol = 2 + Number(p.startMonth);
+          const endCol = 2 + Number(p.endMonth);
 
-          if (startCol >= 3 && endCol <= 14 && startCol <= endCol) {
-            if (startCol !== endCol) worksheet.mergeCells(row, startCol, row, endCol);
+          if (startCol >= 3 && endCol <= 14) {
+            // Merge apenas se for período contínuo real
+            if (startCol < endCol) worksheet.mergeCells(row, startCol, row, endCol);
+            
             const cell = worksheet.getCell(row, startCol);
-            cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF7C6C7" } };
-            cell.alignment = { horizontal: "center" };
+            cell.fill = { 
+              type: "pattern", 
+              pattern: "solid", 
+              fgColor: { argb: "FFF7C6C7" } 
+            };
+            cell.alignment = { horizontal: "center", vertical: "middle" };
           }
         });
       }
-
-      worksheet.getCell(row, 15).value = emp.totalDays || 0;
     });
 
-    // 4. Salvar XLSX temporário
+    // 3. Conversão Adobe
     const tempDir = os.tmpdir();
     inputPath = path.join(tempDir, `mapa_${Date.now()}.xlsx`);
     await workbook.xlsx.writeFile(inputPath);
-    console.log("XLSX gerado em:", inputPath);
 
-    // 5. Converter para PDF usando Adobe
     const credentials = new ServicePrincipalCredentials({
       clientId: process.env.ADOBE_CLIENT_ID,
       clientSecret: process.env.ADOBE_CLIENT_SECRET,
     });
+    
     const pdfServices = new PDFServices({ credentials });
-    const inputAsset = await pdfServices.upload({ readStream: fs.createReadStream(inputPath), mimeType: MimeType.XLSX });
+    const inputAsset = await pdfServices.upload({ 
+      readStream: fs.createReadStream(inputPath), 
+      mimeType: MimeType.XLSX 
+    });
 
     const job = new CreatePDFJob({ inputAsset });
     const pollingURL = await pdfServices.submit({ job });
@@ -90,10 +91,12 @@ export default async function handler(req, res) {
 
     if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
 
-    res.status(200).send(Buffer.concat(chunks));
+    res.setHeader("Content-Type", "application/pdf");
+    return res.status(200).send(Buffer.concat(chunks));
+
   } catch (err) {
-    console.error("ERRO DETALHADO:", err);
+    console.error("Erro:", err);
     if (inputPath && fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
-    res.status(500).json({ error: err.message, stack: err.stack });
+    res.status(500).json({ error: err.message });
   }
 }

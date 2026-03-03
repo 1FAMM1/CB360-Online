@@ -131,15 +131,15 @@
       try {
         const {mode} = req.body;
         if (!mode || !["escalas", "folha_ponto", "formulário_férias"].includes(mode)) {
-            return res.status(400).json({error: "Modo inválido. Use 'escalas', 'folha_ponto' ou 'formulário_férias'"});
+          return res.status(400).json({error: "Modo inválido. Use 'escalas', 'folha_ponto' ou 'formulário_férias'"});
         }
-          if (mode === "escalas") {
-              return await handleEscalas(req, res);
-          } else if (mode === "folha_ponto") {
-              return await handleFolhaPonto(req, res);
-          } else {
-              return await handleVacation(req, res);
-          }
+        if (mode === "escalas") {
+          return await handleEscalas(req, res);
+        } else if (mode === "folha_ponto") {
+          return await handleFolhaPonto(req, res);
+        } else if (mode === "formulário_férias") {
+          return await handleVacation(req, res);
+        }
       } catch (error) {
         if (error instanceof SDKError || error instanceof ServiceUsageError || error instanceof ServiceApiError) {
           return res.status(500).json({error: "Erro no serviço Adobe", details: error.message});

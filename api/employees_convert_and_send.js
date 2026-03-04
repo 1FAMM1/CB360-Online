@@ -14,7 +14,8 @@
       escalas: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/employees_template.xlsx",
       folha_ponto: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/stitch_marker_template.xlsx",
       formulário_férias: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/employee_vacations_mark_template.xlsx",
-      mapa_ferias: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/vacation_map_template.xlsx"
+      mapa_ferias: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/vacation_map_template.xlsx",
+      prioridade_ferias: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/priority_vacation_template.xlsx"
     };
     const HOLIDAY_COLOR = "F7C6C7";
     const HOLIDAY_OPTIONAL_COLOR = "D6ECFF";
@@ -131,8 +132,8 @@
       if (req.method !== "POST") return res.status(405).json({error: "Método não permitido"});
       try {
         const {mode} = req.body;
-        if (!mode || !["escalas", "folha_ponto", "formulário_férias", "mapa_ferias"].includes(mode)) {
-          return res.status(400).json({error: "Modo inválido. Use 'escalas', 'folha_ponto', 'formulário_férias' ou 'mapa_ferias'"});
+        if (!mode || !["escalas", "folha_ponto", "formulário_férias", "mapa_ferias", "prioridade_ferias"].includes(mode)) {
+          return res.status(400).json({error: "Modo inválido. Use 'escalas', 'folha_ponto', 'formulário_férias', 'mapa_ferias' ou 'prioridade_ferias'"});
         }
         if (mode === "escalas") {
           return await handleEscalas(req, res);
@@ -142,6 +143,8 @@
           return await handleVacation(req, res);
         } else if (mode === "mapa_ferias") {
           return await handleMapaFerias(req, res);
+        } else if (mode === "prioridade_ferias") {
+          return await handlePriority(req, res);
         }
       } catch (error) {
         if (error instanceof SDKError || error instanceof ServiceUsageError || error instanceof ServiceApiError) {
@@ -558,5 +561,91 @@
         if (inputPath && fs.existsSync(inputPath)) try {fs.unlinkSync(inputPath);} catch(e) {}
         console.error(err);
         res.status(500).json({error: err.message});
+      }
+    }
+    async function handlePriority(req, res) {
+      let inputPath = null;
+      try {
+        const {priorityYear, employees} = req.body;
+        if (!priorityYear || !Array.isArray(employees)) {
+          return res.status(400).json({error: "Dados inválidos para prioridade"});
+        }
+        if (!CLIENT_ID || !CLIENT_SECRET) {
+          return res.status(500).json({error: "Chaves Adobe não configuradas"});
+        }
+        const ROW_START = 10;
+        const ROW_END = 43;
+        const MAX_ROWS = ROW_END - ROW_START + 1;
+        const safeEmployees = employees.slice(0, MAX_ROWS);
+        const templateResponse = await fetch(TEMPLATES.prioridade_ferias);
+        if (!templateResponse.ok) {
+          throw new Error("Erro ao carregar template de prioridade");
+        }
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.load(await templateResponse.arrayBuffer());
+        const worksheet = workbook.worksheets[0];
+        worksheet.getCell("C3").value =
+          `MAPA DE PRIORIDADE DE MARCAÇÃO DE FÉRIAS - ${priorityYear}`;
+        safeEmployees.forEach((emp, index) => {
+          const rowNumber = ROW_START + index;
+          worksheet.getCell(`B${rowNumber}`).value = emp.name || "";
+          const scores = Array.isArray(emp.scores)
+          ? emp.scores.slice(0, 24)
+          : [];
+          for (let i = 0; i < 24; i++) {
+            const colIndex = 3 + i;
+            const value = Number(scores[i]) || 0;
+            const cell = worksheet.getCell(rowNumber, colIndex);
+            cell.value = value > 0 ? value : "-";
+            if (value > 0) {
+              cell.font = {bold: true};
+            }
+          }
+          worksheet.getCell(rowNumber, 27).value = Number(emp.totalScore) || 0;
+        });
+        for (let i = ROW_START; i <= ROW_END; i++) {
+          const nameCell = worksheet.getCell(`B${i}`).value;
+          if (!nameCell || nameCell.toString().trim() === "") {
+            worksheet.getRow(i).hidden = true;
+          }
+        }
+        const tempDir = os.tmpdir();
+        inputPath = path.join(tempDir, `prioridades_${Date.now()}.xlsx`);
+        await workbook.xlsx.writeFile(inputPath);
+        const credentials = new ServicePrincipalCredentials({
+          clientId: CLIENT_ID,
+          clientSecret: CLIENT_SECRET,
+        });
+        const pdfServices = new PDFServices({credentials});
+        const inputAsset = await pdfServices.upload({
+          readStream: fs.createReadStream(inputPath),
+          mimeType: MimeType.XLSX,
+        });
+        const job = new CreatePDFJob({inputAsset});
+        const pollingURL = await pdfServices.submit({job});
+        const result = await pdfServices.getJobResult({
+          pollingURL,
+          resultType: CreatePDFResult,
+        });
+        const streamAsset = await pdfServices.getContent({
+          asset: result.result.asset,
+        });
+        const chunks = [];
+        for await (let chunk of streamAsset.readStream) {
+          chunks.push(chunk);
+        }
+        if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader(
+          "Content-Disposition",
+          `attachment; filename=Prioridades_${priorityYear}.pdf`
+        );
+        return res.status(200).send(Buffer.concat(chunks));
+      } catch (err) {
+        if (inputPath && fs.existsSync(inputPath)) {
+          try {fs.unlinkSync(inputPath);} catch {}
+        }
+        console.error("Erro API Prioridades:", err);
+        return res.status(500).json({error: err.message});
       }
     }

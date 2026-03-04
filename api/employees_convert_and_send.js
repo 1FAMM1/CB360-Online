@@ -563,7 +563,7 @@
         res.status(500).json({error: err.message});
       }
     }
-    async function handlePriority(req, res) {
+    async function handlePriority(req, res) {      
       let inputPath = null;
       try {
         const {priorityYear, employees} = req.body;
@@ -584,21 +584,18 @@
         const workbook = new ExcelJS.Workbook();
         await workbook.xlsx.load(await templateResponse.arrayBuffer());
         const worksheet = workbook.worksheets[0];
-        worksheet.getCell("C3").value =
-          `MAPA DE PRIORIDADE DE MARCAÇÃO DE FÉRIAS - ${priorityYear}`;
+        worksheet.getCell("C3").value = `MAPA DE PRIORIDADE DE MARCAÇÃO DE FÉRIAS - ${priorityYear}`;
         safeEmployees.forEach((emp, index) => {
           const rowNumber = ROW_START + index;
-          worksheet.getCell(`B${rowNumber}`).value = emp.name || "";
-          const scores = Array.isArray(emp.scores)
-          ? emp.scores.slice(0, 24)
-          : [];
+          worksheet.getCell(`B${rowNumber}`).value = emp.name || "";          
+          const scores = Array.isArray(emp.scores) ? emp.scores.slice(0, 24) : [];          
           for (let i = 0; i < 24; i++) {
             const colIndex = 3 + i;
             const value = Number(scores[i]) || 0;
             const cell = worksheet.getCell(rowNumber, colIndex);
             cell.value = value > 0 ? value : "-";
             if (value > 0) {
-              cell.font = {bold: true};
+              cell.font = { bold: true };
             }
           }
           worksheet.getCell(rowNumber, 27).value = Number(emp.totalScore) || 0;
@@ -609,6 +606,8 @@
             worksheet.getRow(i).hidden = true;
           }
         }
+        worksheet.pageSetup = {orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 1, horizontalCentered: true, verticalCentered: false,
+                               margins: {left: 0.1, right: 0.1, top: 0.15, bottom: 0.15, header: 0, footer: 0}};
         const tempDir = os.tmpdir();
         inputPath = path.join(tempDir, `prioridades_${Date.now()}.xlsx`);
         await workbook.xlsx.writeFile(inputPath);

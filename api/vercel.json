@@ -1,11 +1,7 @@
 {
   "version": 2,
   "functions": {
-    "api/*.js": {
-      "runtime": "nodejs20.x",
-      "maxDuration": 60
-    },
-    "api/mobile/*.js": {
+    "api/**/*.js": {
       "runtime": "nodejs20.x",
       "maxDuration": 60
     }

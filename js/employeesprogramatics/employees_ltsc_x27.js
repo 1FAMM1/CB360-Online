@@ -2498,15 +2498,18 @@
     /* ============================================
     FASE 03 - EMPLOYEE INDIVIDUAL REGISTERS
     ============================================ */
-    /* ====== CREATE AND SAVE EXTRA HOURS ====== */
+    /* ===== CREATE EMPLOYEE GENERAL DATA ====== */
     function createEmployeePersonalGraphic() {
       const cardBody = document.querySelector("#individual-records .card-body");
       if (!cardBody) return;
       cardBody.innerHTML = "";
       const mainWrapper = document.createElement("div");
-      mainWrapper.style.cssText = `display: flex; flex-direction: column; gap: 20px; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;`;
+      mainWrapper.style.cssText = `display: flex; flex-direction: column; margin-top: -20px; gap: 10px; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;`;
       const selectorSection = document.createElement("div");
-      selectorSection.style.cssText = `display: flex; align-items: center; gap: 15px; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);`;
+      selectorSection.style.cssText = `display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 15px; background: white; border-radius: 8px; 
+                                       box-shadow: 0 2px 8px rgba(0,0,0,0.1);`;
+      const leftGroup = document.createElement("div");
+      leftGroup.style.cssText = `display: flex; align-items: center; gap: 10px;`;
       const label = document.createElement("label");
       label.textContent = "Selecionar Funcionário:";
       label.style.cssText = "font-weight: bold; font-size: 14px;";
@@ -2515,37 +2518,48 @@
       select.style.cssText = `padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; min-width: 250px; cursor: pointer;`;
       const yearLabel = document.createElement("label");
       yearLabel.textContent = "Ano:";
-      yearLabel.style.cssText = "font-weight: bold; font-size: 14px; margin-left: 20px;";
+      yearLabel.style.cssText = "font-weight: bold; font-size: 14px; margin-left: 10px;";
       const yearSelect = document.createElement("select");
       yearSelect.id = "year-personal-graphic";
       yearSelect.style.cssText = `padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; cursor: pointer;`;
       const currentYear = new Date().getFullYear();
-      for (let y = 2026; y <= 2036; y++) {
+      for (let y = 2026; y <= 2035; y++) {
         const opt = document.createElement("option");
         opt.value = y;
         opt.textContent = y;
         if (y === currentYear) opt.selected = true;
         yearSelect.appendChild(opt);
       }
-      selectorSection.append(label, select, yearLabel, yearSelect);
+      leftGroup.append(label, select, yearLabel, yearSelect);
+      const cardsGroup = document.createElement("div");
+      cardsGroup.style.cssText = `display: flex; gap: 10px; align-items: center;`;
+      const createMicroCard = (id, labelText, borderCol) => {
+        const div = document.createElement("div");
+        div.style.cssText = `background: #f9f9f9; border-left: 4px solid ${borderCol}; padding: 4px 12px; border-radius: 4px; box-shadow: inset 0 0 4px rgba(0,0,0,0.05); min-width: 140px;`;
+        div.innerHTML = `
+          <div style="font-size: 10px; text-transform: uppercase; color: #666; font-weight: bold; margin-bottom: 2px;">${labelText}</div>
+          <div id="${id}" style="font-size: 15px; font-weight: bold; color: #333;">---</div>
+        `;
+        return div;
+      };
+      const cardTimeBank = createMicroCard("micro-card-banco", "Banco de Horas Atual", "#00c07f");
+      cardsGroup.append(cardTimeBank);
+      selectorSection.append(leftGroup, cardsGroup);
       const contentWrapper = document.createElement("div");
       contentWrapper.id = "personal-graphic-content";
       contentWrapper.style.cssText = `display: none; grid-template-columns: auto 1fr; gap: 20px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);`;
       mainWrapper.append(selectorSection, contentWrapper);
       cardBody.appendChild(mainWrapper);
       loadEmployeesForGraphic();
-      select.addEventListener("change", () => {
-        const yearSel = document.getElementById("year-personal-graphic");
-        if (select.value && yearSel.value) {
-          loadPersonalGraphicData(select.value, parseInt(yearSel.value));
-        }
-      });
-      yearSelect.addEventListener("change", () => {
-        if (select.value && yearSelect.value) {
-          loadPersonalGraphicData(select.value, parseInt(yearSelect.value));
-        }
-      });
+      const triggerUpdate = () => {
+    if (select.value && yearSelect.value) {
+      loadPersonalGraphicData(select.value, parseInt(yearSelect.value));
     }
+  };
+
+  select.addEventListener("change", triggerUpdate);
+  yearSelect.addEventListener("change", triggerUpdate);
+}
     async function loadEmployeesForGraphic() {
       try {
         const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
@@ -2639,13 +2653,29 @@
                            accumulatedHours: 0, holidays: shiftMonth.FE, training: shiftMonth.FOR, sick: shiftMonth.BX,
                            justifiedAbsences: shiftMonth.FJ, unjustifiedAbsences: shiftMonth.FI});
         }
-        // Acumulado reinicia no 2º semestre (Julho)
         let runningTotal = 0;
         monthsData.forEach(d => {
           if (d.month === 7) runningTotal = 0;
           runningTotal += d.monthlyHours + d.extraHours;
           d.accumulatedHours = runningTotal;
         });
+        const currentMonth = new Date().getMonth() + 1;
+        const currentMonthRecord = accumulatedData.find(d => d.month === currentMonth);
+        const microCardBanco = document.getElementById("micro-card-banco");
+        if (microCardBanco && currentMonthRecord) {
+          const currentAccumulated = currentMonthRecord.total_accumulated || 0;
+          microCardBanco.textContent = formatHoursIndividual(currentAccumulated) + "h";
+          if (currentAccumulated > 0) {
+            microCardBanco.style.color = "#00c853";
+          } else if (currentAccumulated < 0) {
+            microCardBanco.style.color = "#f44336";
+          } else {
+            microCardBanco.style.color = "#333";
+          }
+        } else if (microCardBanco) {
+          microCardBanco.textContent = "0.00h";
+          microCardBanco.style.color = "#333";
+        }        
         contentWrapper.dataset.loaded = "true";
         let tableContainer = contentWrapper.querySelector("#personal-table-container");
         let chartContainer = contentWrapper.querySelector("#personal-chart-container");
@@ -2731,7 +2761,7 @@
       headers.forEach(h => {
         const th = document.createElement("th");
         th.innerHTML = h.label;
-        th.style.cssText = `background:${h.bg}; color:${h.color}; padding:10px 8px; text-align:center; font-weight:700; font-size:12px; letter-spacing:0.3px; border-bottom: 2px solid rgba(0,0,0,0.1);`;
+        th.style.cssText = `background: ${h.bg}; color:${h.color}; padding: 3px 8px; text-align:center; font-weight: 700; font-size: 12px; letter-spacing: 0.3px; border-bottom: 2px solid rgba(0,0,0,0.1);`;
       headerRow.appendChild(th);
       });
       thead.appendChild(headerRow);
@@ -2747,12 +2777,16 @@
         values.forEach((val, i) => {
           const td = document.createElement("td");
           td.textContent = val;
-          td.style.cssText = `border-bottom: 1px solid #eee; padding: 8px; text-align:center; color:#333;`;
+          td.style.cssText = `border-bottom: 1px solid #eee; padding: 5px; text-align:center; color:#333;`;
           if (i === 0) {
             td.style.textAlign = "left";
             td.style.fontWeight = "600";
             td.style.color = "#444";
             td.style.paddingLeft = "12px";
+          }
+          if (i >= 4 && parseInt(val) > 0) {
+            td.style.fontWeight = "700";
+            td.style.color = "#383352";
           }
           row.appendChild(td);
         });
@@ -2779,7 +2813,7 @@
           td.textContent = val;
           const cellBg = i === 0 ? bgColor : "#f0f0f0";
           const cellColor = i === 0 ? (textColor || "#222") : "#222";
-          td.style.cssText = `padding:9px 8px; text-align:center; font-weight:700; font-size:13px; background:${cellBg}; color:${cellColor} !important; border-top: 2px solid rgba(0,0,0,0.1);`;
+          td.style.cssText = `padding: 6px 8px; text-align: center; font-weight: 700; font-size: 13px; background: ${cellBg}; color:${cellColor} !important; border-top: 2px solid rgba(0,0,0,0.1);`;
           if (i === 0) { td.style.textAlign = "left"; td.style.paddingLeft = "12px"; }
           row.appendChild(td);
         });
@@ -2787,7 +2821,7 @@
       }
       tbody.appendChild(createSummaryRow("1º Semestre", totalsData.semester1, "#c8e6ff", "#1a5276"));
       tbody.appendChild(createSummaryRow("2º Semestre", totalsData.semester2, "#c8e6ff", "#1a5276"));
-      tbody.appendChild(createSummaryRow("Final Ano",   totalsData.year,       "#1a5276", "#ffffff"));
+      tbody.appendChild(createSummaryRow("Total Anual",   totalsData.year,       "#1a5276", "#ffffff"));
       table.appendChild(tbody);
       container.appendChild(table);
     }
@@ -2799,7 +2833,7 @@
       title.textContent = "Gráfico Pessoal";
       title.style.cssText = `color: white; font-size: 18px; font-weight: bold; text-align: center; margin-bottom: 10px;`;
       const canvasWrapper = document.createElement("div");
-      canvasWrapper.style.cssText = `position: relative; height: 450px; width: 100%;`;
+      canvasWrapper.style.cssText = `position: relative; height: 449px; width: 100%;`;
       const canvas = document.createElement("canvas");
       canvas.id = "personal-chart-canvas";
       canvasWrapper.appendChild(canvas);
@@ -2857,6 +2891,1094 @@
         const access = btn.dataset.access;
         if (access === "Registos Individuais") {
           createEmployeePersonalGraphic();
+        }
+      });
+    });
+    /* ============================================
+    FASE 04 - EMPLOYEE HOLIDAY MANAGEMENT
+    ============================================ */
+    /* === CREATE EMPLOYEE VACATIONS MANAGER === */
+    function getEasterDateForHolidays(year) {
+      const a = year % 19;
+      const b = Math.floor(year / 100);
+      const c = year % 100;
+      const d = Math.floor(b / 4);
+      const e = b % 4;
+      const f = Math.floor((b + 8) / 25);
+      const g = Math.floor((b - f + 1) / 3);
+      const h = (19 * a + b - d - g + 15) % 30;
+      const i = Math.floor(c / 4);
+      const k = c % 4;
+      const l = (32 + 2 * e + 2 * i - h - k) % 7;
+      const m = Math.floor((a + 11 * h + 22 * l) / 451);
+      const month = Math.floor((h + l - 7 * m + 114) / 31);
+      const day = ((h + l - 7 * m + 114) % 31) + 1;
+      return new Date(year, month - 1, day);
+    }    
+    function getPortugalHolidaysForVacations(year) {
+      const holidays = [];
+      const fixedHolidays = [{month: 1, day: 1, name: "Ano Novo"}, {month: 4, day: 25, name: "Dia da Liberdade"}, {month: 5, day: 1, name: "Dia do Trabalhador"},
+                             {month: 6, day: 10, name: "Dia de Portugal"}, {month: 8, day: 15, name: "Assunção de Nossa Senhora"}, {month: 9, day: 7, name: "Dia do Município (Faro)"}, 
+                             {month: 10, day: 5, name: "Implantação da República"}, {month: 11, day: 1, name: "Dia de Todos os Santos"}, {month: 12, day: 1, name: "Restauração da Independência"}, 
+                             {month: 12, day: 8, name: "Imaculada Conceição"}, {month: 12, day: 25, name: "Natal"}];      
+      fixedHolidays.forEach(h => {
+        holidays.push({ month: h.month, day: h.day, name: h.name, optional: false });
+      });
+      const easter = getEasterDateForHolidays(year);
+      const goodFriday = new Date(easter);
+      goodFriday.setDate(easter.getDate() - 2);
+      holidays.push({month: goodFriday.getMonth() + 1, day: goodFriday.getDate(), name: "Sexta-feira Santa", optional: false});
+      const corpusChristi = new Date(easter);
+      corpusChristi.setDate(easter.getDate() + 60);
+      holidays.push({month: corpusChristi.getMonth() + 1, day: corpusChristi.getDate(), name: "Corpo de Deus", optional: false});      
+      return holidays;
+    }
+    function createHolidayManagement() {
+      const cardBody = document.querySelector("#vacation-scheduling .card-body");
+      if (!cardBody) return;      
+      cardBody.innerHTML = "";      
+      const mainWrapper = document.createElement("div");
+      mainWrapper.style.cssText = `display: flex; flex-direction: column; margin-top: -20px; gap: 5px; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;`;
+      const selectorSection = document.createElement("div");
+      selectorSection.style.cssText = `display: flex; align-items: center; gap: 15px; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);`;      
+      const label = document.createElement("label");
+      label.textContent = "Selecionar Funcionário:";
+      label.style.cssText = "font-weight: bold; font-size: 14px;";      
+      const select = document.createElement("select");
+      select.id = "holiday-employee-select";
+      select.style.cssText = `padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; min-width: 250px; cursor: pointer;`;      
+      const yearLabel = document.createElement("label");
+      yearLabel.textContent = "Ano:";
+      yearLabel.style.cssText = "font-weight: bold; font-size: 14px; margin-left: 20px;";      
+      const yearSelect = document.createElement("select");
+      yearSelect.id = "holiday-year-select";
+      yearSelect.style.cssText = `padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; cursor: pointer;`;      
+      const currentYear = new Date().getFullYear();
+      for (let y = 2026; y <= 2035; y++) {
+        const opt = document.createElement("option");
+        opt.value = y;
+        opt.textContent = y;
+        if (y === currentYear) opt.selected = true;
+        yearSelect.appendChild(opt);
+      }      
+      selectorSection.append(label, select, yearLabel, yearSelect);
+      const infoSection = document.createElement("div");
+      infoSection.id = "holiday-info-section";
+      infoSection.style.cssText = `display: none; grid-template-columns: repeat(3, 1fr); gap: 15px; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);`;      
+      const createInfoCard = (id, label, icon, color) => {
+        const card = document.createElement("div");
+        card.style.cssText = `background: linear-gradient(135deg, ${color}22 0%, ${color}11 100%); border: 2px solid ${color}; border-radius: 8px; padding: 15px; text-align: center;`;        
+        card.innerHTML = `
+          <div style="color: ${color}; font-size: 12px; font-weight: 600; margin-bottom: 8px;">
+            ${icon} ${label}
+          </div>
+          <div id="${id}" style="color: #333; font-size: 24px; font-weight: bold;">
+            ---
+          </div>
+        `;        
+        return card;
+      };      
+      infoSection.appendChild(createInfoCard("holiday-total-days", "Total de Férias", "📅", "#2196f3"));
+      infoSection.appendChild(createInfoCard("holiday-used-days", "Dias Usados", "✅", "#ff9800"));
+      infoSection.appendChild(createInfoCard("holiday-available-days", "Dias Disponíveis", "🎯", "#00c853"));
+      const periodsSection = document.createElement("div");
+      periodsSection.id = "holiday-periods-section";
+      periodsSection.style.cssText = `display: none; flex-direction: column; gap: 5px; margin-top: 10px;`;
+      const periodsTitle = document.createElement("h3");
+      periodsTitle.textContent = "Marcar Períodos de Férias";
+      periodsTitle.style.cssText = `margin: 0; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); font-size: 18px; color: #333;`;
+      const cardsWrapper = document.createElement("div");
+      cardsWrapper.style.cssText = `display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px;`;
+      periodsSection.appendChild(periodsTitle);
+      periodsSection.appendChild(cardsWrapper);
+      for (let i = 1; i <= 3; i++) {
+        const periodCard = createPeriodCard(i);
+        cardsWrapper.appendChild(periodCard);
+      }
+      const actionsDiv = document.createElement("div");
+      actionsDiv.style.cssText = `display: flex; gap: 10px; margin-top: 10px; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);`;      
+      const previewBtn = document.createElement("button");
+      previewBtn.id = "holiday-preview-btn";
+      previewBtn.textContent = "👁️ Pré-visualizar";
+      previewBtn.className = "btn btn-secondary";
+      previewBtn.style.cssText = `flex: 1; padding: 12px; font-size: 14px; font-weight: bold; cursor: pointer;`;      
+      const saveBtn = document.createElement("button");
+      saveBtn.id = "holiday-save-btn";
+      saveBtn.textContent = "💾 Gravar Férias";
+      saveBtn.className = "btn btn-add";
+      saveBtn.style.cssText = `flex: 1; padding: 12px; font-size: 14px; font-weight: bold; cursor: pointer;`;
+      const pdfBtn = document.createElement("button");
+      pdfBtn.id = "holiday-pdf-btn";
+      pdfBtn.textContent = "📄 Gerar Formulário (PDF)";
+      pdfBtn.className = "btn btn-info"; // Ou uma classe de cor azul/cinza que tenhas
+      pdfBtn.style.cssText = `flex: 1; padding: 12px; font-size: 14px; font-weight: bold; cursor: pointer; background-color: #455a64; color: white; border: none; border-radius: 4px;`;
+      actionsDiv.append(previewBtn, saveBtn, pdfBtn);
+      periodsSection.appendChild(actionsDiv);
+      const previewSection = document.createElement("div");
+      previewSection.id = "holiday-preview-section";
+      previewSection.style.cssText = `display: none; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);`;      
+      periodsSection.appendChild(previewSection);
+      mainWrapper.append(selectorSection, infoSection, periodsSection);
+      cardBody.appendChild(mainWrapper);
+      setTimeout(() => {
+        for (let i = 1; i <= 3; i++) {
+          const start = document.getElementById(`holiday-start-${i}`);
+          const end = document.getElementById(`holiday-end-${i}`);
+          if (start) start.value = "";
+          if (end) end.value = "";
+        }
+      }, 0);
+      loadEmployeesForHolidays();
+      select.addEventListener("change", () => {
+        if (select.value && yearSelect.value) {
+          loadHolidayData(select.value, parseInt(yearSelect.value));
+        }
+      });      
+      yearSelect.addEventListener("change", () => {
+        if (select.value && yearSelect.value) {
+          loadHolidayData(select.value, parseInt(yearSelect.value));
+        }
+      });      
+      previewBtn.addEventListener("click", previewHolidays);
+      saveBtn.addEventListener("click", saveHolidays);
+      pdfBtn.addEventListener("click", prepareVacationForm);
+    }    
+    function createPeriodCard(periodNumber) {
+      const card = document.createElement("div");
+      card.className = "holiday-period-card";
+      card.style.cssText = `padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid #2196f3;`;      
+      const title = document.createElement("div");
+      title.textContent = `Período ${periodNumber}`;
+      title.style.cssText = `font-size: 16px; font-weight: bold; color: #2196f3; margin-bottom: 15px;`;      
+      const fieldsContainer = document.createElement("div");
+      fieldsContainer.style.cssText = `display: grid; grid-template-columns: 1fr 1fr auto; gap: 15px; align-items: end;`;
+      const startGroup = document.createElement("div");
+      startGroup.innerHTML = `
+        <label style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 13px;">
+          Data Início
+        </label>
+        <input 
+          type="date" 
+          id="holiday-start-${periodNumber}"
+          style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;"
+        />
+      `;
+      const endGroup = document.createElement("div");
+      endGroup.innerHTML = `
+        <label style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 13px;">
+          Data Fim
+        </label>
+        <input 
+          type="date" 
+          id="holiday-end-${periodNumber}"
+          style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;"
+        />
+      `;
+      const daysInfo = document.createElement("div");
+      daysInfo.innerHTML = `
+        <label style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 13px;">
+          Dias Úteis
+        </label>
+        <div 
+          id="holiday-days-${periodNumber}"
+          style="padding: 8px 12px; background: #f0f0f0; border-radius: 4px; font-weight: bold; text-align: center; min-width: 80px;"
+        >
+          ---
+        </div>
+      `;      
+      fieldsContainer.append(startGroup, endGroup, daysInfo);      
+      card.append(title, fieldsContainer);
+      const startInput = card.querySelector(`#holiday-start-${periodNumber}`);
+      const endInput = card.querySelector(`#holiday-end-${periodNumber}`);
+      const daysDisplay = card.querySelector(`#holiday-days-${periodNumber}`);
+      const updateDays = () => {
+        if (startInput.value && endInput.value) {
+          const start = new Date(startInput.value.replace(/-/g, '\/'));
+          const end = new Date(endInput.value.replace(/-/g, '\/'));      
+          if (start <= end) {
+            const yearSelect = document.getElementById("holiday-year-select");
+            const year = parseInt(yearSelect.value);
+            const workingDays = calculateWorkingDaysInPeriod(start, end, year);
+            daysDisplay.textContent = `${workingDays} dias`;
+            daysDisplay.style.color = workingDays > 0 ? "#00c853" : "#333";
+          } else {
+            daysDisplay.textContent = "Inválido";
+            daysDisplay.style.color = "#f44336";
+          }
+        } else {
+          daysDisplay.textContent = "---";
+          daysDisplay.style.color = "#333";
+        }
+      };      
+      startInput.addEventListener("change", updateDays);
+      endInput.addEventListener("change", updateDays);      
+      return card;
+    }    
+    let employeesForHolidays = [];
+    async function loadEmployeesForHolidays() {
+      try {
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/reg_employees?select=n_int,abv_name,team,function&corp_oper_nr=eq.${corpOperNr}&order=n_int`, {
+            headers: getSupabaseHeaders()
+          }
+        );
+        if (!response.ok) throw new Error("Erro ao carregar funcionários");
+        const employees = await response.json();
+        employeesForHolidays = employees;
+        const select = document.getElementById("holiday-employee-select");
+        if (!select) return;
+        select.innerHTML = '<option value="">-- Selecionar --</option>';
+        employees.forEach(emp => {
+          const option = document.createElement("option");
+          option.value = emp.n_int;
+          option.textContent = emp.abv_name;
+          select.appendChild(option);
+        });
+      } catch (error) {
+        console.error("Error loading employees:", error);
+        showPopupWarning && showPopupWarning("Erro ao carregar funcionários");
+      }
+    }
+    async function loadHolidayData(nInt, year) {
+      try {
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const shiftsResponse = await fetch(
+          `${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&n_int=eq.${nInt}&shift=eq.FE&order=month.asc,day.asc`, {
+            headers: getSupabaseHeaders()
+          }
+        );
+        if (!shiftsResponse.ok) throw new Error("Erro ao carregar dados do servidor");
+        const shifts = await shiftsResponse.json();
+        const usedDays = shifts.length;
+        const totalDays = 22;
+        const availableDays = totalDays - usedDays;
+        document.getElementById("holiday-total-days").textContent = totalDays;
+        document.getElementById("holiday-used-days").textContent = usedDays;
+        const availEl = document.getElementById("holiday-available-days");
+        if (availEl) {
+          availEl.textContent = availableDays;
+          availEl.style.color = availableDays > 0 ? "#00c853" : "#f44336";
+        }
+        const periods = [];
+        if (shifts.length > 0) {
+          const dates = shifts.map(s => new Date(year, s.month - 1, s.day, 12, 0, 0));
+          let start = dates[0];
+          let end = dates[0];
+          for (let i = 1; i < dates.length; i++) {
+            const currentDate = dates[i];
+            if (isNextWorkingDay(end, currentDate, year)) {
+              end = currentDate;
+            } else {
+              periods.push({start, end});
+              start = currentDate;
+              end = currentDate;
+            }
+          }
+          periods.push({start, end});
+        }
+        document.getElementById("holiday-info-section").style.display = "grid";
+        document.getElementById("holiday-periods-section").style.display = "flex";
+        for (let i = 1; i <= 3; i++) {
+          const startInput = document.getElementById(`holiday-start-${i}`);
+          const endInput = document.getElementById(`holiday-end-${i}`);
+          const daysDisplay = document.getElementById(`holiday-days-${i}`);
+          const p = periods[i - 1];
+          if (p) {
+            startInput.value = p.start.toLocaleDateString('sv-SE');
+            endInput.value = p.end.toLocaleDateString('sv-SE');
+            const workingDays = calculateWorkingDaysInPeriod(p.start, p.end, year);
+            daysDisplay.textContent = `${workingDays} dias`;
+            daysDisplay.style.color = "#2196f3";
+          } else {
+            startInput.value = "";
+            endInput.value = "";
+            daysDisplay.textContent = "---";
+            daysDisplay.style.color = "#333";
+          }
+        }
+        const previewSection = document.getElementById("holiday-preview-section");
+        if (previewSection) {
+          previewSection.innerHTML = "";
+          previewSection.style.display = "none";
+        }
+      } catch (error) {
+        console.error("Error loading holiday data:", error);
+        if (typeof showPopupWarning === "function") showPopupWarning("Erro ao carregar dados de férias");
+      }
+    }
+    function isNextWorkingDay(lastDate, nextDate, year) {
+      let checkDate = new Date(lastDate);
+      const holidays = getPortugalHolidaysForVacations(year);
+      do {
+        checkDate.setDate(checkDate.getDate() + 1);
+      } while (
+        checkDate.getDay() === 0 ||
+        checkDate.getDay() === 6 ||
+        holidays.some(h => h.month === (checkDate.getMonth() + 1) && h.day === checkDate.getDate())
+      );
+      return checkDate.getFullYear() === nextDate.getFullYear() && checkDate.getMonth() === nextDate.getMonth() && checkDate.getDate() === nextDate.getDate();
+    }
+    function calculateWorkingDaysInPeriod(startDate, endDate, year) {
+      const holidays = getPortugalHolidaysForVacations(year);
+      const holidaysMap = new Map();      
+      holidays.forEach(h => {
+        const key = `${h.month}-${h.day}`;
+        holidaysMap.set(key, true);
+      });      
+      let workingDays = 0;
+      let current = new Date(startDate);      
+      while (current <= endDate) {
+        const dayOfWeek = current.getDay();
+        const month = current.getMonth() + 1;
+        const day = current.getDate();
+        const key = `${month}-${day}`;        
+        const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+        const isHoliday = holidaysMap.has(key);        
+        if (!isWeekend && !isHoliday) {
+          workingDays++;
+        }        
+        current.setDate(current.getDate() + 1);
+      }      
+      return workingDays;
+    }    
+    function previewHolidays() {
+      const select = document.getElementById("holiday-employee-select");
+      const yearSelect = document.getElementById("holiday-year-select");
+      const availableDaysEl = document.getElementById("holiday-available-days");      
+      if (!select.value) {
+        showPopupWarning && showPopupWarning("Selecione um funcionário");
+        return;
+      }      
+      const year = parseInt(yearSelect.value);
+      const availableDays = parseInt(availableDaysEl.textContent);
+      const periods = [];
+      let totalDaysRequested = 0;      
+      for (let i = 1; i <= 3; i++) {
+        const startInput = document.getElementById(`holiday-start-${i}`);
+        const endInput = document.getElementById(`holiday-end-${i}`);        
+        if (startInput.value && endInput.value) {
+          const start = new Date(startInput.value.replace(/-/g, '\/'));
+          const end = new Date(endInput.value.replace(/-/g, '\/'));
+          const days = calculateWorkingDaysInPeriod(start, end, year);          
+          periods.push({ period: i, start, end, days });
+          totalDaysRequested += days;
+        }
+      }      
+      if (periods.length === 0) {
+        showPopupWarning && showPopupWarning("Adicione pelo menos um período");
+        return;
+      }
+      if (totalDaysRequested > availableDays) {
+        showPopupWarning && showPopupWarning(
+          `Dias solicitados (${totalDaysRequested}) excedem dias disponíveis (${availableDays})`
+        );
+        return;
+      }
+      const previewSection = document.getElementById("holiday-preview-section");
+      previewSection.style.display = "block";      
+      let html = '<h4 style="margin: 0 0 15px 0;">Pré-visualização:</h4>';
+      html += '<div style="display: flex; flex-direction: column; gap: 10px;">';      
+      periods.forEach(p => {
+        const startStr = p.start.toLocaleDateString('pt-PT');
+        const endStr = p.end.toLocaleDateString('pt-PT');        
+        html += `
+          <div style="padding: 10px; background: #f0f0f0; border-radius: 4px; border-left: 3px solid #2196f3;">
+            <strong>Período ${p.period}:</strong> ${startStr} a ${endStr} 
+            <span style="color: #00c853; font-weight: bold;">(${p.days} dias úteis)</span>
+          </div>
+        `;
+      });      
+      html += '</div>';
+      html += `<div style="margin-top: 15px; padding: 10px; background: #e3f2fd; border-radius: 4px; text-align: center;">
+        <strong>Total de dias a marcar:</strong> <span style="color: #2196f3; font-size: 18px;">${totalDaysRequested}</span>
+      </div>`;      
+      previewSection.innerHTML = html;
+    }
+    async function saveHolidays() {
+      const select = document.getElementById("holiday-employee-select");
+      const yearSelect = document.getElementById("holiday-year-select");
+      if (!select.value) {
+        if (typeof showPopupWarning === "function") showPopupWarning("Selecione um funcionário");
+        return;
+      }
+      const nInt = parseInt(select.value);
+      const year = parseInt(yearSelect.value);
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const allFERecords = [];
+      for (let i = 1; i <= 3; i++) {
+        const startInput = document.getElementById(`holiday-start-${i}`);
+        const endInput = document.getElementById(`holiday-end-${i}`);
+        if (startInput.value && endInput.value) {
+          const start = new Date(startInput.value.replace(/-/g, '\/'));
+          const end = new Date(endInput.value.replace(/-/g, '\/'));
+          if (start.getFullYear() !== year || end.getFullYear() !== year) {
+            if (typeof showPopupWarning === "function") 
+              showPopupWarning(`Erro no Período ${i}: As datas devem pertencer ao ano ${year}`);
+            return;
+          }
+          const feRecords = generateFERecords(start, end, nInt, year, corpOperNr);
+          allFERecords.push(...feRecords);
+        }
+      }
+      if (allFERecords.length > 22) {
+        const excesso = allFERecords.length;
+        const confirmExcesso = confirm(
+          `⚠️ ATENÇÃO: O plano selecionado tem ${excesso} dias úteis.\n\n` +
+          `O limite padrão anual é de 22 dias. Isto inclui dias transferidos do ano anterior?\n\n` +
+          `Clique em 'OK' para gravar ${excesso} dias ou 'Cancelar' para rever.`
+        );
+        if (!confirmExcesso) return;
+      }
+      try {
+        const monthsInvolved = [...new Set(allFERecords.map(r => r.month))].join(',');
+        const conflictsResponse = await fetch(
+          `${SUPABASE_URL}/rest/v1/reg_employee_shifts?n_int=eq.${nInt}&year=eq.${year}&month=in.(${monthsInvolved})&shift=neq.FE&corp_oper_nr=eq.${corpOperNr}`, {
+            headers: getSupabaseHeaders()
+          }
+        );
+        if (conflictsResponse.ok) {
+          const allOtherShifts = await conflictsResponse.json();
+          const conflicts = allOtherShifts.filter(shift => allFERecords.some(fe => fe.month === shift.month && fe.day === shift.day));
+          if (conflicts.length > 0) {
+            const conflictDaysText = conflicts
+            .sort((a, b) => a.month - b.month || a.day - b.day)
+            .map(c => `${c.day}/${c.month} (${c.shift})`)
+            .join(', ');
+            const message = `⚠️ ATENÇÃO: Existem turnos marcados nos seguintes dias:\n\n${conflictDaysText}\n\nAs férias irão SUBSTITUIR estes turnos.\n\nDeseja continuar?`;
+            if (!confirm(message)) return;
+            const orConditions = conflicts
+            .map(c => `(month.eq.${c.month},day.eq.${c.day})`)
+            .join(',');
+            await fetch(
+              `${SUPABASE_URL}/rest/v1/reg_employee_shifts?n_int=eq.${nInt}&year=eq.${year}&or=${orConditions}&corp_oper_nr=eq.${corpOperNr}`, {
+                method: "DELETE", headers: getSupabaseHeaders()
+              }
+            );
+          }
+        }
+        const deleteOldFEResponse = await fetch(
+          `${SUPABASE_URL}/rest/v1/reg_employee_shifts?n_int=eq.${nInt}&year=eq.${year}&shift=eq.FE&corp_oper_nr=eq.${corpOperNr}`, {
+            method: "DELETE", headers: getSupabaseHeaders()
+          }
+        );
+        if (!deleteOldFEResponse.ok) throw new Error("Erro ao limpar registos de férias antigos");
+        if (allFERecords.length > 0) {
+          const saveResponse = await fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts`, {
+            method: "POST",
+            headers: {
+          ...getSupabaseHeaders(),
+              "Content-Type": "application/json",
+              "Prefer": "return=minimal"
+            },
+            body: JSON.stringify(allFERecords)
+          });
+          if (!saveResponse.ok) throw new Error("Erro ao gravar novas férias");
+        }
+        if (typeof showPopupSuccess === "function")
+          showPopupSuccess(`✅ Férias atualizadas com sucesso: ${allFERecords.length} dias.`);
+        loadHolidayData(nInt, year);
+      } catch (error) {
+        console.error("Save error:", error);
+        if (typeof showPopupWarning === "function") showPopupWarning("Erro ao processar a atualização das férias");
+      }
+    }
+    function generateFERecords(startDate, endDate, nInt, year, corpOperNr) {
+      const holidays = getPortugalHolidaysForVacations(year);
+      const holidaysMap = new Map();
+      holidays.forEach(h => holidaysMap.set(`${h.month}-${h.day}`, true));
+      const selectedEmployee = employeesForHolidays.find(emp => emp.n_int === nInt);
+      if (!selectedEmployee) throw new Error("Funcionário não encontrado");
+      const records = [];
+      let current = new Date(startDate);
+      while (current <= endDate) {
+        const dayOfWeek = current.getDay();
+        const month = current.getMonth() + 1;
+        const day = current.getDate();
+        const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+        const isHoliday = holidaysMap.has(`${month}-${day}`);
+        if (!isWeekend && !isHoliday) {
+          records.push({n_int: nInt, abv_name: selectedEmployee.abv_name, team: selectedEmployee.team, function: selectedEmployee.function, year: year,
+                        month: month, day: day, shift: "FE", corp_oper_nr: corpOperNr});}
+        current.setDate(current.getDate() + 1);
+      }
+      return records;
+    }
+    async function prepareVacationForm() {
+      const select = document.getElementById("holiday-employee-select");
+      const yearSelect = document.getElementById("holiday-year-select");
+      if (!select.value) {
+        return showPopupWarning("Selecione um funcionário primeiro.");
+      }
+      const nInt = select.value;
+      const employeeName = select.options[select.selectedIndex].text;
+      const year = parseInt(yearSelect.value);
+      const periods = [];
+      for (let i = 1; i <= 3; i++) {
+        const startVal = document.getElementById(`holiday-start-${i}`).value;
+        const endVal = document.getElementById(`holiday-end-${i}`).value;
+        if (startVal && endVal) {
+          const startDate = new Date(startVal.replace(/-/g, '/'));
+          const endDate = new Date(endVal.replace(/-/g, '/'));
+          const days = calculateWorkingDaysInPeriod(startDate, endDate, year);
+          periods.push({
+            start: {day: startDate.getDate(), month: startDate.getMonth() + 1, year: startDate.getFullYear()},
+            end: {day: endDate.getDate(), month: endDate.getMonth() + 1, year: endDate.getFullYear()},
+            days
+          });
+        }
+      }
+      if (periods.length === 0) {
+        return showPopupWarning("Preencha pelo menos um período de férias.");
+      }
+      try {
+        if (typeof showPopupSuccess === "function")
+          showPopupSuccess("A gerar PDF... Por favor aguarde.");
+        const response = await fetch("https://cb360-online.vercel.app/api/employees_convert_and_send", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({mode: "formulário_férias", employeeName, nInt, periods})});
+        if (!response.ok) throw new Error("Erro ao gerar PDF");
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `Formulario_Ferias_${employeeName.replace(/\s+/g, '_')}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error(error);
+        showPopupWarning("Falha ao gerar o formulário em PDF.");
+      }
+    }
+    function getIntervalInMonth(startDate, endDate, month, year) {
+      const firstDayOfMonth = new Date(year, month - 1, 1);
+      const lastDayOfMonth = new Date(year, month, 0);
+      if (endDate < firstDayOfMonth || startDate > lastDayOfMonth) return null;
+      const start = new Date(Math.max(startDate, firstDayOfMonth));
+      const end = new Date(Math.min(endDate, lastDayOfMonth));
+      const pad = (n) => n.toString().padStart(2, '0');
+      return `${pad(start.getDate())} a ${pad(end.getDate())}`;
+    }
+    async function createGlobalHolidayMap() {
+      const cardBody = document.querySelector("#vacation-scheduling-map .card-body");
+      if (!cardBody) return;
+      const year = parseInt(document.getElementById("holiday-year-select")?.value || new Date().getFullYear());
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      cardBody.innerHTML = "⌛ A carregar mapa global...";
+      try {
+        const [empRes, shiftRes] = await Promise.all([
+          fetch(`${SUPABASE_URL}/rest/v1/reg_employees?corp_oper_nr=eq.${corpOperNr}&order=abv_name.asc`, {
+            headers: getSupabaseHeaders()
+          }),
+          fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&shift=eq.FE&order=n_int,month,day`, {
+            headers: getSupabaseHeaders()
+          })
+        ]);
+        const allEmployees = await empRes.json();
+        const allShifts = await shiftRes.json();
+        const employees = allEmployees.filter(emp => allShifts.some(s => s.n_int === emp.n_int));
+        if (employees.length === 0) {
+          cardBody.innerHTML = `<div class="alert alert-info">Não existem férias marcadas para o ano ${year}.</div>`;
+          return;
+        }
+        if (!document.getElementById("map-core-css")) {
+          const s = document.createElement("style");
+          s.id = "map-core-css";
+          s.innerHTML = `
+            .m-wrapper {font-family: 'Inter', sans-serif; color: #1e293b;}
+            .m-title {font-size: 16px; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;}
+            .m-badge-rh {background: #1e293b; color: #fff; padding: 2px 7px; border-radius: 4px; font-size: 10px;}
+            .m-container {max-height: 500px; overflow: auto; border: 1px solid #cbd5e1; border-radius: 6px; position: relative; scrollbar-width: none; -ms-overflow-style: none;}
+            .m-container::-webkit-scrollbar { display: none; }
+            .m-table {width: 100%; border-collapse: separate; border-spacing: 0; font-size: 10.5px; table-layout: fixed;}
+            .m-table th {position: sticky; top: 0; z-index: 10; background: #f8fafc; border-bottom: 2px solid #94a3b8; border-right: 1px solid #cbd5e1; padding: 8px 2px; text-align: center;}
+            .m-table th:first-child, .m-table td:first-child {position: sticky; left: 0; width: 150px; z-index: 11; background: #f1f5f9; border-right: 2px solid #cbd5e1; text-align: left; padding-left: 10px;}
+            .m-table th:first-child {z-index: 12;}
+            .m-table td {border-bottom: 1px solid #cbd5e1; border-right: 1px solid #cbd5e1; padding: 4px; text-align: center; vertical-align: middle; height: 30px;}
+            .m-no-holiday {color: #cbd5e1; transition: color 0.2s;}
+            .m-holiday {background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; border-radius: 4px; font-weight: 700; font-size: 9px; padding: 3px; line-height: 1.2;}
+            .m-total {font-weight: 800; background: #475569 !important; color: #fff !important; width: 50px; transition: all 0.2s;}
+            .m-footer {display: flex; justify-content: flex-end; margin-top: 10px; gap: 8px;}
+            .m-btn {background: #1e293b; color: #fff; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px;}
+            .m-btn:hover {background: #334155;}
+            .m-btn-secondary {background: #64748b; color: #fff; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px;}
+            .m-btn-secondary:hover {background: #475569;}
+            .holiday-row:hover td {background-color: #f1f5f9 !important;}
+            .holiday-row:hover .m-no-holiday {color: #64748b !important;}
+            .holiday-row:hover td strong {color: #000;}
+            .holiday-row:hover .m-total {background: #334155 !important; color: #fbbf24 !important;}
+           `;
+          document.head.appendChild(s);
+        }
+        let html = `
+          <div class="m-wrapper">
+            <div class="m-title"><span class="m-badge-rh">RH</span> MAPA GLOBAL DE FÉRIAS ${year}</div>
+            <div class="m-container">
+              <table class="m-table">
+                <thead>
+                  <tr>
+                    <th>FUNCIONÁRIO</th>
+                    ${["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"].map(m => `<th style="width:70px;">${m.toUpperCase()}</th>`).join('')}
+                    <th class="m-total">DIAS</th>
+                  </tr>
+                </thead>
+                <tbody>
+              `;
+        employees.forEach(emp => {
+          const shifts = allShifts.filter(s => s.n_int === emp.n_int);
+          let p = [];
+          if (shifts.length > 0) {
+            shifts.sort((a, b) => (a.month * 100 + a.day) - (b.month * 100 + b.day));
+            let start = new Date(year, shifts[0].month - 1, shifts[0].day);
+            let end = new Date(year, shifts[0].month - 1, shifts[0].day);
+            for (let i = 1; i < shifts.length; i++) {
+              let current = new Date(year, shifts[i].month - 1, shifts[i].day);
+              if (isNextWorkingDay(end, current, year)) {
+                end = current;
+              } else {
+                p.push({s: new Date(start), e: new Date(end)});
+                start = current;
+                end = current;
+              }
+            }
+            p.push({s: new Date(start), e: new Date(end)});
+          }
+          html += `<tr class="holiday-row"><td><strong>${emp.abv_name}</strong></td>`;
+          for (let m = 1; m <= 12; m++) {
+            let periodsStartingHere = p.filter(x => (x.s.getMonth() + 1) === m);
+            if (periodsStartingHere.length > 0) {
+              let maxMonthReached = m;
+              periodsStartingHere.forEach(x => {
+                const endMonth = x.e.getMonth() + 1;
+                if (endMonth > maxMonthReached) maxMonthReached = endMonth;
+              });
+              const span = (maxMonthReached - m) + 1;
+              let allPeriodsInThisBlock = p.filter(x => {
+                const startMonth = x.s.getMonth() + 1;
+                return (startMonth >= m && startMonth <= maxMonthReached);
+              });
+              let txt = allPeriodsInThisBlock.map(x => {
+                const dS = x.s.getDate().toString().padStart(2, '0');
+                const dE = x.e.getDate().toString().padStart(2, '0');
+                return dS === dE ? dS : `${dS} a ${dE}`;
+              }).join(' e ');
+              html += `<td colspan="${span}"><div class="m-holiday">${txt}</div></td>`;
+              m += (span - 1);
+            } else {
+              html += `<td><span class="m-no-holiday">-</span></td>`;
+            }
+          }
+          html += `<td class="m-total" style="text-align:center">${shifts.length}</td></tr>`;
+        });
+        html += `</tbody></table></div>
+          <div class="m-footer">
+            <button class="m-btn-secondary" onclick="consultDiscrepancies()">🔍 Consultar Anómalias</button>
+            <button class="m-btn" onclick="exportarMapaGlobalPDF()">📥 Emitir Mapa</button>
+          </div>
+        </div>`;
+        cardBody.innerHTML = html;
+      } catch (err) {
+        console.error("Erro no Mapa:", err);
+        cardBody.innerHTML = "Erro ao carregar os dados do mapa.";
+      }
+    }
+    async function exportarMapaGlobalPDF() {
+      const year = parseInt(document.getElementById("holiday-year-select")?.value || new Date().getFullYear());
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const btn = document.querySelector(".m-btn");
+      const originalText = btn.innerHTML;
+      btn.innerHTML = "⌛ A Gerar Mapa...";
+      btn.disabled = true;
+      const formatDateSafe = (date) => {
+        const d = new Date(date);
+        return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
+      };
+      try {
+        const [empRes, shiftRes] = await Promise.all([
+          fetch(`${SUPABASE_URL}/rest/v1/reg_employees?corp_oper_nr=eq.${corpOperNr}&order=abv_name.asc`, {
+            headers: getSupabaseHeaders()
+          }),
+          fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&shift=eq.FE&order=n_int,month,day`, {
+            headers: getSupabaseHeaders()
+          })
+        ]);
+        const employees = await empRes.json();
+        const allShifts = await shiftRes.json();
+        const filteredEmployees = employees.filter(emp => allShifts.some(s => s.n_int === emp.n_int));
+        const employeesFormatted = filteredEmployees.map(emp => {
+          const shifts = allShifts.filter(s => s.n_int === emp.n_int);
+          let periods = [];
+          if (shifts.length > 0) {
+            shifts.sort((a, b) => (a.month * 100 + a.day) - (b.month * 100 + b.day));
+            let s = new Date(year, shifts[0].month - 1, shifts[0].day);
+            let e = new Date(year, shifts[0].month - 1, shifts[0].day);
+            for (let i = 1; i < shifts.length; i++) {
+              let c = new Date(year, shifts[i].month - 1, shifts[i].day);
+              if (isNextWorkingDay(e, c, year)) {
+                e = c;
+              } else {
+                periods.push({s: formatDateSafe(s), e: formatDateSafe(e)});
+                s = c; e = c;
+              }
+            }
+            periods.push({s: formatDateSafe(s), e: formatDateSafe(e)});
+          }
+          return { name: emp.abv_name, totalDays: shifts.length, periods: periods };
+        });
+        const response = await fetch("https://cb360-online.vercel.app/api/employees_convert_and_send", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            mode: "mapa_ferias",
+            year,
+            employees: employeesFormatted
+          })
+        });
+        if (!response.ok) throw new Error("Erro na resposta da API");
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `Mapa_Global_Ferias_${year}.pdf`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error("Erro:", error);
+        alert("Falha ao gerar o mapa global.");
+      } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    }
+    async function consultDiscrepancies() {
+      const year = parseInt(document.getElementById("holiday-year-select")?.value || new Date().getFullYear());
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const DAYS_RIGHT = 22;    
+      let modal = document.getElementById("discrepancy-modal");
+      if (!modal) {
+        modal = document.createElement("div");
+        modal.id = "discrepancy-modal";
+        modal.style = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;";
+        document.body.appendChild(modal);
+      }      
+      modal.style.display = "flex";
+      modal.innerHTML = `
+        <div style="background:#fff;padding:25px;border-radius:12px;width:90%;max-width:700px;box-shadow:0 20px 50px rgba(0,0,0,0.3);">
+          <h5 style="margin:0 0 20px 0;display:flex;justify-content:space-between;align-items:center;font-size:18px;">
+            <span>🔍 Análise de Férias - ${year}</span>
+            <button onclick="document.getElementById('discrepancy-modal').style.display='none'" style="border:none;background:none;cursor:pointer;font-size:24px;color:#64748b;">&times;</button>
+          </h5>
+          <div id="disc-content">⌛ A analisar dados...</div>
+          <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+            <button onclick="exportDiscrepanciesToExcel()" class="m-btn" style="background:#3b82f6;">
+              📊 Exportar
+            </button>
+            <button onclick="document.getElementById('discrepancy-modal').style.display='none'" class="m-btn" style="background:#64748b;">
+              Fechar
+            </button>
+          </div>
+        </div>`;    
+      try {
+        const [empRes, shiftRes] = await Promise.all([
+          fetch(`${SUPABASE_URL}/rest/v1/reg_employees?corp_oper_nr=eq.${corpOperNr}&exit_date=is.null&order=abv_name.asc`, { 
+            headers: getSupabaseHeaders() 
+          }),
+          fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&shift=eq.FE`, { 
+            headers: getSupabaseHeaders() 
+          })
+        ]);
+        const employees = await empRes.json();
+        const allShifts = await shiftRes.json();
+        const content = document.getElementById("disc-content");
+        const data = employees.map(emp => {
+          const marcados = allShifts.filter(s => s.n_int === emp.n_int).length;
+          const faltam = DAYS_RIGHT - marcados;
+          return { ...emp, marcados, faltam };
+        });
+        const withDiscrepancies = data.filter(d => d.faltam !== 0).sort((a, b) => Math.abs(b.faltam) - Math.abs(a.faltam));    
+        const ok = employees.length - withDiscrepancies.length;
+        const missing = withDiscrepancies.filter(d => d.faltam > 0).length;
+        const excess = withDiscrepancies.filter(d => d.faltam < 0).length;
+        window.discrepancyData = { year, data: withDiscrepancies };    
+        if (withDiscrepancies.length === 0) {
+          content.innerHTML = `
+            <div style="padding:40px;background:#f0fdf4;color:#166534;border-radius:8px;text-align:center;font-size:16px;">
+              ✅ <strong>Excelente!</strong><br>
+              Todos os ${employees.length} funcionários ativos têm exatamente 22 dias marcados.
+            </div>`;
+          return;
+        }
+        let html = `
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
+            <div style="background:#f0fdf4;padding:15px;border-radius:8px;text-align:center;border:2px solid #bbf7d0;">
+              <div style="font-size:28px;font-weight:800;color:#166534;">${ok}</div>
+              <div style="font-size:11px;color:#166534;margin-top:5px;">✅ COMPLETOS</div>
+            </div>
+            <div style="background:#fef2f2;padding:15px;border-radius:8px;text-align:center;border:2px solid #fecaca;">
+              <div style="font-size:28px;font-weight:800;color:#ef4444;">${missing}</div>
+              <div style="font-size:11px;color:#ef4444;margin-top:5px;">⚠️ POR MARCAR</div>
+            </div>
+            <div style="background:#eff6ff;padding:15px;border-radius:8px;text-align:center;border:2px solid #bfdbfe;">
+              <div style="font-size:28px;font-weight:800;color:#3b82f6;">${excess}</div>
+              <div style="font-size:11px;color:#3b82f6;margin-top:5px;">➕ EXCESSO</div>
+            </div>
+            <div style="background:#fafaf9;padding:15px;border-radius:8px;text-align:center;border:2px solid #e7e5e4;">
+              <div style="font-size:28px;font-weight:800;color:#44403c;">${employees.length}</div>
+              <div style="font-size:11px;color:#44403c;margin-top:5px;">👥 TOTAL</div>
+            </div>
+          </div>    
+          <div style="max-height:350px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:8px;">
+            <table style="width:100%;border-collapse:collapse;font-size:13px;">
+              <thead>
+                <tr style="background:#f8fafc;position:sticky;top:0;z-index:1;">
+                  <th style="padding:12px;text-align:left;border-bottom:2px solid #e2e8f0;font-weight:600;">Funcionário</th>
+                  <th style="padding:12px;text-align:center;border-bottom:2px solid #e2e8f0;font-weight:600;">Direito</th>
+                  <th style="padding:12px;text-align:center;border-bottom:2px solid #e2e8f0;font-weight:600;">Marcados</th>
+                  <th style="padding:12px;text-align:center;border-bottom:2px solid #e2e8f0;font-weight:600;">Diferença</th>
+                  <th style="padding:12px;text-align:left;border-bottom:2px solid #e2e8f0;font-weight:600;">Estado</th>
+                </tr>
+              </thead>
+            <tbody>`;
+        withDiscrepancies.forEach((emp, i) => {
+          const color = emp.faltam > 0 ? "#ef4444" : "#3b82f6";
+          const bgColor = emp.faltam > 0 ? "#fef2f2" : "#eff6ff";
+          const icon = emp.faltam > 0 ? "⚠️" : "➕";
+          const status = emp.faltam > 0 ? "Por marcar" : "Excesso";         
+          html += `
+            <tr style="background:${i % 2 === 0 ? '#fff' : '#fafafa'};border-bottom:1px solid #f1f5f9;">
+              <td style="padding:12px;font-weight:500;">${emp.abv_name}</td>
+              <td style="padding:12px;text-align:center;color:#64748b;">${DAYS_RIGHT}</td>
+              <td style="padding:12px;text-align:center;font-weight:600;">${emp.marcados}</td>
+              <td style="padding:12px;text-align:center;font-weight:700;color:${color};font-size:15px;">
+                ${emp.faltam > 0 ? '+' : ''}${emp.faltam}
+              </td>
+              <td style="padding:12px;">
+                <span style="background:${bgColor};color:${color};padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600;">
+                  ${icon} ${status}
+                </span>
+              </td>
+            </tr>`;
+        });    
+        html += `</tbody></table></div>`;
+        content.innerHTML = html;
+      } catch (error) {
+        console.error("Erro:", error);
+        document.getElementById("disc-content").innerHTML = `
+        <div style="padding:20px;background:#fef2f2;color:#991b1b;border-radius:8px;text-align:center;">
+          ❌ Erro ao carregar dados: ${error.message}
+        </div>`;
+      }
+    }
+    function exportDiscrepanciesToExcel() {
+      if (!window.discrepancyData) {
+        alert("Nenhum dado para exportar");
+        return;
+      }
+      const { year, data } = window.discrepancyData;
+      let csv = "Funcionário,Direito,Marcados,Diferença,Estado\n";
+      data.forEach(emp => {
+        const status = emp.faltam > 0 ? "Por marcar" : "Excesso";
+        csv += `"${emp.abv_name}",22,${emp.marcados},${emp.faltam},"${status}"\n`;
+      });
+      const blob = new Blob([csv], {type: "text/csv;charset=utf-8;"});
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `Discrepancias_Ferias_${year}.csv`;
+      link.click();
+    }
+    
+    
+    
+    
+    
+  
+    async function createPriorityMap() {
+      const cardBody = document.querySelector("#priority-scheduling-map .card-body");
+      if (!cardBody) return;
+      const selectedYear = parseInt(document.getElementById("holiday-year-select")?.value || new Date().getFullYear());
+      const priorityYear = selectedYear + 1;
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      cardBody.innerHTML = "⌛ A calcular pontuações de prioridade...";
+      const weights = {1: [1, 1], 2: [1, 1], 3: [1, 1], 4: [1, 1], 5: [4, 4], 6: [4, 8], 7: [12, 12], 8: [12, 12], 9: [12, 8], 10: [4, 4], 11: [1, 1], 12: [2, 8]};
+      try {
+        const [empRes, shiftRes] = await Promise.all([
+          fetch(`${SUPABASE_URL}/rest/v1/reg_employees?corp_oper_nr=eq.${corpOperNr}&order=abv_name.asc`, {
+            headers: getSupabaseHeaders()
+          }),
+          fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${selectedYear}&shift=eq.FE`, {
+            headers: getSupabaseHeaders()
+          })
+        ]);
+        const allEmployees = await empRes.json();
+        const allShifts = await shiftRes.json();
+        const employeesWithVacation = allEmployees.filter(emp => allShifts.some(s => s.n_int === emp.n_int));
+        if (employeesWithVacation.length === 0) {
+          cardBody.innerHTML = `<div class="alert alert-info">Não existem dados de férias em ${selectedYear} para calcular prioridades.</div>`;
+          return;
+        }
+        if (!document.getElementById("priority-core-css")) {
+          const s = document.createElement("style");
+          s.id = "priority-core-css";
+          s.innerHTML = `
+            .p-wrapper {font-family: 'Inter', sans-serif; color: #1e293b;}
+            .p-container {max-height: 500px; overflow: auto; border: 1px solid #cbd5e1; border-radius: 6px; position: relative; scrollbar-width: none;}
+            .p-container::-webkit-scrollbar {display: none;}
+            .p-table {width: 100%; border-collapse: separate; border-spacing: 0; font-size: 10px; table-layout: fixed;}
+            .p-table thead tr:first-child th {position: sticky; top: 0; z-index: 100; background: #f8fafc; border-bottom: 1px solid #cbd5e1; border-right: 1px solid #cbd5e1; height: 35px;}
+            .p-table thead tr.q-header th {position: sticky; top: 35px; z-index: 90; background: #e2e8f0; border-bottom: 2px solid #94a3b8; height: 20px;}
+            .p-name-col {position: sticky !important; left: 0; width: 150px; z-index: 80; background: #f1f5f9 !important; border-right: 2px solid #cbd5e1 !important; 
+                         text-align: left !important; padding-left: 10px !important;}
+            .p-score-col {position: sticky !important; right: 0; width: 70px; z-index: 80; background: #1e293b !important; color: #fbbf24 !important; border-left: 2px solid #cbd5e1 !important; 
+                          font-weight: 900; font-size: 12px; text-align: center;}
+            thead tr:first-child th.p-name-col {z-index: 110; left: 0; top: 0;}
+            thead tr.q-header th.p-name-col {z-index: 105; left: 0; top: 35px;}
+            thead tr:first-child th.p-score-col {z-index: 110; right: 0; top: 0;}
+            thead tr.q-header th.p-score-col {z-index: 105; right: 0; top: 35px;}
+            .p-table td {border-bottom: 1px solid #cbd5e1; border-right: 1px solid #cbd5e1; padding: 4px; height: 32px; text-align: center; vertical-align: middle;}
+            .q-val {color: #94a3b8;}
+            .q-has-data {color: #1e293b !important; font-weight: 800 !important; background: #f8fafc;}
+            .q1 {border-right: 1px dotted #cbd5e1 !important;}
+            .m-title {font-size: 16px; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;}
+            .m-badge-rh {background: #1e293b; color: #fff; padding: 2px 7px; border-radius: 4px; font-size: 10px;}
+            .m-footer {display: flex; justify-content: flex-end; margin-top: 10px; gap: 8px;}
+            .m-btn {background: #1e293b; color: #fff; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px;}
+            .priority-row:hover td {background-color: #f1f5f9 !important;}
+          `;
+          document.head.appendChild(s);
+        }
+        const meses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+        let html = `
+          <div class="p-wrapper">
+            <div class="m-title">
+              <span class="m-badge-rh">RH</span> PRIORIDADE DE MARCAÇÃO DE FÉRIAS ${priorityYear}
+            </div>
+            <div class="p-container">
+              <table class="p-table">
+                <thead>
+                  <tr>
+                    <th rowspan="2" class="p-name-col">FUNCIONÁRIO</th>
+                    ${meses.map(m => `<th colspan="2" style="width:75px;">${m.toUpperCase()}</th>`).join('')}
+                    <th rowspan="2" class="p-score-col">TOTAL</th>
+                  </tr>
+                  <tr class="q-header">
+                    ${Array(12).fill(0).map(() => `<th class="q1">Q1</th><th>Q2</th>`).join('')}
+                  </tr>
+                </thead>
+              <tbody>
+            `;
+        employeesWithVacation.forEach(emp => {
+          const empShifts = allShifts.filter(s => s.n_int === emp.n_int);
+          let totalScore = 0;
+          let fortnightlyHTML = "";
+          for (let m = 1; m <= 12; m++) {
+            const q1Days = empShifts.filter(s => s.month === m && s.day <= 15).length;
+            const q1Score = q1Days * weights[m][0];
+            const q2Days = empShifts.filter(s => s.month === m && s.day > 15).length;
+            const q2Score = q2Days * weights[m][1];
+            totalScore += (q1Score + q2Score);
+            fortnightlyHTML += `
+              <td class="q1 q-val ${q1Score > 0 ? 'q-has-data' : ''}">${q1Score > 0 ? q1Score : '-'}</td>
+              <td class="q-val ${q2Score > 0 ? 'q-has-data' : ''}">${q2Score > 0 ? q2Score : '-'}</td>
+            `;
+          }
+          html += `
+            <tr class="priority-row">
+              <td class="p-name-col"><strong>${emp.abv_name}</strong></td>
+                ${fortnightlyHTML}
+              <td class="p-score-col">${totalScore}</td>
+            </tr>
+          `;
+        });
+        html += `</tbody></table></div>
+          <div class="m-footer">
+             <button class="m-btn" onclick="exportarPrioridadesPDF()">📥 Emitir Mapa</button>
+          </div>
+          </div>
+          `;
+        cardBody.innerHTML = html;
+      } catch (err) {
+        console.error("Erro na Prioridade:", err);
+        cardBody.innerHTML = "Erro ao carregar matriz de prioridades.";
+      }
+    }
+    async function exportarPrioridadesPDF() {
+      const selectedYear = parseInt(document.getElementById("holiday-year-select")?.value || new Date().getFullYear());
+      const priorityYear = selectedYear + 1;
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const btn = event?.target;
+      const originalText = btn ? btn.innerText : "";
+      if (btn) btn.innerText = "⌛ A Gerar Mapa...";
+      const weights = {1: [1, 1], 2: [1, 1], 3: [1, 1], 4: [1, 1], 5: [4, 4], 6: [4, 8], 7: [12, 12], 8: [12, 12], 9: [12, 8], 10: [4, 4], 11: [1, 1], 12: [2, 8]};
+      try {
+        const [empRes, shiftRes] = await Promise.all([
+          fetch(`${SUPABASE_URL}/rest/v1/reg_employees?corp_oper_nr=eq.${corpOperNr}&order=abv_name.asc`, {
+            headers: getSupabaseHeaders()
+          }),
+          fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${selectedYear}&shift=eq.FE`, {
+            headers: getSupabaseHeaders()
+          })
+        ]);
+        const allEmployees = await empRes.json();
+        const allShifts = await shiftRes.json();
+        const employeesPayload = allEmployees
+        .filter(emp => allShifts.some(s => s.n_int === emp.n_int))
+        .map(emp => {
+          const empShifts = allShifts.filter(s => s.n_int === emp.n_int);
+          let totalScore = 0;
+          let scoresArray = [];
+          for (let m = 1; m <= 12; m++) {
+            const q1Days = empShifts.filter(s => s.month === m && s.day <= 15).length;
+            const q1Score = q1Days * weights[m][0];
+            const q2Days = empShifts.filter(s => s.month === m && s.day > 15).length;
+            const q2Score = q2Days * weights[m][1];
+            scoresArray.push(q1Score);
+            scoresArray.push(q2Score);
+            totalScore += (q1Score + q2Score);
+          }
+          return {name: emp.abv_name, scores: scoresArray, totalScore: totalScore};
+        });
+        if (employeesPayload.length === 0) {
+          alert("Não existem dados para exportar.");
+          return;
+        }
+        const response = await fetch('https://cb360-online.vercel.app/api/priority-map', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({priorityYear: priorityYear, employees: employeesPayload})
+        });
+        if (!response.ok) throw new Error("Erro na resposta da API");
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Prioridades_Ferias_${priorityYear}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error("Erro ao exportar:", err);
+        alert("Erro ao gerar o PDF. Verifica a consola.");
+      } finally {
+        if (btn) btn.innerText = originalText;
+      }
+    }
+    
+    
+    
+    document.querySelectorAll(".sidebar-sub-submenu-button").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const access = btn.dataset.access;
+        const pageId = btn.dataset.page;
+        if (access === "Marcação de Férias") {
+          createHolidayManagement(); 
+        } 
+        else if (access === "Mapa de Férias") {
+          createGlobalHolidayMap();
+        }
+        else if (access === "Mapa de Prioridade") {
+          createPriorityMap();
         }
       });
     });

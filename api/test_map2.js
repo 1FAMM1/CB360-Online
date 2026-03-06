@@ -34,14 +34,15 @@ function makeCellXml(ref, styleIndex, value) {
     return `<c r="${ref}" s="${styleIndex}" t="inlineStr"><is><t xml:space="preserve">${escaped}</t></is></c>`;
 }
 
+// Novo template:
+// Row 9  (primeira): B=7,  C=12, D=12, E=12, F=12, G=12, H=12, I=13
+// Row 10+ (resto):   B=8,  C=14, D=14, E=14, F=14, G=14, H=14, I=15
 // B = Nome | C = Sub. Turno | D = Baixa | E = Férias | F = Parental | G = Nojo | H = Just. | I = Injust.
-// Estilos linha 9 (primeira): B=15, C=4, D=4, E=3, F=3, G=3, H=3, I=6
-// Estilos linha 10+ (resto):  B=16, C=7, D=7, E=7, F=7, G=7, H=7, I=8
 function makeRowXml(rowNum, emp) {
     const isFirst = rowNum === 9;
     const styles = isFirst
-        ? { B: 15, C: 4, D: 4, E: 3, F: 3, G: 3, H: 3, I: 6 }
-        : { B: 16, C: 7, D: 7, E: 7, F: 7, G: 7, H: 7, I: 8 };
+        ? { B: 7,  C: 12, D: 12, E: 12, F: 12, G: 12, H: 12, I: 13 }
+        : { B: 8,  C: 14, D: 14, E: 14, F: 14, G: 14, H: 14, I: 15 };
 
     const cols = ["B", "C", "D", "E", "F", "G", "H", "I"];
     const values = {
@@ -93,19 +94,19 @@ export default async function handler(req, res) {
         const beforeSheetData = sheetXml.substring(0, sheetDataStart);
         const afterSheetData = sheetXml.substring(sheetDataEnd);
 
-        // Extrair rows de cabeçalho preservando conteúdo original (2,3,4 = imagem+texto, 6 = título, 7 = espaço, 8 = headers)
+        // Extrair rows de cabeçalho preservando conteúdo original
         const headerRows = [];
         for (const r of ["2", "3", "4", "6", "7", "8"]) {
             const match = sheetXml.match(new RegExp(`<row r="${r}"[^>]*>.*?</row>`, "s"));
             if (match) headerRows.push(match[0]);
         }
 
-        // Substituir título em B6 com mês/ano dinâmico
+        // Substituir título em B6 com mês/ano dinâmico (s=10 no novo template)
         const row6Index = headerRows.findIndex(r => r.includes(`r="6"`));
         if (row6Index !== -1) {
             headerRows[row6Index] = headerRows[row6Index].replace(
-                /<c r="B6"[^>]*>.*?<\/c>/s,
-                `<c r="B6" s="18" t="inlineStr"><is><t>MAPA SALARIAL - ${monthName} ${year}</t></is></c>`
+                /<c r="B6"[^>]*>.*?<\/c>|<c r="B6"[^\/]*\/>/s,
+                `<c r="B6" s="10" t="inlineStr"><is><t>MAPA SALARIAL - ${monthName} ${year}</t></is></c>`
             );
         }
 
@@ -119,7 +120,7 @@ export default async function handler(req, res) {
 
         // Ocultar linhas não usadas
         for (let i = ROW_START + employees.length; i <= ROW_MAX; i++) {
-            dataRowsXml += `<row r="${i}" spans="2:9" ht="15" hidden="1" x14ac:dyDescent="0.25"><c r="B${i}" s="16"/><c r="C${i}" s="7"/><c r="D${i}" s="7"/><c r="E${i}" s="7"/><c r="F${i}" s="7"/><c r="G${i}" s="7"/><c r="H${i}" s="7"/><c r="I${i}" s="8"/></row>`;
+            dataRowsXml += `<row r="${i}" spans="2:9" ht="15" hidden="1" x14ac:dyDescent="0.25"><c r="B${i}" s="8"/><c r="C${i}" s="14"/><c r="D${i}" s="14"/><c r="E${i}" s="14"/><c r="F${i}" s="14"/><c r="G${i}" s="14"/><c r="H${i}" s="14"/><c r="I${i}" s="15"/></row>`;
         }
 
         const newSheetData = `<sheetData>${headerRows.join("")}${dataRowsXml}</sheetData>`;

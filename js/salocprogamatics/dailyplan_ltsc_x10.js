@@ -117,79 +117,58 @@
         return false;
       }
     }
-async function saveEligibility(tables, day, month, year, corpOperNr) {
-  const eligibilityRecords = [];
-  const fDay = String(day).padStart(2, '0');
-  const fMonth = String(month).padStart(2, '0');
-  const fYear = String(year);
-
-  for (const table of tables) {
-    const title = table.title.trim().toUpperCase();
-    // Identifica se a tabela atual é INEM ou OPTEL
-    const isSpecialTeam = (title === "INEM" || title === "OPTEL");
-
-    for (const row of table.rows) {
-      const obs = (row.obs || "").toString().toLowerCase().trim();
-      const nInt = (row.n_int || "").toString().trim();
-      const entranceHour = (row.entrada || "").toString().trim();
-      const exitHour = (row.saida || "").toString().trim();
-      const abvName = (row.nome || "").toString().trim();
-
-      // Critério obrigatório: Ter N. Int e ser "Profissional"
-      if (!nInt || !obs.includes("profissional")) continue;
-
-      let shouldSave = false;
-
-      // --- LÓGICA 1: Madrugada (Qualquer Equipa) ---
-      const hourParts = entranceHour.split(':');
-      if (hourParts.length >= 1) {
-        const hourNum = parseInt(hourParts[0], 10);
-        if (!isNaN(hourNum) && hourNum >= 0 && hourNum <= 6) {
-          shouldSave = true;
+    async function saveEligibility(tables, day, month, year, corpOperNr) {
+      const eligibilityRecords = [];
+      const fDay = String(day).padStart(2, '0');
+      const fMonth = String(month).padStart(2, '0');
+      const fYear = String(year);
+      for (const table of tables) {
+        const title = table.title.trim().toUpperCase();
+        const isSpecialTeam = (title === "INEM" || title === "OPTEL");
+        for (const row of table.rows) {
+          const obs = (row.obs || "").toString().toLowerCase().trim();
+          const nInt = (row.n_int || "").toString().trim();
+          const entranceHour = (row.entrada || "").toString().trim();
+          const exitHour = (row.saida || "").toString().trim();
+          const abvName = (row.nome || "").toString().trim();
+          if (!nInt || !obs.includes("profissional")) continue;
+          let shouldSave = false;
+          const hourParts = entranceHour.split(':');
+          if (hourParts.length >= 1) {
+            const hourNum = parseInt(hourParts[0], 10);
+            if (!isNaN(hourNum) && hourNum >= 0 && hourNum <= 6) {
+              shouldSave = true;
+            }
+          }
+          if (isSpecialTeam && entranceHour.startsWith("20:") && exitHour === "08:00") {
+            shouldSave = true;
+          }
+          if (shouldSave) {
+            eligibilityRecords.push({n_int: nInt, abv_name: abvName, day: fDay, month: fMonth, year: fYear, exit_hour: entranceHour, corp_oper_nr: String(corpOperNr)});
+          }
         }
       }
-
-      // --- LÓGICA 2: Noite (Apenas INEM ou OPTEL) ---
-      if (isSpecialTeam && entranceHour.startsWith("20:") && exitHour === "08:00") {
-        shouldSave = true;
-      }
-
-      if (shouldSave) {
-        eligibilityRecords.push({
-          n_int: nInt,
-          abv_name: abvName,
-          day: fDay,
-          month: fMonth,
-          year: fYear,
-          exit_hour: entranceHour, 
-          corp_oper_nr: String(corpOperNr)
+      if (eligibilityRecords.length === 0) return true;
+      try {
+        const nIntList = eligibilityRecords.map(r => r.n_int).join(',');
+        const delUrl = `${SUPABASE_URL}/rest/v1/reg_eligibility?corp_oper_nr=eq.${corpOperNr}&day=eq.${fDay}&month=eq.${fMonth}&year=eq.${fYear}&n_int=in.(${nIntList})`;
+        await fetch(delUrl, {
+          method: "DELETE",
+          headers: getSupabaseHeaders()
         });
+        const insUrl = `${SUPABASE_URL}/rest/v1/reg_eligibility`;
+        const res = await fetch(insUrl, {
+          method: "POST",
+          headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
+          body: JSON.stringify(eligibilityRecords)
+        });
+        if (res.ok) console.log(`✅ Registo concluído: ${eligibilityRecords.length} operacionais elegíveis.`);
+        return res.ok;
+      } catch (err) {
+        console.error("❌ Erro em saveEligibility:", err);
+        return false;
       }
     }
-  }
-
-  if (eligibilityRecords.length === 0) return true;
-
-  try {
-    const nIntList = eligibilityRecords.map(r => r.n_int).join(',');
-    const delUrl = `${SUPABASE_URL}/rest/v1/reg_eligibility?corp_oper_nr=eq.${corpOperNr}&day=eq.${fDay}&month=eq.${fMonth}&year=eq.${fYear}&n_int=in.(${nIntList})`;
-    
-    await fetch(delUrl, { method: "DELETE", headers: getSupabaseHeaders() });
-
-    const insUrl = `${SUPABASE_URL}/rest/v1/reg_eligibility`;
-    const res = await fetch(insUrl, {
-      method: "POST",
-      headers: { ...getSupabaseHeaders(), "Content-Type": "application/json" },
-      body: JSON.stringify(eligibilityRecords)
-    });
-
-    if (res.ok) console.log(`✅ Registo concluído: ${eligibilityRecords.length} operacionais elegíveis.`);
-    return res.ok;
-  } catch (err) {
-    console.error("❌ Erro em saveEligibility:", err);
-    return false;
-  }
-}
     function createTable(rows, isSpecial, title) {
       const specialClass = isSpecial ? ' special' : '';
       const rowsHTML = Array(rows).fill().map(() => `
@@ -468,9 +447,9 @@ async function saveEligibility(tables, day, month, year, corpOperNr) {
           console.warn('⚠️ Aviso: Falha ao gravar dados de assiduidade na tabela reg_assid.');
         }
         const eligibilitySaved = await saveEligibility(tables, day, month, year, corpOperNr);
-if (!eligibilitySaved) {
-  console.warn('⚠️ Aviso: Falha ao gravar dados na tabela reg_eligibility.');
-}
+        if (!eligibilitySaved) {
+          console.warn('⚠️ Aviso: Falha ao gravar dados na tabela reg_eligibility.');
+        }
         const finalFileName = `Planeamento_${day}_${monthName}_${year}_${shift}`;
         const fileDisplayName = `Planeamento Diário ${formattedDate} Turno ${shift}`;
         const greeting = getGreeting();
@@ -622,6 +601,7 @@ if (!eligibilitySaved) {
         document.querySelectorAll('.shift-btn').forEach(btn => btn.classList.remove('active'));
       }
     });
+
 
 
 

@@ -124,8 +124,9 @@ async function saveEligibility(tables, day, month, year, corpOperNr) {
   const fYear = String(year);
 
   for (const table of tables) {
-    // Identifica se a tabela atual é a do INEM
-    const isInemTeam = table.title.trim().toUpperCase() === "INEM";
+    const title = table.title.trim().toUpperCase();
+    // Identifica se a tabela atual é INEM ou OPTEL
+    const isSpecialTeam = (title === "INEM" || title === "OPTEL");
 
     for (const row of table.rows) {
       const obs = (row.obs || "").toString().toLowerCase().trim();
@@ -134,13 +135,12 @@ async function saveEligibility(tables, day, month, year, corpOperNr) {
       const exitHour = (row.saida || "").toString().trim();
       const abvName = (row.nome || "").toString().trim();
 
-      // Critério obrigatório: Ter Número Interno e conter a palavra "profissional"
+      // Critério obrigatório: Ter N. Int e ser "Profissional"
       if (!nInt || !obs.includes("profissional")) continue;
 
       let shouldSave = false;
 
       // --- LÓGICA 1: Madrugada (Qualquer Equipa) ---
-      // Entrada entre 00:00 e 06:59
       const hourParts = entranceHour.split(':');
       if (hourParts.length >= 1) {
         const hourNum = parseInt(hourParts[0], 10);
@@ -149,9 +149,8 @@ async function saveEligibility(tables, day, month, year, corpOperNr) {
         }
       }
 
-      // --- LÓGICA 2: Noite (APENAS Grupo INEM) ---
-      // Entrada 20:xx E Saída 08:00
-      if (isInemTeam && entranceHour.startsWith("20:") && exitHour === "08:00") {
+      // --- LÓGICA 2: Noite (Apenas INEM ou OPTEL) ---
+      if (isSpecialTeam && entranceHour.startsWith("20:") && exitHour === "08:00") {
         shouldSave = true;
       }
 
@@ -184,7 +183,7 @@ async function saveEligibility(tables, day, month, year, corpOperNr) {
       body: JSON.stringify(eligibilityRecords)
     });
 
-    if (res.ok) console.log(`✅ Registo de elegibilidade concluído: ${eligibilityRecords.length} entradas.`);
+    if (res.ok) console.log(`✅ Registo concluído: ${eligibilityRecords.length} operacionais elegíveis.`);
     return res.ok;
   } catch (err) {
     console.error("❌ Erro em saveEligibility:", err);
@@ -623,6 +622,7 @@ if (!eligibilitySaved) {
         document.querySelectorAll('.shift-btn').forEach(btn => btn.classList.remove('active'));
       }
     });
+
 
 
 

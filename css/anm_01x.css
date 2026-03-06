@@ -1,4 +1,4 @@
-    #page-main {
+    #page-main { 
       opacity: 0;
       animation: pageEnter 1s ease-out forwards;
     }
@@ -109,4 +109,5 @@
     @keyframes shimmer {0% {transform: translateX(-100%) translateY(-100%) rotate(45deg);} 100% {transform: translateX(100%) translateY(100%) rotate(45deg);}}
     @keyframes inopFade {0%, 100% {opacity: 1} 50% {opacity: 0.5}}
     @keyframes gentleShake {0%, 100% {transform: translateX(0)} 25% {transform: translateX(-1px)} 75% {transform: translateX(1px)}}
+
     @keyframes borderBlink {0%, 100% {border-color: #f1c40f} 50% {border-color: #e67e22}}

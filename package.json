@@ -2,7 +2,7 @@
   "name": "CB360-Mobile",
   "version": "1.0.0",
   "scripts": {
-    "build": "exit 0"
+    "build": "echo 'No build needed'"
   },
   "dependencies": {
     "@adobe/pdfservices-node-sdk": "^4.1.0",

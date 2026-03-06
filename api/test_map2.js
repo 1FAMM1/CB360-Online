@@ -144,18 +144,36 @@ export default async function handler(req, res) {
         const newSheetData = `<sheetData>${headerRows.join("")}${dataRowsXml}</sheetData>`;
         let newSheetXml = beforeSheetData + newSheetData + afterSheetData;
 
-        // 5️⃣ Atualizar sheet no ZIP
+        // 5️⃣ Corrigir pageMargins para margens mínimas
+        newSheetXml = newSheetXml.replace(
+            /<pageMargins[^\/]*\/>/,
+            `<pageMargins left="0.25" right="0.25" top="0.25" bottom="0.25" header="0" footer="0"/>`
+        );
+
+        // 6️⃣ Corrigir pageSetup — landscape A4, sem fitToPage para não distorcer imagem
+        newSheetXml = newSheetXml.replace(
+            /<pageSetup[^\/]*\/>/,
+            `<pageSetup paperSize="9" scale="75" orientation="landscape" r:id="rId1"/>`
+        );
+
+        // 7️⃣ Remover fitToPage do sheetPr para não forçar escala automática
+        newSheetXml = newSheetXml.replace(
+            /<sheetPr><pageSetUpPr fitToPage="1"\/><\/sheetPr>/,
+            `<sheetPr><pageSetUpPr fitToPage="0"/></sheetPr>`
+        );
+
+        // 8️⃣ Atualizar sheet no ZIP
         zip.updateFile("xl/worksheets/sheet1.xml", Buffer.from(newSheetXml, "utf8"));
 
-        // 6️⃣ Gerar buffer do XLSX modificado
+        // 9️⃣ Gerar buffer do XLSX modificado
         const modifiedBuffer = zip.toBuffer();
 
-        // 7️⃣ Guardar em ficheiro temporário
+        // 🔟 Guardar em ficheiro temporário
         const tempDir = os.tmpdir();
         inputPath = path.join(tempDir, `salary_${Date.now()}.xlsx`);
         fs.writeFileSync(inputPath, modifiedBuffer);
 
-        // 8️⃣ Adobe PDF Services
+        // 1️⃣1️⃣ Adobe PDF Services
         const credentials = new ServicePrincipalCredentials({ clientId: CLIENT_ID, clientSecret: CLIENT_SECRET });
         const pdfServices = new PDFServices({ credentials });
 

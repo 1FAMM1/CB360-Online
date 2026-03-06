@@ -18,7 +18,6 @@ export const config = {
 const CLIENT_ID = process.env.ADOBE_CLIENT_ID;
 const CLIENT_SECRET = process.env.ADOBE_CLIENT_SECRET;
 
-// Escapa caracteres especiais XML e converte \n em &#10;
 function escapeXml(str) {
     if (!str || str === "-") return "-";
     return String(str)
@@ -30,16 +29,12 @@ function escapeXml(str) {
         .replace(/\n/g, "&#10;");
 }
 
-// Gera o XML de uma célula inline string
 function makeCellXml(ref, styleIndex, value) {
     const escaped = escapeXml(value);
     return `<c r="${ref}" s="${styleIndex}" t="inlineStr"><is><t xml:space="preserve">${escaped}</t></is></c>`;
 }
 
-// Gera XML de uma row com os dados do funcionário
 // B = Nome | C = Sub. Turno | D = Baixa | E = Férias | F = Parental | G = Nojo | H = Just. | I = Injust.
-// Estilos linha 9 (primeira): B=15, C=4, D=4, E=3, F=3, G=3, H=3, I=6
-// Estilos linha 10+ (resto):  B=16, C=7, D=7, E=7, F=7, G=7, H=7, I=8
 function makeRowXml(rowNum, emp) {
     const isFirst = rowNum === 9;
     const styles = isFirst
@@ -62,7 +57,6 @@ function makeRowXml(rowNum, emp) {
     return `<row r="${rowNum}" spans="2:9" ht="15" x14ac:dyDescent="0.25">${cells}</row>`;
 }
 
-// Patch ao styles.xml — adiciona wrapText="1" nos estilos sem wrapText
 function patchStylesXml(stylesXml) {
     return stylesXml.replace(
         /<alignment([^>]*?)\/>/g,
@@ -70,6 +64,33 @@ function patchStylesXml(stylesXml) {
             if (attrs.includes('wrapText')) return match;
             return `<alignment${attrs} wrapText="1"/>`;
         }
+    );
+}
+
+// Substitui twoCellAnchor por absoluteAnchor com tamanho fixo
+// Posição: x=628650, y=139700 EMU (original offset)
+// Tamanho: 835025 x 912222 EMU (~2.32cm x 2.53cm) — dimensões originais
+function patchDrawingXml(drawingXml) {
+    const x = 628650;
+    const y = 139700;
+    const cx = 835025;
+    const cy = 912222;
+
+    // Extrair o conteúdo do pic (imagem) do twoCellAnchor
+    const picMatch = drawingXml.match(/<xdr:pic>.*?<\/xdr:pic>/s);
+    if (!picMatch) return drawingXml;
+
+    const picXml = picMatch[0];
+
+    // Substituir o twoCellAnchor por absoluteAnchor
+    return drawingXml.replace(
+        /<xdr:twoCellAnchor[^>]*>.*?<\/xdr:twoCellAnchor>/s,
+        `<xdr:absoluteAnchor>
+  <xdr:pos x="${x}" y="${y}"/>
+  <xdr:ext cx="${cx}" cy="${cy}"/>
+  ${picXml}
+  <xdr:clientData/>
+</xdr:absoluteAnchor>`
     );
 }
 
@@ -96,12 +117,16 @@ export default async function handler(req, res) {
         // 2️⃣ Abrir o ZIP
         const zip = new AdmZip(templateBuffer);
 
-        // 3️⃣ Patch styles.xml para adicionar wrapText
+        // 3️⃣ Patch styles.xml
         const stylesXml = zip.readAsText("xl/styles.xml");
-        const patchedStylesXml = patchStylesXml(stylesXml);
-        zip.updateFile("xl/styles.xml", Buffer.from(patchedStylesXml, "utf8"));
+        zip.updateFile("xl/styles.xml", Buffer.from(patchStylesXml(stylesXml), "utf8"));
 
-        // 4️⃣ Ler e modificar sheet XML
+        // 4️⃣ Patch drawing.xml — converter twoCellAnchor para absoluteAnchor
+        const drawingXml = zip.readAsText("xl/drawings/drawing1.xml");
+        const patchedDrawingXml = patchDrawingXml(drawingXml);
+        zip.updateFile("xl/drawings/drawing1.xml", Buffer.from(patchedDrawingXml, "utf8"));
+
+        // 5️⃣ Ler e modificar sheet XML
         let sheetXml = zip.readAsText("xl/worksheets/sheet1.xml");
 
         const ROW_START = 9;
@@ -112,7 +137,7 @@ export default async function handler(req, res) {
         const beforeSheetData = sheetXml.substring(0, sheetDataStart);
         const afterSheetData = sheetXml.substring(sheetDataEnd);
 
-        // Extrair rows de cabeçalho (2,3,4 = imagem, 6 = título, 7 = espaço, 8 = headers)
+        // Extrair rows de cabeçalho
         const headerRows = [];
         for (const r of ["2", "3", "4", "6", "7", "8"]) {
             const match = sheetXml.match(new RegExp(`<row r="${r}"[^>]*>.*?</row>`, "s"));
@@ -144,36 +169,36 @@ export default async function handler(req, res) {
         const newSheetData = `<sheetData>${headerRows.join("")}${dataRowsXml}</sheetData>`;
         let newSheetXml = beforeSheetData + newSheetData + afterSheetData;
 
-        // 5️⃣ Corrigir pageMargins para margens mínimas
+        // Margens mínimas
         newSheetXml = newSheetXml.replace(
             /<pageMargins[^\/]*\/>/,
             `<pageMargins left="0.25" right="0.25" top="0.25" bottom="0.25" header="0" footer="0"/>`
         );
 
-        // 6️⃣ Corrigir pageSetup — landscape A4, sem fitToPage para não distorcer imagem
+        // pageSetup landscape A4 sem fitToPage
         newSheetXml = newSheetXml.replace(
             /<pageSetup[^\/]*\/>/,
             `<pageSetup paperSize="9" scale="75" orientation="landscape" r:id="rId1"/>`
         );
 
-        // 7️⃣ Remover fitToPage do sheetPr para não forçar escala automática
+        // Remover fitToPage
         newSheetXml = newSheetXml.replace(
             /<sheetPr><pageSetUpPr fitToPage="1"\/><\/sheetPr>/,
             `<sheetPr><pageSetUpPr fitToPage="0"/></sheetPr>`
         );
 
-        // 8️⃣ Atualizar sheet no ZIP
+        // 6️⃣ Atualizar sheet no ZIP
         zip.updateFile("xl/worksheets/sheet1.xml", Buffer.from(newSheetXml, "utf8"));
 
-        // 9️⃣ Gerar buffer do XLSX modificado
+        // 7️⃣ Gerar buffer
         const modifiedBuffer = zip.toBuffer();
 
-        // 🔟 Guardar em ficheiro temporário
+        // 8️⃣ Guardar temporário
         const tempDir = os.tmpdir();
         inputPath = path.join(tempDir, `salary_${Date.now()}.xlsx`);
         fs.writeFileSync(inputPath, modifiedBuffer);
 
-        // 1️⃣1️⃣ Adobe PDF Services
+        // 9️⃣ Adobe PDF Services
         const credentials = new ServicePrincipalCredentials({ clientId: CLIENT_ID, clientSecret: CLIENT_SECRET });
         const pdfServices = new PDFServices({ credentials });
 

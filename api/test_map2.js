@@ -31,7 +31,8 @@ function escapeXml(str) {
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
-        .replace(/'/g, "&apos;");
+        .replace(/'/g, "&apos;")
+    .replace(/\n/g, "&#10;"); 
 }
 
 // Gera o XML de uma célula inline string com wrap text

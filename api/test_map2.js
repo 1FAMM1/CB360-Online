@@ -59,7 +59,7 @@ export default async function handler(req, res) {
         if (!templateResponse.ok) throw new Error("Erro ao carregar template do GitHub");
 
         const workbook = new ExcelJS.Workbook();
-        await workbook.xlsx.load(await templateResponse.arrayBuffer());
+        await workbook.xlsx.load(await templateResponse.buffer());
         const worksheet = workbook.worksheets[0];
 
         // 2️⃣ Cabeçalho

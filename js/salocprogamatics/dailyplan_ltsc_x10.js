@@ -120,7 +120,6 @@
 async function saveEligibility(tables, day, month, year, corpOperNr) {
   const eligibilityRecords = [];
   
-  // Normalização de datas para garantir que batem com os filtros
   const fDay = String(day).padStart(2, '0');
   const fMonth = String(month).padStart(2, '0');
   const fYear = String(year);
@@ -128,24 +127,25 @@ async function saveEligibility(tables, day, month, year, corpOperNr) {
   for (const table of tables) {
     for (const row of table.rows) {
       const obs = (row.obs || "").toLowerCase();
-      const nInt = row.n_int?.trim();
-      const abvName = row.nome?.trim();
-      const entranceHour = row.entrada?.trim();
+      const nInt = row.n_int?.toString().trim();
+      const abvName = row.nome?.toString().trim();
+      const entranceHour = row.entrada?.toString().trim();
 
-      // Filtros: "profissional" + n_int + hora válida
+      // Só profissionais válidos com hora
       if (!obs.includes("profissional") || !nInt || !entranceHour) continue;
 
-      // Filtro de horário: 00:00 às 06:59
-      const hourNum = parseInt(entranceHour.split(':')[0], 10);
+      const [hourStr] = entranceHour.split(":");
+      const hourNum = parseInt(hourStr, 10);
 
-      if (hourNum >= 0 && hourNum <= 6) {
+      // Grava apenas se entrada entre 00:00 e 06:59
+      if (!isNaN(hourNum) && hourNum >= 0 && hourNum <= 6) {
         eligibilityRecords.push({
-          n_int: String(nInt),
+          n_int: nInt,
           abv_name: abvName,
           day: fDay,
           month: fMonth,
           year: fYear,
-          exit_hour: entranceHour, // Confirmar se o nome da coluna é este na BD
+          exit_hour: entranceHour, // confirmar coluna na BD
           corp_oper_nr: String(corpOperNr)
         });
       }
@@ -158,8 +158,8 @@ async function saveEligibility(tables, day, month, year, corpOperNr) {
   }
 
   try {
-    // 1. Limpeza de duplicados (Otimizada)
-    const nIntList = eligibilityRecords.map(r => r.n_int).join(',');
+    // Limpeza de duplicados: gera lista segura para in.
+    const nIntList = eligibilityRecords.map(r => `'${r.n_int}'`).join(',');
     const delUrl = `${SUPABASE_URL}/rest/v1/reg_eligibility?corp_oper_nr=eq.${corpOperNr}&day=eq.${fDay}&month=eq.${fMonth}&year=eq.${fYear}&n_int=in.(${nIntList})`;
     
     await fetch(delUrl, { 
@@ -167,7 +167,7 @@ async function saveEligibility(tables, day, month, year, corpOperNr) {
       headers: getSupabaseHeaders() 
     });
 
-    // 2. Inserção
+    // Inserção
     const insUrl = `${SUPABASE_URL}/rest/v1/reg_eligibility`;
     const res = await fetch(insUrl, {
       method: "POST",
@@ -181,12 +181,11 @@ async function saveEligibility(tables, day, month, year, corpOperNr) {
 
     if (!res.ok) {
       const errorDetail = await res.text();
-      // ISTO VAI APARECER NA CONSOLA DO NAVEGADOR (F12)
-      console.error("❌ Erro Crítico Supabase (reg_eligibility):", errorDetail);
+      console.error("❌ Erro Supabase (reg_eligibility):", errorDetail);
       return false;
     }
 
-    console.log("✅ reg_eligibility gravado com sucesso!");
+    console.log(`✅ reg_eligibility gravado com sucesso (${eligibilityRecords.length} registros)!`);
     return true;
 
   } catch (err) {
@@ -626,5 +625,6 @@ if (!eligibilitySaved) {
         document.querySelectorAll('.shift-btn').forEach(btn => btn.classList.remove('active'));
       }
     });
+
 
 

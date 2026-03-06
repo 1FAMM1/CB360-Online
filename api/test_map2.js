@@ -67,33 +67,6 @@ function patchStylesXml(stylesXml) {
     );
 }
 
-// Substitui twoCellAnchor por absoluteAnchor com tamanho fixo
-// Posição: x=628650, y=139700 EMU (original offset)
-// Tamanho: 835025 x 912222 EMU (~2.32cm x 2.53cm) — dimensões originais
-function patchDrawingXml(drawingXml) {
-    const x = 628650;
-    const y = 139700;
-    const cx = 835025;
-    const cy = 912222;
-
-    // Extrair o conteúdo do pic (imagem) do twoCellAnchor
-    const picMatch = drawingXml.match(/<xdr:pic>.*?<\/xdr:pic>/s);
-    if (!picMatch) return drawingXml;
-
-    const picXml = picMatch[0];
-
-    // Substituir o twoCellAnchor por absoluteAnchor
-    return drawingXml.replace(
-        /<xdr:twoCellAnchor[^>]*>.*?<\/xdr:twoCellAnchor>/s,
-        `<xdr:absoluteAnchor>
-  <xdr:pos x="${x}" y="${y}"/>
-  <xdr:ext cx="${cx}" cy="${cy}"/>
-  ${picXml}
-  <xdr:clientData/>
-</xdr:absoluteAnchor>`
-    );
-}
-
 export default async function handler(req, res) {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
@@ -121,12 +94,7 @@ export default async function handler(req, res) {
         const stylesXml = zip.readAsText("xl/styles.xml");
         zip.updateFile("xl/styles.xml", Buffer.from(patchStylesXml(stylesXml), "utf8"));
 
-        // 4️⃣ Patch drawing.xml — converter twoCellAnchor para absoluteAnchor
-        const drawingXml = zip.readAsText("xl/drawings/drawing1.xml");
-        const patchedDrawingXml = patchDrawingXml(drawingXml);
-        zip.updateFile("xl/drawings/drawing1.xml", Buffer.from(patchedDrawingXml, "utf8"));
-
-        // 5️⃣ Ler e modificar sheet XML
+        // 4️⃣ Ler e modificar sheet XML
         let sheetXml = zip.readAsText("xl/worksheets/sheet1.xml");
 
         const ROW_START = 9;
@@ -137,9 +105,17 @@ export default async function handler(req, res) {
         const beforeSheetData = sheetXml.substring(0, sheetDataStart);
         const afterSheetData = sheetXml.substring(sheetDataEnd);
 
-        // Extrair rows de cabeçalho
-        const headerRows = [];
-        for (const r of ["2", "3", "4", "6", "7", "8"]) {
+        // Rows de imagem (2,3,4) com altura fixa explícita (17.25pt cada)
+        // A imagem ocupa rows 0-4, total ~86.25pt. Distribuímos pelas 3 rows visíveis.
+        const imageRows = [
+            `<row r="2" spans="2:9" ht="28.5" customHeight="1" x14ac:dyDescent="0.3"></row>`,
+            `<row r="3" spans="2:9" ht="28.5" customHeight="1" x14ac:dyDescent="0.3"></row>`,
+            `<row r="4" spans="2:9" ht="28.5" customHeight="1" x14ac:dyDescent="0.3"></row>`,
+        ];
+
+        // Extrair rows de cabeçalho (6 = título, 7 = espaço, 8 = headers)
+        const headerRows = [...imageRows];
+        for (const r of ["6", "7", "8"]) {
             const match = sheetXml.match(new RegExp(`<row r="${r}"[^>]*>.*?</row>`, "s"));
             if (match) headerRows.push(match[0]);
         }
@@ -187,18 +163,18 @@ export default async function handler(req, res) {
             `<sheetPr><pageSetUpPr fitToPage="0"/></sheetPr>`
         );
 
-        // 6️⃣ Atualizar sheet no ZIP
+        // 5️⃣ Atualizar sheet no ZIP
         zip.updateFile("xl/worksheets/sheet1.xml", Buffer.from(newSheetXml, "utf8"));
 
-        // 7️⃣ Gerar buffer
+        // 6️⃣ Gerar buffer
         const modifiedBuffer = zip.toBuffer();
 
-        // 8️⃣ Guardar temporário
+        // 7️⃣ Guardar temporário
         const tempDir = os.tmpdir();
         inputPath = path.join(tempDir, `salary_${Date.now()}.xlsx`);
         fs.writeFileSync(inputPath, modifiedBuffer);
 
-        // 9️⃣ Adobe PDF Services
+        // 8️⃣ Adobe PDF Services
         const credentials = new ServicePrincipalCredentials({ clientId: CLIENT_ID, clientSecret: CLIENT_SECRET });
         const pdfServices = new PDFServices({ credentials });
 

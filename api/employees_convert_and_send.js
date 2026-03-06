@@ -546,15 +546,8 @@
         for (let i = ROW_START; i <= ROW_END; i++) {
           if (!worksheet.getCell(i, 2).value) worksheet.getRow(i).hidden = true;
         }
-        worksheet.pageSetup = {
-    orientation: 'landscape',
-    paperSize: 9,
-    fitToPage: true,
-    fitToWidth: 1,
-    fitToHeight: 0,
-    horizontalCentered: true,
-    margins: { left: 0.25, right: 0.25, top: 0.75, bottom: 0.25, header: 0, footer: 0 }
-};
+        worksheet.pageSetup = {orientation: 'landscape', paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
+                               margins: {left: 0.25, right: 0.25, top: 0.75, bottom: 0.25, header: 0, footer: 0}};
         const tempDir = os.tmpdir();
         inputPath = path.join(tempDir, `mapa_${Date.now()}.xlsx`);
         await workbook.xlsx.writeFile(inputPath);
@@ -612,8 +605,8 @@
           const nameCell = worksheet.getCell(`B${i}`).value;
           if (!nameCell || nameCell.toString().trim() === "") worksheet.getRow(i).hidden = true;
         }
-        worksheet.pageSetup = {orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 1, horizontalCentered: true, verticalCentered: false,
-                               margins: {left: 0.1, right: 0.1, top: 0.15, bottom: 0.15, header: 0, footer: 0}};
+        worksheet.pageSetup = {orientation: 'landscape', paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
+                               margins: {left: 0.25, right: 0.25, top: 0.75, bottom: 0.25, header: 0, footer: 0}};
         const tempDir = os.tmpdir();
         inputPath = path.join(tempDir, `prioridades_${Date.now()}.xlsx`);
         await workbook.xlsx.writeFile(inputPath);

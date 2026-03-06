@@ -1,8 +1,5 @@
 import ExcelJS from "exceljs";
-import fetch from "node-fetch";
-import fs from "fs";
-import os from "os";
-import path from "path";
+import { Readable } from "stream";
 import { 
     ServicePrincipalCredentials, 
     PDFServices, 
@@ -15,7 +12,7 @@ import {
 export const config = {
     api: {
         bodyParser: { sizeLimit: "10mb" },
-        maxDuration: 60, // Timeout aumentado
+        maxDuration: 60,
     }
 };
 
@@ -41,32 +38,27 @@ function setBorder(cell) {
     };
 }
 
-// Handler API
-export default async function handleMapaSalarialTeste(req, res) {
-
+export default async function handleMapaSalarial(req, res) {
     // ==== CORS HEADERS ====
-    res.setHeader("Access-Control-Allow-Origin", "*"); // Produção: colocar domínio específico
+    res.setHeader("Access-Control-Allow-Origin", "*"); // Em produção colocar domínio específico
     res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-    // Preflight request
     if (req.method === "OPTIONS") return res.status(200).end();
-
     if (req.method !== "POST") return res.status(405).json({ error: "Método não permitido" });
-
-    let inputPath = null;
 
     try {
         const { year, month, employees } = req.body;
         const MONTH_NAMES = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"];
 
-        // 1️⃣ Carregar template Excel
+        // 1️⃣ Carregar template Excel diretamente em memória
         const TEMPLATE_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/xs_template.xlsx";
-        const templateResponse = await fetch(TEMPLATE_URL);
-        if (!templateResponse.ok) throw new Error("Erro ao carregar template do GitHub");
+        const templateRes = await fetch(TEMPLATE_URL);
+        if (!templateRes.ok) throw new Error("Erro ao carregar template do GitHub");
+        const bufferTemplate = await templateRes.arrayBuffer();
 
         const workbook = new ExcelJS.Workbook();
-        await workbook.xlsx.load(await templateResponse.arrayBuffer());
+        await workbook.xlsx.load(bufferTemplate);
         const worksheet = workbook.worksheets[0];
 
         // 2️⃣ Cabeçalho
@@ -75,15 +67,7 @@ export default async function handleMapaSalarialTeste(req, res) {
         // 3️⃣ Preencher dados
         const ROW_START = 8;
         const ROW_MAX = 60;
-        const colMap = {
-            name: "B",
-            baixas: "C",
-            ferias: "D",
-            parental: "E",
-            nojo: "F",
-            justificadas: "G",
-            injustificadas: "H"
-        };
+        const colMap = { name:"B", baixas:"C", ferias:"D", parental:"E", nojo:"F", justificadas:"G", injustificadas:"H" };
 
         employees.forEach((emp, index) => {
             const row = ROW_START + index;
@@ -92,7 +76,8 @@ export default async function handleMapaSalarialTeste(req, res) {
             const writeData = (col, val) => {
                 const cell = worksheet.getCell(`${col}${row}`);
                 breakStyle(cell);
-                cell.value = val || "-";
+                const safeVal = (val || "-").toString().replace(/[\u0000-\u001F]/g,"");
+                cell.value = safeVal;
                 cell.alignment = { vertical: 'middle', horizontal: col === "B" ? 'left' : 'center', wrapText: true };
                 setBorder(cell);
             };
@@ -106,29 +91,27 @@ export default async function handleMapaSalarialTeste(req, res) {
             writeData(colMap.injustificadas, emp.injustificadas);
         });
 
-        // Ocultar linhas não usadas
         for (let i = ROW_START + employees.length; i <= ROW_MAX; i++) {
             worksheet.getRow(i).hidden = true;
         }
 
-        // Configuração de impressão
         worksheet.pageSetup = {
             orientation: "landscape",
             paperSize: 9,
             fitToPage: true,
             fitToWidth: 1,
             fitToHeight: 0,
-            margins: { left: 0.1, right: 0.1, top: 0.2, bottom: 0.2 }
+            margins: { left:0.1, right:0.1, top:0.2, bottom:0.2 }
         };
 
-        // 4️⃣ Gerar PDF Adobe
-        const tempDir = os.tmpdir();
-        inputPath = path.join(tempDir, `salary_${Date.now()}.xlsx`);
-        await workbook.xlsx.writeFile(inputPath);
+        // 4️⃣ Gerar PDF direto da memória
+        const bufferExcel = await workbook.xlsx.writeBuffer();
+        const inputStream = Readable.from(bufferExcel);
 
         const credentials = new ServicePrincipalCredentials({ clientId: CLIENT_ID, clientSecret: CLIENT_SECRET });
         const pdfServices = new PDFServices({ credentials });
-        const inputAsset = await pdfServices.upload({ readStream: fs.createReadStream(inputPath), mimeType: MimeType.XLSX });
+        const inputAsset = await pdfServices.upload({ readStream: inputStream, mimeType: MimeType.XLSX });
+
         const job = new CreatePDFJob({ inputAsset });
         const pollingURL = await pdfServices.submit({ job });
         const result = await pdfServices.getJobResult({ pollingURL, resultType: CreatePDFResult });
@@ -137,17 +120,12 @@ export default async function handleMapaSalarialTeste(req, res) {
         const chunks = [];
         for await (let chunk of streamAsset.readStream) chunks.push(chunk);
 
-        // Limpeza do ficheiro temporário
-        if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
-
-        // Envio PDF para browser
         res.setHeader("Content-Type", "application/pdf");
         res.setHeader("Content-Disposition", `attachment; filename=Mapa_Salarial_${year}_${month}.pdf`);
         return res.status(200).send(Buffer.concat(chunks));
 
     } catch (error) {
-        if (inputPath && fs.existsSync(inputPath)) try { fs.unlinkSync(inputPath); } catch(e) {}
-        console.error("Erro no Handler Independente:", error);
+        console.error("Erro API Mapa Salarial:", error);
         return res.status(500).json({ error: error.message });
     }
 }

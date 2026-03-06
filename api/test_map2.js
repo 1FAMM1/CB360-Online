@@ -35,6 +35,8 @@ function makeCellXml(ref, styleIndex, value) {
 }
 
 // B = Nome | C = Sub. Turno | D = Baixa | E = Férias | F = Parental | G = Nojo | H = Just. | I = Injust.
+// Estilos linha 9 (primeira): B=15, C=4, D=4, E=3, F=3, G=3, H=3, I=6
+// Estilos linha 10+ (resto):  B=16, C=7, D=7, E=7, F=7, G=7, H=7, I=8
 function makeRowXml(rowNum, emp) {
     const isFirst = rowNum === 9;
     const styles = isFirst
@@ -55,21 +57,6 @@ function makeRowXml(rowNum, emp) {
 
     const cells = cols.map(col => makeCellXml(`${col}${rowNum}`, styles[col], values[col] || "-")).join("");
     return `<row r="${rowNum}" spans="2:9" ht="15" x14ac:dyDescent="0.25">${cells}</row>`;
-}
-
-function patchStylesXml(stylesXml) {
-    return stylesXml.replace(
-        /<alignment([^>]*?)\/>/g,
-        (match, attrs) => {
-            if (attrs.includes('wrapText')) return match;
-            return `<alignment${attrs} wrapText="1"/>`;
-        }
-    );
-}
-
-// Adiciona ht fixo a uma row existente sem o ter
-function addFixedHeight(rowXml, ht) {
-    return rowXml.replace(/^<row /, `<row ht="${ht}" customHeight="1" `);
 }
 
 export default async function handler(req, res) {
@@ -95,11 +82,7 @@ export default async function handler(req, res) {
         // 2️⃣ Abrir o ZIP
         const zip = new AdmZip(templateBuffer);
 
-        // 3️⃣ Patch styles.xml
-        const stylesXml = zip.readAsText("xl/styles.xml");
-        zip.updateFile("xl/styles.xml", Buffer.from(patchStylesXml(stylesXml), "utf8"));
-
-        // 4️⃣ Ler e modificar sheet XML
+        // 3️⃣ Ler e modificar sheet XML
         let sheetXml = zip.readAsText("xl/worksheets/sheet1.xml");
 
         const ROW_START = 9;
@@ -110,20 +93,11 @@ export default async function handler(req, res) {
         const beforeSheetData = sheetXml.substring(0, sheetDataStart);
         const afterSheetData = sheetXml.substring(sheetDataEnd);
 
-        // Extrair todas as rows de cabeçalho preservando conteúdo original
-        // Rows 2,3,4 têm o texto da corporação + imagem ancorada
-        // Adicionamos altura fixa para a imagem não distorcer
+        // Extrair rows de cabeçalho preservando conteúdo original (2,3,4 = imagem+texto, 6 = título, 7 = espaço, 8 = headers)
         const headerRows = [];
         for (const r of ["2", "3", "4", "6", "7", "8"]) {
             const match = sheetXml.match(new RegExp(`<row r="${r}"[^>]*>.*?</row>`, "s"));
-            if (match) {
-                let rowXml = match[0];
-                // Adicionar altura fixa nas rows da imagem (2,3,4) se não tiverem
-                if (["2", "3", "4"].includes(r) && !rowXml.includes('customHeight')) {
-                    rowXml = addFixedHeight(rowXml, "28.5");
-                }
-                headerRows.push(rowXml);
-            }
+            if (match) headerRows.push(match[0]);
         }
 
         // Substituir título em B6 com mês/ano dinâmico
@@ -135,7 +109,7 @@ export default async function handler(req, res) {
             );
         }
 
-        // Construir rows de dados
+        // 4️⃣ Construir rows de dados
         let dataRowsXml = "";
         employees.forEach((emp, index) => {
             const rowNum = ROW_START + index;
@@ -157,7 +131,7 @@ export default async function handler(req, res) {
             `<pageMargins left="0.25" right="0.25" top="0.25" bottom="0.25" header="0" footer="0"/>`
         );
 
-        // pageSetup landscape A4 sem fitToPage
+        // pageSetup landscape A4
         newSheetXml = newSheetXml.replace(
             /<pageSetup[^\/]*\/>/,
             `<pageSetup paperSize="9" scale="75" orientation="landscape" r:id="rId1"/>`

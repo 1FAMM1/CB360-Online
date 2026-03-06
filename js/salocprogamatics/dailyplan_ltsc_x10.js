@@ -119,31 +119,36 @@
     }
 async function saveEligibility(tables, day, month, year, corpOperNr) {
   const eligibilityRecords = [];
-
+  
   const fDay = String(day).padStart(2, '0');
   const fMonth = String(month).padStart(2, '0');
   const fYear = String(year);
 
   for (const table of tables) {
+    // table.rows vem do collectTableData() que já tem as propriedades n_int, entrada, obs, etc.
     for (const row of table.rows) {
-      const obs = (row.obs || "").toLowerCase();
-      const nInt = row.n_int?.toString().trim();
-      const abvName = row.nome?.toString().trim();
-      let entranceHour = row.entrada?.toString().trim();
+      // Forçamos a conversão para string e limpeza de espaços para evitar erros
+      const obs = (row.obs || "").toString().toLowerCase().trim();
+      const nInt = (row.n_int || "").toString().trim();
+      const entranceHour = (row.entrada || "").toString().trim();
+      const abvName = (row.nome || "").toString().trim();
 
-      // Apenas profissionais válidos com hora de entrada
-      if (!obs.includes("profissional") || !nInt || !entranceHour) continue;
+      // LOG DE DEBUG: Verifique na consola se estes valores aparecem quando clica em emitir
+      console.log(`Verificando Elegibilidade: NInt: ${nInt}, Hora: ${entranceHour}, Obs: ${obs}`);
 
-      // Limpa possíveis espaços e valida formato HH:MM
-      entranceHour = entranceHour.replace(/\s/g, '');
-      const hourParts = entranceHour.split(":");
-      if (hourParts.length !== 2) continue;
+      // 1. Condição: Observação tem de conter "profissional"
+      if (!obs.includes("profissional")) continue;
+      
+      // 2. Condição: Tem de ter número mecanográfico e hora
+      if (!nInt || !entranceHour) continue;
 
+      // 3. Condição: Hora entre 00:00 e 06:59
+      // Se a entrada for "04:00", o split(':') dá ["04", "00"]
+      const hourParts = entranceHour.split(':');
+      if (hourParts.length < 2) continue; // Ignora se não tiver formato HH:mm
+      
       const hourNum = parseInt(hourParts[0], 10);
-      const minNum = parseInt(hourParts[1], 10);
-      if (isNaN(hourNum) || isNaN(minNum)) continue;
 
-      // Filtra entradas entre 00:00 e 06:59
       if (hourNum >= 0 && hourNum <= 6) {
         eligibilityRecords.push({
           n_int: nInt,
@@ -151,7 +156,7 @@ async function saveEligibility(tables, day, month, year, corpOperNr) {
           day: fDay,
           month: fMonth,
           year: fYear,
-          exit_hour: entranceHour,
+          exit_hour: entranceHour, // Guarda a hora 04:00
           corp_oper_nr: String(corpOperNr)
         });
       }
@@ -159,43 +164,37 @@ async function saveEligibility(tables, day, month, year, corpOperNr) {
   }
 
   if (eligibilityRecords.length === 0) {
-    console.log("ℹ️ saveEligibility: Nada a gravar (sem profissionais na madrugada).");
+    console.log("ℹ️ saveEligibility: Filtros não validados (Profissional + Madrugada).");
     return true;
   }
 
   try {
-    // Limpeza de duplicados
-    const nIntList = eligibilityRecords.map(r => `'${r.n_int}'`).join(',');
+    const nIntList = eligibilityRecords.map(r => r.n_int).join(',');
     const delUrl = `${SUPABASE_URL}/rest/v1/reg_eligibility?corp_oper_nr=eq.${corpOperNr}&day=eq.${fDay}&month=eq.${fMonth}&year=eq.${fYear}&n_int=in.(${nIntList})`;
     
-    await fetch(delUrl, { 
-      method: "DELETE", 
-      headers: getSupabaseHeaders() 
-    });
+    await fetch(delUrl, { method: "DELETE", headers: getSupabaseHeaders() });
 
-    // Inserção
     const insUrl = `${SUPABASE_URL}/rest/v1/reg_eligibility`;
     const res = await fetch(insUrl, {
       method: "POST",
       headers: { 
         ...getSupabaseHeaders(), 
         "Content-Type": "application/json",
-        "Prefer": "return=minimal" 
+        "Prefer": "resolution=merge-duplicates" 
       },
       body: JSON.stringify(eligibilityRecords)
     });
 
     if (!res.ok) {
       const errorDetail = await res.text();
-      console.error("❌ Erro Supabase (reg_eligibility):", errorDetail);
+      console.error("❌ Erro Supabase reg_eligibility:", errorDetail);
       return false;
     }
 
-    console.log(`✅ reg_eligibility gravado com sucesso (${eligibilityRecords.length} registros)!`);
+    console.log("✅ Gravado em reg_eligibility com sucesso!");
     return true;
-
   } catch (err) {
-    console.error("❌ Erro de exceção em saveEligibility:", err);
+    console.error("❌ Erro em saveEligibility:", err);
     return false;
   }
 }
@@ -631,6 +630,7 @@ if (!eligibilitySaved) {
         document.querySelectorAll('.shift-btn').forEach(btn => btn.classList.remove('active'));
       }
     });
+
 
 
 

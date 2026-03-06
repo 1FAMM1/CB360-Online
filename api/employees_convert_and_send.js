@@ -638,32 +638,21 @@
     const zip = new AdmZip(Buffer.from(arrayBuffer));
     let newSheetXml = zip.readAsText("xl/worksheets/sheet1.xml");
 
-    const meses = [
-      "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-      "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
-    ];
+    const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
     const titulo = `MAPA SALARIAL - ${meses[month - 1].toUpperCase()} ${year}`;
 
-    // 1. Substitui o título na célula A1
-    newSheetXml = newSheetXml.replace(
-      /<c r="A1" t="s"><v>.*?<\/v><\/c>/, 
-      `<c r="A1" t="t"><v>${escapeXml(titulo)}</v></c>`
-    );
+    // 1. Corrigir o Título (Célula A1)
+    newSheetXml = newSheetXml.replace(/<c r="A1" t="s"><v>.*?<\/v><\/c>/, `<c r="A1" t="t"><v>${escapeXml(titulo)}</v></c>`);
 
-    // 2. Localiza o corpo dos dados (SheetData)
+    // 2. Gerar as linhas dos funcionários (Herdando o estilo fino do template)
     const sheetDataMatch = newSheetXml.match(/<sheetData>(.*?)<\/sheetData>/s);
-    if (!sheetDataMatch) throw new Error("Estrutura do Excel inválida");
-
-    // Mantemos o cabeçalho original (Row 2) e geramos as novas linhas
     const headerRow = sheetDataMatch[1].match(/<row r="2".*?<\/row>/s)[0];
     let newRowsXml = headerRow;
 
     employees.forEach((emp, index) => {
       const rowIndex = index + 3;
-      // Nota: Removemos o ht="25" e customHeight para respeitar os 20 do teu template.
-      // t="t" (inlineStr) garante que as quebras de linha \n funcionam para os cards.
-      newRowsXml += `
-      <row r="${rowIndex}">
+      // Removido ht="25" e customHeight para não esmagar a linha
+      newRowsXml += `<row r="${rowIndex}">
         <c r="A${rowIndex}" t="t"><v>${escapeXml(emp.name)}</v></c>
         <c r="B${rowIndex}" t="t"><v>${escapeXml(emp.subShift)}</v></c>
         <c r="C${rowIndex}" t="t"><v>${escapeXml(emp.casualties)}</v></c>
@@ -675,41 +664,29 @@
       </row>`;
     });
 
-    // Substitui todo o conteúdo da tabela
     newSheetXml = newSheetXml.replace(/<sheetData>.*?<\/sheetData>/s, `<sheetData>${newRowsXml}</sheetData>`);
 
-    // 3. CORREÇÃO DO TÍTULO (MERGE): Remove as linhas internas entre A1 e H1
+    // 3. Unir Células do Título (Acaba com as margens internas em A1:H1)
     if (newSheetXml.includes("</sheetData>")) {
-      // Se já existirem merges, removemos para evitar duplicados e adicionamos o nosso
-      newSheetXml = newSheetXml.replace(/<mergeCells.*?>.*?<\/mergeCells>/s, "");
-      newSheetXml = newSheetXml.replace(
-        "</sheetData>", 
-        `</sheetData><mergeCells count="1"><mergeCell ref="A1:H1"/></mergeCells>`
-      );
+      newSheetXml = newSheetXml.replace(/<mergeCells.*?>.*?<\/mergeCells>/s, ""); // Limpa merges antigos
+      newSheetXml = newSheetXml.replace("</sheetData>", `</sheetData><mergeCells count="1"><mergeCell ref="A1:H1"/></mergeCells>`);
     }
 
-    // 4. UNIFORMIZAÇÃO DAS MARGENS (Topo 0.75, Lados 0.25)
-    newSheetXml = newSheetXml.replace(
-      /<pageMargins[^\/]*\/>/,
-      `<pageMargins left="0.25" right="0.25" top="0.75" bottom="0.25" header="0" footer="0"/>`
-    );
+    // 4. Uniformizar Margens (Topo 0.75, Laterais 0.25)
+    newSheetXml = newSheetXml.replace(/<pageMargins[^\/]*\/>/, `<pageMargins left="0.25" right="0.25" top="0.75" bottom="0.25" header="0" footer="0"/>`);
 
-    // 5. CONFIGURAÇÃO DE PÁGINA (Fit to Page igual às Férias)
+    // 5. Ajustar para caber na largura (Fit to Page)
     newSheetXml = newSheetXml.replace(/<sheetPr>.*?<\/sheetPr>/, `<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr>`);
-    newSheetXml = newSheetXml.replace(
-      /<pageSetup[^\/]*\/>/, 
-      `<pageSetup paperSize="9" orientation="landscape" r:id="rId1"/>`
-    );
+    newSheetXml = newSheetXml.replace(/<pageSetup[^\/]*\/>/, `<pageSetup paperSize="9" orientation="landscape" r:id="rId1"/>`);
 
-    // Atualiza o ficheiro dentro do ZIP
     zip.updateFile("xl/worksheets/sheet1.xml", Buffer.from(newSheetXml, "utf8"));
-
     const modifiedBuffer = zip.toBuffer();
+    
     const tempDir = os.tmpdir();
     inputPath = path.join(tempDir, `salary_${Date.now()}.xlsx`);
     fs.writeFileSync(inputPath, modifiedBuffer);
 
-    // --- Envio para Adobe PDF Services ---
+    // Envio para Adobe
     const credentials = new ServicePrincipalCredentials({clientId: CLIENT_ID, clientSecret: CLIENT_SECRET});
     const pdfServices = new PDFServices({credentials});
     const inputAsset = await pdfServices.upload({readStream: fs.createReadStream(inputPath), mimeType: MimeType.XLSX});
@@ -730,11 +707,11 @@
   } catch (error) {
     if (inputPath && fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
     console.error("Erro handleMapaSalarial:", error);
-    return res.status(500).send("Erro ao gerar PDF.");
+    return res.status(500).json({ error: error.message });
   }
 }
 
-// Auxiliar para evitar que caracteres especiais quebrem o XML
+// Função auxiliar essencial para não quebrar o XML
 function escapeXml(unsafe) {
   if (!unsafe) return "";
   return unsafe.toString()

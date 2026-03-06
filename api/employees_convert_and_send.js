@@ -629,112 +629,96 @@
         return res.status(500).json({error: err.message});
       }
     }
-    export default async function handler(req, res) {
-  // 1. TRATAMENTO DE CORS (Obrigatório para o CodePen não bloquear)
-  res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+    async function handleMapaSalarial(req, res) {
+      let inputPath = null;
+      try {
+        const { year, month, employees } = req.body;
+        const MONTH_NAMES = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"];
+        const monthName = MONTH_NAMES[month - 1];
+        const templateResponse = await fetch(TEMPLATES.mapa_salarial);
+        if (!templateResponse.ok) throw new Error("Erro ao carregar template do GitHub");
+        const templateBuffer = await templateResponse.buffer();
+        const zip = new AdmZip(templateBuffer);
+        let sheetXml = zip.readAsText("xl/worksheets/sheet1.xml");
+        const ROW_START = 9;
+        const ROW_MAX = 220;
+        const sheetDataStart = sheetXml.indexOf("<sheetData>");
+        const sheetDataEnd = sheetXml.indexOf("</sheetData>") + "</sheetData>".length;
+        const beforeSheetData = sheetXml.substring(0, sheetDataStart);
+        const afterSheetData = sheetXml.substring(sheetDataEnd);
+        const headerRows = [];
+        for (const r of ["2", "3", "4", "6", "7", "8"]) {
+          const match = sheetXml.match(new RegExp(`<row r="${r}"[^>]*>.*?</row>`, "s"));
+          if (match) headerRows.push(match[0]);
+        }
+        const row6Index = headerRows.findIndex(r => r.includes(`r="6"`));
+        if (row6Index !== -1) {
+          headerRows[row6Index] = headerRows[row6Index].replace(
+            /<c r="B6"[^>]*>.*?<\/c>|<c r="B6"[^\/]*\/>/s,
+            `<c r="B6" s="10" t="inlineStr"><is><t>MAPA SALARIAL - ${monthName} ${year}</t></is></c>`
+          );
+        }
+        let dataRowsXml = "";
+        employees.forEach((emp, index) => {
+          const rowNum = ROW_START + index;
+          if (rowNum > ROW_MAX) return;
+          dataRowsXml += makeRowXml(rowNum, emp);
+        });
+        for (let i = ROW_START + employees.length; i <= ROW_MAX; i++) {
+          dataRowsXml += `<row r="${i}" spans="2:9" ht="15" hidden="1" x14ac:dyDescent="0.25"><c r="B${i}" s="8"/><c r="C${i}" s="14"/><c r="D${i}" s="14"/><c r="E${i}" s="14"/><c r="F${i}" s="14"/><c r="G${i}" s="14"/><c r="H${i}" s="14"/><c r="I${i}" s="15"/></row>`;
+        }
+        const newSheetData = `<sheetData>${headerRows.join("")}${dataRowsXml}</sheetData>`;
+        let newSheetXml = beforeSheetData + newSheetData + afterSheetData;
+        newSheetXml = newSheetXml.replace(/<pageMargins[^\/]*\/>/, `<pageMargins left="0.25" right="0.25" top="0.25" bottom="0.25" header="0" footer="0"/>`);
+        newSheetXml = newSheetXml.replace(/<pageSetup[^\/]*\/>/, `<pageSetup paperSize="9" scale="75" orientation="landscape" r:id="rId1"/>`);
+        newSheetXml = newSheetXml.replace(/<sheetPr><pageSetUpPr fitToPage="1"\/><\/sheetPr>/, `<sheetPr><pageSetUpPr fitToPage="0"/></sheetPr>`);
+        zip.updateFile("xl/worksheets/sheet1.xml", Buffer.from(newSheetXml, "utf8"));
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+const tempDir = os.tmpdir();
+inputPath = path.join(tempDir, `mapa_salarial_${Date.now()}.xlsx`);
+zip.writeZip(inputPath);
 
-  const { mode } = req.body;
+const credentials = new ServicePrincipalCredentials({
+  clientId: CLIENT_ID,
+  clientSecret: CLIENT_SECRET
+});
 
-  try {
-    if (mode === "mapa_salarial") {
-      return await handleMapaSalarial(req, res);
+const pdfServices = new PDFServices({ credentials });
+
+const inputAsset = await pdfServices.upload({
+  readStream: fs.createReadStream(inputPath),
+  mimeType: MimeType.XLSX
+});
+
+const job = new CreatePDFJob({ inputAsset });
+const pollingURL = await pdfServices.submit({ job });
+
+const result = await pdfServices.getJobResult({
+  pollingURL,
+  resultType: CreatePDFResult
+});
+
+const streamAsset = await pdfServices.getContent({
+  asset: result.result.asset
+});
+
+const chunks = [];
+for await (let chunk of streamAsset.readStream) {
+  chunks.push(chunk);
+}
+
+if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
+
+res.setHeader("Content-Type", "application/pdf");
+res.setHeader(
+  "Content-Disposition",
+  `attachment; filename="Mapa_Salarial_${monthName}_${year}.pdf"`
+);
+
+return res.status(200).send(Buffer.concat(chunks));
+      } catch (error) {
+        if (inputPath && fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
+        console.error("Erro handleMapaSalarial:", error);
+        return res.status(500).json({ error: error.message });
+      }
     }
-    // ... as tuas outras condições de modo aqui ...
-  } catch (error) {
-    console.error("Erro no Handler:", error);
-    return res.status(500).json({ error: error.message });
-  }
-}
-
-async function handleMapaSalarial(req, res) {
-  const { year, month, employees } = req.body;
-  let inputPath = null;
-  try {
-    const templateRes = await fetch(TEMPLATES.mapa_salarial);
-    const arrayBuffer = await templateRes.arrayBuffer();
-    const zip = new AdmZip(Buffer.from(arrayBuffer));
-    let newSheetXml = zip.readAsText("xl/worksheets/sheet1.xml");
-
-    const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-    const titulo = `MAPA SALARIAL - ${meses[month - 1].toUpperCase()} ${year}`;
-
-    // 2. TÍTULO LÍMPO (Usa t="t" para inline string)
-    newSheetXml = newSheetXml.replace(/<c r="A1" t="s"><v>.*?<\/v><\/c>/, `<c r="A1" t="t"><v>${escapeXml(titulo)}</v></c>`);
-
-    const sheetDataMatch = newSheetXml.match(/<sheetData>(.*?)<\/sheetData>/s);
-    const headerRow = sheetDataMatch[1].match(/<row r="2".*?<\/row>/s)[0];
-    let newRowsXml = headerRow;
-
-    // 3. LINHAS SEM "HT" E SEM ESTILOS MANUAIS (Para manter as linhas finas do template)
-    employees.forEach((emp, index) => {
-      const rowIndex = index + 3;
-      newRowsXml += `<row r="${rowIndex}">
-        <c r="A${rowIndex}" t="t"><v>${escapeXml(emp.name)}</v></c>
-        <c r="B${rowIndex}" t="t"><v>${escapeXml(emp.subShift)}</v></c>
-        <c r="C${rowIndex}" t="t"><v>${escapeXml(emp.casualties)}</v></c>
-        <c r="D${rowIndex}" t="t"><v>${escapeXml(emp.vacations)}</v></c>
-        <c r="E${rowIndex}" t="t"><v>${escapeXml(emp.parental)}</v></c>
-        <c r="F${rowIndex}" t="t"><v>${escapeXml(emp.disgust)}</v></c>
-        <c r="G${rowIndex}" t="t"><v>${escapeXml(emp.justified)}</v></c>
-        <c r="H${rowIndex}" t="t"><v>${escapeXml(emp.unjustified)}</v></c>
-      </row>`;
-    });
-
-    newSheetXml = newSheetXml.replace(/<sheetData>.*?<\/sheetData>/s, `<sheetData>${newRowsXml}</sheetData>`);
-
-    // 4. MESCLAR TÍTULO (Remove os riscos verticais do cabeçalho)
-    if (newSheetXml.includes("</sheetData>")) {
-       newSheetXml = newSheetXml.replace(/<mergeCells.*?>.*?<\/mergeCells>/s, ""); // Limpa se houver
-       newSheetXml = newSheetXml.replace("</sheetData>", `</sheetData><mergeCells count="1"><mergeCell ref="A1:H1"/></mergeCells>`);
-    }
-
-    // 5. UNIFORMIZAR MARGENS (Topo 0.75, Lados 0.25)
-    newSheetXml = newSheetXml.replace(/<pageMargins[^\/]*\/>/, `<pageMargins left="0.25" right="0.25" top="0.75" bottom="0.25" header="0" footer="0"/>`);
-
-    // Configuração de página
-    newSheetXml = newSheetXml.replace(/<sheetPr>.*?<\/sheetPr>/, `<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr>`);
-    newSheetXml = newSheetXml.replace(/<pageSetup[^\/]*\/>/, `<pageSetup paperSize="9" orientation="landscape" r:id="rId1"/>`);
-
-    zip.updateFile("xl/worksheets/sheet1.xml", Buffer.from(newSheetXml, "utf8"));
-    const modifiedBuffer = zip.toBuffer();
-    
-    const tempDir = os.tmpdir();
-    inputPath = path.join(tempDir, `salary_${Date.now()}.xlsx`);
-    fs.writeFileSync(inputPath, modifiedBuffer);
-
-    // Adobe PDF Services
-    const credentials = new ServicePrincipalCredentials({clientId: CLIENT_ID, clientSecret: CLIENT_SECRET});
-    const pdfServices = new PDFServices({credentials});
-    const inputAsset = await pdfServices.upload({readStream: fs.createReadStream(inputPath), mimeType: MimeType.XLSX});
-    const job = new CreatePDFJob({inputAsset});
-    const pollingURL = await pdfServices.submit({job});
-    const result = await pdfServices.getJobResult({pollingURL, resultType: CreatePDFResult});
-    const streamAsset = await pdfServices.getContent({asset: result.result.asset});
-
-    const chunks = [];
-    for await (let chunk of streamAsset.readStream) chunks.push(chunk);
-
-    if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
-
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename=Mapa_Salarial.pdf`);
-    return res.status(200).send(Buffer.concat(chunks));
-
-  } catch (error) {
-    if (inputPath && fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
-    console.error("Erro Interno:", error);
-    return res.status(500).json({ error: error.message });
-  }
-}
-
-function escapeXml(unsafe) {
-  if (!unsafe) return "";
-  return unsafe.toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
-}

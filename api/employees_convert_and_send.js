@@ -652,11 +652,17 @@
           if (match) headerRows.push(match[0]);
         }
         const row6Index = headerRows.findIndex(r => r.includes(`r="6"`));
-        if (row6Index !== -1) {
-          headerRows[row6Index] = headerRows[row6Index].replace(
-  /<c r="B6"[^>]*>.*?<\/c>|<c r="B6"[^\/]*\/>/s,
-  `<c r="B6" s="${originalStyle}" t="inlineStr"><is><t>MAPA SALARIAL - ${monthName} ${year}</t></is></c>`
-);
+if (row6Index !== -1) {
+  // 1. Primeiro, capturamos o ID do estilo (s="X") que já existe na célula B6 original
+  const styleMatch = headerRows[row6Index].match(/<c r="B6" s="(\d+)"/);
+  const originalStyle = styleMatch ? styleMatch[1] : "10"; // "10" é o fallback se não achar
+
+  // 2. Agora usamos o estilo original na substituição
+  headerRows[row6Index] = headerRows[row6Index].replace(
+    /<c r="B6"[^>]*>.*?<\/c>|<c r="B6"[^\/]*\/>/s,
+    `<c r="B6" s="${originalStyle}" t="inlineStr"><is><t>MAPA SALARIAL - ${monthName} ${year}</t></is></c>`
+  );
+}
         }
         let dataRowsXml = "";
         employees.forEach((emp, index) => {

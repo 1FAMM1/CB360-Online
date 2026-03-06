@@ -19,7 +19,7 @@ const CLIENT_ID = process.env.ADOBE_CLIENT_ID;
 const CLIENT_SECRET = process.env.ADOBE_CLIENT_SECRET;
 
 function escapeXml(str) {
-    if (!str || str === "-") return "-";
+    if (!str || str === "-") return "";
     return String(str)
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")

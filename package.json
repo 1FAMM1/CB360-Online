@@ -1,6 +1,10 @@
 {
-  "name": "CB360-Mobile",
+  "name": "cb360-mobile",
   "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "mkdir -p public && echo 'build bypass'"
+  },
   "dependencies": {
     "@adobe/pdfservices-node-sdk": "^4.1.0",
     "@supabase/supabase-js": "^2.39.0",

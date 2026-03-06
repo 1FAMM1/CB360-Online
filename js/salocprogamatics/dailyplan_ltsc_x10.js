@@ -117,7 +117,7 @@
         return false;
       }
     }
-async function saveEligibility(tables, day, month, year, corpOperNr) {
+async function saveEligibility(tables, day, month, year, corpOperNr, shift) {
   const eligibilityRecords = [];
   
   const fDay = String(day).padStart(2, '0');
@@ -125,50 +125,51 @@ async function saveEligibility(tables, day, month, year, corpOperNr) {
   const fYear = String(year);
 
   for (const table of tables) {
-    // table.rows vem do collectTableData() que já tem as propriedades n_int, entrada, obs, etc.
+    const isInemTeam = table.title === "INEM"; // Verifica se é a equipa INEM
+
     for (const row of table.rows) {
-      // Forçamos a conversão para string e limpeza de espaços para evitar erros
       const obs = (row.obs || "").toString().toLowerCase().trim();
       const nInt = (row.n_int || "").toString().trim();
       const entranceHour = (row.entrada || "").toString().trim();
       const abvName = (row.nome || "").toString().trim();
 
-      // LOG DE DEBUG: Verifique na consola se estes valores aparecem quando clica em emitir
-      console.log(`Verificando Elegibilidade: NInt: ${nInt}, Hora: ${entranceHour}, Obs: ${obs}`);
+      // Critério base: Tem de ter N. Int e ser "Profissional"
+      if (!nInt || !obs.includes("profissional")) continue;
 
-      // 1. Condição: Observação tem de conter "profissional"
-      if (!obs.includes("profissional")) continue;
-      
-      // 2. Condição: Tem de ter número mecanográfico e hora
-      if (!nInt || !entranceHour) continue;
+      let shouldSave = false;
 
-      // 3. Condição: Hora entre 00:00 e 06:59
-      // Se a entrada for "04:00", o split(':') dá ["04", "00"]
+      // 1. Verificação por Horário (00:00 - 06:59)
       const hourParts = entranceHour.split(':');
-      if (hourParts.length < 2) continue; // Ignora se não tiver formato HH:mm
-      
-      const hourNum = parseInt(hourParts[0], 10);
+      if (hourParts.length >= 2) {
+        const hourNum = parseInt(hourParts[0], 10);
+        if (hourNum >= 0 && hourNum <= 6) {
+          shouldSave = true;
+        }
+      }
 
-      if (hourNum >= 0 && hourNum <= 6) {
+      // 2. Verificação por Turno N + Equipa INEM
+      if (shift === 'N' && isInemTeam) {
+        shouldSave = true;
+      }
+
+      if (shouldSave) {
         eligibilityRecords.push({
           n_int: nInt,
           abv_name: abvName,
           day: fDay,
           month: fMonth,
           year: fYear,
-          exit_hour: entranceHour, // Guarda a hora 04:00
+          exit_hour: entranceHour, 
           corp_oper_nr: String(corpOperNr)
         });
       }
     }
   }
 
-  if (eligibilityRecords.length === 0) {
-    console.log("ℹ️ saveEligibility: Filtros não validados (Profissional + Madrugada).");
-    return true;
-  }
+  if (eligibilityRecords.length === 0) return true;
 
   try {
+    // Limpeza de duplicados antes de inserir
     const nIntList = eligibilityRecords.map(r => r.n_int).join(',');
     const delUrl = `${SUPABASE_URL}/rest/v1/reg_eligibility?corp_oper_nr=eq.${corpOperNr}&day=eq.${fDay}&month=eq.${fMonth}&year=eq.${fYear}&n_int=in.(${nIntList})`;
     
@@ -185,14 +186,8 @@ async function saveEligibility(tables, day, month, year, corpOperNr) {
       body: JSON.stringify(eligibilityRecords)
     });
 
-    if (!res.ok) {
-      const errorDetail = await res.text();
-      console.error("❌ Erro Supabase reg_eligibility:", errorDetail);
-      return false;
-    }
-
-    console.log("✅ Gravado em reg_eligibility com sucesso!");
-    return true;
+    if (res.ok) console.log("✅ Elegibilidade (Madrugada/INEM N) gravada!");
+    return res.ok;
   } catch (err) {
     console.error("❌ Erro em saveEligibility:", err);
     return false;
@@ -630,6 +625,7 @@ if (!eligibilitySaved) {
         document.querySelectorAll('.shift-btn').forEach(btn => btn.classList.remove('active'));
       }
     });
+
 
 
 

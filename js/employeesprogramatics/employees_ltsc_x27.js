@@ -1,4 +1,4 @@
-/* ============================================
+    /* ============================================
     FASE 01 - CREATE AND CONTROL EMPLOYEE SCALES
     ============================================ */
     /* ==== EMPLOYEES SCALES MONTH BUTTONS ===== */    
@@ -623,7 +623,7 @@
           { headers: getSupabaseHeaders() }
         );
         if (extraHoursResponse.ok) {
-          const extraHoursData = await extraHoursResponse.json();
+          const extraHoursData = await  extraHoursResponse.json();
           extraHoursData.forEach(item => {
             if (!extraHoursMap[item.n_int]) {
               extraHoursMap[item.n_int] = 0;
@@ -3464,9 +3464,14 @@
     async function createGlobalHolidayMap() {
       const cardBody = document.querySelector("#vacation-scheduling-map .card-body");
       if (!cardBody) return;
-      const year = parseInt(document.getElementById("holiday-year-select")?.value || new Date().getFullYear());
+      const filterElem = document.getElementById("global-year-filter");
+      const year = filterElem ? parseInt(filterElem.value) : parseInt(document.getElementById("holiday-year-select")?.value || new Date().getFullYear());      
       const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
-      cardBody.innerHTML = "⌛ A carregar mapa global...";
+      cardBody.innerHTML = "⌛ A carregar mapa de férias...";
+      let yearOptions = "";
+      for (let y = 2026; y <= 2036; y++) {
+        yearOptions += `<option value="${y}" ${y === year ? 'selected' : ''}>${y}</option>`;
+      }
       try {
         const [empRes, shiftRes] = await Promise.all([
           fetch(`${SUPABASE_URL}/rest/v1/reg_employees?corp_oper_nr=eq.${corpOperNr}&order=abv_name.asc`, {
@@ -3479,10 +3484,6 @@
         const allEmployees = await empRes.json();
         const allShifts = await shiftRes.json();
         const employees = allEmployees.filter(emp => allShifts.some(s => s.n_int === emp.n_int));
-        if (employees.length === 0) {
-          cardBody.innerHTML = `<div class="alert alert-info">Não existem férias marcadas para o ano ${year}.</div>`;
-          return;
-        }
         if (!document.getElementById("map-core-css")) {
           const s = document.createElement("style");
           s.id = "map-core-css";
@@ -3509,23 +3510,39 @@
             .holiday-row:hover .m-no-holiday {color: #64748b !important;}
             .holiday-row:hover td strong {color: #000;}
             .holiday-row:hover .m-total {background: #334155 !important; color: #fbbf24 !important;}
+            .p-year-select {padding: 4px 8px; border-radius: 4px; border: 1px solid #cbd5e1; font-weight: 400; outline: none;}
            `;
           document.head.appendChild(s);
         }
         let html = `
           <div class="m-wrapper">
-            <div class="m-title"><span class="m-badge-rh">RH</span> MAPA GLOBAL DE FÉRIAS ${year}</div>
-            <div class="m-container">
-              <table class="m-table">
-                <thead>
-                  <tr>
-                    <th>FUNCIONÁRIO</th>
-                    ${["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"].map(m => `<th style="width:70px;">${m.toUpperCase()}</th>`).join('')}
-                    <th class="m-total">DIAS</th>
-                  </tr>
-                </thead>
-                <tbody>
-              `;
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <div class="m-title" style="margin:0;"><span class="m-badge-rh">RH</span> MAPA GLOBAL DE FÉRIAS ${year}</div>
+              <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700;">
+                <span>Ano:</span>
+                <select id="global-year-filter" class="p-year-select" onchange="createGlobalHolidayMap()">
+                  ${yearOptions}
+                </select>
+              </div>
+            </div>
+        `;
+        if (employees.length === 0) {
+          html += `<div class="alert alert-info">Não existem férias marcadas para o ano ${year}.</div></div>`;
+          cardBody.innerHTML = html;
+          return;
+        }
+        html += `
+          <div class="m-container">
+            <table class="m-table">
+              <thead>
+                <tr>
+                  <th>FUNCIONÁRIO</th>
+                  ${["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"].map(m => `<th style="width:70px;">${m.toUpperCase()}</th>`).join('')}
+                  <th class="m-total">DIAS</th>
+                </tr>
+              </thead>
+              <tbody>
+            `;
         employees.forEach(emp => {
           const shifts = allShifts.filter(s => s.n_int === emp.n_int);
           let p = [];
@@ -3788,16 +3805,11 @@
       link.download = `Discrepancias_Ferias_${year}.csv`;
       link.click();
     }
-    
-    
-    
-    
-    
-  
     async function createPriorityMap() {
       const cardBody = document.querySelector("#priority-scheduling-map .card-body");
       if (!cardBody) return;
-      const selectedYear = parseInt(document.getElementById("holiday-year-select")?.value || new Date().getFullYear());
+      const filterElem = document.getElementById("priority-year-filter");
+      const selectedYear = filterElem ? parseInt(filterElem.value) : parseInt(document.getElementById("holiday-year-select")?.value || new Date().getFullYear());
       const priorityYear = selectedYear + 1;
       const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       cardBody.innerHTML = "⌛ A calcular pontuações de prioridade...";
@@ -3814,9 +3826,9 @@
         const allEmployees = await empRes.json();
         const allShifts = await shiftRes.json();
         const employeesWithVacation = allEmployees.filter(emp => allShifts.some(s => s.n_int === emp.n_int));
-        if (employeesWithVacation.length === 0) {
-          cardBody.innerHTML = `<div class="alert alert-info">Não existem dados de férias em ${selectedYear} para calcular prioridades.</div>`;
-          return;
+        let yearOptions = "";
+        for (let y = 2026; y <= 2036; y++) {
+          yearOptions += `<option value="${y}" ${y === selectedYear ? 'selected' : ''}>${y}</option>`;
         }
         if (!document.getElementById("priority-core-css")) {
           const s = document.createElement("style");
@@ -3828,10 +3840,11 @@
             .p-table {width: 100%; border-collapse: separate; border-spacing: 0; font-size: 10px; table-layout: fixed;}
             .p-table thead tr:first-child th {position: sticky; top: 0; z-index: 100; background: #f8fafc; border-bottom: 1px solid #cbd5e1; border-right: 1px solid #cbd5e1; height: 35px;}
             .p-table thead tr.q-header th {position: sticky; top: 35px; z-index: 90; background: #e2e8f0; border-bottom: 2px solid #94a3b8; height: 20px;}
-            .p-name-col {position: sticky !important; left: 0; width: 150px; z-index: 80; background: #f1f5f9 !important; border-right: 2px solid #cbd5e1 !important; 
-                         text-align: left !important; padding-left: 10px !important;}
-            .p-score-col {position: sticky !important; right: 0; width: 70px; z-index: 80; background: #1e293b !important; color: #fbbf24 !important; border-left: 2px solid #cbd5e1 !important; 
+            .p-name-col {position: sticky !important; left: 0; width: 150px; z-index: 80; background: #f1f5f9 !important; border-right: 2px solid #cbd5e1 !important; text-align: left !important; 
+                         padding-left: 10px !important;}
+            .p-score-col {position: sticky !important; right: 0; width: 70px; z-index: 80; background: #475569 !important; color: #fff !important; border-left: 2px solid #cbd5e1 !important; 
                           font-weight: 900; font-size: 12px; text-align: center;}
+            .priority-row:hover .p-score-col {background: #334155 !important; color: #fbbf24 !important;}
             thead tr:first-child th.p-name-col {z-index: 110; left: 0; top: 0;}
             thead tr.q-header th.p-name-col {z-index: 105; left: 0; top: 35px;}
             thead tr:first-child th.p-score-col {z-index: 110; right: 0; top: 0;}
@@ -3840,34 +3853,52 @@
             .q-val {color: #94a3b8;}
             .q-has-data {color: #1e293b !important; font-weight: 800 !important; background: #f8fafc;}
             .q1 {border-right: 1px dotted #cbd5e1 !important;}
-            .m-title {font-size: 16px; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;}
-            .m-badge-rh {background: #1e293b; color: #fff; padding: 2px 7px; border-radius: 4px; font-size: 10px;}
-            .m-footer {display: flex; justify-content: flex-end; margin-top: 10px; gap: 8px;}
-            .m-btn {background: #1e293b; color: #fff; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px;}
+            .p-badge-rh {background: #1e293b; color: #fff; padding: 2px 7px; border-radius: 4px; font-size: 10px;}
+            .p-footer {display: flex; justify-content: flex-end; margin-top: 10px; gap: 8px;}
+            .p-btn {background: #1e293b; color: #fff; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px;}
             .priority-row:hover td {background-color: #f1f5f9 !important;}
+            .p-header-flex {display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;}
+            .p-title {font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 8px; margin: 0;}
+            .p-filter-box {display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700;}
+            .p-year-select {padding: 4px 8px; border-radius: 4px; border: 1px solid #cbd5e1; font-weight: 400; outline: none;}
           `;
           document.head.appendChild(s);
         }
         const meses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
         let html = `
           <div class="p-wrapper">
-            <div class="m-title">
-              <span class="m-badge-rh">RH</span> PRIORIDADE DE MARCAÇÃO DE FÉRIAS ${priorityYear}
-            </div>
-            <div class="p-container">
-              <table class="p-table">
-                <thead>
-                  <tr>
-                    <th rowspan="2" class="p-name-col">FUNCIONÁRIO</th>
-                    ${meses.map(m => `<th colspan="2" style="width:75px;">${m.toUpperCase()}</th>`).join('')}
-                    <th rowspan="2" class="p-score-col">TOTAL</th>
-                  </tr>
-                  <tr class="q-header">
-                    ${Array(12).fill(0).map(() => `<th class="q1">Q1</th><th>Q2</th>`).join('')}
-                  </tr>
-                </thead>
-              <tbody>
+            <div class="p-header-flex">
+              <div class="p-title">
+                <span class="p-badge-rh">RH</span> PRIORIDADE DE MARCAÇÃO DE FÉRIAS ${priorityYear}
+              </div>
+              <div class="p-filter-box">
+                <span>Ano:</span>
+                  <select id="priority-year-filter" class="p-year-select" onchange="createPriorityMap()">
+                    ${yearOptions}
+                  </select>
+                </div>
+              </div>
             `;
+        if (employeesWithVacation.length === 0) {
+          html += `<div class="alert alert-info">Não existem dados de férias em ${selectedYear} para calcular prioridades.</div></div>`;
+          cardBody.innerHTML = html;
+          return;
+        }
+        html += `
+        <div class="p-container">
+          <table class="p-table">
+            <thead>
+              <tr>
+                <th rowspan="2" class="p-name-col">FUNCIONÁRIO</th>
+                  ${meses.map(m => `<th colspan="2" style="width:75px;">${m.toUpperCase()}</th>`).join('')}
+                <th rowspan="2" class="p-score-col">TOTAL</th>
+              </tr>
+              <tr class="q-header">
+                ${Array(12).fill(0).map(() => `<th class="q1">Q1</th><th>Q2</th>`).join('')}
+              </tr>
+            </thead>
+          <tbody>
+        `;
         employeesWithVacation.forEach(emp => {
           const empShifts = allShifts.filter(s => s.n_int === emp.n_int);
           let totalScore = 0;
@@ -3891,19 +3922,20 @@
             </tr>
           `;
         });
-        html += `</tbody></table></div>
-          <div class="m-footer">
-             <button class="m-btn" onclick="exportarPrioridadesPDF()">📥 Emitir Mapa</button>
+        html += `
+          </tbody></table></div>
+            <div class="p-footer">
+              <button class="p-btn" onclick="exportPrioritiesMap()">📥 Emitir Mapa</button>
+            </div>
           </div>
-          </div>
-          `;
+        `;
         cardBody.innerHTML = html;
       } catch (err) {
         console.error("Erro na Prioridade:", err);
         cardBody.innerHTML = "Erro ao carregar matriz de prioridades.";
       }
     }
-    async function exportarPrioridadesPDF() {
+    async function exportPrioritiesMap() {
       const selectedYear = parseInt(document.getElementById("holiday-year-select")?.value || new Date().getFullYear());
       const priorityYear = selectedYear + 1;
       const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
@@ -3943,10 +3975,14 @@
           alert("Não existem dados para exportar.");
           return;
         }
-        const response = await fetch('https://cb360-online.vercel.app/api/priority-map', {
+        const response = await fetch('https://cb360-online.vercel.app/api/employees_convert_and_send', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({priorityYear: priorityYear, employees: employeesPayload})
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            mode: "prioridade_ferias",
+            priorityYear: priorityYear,
+            employees: employeesPayload
+          })
         });
         if (!response.ok) throw new Error("Erro na resposta da API");
         const blob = await response.blob();
@@ -3964,9 +4000,6 @@
         if (btn) btn.innerText = originalText;
       }
     }
-    
-    
-    
     document.querySelectorAll(".sidebar-sub-submenu-button").forEach((btn) => {
       btn.addEventListener("click", () => {
         const access = btn.dataset.access;
@@ -3980,5 +4013,554 @@
         else if (access === "Mapa de Prioridade") {
           createPriorityMap();
         }
+      });
+    });
+    /* ============================================
+    FASE 05 - SHIFT ALLOWANCE MANAGEMENT AND EIPS CLASSIFICATION
+   ============================================ */
+    async function createEmployeeShiftAllowance() {
+      const cardBody = document.querySelector("#eligibility-subs-shift .card-body");
+      if (!cardBody) return;
+      const filterElem = document.getElementById("eligibility-year-filter");
+      const year = filterElem ? parseInt(filterElem.value) : parseInt(document.getElementById("holiday-year-select")?.value || new Date().getFullYear());
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      cardBody.innerHTML = "⌛ A carregar dados de elegibilidade...";
+      if (!document.getElementById("eligibility-core-css")) {
+        const s = document.createElement("style");
+        s.id = "eligibility-core-css";
+        s.innerHTML = `
+          .e-wrapper {font-family: 'Inter', sans-serif; color: #1e293b;}
+          .e-title {font-size: 16px; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;}
+          .e-badge-rh {background: #1e293b; color: #fff; padding: 2px 7px; border-radius: 4px; font-size: 10px;}          
+          .e-container {max-height: 500px; overflow: auto; border: 1px solid #cbd5e1; border-radius: 6px; position: relative; scrollbar-width: none;}
+          .e-container::-webkit-scrollbar {display: none;}
+          .e-table {width: 100%; border-collapse: separate; border-spacing: 0; font-size: 10.5px; table-layout: fixed;}
+          .e-table th {position: sticky; top: 0; z-index: 10; background: #f8fafc; border-bottom: 2px solid #94a3b8; border-right: 1px solid #cbd5e1; padding: 8px 2px; text-align: center;}
+          .e-table th:first-child, .e-table td:first-child {position: sticky; left: 0; width: 150px; min-width: 150px; z-index: 11; background: #f1f5f9; border-right: 2px solid #cbd5e1; 
+                                                            text-align: left; padding-left: 10px;}
+          .e-table th:first-child {z-index: 12;}
+          .e-table td {border-bottom: 1px solid #cbd5e1; border-right: 1px solid #cbd5e1; padding: 4px; text-align: center; vertical-align: middle; height: 35px;}
+          .e-eligible {background-color: #10b981 !important; color: white !important; font-weight: bold; border-radius: 4px; padding: 4px 10px; font-size: 9px;}
+          .e-no-data {color: #cbd5e1;}
+          .e-year-select {padding: 4px 8px; border-radius: 4px; border: 1px solid #cbd5e1; font-weight: 400; outline: none; cursor: pointer;}
+          .holiday-row:hover td {background-color: #f1f5f9 !important;}
+          .e-footer {display: flex; justify-content: flex-end; margin-top: 15px; gap: 10px;}
+          .e-btn {background: #1e293b; color: #fff; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; display: flex; align-items: center; gap: 6px;}
+          .e-btn:hover {background: #334155;}
+          .e-btn-info {background: #64748b;}
+          .e-btn-info:hover {background: #475569;}      
+        `;
+        document.head.appendChild(s);
+      }
+      try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/reg_eligibility?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}`, {
+          headers: getSupabaseHeaders()
+        });
+        const data = await response.json();
+        let yearOptions = "";
+        for (let y = 2026; y <= 2036; y++) {
+          yearOptions += `<option value="${y}" ${y === year ? 'selected' : ''}>${y}</option>`;
+        }
+        let html = `
+          <div class="e-wrapper">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <div class="e-title" style="margin:0;"><span class="e-badge-rh">RH</span> ELIGIBILIDADE SUBSÍDIO DE TURNO</div>
+              <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700;">
+              <span>Ano:</span>
+              <select id="eligibility-year-filter" class="e-year-select" onchange="createEmployeeShiftAllowance()">
+                ${yearOptions}
+              </select>
+            </div>
+          </div>
+        `;
+        if (!data || data.length === 0) {
+          html += `<div class="alert alert-info">Sem registos para o ano ${year}.</div></div>`;
+          cardBody.innerHTML = html;
+          return;
+        }
+        const employeeMap = {};
+        data.forEach(reg => {
+          if (!employeeMap[reg.n_int]) {
+            employeeMap[reg.n_int] = {name: reg.abv_name, months: new Set()};
+          }
+          employeeMap[reg.n_int].months.add(parseInt(reg.month));
+        });
+        const sortedNInts = Object.keys(employeeMap).sort((a, b) => parseInt(a) - parseInt(b));
+        html += `
+        <div class="e-container">
+          <table class="e-table">
+            <thead>
+              <tr>
+                <th>FUNCIONÁRIO</th>
+                ${["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"].map(m => `<th style="width:70px;">${m.toUpperCase()}</th>`).join('')}
+              </tr>
+            </thead>
+          <tbody>
+        `;
+        sortedNInts.forEach(n_int => {
+          const emp = employeeMap[n_int];
+          html += `
+            <tr class="holiday-row">
+              <td><strong>${emp.name}</strong> <small style="color:#94a3b8; font-weight:normal;">(${n_int})</small></td>
+              ${[1,2,3,4,5,6,7,8,9,10,11,12].map(m => {
+                return emp.months.has(m)
+                  ? `<td><span class="e-eligible">SIM</span></td>` 
+                  : `<td><span class="e-no-data">-</span></td>`;
+                }).join('')}
+          </tr>`;
+        });
+        html += `
+        </tbody>
+          </table>
+           </div>
+           <div class="e-footer">
+             <button class="e-btn e-btn-info" onclick="createConsultationEligibility()">🔍 Consulta Detalhada</button>
+             <button class="e-btn" onclick="exportarElegibilidadePDF()">📥 Exportar Mapa</button>
+           </div>
+          </div>
+        `;
+        cardBody.innerHTML = html;
+      } catch (err) {
+        console.error("Erro:", err);
+        cardBody.innerHTML = "Erro ao carregar dados.";
+      }
+    }
+    async function createConsultationEligibility() {
+      const filterElem = document.getElementById("eligibility-year-filter");
+      const year = filterElem ? parseInt(filterElem.value) : new Date().getFullYear();
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      let modal = document.getElementById("eligibility-modal");
+      if (!modal) {
+        modal = document.createElement("div");
+        modal.id = "eligibility-modal";
+        modal.style = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15, 23, 42, 0.7);display:flex;align-items:center;justify-content:center;z-index:9999;backdrop-filter:blur(4px);";
+        document.body.appendChild(modal);
+      }
+      modal.style.display = "flex";
+      modal.innerHTML = `
+        <div style="background:#fff;padding:0;border-radius:12px;width:95%;max-width:900px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);overflow:hidden;font-family:'Inter',sans-serif;">
+          <div style="background:#1e293b;padding:20px;color:white;display:flex;justify-content:space-between;align-items:center;">
+            <h5 style="margin:0;font-size:18px;font-weight:700;">🔍 Detalhe de Elegibilidade - ${year}</h5>
+            <button onclick="document.getElementById('eligibility-modal').style.display='none'" style="border:none;background:none;cursor:pointer;font-size:24px;color:#94a3b8;line-height:1;">&times;</button>
+          </div>
+          <div style="padding:20px;">        
+            <div style="display:flex; align-items:center; gap:15px; margin-bottom:20px; padding:15px; background:#f8fafc; border-radius:8px; border:1px solid #e2e8f0;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:13px; font-weight:700; color:#475569;">Mês:</span>
+                <select id="modal-month-filter" style="padding:6px 12px; border-radius:6px; border:1px solid #cbd5e1; font-size:13px; outline:none; cursor:pointer;" onchange="renderEligibilityTable()">
+                  <option value="all">--Selecione o Mês--</option>
+                  <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option>
+                  <option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option>
+                  <option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option>
+                  <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+                </select>
+              </div>
+              <div id="eligibility-count" style="font-size:12px; color:#64748b; margin-left:auto; font-weight:500;"></div>
+            </div>
+            <div id="eligibility-content" style="min-height:200px;">⌛ A carregar registos...</div>        
+            <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px; padding-top:15px; border-top:1px solid #e2e8f0;">
+              <button onclick="document.getElementById('eligibility-modal').style.display='none'" 
+              style="background:#64748b; color:white; border:none; padding:10px 20px; border-radius:6px; font-weight:600; cursor:pointer; font-size:13px;">Emitir</button>
+              <button onclick="document.getElementById('eligibility-modal').style.display='none'" 
+              style="background:#64748b; color:white; border:none; padding:10px 20px; border-radius:6px; font-weight:600; cursor:pointer; font-size:13px;">Fechar</button>
+            </div>
+          </div>
+        </div>
+      `;
+      try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/reg_eligibility?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&order=abv_name.asc,month.asc,day.asc`, {
+          headers: getSupabaseHeaders()
+        });
+        const data = await response.json();
+        window.rawEligibilityData = data;
+        renderEligibilityTable();
+      } catch (error) {
+        console.error("Erro:", error);
+        document.getElementById("eligibility-content").innerHTML = `<div style="color:#ef4444; text-align:center; padding:20px;">❌ Erro ao ligar ao servidor.</div>`;
+      }
+    }
+    function renderEligibilityTable() {
+      const monthFilter = document.getElementById("modal-month-filter").value;
+      const content = document.getElementById("eligibility-content");
+      const countDisplay = document.getElementById("eligibility-count");
+      const data = window.rawEligibilityData || [];
+      const filteredData = monthFilter === "all" 
+        ? data 
+        : data.filter(d => parseInt(d.month) === parseInt(monthFilter));
+      countDisplay.innerHTML = `Registos encontrados: <span style="color:#1e293b;">${filteredData.length}</span>`;
+      if (filteredData.length === 0) {
+        content.innerHTML = `<div style="text-align:center; padding:50px; color:#94a3b8; background:#f8fafc; border-radius:8px; border:1px dashed #cbd5e1;">Nenhum turno elegível encontrado para este período.</div>`;
+        return;
+      }
+      const mesesNomes = ["", "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+      let html = `
+        <div style="max-height:420px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:8px; scrollbar-width: thin;">
+          <table style="width:100%; border-collapse:collapse; font-size:12.5px;">
+            <thead>
+              <tr style="background:#f1f5f9; position:sticky; top:0; z-index:10; box-shadow:0 1px 0 #cbd5e1;">
+                <th style="padding:12px; text-align:left; color:#475569; font-weight:700;">FUNCIONÁRIO</th>
+                <th style="padding:12px; text-align:center; color:#475569; font-weight:700;">DIA</th>
+                <th style="padding:12px; text-align:left; color:#475569; font-weight:700;">MÊS</th>
+                <th style="padding:12px; text-align:center; color:#475569; font-weight:700;">SAÍDA</th>
+                <th style="padding:12px; text-align:center; color:#475569; font-weight:700;">STATUS</th>
+              </tr>
+            </thead>
+          <tbody>
+        `;
+      filteredData.forEach((reg, i) => {
+        html += `
+          <tr style="background:${i % 2 === 0 ? '#fff' : '#fafafa'}; border-bottom:1px solid #f1f5f9;">
+            <td style="padding:10px 12px;">
+              <div style="font-weight:700; color:#1e293b;">${reg.abv_name}</div>
+              <div style="font-size:10px; color:#94a3b8;">#${reg.n_int}</div>
+            </td>
+            <td style="padding:10px 12px; text-align:center; font-weight:600; color:#1e293b;">${String(reg.day).padStart(2, '0')}</td>
+            <td style="padding:10px 12px; color:#64748b;">${mesesNomes[parseInt(reg.month)]}</td>
+            <td style="padding:10px 12px; text-align:center;">
+              <span style="background:#f1f5f9; color:#0f172a; padding:4px 8px; border-radius:4px; font-family:monospace; font-weight:800; border:1px solid #e2e8f0;">
+                ${reg.exit_hour || '--:--'}
+              </span>
+            </td>
+            <td style="padding:10px 12px; text-align:center;">
+              <span style="background:#dcfce7; color:#166534; padding:4px 10px; border-radius:20px; font-size:10px; font-weight:800; letter-spacing:0.3px; border:1px solid #bbf7d0;">
+                ELEGÍVEL
+              </span>
+            </td>
+          </tr>
+        `;
+      });
+      html += `</tbody></table></div>`;
+      content.innerHTML = html;
+    }
+    document.querySelectorAll(".sidebar-sub-submenu-button").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const access = btn.dataset.access;
+        const pageId = btn.dataset.page;
+        if (access === "Subsidio de Turno") {
+          createEmployeeShiftAllowance(); 
+        }        
+      });
+    });
+    /* ============================================
+    FASE 06 - SALARY PROCESSING TABLE
+    ============================================ */
+    async function createSalaryProcessingTable() {
+      const cardBody = document.querySelector("#salary-processing-map .card-body");
+      if (!cardBody) return;
+      const defaultMonth = 1;
+      if (!document.getElementById("salary-core-css")) {
+        const s = document.createElement("style");
+        s.id = "salary-core-css";
+        s.innerHTML = `
+          .s-wrapper {font-family: 'Inter', sans-serif; color: #1e293b;}
+          .s-header-flex {display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;}
+          .s-title {font-size: 16px; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;}
+          .s-badge-rh {background: #1e293b; color: #fff; padding: 2px 7px; border-radius: 4px; font-size: 10px;}
+          .s-container {max-height: 500px; overflow: auto; border: 1px solid #cbd5e1; border-radius: 8px; position: relative; -ms-overflow-style: none; scrollbar-width: none;}
+          .s-container::-webkit-scrollbar {display: none;}
+          .s-table {width: 100%; border-collapse: separate; border-spacing: 0; font-size: 11px; table-layout: fixed;}
+          .s-table th {position: sticky; top: 0; z-index: 10; background: #f8fafc; border-bottom: 2px solid #94a3b8; border-right: 1px solid #cbd5e1; padding: 8px 2px; text-align: center;}          
+          .s-name-col {position: sticky !important; left: 0; z-index: 20 !important; background: #f1f5f9 !important; border-right: 2px solid #cbd5e1 !important; text-align: left !important; 
+                       padding-left: 12px !important; font-weight: 700; width: 180px; min-width: 180px;}
+          .s-table thead th.s-name-col {z-index: 30 !important; top: 0;}          
+          .s-table td {border-bottom: 1px solid #cbd5e1; border-right: 1px solid #cbd5e1; padding: 6px 4px; text-align: center; vertical-align: middle !important;}          
+          .s-row:hover td {background-color: #f8fafc !important;}
+          .s-card-base {background: #fee2e2; color: #991b1b; border: 1px solid currentColor; border-radius: 4px; font-weight: 700; font-size: 9px; padding: 3px; line-height: 1.2;}
+          .s-val-sickleave {color: #dc2626; background: #fef2f2;}
+          .s-val-vacation {color: #2563eb; background: #eff6ff;}
+          .s-val-parental {color: #7c3aed; background: #f5f3ff;}
+          .s-val-disgust {color: #4b5563; background: #f3f4f6;}
+          .s-val-f-just {color: #d97706; background: #fffbeb; border-color: #fcd34d;}
+          .s-val-f-unjust {color: #dc2626; background: #fee2e2; border-color: #fca5a5;}          
+          .s-status-badge {background: #fee2e2; color: #991b1b; border: 1px solid currentColor; border-radius: 4px; font-weight: 700; font-size: 9px; padding: 3px; line-height: 1.2;}
+          .s-status-yes {color: #10b981; background: #ecfdf5;}
+          .s-status-no {color: #dc2626; background: #fef2f2;}
+          .s-filter-select {padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 13px; font-weight: 600;}
+          .s-footer {display: flex; justify-content: flex-end; margin-top: 15px; gap: 10px;}
+          .s-btn {background: #1e293b; color: #fff; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; transition: 0.2s;}
+          .s-btn:hover {opacity: 0.9;}
+        `;
+        document.head.appendChild(s);
+      }
+      const months = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+      let monthOptions = months.map((m, i) => `<option value="${i + 1}" ${i + 1 === defaultMonth ? 'selected' : ''}>${m}</option>`).join('');
+      cardBody.innerHTML = `
+        <div class="s-wrapper">
+          <div class="s-header-flex">
+            <div class="s-title"><span class="s-badge-rh">RH</span> PROCESSAMENTO SALARIAL</div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 13px; font-weight: 700;">Mês:</span>
+              <select id="salary-month-filter" class="s-filter-select" onchange="loadSalaryData()">${monthOptions}</select>
+            </div>
+          </div>
+          <div class="s-container">
+            <table class="s-table">
+              <thead>
+                <tr>
+                  <th class="s-name-col">FUNCIONÁRIO</th>
+                  <th>SUB. TURNO</th>
+                  <th>BAIXA MÉDICA</th>
+                  <th>FÉRIAS</th>
+                  <th>LIC. PARENTAL</th>
+                  <th>LIC. NOJO</th>
+                  <th>FALTAS JUST.</th>
+                  <th>FALTAS INJUST.</th>
+                </tr>
+              </thead>
+              <tbody id="salary-table-body">
+                <tr><td colspan="8" style="padding:40px; text-align:center;">⌛ A carregar dados de Janeiro...</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="s-footer">
+            <button class="s-btn" style="background:#059669;" onclick="exportSalaryExcel()">📊 Exportar Excel</button>
+            <button class="s-btn" onclick="exportSalaryMap(event)">📥 Emitir Mapa</button>
+          </div>
+        </div>`;
+      loadSalaryData();
+    }
+    async function loadSalaryData() {
+      const monthFilter = parseInt(document.getElementById("salary-month-filter").value);
+      const year = new Date().getFullYear();
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const tableBody = document.getElementById("salary-table-body");
+      const lastDayMonth = new Date(year, monthFilter, 0).getDate();
+      const prevMonth = monthFilter === 1 ? 12 : monthFilter - 1;
+      const prevYear = monthFilter === 1 ? year - 1 : year;
+      const nextMonth = monthFilter === 12 ? 1 : monthFilter + 1;
+      const nextYear = monthFilter === 12 ? year + 1 : year;
+      try {
+        const [empRes, eligRes, shiftRes, prevShiftRes, nextShiftRes] = await Promise.all([
+          fetch(`${SUPABASE_URL}/rest/v1/reg_employees?corp_oper_nr=eq.${corpOperNr}&or=(exit_date.is.null,team.in.(COM,SEC))`, {
+            headers: getSupabaseHeaders()
+          }),
+          fetch(`${SUPABASE_URL}/rest/v1/reg_eligibility?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}`, {
+            headers: getSupabaseHeaders()
+          }),
+          fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${monthFilter}`, {
+            headers: getSupabaseHeaders()
+          }),
+          fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${prevYear}&month=eq.${prevMonth}&day=gt.25`, {
+            headers: getSupabaseHeaders()
+          }),
+          fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${nextYear}&month=eq.${nextMonth}&day=lt.6`, {
+            headers: getSupabaseHeaders()
+          })
+        ]);
+        let employees = await empRes.json();
+        const allEligibility = await eligRes.json();
+        const shifts = await shiftRes.json();
+        const prevShifts = await prevShiftRes.json();
+        const nextShifts = await nextShiftRes.json();
+        employees.sort((a, b) => parseInt(a.n_int) - parseInt(b.n_int));
+        let html = "";
+        employees.forEach(emp => {
+          const n_int_formatted = String(emp.n_int).padStart(3, '0');
+          const empShifts = shifts.filter(s => String(s.n_int).padStart(3, '0') === n_int_formatted);
+          const empPrevShifts = prevShifts.filter(s => String(s.n_int).padStart(3, '0') === n_int_formatted);
+          const empNextShifts = nextShifts.filter(s => String(s.n_int).padStart(3, '0') === n_int_formatted);
+          const hasSubsidy = allEligibility.some(reg => String(reg.n_int).padStart(3, '0') === n_int_formatted && parseInt(reg.month) === monthFilter);
+          const subShiftDisplay = hasSubsidy
+            ? `<span class="s-status-badge s-status-yes">SIM</span>`
+            : `<span class="s-status-badge s-status-no">NÃO</span>`;
+          const formatPeriod = (code, classeCss) => {
+            const days = empShifts.filter(s => s.shift === code).map(s => parseInt(s.day)).sort((a, b) => a - b);
+            if (days.length === 0) return "-";
+            let periods = [], current = [days[0]];
+            for (let i = 1; i < days.length; i++) {
+              if (days[i] - days[i - 1] <= 4) current.push(days[i]);
+              else {periods.push(current); current = [days[i]];}
+            }
+            periods.push(current);
+            return periods.map((period, index) => {
+              let pStart = period[0], pEnd = period[period.length - 1];
+              if (index === 0) {
+                const codePrev = empPrevShifts.filter(s => s.shift === code).sort((a,b) => b.day - a.day);
+                if (codePrev.length > 0) {
+                  const diff = Math.round((new Date(year, monthFilter-1, pStart) - new Date(prevYear, prevMonth-1, codePrev[0].day)) / 86400000);
+                  if (diff === 1) pStart = 1;
+                  else if (diff <= 3) {
+                    const dw = new Date(year, monthFilter-1, 1).getDay();
+                    if ((pStart === 2 && (dw === 0 || dw === 1)) || (pStart === 3 && dw === 0)) pStart = 1;
+                  }
+                }
+              }
+              if (index === periods.length - 1) {
+                const codeNext = empNextShifts.filter(s => s.shift === code).sort((a,b) => a.day - b.day);
+                if (codeNext.length > 0) {
+                  const diff = Math.round((new Date(nextYear, nextMonth-1, codeNext[0].day) - new Date(year, monthFilter-1, pEnd)) / 86400000);
+                  if (diff === 1) pEnd = lastDayMonth;
+                  else if (diff <= 3) {
+                    const dwLast = new Date(year, monthFilter-1, lastDayMonth).getDay();
+                    if (pEnd >= lastDayMonth - 2 && (dwLast === 5 || dwLast === 6)) pEnd = lastDayMonth;
+                  }
+                }
+              }
+              return `<div class="s-card-base ${classeCss}">${String(pStart).padStart(2,'0')} a ${String(pEnd).padStart(2,'0')} (${(pEnd-pStart)+1} Dias)</div>`;
+            }).join("");
+          };
+          const vacationDays = empShifts.filter(s => s.shift === 'FE').map(s => parseInt(s.day)).sort((a, b) => a - b);
+          let vacationInfo = "-";
+          if (vacationDays.length > 0) {
+            let vPeriods = [], vCurrent = [vacationDays[0]];
+            for (let i = 1; i < vacationDays.length; i++) {
+              if (vacationDays[i] - vacationDays[i - 1] <= 4) vCurrent.push(vacationDays[i]);
+              else {vPeriods.push(vCurrent); vCurrent = [vacationDays[i]];}
+            }
+            vPeriods.push(vCurrent);
+            vacationInfo = vPeriods.map(p => {
+              const useful = p.filter(d => { const dw = new Date(year, monthFilter-1, d).getDay(); return dw !== 0 && dw !== 6; }).length;
+              return `<div class="s-card-base s-val-vacation">${String(p[0]).padStart(2,'0')} a ${String(p[p.length-1]).padStart(2,'0')} (${useful} Úteis)</div>`;
+            }).join("");
+          }
+          const formatAbsence = (code, classeCss) => {
+            const days = empShifts.filter(s => s.shift === code).map(s => parseInt(s.day)).sort((a, b) => a - b);
+            if (days.length === 0) return "-";
+            let text = days.length === 1 ? `Dia: ${String(days[0]).padStart(2, '0')}` : `${days.join(", ")} (${days.length} Dias)`;
+            return `<div class="s-card-base ${classeCss}">${text}</div>`;
+          };
+          html += `
+            <tr class="s-row">
+              <td class="s-name-col">${emp.abv_name}</td>
+              <td style="text-align:center;">${subShiftDisplay}</td>
+              <td>${formatPeriod('BX', 's-val-sickleave')}</td>
+              <td>${vacationInfo}</td>
+              <td>${formatPeriod('LP', 's-val-parental')}</td>
+              <td>${formatPeriod('LN', 's-val-disgust')}</td>
+              <td>${formatAbsence('FJ', 's-val-f-just')}</td>
+              <td>${formatAbsence('FI', 's-val-f-unjust')}</td>
+            </tr>
+          `;
+        });
+        tableBody.innerHTML = html;
+      } catch (e) { 
+        tableBody.innerHTML = `<tr><td colspan="8" style="color:red;text-align:center;">Erro: ${e.message}</td></tr>`; 
+      }
+    }
+    async function exportSalaryMap(event) {
+      const btn = event?.target;
+      const originalText = btn ? btn.innerText : "";
+      try {
+        if (btn) {
+          btn.innerText = "⌛ A Gerar Mapa...";
+          btn.disabled = true;
+        }
+        const year = new Date().getFullYear();
+        const monthValue = parseInt(document.getElementById("salary-month-filter").value);
+        const monthsNames = ["Janeiro", "Fevereiro", "Marco", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+        const months = monthsNames[monthValue - 1];
+        const rows = document.querySelectorAll("#salary-table-body tr");
+        const employees = [];
+        rows.forEach(row => {
+          const cells = row.querySelectorAll("td");
+          if (cells.length < 8) return;
+          const extractCards = (cell) => {
+            const cards = cell.querySelectorAll(".s-card-base");
+            if (cards.length === 0) return "-";
+            return Array.from(cards).map(c => c.innerText.trim().replace(/[\n\r\t]+/g, " ")).join("\n");
+          };
+          const extractBadge = (cell) => {
+            const badge = cell.querySelector(".s-status-badge");
+            return badge ? badge.innerText.trim() : "-";
+          };
+          employees.push({name: cells[0].innerText.trim(), subShift: extractBadge(cells[1]), casualties: extractCards(cells[2]), vacations: extractCards(cells[3]),
+                          parental: extractCards(cells[4]), disgust: extractCards(cells[5]), justified: extractCards(cells[6]), unjustified: extractCards(cells[7])});});
+        const response = await fetch("https://cb360-online.vercel.app/api/employees_convert_and_send", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            mode: "mapa_salarial",
+            year,
+            month: monthValue,
+            employees
+          })
+        });
+        if (!response.ok) throw new Error("Erro na resposta da API");
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `Mapa_Salarial_${months}_${year}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error("Erro:", error);
+        alert("Erro ao gerar mapa salarial.");
+      } finally {
+        if (btn) {
+          btn.innerText = originalText;
+          btn.disabled = false;
+        }
+      }
+    }
+    async function exportSalaryExcel() {
+      const btn = event?.target;
+      const originalText = btn ? btn.innerText : "";
+      try {
+        if (btn) {
+          btn.innerText = "⌛ A Gerar Mapa...";
+          btn.disabled = true;
+        }
+        const year = new Date().getFullYear();
+        const monthValue = parseInt(document.getElementById("salary-month-filter").value);
+        const monthsNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+        const months = monthsNames[monthValue - 1];
+        const rows = document.querySelectorAll("#salary-table-body tr");
+        const employees = [];
+        rows.forEach(row => {
+          const cells = row.querySelectorAll("td");
+          if (cells.length < 8) return;
+          const extractCards = (cell) => {
+            const cards = cell.querySelectorAll(".s-card-base");
+            if (cards.length === 0) return "-";
+            return Array.from(cards)
+              .map(c => c.innerText.trim().replace(/[\n\r\t]+/g, " "))
+              .join("\n");
+          };
+          const extractBadge = (cell) => {
+            const badge = cell.querySelector(".s-status-badge");
+            return badge ? badge.innerText.trim() : "-";
+          };
+          employees.push({name: cells[0].innerText.trim(), subShift: extractBadge(cells[1]), casualties: extractCards(cells[2]), vacations: extractCards(cells[3]),
+                          parental: extractCards(cells[4]), disgust: extractCards(cells[5]), justified: extractCards(cells[6]), unjustified: extractCards(cells[7])});});
+        const response = await fetch("https://cb360-online.vercel.app/api/employees_convert_and_send", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            mode: "mapa_salarial_excel",
+            year,
+            month: monthValue,
+            employees
+          })
+        });
+        if (!response.ok) throw new Error("Erro na resposta da API");
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `Mapa_Salarial_${months}_${year}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error("Erro:", error);
+        alert("Erro ao gerar Excel.");
+      } finally {
+        if (btn) {
+          btn.innerText = originalText;
+          btn.disabled = false;
+        }
+      }
+    }
+    document.querySelectorAll(".sidebar-sub-submenu-button").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const access = btn.dataset.access;
+        const pageId = btn.dataset.page;
+        if (access === "Processamento Salarial") {
+          createSalaryProcessingTable(); 
+        }        
       });
     });

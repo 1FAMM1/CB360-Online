@@ -1,5 +1,5 @@
 {
-  "name": "CB360-Online",
+  "name": "CB360-Mobile",
   "version": "1.0.0",
   "scripts": {
     "dev": "next dev",

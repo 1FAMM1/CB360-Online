@@ -1,4 +1,4 @@
-    import ExcelJS from "exceljs";
+        import ExcelJS from "exceljs";
     import fetch from "node-fetch";
     import fs from "fs";
     import os from "os";
@@ -143,30 +143,15 @@
       return `<c r="${ref}" s="${styleIndex}" t="inlineStr"><is><t xml:space="preserve">${escaped}</t></is></c>`;
     }
     function makeRowXml(rowNum, emp) {
-  // Se for a primeira linha (9), usamos o estilo 7. Se não, o estilo 8.
-  // O estilo 8 é o que você disse que fica bem na coluna B.
-  const styleId = (rowNum === 9) ? 7 : 8;
-
-  const values = {
-    B: emp.name,
-    C: emp.subShift,
-    D: emp.casualties,
-    E: emp.vacations,
-    F: emp.parental,
-    G: emp.disgust,
-    H: emp.justified,
-    I: emp.unjustified
-  };
-
-  const cols = ["B", "C", "D", "E", "F", "G", "H", "I"];
-  
-  // Agora todas as colunas usam o mesmo styleId (7 ou 8)
-  const cells = cols.map(col => 
-    makeCellXml(`${col}${rowNum}`, styleId, values[col] || "-")
-  ).join("");
-
-  return `<row r="${rowNum}" spans="2:9" ht="15" x14ac:dyDescent="0.25">${cells}</row>`;
-}
+      const isFirst = rowNum === 9;
+      const styles = isFirst
+      ? {B: 7,  C: 12, D: 12, E: 12, F: 12, G: 12, H: 12, I: 12}
+      : {B: 8,  C: 14, D: 14, E: 14, F: 14, G: 14, H: 14, I: 14};
+      const cols = ["B", "C", "D", "E", "F", "G", "H", "I"];
+      const values = {B: emp.name, C: emp.subShift, D: emp.casualties, E: emp.vacations, F: emp.parental, G: emp.disgust, H: emp.justified, I: emp.unjustified};
+      const cells = cols.map(col => makeCellXml(`${col}${rowNum}`, styles[col], values[col] || "-")).join("");
+      return `<row r="${rowNum}" spans="2:9" ht="20" x14ac:dyDescent="0.25">${cells}</row>`;
+    }
     export default async function handler(req, res) {
       res.setHeader("Access-Control-Allow-Origin", "*");
       res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");

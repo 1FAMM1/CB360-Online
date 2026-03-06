@@ -67,6 +67,11 @@ function patchStylesXml(stylesXml) {
     );
 }
 
+// Adiciona ht fixo a uma row existente sem o ter
+function addFixedHeight(rowXml, ht) {
+    return rowXml.replace(/^<row /, `<row ht="${ht}" customHeight="1" `);
+}
+
 export default async function handler(req, res) {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
@@ -105,19 +110,20 @@ export default async function handler(req, res) {
         const beforeSheetData = sheetXml.substring(0, sheetDataStart);
         const afterSheetData = sheetXml.substring(sheetDataEnd);
 
-        // Rows de imagem (2,3,4) com altura fixa explícita (17.25pt cada)
-        // A imagem ocupa rows 0-4, total ~86.25pt. Distribuímos pelas 3 rows visíveis.
-        const imageRows = [
-            `<row r="2" spans="2:9" ht="28.5" customHeight="1" x14ac:dyDescent="0.3"></row>`,
-            `<row r="3" spans="2:9" ht="28.5" customHeight="1" x14ac:dyDescent="0.3"></row>`,
-            `<row r="4" spans="2:9" ht="28.5" customHeight="1" x14ac:dyDescent="0.3"></row>`,
-        ];
-
-        // Extrair rows de cabeçalho (6 = título, 7 = espaço, 8 = headers)
-        const headerRows = [...imageRows];
-        for (const r of ["6", "7", "8"]) {
+        // Extrair todas as rows de cabeçalho preservando conteúdo original
+        // Rows 2,3,4 têm o texto da corporação + imagem ancorada
+        // Adicionamos altura fixa para a imagem não distorcer
+        const headerRows = [];
+        for (const r of ["2", "3", "4", "6", "7", "8"]) {
             const match = sheetXml.match(new RegExp(`<row r="${r}"[^>]*>.*?</row>`, "s"));
-            if (match) headerRows.push(match[0]);
+            if (match) {
+                let rowXml = match[0];
+                // Adicionar altura fixa nas rows da imagem (2,3,4) se não tiverem
+                if (["2", "3", "4"].includes(r) && !rowXml.includes('customHeight')) {
+                    rowXml = addFixedHeight(rowXml, "28.5");
+                }
+                headerRows.push(rowXml);
+            }
         }
 
         // Substituir título em B6 com mês/ano dinâmico

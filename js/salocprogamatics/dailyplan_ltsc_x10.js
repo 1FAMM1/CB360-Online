@@ -117,42 +117,42 @@
         return false;
       }
     }
-async function saveEligibility(tables, day, month, year, corpOperNr, shift) {
+async function saveEligibility(tables, day, month, year, corpOperNr) {
   const eligibilityRecords = [];
   const fDay = String(day).padStart(2, '0');
   const fMonth = String(month).padStart(2, '0');
   const fYear = String(year);
 
-  console.log(`Iniciando saveEligibility - Turno: ${shift}, Data: ${fDay}/${fMonth}/${fYear}`);
-
   for (const table of tables) {
-    // IMPORTANTE: O título tem de ser exatamente "INEM" como no seu tableConfig
-    const isInemTeam = table.title.trim().toUpperCase() === "INEM"; 
+    // Identifica se a tabela atual é a do INEM
+    const isInemTeam = table.title.trim().toUpperCase() === "INEM";
 
     for (const row of table.rows) {
       const obs = (row.obs || "").toString().toLowerCase().trim();
       const nInt = (row.n_int || "").toString().trim();
       const entranceHour = (row.entrada || "").toString().trim();
+      const exitHour = (row.saida || "").toString().trim();
       const abvName = (row.nome || "").toString().trim();
 
+      // Critério obrigatório: Ter Número Interno e conter a palavra "profissional"
       if (!nInt || !obs.includes("profissional")) continue;
 
       let shouldSave = false;
 
-      // Condição 1: Horário de Madrugada (00:00 às 06:59)
+      // --- LÓGICA 1: Madrugada (Qualquer Equipa) ---
+      // Entrada entre 00:00 e 06:59
       const hourParts = entranceHour.split(':');
       if (hourParts.length >= 1) {
         const hourNum = parseInt(hourParts[0], 10);
         if (!isNaN(hourNum) && hourNum >= 0 && hourNum <= 6) {
           shouldSave = true;
-          console.log(`Match Madrugada: ${abvName} (${entranceHour})`);
         }
       }
 
-      // Condição 2: Turno Noite + Equipa INEM + Profissional
-      if (shift === 'N' && isInemTeam) {
+      // --- LÓGICA 2: Noite (APENAS Grupo INEM) ---
+      // Entrada 20:xx E Saída 08:00
+      if (isInemTeam && entranceHour.startsWith("20:") && exitHour === "08:00") {
         shouldSave = true;
-        console.log(`Match INEM Noite: ${abvName}`);
       }
 
       if (shouldSave) {
@@ -169,10 +169,7 @@ async function saveEligibility(tables, day, month, year, corpOperNr, shift) {
     }
   }
 
-  if (eligibilityRecords.length === 0) {
-    console.log("ℹ️ Nenhum registo encontrado para os critérios atuais.");
-    return true;
-  }
+  if (eligibilityRecords.length === 0) return true;
 
   try {
     const nIntList = eligibilityRecords.map(r => r.n_int).join(',');
@@ -183,18 +180,14 @@ async function saveEligibility(tables, day, month, year, corpOperNr, shift) {
     const insUrl = `${SUPABASE_URL}/rest/v1/reg_eligibility`;
     const res = await fetch(insUrl, {
       method: "POST",
-      headers: { 
-        ...getSupabaseHeaders(), 
-        "Content-Type": "application/json",
-        "Prefer": "resolution=merge-duplicates" 
-      },
+      headers: { ...getSupabaseHeaders(), "Content-Type": "application/json" },
       body: JSON.stringify(eligibilityRecords)
     });
 
-    if (res.ok) console.log("✅ Dados gravados com sucesso em reg_eligibility!");
+    if (res.ok) console.log(`✅ Registo de elegibilidade concluído: ${eligibilityRecords.length} entradas.`);
     return res.ok;
   } catch (err) {
-    console.error("❌ Erro técnico ao gravar eligibility:", err);
+    console.error("❌ Erro em saveEligibility:", err);
     return false;
   }
 }
@@ -630,6 +623,7 @@ if (!eligibilitySaved) {
         document.querySelectorAll('.shift-btn').forEach(btn => btn.classList.remove('active'));
       }
     });
+
 
 
 

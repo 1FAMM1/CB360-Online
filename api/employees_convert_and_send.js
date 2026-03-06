@@ -18,7 +18,7 @@
       mapa_ferias: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/vacation_map_template.xlsx",
       prioridade_ferias: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/priority_vacation_template.xlsx",
       mapa_salarial: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/xs_template.xlsx",
-      mapa_salarial_excel: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/xs_template.xlsx",
+     
     };
     // ─── Helpers API 01 ──────────────────────────────────────────────────────────
     const HOLIDAY_COLOR = "F7C6C7";
@@ -161,7 +161,7 @@
       if (req.method !== "POST") return res.status(405).json({error: "Método não permitido"});
       try {
         const {mode} = req.body;
-        if (!mode || !["escalas", "folha_ponto", "formulário_férias", "mapa_ferias", "prioridade_ferias", "mapa_salarial"].includes(mode)) {
+        if (!mode || !["escalas", "folha_ponto", "formulário_férias", "mapa_ferias", "prioridade_ferias", "mapa_salarial", "mapa_salarial_excel"].includes(mode)) {
           return res.status(400).json({error: "Modo inválido."});
         }
         if (mode === "escalas") return await handleEscalas(req, res);

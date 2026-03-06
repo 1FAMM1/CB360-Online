@@ -654,9 +654,9 @@
         const row6Index = headerRows.findIndex(r => r.includes(`r="6"`));
         if (row6Index !== -1) {
           headerRows[row6Index] = headerRows[row6Index].replace(
-            /<c r="B6"[^>]*>.*?<\/c>|<c r="B6"[^\/]*\/>/s,
-            `<c r="B6" s="10" t="inlineStr"><is><t>MAPA SALARIAL - ${monthName} ${year}</t></is></c>`
-          );
+  /<c r="B6"[^>]*>.*?<\/c>|<c r="B6"[^\/]*\/>/s,
+  `<c r="B6" s="${originalStyle}" t="inlineStr"><is><t>MAPA SALARIAL - ${monthName} ${year}</t></is></c>`
+);
         }
         let dataRowsXml = "";
         employees.forEach((emp, index) => {

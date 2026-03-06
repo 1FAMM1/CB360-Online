@@ -119,7 +119,7 @@
     }
 async function saveEligibility(tables, day, month, year, corpOperNr) {
   const eligibilityRecords = [];
-  
+
   const fDay = String(day).padStart(2, '0');
   const fMonth = String(month).padStart(2, '0');
   const fYear = String(year);
@@ -129,23 +129,29 @@ async function saveEligibility(tables, day, month, year, corpOperNr) {
       const obs = (row.obs || "").toLowerCase();
       const nInt = row.n_int?.toString().trim();
       const abvName = row.nome?.toString().trim();
-      const entranceHour = row.entrada?.toString().trim();
+      let entranceHour = row.entrada?.toString().trim();
 
-      // Só profissionais válidos com hora
+      // Apenas profissionais válidos com hora de entrada
       if (!obs.includes("profissional") || !nInt || !entranceHour) continue;
 
-      const [hourStr] = entranceHour.split(":");
-      const hourNum = parseInt(hourStr, 10);
+      // Limpa possíveis espaços e valida formato HH:MM
+      entranceHour = entranceHour.replace(/\s/g, '');
+      const hourParts = entranceHour.split(":");
+      if (hourParts.length !== 2) continue;
 
-      // Grava apenas se entrada entre 00:00 e 06:59
-      if (!isNaN(hourNum) && hourNum >= 0 && hourNum <= 6) {
+      const hourNum = parseInt(hourParts[0], 10);
+      const minNum = parseInt(hourParts[1], 10);
+      if (isNaN(hourNum) || isNaN(minNum)) continue;
+
+      // Filtra entradas entre 00:00 e 06:59
+      if (hourNum >= 0 && hourNum <= 6) {
         eligibilityRecords.push({
           n_int: nInt,
           abv_name: abvName,
           day: fDay,
           month: fMonth,
           year: fYear,
-          exit_hour: entranceHour, // confirmar coluna na BD
+          exit_hour: entranceHour,
           corp_oper_nr: String(corpOperNr)
         });
       }
@@ -158,7 +164,7 @@ async function saveEligibility(tables, day, month, year, corpOperNr) {
   }
 
   try {
-    // Limpeza de duplicados: gera lista segura para in.
+    // Limpeza de duplicados
     const nIntList = eligibilityRecords.map(r => `'${r.n_int}'`).join(',');
     const delUrl = `${SUPABASE_URL}/rest/v1/reg_eligibility?corp_oper_nr=eq.${corpOperNr}&day=eq.${fDay}&month=eq.${fMonth}&year=eq.${fYear}&n_int=in.(${nIntList})`;
     
@@ -625,6 +631,7 @@ if (!eligibilitySaved) {
         document.querySelectorAll('.shift-btn').forEach(btn => btn.classList.remove('active'));
       }
     });
+
 
 
 

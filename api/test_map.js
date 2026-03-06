@@ -1,39 +1,50 @@
+// pages/api/test_map_excel.js
+
 import ExcelJS from "exceljs";
 import fetch from "node-fetch";
-import fs from "fs";
-import os from "os";
-import path from "path";
 
 export const config = {
   api: { bodyParser: { sizeLimit: "10mb" } },
 };
 
 export default async function handleMapaSalarialExcel(req, res) {
-  if (req.method !== "POST") return res.status(405).json({ error: "Método não permitido" });
+  // ==============================
+  //       HEADERS CORS
+  // ==============================
+  res.setHeader("Access-Control-Allow-Origin", "*"); // permite qualquer domínio
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  let tempFilePath = null;
+  // Resposta para preflight OPTIONS
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Método não permitido" });
+  }
 
   try {
     const { year, month, employees } = req.body;
-    const MONTH_NAMES = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"];
+
+    const MONTH_NAMES = [
+      "JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO",
+      "JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"
+    ];
 
     // 1️⃣ Carregar template do GitHub
     const TEMPLATE_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/xs_template.xlsx";
     const templateResponse = await fetch(TEMPLATE_URL);
     if (!templateResponse.ok) throw new Error("Erro ao carregar template do GitHub");
 
-    const arrayBuffer = await templateResponse.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
     const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(buffer);
-
+    await workbook.xlsx.load(await templateResponse.arrayBuffer());
     const worksheet = workbook.worksheets[0];
 
     // 2️⃣ Cabeçalho
-    worksheet.getCell("B6").value = `MAPA DE PROCESSAMENTO - ${MONTH_NAMES[month-1]} ${year}`;
+    worksheet.getCell("B6").value = `MAPA DE PROCESSAMENTO - ${MONTH_NAMES[month - 1]} ${year}`;
 
-    // 3️⃣ Preenchimento de funcionários
+    // 3️⃣ Preenchimento de dados
     const ROW_START = 8;
     const ROW_MAX = 60;
 
@@ -54,34 +65,43 @@ export default async function handleMapaSalarialExcel(req, res) {
       };
     };
 
-    const colMap = {
-      name: "B",
-      baixas: "C",
-      ferias: "D",
-      parental: "E",
-      nojo: "F",
-      justificadas: "G",
-      injustificadas: "H"
-    };
-
     employees.forEach((emp, index) => {
       const currentRow = ROW_START + index;
       if (currentRow > ROW_MAX) return;
 
-      Object.keys(colMap).forEach(key => {
-        const cell = worksheet.getCell(`${colMap[key]}${currentRow}`);
-        cell.value = emp[key] != null ? String(emp[key]) : "-";
-        cell.alignment = { vertical: 'middle', horizontal: key === "name" ? 'left' : 'center', wrapText: true };
+      const colMap = {
+        name: "B",
+        baixas: "C",
+        ferias: "D",
+        parental: "E",
+        nojo: "F",
+        justificadas: "G",
+        injustificadas: "H"
+      };
+
+      const writeData = (col, val) => {
+        const cell = worksheet.getCell(`${col}${currentRow}`);
+        breakStyle(cell);
+        cell.value = val || "-"; // ⚡ sem \n, apenas texto
+        cell.alignment = { vertical: 'middle', horizontal: col === "B" ? 'left' : 'center', wrapText: true };
         setBorder(cell);
-      });
+      };
+
+      writeData(colMap.name, emp.name);
+      writeData(colMap.baixas, emp.baixas);
+      writeData(colMap.ferias, emp.ferias);
+      writeData(colMap.parental, emp.parental);
+      writeData(colMap.nojo, emp.nojo);
+      writeData(colMap.justificadas, emp.justificadas);
+      writeData(colMap.injustificadas, emp.injustificadas);
     });
 
-    // 4️⃣ Ocultar linhas extras
+    // 4️⃣ Ocultar linhas não usadas
     for (let i = ROW_START + employees.length; i <= ROW_MAX; i++) {
       worksheet.getRow(i).hidden = true;
     }
 
-    // 5️⃣ Configuração de impressão (opcional)
+    // 5️⃣ Configurar impressão
     worksheet.pageSetup = {
       orientation: "landscape",
       paperSize: 9, // A4
@@ -91,23 +111,14 @@ export default async function handleMapaSalarialExcel(req, res) {
       margins: { left: 0.1, right: 0.1, top: 0.2, bottom: 0.2 }
     };
 
-    // 6️⃣ Salvar arquivo temporário
-    tempFilePath = path.join(os.tmpdir(), `MapaSalarial_${Date.now()}.xlsx`);
-    await workbook.xlsx.writeFile(tempFilePath);
-
-    // 7️⃣ Retornar Excel para download
+    // 6️⃣ Gerar buffer e enviar
+    const buffer = await workbook.xlsx.writeBuffer();
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    res.setHeader("Content-Disposition", `attachment; filename=MapaSalarial_${year}_${month}.xlsx`);
-    const stream = fs.createReadStream(tempFilePath);
-    stream.pipe(res);
-
-    stream.on("close", () => {
-      if (fs.existsSync(tempFilePath)) fs.unlinkSync(tempFilePath);
-    });
+    res.setHeader("Content-Disposition", `attachment; filename=Mapa_Salarial_${year}_${month}.xlsx`);
+    return res.status(200).send(Buffer.from(buffer));
 
   } catch (error) {
-    if (tempFilePath && fs.existsSync(tempFilePath)) fs.unlinkSync(tempFilePath);
     console.error("Erro API Excel:", error);
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: error.message });
   }
 }

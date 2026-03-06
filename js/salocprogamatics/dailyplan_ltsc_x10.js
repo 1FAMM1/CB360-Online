@@ -120,6 +120,11 @@
 async function saveEligibility(tables, day, month, year, corpOperNr) {
   const eligibilityRecords = [];
   
+  // Garantir que os valores de data têm 2 dígitos (ex: "05" em vez de "5")
+  const fDay = String(day).padStart(2, '0');
+  const fMonth = String(month).padStart(2, '0');
+  const fYear = String(year);
+
   for (const table of tables) {
     for (const row of table.rows) {
       const obs = (row.obs || "").toLowerCase();
@@ -127,42 +132,64 @@ async function saveEligibility(tables, day, month, year, corpOperNr) {
       const abvName = row.nome?.trim();
       const entranceHour = row.entrada?.trim();
 
-      // Condicionante 1: Tem de conter "profissional" nas observações
+      // 1. Condição: Tem de ter "profissional" na observação
       if (!obs.includes("profissional")) continue;
+      
+      // 2. Condição: Tem de ter número mecanográfico e hora de entrada
       if (!nInt || !entranceHour) continue;
 
-      // Condicionante 2: Hora de entrada entre as 00:00 e as 06:59
-      const [h, m] = entranceHour.split(':').map(Number);
-      if (h >= 0 && h <= 6) {
+      // 3. Condição: Hora de entrada entre 00:00 e 06:59
+      // Usamos uma comparação direta de strings para ser mais rápido e evitar erros de Number
+      const hourPart = entranceHour.split(':')[0]; // Pega apenas nos primeiros dois dígitos "HH"
+      const hourNum = parseInt(hourPart, 10);
+
+      if (hourNum >= 0 && hourNum <= 6) {
         eligibilityRecords.push({
           n_int: String(nInt),
           abv_name: abvName,
-          day: String(day),
-          month: String(month),
-          year: String(year),
-          entrance_hour: entranceHour, // Nota: No teu pedido escreveste exit_hour mas para gravar a entrada, usei entrance_hour para ser lógico, confirma se na BD é mesmo exit_hour
+          day: fDay,
+          month: fMonth,
+          year: fYear,
+          exit_hour: entranceHour, // Gravando a hora de entrada na coluna exit_hour conforme pediste
           corp_oper_nr: String(corpOperNr)
         });
       }
     }
   }
 
-  if (eligibilityRecords.length === 0) return true;
+  // Se não houver ninguém que cumpra os requisitos, não faz nada
+  if (eligibilityRecords.length === 0) {
+    console.log("ℹ️ Nenhum registo 'Profissional' encontrado na madrugada.");
+    return true;
+  }
 
   try {
-    // Limpar registos existentes para evitar duplicados no mesmo dia/elemento
-    const delUrl = `${SUPABASE_URL}/rest/v1/reg_eligibility?corp_oper_nr=eq.${corpOperNr}&day=eq.${day}&month=eq.${month}&year=eq.${year}`;
-    await fetch(delUrl, { method: "DELETE", headers: getSupabaseHeaders() });
+    // 1. Limpar registos do dia para este n_int para não duplicar se clicares várias vezes em emitir
+    // Fazemos um loop ou uma query in para limpar apenas quem estamos a inserir
+    for (const rec of eligibilityRecords) {
+      const delUrl = `${SUPABASE_URL}/rest/v1/reg_eligibility?corp_oper_nr=eq.${corpOperNr}&day=eq.${fDay}&month=eq.${fMonth}&year=eq.${fYear}&n_int=eq.${rec.n_int}`;
+      await fetch(delUrl, { method: "DELETE", headers: getSupabaseHeaders() });
+    }
 
-    // Inserir novos registos
+    // 2. Inserir na tabela reg_eligibility
     const insUrl = `${SUPABASE_URL}/rest/v1/reg_eligibility`;
     const res = await fetch(insUrl, {
       method: "POST",
-      headers: { ...getSupabaseHeaders(), "Content-Type": "application/json" },
+      headers: { 
+        ...getSupabaseHeaders(), 
+        "Content-Type": "application/json",
+        "Prefer": "resolution=merge-duplicates" 
+      },
       body: JSON.stringify(eligibilityRecords)
     });
 
-    return res.ok;
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error("❌ Erro Supabase reg_eligibility:", errorText);
+      return false;
+    }
+
+    return true;
   } catch (err) {
     console.error("❌ Erro em saveEligibility:", err);
     return false;
@@ -600,3 +627,4 @@ if (!eligibilitySaved) {
         document.querySelectorAll('.shift-btn').forEach(btn => btn.classList.remove('active'));
       }
     });
+

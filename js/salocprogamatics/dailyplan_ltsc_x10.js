@@ -46,121 +46,128 @@
       return /refor(c|ç)o(s)?|ref\b/i.test(normalized);
     }
     async function saveAttendance(tables, shift, corpOperNr, day, month, year) {
-  const recordsMap = new Map();
-  const now = new Date();
-
-  const currentDay = day ?? String(now.getDate()).padStart(2, "0");
-  const currentMonth = month ?? String(now.getMonth() + 1).padStart(2, "0");
-  const currentYear = year ?? String(now.getFullYear());
-
-  // 1) Extrair registos (dedupe por pessoa+dia+turno+tipo+corp)
+      const recordsMap = new Map();
+      const now = new Date();
+      const currentDay = day ?? String(now.getDate()).padStart(2, "0");
+      const currentMonth = month ?? String(now.getMonth() + 1).padStart(2, "0");
+      const currentYear = year ?? String(now.getFullYear());
+      for (const table of tables) {
+        for (const row of table.rows) {
+          const nInt = row.n_int?.trim();
+          const checkIn = row.entrada?.trim();
+          const checkOut = row.saida?.trim();
+          const rawObs = (row.obs || "").trim();
+          const obs = rawObs.toLowerCase();
+          if (!nInt) continue;
+          let recordType = "";
+          let totalHours = "0";
+          const isAbsent = hasAbsenceStatus(obs);
+          const isOnCall = hasOnCallStatus(obs);
+          const isReinforcement = hasReinforcementStatus(obs);
+          const isSickLeave = obs.includes("baixa");
+          const isLicence = obs.includes("licença") || obs.includes("licenca");
+          const isDispense = obs.includes("dispensa");
+          if (isSickLeave) recordType = "Baixa";
+          else if (isLicence) recordType = "Licença";
+          else if (isDispense) recordType = "Dispensa";
+          else if (isAbsent) recordType = "Falta";
+          else if (isOnCall) recordType = "Piquete";
+          else if (isReinforcement) recordType = "Reforço";
+          else continue;
+          if ((recordType === "Piquete" || recordType === "Reforço") && checkIn && checkOut) {
+            totalHours = String(calculateWorkHours(checkIn, checkOut, shift));
+          }
+          const key = `${nInt}_${currentDay}_${currentMonth}_${currentYear}_${corpOperNr}_${shift}_${recordType}`;
+          if (recordsMap.has(key)) continue;
+          recordsMap.set(key, {n_int: String(nInt), day: String(currentDay), month: String(currentMonth), year: String(currentYear), shift: String(shift), shift_type: String(recordType),
+                               qtd_hours: String(totalHours), observ: rawObs, corp_oper_nr: String(corpOperNr),});}}
+      const attendanceRecords = Array.from(recordsMap.values());
+      try {
+        const delUrl = `${SUPABASE_URL}/rest/v1/reg_assid` + `?corp_oper_nr=eq.${encodeURIComponent(String(corpOperNr))}` + `&day=eq.${encodeURIComponent(String(currentDay))}` +
+                       `&month=eq.${encodeURIComponent(String(currentMonth))}` + `&year=eq.${encodeURIComponent(String(currentYear))}` + `&shift=eq.${encodeURIComponent(String(shift))}`;
+        const delRes = await fetch(delUrl, {
+          method: "DELETE",
+          headers: getSupabaseHeaders(),
+        });
+        if (!delRes.ok) {
+          const t = await delRes.text();
+          throw new Error(`Erro a limpar reg_assid (${delRes.status}): ${t}`);
+        }
+        if (attendanceRecords.length === 0) return true;
+        const insUrl = `${SUPABASE_URL}/rest/v1/reg_assid` + `?on_conflict=corp_oper_nr,n_int,year,month,day,shift,shift_type`;
+        const insRes = await fetch(insUrl, {
+          method: "POST",
+          headers: {
+            ...getSupabaseHeaders(),
+            "Content-Type": "application/json",
+            "Prefer": "resolution=merge-duplicates",
+          },
+          body: JSON.stringify(attendanceRecords),
+        });
+        if (!insRes.ok) {
+          const t = await insRes.text();
+          throw new Error(`Erro a gravar reg_assid (${insRes.status}): ${t}`);
+        }
+        return true;
+      } catch (err) {
+        console.error("❌ Erro em saveAttendance:", err);
+        showPopupWarning(
+          "O planeamento foi enviado, mas houve um erro ao registar as faltas/piquetes no sistema central."
+        );
+        return false;
+      }
+    }
+async function saveEligibility(tables, day, month, year, corpOperNr) {
+  const eligibilityRecords = [];
+  
   for (const table of tables) {
     for (const row of table.rows) {
+      const obs = (row.obs || "").toLowerCase();
       const nInt = row.n_int?.trim();
-      const checkIn = row.entrada?.trim();
-      const checkOut = row.saida?.trim();
-      const rawObs = (row.obs || "").trim();
-      const obs = rawObs.toLowerCase();
+      const abvName = row.nome?.trim();
+      const entranceHour = row.entrada?.trim();
 
-      if (!nInt) continue;
+      // Condicionante 1: Tem de conter "profissional" nas observações
+      if (!obs.includes("profissional")) continue;
+      if (!nInt || !entranceHour) continue;
 
-      let recordType = "";
-      let totalHours = "0";
-
-      const isAbsent = hasAbsenceStatus(obs);
-      const isOnCall = hasOnCallStatus(obs);
-      const isReinforcement = hasReinforcementStatus(obs);
-      const isSickLeave = obs.includes("baixa");
-      const isLicence = obs.includes("licença") || obs.includes("licenca");
-      const isDispense = obs.includes("dispensa");
-
-      if (isSickLeave) recordType = "Baixa";
-      else if (isLicence) recordType = "Licença";
-      else if (isDispense) recordType = "Dispensa";
-      else if (isAbsent) recordType = "Falta";
-      else if (isOnCall) recordType = "Piquete";
-      else if (isReinforcement) recordType = "Reforço";
-      else continue; // nada a gravar
-
-      // Só Piquete/Reforço calculam horas (como tinhas)
-      if ((recordType === "Piquete" || recordType === "Reforço") && checkIn && checkOut) {
-        totalHours = String(calculateWorkHours(checkIn, checkOut, shift));
+      // Condicionante 2: Hora de entrada entre as 00:00 e as 06:59
+      const [h, m] = entranceHour.split(':').map(Number);
+      if (h >= 0 && h <= 6) {
+        eligibilityRecords.push({
+          n_int: String(nInt),
+          abv_name: abvName,
+          day: String(day),
+          month: String(month),
+          year: String(year),
+          entrance_hour: entranceHour, // Nota: No teu pedido escreveste exit_hour mas para gravar a entrada, usei entrance_hour para ser lógico, confirma se na BD é mesmo exit_hour
+          corp_oper_nr: String(corpOperNr)
+        });
       }
-
-      // ✅ IMPORTANTE: inclui shift na chave (para não deduplicar D vs N)
-      const key = `${nInt}_${currentDay}_${currentMonth}_${currentYear}_${corpOperNr}_${shift}_${recordType}`;
-      if (recordsMap.has(key)) continue;
-
-      recordsMap.set(key, {
-        n_int: String(nInt),
-        day: String(currentDay),
-        month: String(currentMonth),
-        year: String(currentYear),
-        shift: String(shift),
-        shift_type: String(recordType),
-        qtd_hours: String(totalHours),
-        observ: rawObs,
-        corp_oper_nr: String(corpOperNr),
-      });
     }
   }
 
-  const attendanceRecords = Array.from(recordsMap.values());
+  if (eligibilityRecords.length === 0) return true;
 
   try {
-    // 2) ✅ Limpar registos existentes desse dia + turno + corp
-    // Isto garante que se removeres "Falta"/"Piquete"/etc do template, desaparece da BD
-    const delUrl =
-      `${SUPABASE_URL}/rest/v1/reg_assid` +
-      `?corp_oper_nr=eq.${encodeURIComponent(String(corpOperNr))}` +
-      `&day=eq.${encodeURIComponent(String(currentDay))}` +
-      `&month=eq.${encodeURIComponent(String(currentMonth))}` +
-      `&year=eq.${encodeURIComponent(String(currentYear))}` +
-      `&shift=eq.${encodeURIComponent(String(shift))}`;
+    // Limpar registos existentes para evitar duplicados no mesmo dia/elemento
+    const delUrl = `${SUPABASE_URL}/rest/v1/reg_eligibility?corp_oper_nr=eq.${corpOperNr}&day=eq.${day}&month=eq.${month}&year=eq.${year}`;
+    await fetch(delUrl, { method: "DELETE", headers: getSupabaseHeaders() });
 
-    const delRes = await fetch(delUrl, {
-      method: "DELETE",
-      headers: getSupabaseHeaders(),
-    });
-
-    if (!delRes.ok) {
-      const t = await delRes.text();
-      throw new Error(`Erro a limpar reg_assid (${delRes.status}): ${t}`);
-    }
-
-    // 3) Se não há registos novos, está feito (ficou limpo)
-    if (attendanceRecords.length === 0) return true;
-
-    // 4) Inserir novamente os registos atuais
-    // (podes manter on_conflict + merge, mas aqui já não é obrigatório porque limpámos antes)
-    const insUrl = `${SUPABASE_URL}/rest/v1/reg_assid` +
-      `?on_conflict=corp_oper_nr,n_int,year,month,day,shift,shift_type`;
-
-    const insRes = await fetch(insUrl, {
+    // Inserir novos registos
+    const insUrl = `${SUPABASE_URL}/rest/v1/reg_eligibility`;
+    const res = await fetch(insUrl, {
       method: "POST",
-      headers: {
-        ...getSupabaseHeaders(),
-        "Content-Type": "application/json",
-        "Prefer": "resolution=merge-duplicates",
-      },
-      body: JSON.stringify(attendanceRecords),
+      headers: { ...getSupabaseHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify(eligibilityRecords)
     });
 
-    if (!insRes.ok) {
-      const t = await insRes.text();
-      throw new Error(`Erro a gravar reg_assid (${insRes.status}): ${t}`);
-    }
-
-    return true;
+    return res.ok;
   } catch (err) {
-    console.error("❌ Erro em saveAttendance:", err);
-    showPopupWarning(
-      "O planeamento foi enviado, mas houve um erro ao registar as faltas/piquetes no sistema central."
-    );
+    console.error("❌ Erro em saveEligibility:", err);
     return false;
   }
 }
-
     function createTable(rows, isSpecial, title) {
       const specialClass = isSpecial ? ' special' : '';
       const rowsHTML = Array(rows).fill().map(() => `
@@ -438,6 +445,10 @@
         if (!attendanceSaved) {
           console.warn('⚠️ Aviso: Falha ao gravar dados de assiduidade na tabela reg_assid.');
         }
+        const eligibilitySaved = await saveEligibility(tables, day, month, year, corpOperNr);
+if (!eligibilitySaved) {
+  console.warn('⚠️ Aviso: Falha ao gravar dados na tabela reg_eligibility.');
+}
         const finalFileName = `Planeamento_${day}_${monthName}_${year}_${shift}`;
         const fileDisplayName = `Planeamento Diário ${formattedDate} Turno ${shift}`;
         const greeting = getGreeting();
@@ -589,6 +600,3 @@
         document.querySelectorAll('.shift-btn').forEach(btn => btn.classList.remove('active'));
       }
     });
-
-
-

@@ -47,13 +47,13 @@ function makeRowXml(rowNum, emp) {
     const cols = ["B", "C", "D", "E", "F", "G", "H", "I"];
     const values = {
         B: emp.name,
-        C: emp.subturno,
-        D: emp.baixas,
-        E: emp.ferias,
+        C: emp.subShift,
+        D: emp.casualties,
+        E: emp.vacations,
         F: emp.parental,
-        G: emp.nojo,
-        H: emp.justificadas,
-        I: emp.injustificadas
+        G: emp.disgust,
+        H: emp.justified,
+        I: emp.unjustified
     };
 
     const cells = cols.map(col => makeCellXml(`${col}${rowNum}`, styles[col], values[col] || "-")).join("");

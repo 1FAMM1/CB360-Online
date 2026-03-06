@@ -37,28 +37,39 @@ function makeCellXml(ref, styleIndex, value) {
 }
 
 // Gera XML de uma row com os dados do funcionário
+// B = Nome | C = Sub. Turno | D = Baixa | E = Férias | F = Parental | G = Nojo | H = Just. | I = Injust.
+// Estilos linha 9 (primeira): B=15, C=4, D=4, E=3, F=3, G=3, H=3, I=6
+// Estilos linha 10+ (resto):  B=16, C=7, D=7, E=7, F=7, G=7, H=7, I=8
 function makeRowXml(rowNum, emp) {
-    const styles = { B: 7, C: 8, D: 8, E: 8, F: 8, G: 8, H: 9 };
-    const cols = ["B", "C", "D", "E", "F", "G", "H"];
+    const isFirst = rowNum === 9;
+    const styles = isFirst
+        ? { B: 15, C: 4, D: 4, E: 3, F: 3, G: 3, H: 3, I: 6 }
+        : { B: 16, C: 7, D: 7, E: 7, F: 7, G: 7, H: 7, I: 8 };
+
+    const cols = ["B", "C", "D", "E", "F", "G", "H", "I"];
     const values = {
         B: emp.name,
-        C: emp.baixas,
-        D: emp.ferias,
-        E: emp.parental,
-        F: emp.nojo,
-        G: emp.justificadas,
-        H: emp.injustificadas
+        C: emp.subturno,
+        D: emp.baixas,
+        E: emp.ferias,
+        F: emp.parental,
+        G: emp.nojo,
+        H: emp.justificadas,
+        I: emp.injustificadas
     };
 
     const cells = cols.map(col => makeCellXml(`${col}${rowNum}`, styles[col], values[col] || "-")).join("");
-    return `<row r="${rowNum}" spans="2:8" ht="15.75" x14ac:dyDescent="0.25">${cells}</row>`;
+    return `<row r="${rowNum}" spans="2:9" ht="15" x14ac:dyDescent="0.25">${cells}</row>`;
 }
 
 // Patch ao styles.xml — adiciona wrapText="1" nos estilos sem wrapText
 function patchStylesXml(stylesXml) {
     return stylesXml.replace(
-        /<alignment horizontal="center" vertical="center"\/>/g,
-        `<alignment horizontal="center" vertical="center" wrapText="1"/>`
+        /<alignment([^>]*?)\/>/g,
+        (match, attrs) => {
+            if (attrs.includes('wrapText')) return match;
+            return `<alignment${attrs} wrapText="1"/>`;
+        }
     );
 }
 
@@ -73,6 +84,8 @@ export default async function handler(req, res) {
 
     try {
         const { year, month, employees } = req.body;
+        const MONTH_NAMES = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"];
+        const monthName = MONTH_NAMES[month - 1];
 
         // 1️⃣ Carregar template do GitHub
         const TEMPLATE_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/xs_template.xlsx";
@@ -83,7 +96,7 @@ export default async function handler(req, res) {
         // 2️⃣ Abrir o ZIP
         const zip = new AdmZip(templateBuffer);
 
-        // 3️⃣ Patch styles.xml para adicionar wrapText a todos os estilos de células
+        // 3️⃣ Patch styles.xml para adicionar wrapText
         const stylesXml = zip.readAsText("xl/styles.xml");
         const patchedStylesXml = patchStylesXml(stylesXml);
         zip.updateFile("xl/styles.xml", Buffer.from(patchedStylesXml, "utf8"));
@@ -91,7 +104,7 @@ export default async function handler(req, res) {
         // 4️⃣ Ler e modificar sheet XML
         let sheetXml = zip.readAsText("xl/worksheets/sheet1.xml");
 
-        const ROW_START = 8;
+        const ROW_START = 9;
         const ROW_MAX = 220;
 
         const sheetDataStart = sheetXml.indexOf("<sheetData>");
@@ -99,9 +112,21 @@ export default async function handler(req, res) {
         const beforeSheetData = sheetXml.substring(0, sheetDataStart);
         const afterSheetData = sheetXml.substring(sheetDataEnd);
 
-        // Manter row 7 (cabeçalhos)
-        const row7Match = sheetXml.match(/<row r="7"[^>]*>.*?<\/row>/s);
-        const row7Xml = row7Match ? row7Match[0] : "";
+        // Extrair rows de cabeçalho (2,3,4 = imagem, 6 = título, 7 = espaço, 8 = headers)
+        const headerRows = [];
+        for (const r of ["2", "3", "4", "6", "7", "8"]) {
+            const match = sheetXml.match(new RegExp(`<row r="${r}"[^>]*>.*?</row>`, "s"));
+            if (match) headerRows.push(match[0]);
+        }
+
+        // Substituir título em B6 com mês/ano dinâmico
+        const row6Index = headerRows.findIndex(r => r.includes(`r="6"`));
+        if (row6Index !== -1) {
+            headerRows[row6Index] = headerRows[row6Index].replace(
+                /<c r="B6"[^>]*>.*?<\/c>/s,
+                `<c r="B6" s="18" t="inlineStr"><is><t>MAPA SALARIAL - ${monthName} ${year}</t></is></c>`
+            );
+        }
 
         // Construir rows de dados
         let dataRowsXml = "";
@@ -113,16 +138,11 @@ export default async function handler(req, res) {
 
         // Ocultar linhas não usadas
         for (let i = ROW_START + employees.length; i <= ROW_MAX; i++) {
-            dataRowsXml += `<row r="${i}" spans="2:8" ht="15.75" hidden="1" x14ac:dyDescent="0.25"><c r="B${i}" s="2"/><c r="C${i}" s="2"/><c r="D${i}" s="2"/><c r="E${i}" s="2"/><c r="F${i}" s="2"/><c r="G${i}" s="2"/><c r="H${i}" s="2"/></row>`;
+            dataRowsXml += `<row r="${i}" spans="2:9" ht="15" hidden="1" x14ac:dyDescent="0.25"><c r="B${i}" s="16"/><c r="C${i}" s="7"/><c r="D${i}" s="7"/><c r="E${i}" s="7"/><c r="F${i}" s="7"/><c r="G${i}" s="7"/><c r="H${i}" s="7"/><c r="I${i}" s="8"/></row>`;
         }
 
-        const newSheetData = `<sheetData>${row7Xml}${dataRowsXml}</sheetData>`;
+        const newSheetData = `<sheetData>${headerRows.join("")}${dataRowsXml}</sheetData>`;
         let newSheetXml = beforeSheetData + newSheetData + afterSheetData;
-
-        newSheetXml = newSheetXml.replace(
-            /<pageSetup[^\/]*\/>/,
-            `<pageSetup paperSize="9" scale="65" orientation="landscape" fitToPage="1" r:id="rId1"/>`
-        );
 
         // 5️⃣ Atualizar sheet no ZIP
         zip.updateFile("xl/worksheets/sheet1.xml", Buffer.from(newSheetXml, "utf8"));

@@ -1,14 +1,14 @@
-import ExcelJS from "exceljs";
 import fetch from "node-fetch";
 import fs from "fs";
 import os from "os";
 import path from "path";
-import { 
-    ServicePrincipalCredentials, 
-    PDFServices, 
-    MimeType, 
-    CreatePDFJob, 
-    CreatePDFResult 
+import AdmZip from "adm-zip";
+import {
+    ServicePrincipalCredentials,
+    PDFServices,
+    MimeType,
+    CreatePDFJob,
+    CreatePDFResult
 } from "@adobe/pdfservices-node-sdk";
 
 export const config = {
@@ -18,33 +18,54 @@ export const config = {
 const CLIENT_ID = process.env.ADOBE_CLIENT_ID;
 const CLIENT_SECRET = process.env.ADOBE_CLIENT_SECRET;
 
-// Funções de utilidade
-function breakStyle(cell) {
-    cell.style = { ...(cell.style || {}) };
-    if (cell.style.alignment) cell.style.alignment = { ...cell.style.alignment };
-    if (cell.style.border) cell.style.border = { ...cell.style.border };
+// Converte referência de coluna letra para índice (B=2, C=3, ...)
+function colLetterToIndex(letter) {
+    return letter.toUpperCase().charCodeAt(0) - 64;
 }
 
-function setBorder(cell) {
-    breakStyle(cell);
-    const c = { argb: "FFD1D1D1" };
-    cell.border = {
-        top: { style: "thin", color: c },
-        left: { style: "thin", color: c },
-        bottom: { style: "thin", color: c },
-        right: { style: "thin", color: c },
+// Escapa caracteres especiais XML
+function escapeXml(str) {
+    if (!str || str === "-") return "-";
+    return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&apos;");
+}
+
+// Gera o XML de uma célula inline string com wrap text
+function makeCellXml(ref, styleIndex, value) {
+    const escaped = escapeXml(value);
+    // Usa inline string (t="inlineStr") para evitar dependência de sharedStrings
+    return `<c r="${ref}" s="${styleIndex}" t="inlineStr"><is><t xml:space="preserve">${escaped}</t></is></c>`;
+}
+
+// Gera XML de uma row com os dados do funcionário
+function makeRowXml(rowNum, emp) {
+    // Estilos baseados no template: linhas 8-46 usam s=4,5,5,5,5,5,6 (primeira linha) 
+    // e s=7,8,8,8,8,8,9 (restantes). Usamos os estilos das linhas do meio (7,8,8,8,8,8,9)
+    const styles = { B: 7, C: 8, D: 8, E: 8, F: 8, G: 8, H: 9 };
+    const cols = ["B", "C", "D", "E", "F", "G", "H"];
+    const values = {
+        B: emp.name,
+        C: emp.baixas,
+        D: emp.ferias,
+        E: emp.parental,
+        F: emp.nojo,
+        G: emp.justificadas,
+        H: emp.injustificadas
     };
+
+    const cells = cols.map(col => makeCellXml(`${col}${rowNum}`, styles[col], values[col] || "-")).join("");
+    return `<row r="${rowNum}" spans="2:8" ht="15.75" x14ac:dyDescent="0.25">${cells}</row>`;
 }
 
 export default async function handler(req, res) {
-    // ===== CORS =====
-    res.setHeader("Access-Control-Allow-Origin", "*"); // ou "https://cdpn.io"
+    res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
-    // Preflight
     if (req.method === "OPTIONS") return res.status(200).end();
-
     if (req.method !== "POST") return res.status(405).json({ error: "Método não permitido" });
 
     let inputPath = null;
@@ -53,81 +74,74 @@ export default async function handler(req, res) {
         const { year, month, employees } = req.body;
         const MONTH_NAMES = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"];
 
-        // 1️⃣ Carregar template do GitHub
+        // 1️⃣ Carregar template do GitHub como buffer raw
         const TEMPLATE_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/xs_template.xlsx";
         const templateResponse = await fetch(TEMPLATE_URL);
         if (!templateResponse.ok) throw new Error("Erro ao carregar template do GitHub");
+        const templateBuffer = await templateResponse.buffer();
 
-        const workbook = new ExcelJS.Workbook();
-        await workbook.xlsx.load(await templateResponse.buffer());
-        const worksheet = workbook.worksheets[0];
+        // 2️⃣ Abrir o ZIP (XLSX é um ZIP)
+        const zip = new AdmZip(templateBuffer);
 
-        // 2️⃣ Cabeçalho
-        worksheet.getCell("B6").value = `MAPA DE PROCESSAMENTO - ${MONTH_NAMES[month-1]} ${year}`;
+        // 3️⃣ Ler o sheet XML
+        let sheetXml = zip.readAsText("xl/worksheets/sheet1.xml");
 
-        // 3️⃣ Preencher dados
+        // 4️⃣ Construir as rows de dados (linhas 8 em diante)
         const ROW_START = 8;
-        const ROW_MAX = 60;
+        const ROW_MAX = 220;
 
+        // Remover todas as rows de dados existentes (linhas 8 a 220) do XML
+        // Mantemos tudo antes da primeira <row r="8" e depois do </sheetData>
+        const sheetDataStart = sheetXml.indexOf("<sheetData>");
+        const sheetDataEnd = sheetXml.indexOf("</sheetData>") + "</sheetData>".length;
+        const beforeSheetData = sheetXml.substring(0, sheetDataStart);
+        const afterSheetData = sheetXml.substring(sheetDataEnd);
+
+        // Extrair apenas a row 7 (cabeçalhos) do sheetData original
+        const row7Match = sheetXml.match(/<row r="7"[^>]*>.*?<\/row>/s);
+        const row7Xml = row7Match ? row7Match[0] : "";
+
+        // Construir rows de dados
+        let dataRowsXml = "";
         employees.forEach((emp, index) => {
             const rowNum = ROW_START + index;
             if (rowNum > ROW_MAX) return;
-
-            const colMap = {
-                name: "B",
-                baixas: "C",
-                ferias: "D",
-                parental: "E",
-                nojo: "F",
-                justificadas: "G",
-                injustificadas: "H"
-            };
-
-            const writeData = (col, val) => {
-                const cell = worksheet.getCell(`${col}${rowNum}`);
-                breakStyle(cell);
-                // Colocar o conteúdo direto, sem \n
-                cell.value = val || "-";
-                cell.alignment = { 
-                    vertical: 'middle',
-                    horizontal: col === "B" ? 'left' : 'center',
-                    wrapText: true
-                };
-                setBorder(cell);
-            };
-
-            writeData(colMap.name, emp.name);
-            writeData(colMap.baixas, emp.baixas);
-            writeData(colMap.ferias, emp.ferias);
-            writeData(colMap.parental, emp.parental);
-            writeData(colMap.nojo, emp.nojo);
-            writeData(colMap.justificadas, emp.justificadas);
-            writeData(colMap.injustificadas, emp.injustificadas);
+            dataRowsXml += makeRowXml(rowNum, emp);
         });
 
-        // Ocultar linhas não usadas
+        // Ocultar linhas não usadas (marcar como hidden)
         for (let i = ROW_START + employees.length; i <= ROW_MAX; i++) {
-            worksheet.getRow(i).hidden = true;
+            dataRowsXml += `<row r="${i}" spans="2:8" ht="15.75" hidden="1" x14ac:dyDescent="0.25"><c r="B${i}" s="2"/><c r="C${i}" s="2"/><c r="D${i}" s="2"/><c r="E${i}" s="2"/><c r="F${i}" s="2"/><c r="G${i}" s="2"/><c r="H${i}" s="2"/></row>`;
         }
 
-        // 4️⃣ Configuração de impressão
-        worksheet.pageSetup = {
-            orientation: "landscape",
-            paperSize: 9, // A4
-            fitToPage: true,
-            fitToWidth: 1,
-            fitToHeight: 0,
-            margins: { left:0.1, right:0.1, top:0.2, bottom:0.2 }
-        };
+        // Reconstruir sheetData
+        const newSheetData = `<sheetData>${row7Xml}${dataRowsXml}</sheetData>`;
 
-        // 5️⃣ Criar arquivo temporário
+        // Reconstruir XML completo
+        // Também atualizar pageSetup para landscape A4
+        let newSheetXml = beforeSheetData + newSheetData + afterSheetData;
+
+        // Atualizar pageSetup se necessário
+        newSheetXml = newSheetXml.replace(
+            /<pageSetup[^\/]*\/>/,
+            `<pageSetup paperSize="9" scale="65" orientation="landscape" fitToPage="1" r:id="rId1"/>`
+        );
+
+        // 5️⃣ Substituir o sheet no ZIP
+        zip.updateFile("xl/worksheets/sheet1.xml", Buffer.from(newSheetXml, "utf8"));
+
+        // 6️⃣ Gerar buffer do XLSX modificado
+        const modifiedBuffer = zip.toBuffer();
+
+        // 7️⃣ Guardar em ficheiro temporário
         const tempDir = os.tmpdir();
         inputPath = path.join(tempDir, `salary_${Date.now()}.xlsx`);
-        await workbook.xlsx.writeFile(inputPath);
+        fs.writeFileSync(inputPath, modifiedBuffer);
 
-        // 6️⃣ Adobe PDF Services
+        // 8️⃣ Adobe PDF Services
         const credentials = new ServicePrincipalCredentials({ clientId: CLIENT_ID, clientSecret: CLIENT_SECRET });
         const pdfServices = new PDFServices({ credentials });
+
         const inputAsset = await pdfServices.upload({
             readStream: fs.createReadStream(inputPath),
             mimeType: MimeType.XLSX
@@ -141,10 +155,8 @@ export default async function handler(req, res) {
         const chunks = [];
         for await (let chunk of streamAsset.readStream) chunks.push(chunk);
 
-        // Limpeza
         if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
 
-        // Enviar PDF
         res.setHeader("Content-Type", "application/pdf");
         res.setHeader("Content-Disposition", `attachment; filename=Mapa_Salarial_${year}_${month}.pdf`);
         return res.status(200).send(Buffer.concat(chunks));

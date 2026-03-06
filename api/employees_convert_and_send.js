@@ -672,7 +672,7 @@
         }
         const newSheetData = `<sheetData>${headerRows.join("")}${dataRowsXml}</sheetData>`;
         let newSheetXml = beforeSheetData + newSheetData + afterSheetData;
-        newSheetXml = newSheetXml.replace(/<pageMargins[^\/]*\/>/, `<pageMargins left="0.25" right="0.25" top="0.25" bottom="0.25" header="0" footer="0"/>`);
+        newSheetXml = newSheetXml.replace(/<pageMargins[^\/]*\/>/, `<pageMargins left="0.35" right="0.25" top="0.25" bottom="0.25" header="0" footer="0"/>`);
         newSheetXml = newSheetXml.replace(/<pageSetup[^\/]*\/>/, `<pageSetup paperSize="9" scale="75" orientation="landscape" r:id="rId1"/>`);
         newSheetXml = newSheetXml.replace(/<sheetPr><pageSetUpPr fitToPage="1"\/><\/sheetPr>/, `<sheetPr><pageSetUpPr fitToPage="0"/></sheetPr>`);
         zip.updateFile("xl/worksheets/sheet1.xml", Buffer.from(newSheetXml, "utf8"));

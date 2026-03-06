@@ -601,13 +601,3 @@
         document.querySelectorAll('.shift-btn').forEach(btn => btn.classList.remove('active'));
       }
     });
-
-
-
-
-
-
-
-
-
-

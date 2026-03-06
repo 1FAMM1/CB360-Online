@@ -120,7 +120,7 @@
 async function saveEligibility(tables, day, month, year, corpOperNr) {
   const eligibilityRecords = [];
   
-  // Garantir que os valores de data têm 2 dígitos (ex: "05" em vez de "5")
+  // Normalização de datas para garantir que batem com os filtros
   const fDay = String(day).padStart(2, '0');
   const fMonth = String(month).padStart(2, '0');
   const fYear = String(year);
@@ -132,16 +132,11 @@ async function saveEligibility(tables, day, month, year, corpOperNr) {
       const abvName = row.nome?.trim();
       const entranceHour = row.entrada?.trim();
 
-      // 1. Condição: Tem de ter "profissional" na observação
-      if (!obs.includes("profissional")) continue;
-      
-      // 2. Condição: Tem de ter número mecanográfico e hora de entrada
-      if (!nInt || !entranceHour) continue;
+      // Filtros: "profissional" + n_int + hora válida
+      if (!obs.includes("profissional") || !nInt || !entranceHour) continue;
 
-      // 3. Condição: Hora de entrada entre 00:00 e 06:59
-      // Usamos uma comparação direta de strings para ser mais rápido e evitar erros de Number
-      const hourPart = entranceHour.split(':')[0]; // Pega apenas nos primeiros dois dígitos "HH"
-      const hourNum = parseInt(hourPart, 10);
+      // Filtro de horário: 00:00 às 06:59
+      const hourNum = parseInt(entranceHour.split(':')[0], 10);
 
       if (hourNum >= 0 && hourNum <= 6) {
         eligibilityRecords.push({
@@ -150,48 +145,52 @@ async function saveEligibility(tables, day, month, year, corpOperNr) {
           day: fDay,
           month: fMonth,
           year: fYear,
-          exit_hour: entranceHour, // Gravando a hora de entrada na coluna exit_hour conforme pediste
+          exit_hour: entranceHour, // Confirmar se o nome da coluna é este na BD
           corp_oper_nr: String(corpOperNr)
         });
       }
     }
   }
 
-  // Se não houver ninguém que cumpra os requisitos, não faz nada
   if (eligibilityRecords.length === 0) {
-    console.log("ℹ️ Nenhum registo 'Profissional' encontrado na madrugada.");
+    console.log("ℹ️ saveEligibility: Nada a gravar (sem profissionais na madrugada).");
     return true;
   }
 
   try {
-    // 1. Limpar registos do dia para este n_int para não duplicar se clicares várias vezes em emitir
-    // Fazemos um loop ou uma query in para limpar apenas quem estamos a inserir
-    for (const rec of eligibilityRecords) {
-      const delUrl = `${SUPABASE_URL}/rest/v1/reg_eligibility?corp_oper_nr=eq.${corpOperNr}&day=eq.${fDay}&month=eq.${fMonth}&year=eq.${fYear}&n_int=eq.${rec.n_int}`;
-      await fetch(delUrl, { method: "DELETE", headers: getSupabaseHeaders() });
-    }
+    // 1. Limpeza de duplicados (Otimizada)
+    const nIntList = eligibilityRecords.map(r => r.n_int).join(',');
+    const delUrl = `${SUPABASE_URL}/rest/v1/reg_eligibility?corp_oper_nr=eq.${corpOperNr}&day=eq.${fDay}&month=eq.${fMonth}&year=eq.${fYear}&n_int=in.(${nIntList})`;
+    
+    await fetch(delUrl, { 
+      method: "DELETE", 
+      headers: getSupabaseHeaders() 
+    });
 
-    // 2. Inserir na tabela reg_eligibility
+    // 2. Inserção
     const insUrl = `${SUPABASE_URL}/rest/v1/reg_eligibility`;
     const res = await fetch(insUrl, {
       method: "POST",
       headers: { 
         ...getSupabaseHeaders(), 
         "Content-Type": "application/json",
-        "Prefer": "resolution=merge-duplicates" 
+        "Prefer": "return=minimal" 
       },
       body: JSON.stringify(eligibilityRecords)
     });
 
     if (!res.ok) {
-      const errorText = await res.text();
-      console.error("❌ Erro Supabase reg_eligibility:", errorText);
+      const errorDetail = await res.text();
+      // ISTO VAI APARECER NA CONSOLA DO NAVEGADOR (F12)
+      console.error("❌ Erro Crítico Supabase (reg_eligibility):", errorDetail);
       return false;
     }
 
+    console.log("✅ reg_eligibility gravado com sucesso!");
     return true;
+
   } catch (err) {
-    console.error("❌ Erro em saveEligibility:", err);
+    console.error("❌ Erro de exceção em saveEligibility:", err);
     return false;
   }
 }
@@ -627,4 +626,5 @@ if (!eligibilitySaved) {
         document.querySelectorAll('.shift-btn').forEach(btn => btn.classList.remove('active'));
       }
     });
+
 

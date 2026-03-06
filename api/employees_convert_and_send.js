@@ -665,7 +665,7 @@
           dataRowsXml += makeRowXml(rowNum, emp);
         });
         for (let i = ROW_START + employees.length; i <= ROW_MAX; i++) {
-          dataRowsXml += `<row r="${i}" spans="2:9" ht="15" hidden="1" x14ac:dyDescent="0.25"><c r="B${i}" s="8"/><c r="C${i}" s="14"/><c r="D${i}" s="14"/><c r="E${i}" s="14"/><c r="F${i}" s="14"/><c r="G${i}" s="14"/><c r="H${i}" s="14"/><c r="I${i}" s="15"/></row>`;
+          dataRowsXml += `<row r="${i}" spans="2:9" ht="20" hidden="1" x14ac:dyDescent="0.25"><c r="B${i}" s="8"/><c r="C${i}" s="14"/><c r="D${i}" s="14"/><c r="E${i}" s="14"/><c r="F${i}" s="14"/><c r="G${i}" s="14"/><c r="H${i}" s="14"/><c r="I${i}" s="15"/></row>`;
         }
         const newSheetData = `<sheetData>${headerRows.join("")}${dataRowsXml}</sheetData>`;
         let newSheetXml = beforeSheetData + newSheetData + afterSheetData;
@@ -673,49 +673,23 @@
         newSheetXml = newSheetXml.replace(/<pageSetup[^\/]*\/>/, `<pageSetup paperSize="9" scale="75" orientation="landscape" r:id="rId1"/>`);
         newSheetXml = newSheetXml.replace(/<sheetPr><pageSetUpPr fitToPage="1"\/><\/sheetPr>/, `<sheetPr><pageSetUpPr fitToPage="0"/></sheetPr>`);
         zip.updateFile("xl/worksheets/sheet1.xml", Buffer.from(newSheetXml, "utf8"));
-
-const tempDir = os.tmpdir();
-inputPath = path.join(tempDir, `mapa_salarial_${Date.now()}.xlsx`);
-zip.writeZip(inputPath);
-
-const credentials = new ServicePrincipalCredentials({
-  clientId: CLIENT_ID,
-  clientSecret: CLIENT_SECRET
-});
-
-const pdfServices = new PDFServices({ credentials });
-
-const inputAsset = await pdfServices.upload({
-  readStream: fs.createReadStream(inputPath),
-  mimeType: MimeType.XLSX
-});
-
-const job = new CreatePDFJob({ inputAsset });
-const pollingURL = await pdfServices.submit({ job });
-
-const result = await pdfServices.getJobResult({
-  pollingURL,
-  resultType: CreatePDFResult
-});
-
-const streamAsset = await pdfServices.getContent({
-  asset: result.result.asset
-});
-
-const chunks = [];
-for await (let chunk of streamAsset.readStream) {
-  chunks.push(chunk);
-}
-
-if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
-
-res.setHeader("Content-Type", "application/pdf");
-res.setHeader(
-  "Content-Disposition",
-  `attachment; filename="Mapa_Salarial_${monthName}_${year}.pdf"`
-);
-
-return res.status(200).send(Buffer.concat(chunks));
+        const modifiedBuffer = zip.toBuffer();
+        const tempDir = os.tmpdir();
+        inputPath = path.join(tempDir, `salary_${Date.now()}.xlsx`);
+        fs.writeFileSync(inputPath, modifiedBuffer);
+        const credentials = new ServicePrincipalCredentials({clientId: CLIENT_ID, clientSecret: CLIENT_SECRET});
+        const pdfServices = new PDFServices({credentials});
+        const inputAsset = await pdfServices.upload({readStream: fs.createReadStream(inputPath), mimeType: MimeType.XLSX});
+        const job = new CreatePDFJob({inputAsset});
+        const pollingURL = await pdfServices.submit({job});
+        const result = await pdfServices.getJobResult({pollingURL, resultType: CreatePDFResult});
+        const streamAsset = await pdfServices.getContent({asset: result.result.asset});
+        const chunks = [];
+        for await (let chunk of streamAsset.readStream) chunks.push(chunk);
+        if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader("Content-Disposition", `attachment; filename=Mapa_Salarial_${year}_${month}.pdf`);
+        return res.status(200).send(Buffer.concat(chunks));
       } catch (error) {
         if (inputPath && fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
         console.error("Erro handleMapaSalarial:", error);

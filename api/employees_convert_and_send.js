@@ -662,7 +662,7 @@ if (row6Index !== -1) {
     /<c r="B6"[^>]*>.*?<\/c>|<c r="B6"[^\/]*\/>/s,
     `<c r="B6" s="${originalStyle}" t="inlineStr"><is><t>MAPA SALARIAL - ${monthName} ${year}</t></is></c>`
   );
-}
+
         }
         let dataRowsXml = "";
         employees.forEach((emp, index) => {

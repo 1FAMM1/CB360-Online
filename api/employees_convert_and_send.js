@@ -17,8 +17,7 @@
       formulário_férias: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/employee_vacations_mark_template.xlsx",
       mapa_ferias: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/vacation_map_template.xlsx",
       prioridade_ferias: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/priority_vacation_template.xlsx",
-      mapa_salarial: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/xs_template.xlsx",
-     
+      mapa_salarial: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/xs_template.xlsx",     
     };
     // ─── Helpers API 01 ──────────────────────────────────────────────────────────
     const HOLIDAY_COLOR = "F7C6C7";
@@ -170,17 +169,7 @@
         if (mode === "mapa_ferias") return await handleMapaFerias(req, res);
         if (mode === "prioridade_ferias") return await handlePriority(req, res);
         if (mode === "mapa_salarial") return await handleMapaSalarial(req, res);
-
-
-
-
-              
         if (mode === "mapa_salarial_excel") return await handleMapaSalarialExcel(req, res);
-
-
-
-
-              
       } catch (error) {
         if (error instanceof SDKError || error instanceof ServiceUsageError || error instanceof ServiceApiError) {
           return res.status(500).json({error: "Erro no serviço Adobe", details: error.message});
@@ -710,88 +699,57 @@
         return res.status(500).json({ error: error.message });
       }
     }
-
-
-
-
-async function handleMapaSalarialExcel(req, res) {
-  try {
-    const { year, month, employees } = req.body;
-    const MONTH_NAMES = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO",
-                         "JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"];
-    const monthName = MONTH_NAMES[month - 1];
-    
-    // Carregar template
-    const templateResponse = await fetch(TEMPLATES.mapa_salarial);
-    if (!templateResponse.ok) throw new Error("Erro ao carregar template");
-    const templateBuffer = await templateResponse.buffer();
-    const zip = new AdmZip(templateBuffer);
-    
-    // Manipular XML (IGUAL ao PDF!)
-    let sheetXml = zip.readAsText("xl/worksheets/sheet1.xml");
-    const ROW_START = 9;
-    const ROW_MAX = 220;
-    
-    const sheetDataStart = sheetXml.indexOf("<sheetData>");
-    const sheetDataEnd = sheetXml.indexOf("</sheetData>") + "</sheetData>".length;
-    const beforeSheetData = sheetXml.substring(0, sheetDataStart);
-    const afterSheetData = sheetXml.substring(sheetDataEnd);
-    
-    // Headers
-    const headerRows = [];
-    for (const r of ["2", "3", "4", "6", "7", "8"]) {
-      const match = sheetXml.match(new RegExp(`<row r="${r}"[^>]*>.*?</row>`, "s"));
-      if (match) headerRows.push(match[0]);
-    }
-    
-    // Atualizar título
-    const row6Index = headerRows.findIndex(r => r.includes(`r="6"`));
-    if (row6Index !== -1) {
-      const styleMatch = headerRows[row6Index].match(/<c r="B6" s="(\d+)"/);
-      const originalStyle = styleMatch ? styleMatch[1] : "10";
-      headerRows[row6Index] = headerRows[row6Index].replace(
-        /<c r="B6"[^>]*>.*?<\/c>|<c r="B6"[^\/]*\/>/s,
-        `<c r="B6" s="${originalStyle}" t="inlineStr"><is><t>MAPA SALARIAL - ${monthName} ${year}</t></is></c>`
-      );
-    }
-    
-    // Gerar linhas de dados
-    let dataRowsXml = "";
-    employees.forEach((emp, index) => {
-      const rowNum = ROW_START + index;
-      if (rowNum > ROW_MAX) return;
-      dataRowsXml += makeRowXml(rowNum, emp);
-    });
-    
-    // Ocultar linhas vazias
-    for (let i = ROW_START + employees.length; i <= ROW_MAX; i++) {
+    async function handleMapaSalarialExcel(req, res) {
+      try {
+        const { year, month, employees } = req.body;
+        const MONTH_NAMES = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO", "JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"];
+        const monthName = MONTH_NAMES[month - 1];
+        const templateResponse = await fetch(TEMPLATES.mapa_salarial);
+        if (!templateResponse.ok) throw new Error("Erro ao carregar template");
+        const templateBuffer = await templateResponse.buffer();
+        const zip = new AdmZip(templateBuffer);
+        let sheetXml = zip.readAsText("xl/worksheets/sheet1.xml");
+        const ROW_START = 9;
+        const ROW_MAX = 220;
+        const sheetDataStart = sheetXml.indexOf("<sheetData>");
+        const sheetDataEnd = sheetXml.indexOf("</sheetData>") + "</sheetData>".length;
+        const beforeSheetData = sheetXml.substring(0, sheetDataStart);
+        const afterSheetData = sheetXml.substring(sheetDataEnd);
+        const headerRows = [];
+        for (const r of ["2", "3", "4", "6", "7", "8"]) {
+          const match = sheetXml.match(new RegExp(`<row r="${r}"[^>]*>.*?</row>`, "s"));
+          if (match) headerRows.push(match[0]);
+        }
+        const row6Index = headerRows.findIndex(r => r.includes(`r="6"`));
+        if (row6Index !== -1) {
+          const styleMatch = headerRows[row6Index].match(/<c r="B6" s="(\d+)"/);
+          const originalStyle = styleMatch ? styleMatch[1] : "10";
+          headerRows[row6Index] = headerRows[row6Index].replace(
+            /<c r="B6"[^>]*>.*?<\/c>|<c r="B6"[^\/]*\/>/s,
+            `<c r="B6" s="${originalStyle}" t="inlineStr"><is><t>MAPA SALARIAL - ${monthName} ${year}</t></is></c>`
+          );
+        }
+        let dataRowsXml = "";
+        employees.forEach((emp, index) => {
+          const rowNum = ROW_START + index;
+          if (rowNum > ROW_MAX) return;
+          dataRowsXml += makeRowXml(rowNum, emp);
+        });
+        for (let i = ROW_START + employees.length; i <= ROW_MAX; i++) {
       dataRowsXml += `<row r="${i}" spans="2:9" ht="20" hidden="1" x14ac:dyDescent="0.25"><c r="B${i}" s="0"/><c r="C${i}" s="0"/><c r="D${i}" s="0"/><c r="E${i}" s="0"/><c r="F${i}" s="0"/><c r="G${i}" s="0"/><c r="H${i}" s="0"/><c r="I${i}" s="0"/></row>`;
+        }
+        const newSheetData = `<sheetData>${headerRows.join("")}${dataRowsXml}</sheetData>`;
+        let newSheetXml = beforeSheetData + newSheetData + afterSheetData;
+        newSheetXml = newSheetXml.replace(/<pageMargins[^\/]*\/>/, `<pageMargins left="0.25" right="0.25" top="0.25" bottom="0.25" header="0" footer="0"/>`);
+        newSheetXml = newSheetXml.replace(/<pageSetup[^\/]*\/>/, `<pageSetup paperSize="9" scale="75" orientation="landscape" r:id="rId1"/>`);
+        newSheetXml = newSheetXml.replace(/<sheetPr><pageSetUpPr fitToPage="1"\/><\/sheetPr>/, `<sheetPr><pageSetUpPr fitToPage="0"/></sheetPr>`);
+        zip.updateFile("xl/worksheets/sheet1.xml", Buffer.from(newSheetXml, "utf8"));
+        const modifiedBuffer = zip.toBuffer();
+        res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        res.setHeader("Content-Disposition", `attachment; filename=Mapa_Salarial_${year}_${month}.xlsx`);
+        return res.status(200).send(modifiedBuffer);
+      } catch (error) {
+        console.error("Erro handleMapaSalarialExcel:", error);
+        return res.status(500).json({error: error.message});
+      }
     }
-    
-    // Montar XML final
-    const newSheetData = `<sheetData>${headerRows.join("")}${dataRowsXml}</sheetData>`;
-    let newSheetXml = beforeSheetData + newSheetData + afterSheetData;
-    
-    // Ajustes de página
-    newSheetXml = newSheetXml.replace(/<pageMargins[^\/]*\/>/, 
-      `<pageMargins left="0.25" right="0.25" top="0.25" bottom="0.25" header="0" footer="0"/>`);
-    newSheetXml = newSheetXml.replace(/<pageSetup[^\/]*\/>/, 
-      `<pageSetup paperSize="9" scale="75" orientation="landscape" r:id="rId1"/>`);
-    newSheetXml = newSheetXml.replace(/<sheetPr><pageSetUpPr fitToPage="1"\/><\/sheetPr>/, 
-      `<sheetPr><pageSetUpPr fitToPage="0"/></sheetPr>`);
-    
-    // Atualizar ZIP
-    zip.updateFile("xl/worksheets/sheet1.xml", Buffer.from(newSheetXml, "utf8"));
-    
-    // RETORNAR XLSX (SEM CONVERTER PARA PDF!)
-    const modifiedBuffer = zip.toBuffer();
-    
-    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    res.setHeader("Content-Disposition", `attachment; filename=Mapa_Salarial_${year}_${month}.xlsx`);
-    return res.status(200).send(modifiedBuffer);
-    
-  } catch (error) {
-    console.error("Erro handleMapaSalarialExcel:", error);
-    return res.status(500).json({ error: error.message });
-  }
-}

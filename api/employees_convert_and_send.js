@@ -324,8 +324,19 @@
           for (let i = 0; i < n; i++) fillEmployeeAtRow(list[i], range.start + i);
           for (let i = n; i < capacity; i++) clearAndHideRow(range.start + i);
         });
-        worksheet.pageSetup = {orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 1, horizontalCentered: true, verticalCentered: false,
-                               margins: {left: 0.1, right: 0.1, top: 0.15, bottom: 0.15, header: 0, footer: 0},};
+        
+
+
+
+        worksheet.pageSetup = {
+    orientation: 'landscape',
+    paperSize: 9,
+    fitToPage: true,
+    fitToWidth: 1,
+    fitToHeight: 0, 
+    horizontalCentered: true,
+    margins: { left: 0.25, right: 0.25, top: 0.75, bottom: 0.25, header: 0, footer: 0 }
+};
         if (format !== "pdf") {
           const buffer = await workbook.xlsx.writeBuffer();
           res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");

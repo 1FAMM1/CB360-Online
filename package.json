@@ -7,6 +7,9 @@
     "start": "next start"
   },
   "dependencies": {
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest",
     "@adobe/pdfservices-node-sdk": "^4.1.0",
     "@supabase/supabase-js": "^2.39.0",
     "exceljs": "^4.4.0",

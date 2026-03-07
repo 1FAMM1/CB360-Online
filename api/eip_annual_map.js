@@ -14,10 +14,8 @@ export const config = {
 
 const CLIENT_ID = process.env.ADOBE_CLIENT_ID;
 const CLIENT_SECRET = process.env.ADOBE_CLIENT_SECRET;
-
 const TEMPLATE_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/eip_annual_map_template.xlsx";
 
-// ─── Colors ──────────────────────────────────────────────────────────────────
 const COLOR = {
   EIP01_BG:   "DBEAFE",
   EIP01_TEXT: "1D4ED8",
@@ -29,25 +27,21 @@ const COLOR = {
   WHITE:      "FFFFFF",
 };
 
-// ─── Month start columns (1-based) ───────────────────────────────────────────
-// Janeiro=B(2), Fevereiro=E(5), Março=H(8), Abril=K(11), Maio=N(14),
-// Junho=Q(17), Julho=T(20), Agosto=W(23), Setembro=Z(26),
-// Outubro=AC(29), Novembro=AF(32), Dezembro=AI(35)
 const MONTH_START_COLS = [2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35];
 const WEEKDAY_NAMES = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
-const ROW_START = 11; // day 1
-const ROW_END   = 41; // day 31
+const ROW_START = 11; 
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// ─── Helpers de Estilo (Mantendo os teus nomes originais) ─────────────────────
 function setFill(cell, hex6) {
   cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF" + hex6 } };
 }
 
 function setFont(cell, hex6Text, bold = false) {
-  cell.font = { ...(cell.font || {}), bold, color: { argb: "FF" + hex6Text } };
+  cell.font = { name: 'Arial', size: 8, bold, color: { argb: "FF" + hex6Text } };
 }
 
-function setBorder(cell) {
+function setBorder(cell, remove = false) {
+  if (remove) { cell.border = null; return; }
   const c = { style: "thin", color: { argb: "FFD1D1D1" } };
   cell.border = { top: c, left: c, bottom: c, right: c };
 }
@@ -56,79 +50,36 @@ function centerAlign(cell) {
   cell.alignment = { horizontal: "center", vertical: "middle" };
 }
 
-function atNoonLocal(y, mIndex, d) {
-  return new Date(y, mIndex, d, 12, 0, 0, 0);
-}
-
-function addDays(baseDate, days) {
-  const d = new Date(baseDate);
-  d.setHours(12, 0, 0, 0);
-  d.setDate(d.getDate() + days);
-  return d;
-}
-
 function getPortugalHolidays(y) {
-  const fixed = [
-    {month: 1, day: 1}, {month: 4, day: 25}, {month: 5, day: 1},
-    {month: 6, day: 10}, {month: 8, day: 15}, {month: 9, day: 7},
-    {month: 10, day: 5}, {month: 11, day: 1}, {month: 12, day: 1},
-    {month: 12, day: 8}, {month: 12, day: 25},
-  ];
-  const a = y % 19, b = Math.floor(y / 100), c = y % 100;
-  const d = Math.floor(b / 4), e = b % 4;
-  const f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3);
-  const h = (19 * a + b - d - g + 15) % 30;
-  const i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7;
-  const m = Math.floor((a + 11 * h + 22 * l) / 451);
-  const emonth = Math.floor((h + l - 7 * m + 114) / 31);
-  const eday = ((h + l - 7 * m + 114) % 31) + 1;
-  const easter = atNoonLocal(y, emonth - 1, eday);
-  const mobile = [addDays(easter, -2), easter, addDays(easter, 60)];
+  const fixed = [{m:1,d:1},{m:4,d:25},{m:5,d:1},{m:6,d:10},{m:8,d:15},{m:9,d:7},{m:10,d:5},{m:11,d:1},{m:12,d:1},{m:12,d:8},{m:12,d:25}];
+  const a=y%19, b=Math.floor(y/100), c=y%100, d=Math.floor(b/4), e=b%4, f=Math.floor((b+8)/25), g=Math.floor((b-f+1)/3), h=(19*a+b-d-g+15)%30, i=Math.floor(c/4), k=c%4, l=(32+2*e+2*i-h-k)%7, m=Math.floor((a+11*h+22*l)/451), em=Math.floor((h+l-7*m+114)/31), ed=((h+l-7*m+114)%31)+1;
+  const easter = new Date(y, em-1, ed, 12);
+  const add = (dt, n) => { const r = new Date(dt); r.setDate(r.getDate()+n); return r; };
+  const mobile = [add(easter,-2), easter, add(easter,60)];
   const set = new Set();
-  fixed.forEach(({month, day}) => set.add(`${month}-${day}`));
-  mobile.forEach(dt => set.add(`${dt.getMonth() + 1}-${dt.getDate()}`));
+  fixed.forEach(h => set.add(`${h.m}-${h.d}`));
+  mobile.forEach(dt => set.add(`${dt.getMonth()+1}-${dt.getDate()}`));
   return set;
 }
 
-// ─── Handler ─────────────────────────────────────────────────────────────────
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "POST") return res.status(405).json({ error: "Método não permitido" });
-
+  
   let inputPath = null;
-
   try {
     const { year, days, format = "pdf" } = req.body;
-    // days: array of { month, day, team } — all 365/366 days
-
-    if (!year || !Array.isArray(days) || days.length === 0) {
-      return res.status(400).json({ error: "Dados incompletos. Necessário: year, days[]" });
-    }
-
-    if (format === "pdf" && (!CLIENT_ID || !CLIENT_SECRET)) {
-      return res.status(500).json({ error: "Chaves Adobe não configuradas" });
-    }
-
-    // Build lookup map: "month-day" -> team
     const eipMap = {};
-    days.forEach(({ month, day, team }) => { eipMap[`${month}-${day}`] = team; });
-
+    days.forEach(d => { eipMap[`${d.month}-${d.day}`] = d.team; });
     const holidays = getPortugalHolidays(year);
 
-    // Load template
     const templateRes = await fetch(TEMPLATE_URL);
-    if (!templateRes.ok) throw new Error("Erro ao carregar template");
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(await templateRes.arrayBuffer());
     const ws = workbook.worksheets[0];
 
-    // Set title
     ws.getCell("B7").value = `ENQUADRAMENTO EQUIPAS DE INTERVENÇÃO PERMANENTE - ${year}`;
 
-    // Fill data
     for (let mi = 0; mi < 12; mi++) {
       const month = mi + 1;
       const startCol = MONTH_START_COLS[mi];
@@ -136,67 +87,55 @@ export default async function handler(req, res) {
 
       for (let day = 1; day <= 31; day++) {
         const row = ROW_START + (day - 1);
-        const colDay  = startCol;
-        const colWd   = startCol + 1;
-        const colTeam = startCol + 2;
+        const cellDay = ws.getCell(row, startCol);
+        const cellWd = ws.getCell(row, startCol + 1);
+        const cellTeam = ws.getCell(row, startCol + 2);
 
-        const cellDay  = ws.getCell(row, colDay);
-        const cellWd   = ws.getCell(row, colWd);
-        const cellTeam = ws.getCell(row, colTeam);
-
+        // CORREÇÃO: Se o dia não existe, limpa MESMO (null) e tira bordas
         if (day > daysInMonth) {
-          // Day doesn't exist in this month
           [cellDay, cellWd, cellTeam].forEach(c => {
-            c.value = "";
+            c.value = null;
             setFill(c, COLOR.EMPTY);
-            setBorder(c);
-            centerAlign(c);
+            setBorder(c, true); // true = remove borda
           });
           continue;
         }
 
         const date = new Date(year, mi, day, 12);
         const wd = date.getDay();
-        const isWeekend = wd === 0 || wd === 6;
-        const isHoliday = holidays.has(`${month}-${day}`);
         const team = eipMap[`${month}-${day}`] || "";
-        const isEIP01 = team === "EIP-01";
-        const isEIP02 = team === "EIP-02";
+        const isWeekend = (wd === 0 || wd === 6);
+        const isHoliday = holidays.has(`${month}-${day}`);
 
-        // Determine background
         let bgColor = COLOR.WHITE;
-        if (isHoliday)      bgColor = COLOR.HOLIDAY;
+        if (isHoliday) bgColor = COLOR.HOLIDAY;
         else if (isWeekend) bgColor = COLOR.WEEKEND;
 
-        // Day cell
+        // Preenchimento
         cellDay.value = String(day).padStart(2, "0");
-        setFill(cellDay, bgColor);
-        setFont(cellDay, "000000", true);
-        setBorder(cellDay);
-        centerAlign(cellDay);
-
-        // Weekday cell
         cellWd.value = WEEKDAY_NAMES[wd];
-        setFill(cellWd, bgColor);
-        setFont(cellWd, "475569", false);
-        setBorder(cellWd);
-        centerAlign(cellWd);
-
-        // Team cell — EIP color overrides weekend/holiday bg
-        let teamBg   = bgColor;
-        let teamText = "000000";
-        if (isEIP01) { teamBg = COLOR.EIP01_BG; teamText = COLOR.EIP01_TEXT; }
-        if (isEIP02) { teamBg = COLOR.EIP02_BG; teamText = COLOR.EIP02_TEXT; }
-
         cellTeam.value = team;
-        setFill(cellTeam, teamBg);
-        setFont(cellTeam, teamText, true);
-        setBorder(cellTeam);
-        centerAlign(cellTeam);
+
+        // Estilos base
+        [cellDay, cellWd, cellTeam].forEach(c => {
+          setFill(c, bgColor);
+          setFont(c, "000000", c === cellDay);
+          setBorder(c);
+          centerAlign(c);
+        });
+
+        // Cores EIP (Sobrepõe o fim de semana se houver equipa)
+        if (team === "EIP-01") {
+          setFill(cellTeam, COLOR.EIP01_BG);
+          setFont(cellTeam, COLOR.EIP01_TEXT, true);
+        } else if (team === "EIP-02") {
+          setFill(cellTeam, COLOR.EIP02_BG);
+          setFont(cellTeam, COLOR.EIP02_TEXT, true);
+        }
       }
     }
 
-    // Page setup
+    // Preservar a tua configuração de página original
     ws.pageSetup = {
       orientation: "landscape", paperSize: 9,
       fitToPage: true, fitToWidth: 1, fitToHeight: 0,
@@ -204,15 +143,13 @@ export default async function handler(req, res) {
       margins: { left: 0.25, right: 0.25, top: 0.5, bottom: 0.25, header: 0, footer: 0 }
     };
 
-    // Return XLSX
     if (format !== "pdf") {
       const buffer = await workbook.xlsx.writeBuffer();
       res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-      res.setHeader("Content-Disposition", `attachment; filename="EIP_Annual_Map_${year}.xlsx"`);
       return res.status(200).send(Buffer.from(buffer));
     }
 
-    // Convert to PDF via Adobe
+    // Adobe PDF
     const tempDir = os.tmpdir();
     inputPath = path.join(tempDir, `eip_${year}_${Date.now()}.xlsx`);
     await workbook.xlsx.writeFile(inputPath);
@@ -230,15 +167,11 @@ export default async function handler(req, res) {
     if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
 
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename="EIP_Annual_Map_${year}.pdf"`);
     return res.status(200).send(Buffer.concat(chunks));
 
   } catch (error) {
     if (inputPath && fs.existsSync(inputPath)) try { fs.unlinkSync(inputPath); } catch {}
-    if (error instanceof SDKError || error instanceof ServiceUsageError || error instanceof ServiceApiError) {
-      return res.status(500).json({ error: "Erro no serviço Adobe", details: error.message });
-    }
-    console.error("Erro EIP Annual Map:", error);
+    console.error("Erro EIP:", error);
     return res.status(500).json({ error: error.message });
   }
 }

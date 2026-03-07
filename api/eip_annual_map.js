@@ -8,9 +8,7 @@ import {
   CreatePDFJob, CreatePDFResult
 } from "@adobe/pdfservices-node-sdk";
 
-export const config = {
-  api: { bodyParser: { sizeLimit: "10mb" } },
-};
+export const config = { api: { bodyParser: { sizeLimit: "10mb" } } };
 
 const CLIENT_ID = process.env.ADOBE_CLIENT_ID;
 const CLIENT_SECRET = process.env.ADOBE_CLIENT_SECRET;
@@ -21,8 +19,8 @@ const COLOR = {
   EIP01_TEXT: "FF1D4ED8",
   EIP02_BG:   "FFDCFCE7",
   EIP02_TEXT: "FF15803D",
-  HOLIDAY:    "FFF7C6C7", // Rosa
-  WEEKEND:    "FFF9E0B0", // Amarelo
+  HOLIDAY:    "FFF7C6C7",
+  WEEKEND:    "FFF9E0B0",
   EMPTY:      "FFF8FAFC",
   WHITE:      "FFFFFFFF",
 };
@@ -31,78 +29,62 @@ const MONTH_START_COLS = [2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35];
 const WEEKDAY_NAMES = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
 const ROW_START = 11;
 
-// ─── A TUA LÓGICA DE DATAS (IGUAL ÀS ESCALAS) ────────────────────────────────
-function atNoonLocal(y, mIndex, d) {
-  return new Date(y, mIndex, d, 12, 0, 0, 0);
-}
+// --- Lógica de Feriados Robusta (Forçando o Ano) ---
+function getHolidaySet(y) {
+  const year = Number(y);
+  const set = new Set();
+  
+  // Feriados Fixos
+  const fixed = [[1,1],[4,25],[5,1],[6,10],[8,15],[9,7],[10,5],[11,1],[12,1],[12,8],[12,25]];
+  fixed.forEach(([m, d]) => set.add(`${m}-${d}`));
 
-function addDays(baseDate, days) {
-  const d = new Date(baseDate);
-  d.setHours(12, 0, 0, 0);
-  d.setDate(d.getDate() + days);
-  return d;
-}
-
-function getPortugalHolidays(y) {
-  const fixed = [
-    {month: 1, day: 1, name: "Ano Novo"}, {month: 4, day: 25, name: "Dia da Liberdade"}, {month: 5, day: 1, name: "Dia do Trabalhador"},
-    {month: 6, day: 10, name: "Dia de Portugal"}, {month: 8, day: 15, name: "Assunção de Nossa Senhora"}, {month: 9, day: 7, name: "Dia da Cidade de Faro"},
-    {month: 10, day: 5, name: "Implantação da República"}, {month: 11, day: 1, name: "Todos os Santos"}, {month: 12, day: 1, name: "Restauração da Independência"},
-    {month: 12, day: 8, name: "Imaculada Conceição"}, {month: 12, day: 25, name: "Natal"},
-  ];
-  const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4,
+  // Algoritmo de Butcher-Meeus (Páscoa)
+  const a = year % 19, b = Math.floor(year / 100), c = year % 100, d = Math.floor(b / 4), e = b % 4,
         f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30,
         i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7,
-        m = Math.floor((a + 11 * h + 22 * l) / 451), emonth = Math.floor((h + l - 7 * m + 114) / 31), eday = ((h + l - 7 * m + 114) % 31) + 1;
+        m = Math.floor((a + 11 * h + 22 * l) / 451), month = Math.floor((h + l - 7 * m + 114) / 31), day = ((h + l - 7 * m + 114) % 31) + 1;
+  
+  const easter = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+  const add = (base, n) => {
+    const dt = new Date(base);
+    dt.setUTCDate(dt.getUTCDate() + n);
+    return dt;
+  };
 
-  const easter = atNoonLocal(y, emonth - 1, eday);
-  const mobile = [
-    {date: addDays(easter, -47), name: "Carnaval", optional: true},
-    {date: addDays(easter, -2), name: "Sexta-feira Santa", optional: false},
-    {date: easter, name: "Páscoa", optional: false},
-    {date: addDays(easter, 60), name: "Corpo de Deus", optional: false},
-  ];
-  const fixedDates = fixed.map((x) => ({ date: atNoonLocal(y, x.month - 1, x.day), name: x.name, optional: false }));
-  return [...fixedDates, ...mobile];
-}
-
-function getHolidaySet(y) {
-  const holidays = getPortugalHolidays(y);
-  const set = new Set();
-  holidays.forEach(h => {
-    if (!h.optional) set.add(`${h.date.getMonth() + 1}-${h.date.getDate()}`);
+  // Carnaval (-47), Sexta Santa (-2), Corpo de Deus (+60)
+  [add(easter, -47), add(easter, -2), easter, add(easter, 60)].forEach(dt => {
+    set.add(`${dt.getUTCMonth() + 1}-${dt.getUTCDate()}`);
   });
   return set;
 }
 
-// ─── HANDLER COM FIX DE CORS ────────────────────────────────────────────────
 export default async function handler(req, res) {
-  // Configuração de CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
   if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   let inputPath = null;
   try {
     const { year, days } = req.body;
+    const targetYear = Number(year);
     const eipMap = {};
     days.forEach(d => { eipMap[`${d.month}-${d.day}`] = d.team; });
-    const holidaysSet = getHolidaySet(year);
+    
+    const holidaysSet = getHolidaySet(targetYear);
 
     const templateRes = await fetch(TEMPLATE_URL);
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(await templateRes.arrayBuffer());
     const ws = workbook.worksheets[0];
 
-    ws.getCell("B7").value = `ENQUADRAMENTO EQUIPAS DE INTERVENÇÃO PERMANENTE - ${year}`;
+    ws.getCell("B7").value = `ENQUADRAMENTO EQUIPAS DE INTERVENÇÃO PERMANENTE - ${targetYear}`;
 
     for (let mi = 0; mi < 12; mi++) {
       const month = mi + 1;
       const startCol = MONTH_START_COLS[mi];
-      const daysInMonth = new Date(year, month, 0).getDate();
+      // Dias no mês para o ano específico
+      const daysInMonth = new Date(targetYear, month, 0).getDate();
 
       for (let day = 1; day <= 31; day++) {
         const row = ROW_START + (day - 1);
@@ -119,8 +101,11 @@ export default async function handler(req, res) {
           continue;
         }
 
-        const currentDt = atNoonLocal(year, mi, day);
+        // Cálculo do dia da semana (Domingo=0, Sábado=6)
+        // Usamos meio-dia para evitar problemas de fuso horário
+        const currentDt = new Date(targetYear, mi, day, 12, 0, 0);
         const wdIndex = currentDt.getDay();
+        
         const isWeekend = (wdIndex === 0 || wdIndex === 6);
         const isHoliday = holidaysSet.has(`${month}-${day}`);
         const team = eipMap[`${month}-${day}`] || "";
@@ -133,11 +118,10 @@ export default async function handler(req, res) {
         cellWd.value = WEEKDAY_NAMES[wdIndex];
         cellTeam.value = team;
 
-        // Estilos baseados no handler de escalas
         [cellDay, cellWd, cellTeam].forEach(c => {
           c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: currentBg } };
           c.alignment = { horizontal: "center", vertical: "middle" };
-          c.font = { name: 'Arial', size: 8, bold: (c === cellDay) };
+          c.font = { name: 'Arial', size: 8, bold: (c === cellDay), color: { argb: "FF000000" } };
           c.border = {
             top: { style: 'thin', color: { argb: 'FFD1D1D1' } },
             left: { style: 'thin', color: { argb: 'FFD1D1D1' } },
@@ -169,8 +153,10 @@ export default async function handler(req, res) {
     const pdfServices = new PDFServices({ credentials });
     const inputAsset = await pdfServices.upload({ readStream: fs.createReadStream(inputPath), mimeType: MimeType.XLSX });
     const job = new CreatePDFJob({ inputAsset });
-    const pollingURL = await pdfServices.submit({ job });
-    const result = await pdfServices.getJobResult({ pollingURL, resultType: CreatePDFResult });
+    const result = await pdfServices.getJobResult({ 
+      pollingURL: await pdfServices.submit({ job }), 
+      resultType: CreatePDFResult 
+    });
     const streamAsset = await pdfServices.getContent({ asset: result.result.asset });
 
     const chunks = [];
@@ -178,7 +164,7 @@ export default async function handler(req, res) {
     fs.unlinkSync(inputPath);
 
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename="Mapa_Anual_EIP_${year}.pdf"`);
+    res.setHeader("Content-Disposition", `attachment; filename="Mapa_Anual_EIP_${targetYear}.pdf"`);
     return res.status(200).send(Buffer.concat(chunks));
 
   } catch (error) {

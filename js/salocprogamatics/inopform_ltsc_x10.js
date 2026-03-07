@@ -208,10 +208,10 @@
         Este email foi processado automaticamente por: CB360 Online<br><br>
         </span>
         ${signature}`;
-        const emailRes = await fetch('https://cb360-online.vercel.app/api/sitop_covert_and_send', {
+        const emailRes = await fetch('https://cb360-online.vercel.app/api/crepc_convert_and_send', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({data, recipients: to, ccRecipients: cc, bccRecipients: bcc, emailSubject: `Situação Operacional do Veículo ${vehicle}`, emailBody: emailBodyHTML})
+          body: JSON.stringify({mode: "sitop", data, recipients: to, ccRecipients: cc, bccRecipients: bcc, emailSubject: `Situação Operacional do Veículo ${vehicle}`, emailBody: emailBodyHTML})
         });
         if (!emailRes.ok) throw new Error("Erro ao enviar email via Vercel.");
         showPopupSuccess(`A situação operacional do veículo ${vehicle} foi enviada para as entidades.`);
@@ -325,4 +325,5 @@
       sitopContainer.style.display = 'none';
       inopsTableContainer.style.display = 'none';
     });
+
 

@@ -8,21 +8,23 @@ import {
   CreatePDFJob, CreatePDFResult
 } from "@adobe/pdfservices-node-sdk";
 
-export const config = { api: { bodyParser: { sizeLimit: "10mb" } } };
+export const config = {
+  api: { bodyParser: { sizeLimit: "10mb" } },
+};
 
 const CLIENT_ID = process.env.ADOBE_CLIENT_ID;
 const CLIENT_SECRET = process.env.ADOBE_CLIENT_SECRET;
 const TEMPLATE_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/eip_annual_map_template.xlsx";
 
 const COLOR = {
-  EIP01_BG: "FFDBEAFE",
+  EIP01_BG:   "FFDBEAFE",
   EIP01_TEXT: "FF1D4ED8",
-  EIP02_BG: "FFDCFCE7",
+  EIP02_BG:   "FFDCFCE7",
   EIP02_TEXT: "FF15803D",
-  HOLIDAY: "FFF7C6C7", // Rosa
-  WEEKEND: "FFF9E0B0", // Amarelo
-  EMPTY: "FFF8FAFC",
-  WHITE: "FFFFFFFF",
+  HOLIDAY:    "FFF7C6C7", // Rosa
+  WEEKEND:    "FFF9E0B0", // Amarelo
+  EMPTY:      "FFF8FAFC",
+  WHITE:      "FFFFFFFF",
 };
 
 const MONTH_START_COLS = [2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35];
@@ -68,15 +70,20 @@ function getHolidaySet(y) {
   const holidays = getPortugalHolidays(y);
   const set = new Set();
   holidays.forEach(h => {
-    // Apenas feriados não opcionais (ou conforme a tua regra)
-    if(!h.optional) set.add(`${h.date.getMonth() + 1}-${h.date.getDate()}`);
+    if (!h.optional) set.add(`${h.date.getMonth() + 1}-${h.date.getDate()}`);
   });
   return set;
 }
 
-// ─── HANDLER ────────────────────────────────────────────────────────────────
+// ─── HANDLER COM FIX DE CORS ────────────────────────────────────────────────
 export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).end();
+  // Configuração de CORS
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   let inputPath = null;
   try {
@@ -112,7 +119,6 @@ export default async function handler(req, res) {
           continue;
         }
 
-        // Criar a data exatamente como na tua lógica de sucesso
         const currentDt = atNoonLocal(year, mi, day);
         const wdIndex = currentDt.getDay();
         const isWeekend = (wdIndex === 0 || wdIndex === 6);
@@ -123,12 +129,11 @@ export default async function handler(req, res) {
         if (isHoliday) currentBg = COLOR.HOLIDAY;
         else if (isWeekend) currentBg = COLOR.WEEKEND;
 
-        // Escrita
         cellDay.value = String(day).padStart(2, "0");
         cellWd.value = WEEKDAY_NAMES[wdIndex];
         cellTeam.value = team;
 
-        // Estilos (Lógica das escalas)
+        // Estilos baseados no handler de escalas
         [cellDay, cellWd, cellTeam].forEach(c => {
           c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: currentBg } };
           c.alignment = { horizontal: "center", vertical: "middle" };
@@ -141,7 +146,6 @@ export default async function handler(req, res) {
           };
         });
 
-        // Pintar a Equipa (EIP-01/EIP-02)
         if (team === "EIP-01") {
           cellTeam.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR.EIP01_BG } };
           cellTeam.font = { name: 'Arial', size: 8, bold: true, color: { argb: COLOR.EIP01_TEXT } };
@@ -152,7 +156,6 @@ export default async function handler(req, res) {
       }
     }
 
-    // Configurações de página (landscape)
     ws.pageSetup = {
       orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0,
       margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.2, header: 0, footer: 0 }
@@ -175,6 +178,7 @@ export default async function handler(req, res) {
     fs.unlinkSync(inputPath);
 
     res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="Mapa_Anual_EIP_${year}.pdf"`);
     return res.status(200).send(Buffer.concat(chunks));
 
   } catch (error) {

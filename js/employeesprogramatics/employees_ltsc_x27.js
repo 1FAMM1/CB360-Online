@@ -3592,7 +3592,7 @@
         html += `</tbody></table></div>
           <div class="m-footer">
             <button class="m-btn-secondary" onclick="consultDiscrepancies()">🔍 Consultar Anómalias</button>
-            <button class="m-btn" onclick="exportarMapaGlobalPDF()">📥 Emitir Mapa</button>
+            <button class="m-btn" onclick="exportGlobalHolidayMap()">📥 Emitir Mapa</button>
           </div>
         </div>`;
         cardBody.innerHTML = html;
@@ -3601,7 +3601,7 @@
         cardBody.innerHTML = "Erro ao carregar os dados do mapa.";
       }
     }
-    async function exportarMapaGlobalPDF() {
+    async function exportGlobalHolidayMap() {
       const year = parseInt(document.getElementById("holiday-year-select")?.value || new Date().getFullYear());
       const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const btn = document.querySelector(".m-btn");
@@ -4017,7 +4017,7 @@
     });
     /* ============================================
     FASE 05 - SHIFT ALLOWANCE MANAGEMENT AND EIPS CLASSIFICATION
-   ============================================ */
+    ============================================ */
     async function createEmployeeShiftAllowance() {
       const cardBody = document.querySelector("#eligibility-subs-shift .card-body");
       if (!cardBody) return;
@@ -4030,7 +4030,7 @@
         s.id = "eligibility-core-css";
         s.innerHTML = `
           .e-wrapper {font-family: 'Inter', sans-serif; color: #1e293b;}
-          .e-title {font-size: 16px; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;}
+          .e-title {font-size: 16px; font-weight: 800; margin: 0; display: flex; align-items: center; gap: 8px;}
           .e-badge-rh {background: #1e293b; color: #fff; padding: 2px 7px; border-radius: 4px; font-size: 10px;}          
           .e-container {max-height: 500px; overflow: auto; border: 1px solid #cbd5e1; border-radius: 6px; position: relative; scrollbar-width: none;}
           .e-container::-webkit-scrollbar {display: none;}
@@ -4066,12 +4066,12 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
               <div class="e-title" style="margin:0;"><span class="e-badge-rh">RH</span> ELIGIBILIDADE SUBSÍDIO DE TURNO</div>
               <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700;">
-              <span>Ano:</span>
-              <select id="eligibility-year-filter" class="e-year-select" onchange="createEmployeeShiftAllowance()">
-                ${yearOptions}
-              </select>
+                <span>Ano:</span>
+                <select id="eligibility-year-filter" class="e-year-select" onchange="createEmployeeShiftAllowance()">
+                  ${yearOptions}
+                </select>
+              </div>
             </div>
-          </div>
         `;
         if (!data || data.length === 0) {
           html += `<div class="alert alert-info">Sem registos para o ano ${year}.</div></div>`;
@@ -4242,9 +4242,9 @@
       });
     });
     /* ============================================
-    FASE 06 - SALARY PROCESSING TABLE
+    FASE 06 - SALARY PROCESSING MAP
     ============================================ */
-    async function createSalaryProcessingTable() {
+    async function createSalaryProcessingMap() {
       const cardBody = document.querySelector("#salary-processing-map .card-body");
       if (!cardBody) return;
       const defaultMonth = 1;
@@ -4253,8 +4253,8 @@
         s.id = "salary-core-css";
         s.innerHTML = `
           .s-wrapper {font-family: 'Inter', sans-serif; color: #1e293b;}
-          .s-header-flex {display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;}
-          .s-title {font-size: 16px; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;}
+          .s-header-flex {display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;}
+          .s-title {font-size: 16px; font-weight: 800; margin: 0; display: flex; align-items: center; gap: 8px;}
           .s-badge-rh {background: #1e293b; color: #fff; padding: 2px 7px; border-radius: 4px; font-size: 10px;}
           .s-container {max-height: 500px; overflow: auto; border: 1px solid #cbd5e1; border-radius: 8px; position: relative; -ms-overflow-style: none; scrollbar-width: none;}
           .s-container::-webkit-scrollbar {display: none;}
@@ -4275,7 +4275,7 @@
           .s-status-badge {background: #fee2e2; color: #991b1b; border: 1px solid currentColor; border-radius: 4px; font-weight: 700; font-size: 9px; padding: 3px; line-height: 1.2;}
           .s-status-yes {color: #10b981; background: #ecfdf5;}
           .s-status-no {color: #dc2626; background: #fef2f2;}
-          .s-filter-select {padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 13px; font-weight: 600;}
+          .s-filter-select {padding: 4px 8px; border-radius: 4px; border: 1px solid #cbd5e1; font-size: 13px; font-weight: 600;}
           .s-footer {display: flex; justify-content: flex-end; margin-top: 15px; gap: 10px;}
           .s-btn {background: #1e293b; color: #fff; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; transition: 0.2s;}
           .s-btn:hover {opacity: 0.9;}
@@ -4287,9 +4287,9 @@
       cardBody.innerHTML = `
         <div class="s-wrapper">
           <div class="s-header-flex">
-            <div class="s-title"><span class="s-badge-rh">RH</span> PROCESSAMENTO SALARIAL</div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 13px; font-weight: 700;">Mês:</span>
+            <div class="s-title" style="margin:0;"><span class="s-badge-rh">RH</span> PROCESSAMENTO SALARIAL</div>
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700;">
+              <span>Mês:</span>
               <select id="salary-month-filter" class="s-filter-select" onchange="loadSalaryData()">${monthOptions}</select>
             </div>
           </div>
@@ -4313,7 +4313,7 @@
             </table>
           </div>
           <div class="s-footer">
-            <button class="s-btn" style="background:#059669;" onclick="exportSalaryExcel()">📊 Exportar Excel</button>
+            <button class="s-btn" style="background:#059669;" onclick="exportSalaryMapXlsx()">📊 Exportar Excel</button>
             <button class="s-btn" onclick="exportSalaryMap(event)">📥 Emitir Mapa</button>
           </div>
         </div>`;
@@ -4495,7 +4495,7 @@
         }
       }
     }
-    async function exportSalaryExcel() {
+    async function exportSalaryMapXlsx() {
       const btn = event?.target;
       const originalText = btn ? btn.innerText : "";
       try {
@@ -4560,7 +4560,264 @@
         const access = btn.dataset.access;
         const pageId = btn.dataset.page;
         if (access === "Processamento Salarial") {
-          createSalaryProcessingTable(); 
+          createSalaryProcessingMap(); 
+        }        
+      });
+    });
+    /* ============================================
+    FASE 07 - ANNUAL FRAMEWORK EIPs
+    ============================================ */    
+    async function createEIPAnnualShiftMap() {
+      const cardBody = document.querySelector("#annual-eip-shift-map .card-body");
+      if (!cardBody) return;
+      const filterElem = document.getElementById("annual-year-filter");
+      const year = filterElem ? parseInt(filterElem.value) : new Date().getFullYear();
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      cardBody.innerHTML = "⌛ A carregar mapa anual...";
+      if (!document.getElementById("annual-core-css")) {
+        const s = document.createElement("style");
+        s.id = "annual-core-css";
+        s.innerHTML = `
+          .a-wrapper {font-family: 'Inter', sans-serif; color: #1e293b;}
+          .a-title {font-size: 16px; font-weight: 800; margin: 0; display: flex; align-items: center; gap: 8px;}
+          .a-badge-rh {background: #1e293b; color: #fff; padding: 2px 7px; border-radius: 4px; font-size: 10px;}
+          .a-container {max-height: 500px; overflow: auto; border: 1px solid #cbd5e1; border-radius: 8px; position: relative; scrollbar-width: none; -ms-overflow-style: none;}
+          .a-container::-webkit-scrollbar {display: none;}
+          .a-table {width: 100%; border-collapse: separate; border-spacing: 0; font-size: 10.5px; table-layout: fixed;}
+          .a-table thead tr.a-month-header th {position: sticky; top: 0; z-index: 10; background: #1e293b; color: #fff; font-size: 11px; font-weight: 800; text-align: center; 
+                                               padding: 7px 2px; border-right: 2px solid #cbd5e1; letter-spacing: 0.5px;}
+          .a-table thead tr.a-month-header th:last-child {border-right: none;}
+          .a-table thead tr.a-month-header th {border-bottom: 2px solid #94a3b8;}
+          .a-table td {border-bottom: 1px solid #b0bec5; border-right: 1px solid #b0bec5; padding: 4px 3px; text-align: center; vertical-align: middle; height: 22px; white-space: nowrap;}
+          .a-table td.a-last-col {border-right: 2px solid #94a3b8;}
+          .a-table td:last-child {border-right: none;}
+          .a-col-day {font-weight: 700; font-size: 10px; width: 18px; min-width: 18px; color: #334155;}
+          .a-col-wd {font-size: 9.5px; width: 28px; min-width: 28px; color: #64748b;}
+          .a-col-shift {font-size: 10px; width: 38px; min-width: 38px; font-weight: 600;}
+          .a-eip01 {background-color: #dbeafe; color: #1d4ed8; border-radius: 3px; padding: 1px 3px; font-size: 11px; font-weight: 700;}
+          .a-eip02 {background-color: #dcfce7; color: #15803d; border-radius: 3px; padding: 1px 3px; font-size: 11px; font-weight: 700;}
+          .a-weekend {background-color: #f9e0b0;}
+          .a-holiday {background-color: #f7c6c7;}
+          .a-empty {background: #f8fafc;}
+          .a-table tbody tr:hover td {background-color: #f1f5f9 !important;}
+          .a-year-select {padding: 4px 8px; border-radius: 4px; border: 1px solid #cbd5e1; font-weight: 400; outline: none; cursor: pointer;}
+          .a-footer {display: flex; justify-content: flex-end; margin-top: 12px; gap: 8px;}
+          .a-btn {background: #1e293b; color: #fff; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; transition: 0.2s;}
+          .a-btn:hover {background: #334155;}
+        `;
+        document.head.appendChild(s);
+      }
+      const MONTHS = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+      const WEEKDAYS = ["DOM","SEG","TER","QUA","QUI","SEX","SÁB"];
+      function daysInMonth(y, m) { return new Date(y, m, 0).getDate(); }
+      function getHolidays(y) {
+        const fixed = [[1,1],[4,25],[5,1],[6,10],[8,15],[9,7],[10,5],[11,1],[12,1],[12,8],[12,25]];
+        const a = y%19, b = Math.floor(y/100), c = y%100, d = Math.floor(b/4), e = b%4;
+        const f = Math.floor((b+8)/25), g = Math.floor((b-f+1)/3), h = (19*a+b-d-g+15)%30;
+        const i = Math.floor(c/4), k = c%4, l = (32+2*e+2*i-h-k)%7;
+        const m = Math.floor((a+11*h+22*l)/451);
+        const eMonth = Math.floor((h+l-7*m+114)/31);
+        const eDay = ((h+l-7*m+114)%31)+1;
+        const easter = new Date(y, eMonth-1, eDay);
+        const addD = (dt, n) => { const r = new Date(dt); r.setDate(r.getDate()+n); return r; };
+        const mobile = [addD(easter,-2), easter, addD(easter,60)];
+        const set = new Set();
+        fixed.forEach(([mo,dy]) => set.add(`${mo}-${dy}`));
+        mobile.forEach(dt => set.add(`${dt.getMonth()+1}-${dt.getDate()}`));
+        return set;
+      }
+      try {
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/reg_eip_anual?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&order=month,day`,
+          { headers: getSupabaseHeaders() }
+        );
+        const eipData = await res.json();
+        if (!eipData || eipData.length === 0) {
+          await checkAndSeedEIPYear(year);
+          return;
+        }
+        const eipMap = {};
+        eipData.forEach(r => { eipMap[`${r.month}-${r.day}`] = r.team; });
+        let yearOptions = "";
+        for (let y = 2026; y <= 2036; y++) {
+          yearOptions += `<option value="${y}" ${y === year ? 'selected' : ''}>${y}</option>`;
+        }
+        const holidays = getHolidays(year);
+        const maxDays = 31;
+        const COL_DAY_W = 18, COL_WD_W = 28, COL_SHIFT_W = 38;
+        let colgroup = "<colgroup>" + MONTHS.map(() => `<col style="width:${COL_DAY_W}px"><col style="width:${COL_WD_W}px"><col style="width:${COL_SHIFT_W}px">`).join("") + "</colgroup>";
+        let monthHeaders = "";
+        MONTHS.forEach(m => { monthHeaders += `<th colspan="3">${m.toUpperCase()}</th>`; });
+        const monthDays = MONTHS.map((_, mi) => daysInMonth(year, mi + 1));
+        const rowspanInserted = new Array(12).fill(false);
+        let rows = "";
+        for (let day = 1; day <= maxDays; day++) {
+          rows += `<tr>`;
+          MONTHS.forEach((_, mi) => {
+            const month = mi + 1;
+            const isLast = mi === 11;
+            const lastClass = isLast ? '' : 'a-last-col';
+            const totalDays = monthDays[mi];
+            const emptySpan = maxDays - totalDays;
+            if (rowspanInserted[mi]) return;
+            if (day > totalDays && emptySpan > 0) {
+              rowspanInserted[mi] = true;
+              rows += `<td colspan="3" rowspan="${emptySpan}" class="${lastClass}" style="background:transparent;"></td>`;
+              return;
+            }
+            const date = new Date(year, mi, day);
+            const wd = date.getDay();
+            const isWeekend = wd === 0 || wd === 6;
+            const isHoliday = holidays.has(`${month}-${day}`);
+            const bgCls = isHoliday ? 'a-holiday' : isWeekend ? 'a-weekend' : '';
+            const team = eipMap[`${month}-${day}`] || '';
+            const teamCls = team === 'EIP-01' ? 'a-eip01' : team === 'EIP-02' ? 'a-eip02' : '';
+            rows += `<td class="a-col-day ${bgCls}">${String(day).padStart(2,'0')}</td>`;
+            rows += `<td class="a-col-wd ${bgCls}">${WEEKDAYS[wd]}</td>`;
+            rows += `<td class="a-col-shift ${lastClass} ${bgCls}"><span class="${teamCls}">${team}</span></td>`;
+          });
+          rows += `</tr>`;
+        }
+        cardBody.innerHTML = `
+          <div class="a-wrapper">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <div class="a-title" style="margin:0;"><span class="a-badge-rh">RH</span> MAPA ANUAL DE TURNOS ${year}</div>
+              <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700;">
+                <span>Ano:</span>
+                <select id="annual-year-filter" class="a-year-select" onchange="createEIPAnnualShiftMap()">
+                  ${yearOptions}
+                </select>
+              </div>
+            </div>
+            <div class="a-container">
+              <table class="a-table">${colgroup}
+                <thead>
+                  <tr class="a-month-header">${monthHeaders}</tr>
+                </thead>
+                <tbody>${rows}</tbody>
+              </table>
+            </div>
+            <div class="a-footer">
+              <button class="a-btn" onclick="exportAnnualMap(event)">📥 Emitir Mapa</button>
+            </div>
+          </div>`;
+      } catch (err) {
+        console.error("Erro no Mapa Anual EIP:", err);
+        cardBody.innerHTML = "Erro ao carregar os dados do mapa.";
+      }
+    }
+    async function checkAndSeedEIPYear(year) {
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const checkRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/reg_eip_anual?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&limit=1`,
+        { headers: getSupabaseHeaders() }
+      );
+      const checkData = await checkRes.json();
+      if (checkData.length > 0) return;
+      const confirmed = await showEIPSeedPopup(year);
+      if (!confirmed) return;
+      const prevYear = year - 1;
+      const prevRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/reg_eip_anual?corp_oper_nr=eq.${corpOperNr}&year=eq.${prevYear}&month=eq.12&order=day.desc&limit=4`,
+        { headers: getSupabaseHeaders() }
+      );
+      const prevData = await prevRes.json();
+      const PATTERN = ["EIP-01", "EIP-01", "EIP-02", "EIP-02"];
+      let startPatternIndex = 0;
+      if (prevData && prevData.length > 0) {
+        const lastDays = prevData.sort((a, b) => b.day - a.day);
+        const lastTeam = lastDays[0].team;
+        const lastDay = lastDays[0].day;
+        let consecutiveCount = 0;
+        for (let i = 0; i < lastDays.length; i++) {
+          if (lastDays[i].team === lastTeam) {
+            consecutiveCount++;
+          } else {
+            break;
+          }
+        }
+        consecutiveCount = Math.min(consecutiveCount, 2);
+        if (lastTeam === "EIP-02") {
+          startPatternIndex = consecutiveCount === 1 ? 1 : 2;
+        } else {
+          startPatternIndex = consecutiveCount === 1 ? 3 : 0;
+        }
+      }
+      const records = [];
+      let patternIndex = startPatternIndex;
+      for (let month = 1; month <= 12; month++) {
+        const daysInMonth = new Date(year, month, 0).getDate();
+        for (let day = 1; day <= daysInMonth; day++) {
+          records.push({corp_oper_nr: corpOperNr, year: year, month: month, day: day, team: PATTERN[patternIndex % 4]}); patternIndex++;
+        }
+      }
+      const BATCH_SIZE = 500;
+      for (let i = 0; i < records.length; i += BATCH_SIZE) {
+        const batch = records.slice(i, i + BATCH_SIZE);
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/reg_eip_anual`, {
+          method: "POST",
+          headers: { ...getSupabaseHeaders(), "Prefer": "return=minimal" },
+          body: JSON.stringify(batch)
+        });
+        if (!res.ok) {
+          const err = await res.text();
+          console.error("Erro ao inserir lote:", err);
+          alert("Erro ao gerar enquadramento. Tente novamente.");
+          return;
+        }
+      }
+      createEIPAnnualShiftMap();
+    }
+    function showEIPSeedPopup(year) {
+      return new Promise((resolve) => {
+        const existing = document.getElementById("eip-seed-popup");
+        if (existing) existing.remove();
+        const overlay = document.createElement("div");
+        overlay.id = "eip-seed-popup";
+        Object.assign(overlay.style, {
+          position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
+          background: "rgba(0,0,0,0.5)", zIndex: 9999,
+          display: "flex", alignItems: "center", justifyContent: "center"
+        });
+        overlay.innerHTML = `
+          <div style="background:#fff; border-radius:10px; padding:32px; max-width:420px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.3); font-family:'Inter',sans-serif;">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+              <span style="background:#1e293b; color:#fff; padding:2px 7px; border-radius:4px; font-size:10px; font-weight:800;">RH</span>
+              <span style="font-size:15px; font-weight:800; color:#1e293b;">ENQUADRAMENTO EIPs</span>
+            </div>
+            <p style="color:#475569; font-size:13px; line-height:1.6; margin-bottom:8px;">
+              Não existem registos de enquadramento para <strong>${year}</strong>.
+            </p>
+            <p style="color:#475569; font-size:13px; line-height:1.6; margin-bottom:24px;">
+              Deseja gerar automaticamente o enquadramento EIP-01 / EIP-02 para ${year}, 
+              com continuação da sequência de ${year - 1}?
+            </p>
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+              <button id="eip-seed-no" style="padding:10px 20px; border-radius:6px; border:1px solid #cbd5e1; background:#fff; color:#475569; font-weight:600; font-size:13px; cursor:pointer;">
+                Não
+              </button>
+              <button id="eip-seed-yes" style="padding:10px 20px; border-radius:6px; border:none; background:#1e293b; color:#fff; font-weight:600; font-size:13px; cursor:pointer;">
+                ✅ Sim, Gerar
+              </button>
+            </div>
+          </div>`;
+        document.body.appendChild(overlay);
+        document.getElementById("eip-seed-yes").addEventListener("click", () => {
+          overlay.remove();
+          resolve(true);
+        });
+        document.getElementById("eip-seed-no").addEventListener("click", () => {
+          overlay.remove();
+          resolve(false);
+        });
+      });
+    }
+    document.querySelectorAll(".sidebar-sub-submenu-button").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const access = btn.dataset.access;
+        const pageId = btn.dataset.page;
+        if (access === "Enquadramento EIPs") {
+          createEIPAnnualShiftMap(); 
         }        
       });
     });

@@ -17,7 +17,7 @@
       formulário_férias: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/employee_vacations_mark_template.xlsx",
       mapa_ferias: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/vacation_map_template.xlsx",
       prioridade_ferias: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/priority_vacation_template.xlsx",
-      mapa_salarial: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/xs_template.xlsx",     
+      mapa_salarial: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/salary_map_template.xlsx",     
     };
     // ─── Helpers API 01 ──────────────────────────────────────────────────────────
     const HOLIDAY_COLOR = "F7C6C7";

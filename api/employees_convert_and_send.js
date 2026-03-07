@@ -768,12 +768,9 @@
         }
         const MONTH_NAMES = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"];
         const WEEKDAY_NAMES = ["DOM","SEG","TER","QUA","QUI","SEX","SÁB"];
-        // Índice rápido "month-day" → team
         const eipMap = {};
         days.forEach(r => { eipMap[`${r.month}-${r.day}`] = r.team; });
-        // Feriados Portugal (mesma lógica das escalas)
-        const holidayMap = getHolidayMapForMonth; // reutiliza helper existente
-        // Pré-calcular todos os feriados do ano de uma vez
+        const holidayMap = getHolidayMapForMonth;
         const allHolidays = getPortugalHolidays(year);
         const holidaySet = new Set(allHolidays.map(h => {
           const dt = h.date;
@@ -784,17 +781,14 @@
         const workbook = new ExcelJS.Workbook();
         await workbook.xlsx.load(await templateResponse.arrayBuffer());
         const worksheet = workbook.worksheets[0];
-        // Título na célula B7 (merged B7:AK8)
         worksheet.getCell("B7").value = `ENQUADRAMENTO ANUAL (EIPs) — ${year}`;
-        // Para cada mês: col base = 2 + (mi * 3)  →  B, E, H, K, N, Q, T, W, Z, AC, AF, AI
-        // Linhas de dados: 11 a 41 (dias 1 a 31)
         const DAY_ROW_START = 11;
         const MAX_DAYS = 31;
         for (let mi = 0; mi < 12; mi++) {
           const month = mi + 1;
-          const colBase = 2 + (mi * 3); // col do dia
-          const colWd   = colBase + 1;  // col do dia da semana
-          const colTeam = colBase + 2;  // col da equipa
+          const colBase = 2 + (mi * 3);
+          const colWd   = colBase + 1;
+          const colTeam = colBase + 2;
           const daysInMonth = new Date(year, month, 0).getDate();
           for (let d = 1; d <= MAX_DAYS; d++) {
             const excelRow = DAY_ROW_START + (d - 1);
@@ -802,7 +796,6 @@
             const cWd   = worksheet.getCell(excelRow, colWd);
             const cTeam = worksheet.getCell(excelRow, colTeam);
             if (d > daysInMonth) {
-              // Dia inexistente neste mês — limpar
               [cDay, cWd, cTeam].forEach(c => {
                 breakStyle(c);
                 c.value = "";
@@ -815,16 +808,13 @@
             const isWknd  = wd === 0 || wd === 6;
             const isHol   = holidaySet.has(`${month}-${d}`);
             const team    = eipMap[`${month}-${d}`] || "";
-            // Cor de fundo para dia e dia-da-semana (igual às escalas)
             let dateBg = null;
             if (isHol)       dateBg = HOLIDAY_COLOR;
             else if (isWknd) dateBg = WEEKEND_COLOR;
-            // Cor da célula da equipa
             let teamBg   = "FFFFFF";
             let teamText = "334155";
-            if (team === "EIP-01") { teamBg = "DBEAFE"; teamText = "1D4ED8"; }
-            if (team === "EIP-02") { teamBg = "DCFCE7"; teamText = "15803D"; }
-            // Coluna DIA
+            if (team === "EIP-01") {teamBg = "DBEAFE"; teamText = "1D4ED8";}
+            if (team === "EIP-02") {teamBg = "DCFCE7"; teamText = "15803D";}
             breakStyle(cDay);
             cDay.value = String(d).padStart(2, "0");
             if (dateBg) {
@@ -835,7 +825,6 @@
             }
             setBorder(cDay);
             cDay.alignment = {horizontal: "center", vertical: "middle"};
-            // Coluna DIA DA SEMANA
             breakStyle(cWd);
             cWd.value = WEEKDAY_NAMES[wd];
             if (dateBg) {
@@ -846,7 +835,6 @@
             }
             setBorder(cWd);
             cWd.alignment = {horizontal: "center", vertical: "middle"};
-            // Coluna EQUIPA
             breakStyle(cTeam);
             cTeam.value = team;
             setFill(cTeam, teamBg);

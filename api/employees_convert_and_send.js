@@ -847,7 +847,7 @@ import ExcelJS from "exceljs";
           orientation: "landscape", paperSize: 9,
           fitToPage: true, fitToWidth: 1, fitToHeight: 0,
           horizontalCentered: true,
-          margins: {left: 0.25, right: 0.25, top: 0.60, bottom: 0.25, header: 0, footer: 0},
+          margins: {left: 0.20, right: 0.25, top: 0.60, bottom: 0.25, header: 0, footer: 0},
         };
         const tempDir = os.tmpdir();
         inputFilePath  = path.join(tempDir, `eip_annual_${Date.now()}.xlsx`);

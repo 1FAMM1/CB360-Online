@@ -5,7 +5,7 @@ import os from "os";
 import path from "path";
 import {
   ServicePrincipalCredentials, PDFServices, MimeType,
-  CreatePDFJob, CreatePDFResult, SDKError, ServiceUsageError, ServiceApiError
+  CreatePDFJob, CreatePDFResult
 } from "@adobe/pdfservices-node-sdk";
 
 export const config = {
@@ -29,9 +29,9 @@ const COLOR = {
 
 const MONTH_START_COLS = [2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35];
 const WEEKDAY_NAMES = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
-const ROW_START = 11; 
+const ROW_START = 11;
 
-// --- Helpers de Estilo ---
+// ─── Helpers de Estilo ─────────────────────────────────────────
 function setFill(cell, hex6) {
   cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF" + hex6 } };
 }
@@ -50,34 +50,64 @@ function centerAlign(cell) {
   cell.alignment = { horizontal: "center", vertical: "middle" };
 }
 
-// --- Cálculo de Feriados com Segurança UTC ---
-function getPortugalHolidays(y) {
-  const fixed = [{m:1,d:1},{m:4,d:25},{m:5,d:1},{m:6,d:10},{m:8,d:15},{m:10,d:5},{m:11,d:1},{m:12,d:1},{m:12,d:8},{m:12,d:25}];
-  
-  const a=y%19, b=Math.floor(y/100), c=y%100, d=Math.floor(b/4), e=b%4, f=Math.floor((b+8)/25), g=Math.floor((b-f+1)/3), h=(19*a+b-d-g+15)%30, i=Math.floor(c/4), k=c%4, l=(32+2*e+2*i-h-k)%7, m=Math.floor((a+11*h+22*l)/451), em=Math.floor((h+l-7*m+114)/31), ed=((h+l-7*m+114)%31)+1;
-  
-  // Páscoa em UTC para comparação direta
+// ─── Cálculo de Feriados com objetos completos ────────────────
+function getPortugalHolidaysObjects(y) {
+  const fixed = [
+    { m:1,d:1,name:"Ano Novo" }, { m:4,d:25,name:"Dia da Liberdade" },
+    { m:5,d:1,name:"Dia do Trabalhador" }, { m:6,d:10,name:"Dia de Portugal" },
+    { m:8,d:15,name:"Assunção de Nossa Senhora" }, { m:10,d:5,name:"Implantação da República" },
+    { m:11,d:1,name:"Todos os Santos" }, { m:12,d:1,name:"Restauração da Independência" },
+    { m:12,d:8,name:"Imaculada Conceição" }, { m:12,d:25,name:"Natal" }
+  ];
+
+  const a=y%19, b=Math.floor(y/100), c=y%100, d=Math.floor(b/4), e=b%4;
+  const f=Math.floor((b+8)/25), g=Math.floor((b-f+1)/3);
+  const h=(19*a+b-d-g+15)%30, i=Math.floor(c/4), k=c%4;
+  const l=(32+2*e+2*i-h-k)%7, m=Math.floor((a+11*h+22*l)/451);
+  const em=Math.floor((h+l-7*m+114)/31), ed=((h+l-7*m+114)%31)+1;
+
   const easter = new Date(Date.UTC(y, em-1, ed));
-  const add = (dt, n) => { const r = new Date(dt); r.setUTCDate(r.getUTCDate() + n); return r; };
-  
-  const mobile = [add(easter,-2), easter, add(easter,60)]; // Sexta-feira Santa, Páscoa, Corpo de Deus
-  
-  const set = new Set();
-  fixed.forEach(h => set.add(`${h.m}-${h.d}`));
-  mobile.forEach(dt => set.add(`${dt.getUTCMonth()+1}-${dt.getUTCDate()}`));
-  return set;
+  const add = (dt,n) => { const r = new Date(dt); r.setUTCDate(r.getUTCDate()+n); return r; };
+
+  const mobile = [
+    {date: add(easter,-47), name:"Carnaval", optional:true},
+    {date: add(easter,-2), name:"Sexta-feira Santa", optional:false},
+    {date: easter, name:"Páscoa", optional:false},
+    {date: add(easter,60), name:"Corpo de Deus", optional:false}
+  ];
+
+  const fixedDates = fixed.map(f => ({
+    date: new Date(Date.UTC(y, f.m-1, f.d)),
+    name: f.name,
+    optional: false
+  }));
+
+  return [...fixedDates, ...mobile];
 }
 
+// ─── Map de feriados por mês ─────────────────────────────────
+function getHolidayMapForMonth(year, month) {
+  const holidays = getPortugalHolidaysObjects(year);
+  const map = new Map();
+  holidays.forEach(h => {
+    const dt = h.date;
+    if (dt.getUTCMonth()+1 === month) {
+      map.set(dt.getUTCDate(), h);
+    }
+  });
+  return map;
+}
+
+// ─── Handler principal ───────────────────────────────────────
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   if (req.method === "OPTIONS") return res.status(200).end();
-  
+
   let inputPath = null;
   try {
     const { year, days } = req.body;
     const eipMap = {};
     days.forEach(d => { eipMap[`${d.month}-${d.day}`] = d.team; });
-    const holidays = getPortugalHolidays(year);
 
     const templateRes = await fetch(TEMPLATE_URL);
     const workbook = new ExcelJS.Workbook();
@@ -90,6 +120,7 @@ export default async function handler(req, res) {
       const month = mi + 1;
       const startCol = MONTH_START_COLS[mi];
       const daysInMonth = new Date(year, month, 0).getDate();
+      const holidayMap = getHolidayMapForMonth(year, month);
 
       for (let day = 1; day <= 31; day++) {
         const row = ROW_START + (day - 1);
@@ -97,7 +128,6 @@ export default async function handler(req, res) {
         const cellWd = ws.getCell(row, startCol + 1);
         const cellTeam = ws.getCell(row, startCol + 2);
 
-        // Limpeza de dias que não existem no mês (ex: 31 de Abril)
         if (day > daysInMonth) {
           [cellDay, cellWd, cellTeam].forEach(c => {
             c.value = null;
@@ -107,23 +137,20 @@ export default async function handler(req, res) {
           continue;
         }
 
-        // --- CÁLCULO UTC SEGURO ---
         const dateUTC = new Date(Date.UTC(year, mi, day));
-        const wd = dateUTC.getUTCDay(); // 0-Dom, 1-Seg...
+        const wd = dateUTC.getUTCDay();
         const team = eipMap[`${month}-${day}`] || "";
         const isWeekend = (wd === 0 || wd === 6);
-        const isHoliday = holidays.has(`${month}-${day}`);
+        const holiday = holidayMap.get(day);
 
         let bgColor = COLOR.WHITE;
-        if (isHoliday) bgColor = COLOR.HOLIDAY;
+        if (holiday) bgColor = holiday.optional ? "D6ECFF" : COLOR.HOLIDAY;
         else if (isWeekend) bgColor = COLOR.WEEKEND;
 
-        // Escrita
         cellDay.value = String(day).padStart(2, "0");
         cellWd.value = WEEKDAY_NAMES[wd];
         cellTeam.value = team;
 
-        // Estilos
         [cellDay, cellWd, cellTeam].forEach(c => {
           setFill(c, bgColor);
           setFont(c, "000000", c === cellDay);
@@ -148,7 +175,6 @@ export default async function handler(req, res) {
       margins: { left: 0.25, right: 0.25, top: 0.5, bottom: 0.25, header: 0, footer: 0 }
     };
 
-    // Conversão PDF
     const tempDir = os.tmpdir();
     inputPath = path.join(tempDir, `eip_${year}_${Date.now()}.xlsx`);
     await workbook.xlsx.writeFile(inputPath);

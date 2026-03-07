@@ -1,4 +1,4 @@
-    import ExcelJS from "exceljs";
+import ExcelJS from "exceljs";
     import fetch from "node-fetch";
     import fs from "fs";
     import os from "os";
@@ -771,11 +771,9 @@
         const eipMap = {};
         days.forEach(r => { eipMap[`${r.month}-${r.day}`] = r.team; });
         const holidayMap = getHolidayMapForMonth;
-        const allHolidays = getPortugalHolidays(year);
-        const holidaySet = new Set(allHolidays.map(h => {
-          const dt = h.date;
-          return `${dt.getMonth()+1}-${dt.getDate()}`;
-        }));
+        const allHolidays   = getPortugalHolidays(year);
+        const holidaySet    = new Set(allHolidays.filter(h => !h.optional).map(h => `${h.date.getMonth()+1}-${h.date.getDate()}`));
+        const holidayOptSet = new Set(allHolidays.filter(h =>  h.optional).map(h => `${h.date.getMonth()+1}-${h.date.getDate()}`));
         const templateResponse = await fetch(TEMPLATES.eip_annual_map);
         if (!templateResponse.ok) throw new Error("Erro ao carregar template EIP");
         const workbook = new ExcelJS.Workbook();
@@ -786,9 +784,9 @@
         const MAX_DAYS = 31;
         for (let mi = 0; mi < 12; mi++) {
           const month = mi + 1;
-          const colBase = 2 + (mi * 3);
-          const colWd   = colBase + 1;
-          const colTeam = colBase + 2;
+          const colBase = 2 + (mi * 3); // col do dia
+          const colWd   = colBase + 1;  // col do dia da semana
+          const colTeam = colBase + 2;  // col da equipa
           const daysInMonth = new Date(year, month, 0).getDate();
           for (let d = 1; d <= MAX_DAYS; d++) {
             const excelRow = DAY_ROW_START + (d - 1);
@@ -806,15 +804,17 @@
             const date    = new Date(year, mi, d, 12, 0, 0);
             const wd      = date.getDay();
             const isWknd  = wd === 0 || wd === 6;
-            const isHol   = holidaySet.has(`${month}-${d}`);
-            const team    = eipMap[`${month}-${d}`] || "";
+            const isHol    = holidaySet.has(`${month}-${d}`);
+            const isHolOpt = holidayOptSet.has(`${month}-${d}`);
+            const team     = eipMap[`${month}-${d}`] || "";
             let dateBg = null;
-            if (isHol)       dateBg = HOLIDAY_COLOR;
-            else if (isWknd) dateBg = WEEKEND_COLOR;
+            if (isHol)         dateBg = HOLIDAY_COLOR;
+            else if (isHolOpt) dateBg = HOLIDAY_OPTIONAL_COLOR;
+            else if (isWknd)   dateBg = WEEKEND_COLOR;
             let teamBg   = "FFFFFF";
             let teamText = "334155";
-            if (team === "EIP-01") {teamBg = "DBEAFE"; teamText = "1D4ED8";}
-            if (team === "EIP-02") {teamBg = "DCFCE7"; teamText = "15803D";}
+            if (team === "EIP-01") { teamBg = "DBEAFE"; teamText = "1D4ED8"; }
+            if (team === "EIP-02") { teamBg = "DCFCE7"; teamText = "15803D"; }
             breakStyle(cDay);
             cDay.value = String(d).padStart(2, "0");
             if (dateBg) {

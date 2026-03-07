@@ -17,7 +17,8 @@
       vacation_form: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/employee_vacations_mark_template.xlsx",
       vacation_map: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/vacation_map_template.xlsx",
       vacation_priority: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/priority_vacation_template.xlsx",
-      salary_map: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/salary_map_template.xlsx",     
+      salary_map: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/salary_map_template.xlsx",
+      eip_anual_map: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/eip_annual_map_template.xlsx",
     };
     // ─── Helpers API 01 ──────────────────────────────────────────────────────────
     const HOLIDAY_COLOR = "F7C6C7";
@@ -170,6 +171,7 @@
         if (mode === "vacation_priority") return await handleVacationPriority(req, res);
         if (mode === "salary_map") return await handleSalaryMap(req, res);
         if (mode === "salary_map_xlsx") return await handleSalaryMapXlsx(req, res);
+        if (mode === "eip_anual_map") return await handleEipAnualMap(req, res);
       } catch (error) {
         if (error instanceof SDKError || error instanceof ServiceUsageError || error instanceof ServiceApiError) {
           return res.status(500).json({error: "Erro no serviço Adobe", details: error.message});
@@ -753,3 +755,84 @@
         return res.status(500).json({error: error.message});
       }
     }
+    async function handleEipAnualMap(req, res) {
+  let inputPath = null;
+  try {
+    const { year, employees } = req.body;
+    if (!year || !Array.isArray(employees)) {
+      return res.status(400).json({ error: "Dados incompletos para EIP anual" });
+    }
+
+    // Carrega o template
+    const templateResponse = await fetch(TEMPLATES.eip_anual_map);
+    if (!templateResponse.ok) throw new Error("Erro ao carregar template EIP anual");
+
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(await templateResponse.arrayBuffer());
+    const worksheet = workbook.worksheets[0];
+
+    // Atualiza título com o ano
+    worksheet.getCell("B6").value = `MAPA EIP ANUAL - ${year}`;
+
+    // Preenche dados dos funcionários
+    const ROW_START = 10; // ajuste conforme template
+    employees.forEach((emp, index) => {
+      const row = ROW_START + index;
+      worksheet.getCell(row, 2).value = emp.name || "";
+      worksheet.getCell(row, 3).value = emp.team || "";
+      worksheet.getCell(row, 4).value = emp.totalPoints || 0;
+      // Pode adicionar mais colunas conforme template
+    });
+
+    // Ajusta linhas ocultas
+    const ROW_MAX = 50; // ajuste conforme template
+    for (let i = ROW_START + employees.length; i <= ROW_MAX; i++) {
+      worksheet.getRow(i).hidden = true;
+    }
+
+    // Configurações de página
+    worksheet.pageSetup = {
+      orientation: "landscape",
+      paperSize: 9,
+      fitToPage: true,
+      fitToWidth: 1,
+      fitToHeight: 0,
+      horizontalCentered: true,
+      margins: { left: 0.25, right: 0.25, top: 0.75, bottom: 0.25, header: 0, footer: 0 }
+    };
+
+    // Gera Excel temporário
+    const tempDir = os.tmpdir();
+    inputPath = path.join(tempDir, `eip_anual_${Date.now()}.xlsx`);
+    await workbook.xlsx.writeFile(inputPath);
+
+    // Converte para PDF se houver credenciais Adobe
+    if (CLIENT_ID && CLIENT_SECRET) {
+      const credentials = new ServicePrincipalCredentials({ clientId: CLIENT_ID, clientSecret: CLIENT_SECRET });
+      const pdfServices = new PDFServices({ credentials });
+      const inputAsset = await pdfServices.upload({ readStream: fs.createReadStream(inputPath), mimeType: MimeType.XLSX });
+      const job = new CreatePDFJob({ inputAsset });
+      const pollingURL = await pdfServices.submit({ job });
+      const result = await pdfServices.getJobResult({ pollingURL, resultType: CreatePDFResult });
+      const streamAsset = await pdfServices.getContent({ asset: result.result.asset });
+      const chunks = [];
+      for await (let chunk of streamAsset.readStream) chunks.push(chunk);
+      if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `attachment; filename=EIP_Anual_${year}.pdf`);
+      return res.status(200).send(Buffer.concat(chunks));
+    }
+
+    // Retorna Excel se sem Adobe
+    const buffer = fs.readFileSync(inputPath);
+    if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename=EIP_Anual_${year}.xlsx`);
+    return res.status(200).send(buffer);
+
+  } catch (error) {
+    if (inputPath && fs.existsSync(inputPath)) try { fs.unlinkSync(inputPath); } catch (e) {}
+    console.error("Erro handleEipAnualMap:", error);
+    return res.status(500).json({ error: error.message });
+  }
+}

@@ -18,7 +18,7 @@
       vacation_map: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/vacation_map_template.xlsx",
       vacation_priority: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/priority_vacation_template.xlsx",
       salary_map: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/salary_map_template.xlsx",
-      eip_anual_map: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/eip_annual_map_template.xlsx",
+      eip_annual_map: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/eip_annual_map_template.xlsx",
     };
     // ─── Helpers API 01 ──────────────────────────────────────────────────────────
     const HOLIDAY_COLOR = "F7C6C7";
@@ -161,7 +161,7 @@
       if (req.method !== "POST") return res.status(405).json({error: "Método não permitido"});
       try {
         const {mode} = req.body;
-        if (!mode || !["monthly_scales", "point_sheet", "vacation_form", "vacation_map", "vacation_priority", "salary_map", "salary_map_xlsx"].includes(mode)) {
+        if (!mode || !["monthly_scales", "point_sheet", "vacation_form", "vacation_map", "vacation_priority", "salary_map", "salary_map_xlsx", "eip_annual_map"].includes(mode)) {
           return res.status(400).json({error: "Modo inválido."});
         }
         if (mode === "monthly_scales") return await handleMonthlyScales(req, res);
@@ -171,7 +171,7 @@
         if (mode === "vacation_priority") return await handleVacationPriority(req, res);
         if (mode === "salary_map") return await handleSalaryMap(req, res);
         if (mode === "salary_map_xlsx") return await handleSalaryMapXlsx(req, res);
-        if (mode === "eip_anual_map") return await handleEipAnualMap(req, res);
+        if (mode === "eip_annual_map") return await handleEIPAnnualMap(req, res);
       } catch (error) {
         if (error instanceof SDKError || error instanceof ServiceUsageError || error instanceof ServiceApiError) {
           return res.status(500).json({error: "Erro no serviço Adobe", details: error.message});
@@ -755,84 +755,142 @@
         return res.status(500).json({error: error.message});
       }
     }
-    async function handleEipAnualMap(req, res) {
-  let inputPath = null;
-  try {
-    const { year, employees } = req.body;
-    if (!year || !Array.isArray(employees)) {
-      return res.status(400).json({ error: "Dados incompletos para EIP anual" });
+    async function handleEIPAnnualMap(req, res) {
+      let inputFilePath = null;
+      let outputFilePath = null;
+      try {
+        const {year, days} = req.body;
+        if (!year || !Array.isArray(days) || days.length === 0) {
+          return res.status(400).json({error: "Dados incompletos: year e days obrigatórios"});
+        }
+        if (!CLIENT_ID || !CLIENT_SECRET) {
+          return res.status(500).json({error: "Chaves Adobe não configuradas"});
+        }
+        const MONTH_NAMES = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"];
+        const WEEKDAY_NAMES = ["DOM","SEG","TER","QUA","QUI","SEX","SÁB"];
+        // Índice rápido "month-day" → team
+        const eipMap = {};
+        days.forEach(r => { eipMap[`${r.month}-${r.day}`] = r.team; });
+        // Feriados Portugal (mesma lógica das escalas)
+        const holidayMap = getHolidayMapForMonth; // reutiliza helper existente
+        // Pré-calcular todos os feriados do ano de uma vez
+        const allHolidays = getPortugalHolidays(year);
+        const holidaySet = new Set(allHolidays.map(h => {
+          const dt = h.date;
+          return `${dt.getMonth()+1}-${dt.getDate()}`;
+        }));
+        const templateResponse = await fetch(TEMPLATES.eip_annual_map);
+        if (!templateResponse.ok) throw new Error("Erro ao carregar template EIP");
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.load(await templateResponse.arrayBuffer());
+        const worksheet = workbook.worksheets[0];
+        // Título na célula B7 (merged B7:AK8)
+        worksheet.getCell("B7").value = `ENQUADRAMENTO ANUAL (EIPs) — ${year}`;
+        // Para cada mês: col base = 2 + (mi * 3)  →  B, E, H, K, N, Q, T, W, Z, AC, AF, AI
+        // Linhas de dados: 11 a 41 (dias 1 a 31)
+        const DAY_ROW_START = 11;
+        const MAX_DAYS = 31;
+        for (let mi = 0; mi < 12; mi++) {
+          const month = mi + 1;
+          const colBase = 2 + (mi * 3); // col do dia
+          const colWd   = colBase + 1;  // col do dia da semana
+          const colTeam = colBase + 2;  // col da equipa
+          const daysInMonth = new Date(year, month, 0).getDate();
+          for (let d = 1; d <= MAX_DAYS; d++) {
+            const excelRow = DAY_ROW_START + (d - 1);
+            const cDay  = worksheet.getCell(excelRow, colBase);
+            const cWd   = worksheet.getCell(excelRow, colWd);
+            const cTeam = worksheet.getCell(excelRow, colTeam);
+            if (d > daysInMonth) {
+              // Dia inexistente neste mês — limpar
+              [cDay, cWd, cTeam].forEach(c => {
+                breakStyle(c);
+                c.value = "";
+                setFill(c, "F8FAFC");
+              });
+              continue;
+            }
+            const date    = new Date(year, mi, d, 12, 0, 0);
+            const wd      = date.getDay();
+            const isWknd  = wd === 0 || wd === 6;
+            const isHol   = holidaySet.has(`${month}-${d}`);
+            const team    = eipMap[`${month}-${d}`] || "";
+            // Cor de fundo para dia e dia-da-semana (igual às escalas)
+            let dateBg = null;
+            if (isHol)       dateBg = HOLIDAY_COLOR;
+            else if (isWknd) dateBg = WEEKEND_COLOR;
+            // Cor da célula da equipa
+            let teamBg   = "FFFFFF";
+            let teamText = "334155";
+            if (team === "EIP-01") { teamBg = "DBEAFE"; teamText = "1D4ED8"; }
+            if (team === "EIP-02") { teamBg = "DCFCE7"; teamText = "15803D"; }
+            // Coluna DIA
+            breakStyle(cDay);
+            cDay.value = String(d).padStart(2, "0");
+            if (dateBg) {
+              setFill(cDay, dateBg);
+              setFontKeepTemplate(cDay, {bold: true, italic: false, bgHex: dateBg});
+            } else {
+              setFontKeepTemplate(cDay, {bold: true, italic: false, bgHex: "FFFFFF"});
+            }
+            setBorder(cDay);
+            cDay.alignment = {horizontal: "center", vertical: "middle"};
+            // Coluna DIA DA SEMANA
+            breakStyle(cWd);
+            cWd.value = WEEKDAY_NAMES[wd];
+            if (dateBg) {
+              setFill(cWd, dateBg);
+              setFontKeepTemplate(cWd, {bold: false, italic: false, bgHex: dateBg});
+            } else {
+              setFontKeepTemplate(cWd, {bold: false, italic: false, bgHex: "FFFFFF"});
+            }
+            setBorder(cWd);
+            cWd.alignment = {horizontal: "center", vertical: "middle"};
+            // Coluna EQUIPA
+            breakStyle(cTeam);
+            cTeam.value = team;
+            setFill(cTeam, teamBg);
+            setFontKeepTemplate(cTeam, {bold: true, italic: false, bgHex: teamBg, forceTextColor: teamText});
+            setBorder(cTeam);
+            cTeam.alignment = {horizontal: "center", vertical: "middle"};
+          }
+        }
+        worksheet.pageSetup = {
+          orientation: "landscape", paperSize: 9,
+          fitToPage: true, fitToWidth: 1, fitToHeight: 0,
+          horizontalCentered: true,
+          margins: {left: 0.25, right: 0.25, top: 0.60, bottom: 0.25, header: 0, footer: 0},
+        };
+        const tempDir = os.tmpdir();
+        inputFilePath  = path.join(tempDir, `eip_annual_${Date.now()}.xlsx`);
+        outputFilePath = path.join(tempDir, `eip_annual_${Date.now()}_out.pdf`);
+        await workbook.xlsx.writeFile(inputFilePath);
+        const credentials = new ServicePrincipalCredentials({clientId: CLIENT_ID, clientSecret: CLIENT_SECRET});
+        const pdfServices = new PDFServices({credentials});
+        const inputAsset  = await pdfServices.upload({readStream: fs.createReadStream(inputFilePath), mimeType: MimeType.XLSX});
+        const job         = new CreatePDFJob({inputAsset});
+        const pollingURL  = await pdfServices.submit({job});
+        const pdfServicesResponse = await pdfServices.getJobResult({pollingURL, resultType: CreatePDFResult});
+        const streamAsset = await pdfServices.getContent({asset: pdfServicesResponse.result.asset});
+        const writeStream = fs.createWriteStream(outputFilePath);
+        streamAsset.readStream.pipe(writeStream);
+        await new Promise((resolve, reject) => {
+          writeStream.on("finish", resolve);
+          writeStream.on("error", reject);
+        });
+        const pdfBuffer = fs.readFileSync(outputFilePath);
+        try {
+          if (inputFilePath  && fs.existsSync(inputFilePath))  fs.unlinkSync(inputFilePath);
+          if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
+        } catch {}
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader("Content-Disposition", `attachment; filename=Enquadramento_EIPs_${year}.pdf`);
+        return res.status(200).send(pdfBuffer);
+      } catch (error) {
+        try {
+          if (inputFilePath  && fs.existsSync(inputFilePath))  fs.unlinkSync(inputFilePath);
+          if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
+        } catch {}
+        throw error;
+      }
     }
-
-    // Carrega o template
-    const templateResponse = await fetch(TEMPLATES.eip_anual_map);
-    if (!templateResponse.ok) throw new Error("Erro ao carregar template EIP anual");
-
-    const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(await templateResponse.arrayBuffer());
-    const worksheet = workbook.worksheets[0];
-
-    // Atualiza título com o ano
-    worksheet.getCell("B6").value = `MAPA EIP ANUAL - ${year}`;
-
-    // Preenche dados dos funcionários
-    const ROW_START = 10; // ajuste conforme template
-    employees.forEach((emp, index) => {
-      const row = ROW_START + index;
-      worksheet.getCell(row, 2).value = emp.name || "";
-      worksheet.getCell(row, 3).value = emp.team || "";
-      worksheet.getCell(row, 4).value = emp.totalPoints || 0;
-      // Pode adicionar mais colunas conforme template
-    });
-
-    // Ajusta linhas ocultas
-    const ROW_MAX = 50; // ajuste conforme template
-    for (let i = ROW_START + employees.length; i <= ROW_MAX; i++) {
-      worksheet.getRow(i).hidden = true;
-    }
-
-    // Configurações de página
-    worksheet.pageSetup = {
-      orientation: "landscape",
-      paperSize: 9,
-      fitToPage: true,
-      fitToWidth: 1,
-      fitToHeight: 0,
-      horizontalCentered: true,
-      margins: { left: 0.25, right: 0.25, top: 0.75, bottom: 0.25, header: 0, footer: 0 }
-    };
-
-    // Gera Excel temporário
-    const tempDir = os.tmpdir();
-    inputPath = path.join(tempDir, `eip_anual_${Date.now()}.xlsx`);
-    await workbook.xlsx.writeFile(inputPath);
-
-    // Converte para PDF se houver credenciais Adobe
-    if (CLIENT_ID && CLIENT_SECRET) {
-      const credentials = new ServicePrincipalCredentials({ clientId: CLIENT_ID, clientSecret: CLIENT_SECRET });
-      const pdfServices = new PDFServices({ credentials });
-      const inputAsset = await pdfServices.upload({ readStream: fs.createReadStream(inputPath), mimeType: MimeType.XLSX });
-      const job = new CreatePDFJob({ inputAsset });
-      const pollingURL = await pdfServices.submit({ job });
-      const result = await pdfServices.getJobResult({ pollingURL, resultType: CreatePDFResult });
-      const streamAsset = await pdfServices.getContent({ asset: result.result.asset });
-      const chunks = [];
-      for await (let chunk of streamAsset.readStream) chunks.push(chunk);
-      if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
-      res.setHeader("Content-Type", "application/pdf");
-      res.setHeader("Content-Disposition", `attachment; filename=EIP_Anual_${year}.pdf`);
-      return res.status(200).send(Buffer.concat(chunks));
-    }
-
-    // Retorna Excel se sem Adobe
-    const buffer = fs.readFileSync(inputPath);
-    if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
-    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    res.setHeader("Content-Disposition", `attachment; filename=EIP_Anual_${year}.xlsx`);
-    return res.status(200).send(buffer);
-
-  } catch (error) {
-    if (inputPath && fs.existsSync(inputPath)) try { fs.unlinkSync(inputPath); } catch (e) {}
-    console.error("Erro handleEipAnualMap:", error);
-    return res.status(500).json({ error: error.message });
-  }
-}

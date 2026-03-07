@@ -288,14 +288,13 @@
       showPopupSuccess("Mensagem criada com sucesso! Abra o WhatsApp e prima CTRL+V", true);
       return message;
     }
-    /* ========== CREATION OF NEW GLOBAL EVENT MESSAGE ========== */
+    
     async function generateWSMSMessage() {
       if (!validateRequiredFields()) return '';
       await new Promise(resolve => {
         const interval = setInterval(() => {
-          const allFieldsReady = document.getElementById('alert_type') && document.getElementById('alert_source') && document.getElementById('alert_level') &&
-                                 document.getElementById('ppi_type') && document.getElementById('km') && document.getElementById('on_going') &&
-                                 document.getElementById('incident_type');
+          const allFieldsReady = document.getElementById('alert_type') && document.getElementById('alert_source') &&  document.getElementById('alert_level') && document.getElementById('ppi_type') && 
+                                 document.getElementById('km') && document.getElementById('on_going') && document.getElementById('incident_type');
           if (allFieldsReady) {
             clearInterval(interval);
             resolve(true);
@@ -322,15 +321,9 @@
         const bbs = card.querySelector('input[type="text"]')?.value?.trim() || '';
         if (vehicle) vehicles.push(bbs ? `${vehicle}|${bbs} BBs.` : vehicle);
       });
-      try {
-        const saveResult = await saveOccurrenceToSupabase({ descrOccorr, localOccorr, localitie }, vehicles.length);
-        if (saveResult === "DUPLICATE") return '';
-      } catch (e) {
-        console.warn("Erro ao gravar no Supabase:", e);
-      }
       let message = '';
       const vehicleText = vehicles.length ? `Saída de ${vehicles.join(', ')}` : '';
-      const vehicleSufix = vehicleText ? `, ${vehicleText}` : '';    
+      const vehicleSufix = vehicleText ? `, ${vehicleText}` : '';
       if (alertType === 'Ocorrência') {
         message = `*🚨🚨INFORMAÇÃO🚨🚨*\n\n*\\\\${alertSource}, HI: ${alertTime}, Ativação para ${descrOccorr} em Faro\\${localitie}\\${localOccorr}${vehicleSufix}* `;
       } else if (alertType === 'Plano Prévio de Intervenção') {
@@ -345,19 +338,25 @@
         }
       }
       if (channelManeuver) message += `\n*Canal Manobra:* ${channelManeuver}`;
+      const out = document.getElementById('wsms_output');
+      if (out) out.value = message;
+      if (navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(message).then(() => {
+          showPopupSuccess("Mensagem criada com sucesso! Abra o WhatsApp e prima CTRL+V", true);
+        }).catch(err => console.error("Erro ao copiar:", err));
+      }
       try {
+        const saveResult = await saveOccurrenceToSupabase({ descrOccorr, localOccorr, localitie }, vehicles.length);
+        if (saveResult === "DUPLICATE") return '';
         const pushBody = `🚨 ${descrOccorr} - ${localOccorr} - ${localitie}. ${vehicleText}`;
         await fetch('https://cb-360-app.vercel.app/api/sendPush', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({recipient_nint: 'geral', corp_nr: currentCorpOperNr, sender_name: 'CB360 Mobile', message_text: pushBody, sender_nint: '0'})
         });
-      } catch (errPush) {
-        console.error('Falha ao enviar Push:', errPush);
+      } catch (err) {
+        console.warn("Erro em operações de fundo:", err);
       }
-      const out = document.getElementById('wsms_output');
-      if (out) out.value = message;
-      if (navigator.clipboard?.writeText) navigator.clipboard.writeText(message).catch(() => {});
       loadActiveOccurrences();
       return message;
     }
@@ -441,6 +440,7 @@
         toggleContactFields();
       });
     });
+
 
 
 

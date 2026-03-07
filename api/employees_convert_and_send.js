@@ -12,12 +12,12 @@
     const CLIENT_ID = process.env.ADOBE_CLIENT_ID;
     const CLIENT_SECRET = process.env.ADOBE_CLIENT_SECRET;
     const TEMPLATES = {
-      escalas: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/employees_template.xlsx",
-      folha_ponto: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/stitch_marker_template.xlsx",
-      formulário_férias: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/employee_vacations_mark_template.xlsx",
-      mapa_ferias: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/vacation_map_template.xlsx",
-      prioridade_ferias: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/priority_vacation_template.xlsx",
-      mapa_salarial: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/salary_map_template.xlsx",     
+      monthly_scales: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/employees_template.xlsx",
+      point_sheet: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/stitch_marker_template.xlsx",
+      vacation_form: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/employee_vacations_mark_template.xlsx",
+      vacation_map: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/vacation_map_template.xlsx",
+      vacation_priority: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/priority_vacation_template.xlsx",
+      salary_map: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/salary_map_template.xlsx",     
     };
     // ─── Helpers API 01 ──────────────────────────────────────────────────────────
     const HOLIDAY_COLOR = "F7C6C7";
@@ -160,16 +160,16 @@
       if (req.method !== "POST") return res.status(405).json({error: "Método não permitido"});
       try {
         const {mode} = req.body;
-        if (!mode || !["escalas", "folha_ponto", "formulário_férias", "mapa_ferias", "prioridade_ferias", "mapa_salarial", "mapa_salarial_excel"].includes(mode)) {
+        if (!mode || !["monthly_scales", "point_sheet", "vacation_form", "vacation_map", "vacation_priority", "salary_map", "salary_map_xlsx"].includes(mode)) {
           return res.status(400).json({error: "Modo inválido."});
         }
-        if (mode === "escalas") return await handleEscalas(req, res);
-        if (mode === "folha_ponto") return await handleFolhaPonto(req, res);
-        if (mode === "formulário_férias") return await handleVacation(req, res);
-        if (mode === "mapa_ferias") return await handleMapaFerias(req, res);
-        if (mode === "prioridade_ferias") return await handlePriority(req, res);
-        if (mode === "mapa_salarial") return await handleMapaSalarial(req, res);
-        if (mode === "mapa_salarial_excel") return await handleMapaSalarialExcel(req, res);
+        if (mode === "monthly_scales") return await handleMonthlyScales(req, res);
+        if (mode === "point_sheet") return await handlePointSheet(req, res);
+        if (mode === "vacation_form") return await handleVacation(req, res);
+        if (mode === "vacation_map") return await handleVacationMap(req, res);
+        if (mode === "vacation_priority") return await handleVacationPriority(req, res);
+        if (mode === "salary_map") return await handleSalaryMap(req, res);
+        if (mode === "salary_map_xlsx") return await handleSalaryMapXlsx(req, res);
       } catch (error) {
         if (error instanceof SDKError || error instanceof ServiceUsageError || error instanceof ServiceApiError) {
           return res.status(500).json({error: "Erro no serviço Adobe", details: error.message});
@@ -177,7 +177,7 @@
         return res.status(500).json({error: "Erro ao processar", details: error?.message || String(error)});
       }
     }
-    async function handleEscalas(req, res) {
+    async function handleMonthlyScales(req, res) {
       let inputFilePath = null;
       let outputFilePath = null;
       try {
@@ -190,7 +190,7 @@
         }
         const MONTH_NAMES = ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"];
         const WEEKDAY_NAMES = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
-        const templateResponse = await fetch(TEMPLATES.escalas);
+        const templateResponse = await fetch(TEMPLATES.monthly_scales);
         if (!templateResponse.ok) throw new Error("Erro ao carregar template");
         const workbook = new ExcelJS.Workbook();
         await workbook.xlsx.load(await templateResponse.arrayBuffer());
@@ -367,7 +367,7 @@
         throw error;
       }
     }
-    async function handleFolhaPonto(req, res) {
+    async function handlePointSheet(req, res) {
       try {
         const {year, month, employee, workingHours} = req.body;
         if (!year || !month || !employee || workingHours === undefined) {
@@ -375,7 +375,7 @@
         }
         const credentials = new ServicePrincipalCredentials({clientId: CLIENT_ID, clientSecret: CLIENT_SECRET});
         const pdfServices = new PDFServices({credentials});
-        const templateResponse = await fetch(TEMPLATES.folha_ponto);
+        const templateResponse = await fetch(TEMPLATES.point_sheet);
         const workbook = new ExcelJS.Workbook();
         await workbook.xlsx.load(await templateResponse.arrayBuffer());
         const worksheet = workbook.worksheets[0];
@@ -448,7 +448,7 @@
         if (!employeeName || !nInt || !periods) {
           return res.status(400).json({error: "Dados incompletos para férias"});
         }
-        const templateResponse = await fetch(TEMPLATES["formulário_férias"]);
+        const templateResponse = await fetch(TEMPLATES["vacation_form"]);
         if (!templateResponse.ok) throw new Error("Erro ao carregar template de férias");
         const workbook = new ExcelJS.Workbook();
         await workbook.xlsx.load(await templateResponse.arrayBuffer());
@@ -495,11 +495,11 @@
         return res.status(500).json({error: error.message});
       }
     }
-    async function handleMapaFerias(req, res) {
+    async function handleVacationMap(req, res) {
       let inputPath = null;
       try {
         const { year, employees } = req.body;
-        const templateResponse = await fetch(TEMPLATES.mapa_ferias);
+        const templateResponse = await fetch(TEMPLATES.vacation_map);
         const workbook = new ExcelJS.Workbook();
         await workbook.xlsx.load(await templateResponse.arrayBuffer());
         const worksheet = workbook.worksheets[0];
@@ -570,7 +570,7 @@
         res.status(500).json({error: err.message});
       }
     }
-    async function handlePriority(req, res) {
+    async function handleVacationPriority(req, res) {
       let inputPath = null;
       try {
         const {priorityYear, employees} = req.body;
@@ -583,7 +583,7 @@
         const ROW_START = 10, ROW_END = 43;
         const MAX_ROWS = ROW_END - ROW_START + 1;
         const safeEmployees = employees.slice(0, MAX_ROWS);
-        const templateResponse = await fetch(TEMPLATES.prioridade_ferias);
+        const templateResponse = await fetch(TEMPLATES.vacation_priority);
         if (!templateResponse.ok) throw new Error("Erro ao carregar template de prioridade");
         const workbook = new ExcelJS.Workbook();
         await workbook.xlsx.load(await templateResponse.arrayBuffer());
@@ -630,13 +630,13 @@
         return res.status(500).json({error: err.message});
       }
     }
-    async function handleMapaSalarial(req, res) {
+    async function handleSalaryMap(req, res) {
       let inputPath = null;
       try {
         const { year, month, employees } = req.body;
         const MONTH_NAMES = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"];
         const monthName = MONTH_NAMES[month - 1];
-        const templateResponse = await fetch(TEMPLATES.mapa_salarial);
+        const templateResponse = await fetch(TEMPLATES.salary_map);
         if (!templateResponse.ok) throw new Error("Erro ao carregar template do GitHub");
         const templateBuffer = await templateResponse.buffer();
         const zip = new AdmZip(templateBuffer);
@@ -695,16 +695,16 @@
         return res.status(200).send(Buffer.concat(chunks));
       } catch (error) {
         if (inputPath && fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
-        console.error("Erro handleMapaSalarial:", error);
+        console.error("Erro handleSalaryMap:", error);
         return res.status(500).json({ error: error.message });
       }
     }
-    async function handleMapaSalarialExcel(req, res) {
+    async function handleSalaryMapXlsx(req, res) {
       try {
         const { year, month, employees } = req.body;
         const MONTH_NAMES = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO", "JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"];
         const monthName = MONTH_NAMES[month - 1];
-        const templateResponse = await fetch(TEMPLATES.mapa_salarial);
+        const templateResponse = await fetch(TEMPLATES.salary_map);
         if (!templateResponse.ok) throw new Error("Erro ao carregar template");
         const templateBuffer = await templateResponse.buffer();
         const zip = new AdmZip(templateBuffer);
@@ -749,7 +749,7 @@
         res.setHeader("Content-Disposition", `attachment; filename=Mapa_Salarial_${year}_${month}.xlsx`);
         return res.status(200).send(modifiedBuffer);
       } catch (error) {
-        console.error("Erro handleMapaSalarialExcel:", error);
+        console.error("Erro handleSalaryMapXlsx:", error);
         return res.status(500).json({error: error.message});
       }
     }

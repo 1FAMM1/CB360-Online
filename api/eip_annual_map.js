@@ -35,7 +35,6 @@ export default async function handler(req, res) {
 
     ws.getCell("B7").value = `ENQUADRAMENTO EQUIPAS DE INTERVENÇÃO PERMANENTE - ${targetYear}`;
 
-    // Mapear dados das equipas
     const teamMap = {};
     days.forEach(d => { teamMap[`${d.month}-${d.day}`] = d.team; });
 
@@ -46,67 +45,67 @@ export default async function handler(req, res) {
 
       for (let day = 1; day <= 31; day++) {
         const row = 11 + (day - 1);
-        const cellDay = ws.getCell(row, startCol);
-        const cellWd = ws.getCell(row, startCol + 1);
-        const cellTeam = ws.getCell(row, startCol + 2);
+        const cells = [
+          ws.getCell(row, startCol),     // Dia
+          ws.getCell(row, startCol + 1), // Semana
+          ws.getCell(row, startCol + 2)  // Equipa
+        ];
 
-        if (day > daysInMonth) {
-          [cellDay, cellWd, cellTeam].forEach(c => {
-            c.value = null;
-            c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } }; // Cinza vazio
-            c.border = null;
-          });
-          continue;
-        }
-
-        // Cálculo do dia da semana (Meio-dia para evitar erros de fuso horário)
-        const date = new Date(targetYear, mi, day, 12, 0, 0);
-        const wdIdx = date.getDay();
-        const isWeekend = (wdIdx === 0 || wdIdx === 6);
-
-        // Preencher Valores
-        cellDay.value = String(day).padStart(2, "0");
-        cellWd.value = WEEKDAY_NAMES[wdIdx];
-        cellTeam.value = teamMap[`${month}-${day}`] || "";
-
-        // Aplicar Estilo (Branco para dias úteis, Amarelo para FDS)
-        const bgColor = isWeekend ? "FFF9E0B0" : "FFFFFFFF";
-
-        [cellDay, cellWd, cellTeam].forEach(c => {
-          c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgColor } };
-          c.font = { name: 'Arial', size: 8, color: { argb: "FF000000" } };
-          c.alignment = { horizontal: "center", vertical: "middle" };
+        // 1. RESET TOTAL DA CÉLULA (Limpa qualquer pintura fantasma)
+        cells.forEach(c => {
+          c.value = null;
+          c.fill = { type: 'pattern', pattern: 'none' }; // Remove qualquer cor
+          c.font = { name: 'Arial', size: 8, bold: false, color: { argb: 'FF000000' } };
           c.border = {
             top: { style: 'thin', color: { argb: 'FFD1D1D1' } },
             left: { style: 'thin', color: { argb: 'FFD1D1D1' } },
             bottom: { style: 'thin', color: { argb: 'FFD1D1D1' } },
             right: { style: 'thin', color: { argb: 'FFD1D1D1' } }
           };
+          c.alignment = { horizontal: "center", vertical: "middle" };
         });
+
+        if (day > daysInMonth) {
+          cells.forEach(c => {
+            c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } };
+            c.border = null;
+          });
+          continue;
+        }
+
+        // 2. CÁLCULO DE DADOS
+        const date = new Date(targetYear, mi, day, 12, 0, 0);
+        const wdIdx = date.getDay();
+        const isWeekend = (wdIdx === 0 || wdIdx === 6);
+
+        // 3. ESCREVER VALORES
+        cells[0].value = String(day).padStart(2, "0");
+        cells[1].value = WEEKDAY_NAMES[wdIdx];
+        cells[2].value = teamMap[`${month}-${day}`] || "";
+
+        // 4. PINTAR APENAS FINS DE SEMANA
+        if (isWeekend) {
+          cells.forEach(c => {
+            c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF9E0B0' } };
+          });
+        } else {
+          cells.forEach(c => {
+            c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFFFF' } };
+          });
+        }
       }
     }
 
-    // Configuração de Impressão
-    ws.pageSetup = {
-      orientation: "landscape",
-      paperSize: 9,
-      fitToPage: true,
-      fitToWidth: 1,
-      fitToHeight: 0
-    };
-
+    // Configuração Adobe PDF
     const tempDir = os.tmpdir();
-    inputPath = path.join(tempDir, `eip_2026_fix_${Date.now()}.xlsx`);
+    inputPath = path.join(tempDir, `final_clean_${Date.now()}.xlsx`);
     await workbook.xlsx.writeFile(inputPath);
 
     const credentials = new ServicePrincipalCredentials({ clientId: CLIENT_ID, clientSecret: CLIENT_SECRET });
     const pdfServices = new PDFServices({ credentials });
     const inputAsset = await pdfServices.upload({ readStream: fs.createReadStream(inputPath), mimeType: MimeType.XLSX });
     const job = new CreatePDFJob({ inputAsset });
-    const result = await pdfServices.getJobResult({ 
-      pollingURL: await pdfServices.submit({ job }), 
-      resultType: CreatePDFResult 
-    });
+    const result = await pdfServices.getJobResult({ pollingURL: await pdfServices.submit({ job }), resultType: CreatePDFResult });
     const streamAsset = await pdfServices.getContent({ asset: result.result.asset });
 
     const chunks = [];

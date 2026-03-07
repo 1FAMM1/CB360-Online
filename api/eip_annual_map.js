@@ -56,25 +56,37 @@ function centerAlign(cell) {
   cell.alignment = { horizontal: "center", vertical: "middle" };
 }
 
+function atNoonLocal(y, mIndex, d) {
+  return new Date(y, mIndex, d, 12, 0, 0, 0);
+}
+
+function addDays(baseDate, days) {
+  const d = new Date(baseDate);
+  d.setHours(12, 0, 0, 0);
+  d.setDate(d.getDate() + days);
+  return d;
+}
+
 function getPortugalHolidays(y) {
   const fixed = [
-    [1,1],[4,25],[5,1],[6,10],[8,15],[9,7],[10,5],[11,1],[12,1],[12,8],[12,25]
+    {month: 1, day: 1}, {month: 4, day: 25}, {month: 5, day: 1},
+    {month: 6, day: 10}, {month: 8, day: 15}, {month: 9, day: 7},
+    {month: 10, day: 5}, {month: 11, day: 1}, {month: 12, day: 1},
+    {month: 12, day: 8}, {month: 12, day: 25},
   ];
-  const a = y%19, b = Math.floor(y/100), c = y%100;
-  const d = Math.floor(b/4), e = b%4;
-  const f = Math.floor((b+8)/25), g = Math.floor((b-f+1)/3);
-  const h = (19*a+b-d-g+15)%30;
-  const i = Math.floor(c/4), k = c%4, l = (32+2*e+2*i-h-k)%7;
-  const m = Math.floor((a+11*h+22*l)/451);
-  const eMonth = Math.floor((h+l-7*m+114)/31);
-  const eDay   = ((h+l-7*m+114)%31)+1;
-  const easter = new Date(y, eMonth-1, eDay, 12);
-  const addD = (dt, n) => { const r = new Date(dt); r.setDate(r.getDate()+n); return r; };
+  const a = y % 19, b = Math.floor(y / 100), c = y % 100;
+  const d = Math.floor(b / 4), e = b % 4;
+  const f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const emonth = Math.floor((h + l - 7 * m + 114) / 31);
+  const eday = ((h + l - 7 * m + 114) % 31) + 1;
+  const easter = atNoonLocal(y, emonth - 1, eday);
+  const mobile = [addDays(easter, -2), easter, addDays(easter, 60)];
   const set = new Set();
-  fixed.forEach(([mo, dy]) => set.add(`${mo}-${dy}`));
-  [addD(easter,-2), easter, addD(easter,60)].forEach(dt =>
-    set.add(`${dt.getMonth()+1}-${dt.getDate()}`)
-  );
+  fixed.forEach(({month, day}) => set.add(`${month}-${day}`));
+  mobile.forEach(dt => set.add(`${dt.getMonth() + 1}-${dt.getDate()}`));
   return set;
 }
 

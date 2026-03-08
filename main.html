@@ -46,9 +46,14 @@
     </header>
     <!---- SIDEBAR MODULE ---->
     <aside class="sidebar">
-      <button class="sidebar-menu-button active" data-page="page-main" data-access="Menu Principal">🏠 Menu Principal</button>
+      <button class="sidebar-menu-button active" data-page="page-main" data-access="Menu Principal">
+  <span class="fa fa-home" style="display: inline-flex; align-items: center; justify-content: center; background: #ddd; color: #444; width: 24px; height: 20px; border-radius: 4px;
+                                  font-size: 12px; font-weight: 800; margin-right: 5px; position: relative; top: -2px; letter-spacing: 0.5px; vertical-align: middle;"></span> Menu Principal
+</button>
       <!-- ======================= DECIR 360 ======================= -->
-      <button class="sidebar-menu-button sub-submenu-toggle" data-page="page-decir" data-access="Gestão Financeira">💶 Gestão Financeira</button>
+      <button class="sidebar-menu-button sub-submenu-toggle" data-page="page-decir" data-access="Gestão Financeira">
+        <span class="fa fa-eur" style="display: inline-flex; align-items: center; justify-content: center; background: #ddd; color: #444; width: 24px; height: 20px; border-radius: 4px; 
+                                       font-size: 12px; font-weight: 800; margin-right: 5px; position: relative; top: -2px; letter-spacing: 0.5px; vertical-align: middle;"></span> Gestão DECIR</button>
       <div class="submenu">
         <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-decir" data-access="Atualização de Valores">Atualização de Valores</button>
         <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-decir" data-access="Controlo de Pagamentos">Controlo de Pagamentos</button>
@@ -60,7 +65,11 @@
         <button class="sidebar-submenu-button" data-page="page-decir" data-access="Assinaturas Diárias">Assinaturas Diárias</button>
       </div>
       <!-- ======================= FOMIO 360 ======================= -->
-      <button class="sidebar-menu-button sub-submenu-toggle" data-page="page-fomio" data-access="Gestão Operacional">👨🏻‍🚒👩🏻‍🚒 Gestão Operacional</button>
+      <button class="sidebar-menu-button sub-submenu-toggle" data-page="page-fomio" data-access="Gestão Operacional">
+        <span style="display: inline-flex; align-items: center; justify-content: center; background: #ddd; color: #444; width: 24px; height: 20px; border-radius: 4px; font-size: 12px; 
+                     font-weight: 800; margin-right: 5px; position: relative; top: -2px; letter-spacing: 0.5px; vertical-align: middle;">
+          <i class="fa fa-fire" style="font-size: 10px;"></i>
+          <i class="fa fa-fire-extinguisher" style="font-size: 10px;"></i></span> Gestão Operacional</button>
       <div class="submenu">
         <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-fomio" data-access="Escalas">Escalas de Serviço</button>
         <div class="sub-submenu">
@@ -72,10 +81,10 @@
           <button class="sidebar-sub-submenu-button" data-page="page-scales" data-access="Emissão Escala">Emissão Escalas</button>
           <button class="sidebar-sub-submenu-button" data-page="page-scales" data-access="Consultar Escalas">Consultar Escalas</button>
         </div>
-        <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-fomio" data-access="Eventos">Eventos</button>
+        <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-fomio" data-access="Eventos">Eventos/Prevenções</button>
         <div class="sub-submenu">
           <button class="sidebar-sub-submenu-button" data-page="page-events" data-access="Criação de Eventos">Criação de Eventos</button>
-          <button class="sidebar-sub-submenu-button" data-page="page-event-disp" data-access="Consultar Disponibilidades">Consulta Disponibilidades</button>
+          <button class="sidebar-sub-submenu-button" data-page="page-event-disp" data-access="Consulta Disponibilidades">Consulta Disponibilidades</button>
         </div>
         <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-fomio" data-access="Pedidos de Férias">Pedidos de Férias</button>
         <div class="sub-submenu">
@@ -83,27 +92,31 @@
         </div>
       </div>
       <!-- ======================= EMPLOYEES 360 ======================= -->      
-      <button class="sidebar-menu-button sub-submenu-toggle" data-page="page-employees" data-access="Gestão Funcionários">👷🏻‍♂️👷🏻‍♀️ Gestão Funcionários</button>
+      <button class="sidebar-menu-button sub-submenu-toggle" data-page="page-employees" data-access="Gestão Funcionários">
+        <span class="fa fa-users" style="display: inline-flex; align-items: center; justify-content: center; background: #ddd; color: #444; width: 24px; height: 20px; border-radius: 4px;
+                                         font-size: 11px; margin-right: 5px; position: relative; top: -2px; vertical-align: middle;"></span> Recursos Humanos</button>
       <div class="submenu">
         <button class="sidebar-submenu-button" data-page="page-employee-scales" data-access="Escalas Mensais">Escalas Mensais</button>
         <button class="sidebar-submenu-button" data-page="page-employee-extra-hour" data-access="Controlo de Horas Extras">Controlo de Horas Extra</button>
         <button class="sidebar-submenu-button" data-page="individual-records" data-access="Registos Individuais">Registos Individuais</button>
-        <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-fomio" data-access="Gestão de Férias">Gestão de Férias</button>
+        <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-employees" data-access="Gestão de Férias">Gestão de Férias</button>
         <div class="sub-submenu">
           <button class="sidebar-sub-submenu-button" data-page="vacation-scheduling" data-access="Marcação de Férias">Marcação de Férias</button>
           <button class="sidebar-sub-submenu-button" data-page="vacation-scheduling-map" data-access="Mapa de Férias">Mapa de Férias</button>
           <button class="sidebar-sub-submenu-button" data-page="priority-scheduling-map" data-access="Mapa de Prioridade">Mapa de Prioridade</button>
         </div>
-        <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-fomio" data-access="Gestão de Férias">Utilitários</button>
+        <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-employees" data-access="Gestão de Férias">Utilitários</button>
         <div class="sub-submenu">
           <button class="sidebar-sub-submenu-button" data-page="eligibility-subs-shift" data-access="Subsidio de Turno">Eligibilidade Subs. Turno</button>
           <button class="sidebar-sub-submenu-button" data-page="salary-processing-map" data-access="Processamento Salarial">Processamento Salarial</button>
           <button class="sidebar-sub-submenu-button" data-page="annual-eip-shift-map" data-access="Enquadramento EIPs">Enquadramento Anual EIP's</button>
         </div>
-        <button class="sidebar-submenu-button" data-page="page-fomio" data-access="Cadastro de Funcionários">Cadastro de Funcionários</button>
+        <button class="sidebar-submenu-button" data-page="employee-registration" data-access="Cadastro de Funcionários">Cadastro de Funcionários</button>
       </div>
       <!-- ======================= SALOC 360 ======================= -->
-      <button class="sidebar-menu-button sub-submenu-toggle" data-page="page-saloc" data-access="SALOC">📡 SALOC</button>
+      <button class="sidebar-menu-button sub-submenu-toggle" data-page="page-saloc" data-access="SALOC">
+        <span class="fa fa-volume-control-phone" style="display: inline-flex; align-items: center; justify-content: center; background: #ddd; color: #444; width: 24px; height: 20px; border-radius: 4px;
+                                                        font-size: 11px; margin-right: 5px; position: relative; top: -2px; vertical-align: middle;"></span> SALOC 360</button>
       <div class="submenu">
         <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-ppis" data-access="Planos Prévios de Intervenção">Planos Prévios de Intervenção</button>
         <div class="sub-submenu">
@@ -128,7 +141,9 @@
         <button class="sidebar-submenu-button" data-page="page-alarm-console" data-access="Consola de Alarmes">Consola de Alarmes</button>
       </div>
       <!-- ======================= WSMS 360 ======================= -->
-      <button class="sidebar-menu-button submenu-toggle" data-page="page-wsms" data-access="Comunicação WSMS">💬 Comunicação WSMS</button>
+      <button class="sidebar-menu-button submenu-toggle" data-page="page-wsms" data-access="Comunicação WSMS">
+        <span class="fa fa-commenting" style="display: inline-flex; align-items: center; justify-content: center; background: #ddd; color: #444; width: 24px; height: 20px; border-radius: 4px;
+                                              font-size: 11px; margin-right: 5px; position: relative; top: -2px; vertical-align: middle;"></span> Comunicação WSMS</button>
       <div class="submenu">
         <button class="sidebar-submenu-button" data-page="page-active_occurrences" data-access="Ocorrências em Curso">🔥 Ocorrências em Curso</button>
         <button class="sidebar-submenu-button" data-page="page_insert_occurrence" data-access="Inserir/Alterar Ocorrência" onclick="NewOCRresetVehicles()">✏️ Inserir/Alterar Ocorrência</button>
@@ -140,9 +155,13 @@
         <button class="sidebar-submenu-button" data-page="page-weather-warnings" data-access="Avisos METEO">🚨 Avisos METEO</button>
       </div>
       <!-- ======================= UTILITÁRIOS ======================= -->
-      <button class="sidebar-menu-button" data-page="page-utilities" data-access="Utilitários">📱 Utilitários</button>
+      <button class="sidebar-menu-button" data-page="page-utilities" data-access="Utilitários">
+        <span class="fa fa-cogs" style="display: inline-flex; align-items: center; justify-content: center; background: #ddd; color: #444; width: 24px; height: 20px; border-radius: 4px;
+                                        font-size: 11px; margin-right: 5px; position: relative; top: -2px; vertical-align: middle;"></span> Utilitários</button>
       <!-- ======================= DATA CENTER ======================= -->
-      <button class="sidebar-menu-button" data-page="page-data" data-access="Data Center">💾 Data Center</button>
+      <button class="sidebar-menu-button" data-page="page-data" data-access="Data Center">
+        <span class="fa fa-database" style="display: inline-flex; align-items: center; justify-content: center; background: #ddd; color: #444; width: 24px; height: 20px; border-radius: 4px;
+                                            font-size: 11px; margin-right: 5px; position: relative; top: -2px; vertical-align: middle;"></span> Data Center</button>
     </aside>
     <!---- MODAL POPUP MODULE ---->
     <div id="popup-modal" class="popup-modal" tabindex="0">
@@ -2663,5 +2682,6 @@
   <script></script>
 </body>
 </html>
+
 
 

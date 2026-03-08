@@ -8,7 +8,7 @@ function getSupabaseHeaders(options = {}) {
     'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
     'Content-Type': 'application/json',
     'x-my-corpo': corp,
-    'x-my-role': currentUserRole,
+    'x-my-role': "admin,
     'x-my-nint': nint
   };
   if (options.returnRepresentation) {

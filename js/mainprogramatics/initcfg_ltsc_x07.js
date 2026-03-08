@@ -9,7 +9,6 @@
         'Content-Type': 'application/json',
         'x-my-corpo': corp,
         'x-my-nint': nint,
-        "x-my-role": currentUserRole,
       };
       if (options.returnRepresentation) {
         headers['Prefer'] = 'return=representation';

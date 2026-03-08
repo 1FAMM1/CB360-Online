@@ -36,7 +36,13 @@
         {label: "Registos Individuais"},
         {label: "Gestão de Férias", children: [
           {label: "Marcação de Férias"},
-          {label: "Mapa de Férias"}
+          {label: "Mapa de Férias"},
+          {label: "Mapa de Prioridade"}
+        ]},
+        {label: "Utilitários RH", children: [
+          {label: "Subsidio de Turno"},
+          {label: "Processamento Salarial"},
+          {label: "Enquadramento EIPs"}
         ]},
         {label: "Cadastro de Funcionários"}
       ]},
@@ -548,5 +554,6 @@
         }
       }
     }
+
 
 

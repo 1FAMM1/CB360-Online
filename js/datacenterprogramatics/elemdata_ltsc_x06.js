@@ -341,20 +341,28 @@
         );
         if (!checkFirefighter.ok) throw new Error(`Erro ao verificar reg_elems: ${checkFirefighter.status}`);
         const existingFirefighter = await safeJson(checkFirefighter);
-        if (existingFirefighter && existingFirefighter.length > 0) {
-          const confirmUpdate = confirm(`O nº interno "${n_intValue}" já existe nesta corporação. Deseja atualizar o registro existente?`);
-          if (!confirmUpdate) return;
-          const recordId = existingFirefighter[0].id;
-          const updateFirefighter = await fetch(
-            `${SUPABASE_URL}/rest/v1/reg_elems?id=eq.${recordId}`, {
-              method: "PATCH",
-              headers: getSupabaseHeaders({ Prefer: "return=representation" }),
-              body: JSON.stringify(payloadRegElems)
-            }
-          );
-          if (!updateFirefighter.ok) throw new Error(`Erro ao atualizar reg_elems: ${updateFirefighter.status}`);
-          await safeJson(updateFirefighter);
-          alert("Bombeiro atualizado com sucesso!");
+        const recordId = existingFirefighter[0].id; // aqui deve ser 'imt8'
+if (!recordId) {
+  alert("❌ Erro: registro existente não tem ID. Atualização impossível.");
+  return;
+}
+
+// PATCH usando o ID correto
+const updateRes = await fetch(
+  `${SUPABASE_URL}/rest/v1/reg_elems?id=eq.${recordId}`, {
+    method: "PATCH",
+    headers: { ...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=representation" },
+    body: JSON.stringify({ ...payloadRegElems, id: undefined }) // remove id do payload
+  }
+);
+
+if (!updateRes.ok) {
+  const errText = await updateRes.text();
+  console.error("Erro PATCH reg_elems:", errText);
+  alert("Erro ao atualizar bombeiro!");
+  return;
+}
+alert("✅ Bombeiro atualizado com sucesso!");
         } else {
           const createBombeiro = await fetch(
             `${SUPABASE_URL}/rest/v1/reg_elems`, {
@@ -554,6 +562,7 @@
         }
       }
     }
+
 
 
 

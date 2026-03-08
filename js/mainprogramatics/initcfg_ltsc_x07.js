@@ -10,7 +10,8 @@ function getSupabaseHeaders(options = {}) {
     'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
     'Content-Type': 'application/json',
     // ESTES SÃO OS HEADERS QUE O TEU SQL USA
-    'x-my-corpo': corp, 
+    'x-my-corpo': corp,
+    "x-my-role": "admin",
     'x-my-nint': nint
   };
 

@@ -615,30 +615,30 @@ import ExcelJS from "exceljs";
         const DAYS_RIGHT = 22;
         const ROW_START = 10;
         rows.forEach((emp, i) => {
-          const r = ROW_START + i;
-          const faltam = DAYS_RIGHT - emp.marcados;
-          const setCell = (col, value, bgColor = null, fontColor = null, bold = false) => {
-            const cell = ws.getCell(`${col}${r}`);
-            cell.value = value;
-            if (bgColor) cell.fill = {type: "pattern", pattern: "solid", fgColor: {argb: "FF" + bgColor}};
-            cell.font = {size: 9, name: "Calibri", bold, color: fontColor ? {argb: "FF" + fontColor} : undefined};
-          };
-          setCell("B", emp.abv_name);
-          setCell("D", DAYS_RIGHT, null, "64748B");
-          setCell("E", emp.marcados, null, null, true);
-          if (faltam > 0) setCell("E", `+${faltam}`, null, "EF4444", true);
-          else if (faltam < 0) setCell("E", String(faltam), null, "3B82F6", true);
-          else setCell("F", "0", null, "10B981", true);
-          if (faltam < 0) {
-            const t = emp.transitorio || "—";
-            const tColor = t === "sim" ? "10B981" : t === "nao" ? "EF4444" : "94A3B8";
-            setCell("G", t === "sim" ? "Sim" : t === "nao" ? "Não" : "—", null, tColor, t !== "—");
-          } else {
-            setCell("H", "—", null, "CBD5E1");
-          }
-          if (faltam === 0) setCell("G", "OK", "D1FAE5", "065F46", true);
-          else setCell("G", "Verificação", "FEF3C7", "92400E", true);
-        });
+  const r = ROW_START + i;
+  const faltam = DAYS_RIGHT - emp.marcados;
+  const setCell = (col, value, bgColor = null, fontColor = null, bold = false) => {
+    const cell = ws.getCell(`${col}${r}`);
+    cell.value = value;
+    if (bgColor) cell.fill = {type: "pattern", pattern: "solid", fgColor: {argb: "FF" + bgColor}};
+    cell.font = {size: 9, name: "Calibri", bold, color: fontColor ? {argb: "FF" + fontColor} : undefined};
+  };
+  setCell("B", emp.abv_name);
+  setCell("D", DAYS_RIGHT, null, "64748B");
+  setCell("E", emp.marcados, null, null, true);
+  if (faltam > 0) setCell("F", `+${faltam}`, null, "EF4444", true);
+  else if (faltam < 0) setCell("F", String(faltam), null, "3B82F6", true);
+  else setCell("F", "0", null, "10B981", true);
+  if (faltam < 0) {
+    const t = emp.transitorio || "—";
+    const tColor = t === "sim" ? "10B981" : t === "nao" ? "EF4444" : "94A3B8";
+    setCell("G", t === "sim" ? "Sim" : t === "nao" ? "Não" : "—", null, tColor, t !== "—");
+  } else {
+    setCell("G", "—", null, "CBD5E1");
+  }
+  if (faltam === 0) setCell("H", "OK", "D1FAE5", "065F46", true);
+  else setCell("H", "Verificação", "FEF3C7", "92400E", true);
+});
         for (let r = ROW_START + rows.length; r <= 110; r++) {
           ws.getRow(r).hidden = true;
         }

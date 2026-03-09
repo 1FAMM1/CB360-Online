@@ -19,6 +19,15 @@ import ExcelJS from "exceljs";
       vacation_priority: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/priority_vacation_template.xlsx",
       salary_map: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/salary_map_template.xlsx",
       eip_annual_map: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/eip_annual_map_template.xlsx",
+
+
+
+
+      vacation_anomalies: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/discrepancias_template.xlsx",
+
+
+        
+    
     };
     // ─── Helpers API 01 ──────────────────────────────────────────────────────────
     const HOLIDAY_COLOR = "F7C6C7";
@@ -161,13 +170,23 @@ import ExcelJS from "exceljs";
       if (req.method !== "POST") return res.status(405).json({error: "Método não permitido"});
       try {
         const {mode} = req.body;
-        if (!mode || !["monthly_scales", "point_sheet", "vacation_form", "vacation_map", "vacation_priority", "salary_map", "salary_map_xlsx", "eip_annual_map"].includes(mode)) {
+        if (!mode || !["monthly_scales", "point_sheet", "vacation_form", "vacation_map",      "vacation_anomalies",     "vacation_priority", "salary_map", "salary_map_xlsx", "eip_annual_map"].includes(mode)) {
           return res.status(400).json({error: "Modo inválido."});
         }
         if (mode === "monthly_scales") return await handleMonthlyScales(req, res);
         if (mode === "point_sheet") return await handlePointSheet(req, res);
         if (mode === "vacation_form") return await handleVacation(req, res);
         if (mode === "vacation_map") return await handleVacationMap(req, res);
+
+
+
+
+        if (mode === "vacation_anomalies") return await handleDiscrepancies(req, res);
+
+
+
+
+        
         if (mode === "vacation_priority") return await handleVacationPriority(req, res);
         if (mode === "salary_map") return await handleSalaryMap(req, res);
         if (mode === "salary_map_xlsx") return await handleSalaryMapXlsx(req, res);
@@ -572,6 +591,94 @@ import ExcelJS from "exceljs";
         res.status(500).json({error: err.message});
       }
     }
+
+
+
+
+    async function handleDiscrepancies(req, res) {
+      let inputFilePath = null;
+      let outputFilePath = null;
+      try {
+        const { year, rows } = req.body;
+        if (!year || !Array.isArray(rows)) {
+          return res.status(400).json({error: "Dados incompletos: year e rows obrigatórios"});
+        }
+        if (!CLIENT_ID || !CLIENT_SECRET) {
+          return res.status(500).json({error: "Chaves Adobe não configuradas"});
+        }
+        const templateRes = await fetch(TEMPLATES.vacation_anomalies);
+        if (!templateRes.ok) throw new Error("Erro ao carregar template");
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.load(await templateRes.arrayBuffer());
+        const ws = workbook.worksheets[0];
+        ws.getCell("B6").value = `ANÁLISE DE ANÓMIALIAS DE MARCAÇÃO DE FÉRIAS - ${year}`;
+        const DAYS_RIGHT = 22;
+        const ROW_START = 10;
+        rows.forEach((emp, i) => {
+          const r = ROW_START + i;
+          const faltam = DAYS_RIGHT - emp.marcados;
+          const setCell = (col, value, bgColor = null, fontColor = null, bold = false) => {
+            const cell = ws.getCell(`${col}${r}`);
+            cell.value = value;
+            if (bgColor) cell.fill = {type: "pattern", pattern: "solid", fgColor: {argb: "FF" + bgColor}};
+            cell.font = {size: 9, name: "Calibri", bold, color: fontColor ? {argb: "FF" + fontColor} : undefined};
+          };
+          setCell("B", emp.abv_name);
+          setCell("C", DAYS_RIGHT, null, "64748B");
+          setCell("D", emp.marcados, null, null, true);
+          if (faltam > 0) setCell("E", `+${faltam}`, null, "EF4444", true);
+          else if (faltam < 0) setCell("E", String(faltam), null, "3B82F6", true);
+          else setCell("E", "0", null, "10B981", true);
+          if (faltam < 0) {
+            const t = emp.transitorio || "—";
+            const tColor = t === "sim" ? "10B981" : t === "nao" ? "EF4444" : "94A3B8";
+            setCell("F", t === "sim" ? "Sim" : t === "nao" ? "Não" : "—", null, tColor, t !== "—");
+          } else {
+            setCell("F", "—", null, "CBD5E1");
+          }
+          if (faltam === 0) setCell("G", "OK", "D1FAE5", "065F46", true);
+          else setCell("G", "Verificação", "FEF3C7", "92400E", true);
+        });
+        for (let r = ROW_START + rows.length; r <= 110; r++) {
+          ws.getRow(r).hidden = true;
+        }
+        ws.pageSetup = {orientation: "portrait", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
+                        margins: {left: 0.3, right: 0.3, top: 0.4, bottom: 0.4, header: 0, footer: 0},};
+        const tempDir = os.tmpdir();
+        inputFilePath = path.join(tempDir, `discrepancias_${Date.now()}.xlsx`);
+        outputFilePath = path.join(tempDir, `discrepancias_${Date.now()}_out.pdf`);
+        await workbook.xlsx.writeFile(inputFilePath);
+        const credentials = new ServicePrincipalCredentials({clientId: CLIENT_ID, clientSecret: CLIENT_SECRET});
+        const pdfServices = new PDFServices({credentials});
+        const inputAsset = await pdfServices.upload({readStream: fs.createReadStream(inputFilePath), mimeType: MimeType.XLSX});
+        const job = new CreatePDFJob({inputAsset});
+        const pollingURL = await pdfServices.submit({job});
+        const pdfServicesResponse = await pdfServices.getJobResult({pollingURL, resultType: CreatePDFResult});
+        const streamAsset = await pdfServices.getContent({asset: pdfServicesResponse.result.asset});
+        const writeStream = fs.createWriteStream(outputFilePath);
+        streamAsset.readStream.pipe(writeStream);
+        await new Promise((resolve, reject) => {writeStream.on("finish", resolve); writeStream.on("error", reject);});
+        const pdfBuffer = fs.readFileSync(outputFilePath);
+        try {
+          if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
+          if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
+        } catch {}
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader("Content-Disposition", `attachment; filename=Discrepancias_Ferias_${year}.pdf`);
+        return res.status(200).send(pdfBuffer);
+      } catch (error) {
+        try {
+          if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
+          if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
+        } catch {}
+        throw error;
+      }
+    }
+
+
+
+
+
     async function handleVacationPriority(req, res) {
       let inputPath = null;
       try {

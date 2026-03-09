@@ -141,7 +141,7 @@
           clearActiveState();
           btn.classList.add("active");    
           if (currentSection === "Emissão Escala") {
-            toggleButtonsVisibility(false, true);
+            toggleButtonsVisibility(true, true);
           } else if (currentSection === "Consultar Escalas") {
             toggleButtonsVisibility(false, false);
           } else {
@@ -1198,7 +1198,9 @@
           const monthIndex = getActiveMonthIndex();
           if (!monthIndex) throw new Error("Nenhum mês selecionado.");
           const savedMap = await fetchSavedData(currentSection, selectedYear, monthIndex);
-          const {toInsert, toUpdate, toDelete} = diffTableChanges(table, savedMap);
+          const {toInsert, toUpdate, toDelete} = currentSection === "Emissão Escala"
+          ? diffFixedRowsChanges(table, savedMap)
+          : diffTableChanges(table, savedMap);
           await saveChanges({toInsert, toUpdate, toDelete, section: currentSection, year: selectedYear, month: monthIndex});
           showPopupSuccess("✅ Escala gravada com sucesso!");
         } catch (err) {

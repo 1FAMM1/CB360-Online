@@ -624,17 +624,17 @@ import ExcelJS from "exceljs";
             cell.font = {size: 9, name: "Calibri", bold, color: fontColor ? {argb: "FF" + fontColor} : undefined};
           };
           setCell("B", emp.abv_name);
-          setCell("C", DAYS_RIGHT, null, "64748B");
-          setCell("D", emp.marcados, null, null, true);
+          setCell("D", DAYS_RIGHT, null, "64748B");
+          setCell("E", emp.marcados, null, null, true);
           if (faltam > 0) setCell("E", `+${faltam}`, null, "EF4444", true);
           else if (faltam < 0) setCell("E", String(faltam), null, "3B82F6", true);
-          else setCell("E", "0", null, "10B981", true);
+          else setCell("F", "0", null, "10B981", true);
           if (faltam < 0) {
             const t = emp.transitorio || "—";
             const tColor = t === "sim" ? "10B981" : t === "nao" ? "EF4444" : "94A3B8";
-            setCell("F", t === "sim" ? "Sim" : t === "nao" ? "Não" : "—", null, tColor, t !== "—");
+            setCell("G", t === "sim" ? "Sim" : t === "nao" ? "Não" : "—", null, tColor, t !== "—");
           } else {
-            setCell("F", "—", null, "CBD5E1");
+            setCell("H", "—", null, "CBD5E1");
           }
           if (faltam === 0) setCell("G", "OK", "D1FAE5", "065F46", true);
           else setCell("G", "Verificação", "FEF3C7", "92400E", true);

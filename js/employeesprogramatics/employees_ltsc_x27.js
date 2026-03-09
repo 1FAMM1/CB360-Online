@@ -66,23 +66,10 @@
       setTimeout(() => {
         yearSelect.value = targetYear;
       }, 0);
-    }
-    /* ======== CREATE AND EMIT SCALES ========= */
-    function toLocalYMD(date) {
-      const y = date.getFullYear();
-      const m = String(date.getMonth() + 1).padStart(2, "0");
-      const d = String(date.getDate()).padStart(2, "0");
-      return `${y}-${m}-${d}`;
-    }
-    function atNoonLocal(y, mIndex, d) {
-      return new Date(y, mIndex, d, 12, 0, 0, 0);
-    }
-    function addDays(baseDate, days) {
-      const d = new Date(baseDate);
-      d.setHours(12, 0, 0, 0);
-      d.setDate(d.getDate() + days);
-      return d;
-    }
+    }    
+    /* ======== CREATE AND EMIT SCALES ========= */    
+    const COMMON_EMP_TH_STYLE = "border: 1px solid #ccc; border-top: 0px solid #ccc; border-left: 0px solid #ccc; width: 35px; padding: 2px; font-size: 11px; text-align: center; background: #f0f0f0;";
+    const COMMON_EMP_TD_STYLE = "border: 1px solid #ccc; border-top: 0px solid #ccc; border-left: 0px solid #ccc; padding: 4px; text-align: center; font-size: 13px; width: 35px;";
     const TEAM_ORDER = ["EQ01", "EQ02", "EQ03", "EQ04", "EQ05", "EQ06", "EQ07", "EQ08", "EQ09", "EQ10","TDNU", "OPC", "EP1", "EP2"];
     const SHIFT_VALUES = {"D": 12, "N": 12, "FR": 24, "FE": 8, "M": 8, "BX": 8, "FOR": 8, 
                           "FO": 0, "LC": 8, "LP": 8, "DP": 0, "LN": 8, "FI": 8, "FJ": 8};
@@ -101,6 +88,21 @@
     let __currentMonth = null;
     let __currentDaysInMonth = null;
     let __currentHolidayMap = null;
+    function toLocalYMD(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+    function atNoonLocal(y, mIndex, d) {
+      return new Date(y, mIndex, d, 12, 0, 0, 0);
+    }
+    function addDays(baseDate, days) {
+      const d = new Date(baseDate);
+      d.setHours(12, 0, 0, 0);
+      d.setDate(d.getDate() + days);
+      return d;
+    }
     function getPortugalHolidays(year) {
       const fixed = [{month: 1, day: 1, name: "Ano Novo"}, {month: 4, day: 25, name: "Dia da Liberdade"}, {month: 5, day: 1, name: "Dia do Trabalhador"}, {month: 6, day: 10, name: "Dia de Portugal"},
                      {month: 8, day: 15, name: "Assunção de Nossa Senhora"}, {month: 9, day: 7, name: "Dia da Cidade de Faro"}, {month: 10, day: 5, name: "Implantação da República"},
@@ -851,25 +853,25 @@
         tr.setAttribute("data-nint", "");        
         const tdNI = document.createElement("td");
         tdNI.textContent = "";
-        tdNI.style.cssText = COMMON_TD_STYLE;
+        tdNI.style.cssText = COMMON_EMP_TD_STYLE;
         tr.appendChild(tdNI);
         const tdName = document.createElement("td");
         tdName.textContent = "";
-        tdName.style.cssText = COMMON_TD_STYLE;
+        tdName.style.cssText = COMMON_EMP_TD_STYLE;
         tr.appendChild(tdName);
         const tdFunction = document.createElement("td");
         tdFunction.textContent = "";
-        tdFunction.style.cssText = COMMON_TD_STYLE + "text-align:center;";
+        tdFunction.style.cssText = COMMON_EMP_TD_STYLE + "text-align:center;";
         tr.appendChild(tdFunction);
         const tdEq = document.createElement("td");
         tdEq.textContent = teamCode;
-        tdEq.style.cssText = COMMON_TD_STYLE + "text-align:center;";
+        tdEq.style.cssText = COMMON_EMP_TD_STYLE + "text-align:center;";
         tr.appendChild(tdEq);
         for (let d = 1; d <= __currentDaysInMonth; d++) {
           const td = document.createElement("td");
           td.className = `day-cell-${d}`;
           td.contentEditable = true;
-          td.style.cssText = COMMON_TD_STYLE;
+          td.style.cssText = COMMON_EMP_TD_STYLE;
           td.addEventListener("contextmenu", (ev) => {
             ev.preventDefault();
             showDriverMenu(ev.clientX, ev.clientY, td);
@@ -938,12 +940,12 @@
         const tdTotalMonthly = document.createElement("td");
         tdTotalMonthly.className = "total-monthly-cell";
         tdTotalMonthly.textContent = "0";
-        tdTotalMonthly.style.cssText = COMMON_TD_STYLE + "text-align:center; font-weight:bold; background:#f0f0f0;";
+        tdTotalMonthly.style.cssText = COMMON_EMP_TD_STYLE + "text-align:center; font-weight:bold; background:#f0f0f0;";
         tr.appendChild(tdTotalMonthly);        
         const tdTotalAcum = document.createElement("td");
         tdTotalAcum.className = "total-accumulated-cell";
         tdTotalAcum.textContent = "0";
-        tdTotalAcum.style.cssText = COMMON_TD_STYLE + "text-align:center; font-weight:bold; background:#ffe6e6;";
+        tdTotalAcum.style.cssText = COMMON_EMP_TD_STYLE + "text-align:center; font-weight:bold; background:#ffe6e6;";
         tr.appendChild(tdTotalAcum);        
         insertAfter.insertAdjacentElement("afterend", tr);
         insertAfter = tr;
@@ -1331,7 +1333,7 @@
         const th = document.createElement("th");
         th.textContent = h;
         th.rowSpan = 2;
-        th.style.cssText = COMMON_TH_STYLE + "border-bottom:2px solid #ccc;";
+        th.style.cssText = COMMON_EMP_TH_STYLE + "border-bottom:2px solid #ccc;";
         if (i === 0) th.style.width = "40px";
         if (i === 1) th.style.width = "140px";
         if (i === 2) th.style.width = "60px";
@@ -1341,18 +1343,18 @@
       for (let d = 1; d <= 31; d++) {
         const th = document.createElement("th");
         th.className = `day-header-${d}`;
-        th.style.cssText = COMMON_TH_STYLE;
+        th.style.cssText = COMMON_EMP_TH_STYLE;
         trTop.appendChild(th);
       }
       const thMonthlyTotal = document.createElement("th");
       thMonthlyTotal.innerHTML = "TOTAL<br>Mensal";
       thMonthlyTotal.rowSpan = 2;
-      thMonthlyTotal.style.cssText = COMMON_TH_STYLE + "border-bottom:2px solid #ccc; width:70px; background:#131a69; color:#fff; line-height:16px;";
+      thMonthlyTotal.style.cssText = COMMON_EMP_TH_STYLE + "border-bottom:2px solid #ccc; width:70px; background:#131a69; color:#fff; line-height:16px;";
       trTop.appendChild(thMonthlyTotal);
       const thTotalAcum = document.createElement("th");
       thTotalAcum.innerHTML = "TOTAL<br>Acumulado";
       thTotalAcum.rowSpan = 2;
-      thTotalAcum.style.cssText = COMMON_TH_STYLE + "border-bottom:2px solid #ccc; width:70px; background:#8B0000; color:#fff; line-height:16px;";
+      thTotalAcum.style.cssText = COMMON_EMP_TH_STYLE + "border-bottom:2px solid #ccc; width:70px; background:#8B0000; color:#fff; line-height:16px;";
       trTop.appendChild(thTotalAcum);
       thead.appendChild(trTop);
       const trNums = document.createElement("tr");
@@ -1360,7 +1362,7 @@
         const th = document.createElement("th");
         th.className = `day-number-${d}`;
         th.textContent = d;
-        th.style.cssText = COMMON_TH_STYLE + "border-bottom:2px solid #ccc;";
+        th.style.cssText = COMMON_EMP_TH_STYLE + "border-bottom:2px solid #ccc;";
         trNums.appendChild(th);
       }
       thead.appendChild(trNums);
@@ -1413,7 +1415,7 @@
         const td = document.createElement("td");
         td.className = `day-cell-${dayNum}`;
         td.contentEditable = true;
-        td.style.cssText = COMMON_TD_STYLE;
+        td.style.cssText = COMMON_EMP_TD_STYLE;
         td.addEventListener("contextmenu", (ev) => {
           ev.preventDefault();
           showDriverMenu(ev.clientX, ev.clientY, td);
@@ -1572,19 +1574,19 @@
         tr.dataset.entryDate = item.entry_date || null;
         const tdNI = document.createElement("td");
         tdNI.textContent = String(item.n_int).padStart(3, "0");
-        tdNI.style.cssText = COMMON_TD_STYLE;
+        tdNI.style.cssText = COMMON_EMP_TD_STYLE;
         tr.appendChild(tdNI);
         const tdName = document.createElement("td");
         tdName.textContent = item.abv_name || "";
-        tdName.style.cssText = COMMON_TD_STYLE;
+        tdName.style.cssText = COMMON_EMP_TD_STYLE;
         tr.appendChild(tdName);
         const tdFunction = document.createElement("td");
         tdFunction.textContent = item.function || "";
-        tdFunction.style.cssText = COMMON_TD_STYLE + "text-align:center;";
+        tdFunction.style.cssText = COMMON_EMP_TD_STYLE + "text-align:center;";
         tr.appendChild(tdFunction);
         const tdEq = document.createElement("td");
         tdEq.textContent = normalizeTeam(item.team);
-        tdEq.style.cssText = COMMON_TD_STYLE + "text-align:center;";
+        tdEq.style.cssText = COMMON_EMP_TD_STYLE + "text-align:center;";
         tr.appendChild(tdEq);
         for (let d = 1; d <= daysInMonth; d++) {
           tr.appendChild(createDayCell(d, tr));
@@ -1592,7 +1594,7 @@
         const tdMonthlyTotal = document.createElement("td");
         tdMonthlyTotal.className = "total-monthly-cell";
         tdMonthlyTotal.textContent = "0";
-        tdMonthlyTotal.style.cssText = COMMON_TD_STYLE + "text-align:center; font-weight:bold; background:#f0f0f0;";
+        tdMonthlyTotal.style.cssText = COMMON_EMP_TD_STYLE + "text-align:center; font-weight:bold; background:#f0f0f0;";
         tr.appendChild(tdMonthlyTotal);
         const tdTotalAcum = document.createElement("td");
         tdTotalAcum.className = "total-accumulated-cell";
@@ -1602,7 +1604,7 @@
         tdTotalAcum.dataset.base = accumulatedBase;
         tdTotalAcum.dataset.extraHours = extraHours;
         tdTotalAcum.dataset.isJanuary = item._isJanuary ? "1" : "0";
-        tdTotalAcum.style.cssText = COMMON_TD_STYLE + "text-align:center; font-weight:bold; background:#ffe6e6;";
+        tdTotalAcum.style.cssText = COMMON_EMP_TD_STYLE + "text-align:center; font-weight:bold; background:#ffe6e6;";
         tr.appendChild(tdTotalAcum);
         tbody.appendChild(tr);
       });
@@ -2189,15 +2191,15 @@
         if (holiday) bg = holiday.optional ? "#d6ecff" : "#f7c6c7";
         else if (dow === 0 || dow === 6) bg = "#f9e0b0";
         return bg
-          ? COMMON_TH_STYLE + `background: ${bg}; color: #000; ${extraCss}`
-        : COMMON_TH_STYLE + extraCss;
+          ? COMMON_EMP_TH_STYLE + `background: ${bg}; color: #000; ${extraCss}`
+        : COMMON_EMP_TH_STYLE + extraCss;
       }
       const trWeek = document.createElement("tr");
       ["NI", "Nome"].forEach((h, i) => {
         const th = document.createElement("th");
         th.textContent = h;
         th.rowSpan = 2;
-        th.style.cssText = COMMON_TH_STYLE + "border-bottom: 2px solid #ccc;";
+        th.style.cssText = COMMON_EMP_TH_STYLE + "border-bottom: 2px solid #ccc;";
         if (i === 0) th.style.width = "40px";
         if (i === 1) th.style.width = "140px";
         trWeek.appendChild(th);
@@ -2216,7 +2218,7 @@
       const thMonthlyTotal = document.createElement("th");
       thMonthlyTotal.innerHTML = "TOTAL<br>Mês";
       thMonthlyTotal.rowSpan = 2;
-      thMonthlyTotal.style.cssText = COMMON_TH_STYLE + "border-bottom: 2px solid #ccc; width: 70px; background: #131a69; color: #fff; line-height: 16px;";
+      thMonthlyTotal.style.cssText = COMMON_EMP_TH_STYLE + "border-bottom: 2px solid #ccc; width: 70px; background: #131a69; color: #fff; line-height: 16px;";
       trWeek.appendChild(thMonthlyTotal);
       thead.appendChild(trWeek);
       const trNums = document.createElement("tr");
@@ -2254,11 +2256,11 @@
         tr.setAttribute("data-nint", item.n_int);
         const tdNI = document.createElement("td");
         tdNI.textContent = String(item.n_int).padStart(3, "0");
-        tdNI.style.cssText = COMMON_TD_STYLE;
+        tdNI.style.cssText = COMMON_EMP_TD_STYLE;
         tr.appendChild(tdNI);
         const tdName = document.createElement("td");
         tdName.textContent = item.abv_name || "";
-        tdName.style.cssText = COMMON_TD_STYLE;
+        tdName.style.cssText = COMMON_EMP_TD_STYLE;
         tr.appendChild(tdName);
         for (let d = 1; d <= daysInMonth; d++) {
           const td = document.createElement("td");
@@ -2267,7 +2269,7 @@
           const savedMinutes = item.extra_hours?.[d - 1] || 0;
           td.textContent = minutesToHHMM(savedMinutes);
           const bgColor = getDayCellBg(d);
-          td.style.cssText = COMMON_TD_STYLE + "text-align: center;";
+          td.style.cssText = COMMON_EMP_TD_STYLE + "text-align: center;";
           if (bgColor) td.style.backgroundColor = bgColor;          
           td.addEventListener("input", maskTimeExtraHours);
           td.addEventListener("blur", () => {
@@ -2312,7 +2314,7 @@
         }
         const tdMonthlyTotal = document.createElement("td");
         tdMonthlyTotal.className = "total-monthly-extra-cell";
-        tdMonthlyTotal.style.cssText = COMMON_TD_STYLE + "text-align: center; font-weight: bold; background: #f0f0f0;";
+        tdMonthlyTotal.style.cssText = COMMON_EMP_TD_STYLE + "text-align: center; font-weight: bold; background: #f0f0f0;";
         tr.appendChild(tdMonthlyTotal);
         tbody.appendChild(tr);
         updateExtraHoursTotals(tr);
@@ -3365,10 +3367,10 @@
             const message = `⚠️ ATENÇÃO: Existem turnos marcados nos seguintes dias:\n\n${conflictDaysText}\n\nAs férias irão SUBSTITUIR estes turnos.\n\nDeseja continuar?`;
             if (!confirm(message)) return;
             const orConditions = conflicts
-            .map(c => `(month.eq.${c.month},day.eq.${c.day})`)
+            .map(c => `and(month.eq.${c.month},day.eq.${c.day})`)
             .join(',');
             await fetch(
-              `${SUPABASE_URL}/rest/v1/reg_employee_shifts?n_int=eq.${nInt}&year=eq.${year}&or=${orConditions}&corp_oper_nr=eq.${corpOperNr}`, {
+              `${SUPABASE_URL}/rest/v1/reg_employee_shifts?n_int=eq.${nInt}&year=eq.${year}&corp_oper_nr=eq.${corpOperNr}&shift=neq.FE&or=(${orConditions})`, {
                 method: "DELETE", headers: getSupabaseHeaders()
               }
             );
@@ -4299,7 +4301,7 @@
           .s-val-f-just {color: #d97706; background: #fffbeb; border-color: #fcd34d;}
           .s-val-f-unjust {color: #dc2626; background: #fee2e2; border-color: #fca5a5;}          
           .s-status-badge {background: #fee2e2; color: #991b1b; border: 1px solid currentColor; border-radius: 4px; font-weight: 700; font-size: 9px; padding: 3px; line-height: 1.2;}
-          .s-status-yes {color: #10b981; background: #ecfdf5;}
+          .s-status-yes {font-size: 9px; color: #10b981; background: #ecfdf5;}
           .s-status-no {color: #dc2626; background: #fef2f2;}
           .s-filter-select {padding: 4px 8px; border-radius: 4px; border: 1px solid #cbd5e1; font-size: 13px; font-weight: 600;}
           .s-footer {display: flex; justify-content: flex-end; margin-top: 15px; gap: 10px;}
@@ -5255,6 +5257,301 @@
       btn.addEventListener("click", () => {
         if (btn.dataset.access === "Cadastro de Funcionários") {
           createEmployeeRegistration();
+        }
+      });
+    });
+    
+    
+    
+    
+    
+    async function createRHDashboard() {
+      const cardBody = document.querySelector("#dashboard-rh .card-body");
+      if (!cardBody) {
+        console.error("❌ Card body não encontrado!");
+        return;
+      }
+      if (!document.getElementById("dashboard-core-css")) {
+        const s = document.createElement("style");
+        s.id = "dashboard-core-css";
+        s.innerHTML = `
+          @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+          .dash-title {font-size: 16px; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; font-family: 'Inter', sans-serif; color: #1e293b;}
+          .dash-badge-rh {background: #1e293b; color: #fff; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-family: 'Inter', sans-serif; color: #1e293b;}
+          .dash-wrapper {font-family: 'Plus Jakarta Sans', sans-serif; color: #1e293b; background: linear-gradient(135deg, #f0f4ff 0%, #fafbff 60%, #f0f7f4 100%); padding: 24px;
+                         border-radius: 16px; min-height: 100%;}
+          .dash-filters {display: flex; align-items: center; gap: 12px; margin-bottom: 24px; flex-wrap: wrap;}
+          .dash-filter-label {font-size: 18px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;}
+          .dash-filter-select {padding: 8px 14px; border: 1.5px solid rgba(99,102,241,0.25); border-radius: 10px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px;
+                               font-weight: 600; color: #1e293b; background: rgba(255,255,255,0.85); backdrop-filter: blur(8px); cursor: pointer; outline: none;
+                               transition: border-color 0.2s, box-shadow 0.2s; box-shadow: 0 2px 8px rgba(99,102,241,0.08);}
+          .dash-filter-select:focus {border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.15);}
+          .dash-filter-btn {padding: 8px 18px; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; border: none; border-radius: 10px; font-family: 'Plus Jakarta Sans', sans-serif;
+                            font-size: 13px; font-weight: 700; cursor: pointer; transition: opacity 0.2s, transform 0.15s; box-shadow: 0 4px 12px rgba(99,102,241,0.3);}
+          .dash-filter-btn:hover {opacity: 0.9; transform: translateY(-1px);}
+          .dash-filter-btn:active {transform: translateY(0);}
+          .dash-cards {display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;}
+          @media (max-width: 1200px) {.dash-cards {grid-template-columns: repeat(2, 1fr);}}
+          @media (max-width: 600px) {.dash-cards {grid-template-columns: 1fr;}}
+          .dash-card {position: relative; background: rgba(255, 255, 255, 0.55); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1.5px solid rgba(255, 255, 255, 0.85);
+                      border-radius: 20px; padding: 22px 20px 18px; box-shadow: 0 8px 32px rgba(99,102,241,0.08), 0 2px 8px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.9); overflow: hidden;
+                      transition: transform 0.25s, box-shadow 0.25s;}
+          .dash-card:hover {transform: translateY(-4px); box-shadow: 0 16px 40px rgba(99,102,241,0.14), 0 4px 12px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9);}
+          .dash-card::before {content: ''; position: absolute; top: -40px; right: -40px; width: 100px; height: 100px; border-radius: 50%; opacity: 0.12;}
+          .dash-card-0::before {background: #6366f1;}
+          .dash-card-1::before {background: #10b981;}
+          .dash-card-2::before {background: #f59e0b;}
+          .dash-card-3::before {background: #ec4899;}
+          .dash-card-header {display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px;}
+          .dash-card-icon-wrap {width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);}
+          .dash-card-0 .dash-card-icon-wrap {background: linear-gradient(135deg, #6366f1, #8b5cf6);}
+          .dash-card-1 .dash-card-icon-wrap {background: linear-gradient(135deg, #10b981, #059669);}
+          .dash-card-2 .dash-card-icon-wrap {background: linear-gradient(135deg, #f59e0b, #d97706);}
+          .dash-card-3 .dash-card-icon-wrap {background: linear-gradient(135deg, #ec4899, #db2777);}
+          .dash-card-value {font-size: 36px; font-weight: 800; color: #0f172a; line-height: 1; letter-spacing: -1px;}
+          .dash-card-label {font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 700; margin-top: 4px;}
+          .dash-progress-wrap {margin-top: 16px;}
+          .dash-progress-meta {display: flex; justify-content: space-between; font-size: 11px; font-weight: 600; color: #94a3b8; margin-bottom: 6px;}
+          .dash-progress-track {width: 100%; height: 6px; background: rgba(0,0,0,0.07); border-radius: 99px; overflow: hidden;}
+          .dash-progress-bar {height: 100%; border-radius: 99px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);}
+          .dash-card-0 .dash-progress-bar {background: linear-gradient(90deg, #6366f1, #8b5cf6);}
+          .dash-card-1 .dash-progress-bar {background: linear-gradient(90deg, #10b981, #34d399);}
+          .dash-card-2 .dash-progress-bar {background: linear-gradient(90deg, #f59e0b, #fbbf24);}
+          .dash-card-3 .dash-progress-bar {background: linear-gradient(90deg, #ec4899, #f472b6);}
+          .dash-charts {display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;}
+          @media (max-width: 768px) {.dash-charts {grid-template-columns: 1fr;}}
+          .dash-chart-box {background: rgba(255,255,255,0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1.5px solid rgba(255,255,255,0.85); border-radius: 20px;
+                           padding: 22px; box-shadow: 0 8px 32px rgba(99,102,241,0.07), inset 0 1px 0 rgba(255,255,255,0.9); min-height: 300px;}
+          .dash-chart-title {font-size: 13px; font-weight: 700; color: #1e293b; margin-bottom: 18px; display: flex; align-items: center; gap: 8px;}
+          .dash-badge-rh {background: linear-gradient(135deg, #1e293b, #334155); color: #fff; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; letter-spacing: 0.5px;}
+          .dash-loading {display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(99,102,241,0.2); border-top-color: #6366f1; border-radius: 50%; animation: dash-spin 0.7s linear infinite;
+                         vertical-align: middle;}
+          @keyframes dash-spin {to{transform: rotate(360deg);}}
+          .dash-fade-in {animation: dashFadeIn 0.5s ease forwards; opacity: 0;}
+          @keyframes dashFadeIn {from {opacity: 0; transform: translateY(10px);} to {opacity: 1; transform: translateY(0);}}
+        `;
+        document.head.appendChild(s);
+      }
+      const now = new Date();
+      const currentMonth = now.getMonth() + 1;
+      const currentYear = now.getFullYear();
+      const monthNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+      let monthOptions = monthNames.map((m, i) => `<option value="${i+1}" ${i+1 === currentMonth ? 'selected' : ''}>${m}</option>`).join('');
+      const defaultYear = new Date().getFullYear();
+      let yearOptions = '';
+      for (let y = 2026; y <= 2036; y++) {
+        yearOptions += `<option value="${y}" ${y === defaultYear ? 'selected' : ''}>${y}</option>`;
+      }
+      cardBody.innerHTML = `
+        <div class="dash-title"><span class="dash-badge-rh">RH</span> DASHBOARD</div>
+        <div class="dash-wrapper">
+          <div class="dash-filters">
+            <span class="dash-filter-label">
+              <span style="position: relative; top: -2px;">🗓</span> Período:</span>
+            <select class="dash-filter-select" id="dash-filter-month">${monthOptions}</select>
+            <select class="dash-filter-select" id="dash-filter-year">${yearOptions}</select>
+          </div>
+          <div class="dash-cards">
+            <div class="dash-card dash-card-0 dash-fade-in" style="animation-delay:0.05s">
+              <div class="dash-card-header">
+                <div>
+                  <div class="dash-card-value" id="total-employees"><span class="dash-loading"></span></div>
+                  <div class="dash-card-label">Total Funcionários</div>
+                </div>
+                <div class="dash-card-icon-wrap">👥</div>
+              </div>
+              <div class="dash-progress-wrap">
+                <div class="dash-progress-meta">
+                  <span>Headcount</span>
+                  <span id="total-employees-pct">—</span>
+                    </div>
+                <div class="dash-progress-track">
+                  <div class="dash-progress-bar" id="total-employees-bar" style="width:0%"></div>
+                </div>
+              </div>
+            </div>
+            <div class="dash-card dash-card-1 dash-fade-in" style="animation-delay:0.12s">
+              <div class="dash-card-header">
+                <div>
+                  <div class="dash-card-value" id="active-employees"><span class="dash-loading"></span></div>
+                  <div class="dash-card-label">Ativos</div>
+                </div>
+                <div class="dash-card-icon-wrap">✅</div>
+              </div>
+              <div class="dash-progress-wrap">
+                <div class="dash-progress-meta">
+                  <span>% do total</span>
+                  <span id="active-employees-pct">—</span>
+                </div>
+                <div class="dash-progress-track">
+                  <div class="dash-progress-bar" id="active-employees-bar" style="width:0%"></div>
+                </div>
+              </div>
+            </div>
+            <div class="dash-card dash-card-2 dash-fade-in" style="animation-delay:0.19s">
+              <div class="dash-card-header">
+                <div>
+                  <div class="dash-card-value" id="vacation-month"><span class="dash-loading"></span></div>
+                  <div class="dash-card-label">Férias Este Mês</div>
+                </div>
+                <div class="dash-card-icon-wrap">🏖️</div>
+              </div>
+              <div class="dash-progress-wrap">
+                <div class="dash-progress-meta">
+                  <span>% do total</span>
+                  <span id="vacation-month-pct">—</span>
+                </div>
+                <div class="dash-progress-track">
+                  <div class="dash-progress-bar" id="vacation-month-bar" style="width:0%"></div>
+                </div>
+              </div>
+            </div>
+            <div class="dash-card dash-card-3 dash-fade-in" style="animation-delay:0.26s">
+              <div class="dash-card-header">
+                <div>
+                  <div class="dash-card-value" id="subsidy-month"><span class="dash-loading"></span></div>
+                  <div class="dash-card-label">Subsídio Turno</div>
+                </div>
+                <div class="dash-card-icon-wrap">💰</div>
+              </div>
+              <div class="dash-progress-wrap">
+                <div class="dash-progress-meta">
+                  <span>% do total</span>
+                  <span id="subsidy-month-pct">—</span>
+                </div>
+                <div class="dash-progress-track">
+                  <div class="dash-progress-bar" id="subsidy-month-bar" style="width:0%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="dash-charts">
+            <div class="dash-chart-box dash-fade-in" style="animation-delay:0.33s">
+              <div class="dash-chart-title">
+                <span class="dash-badge-rh">RH</span> Funcionários por Função
+              </div>
+              <canvas id="chart-by-team" style="max-height:250px;"></canvas>
+            </div>
+            <div class="dash-chart-box dash-fade-in" style="animation-delay:0.4s">
+              <div class="dash-chart-title">
+                <span class="dash-badge-rh">RH</span> Férias por Mês (<span id="chart-year-label">${currentYear}</span>)
+              </div>
+              <canvas id="chart-vacations" style="max-height:250px;"></canvas>
+            </div>
+          </div>
+        </div>
+      `;
+      document.getElementById("dash-filter-month").addEventListener("change", loadDashboardData);
+      document.getElementById("dash-filter-year").addEventListener("change", loadDashboardData);
+      setTimeout(() => {
+        const filterMonth = document.getElementById("dash-filter-month");
+        const filterYear  = document.getElementById("dash-filter-year");
+        if (filterMonth) filterMonth.value = currentMonth;
+        if (filterYear)  filterYear.value  = currentYear;
+      }, 0);
+      await loadDashboardData();
+    }
+    let _dashChartTeam = null;
+    let _dashChartVac = null;
+    async function loadDashboardData() {
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const filterMonth = document.getElementById("dash-filter-month");
+      const filterYear = document.getElementById("dash-filter-year");
+      const selectedMonth = filterMonth ? parseInt(filterMonth.value) : new Date().getMonth() + 1;
+      const selectedYear = filterYear ? parseInt(filterYear.value) : new Date().getFullYear();
+      const monthStr = String(selectedMonth);
+      const monthWithZero = selectedMonth < 10 ? `0${selectedMonth}` : String(selectedMonth);
+      const yearStr = String(selectedYear);
+      if (document.getElementById("chart-year-label"))
+        document.getElementById("chart-year-label").textContent = selectedYear;
+      ["total-employees","active-employees","vacation-month","subsidy-month"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = '<span class="dash-loading"></span>';
+      });
+      try {
+        const headers = getSupabaseHeaders();
+        const [empRes, vacRes, eligRes] = await Promise.all([
+          fetch(`${SUPABASE_URL}/rest/v1/reg_employees?corp_oper_nr=eq.${corpOperNr}`, {headers}),
+          fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&shift=eq.FE`, {headers}),
+          fetch(`${SUPABASE_URL}/rest/v1/reg_eligibility?corp_oper_nr=eq.${corpOperNr}`, {headers})
+        ]);
+        const employees = await empRes.json();
+        const vacations = await vacRes.json();
+        const eligibility = await eligRes.json();
+        const total = employees.length;
+        const active = employees.filter(e => !e.exit_date || new Date(e.exit_date) >= new Date()).length;
+        const vacMonth = new Set(
+          vacations.filter(v => {
+            const vMonth = String(v.month).trim();
+            const vYear  = String(v.year  || "").trim();
+            return (vMonth === monthStr || vMonth === monthWithZero) && vYear === yearStr;
+          }).map(v => v.n_int)
+        ).size;
+        const filteredElig = eligibility.filter(e => {
+          const eYear  = String(e.year).trim();
+          const eMonth = String(e.month).trim();
+          return eYear === yearStr && (eMonth === monthStr || eMonth === monthWithZero);
+        });
+        const subsidy = new Set(filteredElig.map(e => String(e.n_int || ""))).size;
+        const setCard = (valueId, barId, pctId, value, total, decimals = 0) => {
+          const el = document.getElementById(valueId);
+          if (el) el.textContent = value;
+          const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+          const barEl = document.getElementById(barId);
+          const pctEl = document.getElementById(pctId);
+          if (barEl) setTimeout(() => { barEl.style.width = pct + "%"; }, 100);
+          if (pctEl) pctEl.textContent = pct + "%";
+        };
+        setCard("total-employees", "total-employees-bar", "total-employees-pct", total, 50);
+        setCard("active-employees", "active-employees-bar", "active-employees-pct", active, total);
+        setCard("vacation-month", "vacation-month-bar", "vacation-month-pct", vacMonth, active);
+        setCard("subsidy-month", "subsidy-month-bar",  "subsidy-month-pct", subsidy, active);
+        if (typeof Chart !== 'undefined') {
+          if (_dashChartTeam) {_dashChartTeam.destroy(); _dashChartTeam = null;}
+          if (_dashChartVac) {_dashChartVac.destroy(); _dashChartVac = null;}
+          const today = new Date();
+          const teamCounts = {};
+          employees.forEach(e => {
+            const exitDate = e.exit_date ? new Date(e.exit_date) : null;
+            if (!exitDate || exitDate >= today) {
+              let team = String(e.function || "Sem Função").trim();
+              if (team.startsWith("EP1")) team = "EIP-01";
+              else if (team.startsWith("EP2")) team = "EIP-02";
+              teamCounts[team] = (teamCounts[team] || 0) + 1;
+            }
+          });
+          const teamColors = [
+            'rgba(99,102,241,0.85)','rgba(16,185,129,0.85)','rgba(245,158,11,0.85)',
+            'rgba(236,72,153,0.85)','rgba(59,130,246,0.85)','rgba(239,68,68,0.85)'
+          ];
+          _dashChartTeam = new Chart(document.getElementById("chart-by-team"), {
+            type: 'bar',
+            data: {labels: Object.keys(teamCounts), datasets: [{label: 'Funcionários', data: Object.values(teamCounts), backgroundColor: teamColors, borderRadius: 8, borderSkipped: false,}]},
+            options: {responsive: true, maintainAspectRatio: false, plugins: {legend: {display: false}},
+                      scales: {x: {grid: {display: false}, ticks: {font: {family: 'Plus Jakarta Sans', weight: '600', size: 11}}},
+                               y: {grid: {color: 'rgba(0,0,0,0.05)'}, ticks: {stepSize: 1, font: {family: 'Plus Jakarta Sans', size: 11}}}}}});
+          const vacByMonth = Array(12).fill(0);
+          vacations.filter(v => String(v.year || "") === yearStr).forEach(v => {
+            const mesIdx = parseInt(v.month) - 1;
+            if (mesIdx >= 0 && mesIdx < 12) vacByMonth[mesIdx]++;
+          });
+          _dashChartVac = new Chart(document.getElementById("chart-vacations"), {
+            type: 'line',
+            data: {labels: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'],
+                   datasets: [{label: 'Dias de Férias', data: vacByMonth, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', tension: 0.4, fill: true, pointBackgroundColor: '#10b981',
+                               pointRadius: 5, pointHoverRadius: 7,}]},
+            options: {responsive: true, maintainAspectRatio: false, plugins: {legend: {display: false}},
+                      scales: {x: {grid: {display: false}, ticks: {font: {family: 'Plus Jakarta Sans', weight: '600', size: 11}}},
+                               y: {grid: {color: 'rgba(0,0,0,0.05)'}, ticks: {stepSize: 1, font: {family: 'Plus Jakarta Sans', size: 11}}}}}});}
+      } catch (error) {
+        console.error("❌ Erro dashboard:", error);
+      }
+    }
+    document.querySelectorAll(".sidebar-sub-submenu-button").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const access = btn.dataset.access;
+        if (access === "dashboard-RH") {
+          createRHDashboard();
         }
       });
     });

@@ -151,7 +151,7 @@ export default async function handler(req, res) {
                 { width: 5 }, { width: 5 }, { width: 8 }, { width: 20 }, { width: 8 }
             ];
             for (let d = 1; d <= data.daysInMonth; d++) {
-                newSheet.getColumn(5 + d).width = 5;
+                newSheet.getColumn(5 + d).width = 2.5;
             }
             newSheet.mergeCells('C9:H9');
             const titleCell = newSheet.getCell('C9');

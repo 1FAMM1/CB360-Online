@@ -1,7 +1,4 @@
     /* =======================================
-    FOMIO 360 PROGRAMATICS
-    ======================================= */
-    /* =======================================
     SCALES MOULE
     ======================================= */
     /* = SCALES DYNAMIC TABLE - MAIN INIT = */    
@@ -136,7 +133,7 @@
             tableContainer.innerHTML = "";
             toggleButtonsVisibility(false, false);
             return;
-          }    
+          }
           if (currentSection === "DECIR" && blockedMonthsForDecir.includes(index)) {
             showPopupWarning(`⛔ Durante o mês de ${month}, não existe DECIR. Salvo prolongamento ou atecipação declarados pela ANEPC.`);
             return;
@@ -172,7 +169,7 @@
       setTimeout(() => { yearSelect.value = targetYear; }, 0);
     }
     /* ============  LOAD DATA ============ */
-    const getCorpId = () => sessionStorage.getItem('currentCorpOperNr');
+    const getCorpId = () => sessionStorage.getItem('currentCorpOperNr') || "0805";
     async function loadSetionData(secao) {
       try {
         const corp = getCorpId();
@@ -211,7 +208,7 @@
       try {
         const corp = getCorpId();
         const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/reg_elems?select=n_int,abv_name,patent_abv&corp_oper_nr=eq.${corp}&n_int=gte.003&n_int=lt.900&elem_state=eq.true`, {
+          `${SUPABASE_URL}/rest/v1/reg_elems?select=n_int,abv_name,patent_abv,section,MP,TAS,ML&corp_oper_nr=eq.${corp}&n_int=gte.003&n_int=lt.900&elem_state=eq.true`, {
             headers: getSupabaseHeaders()
           }
         );
@@ -272,7 +269,6 @@
     const TRANSPARENT = "transparent";
     const WHITE = "#fff";
     const BLACK = "#000";
-
     function updateCellColor(td, value, date) {
       value = value.toUpperCase();
       if (CELL_COLORS[value]) {
@@ -465,10 +461,10 @@
       }
     }
     /* ======== CREATING DAY CELLS ======== */
-    function createDayCellWithListeners(d, tr, year, month, savedMap, section, daysInMonth, calculateRowTotal, calculateColumnTotals) {
+    function createDayCellWithListeners(d, tr, year, month, savedMap, section, daysInMonth, calculateVolunteersRowTotal, calculateColumnTotals) {
       const td = document.createElement("td");
       td.className = `day-cell-${d}`;
-      td.contentEditable = section !== "Emissão Escala" && section !== "Consultar Escalas";
+      td.contentEditable = section !== "Consultar Escalas";
       td.style.cssText = COMMON_TD_STYLE;
       td.style.fontWeight = "bold";
       td.addEventListener("focus", () => {
@@ -494,13 +490,14 @@
           const date = new Date(year, month - 1, dayNum);
           td.style.background = date.getDay() === 0 || date.getDay() === 6 ? "#f9e0b0" : "transparent";
           td.style.color = "#000";
-          calculateRowTotal(tr, section, daysInMonth);
+          calculateVolunteersRowTotal(tr, section, daysInMonth);
           calculateColumnTotals(tr.parentElement, section, daysInMonth);
           return;
         }
         updateCellColor(td, value, new Date(year, month - 1, dayNum));
-        calculateRowTotal(tr, section, daysInMonth);
+        calculateVolunteersRowTotal(tr, section, daysInMonth);
         calculateColumnTotals(tr.parentElement, section, daysInMonth);
+        calculateMLTotals(tr.parentElement, daysInMonth, currentTableData);
         calculateMPTotals(tr.parentElement, daysInMonth, currentTableData, section);
         calculateTASTotals(tr.parentElement, daysInMonth, currentTableData);
         if (section === "DECIR") {
@@ -559,7 +556,7 @@
       return td;
     }
     /* ====== CREATION OF FIXED CELLS ===== */    
-    function createFixedDayCellWithListeners(d, fixedRow, year, month, savedMap, nIntStr, daysInMonth, calculateRowTotal, calculateColumnTotals) {
+    function createFixedDayCellWithListeners(d, fixedRow, year, month, savedMap, nIntStr, daysInMonth, calculateVolunteersRowTotal, calculateColumnTotals) {
       const td = document.createElement("td");
       td.className = `fixed-day-cell-${d}`;
       td.contentEditable = currentSection !== "Consultar Escalas";
@@ -579,7 +576,7 @@
         let value = td.textContent.toUpperCase().slice(0, 1);
         if (td.textContent !== value) td.textContent = value;
         updateCellColor(td, value, date);
-        calculateRowTotal(fixedRow, currentSection, daysInMonth);
+        calculateVolunteersRowTotal(fixedRow, currentSection, daysInMonth);
         calculateColumnTotals(fixedRow.parentElement, currentSection, daysInMonth);
         const cells = Array.from(fixedRow.querySelectorAll("td"))
           .filter(c => c.contentEditable === "true");
@@ -631,7 +628,7 @@
       return td;
     }
     /* ====== CREATION OF FIXED LINES ===== */
-    function createFixedRows(tbody, data, savedMap, year, month, daysInMonth, section, calculateRowTotal, calculateColumnTotals) {
+    function createFixedRows(tbody, data, savedMap, year, month, daysInMonth, section, calculateVolunteersRowTotal, calculateColumnTotals) {
       const fixedRowsData = [{idx: 0, text: savedMap[`fixed_0_text`] || "OFOPE", isHeader: true},
                              {idx: 1, dataIndex: 0}, {idx: 2, dataIndex: 1}, {idx: 3, dataIndex: 2},
                              {idx: 5, text: savedMap[`fixed_3_text`] || "CORPO ATIVO", isHeader: true}];
@@ -668,7 +665,7 @@
             for (let d = 1; d <= daysInMonth; d++) {
               const td = createFixedDayCellWithListeners(
                 d, fixedRow, year, month, savedMap, nIntStr, daysInMonth,
-                calculateRowTotal, calculateColumnTotals
+                calculateVolunteersRowTotal, calculateColumnTotals
               );
               fixedRow.appendChild(td);
             }
@@ -679,13 +676,13 @@
           }
           tbody.appendChild(fixedRow);
           if (!rowInfo.isHeader) {
-            calculateRowTotal(fixedRow, section, daysInMonth);
+            calculateVolunteersRowTotal(fixedRow, section, daysInMonth);
           }
         }
       });
     }
     /* ====== CREATION OF DATA LINES ====== */
-    function createDataRows(tbody, data, savedMap, year, month, daysInMonth, section, calculateRowTotal, calculateColumnTotals) {
+    function createDataRows(tbody, data, savedMap, year, month, daysInMonth, section, calculateVolunteersRowTotal, calculateColumnTotals) {
       const isEditable = section === "Emissão Escala";
       const isEscalaSection = isEditable || section === "Consultar Escalas";
       for (let dataIdx = 0; dataIdx < data.length; dataIdx++) {
@@ -707,7 +704,7 @@
           for (let d = 1; d <= 31; d++) {
             const td = createDayCellWithListeners(
               d, tr, year, month, savedMap, section, daysInMonth,
-              calculateRowTotal, calculateColumnTotals, isEditable
+              calculateVolunteersRowTotal, calculateColumnTotals, isEditable
             );
             tr.appendChild(td);
           }
@@ -737,7 +734,7 @@
             td.style.display = "none";
           }
         }
-        calculateRowTotal(tr, section, daysInMonth);
+        calculateVolunteersRowTotal(tr, section, daysInMonth);
       }
     }
     /* === CREATION OF THE TOTAL LINES ==== */    
@@ -777,6 +774,61 @@
       return totalsRow;
     }
     /* === CREATION OF MP ROWS (DECIR) ==== */
+    function createMLRow(tbody, daysInMonth) {
+      let mlRow = tbody.querySelector(".ml-row");
+      if (!mlRow) {
+        mlRow = document.createElement("tr");
+        mlRow.className = "ml-row";
+        const tdLabel = document.createElement("td");
+        tdLabel.textContent = "Motoristas de Ligeiros";
+        tdLabel.colSpan = 3;
+        tdLabel.style.cssText = COMMON_TDLABEL_STYLE;
+        tdLabel.style.background = "#c8e6c9";
+        mlRow.appendChild(tdLabel);
+        for (let d = 1; d <= 31; d++) {
+          const td = document.createElement("td");
+          td.className = `ml-${d}`;
+          td.style.cssText = COMMON_TD_STYLE;
+          td.style.background = "#c8e6c990";
+          mlRow.appendChild(td);
+        }
+        const tdEmpty = document.createElement("td");
+        tdEmpty.style.border = "none";
+        tdEmpty.style.background = "#ebebebd9";
+        mlRow.appendChild(tdEmpty);
+        tbody.appendChild(mlRow);
+      }
+      for (let d = 1; d <= 31; d++) {
+        const mlCell = mlRow.querySelector(`.ml-${d}`);
+        mlCell.style.display = d <= daysInMonth ? "" : "none";
+      }
+    }
+    function calculateMLTotals(tbody, daysInMonth, data) {
+      const mlRow = tbody.querySelector(".ml-row");
+      if (!mlRow) return;
+      for (let d = 1; d <= daysInMonth; d++) {
+        let totalCount = 0;
+        const rows = tbody.querySelectorAll("tr:not(.totals-row):not(.ml-row):not(.mp-row):not(.tas-row):not(.fixed-row)");
+        rows.forEach(tr => {
+          const nInt = parseInt(tr.getAttribute("data-nint"), 10);
+          const person = data.find(item => parseInt(item.n_int, 10) === nInt);
+          if (person && person.ML === true) {
+            const td = tr.querySelector(`.day-cell-${d}`);
+            if (td && td.style.display !== "none") {
+              const value = td.textContent.toUpperCase().trim();
+              if (["PD", "PN", "PT"].includes(value)) {
+                totalCount++;
+              }
+            }
+          }
+        });
+        const mlCell = mlRow.querySelector(`.ml-${d}`);
+        if (mlCell) {
+          mlCell.textContent = totalCount;
+          mlCell.style.fontWeight = "bold";
+        }
+      }
+    }
     function createMPRows(tbody, daysInMonth, currentSection) {
       const isDecir = currentSection === "DECIR";
       if (isDecir) {
@@ -987,7 +1039,7 @@
       }
     }
     /* === TOTAL CALCULATION FUNCTIONS ==== */
-    function calculateRowTotal(tr, section, daysInMonth) {
+    function calculateVolunteersRowTotal(tr, section, daysInMonth) {
       let total = 0;
       for (let d = 1; d <= daysInMonth; d++) {
         const td = tr.querySelector(`.day-cell-${d}, .fixed-day-cell-${d}`);
@@ -1026,52 +1078,44 @@
       currentTableData = data;
       const container = document.getElementById(containerId);
       if (!container) return;
-      container.innerHTML = "";    
+      container.innerHTML = "";
       createTableHeaders(container, year, month, currentSection);
       const wrapper = createTableWrapper(container);
       const table = createTableStructure(wrapper);
-      const daysInMonth = new Date(year, month, 0).getDate();    
-      updateDayHeaders(table, year, month, daysInMonth);    
-      const sectionToLoad = currentSection === "Consultar Escalas" ? "Emissão Escala" : currentSection;    
+      const daysInMonth = new Date(year, month, 0).getDate();
+      updateDayHeaders(table, year, month, daysInMonth);
+      const sectionToLoad = currentSection === "Consultar Escalas" ? "Emissão Escala" : currentSection;
       const savedMap = await loadSavedData(sectionToLoad, year, month);
-      const tbody = table.querySelector("tbody");    
-      const isEscalaSection =
-        currentSection === "Emissão Escala" ||
-        currentSection === "Consultar Escalas";    
+      const tbody = table.querySelector("tbody");
+      const isEscalaSection = currentSection === "Emissão Escala" || currentSection === "Consultar Escalas";
       if (isEscalaSection) {
-        createFixedRows(tbody, data, savedMap, year, month, daysInMonth,
-          currentSection,
-          calculateRowTotal,
-          calculateColumnTotals
-        );
-      }    
-      createDataRows(tbody, data, savedMap, year, month, daysInMonth,
-        currentSection,
-        calculateRowTotal,
-        calculateColumnTotals
-      );    
-      createTotalsRow(tbody, daysInMonth);
-      if (
-        currentSection === "DECIR" ||
-        currentSection === "1ª Secção" ||
-        currentSection === "2ª Secção"
-      ) {
+        createFixedRows(tbody, data, savedMap, year, month, daysInMonth, currentSection, calculateVolunteersRowTotal, calculateColumnTotals);
+      }
+      createDataRows(tbody, data, savedMap, year, month, daysInMonth, currentSection, calculateVolunteersRowTotal, calculateColumnTotals);
+      if (currentSection === "DECIR" || currentSection === "1ª Secção" || currentSection === "2ª Secção") {
         createMPRows(tbody, daysInMonth, currentSection);
       }
       if (currentSection === "1ª Secção" || currentSection === "2ª Secção") {
         createTASRows(tbody, daysInMonth);
       }
+      if (currentSection === "Emissão Escala") {
+        createMLRow(tbody, daysInMonth);
+        createMPRows(tbody, daysInMonth, currentSection);
+        createTASRows(tbody, daysInMonth);
+      }
       calculateColumnTotals(tbody, currentSection, daysInMonth);
-      if (
-        currentSection === "DECIR" ||
-        currentSection === "1ª Secção" ||
-        currentSection === "2ª Secção"
-      ) {
+      if (currentSection === "DECIR" || currentSection === "1ª Secção" || currentSection === "2ª Secção") {
         calculateMPTotals(tbody, daysInMonth, data, currentSection);
       }
       if (currentSection === "1ª Secção" || currentSection === "2ª Secção") {
         calculateTASTotals(tbody, daysInMonth, data);
       }
+      if (currentSection === "Emissão Escala") {
+        calculateMLTotals(tbody, daysInMonth, data);
+        calculateMPTotals(tbody, daysInMonth, data, currentSection);
+        calculateTASTotals(tbody, daysInMonth, data);
+      }
+      createTotalsRow(tbody, daysInMonth);
     }
     /* =======================================
        CREATION OF SCALE LEGEND
@@ -1176,13 +1220,24 @@
     }    
     async function fetchSavedData(section, year, month) {
       const corp = getCorpId();
-      const url = `${SUPABASE_URL}/rest/v1/reg_serv?select=n_int,day,value&section=eq.${section}&year=eq.${year}&month=eq.${month}&corp_oper_nr=eq.${corp}`;
-      const response = await fetch(url, { headers: getSupabaseHeaders() });
+      let url;
+      if (section === "Emissão Escala") {
+        url = `${SUPABASE_URL}/rest/v1/reg_serv?select=n_int,day,value,section&year=eq.${year}&month=eq.${month}&corp_oper_nr=eq.${corp}`;
+      } else {
+        url = `${SUPABASE_URL}/rest/v1/reg_serv?select=n_int,day,value&section=eq.${section}&year=eq.${year}&month=eq.${month}&corp_oper_nr=eq.${corp}`;
+      }
+      const response = await fetch(url, {
+        headers: getSupabaseHeaders()
+      });
       if (!response.ok) throw new Error("Erro ao carregar dados do mês.");
       const data = await response.json();
       const map = {};
-      data.forEach(({ n_int, day, value }) => {
-        map[`${n_int}_${day}`] = value;
+      data.forEach(({n_int, day, value, section: sec}) => {
+        if (section === "Emissão Escala") {
+          map[`${n_int}_${day}`] = {value, section: sec};
+        } else {
+          map[`${n_int}_${day}`] = value;
+        }
       });
       return map;
     }
@@ -1215,10 +1270,10 @@
       return {toInsert, toUpdate, toDelete};
     }
     async function saveChanges({toInsert, toUpdate, toDelete, section, year, month}) {
-      const requests = [];
+        const requests = [];
       const corp = getCorpId();
       if (toInsert.length) {
-        const insertBody = toInsert.map(item => ({section, n_int: item.n_int, abv_name: item.abv_name, year, month, day: item.day, value: item.value,corp_oper_nr: corp}));
+        const insertBody = toInsert.map(item => ({section: item.section || section, n_int: item.n_int, abv_name: item.abv_name, year, month, day: item.day, value: item.value, corp_oper_nr: corp}));
         requests.push(fetch(`${SUPABASE_URL}/rest/v1/reg_serv`, {
           method: "POST",
           headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
@@ -1226,15 +1281,15 @@
         }));
       }
       for (const item of toUpdate) {
-        const filter = `section=eq.${section}&n_int=eq.${item.n_int}&year=eq.${year}&month=eq.${month}&day=eq.${item.day}&corp_oper_nr=eq.${corp}`;
+        const filter = `section=eq.${item.section || section}&n_int=eq.${item.n_int}&year=eq.${year}&month=eq.${month}&day=eq.${item.day}&corp_oper_nr=eq.${corp}`;
         requests.push(fetch(`${SUPABASE_URL}/rest/v1/reg_serv?${filter}`, {
           method: "PATCH",
           headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
-          body: JSON.stringify({ value: item.value })
+          body: JSON.stringify({value: item.value})
         }));
       }
       for (const item of toDelete) {
-        const filter = `section=eq.${section}&n_int=eq.${item.n_int}&year=eq.${year}&month=eq.${month}&day=eq.${item.day}&corp_oper_nr=eq.${corp}`;
+        const filter = `section=eq.${item.section || section}&n_int=eq.${item.n_int}&year=eq.${year}&month=eq.${month}&day=eq.${item.day}&corp_oper_nr=eq.${corp}`;
         requests.push(fetch(`${SUPABASE_URL}/rest/v1/reg_serv?${filter}`, {
           method: "DELETE",
           headers: getSupabaseHeaders()
@@ -1259,7 +1314,7 @@
         const selectedYear = parseInt(yearSelect.value, 10);
         const monthIndex = getActiveMonthIndex();
         if (!monthIndex) throw new Error("Nenhum mês selecionado.");
-        const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
+        const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr') || "0805";
         const headers = getSupabaseHeaders();
         const savedMap = await fetchSavedData(currentSection, selectedYear, monthIndex);
         const { toInsert, toUpdate, toDelete } = diffFixedRowsChanges(table, savedMap);
@@ -1311,13 +1366,11 @@
       const toInsert = [];
       const toUpdate = [];
       const toDelete = [];
-      const rows = table.querySelectorAll("tr.fixed-row");
-      for (const row of rows) {
+      const fixedRows = table.querySelectorAll("tr.fixed-row");
+      for (const row of fixedRows) {
         const fixedId = row.getAttribute("data-fixed");
         if (fixedId !== "1" && fixedId !== "2" && fixedId !== "3") continue;
-        if (row.cells.length < 10) {
-          continue;
-        }
+        if (row.cells.length < 10) continue;
         const n_int = fixedId === "1" ? 3 : (fixedId === "2" ? 4 : 9);
         const abv_name = row.cells[1] ? row.cells[1].textContent.trim() : "FIXO";
         for (let d = 3; d < row.cells.length - 1; d++) {
@@ -1327,12 +1380,38 @@
           const day = d - 2;
           const key = `${n_int}_${day}`;
           const existingVal = savedMap[key];
-          if (existingVal) {
-            if (!value) toDelete.push({ n_int, day });
-            else if (existingVal.toUpperCase() !== value)
-              toUpdate.push({ n_int, day, value });
+          const existingValue = typeof existingVal === 'object' ? existingVal?.value : existingVal;
+          const existingSection = typeof existingVal === 'object' ? existingVal?.section : "Emissão Escala";
+          if (existingValue) {
+            if (!value) toDelete.push({n_int, day, section: existingSection});
+            else if (existingValue.toUpperCase() !== value)
+            toUpdate.push({n_int, day, value, section: existingSection});
           } else if (value) {
-            toInsert.push({ n_int, abv_name, day, value });
+            toInsert.push({n_int, abv_name, day, value, section: "Emissão Escala"});
+          }
+        }
+      }
+      const normalRows = table.querySelectorAll("tr:not(.fixed-row):not(.totals-row):not(.mp-dia-row):not(.mp-noite-row):not(.mp-row):not(.tas-row)");
+      for (const row of normalRows) {
+        const cells = row.querySelectorAll("td");
+        const n_int = parseInt(cells[0].textContent, 10);
+        const abv_name = cells[1].textContent;
+        if (isNaN(n_int)) continue;
+        const person = currentTableData.find(item => parseInt(item.n_int, 10) === n_int);
+        const elemSection = person?.section || "Emissão Escala";
+        for (let d = 3; d < cells.length - 1; d++) {
+          const value = cells[d].textContent.toUpperCase().slice(0, 2).trim();
+          const day = d - 2;
+          const key = `${n_int}_${day}`;
+          const existingVal = savedMap[key];
+          const existingValue = typeof existingVal === 'object' ? existingVal?.value : existingVal;
+          const existingSection = typeof existingVal === 'object' ? existingVal?.section : elemSection;
+          if (existingValue) {
+            if (!value) toDelete.push({n_int, day, section: existingSection});
+            else if (existingValue.toUpperCase() !== value)
+              toUpdate.push({n_int, day, value, section: existingSection});
+          } else if (value) {
+            toInsert.push({n_int, abv_name, day, value, section: elemSection});
           }
         }
       }
@@ -1369,7 +1448,7 @@
         fixedRows.push(rowData);
       });
       const normalRows = [];
-      tbody.querySelectorAll("tr:not(.fixed-row):not(.totals-row):not(.mp-dia-row):not(.mp-noite-row)").forEach(tr => {
+      tbody.querySelectorAll("tr:not(.fixed-row):not(.totals-row):not(.mp-dia-row):not(.mp-noite-row):not(.mp-row):not(.tas-row):not(.ml-row)").forEach(tr => {
         const rowData = {ni: tr.cells[0].textContent, nome: tr.cells[1].textContent, catg: tr.cells[2].textContent, days: {}};
         for (let d = 1; d <= daysInMonth; d++) {
           const cell = tr.querySelector(`.day-cell-${d}`);
@@ -1410,5 +1489,3 @@
         alert(`❌ Erro: Não foi possível comunicar com o serviço de conversão.\n\nTipo: ${error.name}\nMensagem: ${error.message}`);
       }
     }
-
-

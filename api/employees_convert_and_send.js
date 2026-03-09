@@ -23,7 +23,7 @@ import ExcelJS from "exceljs";
 
 
 
-      vacation_anomalies: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/discrepancias_template.xlsx",
+      vacation_anomalies: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/vacation_anomalies_template.xlsx",
 
 
         

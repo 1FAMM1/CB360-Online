@@ -117,7 +117,6 @@
         });
       } catch (e) {
         console.error("Erro ao carregar indisponibilidades:", e);
-        showPopupWarning("❌ Erro ao carregar indisponibilidades em aberto.");
       }
     }
     /* = CREATION OF MESSAGE ABOUT END OF VEHICLE UNAVAILABILITY AND REMOVAL FROM DB = */
@@ -196,4 +195,5 @@
       await veícIndispBlinker.update();
     }
     refreshVehícIndispAndBlinker();
+
     setInterval(refreshVehícIndispAndBlinker, 10000);

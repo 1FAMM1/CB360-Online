@@ -1,4 +1,4 @@
-import ExcelJS from "exceljs";
+    import ExcelJS from "exceljs";
     import fetch from "node-fetch";
     import fs from "fs";
     import os from "os";
@@ -14,16 +14,7 @@ import ExcelJS from "exceljs";
     const TEMPLATES = {
       monthly_scales: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/employees_template.xlsx",
       point_sheet: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/stitch_marker_template.xlsx",
-
-
-
-
       shift_allowance: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/entitlement_to_shift_allowance.xlsx",
-
-
-
-
-        
       vacation_form: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/employee_vacations_mark_template.xlsx",
       vacation_map: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/vacation_map_template.xlsx",
       vacation_anomalies: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/vacation_anomalies_template.xlsx",
@@ -172,21 +163,12 @@ import ExcelJS from "exceljs";
       if (req.method !== "POST") return res.status(405).json({error: "Método não permitido"});
       try {
         const {mode} = req.body;
-        if (!mode || !["monthly_scales", "point_sheet",      "shift_allowance",     "vacation_form", "vacation_map", "vacation_anomalies", "vacation_priority", "salary_map", "salary_map_xlsx", "eip_annual_map"].includes(mode)) {
+        if (!mode || !["monthly_scales", "point_sheet", "shift_allowance", "vacation_form", "vacation_map", "vacation_anomalies", "vacation_priority", "salary_map", "salary_map_xlsx", "eip_annual_map"].includes(mode)) {
           return res.status(400).json({error: "Modo inválido."});
         }
         if (mode === "monthly_scales") return await handleMonthlyScales(req, res);
         if (mode === "point_sheet") return await handlePointSheet(req, res);
-
-
-
-
         if (mode === "shift_allowance") return handleShiftAllowance(req, res);
-
-
-
-
-          
         if (mode === "vacation_form") return await handleVacation(req, res);
         if (mode === "vacation_map") return await handleVacationMap(req, res);
         if (mode === "vacation_anomalies") return await handleVacationAnomalies(req, res);
@@ -465,118 +447,93 @@ import ExcelJS from "exceljs";
         throw error;
       }
     }
-
-
-
-
-async function handleShiftAllowance(req, res) {
-  let inputFilePath = null;
-  let outputFilePath = null;
-  try {
-    const { year, employees } = req.body;
-    if (!year || !Array.isArray(employees)) {
-      return res.status(400).json({ error: "Dados incompletos" });
+    async function handleShiftAllowance(req, res) {
+      let inputFilePath = null;
+      let outputFilePath = null;
+      try {
+        const { year, employees } = req.body;
+        if (!year || !Array.isArray(employees)) {
+          return res.status(400).json({error: "Dados incompletos"});
+        }
+        const templateRes = await fetch(TEMPLATES.shift_allowance);
+        if (!templateRes.ok) throw new Error("Erro ao carregar template");
+        const templateBuffer = await templateRes.buffer();
+        const zip = new AdmZip(templateBuffer);
+        let sheetXml = zip.readAsText("xl/worksheets/sheet1.xml");
+        const sheetDataStart = sheetXml.indexOf("<sheetData>");
+        const sheetDataEnd = sheetXml.indexOf("</sheetData>") + "</sheetData>".length;
+        const beforeSheetData = sheetXml.substring(0, sheetDataStart);
+        const afterSheetData = sheetXml.substring(sheetDataEnd);
+        const headerRows = [];
+        for (const r of ["2","3","4","5","6","7","8","9"]) {
+          const match = sheetXml.match(new RegExp(`<row r="${r}"[^>]*>.*?</row>`, "s"));
+          if (match) headerRows.push(match[0]);
+        }
+        const row6Index = headerRows.findIndex(r => r.includes(`r="6"`));
+        if (row6Index !== -1) {
+          headerRows[row6Index] = headerRows[row6Index].replace(
+            `<c r="B6" s="3"/>`,
+            `<c r="B6" s="3" t="inlineStr"><is><t>ELEGIBILIDADE PARA SUBSÍDIO DE TURNO - ${year}</t></is></c>`
+          );
+        }
+        const escapeXml = (str) => String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+        const COLS = ["D","E","F","G","H","I","J","K","L","M","N","O"];
+        const ROW_START = 10;
+        const ROW_MAX = 49;
+        let dataRowsXml = "";
+        employees.forEach((emp, i) => {
+          const r = ROW_START + i;
+          if (r > ROW_MAX) return;
+          const monthCells = COLS.map((col, idx) => {
+            const val = emp.months[idx] || "";
+            return val ? `<c r="${col}${r}" s="7" t="inlineStr"><is><t>${val}</t></is></c>`
+                       : `<c r="${col}${r}" s="7"/>`;
+          }).join("");
+          dataRowsXml += `<row r="${r}" spans="2:15" x14ac:dyDescent="0.25">` +
+            `<c r="B${r}" s="6" t="inlineStr"><is><t>${escapeXml(emp.name)}</t></is></c>` +
+            `<c r="C${r}" s="6"/>` +
+            monthCells +
+            `</row>`;
+        });
+        for (let r = ROW_START + employees.length; r <= ROW_MAX; r++) {
+          dataRowsXml += `<row r="${r}" spans="2:15" hidden="1" x14ac:dyDescent="0.25">` +
+            `<c r="B${r}" s="6"/><c r="C${r}" s="6"/>` +
+            COLS.map(col => `<c r="${col}${r}" s="7"/>`).join("") +
+            `</row>`;
+        }
+        const lastRow = sheetXml.match(/<row r="49"[^>]*>.*?<\/row>/s);
+        if (lastRow) dataRowsXml += lastRow[0];
+        const newSheetData = `<sheetData>${headerRows.join("")}${dataRowsXml}</sheetData>`;
+        const newSheetXml = beforeSheetData + newSheetData + afterSheetData;
+        zip.updateFile("xl/worksheets/sheet1.xml", Buffer.from(newSheetXml, "utf8"));
+        const modifiedBuffer = zip.toBuffer();
+        const tempDir = os.tmpdir();
+        inputFilePath = path.join(tempDir, `shift_${Date.now()}.xlsx`);
+        outputFilePath = path.join(tempDir, `shift_${Date.now()}_out.pdf`);
+        fs.writeFileSync(inputFilePath, modifiedBuffer);
+        const credentials = new ServicePrincipalCredentials({clientId: CLIENT_ID, clientSecret: CLIENT_SECRET});
+        const pdfServices = new PDFServices({credentials});
+        const inputAsset = await pdfServices.upload({readStream: fs.createReadStream(inputFilePath), mimeType: MimeType.XLSX});
+        const job = new CreatePDFJob({inputAsset});
+        const pollingURL = await pdfServices.submit({job});
+        const pdfServicesResponse = await pdfServices.getJobResult({pollingURL, resultType: CreatePDFResult});
+        const streamAsset = await pdfServices.getContent({asset: pdfServicesResponse.result.asset});
+        const chunks = [];
+        for await (let chunk of streamAsset.readStream) chunks.push(chunk);
+        if (fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader("Content-Disposition", `attachment; filename=Elegibilidade_Subsidio_Turno_${year}.pdf`);
+        return res.status(200).send(Buffer.concat(chunks));
+      } catch (error) {
+        if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
+        if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
+        console.error("Erro handleShiftAllowance:", error);
+        return res.status(500).json({error: "Erro ao gerar PDF", details: error.message});
+      }
     }
-    const templateRes = await fetch(TEMPLATES.shift_allowance);
-    if (!templateRes.ok) throw new Error("Erro ao carregar template");
-    const templateBuffer = await templateRes.buffer();
-    const zip = new AdmZip(templateBuffer);
-    let sheetXml = zip.readAsText("xl/worksheets/sheet1.xml");
-
-    const sheetDataStart = sheetXml.indexOf("<sheetData>");
-    const sheetDataEnd = sheetXml.indexOf("</sheetData>") + "</sheetData>".length;
-    const beforeSheetData = sheetXml.substring(0, sheetDataStart);
-    const afterSheetData = sheetXml.substring(sheetDataEnd);
-
-    // Preservar linhas de cabeçalho 2-9
-    const headerRows = [];
-    for (const r of ["2","3","4","5","6","7","8","9"]) {
-      const match = sheetXml.match(new RegExp(`<row r="${r}"[^>]*>.*?</row>`, "s"));
-      if (match) headerRows.push(match[0]);
-    }
-
-    // Atualizar título B6
-    const row6Index = headerRows.findIndex(r => r.includes(`r="6"`));
-    if (row6Index !== -1) {
-      headerRows[row6Index] = headerRows[row6Index].replace(
-        /<c r="B6"[^>]*>.*?<\/c>|<c r="B6"[^\/]*\/>/s,
-        `<c r="B6" s="3" t="inlineStr"><is><t>ELEGIBILIDADE PARA SUBSÍDIO DE TURNO - ${year}</t></is></c>`
-      );
-    }
-
-    const escapeXml = (str) => String(str)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
-
-    const COLS = ["D","E","F","G","H","I","J","K","L","M","N","O"];
-    const ROW_START = 10;
-    const ROW_MAX = 48;
-
-    let dataRowsXml = "";
-    employees.forEach((emp, i) => {
-      const r = ROW_START + i;
-      if (r > ROW_MAX) return;
-      const monthCells = COLS.map((col, idx) => {
-        const val = emp.months[idx] || "";
-        return val ? `<c r="${col}${r}" s="7" t="inlineStr"><is><t>${val}</t></is></c>`
-                   : `<c r="${col}${r}" s="7"/>`;
-      }).join("");
-      dataRowsXml += `<row r="${r}" spans="2:15" x14ac:dyDescent="0.25">` +
-        `<c r="B${r}" s="6" t="inlineStr"><is><t>${escapeXml(emp.name)}</t></is></c>` +
-        `<c r="C${r}" s="6"/>` +
-        monthCells +
-        `</row>`;
-    });
-
-    // Linhas ocultas
-    for (let r = ROW_START + employees.length; r <= ROW_MAX; r++) {
-      dataRowsXml += `<row r="${r}" spans="2:15" hidden="1" x14ac:dyDescent="0.25">` +
-        `<c r="B${r}" s="6"/><c r="C${r}" s="6"/>` +
-        COLS.map(col => `<c r="${col}${r}" s="7"/>`).join("") +
-        `</row>`;
-    }
-
-    // Última linha (borda inferior)
-    const lastRow = sheetXml.match(/<row r="49"[^>]*>.*?<\/row>/s);
-    if (lastRow) dataRowsXml += lastRow[0];
-
-    const newSheetData = `<sheetData>${headerRows.join("")}${dataRowsXml}</sheetData>`;
-    const newSheetXml = beforeSheetData + newSheetData + afterSheetData;
-
-    zip.updateFile("xl/worksheets/sheet1.xml", Buffer.from(newSheetXml, "utf8"));
-    const modifiedBuffer = zip.toBuffer();
-
-    const tempDir = os.tmpdir();
-    inputFilePath = path.join(tempDir, `shift_${Date.now()}.xlsx`);
-    outputFilePath = path.join(tempDir, `shift_${Date.now()}_out.pdf`);
-    fs.writeFileSync(inputFilePath, modifiedBuffer);
-
-    const credentials = new ServicePrincipalCredentials({ clientId: CLIENT_ID, clientSecret: CLIENT_SECRET });
-    const pdfServices = new PDFServices({ credentials });
-    const inputAsset = await pdfServices.upload({ readStream: fs.createReadStream(inputFilePath), mimeType: MimeType.XLSX });
-    const job = new CreatePDFJob({ inputAsset });
-    const pollingURL = await pdfServices.submit({ job });
-    const pdfServicesResponse = await pdfServices.getJobResult({ pollingURL, resultType: CreatePDFResult });
-    const streamAsset = await pdfServices.getContent({ asset: pdfServicesResponse.result.asset });
-    const chunks = [];
-    for await (let chunk of streamAsset.readStream) chunks.push(chunk);
-    if (fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename=Elegibilidade_Subsidio_Turno_${year}.pdf`);
-    return res.status(200).send(Buffer.concat(chunks));
-  } catch (error) {
-    if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
-    if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
-    console.error("Erro handleShiftAllowance:", error);
-    return res.status(500).json({ error: "Erro ao gerar PDF", details: error.message });
-  }
-}
-
-
-
-
-
     async function handleVacation(req, res) {
       let inputFilePath = null;
       try {

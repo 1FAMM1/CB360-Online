@@ -1,4 +1,4 @@
-import ExcelJS from "exceljs";
+    import ExcelJS from "exceljs";
     import fetch from "node-fetch";
     import fs from "fs";
     import os from "os";
@@ -597,13 +597,11 @@ import ExcelJS from "exceljs";
           const r = ROW_START + i;
           const missing = DAYS_RIGHT - emp.marked;
           const setCell = (col, value, bgColor = null, fontColor = null, bold = false) => {
-  const cell = ws.getCell(`${col}${r}`);
-  cell.value = value;
-  cell.style = {};
-  if (bgColor) cell.fill = {type: "pattern", pattern: "solid", fgColor: {argb: "FF" + bgColor}};
-  cell.font = {size: 9, name: "Calibri", bold, color: {argb: fontColor ? "FF" + fontColor : "FF000000"}};
-  cell.alignment = {horizontal: col === "B" ? "left" : "center", vertical: "center"};
-};
+            const cell = ws.getCell(`${col}${r}`);
+            cell.value = value;
+            if (bgColor) cell.fill = {type: "pattern", pattern: "solid", fgColor: {argb: "FF" + bgColor}};
+            cell.font = {size: 9, name: "Calibri", bold, color: {argb: fontColor ? "FF" + fontColor : "FF000000"}};
+          };
           setCell("B", emp.abv_name);
           setCell("D", DAYS_RIGHT, null, "64748B");
           setCell("E", emp.marked, null, null, true);

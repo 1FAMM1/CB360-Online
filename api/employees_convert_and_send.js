@@ -524,7 +524,7 @@
         if (!CLIENT_ID || !CLIENT_SECRET) {
           return res.status(500).json({error: "Chaves Adobe não configuradas"});
         }
-        const MONTH_NAMES = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"];
+        const MONTH_NAMES = ["","JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"];
         const monthNum = parseInt(month, 10);
         const monthLabel = (!month || month === "all" || isNaN(monthNum)) ? "Todos os Meses" : MONTH_NAMES[monthNum];
         const templateRes = await fetch(TEMPLATES.detailed_shift_allowance);

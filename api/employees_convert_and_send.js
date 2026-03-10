@@ -19,7 +19,7 @@
 
 
 
-      detailed_shift_allowance: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/detailed_entitlement_to_shift_allowance.xlsx"
+      detailed_shift_allowance: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/detailed_entitlement_to_shift_allowance.xlsx",
 
 
 

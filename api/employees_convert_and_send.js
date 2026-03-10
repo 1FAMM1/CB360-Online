@@ -7,7 +7,7 @@
     import {ServicePrincipalCredentials, PDFServices, MimeType, CreatePDFJob, CreatePDFResult, SDKError,
             ServiceUsageError, ServiceApiError,} from "@adobe/pdfservices-node-sdk";
     export const config = {
-      api: { bodyParser: {sizeLimit: "10mb"}},
+      api: {bodyParser: {sizeLimit: "10mb"}},
     };
     const CLIENT_ID = process.env.ADOBE_CLIENT_ID;
     const CLIENT_SECRET = process.env.ADOBE_CLIENT_SECRET;
@@ -519,68 +519,170 @@
     async function handleDetailedShiftAllowance(req, res) {
   let inputFilePath = null;
   let outputFilePath = null;
+
   try {
     const { year, month, records } = req.body;
+
     if (!year || !Array.isArray(records)) {
-      return res.status(400).json({error: "Dados incompletos"});
+      return res.status(400).json({ error: "Dados incompletos" });
     }
+
     if (!CLIENT_ID || !CLIENT_SECRET) {
-      return res.status(500).json({error: "Chaves Adobe não configuradas"});
+      return res.status(500).json({ error: "Chaves Adobe não configuradas" });
     }
-    const MONTH_NAMES = ["","Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-      const monthLabel = (month && month !== "all") ? MONTH_NAMES[parseInt(records[0]?.month) || 0] : "Todos os Meses";    
+
+    const MONTH_NAMES = [
+      "",
+      "Janeiro",
+      "Fevereiro",
+      "Março",
+      "Abril",
+      "Maio",
+      "Junho",
+      "Julho",
+      "Agosto",
+      "Setembro",
+      "Outubro",
+      "Novembro",
+      "Dezembro"
+    ];
+
+    // ✅ cálculo correto do mês
+    const monthNum = parseInt(month, 10);
+
+    const monthLabel =
+      (!month || month === "all" || isNaN(monthNum))
+        ? "Todos os Meses"
+        : MONTH_NAMES[monthNum];
+
     const templateRes = await fetch(TEMPLATES.detailed_shift_allowance);
     if (!templateRes.ok) throw new Error("Erro ao carregar template");
+
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(await templateRes.arrayBuffer());
+
     const ws = workbook.worksheets[0];
-    ws.getCell("B6").value = `ELEGIBILIDADE PARA SUBSÍDIO DE TURNO - ${monthLabel} ${year}`;
+
+    ws.getCell("B6").value =
+      `ELEGIBILIDADE PARA SUBSÍDIO DE TURNO - ${monthLabel} ${year}`;
+
     const ROW_START = 10;
     const ROW_MAX = 48;
+
     records.forEach((rec, i) => {
       const r = ROW_START + i;
       if (r > ROW_MAX) return;
-      ws.getCell(`B${r}`).value = rec.abv_name;      
-      ws.getCell(`D${r}`).value = `${String(rec.day).padStart(2,'0')} ${MONTH_NAMES[parseInt(rec.month) || 0]} ${year}`;
+
+      const recMonth = parseInt(rec.month, 10);
+
+      ws.getCell(`B${r}`).value = rec.abv_name;
+
+      ws.getCell(`D${r}`).value =
+        `${String(rec.day).padStart(2, "0")} ${MONTH_NAMES[recMonth]} ${year}`;
+
       ws.getCell(`E${r}`).value = rec.exit_hour || "--:--";
+
       ws.getCell(`F${r}`).value = "ELEGÍVEL";
     });
+
+    // esconder linhas não usadas
     for (let r = ROW_START + records.length; r <= ROW_MAX; r++) {
       ws.getRow(r).hidden = true;
     }
+
     ws.pageSetup = {
-      orientation: "portrait", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
-      margins: {left: 0.3, right: 0.3, top: 0.4, bottom: 0.4, header: 0, footer: 0}
+      orientation: "portrait",
+      paperSize: 9,
+      fitToPage: true,
+      fitToWidth: 1,
+      fitToHeight: 0,
+      horizontalCentered: true,
+      margins: {
+        left: 0.3,
+        right: 0.3,
+        top: 0.4,
+        bottom: 0.4,
+        header: 0,
+        footer: 0
+      }
     };
+
     const tempDir = os.tmpdir();
+
     inputFilePath = path.join(tempDir, `shift_detail_${Date.now()}.xlsx`);
     outputFilePath = path.join(tempDir, `shift_detail_${Date.now()}_out.pdf`);
+
     await workbook.xlsx.writeFile(inputFilePath);
-    const credentials = new ServicePrincipalCredentials({clientId: CLIENT_ID, clientSecret: CLIENT_SECRET});
-    const pdfServices = new PDFServices({credentials});
-    const inputAsset = await pdfServices.upload({readStream: fs.createReadStream(inputFilePath), mimeType: MimeType.XLSX});
-    const job = new CreatePDFJob({inputAsset});
-    const pollingURL = await pdfServices.submit({job});
-    const pdfServicesResponse = await pdfServices.getJobResult({pollingURL, resultType: CreatePDFResult});
-    const streamAsset = await pdfServices.getContent({asset: pdfServicesResponse.result.asset});
+
+    const credentials = new ServicePrincipalCredentials({
+      clientId: CLIENT_ID,
+      clientSecret: CLIENT_SECRET
+    });
+
+    const pdfServices = new PDFServices({ credentials });
+
+    const inputAsset = await pdfServices.upload({
+      readStream: fs.createReadStream(inputFilePath),
+      mimeType: MimeType.XLSX
+    });
+
+    const job = new CreatePDFJob({ inputAsset });
+
+    const pollingURL = await pdfServices.submit({ job });
+
+    const pdfServicesResponse = await pdfServices.getJobResult({
+      pollingURL,
+      resultType: CreatePDFResult
+    });
+
+    const streamAsset = await pdfServices.getContent({
+      asset: pdfServicesResponse.result.asset
+    });
+
     const writeStream = fs.createWriteStream(outputFilePath);
+
     streamAsset.readStream.pipe(writeStream);
-    await new Promise((resolve, reject) => {writeStream.on("finish", resolve); writeStream.on("error", reject);});
+
+    await new Promise((resolve, reject) => {
+      writeStream.on("finish", resolve);
+      writeStream.on("error", reject);
+    });
+
     const pdfBuffer = fs.readFileSync(outputFilePath);
+
+    // limpar temporários
     try {
-      if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
-      if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
+      if (inputFilePath && fs.existsSync(inputFilePath))
+        fs.unlinkSync(inputFilePath);
+
+      if (outputFilePath && fs.existsSync(outputFilePath))
+        fs.unlinkSync(outputFilePath);
     } catch {}
+
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename=Detalhe_Elegibilidade_${year}_${month || 'todos'}.pdf`);
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=Detalhe_Elegibilidade_${year}_${month || "todos"}.pdf`
+    );
+
     return res.status(200).send(pdfBuffer);
+
   } catch (error) {
+
     try {
-      if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
-      if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
+      if (inputFilePath && fs.existsSync(inputFilePath))
+        fs.unlinkSync(inputFilePath);
+
+      if (outputFilePath && fs.existsSync(outputFilePath))
+        fs.unlinkSync(outputFilePath);
     } catch {}
-    console.error("Erro handleDetailedShiftAllowance:", error.message, error.stack); // ✅ adiciona aqui
-    return res.status(500).json({error: "Erro ao gerar PDF", details: error.message}); // ✅ e aqui
+
+    console.error("Erro handleDetailedShiftAllowance:", error.message, error.stack);
+
+    return res.status(500).json({
+      error: "Erro ao gerar PDF",
+      details: error.message
+    });
   }
 }
 

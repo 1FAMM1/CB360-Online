@@ -600,7 +600,7 @@ import ExcelJS from "exceljs";
             const cell = ws.getCell(`${col}${r}`);
             cell.value = value;
             if (bgColor) cell.fill = {type: "pattern", pattern: "solid", fgColor: {argb: "FF" + bgColor}};
-            cell.font = {size: 9, name: "Calibri", bold, color: fontColor ? {argb: "FF" + fontColor} : undefined};
+            cell.font = {size: 9, name: "Calibri", bold, color: {argb: fontColor ? "FF" + fontColor : "FF000000"}};
           };
           setCell("B", emp.abv_name);
           setCell("D", DAYS_RIGHT, null, "64748B");

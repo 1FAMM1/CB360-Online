@@ -645,7 +645,6 @@ import ExcelJS from "exceljs";
     throw error;
   }
 }
-
     async function handleVacationPriority(req, res) {
       let inputPath = null;
       try {

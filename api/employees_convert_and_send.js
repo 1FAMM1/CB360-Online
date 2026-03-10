@@ -575,84 +575,152 @@
       }
     }
     async function handleVacationAnomalies(req, res) {  
-      let inputFilePath = null;
-      let outputFilePath = null;
-      try {
-        const { year, rows } = req.body;
-        if (!year || !Array.isArray(rows)) {
-          return res.status(400).json({error: "Dados incompletos: year e rows obrigatórios"});
-        }
-        if (!CLIENT_ID || !CLIENT_SECRET) {
-          return res.status(500).json({error: "Chaves Adobe não configuradas"});
-        }
-        const templateRes = await fetch(TEMPLATES.vacation_anomalies);
-        if (!templateRes.ok) throw new Error("Erro ao carregar template");
-        const workbook = new ExcelJS.Workbook();
-        await workbook.xlsx.load(await templateRes.arrayBuffer());
-        const ws = workbook.worksheets[0];
-        ws.getCell("B6").value = `ANÁLISE DE ANÓMIALIAS DE MARCAÇÃO DE FÉRIAS - ${year}`;
-        const DAYS_RIGHT = 22;
-        const ROW_START = 10;
-        rows.forEach((emp, i) => {
-          const r = ROW_START + i;
-          const missing = DAYS_RIGHT - emp.marked;
-          const setCell = (col, value, bgColor = null, fontColor = null, bold = false) => {
-            const cell = ws.getCell(`${col}${r}`);
-            cell.value = value;
-            if (bgColor) cell.fill = {type: "pattern", pattern: "solid", fgColor: {argb: "FF" + bgColor}};
-            cell.font = {size: 9, name: "Calibri", bold, color: {argb: fontColor ? "FF" + fontColor : "FF000000"}};
-          };
-          setCell("B", emp.abv_name);
-          setCell("D", DAYS_RIGHT, null, "64748B");
-          setCell("E", emp.marked, null, null, true);
-          if (missing > 0) setCell("F", `+${missing}`, null, "EF4444", true);
-          else if (missing < 0) setCell("F", String(missing), null, "3B82F6", true);
-          else setCell("F", "0", null, "10B981", true);
-          if (missing < 0) {
-            const t = emp.transitory || "—";
-            const tColor = t === "sim" ? "10B981" : t === "nao" ? "EF4444" : "94A3B8";
-            setCell("G", t === "sim" ? "Sim" : t === "nao" ? "Não" : "—", null, tColor, t !== "—");
-          } else {
-            setCell("G", "—", null, "CBD5E1");
-          }
-          if (missing === 0) setCell("H", "OK", null, "10B981", true);
-          else setCell("H", "Verificação", null, "EF4444", true);
-        });
-        for (let r = ROW_START + rows.length; r <= 110; r++) {
-          ws.getRow(r).hidden = true;
-        }
-        ws.pageSetup = {orientation: "portrait", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
-                        margins: {left: 0.3, right: 0.3, top: 0.4, bottom: 0.4, header: 0, footer: 0},};
-        const tempDir = os.tmpdir();
-        inputFilePath = path.join(tempDir, `discrepancias_${Date.now()}.xlsx`);
-        outputFilePath = path.join(tempDir, `discrepancias_${Date.now()}_out.pdf`);
-        await workbook.xlsx.writeFile(inputFilePath);
-        const credentials = new ServicePrincipalCredentials({clientId: CLIENT_ID, clientSecret: CLIENT_SECRET});
-        const pdfServices = new PDFServices({credentials});
-        const inputAsset = await pdfServices.upload({readStream: fs.createReadStream(inputFilePath), mimeType: MimeType.XLSX});
-        const job = new CreatePDFJob({inputAsset});
-        const pollingURL = await pdfServices.submit({job});
-        const pdfServicesResponse = await pdfServices.getJobResult({pollingURL, resultType: CreatePDFResult});
-        const streamAsset = await pdfServices.getContent({asset: pdfServicesResponse.result.asset});
-        const writeStream = fs.createWriteStream(outputFilePath);
-        streamAsset.readStream.pipe(writeStream);
-        await new Promise((resolve, reject) => {writeStream.on("finish", resolve); writeStream.on("error", reject);});
-        const pdfBuffer = fs.readFileSync(outputFilePath);
-        try {
-          if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
-          if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
-        } catch {}
-        res.setHeader("Content-Type", "application/pdf");
-        res.setHeader("Content-Disposition", `attachment; filename=Discrepancias_Ferias_${year}.pdf`);
-        return res.status(200).send(pdfBuffer);
-      } catch (error) {
-        try {
-          if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
-          if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
-        } catch {}
-        throw error;
-      }
+  let inputFilePath = null;
+  let outputFilePath = null;
+  
+  try {
+    const { year, rows } = req.body;
+    
+    // Validações Iniciais
+    if (!year || !Array.isArray(rows)) {
+      return res.status(400).json({error: "Dados incompletos: year e rows obrigatórios"});
     }
+    if (!CLIENT_ID || !CLIENT_SECRET) {
+      return res.status(500).json({error: "Chaves Adobe não configuradas"});
+    }
+
+    // Carregamento do Template
+    const templateRes = await fetch(TEMPLATES.vacation_anomalies);
+    if (!templateRes.ok) throw new Error("Erro ao carregar template");
+    
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(await templateRes.arrayBuffer());
+    const ws = workbook.worksheets[0];
+
+    // Título Principal
+    ws.getCell("B6").value = `ANÁLISE DE ANOMALIAS DE MARCAÇÃO DE FÉRIAS - ${year}`;
+
+    const DAYS_RIGHT = 22;
+    const ROW_START = 10;
+
+    rows.forEach((emp, i) => {
+      const r = ROW_START + i;
+      const missing = DAYS_RIGHT - emp.marked;
+
+      // Helper para aplicar estilos com cores seguras
+      const setCell = (col, value, bgColor = null, fontColor = "000000", bold = false) => {
+        const cell = ws.getCell(`${col}${r}`);
+        cell.value = value;
+        
+        // Fundo (opcional)
+        if (bgColor) {
+          cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF" + bgColor } };
+        }
+
+        // Fonte (Tamanho 9, Calibri, Cor ARGB)
+        cell.font = {
+          size: 9,
+          name: "Calibri",
+          bold,
+          color: { argb: "FF" + fontColor }
+        };
+      };
+
+      // Coluna B: Nome (Preto)
+      setCell("B", emp.abv_name, null, "000000");
+
+      // Coluna D: Dias Direito (Cinza padrão)
+      setCell("D", DAYS_RIGHT, null, "64748B");
+
+      // Coluna E: Marcados (Preto, Bold)
+      setCell("E", emp.marked, null, "000000", true);
+
+      // Coluna F: Diferença (Cores condicionais)
+      if (missing > 0) {
+        setCell("F", missing, null, "EF4444", true); // Vermelho se falta marcar
+      } else if (missing < 0) {
+        setCell("F", missing, null, "3B82F6", true); // Azul se marcou a mais
+      } else {
+        setCell("F", 0, null, "10B981", true);       // Verde se está exato
+      }
+
+      // Coluna G: Transitório (Lógica de cores baseada na resposta)
+      if (missing < 0) {
+        const t = emp.transitory || "—";
+        const tColor = t === "sim" ? "10B981" : t === "nao" ? "EF4444" : "94A3B8";
+        const tLabel = t === "sim" ? "Sim" : t === "nao" ? "Não" : "—";
+        setCell("G", tLabel, null, tColor, t !== "—");
+      } else {
+        setCell("G", "—", null, "CBD5E1");
+      }
+
+      // Coluna H: STATUS (Apenas "Verificação" fica em Vermelho)
+      if (missing === 0) {
+        setCell("H", "OK", null, "10B981", true); // Verde para OK
+      } else {
+        setCell("H", "Verificação", null, "EF4444", true); // VERMELHO para atenção
+      }
+    });
+
+    // Esconde linhas vazias do template (até a 110)
+    for (let r = ROW_START + rows.length; r <= 110; r++) {
+      ws.getRow(r).hidden = true;
+    }
+
+    // Configuração de Impressão PDF
+    ws.pageSetup = {
+      orientation: "portrait",
+      paperSize: 9,
+      fitToPage: true,
+      fitToWidth: 1,
+      fitToHeight: 0,
+      horizontalCentered: true,
+      margins: { left: 0.3, right: 0.3, top: 0.4, bottom: 0.4, header: 0, footer: 0 },
+    };
+
+    // Caminhos temporários
+    const tempDir = os.tmpdir();
+    inputFilePath = path.join(tempDir, `discrepancias_${Date.now()}.xlsx`);
+    outputFilePath = path.join(tempDir, `discrepancias_${Date.now()}_out.pdf`);
+
+    // Escrita e Conversão Adobe PDF Services
+    await workbook.xlsx.writeFile(inputFilePath);
+
+    const credentials = new ServicePrincipalCredentials({ clientId: CLIENT_ID, clientSecret: CLIENT_SECRET });
+    const pdfServices = new PDFServices({ credentials });
+    const inputAsset = await pdfServices.upload({ readStream: fs.createReadStream(inputFilePath), mimeType: MimeType.XLSX });
+    
+    const job = new CreatePDFJob({ inputAsset });
+    const pollingURL = await pdfServices.submit({ job });
+    const pdfServicesResponse = await pdfServices.getJobResult({ pollingURL, resultType: CreatePDFResult });
+    
+    const streamAsset = await pdfServices.getContent({ asset: pdfServicesResponse.result.asset });
+    const writeStream = fs.createWriteStream(outputFilePath);
+    
+    streamAsset.readStream.pipe(writeStream);
+    await new Promise((resolve, reject) => { writeStream.on("finish", resolve); writeStream.on("error", reject); });
+
+    const pdfBuffer = fs.readFileSync(outputFilePath);
+
+    // Limpeza de ficheiros temporários
+    try {
+      if (fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
+      if (fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
+    } catch (e) { console.error("Erro ao apagar temporários:", e); }
+
+    // Resposta
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename=Discrepancias_Ferias_${year}.pdf`);
+    return res.status(200).send(pdfBuffer);
+
+  } catch (error) {
+    // Limpeza em caso de erro
+    if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
+    if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
+    console.error("Erro no processamento:", error);
+    res.status(500).json({ error: "Erro interno ao gerar PDF" });
+  }
+}
     async function handleVacationPriority(req, res) {
       let inputPath = null;
       try {

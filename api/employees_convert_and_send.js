@@ -646,12 +646,12 @@ import ExcelJS from "exceljs";
         res.setHeader("Content-Disposition", `attachment; filename=Discrepancias_Ferias_${year}.pdf`);
         return res.status(200).send(pdfBuffer);
       } catch (error) {
-        try {
-          if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
-          if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
-        } catch {}
-        throw error;
-      }
+  try {
+    if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
+    if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
+  } catch {}
+  return res.status(500).json({ error: "Erro ao gerar PDF", details: error.message });
+}
     }
     async function handleVacationPriority(req, res) {
       let inputPath = null;

@@ -528,7 +528,7 @@
       return res.status(500).json({error: "Chaves Adobe não configuradas"});
     }
     const MONTH_NAMES = ["","Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-    const monthLabel = (month && month !== "all") ? MONTH_NAMES[parseInt(month)] : "Todos os Meses";
+      const monthLabel = (month && month !== "all") ? MONTH_NAMES[parseInt(records[0]?.month) || 0] : "Todos os Meses";    
     const templateRes = await fetch(TEMPLATES.detailed_shift_allowance);
     if (!templateRes.ok) throw new Error("Erro ao carregar template");
     const workbook = new ExcelJS.Workbook();

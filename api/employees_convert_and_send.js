@@ -16,10 +16,10 @@
       point_sheet: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/stitch_marker_template.xlsx",
       vacation_form: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/employee_vacations_mark_template.xlsx",
       vacation_map: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/vacation_map_template.xlsx",
+      vacation_anomalies: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/vacation_anomalies_template.xlsx",
       vacation_priority: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/priority_vacation_template.xlsx",
       salary_map: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/salary_map_template.xlsx",
-      eip_annual_map: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/eip_annual_map_template.xlsx",
-      vacation_anomalies: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/vacation_anomalies_template.xlsx",    
+      eip_annual_map: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/eip_annual_map_template.xlsx",          
     };
     // ─── Helpers API 01 ──────────────────────────────────────────────────────────
     const HOLIDAY_COLOR = "F7C6C7";
@@ -574,114 +574,63 @@
         res.status(500).json({error: err.message});
       }
     }
-    async function handleVacationAnomalies(req, res) {  
-  let inputFilePath = null;
-  let outputFilePath = null;
-  
-  try {
-    const { year, rows } = req.body;
-    const templateRes = await fetch(TEMPLATES.vacation_anomalies);
-    const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(await templateRes.arrayBuffer());
-    const ws = workbook.worksheets[0];
-
-    // Estilos Fixos (Forçados)
-    const FONT_BLACK = { name: "Calibri", size: 9, bold: false, color: { argb: "FF000000" } };
-    const FONT_BLACK_BOLD = { name: "Calibri", size: 9, bold: true, color: { argb: "FF000000" } };
-    const FONT_RED_BOLD = { name: "Calibri", size: 9, bold: true, color: { argb: "FFFF0000" } };
-    const FONT_GREEN_BOLD = { name: "Calibri", size: 9, bold: true, color: { argb: "FF10B981" } };
-
-    ws.getCell("B6").value = `ANÁLISE DE ANOMALIAS DE MARCAÇÃO DE FÉRIAS - ${year}`;
-
-    const ROW_START = 10;
-    const DAYS_RIGHT = 22;
-
-    rows.forEach((emp, i) => {
-      const r = ROW_START + i;
-      const marked = Number(emp.marked) || 0;
-      const missing = DAYS_RIGHT - marked;
-
-      // 1. Nome (Coluna B)
-      const cellB = ws.getCell(`B${r}`);
-      cellB.value = emp.abv_name;
-      cellB.font = FONT_BLACK;
-
-      // 2. Dias Direito (Coluna D)
-      const cellD = ws.getCell(`D${r}`);
-      cellD.value = DAYS_RIGHT;
-      cellD.font = { ...FONT_BLACK, color: { argb: "FF64748B" } }; // Cinza escuro
-
-      // 3. Dias Utilizados (Coluna E)
-      const cellE = ws.getCell(`E${r}`);
-      cellE.value = marked;
-      cellE.font = FONT_BLACK_BOLD;
-
-      // 4. Diferencial (Coluna F) - SEMPRE PRETO
-      const cellF = ws.getCell(`F${r}`);
-      cellF.value = missing;
-      cellF.font = FONT_BLACK_BOLD; 
-
-      // 5. Excesso Transitório (Coluna G)
-      const cellG = ws.getCell(`G${r}`);
-      const t = emp.transitory || "—";
-      cellG.value = t === "sim" ? "Sim" : t === "nao" ? "Não" : "—";
-      cellG.font = FONT_BLACK;
-
-      // 6. Status (Coluna H) - ÚNICA COM COR
-      const cellH = ws.getCell(`H${r}`);
-      if (missing === 0) {
-        cellH.value = "OK";
-        cellH.font = FONT_GREEN_BOLD;
-      } else {
-        cellH.value = "Verificação";
-        cellH.font = FONT_RED_BOLD;
+    async function handleVacationAnomalies(req, res) {
+      let inputFilePath = null;
+      let outputFilePath = null;
+      try {
+        const { year, rows } = req.body;
+        const templateRes = await fetch(TEMPLATES.vacation_anomalies);
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.load(await templateRes.arrayBuffer());
+        const ws = workbook.worksheets[0];
+        ws.getCell("B6").value = `ANÁLISE DE ANOMALIAS DE MARCAÇÃO DE FÉRIAS - ${year}`;
+        const ROW_START = 10;
+        const DAYS_RIGHT = 22;
+        rows.forEach((emp, i) => {
+          const r = ROW_START + i;
+          const marked = Number(emp.marked) || 0;
+          const missing = DAYS_RIGHT - marked;
+          ws.getCell(`B${r}`).value = emp.abv_name;
+          ws.getCell(`D${r}`).value = DAYS_RIGHT;
+          ws.getCell(`E${r}`).value = marked;
+          ws.getCell(`F${r}`).value = missing;
+          const t = emp.transitory || "—";
+          ws.getCell(`G${r}`).value = t === "sim" ? "Sim" : t === "nao" ? "Não" : "—";
+          ws.getCell(`H${r}`).value = missing === 0 ? "OK" : "Verificação";
+          ws.getRow(r).commit();
+        });
+        for (let r = ROW_START + rows.length; r <= 110; r++) {
+          ws.getRow(r).hidden = true;
+        }
+        ws.pageSetup = {
+          orientation: "portrait", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
+          margins: {left: 0.3, right: 0.3, top: 0.4, bottom: 0.4, header: 0, footer: 0}
+        };
+        const tempDir = os.tmpdir();
+        inputFilePath = path.join(tempDir, `fix_${Date.now()}.xlsx`);
+        outputFilePath = path.join(tempDir, `fix_${Date.now()}.pdf`);
+        await workbook.xlsx.writeFile(inputFilePath);
+        const credentials = new ServicePrincipalCredentials({clientId: CLIENT_ID, clientSecret: CLIENT_SECRET});
+        const pdfServices = new PDFServices({credentials});
+        const inputAsset = await pdfServices.upload({readStream: fs.createReadStream(inputFilePath), mimeType: MimeType.XLSX});
+        const job = new CreatePDFJob({inputAsset});
+        const pollingURL = await pdfServices.submit({job});
+        const result = await pdfServices.getJobResult({pollingURL, resultType: CreatePDFResult});
+        const streamAsset = await pdfServices.getContent({asset: result.result.asset});
+        const writeStream = fs.createWriteStream(outputFilePath);
+        streamAsset.readStream.pipe(writeStream);
+        await new Promise((res) => writeStream.on("finish", res));
+        const pdfBuffer = fs.readFileSync(outputFilePath);
+        res.setHeader("Content-Type", "application/pdf");
+        res.status(200).send(pdfBuffer);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send("Erro ao gerar PDF");
+      } finally {
+        if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
+        if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
       }
-
-      // Limpeza de estilos de linha que podem vir do template
-      ws.getRow(r).commit(); 
-    });
-
-    // Esconder linhas vazias
-    for (let r = ROW_START + rows.length; r <= 110; r++) {
-      ws.getRow(r).hidden = true;
     }
-
-    // Configuração de página
-    ws.pageSetup = {
-      orientation: "portrait", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0,
-      horizontalCentered: true, margins: { left: 0.3, right: 0.3, top: 0.4, bottom: 0.4, header: 0, footer: 0 }
-    };
-
-    const tempDir = os.tmpdir();
-    inputFilePath = path.join(tempDir, `fix_${Date.now()}.xlsx`);
-    outputFilePath = path.join(tempDir, `fix_${Date.now()}.pdf`);
-    await workbook.xlsx.writeFile(inputFilePath);
-
-    // Envio para Adobe
-    const credentials = new ServicePrincipalCredentials({ clientId: CLIENT_ID, clientSecret: CLIENT_SECRET });
-    const pdfServices = new PDFServices({ credentials });
-    const inputAsset = await pdfServices.upload({ readStream: fs.createReadStream(inputFilePath), mimeType: MimeType.XLSX });
-    const job = new CreatePDFJob({ inputAsset });
-    const pollingURL = await pdfServices.submit({ job });
-    const result = await pdfServices.getJobResult({ pollingURL, resultType: CreatePDFResult });
-    const streamAsset = await pdfServices.getContent({ asset: result.result.asset });
-    
-    const writeStream = fs.createWriteStream(outputFilePath);
-    streamAsset.readStream.pipe(writeStream);
-    await new Promise((res) => writeStream.on("finish", res));
-
-    const pdfBuffer = fs.readFileSync(outputFilePath);
-    res.setHeader("Content-Type", "application/pdf");
-    res.status(200).send(pdfBuffer);
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Erro ao gerar PDF");
-  } finally {
-    if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
-    if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
-  }
-}
     async function handleVacationPriority(req, res) {
       let inputPath = null;
       try {

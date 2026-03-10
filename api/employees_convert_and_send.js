@@ -19,15 +19,7 @@ import ExcelJS from "exceljs";
       vacation_priority: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/priority_vacation_template.xlsx",
       salary_map: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/salary_map_template.xlsx",
       eip_annual_map: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/eip_annual_map_template.xlsx",
-
-
-
-
-      vacation_anomalies: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/vacation_anomalies_template.xlsx",
-
-
-        
-    
+      vacation_anomalies: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/vacation_anomalies_template.xlsx",    
     };
     // ─── Helpers API 01 ──────────────────────────────────────────────────────────
     const HOLIDAY_COLOR = "F7C6C7";
@@ -170,23 +162,14 @@ import ExcelJS from "exceljs";
       if (req.method !== "POST") return res.status(405).json({error: "Método não permitido"});
       try {
         const {mode} = req.body;
-        if (!mode || !["monthly_scales", "point_sheet", "vacation_form", "vacation_map",      "vacation_anomalies",     "vacation_priority", "salary_map", "salary_map_xlsx", "eip_annual_map"].includes(mode)) {
+        if (!mode || !["monthly_scales", "point_sheet", "vacation_form", "vacation_map", "vacation_anomalies", "vacation_priority", "salary_map", "salary_map_xlsx", "eip_annual_map"].includes(mode)) {
           return res.status(400).json({error: "Modo inválido."});
         }
         if (mode === "monthly_scales") return await handleMonthlyScales(req, res);
         if (mode === "point_sheet") return await handlePointSheet(req, res);
         if (mode === "vacation_form") return await handleVacation(req, res);
         if (mode === "vacation_map") return await handleVacationMap(req, res);
-
-
-
-
-        if (mode === "vacation_anomalies") return await handleDiscrepancies(req, res);
-
-
-
-
-        
+        if (mode === "vacation_anomalies") return await handleVacationAnomalies(req, res);
         if (mode === "vacation_priority") return await handleVacationPriority(req, res);
         if (mode === "salary_map") return await handleSalaryMap(req, res);
         if (mode === "salary_map_xlsx") return await handleSalaryMapXlsx(req, res);
@@ -591,11 +574,7 @@ import ExcelJS from "exceljs";
         res.status(500).json({error: err.message});
       }
     }
-
-
-
-
-    async function handleDiscrepancies(req, res) {
+    async function handleVacationAnomalies(req, res) {  
       let inputFilePath = null;
       let outputFilePath = null;
       try {
@@ -615,30 +594,30 @@ import ExcelJS from "exceljs";
         const DAYS_RIGHT = 22;
         const ROW_START = 10;
         rows.forEach((emp, i) => {
-  const r = ROW_START + i;
-  const faltam = DAYS_RIGHT - emp.marcados;
-  const setCell = (col, value, bgColor = null, fontColor = null, bold = false) => {
-    const cell = ws.getCell(`${col}${r}`);
-    cell.value = value;
-    if (bgColor) cell.fill = {type: "pattern", pattern: "solid", fgColor: {argb: "FF" + bgColor}};
-    cell.font = {size: 9, name: "Calibri", bold, color: fontColor ? {argb: "FF" + fontColor} : undefined};
-  };
-  setCell("B", emp.abv_name);
-  setCell("D", DAYS_RIGHT, null, "64748B");
-  setCell("E", emp.marcados, null, null, true);
-  if (faltam > 0) setCell("F", `+${faltam}`, null, "EF4444", true);
-  else if (faltam < 0) setCell("F", String(faltam), null, "3B82F6", true);
-  else setCell("F", "0", null, "10B981", true);
-  if (faltam < 0) {
-    const t = emp.transitorio || "—";
-    const tColor = t === "sim" ? "10B981" : t === "nao" ? "EF4444" : "94A3B8";
-    setCell("G", t === "sim" ? "Sim" : t === "nao" ? "Não" : "—", null, tColor, t !== "—");
-  } else {
-    setCell("G", "—", null, "CBD5E1");
-  }
-  if (faltam === 0) setCell("H", "OK", "D1FAE5", "065F46", true);
-  else setCell("H", "Verificação", "FEF3C7", "92400E", true);
-});
+          const r = ROW_START + i;
+          const missing = DAYS_RIGHT - emp.marked;
+          const setCell = (col, value, bgColor = null, fontColor = null, bold = false) => {
+            const cell = ws.getCell(`${col}${r}`);
+            cell.value = value;
+            if (bgColor) cell.fill = {type: "pattern", pattern: "solid", fgColor: {argb: "FF" + bgColor}};
+            cell.font = {size: 9, name: "Calibri", bold, color: fontColor ? {argb: "FF" + fontColor} : undefined};
+          };
+          setCell("B", emp.abv_name);
+          setCell("D", DAYS_RIGHT, null, "64748B");
+          setCell("E", emp.marked, null, null, true);
+          if (missing > 0) setCell("F", `+${missing}`, null, "EF4444", true);
+          else if (missing < 0) setCell("F", String(missing), null, "3B82F6", true);
+          else setCell("F", "0", null, "10B981", true);
+          if (missing < 0) {
+            const t = emp.transitory || "—";
+            const tColor = t === "sim" ? "10B981" : t === "nao" ? "EF4444" : "94A3B8";
+            setCell("G", t === "sim" ? "Sim" : t === "nao" ? "Não" : "—", null, tColor, t !== "—");
+          } else {
+            setCell("G", "—", null, "CBD5E1");
+          }
+          if (missing === 0) setCell("H", "OK", null, "10B981", true);
+          else setCell("H", "Verificação", null, "EF4444", true);
+        });
         for (let r = ROW_START + rows.length; r <= 110; r++) {
           ws.getRow(r).hidden = true;
         }
@@ -674,11 +653,6 @@ import ExcelJS from "exceljs";
         throw error;
       }
     }
-
-
-
-
-
     async function handleVacationPriority(req, res) {
       let inputPath = null;
       try {

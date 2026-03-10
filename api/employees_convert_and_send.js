@@ -15,16 +15,7 @@
       monthly_scales: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/employees_template.xlsx",
       point_sheet: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/stitch_marker_template.xlsx",
       shift_allowance: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/entitlement_to_shift_allowance.xlsx",
-
-
-
-
-      detailed_shift_allowance: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/detailed_entitlement_to_shift_allowance.xlsx",
-
-
-
-
-     
+      detailed_shift_allowance: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/detailed_entitlement_to_shift_allowance.xlsx",     
       vacation_form: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/employee_vacations_mark_template.xlsx",
       vacation_map: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/vacation_map_template.xlsx",
       vacation_anomalies: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/vacation_anomalies_template.xlsx",
@@ -173,22 +164,13 @@
       if (req.method !== "POST") return res.status(405).json({error: "Método não permitido"});
       try {
         const {mode} = req.body;
-        if (!mode || !["monthly_scales", "point_sheet", "shift_allowance",      "detailed_shift_allowance",     "vacation_form", "vacation_map", "vacation_anomalies", "vacation_priority", "salary_map", "salary_map_xlsx", "eip_annual_map"].includes(mode)) {
+        if (!mode || !["monthly_scales", "point_sheet", "shift_allowance", "detailed_shift_allowance", "vacation_form", "vacation_map", "vacation_anomalies", "vacation_priority", "salary_map", "salary_map_xlsx", "eip_annual_map"].includes(mode)) {
           return res.status(400).json({error: "Modo inválido."});
         }
         if (mode === "monthly_scales") return await handleMonthlyScales(req, res);
         if (mode === "point_sheet") return await handlePointSheet(req, res);
         if (mode === "shift_allowance") return handleShiftAllowance(req, res);
-
-
-
-
         if (mode === "detailed_shift_allowance") return handleDetailedShiftAllowance(req, res);
-
-
-
-
-          
         if (mode === "vacation_form") return await handleVacation(req, res);
         if (mode === "vacation_map") return await handleVacationMap(req, res);
         if (mode === "vacation_anomalies") return await handleVacationAnomalies(req, res);
@@ -546,7 +528,7 @@
       return res.status(500).json({error: "Chaves Adobe não configuradas"});
     }
     const MONTH_NAMES = ["","Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-    const monthLabel = month ? MONTH_NAMES[month] : "Todos os Meses";
+    const monthLabel = (month && month !== "all") ? MONTH_NAMES[parseInt(month)] : "Todos os Meses";
     const templateRes = await fetch(TEMPLATES.detailed_shift_allowance);
     if (!templateRes.ok) throw new Error("Erro ao carregar template");
     const workbook = new ExcelJS.Workbook();

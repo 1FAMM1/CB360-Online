@@ -580,106 +580,106 @@
   
   try {
     const { year, rows } = req.body;
-    if (!year || !Array.isArray(rows)) return res.status(400).json({error: "Dados incompletos"});
-    if (!CLIENT_ID || !CLIENT_SECRET) return res.status(500).json({error: "Adobe não configurado"});
-
     const templateRes = await fetch(TEMPLATES.vacation_anomalies);
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(await templateRes.arrayBuffer());
     const ws = workbook.worksheets[0];
 
-    // Título - Forçar Preto
-    const titleCell = ws.getCell("B6");
-    titleCell.value = `ANÁLISE DE ANOMALIAS DE MARCAÇÃO DE FÉRIAS - ${year}`;
-    titleCell.font = { name: "Calibri", size: 11, bold: true, color: { argb: "FF000000" } };
+    // Estilos Fixos (Forçados)
+    const FONT_BLACK = { name: "Calibri", size: 9, bold: false, color: { argb: "FF000000" } };
+    const FONT_BLACK_BOLD = { name: "Calibri", size: 9, bold: true, color: { argb: "FF000000" } };
+    const FONT_RED_BOLD = { name: "Calibri", size: 9, bold: true, color: { argb: "FFFF0000" } };
+    const FONT_GREEN_BOLD = { name: "Calibri", size: 9, bold: true, color: { argb: "FF10B981" } };
 
-    const DAYS_RIGHT = 22;
+    ws.getCell("B6").value = `ANÁLISE DE ANOMALIAS DE MARCAÇÃO DE FÉRIAS - ${year}`;
+
     const ROW_START = 10;
+    const DAYS_RIGHT = 22;
 
     rows.forEach((emp, i) => {
       const r = ROW_START + i;
-      const missing = DAYS_RIGHT - (emp.marked || 0);
+      const marked = Number(emp.marked) || 0;
+      const missing = DAYS_RIGHT - marked;
 
-      // Helper local que NÃO usa breakStyle para não herdar lixo do template
-      const writeCell = (col, value, color = "000000", isBold = false) => {
-        const cell = ws.getCell(`${col}${r}`);
-        cell.value = value;
-        // Criamos um objeto novo do zero. Isso mata qualquer vermelho que venha do Excel.
-        cell.font = {
-          name: "Calibri",
-          size: 9,
-          bold: isBold,
-          color: { argb: "FF" + color.replace("#", "") }
-        };
-        cell.fill = { type: "pattern", pattern: "none" }; // Remove fundos do template
-        cell.alignment = { vertical: 'middle', horizontal: col === 'B' ? 'left' : 'center' };
-      };
+      // 1. Nome (Coluna B)
+      const cellB = ws.getCell(`B${r}`);
+      cellB.value = emp.abv_name;
+      cellB.font = FONT_BLACK;
 
-      // Coluna B: Nome (Preto)
-      writeCell("B", emp.abv_name, "000000", false);
+      // 2. Dias Direito (Coluna D)
+      const cellD = ws.getCell(`D${r}`);
+      cellD.value = DAYS_RIGHT;
+      cellD.font = { ...FONT_BLACK, color: { argb: "FF64748B" } }; // Cinza escuro
 
-      // Coluna D: Dias Direito (Cinza/Preto)
-      writeCell("D", DAYS_RIGHT, "64748B", false);
+      // 3. Dias Utilizados (Coluna E)
+      const cellE = ws.getCell(`E${r}`);
+      cellE.value = marked;
+      cellE.font = FONT_BLACK_BOLD;
 
-      // Coluna E: Marcados (Preto Bold)
-      writeCell("E", emp.marked, "000000", true);
+      // 4. Diferencial (Coluna F) - SEMPRE PRETO
+      const cellF = ws.getCell(`F${r}`);
+      cellF.value = missing;
+      cellF.font = FONT_BLACK_BOLD; 
 
-      // Coluna F: Diferencial (Sempre PRETO conforme pedido)
-      writeCell("F", missing, "000000", true);
-
-      // Coluna G: Transitório (Preto)
+      // 5. Excesso Transitório (Coluna G)
+      const cellG = ws.getCell(`G${r}`);
       const t = emp.transitory || "—";
-      const tLabel = t === "sim" ? "Sim" : t === "nao" ? "Não" : "—";
-      writeCell("G", tLabel, "000000", false);
+      cellG.value = t === "sim" ? "Sim" : t === "nao" ? "Não" : "—";
+      cellG.font = FONT_BLACK;
 
-      // Coluna H: STATUS (A ÚNICA COM COR)
+      // 6. Status (Coluna H) - ÚNICA COM COR
+      const cellH = ws.getCell(`H${r}`);
       if (missing === 0) {
-        writeCell("H", "OK", "10B981", true); // Verde
+        cellH.value = "OK";
+        cellH.font = FONT_GREEN_BOLD;
       } else {
-        writeCell("H", "Verificação", "EF4444", true); // Vermelho
+        cellH.value = "Verificação";
+        cellH.font = FONT_RED_BOLD;
       }
+
+      // Limpeza de estilos de linha que podem vir do template
+      ws.getRow(r).commit(); 
     });
 
-    // Esconder o resto das linhas do template
+    // Esconder linhas vazias
     for (let r = ROW_START + rows.length; r <= 110; r++) {
       ws.getRow(r).hidden = true;
     }
 
-    // Configuração de Impressão e Envio Adobe (Código original mantido)
+    // Configuração de página
     ws.pageSetup = {
       orientation: "portrait", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0,
       horizontalCentered: true, margins: { left: 0.3, right: 0.3, top: 0.4, bottom: 0.4, header: 0, footer: 0 }
     };
 
     const tempDir = os.tmpdir();
-    inputFilePath = path.join(tempDir, `vac_anom_${Date.now()}.xlsx`);
-    outputFilePath = path.join(tempDir, `vac_anom_${Date.now()}.pdf`);
+    inputFilePath = path.join(tempDir, `fix_${Date.now()}.xlsx`);
+    outputFilePath = path.join(tempDir, `fix_${Date.now()}.pdf`);
     await workbook.xlsx.writeFile(inputFilePath);
 
+    // Envio para Adobe
     const credentials = new ServicePrincipalCredentials({ clientId: CLIENT_ID, clientSecret: CLIENT_SECRET });
     const pdfServices = new PDFServices({ credentials });
     const inputAsset = await pdfServices.upload({ readStream: fs.createReadStream(inputFilePath), mimeType: MimeType.XLSX });
     const job = new CreatePDFJob({ inputAsset });
     const pollingURL = await pdfServices.submit({ job });
-    const pdfServicesResponse = await pdfServices.getJobResult({ pollingURL, resultType: CreatePDFResult });
-    const streamAsset = await pdfServices.getContent({ asset: pdfServicesResponse.result.asset });
-    const writeStream = fs.createWriteStream(outputFilePath);
+    const result = await pdfServices.getJobResult({ pollingURL, resultType: CreatePDFResult });
+    const streamAsset = await pdfServices.getContent({ asset: result.result.asset });
     
+    const writeStream = fs.createWriteStream(outputFilePath);
     streamAsset.readStream.pipe(writeStream);
-    await new Promise((resolve, reject) => { writeStream.on("finish", resolve); writeStream.on("error", reject); });
+    await new Promise((res) => writeStream.on("finish", res));
 
     const pdfBuffer = fs.readFileSync(outputFilePath);
-    if (fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
-    if (fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
-
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename=Anomalias_Ferias_${year}.pdf`);
-    return res.status(200).send(pdfBuffer);
+    res.status(200).send(pdfBuffer);
 
   } catch (error) {
     console.error(error);
+    res.status(500).send("Erro ao gerar PDF");
+  } finally {
     if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
-    res.status(500).json({ error: "Erro ao gerar PDF" });
+    if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
   }
 }
     async function handleVacationPriority(req, res) {

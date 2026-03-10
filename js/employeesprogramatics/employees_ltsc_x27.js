@@ -24,7 +24,7 @@
       yearSelect.id = yearSelectId;
       Object.assign(yearSelect.style, {padding: "6px 10px", borderRadius: "4px", border: "1px solid #ccc", cursor: "pointer"});
       const targetYear = new Date().getFullYear();
-      for (let y = 2025; y <= 2035; y++) {
+      for (let y = 2026; y <= 2036; y++) {
         const opt = document.createElement("option");
         opt.value = y;
         opt.textContent = y;
@@ -2108,7 +2108,7 @@
       yearSelect.id = yearSelectId;
       Object.assign(yearSelect.style, {padding: "6px 10px", borderRadius: "4px", border: "1px solid #ccc", cursor: "pointer"});
       const targetYear = new Date().getFullYear();
-      for (let y = 2025; y <= 2035; y++) {
+      for (let y = 2026; y <= 2036; y++) {
         const opt = document.createElement("option");
         opt.value = y;
         opt.textContent = y;
@@ -3414,7 +3414,7 @@
         const dayOfWeek = current.getDay();
         const month = current.getMonth() + 1;
         const day = current.getDate();
-        const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+        const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6); 
         const isHoliday = holidaysMap.has(`${month}-${day}`);
         if (!isWeekend && !isHoliday) {
           records.push({n_int: nInt, abv_name: selectedEmployee.abv_name, team: selectedEmployee.team, function: selectedEmployee.function, year: year,
@@ -3488,7 +3488,7 @@
       if (!document.getElementById("map-core-css")) {
         const s = document.createElement("style");
         s.id = "map-core-css";
-        s.innerHTML = `
+        s.innerHTML = ` 
           .m-wrapper {font-family: 'Inter', sans-serif; color: #1e293b;}
           .m-title {font-size: 16px; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;}
           .m-badge-rh {background: #1e293b; color: #fff; padding: 2px 7px; border-radius: 4px; font-size: 10px;}
@@ -3706,21 +3706,27 @@
       }      
       modal.style.display = "flex";
       modal.innerHTML = `
-        <div style="background:#fff;padding:25px;border-radius:12px;width:90%;max-width:700px;box-shadow:0 20px 50px rgba(0,0,0,0.3);">
-          <h5 style="margin:0 0 20px 0;display:flex;justify-content:space-between;align-items:center;font-size:18px;">
-            <span>🔍 Análise de Férias - ${year}</span>
-            <button onclick="document.getElementById('discrepancy-modal').style.display='none'" style="border:none;background:none;cursor:pointer;font-size:24px;color:#64748b;">&times;</button>
-          </h5>
-          <div id="disc-content">⌛ A analisar dados...</div>
-          <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
-            <button onclick="exportDiscrepanciesToExcel()" class="m-btn" style="background:#3b82f6;">
-              📊 Exportar
-            </button>
-            <button onclick="document.getElementById('discrepancy-modal').style.display='none'" class="m-btn" style="background:#64748b;">
-              Fechar
-            </button>
+        <div style="background:#ffffff; padding:0; border-radius:16px; width:92%; max-width:720px; box-shadow:0 30px 80px rgba(0,0,0,0.35); animation:modalIn .25s ease;
+                    overflow:hidden; font-family:system-ui,Segoe UI,Roboto;">
+          <div style="padding:18px 22px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; background:linear-gradient(135deg,#3b82f6,#2563eb);
+                      color:white;">
+          <div style="font-size:16px;font-weight:700;">🔍 Análise de Férias ${year}</div>
+          <button onclick="document.getElementById('discrepancy-modal').style.display='none'" style=" border:none; background:rgba(255,255,255,0.15); color:white; width:32px; height:32px;
+                           border-radius:8px; cursor:pointer; font-size:18px;">✕</button></div>
+          <div style="padding:22px;">
+            <div id="disc-content">⌛ A analisar dados...</div>
           </div>
-        </div>`;    
+          <div style="padding:16px 22px; border-top:1px solid #e2e8f0; display:flex; justify-content:flex-end; gap:10px; background:#f8fafc;">
+            <button id="export-discrepancies-btn" onclick="exportDiscrepancies()" style="padding:8px 16px; border:none; border-radius:8px; background:#3b82f6; color:white; font-weight:600;
+            cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">📊 Exportar</button>
+            <button onclick="document.getElementById('discrepancy-modal').style.display='none'" style=" padding:8px 16px; border:none; border-radius:8px; background:#64748b; color:white;
+                             font-weight:600; cursor:pointer;">Fechar</button>
+          </div>
+        </div>
+        <style>
+          @keyframes modalIn{from{transform:translateY(30px); opacity:0;} to {transform:translateY(0); opacity:1;}}
+        </style>
+      `;
       try {
         const [empRes, shiftRes] = await Promise.all([
           fetch(`${SUPABASE_URL}/rest/v1/reg_employees?corp_oper_nr=eq.${corpOperNr}&exit_date=is.null&order=abv_name.asc`, { 
@@ -3734,14 +3740,14 @@
         const allShifts = await shiftRes.json();
         const content = document.getElementById("disc-content");
         const data = employees.map(emp => {
-          const marcados = allShifts.filter(s => s.n_int === emp.n_int).length;
-          const faltam = DAYS_RIGHT - marcados;
-          return { ...emp, marcados, faltam };
+          const marked = allShifts.filter(s => s.n_int === emp.n_int).length;
+          const missing = DAYS_RIGHT - marked;
+          return { ...emp, marked, missing };
         });
-        const withDiscrepancies = data.filter(d => d.faltam !== 0).sort((a, b) => Math.abs(b.faltam) - Math.abs(a.faltam));    
+        const withDiscrepancies = data.filter(d => d.missing !== 0).sort((a, b) => Math.abs(b.missing) - Math.abs(a.missing));    
         const ok = employees.length - withDiscrepancies.length;
-        const missing = withDiscrepancies.filter(d => d.faltam > 0).length;
-        const excess = withDiscrepancies.filter(d => d.faltam < 0).length;
+        const missing = withDiscrepancies.filter(d => d.missing > 0).length;
+        const excess = withDiscrepancies.filter(d => d.missing < 0).length;
         window.discrepancyData = { year, data: withDiscrepancies };    
         if (withDiscrepancies.length === 0) {
           content.innerHTML = `
@@ -3778,27 +3784,44 @@
                   <th style="padding:12px;text-align:center;border-bottom:2px solid #e2e8f0;font-weight:600;">Direito</th>
                   <th style="padding:12px;text-align:center;border-bottom:2px solid #e2e8f0;font-weight:600;">Marcados</th>
                   <th style="padding:12px;text-align:center;border-bottom:2px solid #e2e8f0;font-weight:600;">Diferença</th>
-                  <th style="padding:12px;text-align:left;border-bottom:2px solid #e2e8f0;font-weight:600;">Estado</th>
+                  <th style="padding:12px;text-align:center;border-bottom:2px solid #e2e8f0;font-weight:600;">Estado</th>
+                  <th style="padding:12px;text-align:center;border-bottom:2px solid #e2e8f0;font-weight:600;">Excesso Transitório?</th>                  
                 </tr>
               </thead>
             <tbody>`;
         withDiscrepancies.forEach((emp, i) => {
-          const color = emp.faltam > 0 ? "#ef4444" : "#3b82f6";
-          const bgColor = emp.faltam > 0 ? "#fef2f2" : "#eff6ff";
-          const icon = emp.faltam > 0 ? "⚠️" : "➕";
-          const status = emp.faltam > 0 ? "Por marcar" : "Excesso";         
+          const color = emp.missing > 0 ? "#ef4444" : "#3b82f6";
+          const bgColor = emp.missing > 0 ? "#fef2f2" : "#eff6ff";
+          const icon = emp.missing > 0 ? "⚠️" : "➕";
+          const status = emp.missing > 0 ? "Por marcar" : "Excesso";         
           html += `
             <tr style="background:${i % 2 === 0 ? '#fff' : '#fafafa'};border-bottom:1px solid #f1f5f9;">
               <td style="padding:12px;font-weight:500;">${emp.abv_name}</td>
               <td style="padding:12px;text-align:center;color:#64748b;">${DAYS_RIGHT}</td>
-              <td style="padding:12px;text-align:center;font-weight:600;">${emp.marcados}</td>
+              <td style="padding:12px;text-align:center;font-weight:600;">${emp.marked}</td>
               <td style="padding:12px;text-align:center;font-weight:700;color:${color};font-size:15px;">
-                ${emp.faltam > 0 ? '+' : ''}${emp.faltam}
+                ${emp.missing > 0 ? '+' : ''}${emp.missing}
               </td>
               <td style="padding:12px;">
                 <span style="background:${bgColor};color:${color};padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600;">
                   ${icon} ${status}
                 </span>
+              </td>
+              <td style="padding:12px;text-align:center;">
+                <button ${emp.missing >= 0 ? 'disabled' : ''} 
+                  onclick="this.parentElement.parentElement.setAttribute('data-transitory','sim');this.style.background='#10b981';this.style.color='#fff';
+                  this.nextElementSibling.style.background='#f1f5f9';this.nextElementSibling.style.color='#64748b';" 
+                  style="padding:4px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:11px;font-weight:600;cursor:${emp.missing < 0 ? 'pointer' : 'not-allowed'};
+                  background:#f1f5f9;color:${emp.missing < 0 ? '#64748b' : '#cbd5e1'};margin-right:4px;opacity:${emp.missing < 0 ? '1' : '0.4'};">
+                  Sim
+                </button>
+                <button ${emp.missing >= 0 ? 'disabled' : ''} 
+                  onclick="this.parentElement.parentElement.setAttribute('data-transitory','nao');this.style.background='#ef4444';this.style.color='#fff';
+                  this.previousElementSibling.style.background='#f1f5f9';this.previousElementSibling.style.color='#64748b';"
+                  style="padding:4px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:11px;font-weight:600;cursor:${emp.missing < 0 ? 'pointer' : 'not-allowed'};
+                  background:#f1f5f9;color:${emp.missing < 0 ? '#64748b' : '#cbd5e1'};opacity:${emp.missing < 0 ? '1' : '0.4'};">
+                  Não
+                </button>
               </td>
             </tr>`;
         });    
@@ -3812,22 +3835,43 @@
         </div>`;
       }
     }
-    function exportDiscrepanciesToExcel() {
+    async function exportDiscrepancies() {
       if (!window.discrepancyData) {
         alert("Nenhum dado para exportar");
         return;
       }
       const { year, data } = window.discrepancyData;
-      let csv = "Funcionário,Direito,Marcados,Diferença,Estado\n";
-      data.forEach(emp => {
-        const status = emp.faltam > 0 ? "Por marcar" : "Excesso";
-        csv += `"${emp.abv_name}",22,${emp.marcados},${emp.faltam},"${status}"\n`;
-      });
-      const blob = new Blob([csv], {type: "text/csv;charset=utf-8;"});
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = `Discrepancias_Ferias_${year}.csv`;
-      link.click();
+      const rows = document.querySelectorAll("#discrepancy-modal tbody tr");
+      const payload = {
+        mode: "vacation_anomalies", year, rows: 
+        data.map((emp, i) => ({abv_name: emp.abv_name, marked: emp.marked, missing: emp.missing, transitory: rows[i]?.getAttribute("data-transitory") || "—"}))};
+      try {
+        const btn = document.getElementById("export-discrepancies-btn");
+        if (btn) {btn.disabled = true; btn.textContent = "⌛ A gerar...";}
+        const response = await fetch("https://cb360-online.vercel.app/api/employees_convert_and_send", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(text);
+        } 
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `Discrepancias_Ferias_${year}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (error) {
+        alert("❌ Erro ao gerar PDF: " + error.message);
+      } finally {
+        const btn = document.getElementById("export-discrepancies-btn");
+        if (btn) {btn.disabled = false; btn.textContent = "📊 Exportar";}
+      }
     }
     /* PRIORIDADE FÉRIAS */
     async function createPriorityMap() {
@@ -3922,7 +3966,7 @@
       const weights = {1: [1, 1], 2: [1, 1], 3: [1, 1], 4: [1, 1], 5: [4, 4], 6: [4, 8], 7: [12, 12], 8: [12, 12], 9: [12, 8], 10: [4, 4], 11: [1, 1], 12: [2, 8]};
       try {
         const [empRes, shiftRes] = await Promise.all([
-          fetch(`${SUPABASE_URL}/rest/v1/reg_employees?corp_oper_nr=eq.${corpOperNr}&order=abv_name.asc`, {
+          fetch(`${SUPABASE_URL}/rest/v1/reg_employees?corp_oper_nr=eq.${corpOperNr}&function=neq.SEC&function=neq.COM&order=abv_name.asc`, {
             headers: getSupabaseHeaders()
           }),
           fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${selectedYear}&shift=eq.FE`, {
@@ -3935,7 +3979,7 @@
         if (employeesWithVacation.length === 0) {
           tableBody.innerHTML = `<tr><td colspan="26" style="padding:40px; text-align:center; color:#64748b;">Não existem dados de férias em ${selectedYear} para calcular prioridades.</td></tr>`;
           return;
-        }
+        } 
         let rows = "";
         employeesWithVacation.forEach(emp => {
           const empShifts = allShifts.filter(s => s.n_int === emp.n_int);
@@ -3965,7 +4009,7 @@
         console.error("Erro na Prioridade:", err);
         tableBody.innerHTML = `<tr><td colspan="26" style="color:red; text-align:center;">Erro: ${err.message}</td></tr>`;
       }
-    }
+    } 
     async function exportPrioritiesMap() {
       const selectedYear = parseInt(document.getElementById("holiday-year-select")?.value || new Date().getFullYear());
       const priorityYear = selectedYear + 1;
@@ -3976,7 +4020,7 @@
       const weights = {1: [1, 1], 2: [1, 1], 3: [1, 1], 4: [1, 1], 5: [4, 4], 6: [4, 8], 7: [12, 12], 8: [12, 12], 9: [12, 8], 10: [4, 4], 11: [1, 1], 12: [2, 8]};
       try {
         const [empRes, shiftRes] = await Promise.all([
-          fetch(`${SUPABASE_URL}/rest/v1/reg_employees?corp_oper_nr=eq.${corpOperNr}&order=abv_name.asc`, {
+          fetch(`${SUPABASE_URL}/rest/v1/reg_employees?corp_oper_nr=eq.${corpOperNr}&function=neq.SEC&function=neq.COM&order=abv_name.asc`, {
             headers: getSupabaseHeaders()
           }),
           fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${selectedYear}&shift=eq.FE`, {
@@ -4026,7 +4070,7 @@
       } finally {
         if (btn) btn.innerText = originalText;
       }
-    }
+    } 
     document.querySelectorAll(".sidebar-sub-submenu-button").forEach((btn) => {
       btn.addEventListener("click", () => {
         const access = btn.dataset.access;
@@ -4105,11 +4149,10 @@
             </div>
             <div class="e-footer">
               <button class="e-btn e-btn-info" onclick="createConsultationEligibility()">🔍 Consulta Detalhada</button>
-              <button class="e-btn" onclick="exportarElegibilidadePDF()">📥 Exportar Mapa</button>
+              <button class="e-btn" onclick="exportShiftEligibility()">📥 Emitir Mapa</button>
             </div>
           </div>`;
       }
-
       loadEligibilityData();
     }
     async function loadEligibilityData() {
@@ -4188,8 +4231,8 @@
             </div>
             <div id="eligibility-content" style="min-height:200px;">⌛ A carregar registos...</div>        
             <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px; padding-top:15px; border-top:1px solid #e2e8f0;">
-              <button onclick="document.getElementById('eligibility-modal').style.display='none'" 
-              style="background:#64748b; color:white; border:none; padding:10px 20px; border-radius:6px; font-weight:600; cursor:pointer; font-size:13px;">Emitir</button>
+              <button onclick="exportDetailedShiftEligibility()" style="background:#1e293b; color:white; border:none; padding:10px 20px; border-radius:6px; font-weight:600; 
+                               cursor:pointer; font-size:13px;">📥 Emitir</button>
               <button onclick="document.getElementById('eligibility-modal').style.display='none'" 
               style="background:#64748b; color:white; border:none; padding:10px 20px; border-radius:6px; font-weight:600; cursor:pointer; font-size:13px;">Fechar</button>
             </div>
@@ -4260,6 +4303,100 @@
       });
       html += `</tbody></table></div>`;
       content.innerHTML = html;
+    }
+    async function exportShiftEligibility() {      
+      const filterElem = document.getElementById("eligibility-year-filter");
+      const year = filterElem ? parseInt(filterElem.value) : new Date().getFullYear();
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const btn = event?.target;
+      const originalText = btn ? btn.innerText : "";
+      if (btn) {btn.disabled = true; btn.innerText = "⌛ A Gerar Mapa...";}
+      try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/reg_eligibility?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}`, {
+          headers: getSupabaseHeaders()
+        });
+        const data = await response.json();
+        if (!data || data.length === 0) {
+          showPopupWarning("Sem dados para exportar."); 
+          return;
+        }
+        const employeeMap = {};
+        data.forEach(reg => {
+          if (!employeeMap[reg.n_int]) {
+            employeeMap[reg.n_int] = {name: reg.abv_name, months: new Set()};
+          }
+          employeeMap[reg.n_int].months.add(parseInt(reg.month));
+        });
+        const employees = Object.values(employeeMap)
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map(emp => ({
+          name: emp.name,
+          months: [1,2,3,4,5,6,7,8,9,10,11,12].map(m => emp.months.has(m) ? "SIM" : "")
+        }));
+        const apiResponse = await fetch("https://cb360-online.vercel.app/api/employees_convert_and_send", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({mode: "shift_allowance", year, employees})
+        });
+        if (!apiResponse.ok) {
+          const text = await apiResponse.text();
+          throw new Error(text);
+        }
+        const blob = await apiResponse.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `Elegibilidade_Mensal_Subsidio_Turno_${year}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error("Erro:", err);
+        showPopupWarning("❌ Erro ao gerar PDF: " + err.message);
+      } finally {
+        if (btn) {btn.disabled = false; btn.innerText = originalText;}
+      }
+    }    
+    async function exportDetailedShiftEligibility() {
+      const filterElem = document.getElementById("eligibility-year-filter");
+      const year = filterElem ? parseInt(filterElem.value) : new Date().getFullYear();
+      const monthFilter = document.getElementById("modal-month-filter")?.value;
+      if (!monthFilter || monthFilter === "all") {
+        showPopupWarning("Por favor selecione um mês antes de emitir.");
+        return;
+      }
+      const month = parseInt(monthFilter);
+      const data = window.rawEligibilityData || [];
+      const records = data.filter(d => parseInt(d.month) === month);
+      if (records.length === 0) {
+        showPopupWarning("Sem registos para emitir."); 
+        return;
+      }
+      const btn = event?.target;
+      const originalText = btn ? btn.innerText : "";
+      if (btn) { btn.disabled = true; btn.innerText = "⌛ A gerar..."; }
+      try {
+        const response = await fetch("https://cb360-online.vercel.app/api/employees_convert_and_send", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({mode: "detailed_shift_allowance", year, month, records})
+        });
+        if (!response.ok) { const text = await response.text(); throw new Error(text); }
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `Detalhe_Elegibilidade_${year}_${month}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        showPopupWarning("❌ Erro ao gerar PDF: " + err.message);
+      } finally {
+        if (btn) { btn.disabled = false; btn.innerText = originalText; }
+      }
     }
     document.querySelectorAll(".sidebar-sub-submenu-button").forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -5260,11 +5397,6 @@
         }
       });
     });
-    
-    
-    
-    
-    
     async function createRHDashboard() {
       const cardBody = document.querySelector("#dashboard-rh .card-body");
       if (!cardBody) {
@@ -5356,7 +5488,7 @@
               <div class="dash-card-header">
                 <div>
                   <div class="dash-card-value" id="total-employees"><span class="dash-loading"></span></div>
-                  <div class="dash-card-label">Total Funcionários</div>
+                  <div class="dash-card-label">Total de Funcionários</div>
                 </div>
                 <div class="dash-card-icon-wrap">👥</div>
               </div>
@@ -5374,7 +5506,7 @@
               <div class="dash-card-header">
                 <div>
                   <div class="dash-card-value" id="active-employees"><span class="dash-loading"></span></div>
-                  <div class="dash-card-label">Ativos</div>
+                  <div class="dash-card-label">Funcionários Ativos</div>
                 </div>
                 <div class="dash-card-icon-wrap">✅</div>
               </div>
@@ -5392,7 +5524,7 @@
               <div class="dash-card-header">
                 <div>
                   <div class="dash-card-value" id="vacation-month"><span class="dash-loading"></span></div>
-                  <div class="dash-card-label">Férias Este Mês</div>
+                  <div class="dash-card-label">Funcionários de Férias Este Mês</div>
                 </div>
                 <div class="dash-card-icon-wrap">🏖️</div>
               </div>
@@ -5410,7 +5542,7 @@
               <div class="dash-card-header">
                 <div>
                   <div class="dash-card-value" id="subsidy-month"><span class="dash-loading"></span></div>
-                  <div class="dash-card-label">Subsídio Turno</div>
+                  <div class="dash-card-label">Funcionários com Subsídio Turno</div>
                 </div>
                 <div class="dash-card-icon-wrap">💰</div>
               </div>
@@ -5483,17 +5615,17 @@
         const vacMonth = new Set(
           vacations.filter(v => {
             const vMonth = String(v.month).trim();
-            const vYear  = String(v.year  || "").trim();
+            const vYear = String(v.year || "").trim();
             return (vMonth === monthStr || vMonth === monthWithZero) && vYear === yearStr;
           }).map(v => v.n_int)
         ).size;
         const filteredElig = eligibility.filter(e => {
-          const eYear  = String(e.year).trim();
+          const eYear = String(e.year).trim();
           const eMonth = String(e.month).trim();
           return eYear === yearStr && (eMonth === monthStr || eMonth === monthWithZero);
         });
         const subsidy = new Set(filteredElig.map(e => String(e.n_int || ""))).size;
-        const setCard = (valueId, barId, pctId, value, total, decimals = 0) => {
+        const setCard = (valueId, barId, pctId, value, total) => {
           const el = document.getElementById(valueId);
           if (el) el.textContent = value;
           const pct = total > 0 ? Math.round((value / total) * 100) : 0;
@@ -5505,7 +5637,7 @@
         setCard("total-employees", "total-employees-bar", "total-employees-pct", total, 50);
         setCard("active-employees", "active-employees-bar", "active-employees-pct", active, total);
         setCard("vacation-month", "vacation-month-bar", "vacation-month-pct", vacMonth, active);
-        setCard("subsidy-month", "subsidy-month-bar",  "subsidy-month-pct", subsidy, active);
+        setCard("subsidy-month", "subsidy-month-bar", "subsidy-month-pct", subsidy, active);
         if (typeof Chart !== 'undefined') {
           if (_dashChartTeam) {_dashChartTeam.destroy(); _dashChartTeam = null;}
           if (_dashChartVac) {_dashChartVac.destroy(); _dashChartVac = null;}
@@ -5520,29 +5652,43 @@
               teamCounts[team] = (teamCounts[team] || 0) + 1;
             }
           });
-          const teamColors = [
-            'rgba(99,102,241,0.85)','rgba(16,185,129,0.85)','rgba(245,158,11,0.85)',
-            'rgba(236,72,153,0.85)','rgba(59,130,246,0.85)','rgba(239,68,68,0.85)'
-          ];
-          _dashChartTeam = new Chart(document.getElementById("chart-by-team"), {
-            type: 'bar',
-            data: {labels: Object.keys(teamCounts), datasets: [{label: 'Funcionários', data: Object.values(teamCounts), backgroundColor: teamColors, borderRadius: 8, borderSkipped: false,}]},
-            options: {responsive: true, maintainAspectRatio: false, plugins: {legend: {display: false}},
-                      scales: {x: {grid: {display: false}, ticks: {font: {family: 'Plus Jakarta Sans', weight: '600', size: 11}}},
-                               y: {grid: {color: 'rgba(0,0,0,0.05)'}, ticks: {stepSize: 1, font: {family: 'Plus Jakarta Sans', size: 11}}}}}});
-          const vacByMonth = Array(12).fill(0);
-          vacations.filter(v => String(v.year || "") === yearStr).forEach(v => {
-            const mesIdx = parseInt(v.month) - 1;
-            if (mesIdx >= 0 && mesIdx < 12) vacByMonth[mesIdx]++;
+          const teamOrder = ["COM", "CRD", "TAS", "TAT", "OPTEL", "EIP-01", "EIP-02", "SEC"];
+          const sortedTeams = Object.entries(teamCounts).sort((a, b) => {
+            const indexA = teamOrder.indexOf(a[0]);
+            const indexB = teamOrder.indexOf(b[0]);
+            if (indexA === -1) return 1;
+            if (indexB === -1) return -1;
+            return indexA - indexB;
           });
-          _dashChartVac = new Chart(document.getElementById("chart-vacations"), {
-            type: 'line',
-            data: {labels: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'],
-                   datasets: [{label: 'Dias de Férias', data: vacByMonth, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', tension: 0.4, fill: true, pointBackgroundColor: '#10b981',
-                               pointRadius: 5, pointHoverRadius: 7,}]},
-            options: {responsive: true, maintainAspectRatio: false, plugins: {legend: {display: false}},
-                      scales: {x: {grid: {display: false}, ticks: {font: {family: 'Plus Jakarta Sans', weight: '600', size: 11}}},
-                               y: {grid: {color: 'rgba(0,0,0,0.05)'}, ticks: {stepSize: 1, font: {family: 'Plus Jakarta Sans', size: 11}}}}}});}
+          const teamLabels = sortedTeams.map(t => t[0]);
+          const teamValues = sortedTeams.map(t => t[1]);
+          const teamColors = ['rgba(99,102,241,0.85)', 'rgba(16,185,129,0.85)', 'rgba(245,158,11,0.85)',
+                              'rgba(236,72,153,0.85)', 'rgba(59,130,246,0.85)', 'rgba(239,68,68,0.85)'];
+          _dashChartTeam = new Chart(
+            document.getElementById("chart-by-team"), {
+              type: 'bar',
+              data: {labels: teamLabels, datasets: [{label: 'Funcionários', data: teamValues, backgroundColor: teamColors, borderRadius: 8, borderSkipped: false}]},
+              options: {responsive: true, maintainAspectRatio: false, plugins: {legend: {display: false}},
+              scales: {x: {grid: {display: false}, ticks: {font: {family: 'Plus Jakarta Sans', weight: '600', size: 11}}},
+                       y: {grid: { color: 'rgba(0,0,0,0.05)' }, ticks: {stepSize: 1, font: {family: 'Plus Jakarta Sans', size: 11}}}}}});
+          const vacByMonth = Array(12).fill(0);
+          vacations
+            .filter(v => String(v.year || "") === yearStr)
+            .forEach(v => {
+            const mesIdx = parseInt(v.month) - 1;
+            if (mesIdx >= 0 && mesIdx < 12) {
+              vacByMonth[mesIdx]++;
+            }
+          });
+          _dashChartVac = new Chart(
+            document.getElementById("chart-vacations"), {
+              type: 'line',
+              data: {labels: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'], 
+              datasets: [{label: 'Dias de Férias', data: vacByMonth, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', tension: 0.4, fill: true,
+                          pointBackgroundColor: '#10b981', pointRadius: 5, pointHoverRadius: 7}]},
+              options: {responsive: true, maintainAspectRatio: false, plugins: {legend: {display: false}},
+              scales: {x: {grid: {display: false}, ticks: {font: {family: 'Plus Jakarta Sans', weight: '600', size: 11}}},
+                       y: {grid: {color: 'rgba(0,0,0,0.05)'}, ticks: {stepSize: 1, font: {family: 'Plus Jakarta Sans', size: 11}}}}}});}
       } catch (error) {
         console.error("❌ Erro dashboard:", error);
       }

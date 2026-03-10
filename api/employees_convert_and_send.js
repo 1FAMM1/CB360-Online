@@ -560,7 +560,7 @@
       if (r > ROW_MAX) return;
       ws.getCell(`B${r}`).value = rec.abv_name;
       
-      ws.getCell(`D${r}`).value = `${String(rec.day).padStart(2,'0')} ${MONTH_NAMES[parseInt(rec.month) || 0]} ${year}`;
+      ws.getCell(`D${r}`).value = `${String(rec.day).padStart(2,'0')} ${MONTH_NAMES[rec.month]} ${year}`;
       ws.getCell(`E${r}`).value = rec.exit_hour || "--:--";
       ws.getCell(`F${r}`).value = "ELEGÍVEL";
     });

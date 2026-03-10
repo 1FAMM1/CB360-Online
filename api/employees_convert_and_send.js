@@ -575,62 +575,62 @@
       }
     }
     async function handleVacationAnomalies(req, res) {
-      let inputFilePath = null;
-      let outputFilePath = null;
-      try {
-        const { year, rows } = req.body;
-        const templateRes = await fetch(TEMPLATES.vacation_anomalies);
-        const workbook = new ExcelJS.Workbook();
-        await workbook.xlsx.load(await templateRes.arrayBuffer());
-        const ws = workbook.worksheets[0];
-        ws.getCell("B6").value = `ANÁLISE DE ANOMALIAS DE MARCAÇÃO DE FÉRIAS - ${year}`;
-        const ROW_START = 10;
-        const DAYS_RIGHT = 22;
-        rows.forEach((emp, i) => {
-          const r = ROW_START + i;
-          const marked = Number(emp.marked) || 0;
-          const missing = DAYS_RIGHT - marked;
-          ws.getCell(`B${r}`).value = emp.abv_name;
-          ws.getCell(`D${r}`).value = DAYS_RIGHT;
-          ws.getCell(`E${r}`).value = marked;
-          ws.getCell(`F${r}`).value = missing;
-          const t = emp.transitory || "—";
-          ws.getCell(`G${r}`).value = t === "sim" ? "Sim" : t === "nao" ? "Não" : "—";
-          ws.getCell(`H${r}`).value = missing === 0 ? "OK" : "Verificação";
-          ws.getRow(r).commit();
-        });
-        for (let r = ROW_START + rows.length; r <= 110; r++) {
-          ws.getRow(r).hidden = true;
-        }
-        ws.pageSetup = {
-          orientation: "portrait", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
-          margins: {left: 0.3, right: 0.3, top: 0.4, bottom: 0.4, header: 0, footer: 0}
-        };
-        const tempDir = os.tmpdir();
-        inputFilePath = path.join(tempDir, `fix_${Date.now()}.xlsx`);
-        outputFilePath = path.join(tempDir, `fix_${Date.now()}.pdf`);
-        await workbook.xlsx.writeFile(inputFilePath);
-        const credentials = new ServicePrincipalCredentials({clientId: CLIENT_ID, clientSecret: CLIENT_SECRET});
-        const pdfServices = new PDFServices({credentials});
-        const inputAsset = await pdfServices.upload({readStream: fs.createReadStream(inputFilePath), mimeType: MimeType.XLSX});
-        const job = new CreatePDFJob({inputAsset});
-        const pollingURL = await pdfServices.submit({job});
-        const result = await pdfServices.getJobResult({pollingURL, resultType: CreatePDFResult});
-        const streamAsset = await pdfServices.getContent({asset: result.result.asset});
-        const writeStream = fs.createWriteStream(outputFilePath);
-        streamAsset.readStream.pipe(writeStream);
-        await new Promise((res) => writeStream.on("finish", res));
-        const pdfBuffer = fs.readFileSync(outputFilePath);
-        res.setHeader("Content-Type", "application/pdf");
-        res.status(200).send(pdfBuffer);
-      } catch (error) {
-        console.error(error);
-        res.status(500).send("Erro ao gerar PDF");
-      } finally {
-        if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
-        if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
-      }
+  let inputFilePath = null;
+  let outputFilePath = null;
+  try {
+    const { year, rows } = req.body;
+    const templateRes = await fetch(TEMPLATES.vacation_anomalies);
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(await templateRes.arrayBuffer());
+    const ws = workbook.worksheets[0];
+    ws.getCell("B6").value = `ANÁLISE DE ANOMALIAS DE MARCAÇÃO DE FÉRIAS - ${year}`;
+    const ROW_START = 10;
+    const DAYS_RIGHT = 22;
+    rows.forEach((emp, i) => {
+      const r = ROW_START + i;
+      const marked = Number(emp.marked) || 0;
+      const missing = DAYS_RIGHT - marked;
+      ws.getCell(`B${r}`).value = emp.abv_name;
+      ws.getCell(`D${r}`).value = DAYS_RIGHT;
+      ws.getCell(`E${r}`).value = marked;
+      ws.getCell(`F${r}`).value = missing;
+      const t = emp.transitory || "—";
+      ws.getCell(`G${r}`).value = t === "sim" ? "Sim" : t === "nao" ? "Não" : "—";
+      ws.getCell(`H${r}`).value = missing === 0 ? "OK" : "Verificação";
+      ws.getRow(r).commit();
+    });
+    for (let r = ROW_START + rows.length; r <= 110; r++) {
+      ws.getRow(r).hidden = true;
     }
+    ws.pageSetup = {
+      orientation: "portrait", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
+      margins: {left: 0.3, right: 0.3, top: 0.4, bottom: 0.4, header: 0, footer: 0}
+    };
+    const tempDir = os.tmpdir();
+    inputFilePath = path.join(tempDir, `fix_${Date.now()}.xlsx`);
+    outputFilePath = path.join(tempDir, `fix_${Date.now()}.pdf`);
+    await workbook.xlsx.writeFile(inputFilePath);
+    const credentials = new ServicePrincipalCredentials({clientId: CLIENT_ID, clientSecret: CLIENT_SECRET});
+    const pdfServices = new PDFServices({credentials});
+    const inputAsset = await pdfServices.upload({readStream: fs.createReadStream(inputFilePath), mimeType: MimeType.XLSX});
+    const job = new CreatePDFJob({inputAsset});
+    const pollingURL = await pdfServices.submit({job});
+    const result = await pdfServices.getJobResult({pollingURL, resultType: CreatePDFResult});
+    const streamAsset = await pdfServices.getContent({asset: result.result.asset});
+    const writeStream = fs.createWriteStream(outputFilePath);
+    streamAsset.readStream.pipe(writeStream);
+    await new Promise((res) => writeStream.on("finish", res));
+    const pdfBuffer = fs.readFileSync(outputFilePath);
+    res.setHeader("Content-Type", "application/pdf");
+    res.status(200).send(pdfBuffer);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Erro ao gerar PDF", details: error.message }); // ✅
+  } finally { // ✅ dentro da função
+    if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
+    if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
+  }
+}
     async function handleVacationPriority(req, res) {
       let inputPath = null;
       try {

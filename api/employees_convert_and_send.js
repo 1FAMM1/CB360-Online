@@ -580,90 +580,80 @@
   
   try {
     const { year, rows } = req.body;
-    
-    if (!year || !Array.isArray(rows)) {
-      return res.status(400).json({error: "Dados incompletos: year e rows obrigatórios"});
-    }
-    if (!CLIENT_ID || !CLIENT_SECRET) {
-      return res.status(500).json({error: "Chaves Adobe não configuradas"});
-    }
+    if (!year || !Array.isArray(rows)) return res.status(400).json({error: "Dados incompletos"});
+    if (!CLIENT_ID || !CLIENT_SECRET) return res.status(500).json({error: "Adobe não configurado"});
 
     const templateRes = await fetch(TEMPLATES.vacation_anomalies);
-    if (!templateRes.ok) throw new Error("Erro ao carregar template");
-    
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(await templateRes.arrayBuffer());
     const ws = workbook.worksheets[0];
 
-    ws.getCell("B6").value = `ANÁLISE DE ANOMALIAS DE MARCAÇÃO DE FÉRIAS - ${year}`;
+    // Título - Forçar Preto
+    const titleCell = ws.getCell("B6");
+    titleCell.value = `ANÁLISE DE ANOMALIAS DE MARCAÇÃO DE FÉRIAS - ${year}`;
+    titleCell.font = { name: "Calibri", size: 11, bold: true, color: { argb: "FF000000" } };
 
     const DAYS_RIGHT = 22;
     const ROW_START = 10;
 
     rows.forEach((emp, i) => {
       const r = ROW_START + i;
-      const missing = DAYS_RIGHT - emp.marked;
+      const missing = DAYS_RIGHT - (emp.marked || 0);
 
-      // Função interna com RESET de cor obrigatório para cada célula
-      const setCell = (col, value, fontColor = "000000", bold = false) => {
+      // Helper local que NÃO usa breakStyle para não herdar lixo do template
+      const writeCell = (col, value, color = "000000", isBold = false) => {
         const cell = ws.getCell(`${col}${r}`);
         cell.value = value;
-        
-        // Forçamos o estilo em todas as células para evitar herança do template ou da célula anterior
+        // Criamos um objeto novo do zero. Isso mata qualquer vermelho que venha do Excel.
         cell.font = {
-          size: 9,
           name: "Calibri",
-          bold: bold,
-          color: { argb: "FF" + fontColor }
+          size: 9,
+          bold: isBold,
+          color: { argb: "FF" + color.replace("#", "") }
         };
-        
-        // Remove preenchimentos residuais (opcional, para garantir fundo branco)
-        cell.fill = { type: "pattern", pattern: "none" };
+        cell.fill = { type: "pattern", pattern: "none" }; // Remove fundos do template
+        cell.alignment = { vertical: 'middle', horizontal: col === 'B' ? 'left' : 'center' };
       };
 
-      // Coluna B: Nome (Sempre Preto)
-      setCell("B", emp.abv_name, "000000", false);
+      // Coluna B: Nome (Preto)
+      writeCell("B", emp.abv_name, "000000", false);
 
-      // Coluna D: Dias Direito (Sempre Cinza/Preto)
-      setCell("D", DAYS_RIGHT, "64748B", false);
+      // Coluna D: Dias Direito (Cinza/Preto)
+      writeCell("D", DAYS_RIGHT, "64748B", false);
 
-      // Coluna E: Marcados (Sempre Preto)
-      setCell("E", emp.marked, "000000", true);
+      // Coluna E: Marcados (Preto Bold)
+      writeCell("E", emp.marked, "000000", true);
 
-      // Coluna F: Diferencial (Preto por padrão, colorido apenas se quiseres destaque)
-      // Se quiseres TUDO preto exceto o status, muda as cores abaixo para "000000"
-      let diffColor = "000000"; 
-      if (missing > 0) diffColor = "000000"; // Era EF4444, mudei para preto conforme o teu pedido
-      setCell("F", missing, diffColor, true);
+      // Coluna F: Diferencial (Sempre PRETO conforme pedido)
+      writeCell("F", missing, "000000", true);
 
-      // Coluna G: Transitório (Preto por padrão)
+      // Coluna G: Transitório (Preto)
       const t = emp.transitory || "—";
       const tLabel = t === "sim" ? "Sim" : t === "nao" ? "Não" : "—";
-      setCell("G", tLabel, "000000", false);
+      writeCell("G", tLabel, "000000", false);
 
-      // Coluna H: STATUS (A ÚNICA QUE DEVE SER VERMELHA)
+      // Coluna H: STATUS (A ÚNICA COM COR)
       if (missing === 0) {
-        setCell("H", "OK", "10B981", true); // Verde para OK
+        writeCell("H", "OK", "10B981", true); // Verde
       } else {
-        setCell("H", "Verificação", "EF4444", true); // VERMELHO apenas aqui
+        writeCell("H", "Verificação", "EF4444", true); // Vermelho
       }
     });
 
-    // Esconder linhas não utilizadas
+    // Esconder o resto das linhas do template
     for (let r = ROW_START + rows.length; r <= 110; r++) {
       ws.getRow(r).hidden = true;
     }
 
-    // Configurações de página e envio para Adobe (veo/pdfservices)
+    // Configuração de Impressão e Envio Adobe (Código original mantido)
     ws.pageSetup = {
       orientation: "portrait", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0,
       horizontalCentered: true, margins: { left: 0.3, right: 0.3, top: 0.4, bottom: 0.4, header: 0, footer: 0 }
     };
 
     const tempDir = os.tmpdir();
-    inputFilePath = path.join(tempDir, `discrepancias_${Date.now()}.xlsx`);
-    outputFilePath = path.join(tempDir, `discrepancias_${Date.now()}_out.pdf`);
-
+    inputFilePath = path.join(tempDir, `vac_anom_${Date.now()}.xlsx`);
+    outputFilePath = path.join(tempDir, `vac_anom_${Date.now()}.pdf`);
     await workbook.xlsx.writeFile(inputFilePath);
 
     const credentials = new ServicePrincipalCredentials({ clientId: CLIENT_ID, clientSecret: CLIENT_SECRET });
@@ -679,17 +669,16 @@
     await new Promise((resolve, reject) => { writeStream.on("finish", resolve); writeStream.on("error", reject); });
 
     const pdfBuffer = fs.readFileSync(outputFilePath);
-
     if (fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
     if (fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
 
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename=Discrepancias_Ferias_${year}.pdf`);
+    res.setHeader("Content-Disposition", `attachment; filename=Anomalias_Ferias_${year}.pdf`);
     return res.status(200).send(pdfBuffer);
 
   } catch (error) {
+    console.error(error);
     if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
-    if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
     res.status(500).json({ error: "Erro ao gerar PDF" });
   }
 }

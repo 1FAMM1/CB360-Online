@@ -574,71 +574,125 @@ import ExcelJS from "exceljs";
         res.status(500).json({error: err.message});
       }
     }
-    async function handleVacationAnomalies(req, res) {
-      let inputFilePath = null;
-      let outputFilePath = null;
-      try {
-        const {year, rows} = req.body;
-        if (!year || !Array.isArray(rows)) {
-          return res.status(400).json({error: "Dados incompletos: year e rows obrigatórios"});
-        }
-        if (!CLIENT_ID || !CLIENT_SECRET) {
-          return res.status(500).json({error: "Chaves Adobe não configuradas"});
-        }
-        const templateRes = await fetch(TEMPLATES.vacation_anomalies);
-        if (!templateRes.ok) throw new Error("Erro ao carregar template");
-        const workbook = new ExcelJS.Workbook();
-        await workbook.xlsx.load(await templateRes.arrayBuffer());
-        const ws = workbook.worksheets[0];
-        ws.getCell("B6").value = `ANÁLISE DE ANOMALIAS DE MARCAÇÃO DE FÉRIAS - ${year}`;
-        const DAYS_RIGHT = 22;
-        const ROW_START = 10;
-        rows.forEach((emp, i) => {
-          const r = ROW_START + i;
-          const marked = Number(emp.marked) || 0;
-          const missing = DAYS_RIGHT - marked;
-          ws.getCell(`B${r}`).value = emp.abv_name;
-          ws.getCell(`D${r}`).value = DAYS_RIGHT;
-          ws.getCell(`E${r}`).value = marked;
-          ws.getCell(`F${r}`).value = missing;
-          const t = emp.transitory || "—";
-          ws.getCell(`G${r}`).value = t === "sim" ? "Sim" : t === "nao" ? "Não" : "—";
-          ws.getCell(`H${r}`).value = missing === 0 ? "OK" : "Verificação";
-          ws.getRow(r).commit();
-        });
-        for (let r = ROW_START + rows.length; r <= 110; r++) {
-          ws.getRow(r).hidden = true;
-        }
-        ws.pageSetup = {
-          orientation: "portrait", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, 
-          margins: {left: 0.3, right: 0.3, top: 0.4, bottom: 0.4, header: 0, footer: 0}
-        };
-        const tempDir = os.tmpdir();
-        inputFilePath = path.join(tempDir, `discrepancias_${Date.now()}.xlsx`);
-        outputFilePath = path.join(tempDir, `discrepancias_${Date.now()}_out.pdf`);
-        await workbook.xlsx.writeFile(inputFilePath);
-        const credentials = new ServicePrincipalCredentials({clientId: CLIENT_ID, clientSecret: CLIENT_SECRET});
-        const pdfServices = new PDFServices({credentials});
-        const inputAsset = await pdfServices.upload({readStream: fs.createReadStream(inputFilePath), mimeType: MimeType.XLSX});
-        const job = new CreatePDFJob({inputAsset});
-        const pollingURL = await pdfServices.submit({job});
-        const pdfServicesResponse = await pdfServices.getJobResult({pollingURL, resultType: CreatePDFResult});
-        const streamAsset = await pdfServices.getContent({asset: pdfServicesResponse.result.asset});
-        const writeStream = fs.createWriteStream(outputFilePath);
-        streamAsset.readStream.pipe(writeStream);
-        await new Promise((resolve, reject) => {writeStream.on("finish", resolve); writeStream.on("error", reject);});
-        const pdfBuffer = fs.readFileSync(outputFilePath);
-        if (fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
-        if (fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
-        res.setHeader("Content-Type", "application/pdf");
-        res.setHeader("Content-Disposition", `attachment; filename=Discrepancias_Ferias_${year}.pdf`);
-        return res.status(200).send(pdfBuffer);
-      } catch (error) {
-        if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
-        if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
-        res.status(500).json({error: "Erro ao gerar PDF", details: error.message});
-      }
+    async function handleVacationAnomalies(req, res) {  
+  let inputFilePath = null;
+  let outputFilePath = null;
+  
+  try {
+    const { year, rows } = req.body;
+    
+    if (!year || !Array.isArray(rows)) {
+      return res.status(400).json({error: "Dados incompletos: year e rows obrigatórios"});
     }
+    if (!CLIENT_ID || !CLIENT_SECRET) {
+      return res.status(500).json({error: "Chaves Adobe não configuradas"});
+    }
+
+    const templateRes = await fetch(TEMPLATES.vacation_anomalies);
+    if (!templateRes.ok) throw new Error("Erro ao carregar template");
+    
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(await templateRes.arrayBuffer());
+    const ws = workbook.worksheets[0];
+
+    ws.getCell("B6").value = `ANÁLISE DE ANOMALIAS DE MARCAÇÃO DE FÉRIAS - ${year}`;
+
+    const DAYS_RIGHT = 22;
+    const ROW_START = 10;
+
+    rows.forEach((emp, i) => {
+      const r = ROW_START + i;
+      const missing = DAYS_RIGHT - emp.marked;
+
+      // Função interna com RESET de cor obrigatório para cada célula
+      const setCell = (col, value, fontColor = "000000", bold = false) => {
+        const cell = ws.getCell(`${col}${r}`);
+        cell.value = value;
+        
+        // Forçamos o estilo em todas as células para evitar herança do template ou da célula anterior
+        cell.font = {
+          size: 9,
+          name: "Calibri",
+          bold: bold,
+          color: { argb: "FF" + fontColor }
+        };
+        
+        // Remove preenchimentos residuais (opcional, para garantir fundo branco)
+        cell.fill = { type: "pattern", pattern: "none" };
+      };
+
+      // Coluna B: Nome (Sempre Preto)
+      setCell("B", emp.abv_name, "000000", false);
+
+      // Coluna D: Dias Direito (Sempre Cinza/Preto)
+      setCell("D", DAYS_RIGHT, "64748B", false);
+
+      // Coluna E: Marcados (Sempre Preto)
+      setCell("E", emp.marked, "000000", true);
+
+      // Coluna F: Diferencial (Preto por padrão, colorido apenas se quiseres destaque)
+      // Se quiseres TUDO preto exceto o status, muda as cores abaixo para "000000"
+      let diffColor = "000000"; 
+      if (missing > 0) diffColor = "000000"; // Era EF4444, mudei para preto conforme o teu pedido
+      setCell("F", missing, diffColor, true);
+
+      // Coluna G: Transitório (Preto por padrão)
+      const t = emp.transitory || "—";
+      const tLabel = t === "sim" ? "Sim" : t === "nao" ? "Não" : "—";
+      setCell("G", tLabel, "000000", false);
+
+      // Coluna H: STATUS (A ÚNICA QUE DEVE SER VERMELHA)
+      if (missing === 0) {
+        setCell("H", "OK", "10B981", true); // Verde para OK
+      } else {
+        setCell("H", "Verificação", "EF4444", true); // VERMELHO apenas aqui
+      }
+    });
+
+    // Esconder linhas não utilizadas
+    for (let r = ROW_START + rows.length; r <= 110; r++) {
+      ws.getRow(r).hidden = true;
+    }
+
+    // Configurações de página e envio para Adobe (veo/pdfservices)
+    ws.pageSetup = {
+      orientation: "portrait", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0,
+      horizontalCentered: true, margins: { left: 0.3, right: 0.3, top: 0.4, bottom: 0.4, header: 0, footer: 0 }
+    };
+
+    const tempDir = os.tmpdir();
+    inputFilePath = path.join(tempDir, `discrepancias_${Date.now()}.xlsx`);
+    outputFilePath = path.join(tempDir, `discrepancias_${Date.now()}_out.pdf`);
+
+    await workbook.xlsx.writeFile(inputFilePath);
+
+    const credentials = new ServicePrincipalCredentials({ clientId: CLIENT_ID, clientSecret: CLIENT_SECRET });
+    const pdfServices = new PDFServices({ credentials });
+    const inputAsset = await pdfServices.upload({ readStream: fs.createReadStream(inputFilePath), mimeType: MimeType.XLSX });
+    const job = new CreatePDFJob({ inputAsset });
+    const pollingURL = await pdfServices.submit({ job });
+    const pdfServicesResponse = await pdfServices.getJobResult({ pollingURL, resultType: CreatePDFResult });
+    const streamAsset = await pdfServices.getContent({ asset: pdfServicesResponse.result.asset });
+    const writeStream = fs.createWriteStream(outputFilePath);
+    
+    streamAsset.readStream.pipe(writeStream);
+    await new Promise((resolve, reject) => { writeStream.on("finish", resolve); writeStream.on("error", reject); });
+
+    const pdfBuffer = fs.readFileSync(outputFilePath);
+
+    if (fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
+    if (fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename=Discrepancias_Ferias_${year}.pdf`);
+    return res.status(200).send(pdfBuffer);
+
+  } catch (error) {
+    if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
+    if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
+    res.status(500).json({ error: "Erro ao gerar PDF" });
+  }
+}
     async function handleVacationPriority(req, res) {
       let inputPath = null;
       try {

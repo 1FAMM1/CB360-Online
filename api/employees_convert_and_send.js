@@ -532,7 +532,7 @@
         const workbook = new ExcelJS.Workbook();
         await workbook.xlsx.load(await templateRes.arrayBuffer());
         const ws = workbook.worksheets[0];
-        ws.getCell("B6").value = `ANÁLISE DETALHADA DE ATRIBUIÇÃO DE SUBSÍDIO DE TURNO - ${monthLabel} ${year}`;
+        ws.getCell("B6").value = `Análise Detalhada de Atribuição de Subsídio de Turno - ${monthLabel} ${year}`;
         const ROW_START = 10;
         const ROW_MAX = 49;
         records.forEach((rec, i) => {

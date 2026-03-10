@@ -597,7 +597,8 @@
       if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
       if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
     } catch {}
-    throw error;
+    console.error("Erro handleDetailedShiftAllowance:", error.message, error.stack); // ✅ adiciona aqui
+    return res.status(500).json({error: "Erro ao gerar PDF", details: error.message}); // ✅ e aqui
   }
 }
 

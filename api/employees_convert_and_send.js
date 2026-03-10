@@ -606,9 +606,22 @@ import ExcelJS from "exceljs";
           } else {
             ws.getCell(`G${r}`).value = "—";
           }
-          const cellH = ws.getCell(`H${r}`);
-          cellH.value = missing === 0 ? "OK" : "Verificação";
-          cellH.font = {size: 9, name: "Calibri", bold: true, color: {argb: missing === 0 ? "FF10B981" : "FFEF4444"}}
+         ws.addConditionalFormatting({
+          ref: `H10:H${ROW_START + rows.length - 1}`,
+          rules: [
+            {
+              type: "containsText",
+              operator: "containsText",
+              text: "OK",
+              style: { font: { bold: true, color: { argb: "FF10B981" } } }
+            },
+            {
+              type: "containsText",
+              operator: "containsText",
+              text: "Verificação",
+              style: { font: { bold: true, color: { argb: "FFEF4444" } } }
+            }
+          ]
         });
         for (let r = ROW_START + rows.length; r <= 110; r++) {
           ws.getRow(r).hidden = true;

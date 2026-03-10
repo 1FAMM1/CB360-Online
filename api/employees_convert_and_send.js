@@ -448,92 +448,70 @@
       }
     }
     async function handleShiftAllowance(req, res) {
-      let inputFilePath = null;
-      let outputFilePath = null;
-      try {
-        const { year, employees } = req.body;
-        if (!year || !Array.isArray(employees)) {
-          return res.status(400).json({error: "Dados incompletos"});
-        }
-        const templateRes = await fetch(TEMPLATES.shift_allowance);
-        if (!templateRes.ok) throw new Error("Erro ao carregar template");
-        const templateBuffer = await templateRes.buffer();
-        const zip = new AdmZip(templateBuffer);
-        let sheetXml = zip.readAsText("xl/worksheets/sheet1.xml");
-        const sheetDataStart = sheetXml.indexOf("<sheetData>");
-        const sheetDataEnd = sheetXml.indexOf("</sheetData>") + "</sheetData>".length;
-        const beforeSheetData = sheetXml.substring(0, sheetDataStart);
-        const afterSheetData = sheetXml.substring(sheetDataEnd);
-        const headerRows = [];
-        for (const r of ["2","3","4","5","6","7","8","9"]) {
-          const match = sheetXml.match(new RegExp(`<row r="${r}"[^>]*>.*?</row>`, "s"));
-          if (match) headerRows.push(match[0]);
-        }
-        const row6Index = headerRows.findIndex(r => r.includes(`r="6"`));
-        if (row6Index !== -1) {
-          headerRows[row6Index] = headerRows[row6Index].replace(
-            `<c r="B6" s="3"/>`,
-            `<c r="B6" s="3" t="inlineStr"><is><t>ELEGIBILIDADE PARA SUBSÍDIO DE TURNO - ${year}</t></is></c>`
-          );
-        }
-        const escapeXml = (str) => String(str)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
-        const COLS = ["D","E","F","G","H","I","J","K","L","M","N","O"];
-        const ROW_START = 10;
-        const ROW_MAX = 49;
-        let dataRowsXml = "";
-        employees.forEach((emp, i) => {
-          const r = ROW_START + i;
-          if (r > ROW_MAX) return;
-          const monthCells = COLS.map((col, idx) => {
-            const val = emp.months[idx] || "";
-            return val ? `<c r="${col}${r}" s="7" t="inlineStr"><is><t>${val}</t></is></c>`
-                       : `<c r="${col}${r}" s="7"/>`;
-          }).join("");
-          dataRowsXml += `<row r="${r}" spans="2:15" x14ac:dyDescent="0.25">` +
-            `<c r="B${r}" s="6" t="inlineStr"><is><t>${escapeXml(emp.name)}</t></is></c>` +
-            `<c r="C${r}" s="6"/>` +
-            monthCells +
-            `</row>`;
-        });
-        for (let r = ROW_START + employees.length; r <= ROW_MAX; r++) {
-          dataRowsXml += `<row r="${r}" spans="2:15" hidden="1" x14ac:dyDescent="0.25">` +
-            `<c r="B${r}" s="6"/><c r="C${r}" s="6"/>` +
-            COLS.map(col => `<c r="${col}${r}" s="7"/>`).join("") +
-            `</row>`;
-        }
-        const lastRow = sheetXml.match(/<row r="49"[^>]*>.*?<\/row>/s);
-        if (lastRow) dataRowsXml += lastRow[0];
-        const newSheetData = `<sheetData>${headerRows.join("")}${dataRowsXml}</sheetData>`;
-        const newSheetXml = beforeSheetData + newSheetData + afterSheetData;
-        zip.updateFile("xl/worksheets/sheet1.xml", Buffer.from(newSheetXml, "utf8"));
-        const modifiedBuffer = zip.toBuffer();
-        const tempDir = os.tmpdir();
-        inputFilePath = path.join(tempDir, `shift_${Date.now()}.xlsx`);
-        outputFilePath = path.join(tempDir, `shift_${Date.now()}_out.pdf`);
-        fs.writeFileSync(inputFilePath, modifiedBuffer);
-        const credentials = new ServicePrincipalCredentials({clientId: CLIENT_ID, clientSecret: CLIENT_SECRET});
-        const pdfServices = new PDFServices({credentials});
-        const inputAsset = await pdfServices.upload({readStream: fs.createReadStream(inputFilePath), mimeType: MimeType.XLSX});
-        const job = new CreatePDFJob({inputAsset});
-        const pollingURL = await pdfServices.submit({job});
-        const pdfServicesResponse = await pdfServices.getJobResult({pollingURL, resultType: CreatePDFResult});
-        const streamAsset = await pdfServices.getContent({asset: pdfServicesResponse.result.asset});
-        const chunks = [];
-        for await (let chunk of streamAsset.readStream) chunks.push(chunk);
-        if (fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
-        res.setHeader("Content-Type", "application/pdf");
-        res.setHeader("Content-Disposition", `attachment; filename=Elegibilidade_Subsidio_Turno_${year}.pdf`);
-        return res.status(200).send(Buffer.concat(chunks));
-      } catch (error) {
-        if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
-        if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
-        console.error("Erro handleShiftAllowance:", error);
-        return res.status(500).json({error: "Erro ao gerar PDF", details: error.message});
-      }
+  let inputFilePath = null;
+  let outputFilePath = null;
+  try {
+    const { year, employees } = req.body;
+    if (!year || !Array.isArray(employees)) {
+      return res.status(400).json({error: "Dados incompletos"});
     }
+    if (!CLIENT_ID || !CLIENT_SECRET) {
+      return res.status(500).json({error: "Chaves Adobe não configuradas"});
+    }
+    const templateRes = await fetch(TEMPLATES.shift_allowance);
+    if (!templateRes.ok) throw new Error("Erro ao carregar template");
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(await templateRes.arrayBuffer());
+    const ws = workbook.worksheets[0];
+    ws.getCell("B6").value = `ELEGIBILIDADE PARA SUBSÍDIO DE TURNO - ${year}`;
+    const COLS = ["D","E","F","G","H","I","J","K","L","M","N","O"];
+    const ROW_START = 10;
+    const ROW_MAX = 48;
+    employees.forEach((emp, i) => {
+      const r = ROW_START + i;
+      if (r > ROW_MAX) return;
+      ws.getCell(`B${r}`).value = emp.name;
+      COLS.forEach((col, idx) => {
+        ws.getCell(`${col}${r}`).value = emp.months[idx] || "";
+      });
+    });
+    for (let r = ROW_START + employees.length; r <= ROW_MAX; r++) {
+      ws.getRow(r).hidden = true;
+    }
+    ws.pageSetup = {
+      orientation: "portrait", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
+      margins: {left: 0.3, right: 0.3, top: 0.4, bottom: 0.4, header: 0, footer: 0}
+    };
+    const tempDir = os.tmpdir();
+    inputFilePath = path.join(tempDir, `shift_${Date.now()}.xlsx`);
+    outputFilePath = path.join(tempDir, `shift_${Date.now()}_out.pdf`);
+    await workbook.xlsx.writeFile(inputFilePath);
+    const credentials = new ServicePrincipalCredentials({clientId: CLIENT_ID, clientSecret: CLIENT_SECRET});
+    const pdfServices = new PDFServices({credentials});
+    const inputAsset = await pdfServices.upload({readStream: fs.createReadStream(inputFilePath), mimeType: MimeType.XLSX});
+    const job = new CreatePDFJob({inputAsset});
+    const pollingURL = await pdfServices.submit({job});
+    const pdfServicesResponse = await pdfServices.getJobResult({pollingURL, resultType: CreatePDFResult});
+    const streamAsset = await pdfServices.getContent({asset: pdfServicesResponse.result.asset});
+    const writeStream = fs.createWriteStream(outputFilePath);
+    streamAsset.readStream.pipe(writeStream);
+    await new Promise((resolve, reject) => {writeStream.on("finish", resolve); writeStream.on("error", reject);});
+    const pdfBuffer = fs.readFileSync(outputFilePath);
+    try {
+      if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
+      if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
+    } catch {}
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename=Elegibilidade_Subsidio_Turno_${year}.pdf`);
+    return res.status(200).send(pdfBuffer);
+  } catch (error) {
+    try {
+      if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
+      if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
+    } catch {}
+    throw error;
+  }
+}
     async function handleVacation(req, res) {
       let inputFilePath = null;
       try {

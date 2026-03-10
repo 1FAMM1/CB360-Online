@@ -574,7 +574,7 @@ import ExcelJS from "exceljs";
         res.status(500).json({error: err.message});
       }
     }
-    async function handleVacationAnomalies(req, res) {
+    async function handleVacationAnomalies(req, res) {  
   let inputFilePath = null;
   let outputFilePath = null;
   try {
@@ -587,77 +587,38 @@ import ExcelJS from "exceljs";
     }
     const templateRes = await fetch(TEMPLATES.vacation_anomalies);
     if (!templateRes.ok) throw new Error("Erro ao carregar template");
-    const templateBuffer = await templateRes.buffer();
-    const zip = new AdmZip(templateBuffer);
-    let sheetXml = zip.readAsText("xl/worksheets/sheet1.xml");
-
-    const sheetDataStart = sheetXml.indexOf("<sheetData>");
-    const sheetDataEnd = sheetXml.indexOf("</sheetData>") + "</sheetData>".length;
-    const beforeSheetData = sheetXml.substring(0, sheetDataStart);
-    const afterSheetData = sheetXml.substring(sheetDataEnd);
-
-    // Preservar linhas de cabeçalho (1 a 9)
-    const headerRows = [];
-    for (const r of ["1","2","3","4","5","6","7","8","9"]) {
-      const match = sheetXml.match(new RegExp(`<row r="${r}"[^>]*>.*?</row>`, "s"));
-      if (match) headerRows.push(match[0]);
-    }
-
-    // Atualizar o título na célula B6
-    const row6Index = headerRows.findIndex(r => r.includes(`r="6"`));
-    if (row6Index !== -1) {
-      const styleMatch = headerRows[row6Index].match(/<c r="B6" s="(\d+)"/);
-      const originalStyle = styleMatch ? styleMatch[1] : "0";
-      headerRows[row6Index] = headerRows[row6Index].replace(
-        /<c r="B6"[^>]*>.*?<\/c>|<c r="B6"[^\/]*\/>/s,
-        `<c r="B6" s="${originalStyle}" t="inlineStr"><is><t>ANÁLISE DE ANOMALIAS DE MARCAÇÃO DE FÉRIAS - ${year}</t></is></c>`
-      );
-    }
-
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(await templateRes.arrayBuffer());
+    const ws = workbook.worksheets[0];
+    ws.getCell("B6").value = `ANÁLISE DE ANOMALIAS DE MARCAÇÃO DE FÉRIAS - ${year}`;
     const DAYS_RIGHT = 22;
     const ROW_START = 10;
-
-    // Função para escapar caracteres XML
-    const escapeXml = (str) => String(str)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
-
-    // Gerar linhas de dados
-    let dataRowsXml = "";
     rows.forEach((emp, i) => {
       const r = ROW_START + i;
       const missing = DAYS_RIGHT - emp.marked;
-      const fVal = missing > 0 ? `+${missing}` : String(missing);
-      const t = emp.transitory || "—";
-      const gVal = missing < 0 ? (t === "sim" ? "Sim" : t === "nao" ? "Não" : "—") : "—";
-      const hVal = missing === 0 ? "OK" : "Verificação";
-      dataRowsXml += `<row r="${r}">` +
-        `<c r="B${r}" t="inlineStr"><is><t>${escapeXml(emp.abv_name)}</t></is></c>` +
-        `<c r="D${r}"><v>${DAYS_RIGHT}</v></c>` +
-        `<c r="E${r}"><v>${emp.marked}</v></c>` +
-        `<c r="F${r}" t="inlineStr"><is><t>${fVal}</t></is></c>` +
-        `<c r="G${r}" t="inlineStr"><is><t>${escapeXml(gVal)}</t></is></c>` +
-        `<c r="H${r}" t="inlineStr"><is><t>${escapeXml(hVal)}</t></is></c>` +
-        `</row>`;
+      ws.getCell(`B${r}`).value = emp.abv_name;
+      ws.getCell(`D${r}`).value = DAYS_RIGHT;
+      ws.getCell(`E${r}`).value = emp.marked;
+      ws.getCell(`F${r}`).value = missing > 0 ? `+${missing}` : String(missing);
+      if (missing < 0) {
+        const t = emp.transitory || "—";
+        ws.getCell(`G${r}`).value = t === "sim" ? "Sim" : t === "nao" ? "Não" : "—";
+      } else {
+        ws.getCell(`G${r}`).value = "—";
+      }
+      ws.getCell(`H${r}`).value = missing === 0 ? "OK" : "Verificação";
     });
-
-    // Linhas ocultas
     for (let r = ROW_START + rows.length; r <= 110; r++) {
-      dataRowsXml += `<row r="${r}" hidden="1"></row>`;
+      ws.getRow(r).hidden = true;
     }
-
-    const newSheetData = `<sheetData>${headerRows.join("")}${dataRowsXml}</sheetData>`;
-    const newSheetXml = beforeSheetData + newSheetData + afterSheetData;
-
-    zip.updateFile("xl/worksheets/sheet1.xml", Buffer.from(newSheetXml, "utf8"));
-    const modifiedBuffer = zip.toBuffer();
-
+    ws.pageSetup = {
+      orientation: "portrait", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
+      margins: {left: 0.3, right: 0.3, top: 0.4, bottom: 0.4, header: 0, footer: 0}
+    };
     const tempDir = os.tmpdir();
     inputFilePath = path.join(tempDir, `discrepancias_${Date.now()}.xlsx`);
     outputFilePath = path.join(tempDir, `discrepancias_${Date.now()}_out.pdf`);
-    fs.writeFileSync(inputFilePath, modifiedBuffer);
-
+    await workbook.xlsx.writeFile(inputFilePath);
     const credentials = new ServicePrincipalCredentials({clientId: CLIENT_ID, clientSecret: CLIENT_SECRET});
     const pdfServices = new PDFServices({credentials});
     const inputAsset = await pdfServices.upload({readStream: fs.createReadStream(inputFilePath), mimeType: MimeType.XLSX});
@@ -665,19 +626,26 @@ import ExcelJS from "exceljs";
     const pollingURL = await pdfServices.submit({job});
     const pdfServicesResponse = await pdfServices.getJobResult({pollingURL, resultType: CreatePDFResult});
     const streamAsset = await pdfServices.getContent({asset: pdfServicesResponse.result.asset});
-    const chunks = [];
-    for await (let chunk of streamAsset.readStream) chunks.push(chunk);
-    if (fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
+    const writeStream = fs.createWriteStream(outputFilePath);
+    streamAsset.readStream.pipe(writeStream);
+    await new Promise((resolve, reject) => {writeStream.on("finish", resolve); writeStream.on("error", reject);});
+    const pdfBuffer = fs.readFileSync(outputFilePath);
+    try {
+      if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
+      if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
+    } catch {}
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `attachment; filename=Discrepancias_Ferias_${year}.pdf`);
-    return res.status(200).send(Buffer.concat(chunks));
+    return res.status(200).send(pdfBuffer);
   } catch (error) {
-    if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
-    if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
-    console.error("Erro handleVacationAnomalies:", error);
-    return res.status(500).json({error: "Erro ao gerar PDF", details: error.message});
+    try {
+      if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
+      if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
+    } catch {}
+    throw error;
   }
 }
+
     async function handleVacationPriority(req, res) {
       let inputPath = null;
       try {

@@ -23,6 +23,39 @@
     let currentSection = "1ª Secção";
     let currentTableData = [];
     const yearAtual = new Date().getFullYear();
+    function atNoonLocal(y, mIndex, d) {
+      return new Date(y, mIndex, d, 12, 0, 0, 0);
+    }
+    function addDays(baseDate, days) {
+      const d = new Date(baseDate);
+      d.setHours(12, 0, 0, 0);
+      d.setDate(d.getDate() + days);
+      return d;
+    }
+    function getPortugalHolidays(year) {
+      const fixed = [{month: 1, day: 1, name: "Ano Novo"}, {month: 4, day: 25, name: "Dia da Liberdade"}, {month: 5, day: 1, name: "Dia do Trabalhador"}, {month: 6, day: 10, name: "Dia de Portugal"},
+                     {month: 8, day: 15, name: "Assunção de Nossa Senhora"}, {month: 9, day: 7, name: "Dia da Cidade de Faro"}, {month: 10, day: 5, name: "Implantação da República"},
+                     {month: 11, day: 1, name: "Todos os Santos"}, {month: 12, day: 1, name: "Restauração da Independência"}, {month: 12, day: 8, name: "Imaculada Conceição"}, {month: 12, day: 25, name: "Natal"}];
+      const a = year % 19;
+      const b = Math.floor(year / 100);
+      const c = year % 100;
+      const d = Math.floor(b / 4);
+      const e = b % 4;
+      const f = Math.floor((b + 8) / 25);
+      const g = Math.floor((b - f + 1) / 3);
+      const h = (19 * a + b - d - g + 15) % 30;
+      const i = Math.floor(c / 4);
+      const k = c % 4;
+      const l = (32 + 2 * e + 2 * i - h - k) % 7;
+      const m = Math.floor((a + 11 * h + 22 * l) / 451);
+      const month = Math.floor((h + l - 7 * m + 114) / 31);
+      const day = ((h + l - 7 * m + 114) % 31) + 1;
+      const easter = atNoonLocal(year, month - 1, day);
+      const mobile = [{date: addDays(easter, -47), name: "Carnaval", optional: true}, {date: addDays(easter, -2),  name: "Sexta-feira Santa", optional: false}, 
+                      {date: easter, name: "Páscoa", optional: false}, {date: addDays(easter, 60),  name: "Corpo de Deus", optional: false}];
+      const fixedDates = fixed.map(h => ({date: atNoonLocal(year, h.month - 1, h.day), name: h.name, optional: false}));
+      return [...fixedDates, ...mobile];
+    }
     document.addEventListener("DOMContentLoaded", () => {
       createMonthButtons("months-container", "table-container", yearAtual);
       initSidebarSecaoButtons();
@@ -395,6 +428,7 @@
       wrapper.style.maxHeight = "75vh";
       wrapper.style.height = "370px";
       wrapper.style.overflowY = "auto";
+      wrapper.style.overflowX = "auto";
       return wrapper;
     }
     function createTableStructure(wrapper) {
@@ -439,21 +473,39 @@
       return table;
     }
     /* ========= DAY HEADER UPDATE ======== */
-    function updateDayHeaders(table, year, month, daysInMonth) {
+    function updateDayHeaders(table, year, month, daysInMonth, holidays) {
+      const hList = holidays || getPortugalHolidays(year);
+      const mesIdx = month - 1;
       for (let d = 1; d <= 31; d++) {
         const h = table.querySelector(`.day-header-${d}`);
         const n = table.querySelector(`.day-number-${d}`);
+        if (!h || !n) continue;
         if (d <= daysInMonth) {
-          const date = new Date(year, month - 1, d);
-          h.textContent = date.toLocaleDateString("pt-PT", {
-              weekday: "short"
-            })
-            .toUpperCase().slice(0, 3);
+          const date = new Date(year, mesIdx, d);
+          h.textContent = date.toLocaleDateString("pt-PT", {weekday: "short"}).toUpperCase().slice(0, 3);
           h.style.display = "";
           n.style.display = "";
           const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-          h.style.background = isWeekend ? "#f9e0b0" : "#f0f0f0";
-          n.style.background = isWeekend ? "#f9e0b0" : "#f0f0f0";
+          const holiday = hList.find(hol => hol.date.getDate() === d && hol.date.getMonth() === mesIdx);
+          if (holiday) {
+            const color = holiday.optional ? "#2ecc71" : "#ffcccc";
+            const textColor = holiday.optional ? "#ffffff" : "#000000";
+            h.style.background = color;
+            n.style.background = color;
+            h.style.color = textColor;
+            n.style.color = textColor;
+            h.title = holiday.name;
+            n.title = holiday.name;
+            h.classList.add(holiday.optional ? "holiday-optional" : "holiday");
+            n.classList.add(holiday.optional ? "holiday-optional" : "holiday");
+          } else {
+            h.style.background = isWeekend ? "#f9e0b0" : "#f0f0f0";
+            n.style.background = isWeekend ? "#f9e0b0" : "#f0f0f0";
+            h.style.color = "#000";
+            n.style.color = "#000";
+            h.classList.remove("holiday", "holiday-optional");
+            n.classList.remove("holiday", "holiday-optional");
+          }
         } else {
           h.style.display = "none";
           n.style.display = "none";
@@ -461,12 +513,29 @@
       }
     }
     /* ======== CREATING DAY CELLS ======== */
-    function createDayCellWithListeners(d, tr, year, month, savedMap, section, daysInMonth, calculateVolunteersRowTotal, calculateColumnTotals) {
+    function createDayCellWithListeners(d, tr, year, month, savedMap, section, daysInMonth, calculateVolunteersRowTotal, calculateColumnTotals, holidays) {
       const td = document.createElement("td");
       td.className = `day-cell-${d}`;
       td.contentEditable = section !== "Consultar Escalas";
       td.style.cssText = COMMON_TD_STYLE;
       td.style.fontWeight = "bold";
+      const mesIdx = month - 1;
+      const dateObj = new Date(year, mesIdx, d);
+      const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
+      const holiday = holidays && holidays.find(h => h.date.getDate() === d && h.date.getMonth() === mesIdx);
+      const setInitialColor = () => {
+        if (holiday) {
+          td.style.background = holiday.optional ? "#2ecc71" : "#ffcccc";
+          td.style.color = holiday.optional ? "#ffffff" : "#000000";
+        } else if (isWeekend) {
+          td.style.background = "#f9e0b0";
+          td.style.color = "#000";
+        } else {
+          td.style.background = "transparent";
+          td.style.color = "#000";
+        }
+      };
+      setInitialColor();
       td.addEventListener("focus", () => {
         const range = document.createRange();
         range.selectNodeContents(td);
@@ -481,20 +550,22 @@
           td.textContent = value;
           if (td.firstChild) sel.collapse(td.firstChild, value.length);
         }
-        const dayNum = parseInt(td.className.match(/day-cell-(\d+)/)[1], 10);
+        const dayNum = d;
         const n_int = parseInt(tr.getAttribute("data-nint"), 10);
         const conflictMsg = await checkConflict(section, n_int, year, month, dayNum, value);
         if (conflictMsg) {
           showPopupWarning(conflictMsg);
           td.textContent = "";
-          const date = new Date(year, month - 1, dayNum);
-          td.style.background = date.getDay() === 0 || date.getDay() === 6 ? "#f9e0b0" : "transparent";
-          td.style.color = "#000";
+          setInitialColor();
           calculateVolunteersRowTotal(tr, section, daysInMonth);
           calculateColumnTotals(tr.parentElement, section, daysInMonth);
           return;
         }
-        updateCellColor(td, value, new Date(year, month - 1, dayNum));
+        if (value.trim() === "") {
+          setInitialColor();
+        } else {
+          updateCellColor(td, value, dateObj);
+        }
         calculateVolunteersRowTotal(tr, section, daysInMonth);
         calculateColumnTotals(tr.parentElement, section, daysInMonth);
         calculateMLTotals(tr.parentElement, daysInMonth, currentTableData);
@@ -513,41 +584,27 @@
         const idx = cells.indexOf(td);
         switch (e.key) {
           case "ArrowRight":
-            if (cells[idx + 1]) {
-              e.preventDefault();
-              cells[idx + 1].focus();
-            }
+            if (cells[idx + 1]) {e.preventDefault(); cells[idx + 1].focus();}
             break;
           case "ArrowLeft":
-            if (cells[idx - 1]) {
-              e.preventDefault();
-              cells[idx - 1].focus();
-            }
+            if (cells[idx - 1]) {e.preventDefault(); cells[idx - 1].focus();}
             break;
           case "ArrowUp":
             if (tr.previousElementSibling) {
-              const prevRowCells = Array.from(tr.previousElementSibling.querySelectorAll("td"))
-                .filter(c => c.contentEditable === "true");
-              if (prevRowCells[idx]) {
-                e.preventDefault();
-                prevRowCells[idx].focus();
-              }
+              const prevRowCells = Array.from(tr.previousElementSibling.querySelectorAll("td")).filter(c => c.contentEditable === "true");
+              if (prevRowCells[idx]) {e.preventDefault(); prevRowCells[idx].focus();}
             }
             break;
           case "ArrowDown":
             if (tr.nextElementSibling) {
-              const nextRowCells = Array.from(tr.nextElementSibling.querySelectorAll("td"))
-                .filter(c => c.contentEditable === "true");
-              if (nextRowCells[idx]) {
-                e.preventDefault();
-                nextRowCells[idx].focus();
-              }
+              const nextRowCells = Array.from(tr.nextElementSibling.querySelectorAll("td")).filter(c => c.contentEditable === "true");
+              if (nextRowCells[idx]) {e.preventDefault(); nextRowCells[idx].focus();}
             }
             break;
         }
       });
       td.addEventListener("blur", async () => {
-        const dayNum = parseInt(td.className.match(/day-cell-(\d+)/)[1], 10);
+        const dayNum = d;
         const n_int = parseInt(tr.getAttribute("data-nint"), 10);
         const value = td.textContent.toUpperCase().slice(0, 2);
         const nIntStr = String(n_int).padStart(3, "0");
@@ -555,16 +612,34 @@
       });
       return td;
     }
-    /* ====== CREATION OF FIXED CELLS ===== */    
-    function createFixedDayCellWithListeners(d, fixedRow, year, month, savedMap, nIntStr, daysInMonth, calculateVolunteersRowTotal, calculateColumnTotals) {
+    /* ====== CREATION OF FIXED CELLS ===== */
+    function createFixedDayCellWithListeners(d, fixedRow, year, month, savedMap, nIntStr, daysInMonth, calculateVolunteersRowTotal, calculateColumnTotals, holidays) {
       const td = document.createElement("td");
       td.className = `fixed-day-cell-${d}`;
       td.contentEditable = currentSection !== "Consultar Escalas";
       td.style.cssText = COMMON_TD_STYLE;
       td.style.fontWeight = "bold";
-      td.textContent = savedMap[`${nIntStr}_${d}`] ? savedMap[`${nIntStr}_${d}`].toUpperCase() : "";
+      const val = savedMap[`${nIntStr}_${d}`] ? savedMap[`${nIntStr}_${d}`].toUpperCase() : "";
+      td.textContent = val;
       const date = new Date(year, month - 1, d);
-      updateCellColor(td, td.textContent, date);
+      const mesIdx = month - 1;
+      const holiday = holidays && holidays.find(h => h.date.getDate() === d && h.date.getMonth() === mesIdx);
+      const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+      const setFixedColor = (currentVal) => {
+        if (currentVal) {
+          updateCellColor(td, currentVal, date);
+        } else if (holiday) {
+          td.style.background = holiday.optional ? "#2ecc71" : "#ffcccc";
+          td.style.color = holiday.optional ? "#ffffff" : "#000000";
+        } else if (isWeekend) {
+          td.style.background = "#f9e0b0";
+          td.style.color = "#000";
+        } else {
+          td.style.background = "transparent";
+          td.style.color = "#000";
+        }
+      };
+      setFixedColor(val);
       td.addEventListener("focus", () => {
         const range = document.createRange();
         range.selectNodeContents(td);
@@ -575,11 +650,14 @@
       td.addEventListener("input", () => {
         let value = td.textContent.toUpperCase().slice(0, 1);
         if (td.textContent !== value) td.textContent = value;
-        updateCellColor(td, value, date);
+        if (value.trim() === "") {
+          setFixedColor("");
+        } else {
+          updateCellColor(td, value, date);
+        }
         calculateVolunteersRowTotal(fixedRow, currentSection, daysInMonth);
         calculateColumnTotals(fixedRow.parentElement, currentSection, daysInMonth);
-        const cells = Array.from(fixedRow.querySelectorAll("td"))
-          .filter(c => c.contentEditable === "true");
+        const cells = Array.from(fixedRow.querySelectorAll("td")).filter(c => c.contentEditable === "true");
         const idx = cells.indexOf(td);
         if (value.length === 1 && cells[idx + 1]) cells[idx + 1].focus();
       });
@@ -587,40 +665,23 @@
         savedMap[`${nIntStr}_${d}`] = td.textContent.toUpperCase().slice(0, 1);
       });
       td.addEventListener("keydown", (e) => {
-        const cells = Array.from(fixedRow.querySelectorAll("td"))
-          .filter(c => c.contentEditable === "true");
+        const cells = Array.from(fixedRow.querySelectorAll("td")).filter(c => c.contentEditable === "true");
         const idx = cells.indexOf(td);
         switch (e.key) {
-          case "ArrowRight":
-            if (cells[idx + 1]) {
-              e.preventDefault();
-              cells[idx + 1].focus();
-            }
+          case "ArrowRight": if (cells[idx + 1]) {e.preventDefault(); cells[idx + 1].focus();}
             break;
-          case "ArrowLeft":
-            if (cells[idx - 1]) {
-              e.preventDefault();
-              cells[idx - 1].focus();
-            }
+          case "ArrowLeft": if (cells[idx - 1]) {e.preventDefault(); cells[idx - 1].focus();}
             break;
           case "ArrowUp":
             if (fixedRow.previousElementSibling && fixedRow.previousElementSibling.classList.contains("fixed-row")) {
-              const prevCells = Array.from(fixedRow.previousElementSibling.querySelectorAll("td"))
-                .filter(c => c.contentEditable === "true");
-              if (prevCells[idx]) {
-                e.preventDefault();
-                prevCells[idx].focus();
-              }
+              const prevCells = Array.from(fixedRow.previousElementSibling.querySelectorAll("td")).filter(c => c.contentEditable === "true");
+              if (prevCells[idx]) {e.preventDefault(); prevCells[idx].focus();}
             }
             break;
           case "ArrowDown":
             if (fixedRow.nextElementSibling && fixedRow.nextElementSibling.classList.contains("fixed-row")) {
-              const nextCells = Array.from(fixedRow.nextElementSibling.querySelectorAll("td"))
-                .filter(c => c.contentEditable === "true");
-              if (nextCells[idx]) {
-                e.preventDefault();
-                nextCells[idx].focus();
-              }
+              const nextCells = Array.from(fixedRow.nextElementSibling.querySelectorAll("td")).filter(c => c.contentEditable === "true");
+              if (nextCells[idx]) {e.preventDefault(); nextCells[idx].focus();}
             }
             break;
         }
@@ -628,10 +689,9 @@
       return td;
     }
     /* ====== CREATION OF FIXED LINES ===== */
-    function createFixedRows(tbody, data, savedMap, year, month, daysInMonth, section, calculateVolunteersRowTotal, calculateColumnTotals) {
-      const fixedRowsData = [{idx: 0, text: savedMap[`fixed_0_text`] || "OFOPE", isHeader: true},
-                             {idx: 1, dataIndex: 0}, {idx: 2, dataIndex: 1}, {idx: 3, dataIndex: 2},
-                             {idx: 5, text: savedMap[`fixed_3_text`] || "CORPO ATIVO", isHeader: true}];
+    function createFixedRows(tbody, data, savedMap, year, month, daysInMonth, section, calculateVolunteersRowTotal, calculateColumnTotals, holidays) {
+      const fixedRowsData = [{idx: 0, text: savedMap[`fixed_0_text`] || "OFOPE", isHeader: true}, {idx: 1, dataIndex: 0}, {idx: 2, dataIndex: 1},
+                             {idx: 3, dataIndex: 2}, {idx: 5, text: savedMap[`fixed_3_text`] || "CORPO ATIVO", isHeader: true}];
       fixedRowsData.forEach(rowInfo => {
         let fixedRow = tbody.querySelector(`tr.fixed-row[data-fixed="${rowInfo.idx}"]`);
         if (!fixedRow) {
@@ -640,33 +700,29 @@
           fixedRow.setAttribute("data-fixed", rowInfo.idx);
           if (rowInfo.isHeader) {
             const td = document.createElement("td");
-            td.colSpan = 3 + daysInMonth + 1;
-            td.style.cssText = COMMON_TD_STYLE;
+            td.colSpan = 3 + 31 + 1;
             td.style.cssText = COMMON_TDSPECIAL_STYLE;
             td.textContent = rowInfo.text;
             fixedRow.appendChild(td);
           } else {
             ["NI", "Nome", "Catg."].forEach((f) => {
               const td = document.createElement("td");
-              td.contentEditable = "false";
               td.style.cssText = COMMON_TD_STYLE;
               const item = data[rowInfo.dataIndex];
               if (item) {
                 if (f === "NI") td.textContent = String(item.n_int).padStart(3, "0");
                 else if (f === "Nome") td.textContent = item.abv_name;
                 else if (f === "Catg.") td.textContent = item.patent_abv || "";
-              } else {
-                const fieldName = f === "NI" ? "ni" : f === "Nome" ? "nome" : "catg";
-                td.textContent = savedMap[`fixed_${rowInfo.idx}_${fieldName}`] || "";
               }
               fixedRow.appendChild(td);
             });
-            const nIntStr = String(data[rowInfo.dataIndex].n_int).padStart(3, "0");
-            for (let d = 1; d <= daysInMonth; d++) {
+            const nIntStr = data[rowInfo.dataIndex] ? String(data[rowInfo.dataIndex].n_int).padStart(3, "0") : "000";
+            for (let d = 1; d <= 31; d++) {
               const td = createFixedDayCellWithListeners(
                 d, fixedRow, year, month, savedMap, nIntStr, daysInMonth,
-                calculateVolunteersRowTotal, calculateColumnTotals
+                calculateVolunteersRowTotal, calculateColumnTotals, holidays
               );
+              if (d > daysInMonth) td.style.display = "none";
               fixedRow.appendChild(td);
             }
             const tdTotal = document.createElement("td");
@@ -681,8 +737,8 @@
         }
       });
     }
-    /* ====== CREATION OF DATA LINES ====== */
-    function createDataRows(tbody, data, savedMap, year, month, daysInMonth, section, calculateVolunteersRowTotal, calculateColumnTotals) {
+    /* ====== CREATION OF DATA LINES (CORRIGIDA) ====== */
+    function createDataRows(tbody, data, savedMap, year, month, daysInMonth, section, calculateVolunteersRowTotal, calculateColumnTotals, holidays) {
       const isEditable = section === "Emissão Escala";
       const isEscalaSection = isEditable || section === "Consultar Escalas";
       for (let dataIdx = 0; dataIdx < data.length; dataIdx++) {
@@ -704,7 +760,7 @@
           for (let d = 1; d <= 31; d++) {
             const td = createDayCellWithListeners(
               d, tr, year, month, savedMap, section, daysInMonth,
-              calculateVolunteersRowTotal, calculateColumnTotals, isEditable
+              calculateVolunteersRowTotal, calculateColumnTotals, holidays
             );
             tr.appendChild(td);
           }
@@ -720,16 +776,24 @@
           if (d <= daysInMonth) {
             td.style.display = "";
             const cellValue = savedMap[`${nIntStr}_${d}`] ? savedMap[`${nIntStr}_${d}`].toUpperCase() : "";
-            if (isEditable) {
-              const input = td.querySelector('input');
-              if (input) {
-                input.value = cellValue;
+            td.textContent = cellValue;
+            if (cellValue.trim() === "") {
+              const mesIdx = month - 1;
+              const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+              const holiday = holidays && holidays.find(h => h.date.getDate() === d && h.date.getMonth() === mesIdx);
+              if (holiday) {
+                td.style.background = holiday.optional ? "#2ecc71" : "#ffcccc";
+                td.style.color = holiday.optional ? "#ffffff" : "#000000";
+              } else if (isWeekend) {
+                td.style.background = "#f9e0b0";
+                td.style.color = "#000";
+              } else {
+                td.style.background = "transparent";
+                td.style.color = "#000";
               }
-              td.textContent = cellValue;
             } else {
-              td.textContent = cellValue;
+              updateCellColor(td, cellValue, date);
             }
-            updateCellColor(td, td.textContent, date);
           } else {
             td.style.display = "none";
           }
@@ -1073,7 +1137,7 @@
         }
       }
     }
-    /* ========== MAIN FUNCTION  ========== */
+    /* ========== MAIN FUNCTION - COMPLETA ========== */
     async function createMonthTable(containerId, year, month, data) {
       currentTableData = data;
       const container = document.getElementById(containerId);
@@ -1083,24 +1147,34 @@
       const wrapper = createTableWrapper(container);
       const table = createTableStructure(wrapper);
       const daysInMonth = new Date(year, month, 0).getDate();
-      updateDayHeaders(table, year, month, daysInMonth);
+      const holidays = getPortugalHolidays(year);
+      updateDayHeaders(table, year, month, daysInMonth, holidays);
       const sectionToLoad = currentSection === "Consultar Escalas" ? "Emissão Escala" : currentSection;
       const savedMap = await loadSavedData(sectionToLoad, year, month);
       const tbody = table.querySelector("tbody");
       const isEscalaSection = currentSection === "Emissão Escala" || currentSection === "Consultar Escalas";
       if (isEscalaSection) {
-        createFixedRows(tbody, data, savedMap, year, month, daysInMonth, currentSection, calculateVolunteersRowTotal, calculateColumnTotals);}
-      createDataRows(tbody, data, savedMap, year, month, daysInMonth, currentSection, calculateVolunteersRowTotal, calculateColumnTotals);
+        createFixedRows(
+          tbody, data, savedMap, year, month, daysInMonth, 
+          currentSection, calculateVolunteersRowTotal, calculateColumnTotals,
+          holidays
+        );
+      }
+      createDataRows(
+        tbody, data, savedMap, year, month, daysInMonth, 
+        currentSection, calculateVolunteersRowTotal, calculateColumnTotals, 
+        holidays
+      );
       if (currentSection === "DECIR" || currentSection === "1ª Secção" || currentSection === "2ª Secção") {
-        createMPRows(tbody, daysInMonth, currentSection);
+        createMPRows(tbody, daysInMonth, currentSection, holidays, month, year);
       }
       if (currentSection === "1ª Secção" || currentSection === "2ª Secção") {
-        createTASRows(tbody, daysInMonth);
+        createTASRows(tbody, daysInMonth, holidays, month, year);
       }
       if (currentSection === "Emissão Escala") {
-        createMLRow(tbody, daysInMonth);
-        createMPRows(tbody, daysInMonth, currentSection);
-        createTASRows(tbody, daysInMonth);
+        createMLRow(tbody, daysInMonth, holidays, month, year);
+        createMPRows(tbody, daysInMonth, currentSection, holidays, month, year);
+        createTASRows(tbody, daysInMonth, holidays, month, year);
       }
       if (currentSection === "DECIR" || currentSection === "1ª Secção" || currentSection === "2ª Secção") {
         calculateMPTotals(tbody, daysInMonth, data, currentSection);
@@ -1108,7 +1182,7 @@
       if (currentSection === "1ª Secção" || currentSection === "2ª Secção") {
         calculateTASTotals(tbody, daysInMonth, data);
       }
-       if (currentSection === "Emissão Escala") {
+      if (currentSection === "Emissão Escala") {
         calculateMLTotals(tbody, daysInMonth, data);
         calculateMPTotals(tbody, daysInMonth, data, currentSection);
         calculateTASTotals(tbody, daysInMonth, data);        
@@ -1425,68 +1499,60 @@
       const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
       const fileName = `Escala FOMIO ${monthNames[month - 1]} ${year}`;
       const daysInMonth = new Date(year, month, 0).getDate();
-      const weekdays = [];
       const table = tbody.parentElement;
+      const holidays = getPortugalHolidays(year);
+      const mesIdx = month - 1;
+      const holidayDays = holidays.filter(h => !h.optional && h.date.getMonth() === mesIdx).map(h => h.date.getDate());
+      const optionalDays = holidays.filter(h => h.optional && h.date.getMonth() === mesIdx).map(h => h.date.getDate());
+      const weekdays = [];
       for (let d = 1; d <= daysInMonth; d++) {
         const headerCell = table.querySelector(`.day-header-${d}`);
-        if (headerCell) {
-          weekdays.push(headerCell.textContent || '');
-        } else {
-          const date = new Date(year, month - 1, d);
-          weekdays.push(date.toLocaleDateString("pt-PT", {
-            weekday: "long"
-          }).substring(0, 3).toUpperCase());
-        }
+        weekdays.push(headerCell ? headerCell.textContent.trim() : "");
       }
       const fixedRows = [];
       tbody.querySelectorAll("tr.fixed-row").forEach(tr => {
-        if (tr.cells.length === 1) return;
-        const rowData = {type: 'data', ni: tr.cells[0].textContent, nome: tr.cells[1].textContent, catg: tr.cells[2].textContent, days: {}};
+        if (tr.cells.length <= 1) return;
+        const rowData = {ni: tr.cells[0].textContent.trim(), nome: tr.cells[1].textContent.trim(), catg: tr.cells[2].textContent.trim(), days: {}};
         for (let d = 1; d <= daysInMonth; d++) {
           const cell = tr.querySelector(`.fixed-day-cell-${d}`);
-          if (cell) rowData.days[d] = cell.textContent || '';
+          rowData.days[d] = cell ? cell.textContent.trim() : "";
         }
         fixedRows.push(rowData);
       });
       const normalRows = [];
-      tbody.querySelectorAll("tr:not(.fixed-row):not(.totals-row):not(.mp-dia-row):not(.mp-noite-row):not(.mp-row):not(.tas-row):not(.ml-row)").forEach(tr => {
-        const rowData = {ni: tr.cells[0].textContent, nome: tr.cells[1].textContent, catg: tr.cells[2].textContent, days: {}};
+      const rowSelector = "tr:not(.fixed-row):not(.totals-row):not(.mp-dia-row):not(.mp-noite-row):not(.mp-row):not(.tas-row):not(.ml-row)";
+      tbody.querySelectorAll(rowSelector).forEach(tr => {
+        const cells = tr.querySelectorAll("td");
+        if (cells.length < 3) return;
+        const rowData = {ni: cells[0].textContent.trim(), nome: cells[1].textContent.trim(), catg: cells[2].textContent.trim(), days: {}};
         for (let d = 1; d <= daysInMonth; d++) {
           const cell = tr.querySelector(`.day-cell-${d}`);
-          if (cell && cell.style.display !== 'none') rowData.days[d] = cell.textContent || '';
+          rowData.days[d] = (cell && cell.style.display !== 'none') ? cell.textContent.trim() : "";
         }
         normalRows.push(rowData);
       });
-      const payload = {year, month, monthName: monthNames[month - 1], fileName, daysInMonth, weekdays, fixedRows, normalRows};
-      const vercelApiEndpoint = 'https://cb360-online.vercel.app/api/scales_convert';
+      const payload = {year, month, monthName: monthNames[month - 1], fileName, daysInMonth, weekdays, fixedRows, normalRows, holidayDays, optionalDays};
       try {
-        const response = await fetch(vercelApiEndpoint, {
+        const response = await fetch('https://cb360-online.vercel.app/api/scales_convert', {
           method: 'POST',
-          headers: {'Content-Type': 'application/json'},
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
         if (response.ok) {
           const pdfBlob = await response.blob();
           const url = URL.createObjectURL(pdfBlob);
           const a = document.createElement("a");
-          a.href = url;
-          a.download = `${fileName}.pdf`;
-          document.body.appendChild(a);
-          a.click();
+          a.href = url; a.download = `${fileName}.pdf`;
+          document.body.appendChild(a); a.click();
           document.body.removeChild(a);
           URL.revokeObjectURL(url);
-          showPopupSuccess(`✅ A escala foi gerada e descarregada como ${fileName}.pdf!`);
+          if (typeof showPopupSuccess === 'function') showPopupSuccess(`✅ PDF gerado com sucesso!`);
         } else {
-          const contentType = response.headers.get('content-type');
-          if (contentType && contentType.includes('application/json')) {
-            const errorJson = await response.json();
-            alert(`Erro (${response.status}):\n${errorJson.error}\n\nDetalhes: ${errorJson.details || 'Sem detalhes'}`);
-          } else {
-            const errorText = await response.text();
-            alert(`Erro no servidor (${response.status}):\n${errorText}`);
-          }
+          const err = await response.json().catch(() => ({}));
+          alert(`Erro: ${err.error || 'Erro no servidor'}`);
         }
       } catch (error) {
-        alert(`❌ Erro: Não foi possível comunicar com o serviço de conversão.\n\nTipo: ${error.name}\nMensagem: ${error.message}`);
+        console.error("Erro:", error);
+        alert(`❌ Erro de ligação ao serviço.`);
       }
     }

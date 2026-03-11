@@ -24,7 +24,7 @@
       yearSelect.id = yearSelectId;
       Object.assign(yearSelect.style, {padding: "6px 10px", borderRadius: "4px", border: "1px solid #ccc", cursor: "pointer"});
       const targetYear = new Date().getFullYear();
-      for (let y = 2026; y <= 2036; y++) {
+      for (let y = 2025; y <= 2035; y++) {
         const opt = document.createElement("option");
         opt.value = y;
         opt.textContent = y;
@@ -2108,7 +2108,7 @@
       yearSelect.id = yearSelectId;
       Object.assign(yearSelect.style, {padding: "6px 10px", borderRadius: "4px", border: "1px solid #ccc", cursor: "pointer"});
       const targetYear = new Date().getFullYear();
-      for (let y = 2026; y <= 2036; y++) {
+      for (let y = 2025; y <= 2035; y++) {
         const opt = document.createElement("option");
         opt.value = y;
         opt.textContent = y;

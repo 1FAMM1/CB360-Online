@@ -112,15 +112,18 @@ export default async function handler(req, res) {
       row.commit();
     });
 
-    // 6. Ocultar linhas e colunas vazias
+    // 6. Ocultar linhas sem nenhum turno
     for (let r = 18; r <= 117; r++) {
       const row = sheet.getRow(r);
-      if (!row.getCell(3).value || row.getCell(3).value.toString().trim() === '') row.hidden = true;
-    }
-    for (let c = 6; c <= 6 + data.daysInMonth - 1; c++) {
-      if (!sheet.getRow(11).getCell(c).value || sheet.getRow(11).getCell(c).value.toString().trim() === '') {
-        sheet.getColumn(c).hidden = true;
+      let hasShift = false;
+      for (let c = 6; c < 6 + data.daysInMonth; c++) {
+        const cell = row.getCell(c);
+        if (cell.value && cell.value.toString().trim() !== '') {
+          hasShift = true;
+          break;
+        }
       }
+      if (!hasShift) row.hidden = true;
     }
 
     // 7. Limpar valores nulos

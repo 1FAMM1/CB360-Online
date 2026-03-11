@@ -2,13 +2,8 @@
     import nodemailer from "nodemailer";
     import fs from "fs";
     import https from "https";
-    import {
-      ServicePrincipalCredentials,
-      PDFServices,
-      MimeType,
-      CreatePDFResult,
-      CreatePDFJob,
-    } from "@adobe/pdfservices-node-sdk";
+    import {ServicePrincipalCredentials, PDFServices, MimeType, CreatePDFResult, CreatePDFJob,} 
+    from "@adobe/pdfservices-node-sdk";
     const CLIENT_ID = process.env.ADOBE_CLIENT_ID;
     const CLIENT_SECRET = process.env.ADOBE_CLIENT_SECRET;
     const GMAIL_EMAIL = process.env.GMAIL_EMAIL;
@@ -134,7 +129,7 @@
       const fileName = `MOA_${deviceSafe}_de_${gdhInit}_a_${gdhEnd}_${data.corp_oper_nr}`;
       const xlsxBuffer = await workbook.xlsx.writeBuffer();
       const pdfBuffer  = await convertXLSXToPDF(xlsxBuffer, fileName);
-      const transporter = nodemailer.createTransport({ service: "gmail", auth: { user: GMAIL_EMAIL, pass: GMAIL_APP_PASSWORD } });
+      const transporter = nodemailer.createTransport({service: "gmail", auth: {user: GMAIL_EMAIL, pass: GMAIL_APP_PASSWORD}});
       await transporter.sendMail({
         from: GMAIL_EMAIL,
         to: recipients.join(", "),
@@ -143,9 +138,9 @@
         subject: emailSubject || `MOA – ${data.moa_cb || data.moa_device_type || ""}`,
         html: emailBody || `<p>Segue em anexo a MOA.</p><p>OPTEL<br>${data.moa_optel || ""}</p>`,
         text: "Segue em anexo a MOA.",
-        attachments: [{ filename: `${fileName}.pdf`, content: pdfBuffer, contentType: "application/pdf" }],
+        attachments: [{filename: `${fileName}.pdf`, content: pdfBuffer, contentType: "application/pdf"}],
       });
-      return res.status(200).json({ success: true, message: `MOA gerada e enviada com sucesso para ${recipients.length} destinatário(s).` });
+      return res.status(200).json({success: true, message: `MOA gerada e enviada com sucesso para ${recipients.length} destinatário(s).`});
     }
     // ─── Handler SITOP (lógica original intacta) ──────────────────────────────────
     async function handleSITOP(req, res) {
@@ -180,7 +175,7 @@
       const fileName = `${prefix}_${data.vehicle}_${data.corp_oper_nr}`;
       const xlsxBuffer = await workbook.xlsx.writeBuffer();
       const pdfBuffer = await convertXLSXToPDF(xlsxBuffer, fileName);
-      const transporter = nodemailer.createTransport({ service: "gmail", auth: { user: GMAIL_EMAIL, pass: GMAIL_APP_PASSWORD } });
+      const transporter = nodemailer.createTransport({ service: "gmail", auth: {user: GMAIL_EMAIL, pass: GMAIL_APP_PASSWORD}});
       await transporter.sendMail({
         from: GMAIL_EMAIL,
         to: recipients.join(", "),
@@ -191,7 +186,7 @@
         text: 'Segue em anexo o documento de situação operacional de veículos.',
         attachments: [{filename: `${fileName}.pdf`, content: pdfBuffer, contentType: 'application/pdf'}],
       });
-      return res.status(200).json({ success: true, message: `PDF gerado e enviado com sucesso para ${recipients.length} destinatário(s).` });
+      return res.status(200).json({success: true, message: `PDF gerado e enviado com sucesso para ${recipients.length} destinatário(s).`});
     }
     // ─── Handler principal ────────────────────────────────────────────────────────
     export default async function handler(req, res) {
@@ -202,7 +197,7 @@
       try {
         const {mode} = req.body || {};
         if (!mode || !["moa", "sitop"].includes(mode)) {
-          return res.status(400).json({ error: "Modo inválido. Use 'moa' ou 'sitop'." });
+          return res.status(400).json({error: "Modo inválido. Use 'moa' ou 'sitop'."});
         }
         if (mode === "moa")   return await handleMOA(req, res);
         if (mode === "sitop") return await handleSITOP(req, res);

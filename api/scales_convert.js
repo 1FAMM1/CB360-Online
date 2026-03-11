@@ -73,17 +73,15 @@ export default async function handler(req, res) {
     row11.commit();
     row12.commit();
 
-    // 4. Marcar linha 8 com FR ou CA
+    // 4. Marcar linha 8 com FR ou CA (sem aplicar cores)
     const row8 = sheet.getRow(8);
     (data.holidayDays || []).forEach(day => {
       const col = 6 + (day - 1);
-      const cell = row8.getCell(col);
-      cell.value = 'FR';
+      row8.getCell(col).value = 'FR';
     });
     (data.optionalDays || []).forEach(day => {
       const col = 6 + (day - 1);
-      const cell = row8.getCell(col);
-      cell.value = 'CA';
+      row8.getCell(col).value = 'CA';
     });
     row8.commit();
 
@@ -125,31 +123,12 @@ export default async function handler(req, res) {
       }
     }
 
-    // 7. Pintar colunas de feriados, opcionais e fins de semana (linhas 11–117)
-    for (let d = 1; d <= data.daysInMonth; d++) {
-      const col = 6 + (d - 1);
-      const header8 = sheet.getRow(8).getCell(col).value;
-      const weekdayName = sheet.getRow(11).getCell(col).value;
-
-      let color = null;
-      if (header8 === 'FR') color = 'FFFFC0CB';      // rosa
-      else if (header8 === 'CA') color = 'FF90EE90'; // verde
-      else if (weekdayName === 'SÁB' || weekdayName === 'DOM') color = 'FFD3D3D3'; // cinza claro
-
-      if (color) {
-        for (let r = 11; r <= 117; r++) {
-          const cell = sheet.getRow(r).getCell(col);
-          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: color } };
-        }
-      }
-    }
-
-    // 8. Limpar valores nulos
+    // 7. Limpar valores nulos
     sheet.eachRow(row => row.eachCell(cell => {
       if (cell.value === undefined || cell.value === null) cell.value = '';
     }));
 
-    // 9. Configurar página
+    // 8. Configurar página
     sheet.pageSetup = {
       orientation: 'portrait',
       paperSize: 9,
@@ -161,12 +140,12 @@ export default async function handler(req, res) {
       margins: { left: 0.1, right: 0.1, top: 0.2, bottom: 0.2, header: 0, footer: 0 }
     };
 
-    // 10. Salvar temporário
+    // 9. Caminhos temporários
     inputFilePath = path.join(tempDir, `${data.fileName}_${Date.now()}.xlsx`);
     outputFilePath = path.join(tempDir, `${data.fileName}_${Date.now()}.pdf`);
     await workbook.xlsx.writeFile(inputFilePath);
 
-    // 11. Converter para PDF com Adobe PDF Services
+    // 10. Converter para PDF
     const credentials = new ServicePrincipalCredentials({ clientId: CLIENT_ID, clientSecret: CLIENT_SECRET });
     const pdfServices = new PDFServices({ credentials });
     const inputAsset = await pdfServices.upload({ readStream: fs.createReadStream(inputFilePath), mimeType: MimeType.XLSX });
@@ -182,13 +161,13 @@ export default async function handler(req, res) {
 
     const pdfBuffer = fs.readFileSync(outputFilePath);
 
-    // 12. Limpeza
+    // 11. Limpeza de arquivos temporários
     try {
       if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
       if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
     } catch { }
 
-    // 13. Retornar PDF
+    // 12. Retornar PDF
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${data.fileName}.pdf"`);
     return res.status(200).send(pdfBuffer);

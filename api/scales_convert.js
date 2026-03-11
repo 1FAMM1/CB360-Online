@@ -16,7 +16,6 @@ import {
 
 const CLIENT_ID = process.env.ADOBE_CLIENT_ID;
 const CLIENT_SECRET = process.env.ADOBE_CLIENT_SECRET;
-
 const TEMPLATE_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/fomio_template.xlsx";
 
 export const config = {
@@ -52,7 +51,6 @@ export default async function handler(req, res) {
 
     // 1. Baixar template Excel
     const templateBuffer = await downloadTemplate(TEMPLATE_URL);
-
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(templateBuffer);
 
@@ -65,9 +63,8 @@ export default async function handler(req, res) {
 
     // 3. Preencher título e cabeçalhos
     sheet.getCell("C9").value = `${data.monthName} ${data.year}`;
-
-    const row11 = sheet.getRow(11);
-    const row12 = sheet.getRow(12);
+    const row11 = sheet.getRow(11); // nomes dos dias da semana
+    const row12 = sheet.getRow(12); // números dos dias
     for (let d = 1; d <= data.daysInMonth; d++) {
       const col = 6 + (d - 1);
       row11.getCell(col).value = data.weekdays[d - 1] || '';
@@ -76,33 +73,21 @@ export default async function handler(req, res) {
     row11.commit();
     row12.commit();
 
-    // 4. Marcar feriados e opcionais com cores
+    // 4. Marcar linha 8 com FR ou CA
     const row8 = sheet.getRow(8);
-
     (data.holidayDays || []).forEach(day => {
       const col = 6 + (day - 1);
       const cell = row8.getCell(col);
       cell.value = 'FR';
-      cell.fill = {
-        type: 'pattern',
-        pattern: 'solid',
-        fgColor: { argb: 'FFFFC0CB' } // Rosa
-      };
     });
-
     (data.optionalDays || []).forEach(day => {
       const col = 6 + (day - 1);
       const cell = row8.getCell(col);
-      cell.value = 'CA'; // Carnaval ou opcional
-      cell.fill = {
-        type: 'pattern',
-        pattern: 'solid',
-        fgColor: { argb: 'FF90EE90' } // Verde claro
-      };
+      cell.value = 'CA';
     });
     row8.commit();
 
-    // 5. Preencher linhas fixas e normais com currentRow dinâmico
+    // 5. Preencher linhas fixas e normais
     let currentRow = 14;
     (data.fixedRows || []).forEach(fixedRow => {
       const row = sheet.getRow(currentRow++);
@@ -129,19 +114,34 @@ export default async function handler(req, res) {
       row.commit();
     });
 
-    // 6. Ocultar linhas vazias
+    // 6. Ocultar linhas e colunas vazias
     for (let r = 18; r <= 117; r++) {
       const row = sheet.getRow(r);
-      const cellC = row.getCell(3);
-      if (!cellC.value || cellC.value.toString().trim() === '') row.hidden = true;
+      if (!row.getCell(3).value || row.getCell(3).value.toString().trim() === '') row.hidden = true;
+    }
+    for (let c = 6; c <= 6 + data.daysInMonth - 1; c++) {
+      if (!sheet.getRow(11).getCell(c).value || sheet.getRow(11).getCell(c).value.toString().trim() === '') {
+        sheet.getColumn(c).hidden = true;
+      }
     }
 
-    // 7. Ocultar colunas vazias
-    const colStart = 6;
-    const colEnd = 36;
-    for (let c = colStart; c <= colEnd; c++) {
-      const cell = sheet.getRow(11).getCell(c);
-      if (!cell.value || cell.value.toString().trim() === '') sheet.getColumn(c).hidden = true;
+    // 7. Pintar colunas de feriados, opcionais e fins de semana (linhas 11–117)
+    for (let d = 1; d <= data.daysInMonth; d++) {
+      const col = 6 + (d - 1);
+      const header8 = sheet.getRow(8).getCell(col).value;
+      const weekdayName = sheet.getRow(11).getCell(col).value;
+
+      let color = null;
+      if (header8 === 'FR') color = 'FFFFC0CB';      // rosa
+      else if (header8 === 'CA') color = 'FF90EE90'; // verde
+      else if (weekdayName === 'SÁB' || weekdayName === 'DOM') color = 'FFD3D3D3'; // cinza claro
+
+      if (color) {
+        for (let r = 11; r <= 117; r++) {
+          const cell = sheet.getRow(r).getCell(col);
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: color } };
+        }
+      }
     }
 
     // 8. Limpar valores nulos
@@ -161,17 +161,14 @@ export default async function handler(req, res) {
       margins: { left: 0.1, right: 0.1, top: 0.2, bottom: 0.2, header: 0, footer: 0 }
     };
 
-    // 10. Caminhos temporários
+    // 10. Salvar temporário
     inputFilePath = path.join(tempDir, `${data.fileName}_${Date.now()}.xlsx`);
     outputFilePath = path.join(tempDir, `${data.fileName}_${Date.now()}.pdf`);
-
-    // 11. Salvar Excel
     await workbook.xlsx.writeFile(inputFilePath);
 
-    // 12. Converter para PDF com Adobe PDF Services
+    // 11. Converter para PDF com Adobe PDF Services
     const credentials = new ServicePrincipalCredentials({ clientId: CLIENT_ID, clientSecret: CLIENT_SECRET });
     const pdfServices = new PDFServices({ credentials });
-
     const inputAsset = await pdfServices.upload({ readStream: fs.createReadStream(inputFilePath), mimeType: MimeType.XLSX });
     const job = new CreatePDFJob({ inputAsset });
     const pollingURL = await pdfServices.submit({ job });
@@ -185,13 +182,13 @@ export default async function handler(req, res) {
 
     const pdfBuffer = fs.readFileSync(outputFilePath);
 
-    // 13. Limpeza
+    // 12. Limpeza
     try {
       if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
       if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
     } catch { }
 
-    // 14. Retornar PDF
+    // 13. Retornar PDF
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${data.fileName}.pdf"`);
     return res.status(200).send(pdfBuffer);

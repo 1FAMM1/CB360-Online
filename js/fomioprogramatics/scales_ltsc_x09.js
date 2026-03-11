@@ -816,7 +816,7 @@
             const td = tr.querySelector(`.day-cell-${d}`);
             if (td && td.style.display !== "none") {
               const value = td.textContent.toUpperCase().trim();
-              if (["PD", "PN", "PT"].includes(value)) {
+              if (["PD", "PN", "PT", "EP"].includes(value)) {
                 totalCount++;
               }
             }
@@ -968,7 +968,7 @@
               const td = tr.querySelector(`.day-cell-${d}`);
               if (td && td.style.display !== "none") {
                 const value = td.textContent.toUpperCase().trim();
-                if (["PD", "PN", "PT"].includes(value)) {
+                if (["PD", "PN", "PT", "EP"].includes(value)) {
                   totalCount++;
                 }
               }
@@ -1025,7 +1025,7 @@
             const td = tr.querySelector(`.day-cell-${d}`);
             if (td && td.style.display !== "none") {
               const value = td.textContent.toUpperCase().trim();
-              if (["PD", "PN", "PT"].includes(value)) {
+              if (["PD", "PN", "PT", "EP"].includes(value)) {
                 totalCount++;
               }
             }
@@ -1089,8 +1089,7 @@
       const tbody = table.querySelector("tbody");
       const isEscalaSection = currentSection === "Emissão Escala" || currentSection === "Consultar Escalas";
       if (isEscalaSection) {
-        createFixedRows(tbody, data, savedMap, year, month, daysInMonth, currentSection, calculateVolunteersRowTotal, calculateColumnTotals);
-      }
+        createFixedRows(tbody, data, savedMap, year, month, daysInMonth, currentSection, calculateVolunteersRowTotal, calculateColumnTotals);}
       createDataRows(tbody, data, savedMap, year, month, daysInMonth, currentSection, calculateVolunteersRowTotal, calculateColumnTotals);
       if (currentSection === "DECIR" || currentSection === "1ª Secção" || currentSection === "2ª Secção") {
         createMPRows(tbody, daysInMonth, currentSection);
@@ -1103,19 +1102,19 @@
         createMPRows(tbody, daysInMonth, currentSection);
         createTASRows(tbody, daysInMonth);
       }
-      calculateColumnTotals(tbody, currentSection, daysInMonth);
       if (currentSection === "DECIR" || currentSection === "1ª Secção" || currentSection === "2ª Secção") {
         calculateMPTotals(tbody, daysInMonth, data, currentSection);
       }
       if (currentSection === "1ª Secção" || currentSection === "2ª Secção") {
         calculateTASTotals(tbody, daysInMonth, data);
       }
-      if (currentSection === "Emissão Escala") {
+       if (currentSection === "Emissão Escala") {
         calculateMLTotals(tbody, daysInMonth, data);
         calculateMPTotals(tbody, daysInMonth, data, currentSection);
-        calculateTASTotals(tbody, daysInMonth, data);
+        calculateTASTotals(tbody, daysInMonth, data);        
       }
       createTotalsRow(tbody, daysInMonth);
+      calculateColumnTotals(tbody, currentSection, daysInMonth);
     }
     /* =======================================
        CREATION OF SCALE LEGEND
@@ -1459,7 +1458,7 @@
         normalRows.push(rowData);
       });
       const payload = {year, month, monthName: monthNames[month - 1], fileName, daysInMonth, weekdays, fixedRows, normalRows};
-      const vercelApiEndpoint = 'https://cb360-online.vercel.app/api/scales-convert-excel';
+      const vercelApiEndpoint = 'https://cb360-online.vercel.app/api/scales_convert';
       try {
         const response = await fetch(vercelApiEndpoint, {
           method: 'POST',

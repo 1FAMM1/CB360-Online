@@ -426,6 +426,11 @@
                 hours = 20;
               }
             }
+          } else if (val === "D") {
+            const holiday = holidayMap?.get(dayNum);
+            if (holiday && !holiday.optional) {
+              hours = 24;
+            }
           }
           total += hours;
         }

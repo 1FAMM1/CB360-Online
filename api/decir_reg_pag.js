@@ -8,6 +8,7 @@ const TEMPLATE_PAG_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/
 const TEMPLATE_REG_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/decir_reg_template.xlsx";
 const TEMPLATE_CODE_A33_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/cod_a33_template.xlsx";
 const TEMPLATE_ANEPC_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/anepc_template.xlsx";
+const TEMPLATE_OCORR_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/reg_ocorr_decir.xlsx";
 
 export const config = { api: { bodyParser: { sizeLimit: '10mb' } } };
 
@@ -31,7 +32,7 @@ function monthNameToIndex(ptName) {
   };
   return map[m] || null;
 }
-// ---------- MAIN HANDLER ----------
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -45,11 +46,11 @@ export default async function handler(req, res) {
     if (!data || !data.type) return res.status(400).json({ error: "Tipo não especificado" });
     const workbook = new ExcelJS.Workbook();
     let sheet;
+
     // ---------- DAILY REGISTER ----------
     if (data.type === 'reg') {
       const requiredFields = ['monthName','year','daysInMonth','weekdays','fixedRows','normalRows'];
       if (!requiredFields.every(f => f in data)) return res.status(400).json({ error: "Dados incompletos para registo diário" });
-
       const templateBuffer = await downloadTemplate(TEMPLATE_REG_URL);
       await workbook.xlsx.load(templateBuffer);
       sheet = workbook.worksheets[0];
@@ -105,23 +106,21 @@ export default async function handler(req, res) {
       for (let r = 11; r <= 214; r++) {
         const cellAL = sheet.getRow(r).getCell(38);
         const cellAM = sheet.getRow(r).getCell(39);
-        const cellAN = sheet.getRow(r).getCell(40);        
+        const cellAN = sheet.getRow(r).getCell(40);
         const amalEmpty = !cellAL.value || cellAL.value === '' || Number(cellAL.value) === 0;
         const anepcEmpty = !cellAM.value || cellAM.value === '' || Number(cellAM.value) === 0;
         const globalEmpty = !cellAN.value || cellAN.value === '' || Number(cellAN.value) === 0;
-        if (amalEmpty || anepcEmpty || globalEmpty) {
-          sheet.getRow(r).hidden = true;
-        }
-      }      
+        if (amalEmpty || anepcEmpty || globalEmpty) sheet.getRow(r).hidden = true;
+      }
       for (let c = 6; c <= 36; c++) {
         const cell = sheet.getRow(10).getCell(c);
         if (!cell.value || cell.value.toString().trim() === '') sheet.getColumn(c).hidden = true;
       }
     }
+
     // ---------- PAYMENTS ----------
     else if (data.type === 'pag') {
       if (!Array.isArray(data.rows)) return res.status(400).json({ error: "Rows inválidas para pagamentos" });
-
       const templateBuffer = await downloadTemplate(TEMPLATE_PAG_URL);
       await workbook.xlsx.load(templateBuffer);
       sheet = workbook.worksheets[0];
@@ -130,7 +129,7 @@ export default async function handler(req, res) {
       const endRowTemplate = 113;
       data.rows.forEach((row, idx) => {
         const r = sheet.getRow(startRow + idx);
-        r.getCell(2).value = String(row.ni).padStart(3,'0'); // NI
+        r.getCell(2).value = String(row.ni).padStart(3,'0');
         r.getCell(3).value = row.nome || '';
         r.getCell(4).value = row.nif || '';
         r.getCell(5).value = row.nib || '';
@@ -140,15 +139,14 @@ export default async function handler(req, res) {
       });
       for (let r = startRow; r <= endRowTemplate; r++) {
         const row = sheet.getRow(r);
-        const cellG = row.getCell(7);
-        const valor = Number(cellG.value) || 0;
         const allEmpty = [2,3,4,5,6,7].every(c => {
           const v = row.getCell(c).value;
           return v === null || v === undefined || v === '';
         });
-        if (valor === 0 || allEmpty) row.hidden = true;
+        if (allEmpty) row.hidden = true;
       }
     }
+
     // ---------- CODE A33 ----------
     else if (data.type === 'code_a33') {
       if (!Array.isArray(data.rows)) return res.status(400).json({ error: "Rows inválidas para code_a33" });
@@ -167,25 +165,18 @@ export default async function handler(req, res) {
         row.getCell("G").value = person.nif || '';
         const monthsMap = { ABRIL: "J", MAIO: "L", JUNHO: "N", JULHO: "P", AGOSTO: "R", SETEMBRO: "T", OUTUBRO: "V" };
         Object.entries(monthsMap).forEach(([month, colLetter]) => {
-          const value = Number(person[month]) || 0;
-          row.getCell(colLetter).value = value;
+          row.getCell(colLetter).value = Number(person[month]) || 0;
         });
         row.commit();
         currentRow++;
       }
       for (let r = startRow; r <= endRowTemplate; r++) {
         const row = sheet.getRow(r);
-        const monthColumns = ["J", "L", "N", "P", "R", "T", "V"];
-        const allZeroOrEmpty = monthColumns.every(col => {
-          const cell = row.getCell(col);
-          const value = Number(cell.value) || 0;
-          return value === 0;
-        });
-        if (allZeroOrEmpty) {
-          row.hidden = true;
-        }
+        const allZeroOrEmpty = ["J","L","N","P","R","T","V"].every(col => (Number(row.getCell(col).value) || 0) === 0);
+        if (allZeroOrEmpty) row.hidden = true;
       }
     }
+
     // ---------- ANEPC ----------
     else if (data.type === "anepc") {
       const buffer = await downloadTemplate(TEMPLATE_ANEPC_URL);
@@ -196,12 +187,8 @@ export default async function handler(req, res) {
       const mIdx = monthNameToIndex(monthName);
       let firstDay = 1;
       let lastDay = new Date(year, mIdx, 0).getDate();
-      if (mIdx === 5) {
-        firstDay = 15;
-      }
-      if (mIdx === 10) {
-        lastDay = 15;
-      }
+      if (mIdx === 5) firstDay = 15;
+      if (mIdx === 10) lastDay = 15;
       const mm = String(mIdx).padStart(2,'0');
       const periodStr = `Período: ${String(firstDay).padStart(2,'0')} / ${mm} / ${year}  a  ${String(lastDay).padStart(2,'0')} / ${mm} / ${year}`;
       sheet.getCell("B7").value = `Dispositivo Especial Combate Incêndios Rurais (DECIR ${year})         ${periodStr}`;
@@ -224,11 +211,41 @@ export default async function handler(req, res) {
           (!line.getCell("D").value || line.getCell("D").value === "");
         const qtd = Number(line.getCell("F").value) || 0;
         const val = Number(line.getCell("H").value) || 0;
-        if (empty || (qtd === 0 && val === 0)) {
-          line.hidden = true;
-        }
+        if (empty || (qtd === 0 && val === 0)) line.hidden = true;
       }
     }
+
+    // ---------- OCORRÊNCIAS ----------
+    else if (data.type === 'ocorr') {
+      if (!Array.isArray(data.rows)) return res.status(400).json({ error: "Rows inválidas para ocorrências" });
+      const templateBuffer = await downloadTemplate(TEMPLATE_OCORR_URL);
+      await workbook.xlsx.load(templateBuffer);
+      sheet = workbook.worksheets[0];
+      sheet.getCell("B2").value = `REGISTO DE OCORRÊNCIAS DECIR - ${data.year}`;
+      const MONTH_COLS = {
+        "Maio":     { occ: "B", date: "C", act: "D" },
+        "Junho":    { occ: "E", date: "F", act: "G" },
+        "Julho":    { occ: "H", date: "I", act: "J" },
+        "Agosto":   { occ: "K", date: "L", act: "M" },
+        "Setembro": { occ: "N", date: "O", act: "P" },
+        "Outubro":  { occ: "Q", date: "R", act: "S" }
+      };
+      const START_ROW = 7;
+      data.rows.forEach(record => {
+        const rowIdx = record.row_index ?? 0;
+        const excelRow = START_ROW + rowIdx;
+        const row = sheet.getRow(excelRow);
+        Object.entries(MONTH_COLS).forEach(([month, cols]) => {
+          const entry = record[month];
+          if (!entry) return;
+          if (entry.occurrence) row.getCell(cols.occ).value  = entry.occurrence;
+          if (entry.date)       row.getCell(cols.date).value = entry.date;
+          if (entry.acting)     row.getCell(cols.act).value  = entry.acting;
+        });
+        row.commit();
+      });
+    }
+
     // ---------- SAVE AND DOWNLOAD ----------
     outputFile = path.join(tempDir, `${data.fileName}_${Date.now()}.xlsx`);
     await workbook.xlsx.writeFile(outputFile);

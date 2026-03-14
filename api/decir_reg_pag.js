@@ -225,52 +225,46 @@
           });
         }
         // ---------- REFEIÇÕES ----------
-else if (data.type === 'ref') {
-  if (!Array.isArray(data.rows)) return res.status(400).json({ error: "Rows inválidas para refeições" });
-  const templateBuffer = await downloadTemplate(TEMPLATE_REF_URL);
-  await workbook.xlsx.load(templateBuffer);
-  sheet = workbook.worksheets[0];
-
-  // Título
-  sheet.getCell("B6").value = `Refeições DECIR - ${data.monthName} ${data.year}`;
-
-  // Preencher dados
-  const START_ROW = 9;
-  data.rows.forEach((row, idx) => {
-    const r = sheet.getRow(START_ROW + idx);
-    r.getCell("B").value = row.day || "";
-    r.getCell("C").value = row.alert_state || "";
-    r.getCell("E").value = row.restaurant || "";
-    r.getCell("H").value = row.meal_prev || "";
-    r.getCell("J").value = row.meal_efet || "";
-    r.getCell("L").value = row.meal_devi || "";
-    r.getCell("N").value = row.resp_name || "";
-    r.commit();
-  });
-
-  // Calcular totais por restaurante
-  const totals = {};
-  data.rows.forEach(row => {
-    const rest = row.restaurant || "";
-    if (!rest) return;
-    const efet = parseInt(row.meal_efet) || 0;
-    totals[rest] = (totals[rest] || 0) + efet;
-  });
-
-  const entries = Object.entries(totals).filter(([k]) => k !== "");
-  if (entries.length > 0) {
-    entries.sort((a, b) => b[1] - a[1]);
-    const [mostName, mostTotal] = entries[0];
-    sheet.getCell("E41").value = `Total de Refeições ${mostName}`;
-    sheet.getCell("L41").value = mostTotal;
-
-    if (entries.length > 1) {
-      const [leastName, leastTotal] = entries[entries.length - 1];
-      sheet.getCell("E43").value = `Total de Refeições ${leastName}`;
-      sheet.getCell("L43").value = leastTotal;
-    }
-  }
-}
+        else if (data.type === 'ref') {
+          if (!Array.isArray(data.rows)) return res.status(400).json({ error: "Rows inválidas para refeições" });
+          const templateBuffer = await downloadTemplate(TEMPLATE_REF_URL);
+          await workbook.xlsx.load(templateBuffer);
+          sheet = workbook.worksheets[0];
+          sheet.getCell("B6").value = `Refeições DECIR - ${data.monthName} ${data.year}`;
+          const START_ROW = 9;
+          data.rows.forEach((row, idx) => {
+            const r = sheet.getRow(START_ROW + idx);
+            r.getCell("B").value = row.day || "";
+            r.getCell("C").value = row.alert_state || "";
+            r.getCell("E").value = row.restaurant || "";
+            r.getCell("H").value = row.meal_prev || "";
+            r.getCell("J").value = row.meal_efet || "";
+            r.getCell("L").value = row.meal_devi || "";
+            r.getCell("N").value = row.resp_name || "";
+            r.commit();
+          });
+          const totals = {};
+          data.rows.forEach(row => {
+            const rest = row.restaurant || "";
+            if (!rest) return;
+            const efet = parseInt(row.meal_efet) || 0;
+            totals[rest] = (totals[rest] || 0) + efet;
+          });
+          const entries = Object.entries(totals).filter(([k]) => k !== "");
+          if (entries.length > 0) {
+            entries.sort((a, b) => b[1] - a[1]);
+            const [mostName, mostTotal] = entries[0];
+            sheet.getCell("E41").value = `Total de Refeições ${mostName}`;
+            sheet.getCell("L41").value = mostTotal;
+            sheet.getCell("C53").value = `Responsável ${mostName}`;
+            if (entries.length > 1) {
+              const [leastName, leastTotal] = entries[entries.length - 1];
+              sheet.getCell("E43").value = `Total de Refeições ${leastName}`;
+              sheet.getCell("L43").value = leastTotal;
+              sheet.getCell("L53").value = `Responsável ${leastName}`;
+            }
+          }
+        }
         // ---------- SAVE AND DOWNLOAD ----------
         outputFile = path.join(tempDir, `${data.fileName}_${Date.now()}.xlsx`);
         await workbook.xlsx.writeFile(outputFile);

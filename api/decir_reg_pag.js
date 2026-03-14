@@ -8,6 +8,7 @@
     const TEMPLATE_CODE_A33_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/cod_a33_template.xlsx";
     const TEMPLATE_ANEPC_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/anepc_template.xlsx";
     const TEMPLATE_OCORR_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/reg_ocorr_decir.xlsx";
+    const TEMPLATE_REF_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/reg_ref_decir.xlsx";
     export const config = {api: {bodyParser: {sizeLimit: '10mb'}}};
     async function downloadTemplate(url) {
       return new Promise((resolve, reject) => {
@@ -221,6 +222,26 @@
               if (entry.acting) row.getCell(cols.act).value  = entry.acting;
             });
             row.commit();
+          });
+        }
+        // ---------- REFEIÇÕES ----------
+        else if (data.type === 'ref') {
+          if (!Array.isArray(data.rows)) return res.status(400).json({ error: "Rows inválidas para refeições" });
+          const templateBuffer = await downloadTemplate(TEMPLATE_REF_URL);
+          await workbook.xlsx.load(templateBuffer);
+          sheet = workbook.worksheets[0];
+          sheet.getCell("B6").value = `Refeições DECIR - ${data.monthName} ${data.year}`;
+          const START_ROW = 9;
+          data.rows.forEach((row, idx) => {
+          const r = sheet.getRow(START_ROW + idx);
+            r.getCell("B").value = row.day || "";
+            r.getCell("C").value = row.alert_state || "";
+            r.getCell("E").value = row.restaurant || "";
+            r.getCell("H").value = row.meal_prev || "";
+            r.getCell("J").value = row.meal_efet || "";
+            r.getCell("L").value = row.meal_devi || "";
+            r.getCell("N").value = row.resp_name || "";
+            r.commit();
           });
         }
         // ---------- SAVE AND DOWNLOAD ----------

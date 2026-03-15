@@ -30,7 +30,8 @@ function formatDate(dateStr) {
 async function fetchFullNames(nints, corpOperNr) {
   if (!nints.length) return {};
   const paddedNints = nints.map(n => String(n).padStart(3, "0"));
-  const query = `n_int=in.(${paddedNints.join(",")})&corp_oper_nr=eq.${corpOperNr}&select=n_int,full_name`;
+  const query = `n_int=in.(${paddedNints.join(",")})&select=n_int,full_name`;
+  console.log("Query Supabase:", `${SUPABASE_URL}/rest/v1/reg_elems?${query}`);
   const response = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?${query}`, {
     headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${SUPABASE_KEY}` }
   });

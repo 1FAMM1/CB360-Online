@@ -304,6 +304,15 @@ export default async function handler(req, res) {
           sheet.getCell("L53").value = `Responsável ${leastName}`;
         }
       }
+        sheet.pageSetup = {
+  orientation: "portrait",
+  paperSize: 9,
+  fitToPage: true,
+  fitToWidth: 1,
+  fitToHeight: 0,
+  horizontalCentered: true,
+  margins: { left: 0.5, right: 0.5, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3 }
+};
     }
     // ---------- SIGNA ----------
     else if (data.type === 'signa') {

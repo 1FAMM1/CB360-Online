@@ -237,25 +237,36 @@ export default async function handler(req, res) {
     }
     // ---------- OCORRÊNCIAS ----------
     else if (data.type === 'ocorr') {
-      if (!Array.isArray(data.rows)) return res.status(400).json({ error: "Rows inválidas para ocorrências" });
-      const templateBuffer = await downloadTemplate(TEMPLATE_OCORR_URL);
-      await workbook.xlsx.load(templateBuffer);
-      sheet = workbook.worksheets[0];
-      sheet.getCell("B2").value = `REGISTO DE OCORRÊNCIAS DECIR - ${data.year}`;
-      const MONTH_COLS = {"Maio":{occ:"B",date:"C",act:"D"},"Junho":{occ:"E",date:"F",act:"G"},"Julho":{occ:"H",date:"I",act:"J"},
-                          "Agosto":{occ:"K",date:"L",act:"M"},"Setembro":{occ:"N",date:"O",act:"P"},"Outubro":{occ:"Q",date:"R",act:"S"}};
-      data.rows.forEach(record => {
-        const row = sheet.getRow(7 + (record.row_index ?? 0));
-        Object.entries(MONTH_COLS).forEach(([month, cols]) => {
-          const entry = record[month];
-          if (!entry) return;
-          if (entry.occurrence) row.getCell(cols.occ).value = entry.occurrence;
-          if (entry.date) row.getCell(cols.date).value = entry.date;
-          if (entry.acting) row.getCell(cols.act).value = entry.acting;
-        });
-        row.commit();
-      });
-    }
+  if (!Array.isArray(data.rows)) return res.status(400).json({ error: "Rows inválidas para ocorrências" });
+  const templateBuffer = await downloadTemplate(TEMPLATE_OCORR_URL);
+  await workbook.xlsx.load(templateBuffer);
+  sheet = workbook.worksheets[0];
+  sheet.getCell("B2").value = `REGISTO DE OCORRÊNCIAS DECIR - ${data.year}`;
+  const MONTH_COLS = {"Maio":{occ:"B",date:"C",act:"D"},"Junho":{occ:"E",date:"F",act:"G"},"Julho":{occ:"H",date:"I",act:"J"},
+                      "Agosto":{occ:"K",date:"L",act:"M"},"Setembro":{occ:"N",date:"O",act:"P"},"Outubro":{occ:"Q",date:"R",act:"S"}};
+  data.rows.forEach(record => {
+    const row = sheet.getRow(7 + (record.row_index ?? 0));
+    Object.entries(MONTH_COLS).forEach(([month, cols]) => {
+      const entry = record[month];
+      if (!entry) return;
+      if (entry.occurrence) row.getCell(cols.occ).value = entry.occurrence;
+      if (entry.date) row.getCell(cols.date).value = entry.date;
+      if (entry.acting) row.getCell(cols.act).value = entry.acting;
+    });
+    row.commit();
+  });
+  // ← adicionar aqui
+  sheet.pageSetup = {
+    orientation: "landscape",
+    paperSize: 9,
+    fitToPage: true,
+    fitToWidth: 1,
+    fitToHeight: 0,
+    horizontalCentered: true,
+    verticalCentered: false,
+    margins: { left: 0.3, right: 0.3, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3 }
+  };
+}
     // ---------- REFEIÇÕES ----------
     else if (data.type === 'ref') {
       if (!Array.isArray(data.rows)) return res.status(400).json({ error: "Rows inválidas para refeições" });

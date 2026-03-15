@@ -27,23 +27,6 @@ function formatDate(dateStr) {
   return `${d} / ${m} / ${y}`;
 }
 
-async function fetchFullNames(nints, corpOperNr) {
-  if (!nints.length) return {};
-  const paddedNints = nints.map(n => String(n).padStart(3, "0"));
-  const query = `n_int=in.(${paddedNints.join(",")})&select=n_int,full_name`;
-  console.log("Query Supabase:", `${SUPABASE_URL}/rest/v1/reg_elems?${query}`);
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?${query}`, {
-    headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${SUPABASE_KEY}` }
-  });
-  if (!response.ok) {
-    console.log("Supabase error:", response.status, await response.text());
-    return {};
-  }
-  const data = await response.json();
-  console.log("Supabase data:", JSON.stringify(data));
-  return Object.fromEntries(data.map(e => [String(e.n_int), e.full_name || ""]));
-}
-
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -55,20 +38,8 @@ export default async function handler(req, res) {
   let outputFile = null;
 
   try {
-    const { date1, date2, year, fileName, ecin, elac, corpOperNr } = req.body;
+    const { date1, date2, year, fileName, ecin, elac } = req.body;
     if (!date1 || !date2 || !year) return res.status(400).json({ error: "Dados incompletos" });
-
-    const allMembers = [
-      ...(ecin?.day1?.day || []), ...(ecin?.day1?.night || []),
-      ...(ecin?.day2?.day || []), ...(ecin?.day2?.night || []),
-      ...(elac?.day1?.day || []), ...(elac?.day1?.night || []),
-      ...(elac?.day2?.day || []), ...(elac?.day2?.night || [])
-    ];
-    const allNints = [...new Set(allMembers.map(m => m.nint).filter(Boolean))];
-    const fullNamesMap = await fetchFullNames(allNints, corpOperNr);
-    console.log("allNints enviados:", allNints);
-    console.log("fullNamesMap resultado:", JSON.stringify(fullNamesMap));
-    console.log("exemplo member:", JSON.stringify(ecin?.day1?.day?.[0]));
 
     const templateBuffer = await downloadTemplate(TEMPLATE_SIGNA_URL);
     const workbook = new ExcelJS.Workbook();
@@ -89,6 +60,7 @@ export default async function handler(req, res) {
     [11, 29, 64, 82, 117, 129, 171, 183].forEach(row => sheet.getCell(`F${row}`).value = dayShift);
     [20, 38, 73, 91, 123, 135, 177, 189].forEach(row => sheet.getCell(`F${row}`).value = nightShift);
 
+    // Preencher equipa com abv_name (páginas 1 e 3)
     const fillTeam = (startRow, members) => {
       if (!Array.isArray(members)) return;
       members.forEach((member, idx) => {
@@ -99,17 +71,19 @@ export default async function handler(req, res) {
       });
     };
 
+    // Preencher equipa com full_name (páginas 2 e 4)
     const fillTeamFull = (startRow, members) => {
       if (!Array.isArray(members)) return;
       members.forEach((member, idx) => {
         const row = startRow + idx;
         if (member.n_file) sheet.getCell(`B${row}`).value = member.n_file;
         if (member.patent) sheet.getCell(`D${row}`).value = member.patent;
-        const fullName = fullNamesMap[String(member.nint).padStart(3,"0")] || member.abv_name || "";
+        const fullName = member.full_name || member.abv_name || "";
         if (fullName) sheet.getCell(`F${row}`).value = fullName;
       });
     };
 
+    // Páginas 1 e 3 — abv_name
     fillTeam(14,  ecin?.day1?.day);
     fillTeam(23,  ecin?.day1?.night);
     fillTeam(32,  ecin?.day2?.day);
@@ -119,6 +93,7 @@ export default async function handler(req, res) {
     fillTeam(132, elac?.day2?.day);
     fillTeam(138, elac?.day2?.night);
 
+    // Páginas 2 e 4 — full_name
     fillTeamFull(67,  ecin?.day1?.day);
     fillTeamFull(76,  ecin?.day1?.night);
     fillTeamFull(85,  ecin?.day2?.day);

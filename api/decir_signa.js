@@ -29,7 +29,8 @@ function formatDate(dateStr) {
 
 async function fetchFullNames(nints) {
   if (!nints.length) return {};
-  const query = `n_int=in.(${nints.join(",")})&select=n_int,full_name`;
+  const paddedNints = nints.map(n => String(n).padStart(3, "0"));
+  const query = `n_int=in.(${paddedNints.join(",")})&select=n_int,full_name`;
   const response = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?${query}`, {
     headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${SUPABASE_KEY}` }
   });
@@ -104,7 +105,7 @@ export default async function handler(req, res) {
         const row = startRow + idx;
         if (member.n_file) sheet.getCell(`B${row}`).value = member.n_file;
         if (member.patent) sheet.getCell(`D${row}`).value = member.patent;
-        const fullName = fullNamesMap[String(member.nint)] || member.abv_name || "";
+        const fullName = fullNamesMap[String(member.nint).padStart(3,"0")] || member.abv_name || "";
         if (fullName) sheet.getCell(`F${row}`).value = fullName;
       });
     };

@@ -6,7 +6,7 @@ import https from 'https';
 
 const TEMPLATE_SIGNA_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/000.xlsx";
 const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_KEY = process.env.SUPABASE_KEY;
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqa2JvZGZxc3Zja3ZuaGp3bWhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgxNjM3NjQsImV4cCI6MjA2MzczOTc2NH0.jX5OPZkz1JSSwrahCoFzqGYw8tYkgE8isbn12uP43-0';
 
 export const config = { api: { bodyParser: { sizeLimit: '10mb' } } };
 

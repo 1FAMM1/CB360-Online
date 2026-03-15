@@ -20,7 +20,6 @@ async function downloadTemplate(url) {
 }
 
 function formatDate(dateStr) {
-  // "2026-05-15" → "15 / 05 / 2026"
   if (!dateStr) return "";
   const [y, m, d] = dateStr.split("-");
   return `${d} / ${m} / ${y}`;
@@ -47,10 +46,24 @@ export default async function handler(req, res) {
 
     const title = `Dispositivo Especial Combate Incêndios Rurais (DECIR ${year})`;
     const period = `Período: ${formatDate(date1)}  a  ${formatDate(date2)}`;
+    const date1Formatted = formatDate(date1);
+    const date2Formatted = formatDate(date2);
 
-    // Preencher título e período nas 4 secções
+    // Título e período nas 4 secções
     [7, 60, 113, 167].forEach(row => sheet.getCell(`B${row}`).value = title);
     [9, 62, 115, 169].forEach(row => sheet.getCell(`B${row}`).value = period);
+
+    // 1ª data + Turno Dia
+    [11, 20, 64, 73, 117, 123, 171, 177].forEach(row => {
+      sheet.getCell(`B${row}`).value = date1Formatted;
+      sheet.getCell(`F${row}`).value = "Turno: 08:00 Horas às 20:00 Horas";
+    });
+
+    // 2ª data + Turno Noite
+    [29, 38, 82, 91, 129, 135, 183, 189].forEach(row => {
+      sheet.getCell(`B${row}`).value = date2Formatted;
+      sheet.getCell(`F${row}`).value = "Turno: 20:00 Horas às 08:00 Horas";
+    });
 
     outputFile = path.join(tempDir, `${fileName || "signa"}_${Date.now()}.xlsx`);
     await workbook.xlsx.writeFile(outputFile);

@@ -48,22 +48,22 @@ export default async function handler(req, res) {
     const period = `Período: ${formatDate(date1)}  a  ${formatDate(date2)}`;
     const date1Formatted = formatDate(date1);
     const date2Formatted = formatDate(date2);
+    const dayShift   = "Turno: 08:00 Horas às 20:00 Horas";
+    const nightShift = "Turno: 20:00 Horas às 08:00 Horas";
 
     // Título e período nas 4 secções
     [7, 60, 113, 167].forEach(row => sheet.getCell(`B${row}`).value = title);
     [9, 62, 115, 169].forEach(row => sheet.getCell(`B${row}`).value = period);
 
-    // 1ª data + Turno Dia
-    [11, 20, 64, 73, 117, 123, 171, 177].forEach(row => {
-      sheet.getCell(`B${row}`).value = date1Formatted;
-      sheet.getCell(`F${row}`).value = "Turno: 08:00 Horas às 20:00 Horas";
-    });
+    // 1ª data (Dia 1)
+    [11, 20, 64, 73, 117, 123, 171, 177].forEach(row => sheet.getCell(`B${row}`).value = date1Formatted);
 
-    // 2ª data + Turno Noite
-    [29, 38, 82, 91, 129, 135, 183, 189].forEach(row => {
-      sheet.getCell(`B${row}`).value = date2Formatted;
-      sheet.getCell(`F${row}`).value = "Turno: 20:00 Horas às 08:00 Horas";
-    });
+    // 2ª data (Dia 2)
+    [29, 38, 82, 91, 129, 135, 183, 189].forEach(row => sheet.getCell(`B${row}`).value = date2Formatted);
+
+    // Turnos alternados dia/noite
+    [11, 29, 64, 82, 117, 129, 171, 183].forEach(row => sheet.getCell(`F${row}`).value = dayShift);
+    [20, 38, 73, 91, 123, 135, 177, 189].forEach(row => sheet.getCell(`F${row}`).value = nightShift);
 
     outputFile = path.join(tempDir, `${fileName || "signa"}_${Date.now()}.xlsx`);
     await workbook.xlsx.writeFile(outputFile);

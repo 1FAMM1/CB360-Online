@@ -27,15 +27,19 @@ function formatDate(dateStr) {
   return `${d} / ${m} / ${y}`;
 }
 
-async function fetchFullNames(nints) {
+async function fetchFullNames(nints, corpOperNr) {
   if (!nints.length) return {};
   const paddedNints = nints.map(n => String(n).padStart(3, "0"));
-  const query = `n_int=in.(${paddedNints.join(",")})&select=n_int,full_name`;
+  const query = `n_int=in.(${paddedNints.join(",")})&corp_oper_nr=eq.${corpOperNr}&select=n_int,full_name`;
   const response = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?${query}`, {
     headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${SUPABASE_KEY}` }
   });
-  if (!response.ok) return {};
+  if (!response.ok) {
+    console.log("Supabase error:", response.status, await response.text());
+    return {};
+  }
   const data = await response.json();
+  console.log("Supabase data:", JSON.stringify(data));
   return Object.fromEntries(data.map(e => [String(e.n_int), e.full_name || ""]));
 }
 
@@ -50,10 +54,9 @@ export default async function handler(req, res) {
   let outputFile = null;
 
   try {
-    const { date1, date2, year, fileName, ecin, elac } = req.body;
+    const { date1, date2, year, fileName, ecin, elac, corpOperNr } = req.body;
     if (!date1 || !date2 || !year) return res.status(400).json({ error: "Dados incompletos" });
 
-    // Recolher todos os n_int únicos para buscar full_name
     const allMembers = [
       ...(ecin?.day1?.day || []), ...(ecin?.day1?.night || []),
       ...(ecin?.day2?.day || []), ...(ecin?.day2?.night || []),
@@ -61,11 +64,10 @@ export default async function handler(req, res) {
       ...(elac?.day2?.day || []), ...(elac?.day2?.night || [])
     ];
     const allNints = [...new Set(allMembers.map(m => m.nint).filter(Boolean))];
-    const fullNamesMap = await fetchFullNames(allNints);
-console.log("allNints enviados:", allNints);
-console.log("fullNamesMap resultado:", JSON.stringify(fullNamesMap));
-console.log("exemplo member:", JSON.stringify(ecin?.day1?.day?.[0]));
-    
+    const fullNamesMap = await fetchFullNames(allNints, corpOperNr);
+    console.log("allNints enviados:", allNints);
+    console.log("fullNamesMap resultado:", JSON.stringify(fullNamesMap));
+    console.log("exemplo member:", JSON.stringify(ecin?.day1?.day?.[0]));
 
     const templateBuffer = await downloadTemplate(TEMPLATE_SIGNA_URL);
     const workbook = new ExcelJS.Workbook();
@@ -79,19 +81,13 @@ console.log("exemplo member:", JSON.stringify(ecin?.day1?.day?.[0]));
     const dayShift   = "Turno: 08:00 Horas às 20:00 Horas";
     const nightShift = "Turno: 20:00 Horas às 08:00 Horas";
 
-    // Título e período
     [7, 60, 113, 167].forEach(row => sheet.getCell(`B${row}`).value = title);
     [9, 62, 115, 169].forEach(row => sheet.getCell(`B${row}`).value = period);
-
-    // Datas
     [11, 20, 64, 73, 117, 123, 171, 177].forEach(row => sheet.getCell(`B${row}`).value = date1Formatted);
     [29, 38, 82, 91, 129, 135, 183, 189].forEach(row => sheet.getCell(`B${row}`).value = date2Formatted);
-
-    // Turnos
     [11, 29, 64, 82, 117, 129, 171, 183].forEach(row => sheet.getCell(`F${row}`).value = dayShift);
     [20, 38, 73, 91, 123, 135, 177, 189].forEach(row => sheet.getCell(`F${row}`).value = nightShift);
 
-    // Preencher equipa com abv_name (páginas 1 e 3)
     const fillTeam = (startRow, members) => {
       if (!Array.isArray(members)) return;
       members.forEach((member, idx) => {
@@ -102,7 +98,6 @@ console.log("exemplo member:", JSON.stringify(ecin?.day1?.day?.[0]));
       });
     };
 
-    // Preencher equipa com full_name (páginas 2 e 4)
     const fillTeamFull = (startRow, members) => {
       if (!Array.isArray(members)) return;
       members.forEach((member, idx) => {
@@ -114,7 +109,6 @@ console.log("exemplo member:", JSON.stringify(ecin?.day1?.day?.[0]));
       });
     };
 
-    // Páginas 1 e 3 — abv_name
     fillTeam(14,  ecin?.day1?.day);
     fillTeam(23,  ecin?.day1?.night);
     fillTeam(32,  ecin?.day2?.day);
@@ -124,7 +118,6 @@ console.log("exemplo member:", JSON.stringify(ecin?.day1?.day?.[0]));
     fillTeam(132, elac?.day2?.day);
     fillTeam(138, elac?.day2?.night);
 
-    // Páginas 2 e 4 — full_name
     fillTeamFull(67,  ecin?.day1?.day);
     fillTeamFull(76,  ecin?.day1?.night);
     fillTeamFull(85,  ecin?.day2?.day);

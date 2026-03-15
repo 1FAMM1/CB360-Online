@@ -36,7 +36,7 @@ export default async function handler(req, res) {
   let outputFile = null;
 
   try {
-    const { date1, date2, year, fileName } = req.body;
+    const { date1, date2, year, fileName, ecin, elac } = req.body;
     if (!date1 || !date2 || !year) return res.status(400).json({ error: "Dados incompletos" });
 
     const templateBuffer = await downloadTemplate(TEMPLATE_SIGNA_URL);
@@ -51,19 +51,40 @@ export default async function handler(req, res) {
     const dayShift   = "Turno: 08:00 Horas às 20:00 Horas";
     const nightShift = "Turno: 20:00 Horas às 08:00 Horas";
 
-    // Título e período nas 4 secções
+    // Título e período
     [7, 60, 113, 167].forEach(row => sheet.getCell(`B${row}`).value = title);
     [9, 62, 115, 169].forEach(row => sheet.getCell(`B${row}`).value = period);
 
-    // 1ª data (Dia 1)
+    // Datas
     [11, 20, 64, 73, 117, 123, 171, 177].forEach(row => sheet.getCell(`B${row}`).value = date1Formatted);
-
-    // 2ª data (Dia 2)
     [29, 38, 82, 91, 129, 135, 183, 189].forEach(row => sheet.getCell(`B${row}`).value = date2Formatted);
 
-    // Turnos alternados dia/noite
+    // Turnos
     [11, 29, 64, 82, 117, 129, 171, 183].forEach(row => sheet.getCell(`F${row}`).value = dayShift);
     [20, 38, 73, 91, 123, 135, 177, 189].forEach(row => sheet.getCell(`F${row}`).value = nightShift);
+
+    // Preencher equipa
+    const fillTeam = (startRow, members) => {
+      if (!Array.isArray(members)) return;
+      members.forEach((member, idx) => {
+        const row = startRow + idx;
+        if (member.n_file)   sheet.getCell(`B${row}`).value = member.n_file;
+        if (member.patent)   sheet.getCell(`D${row}`).value = member.patent;
+        if (member.abv_name) sheet.getCell(`F${row}`).value = member.abv_name;
+      });
+    };
+
+    // ECIN
+    fillTeam(14, ecin?.day1?.day);
+    fillTeam(23, ecin?.day1?.night);
+    fillTeam(32, ecin?.day2?.day);
+    fillTeam(41, ecin?.day2?.night);
+
+    // ELAC
+    fillTeam(120, elac?.day1?.day);
+    fillTeam(126, elac?.day1?.night);
+    fillTeam(132, elac?.day2?.day);
+    fillTeam(138, elac?.day2?.night);
 
     outputFile = path.join(tempDir, `${fileName || "signa"}_${Date.now()}.xlsx`);
     await workbook.xlsx.writeFile(outputFile);

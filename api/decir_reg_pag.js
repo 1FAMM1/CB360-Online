@@ -154,6 +154,15 @@ export default async function handler(req, res) {
         const cell = sheet.getRow(10).getCell(c);
         if (!cell.value || cell.value.toString().trim() === '') sheet.getColumn(c).hidden = true;
       }
+        sheet.pageSetup = {
+  orientation: "landscape",
+  paperSize: 9,
+  fitToPage: true,
+  fitToWidth: 1,
+  fitToHeight: 0,
+  horizontalCentered: true,
+  margins: { left: 0.3, right: 0.3, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3 }
+};
     }
     // ---------- PAYMENTS ----------
     else if (data.type === 'pag') {
@@ -177,6 +186,15 @@ export default async function handler(req, res) {
         const allEmpty = [2,3,4,5,6,7].every(c => { const v = row.getCell(c).value; return v === null || v === undefined || v === ''; });
         if (allEmpty) row.hidden = true;
       }
+        sheet.pageSetup = {
+  orientation: "portrait",
+  paperSize: 9,
+  fitToPage: true,
+  fitToWidth: 1,
+  fitToHeight: 0,
+  horizontalCentered: true,
+  margins: { left: 0.5, right: 0.5, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3 }
+};
     }
     // ---------- CODE A33 ----------
     else if (data.type === 'code_a33') {
@@ -202,6 +220,15 @@ export default async function handler(req, res) {
         const allZero = ["J","L","N","P","R","T","V"].every(col => (Number(row.getCell(col).value) || 0) === 0);
         if (allZero) row.hidden = true;
       }
+        sheet.pageSetup = {
+  orientation: "landscape",
+  paperSize: 9,
+  fitToPage: true,
+  fitToWidth: 1,
+  fitToHeight: 0,
+  horizontalCentered: true,
+  margins: { left: 0.3, right: 0.3, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3 }
+};
     }
     // ---------- ANEPC ----------
     else if (data.type === "anepc") {
@@ -234,6 +261,15 @@ export default async function handler(req, res) {
         const val = Number(line.getCell("H").value) || 0;
         if (empty || (qtd === 0 && val === 0)) line.hidden = true;
       }
+        sheet.pageSetup = {
+  orientation: "landscape",
+  paperSize: 9,
+  fitToPage: true,
+  fitToWidth: 1,
+  fitToHeight: 0,
+  horizontalCentered: true,
+  margins: { left: 0.3, right: 0.3, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3 }
+};
     }
     // ---------- OCORRÊNCIAS ----------
     else if (data.type === 'ocorr') {
@@ -365,6 +401,15 @@ export default async function handler(req, res) {
       fillTeamFull(85,  ecin?.day2?.day);   fillTeamFull(94,  ecin?.day2?.night);
       fillTeamFull(174, elac?.day1?.day);   fillTeamFull(180, elac?.day1?.night);
       fillTeamFull(186, elac?.day2?.day);   fillTeamFull(192, elac?.day2?.night);
+        sheet.pageSetup = {
+  orientation: "portrait",
+  paperSize: 9,
+  fitToPage: true,
+  fitToWidth: 1,
+  fitToHeight: 0,
+  horizontalCentered: true,
+  margins: { left: 0.5, right: 0.5, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3 }
+};
     }
 
     // ---------- SAVE AND DOWNLOAD ----------

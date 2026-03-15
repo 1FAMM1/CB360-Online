@@ -3,10 +3,17 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import https from 'https';
+import {
+  ServicePrincipalCredentials,
+  PDFServices,
+  MimeType,
+  CreatePDFResult,
+  CreatePDFJob,
+} from "@adobe/pdfservices-node-sdk";
 
 const TEMPLATE_SIGNA_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/000.xlsx";
-const SUPABASE_URL = 'https://rjkbodfqsvckvnhjwmhg.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqa2JvZGZxc3Zja3ZuaGp3bWhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgxNjM3NjQsImV4cCI6MjA2MzczOTc2NH0.jX5OPZkz1JSSwrahCoFzqGYw8tYkgE8isbn12uP43-0';
+const CLIENT_ID = process.env.ADOBE_CLIENT_ID;
+const CLIENT_SECRET = process.env.ADOBE_CLIENT_SECRET;
 
 export const config = { api: { bodyParser: { sizeLimit: '10mb' } } };
 
@@ -27,6 +34,37 @@ function formatDate(dateStr) {
   return `${d} / ${m} / ${y}`;
 }
 
+async function convertXLSXToPDF(xlsxBuffer, fileName) {
+  if (!CLIENT_ID || !CLIENT_SECRET) throw new Error("Chaves Adobe não configuradas.");
+  const inputFilePath = `/tmp/${fileName}_input_${Date.now()}.xlsx`;
+  fs.writeFileSync(inputFilePath, xlsxBuffer);
+  try {
+    const credentials = new ServicePrincipalCredentials({ clientId: CLIENT_ID, clientSecret: CLIENT_SECRET });
+    const pdfServices = new PDFServices({ credentials });
+    const inputAsset = await pdfServices.upload({
+      readStream: fs.createReadStream(inputFilePath),
+      mimeType: MimeType.XLSX,
+    });
+    const job = new CreatePDFJob({ inputAsset });
+    const pollingURL = await pdfServices.submit({ job });
+    const pdfServicesResponse = await pdfServices.getJobResult({ pollingURL, resultType: CreatePDFResult });
+    const resultAsset = pdfServicesResponse.result.asset;
+    const streamAsset = await pdfServices.getContent({ asset: resultAsset });
+    const chunks = [];
+    await new Promise((resolve, reject) => {
+      streamAsset.readStream.on("data", chunk => chunks.push(chunk));
+      streamAsset.readStream.on("end", resolve);
+      streamAsset.readStream.on("error", reject);
+    });
+    return Buffer.concat(chunks);
+  } catch (error) {
+    console.error("Erro Adobe:", error);
+    throw new Error("Falha na conversão XLSX para PDF.");
+  } finally {
+    try { if (fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath); } catch {}
+  }
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -38,7 +76,7 @@ export default async function handler(req, res) {
   let outputFile = null;
 
   try {
-    const { date1, date2, year, fileName, ecin, elac } = req.body;
+    const { date1, date2, year, fileName, ecin, elac, format } = req.body;
     if (!date1 || !date2 || !year) return res.status(400).json({ error: "Dados incompletos" });
 
     const templateBuffer = await downloadTemplate(TEMPLATE_SIGNA_URL);
@@ -60,7 +98,6 @@ export default async function handler(req, res) {
     [11, 29, 64, 82, 117, 129, 171, 183].forEach(row => sheet.getCell(`F${row}`).value = dayShift);
     [20, 38, 73, 91, 123, 135, 177, 189].forEach(row => sheet.getCell(`F${row}`).value = nightShift);
 
-    // Preencher equipa com abv_name (páginas 1 e 3)
     const fillTeam = (startRow, members) => {
       if (!Array.isArray(members)) return;
       members.forEach((member, idx) => {
@@ -71,7 +108,6 @@ export default async function handler(req, res) {
       });
     };
 
-    // Preencher equipa com full_name (páginas 2 e 4)
     const fillTeamFull = (startRow, members) => {
       if (!Array.isArray(members)) return;
       members.forEach((member, idx) => {
@@ -83,7 +119,6 @@ export default async function handler(req, res) {
       });
     };
 
-    // Páginas 1 e 3 — abv_name
     fillTeam(14,  ecin?.day1?.day);
     fillTeam(23,  ecin?.day1?.night);
     fillTeam(32,  ecin?.day2?.day);
@@ -93,7 +128,6 @@ export default async function handler(req, res) {
     fillTeam(132, elac?.day2?.day);
     fillTeam(138, elac?.day2?.night);
 
-    // Páginas 2 e 4 — full_name
     fillTeamFull(67,  ecin?.day1?.day);
     fillTeamFull(76,  ecin?.day1?.night);
     fillTeamFull(85,  ecin?.day2?.day);
@@ -103,14 +137,23 @@ export default async function handler(req, res) {
     fillTeamFull(186, elac?.day2?.day);
     fillTeamFull(192, elac?.day2?.night);
 
-    outputFile = path.join(tempDir, `${fileName || "signa"}_${Date.now()}.xlsx`);
-    await workbook.xlsx.writeFile(outputFile);
-    const fileBuffer = fs.readFileSync(outputFile);
-    try { fs.unlinkSync(outputFile); } catch {}
+    const safeFileName = fileName || "signa";
 
-    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    res.setHeader("Content-Disposition", `attachment; filename="${fileName || "signa"}.xlsx"`);
-    return res.status(200).send(fileBuffer);
+    if (format === "pdf") {
+      const xlsxBuffer = await workbook.xlsx.writeBuffer();
+      const pdfBuffer = await convertXLSXToPDF(xlsxBuffer, safeFileName);
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `attachment; filename="${safeFileName}.pdf"`);
+      return res.status(200).send(pdfBuffer);
+    } else {
+      outputFile = path.join(tempDir, `${safeFileName}_${Date.now()}.xlsx`);
+      await workbook.xlsx.writeFile(outputFile);
+      const fileBuffer = fs.readFileSync(outputFile);
+      try { fs.unlinkSync(outputFile); } catch {}
+      res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      res.setHeader("Content-Disposition", `attachment; filename="${safeFileName}.xlsx"`);
+      return res.status(200).send(fileBuffer);
+    }
 
   } catch (e) {
     try { if (outputFile) fs.unlinkSync(outputFile); } catch {}

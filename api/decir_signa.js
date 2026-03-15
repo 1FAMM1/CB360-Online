@@ -62,6 +62,10 @@ export default async function handler(req, res) {
     ];
     const allNints = [...new Set(allMembers.map(m => m.nint).filter(Boolean))];
     const fullNamesMap = await fetchFullNames(allNints);
+console.log("allNints enviados:", allNints);
+console.log("fullNamesMap resultado:", JSON.stringify(fullNamesMap));
+console.log("exemplo member:", JSON.stringify(ecin?.day1?.day?.[0]));
+    
 
     const templateBuffer = await downloadTemplate(TEMPLATE_SIGNA_URL);
     const workbook = new ExcelJS.Workbook();

@@ -1,73 +1,72 @@
-    /* =======================================
-    FOMIO
+        /* =======================================
+    SCALES MODULE
     ======================================= */
-    function createFOMIOMonthButtons(containerId, tableContainerId, year) {
-      const container = $(containerId);
-      if (!container) return;
-      const saveBtn = $("save-button");
-      const emitBtn = $("emit-button");
-      container.innerHTML = "";
-      if (emitBtn) emitBtn.style.marginTop = "20px";
-      const mainWrapper = document.createElement("div");
-      Object.assign(mainWrapper.style, {display:"flex",flexDirection:"column",alignItems:"center",gap:"12px"});
-      const yearContainer = document.createElement("div");
-      Object.assign(yearContainer.style, {marginBottom:"10px",display:"flex",alignItems:"center",gap:"8px"});
-      const yearLabel = document.createElement("label"); yearLabel.textContent = "Ano:"; yearLabel.style.fontWeight = "bold";
-      const yearSelect = document.createElement("select"); yearSelect.id = "year-selector";
-      Object.assign(yearSelect.style, {padding:"6px 10px",borderRadius:"4px",border:"1px solid #ccc",cursor:"pointer"});
-      const targetYear = parseInt(year || yearAtual, 10);
-      for (let y=2025; y<=2035; y++) {
-        const opt = document.createElement("option"); opt.value=y; opt.textContent=y;
-        if (y===targetYear) opt.selected=true;
-        yearSelect.appendChild(opt);
-      }
-      yearSelect.value = targetYear;
-      yearContainer.append(yearLabel, yearSelect);
-      const monthsWrapper = document.createElement("div");
-      Object.assign(monthsWrapper.style, {display:"flex",flexWrap:"wrap",justifyContent:"center",gap:"3px",maxWidth:"800px"});
-      const toggleButtons = (showSave, showEmit) => {
-        if (saveBtn) saveBtn.style.display = showSave ? "inline-block" : "none";
-        if (emitBtn) emitBtn.style.display = showEmit ? "inline-block" : "none";
-      };
-      MONTH_NAMES_PT.forEach((month, index) => {
-        const btn = document.createElement("button");
-        btn.textContent = month; btn.className = "btn btn-add";
-        Object.assign(btn.style, {fontSize:"14px",fontWeight:"bold",width:"110px",height:"40px",borderRadius:"4px",margin:"2px"});
-        btn.addEventListener("click", async () => {
-          const selectedYear = parseInt(yearSelect.value, 10);
-          const tableContainer = $(tableContainerId);
-          if (btn.classList.contains("active")) {
-            btn.classList.remove("active"); tableContainer.innerHTML = ""; toggleButtons(false, false); return;
-          }
-          if (currentSection === "DECIR" && BLOCKED_MONTHS_DECIR.includes(index)) {
-            showPopupWarning(`⛔ Durante o mês de ${month}, não existe DECIR. Salvo prolongamento ou antecipação declarados pela ANEPC.`); return;
-          }
-          monthsWrapper.querySelectorAll(".btn.btn-add").forEach(b => b.classList.remove("active"));
-          btn.classList.add("active");
-          if (currentSection === "Emissão Escala") toggleButtons(true, true);
-          else if (currentSection === "Consultar Escalas") toggleButtons(false, false);
-          else toggleButtons(true, false);
-          const data = await loadSectionData();
-          createMonthTable(tableContainerId, selectedYear, index + 1, data);
-          handleLegend(tableContainerId);
-        });
-        monthsWrapper.appendChild(btn);
-      });
-      yearSelect.addEventListener("change", () => {
-        createFOMIOMonthButtons(containerId, tableContainerId, parseInt(yearSelect.value, 10));
-        const tc = $(tableContainerId); if (tc) tc.innerHTML = "";
-        if (saveBtn) saveBtn.style.display = "none";
-        if (emitBtn) emitBtn.style.display = "none";
-      });
-      mainWrapper.append(yearContainer, monthsWrapper);
-      container.appendChild(mainWrapper);
-      setTimeout(() => { yearSelect.value = targetYear; }, 0);
-    }
-    /* ─── STATE (FOMIO) ──────────────────────────────────────── */
+    /* ─── CONSTANTS ─────────────────────────────────────────── */
+    const TITLE_MAIN_STYLE = "text-align:center;margin-top:30px;background:#ffcccc;padding:8px;font-weight:bold;font-size:18px;";
+    const TITLE_SUB_STYLE = "text-align:center;margin-bottom:5px;margin-top:-15px;font-size:14px;background:#ffcccc;padding:6px;";
+    const TITLE_MONTHYEAR_STYLE = "text-align:center;margin-bottom:-15px;font-size:14px;font-weight:bold;background:#ffffcc;padding:6px;";
+    const COMMON_TH_STYLE = "border:1px solid #ccc;border-top:0;border-left:0;width:35px;padding:2px;font-size:11px;text-align:center;background:#f0f0f0;";
+    const COMMON_THTOTAL_STYLE = "border:1px solid #ccc;border-top:0;border-left:0;padding:2px;text-align:center;font-size:10px;width:30px;";
+    const COMMON_TD_STYLE = "border:1px solid #ccc;border-top:0;border-left:0;padding:4px;text-align:center;font-size:13px;width:35px;";
+    const COMMON_TDSPECIAL_STYLE = "font-weight:bold;font-size:15px;background:#2b284f;color:#cfcfcf;height:12px;line-height:12px;";
+    const COMMON_TDTOTAL_STYLE = "border:1px solid #ccc;border-top:0;border-left:0;padding:4px;width:30px;text-align:center;font-weight:bold;";
+    const COMMON_TDLABEL_STYLE = "border:1px solid #ccc;border-top:0;border-bottom:0;border-left:0;padding:4px;width:30px;text-align:center;font-weight:bold;";
+    const TABLE_STYLE = "margin-top:10px;border-collapse:separate;border-spacing:0 5px;font-size:12px;text-align:center;margin-left:auto;margin-right:auto;";
+    const TD_CODE_STYLE = "border:1px solid #ccc;font-weight:bold;padding:4px 6px;width:40px;white-space:nowrap;";
+    const TD_DESC_STYLE = "border:1px solid #ccc;background:#fff;padding:4px 6px;width:110px;text-align:left;font-size:13px;white-space:nowrap;border-left:0;";
+    const TD_SPACER_STYLE = "width:5px;";
+    const MAX_COLS_PER_ROW = 30;
+    const MONTH_NAMES = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"];
+    const SCALES_MONTH_NAMES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+    const WEEKEND_COLOR = "#f9e0b0";
+    const BLOCKED_MONTHS_DECIR = [0,1,2,3,10,11];
+    const CELL_COLORS = {PD:{background:"#2fc41a",color:"#fff"}, PN:{background:"#add8e6",color:"#000"}, PT:{background:"#183b7a",color:"#fff"},
+                         BX:{background:"#ed1111",color:"#fff"}, FO:{background:"#b3b3b3",color:"#000"}, FE:{background:"#995520",color:"#fff"},
+                         FD:{background:"#519294",color:"#fff"}, FN:{background:"#4f1969",color:"#fff"}, ED:{background:"#b6fcb6",color:"#000"},
+                         EN:{background:"#1e3a8a",color:"#fff"}, ET:{background:"#006400",color:"#fff"}, EP:{background:"#ff9800",color:"#000"},
+                         N: {background:"#383838",color:"#fff"}};
+    const CONFLICT_MESSAGES = {DECIR_TO_PIQUETE: "Elemento já escalado para serviço de Piquete, selecione apenas ED ou solicite ao Chefe de Secção a remoção do elemento do serviço de Piquete!",
+                               PIQUETE_TO_DECIR: "Elemento já escalado para serviço de DECIR, selecione outro dia ou solicite ao responsável pela escala de DECIR a remoção do elemento do serviço de DECIR!"};
+    const DECIR_LEGEND  = [{code:"ED",desc:"ECIN Dia"},{code:"EN",desc:"ECIN Noite"},{code:"ET",desc:"ECIN 24 Hrs."}];
+    const ESCALA_LEGEND = [{code:"PD",desc:"Piquete Dia"},{code:"PN",desc:"Piquete Noite"},{code:"PT",desc:"Piquete 24 Hrs."},
+                           {code:"BX",desc:"Baixa"},{code:"FE",desc:"Férias"},{code:"FO",desc:"Formação"},{code:"FD",desc:"Estágio Dia"},{code:"FN",desc:"Estágio Noite"}];
+    const ECIN_EXTRA = [{code:"ED",desc:"ECIN Dia"},{code:"EN",desc:"ECIN Noite"},{code:"ET",desc:"ECIN 24 Hrs."},{code:"EP",desc:"ECIN D\\Piquete N"}];
+    /* ─── STATE ──────────────────────────────────────────────── */
     let currentSection  = "1ª Secção";
     let currentTableData = [];
     const yearAtual = new Date().getFullYear();
-    /* ─── COR DA CÉLULA (FOMIO) ──────────────────────────────── */
+    /* ─── HELPERS ────────────────────────────────────────────── */
+    const getCorpId = () => sessionStorage.getItem('currentCorpOperNr') || "0805";
+    async function supabaseFetch(path, opts = {}) {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { headers: getSupabaseHeaders(), ...opts });
+      if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`);
+      return res.json();
+    }
+    function atNoonLocal(y, mIndex, d) {
+      return new Date(y, mIndex, d, 12, 0, 0, 0);
+    }
+    function addDays(baseDate, days) {
+      const d = new Date(baseDate);
+      d.setHours(12, 0, 0, 0);
+      d.setDate(d.getDate() + days);
+      return d;
+    }
+    /* ─── HOLIDAYS ───────────────────────────────────────────── */
+    function getPortugalHolidays(year) {
+      const fixed = [{month:1,day:1,name:"Ano Novo"},{month:4,day:25,name:"Dia da Liberdade"},{month:5,day:1,name:"Dia do Trabalhador"},
+                     {month:6,day:10,name:"Dia de Portugal"},{month:8,day:15,name:"Assunção de Nossa Senhora"},{month:9,day:7,name:"Dia da Cidade de Faro"},
+                     {month:10,day:5,name:"Implantação da República"},{month:11,day:1,name:"Todos os Santos"},{month:12,day:1,name:"Restauração da Independência"},
+                     {month:12,day:8,name:"Imaculada Conceição"},{month:12,day:25,name:"Natal"}];
+      const a=year%19, b=Math.floor(year/100), c=year%100, d=Math.floor(b/4), e=b%4;
+      const f=Math.floor((b+8)/25), g=Math.floor((b-f+1)/3), h=(19*a+b-d-g+15)%30;
+      const i=Math.floor(c/4), k=c%4, l=(32+2*e+2*i-h-k)%7, m=Math.floor((a+11*h+22*l)/451);
+      const month=Math.floor((h+l-7*m+114)/31), day=((h+l-7*m+114)%31)+1;
+      const easter = atNoonLocal(year, month-1, day);
+      const mobile = [{date:addDays(easter,-47),name:"Carnaval",optional:true},{date:addDays(easter,-2),name:"Sexta-feira Santa",optional:false},
+                      {date:easter,name:"Páscoa",optional:false},{date:addDays(easter,60),name:"Corpo de Deus",optional:false}];
+      return [...fixed.map(h => ({date:atNoonLocal(year,h.month-1,h.day),name:h.name,optional:false})), ...mobile];
+    }
+    /* ─── CELL COLOR ─────────────────────────────────────────── */
     function updateCellColor(td, value, date) {
       value = value.toUpperCase();
       if (CELL_COLORS[value]) {td.style.background = CELL_COLORS[value].background; td.style.color = CELL_COLORS[value].color; return;}
@@ -82,7 +81,7 @@
       else if (date.getDay() === 0 || date.getDay() === 6) {td.style.background = WEEKEND_COLOR; td.style.color = "#000";}
       else {td.style.background = "transparent"; td.style.color = "#000";}
     }
-    /* ─── CÁLCULOS DE TOTAIS (FOMIO) ────────────────────────── */
+    /* ─── TOTAL CALCULATIONS ─────────────────────────────────── */
     function computeTotalValue(value, isDecir, isRow = false) {
       if (!value) return 0;
       if (isDecir) {
@@ -123,7 +122,7 @@
         if (totalCell) {totalCell.textContent = dayTotal; applyTotalCellStyle(totalCell, dayTotal, section === "DECIR");}
       }
     }
-    /* ─── LINHAS DE RESUMO ML / MP / TAS (FOMIO) ────────────── */
+    /* ─── SUMMARY ROWS (ML / MP / TAS) ──────────────────────── */
     function makeSummaryRow(tbody, className, label, bgLabel, bgCell, colPrefix) {
       let row = tbody.querySelector(`.${className}`);
       if (!row) {
@@ -214,7 +213,7 @@
         calculateSummaryRow(tbody, daysInMonth, data, "mp-row", "mp", p => p.MP === true, v => ["PD","PN","PT","EP"].includes(v) ? 1 : 0);
       }
     }
-    /* ─── LINHA DE TOTAIS (FOMIO) ────────────────────────────── */
+    /* ─── TOTALS ROW ─────────────────────────────────────────── */
     function createTotalsRow(tbody, daysInMonth) {
       let totalsRow = tbody.querySelector(".totals-row");
       if (!totalsRow) {
@@ -236,7 +235,7 @@
       }
       for (let d = 1; d <= 31; d++) totalsRow.querySelector(`.total-day-${d}`).style.display = d <= daysInMonth ? "" : "none";
     }
-    /* ─── VERIFICAÇÃO DE CONFLITOS (FOMIO) ───────────────────── */
+    /* ─── CONFLICT CHECK ─────────────────────────────────────── */
     async function hasConflict(params, values) {
       const valueQuery = Array.isArray(values) ? `in.(${values.join(",")})` : `eq.${values}`;
       const query = Object.entries(params).map(([k,v]) => `${k}=eq.${v}`).join("&");
@@ -256,7 +255,7 @@
         return null;
       }
     }
-    /* ─── NAVEGAÇÃO POR TECLADO (FOMIO) ─────────────────────── */
+    /* ─── KEYBOARD NAVIGATION ────────────────────────────────── */
     function handleKeyNav(e, td, tr) {
       const cells = Array.from(tr.querySelectorAll("td")).filter(c => c.contentEditable === "true");
       const idx = cells.indexOf(td);
@@ -278,7 +277,7 @@
         const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
       });
     }
-    /* ─── FUNDO DE CÉLULA (FOMIO) ────────────────────────────── */
+    /* ─── CELL COLOR HELPERS ─────────────────────────────────── */
     function getCellBg(d, month, holidays) {
       const date = new Date(0, month - 1, d);
       const holiday = holidays?.find(h => h.date.getDate() === d && h.date.getMonth() === month - 1);
@@ -286,7 +285,7 @@
       if (date.getDay() === 0 || date.getDay() === 6) return {bg: WEEKEND_COLOR, color: "#000"};
       return { bg: "transparent", color: "#000" };
     }
-    /* ─── CÉLULA DE DIA — LINHA NORMAL (FOMIO) ───────────────── */
+    /* ─── DAY CELL — NORMAL ROW ──────────────────────────────── */
     function createDayCellWithListeners(d, tr, year, month, savedMap, section, daysInMonth, calculateVolunteersRowTotal, calculateColumnTotals, holidays) {
       const td = document.createElement("td");
       td.className = `day-cell-${d}`;
@@ -328,7 +327,7 @@
       td.addEventListener("blur", () => {savedMap[`${String(parseInt(tr.getAttribute("data-nint"),10)).padStart(3,"0")}_${d}`] = td.textContent.toUpperCase().slice(0,2);});
       return td;
     }
-    /* ─── CÉLULA DE DIA — LINHA FIXA (FOMIO) ────────────────── */
+    /* ─── DAY CELL — FIXED ROW ───────────────────────────────── */
     function createFixedDayCellWithListeners(d, fixedRow, year, month, savedMap, nIntStr, daysInMonth, calculateVolunteersRowTotal, calculateColumnTotals, holidays) {
       const td = document.createElement("td");
       td.className = `fixed-day-cell-${d}`;
@@ -361,18 +360,18 @@
       td.addEventListener("keydown", e => handleKeyNav(e, td, fixedRow));
       return td;
     }
-    /* ─── ESTRUTURA DA TABELA (FOMIO) ────────────────────────── */
+    /* ─── TABLE STRUCTURE ────────────────────────────────────── */
     function createTableHeaders(container, year, month, section) {
       const h2 = document.createElement("h2");
-      h2.textContent = "ESCALA DE SERVIÇO"; h2.style.cssText = SCALES_TITLE_MAIN_STYLE;
+      h2.textContent = "ESCALA DE SERVIÇO"; h2.style.cssText = TITLE_MAIN_STYLE;
       container.appendChild(h2);
       if (section !== "Emissão Escala" && section !== "Consultar Escalas") {
         const h3 = document.createElement("h3");
-        h3.textContent = section ? section.toUpperCase() : ""; h3.style.cssText = SCALES_TITLE_SUB_STYLE;
+        h3.textContent = section ? section.toUpperCase() : ""; h3.style.cssText = TITLE_SUB_STYLE;
         container.appendChild(h3);
       }
       const h3m = document.createElement("h3");
-      h3m.textContent = `${MONTH_NAMES_UPPER[month-1]} ${year}`; h3m.style.cssText = TITLE_MONTHYEAR_STYLE;
+      h3m.textContent = `${MONTH_NAMES[month-1]} ${year}`; h3m.style.cssText = TITLE_MONTHYEAR_STYLE;
       container.appendChild(h3m);
     }
     function createTableWrapper(container) {
@@ -410,8 +409,8 @@
       wrapper.appendChild(table);
       return table;
     }
-    /* ─── HEADERS DE DIA (FOMIO) ─────────────────────────────── */
-    function updateScalesDayHeaders(table, year, month, daysInMonth, holidays) {
+    /* ─── DAY HEADERS ────────────────────────────────────────── */
+    function updateDayHeaders(table, year, month, daysInMonth, holidays) {
       const hList = holidays || getPortugalHolidays(year);
       const mesIdx = month - 1;
       for (let d=1; d<=31; d++) {
@@ -434,7 +433,7 @@
         } else { h.style.display="none"; n.style.display="none"; }
       }
     }
-    /* ─── LINHAS FIXAS (FOMIO) ───────────────────────────────── */
+    /* ─── FIXED ROWS ─────────────────────────────────────────── */
     function createFixedRows(tbody, data, savedMap, year, month, daysInMonth, section, calculateVolunteersRowTotal, calculateColumnTotals, holidays) {
       const fixedRowsData = [{idx:0, text:savedMap[`fixed_0_text`]||"OFOPE", isHeader:true}, {idx:1, dataIndex:0}, {idx:2, dataIndex:1}, {idx:3, dataIndex:2},
                              {idx:5, text:savedMap[`fixed_3_text`]||"CORPO ATIVO", isHeader:true}];
@@ -468,7 +467,7 @@
         }
       });
     }
-    /* ─── LINHAS DE DADOS (FOMIO) ────────────────────────────── */
+    /* ─── DATA ROWS ──────────────────────────────────────────── */
     function createDataRows(tbody, data, savedMap, year, month, daysInMonth, section, calculateVolunteersRowTotal, calculateColumnTotals, holidays) {
       const isEscalaSection = section === "Emissão Escala" || section === "Consultar Escalas";
       data.forEach((item, dataIdx) => {
@@ -507,7 +506,7 @@
         calculateVolunteersRowTotal(tr, section, daysInMonth);
       });
     }
-    /* ─── FUNÇÃO PRINCIPAL DA TABELA (FOMIO) ─────────────────── */
+    /* ─── MAIN TABLE FUNCTION ────────────────────────────────── */
     async function createMonthTable(containerId, year, month, data) {
       currentTableData = data;
       const container = $(containerId);
@@ -518,7 +517,7 @@
       const table = createTableStructure(wrapper);
       const daysInMonth = new Date(year, month, 0).getDate();
       const holidays = getPortugalHolidays(year);
-      updateScalesDayHeaders(table, year, month, daysInMonth, holidays);
+      updateDayHeaders(table, year, month, daysInMonth, holidays);
       const sectionToLoad = currentSection === "Consultar Escalas" ? "Emissão Escala" : currentSection;
       const savedMap = await loadSavedData(sectionToLoad, year, month);
       const tbody = table.querySelector("tbody");
@@ -537,7 +536,7 @@
       createTotalsRow(tbody, daysInMonth);
       calculateColumnTotals(tbody, currentSection, daysInMonth);
     }
-    /* ─── LEGENDA (FOMIO) ────────────────────────────────────── */
+    /* ─── LEGEND ─────────────────────────────────────────────── */
     function createLegendScale(containerId, legendItems) {
       const container = $(containerId);
       if (!container) return;
@@ -561,7 +560,7 @@
         : ESCALA_LEGEND;
       createLegendScale(containerId, items);
     }
-    /* ─── LOADERS (FOMIO) ────────────────────────────────────── */
+    /* ─── LOADERS ────────────────────────────────────────────── */
     async function loadSetionData(secao) {
       try {
         const data = await supabaseFetch(`reg_elems?select=n_int,abv_name,patent_abv,MP,TAS&section=eq.${secao}&corp_oper_nr=eq.${getCorpId()}&n_int=lt.900&elem_state=eq.true`);
@@ -610,7 +609,70 @@
         }, {});
       } catch (err) { console.error(err); return {}; }
     }
-    /* ─── SIDEBAR HANDLERS (FOMIO) ───────────────────────────── */
+    /* ─── MONTH BUTTONS ──────────────────────────────────────── */
+    function createMonthButtons(containerId, tableContainerId, year) {
+      const container = $(containerId);
+      if (!container) return;
+      const saveBtn = $("save-button");
+      const emitBtn = $("emit-button");
+      container.innerHTML = "";
+      if (emitBtn) emitBtn.style.marginTop = "20px";
+      const mainWrapper = document.createElement("div");
+      Object.assign(mainWrapper.style, {display:"flex",flexDirection:"column",alignItems:"center",gap:"12px"});
+      const yearContainer = document.createElement("div");
+      Object.assign(yearContainer.style, {marginBottom:"10px",display:"flex",alignItems:"center",gap:"8px"});
+      const yearLabel = document.createElement("label"); yearLabel.textContent = "Ano:"; yearLabel.style.fontWeight = "bold";
+      const yearSelect = document.createElement("select"); yearSelect.id = "year-selector";
+      Object.assign(yearSelect.style, {padding:"6px 10px",borderRadius:"4px",border:"1px solid #ccc",cursor:"pointer"});
+      const targetYear = parseInt(year || yearAtual, 10);
+      for (let y=2025; y<=2035; y++) {
+        const opt = document.createElement("option"); opt.value=y; opt.textContent=y;
+        if (y===targetYear) opt.selected=true;
+        yearSelect.appendChild(opt);
+      }
+      yearSelect.value = targetYear;
+      yearContainer.append(yearLabel, yearSelect);
+      const monthsWrapper = document.createElement("div");
+      Object.assign(monthsWrapper.style, {display:"flex",flexWrap:"wrap",justifyContent:"center",gap:"3px",maxWidth:"800px"});
+      const toggleButtons = (showSave, showEmit) => {
+        if (saveBtn) saveBtn.style.display = showSave ? "inline-block" : "none";
+        if (emitBtn) emitBtn.style.display = showEmit ? "inline-block" : "none";
+      };
+      SCALES_MONTH_NAMES.forEach((month, index) => {
+        const btn = document.createElement("button");
+        btn.textContent = month; btn.className = "btn btn-add";
+        Object.assign(btn.style, {fontSize:"14px",fontWeight:"bold",width:"110px",height:"40px",borderRadius:"4px",margin:"2px"});
+        btn.addEventListener("click", async () => {
+          const selectedYear = parseInt(yearSelect.value, 10);
+          const tableContainer = $(tableContainerId);
+          if (btn.classList.contains("active")) {
+            btn.classList.remove("active"); tableContainer.innerHTML = ""; toggleButtons(false, false); return;
+          }
+          if (currentSection === "DECIR" && BLOCKED_MONTHS_DECIR.includes(index)) {
+            showPopupWarning(`⛔ Durante o mês de ${month}, não existe DECIR. Salvo prolongamento ou antecipação declarados pela ANEPC.`); return;
+          }
+          monthsWrapper.querySelectorAll(".btn.btn-add").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          if (currentSection === "Emissão Escala") toggleButtons(true, true);
+          else if (currentSection === "Consultar Escalas") toggleButtons(false, false);
+          else toggleButtons(true, false);
+          const data = await loadSectionData();
+          createMonthTable(tableContainerId, selectedYear, index + 1, data);
+          handleLegend(tableContainerId);
+        });
+        monthsWrapper.appendChild(btn);
+      });
+      yearSelect.addEventListener("change", () => {
+        createMonthButtons(containerId, tableContainerId, parseInt(yearSelect.value, 10));
+        const tc = $(tableContainerId); if (tc) tc.innerHTML = "";
+        if (saveBtn) saveBtn.style.display = "none";
+        if (emitBtn) emitBtn.style.display = "none";
+      });
+      mainWrapper.append(yearContainer, monthsWrapper);
+      container.appendChild(mainWrapper);
+      setTimeout(() => { yearSelect.value = targetYear; }, 0);
+    }
+    /* ─── SIDEBAR HANDLERS ───────────────────────────────────── */
     document.querySelectorAll('.sidebar-sub-submenu-button').forEach(btn => {
       btn.addEventListener('click', () => {
         const page = btn.dataset.page, access = btn.dataset.access;
@@ -626,7 +688,7 @@
       document.querySelectorAll(".sidebar-sub-submenu-button").forEach(btn => {
         btn.addEventListener("click", async () => {
           currentSection = btn.getAttribute("data-access");
-          createFOMIOMonthButtons("months-container", "table-container", yearAtual);
+          createMonthButtons("months-container", "table-container", yearAtual);
           $("table-container").innerHTML = "";
           document.querySelectorAll(".btn.btn-add").forEach(b => b.classList.remove("active"));
           const saveButton = $("save-button"), emitButton = $("emit-button");
@@ -635,14 +697,15 @@
         });
       });
     }
-    /* ─── INIT (FOMIO) ───────────────────────────────────────── */
+    /* ─── INIT ───────────────────────────────────────────────── */
     document.addEventListener("DOMContentLoaded", () => {
-      createFOMIOMonthButtons("months-container", "table-container", yearAtual);
+      createMonthButtons("months-container", "table-container", yearAtual);
       initSidebarSecaoButtons();
       initSaveButton();
       const emitBtn = $("emit-button");
       if (emitBtn) emitBtn.addEventListener("click", () => {if (currentSection === "Emissão Escala") initScaleEmission();});
     });
+    /* ─── SAVE ───────────────────────────────────────────────── */
     function getActiveMonthIndex() {
       const container = document.querySelector("#months-container, #months-container-scales");
       if (!container) return null;
@@ -759,6 +822,7 @@
         finally {saveBtn.disabled=false; saveBtn.textContent="Guardar Escala";}
       });
     }
+    /* ─── EMIT SCALE ─────────────────────────────────────────── */
     async function initScaleEmission() {
       const table = document.querySelector(".month-table tbody");
       if (!table) return;
@@ -774,7 +838,7 @@
         const changes = diffFixedRowsChanges(table, savedMap);
         await saveChanges({...changes, section:currentSection, year:selectedYear, month:monthIndex});
         try {
-          const nomeMes = MONTH_NAMES_PT[parseInt(monthIndex)-1];
+          const nomeMes = SCALES_MONTH_NAMES[parseInt(monthIndex)-1];
           const respUsers = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${corp_oper_nr}&elem_state=eq.true&select=n_int`, {headers: getSupabaseHeaders()});
           const activeUsers = await respUsers.json();
           if (activeUsers.length > 0) {
@@ -797,8 +861,9 @@
       } catch (err) {console.error(err); alert("❌ Erro ao salvar as linhas fixas: " + err.message);}
       finally {if (saveBtn) {saveBtn.disabled=false; saveBtn.textContent="Guardar Emissão";}}
     }
+    /* ─── EXCEL EXPORT ───────────────────────────────────────── */
     async function exportScheduleToExcel(tbody, year, month) {
-      const fileName = `Escala FOMIO ${MONTH_NAMES_PT[month-1]} ${year}`;
+      const fileName = `Escala FOMIO ${SCALES_MONTH_NAMES[month-1]} ${year}`;
       const daysInMonth = new Date(year, month, 0).getDate();
       const table = tbody.parentElement;
       const holidays = getPortugalHolidays(year);
@@ -825,7 +890,7 @@
         }
         normalRows.push(rowData);
       });
-      const payload = {year, month, monthName:MONTH_NAMES_PT[month-1], fileName, daysInMonth, weekdays, fixedRows, normalRows, holidayDays, optionalDays};
+      const payload = {year, month, monthName:SCALES_MONTH_NAMES[month-1], fileName, daysInMonth, weekdays, fixedRows, normalRows, holidayDays, optionalDays};
       try {
         const response = await fetch('https://cb360-online.vercel.app/api/scales_convert', {
           method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
@@ -841,3 +906,4 @@
         }
       } catch (error) {console.error("Erro:", error); alert(`❌ Erro de ligação ao serviço.`);}
     }
+

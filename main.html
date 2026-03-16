@@ -657,6 +657,16 @@
         </div>
       </div>
     </div>
+    <div id="decir-sca-view" class="page">
+      <div class="card last-card">
+        <div class="card-header">VISUALIZAÇÃO ESCALAS DECIR</div>
+        <div class="card-body" style="font-family: 'Segoe UI', sans-serif;">
+          <div id="months-container-dec-view" style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 0 0 0 0;"></div>
+          <div id="table-container-dec-view"></div>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+    </div>
     <div id="decir-reg" class="page">
       <div class="card last-card">
       <div class="card-header">REGISTO MENSAL DE ELEMENTOS AFETOS AO DECIR</div>
@@ -671,9 +681,10 @@
           <div id="table-container-dec-reg"></div>
         </div>
         <div class="action-buttons" id="decir-reg-options" style="margin: 0 20px 15px 0; display: none;">
-          <button class="btn btn-add" id="delete-dec-btn" onclick="clearDecirTable()">Limpar</button>
-          <button class="btn btn-danger" id="emit-reg-dec-btn">Emitir</button>
-          <button class="btn btn-success" id="guardar-dec-btn" onclick="saveDecirFull()">Guardar</button>
+          <button class="btn btn-add" id="delete-dec-btn">Limpar</button>
+          <button class="btn btn-danger" id="emit-reg-dec-btn">⬇️ Excel</button>
+          <button class="btn btn-danger" id="emit-reg-pdf-btn">📄 PDF</button>
+          <button class="btn btn-success" id="guardar-dec-btn">Guardar</button>            
         </div>
         <div class="card-footer"></div>
       </div>
@@ -693,10 +704,12 @@
           <div id="table-container-dec-coda33"></div>           
         </div>
         <div class="action-buttons" id="decir-pag-options" style="margin: 0 20px 15px 0; display: none;">
-          <button class="btn btn-success" id="emit-pag-dec-btn">Emitir</button>
+          <button class="btn btn-success" id="emit-pag-dec-btn">⬇️ Excel</button>
+          <button class="btn btn-danger" id="emit-pag-pdf-btn">📄 PDF</button>            
         </div>
         <div class="action-buttons" id="decir-coda33-options" style="margin: 0 20px 15px 0; display: none;">
-          <button class="btn btn-success" id="emit-coda33-dec-btn">Emitir</button>
+          <button class="btn btn-success" id="emit-coda33-dec-btn">⬇️ Excel</button>
+          <button class="btn btn-danger" id="emit-coda33-pdf-btn">📄 PDF</button>           
         </div>
         <div class="card-footer"></div>
       </div>
@@ -715,10 +728,52 @@
           <div id="table-container-dec-anepc"></div>
         </div>
         <div class="action-buttons" id="decir-anepc-options" style="margin: 0 20px 15px 0; display: none;">
-          <button class="btn btn-success" id="emit-anepc-dec-btn">Emitir</button>
+          <button class="btn btn-success" id="emit-anepc-dec-btn">⬇️ Excel</button>
+          <button class="btn btn-danger" id="emit-anepc-pdf-btn">📄 PDF</button>           
         </div>
         <div class="card-footer"></div>
       </div>
+    </div>   
+    <div id="decir-reg-ocorr" class="page">
+      <div class="card last-card">
+        <div class="card-header">REGISTO MENSAL DE OCORRÊNCIAS</div>
+        <div class="card-body" style="font-family: 'Segoe UI', sans-serif;">
+          <div id="months-container-dec-reg" style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 0 0 0 0;"></div>         
+        </div>
+        <div class="action-buttons" id="decir-ocorr-options" style="margin: 0 20px 15px 0; display: none;">
+          <button class="btn btn-success" id="guardar-ocorr-btn">Guardar</button>
+          <button class="btn btn-danger" id="emit-ocorr-dec-btn">⬇️ Excel</button>
+          <button class="btn btn-danger" id="emit-ocorr-pdf-btn">📄 PDF</button>            
+        </div>
+        <div class="card-footer"></div>
+      </div>
+    </div>
+    <div id="decir-reg-signa" class="page">
+      <div class="card last-card">
+        <div class="card-header">EMISSÃO FORMULÁRIOS ANEPC</div>
+        <div class="card-body" style="font-family: 'Segoe UI', sans-serif;">              
+        </div>
+        <div class="action-buttons" id="decir-signa-options" style="margin: 0 20px 15px 0; display: none;">
+          <button class="btn btn-primary" id="emit-signa-xlsx-btn">⬇️ Excel</button>
+          <button class="btn btn-danger" id="emit-signa-pdf-btn">📄 PDF</button>
+        </div>
+        <div class="card-footer"></div>
+      </div>
+    </div>
+    <div id="decir-reg-ref" class="page">
+      <div class="card last-card">
+        <div class="card-header">REGISTO MENSAL DE REFEIÇÕES</div>
+        <div class="card-body" style="font-family: 'Segoe UI', sans-serif;">
+          <div id="months-container-dec-ref" style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 0 0 0 0;"></div>
+          <div id="table-container-dec-ref"></div>
+        </div>
+        <div class="action-buttons" id="decir-ref-options" style="margin: 0 20px 15px 0; display: none;">
+          <button class="btn btn-success" id="guardar-ref-btn">Guardar</button>
+          <button class="btn btn-danger" id="emit-ref-dec-btn">⬇️ Excel</button>
+          <button class="btn btn-danger" id="emit-ref-pdf-btn">📄 PDF</button>            
+        </div>
+        <div class="card-footer"></div>
+      </div>        
     </div>
     <!---- SCALE CREATION MODULE ---->
     <div id="page-scales" class="page">

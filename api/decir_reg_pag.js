@@ -156,11 +156,11 @@
             r.commit();
           });
           for (let r = 10; r <= 113; r++) {
-  const row = sheet.getRow(r);
-  const qtd = Number(row.getCell(6).value) || 0;
-  const val = Number(row.getCell(7).value) || 0;
-  if (qtd === 0 && val === 0) row.hidden = true;
-}
+            const row = sheet.getRow(r);
+            const qtd = Number(row.getCell(6).value) || 0;
+            const val = Number(row.getCell(7).value) || 0;
+            if (qtd === 0 && val === 0) row.hidden = true;
+          }
           sheet.pageSetup = {orientation: "portrait", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
                              margins: {left: 0.5, right: 0.5, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3}};}
         // ---------- CODE A33 ----------

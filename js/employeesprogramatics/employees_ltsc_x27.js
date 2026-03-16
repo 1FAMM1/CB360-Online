@@ -1297,6 +1297,29 @@
     let __nextMonthShiftsCache = {};
     let __lastFridayPrevCache = null;
     let __firstMondayNextCache = null;
+function updateEmployeesDayHeaders(table, year, month, daysInMonth, holidays) {
+      const hList = holidays || getPortugalHolidays(year);
+      const mesIdx = month - 1;
+      for (let d=1; d<=31; d++) {
+        const h = table.querySelector(`.day-header-${d}`);
+        const n = table.querySelector(`.day-number-${d}`);
+        if (!h || !n) continue;
+        if (d <= daysInMonth) {
+          const date = new Date(year, mesIdx, d);
+          h.textContent = date.toLocaleDateString("pt-PT",{weekday:"short"}).toUpperCase().slice(0,3);
+          h.style.display = ""; n.style.display = "";
+          const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+          const holiday = hList.find(hol => hol.date.getDate() === d && hol.date.getMonth() === mesIdx);
+          if (holiday) {
+            const bg = holiday.optional ? "#2ecc71" : "#ffcccc", fg = holiday.optional ? "#000" : "#000";
+            [h, n].forEach(el => { el.style.background=bg; el.style.color=fg; el.title=holiday.name; el.classList.add(holiday.optional?"holiday-optional":"holiday"); });
+          } else {
+            const bg = isWeekend ? WEEKEND_COLOR : "#f0f0f0";
+            [h, n].forEach(el => { el.style.background=bg; el.style.color="#000"; el.classList.remove("holiday","holiday-optional"); });
+          }
+        } else { h.style.display="none"; n.style.display="none"; }
+      }
+    }
     async function createEmployeeScalesTable(containerId, year, month, data) {
       const container = document.getElementById(containerId);
       if (!container) return;

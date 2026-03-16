@@ -141,40 +141,6 @@
                         monthNames: DECIR_MONTH_NAMES, blockedMonths: [], loadDataFunc: async (y, m) => m, createTableFunc: (cId, y, m, d) => createDecirMealTable(cId, y, m + 4, d)}},
       "decir-reg-signa": {init: createDecirSignaTable}
     };
-    document.querySelectorAll(".sidebar-submenu-button, .sidebar-sub-submenu-button").forEach(btn => {
-      btn.addEventListener("click", (e) => {
-        if (btn.dataset.page === "decir-sca-view") {
-          const container = document.getElementById("months-container-dec-view");
-          if (!container) return;
-          container.innerHTML = "";
-          createDecirButtonsGeneric({
-            containerId: "months-container-dec-view", tableContainerId: "table-container-dec-view", yearSelectId: "year-dec-view", 
-            optionsContainerId: "decir-view-options", monthNames: DECIR_MONTH_NAMES, blockedMonths: [], loadDataFunc: async (y, m) => loadDecirData(), 
-            createTableFunc: (cId, y, m, data) => createDecirViewTable(cId, y, m + 4, data)});
-          return;
-        }
-        if (btn.getAttribute("data-access") === "Atualização de Valores") {
-          e.preventDefault(); e.stopPropagation();
-          openConfigDecirModal();
-          return;
-        }
-        const cfg = PAGE_CONFIGS[btn.dataset.page];
-        if (!cfg) return;
-        if (cfg.init) {cfg.init(); return;}
-        const clear = id => {const el = $(id); if (el) el.innerHTML = "";};
-        clear(cfg.tableId);
-        const opt = $(cfg.optionsId); if (opt) opt.style.display = "none";
-        (cfg.extra || []).forEach(id => {
-          const el = $(id);
-          if (!el) return;
-          if (id.startsWith("table-container")) el.innerHTML = "";
-          el.style.display = "none";
-        });
-        document.querySelectorAll(`#${cfg.monthsId} .btn`).forEach(b => b.classList.remove("active"));
-        createDecirButtonsGeneric(cfg.generic);
-        loadDecirConfigValues();
-      });
-    });
     /* ─── LOADERS (DECIR) ────────────────────────────────────── */
     async function loadDecirConfigValues() {
       try {
@@ -219,6 +185,21 @@
           return map;
         }, {});
       } catch {
+        return {};
+      }
+    }
+    async function loadDecirViewSavedData(year, month) {
+      try {
+        const corp = getCorpId();
+        const data = await supabaseFetch(
+          `reg_serv?select=n_int,day,value&corp_oper_nr=eq.${corp}&year=eq.${year}&month=eq.${month}&section=eq.DECIR`
+        );
+        return data.reduce((map, item) => {
+          map[`${String(item.n_int).padStart(3,'0')}_${item.day}`] = item.value;
+          return map;
+        }, {});
+      } catch (err) {
+        console.error(err);
         return {};
       }
     }
@@ -289,43 +270,68 @@
       }
       window.loadDecirByMonth = loadDecirByMonth;
     })();
-    /* ─── HEADERS DE DIA (DECIR) ─────────────────────────────── */
-    function updateDECIRDayHeaders(table, year, month, daysInMonth, holidays) {
-      const hList = holidays || getPortugalHolidays(year);
-      const mesIdx = month - 1;
-      for (let d=1; d<=31; d++) {
-        const h = table.querySelector(`.day-header-${d}`);
-        const n = table.querySelector(`.day-number-${d}`);
-        if (!h || !n) continue;
-        if (d <= daysInMonth) {
-          const date = new Date(year, mesIdx, d);
-          h.textContent = date.toLocaleDateString("pt-PT",{weekday:"short"}).toUpperCase().slice(0,3);
-          h.style.display = ""; n.style.display = "";
-          const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-          const holiday = hList.find(hol => hol.date.getDate() === d && hol.date.getMonth() === mesIdx);
-          if (holiday) {
-            const bg = holiday.optional ? "#2ecc71" : "#ffcccc", fg = holiday.optional ? "#fff" : "#000";
-            [h, n].forEach(el => { el.style.background=bg; el.style.color=fg; el.title=holiday.name; el.classList.add(holiday.optional?"holiday-optional":"holiday"); });
-          } else {
-            const bg = isWeekend ? WEEKEND_COLOR : "#f0f0f0";
-            [h, n].forEach(el => { el.style.background=bg; el.style.color="#000"; el.classList.remove("holiday","holiday-optional"); });
-          }
-        } else { h.style.display="none"; n.style.display="none"; }
-      }
-    }
-    /* ─── CONSULTA ESCALAS DECIR ─────────────────────────────── */
     /* ─── TABELA: VISUALIZAÇÃO ESCALAS DECIR ─────────────────── */
+    /* ─── HEADERS DE DIA (DECIR) ─────────────────────────────── */   
+    function createDecirTableStructure(wrapper) {
+      const table = document.createElement("table");
+      table.className = "decir-month-table";
+      table.style.width = "100%";
+      table.style.borderCollapse = "separated";
+      const thead = document.createElement("thead");
+      const trWeekdays = document.createElement("tr");
+      ["NI","Nome","Catg."].forEach((h,i) => {
+        const th = document.createElement("th");
+        th.textContent = h; th.rowSpan = 2; th.style.cssText = COMMON_TH_STYLE;
+        th.style.width = i===0?"50px":i===1?"150px":"50px";
+        trWeekdays.appendChild(th);
+      });
+      for (let d=1; d<=31; d++) {
+        const th = document.createElement("th");
+        th.className = `day-header-${d}`; th.style.cssText = COMMON_TH_STYLE;
+        trWeekdays.appendChild(th);
+      }
+      const thTotal = document.createElement("th");
+      thTotal.textContent = "TOTAL"; thTotal.rowSpan = 2; thTotal.style.cssText = COMMON_THTOTAL_STYLE;
+      trWeekdays.appendChild(thTotal);
+      thead.appendChild(trWeekdays);
+      const trNumbers = document.createElement("tr");
+      for (let d=1; d<=31; d++) {
+        const th = document.createElement("th");
+        th.className = `day-number-${d}`; th.textContent = d; th.style.cssText = COMMON_TH_STYLE;
+        trNumbers.appendChild(th);
+      }
+      thead.appendChild(trNumbers);
+      table.appendChild(thead);
+      table.appendChild(document.createElement("tbody"));
+      wrapper.appendChild(table);
+      return table;
+    }
+    function createDecirViewHeaders(container, year, month) {
+      const h2 = document.createElement("h2");
+      h2.textContent = "ESCALA DE SERVIÇO";
+      h2.style.cssText = SCALES_TITLE_MAIN_STYLE;
+      container.appendChild(h2);
+      const h3 = document.createElement("h3");
+      h3.textContent = "DECIR";
+      h3.style.cssText = SCALES_TITLE_SUB_STYLE;
+      container.appendChild(h3);
+      const h3m = document.createElement("h3");
+      h3m.textContent = `${MONTH_NAMES_UPPER[month - 1]} ${year}`;
+      h3m.style.cssText = TITLE_MONTHYEAR_STYLE;
+      container.appendChild(h3m);
+    }
+    /* ─── CONSULTA ESCALAS DECIR ─────────────────────────────── */    
     async function createDecirViewTable(containerId, year, month, data) {
       const container = document.getElementById(containerId) || $(containerId);
       if (!container) return;
       container.innerHTML = "";
-      createTableHeaders(container, year, month, "DECIR");
-      const wrapper = createTableWrapper(container);
-      const table = createTableStructure(wrapper);
+      createDecirViewHeaders(container, year, month, "DECIR");
+      const wrapper = decirMakeWrapper(container);
+      const table = createDecirTableStructure(wrapper);
       const daysInMonth = new Date(year, month, 0).getDate();
       const holidays = getPortugalHolidays(year);
-      updateScalesDayHeaders(table, year, month, daysInMonth, holidays);
-      const savedMap = await loadSavedData("DECIR", year, month);
+      updateDECIRDayHeaders(table, year, month, daysInMonth, holidays);
+      const savedMap = await loadDecirViewSavedData(year, month);
       const tbody = table.querySelector("tbody");
       data.forEach(item => {
         const nIntStr = String(item.n_int).padStart(3,"0");
@@ -380,6 +386,31 @@
       calculateColumnTotals(tbody, "DECIR", daysInMonth);
       createLegendScale(containerId, DECIR_LEGEND);
     }
+    function updateDECIRDayHeaders(table, year, month, daysInMonth, holidays) {
+      const thMonth = table.querySelector(".month-header");
+      if (thMonth) thMonth.textContent = `${MONTH_NAMES_UPPER[month-1]} ${year}`;
+      const hList = holidays || getPortugalHolidays(year);
+      const mesIdx = month - 1;
+      for (let d=1; d<=31; d++) {
+        const h = table.querySelector(`.day-header-${d}`);
+        const n = table.querySelector(`.day-number-${d}`);
+        if (!h || !n) continue;
+        if (d <= daysInMonth) {
+          const date = new Date(year, mesIdx, d);
+          h.textContent = date.toLocaleDateString("pt-PT",{weekday:"short"}).toUpperCase().slice(0,3);
+          h.style.display = ""; n.style.display = "";
+          const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+          const holiday = hList.find(hol => hol.date.getDate() === d && hol.date.getMonth() === mesIdx);
+          if (holiday) {
+            const bg = holiday.optional ? "#2ecc71" : "#ffcccc", fg = holiday.optional ? "#fff" : "#000";
+            [h, n].forEach(el => { el.style.background=bg; el.style.color=fg; el.title=holiday.name; el.classList.add(holiday.optional?"holiday-optional":"holiday"); });
+          } else {
+            const bg = isWeekend ? WEEKEND_COLOR : "#f0f0f0";
+            [h, n].forEach(el => { el.style.background=bg; el.style.color="#000"; el.classList.remove("holiday","holiday-optional"); });
+          }
+        } else { h.style.display="none"; n.style.display="none"; }
+      }
+    }
     /* ─── TABELA: REGISTOS (DECIR) ───────────────────────────── */    
     async function createDecirRegTable(containerId, year, month, data) {
       const container = $(containerId);
@@ -387,9 +418,9 @@
       container.innerHTML = "";
       const daysInMonth = new Date(year, month, 0).getDate();
       container.appendChild(makeTitle(`REGISTO DECIR - ${MONTH_NAMES_UPPER[month-1]} ${year}`));
-      const wrapper = makeWrapper(container);
+      const wrapper = decirMakeWrapper(container);
       const table = document.createElement("table");
-      table.className = "decir-reg-table";
+      table.className = "dec-reg-month-table";
       Object.assign(table.style, {width:"100%", borderCollapse:"separated"});
       /* thead */
       const thead = document.createElement("thead");
@@ -406,10 +437,10 @@
         th.style.cssText = COMMON_TH_STYLE;
         trTop.appendChild(th);
       }
-      [["TOTAL<br>Turnos","60px","#131a69"],["Valor<br>AMAL","120px",null],["Valor<br>ANEPC","120px",null],["Valor<br>GLOBAL","120px",null]]
+      [["TOTAL<br>Turnos", "60px", "#131a69"], ["Valor<br>AMAL", "120px", null], ["Valor<br>ANEPC", "120px", null], ["Valor<br>GLOBAL", "120px", null]]
         .forEach(([txt,w,bg]) => {
-        const th = makeTh(txt, `width:${w};text-align:center;vertical-align:middle;border-bottom:2px solid #ccc;${bg?`background:${bg};color:#fff`:""}`, {});
-        th.style.cssText = COMMON_THTOTAL_STYLE + `width:${w};text-align:center;vertical-align:middle;border-bottom:2px solid #ccc;${bg?`background:${bg};color:#fff`:""}`;
+        const th = makeTh(txt, `width:${w}; text-align: center; vertical-align: middle; border-bottom: 2px solid #ccc; ${bg?`background: ${bg}; color: #fff` : ""}`, {});
+        th.style.cssText = COMMON_THTOTAL_STYLE + `width: ${w}; text-align: center; vertical-align: middle; border-bottom: 2px solid #ccc; ${bg?`background: ${bg}; color : #fff`:""}`;
         th.rowSpan = 2;
         trTop.appendChild(th);
       });
@@ -419,7 +450,7 @@
         const th = document.createElement("th");
         th.className = `day-number-${d}`;
         th.textContent = d;
-        th.style.cssText = COMMON_TH_STYLE + "border-bottom:2px solid #ccc;";
+        th.style.cssText = COMMON_TH_STYLE + "border-bottom: 2px solid #ccc;";
         trNums.appendChild(th);
       }
       thead.appendChild(trNums);
@@ -515,7 +546,7 @@
           }
           const tdTurno = document.createElement("td");
           tdTurno.textContent = turno;
-          tdTurno.style.cssText = COMMON_TD_STYLE + `font-weight:bold;text-align:center;${turno==="N"?"border-bottom:2px solid #ccc;":""}`;
+          tdTurno.style.cssText = COMMON_TD_STYLE + `font-weight: bold; text-align: center; ${turno==="N"?"border-bottom: 2px solid #ccc;" : ""}`;
           tr.appendChild(tdTurno);
           for (let d=1; d<=daysInMonth; d++) tr.appendChild(createDayCell(d, tr));
           const tdTotal = document.createElement("td");
@@ -542,16 +573,16 @@
         if (!totalRow) {
           totalRow = document.createElement("tr");
           totalRow.className = "total-elements-row";
-          totalRow.style.cssText = "height:25px;line-height:16px;";
+          totalRow.style.cssText = "height: 25px; line-height: 16px;";
           const tdTitle = document.createElement("td");
           tdTitle.colSpan = 4;
-          tdTitle.style.cssText = "font-weight:bold;text-align:center;padding:2px 4px;border:1px solid #ccc;border-top:0;border-left:0;background:#f7c277;";
+          tdTitle.style.cssText = "font-weight: bold; text-align: center; padding: 2px 4px; border: 1px solid #ccc; border-top: 0; border-left: 0; background: #f7c277;";
           tdTitle.textContent = "Total diário de elementos:";
           totalRow.appendChild(tdTitle);
           for (let d=1; d<=daysInMonth; d++) {
             const td = document.createElement("td");
             td.className = `total-day-${d}`;
-            td.style.cssText = "font-weight:bold;text-align:center;padding:2px 4px;border:1px solid #ccc;border-top:0;border-left:0;height:18px;line-height:16px;";
+            td.style.cssText = "font-weight: bold; text-align: center; padding: 2px 4px; border: 1px solid #ccc; border-top: 0; border-left: 0; height: 18px; line-height: 16px;";
             totalRow.appendChild(td);
           }
           const tdGeral = document.createElement("td");
@@ -579,7 +610,7 @@
       if (!container) return;
       container.innerHTML = "";
       container.appendChild(makeTitle(`RELATÓRIO PAGAMENTOS DECIR - ${MONTH_NAMES_UPPER[month-1]} ${year}`));
-      const wrapper = makeWrapper(container);
+      const wrapper = decirMakeWrapper(container);
       const table = document.createElement("table");
       table.className = "pag-table";
       Object.assign(table.style, {width:"100%", borderCollapse:"separated", fontFamily:"Segoe UI, sans-serif"});
@@ -623,124 +654,13 @@
       $("decir-pag-options") && ($("decir-pag-options").style.display="flex");
       updateDECIRTotalPaymentsByMonth();
     }
-    /* ─── TABELA: COD A33 (DECIR) ────────────────────────────── */
-    function createDecirCodA33Table(containerId, year, elements, turnosPorMes) {
-      const container = $(containerId);
-      if (!container) return;
-      container.innerHTML = "";
-      container.appendChild(makeTitle(`RELATÓRIO ANUAL DECIR ${year} - Cod.A33`));
-      const wrapper = makeWrapper(container);
-      const table = document.createElement("table");
-      table.className = "coda33-table";
-      Object.assign(table.style, {width:"100%", borderCollapse:"separate", fontFamily:"Segoe UI, sans-serif"});
-      const thead = document.createElement("thead");
-      const trh   = document.createElement("tr");
-      [["NI","40px"],["Nome","175px"],["NIF","120px"]].forEach(([h,w]) => {
-        const th = makeTh(h, "height:40px;line-height:40px;");
-        th.style.width = w;
-        trh.appendChild(th);
-      });
-      const CODA33_MONTHS = ["ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO"];
-      CODA33_MONTHS.forEach(m => {
-        const thS = makeTh(`Turnos ${m}`, "width:90px;display:none;");
-        const thV = makeTh(m, "width:100px;height:40px;line-height:40px;");
-        trh.appendChild(thS); trh.appendChild(thV);
-      });
-      const thTotal = document.createElement("th");
-      thTotal.innerHTML = "Total por<br>Contribuinte";
-      thTotal.style.cssText = COMMON_THTOTAL_STYLE + "width:130px;height:40px;line-height:20px;";
-      trh.appendChild(thTotal);
-      thead.appendChild(trh);
-      table.appendChild(thead);
-      const tbody = document.createElement("tbody");
-      const amalI = parseVal("amal-value-pag");
-      const anepcI = parseVal("anepc-value-pag");
-      const rowsCount = elements.length > 0 ? elements.length : 10;
-      for (let i=0; i<rowsCount; i++) {
-        const elem = elements[i] || {};
-        const tr   = document.createElement("tr");
-        const niKey = parseInt(elem.n_int,10);
-        tr.appendChild(makeTd(elem.n_int ? String(elem.n_int).padStart(3,'0') : ""));
-        tr.appendChild(makeTd(elem.full_name||"", "text-align:center;padding:6px 8px;"));
-        tr.appendChild(makeTd(elem.nif||"", "text-align:center;padding:6px 8px;"));
-        let totalForRow = 0;
-        const tdTotalContributor = document.createElement("td");
-        tdTotalContributor.className = "total-contributor";
-        tdTotalContributor.style.cssText = COMMON_TD_STYLE + "font-weight:bold;padding:6px 8px;text-align:right;";
-        for (let m=4; m<=10; m++) {
-          const qtd = turnosPorMes?.[m]?.[niKey] || 0;
-          const tdT = makeTd(String(qtd), "text-align:center;font-weight:bold;padding:6px 8px;");
-          tdT.style.display = "none";
-          const val = (amalI + anepcI) * qtd;
-          const tdV = document.createElement("td");
-          tdV.style.cssText = COMMON_TD_STYLE + "font-weight:bold;padding:6px 8px;text-align:right;";
-          tdV.className = `valor-mes-${m}`;
-          tdV.textContent = formatCurrency(val);
-          tdV.setAttribute("data-value", val);
-          totalForRow += val;
-          tr.appendChild(tdT); tr.appendChild(tdV);
-        }
-        tdTotalContributor.textContent = formatCurrency(totalForRow);
-        tr.appendChild(tdTotalContributor);
-        tbody.appendChild(tr);
-      }
-      table.appendChild(tbody);
-      wrapper.appendChild(table);
-      ["amal-value-pag","anepc-value-pag"].forEach(id => {const el=$(id); if(el) el.addEventListener("input", updateAllValues);});
-      if (typeof updateDECIRTotalPaymentsByMonth==='function') updateDECIRTotalPaymentsByMonth();
-    }
-    /* ─── TABELA: ANEPC (DECIR) ──────────────────────────────── */
-    function createDecirAnepcTable(containerId, year, month, elements, turnosPorNI) {
-      const container = $(containerId);
-      if (!container) return;
-      container.innerHTML = "";
-      container.appendChild(makeTitle(`RELATÓRIO ANEPC DECIR - ${MONTH_NAMES_UPPER[month-1]} ${year}`));
-      const wrapper = makeWrapper(container);
-      const table = document.createElement("table");
-      table.className = "anepc-table";
-      Object.assign(table.style, {width:"100%", borderCollapse:"separated", fontFamily:"Segoe UI, sans-serif"});
-      const thead = document.createElement("thead");
-      const trh = document.createElement("tr");
-      [["Nº Mecanográfico","120px"],["Função","100px"],["Nome","200px"],["Qtd. Turnos","100px"],["Valor ANEPC (€)","140px"]]
-        .forEach(([h,w]) => {
-        const th = makeTh(h, "height:40px;line-height:40px;");
-        th.style.width = w;
-        trh.appendChild(th);
-      });
-      thead.appendChild(trh);
-      table.appendChild(thead);
-      const tbody = document.createElement("tbody");
-      const rowsCount = elements.length > 0 ? elements.length : 10;
-      for (let i=0; i<rowsCount; i++) {
-        const elem = elements[i] || {};
-        const tr   = document.createElement("tr");
-        const niKey = parseInt(elem.n_int,10);
-        const qtyShifts = turnosPorNI?.[niKey] || 0;
-        tr.appendChild(makeTd(elem.n_file ? String(elem.n_file) : "", "text-align:center;"));
-        tr.appendChild(makeTd(elem.patent||"",    "text-align:center;padding:6px 8px;"));
-        tr.appendChild(makeTd(elem.full_name||"", "text-align:center;padding:6px 8px;"));
-        tr.appendChild(makeTd(String(qtyShifts),  "text-align:center;font-weight:bold;padding:6px 8px;"));
-        const tdValue = document.createElement("td");
-        tdValue.style.cssText = COMMON_TDTOTAL_STYLE + "text-align:right;font-weight:bold;padding:6px 8px;";
-        const updateValor = () => {tdValue.textContent = formatCurrency(parseVal("anepc-value-anepc") * qtyShifts);};
-        updateValor();
-        const inp = $("anepc-value-anepc"); if(inp) inp.addEventListener("input", updateValor);
-        tr.appendChild(tdValue);
-        tbody.appendChild(tr);
-      }
-      table.appendChild(tbody);
-      wrapper.appendChild(table);
-      const optAnepc = $("decir-anepc-options"); if(optAnepc) optAnepc.style.display="flex";
-      if (typeof updateAnepcTotals==='function') updateAnepcTotals();
-    }
-    window.createDecirAnepcTable = createDecirAnepcTable;
-    /* ─── CÁLCULOS (DECIR) ───────────────────────────────────── */
+    /* ─── CÁLCULOS REGISTOS (DECIR) ──────────────────────────── */
     function updateAllValues() {
       const amalCents  = Math.round(parseVal("amal-value-reg") * 100);
       const anepcCents = Math.round(parseVal("anepc-value-reg") * 100);
-      const tbody = document.querySelector("table.decir-reg-table tbody");
+      const tbody = document.querySelector("table.month-table tbody, table.dec-reg-month-table tbody");
       if (!tbody) return;
-      const rows = Array.from(tbody.querySelectorAll("tr:not(.total-elements-row)"));
+      const rows = Array.from(tbody.querySelectorAll("tr"));
       for (let i=0; i<rows.length; i+=2) {
         const [trD, trN] = [rows[i], rows[i+1]];
         if (!trN) continue;
@@ -754,7 +674,7 @@
       setTimeout(updateGeneralTotals, 0);
     }
     function updateGeneralTotals() {
-      const tbody = document.querySelector("table.month-table tbody");
+      const tbody = document.querySelector("table.month-table tbody, table.dec-reg-month-table tbody");
       if (!tbody) return;
       let [amal, anepc, global] = [0,0,0];
       const toCents = cell => {
@@ -817,49 +737,34 @@
       tc.style.display = "flex";
       tc.style.justifyContent = "flex-end";
     }
-    function updateDECIRTotalCodA33() {
-      const table = document.querySelector("#table-container-dec-coda33 table");
-      if (!table) return;
-      const tbody = table.querySelector("tbody");
-      if (!tbody) return;
-      tbody.querySelector(".total-coda33")?.remove();
-      const CODA33_MONTHS = ["ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO"];
-      const headerCells = Array.from(table.querySelector("thead tr").children);
-      const monthIndices = CODA33_MONTHS.map(name => headerCells.findIndex(th => th.textContent.trim().toUpperCase()===name));
-      const monthSums = monthIndices.map(() => 0);
-      Array.from(tbody.querySelectorAll("tr")).forEach(tr => {
-        const tds = Array.from(tr.querySelectorAll("td"));
-        monthIndices.forEach((idx,i) => {if(idx>=0&&tds[idx]) monthSums[i] += Math.round(parseCurrency(tds[idx].textContent)*100);});
-      });
-      const grandTotal = monthSums.reduce((a,b)=>a+b,0);
-      const totalRow = document.createElement("tr");
-      totalRow.className = "total-coda33";
-      Object.assign(totalRow.style, {fontWeight:"bold", backgroundColor:"#e0f7e0"});
-      const tdFixed = document.createElement("td");
-      tdFixed.textContent = "Somatórios:";
-      tdFixed.colSpan = 3;
-      Object.assign(tdFixed.style, {textAlign:"right", backgroundColor:"#f7f7f7"});
-      totalRow.appendChild(tdFixed);
-      monthSums.forEach(sum => {
-        const td = document.createElement("td");
-        td.textContent = formatCurrency(sum/100);
-        td.style.textAlign = "right";
-        totalRow.appendChild(td);
-      });
-      const tdTotal = document.createElement("td");
-      tdTotal.textContent = formatCurrency(grandTotal/100);
-      Object.assign(tdTotal.style, {textAlign:"right", backgroundColor:"#c0ffc0"});
-      totalRow.appendChild(tdTotal);
-      tbody.appendChild(totalRow);
-    }
     /* ─── LIMPAR TABELA (DECIR) ──────────────────────────────── */
+    function showPopupConfirm(message) {
+      return new Promise(resolve => {
+        const modal = $("popup-confirm-modal");
+        $("popup-confirm-message").textContent = message;
+        modal.classList.add("show");
+        const okBtn = $("popup-confirm-ok-btn");
+        const cancelBtn = $("popup-confirm-cancel-btn");
+        const cleanup = (result) => {
+          modal.classList.remove("show");
+          okBtn.removeEventListener("click", onOk);
+          cancelBtn.removeEventListener("click", onCancel);
+          resolve(result);
+        };
+        const onOk = () => cleanup(true);
+        const onCancel = () => cleanup(false);
+        okBtn.addEventListener("click", onOk);
+        cancelBtn.addEventListener("click", onCancel);
+      });
+    }
     async function clearDecirTable() {
       if (!$("table-container-dec-reg")) return;
       const monthBtn = document.querySelector("#months-container-dec-reg .btn.active");
       if (!monthBtn) return showPopupWarning("Nenhum mês selecionado.");
       const month = Array.from(document.querySelectorAll("#months-container-dec-reg .btn")).indexOf(monthBtn) + 1 + 4;
       const year  = parseInt($("year-dec-reg").value, 10);
-      if (!confirm(`Tem certeza que quer limpar os dados de ${monthBtn.textContent.trim()} de ${year}?`)) return;
+      const confirmed = await showPopupConfirm(`Tem certeza que quer limpar os dados de ${monthBtn.textContent.trim()} de ${year}?`);
+      if (!confirmed) return;
       try {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/decir_reg_pag?year=eq.${year}&month=eq.${month}`, {method:"DELETE", headers:getSupabaseHeaders()});
         if (!res.ok) throw new Error(await res.text()||"Erro ao apagar dados");
@@ -917,159 +822,107 @@
       }
       finally {if(btn) {btn.disabled=false; btn.textContent="Guardar";}}
     }
-    /* ─── GERAR FICHEIROS EXCEL (DECIR) ──────────────────────── */
-    async function generateDECIRFiles(type, format = "xlsx") {
-      let data = { type, format };
-      if (type === 'reg') {
-        const table = document.querySelector("#table-container-dec-reg table tbody");
-        if (!table) return alert("Tabela de registo diário não encontrada.");
-        const monthSelect = document.querySelector("#months-container-dec-reg .btn.active");
-        const yearInput = $("year-dec-reg");
-        if (!monthSelect||!yearInput) return alert("Selecione mês e ano.");
-        const monthIdx = Array.from(document.querySelectorAll("#months-container-dec-reg .btn")).indexOf(monthSelect) + 1 + 4;
-        const monthName = monthSelect.textContent.trim();
-        const year = parseInt(yearInput.value,10);
-        const daysInMonth = new Date(year,monthIdx,0).getDate();
-        const weekdays=[], holidayDays=[];
-        for (let d=1; d<=daysInMonth; d++) {
-          const date = new Date(year,monthIdx-1,d);
-          weekdays.push(['DOM','SEG','TER','QUA','QUI','SEX','SÁB'][date.getDay()]);
-          if (date.getDay()===0||date.getDay()===6) holidayDays.push(d);
+    /* ─── TABELA: COD A33 (DECIR) ────────────────────────────── */
+    function createDecirCodA33Table(containerId, year, elements, turnosPorMes) {
+      const container = $(containerId);
+      if (!container) return;
+      container.innerHTML = "";
+      container.appendChild(makeTitle(`RELATÓRIO ANUAL DECIR ${year} - Cod.A33`));
+      const wrapper = decirMakeWrapper(container);
+      const table = document.createElement("table");
+      table.className = "coda33-table";
+      Object.assign(table.style, {width:"100%", borderCollapse:"separate", fontFamily:"Segoe UI, sans-serif"});
+      const thead = document.createElement("thead");
+      const trh   = document.createElement("tr");
+      [["NI","40px"],["Nome","175px"],["NIF","120px"]].forEach(([h,w]) => {
+        const th = makeTh(h, "height:40px;line-height:40px;");
+        th.style.width = w;
+        trh.appendChild(th);
+      });
+      const CODA33_MONTHS = ["ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO"];
+      CODA33_MONTHS.forEach(m => {
+        const thS = makeTh(`Turnos ${m}`, "width:90px;display:none;");
+        const thV = makeTh(m, "width:100px;height:40px;line-height:40px;");
+        trh.appendChild(thS); trh.appendChild(thV);
+      });
+      const thTotal = document.createElement("th");
+      thTotal.innerHTML = "Total por<br>Contribuinte";
+      thTotal.style.cssText = COMMON_THTOTAL_STYLE + "width:130px;height:40px;line-height:20px;";
+      trh.appendChild(thTotal);
+      thead.appendChild(trh);
+      table.appendChild(thead);
+      const tbody = document.createElement("tbody");
+      const amalI = parseVal("amal-value-pag");
+      const anepcI = parseVal("anepc-value-pag");
+      const rowsCount = elements.length > 0 ? elements.length : 10;
+      for (let i=0; i<rowsCount; i++) {
+        const elem = elements[i] || {};
+        const tr   = document.createElement("tr");
+        const niKey = parseInt(elem.n_int,10);
+        tr.appendChild(makeTd(elem.n_int ? String(elem.n_int).padStart(3,'0') : ""));
+        tr.appendChild(makeTd(elem.full_name||"", "text-align:center;padding:6px 8px;"));
+        tr.appendChild(makeTd(elem.nif||"", "text-align:center;padding:6px 8px;"));
+        let totalForRow = 0;
+        const tdTotalContributor = document.createElement("td");
+        tdTotalContributor.className = "total-contributor";
+        tdTotalContributor.style.cssText = COMMON_TD_STYLE + "font-weight:bold;padding:6px 8px;text-align:right;";
+        for (let m=4; m<=10; m++) {
+          const qtd = turnosPorMes?.[m]?.[niKey] || 0;
+          const tdT = makeTd(String(qtd), "text-align:center;font-weight:bold;padding:6px 8px;");
+          tdT.style.display = "none";
+          const val = (amalI + anepcI) * qtd;
+          const tdV = document.createElement("td");
+          tdV.style.cssText = COMMON_TD_STYLE + "font-weight:bold;padding:6px 8px;text-align:right;";
+          tdV.className = `valor-mes-${m}`;
+          tdV.textContent = formatCurrency(val);
+          tdV.setAttribute("data-value", val);
+          totalForRow += val;
+          tr.appendChild(tdT); tr.appendChild(tdV);
         }
-        const parseValue = txt => parseFloat(txt.trim().replace(/\s/g,'').replace(/\./g,'').replace(',','.')) || 0;
-        const fixedRows=[], normalRows=[];
-        let lastNI=null, lastNome=null, lastAmal=null, lastAnepc=null, lastGlobal=null;
-        Array.from(table.querySelectorAll("tr")).filter(tr=>!tr.classList.contains("total-elements-row")).forEach(row => {
-          const cells = Array.from(row.querySelectorAll("td"));
-          if (!cells.length) return;
-          let nInt, nome, turno, startIdx;
-          if (cells[0].rowSpan===2) {
-            nInt=parseInt(cells[0].textContent.trim(),10); nome=cells[1].textContent.trim();
-            turno=cells[3]?.textContent.trim()||'D'; startIdx=4;
-            lastNI=nInt; lastNome=nome;
-            lastAmal=parseValue(cells[cells.length-3].textContent);
-            lastAnepc=parseValue(cells[cells.length-2].textContent);
-            lastGlobal=parseValue(cells[cells.length-1].textContent);
-          } else {
-            nInt=lastNI; nome=lastNome; turno=cells[0].textContent.trim(); startIdx=1;
-          }
-          const daysData={};
-          for (let d=0; d<daysInMonth; d++) {
-            const cell=cells[startIdx+d];
-            daysData[d+1]={D:'',N:''};
-            if (cell&&cell.textContent.trim().toUpperCase()==='X') daysData[d+1][turno]='X';
-          }
-          const rowObj={ni:nInt,nome,days:daysData,amal:lastAmal,anepc:lastAnepc,global:lastGlobal};
-          turno==='D' ? fixedRows.push(rowObj) : normalRows.push(rowObj);
-        });
-        data = {...data, fileName:`REGISTOS_DECIR_${monthName}_${year}`, monthName, year, daysInMonth, weekdays, holidayDays, fixedRows, normalRows};
-      } else if (type === 'pag') {
-        const table = document.querySelector("#table-container-dec-pag table tbody");
-        if (!table) return alert("Tabela de pagamentos não encontrada.");
-        const monthSelect = document.querySelector("#months-container-dec-pag .btn.active");
-        const yearInput = $("year-dec-pag");
-        if (!monthSelect||!yearInput) return alert("Selecione mês e ano.");
-        const monthName = monthSelect.textContent.trim();
-        const year = parseInt(yearInput.value,10);
-        const rows = Array.from(table.querySelectorAll("tr")).map(tr => {
-          const cells = tr.querySelectorAll("td");
-          return {ni: parseInt(cells[0].textContent.trim(),10), nome: cells[1]?.textContent.trim()||"", nif: cells[2]?.textContent.trim()||"", nib: cells[3]?.textContent.trim()||"",
-                  qtdTurnos: parseInt(cells[4]?.textContent.trim()||0,10), valor: parseCurrency(cells[5]?.textContent)};});
-        data = {...data, fileName:`PAGAMENTOS_DECIR_${monthName}_${year}`, monthName, year, rows};
-      } else if (type === 'code_a33') {
-        const table = document.querySelector("#table-container-dec-coda33 tbody");
-        if (!table) return alert("Tabela Cod.A33 não encontrada.");
-        const yearInput = $("year-dec-pag");
-        if (!yearInput) return alert("Selecione ano.");
-        const year = parseInt(yearInput.value,10);
-        const rows = Array.from(table.querySelectorAll("tr")).map(tr => {
-          const cells = tr.querySelectorAll("td");
-          return {ni: parseInt(cells[0]?.textContent.trim(),10)||0, nome: cells[1]?.textContent.trim()||'', nif: cells[2]?.textContent.trim()||'',
-                  ABRIL: parseCurrency(cells[4]?.textContent), MAIO: parseCurrency(cells[6]?.textContent), JUNHO: parseCurrency(cells[8]?.textContent), JULHO: parseCurrency(cells[10]?.textContent),
-                  AGOSTO: parseCurrency(cells[12]?.textContent), SETEMBRO: parseCurrency(cells[14]?.textContent), OUTUBRO: parseCurrency(cells[16]?.textContent)};
-        }).filter(r => r.ni>0 && (r.ABRIL||r.MAIO||r.JUNHO||r.JULHO||r.AGOSTO||r.SETEMBRO||r.OUTUBRO));
-        data = {...data, fileName:`CODA33_DECIR_${year}`, year, rows};
-      } else if (type === 'anepc') {
-        const table = document.querySelector(".anepc-table tbody");
-        if (!table) return alert("Tabela ANEPC não encontrada.");
-        const monthSelect = document.querySelector("#months-container-dec-anepc .btn.active");
-        const yearInput = $("year-dec-anepc");
-        const monthName = monthSelect ? monthSelect.textContent.trim() : 'MÊS';
-        const year = yearInput ? parseInt(yearInput.value,10) : new Date().getFullYear();
-        const rows = Array.from(table.querySelectorAll("tr")).map(tr => {
-          const cells = tr.querySelectorAll("td");
-          if (cells.length<5) return null;
-          return {niFile:cells[0]?.textContent.trim()||'', funcao:cells[1]?.textContent.trim()||'', nome:cells[2]?.textContent.trim()||'', 
-                  qtdTurnos:parseInt(cells[3]?.textContent.trim()||0,10), valor:parseCurrency(cells[4]?.textContent)};
-        }).filter(r => r && (r.qtdTurnos>0||r.valor>0));
-        data = {...data, fileName:`RELATORIO_ANEPC_${monthName}_${year}`, monthName, year, rows};
-      } else if (type === 'ocorr') {
-        const year = document.getElementById("year-dec-ocorr")?.value || String(new Date().getFullYear());
-        const OCORR_MONTHS = ["Maio","Junho","Julho","Agosto","Setembro","Outubro"];
-        const tbody = document.querySelector("#decir-reg-ocorr table tbody");
-        if (!tbody) return alert("Tabela não encontrada.");
-        const rows = Array.from(tbody.querySelectorAll("tr")).map((tr, rowIdx) => {
-          const tds = Array.from(tr.querySelectorAll("td"));
-          const record = { row_index: rowIdx };
-          OCORR_MONTHS.forEach((month, mIdx) => {
-            const base = mIdx * 3;
-            record[month] = {occurrence: tds[base]?.textContent.trim() || "", date: tds[base+1]?.textContent.trim() || "", acting: tds[base+2]?.querySelector("select")?.value || ""};
-          });
-          return record;
-        }).filter(r => OCORR_MONTHS.some(m => r[m].occurrence));
-        data = {...data, fileName:`OCORRENCIAS_DECIR_${year}`, year, rows};
-      } else if (type === 'ref') {
-        const monthBtn = document.querySelector("#months-container-dec-ref .btn.active");
-        const yearInput = document.getElementById("year-dec-ref");
-        if (!monthBtn || !yearInput) return alert("Selecione mês e ano.");
-        const monthName = monthBtn.textContent.trim();
-        const year = yearInput.value;
-        const tbody = document.querySelector("#table-container-dec-ref table tbody");
-        if (!tbody) return alert("Tabela não encontrada.");
-        const rows = Array.from(tbody.querySelectorAll("tr")).map(tr => {
-          const tds = Array.from(tr.querySelectorAll("td"));
-          const day = tds[0]?.textContent.trim();
-          const alert_state = tds[2]?.querySelector("select")?.value || "";
-          const restaurant = tds[3]?.querySelector("select")?.value || "";
-          const meal_prev = tds[4]?.textContent.trim();
-          const meal_efet = tds[5]?.textContent.trim();
-          const meal_devi = tds[6]?.textContent.trim();
-          const resp_name = tds[8]?.textContent.trim();
-          if (!alert_state && !restaurant && !meal_prev && !meal_efet && !resp_name) return null;
-          return {day, alert_state, restaurant, meal_prev, meal_efet, meal_devi, resp_name};
-        }).filter(r => r !== null);
-        data = {...data, fileName:`REFEICOES_DECIR_${monthName}_${year}`, monthName, year, rows};
+        tdTotalContributor.textContent = formatCurrency(totalForRow);
+        tr.appendChild(tdTotalContributor);
+        tbody.appendChild(tr);
       }
-      try {
-        const res = await fetch("https://cb360-online.vercel.app/api/decir_reg_pag", {
-          method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(data)
-        });
-        if (!res.ok) {const err=await res.json(); return alert("Erro: "+(err.details||err.error));}
-        const blob = await res.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href=url; a.download=`${data.fileName}.${format}`;
-        document.body.appendChild(a); a.click(); a.remove();
-        window.URL.revokeObjectURL(url);
-      } catch(err) {
-        alert("Erro ao gerar ficheiro: "+err.message);
-      }
+      table.appendChild(tbody);
+      wrapper.appendChild(table);
+      ["amal-value-pag","anepc-value-pag"].forEach(id => {const el=$(id); if(el) el.addEventListener("input", updateAllValues);});
+      if (typeof updateDECIRTotalPaymentsByMonth==='function') updateDECIRTotalPaymentsByMonth();
     }
-    /* ─── EVENT LISTENERS (DECIR) ────────────────────────────── */
-    ["emit-pag-dec-btn","emit-reg-dec-btn","emit-coda33-dec-btn","emit-anepc-dec-btn","emit-ocorr-dec-btn","emit-ref-dec-btn"].forEach((id,i) => {
-      $(id)?.addEventListener("click", () => generateDECIRFiles(['pag','reg','code_a33','anepc','ocorr','ref'][i]));
-    });
-    $("emit-reg-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('reg', 'pdf'));
-    $("delete-dec-btn")?.addEventListener("click", clearDecirTable);
-    $("guardar-dec-btn")?.addEventListener("click", saveDecirFull);
-    $("emit-pag-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('pag', 'pdf'));
-    $("emit-coda33-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('code_a33', 'pdf'));
-    $("emit-anepc-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('anepc', 'pdf'));
-    $("guardar-ocorr-btn")?.addEventListener("click", saveDecirOccurrences);
-    $("emit-ocorr-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('ocorr', 'pdf'));
-    $("guardar-ref-btn")?.addEventListener("click", saveDecirMeals);
-    $("emit-ref-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('ref', 'pdf'));    
-    /* ─── COD A33 HANDLER (DECIR) ────────────────────────────── */
+    function updateDECIRTotalCodA33() {
+      const table = document.querySelector("#table-container-dec-coda33 table");
+      if (!table) return;
+      const tbody = table.querySelector("tbody");
+      if (!tbody) return;
+      tbody.querySelector(".total-coda33")?.remove();
+      const CODA33_MONTHS = ["ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO"];
+      const headerCells = Array.from(table.querySelector("thead tr").children);
+      const monthIndices = CODA33_MONTHS.map(name => headerCells.findIndex(th => th.textContent.trim().toUpperCase()===name));
+      const monthSums = monthIndices.map(() => 0);
+      Array.from(tbody.querySelectorAll("tr")).forEach(tr => {
+        const tds = Array.from(tr.querySelectorAll("td"));
+        monthIndices.forEach((idx,i) => {if(idx>=0&&tds[idx]) monthSums[i] += Math.round(parseCurrency(tds[idx].textContent)*100);});
+      });
+      const grandTotal = monthSums.reduce((a,b)=>a+b,0);
+      const totalRow = document.createElement("tr");
+      totalRow.className = "total-coda33";
+      Object.assign(totalRow.style, {fontWeight:"bold", backgroundColor:"#e0f7e0"});
+      const tdFixed = document.createElement("td");
+      tdFixed.textContent = "Somatórios:";
+      tdFixed.colSpan = 3;
+      Object.assign(tdFixed.style, {textAlign:"right", backgroundColor:"#f7f7f7"});
+      totalRow.appendChild(tdFixed);
+      monthSums.forEach(sum => {
+        const td = document.createElement("td");
+        td.textContent = formatCurrency(sum/100);
+        td.style.textAlign = "right";
+        totalRow.appendChild(td);
+      });
+      const tdTotal = document.createElement("td");
+      tdTotal.textContent = formatCurrency(grandTotal/100);
+      Object.assign(tdTotal.style, {textAlign:"right", backgroundColor:"#c0ffc0"});
+      totalRow.appendChild(tdTotal);
+      tbody.appendChild(totalRow);
+    }
     async function handleCodA33Button() {
       const tableContainer = $("table-container-dec-coda33");
       const emitBtn = $("emit-coda33-dec-btn");
@@ -1089,6 +942,83 @@
         createDecirCodA33Table("table-container-dec-coda33", year, elements, turnosPorMes);
       } catch (err) {
         console.error("Erro no COD.A33:", err);
+      }
+    }
+    /* ─── TABELA: ANEPC (DECIR) ──────────────────────────────── */
+    function createDecirAnepcTable(containerId, year, month, elements, turnosPorNI) {
+      const container = $(containerId);
+      if (!container) return;
+      container.innerHTML = "";
+      container.appendChild(makeTitle(`RELATÓRIO ANEPC DECIR - ${MONTH_NAMES_UPPER[month-1]} ${year}`));
+      const wrapper = decirMakeWrapper(container);
+      const table = document.createElement("table");
+      table.className = "anepc-table";
+      Object.assign(table.style, {width:"100%", borderCollapse:"separated", fontFamily:"Segoe UI, sans-serif"});
+      const thead = document.createElement("thead");
+      const trh = document.createElement("tr");
+      [["Nº Mecanográfico","120px"],["Função","100px"],["Nome","200px"],["Qtd. Turnos","100px"],["Valor ANEPC (€)","140px"]]
+        .forEach(([h,w]) => {
+        const th = makeTh(h, "height:40px;line-height:40px;");
+        th.style.width = w;
+        trh.appendChild(th);
+      });
+      thead.appendChild(trh);
+      table.appendChild(thead);
+      const tbody = document.createElement("tbody");
+      const rowsCount = elements.length > 0 ? elements.length : 10;
+      for (let i=0; i<rowsCount; i++) {
+        const elem = elements[i] || {};
+        const tr   = document.createElement("tr");
+        const niKey = parseInt(elem.n_int,10);
+        const qtyShifts = turnosPorNI?.[niKey] || 0;
+        tr.appendChild(makeTd(elem.n_file ? String(elem.n_file) : "", "text-align:center;"));
+        tr.appendChild(makeTd(elem.patent||"",    "text-align:center;padding:6px 8px;"));
+        tr.appendChild(makeTd(elem.full_name||"", "text-align:center;padding:6px 8px;"));
+        tr.appendChild(makeTd(String(qtyShifts),  "text-align:center;font-weight:bold;padding:6px 8px;"));
+        const tdValue = document.createElement("td");
+        tdValue.style.cssText = COMMON_TDTOTAL_STYLE + "text-align:right;font-weight:bold;padding:6px 8px;";
+        const updateValor = () => {tdValue.textContent = formatCurrency(parseVal("anepc-value-anepc") * qtyShifts);};
+        updateValor();
+        const inp = $("anepc-value-anepc"); if(inp) inp.addEventListener("input", updateValor);
+        tr.appendChild(tdValue);
+        tbody.appendChild(tr);
+      }
+      table.appendChild(tbody);
+      wrapper.appendChild(table);
+      const optAnepc = $("decir-anepc-options"); if(optAnepc) optAnepc.style.display="flex";
+      if (typeof updateAnepcTotals==='function') updateAnepcTotals();
+    }
+    window.createDecirAnepcTable = createDecirAnepcTable;
+    /* ─── LOAD OCORRÊNCIAS (DECIR) ────────────────────────── */
+    async function loadDecirOccurrences() {
+      const year = document.getElementById("year-dec-ocorr")?.value || String(new Date().getFullYear());
+      const corpOperNr = getCorpId();
+      try {
+        const data = await supabaseFetch(`decir_reg_ocorr?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}`);
+        if (!data?.length) return;
+        const tbody = document.querySelector("#decir-reg-ocorr table tbody");
+        if (!tbody) return;
+        const OCORR_MONTHS_NR = ["05","06","07","08","09","10"];
+        data.forEach(item => {
+          const mIdx = OCORR_MONTHS_NR.indexOf(item.month);
+          if (mIdx === -1) return;
+          const rows = Array.from(tbody.querySelectorAll("tr"));
+          const tr = rows[item.row_index];
+          if (!tr) return;
+          const tds = Array.from(tr.querySelectorAll("td"));
+          const base = mIdx * 3;
+          if (tds[base]) tds[base].textContent = item.occurrence || "";
+          if (tds[base + 1]) tds[base + 1].textContent = item.day && item.month && item.year
+            ? `${item.day}/${item.month}/${item.year}` : "";
+          const sel = tds[base + 2]?.querySelector("select");
+          if (sel) {
+            sel.value = item.acting === true ? "Sim" : item.acting === false ? "Não" : "";
+            sel.dispatchEvent(new Event("change"));
+          }
+        });
+      } catch(err) {
+        console.error("Erro ao carregar ocorrências:", err);
+        showPopupWarning("Erro ao carregar ocorrências.");
       }
     }
     /* ─── TABELA: CONTROLO DE OCORRÊNCIAS (DECIR) ───────────── */
@@ -1264,38 +1194,6 @@
         });
       });
     }
-    /* ─── LOAD OCORRÊNCIAS (DECIR) ────────────────────────── */
-    async function loadDecirOccurrences() {
-      const year = document.getElementById("year-dec-ocorr")?.value || String(new Date().getFullYear());
-      const corpOperNr = getCorpId();
-      try {
-        const data = await supabaseFetch(`decir_reg_ocorr?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}`);
-        if (!data?.length) return;
-        const tbody = document.querySelector("#decir-reg-ocorr table tbody");
-        if (!tbody) return;
-        const OCORR_MONTHS_NR = ["05","06","07","08","09","10"];
-        data.forEach(item => {
-          const mIdx = OCORR_MONTHS_NR.indexOf(item.month);
-          if (mIdx === -1) return;
-          const rows = Array.from(tbody.querySelectorAll("tr"));
-          const tr = rows[item.row_index];
-          if (!tr) return;
-          const tds = Array.from(tr.querySelectorAll("td"));
-          const base = mIdx * 3;
-          if (tds[base]) tds[base].textContent = item.occurrence || "";
-          if (tds[base + 1]) tds[base + 1].textContent = item.day && item.month && item.year
-            ? `${item.day}/${item.month}/${item.year}` : "";
-          const sel = tds[base + 2]?.querySelector("select");
-          if (sel) {
-            sel.value = item.acting === true ? "Sim" : item.acting === false ? "Não" : "";
-            sel.dispatchEvent(new Event("change"));
-          }
-        });
-      } catch(err) {
-        console.error("Erro ao carregar ocorrências:", err);
-        showPopupWarning("Erro ao carregar ocorrências.");
-      }
-    }
     /* ─── GUARDAR OCORRÊNCIAS (DECIR) ────────────────────────── */
     async function saveDecirOccurrences() {
       const container = document.querySelector("#decir-reg-ocorr .card-body");
@@ -1344,6 +1242,69 @@
         showPopupWarning("❌ Erro ao gravar: " + err.message);
       } finally {
         if (btn) {btn.disabled = false; btn.textContent = "Guardar";}
+      }
+    }
+    /* ─── LOAD REFEIÇÕES (DECIR) ─────────────────────────────── */
+    async function loadDecirMeals() {
+      const month_btn = document.querySelector("#months-container-dec-ref .btn.active");
+      if (!month_btn) return;
+      const monthIdx = Array.from(document.querySelectorAll("#months-container-dec-ref .btn")).indexOf(month_btn) + 1;
+      const month = String(monthIdx + 4).padStart(2,"0");
+      const year = document.getElementById("year-dec-ref")?.value || String(new Date().getFullYear());
+      const corpOperNr = getCorpId();
+      try {
+        const [data, regServ] = await Promise.all([
+          supabaseFetch(`decir_reg_meals?corp_oper_nr=eq.${corpOperNr}&month=eq.${month}&year=eq.${year}`),
+          supabaseFetch(`reg_serv?corp_oper_nr=eq.${corpOperNr}&month=eq.${month}&year=eq.${year}&value=in.(ED,ET)`)
+        ]);
+        const prevByDay = {};
+        (regServ || []).forEach(item => {
+          const d = String(parseInt(item.day, 10));
+          prevByDay[d] = (prevByDay[d] || 0) + 1;
+        });
+        if (!data?.length && Object.keys(prevByDay).length === 0) return;
+        const tbody = document.querySelector("#table-container-dec-ref table tbody");
+        if (!tbody) return;
+        const rows = Array.from(tbody.querySelectorAll("tr"));
+        rows.forEach((tr, idx) => {
+          const day = String(idx + 1);
+          const tds = Array.from(tr.querySelectorAll("td"));
+          if (tds[4]) tds[4].textContent = String(prevByDay[day] || 0);
+        });
+        (data || []).forEach(item => {
+          const day = parseInt(item.day, 10);
+          const tr = rows[day - 1];
+          if (!tr) return;
+          const tds = Array.from(tr.querySelectorAll("td"));
+          const selAlert = tds[2]?.querySelector("select");
+          if (selAlert && item.alert_state) {
+            selAlert.value = item.alert_state;
+            selAlert.dispatchEvent(new Event("change"));
+          }
+          const selRest = tds[3]?.querySelector("select");
+          if (selRest && item.restaurant) selRest.value = item.restaurant;
+          if (tds[5]) tds[5].textContent = item.meal_efet || "";
+          if (tds[6]) {
+            const prev = parseInt(tds[4]?.textContent) || 0;
+            const efet = parseInt(item.meal_efet) || 0;
+            const desvio = efet - prev;
+            const hasEfet = (item.meal_efet || "") !== "";
+            if (hasEfet || prev > 0) {
+              tds[6].textContent = desvio > 0 ? `+${desvio}` : String(desvio);
+              tds[6].style.color = desvio < 0 ? "#c62828" : desvio > 0 ? "#006400" : "#333";
+            }
+          }
+          if (tds[7]) tds[7].textContent = item.ni_resp || "";
+          if (item.ni_resp && tds[8]) {
+            supabaseFetch(`reg_elems?select=patent_abv,abv_name&n_int=eq.${item.ni_resp}&corp_oper_nr=eq.${corpOperNr}&limit=1`)
+              .then(res => {
+              if (res?.length) tds[8].textContent = `${res[0].patent_abv || ""} ${res[0].abv_name || ""}`.trim();
+            }).catch(() => {});
+          }
+        });
+      } catch(err) {
+        console.error("Erro ao carregar refeições:", err);
+        showPopupWarning("Erro ao carregar refeições.");
       }
     }
     /* ─── TABELA: REFEIÇÕES (DECIR) ──────────────────────────── */
@@ -1465,7 +1426,6 @@
         tdRest.appendChild(selRest);
         tr.appendChild(tdRest);
         const tdPrev = makeTdBase(false, false);
-        tdPrev.contentEditable = true;
         tdPrev.style.outline = "none";
         tdPrev.style.cursor = "text";
         tdPrev.addEventListener("focus", () => tdPrev.style.background = "#eef0ff");
@@ -1555,73 +1515,6 @@
           loadDecirMeals();
         });
       });
-    }
-    /* ─── LOAD REFEIÇÕES (DECIR) ─────────────────────────────── */
-    async function loadDecirMeals() {
-      const month_btn = document.querySelector("#months-container-dec-ref .btn.active");
-      if (!month_btn) return;
-      const monthIdx = Array.from(document.querySelectorAll("#months-container-dec-ref .btn")).indexOf(month_btn) + 1;
-      const month = String(monthIdx + 4).padStart(2,"0");
-      const year = document.getElementById("year-dec-ref")?.value || String(new Date().getFullYear());
-      const corpOperNr = getCorpId();
-      try {
-        const [data, regServ] = await Promise.all([
-          supabaseFetch(`decir_reg_meals?corp_oper_nr=eq.${corpOperNr}&month=eq.${month}&year=eq.${year}`),
-          supabaseFetch(`reg_serv?corp_oper_nr=eq.${corpOperNr}&month=eq.${month}&year=eq.${year}&value=in.(ED,ET)`)
-        ]);
-        const prevByDay = {};
-        console.log("regServ:", regServ);
-        console.log("prevByDay:", prevByDay);
-        (regServ || []).forEach(item => {
-          const d = String(parseInt(item.day, 10));
-          prevByDay[d] = (prevByDay[d] || 0) + 1;
-        });
-        if (!data?.length && Object.keys(prevByDay).length === 0) return;
-        const tbody = document.querySelector("#table-container-dec-ref table tbody");
-        if (!tbody) return;
-        const rows = Array.from(tbody.querySelectorAll("tr"));
-        rows.forEach((tr, idx) => {
-          const day = String(idx + 1);
-          const tds = Array.from(tr.querySelectorAll("td"));
-          console.log(`dia ${day}: tds.length=${tds.length}, tds[4]=${tds[4]?.textContent}`);
-          
-          if (tds[4]) tds[4].innerText = String(prevByDay[day] || 0);
-        });
-        (data || []).forEach(item => {
-          const day = parseInt(item.day, 10);
-          const tr = rows[day - 1];
-          if (!tr) return;
-          const tds = Array.from(tr.querySelectorAll("td"));
-          const selAlert = tds[2]?.querySelector("select");
-          if (selAlert && item.alert_state) {
-            selAlert.value = item.alert_state;
-            selAlert.dispatchEvent(new Event("change"));
-          }
-          const selRest = tds[3]?.querySelector("select");
-          if (selRest && item.restaurant) selRest.value = item.restaurant;
-          if (tds[5]) tds[5].textContent = item.meal_efet || "";
-          if (tds[6]) {
-            const prev = parseInt(tds[4]?.innerText) || 0;
-            const efet = parseInt(item.meal_efet) || 0;
-            const desvio = efet - prev;
-            const hasEfet = (item.meal_efet || "") !== "";
-            if (hasEfet || prev > 0) {
-              tds[6].textContent = desvio > 0 ? `+${desvio}` : String(desvio);
-              tds[6].style.color = desvio < 0 ? "#c62828" : desvio > 0 ? "#006400" : "#333";
-            }
-          }
-          if (tds[7]) tds[7].textContent = item.ni_resp || "";
-          if (item.ni_resp && tds[8]) {
-            supabaseFetch(`reg_elems?select=patent_abv,abv_name&n_int=eq.${item.ni_resp}&corp_oper_nr=eq.${corpOperNr}&limit=1`)
-              .then(res => {
-              if (res?.length) tds[8].textContent = `${res[0].patent_abv || ""} ${res[0].abv_name || ""}`.trim();
-            }).catch(() => {});
-          }
-        });
-      } catch(err) {
-        console.error("Erro ao carregar refeições:", err);
-        showPopupWarning("Erro ao carregar refeições.");
-      }
     }
     /* ─── GUARDAR REFEIÇÕES (DECIR) ──────────────────────────── */
     async function saveDecirMeals() {
@@ -2200,3 +2093,191 @@
     };
     document.getElementById("emit-signa-xlsx-btn")?.addEventListener("click", () => emitSigna("xlsx"));
     document.getElementById("emit-signa-pdf-btn")?.addEventListener("click", () => emitSigna("pdf"));
+    /* ─── GERAR FICHEIROS EXCEL (DECIR) ──────────────────────── */
+    async function generateDECIRFiles(type, format = "xlsx") {
+      let data = { type, format };
+      if (type === 'reg') {
+        const table = document.querySelector("#table-container-dec-reg table tbody");
+        if (!table) return alert("Tabela de registo diário não encontrada.");
+        const monthSelect = document.querySelector("#months-container-dec-reg .btn.active");
+        const yearInput = $("year-dec-reg");
+        if (!monthSelect||!yearInput) return alert("Selecione mês e ano.");
+        const monthIdx = Array.from(document.querySelectorAll("#months-container-dec-reg .btn")).indexOf(monthSelect) + 1 + 4;
+        const monthName = monthSelect.textContent.trim();
+        const year = parseInt(yearInput.value,10);
+        const daysInMonth = new Date(year,monthIdx,0).getDate();
+        const weekdays=[], holidayDays=[];
+        for (let d=1; d<=daysInMonth; d++) {
+          const date = new Date(year,monthIdx-1,d);
+          weekdays.push(['DOM','SEG','TER','QUA','QUI','SEX','SÁB'][date.getDay()]);
+          if (date.getDay()===0||date.getDay()===6) holidayDays.push(d);
+        }
+        const parseValue = txt => parseFloat(txt.trim().replace(/\s/g,'').replace(/\./g,'').replace(',','.')) || 0;
+        const fixedRows=[], normalRows=[];
+        let lastNI=null, lastNome=null, lastAmal=null, lastAnepc=null, lastGlobal=null;
+        Array.from(table.querySelectorAll("tr")).filter(tr=>!tr.classList.contains("total-elements-row")).forEach(row => {
+          const cells = Array.from(row.querySelectorAll("td"));
+          if (!cells.length) return;
+          let nInt, nome, turno, startIdx;
+          if (cells[0].rowSpan===2) {
+            nInt=parseInt(cells[0].textContent.trim(),10); nome=cells[1].textContent.trim();
+            turno=cells[3]?.textContent.trim()||'D'; startIdx=4;
+            lastNI=nInt; lastNome=nome;
+            lastAmal=parseValue(cells[cells.length-3].textContent);
+            lastAnepc=parseValue(cells[cells.length-2].textContent);
+            lastGlobal=parseValue(cells[cells.length-1].textContent);
+          } else {
+            nInt=lastNI; nome=lastNome; turno=cells[0].textContent.trim(); startIdx=1;
+          }
+          const daysData={};
+          for (let d=0; d<daysInMonth; d++) {
+            const cell=cells[startIdx+d];
+            daysData[d+1]={D:'',N:''};
+            if (cell&&cell.textContent.trim().toUpperCase()==='X') daysData[d+1][turno]='X';
+          }
+          const rowObj={ni:nInt,nome,days:daysData,amal:lastAmal,anepc:lastAnepc,global:lastGlobal};
+          turno==='D' ? fixedRows.push(rowObj) : normalRows.push(rowObj);
+        });
+        data = {...data, fileName:`REGISTOS_DECIR_${monthName}_${year}`, monthName, year, daysInMonth, weekdays, holidayDays, fixedRows, normalRows};
+      } else if (type === 'pag') {
+        const table = document.querySelector("#table-container-dec-pag table tbody");
+        if (!table) return alert("Tabela de pagamentos não encontrada.");
+        const monthSelect = document.querySelector("#months-container-dec-pag .btn.active");
+        const yearInput = $("year-dec-pag");
+        if (!monthSelect||!yearInput) return alert("Selecione mês e ano.");
+        const monthName = monthSelect.textContent.trim();
+        const year = parseInt(yearInput.value,10);
+        const rows = Array.from(table.querySelectorAll("tr")).map(tr => {
+          const cells = tr.querySelectorAll("td");
+          return {ni: parseInt(cells[0].textContent.trim(),10), nome: cells[1]?.textContent.trim()||"", nif: cells[2]?.textContent.trim()||"", nib: cells[3]?.textContent.trim()||"",
+                  qtdTurnos: parseInt(cells[4]?.textContent.trim()||0,10), valor: parseCurrency(cells[5]?.textContent)};});
+        data = {...data, fileName:`PAGAMENTOS_DECIR_${monthName}_${year}`, monthName, year, rows};
+      } else if (type === 'code_a33') {
+        const table = document.querySelector("#table-container-dec-coda33 tbody");
+        if (!table) return alert("Tabela Cod.A33 não encontrada.");
+        const yearInput = $("year-dec-pag");
+        if (!yearInput) return alert("Selecione ano.");
+        const year = parseInt(yearInput.value,10);
+        const rows = Array.from(table.querySelectorAll("tr")).map(tr => {
+          const cells = tr.querySelectorAll("td");
+          return {ni: parseInt(cells[0]?.textContent.trim(),10)||0, nome: cells[1]?.textContent.trim()||'', nif: cells[2]?.textContent.trim()||'',
+                  ABRIL: parseCurrency(cells[4]?.textContent), MAIO: parseCurrency(cells[6]?.textContent), JUNHO: parseCurrency(cells[8]?.textContent), JULHO: parseCurrency(cells[10]?.textContent),
+                  AGOSTO: parseCurrency(cells[12]?.textContent), SETEMBRO: parseCurrency(cells[14]?.textContent), OUTUBRO: parseCurrency(cells[16]?.textContent)};
+        }).filter(r => r.ni>0 && (r.ABRIL||r.MAIO||r.JUNHO||r.JULHO||r.AGOSTO||r.SETEMBRO||r.OUTUBRO));
+        data = {...data, fileName:`CODA33_DECIR_${year}`, year, rows};
+      } else if (type === 'anepc') {
+        const table = document.querySelector(".anepc-table tbody");
+        if (!table) return alert("Tabela ANEPC não encontrada.");
+        const monthSelect = document.querySelector("#months-container-dec-anepc .btn.active");
+        const yearInput = $("year-dec-anepc");
+        const monthName = monthSelect ? monthSelect.textContent.trim() : 'MÊS';
+        const year = yearInput ? parseInt(yearInput.value,10) : new Date().getFullYear();
+        const rows = Array.from(table.querySelectorAll("tr")).map(tr => {
+          const cells = tr.querySelectorAll("td");
+          if (cells.length<5) return null;
+          return {niFile:cells[0]?.textContent.trim()||'', funcao:cells[1]?.textContent.trim()||'', nome:cells[2]?.textContent.trim()||'', 
+                  qtdTurnos:parseInt(cells[3]?.textContent.trim()||0,10), valor:parseCurrency(cells[4]?.textContent)};
+        }).filter(r => r && (r.qtdTurnos>0||r.valor>0));
+        data = {...data, fileName:`RELATORIO_ANEPC_${monthName}_${year}`, monthName, year, rows};
+      } else if (type === 'ocorr') {
+        const year = document.getElementById("year-dec-ocorr")?.value || String(new Date().getFullYear());
+        const OCORR_MONTHS = ["Maio","Junho","Julho","Agosto","Setembro","Outubro"];
+        const tbody = document.querySelector("#decir-reg-ocorr table tbody");
+        if (!tbody) return alert("Tabela não encontrada.");
+        const rows = Array.from(tbody.querySelectorAll("tr")).map((tr, rowIdx) => {
+          const tds = Array.from(tr.querySelectorAll("td"));
+          const record = { row_index: rowIdx };
+          OCORR_MONTHS.forEach((month, mIdx) => {
+            const base = mIdx * 3;
+            record[month] = {occurrence: tds[base]?.textContent.trim() || "", date: tds[base+1]?.textContent.trim() || "", acting: tds[base+2]?.querySelector("select")?.value || ""};
+          });
+          return record;
+        }).filter(r => OCORR_MONTHS.some(m => r[m].occurrence));
+        data = {...data, fileName:`OCORRENCIAS_DECIR_${year}`, year, rows};
+      } else if (type === 'ref') {
+        const monthBtn = document.querySelector("#months-container-dec-ref .btn.active");
+        const yearInput = document.getElementById("year-dec-ref");
+        if (!monthBtn || !yearInput) return alert("Selecione mês e ano.");
+        const monthName = monthBtn.textContent.trim();
+        const year = yearInput.value;
+        const tbody = document.querySelector("#table-container-dec-ref table tbody");
+        if (!tbody) return alert("Tabela não encontrada.");
+        const rows = Array.from(tbody.querySelectorAll("tr")).map(tr => {
+          const tds = Array.from(tr.querySelectorAll("td"));
+          const day = tds[0]?.textContent.trim();
+          const alert_state = tds[2]?.querySelector("select")?.value || "";
+          const restaurant = tds[3]?.querySelector("select")?.value || "";
+          const meal_prev = tds[4]?.textContent.trim();
+          const meal_efet = tds[5]?.textContent.trim();
+          const meal_devi = tds[6]?.textContent.trim();
+          const resp_name = tds[8]?.textContent.trim();
+          if (!alert_state && !restaurant && !meal_prev && !meal_efet && !resp_name) return null;
+          return {day, alert_state, restaurant, meal_prev, meal_efet, meal_devi, resp_name};
+        }).filter(r => r !== null);
+        data = {...data, fileName:`REFEICOES_DECIR_${monthName}_${year}`, monthName, year, rows};
+      }
+      try {
+        const res = await fetch("https://cb360-online.vercel.app/api/decir_reg_pag", {
+          method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(data)
+        });
+        if (!res.ok) {const err=await res.json(); return alert("Erro: "+(err.details||err.error));}
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href=url; a.download=`${data.fileName}.${format}`;
+        document.body.appendChild(a); a.click(); a.remove();
+        window.URL.revokeObjectURL(url);
+      } catch(err) {
+        alert("Erro ao gerar ficheiro: "+err.message);
+      }
+    }
+    /* ─── EVENT LISTENERS (DECIR) ────────────────────────────── */
+    ["emit-pag-dec-btn","emit-reg-dec-btn","emit-coda33-dec-btn","emit-anepc-dec-btn","emit-ocorr-dec-btn","emit-ref-dec-btn"].forEach((id,i) => {
+      $(id)?.addEventListener("click", () => generateDECIRFiles(['pag','reg','code_a33','anepc','ocorr','ref'][i]));
+    });
+    $("emit-reg-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('reg', 'pdf'));
+    $("delete-dec-btn")?.addEventListener("click", clearDecirTable);
+    $("guardar-dec-btn")?.addEventListener("click", saveDecirFull);
+    $("emit-pag-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('pag', 'pdf'));
+    $("emit-coda33-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('code_a33', 'pdf'));
+    $("emit-anepc-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('anepc', 'pdf'));
+    $("guardar-ocorr-btn")?.addEventListener("click", saveDecirOccurrences);
+    $("emit-ocorr-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('ocorr', 'pdf'));
+    $("guardar-ref-btn")?.addEventListener("click", saveDecirMeals);
+    $("emit-ref-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('ref', 'pdf'));
+    document.querySelectorAll(".sidebar-submenu-button, .sidebar-sub-submenu-button").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        if (btn.dataset.page === "decir-sca-view") {
+          const container = document.getElementById("months-container-dec-view");
+          if (!container) return;
+          container.innerHTML = "";
+          const tableContainer = document.getElementById("table-container-dec-view");
+          if (tableContainer) tableContainer.innerHTML = "";
+          createDecirButtonsGeneric({
+            containerId: "months-container-dec-view", tableContainerId: "table-container-dec-view", yearSelectId: "year-dec-view", 
+            optionsContainerId: "decir-view-options", monthNames: DECIR_MONTH_NAMES, blockedMonths: [], loadDataFunc: async (y, m) => loadDecirData(), 
+            createTableFunc: (cId, y, m, data) => createDecirViewTable(cId, y, m + 4, data)});
+          return;
+        }
+        if (btn.getAttribute("data-access") === "Atualização de Valores") {
+          e.preventDefault(); e.stopPropagation();
+          openConfigDecirModal();
+          return;
+        }
+        const cfg = PAGE_CONFIGS[btn.dataset.page];
+        if (!cfg) return;
+        if (cfg.init) {cfg.init(); return;}
+        const clear = id => {const el = $(id); if (el) el.innerHTML = "";};
+        clear(cfg.tableId);
+        const opt = $(cfg.optionsId); if (opt) opt.style.display = "none";
+        (cfg.extra || []).forEach(id => {
+          const el = $(id);
+          if (!el) return;
+          if (id.startsWith("table-container")) el.innerHTML = "";
+          el.style.display = "none";
+        });
+        document.querySelectorAll(`#${cfg.monthsId} .btn`).forEach(b => b.classList.remove("active"));
+        createDecirButtonsGeneric(cfg.generic);
+        loadDecirConfigValues();
+      });
+    });

@@ -1375,7 +1375,7 @@
       const tbody = document.createElement("tbody");
       table.appendChild(tbody);
       wrapper.appendChild(table);
-      updateDayHeaders(table, year, month, daysInMonth);
+      updateEmployeesDayHeaders(table, year, month, daysInMonth);
       Array.from(thead.querySelectorAll("th")).forEach((th) => {
         th.style.position = "sticky";
         th.style.top = "0";

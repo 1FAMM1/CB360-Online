@@ -157,7 +157,10 @@
           });
           for (let r = 10; r <= 113; r++) {
             const row = sheet.getRow(r);
-            const allEmpty = [2,3,4,5,6,7].every(c => {const v = row.getCell(c).value; return v === null || v === undefined || v === '';});
+            const allEmpty = [2,3,4,5,6,7].every(c => {
+              const v = row.getCell(c).value;
+              return v === null || v === undefined || v === '' || v === '- €' || v === '0,00 €' || Number(v) === 0;
+            });
             if (allEmpty) row.hidden = true;
           }
           sheet.pageSetup = {orientation: "portrait", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,

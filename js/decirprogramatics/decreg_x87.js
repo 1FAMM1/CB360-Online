@@ -389,7 +389,7 @@
       container.appendChild(makeTitle(`REGISTO DECIR - ${MONTH_NAMES_UPPER[month-1]} ${year}`));
       const wrapper = makeWrapper(container);
       const table = document.createElement("table");
-      table.className = "month-table";
+      table.className = "decir-reg-table";
       Object.assign(table.style, {width:"100%", borderCollapse:"separated"});
       /* thead */
       const thead = document.createElement("thead");
@@ -738,7 +738,7 @@
     function updateAllValues() {
       const amalCents  = Math.round(parseVal("amal-value-reg") * 100);
       const anepcCents = Math.round(parseVal("anepc-value-reg") * 100);
-      const tbody = document.querySelector("table.month-table tbody");
+      const tbody = document.querySelector("table.decir-reg-table tbody");
       if (!tbody) return;
       const rows = Array.from(tbody.querySelectorAll("tr:not(.total-elements-row)"));
       for (let i=0; i<rows.length; i+=2) {

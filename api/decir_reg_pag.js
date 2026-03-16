@@ -157,14 +157,9 @@
           });
           for (let r = 10; r <= 113; r++) {
   const row = sheet.getRow(r);
-  const allEmpty = [2,3,4,5].every(c => {
-    const v = row.getCell(c).value;
-    return v === null || v === undefined || v === '';
-  }) && [6,7].every(c => {
-    const v = row.getCell(c).value;
-    return v === null || v === undefined || v === '' || Number(v) === 0;
-  });
-  if (allEmpty) row.hidden = true;
+  const qtd = Number(row.getCell(6).value) || 0;
+  const val = Number(row.getCell(7).value) || 0;
+  if (qtd === 0 && val === 0) row.hidden = true;
 }
           sheet.pageSetup = {orientation: "portrait", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
                              margins: {left: 0.5, right: 0.5, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3}};}

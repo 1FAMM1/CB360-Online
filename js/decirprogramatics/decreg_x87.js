@@ -1,93 +1,7 @@
     /* =======================================
     DECIR PROGRAMATICS
     ======================================= */
-    /* ─── CONSTANTS ─────────────────────────────────────────── */
-    const MONTH_NAMES_PT = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-    const MONTH_NAMES_UPPER = MONTH_NAMES_PT.map(m => m.toUpperCase());
-    const BLOCKED_MONTHS_DEFAULT = [0,1,2,3,10,11];
-    const CORP = () => sessionStorage.getItem("currentCorpOperNr") || "0805";
-    /* ─── HELPERS ────────────────────────────────────────────── */
-    const $ = id => document.getElementById(id);
-    const parseCurrency = txt => !txt ? 0 : parseFloat(txt.replace('€','').replace(/\s/g,'').replace(/\./g,'').replace(',','.')) || 0;
-    const parseVal = id => parseFloat(($( id)?.value||"0").replace(",",".")) || 0;
-    const formatCurrency = v => new Intl.NumberFormat('pt-PT',{style:'currency',currency:'EUR',minimumFractionDigits:2,maximumFractionDigits:2}).format(v);
-    const formatNumber = v => new Intl.NumberFormat('pt-PT',{minimumFractionDigits:0,maximumFractionDigits:0}).format(v);
-    async function supabaseFetch(path, opts = {}) {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {headers: getSupabaseHeaders(), ...opts});
-      if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`);
-      return res.json();
-    }
-    function makeWrapper(container) {
-      if (typeof createTableWrapper === 'function') return createTableWrapper(container);
-      const w = document.createElement("div");
-      Object.assign(w.style, {maxHeight:"380px", overflowY:"auto", height:"380px"});
-      container.appendChild(w);
-      return w;
-    }
-    function makeTh(txt, cssExtra = "", style = {}) {
-      const th = document.createElement("th");
-      th.innerHTML = txt;
-      th.style.cssText = COMMON_TH_STYLE + cssExtra;
-      Object.assign(th.style, style);
-      return th;
-    }
-    function makeTd(txt = "", cssExtra = "") {
-      const td = document.createElement("td");
-      td.textContent = txt;
-      td.style.cssText = COMMON_TD_STYLE + cssExtra;
-      return td;
-    }
-    function makeTitle(text, bg = "#3ac55b") {
-      const h = document.createElement("h3");
-      h.textContent = text;
-      Object.assign(h.style, {textAlign:"center",margin:"20px 0 -15px 0",background:bg,height:"30px",borderRadius:"3px",lineHeight:"30px",padding:"0 8px"});
-      return h;
-    }
-    /* ─── SIDEBAR BUTTON — MODAL CONFIG ─────────────────────── */
-    document.querySelectorAll(".sidebar-submenu-button").forEach(btn => {
-      btn.addEventListener("click", e => {
-        if (btn.getAttribute("data-access") === "Atualização de Valores") {
-          e.preventDefault(); e.stopPropagation();
-          openConfigDecirModal();
-        }
-      });
-    });
-    async function openConfigDecirModal() {
-      $('modalConfigDecir').classList.add('show');
-      try {
-        const data = await supabaseFetch(`decir_values_config?corp_oper_nr=eq.${CORP()}`);
-        if (data?.length) {
-          $('amal_value').value = data[0].amal_value;
-          $('anepc_value').value = data[0].anepc_value;
-        }
-      } catch (err) {
-        console.error("Erro ao carregar dados:", err);
-      }
-    }
-    function closeConfigModal() { 
-      $('modalConfigDecir').classList.remove('show');
-    }
-    async function updateDecirValues() {
-      const btn = $('btnSaveConfig');
-      const amal = $('amal_value').value.replace(',','.');
-      const anepc = $('anepc_value').value.replace(',','.');
-      btn.disabled = true;
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A guardar...';
-      try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/decir_values_config?corp_oper_nr=eq.${CORP()}`, {
-          method: 'PATCH',
-          headers: {...getSupabaseHeaders(), 'Content-Type':'application/json', 'Prefer':'return=minimal'},
-          body: JSON.stringify({amal_value:parseFloat(amal), anepc_value:parseFloat(anepc), updated_at:new Date().toISOString()})
-        });
-        if (res.ok) { 
-          alert("✅ Configurações guardadas com sucesso!"); closeConfigModal();
-        }
-      } catch {
-        alert("❌ Erro ao ligar ao servidor.");
-      }
-      finally {btn.disabled = false; btn.innerText = "Gravar Alterações";}
-    }
-    /* ─── GENERIC MONTH BUTTONS ─────────────────────────────── */
+    /* ─── BOTÕES GENÉRICOS DE MÊS (DECIR) ───────────────────── */
     function createDecirButtonsGeneric({
       containerId, tableContainerId, yearSelectId, optionsContainerId,
       blockedMonths = BLOCKED_MONTHS_DEFAULT,
@@ -109,7 +23,7 @@
       yearSelect.id = yearSelectId;
       Object.assign(yearSelect.style, {padding:"6px 10px",borderRadius:"4px",border:"1px solid #ccc",cursor:"pointer"});
       const targetYear = new Date().getFullYear();
-      for (let y = 2025; y <= 2035; y++) {
+      for (let y = 2026; y <= 2036; y++) {
         const opt = document.createElement("option");
         opt.value = y; opt.textContent = y;
         if (y === targetYear) opt.selected = true;
@@ -168,26 +82,85 @@
       mainWrapper.append(yearContainer, monthsWrapper);
       container.appendChild(mainWrapper);
     }
-    /* ─── SIDEBAR SUB-SUBMENU HANDLER ───────────────────────── */
+    /* ─── SIDEBAR BUTTON — MODAL CONFIG ─────────────────────── */
+    async function openConfigDecirModal() {
+      $('modalConfigDecir').classList.add('show');
+      try {
+        const data = await supabaseFetch(`decir_values_config?corp_oper_nr=eq.${getCorpId()}`);
+        if (data?.length) {
+          $('amal_value').value = data[0].amal_value;
+          $('anepc_value').value = data[0].anepc_value;
+        }
+      } catch (err) {
+        console.error("Erro ao carregar dados:", err);
+      }
+    }
+    function closeConfigModal() { 
+      $('modalConfigDecir').classList.remove('show');
+    }
+    async function updateDecirValues() {
+      const btn = $('btnSaveConfig');
+      const amal = $('amal_value').value.replace(',','.');
+      const anepc = $('anepc_value').value.replace(',','.');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A guardar...';
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/decir_values_config?corp_oper_nr=eq.${getCorpId()}`, {
+          method: 'PATCH',
+          headers: {...getSupabaseHeaders(), 'Content-Type':'application/json', 'Prefer':'return=minimal'},
+          body: JSON.stringify({amal_value:parseFloat(amal), anepc_value:parseFloat(anepc), updated_at:new Date().toISOString()})
+        });
+        if (res.ok) { 
+          alert("✅ Configurações guardadas com sucesso!"); closeConfigModal();
+        }
+      } catch {
+        alert("❌ Erro ao ligar ao servidor.");
+      }
+      finally {btn.disabled = false; btn.innerText = "Gravar Alterações";}
+    }
+    /* ─── SIDEBAR SUB-SUBMENU HANDLER (DECIR) ───────────────── */
     const PAGE_CONFIGS = {
       "decir-reg": {tableId: "table-container-dec-reg", optionsId: "decir-reg-options", monthsId: "months-container-dec-reg",
                     generic: {containerId: "months-container-dec-reg", tableContainerId: "table-container-dec-reg", yearSelectId: "year-dec-reg", optionsContainerId: "decir-reg-options",
-                              loadDataFunc: async () => loadDecirRegData(), createTableFunc: createDecirRegTable, loadByMonthFunc: async (y,m) => window.loadDecirByMonth?.(y,m)}},
+                              monthNames: DECIR_MONTH_NAMES, blockedMonths:[], loadDataFunc: async () => loadDecirRegData(), createTableFunc: (cId, y, m, d) => createDecirRegTable(cId, y, m + 4, d), 
+                              loadByMonthFunc: async (y, m) => window.loadDecirByMonth?.(y, m + 4)}},
       "decir-pag": {tableId: "table-container-dec-pag", optionsId: "decir-pag-options", monthsId: "months-container-dec-pag",
                     extra: ["table-container-dec-coda33","decir-coda33-options","decir-payment-totals"],
                     generic: {containerId: "months-container-dec-pag", tableContainerId: "table-container-dec-pag", yearSelectId: "year-dec-pag", optionsContainerId: "decir-pag-options",
-                              monthNames: [...MONTH_NAMES_PT, "Cod.A33"], includeExtraButton: true, extraButtonFunc: handleCodA33Button,
-                              loadDataFunc: async (y,m) => ({elems: await loadDecirPayElements(), turnos: await loadShiftsByNI(y,m)}), 
-                              createTableFunc: (cId,y,m,d) => createDecirPayTable(cId,y,m,d.elems,d.turnos), totalContainerId: "decir-payment-totals"}},
+                    monthNames: [...DECIR_MONTH_NAMES, "Cod.A33"], includeExtraButton: true, extraButtonFunc: handleCodA33Button,
+                    loadDataFunc: async (y, m) => ({elems: await loadDecirPayElements(), turnos: await loadShiftsByNI(y, m + 4)}), 
+                    createTableFunc: (cId, y, m, d) => createDecirPayTable(cId, y, m + 4, d.elems, d.turnos),
+                    totalContainerId: "decir-payment-totals", blockedMonths: []}},
       "decir-anepc": {tableId: "table-container-dec-anepc", optionsId: "decir-anepc-options", monthsId: "months-container-dec-anepc",
                       generic: {containerId: "months-container-dec-anepc", tableContainerId: "table-container-dec-anepc", yearSelectId: "year-dec-anepc", optionsContainerId: "decir-anepc-options",
-                                loadDataFunc: async (y,m) => ({elems: await loadDecirANEPCElements(), turnos: await loadShiftsByNI(y,m)}),
-                                createTableFunc: (cId,y,m,d) => createDecirAnepcTable(cId,y,m,d.elems,d.turnos)}}};
-    document.querySelectorAll(".sidebar-sub-submenu-button").forEach(btn => {
-      btn.addEventListener("click", () => {
+                      monthNames: DECIR_MONTH_NAMES, blockedMonths: [], loadDataFunc: async (y, m) => ({elems: await loadDecirANEPCElements(), turnos: await loadShiftsByNI(y, m + 4)}),
+                      createTableFunc: (cId, y, m, d) => createDecirAnepcTable(cId, y, m + 4, d.elems, d.turnos)}},
+      "decir-reg-ocorr": {init: createDecirOccurrencesTable},
+      "decir-reg-ref": {tableId: "table-container-dec-ref", optionsId: "decir-ref-options", monthsId: "months-container-dec-ref",
+                        generic: {containerId: "months-container-dec-ref", tableContainerId: "table-container-dec-ref", yearSelectId: "year-dec-ref", optionsContainerId: "decir-ref-options",
+                        monthNames: DECIR_MONTH_NAMES, blockedMonths: [], loadDataFunc: async (y, m) => m, createTableFunc: (cId, y, m, d) => createDecirMealTable(cId, y, m + 4, d)}},
+      "decir-reg-signa": {init: createDecirSignaTable}
+    };
+    document.querySelectorAll(".sidebar-submenu-button, .sidebar-sub-submenu-button").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        if (btn.dataset.page === "decir-sca-view") {
+          const container = document.getElementById("months-container-dec-view");
+          if (!container) return;
+          container.innerHTML = "";
+          createDecirButtonsGeneric({
+            containerId: "months-container-dec-view", tableContainerId: "table-container-dec-view", yearSelectId: "year-dec-view", 
+            optionsContainerId: "decir-view-options", monthNames: DECIR_MONTH_NAMES, blockedMonths: [], loadDataFunc: async (y, m) => loadDecirData(), 
+            createTableFunc: (cId, y, m, data) => createDecirViewTable(cId, y, m + 4, data)});
+          return;
+        }
+        if (btn.getAttribute("data-access") === "Atualização de Valores") {
+          e.preventDefault(); e.stopPropagation();
+          openConfigDecirModal();
+          return;
+        }
         const cfg = PAGE_CONFIGS[btn.dataset.page];
         if (!cfg) return;
-        const hide = id => {const el = $(id); if (el) { el.innerHTML=""; el.style.display="none";}};
+        if (cfg.init) {cfg.init(); return;}
         const clear = id => {const el = $(id); if (el) el.innerHTML = "";};
         clear(cfg.tableId);
         const opt = $(cfg.optionsId); if (opt) opt.style.display = "none";
@@ -202,7 +175,7 @@
         loadDecirConfigValues();
       });
     });
-    /* ─── LOADERS ────────────────────────────────────────────── */
+    /* ─── LOADERS (DECIR) ────────────────────────────────────── */
     async function loadDecirConfigValues() {
       try {
         const data = await supabaseFetch("decir_values_config?select=amal_value,anepc_value&limit=1");
@@ -249,11 +222,11 @@
         return {};
       }
     }
-    /* ─── SAVED DATA LOADER (IIFE) ───────────────────────────── */
+    /* ─── SAVED DATA LOADER DECIR (IIFE) ─────────────────────── */
     (function() {
       async function loadDecirSavedData(year, month) {
         try {
-          const url = `${window.SUPABASE_URL||SUPABASE_URL}/rest/v1/decir_reg_pag?select=n_int,day,turno&year=eq.${year}&month=eq.${month}&corp_oper_nr=eq.${CORP()}`;
+          const url = `${window.SUPABASE_URL||SUPABASE_URL}/rest/v1/decir_reg_pag?select=n_int,day,turno&year=eq.${year}&month=eq.${month}&corp_oper_nr=eq.${getCorpId()}`;
           const res = await fetch(url, {headers: window.getSupabaseHeaders ? window.getSupabaseHeaders() : getSupabaseHeaders()});
           if (!res.ok) return {};
           const data = await res.json();
@@ -305,7 +278,7 @@
       }
       async function loadDecirByMonth(year, month) {
         try {
-          await new Promise(r => setTimeout(r, 200));
+          await new Promise(r => setTimeout(r, 0));
           const tbody = document.querySelector("#table-container-dec-reg table tbody");
           if (!tbody) return;
           const map = await loadDecirSavedData(year, month);
@@ -316,7 +289,98 @@
       }
       window.loadDecirByMonth = loadDecirByMonth;
     })();
-    /* ─── TABLE: REGISTERS ───────────────────────────────────── */
+    /* ─── HEADERS DE DIA (DECIR) ─────────────────────────────── */
+    function updateDECIRDayHeaders(table, year, month, daysInMonth, holidays) {
+      const hList = holidays || getPortugalHolidays(year);
+      const mesIdx = month - 1;
+      for (let d=1; d<=31; d++) {
+        const h = table.querySelector(`.day-header-${d}`);
+        const n = table.querySelector(`.day-number-${d}`);
+        if (!h || !n) continue;
+        if (d <= daysInMonth) {
+          const date = new Date(year, mesIdx, d);
+          h.textContent = date.toLocaleDateString("pt-PT",{weekday:"short"}).toUpperCase().slice(0,3);
+          h.style.display = ""; n.style.display = "";
+          const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+          const holiday = hList.find(hol => hol.date.getDate() === d && hol.date.getMonth() === mesIdx);
+          if (holiday) {
+            const bg = holiday.optional ? "#2ecc71" : "#ffcccc", fg = holiday.optional ? "#fff" : "#000";
+            [h, n].forEach(el => { el.style.background=bg; el.style.color=fg; el.title=holiday.name; el.classList.add(holiday.optional?"holiday-optional":"holiday"); });
+          } else {
+            const bg = isWeekend ? WEEKEND_COLOR : "#f0f0f0";
+            [h, n].forEach(el => { el.style.background=bg; el.style.color="#000"; el.classList.remove("holiday","holiday-optional"); });
+          }
+        } else { h.style.display="none"; n.style.display="none"; }
+      }
+    }
+    /* ─── CONSULTA ESCALAS DECIR ─────────────────────────────── */
+    /* ─── TABELA: VISUALIZAÇÃO ESCALAS DECIR ─────────────────── */
+    async function createDecirViewTable(containerId, year, month, data) {
+      const container = document.getElementById(containerId) || $(containerId);
+      if (!container) return;
+      container.innerHTML = "";
+      createTableHeaders(container, year, month, "DECIR");
+      const wrapper = createTableWrapper(container);
+      const table = createTableStructure(wrapper);
+      const daysInMonth = new Date(year, month, 0).getDate();
+      const holidays = getPortugalHolidays(year);
+      updateScalesDayHeaders(table, year, month, daysInMonth, holidays);
+      const savedMap = await loadSavedData("DECIR", year, month);
+      const tbody = table.querySelector("tbody");
+      data.forEach(item => {
+        const nIntStr = String(item.n_int).padStart(3,"0");
+        const tr = document.createElement("tr");
+        tr.setAttribute("data-nint", nIntStr);
+        ["NI","Nome","Catg."].forEach(f => {
+          const td = document.createElement("td");
+          td.style.cssText = COMMON_TD_STYLE;
+          td.textContent = f==="NI" ? nIntStr : f==="Nome" ? item.abv_name : item.patent_abv||"";
+          tr.appendChild(td);
+        });
+        for (let d = 1; d <= 31; d++) {
+          const td = document.createElement("td");
+          td.className = `day-cell-${d}`;
+          td.style.cssText = COMMON_TD_STYLE;
+          td.style.fontWeight = "bold";
+          td.style.display = d <= daysInMonth ? "" : "none";
+          td._year = year;
+          if (d <= daysInMonth) {
+            const cellValue = (savedMap[`${nIntStr}_${d}`] || "").toUpperCase();
+            td.textContent = cellValue;
+            const date = new Date(year, month - 1, d);
+            if (cellValue) {
+              updateCellColor(td, cellValue, date);
+            } else {
+              const holiday = holidays?.find(h => h.date.getDate() === d && h.date.getMonth() === month - 1);
+              const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+              if (holiday) {
+                td.style.background = holiday.optional ? "#2ecc71" : "#ffcccc";
+                td.style.color = holiday.optional ? "#fff" : "#000";
+              } else if (isWeekend) {
+                td.style.background = WEEKEND_COLOR;
+                td.style.color = "#000";
+              } else {
+                td.style.background = "transparent";
+                td.style.color = "#000";
+              }
+            }
+          }
+          tr.appendChild(td);
+        }
+        const tdTotal = document.createElement("td");
+        tdTotal.className = "total-cell";
+        tdTotal.style.cssText = COMMON_TDTOTAL_STYLE;
+        tr.appendChild(tdTotal);
+        calculateVolunteersRowTotal(tr, "DECIR", daysInMonth);
+        tbody.appendChild(tr);
+      });
+      createMPRows(tbody, daysInMonth, "DECIR");
+      calculateMPTotals(tbody, daysInMonth, data, "DECIR");
+      createTotalsRow(tbody, daysInMonth);
+      calculateColumnTotals(tbody, "DECIR", daysInMonth);
+      createLegendScale(containerId, DECIR_LEGEND);
+    }
+    /* ─── TABELA: REGISTOS (DECIR) ───────────────────────────── */    
     async function createDecirRegTable(containerId, year, month, data) {
       const container = $(containerId);
       if (!container) return;
@@ -363,8 +427,8 @@
       const tbody = document.createElement("tbody");
       table.appendChild(tbody);
       wrapper.appendChild(table);
-      updateDayHeaders(table, year, month, daysInMonth);
-      /* navigation helpers */
+      const holidays = getPortugalHolidays(year);
+      updateDECIRDayHeaders(table, year, month, daysInMonth, holidays);
       const getRows = () => Array.from(tbody.querySelectorAll("tr"));
       const getEditable = row => Array.from(row.querySelectorAll("td[contenteditable='true']"));
       const focusCell = td => {
@@ -401,10 +465,20 @@
         td.contentEditable = true;
         td.style.cssText = COMMON_TD_STYLE;
         if (trRef.querySelector("td")?.textContent.trim()==="N") td.style.borderBottom = "2px solid #ccc";
+        const date = new Date(year, month - 1, dayNum);
+        const holiday = holidays.find(h => h.date.getDate() === dayNum && h.date.getMonth() === month - 1);
+        const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+        const setDayCellBg = () => {
+          if (holiday) {td.style.background = holiday.optional ? "#2ecc71" : "#ffcccc"; td.style.color = holiday.optional ? "#fff" : "#000";}
+          else if (isWeekend) {td.style.background = WEEKEND_COLOR; td.style.color = "#000";}
+          else {td.style.background = ""; td.style.color = "";}
+        };
+        setDayCellBg();
         td.addEventListener("input", () => {
           let v = td.textContent.toUpperCase().trim();
           v = v.length>1 ? v[0] : v;
           td.textContent = v==="X" ? "X" : "";
+          setDayCellBg();
           updateRowTotal(trRef);
           if (v==="X") {const next=navigate(td,"right"); if(next) setTimeout(()=>focusCell(next),0);}
         });
@@ -496,16 +570,10 @@
       };
       updateDailyTotals();
       updateAllValues();
-      for (let d=1; d<=daysInMonth; d++) {
-        const date = new Date(year, month-1, d);
-        if (date.getDay()===0 || date.getDay()===6) {
-          tbody.querySelectorAll(`.day-cell-${d}`).forEach(td => {td.style.background = WEEKEND_COLOR||"#f9e0b0";});
-        }
-      }
       const firstEditable = tbody.querySelector("td[contenteditable='true']");
       if (firstEditable) firstEditable.focus();
     }
-    /* ─── TABLE: PAYMENTS ────────────────────────────────────── */
+    /* ─── TABELA: PAGAMENTOS (DECIR) ─────────────────────────── */
     function createDecirPayTable(containerId, year, month, elements, turnosPorNI) {
       const container = $(containerId);
       if (!container) return;
@@ -555,7 +623,7 @@
       $("decir-pag-options") && ($("decir-pag-options").style.display="flex");
       updateDECIRTotalPaymentsByMonth();
     }
-    /* ─── TABLE: COD A33 ─────────────────────────────────────── */
+    /* ─── TABELA: COD A33 (DECIR) ────────────────────────────── */
     function createDecirCodA33Table(containerId, year, elements, turnosPorMes) {
       const container = $(containerId);
       if (!container) return;
@@ -621,7 +689,7 @@
       ["amal-value-pag","anepc-value-pag"].forEach(id => {const el=$(id); if(el) el.addEventListener("input", updateAllValues);});
       if (typeof updateDECIRTotalPaymentsByMonth==='function') updateDECIRTotalPaymentsByMonth();
     }
-    /* ─── TABLE: ANEPC ───────────────────────────────────────── */
+    /* ─── TABELA: ANEPC (DECIR) ──────────────────────────────── */
     function createDecirAnepcTable(containerId, year, month, elements, turnosPorNI) {
       const container = $(containerId);
       if (!container) return;
@@ -666,13 +734,13 @@
       if (typeof updateAnepcTotals==='function') updateAnepcTotals();
     }
     window.createDecirAnepcTable = createDecirAnepcTable;
-    /* ─── CALCULATIONS ───────────────────────────────────────── */
+    /* ─── CÁLCULOS (DECIR) ───────────────────────────────────── */
     function updateAllValues() {
       const amalCents  = Math.round(parseVal("amal-value-reg") * 100);
       const anepcCents = Math.round(parseVal("anepc-value-reg") * 100);
       const tbody = document.querySelector("table.month-table tbody");
       if (!tbody) return;
-      const rows = Array.from(tbody.querySelectorAll("tr"));
+      const rows = Array.from(tbody.querySelectorAll("tr:not(.total-elements-row)"));
       for (let i=0; i<rows.length; i+=2) {
         const [trD, trN] = [rows[i], rows[i+1]];
         if (!trN) continue;
@@ -784,12 +852,12 @@
       totalRow.appendChild(tdTotal);
       tbody.appendChild(totalRow);
     }
-    /* ─── CLEAR TABLE ────────────────────────────────────────── */
+    /* ─── LIMPAR TABELA (DECIR) ──────────────────────────────── */
     async function clearDecirTable() {
       if (!$("table-container-dec-reg")) return;
       const monthBtn = document.querySelector("#months-container-dec-reg .btn.active");
       if (!monthBtn) return showPopupWarning("Nenhum mês selecionado.");
-      const month = Array.from(document.querySelectorAll("#months-container-dec-reg .btn")).indexOf(monthBtn) + 1;
+      const month = Array.from(document.querySelectorAll("#months-container-dec-reg .btn")).indexOf(monthBtn) + 1 + 4;
       const year  = parseInt($("year-dec-reg").value, 10);
       if (!confirm(`Tem certeza que quer limpar os dados de ${monthBtn.textContent.trim()} de ${year}?`)) return;
       try {
@@ -800,15 +868,15 @@
         console.error(err); showPopupWarning("❌ Erro ao apagar: "+err.message);
       }
     }
-    /* ─── SAVE REGISTER TABLE ────────────────────────────────── */
+    /* ─── GUARDAR REGISTO (DECIR) ────────────────────────────── */
     async function saveDecirFull() {
       const table = document.querySelector("#table-container-dec-reg table tbody");
       if (!table) return showPopupWarning("Nenhuma tabela aberta.");
-      const corpOperNr = CORP();
+      const corpOperNr = getCorpId();
       const year = parseInt($("year-dec-reg")?.value, 10);
       const monthBtn = document.querySelector("#months-container-dec-reg .btn.active");
       if (!monthBtn) return showPopupWarning("Nenhum mês selecionado.");
-      const month = Array.from(document.querySelectorAll("#months-container-dec-reg .btn")).indexOf(monthBtn) + 1;
+      const month = Array.from(document.querySelectorAll("#months-container-dec-reg .btn")).indexOf(monthBtn) + 1 + 4;
       const btn = $("guardar-dec-btn");
       if (btn) {btn.disabled=true; btn.textContent="A gravar...";}
       try {
@@ -849,16 +917,16 @@
       }
       finally {if(btn) {btn.disabled=false; btn.textContent="Guardar";}}
     }
-    /* ─── GENERATE FILES (EXCEL EXPORT) ─────────────────────── */
-    async function generateDECIRFiles(type) {
-      let data = { type };
+    /* ─── GERAR FICHEIROS EXCEL (DECIR) ──────────────────────── */
+    async function generateDECIRFiles(type, format = "xlsx") {
+      let data = { type, format };
       if (type === 'reg') {
         const table = document.querySelector("#table-container-dec-reg table tbody");
         if (!table) return alert("Tabela de registo diário não encontrada.");
         const monthSelect = document.querySelector("#months-container-dec-reg .btn.active");
         const yearInput = $("year-dec-reg");
         if (!monthSelect||!yearInput) return alert("Selecione mês e ano.");
-        const monthIdx = Array.from(document.querySelectorAll("#months-container-dec-reg .btn")).indexOf(monthSelect)+1;
+        const monthIdx = Array.from(document.querySelectorAll("#months-container-dec-reg .btn")).indexOf(monthSelect) + 1 + 4;
         const monthName = monthSelect.textContent.trim();
         const year = parseInt(yearInput.value,10);
         const daysInMonth = new Date(year,monthIdx,0).getDate();
@@ -905,39 +973,25 @@
         const year = parseInt(yearInput.value,10);
         const rows = Array.from(table.querySelectorAll("tr")).map(tr => {
           const cells = tr.querySelectorAll("td");
-          return {
-            ni: parseInt(cells[0].textContent.trim(),10),
-            nome: cells[1]?.textContent.trim()||"",
-            nif: cells[2]?.textContent.trim()||"",
-            nib: cells[3]?.textContent.trim()||"",
-            qtdTurnos: parseInt(cells[4]?.textContent.trim()||0,10),
-            valor: parseCurrency(cells[5]?.textContent)
-          };
-        });
+          return {ni: parseInt(cells[0].textContent.trim(),10), nome: cells[1]?.textContent.trim()||"", nif: cells[2]?.textContent.trim()||"", nib: cells[3]?.textContent.trim()||"",
+                  qtdTurnos: parseInt(cells[4]?.textContent.trim()||0,10), valor: parseCurrency(cells[5]?.textContent)};});
         data = {...data, fileName:`PAGAMENTOS_DECIR_${monthName}_${year}`, monthName, year, rows};
       } else if (type === 'code_a33') {
         const table = document.querySelector("#table-container-dec-coda33 tbody");
         if (!table) return alert("Tabela Cod.A33 não encontrada.");
         const yearInput = $("year-dec-pag");
-        if (!yearInput) return alert("Selecione mês e ano.");
+        if (!yearInput) return alert("Selecione ano.");
         const year = parseInt(yearInput.value,10);
         const rows = Array.from(table.querySelectorAll("tr")).map(tr => {
           const cells = tr.querySelectorAll("td");
-          return {
-            ni: parseInt(cells[0]?.textContent.trim(),10)||0,
-            nome: cells[1]?.textContent.trim()||'',
-            nif: cells[2]?.textContent.trim()||'',
-            ABRIL: parseCurrency(cells[4]?.textContent), MAIO: parseCurrency(cells[6]?.textContent),
-            JUNHO: parseCurrency(cells[8]?.textContent), JULHO: parseCurrency(cells[10]?.textContent),
-            AGOSTO: parseCurrency(cells[12]?.textContent), SETEMBRO: parseCurrency(cells[14]?.textContent),
-            OUTUBRO: parseCurrency(cells[16]?.textContent)
-          };
+          return {ni: parseInt(cells[0]?.textContent.trim(),10)||0, nome: cells[1]?.textContent.trim()||'', nif: cells[2]?.textContent.trim()||'',
+                  ABRIL: parseCurrency(cells[4]?.textContent), MAIO: parseCurrency(cells[6]?.textContent), JUNHO: parseCurrency(cells[8]?.textContent), JULHO: parseCurrency(cells[10]?.textContent),
+                  AGOSTO: parseCurrency(cells[12]?.textContent), SETEMBRO: parseCurrency(cells[14]?.textContent), OUTUBRO: parseCurrency(cells[16]?.textContent)};
         }).filter(r => r.ni>0 && (r.ABRIL||r.MAIO||r.JUNHO||r.JULHO||r.AGOSTO||r.SETEMBRO||r.OUTUBRO));
-        console.log("Dados Cod.A33 a enviar:", rows);
         data = {...data, fileName:`CODA33_DECIR_${year}`, year, rows};
       } else if (type === 'anepc') {
         const table = document.querySelector(".anepc-table tbody");
-        if (!table) return alert("Tabela ANEPC não encontrada. Certifique-se de que foi gerada.");
+        if (!table) return alert("Tabela ANEPC não encontrada.");
         const monthSelect = document.querySelector("#months-container-dec-anepc .btn.active");
         const yearInput = $("year-dec-anepc");
         const monthName = monthSelect ? monthSelect.textContent.trim() : 'MÊS';
@@ -948,8 +1002,43 @@
           return {niFile:cells[0]?.textContent.trim()||'', funcao:cells[1]?.textContent.trim()||'', nome:cells[2]?.textContent.trim()||'', 
                   qtdTurnos:parseInt(cells[3]?.textContent.trim()||0,10), valor:parseCurrency(cells[4]?.textContent)};
         }).filter(r => r && (r.qtdTurnos>0||r.valor>0));
-        console.log("Dados ANEPC a enviar:", rows);
         data = {...data, fileName:`RELATORIO_ANEPC_${monthName}_${year}`, monthName, year, rows};
+      } else if (type === 'ocorr') {
+        const year = document.getElementById("year-dec-ocorr")?.value || String(new Date().getFullYear());
+        const OCORR_MONTHS = ["Maio","Junho","Julho","Agosto","Setembro","Outubro"];
+        const tbody = document.querySelector("#decir-reg-ocorr table tbody");
+        if (!tbody) return alert("Tabela não encontrada.");
+        const rows = Array.from(tbody.querySelectorAll("tr")).map((tr, rowIdx) => {
+          const tds = Array.from(tr.querySelectorAll("td"));
+          const record = { row_index: rowIdx };
+          OCORR_MONTHS.forEach((month, mIdx) => {
+            const base = mIdx * 3;
+            record[month] = {occurrence: tds[base]?.textContent.trim() || "", date: tds[base+1]?.textContent.trim() || "", acting: tds[base+2]?.querySelector("select")?.value || ""};
+          });
+          return record;
+        }).filter(r => OCORR_MONTHS.some(m => r[m].occurrence));
+        data = {...data, fileName:`OCORRENCIAS_DECIR_${year}`, year, rows};
+      } else if (type === 'ref') {
+        const monthBtn = document.querySelector("#months-container-dec-ref .btn.active");
+        const yearInput = document.getElementById("year-dec-ref");
+        if (!monthBtn || !yearInput) return alert("Selecione mês e ano.");
+        const monthName = monthBtn.textContent.trim();
+        const year = yearInput.value;
+        const tbody = document.querySelector("#table-container-dec-ref table tbody");
+        if (!tbody) return alert("Tabela não encontrada.");
+        const rows = Array.from(tbody.querySelectorAll("tr")).map(tr => {
+          const tds = Array.from(tr.querySelectorAll("td"));
+          const day = tds[0]?.textContent.trim();
+          const alert_state = tds[2]?.querySelector("select")?.value || "";
+          const restaurant = tds[3]?.querySelector("select")?.value || "";
+          const meal_prev = tds[4]?.textContent.trim();
+          const meal_efet = tds[5]?.textContent.trim();
+          const meal_devi = tds[6]?.textContent.trim();
+          const resp_name = tds[8]?.textContent.trim();
+          if (!alert_state && !restaurant && !meal_prev && !meal_efet && !resp_name) return null;
+          return {day, alert_state, restaurant, meal_prev, meal_efet, meal_devi, resp_name};
+        }).filter(r => r !== null);
+        data = {...data, fileName:`REFEICOES_DECIR_${monthName}_${year}`, monthName, year, rows};
       }
       try {
         const res = await fetch("https://cb360-online.vercel.app/api/decir_reg_pag", {
@@ -959,18 +1048,28 @@
         const blob = await res.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
-        a.href=url; a.download=data.fileName+".xlsx";
+        a.href=url; a.download=`${data.fileName}.${format}`;
         document.body.appendChild(a); a.click(); a.remove();
         window.URL.revokeObjectURL(url);
       } catch(err) {
-        alert("Erro ao gerar Excel: "+err.message);
+        alert("Erro ao gerar ficheiro: "+err.message);
       }
     }
-    /* ─── EVENT LISTENERS ────────────────────────────────────── */
-    ["emit-pag-dec-btn","emit-reg-dec-btn","emit-coda33-dec-btn","emit-anepc-dec-btn"].forEach((id,i) => {
-      $(id)?.addEventListener("click", () => generateDECIRFiles(['pag','reg','code_a33','anepc'][i]));
+    /* ─── EVENT LISTENERS (DECIR) ────────────────────────────── */
+    ["emit-pag-dec-btn","emit-reg-dec-btn","emit-coda33-dec-btn","emit-anepc-dec-btn","emit-ocorr-dec-btn","emit-ref-dec-btn"].forEach((id,i) => {
+      $(id)?.addEventListener("click", () => generateDECIRFiles(['pag','reg','code_a33','anepc','ocorr','ref'][i]));
     });
-    /* ─── COD A33 HANDLER (CORRIGIDO PARA O SEU HTML) ──────────────── */
+    $("emit-reg-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('reg', 'pdf'));
+    $("delete-dec-btn")?.addEventListener("click", clearDecirTable);
+    $("guardar-dec-btn")?.addEventListener("click", saveDecirFull);
+    $("emit-pag-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('pag', 'pdf'));
+    $("emit-coda33-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('code_a33', 'pdf'));
+    $("emit-anepc-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('anepc', 'pdf'));
+    $("guardar-ocorr-btn")?.addEventListener("click", saveDecirOccurrences);
+    $("emit-ocorr-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('ocorr', 'pdf'));
+    $("guardar-ref-btn")?.addEventListener("click", saveDecirMeals);
+    $("emit-ref-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('ref', 'pdf'));    
+    /* ─── COD A33 HANDLER (DECIR) ────────────────────────────── */
     async function handleCodA33Button() {
       const tableContainer = $("table-container-dec-coda33");
       const emitBtn = $("emit-coda33-dec-btn");
@@ -992,3 +1091,1112 @@
         console.error("Erro no COD.A33:", err);
       }
     }
+    /* ─── TABELA: CONTROLO DE OCORRÊNCIAS (DECIR) ───────────── */
+    function createDecirOccurrencesTable() {
+      const container = document.querySelector("#decir-reg-ocorr .card-body");
+      if (!container) return;
+      container.innerHTML = "";
+      const OCORR_MONTHS = ["Maio","Junho","Julho","Agosto","Setembro","Outubro"];
+      const NUM_ROWS = 30;
+      const style = document.createElement("style");
+      style.textContent = `#decir-reg-ocorr .card-body > div::-webkit-scrollbar {display: none;}
+        .ocorr-select {width: 100%; border: none; background: transparent; cursor: pointer; font-size: 11px; text-align: center; outline: none; appearance: none;
+        -webkit-appearance: none; color: #333; padding: 0;}
+        .ocorr-select:focus {background: #eef0ff;}
+        .ocorr-select option {background: #fff; color: #333;}
+        `;
+      document.head.appendChild(style);
+      const title = document.createElement("div");
+      title.textContent = "REGISTO DE OCORRÊNCIAS DECIR";
+      Object.assign(title.style, {textAlign: "center", fontWeight: "bold", fontSize: "15px", fontFamily: "Segoe UI, sans-serif", color: "#131a69", marginBottom: "10px", letterSpacing: "0.5px"});
+      container.appendChild(title);
+      const yearContainer = document.createElement("div");
+      Object.assign(yearContainer.style, {display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginBottom: "10px"});
+      const yearLabel = document.createElement("label");
+      yearLabel.textContent = "Ano:";
+      yearLabel.style.fontWeight = "bold";
+      yearLabel.style.fontFamily = "Segoe UI, sans-serif";
+      const yearSelect = document.createElement("select");
+      yearSelect.id = "year-dec-ocorr";
+      Object.assign(yearSelect.style, {padding: "6px 10px", borderRadius: "4px", border: "1px solid #ccc", cursor: "pointer"});
+      const targetYear = new Date().getFullYear();
+      for (let y = 2026; y <= 2036; y++) { 
+        const opt = document.createElement("option");
+        opt.value = y; opt.textContent = y;
+        if (y === targetYear) opt.selected = true;
+        yearSelect.appendChild(opt);
+      }
+      setTimeout(() => {yearSelect.value = targetYear;}, 0);
+      yearSelect.addEventListener("change", () => {
+        const tbody = document.querySelector("#decir-reg-ocorr table tbody");
+        if (tbody) {
+          tbody.querySelectorAll("tr").forEach(tr => {
+            Array.from(tr.querySelectorAll("td")).forEach(td => {
+              if (td.querySelector("select")) {
+                const sel = td.querySelector("select");
+                sel.value = "";
+                sel.dispatchEvent(new Event("change"));
+              } else {
+                td.textContent = "";
+              }
+            });
+          });
+        }
+        loadDecirOccurrences();
+      });
+      yearContainer.append(yearLabel, yearSelect);
+      container.appendChild(yearContainer);
+      const wrapper = document.createElement("div");
+      Object.assign(wrapper.style, {overflowX: "auto", overflowY: "auto", width: "100%", maxHeight: "500px", marginTop: "0px", scrollbarWidth: "none", msOverflowStyle: "none",
+                                    borderRadius: "8px", border: "1px solid #ddd", boxShadow: "0 2px 8px rgba(0,0,0,0.08)"});
+      const table = document.createElement("table");
+      Object.assign(table.style, {width: "100%", borderCollapse: "separate", borderSpacing: "0", fontFamily: "Segoe UI, sans-serif", fontSize: "13px"});
+      const thead = document.createElement("thead");
+      const trMonths = document.createElement("tr");
+      OCORR_MONTHS.forEach((month, mIdx) => {
+        const th = document.createElement("th");
+        th.textContent = month;
+        th.colSpan = 3;
+        Object.assign(th.style, {borderBottom: "1px solid #2a3580", borderLeft: mIdx === 0 ? "none" : "1px solid #2a3580", background: "#131a69", color: "#fff", textAlign: "center",
+                                 padding: "8px 4px", fontWeight: "bold", position: "sticky", top: "0", zIndex: "2"});
+        if (mIdx === 0) th.style.borderTopLeftRadius = "8px";
+        if (mIdx === OCORR_MONTHS.length - 1) th.style.borderTopRightRadius = "8px";
+        trMonths.appendChild(th);
+      });
+      thead.appendChild(trMonths);
+      const trSubs = document.createElement("tr");
+      OCORR_MONTHS.forEach((_, mIdx) => {
+        ["Ocorrência","Data","Atuação"].forEach((sub, sIdx) => {
+          const th = document.createElement("th");
+          th.textContent = sub;
+          th.className = "ocorr-sub-header";
+          Object.assign(th.style, {borderBottom: "1px solid #ddd", borderLeft: mIdx === 0 && sIdx === 0 ? "none" : "1px solid #2a3580", background: "#1e2a80", color: "#fff", textAlign: "center",
+                                   padding: "6px 4px", fontWeight: "normal", fontSize: "12px", whiteSpace: "nowrap", position: "sticky", top: "37px", zIndex: "2"});
+          trSubs.appendChild(th);
+        });
+      });
+      thead.appendChild(trSubs);
+      table.appendChild(thead);
+      const tbody = document.createElement("tbody");
+      for (let r = 0; r < NUM_ROWS; r++) {
+        const tr = document.createElement("tr");
+        const isLast = r === NUM_ROWS - 1;
+        tr.style.background = r % 2 === 0 ? "#fff" : "#f5f6fa";
+        OCORR_MONTHS.forEach((_, mIdx) => {
+          ["ocorrencia","data","atuacao"].forEach((type, sIdx) => {
+            const td = document.createElement("td");
+            const isFirstCol = mIdx === 0 && sIdx === 0;
+            const isLastCol = mIdx === OCORR_MONTHS.length - 1 && sIdx === 2;
+            Object.assign(td.style, {borderBottom: isLast ? "none" : "1px solid #ddd", borderLeft: isFirstCol ? "none" : "1px solid #ddd", padding: "2px 4px",
+                                     minWidth: type === "ocorrencia" ? "80px" : type === "data" ? "60px" : "70px", height: "24px", verticalAlign: "middle", textAlign: "center", fontSize: "11px"});
+            if (isLast && isFirstCol) td.style.borderBottomLeftRadius = "8px";
+            if (isLast && isLastCol) td.style.borderBottomRightRadius = "8px";
+            if (type === "atuacao") {
+              const sel = document.createElement("select");
+              sel.className = "ocorr-select";
+              ["","Sim","Não"].forEach(opt => {
+                const o = document.createElement("option");
+                o.value = opt; o.textContent = opt;
+                sel.appendChild(o);
+              });
+              sel.addEventListener("change", () => {
+                td.style.background = sel.value === "Sim" ? "#e0f7e0" : sel.value === "Não" ? "#ffe0e0" : "";
+                sel.style.color = sel.value === "Sim" ? "#006400" : sel.value === "Não" ? "#8B0000" : "#333";
+                sel.style.fontWeight = sel.value ? "bold" : "normal";
+              });
+              td.appendChild(sel);
+            } else if (type === "data") {
+              td.contentEditable = true;
+              td.style.outline = "none";
+              td.style.cursor = "text";
+              td.addEventListener("focus", () => td.style.background = "#eef0ff");
+              td.addEventListener("blur", () => {
+                td.style.background = "";
+                const raw = td.textContent.replace(/\D/g,"").slice(0,2);
+                if (raw.length > 0) {
+                  const OCORR_MONTHS_NR = ["05","06","07","08","09","10"];
+                  const mon = OCORR_MONTHS_NR[mIdx];
+                  const yr = document.getElementById("year-dec-ocorr")?.value || String(new Date().getFullYear());
+                  td.textContent = raw.padStart(2,"0") + "/" + mon + "/" + yr;
+                } else {
+                  td.textContent = "";
+                }
+              });
+              td.addEventListener("keydown", e => {
+                const allowed = ["Backspace","Delete","ArrowLeft","ArrowRight","Tab"];
+                if (!allowed.includes(e.key) && !/^\d$/.test(e.key)) e.preventDefault();
+                if (/^\d$/.test(e.key) && td.textContent.replace(/\D/g,"").length >= 2) e.preventDefault();
+              });
+            } else {
+              td.contentEditable = true;
+              td.style.outline = "none";
+              td.style.cursor = "text";
+              td.addEventListener("focus", () => td.style.background = "#eef0ff");
+              td.addEventListener("blur",  () => td.style.background = "");
+              td.addEventListener("keydown", e => {
+                const allowed = ["Backspace","Delete","ArrowLeft","ArrowRight","Tab"];
+                if (!allowed.includes(e.key) && td.textContent.length >= 11) e.preventDefault();
+              });
+              td.addEventListener("input", () => {
+                if (td.textContent.length > 11) td.textContent = td.textContent.slice(0,11);
+              });
+            }
+            tr.appendChild(td);
+          });
+        });
+        tbody.appendChild(tr);
+      }
+      table.appendChild(tbody);
+      wrapper.appendChild(table);
+      container.appendChild(wrapper);
+      const options = document.getElementById("decir-ocorr-options");
+      if (options) options.style.display = "flex";
+      requestAnimationFrame(() => {
+        const firstRow = thead.querySelector("tr");
+        if (firstRow) {
+          const h = firstRow.offsetHeight + "px";
+          table.querySelectorAll(".ocorr-sub-header").forEach(th => th.style.top = h);
+        }
+      });
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          loadDecirOccurrences();
+        });
+      });
+    }
+    /* ─── LOAD OCORRÊNCIAS (DECIR) ────────────────────────── */
+    async function loadDecirOccurrences() {
+      const year = document.getElementById("year-dec-ocorr")?.value || String(new Date().getFullYear());
+      const corpOperNr = getCorpId();
+      try {
+        const data = await supabaseFetch(`decir_reg_ocorr?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}`);
+        if (!data?.length) return;
+        const tbody = document.querySelector("#decir-reg-ocorr table tbody");
+        if (!tbody) return;
+        const OCORR_MONTHS_NR = ["05","06","07","08","09","10"];
+        data.forEach(item => {
+          const mIdx = OCORR_MONTHS_NR.indexOf(item.month);
+          if (mIdx === -1) return;
+          const rows = Array.from(tbody.querySelectorAll("tr"));
+          const tr = rows[item.row_index];
+          if (!tr) return;
+          const tds = Array.from(tr.querySelectorAll("td"));
+          const base = mIdx * 3;
+          if (tds[base]) tds[base].textContent = item.occurrence || "";
+          if (tds[base + 1]) tds[base + 1].textContent = item.day && item.month && item.year
+            ? `${item.day}/${item.month}/${item.year}` : "";
+          const sel = tds[base + 2]?.querySelector("select");
+          if (sel) {
+            sel.value = item.acting === true ? "Sim" : item.acting === false ? "Não" : "";
+            sel.dispatchEvent(new Event("change"));
+          }
+        });
+      } catch(err) {
+        console.error("Erro ao carregar ocorrências:", err);
+        showPopupWarning("Erro ao carregar ocorrências.");
+      }
+    }
+    /* ─── GUARDAR OCORRÊNCIAS (DECIR) ────────────────────────── */
+    async function saveDecirOccurrences() {
+      const container = document.querySelector("#decir-reg-ocorr .card-body");
+      if (!container) return showPopupWarning("Tabela não encontrada.");
+      const year = document.getElementById("year-dec-ocorr")?.value || String(new Date().getFullYear());
+      const corpOperNr = getCorpId();
+      const btn = document.getElementById("guardar-ocorr-btn");
+      if (btn) {btn.disabled = true; btn.textContent = "A gravar...";}
+      try {
+        const payload = [];
+        const rows = container.querySelectorAll("tbody tr");
+        const OCORR_MONTHS = ["Maio","Junho","Julho","Agosto","Setembro","Outubro"];
+        rows.forEach((tr, rowIdx) => {
+          const tds = Array.from(tr.querySelectorAll("td"));
+          OCORR_MONTHS.forEach((_, mIdx) => {
+            const base = mIdx * 3;
+            const occTd = tds[base];
+            const dataTd = tds[base + 1];
+            const actTd = tds[base + 2];
+            const occurrence = occTd?.textContent.trim();
+            if (!occurrence) return;
+            const rawDate = dataTd?.textContent.trim();
+            const parts = rawDate ? rawDate.split("/") : [];
+            const day = parts[0] || "";
+            const month = parts[1] || "";
+            const yr = parts[2] || year;
+            const selEl = actTd?.querySelector("select");
+            const acting = selEl?.value === "Sim" ? true : selEl?.value === "Não" ? false : null;
+            payload.push({corp_oper_nr: corpOperNr, occurrence, day, month, year: yr, acting, row_index: rowIdx});
+          });
+        });
+        await fetch(`${SUPABASE_URL}/rest/v1/decir_reg_ocorr?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}`, {
+          method: "DELETE", headers: getSupabaseHeaders()
+        }).then(r => {if (!r.ok) throw new Error("Erro ao limpar registos antigos");});
+        if (payload.length > 0) {
+          const r = await fetch(`${SUPABASE_URL}/rest/v1/decir_reg_ocorr`, {
+            method: "POST",
+            headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
+            body: JSON.stringify(payload)
+          });
+          if (!r.ok) throw new Error(await r.text() || "Erro desconhecido ao gravar");
+        }
+        showPopupSuccess("✅ Ocorrências gravadas com sucesso!");
+      } catch(err) {
+        console.error(err);
+        showPopupWarning("❌ Erro ao gravar: " + err.message);
+      } finally {
+        if (btn) {btn.disabled = false; btn.textContent = "Guardar";}
+      }
+    }
+    /* ─── TABELA: REFEIÇÕES (DECIR) ──────────────────────────── */
+    function createDecirMealTable(containerId, year, month, data) {
+      const container = document.getElementById(containerId) || $(containerId);
+      if (!container) return;
+      container.innerHTML = "";
+      const ALERT_OPTIONS = ["","Monitorização","Nível I - Moderado","Nível II - Elevado","Nível III - Muito Elevado","Nível IV - Extremo"];
+      const RESTAURANT_OPTIONS = ["","O Cristina","O Sol"];
+      const daysInMonth = new Date(year, month, 0).getDate();
+      const holidays = getPortugalHolidays(year);
+      const title = document.createElement("div");
+      title.textContent = `REGISTO DE REFEIÇÕES DECIR - ${MONTH_NAMES_UPPER[month-1]} ${year}`;
+      Object.assign(title.style, {textAlign: "center", fontWeight: "bold", fontSize: "15px", fontFamily: "Segoe UI, sans-serif", color: "#131a69", marginBottom: "10px", marginTop: "10px", letterSpacing: "0.5px"});
+      container.appendChild(title);
+      const wrapper = document.createElement("div");
+      Object.assign(wrapper.style, {overflowX: "auto", overflowY: "auto", width: "100%", maxHeight: "500px", scrollbarWidth: "none", msOverflowStyle: "none", borderRadius: "8px", border: "1px solid #ddd",
+                                    boxShadow:"0 2px 8px rgba(0,0,0,0.08)"});
+      const style = document.createElement("style");
+      style.textContent = `
+        #decir-reg-ref .card-body > div::-webkit-scrollbar { display: none; }
+        .ref-select { width:100%; border:none; background:transparent; cursor:pointer; font-size:11px; text-align:center;
+          outline:none; appearance:none; -webkit-appearance:none; color:#333; padding:0; }
+        .ref-select:focus { background:#eef0ff; }
+        .ref-select option { background:#fff; color:#333; }
+      `;
+      document.head.appendChild(style);
+      const table = document.createElement("table");
+      Object.assign(table.style, {width: "100%", borderCollapse: "separate", borderSpacing: "0", fontFamily: "Segoe UI, sans-serif", fontSize: "13px"});
+      const thead = document.createElement("thead");
+      const trh = document.createElement("tr");
+      const headers = [{label: "Dia", width: "45px", colSpan: 2}, {label: "Estado de Alerta", width: "190px", colSpan: 1}, {label: "Restaurante", width: "190px", colSpan: 1},
+                       {label: "Ref. Previstas", width: "120px", colSpan: 1}, {label: "Ref. Efetivas", width: "120px", colSpan: 1}, {label: "Desvio", width: "120px", colSpan: 1},
+                       {label: "Responsável", width: "220px", colSpan: 2}];
+      headers.forEach((h, i) => {
+        const th = document.createElement("th");
+        th.textContent = h.label;
+        if (h.colSpan > 1) th.colSpan = h.colSpan;
+        Object.assign(th.style, {borderBottom: "1px solid #ddd", borderLeft: "1px solid #ddd", background: "#131a69", color: "#fff", textAlign: "center", padding: "8px 4px", fontWeight: "bold", 
+                                 position: "sticky", top: "0", zIndex: "2", width: h.width, whiteSpace: "nowrap"});
+        if (i === 0) th.style.borderTopLeftRadius = "8px";
+        if (i === headers.length - 1) th.style.borderTopRightRadius = "8px";
+        trh.appendChild(th);
+      });
+      thead.appendChild(trh);
+      table.appendChild(thead);
+      const tbody = document.createElement("tbody");
+      const getDayBg = (d) => {
+        const date = new Date(year, month - 1, d);
+        const holiday = holidays.find(h => h.date.getDate() === d && h.date.getMonth() === month - 1);
+        const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+        if (holiday) return {bg: holiday.optional ? "#2ecc71" : "#ffcccc", color:"#000", title:holiday.name};
+        if (isWeekend) return {bg: WEEKEND_COLOR, color:"#000", title:""};
+        return {bg:"", color:"", title:""};
+      };
+      const WEEKDAYS_PT = ["DOM","SEG","TER","QUA","QUI","SEX","SÁB"];
+      const allEditableCells = [];
+      const navigateCell = (currentTd, dir) => {
+        const idx = allEditableCells.indexOf(currentTd);
+        if (idx === -1) return;
+        if (dir === "right" || dir === "down") {
+          const next = allEditableCells[idx + 1];
+          if (next) next.focus();
+        } else if (dir === "left" || dir === "up") {
+          const prev = allEditableCells[idx - 1];
+          if (prev) prev.focus();
+        }
+      };
+      for (let d = 1; d <= daysInMonth; d++) {
+        const tr = document.createElement("tr");
+        const isLast = d === daysInMonth;
+        const dayStyle = getDayBg(d);
+        const date = new Date(year, month - 1, d);
+        const weekday = WEEKDAYS_PT[date.getDay()];
+        tr.style.background = dayStyle.bg || (d % 2 === 0 ? "#f5f6fa" : "#fff");
+        const makeTdBase = (isFirst, isLast_col) => {
+          const td = document.createElement("td");
+          Object.assign(td.style, {borderBottom:"1px solid #ddd", borderLeft:"1px solid #ddd", padding:"3px 4px", height:"28px", verticalAlign:"middle", textAlign:"center", fontSize:"11px", 
+                                   background:dayStyle.bg || "", color:dayStyle.color || "", borderBottomLeftRadius: isLast && isFirst ? "8px" : "", borderBottomRightRadius: isLast && isLast_col ? "8px" : ""});
+          if (dayStyle.title) td.title = dayStyle.title;
+          return td;
+        };
+        const tdDay = makeTdBase(true, false);
+        tdDay.textContent = String(d).padStart(2,"0");
+        tdDay.style.fontWeight = "bold";
+        tdDay.style.width = "80px";
+        tr.appendChild(tdDay);
+        const tdWek = makeTdBase(false, false);
+        tdWek.textContent = weekday;
+        tdWek.style.fontWeight = "bold";
+        tdWek.style.width = "100px";
+        tr.appendChild(tdWek);
+        const tdAlert = makeTdBase(false, false);
+        const selAlert = document.createElement("select");
+        selAlert.className = "ref-select";
+        ALERT_OPTIONS.forEach(opt => {
+          const o = document.createElement("option");
+          o.value = opt; o.textContent = opt || "—";
+          selAlert.appendChild(o);
+        });
+        selAlert.addEventListener("change", () => {
+          const colors = {"Monitorização": {bg: "#a5d6a7", color: "#1b5e20"}, "Nível I - Moderado": {bg: "#90caf9", color: "#0d47a1"}, "Nível II - Elevado": {bg: "#fff176", color: "#f57f17"},
+                          "Nível III - Muito Elevado": {bg: "#ffb74d", color: "#bf360c"}, "Nível IV - Extremo": {bg: "#ef9a9a", color: "#b71c1c"}};
+          const c = colors[selAlert.value];
+          tdAlert.style.background = c ? c.bg : (dayStyle.bg || "");
+          selAlert.style.color = c ? c.color : "#333";
+          selAlert.style.fontWeight = selAlert.value ? "bold" : "normal";
+        });
+        tdAlert.appendChild(selAlert);
+        tr.appendChild(tdAlert);
+        const tdRest = makeTdBase(false, false);
+        const selRest = document.createElement("select");
+        selRest.className = "ref-select";
+        RESTAURANT_OPTIONS.forEach(opt => {
+          const o = document.createElement("option");
+          o.value = opt; o.textContent = opt || "—";
+          selRest.appendChild(o);
+        });
+        tdRest.appendChild(selRest);
+        tr.appendChild(tdRest);
+        const tdPrev = makeTdBase(false, false);
+        tdPrev.contentEditable = true;
+        tdPrev.style.outline = "none";
+        tdPrev.style.cursor = "text";
+        tdPrev.addEventListener("focus", () => tdPrev.style.background = "#eef0ff");
+        tdPrev.addEventListener("blur", () => {tdPrev.style.background = dayStyle.bg || ""; updateDeviation();});
+        tdPrev.addEventListener("keydown", e => {
+          if (["ArrowRight","ArrowDown","Enter"].includes(e.key)) {e.preventDefault(); navigateCell(tdPrev, "right");}
+          else if (["ArrowLeft","ArrowUp"].includes(e.key)) {e.preventDefault(); navigateCell(tdPrev, "left");}
+          else if (!/^\d$/.test(e.key) && !["Backspace","Delete","Tab"].includes(e.key)) e.preventDefault();
+        });
+        tdPrev.addEventListener("input", updateDeviation);
+        tr.appendChild(tdPrev);
+        allEditableCells.push(tdPrev);
+        const tdEfet = makeTdBase(false, false);
+        tdEfet.contentEditable = true;
+        tdEfet.style.outline = "none";
+        tdEfet.style.cursor = "text";
+        tdEfet.addEventListener("focus", () => tdEfet.style.background = "#eef0ff");
+        tdEfet.addEventListener("blur", () => {tdEfet.style.background = dayStyle.bg || ""; updateDeviation();});
+        tdEfet.addEventListener("keydown", e => {
+          if (["ArrowRight","ArrowDown","Enter"].includes(e.key)) {e.preventDefault(); navigateCell(tdEfet, "right");}
+          else if (["ArrowLeft","ArrowUp"].includes(e.key)) {e.preventDefault(); navigateCell(tdEfet, "left");}
+          else if (!/^\d$/.test(e.key) && !["Backspace","Delete","Tab"].includes(e.key)) e.preventDefault();
+        });
+        tdEfet.addEventListener("input", updateDeviation);
+        tr.appendChild(tdEfet);
+        allEditableCells.push(tdEfet);
+        const tdDeviation = makeTdBase(false, false);
+        tdDeviation.style.fontWeight = "bold";
+        function updateDeviation() {
+          const prev = parseInt(tdPrev.textContent.trim()) || 0;
+          const efet = parseInt(tdEfet.textContent.trim()) || 0;
+          const desvio = efet - prev;
+          const hasPrev = tdPrev.textContent.trim() !== "";
+          const hasEfet = tdEfet.textContent.trim() !== "";
+          if (!hasPrev && !hasEfet) {
+            tdDeviation.textContent = "";
+            tdDeviation.style.color = "#333";
+          } else {
+            tdDeviation.textContent = desvio > 0 ? `+${desvio}` : String(desvio);
+            tdDeviation.style.color = desvio < 0 ? "#c62828" : desvio > 0 ? "#006400" : "#333";
+          }
+        }
+        tr.appendChild(tdDeviation);
+        const tdResp = makeTdBase(false, true);
+        tdResp.style.textAlign = "left";
+        tdResp.style.paddingLeft = "6px";
+        const tdNI = makeTdBase(false, false);
+        tdNI.contentEditable = true;
+        tdNI.style.outline = "none";
+        tdNI.style.cursor = "text";
+        tdNI.style.width = "80px";
+        tdNI.style.minWidth = "80px";
+        tdNI.style.maxWidth = "80px";
+        tdNI.addEventListener("focus", () => tdNI.style.background = "#eef0ff");
+        tdNI.addEventListener("blur", () => tdNI.style.background = dayStyle.bg || "");
+        tdNI.addEventListener("keydown", e => {
+          if (["ArrowRight","ArrowDown","Enter"].includes(e.key)) {e.preventDefault(); navigateCell(tdNI, "right");}
+          else if (["ArrowLeft","ArrowUp"].includes(e.key)) {e.preventDefault(); navigateCell(tdNI, "left");}
+          else if (/^\d$/.test(e.key) && tdNI.textContent.replace(/\D/g,"").length >= 3) e.preventDefault();
+          else if (!/^\d$/.test(e.key) && !["Backspace","Delete","Tab"].includes(e.key)) e.preventDefault();
+        });
+        tdNI.addEventListener("input", async () => {
+          const ni = tdNI.textContent.trim();
+          if (ni.length === 3) {
+            try {
+              const result = await supabaseFetch(`reg_elems?select=patent_abv,abv_name&n_int=eq.${ni}&corp_oper_nr=eq.${getCorpId()}&limit=1`);
+              tdResp.textContent = result?.length ? `${result[0].patent_abv || ""} ${result[0].abv_name || ""}`.trim() : "";
+            } catch {
+              tdResp.textContent = "";
+            }
+          } else {
+            tdResp.textContent = "";
+          }
+        });
+        tr.appendChild(tdNI);
+        allEditableCells.push(tdNI);
+        tr.appendChild(tdResp);
+        tbody.appendChild(tr);
+      }
+      table.appendChild(tbody);
+      wrapper.appendChild(table);
+      container.appendChild(wrapper);
+      const options = document.getElementById("decir-ref-options");
+      if (options) options.style.display = "flex";
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          loadDecirMeals();
+        });
+      });
+    }
+    /* ─── LOAD REFEIÇÕES (DECIR) ─────────────────────────────── */
+    async function loadDecirMeals() {
+      const month_btn = document.querySelector("#months-container-dec-ref .btn.active");
+      if (!month_btn) return;
+      const monthIdx = Array.from(document.querySelectorAll("#months-container-dec-ref .btn")).indexOf(month_btn) + 1;
+      const month = String(monthIdx + 4).padStart(2,"0");
+      const year = document.getElementById("year-dec-ref")?.value || String(new Date().getFullYear());
+      const corpOperNr = getCorpId();
+      try {
+        const [data, regServ] = await Promise.all([
+          supabaseFetch(`decir_reg_meals?corp_oper_nr=eq.${corpOperNr}&month=eq.${month}&year=eq.${year}`),
+          supabaseFetch(`reg_serv?corp_oper_nr=eq.${corpOperNr}&month=eq.${month}&year=eq.${year}&value=in.(ED,ET)`)
+        ]);
+        const prevByDay = {};
+        console.log("regServ:", regServ);
+        console.log("prevByDay:", prevByDay);
+        (regServ || []).forEach(item => {
+          const d = String(parseInt(item.day, 10));
+          prevByDay[d] = (prevByDay[d] || 0) + 1;
+        });
+        if (!data?.length && Object.keys(prevByDay).length === 0) return;
+        const tbody = document.querySelector("#table-container-dec-ref table tbody");
+        if (!tbody) return;
+        const rows = Array.from(tbody.querySelectorAll("tr"));
+        rows.forEach((tr, idx) => {
+          const day = String(idx + 1);
+          const tds = Array.from(tr.querySelectorAll("td"));
+          console.log(`dia ${day}: tds.length=${tds.length}, tds[4]=${tds[4]?.textContent}`);
+          
+          if (tds[4]) tds[4].innerText = String(prevByDay[day] || 0);
+        });
+        (data || []).forEach(item => {
+          const day = parseInt(item.day, 10);
+          const tr = rows[day - 1];
+          if (!tr) return;
+          const tds = Array.from(tr.querySelectorAll("td"));
+          const selAlert = tds[2]?.querySelector("select");
+          if (selAlert && item.alert_state) {
+            selAlert.value = item.alert_state;
+            selAlert.dispatchEvent(new Event("change"));
+          }
+          const selRest = tds[3]?.querySelector("select");
+          if (selRest && item.restaurant) selRest.value = item.restaurant;
+          if (tds[5]) tds[5].textContent = item.meal_efet || "";
+          if (tds[6]) {
+            const prev = parseInt(tds[4]?.innerText) || 0;
+            const efet = parseInt(item.meal_efet) || 0;
+            const desvio = efet - prev;
+            const hasEfet = (item.meal_efet || "") !== "";
+            if (hasEfet || prev > 0) {
+              tds[6].textContent = desvio > 0 ? `+${desvio}` : String(desvio);
+              tds[6].style.color = desvio < 0 ? "#c62828" : desvio > 0 ? "#006400" : "#333";
+            }
+          }
+          if (tds[7]) tds[7].textContent = item.ni_resp || "";
+          if (item.ni_resp && tds[8]) {
+            supabaseFetch(`reg_elems?select=patent_abv,abv_name&n_int=eq.${item.ni_resp}&corp_oper_nr=eq.${corpOperNr}&limit=1`)
+              .then(res => {
+              if (res?.length) tds[8].textContent = `${res[0].patent_abv || ""} ${res[0].abv_name || ""}`.trim();
+            }).catch(() => {});
+          }
+        });
+      } catch(err) {
+        console.error("Erro ao carregar refeições:", err);
+        showPopupWarning("Erro ao carregar refeições.");
+      }
+    }
+    /* ─── GUARDAR REFEIÇÕES (DECIR) ──────────────────────────── */
+    async function saveDecirMeals() {
+      const tbody = document.querySelector("#table-container-dec-ref table tbody");
+      if (!tbody) return showPopupWarning("Nenhuma tabela aberta.");
+      const monthBtn = document.querySelector("#months-container-dec-ref .btn.active");
+      if (!monthBtn) return showPopupWarning("Nenhum mês selecionado.");
+      const monthIdx = Array.from(document.querySelectorAll("#months-container-dec-ref .btn")).indexOf(monthBtn) + 1;
+      const month = String(monthIdx + 4).padStart(2,"0");
+      const year = document.getElementById("year-dec-ref")?.value || String(new Date().getFullYear());
+      const corpOperNr = getCorpId();
+      const btn = document.getElementById("guardar-ref-btn");
+      if (btn) {btn.disabled = true; btn.textContent = "A gravar...";}
+      try {
+        const payload = [];
+        Array.from(tbody.querySelectorAll("tr")).forEach(tr => {
+          const tds = Array.from(tr.querySelectorAll("td"));
+          const day = tds[0]?.textContent.trim();
+          const alert_state = tds[2]?.querySelector("select")?.value || "";
+          const restaurant = tds[3]?.querySelector("select")?.value || "";          
+          const meal_efet = tds[5]?.textContent.trim();
+          const ni_resp = tds[7]?.textContent.trim();
+          if (!alert_state && !restaurant && !meal_efet && !ni_resp) return;
+          payload.push({corp_oper_nr: corpOperNr, day, month, year, alert_state, restaurant, meal_efet, ni_resp});
+        });
+        await fetch(`${SUPABASE_URL}/rest/v1/decir_reg_meals?corp_oper_nr=eq.${corpOperNr}&month=eq.${month}&year=eq.${year}`, {
+          method: "DELETE", headers: getSupabaseHeaders()
+        }).then(r => {if (!r.ok) throw new Error("Erro ao limpar registos antigos");});
+        if (payload.length > 0) {
+          const r = await fetch(`${SUPABASE_URL}/rest/v1/decir_reg_meals`, {
+            method: "POST",
+            headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
+            body: JSON.stringify(payload)
+          });
+          if (!r.ok) throw new Error(await r.text() || "Erro desconhecido ao gravar");
+        }
+        showPopupSuccess("✅ Refeições gravadas com sucesso!");
+      } catch(err) {
+        console.error(err);
+        showPopupWarning("❌ Erro ao gravar: " + err.message);
+      } finally {
+        if (btn) {btn.disabled = false; btn.textContent = "Guardar";}
+      }
+    }
+    /* ─── FUNÇÕES GLOBAIS SIGNA (DECIR) ─────────────────────── */
+    function signaCheckETPlaced(container, nint, day) {
+      let hasDay = false, hasNight = false;
+      container.querySelectorAll(".signa-drop-zone.filled").forEach(z => {
+        if (parseInt(z.dataset.nint, 10) === nint && z.dataset.valueType === "ET" && z.dataset.day === day) {
+          if (z.dataset.shift === "day") hasDay = true;
+          if (z.dataset.shift === "night") hasNight = true;
+        }
+      });
+      return hasDay && hasNight;
+    }
+    function signaFillZone(zone, data) {
+      const tr = zone.closest("tr");
+      if (!tr) return;
+      zone.textContent = String(data.nint).padStart(3,"0");
+      zone.className = "signa-drop-zone filled" + (data.mp ? " mp-fill" : "");
+      zone.dataset.nint = data.nint;
+      zone.dataset.valueType = data.valueType;
+      zone.dataset.day = data.day;
+      zone.dataset.fullname = data.full_name || "";
+      zone.draggable = true;
+      tr.querySelector(".field-nfile").value = data.n_file || "";
+      tr.querySelector(".field-patent").value = data.patent || "";
+      tr.querySelector(".field-abvname").value = data.abv_name || "";
+    }
+    function signaClearRow(zone) {
+      const tr = zone.closest("tr");
+      if (!tr) return;
+      const keepDay = zone.dataset.day;
+      const keepShift = zone.dataset.shift;
+      const keepSection = zone.dataset.section;
+      zone.textContent = "—";
+      zone.className = "signa-drop-zone";
+      zone.draggable = false;
+      zone.dataset.nint = "";
+      zone.dataset.valueType = "";
+      zone.dataset.day = keepDay;
+      zone.dataset.shift = keepShift;
+      zone.dataset.section = keepSection;
+      tr.querySelector(".field-nfile").value = "";
+      tr.querySelector(".field-patent").value = "";
+      tr.querySelector(".field-abvname").value = "";
+    }
+    function signaGetZoneData(zone) {
+      const tr = zone.closest("tr");
+      if (!tr || !zone.dataset.nint) return null;
+      return {nint: parseInt(zone.dataset.nint, 10), n_file: tr.querySelector(".field-nfile").value, patent: tr.querySelector(".field-patent").value, abv_name: tr.querySelector(".field-abvname").value,
+              mp: zone.classList.contains("mp-fill"), valueType: zone.dataset.valueType, shift: zone.dataset.shift, day: zone.dataset.day, section: zone.dataset.section};
+    }
+    function signaBuildTurnoBlock(title, subTitle, positions, shift, turnoDay, section, makePositionRowFn) {
+      const block = document.createElement("div");
+      block.className = "signa-shift-block";
+      const header = document.createElement("div");
+      header.className = "signa-shift-header";
+      header.textContent = title;
+      const sub = document.createElement("div");
+      sub.className = "signa-shift-subheader";
+      sub.textContent = subTitle;
+      block.append(header, sub);
+      const table = document.createElement("table");
+      table.className = "signa-inner-table";
+      const thead = document.createElement("thead");
+      const trh = document.createElement("tr");
+      ["","Nº Int.","Nº Mec.","Categ.","Nome Abrev.",""].forEach(h => {
+        const th = document.createElement("th"); th.textContent = h; trh.appendChild(th);
+      });
+      thead.appendChild(trh);
+      table.appendChild(thead);
+      const tbody = document.createElement("tbody");
+      positions.forEach(p => makePositionRowFn(p, tbody, shift, turnoDay, section));
+      table.appendChild(tbody);
+      block.appendChild(table);
+      return block;
+    }
+    /* ─── EMISSÃO FORMULÁRIOS ANEPC (DECIR) ─────────────────── */
+    function createDecirSignaTable() {
+      const container = document.querySelector("#decir-reg-signa .card-body");
+      if (!container) return;
+      container.innerHTML = "";
+      const style = document.createElement("style");
+      style.textContent = `
+        .signa-wrapper {display: flex; gap: 16px; font-family: 'Segoe UI', sans-serif;}
+        .signa-tables {flex: 1; min-width: 0;}
+        .signa-sidebar {width: 500px; flex-shrink: 0; margin-top: 12px;}
+        .signa-date-row {display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;}
+        .signa-date-row label {font-weight: bold; font-size: 13px;}
+        .signa-date-row input[type="date"] {padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; cursor: pointer;}
+        .signa-load-btn {padding: 7px 16px; background: #131a69; color: #fff; border: none; border-radius: 4px; font-weight: bold; font-size: 13px; cursor: pointer;}
+        .signa-load-btn:hover {background: #1e2a80;}
+        .signa-format-btn {padding: 7px 16px; background: #2e7d32; color: #fff; border: none; border-radius: 4px; font-weight: bold; font-size: 13px; cursor: pointer;}
+        .signa-format-btn:hover {background: #1b5e20;}
+        .signa-section-title {background: #131a69; color: #fff; font-weight: bold; font-size: 13px; padding: 6px 10px; border-radius: 4px 4px 0 0; margin-top: 12px;}
+        .signa-shift-grid {display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 4px;}
+        .signa-shift-block {border: 1px solid #ddd; border-radius: 0 0 4px 4px; overflow: hidden;}
+        .signa-shift-header {background: #1e2a80; color: #fff; font-size: 11px; font-weight: bold; padding: 4px 8px; text-align: center;}
+        .signa-shift-subheader {background: #f0f0f0; font-size: 10px; font-weight: bold; padding: 2px 6px; color: #333; border-bottom: 1px solid #ddd; text-align: center;}
+        .signa-inner-table {width: 100%; border-collapse: collapse; font-size: 11px;}
+        .signa-inner-table thead th {background: #2a3580; color: #fff; padding: 3px 5px; text-align: center; font-size: 10px; font-weight: bold; border: 1px solid #1e2a80; white-space: nowrap;}
+        .signa-inner-table tbody tr {border-bottom: 1px solid #eee;}
+        .signa-inner-table tbody tr:hover {background: #f8f9ff;}
+        .signa-inner-table tbody td {padding: 2px 4px; border: 1px solid #eee; text-align: center; font-size: 11px; height: 26px; vertical-align: middle;}
+        .signa-pos-label {font-weight: bold; color: #555; background: #f5f5f5; white-space: nowrap; width: 32px;}
+        .signa-drop-cell {min-width: 40px; width: 40px;}
+        .signa-drop-zone {min-height: 22px; border: 1px dashed #ccc; border-radius: 2px; padding: 1px 4px; background: #fafafa; display: flex; align-items: center; justify-content: center; 
+                          font-size: 10px; color: #aaa; transition: background 0.15s; cursor: default;}
+        .signa-drop-zone.drag-over {background: #e8f0ff; border-color: #131a69; border-style: solid;}
+        .signa-drop-zone.drag-invalid {background: #ffeeee; border-color: #c62828; border-style: solid;}
+        .signa-drop-zone.filled { background: #eef4ff; border-color: #3a4fb0; border-style: solid; color: #222; font-weight: bold; font-size: 11px; cursor: grab;}
+        .signa-drop-zone.mp-fill {background: #fff9e6; border-color: #f0a500; border-style: solid;}
+        .signa-auto-field {background: transparent; border: none; font-size: 11px; color: #333; width: 100%; text-align: center; outline: none;}
+        .signa-clear-btn {color: #ccc; cursor: pointer; font-size: 11px; padding: 0 2px; flex-shrink: 0;}
+        .signa-clear-btn:hover {color: #c62828;}
+        .signa-sidebar-title {background: #333; color: #fff; font-weight: bold; font-size: 12px; padding: 6px 10px; border-radius: 4px 4px 0 0;}
+        .signa-sidebar-day-title {font-size: 11px; font-weight: bold; padding: 5px 8px; background: #131a69; color: #fff; border-bottom: 1px solid #0a0f40;}
+        .signa-sidebar-group-title {font-size: 10px; font-weight: bold; padding: 3px 8px; background: #f0f0f0; color: #555; border-bottom: 1px solid #ddd;}
+        .signa-sidebar-list {border: 1px solid #ddd; border-top: none; border-radius: 0 0 4px 4px; height: calc(100% - 35px); overflow-y: auto;}
+        .signa-sidebar-item {display: flex; align-items: center; gap: 4px; padding: 4px 8px; border-bottom: 1px solid #f5f5f5; cursor: grab; background: #fff; user-select: none; font-size: 11px;}
+        .signa-sidebar-item:hover {background: #f0f4ff;}
+        .signa-sidebar-item.dragging {opacity: 0.4;}
+        .signa-sidebar-item.used {opacity: 0.3; pointer-events: none; text-decoration: line-through;}
+        .signa-ni {color: #888; min-width: 26px; font-size: 10px;}
+        .signa-cat {color: #555; min-width: 28px; font-size: 10px;}
+        .signa-name {font-weight: bold; color: #222; flex: 1;}
+        .signa-mp-badge {font-size: 9px; background: #f0a500; color: #fff; border-radius: 2px; padding: 1px 3px; font-weight: bold; flex-shrink: 0;}
+      `;
+      document.head.appendChild(style);
+      const dateRow = document.createElement("div");
+      dateRow.className = "signa-date-row";
+      const lbl1 = document.createElement("label"); lbl1.textContent = "Dia 1:";
+      const inp1 = document.createElement("input"); inp1.type = "date"; inp1.id = "signa-date1";
+      const lbl2 = document.createElement("label"); lbl2.textContent = "Dia 2:";
+      const inp2 = document.createElement("input"); inp2.type = "date"; inp2.id = "signa-date2";
+      const loadBtn = document.createElement("button");
+      loadBtn.className = "signa-load-btn"; loadBtn.textContent = "⟳ Carregar Elementos";
+      const formatBtn = document.createElement("button");
+      formatBtn.className = "signa-format-btn"; formatBtn.textContent = "⚡ Formatar Equipas";
+      dateRow.append(lbl1, inp1, lbl2, inp2, loadBtn, formatBtn);
+      container.appendChild(dateRow);
+      const wrapper = document.createElement("div");
+      wrapper.className = "signa-wrapper";
+      const tablesDiv = document.createElement("div");
+      tablesDiv.className = "signa-tables";
+      const sidebarDiv = document.createElement("div");
+      sidebarDiv.className = "signa-sidebar";
+      const sidebarTitle = document.createElement("div");
+      sidebarTitle.className = "signa-sidebar-title";
+      sidebarTitle.textContent = "ELEMENTOS ESCALADOS";
+      sidebarTitle.style.textAlign = "center";
+      const sidebarList = document.createElement("div");
+      sidebarList.className = "signa-sidebar-list";
+      sidebarList.id = "signa-sidebar-list";
+      sidebarList.innerHTML = `<div style="padding: 12px; font-size: 11px; color: #999; text-align: center;">Selecione as datas e clique em Carregar</div>`;
+      sidebarDiv.append(sidebarTitle, sidebarList);
+      wrapper.append(tablesDiv, sidebarDiv);
+      container.appendChild(wrapper);
+      let dragData = null;
+      function updateSidebarItem(nint, valueType, day) {
+        sidebarList.querySelectorAll(".signa-sidebar-item").forEach(item => {
+          if (parseInt(item.dataset.nint, 10) === nint && item.dataset.valueType === valueType && item.dataset.day === day) {
+            setTimeout(() => {
+              if (valueType === "ET") {
+                if (signaCheckETPlaced(container, nint, day)) item.classList.add("used");
+                else item.classList.remove("used");
+              } else {
+                item.classList.add("used");
+              }
+            }, 0);
+          }
+        });
+      }
+      function restoreSidebarItem(nint, valueType, day) {
+        sidebarList.querySelectorAll(".signa-sidebar-item").forEach(item => {
+          if (parseInt(item.dataset.nint, 10) === nint && item.dataset.valueType === valueType && item.dataset.day === day) {
+            setTimeout(() => {
+              if (valueType === "ET") {
+                if (!signaCheckETPlaced(container, nint, day)) item.classList.remove("used");
+              } else {
+                const stillPlaced = container.querySelector(`.signa-drop-zone.filled[data-nint="${nint}"][data-day="${day}"]`);
+                if (!stillPlaced) item.classList.remove("used");
+              }
+            }, 0);
+          }
+        });
+      }
+      function makePositionRow(posLabel, tbody, shift, turnoDay, section) {
+        const tr = document.createElement("tr");
+        const tdLabel = document.createElement("td");
+        tdLabel.className = "signa-pos-label";
+        tdLabel.textContent = posLabel;
+        tr.appendChild(tdLabel);
+        const tdDrop = document.createElement("td");
+        tdDrop.className = "signa-drop-cell";
+        const zone = document.createElement("div");
+        zone.className = "signa-drop-zone";
+        zone.textContent = "—";
+        zone.dataset.nint = "";
+        zone.dataset.shift = shift;
+        zone.dataset.day = turnoDay;
+        zone.dataset.section = section;
+        zone.dataset.valueType = "";
+        zone.draggable = false;
+        zone.addEventListener("dragover", e => {
+          e.preventDefault();
+          if (!dragData) return;
+          const shiftOk = dragData.valueType === "ED" ? shift === "day" : dragData.valueType === "EN" ? shift === "night" : true;
+          const dayOk = dragData.day === turnoDay;
+          zone.classList.remove("drag-over", "drag-invalid");
+          zone.classList.add(shiftOk && dayOk ? "drag-over" : "drag-invalid");
+        });
+        zone.addEventListener("dragleave", () => zone.classList.remove("drag-over", "drag-invalid"));
+        zone.addEventListener("drop", e => {
+          e.preventDefault();
+          zone.classList.remove("drag-over", "drag-invalid");
+          if (!dragData) return;
+          const shiftOk = dragData.valueType === "ED" ? shift === "day" : dragData.valueType === "EN" ? shift === "night" : true;
+          const dayOk = dragData.day === turnoDay;
+          if (!shiftOk || !dayOk) {
+            const msg = !dayOk ? `⛔ Elemento do Dia ${dragData.day} não pode ser colocado no Dia ${turnoDay}!`
+                               : `⛔ Elemento ${dragData.valueType} não pode ser colocado neste turno!`;
+            showPopupWarning(msg);
+            dragData = null;
+            return;
+          }
+          const destExisting = signaGetZoneData(zone);
+          if (dragData.sourceZone && dragData.sourceZone !== zone) {
+            if (destExisting) {
+              const srcShift = dragData.sourceZone.dataset.shift;
+              const srcDay = dragData.sourceZone.dataset.day;
+              const swapShiftOk = destExisting.valueType === "ED" ? srcShift === "day" : destExisting.valueType === "EN" ? srcShift === "night" : true;
+              const swapDayOk = destExisting.day === srcDay;
+              if (swapShiftOk && swapDayOk) {
+                signaFillZone(dragData.sourceZone, destExisting);
+                updateSidebarItem(destExisting.nint, destExisting.valueType, destExisting.day);
+              } else {
+                signaClearRow(dragData.sourceZone);
+                restoreSidebarItem(dragData.nint, dragData.valueType, dragData.day);
+              }
+            } else {
+              signaClearRow(dragData.sourceZone);
+            }
+            restoreSidebarItem(dragData.nint, dragData.valueType, dragData.day);
+          }
+          signaFillZone(zone, dragData);
+          updateSidebarItem(dragData.nint, dragData.valueType, dragData.day);
+          dragData = null;
+        });
+        zone.addEventListener("dragstart", e => {
+          if (!zone.dataset.nint) {e.preventDefault(); return;}
+          const data = signaGetZoneData(zone);
+          if (!data) {e.preventDefault(); return;}
+          dragData = {...data, sourceZone: zone};
+          e.dataTransfer.effectAllowed = "move";
+        });
+        tdDrop.appendChild(zone);
+        tr.appendChild(tdDrop);
+        ["field-nfile","field-patent","field-abvname"].forEach(cls => {
+          const td = document.createElement("td");
+          const inp = document.createElement("input");
+          inp.className = `signa-auto-field ${cls}`;
+          inp.readOnly = true;
+          td.appendChild(inp);
+          tr.appendChild(td);
+        });
+        const tdClear = document.createElement("td");
+        tdClear.style.width = "16px";
+        const clearBtn = document.createElement("span");
+        clearBtn.className = "signa-clear-btn";
+        clearBtn.textContent = "✕";
+        clearBtn.addEventListener("click", () => {
+          const nint = parseInt(zone.dataset.nint, 10);
+          const vt = zone.dataset.valueType;
+          const dy = zone.dataset.day;
+          signaClearRow(zone);
+          if (nint) restoreSidebarItem(nint, vt, dy);
+        });
+        tdClear.appendChild(clearBtn);
+        tr.appendChild(tdClear);
+        tbody.appendChild(tr);
+        return zone;
+      }
+      function buildSignaTables() {        
+        tablesDiv.innerHTML = "";
+        const date1 = inp1.value ? new Date(inp1.value).toLocaleDateString("pt-PT") : "";
+        const date2 = inp2.value ? new Date(inp2.value).toLocaleDateString("pt-PT") : "";
+        const ecinTitle = document.createElement("div");
+        ecinTitle.className = "signa-section-title";
+        ecinTitle.textContent = "ECIN";
+        ecinTitle.style.textAlign = "center";
+        tablesDiv.appendChild(ecinTitle);
+        const ecinGrid = document.createElement("div");
+        ecinGrid.className = "signa-shift-grid";
+        ecinGrid.append(
+          signaBuildTurnoBlock(`${date1} | DIA`, `☀️ 08:00 → 20:00`, ["CE","MO","Elem.1","Elem.2","Elem.3"], "day",   "1", "ecin", makePositionRow),
+          signaBuildTurnoBlock(`${date1} | NOITE`, `🌙 20:00 → 08:00`, ["CE","MO","Elem.1","Elem.2","Elem.3"], "night", "1", "ecin", makePositionRow),
+          signaBuildTurnoBlock(`${date2} | DIA`, `☀️ 08:00 → 20:00`, ["CE","MO","Elem.1","Elem.2","Elem.3"], "day",   "2", "ecin", makePositionRow),
+          signaBuildTurnoBlock(`${date2} | NOITE`, `🌙 20:00 → 08:00`, ["CE","MO","Elem.1","Elem.2","Elem.3"], "night", "2", "ecin", makePositionRow)
+        );
+        tablesDiv.appendChild(ecinGrid);
+        const elacTitle = document.createElement("div");
+        elacTitle.className = "signa-section-title";
+        elacTitle.textContent = "ELAC";
+        elacTitle.style.textAlign = "center";
+        tablesDiv.appendChild(elacTitle);
+        const elacGrid = document.createElement("div");
+        elacGrid.className = "signa-shift-grid";
+        elacGrid.append(
+          signaBuildTurnoBlock(`${date1} | DIA`, `☀️ 08:00 → 20:00`, ["CE","MO"], "day",   "1", "elac", makePositionRow),
+          signaBuildTurnoBlock(`${date1} | NOITE`, `🌙 20:00 → 08:00`, ["CE","MO"], "night", "1", "elac", makePositionRow),
+          signaBuildTurnoBlock(`${date2} | DIA`, `☀️ 08:00 → 20:00`, ["CE","MO"], "day",   "2", "elac", makePositionRow),
+          signaBuildTurnoBlock(`${date2} | NOITE`, `🌙 20:00 → 08:00`, ["CE","MO"], "night", "2", "elac", makePositionRow)
+        );
+        tablesDiv.appendChild(elacGrid);
+      }
+      buildSignaTables();
+      function makeSidebarItem(elem, valueType, day) {
+        const item = document.createElement("div");
+        item.className = "signa-sidebar-item";
+        item.draggable = true;
+        item.dataset.nint = parseInt(elem.n_int, 10);
+        item.dataset.valueType = valueType;
+        item.dataset.day = day;
+        item.dataset.mp = elem.MP ? "1" : "0";
+        item.dataset.nfile = elem.n_file || "";
+        item.dataset.fullname = elem.full_name || "";
+        item.innerHTML = `
+          <span class="signa-ni">${String(elem.n_int).padStart(3,"0")}</span>
+          <span class="signa-cat">${elem.patent||""}</span>
+          <span class="signa-name">${elem.abv_name||""}</span>
+          ${elem.MP ? '<span class="signa-mp-badge">MP</span>' : ""}
+        `;
+        item.addEventListener("dragstart", e => {
+          if (item.classList.contains("used")) {e.preventDefault(); return;}
+          dragData = {nint: parseInt(elem.n_int, 10), n_file: elem.n_file || "", patent: elem.patent || "", abv_name: elem.abv_name || "", full_name: elem.full_name || "", 
+                      mp: elem.MP, valueType: valueType, day: day, sourceZone: null};
+          item.classList.add("dragging");
+          e.dataTransfer.effectAllowed = "move";
+        });
+        item.addEventListener("dragend", () => item.classList.remove("dragging"));
+        return item;
+      }
+      // ── Formatar Equipas ──
+      formatBtn.addEventListener("click", () => {
+        const sidebarItems = sidebarList.querySelectorAll(".signa-sidebar-item");
+        if (!sidebarItems.length) return showPopupWarning("Carregue os elementos primeiro.");
+        const getAllForShift = (day, shift) => {
+          const items = [];
+          sidebarList.querySelectorAll(".signa-sidebar-item").forEach(item => {
+            if (item.dataset.day !== day) return;
+            const vt = item.dataset.valueType;
+            if (vt === "ED" && shift !== "day") return;
+            if (vt === "EN" && shift !== "night") return;
+            items.push({nint: parseInt(item.dataset.nint, 10), n_file: item.dataset.nfile || "", patent: item.querySelector(".signa-cat").textContent.trim(),
+                        abv_name: item.querySelector(".signa-name").textContent.trim(), full_name: item.dataset.fullname || "", mp: item.dataset.mp === "1", valueType: vt, day: day});});
+          return items.sort((a,b) => a.nint - b.nint);
+        };
+        const distributeToZones = (items, day, shift, section) => {
+          if (!items.length) return;
+          const mpItems = items.filter(i => i.mp);
+          let ceIdx = 0, moIdx = -1;
+          if (mpItems.length === 1 && items[0].nint === mpItems[0].nint) {
+            moIdx = 0; ceIdx = items.length > 1 ? 1 : -1;
+          } else if (mpItems.length > 0) {
+            ceIdx = 0;
+            const mc = items.findIndex((i, idx) => i.mp && idx !== 0);
+            moIdx = mc >= 0 ? mc : items.findIndex(i => i.mp);
+          } else {
+            ceIdx = 0; moIdx = items.length > 1 ? 1 : -1;
+          }
+          const assigned = [];
+          const used = new Set();
+          if (ceIdx >= 0 && items[ceIdx]) {assigned.push(items[ceIdx]); used.add(ceIdx);}
+          else assigned.push(null);
+          if (moIdx >= 0 && moIdx !== ceIdx && items[moIdx]) {assigned.push(items[moIdx]); used.add(moIdx);}
+          else assigned.push(null);
+          items.forEach((item, idx) => {if (!used.has(idx)) assigned.push(item);});
+          const zones = Array.from(container.querySelectorAll(
+            `.signa-drop-zone[data-day="${day}"][data-shift="${shift}"][data-section="${section}"]`
+          ));
+          zones.forEach((zone, i) => {
+            if (!assigned[i]) return;
+            if (zone.dataset.nint) signaClearRow(zone);
+            signaFillZone(zone, assigned[i]);
+            updateSidebarItem(assigned[i].nint, assigned[i].valueType, assigned[i].day);
+          });
+        };
+        ["1","2"].forEach(day => {
+          ["day","night"].forEach(shift => {
+            const all = getAllForShift(day, shift);
+            if (!all.length) return;
+            const mpItems = all.filter(i => i.mp);
+            const nonMpItems = all.filter(i => !i.mp);
+            let elacMP = null, elacCE = null;
+            if (mpItems.length >= 2) {
+              elacMP = mpItems[mpItems.length - 1];
+              elacCE = nonMpItems.length > 0 ? nonMpItems[nonMpItems.length - 1] : mpItems[mpItems.length - 2];
+            } else if (mpItems.length === 1) {
+              elacMP = mpItems[0];
+              elacCE = nonMpItems.length > 0 ? nonMpItems[nonMpItems.length - 1] : null;
+            } else {
+              elacCE = all.length > 1 ? all[all.length - 2] : null;
+              elacMP = all[all.length - 1];
+            }
+            const elacNints = new Set([elacMP?.nint, elacCE?.nint].filter(Boolean));
+            const ecinItems = all.filter(i => !elacNints.has(i.nint));
+            const elacAssigned = [elacCE || null, elacMP || null];
+            const elacZones = Array.from(container.querySelectorAll(
+              `.signa-drop-zone[data-day="${day}"][data-shift="${shift}"][data-section="elac"]`
+            ));
+            elacZones.forEach((zone, i) => {
+              if (!elacAssigned[i]) return;
+              if (zone.dataset.nint) signaClearRow(zone);
+              signaFillZone(zone, elacAssigned[i]);
+              updateSidebarItem(elacAssigned[i].nint, elacAssigned[i].valueType, elacAssigned[i].day);
+            });
+            distributeToZones(ecinItems, day, shift, "ecin");
+          });
+        });
+      });
+      // ── Carregar elementos ──
+      loadBtn.addEventListener("click", async () => {
+        const date1 = inp1.value;
+        const date2 = inp2.value;
+        buildSignaTables();
+        if (!date1 || !date2) return showPopupWarning("Selecione as duas datas.");
+        const [y1,m1,d1] = date1.split("-");
+        const [y2,m2,d2] = date2.split("-");
+        const corp = getCorpId();
+        const isSameDay = date1 === date2;
+        sidebarList.innerHTML = `<div style="padding:12px;font-size:11px;color:#999;text-align:center;">A carregar...</div>`;
+        try {
+          const data1 = await supabaseFetch(`reg_serv?corp_oper_nr=eq.${corp}&year=eq.${y1}&month=eq.${m1}&day=eq.${d1}&value=in.(ED,EN,ET)&select=n_int,value`);
+          const data2 = isSameDay ? data1 : await supabaseFetch(`reg_serv?corp_oper_nr=eq.${corp}&year=eq.${y2}&month=eq.${m2}&day=eq.${d2}&value=in.(ED,EN,ET)&select=n_int,value`);
+          const allNInts = [...new Set([...data1, ...data2].map(i => String(i.n_int).padStart(3,"0")))];
+          if (!allNInts.length) {
+            sidebarList.innerHTML = `<div style="padding:12px;font-size:11px;color:#999;text-align:center;">Nenhum elemento encontrado.</div>`;
+            return;
+          }
+          const elemsData = await supabaseFetch(`reg_elems?n_int=in.(${allNInts.join(",")})&corp_oper_nr=eq.${corp}&select=n_int,abv_name,patent,n_file,MP,full_name`);
+          const elemsMap = Object.fromEntries(elemsData.map(e => [String(e.n_int).padStart(3,"0"), e]));
+          sidebarList.innerHTML = "";
+          const day1Title = document.createElement("div");
+          day1Title.className = "signa-sidebar-day-title";
+          day1Title.textContent = `📅 Dia 1 — ${inp1.value}`;
+          sidebarList.appendChild(day1Title);
+          const day1Groups = {
+            "ED (Turno Dia)": data1.filter(i => i.value === "ED").map(i => ({elem: elemsMap[String(i.n_int).padStart(3,"0")], vt: "ED"})).filter(i => i.elem),
+            "EN (Turno Noite)": data1.filter(i => i.value === "EN").map(i => ({elem: elemsMap[String(i.n_int).padStart(3,"0")], vt: "EN"})).filter(i => i.elem),
+            "ET (Dia + Noite)": data1.filter(i => i.value === "ET").map(i => ({elem: elemsMap[String(i.n_int).padStart(3,"0")], vt: "ET"})).filter(i => i.elem),
+          };
+          Object.entries(day1Groups).forEach(([groupName, items]) => {
+            if (!items.length) return;
+            const grpTitle = document.createElement("div");
+            grpTitle.className = "signa-sidebar-group-title";
+            grpTitle.textContent = groupName;
+            sidebarList.appendChild(grpTitle);
+            items.sort((a,b) => parseInt(a.elem.n_int,10) - parseInt(b.elem.n_int,10))
+              .forEach(({elem, vt}) => sidebarList.appendChild(makeSidebarItem(elem, vt, "1")));
+          });
+          if (!isSameDay) {
+            const day2Title = document.createElement("div");
+            day2Title.className = "signa-sidebar-day-title";
+            day2Title.textContent = `📅 Dia 2 — ${inp2.value}`;
+            sidebarList.appendChild(day2Title);
+            const day2Groups = {
+              "ED (Turno Dia)":   data2.filter(i => i.value === "ED").map(i => ({elem: elemsMap[String(i.n_int).padStart(3,"0")], vt: "ED"})).filter(i => i.elem),
+              "EN (Turno Noite)": data2.filter(i => i.value === "EN").map(i => ({elem: elemsMap[String(i.n_int).padStart(3,"0")], vt: "EN"})).filter(i => i.elem),
+              "ET (Dia + Noite)": data2.filter(i => i.value === "ET").map(i => ({elem: elemsMap[String(i.n_int).padStart(3,"0")], vt: "ET"})).filter(i => i.elem),
+            };
+            Object.entries(day2Groups).forEach(([groupName, items]) => {
+              if (!items.length) return;
+              const grpTitle = document.createElement("div");
+              grpTitle.className = "signa-sidebar-group-title";
+              grpTitle.textContent = groupName;
+              sidebarList.appendChild(grpTitle);
+              items.sort((a,b) => parseInt(a.elem.n_int,10) - parseInt(b.elem.n_int,10))
+                .forEach(({elem, vt}) => sidebarList.appendChild(makeSidebarItem(elem, vt, "2")));
+            });
+          }
+          setTimeout(() => {
+            container.querySelectorAll(".signa-drop-zone.filled").forEach(zone => {
+              const nint = parseInt(zone.dataset.nint, 10);
+              const vt = zone.dataset.valueType;
+              const dy = zone.dataset.day;
+              sidebarList.querySelectorAll(".signa-sidebar-item").forEach(item => {
+                if (parseInt(item.dataset.nint, 10) === nint && item.dataset.valueType === vt && item.dataset.day === dy) {
+                  if (vt === "ET") {if (signaCheckETPlaced(container, nint, dy)) item.classList.add("used");}
+                  else item.classList.add("used");
+                }
+              });
+            });
+          }, 50);
+        } catch(err) {
+          console.error(err);
+          sidebarList.innerHTML = `<div style="padding:12px;font-size:11px;color:#c62828;text-align:center;">Erro ao carregar elementos.</div>`;
+        }
+      });
+      const options = document.getElementById("decir-signa-options");
+      if (options) options.style.display = "flex";
+    }
+    const emitSigna = async (format) => {
+      const inp1 = document.getElementById("signa-date1");
+      const inp2 = document.getElementById("signa-date2");
+      if (!inp1?.value || !inp2?.value) return showPopupWarning("Selecione as duas datas.");
+      const getTeamData = (day, shift, section) => {
+        const container = document.querySelector("#decir-reg-signa .card-body");
+        return Array.from(container.querySelectorAll(
+          `.signa-drop-zone[data-day="${day}"][data-shift="${shift}"][data-section="${section}"]`
+        )).map(zone => {
+          const tr = zone.closest("tr");
+          return {nint: zone.dataset.nint || "", n_file: tr?.querySelector(".field-nfile")?.value || "", patent: tr?.querySelector(".field-patent")?.value || "",
+                  abv_name: tr?.querySelector(".field-abvname")?.value || "", full_name: zone.dataset.fullname || ""};});};
+      try {
+        const payload = {type: "signa", date1: inp1.value, date2: inp2.value, year: inp1.value.split("-")[0], fileName: "SIGNA_DECIR", format,
+                         ecin: {day1: {day: getTeamData("1","day","ecin"), night: getTeamData("1","night","ecin")}, day2: {day: getTeamData("2","day","ecin"), night: getTeamData("2","night","ecin")}},
+                         elac: {day1: {day: getTeamData("1","day","elac"), night: getTeamData("1","night","elac")}, day2: {day: getTeamData("2","day","elac"), night: getTeamData("2","night","elac")}}};
+        const res = await fetch("https://cb360-online.vercel.app/api/decir_reg_pag", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) {const err = await res.json(); return alert("Erro: " + (err.details || err.error));}
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `SIGNA_DECIR.${format}`;
+        document.body.appendChild(a); a.click(); a.remove();
+        window.URL.revokeObjectURL(url);
+      } catch(err) {
+        alert("Erro: " + err.message);
+      }
+    };
+    document.getElementById("emit-signa-xlsx-btn")?.addEventListener("click", () => emitSigna("xlsx"));
+    document.getElementById("emit-signa-pdf-btn")?.addEventListener("click", () => emitSigna("pdf"));

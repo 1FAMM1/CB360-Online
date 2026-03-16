@@ -718,21 +718,26 @@
       return {toInsert, toUpdate, toDelete};
     }
     function diffFixedRowsChanges(table, savedMap) {
-      const toInsert=[], toUpdate=[], toDelete=[];
+      const toInsert = [], toUpdate = [], toDelete = [];
+      const PROTECTED = ["ED", "EN", "ET", "EP"];
       table.querySelectorAll("tr.fixed-row").forEach(row => {
         const fixedId = row.getAttribute("data-fixed");
-        if (!["1","2","3"].includes(fixedId) || row.cells.length < 10) return;
-        const n_int = fixedId==="1"?3:fixedId==="2"?4:9;
+        if (!["1", "2", "3"].includes(fixedId) || row.cells.length < 10) return;
+        const n_int = fixedId === "1" ? 3 : fixedId === "2" ? 4 : 9;
         const abv_name = row.cells[1]?.textContent.trim() || "FIXO";
-        for (let d=3; d<row.cells.length-1; d++) {
-          const value = row.cells[d]?.textContent.toUpperCase().slice(0,1).trim();
-          const day = d-2, key = `${n_int}_${day}`, existingVal = savedMap[key];
-          const existingValue = typeof existingVal==='object' ? existingVal?.value : existingVal;
-          const existingSection = typeof existingVal==='object' ? existingVal?.section : "Emissão Escala";
+        for (let d = 3; d < row.cells.length - 1; d++) {
+          const cellText = row.cells[d]?.textContent.trim().toUpperCase();
+          if (PROTECTED.includes(cellText)) continue;
+          const value = cellText.slice(0, 1).trim();
+          const day = d - 2, key = `${n_int}_${day}`, existingVal = savedMap[key];
+          const existingValue = typeof existingVal === 'object' ? existingVal?.value : existingVal;
+          const existingSection = typeof existingVal === 'object' ? existingVal?.section : "Emissão Escala";
           if (existingValue) {
-            if (!value) toDelete.push({n_int, day, section:existingSection});
-            else if (existingValue.toUpperCase() !== value) toUpdate.push({n_int, day, value, section:existingSection});
-          } else if (value) toInsert.push({n_int, abv_name, day, value, section:"Emissão Escala"});
+            if (!value) toDelete.push({n_int, day, section: existingSection});
+            else if (existingValue.toUpperCase() !== value) toUpdate.push({n_int, day, value, section: existingSection});
+          } else if (value) {
+            toInsert.push({n_int, abv_name, day, value, section: "Emissão Escala"});
+          }
         }
       });
       const normalRows = table.querySelectorAll("tr:not(.fixed-row):not(.totals-row):not(.mp-dia-row):not(.mp-noite-row):not(.mp-row):not(.tas-row)");
@@ -741,20 +746,23 @@
         const n_int = parseInt(cells[0]?.textContent, 10);
         if (isNaN(n_int)) return;
         const abv_name = cells[1]?.textContent;
-        const person = currentTableData.find(item => parseInt(item.n_int,10) === n_int);
+        const person = typeof currentTableData !== 'undefined' ? currentTableData.find(item => parseInt(item.n_int, 10) === n_int) : null;
         const elemSection = person?.section || "Emissão Escala";
-        for (let d=3; d<cells.length-1; d++) {
-          const value = cells[d]?.textContent.toUpperCase().slice(0,2).trim();
-          const day = d-2, key = `${n_int}_${day}`, existingVal = savedMap[key];
-          const existingValue = typeof existingVal==='object' ? existingVal?.value : existingVal;
-          const existingSection = typeof existingVal==='object' ? existingVal?.section : elemSection;
+        for (let d = 3; d < cells.length - 1; d++) {
+          const cellText = cells[d]?.textContent.trim().toUpperCase();
+          const value = cellText.slice(0, 2).trim();
+          const day = d - 2, key = `${n_int}_${day}`, existingVal = savedMap[key];
+          const existingValue = typeof existingVal === 'object' ? existingVal?.value : existingVal;
+          const existingSection = typeof existingVal === 'object' ? existingVal?.section : elemSection;
           if (existingValue) {
-            if (!value) toDelete.push({n_int, day, section:existingSection});
-            else if (existingValue.toUpperCase() !== value) toUpdate.push({n_int, day, value, section:existingSection});
-          } else if (value) toInsert.push({n_int, abv_name, day, value, section:elemSection});
+            if (!value) toDelete.push({n_int, day, section: existingSection});
+            else if (existingValue.toUpperCase() !== value) toUpdate.push({n_int, day, value, section: existingSection});
+          } else if (value) {
+            toInsert.push({n_int, abv_name, day, value, section: elemSection});
+          }
         }
       });
-      return {toInsert, toUpdate, toDelete};
+      return { toInsert, toUpdate, toDelete };
     }
     function initSaveButton() {
       const saveBtn = $("save-button");
@@ -765,32 +773,54 @@
         if (!table) return;
         const selectedYear = parseInt($("year-selector")?.value, 10);
         if (!selectedYear) throw new Error("Year selector não encontrado");
-        saveBtn.disabled = true; saveBtn.textContent = "A guardar...";
+        saveBtn.disabled = true; 
+        saveBtn.textContent = "A guardar...";
         try {
           const monthIndex = getActiveMonthIndex();
           if (!monthIndex) throw new Error("Nenhum mês selecionado.");
+          if (currentSection === "Emissão Escala") {
+            const PROTECTED = ["ED", "EN", "ET", "EP"];
+            table.querySelectorAll("tr.fixed-row").forEach(tr => {
+              tr.querySelectorAll('td[class*="fixed-day-cell-"]').forEach(td => {
+                if (PROTECTED.includes(td.textContent.trim().toUpperCase())) {
+                  td.setAttribute('data-original-val', td.textContent);
+                  td.textContent = "";
+                }
+              });
+            });
+          }
           const savedMap = await fetchSavedData(currentSection, selectedYear, monthIndex);
           const changes = currentSection === "Emissão Escala" ? diffFixedRowsChanges(table, savedMap) : diffTableChanges(table, savedMap);
           await saveChanges({...changes, section:currentSection, year:selectedYear, month:monthIndex});
+          if (currentSection === "Emissão Escala") {
+            table.querySelectorAll("tr.fixed-row td[data-original-val]").forEach(td => {
+              td.textContent = td.getAttribute('data-original-val');
+              td.removeAttribute('data-original-val');
+            });
+          }
           showPopupSuccess("✅ Escala gravada com sucesso!");
-        } catch (err) {console.error(err); alert("❌ Erro ao salvar a tabela: " + err.message);}
-        finally {saveBtn.disabled=false; saveBtn.textContent="Guardar Escala";}
+        } catch (err) {
+          console.error(err); 
+          alert("❌ Erro ao salvar a tabela: " + err.message);
+        } finally {
+          saveBtn.disabled = false;
+          saveBtn.textContent = "Guardar Escala";
+        }
       });
     }
     async function initScaleEmission() {
       const table = document.querySelector(".month-table tbody");
       if (!table) return;
       const saveBtn = $("save-button-emissao");
-      if (saveBtn) {saveBtn.disabled=true; saveBtn.textContent="A guardar...";}
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.textContent = "A processar...";
+      }
       try {
         const selectedYear = parseInt($("year-selector")?.value, 10);
-        if (!selectedYear) throw new Error("Year selector não encontrado");
         const monthIndex = getActiveMonthIndex();
-        if (!monthIndex) throw new Error("Nenhum mês selecionado.");
+        if (!selectedYear || !monthIndex) throw new Error("Ano ou Mês não selecionado.");
         const corp_oper_nr = getCorpId();
-        const savedMap = await fetchSavedData(currentSection, selectedYear, monthIndex);
-        const changes = diffFixedRowsChanges(table, savedMap);
-        await saveChanges({...changes, section:currentSection, year:selectedYear, month:monthIndex});
         try {
           const nomeMes = MONTH_NAMES_PT[parseInt(monthIndex)-1];
           const respUsers = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${corp_oper_nr}&elem_state=eq.true&select=n_int`, {headers: getSupabaseHeaders()});
@@ -802,34 +832,45 @@
               method:'POST', headers:getSupabaseHeaders(),
               body: JSON.stringify(activeUsers.map(u => ({n_int:u.n_int, corp_oper_nr, title:"Escala Emitida", message:msgNotif, is_read:false, created_at:now})))
             });
-            try {
-              await fetch('https://cb-360-app.vercel.app/api/sendPush', {
-                method:'POST', headers:{'Content-Type':'application/json'},
-                body: JSON.stringify({recipient_nint:'geral', corp_nr:corp_oper_nr, sender_name:'CB360 Online', message_text:msgNotif, sender_nint:'0'})
-              });
-            } catch (errPush) {console.error('Erro ao enviar push:', errPush);}
+            await fetch('https://cb-360-app.vercel.app/api/sendPush', {
+              method:'POST', headers:{'Content-Type':'application/json'},
+              body: JSON.stringify({recipient_nint:'geral', corp_nr:corp_oper_nr, sender_name:'CB360 Online', message_text:msgNotif, sender_nint:'0'})
+            }).catch(err => console.error('Erro Push:', err));
           }
-        } catch (errNotif) {console.error("Erro no fluxo de notificações:", errNotif);}
-        showPopupSuccess("✅ Escala emitida com sucesso! Por favor aguarde uns breves segundos pelo download automático. Obrigado.");
+        } catch (errNotif) {
+          console.error("Erro Notificações:", errNotif);
+        }
+        showPopupSuccess("✅ Escala emitida! O download vai começar.");
         await exportScheduleToExcel(table, selectedYear, monthIndex);
-      } catch (err) {console.error(err); alert("❌ Erro ao salvar as linhas fixas: " + err.message);}
-      finally {if (saveBtn) {saveBtn.disabled=false; saveBtn.textContent="Guardar Emissão";}}
+      } catch (err) {
+        console.error(err); 
+        alert("❌ Erro ao emitir escala: " + err.message);
+      } finally {
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.textContent = "Guardar Emissão";
+        }
+      }
     }
     async function exportScheduleToExcel(tbody, year, month) {
+      const PROTECTED = ["ED", "EN", "ET", "EP"];
       const fileName = `Escala FOMIO ${MONTH_NAMES_PT[month-1]} ${year}`;
       const daysInMonth = new Date(year, month, 0).getDate();
       const table = tbody.parentElement;
       const holidays = getPortugalHolidays(year);
       const mesIdx = month - 1;
-      const holidayDays  = holidays.filter(h => !h.optional && h.date.getMonth()===mesIdx).map(h => h.date.getDate());
-      const optionalDays = holidays.filter(h =>  h.optional && h.date.getMonth()===mesIdx).map(h => h.date.getDate());
+      const holidayDays = holidays.filter(h => !h.optional && h.date.getMonth()===mesIdx).map(h => h.date.getDate());
+      const optionalDays = holidays.filter(h => h.optional && h.date.getMonth()===mesIdx).map(h => h.date.getDate());
       const weekdays = [];
       for (let d=1; d<=daysInMonth; d++) weekdays.push(table.querySelector(`.day-header-${d}`)?.textContent.trim() || "");
       const fixedRows = [];
       tbody.querySelectorAll("tr.fixed-row").forEach(tr => {
         if (tr.cells.length <= 1) return;
         const rowData = {ni:tr.cells[0].textContent.trim(), nome:tr.cells[1].textContent.trim(), catg:tr.cells[2].textContent.trim(), days:{}};
-        for (let d=1; d<=daysInMonth; d++) rowData.days[d] = tr.querySelector(`.fixed-day-cell-${d}`)?.textContent.trim() || "";
+        for (let d=1; d<=daysInMonth; d++) {
+          const val = tr.querySelector(`.fixed-day-cell-${d}`)?.textContent.trim() || "";
+          rowData.days[d] = PROTECTED.includes(val.toUpperCase()) ? "" : val;
+        }
         fixedRows.push(rowData);
       });
       const normalRows = [];
@@ -852,10 +893,8 @@
           const url = URL.createObjectURL(await response.blob());
           const a = document.createElement("a"); a.href=url; a.download=`${fileName}.pdf`;
           document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-          if (typeof showPopupSuccess==='function') showPopupSuccess(`✅ PDF gerado com sucesso!`);
-        } else {
-          const err = await response.json().catch(()=>({}));
-          alert(`Erro: ${err.error||'Erro no servidor'}`);
         }
-      } catch (error) {console.error("Erro:", error); alert(`❌ Erro de ligação ao serviço.`);}
+      } catch (error) {
+        console.error("Erro PDF:", error);      
+      }
     }

@@ -833,6 +833,8 @@
       const amalCents  = Math.round(parseVal("amal-value-reg") * 100);
       const anepcCents = Math.round(parseVal("anepc-value-reg") * 100);
       const tbody = document.querySelector("#decir-reg table.month-table tbody");
+      console.log("updateAllValues tbody:", tbody);
+  console.log("amalCents:", amalCents, "anepcCents:", anepcCents);
       if (!tbody) return;
       const rows = Array.from(tbody.querySelectorAll("tr"));
       for (let i=0; i<rows.length; i+=2) {

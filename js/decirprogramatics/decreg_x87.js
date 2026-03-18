@@ -770,6 +770,9 @@
         const res = await fetch(`${SUPABASE_URL}/rest/v1/decir_reg_pag?year=eq.${year}&month=eq.${month}`, {method:"DELETE", headers:getSupabaseHeaders()});
         if (!res.ok) throw new Error(await res.text()||"Erro ao apagar dados");
         showPopupSuccess(`✅ Dados de ${monthBtn.textContent.trim()} de ${year} apagados com sucesso!`);
+        const data = await loadDecirRegData();
+        await createDecirRegTable("table-container-dec-reg", year, month, data);
+        await window.loadDecirByMonth?.(year, month);
       } catch(err) {
         console.error(err); showPopupWarning("❌ Erro ao apagar: "+err.message);
       }

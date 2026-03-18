@@ -139,7 +139,8 @@
       "decir-reg-ref": {tableId: "table-container-dec-ref", optionsId: "decir-ref-options", monthsId: "months-container-dec-ref",
                         generic: {containerId: "months-container-dec-ref", tableContainerId: "table-container-dec-ref", yearSelectId: "year-dec-ref", optionsContainerId: "decir-ref-options",
                         monthNames: DECIR_MONTH_NAMES, blockedMonths: [], loadDataFunc: async (y, m) => m, createTableFunc: (cId, y, m, d) => createDecirMealTable(cId, y, m + 4, d)}},
-      "decir-reg-signa": {init: createDecirSignaTable}
+      "decir-reg-signa": {init: createDecirSignaTable},
+      "decir-dashboard": {init: createDecirDashboard} 
     };
     /* ─── LOADERS (DECIR) ────────────────────────────────────── */
     async function loadDecirConfigValues() {
@@ -2281,3 +2282,740 @@
         loadDecirConfigValues();
       });
     });
+    /* ─── CARD: ESTADOS DE ALERTA (DECIR) ───────────────────── */
+    async function createDecirAlertStatsCard(wrapper, year) {
+      const corp = getCorpId();
+      const MONTHS = [{name: "MAIO", num: "05"}, {name: "JUNHO", num: "06"}, {name: "JULHO", num: "07"}, {name: "AGOSTO", num: "08"}, {name: "SETEMBRO", num: "09"}, {name: "OUTUBRO", num: "10"}];
+      const LEVELS = [{key: "Monitorização", label: "MONITORIZAÇÃO", color: "#22c55e", bg: "#dcfce7"}, {key: "Nível I - Moderado", label: "NÍVEL I", color: "#3b82f6", bg: "#dbeafe"},
+                      {key: "Nível II - Elevado", label: "NÍVEL II", color: "#eab308", bg: "#fef9c3"}, {key: "Nível III - Muito Elevado", label: "NÍVEL III", color: "#f97316", bg: "#ffedd5"},
+                      {key: "Nível IV - Extremo", label: "NÍVEL IV", color: "#ef4444", bg: "#fee2e2"}];
+      const data = await supabaseFetch(`decir_reg_meals?corp_oper_nr=eq.${corp}&year=eq.${year}&month=in.(05,06,07,08,09,10)&select=month,alert_state`);
+      const stats = {};
+      MONTHS.forEach(m => { stats[m.num] = {}; LEVELS.forEach(l => {stats[m.num][l.key] = 0; });});
+      data.forEach(item => {if (stats[item.month] && item.alert_state && stats[item.month][item.alert_state] !== undefined) stats[item.month][item.alert_state]++;});
+      const totals = {};
+      LEVELS.forEach(l => {totals[l.key] = MONTHS.reduce((sum, m) => sum + (stats[m.num][l.key] || 0), 0);});
+      const totalDays = Object.values(totals).reduce((a, b) => a + b, 0);
+      const totalEAE = MONTHS.reduce((sum, m) => sum + (stats[m.num]["Nível I - Moderado"] || 0) + (stats[m.num]["Nível II - Elevado"] || 0) + (stats[m.num]
+                                                                    ["Nível III - Muito Elevado"] || 0) + (stats[m.num]["Nível IV - Extremo"] || 0), 0);
+      const pctOut = totalDays > 0 ? ((totalDays - totalEAE) / totalDays * 100).toFixed(2) : "0.00";
+      const pctInside = totalDays > 0 ? (totalEAE / totalDays * 100).toFixed(2) : "0.00";
+      const styleId = "dash-alert-style";
+      if (!document.getElementById(styleId)) {
+        const s = document.createElement("style"); s.id = styleId;
+        s.textContent = `
+          .alert-card {background: rgba(0, 0, 0, 0.08); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.9); border-radius: 20px; 
+                       box-shadow: 0 8px 32px rgba(99,102,241,0.08); padding: 24px; margin-bottom: 24px;}
+          .alert-card-title {font-size: 16px; font-weight: 700; color: #131a69; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;}
+          .alert-layout {display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;}
+          .alert-table {border-radius: 10px; overflow: hidden; width: 100%; border-collapse: collapse; font-size: 14px;}
+          .alert-table th {padding: 6px 8px; text-align: center; font-weight: 700; font-size: 14px; border: 1px solid #ccc; background: #131a69; color: #fff;}
+          .alert-table td {font-size: 14px; padding: 6px 8px; text-align: center; border: 1px solid #ccc; font-weight: 500; color: #374151;}
+          .alert-table tr:hover td {background: #f8faff;}
+          .alert-month-cell {font-weight: 700; color: #131a69; text-align: left !important; padding-left: 10px !important;}
+          .alert-total-row td {font-weight: 700; background: #f1f5f9; border-top: 2px solid #131a69;}
+          .alert-chart-wrap {position: relative; height: 390px;}
+        `;
+        document.head.appendChild(s);
+      }
+      const card = document.createElement("div"); card.className = "alert-card";
+      const cardTitle = document.createElement("div"); cardTitle.className = "alert-card-title";
+      cardTitle.innerHTML = `🚨 ESTADOS DE ALERTAS DO SIOPS PARA DECIR`;
+      card.appendChild(cardTitle);
+      const layout = document.createElement("div"); layout.className = "alert-layout";
+      const tableWrap = document.createElement("div");
+      const table = document.createElement("table"); table.className = "alert-table";
+      const thead = document.createElement("thead");
+      const trh1 = document.createElement("tr");
+      const thMonth = document.createElement("th"); thMonth.textContent = "Mês"; thMonth.rowSpan = 2; thMonth.style.background = "#0f1660"; trh1.appendChild(thMonth);
+      const thEAE = document.createElement("th"); thEAE.textContent = "Estado de Alerta Especial (EAE)"; thEAE.colSpan = 5; thEAE.style.background = "#1e2a80"; trh1.appendChild(thEAE);
+      thead.appendChild(trh1);
+      const trh2 = document.createElement("tr");
+      LEVELS.forEach(l => {const th = document.createElement("th"); th.textContent = l.label; th.style.background = l.color; th.style.color = "#fff"; trh2.appendChild(th);});
+      thead.appendChild(trh2); table.appendChild(thead);
+      const tbody = document.createElement("tbody");
+      MONTHS.forEach(m => {
+        const tr = document.createElement("tr");
+        const tdM = document.createElement("td"); tdM.className = "alert-month-cell"; tdM.textContent = m.name; tr.appendChild(tdM);
+        LEVELS.forEach(l => {const td = document.createElement("td"); const val = stats[m.num][l.key] || 0; td.textContent = val; if (val > 0) {
+                             td.style.background = l.bg; td.style.color = l.color; td.style.fontWeight = "700"; } tr.appendChild(td);});
+        tbody.appendChild(tr);
+      });
+      const trTotal = document.createElement("tr"); trTotal.className = "alert-total-row";
+      const tdTLabel = document.createElement("td"); tdTLabel.className = "alert-month-cell"; tdTLabel.textContent = "Totais"; trTotal.appendChild(tdTLabel);
+      LEVELS.forEach(l => {const td = document.createElement("td"); td.textContent = totals[l.key]; td.style.color = l.color; trTotal.appendChild(td);});
+      tbody.appendChild(trTotal);
+      const trEAE = document.createElement("tr");
+      const tdEAE = document.createElement("td"); tdEAE.colSpan = 6; tdEAE.style.cssText = "background: #dbeafe; color: #1d4ed8; text-align: center; padding: 6px; font-weight: 700;";
+      tdEAE.textContent = `${totalDays} Dias | ${totalEAE} Dias em EAE do SIOPS para o DECIR`; trEAE.appendChild(tdEAE); tbody.appendChild(trEAE);
+      const trPct = document.createElement("tr");
+      const tdOut = document.createElement("td"); tdOut.colSpan = 3; tdOut.style.cssText = "background: #fef9c3; color: #854d0e; text-align: center; padding: 6px; font-weight: 700;"; 
+                                                   tdOut.textContent = `% Fora EAE: ${pctOut}%`;
+      const tdInside= document.createElement("td"); tdInside.colSpan = 3; tdInside.style.cssText = "background: #dcfce7; color: #166534; text-align: center; padding: 6px; font-weight: 700;"; 
+                                                     tdInside.textContent = `% Em EAE: ${pctInside}%`;
+      trPct.append(tdOut, tdInside); tbody.appendChild(trPct);
+      table.appendChild(tbody); tableWrap.appendChild(table); layout.appendChild(tableWrap);
+      const chartWrap = document.createElement("div"); chartWrap.className = "alert-chart-wrap";
+      const canvas = document.createElement("canvas"); canvas.id = `alert-chart-${Date.now()}`;
+      chartWrap.appendChild(canvas); layout.appendChild(chartWrap); card.appendChild(layout); wrapper.appendChild(card);
+      if (window.Chart) {
+         canvas._chartInstance = new Chart(canvas, {type: "line", data: {labels: MONTHS.map(m => m.name), datasets: LEVELS.map(l => ({label: l.label, data: MONTHS.map(m => stats[m.num][l.key] || 0), 
+                                                    borderColor: l.color, backgroundColor: l.color + "33", tension: 0.4, pointRadius: 4, pointHoverRadius: 6, fill: false, borderWidth: 2}))},
+                                                    options: {responsive: true, maintainAspectRatio: false,
+                                                    plugins: {legend: {position: "bottom", labels: {font: {size: 14}, boxWidth: 16}},
+                                                    title: {display: true, text: `Estados de Alerta`, font: {size: 14}, color: "#131a69"}},
+                                                    scales: {y: {beginAtZero: true, ticks: {stepSize: 1, font: {size: 10}}, grid: {color: "#ccc"}},
+                                                             x: {ticks: {font: {size: 10}}, grid: {display: false}}}}});}}
+    async function updateDecirAlertStatsCard(year) {
+      const corp = getCorpId();
+      const MONTHS = [{name: "MAIO", num: "05"}, {name: "JUNHO", num: "06"}, {name: "JULHO", num: "07"}, {name: "AGOSTO", num: "08"}, {name: "SETEMBRO", num: "09"}, {name: "OUTUBRO", num: "10"}];
+      const LEVELS = [{key: "Monitorização", label: "MONITORIZAÇÃO", color: "#22c55e", bg: "#dcfce7"}, {key: "Nível I - Moderado", label: "NÍVEL I", color: "#3b82f6", bg: "#dbeafe"},
+                      {key: "Nível II - Elevado", label: "NÍVEL II", color: "#eab308", bg: "#fef9c3"}, {key: "Nível III - Muito Elevado", label: "NÍVEL III", color: "#f97316", bg: "#ffedd5"},
+                      {key: "Nível IV - Extremo", label: "NÍVEL IV", color: "#ef4444", bg: "#fee2e2"}];
+      const data = await supabaseFetch(`decir_reg_meals?corp_oper_nr=eq.${corp}&year=eq.${year}&month=in.(05,06,07,08,09,10)&select=month,alert_state`);
+      const stats = {};
+      MONTHS.forEach(m => {stats[m.num] = {}; LEVELS.forEach(l => { stats[m.num][l.key] = 0; });});
+      data.forEach(item => {if (stats[item.month] && item.alert_state && stats[item.month][item.alert_state] !== undefined) stats[item.month][item.alert_state]++;});
+      const totals = {};
+      LEVELS.forEach(l => {totals[l.key] = MONTHS.reduce((sum, m) => sum + (stats[m.num][l.key] || 0), 0);});
+      const totalDays = Object.values(totals).reduce((a, b) => a + b, 0);
+      const totalEAE = MONTHS.reduce((sum, m) => sum + (stats[m.num]["Nível I - Moderado"] || 0) + (stats[m.num]["Nível II - Elevado"] || 0) +
+                                     (stats[m.num]["Nível III - Muito Elevado"] || 0) + (stats[m.num]["Nível IV - Extremo"] || 0), 0);
+      const pctOut = totalDays > 0 ? ((totalDays - totalEAE) / totalDays * 100).toFixed(2) : "0.00";
+      const pctInside = totalDays > 0 ? (totalEAE / totalDays * 100).toFixed(2) : "0.00";
+      const tbody = document.querySelector(".alert-table tbody");
+      if (tbody) {
+        const rows = tbody.querySelectorAll("tr:not(.alert-total-row)");
+        MONTHS.forEach((m, i) => {
+          const tds = rows[i]?.querySelectorAll("td:not(.alert-month-cell)");
+          if (!tds) return;
+          LEVELS.forEach((l, j) => {
+            const val = stats[m.num][l.key] || 0;
+            tds[j].textContent = val;
+            tds[j].style.background = val > 0 ? l.bg : "";
+            tds[j].style.color = val > 0 ? l.color : "";
+            tds[j].style.fontWeight = val > 0 ? "700" : "";
+          });
+        });
+        const totalRow = tbody.querySelector(".alert-total-row");
+        if (totalRow) {
+          const totalTds = totalRow.querySelectorAll("td:not(.alert-month-cell)");
+          LEVELS.forEach((l, j) => {totalTds[j].textContent = totals[l.key]; totalTds[j].style.color = l.color;});
+        }
+        const allRows = tbody.querySelectorAll("tr");
+        const eaeRow = allRows[allRows.length - 2];
+        const pctRow = allRows[allRows.length - 1];
+        if (eaeRow) eaeRow.querySelector("td").textContent = `${totalDays} Dias | ${totalEAE} Dias em EAE do SIOPS para o DECIR`;
+        if (pctRow) {
+          const pctTds = pctRow.querySelectorAll("td");
+          if (pctTds[0]) pctTds[0].textContent = `% Fora EAE: ${pctOut}%`;
+          if (pctTds[1]) pctTds[1].textContent = `% Em EAE: ${pctInside}%`;
+        }
+      }
+      const canvas = document.querySelector("[id^='alert-chart-']");
+      if (canvas && canvas._chartInstance) {
+        canvas._chartInstance.data.datasets.forEach((ds, i) => {
+          ds.data = MONTHS.map(m => stats[m.num][LEVELS[i].key] || 0);
+        });
+        canvas._chartInstance.update();
+      }
+    }
+    /* ─── CARD: REFEIÇÕES (DECIR) ───────────────────────────── */
+    async function createDecirMealsStatsCard(wrapper, year) {
+      const corp = getCorpId();
+      const MONTHS = [{name: "MAIO", num: "05"}, {name: "JUNHO", num: "06"}, {name: "JULHO", num: "07"}, {name: "AGOSTO", num: "08"}, {name: "SETEMBRO", num: "09"}, {name: "OUTUBRO", num: "10"}];
+      const RESTAURANTS = [{key: "O Cristina", label: 'Restaurante "O Cristina"', color: "#3b82f6", bg: "#dbeafe"},{key: "O Sol", label: 'Restaurante "O Sol"', color: "#22c55e", bg: "#dcfce7"}];
+      const data = await supabaseFetch(`decir_reg_meals?corp_oper_nr=eq.${corp}&year=eq.${year}&month=in.(05,06,07,08,09,10)&select=month,restaurant,meal_efet`);
+      const stats = {};
+      MONTHS.forEach(m => {stats[m.num] = {}; RESTAURANTS.forEach(r => {stats[m.num][r.key] = 0;});});
+      data.forEach(item => {if (stats[item.month] && item.restaurant && stats[item.month][item.restaurant] !== undefined) stats[item.month][item.restaurant] += parseInt(item.meal_efet) || 0;});
+      const totals = {};
+      RESTAURANTS.forEach(r => {totals[r.key] = MONTHS.reduce((sum, m) => sum + (stats[m.num][r.key] || 0), 0);});
+      const grandTotal = Object.values(totals).reduce((a, b) => a + b, 0);
+      const pcts = {};
+      RESTAURANTS.forEach(r => {pcts[r.key] = grandTotal > 0 ? (totals[r.key] / grandTotal * 100).toFixed(2) : "0.00";});
+      const styleId = "dash-meals-style";
+      if (!document.getElementById(styleId)) {
+        const s = document.createElement("style"); s.id = styleId;
+        s.textContent = `
+          .meals-card {background: rgba(0, 0, 0, 0.10); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.9); border-radius: 20px; 
+                       box-shadow: 0 8px 32px rgba(99,102,241,0.08); padding: 24px; margin-bottom: 24px;}
+          .meals-card-title {font-size: 16px; font-weight: 700; color: #131a69; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;}
+          .meals-layout {display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;}
+          .meals-table {border-radius: 10px; overflow: hidden;width: 100%; border-collapse: collapse; font-size: 14px;}
+          .meals-table th {padding: 6px 8px; text-align: center; font-weight: 700; font-size: 14px; border: 1px solid #ccc; background: #131a69; color: #fff;}
+          .meals-table td {padding: 6px 8px; text-align: center; border: 1px solid #ccc; font-weight: 500; color: #374151;}
+          .meals-table tr:hover td {background: #f8faff;}
+          .meals-month-cell {font-weight: 700; color: #131a69; text-align: left !important; padding-left: 10px !important;}
+          .meals-total-row td {font-weight: 700; background: #f1f5f9; border-top: 2px solid #131a69;}
+          .meals-chart-wrap {position: relative; height: 390px;}
+        `;
+        document.head.appendChild(s);
+      }
+      const card = document.createElement("div"); card.className = "meals-card";
+      const cardTitle = document.createElement("div"); cardTitle.className = "meals-card-title";
+      cardTitle.innerHTML = `🍽️ REFEIÇÕES SERVIDAS`; card.appendChild(cardTitle);
+      const layout = document.createElement("div"); layout.className = "meals-layout";
+      const tableWrap = document.createElement("div");
+      const table = document.createElement("table"); table.className = "meals-table";
+      const thead = document.createElement("thead");
+      const trh1 = document.createElement("tr");
+      const thMonth = document.createElement("th"); thMonth.textContent = "Mês"; thMonth.rowSpan = 2; thMonth.style.background = "#0f1660"; trh1.appendChild(thMonth);
+      const thRest = document.createElement("th"); thRest.textContent = "Refeições Servidas por Restaurante"; thRest.colSpan = 2; thRest.style.background = "#1e2a80"; trh1.appendChild(thRest);
+      thead.appendChild(trh1);
+      const trh2 = document.createElement("tr");
+      RESTAURANTS.forEach(r => {const th = document.createElement("th"); th.textContent = r.label; th.style.background = r.color; th.style.color = "#fff"; trh2.appendChild(th);});
+      thead.appendChild(trh2); table.appendChild(thead);
+      const tbody = document.createElement("tbody");
+      MONTHS.forEach(m => {
+        const tr = document.createElement("tr");
+        const tdM = document.createElement("td"); tdM.className = "meals-month-cell"; tdM.textContent = m.name; tr.appendChild(tdM);
+        RESTAURANTS.forEach(r => {const td = document.createElement("td"); const val = stats[m.num][r.key] || 0; td.textContent = val; if (val > 0) {
+                                 td.style.background = r.bg; td.style.color = r.color; td.style.fontWeight = "700"; } tr.appendChild(td);}); tbody.appendChild(tr);
+      });
+      const trTotal = document.createElement("tr"); trTotal.className = "meals-total-row";
+      const tdTL = document.createElement("td"); tdTL.className = "meals-month-cell"; tdTL.textContent = "Totais"; trTotal.appendChild(tdTL);
+      RESTAURANTS.forEach(r => {const td = document.createElement("td"); td.textContent = totals[r.key]; td.style.color = r.color; trTotal.appendChild(td);});
+      tbody.appendChild(trTotal);
+      const trGrand = document.createElement("tr");
+      const tdGrand = document.createElement("td"); tdGrand.colSpan = 3; tdGrand.style.cssText = "background: #dbeafe; color: #1d4ed8; text-align: center; padding: 6px; font-weight: 700;";
+                                                    tdGrand.textContent = `${grandTotal} Refeições`; trGrand.appendChild(tdGrand); tbody.appendChild(trGrand);
+      const trPct = document.createElement("tr");
+      RESTAURANTS.forEach(r => {const td = document.createElement("td"); td.style.cssText = `background: ${r.bg}; color: ${r.color}; text-align: center; padding :6px; font-weight: 700;`;
+                                                                         td.textContent = `% ${r.label.replace('Restaurante "','').replace('"','')}: ${pcts[r.key]}%`; trPct.appendChild(td);});
+      const tdPctLabel = document.createElement("td"); tdPctLabel.style.cssText = "background: #f1f5f9; color: #131a69; text-align: left; padding: 6px; padding-left: 10px; font-weight: 700;"; 
+                                                       tdPctLabel.textContent = "% por Rest."; trPct.insertBefore(tdPctLabel, trPct.firstChild);
+      tbody.appendChild(trPct); table.appendChild(tbody); tableWrap.appendChild(table); layout.appendChild(tableWrap);
+      const chartWrap = document.createElement("div"); chartWrap.className = "meals-chart-wrap";
+      const canvas = document.createElement("canvas"); canvas.id = `meals-chart-${Date.now()}`;
+      chartWrap.appendChild(canvas); layout.appendChild(chartWrap); card.appendChild(layout); wrapper.appendChild(card);
+      if (window.Chart) {
+        canvas._chartInstance = new Chart(canvas, {type: "line", data: {labels: MONTHS.map(m => m.name), datasets: RESTAURANTS.map(r => ({label: r.label, data: MONTHS.map(m => stats[m.num][r.key] || 0), 
+                                                   borderColor: r.color, backgroundColor: r.color + "33", tension: 0.4, pointRadius: 4, pointHoverRadius: 6, fill: false, borderWidth: 2}))},
+                                                   options: {responsive: true, maintainAspectRatio: false,
+                                                   plugins: {legend: {position: "bottom", labels: {font: {size: 14}, boxWidth: 16}},
+                                                   title: {display: true, text: `Refeições Servidas`, font: {size: 14}, color: "#131a69"}},
+                                                   scales: {y: {beginAtZero: true, ticks: {font: {size: 10}}, grid: {color: "#ccc"}},
+                                                            x: {ticks: {font: {size: 10}}, grid: {display: false}}}}});}}
+    async function updateDecirMealsStatsCard(year) {
+      const corp = getCorpId();
+      const MONTHS = [{name: "MAIO", num: "05"}, {name: "JUNHO", num: "06"}, {name: "JULHO", num: "07"}, {name: "AGOSTO", num: "08"}, {name: "SETEMBRO", num: "09"}, {name: "OUTUBRO", num: "10"}];
+      const RESTAURANTS = [{key: "O Cristina", label: 'Restaurante "O Cristina"', color: "#3b82f6", bg: "#dbeafe"}, {key: "O Sol", label: 'Restaurante "O Sol"', color: "#22c55e", bg: "#dcfce7"}];
+      const data = await supabaseFetch(`decir_reg_meals?corp_oper_nr=eq.${corp}&year=eq.${year}&month=in.(05,06,07,08,09,10)&select=month,restaurant,meal_efet`);
+      const stats = {};
+      MONTHS.forEach(m => {stats[m.num] = {}; RESTAURANTS.forEach(r => { stats[m.num][r.key] = 0; });});
+      data.forEach(item => {if (stats[item.month] && item.restaurant && stats[item.month][item.restaurant] !== undefined) stats[item.month][item.restaurant] += parseInt(item.meal_efet) || 0;});
+      const totals = {};
+      RESTAURANTS.forEach(r => {totals[r.key] = MONTHS.reduce((sum, m) => sum + (stats[m.num][r.key] || 0), 0);});
+      const grandTotal = Object.values(totals).reduce((a, b) => a + b, 0);
+      const pcts = {};
+      RESTAURANTS.forEach(r => {pcts[r.key] = grandTotal > 0 ? (totals[r.key] / grandTotal * 100).toFixed(2) : "0.00";});
+      const tbody = document.querySelector(".meals-table tbody");
+      if (tbody) {
+        const rows = tbody.querySelectorAll("tr:not(.meals-total-row)");
+        MONTHS.forEach((m, i) => {
+          const tds = rows[i]?.querySelectorAll("td:not(.meals-month-cell)");
+          if (!tds) return;
+          RESTAURANTS.forEach((r, j) => {
+            const val = stats[m.num][r.key] || 0;
+            tds[j].textContent = val;
+            tds[j].style.background = val > 0 ? r.bg : "";
+            tds[j].style.color = val > 0 ? r.color : "";
+            tds[j].style.fontWeight = val > 0 ? "700" : "";
+          });
+        });
+        const totalRow = tbody.querySelector(".meals-total-row");
+        if (totalRow) {
+          const totalTds = totalRow.querySelectorAll("td:not(.meals-month-cell)");
+          RESTAURANTS.forEach((r, j) => {totalTds[j].textContent = totals[r.key]; totalTds[j].style.color = r.color;});
+        }
+        const allRows = tbody.querySelectorAll("tr");
+        const grandRow = allRows[allRows.length - 2];
+        const pctRow = allRows[allRows.length - 1];
+        if (grandRow) grandRow.querySelector("td").textContent = `${grandTotal} Refeições`;
+        if (pctRow) {
+          const pctTds = pctRow.querySelectorAll("td:not(:first-child)");
+          RESTAURANTS.forEach((r, j) => {
+            if (pctTds[j]) pctTds[j].textContent = `% ${r.label.replace('Restaurante "','').replace('"','')}: ${pcts[r.key]}%`;
+          });
+        }
+      }
+      const canvas = document.querySelector("[id^='meals-chart-']");
+      if (canvas && canvas._chartInstance) {
+        canvas._chartInstance.data.datasets.forEach((ds, i) => {
+          ds.data = MONTHS.map(m => stats[m.num][RESTAURANTS[i].key] || 0);
+        });
+        canvas._chartInstance.update();
+      }
+    }
+    /* ─── CARD: OCORRÊNCIAS (DECIR) ─────────────────────────── */    
+    async function createDecirOcorrStatsCard(wrapper, year) {
+      const corp = getCorpId();
+      const MONTHS = [{name: "MAIO", num: "05"}, {name: "JUNHO", num: "06"}, {name: "JULHO", num: "07"}, {name: "AGOSTO", num: "08"}, {name: "SETEMBRO", num: "09"}, {name: "OUTUBRO", num: "10"}];
+      const data = await supabaseFetch(`decir_reg_ocorr?corp_oper_nr=eq.${corp}&year=eq.${year}&month=in.(05,06,07,08,09,10)&select=month,acting`);
+      const stats = {};
+      MONTHS.forEach(m => { stats[m.num] = {total: 0, with: 0, without: 0};});
+      data.forEach(item => {if (!stats[item.month]) return; stats[item.month].total++; if (item.acting === true) stats[item.month].with++; if (item.acting === false) stats[item.month].without++;});
+      const totals = {total: 0, with: 0, without: 0};
+      MONTHS.forEach(m => {totals.total += stats[m.num].total; totals.with += stats[m.num].with; totals.without += stats[m.num].without;});
+      const pctWith = totals.total > 0 ? (totals.with / totals.total * 100).toFixed(2) : "0.00";
+      const pctWithOut = totals.total > 0 ? (totals.without / totals.total * 100).toFixed(2) : "0.00";
+      const styleId = "dash-ocorr-style";
+      if (!document.getElementById(styleId)) {
+        const s = document.createElement("style"); s.id = styleId;        
+        s.textContent = `
+          .ocorr-stats-card {background: rgba(0, 0, 0, 0.10); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.9); border-radius: 20px; 
+                             box-shadow: 0 8px 32px rgba(99,102,241,0.08); padding: 24px; margin-bottom: 24px;}
+          .ocorr-stats-title {font-size: 16px; font-weight: 700; color: #131a69; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;}
+          .ocorr-stats-layout {display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;}
+          .ocorr-stats-table {border-radius: 10px; overflow: hidden; width: 100%; border-collapse: collapse; font-size: 14px;}
+          .ocorr-stats-table th {padding: 6px 8px; text-align: center; font-weight: 700; font-size: 14px; border: 1px solid #ccc; background: #131a69; color: #fff;}
+          .ocorr-stats-table td {padding: 6px 8px; text-align: center; border: 1px solid #ccc; font-weight: 500; color: #374151;}
+          .ocorr-stats-table tr:hover td {background: #f8faff;}
+          .ocorr-month-cell {font-weight: 700; color: #131a69; text-align: left !important; padding-left: 10px !important;}
+          .ocorr-total-row td {font-weight: 700; background: #f1f5f9; border-top: 2px solid #131a69;}
+          .ocorr-chart-wrap {position: relative; height: 360px;}
+        `;
+        document.head.appendChild(s);
+      }
+      const card = document.createElement("div"); card.className = "ocorr-stats-card";
+      const cardTitle = document.createElement("div"); cardTitle.className = "ocorr-stats-title";
+      cardTitle.innerHTML = `⚡ ATIVAÇÕES PARA OCORRÊNCIAS`; card.appendChild(cardTitle);
+      const layout = document.createElement("div"); layout.className = "ocorr-stats-layout";
+      const tableWrap = document.createElement("div");
+      const table = document.createElement("table"); table.className = "ocorr-stats-table";
+      const thead = document.createElement("thead");
+      const trh1 = document.createElement("tr");
+      const thMonth = document.createElement("th"); thMonth.textContent = "Mês"; thMonth.rowSpan = 2; thMonth.style.background = "#0f1660"; trh1.appendChild(thMonth);
+      const thAtiv = document.createElement("th"); thAtiv.textContent = "Ativações para Ocorrências (Âmbito DECIR)"; thAtiv.colSpan = 3; thAtiv.style.background = "#1e2a80"; trh1.appendChild(thAtiv);
+      thead.appendChild(trh1);
+      const trh2 = document.createElement("tr");
+      [{label:"Total", color:"#eab308"}, {label:"Com Atuação", color:"#22c55e"}, {label:"Sem Atuação", color:"#ef4444"}].forEach(h => {
+        const th = document.createElement("th"); th.textContent = h.label; th.style.background = h.color; th.style.color = "#fff"; trh2.appendChild(th);});
+      thead.appendChild(trh2); table.appendChild(thead);
+      const tbody = document.createElement("tbody");
+      MONTHS.forEach(m => {
+        const tr = document.createElement("tr");
+        const tdM = document.createElement("td"); tdM.className = "ocorr-month-cell"; tdM.textContent = m.name; tr.appendChild(tdM);
+        [{val: stats[m.num].total, bg: "#fef9c3", color: "#854d0e"}, {val: stats[m.num].with, bg: "#dcfce7", color: "#166534"}, {val: stats[m.num].without, bg: "#fee2e2", color: "#991b1b"}]
+          .forEach(v => {const td = document.createElement("td"); td.textContent = v.val; if (v.val > 0) {td.style.background = v.bg; td.style.color = v.color; td.style.fontWeight = "700";}
+                         tr.appendChild(td);});
+        tbody.appendChild(tr);
+      });
+      const trTotal = document.createElement("tr"); trTotal.className = "ocorr-total-row";
+      const tdTL = document.createElement("td");
+      tdTL.className = "ocorr-month-cell"; tdTL.textContent = "Totais:"; tdTL.rowSpan = 2; tdTL.style.cssText = "font-weight: 700; background: #f1f5f9; color:#131a69; padding-left: 10px; vertical-align: middle;";
+      trTotal.appendChild(tdTL);
+      const tdTotalAtiv = document.createElement("td");
+      tdTotalAtiv.textContent = `${totals.total} Ativações`; tdTotalAtiv.rowSpan = 2; tdTotalAtiv.style.cssText = "color: #854d0e; font-weight: 700; background: #fef9c3; text-align: center; vertical-align: middle;";
+      trTotal.appendChild(tdTotalAtiv);
+      const tdWith = document.createElement("td");
+      tdWith.textContent = totals.with; tdWith.style.cssText = "color: #166534; font-weight: 700; background: #dcfce7; text-align: center;";
+      trTotal.appendChild(tdWith);
+      const tdWithOut = document.createElement("td");
+      tdWithOut.textContent = totals.without; tdWithOut.style.cssText = "color: #991b1b; font-weight: 700; background: #fee2e2; text-align: center;";
+      trTotal.appendChild(tdWithOut);
+      tbody.appendChild(trTotal);
+      const trPct = document.createElement("tr");
+      const tdPctWith = document.createElement("td"); tdPctWith.style.cssText = "background: #dcfce7; color: #166534; text-align: center; padding: 6px; font-size: 14px; border: 1px solid #ccc; font-weight:700;";
+                                                      tdPctWith.textContent = `% Com Atuação: ${pctWith}%`; trPct.appendChild(tdPctWith);
+      const tdPctWithOut = document.createElement("td"); tdPctWithOut.style.cssText = "background: #fee2e2; color: #991b1b; text-align: center; padding: 6px; font-size: 14px; border: 1px solid #ccc; font-weight:700;"; 
+                                                     tdPctWithOut.textContent = `% Sem Atuação: ${pctWithOut}%`; trPct.appendChild(tdPctWithOut);
+      tbody.appendChild(trPct); table.appendChild(tbody); tableWrap.appendChild(table); layout.appendChild(tableWrap);
+      const chartWrap = document.createElement("div"); chartWrap.className = "ocorr-chart-wrap";
+      const canvas = document.createElement("canvas"); canvas.id = `ocorr-chart-${Date.now()}`;
+      chartWrap.appendChild(canvas); layout.appendChild(chartWrap); card.appendChild(layout); wrapper.appendChild(card);
+      if (window.Chart) {
+        canvas._chartInstance = new Chart(canvas, {type: "line", data: {labels: MONTHS.map(m => m.name), datasets: [
+          {label: "Ativações", data: MONTHS.map(m => stats[m.num].total), borderColor: "#eab308", backgroundColor: "#eab30833", tension: 0.4, pointRadius: 4, fill: false, borderWidth: 2},
+          {label: "Com Atuação", data: MONTHS.map(m => stats[m.num].with), borderColor: "#22c55e", backgroundColor: "#22c55e33", tension: 0.4, pointRadius: 4, fill: false, borderWidth: 2},
+          {label: "Sem Atuação", data: MONTHS.map(m => stats[m.num].without), borderColor: "#ef4444", backgroundColor: "#ef444433", tension: 0.4, pointRadius: 4, fill: false, borderWidth: 2}]},
+                                                   options: {responsive: true, maintainAspectRatio: false, 
+                                                   plugins: {legend: {position: "bottom", labels: {font: {size: 14}, boxWidth: 16}},
+                                                   title: {display: true, text: `Ativações`, font: {size: 14}, color: "#131a69"}},
+                                                   scales: {y: {beginAtZero: true, ticks: {stepSize: 1, font: {size: 10}}, grid: {color: "#ccc"}},
+                                                            x: {ticks: {font: {size: 10}}, grid: {display: false}}}}});}}
+    async function updateDecirOcorrStatsCard(year) {
+      const corp = getCorpId();
+      const MONTHS = [{name: "MAIO", num: "05"}, {name: "JUNHO", num: "06"}, {name: "JULHO", num: "07"}, {name: "AGOSTO", num: "08"}, {name: "SETEMBRO", num: "09"}, {name: "OUTUBRO", num: "10"}];
+      const data = await supabaseFetch(`decir_reg_ocorr?corp_oper_nr=eq.${corp}&year=eq.${year}&month=in.(05,06,07,08,09,10)&select=month,acting`);
+      const stats = {};
+      MONTHS.forEach(m => {stats[m.num] = {total: 0, with: 0, without: 0};});
+      data.forEach(item => {if (!stats[item.month]) return; stats[item.month].total++; if (item.acting === true) stats[item.month].with++; if (item.acting === false) stats[item.month].without++;});
+      const totals = {total: 0, with: 0, without: 0};
+      MONTHS.forEach(m => {totals.total += stats[m.num].total; totals.with += stats[m.num].with; totals.without += stats[m.num].without;});
+      const pctWith = totals.total > 0 ? (totals.with / totals.total * 100).toFixed(2) : "0.00";
+      const pctWithOut = totals.total > 0 ? (totals.without / totals.total * 100).toFixed(2) : "0.00";
+      const tbody = document.querySelector(".ocorr-stats-table tbody");
+      if (tbody) {
+        const rows = tbody.querySelectorAll("tr:not(.ocorr-total-row)");
+        MONTHS.forEach((m, i) => {
+          const tds = rows[i]?.querySelectorAll("td:not(.ocorr-month-cell)");
+          if (!tds) return;
+          [{val: stats[m.num].total, bg: "#fef9c3", color: "#854d0e"}, {val: stats[m.num].with, bg: "#dcfce7", color: "#166534"}, {val: stats[m.num].without, bg: "#fee2e2", color: "#991b1b"}]
+            .forEach((v, j) => {
+            tds[j].textContent = v.val;
+            tds[j].style.background = v.val > 0 ? v.bg : "";
+            tds[j].style.color = v.val > 0 ? v.color : "";
+            tds[j].style.fontWeight = v.val > 0 ? "700" : "";
+          });
+        });
+        const totalRow = tbody.querySelector(".ocorr-total-row");
+        if (totalRow) {
+          const tds = totalRow.querySelectorAll("td");
+          if (tds[1]) tds[1].textContent = `${totals.total} Ativações`;
+          if (tds[2]) tds[2].textContent = totals.with;
+          if (tds[3]) tds[3].textContent = totals.without;
+        }
+        const allRows = tbody.querySelectorAll("tr");
+        const pctRow = allRows[allRows.length - 1];
+        if (pctRow) {
+          const pctTds = pctRow.querySelectorAll("td");
+          if (pctTds[0]) pctTds[0].textContent = `% Com Atuação: ${pctWith}%`;
+          if (pctTds[1]) pctTds[1].textContent = `% Sem Atuação: ${pctWithOut}%`;
+        }
+      }
+      const canvas = document.querySelector("[id^='ocorr-chart-']");
+      if (canvas && canvas._chartInstance) {
+        canvas._chartInstance.data.datasets[0].data = MONTHS.map(m => stats[m.num].total);
+        canvas._chartInstance.data.datasets[1].data = MONTHS.map(m => stats[m.num].with);
+        canvas._chartInstance.data.datasets[2].data = MONTHS.map(m => stats[m.num].without);
+        canvas._chartInstance.update();
+      }
+    }
+    /* ─── CARD: PODIUM (DECIR) ──────────────────────────────── */
+    async function createDecirPodiumCard(year) {
+      const container = document.getElementById("decir-podium-container");
+      if (!container) return;
+      container.innerHTML = "";
+      const style = document.createElement("style");
+      style.textContent = `
+        .podium-section-title {font-size: 20px; font-weight: 700; color: #131a69; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 8px;}
+        .podium-grid {display: flex; gap: 16px; align-items: flex-end; justify-content: center; flex-wrap: wrap; margin-bottom: 40px;}
+        .podium-card {backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); background: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.9); border-radius: 20px; 
+                      box-shadow: 0 8px 32px rgba(99,102,241,0.1),0 2px 8px rgba(0,0,0,0.06); padding: 24px 20px 20px; text-align: center; width: 200px; position: relative; opacity: 0; pointer-events: none;}
+        .podium-card.revealed {opacity: 1; pointer-events: all;}
+        .podium-card.rank-1 {width: 250px; background: linear-gradient(135deg, rgba(251,191,36,0.15), rgba(245,158,11,0.08)); border-color: rgba(251,191,36,0.15); 
+                             box-shadow: 0 4px 16px rgba(251,191,36,0.05), 0 1px 4px rgba(0,0,0,0.02); order: 2;}
+        .podium-card.rank-2 {width: 220px; background: linear-gradient(135deg, rgba(156,163,175,0.2), rgba(209,213,219,0.1)); border-color: rgba(156,163,175,0.15); 
+                             box-shadow: 0 4px 16px rgba(156,163,175,0.05), 0 1px 4px rgba(0,0,0,0.02); order: 1;}
+        .podium-card.rank-3 {background: linear-gradient(135deg, rgba(180,83,9,0.15), rgba(217,119,6,0.08)); border-color: rgba(180,83,9,0.15); 
+                             box-shadow: 0 4px 16px rgba(180,83,9,0.05), 0 1px 4px rgba(0,0,0,0.02); order: 3;}
+        .podium-card.rank-3.revealed {animation: podiumReveal 0.7s cubic-bezier(0.34,1.56,0.64,1) forwards;}
+        .podium-card.rank-2.revealed {animation: podiumReveal 0.7s cubic-bezier(0.34,1.56,0.64,1) forwards;}
+        .podium-card.rank-1.revealed {animation: podiumReveal 0.8s cubic-bezier(0.34,1.56,0.64,1) forwards;}
+        .podium-card.rank-1.winner {animation: podiumPulse 1s ease-in-out infinite, podiumWave 3s ease-in-out 1s infinite;}
+        .podium-badge {position: absolute; top: -14px; left: 50%; transform: translateX(-50%); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; 
+                       justify-content: center; font-size: 15px; font-weight: 900; border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.12);}
+        .rank-1 .podium-badge {background: linear-gradient(135deg,#f59e0b,#fbbf24); color: #fff;}
+        .rank-2 .podium-badge {background: linear-gradient(135deg,#9ca3af,#d1d5db); color: #fff;}
+        .rank-3 .podium-badge {background: linear-gradient(135deg,#b45309,#d97706); color: #fff;}
+        .podium-photo {width: 80px; height: 80px; border-radius: 50%; object-fit:cover; margin: 8px auto 12px; display: block; border: 3px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.12);}
+        .rank-1 .podium-photo {width:120px; height:120px; border-color:#fbbf24; }
+        .podium-photo-placeholder {width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg,#e0e7ff,#c7d2fe); margin: 8px auto 12px; display: flex; align-items: center; 
+                                   justify-content:center; font-size: 28px; border: 3px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.12);}
+        .rank-1 .podium-photo-placeholder {width: 96px; height: 96px; border-color: #fbbf24;}
+        .podium-name {font-size: 14px; font-weight: 600; color: #1e1b4b; margin-bottom: 4px; line-height: 1.3;}
+        .podium-ni {font-size: 13px; color :#6366f1; font-weight: 500; margin-bottom: 12px;}
+        .podium-stats {display: flex; gap: 8px; justify-content: center;}
+        .podium-stat-label {font-size:11px; font-weight: 750; color: #888; text-transform: uppercase; letter-spacing: 0.4px; margin-top: 2px;}
+        .podium-stat {background: rgba(99,102,241,0.08); border-radius: 10px; padding: 6px 10px; flex: 1;}
+        .rank-1 .podium-stat {background: rgba(251,191,36,0.12);}
+        .podium-stat-value {font-size: 18px; font-weight: 700; color:#131a69; line-height:1;}
+        .rank-1 .podium-stat-value {color: #b45309;}
+        .podium-card.rank-4to10 {background: linear-gradient(135deg, #f0f4ff, #e8eeff); border-radius: 16px; border: 1px solid rgba(0,0,0,0.10); box-shadow: 0 2px 8px rgba(0,0,0,0.09); padding: 16px; 
+                                 text-align: center; position: relative; opacity: 0; pointer-events: none; transition: all 0.3s ease;}
+        .podium-card.rank-4to10.revealed {opacity: 1; transform: translateY(0);}
+        .podium-card.rank-4to10 .podium-name {font-size: 13px; font-weight: 600; color: #1e1b4b; margin-bottom: 4px;}
+        .podium-card.rank-4to10 .podium-ni {font-size: 12px; color: #6366f1; margin-bottom: 8px;}
+        .podium-card.rank-4to10 .podium-stats {font-size: 12px; display: flex; justify-content: space-between; margin-top: 8px;}
+        .podium-card.rank-4to10 .podium-stat-label {font-size: 11px; color: #888; font-weight: 750}
+        .podium-card.rank-4to10 .podium-stat-value {font-weight: 700; color: #131a69;}        
+        .dash-loading, .dash-empty {text-align: center; padding: 48px; color: #9ca3af; font-size: 14px;}
+        .podium-reveal-btn {display: block; margin: 16px auto 24px; padding: 12px 32px; background: linear-gradient(135deg, #131a69, #6366f1); color: #fff; border: none; border-radius: 50px; 
+                            font-weight: 700; cursor: pointer; box-shadow: 0 4px 20px rgba(99,102,241,0.3); transition: transform 0.2s, box-shadow 0.2s; letter-spacing: 0.5px;}
+        .podium-reveal-btn:hover {transform: translateY(-2px); box-shadow: 0 8px 28px rgba(99,102,241,0.4);}
+        .podium-reveal-btn:disabled {opacity: 0.6; cursor: not-allowed; transform: none;}
+        .podium-confetti {position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999;}
+        @keyframes podiumReveal {0% {opacity: 0; transform: scale(0.3) translateY(40px);} 60% {opacity:1; transform: scale(1.08) translateY(-8px);} 80% {transform: scale(0.96) translateY(2px);} 100% {opacity:1;                                              transform:scale(1) translateY(0);}}
+        @keyframes podiumWave {0% {transform: translateY(0);} 25% {transform: translateY(-15px);} 50% {transform: translateY(0);} 75% {transform: translateY(-10px);} 100% {transform: translateY(0);}}
+        @keyframes podiumPulse {0%,100%{transform:scale(1);} 50%{transform:scale(1.05);}}      
+      `;
+      document.head.appendChild(style);
+      const podiumSection = document.createElement("div");
+      const podiumTitle = document.createElement("div");
+      podiumTitle.className = "podium-section-title";
+      podiumTitle.innerHTML = "🥇 TOP 10";
+      const podiumGrid = document.createElement("div");
+      podiumGrid.className = "podium-grid";
+      podiumSection.append(podiumTitle, podiumGrid);
+      const lowerPodiumSection = document.createElement("div");
+      lowerPodiumSection.style.display = "flex";
+      lowerPodiumSection.style.gap = "8px";
+      lowerPodiumSection.style.flexWrap = "nowrap";
+      lowerPodiumSection.style.justifyContent = "center";
+      lowerPodiumSection.style.marginTop = "16px";
+      const thankYouWrapper = document.createElement("div");
+      thankYouWrapper.style.display = "flex";
+      thankYouWrapper.style.justifyContent = "center";
+      thankYouWrapper.style.marginTop = "24px";
+      const thankYouMsg = document.createElement("div");
+      thankYouMsg.style.fontSize = "18px";
+      thankYouMsg.style.fontWeight = "800";
+      thankYouMsg.style.color = "#444";
+      thankYouMsg.style.textTransform = "uppercase";
+      thankYouMsg.style.opacity = "0";
+      thankYouMsg.style.transform = "translateY(20px)";
+      thankYouMsg.style.transition = "all 1s ease";
+      thankYouWrapper.appendChild(thankYouMsg);
+      const revealBtn = document.createElement("button");
+      revealBtn.className = "podium-reveal-btn";
+      revealBtn.textContent = "🎬 Apresentar Pódio";
+      podiumSection.insertBefore(revealBtn, podiumGrid);
+      container.appendChild(podiumSection);
+      container.appendChild(lowerPodiumSection);
+      container.appendChild(thankYouWrapper);
+      try {
+        const corp = getCorpId();
+        const shifts = await supabaseFetch(
+          `decir_reg_pag?corp_oper_nr=eq.${corp}&year=eq.${year}&select=n_int,turno`
+        );
+        if (!shifts.length) {
+          podiumGrid.innerHTML = `<div class="dash-empty">Sem dados para ${year}</div>`;
+          return;
+        }
+        const countMap = {};
+        shifts.forEach(s => {
+          const ni = parseInt(s.n_int, 10);
+          countMap[ni] = (countMap[ni] || 0) + 1;
+        });
+        const top10 = Object.entries(countMap)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10)
+        .map(([ni, count]) => ({ni: parseInt(ni), count}));
+        const nints = top10.map(t => String(t.ni).padStart(3, "0"));
+        const elems = await supabaseFetch(
+          `reg_elems?n_int=in.(${nints.join(",")})&corp_oper_nr=eq.${corp}&select=n_int,abv_name,photo_url`
+        );
+        const elemsMap = Object.fromEntries(
+          elems.map(e => [parseInt(e.n_int, 10), e])
+        );
+        top10.slice(0, 3).forEach((item, idx) => {
+          const rank = idx + 1;
+          const elem = elemsMap[item.ni] || {};
+          const hours = item.count * 12;
+          const card = document.createElement("div");
+          card.className = `podium-card rank-${rank}`;
+          const badge = document.createElement("div");
+          badge.className = "podium-badge";
+          badge.textContent = rank;
+          const photoEl = elem.photo_url
+            ? document.createElement("img")
+            : document.createElement("div");
+          if (elem.photo_url) {
+            photoEl.className = "podium-photo";
+            photoEl.src = elem.photo_url;
+            photoEl.onerror = () => {
+              photoEl.replaceWith(document.createElement("div"));
+            };
+          } else {
+            photoEl.className = "podium-photo-placeholder";
+            photoEl.textContent = "👤";
+          }
+          const name = document.createElement("div");
+          name.className = "podium-name";
+          name.textContent =
+            elem.abv_name || `Nº ${String(item.ni).padStart(3, "0")}`;
+          const ni = document.createElement("div");
+          ni.className = "podium-ni";
+          ni.textContent = `Nº ${String(item.ni).padStart(3, "0")}`;
+          const stats = document.createElement("div");
+          stats.className = "podium-stats";
+          stats.innerHTML = `
+            <div class="podium-stat">
+              <div class="podium-stat-value">${item.count}</div>
+              <div class="podium-stat-label">Turnos</div>
+            </div>
+            <div class="podium-stat">
+              <div class="podium-stat-value">${hours}h</div>
+              <div class="podium-stat-label">Horas</div>
+            </div>
+          `;
+          card.append(badge, photoEl, name, ni, stats);
+          podiumGrid.appendChild(card);
+        });
+        top10.slice(3).forEach((item, idx) => {
+          const rank = idx + 4;
+          const elem = elemsMap[item.ni] || {};
+          const hours = item.count * 12;
+          const card = document.createElement("div");
+          card.className = "podium-card rank-4to10";
+          const badge = document.createElement("div");
+          badge.className = "podium-badge";
+          badge.textContent = rank;
+          const name = document.createElement("div");
+          name.className = "podium-name";
+          name.textContent =
+            elem.abv_name || `Nº ${String(item.ni).padStart(3, "0")}`;
+          const ni = document.createElement("div");
+          ni.className = "podium-ni";
+          ni.textContent = `Nº ${String(item.ni).padStart(3, "0")}`;
+          const stats = document.createElement("div");
+          stats.className = "podium-stats";
+          stats.innerHTML = `
+            <div class="podium-stat">
+              <div class="podium-stat-value">${item.count}</div>
+              <div class="podium-stat-label">Turnos</div>
+            </div>
+            <div class="podium-stat">
+              <div class="podium-stat-value">${hours}h</div>
+              <div class="podium-stat-label">Horas</div>
+            </div>
+          `;
+          card.append(badge, name, ni, stats);
+          lowerPodiumSection.appendChild(card);
+          card.style.opacity = 0;
+          card.style.pointerEvents = "none";
+        });
+        thankYouMsg.textContent = `🎉 OBRIGADO PELA VOSSA COLABORAÇÃO!!! ATÉ AO DECIR ${parseInt(year) + 1}`;
+        revealBtn.onclick = async () => {
+          revealBtn.disabled = true;
+          revealBtn.textContent = "🎭 A revelar...";
+          const cards = {
+            3: podiumGrid.querySelector(".rank-3"),
+            2: podiumGrid.querySelector(".rank-2"),
+            1: podiumGrid.querySelector(".rank-1")
+          };
+          if (cards[3]) {
+            cards[3].classList.add("revealed");
+            await new Promise(r => setTimeout(r, 1200));
+          }
+          if (cards[2]) {
+            cards[2].classList.add("revealed");
+            await new Promise(r => setTimeout(r, 1200));
+          }
+          if (cards[1]) {
+            cards[1].classList.add("revealed", "winner");
+            if (typeof launchConfetti === "function") {
+              launchConfetti(cards[1]);
+            }
+          }
+          const lowerCards = lowerPodiumSection.querySelectorAll(".rank-4to10");
+          for (let i = 0; i < lowerCards.length; i++) {
+            await new Promise(r => setTimeout(r, 1000));
+            const c = lowerCards[i];
+            c.classList.add("revealed");
+            c.style.opacity = 1;
+            c.style.pointerEvents = "all";
+            if (i === lowerCards.length - 1) {
+              setTimeout(() => {
+                thankYouMsg.style.opacity = "1";
+                thankYouMsg.style.transform = "translateY(0)";
+              }, 1000);
+            }
+          }
+          revealBtn.textContent = "✅ Pódio Revelado!";
+        };
+      } catch (err) {
+        console.error(err);
+        podiumGrid.innerHTML = `<div class="dash-empty">❌ Erro ao carregar dados</div>`;
+      }
+    }
+    async function updateDecirPodiumCard(year) {
+      const container = document.getElementById("decir-podium-container");
+      if (!container) return;
+      container.innerHTML = "";
+      await createDecirPodiumCard(year);
+    }
+    /* ─── CONFETTI ───────────────────────────────────────────── */
+    function launchConfetti(originEl) {
+      const colors = ["#fbbf24","#6366f1","#22c55e","#ef4444","#131a69","#f97316"];
+      const canvas = document.createElement("canvas");
+      canvas.className = "podium-confetti";
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      document.body.appendChild(canvas);
+      const ctx = canvas.getContext("2d");
+      const rect = originEl.getBoundingClientRect();
+      const originX = rect.left + rect.width / 2;
+      const originY = rect.top + rect.height / 3;
+      const pieces = Array.from({length: 80}, () => ({
+        x: originX, y: originY, r: Math.random() * 8 + 4, color: colors[Math.floor(Math.random() * colors.length)], vx: (Math.random() - 0.5) * 6, vy: -(Math.random() * 6 + 2),
+        gravity: 0.15, angle: Math.random() * 360, spin: (Math.random() - 0.5) * 8
+      }));
+      let frame = 0;
+      const animate = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        pieces.forEach(p => {ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.angle * Math.PI / 180); ctx.fillStyle = p.color; ctx.globalAlpha = Math.max(0, 1 - frame / 240);
+                             ctx.fillRect(-p.r / 2, -p.r / 2, p.r, p.r / 2); ctx.restore(); p.x += p.vx; p.y += p.vy; p.vy += p.gravity; p.angle += p.spin;
+                            });
+        frame++;
+        if (frame < 240) requestAnimationFrame(animate);
+        else canvas.remove();
+      };
+      animate();
+    }
+    /* ─── DASHBOARD DECIR ────────────────────────────────────── */
+    async function createDecirDashboard() {
+      const container = document.querySelector("#decir-dashboard .card-body");
+      if (!container) return;
+      container.innerHTML = "";
+      const styleId = "decir-dashboard-styles";
+      if (!document.getElementById(styleId)) {
+        const style = document.createElement("style");
+        style.id = styleId;
+        style.textContent = `
+          .dash-wrapper {background: linear-gradient(135deg,#f0f4ff 0%,#faf5ff 50%,#f0f9ff 100%); border-radius: 16px; padding: 32px; min-height: 400px;}
+          .dash-header {display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; flex-wrap: wrap; gap: 12px;}
+          .dash-title {font-size: 22px; font-weight: 900; color: #131a69; letter-spacing: -0.5px;}
+          .dash-title span {color:#6366f1;}
+          .dash-year-select {padding: 8px 16px; border-radius: 50px; border: 2px solid #e0e7ff; background: #fff; font-size: 14px; font-weight: 600; color: #131a69; cursor:pointer;
+                             outline:none; transition:border-color 0.2s;}
+          .dash-year-select:focus {border-color: #6366f1;}
+        `;
+        document.head.appendChild(style);
+      }
+      const wrapper = document.createElement("div");
+      wrapper.className = "dash-wrapper";
+      const header = document.createElement("div");
+      header.className = "dash-header";
+      const title = document.createElement("div");
+      title.className = "dash-title";
+      title.innerHTML = `🏆 Dashboard Operacional <span>DECIR</span>`;
+      const yearSelect = document.createElement("select");
+      yearSelect.className = "dash-year-select";
+      const currentYear = new Date().getFullYear();
+      for (let y = 2026; y <= 2036; y++) {
+        const opt = document.createElement("option");
+        opt.value = y;
+        opt.textContent = y;
+        if (y === currentYear) opt.selected = true;
+        yearSelect.appendChild(opt);
+      }
+      header.append(title, yearSelect);
+      wrapper.appendChild(header);
+      const cardsContainer = document.createElement("div");
+      const podiumContainer = document.createElement("div");
+      podiumContainer.id = "decir-podium-container";
+      wrapper.appendChild(cardsContainer);
+      wrapper.appendChild(podiumContainer);
+      container.appendChild(wrapper);
+      async function loadAll(year) {
+        const isFirstLoad = cardsContainer.children.length === 0;
+        if (isFirstLoad) {
+          await createDecirAlertStatsCard(cardsContainer, year);
+          await createDecirMealsStatsCard(cardsContainer, year);
+          await createDecirOcorrStatsCard(cardsContainer, year);
+          await createDecirPodiumCard(year);
+        } else {
+          await updateDecirAlertStatsCard(year);
+          await updateDecirMealsStatsCard(year);
+          await updateDecirOcorrStatsCard(year);
+          await updateDecirPodiumCard(year);
+        }
+      }
+      yearSelect.addEventListener("change", () => {
+        loadAll(parseInt(yearSelect.value));
+      });
+      await loadAll(currentYear);
+    }

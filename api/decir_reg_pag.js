@@ -11,7 +11,7 @@
     const TEMPLATE_ANEPC_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/anepc_template.xlsx";
     const TEMPLATE_OCORR_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/reg_ocorr_decir.xlsx";
     const TEMPLATE_REF_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/reg_ref_decir.xlsx";
-    const TEMPLATE_SIGNA_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/000.xlsx";
+    const TEMPLATE_SIGNA_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/signa_decir_template.xlsx";
     const CLIENT_ID = process.env.ADOBE_CLIENT_ID;
     const CLIENT_SECRET = process.env.ADOBE_CLIENT_SECRET;
     export const config = {

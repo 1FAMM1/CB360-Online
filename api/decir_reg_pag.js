@@ -337,12 +337,12 @@ else if (data.type === 'signa') {
     // ── Criar mapa específico BRIGADA ──
     const ecinA_day   = ecin?.day1?.day?.slice(0,5) || [];
     const ecinA_night = ecin?.day1?.night?.slice(0,5) || [];
-    const ecinB_day   = ecin?.day2?.day?.slice(0,5) || [];
-    const ecinB_night = ecin?.day2?.night?.slice(0,5) || [];
+    const ecinB_day   = ecin?.day1?.day?.slice(0,5) || [];
+    const ecinB_night = ecin?.day1?.night?.slice(0,5) || [];
     const elac_day1   = elac?.day1?.day || [];
     const elac_night1 = elac?.day1?.night || [];
-    const elac_day1   = elac?.day2?.day || [];
-    const elac_night1 = elac?.day2?.night || [];
+    const elac_day1   = elac?.day1?.day || [];
+    const elac_night1 = elac?.day1?.night || [];
 
     // ── Preenchimento ECIN A/B
     fillTeam(14, ecinA_day);

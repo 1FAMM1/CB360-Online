@@ -286,69 +286,69 @@
           sheet.pageSetup = {orientation: "portrait", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
                              margins: {left: 0.5, right: 0.5, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3}};}
         // ---------- SIGNA ----------
-else if (data.type === 'signa') {
-  const { date1, date2, year, ecin, elac, mode } = data;
-  if (!date1 || !date2 || !year) return res.status(400).json({error: "Dados incompletos para signa"});
-  const templateUrl = mode === "1_ecin" ? TEMPLATE_SIGNA_ECIN_URL
-    : mode === "brigada" ? TEMPLATE_SIGNA_BRIGADE_URL : TEMPLATE_SIGNA_ECINELAC_URL;
-  const templateBuffer = await downloadTemplate(templateUrl);
-  await workbook.xlsx.load(templateBuffer);
-  sheet = workbook.worksheets[0];
-  const title = `Dispositivo Especial Combate Incêndios Rurais (DECIR ${year})`;
-  const period = `Período: ${formatDate(date1)}  a  ${formatDate(date2)}`;
-  const date1Formatted = formatDate(date1);
-  const date2Formatted = formatDate(date2);
-  const dayShift   = "Turno: 08:00 Horas às 20:00 Horas";
-  const nightShift = "Turno: 20:00 Horas às 08:00 Horas";
-  const fillTeam = (startRow, members) => {
-    if (!Array.isArray(members)) return;
-    members.forEach((member, idx) => {
-      const row = startRow + idx;
-      if (member.n_file)   sheet.getCell(`B${row}`).value = member.n_file;
-      if (member.patent)   sheet.getCell(`D${row}`).value = member.patent;
-      if (member.abv_name) sheet.getCell(`F${row}`).value = member.abv_name;
-    });
-  };
-  const fillTeamFull = (startRow, members) => {
-    if (!Array.isArray(members)) return;
-    members.forEach((member, idx) => {
-      const row = startRow + idx;
-      if (member.n_file) sheet.getCell(`B${row}`).value = member.n_file;
-      if (member.patent) sheet.getCell(`D${row}`).value = member.patent;
-      const fullName = member.full_name || member.abv_name || "";
-      if (fullName) sheet.getCell(`F${row}`).value = fullName;
-    });
-  };
-  if (mode === "1_ecin") {
-    [7, 60].forEach(row => sheet.getCell(`B${row}`).value = title);
-    [9, 62].forEach(row => sheet.getCell(`B${row}`).value = period);
-    [11, 20, 64, 73].forEach(row => sheet.getCell(`B${row}`).value = date1Formatted);
-    [29, 38, 82, 91].forEach(row => sheet.getCell(`B${row}`).value = date2Formatted);
-    [11, 29, 64, 82].forEach(row => sheet.getCell(`F${row}`).value = dayShift);
-    [20, 38, 73, 91].forEach(row => sheet.getCell(`F${row}`).value = nightShift);
-    fillTeam(14, ecin?.day1?.day); fillTeam(23, ecin?.day1?.night);
-    fillTeam(32, ecin?.day2?.day); fillTeam(41, ecin?.day2?.night);
-    fillTeamFull(67, ecin?.day1?.day); fillTeamFull(76, ecin?.day1?.night);
-    fillTeamFull(85, ecin?.day2?.day); fillTeamFull(94, ecin?.day2?.night);
-  } else {
-    [7, 60, 113, 168].forEach(row => sheet.getCell(`B${row}`).value = title);
-    [9, 62, 115, 170].forEach(row => sheet.getCell(`B${row}`).value = period);
-    [11, 20, 64, 73, 117, 123, 172, 178].forEach(row => sheet.getCell(`B${row}`).value = date1Formatted);
-    [29, 38, 82, 91, 129, 135, 184, 190].forEach(row => sheet.getCell(`B${row}`).value = date2Formatted);
-    [11, 29, 64, 82, 117, 129, 172, 184].forEach(row => sheet.getCell(`F${row}`).value = dayShift);
-    [20, 38, 73, 91, 123, 135, 178, 190].forEach(row => sheet.getCell(`F${row}`).value = nightShift);
-    fillTeam(14, ecin?.day1?.day); fillTeam(23, ecin?.day1?.night);
-    fillTeam(32, ecin?.day2?.day); fillTeam(41, ecin?.day2?.night);
-    fillTeam(120, elac?.day1?.day); fillTeam(126, elac?.day1?.night);
-    fillTeam(132, elac?.day2?.day); fillTeam(138, elac?.day2?.night);
-    fillTeamFull(67, ecin?.day1?.day); fillTeamFull(76, ecin?.day1?.night);
-    fillTeamFull(85, ecin?.day2?.day); fillTeamFull(94, ecin?.day2?.night);
-    fillTeamFull(175, elac?.day1?.day); fillTeamFull(181, elac?.day1?.night);
-    fillTeamFull(187, elac?.day2?.day); fillTeamFull(193, elac?.day2?.night);
-  }
-  sheet.pageSetup = {orientation: "portrait", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
-                     margins: {left: 0.5, right: 0.5, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3}};
-}
+        else if (data.type === 'signa') {
+          const { date1, date2, year, ecin, elac, mode } = data;
+          if (!date1 || !date2 || !year) return res.status(400).json({error: "Dados incompletos para signa"});
+          const templateUrl = mode === "1_ecin" ? TEMPLATE_SIGNA_ECIN_URL
+          : mode === "brigada" ? TEMPLATE_SIGNA_BRIGADE_URL : TEMPLATE_SIGNA_ECINELAC_URL;
+          const templateBuffer = await downloadTemplate(templateUrl);
+          await workbook.xlsx.load(templateBuffer);
+          sheet = workbook.worksheets[0];
+          const title = `Dispositivo Especial Combate Incêndios Rurais (DECIR ${year})`;
+          const period = `Período: ${formatDate(date1)}  a  ${formatDate(date2)}`;
+          const date1Formatted = formatDate(date1);
+          const date2Formatted = formatDate(date2);
+          const dayShift   = "Turno: 08:00 Horas às 20:00 Horas";
+          const nightShift = "Turno: 20:00 Horas às 08:00 Horas";
+          const fillTeam = (startRow, members) => {
+            if (!Array.isArray(members)) return;
+            members.forEach((member, idx) => {
+              const row = startRow + idx;
+              if (member.n_file)   sheet.getCell(`B${row}`).value = member.n_file;
+              if (member.patent)   sheet.getCell(`D${row}`).value = member.patent;
+              if (member.abv_name) sheet.getCell(`F${row}`).value = member.abv_name;
+            });
+          };
+          const fillTeamFull = (startRow, members) => {
+            if (!Array.isArray(members)) return;
+            members.forEach((member, idx) => {
+              const row = startRow + idx;
+              if (member.n_file) sheet.getCell(`B${row}`).value = member.n_file;
+              if (member.patent) sheet.getCell(`D${row}`).value = member.patent;
+              const fullName = member.full_name || member.abv_name || "";
+              if (fullName) sheet.getCell(`F${row}`).value = fullName;
+            });
+          };
+          if (mode === "1_ecin") {
+            [7, 60].forEach(row => sheet.getCell(`B${row}`).value = title);
+            [9, 62].forEach(row => sheet.getCell(`B${row}`).value = period);
+            [11, 20, 64, 73].forEach(row => sheet.getCell(`B${row}`).value = date1Formatted);
+            [29, 38, 82, 91].forEach(row => sheet.getCell(`B${row}`).value = date2Formatted);
+            [11, 29, 64, 82].forEach(row => sheet.getCell(`F${row}`).value = dayShift);
+            [20, 38, 73, 91].forEach(row => sheet.getCell(`F${row}`).value = nightShift);
+            fillTeam(14, ecin?.day1?.day); fillTeam(23, ecin?.day1?.night);
+            fillTeam(32, ecin?.day2?.day); fillTeam(41, ecin?.day2?.night);
+            fillTeamFull(67, ecin?.day1?.day); fillTeamFull(76, ecin?.day1?.night);
+            fillTeamFull(85, ecin?.day2?.day); fillTeamFull(94, ecin?.day2?.night);
+          } else {
+            [7, 60, 113, 168].forEach(row => sheet.getCell(`B${row}`).value = title);
+            [9, 62, 115, 170].forEach(row => sheet.getCell(`B${row}`).value = period);
+            [11, 20, 64, 73, 117, 123, 172, 178].forEach(row => sheet.getCell(`B${row}`).value = date1Formatted);
+            [29, 38, 82, 91, 129, 135, 184, 190].forEach(row => sheet.getCell(`B${row}`).value = date2Formatted);
+            [11, 29, 64, 82, 117, 129, 172, 184].forEach(row => sheet.getCell(`F${row}`).value = dayShift);
+            [20, 38, 73, 91, 123, 135, 178, 190].forEach(row => sheet.getCell(`F${row}`).value = nightShift);
+            fillTeam(14, ecin?.day1?.day); fillTeam(23, ecin?.day1?.night);
+            fillTeam(32, ecin?.day2?.day); fillTeam(41, ecin?.day2?.night);
+            fillTeam(120, elac?.day1?.day); fillTeam(126, elac?.day1?.night);
+            fillTeam(132, elac?.day2?.day); fillTeam(138, elac?.day2?.night);
+            fillTeamFull(67, ecin?.day1?.day); fillTeamFull(76, ecin?.day1?.night);
+            fillTeamFull(85, ecin?.day2?.day); fillTeamFull(94, ecin?.day2?.night);
+            fillTeamFull(175, elac?.day1?.day); fillTeamFull(181, elac?.day1?.night);
+            fillTeamFull(187, elac?.day2?.day); fillTeamFull(193, elac?.day2?.night);
+          }
+          sheet.pageSetup = {orientation: "portrait", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
+                             margins: {left: 0.5, right: 0.5, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3}};
+        }
         // ---------- SAVE AND DOWNLOAD ----------
         const safeFileName = data.fileName || "decir";
         if (format === "pdf") {

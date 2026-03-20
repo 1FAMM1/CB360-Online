@@ -139,7 +139,7 @@
       "decir-reg-ref": {tableId: "table-container-dec-ref", optionsId: "decir-ref-options", monthsId: "months-container-dec-ref",
                         generic: {containerId: "months-container-dec-ref", tableContainerId: "table-container-dec-ref", yearSelectId: "year-dec-ref", optionsContainerId: "decir-ref-options",
                         monthNames: DECIR_MONTH_NAMES, blockedMonths: [], loadDataFunc: async (y, m) => m, createTableFunc: (cId, y, m, d) => createDecirMealTable(cId, y, m + 4, d)}},
-      "decir-reg-signa": {init: createDecirSignaTable},
+      "decir-reg-signa": {init: openDecirSignaWithMode},
       "decir-dashboard": {init: createDecirDashboard} 
     };
     /* ─── LOADERS (DECIR) ────────────────────────────────────── */
@@ -1610,7 +1610,8 @@
       const tr = zone.closest("tr");
       if (!tr || !zone.dataset.nint) return null;
       return {nint: parseInt(zone.dataset.nint, 10), n_file: tr.querySelector(".field-nfile").value, patent: tr.querySelector(".field-patent").value, abv_name: tr.querySelector(".field-abvname").value,
-              mp: zone.classList.contains("mp-fill"), valueType: zone.dataset.valueType, shift: zone.dataset.shift, day: zone.dataset.day, section: zone.dataset.section};
+              full_name: zone.dataset.fullname || "", mp: zone.classList.contains("mp-fill"), valueType: zone.dataset.valueType, shift: zone.dataset.shift, day: zone.dataset.day, 
+              section: zone.dataset.section};
     }
     function signaBuildTurnoBlock(title, subTitle, positions, shift, turnoDay, section, makePositionRowFn) {
       const block = document.createElement("div");
@@ -1638,7 +1639,53 @@
       return block;
     }
     /* ─── EMISSÃO FORMULÁRIOS ANEPC (DECIR) ─────────────────── */
-    function createDecirSignaTable() {
+    async function openDecirSignaWithMode() {
+      const corp = getCorpId();
+      let mode = null;
+      try {
+        const data = await supabaseFetch(`decir_mode?corp_oper_nr=eq.${corp}&select=mode`);
+        if (data?.length && data[0].mode) mode = data[0].mode;
+      } catch(err) {
+        console.error("Erro ao ler decir_mode:", err);
+      }
+      if (mode) return createDecirSignaTable(mode);
+      showDecirModeModal(async (chosen) => {
+        try {
+          await fetch(`${SUPABASE_URL}/rest/v1/decir_mode?corp_oper_nr=eq.${corp}`, {
+            method: "DELETE", headers: getSupabaseHeaders()
+          });
+          await fetch(`${SUPABASE_URL}/rest/v1/decir_mode`, {
+            method: "POST",
+            headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
+            body: JSON.stringify({corp_oper_nr: corp, mode: chosen})
+          });
+        } catch(err) {
+          console.error("Erro ao guardar decir_mode:", err);
+        }
+        createDecirSignaTable(chosen);
+      });
+    }
+    function showDecirModeModal(onConfirm) {
+      document.getElementById("decir-mode-modal")?.remove();
+      const overlay = document.createElement("div");
+      overlay.id = "decir-mode-modal";
+      overlay.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;`;
+      overlay.innerHTML = `
+        <div style="background:#fff;border-radius:8px;padding:28px 32px;min-width:360px;box-shadow:0 8px 32px rgba(0,0,0,0.25);text-align:center;">
+          <div style="font-size:15px;font-weight:bold;color:#131a69;margin-bottom:6px;">CONFIGURAÇÃO DE ASSINATURAS</div>
+          <div style="font-size:12px;color:#666;margin-bottom:20px;">Selecione o modo de operação.</div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <button data-mode="1_ecin" style="padding:12px;background:#131a69;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:bold;cursor:pointer;">🚒 1 ECIN</button>
+            <button data-mode="1_ecin_1_elac" style="padding:12px;background:#1e6f2e;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:bold;cursor:pointer;">🚒🚑 1 ECIN e 1 ELAC</button>
+            <button data-mode="brigada" style="padding:12px;background:#7b1fa2;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:bold;cursor:pointer;">🚒🚒🚑 BRIGADA (2 ECIN's e 1 ELAC)</button>
+          </div>
+        </div>`;
+      overlay.querySelectorAll("button[data-mode]").forEach(btn => {
+        btn.addEventListener("click", () => { overlay.remove(); onConfirm(btn.dataset.mode); });
+      });
+      document.body.appendChild(overlay);
+    }
+    function createDecirSignaTable(mode = "1_ecin_1_elac") {
       const container = document.querySelector("#decir-reg-signa .card-body");
       if (!container) return;
       container.innerHTML = "";
@@ -1660,10 +1707,10 @@
         .signa-shift-header {background: #1e2a80; color: #fff; font-size: 11px; font-weight: bold; padding: 4px 8px; text-align: center;}
         .signa-shift-subheader {background: #f0f0f0; font-size: 10px; font-weight: bold; padding: 2px 6px; color: #333; border-bottom: 1px solid #ddd; text-align: center;}
         .signa-inner-table {width: 100%; border-collapse: collapse; font-size: 11px;}
-        .signa-inner-table thead th {background: #2a3580; color: #fff; padding: 3px 5px; text-align: center; font-size: 10px; font-weight: bold; border: 1px solid #1e2a80; white-space: nowrap;}
+        .signa-inner-table thead th {background: #2a3580; color: #fff; padding: 3px 5px; text-align: center; font-size: 10px; font-weight: bold; border: 1px solid #3a4fb0; white-space: nowrap;}
         .signa-inner-table tbody tr {border-bottom: 1px solid #eee;}
         .signa-inner-table tbody tr:hover {background: #f8f9ff;}
-        .signa-inner-table tbody td {padding: 2px 4px; border: 1px solid #eee; text-align: center; font-size: 11px; height: 26px; vertical-align: middle;}
+        .signa-inner-table tbody td {padding: 2px 4px; border: 1px solid #ccc; text-align: center; font-size: 11px; height: 26px; vertical-align: middle;}
         .signa-pos-label {font-weight: bold; color: #555; background: #f5f5f5; white-space: nowrap; width: 32px;}
         .signa-drop-cell {min-width: 40px; width: 40px;}
         .signa-drop-zone {min-height: 22px; border: 1px dashed #ccc; border-radius: 2px; padding: 1px 4px; background: #fafafa; display: flex; align-items: center; justify-content: center; 
@@ -1687,6 +1734,7 @@
         .signa-cat {color: #555; min-width: 28px; font-size: 10px;}
         .signa-name {font-weight: bold; color: #222; flex: 1;}
         .signa-mp-badge {font-size: 9px; background: #f0a500; color: #fff; border-radius: 2px; padding: 1px 3px; font-weight: bold; flex-shrink: 0;}
+        .mode-highlight {color: #c62828; font-weight: bold; font-size: 15px;}
       `;
       document.head.appendChild(style);
       const dateRow = document.createElement("div");
@@ -1700,6 +1748,33 @@
       const formatBtn = document.createElement("button");
       formatBtn.className = "signa-format-btn"; formatBtn.textContent = "⚡ Formatar Equipas";
       dateRow.append(lbl1, inp1, lbl2, inp2, loadBtn, formatBtn);
+      const modeSpacer = document.createElement("div");
+      modeSpacer.style.cssText = "flex:1;";
+      const modeLabel = document.createElement("span");
+      const modeNames = {"1_ecin": "1 ECIN", "1_ecin_1_elac": "1 ECIN + 1 ELAC", "brigada": "BRIGADA"};
+      modeLabel.style.cssText = "font-size:12px;color:#555;font-weight:bold;";
+      modeLabel.innerHTML = `Modo de Operação: <span class="mode-highlight">${modeNames[mode] || mode}</span>`;
+      const modeBtn = document.createElement("button");
+      modeBtn.textContent = "✏️ Modificar";
+      modeBtn.style.cssText = "padding:7px 16px;background:#b71c1c;color:#fff;border:none;border-radius:4px;font-weight:bold;font-size:13px;cursor:pointer;";
+      modeBtn.addEventListener("click", async () => {
+        showDecirModeModal(async (chosen) => {
+          try {
+            await fetch(`${SUPABASE_URL}/rest/v1/decir_mode?corp_oper_nr=eq.${getCorpId()}`, {
+              method: "DELETE", headers: getSupabaseHeaders()
+            });
+            await fetch(`${SUPABASE_URL}/rest/v1/decir_mode`, {
+              method: "POST",
+              headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
+              body: JSON.stringify({corp_oper_nr: getCorpId(), mode: chosen})
+            });
+          } catch(err) {
+            console.error("Erro ao guardar decir_mode:", err);
+          }
+          createDecirSignaTable(chosen);
+        });
+      });
+      dateRow.append(modeSpacer, modeLabel, modeBtn);
       container.appendChild(dateRow);
       const wrapper = document.createElement("div");
       wrapper.className = "signa-wrapper";
@@ -1843,38 +1918,78 @@
         tbody.appendChild(tr);
         return zone;
       }
-      function buildSignaTables() {        
+      function buildSignaTables() {
         tablesDiv.innerHTML = "";
         const date1 = inp1.value ? new Date(inp1.value).toLocaleDateString("pt-PT") : "";
         const date2 = inp2.value ? new Date(inp2.value).toLocaleDateString("pt-PT") : "";
+        // ── ECIN ──
         const ecinTitle = document.createElement("div");
         ecinTitle.className = "signa-section-title";
         ecinTitle.textContent = "ECIN";
         ecinTitle.style.textAlign = "center";
         tablesDiv.appendChild(ecinTitle);
-        const ecinGrid = document.createElement("div");
-        ecinGrid.className = "signa-shift-grid";
-        ecinGrid.append(
-          signaBuildTurnoBlock(`${date1} | DIA`, `☀️ 08:00 → 20:00`, ["CE","MO","Elem.1","Elem.2","Elem.3"], "day",   "1", "ecin", makePositionRow),
-          signaBuildTurnoBlock(`${date1} | NOITE`, `🌙 20:00 → 08:00`, ["CE","MO","Elem.1","Elem.2","Elem.3"], "night", "1", "ecin", makePositionRow),
-          signaBuildTurnoBlock(`${date2} | DIA`, `☀️ 08:00 → 20:00`, ["CE","MO","Elem.1","Elem.2","Elem.3"], "day",   "2", "ecin", makePositionRow),
-          signaBuildTurnoBlock(`${date2} | NOITE`, `🌙 20:00 → 08:00`, ["CE","MO","Elem.1","Elem.2","Elem.3"], "night", "2", "ecin", makePositionRow)
-        );
-        tablesDiv.appendChild(ecinGrid);
-        const elacTitle = document.createElement("div");
-        elacTitle.className = "signa-section-title";
-        elacTitle.textContent = "ELAC";
-        elacTitle.style.textAlign = "center";
-        tablesDiv.appendChild(elacTitle);
-        const elacGrid = document.createElement("div");
-        elacGrid.className = "signa-shift-grid";
-        elacGrid.append(
-          signaBuildTurnoBlock(`${date1} | DIA`, `☀️ 08:00 → 20:00`, ["CE","MO"], "day",   "1", "elac", makePositionRow),
-          signaBuildTurnoBlock(`${date1} | NOITE`, `🌙 20:00 → 08:00`, ["CE","MO"], "night", "1", "elac", makePositionRow),
-          signaBuildTurnoBlock(`${date2} | DIA`, `☀️ 08:00 → 20:00`, ["CE","MO"], "day",   "2", "elac", makePositionRow),
-          signaBuildTurnoBlock(`${date2} | NOITE`, `🌙 20:00 → 08:00`, ["CE","MO"], "night", "2", "elac", makePositionRow)
-        );
-        tablesDiv.appendChild(elacGrid);
+        if (mode === "brigada") {
+          // ── Equipa 01 ──
+          const eq1Title = document.createElement("div");
+          eq1Title.className = "signa-section-title";
+          eq1Title.textContent = "EQUIPA 01";
+          eq1Title.style.cssText = "text-align:center;background:#1e6f2e;margin-top:4px;";
+          tablesDiv.appendChild(eq1Title);
+          const eq1Grid = document.createElement("div");
+          eq1Grid.className = "signa-shift-grid";
+          eq1Grid.append(
+            signaBuildTurnoBlock(`${date1} | DIA`, `☀️ 08:00 → 20:00`, ["CE","MO","Elem.1","Elem.2","Elem.3"], "day", "1", "ecin", makePositionRow),
+            signaBuildTurnoBlock(`${date1} | NOITE`, `🌙 20:00 → 08:00`, ["CE","MO","Elem.1","Elem.2","Elem.3"], "night", "1", "ecin", makePositionRow)
+          );
+          tablesDiv.appendChild(eq1Grid);
+          // ── Equipa 02 ──
+          const eq2Title = document.createElement("div");
+          eq2Title.className = "signa-section-title";
+          eq2Title.textContent = "EQUIPA 02";
+          eq2Title.style.cssText = "text-align:center;background:#1e6f2e;margin-top:4px;";
+          tablesDiv.appendChild(eq2Title);
+          const eq2Grid = document.createElement("div");
+          eq2Grid.className = "signa-shift-grid";
+          eq2Grid.append(
+            signaBuildTurnoBlock(`${date1} | DIA`, `☀️ 08:00 → 20:00`, ["CE","MO","Elem.1","Elem.2","Elem.3"], "day", "2", "ecin", makePositionRow),
+            signaBuildTurnoBlock(`${date1} | NOITE`, `🌙 20:00 → 08:00`, ["CE","MO","Elem.1","Elem.2","Elem.3"], "night", "2", "ecin", makePositionRow)
+          );
+          tablesDiv.appendChild(eq2Grid);
+        } else {
+          const ecinGrid = document.createElement("div");
+          ecinGrid.className = "signa-shift-grid";
+          ecinGrid.append(
+            signaBuildTurnoBlock(`${date1} | DIA`, `☀️ 08:00 → 20:00`, ["CE","MO","Elem.1","Elem.2","Elem.3"], "day", "1", "ecin", makePositionRow),
+            signaBuildTurnoBlock(`${date1} | NOITE`, `🌙 20:00 → 08:00`, ["CE","MO","Elem.1","Elem.2","Elem.3"], "night", "1", "ecin", makePositionRow),
+            signaBuildTurnoBlock(`${date2} | DIA`, `☀️ 08:00 → 20:00`, ["CE","MO","Elem.1","Elem.2","Elem.3"], "day", "2", "ecin", makePositionRow),
+            signaBuildTurnoBlock(`${date2} | NOITE`, `🌙 20:00 → 08:00`, ["CE","MO","Elem.1","Elem.2","Elem.3"], "night", "2", "ecin", makePositionRow)
+          );
+          tablesDiv.appendChild(ecinGrid);
+        }
+        // ── ELAC (só modos 1_ecin_1_elac e brigada) ──
+        if (mode === "1_ecin_1_elac" || mode === "brigada") {
+          const elacTitle = document.createElement("div");
+          elacTitle.className = "signa-section-title";
+          elacTitle.textContent = "ELAC";
+          elacTitle.style.textAlign = "center";
+          tablesDiv.appendChild(elacTitle);
+          const elacGrid = document.createElement("div");
+          elacGrid.className = "signa-shift-grid";
+          if (mode === "brigada") {
+            elacGrid.append(
+              signaBuildTurnoBlock(`${date1} | DIA`, `☀️ 08:00 → 20:00`, ["CE","MO"], "day", "1", "elac", makePositionRow),
+              signaBuildTurnoBlock(`${date1} | NOITE`, `🌙 20:00 → 08:00`, ["CE","MO"], "night", "1", "elac", makePositionRow)
+            );
+          } else {
+            elacGrid.append(
+              signaBuildTurnoBlock(`${date1} | DIA`, `☀️ 08:00 → 20:00`, ["CE","MO"], "day", "1", "elac", makePositionRow),
+              signaBuildTurnoBlock(`${date1} | NOITE`, `🌙 20:00 → 08:00`, ["CE","MO"], "night", "1", "elac", makePositionRow),
+              signaBuildTurnoBlock(`${date2} | DIA`, `☀️ 08:00 → 20:00`, ["CE","MO"], "day", "2", "elac", makePositionRow),
+              signaBuildTurnoBlock(`${date2} | NOITE`, `🌙 20:00 → 08:00`, ["CE","MO"], "night", "2", "elac", makePositionRow)
+            );
+          }
+          tablesDiv.appendChild(elacGrid);
+        }
       }
       buildSignaTables();
       function makeSidebarItem(elem, valueType, day) {
@@ -1948,36 +2063,85 @@
             updateSidebarItem(assigned[i].nint, assigned[i].valueType, assigned[i].day);
           });
         };
+        // ── Modo BRIGADA — tratado fora do forEach ──
+        if (mode === "brigada") {
+          ["day","night"].forEach(shift => {
+            const all = getAllForShift("1", shift);
+            if (!all.length) return;
+            if (all.length < 8) {
+              showPopupWarning(`⛔ Elementos insuficientes para modo Brigada (mínimo 8, disponíveis ${all.length}).`);
+              return;
+            }
+            let ecinACount, ecinBCount, elacCount;
+            if (all.length >= 12) {ecinACount = 5; ecinBCount = 5; elacCount = 2;}
+            else if (all.length === 11) {ecinACount = 5; ecinBCount = 5; elacCount = 1;}
+            else if (all.length === 10) {ecinACount = 5; ecinBCount = 4; elacCount = 1;}
+            else if (all.length === 9) {ecinACount = 4; ecinBCount = 4; elacCount = 1;}
+            else {ecinACount = 4; ecinBCount = 4; elacCount = 0;}
+            const mpCopy = [...all.filter(i => i.mp)];
+            const nonMpCopy = [...all.filter(i => !i.mp)];
+            const elacItems = [];
+            if (elacCount > 0) {
+              elacItems.push(mpCopy.pop());
+              if (elacCount === 2 && nonMpCopy.length > 0) elacItems.unshift(nonMpCopy.pop());
+              else if (elacCount === 2) elacItems.unshift(mpCopy.pop());
+            }
+            const remaining = [...nonMpCopy, ...mpCopy].sort((a,b) => a.nint - b.nint);
+            const ecinBMP = remaining.find(i => i.mp);
+            const remainingAfterBMP = remaining.filter(i => i !== ecinBMP);
+            const ecinBItems = ecinBMP ? [ecinBMP, ...remainingAfterBMP.splice(0, ecinBCount - 1)] : remainingAfterBMP.splice(0, ecinBCount);
+            const ecinAItems = remainingAfterBMP.slice(0, ecinACount);
+            distributeToZones(ecinAItems, "1", shift, "ecin");
+            distributeToZones(ecinBItems, "2", shift, "ecin");
+            if (elacCount > 0) {
+              const elacZones = Array.from(container.querySelectorAll(
+                `.signa-drop-zone[data-day="1"][data-shift="${shift}"][data-section="elac"]`
+              ));
+              elacZones.forEach((zone, i) => {
+                if (!elacItems[i]) return;
+                if (zone.dataset.nint) signaClearRow(zone);
+                signaFillZone(zone, elacItems[i]);
+                updateSidebarItem(elacItems[i].nint, elacItems[i].valueType, elacItems[i].day);
+              });
+            }
+          });
+        }
+        // ── Modos 1_ecin e 1_ecin_1_elac ──
         ["1","2"].forEach(day => {
           ["day","night"].forEach(shift => {
             const all = getAllForShift(day, shift);
             if (!all.length) return;
             const mpItems = all.filter(i => i.mp);
             const nonMpItems = all.filter(i => !i.mp);
-            let elacMP = null, elacCE = null;
-            if (mpItems.length >= 2) {
-              elacMP = mpItems[mpItems.length - 1];
-              elacCE = nonMpItems.length > 0 ? nonMpItems[nonMpItems.length - 1] : mpItems[mpItems.length - 2];
-            } else if (mpItems.length === 1) {
-              elacMP = mpItems[0];
-              elacCE = nonMpItems.length > 0 ? nonMpItems[nonMpItems.length - 1] : null;
-            } else {
-              elacCE = all.length > 1 ? all[all.length - 2] : null;
-              elacMP = all[all.length - 1];
+            if (mode === "1_ecin") {
+              distributeToZones(all, day, shift, "ecin");
+              return;
             }
-            const elacNints = new Set([elacMP?.nint, elacCE?.nint].filter(Boolean));
-            const ecinItems = all.filter(i => !elacNints.has(i.nint));
-            const elacAssigned = [elacCE || null, elacMP || null];
-            const elacZones = Array.from(container.querySelectorAll(
-              `.signa-drop-zone[data-day="${day}"][data-shift="${shift}"][data-section="elac"]`
-            ));
-            elacZones.forEach((zone, i) => {
-              if (!elacAssigned[i]) return;
-              if (zone.dataset.nint) signaClearRow(zone);
-              signaFillZone(zone, elacAssigned[i]);
-              updateSidebarItem(elacAssigned[i].nint, elacAssigned[i].valueType, elacAssigned[i].day);
-            });
-            distributeToZones(ecinItems, day, shift, "ecin");
+            if (mode === "1_ecin_1_elac") {
+              if (all.length <= 4 || mpItems.length < 1) {
+                distributeToZones(all, day, shift, "ecin");
+                return;
+              }
+              const elacMP = mpItems[mpItems.length - 1];
+              let elacCE = null;
+              if (all.length >= 7) {
+                elacCE = nonMpItems.length > 0 ? nonMpItems[nonMpItems.length - 1] : mpItems.length >= 2 ? mpItems[mpItems.length - 2] : null;
+              }
+              const elacNints = new Set([elacMP?.nint, elacCE?.nint].filter(Boolean));
+              const ecinItems = all.filter(i => !elacNints.has(i.nint)).slice(0, 5);
+              const elacAssigned = [elacCE || null, elacMP || null];
+              const elacZones = Array.from(container.querySelectorAll(
+                `.signa-drop-zone[data-day="${day}"][data-shift="${shift}"][data-section="elac"]`
+              ));
+              elacZones.forEach((zone, i) => {
+                if (!elacAssigned[i]) return;
+                if (zone.dataset.nint) signaClearRow(zone);
+                signaFillZone(zone, elacAssigned[i]);
+                updateSidebarItem(elacAssigned[i].nint, elacAssigned[i].valueType, elacAssigned[i].day);
+              });
+              distributeToZones(ecinItems, day, shift, "ecin");
+              return;
+            }
           });
         });
       });
@@ -2075,9 +2239,17 @@
           return {nint: zone.dataset.nint || "", n_file: tr?.querySelector(".field-nfile")?.value || "", patent: tr?.querySelector(".field-patent")?.value || "",
                   abv_name: tr?.querySelector(".field-abvname")?.value || "", full_name: zone.dataset.fullname || ""};});};
       try {
-        const payload = {type: "signa", date1: inp1.value, date2: inp2.value, year: inp1.value.split("-")[0], fileName: "SIGNA_DECIR", format,
+        const payload = {type: "signa", date1: inp1.value, date2: inp2.value, year: inp1.value.split("-")[0], fileName: "ASSINATURAS_DECIR", format,
+                         mode: document.querySelector("#decir-reg-signa .mode-highlight")?.textContent === "1 ECIN" ? "1_ecin"
+                             : document.querySelector("#decir-reg-signa .mode-highlight")?.textContent === "BRIGADA" ? "brigada" : "1_ecin_1_elac",
                          ecin: {day1: {day: getTeamData("1","day","ecin"), night: getTeamData("1","night","ecin")}, day2: {day: getTeamData("2","day","ecin"), night: getTeamData("2","night","ecin")}},
                          elac: {day1: {day: getTeamData("1","day","elac"), night: getTeamData("1","night","elac")}, day2: {day: getTeamData("2","day","elac"), night: getTeamData("2","night","elac")}}};
+        console.log("PAYLOAD BRIGADA:", JSON.stringify({
+  ecinA_day:   payload.ecin.day1.day,
+  ecinA_night: payload.ecin.day1.night,
+  ecinB_day:   payload.ecin.day2.day,
+  ecinB_night: payload.ecin.day2.night,
+}, null, 2));
         const res = await fetch("https://cb360-online.vercel.app/api/decir_reg_pag", {
           method: "POST",
           headers: {"Content-Type": "application/json"},
@@ -2088,7 +2260,7 @@
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `SIGNA_DECIR.${format}`;
+        a.download = `ASSINATURAS_DECIR.${format}`;
         document.body.appendChild(a); a.click(); a.remove();
         window.URL.revokeObjectURL(url);
       } catch(err) {

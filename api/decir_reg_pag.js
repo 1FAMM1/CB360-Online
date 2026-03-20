@@ -337,12 +337,12 @@ else if (data.type === 'signa') {
     // ── Criar mapa específico BRIGADA ──
     const ecinA_day   = ecin?.day1?.day?.slice(0,5) || [];
     const ecinA_night = ecin?.day1?.night?.slice(0,5) || [];
-    const ecinB_day   = ecin?.day1?.day?.slice(0,5) || [];
-    const ecinB_night = ecin?.day1?.night?.slice(0,5) || [];
+    const ecinB_day   = ecin?.day2?.day?.slice(0,5) || [];
+    const ecinB_night = ecin?.day2?.night?.slice(0,5) || [];
     const elac_day1   = elac?.day1?.day || [];
     const elac_night1 = elac?.day1?.night || [];
-    const elac_day1   = elac?.day1?.day || [];
-    const elac_night1 = elac?.day1?.night || [];
+    const elac_day2   = elac?.day2?.day || [];
+    const elac_night2 = elac?.day2?.night || [];
 
     // ── Preenchimento ECIN A/B
     fillTeam(14, ecinA_day);
@@ -353,8 +353,8 @@ else if (data.type === 'signa') {
     // ── Preenchimento ELAC
     fillTeam(120, elac_day1);
     fillTeam(126, elac_night1);
-    fillTeam(132, elac_day1);
-    fillTeam(138, elac_night1);
+    fillTeam(132, elac_day2);
+    fillTeam(138, elac_night2);
 
     // ── Preenchimento full names
     fillTeamFull(67, ecinA_day);
@@ -363,8 +363,8 @@ else if (data.type === 'signa') {
     fillTeamFull(94, ecinB_night);
     fillTeamFull(175, elac_day1);
     fillTeamFull(181, elac_night1);
-    fillTeamFull(187, elac_day1);
-    fillTeamFull(193, elac_night1);
+    fillTeamFull(187, elac_day2);
+    fillTeamFull(193, elac_night2);
 
   } else if (mode === "1_ecin") {
     [7, 60].forEach(row => sheet.getCell(`B${row}`).value = title);
@@ -377,6 +377,7 @@ else if (data.type === 'signa') {
             fillTeam(32, ecin?.day2?.day); fillTeam(41, ecin?.day2?.night);
             fillTeamFull(67, ecin?.day1?.day); fillTeamFull(76, ecin?.day1?.night);
             fillTeamFull(85, ecin?.day2?.day); fillTeamFull(94, ecin?.day2?.night);
+
   } else {
     [7, 60, 113, 168].forEach(row => sheet.getCell(`B${row}`).value = title);
             [9, 62, 115, 170].forEach(row => sheet.getCell(`B${row}`).value = period);

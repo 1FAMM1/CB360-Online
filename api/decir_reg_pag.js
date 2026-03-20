@@ -327,9 +327,9 @@ else if (data.type === 'signa') {
 
   if (mode === "brigada") {
     // Cabeçalhos
-    [7, 60, 113, 168].forEach(row => sheet.getCell(`B${row}`).value = title);
-    [9, 62, 115, 170].forEach(row => sheet.getCell(`B${row}`).value = period);
-    [11, 20, 64, 73, 117, 123, 172, 178].forEach(row => sheet.getCell(`B${row}`).value = date1Formatted);
+    [7, 60, 113, 167].forEach(row => sheet.getCell(`B${row}`).value = title);
+    [9, 62, 115, 169].forEach(row => sheet.getCell(`B${row}`).value = period);
+    [11, 20, 64, 73, 117, 123, 171, 178].forEach(row => sheet.getCell(`B${row}`).value = date1Formatted);
     [29, 38, 82, 91, 184, 190].forEach(row => sheet.getCell(`B${row}`).value = date2Formatted);
     [11, 29, 64, 82, 117, 172, 184].forEach(row => sheet.getCell(`F${row}`).value = dayShift);
     [20, 38, 73, 91, 123, 178, 190].forEach(row => sheet.getCell(`F${row}`).value = nightShift);

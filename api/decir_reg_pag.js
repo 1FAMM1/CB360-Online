@@ -367,9 +367,31 @@ else if (data.type === 'signa') {
     fillTeamFull(193, elac_night2);
 
   } else if (mode === "1_ecin") {
-    // Preenchimento modo 1_ecin...
+    [7, 60].forEach(row => sheet.getCell(`B${row}`).value = title);
+            [9, 62].forEach(row => sheet.getCell(`B${row}`).value = period);
+            [11, 20, 64, 73].forEach(row => sheet.getCell(`B${row}`).value = date1Formatted);
+            [29, 38, 82, 91].forEach(row => sheet.getCell(`B${row}`).value = date2Formatted);
+            [11, 29, 64, 82].forEach(row => sheet.getCell(`F${row}`).value = dayShift);
+            [20, 38, 73, 91].forEach(row => sheet.getCell(`F${row}`).value = nightShift);
+            fillTeam(14, ecin?.day1?.day); fillTeam(23, ecin?.day1?.night);
+            fillTeam(32, ecin?.day2?.day); fillTeam(41, ecin?.day2?.night);
+            fillTeamFull(67, ecin?.day1?.day); fillTeamFull(76, ecin?.day1?.night);
+            fillTeamFull(85, ecin?.day2?.day); fillTeamFull(94, ecin?.day2?.night);
   } else {
-    // Preenchimento modo 1_ecin_1_elac...
+    [7, 60, 113, 168].forEach(row => sheet.getCell(`B${row}`).value = title);
+            [9, 62, 115, 170].forEach(row => sheet.getCell(`B${row}`).value = period);
+            [11, 20, 64, 73, 117, 123, 172, 178].forEach(row => sheet.getCell(`B${row}`).value = date1Formatted);
+            [29, 38, 82, 91, 129, 135, 184, 190].forEach(row => sheet.getCell(`B${row}`).value = date2Formatted);
+            [11, 29, 64, 82, 117, 129, 172, 184].forEach(row => sheet.getCell(`F${row}`).value = dayShift);
+            [20, 38, 73, 91, 123, 135, 178, 190].forEach(row => sheet.getCell(`F${row}`).value = nightShift);
+            fillTeam(14, ecin?.day1?.day); fillTeam(23, ecin?.day1?.night);
+            fillTeam(32, ecin?.day2?.day); fillTeam(41, ecin?.day2?.night);
+            fillTeam(120, elac?.day1?.day); fillTeam(126, elac?.day1?.night);
+            fillTeam(132, elac?.day2?.day); fillTeam(138, elac?.day2?.night);
+            fillTeamFull(67, ecin?.day1?.day); fillTeamFull(76, ecin?.day1?.night);
+            fillTeamFull(85, ecin?.day2?.day); fillTeamFull(94, ecin?.day2?.night);
+            fillTeamFull(175, elac?.day1?.day); fillTeamFull(181, elac?.day1?.night);
+            fillTeamFull(187, elac?.day2?.day); fillTeamFull(193, elac?.day2?.night);
   }
 
   sheet.pageSetup = {

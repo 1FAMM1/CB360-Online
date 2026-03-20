@@ -330,9 +330,9 @@ else if (data.type === 'signa') {
     [7, 60, 113, 168].forEach(row => sheet.getCell(`B${row}`).value = title);
     [9, 62, 115, 170].forEach(row => sheet.getCell(`B${row}`).value = period);
     [11, 20, 64, 73, 117, 123, 172, 178].forEach(row => sheet.getCell(`B${row}`).value = date1Formatted);
-    [29, 38, 82, 91, 129, 135, 184, 190].forEach(row => sheet.getCell(`B${row}`).value = date2Formatted);
-    [11, 29, 64, 82, 117, 129, 172, 184].forEach(row => sheet.getCell(`F${row}`).value = dayShift);
-    [20, 38, 73, 91, 123, 135, 178, 190].forEach(row => sheet.getCell(`F${row}`).value = nightShift);
+    [29, 38, 82, 91, 184, 190].forEach(row => sheet.getCell(`B${row}`).value = date2Formatted);
+    [11, 29, 64, 82, 117, 172, 184].forEach(row => sheet.getCell(`F${row}`).value = dayShift);
+    [20, 38, 73, 91, 123, 178, 190].forEach(row => sheet.getCell(`F${row}`).value = nightShift);
 
     // ── Criar mapa específico BRIGADA ──
     const ecinA_day   = ecin?.day1?.day?.slice(0,5) || [];

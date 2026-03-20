@@ -11,7 +11,9 @@
     const TEMPLATE_ANEPC_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/anepc_template.xlsx";
     const TEMPLATE_OCORR_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/reg_ocorr_decir.xlsx";
     const TEMPLATE_REF_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/reg_ref_decir.xlsx";
-    const TEMPLATE_SIGNA_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/signa_decir_template.xlsx";
+    const TEMPLATE_SIGNA_ECIN_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/signa_decir_ecin_template.xlsx";
+    const TEMPLATE_SIGNA_ECINELAC_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/signa_decir_ecinelac_template.xlsx";
+    const TEMPLATE_SIGNA_BRIGADE_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/signa_decir_brigade_template.xlsx";
     const CLIENT_ID = process.env.ADOBE_CLIENT_ID;
     const CLIENT_SECRET = process.env.ADOBE_CLIENT_SECRET;
     export const config = {
@@ -285,9 +287,11 @@
                              margins: {left: 0.5, right: 0.5, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3}};}
         // ---------- SIGNA ----------
         else if (data.type === 'signa') {
-          const { date1, date2, year, ecin, elac } = data;
+          const { date1, date2, year, ecin, elac, mode } = data;
           if (!date1 || !date2 || !year) return res.status(400).json({error: "Dados incompletos para signa"});
-          const templateBuffer = await downloadTemplate(TEMPLATE_SIGNA_URL);
+          const templateUrl = mode === "1_ecin" ? TEMPLATE_SIGNA_ECIN_URL
+            : mode === "brigada" ? TEMPLATE_SIGNA_BRIGADE_URL : TEMPLATE_SIGNA_ECINELAC_URL;
+          const templateBuffer = await downloadTemplate(templateUrl);
           await workbook.xlsx.load(templateBuffer);
           sheet = workbook.worksheets[0];
           const title = `Dispositivo Especial Combate Incêndios Rurais (DECIR ${year})`;
@@ -296,12 +300,12 @@
           const date2Formatted = formatDate(date2);
           const dayShift   = "Turno: 08:00 Horas às 20:00 Horas";
           const nightShift = "Turno: 20:00 Horas às 08:00 Horas";
-          [7, 60, 113, 167].forEach(row => sheet.getCell(`B${row}`).value = title);
-          [9, 62, 115, 169].forEach(row => sheet.getCell(`B${row}`).value = period);
-          [11, 20, 64, 73, 117, 123, 171, 177].forEach(row => sheet.getCell(`B${row}`).value = date1Formatted);
-          [29, 38, 82, 91, 129, 135, 183, 189].forEach(row => sheet.getCell(`B${row}`).value = date2Formatted);
-          [11, 29, 64, 82, 117, 129, 171, 183].forEach(row => sheet.getCell(`F${row}`).value = dayShift);
-          [20, 38, 73, 91, 123, 135, 177, 189].forEach(row => sheet.getCell(`F${row}`).value = nightShift);
+            [7, 60, 113, 167].forEach(row => sheet.getCell(`B${row}`).value = title);
+            [9, 62, 115, 169].forEach(row => sheet.getCell(`B${row}`).value = period);
+            [11, 20, 64, 73, 117, 123, 171, 177].forEach(row => sheet.getCell(`B${row}`).value = date1Formatted);
+            [29, 38, 82, 91, 129, 135, 183, 189].forEach(row => sheet.getCell(`B${row}`).value = date2Formatted);
+            [11, 29, 64, 82, 117, 129, 171, 183].forEach(row => sheet.getCell(`F${row}`).value = dayShift);
+            [20, 38, 73, 91, 123, 135, 177, 189].forEach(row => sheet.getCell(`F${row}`).value = nightShift);
           const fillTeam = (startRow, members) => {
             if (!Array.isArray(members)) return;
             members.forEach((member, idx) => {
@@ -321,7 +325,7 @@
               if (fullName) sheet.getCell(`F${row}`).value = fullName;
             });
           };
-          fillTeam(14, ecin?.day1?.day); fillTeam(23, ecin?.day1?.night); fillTeam(32, ecin?.day2?.day); fillTeam(41, ecin?.day2?.night); fillTeam(120, elac?.day1?.day);   
+          fillTeam(14, ecin?.day1?.day); fillTeam(23, ecin?.day1?.night); fillTeam(32, ecin?.day2?.day); fillTeam(41, ecin?.day2?.night); fillTeam(120, elac?.day1?.day);
           fillTeam(126, elac?.day1?.night); fillTeam(132, elac?.day2?.day); fillTeam(138, elac?.day2?.night); fillTeamFull(67, ecin?.day1?.day); fillTeamFull(76, ecin?.day1?.night);
           fillTeamFull(85, ecin?.day2?.day); fillTeamFull(94, ecin?.day2?.night); fillTeamFull(174, elac?.day1?.day); fillTeamFull(180, elac?.day1?.night); fillTeamFull(186, elac?.day2?.day);
           fillTeamFull(192, elac?.day2?.night);

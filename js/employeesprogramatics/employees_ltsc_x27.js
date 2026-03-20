@@ -1551,9 +1551,12 @@
     }
     async function loadExtraHours(year, month) {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const monthStart = `${year}-${String(month).padStart(2, "0")}-01`;
+        const lastDay = new Date(year, month, 0).getDate();
+        const monthEnd = `${year}-${String(month).padStart(2, "0")}-${lastDay}`;
         const [empRes, hoursRes] = await Promise.all([
-          fetch(`${SUPABASE_URL}/rest/v1/reg_employees?select=n_int,abv_name&corp_oper_nr=eq.${corpOperNr}`, {
+          fetch(`${SUPABASE_URL}/rest/v1/reg_employees?select=n_int,abv_name&corp_oper_nr=eq.${corpOperNr}&function=not.in.(COM,SEC)&or=(exit_date.is.null,exit_date.gte.${monthStart})`, {
             headers: getSupabaseHeaders()
           }),
           fetch(`${SUPABASE_URL}/rest/v1/reg_employees_extra_hours?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`, {
@@ -1577,9 +1580,10 @@
         return {employees: []};
       }
     }    
-    document.getElementById("employees-extra-save-btn")?.addEventListener("click", saveExtraHours);   
-    /*FASE 03*/
-    /* ================================ CREATE EMPLOYEE GENERAL DATA =============================== */
+    document.getElementById("employees-extra-save-btn")?.addEventListener("click", saveExtraHours);
+    /* ================================
+    FASE 03 - GENERAL DATA
+    ================================ */
     function createEmployeePersonalGraphic() {
       const cardBody = document.querySelector("#individual-records .card-body");
       if (!cardBody) return;

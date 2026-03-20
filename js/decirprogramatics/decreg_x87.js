@@ -1747,11 +1747,18 @@
       loadBtn.className = "signa-load-btn"; loadBtn.textContent = "⟳ Carregar Elementos";
       const formatBtn = document.createElement("button");
       formatBtn.className = "signa-format-btn"; formatBtn.textContent = "⚡ Formatar Equipas";
+      if (mode === "brigada") {
+        inp2.disabled = true;
+        inp2.style.opacity = "0.5";
+        inp2.style.cursor = "not-allowed";
+        inp1.addEventListener("input", () => { inp2.value = inp1.value; });
+        inp1.addEventListener("change", () => { inp2.value = inp1.value; });
+      }
       dateRow.append(lbl1, inp1, lbl2, inp2, loadBtn, formatBtn);
       const modeSpacer = document.createElement("div");
       modeSpacer.style.cssText = "flex:1;";
       const modeLabel = document.createElement("span");
-      const modeNames = {"1_ecin": "1 ECIN", "1_ecin_1_elac": "1 ECIN + 1 ELAC", "brigada": "BRIGADA"};
+      const modeNames = {"1_ecin": "1 ECIN", "1_ecin_1_elac": "1 ECIN e 1 ELAC", "brigada": "BRIGADA"};
       modeLabel.style.cssText = "font-size:12px;color:#555;font-weight:bold;";
       modeLabel.innerHTML = `Modo de Operação: <span class="mode-highlight">${modeNames[mode] || mode}</span>`;
       const modeBtn = document.createElement("button");
@@ -2081,10 +2088,10 @@
             const mpCopy = [...all.filter(i => i.mp)];
             const nonMpCopy = [...all.filter(i => !i.mp)];
             const elacItems = [];
-            if (elacCount > 0) {
+            if (elacCount === 2) {
               elacItems.push(mpCopy.pop());
-              if (elacCount === 2 && nonMpCopy.length > 0) elacItems.unshift(nonMpCopy.pop());
-              else if (elacCount === 2) elacItems.unshift(mpCopy.pop());
+              if (nonMpCopy.length > 0) elacItems.unshift(nonMpCopy.pop());
+              else elacItems.unshift(mpCopy.pop());
             }
             const remaining = [...nonMpCopy, ...mpCopy].sort((a,b) => a.nint - b.nint);
             const ecinBMP = remaining.find(i => i.mp);
@@ -2097,12 +2104,21 @@
               const elacZones = Array.from(container.querySelectorAll(
                 `.signa-drop-zone[data-day="1"][data-shift="${shift}"][data-section="elac"]`
               ));
-              elacZones.forEach((zone, i) => {
-                if (!elacItems[i]) return;
-                if (zone.dataset.nint) signaClearRow(zone);
-                signaFillZone(zone, elacItems[i]);
-                updateSidebarItem(elacItems[i].nint, elacItems[i].valueType, elacItems[i].day);
-              });
+              if (elacCount === 1) {              
+                const mpEl = mpCopy.pop();
+                if (mpEl && elacZones[1]) {
+                  if (elacZones[1].dataset.nint) signaClearRow(elacZones[1]);
+                  signaFillZone(elacZones[1], mpEl);
+                  updateSidebarItem(mpEl.nint, mpEl.valueType, mpEl.day);
+                }
+              } else {
+                elacZones.forEach((zone, i) => {
+                  if (!elacItems[i]) return;
+                  if (zone.dataset.nint) signaClearRow(zone);
+                  signaFillZone(zone, elacItems[i]);
+                  updateSidebarItem(elacItems[i].nint, elacItems[i].valueType, elacItems[i].day);
+                });
+              }
             }
           });
         }
@@ -2230,6 +2246,19 @@
       const inp1 = document.getElementById("signa-date1");
       const inp2 = document.getElementById("signa-date2");
       if (!inp1?.value || !inp2?.value) return showPopupWarning("Selecione as duas datas.");
+      const mode = document.querySelector("#decir-reg-signa .mode-highlight")?.textContent === "1 ECIN" ? "1_ecin"
+                 : document.querySelector("#decir-reg-signa .mode-highlight")?.textContent === "BRIGADA" ? "brigada" : "1_ecin_1_elac";
+      const isBrigade = mode === "brigada";
+      const formatDateForName = (dateStr) => {
+        const [y, m, d] = dateStr.split("-");
+        const months = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+        return {day: parseInt(d), month: months[parseInt(m)-1], year: y};
+      };
+      const d1 = formatDateForName(inp1.value);
+      const d2 = formatDateForName(inp2.value);
+      const fileName = isBrigade
+        ? `ASSINATURAS_DECIR_${d1.day}_${d1.month}_${d1.year}`
+        : `ASSINATURAS_DECIR_${d1.day}_a_${d2.day}_${d2.month}_${d2.year}`;
       const getTeamData = (day, shift, section) => {
         const container = document.querySelector("#decir-reg-signa .card-body");
         return Array.from(container.querySelectorAll(
@@ -2237,19 +2266,29 @@
         )).map(zone => {
           const tr = zone.closest("tr");
           return {nint: zone.dataset.nint || "", n_file: tr?.querySelector(".field-nfile")?.value || "", patent: tr?.querySelector(".field-patent")?.value || "",
-                  abv_name: tr?.querySelector(".field-abvname")?.value || "", full_name: zone.dataset.fullname || ""};});};
+                  abv_name: tr?.querySelector(".field-abvname")?.value || "", full_name: zone.dataset.fullname || ""};
+        });
+      };
+      const getTeamDataBrigada = (shift, team) => {
+        const container = document.querySelector("#decir-reg-signa .card-body");
+        const allZones = Array.from(container.querySelectorAll(
+          `.signa-drop-zone[data-day="1"][data-shift="${shift}"][data-section="ecin"]`
+        ));
+        const zones = team === "A" ? allZones.slice(0, 5) : allZones.slice(5, 10);
+        return zones.map(zone => {
+          const tr = zone.closest("tr");
+          return {nint: zone.dataset.nint || "", n_file: tr?.querySelector(".field-nfile")?.value || "", patent: tr?.querySelector(".field-patent")?.value || "",
+                  abv_name: tr?.querySelector(".field-abvname")?.value || "", full_name: zone.dataset.fullname || ""};
+        });
+      };
       try {
-        const payload = {type: "signa", date1: inp1.value, date2: inp2.value, year: inp1.value.split("-")[0], fileName: "ASSINATURAS_DECIR", format,
-                         mode: document.querySelector("#decir-reg-signa .mode-highlight")?.textContent === "1 ECIN" ? "1_ecin"
-                             : document.querySelector("#decir-reg-signa .mode-highlight")?.textContent === "BRIGADA" ? "brigada" : "1_ecin_1_elac",
-                         ecin: {day1: {day: getTeamData("1","day","ecin"), night: getTeamData("1","night","ecin")}, day2: {day: getTeamData("2","day","ecin"), night: getTeamData("2","night","ecin")}},
-                         elac: {day1: {day: getTeamData("1","day","elac"), night: getTeamData("1","night","elac")}, day2: {day: getTeamData("2","day","elac"), night: getTeamData("2","night","elac")}}};
-        console.log("PAYLOAD BRIGADA:", JSON.stringify({
-  ecinA_day:   payload.ecin.day1.day,
-  ecinA_night: payload.ecin.day1.night,
-  ecinB_day:   payload.ecin.day2.day,
-  ecinB_night: payload.ecin.day2.night,
-}, null, 2));
+        const payload = {type: "signa", date1: inp1.value, date2: inp2.value, year: inp1.value.split("-")[0], fileName, format, mode,
+                         ecin: {day1: {day: isBrigade ? getTeamDataBrigada("day", "A") : getTeamData("1","day","ecin"),
+                                       night: isBrigade ? getTeamDataBrigada("night", "A") : getTeamData("1","night","ecin")},
+                                day2: {day: isBrigade ? getTeamDataBrigada("day", "B") : getTeamData("2","day","ecin"),
+                                       night: isBrigade ? getTeamDataBrigada("night", "B") : getTeamData("2","night","ecin")}},
+                         elac: {day1: {day: getTeamData("1","day","elac"), night: getTeamData("1","night","elac")},
+                                day2: {day: getTeamData("2","day","elac"), night: getTeamData("2","night","elac")}}};
         const res = await fetch("https://cb360-online.vercel.app/api/decir_reg_pag", {
           method: "POST",
           headers: {"Content-Type": "application/json"},
@@ -2260,7 +2299,7 @@
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `ASSINATURAS_DECIR.${format}`;
+        a.download = `${fileName}.${format}`;
         document.body.appendChild(a); a.click(); a.remove();
         window.URL.revokeObjectURL(url);
       } catch(err) {

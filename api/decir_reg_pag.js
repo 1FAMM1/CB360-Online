@@ -337,6 +337,8 @@
             [29, 38, 82, 91, 129, 135, 184, 190].forEach(row => sheet.getCell(`B${row}`).value = date2Formatted);
             [11, 29, 64, 82, 117, 129, 172, 184].forEach(row => sheet.getCell(`F${row}`).value = dayShift);
             [20, 38, 73, 91, 123, 135, 178, 190].forEach(row => sheet.getCell(`F${row}`).value = nightShift);
+            fillTeam(14, ecin?.day1?.day); fillTeam(23, ecin?.day1?.night);
+            fillTeam(32, ecin?.day2?.day); fillTeam(41, ecin?.day2?.night);
           } else {
             [7, 60, 113, 168].forEach(row => sheet.getCell(`B${row}`).value = title);
             [9, 62, 115, 170].forEach(row => sheet.getCell(`B${row}`).value = period);

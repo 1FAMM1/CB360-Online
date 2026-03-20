@@ -360,7 +360,7 @@
   if (elac?.day1?.night?.length) fillTeamFull(181, elac.day1.night);
   if (elac?.day2?.day?.length) fillTeamFull(187, elac.day2.day);
   if (elac?.day2?.night?.length) fillTeamFull(193, elac.day2.night);
-}
+
           } else {
             [7, 60, 113, 168].forEach(row => sheet.getCell(`B${row}`).value = title);
             [9, 62, 115, 170].forEach(row => sheet.getCell(`B${row}`).value = period);

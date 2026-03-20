@@ -329,8 +329,8 @@ else if (data.type === 'signa') {
     // Cabeçalhos
     [7, 60, 113, 167].forEach(row => sheet.getCell(`B${row}`).value = title);
     [9, 62, 115, 169].forEach(row => sheet.getCell(`B${row}`).value = period);
-    [11, 20, 64, 73, 117, 123, 171, 178].forEach(row => sheet.getCell(`B${row}`).value = date1Formatted);
-    [29, 38, 82, 91, 184, 190].forEach(row => sheet.getCell(`B${row}`).value = date2Formatted);
+    [11, 20, 64, 73, 117, 123, 171, 177].forEach(row => sheet.getCell(`B${row}`).value = date1Formatted);
+    [29, 38, 82, 91].forEach(row => sheet.getCell(`B${row}`).value = date2Formatted);
     [11, 29, 64, 82, 117, 171].forEach(row => sheet.getCell(`F${row}`).value = dayShift);
     [20, 38, 73, 91, 123, 177].forEach(row => sheet.getCell(`F${row}`).value = nightShift);
 
@@ -361,8 +361,8 @@ else if (data.type === 'signa') {
     fillTeamFull(76, ecinA_night);
     fillTeamFull(85, ecinB_day);
     fillTeamFull(94, ecinB_night);
-    fillTeamFull(175, elac_day1);
-    fillTeamFull(181, elac_night1);
+    fillTeamFull(174, elac_day1);
+    fillTeamFull(180, elac_night1);
     fillTeamFull(187, elac_day2);
     fillTeamFull(193, elac_night2);
 

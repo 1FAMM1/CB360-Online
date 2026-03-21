@@ -532,8 +532,10 @@
           worksheet.getCell(`K${row}`).value = padNumber(p.end.month, 2);
           worksheet.getCell(`M${row}`).value = p.end.year;
         }
-        worksheet.getCell(`Q${row}`).value = padNumber(Number(p.days) || 0);
+        worksheet.getCell(`Q${row}`).value = Number(p.days) || 0;
       });
+      const total = periods.slice(0, 3).reduce((sum, p) => sum + (Number(p.days) || 0), 0);
+      worksheet.getCell("Q17").value = total;
       worksheet.pageSetup = {orientation: "portrait", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 1};
       const pdfBuffer = await workbookToPdfBuffer(workbook, "vac");
       res.setHeader("Content-Type", "application/pdf");

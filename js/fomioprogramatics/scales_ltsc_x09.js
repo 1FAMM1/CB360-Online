@@ -504,7 +504,11 @@
             const date = new Date(year, month-1, d);
             const cellValue = (savedMap[`${nIntStr}_${d}`] || "").toUpperCase();
             td.textContent = cellValue;
-            if (isEscalaSection && ["ED","EN","ET","EP"].includes(cellValue)) {
+            if (section === "Consultar Escalas") {
+              td.contentEditable = "false";
+              td.style.cursor = "not-allowed";
+              td.style.opacity = "1";
+            } else if (isEscalaSection && ["ED","EN","ET","EP"].includes(cellValue)) {
               td.contentEditable = "false";
               td.style.cursor = "not-allowed";
               td.style.opacity = "0.8";

@@ -1,84 +1,86 @@
     /* =======================================
-              FIREFIGHTER LISTING
+    FIREFIGHTER LISTING
     ======================================= */
     const ACCESS_OPTIONS = [
       {label: "Menu Principal"},
-      {label: "Gestão Financeira", children: [
-        {label: "Atualização de Valores"},
-        {label: "Controlo de Pagamentos", children: [
-          {label: "Registo por Elemento"},
-          {label: "Núcleo Financeiro"},
-          {label: "Relatórios ANEPC"}
-        ]},
-        {label: "Assinaturas Diárias"}
-      ]},
-      {label: "Gestão Operacional", children: [
-        {label: "Escalas", children: [
-          {label: "DECIR"},
-          {label: "1ª Secção"},
-          {label: "2ª Secção"},
-          {label: "3ª Secção"},
-          {label: "4ª Secção"},
-          {label: "Emissão Escala"},
-          {label: "Consultar Escalas"}
-        ]},
-        {label: "Eventos", children: [
-          {label: "Criação de Eventos"},
-          {label: "Consultar Disponibilidades"}
-        ]},
-        {label: "Pedidos de Férias", children: [
-          {label: "Consultar Pedidos"}
-        ]}, 
-      ]},
-      {label: "Gestão Funcionários", children: [
-        {label: "Escalas Mensais"},
-        {label: "Controlo de Horas Extras"},
-        {label: "Registos Individuais"},
-        {label: "Gestão de Férias", children: [
-          {label: "Marcação de Férias"},
-          {label: "Mapa de Férias"},
-          {label: "Mapa de Prioridade"}
-        ]},
-        {label: "Utilitários RH", children: [
-          {label: "Subsidio de Turno"},
-          {label: "Processamento Salarial"},
-          {label: "Enquadramento EIPs"}
-        ]},
-        {label: "Cadastro de Funcionários"}
-      ]},
-      {label: "SALOC", children: [
-        {label: "Planos Prévios de Intervenção", children: [
-          {label: "PPI A2"},
-          {label: "PPI A22"},
-          {label: "PPI Aeroporto de Faro"},
-          {label: "PPI Linha Férrea"},
-          {label: "PPI Aérodromo de Portimão"}
-        ]},
-        {label: "Registos Recusas/INOPS", children: [
-          {label: "Recusas de Serviços"}, 
-          {label: "Inoperacionalidades INEM"}, 
-          {label: "Relatórios Mensais"}, 
-          {label: "DashBoard"}
-        ]},
-        {label: "Documentação Importante", children: [
-          {label: "CREPC Algarve"},
-          {label: "Planeamento Diário"},
-          {label: "Sitop de Veículos"},
-          {label: "Refeições DECIR"}
-        ]},
-        {label: "Consola de Alarmes"}
-      ]},
-      {label: "Comunicação WSMS", children: [
-        {label: "Ocorrências em Curso"},
-        {label: "Inserir/Alterar Ocorrência"},
-        {label: "Encerrar Ocorrência"},
-        {label: "Solicitar Disponibilidades"},
-        {label: "Indisponibilidade Veículos"},
-        {label: "Info. Grelha Município"},
-        {label: "Serviços EMS"},
-        {label: "Avisos METEO"}]},
-      {label: "Utilitários"},
-      {label: "Data Center"}
+      {label: "Gestão DECIR",
+       children: [
+         {label: "Escalas"},
+         {label: "Gestão Financeira", 
+          children: [
+            {label: "Atualização de Valores"}, {label: "Registo por Elemento"}, {label: "Núcleo Financeiro"}, {label: "Relatórios ANEPC"},
+          ],
+         },
+         {label: "Registos Complementares",
+          children: [
+            {label: "Controlo de Ocorrências"}, {label: "Assinaturas Diárias"}, {label: "Refeições Diárias"},
+          ],
+         },
+         {label: "DashBoard DECIR"},
+       ],
+      },
+      {label: "Gestão Operacional",
+       children: [
+         {label: "Escalas",
+          children: [
+            {label: "DECIR"}, {label: "1ª Secção"}, {label: "2ª Secção"}, {label: "3ª Secção"}, {label: "4ª Secção"}, {label: "Emissão Escala"}, {label: "Consultar Escalas"},
+          ],
+         },
+         {label: "Eventos",
+          children: [
+            {label: "Criação de Eventos"}, {label: "Consultar Disponibilidades"},
+          ],
+         },
+         {label: "Pedidos de Férias",
+          children: [
+            {label: "Consultar Pedidos"}
+          ],
+         },
+       ],
+      },
+      {label: "Recursos Humanos",
+       children: [
+         {label: "Escalas Mensais"}, {label: "Controlo de Horas Extras"}, {label: "Registos Individuais"},
+         {label: "Gestão de Férias",
+          children: [
+            {label: "Marcação de Férias"}, {label: "Mapa de Férias"}, {label: "Mapa de Prioridade"},
+          ],
+         },
+         {label: "Utilitários RH",
+          children: [
+            {label: "Subsidio de Turno"}, {label: "Processamento Salarial"}, {label: "Enquadramento EIPs"}, {label: "DashBoard RH"},
+          ],
+         },
+         {label: "Cadastro de Funcionários"},
+       ],
+      },
+      {label: "SALOC",
+       children: [
+         {label: "Planos Prévios de Intervenção",
+          children: [
+            {label: "PPI A2"}, {label: "PPI A22"}, {label: "PPI Aeroporto de Faro"}, {label: "PPI Linha Férrea"}, {label: "PPI Aérodromo de Portimão"},
+          ],
+         },
+         {label: "Registos Recusas/INOPS",
+          children: [
+            {label: "Recusas de Serviços"}, {label: "Inoperacionalidades INEM"}, {label: "Relatórios Mensais"}, {label: "DashBoard"},
+          ],
+         },
+         {label: "Documentação Importante",
+          children: [
+            {label: "CREPC Algarve"}, {label: "Planeamento Diário"}, {label: "Sitop de Veículos"},
+          ],
+         },
+         {label: "Consola de Alarmes"},
+       ],
+      },
+      {label: "Comunicação WSMS",
+       children: [{label: "Ocorrências em Curso"}, {label: "Inserir/Alterar Ocorrência"}, {label: "Encerrar Ocorrência"}, {label: "Solicitar Disponibilidades"},
+                  {label: "Indisponibilidade Veículos"}, {label: "Info. Grelha Município"}, {label: "Serviços EMS"}, {label: "Avisos METEO"},
+                 ],
+      },
+      { label: "Utilitários" },
+      { label: "Data Center" },
     ];
     /* ================= LOAD TABLE ================= */
     async function loadElementsTable() {

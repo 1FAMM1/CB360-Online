@@ -5,7 +5,7 @@
       {label: "Menu Principal"},
       {label: "Gestão DECIR",
        children: [
-         {label: "Escalas DECIR"},
+         {label: "Ver Escalas"},
          {label: "Gestão Financeira", 
           children: [
             {label: "Atualização de Valores"}, {label: "Registo por Elemento"}, {label: "Núcleo Financeiro"}, {label: "Relatórios ANEPC"},

@@ -791,42 +791,41 @@
         }
       });
      rows.forEach(row => {
-  for (let d = 1; d <= daysInMonth; d++) {
-    const cell = row.querySelector(`.day-cell-${d}`);
-    if (!cell) continue;
-    const shift = cell.textContent.trim().toUpperCase();
-    const nextDay = d + 1;
-    if (shift === "FE" || shift === "BX") {
-  const corPintar = shift === "FE" ? "#00B0F0" : "#FF0000";
-  const _paintCell = (dayN) => {
-    const c = row.querySelector(`.day-cell-${dayN}`);
-    if (c && (!c.textContent.trim().toUpperCase() || !SHIFT_COLORS[c.textContent.trim().toUpperCase()])) {
-      c.style.backgroundColor = corPintar;
-      if (shift === "BX") { c.style.color = "#FFFFFF"; c.style.fontWeight = "bold"; }
-    }
-  };
-  // Pintar apenas dias contíguos não úteis a seguir ao FE/BX
-  let checkDay = nextDay;
-  while (checkDay <= daysInMonth) {
-    const checkDate = atNoonLocal(year, month - 1, checkDay);
-    const checkDow = checkDate.getDay();
-    const checkIsHoliday = holidayMap?.has(checkDay) && !holidayMap.get(checkDay).optional;
-    const checkIsWeekend = checkDow === 0 || checkDow === 6;
-    if (checkIsWeekend || checkIsHoliday) {
-      _paintCell(checkDay);
-      checkDay++;
-    } else {
-      break; // dia útil — para
-    }
-  }
-  continue;
-}
-    if (SPECIAL_BEFORE_HOLIDAY_RED.includes(shift)) {
-      const nc = row.querySelector(`.day-cell-${nextDay}`);
-      if (nc) { const nv = nc.textContent.trim().toUpperCase(); if (!nv || !SHIFT_COLORS[nv]) { nc.style.backgroundColor = "#FF0000"; nc.style.color = "#FFFFFF"; nc.style.fontWeight = "bold"; } }
-    }
-  }
-});
+        for (let d = 1; d <= daysInMonth; d++) {
+          const cell = row.querySelector(`.day-cell-${d}`);
+          if (!cell) continue;
+          const shift = cell.textContent.trim().toUpperCase();
+          const nextDay = d + 1;
+          if (shift === "FE" || shift === "BX") {
+            const corPintar = shift === "FE" ? "#00B0F0" : "#FF0000";
+            const _paintCell = (dayN) => {
+              const c = row.querySelector(`.day-cell-${dayN}`);
+              if (c && (!c.textContent.trim().toUpperCase() || !SHIFT_COLORS[c.textContent.trim().toUpperCase()])) {
+                c.style.backgroundColor = corPintar;
+                if (shift === "BX") { c.style.color = "#FFFFFF"; c.style.fontWeight = "bold"; }
+              }
+            };
+            let checkDay = nextDay;
+            while (checkDay <= daysInMonth) {
+              const checkDate = atNoonLocal(year, month - 1, checkDay);
+              const checkDow = checkDate.getDay();
+              const checkIsHoliday = holidayMap?.has(checkDay) && !holidayMap.get(checkDay).optional;
+              const checkIsWeekend = checkDow === 0 || checkDow === 6;
+              if (checkIsWeekend || checkIsHoliday) {
+                _paintCell(checkDay);
+                checkDay++;
+              } else {
+                break;
+              }
+            }
+            continue;
+          }
+          if (SPECIAL_BEFORE_HOLIDAY_RED.includes(shift)) {
+            const nc = row.querySelector(`.day-cell-${nextDay}`);
+            if (nc) {const nv = nc.textContent.trim().toUpperCase(); if (!nv || !SHIFT_COLORS[nv]) {nc.style.backgroundColor = "#FF0000"; nc.style.color = "#FFFFFF"; nc.style.fontWeight = "bold";}}
+          }
+        }
+      });
       rows.forEach(row => {
         const rowNInt = parseInt(row.getAttribute("data-nint"), 10);
         if (!rowNInt) return;

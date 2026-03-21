@@ -805,13 +805,30 @@
                 if (shift === "BX") { c.style.color = "#FFFFFF"; c.style.fontWeight = "bold"; }
               }
             };
-            _paintCell(nextDay);
-            if (atNoonLocal(year, month - 1, nextDay).getDay() === 5) {
-              if (nextDay + 1 <= daysInMonth) _paintCell(nextDay + 1);
-              if (nextDay + 2 <= daysInMonth) _paintCell(nextDay + 2);
-            }
-            continue;
-          }
+            if (shift === "FE" || shift === "BX") {
+  const corPintar = shift === "FE" ? "#00B0F0" : "#FF0000";
+  const _paintCell = (dayN) => {
+    const c = row.querySelector(`.day-cell-${dayN}`);
+    if (c && (!c.textContent.trim().toUpperCase() || !SHIFT_COLORS[c.textContent.trim().toUpperCase()])) {
+      c.style.backgroundColor = corPintar;
+      if (shift === "BX") { c.style.color = "#FFFFFF"; c.style.fontWeight = "bold"; }
+    }
+  };
+  // ← VERIFICAR se o próximo dia é fim de semana ou feriado antes de pintar
+  const nextDate = atNoonLocal(year, month - 1, nextDay);
+  const nextDow = nextDate.getDay();
+  const nextIsHoliday = holidayMap?.has(nextDay);
+  const nextIsWeekend = nextDow === 0 || nextDow === 6;
+  if (nextIsWeekend || nextIsHoliday) {
+    _paintCell(nextDay);
+    if (nextDow === 5 || nextDow === 6) {
+      if (nextDay + 1 <= daysInMonth) _paintCell(nextDay + 1);
+      if (nextDay + 2 <= daysInMonth) _paintCell(nextDay + 2);
+    }
+  }
+  // Só pinta o fim de semana seguinte, não dias úteis
+  continue;
+}
           if (SPECIAL_BEFORE_HOLIDAY_RED.includes(shift)) {
             const nc = row.querySelector(`.day-cell-${nextDay}`);
             if (nc) { const nv = nc.textContent.trim().toUpperCase(); if (!nv || !SHIFT_COLORS[nv]) { nc.style.backgroundColor = "#FF0000"; nc.style.color = "#FFFFFF"; nc.style.fontWeight = "bold"; } }

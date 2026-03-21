@@ -262,7 +262,7 @@
       infoDiv.style.cssText = `margin-top:5px;padding:12px;background:#f0f8ff;border:1px solid #4682b4;border-radius:5px;font-family:'Segoe UI',sans-serif;
                                display:inline-block;width:315px;height:150px;`;
       const holidaysHTML = info.holidaysInMonth.length > 0
-        ? `<div><strong style="color:#1e3a8a;">🎉 Feriados:</strong><span style="color:#6b7280;">${info.holidaysInMonth.map(h => `Dia: ${h.day}`).join(", ")}</span></div>`
+        ? `<div><strong style="color:#1e3a8a;">🎉 Feriados:</strong><span style="color:#6b7280;"> ${info.holidaysInMonth.map(h => `Dia: ${h.day}`).join(", ")}</span></div>`
         : "";
       infoDiv.innerHTML = `
         <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start;">

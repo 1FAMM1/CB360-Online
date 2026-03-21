@@ -532,7 +532,7 @@
           worksheet.getCell(`K${row}`).value = padNumber(p.end.month, 2);
           worksheet.getCell(`M${row}`).value = p.end.year;
         }
-        worksheet.getCell(`Q${row}`).value = padNumber(Number(p.days) || 0, 2);
+        worksheet.getCell(`Q${row}`).value = padNumber(Number(p.days) || 0);
       });
       worksheet.pageSetup = {orientation: "portrait", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 1};
       const pdfBuffer = await workbookToPdfBuffer(workbook, "vac");

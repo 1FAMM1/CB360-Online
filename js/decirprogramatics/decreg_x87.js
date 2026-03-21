@@ -2519,7 +2519,7 @@
         const s = document.createElement("style"); s.id = styleId;
         s.textContent = `
           .alert-card {background: rgba(0, 0, 0, 0.08); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.9); border-radius: 20px; 
-                       box-shadow: 0 8px 32px rgba(99,102,241,0.08); padding: 24px; margin-bottom: 24px;}
+                       box-shadow: 0 4px 8px rgba(0,0,0,0.25); padding: 24px; margin-bottom: 24px;}
           .alert-card-title {font-size: 16px; font-weight: 700; color: #131a69; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;}
           .alert-layout {display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;}
           .alert-table {border-radius: 10px; overflow: hidden; width: 100%; border-collapse: collapse; font-size: 14px;}
@@ -2653,7 +2653,7 @@
         const s = document.createElement("style"); s.id = styleId;
         s.textContent = `
           .meals-card {background: rgba(0, 0, 0, 0.10); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.9); border-radius: 20px; 
-                       box-shadow: 0 8px 32px rgba(99,102,241,0.08); padding: 24px; margin-bottom: 24px;}
+                       box-shadow: 0 4px 8px rgba(0,0,0,0.25); padding: 24px; margin-bottom: 24px;}
           .meals-card-title {font-size: 16px; font-weight: 700; color: #131a69; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;}
           .meals-layout {display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;}
           .meals-table {border-radius: 10px; overflow: hidden;width: 100%; border-collapse: collapse; font-size: 14px;}
@@ -2779,7 +2779,7 @@
         const s = document.createElement("style"); s.id = styleId;        
         s.textContent = `
           .ocorr-stats-card {background: rgba(0, 0, 0, 0.10); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.9); border-radius: 20px; 
-                             box-shadow: 0 8px 32px rgba(99,102,241,0.08); padding: 24px; margin-bottom: 24px;}
+                             box-shadow: 0 4px 8px rgba(0,0,0,0.25); padding: 24px; margin-bottom: 24px;}
           .ocorr-stats-title {font-size: 16px; font-weight: 700; color: #131a69; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;}
           .ocorr-stats-layout {display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;}
           .ocorr-stats-table {border-radius: 10px; overflow: hidden; width: 100%; border-collapse: collapse; font-size: 14px;}
@@ -3180,9 +3180,9 @@
         style.id = styleId;
         style.textContent = `
           .dash-wrapper {background: linear-gradient(135deg,#f0f4ff 0%,#faf5ff 50%,#f0f9ff 100%); border-radius: 16px; padding: 32px; min-height: 400px;}
-          .dash-header {display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; flex-wrap: wrap; gap: 12px;}
-          .dash-title {font-size: 22px; font-weight: 900; color: #131a69; letter-spacing: -0.5px;}
-          .dash-title span {color:#6366f1;}
+          .dash-header {display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;}
+          .dash-title {font-size: 22px; font-weight: 700; color: #2d3db5; letter-spacing: -0.5px;}
+          .dash-title span {color:#dc2626;}
           .dash-year-select {padding: 8px 16px; border-radius: 50px; border: 2px solid #e0e7ff; background: #fff; font-size: 14px; font-weight: 600; color: #131a69; cursor:pointer;
                              outline:none; transition:border-color 0.2s;}
           .dash-year-select:focus {border-color: #6366f1;}

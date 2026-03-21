@@ -797,27 +797,30 @@
     const shift = cell.textContent.trim().toUpperCase();
     const nextDay = d + 1;
     if (shift === "FE" || shift === "BX") {
-      const corPintar = shift === "FE" ? "#00B0F0" : "#FF0000";
-      const _paintCell = (dayN) => {
-        const c = row.querySelector(`.day-cell-${dayN}`);
-        if (c && (!c.textContent.trim().toUpperCase() || !SHIFT_COLORS[c.textContent.trim().toUpperCase()])) {
-          c.style.backgroundColor = corPintar;
-          if (shift === "BX") { c.style.color = "#FFFFFF"; c.style.fontWeight = "bold"; }
-        }
-      };
-      const nextDate = atNoonLocal(year, month - 1, nextDay);
-      const nextDow = nextDate.getDay();
-      const nextIsHoliday = holidayMap?.has(nextDay);
-      const nextIsWeekend = nextDow === 0 || nextDow === 6;
-      if (nextIsWeekend || nextIsHoliday) {
-        _paintCell(nextDay);
-        if (nextDow === 5 || nextDow === 6) {
-          if (nextDay + 1 <= daysInMonth) _paintCell(nextDay + 1);
-          if (nextDay + 2 <= daysInMonth) _paintCell(nextDay + 2);
-        }
-      }
-      continue;
+  const corPintar = shift === "FE" ? "#00B0F0" : "#FF0000";
+  const _paintCell = (dayN) => {
+    const c = row.querySelector(`.day-cell-${dayN}`);
+    if (c && (!c.textContent.trim().toUpperCase() || !SHIFT_COLORS[c.textContent.trim().toUpperCase()])) {
+      c.style.backgroundColor = corPintar;
+      if (shift === "BX") { c.style.color = "#FFFFFF"; c.style.fontWeight = "bold"; }
     }
+  };
+  // Pintar apenas dias contíguos não úteis a seguir ao FE/BX
+  let checkDay = nextDay;
+  while (checkDay <= daysInMonth) {
+    const checkDate = atNoonLocal(year, month - 1, checkDay);
+    const checkDow = checkDate.getDay();
+    const checkIsHoliday = holidayMap?.has(checkDay) && !holidayMap.get(checkDay).optional;
+    const checkIsWeekend = checkDow === 0 || checkDow === 6;
+    if (checkIsWeekend || checkIsHoliday) {
+      _paintCell(checkDay);
+      checkDay++;
+    } else {
+      break; // dia útil — para
+    }
+  }
+  continue;
+}
     if (SPECIAL_BEFORE_HOLIDAY_RED.includes(shift)) {
       const nc = row.querySelector(`.day-cell-${nextDay}`);
       if (nc) { const nv = nc.textContent.trim().toUpperCase(); if (!nv || !SHIFT_COLORS[nv]) { nc.style.backgroundColor = "#FF0000"; nc.style.color = "#FFFFFF"; nc.style.fontWeight = "bold"; } }

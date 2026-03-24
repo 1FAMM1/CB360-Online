@@ -10,7 +10,7 @@
       if (reserv.checked) inem.checked = false;
     });
     /* ================ CREATION OF EMS SERVICES MESSAGE =============== */
-    function generateCODUserviceMessage() {
+    async function generateCODUserviceMessage() {
       const hourAlert = document.getElementById('alert-service')?.value || '';
       const address = document.getElementById('address-service')?.value?.trim() || '';
       const locality = document.getElementById('location-service')?.value?.trim() || '';
@@ -33,9 +33,29 @@
       if (gender || age) message += `*Vítima:* ${gender}${gender && (age || ageType) ? ', ' : ''}${age} ${ageType}\n`;
       if (situation) message += `*Situação:* ${situation}\n\n`;
       if (observations) message += `*Observações:* ${observations}`;
+      const victimTypeMap = { "Masc.": "MASCULINO", "Fem.": "FEMININO", "Desc.": "DESCONHECIDO" };
+      const victimType = victimTypeMap[gender] || gender;
+      const serviceType = inem.checked ? "ITeams" : reserv.checked ? "Verbete" : "";
+      const now = new Date();
+      const alertDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       if (navigator.clipboard?.writeText) {
-        navigator.clipboard.writeText(message).then(() => {
+        navigator.clipboard.writeText(message).then(async () => {
           showPopupSuccess("Mensagem criada e copiada! Pode colar no WhatsApp (CTRL+V).");
+          try {
+            const record = {corp_oper_nr: corpOperNr, nr_codu: nrCODU || null, alert_date: alertDate, alert_hour: hourAlert || null, victim_type: victimType || null,
+                            victim_age_type: ageType || null, victim_age_unit: age || null, victim_address: address || null, victim_location: locality || null,
+                            service_type: serviceType || null,};
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/inem_entries`, {
+              method: "POST",
+              headers: { ...getSupabaseHeaders(), "Prefer": "return=minimal" },
+              body: JSON.stringify(record)
+            });
+            if (!res.ok) throw new Error(await res.text());
+          } catch(err) {
+            console.error("Erro ao gravar registo INEM:", err);
+            showPopupWarning("Mensagem copiada, mas erro ao gravar registo.");
+          }
           clearFormFields();
         }).catch(() => showPopupWarning("Não foi possível copiar automaticamente. Copie manualmente."));
       } else {
@@ -43,7 +63,7 @@
       }
       console.log(message);
       return message;
-    }    
+    }
     /* ============== EMS SERVICES FIELDS CONFIGURATIONS =============== */
     function focusAddressField() {
       const addressInput = document.getElementById("address-service");

@@ -1,4 +1,4 @@
-async function checkPdfExists(nrCodu) {
+    async function checkPdfExists(nrCodu) {
       const fileName = `ocr_${nrCodu}.pdf`;
       const url = `${SUPABASE_URL}/storage/v1/object/public/inem-verbetes/${fileName}`;
       try {
@@ -34,7 +34,7 @@ async function checkPdfExists(nrCodu) {
         tbody.innerHTML = "";
         if (btnEmitir) btnEmitir.style.display = "none";
         if (!data?.length) return;
-        const COLUMNS = ["nr_codu", "alerta", "vitima", "morada", "via", "actions", "pdfstatus"];
+        const COLUMNS = ["nr_codu", "alerta", "vitima", "morada", "tas", "via", "actions", "pdfstatus"];
         const totalCols = COLUMNS.length;
         data.forEach((item, i) => {
           const tr = document.createElement("tr");
@@ -64,12 +64,14 @@ async function checkPdfExists(nrCodu) {
               let vitima = "";
               if (type) vitima += type;
               if (ageType) vitima += (vitima ? " - " : "") + ageType;
-              if (ageUnit) vitima += (vitima ? ", "  : "") + ageUnit;
+              if (ageUnit) vitima += (vitima ? " "  : "") + ageUnit;
               td.textContent = vitima;
             } else if (key === "morada") {
               const address  = item.victim_address || "";
               const location = item.victim_location || "";
-              td.textContent = [address, location].filter(Boolean).join(", ");
+              td.textContent = [address, location].filter(Boolean).join(" - ");
+            } else if (key === "tas") {
+              td.textContent = item.tas || "";
             } else if (key === "via") {
               td.textContent = item.service_type || "";
             } else if (key === "actions") {
@@ -215,9 +217,9 @@ async function checkPdfExists(nrCodu) {
       const container = document.querySelector("#inem-entries .card-body");
       if (!container) return;
       container.innerHTML = "";
-      const COLUMNS = [{key: "nr_codu", label: "Nr. CODU", width: "80px"}, {key: "alerta", label: "Alerta", width: "130px"}, {key: "vitima", label: "Vítima", width: "120px"},
-                       {key: "morada", label: "Morada", width: "200px"}, {key: "via", label: "Via", width: "80px"}, {key: "actions", label: "Verbete", width: "90px"},
-                       {key: "pdfstatus", label: "PDF", width: "50px"},];
+      const COLUMNS = [{key: "nr_codu", label: "Nr. CODU", width: "60px"}, {key: "alerta", label: "Alerta", width: "80px"}, {key: "vitima", label: "Vítima", width: "100px"},
+                       {key: "morada", label: "Morada", width: "200px"}, {key: "tas", label: "TAS", width: "120px"}, {key: "via", label: "Via", width: "60px"},
+                       {key: "actions", label: "Verbete", width: "90px"}, {key: "pdfstatus", label: "PDF", width: "50px"},];
       if (!document.getElementById("inem-entries-style")) {
         const style = document.createElement("style");
         style.id = "inem-entries-style";

@@ -335,6 +335,16 @@
       }
       return total;
     }
+    function formatDecimalToHHMM(decimalHours) {
+      const isNegative = decimalHours < 0;
+      const absHours = Math.abs(decimalHours);
+      const h = Math.floor(absHours);
+      const m = Math.round((absHours - h) * 60);
+      const finalH = m === 60 ? h + 1 : h;
+      const finalM = m === 60 ? 0 : m;
+      const sign = isNegative ? "-" : "";
+      return `${sign}${String(finalH).padStart(2, "0")}:${String(finalM).padStart(2, "0")}`;
+    }
     function updateRowTotal(row) {
       const totalMonthly = calculateProfessionalsRowTotal(row);
       const totalMonthlyCell = row.querySelector(".total-monthly-cell");
@@ -344,8 +354,11 @@
         const base = parseFloat(totalAcumCell.dataset.base || 0);
         const extra = parseFloat(totalAcumCell.dataset.extraHours || 0);
         const isJan = totalAcumCell.dataset.isJanuary === "1";
-        const diff = totalMonthly - calculateWorkingHours(__currentYear, __currentMonth).workingHours + extra;
-        totalAcumCell.textContent = isJan ? diff : base + diff;
+        const workingHours = calculateWorkingHours(__currentYear, __currentMonth).workingHours;
+        const diff = totalMonthly - workingHours + extra;
+        const finalValueDecimal = isJan ? diff : base + diff;
+        totalAcumCell.textContent = formatDecimalToHHMM(finalValueDecimal);
+        totalAcumCell.style.color = finalValueDecimal < 0 ? "red" : "#444";
       }
     }
     function ensureDriverMenu() {

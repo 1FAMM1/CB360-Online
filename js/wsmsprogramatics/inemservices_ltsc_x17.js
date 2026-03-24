@@ -44,7 +44,7 @@
           showPopupSuccess("Mensagem criada e copiada! Pode colar no WhatsApp (CTRL+V).");
           try {
             const record = {corp_oper_nr: corpOperNr, nr_codu: nrCODU || null, alert_date: alertDate, alert_hour: hourAlert || null, victim_type: victimType || null,
-                            victim_age_type: ageType || null, victim_age_unit: age || null, victim_address: address || null, victim_location: locality || null,
+                            victim_age_unit: age || null, victim_age_type: ageType || null, victim_address: address || null, victim_location: locality || null,
                             service_type: serviceType || null,};
             const res = await fetch(`${SUPABASE_URL}/rest/v1/inem_entries`, {
               method: "POST",

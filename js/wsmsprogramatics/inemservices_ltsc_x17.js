@@ -51,7 +51,7 @@
        if (gender || age) message += `*Vítima:* ${gender}${gender && (age || ageType) ? ', ' : ''}${age} ${ageType}\n`;
        if (situation) message += `*Situação:* ${situation}\n\n`;
        if (observations) message += `*Observações:* ${observations}`;
-       const victimTypeMap = { "Masc.": "Masculino", "Fem.": "Feminino", "Desc.": "Desconhcido" };
+       const victimTypeMap = { "Masc.": "Masculino", "Fem.": "Feminino", "Desc.": "Desconhecido" };
        const victimType = victimTypeMap[gender] || gender;
        const serviceType = inem.checked ? "ITeams" : reserv.checked ? "Verbete" : "";
        const now = new Date();

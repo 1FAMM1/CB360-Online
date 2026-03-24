@@ -1,6 +1,6 @@
     /* =======================================
               EMS SERVICES
-    ======================================= */
+    ======================================= */    
     const inem = document.getElementById('alert-inem');
     const reserv = document.getElementById('alert-reserv');
     inem.addEventListener('change', () => {
@@ -8,6 +8,23 @@
     });
     reserv.addEventListener('change', () => {
       if (reserv.checked) inem.checked = false;
+    });
+    document.getElementById("resp-tas-ni")?.addEventListener("input", async function () {
+      const ni = this.value.trim();
+      const nameInput = document.getElementById("resp-tas-name");
+      if (!nameInput) return;
+      if (ni.length < 3) {
+        nameInput.value = "";
+        return;
+      }
+      try {
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const data = await supabaseFetch(`reg_elems?corp_oper_nr=eq.${corpOperNr}&n_int=eq.${ni}&select=abv_name&limit=1`);
+        nameInput.value = data?.[0]?.abv_name || "";
+      } catch(err) {
+        console.error("Erro ao procurar elemento:", err);
+        nameInput.value = "";
+      }
     });
     /* ================ CREATION OF EMS SERVICES MESSAGE =============== */
     async function generateCODUserviceMessage() {
@@ -20,7 +37,8 @@
        const ageType = document.getElementById('victim-age-type-service')?.value || '';
        const situation = document.getElementById('situation-service')?.value?.trim() || '';
        const nrCODU = document.getElementById('nr-codu-service')?.value?.trim() || '';
-       const observations = document.getElementById('observations-service')?.value?.trim() || '';
+       const tasName = document.getElementById('resp-tas-name')?.value?.trim() || '';
+       const observations = document.getElementById('observations-service')?.value?.trim() || '';      
        let messageTitle = `*🚨⚠️ SERVIÇO INEM ⚠️🚨*`;
        if (reserv.checked) {
          messageTitle = '*🚨⚠️ SERVIÇO INEM-Reserva ⚠️🚨*';
@@ -45,7 +63,7 @@
            try {
              const record = {corp_oper_nr: corpOperNr, nr_codu: nrCODU || null, alert_date: alertDate, alert_hour: hourAlert || null, victim_type: victimType || null,
                              victim_age_type: age || null, victim_age_unit: ageType || null, victim_address: address || null, victim_location: locality || null,
-                             service_type: serviceType || null,};
+                             service_type: serviceType || null, tas: tasName || null,};
              const res = await fetch(`${SUPABASE_URL}/rest/v1/inem_entries`, {
                method: "POST",
                headers: {...getSupabaseHeaders(), "Prefer": "return=minimal"},
@@ -71,8 +89,7 @@
       } else {
         setTimeout(focusAddressField, 150);
       }
-    }
-    
+    }    
     function setCurrentTimeForINEMService() {
       const timeInput = document.getElementById("alert-service");
       if (!timeInput) return;
@@ -81,7 +98,6 @@
       const mm = String(now.getMinutes()).padStart(2, "0");
       timeInput.value = `${hh}:${mm}`;
     }
-
     function trySetTimeWithRetry(retries = 5, delay = 100) {
       let attempts = 0;
       const t = setInterval(() => {
@@ -107,7 +123,6 @@
         }
       }
     });
-
     function attachSidebarTimeSetter() {
       const selectors = [".sidebar-submenu-button", ".sidebar-sub-submenu-button"];
       selectors.forEach(sel => {

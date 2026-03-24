@@ -11,59 +11,58 @@
     });
     /* ================ CREATION OF EMS SERVICES MESSAGE =============== */
     async function generateCODUserviceMessage() {
-      const hourAlert = document.getElementById('alert-service')?.value || '';
-      const address = document.getElementById('address-service')?.value?.trim() || '';
-      const locality = document.getElementById('location-service')?.value?.trim() || '';
-      const referencePoint = document.getElementById('reference-address-service')?.value?.trim() || '';
-      const gender = document.getElementById('victim-gender-service')?.value || '';
-      const age = document.getElementById('victim-age-service')?.value?.trim() || '';
-      const ageType = document.getElementById('victim-age-type-service')?.value || '';
-      const situation = document.getElementById('situation-service')?.value?.trim() || '';
-      const nrCODU = document.getElementById('nr-codu-service')?.value?.trim() || '';
-      const observations = document.getElementById('observations-service')?.value?.trim() || '';
-      let messageTitle = `*🚨⚠️ SERVIÇO INEM ⚠️🚨*`;
-      if (reserv.checked) {
-        messageTitle = '*🚨⚠️ SERVIÇO INEM-Reserva ⚠️🚨*';
-      }
-      let message = `${messageTitle}\n\n`;
-      if (nrCODU) message += `*Nr. CODU:* ${nrCODU}\n`;
-      if (hourAlert) message += `*Hora Alerta:* ${hourAlert}\n`;
-      if (address || locality) message += `*Local:* ${address}${address && locality ? ' - ' : ''}${locality}\n`;
-      if (referencePoint) message += `*Ponto Ref.:* ${referencePoint}\n`;
-      if (gender || age) message += `*Vítima:* ${gender}${gender && (age || ageType) ? ', ' : ''}${age} ${ageType}\n`;
-      if (situation) message += `*Situação:* ${situation}\n\n`;
-      if (observations) message += `*Observações:* ${observations}`;
-      const victimTypeMap = { "Masc.": "MASCULINO", "Fem.": "FEMININO", "Desc.": "DESCONHECIDO" };
-      const victimType = victimTypeMap[gender] || gender;
-      const serviceType = inem.checked ? "ITeams" : reserv.checked ? "Verbete" : "";
-      const now = new Date();
-      const alertDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
-      if (navigator.clipboard?.writeText) {
-        navigator.clipboard.writeText(message).then(async () => {
-          showPopupSuccess("Mensagem criada e copiada! Pode colar no WhatsApp (CTRL+V).");
-          try {
-            const record = {corp_oper_nr: corpOperNr, nr_codu: nrCODU || null, alert_date: alertDate, alert_hour: hourAlert || null, victim_type: victimType || null,
-                            victim_age_unit: age || null, victim_age_type: ageType || null, victim_address: address || null, victim_location: locality || null,
-                            service_type: serviceType || null,};
-            const res = await fetch(`${SUPABASE_URL}/rest/v1/inem_entries`, {
-              method: "POST",
-              headers: { ...getSupabaseHeaders(), "Prefer": "return=minimal" },
-              body: JSON.stringify(record)
-            });
-            if (!res.ok) throw new Error(await res.text());
-          } catch(err) {
-            console.error("Erro ao gravar registo INEM:", err);
-            showPopupWarning("Mensagem copiada, mas erro ao gravar registo.");
-          }
-          clearFormFields();
-        }).catch(() => showPopupWarning("Não foi possível copiar automaticamente. Copie manualmente."));
-      } else {
-        showPopupSuccess("Mensagem criada! Copie manualmente o texto.");
-      }
-      console.log(message);
-      return message;
-    }
+       const hourAlert = document.getElementById('alert-service')?.value || '';
+       const address = document.getElementById('address-service')?.value?.trim() || '';
+       const locality = document.getElementById('location-service')?.value?.trim() || '';
+       const referencePoint = document.getElementById('reference-address-service')?.value?.trim() || '';
+       const gender = document.getElementById('victim-gender-service')?.value || '';
+       const age = document.getElementById('victim-age-service')?.value?.trim() || '';
+       const ageType = document.getElementById('victim-age-type-service')?.value || '';
+       const situation = document.getElementById('situation-service')?.value?.trim() || '';
+       const nrCODU = document.getElementById('nr-codu-service')?.value?.trim() || '';
+       const observations = document.getElementById('observations-service')?.value?.trim() || '';
+       let messageTitle = `*🚨⚠️ SERVIÇO INEM ⚠️🚨*`;
+       if (reserv.checked) {
+         messageTitle = '*🚨⚠️ SERVIÇO INEM-Reserva ⚠️🚨*';
+       }
+       let message = `${messageTitle}\n\n`;
+       if (nrCODU) message += `*Nr. CODU:* ${nrCODU}\n`;
+       if (hourAlert) message += `*Hora Alerta:* ${hourAlert}\n`;
+       if (address || locality) message += `*Local:* ${address}${address && locality ? ' - ' : ''}${locality}\n`;
+       if (referencePoint) message += `*Ponto Ref.:* ${referencePoint}\n`;
+       if (gender || age) message += `*Vítima:* ${gender}${gender && (age || ageType) ? ', ' : ''}${age} ${ageType}\n`;
+       if (situation) message += `*Situação:* ${situation}\n\n`;
+       if (observations) message += `*Observações:* ${observations}`;
+       const victimTypeMap = { "Masc.": "Masculino", "Fem.": "Feminino", "Desc.": "Desconhcido" };
+       const victimType = victimTypeMap[gender] || gender;
+       const serviceType = inem.checked ? "ITeams" : reserv.checked ? "Verbete" : "";
+       const now = new Date();
+       const alertDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+       const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+       if (navigator.clipboard?.writeText) {
+         navigator.clipboard.writeText(message).then(async () => {
+           showPopupSuccess("Mensagem criada e copiada! Pode colar no WhatsApp (CTRL+V).");
+           try {
+             const record = {corp_oper_nr: corpOperNr, nr_codu: nrCODU || null, alert_date: alertDate, alert_hour: hourAlert || null, victim_type: victimType || null,
+                             victim_age_type: age || null, victim_age: ageType || null, victim_address: address || null, victim_location: locality || null,
+                             service_type: serviceType || null,};
+             const res = await fetch(`${SUPABASE_URL}/rest/v1/inem_entries`, {
+               method: "POST",
+               headers: {...getSupabaseHeaders(), "Prefer": "return=minimal"},
+               body: JSON.stringify(record)
+             });
+             if (!res.ok) throw new Error(await res.text());
+           } catch(err) {
+             console.error("Erro ao gravar registo INEM:", err);
+             showPopupWarning("Mensagem copiada, mas erro ao gravar registo.");
+           }
+           clearFormFields();
+         }).catch(() => showPopupWarning("Não foi possível copiar automaticamente. Copie manualmente."));
+       } else {
+         showPopupSuccess("Mensagem criada! Copie manualmente o texto.");
+       }
+       return message;
+     }
     /* ============== EMS SERVICES FIELDS CONFIGURATIONS =============== */
     function focusAddressField() {
       const addressInput = document.getElementById("address-service");

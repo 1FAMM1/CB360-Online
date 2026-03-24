@@ -192,20 +192,19 @@
         const style = document.createElement("style");
         style.id = "inem-modal-style";
         style.textContent = `
-          @keyframes inemFadeIn {from {opacity: 0;} to {opacity: 1;}}
-          @keyframes inemSlideUp {from {opacity: 0; transform: translateY(30px) scale(0.97); } to {opacity: 1; transform: translateY(0) scale(1);}}
+          @keyframes inemFadeIn {from {opacity: 0;} to { opacity: 1;}}
+          @keyframes inemSlideUp {from {opacity: 0; transform: translateY(30px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
           @keyframes inemSpin {to {transform: rotate(360deg);}}
           #inem-pdf-modal {animation: inemFadeIn .2s ease;}
           #inem-pdf-modal .modal-box {animation: inemSlideUp .25s ease;}
-          #inem-pdf-modal .modal-box.closing {animation: inemSlideUp .2s ease reverse forwards;}
-          #inem-pdf-modal .closing-overlay {animation: inemFadeIn .2s ease reverse forwards;}
           .inem-modal-spinner {width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top-color: #131a69; border-radius: 50%; animation: inemSpin .8s linear infinite;}
-          .inem-toolbar-btn {border: none; background: rgba(255,255,255,0.1); color: #fff; width: 32px; height: 32px; border-radius: 6px; cursor: pointer; font-size: 15px; 
+          .inem-toolbar-btn {border: none; background: rgba(255,255,255,0.1); color: #fff; width: 32px; height: 32px; border-radius: 6px; cursor: pointer; font-size: 15px;
                              display: inline-flex; align-items: center; justify-content: center; transition: background .15s;}
           .inem-toolbar-btn:hover {background: rgba(255,255,255,0.25);}
-          .inem-print-btn {border: none; background: rgba(255,255,255,0.15); color: #fff; padding: 5px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; 
+          .inem-print-btn {border: none; background: rgba(255,255,255,0.15); color: #fff; padding: 5px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold;
                            font-family: Segoe UI, sans-serif; display: inline-flex; align-items: center; gap: 6px; transition: background .15s;}
           .inem-print-btn:hover {background: rgba(255,255,255,0.3);}
+          .inem-modal-footer {background: linear-gradient(135deg, #131a69 0%, #1e2fa0 100%); padding: 8px 16px; display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-shrink: 0;}
         `;
         document.head.appendChild(style);
       }
@@ -218,8 +217,8 @@
       Object.assign(box.style, {background: "#f8fafc", borderRadius: "14px", width: "82vw", height: "90vh", display: "flex", flexDirection: "column", 
                                 boxShadow: "0 24px 64px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2)", overflow: "hidden"});
       const header = document.createElement("div");
-      Object.assign(header.style, {background: "linear-gradient(135deg, #131a69 0%, #1e2fa0 100%)", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", 
-                                   gap: "12px", flexShrink: "0"});
+      Object.assign(header.style, {background: "linear-gradient(135deg, #131a69 0%, #1e2fa0 100%)", padding: "12px 16px", display: "flex", alignItems: "center",
+                                   justifyContent: "space-between", gap: "12px", flexShrink: "0"});
       const titleGroup = document.createElement("div");
       Object.assign(titleGroup.style, {display: "flex", alignItems: "center", gap: "10px"});
       const icon = document.createElement("div");
@@ -236,11 +235,6 @@
       titleGroup.append(icon, titleWrap);
       const toolbar = document.createElement("div");
       Object.assign(toolbar.style, {display: "flex", alignItems: "center", gap: "6px"});
-      const btnPrint = document.createElement("button");
-      btnPrint.className = "inem-print-btn";
-      btnPrint.innerHTML = "🖨️ Imprimir";
-      btnPrint.title = "Imprimir";
-      btnPrint.onclick = () => {try {iframe.contentWindow.print(); } catch {window.print();}};
       const btnFs = document.createElement("button");
       btnFs.className = "inem-toolbar-btn";
       btnFs.innerHTML = "⛶";
@@ -263,13 +257,13 @@
         overlay.style.animation = "inemFadeIn .18s ease reverse forwards";
         setTimeout(() => overlay.remove(), 180);
       };
-      toolbar.append(btnPrint, btnFs, btnClose);
+      toolbar.append(btnFs, btnClose);
       header.append(titleGroup, toolbar);
       const content = document.createElement("div");
       Object.assign(content.style, {flex: "1", position: "relative", overflow: "hidden", background: "#fff"});
       const loadingEl = document.createElement("div");
-      Object.assign(loadingEl.style, {position: "absolute", inset: "0", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "14px",
-                                      background: "#fff", zIndex: "2"});
+      Object.assign(loadingEl.style, {position: "absolute", inset: "0", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", 
+                                      gap: "14px", background: "#fff", zIndex: "2"});
       const spinner = document.createElement("div");
       spinner.className = "inem-modal-spinner";
       const loadingText = document.createElement("div");
@@ -291,8 +285,8 @@
           const sanitized = html
           .replace(/window\.print\s*\(\s*\)/g, "void 0")
           .replace(/onload\s*=\s*["']?print\s*\(\s*\)["']?/gi, "");
-          iframe.srcdoc = sanitized;
           iframe.onload = hideLoading;
+          iframe.srcdoc = sanitized;
         })
           .catch(() => {
           loadingEl.remove();
@@ -303,7 +297,17 @@
         iframe.onload = hideLoading;
       }
       content.appendChild(iframe);
-      box.append(header, content);
+      const footer = document.createElement("div");
+      footer.className = "inem-modal-footer";
+      if (ext === "html") {
+        const btnPrint = document.createElement("button");
+        btnPrint.className = "inem-print-btn";
+        btnPrint.innerHTML = "🖨️ Imprimir";
+        btnPrint.title = "Imprimir";
+        btnPrint.onclick = () => { try {iframe.contentWindow.print(); } catch {window.print();}};
+        footer.appendChild(btnPrint);
+      }
+      box.append(header, content, footer);
       overlay.appendChild(box);
       overlay.addEventListener("click", e => {if (e.target === overlay) btnClose.onclick();});
       document.body.appendChild(overlay);

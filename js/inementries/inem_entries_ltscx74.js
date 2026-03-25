@@ -304,7 +304,7 @@
         btnPrint.className = "inem-print-btn";
         btnPrint.innerHTML = "🖨️ Imprimir";
         btnPrint.title = "Imprimir";
-        btnPrint.onclick = () => { try {iframe.contentWindow.print(); } catch {window.print();}};
+        btnPrint.onclick = () => {try {iframe.contentWindow.print();} catch {window.print();}};
         footer.appendChild(btnPrint);
       }
       box.append(header, content, footer);

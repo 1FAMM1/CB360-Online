@@ -181,135 +181,207 @@
         showPopupWarning("Ficheiro não encontrado.");
       }
     }
-    /* ─── VISUALIZAR (MODAL) ────────────────────────────── */
-    async function inemViewPdf(nrCodu, serviceType) {
-      if (!nrCodu) return;
-      const ext = serviceType === "ITeams" ? "html" : "pdf";
-      const fileName = `ocr_${nrCodu}.${ext}`;
-      const url = `${SUPABASE_URL}/storage/v1/object/public/inem-verbetes/${fileName}`;
-      document.getElementById("inem-pdf-modal")?.remove();
-      if (!document.getElementById("inem-modal-style")) {
-        const style = document.createElement("style");
-        style.id = "inem-modal-style";
-        style.textContent = `
-          @keyframes inemFadeIn {from {opacity: 0;} to { opacity: 1;}}
-          @keyframes inemSlideUp {from {opacity: 0; transform: translateY(30px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
-          @keyframes inemSpin {to {transform: rotate(360deg);}}
-          #inem-pdf-modal {animation: inemFadeIn .2s ease;}
-          #inem-pdf-modal .modal-box {animation: inemSlideUp .25s ease;}
-          .inem-modal-spinner {width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top-color: #131a69; border-radius: 50%; animation: inemSpin .8s linear infinite;}
-          .inem-toolbar-btn {border: none; background: rgba(255,255,255,0.1); color: #fff; width: 32px; height: 32px; border-radius: 6px; cursor: pointer; font-size: 15px;
-                             display: inline-flex; align-items: center; justify-content: center; transition: background .15s;}
-          .inem-toolbar-btn:hover {background: rgba(255,255,255,0.25);}
-          .inem-print-btn {border: none; background: rgba(255,255,255,0.15); color: #fff; padding: 5px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold;
-                           font-family: Segoe UI, sans-serif; display: inline-flex; align-items: center; gap: 6px; transition: background .15s;}
-          .inem-print-btn:hover {background: rgba(255,255,255,0.3);}
-          .inem-modal-footer {background: linear-gradient(135deg, #131a69 0%, #1e2fa0 100%); padding: 8px 16px; display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-shrink: 0;}
-        `;
-        document.head.appendChild(style);
+    /* ─── LOGOS (Supabase Storage) ───────────────────────────────────────────── */
+    const INEM_LOGO   = "https://rjkbodfqsvckvnhjwmhg.supabase.co/storage/v1/object/public/cb_logos/INEM_logo.png";
+    const ITEAMS_LOGO = "https://rjkbodfqsvckvnhjwmhg.supabase.co/storage/v1/object/public/cb_logos/ITEAMS.png";
+    /* ─── ESTILOS ────────────────────────────────────────────────────────────── */
+    const INEM_MODAL_STYLES = `
+      @keyframes inemFadeIn {from {opacity: 0;} to {opacity: 1;}}
+      @keyframes inemSlideUp {from {opacity: 0; transform: translateY(28px) scale(0.96);} to {opacity: 1; transform: translateY(0) scale(1);}}
+      @keyframes inemSpin {to {transform: rotate(360deg);}}
+      #inem-pdf-modal {animation: inemFadeIn .22s ease;}
+      #inem-pdf-modal .inem-box {animation: inemSlideUp .28s cubic-bezier(.22,.68,0,1.2);}
+      .inem-spinner {width: 36px; height: 36px; border: 3px solid #f0e8e8; border-top-color: #8b0000; border-radius: 50%; animation: inemSpin .75s linear infinite;}
+      .inem-btn {border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.8); width: 30px; height: 30px; border-radius: 7px; cursor: pointer;
+                 font-size: 14px; display: inline-flex; align-items: center; justify-content: center;  transition: background .15s, border-color .15s, transform .1s;}
+      .inem-btn:hover  {background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.25); color: #fff;}
+      .inem-btn:active {transform: scale(.91);}
+      .inem-btn.inem-close-btn {border-color: rgba(255,80,80,0.22);}
+      .inem-btn.inem-close-btn:hover {background: rgba(180,0,0,0.4); border-color: rgba(255,80,80,0.5);}
+      .inem-print-btn {border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.92); padding: 6px 14px; border-radius: 7px; cursor: pointer;
+                       font-size: 12.5px; font-weight: 600; font-family: 'Segoe UI', sans-serif; letter-spacing: .3px; display: inline-flex; align-items: center; gap: 6px;
+                       transition: background .15s, border-color .15s, transform .1s;}
+      .inem-print-btn:hover {background: rgba(255,255,255,0.22); border-color: rgba(255,255,255,0.38);}
+      .inem-print-btn:active {transform: scale(.96);}
+      .inem-header {background: linear-gradient(135deg, #5a0000 0%, #7b0000 45%, #9a0f0f 100%); padding: 11px 14px; display: flex; align-items: center; justify-content: space-between;
+                    gap: 10px; flex-shrink: 0; border-bottom: 1px solid rgba(0,0,0,0.2); position: relative;}
+      .inem-header::before {content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255,255,255,0.07) 0%, transparent 100%); pointer-events: none;}
+      .inem-footer {background: linear-gradient(135deg, #5a0000 0%, #7b0000 100%); padding: 9px 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+                    flex-shrink: 0; border-top: 1px solid rgba(0,0,0,0.15); position: relative;}
+      .inem-footer::before {content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, transparent 100%); pointer-events: none;}
+      .inem-logo-box {width: 34px; height: 34px; border-radius: 6px; overflow: hidden; flex-shrink: 0;}
+      .inem-logo-box img {width: 100%; height: 100%; object-fit: cover;}
+      .inem-logo-iteams {height: 22px; flex-shrink: 0; opacity: .85;}
+      .inem-logo-iteams img {height: 100%; width: auto; object-fit: contain; filter: brightness(0) invert(1);}
+      .inem-sep {width: 1px; height: 28px; background: rgba(255,255,255,0.18); flex-shrink: 0;}
+      .inem-title-main {color: #fff; font-weight: 700; font-size: 13px; font-family: 'Segoe UI', sans-serif; letter-spacing: .1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+      .inem-title-sub {color: rgba(255,255,255,0.42); font-size: 10.5px; font-family: 'Segoe UI', sans-serif; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+      .inem-badge {background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.18); border-radius: 5px; padding: 2px 7px; font-size: 10px; font-weight: 700; 
+                   font-family: 'Segoe UI', sans-serif; color: rgba(255,255,255,0.85); letter-spacing: .7px; text-transform: uppercase; flex-shrink: 0;}
+      .inem-footer-info {color: rgba(255,255,255,0.38); font-size: 10.5px; font-family: 'Segoe UI', sans-serif; letter-spacing: .2px; position: relative; z-index: 1;}      
+    `;
+    /* ── helpers ─────────────────────────────────────────────────────────────── */
+    function _inemInjectStyles() {
+      if (document.getElementById('inem-modal-style')) return;
+      const style = document.createElement('style');
+      style.id = 'inem-modal-style';
+      style.textContent = INEM_MODAL_STYLES;
+      document.head.appendChild(style);
+    }
+    function _inemCloseModal(overlay, box) {
+      box.style.animation = 'inemSlideUp .18s ease reverse forwards';
+      overlay.style.animation = 'inemFadeIn .18s ease reverse forwards';
+      setTimeout(() => overlay.remove(), 180);
+    }
+    function _inemBuildHeader(nrCodu, serviceType, ext, box, overlay) {
+      const header = document.createElement('div');
+      header.className = 'inem-header';
+      const left = document.createElement('div');
+      Object.assign(left.style, {display: 'flex', alignItems: 'center', gap: '10px', flex: '1', minWidth: '0', position: 'relative', zIndex: '1'});
+      const logoInem = document.createElement('div');
+      logoInem.className = 'inem-logo-box';
+      const imgInem = document.createElement('img');
+      imgInem.src = INEM_LOGO;
+      imgInem.alt = 'INEM';
+      logoInem.appendChild(imgInem);
+      const sep1 = document.createElement('div');
+      sep1.className = 'inem-sep';
+      left.append(logoInem, sep1);
+      if (serviceType === 'ITeams') {
+        const logoIt = document.createElement('div');
+        logoIt.className = 'inem-logo-iteams';
+        const imgIt = document.createElement('img');
+        imgIt.src = ITEAMS_LOGO;
+        imgIt.alt = 'iTeams';
+        logoIt.appendChild(imgIt);
+        const sep2 = document.createElement('div');
+        sep2.className = 'inem-sep';
+        left.append(logoIt, sep2);
       }
-      const overlay = document.createElement("div");
-      overlay.id = "inem-pdf-modal";
-      Object.assign(overlay.style, {position: "fixed", inset: "0", background: "rgba(10,15,40,0.75)", zIndex: "9999", display: "flex", alignItems: "center", 
-                                    justifyContent: "center", backdropFilter: "blur(3px)"});
-      const box = document.createElement("div");
-      box.className = "modal-box";
-      Object.assign(box.style, {background: "#f8fafc", borderRadius: "14px", width: "82vw", height: "90vh", display: "flex", flexDirection: "column", 
-                                boxShadow: "0 24px 64px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2)", overflow: "hidden"});
-      const header = document.createElement("div");
-      Object.assign(header.style, {background: "linear-gradient(135deg, #131a69 0%, #1e2fa0 100%)", padding: "12px 16px", display: "flex", alignItems: "center",
-                                   justifyContent: "space-between", gap: "12px", flexShrink: "0"});
-      const titleGroup = document.createElement("div");
-      Object.assign(titleGroup.style, {display: "flex", alignItems: "center", gap: "10px"});
-      const icon = document.createElement("div");
-      icon.innerHTML = ext === "html" ? "📋" : "📄";
-      icon.style.fontSize = "20px";
-      const titleWrap = document.createElement("div");
-      const titleMain = document.createElement("div");
-      titleMain.textContent = `Verbete INEM — ${nrCodu}`;
-      Object.assign(titleMain.style, {color: "#fff", fontWeight: "700", fontSize: "14px", fontFamily: "Segoe UI, sans-serif"});
-      const titleSub = document.createElement("div");
-      titleSub.textContent = `Via ${serviceType} · ${fileName}`;
-      Object.assign(titleSub.style, {color: "rgba(255,255,255,0.55)", fontSize: "11px", fontFamily: "Segoe UI, sans-serif", marginTop: "1px"});
-      titleWrap.append(titleMain, titleSub);
-      titleGroup.append(icon, titleWrap);
-      const toolbar = document.createElement("div");
-      Object.assign(toolbar.style, {display: "flex", alignItems: "center", gap: "6px"});
-      const btnFs = document.createElement("button");
-      btnFs.className = "inem-toolbar-btn";
-      btnFs.innerHTML = "⛶";
-      btnFs.title = "Ecrã inteiro";
+      const titleWrap = document.createElement('div');
+      titleWrap.style.cssText = 'min-width:0';
+      const titleRow = document.createElement('div');
+      Object.assign(titleRow.style, {display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '2px'});
+      const titleMain = document.createElement('div');
+      titleMain.className = 'inem-title-main';
+      titleMain.textContent = serviceType === 'ITeams' ? `Verbete ITeams - ${nrCodu}` : `Verbete INEM - ${nrCodu}`;
+      const badge = document.createElement('span');
+      badge.className = 'inem-badge';
+      badge.textContent = ext.toUpperCase();
+      const titleSub = document.createElement('div');
+      titleSub.className = 'inem-title-sub';
+      titleSub.textContent = `Via ${serviceType} · ocr_${nrCodu}.${ext}`;
+      titleRow.append(titleMain, badge);
+      titleWrap.append(titleRow, titleSub);
+      left.appendChild(titleWrap);
+      const toolbar = document.createElement('div');
+      Object.assign(toolbar.style, {display: 'flex', alignItems: 'center', gap: '5px', position: 'relative', zIndex: '1'});
       let isFs = false;
+      const btnFs = document.createElement('button');
+      btnFs.className = 'inem-btn';
+      btnFs.innerHTML = '⛶';
+      btnFs.title = 'Ecrã inteiro';
       btnFs.onclick = () => {
         isFs = !isFs;
-        box.style.width = isFs ? "100vw" : "82vw";
-        box.style.height = isFs ? "100vh" : "90vh";
-        box.style.borderRadius = isFs ? "0" : "14px";
-        btnFs.innerHTML = isFs ? "⊡" : "⛶";
+        Object.assign(box.style, {width: isFs ? '100vw' : '82vw', height: isFs ? '100vh' : '90vh', borderRadius: isFs ? '0' : '14px',});
+        btnFs.innerHTML = isFs ? '⊡' : '⛶';
       };
-      const btnClose = document.createElement("button");
-      btnClose.className = "inem-toolbar-btn";
-      btnClose.innerHTML = "✕";
-      btnClose.title = "Fechar";
-      btnClose.style.fontSize = "16px";
-      btnClose.onclick = () => {
-        box.style.animation = "inemSlideUp .18s ease reverse forwards";
-        overlay.style.animation = "inemFadeIn .18s ease reverse forwards";
-        setTimeout(() => overlay.remove(), 180);
-      };
+      const btnClose = document.createElement('button');
+      btnClose.className = 'inem-btn inem-close-btn';
+      btnClose.innerHTML = '✕';
+      btnClose.title = 'Fechar';
+      btnClose.style.fontSize = '15px';
+      btnClose.onclick = () => _inemCloseModal(overlay, box);
       toolbar.append(btnFs, btnClose);
-      header.append(titleGroup, toolbar);
-      const content = document.createElement("div");
-      Object.assign(content.style, {flex: "1", position: "relative", overflow: "hidden", background: "#fff"});
-      const loadingEl = document.createElement("div");
-      Object.assign(loadingEl.style, {position: "absolute", inset: "0", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", 
-                                      gap: "14px", background: "#fff", zIndex: "2"});
-      const spinner = document.createElement("div");
-      spinner.className = "inem-modal-spinner";
-      const loadingText = document.createElement("div");
-      loadingText.textContent = "A carregar ficheiro…";
-      Object.assign(loadingText.style, {color: "#64748b", fontSize: "13px", fontFamily: "Segoe UI, sans-serif"});
+      header.append(left, toolbar);
+      return { header, btnClose };
+    }
+    function _inemBuildContent(url, ext) {
+      const content = document.createElement('div');
+      Object.assign(content.style, {flex: '1', position: 'relative', overflow: 'hidden', background: '#fff'});
+      const loadingEl = document.createElement('div');
+      Object.assign(loadingEl.style, {position: 'absolute', inset: '0', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '14px', background: '#fff', zIndex: '2',});
+      const spinner = document.createElement('div');
+      spinner.className = 'inem-spinner';
+      const loadingText = document.createElement('div');
+      loadingText.textContent = 'A carregar ficheiro…';
+      Object.assign(loadingText.style, {color: '#9ca3af', fontSize: '12.5px', fontFamily: "'Segoe UI', sans-serif"});
       loadingEl.append(spinner, loadingText);
-      content.appendChild(loadingEl);
-      const iframe = document.createElement("iframe");
-      Object.assign(iframe.style, {position: "absolute", inset: "0", width: "100%", height: "100%", border: "none", opacity: "0", transition: "opacity .3s"});
-      const hideLoading = () => {
-        loadingEl.style.display = "none";
-        iframe.style.opacity = "1";
+      const iframe = document.createElement('iframe');
+      Object.assign(iframe.style, {position: 'absolute', inset: '0', width: '100%', height: '100%', border: 'none', opacity: '0', transition: 'opacity .3s',});
+      const revealIframe = () => {
+        loadingEl.style.display = 'none';
+        iframe.style.opacity = '1';
       };
-      if (ext === "html") {
+      if (ext === 'html') {
         fetch(url)
           .then(r => r.arrayBuffer())
-          .then(buf => new TextDecoder("windows-1252").decode(buf))
+          .then(buf => new TextDecoder('windows-1252').decode(buf))
           .then(html => {
-          const sanitized = html
-          .replace(/window\.print\s*\(\s*\)/g, "void 0")
-          .replace(/onload\s*=\s*["']?print\s*\(\s*\)["']?/gi, "");
-          iframe.onload = hideLoading;
-          iframe.srcdoc = sanitized;
+          iframe.onload = revealIframe;
+          const scrollbarCSS = `<style>::-webkit-scrollbar {width: 10px; height: 6px;} ::-webkit-scrollbar-track {background: #1a0000;}
+                                       ::-webkit-scrollbar-thumb {background: #7b0000; border-radius: 10px;} ::-webkit-scrollbar-thumb:hover {background: #9a0f0f;}</style>`;
+          iframe.srcdoc = scrollbarCSS + html
+            .replace(/window\.print\s*\(\s*\)/g, 'void 0')
+            .replace(/onload\s*=\s*["']?print\s*\(\s*\)["']?/gi, '');
         })
           .catch(() => {
           loadingEl.remove();
-          showPopupWarning("Erro ao carregar o ficheiro HTML.");
+          showPopupWarning('Erro ao carregar o ficheiro HTML.');
         });
       } else {
         iframe.src = url;
-        iframe.onload = hideLoading;
+        iframe.onload = revealIframe;
       }
-      content.appendChild(iframe);
-      const footer = document.createElement("div");
-      footer.className = "inem-modal-footer";
-      if (ext === "html") {
-        const btnPrint = document.createElement("button");
-        btnPrint.className = "inem-print-btn";
-        btnPrint.innerHTML = "🖨️ Imprimir";
-        btnPrint.title = "Imprimir";
-        btnPrint.onclick = () => {try {iframe.contentWindow.print();} catch {window.print();}};
+      content.append(loadingEl, iframe);
+      return {content, iframe};
+    }
+    function _inemBuildFooter(ext, iframe) {
+      const footer = document.createElement('div');
+      footer.className = 'inem-footer';
+      const info = document.createElement('div');
+      info.className = 'inem-footer-info';
+      info.textContent = 'INEM · Serviço Nacional de Emergência Médica';
+      footer.appendChild(info);
+      if (ext === 'html') {
+        const btnPrint = document.createElement('button');
+        btnPrint.className = 'inem-print-btn';
+        btnPrint.innerHTML = '🖨️ Imprimir';
+        btnPrint.title = 'Imprimir verbete';
+        btnPrint.style.position = 'relative';
+        btnPrint.style.zIndex = '1';
+        btnPrint.onclick = () => {
+          try {iframe.contentWindow.print();} catch {window.print();}
+        };
         footer.appendChild(btnPrint);
       }
+      return footer;
+    }
+    /* ── função principal ─────────────────────────────────────────────────────── */
+    async function inemViewPdf(nrCodu, serviceType) {
+      if (!nrCodu) return;
+      const ext = serviceType === 'ITeams' ? 'html' : 'pdf';
+      const fileName = `ocr_${nrCodu}.${ext}`;
+      const url = `${SUPABASE_URL}/storage/v1/object/public/inem-verbetes/${fileName}`;
+      document.getElementById('inem-pdf-modal')?.remove();
+      _inemInjectStyles();
+      const overlay = document.createElement('div');
+      overlay.id = 'inem-pdf-modal';
+      Object.assign(overlay.style, {position: 'fixed', inset: '0', background: 'rgba(10,8,8,0.78)', zIndex: '9999', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)',});
+      const box = document.createElement('div');
+      box.className = 'inem-box';
+      Object.assign(box.style, {background: '#f8f8f8', borderRadius: '14px', width: '82vw', height: '90vh', display: 'flex', flexDirection: 'column', 
+                                boxShadow: '0 28px 72px rgba(0,0,0,0.45), 0 2px 8px rgba(0,0,0,0.18)', overflow: 'hidden',});
+      const {header, btnClose} = _inemBuildHeader(nrCodu, serviceType, ext, box, overlay);
+      const {content, iframe} = _inemBuildContent(url, ext);
+      const footer = _inemBuildFooter(ext, iframe);
       box.append(header, content, footer);
       overlay.appendChild(box);
-      overlay.addEventListener("click", e => {if (e.target === overlay) btnClose.onclick();});
+      overlay.addEventListener('click', e => {if (e.target === overlay) _inemCloseModal(overlay, box);});
+      const onKeyDown = e => {
+        if (e.key === 'Escape') {_inemCloseModal(overlay, box); document.removeEventListener('keydown', onKeyDown);}
+      };
+      document.addEventListener('keydown', onKeyDown);
       document.body.appendChild(overlay);
     }
     /* ─── CRIAR TABELA DE DADOS ─────────────────────────────── */

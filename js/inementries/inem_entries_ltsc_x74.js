@@ -426,22 +426,35 @@
       const content = document.createElement('div');
       Object.assign(content.style, {flex: '1', position: 'relative', overflow: 'hidden', background: '#fff'});
       const loadingEl = document.createElement('div');
-      Object.assign(loadingEl.style, {position: 'absolute', inset: '0', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '14px', background: '#fff', zIndex: '2',});
+      Object.assign(loadingEl.style, {position: 'absolute', inset: '0', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '14px', background: '#fff', zIndex: '2'});
       const spinner = document.createElement('div');
       spinner.className = 'inem-spinner';
       const loadingText = document.createElement('div');
       loadingText.textContent = 'A carregar ficheiro…';
       Object.assign(loadingText.style, {color: '#9ca3af', fontSize: '12.5px', fontFamily: "'Segoe UI', sans-serif"});
       loadingEl.append(spinner, loadingText);
+      function showNotFound() {
+        loadingEl.innerHTML = '';
+        const icon = document.createElement('div');
+        icon.textContent = '📄';
+        Object.assign(icon.style, {fontSize: '48px', opacity: '0.4'});
+        const msg = document.createElement('div');
+        msg.textContent = 'Verbete Indisponível.';
+        Object.assign(msg.style, {color: '#6b7280', fontSize: '15px', fontWeight: '600', fontFamily: "'Segoe UI', sans-serif"});
+        const sub = document.createElement('div');
+        sub.textContent = 'Ainda não foi carregado nenhum verbete para esta ocorrência.';
+        Object.assign(sub.style, {color: '#9ca3af', fontSize: '12.5px', fontFamily: "'Segoe UI', sans-serif"});
+        loadingEl.append(icon, msg, sub);
+      }
       const iframe = document.createElement('iframe');
-      Object.assign(iframe.style, {position: 'absolute', inset: '0', width: '100%', height: '100%', border: 'none', opacity: '0', transition: 'opacity .3s',});
+      Object.assign(iframe.style, {position: 'absolute', inset: '0', width: '100%', height: '100%', border: 'none', opacity: '0', transition: 'opacity .3s'});
       const revealIframe = () => {
         loadingEl.style.display = 'none';
         iframe.style.opacity = '1';
       };
       if (ext === 'html') {
         fetch(url)
-          .then(r => r.arrayBuffer())
+          .then(r => {if (!r.ok) throw new Error(); return r.arrayBuffer();})
           .then(buf => new TextDecoder('windows-1252').decode(buf))
           .then(html => {
           iframe.onload = revealIframe;
@@ -451,13 +464,15 @@
             .replace(/window\.print\s*\(\s*\)/g, 'void 0')
             .replace(/onload\s*=\s*["']?print\s*\(\s*\)["']?/gi, '');
         })
-          .catch(() => {
-          loadingEl.remove();
-          showPopupWarning('Erro ao carregar o ficheiro HTML.');
-        });
+          .catch(() => showNotFound());
       } else {
-        iframe.src = url;
-        iframe.onload = revealIframe;
+        fetch(url, {method: 'HEAD'})
+          .then(r => {if (!r.ok) throw new Error();})
+          .then(() => {
+          iframe.src = url;
+          iframe.onload = revealIframe;
+        })
+          .catch(() => showNotFound());
       }
       content.append(loadingEl, iframe);
       return {content, iframe};

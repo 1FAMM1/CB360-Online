@@ -4141,139 +4141,188 @@
         const s = document.createElement("style");
         s.id = "reg-core-css";
         s.innerHTML = `
-          .reg-wrapper {font-family: 'Inter', sans-serif; color: #1e293b;}
-          .reg-grid {display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;}
-          .reg-grid-full {grid-column: 1 / -1;}
+          @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+          .reg-wrapper {font-family: 'DM Sans', sans-serif; color: #1e293b;}
+          .reg-stats {display: flex; gap: 10px; margin-bottom: 20px;}
+          .reg-stat-card {flex: 1; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px; display: flex; align-items: center; gap: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);}
+          .reg-stat-icon {width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;}
+          .reg-stat-icon.total {background: #eff6ff;}
+          .reg-stat-icon.active {background: #f0fdf4;}
+          .reg-stat-icon.inactive {background: #fef2f2;}
+          .reg-stat-val {font-size: 22px; font-weight: 700; line-height: 1;}
+          .reg-stat-lbl {font-size: 11px; color: #94a3b8; font-weight: 500; margin-top: 2px;}
+          .reg-form-card {background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.05);}
+          .reg-form-header {background: #1e293b; padding: 14px 20px; display: flex; align-items: center; gap: 10px;}
+          .reg-form-header-title {font-size: 13px; font-weight: 700; color: #fff; letter-spacing: 0.5px; text-transform: uppercase;}
+          .reg-form-header-badge {background: rgba(255,255,255,0.15); color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700;}
+          .reg-form-body {padding: 20px;}
+          .reg-grid {display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;}
           .reg-field {display: flex; flex-direction: column; gap: 5px;}
-          .reg-label {font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;}
-          .reg-input, .reg-select {width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; font-family: 'Inter', sans-serif;
-                                   color: #1e293b; background: #fff; outline: none; transition: border-color 0.2s, box-shadow 0.2s; box-sizing: border-box;}
-          .reg-input:focus, .reg-select:focus {border-color: #1e293b; box-shadow: 0 0 0 3px rgba(30,41,59,0.08);}
-          .reg-input::placeholder {color: #94a3b8;}
-          .reg-divider {height: 1px; background: #e2e8f0; margin: 8px 0 20px;}
-          .reg-table-wrapper {max-height: 380px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; scrollbar-width: none; -ms-overflow-style: none;}
-          .reg-table-wrapper::-webkit-scrollbar {display: none;}
-          .reg-table {width: 100%; border-collapse: collapse; font-size: 12px;}
-          .reg-table thead th {position: sticky; top: 0; background: #1e293b; color: #fff; padding: 10px 12px; text-align: left; font-size: 11px; font-weight: 700;
-                               text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;}
-          .reg-table tbody tr {border-bottom: 1px solid #f1f5f9; transition: background 0.15s;}
+          .reg-label {font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;}
+          .reg-input, .reg-select {width: 100%; padding: 9px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 13px; font-family: 'DM Sans', sans-serif; color: #1e293b; background: #f8fafc;
+                                   outline: none; transition: border-color 0.2s, background 0.2s, box-shadow 0.2s; box-sizing: border-box;}
+          .reg-input:focus, .reg-select:focus {border-color: #1e293b; background: #fff; box-shadow: 0 0 0 3px rgba(30,41,59,0.08);}
+          .reg-input::placeholder {color: #cbd5e1;}
+          .reg-form-footer {display: flex; justify-content: flex-end; gap: 8px; padding: 14px 20px; border-top: 1px solid #f1f5f9; background: #f8fafc;}
+          .reg-btn {border: none; padding: 9px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; font-family: 'DM Sans', sans-serif;
+                    transition: all 0.2s; display: flex; align-items: center; gap: 6px;}
+          .reg-btn-primary {background: #1e293b; color: #fff;}
+          .reg-btn-primary:hover {background: #0f172a; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(30,41,59,0.25);}
+          .reg-btn-secondary {background: #fff; color: #64748b; border: 1.5px solid #e2e8f0;}
+          .reg-btn-secondary:hover {background: #f1f5f9;}
+          .reg-btn-edit {background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;}
+          .reg-btn-edit:hover {background: #dbeafe;}
+          .reg-btn-sm {padding: 5px 12px; font-size: 11px;}
+          .reg-table-card {background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.05);}
+          .reg-table-header {padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #f1f5f9;}
+          .reg-table-title {font-size: 13px; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.5px;}
+          .reg-badge-rh {background: #1e293b; color: #fff; padding: 2px 7px; border-radius: 4px; font-size: 10px;}
+          .reg-search {padding: 7px 12px 7px 34px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 12px; font-family: 'DM Sans', sans-serif; color: #1e293b;
+                       background: #f8fafc url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center; outline: none; transition: border-color 0.2s; width: 220px;}
+          .reg-search:focus {border-color: #1e293b; background-color: #fff;}
+          .reg-table-wrapper {max-height: 400px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #e2e8f0 transparent;}
+          .reg-table {width: 100%; border-collapse: collapse; font-size: 12.5px;}
+          .reg-table thead th {position: sticky; top: 0; background: #f8fafc; color: #64748b; padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; 
+                               white-space: nowrap; border-bottom: 1px solid #e2e8f0;}
+          .reg-table tbody tr {border-bottom: 1px solid #f8fafc; transition: background 0.15s;}
           .reg-table tbody tr:hover {background: #f8fafc;}
-          .reg-table tbody td {padding: 9px 12px; color: #334155; vertical-align: middle;}
-          .reg-table tbody td:last-child {text-align: center;}
-          .reg-badge {display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700;}
+          .reg-table tbody td {padding: 10px 14px; color: #334155; vertical-align: middle;}
+          .reg-avatar {width: 30px; height: 30px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; color: #fff; 
+                       flex-shrink: 0; margin-right: 8px;}
+          .reg-name-cell {display: flex; align-items: center;}
+          .reg-badge {display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 10px; font-weight: 700;}
           .reg-badge-active {background: #dcfce7; color: #15803d;}
           .reg-badge-inactive {background: #fee2e2; color: #991b1b;}
-          .reg-btn {border: none; padding: 9px 18px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; font-family: 'Inter', sans-serif; transition: 0.2s;}
-          .reg-btn-primary {background: #1e293b; color: #fff;}
-          .reg-btn-primary:hover {background: #334155;}
-          .reg-btn-secondary {background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1;}
-          .reg-btn-secondary:hover {background: #e2e8f0;}
-          .reg-btn-danger {background: #fee2e2; color: #991b1b;}
-          .reg-btn-danger:hover {background: #fecaca;}
-          .reg-btn-edit {background: #eff6ff; color: #1d4ed8;}
-          .reg-btn-edit:hover {background: #dbeafe;}
-          .reg-btn-sm {padding: 5px 10px; font-size: 11px;}
-          .reg-footer {display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px;}
-          .reg-section-title {font-size: 13px; font-weight: 800; color: #1e293b; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;}
-          .reg-badge-rh {background: #1e293b; color: #fff; padding: 2px 7px; border-radius: 4px; font-size: 10px;}
-          .reg-empty {padding: 40px; text-align: center; color: #94a3b8; font-size: 13px;}
-          .reg-search {width: 100%; padding: 9px 12px 9px 36px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; font-family: 'Inter', sans-serif;
-                       color: #1e293b; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat 12px center; outline: none; transition: border-color 0.2s; box-sizing: border-box;}
-          .reg-search:focus {border-color: #1e293b;}
-          .reg-header-bar {display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; gap: 12px;}
+          .reg-func-badge {display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; background: #f1f5f9; color: #475569;}
+          .reg-empty {padding: 50px; text-align: center; color: #94a3b8; font-size: 13px;}
         `;
         document.head.appendChild(s);
       }
       cardBody.innerHTML = `
         <div class="reg-wrapper">
-          <div class="reg-section-title"><span class="reg-badge-rh">RH</span> CADASTRO DE FUNCIONÁRIO</div>
-          <div class="reg-grid" id="reg-form-grid">
-            <div class="reg-field">
-              <label class="reg-label">Nº Interno</label>
-              <input type="text" id="reg-n-int" class="reg-input" placeholder="Ex: 001">
+          <div class="reg-stats" id="reg-stats-bar">
+            <div class="reg-stat-card">
+              <div class="reg-stat-icon total">👥</div>
+              <div>
+                <div class="reg-stat-val" id="reg-stat-total">—</div>
+                <div class="reg-stat-lbl">Total</div>
+              </div>
             </div>
-            <div class="reg-field">
-              <label class="reg-label">Nome</label>
-              <input type="text" id="reg-name" class="reg-input" placeholder="Nome do funcionário">
+            <div class="reg-stat-card">
+              <div class="reg-stat-icon active">✅</div>
+              <div>
+                <div class="reg-stat-val" id="reg-stat-active" style="color:#16a34a;">—</div>
+                <div class="reg-stat-lbl">Ativos</div>
+              </div>
             </div>
-            <div class="reg-field">
-              <label class="reg-label">Função</label>
-              <select id="reg-function" class="reg-select">
-                <option value="">— Selecionar —</option>
-                <option value="Comando">COMANDO</option>
-                <option value="Coordenador">COORDENADOR</option>
-                <option value="Secretariado">SECRETARIADO</option>
-                <option value="TAT">TAT</option>
-                <option value="TAS">TAS</option>
-                <option value="OPTEL">OPTEL</option>
-                <option value="EIP">EIP</option>
-              </select>
-            </div>
-            <div class="reg-field">
-              <label class="reg-label">Equipa</label>
-              <select id="reg-team" class="reg-select">
-                <option value="">— Selecionar —</option>
-                <option value="Comando">COMANDO</option>
-                <option value="Coordenação">COORDENAÇÃO</option>
-                <option value="Secretariado">SECRETARIADO</option>
-                <option value="INEM">INEM</option>
-                <option value="TDNU">TDNU</option>
-                <option value="SALOC">SALOC</option>
-                <option value="EIP01">EIP01</option>
-                <option value="EIP02">EIP02</option>
-                <option value="EIP03">EIP03</option>
-                <option value="EIP04">EIP04</option>
-              </select>
-            </div>
-            <div class="reg-field">
-              <label class="reg-label">Data de Entrada</label>
-              <input type="date" id="reg-entry-date" class="reg-input">
-            </div>
-            <div class="reg-field">
-              <label class="reg-label">Data de Saída</label>
-              <input type="date" id="reg-exit-date" class="reg-input">
+            <div class="reg-stat-card">
+              <div class="reg-stat-icon inactive">🔴</div>
+              <div>
+                <div class="reg-stat-val" id="reg-stat-inactive" style="color:#dc2626;">—</div>
+                <div class="reg-stat-lbl">Inativos</div>
+              </div>
             </div>
           </div>
-          <div class="reg-footer" style="margin-bottom: 24px;">
-            <button class="reg-btn reg-btn-secondary" id="reg-clear-btn">Limpar</button>
-            <button class="reg-btn reg-btn-primary" id="reg-save-btn">Guardar</button>
+          <div class="reg-form-card">
+            <div class="reg-form-header">
+              <span class="reg-form-header-badge">RH</span>
+              <span class="reg-form-header-title" id="reg-form-title">Novo Funcionário</span>
+            </div>
+            <div class="reg-form-body">
+              <div class="reg-grid">
+                <div class="reg-field">
+                  <label class="reg-label">Nº Interno</label>
+                  <input type="text" id="reg-n-int" class="reg-input" placeholder="Ex: 001">
+                </div>
+                <div class="reg-field">
+                  <label class="reg-label">Nome</label>
+                  <input type="text" id="reg-name" class="reg-input" placeholder="Nome completo abreviado">
+                </div>
+                <div class="reg-field">
+                  <label class="reg-label">Função</label>
+                  <select id="reg-function" class="reg-select">
+                    <option value="">— Selecionar —</option>
+                    <option value="Comando">COMANDO</option>
+                    <option value="Coordenador">COORDENADOR</option>
+                    <option value="Secretariado">SECRETARIADO</option>
+                    <option value="TAT">TAT</option>
+                    <option value="TAS">TAS</option>
+                    <option value="OPTEL">OPTEL</option>
+                    <option value="EIP">EIP</option>
+                  </select>
+                </div>
+                <div class="reg-field">
+                  <label class="reg-label">Equipa</label>
+                  <select id="reg-team" class="reg-select">
+                    <option value="">— Selecionar —</option>
+                    <option value="Comando">COMANDO</option>
+                    <option value="Coordenação">COORDENAÇÃO</option>
+                    <option value="Secretariado">SECRETARIADO</option>
+                    <option value="INEM">INEM</option>
+                    <option value="TDNU">TDNU</option>
+                    <option value="SALOC">SALOC</option>
+                    <option value="EIP01">EIP01</option>
+                    <option value="EIP02">EIP02</option>
+                    <option value="EIP03">EIP03</option>
+                    <option value="EIP04">EIP04</option>
+                  </select>
+                </div>
+                <div class="reg-field">
+                  <label class="reg-label">Data de Entrada</label>
+                  <input type="date" id="reg-entry-date" class="reg-input">
+                </div>
+                <div class="reg-field">
+                  <label class="reg-label">Data de Saída</label>
+                  <input type="date" id="reg-exit-date" class="reg-input">
+                </div>
+              </div>
+            </div>
+            <div class="reg-form-footer">
+              <button class="reg-btn reg-btn-secondary" id="reg-clear-btn">↩ Limpar</button>
+              <button class="reg-btn reg-btn-primary" id="reg-save-btn">💾 Guardar</button>
+            </div>
           </div>
-          <div class="reg-divider"></div>
-          <div class="reg-header-bar">
-            <div class="reg-section-title" style="margin:0;"><span class="reg-badge-rh">RH</span> LISTA DE FUNCIONÁRIOS</div>
-            <input type="text" id="reg-search" class="reg-search" placeholder="Pesquisar funcionário..." style="max-width:260px;">
-          </div>
-          <div class="reg-table-wrapper">
-            <table class="reg-table">
-              <thead>
-                <tr>
-                  <th style="width:70px;">Nº Int.</th>
-                  <th>Nome</th>
-                  <th style="width:90px;">Função</th>
-                  <th style="width:80px;">Equipa</th>
-                  <th style="width:105px;">Dt. Entrada</th>
-                  <th style="width:105px;">Dt. Saída</th>
-                  <th style="width:70px;">Estado</th>
-                  <th style="width:100px;">Ações</th>
-                </tr>
-              </thead>
-              <tbody id="reg-table-body">
-                <tr><td colspan="8" class="reg-empty">⌛ A carregar funcionários...</td></tr>
-              </tbody>
-            </table>
+          <div class="reg-table-card">
+            <div class="reg-table-header">
+              <div class="reg-table-title">
+                <span class="reg-badge-rh">RH</span> Lista de Funcionários
+              </div>
+              <input type="text" id="reg-search" class="reg-search" placeholder="Pesquisar...">
+            </div>
+            <div class="reg-table-wrapper">
+              <table class="reg-table">
+                <thead>
+                  <tr>
+                    <th style="width:60px;">Nº</th>
+                    <th>Nome</th>
+                    <th style="width:90px;">Função</th>
+                    <th style="width:80px;">Equipa</th>
+                    <th style="width:70px;">Estado</th>
+                    <th style="width:95px;">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="reg-table-body">
+                  <tr><td colspan="6" class="reg-empty">⌛ A carregar funcionários...</td></tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       `;
-      const entry = document.getElementById("reg-entry-date");
-      const exit  = document.getElementById("reg-exit-date");
       setTimeout(() => {
-        entry.value = "";
-        exit.value = "";
+        document.getElementById("reg-entry-date").value = "";
+        document.getElementById("reg-exit-date").value = "";
       }, 0);
       document.getElementById("reg-save-btn").addEventListener("click", saveEmployee);
       document.getElementById("reg-clear-btn").addEventListener("click", clearRegForm);
       document.getElementById("reg-search").addEventListener("input", filterRegTable);
       await loadEmployees();
+    }
+    const AVATAR_COLORS = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#ef4444', '#06b6d4', '#84cc16', '#f97316', '#6366f1'];
+    function avatarColor(name) {
+      let h = 0;
+      for (let i = 0; i < (name || "").length; i++) h = (h * 31 + name.charCodeAt(i)) & 0xffffffff;
+      return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
     }
     let __regEditingNInt = null;
     function clearRegForm() {
@@ -4284,15 +4333,19 @@
       document.getElementById("reg-function").value = "";
       document.getElementById("reg-team").value = "";
       document.getElementById("reg-entry-date").value = "";
-      document.getElementById("reg-exit-date").value  = "";
-      document.getElementById("reg-save-btn").textContent = "Guardar";
+      document.getElementById("reg-exit-date").value = "";
+      document.getElementById("reg-save-btn").textContent = "💾 Guardar";
+      const title = document.getElementById("reg-form-title");
+      if (title) title.textContent = "Novo Funcionário";
+      const formHeader = document.querySelector(".reg-form-header");
+      if (formHeader) formHeader.style.background = "#1e293b";
     }
     async function loadEmployees() {
       const tbody = document.getElementById("reg-table-body");
       if (!tbody) return;
-      tbody.innerHTML = `<tr><td colspan="8" class="reg-empty">⌛ A carregar...</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" class="reg-empty">⌛ A carregar...</td></tr>`;
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
         const res = await fetch(
           `${SUPABASE_URL}/rest/v1/reg_employees?corp_oper_nr=eq.${corpOperNr}&order=n_int.asc`, {
             headers: getSupabaseHeaders()
@@ -4300,36 +4353,50 @@
         );
         const data = await res.json();
         if (!Array.isArray(data) || data.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="8" class="reg-empty">Nenhum funcionário registado.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="6" class="reg-empty">Nenhum funcionário registado.</td></tr>`;
+          updateRegStats([]);
           return;
         }
         window._regAllEmployees = data;
         renderRegTable(data);
+        updateRegStats(data);
       } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="8" class="reg-empty" style="color:#dc2626;">Erro: ${err.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="reg-empty" style="color:#dc2626;">Erro: ${err.message}</td></tr>`;
       }
+    }
+    function updateRegStats(data) {
+      const today = new Date(); today.setHours(0,0,0,0);
+      const total = data.length;
+      const active = data.filter(e => !e.exit_date || new Date(e.exit_date.split("T")[0]) >= today).length;
+      const inactive = total - active;
+      const el = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+      el("reg-stat-total", total);
+      el("reg-stat-active", active);
+      el("reg-stat-inactive", inactive);
     }
     function renderRegTable(data) {
       const tbody = document.getElementById("reg-table-body");
       if (!tbody) return;
-      const today = new Date();
-      today.setHours(0,0,0,0);
+      const today = new Date(); today.setHours(0,0,0,0);
       tbody.innerHTML = data.map(emp => {
         const exitDate = emp.exit_date ? new Date(emp.exit_date.split("T")[0]) : null;
         const isActive = !exitDate || exitDate >= today;
         const badge = isActive
           ? `<span class="reg-badge reg-badge-active">Ativo</span>`
           : `<span class="reg-badge reg-badge-inactive">Inativo</span>`;
-        const entryFmt = emp.entry_date ? emp.entry_date.split("T")[0] : "—";
-        const exitFmt  = emp.exit_date  ? emp.exit_date.split("T")[0]  : "—";
+        const initials = (emp.abv_name || "?").charAt(0).toUpperCase();
+        const color = avatarColor(emp.abv_name || "");
         return `
           <tr>
-            <td>${String(emp.n_int).padStart(3,"0")}</td>
-            <td>${emp.abv_name || "—"}</td>
-            <td>${emp.function || "—"}</td>
-            <td>${emp.team || "—"}</td>
-            <td>${entryFmt}</td>
-            <td>${exitFmt}</td>
+            <td style="font-weight:700; color:#64748b;">${String(emp.n_int).padStart(3,"0")}</td>
+            <td>
+              <div class="reg-name-cell">
+                <span class="reg-avatar" style="background:${color};">${initials}</span>
+                <span style="font-weight:600;">${emp.abv_name || "—"}</span>
+              </div>
+            </td>
+            <td><span class="reg-func-badge">${emp.function || "—"}</span></td>
+            <td style="color:#64748b; font-size:12px;">${emp.team || "—"}</td>
             <td>${badge}</td>
             <td>
               <button class="reg-btn reg-btn-edit reg-btn-sm" onclick="editEmployee(${emp.n_int})">✏️ Editar</button>
@@ -4351,7 +4418,7 @@
       if (!emp) return;
       __regEditingNInt = nInt;
       const nIntField = document.getElementById("reg-n-int");
-      nIntField.value = String(emp.n_int).padStart(3,"0");
+      nIntField.value = String(emp.n_int).padStart(3, "0");
       nIntField.disabled = true;
       document.getElementById("reg-name").value = emp.abv_name || "";
       const FUNCTION_REVERSE = {"COM": "Comando", "CRD": "Coordenador", "SEC": "Secretariado"};
@@ -4359,10 +4426,23 @@
       const TEAM_REVERSE = {"COM": "Comando", "CRD": "Coordenação", "SEC": "Secretariado"};
       document.getElementById("reg-team").value = TEAM_REVERSE[emp.team] || emp.team || "";
       document.getElementById("reg-entry-date").value = emp.entry_date ? emp.entry_date.split("T")[0] : "";
-      document.getElementById("reg-exit-date").value = emp.exit_date  ? emp.exit_date.split("T")[0]  : "";
-      document.getElementById("reg-save-btn").textContent = "Atualizar";
+      document.getElementById("reg-exit-date").value = emp.exit_date ? emp.exit_date.split("T")[0] : "";
+      document.getElementById("reg-save-btn").textContent = "💾 Atualizar";
+      const title = document.getElementById("reg-form-title");
+      if (title) title.textContent = `Editar — ${emp.abv_name}`;
+      const formHeader = document.querySelector(".reg-form-header");
+      if (formHeader) formHeader.style.background = "#7f1d1d";
       const container = document.querySelector("#employee-registration .card-body");
-      if (container) container.scrollTop = 0;
+      if (container) {
+        container.scrollTop = 0;
+        container.scrollIntoView({behavior: "smooth", block: "start"});
+      }
+      const formCard = document.querySelector(".reg-form-card");
+      if (formCard) {
+        const yOffset = -140;
+        const y = formCard.getBoundingClientRect().top + window.pageYOffset + yOffset;
+        window.scrollTo({top: y, behavior: "smooth"});
+      }
     }
     async function saveEmployee() {
       const nInt = document.getElementById("reg-n-int").value.trim();
@@ -4370,103 +4450,72 @@
       const funcRaw = document.getElementById("reg-function").value;
       const teamRaw = document.getElementById("reg-team").value;
       const entryDate = document.getElementById("reg-entry-date").value;
-      const exitDate  = document.getElementById("reg-exit-date").value;
-      if (!nInt || !name) {
-        showPopupWarning("⚠️ Nº Interno e Nome são obrigatórios.");
-        return;
-      }
+      const exitDate = document.getElementById("reg-exit-date").value;
+      if (!nInt || !name) { showPopupWarning("⚠️ Nº Interno e Nome são obrigatórios."); return; }
       if (entryDate && exitDate && new Date(exitDate) < new Date(entryDate)) {
-        showPopupWarning("⚠️ A Data de Saída não pode ser anterior à Data de Entrada.");
-        return;
+        showPopupWarning("⚠️ A Data de Saída não pode ser anterior à Data de Entrada."); return;
       }
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const saveBtn = document.getElementById("reg-save-btn");
       saveBtn.disabled = true;
       saveBtn.textContent = "A guardar...";
       try {
         const allRes = await fetch(
-          `${SUPABASE_URL}/rest/v1/reg_employees?corp_oper_nr=eq.${corpOperNr}&select=function,team,n_int`, {
-            headers: getSupabaseHeaders()
-          }
+          `${SUPABASE_URL}/rest/v1/reg_employees?corp_oper_nr=eq.${corpOperNr}&select=function,team,n_int`,
+          { headers: getSupabaseHeaders() }
         );
         const allEmps = await allRes.json();
         if (!__regEditingNInt) {
-          const exists = allEmps.some(e => e.n_int == nInt);
-          if (exists) {
+          if (allEmps.some(e => e.n_int == nInt)) {
             showPopupWarning("⚠️ Nº interno já existe nesta corporação.");
             saveBtn.disabled = false;
-            saveBtn.textContent = "Guardar";
+            saveBtn.textContent = "💾 Guardar";
             return;
           }
         }
         let func = funcRaw;
-        const FUNCTION_MAP = {"Comando": "COM", "Coordenador": "CRD", "Secretariado": "SEC", "TAS": "TAS", "TAT": "TAT", "OPTEL": "OPTEL"};
+        const FUNCTION_MAP = {"Comando":"COM","Coordenador":"CRD","Secretariado":"SEC","TAS":"TAS","TAT":"TAT","OPTEL":"OPTEL"};
         if (FUNCTION_MAP[funcRaw]) func = FUNCTION_MAP[funcRaw];
         else if (funcRaw === "EIP") {
           const eipMatch = teamRaw.match(/^EIP0?(\d+)$/);
           if (eipMatch) {
-            const eipNum = eipMatch[1];
-            const prefix = `EP${eipNum}`;
-            const existing = allEmps
-            .map(e => e.function || "")
-            .filter(f => f.startsWith(prefix))
-            .map(f => parseInt(f.replace(prefix, ""), 10))
-            .filter(n => !isNaN(n));
-            const lastNum = existing.length > 0 ? Math.max(...existing) : 0;
-            func = `${prefix}${String(lastNum + 1).padStart(2, "0")}`;
+            const prefix = `EP${eipMatch[1]}`;
+            const existing = allEmps.map(e => e.function || "").filter(f => f.startsWith(prefix))
+              .map(f => parseInt(f.replace(prefix, ""), 10)).filter(n => !isNaN(n));
+            func = `${prefix}${String((existing.length > 0 ? Math.max(...existing) : 0) + 1).padStart(2,"0")}`;
           }
         }
         let team = teamRaw;
-        const TEAM_MAP = {"Comando": "COM", "Coordenação": "CRD", "Secretariado": "SEC"};
+        const TEAM_MAP = {"Comando":"COM","Coordenação":"CRD","Secretariado":"SEC"};
         if (TEAM_MAP[teamRaw]) team = TEAM_MAP[teamRaw];
         else if (teamRaw === "INEM") {
-          const existing = allEmps
-          .map(e => e.team || "")
-          .filter(t => /^EQ\d+$/.test(t))
-          .map(t => parseInt(t.replace("EQ", ""), 10))
-          .filter(n => !isNaN(n));
-          const lastNum = existing.length > 0 ? Math.max(...existing) : 0;
-          team = `EQ${String(lastNum + 1).padStart(2, "0")}`;
+          const existing = allEmps.map(e => e.team||"").filter(t => /^EQ\d+$/.test(t)).map(t => parseInt(t.replace("EQ",""),10)).filter(n => !isNaN(n));
+          team = `EQ${String((existing.length > 0 ? Math.max(...existing) : 0) + 1).padStart(2,"0")}`;
         } else if (teamRaw === "TDNU") {
-          const existing = allEmps
-          .map(e => e.team || "")
-          .filter(t => /^TDNU\d+$/.test(t))
-          .map(t => parseInt(t.replace("TDNU", ""), 10))
-          .filter(n => !isNaN(n));
-          const lastNum = existing.length > 0 ? Math.max(...existing) : 0;
-          team = `TDNU${String(lastNum + 1).padStart(2, "0")}`;
+          const existing = allEmps.map(e => e.team||"").filter(t => /^TDNU\d+$/.test(t)).map(t => parseInt(t.replace("TDNU",""),10)).filter(n => !isNaN(n));
+          team = `TDNU${String((existing.length > 0 ? Math.max(...existing) : 0) + 1).padStart(2,"0")}`;
         } else if (teamRaw === "SALOC") {
-          const existing = allEmps
-          .map(e => e.team || "")
-          .filter(t => /^OPC\d+$/.test(t))
-          .map(t => parseInt(t.replace("OPC", ""), 10))
-          .filter(n => !isNaN(n));
-          const lastNum = existing.length > 0 ? Math.max(...existing) : 0;
-          team = `OPC${String(lastNum + 1).padStart(2, "0")}`;
+          const existing = allEmps.map(e => e.team||"").filter(t => /^OPC\d+$/.test(t)).map(t => parseInt(t.replace("OPC",""),10)).filter(n => !isNaN(n));
+          team = `OPC${String((existing.length > 0 ? Math.max(...existing) : 0) + 1).padStart(2,"0")}`;
         } else if (/^EIP\d+$/.test(teamRaw)) {
           team = teamRaw;
         }
-        const payload = {n_int: parseInt(nInt, 10), abv_name: name, function: func || null, team: team || null, entry_date: entryDate || null, exit_date: exitDate || null, corp_oper_nr: corpOperNr};
+        const payload = {n_int: parseInt(nInt,10), abv_name: name, function: func||null, team: team||null, entry_date: entryDate||null, exit_date: exitDate||null, corp_oper_nr: corpOperNr};
         let res;
         if (__regEditingNInt) {
-          res = await fetch(
-            `${SUPABASE_URL}/rest/v1/reg_employees?n_int=eq.${__regEditingNInt}&corp_oper_nr=eq.${corpOperNr}`, {
-              method: "PATCH",
-              headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
-              body: JSON.stringify(payload)
-            }
-          );
+          res = await fetch(`${SUPABASE_URL}/rest/v1/reg_employees?n_int=eq.${__regEditingNInt}&corp_oper_nr=eq.${corpOperNr}`, {
+            method: "PATCH",
+            headers: {...getSupabaseHeaders(), "Content-Type":"application/json","Prefer":"return=minimal"},
+            body: JSON.stringify(payload)
+          });
         } else {
           res = await fetch(`${SUPABASE_URL}/rest/v1/reg_employees`, {
             method: "POST",
-            headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
+            headers: {...getSupabaseHeaders(), "Content-Type":"application/json","Prefer":"return=minimal"},
             body: JSON.stringify(payload)
           });
         }
-        if (!res.ok) {
-          const err = await res.text();
-          throw new Error(err);
-        }
+        if (!res.ok) throw new Error(await res.text());
         showPopupSuccess(__regEditingNInt ? "✅ Funcionário atualizado!" : "✅ Funcionário registado!");
         clearRegForm();
         await loadEmployees();
@@ -4475,7 +4524,7 @@
         showPopupWarning("❌ Erro: " + err.message);
       } finally {
         saveBtn.disabled = false;
-        saveBtn.textContent = __regEditingNInt ? "Atualizar" : "Guardar";
+        saveBtn.textContent = __regEditingNInt ? "💾 Atualizar" : "💾 Guardar";
       }
     }
     document.querySelectorAll(".sidebar-submenu-button").forEach((btn) => {
@@ -4485,6 +4534,9 @@
         }
       });
     });
+    /* ================================
+    FASE 09 - DASHBOARD
+    =============================== */
     async function createRHDashboard() {
       const cardBody = document.querySelector("#dashboard-rh .card-body");
       if (!cardBody) {

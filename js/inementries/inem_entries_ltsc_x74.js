@@ -1,6 +1,6 @@
     /* ================================
     INSERÇÃO VERBETES INEM
-    ================================ */
+    ================================ */ 
     /* ─── LOAD ──────────────────────────────────────────── */
     async function loadInemEntries() {
       const dateFrom = document.getElementById("inem-date-from")?.value;

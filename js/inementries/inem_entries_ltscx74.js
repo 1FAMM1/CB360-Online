@@ -1,15 +1,4 @@
-    /* ─── LOAD ──────────────────────────────────────────── */
-    async function checkPdfExists(nrCodu, serviceType) {
-      const ext = serviceType === "ITeams" ? "html" : "pdf";
-      const fileName = `ocr_${nrCodu}.${ext}`;
-      const url = `${SUPABASE_URL}/storage/v1/object/public/inem-verbetes/${fileName}`;
-      try {
-        const res = await fetch(url, {method: "HEAD"});
-        return res.ok;
-      } catch {
-        return false;
-      }
-    }
+    /* ─── LOAD ──────────────────────────────────────────── */    
     async function loadInemEntries() {
       const dateFrom = document.getElementById("inem-date-from")?.value;
       const dateTo = document.getElementById("inem-date-to")?.value;
@@ -44,7 +33,7 @@
               const ext = item.service_type === "ITeams" ? "html" : "pdf";
               const url = `${SUPABASE_URL}/storage/v1/object/public/inem-verbetes/ocr_${item.nr_codu}.${ext}`;
               try {
-                const res = await fetch(url, { method: "HEAD" });
+                const res = await fetch(url, {method: "HEAD"});
                 return [item.nr_codu, res.ok];
               } catch {
                 return [item.nr_codu, false];
@@ -148,13 +137,13 @@
       document.getElementById('inem-edit-modal')?.remove();
       const overlay = document.createElement('div');
       overlay.id = 'inem-edit-modal';
-      Object.assign(overlay.style, {position: 'fixed', inset: '0', background: 'rgba(10,8,8,0.78)', zIndex: '10000', display: 'flex', alignItems: 'center', justifyContent: 'center', 
+      Object.assign(overlay.style, {position: 'fixed', inset: '0', background: 'rgba(10,8,8,0.78)', zIndex: '10000', display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     backdropFilter: 'blur(4px)'});
       const box = document.createElement('div');
-      Object.assign(box.style, {background: '#fff', borderRadius: '12px', width: '420px', boxShadow: '0 28px 72px rgba(0,0,0,0.45)', display: 'flex', flexDirection: 'column', 
+      Object.assign(box.style, {background: '#fff', borderRadius: '12px', width: '420px', boxShadow: '0 28px 72px rgba(0,0,0,0.45)', display: 'flex', flexDirection: 'column',
                                 overflow: 'hidden', fontFamily: "'Segoe UI', sans-serif"});
       const header = document.createElement('div');
-      Object.assign(header.style, {background: 'linear-gradient(135deg, #5a0000 0%, #7b0000 45%, #9a0f0f 100%)', padding: '12px 16px', display: 'flex', alignItems: 'center', 
+      Object.assign(header.style, {background: 'linear-gradient(135deg, #5a0000 0%, #7b0000 45%, #9a0f0f 100%)', padding: '12px 16px', display: 'flex', alignItems: 'center',
                                    justifyContent: 'space-between'});
       const headerTitle = document.createElement('div');
       Object.assign(headerTitle.style, {color: '#fff', fontWeight: '700', fontSize: '13px'});
@@ -167,64 +156,81 @@
       header.append(headerTitle, btnClose);
       const body = document.createElement('div');
       Object.assign(body.style, {padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: '12px'});
-      const FIELDS = [{key: 'nr_codu', label: 'Nr. CODU', type: 'text'}, {key: 'alert_hour', label: 'Hora Alerta', type: 'time'}, 
-                      {key: 'victim_type', label: 'Tipo Vítima', type: 'select', options: ['Masculino', 'Feminino', 'Desconhecido']}, {key: 'victim_age_type', label: 'Tipo Idade', type: 'text'},
-                      {key: 'victim_age_unit', label: 'Unidade Idade', type: 'select', options: ['Anos', 'Meses', 'Dias']}, {key: 'victim_address',  label: 'Morada', type: 'text'},
-                      {key: 'victim_location', label: 'Localização',   type: 'text'},];
       const inputs = {};
-      FIELDS.forEach(f => {
-        const group = document.createElement('div');
-        Object.assign(group.style, {display: 'flex', flexDirection: 'column', gap: '4px'});
-        const label = document.createElement('label');
-        label.textContent = f.label;
-        Object.assign(label.style, {fontSize: '11.5px', fontWeight: '600', color: '#555', textTransform: 'uppercase', letterSpacing: '.4px'});
+      function makeInput(key, type, options) {
         let input;
-        if (f.type === 'select') {
+        if (type === 'select') {
           input = document.createElement('select');
-          f.options.forEach(opt => {
+          options.forEach(opt => {
             const option = document.createElement('option');
             option.value = opt;
             option.textContent = opt;
-            if ((item[f.key] || '') === opt) option.selected = true;
+            if ((item[key] || '') === opt) option.selected = true;
             input.appendChild(option);
           });
         } else {
           input = document.createElement('input');
-          input.type = f.type;
-          input.value = item[f.key] || '';
+          input.type = type;
+          input.value = item[key] || '';
         }
-        Object.assign(input.style, {padding: '7px 10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '13px', outline: 'none', transition: 'border-color .15s', 
-                                    color: '#1a1a1a', background: '#fff'});
+        Object.assign(input.style, {padding: '7px 10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '13px', outline: 'none', transition: 'border-color .15s',
+                                    color: '#1a1a1a', background: '#fff', width: '100%', boxSizing: 'border-box'});
         input.onfocus = () => input.style.borderColor = '#7b0000';
-        input.onblur = () => input.style.borderColor = '#ddd';
-        inputs[f.key] = input;
-        group.append(label, input);
-        body.appendChild(group);
-      });
+        input.onblur  = () => input.style.borderColor = '#ddd';
+        inputs[key] = input;
+        return input;
+      }
+      function makeField(key, label, type, options) {
+        const group = document.createElement('div');
+        Object.assign(group.style, {display: 'flex', flexDirection: 'column', gap: '4px'});
+        const lbl = document.createElement('label');
+        lbl.textContent = label;
+        Object.assign(lbl.style, {fontSize: '11.5px', fontWeight: '600', color: '#555', textTransform: 'uppercase', letterSpacing: '.4px'});
+        group.append(lbl, makeInput(key, type, options));
+        return group;
+      }
+      const row1 = document.createElement('div');
+      Object.assign(row1.style, {display: 'flex', gap: '10px'});
+      const coduField = makeField('nr_codu', 'Nr. CODU', 'text');
+      Object.assign(coduField.style, {flex: '1'});
+      const alertHourField = makeField('alert_hour', 'Hora Alerta', 'time');
+      Object.assign(alertHourField.style, {flex: '1'});
+      row1.append(coduField, alertHourField);
+      body.appendChild(row1);
+      const row2 = document.createElement('div');
+      Object.assign(row2.style, {display: 'flex', gap: '10px', alignItems: 'flex-end'});
+      const victimTypeField = makeField('victim_type', 'Vítima', 'select', ['Masculino', 'Feminino', 'Desconhecido']);
+      Object.assign(victimTypeField.style, {flex: '1.5'});
+      const ageTypeField = makeField('victim_age_type', 'Idade', 'text');
+      Object.assign(ageTypeField.style, {flex: '1'});
+      const ageUnitField = makeField('victim_age_unit', ' ', 'select', ['Anos', 'Meses', 'Dias']);
+      Object.assign(ageUnitField.style, {flex: '1'});
+      row2.append(victimTypeField, ageTypeField, ageUnitField);
+      body.appendChild(row2);
+      body.appendChild(makeField('victim_address', 'Morada', 'text'));
+      body.appendChild(makeField('victim_location', 'Localidade', 'text'));
       const footer = document.createElement('div');
       Object.assign(footer.style, {padding: '12px 20px', display: 'flex', justifyContent: 'flex-end', gap: '8px', borderTop: '1px solid #eee', background: '#fafafa'});
       const btnCancel = document.createElement('button');
       btnCancel.textContent = 'Cancelar';
-      Object.assign(btnCancel.style, {padding: '7px 16px', borderRadius: '6px', border: '1px solid #ddd', background: '#fff', color: '#555', fontSize: '13px', fontWeight: '600', cursor: 'pointer'});
+      Object.assign(btnCancel.style, {padding: '7px 16px', borderRadius: '6px', border: '1px solid #ddd', background: '#fff', color: '#555', fontSize: '13px', fontWeight: '600', 
+                                      cursor: 'pointer'});
       btnCancel.onclick = () => overlay.remove();
       const btnSave = document.createElement('button');
       btnSave.textContent = '💾 Guardar';
-      Object.assign(btnSave.style, {padding: '7px 16px', borderRadius: '6px', border: 'none', background: 'linear-gradient(135deg, #7b0000, #9a0f0f)', color: '#fff', fontSize: '13px', 
+      Object.assign(btnSave.style, {padding: '7px 16px', borderRadius: '6px', border: 'none', background: 'linear-gradient(135deg, #7b0000, #9a0f0f)', color: '#fff', fontSize: '13px',
                                     fontWeight: '600', cursor: 'pointer'});
       btnSave.onclick = async () => {
         const updated = {};
-        FIELDS.forEach(f => { updated[f.key] = inputs[f.key].value.trim() || null; });
+        const FIELDS = [{key: 'nr_codu'}, {key: 'alert_hour'}, {key: 'victim_type'}, {key: 'victim_address'}, {key: 'victim_location'}, {key: 'victim_age_type'}, {key: 'victim_age_unit'}];
+        FIELDS.forEach(f => {
+          updated[f.key] = inputs[f.key].value.trim() || null;
+        });
         const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
         try {
           const res = await fetch(`${SUPABASE_URL}/rest/v1/inem_entries?nr_codu=eq.${item.nr_codu}`, {
-            method: 'PATCH',
-            headers: {
-              'apikey': SUPABASE_ANON_KEY,
-              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-              'Content-Type': 'application/json',
-              'Prefer': 'return=minimal',
-              'x-my-corpo': corpOperNr
-            },
+            method: "PATCH",
+            headers: {...getSupabaseHeaders(), "Content-Type":"application/json", "Prefer":"return=minimal"},
             body: JSON.stringify(updated)
           });
           if (!res.ok) throw new Error(await res.text());
@@ -587,13 +593,16 @@
       table.style.cssText = "width: 100%; border-collapse: separate; border-spacing: 0; font-family: Segoe UI, sans-serif; font-size: 13px;";
       const thead  = document.createElement("thead");
       const trHead = document.createElement("tr");
+      const redCols = ["tas", "via", "actions", "pdfstatus"];
       COLUMNS.forEach((col, idx) => {
         const th = document.createElement("th");
         th.textContent = col.label;
         const isFirst = idx === 0;
-        const isLast = idx === COLUMNS.length - 1;
-        Object.assign(th.style, {borderBottom: "1px solid #2a3580", borderLeft: isFirst ? "none" : "1px solid #2a3580", background: "#131a69", color: "#fff", textAlign: "center", padding: "8px 6px",
-                                 fontWeight: "bold", position: "sticky", top: "0", zIndex: "2", whiteSpace: "nowrap", fontSize: "12px", minWidth: col.width});
+        const isLast  = idx === COLUMNS.length - 1;
+        const thBg     = redCols.includes(col.key) ? "#9a1515" : "#131a69";
+        const thBorder = redCols.includes(col.key) ? "#7b0000" : "#2a3580";
+        Object.assign(th.style, {borderBottom: `1px solid ${thBorder}`, borderLeft: isFirst ? "none" : `1px solid ${thBorder}`, background: thBg, color: "#fff", textAlign: "center",
+                                 padding: "8px 6px", fontWeight: "bold", position: "sticky", top: "0", zIndex: "2", whiteSpace: "nowrap", fontSize: "12px", minWidth: col.width});
         if (isFirst) th.style.borderTopLeftRadius  = "8px";
         if (isLast)  th.style.borderTopRightRadius = "8px";
         trHead.appendChild(th);

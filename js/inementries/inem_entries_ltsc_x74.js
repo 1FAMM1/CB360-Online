@@ -517,7 +517,7 @@
       container.innerHTML = "";
       const COLUMNS = [{key: "nr_codu", label: "Nr. CODU", width: "60px"}, {key: "alerta", label: "Alerta", width: "80px"}, {key: "vitima", label: "Vítima", width: "100px"},
                        {key: "morada", label: "Morada", width: "200px"}, {key: "edit", label: "Editar", width: "36px"}, {key: "tas", label: "TAS", width: "120px"}, {key: "via", label: "Via", width: "60px"},
-                       {key: "actions", label: "Verbete", width: "90px"}, {key: "pdfstatus", label: "PDF", width: "50px"}];
+                       {key: "actions", label: "Verbete", width: "90px"}, {key: "pdfstatus", label: "Status", width: "50px"}];
       if (!document.getElementById("inem-entries-style")) {
         const style = document.createElement("style");
         style.id = "inem-entries-style";

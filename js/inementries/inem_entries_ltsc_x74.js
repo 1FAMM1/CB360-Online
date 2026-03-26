@@ -625,6 +625,12 @@
       btnEmitir.addEventListener("click", () => exportInemEntries());
       footer.appendChild(btnEmitir);
       container.appendChild(footer);
+      const today = new Date().toISOString().split("T")[0];
+      const dateFrom = document.getElementById("inem-date-from");
+      const dateTo = document.getElementById("inem-date-to");
+      if (dateFrom) dateFrom.value = today;
+      if (dateTo) dateTo.value = today;
+      loadInemEntries();
     }
     document.querySelectorAll(".sidebar-menu-button").forEach((btn) => {
       btn.addEventListener("click", () => {

@@ -147,7 +147,7 @@
                                    justifyContent: 'space-between'});
       const headerTitle = document.createElement('div');
       Object.assign(headerTitle.style, {color: '#fff', fontWeight: '700', fontSize: '13px'});
-      headerTitle.textContent = `Editar Verbete — ${item.nr_codu}`;
+      headerTitle.textContent = `✏️ Editar Verbete - Nr. CODU: ${item.nr_codu}`;
       const btnClose = document.createElement('button');
       btnClose.innerHTML = '✕';
       Object.assign(btnClose.style, {border: '1px solid rgba(255,80,80,0.22)', background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.8)', width: '28px', height: '28px',

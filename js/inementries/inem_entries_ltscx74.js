@@ -37,6 +37,21 @@
         if (btnEmitir) btnEmitir.style.display = "none";
         if (!data?.length) return;
         const COLUMNS = ["nr_codu", "alerta", "vitima", "morada", "edit", "tas", "via", "actions", "pdfstatus"];
+        const existsMap = new Map(
+          await Promise.all(
+            data.map(async item => {
+              if (!item.nr_codu) return [item.nr_codu, false];
+              const ext = item.service_type === "ITeams" ? "html" : "pdf";
+              const url = `${SUPABASE_URL}/storage/v1/object/public/inem-verbetes/ocr_${item.nr_codu}.${ext}`;
+              try {
+                const res = await fetch(url, { method: "HEAD" });
+                return [item.nr_codu, res.ok];
+              } catch {
+                return [item.nr_codu, false];
+              }
+            })
+          )
+        );
         data.forEach((item, i) => {
           const tr = document.createElement("tr");
           tr.style.background = i % 2 === 0 ? "#fff" : "#f5f6fa";
@@ -48,7 +63,7 @@
             if (key === "nr_codu") {
               td.textContent = item.nr_codu || "";
             } else if (key === "alerta") {
-              let alerta = "";
+              let alerta = "";              
               if (item.alert_date) {
                 const [y, m, d] = item.alert_date.split("-");
                 alerta = `${d}/${m}/${y}`;
@@ -62,7 +77,7 @@
               let vitima = "";
               if (type) vitima += type;
               if (ageType) vitima += (vitima ? " - " : "") + ageType;
-              if (ageUnit) vitima += (vitima ? " "   : "") + ageUnit;
+              if (ageUnit) vitima += (vitima ? " " : "") + ageUnit;
               td.textContent = vitima;
             } else if (key === "morada") {
               const address = item.victim_address || "";
@@ -105,12 +120,10 @@
             } else if (key === "pdfstatus") {
               td.classList.add("inem-pdf-status-td");
               if (item.nr_codu) {
-                td.textContent = "…";
-                checkPdfExists(item.nr_codu, item.service_type).then(exists => {
-                  td.textContent = exists ? "✅" : "❌";
-                  td.style.fontSize = "17px";
-                  td.title = exists ? "Ficheiro disponível" : "Ficheiro não encontrado";
-                });
+                const exists = existsMap.get(item.nr_codu);
+                td.textContent = exists ? "✅" : "❌";
+                td.style.fontSize = "17px";
+                td.title = exists ? "Ficheiro disponível" : "Ficheiro não encontrado";
               }
             } else if (key === "edit") {
               td.style.userSelect = "none";
@@ -120,7 +133,7 @@
               Object.assign(btnEdit.style, {border: "none", background: "transparent", cursor: "pointer", fontSize: "14px", padding: "0", lineHeight: "1"});
               btnEdit.addEventListener("click", () => inemEditEntry(item));
               td.appendChild(btnEdit);
-            }           
+            }
             tr.appendChild(td);
           });
           tbody.appendChild(tr);

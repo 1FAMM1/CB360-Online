@@ -1,6 +1,6 @@
     /* ================================
     INSERÇÃO VERBETES INEM
-    ================================ */ 
+    ================================ */
     /* ─── LOAD ──────────────────────────────────────────── */
     async function loadInemEntries() {
       const dateFrom = document.getElementById("inem-date-from")?.value;
@@ -137,6 +137,17 @@
           });
           tbody.appendChild(tr);
         });
+        const totalsEl = document.getElementById("inem-totals");
+        if (totalsEl && data?.length) {
+          const total   = data.length;
+          const iteams  = data.filter(d => d.service_type === "ITeams").length;
+          const verbete = data.filter(d => d.service_type !== "ITeams").length;
+          totalsEl.innerHTML = `<span>TOTAL: ${total}</span> &nbsp;|&nbsp; <span>ITeams: ${iteams}</span> &nbsp;|&nbsp; <span>Verbete: ${verbete}</span>`;
+        } else if (totalsEl) {
+          totalsEl.innerHTML = `<span>TOTAL: 0</span> &nbsp;|&nbsp; <span>ITeams: 0</span> &nbsp;|&nbsp; <span>Verbete: 0</span>`;
+        }
+        const btnEmitirXlsx = document.getElementById("btn-inem-emitir-xlsx");
+        if (btnEmitirXlsx) btnEmitirXlsx.style.display = "";
         if (btnEmitir) btnEmitir.style.display = "";
       } catch(err) {
         console.error("Erro ao carregar verbetes INEM:", err);
@@ -201,6 +212,10 @@
             if (tbody) tbody.innerHTML = "";
             const btnEmitir = document.getElementById("btn-inem-emitir");
             if (btnEmitir) btnEmitir.style.display = "none";
+            const btnEmitirXlsx = document.getElementById("btn-inem-emitir-xlsx");
+            if (btnEmitirXlsx) btnEmitirXlsx.style.display = "none";
+            const totalsEl = document.getElementById("inem-totals");
+            if (totalsEl) totalsEl.innerHTML = `<span>TOTAL: 0</span> &nbsp;|&nbsp; <span>ITeams: 0</span> &nbsp;|&nbsp; <span>Verbete: 0</span>`;
             return;
           }
           loadInemEntries();
@@ -233,12 +248,12 @@
         const th = document.createElement("th");
         th.textContent = col.label;
         const isFirst = idx === 0;
-        const isLast  = idx === COLUMNS.length - 1;
-        const thBg     = redCols.includes(col.key) ? "#9a1515" : "#131a69";
+        const isLast = idx === COLUMNS.length - 1;
+        const thBg  = redCols.includes(col.key) ? "#9a1515" : "#131a69";
         const thBorder = redCols.includes(col.key) ? "#7b0000" : "#2a3580";
         Object.assign(th.style, {borderBottom: `1px solid ${thBorder}`, borderLeft: isFirst ? "none" : `1px solid ${thBorder}`, background: thBg, color: "#fff", textAlign: "center",
                                  padding: "8px 6px", fontWeight: "bold", position: "sticky", top: "0", zIndex: "2", whiteSpace: "nowrap", fontSize: "12px", minWidth: col.width});
-        if (isFirst) th.style.borderTopLeftRadius  = "8px";
+        if (isFirst) th.style.borderTopLeftRadius = "8px";
         if (isLast)  th.style.borderTopRightRadius = "8px";
         trHead.appendChild(th);
       });
@@ -249,16 +264,34 @@
       wrapper.appendChild(table);
       container.appendChild(wrapper);
       const footer = document.createElement("div");
-      Object.assign(footer.style, {display: "flex", justifyContent: "flex-end", marginTop: "12px"});
+      Object.assign(footer.style, {display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "12px"});
+      const totalsEl = document.createElement("div");
+      Object.assign(totalsEl.style, {fontSize: "12px", fontFamily: "Segoe UI, sans-serif", color: "#888", lineHeight: "1.6", fontWeight: "600"});
+      totalsEl.id = "inem-totals";
+      totalsEl.innerHTML = `<span>TOTAL: 0</span> &nbsp;|&nbsp; <span>ITeams: 0</span> &nbsp;|&nbsp; <span>Verbete: 0</span>`;
+      footer.appendChild(totalsEl);
+      const btnsRight = document.createElement("div");
+      Object.assign(btnsRight.style, {display: "flex", gap: "8px"});
+      const btnEmitirXlsx = document.createElement("button");
+      btnEmitirXlsx.id = "btn-inem-emitir-xlsx";
+      btnEmitirXlsx.textContent = "📊 Emitir XLSX";
+      Object.assign(btnEmitirXlsx.style, {background: "#1a6b3a", color: "#fff", border: "none", padding: "10px 18px", borderRadius: "6px", cursor: "pointer", fontWeight: "600",
+                                          fontSize: "12px", transition: "0.2s"});
+      btnEmitirXlsx.style.display = "none";
+      btnEmitirXlsx.addEventListener("mouseenter", () => btnEmitirXlsx.style.background = "#25924f");
+      btnEmitirXlsx.addEventListener("mouseleave", () => btnEmitirXlsx.style.background = "#1a6b3a");
+      btnEmitirXlsx.addEventListener("click", () => exportInemEntriesXlsx());
       const btnEmitir = document.createElement("button");
       btnEmitir.id = "btn-inem-emitir";
-      btnEmitir.textContent = "📥 Emitir Registos";
-      Object.assign(btnEmitir.style, {background: "#1e293b", color: "#fff", border: "none", padding: "10px 18px", borderRadius: "6px", cursor: "pointer", fontWeight: "600", fontSize: "12px", transition: "0.2s"});
+      btnEmitir.textContent = "📥 Emitir PDF";
+      Object.assign(btnEmitir.style, {background: "#1e293b", color: "#fff", border: "none", padding: "10px 18px", borderRadius: "6px", cursor: "pointer", fontWeight: "600", 
+                                      fontSize: "12px", transition: "0.2s"});
       btnEmitir.style.display = "none";
       btnEmitir.addEventListener("mouseenter", () => btnEmitir.style.background = "#334155");
       btnEmitir.addEventListener("mouseleave", () => btnEmitir.style.background = "#1e293b");
       btnEmitir.addEventListener("click", () => exportInemEntries());
-      footer.appendChild(btnEmitir);
+      btnsRight.append(btnEmitirXlsx, btnEmitir);
+      footer.appendChild(btnsRight);
       container.appendChild(footer);
       const today = new Date().toISOString().split("T")[0];
       const dateFrom = document.getElementById("inem-date-from");

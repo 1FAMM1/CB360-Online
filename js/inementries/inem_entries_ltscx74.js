@@ -1,3 +1,4 @@
+    /* ─── LOAD ──────────────────────────────────────────── */
     async function checkPdfExists(nrCodu, serviceType) {
       const ext = serviceType === "ITeams" ? "html" : "pdf";
       const fileName = `ocr_${nrCodu}.${ext}`;
@@ -28,14 +29,14 @@
         if (dateFrom) query += `&alert_date=gte.${dateFrom}`;
         if (dateTo) query += `&alert_date=lte.${dateTo}`;
       }
-      query += `&order=alert_date.asc`;
+      query += `&order=nr_codu.desc`;
       try {
         const data = await supabaseFetch(query);
         if (!tbody) return;
         tbody.innerHTML = "";
         if (btnEmitir) btnEmitir.style.display = "none";
         if (!data?.length) return;
-        const COLUMNS = ["nr_codu", "alerta", "vitima", "morada", "tas", "via", "actions", "pdfstatus"];
+        const COLUMNS = ["nr_codu", "alerta", "vitima", "morada", "edit", "tas", "via", "actions", "pdfstatus"];
         data.forEach((item, i) => {
           const tr = document.createElement("tr");
           tr.style.background = i % 2 === 0 ? "#fff" : "#f5f6fa";
@@ -111,7 +112,15 @@
                   td.title = exists ? "Ficheiro disponível" : "Ficheiro não encontrado";
                 });
               }
-            }
+            } else if (key === "edit") {
+              td.style.userSelect = "none";
+              const btnEdit = document.createElement("button");
+              btnEdit.innerHTML = "✏️";
+              btnEdit.title = "Editar";
+              Object.assign(btnEdit.style, {border: "none", background: "transparent", cursor: "pointer", fontSize: "14px", padding: "0", lineHeight: "1"});
+              btnEdit.addEventListener("click", () => inemEditEntry(item));
+              td.appendChild(btnEdit);
+            }           
             tr.appendChild(td);
           });
           tbody.appendChild(tr);
@@ -121,6 +130,104 @@
         console.error("Erro ao carregar verbetes INEM:", err);
         showPopupWarning("Erro ao carregar verbetes INEM.");
       }
+    }
+    function inemEditEntry(item) {
+      document.getElementById('inem-edit-modal')?.remove();
+      const overlay = document.createElement('div');
+      overlay.id = 'inem-edit-modal';
+      Object.assign(overlay.style, {position: 'fixed', inset: '0', background: 'rgba(10,8,8,0.78)', zIndex: '10000', display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                                    backdropFilter: 'blur(4px)'});
+      const box = document.createElement('div');
+      Object.assign(box.style, {background: '#fff', borderRadius: '12px', width: '420px', boxShadow: '0 28px 72px rgba(0,0,0,0.45)', display: 'flex', flexDirection: 'column', 
+                                overflow: 'hidden', fontFamily: "'Segoe UI', sans-serif"});
+      const header = document.createElement('div');
+      Object.assign(header.style, {background: 'linear-gradient(135deg, #5a0000 0%, #7b0000 45%, #9a0f0f 100%)', padding: '12px 16px', display: 'flex', alignItems: 'center', 
+                                   justifyContent: 'space-between'});
+      const headerTitle = document.createElement('div');
+      Object.assign(headerTitle.style, {color: '#fff', fontWeight: '700', fontSize: '13px'});
+      headerTitle.textContent = `Editar Verbete — ${item.nr_codu}`;
+      const btnClose = document.createElement('button');
+      btnClose.innerHTML = '✕';
+      Object.assign(btnClose.style, {border: '1px solid rgba(255,80,80,0.22)', background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.8)', width: '28px', height: '28px',
+                                     borderRadius: '7px', cursor: 'pointer', fontSize: '14px'});
+      btnClose.onclick = () => overlay.remove();
+      header.append(headerTitle, btnClose);
+      const body = document.createElement('div');
+      Object.assign(body.style, {padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: '12px'});
+      const FIELDS = [{key: 'nr_codu', label: 'Nr. CODU', type: 'text'}, {key: 'alert_hour', label: 'Hora Alerta', type: 'time'}, 
+                      {key: 'victim_type', label: 'Tipo Vítima', type: 'select', options: ['Masculino', 'Feminino', 'Desconhecido']}, {key: 'victim_age_type', label: 'Tipo Idade', type: 'text'},
+                      {key: 'victim_age_unit', label: 'Unidade Idade', type: 'select', options: ['Anos', 'Meses', 'Dias']}, {key: 'victim_address',  label: 'Morada', type: 'text'},
+                      {key: 'victim_location', label: 'Localização',   type: 'text'},];
+      const inputs = {};
+      FIELDS.forEach(f => {
+        const group = document.createElement('div');
+        Object.assign(group.style, {display: 'flex', flexDirection: 'column', gap: '4px'});
+        const label = document.createElement('label');
+        label.textContent = f.label;
+        Object.assign(label.style, {fontSize: '11.5px', fontWeight: '600', color: '#555', textTransform: 'uppercase', letterSpacing: '.4px'});
+        let input;
+        if (f.type === 'select') {
+          input = document.createElement('select');
+          f.options.forEach(opt => {
+            const option = document.createElement('option');
+            option.value = opt;
+            option.textContent = opt;
+            if ((item[f.key] || '') === opt) option.selected = true;
+            input.appendChild(option);
+          });
+        } else {
+          input = document.createElement('input');
+          input.type = f.type;
+          input.value = item[f.key] || '';
+        }
+        Object.assign(input.style, {padding: '7px 10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '13px', outline: 'none', transition: 'border-color .15s', 
+                                    color: '#1a1a1a', background: '#fff'});
+        input.onfocus = () => input.style.borderColor = '#7b0000';
+        input.onblur = () => input.style.borderColor = '#ddd';
+        inputs[f.key] = input;
+        group.append(label, input);
+        body.appendChild(group);
+      });
+      const footer = document.createElement('div');
+      Object.assign(footer.style, {padding: '12px 20px', display: 'flex', justifyContent: 'flex-end', gap: '8px', borderTop: '1px solid #eee', background: '#fafafa'});
+      const btnCancel = document.createElement('button');
+      btnCancel.textContent = 'Cancelar';
+      Object.assign(btnCancel.style, {padding: '7px 16px', borderRadius: '6px', border: '1px solid #ddd', background: '#fff', color: '#555', fontSize: '13px', fontWeight: '600', cursor: 'pointer'});
+      btnCancel.onclick = () => overlay.remove();
+      const btnSave = document.createElement('button');
+      btnSave.textContent = '💾 Guardar';
+      Object.assign(btnSave.style, {padding: '7px 16px', borderRadius: '6px', border: 'none', background: 'linear-gradient(135deg, #7b0000, #9a0f0f)', color: '#fff', fontSize: '13px', 
+                                    fontWeight: '600', cursor: 'pointer'});
+      btnSave.onclick = async () => {
+        const updated = {};
+        FIELDS.forEach(f => { updated[f.key] = inputs[f.key].value.trim() || null; });
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        try {
+          const res = await fetch(`${SUPABASE_URL}/rest/v1/inem_entries?nr_codu=eq.${item.nr_codu}`, {
+            method: 'PATCH',
+            headers: {
+              'apikey': SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+              'Content-Type': 'application/json',
+              'Prefer': 'return=minimal',
+              'x-my-corpo': corpOperNr
+            },
+            body: JSON.stringify(updated)
+          });
+          if (!res.ok) throw new Error(await res.text());
+          showPopupSuccess('Verbete atualizado com sucesso.');
+          overlay.remove();
+          loadInemEntries();
+        } catch(err) {
+          console.error('Erro ao guardar:', err);
+          showPopupWarning('Erro ao guardar as alterações.');
+        }
+      };
+      footer.append(btnCancel, btnSave);
+      box.append(header, body, footer);
+      overlay.appendChild(box);
+      overlay.addEventListener('click', e => {if (e.target === overlay) overlay.remove();});
+      document.body.appendChild(overlay);
     }
     /* ─── UPLOAD ────────────────────────────────────────── */
     async function inemUploadPdf(nrCodu, serviceType) {
@@ -390,8 +497,8 @@
       if (!container) return;
       container.innerHTML = "";
       const COLUMNS = [{key: "nr_codu", label: "Nr. CODU", width: "60px"}, {key: "alerta", label: "Alerta", width: "80px"}, {key: "vitima", label: "Vítima", width: "100px"},
-                       {key: "morada", label: "Morada", width: "200px"}, {key: "tas", label: "TAS", width: "120px"}, {key: "via", label: "Via", width: "60px"},
-                       {key: "actions", label: "Verbete", width: "90px"}, {key: "pdfstatus", label: "PDF", width: "50px"},];
+                       {key: "morada", label: "Morada", width: "200px"}, {key: "edit", label: "Editar", width: "36px"}, {key: "tas", label: "TAS", width: "120px"}, {key: "via", label: "Via", width: "60px"},
+                       {key: "actions", label: "Verbete", width: "90px"}, {key: "pdfstatus", label: "PDF", width: "50px"}];
       if (!document.getElementById("inem-entries-style")) {
         const style = document.createElement("style");
         style.id = "inem-entries-style";
@@ -399,9 +506,9 @@
           #inem-entries .card-body > div::-webkit-scrollbar {display: none;}
           .btn-inem-upload, .btn-inem-download, .btn-inem-view {border: none; border-radius: 4px; width: 24px; height: 22px; cursor: pointer; font-size: 12px; display: inline-flex; align-items: center;
                                                                 justify-content: center; padding: 0; transition: opacity .15s;}
-          .btn-inem-upload   {background: #c0392b; color: #fff;}
+          .btn-inem-upload {background: #c0392b; color: #fff;}
           .btn-inem-download {background: #27ae60; color: #fff;}
-          .btn-inem-view     {background: #2980b9; color: #fff;}
+          .btn-inem-view {background: #2980b9; color: #fff;}
           .btn-inem-upload:hover, .btn-inem-download:hover, .btn-inem-view:hover {opacity: .8;}
           .inem-pdf-status-td {font-size: 18px;}
         `;

@@ -4784,7 +4784,7 @@
     document.querySelectorAll(".sidebar-sub-submenu-button").forEach((btn) => {
       btn.addEventListener("click", () => {
         const access = btn.dataset.access;
-        if (access === "dashboard-RH") {
+        if (access === "DashBoard RH") {
           createRHDashboard();
         }
       });

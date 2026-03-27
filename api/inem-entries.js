@@ -2,7 +2,8 @@ import ExcelJS from 'exceljs';
 import fs from 'fs';
 import os from 'os';
 import https from 'https';
-import { ServicePrincipalCredentials, PDFServices, MimeType, CreatePDFResult, CreatePDFJob } from "@adobe/pdfservices-node-sdk";
+import { ServicePrincipalCredentials, PDFServices, MimeType, CreatePDFResult, CreatePDFJob } 
+from "@adobe/pdfservices-node-sdk";
 
 const TEMPLATE_INEM_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/inem_entries_template.xlsx";
 const CLIENT_ID = process.env.ADOBE_CLIENT_ID;

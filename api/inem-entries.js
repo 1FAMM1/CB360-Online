@@ -63,6 +63,19 @@
         const workbook = new ExcelJS.Workbook();
         await workbook.xlsx.load(templateBuffer);
         const sheet = workbook.worksheets[0];
+        const dateFrom = req.body.dateFrom || "";
+        const dateTo   = req.body.dateTo   || "";
+        function fmtDate(d) {
+          if (!d) return "";
+          const [y, m, dd] = d.split("-");
+          return `${dd}/${m}/${y}`;
+        }
+        const d1 = fmtDate(dateFrom);
+        const d2 = fmtDate(dateTo);
+        const titulo = d1 === d2 || !d2
+          ? `Relatório Saídas INEM\\Reserva - ${d1}`
+          : `Relatório Saídas INEM\\Reserva - ${d1} a ${d2}`;
+        sheet.getCell("B6").value = titulo;        
         rows.forEach((item, idx) => {
           const rowNum = 10 + idx;
           const r = sheet.getRow(rowNum);

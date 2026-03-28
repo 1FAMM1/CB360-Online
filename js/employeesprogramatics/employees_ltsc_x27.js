@@ -3769,7 +3769,7 @@
       const originalText = btn ? btn.innerText : "";
       try {
         if (btn) {
-          btn.innerText = "⌛ A Gerar Mapa...";
+          btn.innerText = "⌛ A Exportar...";
           btn.disabled = true;
         }
         const year = parseInt(document.getElementById("salary-year-filter").value);

@@ -908,7 +908,6 @@
       }
     }
     async function createEmployeeScalesTable(containerId, year, month, data) {
-      console.log("createEmployeeScalesTable chamado:", containerId, year, month, data?.length);
       const container = document.getElementById(containerId);
       if (!container) return;
       const rowsData = Array.isArray(data) ? data : [];

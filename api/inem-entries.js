@@ -1,6 +1,7 @@
     import ExcelJS from 'exceljs';
     import fs from 'fs';
     import os from 'os';
+    import path from 'path';
     import https from 'https';
     import {ServicePrincipalCredentials, PDFServices, MimeType, CreatePDFResult, CreatePDFJob}
     from "@adobe/pdfservices-node-sdk";

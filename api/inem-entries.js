@@ -98,8 +98,7 @@
           res.setHeader("Content-Disposition", `attachment; filename="${safeFileName}.pdf"`);
           return res.status(200).send(pdfBuffer);
         } else {
-          const path = require('path');
-          outputFile = path.join(tempDir, `${safeFileName}_${Date.now()}.xlsx`);
+          outputFile = `${tempDir}/${safeFileName}_${Date.now()}.xlsx`;
           await workbook.xlsx.writeFile(outputFile);
           const fileBuffer = fs.readFileSync(outputFile);
           try {fs.unlinkSync(outputFile);} catch {}

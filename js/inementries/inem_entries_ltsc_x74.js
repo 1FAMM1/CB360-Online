@@ -1,6 +1,6 @@
     /* ================================
     INSERÇÃO VERBETES INEM
-    ================================ */ 
+    ================================ */
     /* ─── LOAD ──────────────────────────────────────────── */
     async function loadInemEntries() {
       const dateFrom = document.getElementById("inem-date-from")?.value;
@@ -8,10 +8,14 @@
       const codu = document.getElementById("inem-filter-codu")?.value.trim();
       const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const tbody = document.querySelector("#inem-entries table tbody");
+      const btnEmitirXlsx = document.getElementById("btn-inem-emitir-xlsx");
       const btnEmitir = document.getElementById("btn-inem-emitir");
       if (!dateFrom && !dateTo && !codu) {
         if (tbody) tbody.innerHTML = "";
         if (btnEmitir) btnEmitir.style.display = "none";
+        if (btnEmitirXlsx) btnEmitirXlsx.style.display = "none";
+        const totalsEl = document.getElementById("inem-totals");
+        if (totalsEl) totalsEl.innerHTML = `<span>TOTAL: 0</span> &nbsp;|&nbsp; <span>ITeams: 0</span> &nbsp;|&nbsp; <span>Verbete: 0</span>`;
         return;
       }
       let query = `inem_entries?corp_oper_nr=eq.${corpOperNr}`;
@@ -27,6 +31,7 @@
         if (!tbody) return;
         tbody.innerHTML = "";
         if (btnEmitir) btnEmitir.style.display = "none";
+        if (btnEmitirXlsx) btnEmitirXlsx.style.display = "none";
         if (!data?.length) return;
         const COLUMNS = ["nr_codu", "alerta", "vitima", "morada", "edit", "tas", "via", "actions", "pdfstatus"];
         const existsMap = new Map(
@@ -146,7 +151,6 @@
         } else if (totalsEl) {
           totalsEl.innerHTML = `<span>TOTAL: 0</span> &nbsp;|&nbsp; <span>ITeams: 0</span> &nbsp;|&nbsp; <span>Verbete: 0</span>`;
         }
-        const btnEmitirXlsx = document.getElementById("btn-inem-emitir-xlsx");
         if (btnEmitirXlsx) btnEmitirXlsx.style.display = "";
         if (btnEmitir) btnEmitir.style.display = "";
       } catch(err) {
@@ -289,7 +293,7 @@
       btnEmitir.style.display = "none";
       btnEmitir.addEventListener("mouseenter", () => btnEmitir.style.background = "#334155");
       btnEmitir.addEventListener("mouseleave", () => btnEmitir.style.background = "#1e293b");
-      btnEmitir.addEventListener("click", () => exportInemEntries());
+      btnEmitir.addEventListener("click", () => exportInemEntriesPDF());
       btnsRight.append(btnEmitirXlsx, btnEmitir);
       footer.appendChild(btnsRight);
       container.appendChild(footer);
@@ -759,6 +763,112 @@
         console.error("Erro ao eliminar:", err);
         showPopupWarning("Erro ao eliminar o ficheiro.");
       }
+    }
+    /* ─── EXPORT XLSX ───────────────────────────────────── */
+    async function exportInemEntriesXlsx() {
+      const rows = _buildInemExportRows();
+      if (!rows.length) return showPopupWarning("Sem dados para exportar.");
+      const btnXlsx = document.getElementById("btn-inem-emitir-xlsx");
+      const originalText = btnXlsx.textContent;
+      btnXlsx.textContent = "⏳ A Emitir...";
+      btnXlsx.disabled = true;
+      try {
+        const res = await fetch("https://cb360-online.vercel.app/api/inem-entries", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({rows, format: "xlsx", dateFrom: document.getElementById("inem-date-from")?.value, dateTo: document.getElementById("inem-date-to")?.value})
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");        
+        const dateFrom = document.getElementById("inem-date-from")?.value || "";
+        const dateTo = document.getElementById("inem-date-to")?.value || "";
+        function fmtFile(d) {
+          if (!d) return "";
+          const [y, m, dd] = d.split("-");
+          return `${dd}-${m}-${y}`;
+        }
+        const sufix = dateFrom === dateTo || !dateTo
+          ? fmtFile(dateFrom)
+          : `${fmtFile(dateFrom)}_a_${fmtFile(dateTo)}`;
+        a.href = url; a.download = `inem_entries_${sufix}.xlsx`; a.click();
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error("Erro ao exportar XLSX:", err);
+        showPopupWarning("Erro ao exportar XLSX.");
+      } finally {
+        btnXlsx.textContent = originalText;
+        btnXlsx.disabled = false;
+      }
+    }
+    /* ─── EXPORT PDF ────────────────────────────────────── */
+    async function exportInemEntriesPDF() {
+      const rows = _buildInemExportRows();
+      if (!rows.length) return showPopupWarning("Sem dados para exportar.");
+      const btnPdf = document.getElementById("btn-inem-emitir");
+      const originalText = btnPdf.textContent;
+      btnPdf.textContent = "⏳ A Emitir...";
+      btnPdf.disabled = true;
+      try {
+        const res = await fetch("https://cb360-online.vercel.app/api/inem-entries", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({rows, format: "pdf", dateFrom: document.getElementById("inem-date-from")?.value, dateTo: document.getElementById("inem-date-to")?.value})
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        const dateFrom = document.getElementById("inem-date-from")?.value || "";
+        const dateTo = document.getElementById("inem-date-to")?.value || "";
+        function fmtFile(d) {
+          if (!d) return "";
+          const [y, m, dd] = d.split("-");
+          return `${dd}-${m}-${y}`;
+        }
+        const sufix = dateFrom === dateTo || !dateTo
+          ? fmtFile(dateFrom)
+          : `${fmtFile(dateFrom)}_a_${fmtFile(dateTo)}`;        
+        a.href = url; a.download = `inem_entries_${sufix}.pdf`; a.click();
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error("Erro ao exportar PDF:", err);
+        showPopupWarning("Erro ao exportar PDF.");
+      } finally {
+        btnPdf.textContent = originalText;
+        btnPdf.disabled = false;
+      }
+    }
+    /* ─── HELPER: BUILD ROWS ────────────────────────────── */
+    function _buildInemExportRows() {
+      const rows = [];
+      document.querySelectorAll("#inem-entries table tbody tr").forEach(tr => {
+        const tds = tr.querySelectorAll("td");
+        const nrCodu = tds[0]?.textContent.trim();
+        if (!nrCodu) return;
+        const alertaRaw = tds[1]?.textContent.trim() || "";
+        const alertaParts = alertaRaw.split(/\s+/);
+        let alert_date = "", alert_hour = "";
+        if (alertaParts[0]) {
+          const [d, m, y] = alertaParts[0].split("/");
+          alert_date = `${y}-${m}-${d}`;
+        }
+        if (alertaParts[1]) alert_hour = alertaParts[1];
+        const vit = tds[2]?.textContent.trim() || "";
+        const vitParts = vit.split(" - ");
+        const victim_type = vitParts[0] || "";
+        const ageRaw = vitParts[1] || "";
+        const ageMatch = ageRaw.match(/^(\d+)\s*(.*)$/);
+        const victim_age_type = ageMatch ? ageMatch[1] : ageRaw;
+        const victim_age_unit = ageMatch ? ageMatch[2].trim() : "";
+        const moradaRaw = tds[3]?.textContent.trim() || "";
+        const moradaParts = moradaRaw.split(" - ");
+        const victim_address = moradaParts[0] || "";
+        const victim_location = moradaParts.slice(1).join(" - ") || "";
+        rows.push({nr_codu: nrCodu, alert_date, alert_hour, victim_type, victim_age_type, victim_age_unit, victim_address, victim_location,
+                   tas: tds[5]?.textContent.trim() || "", service_type: tds[6]?.textContent.trim() || ""});});
+      return rows;
     }
     /* ─── INICIALIZAÇÃO ─────────────────────────────────── */
     document.querySelectorAll(".sidebar-menu-button").forEach((btn) => {

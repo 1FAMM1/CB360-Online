@@ -278,16 +278,16 @@
       Object.assign(btnsRight.style, {display: "flex", gap: "8px"});
       const btnEmitirXlsx = document.createElement("button");
       btnEmitirXlsx.id = "btn-inem-emitir-xlsx";
-      btnEmitirXlsx.textContent = "📊 Emitir XLSX";
-      Object.assign(btnEmitirXlsx.style, {background: "#1a6b3a", color: "#fff", border: "none", padding: "10px 18px", borderRadius: "6px", cursor: "pointer", fontWeight: "600",
+      btnEmitirXlsx.textContent = "📊 Exportar Excel";
+      Object.assign(btnEmitirXlsx.style, {background: "#059669", color: "#fff", border: "none", padding: "10px 18px", borderRadius: "6px", cursor: "pointer", fontWeight: "600",
                                           fontSize: "12px", transition: "0.2s"});
       btnEmitirXlsx.style.display = "none";
-      btnEmitirXlsx.addEventListener("mouseenter", () => btnEmitirXlsx.style.background = "#25924f");
-      btnEmitirXlsx.addEventListener("mouseleave", () => btnEmitirXlsx.style.background = "#1a6b3a");
+      btnEmitirXlsx.addEventListener("mouseenter", () => btnEmitirXlsx.style.opacity = "0.9");
+      btnEmitirXlsx.addEventListener("mouseleave", () => btnEmitirXlsx.style.opacity = "1");
       btnEmitirXlsx.addEventListener("click", () => exportInemEntriesXlsx());
       const btnEmitir = document.createElement("button");
       btnEmitir.id = "btn-inem-emitir";
-      btnEmitir.textContent = "📥 Emitir PDF";
+      btnEmitir.textContent = "📥 Emitir Mapa";
       Object.assign(btnEmitir.style, {background: "#1e293b", color: "#fff", border: "none", padding: "10px 18px", borderRadius: "6px", cursor: "pointer", fontWeight: "600", 
                                       fontSize: "12px", transition: "0.2s"});
       btnEmitir.style.display = "none";
@@ -770,7 +770,7 @@
       if (!rows.length) return showPopupWarning("Sem dados para exportar.");
       const btnXlsx = document.getElementById("btn-inem-emitir-xlsx");
       const originalText = btnXlsx.textContent;
-      btnXlsx.textContent = "⏳ A Emitir...";
+      btnXlsx.textContent = "⏳ A Exportar...";
       btnXlsx.disabled = true;
       try {
         const res = await fetch("https://cb360-online.vercel.app/api/inem-entries", {
@@ -808,7 +808,7 @@
       if (!rows.length) return showPopupWarning("Sem dados para exportar.");
       const btnPdf = document.getElementById("btn-inem-emitir");
       const originalText = btnPdf.textContent;
-      btnPdf.textContent = "⏳ A Emitir...";
+      btnPdf.textContent = "⏳ A Gerar Mapa...";
       btnPdf.disabled = true;
       try {
         const res = await fetch("https://cb360-online.vercel.app/api/inem-entries", {

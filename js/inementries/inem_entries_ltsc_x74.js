@@ -652,7 +652,7 @@
       footer.className = 'inem-footer';
       const info = document.createElement('div');
       info.className = 'inem-footer-info';
-      info.textContent = 'INEM · Serviço Nacional de Emergência Médica';
+      info.textContent = 'INEM · Instituto Nacional de Emergência Médica';
       footer.appendChild(info);
       if (ext === 'html') {
         const btnPrint = document.createElement('button');

@@ -1,5 +1,5 @@
     /* =======================================
-       POPUPS
+    POPUPS
     ======================================= */
     function setupPopup(modalId, okBtnId, clearFields = false) {
       const modal = document.getElementById(modalId);
@@ -39,7 +39,6 @@
       modal.classList.add("show");
       modal.focus();
     }
-
     function showPopupSuccess(message = "", clearFields = false) {
       const modal = document.getElementById("popup-success-modal");
       if (!modal) return;
@@ -55,7 +54,6 @@
         };
       }
     }
-
     function showPopupWarning(message) {
       const modal = document.getElementById("popup-warning-modal");
       if (!modal) return;
@@ -64,11 +62,13 @@
       modal.classList.add("show");
       modal.focus();
     }
-    
-    
-    
-    
-    
+    function showPopup(id, mensagem) {
+      document.querySelector('#' + id + ' .popup-body ul').innerHTML = `<li>${mensagem}</li>`;
+      document.getElementById(id).classList.add('show');
+    }
+    function closePopup(id) {
+      document.getElementById(id).classList.remove('show');
+    }
     /* =======================================
        TEMPORÁRIO PARA MÓDULOS EM COSTRUÇÃO
     ======================================= */
@@ -79,8 +79,7 @@
       if (textElem) textElem.innerHTML = message;
       modal.classList.add("show");
       modal.focus();
-    }
-    
+    }    
     function setupTempPopup() {
       const modal = document.getElementById("popup-temp-modal");
       const okBtn = document.getElementById("popup-temp-ok-btn");

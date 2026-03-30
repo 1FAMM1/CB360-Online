@@ -10,7 +10,7 @@
       const motive = document.getElementById('new_reason_unavailability')?.value || '';
       const local = document.getElementById('new_unavailability_local')?.value || '';
       if (!vehicle || !startDate || !startHour || !motive || !local) {
-        showPopupWarning("Preencha todos os campos obrigatórios!");
+        showPopup('popup-danger', "Preencha todos os campos obrigatórios!");
         return '';
       }
       if (vehicle === 'ABSC-02') vehicle = 'INEM-Reserva';
@@ -29,7 +29,7 @@
       const out = document.getElementById('wsms_output');
       if (out) out.value = message;
       if (navigator.clipboard?.writeText) navigator.clipboard.writeText(message).catch(() => {});
-      showPopupSuccess("Mensagem criada com sucesso! Abra o WhatsApp e prima CTRL+V", true);
+      showPopup('popup-success', "Mensagem criada com sucesso! Abra o WhatsApp e prima CTRL+V", true);
       try {
         await saveUnavailabilityToSupabase(currentData);
       } catch (e) {
@@ -85,7 +85,6 @@
         `;
           return;
         }
-
         function formatDateDisplay(dateTimeStr) {
           if (!dateTimeStr) return '';
           const [datePart, timePart] = dateTimeStr.split(' ');
@@ -139,7 +138,7 @@
         );
         const data = await resp.json();
         if (data.length === 0) {
-          showPopupWarning("Não foi encontrada indisponibilidade em aberto para este veículo.");
+          showPopup('popup-danger', "Não foi encontrada indisponibilidade em aberto para este veículo.");
           return '';
         }
         const record = data[0];
@@ -167,7 +166,7 @@
         const out = document.getElementById('wsms_output');
         if (out) out.value = message;
         if (navigator.clipboard?.writeText) navigator.clipboard.writeText(message).catch(() => {});
-        showPopupSuccess("Mensagem criada com sucesso! Abra o WhatsApp e prima CTRL+V", true);
+        showPopup('popup-success', "Mensagem criada com sucesso! Abra o WhatsApp e prima CTRL+V", true);
         await fetch(
           `${SUPABASE_URL}/rest/v1/vehicle_unavailability?id=eq.${record.id}`, {
             method: 'DELETE',
@@ -182,7 +181,7 @@
         return message;
       } catch (e) {
         console.error("❌ Erro ao gerar fim de indisponibilidade:", e);
-        showPopupWarning("Erro ao gerar mensagem de fim de indisponibilidade.");
+        showPopup('popup-danger', "Erro ao gerar mensagem de fim de indisponibilidade.");
         return '';
       }
     }
@@ -195,5 +194,4 @@
       await veícIndispBlinker.update();
     }
     refreshVehícIndispAndBlinker();
-
     setInterval(refreshVehícIndispAndBlinker, 10000);

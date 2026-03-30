@@ -13,7 +13,7 @@
     function generateCloseCREPCMessage() {
       const nrOccurrence = document.getElementById('close_nr_occurrence')?.value?.trim();
       if (!nrOccurrence) {
-        showPopupWarning("Por favor, preencha o Nr. de Ocorrência para poder encerrar a ocorrência.");
+        showPopup('popup-danger', "Por favor, preencha o Nr. de Ocorrência para poder encerrar a ocorrência.");
         return;
       }
       const sections = [];
@@ -125,14 +125,12 @@
       if (navigator.clipboard?.writeText) {
         navigator.clipboard.writeText(message).catch(() => {});
       }
-      showPopupSuccess("Mensagem criada com sucesso! Abra o WhatsApp e prima CTRL+V", true);
+      showPopup('popup-success', "Mensagem criada com sucesso! Abra o WhatsApp e prima CTRL+V", true);
       return message;
     }
-
     function toggleClsOcorrSection(section, button) {
       const el = document.querySelector(`.${section}`);
       if (!el) return;
       const isHidden = el.classList.toggle('hidden');
       button.classList.toggle('active', !isHidden);
-
     }

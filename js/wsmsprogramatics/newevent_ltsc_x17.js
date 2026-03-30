@@ -1,5 +1,5 @@
     /* =======================================
-              GROUP INSERT OCCURRENCES
+    GROUP INSERT OCCURRENCES
     ======================================= */
     /* ========== DYNAMIC FIELDS TOOGLE ========== */
     function toggleAlertTypeFields() {
@@ -285,7 +285,7 @@
       const out = document.getElementById('wsms_output');
       if (out) out.value = message;
       if (navigator.clipboard?.writeText) navigator.clipboard.writeText(message).catch(() => {});
-      showPopupSuccess("Mensagem criada com sucesso! Abra o WhatsApp e prima CTRL+V", true);
+      showPopup('popup-success', "Mensagem criada com sucesso! Abra o WhatsApp e prima CTRL+V", true);
       return message;
     }
     /* ========== CREATION OF NEW GLOBAL EVENT MESSAGE ========== */
@@ -339,7 +339,7 @@
         }
       } catch (e) {
         console.warn("Erro ao gravar no Supabase:", e);
-        showPopupWarning("Erro ao gravar no Supabase, mas a mensagem será criada.");
+        showPopup('popup-danger', "Erro ao gravar no Supabase, mas a mensagem será criada.");
       }
       let message = '';
       const vehicleText = vehicles.length ? `Saída de ${vehicles.join(', ')}` : '';
@@ -365,7 +365,7 @@
       const out = document.getElementById('wsms_output');
       if (out) out.value = message;
       if (navigator.clipboard?.writeText) navigator.clipboard.writeText(message).catch(() => {});
-      showPopupSuccess("Mensagem criada com sucesso! Abra o WhatsApp e prima CTRL+V", false);
+      showPopup('popup-success', "Mensagem criada com sucesso! Abra o WhatsApp e prima CTRL+V", false);
       loadActiveOccurrences();
       return message;
     }    
@@ -407,7 +407,7 @@
           const existingVehicles = Number(existingOccurrence.vehicles || 0);
           const existingElements = Number(existingOccurrence.elements || 0);
           if (existingVehicles === vehiclesCount && existingElements === totalElements) {
-            showPopupWarning("Já existe uma ocorrência idêntica registada.");
+            showPopup('popup-danger', "Já existe uma ocorrência idêntica registada.");
             return "DUPLICATE";
           } else {
             const updateResp = await fetch(
@@ -433,7 +433,7 @@
         return await safeJson(insertResp);
       } catch (e) {
         console.error("Erro ao gravar ocorrência:", e);
-        showPopupWarning("❌ Erro ao comunicar com a base de dados.");
+        showPopup('popup-danger', "❌ Erro ao comunicar com a base de dados.");
         return null;
       }
     }
@@ -449,8 +449,3 @@
         toggleContactFields();
       });
     });
-
-
-
-
-

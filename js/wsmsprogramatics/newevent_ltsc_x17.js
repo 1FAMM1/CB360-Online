@@ -210,7 +210,7 @@
         .some(sel => sel.value.trim() !== '');
       if (!hasVehicle) missingFields.push("A ocorrência deve conter pelo menos 1 Veículo");
       if (missingFields.length > 0) {
-        showPopupMissingFields(missingFields);
+        showPopup('popup-danger', missingFields);
         return false;
       }
       return true;

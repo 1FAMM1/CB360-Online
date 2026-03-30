@@ -1,5 +1,5 @@
     /* =======================================
-              MUNICIPALITY GRID GROUP
+    MUNICIPALITY GRID GROUP
     ======================================= */
     /* ========== AUTOMATIC MESSAGE FILLING AND FIELD TOOGLE ========== */
     function autoFillMunicipalityGrid() {
@@ -13,7 +13,6 @@
       }
     }
     document.getElementById('state_municipality_grid').addEventListener('change', autoFillMunicipalityGrid);
-
     function toggleMunicipalityGridOutput() {
       const state = document.getElementById('state_municipality_grid')?.value?.trim();
       const motive = document.getElementById('municipality_grid_output');
@@ -41,6 +40,6 @@
       if (navigator.clipboard?.writeText) {
         navigator.clipboard.writeText(message).catch(() => {});
       }
-      showPopupSuccess("Mensagem criada com sucesso! Abra o WhatsApp e prima CTRL+V", false);
+      showPopup('popup-success', "Mensagem criada com sucesso! Abra o WhatsApp e prima CTRL+V", false);
       return message;
     }

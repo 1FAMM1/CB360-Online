@@ -1,5 +1,5 @@
     /* =======================================
-              GROUP REQUESTS
+    GROUP REQUESTS
     ======================================= */
     /* ========== CREATION OF MESSAGE REQUESTING ELEMENTS ========== */
     function generateAvailability() {
@@ -17,7 +17,7 @@
       const hourOut = document.querySelector('#exit_hour')?.value;
       const destination = document.querySelector('#uls_desteny')?.value?.trim() || '';
       if (!typeRequest && !motiveRequest && !drivers && !elements) {
-        showPopupWarning('Por favor, preencha pelo menos um dos campos antes de efetuar a solicitação.');
+        showPopup('popup-danger', 'Por favor, preencha pelo menos um dos campos antes de efetuar a solicitação.');
         return;
       }
       let message = '*🚨🚨INFORMAÇÃO🚨🚨*\n\n';
@@ -60,7 +60,7 @@
       if (navigator.clipboard?.writeText) {
         navigator.clipboard.writeText(message).catch(() => {});
       }
-      showPopupSuccess("Mensagem criada com sucesso! Abra o WhatsApp e prima CTRL+V", true);
+      showPopup('popup-success', "Mensagem criada com sucesso! Abra o WhatsApp e prima CTRL+V", true);
       document.getElementById('solicitation_motive').disabled = true;
       document.getElementById('solicitation_shift').disabled = true;
       document.getElementById('exit_hour').disabled = true;

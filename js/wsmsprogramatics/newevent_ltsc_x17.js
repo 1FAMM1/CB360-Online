@@ -201,10 +201,7 @@
         if (!document.getElementById('contact_nr')?.value.trim()) missingFields.push("Contacto do Contactante");
       }
       if (classOccorr === '4331' || classOccorr === '4333') {
-        const animalType = document.getElementById('animal-type')?.value.trim();
-        if (!animalType) {
-          missingFields.push("Tipo de Animal");
-        }
+        if (!document.getElementById('animal-type')?.value.trim()) missingFields.push("Tipo de Animal");
       }
       const hasVehicle = Array.from(document.querySelectorAll('.vehicle-card select'))
         .some(sel => sel.value.trim() !== '');

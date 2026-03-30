@@ -18,7 +18,7 @@
         return;
       }
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const data = await supabaseFetch(`reg_elems?corp_oper_nr=eq.${corpOperNr}&n_int=eq.${ni}&select=abv_name&limit=1`);
         nameInput.value = data?.[0]?.abv_name || "";
       } catch(err) {
@@ -49,7 +49,7 @@
       }
      if (missing.length > 0) {
        const list = missing.map(f => `</li><li style="list-style:none;">• ${f}`).join('');
-       showPopup('popup-danger', `<strong>Preencha os seguintes campos obrigatórios:</strong><br><br>${list}`);
+       showPopup('popup-danger', `<strong>PREENCHA OS CAMPOS OBRIGATÓRIOS:</strong><br><br>${list}`);
        return false;
      }
       return true;
@@ -85,7 +85,7 @@
       const serviceType = inem.checked ? "ITeams" : reserv.checked ? "Verbete" : "";
       const now = new Date();
       const alertDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       if (navigator.clipboard?.writeText) {
         navigator.clipboard.writeText(message).then(async () => {
           showPopup('popup-success', "Mensagem criada e copiada! Pode colar no WhatsApp.");

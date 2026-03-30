@@ -63,7 +63,13 @@
       modal.focus();
     }
     function showPopup(id, mensagem) {
-      document.querySelector('#' + id + ' .popup-body ul').innerHTML = `<li>${mensagem}</li>`;
+      const ul = document.querySelector('#' + id + ' .popup-body ul');
+      if (!ul) return;
+      if (Array.isArray(mensagem)) {
+        ul.innerHTML = mensagem.map(m => `<li style="list-style:none;">• ${m}</li>`).join('');
+      } else {
+        ul.innerHTML = `<li>${mensagem}</li>`;
+      }
       document.getElementById(id).classList.add('show');
     }
     function closePopup(id) {

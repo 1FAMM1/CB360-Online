@@ -204,10 +204,11 @@
         if (!document.getElementById('animal-type')?.value.trim()) missingFields.push("Tipo de Animal");
       }
       const hasVehicle = Array.from(document.querySelectorAll('.vehicle-card select'))
-        .some(sel => sel.value.trim() !== '');
+      .some(sel => sel.value.trim() !== '');
       if (!hasVehicle) missingFields.push("A ocorrência deve conter pelo menos 1 Veículo");
       if (missingFields.length > 0) {
-        showPopup('popup-danger', missingFields);
+        const list = missingFields.map(f => `</li><li style="list-style:none;">• ${f}`).join('');
+        showPopup('popup-danger', `<strong>PREENCHA OS CAMPOS OBRIGATÓRIOS:</strong><br><br>${list}`);
         return false;
       }
       return true;

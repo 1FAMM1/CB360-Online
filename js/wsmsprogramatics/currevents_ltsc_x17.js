@@ -107,7 +107,7 @@
     /* ============== SEND POSIT =============== */
     document.getElementById('posit-send-btn').onclick = async function () {
       if (!currentPositId) {
-        showPopupWarning("Nenhuma ocorrência selecionada.");
+        showPopup('popup-danger', "Nenhuma ocorrência selecionada.");
         return;
       }
       const occorrence = document.getElementById('posit-description').value;
@@ -119,11 +119,11 @@
       const desmobilizacao = document.getElementById('desmobilizacao').checked;
       /* ============== VALIDATIONS ============== */
       if (!horaPosit || horaPosit.length < 5) {
-        showPopupWarning("Indique a hora do POSIT (HH:MM).");
+        showPopup('popup-danger', "Indique a hora do POSIT (HH:MM).");
         return;
       }
       if (!positText) {
-        showPopupWarning("Indique o texto do POSIT.");
+        showPopup('popup-danger', "Indique o texto do POSIT.");
         return;
       }
       /* ======== GENERATE POSIT MESSAGE ========= */
@@ -154,11 +154,11 @@
         }
         /* ============= COPY MESSAGE ============== */
         await navigator.clipboard.writeText(mensagem);
-        showPopupSuccess("POSIT criado com sucesso! Abra o WhatsApp e prima CTRL+V.", true);
+        showPopup('popup-success', "POSIT criado com sucesso! Abra o WhatsApp e prima CTRL+V.", true);
         setTimeout(closePositPopup, 500);
       } catch (err) {
         console.error("Erro no POSIT:", err);
-        showPopupWarning("Erro ao criar POSIT!");
+        showPopup('popup-danger', "Erro ao criar POSIT!");
       }
     };
     document.addEventListener('DOMContentLoaded', () => {

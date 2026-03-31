@@ -1,32 +1,37 @@
-    /* =======================================
+   /* =======================================
     MUNICIPALITY GRID GROUP
     ======================================= */
-    /* ========== AUTOMATIC MESSAGE FILLING AND FIELD TOOGLE ========== */
+    /* ============== FIELD VALIDATION ============== */
+    function validateMunicipalityGridForm() {
+      const state = document.getElementById('state_municipality_grid')?.value?.trim();
+      const motiveEl = document.getElementById('municipality_grid_output');
+      if (!state) {
+        showPopup('popup-danger', 'Por favor, selecione o estado da Grelha do Município.');
+        return false;
+      }
+      if ((state === 'Com Constrangimentos' || state === 'Inoperacional') && (!motiveEl || !motiveEl.value.trim())) {
+        showPopup('popup-danger', 'Por favor, indique o motivo do constrangimento ou inoperacionalidade.');
+        return false;
+      }
+      return true;
+    }
+    /* ========== AUTOMATIC MESSAGE FILLING AND FIELD TOGGLE ========== */
     function autoFillMunicipalityGrid() {
       const state = document.getElementById('state_municipality_grid')?.value?.trim();
       const out = document.getElementById('municipality_grid_output');
       if (!out || !state) return;
       if (state === 'Sem Constrangimentos') {
         out.value = 'Selecionou Sem Constrangimentos, a mensagem foi gerada de forma automática.';
+        out.readOnly = true;
       } else {
         out.value = '';
+        out.readOnly = false;
       }
     }
-    document.getElementById('state_municipality_grid').addEventListener('change', autoFillMunicipalityGrid);
-    function toggleMunicipalityGridOutput() {
-      const state = document.getElementById('state_municipality_grid')?.value?.trim();
-      const motive = document.getElementById('municipality_grid_output');
-      if (!motive) return;
-      if (state === 'Sem Constrangimentos') {
-        motive.value = "Selecionou Sem Constrangimentos, a mensagem foi gerada de forma automática.";
-        motive.readOnly = true;
-      } else {
-        motive.value = "";
-        motive.readOnly = false;
-      }
-    }
+    document.getElementById('state_municipality_grid')?.addEventListener('change', autoFillMunicipalityGrid);
     /* ========== CREATION OF MUNICIPALITY GRID STATUS MESSAGE ========== */
     function generateMunicipalityGridMessage() {
+      if (!validateMunicipalityGridForm()) return '';
       const state = document.getElementById('state_municipality_grid')?.value?.trim();
       const motive = document.getElementById('municipality_grid_output');
       let message = '';

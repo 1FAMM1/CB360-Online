@@ -1,27 +1,50 @@
-    /* =======================================
+/* =======================================
     GROUP REQUESTS
     ======================================= */
-    /* ========== CREATION OF MESSAGE REQUESTING ELEMENTS ========== */
+    /* ============== FIELD VALIDATION ============== */
+    function validateAvailabilityForm() {
+      const fields = [{id: 'solicitation_type', label: 'Tipo de Solicitação'}, {id: 'solicitation_motive', label: 'Motivo'}, {id: 'solicitation_shift', label: 'Turno'},
+                      {id: 'exit_hour', label: 'Hora de Saída'}, {id: 'uls_desteny', label: 'Destino'}, {id: 'drivers', label: 'Motoristas'}, {id: 'elements', label: 'Elementos'}];
+      const typeSelect = document.getElementById('solicitation_type')?.value;
+      const missing = [];
+      fields.forEach(f => {
+        const el = document.getElementById(f.id);
+        if (!el) return;
+        if (f.id === 'solicitation_motive' || f.id === 'solicitation_shift' || f.id === 'exit_hour' || f.id === 'uls_desteny') {
+          if (!typeSelect) return;
+          if (typeSelect === 'Transporte de Doentes' && f.id === 'uls_desteny' && !el.value.trim()) missing.push(f.label);
+          if (typeSelect === 'Transporte de Doentes' && f.id === 'exit_hour' && !el.value.trim()) missing.push(f.label);
+          if (typeSelect !== 'Transporte de Doentes' && f.id === 'solicitation_motive' && !el.value.trim()) missing.push(f.label);
+          if (typeSelect !== 'Transporte de Doentes' && f.id === 'solicitation_shift' && !el.value.trim()) missing.push(f.label);
+          return;
+        }
+        if (!el.value?.trim()) missing.push(f.label);
+      });
+      if (missing.length > 0) {
+        const list = missing.map(f => `</li><li style="list-style:none;">• ${f}`).join('');
+        showPopup('popup-danger', `<strong>PREENCHA OS CAMPOS OBRIGATÓRIOS:</strong><br><br>${list}`);
+        return false;
+      }
+      return true;
+    }
+    /* ============== GENERATE MESSAGE ============== */
     function generateAvailability() {
-      function formatDate(dateStr) {
+      if (!validateAvailabilityForm()) return;
+      const formatDate = (dateStr) => {
         if (!dateStr) return '';
         const [year, month, day] = dateStr.split('-');
         return `${day}/${month}/${year}`;
-      }
+      };
       const dateService = document.getElementById('solicitation_date')?.value?.trim();
       const typeRequest = document.getElementById('solicitation_type')?.value?.trim();
       const motiveRequest = document.getElementById('solicitation_motive')?.value?.trim();
       const shift = document.getElementById('solicitation_shift')?.value?.trim();
-      const drivers = document.querySelector('#drivers')?.value?.trim();
-      const elements = document.querySelector('#elements')?.value?.trim();
-      const hourOut = document.querySelector('#exit_hour')?.value;
-      const destination = document.querySelector('#uls_desteny')?.value?.trim() || '';
-      if (!typeRequest && !motiveRequest && !drivers && !elements) {
-        showPopup('popup-danger', 'Por favor, preencha pelo menos um dos campos antes de efetuar a solicitação.');
-        return;
-      }
+      const drivers = document.getElementById('drivers')?.value?.trim();
+      const elements = document.getElementById('elements')?.value?.trim();
+      const hourOut = document.getElementById('exit_hour')?.value;
+      const destination = document.getElementById('uls_desteny')?.value?.trim() || '';
       let message = '*🚨🚨INFORMAÇÃO🚨🚨*\n\n';
-      let partes = [];
+      let parts = [];
       if (drivers || elements) {
         let meioText = 'Solicita-se ';
         if (drivers) meioText += `${drivers} Motorista(s)`;
@@ -29,31 +52,25 @@
         if (elements) meioText += `${elements} Elemento(s)`;
         if (typeRequest === 'INEM') meioText += ' TAS';
         if (typeRequest === 'Reforço Piquete') meioText += ' Preferencialmente TAS';
-        partes.push(meioText);
+        parts.push(meioText);
       }
       if (typeRequest) {
         let tipoText = `para efetuar serviço de ${typeRequest}`;
         if (typeRequest === 'Transporte de Doentes') {
           tipoText += ` para ${destination}`;
           if (dateService) tipoText += ` no dia ${formatDate(dateService)}`;
-          if (hourOut) tipoText += `, com saída da unidade pelas ${hourOut}`;
-          else tipoText += `, com saída da unidade pelas 10:10`;
+          tipoText += `, com saída da unidade pelas ${hourOut || '10:10'}`;
         } else {
           if (dateService) tipoText += ` no dia ${formatDate(dateService)}`;
           if (shift) tipoText += ` no turno ${shift}`;
         }
-        partes.push(tipoText);
+        parts.push(tipoText);
       }
       if (typeRequest === 'Reforço Piquete' && motiveRequest === 'Grelha Município') {
-        partes.push(`afim de assegurar a ${motiveRequest}`);
+        parts.push(`afim de assegurar a ${motiveRequest}`);
       }
-      message += partes.join(' ') + '. ';
-      let destinatario = '';
-      if (typeRequest === 'DECIR' || typeRequest === 'DIOPS') {
-        destinatario = 'ao Sr. Adjunto de Comando';
-      } else {
-        destinatario = 'à SALOC';
-      }
+      message += parts.join(' ') + '. ';
+      const destinatario = (typeRequest === 'DECIR' || typeRequest === 'DIOPS') ? 'ao Sr. Adjunto de Comando' : 'à SALOC';
       message += `As disponibilidades deverão ser remetidas ${destinatario}, com a maior brevidade possível. Obrigado!`;
       const out = document.getElementById('wsms_output');
       if (out) out.value = message;
@@ -61,13 +78,13 @@
         navigator.clipboard.writeText(message).catch(() => {});
       }
       showPopup('popup-success', "Mensagem criada com sucesso! Abra o WhatsApp e prima CTRL+V", true);
-      document.getElementById('solicitation_motive').disabled = true;
-      document.getElementById('solicitation_shift').disabled = true;
-      document.getElementById('exit_hour').disabled = true;
-      document.getElementById('uls_desteny').disabled = true;
+      ['solicitation_motive','solicitation_shift','exit_hour','uls_desteny'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.disabled = true;
+      });
       return message;
     }
-
+    /* ============== TOGGLE FIELDS BASED ON TYPE ============== */
     function toggleFields() {
       const typeSelect = document.getElementById('solicitation_type');
       const motiveSelect = document.getElementById('solicitation_motive');
@@ -88,12 +105,12 @@
         if (destinationInput) destinationInput.value = '';
       }
     }
+    /* ============== INIT ============== */
     document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('solicitation_motive').disabled = true;
-      document.getElementById('solicitation_shift').disabled = true;
-      document.getElementById('exit_hour').disabled = true;
-      document.getElementById('uls_desteny').disabled = true;
+      ['solicitation_motive','solicitation_shift','exit_hour','uls_desteny'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.disabled = true;
+      });
       toggleFields();
-      document.getElementById('solicitation_type')
-        .addEventListener('change', toggleFields);
+      document.getElementById('solicitation_type')?.addEventListener('change', toggleFields);
     });

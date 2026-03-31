@@ -1,5 +1,5 @@
     /* =========================
-    FASE 01
+    FASE 01 - SCALES
     ========================= */
     const SCALE_STATE = {currentYear: null, currentMonth: null, daysInMonth: null, holidayMap: null};
     function createEmployeeMonthButtons({
@@ -467,54 +467,7 @@
     function hideDriverMenu() {
       if (__driverMenu) __driverMenu.style.display = "none";
       __driverMenuCell = null;
-    }
-    function showLoadingPopup(message) {
-      document.getElementById("loading-popup")?.remove();
-      const popup = document.createElement("div");
-      popup.id = "loading-popup";
-      popup.style.cssText = `position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:40px 50px;
-                             border-radius:20px;box-shadow:0 20px 60px rgba(102,126,234,0.4);z-index:10000;text-align:center;min-width:400px;animation:popupFadeIn 0.3s ease-out;`;
-      const spinner = document.createElement("div");
-      spinner.style.cssText = `border:5px solid rgba(255,255,255,0.3);border-top:5px solid #fff;border-radius:50%;width:60px;height:60px;animation:spin 0.8s linear infinite;margin:0 auto 25px;`;
-      const text = document.createElement("p");
-      text.id = "loading-popup-text"; text.textContent = message;
-      text.style.cssText = `font-size:18px;font-weight:600;color:#fff;margin:0 0 15px 0;text-shadow:0 2px 4px rgba(0,0,0,0.2);`;
-      const progressBar = document.createElement("div");
-      progressBar.id = "loading-progress-bar";
-      progressBar.style.cssText = `width:100%;height:4px;background:rgba(255,255,255,0.3);border-radius:2px;overflow:hidden;margin-top:15px;`;
-      const progressFill = document.createElement("div");
-      progressFill.id = "loading-progress-fill";
-      progressFill.style.cssText = `width:0%;height:100%;background:#fff;border-radius:2px;transition:width 0.3s ease;`;
-      progressBar.appendChild(progressFill);
-      popup.appendChild(spinner); popup.appendChild(text); popup.appendChild(progressBar);
-      const overlay = document.createElement("div");
-      overlay.id = "loading-overlay";
-      overlay.style.cssText = `position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);backdrop-filter:blur(5px);z-index:9999;animation:overlayFadeIn 0.3s ease-out;`;
-      document.body.appendChild(overlay); document.body.appendChild(popup);
-      if (!document.getElementById("popup-animations")) {
-        const style = document.createElement("style");
-        style.id = "popup-animations";
-        style.textContent = `@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
-                             @keyframes popupFadeIn{from{opacity:0;transform:translate(-50%,-45%)}to{opacity:1;transform:translate(-50%,-50%)}}
-                             @keyframes overlayFadeIn{from{opacity:0}to{opacity:1}}
-                             @keyframes popupFadeOut{from{opacity:1;transform:translate(-50%,-50%)}to{opacity:0;transform:translate(-50%,-55%)}}
-                             @keyframes overlayFadeOut{from{opacity:1}to{opacity:0}}`;
-        document.head.appendChild(style);
-      }
-    }
-    function updateLoadingPopup(message, progress = null) {
-      const text = document.getElementById("loading-popup-text");
-      if (text) text.textContent = message;
-      if (progress !== null) { const fill = document.getElementById("loading-progress-fill"); if (fill) fill.style.width = `${progress}%`; }
-    }
-    function hideLoadingPopup() {
-      ["loading-popup","loading-overlay"].forEach(id => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        el.style.animation = id === "loading-popup" ? "popupFadeOut 0.3s ease-out" : "overlayFadeOut 0.3s ease-out";
-        setTimeout(() => el.remove(), 300);
-      });
-    }
+    }    
     function _getActiveYearMonth() {
       const yearSelect = document.getElementById("year-employees");
       const monthBtn = document.querySelector("#months-container-scales-employees .btn.active");
@@ -548,7 +501,7 @@
     }
     async function loadScalesShifts(year, month) {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
         const response = await fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`, {headers: getSupabaseHeaders()});
         if (!response.ok) { console.warn("Nenhum shift salvo ou erro ao carregar"); return {shifts: {}, employeeData: {}}; }
         const data = await response.json();
@@ -563,7 +516,7 @@
     }
     async function loadScalesEmployees(year, month) {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
         const monthStart = `${year}-${String(month).padStart(2, "0")}-01`;
         const lastDay = new Date(year, month, 0).getDate();
         const monthEnd = `${year}-${String(month).padStart(2, "0")}-${lastDay}`;
@@ -599,7 +552,7 @@
         });
         data._shifts = shifts;
         return data;
-      } catch (err) { console.error(err); showPopupWarning && showPopupWarning("Erro ao carregar profissionais."); return []; }
+      } catch (err) {console.error(err); showPopupWarning && showPopupWarning("Erro ao carregar profissionais."); return [];}
     }
     function applyShiftsToTable(shifts) {
       document.querySelectorAll("tr.data-row").forEach(row => {
@@ -743,10 +696,10 @@
         const hasShifts = Array.from(row.querySelectorAll("td[contenteditable='true']")).some(c => c.textContent.trim() !== "");
         if (!ni && !nome && !hasShifts) { row.remove(); removedCount++; }
       });
-      removedCount > 0 ? showPopupSuccess(`✅ ${removedCount} Elemento(s) Removido(s).`) : showPopupWarning("⚠️ Nenhuma linha vazia encontrada");
+      removedCount > 0 ? showPopup('popup-success', `${removedCount} Elemento(s) Removido(s).`) : showPopup('popup-danger', "Nenhuma linha vazia encontrada");
     }
     async function loadWeekendAdjacentData(year, month) {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       __prevMonthShiftsCache = {}; __nextMonthShiftsCache = {}; __lastFridayPrevCache = null; __firstMondayNextCache = null;
       let prevMonth = month - 1, prevYear = year;
       if (prevMonth === 0) { prevMonth = 12; prevYear--; }
@@ -803,7 +756,7 @@
           }
         }
       });
-     rows.forEach(row => {
+      rows.forEach(row => {
         for (let d = 1; d <= daysInMonth; d++) {
           const cell = row.querySelector(`.day-cell-${d}`);
           if (!cell) continue;
@@ -1028,7 +981,7 @@
           const buttonsDiv = document.createElement("div"); buttonsDiv.style.cssText = "display:flex;gap:8px;position:absolute;right:0;";
           const btnStyle = "border:none;border-radius:4px;width:20px;height:20px;cursor:pointer;font-size:18px;font-weight:bold;color:white;";
           const btnAdd = document.createElement("button"); btnAdd.textContent = "+"; btnAdd.style.cssText = btnStyle + "background:#10b981;";
-          btnAdd.addEventListener("click", e => { e.stopPropagation(); cfg.addLogic(cfg.prefix); showPopupSuccess(cfg.successMsg); });
+          btnAdd.addEventListener("click", e => {e.stopPropagation(); cfg.addLogic(cfg.prefix); showPopup('popup-success', cfg.successMsg);});
           const btnRemove = document.createElement("button"); btnRemove.textContent = "−"; btnRemove.style.cssText = btnStyle + "background:#ef4444;";
           btnRemove.addEventListener("click", e => { e.stopPropagation(); removeEmptyRows(cfg.prefix); });
           buttonsDiv.appendChild(btnAdd); buttonsDiv.appendChild(btnRemove); flex.appendChild(buttonsDiv);
@@ -1079,9 +1032,9 @@
     }
     async function cleanEmployeeScales({ autoSave = false } = {}) {
       const tbody = document.querySelector("table.employees-table tbody");
-      if (!tbody) { showPopupWarning("Nenhuma tabela aberta."); return; }
+      if (!tbody) {showPopup('popup-danger', "Nenhuma tabela aberta."); return;}
       const ym = _getActiveYearMonth();
-      if (!ym) { showPopupWarning("Seleciona mês e ano primeiro."); return; }
+      if (!ym) {showPopup('popup-danger', "Seleciona mês e ano primeiro."); return;}
       const {year, month} = ym;
       const daysInMonth = new Date(year, month, 0).getDate();
       const table = tbody.closest("table");
@@ -1103,15 +1056,15 @@
         }
       });
       if (table) { paintWeekendHeaders(table, year, month, daysInMonth); paintHolidaysOnTable(tbody, table, year, month, daysInMonth, holidayMap); }
-      showPopupSuccess("✅ Turnos Removidos. Escala Reíniciada.");
+      showPopup('popup-success', "Turnos Removidos. Escala Reíniciada.");
     }
     async function saveEmployeeScales() {
       const tbody = document.querySelector("table.employees-table tbody");
-      if (!tbody) { showPopupWarning("Nenhuma tabela aberta."); return; }
+      if (!tbody) {showPopup('popup-danger', "Nenhuma tabela aberta."); return;}
       const ym = _getActiveYearMonth();
-      if (!ym) { showPopupWarning("Seleciona mês e ano primeiro."); return; }
+      if (!ym) {showPopup('popup-danger', "Seleciona mês e ano primeiro."); return;}
       const {year, month, monthBtn} = ym;
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const saveBtn = document.getElementById("employees-save-btn");
       if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = "A guardar..."; }
       try {
@@ -1159,9 +1112,9 @@
             headers:{...getSupabaseHeaders(),"Content-Type":"application/json","Prefer":"return=minimal"}, body:JSON.stringify(accumulatedPayload)});
           if (!ins2.ok) console.warn("⚠️ Erro ao guardar acumulados:", await ins2.text());
         }
-        showPopupSuccess(`✅ Escala de ${monthBtn.textContent} ${year} guardada com sucesso!`);
+        showPopup('popup-success', `Escala de ${monthBtn.textContent} ${year} guardada com sucesso!`);
       } catch (err) {
-        console.error("Erro ao guardar escala:", err); showPopupWarning("❌ Erro ao guardar: " + err.message);
+        console.error("Erro ao guardar escala:", err); showPopup('popup-danger', "❌ Erro ao guardar: " + err.message);
       } finally {
         if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = "Guardar"; }
       }
@@ -1190,20 +1143,20 @@
         const monthNames = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
         a.download = `Escala_Funcionários_${monthNames[month - 1]}_${year}.${format === "pdf" ? "pdf" : "xlsx"}`;
         a.click(); URL.revokeObjectURL(url);
-        hideLoadingPopup(); showPopupSuccess("✅ Escala gerada com sucesso!");
-      } catch (err) { hideLoadingPopup(); console.error("Erro ao gerar folha:", err); showPopupWarning(`❌ Erro: ${err.message}`); }
+        hideLoadingPopup(); showPopup('popup-info', `Escala gerada com sucesso, em formato ${format === "pdf" ? "PDF" : "Excel"}!`);
+      } catch (err) {hideLoadingPopup(); console.error("Erro ao gerar folha:", err); showPopup('popup-danger', `❌ Erro: ${err.message}`);}
     }
     async function emitStitchSheets() {
       const tbody = document.querySelector("table.employees-table tbody");
-      if (!tbody) { showPopupWarning("Nenhuma tabela aberta."); return; }
+      if (!tbody) {showPopup('popup-danger', "Nenhuma tabela aberta."); return;}
       const ym = _getActiveYearMonth();
-      if (!ym) { showPopupWarning("Selecione mês e ano primeiro."); return; }
+      if (!ym) {showPopup('popup-danger', "Selecione mês e ano primeiro."); return;}
       const {year, month} = ym;
       const MONTH_NAMES = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"];
       try {
         const daysInMonth = new Date(year, month, 0).getDate();
         const employees = _collectEmployeeData(Array.from(tbody.querySelectorAll("tr.data-row")), daysInMonth).filter(emp => emp.abv_name);
-        if (!employees.length) { showPopupWarning("Nenhum funcionário encontrado."); return; }
+        if (!employees.length) {showPopup('popup-danger',"Nenhum funcionário encontrado."); return; }
         showLoadingPopup(`🔄 A iniciar geração de ${employees.length} folhas...`);
         const workingHours = calculateWorkingHours(year, month).workingHours;
         const {PDFDocument} = PDFLib;
@@ -1223,8 +1176,8 @@
         const url = URL.createObjectURL(new Blob([await mergedPdf.save()], {type:"application/pdf"}));
         const a = document.createElement("a"); a.href = url; a.download = `Folhas_Ponto_${MONTH_NAMES[month - 1]}_${year}.pdf`;
         document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-        hideLoadingPopup(); showPopupSuccess("✅ Todas as folhas foram geradas com sucesso!");
-      } catch (err) { hideLoadingPopup(); console.error("❌ Erro completo:", err); showPopupWarning("❌ Erro: " + err.message); }
+        hideLoadingPopup(); showPopup('popup-success',"Todas as folhas foram geradas com sucesso!");
+      } catch (err) { hideLoadingPopup(); console.error("❌ Erro completo:", err); showPopup('popup-danger',"Erro: " + err.message); }
     }
     document.getElementById("employees-clean-btn")?.addEventListener("click", cleanEmployeeScales);
     document.getElementById("employees-save-btn")?.addEventListener("click", saveEmployeeScales);
@@ -1265,8 +1218,7 @@
     function isValidHHMM(value) {
       return /^\d{1,2}:\d{2}$/.test(value);
     }
-    /* ================================ CREATE AND SAVE EXTRA HOURS =============================== */
-    
+    /* ================================ CREATE AND SAVE EXTRA HOURS =============================== */    
     async function createExtraHoursTable(containerId, year, month, data) {
       const container = document.getElementById(containerId);
       if (!container) return;
@@ -1446,18 +1398,18 @@
     async function saveExtraHours() {
       const tbody = document.querySelector("table.extra-hours-table tbody");
       if (!tbody) {
-        showPopupWarning("Nenhuma tabela aberta.");
+        showPopup('popup-danger', "Nenhuma tabela aberta.");
         return;
       }
       const yearSelect = document.getElementById("year-extra-hour-employees");
       const monthBtn = document.querySelector("#months-container-extra-hour-employees .btn.active");
       if (!monthBtn || !yearSelect) {
-        showPopupWarning("Selecione mês e ano primeiro.");
+        showPopup('popup-danger', "Selecione mês e ano primeiro.");
         return;
       }
       const year = parseInt(yearSelect.value, 10);
       const month = Array.from(document.querySelectorAll("#months-container-extra-hour-employees .btn")).indexOf(monthBtn) + 1;
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const saveExtraHoursBtn = document.getElementById("employees-extra-save-btn");
       if (saveExtraHoursBtn) {
         saveExtraHoursBtn.disabled = true;
@@ -1558,10 +1510,10 @@
         } catch (acumErr) {
           console.warn("⚠️ Horas extra guardadas, mas erro ao atualizar acumulados:", acumErr);
         }
-        showPopupSuccess(`✅ Dados atualizados com sucesso!`);
+        showPopup('popup-success', `Dados atualizados com sucesso!`);
       } catch (error) {
         console.error(error);
-        showPopupWarning("❌ Erro ao atualizar dados.");
+        showPopup('popup-danger', "Erro ao atualizar dados.");
       } finally {
         if (saveExtraHoursBtn) {
           saveExtraHoursBtn.disabled = false;
@@ -1666,7 +1618,7 @@
     }
     async function loadEmployeesForGraphic() {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/reg_employees?select=n_int,abv_name&corp_oper_nr=eq.${corpOperNr}&order=n_int`, {
             headers: getSupabaseHeaders()
@@ -1685,7 +1637,7 @@
         });
       } catch (error) {
         console.error("Error loading employees:", error);
-        showPopupWarning && showPopupWarning("Error loading employees list");
+        showPopupWarning && showPopup('popup-danger', "Error loading employees list");
       }
     }
     async function loadPersonalGraphicData(nInt, year) {
@@ -1696,7 +1648,7 @@
         if (!contentWrapper.dataset.loaded) {
           contentWrapper.innerHTML = "A Carregar...";
         }
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
         const [employeeRes, accumulatedRes, shiftsRes, extraHoursRes] = await Promise.all([
           fetch(
             `${SUPABASE_URL}/rest/v1/reg_employees?select=n_int,abv_name&corp_oper_nr=eq.${corpOperNr}&n_int=eq.${nInt}`, {
@@ -1795,7 +1747,7 @@
         createPersonalGraphicChart(chartContainer, monthsData);
       } catch (error) {
         console.error("Error loading personal graphic data:", error);
-        showPopupWarning && showPopupWarning("Error loading data");
+        showPopupWarning && showPopup('popup-danger', "Error loading data");
       }
     }
     function calculateWorkingHoursIndividual(startDate, endDate, year) {
@@ -2223,7 +2175,7 @@
     let employeesForHolidays = [];
     async function loadEmployeesForHolidays() {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/reg_employees?select=n_int,abv_name,team,function&corp_oper_nr=eq.${corpOperNr}&order=n_int`, {
             headers: getSupabaseHeaders()
@@ -2243,12 +2195,12 @@
         });
       } catch (error) {
         console.error("Error loading employees:", error);
-        showPopupWarning && showPopupWarning("Erro ao carregar funcionários");
+        showPopupWarning && showPopup('popup-danger', "Erro ao carregar funcionários");
       }
     }
     async function loadHolidayData(nInt, year) {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
         const shiftsResponse = await fetch(
           `${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&n_int=eq.${nInt}&shift=eq.FE&order=month.asc,day.asc`, {
             headers: getSupabaseHeaders()
@@ -2310,7 +2262,7 @@
         }
       } catch (error) {
         console.error("Error loading holiday data:", error);
-        if (typeof showPopupWarning === "function") showPopupWarning("Erro ao carregar dados de férias");
+        if (typeof showPopup === "function") showPopup('popup-danger', "Erro ao carregar dados de férias");
       }
     }
     function isNextWorkingDay(lastDate, nextDate, year) {
@@ -2353,7 +2305,7 @@
       const yearSelect = document.getElementById("holiday-year-select");
       const availableDaysEl = document.getElementById("holiday-available-days");
       if (!select.value) {
-        showPopupWarning && showPopupWarning("Selecione um funcionário");
+        showPopupWarning && showPopup('popup-danger', "Selecione um funcionário");
         return;
       }
       const year = parseInt(yearSelect.value);
@@ -2372,12 +2324,11 @@
         }
       }
       if (periods.length === 0) {
-        showPopupWarning && showPopupWarning("Adicione pelo menos um período");
+        showPopupWarning && showPopup('popup-danger', "Adicione pelo menos um período");
         return;
       }
       if (totalDaysRequested > availableDays) {
-        showPopupWarning && showPopupWarning(
-          `Dias solicitados (${totalDaysRequested}) excedem dias disponíveis (${availableDays})`
+        showPopupWarning && showPopup('popup-danger', `Dias solicitados (${totalDaysRequested}) excedem dias disponíveis (${availableDays})`
         );
         return;
       }
@@ -2405,12 +2356,12 @@
       const select = document.getElementById("holiday-employee-select");
       const yearSelect = document.getElementById("holiday-year-select");
       if (!select.value) {
-        if (typeof showPopupWarning === "function") showPopupWarning("Selecione um funcionário");
+        if (typeof showPopupWarning === "function") showPopup('popup-danger', "Selecione um funcionário");
         return;
       }
       const nInt = parseInt(select.value);
       const year = parseInt(yearSelect.value);
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const allFERecords = [];
       for (let i = 1; i <= 3; i++) {
         const startInput = document.getElementById(`holiday-start-${i}`);
@@ -2420,7 +2371,7 @@
           const end = new Date(endInput.value.replace(/-/g, '\/'));
           if (start.getFullYear() !== year || end.getFullYear() !== year) {
             if (typeof showPopupWarning === "function")
-              showPopupWarning(`Erro no Período ${i}: As datas devem pertencer ao ano ${year}`);
+              showPopup('popup-danger', `Erro no Período ${i}: As datas devem pertencer ao ano ${year}`);
             return;
           }
           const feRecords = generateFERecords(start, end, nInt, year, corpOperNr);
@@ -2481,12 +2432,12 @@
           });
           if (!saveResponse.ok) throw new Error("Erro ao gravar novas férias");
         }
-        if (typeof showPopupSuccess === "function")
-          showPopupSuccess(`✅ Férias atualizadas com sucesso: ${allFERecords.length} dias.`);
+        if (typeof showPopup === "function")
+          showPopup('popup-success', `Férias atualizadas com sucesso: ${allFERecords.length} dias.`);
         loadHolidayData(nInt, year);
       } catch (error) {
         console.error("Save error:", error);
-        if (typeof showPopupWarning === "function") showPopupWarning("Erro ao processar a atualização das férias");
+        if (typeof showPopup === "function") showPopup('popup-danger', "Erro ao processar a atualização das férias");
       }
     }
     function generateFERecords(startDate, endDate, nInt, year, corpOperNr) {
@@ -2514,7 +2465,7 @@
       const select = document.getElementById("holiday-employee-select");
       const yearSelect = document.getElementById("holiday-year-select");
       if (!select.value) {
-        return showPopupWarning("Selecione um funcionário primeiro.");
+        return showPopup('popup-danger', "Selecione um funcionário primeiro.");
       }
       const nInt = select.value;
       const employeeName = select.options[select.selectedIndex].text;
@@ -2535,15 +2486,17 @@
         }
       }
       if (periods.length === 0) {
-        return showPopupWarning("Preencha pelo menos um período de férias.");
+        return showPopup('popup-danger', "Preencha pelo menos um período de férias.");
       }
       try {
-        if (typeof showPopupSuccess === "function")
-          showPopupSuccess("A gerar PDF... Por favor aguarde.");
+        if (typeof showPopup === "function") {
+          showLoadingPopup(`A gerar formulário de marcação de férias de ${employeeName}.`);
+        }
         const response = await fetch("https://cb360-online.vercel.app/api/employees_convert_and_send", {
           method: "POST",
           headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({mode: "vacation_form", employeeName, nInt, periods})});
+          body: JSON.stringify({mode: "vacation_form", employeeName, nInt, periods})
+        });
         if (!response.ok) throw new Error("Erro ao gerar PDF");
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
@@ -2552,12 +2505,18 @@
         a.download = `Formulario_Ferias_${employeeName.replace(/\s+/g, '_')}.pdf`;
         document.body.appendChild(a);
         a.click();
+        a.remove();
         window.URL.revokeObjectURL(url);
+        setTimeout(() => {
+          hideLoadingPopup();
+          showPopup('popup-info', `Formulário de marcação de férias de ${employeeName}, gerado com sucesso!`);
+        }, 400);
       } catch (error) {
         console.error(error);
-        showPopupWarning("Falha ao gerar o formulário em PDF.");
+        hideLoadingPopup();
+        showPopup('popup-danger', "Falha ao gerar o formulário em PDF.");
       }
-    }
+    }    
     function getIntervalInMonth(startDate, endDate, month, year) {
       const firstDayOfMonth = new Date(year, month - 1, 1);
       const lastDayOfMonth = new Date(year, month, 0);
@@ -2571,7 +2530,6 @@
     async function createGlobalHolidayMap() {
       const cardBody = document.querySelector("#vacation-scheduling-map .card-body");
       if (!cardBody) return;
-
       if (!document.getElementById("map-core-css")) {
         const s = document.createElement("style");
         s.id = "map-core-css";
@@ -2642,7 +2600,7 @@
     async function loadGlobalHolidayData() {
       const filterElem = document.getElementById("global-year-filter");
       const year = filterElem ? parseInt(filterElem.value) : new Date().getFullYear();
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const tableBody = document.getElementById("holiday-table-body");
       const titleElem = document.getElementById("holiday-map-title");
       if (titleElem) titleElem.innerHTML = `<span class="m-badge-rh">RH</span> MAPA DE FÉRIAS ${year}`;
@@ -2718,9 +2676,10 @@
     }
     async function exportGlobalHolidayMap() {
       const year = parseInt(document.getElementById("holiday-year-select")?.value || new Date().getFullYear());
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const btn = document.querySelector(".m-btn");
       const originalText = btn.innerHTML;
+      showLoadingPopup(`A gerar mapa global de férias para ${year}.`);
       btn.innerHTML = "⌛ A Gerar Mapa...";
       btn.disabled = true;
       const formatDateSafe = (date) => {
@@ -2729,12 +2688,8 @@
       };
       try {
         const [empRes, shiftRes] = await Promise.all([
-          fetch(`${SUPABASE_URL}/rest/v1/reg_employees?corp_oper_nr=eq.${corpOperNr}&order=abv_name.asc`, {
-            headers: getSupabaseHeaders()
-          }),
-          fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&shift=eq.FE&order=n_int,month,day`, {
-            headers: getSupabaseHeaders()
-          })
+          fetch(`${SUPABASE_URL}/rest/v1/reg_employees?corp_oper_nr=eq.${corpOperNr}&order=abv_name.asc`, {headers: getSupabaseHeaders()}),
+          fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&shift=eq.FE&order=n_int,month,day`, {headers: getSupabaseHeaders()})
         ]);
         const employees = await empRes.json();
         const allShifts = await shiftRes.json();
@@ -2757,12 +2712,12 @@
             }
             periods.push({s: formatDateSafe(s), e: formatDateSafe(e)});
           }
-          return { name: emp.abv_name, totalDays: shifts.length, periods: periods };
+          return {name: emp.abv_name, totalDays: shifts.length, periods};
         });
         const response = await fetch("https://cb360-online.vercel.app/api/employees_convert_and_send", {
           method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({mode: "vacation_map", year, employees: employeesFormatted})
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ mode: "vacation_map", year, employees: employeesFormatted })
         });
         if (!response.ok) throw new Error("Erro na resposta da API");
         const blob = await response.blob();
@@ -2770,11 +2725,18 @@
         const a = document.createElement("a");
         a.href = url;
         a.download = `Mapa_Global_Ferias_${year}.pdf`;
+        document.body.appendChild(a);
         a.click();
+        a.remove();
         window.URL.revokeObjectURL(url);
+        setTimeout(() => {
+          hideLoadingPopup();
+          showPopup('popup-info', `O mapa global de férias de ${year} foi foi gerado com sucesso.`);
+        }, 400);
       } catch (error) {
         console.error("Erro:", error);
-        alert("Falha ao gerar o mapa global.");
+        hideLoadingPopup();
+        showPopup('popup-danger', "Falha ao gerar o mapa global de férias.");
       } finally {
         btn.innerHTML = originalText;
         btn.disabled = false;
@@ -2782,7 +2744,7 @@
     }
     async function consultDiscrepancies() {
       const year = parseInt(document.getElementById("global-year-filter")?.value || new Date().getFullYear());
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const DAYS_RIGHT = 22;
       let modal = document.getElementById("discrepancy-modal");
       if (!modal) {
@@ -2924,17 +2886,20 @@
     }
     async function exportDiscrepancies() {
       if (!window.discrepancyData) {
-        alert("Nenhum dado para exportar");
+        showPopup('popup-danger', "Nenhum dado para exportar");
         return;
-      }
+      }      
       const { year, data } = window.discrepancyData;
       const rows = document.querySelectorAll("#discrepancy-modal tbody tr");
-      const payload = {
-        mode: "vacation_anomalies", year, rows:
-        data.map((emp, i) => ({abv_name: emp.abv_name, marked: emp.marked, missing: emp.missing, transitory: rows[i]?.getAttribute("data-transitory") || "—"}))};
+      const payload = {mode: "vacation_anomalies", year, rows: data.map((emp, i) => ({
+                       abv_name: emp.abv_name, marked: emp.marked, missing: emp.missing, transitory: rows[i]?.getAttribute("data-transitory") || "—" }))};
+      const btn = document.getElementById("export-discrepancies-btn");
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = "⌛ A gerar...";
+      }
+      showLoadingPopup(`A gerar lista de discrepâncias de férias para ${year}...`);
       try {
-        const btn = document.getElementById("export-discrepancies-btn");
-        if (btn) {btn.disabled = true; btn.textContent = "⌛ A gerar...";}
         const response = await fetch("https://cb360-online.vercel.app/api/employees_convert_and_send", {
           method: "POST",
           headers: {"Content-Type": "application/json"},
@@ -2951,13 +2916,21 @@
         a.download = `Discrepancias_Ferias_${year}.pdf`;
         document.body.appendChild(a);
         a.click();
-        document.body.removeChild(a);
+        a.remove();
         URL.revokeObjectURL(url);
+        setTimeout(() => {
+          hideLoadingPopup();
+          showPopup('popup-info', `Lista de discrepâncias de férias para ${year} gerada com sucesso.`);
+        }, 400);    
       } catch (error) {
-        alert("❌ Erro ao gerar PDF: " + error.message);
+        hideLoadingPopup();
+        console.error("Erro ao gerar PDF de discrepâncias:", error);
+        showPopup('popup-danger', `❌ Erro ao gerar PDF: ${error.message}`);
       } finally {
-        const btn = document.getElementById("export-discrepancies-btn");
-        if (btn) {btn.disabled = false; btn.textContent = "📊 Exportar";}
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = "📊 Exportar";
+        }
       }
     }
     /* PRIORIDADE FÉRIAS */
@@ -3045,7 +3018,7 @@
       const filterElem = document.getElementById("priority-year-filter");
       const selectedYear = filterElem ? parseInt(filterElem.value) : new Date().getFullYear();
       const priorityYear = selectedYear + 1;
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const tableBody = document.getElementById("priority-table-body");
       const titleElem = document.getElementById("priority-map-title");
       if (titleElem) titleElem.innerHTML = `<span class="p-badge-rh">RH</span> PRIORIDADE DE MARCAÇÃO DE FÉRIAS ${priorityYear}`;
@@ -3097,22 +3070,22 @@
         tableBody.innerHTML = `<tr><td colspan="26" style="color:red; text-align:center;">Erro: ${err.message}</td></tr>`;
       }
     }
-    async function exportPrioritiesMap() {
+    async function exportPrioritiesMap(event) {
       const selectedYear = parseInt(document.getElementById("holiday-year-select")?.value || new Date().getFullYear());
       const priorityYear = selectedYear + 1;
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const btn = event?.target;
       const originalText = btn ? btn.innerText : "";
-      if (btn) btn.innerText = "⌛ A Gerar Mapa...";
+      if (btn) {
+        btn.innerText = "⌛ A Gerar Mapa...";
+        btn.disabled = true;
+      }
       const weights = {1: [1, 1], 2: [1, 1], 3: [1, 1], 4: [1, 1], 5: [4, 4], 6: [4, 8], 7: [12, 12], 8: [12, 12], 9: [12, 8], 10: [4, 4], 11: [1, 1], 12: [2, 8]};
+      showLoadingPopup(`A gerar mapa de prioridades de férias para ${priorityYear}...`);
       try {
         const [empRes, shiftRes] = await Promise.all([
-          fetch(`${SUPABASE_URL}/rest/v1/reg_employees?corp_oper_nr=eq.${corpOperNr}&function=neq.SEC&function=neq.COM&order=abv_name.asc`, {
-            headers: getSupabaseHeaders()
-          }),
-          fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${selectedYear}&shift=eq.FE`, {
-            headers: getSupabaseHeaders()
-          })
+          fetch(`${SUPABASE_URL}/rest/v1/reg_employees?corp_oper_nr=eq.${corpOperNr}&function=neq.SEC&function=neq.COM&order=abv_name.asc`, {headers: getSupabaseHeaders()}),
+          fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${selectedYear}&shift=eq.FE`, {headers: getSupabaseHeaders()})
         ]);
         const allEmployees = await empRes.json();
         const allShifts = await shiftRes.json();
@@ -3127,20 +3100,20 @@
             const q1Score = q1Days * weights[m][0];
             const q2Days = empShifts.filter(s => s.month === m && s.day > 15).length;
             const q2Score = q2Days * weights[m][1];
-            scoresArray.push(q1Score);
-            scoresArray.push(q2Score);
+            scoresArray.push(q1Score, q2Score);
             totalScore += (q1Score + q2Score);
           }
-          return {name: emp.abv_name, scores: scoresArray, totalScore: totalScore};
+          return {name: emp.abv_name, scores: scoresArray, totalScore};
         });
         if (employeesPayload.length === 0) {
-          alert("Não existem dados para exportar.");
+          hideLoadingPopup();
+          showPopup('popup-danger', "Não existem dados para exportar.");
           return;
         }
         const response = await fetch('https://cb360-online.vercel.app/api/employees_convert_and_send', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({mode: "vacation_priority", priorityYear: priorityYear, employees: employeesPayload})
+          body: JSON.stringify({mode: "vacation_priority", priorityYear, employees: employeesPayload})
         });
         if (!response.ok) throw new Error("Erro na resposta da API");
         const blob = await response.blob();
@@ -3150,12 +3123,21 @@
         a.download = `Prioridades_Ferias_${priorityYear}.pdf`;
         document.body.appendChild(a);
         a.click();
+        a.remove();
         window.URL.revokeObjectURL(url);
+        setTimeout(() => {
+          hideLoadingPopup();
+          showPopup('popup-info', `Mapa de prioridades de férias para ${priorityYear} gerado com sucesso.`);
+        }, 400);
       } catch (err) {
+        hideLoadingPopup();
         console.error("Erro ao exportar:", err);
-        alert("Erro ao gerar o PDF. Verifica a consola.");
+        showPopup('popup-danger', "Erro ao gerar o PDF. Verifica a consola.");
       } finally {
-        if (btn) btn.innerText = originalText;
+        if (btn) {
+          btn.disabled = false;
+          btn.innerText = originalText;
+        }
       }
     }
     document.querySelectorAll(".sidebar-sub-submenu-button").forEach((btn) => {
@@ -3245,7 +3227,7 @@
     async function loadEligibilityData() {
       const filterElem = document.getElementById("eligibility-year-filter");
       const year = filterElem ? parseInt(filterElem.value) : new Date().getFullYear();
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const tableBody = document.getElementById("eligibility-table-body");
       tableBody.innerHTML = `<tr><td colspan="13" style="padding:40px; text-align:center;">⌛ A carregar dados de ${year}...</td></tr>`;
       try {
@@ -3287,7 +3269,7 @@
     async function createConsultationEligibility() {
       const filterElem = document.getElementById("eligibility-year-filter");
       const year = filterElem ? parseInt(filterElem.value) : new Date().getFullYear();
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       let modal = document.getElementById("eligibility-modal");
       if (!modal) {
         modal = document.createElement("div");
@@ -3391,20 +3373,23 @@
       html += `</tbody></table></div>`;
       content.innerHTML = html;
     }
-    async function exportShiftEligibility() {
+    async function exportShiftEligibility(event) {
       const filterElem = document.getElementById("eligibility-year-filter");
       const year = filterElem ? parseInt(filterElem.value) : new Date().getFullYear();
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const btn = event?.target;
       const originalText = btn ? btn.innerText : "";
-      if (btn) {btn.disabled = true; btn.innerText = "⌛ A Gerar Mapa...";}
+      if (btn) {
+        btn.disabled = true;
+        btn.innerText = "⌛ A Gerar Mapa...";
+      }
+      showLoadingPopup(`A gerar mapa de elegibilidade de subsídios de turno para ${year}...`);
       try {
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/reg_eligibility?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}`, {
-          headers: getSupabaseHeaders()
-        });
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/reg_eligibility?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}`, {headers: getSupabaseHeaders()});
         const data = await response.json();
         if (!data || data.length === 0) {
-          showPopupWarning("Sem dados para exportar.");
+          hideLoadingPopup();
+          showPopup('popup-danger', "Sem dados para exportar.");
           return;
         }
         const employeeMap = {};
@@ -3436,40 +3421,57 @@
         a.download = `Elegibilidade_Mensal_Subsidio_Turno_${year}.pdf`;
         document.body.appendChild(a);
         a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        a.remove();
+        window.URL.revokeObjectURL(url);
+        setTimeout(() => {
+          hideLoadingPopup();
+          showPopup('popup-info', `Mapa de elegibilidade para subsídio de turno para ${year} gerado com sucesso.`);
+        }, 400);
       } catch (err) {
+        hideLoadingPopup();
         console.error("Erro:", err);
-        showPopupWarning("❌ Erro ao gerar PDF: " + err.message);
+        showPopup('popup-danger', "❌ Erro ao gerar PDF: " + err.message);
       } finally {
-        if (btn) {btn.disabled = false; btn.innerText = originalText;}
+        if (btn) {
+          btn.disabled = false;
+          btn.innerText = originalText;
+        }
       }
     }
-    async function exportDetailedShiftEligibility() {
+    async function exportDetailedShiftEligibility(event) {
       const filterElem = document.getElementById("eligibility-year-filter");
       const year = filterElem ? parseInt(filterElem.value) : new Date().getFullYear();
       const monthFilter = document.getElementById("modal-month-filter")?.value;
       if (!monthFilter || monthFilter === "all") {
-        showPopupWarning("Por favor selecione um mês antes de emitir.");
+        showPopup('popup-danger', "Por favor selecione um mês antes de emitir.");
         return;
       }
       const month = parseInt(monthFilter);
+      const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+      const monthName = monthNames[month - 1];
       const data = window.rawEligibilityData || [];
       const records = data.filter(d => parseInt(d.month) === month);
       if (records.length === 0) {
-        showPopupWarning("Sem registos para emitir.");
+        showPopup('popup-danger', "Sem registos para emitir.");
         return;
       }
       const btn = event?.target;
       const originalText = btn ? btn.innerText : "";
-      if (btn) { btn.disabled = true; btn.innerText = "⌛ A gerar..."; }
+      if (btn) {
+        btn.disabled = true; 
+        btn.innerText = "⌛ A gerar..."; 
+      }
+      showLoadingPopup(`A gerar mapa detalhado de elegibilidade de subsídio para ${monthName} de ${year}...`);
       try {
         const response = await fetch("https://cb360-online.vercel.app/api/employees_convert_and_send", {
           method: "POST",
           headers: {"Content-Type": "application/json"},
           body: JSON.stringify({mode: "detailed_shift_allowance", year, month, records})
         });
-        if (!response.ok) { const text = await response.text(); throw new Error(text); }
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(text);
+        }
         const blob = await response.blob();
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -3477,12 +3479,21 @@
         a.download = `Detalhe_Elegibilidade_${year}_${month}.pdf`;
         document.body.appendChild(a);
         a.click();
-        document.body.removeChild(a);
+        a.remove();
         URL.revokeObjectURL(url);
+        setTimeout(() => {
+          hideLoadingPopup();
+          showPopup('popup-info', `Mapa detalhado de elegibilidade de subsídio de turno para ${monthName} de ${year} gerado com sucesso.`);
+        }, 400);
       } catch (err) {
-        showPopupWarning("❌ Erro ao gerar PDF: " + err.message);
+        hideLoadingPopup();
+        console.error("Erro ao gerar PDF detalhado:", err);
+        showPopup('popup-danger', "❌ Erro ao gerar PDF: " + err.message);
       } finally {
-        if (btn) { btn.disabled = false; btn.innerText = originalText; }
+        if (btn) {
+          btn.disabled = false;
+          btn.innerText = originalText;
+        }
       }
     }
     document.querySelectorAll(".sidebar-sub-submenu-button").forEach((btn) => {
@@ -3575,7 +3586,7 @@
           </div>
           <div class="s-footer">
             <button class="s-btn" style="background:#059669;" onclick="exportSalaryMapXlsx()">📊 Exportar Excel</button>
-            <button class="s-btn" onclick="exportSalaryMap(event)">📥 Emitir Mapa</button>
+            <button class="s-btn" onclick="exportSalaryMapPDF(event)">📥 Emitir Mapa</button>
           </div>
         </div>`;
       setTimeout(() => {
@@ -3587,7 +3598,7 @@
     async function loadSalaryData() {
       const monthFilter = parseInt(document.getElementById("salary-month-filter").value);
       const year = parseInt(document.getElementById("salary-year-filter").value);
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const tableBody = document.getElementById("salary-table-body");
       const firstDayOfMonth = `${year}-${String(monthFilter).padStart(2, '0')}-01`;
       const lastDayMonth = new Date(year, monthFilter, 0).getDate();
@@ -3710,18 +3721,18 @@
         tableBody.innerHTML = `<tr><td colspan="8" style="color:red;text-align:center;">Erro ao carregar dados: ${e.message}</td></tr>`;
       }
     }
-    async function exportSalaryMap(event) {
+    async function exportSalaryMapPDF(event) {
       const btn = event?.target;
       const originalText = btn ? btn.innerText : "";
+      if (btn) {
+        btn.disabled = true;
+        btn.innerText = "⌛ A Gerar Mapa...";
+      }
       try {
-        if (btn) {
-          btn.innerText = "⌛ A Gerar Mapa...";
-          btn.disabled = true;
-        }
         const year = parseInt(document.getElementById("salary-year-filter").value);
         const monthValue = parseInt(document.getElementById("salary-month-filter").value);
-        const monthsNames = ["Janeiro", "Fevereiro", "Marco", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-        const months = monthsNames[monthValue - 1];
+        const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+        const monthName = monthNames[monthValue - 1];
         const rows = document.querySelectorAll("#salary-table-body tr");
         const employees = [];
         rows.forEach(row => {
@@ -3736,8 +3747,9 @@
             const badge = cell.querySelector(".s-status-badge");
             return badge ? badge.innerText.trim() : "-";
           };
-          employees.push({name: cells[0].innerText.trim(), subShift: extractBadge(cells[1]), casualties: extractCards(cells[2]), vacations: extractCards(cells[3]),
-                          parental: extractCards(cells[4]), disgust: extractCards(cells[5]), justified: extractCards(cells[6]), unjustified: extractCards(cells[7])});});
+          employees.push({name: cells[0].innerText.trim(), subShift: extractBadge(cells[1]), casualties: extractCards(cells[2]), vacations: extractCards(cells[3]), parental: extractCards(cells[4]),
+                          disgust: extractCards(cells[5]), justified: extractCards(cells[6]), unjustified: extractCards(cells[7])});});
+        showLoadingPopup(`A gerar mapa salarial em formato PDF para ${monthName} de ${year}...`);
         const response = await fetch("https://cb360-online.vercel.app/api/employees_convert_and_send", {
           method: "POST",
           headers: {"Content-Type": "application/json"},
@@ -3748,33 +3760,38 @@
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `Mapa_Salarial_${months}_${year}.pdf`;
+        a.download = `Mapa_Salarial_${monthName}_${year}.pdf`;
         document.body.appendChild(a);
         a.click();
         a.remove();
         window.URL.revokeObjectURL(url);
+        setTimeout(() => {
+          hideLoadingPopup();
+          showPopup('popup-info', `Mapa salarial para ${monthName} de ${year} gerado com sucesso.`);
+        }, 400);
       } catch (error) {
-        console.error("Erro:", error);
-        alert("Erro ao gerar mapa salarial.");
+        hideLoadingPopup();
+        console.error("Erro ao gerar mapa salarial:", error);
+        showPopup('popup-danger', "❌ Erro ao gerar mapa salarial.");
       } finally {
         if (btn) {
-          btn.innerText = originalText;
           btn.disabled = false;
+          btn.innerText = originalText;
         }
       }
     }
-    async function exportSalaryMapXlsx() {
+    async function exportSalaryMapXlsx(event) {
       const btn = event?.target;
       const originalText = btn ? btn.innerText : "";
+      if (btn) {
+        btn.disabled = true;
+        btn.innerText = "⌛ A Exportar...";
+      }
       try {
-        if (btn) {
-          btn.innerText = "⌛ A Exportar...";
-          btn.disabled = true;
-        }
         const year = parseInt(document.getElementById("salary-year-filter").value);
         const monthValue = parseInt(document.getElementById("salary-month-filter").value);
-        const monthsNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-        const months = monthsNames[monthValue - 1];
+        const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+        const monthName = monthNames[monthValue - 1];
         const rows = document.querySelectorAll("#salary-table-body tr");
         const employees = [];
         rows.forEach(row => {
@@ -3791,8 +3808,9 @@
             const badge = cell.querySelector(".s-status-badge");
             return badge ? badge.innerText.trim() : "-";
           };
-          employees.push({name: cells[0].innerText.trim(), subShift: extractBadge(cells[1]), casualties: extractCards(cells[2]), vacations: extractCards(cells[3]),
-                          parental: extractCards(cells[4]), disgust: extractCards(cells[5]), justified: extractCards(cells[6]), unjustified: extractCards(cells[7])});});
+          employees.push({name: cells[0].innerText.trim(), subShift: extractBadge(cells[1]), casualties: extractCards(cells[2]), vacations: extractCards(cells[3]), parental: extractCards(cells[4]),
+                          disgust: extractCards(cells[5]), justified: extractCards(cells[6]), unjustified: extractCards(cells[7])});});
+        showLoadingPopup(`A gerar mapa salarial em formato EXCEL para ${monthName} de ${year}...`);
         const response = await fetch("https://cb360-online.vercel.app/api/employees_convert_and_send", {
           method: "POST",
           headers: {"Content-Type": "application/json"},
@@ -3803,18 +3821,23 @@
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `Mapa_Salarial_${months}_${year}.xlsx`;
+        a.download = `Mapa_Salarial_${monthName}_${year}.xlsx`;
         document.body.appendChild(a);
         a.click();
         a.remove();
         window.URL.revokeObjectURL(url);
+        setTimeout(() => {
+          hideLoadingPopup();
+          showPopup('popup-info', `Mapa salarial para ${monthName} de ${year} gerado com sucesso.`);
+        }, 400);
       } catch (error) {
-        console.error("Erro:", error);
-        alert("Erro ao gerar Excel.");
+        hideLoadingPopup();
+        console.error("Erro ao gerar Excel:", error);
+        showPopup('popup-danger', "❌ Erro ao gerar Excel.");
       } finally {
         if (btn) {
-          btn.innerText = originalText;
           btn.disabled = false;
+          btn.innerText = originalText;
         }
       }
     }
@@ -3906,7 +3929,7 @@
     async function loadEIPData() {
       const filterElem = document.getElementById("annual-year-filter");
       const year = filterElem ? parseInt(filterElem.value) : new Date().getFullYear();
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const tableBody = document.getElementById("annual-table-body");
       const titleElem = document.getElementById("annual-map-title");
       if (titleElem) titleElem.innerHTML = `<span class="a-badge-rh">RH</span> ENQUADRAMENTO ANUAL (EIPs) - ${year}`;
@@ -3988,17 +4011,22 @@
     async function exportAnnualMap(event) {
       const btn = event?.target;
       const originalText = btn ? btn.innerText : "";
+      if (btn) {
+        btn.disabled = true;
+        btn.innerText = "⌛ A Gerar Mapa...";
+      }
       try {
-        if (btn) { btn.innerText = "⌛ A Gerar Mapa..."; btn.disabled = true; }
         const data = window._eipCurrentData;
         if (!data || !data.days || data.days.length === 0) {
-          alert("Sem dados para exportar. Carregue o mapa primeiro.");
+          hideLoadingPopup();
+          showPopup('popup-danger', "Sem dados para exportar. Carregue o mapa primeiro.");
           return;
         }
+        showLoadingPopup(`A gerar mapa de enquadramento anual para as EIPs para ${data.year}...`);
         const response = await fetch("https://cb360-online.vercel.app/api/employees_convert_and_send", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({mode: "eip_annual_map", year: data.year, days: data.days, format: "pdf" })
+          body: JSON.stringify({mode: "eip_annual_map", year: data.year, days: data.days, format: "pdf"})
         });
         if (!response.ok) throw new Error("Erro na resposta da API");
         const blob = await response.blob();
@@ -4010,15 +4038,23 @@
         a.click();
         a.remove();
         window.URL.revokeObjectURL(url);
+        setTimeout(() => {
+          hideLoadingPopup();
+          showPopup('popup-info', `Mapa de enquadramento anual para as EIPs para ${data.year} gerado com sucesso.`);
+        }, 400);
       } catch (error) {
-        console.error("Erro:", error);
-        alert("Erro ao gerar mapa EIP.");
+        hideLoadingPopup();
+        console.error("Erro ao gerar mapa EIP:", error);
+        showPopup('popup-danger', "❌ Erro ao gerar mapa EIP.");
       } finally {
-        if (btn) { btn.innerText = originalText; btn.disabled = false; }
+        if (btn) {
+          btn.disabled = false;
+          btn.innerText = originalText;
+        }
       }
     }
     async function checkAndSeedEIPYear(year) {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const checkRes = await fetch(
         `${SUPABASE_URL}/rest/v1/reg_eip_anual?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&limit=1`,
         { headers: getSupabaseHeaders() }
@@ -4725,7 +4761,7 @@
     let _dashChartTeam = null;
     let _dashChartVac = null;
     async function loadDashboardData() {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const filterMonth = document.getElementById("dash-filter-month");
       const filterYear = document.getElementById("dash-filter-year");
       const selectedMonth = filterMonth ? parseInt(filterMonth.value) : new Date().getMonth() + 1;

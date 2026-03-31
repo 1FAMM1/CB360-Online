@@ -1,4 +1,4 @@
-    /* =======================================
+/* =======================================
     ROAD CLOSURES
     ======================================= */
     async function waitForRouteInputs(total = 13) {
@@ -50,7 +50,7 @@
     async function saveRoutesGroupFields(total = 13) {
       const currentCorpOperNr = sessionStorage.getItem('currentCorpOperNr');
       if (!currentCorpOperNr) {
-        showPopupWarning("❌ Erro: Sessão não identificada.");
+        showPopup('popup-danger', "Erro: Sessão não identificada.");
         return;
       }
       try {
@@ -98,11 +98,11 @@
             });
           }
         }
-        showPopupSuccess("✅ Vias atualizadas com sucesso!");
+        showPopup('popup-success', "Cortes/Interrompimento de Vias atualizados com sucesso!");
         loadRoutesFromSupabase(total);
       } catch (error) {
         console.error("❌ [ROUTES] Erro ao gravar:", error);
-        showPopupWarning("Erro ao gravar dados das vias.");
+        showPopup('popup-danger', "Erro ao gravar Cortes/Interrompimento de Vias.");
       }
     }
     document.addEventListener("DOMContentLoaded", () => loadRoutesFromSupabase());

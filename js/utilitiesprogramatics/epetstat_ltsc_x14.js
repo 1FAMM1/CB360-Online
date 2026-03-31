@@ -1,5 +1,5 @@
-    /* =======================================
-            SPECIAL READINESS STATES
+/* =======================================
+    SPECIAL READINESS STATES
     ======================================= */
     /* ========== COLOR CONTROL EPE ========== */
     class EPEButtonColorManager {
@@ -42,6 +42,7 @@
         const epe_type = containerId;
         const epe_value = button.textContent.trim();
         this.saveToSupabase(epe_type, epe_value);
+        showPopup('popup-success', `Estado do <b>${epe_type.toUpperCase()}</b>, atualizado para <b>${epe_value}</b>.`);
       }
       async loadFromSupabase() {
         try {

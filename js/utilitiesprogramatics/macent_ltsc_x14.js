@@ -59,7 +59,7 @@
       try {
         const currentCorpOperNr = sessionStorage.getItem('currentCorpOperNr');
         if (!currentCorpOperNr) {
-          showPopupWarning("❌ Erro: Sessão expirada. Faça login novamente.");
+          showPopup('popup-danger', "Erro: Sessão expirada. Faça login novamente.");
           return;
         }
         const headers = getSupabaseHeaders();
@@ -86,11 +86,11 @@
             }
           }
         }
-        showPopupSuccess("✅ Todos os dados foram guardados com sucesso!");
+        showPopup('popup-success', "Centros de Meios Aéreos atualizados com sucesso!");
         loadCMAsFromSupabase();
       } catch (error) {
         console.error("❌ Erro fatal na gravação:", error);
-        showPopupWarning("❌ Ocorreu um erro ao guardar os dados. Verifique a consola.");
+        showPopup('popup-danger', "Ocorreu um erro ao guardar os dados. Verifique a consola.");
       }
     }
     document.addEventListener("DOMContentLoaded", loadCMAsFromSupabase);

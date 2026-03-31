@@ -1,4 +1,4 @@
-    /* =======================================
+/* =======================================
     RELEVANT INFORMATION
     ======================================= */
     async function createDefaultInfoRows(corp) {
@@ -91,7 +91,7 @@
           }
         );
         if (!resPatch.ok) throw new Error(await resPatch.text());
-        showPopupSuccess(`A informação ${n} foi atualizada com sucesso.`, false);
+        showPopup('popup-success', `A informação ${n} foi atualizada com sucesso.`, false);
       } catch (e) {
         console.error("❌ Erro ao salvar info:", e);
       }
@@ -116,7 +116,7 @@
         document.getElementById(`from-${n}`).value = "";
         document.getElementById(`to-${n}`).value = "";
         document.getElementById(`info-${n}`).value = "";
-        showPopupWSuccess(`A informação ${n} foi limpa com sucesso.`);
+        showPopup('popup-success', `A informação ${n} foi limpa com sucesso.`);
       } catch (e) {
         console.error("❌ Erro ao limpar info:", e);
       }

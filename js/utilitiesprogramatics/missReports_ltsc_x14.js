@@ -1,11 +1,11 @@
-    /* =======================================
+/* =======================================
     MISSING REPORTS
     ======================================= */
     async function loadocrReportsFromSupabase(total = 24) {
       createOcrReportsInputs(total);
       const currentCorpOperNr = sessionStorage.getItem('currentCorpOperNr');
       if (!currentCorpOperNr) {
-        showPopupWarning("❌ Erro: Sessão não identificada.");
+        showPopup('popup-danger', "Erro: Sessão não identificada.");
         return;
       }
       try {
@@ -15,7 +15,7 @@
         const data = raw ? JSON.parse(raw) : [];
         if (!Array.isArray(data)) {
           console.error("Resposta inválida:", data);
-          showPopupWarning("❌ Erro ao carregar dados.");
+          showPopup('popup-danger', "Erro ao carregar dados.");
           return;
         }
         data.slice(0, total).forEach((report, index) => {
@@ -40,7 +40,7 @@
         });
       } catch (err) {
         console.error("Erro ao carregar OCR reports:", err);
-        showPopupWarning("❌ Erro de ligação ao servidor.");
+        showPopup('popup-danger', "Erro de ligação ao servidor.");
       }
     }
     async function saveOcrReportsToSupabase(total = 24) {
@@ -51,7 +51,7 @@
       }    
       const corp_oper_nr_raw = sessionStorage.getItem("currentCorpOperNr");
       if (!corp_oper_nr_raw) {
-        showPopupWarning("❌ Erro: corp não identificada.");
+        showPopup('popup-danger', "Erro: Corporação não identificada.");
         if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = "Guardar"; }
         return;
       }
@@ -79,7 +79,7 @@
           rowsRaw.push({corp_oper_nr, n_int, report_nr: report_nr || null, report_date: report_date || null, report_state: status === "done"});
         }
         if (rowsRaw.length === 0) {
-          showPopupWarning("⚠️ Nada para guardar.");
+          showPopup('popup-danger', "Sem registos para guardar.");
           return;
         }
         const formMap = new Map();
@@ -91,7 +91,7 @@
         const existing = getRaw ? JSON.parse(getRaw) : [];    
         if (!Array.isArray(existing)) {
           console.error("Existing inválido:", existing);
-          showPopupWarning("❌ Erro ao validar dados existentes.");
+          showPopup('popup-danger', "Erro ao validar dados existentes.");
           return;
         }
         const existingMap = new Map();
@@ -113,7 +113,7 @@
           }
         }    
         if (toInsert.length === 0 && toUpdate.length === 0) {
-          showPopupWarning("✅ Sem alterações (não havia nada para guardar).");
+          showPopup('popup-danger', "Sem alterações para guardar.");
           return;
         }
         if (toInsert.length > 0) {
@@ -129,7 +129,7 @@
           if (!insRes.ok) {
             const t = await insRes.text();
             console.error("Erro INSERT reports_control:", t);
-            showPopupWarning("❌ Erro ao inserir novos registos.");
+            showPopup('popup-danger', "Erro ao inserir novos registos.");
             return;
           }
         }
@@ -150,7 +150,7 @@
           if (!updRes.ok) {
             const t = await updRes.text();
             console.error("Erro UPDATE reports_control:", t, "URL:", updUrl);
-            showPopupWarning("❌ Erro ao atualizar registos.");
+            showPopup('popup-danger', "Erro ao atualizar registos.");
             return;
           }
         }
@@ -186,10 +186,10 @@
         } catch (errNotif) {
           console.error("Erro no fluxo de notificações:", errNotif);
         }    
-        showPopupSuccess(`✅ Guardado! Novos: ${toInsert.length} | Atualizados: ${toUpdate.length}`);    
+        showPopup('popup-success', `Relatórios de Ocorrência Guardados! Novos: ${toInsert.length} | Atualizados: ${toUpdate.length}`);    
       } catch (err) {
         console.error("Erro geral save OCR reports:", err);
-        showPopupWarning("❌ Erro de ligação ao servidor.");
+        showPopup('popup-danger', "Erro de ligação ao servidor.");
       } finally {
         if (saveBtn) {
           saveBtn.disabled = false;

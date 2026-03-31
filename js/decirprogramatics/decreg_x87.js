@@ -67,7 +67,7 @@
           }
           if (blockedMonths.includes(idx)) {
             if (tableContainer) tableContainer.innerHTML = "";
-            setTimeout(() => showPopupWarning(`⛔ Durante o mês de ${month}, não existe DECIR. Salvo prolongamento ou antecipação declarados pela ANEPC.`), 10);
+            setTimeout(() => showPopup('popup-danger', `⛔ Durante o mês de ${month}, não existe DECIR. Salvo prolongamento ou antecipação declarados pela ANEPC.`), 10);
             return;
           }
           const yearVal = parseInt(yearSelect.value, 10);
@@ -111,10 +111,10 @@
           body: JSON.stringify({amal_value:parseFloat(amal), anepc_value:parseFloat(anepc), updated_at:new Date().toISOString()})
         });
         if (res.ok) { 
-          alert("✅ Configurações guardadas com sucesso!"); closeConfigModal();
+          showPopup('popup-success', "✅ Configurações guardadas com sucesso!"); closeConfigModal();
         }
       } catch {
-        alert("❌ Erro ao ligar ao servidor.");
+        showPopup('popup-danger', "❌ Erro ao ligar ao servidor.");
       }
       finally {btn.disabled = false; btn.innerText = "Gravar Alterações";}
     }
@@ -153,7 +153,7 @@
           .forEach((id,i) => {const el=$(id); if(el) el.value = i%2===0 ? fA : fN;});
         updateAllValues();
       } catch {
-        showPopupWarning("Erro ao carregar valores de configuração.");
+        showPopup('popup-danger', "Erro ao carregar valores de configuração.");
       }
     }
     async function loadDecirRegData() {
@@ -161,7 +161,7 @@
         const data = await supabaseFetch("reg_elems?select=n_int,abv_name,patent_abv&n_int=gt.008&n_int=lt.400&elem_state=eq.true");
         return data.sort((a,b) => parseInt(a.n_int,10) - parseInt(b.n_int,10));
       } catch {
-        showPopupWarning("Erro ao carregar dados dos elementos.");
+        showPopup('popup-danger', "Erro ao carregar dados dos elementos.");
         return [];
       }
     }
@@ -170,7 +170,7 @@
         const data = await supabaseFetch(`reg_elems?select=${select}&n_int=gt.008&n_int=lt.400&elem_state=eq.true`);
         return data.sort((a,b) => parseInt(a.n_int,10) - parseInt(b.n_int,10));
       } catch {
-        showPopupWarning("Erro ao carregar lista de elementos.");
+        showPopup('popup-danger', "Erro ao carregar lista de elementos.");
         return [];
       }
     }
@@ -761,7 +761,7 @@
     async function clearDecirTable() {
       if (!$("table-container-dec-reg")) return;
       const monthBtn = document.querySelector("#months-container-dec-reg .btn.active");
-      if (!monthBtn) return showPopupWarning("Nenhum mês selecionado.");
+      if (!monthBtn) return showPopup('popup-danger', "Nenhum mês selecionado.");
       const month = Array.from(document.querySelectorAll("#months-container-dec-reg .btn")).indexOf(monthBtn) + 1 + 4;
       const year  = parseInt($("year-dec-reg").value, 10);
       const confirmed = await showPopupConfirm(`Tem certeza que quer limpar os dados de ${monthBtn.textContent.trim()} de ${year}?`);
@@ -769,22 +769,22 @@
       try {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/decir_reg_pag?year=eq.${year}&month=eq.${month}`, {method:"DELETE", headers:getSupabaseHeaders()});
         if (!res.ok) throw new Error(await res.text()||"Erro ao apagar dados");
-        showPopupSuccess(`✅ Dados de ${monthBtn.textContent.trim()} de ${year} apagados com sucesso!`);
+        showPopup('popup-success', `✅ Dados de ${monthBtn.textContent.trim()} de ${year} apagados com sucesso!`);
         const data = await loadDecirRegData();
         await createDecirRegTable("table-container-dec-reg", year, month, data);
         await window.loadDecirByMonth?.(year, month);
       } catch(err) {
-        console.error(err); showPopupWarning("❌ Erro ao apagar: "+err.message);
+        console.error(err); showPopup('popup-danger', "❌ Erro ao apagar: "+err.message);
       }
     }
     /* ─── GUARDAR REGISTO (DECIR) ────────────────────────────── */
     async function saveDecirFull() {
       const table = document.querySelector("#table-container-dec-reg table tbody");
-      if (!table) return showPopupWarning("Nenhuma tabela aberta.");
+      if (!table) return showPopup('popup-danger', "Nenhuma tabela aberta.");
       const corpOperNr = getCorpId();
       const year = parseInt($("year-dec-reg")?.value, 10);
       const monthBtn = document.querySelector("#months-container-dec-reg .btn.active");
-      if (!monthBtn) return showPopupWarning("Nenhum mês selecionado.");
+      if (!monthBtn) return showPopup('popup-danger', "Nenhum mês selecionado.");
       const month = Array.from(document.querySelectorAll("#months-container-dec-reg .btn")).indexOf(monthBtn) + 1 + 4;
       const btn = $("guardar-dec-btn");
       if (btn) {btn.disabled=true; btn.textContent="A gravar...";}
@@ -819,10 +819,10 @@
           });
           if (!r.ok) throw new Error(await r.text()||"Erro desconhecido ao gravar");
         }
-        showPopupSuccess("✅ Registo DECIR gravado com sucesso!");
+        showPopup('popup-success', "✅ Registo DECIR gravado com sucesso!");
       } catch(err) {
         console.error(err);
-        showPopupWarning("❌ Erro ao gravar: "+err.message);
+        showPopup('popup-danger', "❌ Erro ao gravar: "+err.message);
       }
       finally {if(btn) {btn.disabled=false; btn.textContent="Guardar";}}
     }
@@ -1022,7 +1022,7 @@
         });
       } catch(err) {
         console.error("Erro ao carregar ocorrências:", err);
-        showPopupWarning("Erro ao carregar ocorrências.");
+        showPopup('popup-danger', "Erro ao carregar ocorrências.");
       }
     }
     /* ─── TABELA: CONTROLO DE OCORRÊNCIAS (DECIR) ───────────── */
@@ -1201,7 +1201,7 @@
     /* ─── GUARDAR OCORRÊNCIAS (DECIR) ────────────────────────── */
     async function saveDecirOccurrences() {
       const container = document.querySelector("#decir-reg-ocorr .card-body");
-      if (!container) return showPopupWarning("Tabela não encontrada.");
+      if (!container) return showPopup('popup-danger', "Tabela não encontrada.");
       const year = document.getElementById("year-dec-ocorr")?.value || String(new Date().getFullYear());
       const corpOperNr = getCorpId();
       const btn = document.getElementById("guardar-ocorr-btn");
@@ -1240,10 +1240,10 @@
           });
           if (!r.ok) throw new Error(await r.text() || "Erro desconhecido ao gravar");
         }
-        showPopupSuccess("✅ Ocorrências gravadas com sucesso!");
+        showPopup('popup-success', "✅ Ocorrências gravadas com sucesso!");
       } catch(err) {
         console.error(err);
-        showPopupWarning("❌ Erro ao gravar: " + err.message);
+        showPopup('popup-danger', "❌ Erro ao gravar: " + err.message);
       } finally {
         if (btn) {btn.disabled = false; btn.textContent = "Guardar";}
       }
@@ -1308,7 +1308,7 @@
         });
       } catch(err) {
         console.error("Erro ao carregar refeições:", err);
-        showPopupWarning("Erro ao carregar refeições.");
+        showPopup('popup-danger', "Erro ao carregar refeições.");
       }
     }
     /* ─── TABELA: REFEIÇÕES (DECIR) ──────────────────────────── */
@@ -1523,9 +1523,9 @@
     /* ─── GUARDAR REFEIÇÕES (DECIR) ──────────────────────────── */
     async function saveDecirMeals() {
       const tbody = document.querySelector("#table-container-dec-ref table tbody");
-      if (!tbody) return showPopupWarning("Nenhuma tabela aberta.");
+      if (!tbody) return showPopup('popup-danger', "Nenhuma tabela aberta.");
       const monthBtn = document.querySelector("#months-container-dec-ref .btn.active");
-      if (!monthBtn) return showPopupWarning("Nenhum mês selecionado.");
+      if (!monthBtn) return showPopup('popup-danger', "Nenhum mês selecionado.");
       const monthIdx = Array.from(document.querySelectorAll("#months-container-dec-ref .btn")).indexOf(monthBtn) + 1;
       const month = String(monthIdx + 4).padStart(2,"0");
       const year = document.getElementById("year-dec-ref")?.value || String(new Date().getFullYear());
@@ -1555,10 +1555,10 @@
           });
           if (!r.ok) throw new Error(await r.text() || "Erro desconhecido ao gravar");
         }
-        showPopupSuccess("✅ Refeições gravadas com sucesso!");
+        showPopup('popup-success', "✅ Refeições gravadas com sucesso!");
       } catch(err) {
         console.error(err);
-        showPopupWarning("❌ Erro ao gravar: " + err.message);
+        showPopup('popup-danger', "❌ Erro ao gravar: " + err.message);
       } finally {
         if (btn) {btn.disabled = false; btn.textContent = "Guardar";}
       }
@@ -1864,7 +1864,7 @@
           if (!shiftOk || !dayOk) {
             const msg = !dayOk ? `⛔ Elemento do Dia ${dragData.day} não pode ser colocado no Dia ${turnoDay}!`
                                : `⛔ Elemento ${dragData.valueType} não pode ser colocado neste turno!`;
-            showPopupWarning(msg);
+            showPopup('popup-danger', msg);
             dragData = null;
             return;
           }
@@ -2028,7 +2028,7 @@
       // ── Formatar Equipas ──
       formatBtn.addEventListener("click", () => {
         const sidebarItems = sidebarList.querySelectorAll(".signa-sidebar-item");
-        if (!sidebarItems.length) return showPopupWarning("Carregue os elementos primeiro.");
+        if (!sidebarItems.length) return showPopup('popup-danger', "Carregue os elementos primeiro.");
         const getAllForShift = (day, shift) => {
           const items = [];
           sidebarList.querySelectorAll(".signa-sidebar-item").forEach(item => {
@@ -2076,7 +2076,7 @@
             const all = getAllForShift("1", shift);
             if (!all.length) return;
             if (all.length < 8) {
-              showPopupWarning(`⛔ Elementos insuficientes para modo Brigada (mínimo 8, disponíveis ${all.length}).`);
+              showPopup('popup-danger', `⛔ Elementos insuficientes para modo Brigada (mínimo 8, disponíveis ${all.length}).`);
               return;
             }
             let ecinACount, ecinBCount, elacCount;
@@ -2166,7 +2166,7 @@
         const date1 = inp1.value;
         const date2 = inp2.value;
         buildSignaTables();
-        if (!date1 || !date2) return showPopupWarning("Selecione as duas datas.");
+        if (!date1 || !date2) return showPopup('popup-danger', "Selecione as duas datas.");
         const [y1,m1,d1] = date1.split("-");
         const [y2,m2,d2] = date2.split("-");
         const corp = getCorpId();
@@ -2245,14 +2245,19 @@
     const emitSigna = async (format) => {
       const inp1 = document.getElementById("signa-date1");
       const inp2 = document.getElementById("signa-date2");
-      if (!inp1?.value || !inp2?.value) return showPopupWarning("Selecione as duas datas.");
-      const mode = document.querySelector("#decir-reg-signa .mode-highlight")?.textContent === "1 ECIN" ? "1_ecin"
-                 : document.querySelector("#decir-reg-signa .mode-highlight")?.textContent === "BRIGADA" ? "brigada" : "1_ecin_1_elac";
+      if (!inp1?.value || !inp2?.value) {
+        return showPopup('popup-danger', "Selecione as duas datas.");
+      }
+      const mode = document.querySelector("#decir-reg-signa .mode-highlight")?.textContent === "1 ECIN"
+        ? "1_ecin"
+        : document.querySelector("#decir-reg-signa .mode-highlight")?.textContent === "BRIGADA"
+        ? "brigada"
+        : "1_ecin_1_elac";
       const isBrigade = mode === "brigada";
       const formatDateForName = (dateStr) => {
         const [y, m, d] = dateStr.split("-");
         const months = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-        return {day: parseInt(d), month: months[parseInt(m)-1], year: y};
+        return {day: parseInt(d), month: months[parseInt(m) - 1], year: y};
       };
       const d1 = formatDateForName(inp1.value);
       const d2 = formatDateForName(inp2.value);
@@ -2281,12 +2286,11 @@
                   abv_name: tr?.querySelector(".field-abvname")?.value || "", full_name: zone.dataset.fullname || ""};
         });
       };
+      showLoadingPopup("A gerar ficheiro de assinaturas...");
       try {
         const payload = {type: "signa", date1: inp1.value, date2: inp2.value, year: inp1.value.split("-")[0], fileName, format, mode,
-                         ecin: {day1: {day: isBrigade ? getTeamDataBrigada("day", "A") : getTeamData("1","day","ecin"),
-                                       night: isBrigade ? getTeamDataBrigada("night", "A") : getTeamData("1","night","ecin")},
-                                day2: {day: isBrigade ? getTeamDataBrigada("day", "B") : getTeamData("2","day","ecin"),
-                                       night: isBrigade ? getTeamDataBrigada("night", "B") : getTeamData("2","night","ecin")}},
+                         ecin: {day1: {day: isBrigade ? getTeamDataBrigada("day", "A") : getTeamData("1","day","ecin"), night: isBrigade ? getTeamDataBrigada("night", "A") : getTeamData("1","night","ecin")},
+                                day2: {day: isBrigade ? getTeamDataBrigada("day", "B") : getTeamData("2","day","ecin"), night: isBrigade ? getTeamDataBrigada("night", "B") : getTeamData("2","night","ecin")}},
                          elac: {day1: {day: getTeamData("1","day","elac"), night: getTeamData("1","night","elac")},
                                 day2: {day: getTeamData("2","day","elac"), night: getTeamData("2","night","elac")}}};
         const res = await fetch("https://cb360-online.vercel.app/api/decir_reg_pag", {
@@ -2294,95 +2298,150 @@
           headers: {"Content-Type": "application/json"},
           body: JSON.stringify(payload)
         });
-        if (!res.ok) {const err = await res.json(); return alert("Erro: " + (err.details || err.error));}
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.details || err.error);
+        }
         const blob = await res.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
         a.download = `${fileName}.${format}`;
-        document.body.appendChild(a); a.click(); a.remove();
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
         window.URL.revokeObjectURL(url);
-      } catch(err) {
-        alert("Erro: " + err.message);
+        setTimeout(() => {
+          hideLoadingPopup();
+          showPopup('popup-info', "Ficheiro de assinaturas gerado com sucesso.");
+        }, 400);
+      } catch (err) {
+        hideLoadingPopup();
+        console.error("Erro:", err);
+        showPopup('popup-danger', "❌ Erro: " + err.message);
       }
     };
     document.getElementById("emit-signa-xlsx-btn")?.addEventListener("click", () => emitSigna("xlsx"));
     document.getElementById("emit-signa-pdf-btn")?.addEventListener("click", () => emitSigna("pdf"));
-    /* ─── GERAR FICHEIROS EXCEL (DECIR) ──────────────────────── */
-    async function generateDECIRFiles(type, format = "xlsx") {
+    /* ───────── HELPERS ───────── */
+    function downloadBlob(blob, filename) {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    }
+    function startLoading(btn, text) {
+      if (!btn) return { restore: () => {} };
+      const original = btn.innerText;
+      btn.disabled = true;
+      btn.innerText = text;
+      return {
+        restore: () => {
+          btn.disabled = false;
+          btn.innerText = original;
+        }
+      };
+    }
+    /* ───────── PAYLOAD BUILDER ───────── */
+    function buildDECIRPayload(type, format) {
       let data = { type, format };
+      /* ───────── REG ───────── */
       if (type === 'reg') {
         const table = document.querySelector("#table-container-dec-reg table tbody");
-        if (!table) return alert("Tabela de registo diário não encontrada.");
+        if (!table) throw new Error("Tabela de registo diário não encontrada.");
         const monthSelect = document.querySelector("#months-container-dec-reg .btn.active");
         const yearInput = $("year-dec-reg");
-        if (!monthSelect||!yearInput) return alert("Selecione mês e ano.");
-        const monthIdx = Array.from(document.querySelectorAll("#months-container-dec-reg .btn")).indexOf(monthSelect) + 1 + 4;
+        if (!monthSelect || !yearInput) throw new Error("Selecione mês e ano.");
+        const monthIdx = Array.from(document.querySelectorAll("#months-container-dec-reg .btn"))
+        .indexOf(monthSelect) + 1 + 4;
         const monthName = monthSelect.textContent.trim();
-        const year = parseInt(yearInput.value,10);
-        const daysInMonth = new Date(year,monthIdx,0).getDate();
-        const weekdays=[], holidayDays=[];
-        for (let d=1; d<=daysInMonth; d++) {
-          const date = new Date(year,monthIdx-1,d);
+        const year = parseInt(yearInput.value, 10);
+        const daysInMonth = new Date(year, monthIdx, 0).getDate();
+        const weekdays = [], holidayDays = [];
+        for (let d = 1; d <= daysInMonth; d++) {
+          const date = new Date(year, monthIdx - 1, d);
           weekdays.push(['DOM','SEG','TER','QUA','QUI','SEX','SÁB'][date.getDay()]);
-          if (date.getDay()===0||date.getDay()===6) holidayDays.push(d);
+          if (date.getDay() === 0 || date.getDay() === 6) holidayDays.push(d);
         }
         const parseValue = txt => parseFloat(txt.trim().replace(/\s/g,'').replace(/\./g,'').replace(',','.')) || 0;
-        const fixedRows=[], normalRows=[];
+        const fixedRows = [], normalRows = [];
         let lastNI=null, lastNome=null, lastAmal=null, lastAnepc=null, lastGlobal=null;
-        Array.from(table.querySelectorAll("tr")).filter(tr=>!tr.classList.contains("total-elements-row")).forEach(row => {
+        Array.from(table.querySelectorAll("tr"))
+          .filter(tr => !tr.classList.contains("total-elements-row"))
+          .forEach(row => {
           const cells = Array.from(row.querySelectorAll("td"));
           if (!cells.length) return;
           let nInt, nome, turno, startIdx;
-          if (cells[0].rowSpan===2) {
-            nInt=parseInt(cells[0].textContent.trim(),10); nome=cells[1].textContent.trim();
-            turno=cells[3]?.textContent.trim()||'D'; startIdx=4;
+          if (cells[0].rowSpan === 2) {
+            nInt = parseInt(cells[0].textContent.trim(),10);
+            nome = cells[1].textContent.trim();
+            turno = cells[3]?.textContent.trim() || 'D';
+            startIdx = 4;
             lastNI=nInt; lastNome=nome;
             lastAmal=parseValue(cells[cells.length-3].textContent);
             lastAnepc=parseValue(cells[cells.length-2].textContent);
             lastGlobal=parseValue(cells[cells.length-1].textContent);
           } else {
-            nInt=lastNI; nome=lastNome; turno=cells[0].textContent.trim(); startIdx=1;
+            nInt=lastNI; nome=lastNome;
+            turno=cells[0].textContent.trim();
+            startIdx=1;
           }
           const daysData={};
           for (let d=0; d<daysInMonth; d++) {
             const cell=cells[startIdx+d];
             daysData[d+1]={D:'',N:''};
-            if (cell&&cell.textContent.trim().toUpperCase()==='X') daysData[d+1][turno]='X';
+            if (cell && cell.textContent.trim().toUpperCase()==='X') {
+              daysData[d+1][turno]='X';
+            }
           }
           const rowObj={ni:nInt,nome,days:daysData,amal:lastAmal,anepc:lastAnepc,global:lastGlobal};
           turno==='D' ? fixedRows.push(rowObj) : normalRows.push(rowObj);
         });
-        data = {...data, fileName:`REGISTOS_DECIR_${monthName}_${year}`, monthName, year, daysInMonth, weekdays, holidayDays, fixedRows, normalRows};
-      } else if (type === 'pag') {
+        return {
+          ...data,
+          fileName:`REGISTOS_DECIR_${monthName}_${year}`,
+          monthName, year, daysInMonth, weekdays, holidayDays,
+          fixedRows, normalRows
+        };
+      }
+      /* ───────── PAG ───────── */
+      if (type === 'pag') {
         const table = document.querySelector("#table-container-dec-pag table tbody");
-        if (!table) return alert("Tabela de pagamentos não encontrada.");
+        if (!table) throw new Error("Tabela de pagamentos não encontrada.");
         const monthSelect = document.querySelector("#months-container-dec-pag .btn.active");
         const yearInput = $("year-dec-pag");
-        if (!monthSelect||!yearInput) return alert("Selecione mês e ano.");
+        if (!monthSelect || !yearInput) throw new Error("Selecione mês e ano.");
         const monthName = monthSelect.textContent.trim();
         const year = parseInt(yearInput.value,10);
         const rows = Array.from(table.querySelectorAll("tr")).map(tr => {
           const cells = tr.querySelectorAll("td");
           return {ni: parseInt(cells[0].textContent.trim(),10), nome: cells[1]?.textContent.trim()||"", nif: cells[2]?.textContent.trim()||"", nib: cells[3]?.textContent.trim()||"",
                   qtdTurnos: parseInt(cells[4]?.textContent.trim()||0,10), valor: parseCurrency(cells[5]?.textContent)};});
-        data = {...data, fileName:`PAGAMENTOS_DECIR_${monthName}_${year}`, monthName, year, rows};
-      } else if (type === 'code_a33') {
+        return {...data, fileName:`PAGAMENTOS_DECIR_${monthName}_${year}`, monthName, year, rows};
+      }
+      /* ───────── CODE A33 ───────── */
+      if (type === 'code_a33') {
         const table = document.querySelector("#table-container-dec-coda33 tbody");
-        if (!table) return alert("Tabela Cod.A33 não encontrada.");
+        if (!table) throw new Error("Tabela Cod.A33 não encontrada.");
         const yearInput = $("year-dec-pag");
-        if (!yearInput) return alert("Selecione ano.");
+        if (!yearInput) throw new Error("Selecione ano.");
         const year = parseInt(yearInput.value,10);
         const rows = Array.from(table.querySelectorAll("tr")).map(tr => {
           const cells = tr.querySelectorAll("td");
-          return {ni: parseInt(cells[0]?.textContent.trim(),10)||0, nome: cells[1]?.textContent.trim()||'', nif: cells[2]?.textContent.trim()||'',
-                  ABRIL: parseCurrency(cells[4]?.textContent), MAIO: parseCurrency(cells[6]?.textContent), JUNHO: parseCurrency(cells[8]?.textContent), JULHO: parseCurrency(cells[10]?.textContent),
-                  AGOSTO: parseCurrency(cells[12]?.textContent), SETEMBRO: parseCurrency(cells[14]?.textContent), OUTUBRO: parseCurrency(cells[16]?.textContent)};
+          return {ni: parseInt(cells[0]?.textContent.trim(),10)||0, nome: cells[1]?.textContent.trim()||'', nif: cells[2]?.textContent.trim()||'', ABRIL: parseCurrency(cells[4]?.textContent),
+                  MAIO: parseCurrency(cells[6]?.textContent), JUNHO: parseCurrency(cells[8]?.textContent), JULHO: parseCurrency(cells[10]?.textContent), AGOSTO: parseCurrency(cells[12]?.textContent),
+                  SETEMBRO: parseCurrency(cells[14]?.textContent), OUTUBRO: parseCurrency(cells[16]?.textContent)};
         }).filter(r => r.ni>0 && (r.ABRIL||r.MAIO||r.JUNHO||r.JULHO||r.AGOSTO||r.SETEMBRO||r.OUTUBRO));
-        data = {...data, fileName:`CODA33_DECIR_${year}`, year, rows};
-      } else if (type === 'anepc') {
+        return {...data, fileName:`CODA33_DECIR_${year}`, year, rows};
+      }
+      /* ───────── ANEPC ───────── */
+      if (type === 'anepc') {
         const table = document.querySelector(".anepc-table tbody");
-        if (!table) return alert("Tabela ANEPC não encontrada.");
+        if (!table) throw new Error("Tabela ANEPC não encontrada.");
         const monthSelect = document.querySelector("#months-container-dec-anepc .btn.active");
         const yearInput = $("year-dec-anepc");
         const monthName = monthSelect ? monthSelect.textContent.trim() : 'MÊS';
@@ -2390,33 +2449,42 @@
         const rows = Array.from(table.querySelectorAll("tr")).map(tr => {
           const cells = tr.querySelectorAll("td");
           if (cells.length<5) return null;
-          return {niFile:cells[0]?.textContent.trim()||'', funcao:cells[1]?.textContent.trim()||'', nome:cells[2]?.textContent.trim()||'', 
-                  qtdTurnos:parseInt(cells[3]?.textContent.trim()||0,10), valor:parseCurrency(cells[4]?.textContent)};
+          return {niFile:cells[0]?.textContent.trim()||'', funcao:cells[1]?.textContent.trim()||'', nome:cells[2]?.textContent.trim()||'', qtdTurnos:parseInt(cells[3]?.textContent.trim()||0,10),
+                  valor:parseCurrency(cells[4]?.textContent)};
         }).filter(r => r && (r.qtdTurnos>0||r.valor>0));
-        data = {...data, fileName:`RELATORIO_ANEPC_${monthName}_${year}`, monthName, year, rows};
-      } else if (type === 'ocorr') {
+        return {...data, fileName:`RELATORIO_ANEPC_${monthName}_${year}`, monthName, year, rows};
+      }
+      /* ───────── OCORR ───────── */
+      if (type === 'ocorr') {
         const year = document.getElementById("year-dec-ocorr")?.value || String(new Date().getFullYear());
         const OCORR_MONTHS = ["Maio","Junho","Julho","Agosto","Setembro","Outubro"];
         const tbody = document.querySelector("#decir-reg-ocorr table tbody");
-        if (!tbody) return alert("Tabela não encontrada.");
+        if (!tbody) throw new Error("Tabela não encontrada.");
         const rows = Array.from(tbody.querySelectorAll("tr")).map((tr, rowIdx) => {
           const tds = Array.from(tr.querySelectorAll("td"));
           const record = { row_index: rowIdx };
           OCORR_MONTHS.forEach((month, mIdx) => {
             const base = mIdx * 3;
-            record[month] = {occurrence: tds[base]?.textContent.trim() || "", date: tds[base+1]?.textContent.trim() || "", acting: tds[base+2]?.querySelector("select")?.value || ""};
+            record[month] = {
+              occurrence: tds[base]?.textContent.trim() || "",
+              date: tds[base+1]?.textContent.trim() || "",
+              acting: tds[base+2]?.querySelector("select")?.value || ""
+            };
           });
           return record;
         }).filter(r => OCORR_MONTHS.some(m => r[m].occurrence));
-        data = {...data, fileName:`OCORRENCIAS_DECIR_${year}`, year, rows};
-      } else if (type === 'ref') {
+        return {...data, fileName:`OCORRENCIAS_DECIR_${year}`, year, rows};
+      }
+      /* ───────── REF ───────── */
+      if (type === 'ref') {
         const monthBtn = document.querySelector("#months-container-dec-ref .btn.active");
         const yearInput = document.getElementById("year-dec-ref");
-        if (!monthBtn || !yearInput) return alert("Selecione mês e ano.");
+        if (!monthBtn || !yearInput)
+          throw new Error("Selecione mês e ano.");
         const monthName = monthBtn.textContent.trim();
         const year = yearInput.value;
         const tbody = document.querySelector("#table-container-dec-ref table tbody");
-        if (!tbody) return alert("Tabela não encontrada.");
+        if (!tbody) throw new Error("Tabela não encontrada.");
         const rows = Array.from(tbody.querySelectorAll("tr")).map(tr => {
           const tds = Array.from(tr.querySelectorAll("td"));
           const day = tds[0]?.textContent.trim();
@@ -2426,24 +2494,45 @@
           const meal_efet = tds[5]?.textContent.trim();
           const meal_devi = tds[6]?.textContent.trim();
           const resp_name = tds[8]?.textContent.trim();
-          if (!alert_state && !restaurant && !meal_prev && !meal_efet && !resp_name) return null;
+          if (!alert_state && !restaurant && !meal_prev && !meal_efet && !resp_name)
+            return null;
           return {day, alert_state, restaurant, meal_prev, meal_efet, meal_devi, resp_name};
         }).filter(r => r !== null);
-        data = {...data, fileName:`REFEICOES_DECIR_${monthName}_${year}`, monthName, year, rows};
+        return {...data, fileName:`REFEICOES_DECIR_${monthName}_${year}`, monthName, year, rows};
       }
+      throw new Error("Tipo não suportado.");
+    }
+    /* ───────── FUNÇÃO PRINCIPAL ───────── */
+    async function generateDECIRFiles(type, format = "xlsx", event) {
+      const btn = event?.target;
+      const loader = startLoading(btn, "⌛ A Gerar...");
       try {
+        const data = buildDECIRPayload(type, format);
+        const extra = data.monthName && data.year
+          ? ` para ${data.monthName} de ${data.year}`
+          : data.year ? ` para ${data.year}` : "";
+        showLoadingPopup(`A gerar ficheiro DECIR${extra}...`);
         const res = await fetch("https://cb360-online.vercel.app/api/decir_reg_pag", {
-          method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(data)
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(data)
         });
-        if (!res.ok) {const err=await res.json(); return alert("Erro: "+(err.details||err.error));}
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.details || err.error);
+        }
         const blob = await res.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href=url; a.download=`${data.fileName}.${format}`;
-        document.body.appendChild(a); a.click(); a.remove();
-        window.URL.revokeObjectURL(url);
-      } catch(err) {
-        alert("Erro ao gerar ficheiro: "+err.message);
+        downloadBlob(blob, `${data.fileName}.${format}`);
+        setTimeout(() => {
+          hideLoadingPopup();
+          showPopup('popup-info', `Ficheiro de "${data.fileName}.${format}" gerado com sucesso.`);
+        }, 400);
+      } catch (err) {
+        hideLoadingPopup();
+        console.error(err);
+        showPopup('popup-danger', "❌ Erro ao gerar ficheiro: " + err.message);
+      } finally {
+        loader.restore();
       }
     }
     /* ─── EVENT LISTENERS (DECIR) ────────────────────────────── */

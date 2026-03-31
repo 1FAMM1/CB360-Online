@@ -40,7 +40,7 @@
             btn.classList.remove("active"); tableContainer.innerHTML = ""; toggleButtons(false, false); return;
           }
           if (currentSection === "DECIR" && BLOCKED_MONTHS_DECIR.includes(index)) {
-            showPopupWarning(`⛔ Durante o mês de ${month}, não existe DECIR. Salvo prolongamento ou antecipação declarados pela ANEPC.`); return;
+            showPopup('popup-danger', `⛔ Durante o mês de ${month}, não existe DECIR. Salvo prolongamento ou antecipação declarados pela ANEPC.`); return;
           }
           monthsWrapper.querySelectorAll(".btn.btn-add").forEach(b => b.classList.remove("active"));
           btn.classList.add("active");
@@ -311,7 +311,7 @@
         const n_int = parseInt(tr.getAttribute("data-nint"), 10);
         const conflictMsg = await checkConflict(section, n_int, year, month, d, value);
         if (conflictMsg) {
-          showPopupWarning(conflictMsg); td.textContent = ""; setInitialColor();
+          showPopup('popup-danger', conflictMsg); td.textContent = ""; setInitialColor();
           calculateVolunteersRowTotal(tr, section, daysInMonth);
           calculateColumnTotals(tr.parentElement, section, daysInMonth);
           return;
@@ -802,10 +802,10 @@
               td.removeAttribute('data-original-val');
             });
           }
-          showPopupSuccess("✅ Escala gravada com sucesso!");
+          showPopup('popup-success', "✅ Escala gravada com sucesso!");
         } catch (err) {
           console.error(err); 
-          alert("❌ Erro ao salvar a tabela: " + err.message);
+          showPopup('popup-danger', "❌ Erro ao salvar a tabela: " + err.message);
         } finally {
           saveBtn.disabled = false;
           saveBtn.textContent = "Guardar Escala";
@@ -818,37 +818,54 @@
       const saveBtn = $("save-button-emissao");
       if (saveBtn) {
         saveBtn.disabled = true;
-        saveBtn.textContent = "A processar...";
+        saveBtn.textContent = "⌛ A processar...";
       }
       try {
         const selectedYear = parseInt($("year-selector")?.value, 10);
         const monthIndex = getActiveMonthIndex();
-        if (!selectedYear || !monthIndex) throw new Error("Ano ou Mês não selecionado.");
+        if (!selectedYear || !monthIndex) {
+          throw new Error("Ano ou Mês não selecionado.");
+        }
         const corp_oper_nr = getCorpId();
+        const nomeMes = MONTH_NAMES_PT[parseInt(monthIndex) - 1];
+        showLoadingPopup(`A gerar escala de serviço de ${nomeMes} ${selectedYear}...`);
+        /* ───────── NOTIFICAÇÕES ───────── */
         try {
-          const nomeMes = MONTH_NAMES_PT[parseInt(monthIndex)-1];
-          const respUsers = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${corp_oper_nr}&elem_state=eq.true&select=n_int`, {headers: getSupabaseHeaders()});
+          const respUsers = await fetch(
+            `${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${corp_oper_nr}&elem_state=eq.true&select=n_int`,
+            {headers: getSupabaseHeaders()
+            }
+          );
           const activeUsers = await respUsers.json();
           if (activeUsers.length > 0) {
             const now = new Date().toISOString();
             const msgNotif = `📅 A escala de Serviço para ${nomeMes}/${selectedYear} foi emitida. Consulta a área "Escalas"!`;
             await fetch(`${SUPABASE_URL}/rest/v1/user_notifications`, {
-              method:'POST', headers:getSupabaseHeaders(),
-              body: JSON.stringify(activeUsers.map(u => ({n_int:u.n_int, corp_oper_nr, title:"Escala Emitida", message:msgNotif, is_read:false, created_at:now})))
+              method: 'POST',
+              headers: getSupabaseHeaders(),
+              body: JSON.stringify(
+                activeUsers.map(u => ({n_int: u.n_int, corp_oper_nr, title: "Escala Emitida", message: msgNotif, is_read: false, created_at: now}))
+              )
             });
-            await fetch('https://cb-360-app.vercel.app/api/sendPush', {
-              method:'POST', headers:{'Content-Type':'application/json'},
-              body: JSON.stringify({recipient_nint:'geral', corp_nr:corp_oper_nr, sender_name:'CB360 Online', message_text:msgNotif, sender_nint:'0'})
+            fetch('https://cb-360-app.vercel.app/api/sendPush', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({recipient_nint: 'geral', corp_nr: corp_oper_nr, sender_name: 'CB360 Online', message_text: msgNotif, sender_nint: '0'})
             }).catch(err => console.error('Erro Push:', err));
           }
         } catch (errNotif) {
           console.error("Erro Notificações:", errNotif);
         }
-        showPopupSuccess("✅ Escala emitida! O download vai começar.");
+        /* ───────── EXPORT ───────── */
         await exportScheduleToExcel(table, selectedYear, monthIndex);
+        setTimeout(() => {
+          hideLoadingPopup();
+          showPopup('popup-info', `Escala de serviço para ${nomeMes} ${selectedYear} gerada com sucesso.`);
+        }, 400);
       } catch (err) {
-        console.error(err); 
-        alert("❌ Erro ao emitir escala: " + err.message);
+        console.error(err);
+        hideLoadingPopup();
+        showPopup('popup-danger', "❌ Erro ao emitir escala: " + err.message);
       } finally {
         if (saveBtn) {
           saveBtn.disabled = false;

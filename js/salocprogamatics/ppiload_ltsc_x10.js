@@ -426,8 +426,8 @@
         searchHandler: async () => {
           const kmStr = inputKm.value.trim();
           const activeDir = document.querySelector("#ppia22-grid-controls .btn.active");
-          if (!activeDir) return showPopupWarning("⚠️ Selecione o sentido primeiro!");
-          if (!kmStr || isNaN(parseFloat(kmStr))) return showPopupWarning("⚠️ Introduza um quilómetro válido!");
+          if (!activeDir) return showPopup('popup-info', "Selecione o sentido primeiro!");
+          if (!kmStr || isNaN(parseFloat(kmStr))) return showPopup('popup-info', "Introduza um quilómetro válido!");
           await loadPPIA22DataFromKm(parseFloat(kmStr), activeDir.id === "km-dir-O-E" ? "OESTE-ESTE" : "ESTE-OESTE");
         }
       });
@@ -441,8 +441,8 @@
         searchHandler: async () => {
           const kmStr = inputKm.value.trim();
           const activeDir = document.querySelector("#ppilinfer-grid-controls .btn.active");
-          if (!activeDir) return showPopupWarning("⚠️ Selecione o troço primeiro!");
-          if (!kmStr || isNaN(parseFloat(kmStr))) return showPopupWarning("⚠️ Introduza um ponto quilométrico válido!");
+          if (!activeDir) return showPopup('popup-info', "Selecione o troço primeiro!");
+          if (!kmStr || isNaN(parseFloat(kmStr))) return showPopup('popup-info', "Introduza um ponto quilométrico válido!");
           await loadPPILinFerDataFromKm(parseFloat(kmStr), activeDir.id === "Pkm-dir-T-L" ? "TUNES-LAGOS" : "TUNES-VRSA");
         }
       });
@@ -516,7 +516,7 @@
           return km >= Math.min(f,s) && km <= Math.max(f,s);
         });
         if (!filtered.length) {
-          showPopupWarning("⚠️ Nenhuma grelha encontrada para este quilómetro.");           
+          showPopup('popup-danger', "Nenhuma grelha encontrada para este quilómetro.");           
           return;
         }
         const limiteGrelhas = filtered.filter(ppi => {
@@ -526,7 +526,7 @@
         });
         if (limiteGrelhas.length > 1) {
           const grelhas = limiteGrelhas.map(p=>p.ppi_grid).sort((a,b)=>a.localeCompare(b));
-          showPopupWarning(`⚠️ O quilómetro <b style="color:red">${km.toFixed(2)}</b> corresponde ao limite entre duas grelhas, 
+          showPopup('popup-danger', `O quilómetro <b style="color:red">${km.toFixed(2)}</b> corresponde ao limite entre duas grelhas, 
                             <b style="color:red">${grelhas.length===2?grelhas.join(" e "):grelhas.join(", ")}</b>.<br>Para garantir maior precisão na atribuição de meios, 
                             recomenda-se a consulta direta por grelha. Obrigado.`);
           return;
@@ -894,7 +894,7 @@
           return km>=Math.min(f,s)&&km<=Math.max(f,s);
         });
         if(!filtered.length){
-          showPopupWarning("⚠️ Nenhuma grelha encontrada para este ponto quilométrico no troço selecionado.");
+          showPopup('popup-danger', "Nenhuma grelha encontrada para este ponto quilométrico no troço selecionado.");
           return;
         }
         const limiteGrelhas=filtered.filter(ppi=>{
@@ -904,7 +904,7 @@
         });
         if(limiteGrelhas.length>1){
           const grelhas=limiteGrelhas.map(p=>p.grid_id).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
-          showPopupWarning(`⚠️ O Ponto Quilométrico <b style="color:red">${km.toFixed(3)}</b> corresponde ao limite entre duas grelhas 
+          showPopup('popup-danger', `O Ponto Quilométrico <b style="color:red">${km.toFixed(3)}</b> corresponde ao limite entre duas grelhas 
                             <b style="color:red">${grelhas.length===2?grelhas.join(" e "):grelhas.join(", ")}</b>.<br>Para garantir maior precisão na atribuição de meios, 
                             recomenda-se a consulta direta por grelha. Obrigado.`);
           return;

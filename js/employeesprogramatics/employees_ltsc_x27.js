@@ -4486,9 +4486,9 @@
       const teamRaw = document.getElementById("reg-team").value;
       const entryDate = document.getElementById("reg-entry-date").value;
       const exitDate = document.getElementById("reg-exit-date").value;
-      if (!nInt || !name) { showPopupWarning("⚠️ Nº Interno e Nome são obrigatórios."); return; }
+      if (!nInt || !name) {showPopup('popup-danger', "Nº Interno e Nome são obrigatórios."); return;}
       if (entryDate && exitDate && new Date(exitDate) < new Date(entryDate)) {
-        showPopupWarning("⚠️ A Data de Saída não pode ser anterior à Data de Entrada."); return;
+        showPopup('popup-danger',"A Data de Saída não pode ser anterior à Data de Entrada."); return;
       }
       const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const saveBtn = document.getElementById("reg-save-btn");
@@ -4502,7 +4502,7 @@
         const allEmps = await allRes.json();
         if (!__regEditingNInt) {
           if (allEmps.some(e => e.n_int == nInt)) {
-            showPopupWarning("⚠️ Nº interno já existe nesta corporação.");
+            showPopup('popup-danger', "Nº interno já existe nesta corporação.");
             saveBtn.disabled = false;
             saveBtn.textContent = "💾 Guardar";
             return;
@@ -4551,12 +4551,12 @@
           });
         }
         if (!res.ok) throw new Error(await res.text());
-        showPopupSuccess('popup-success', __regEditingNInt ? "✅ Funcionário atualizado!" : "✅ Funcionário registado!");
+        showPopup('popup-success', __regEditingNInt ? "Funcionário atualizado!" : "Funcionário registado!");
         clearRegForm();
         await loadEmployees();
       } catch (err) {
         console.error(err);
-        showPopupWarning("❌ Erro: " + err.message);
+        showPopup('popup-danger', "Erro: " + err.message);
       } finally {
         saveBtn.disabled = false;
         saveBtn.textContent = __regEditingNInt ? "💾 Atualizar" : "💾 Guardar";

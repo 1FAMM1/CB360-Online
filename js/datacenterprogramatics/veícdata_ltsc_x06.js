@@ -1,6 +1,6 @@
-    /* =======================================
-           VEHICLE LISTING
-   ======================================= */
+   /* =======================================
+    VEHICLE LISTING
+    ======================================= */
     /* ================= LOAD VEHICLES TABLE ================= */
     async function loadVehiclesTable() {
       try {
@@ -77,24 +77,17 @@
       const vehicleRegistration = document.getElementById("new-veíc-registration").value.trim();
       const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       if (!vehicleName || !vehicleRegistration) {
-        alert("Nome e matrícula são obrigatórios!");
+        showPopup('popup-danger', "Nome e matrícula são obrigatórios!");
         return;
       }
       if (!currentCorpOperNr) {
-        alert("Corporação não definida!");
+        showPopup('popup-danger', "Corporação não definida!");
         return;
       }
-      const payload = {
-        vehicle: vehicleName,
-        vehicle_registration: vehicleRegistration,
-        vehicle_brand: document.getElementById("new-veíc-brand").value,
-        vehicle_model: document.getElementById("new-veíc-model").value,
-        buy_date: document.getElementById("new-veíc-buy-date").value,
-        registration_date: document.getElementById("new-veíc-registration-date").value,
-        current_status: document.getElementById("new-veíc-state").value,
-        is_inop: document.getElementById("new-veíc-state").value === "Inoperacional",
-        corp_oper_nr: currentCorpOperNr
-      };
+      const payload = {vehicle: vehicleName, vehicle_registration: vehicleRegistration, vehicle_brand: document.getElementById("new-veíc-brand").value,
+                       vehicle_model: document.getElementById("new-veíc-model").value, buy_date: document.getElementById("new-veíc-buy-date").value,
+                       registration_date: document.getElementById("new-veíc-registration-date").value, current_status: document.getElementById("new-veíc-state").value,
+                       is_inop: document.getElementById("new-veíc-state").value === "Inoperacional", corp_oper_nr: currentCorpOperNr};
       try {
         let method, url;
         if (editVehicleId) {
@@ -113,14 +106,14 @@
           const errorData = await response.json();
           throw new Error(`${response.status} - ${errorData.message || ''}`);
         }
-        alert(editVehicleId ? "Veículo atualizado com sucesso!" : "Veículo adicionado com sucesso!");
+        showPopup('popup-success', editVehicleId ? "Veículo atualizado com sucesso!" : "Veículo adicionado com sucesso!");
         editVehicleId = null;
         ["new-veíc-name","new-veíc-registration","new-veíc-brand","new-veíc-model","new-veíc-buy-date","new-veíc-registration-date","new-veíc-state"]
           .forEach(id => document.getElementById(id).value = "");
         loadVehiclesTable();
       } catch (err) {
         console.error("Erro:", err);
-        alert(`Erro: ${err.message}`);
+        showPopup('popup-danger', `Erro: ${err.message}`);
       }
     });
     /* ================= DELETE VEHICLE ================= */
@@ -135,11 +128,11 @@
           }
         );
         if (!response.ok) throw new Error("Erro ao remover veículo");
-        alert("Veículo removido com sucesso!");
+        showPopup('popup-success', "Veículo removido com sucesso!");
         loadVehiclesTable();
       } catch (err) {
         console.error(err);
-        alert("Erro ao remover veículo.");
+        showPopup('popup-danger', "Erro ao remover veículo.");
       }
     }
     /* ================= INITIAL LOAD ================= */

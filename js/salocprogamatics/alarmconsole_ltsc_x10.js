@@ -1,5 +1,5 @@
     /* =======================================
-                ALARM CONSOLE
+    ALARM CONSOLE
     ======================================= */
     async function fetchRegElemsFromSupabase() {
       try {
@@ -19,8 +19,7 @@
       } catch (error) {
         return [];
       }
-    }
-    
+    }    
     async function populateIndivSelect(select) {
       const elems = await fetchRegElemsFromSupabase();
       elems.sort((a, b) => (a.n_int || 9999) - (b.n_int || 9999));
@@ -36,7 +35,6 @@
                        'ca-glob-pv': 'PV', 'ca-glob-sb': 'SB', 'ca-glob-sn': 'SN', 'ca-glob-gch': 'GCH', 'ca-glob-gcm': 'GCM'};
     let selectedButton = null;
     let isPlaying = false;
-
     function setupButtonContainer(containerId, otherContainerIds = []) {
       const container = document.getElementById(containerId);
       if (!container) return;
@@ -44,7 +42,7 @@
         if (btn.id.includes('call')) return;
         btn.addEventListener('click', () => {
           if (isPlaying) {
-            showPopupWarning("Aguarde até o som atual terminar!");
+            showPopup('popup-danger', "Aguarde até o som atual terminar!");
             return;
           }
           const wasActive = btn.classList.contains('active');
@@ -68,7 +66,6 @@
         });
       });
     }
-
     function disableAllControls(disabled) {
       document
         .querySelectorAll('#alarm-console-indiv button, #alarm-console-group button, #alarm-console-internal button')
@@ -82,14 +79,14 @@
 
     function playSelectedSound(selectId) {
       if (isPlaying) {
-        showPopupWarning("Aguarde até o som atual terminar!");
+        showPopup('popup-danger', "Aguarde até o som atual terminar!");
         return;
       }
       const select = document.getElementById(selectId);
       if (!select) return;
       let selectedElement = select.value.trim();
-      if (!selectedButton) return showPopupWarning("Selecione uma opção de chamada!");
-      if (!selectedElement) return showPopupWarning("Selecione um elemento!");
+      if (!selectedButton) return showPopup('popup-danger', "Selecione uma opção de chamada!");
+      if (!selectedElement) return showPopup('popup-danger', "Selecione um elemento!");
       if (selectedElement.includes('-')) {
         selectedElement = selectedElement.split('-').slice(1).join('-').trim();
       }
@@ -104,11 +101,11 @@
         })
         .then(response => {
           if (!response.ok) {
-            showPopupWarning(`Não é possível reproduzir os itens selecionados!`);
+            showPopup('popup-danger', `Não é possível reproduzir os itens selecionados!`);
             throw new Error("Som não encontrado");
           }
           const audio1 = new Audio(`${baseUrl}init_call.mp3`);
-          audio1.onerror = () => alert(`Ficheiro de som "init_call.mp3" não encontrado!`);
+          audio1.onerror = () => showPopup('popup-danger', `Ficheiro de som "init_call.mp3" não encontrado!`);
           audio1.play();
           audio1.onended = () => {
             const audio2 = new Audio(`${baseUrl}${fileName}`);
@@ -129,7 +126,7 @@
           };
         })
         .catch(() => {
-          alert(`Erro ao verificar ficheiro "${fileName}"!`);
+          showPopup('popup-danger', `Erro ao verificar ficheiro "${fileName}"!`);
           disableAllControls(false);
           isPlaying = false;
         });
@@ -154,13 +151,13 @@
           const key = internalSoundKeys[btn.id];
           if (!key) return;
           if (isPlaying) {
-            showPopupWarning("Aguarde até o som atual terminar!");
+            showPopup('popup-danger', "Aguarde até o som atual terminar!");
             return;
           }
           isPlaying = true;
           disableAllControls(true);
           const audio = new Audio(`https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/sounds/Internal/${key}.mp3`);
-          audio.onerror = () => alert(`Ficheiro de som "${key}.mp3" não encontrado!`);
+          audio.onerror = () => showPopup('popup-danger', `Ficheiro de som "${key}.mp3" não encontrado!`);
           audio.play();
           audio.onended = () => {
             document

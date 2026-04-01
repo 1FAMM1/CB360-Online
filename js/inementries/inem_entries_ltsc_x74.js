@@ -306,8 +306,8 @@
       Object.assign(btnEmitirXlsx.style, {background: "#059669", color: "#fff", border: "none", padding: "10px 18px", borderRadius: "6px", cursor: "pointer", fontWeight: "600",
                                           fontSize: "12px", transition: "0.2s"});
       btnEmitirXlsx.style.display = "none";
-      btnEmitirXlsx.addEventListener("mouseenter", () => btnEmitirXlsx.style.opacity = "0.9");
-      btnEmitirXlsx.addEventListener("mouseleave", () => btnEmitirXlsx.style.opacity = "1");
+      btnEmitirXlsx.addEventListener("mouseenter", () => {if (!btnEmitirXlsx.disabled) btnEmitirXlsx.style.opacity = "0.9";});
+      btnEmitirXlsx.addEventListener("mouseleave", () => {if (!btnEmitirXlsx.disabled) btnEmitirXlsx.style.opacity = "1";});
       btnEmitirXlsx.addEventListener("click", () => exportInemEntriesXlsx());
       const btnEmitir = document.createElement("button");
       btnEmitir.id = "btn-inem-emitir";

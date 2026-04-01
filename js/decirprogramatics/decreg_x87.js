@@ -111,10 +111,10 @@
           body: JSON.stringify({amal_value:parseFloat(amal), anepc_value:parseFloat(anepc), updated_at:new Date().toISOString()})
         });
         if (res.ok) { 
-          showPopup('popup-success', "✅ Configurações guardadas com sucesso!"); closeConfigModal();
+          showPopup('popup-success', "Configurações guardadas com sucesso!"); closeConfigModal();
         }
       } catch {
-        showPopup('popup-danger', "❌ Erro ao ligar ao servidor.");
+        showPopup('popup-danger', "Erro ao ligar ao servidor.");
       }
       finally {btn.disabled = false; btn.innerText = "Gravar Alterações";}
     }
@@ -769,12 +769,12 @@
       try {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/decir_reg_pag?year=eq.${year}&month=eq.${month}`, {method:"DELETE", headers:getSupabaseHeaders()});
         if (!res.ok) throw new Error(await res.text()||"Erro ao apagar dados");
-        showPopup('popup-success', `✅ Dados de ${monthBtn.textContent.trim()} de ${year} apagados com sucesso!`);
+        showPopup('popup-success', `Dados de ${monthBtn.textContent.trim()} de ${year} apagados com sucesso!`);
         const data = await loadDecirRegData();
         await createDecirRegTable("table-container-dec-reg", year, month, data);
         await window.loadDecirByMonth?.(year, month);
       } catch(err) {
-        console.error(err); showPopup('popup-danger', "❌ Erro ao apagar: "+err.message);
+        console.error(err); showPopup('popup-danger', "Erro ao apagar: "+err.message);
       }
     }
     /* ─── GUARDAR REGISTO (DECIR) ────────────────────────────── */
@@ -819,10 +819,10 @@
           });
           if (!r.ok) throw new Error(await r.text()||"Erro desconhecido ao gravar");
         }
-        showPopup('popup-success', "✅ Registo DECIR gravado com sucesso!");
+        showPopup('popup-success', "Registo DECIR gravado com sucesso!");
       } catch(err) {
         console.error(err);
-        showPopup('popup-danger', "❌ Erro ao gravar: "+err.message);
+        showPopup('popup-danger', "Erro ao gravar: "+err.message);
       }
       finally {if(btn) {btn.disabled=false; btn.textContent="Guardar";}}
     }
@@ -1240,10 +1240,10 @@
           });
           if (!r.ok) throw new Error(await r.text() || "Erro desconhecido ao gravar");
         }
-        showPopup('popup-success', "✅ Ocorrências gravadas com sucesso!");
+        showPopup('popup-success', "Ocorrências gravadas com sucesso!");
       } catch(err) {
         console.error(err);
-        showPopup('popup-danger', "❌ Erro ao gravar: " + err.message);
+        showPopup('popup-danger', "Erro ao gravar: " + err.message);
       } finally {
         if (btn) {btn.disabled = false; btn.textContent = "Guardar";}
       }
@@ -1555,10 +1555,10 @@
           });
           if (!r.ok) throw new Error(await r.text() || "Erro desconhecido ao gravar");
         }
-        showPopup('popup-success', "✅ Refeições gravadas com sucesso!");
+        showPopup('popup-success', "Refeições gravadas com sucesso!");
       } catch(err) {
         console.error(err);
-        showPopup('popup-danger', "❌ Erro ao gravar: " + err.message);
+        showPopup('popup-danger', "Erro ao gravar: " + err.message);
       } finally {
         if (btn) {btn.disabled = false; btn.textContent = "Guardar";}
       }
@@ -2318,7 +2318,7 @@
       } catch (err) {
         hideLoadingPopup();
         console.error("Erro:", err);
-        showPopup('popup-danger', "❌ Erro: " + err.message);
+        showPopup('popup-danger', "Erro: " + err.message);
       }
     };
     document.getElementById("emit-signa-xlsx-btn")?.addEventListener("click", () => emitSigna("xlsx"));
@@ -2530,7 +2530,7 @@
       } catch (err) {
         hideLoadingPopup();
         console.error(err);
-        showPopup('popup-danger', "❌ Erro ao gerar ficheiro: " + err.message);
+        showPopup('popup-danger', "Erro ao gerar ficheiro: " + err.message);
       } finally {
         loader.restore();
       }
@@ -3217,11 +3217,11 @@
               }, 1000);
             }
           }
-          revealBtn.textContent = "✅ Pódio Revelado!";
+          revealBtn.textContent = "Pódio Revelado!";
         };
       } catch (err) {
         console.error(err);
-        podiumGrid.innerHTML = `<div class="dash-empty">❌ Erro ao carregar dados</div>`;
+        podiumGrid.innerHTML = `<div class="dash-empty">Erro ao carregar dados</div>`;
       }
     }
     async function updateDecirPodiumCard(year) {

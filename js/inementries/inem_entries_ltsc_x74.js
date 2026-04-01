@@ -5,8 +5,10 @@
     async function loadInemEntries() {
       const dateFrom = document.getElementById("inem-date-from")?.value;
       const dateTo = document.getElementById("inem-date-to")?.value;
-      const codu = document.getElementById("inem-filter-codu")?.value.trim();
+      const codu = document.getElementById("inem-filter-codu")?.value.trim();      
       const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const nInt = sessionStorage.getItem("n_int");
+      const isReadOnly = parseInt(nInt) === 9000;
       const tbody = document.querySelector("#inem-entries table tbody");
       const btnEmitirXlsx = document.getElementById("btn-inem-emitir-xlsx");
       const btnEmitir = document.getElementById("btn-inem-emitir");
@@ -120,6 +122,14 @@
               const gap = document.createElement("div");
               Object.assign(gap.style, {display: nrCodu ? "flex" : "none", gap: "3px", justifyContent: "center", alignItems: "center"});
               gap.append(btnUp, btnDown, btnView, btnDel);
+              if (isReadOnly) {
+                [btnDown, btnView, btnDel].forEach(btn => {
+                  btn.disabled = true;
+                  btn.style.opacity = "0.3";
+                  btn.style.cursor = "not-allowed";
+                  btn.style.pointerEvents = "none";
+                });
+              }
               td.appendChild(gap);
             } else if (key === "pdfstatus") {
               td.classList.add("inem-pdf-status-td");
@@ -151,8 +161,22 @@
         } else if (totalsEl) {
           totalsEl.innerHTML = `<span>TOTAL: 0</span> &nbsp;|&nbsp; <span>ITeams: 0</span> &nbsp;|&nbsp; <span>Verbete: 0</span>`;
         }
-        if (btnEmitirXlsx) btnEmitirXlsx.style.display = "";
-        if (btnEmitir) btnEmitir.style.display = "";
+        if (btnEmitirXlsx) {
+          btnEmitirXlsx.style.display = "";
+          if (isReadOnly) {
+            btnEmitirXlsx.disabled = true;
+            btnEmitirXlsx.style.opacity = "0.3";
+            btnEmitirXlsx.style.cursor = "not-allowed";
+          }
+        }
+        if (btnEmitir) {
+          btnEmitir.style.display = "";
+          if (isReadOnly) {
+            btnEmitir.disabled = true;
+            btnEmitir.style.opacity = "0.3";
+            btnEmitir.style.cursor = "not-allowed";
+          }
+        }
       } catch(err) {
         console.error("Erro ao carregar verbetes INEM:", err);
         showPopup('popup-danger', "Erro ao carregar verbetes INEM.");

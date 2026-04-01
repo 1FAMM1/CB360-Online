@@ -802,10 +802,10 @@
               td.removeAttribute('data-original-val');
             });
           }
-          showPopup('popup-success', "✅ Escala gravada com sucesso!");
+          showPopup('popup-success', "Escala gravada com sucesso!");
         } catch (err) {
           console.error(err); 
-          showPopup('popup-danger', "❌ Erro ao salvar a tabela: " + err.message);
+          showPopup('popup-danger', "Erro ao salvar a tabela: " + err.message);
         } finally {
           saveBtn.disabled = false;
           saveBtn.textContent = "Guardar Escala";
@@ -865,7 +865,7 @@
       } catch (err) {
         console.error(err);
         hideLoadingPopup();
-        showPopup('popup-danger', "❌ Erro ao emitir escala: " + err.message);
+        showPopup('popup-danger', "Erro ao emitir escala: " + err.message);
       } finally {
         if (saveBtn) {
           saveBtn.disabled = false;

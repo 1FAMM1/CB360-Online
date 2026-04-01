@@ -1,10 +1,9 @@
     /* =======================================
-       DAILY PLANNING
+    DAILY PLANNING
     ======================================= */
     const tableConfig = [{rows: 1, special: false, title: "OFOPE"}, {rows: 1, special: false, title: "CHEFE DE SERVIÇO"}, {rows: 1, special: false, title: "OPTEL"},
                          {rows: 5, special: true, title: "EQUIPA 01"}, {rows: 5, special: false, title: "EQUIPA 02"}, {rows: 2, special: false, title: "LOGÍSTICA"},
                          {rows: 3, special: false, title: "INEM"}, {rows: 3, special: false, title: "INEM - Reserva"}, {rows: 10, special: false, title: "SERVIÇO GERAL"}];
-
     function createInputCell({type = 'text', readonly = false, className = '',tabindex = 0}) {
       return `<td><input type="${type}" class="${className}" ${readonly ? 'readonly' : ''} tabindex="${tabindex}"></td>`;
     }    
@@ -111,9 +110,7 @@
         return true;
       } catch (err) {
         console.error("❌ Erro em saveAttendance:", err);
-        showPopupWarning(
-          "O planeamento foi enviado, mas houve um erro ao registar as faltas/piquetes no sistema central."
-        );
+        showPopup('popup-danger', "O planeamento foi enviado, mas houve um erro ao registar as faltas/piquetes no sistema central.");
         return false;
       }
     }
@@ -300,17 +297,8 @@
           const inputs = tr.querySelectorAll('input');
           const mpCell = tr.querySelector('.mp-cell');
           const tasCell = tr.querySelector('.tas-cell');
-          return {
-            n_int: inputs[0]?.value?.trim() || "",
-            patente: inputs[1]?.value?.trim() || "",
-            nome: inputs[2]?.value?.trim() || "",
-            entrada: inputs[3]?.value?.trim() || "",
-            saida: inputs[4]?.value?.trim() || "",
-            MP: mpCell?.textContent === "X",
-            TAS: tasCell?.textContent === "X",
-            obs: inputs[5]?.value?.trim() || ""
-          };
-        });
+          return {n_int: inputs[0]?.value?.trim() || "", patente: inputs[1]?.value?.trim() || "", nome: inputs[2]?.value?.trim() || "", entrada: inputs[3]?.value?.trim() || "",
+                  saida: inputs[4]?.value?.trim() || "", MP: mpCell?.textContent === "X", TAS: tasCell?.textContent === "X", obs: inputs[5]?.value?.trim() || ""};});
         return {title, rows};
       });
       return tables;
@@ -336,7 +324,7 @@
           if (storedShift) {
             shift = storedShift;
           } else {
-            showPopupWarning("Não foi possível determinar o turno original.");
+            showPopup('popup-danger', "Não foi possível determinar o turno original.");
             return;
           }
         }
@@ -396,7 +384,7 @@
     async function emitPlanning(shift, date, baixar = false) {
       const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       if (!corpOperNr) {
-        showPopupWarning("❌ Erro: Sessão expirada. Por favor, faça login novamente.");
+        showPopup('popup-danger', "Erro: Sessão expirada. Por favor, faça login novamente.");
         return;
       }
       const tables = collectTableData();
@@ -411,7 +399,7 @@
       const CC_RECIPIENTS = cc;
       const BCC_RECIPIENTS = bcc;
       if (RECIPIENTS.length === 0) {
-        showPopupWarning("Erro: Defina pelo menos um destinatário.");
+        showPopup('popup-danger', "Erro: Defina pelo menos um destinatário.");
         return;
       }
      const teamNameMap = {"OFOPE": "ofope", "CHEFE DE SERVIÇO": "chefe_servico", "OPTEL": "optel",
@@ -462,20 +450,20 @@
             ${optelName}<br><br>        
             ${signature}
         `;
-        showPopupSuccess(`Planeamento gerado com sucesso. O mesmo está a ser enviado para as entidades.`);
+        showPopup('popup-success', `Planeamento gerado com sucesso. O mesmo está a ser enviado para as entidades.`);
         const response = await fetch("/api/plandir_convert_and_send", {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({shift, date, tables, recipients: RECIPIENTS, ccRecipients: CC_RECIPIENTS, bccRecipients: BCC_RECIPIENTS, emailBody: emailBodyHTML})});
         const result = await response.json();
         if (!response.ok) {
-          showPopupWarning(`ERRO! O planeamento não foi enviado. Detalhes: ${result.details || 'Verificar consola.'}`);
+          showPopup('popup-danger', `ERRO! O planeamento não foi enviado. Detalhes: ${result.details || 'Verificar consola.'}`);
           return;
         }
-        showPopupSuccess(`✅ Planeamento do dia ${day}/${month}/${year} (Turno ${shift}) emitido e enviado com sucesso!`);
+        showPopup('popup-success', `Planeamento do dia ${day}/${month}/${year} (Turno ${shift}) emitido e enviado com sucesso!`);
       } catch (err) {
         console.error('Erro no processo de emissão:', err);
-        showPopupWarning('Erro ao processar o planeamento. Por favor, tente novamente.');
+        showPopup('popup-danger', 'Erro ao processar o planeamento. Por favor, tente novamente.');
       }
     }
     async function loadShift(shift) {

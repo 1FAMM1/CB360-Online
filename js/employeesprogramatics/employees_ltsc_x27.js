@@ -4551,7 +4551,7 @@
           });
         }
         if (!res.ok) throw new Error(await res.text());
-        showPopupSuccess(__regEditingNInt ? "✅ Funcionário atualizado!" : "✅ Funcionário registado!");
+        showPopupSuccess('popup-success', __regEditingNInt ? "✅ Funcionário atualizado!" : "✅ Funcionário registado!");
         clearRegForm();
         await loadEmployees();
       } catch (err) {

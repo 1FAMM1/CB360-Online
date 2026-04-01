@@ -202,7 +202,7 @@
         }    
       } catch (err) {
         console.error("Erro no fluxo updateVacatState:", err);
-        alert("Erro ao processar alteração.");
+        showPopup('popup-danger', "Erro ao processar alteração.");
       }
     }
     /* ========== SAVE VACATIONS ========== */

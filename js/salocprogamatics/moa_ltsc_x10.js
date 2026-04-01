@@ -118,12 +118,12 @@
     /* ================= MAIN FUNCTION ================= */
     async function emitMOAGlobal() {
       const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
-      if (!corpOperNr) { alert("❌ Erro: O número da corporação não foi encontrado."); return; }
+      if (!corpOperNr) {showPopup('popup-danger', "Erro: O número da corporação não foi encontrado."); return;}
       const moa_device_type = document.getElementById("moa_device_type")?.value.trim();
       const moa_cb = document.getElementById("moa_cb")?.value.trim();
-      if (!moa_device_type || !moa_cb) { alert("Preencha: Tipo de Dispositivo e CB."); return; }
-      if (typeof showPopupSuccess === "function")
-        showPopupSuccess(`MOA do dispositivo ${moa_device_type} criada. Aguarde o envio.`);
+      if (!moa_device_type || !moa_cb) {showPopup('popup-danger', "Preencha: Tipo de Dispositivo e CB."); return;}
+      if (typeof showPopup === "function")
+        showPopup('popup-success', `MOA do dispositivo ${moa_device_type} criada. Aguarde o envio.`);
       const btn = document.getElementById("saveMOABtn");
       if (btn) btn.disabled = true;
       const data = {};
@@ -145,13 +145,13 @@
       try {
         const recipients = await fetchMOARecipients(corpOperNr);
         await sendMOAEmail(data, recipients, corpOperNr);
-        if (typeof showPopupSuccess === "function")
-          showPopupSuccess(`A MOA do dispositivo ${data.moa_device_type} foi enviada!`);
+        if (typeof showPopup === "function")
+          showPopup('popup-success', `A MOA do dispositivo ${data.moa_device_type} foi enviada!`);
         window.hideMOAContainer();
         const btnNew = document.getElementById("NewMOABtn");
         if (btnNew) btnNew.classList.remove("active");
       } catch (err) {
-        alert(`Erro ao enviar MOA: ${err.message}`);
+        showPopup('popup-danger', `Erro ao enviar MOA: ${err.message}`);
         console.error(err);
       } finally {
         if (btn) btn.disabled = false;
@@ -212,6 +212,4 @@
       if (crepcAlgBtn) {
         crepcAlgBtn.addEventListener('click', () => { window.hideMOAContainer(); });
       }
-
     });
-

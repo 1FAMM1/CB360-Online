@@ -155,7 +155,7 @@
         if (btnEmitir) btnEmitir.style.display = "";
       } catch(err) {
         console.error("Erro ao carregar verbetes INEM:", err);
-        showPopupWarning("Erro ao carregar verbetes INEM.");
+        showPopup('popup-danger', "Erro ao carregar verbetes INEM.");
       }
     }
     /* ─── CRIAR TABELA DE DADOS ─────────────────────────────── */
@@ -406,12 +406,12 @@
             body: JSON.stringify(updated)
           });
           if (!res.ok) throw new Error(await res.text());
-          showPopupSuccess('Verbete atualizado com sucesso.');
+          showPopup('popup-success', 'Verbete atualizado com sucesso.');
           overlay.remove();
           loadInemEntries();
         } catch(err) {
           console.error('Erro ao guardar:', err);
-          showPopupWarning('Erro ao guardar as alterações.');
+          showPopup('popup-danger', 'Erro ao guardar as alterações.');
         }
       };
       footer.append(btnCancel, btnSave);
@@ -440,7 +440,7 @@
             body: file
           });
           if (!res.ok) throw new Error(await res.text());
-          showPopupSuccess("Ficheiro carregado com sucesso.");
+          showPopup('popup-success', `Verbete para a ocorrência <b>${nrCodu}</b> carregado com sucesso.`);
           document.querySelectorAll("#inem-entries table tbody tr").forEach(tr => {
             const btnUp = tr.querySelector(".btn-inem-upload");
             if (btnUp?.dataset.nr === nrCodu) {
@@ -448,13 +448,13 @@
               if (statusTd) {
                 statusTd.textContent = "✅";
                 statusTd.style.fontSize = "17px";
-                statusTd.title = "Ficheiro disponível";
+                statusTd.title = "Verbete disponível";
               }
             }
           });
         } catch(err) {
           console.error("Erro ao fazer upload:", err);
-          showPopupWarning("Erro ao carregar o ficheiro.");
+          showPopup('popup-danger', "Erro ao carregar o verbete.");
         }
       };
       input.click();
@@ -476,7 +476,7 @@
         a.click();
         URL.revokeObjectURL(blobUrl);
       } catch(err) {
-        showPopupWarning("Ficheiro não encontrado.");
+        showPopup('popup-danger', "Verbete não encontrado.");
       }
     }
     /* ─── VISUALIZAR ────────────────────────────────────── */
@@ -747,7 +747,7 @@
           headers: {"Authorization": `Bearer ${SUPABASE_ANON_KEY}`}
         });
         if (!res.ok) throw new Error(await res.text());
-        showPopupSuccess("Ficheiro eliminado com sucesso.");
+        showPopup('popup-success', "Verbete eliminado com sucesso.");
         document.querySelectorAll("#inem-entries table tbody tr").forEach(tr => {
           const btnDel = tr.querySelector(".btn-inem-delete");
           if (btnDel?.dataset.nr === nrCodu) {
@@ -761,7 +761,7 @@
         });
       } catch(err) {
         console.error("Erro ao eliminar:", err);
-        showPopupWarning("Erro ao eliminar o ficheiro.");
+        showPopup('popup-danger', "Erro ao eliminar o verbete.");
       }
     }
     /* ─── EXPORT XLSX ───────────────────────────────────── */
@@ -772,6 +772,7 @@
       const originalText = btnXlsx.textContent;
       btnXlsx.textContent = "⏳ A Exportar...";
       btnXlsx.disabled = true;
+      showLoadingPopup("🔄 A iniciar exportação XLSX...");
       try {
         const res = await fetch("https://cb360-online.vercel.app/api/inem-entries", {
           method: "POST",
@@ -779,25 +780,26 @@
           body: JSON.stringify({rows, format: "xlsx", dateFrom: document.getElementById("inem-date-from")?.value, dateTo: document.getElementById("inem-date-to")?.value})
         });
         if (!res.ok) throw new Error(await res.text());
+        updateLoadingPopup("💾 A gerar ficheiro XLSX...");
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");        
         const dateFrom = document.getElementById("inem-date-from")?.value || "";
         const dateTo = document.getElementById("inem-date-to")?.value || "";
-        function fmtFile(d) {
-          if (!d) return "";
-          const [y, m, dd] = d.split("-");
-          return `${dd}-${m}-${y}`;
-        }
-        const sufix = dateFrom === dateTo || !dateTo
-          ? fmtFile(dateFrom)
-          : `${fmtFile(dateFrom)}_a_${fmtFile(dateTo)}`;
-        a.href = url; a.download = `inem_entries_${sufix}.xlsx`; a.click();
+        function fmtFile(d) {if (!d) return ""; const [y,m,dd] = d.split("-"); return `${dd}-${m}-${y}`;}
+        const sufix = dateFrom === dateTo || !dateTo ? fmtFile(dateFrom) : `${fmtFile(dateFrom)}_a_${fmtFile(dateTo)}`;
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `inem_entries_${sufix}.xlsx`;
+        a.click();
         URL.revokeObjectURL(url);
+        updateLoadingPopup("✅ Exportação concluída!");
+        showPopup('popup-info', `Mapa serviços INEM\Reserva gerado com sucesso.`);
       } catch (err) {
         console.error("Erro ao exportar XLSX:", err);
-        showPopupWarning("Erro ao exportar XLSX.");
+        showPopup('popup-danger', "Erro ao exportar XLSX.");
+        updateLoadingPopup("❌ Erro durante a exportação.");
       } finally {
+        hideLoadingPopup();
         btnXlsx.textContent = originalText;
         btnXlsx.disabled = false;
       }
@@ -810,6 +812,7 @@
       const originalText = btnPdf.textContent;
       btnPdf.textContent = "⏳ A Gerar Mapa...";
       btnPdf.disabled = true;
+      showLoadingPopup("🔄 A iniciar exportação PDF...");
       try {
         const res = await fetch("https://cb360-online.vercel.app/api/inem-entries", {
           method: "POST",
@@ -817,25 +820,26 @@
           body: JSON.stringify({rows, format: "pdf", dateFrom: document.getElementById("inem-date-from")?.value, dateTo: document.getElementById("inem-date-to")?.value})
         });
         if (!res.ok) throw new Error(await res.text());
+        updateLoadingPopup("💾 A gerar ficheiro PDF...");
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
         const dateFrom = document.getElementById("inem-date-from")?.value || "";
         const dateTo = document.getElementById("inem-date-to")?.value || "";
-        function fmtFile(d) {
-          if (!d) return "";
-          const [y, m, dd] = d.split("-");
-          return `${dd}-${m}-${y}`;
-        }
-        const sufix = dateFrom === dateTo || !dateTo
-          ? fmtFile(dateFrom)
-          : `${fmtFile(dateFrom)}_a_${fmtFile(dateTo)}`;        
-        a.href = url; a.download = `inem_entries_${sufix}.pdf`; a.click();
+        function fmtFile(d) {if (!d) return ""; const [y,m,dd] = d.split("-"); return `${dd}-${m}-${y}`;}
+        const sufix = dateFrom === dateTo || !dateTo ? fmtFile(dateFrom) : `${fmtFile(dateFrom)}_a_${fmtFile(dateTo)}`;
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `inem_entries_${sufix}.pdf`;
+        a.click();
         URL.revokeObjectURL(url);
+        updateLoadingPopup("✅ Exportação concluída!");
+        showPopup('popup-info', `Mapa serviços INEM\Reserva gerado com sucesso.`);
       } catch (err) {
         console.error("Erro ao exportar PDF:", err);
-        showPopupWarning("Erro ao exportar PDF.");
+        showPopup('popup-danger', "Erro ao exportar PDF.");
+        updateLoadingPopup("❌ Erro durante a exportação.");
       } finally {
+        hideLoadingPopup();
         btnPdf.textContent = originalText;
         btnPdf.disabled = false;
       }

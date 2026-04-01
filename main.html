@@ -233,21 +233,41 @@
       </div>
     </div>
   </div>
-  <div id="popup-vehicle-status" class="popup-modal" tabindex="0">
-    <div class="popup-content">
-      <h3 id="popup-vehicle-title"></h3>
-      <label for="vehicle-status-select">Selecione o estado:</label>
-      <select id="vehicle-status-select">
-        <option value="Disponível no Quartel">Disponível no Quartel</option>
-        <option value="Em Serviço">Em Serviço</option>
-        <option value="Inop">Inop</option>
-      </select>
-      <div style="margin-top: 10px; text-align: center;">
-        <button id="popup-vehicle-ok-btn" class="btn btn-success">OK</button>
-        <button id="popup-vehicle-cancel-btn" class="btn btn-danger">Cancelar</button>
+  <div id="vehicle-status-modal" class="vehicle-status-modal" tabindex="0">
+      <div class="vehicle-status-modal-content">
+        <div class="vehicle-status-modal-header">
+          <h3>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v3h-7V8z"/>
+              <circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+            </svg>
+            <span id="vehicle-status-modal-title"></span>
+          </h3>
+          <button class="vehicle-status-modal-close" onclick="closeVehicleStatusModal()">✕</button>
+        </div>
+        <div class="vehicle-status-modal-body">
+          <label for="vehicle-status-select">Estado operacional</label>
+          <div class="vehicle-status-select-wrap">
+            <select id="vehicle-status-select" onchange="vehicleStatusUpdateBadge(this.value)">
+              <option value="Disponível no Quartel">Disponível no Quartel</option>
+              <option value="Em Serviço">Em Serviço</option>
+              <option value="Inop">Inop</option>
+            </select>
+            <svg width="12" height="8" viewBox="0 0 14 10" fill="none">
+              <path d="M1 1l6 6 6-6" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <span id="vehicle-status-badge" class="vehicle-status-badge disponivel">
+            <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="currentColor"/></svg>
+            Disponível no Quartel
+          </span>
+        </div>
+        <div class="vehicle-status-modal-footer">
+          <button id="vehicle-status-cancel-btn" class="vehicle-status-btn secondary" onclick="closeVehicleStatusModal()">Cancelar</button>
+          <button id="vehicle-status-ok-btn" class="vehicle-status-btn primary" onclick="confirmVehicleStatus()">Confirmar</button>
+        </div>
       </div>
     </div>
-  </div>
   <!-- MODAL CONFIRMAÇÃO DECIR -->
   <div id="popup-confirm-modal" class="popup-modal" tabindex="0">
     <div class="popup-content">

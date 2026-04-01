@@ -682,33 +682,48 @@
     <!---- PROGRAM MODULES ---->
     
     <div id="modalConfigDecir" class="decir-modal-custom">
-        <div class="decir-modal-content">
-          <div class="decir-modal-header">
-            <h3><i class="fas fa-cog"></i>Configuração de Valores DECIR</h3>
-            <button class="decir-close-btn" onclick="closeConfigModal()">✕</button>
-          </div>
-          <!-- BODY -->
-          <div class="decir-modal-body">
-            <div class="decir-form-group">
-              <label for="amal_value">Valor Diário AMAL</label>
-              <div class="decir-input-wrapper">
-                <input type="number" id="amal_value" step="0.01" placeholder="0.00">
-              </div>
-            </div>
-            <div class="decir-form-group">
-              <label for="anepc_value">Valor Diário ANEPC</label>
-              <div class="decir-input-wrapper">
-                <input type="number" id="anepc_value" step="0.01" placeholder="0.00">
-              </div>
-            </div>
-          </div>
-          <!-- FOOTER -->
-          <div class="decir-modal-footer">
-            <button type="button" class="decir-btn decir-btn-secondary" onclick="closeConfigModal()">Cancelar</button>
-            <button type="button" id="btnSaveConfig" class="decir-btn decir-btn-primary" onclick="updateDecirValues()">💾 Gravar Alterações</button>
-          </div>
+  <div class="decir-modal-content">
+
+    <!-- HEADER -->
+    <div class="decir-modal-header">
+      <h3>
+        <i class="fas fa-cog"></i>
+        Configuração de Valores DECIR
+      </h3>
+      <button class="decir-close-btn" onclick="closeConfigModal()">✕</button>
+    </div>
+
+    <!-- BODY -->
+    <div class="decir-modal-body">
+
+      <div class="decir-form-group">
+        <label for="amal_value">Valor Diário AMAL</label>
+        <div class="decir-input-wrapper">
+          <input type="number" id="amal_value" step="0.01" placeholder="0.00">
         </div>
       </div>
+
+      <div class="decir-form-group">
+        <label for="anepc_value">Valor Diário ANEPC</label>
+        <div class="decir-input-wrapper">
+          <input type="number" id="anepc_value" step="0.01" placeholder="0.00">
+        </div>
+      </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <div class="decir-modal-footer">
+      <button type="button" class="decir-btn decir-btn-secondary" onclick="closeConfigModal()">
+        Cancelar
+      </button>
+      <button type="button" id="btnSaveConfig" class="decir-btn decir-btn-primary" onclick="updateDecirValues()">
+        💾 Gravar Alterações
+      </button>
+    </div>
+
+  </div>
+</div>
     <div id="decir-sca-view" class="page">
       <div class="card last-card">
         <div class="card-header">VISUALIZAÇÃO ESCALAS DECIR</div>

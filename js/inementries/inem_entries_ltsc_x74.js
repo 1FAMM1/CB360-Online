@@ -7,7 +7,7 @@
       const dateTo = document.getElementById("inem-date-to")?.value;
       const codu = document.getElementById("inem-filter-codu")?.value.trim();      
       const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
-      const nInt = sessionStorage.getItem("n_int");
+      const nInt = sessionStorage.getItem("currentNInt");
       const isReadOnly = parseInt(nInt) === 9000;
       const tbody = document.querySelector("#inem-entries table tbody");
       const btnEmitirXlsx = document.getElementById("btn-inem-emitir-xlsx");

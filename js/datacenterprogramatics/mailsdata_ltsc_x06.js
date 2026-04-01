@@ -22,7 +22,7 @@
         document.getElementById("config_moa_mail_bcc").value = rows.find(r => r.category === "crepcmoa_mail_bcc")?.value || "";
       } catch (err) {
         console.error(err);
-        showPopupWarning("Erro ao carregar emails: " + err.message);
+        showPopup('popup-danger', "Erro ao carregar emails: " + err.message);
       }
     }
     /* ======= INSERT INTO SUPABASE ======= */
@@ -68,7 +68,7 @@
           }
         );
       }
-      showPopupSuccess("Emails SITOP atualizados!");
+      showPopup('popup-success', "Emails para envio de Situações Operacionais de Veículos, atualizados com sucesso.");
     }
     /* ============= SAVE MOA ============= */
     async function saveMoaMails() {
@@ -86,7 +86,7 @@
           }
         );
       }
-      showPopupSuccess("Emails MOA atualizados!");
+      showPopup('popup-success', "Emails para envio de Medidas Operacionais de Anticipação, atualizados com sucesso.");
     }
     /* ========= EVENT LISTENERS ========== */
     document.getElementById("config_sitop_mail_save").addEventListener("click", saveSitopMails);

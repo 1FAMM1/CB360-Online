@@ -150,13 +150,13 @@
       const ppi_subs = document.getElementById("ppi_subs_yes").checked;
       const optel = document.getElementById("sitop_optel").value.trim();
       if (!vehicle || !registration || !gdh_inop) {
-        showPopupWarning("Por favor preencha os campos obrigatórios: Veículo, Matrícula e GDH INOP.");
+        showPopup('popup-danger', "Por favor preencha os campos obrigatórios: Veículo, Matrícula e GDH INOP.");
         return;
       }
-      showPopupSuccess(`Estado Operacional do veículo ${vehicle} criado com sucesso. Por favor aguarde uns segundos, receberá uma nova notificação após o envio para as entidades estar concluído!`);
+      showPopup('popup-success', `Estado Operacional do veículo ${vehicle} criado com sucesso. Por favor aguarde uns segundos, receberá uma nova notificação após o envio para as entidades estar concluído!`);
       const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       if (!corpOperNr) {
-        showPopupWarning("❌ Erro: O número da corporação não foi encontrado. Por favor, faça login novamente.");
+        showPopup('popup-danger', "Erro: O número da corporação não foi encontrado. Por favor, faça login novamente.");
         return;
       }
       saveBtn.disabled = true;
@@ -174,7 +174,7 @@
           if (!checkRes.ok) throw new Error(`Erro ao verificar duplicado.`);
           const existing = await checkRes.json();
           if (existing.length > 0) {
-            showPopupWarning(`❌ O veículo ${vehicle} já se encontra INOP!`);
+            showPopup('popup-danger', `O veículo ${vehicle} já se encontra INOP!`);
             saveBtn.disabled = false;
             return;
           }
@@ -214,7 +214,7 @@
           body: JSON.stringify({mode: "sitop", data, recipients: to, ccRecipients: cc, bccRecipients: bcc, emailSubject: `Situação Operacional do Veículo ${vehicle}`, emailBody: emailBodyHTML})
         });
         if (!emailRes.ok) throw new Error("Erro ao enviar email via Vercel.");
-        showPopupSuccess(`A situação operacional do veículo ${vehicle} foi enviada para as entidades.`);
+        showPopup('popup-success', `A situação operacional do veículo ${vehicle} foi enviada para as entidades.`);
         if (isOperational && isUpdate) {
           await fetch(`${SUPABASE_URL}/rest/v1/sitop_vehicles?id=eq.${recordId}`, {
             method: 'DELETE',
@@ -226,7 +226,7 @@
         if (oldInopBtn) oldInopBtn.classList.remove("active");
       } catch (err) {
         console.error(err);
-        alert(`❌ Erro: ${err.message}`);
+        showPopup('popup-danger', `Erro: ${err.message}`);
       } finally {
         saveBtn.disabled = false;
       }
@@ -294,7 +294,7 @@
           inopsTableContainer.style.display = "block";
         } catch (err) {
           console.error(err);
-          alert("❌ Erro ao carregar inoperacionalidades: " + err.message);
+          showPopup('popup-danger', "Erro ao carregar inoperacionalidades: " + err.message);
         }
       });
     }
@@ -325,5 +325,3 @@
       sitopContainer.style.display = 'none';
       inopsTableContainer.style.display = 'none';
     });
-
-

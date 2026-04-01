@@ -17,13 +17,13 @@
                 text-shadow: 0 1px 1px rgba(0,0,0,0.2);}
     .popup-btn:hover {filter: brightness(1.1);}
     @keyframes barShine {0% {background-position: 200% 0;} 100% {background-position: -200% 0;}}
-    /* Vermelho */
+    /* Error */
     .popup-danger .popup-header {background: linear-gradient(135deg, #E8404F 0%, #C82333 60%, #B01E2B 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.15);}
     .popup-danger .popup-btn {background-color: #DC3545;}
-    /* Verde */
+    /* Success */
     .popup-success .popup-header {background: linear-gradient(135deg, #28A96A 0%, #157347 60%, #0F5C38 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.15);}
     .popup-success .popup-btn {background-color: #198754;}
-    /* Azul */
+    /* Information */
     .popup-info .popup-header {background: linear-gradient(135deg, #3D8BFD 0%, #0A58CA 60%, #0847A8 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.15);}
     .popup-info .popup-btn {background-color: #0D6EFD;}
     .decir-modal-custom {display: none; position: fixed; inset: 0; z-index: 999999; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(6px); animation: fadeIn 0.2s ease;}
@@ -46,7 +46,9 @@
     .decir-btn-secondary {background: #e2e8f0; color: #334155;}
     .decir-btn-secondary:hover {background: #cbd5f5;}
     .decir-btn-primary {background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff;}
-    .decir-btn-primary:hover {transform: translateY(-1px); box-shadow: 0 6px 14px rgba(37, 99, 235, 0.35);}
+    .decir-btn-primary:hover {transform: translateY(-1px); box-shadow: 0 6px 14px rgba(37, 99, 235, 0.35);}    
+    @keyframes modalPop {from {opacity: 0; transform: translate(-50%, -40%) scale(0.96);} to {opacity: 1; transform: translate(-50%, -50%) scale(1);}}
+    @keyframes fadeIn {from {opacity: 0;} to {opacity: 1;}}
 
     #vehicle-status-select {
       width: 100%;

@@ -1,8 +1,8 @@
     /* =======================================
-            DATA CENTER
+    DATA CENTER
     ======================================= */
     /* =======================================
-            CORPORATION DATA
+    CORPORATION DATA
     ======================================= */
     async function checkExistingCorporation() {
       try {
@@ -18,8 +18,7 @@
         console.error('Erro ao verificar corporação existente:', error);
         return null;
       }
-    }
-    
+    }    
     async function loadCorporationData() {
       try {
         const currentCorpNr = sessionStorage.getItem("currentCorpOperNr");
@@ -33,7 +32,6 @@
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
         if (!data.length) {
-          console.log(`ℹ️ Nenhum dado de corporação encontrado para corpOperNr: ${currentCorpNr}`);
           return;
         }
         const corporation = data[0];
@@ -50,7 +48,6 @@
         console.error('❌ Erro ao carregar dados da corporação:', error);
       }
     }
-
     async function loadCorporationLogo() {
       try {
         const corpOperNr = sessionStorage.getItem("currentCorpOperNr");        
@@ -74,8 +71,7 @@
         console.error("Erro ao carregar logo da corporação:", error);
       }
     }    
-    document.addEventListener('DOMContentLoaded', loadCorporationLogo);
-    
+    document.addEventListener('DOMContentLoaded', loadCorporationLogo);    
     async function saveCorporationData() {
       const saveButton = document.querySelector('button[onclick="saveCorporationData()"]');
       const originalText = saveButton ? saveButton.textContent : 'ATUALIZAR';
@@ -108,19 +104,17 @@
         } else {
           response = await createCorporationData(corporationData);
         }
-        showSuccessMessage('Dados da corporação salvos com sucesso!');
-        console.log('✅ Dados salvos:', corporationData);
+        showPopup('popup-success', 'Dados da corporação salvos com sucesso!');
       } catch (error) {
         console.error('❌ Erro ao salvar dados da corporação:', error);
-        showErrorMessage(error.message || 'Erro ao salvar dados da corporação');
+        showPopup('popup-danger', error.message || 'Erro ao salvar dados da corporação');
       } finally {
         if (saveButton) {
           saveButton.disabled = false;
           saveButton.textContent = originalText;
         }
       }
-    }
-    
+    }    
     async function createCorporationData(data) {
       const response = await fetch(`${SUPABASE_URL}/rest/v1/corporation_data`, {
         method: 'POST',
@@ -136,8 +130,7 @@
         throw new Error(`Erro ao criar corporação: ${response.status} - ${errorData}`);
       }
       return await response.json();
-    }
-    
+    }    
     async function updateCorporationData(id, data) {
       const response = await fetch(`${SUPABASE_URL}/rest/v1/corporation_data?id=eq.${id}`, {
         method: 'PATCH',
@@ -154,7 +147,6 @@
       }
       return await response.json();
     }
-
     function splitPostalCode(fullPostalCode) {
       if (!fullPostalCode) return {cp1: '', cp2: ''};
       if (fullPostalCode.includes('-')) {
@@ -165,8 +157,7 @@
         return {cp1: fullPostalCode.substring(0, 4), cp2: fullPostalCode.substring(4, 7)};
       }
       return {cp1: fullPostalCode, cp2: ''};
-    }
-    
+    }    
     function getCombinedPostalCode() {
       const cp1 = document.getElementById('assoc-cp1')?.value?.trim();
       const cp2 = document.getElementById('assoc-cp2')?.value?.trim();
@@ -175,21 +166,18 @@
       }
       return cp1 || cp2 || null;
     }
-
     function getSelectedDistrictName() {
       const districtSelect = document.getElementById('district_select_corp');
       if (!districtSelect || !districtSelect.value || districtSelect.value === '') return null;
       const selectedOption = districtSelect.options[districtSelect.selectedIndex];
       return selectedOption ? selectedOption.textContent.trim() : null;
     }
-
     function getSelectedCouncilName() {
       const councilSelect = document.getElementById('council_select_corp');
       if (!councilSelect || !councilSelect.value || councilSelect.value === '') return null;
       const selectedOption = councilSelect.options[councilSelect.selectedIndex];
       return selectedOption ? selectedOption.textContent.trim() : null;
     }
-
     function validateCorporationData(data) {
       if (!data.corporation) {
         return {isValid: false, message: 'Nome da corporação é obrigatório'};
@@ -207,8 +195,7 @@
         return {isValid: false, message: 'Código postal deve ter o formato XXXX-XXX'};
       }
       return {isValid: true};
-    }
-    
+    }    
     async function findDistrictIdByName(districtName) {
       try {
         const response = await fetch(`${SUPABASE_URL}/rest/v1/districts_select?select=id&district=eq.${encodeURIComponent(districtName)}`, {
@@ -221,8 +208,7 @@
         console.error('Erro ao buscar ID do distrito:', error);
         return null;
       }
-    }
-    
+    }    
     async function findCouncilIdByName(councilName) {
       try {
         const response = await fetch(`${SUPABASE_URL}/rest/v1/councils_select?select=id&council=eq.${encodeURIComponent(councilName)}`, {
@@ -235,8 +221,7 @@
         console.error('Erro ao buscar ID do concelho:', error);
         return null;
       }
-    }
-    
+    }    
     async function loadHierarchicalSelects(corporation) {
       try {
         if (corporation.corp_district) {
@@ -259,22 +244,12 @@
       } catch (error) {
         console.error('❌ Erro ao carregar selects hierárquicos:', error);
       }
-    }
-    
-    function showSuccessMessage(message) {
-      alert(`${message}`);
-    }
-
-    function showErrorMessage(message) {
-      alert(`❌ ${message}`);
-    }
-    
+    }    
     document.addEventListener('DOMContentLoaded', async () => {
       setTimeout(async () => {
         await loadCorporationData();
       }, 1000);
     });
-
     function showPanelCard(panelId) {
       document.querySelectorAll(".panel-card").forEach(el => el.classList.remove("active"));
       document.getElementById(`panel-${panelId}`).classList.add("active");

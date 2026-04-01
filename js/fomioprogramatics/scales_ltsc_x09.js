@@ -40,7 +40,7 @@
             btn.classList.remove("active"); tableContainer.innerHTML = ""; toggleButtons(false, false); return;
           }
           if (currentSection === "DECIR" && BLOCKED_MONTHS_DECIR.includes(index)) {
-            showPopup('popup-danger', `⛔ Durante o mês de ${month}, não existe DECIR. Salvo prolongamento ou antecipação declarados pela ANEPC.`); return;
+            showPopup('popup-danger', `Durante o mês de ${month}, não existe DECIR. Salvo prolongamento ou antecipação declarados pela ANEPC.`); return;
           }
           monthsWrapper.querySelectorAll(".btn.btn-add").forEach(b => b.classList.remove("active"));
           btn.classList.add("active");

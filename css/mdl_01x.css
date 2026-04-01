@@ -26,6 +26,27 @@
     /* Azul */
     .popup-info .popup-header {background: linear-gradient(135deg, #3D8BFD 0%, #0A58CA 60%, #0847A8 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.15);}
     .popup-info .popup-btn {background-color: #0D6EFD;}
+    .decir-modal-custom {display: none; position: fixed; inset: 0; z-index: 999999; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(6px); animation: fadeIn 0.2s ease;}
+    .decir-modal-custom.show {display: block;}
+    .decir-modal-content {position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 400px; max-width: 92%; background: #ffffff; border-radius: 14px;
+                          box-shadow: 0 30px 70px rgba(0,0,0,0.45); overflow: hidden; font-family: 'Segoe UI', sans-serif; animation: modalPop 0.28s cubic-bezier(.22,.68,0,1.2);}
+    .decir-modal-header {background: linear-gradient(135deg, #1e3a8a, #2563eb); padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;}
+    .decir-modal-header h3 {margin: 0; font-size: 13.5px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px;}
+    .decir-close-btn {background: rgba(255,255,255,0.15); border: none; color: #fff; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-size: 14px; transition: 0.15s;}
+    .decir-close-btn:hover {background: rgba(255,255,255,0.3);}
+    .decir-modal-body {padding: 20px 22px;}
+    .decir-form-group {margin-bottom: 16px;}
+    .decir-form-group label {display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .5px;}
+    .decir-input-wrapper {position: relative;}
+    .decir-input-wrapper input {width: 100%; padding: 11px 36px 11px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 14px; font-weight: 500; color: #1e293b; transition: all 0.15s ease;}
+    .decir-input-wrapper input:focus {border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); outline: none;}
+    .decir-input-wrapper::after {content: "€"; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-weight: 600; font-size: 13px;}
+    .decir-modal-footer {padding: 14px 18px; border-top: 1px solid #f1f5f9; background: #f8fafc; display: flex; justify-content: flex-end; gap: 10px;}
+    .decir-btn {padding: 9px 16px; border-radius: 7px; font-size: 12.5px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s ease;}
+    .decir-btn-secondary {background: #e2e8f0; color: #334155;}
+    .decir-btn-secondary:hover {background: #cbd5f5;}
+    .decir-btn-primary {background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff;}
+    .decir-btn-primary:hover {transform: translateY(-1px); box-shadow: 0 6px 14px rgba(37, 99, 235, 0.35);}
 
     #vehicle-status-select {
       width: 100%;

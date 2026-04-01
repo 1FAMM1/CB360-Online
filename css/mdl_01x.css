@@ -47,36 +47,31 @@
     .decir-btn-secondary:hover {background: #cbd5f5;}
     .decir-btn-primary {background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff;}
     .decir-btn-primary:hover {transform: translateY(-1px); box-shadow: 0 6px 14px rgba(37, 99, 235, 0.35);}    
+    .vehicle-status-modal {display: none; position: fixed; inset: 0; z-index: 999999; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(6px); animation: fadeIn 0.2s ease;}
+    .vehicle-status-modal.show {display: block;}
+    .vehicle-status-modal-content {position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 400px; max-width: 92%; background: #ffffff; border-radius: 14px;
+                                   box-shadow: 0 30px 70px rgba(0,0,0,0.45); overflow: hidden; animation: modalPop 0.28s cubic-bezier(.22,.68,0,1.2);}
+    .vehicle-status-modal-header {background: linear-gradient(135deg, #1e3a8a, #2563eb); padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;}
+    .vehicle-status-modal-header h3 {margin: 0; font-size: 13.5px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px;}
+    .vehicle-status-modal-close {background: rgba(255,255,255,0.15); border: none; color: #fff; width: 28px; height: 28px; border-radius: 6px; cursor: pointer;font-size: 13px; transition: 0.15s;
+                                 display: flex; align-items: center; justify-content: center;}
+    .vehicle-status-modal-close:hover {background: rgba(255,255,255,0.3);}
+    .vehicle-status-modal-body {padding: 20px 22px;}
+    .vehicle-status-modal-body label {display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .5px;}
+    .vehicle-status-select-wrap {position: relative;}
+    .vehicle-status-select-wrap select {width: 100%; padding: 11px 36px 11px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 14px; font-weight: 500; color: #1e293b;
+                                        background: #fff; appearance: none; outline: none; cursor: pointer; transition: all 0.15s ease; font-family: 'Segoe UI', sans-serif;}
+    .vehicle-status-select-wrap select:focus {border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);}
+    .vehicle-status-select-wrap svg {position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none;}
+    .vehicle-status-badge {display: inline-flex; align-items: center; gap: 5px; margin-top: 8px; font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 999px;}
+    .vehicle-status-badge.disponivel {background: #dcfce7; color: #15803d;}
+    .vehicle-status-badge.servico {background: #dbeafe; color: #1d4ed8;}
+    .vehicle-status-badge.inop {background: #fee2e2; color: #b91c1c;}
+    .vehicle-status-modal-footer {padding: 14px 18px; border-top: 1px solid #f1f5f9; background: #f8fafc; display: flex; justify-content: flex-end; gap: 10px;}
+    .vehicle-status-btn {padding: 9px 16px; border-radius: 7px; font-size: 12.5px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s ease; font-family: 'Segoe UI', sans-serif;}
+    .vehicle-status-btn.secondary {background: #e2e8f0; color: #334155;}
+    .vehicle-status-btn.secondary:hover {background: #cbd5e1;}
+    .vehicle-status-btn.primary {background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff;}
+    .vehicle-status-btn.primary:hover {transform: translateY(-1px); box-shadow: 0 6px 14px rgba(37, 99, 235, 0.35);}
     @keyframes modalPop {from {opacity: 0; transform: translate(-50%, -40%) scale(0.96);} to {opacity: 1; transform: translate(-50%, -50%) scale(1);}}
     @keyframes fadeIn {from {opacity: 0;} to {opacity: 1;}}
-
-    #vehicle-status-select {
-      width: 100%;
-      padding: 10px 12px;
-      border: 2px solid #ddd;
-      border-radius: 8px;
-      font-size: 14px;
-      background-color: #fff;
-      color: #333;
-      appearance: none;
-      outline: none;
-      transition: all 0.2s ease-in-out;
-      margin-top: 10px;
-    }
-
-    #vehicle-status-select {
-      background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg width='14' height='10' viewBox='0 0 14 10' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l6 6 6-6' stroke='%23333' stroke-width='2' fill='none' fill-rule='evenodd'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 12px center;
-      background-size: 14px;
-    }
-
-    #vehicle-status-select:focus {
-      border-color: #28a745;
-      box-shadow: 0 0 5px rgba(40, 167, 69, 0.4);
-    }
-
-    #vehicle-status-select:hover {
-      border-color: #aaa;
-
-    }

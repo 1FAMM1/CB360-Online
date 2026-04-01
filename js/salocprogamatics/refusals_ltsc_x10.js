@@ -22,7 +22,8 @@
       if (!optelRefusal) missingFields.push("Optel de Serviço");
       if (!validatedRefusal) missingFields.push("Validado por");
       if (missingFields.length > 0) {
-        showPopupMissingFields(missingFields);
+        const list = missingFields.map(f => `</li><li style="list-style:none;">• ${f}`).join('');
+        showPopup('popup-danger', `<strong>PREENCHA OS CAMPOS OBRIGATÓRIOS:</strong><br><br>${list}`);
         return false;
       }
       return true;
@@ -31,17 +32,10 @@
     async function insertServiceRefusal() { 
       if (!validateRequiredServiceRefusalFields()) return;
       const corpOperNr = sessionStorage.getItem('currentCorpOperNr');
-      const payload = {
-        corp_oper_nr: corpOperNr,
-        refusal_date: document.getElementById('service_refusal_date').value,
-        refusal_time: document.getElementById('service_refusal_time').value,
-        service_type: document.getElementById('service_refusal_type').value,
-        reason_for_refusal: document.getElementById('service_refusal_motive').value,
-        service_origin: document.getElementById('service_refusal_origin').value,
-        service_destination: document.getElementById('service_refusal_destination').value,
-        optel_refusal: document.getElementById('service_refusal_optel').value,
-        validated_refusal: document.getElementById('service_refusal_validation').value
-      };
+      const payload = {corp_oper_nr: corpOperNr, refusal_date: document.getElementById('service_refusal_date').value, refusal_time: document.getElementById('service_refusal_time').value,
+                       service_type: document.getElementById('service_refusal_type').value, reason_for_refusal: document.getElementById('service_refusal_motive').value,
+                       service_origin: document.getElementById('service_refusal_origin').value, service_destination: document.getElementById('service_refusal_destination').value,
+                       optel_refusal: document.getElementById('service_refusal_optel').value, validated_refusal: document.getElementById('service_refusal_validation').value};
       try {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/service_refusals`, {
           method: "POST",
@@ -49,7 +43,7 @@
           body: JSON.stringify(payload)
         });
         if (res.ok) {
-          showPopupSuccess("✅ Recusa de serviço registada com sucesso!");
+          showPopup('popup-success', "Recusa de serviço registada com sucesso!");
           loadServiceRefusals();
           document.getElementById('service_refusal_time').value = '';
           document.getElementById('service_refusal_type').value = '';
@@ -60,11 +54,11 @@
           document.getElementById('service_refusal_validation').value = '';
         } else {
           const err = await res.text();
-          showPopupWarning("❌ Erro ao gravar recusa:\n" + err);
+          showPopup('popup-danger', "Erro ao gravar recusa:\n" + err);
         }
       } catch (error) {
         console.error(error);
-        showPopupWarning("❌ Erro de conexão com o servidor.");
+        showPopup('popup-danger', "Erro de conexão com o servidor.");
       }
     }
     /* ================ REFUSAL ELIMINATION =============== */
@@ -76,15 +70,15 @@
           headers: getSupabaseHeaders()
         });
         if (res.ok) {
-          alert("✅ Registro eliminado!");
+          showPopup('popup-success', "Registro eliminado!");
           loadServiceRefusals();
         } else {
           const err = await res.text();
-          alert("❌ Erro ao eliminar registro:\n" + err);
+          showPopup('popup-danger', "Erro ao eliminar registro:\n" + err);
         }
       } catch (error) {
         console.error(error);
-        alert("❌ Erro de conexão com o servidor.");
+        showPopup('popup-danger', "Erro de conexão com o servidor.");
       }
     }
     /* ========== FORMATTING DATES IN THE TABLE =========== */
@@ -140,7 +134,6 @@
         }
       });
     }
-
     function populateRefusalsYearFilter() {
       const select = document.getElementById('refusals_year_filter');
       if (!select) return;
@@ -189,7 +182,8 @@
       if (!optelRefusal) missingFields.push("Optel de Serviço");
       if (!validatedRefusal) missingFields.push("Validado por");
       if (missingFields.length > 0) {
-        showPopupMissingFields(missingFields);
+        const list = missingFields.map(f => `</li><li style="list-style:none;">• ${f}`).join('');
+        showPopup('popup-danger', `<strong>PREENCHA OS CAMPOS OBRIGATÓRIOS:</strong><br><br>${list}`);
         return false;
       }
       return true;
@@ -198,16 +192,10 @@
     async function insertIneInop() {
       if (!validateRequiredIneInopFields()) return;
       const corpOperNr = sessionStorage.getItem('currentCorpOperNr');    
-      const payload = {
-        corp_oper_nr: corpOperNr,
-        ineinop_date: document.getElementById('ineinop_date').value,
-        ineinop_shift: document.getElementById('ineinop_shift').value,
-        ineinop_hour_qtd: document.getElementById('ineinop_hour_qtd').value,
-        reason_for_ineinop: document.getElementById('reason_for_ineinop').value,
-        ineinop_crew: document.getElementById('ineinop_crew').value,
-        optel_refusal: document.getElementById('ineinop_optel').value,
-        validated_refusal: document.getElementById('ineinop_validation').value
-      };    
+      const payload = {corp_oper_nr: corpOperNr, ineinop_date: document.getElementById('ineinop_date').value, ineinop_shift: document.getElementById('ineinop_shift').value,
+                       ineinop_hour_qtd: document.getElementById('ineinop_hour_qtd').value, reason_for_ineinop: document.getElementById('reason_for_ineinop').value,
+                       ineinop_crew: document.getElementById('ineinop_crew').value, optel_refusal: document.getElementById('ineinop_optel').value,
+                       validated_refusal: document.getElementById('ineinop_validation').value};    
       try {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/inem_inop`, {
           method: "POST",
@@ -215,7 +203,7 @@
           body: JSON.stringify(payload)
         });    
         if (res.ok) {
-          showPopupSuccess("✅ Inoperacionalidade registada com sucesso!");
+          showPopup('popup-success', "Inoperacionalidade registada com sucesso!");
           loadIneInops();
           document.getElementById('ineinop_shift').value = '';
           document.getElementById('ineinop_hour_qtd').value = '';
@@ -225,11 +213,11 @@
           document.getElementById('ineinop_validation').value = '';
         } else {
           const err = await res.text();
-          alert("❌ Erro ao gravar inoperacionalidade:\n" + err);
+          showPopup('popup-danger', "Erro ao gravar inoperacionalidade:\n" + err);
         }
       } catch (error) {
         console.error(error);
-        alert("❌ Erro de conexão com o servidor.");
+        showPopup('popup-danger', "Erro de conexão com o servidor.");
       }
     }
     /* ============= REMOVAL OF INOPERABILITY ============= */
@@ -241,15 +229,15 @@
           headers: getSupabaseHeaders()
         });
         if (res.ok) {
-          alert("✅ Registro eliminado!");
+          showPopup('popup-success', "Registro eliminado!");
           loadIneInops();
         } else {
           const err = await res.text();
-          alert("❌ Erro ao eliminar registro:\n" + err);
+          showPopup('popup-danger', "Erro ao eliminar registro:\n" + err);
         }
       } catch (error) {
         console.error(error);
-        alert("❌ Erro de conexão com o servidor.");
+        showPopup('popup-danger', "Erro de conexão com o servidor.");
       }
     }
     /* ========== FORMATTING DATES IN THE TABLE =========== */
@@ -310,7 +298,6 @@
         }
       });
     }
-
     function populateIneInopYearFilter() {
       const select = document.getElementById('ineinop_year_filter');
       if (!select) return;
@@ -494,5 +481,3 @@
         }
       });
     });
-
-

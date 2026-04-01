@@ -58,7 +58,7 @@
       const valueHour = parseFloat(document.getElementById('valueHour').value);
       const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');  
       if (!eventName || !eventType || !location || !startDate || !endDate || isNaN(operational) || isNaN(valueHour)) {
-        alert("Preencha todos os campos corretamente!"); 
+        showPopup('popup-danger', "Preencha todos os campos corretamente!"); 
         return;
       }      
       const shifts = [...document.querySelectorAll('.shift-item')].map(item => {
@@ -70,7 +70,7 @@
       }).filter(t => t.event_shift_date && t.event_shift !== "-");    
       
       if (shifts.length === 0) {
-        alert("Adicione pelo menos um turno completo!");
+        showPopup('popup-danger', "Adicione pelo menos um turno completo!");
         return;
       }      
       try {
@@ -82,7 +82,7 @@
         );
         const existingEvents = await respCheck.json();
         if (existingEvents.length > 0) { 
-          alert(`O evento "${eventName}" já existe na sua corporação!`);
+          showPopup('popup-danger', `O evento "${eventName}" já existe na sua corporação!`);
           return;
         }        
         const respEvent = await fetch(`${SUPABASE_URL}/rest/v1/event_list`, {
@@ -128,12 +128,12 @@
         } catch (errNotif) {
           console.error("Erro ao notificar elementos:", errNotif);
         }        
-        alert("Evento criado e operacionais notificados com sucesso!");
+        showPopup('popup-success', "Evento criado e operacionais notificados com sucesso!");
         clearForm();
         if (typeof loadEvents === "function") loadEvents();
       } catch(e) { 
         console.error("Erro no submitEvent:", e);
-        alert("Erro ao criar evento.");
+        showPopup('popup-danger', "Erro ao criar evento.");
       }
     }
     /* ========== LOADING EVENT =========== */    
@@ -337,7 +337,7 @@
             const currentAct = parseInt(s[0].act_oper) || 0;
             const currentNec = parseInt(s[0].nec_oper) || 0;
             if (currentAct >= currentNec) {
-              alert("Atenção: Este turno já atingiu o limite de vagas!");
+              showPopup('popup-danger', "Atenção: Este turno já atingiu o limite de vagas!");
               return;
             }
           }
@@ -391,7 +391,7 @@
         console.log(`Estado atualizado: ${userNInt} -> ${newState}`);
       } catch (e) {
         console.error("Erro crítico no updateState:", e);
-        alert("Ocorreu um erro ao processar o estado ou a notificação.");
+        showPopup('popup-danger', "Ocorreu um erro ao processar o estado ou a notificação.");
       }
     }
     /* =========== DELETE EVENT =========== */
@@ -407,7 +407,7 @@
           fetch(`${SUPABASE_URL}/rest/v1/event_shifts?${filter}`, {method: 'DELETE', headers}),
           fetch(`${SUPABASE_URL}/rest/v1/event_disp?${filter}`, {method: 'DELETE', headers})
         ]);        
-        alert("Eliminado com sucesso.");
+        showPopup('popup-success', "Eliminado com sucesso.");
         loadEvents();
       } catch (e) {
         console.error(e);

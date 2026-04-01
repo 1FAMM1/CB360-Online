@@ -67,7 +67,7 @@
           }
           if (blockedMonths.includes(idx)) {
             if (tableContainer) tableContainer.innerHTML = "";
-            setTimeout(() => showPopup('popup-danger', `⛔ Durante o mês de ${month}, não existe DECIR. Salvo prolongamento ou antecipação declarados pela ANEPC.`), 10);
+            setTimeout(() => showPopup('popup-danger', `Durante o mês de ${month}, não existe DECIR. Salvo prolongamento ou antecipação declarados pela ANEPC.`), 10);
             return;
           }
           const yearVal = parseInt(yearSelect.value, 10);
@@ -1862,8 +1862,8 @@
           const shiftOk = dragData.valueType === "ED" ? shift === "day" : dragData.valueType === "EN" ? shift === "night" : true;
           const dayOk = dragData.day === turnoDay;
           if (!shiftOk || !dayOk) {
-            const msg = !dayOk ? `⛔ Elemento do Dia ${dragData.day} não pode ser colocado no Dia ${turnoDay}!`
-                               : `⛔ Elemento ${dragData.valueType} não pode ser colocado neste turno!`;
+            const msg = !dayOk ? `Elemento do Dia ${dragData.day} não pode ser colocado no Dia ${turnoDay}!`
+                               : `Elemento ${dragData.valueType} não pode ser colocado neste turno!`;
             showPopup('popup-danger', msg);
             dragData = null;
             return;
@@ -2076,7 +2076,7 @@
             const all = getAllForShift("1", shift);
             if (!all.length) return;
             if (all.length < 8) {
-              showPopup('popup-danger', `⛔ Elementos insuficientes para modo Brigada (mínimo 8, disponíveis ${all.length}).`);
+              showPopup('popup-danger', `Elementos insuficientes para modo Brigada (mínimo 8, disponíveis ${all.length}).`);
               return;
             }
             let ecinACount, ecinBCount, elacCount;

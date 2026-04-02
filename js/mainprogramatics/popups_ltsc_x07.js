@@ -62,16 +62,26 @@
       modal.classList.add("show");
       modal.focus();
     }
-    function showPopup(id, mensagem) {
-      const ul = document.querySelector('#' + id + ' .popup-body ul');
-      if (!ul) return;
-      if (Array.isArray(mensagem)) {
-        ul.innerHTML = mensagem.map(m => `<li style="list-style:none;">• ${m}</li>`).join('');
-      } else {
-        ul.innerHTML = `<li>${mensagem}</li>`;
-      }
-      document.getElementById(id).classList.add('show');
-    }
+    function showPopup(id, mensagem, clearFields = false) {
+  const ul = document.querySelector('#' + id + ' .popup-body ul');
+  if (!ul) return;
+  if (Array.isArray(mensagem)) {
+    ul.innerHTML = mensagem.map(m => `<li style="list-style:none;">• ${m}</li>`).join('');
+  } else {
+    ul.innerHTML = `<li>${mensagem}</li>`;
+  }
+  const modal = document.getElementById(id);
+  if (!modal) return;
+  modal.classList.add('show');
+
+  const okBtn = modal.querySelector('[id$="-ok-btn"]');
+  if (okBtn) {
+    okBtn.onclick = () => {
+      modal.classList.remove('show');
+      if (clearFields) clearFormFields();
+    };
+  }
+}
     function closePopup(id) {
       document.getElementById(id).classList.remove('show');
     }

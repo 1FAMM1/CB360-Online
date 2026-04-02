@@ -182,8 +182,8 @@
       `).join('');
       return `
       <div id="plandir-card-container" style="display: flex; justify-content: center;">
-        <div class="main-card" style="margin: 10px 0 0 0; max-width: 1200px; transform:none !important; transition:none !important;">
-          <div class="card-title">${title}</div>
+        <div class="plandir-main-card" style="margin: 10px 0 0 0; max-width: 1200px; transform:none !important; transition:none !important;">
+          <div class="plandir-card-title"><span class="plandir-status-dot"></span>${title}</div>
           <table class="plandir-table">
             <colgroup>
               <col style="width: 75px;">
@@ -215,6 +215,15 @@
         </div>
       </div>
       `;
+    }
+    function updateStatusDots() {
+      document.querySelectorAll('.plandir-main-card').forEach(card => {
+        const dot = card.querySelector('.plandir-status-dot');
+        if (!dot) return;
+        const hasFilled = [...card.querySelectorAll('.plandir-nint-input')]
+        .some(input => input.value.trim() !== '');
+        dot.classList.toggle('filled', hasFilled);
+      });
     }
     function updateRowFields(row, data, shift) {
       const entrada = row.querySelector('.plandir-entrance-input');
@@ -290,9 +299,9 @@
       return headerDiv;
     }
     function collectTableData() {
-      const tables = [...document.querySelectorAll('.main-card')].map(card => {
-        const titleEl = card.querySelector('.card-title');
-        const title = titleEl ? titleEl.textContent : "Sem título";
+      const tables = [...document.querySelectorAll('.plandir-main-card')].map(card => {
+        const titleEl = card.querySelector('.plandir-card-title');
+        const title = titleEl ? titleEl.textContent.trim() : "Sem título";
         const rows = [...card.querySelectorAll('tbody tr')].map(tr => {
           const inputs = tr.querySelectorAll('input');
           const mpCell = tr.querySelector('.mp-cell');
@@ -529,8 +538,8 @@
             Object.keys(teamsData).forEach(dbTeamName => {
               const displayTitle = teamNameMap[dbTeamName];
               if (!displayTitle) return;
-              const card = Array.from(document.querySelectorAll('.main-card')).find(
-                c => c.querySelector('.card-title')?.textContent === displayTitle
+              const card = Array.from(document.querySelectorAll('.plandir-main-card')).find(
+                c => c.querySelector('.plandir-card-title')?.textContent.trim() === displayTitle
               );
               if (!card) return;
               const rows = Array.from(card.querySelectorAll('tbody tr'));
@@ -555,11 +564,12 @@
                 }
                 if (inputs[5]) inputs[5].value = member.observ || '';
               });
-            });
+            });            
           }
         } catch (err) {
           console.error('Erro ao carregar dados salvos direto:', err);
         }
+        updateStatusDots();
       }
       container.querySelectorAll('.plandir-nint-input').forEach(input => {
         input.addEventListener('input', async function() {
@@ -578,6 +588,7 @@
           } else {
             updateRowFields(row, null);
           }
+          updateStatusDots();
         });
       });
       createEmitButton(container);

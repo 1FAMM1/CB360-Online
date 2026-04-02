@@ -1671,32 +1671,47 @@
       </div>
     </div>
     <!---- DAYLY PLANS SUB-MODULE ---->
-    <div id="page-plandir" class="page">
-      <h2 class="section-title">SALOC 360</h2>
-      <div class="card last-card">
-        <div class="card-header">PLANEAMENTOS DIÁRIOS</div>
-        <div class="card-body">
-          <div class="form-row" style="margin: 0 0 0 0; display: flex; justify-content: center;">
-            <div class="main-card" style="display: flex; flex-direction: column; align-items: center;">
-              <label style="margin-bottom: 10px; font-size: 14px; font-weight: bold;">Selecione um Turno</label>
-              <div class="action-buttons" id="plandir-shift" style="gap: 5px;">
-                <button class="btn btn-add shift-btn" style="height: 35px;" data-shift="D" onclick="loadShift('D')">TURNO "D"</button>
-                <button class="btn btn-add shift-btn" style="height: 35px;" data-shift="N" onclick="loadShift('N')">TURNO "N"</button>
-                <button class="btn btn-add shift-btn" style="height: 35px; background: orange; color: black;" data-shift="LAST" onclick="loadShift('LAST')">ÚLTIMO</button>
+      <div id="page-plandir" class="page">
+        <h2 class="section-title">SALOC 360</h2>
+        <div class="card last-card">
+          <div class="card-header">PLANEAMENTOS DIÁRIOS</div>
+          <div class="card-body">
+            <div class="form-row" style="margin: 0 0 0 0; display: flex; justify-content: center;">
+              <div class="shift-main-card" style="display: flex; flex-direction: column; align-items: center;">
+                <label style="margin-bottom: 10px; font-size: 14px; font-weight: bold;">Selecione um Turno</label>
+                <div class="action-buttons" id="plandir-shift" style="gap: 5px;">
+                  <button class="btn btn-add shift-btn" style="height: 35px;" data-shift="D" onclick="loadShift('D')">TURNO "D"</button>
+                  <button class="btn btn-add shift-btn" style="height: 35px;" data-shift="N" onclick="loadShift('N')">TURNO "N"</button>
+                  <button class="btn btn-add shift-btn" style="height: 35px; background: orange; color: black;" data-shift="LAST" onclick="loadShift('LAST')">ÚLTIMO</button>
+                </div>
+              </div>
+            </div>
+            <div id="plandir-layout-wrapper">
+              <div id="plandir-left-col">
+                <div id="plandir_container"></div>
+              </div>
+              <div id="plandir-right-col" style="display: none;">
+                <div id="plandir-card-container">
+                  <div class="plandir-main-card" style="margin: 10px 0 0 0; width: 500px;">
+                    <div class="plandir-card-title red-variant">ESCALA DO DIA</div>
+                    <table class="plandir-side-table">
+                      <thead>
+                        <tr>
+                          <th style="padding: 5px 6px; width: 75px;">Nº Int.</th>
+                          <th style="padding: 5px 6px; width: 150px;">Patente</th>
+                          <th style="padding: 5px 6px; width: 200px;">Nome</th>
+                        </tr>
+                      </thead>
+                      <tbody id="plandir-side-tbody"></tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-          <div id="plandir_container">
-            <div class="form-row" style="margin: 0 0 0 0; display: flex; flex-wrap: wrap; justify-content: flex-end;">
-              <div class="action-buttons" id="plandir-emit" style="gap: 5px;">
-                <button id="emit-pp" class="btn btn-success" style="display: none;">Emitir Planeamento</button>
-              </div>
-            </div>
-          </div>
+          <div class="card-footer"></div>
         </div>
-        <div class="card-footer"></div>
       </div>
-    </div>
     <!---- VEHICLE OPERATIONAL STATUS SUB-MODULE ---->
     <div id="page-inocrepc" class="page">
       <h2 class="section-title">SALOC 360</h2>

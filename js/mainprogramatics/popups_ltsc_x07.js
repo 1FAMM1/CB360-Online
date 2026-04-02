@@ -74,7 +74,7 @@
   if (!modal) return;
   modal.classList.add('show');
 
-  const okBtn = modal.querySelector('[id$="-ok-btn"]');
+  const okBtn = modal.querySelector('.popup-btn');
   if (okBtn) {
     okBtn.onclick = () => {
       modal.classList.remove('show');

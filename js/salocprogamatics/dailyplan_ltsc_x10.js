@@ -188,12 +188,12 @@
             <colgroup>
               <col style="width: 75px;">
               <col style="width: 200px;">
-              <col style="width: 300px;">
+              <col style="width: 250px;">
               <col style="width: 75px;">
               <col style="width: 75px;">
               <col style="width: 75px;">
               <col style="width: 75px;">
-              <col style="width: 500px;">
+              <col style="width: 400px;">
             </colgroup>
             <thead>
               <tr${specialClass}>
@@ -223,6 +223,17 @@
         const hasFilled = [...card.querySelectorAll('.plandir-nint-input')]
         .some(input => input.value.trim() !== '');
         dot.classList.toggle('filled', hasFilled);
+      });
+      const sideTbody = document.getElementById('plandir-side-tbody');
+      if (!sideTbody) return;
+      const currentInputs = Array.from(document.querySelectorAll('.plandir-nint-input'))
+      .map(i => i.value.trim().padStart(3, '0'))
+      .filter(val => val !== '' && val !== '000');
+      sideTbody.querySelectorAll('tr[data-side-nint]').forEach(tr => {
+        const nint = tr.getAttribute('data-side-nint');
+        const isFilled = currentInputs.includes(nint);
+        tr.classList.toggle('row-highlight-green', isFilled);
+        tr.classList.toggle('row-pending-red', !isFilled);
       });
     }
     function updateRowFields(row, data, shift) {
@@ -481,6 +492,7 @@
       if (activeBtn && activeBtn.dataset.shift === shift) {
         activeBtn.classList.remove('active');
         container.innerHTML = '';
+        document.getElementById('plandir-right-col').style.display = 'none';
         return;
       }
       activateShiftButton(shift);
@@ -591,12 +603,117 @@
           updateStatusDots();
         });
       });
+      if (shift === 'D' || shift === 'N') {
+        loadSideTable(shift);
+      }
       createEmitButton(container);
+    }
+    async function loadSideTable(shift) {
+      const tbody = document.getElementById('plandir-side-tbody');
+      const rightCol = document.getElementById('plandir-right-col');
+      if (!tbody || !rightCol) return;
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      if (!corpOperNr) return;
+      const now = new Date();
+      const day = String(now.getDate()).padStart(2, '0');
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const year = String(now.getFullYear());
+      tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#aaa; padding:12px;">A carregar...</td></tr>`;
+      rightCol.style.display = 'block';
+      try {
+        let dataNormal = [];
+        let dataServico = [];
+        let dataOfope = [];
+        const urlNormal = `${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&day=eq.${day}&month=eq.${month}&year=eq.${year}&shift=eq.${shift}&select=n_int,abv_name`;
+        const resNormal = await fetch(urlNormal, {headers: getSupabaseHeaders()});
+        dataNormal = await resNormal.json();
+        if (shift === 'N') {
+          const urlOfope = `${SUPABASE_URL}/rest/v1/reg_serv?corp_oper_nr=eq.${corpOperNr}&day=eq.${day}&month=eq.${month}&year=eq.${year}&value=eq.N&select=n_int,abv_name`;
+          const resOfope = await fetch(urlOfope, {headers: getSupabaseHeaders()});
+          dataOfope = await resOfope.json();
+          const values = "PN,ED,EN,ET";
+          const urlServ = `${SUPABASE_URL}/rest/v1/reg_serv?corp_oper_nr=eq.${corpOperNr}&day=eq.${day}&month=eq.${month}&year=eq.${year}&value=in.(${values})&select=n_int,abv_name`;
+          const resServ = await fetch(urlServ, {headers: getSupabaseHeaders()});
+          dataServico = await resServ.json();
+        }
+        const sortFn = (a, b) => Number(a.n_int) - Number(b.n_int);
+        dataNormal.sort(sortFn);
+        dataOfope.sort(sortFn);
+        dataServico.sort(sortFn);
+        if (dataNormal.length === 0 && dataServico.length === 0 && dataOfope.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#aaa; padding:12px;">Sem dados</td></tr>`;
+          return;
+        }
+        const allNInts = [...dataNormal, ...dataServico, ...dataOfope].map(r => String(r.n_int).trim().padStart(3, '0'));
+        const uniqueNInts = [...new Set(allNInts)];
+        const resElems = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?n_int=in.(${uniqueNInts.join(',')})&select=n_int,patent`, {
+          headers: getSupabaseHeaders()
+        });
+        const elems = await resElems.json();
+        const patenteMap = {};
+        elems.forEach(e => {
+          const key = String(e.n_int || '').trim().padStart(3, '0');
+          patenteMap[key] = e.patent || '';
+        });
+        let htmlContent = "";
+        htmlContent += `
+          <tr>
+            <td colspan="3" class="plandir-card-title black-variant" style="height: 30px; font-size: 11px; padding: 0; border: none; text-align: center; display: table-cell;">
+              ${shift === 'D' ? 'PROFISSIONAIS\\EIP' : 'PROFISSIONAIS'}
+            </td>
+          </tr>
+        `;
+        htmlContent += dataNormal.map(r => renderRow(r, patenteMap)).join('');
+        if (shift === 'N') {
+          if (dataOfope.length > 0) {
+            htmlContent += `
+              <tr>
+                <td colspan="3" class="plandir-card-title black-variant" style="height: 30px; font-size: 11px; padding: 0; border: none; text-align: center; display: table-cell; border-top: 1px solid #fff;">
+                  OFOPE
+                </td>
+              </tr>
+            `;
+            htmlContent += dataOfope.map(r => renderRow(r, patenteMap)).join('');
+          }
+          if (dataServico.length > 0) {
+            htmlContent += `
+              <tr>
+                <td colspan="3" class="plandir-card-title black-variant" style="height: 30px; font-size: 11px; padding: 0; border: none; text-align: center; display: table-cell; border-top: 1px solid #fff;">PIQUETE\\ECIN
+                </td>
+              </tr>
+            `;
+            htmlContent += dataServico.map(r => renderRow(r, patenteMap)).join('');
+          }
+        }
+        tbody.innerHTML = htmlContent;
+        updateStatusDots();
+      } catch (err) {
+        console.error('Erro ao carregar escala:', err);
+        tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#e44; padding:12px;">Erro ao carregar</td></tr>`;
+      }
+    }
+    function renderRow(r, patenteMap) {
+      const nIntFormatted = String(r.n_int || '').trim().padStart(3, '0');
+      const patente = patenteMap[nIntFormatted] || '';
+      const isAlreadyFilled = Array.from(document.querySelectorAll('.plandir-nint-input'))
+      .some(input => input.value.trim().padStart(3, '0') === nIntFormatted);
+      const initialClass = isAlreadyFilled ? 'row-highlight-green' : 'row-pending-red';
+      return `
+        <tr data-side-nint="${nIntFormatted}" class="${initialClass}">
+          <td style="text-align:center; padding: 5px 6px; width:75px;">${nIntFormatted}</td>
+          <td style="padding: 5px 6px; width:150px;">${patente}</td>
+          <td style="padding: 5px 6px; width:250px;">${r.abv_name || ''}</td>
+        </tr>
+      `;
     }
     document.querySelector('[data-page="page-plandir"]').addEventListener('click', () => {
       const container = document.getElementById('plandir_container');
+      const rightCol = document.getElementById('plandir-right-col');
       if (container && container.innerHTML.trim() !== '') {
         container.innerHTML = '';
+        if (rightCol) {
+          rightCol.style.display = 'none';
+        }
         document.querySelectorAll('.shift-btn').forEach(btn => btn.classList.remove('active'));
       }
     });

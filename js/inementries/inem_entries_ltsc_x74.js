@@ -405,6 +405,53 @@
       body.appendChild(row2);
       body.appendChild(makeField('victim_address', 'Morada', 'text'));
       body.appendChild(makeField('victim_location', 'Localidade', 'text'));
+      const row3 = document.createElement('div');
+      Object.assign(row3.style, {display: 'flex', gap: '10px', alignItems: 'flex-end'});
+      const tasNintGroup = document.createElement('div');
+      Object.assign(tasNintGroup.style, {display: 'flex', flexDirection: 'column', gap: '4px', flex: '1'});
+      const tasNintLbl = document.createElement('label');
+      tasNintLbl.textContent = 'TAS';
+      Object.assign(tasNintLbl.style, {fontSize: '11.5px', fontWeight: '600', color: '#555', textTransform: 'uppercase', letterSpacing: '.4px'});
+      const tasNintInput = document.createElement('input');
+      tasNintInput.type = 'text';
+      tasNintInput.placeholder = 'N.º Int.';
+      Object.assign(tasNintInput.style, {padding: '7px 10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '13px', outline: 'none', transition: 'border-color .15s',
+                                         color: '#1a1a1a', background: '#fff', width: '100%', boxSizing: 'border-box'});
+      tasNintInput.onfocus = () => tasNintInput.style.borderColor = '#7b0000';
+      tasNintInput.onblur  = () => tasNintInput.style.borderColor = '#ddd';
+      tasNintGroup.append(tasNintLbl, tasNintInput);
+      const tasNameGroup = document.createElement('div');
+      Object.assign(tasNameGroup.style, {display: 'flex', flexDirection: 'column', gap: '4px', flex: '2'});
+      const tasNameLbl = document.createElement('label');
+      tasNameLbl.textContent = ' ';
+      Object.assign(tasNameLbl.style, {fontSize: '11.5px', fontWeight: '600', color: '#555', textTransform: 'uppercase', letterSpacing: '.4px'});
+      const tasNameInput = document.createElement('input');
+      tasNameInput.type = 'text';
+      tasNameInput.placeholder = 'Nome';
+      tasNameInput.value = item.tas || '';
+      Object.assign(tasNameInput.style, {padding: '7px 10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '13px', outline: 'none', transition: 'border-color .15s',
+                                         color: '#1a1a1a', background: '#fff', width: '100%', boxSizing: 'border-box'});
+      tasNameInput.onfocus = () => tasNameInput.style.borderColor = '#7b0000';
+      tasNameInput.onblur  = () => tasNameInput.style.borderColor = '#ddd';
+      tasNameGroup.append(tasNameLbl, tasNameInput);
+      tasNintInput.addEventListener('input', async function() {
+        const val = this.value.trim();
+        if (val.length === 3) {
+          try {
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${val}&select=abv_name`, {
+              headers: getSupabaseHeaders()
+            });
+            const data = await res.json();
+            tasNameInput.value = data[0]?.abv_name || '';
+          } catch(err) {
+            tasNameInput.value = '';
+          }
+        } else {
+          tasNameInput.value = '';
+        }
+      });
+      row3.append(tasNintGroup, tasNameGroup);
+      body.appendChild(row3);
       const footer = document.createElement('div');
       Object.assign(footer.style, {padding: '12px 20px', display: 'flex', justifyContent: 'flex-end', gap: '8px', borderTop: '1px solid #eee', background: '#fafafa'});
       const btnCancel = document.createElement('button');
@@ -422,6 +469,7 @@
         FIELDS.forEach(f => {
           updated[f.key] = inputs[f.key].value.trim() || null;
         });
+        updated['tas'] = tasNameInput.value.trim() || null;
         const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
         try {
           const res = await fetch(`${SUPABASE_URL}/rest/v1/inem_entries?nr_codu=eq.${item.nr_codu}`, {

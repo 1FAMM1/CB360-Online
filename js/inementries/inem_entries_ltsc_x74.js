@@ -328,25 +328,25 @@
       if (dateTo) dateTo.value = today;
       loadInemEntries();
     }
-    /* ─── EDITAR ────────────────────────────────────────── */   
+    /* ─── EDITAR ────────────────────────────────────────── */
     function inemEditEntry(item) {
       document.getElementById('inem-edit-modal')?.remove();
       const overlay = document.createElement('div');
       overlay.id = 'inem-edit-modal';
-      Object.assign(overlay.style, {position: 'fixed', inset: '0', background: 'rgba(10,8,8,0.78)', zIndex: '10000', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      Object.assign(overlay.style, {position: 'fixed', inset: '0', background: 'rgba(10,8,8,0.78)', zIndex: '10000',  display: 'flex', alignItems: 'center', justifyContent: 'center', 
                                     backdropFilter: 'blur(4px)'});
       const box = document.createElement('div');
-      Object.assign(box.style, {background: '#fff', borderRadius: '12px', width: '420px', boxShadow: '0 28px 72px rgba(0,0,0,0.45)', display: 'flex', flexDirection: 'column',
-                                overflow: 'hidden', fontFamily: "'Segoe UI', sans-serif"});
+      Object.assign(box.style, {background: '#fff', borderRadius: '12px', width: '420px', boxShadow: '0 28px 72px rgba(0,0,0,0.45)', display: 'flex', flexDirection: 'column', overflow: 'hidden', 
+                                fontFamily: "'Segoe UI', sans-serif"});
       const header = document.createElement('div');
-      Object.assign(header.style, {background: 'linear-gradient(135deg, #5a0000 0%, #7b0000 45%, #9a0f0f 100%)', padding: '12px 16px', display: 'flex', alignItems: 'center',
+      Object.assign(header.style, {background: 'linear-gradient(135deg, #5a0000 0%, #7b0000 45%, #9a0f0f 100%)', padding: '12px 16px', display: 'flex', alignItems: 'center', 
                                    justifyContent: 'space-between'});
       const headerTitle = document.createElement('div');
       Object.assign(headerTitle.style, {color: '#fff', fontWeight: '700', fontSize: '13px'});
       headerTitle.textContent = `✏️ Editar Verbete - Nr. CODU: ${item.nr_codu}`;
       const btnClose = document.createElement('button');
       btnClose.innerHTML = '✕';
-      Object.assign(btnClose.style, {border: '1px solid rgba(255,80,80,0.22)', background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.8)', width: '28px', height: '28px',
+      Object.assign(btnClose.style, {border: '1px solid rgba(255,80,80,0.22)', background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.8)', width: '28px', height: '28px', 
                                      borderRadius: '7px', cursor: 'pointer', fontSize: '14px'});
       btnClose.onclick = () => overlay.remove();
       header.append(headerTitle, btnClose);
@@ -369,8 +369,8 @@
           input.type = type;
           input.value = item[key] || '';
         }
-        Object.assign(input.style, {padding: '7px 10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '13px', outline: 'none', transition: 'border-color .15s',
-                                    color: '#1a1a1a', background: '#fff', width: '100%', boxSizing: 'border-box'});
+        Object.assign(input.style, {padding: '7px 10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '13px', outline: 'none', transition: 'border-color .15s', color: '#1a1a1a', 
+                                    background: '#fff', width: '100%', boxSizing: 'border-box'});
         input.onfocus = () => input.style.borderColor = '#7b0000';
         input.onblur  = () => input.style.borderColor = '#ddd';
         inputs[key] = input;
@@ -415,7 +415,7 @@
       const tasNintInput = document.createElement('input');
       tasNintInput.type = 'text';
       tasNintInput.placeholder = 'N.º Int.';
-      Object.assign(tasNintInput.style, {padding: '7px 10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '13px', outline: 'none', transition: 'border-color .15s',
+      Object.assign(tasNintInput.style, {padding: '7px 10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '13px', outline: 'none', transition: 'border-color .15s', 
                                          color: '#1a1a1a', background: '#fff', width: '100%', boxSizing: 'border-box'});
       tasNintInput.onfocus = () => tasNintInput.style.borderColor = '#7b0000';
       tasNintInput.onblur  = () => tasNintInput.style.borderColor = '#ddd';
@@ -423,17 +423,25 @@
       const tasNameGroup = document.createElement('div');
       Object.assign(tasNameGroup.style, {display: 'flex', flexDirection: 'column', gap: '4px', flex: '2'});
       const tasNameLbl = document.createElement('label');
-      tasNameLbl.textContent = ' ';
+      tasNameLbl.textContent = ' '; 
       Object.assign(tasNameLbl.style, {fontSize: '11.5px', fontWeight: '600', color: '#555', textTransform: 'uppercase', letterSpacing: '.4px'});
       const tasNameInput = document.createElement('input');
       tasNameInput.type = 'text';
-      tasNameInput.placeholder = 'Nome';
+      tasNameInput.placeholder = 'Nome TAS';
       tasNameInput.value = item.tas || '';
-      Object.assign(tasNameInput.style, {padding: '7px 10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '13px', outline: 'none', transition: 'border-color .15s',
-                                         color: '#1a1a1a', background: '#fff', width: '100%', boxSizing: 'border-box'});
-      tasNameInput.onfocus = () => tasNameInput.style.borderColor = '#7b0000';
-      tasNameInput.onblur  = () => tasNameInput.style.borderColor = '#ddd';
+      tasNameInput.readOnly = true;
+      tasNameInput.disabled = true;
+      Object.assign(tasNameInput.style, {padding: '7px 10px', borderRadius: '6px', border: '1px solid #eee', fontSize: '13px', outline: 'none', color: '#666', background: '#f5f5f5', 
+                                         width: '100%', boxSizing: 'border-box', cursor: 'not-allowed'});
       tasNameGroup.append(tasNameLbl, tasNameInput);
+      if (item.tas) {
+        fetch(`${SUPABASE_URL}/rest/v1/reg_elems?abv_name=eq.${encodeURIComponent(item.tas)}&select=n_int`, {
+          headers: getSupabaseHeaders()
+        })
+          .then(res => res.json())
+          .then(data => {if (data.length > 0) tasNintInput.value = data[0].n_int;})
+          .catch(err => console.error('Erro na busca inicial do TAS:', err));
+      }
       tasNintInput.addEventListener('input', async function() {
         const val = this.value.trim();
         if (val.length === 3) {
@@ -443,9 +451,7 @@
             });
             const data = await res.json();
             tasNameInput.value = data[0]?.abv_name || '';
-          } catch(err) {
-            tasNameInput.value = '';
-          }
+          } catch(err) {tasNameInput.value = '';}
         } else {
           tasNameInput.value = '';
         }
@@ -456,12 +462,11 @@
       Object.assign(footer.style, {padding: '12px 20px', display: 'flex', justifyContent: 'flex-end', gap: '8px', borderTop: '1px solid #eee', background: '#fafafa'});
       const btnCancel = document.createElement('button');
       btnCancel.textContent = 'Cancelar';
-      Object.assign(btnCancel.style, {padding: '7px 16px', borderRadius: '6px', border: '1px solid #ddd', background: '#fff', color: '#555', fontSize: '13px', fontWeight: '600', 
-                                      cursor: 'pointer'});
+      Object.assign(btnCancel.style, {padding: '7px 16px', borderRadius: '6px', border: '1px solid #ddd', background: '#fff', color: '#555', fontSize: '13px', fontWeight: '600', cursor: 'pointer'});
       btnCancel.onclick = () => overlay.remove();
       const btnSave = document.createElement('button');
       btnSave.textContent = '💾 Guardar';
-      Object.assign(btnSave.style, {padding: '7px 16px', borderRadius: '6px', border: 'none', background: 'linear-gradient(135deg, #7b0000, #9a0f0f)', color: '#fff', fontSize: '13px',
+      Object.assign(btnSave.style, {padding: '7px 16px', borderRadius: '6px', border: 'none', background: 'linear-gradient(135deg, #7b0000, #9a0f0f)', color: '#fff', fontSize: '13px', 
                                     fontWeight: '600', cursor: 'pointer'});
       btnSave.onclick = async () => {
         const updated = {};
@@ -470,7 +475,6 @@
           updated[f.key] = inputs[f.key].value.trim() || null;
         });
         updated['tas'] = tasNameInput.value.trim() || null;
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
         try {
           const res = await fetch(`${SUPABASE_URL}/rest/v1/inem_entries?nr_codu=eq.${item.nr_codu}`, {
             method: "PATCH",
@@ -487,7 +491,7 @@
         }
       };
       footer.append(btnCancel, btnSave);
-      box.append(header, body, footer);
+        box.append(header, body, footer);
       overlay.appendChild(box);
       overlay.addEventListener('click', e => {if (e.target === overlay) overlay.remove();});
       document.body.appendChild(overlay);

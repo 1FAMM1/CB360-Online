@@ -56,7 +56,7 @@
                                        font-size: 12px; font-weight: 800; margin-right: 5px; position: relative; top: -2px; letter-spacing: 0.5px; vertical-align: middle;"></span> Gestão DECIR</button>
       <div class="submenu">
         <button class="sidebar-submenu-button" data-page="decir-sca-view" data-access="Ver Escalas">Consulta de Escalas</button>
-        <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-decir" data-access="Gestão Financeira"">Controlo Financeiro</button>
+        <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-decir" data-access="Gestão Financeira">Controlo Financeiro</button>
         <div class="sub-submenu">
           <button class="sidebar-sub-submenu-button " data-page="page-decir" data-access="Atualização de Valores">Atualização de Valores</button>
           <button class="sidebar-sub-submenu-button" data-page="decir-reg" data-access="Registo por Elemento">Registo por Elemento</button>
@@ -174,66 +174,43 @@
         <span class="fa fa-database" style="display: inline-flex; align-items: center; justify-content: center; background: #ddd; color: #444; width: 24px; height: 20px; border-radius: 4px;
                                             font-size: 11px; margin-right: 5px; position: relative; top: -2px; vertical-align: middle;"></span> Data Center</button>
     </aside>
-    <!---- MODAL POPUP MODULE ---->
-    <div id="popup-modal" class="popup-modal" tabindex="0">
-      <div class="popup-content">
-        <h3>CAMPOS EM FALTA</h3>
-        <ul id="missing-fields-list"></ul>
-        <button id="popup-ok-btn">OK</button>
+    <!-- VERMELHO -->
+    <div id="popup-danger" class="popup-modal">
+      <div class="popup-content popup-danger">
+        <div class="popup-header"><h3>⛔ AVISO</h3></div>
+        <div class="popup-body">
+          <ul><li>Mensagem de erro aqui</li></ul>
+        </div>
+        <div class="popup-footer">
+          <button class="popup-btn" onclick="closePopup('popup-danger')">OK</button>
+        </div>
       </div>
     </div>
-    <div id="popup-warning-modal" class="popup-modal" tabindex="0">
-      <div class="popup-content">
-        <h3>AVISO</h3>
-        <p></p>
-        <button id="popup-warning-ok-btn" class="btn btn-danger">OK</button>
+    <!-- VERDE -->
+    <div id="popup-success" class="popup-modal">
+      <div class="popup-content popup-success">
+        <div class="popup-header"><h3>✅ SUCESSO</h3></div>
+        <div class="popup-body">
+          <ul><li>Operação concluída com sucesso</li></ul>
+        </div>
+        <div class="popup-footer">
+          <button class="popup-btn" onclick="closePopup('popup-success')">OK</button>
+        </div>
       </div>
     </div>
-    <div id="popup-success-modal" class="popup-modal" tabindex="0">
-      <div class="popup-content">
-        <h3>SUCESSO</h3>
-        <p></p>
-        <button id="popup-success-ok-btn" class="btn btn-success">OK</button>
-      </div>
-    </div>    
-  </div>
-  <!-- VERMELHO -->
-  <div id="popup-danger" class="popup-modal">
-    <div class="popup-content popup-danger">
-      <div class="popup-header"><h3>⛔ AVISO</h3></div>
-      <div class="popup-body">
-        <ul><li>Mensagem de erro aqui</li></ul>
-      </div>
-      <div class="popup-footer">
-        <button class="popup-btn" onclick="closePopup('popup-danger')">OK</button>
+    <!-- AZUL -->
+    <div id="popup-info" class="popup-modal">
+      <div class="popup-content popup-info">
+        <div class="popup-header"><h3>ℹ️ INFORMAÇÃO</h3></div>
+        <div class="popup-body">
+          <ul><li>Mensagem informativa aqui</li></ul>
+        </div>
+        <div class="popup-footer">
+          <button class="popup-btn" onclick="closePopup('popup-info')">OK</button>
+        </div>
       </div>
     </div>
-  </div>
-  <!-- VERDE -->
-  <div id="popup-success" class="popup-modal">
-    <div class="popup-content popup-success">
-      <div class="popup-header"><h3>✅ SUCESSO</h3></div>
-      <div class="popup-body">
-        <ul><li>Operação concluída com sucesso</li></ul>
-      </div>
-      <div class="popup-footer">
-        <button class="popup-btn" onclick="closePopup('popup-success')">OK</button>
-      </div>
-    </div>
-  </div>
-  <!-- AZUL -->
-  <div id="popup-info" class="popup-modal">
-    <div class="popup-content popup-info">
-      <div class="popup-header"><h3>ℹ️ INFORMAÇÃO</h3></div>
-      <div class="popup-body">
-        <ul><li>Mensagem informativa aqui</li></ul>
-      </div>
-      <div class="popup-footer">
-        <button class="popup-btn" onclick="closePopup('popup-info')">OK</button>
-      </div>
-    </div>
-  </div>
-  <!-- LARANJA -->
+    <!-- LARANJA -->
     <div id="popup-confirm-modal" class="popup-modal popup-warning" tabindex="0">
       <div class="popup-content">
         <div class="popup-header"><h3>⚠️ CONFIRMAÇÃO</h3></div>
@@ -246,7 +223,31 @@
         </div>
       </div>
     </div>
-  <div id="vehicle-status-modal" class="vehicle-status-modal" tabindex="0">
+    <!-- LARANJA - TIPO REFORÇO -->
+    <div id="popup-reforco-modal" class="popup-modal popup-warning" tabindex="0">
+      <div class="popup-content">
+        <div class="popup-header"><h3>⚠️ TIPO DE SERVIÇO</h3></div>
+        <div class="popup-body">
+          <ul>
+            <li style="list-style:none; margin-bottom: 8px;">
+              <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                <input type="radio" name="popup-reforco-tipo" value="Reforço"> Reforço
+              </label>
+            </li>
+            <li style="list-style:none;">
+              <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                <input type="radio" name="popup-reforco-tipo" value="Troca de Serviço"> Troca de Serviço
+              </label>
+            </li>
+          </ul>
+        </div>
+        <div class="popup-footer" style="gap: 10px;">
+          <button id="popup-reforco-ok-btn" class="popup-btn" style="background-color: #FD7E14;">Confirmar</button>
+          <button id="popup-reforco-cancel-btn" class="popup-btn" style="background-color: #6C757D;">Cancelar</button>
+        </div>
+      </div>
+    </div>
+    <div id="vehicle-status-modal" class="vehicle-status-modal" tabindex="0">
       <div class="vehicle-status-modal-content">
         <div class="vehicle-status-modal-header">
           <h3>
@@ -281,29 +282,29 @@
         </div>
       </div>
     </div>
-  <!--------------------------->
-  <!---- TEMP POPUP MODULE ---->  
-  <div id="popup-temp-modal" class="popup-modal" tabindex="0">
-    <div class="popup-content">
-      <h3>BREVEMENTE</h3>
-      <p>MÓDULO BREVEMENTE DISPONÍVEL EM CB360 ONLINE</p>
-      <button id="popup-temp-ok-btn" class="btn btn-success">OK</button>
-    </div>
-  </div>
-  <!--------------------------->
-  <!---------------------------> 
-  <!---- REGISTRATION WINDOW MODULE ---->
-  <div class="window" role="dialog" aria-labelledby="win-title" id="editWindow">
-    <div class="window-titlebar">
-      <div class="window-title-left">
-        <div class="window-app-icon">✏️</div>
-        <span id="windowTitle">Registo de Elementos</span>
-      </div>
-      <div class="window-title-controls">
-        <button id="closeWindow">×</button>
+    <!--------------------------->
+    <!---- TEMP POPUP MODULE ---->
+    <div id="popup-temp-modal" class="popup-modal" tabindex="0">
+      <div class="popup-content">
+        <h3>BREVEMENTE</h3>
+        <p>MÓDULO BREVEMENTE DISPONÍVEL EM CB360 ONLINE</p>
+        <button id="popup-temp-ok-btn" class="btn btn-success">OK</button>
       </div>
     </div>
-    <div class="window-content">
+    <!--------------------------->
+    <!--------------------------->
+    <!---- REGISTRATION WINDOW MODULE ---->
+    <div class="window" role="dialog" aria-labelledby="win-title" id="editWindow">
+      <div class="window-titlebar">
+        <div class="window-title-left">
+          <div class="window-app-icon">✏️</div>
+          <span id="windowTitle">Registo de Elementos</span>
+        </div>
+        <div class="window-title-controls">
+          <button id="closeWindow">×</button>
+        </div>
+      </div>
+      <div class="window-content">
       <div class="tab-header">
         <button class="tab-btn active" data-tab="main-data">Dados Gerais</button>
         <button class="tab-btn" data-tab="other-data">Outros Dados</button>
@@ -329,8 +330,7 @@
           </div>
           <div class="window-field-horizontal">
             <label>Nº Interno:</label>
-            <input type="text" id="win_n_int" style="width:80px; text-align:center;" maxlength="3"
-                   oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)">
+            <input type="text" id="win_n_int" style="width:80px; text-align:center;" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)">
             <label style="width:115px;">Nº Mecanográfico:</label>
             <input type="text" id="win_n_file" style="width:120px; text-align:center;" maxlength="8" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,8)">
           </div>
@@ -2840,52 +2840,52 @@
      <span class="right-info">CB360 Online v12.197.73</span>
     </div>
   </footer>
-  <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
-  <script src="js/mainprogramatics/initcfg_ltsc_x07.js"></script>
-  <script src="js/mainprogramatics/contcrea_ltsc_x21.js"></script>
-  <script src="js/mainprogramatics/popup_emit_ltsc_x07.js"></script>
-  <script src="js/mainprogramatics/loadmain_ltsc_x07.js"></script>
-  <script src="js/mainprogramatics/loadmainfields_ltsc_x07.js"></script>
-  <script src="js/mainprogramatics/sidebars_ltsc_x07.js"></script>
-  <script src="js/mainprogramatics/popups_ltsc_x07.js"></script>
-  <script src="js/mainprogramatics/generics_ltsc_x07.js"></script>
-  <script src="js/mainprogramatics/shared_x87.js"></script>
-  <script src="js/decirprogramatics/decreg_x87.js"></script>
-  <script src="js/fomioprogramatics/scales_ltsc_x09.js"></script>
-  <script src="js/fomioprogramatics/events_ltsc_x09.js"></script>
-  <script src="js/fomioprogramatics/vacations_ltsc_x09.js"></script>
-  <script src="js/employeesprogramatics/employees_ltsc_x27.js"></script>
-  <script src="js/inementries/inem_entries_ltsc_x74.js"></script>
-  <script src="js/salocprogamatics/ppiload_ltsc_x10.js"></script>
-  <script src="js/salocprogamatics/refusals_ltsc_x10.js"></script>
-  <script src="js/salocprogamatics/moa_ltsc_x10.js"></script>
-  <script src="js/salocprogamatics/dailyplan_ltsc_x10.js"></script>
-  <script src="js/salocprogamatics/inopform_ltsc_x10.js"></script>
-  <script src="js/salocprogamatics/alarmconsole_ltsc_x10.js"></script>
-  <script src="js/wsmsprogramatics/currevents_ltsc_x17.js"></script>
-  <script src="js/wsmsprogramatics/newevent_ltsc_x17.js"></script>
-  <script src="js/wsmsprogramatics/clsevent_ltsc_x17.js"></script>
-  <script src="js/wsmsprogramatics/request_ltsc_x17.js"></script>
-  <script src="js/wsmsprogramatics/unavail_ltsc_x17.js"></script>
-  <script src="js/wsmsprogramatics/mgrid_ltsc_x17.js"></script>
-  <script src="js/wsmsprogramatics/inemservices_ltsc_x17.js"></script>
-  <script src="js/wsmsprogramatics/weather_warnings_ltsc_x17.js"></script>
-  <script src="js/utilitiesprogramatics/dpconsole_ltsc_x14.js"></script>
-  <script src="js/utilitiesprogramatics/epetstat_ltsc_x14.js"></script>
-  <script src="js/utilitiesprogramatics/veícstat_ltsc_x14.js"></script>
-  <script src="js/utilitiesprogramatics/infrelev_ltsc_x14.js"></script>
-  <script src="js/utilitiesprogramatics/roacut_ltsc_x14.js"></script>
-  <script src="js/utilitiesprogramatics/macent_ltsc_x14.js"></script>
-  <script src="js/utilitiesprogramatics/noHospital_ltsc_x14.js"></script>
-  <script src="js/utilitiesprogramatics/missReports_ltsc_x14.js"></script>
-  <script src="js/datacenterprogramatics/corpdata_ltsc_x06.js"></script>
-  <script src="js/datacenterprogramatics/elemdata_ltsc_x06.js"></script>
-  <script src="js/datacenterprogramatics/veícdata_ltsc_x06.js"></script>
-  <script src="js/datacenterprogramatics/mailsdata_ltsc_x06.js"></script>
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+    <script src="js/mainprogramatics/initcfg_ltsc_x07.js"></script>
+    <script src="js/mainprogramatics/contcrea_ltsc_x21.js"></script>
+    <script src="js/mainprogramatics/popup_emit_ltsc_x07.js"></script>
+    <script src="js/mainprogramatics/loadmain_ltsc_x07.js"></script>
+    <script src="js/mainprogramatics/loadmainfields_ltsc_x07.js"></script>
+    <script src="js/mainprogramatics/sidebars_ltsc_x07.js"></script>
+    <script src="js/mainprogramatics/popups_ltsc_x07.js"></script>
+    <script src="js/mainprogramatics/generics_ltsc_x07.js"></script>
+    <script src="js/mainprogramatics/shared_x87.js"></script>
+    <script src="js/decirprogramatics/decreg_x87.js"></script>
+    <script src="js/fomioprogramatics/scales_ltsc_x09.js"></script>
+    <script src="js/fomioprogramatics/events_ltsc_x09.js"></script>
+    <script src="js/fomioprogramatics/vacations_ltsc_x09.js"></script>
+    <script src="js/employeesprogramatics/employees_ltsc_x27.js"></script>
+    <script src="js/inementries/inem_entries_ltsc_x74.js"></script>
+    <script src="js/salocprogamatics/ppiload_ltsc_x10.js"></script>
+    <script src="js/salocprogamatics/refusals_ltsc_x10.js"></script>
+    <script src="js/salocprogamatics/moa_ltsc_x10.js"></script>
+    <script src="js/salocprogamatics/dailyplan_ltsc_x10.js"></script>
+    <script src="js/salocprogamatics/inopform_ltsc_x10.js"></script>
+    <script src="js/salocprogamatics/alarmconsole_ltsc_x10.js"></script>
+    <script src="js/wsmsprogramatics/currevents_ltsc_x17.js"></script>
+    <script src="js/wsmsprogramatics/newevent_ltsc_x17.js"></script>
+    <script src="js/wsmsprogramatics/clsevent_ltsc_x17.js"></script>
+    <script src="js/wsmsprogramatics/request_ltsc_x17.js"></script>
+    <script src="js/wsmsprogramatics/unavail_ltsc_x17.js"></script>
+    <script src="js/wsmsprogramatics/mgrid_ltsc_x17.js"></script>
+    <script src="js/wsmsprogramatics/inemservices_ltsc_x17.js"></script>
+    <script src="js/wsmsprogramatics/weather_warnings_ltsc_x17.js"></script>
+    <script src="js/utilitiesprogramatics/dpconsole_ltsc_x14.js"></script>
+    <script src="js/utilitiesprogramatics/epetstat_ltsc_x14.js"></script>
+    <script src="js/utilitiesprogramatics/veícstat_ltsc_x14.js"></script>
+    <script src="js/utilitiesprogramatics/infrelev_ltsc_x14.js"></script>
+    <script src="js/utilitiesprogramatics/roacut_ltsc_x14.js"></script>
+    <script src="js/utilitiesprogramatics/macent_ltsc_x14.js"></script>
+    <script src="js/utilitiesprogramatics/noHospital_ltsc_x14.js"></script>
+    <script src="js/utilitiesprogramatics/missReports_ltsc_x14.js"></script>
+    <script src="js/datacenterprogramatics/corpdata_ltsc_x06.js"></script>
+    <script src="js/datacenterprogramatics/elemdata_ltsc_x06.js"></script>
+    <script src="js/datacenterprogramatics/veícdata_ltsc_x06.js"></script>
+    <script src="js/datacenterprogramatics/mailsdata_ltsc_x06.js"></script>
   <script></script>
 </body>
 </html>

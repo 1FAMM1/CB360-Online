@@ -486,6 +486,99 @@
         showPopup('popup-danger', 'Erro ao processar o planeamento. Por favor, tente novamente.');
       }
     }
+    async function loadSideTable(shift) {
+      const tbody = document.getElementById('plandir-side-tbody');
+      const rightCol = document.getElementById('plandir-right-col');
+      if (!tbody || !rightCol) return;
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      if (!corpOperNr) return;
+      const now = new Date();
+      const day = String(now.getDate()).padStart(2, '0');
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const year = String(now.getFullYear());
+      tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#aaa; padding:12px;">A carregar...</td></tr>`;
+      rightCol.style.display = 'block';
+      try {
+        let dataNormal = [];
+        let dataEcin = [];
+        let dataOfope = [];
+        let dataPiquete = [];
+        const urlNormal = `${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&day=eq.${day}&month=eq.${month}&year=eq.${year}&shift=eq.${shift}&select=n_int,abv_name`;
+        const resNormal = await fetch(urlNormal, {headers: getSupabaseHeaders()});
+        dataNormal = await resNormal.json();
+        if (shift === 'D') {
+          const urlEcin = `${SUPABASE_URL}/rest/v1/reg_serv?corp_oper_nr=eq.${corpOperNr}&day=eq.${day}&month=eq.${month}&year=eq.${year}&value=in.(ED,ET)&select=n_int,abv_name`;
+          const resEcin = await fetch(urlEcin, {headers: getSupabaseHeaders()});
+          dataEcin = await resEcin.json();
+        }
+        if (shift === 'N') {
+          const urlOfope = `${SUPABASE_URL}/rest/v1/reg_serv?corp_oper_nr=eq.${corpOperNr}&day=eq.${day}&month=eq.${month}&year=eq.${year}&value=eq.N&select=n_int,abv_name`;
+          const resOfope = await fetch(urlOfope, {headers: getSupabaseHeaders()});
+          dataOfope = await resOfope.json();
+          const urlPiquete = `${SUPABASE_URL}/rest/v1/reg_serv?corp_oper_nr=eq.${corpOperNr}&day=eq.${day}&month=eq.${month}&year=eq.${year}&value=eq.PN&select=n_int,abv_name`;
+          const resPiquete = await fetch(urlPiquete, {headers: getSupabaseHeaders()});
+          dataPiquete = await resPiquete.json();
+          const urlEcin = `${SUPABASE_URL}/rest/v1/reg_serv?corp_oper_nr=eq.${corpOperNr}&day=eq.${day}&month=eq.${month}&year=eq.${year}&value=in.(EN,ET)&select=n_int,abv_name`;
+          const resEcin = await fetch(urlEcin, {headers: getSupabaseHeaders()});
+          dataEcin = await resEcin.json();
+        }
+        const sortFn = (a, b) => Number(a.n_int) - Number(b.n_int);
+        dataNormal.sort(sortFn);
+        dataEcin.sort(sortFn);
+        dataOfope.sort(sortFn);
+        dataPiquete.sort(sortFn);
+        if (dataNormal.length === 0 && dataEcin.length === 0 && dataOfope.length === 0 && dataPiquete.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#aaa; padding:12px;">Sem dados</td></tr>`;
+          return;
+        }
+        const allNInts = [...dataNormal, ...dataEcin, ...dataOfope, ...dataPiquete].map(r => String(r.n_int).trim().padStart(3, '0'));
+        const uniqueNInts = [...new Set(allNInts)];
+        const resElems = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?n_int=in.(${uniqueNInts.join(',')})&select=n_int,patent`, {
+          headers: getSupabaseHeaders()
+        });
+        const elems = await resElems.json();
+        const patenteMap = {};
+        elems.forEach(e => {
+          const key = String(e.n_int || '').trim().padStart(3, '0');
+          patenteMap[key] = e.patent || '';
+        });
+        const sectionHeader = (title) => `
+          <tr>
+            <td colspan="3" class="plandir-card-title black-variant" style="height: 30px; font-size: 11px; padding: 0; border: none; text-align: center; display: table-cell; border-top: 1px solid #fff;">
+              ${title}
+            </td>
+          </tr>
+        `;
+        let htmlContent = "";
+        htmlContent += sectionHeader(shift === 'D' ? 'PROFISSIONAIS' : 'PROFISSIONAIS');
+        htmlContent += dataNormal.map(r => renderRow(r, patenteMap)).join('');
+        if (shift === 'D') {
+          if (dataEcin.length > 0) {
+            htmlContent += sectionHeader('ECIN');
+            htmlContent += dataEcin.map(r => renderRow(r, patenteMap)).join('');
+          }
+        }
+        if (shift === 'N') {
+          if (dataOfope.length > 0) {
+            htmlContent += sectionHeader('OFOPE');
+            htmlContent += dataOfope.map(r => renderRow(r, patenteMap)).join('');
+          }
+          if (dataPiquete.length > 0) {
+            htmlContent += sectionHeader('PIQUETE');
+            htmlContent += dataPiquete.map(r => renderRow(r, patenteMap)).join('');
+          }
+          if (dataEcin.length > 0) {
+            htmlContent += sectionHeader('ECIN');
+            htmlContent += dataEcin.map(r => renderRow(r, patenteMap)).join('');
+          }
+        }
+        tbody.innerHTML = htmlContent;
+        updateStatusDots();
+      } catch (err) {
+        console.error('Erro ao carregar escala:', err);
+        tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#e44; padding:12px;">Erro ao carregar</td></tr>`;
+      }
+    }
     async function loadShift(shift) {
       const container = document.getElementById('plandir_container');
       const activeBtn = document.querySelector('.shift-btn.active');
@@ -502,7 +595,7 @@
         localStorage.setItem("originalShift", shift);
       }
       let header;
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       if (shift === 'LAST') {
         try {
           const res = await fetch(`${SUPABASE_URL}/rest/v1/fomio_date?select=header_text&limit=1`, {
@@ -511,83 +604,142 @@
           });
           const dataArr = await res.json();
           let formattedHeader = null;
+          let originalShift = null;
           if (dataArr && dataArr.length > 0) {
             const headerText = dataArr[0].header_text;
             const match = headerText.match(/Dia: (\d{2}) (\w{3}) (\d{4}) \| Turno (.) \| (.+)/);
             if (match) {
               const [_, day, month, year, shiftLetter, hours] = match;
+              originalShift = shiftLetter;
               sessionStorage.setItem("originalShift", shiftLetter);
               localStorage.setItem("originalShift", shiftLetter);
             }
             formattedHeader = headerText;
           }
           header = createPlanDirHeader('LAST', formattedHeader);
+          if (header) container.appendChild(header);
+          container.insertAdjacentHTML('beforeend', tableConfig.map(cfg => createTable(cfg.rows, cfg.special, cfg.title)).join(''));
+          try {
+            const res2 = await fetch(`${SUPABASE_URL}/rest/v1/fomio_teams?select=*`, {
+              method: 'GET',
+              headers: getSupabaseHeaders()
+            });
+            const allMembers = await res2.json();
+            if (allMembers && allMembers.length > 0) {
+              const teamNameMap = {"ofope": "OFOPE", "chefe_servico": "CHEFE DE SERVIÇO", "optel": "OPTEL",
+                                   "equipa_01": "EQUIPA 01", "equipa_02": "EQUIPA 02", "logistica": "LOGÍSTICA",
+                                   "inem": "INEM", "inem_reserva": "INEM - Reserva", "servico_geral": "SERVIÇO GERAL"};
+              const teamsData = allMembers.reduce((acc, member) => {
+                if (!acc[member.team_name]) acc[member.team_name] = [];
+                acc[member.team_name].push(member);
+                return acc;
+              }, {});
+              Object.keys(teamsData).forEach(dbTeamName => {
+                const displayTitle = teamNameMap[dbTeamName];
+                if (!displayTitle) return;
+                const card = Array.from(document.querySelectorAll('.plandir-main-card')).find(
+                  c => c.querySelector('.plandir-card-title')?.textContent.trim() === displayTitle
+                );
+                if (!card) return;
+                const rows = Array.from(card.querySelectorAll('tbody tr'));
+                teamsData[dbTeamName].forEach((member, i) => {
+                  const tr = rows[i];
+                  if (!tr) return;
+                  const inputs = tr.querySelectorAll('input');
+                  const mpCell = tr.querySelector('.mp-cell');
+                  const tasCell = tr.querySelector('.tas-cell');
+                  if (inputs[0]) inputs[0].value = member.n_int || '';
+                  if (inputs[1]) inputs[1].value = member.patente || '';
+                  if (inputs[2]) inputs[2].value = member.nome || '';
+                  if (inputs[3]) inputs[3].value = member.h_entrance || '';
+                  if (inputs[4]) inputs[4].value = member.h_exit || '';
+                  if (mpCell) {
+                    mpCell.textContent = member.MP ? 'X' : '';
+                    mpCell.classList.toggle('plandir-mp-active', !!member.MP);
+                  }
+                  if (tasCell) {
+                    tasCell.textContent = member.TAS ? 'X' : '';
+                    tasCell.classList.toggle('plandir-tas-active', !!member.TAS);
+                  }
+                  if (inputs[5]) inputs[5].value = member.observ || '';
+                });
+              });
+            }
+          } catch (err) {
+            console.error('Erro ao carregar dados salvos direto:', err);
+          }
+          updateStatusDots();
+          if (originalShift) loadSideTable(originalShift);
         } catch (err) {
           console.error('Erro ao carregar header direto:', err);
           header = createPlanDirHeader('LAST');
+          if (header) container.appendChild(header);
+          container.insertAdjacentHTML('beforeend', tableConfig.map(cfg => createTable(cfg.rows, cfg.special, cfg.title)).join(''));
         }
       } else {
         header = createPlanDirHeader(shift);
-      }
-      if (header) container.appendChild(header);
-      container.insertAdjacentHTML('beforeend', tableConfig.map(cfg => createTable(cfg.rows, cfg.special, cfg.title)).join(''));
-      if (shift === 'LAST') {
-        try {
-          const res = await fetch(`${SUPABASE_URL}/rest/v1/fomio_teams?select=*`, {
-            method: 'GET',
-            headers: getSupabaseHeaders()
-          });
-          const allMembers = await res.json();
-          if (allMembers && allMembers.length > 0) {
-            const teamNameMap = {"ofope": "OFOPE", "chefe_servico": "CHEFE DE SERVIÇO", "optel": "OPTEL", 
-                                 "equipa_01": "EQUIPA 01", "equipa_02": "EQUIPA 02", "logistica": "LOGÍSTICA", 
-                                 "inem": "INEM", "inem_reserva": "INEM - Reserva", "servico_geral": "SERVIÇO GERAL"};
-            const teamsData = allMembers.reduce((acc, member) => {
-              if (!acc[member.team_name]) acc[member.team_name] = [];
-              acc[member.team_name].push(member);
-              return acc;
-            }, {});
-            Object.keys(teamsData).forEach(dbTeamName => {
-              const displayTitle = teamNameMap[dbTeamName];
-              if (!displayTitle) return;
-              const card = Array.from(document.querySelectorAll('.plandir-main-card')).find(
-                c => c.querySelector('.plandir-card-title')?.textContent.trim() === displayTitle
-              );
-              if (!card) return;
-              const rows = Array.from(card.querySelectorAll('tbody tr'));
-              teamsData[dbTeamName].forEach((member, i) => {
-                const tr = rows[i];
-                if (!tr) return;
-                const inputs = tr.querySelectorAll('input');
-                const mpCell = tr.querySelector('.mp-cell');
-                const tasCell = tr.querySelector('.tas-cell');
-                if (inputs[0]) inputs[0].value = member.n_int || '';
-                if (inputs[1]) inputs[1].value = member.patente || '';
-                if (inputs[2]) inputs[2].value = member.nome || '';
-                if (inputs[3]) inputs[3].value = member.h_entrance || '';
-                if (inputs[4]) inputs[4].value = member.h_exit || '';
-                if (mpCell) {
-                  mpCell.textContent = member.MP ? 'X' : '';
-                  mpCell.classList.toggle('plandir-mp-active', !!member.MP);
-                }
-                if (tasCell) {
-                  tasCell.textContent = member.TAS ? 'X' : '';
-                  tasCell.classList.toggle('plandir-tas-active', !!member.TAS);
-                }
-                if (inputs[5]) inputs[5].value = member.observ || '';
-              });
-            });            
-          }
-        } catch (err) {
-          console.error('Erro ao carregar dados salvos direto:', err);
-        }
-        updateStatusDots();
+        if (header) container.appendChild(header);
+        container.insertAdjacentHTML('beforeend', tableConfig.map(cfg => createTable(cfg.rows, cfg.special, cfg.title)).join(''));
+        loadSideTable(shift);
       }
       container.querySelectorAll('.plandir-nint-input').forEach(input => {
         input.addEventListener('input', async function() {
           this.value = this.value.replace(/\D/g, '').slice(0, 3);
           const row = this.closest('tr');
           if (this.value.length === 3) {
+            const nIntFormatted = this.value.padStart(3, '0');
+            const inputRef = this;
+            let dataArr = [];
+            try {
+              const res = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${this.value}`, {
+                headers: getSupabaseHeaders()
+              });
+              dataArr = await res.json();
+              updateRowFields(row, dataArr[0], shift);
+            } catch (err) {
+              console.error('Erro reg_elems:', err);
+            }
+            const sideTbody = document.getElementById('plandir-side-tbody');
+            const existsInSide = sideTbody && sideTbody.querySelector(`tr[data-side-nint="${nIntFormatted}"]`);
+            if (!existsInSide) {
+              const nome = dataArr[0]?.abv_name || nIntFormatted;
+              const msg = document.getElementById('popup-confirm-message');
+              if (msg) msg.textContent = `O Elemento ${nIntFormatted} (${nome}) não consta na escala do dia. Deseja adicioná-lo ao planeamento?`;
+              const modal1 = document.getElementById('popup-confirm-modal');
+              const modal2 = document.getElementById('popup-reforco-modal');
+              if (modal1) modal1.classList.add('show');
+              const okBtn1 = document.getElementById('popup-confirm-ok-btn');
+              const cancelBtn1 = document.getElementById('popup-confirm-cancel-btn');
+              const okBtn2 = document.getElementById('popup-reforco-ok-btn');
+              const cancelBtn2 = document.getElementById('popup-reforco-cancel-btn');
+              if (okBtn1) okBtn1.onclick = () => {
+                modal1.classList.remove('show');
+                document.querySelectorAll('input[name="popup-reforco-tipo"]').forEach(r => r.checked = false);
+                if (modal2) modal2.classList.add('show');
+              };
+              if (cancelBtn1) cancelBtn1.onclick = () => {
+                modal1.classList.remove('show');
+                inputRef.value = '';
+                updateRowFields(row, null);
+                updateStatusDots();
+              };
+              if (okBtn2) okBtn2.onclick = () => {
+                const selected = document.querySelector('input[name="popup-reforco-tipo"]:checked');
+                if (!selected) {
+                  showPopup('popup-danger', 'Por favor selecione uma opção.');
+                  return;
+                }
+                modal2.classList.remove('show');
+                const obsInput = row.querySelectorAll('td input')[5];
+                if (obsInput) obsInput.value = selected.value;
+              };
+              if (cancelBtn2) cancelBtn2.onclick = () => {
+                modal2.classList.remove('show');
+                inputRef.value = '';
+                updateRowFields(row, null);
+                updateStatusDots();
+              };
+            }
             try {
               const res = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${this.value}`, {
                 headers: getSupabaseHeaders()
@@ -603,94 +755,7 @@
           updateStatusDots();
         });
       });
-      if (shift === 'D' || shift === 'N') {
-        loadSideTable(shift);
-      }
       createEmitButton(container);
-    }
-    async function loadSideTable(shift) {
-      const tbody = document.getElementById('plandir-side-tbody');
-      const rightCol = document.getElementById('plandir-right-col');
-      if (!tbody || !rightCol) return;
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
-      if (!corpOperNr) return;
-      const now = new Date();
-      const day = String(now.getDate()).padStart(2, '0');
-      const month = String(now.getMonth() + 1).padStart(2, '0');
-      const year = String(now.getFullYear());
-      tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#aaa; padding:12px;">A carregar...</td></tr>`;
-      rightCol.style.display = 'block';
-      try {
-        let dataNormal = [];
-        let dataServico = [];
-        let dataOfope = [];
-        const urlNormal = `${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&day=eq.${day}&month=eq.${month}&year=eq.${year}&shift=eq.${shift}&select=n_int,abv_name`;
-        const resNormal = await fetch(urlNormal, {headers: getSupabaseHeaders()});
-        dataNormal = await resNormal.json();
-        if (shift === 'N') {
-          const urlOfope = `${SUPABASE_URL}/rest/v1/reg_serv?corp_oper_nr=eq.${corpOperNr}&day=eq.${day}&month=eq.${month}&year=eq.${year}&value=eq.N&select=n_int,abv_name`;
-          const resOfope = await fetch(urlOfope, {headers: getSupabaseHeaders()});
-          dataOfope = await resOfope.json();
-          const values = "PN,ED,EN,ET";
-          const urlServ = `${SUPABASE_URL}/rest/v1/reg_serv?corp_oper_nr=eq.${corpOperNr}&day=eq.${day}&month=eq.${month}&year=eq.${year}&value=in.(${values})&select=n_int,abv_name`;
-          const resServ = await fetch(urlServ, {headers: getSupabaseHeaders()});
-          dataServico = await resServ.json();
-        }
-        const sortFn = (a, b) => Number(a.n_int) - Number(b.n_int);
-        dataNormal.sort(sortFn);
-        dataOfope.sort(sortFn);
-        dataServico.sort(sortFn);
-        if (dataNormal.length === 0 && dataServico.length === 0 && dataOfope.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#aaa; padding:12px;">Sem dados</td></tr>`;
-          return;
-        }
-        const allNInts = [...dataNormal, ...dataServico, ...dataOfope].map(r => String(r.n_int).trim().padStart(3, '0'));
-        const uniqueNInts = [...new Set(allNInts)];
-        const resElems = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?n_int=in.(${uniqueNInts.join(',')})&select=n_int,patent`, {
-          headers: getSupabaseHeaders()
-        });
-        const elems = await resElems.json();
-        const patenteMap = {};
-        elems.forEach(e => {
-          const key = String(e.n_int || '').trim().padStart(3, '0');
-          patenteMap[key] = e.patent || '';
-        });
-        let htmlContent = "";
-        htmlContent += `
-          <tr>
-            <td colspan="3" class="plandir-card-title black-variant" style="height: 30px; font-size: 11px; padding: 0; border: none; text-align: center; display: table-cell;">
-              ${shift === 'D' ? 'PROFISSIONAIS\\EIP' : 'PROFISSIONAIS'}
-            </td>
-          </tr>
-        `;
-        htmlContent += dataNormal.map(r => renderRow(r, patenteMap)).join('');
-        if (shift === 'N') {
-          if (dataOfope.length > 0) {
-            htmlContent += `
-              <tr>
-                <td colspan="3" class="plandir-card-title black-variant" style="height: 30px; font-size: 11px; padding: 0; border: none; text-align: center; display: table-cell; border-top: 1px solid #fff;">
-                  OFOPE
-                </td>
-              </tr>
-            `;
-            htmlContent += dataOfope.map(r => renderRow(r, patenteMap)).join('');
-          }
-          if (dataServico.length > 0) {
-            htmlContent += `
-              <tr>
-                <td colspan="3" class="plandir-card-title black-variant" style="height: 30px; font-size: 11px; padding: 0; border: none; text-align: center; display: table-cell; border-top: 1px solid #fff;">PIQUETE\\ECIN
-                </td>
-              </tr>
-            `;
-            htmlContent += dataServico.map(r => renderRow(r, patenteMap)).join('');
-          }
-        }
-        tbody.innerHTML = htmlContent;
-        updateStatusDots();
-      } catch (err) {
-        console.error('Erro ao carregar escala:', err);
-        tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#e44; padding:12px;">Erro ao carregar</td></tr>`;
-      }
     }
     function renderRow(r, patenteMap) {
       const nIntFormatted = String(r.n_int || '').trim().padStart(3, '0');

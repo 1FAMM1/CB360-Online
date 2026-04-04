@@ -296,7 +296,7 @@
       }
     }
     function activateShiftButton(shift) {
-      document.querySelectorAll('.shift-btn').forEach(btn => {
+      document.querySelectorAll('.options-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.shift === shift);
       });
     }
@@ -992,8 +992,8 @@
       const minutes = now.getMinutes();
       const totalMinutes = hours * 60 + minutes;
       const isDay = totalMinutes >= 8 * 60 && totalMinutes < 20 * 60;
-      const btnD = document.querySelector('.shift-btn[data-shift="D"]');
-      const btnN = document.querySelector('.shift-btn[data-shift="N"]');
+      const btnD = document.querySelector('.options-btn[data-shift="D"]');
+      const btnN = document.querySelector('.options-btn[data-shift="N"]');
       if (isDay) {
         btnN.disabled = true;
         btnN.style.opacity = '0.4';

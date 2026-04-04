@@ -714,6 +714,15 @@
             } catch (err) {
               console.error('Erro reg_elems:', err);
             }
+            const allNintInputs = Array.from(document.querySelectorAll('.plandir-nint-input'));
+            const existingRow = allNintInputs.find(i => i !== inputRef && i.value.trim() === this.value.trim());
+            if (existingRow) {
+              const existingObs = existingRow.closest('tr').querySelectorAll('td input')[5];
+              const obsInput = row.querySelectorAll('td input')[5];
+              if (obsInput && existingObs) obsInput.value = existingObs.value;
+              updateStatusDots();
+              return;
+            }
             const sideTbody = document.getElementById('plandir-side-tbody');
             const sideRow = sideTbody && sideTbody.querySelector(`tr[data-side-nint="${nIntFormatted}"]`);
             const existsInSide = !!sideRow;
@@ -772,6 +781,8 @@
                 document.getElementById('service-swap-fields').style.display = 'none';
                 document.getElementById('service-swap-nint').value = '';
                 document.getElementById('service-swap-name').value = '';
+                document.getElementById('service-other-fields').style.display = 'none';
+                document.getElementById('service-other-text').value = '';
                 setTimeout(() => {
                   if (modal2) modal2.classList.add('show');
                 }, 50);
@@ -787,6 +798,52 @@
                 if (!selected) {
                   showPopup('popup-danger', 'Por favor selecione uma opção.');
                   return;
+                }
+                if (selected.value === 'Troca de Serviço') {
+                  const nIntSwap = document.getElementById('service-swap-nint')?.value?.trim();
+                  if (!nIntSwap) {
+                    showPopup('popup-danger', 'Por favor insira o Nº Int. do elemento para troca.');
+                    const dangerBtn = document.querySelector('#popup-danger .popup-btn');
+                    const originalOnclick = dangerBtn.onclick;
+                    dangerBtn.onclick = () => {
+                      closePopup('popup-danger');
+                      dangerBtn.onclick = originalOnclick;
+                      setTimeout(() => {
+                        document.getElementById('service-swap-nint').focus();
+                      }, 50);
+                    };
+                    return;
+                  }
+                  if (nIntSwap === inputRef.value.trim()) {
+                    showPopup('popup-danger', 'O elemento não pode fazer troca consigo mesmo.');
+                    const dangerBtn = document.querySelector('#popup-danger .popup-btn');
+                    const originalOnclick = dangerBtn.onclick;
+                    dangerBtn.onclick = () => {
+                      closePopup('popup-danger');
+                      dangerBtn.onclick = originalOnclick;
+                      setTimeout(() => {
+                        document.getElementById('service-swap-nint').focus();
+                        document.getElementById('service-swap-nint').select();
+                      }, 50);
+                    };
+                    return;
+                  }
+                }
+                if (selected.value === 'Outro') {
+                  const otherText = document.getElementById('service-other-text')?.value?.trim();
+                  if (!otherText) {
+                    showPopup('popup-danger', 'Por favor preencha o campo de observação.');
+                    const dangerBtn = document.querySelector('#popup-danger .popup-btn');
+                    const originalOnclick = dangerBtn.onclick;
+                    dangerBtn.onclick = () => {
+                      closePopup('popup-danger');
+                      dangerBtn.onclick = originalOnclick;
+                      setTimeout(() => {
+                        document.getElementById('service-other-text').focus();
+                      }, 50);
+                    };
+                    return;
+                  }
                 }
                 modal2.classList.remove('show');
                 const obsInput = row.querySelectorAll('td input')[5];
@@ -818,6 +875,9 @@
                     else if (secaoSwap === 'PIQUETE') prefix = 'Piquete';
                     if (obsInput) obsInput.value = `${prefix} | Troca de Serviço | ${swapInfo}`;
                   }
+                } else if (selected.value === 'Outro') {
+                  const otherText = document.getElementById('service-other-text')?.value?.trim();
+                  if (obsInput) obsInput.value = otherText || '';
                 } else {
                   if (obsInput) obsInput.value = selected.value;
                 }
@@ -854,6 +914,25 @@
           }
         });
       });
+      container.querySelectorAll('input:not([readonly]):not([disabled])').forEach(input => {
+        input.addEventListener('keydown', function(e) {
+          if (e.key !== 'Enter') return;
+          e.preventDefault();
+          const allInputs = Array.from(container.querySelectorAll('input:not([readonly]):not([disabled])'));
+          const currentIndex = allInputs.indexOf(this);
+          if (currentIndex !== -1 && currentIndex < allInputs.length - 1) {
+            allInputs[currentIndex + 1].focus();
+          }
+        });
+      });
+      container.querySelectorAll('.plandir-nint-input').forEach(input => {
+        input.addEventListener('dblclick', function() {
+          const row = this.closest('tr');
+          this.value = '';
+          updateRowFields(row, null);
+          updateStatusDots();
+        });
+      });
       createEmitButton(container);
     }
     function renderRow(r, patentMap) {
@@ -883,8 +962,8 @@
     });
     document.querySelectorAll('input[name="popup-service-type"]').forEach(radio => {
       radio.addEventListener('change', function () {
-        const fields = document.getElementById('service-swap-fields');
-        fields.style.display = this.value === 'Troca de Serviço' ? 'flex' : 'none';
+        document.getElementById('service-swap-fields').style.display = this.value === 'Troca de Serviço' ? 'flex' : 'none';
+        document.getElementById('service-other-fields').style.display = this.value === 'Outro' ? 'flex' : 'none';
       });
     });
     document.addEventListener('input', async function (e) {

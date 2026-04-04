@@ -351,7 +351,7 @@
       emitBtn.className = 'btn btn-success';
       emitBtn.textContent = 'EMITIR PLANEAMENTO';
       emitBtn.addEventListener('click', () => {
-        let shift = document.querySelector('.shift-btn.active').dataset.shift;
+        let shift = document.querySelector('.options-btn.active').dataset.shift;
         const date = new Date().toISOString().slice(0, 10);
         if (shift === "LAST") {
           let storedShift = sessionStorage.getItem("originalShift");
@@ -597,7 +597,7 @@
     }
     async function loadShift(shift) {
       const container = document.getElementById('plandir_container');
-      const activeBtn = document.querySelector('.shift-btn.active');
+      const activeBtn = document.querySelector('.options-btn.active');
       if (activeBtn && activeBtn.dataset.shift === shift) {
         activeBtn.classList.remove('active');
         container.innerHTML = '';
@@ -957,7 +957,7 @@
         if (rightCol) {
           rightCol.style.display = 'none';
         }
-        document.querySelectorAll('.shift-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.options-btn').forEach(btn => btn.classList.remove('active'));
       }
     });
     document.querySelectorAll('input[name="popup-service-type"]').forEach(radio => {

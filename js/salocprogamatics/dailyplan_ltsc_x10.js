@@ -254,23 +254,23 @@
       });
     }
     function updateRowFields(row, data, shift) {
-      const entrada = row.querySelector('.plandir-entrance-input');
-      const saida = row.querySelector('.plandir-exit-input');
-      const patente = row.querySelectorAll('td input')[1];
-      const nome = row.querySelectorAll('td input')[2];
+      const entrance = row.querySelector('.plandir-entrance-input');
+      const exit = row.querySelector('.plandir-exit-input');
+      const patent = row.querySelectorAll('td input')[1];
+      const name = row.querySelectorAll('td input')[2];
       const mpCell = row.querySelectorAll('td')[5];
       const tasCell = row.querySelectorAll('td')[6];
-      const obsInput = row.querySelectorAll('td input')[7];
+      const obsInput = row.querySelectorAll('td input')[5];
       if (shift === 'D') {
-        if (entrada) entrada.value = "08:00";
-        if (saida) saida.value = "20:00";
+        if (entrance) entrance.value = "08:00";
+        if (exit) exit.value = "20:00";
       } else if (shift === 'N') {
-        if (entrada) entrada.value = "20:00";
-        if (saida) saida.value = "08:00";
+        if (entrance) entrance.value = "20:00";
+        if (exit) exit.value = "08:00";
       }
       if (data) {
-        if (patente) patente.value = data.patent || "";
-        if (nome) nome.value = data.abv_name || "";
+        if (patent) patent.value = data.patent || "";
+        if (name) name.value = data.abv_name || "";
         if (mpCell) {
           mpCell.textContent = data.MP ? "X" : "";
           mpCell.classList.toggle('plandir-mp-active', !!data.MP);
@@ -280,10 +280,10 @@
           tasCell.classList.toggle('plandir-tas-active', !!data.TAS);
         }
       } else {
-        if (entrada) entrada.value = "";
-        if (saida) saida.value = "";
-        if (patente) patente.value = "";
-        if (nome) nome.value = "";
+        if (entrance) entrance.value = "";
+        if (exit) exit.value = "";
+        if (patent) patent.value = "";
+        if (name) name.value = "";
         if (mpCell) {
           mpCell.textContent = "";
           mpCell.classList.remove('plandir-mp-active');
@@ -717,22 +717,66 @@
               console.error('Erro reg_elems:', err);
             }
             const sideTbody = document.getElementById('plandir-side-tbody');
-            const existsInSide = sideTbody && sideTbody.querySelector(`tr[data-side-nint="${nIntFormatted}"]`);
-            if (!existsInSide) {
+            const sideRow = sideTbody && sideTbody.querySelector(`tr[data-side-nint="${nIntFormatted}"]`);
+            const existsInSide = !!sideRow;
+            if (existsInSide) {
+              const obsInput = row.querySelectorAll('td input')[5];
+              if (shift === 'D') {
+                try {
+                  const resTeam = await fetch(`${SUPABASE_URL}/rest/v1/reg_employees?n_int=eq.${this.value}&select=team`, {
+                    headers: getSupabaseHeaders()
+                  });
+                  const teamData = await resTeam.json();
+                  const team = teamData[0]?.team || '';
+                  if (obsInput) obsInput.value = team.startsWith('EIP') ? 'EIP' : 'Profissional';
+                } catch (err) {
+                  console.error('Erro ao buscar team:', err);
+                  if (obsInput) obsInput.value = 'Profissional';
+                }
+              } else {
+                let secao = '';
+                let currentSection = '';
+                sideTbody.querySelectorAll('tr').forEach(tr => {
+                  const sectionCell = tr.querySelector('td.plandir-card-title');
+                  if (sectionCell) {
+                    currentSection = sectionCell.textContent.trim();
+                  }
+                  if (tr.getAttribute('data-side-nint') === nIntFormatted) {
+                    secao = currentSection;
+                  }
+                });
+                if (obsInput) {
+                  if (secao === 'PROFISSIONAIS') obsInput.value = 'Profissional';
+                  else if (secao === 'PIQUETE') obsInput.value = 'Piquete';
+                  else if (secao === 'ECIN') obsInput.value = 'ECIN';
+                  else if (secao === 'OFOPE') obsInput.value = '';
+                  else obsInput.value = 'Profissional';
+                }
+              }
+            } else {
               const nome = dataArr[0]?.abv_name || nIntFormatted;
               const msg = document.getElementById('popup-confirm-message');
               if (msg) msg.textContent = `O Elemento ${nIntFormatted} (${nome}) não consta na escala do dia. Deseja adicioná-lo ao planeamento?`;
               const modal1 = document.getElementById('popup-confirm-modal');
-              const modal2 = document.getElementById('popup-reforco-modal');
+              const modal2 = document.getElementById('popup-service-type-modal');
               if (modal1) modal1.classList.add('show');
               const okBtn1 = document.getElementById('popup-confirm-ok-btn');
               const cancelBtn1 = document.getElementById('popup-confirm-cancel-btn');
-              const okBtn2 = document.getElementById('popup-reforco-ok-btn');
-              const cancelBtn2 = document.getElementById('popup-reforco-cancel-btn');
+              const okBtn2Raw = document.getElementById('popup-service-type-ok-btn');
+              const cancelBtn2Raw = document.getElementById('popup-service-type-cancel-btn');
+              const okBtn2 = okBtn2Raw.cloneNode(true);
+              const cancelBtn2 = cancelBtn2Raw.cloneNode(true);
+              okBtn2Raw.parentNode.replaceChild(okBtn2, okBtn2Raw);
+              cancelBtn2Raw.parentNode.replaceChild(cancelBtn2, cancelBtn2Raw);
               if (okBtn1) okBtn1.onclick = () => {
                 modal1.classList.remove('show');
-                document.querySelectorAll('input[name="popup-reforco-tipo"]').forEach(r => r.checked = false);
-                if (modal2) modal2.classList.add('show');
+                document.querySelectorAll('input[name="popup-service-type"]').forEach(r => r.checked = false);
+                document.getElementById('service-swap-fields').style.display = 'none';
+                document.getElementById('service-swap-nint').value = '';
+                document.getElementById('service-swap-name').value = '';
+                setTimeout(() => {
+                  if (modal2) modal2.classList.add('show');
+                }, 50);
               };
               if (cancelBtn1) cancelBtn1.onclick = () => {
                 modal1.classList.remove('show');
@@ -740,31 +784,33 @@
                 updateRowFields(row, null);
                 updateStatusDots();
               };
-              if (okBtn2) okBtn2.onclick = () => {
-                const selected = document.querySelector('input[name="popup-reforco-tipo"]:checked');
+              okBtn2.onclick = async () => {
+                const selected = document.querySelector('input[name="popup-service-type"]:checked');
                 if (!selected) {
                   showPopup('popup-danger', 'Por favor selecione uma opção.');
                   return;
                 }
                 modal2.classList.remove('show');
                 const obsInput = row.querySelectorAll('td input')[5];
-                if (obsInput) obsInput.value = selected.value;
+                if (selected.value === 'Troca de Serviço') {
+                  const nIntSwap = document.getElementById('service-swap-nint')?.value?.trim();
+                  const nameSwap = document.getElementById('service-swap-name')?.value?.trim();
+                  const swapInfo = nIntSwap ? `${nIntSwap} ${nameSwap}` : '';
+                  if (shift === 'D') {
+                    if (obsInput) obsInput.value = `Profissional | Troca de Serviço | ${swapInfo}`;
+                  } else {
+                    if (obsInput) obsInput.value = `Piquete | Troca de Serviço | ${swapInfo}`;
+                  }
+                } else {
+                  if (obsInput) obsInput.value = selected.value;
+                }
               };
-              if (cancelBtn2) cancelBtn2.onclick = () => {
+              cancelBtn2.onclick = () => {
                 modal2.classList.remove('show');
                 inputRef.value = '';
                 updateRowFields(row, null);
                 updateStatusDots();
               };
-            }
-            try {
-              const res = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${this.value}`, {
-                headers: getSupabaseHeaders()
-              });
-              const dataArr = await res.json();
-              updateRowFields(row, dataArr[0], shift);
-            } catch (err) {
-              console.error('Erro reg_elems:', err);
             }
           } else {
             updateRowFields(row, null);
@@ -772,18 +818,37 @@
           updateStatusDots();
         });
       });
+      container.querySelectorAll('.plandir-entrance-input').forEach(input => {
+        input.addEventListener('change', function() {
+          const row = this.closest('tr');
+          const obsInput = row.querySelectorAll('td input')[5];
+          if (!obsInput) return;
+          if (shift !== 'D') return;
+          if (!obsInput.value.startsWith('Profissional')) return;
+          const val = this.value.trim();
+          if (!val) return;
+          const [h, m] = val.split(':').map(Number);
+          const totalMinutes = h * 60 + m;
+          const limit = 6 * 60 + 30;
+          if (totalMinutes < limit) {
+            obsInput.value = 'Profissional | Longo Curso';
+          } else {
+            obsInput.value = 'Profissional';
+          }
+        });
+      });
       createEmitButton(container);
     }
-    function renderRow(r, patenteMap) {
+    function renderRow(r, patentMap) {
       const nIntFormatted = String(r.n_int || '').trim().padStart(3, '0');
-      const patente = patenteMap[nIntFormatted] || '';
+      const patent = patentMap[nIntFormatted] || '';
       const isAlreadyFilled = Array.from(document.querySelectorAll('.plandir-nint-input'))
       .some(input => input.value.trim().padStart(3, '0') === nIntFormatted);
       const initialClass = isAlreadyFilled ? 'row-highlight-green' : 'row-pending-red';
       return `
         <tr data-side-nint="${nIntFormatted}" class="${initialClass}">
           <td style="text-align:center; padding: 5px 6px; width:75px;">${nIntFormatted}</td>
-          <td style="padding: 5px 6px; width:150px;">${patente}</td>
+          <td style="padding: 5px 6px; width:150px;">${patent}</td>
           <td style="padding: 5px 6px; width:250px;">${r.abv_name || ''}</td>
         </tr>
       `;
@@ -797,5 +862,31 @@
           rightCol.style.display = 'none';
         }
         document.querySelectorAll('.shift-btn').forEach(btn => btn.classList.remove('active'));
+      }
+    });
+    document.querySelectorAll('input[name="popup-service-type"]').forEach(radio => {
+      radio.addEventListener('change', function () {
+        const fields = document.getElementById('service-swap-fields');
+        fields.style.display = this.value === 'Troca de Serviço' ? 'flex' : 'none';
+      });
+    });
+    document.addEventListener('input', async function (e) {
+      if (e.target.id !== 'service-swap-nint') return;
+      const input = e.target;
+      input.value = input.value.replace(/\D/g, '').slice(0, 3);
+      const nameField = document.getElementById('service-swap-name');
+      if (input.value.length === 3) {
+        try {
+          const res = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${input.value}`, {
+            headers: getSupabaseHeaders()
+          });
+          const data = await res.json();
+          nameField.value = data[0]?.abv_name || '';
+        } catch (err) {
+          console.error('Erro:', err);
+          nameField.value = '';
+        }
+      } else {
+        nameField.value = '';
       }
     });

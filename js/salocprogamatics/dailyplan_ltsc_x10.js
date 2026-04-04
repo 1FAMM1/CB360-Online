@@ -986,3 +986,24 @@
         nameField.value = '';
       }
     });
+    function blockShiftButtons() {
+      const now = new Date();
+      const hours = now.getHours();
+      const minutes = now.getMinutes();
+      const totalMinutes = hours * 60 + minutes;
+      const isDay = totalMinutes >= 8 * 60 && totalMinutes < 20 * 60;
+      const btnD = document.querySelector('.shift-btn[data-shift="D"]');
+      const btnN = document.querySelector('.shift-btn[data-shift="N"]');
+      if (isDay) {
+        btnN.disabled = true;
+        btnN.style.opacity = '0.4';
+        btnN.style.cursor = 'not-allowed';
+        btnN.title = 'Turno N disponível após as 20:00';
+      } else {
+        btnD.disabled = true;
+        btnD.style.opacity = '0.4';
+        btnD.style.cursor = 'not-allowed';
+        btnD.title = 'Turno D disponível após as 08:00';
+      }
+    }
+    blockShiftButtons();

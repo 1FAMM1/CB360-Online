@@ -10,13 +10,7 @@
     .plandir-side-table tbody tr:hover td {background-color: #f0f4ff;}
     .row-highlight-green td {background-color: #dcfce7 !important; color: #15803d !important; font-weight: 600;}
     .plandir-side-table tbody tr.row-highlight-green:hover td {background-color: #bbf7d0 !important;}
-    .row-pending-red td {background-color: #fee2e2 !important; color: #991b1b !important; transition: all 0.3s ease;}
-    .shift-main-card {background: linear-gradient(to bottom, #ffffff, #f0f0f0); box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 10px; border: 1px solid #d0d0d0; padding: 12px; min-height: 50px;}
-    .shift-btn {padding: 6px 20px; font-size: 11px; font-weight: 700; border: 1px solid #ccc; border-radius: 8px; background: linear-gradient(to bottom, #fff, #f0f0f0);
-                color: #333; cursor: pointer; transition: all 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.1);}
-    .shift-btn:hover {background: linear-gradient(to bottom, #f3f4f6, #e8e8e8);}
-    .shift-btn.active {background: linear-gradient(to bottom, #dbeafe, #bfdbfe); color: #1d4ed8; border-color: #93c5fd; font-weight: 600; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);}
-    .shift-btn:focus {outline: 0px solid #C82333; outline-offset: 0px;}
+    .row-pending-red td {background-color: #fee2e2 !important; color: #991b1b !important; transition: all 0.3s ease;}    
     .plandir-shift-header {width: 1598px; margin: 5px auto; margin-bottom: 0px; text-align: center; padding: 10px 16px; border-radius: 10px; border: 1px solid #d0d0d0;
                            background: linear-gradient(to bottom, #ffffff, #f0f0f0); box-shadow: 0 2px 8px rgba(0,0,0,0.1);}
     .plandir-shift-header .plandir-header-title {font-size: 18px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px;}

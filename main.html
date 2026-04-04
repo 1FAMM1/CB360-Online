@@ -239,14 +239,22 @@
                 <input type="radio" name="popup-service-type" value="Reforço" style="cursor:pointer !important;"> Reforço
               </label>
             </li>
-            <li style="list-style:none; display:flex; align-items:center; gap:8px;">
+            <li style="list-style:none; margin-bottom: 8px; display:flex; align-items:center; gap:8px;">
               <label style="display:flex; align-items:center; gap:8px; cursor:pointer !important; white-space:nowrap;">
                 <input type="radio" name="popup-service-type" value="Troca de Serviço" style="cursor:pointer !important;"> Troca de Serviço
               </label>
               <div id="service-swap-fields" style="display:none; align-items:center; gap:8px;">
-                <label style="white-space:nowrap; line-height:1; display:flex; align-items:center;">|  Nº Int.</label>
+                <label style="white-space:nowrap; line-height:1; display:flex; align-items:center;">| Nº Int.</label>
                 <input type="text" id="service-swap-nint" style="width:50px; padding:4px 6px; border:1px solid #dee2e6; border-radius:4px; font-size:0.85em; text-align:center;">
                 <input type="text" id="service-swap-name" style="width:175px; padding:4px 6px; border:1px solid #dee2e6; border-radius:4px; font-size:0.85em;" readonly disabled>
+              </div>
+            </li>
+            <li style="list-style:none; display:flex; align-items:center; gap:8px;">
+              <label style="display:flex; align-items:center; gap:8px; cursor:pointer !important; white-space:nowrap;">
+                <input type="radio" name="popup-service-type" value="Outro" style="cursor:pointer !important;"> Outro
+              </label>
+              <div id="service-other-fields" style="display:none; align-items:center; gap:8px;">
+                <input type="text" id="service-other-text" style="width:250px; padding:4px 6px; border:1px solid #dee2e6; border-radius:4px; font-size:0.85em;">
               </div>
             </li>
           </ul>

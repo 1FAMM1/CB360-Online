@@ -224,34 +224,40 @@
       </div>
     </div>
     <!-- LARANJA - TIPO REFORÇO -->
-    <div id="popup-reforco-modal" class="popup-modal popup-warning" tabindex="0">
-      <div class="popup-content">
+    <div id="popup-service-type-modal" class="popup-modal popup-warning" tabindex="0">
+      <div class="popup-content" style="min-width: 450px;">
         <div class="popup-header"><h3>⚠️ TIPO DE SERVIÇO</h3></div>
         <div class="popup-body">
-          <ul>
+          <ul style="list-style:none; padding:0; margin:0;">
             <li style="list-style:none; margin-bottom: 8px;">
-              <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                <input type="radio" name="popup-reforco-tipo" value="Extra"> Extra
+              <label style="display:flex; align-items:center; gap:8px; cursor:pointer !important;">
+                <input type="radio" name="popup-service-type" value="Extra" style="cursor:pointer !important;"> Extra
               </label>
             </li>
             <li style="list-style:none; margin-bottom: 8px;">
-              <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                <input type="radio" name="popup-reforco-tipo" value="Reforço"> Reforço
+              <label style="display:flex; align-items:center; gap:8px; cursor:pointer !important;">
+                <input type="radio" name="popup-service-type" value="Reforço" style="cursor:pointer !important;"> Reforço
               </label>
             </li>
-            <li style="list-style:none;">
-              <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                <input type="radio" name="popup-reforco-tipo" value="Troca de Serviço"> Troca de Serviço
+            <li style="list-style:none; display:flex; align-items:center; gap:8px;">
+              <label style="display:flex; align-items:center; gap:8px; cursor:pointer !important; white-space:nowrap;">
+                <input type="radio" name="popup-service-type" value="Troca de Serviço" style="cursor:pointer !important;"> Troca de Serviço
               </label>
+              <div id="service-swap-fields" style="display:none; align-items:center; gap:8px;">
+                <label style="white-space:nowrap; line-height:1; display:flex; align-items:center;">|  Nº Int.</label>
+                <input type="text" id="service-swap-nint" style="width:50px; padding:4px 6px; border:1px solid #dee2e6; border-radius:4px; font-size:0.85em; text-align:center;">
+                <input type="text" id="service-swap-name" style="width:175px; padding:4px 6px; border:1px solid #dee2e6; border-radius:4px; font-size:0.85em;" readonly disabled>
+              </div>
             </li>
           </ul>
         </div>
         <div class="popup-footer" style="gap: 10px;">
-          <button id="popup-reforco-ok-btn" class="popup-btn" style="background-color: #FD7E14;">Confirmar</button>
-          <button id="popup-reforco-cancel-btn" class="popup-btn" style="background-color: #6C757D;">Cancelar</button>
+          <button id="popup-service-type-ok-btn" class="popup-btn" style="background-color: #FD7E14;">Confirmar</button>
+          <button id="popup-service-type-cancel-btn" class="popup-btn" style="background-color: #6C757D;">Cancelar</button>
         </div>
       </div>
     </div>
+    <!-- VEHICLES MODAL -->
     <div id="vehicle-status-modal" class="vehicle-status-modal" tabindex="0">
       <div class="vehicle-status-modal-content">
         <div class="vehicle-status-modal-header">

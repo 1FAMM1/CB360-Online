@@ -322,6 +322,9 @@
     });
     /* ================== RESTART PAGE ================= */
     document.querySelector('[data-page="page-inocrepc"]').addEventListener('click', () => {
+      const oldInopBtn = document.querySelector(".oldinop");
+      NewInopBtn.classList.remove("active"); 
+      oldInopBtn.classList.remove("active"); 
       sitopContainer.style.display = 'none';
       inopsTableContainer.style.display = 'none';
     });

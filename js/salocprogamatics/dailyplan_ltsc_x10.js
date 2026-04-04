@@ -439,8 +439,7 @@
         showPopup('popup-danger', "Erro: Defina pelo menos um destinatário.");
         return;
       }
-     const teamNameMap = {"OFOPE": "ofope", "CHEFE DE SERVIÇO": "chefe_servico", "OPTEL": "optel",
-                          "EQUIPA 01": "equipa_01", "EQUIPA 02": "equipa_02", "LOGÍSTICA": "logistica",
+     const teamNameMap = {"OFOPE": "ofope", "CHEFE DE SERVIÇO": "chefe_servico", "OPTEL": "optel", "EQUIPA 01": "equipa_01", "EQUIPA 02": "equipa_02", "LOGÍSTICA": "logistica",
                           "INEM": "inem", "INEM - Reserva": "inem_reserva", "SERVIÇO GERAL": "servico_geral"};
       try {
         for (let table of tables) {
@@ -643,8 +642,7 @@
             });
             const allMembers = await res2.json();
             if (allMembers && allMembers.length > 0) {
-              const teamNameMap = {"ofope": "OFOPE", "chefe_servico": "CHEFE DE SERVIÇO", "optel": "OPTEL",
-                                   "equipa_01": "EQUIPA 01", "equipa_02": "EQUIPA 02", "logistica": "LOGÍSTICA",
+              const teamNameMap = {"ofope": "OFOPE", "chefe_servico": "CHEFE DE SERVIÇO", "optel": "OPTEL", "equipa_01": "EQUIPA 01", "equipa_02": "EQUIPA 02", "logistica": "LOGÍSTICA",
                                    "inem": "INEM", "inem_reserva": "INEM - Reserva", "servico_geral": "SERVIÇO GERAL"};
               const teamsData = allMembers.reduce((acc, member) => {
                 if (!acc[member.team_name]) acc[member.team_name] = [];
@@ -799,7 +797,26 @@
                   if (shift === 'D') {
                     if (obsInput) obsInput.value = `Profissional | Troca de Serviço | ${swapInfo}`;
                   } else {
-                    if (obsInput) obsInput.value = `Piquete | Troca de Serviço | ${swapInfo}`;
+                    let secaoSwap = '';
+                    let currentSection = '';
+                    const sideTbody = document.getElementById('plandir-side-tbody');
+                    const nIntSwapFormatted = nIntSwap?.padStart(3, '0');
+                    if (sideTbody && nIntSwapFormatted) {
+                      sideTbody.querySelectorAll('tr').forEach(tr => {
+                        const sectionCell = tr.querySelector('td.plandir-card-title');
+                        if (sectionCell) {
+                          currentSection = sectionCell.textContent.trim();
+                        }
+                        if (tr.getAttribute('data-side-nint') === nIntSwapFormatted) {
+                          secaoSwap = currentSection;
+                        }
+                      });
+                    }
+                    let prefix = 'Piquete';
+                    if (secaoSwap === 'PROFISSIONAIS') prefix = 'Profissional';
+                    else if (secaoSwap === 'ECIN') prefix = 'ECIN';
+                    else if (secaoSwap === 'PIQUETE') prefix = 'Piquete';
+                    if (obsInput) obsInput.value = `${prefix} | Troca de Serviço | ${swapInfo}`;
                   }
                 } else {
                   if (obsInput) obsInput.value = selected.value;

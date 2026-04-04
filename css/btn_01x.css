@@ -25,3 +25,9 @@
     .panel-btn {padding: 6px 8px; border: 1px solid #bdc3c7; border-radius: 6px; background: white; cursor: pointer; text-align: center; transition: all 0.3s ease; font-weight: bold;
                 font-size: 11px; height: 50px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; min-width: 0;}
     .panel-btn:hover {transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); filter: brightness(1.1);}
+
+    .options-btn {padding: 6px 20px; font-size: 11px; font-weight: 700; border: 1px solid #ccc; border-radius: 8px; background: linear-gradient(to bottom, #fff, #f0f0f0);
+                color: #333; cursor: pointer; transition: all 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.1);}
+    .options-btn:hover {background: linear-gradient(to bottom, #f3f4f6, #e8e8e8);}
+    .options-btn.active {background: linear-gradient(to bottom, #dbeafe, #bfdbfe); color: #1d4ed8; border-color: #93c5fd; font-weight: 600; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);}
+    .options-btn:focus {outline: 0px solid #C82333; outline-offset: 0px;}

@@ -20,6 +20,7 @@
     /* Error */
     .popup-danger .popup-header {background: linear-gradient(135deg, #E8404F 0%, #C82333 60%, #B01E2B 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.15);}
     .popup-danger .popup-btn {background-color: #DC3545;}
+    #popup-danger {z-index: 10001;}
     /* Success */
     .popup-success .popup-header {background: linear-gradient(135deg, #28A96A 0%, #157347 60%, #0F5C38 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.15);}
     .popup-success .popup-btn {background-color: #198754;}

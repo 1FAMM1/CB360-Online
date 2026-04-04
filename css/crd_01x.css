@@ -36,3 +36,4 @@
     .panel-card p {color: #495057; line-height: 1.6; margin-bottom: 15px;}
     .transparent-card {border: 2px solid #888; border-radius: 8px; background-color: transparent; padding: 15px; margin: 0 0 0 0;}
     .transparent-card .card-header {font-weight: bold; font-size: 16px; margin-bottom: 10px;}
+    .options-main-card {background: linear-gradient(to bottom, #ffffff, #f0f0f0); box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 10px; border: 1px solid #d0d0d0; padding: 12px; min-height: 50px;}

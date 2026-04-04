@@ -959,6 +959,7 @@
         }
         document.querySelectorAll('.options-btn').forEach(btn => btn.classList.remove('active'));
       }
+      blockShiftButtons();
     });
     document.querySelectorAll('input[name="popup-service-type"]').forEach(radio => {
       radio.addEventListener('change', function () {
@@ -988,12 +989,18 @@
     });
     function blockShiftButtons() {
       const now = new Date();
-      const hours = now.getHours();
-      const minutes = now.getMinutes();
-      const totalMinutes = hours * 60 + minutes;
+      const totalMinutes = now.getHours() * 60 + now.getMinutes();
       const isDay = totalMinutes >= 8 * 60 && totalMinutes < 20 * 60;
       const btnD = document.querySelector('.options-btn[data-shift="D"]');
       const btnN = document.querySelector('.options-btn[data-shift="N"]');
+      btnD.disabled = false;
+      btnD.style.opacity = '1';
+      btnD.style.cursor = 'pointer';
+      btnD.title = '';
+      btnN.disabled = false;
+      btnN.style.opacity = '1';
+      btnN.style.cursor = 'pointer';
+      btnN.title = '';
       if (isDay) {
         btnN.disabled = true;
         btnN.style.opacity = '0.4';
@@ -1006,4 +1013,4 @@
         btnD.title = 'Turno D disponível após as 08:00';
       }
     }
-    blockShiftButtons();
+    blockShiftButtons(); 

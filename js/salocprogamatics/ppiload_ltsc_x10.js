@@ -378,7 +378,7 @@
     function createDirectionButtons(dirRow, directions, idPrefix, btnStyle, topStyle, botStyle, controlsSelector) {
       directions.forEach(d => {
         const btn = document.createElement("button");
-        btn.id = idPrefix + d.id; btn.className = "btn btn-add"; btn.style.cssText = btnStyle;
+        btn.id = idPrefix + d.id; btn.className = "btn btn-add options-btn"; btn.style.cssText = btnStyle;
         const l1 = document.createElement("div"); l1.textContent = d.line1; l1.style.cssText = topStyle;
         const l2 = document.createElement("div"); l2.textContent = d.line2; l2.style.cssText = botStyle;
         btn.append(l1, l2);
@@ -409,9 +409,9 @@
       const container = document.getElementById(containerId);
       if (!container) return;
       container.style.display = "block"; container.innerHTML = "";
-      const card = document.createElement("div"); card.className = "main-card"; card.style.cssText = cardStyle;
+      const card = document.createElement("div"); card.className = "options-main-card"; card.style.cssText = cardStyle;
       const title = document.createElement("label"); title.textContent = titleText; title.style.cssText = titleStyle;
-      const btnSearch = document.createElement("button"); btnSearch.textContent = "Procurar"; btnSearch.className = "btn btn-add"; btnSearch.style.width = "150px";
+      const btnSearch = document.createElement("button"); btnSearch.textContent = "Procurar"; btnSearch.className = "btn btn-add options-black-btn"; btnSearch.style.width = "150px";
       btnSearch.onclick = searchHandler;
       card.append(title, directionButtons, inputEl, btnSearch);
       container.appendChild(card);
@@ -455,7 +455,7 @@
       row.appendChild(label); return row;
     }
     function createA22GridButtons(id, specialButtons) {
-      const btn = document.createElement("button"); btn.id = id; btn.textContent = id; btn.className = "btn btn-add"; btn.style.cssText = A22_GRID_BUTTON_STYLE;
+      const btn = document.createElement("button"); btn.id = id; btn.textContent = id; btn.className = "btn btn-add options-btn"; btn.style.cssText = A22_GRID_BUTTON_STYLE;
       if (specialButtons.has(id) && getCorpNr() === "0805") btn.classList.add("btn-special");
       btn.onclick = e => {
         e.preventDefault();
@@ -669,7 +669,7 @@
       container.appendChild(labelDiv);
       const rowButtons=document.createElement("div"); Object.assign(rowButtons.style,AERO_ROW_STYLE);
       buttonsData.forEach(btnData => {
-        const btn=document.createElement("button"); btn.id=btnData.id; btn.className="btn btn-add";
+        const btn=document.createElement("button"); btn.id=btnData.id; btn.className="btn btn-add options-btn";
         btn.textContent=`${btnData.id} (${btnData.label})`;
         const bgMap={B1:"black",A1:"green",A2:"yellow",A3:"orange",A4:"red"};
         const colorMap={B1:"red",A2:"black",A3:"black"};
@@ -854,7 +854,7 @@
       ShowLinFerGridButtons();
     }
     function createLinFerGridButtons(id, specialButtons) {
-      const btn=document.createElement("button"); btn.id=id; btn.textContent=id; btn.className="btn btn-add"; btn.style.cssText=LINFER_GRID_BUTTON_STYLE;
+      const btn=document.createElement("button"); btn.id=id; btn.textContent=id; btn.className="btn btn-add options-btn"; btn.style.cssText=LINFER_GRID_BUTTON_STYLE;
       if(specialButtons.has(id)&&getCorpNr()==="0805") btn.classList.add("btn-special");
       btn.onclick=e=>{
         e.preventDefault();

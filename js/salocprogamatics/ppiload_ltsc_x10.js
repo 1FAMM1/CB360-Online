@@ -855,7 +855,7 @@
     }
     function createLinFerGridButtons(id, specialButtons) {
       const btn=document.createElement("button"); btn.id=id; btn.textContent=id; btn.className="btn btn-add options-btn"; btn.style.cssText=LINFER_GRID_BUTTON_STYLE;
-      if(specialButtons.has(id)&&getCorpNr()==="0805") btn.classList.add("btn-special");
+      if(specialButtons.has(id)&&getCorpNr()==="0805") btn.classList.add("options-yellow-btn");
       btn.onclick=e=>{
         e.preventDefault();
         const isActive=btn.classList.contains("active");

@@ -31,3 +31,14 @@
     .options-btn:hover {background: linear-gradient(to bottom, #f3f4f6, #e8e8e8);}
     .options-btn.active {background: linear-gradient(to bottom, #fee2e2, #fecaca); color: #b91c1c; border-color: #fca5a5; font-weight: 600; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);}
     .options-btn:focus {outline: 0px solid #C82333; outline-offset: 0px;}
+
+    .options-black-btn {padding: 6px 20px; font-size: 11px; font-weight: 700; border: 1px solid #222; border-radius: 8px; background: linear-gradient(to bottom, #444444, #000000); color: #ffffff;
+                        cursor: pointer; transition: all 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.5);}
+    .options-black-btn:hover {background: linear-gradient(to bottom, #555555, #111111); color: #fff;}
+    .options-black-btn.active {background: linear-gradient(to bottom, #991b1b, #450a0a); color: #fecaca; border-color: #7f1d1d; font-weight: 600; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);}
+    .options-black-btn:focus {outline: 0px solid #C82333; outline-offset: 0px;}
+    .options-yellow-btn {padding: 6px 20px; font-size: 11px; font-weight: 700; border: 1px solid #eab308; border-radius: 8px; background: linear-gradient(to bottom, #fde047, #facc15); color: #713f12;
+                         cursor: pointer; transition: all 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.1);}    
+    .options-yellow-btn:hover {background: linear-gradient(to bottom, #fef08a, #fde047); border-color: #facc15;}
+    .options-yellow-btn.active {background: linear-gradient(to bottom, #f59e0b, #d97706); color: #ffffff; border-color: #b45309; font-weight: 600; box-shadow: inset 0 1px 4px rgba(0,0,0,0.2);}
+    .options-yellow-btn:focus {outline: 0px solid #f59e0b; outline-offset: 0px;}

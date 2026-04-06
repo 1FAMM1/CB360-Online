@@ -18,22 +18,24 @@
     const A22_DIRECTION_MID_STYLE = `font-weight: bold; font-size: 14px;`;
     const A22_DIRECTION_BOT_STYLE = `font-size: 11px;`;
     const A22_NODE_KM_STYLE = `font-size: 10px;`;
-    const INTERVENTION_NOTICE_STYLE = `padding: 10px; margin: 5px 0 -10px 0; border-radius: 3px; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: bold;
-                                       font-size: 18px; background: radial-gradient(ellipse at center, #ff6b6b 0%, #cc0000 55%, #7a0000 100%);
-                                       box-shadow: inset 0 2px 6px rgba(255,255,255,0.45), inset 0 -2px 4px rgba(0,0,0,0.3), 0 2px 6px rgba(0,0,0,0.35);`;
+    const INTERVENTION_NOTICE_STYLE = `padding: 12px 16px; margin: 5px 0 -10px 0; border-radius: 5px; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: bold;
+                                       font-size: 18px; border-top: 1px solid rgba(255,255,255,0.2);`;
     const FINAL_H_TABLE_STYLE = `width: 100%; margin-top: -5px; border-collapse: collapse;`;
     const FINAL_H_CELL_STYLE = `background-color: navy; color: white; font-weight: bold; text-align: center; width: 80px; line-height: 15px; padding: 5px; border: 1px solid #bbb;`;
-    const CUMULATIVE_ALERT_STYLE = `padding: 10px; margin: 5px 0 -5px 0; border-radius: 3px; font-weight: bold; text-align: center; color: white;
-                                    background: radial-gradient(ellipse at center, #ff4444 0%, #b30000 55%, #6b0000 100%);
-                                    box-shadow: inset 0 2px 6px rgba(255,255,255,0.45), inset 0 -2px 4px rgba(0,0,0,0.3), 0 2px 6px rgba(0,0,0,0.35);`;
+    const CUMULATIVE_ALERT_STYLE = `padding: 12px 16px; margin: 5px 0 -5px 0; border-radius: 5px; font-weight: bold; text-align: center; font-size: 15px; color: #fff;
+                                    background: radial-gradient(ellipse at 50% 35%, #ff5555 0%, #cc0000 45%, #5a0000 100%); text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+                                    box-shadow: inset 0 3px 8px rgba(255,255,255,0.3), inset 0 -3px 6px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.5), 0 3px 8px rgba(0,0,0,0.4);
+                                    border-top: 1px solid rgba(255,255,255,0.25); letter-spacing: 0.03em;`;
     const FINAL_H_TEXT_STYLE = `padding: 5px; text-align: left; border: 1px solid #bbb; line-height: 15px;`;
     const AERO_LABEL_STYLE = {background: "linear-gradient(to light,#888,#c0c0c0)", borderRadius: "3px", height: "30px", display: "flex", alignItems: "center", justifyContent: "center",
                               fontSize: "17px", fontWeight: "bold", color: "black", width: "100%", maxWidth: "920px", margin: "3px auto 0 auto"};
     const AERO_ROW_STYLE = {display: "flex", justifyContent: "center", flexWrap: "wrap", gap: "5px"};
     const AERO_BUTTON_STYLE = {marginTop: "5px", width: "180px", height: "30px", fontSize: "12px", fontWeight: "bold"};
     const AERO_HEADER_TABLE_STYLE = {width: "100%", margin: "25px 0 5px 0", borderCollapse: "collapse"};
-    const AERO_HEADER_CELL_STYLE = {textAlign: "center", background: "radial-gradient(ellipse at center, #c0392b 0%, #8B0000 55%, #4a0000 100%)", color: "#FFD700", fontWeight: "bold", fontSize: "16px",
-                                    padding: "8px", borderRadius: "3px", whiteSpace: "pre-line", boxShadow: "inset 0 2px 6px rgba(255,255,255,0.45), inset 0 -2px 4px rgba(0,0,0,0.3), 0 2px 6px rgba(0,0,0,0.35)",};
+    const AERO_HEADER_CELL_STYLE = {textAlign: "center", background: "radial-gradient(ellipse at 50% 35%, #a83228 0%, #6e0a0a 50%, #3a0404 100%)", color: "#FFD700", fontWeight: "bold",
+                                    fontSize: "16px", padding: "10px 12px", borderRadius: "5px", whiteSpace: "pre-line", textShadow: "0 1px 3px rgba(0,0,0,0.6)",
+                                    boxShadow: "inset 0 3px 8px rgba(255,255,255,0.2), inset 0 -3px 6px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.3), 0 3px 8px rgba(0,0,0,0.4)",
+                                    borderTop: "1px solid rgba(255,255,255,0.15)",};
     const AERO_INFO_TABLE_STYLE = {width: "100%" ,margin: "5px 0 5px 0", borderCollapse: "collapse", border: "1px solid #bbb"};
     const AERO_CELL_STYLE = {textAlign: "left", padding: "4px", border: "1px solid #bbb", minHeight: "25px", verticalAlign: "top"};
     const AERO_RESERVA_CELL_STYLE = {textAlign: "center", padding: "4px", border: "1px solid #bbb", backgroundColor: "green", color: "white", fontWeight:"bold"};
@@ -232,10 +234,11 @@
         notice.style.cssText = INTERVENTION_NOTICE_STYLE;
         parentContainer.insertBefore(notice, parentContainer.firstChild);
       }
-      notice.style.background = isIntervention
-        ? "radial-gradient(ellipse at center, #5edd7a 0%, #229941 55%, #0f5c24 100%)" : "radial-gradient(ellipse at center, #ff6b6b 0%, #cc1d1d 55%, #7a0000 100%)";
-      notice.style.boxShadow = "inset 0 2px 6px rgba(255,255,255,0.45), inset 0 -2px 4px rgba(0,0,0,0.3), 0 2px 6px rgba(0,0,0,0.35)";
-      notice.style.color = isIntervention ? "#fff" : "#f2b30a";
+      notice.style.background = isIntervention ? "radial-gradient(ellipse at 50% 35%, #72f09a 0%, #25a84a 45%, #0d4f1e 100%)" : "radial-gradient(ellipse at 50% 35%, #ff7070 0%, #cc1d1d 50%, #6b0000 100%)";
+      notice.style.boxShadow = "inset 0 3px 8px rgba(255,255,255,0.25), inset 0 -3px 6px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.4), 0 3px 8px rgba(0,0,0,0.4)";
+      notice.style.borderTop = "1px solid rgba(255,255,255,0.2)";
+      notice.style.textShadow = isIntervention ? "0 1px 6px rgba(0,0,0,0.7), 0 0 12px rgba(0,0,0,0.4)"  : "0 1px 4px rgba(0,0,0,0.6)";
+      notice.style.color = "#fff";
       notice.textContent = isIntervention ? "COM INTERVENÇÃO DO CORPO DE BOMBEIROS" : "SEM INTERVENÇÃO DO CORPO DE BOMBEIROS";
     }
     function checkIfHasCBIntervention(parentContainer) {
@@ -295,13 +298,12 @@
       let container = document.getElementById(containerId);
       if (!container) {
         container = document.createElement("div"); container.id = containerId;
-        insertBefore ? parentEl.parentNode.insertBefore(container, parentEl)
-                     : parentEl.parentNode.insertBefore(container, parentEl.nextSibling);
+        insertBefore ? parentEl.parentNode.insertBefore(container, parentEl) : parentEl.parentNode.insertBefore(container, parentEl.nextSibling);
       } else if (!insertBefore && container.nextSibling !== parentEl.nextSibling) {
         parentEl.parentNode.insertBefore(container, parentEl.nextSibling);
       }
       return container;
-    }
+    }    
     /* ─── CLEAR / RESET ──────────────────────────────────────── */
     function clearPPIContainers(ppiPrefix) {
       [`${ppiPrefix}-grid-references`,`${ppiPrefix}-grid-container`,`${ppiPrefix}-specials-container`,`${ppiPrefix}-abs-note`]

@@ -1,18 +1,6 @@
-    .table-elements {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    .table-elements th,
-    .table-elements td {
-      border: 1px solid #ccc;
-      padding: 2px;
-      text-align: center;
-    }
-
-    .table-elements th {
-      background-color: #f2f2f2;
-    }
+    .table-elements {width: 100%; border-collapse: collapse; box-shadow: 0 4px 12px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.08); overflow: hidden;}
+    .table-elements th, .table-elements td {border: 1px solid #ccc; padding: 2px; text-align: center;}
+    .table-elements th {background-color: #f2f2f2;}
 
     .month-table td[contenteditable="true"]:focus {
       outline: none;

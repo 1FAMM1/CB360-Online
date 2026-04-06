@@ -18,18 +18,22 @@
     const A22_DIRECTION_MID_STYLE = `font-weight: bold; font-size: 14px;`;
     const A22_DIRECTION_BOT_STYLE = `font-size: 11px;`;
     const A22_NODE_KM_STYLE = `font-size: 10px;`;
-    const INTERVENTION_NOTICE_STYLE = `padding: 10px; margin: 20px 0 5px 0; border-radius: 3px; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: bold;
-                                       font-size:18px;`;
+    const INTERVENTION_NOTICE_STYLE = `padding: 10px; margin: 5px 0 -10px 0; border-radius: 3px; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: bold;
+                                       font-size: 18px; background: radial-gradient(ellipse at center, #ff6b6b 0%, #cc0000 55%, #7a0000 100%);
+                                       box-shadow: inset 0 2px 6px rgba(255,255,255,0.45), inset 0 -2px 4px rgba(0,0,0,0.3), 0 2px 6px rgba(0,0,0,0.35);`;
     const FINAL_H_TABLE_STYLE = `width: 100%; margin-top: -5px; border-collapse: collapse;`;
     const FINAL_H_CELL_STYLE = `background-color: navy; color: white; font-weight: bold; text-align: center; width: 80px; line-height: 15px; padding: 5px; border: 1px solid #bbb;`;
-    const CUMULATIVE_ALERT_STYLE = `padding: 10px;margin: 5px 0 -5px 0; border-radius: 3px; font-weight: bold; background: #b30000; color: white; text-align: center;`;
+    const CUMULATIVE_ALERT_STYLE = `padding: 10px; margin: 5px 0 -5px 0; border-radius: 3px; font-weight: bold; text-align: center; color: white;
+                                    background: radial-gradient(ellipse at center, #ff4444 0%, #b30000 55%, #6b0000 100%);
+                                    box-shadow: inset 0 2px 6px rgba(255,255,255,0.45), inset 0 -2px 4px rgba(0,0,0,0.3), 0 2px 6px rgba(0,0,0,0.35);`;
     const FINAL_H_TEXT_STYLE = `padding: 5px; text-align: left; border: 1px solid #bbb; line-height: 15px;`;
     const AERO_LABEL_STYLE = {background: "linear-gradient(to light,#888,#c0c0c0)", borderRadius: "3px", height: "30px", display: "flex", alignItems: "center", justifyContent: "center",
                               fontSize: "17px", fontWeight: "bold", color: "black", width: "100%", maxWidth: "920px", margin: "3px auto 0 auto"};
     const AERO_ROW_STYLE = {display: "flex", justifyContent: "center", flexWrap: "wrap", gap: "5px"};
     const AERO_BUTTON_STYLE = {marginTop: "5px", width: "180px", height: "30px", fontSize: "12px", fontWeight: "bold"};
     const AERO_HEADER_TABLE_STYLE = {width: "100%", margin: "25px 0 5px 0", borderCollapse: "collapse"};
-    const AERO_HEADER_CELL_STYLE = {textAlign: "center", backgroundColor: "#8B0000", color: "#FFD700", fontWeight: "bold", fontSize: "16px", padding: "8px", borderRadius: "8px", whiteSpace: "pre-line"};
+    const AERO_HEADER_CELL_STYLE = {textAlign: "center", background: "radial-gradient(ellipse at center, #c0392b 0%, #8B0000 55%, #4a0000 100%)", color: "#FFD700", fontWeight: "bold", fontSize: "16px",
+                                    padding: "8px", borderRadius: "3px", whiteSpace: "pre-line", boxShadow: "inset 0 2px 6px rgba(255,255,255,0.45), inset 0 -2px 4px rgba(0,0,0,0.3), 0 2px 6px rgba(0,0,0,0.35)",};
     const AERO_INFO_TABLE_STYLE = {width: "100%" ,margin: "5px 0 5px 0", borderCollapse: "collapse", border: "1px solid #bbb"};
     const AERO_CELL_STYLE = {textAlign: "left", padding: "4px", border: "1px solid #bbb", minHeight: "25px", verticalAlign: "top"};
     const AERO_RESERVA_CELL_STYLE = {textAlign: "center", padding: "4px", border: "1px solid #bbb", backgroundColor: "green", color: "white", fontWeight:"bold"};
@@ -43,7 +47,7 @@
     const LINFER_TITLE_STYLE = `background: linear-gradient(to right,#888,#c0c0c0); color: black; font-weight: bold; font-size: 17px; width: 100%; max-width: 1580px; height: 30px; display: flex;
                                 justify-content: center; align-items: center; margin: 0 0 5px 0; border-radius: 3px;`;
     const LINFER_ROW_STYLE = `display: flex; justify-content: flex-start; margin: 0;`;
-    const LINFER_GRID_BUTTON_STYLE = `width: 94px; height: 40px; font-size: 12px;`;
+    const LINFER_GRID_BUTTON_STYLE = `margin: 5px 0;width: 94px; height: 40px; font-size: 12px;`;
     const LINFER_DIRECTION_BUTTON_STYLE = `width: 160px; height: 50px; display: flex; flex-direction: column; justify-content: center; align-items: center; font-weight: bold;`;
     const LINFER_DIRECTION_TOP_STYLE = `font-size: 14px;`;
     const LINFER_DIRECTION_BOT_STYLE = `font-size: 11px; font-weight: normal;`;
@@ -228,7 +232,9 @@
         notice.style.cssText = INTERVENTION_NOTICE_STYLE;
         parentContainer.insertBefore(notice, parentContainer.firstChild);
       }
-      notice.style.backgroundColor = isIntervention ? "#229941" : "#cc1d1d";
+      notice.style.background = isIntervention
+        ? "radial-gradient(ellipse at center, #5edd7a 0%, #229941 55%, #0f5c24 100%)" : "radial-gradient(ellipse at center, #ff6b6b 0%, #cc1d1d 55%, #7a0000 100%)";
+      notice.style.boxShadow = "inset 0 2px 6px rgba(255,255,255,0.45), inset 0 -2px 4px rgba(0,0,0,0.3), 0 2px 6px rgba(0,0,0,0.35)";
       notice.style.color = isIntervention ? "#fff" : "#f2b30a";
       notice.textContent = isIntervention ? "COM INTERVENÇÃO DO CORPO DE BOMBEIROS" : "SEM INTERVENÇÃO DO CORPO DE BOMBEIROS";
     }

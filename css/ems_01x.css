@@ -1,8 +1,8 @@
-/* ================== EMS CSS =================== */
-    .ems-card {border: 0.5px solid #d0d0d0; border-radius: 8px; overflow: hidden; background: #fff;}
-    .ems-card-header {background: #c0392b; color: #fff; padding: 9px 18px; font-size: 12px; font-weight: 600; letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px;}
-    .ems-card-body {padding: 16px 20px; display: flex; flex-direction: column; gap: 14px;}
-    .ems-card-footer {border-top: 0.5px solid #e0e0e0; padding: 10px 20px; display: flex; justify-content: flex-end; background: #fafafa;}
+    /* ================== WSMS CSS =================== */
+    .wsms-card {border: 0.5px solid #d0d0d0; border-radius: 8px; overflow: hidden; background: #fff;}
+    .wsms-card-header {background: #c0392b; color: #fff; padding: 9px 18px; font-size: 12px; font-weight: 600; letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px;}
+    .wsms-card-body {padding: 16px 20px; display: flex; flex-direction: column; gap: 14px;}
+    .wsms-card-footer {border-top: 0.5px solid #e0e0e0; padding: 10px 20px; display: flex; justify-content: flex-end; background: #fafafa;}
     .ems-section {display: flex; flex-direction: column; gap: 8px;}
     .ems-section-label {font-size: 10px; font-weight: 600; color: #999; text-transform: uppercase; letter-spacing: 0.08em; padding-bottom: 4px; border-bottom: 0.5px solid #e8e8e8;}
     .ems-row {display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end;}

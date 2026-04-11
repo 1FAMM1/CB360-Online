@@ -1,5 +1,5 @@
     /* =======================================
-              WEATHER WARNINGS
+    WEATHER WARNINGS
     ======================================= */
     async function fetchIPMAWarnings() {
       try {
@@ -11,7 +11,6 @@
         return [];
       }
     }
-
     function createIPMAAlertCard(alert) {
       const card = document.createElement("div");    
       const levelClass = { yellow: "ipma-yellow", orange: "ipma-orange", red: "ipma-red" }[alert.awarenessLevelID];
@@ -33,7 +32,6 @@
       card.appendChild(btn);    
       return card;
     }
-
     async function updateWarnings() {
       const container = document.getElementById("ipma-alerts");
       container.innerHTML = "A carregar avisos...";
@@ -60,8 +58,7 @@
       document.querySelectorAll("#ipma-alerts .ipma-card").forEach(card => {
         const endTime = new Date(card.dataset.endTime);
         if (endTime <= now) card.remove();
-      });
-    
+      });    
       const container = document.getElementById("ipma-alerts");
       if (!container.querySelector(".ipma-card")) {
         const card = document.createElement("div");
@@ -78,7 +75,6 @@
     }, 60 * 1000);
     updateWarnings();
     setInterval(updateWarnings, 10 * 60 * 1000);
-
     function issueNotice(card) {
       if (!card) return alert("Aviso não encontrado.");
       const tipo = card.querySelector(".ipma-title")?.textContent || "Aviso";
@@ -115,15 +111,14 @@
       }
       if (navigator.clipboard?.writeText) {
         navigator.clipboard.writeText(mensagem).then(() => {
-          alert("Mensagem copiada! Pode colar no WhatsApp ou outro chat.");
+          showPopup('popup-success', "Mensagem criada e copiada! Pode colar no WhatsApp.");
         }).catch(() => {
-          alert("Não foi possível copiar automaticamente. Copie manualmente:\n\n" + mensagem);
+          showPopup('popup-danger', "Não foi possível copiar automaticamente. Copie manualmente:\n\n" + mensagem);
         });
       } else {
-        alert("Copie manualmente a mensagem:\n\n" + mensagem);
+        showPopup('popup-danger', "Copie manualmente a mensagem:\n\n" + mensagem);
       }
-    }
-    
+    }    
     function formatDate(dateStr) {
       const date = new Date(dateStr);
       if (isNaN(date)) return dateStr;

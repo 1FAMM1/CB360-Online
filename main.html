@@ -2463,12 +2463,12 @@
     </div>
     <!---- EMS SERVICES SUB-MODULE ---->
     <div id="page-inem-services" class="page">
-      <div class="ems-card" style="margin: 0 0 25px 0;">
-        <div class="ems-card-header">
+      <div class="wsms-card" style="margin: 0 0 25px 0;">
+        <div class="wsms-card-header">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
           <span>SERVIÇOS EMERGÊNCIA MÉDICA</span>
         </div>
-        <div class="ems-card-body">
+        <div class="wsms-card-body">
           <div class="ems-section">
             <div class="ems-section-label">Tipo de serviço</div>
             <div class="ems-type-row">
@@ -2565,18 +2565,28 @@
             </div>
           </div>
         </div>
-        <div class="ems-card-footer">
+        <div class="wsms-card-footer">
           <button class="btn btn-ems-send" onclick="generateCODUserviceMessage()">ENVIAR SERVIÇO</button>
         </div>
       </div>
     </div>
     <!---- WEATHER WARNINGS SUB-MODULE ---->
     <div id="page-weather-warnings" class="page">
-      <h2 class="section-title">Avisos Meteorológicos</h2>
-      <div class="card" style="margin: 0 0 25px 0;">
-        <div class="card-header">AVISOS METEOROLÓGICOS PARA A REGIÃO DO ALGARVE</div>
-        <div class="card-body" id="ipma-alerts"></div>
-        <div class="card-footer"></div>
+      <div class="wsms-card" style="margin: 0 0 25px 0;">        
+        <div class="wsms-card-header">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;">
+            <path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25"/>
+            <line x1="8" y1="19" x2="8" y2="21"/>
+            <line x1="8" y1="13" x2="8" y2="15"/>
+            <line x1="16" y1="19" x2="16" y2="21"/>
+            <line x1="16" y1="13" x2="16" y2="15"/>
+            <line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="12" y1="15" x2="12" y2="17"/>
+          </svg>
+          <span>AVISOS METEOROLÓGICOS PARA A REGIÃO DO ALGARVE</span>
+        </div>        
+        <div class="wsms-card-body" id="ipma-alerts"></div>
+        <div class="wsms-card-footer"></div>
       </div>
     </div>
     <!---- UTILITIES MODULE ---->

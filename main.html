@@ -2004,9 +2004,14 @@
     <!---- NEW OCCURRENCE SUB-MODULE ---->
     <div id="page_insert_occurrence" class="page">
       <h2 class="section-title">Dados para Nova Ocorrência</h2>
-      <div class="card">
-        <div class="card-header">DADOS GLOBAIS</div>
-        <div class="card-body">
+      <div class="wsms-card">
+        <div class="wsms-card-header">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+          </svg>
+          <span>DADOS GLOBAIS</span>
+        </div>
+        <div class="wsms-card-body">
           <div class="card-type-separator" style="margin: -19px -20px 15px -20px; font-style: italic;">Local da Ocorrência</div>
           <div class="form-row">
             <div class="global-field-horizontal">
@@ -2134,11 +2139,20 @@
             </div>
           </div>
         </div>
-        <div class="card-footer"></div>
+        <div class="wsms-card-footer"></div>
       </div>
-      <div class="card last-card">
-        <div class="card-header" style="margin: 0 0 -10px 0;">VEÍCULOS AFETOS À OCORRÊNCIA</div>
-        <div class="card-body">
+      <div class="wsms-card last-card">
+        <div class="wsms-card-header">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;">
+            <path d="M19 17H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h8l4 4v6a2 2 0 0 1-2 2z"/>
+            <circle cx="8" cy="17" r="2"/>
+            <circle cx="16" cy="17" r="2"/>
+            <line x1="10" y1="9" x2="10" y2="13"/>
+            <line x1="8" y1="11" x2="12" y2="11"/>
+          </svg>
+          <span>DADOS GLOBAIS</span>
+        </div>
+        <div class="wsms-card-body">
           <button id="add-new-vehicle-btn" class="btn btn-add" style="margin: 0 0 10px 0;" onclick="NewOCRaddVehicle()">ADICIONAR</button>
           <div class="grid-2fr" id="vehicle-container"></div>
           <textarea id="wsms_output" rows="4" cols="50" readonly style="display: none;"></textarea>
@@ -2149,7 +2163,7 @@
             </div>
           </div>
         </div>
-        <div class="card-footer"></div>
+        <div class="wsms-card-footer"></div>
       </div>
     </div>
     <!---- CLOSE OCCURRENCE SUB-MODULE ---->

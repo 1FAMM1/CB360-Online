@@ -8,9 +8,9 @@
     function updateTypeSelection() {
       optInem.classList.toggle('active', inem.checked);
       optReserv.classList.toggle('active', reserv.checked);
-      const card = document.querySelector('.ems-card');
+      const card = document.querySelector('.wsms-card');
       if (card) card.classList.toggle('theme-inem', inem.checked);
-      const header = document.querySelector('.ems-card-header span');
+      const header = document.querySelector('.wsms-card-header span');
       if (header) header.textContent = reserv.checked ? 'SERVIÇOS EMERGÊNCIA MÉDICA - RESERVA' : 'SERVIÇOS EMERGÊNCIA MÉDICA';
     }
     inem.addEventListener('change', () => {
@@ -122,9 +122,9 @@
       reserv.checked = false;
       optInem.classList.remove('active');
       optReserv.classList.remove('active');
-      const card = document.querySelector('.ems-card');
+      const card = document.querySelector('.wsms-card');
       if (card) card.classList.remove('theme-inem');
-      const header = document.querySelector('.ems-card-header span');
+      const header = document.querySelector('.wsms-card-header span');
       if (header) header.textContent = 'SERVIÇOS EMERGÊNCIA MÉDICA';
     }
     function focusAddressField() {

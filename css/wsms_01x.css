@@ -21,15 +21,15 @@
                    transition: border-color 0.15s, background 0.15s; user-select: none;}
     .ems-type-opt:hover {border-color: #c0392b; background: #fdf4f3;}
     .ems-type-opt.active {border-color: #c0392b; background: #fdf0ee;}
-    .ems-card.theme-inem .ems-card-header {background: #f0b400; color: #1a2e4a;}
-    .ems-card.theme-inem .ems-card-header svg {stroke: #1a2e4a;}
-    .ems-card.theme-inem .ems-field input:focus, .ems-card.theme-inem .ems-field select:focus  {border-color: #f0b400 !important; box-shadow: 0 0 0 2px rgba(240,180,0,0.18) !important;}
-    .ems-card.theme-inem .ems-type-opt:hover {border-color: #f0b400; background: #fffbea;}
-    .ems-card.theme-inem .ems-type-opt.active {border-color: #f0b400; background: #fffbea;}
-    .ems-card.theme-inem .ems-type-opt.active input[type="checkbox"] {accent-color: #f0b400;}
-    .ems-card.theme-inem .btn-ems-send {background: #f0b400; color: #1a2e4a;}
-    .ems-card.theme-inem .btn-ems-send:hover {background: #d4a000; color: #1a2e4a;}
-    .ems-card.theme-inem .btn-ems-send:active {background: #b88c00; color: #1a2e4a;}
+    .wsms-card.theme-inem .wsms-card-header {background: #f0b400; color: #1a2e4a;}
+    .wsms-card.theme-inem .wsms-card-header svg {stroke: #1a2e4a;}
+    .wsms-card.theme-inem .ems-field input:focus, .wsms-card.theme-inem .ems-field select:focus {border-color: #f0b400 !important; box-shadow: 0 0 0 2px rgba(240,180,0,0.18) !important;}
+    .wsms-card.theme-inem .ems-type-opt:hover {border-color: #f0b400; background: #fffbea;}
+    .wsms-card.theme-inem .ems-type-opt.active {border-color: #f0b400; background: #fffbea;}
+    .wsms-card.theme-inem .ems-type-opt.active input[type="checkbox"] {accent-color: #f0b400;}
+    .wsms-card.theme-inem .btn-ems-send {background: #f0b400; color: #1a2e4a;}
+    .wsms-card.theme-inem .btn-ems-send:hover {background: #d4a000; color: #1a2e4a;}
+    .wsms-card.theme-inem .btn-ems-send:active {background: #b88c00; color: #1a2e4a;}
     .ems-type-opt input[type="checkbox"] {width: 14px; height: 14px; accent-color: #c0392b; cursor: pointer !important; margin: 0;}
     .ems-type-opt label {font-size: 12px; font-weight: 600; color: #444; cursor: pointer; letter-spacing: 0.03em;}
     .btn-ems-send {background: #c0392b; color: #fff; border: none; border-radius: 6px; padding: 0 22px; height: 32px; font-size: 12px; font-weight: 600; letter-spacing: 0.05em;

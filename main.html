@@ -2357,19 +2357,19 @@
         <div class="wsms-card-body">
           <div class="wsms-section">
             <div class="wsms-row">
-              <div class="wsms-field wsms-field--fixed">
+              <div class="wsms-field" style="flex-direction: row; align-items: center; gap: 8px;">
                 <label for="solicitation_date">Data do Serviço</label>
                 <input type="date" id="solicitation_date" style="width: 130px;">
               </div>
-              <div class="wsms-field wsms-field--fixed">
+              <div class="wsms-field" style="flex-direction: row; align-items: center; gap: 8px;">
                 <label for="solicitation_type">Tipo de Solicitação</label>
                 <select id="solicitation_type" style="width: 200px;"></select>
               </div>
-              <div class="wsms-field wsms-field--fixed">
+              <div class="wsms-field" style="flex-direction: row; align-items: center; gap: 8px;">
                 <label for="solicitation_motive">Motivo da Solicitação</label>
                 <select id="solicitation_motive" style="width: 200px;"></select>
               </div>
-              <div class="wsms-field wsms-field--fixed">
+              <div class="wsms-field" style="flex-direction: row; align-items: center; gap: 8px;">
                 <label for="solicitation_shift">Turno</label>
                 <select id="solicitation_shift" style="width: 80px;"></select>
               </div>
@@ -2390,12 +2390,12 @@
         <div class="wsms-card-body">
           <div class="wsms-section">
             <div class="wsms-row">
-              <div class="wsms-field wsms-field--fixed">
+              <div class="wsms-field" style="flex-direction: row; align-items: center; gap: 8px;">
                 <label for="drivers">Motoristas</label>
                 <input type="text" id="drivers" placeholder="0" style="width: 75px; text-align: center;" maxlength="2" 
                        oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
               </div>
-              <div class="wsms-field wsms-field--fixed">
+              <div class="wsms-field" style="flex-direction: row; align-items: center; gap: 8px;">
                 <label for="elements">Elementos</label>
                 <input type="text" id="elements" placeholder="0" style="width: 75px; text-align: center;" maxlength="2" 
                        oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
@@ -2417,11 +2417,11 @@
         <div class="wsms-card-body">
           <div class="wsms-section">
             <div class="wsms-row">
-              <div class="wsms-field wsms-field--fixed">
+              <div class="wsms-field" style="flex-direction: row; align-items: center; gap: 8px;">
                 <label for="exit_hour">Hora de Saída</label>
                 <input type="time" id="exit_hour" style="width: 90px;">
               </div>
-              <div class="wsms-field wsms-field--fixed">
+              <div class="wsms-field" style="flex-direction: row; align-items: center; gap: 8px;">
                 <label for="uls_desteny">ULS Destino</label>
                 <input type="text" id="uls_desteny" placeholder="Ex. IPO Lisboa" style="width: 250px; text-align: center;">
               </div>
@@ -2442,52 +2442,62 @@
     </div>
     <!---- VEHICLE UNAVAILABILITY SUB-MODULE ---->
     <div id="page-indisp" class="page">
-      <h2 class="section-title">Indisponibilidade Veículos</h2>
-      <div class="card">
-        <div class="card-header">NOVA INDISPONIBILIDADE DE VÉICULO</div>
-        <div class="card-body">
-          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-            <div class="vehicle-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Veículo:</label>
-              <select id="new_vehicle_unavailable" style="width: 120px;">
-              </select>
-            </div>
-          </div>
-          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: -3px;">
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Data da Indisponibilidade:</label>
-              <div class="extras-field-horizontal">
-                <input type="date" id="new_unavailability_date" style="width: 110px;">
+      <!-- CARD 1: NOVA INDISPONIBILIDADE -->
+      <div class="wsms-card" style="margin-bottom: 10px;">
+        <div class="wsms-card-header">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+          </svg>
+          <span>NOVA INDISPONIBILIDADE DE VEÍCULO</span>
+        </div>
+        <div class="wsms-card-body">
+          <div class="wsms-section">
+            <div class="wsms-row">
+              <div class="wsms-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                <label for="new_vehicle_unavailable">Veículo</label>
+                <select id="new_vehicle_unavailable" style="width: 120px;"></select>
               </div>
-            </div>
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Hora da Indisponibilidade:</label>
-              <div class="global-field-horizontal">
-                <input type="time" id="new_unavailability_hour" style="width: 80px;">
+              <div class="wsms-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                <label for="new_unavailability_date">Data da Indisponibilidade</label>
+                <input type="date" id="new_unavailability_date" style="width: 130px;">
               </div>
-            </div>
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Motivo da Indisponibilidade:</label>
-              <select id="new_reason_unavailability" style="width: 175px;">
-              </select>
-            </div>
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Local da Indisponibilidade:</label>
-              <select id="new_unavailability_local" style="width: 175px;">
-              </select>
+              <div class="wsms-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                <label for="new_unavailability_hour">Hora da Indisponibilidade</label>
+                <input type="time" id="new_unavailability_hour" style="width: 90px;">
+              </div>
+              <div class="wsms-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                <label for="new_reason_unavailability">Motivo</label>
+                <select id="new_reason_unavailability" style="width: 175px;"></select>
+              </div>
+              <div class="wsms-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                <label for="new_unavailability_local">Local</label>
+                <select id="new_unavailability_local" style="width: 175px;"></select>
+              </div>
             </div>
           </div>
         </div>
-        <div class="form-row" style="margin: 0 15px 15px 0; display: flex; flex-wrap: wrap; justify-content: flex-end;">
-          <div class="action-buttons" id="veícunavailable-sendgroup">
-            <button class="btn btn-danger" onclick="generateNewUnavailability()">ENVIAR INDISPONIBILIDADE</button>
-          </div>
+        <div class="wsms-card-footer">
+          <button class="btn btn-wsms-send" onclick="generateNewUnavailability()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="margin-right: 6px; vertical-align: middle;">
+              <path d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.01-.24 11.36 11.36 0 0 0 3.56.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1 11.36 11.36 0 0 0 .57 3.56 1 1 0 0 1-.24 1.01z"/>
+            </svg>
+            ENVIAR INDISPONIBILIDADE
+          </button>
         </div>
-        <div class="card-footer"></div>
       </div>
-      <div class="card">
-        <div class="card-header">VEÍCULOS INDISPONÍVEIS</div>
-        <div class="card-body">
+      <!-- CARD 2: VEÍCULOS INDISPONÍVEIS -->
+      <div class="wsms-card" style="margin-bottom: 10px;">
+        <div class="wsms-card-header">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;">
+            <rect x="1" y="9" width="15" height="10" rx="1"/>
+            <path d="M16 13h4l3 3v3h-7V13z"/>
+            <circle cx="5.5" cy="19.5" r="1.5"/>
+            <circle cx="18.5" cy="19.5" r="1.5"/>
+          </svg>
+          <span>VEÍCULOS INDISPONÍVEIS</span>
+        </div>
+        <div class="wsms-card-body">
           <div class="table-container">
             <table id="active-unavailability-table">
               <thead>
@@ -2499,88 +2509,97 @@
                   <th style="width: 200px;">Finalizar</th>
                 </tr>
               </thead>
-              <tbody id="active-unavailability-tbody">
-              </tbody>
+              <tbody id="active-unavailability-tbody"></tbody>
             </table>
           </div>
         </div>
-        <div class="form-row" style="margin: -5px 20px 15px 0; display: flex; justify-content: flex-end;">
-          <div class="action-buttons" id="veícunavailable-refresh">
-            <button class="btn btn-success" onclick="loadActiveUnavailability()">ATUALIZAR LISTA</button>
-          </div>
+        <div class="wsms-card-footer">
+          <button class="btn btn-wsms-green" onclick="loadActiveUnavailability()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="margin-right: 6px; vertical-align: middle;">
+              <polyline points="23 4 23 10 17 10"/>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
+            ATUALIZAR LISTA
+          </button>
         </div>
-        <div class="card-footer"></div>
       </div>
-      <div id="availability-card" class="card last-card">
-        <div class="card-header">FIM DE INDISPONIBILIDADE DE VÉICULO DE VÉICULO</div>
-        <div class="card-body">
-          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Veículo:</label>
-              <div class="global-field-horizontal">
+      <!-- CARD 3: FIM DE INDISPONIBILIDADE -->
+      <div id="availability-card" class="wsms-card" style="margin-bottom: 50px;">
+        <div class="wsms-card-header">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+          <span>FIM DE INDISPONIBILIDADE DE VEÍCULO</span>
+        </div>
+        <div class="wsms-card-body">
+          <div class="wsms-section">
+            <div class="wsms-row">
+              <div class="wsms-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                <label for="end_vehicle_unavailable">Veículo</label>
                 <input type="text" id="end_vehicle_unavailable" style="width: 100px; text-align: center;">
               </div>
-            </div>
-          </div>
-          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Motivo da Indisponibilidade:</label>
-              <div class="extras-field-horizontal">
+              <div class="wsms-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                <label for="end_reason_unavailability">Motivo da Indisponibilidade</label>
                 <input type="text" id="end_reason_unavailability" style="width: 175px; text-align: center;">
               </div>
-            </div>
-            <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-              <div class="global-field-horizontal">
-                <label style="font-size: 12px; font-weight: bold; color: #444;">Data da Disponibilidade:</label>
-                <div class="global-field-horizontal">
-                  <input type="date" id="end_unavailability_date" style="width: 120px;">
-                </div>
+              <div class="wsms-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                <label for="end_unavailability_date">Data da Disponibilidade</label>
+                <input type="date" id="end_unavailability_date" style="width: 130px;">
               </div>
-              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal">
-                  <label style="font-size: 12px; font-weight: bold; color: #444;">Hora da Disponibilidade:</label>
-                  <div class="global-field-horizontal">
-                    <input type="time" id="end_unavailability_hour" style="width: 80px;">
-                  </div>
-                </div>
+              <div class="wsms-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                <label for="end_unavailability_hour">Hora da Disponibilidade</label>
+                <input type="time" id="end_unavailability_hour" style="width: 90px;">
               </div>
             </div>
           </div>
         </div>
-        <div class="form-row" style="margin: 0 15px 15px 0; display: flex; flex-wrap: wrap; justify-content: flex-end;">
-          <div class="action-buttons" id="veícavailable-sendgroup">
-            <button class="btn btn-success" onclick="generateEndUnavailability()">ENVIAR DISPONIBILIDADE</button>
-          </div>
+        <div class="wsms-card-footer">
+          <button class="btn btn-wsms-green" onclick="generateEndUnavailability()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="margin-right: 6px; vertical-align: middle;">
+              <path d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.01-.24 11.36 11.36 0 0 0 3.56.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1 11.36 11.36 0 0 0 .57 3.56 1 1 0 0 1-.24 1.01z"/>
+            </svg>
+            ENVIAR DISPONIBILIDADE
+          </button>
         </div>
-        <div class="card-footer"></div>
       </div>
     </div>
     <!---- STATUS INFORMATION MUNICIPALITY GRID SUB-MODULE ---->
     <div id="page-municipality-grid" class="page">
-      <h2 class="section-title">Info. Grelha Município</h2>
-      <div class="card" style="margin: 0 0 25px 0;">
-        <div class="card-header">ESTADO OPERACIONAL DA GRELHA DO MUNICÍPIO</div>
-        <div class="card-body">
-          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Estado Operacional:</label>
-              <select id="state_municipality_grid" style="width: 200px;" onchange="autoFillMunicipalityGrid()">
-              </select>
+      <div class="wsms-card" style="margin-bottom: 10px;">
+        <div class="wsms-card-header">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;">
+            <rect x="3" y="3" width="7" height="7"/>
+            <rect x="14" y="3" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/>
+            <rect x="14" y="14" width="7" height="7"/>
+          </svg>
+          <span>ESTADO OPERACIONAL DA GRELHA DO MUNICÍPIO</span>
+        </div>
+        <div class="wsms-card-body">
+          <div class="wsms-section">
+            <div class="wsms-row">
+              <div class="wsms-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                <label for="state_municipality_grid">Estado Operacional</label>
+                <select id="state_municipality_grid" style="width: 200px;" onchange="autoFillMunicipalityGrid()"></select>
+              </div>
             </div>
-          </div>
-          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Motivo do Estado:</label>
-              <input type="text" id="municipality_grid_output" placeholder="Indique um motivo para o estado da grelha." style="width: 700px;">
-            </div>
-          </div>
-          <div class="form-row" style="margin: 0 0 -5px 0; display: flex; flex-wrap: wrap; justify-content: flex-end;">
-            <div class="action-buttons" id="municipalgrid-sendgroup">
-              <button class="btn btn-success" onclick="generateMunicipalityGridMessage()">ENVIAR ESTADO</button>
+            <div class="wsms-row">
+              <div class="wsms-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                <label for="municipality_grid_output">Motivo do Estado</label>
+                <input type="text" id="municipality_grid_output" placeholder="Indique um motivo para o estado da grelha." style="width: 500px;">
+              </div>
             </div>
           </div>
         </div>
-        <div class="card-footer"></div>
+        <div class="wsms-card-footer">
+          <button class="btn btn-wsms-send" onclick="generateMunicipalityGridMessage()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="margin-right: 6px; vertical-align: middle;">
+              <path d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.01-.24 11.36 11.36 0 0 0 3.56.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1 11.36 11.36 0 0 0 .57 3.56 1 1 0 0 1-.24 1.01z"/>
+            </svg>
+            ENVIAR ESTADO
+          </button>
+        </div>
       </div>
     </div>
     <!---- EMS SERVICES SUB-MODULE ---->

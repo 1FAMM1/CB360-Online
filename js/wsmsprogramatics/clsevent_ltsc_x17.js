@@ -128,9 +128,9 @@
       showPopup('popup-success', "Mensagem criada com sucesso! Abra o WhatsApp e prima CTRL+V", true);
       return message;
     }
-    function toggleClsOcorrSection(section, button) {
-      const el = document.querySelector(`.${section}`);
+    function toggleClsOcorrSection(sectionClass, btn) {
+      const el = document.querySelector(`.${sectionClass}`);
       if (!el) return;
       const isHidden = el.classList.toggle('hidden');
-      button.classList.toggle('active', !isHidden);
+      btn.classList.toggle('active', !isHidden);
     }

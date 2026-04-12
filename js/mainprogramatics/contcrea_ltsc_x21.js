@@ -19,15 +19,15 @@
         <div class="wsms-row">
           <div class="wsms-field">
             <label>Data Saída</label>
-            <input type="date" style="width: 120px;">
+            <input type="date" style="width: 130px;">
           </div>
           <div class="wsms-field">
             <label>Veículo</label>
-            <select style="width: 100px;"><option></option></select>
+            <select style="width: 120px;"><option></option></select>
           </div>
           <div class="wsms-field">
             <label>BBs</label>
-            <input type="text" placeholder="00" style="width: 60px; text-align: center;" maxlength="2"
+            <input type="text" placeholder="00" style="width: 80px; text-align: center;" maxlength="2"
                    oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
           </div>
           <div class="wsms-field">

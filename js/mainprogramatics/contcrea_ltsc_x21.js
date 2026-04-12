@@ -5,34 +5,34 @@
             CREATION OF DYNAMIC CONTAINERS
     ======================================= */
     /* =======================================
-            NEW OCCURRENCE
+    NEW OCCURRENCE
     ======================================= */
-    /* ========== VEHICLES ========== */
+    /* ============= VEHICLES ============= */
     const vehicleContainer = document.getElementById('vehicle-container');
     let vehicleCount = 0;    
     async function NewOCRaddVehicle() {
       vehicleCount++;
       const card = document.createElement('div');
-      card.className = 'vehicle-card';
+      card.className = 'wsms-vehicle-card';
       card.innerHTML = `
         <div class="field-card-title">${vehicleCount}º VEÍCULO</div>
-        <div class="vehicle-fields">
-          <div class="vehicle-field" style="width: 120px;">
-            <label>Data Saída:</label>
-            <input type="date">
+        <div class="wsms-row">
+          <div class="wsms-field">
+            <label>Data Saída</label>
+            <input type="date" style="width: 120px;">
           </div>
-          <div class="vehicle-field" style="width: 150px;">
-            <label>Veículo:</label>
-            <select><option></option></select>
+          <div class="wsms-field">
+            <label>Veículo</label>
+            <select style="width: 100px;"><option></option></select>
           </div>
-          <div class="vehicle-field" style="width: 75px;">
-            <label>BBs:</label>
-            <input type="text" placeholder="00" style="width:100%; text-align:center;" maxlength="2"
+          <div class="wsms-field">
+            <label>BBs</label>
+            <input type="text" placeholder="00" style="width: 60px; text-align: center;" maxlength="2"
                    oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
           </div>
-          <div class="vehicle-field" style="width: 100px;">
-            <label>Hora Saída:</label>
-            <input type="time">
+          <div class="wsms-field">
+            <label>Hora Saída</label>
+            <input type="time" style="width: 100px;">
           </div>
         </div>
       `;

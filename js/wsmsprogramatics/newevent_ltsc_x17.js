@@ -203,7 +203,7 @@
       if (classOccorr === '4331' || classOccorr === '4333') {
         if (!document.getElementById('animal-type')?.value.trim()) missingFields.push("Tipo de Animal");
       }
-      const hasVehicle = Array.from(document.querySelectorAll('.vehicle-card select'))
+      const hasVehicle = Array.from(document.querySelectorAll('.wsms-vehicle-card select'))
       .some(sel => sel.value.trim() !== '');
       if (!hasVehicle) missingFields.push("A ocorrência deve conter pelo menos 1 Veículo");
       if (missingFields.length > 0) {

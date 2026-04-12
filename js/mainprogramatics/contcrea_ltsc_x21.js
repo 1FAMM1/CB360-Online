@@ -269,7 +269,7 @@
     }
     /* ========== RESET BUTTONS =========== */    
     function resetButtons() {
-      const buttons = document.querySelectorAll('.action-buttons .btn-add');
+      const buttons = document.querySelectorAll('#page_close_occurrence .btn-wsms-blue');
       buttons.forEach(btn => btn.classList.remove('active'));
     }
     /* =========== GLOBAL RESET =========== */    

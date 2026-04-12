@@ -2345,78 +2345,99 @@
     </div>
     <!---- AVAILABILITY REQUEST SUB-MODULE ---->
     <div id="page-solicitation" class="page">
-      <h2 class="section-title">Solicitação de Disponibilidades para Serviços</h2>
-      <div class="card">
-        <div class="card-header">TIPO DE SOLICITAÇÃO</div>
-        <div class="card-body">
-          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: -5px;">
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Data do Serviço:</label>
-              <input type="date" id="solicitation_date" style="width: 110px;">
-            </div>
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Tipo de Solicitação:</label>
-              <select id="solicitation_type" style="width: 200px;">
-              </select>
-            </div>
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Motivo da Solicitação:</label>
-              <select id="solicitation_motive" style="width: 200px;">
-              </select>
-            </div>
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Turno:</label>
-              <select id="solicitation_shift" style="width: 75px;">
-              </select>
-            </div>
-          </div>
+      <!-- CARD 1: TIPO DE SOLICITAÇÃO -->
+      <div class="wsms-card" style="margin-bottom: 10px;">
+        <div class="wsms-card-header">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;">
+            <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+            <rect x="9" y="3" width="6" height="4" rx="1"/>
+          </svg>
+          <span>TIPO DE SOLICITAÇÃO</span>
         </div>
-        <div class="card-footer"></div>
-      </div>
-      <div class="card">
-        <div class="card-header">MEIOS SOLICITADOS</div>
-        <div class="card-body">
-          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: -5px;">
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Motoritas:</label>
-              <div class="global-field-horizontal">
-                <input type="text" id="drivers" placeholder="0" style="width: 75px; text-align: center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
+        <div class="wsms-card-body">
+          <div class="wsms-section">
+            <div class="wsms-row">
+              <div class="wsms-field wsms-field--fixed">
+                <label for="solicitation_date">Data do Serviço</label>
+                <input type="date" id="solicitation_date" style="width: 130px;">
               </div>
-            </div>
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Elementos:</label>
-              <div class="global-field-horizontal">
-                <input type="text" id="elements" placeholder="0" style="width: 75px; text-align: center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
+              <div class="wsms-field wsms-field--fixed">
+                <label for="solicitation_type">Tipo de Solicitação</label>
+                <select id="solicitation_type" style="width: 200px;"></select>
+              </div>
+              <div class="wsms-field wsms-field--fixed">
+                <label for="solicitation_motive">Motivo da Solicitação</label>
+                <select id="solicitation_motive" style="width: 200px;"></select>
+              </div>
+              <div class="wsms-field wsms-field--fixed">
+                <label for="solicitation_shift">Turno</label>
+                <select id="solicitation_shift" style="width: 80px;"></select>
               </div>
             </div>
           </div>
         </div>
-        <div class="card-footer"></div>
+        <div class="wsms-card-footer"></div>
       </div>
-      <div class="card">
-        <div class="card-header">DESTINO DO SERVIÇO</div>
-        <div class="card-body">
-          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: -5px;">
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Hora de Saída:</label>
-              <div class="global-field-horizontal">
-                <input type="time" id="exit_hour" style="width: 80px;">
+      <!-- CARD 2: MEIOS SOLICITADOS -->
+      <div class="wsms-card" style="margin-bottom: 10px;">
+        <div class="wsms-card-header">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          <span>MEIOS SOLICITADOS</span>
+        </div>
+        <div class="wsms-card-body">
+          <div class="wsms-section">
+            <div class="wsms-row">
+              <div class="wsms-field wsms-field--fixed">
+                <label for="drivers">Motoristas</label>
+                <input type="text" id="drivers" placeholder="0" style="width: 75px; text-align: center;" maxlength="2" 
+                       oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
+              </div>
+              <div class="wsms-field wsms-field--fixed">
+                <label for="elements">Elementos</label>
+                <input type="text" id="elements" placeholder="0" style="width: 75px; text-align: center;" maxlength="2" 
+                       oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
               </div>
             </div>
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">ULS Destino:</label>
-              <div class="global-field-horizontal">
+          </div>
+        </div>
+        <div class="wsms-card-footer"></div>
+      </div>
+      <!-- CARD 3: DESTINO DO SERVIÇO -->
+      <div class="wsms-card" style="margin-bottom: 10px;">
+        <div class="wsms-card-header">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          <span>DESTINO DO SERVIÇO</span>
+        </div>
+        <div class="wsms-card-body">
+          <div class="wsms-section">
+            <div class="wsms-row">
+              <div class="wsms-field wsms-field--fixed">
+                <label for="exit_hour">Hora de Saída</label>
+                <input type="time" id="exit_hour" style="width: 90px;">
+              </div>
+              <div class="wsms-field wsms-field--fixed">
+                <label for="uls_desteny">ULS Destino</label>
                 <input type="text" id="uls_desteny" placeholder="Ex. IPO Lisboa" style="width: 250px; text-align: center;">
               </div>
             </div>
           </div>
         </div>
-        <div class="card-footer"></div>
+        <div class="wsms-card-footer"></div>
       </div>
-      <div class="form-row" style="margin: 10px 0 10px 10px; display: flex; flex-wrap: wrap; justify-content: flex-end;">
-        <div class="action-buttons" id="solicitation-sendgroup" >
-          <button class="btn btn-success" onclick="generateAvailability()">SOLICITAR</button>
-        </div>
+      <!-- BOTÃO ENVIAR -->
+      <div style="display: flex; justify-content: flex-end; margin-bottom: 50px;">
+        <button class="btn btn-wsms-send" onclick="generateAvailability()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="margin-right: 6px; vertical-align: middle;">
+            <path d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.01-.24 11.36 11.36 0 0 0 3.56.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1 11.36 11.36 0 0 0 .57 3.56 1 1 0 0 1-.24 1.01z"/>
+          </svg>
+          SOLICITAR
+        </button>
       </div>
     </div>
     <!---- VEHICLE UNAVAILABILITY SUB-MODULE ---->

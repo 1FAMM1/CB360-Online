@@ -2002,169 +2002,175 @@
       </div>
     </div>
     <!---- NEW OCCURRENCE SUB-MODULE ---->
-    <div id="page_insert_occurrence" class="page">
-      <div class="wsms-card" style="margin-bottom: 10px;">
-        <div class="wsms-card-header">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;">
-            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-          </svg>
-          <span>DADOS GLOBAIS</span>
+      <div id="page_insert_occurrence" class="page">
+        <!-- CARD 1: DADOS GLOBAIS -->
+        <div class="wsms-card" style="margin-bottom: 10px;">
+          <div class="wsms-card-header">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+            </svg>
+            <span>DADOS GLOBAIS</span>
+          </div>
+          <div class="wsms-card-body">
+            <div class="wsms-section">
+              <div class="wsms-section-label">Local da Ocorrência</div>
+              <div class="wsms-row">
+                <div class="wsms-field">
+                  <label for="alert_type">Tipo sw Alerta</label>
+                  <select id="alert_type"></select>
+                </div>
+                <div class="wsms-field">
+                  <label for="alert_source">Fonte do Alerta</label>
+                  <select id="alert_source"></select>
+                </div>
+                <div class="wsms-field" id="ems_group">
+                  <label for="ems_nr">Nr. CODU</label>
+                  <input type="text" id="ems_nr" placeholder="Ex. 123456789">
+                </div>
+              </div>
+              <div class="wsms-row">
+                <div class="wsms-field">
+                  <label for="alert_date">Data Alerta</label>
+                  <input type="date" id="alert_date">
+                </div>
+                <div class="wsms-field">
+                  <label for="alert_time">Hora do Alerta</label>
+                  <input type="time" id="alert_time">
+                </div>
+                <div class="wsms-field">
+                  <label for="class_occorr_input">Class. de Ocorrência</label>
+                  <input type="text" id="class_occorr_input" placeholder="Ex. 3103" style="width: 80px; text-align: center;" maxlength="4" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 4)">
+                </div>
+                <div class="wsms-field">
+                  <label for="nr_occurrence_input">Nr. de Ocorrência</label>
+                  <input type="text" id="nr_occurrence_input" placeholder="Ex. 123456789" style="width: 120px; text-align: center;" maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11)">
+                </div>
+                <div class="wsms-field">
+                  <label for="channel_maneuver">Canal de Manobra</label>
+                  <select id="channel_maneuver" style="width: 85px;">
+                    <option></option>
+                  </select>
+                </div>
+              </div>
+              <div class="wsms-row">
+                <div class="wsms-field wsms-field--grow3">
+                  <label for="occorr_local_input">Morada da Ocorrência</label>
+                  <input type="text" id="occorr_local_input" placeholder="Ex. Rua Serpa Pinto, 00">
+                </div>
+                <div class="wsms-field wsms-field--grow2">
+                  <label for="occorr_localitie_input">Localidade</label>
+                  <input type="text" id="occorr_localitie_input" placeholder="Ex. Faro">
+                </div>
+                <div class="wsms-field wsms-field--grow2">
+                  <label for="district_select">Distrito</label>
+                  <select id="district_select"></select>
+                </div>
+                <div class="wsms-field wsms-field--grow2">
+                  <label for="council_select">Concelho</label>
+                  <select id="council_select">
+                    <option></option>
+                  </select>
+                </div>
+                <div class="wsms-field wsms-field--grow2">
+                  <label for="parish_select">Freguesia</label>
+                  <select id="parish_select"></select>
+                </div>
+              </div>
+              <div class="wsms-row">
+                <div class="wsms-field">
+                  <label for="contact_name">Nome do Contactante</label>
+                  <input type="text" id="contact_name" style="width: 250px;" placeholder="Ex. João Sousa">
+                </div>
+                <div class="wsms-field">
+                  <label for="contact_nr">Nr. do Contactante</label>
+                  <input type="text" id="contact_nr" placeholder="Ex. 910 000 000" style="width: 150px; text-align: center;" maxlength="9" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 9)">
+                </div>
+              </div>
+              <div class="wsms-row">
+                <div class="wsms-field wsms-field--grow">
+                  <label for="animal-type" style="color: #c0392b;">Tipo de Animal <span style="font-weight: 400; text-transform: none; letter-spacing: 0;">(preencher se ocorrência for salvamento animal)</span></label>
+                  <input type="text" id="animal-type" placeholder="Ex. Canídeo">
+                </div>
+              </div>
+            </div>
+            <div class="wsms-section">
+              <div class="wsms-section-label">Planos Prévios de Intervenção</div>
+              <div class="wsms-row">
+                <div class="wsms-field">
+                  <label for="ppi_type">Tipo de PPI</label>
+                  <select id="ppi_type"></select>
+                </div>
+                <div class="wsms-field wsms-field--grow2">
+                  <label for="alert_level">Nível de Alerta</label>
+                  <select id="alert_level">
+                    <option></option>
+                  </select>
+                </div>
+                <div class="wsms-field">
+                  <label for="alarm_grid">Grelha de Alarme</label>
+                  <select id="alarm_grid" style="width: 85px;">
+                    <option></option>
+                  </select>
+                </div>
+                <div class="wsms-field">
+                  <label for="km">Km</label>
+                  <input type="text" id="km" placeholder="00" style="width: 75px; text-align: center;" maxlength="6" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1').slice(0, 6)">
+                </div>
+                <div class="wsms-field wsms-field--grow2">
+                  <label for="on_going">Sentido</label>
+                  <select id="on_going"></select>
+                </div>
+                <div class="wsms-field wsms-field--grow2">
+                  <label for="incident_type">Tipo de Incidente</label>
+                  <select id="incident_type"></select>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="wsms-card-footer"></div>
         </div>
-        <div class="wsms-card-body">
-          <div class="card-type-separator" style="margin: -19px -20px 15px -20px; font-style: italic;">Local da Ocorrência</div>
-          <div class="form-row">
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Tipo Alerta:</label>
-              <select id="alert_type">
-              </select>
+        <!-- CARD 2: VEÍCULOS -->
+        <div class="wsms-card last-card">
+          <div class="wsms-card-header">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;">
+              <path d="M19 17H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h8l4 4v6a2 2 0 0 1-2 2z"/>
+              <circle cx="8" cy="17" r="2"/>
+              <circle cx="16" cy="17" r="2"/>
+              <line x1="10" y1="9" x2="10" y2="13"/>
+              <line x1="8" y1="11" x2="12" y2="11"/>
+            </svg>
+            <span>VEÍCULOS AFETOS À OCORRÊNCIA</span>
+          </div>
+          <div class="wsms-card-body">
+            <div>
+              <button id="add-new-vehicle-btn" class="btn btn-wsms-blue" onclick="NewOCRaddVehicle()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="margin-right: 6px; vertical-align: middle;">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                ADICIONAR
+              </button>
             </div>
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Fonte Alerta:</label>
-              <select id="alert_source">
-              </select>
-            </div>
-            <div class="global-field-horizontal" id="ems_group">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Nr. CODU:</label>
-              <input type="text" id="ems_nr" placeholder="Ex. 123456789">
+            <div class="grid-2fr" id="vehicle-container"></div>
+            <textarea id="wsms_output" rows="4" cols="50" readonly style="display: none;"></textarea>
+            <div class="wsms-row" style="justify-content: flex-end; margin-top: 6px;">
+              <button class="btn btn-wsms-green" onclick="generateWSMSMessage()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="margin-right: 6px; vertical-align: middle;">
+                  <path d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.01-.24 11.36 11.36 0 0 0 3.56.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1 11.36 11.36 0 0 0 .57 3.56 1 1 0 0 1-.24 1.01z"/>
+                </svg>
+                BOMBEIROS
+              </button>
+              <button class="btn btn-wsms-send" onclick="generateNewCREPCMessage()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="margin-right: 6px; vertical-align: middle;">
+                  <path d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.01-.24 11.36 11.36 0 0 0 3.56.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1 11.36 11.36 0 0 0 .57 3.56 1 1 0 0 1-.24 1.01z"/>
+                </svg>
+                COMUNICAR CREPC
+              </button>
             </div>
           </div>
-          <div class="form-row">
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Data Alerta:</label>
-              <input type="date" id="alert_date" value="">
-            </div>
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Hora Alerta:</label>
-              <input type="time" id="alert_time" value="">
-            </div>
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Class. Ocorrência:</label>
-              <input type="text" id="class_occorr_input" placeholder="Ex. 3103" style="width: 80px; text-align: center;" maxlength="4" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 4)">
-            </div>
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Nr. Ocorrência:</label>
-              <input type="text" id="nr_occurrence_input" placeholder="Ex. 123456789" style="width: 100px; text-align: center;" maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11)">
-            </div>
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Canal Manobra:</label>
-              <select id="channel_maneuver" style="width: 75px;">
-                <option></option>
-              </select>
-            </div>
-            <div class="global-field-horizontal" style="display: none;">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Descr. Ocorrência:</label>
-              <input type="text" id="occorr_descr_input" placeholder="Inc. Mato">
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Morada Ocorrência:</label>
-              <input type="text" id="occorr_local_input" style="width: 350px;" placeholder="Ex. Rua Serpa Pinto, 00">
-            </div>
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Localidade:</label>
-              <input type="text" id="occorr_localitie_input" placeholder="Ex. Faro">
-            </div>
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Distrito:</label>
-              <select id="district_select" style="width: 190px;">
-              </select>
-            </div>
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Concelho:</label>
-              <select id="council_select" style="width: 190px;">
-                <option></option>
-              </select>
-            </div>
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Freguesia:</label>
-              <select id="parish_select" style="width: 220px;">
-              </select>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Nome Contactante:</label>
-              <input type="text" id="contact_name" style="width: 250px;" placeholder="Ex. João Sousa">
-            </div>
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Nr. Contactante:</label>
-              <input type="text" id="contact_nr" placeholder="Ex. 910 000 000" style="width: 120px; text-align: center;" maxlength="9" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 9)">
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-style: italic; font-weight: bold; color: #c70c0c;">Caso a classificação de ocorrência seja salvamento animal, por favor indique o tipo</label>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Tipo Animal:</label>
-              <input type="text" id="animal-type" style="width: 250px;" placeholder="Ex. Canideo">
-            </div>
-          </div>
-          <div class="card-type-separator" style="margin: 10px -20px 15px -20px; font-style: italic;">Planos Prévios de Intervenção</div>
-          <div class="form-row" style="margin: 0 0 -10px 0;">
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Tipo PPI:</label>
-              <select id="ppi_type">
-              </select>
-            </div>
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Nível Alerta:</label>
-              <select id="alert_level" style="width: 175px;">
-                <option></option>
-              </select>
-            </div>
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Grelha Alarme:</label>
-              <select id="alarm_grid" style="width: 75px;">
-                <option></option>
-              </select>
-            </div>
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Km:</label>
-              <input type="text" id="km" placeholder="00" style="width: 75px; text-align: center;" maxlength="6" oninput="this.value = this.value.replace(/[^0-9.]/g, '') .replace(/(\..*)\./g, '$1') .slice(0, 6)">
-            </div>
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Sentido:</label>
-              <select id="on_going" style="width: 230px;">
-              </select>
-            </div>
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Tipo Incidente:</label>
-              <select id="incident_type" style="width: 175px;">
-              </select>
-            </div>
-          </div>
+          <div class="wsms-card-footer"></div>
         </div>
-        <div class="wsms-card-footer"></div>
       </div>
-      <div class="wsms-card last-card">
-        <div class="wsms-card-header">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;">
-            <path d="M19 17H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h8l4 4v6a2 2 0 0 1-2 2z"/>
-            <circle cx="8" cy="17" r="2"/>
-            <circle cx="16" cy="17" r="2"/>
-            <line x1="10" y1="9" x2="10" y2="13"/>
-            <line x1="8" y1="11" x2="12" y2="11"/>
-          </svg>
-          <span>VEÍCULOS AFETOS À OCORRÊNCIA</span>
-        </div>
-        <div class="wsms-card-body">
-          <button id="add-new-vehicle-btn" class="btn btn-add" style="margin: 0 0 10px 0;" onclick="NewOCRaddVehicle()">ADICIONAR</button>
-          <div class="grid-2fr" id="vehicle-container"></div>
-          <textarea id="wsms_output" rows="4" cols="50" readonly style="display: none;"></textarea>
-          <div class="form-row" style="margin: 15px 0 -5px 0; display: flex; flex-wrap: wrap; justify-content: flex-end;">
-            <div class="action-buttons" id="newoccurrence-sendgroup" >
-              <button class="btn btn-success" onclick="generateWSMSMessage()">BOMBEIROS</button>
-              <button class="btn btn-danger" onclick="generateNewCREPCMessage()">COMUNICAR CREPC</button>
-            </div>
-          </div>
-        </div>
-        <div class="wsms-card-footer"></div>
-      </div>
-    </div>
     <!---- CLOSE OCCURRENCE SUB-MODULE ---->
     <div id="page_close_occurrence" class="page">
       <h2 class="section-title">Dados para Encerramento da Ocorrência</h2>
@@ -2480,15 +2486,15 @@
     </div>
     <!---- EMS SERVICES SUB-MODULE ---->
     <div id="page-inem-services" class="page">
-      <div class="wsms-card">
+      <div class="wsms-card" style="margin: 0 0 25px 0;">
         <div class="wsms-card-header">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
           <span>SERVIÇOS EMERGÊNCIA MÉDICA</span>
         </div>
         <div class="wsms-card-body">
-          <div class="ems-section">
-            <div class="ems-section-label">Tipo de serviço</div>
-            <div class="ems-type-row">
+          <div class="wsms-section">
+            <div class="wsms-section-label">Tipo de serviço</div>
+            <div class="wsms-type-row">
               <div class="ems-type-opt ems-type-inem" id="opt-inem">
                 <input type="checkbox" id="alert-inem">
                 <label for="alert-inem">INEM</label>
@@ -2499,36 +2505,36 @@
               </div>
             </div>
           </div>
-          <div class="ems-section">
-            <div class="ems-section-label">Temporização</div>
-            <div class="ems-row">
-              <div class="ems-field">
+          <div class="wsms-section">
+            <div class="wsms-section-label">Temporização</div>
+            <div class="wsms-row">
+              <div class="wsms-field">
                 <label for="alert-service">Hora Alerta</label>
                 <input type="time" id="alert-service" style="width: 110px;">
               </div>
             </div>
           </div>
-          <div class="ems-section">
-            <div class="ems-section-label">Localização</div>
-            <div class="ems-row">
-              <div class="ems-field ems-field--grow3">
+          <div class="wsms-section">
+            <div class="wsms-section-label">Localização</div>
+            <div class="wsms-row">
+              <div class="wsms-field wsms-field--grow3">
                 <label for="address-service">Morada</label>
                 <input type="text" id="address-service" placeholder="Morada da ocorrência">
               </div>
-              <div class="ems-field ems-field--grow2">
+              <div class="wsms-field wsms-field--grow2">
                 <label for="location-service">Localidade</label>
                 <input type="text" id="location-service" placeholder="Localidade">
               </div>
-              <div class="ems-field ems-field--grow3">
+              <div class="wsms-field wsms-field--grow3">
                 <label for="reference-address-service">Ponto de Referência</label>
                 <input type="text" id="reference-address-service" placeholder="Ponto de referência">
               </div>
             </div>
           </div>
-          <div class="ems-section">
-            <div class="ems-section-label">Vítima</div>
-            <div class="ems-row">
-              <div class="ems-field">
+          <div class="wsms-section">
+            <div class="wsms-section-label">Vítima</div>
+            <div class="wsms-row">
+              <div class="wsms-field">
                 <label for="victim-gender-service">Género</label>
                 <select id="victim-gender-service" style="width: 90px;">
                   <option></option>
@@ -2538,12 +2544,12 @@
                   <option>Outro</option>
                 </select>
               </div>
-              <div class="ems-field">
+              <div class="wsms-field">
                 <label for="victim-age-service">Idade</label>
                 <input type="text" id="victim-age-service" placeholder="00" maxlength="3" inputmode="numeric" style="width: 55px; text-align: center;" 
                        oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 3)">
               </div>
-              <div class="ems-field">
+              <div class="wsms-field">
                 <label for="victim-age-type-service"> </label>
                 <select id="victim-age-type-service" style="width: 85px;">
                   <option></option>
@@ -2552,30 +2558,30 @@
                   <option>Anos</option>
                 </select>
               </div>
-              <div class="ems-field ems-field--grow">
+              <div class="wsms-field wsms-field--grow">
                 <label for="situation-service">Situação</label>
                 <input type="text" id="situation-service" placeholder="Descreva a situação clínica">
               </div>
             </div>
           </div>
-          <div class="ems-section">
-            <div class="ems-section-label">Operacional</div>
-            <div class="ems-row">
-              <div class="ems-field">
+          <div class="wsms-section">
+            <div class="wsms-section-label">Operacional</div>
+            <div class="wsms-row">
+              <div class="wsms-field">
                 <label for="nr-codu-service">Nr. CODU</label>
                 <input type="text" id="nr-codu-service" placeholder="123456789" maxlength="9" inputmode="numeric" style="width: 120px; text-align: center;"
                        oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 9)">
               </div>
-              <div class="ems-field">
+              <div class="wsms-field">
                 <label for="resp-tas-ni">Nr. TAS</label>
                 <input type="text" id="resp-tas-ni" placeholder="000" maxlength="3" inputmode="numeric" style="width: 60px; text-align: center;"
                        oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 3)">
               </div>
-              <div class="ems-field ems-field--grow2">
+              <div class="wsms-field wsms-field--grow2">
                 <label for="resp-tas-name">Nome TAS</label>
                 <input type="text" id="resp-tas-name" disabled>
               </div>
-              <div class="ems-field ems-field--grow2">
+              <div class="wsms-field wsms-field--grow2">
                 <label for="observations-service">Observações</label>
                 <input type="text" id="observations-service" placeholder="Observações adicionais">
               </div>
@@ -2583,7 +2589,13 @@
           </div>
         </div>
         <div class="wsms-card-footer">
-          <button class="btn btn-ems-send" onclick="generateCODUserviceMessage()">ENVIAR SERVIÇO</button>
+          <button class="btn btn-wsms-send" onclick="generateCODUserviceMessage()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="margin-right: 6px; vertical-align: middle;">
+              <line x1="22" y1="2" x2="11" y2="13"/>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+            ENVIAR SERVIÇO
+          </button>
         </div>
       </div>
     </div>

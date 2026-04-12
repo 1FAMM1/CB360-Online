@@ -125,7 +125,7 @@
       if (navigator.clipboard?.writeText) {
         navigator.clipboard.writeText(message).catch(() => {});
       }
-      showPopup('popup-success', "Mensagem criada com sucesso! Abra o WhatsApp e prima CTRL+V", true);
+      showPopup('popup-success', "Mensagem criada e copiada! Pode colar no WhatsApp.", true);
       return message;
     }
     function toggleClsOcorrSection(sectionClass, btn) {

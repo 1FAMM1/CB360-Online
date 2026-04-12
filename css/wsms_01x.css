@@ -1,6 +1,7 @@
     /* ================== WSMS CSS =================== */
     .wsms-card {border: 0.5px solid #d0d0d0; border-radius: 8px; overflow: hidden; background: #fff;}
-    .wsms-card-header {background: #c0392b; color: #fff; padding: 9px 18px; font-size: 12px; font-weight: 600; letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px;}
+    .wsms-card-header {background: #2c3e50; color: #fff; padding: 9px 18px; font-size: 12px; font-weight: 600; letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px;}
+    .wsms-card-header-ems { background: #c0392b; color: #fff; padding: 9px 18px; font-size: 12px; font-weight: 600; letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px;}
     .wsms-card-body {padding: 16px 20px; display: flex; flex-direction: column; gap: 20px;}
     .wsms-card-footer {border-top: 0.5px solid #e0e0e0; padding: 10px 20px; display: flex; justify-content: flex-end; background: #fafafa;}
     .wsms-section {display: flex; flex-direction: column; gap: 8px;}
@@ -20,8 +21,8 @@
                     background 0.15s; user-select: none;}
     .wsms-type-opt:hover {border-color: #c0392b; background: #fdf4f3;}
     .wsms-type-opt.active {border-color: #c0392b; background: #fdf0ee;}
-    .wsms-card.theme-inem .wsms-card-header {background: #f0b400; color: #1a2e4a;}
-    .wsms-card.theme-inem .wsms-card-header svg {stroke: #1a2e4a;}
+    .wsms-card.theme-inem .wsms-card-header-ems {background: #f0b400; color: #1a2e4a;}
+    .wsms-card.theme-inem .wsms-card-header-ems svg {stroke: #1a2e4a;}
     .wsms-card.theme-inem .wsms-field input:focus, .wsms-card.theme-inem .wsms-field select:focus {border-color: #f0b400 !important; box-shadow: 0 0 0 2px rgba(240,180,0,0.18) !important;}
     .wsms-card.theme-inem .wsms-type-opt:hover {border-color: #f0b400; background: #fffbea;}
     .wsms-card.theme-inem .wsms-type-opt.active {border-color: #f0b400; background: #fffbea;}
@@ -43,8 +44,20 @@
                     transition: background 0.15s;}
     .btn-wsms-blue:hover {background: #2471a3;}
     .btn-wsms-blue:active {background: #1a5276; transform: scale(0.98);}    
-    .wsms-vehicle-card {background: #fff; border-radius: 6px; border: 0.5px solid #d0d0d0; box-shadow: 0 1px 3px rgba(0,0,0,0.08); overflow: hidden; transition: transform 0.2s ease, box-shadow 0.2s ease;}
-    .wsms-vehicle-card:hover {transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0,0,0,0.12);}
-    .wsms-vehicle-card .field-card-title {background: linear-gradient(to right, #061426, #0d2a4d, #1a3d73); color: #fff; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; padding: 6px 12px;
-                                          text-shadow: 0 1px 2px rgba(0,0,0,0.4);}
+    .wsms-vehicle-card, .wsms-victims-card, 
+    .wsms-extras-card, .wsms-demage-card,
+    .wsms-burned-card, .wsms-observ-card {background: #fff; border-radius: 6px; border: 0.5px solid #d0d0d0; box-shadow: 0 1px 3px rgba(0,0,0,0.08); overflow: hidden; 
+                                          transition: transform 0.2s ease, box-shadow 0.2s ease;}    
+    .wsms-vehicle-card .field-card-title, 
+    .wsms-victims-card .field-card-title, 
+    .wsms-extras-card .field-card-title, 
+    .wsms-demage-card .field-card-title,
+    .wsms-burned-card .field-card-title, 
+    .wsms-observ-card .field-card-title{background: linear-gradient(to right, #061426, #0d2a4d, #1a3d73); color: #fff; font-size: 11px; font-weight: 600; letter-spacing: 0.06em;                                                                                 padding: 6px 12px; text-shadow: 0 1px 2px rgba(0,0,0,0.4);}
     .wsms-vehicle-card .wsms-row {padding: 5px 20px;}
+    #vehicles-container {gap: 10px;}
+    .wsms-card-mini {background: #fff; border-radius: 6px; border: 0.5px solid #d0d0d0; box-shadow: 0 1px 3px rgba(0,0,0,0.08); overflow: hidden;}
+    .wsms-card-mini .field-card-title {background: linear-gradient(to right, #061426, #0d2a4d, #1a3d73); color: #fff; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; padding: 6px 12px;}
+    .wsms-card-mini .wsms-row {padding: 4px 10px;}
+    .wsms-card-mini .wsms-field {display: flex !important; flex-direction: row !important; align-items: center; gap: 6px;}
+    .wsms-card-mini .wsms-field label {margin: 0; white-space: nowrap; font-size: 11px;}

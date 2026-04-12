@@ -23,11 +23,11 @@
           </div>
           <div class="wsms-field">
             <label>Veículo</label>
-            <select style="width: 120px;"><option></option></select>
+            <select style="width: 140px;"><option></option></select>
           </div>
           <div class="wsms-field">
             <label>BBs</label>
-            <input type="text" placeholder="00" style="width: 80px; text-align: center;" maxlength="2"
+            <input type="text" placeholder="00" style="width: 84px; text-align: center;" maxlength="2"
                    oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
           </div>
           <div class="wsms-field">

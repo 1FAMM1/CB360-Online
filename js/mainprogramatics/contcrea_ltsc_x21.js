@@ -58,50 +58,70 @@
       const buttons = document.querySelectorAll('.action-buttons .btn-add');
       buttons.forEach(btn => btn.classList.remove('active'));
     }
-    /* ========== VEHICLES ========== */
+    /* ========== VEHICLES ============= */
     const vehiclesContainer = document.getElementById('vehicles-container');
     let closeVehicleCount = 0;
     async function CloseOCRaddVehicle() {
       closeVehicleCount++;
       const card = document.createElement('div');
-      card.className = 'vehicle-card';
-      card.style.minHeight = "190px";
-      card.style.margin = "5px";
+      card.className = 'wsms-card-mini';
       card.innerHTML = `
         <div class="field-card-title">${closeVehicleCount}º VEÍCULO</div>
-        <div class="vehicle-field-horizontal" style="width: 175px;">
-          <label>Veículo:</label>
-          <select style="width: 150px;"></select>
-        </div>
-        <div class="global-field-horizontal">
-          <label>Dt. Ch. TO:</label>
-          <input type="date" style="width: 110px;">
-          <label>Hr. Ch. TO:</label>
-          <input type="time" style="width: 80px;">
-        </div>
-        <div class="global-field-horizontal">
-          <label>Dt. Sd. TO:</label>
-          <input type="date" style="width: 110px;">
-          <label>Hr. Sd. TO:</label>
-          <input type="time" style="width: 80px;">
-        </div>
-        <div class="global-field-horizontal">
-          <label>Dt. Ch. Und.:</label>
-          <input type="date" style="width: 110px;">
-          <label>Hr. Ch. Und.:</label>
-          <input type="time" style="width: 80px;">
-          <label>Kms.:</label>
-          <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="5" 
-                 oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,5)">
-        </div>
-        <div class="global-field-horizontal">
-          <label>Tempo Bomba:</label>
-          <label>Hr:</label>
-          <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="3" 
-                 oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)">
-          <label>Mins:</label>
-          <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="2" 
-                 oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
+        <div style="padding: 5px 0px; display: flex; flex-direction: column; gap: 5px;">
+          <div class="wsms-row" style="margin-bottom: -10px; margin-top: -10px;">
+            <div class="wsms-field wsms-field--fixed" style="display:flex !important; flex-direction:row !important; align-items:center; gap:8px;">
+              <label style="margin:0;">Veículo</label>
+              <select style="width: 150px;"></select>
+            </div>
+          </div>
+          <div class="wsms-row" style="margin-bottom: -10px;">
+            <div class="wsms-field wsms-field--fixed">
+              <label>Dt. Ch. TO</label>
+              <input type="date" style="width: 110px;">
+            </div>
+            <div class="wsms-field wsms-field--fixed">
+              <label>Hr. Ch. TO</label>
+              <input type="time" style="width: 90px;">
+            </div>
+          </div>
+          <div class="wsms-row" style="margin-bottom: -10px;">
+            <div class="wsms-field wsms-field--fixed">
+              <label>Dt. Sd. TO</label>
+              <input type="date" style="width: 110px;">
+            </div>
+            <div class="wsms-field wsms-field--fixed">
+              <label>Hr. Sd. TO</label>
+              <input type="time" style="width: 90px;">
+            </div>
+          </div>
+          <div class="wsms-row" style="margin-bottom: -10px;">
+            <div class="wsms-field wsms-field--fixed">
+              <label>Dt. Ch. Und.</label>
+              <input type="date" style="width: 110px;">
+            </div>
+            <div class="wsms-field wsms-field--fixed">
+              <label>Hr. Ch. Und.</label>
+              <input type="time" style="width: 90px;">
+            </div>
+            <div class="wsms-field wsms-field--fixed">
+              <label>Kms.</label>
+              <input type="text" placeholder="0" style="width: 65px; text-align: center;" maxlength="5"
+                     oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,5)">
+            </div>
+          </div>
+          <div class="wsms-row" style="margin-bottom: 10px;">
+            <div class="wsms-field wsms-field--fixed">
+              <label>Tempo de Bomba</label>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 11px; font-weight: 600; color: #777; text-transform: uppercase; letter-spacing: 0.06em;">Hr:</span>
+                <input type="text" placeholder="0" style="width: 55px; text-align: center;" maxlength="3"
+                       oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)">
+                <span style="font-size: 11px; font-weight: 600; color: #777; text-transform: uppercase; letter-spacing: 0.06em;">Min:</span>
+                <input type="text" placeholder="0" style="width: 55px; text-align: center;" maxlength="2"
+                       oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
+              </div>
+            </div>
+          </div>
         </div>
       `;
       vehiclesContainer.appendChild(card);
@@ -117,39 +137,42 @@
         CloseOCRaddVehicle();
       }
     }
-    /* ========== VICTIMS ========== */
+    /* ============= VICTIMS ============== */
     const victimsContainer = document.getElementById('victims-container');
     let victimsCount = 0;
     async function addVictim() {
       victimsCount++;
       const idx = victimsCount;
       const div = document.createElement('div');
-      div.className = 'form-row';
-      div.style.display = 'flex';
-      div.style.flexWrap = 'wrap';
-      div.style.gap = '15px';
-      div.style.marginBottom = '0px';
+      div.className = 'wsms-card-mini';
+      div.style.marginBottom = '6px';
       div.innerHTML = `
-        <div class="global-field-horizontal">
-          <label>Género:</label>
-          <select id="victim_${idx}_gender" style="width: 120px;"></select>
-        </div>
-        <div class="global-field-horizontal">
-          <label>Idade:</label>
-          <input type="text" id="victim_${idx}_age_unit" placeholder="0" style="width: 50px; text-align: center;" maxlength="3">
-          <select id="victim_${idx}_age" style="width: 120px;"></select>
-        </div>
-        <div class="global-field-horizontal">
-          <label>Nacion:</label>
-          <input type="text" id="victim_${idx}_nation" style="width: 175px;">
-        </div>
-        <div class="global-field-horizontal">
-          <label>Tipo:</label>
-          <select id="victim_${idx}_type" style="width: 120px;"></select>
-        </div>
-        <div class="global-field-horizontal">
-          <label>Estado:</label>
-          <select id="victim_${idx}_status" style="width: 120px;"></select>
+        <div style="padding:4px 6px;">
+          <div class="wsms-row" style="flex-wrap: wrap; gap: 8px;">
+            <div class="wsms-field wsms-field--fixed">
+              <label>Género</label>
+              <select id="victim_${idx}_gender" style="width: 110px;"></select>
+            </div>
+            <div class="wsms-field wsms-field--fixed">
+              <label>Idade</label>
+              <div style="display:flex; gap:4px;">
+                <input type="text" id="victim_${idx}_age_unit" style="width: 45px; text-align: center;">
+                <select id="victim_${idx}_age" style="width:80px;"></select>
+              </div>
+            </div>
+            <div class="wsms-field wsms-field--fixed">
+              <label>Nacionalidade</label>
+              <input type="text" id="victim_${idx}_nation" style="width:150px;">
+            </div>
+            <div class="wsms-field wsms-field--fixed">
+              <label>Tipo</label>
+              <select id="victim_${idx}_type" style="width:100px;"></select>
+            </div>
+            <div class="wsms-field wsms-field--fixed">
+              <label>Estado</label>
+              <select id="victim_${idx}_status" style="width:100px;"></select>
+            </div>
+          </div>
         </div>
       `;
       victimsContainer.appendChild(div);
@@ -157,9 +180,9 @@
       await populateSingleVictimSelect(document.getElementById(`victim_${idx}_age`), 'victim_age');
       await populateSingleVictimSelect(document.getElementById(`victim_${idx}_type`), 'victim_type');
       await populateSingleVictimSelect(document.getElementById(`victim_${idx}_status`), 'victim_status');
-    }    
+    }
     async function resetVictims(initialCount = 1) {
-      const victimsCard = document.querySelector('.victims-card');
+      const victimsCard = document.querySelector('.wsms-victims-card');
       if (victimsCard) victimsCard.classList.add('hidden');
       victimsContainer.innerHTML = "";
       victimsCount = 0;
@@ -170,84 +193,86 @@
     document.addEventListener('DOMContentLoaded', async () => {
       await resetVictims(1);
     });
-    /* ========== OTHER MEANS IN THE TO ========== */
+    /* = OTHER VEHICLES IN THE OCCURRENCE = */
     const extrasContainer = document.getElementById('extras-container');
     let extrasCount = 0;
     function addExtra(index = null) {
       extrasCount++;
       const i = index || extrasCount;
       const div = document.createElement('div');
-      div.className = 'form-row';
-      div.style.display = 'flex';
-      div.style.flexWrap = 'wrap';
-      div.style.gap = '15px';
-      div.style.marginBottom = '0px';
+      div.className = 'wsms-card-mini';
+      div.style.marginBottom = '6px';
       div.innerHTML = `
-        <div class="global-field-horizontal" style="flex:1;"> 
-          <label>${i.toString().padStart(2, '0')}.:</label> 
-          <input type="text" style="width: 100%;"> 
-        </div>
-        <div class="global-field-horizontal">
-          <label>Veícs.:</label>
-          <input type="text" placeholder="0" style="width:50px; text-align:center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0, 2)">
-        </div>
-        <div class="global-field-horizontal">
-          <label>Elems.:</label>
-          <input type="text" placeholder="0" style="width: 50px; text-align: center;" maxlength="2" oninput="this.value = this.value.replace(/[^0-9]/g,'').slice(0, 2)">
+        <div style="padding:4px 6px; display:flex; flex-direction:column; gap:4px;">
+          <div class="wsms-row">
+            <div class="wsms-field wsms-field--grow">
+              <label>Descrição</label>
+              <input type="text" style="width: 100%;">
+            </div>
+            <div class="wsms-field wsms-field--fixed">
+              <label>Veícs.</label>
+              <input type="text" style="width:55px; text-align:center;">
+            </div>
+            <div class="wsms-field wsms-field--fixed">
+              <label>Elems.</label>
+              <input type="text" style="width:55px; text-align:center;">
+            </div>
+          </div>
         </div>
       `;
       extrasContainer.appendChild(div);
     }
     function resetExtras() {
-      const victimsCard = document.querySelector('.extras-card');
-      if (victimsCard) victimsCard.classList.add('hidden');
+      const extrasCard = document.querySelector('.wsms-extras-card');
+      if (extrasCard) extrasCard.classList.add('hidden');
       extrasContainer.innerHTML = "";
       extrasCount = 0;
       for (let i = 1; i <= 1; i++) addExtra(i);
     }
-    /* ========== DAMAGE CAUSED ========== */
+    /* ========== DAMAGE CAUSED =========== */
     const damagesContainer = document.getElementById('damages-container');
     let damagesCount = 0;
     function addDamage(index = null) {
       damagesCount++;
       const i = index || damagesCount;
       const div = document.createElement('div');
-      div.className = 'form-row';
-      div.style.display = 'flex';
-      div.style.flexWrap = 'wrap';
-      div.style.gap = '5px';
-      div.style.marginBottom = '0px';
+      div.className = 'wsms-card-mini';
+      div.style.marginBottom = '6px';
       div.innerHTML = `
-        <div class="global-field-horizontal" style="flex: 1;">
-          <label>${i.toString().padStart(2,'0')}.:</label>
-          <input type="text" style="width: 100%;">
+        <div style="padding:4px 6px;">
+          <div class="wsms-row">
+            <div class="wsms-field wsms-field--grow">
+              <label>Descrição</label>
+              <input type="text" style="width: 100%;">
+            </div>
+          </div>
         </div>
       `;
       damagesContainer.appendChild(div);
     }
     function resetDamages() {
-      const victimsCard = document.querySelector('.demage-card');
-      if (victimsCard) victimsCard.classList.add('hidden');
+      const demageCard = document.querySelector('.wsms-demage-card');
+      if (demageCard) demageCard.classList.add('hidden');
       damagesContainer.innerHTML = "";
       damagesCount = 0;
-      for (let i = 1; i <= 1; i++) addDamage(i);
+      addDamage(1);
     }
-    /* ========== BURNT AREA ========== */
+    /* ============ BURNT AREA ============ */
     function resetBurned() {
-      const burnedCard = document.querySelector('.burned-card');
+      const burnedCard = document.querySelector('.wsms-burned-card');
       if (burnedCard) burnedCard.classList.add('hidden');
     }
-    /* ========== COMMENTS ========== */
+    /* ============= COMMENTS ============= */
     function resetObservations() {
-      const observCard = document.querySelector('.observ-card');
-      if (observCard) observCard.classList.add('hidden');
+      const observCard = document.querySelector('.wsms-observ-card');
+      if (observCard) observCard.classList.add('hidden');    
     }
-    /* ========== RESET BUTTONS ========== */
+    /* ========== RESET BUTTONS =========== */    
     function resetButtons() {
       const buttons = document.querySelectorAll('.action-buttons .btn-add');
       buttons.forEach(btn => btn.classList.remove('active'));
     }
-    /* ========== GLOBAL RESET ========== */
+    /* =========== GLOBAL RESET =========== */    
     function CloseOCRresetAll() {
       CloseOCRresetVehicles();
       resetVictims();

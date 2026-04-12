@@ -2215,7 +2215,7 @@
         </div>
         <div class="wsms-card-body">
           <div>
-            <button id="add-new-vehicle-btn" class="btn btn-wsms-blue" onclick="NewOCRaddVehicle()">
+            <button id="add-new-vehicle-btn" class="btn btn-wsms-blue" style="margin-bottom: -5px;" onclick="NewOCRaddVehicle()">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="margin-right: 6px; vertical-align: middle;">
                 <line x1="12" y1="5" x2="12" y2="19"/>
                 <line x1="5" y1="12" x2="19" y2="12"/>
@@ -2245,172 +2245,173 @@
     </div>
     <!---- CLOSE OCCURRENCE SUB-MODULE ---->
     <div id="page_close_occurrence" class="page">
-      <h2 class="section-title">Dados para Encerramento da Ocorrência</h2>
-      <div class="card">
-        <div class="card-header">DADOS GLOBAIS</div>
-        <div class="card-body">
-          <div class="form-row">
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Nr. Ocorrência:</label>
-              <input type="text" id="close_nr_occurrence" placeholder="Ex. 2025123456789" style="width: 150px; text-align: center;" maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11)">
+      <!-- CARD 1: DADOS GLOBAIS -->
+      <div class="wsms-card" style="margin-bottom: 10px;">
+        <div class="wsms-card-header">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+          </svg>
+          <span>DADOS GLOBAIS</span>
+        </div>
+        <div class="wsms-card-body">
+          <div class="wsms-section">
+            <div class="wsms-section-label">Ocorrência</div>
+            <div class="wsms-row">
+              <div class="wsms-field">
+                <label for="close_nr_occurrence">Nr. Ocorrência</label>
+                <input type="text" id="close_nr_occurrence" placeholder="Ex. 2025123456789" style="width: 170px; text-align: center;" maxlength="11" 
+                       oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11)">
+              </div>
             </div>
           </div>
-          <button id="add-close-vehicle-btn" class="btn btn-add" style="margin: 5px 0 0 0;" onclick="CloseOCRaddVehicle()">ADICIONAR</button>
+          <div class="wsms-section">
+            <div class="wsms-section-label">Veículos</div>
+            <div class="wsms-row">
+              <button id="add-close-vehicle-btn" class="btn btn-wsms-blue" onclick="CloseOCRaddVehicle()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="margin-right: 6px; vertical-align: middle;">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                ADICIONAR
+              </button>
+            </div>
+            <div class="grid-3fr" id="vehicles-container"></div>
+          </div>
         </div>
-        <div class="grid-3fr" id="vehicles-container" style="margin: -15px 15px 15px 15px;"></div>
-        <div class="card-footer"></div>
+        <div class="wsms-card-footer"></div>
       </div>
-      <div class="card last-card">
-        <div class="card-header">DADOS ADICIONAIS</div>
-        <div class="form-row" style="margin: 15px 0 -40px 0; display: flex; flex-wrap: wrap; justify-content: center;">
-          <div class="action-buttons" id="closeoccurrence-extra-options" >
-            <button class="btn btn-add" onclick="toggleClsOcorrSection('victims-card', this)">VÍTIMAS</button>
-            <button class="btn btn-add" onclick="toggleClsOcorrSection('extras-card', this)">OUTROS MEIOS</button>
-            <button class="btn btn-add" onclick="toggleClsOcorrSection('demage-card', this)">DANOS</button>
-            <button class="btn btn-add" onclick="toggleClsOcorrSection('burned-card', this)">ÁREA ARDIDA</button>
-            <button class="btn btn-add" onclick="toggleClsOcorrSection('observ-card', this)">OBSERVAÇÕES</button>
-          </div>
+      <!-- CARD 2: DADOS ADICIONAIS -->
+      <div class="wsms-card" style="margin-bottom: 10px;">
+        <div class="wsms-card-header">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <span>DADOS ADICIONAIS</span>
         </div>
-        <div class="card-body">
-          <div class="victims-card hidden" style="margin: 35px 0 0 0;">
-            <div class="field-card-title" style="display: flex; align-items: center; gap: 10px;">
-              <label style="font-size: 13px;">VÍTIMAS</label>
-              <button class="btn btn-add" style="width: 70px; height: 20px; padding: 0; line-height: 20px;" onclick="addVictim()">ADICIONAR</button>
-            </div>
-            <div id="victims-container"></div>
+        <div class="wsms-card-body">
+          <div class="wsms-row" style="justify-content: center;">
+            <button class="btn btn-wsms-blue" onclick="toggleClsOcorrSection('wsms-victims-card', this)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="margin-right: 6px; vertical-align: middle;">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              VÍTIMAS
+            </button>
+            <button class="btn btn-wsms-blue" onclick="toggleClsOcorrSection('wsms-extras-card', this)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="margin-right: 6px; vertical-align: middle;">
+                <rect x="1" y="9" width="15" height="10" rx="1"/>
+                <path d="M16 13h4l3 3v3h-7V13z"/>
+                <circle cx="5.5" cy="19.5" r="1.5"/>
+                <circle cx="18.5" cy="19.5" r="1.5"/>
+              </svg>
+              OUTROS MEIOS
+            </button>
+            <button class="btn btn-wsms-blue" onclick="toggleClsOcorrSection('wsms-demage-card', this)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="margin-right: 6px; vertical-align: middle;">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+              DANOS
+            </button>
+            <button class="btn btn-wsms-blue" onclick="toggleClsOcorrSection('wsms-burned-card', this)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="margin-right: 6px; vertical-align: middle;">
+                <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.25-2.5-.5-5.5 1-7 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+              </svg>
+              ÁREA ARDIDA
+            </button>
+            <button class="btn btn-wsms-blue" onclick="toggleClsOcorrSection('wsms-observ-card', this)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="margin-right: 6px; vertical-align: middle;">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+                <polyline points="10 9 9 9 8 9"/>
+              </svg>
+              OBSERVAÇÕES
+            </button>
           </div>
-          <div class="grid-2fr" style="margin: 10px 0px 15px 0px;">
-            <div class="extras-card hidden">
-              <div class="field-card-title" style="display: flex; align-items: center; gap: 10px;">
-                <label style="font-size: 13px;">OUTROS MEIOS NO TO</label>
-                <button class="btn btn-add" style="width: 70px; height: 20px; padding: 0; line-height: 20px;" onclick="addExtra()">ADICIONAR</button>
-              </div>
-              <div id="extras-container"></div>
+          <!-- VÍTIMAS -->
+          <div class="wsms-section wsms-victims-card hidden" style="margin-bottom: -10px;">
+            <div class="field-card-title" style="display:flex; justify-content:space-between; align-items:center;">
+              VÍTIMAS
+              <button class="btn btn-wsms-blue" style="height:22px; padding:0 10px; font-size:11px;" onclick="addVictim()">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="margin-right: 4px; vertical-align: middle;">
+                    <line x1="12" y1="5" x2="12" y2="19"/>
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                  </svg>
+                ADICIONAR
+              </button>
             </div>
-            <div class="demage-card hidden">
-              <div class="field-card-title" style="display: flex; align-items: center; gap: 10px;">
-                <label style="font-size: 13px;">DANOS CAUSADOS</label>
-                <button class="btn btn-add" style="width: 70px; height: 20px; padding: 0; line-height: 20px;" onclick="addDamage()">ADICIONAR</button>
-              </div>
-              <div id="damages-container"></div>
+            <div class="wsms-card-body" style="padding:6px 10px;">
+              <div id="victims-container"></div>
             </div>
           </div>
-          <div class="grid-2fr" style="margin: -10px 0 0 0;">
-            <div class="burned-card hidden" style="min-height: 100px;  max-width: 100%; margin: 5px 0 0 0;">
-              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin: 0 0 0 0;">
-                <div class="field-card-title">
-                  <label style="font-size: 13px;">ÁREA ARDIDA</label>
+          <!-- OUTROS MEIOS + DANOS -->
+          <div class="grid-2fr">
+            <div class="wsms-section wsms-extras-card hidden" style="margin-bottom: -10px;">
+              <div class="field-card-title" style="display:flex; justify-content:space-between; align-items:center;">
+                OUTROS MEIOS NO TO
+                <button class="btn btn-wsms-blue" style="height: 22px; padding: 0 10px; font-size: 11px;" onclick="addExtra()">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="margin-right: 4px; vertical-align: middle;">
+                    <line x1="12" y1="5" x2="12" y2="19"/>
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                  </svg>
+                  ADICIONAR
+                </button>
+              </div>
+              <div id="extras-container" style="padding: 6px 10px;"></div>
+            </div>            
+            <div class="wsms-section wsms-demage-card hidden" style="margin-bottom: -10px;">
+              <div class="field-card-title" style="display:flex; justify-content:space-between; align-items:center;">
+                DANOS CAUSADOS
+                <button class="btn btn-wsms-blue" style="height: 22px; padding: 0 10px; font-size: 11px;" onclick="addDamage()">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="margin-right: 4px; vertical-align: middle;">
+                    <line x1="12" y1="5" x2="12" y2="19"/>
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                  </svg>
+                  ADICIONAR
+                </button>
+              </div>
+              <div id="damages-container" style="padding: 6px 10px;"></div>
+            </div>
+          </div>
+          <!-- ÁREA ARDIDA + OBSERVAÇÕES -->
+          <div class="grid-2fr">
+            <div class="wsms-section wsms-burned-card hidden">
+              <div class="field-card-title">ÁREA ARDIDA</div>
+              <div class="wsms-row" style="padding: 8px 12px;">
+                <div class="wsms-field wsms-field--fixed">
+                  <label>Metros²</label>
+                  <input type="number" id="area_m2" placeholder="0" style="width: 120px; text-align: center;" oninput="updateHectares()">
+                </div>
+                <div class="wsms-field wsms-field--fixed">
+                  <label>Hectares</label>
+                  <input type="text" id="area_ha" placeholder="0" style="width: 120px; text-align: center;" readonly>
                 </div>
               </div>
-              <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal" style="flex:1;">
-                  <label>01.:</label>
-                  <input type="number" id="area_m2" placeholder="0" style="width: 15%; text-align: center;" oninput="updateHectares()">
-                  <label>Mts.2</label>
-                </div>
-              </div>
-              <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal" style="flex:1;">
-                  <label>02.:</label>
-                  <input type="text" id="area_ha" placeholder="0" style="width: 15%; text-align: center;" readonly>
-                  <label>Ha.</label>
-                </div>
-              </div>
             </div>
-            <div class="observ-card hidden" style="min-height: 100px; max-width: 100%; margin: 5px 0 0 0;">
-              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin: 0 0 0 0;">
-                <div class="field-card-title">
-                  <label style="font-size: 13px;">OBSERVAÇÕES</label>
-                </div>
-              </div>
-              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 0px;">
-                <div class="global-field-horizontal" style="width: 100%;">
-                  <textarea placeholder="Escreva suas observações..." rows="4" style="width: 100%; height: 45px; resize: vertical;"></textarea>
-                </div>
+            <div class="wsms-section wsms-observ-card hidden">
+              <div class="field-card-title">OBSERVAÇÕES</div>
+              <div style="padding: 8px 12px;">
+                <textarea placeholder="Escreva as observações..." rows="4"
+                          style="width: 100%; height: 70px; resize: vertical; border: 1px solid #c8c8c8; border-radius: 5px; padding: 8px; font-size: 12px; box-sizing: border-box;"></textarea>
               </div>
             </div>
           </div>
         </div>
-        <div class="card-footer"></div>
+        <div class="wsms-card-footer"></div>
       </div>
-      <div class="action-buttons" id="closeoccurrence-sendgroup" style="margin: -35px 0 50px 0;">
-        <button class="btn btn-danger" onclick="generateCloseCREPCMessage()">COMUNICAR CREPC</button>
-      </div>
-    </div>
-    <!---- AVAILABILITY REQUEST SUB-MODULE ---->
-    <div id="page-solicitation" class="page">
-      <h2 class="section-title">Solicitação de Disponibilidades para Serviços</h2>
-      <div class="card">
-        <div class="card-header">TIPO DE SOLICITAÇÃO</div>
-        <div class="card-body">
-          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: -5px;">
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Data do Serviço:</label>
-              <input type="date" id="solicitation_date" style="width: 110px;">
-            </div>
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Tipo de Solicitação:</label>
-              <select id="solicitation_type" style="width: 200px;">
-              </select>
-            </div>
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Motivo da Solicitação:</label>
-              <select id="solicitation_motive" style="width: 200px;">
-              </select>
-            </div>
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Turno:</label>
-              <select id="solicitation_shift" style="width: 75px;">
-              </select>
-            </div>
-          </div>
-        </div>
-        <div class="card-footer"></div>
-      </div>
-      <div class="card">
-        <div class="card-header">MEIOS SOLICITADOS</div>
-        <div class="card-body">
-          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: -5px;">
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Motoritas:</label>
-              <div class="global-field-horizontal">
-                <input type="text" id="drivers" placeholder="0" style="width: 75px; text-align: center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
-              </div>
-            </div>
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Elementos:</label>
-              <div class="global-field-horizontal">
-                <input type="text" id="elements" placeholder="0" style="width: 75px; text-align: center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="card-footer"></div>
-      </div>
-      <div class="card">
-        <div class="card-header">DESTINO DO SERVIÇO</div>
-        <div class="card-body">
-          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: -5px;">
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">Hora de Saída:</label>
-              <div class="global-field-horizontal">
-                <input type="time" id="exit_hour" style="width: 80px;">
-              </div>
-            </div>
-            <div class="global-field-horizontal">
-              <label style="font-size: 12px; font-weight: bold; color: #444;">ULS Destino:</label>
-              <div class="global-field-horizontal">
-                <input type="text" id="uls_desteny" placeholder="Ex. IPO Lisboa" style="width: 250px; text-align: center;">
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="card-footer"></div>
-      </div>
-      <div class="form-row" style="margin: 10px 0 10px 10px; display: flex; flex-wrap: wrap; justify-content: flex-end;">
-        <div class="action-buttons" id="solicitation-sendgroup" >
-          <button class="btn btn-success" onclick="generateAvailability()">SOLICITAR</button>
-        </div>
+      <!-- BOTÃO ENVIAR -->
+      <div style="display: flex; justify-content: flex-end; margin-bottom: 50px;">
+        <button class="btn btn-wsms-send" onclick="generateCloseCREPCMessage()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="margin-right: 6px; vertical-align: middle;">
+            <path d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.01-.24 11.36 11.36 0 0 0 3.56.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1 11.36 11.36 0 0 0 .57 3.56 1 1 0 0 1-.24 1.01z"/>
+          </svg>
+          COMUNICAR CREPC
+        </button>
       </div>
     </div>
     <!---- VEHICLE UNAVAILABILITY SUB-MODULE ---->

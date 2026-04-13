@@ -1,5 +1,5 @@
-    /* =======================================
-              CLOSING GROUP INCIDENTS
+/* =======================================
+    CLOSING GROUP INCIDENTS
     ======================================= */
     /* ========== CONVERSION FROM MT² TO Ha ========== */
     function updateHectares() {
@@ -17,10 +17,10 @@
         return;
       }
       const sections = [];
-      sections.push(`*❌ Encerramento de Ocorrência*`);
+      sections.push(`*⛔ Encerramento de Ocorrência*`);
       sections.push(`*N. OC:* ${nrOccurrence}`);
       const vehicleBlocks = [];
-      document.querySelectorAll('.vehicle-card').forEach(card => {
+      document.querySelectorAll('#vehicles-container .wsms-card-mini').forEach(card => {
         const vehicle = card.querySelector('select')?.value?.trim();
         if (!vehicle) return;
         const dates = card.querySelectorAll('input[type="date"]');
@@ -62,7 +62,7 @@
         if (gender || age || nation || type || status) {
           const parts = [];
           if (gender) parts.push(gender);
-          if (age) parts.push(`${ageUnit ? ' ' + ageUnit : ''}${age}`);
+          if (age) parts.push(`${ageUnit ? ' ' + ageUnit : ''} ${age}`);
           if (nation) parts.push(`Nacion: ${nation}`);
           if (type) parts.push(type);
           if (status) parts.push(status);
@@ -70,10 +70,10 @@
         }
       }
       if (victimLines.length) {
-        sections.push(`*VÍTIMAS:*\n${victimLines.join('\n')}`);
+        sections.push(`*VÍTIMA(s):*\n${victimLines.join('\n')}`);
       }
       const extrasLines = [];
-      document.querySelectorAll('.extras-card').forEach(card => {
+      document.querySelectorAll('.wsms-extras-card').forEach(card => {
         const label = card.querySelector('label')?.textContent?.trim();
         if (label?.toLowerCase().includes('outros meios')) {
           card.querySelectorAll('.form-row').forEach(row => {
@@ -95,7 +95,7 @@
         sections.push(`*OUTROS MEIOS NO TO:*\n${extrasLines.join('\n')}`);
       }
       const damageLines = [];
-      document.querySelectorAll('.demage-card').forEach(card => {
+      document.querySelectorAll('.wsms-demage-card').forEach(card => {
         const label = card.querySelector('label')?.textContent?.trim();
         if (label?.toLowerCase().includes('danos')) {
           card.querySelectorAll('input[type="text"]').forEach(input => {
@@ -115,7 +115,7 @@
         if (areaHa) parts.push(`${areaHa} ha`);
         sections.push(`*ÁREA ARDIDA:*\n${parts.join(' | ')}`);
       }
-      const observations = document.querySelector('.observ-card textarea')?.value?.trim();
+      const observations = document.querySelector('.wsms-observ-card textarea')?.value?.trim();
       if (observations) {
         sections.push(`*OBSERVAÇÕES:*\n${observations}`);
       }

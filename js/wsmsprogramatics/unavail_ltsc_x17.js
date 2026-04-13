@@ -42,7 +42,7 @@
       }
       document.getElementById('wsms_output').value = message;
       if (navigator.clipboard?.writeText) navigator.clipboard.writeText(message).catch(() => {});
-      showPopup('popup-success', "Mensagem criada com sucesso! Abra o WhatsApp e prima CTRL+V", true);
+      showPopup('popup-success', "Mensagem criada e copiada! Pode colar no WhatsApp.", true);
       try {
         await saveUnavailabilityToSupabase(currentData);
       } catch (e) {
@@ -157,7 +157,7 @@
         const out = document.getElementById('wsms_output');
         if (out) out.value = message;
         if (navigator.clipboard?.writeText) navigator.clipboard.writeText(message).catch(() => {});
-        showPopup('popup-success', "Mensagem criada com sucesso! Abra o WhatsApp e prima CTRL+V", true);
+        showPopup('popup-success', "Mensagem criada e copiada! Pode colar no WhatsApp.", true);
         await fetch(`${SUPABASE_URL}/rest/v1/vehicle_unavailability?id=eq.${record.id}`, {
           method: 'DELETE',
           headers: getSupabaseHeaders()

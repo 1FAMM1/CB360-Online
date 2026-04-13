@@ -235,7 +235,7 @@
         emsInfo = `*Nr. CODU:* ${emsNr}\n`;
       }
       const vehicles = [];
-      document.querySelectorAll('.vehicle-card').forEach(card => {
+      document.querySelectorAll('.wsms-vehicle-card').forEach(card => {
         const vehicle = card.querySelector('select')?.value?.trim() || '';
         const bbs = card.querySelector('input[type="text"]')?.value?.trim() || '';
         const vDate = card.querySelector('input[type="date"]')?.value || '';
@@ -260,7 +260,7 @@
       let message = '';
       if (nrOccurrence) {
         message =
-          `*➕ Agregar à Ocorrência*\n\n` +
+          `*🔗 Agregar à Ocorrência*\n\n` +
           `*FONTE ALERTA:* ${alertSource}\n` +
           `*N. OC:* ${nrOccurrence}\n` +
           `*GDH ALERTA:* ${gdhAlerta}\n` +
@@ -269,11 +269,11 @@
           `${vehicles.join('\n')}`;
       } else {
         message =
-          `*✅ Registo de Nova Ocorrência*\n\n` +
+          `*📋 Registo de Nova Ocorrência*\n\n` +
           `*FONTE ALERTA:* ${alertSource}\n` +
           emsInfo +
           `*GDH ALERTA:* ${gdhAlerta}\n` +
-          `*CLASS OC:* ${classOccorr}\n` +
+          `*CLASS OCORR.:* ${classOccorr}\n` +
           `*LOCAL:* ${localOccorr} - ${localitie} - ${council} - ${parish}\n` +
           `${vehicles.join('\n')}\n\n` +
           `${contacInfo}` +
@@ -319,7 +319,7 @@
       const ppiIncident = document.getElementById('incident_type')?.value || '';
       const channelManeuver = document.getElementById('channel_maneuver')?.value?.trim() || '';
       const vehicles = [];
-      document.querySelectorAll('.vehicle-card').forEach(card => {
+      document.querySelectorAll('.wsms-vehicle-card').forEach(card => {
         const vehicle = card.querySelector('select')?.value?.trim() || '';
         const bbs = card.querySelector('input[type="text"]')?.value?.trim() || '';
         if (vehicle) vehicles.push(bbs ? `${vehicle}|${bbs} BBs.` : vehicle);
@@ -389,7 +389,7 @@
               `${String(startDateTime.getDate()).padStart(2,'0')}/${String(startDateTime.getMonth()+1).padStart(2,'0')}/${startDateTime.getFullYear()} ` +
               `${String(startDateTime.getHours()).padStart(2,'0')}:${String(startDateTime.getMinutes()).padStart(2,'0')}`;
         let totalElements = 0;
-        document.querySelectorAll('.vehicle-card').forEach(card => {
+        document.querySelectorAll('.wsms-vehicle-card').forEach(card => {
           const bbs = parseInt(card.querySelector('input[type="text"]')?.value || '0', 10);
           if (!isNaN(bbs)) totalElements += bbs;
         });

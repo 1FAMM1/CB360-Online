@@ -10,8 +10,8 @@
       optReserv.classList.toggle('active', reserv.checked);
       const card = inem.closest('.wsms-card');
       if (card) card.classList.toggle('theme-inem', inem.checked);
-      const header = card?.querySelector('.wsms-card-header span');
-      if (header) header.textContent = reserv.checked ? 'SERVIÇOS EMERGÊNCIA MÉDICA - RESERVA' : 'SERVIÇOS EMERGÊNCIA MÉDICA';
+      const header = card?.querySelector('.wsms-card-header-ems span');
+      if (header) header.textContent = reserv.checked ? 'SERVIÇOS DE EMERGÊNCIA MÉDICA - RESERVA' : 'SERVIÇOS DE EMERGÊNCIA MÉDICA';
     }
     inem.addEventListener('change', () => {
       if (inem.checked) reserv.checked = false;
@@ -124,8 +124,8 @@
       optReserv.classList.remove('active');
       const card = inem.closest('.wsms-card');
       if (card) card.classList.remove('theme-inem');
-      const header = card?.querySelector('.wsms-card-header span');
-      if (header) header.textContent = 'SERVIÇOS EMERGÊNCIA MÉDICA';
+      const header = card?.querySelector('.wsms-card-header-ems span');
+      if (header) header.textContent = 'SERVIÇOS DE EMERGÊNCIA MÉDICA';
     }
     function focusAddressField() {
       const el = document.getElementById("address-service");

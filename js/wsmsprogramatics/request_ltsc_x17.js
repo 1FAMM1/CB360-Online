@@ -77,7 +77,7 @@
       if (navigator.clipboard?.writeText) {
         navigator.clipboard.writeText(message).catch(() => {});
       }
-      showPopup('popup-success', "Mensagem criada com sucesso! Abra o WhatsApp e prima CTRL+V", true);
+      showPopup('popup-success', "Mensagem criada e copiada! Pode colar no WhatsApp.", true);
       ['solicitation_motive','solicitation_shift','exit_hour','uls_desteny'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.disabled = true;

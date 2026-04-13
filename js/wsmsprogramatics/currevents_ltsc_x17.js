@@ -154,7 +154,7 @@
         }
         /* ============= COPY MESSAGE ============== */
         await navigator.clipboard.writeText(mensagem);
-        showPopup('popup-success', "POSIT criado com sucesso! Abra o WhatsApp e prima CTRL+V.", true);
+        showPopup('popup-success', "POSIT criado e copiado! Pode colar no WhatsApp.", true);
         setTimeout(closePositPopup, 500);
       } catch (err) {
         console.error("Erro no POSIT:", err);

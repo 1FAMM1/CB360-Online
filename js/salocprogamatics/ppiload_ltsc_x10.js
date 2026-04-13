@@ -24,7 +24,7 @@
     const CUMULATIVE_ALERT_STYLE = `padding: 10px 14px; margin: 5px 0 -5px 0; border-radius: 5px; font-weight: 700; text-align: center; font-size: 15px; color: #842029; background-color: #f8d7da;
                                     border: 1px solid #842029;`;
     const FINAL_H_TEXT_STYLE = `padding: 5px; text-align: left; border: 1px solid #bbb; line-height: 15px;`;
-    const AERO_LABEL_STYLE = {background: "linear-gradient(to light,#888,#c0c0c0)", borderRadius: "3px", height: "30px", display: "flex", alignItems: "center", justifyContent: "center",
+    const AERO_LABEL_STYLE = {background: "linear-gradient(to right,#888,#c0c0c0)", borderRadius: "3px", height: "30px", display: "flex", alignItems: "center", justifyContent: "center",
                               fontSize: "17px", fontWeight: "bold", color: "black", width: "100%", maxWidth: "920px", margin: "3px auto 0 auto"};
     const AERO_ROW_STYLE = {display: "flex", justifyContent: "center", flexWrap: "wrap", gap: "5px"};
     const AERO_BUTTON_STYLE = {marginTop: "5px", width: "180px", height: "30px", fontSize: "12px", fontWeight: "bold"};
@@ -1022,7 +1022,7 @@
       const table=Object.assign(document.createElement("table"),{className:"table-elements"});
       table.style.cssText=LINFER_ABS_TABLE_STYLE;
       const td=Object.assign(document.createElement("td"),{innerHTML:`<b>* As ABSC</b> a despacho para o PPI da Linha Férrea do Algarve, não devem ser as afetas ao PEM do INEM, 
-                                                                      sendo complementares às mobilizadas pelo CODU do INEM (GRELHA ${letter} - INEM)`});
+                                                                         sendo complementares às mobilizadas pelo CODU do INEM (GRELHA ${letter} - INEM)`});
       td.style.cssText=LINFER_ABS_CELL_STYLE;
       const tr=document.createElement("tr"); tr.appendChild(td); table.appendChild(tr); container.appendChild(table);
     }

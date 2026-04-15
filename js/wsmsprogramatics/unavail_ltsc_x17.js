@@ -1,4 +1,4 @@
-/* =======================================
+    /* =======================================
     VEHICLE UNAVAILABILITY GROUP
     ======================================= */
     /* ============== FIELD VALIDATION ============== */
@@ -22,23 +22,24 @@
     let lastUnavailabilityData = null;
     async function generateNewUnavailability() {
       if (!validateVehicleUnavailabilityForm()) return '';
-      let vehicle = document.getElementById('new_vehicle_unavailable')?.value || '';
+      const originalVehicle = document.getElementById('new_vehicle_unavailable')?.value || '';
       const startDate = document.getElementById('new_unavailability_date')?.value || '';
       const startHour = document.getElementById('new_unavailability_hour')?.value || '';
       const motive = document.getElementById('new_reason_unavailability')?.value || '';
       const local = document.getElementById('new_unavailability_local')?.value || '';
-      if (vehicle === 'ABSC-02') vehicle = 'INEM-Reserva';
-      else if (vehicle === 'ABSC-01' || vehicle === 'ABSC-03') vehicle = 'INEM';
+      let displayVehicle = originalVehicle;
+      if (originalVehicle === 'ABSC-02') displayVehicle = 'INEM-Reserva';
+      else if (originalVehicle === 'ABSC-01' || originalVehicle === 'ABSC-03') displayVehicle = 'INEM';
       const gdh = formatWSMSGDH(startDate, startHour);
-      const currentData = {vehicle, startDate, startHour, motive, local};
+      const currentData = {vehicle: originalVehicle, startDate, startHour, motive, local};
       lastUnavailabilityData = currentData;
       let message = '';
       if (motive === "Pausa para Alimentação") {
-        message = `*🚨INFORMAÇÃO🚨*\n\n*${vehicle}:*\n${motive}, ${local}, ${gdh}`;
+        message = `*🚨INFORMAÇÃO🚨*\n\n*${displayVehicle}:*\n${motive}, ${local}, ${gdh}`;
       } else if (["Falta de Macas", "Aguarda Triagem"].includes(motive)) {
-        message = `*🚨INFORMAÇÃO🚨*\n\n*${vehicle}:*\nRetido(a) por: ${motive}, ${local}, ${gdh}`;
+        message = `*🚨INFORMAÇÃO🚨*\n\n*${displayVehicle}:*\nRetido(a) por: ${motive}, ${local}, ${gdh}`;
       } else {
-        message = `*🚨INFORMAÇÃO🚨*\n\n*${vehicle}:*\nInoperacional por: ${motive}, ${local}, ${gdh}.`;
+        message = `*🚨INFORMAÇÃO🚨*\n\n*${displayVehicle}:*\nInoperacional por: ${motive}, ${local}, ${gdh}.`;
       }
       document.getElementById('wsms_output').value = message;
       if (navigator.clipboard?.writeText) navigator.clipboard.writeText(message).catch(() => {});
@@ -53,7 +54,7 @@
     }
     /* ============== SAVE UNAVAILABILITY TO DATABASE ============== */
     async function saveUnavailabilityToSupabase(data) {
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       try {
         const insertResp = await fetch(`${SUPABASE_URL}/rest/v1/vehicle_unavailability`, {
           method: 'POST',
@@ -73,7 +74,7 @@
     }
     /* ============== LOAD ACTIVE UNAVAILABILITIES ============== */
     async function loadActiveUnavailability() {
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const tbody = document.getElementById('active-unavailability-tbody');
       if (!tbody) return;
       try {
@@ -88,7 +89,8 @@
               <td colspan="8" style="padding: 20px; text-align: center; color: #6C757D;">
                 Não existem veículos indisponíveis neste momento.
               </td>
-            </tr>`;
+            </tr>
+          `;
           return;
         }
         data.forEach(item => {
@@ -101,11 +103,16 @@
             <td style="text-align:center; border: 1px solid #DEE2E6;">${item.status}</td>
             <td style="text-align:center; border: 1px solid #DEE2E6;">
               <button class="btn btn-danger btn-sm finalize-btn">Finalizar Indisponibilidade</button>
-            </td>`;
+            </td>
+          `;
           tr.querySelector('.finalize-btn').addEventListener('click', () => {
             document.getElementById('end_vehicle_unavailable').value = item.vehicle;
             document.getElementById('end_reason_unavailability').value = item.unavailability_motive;
+            const hoje = new Date().toISOString().split('T')[0];
+            document.getElementById('end_unavailability_date').value = hoje;
+            document.getElementById('end_unavailability_hour').value = "";
             document.getElementById('availability-card').style.display = 'block';
+            document.getElementById('end_unavailability_hour').focus();
           });
           tbody.appendChild(tr);
         });
@@ -119,14 +126,14 @@
       const [year, month, day] = dateStr.split('-');
       return `${day}/${month}/${year} ${timeStr || ''}`;
     }
-    /* ============== GENERATE END OF UNAVAILABILITY MESSAGE ============== */
-    async function generateEndUnavailability() {
+    /* ============== GENERATE END OF UNAVAILABILITY MESSAGE (FINAL & BLINDADA) ============== */
+     async function generateEndUnavailability() {
       if (!validateVehicleUnavailabilityForm(true)) return '';
       const vehicle = document.getElementById('end_vehicle_unavailable')?.value;
       const motive = document.getElementById('end_reason_unavailability')?.value;
       const endDate = document.getElementById('end_unavailability_date')?.value;
       const endHour = document.getElementById('end_unavailability_hour')?.value;
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       try {
         const query = `vehicle=eq.${encodeURIComponent(vehicle)}&unavailability_motive=eq.${encodeURIComponent(motive)}&status=eq.Em%20Aberto&corp_oper_nr=eq.${currentCorpOperNr}`;
         const resp = await fetch(`${SUPABASE_URL}/rest/v1/vehicle_unavailability?${query}`, {

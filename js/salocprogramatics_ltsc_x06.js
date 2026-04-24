@@ -35,8 +35,8 @@
     const FINAL_H_TEXT_STYLE = `padding: 5px; text-align: left; border: 1px solid #bbb; line-height: 15px;`;
     const AERO_LABEL_STYLE = {fontFamily: "'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif", background: "linear-gradient(180deg, #f8fafc 0%, #cbd5e1 100%)", color: "#1e293b", fontWeight: "850",
                               fontSize: "14px", textTransform: "uppercase", letterSpacing: "1px", textShadow: "0 1px 0 rgba(255, 255, 255, 0.8)", width: "100%", maxWidth: "1065px", height: "36px", display: "flex",
-                              alignItems: "center", justifyContent: "center", borderRadius: "6px", border: "1px solid #94a3b8", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9)",
-                              margin: "3px auto 8px auto",};
+                              alignItems: "center", justifyContent: "center", borderRadius: "6px", border: "1px solid #94a3b8", 
+                              boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9)", margin: "3px auto 8px auto",};
     const AERO_ROW_STYLE = {display: "flex", justifyContent: "center", flexWrap: "wrap", gap: "5px"};
     const AERO_BUTTON_STYLE = {marginTop: "5px", width: "210px", height: "35px", fontSize: "12px", fontWeight: "bold"};
     const AERO_HEADER_TABLE_STYLE = {width: "100%", margin: "5px 0 0 0", borderCollapse: "separated"};
@@ -54,8 +54,8 @@
     const AERO_B1_TITLE_DIV_STYLE = {flex: "1", textAlign: "center"};
     const LINFER_TITLE_STYLE = `font-family: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: linear-gradient(180deg, #f8fafc 0%, #cbd5e1 100%); color: #1e293b; font-weight: 850;
                                 font-size: 14px; text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8); width: 100%; max-width: 1580px; height: 36px; display: flex;
-                                align-items: center; justify-content: center; border-radius: 6px; border: 1px solid #94a3b8; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9);
-                                margin: 0px auto 8px auto;`;
+                                align-items: center; justify-content: center; border-radius: 6px; border: 1px solid #94a3b8; 
+                                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9); margin: 0px auto 8px auto;`;
     const LINFER_ROW_STYLE = `display: flex; justify-content: flex-start; margin: 0;`;
     const LINFER_GRID_BUTTON_STYLE = `margin: 5px 0; width: 93px; height: 40px; font-size: 12px;`;
     const LINFER_DIRECTION_BUTTON_STYLE = `width: 160px; height: 50px; display: flex; flex-direction: column; justify-content: center; align-items: center; font-weight: bold;`;
@@ -73,7 +73,7 @@
     const LINFER_SPECIAL_TITLE_STYLE = `background-color: #fff3b0; font-weight: bold; text-align: center; padding: 4px; margin: -5px 0 -1px 0; border: 1px solid #bbb;`;
     const LINFER_SPECIAL_ITEM_STYLE = `border: 1px solid #bbb; padding: 4px 8px; margin-bottom: -1px; text-align: left;`;
     const LINFER_ABS_TABLE_STYLE = `width: 100%; margin-top: -5px; border-collapse: collapse;`;
-    const LINFER_ABS_CELL_STYLE = `border: 1px solid #bbb; padding: 5px; text-align: left;`;
+    const LINFER_ABS_CELL_STYLE = `border: 1px solid #bbb; text-align: left;`;
     /* ─── HELPERS ────────────────────────────────────────────── */
     const getCorpNr = () => sessionStorage.getItem("currentCorpOperNr") || "0805";
     async function fetchFromSupabase(table, filter) {
@@ -466,19 +466,15 @@
     }
     /* ─── A22 GRID BUTTONS ───────────────────────────────────── */
     function createA22SenceTitle(text, isTop) {
-    const row = document.createElement("div"); 
-    row.className = "major-row";
-    
-    // Aplica o estilo UP se for isTop, caso contrário aplica o DOWN
-    row.style.cssText = isTop ? A22_TITLE_STYLE_UP : A22_TITLE_STYLE_DOWN;
-    
-    const label = document.createElement("label"); 
-    label.textContent = text;
-    label.style.cursor = "inherit"; // Garante que o cursor seja o mesmo da row
-    
-    row.appendChild(label); 
-    return row;
-}
+      const row = document.createElement("div");
+      row.className = "major-row";
+      row.style.cssText = isTop ? A22_TITLE_STYLE_UP : A22_TITLE_STYLE_DOWN;
+      const label = document.createElement("label");
+      label.textContent = text;
+      label.style.cursor = "inherit";
+      row.appendChild(label);
+      return row;
+    }
     function createA22GridButtons(id, specialButtons) {
       const btn = document.createElement("button"); btn.id = id; btn.textContent = id; btn.className = "btn btn-add options-btn"; btn.style.cssText = A22_GRID_BUTTON_STYLE;
       if (specialButtons.has(id) && getCorpNr() === "0805") btn.classList.add("options-yellow-btn");
@@ -2342,12 +2338,12 @@
         } catch (err) {
           console.error('Erro ao carregar header direto:', err);
           header = createPlanDirHeader('LAST');
-          if (header && headerContainer) headerContainer.appendChild(header); // ← ALTERADO
+          if (header && headerContainer) headerContainer.appendChild(header);
           container.insertAdjacentHTML('beforeend', tableConfig.map(cfg => createTable(cfg.rows, cfg.special, cfg.title)).join(''));
         }
       } else {
         header = createPlanDirHeader(shift);
-        if (header && headerContainer) headerContainer.appendChild(header); // ← ALTERADO
+        if (header && headerContainer) headerContainer.appendChild(header);
         container.insertAdjacentHTML('beforeend', tableConfig.map(cfg => createTable(cfg.rows, cfg.special, cfg.title)).join(''));
         loadSideTable(shift);
       }
@@ -2453,7 +2449,8 @@
                     showPopup('popup-danger', 'O elemento não pode fazer troca consigo mesmo.');
                     const dangerBtn = document.querySelector('#popup-danger .popup-btn');
                     const originalOnclick = dangerBtn.onclick;
-                    dangerBtn.onclick = () => { closePopup('popup-danger'); dangerBtn.onclick = originalOnclick; setTimeout(() => { document.getElementById('service-swap-nint').focus(); document.getElementById('service-swap-nint').select(); }, 50); };
+                    dangerBtn.onclick = () => {closePopup('popup-danger'); dangerBtn.onclick = originalOnclick; setTimeout(() => {
+                      document.getElementById('service-swap-nint').focus(); document.getElementById('service-swap-nint').select();}, 50);};
                     return;
                   }
                 }
@@ -2463,7 +2460,7 @@
                     showPopup('popup-danger', 'Por favor preencha o campo de observação.');
                     const dangerBtn = document.querySelector('#popup-danger .popup-btn');
                     const originalOnclick = dangerBtn.onclick;
-                    dangerBtn.onclick = () => { closePopup('popup-danger'); dangerBtn.onclick = originalOnclick; setTimeout(() => { document.getElementById('service-other-text').focus(); }, 50); };
+                    dangerBtn.onclick = () => {closePopup('popup-danger'); dangerBtn.onclick = originalOnclick; setTimeout(() => {document.getElementById('service-other-text').focus();}, 50);};
                     return;
                   }
                 }
@@ -2613,13 +2610,9 @@
     ======================================= */
     function preselectCorpInSitopCB() {
       const current = sessionStorage.getItem("currentCorpOperNr");
-      if (!current) {
-        return;
-      }
+      if (!current) return;
       const select = document.getElementById("sitop_cb");
-      if (!select) {
-        return;
-      }
+      if (!select) return;
       const clean = str => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
       for (const option of select.options) {
         const optionText = clean(option.textContent);
@@ -2630,7 +2623,16 @@
         }
       }
     }
-    /* =============== ELEMENT VARIABLES =============== */
+    function setSitopHeader(mode) {
+      const header = sitopContainer.querySelector(".major-card-header");
+      if (!header) return;
+      if (mode === "new") {
+        header.textContent = "INSERÇÃO DE NOVA INOPERACIONALIDADE";
+      }
+      if (mode === "validate") {
+        header.textContent = "COMUNICAR OPERACIONALIDADE";
+      }
+    }
     const NewInopBtn = document.getElementById("NewInopBtn");
     const oldInopBtn = document.querySelector(".oldinop");
     const backBtn = document.getElementById("backBtn");
@@ -2648,7 +2650,6 @@
     const noCheckbox = document.getElementById("ppi_no");
     const subsYesCheckbox = document.getElementById("ppi_subs_yes");
     const subsNoCheckbox = document.getElementById("ppi_subs_no");
-    /* =========== UTILITY FUNCTIONS AND UI ============ */
     function formatSITOPGDH() {
       const now = new Date();
       const day = String(now.getDate()).padStart(2, "0");
@@ -2660,13 +2661,17 @@
       return `${day}${hour}${minutes}${month}${year}`;
     }
     function clearSitopForm() {
-      document.querySelectorAll("#sitop_container input, #sitop_container textarea").forEach(el => el.value = "");
-      document.querySelectorAll('#sitop_container input[type="checkbox"]').forEach(cb => cb.checked = false);
-      document.querySelectorAll('#sitop_container select').forEach(sel => sel.selectedIndex = 0);
+      document.querySelectorAll("#sitop_container input, #sitop_container textarea")
+        .forEach(el => el.value = "");
+      document.querySelectorAll('#sitop_container input[type="checkbox"]')
+        .forEach(cb => cb.checked = false);
+      document.querySelectorAll('#sitop_container select')
+        .forEach(sel => sel.selectedIndex = 0);
       sitopContainer.removeAttribute("data-record-id");
       saveBtn.textContent = "📄 Emitir Inoperacionalidade";
       saveBtn.classList.remove("btn-success");
       saveBtn.classList.add("btn-danger");
+      setSitopHeader("new");
     }
     function toggleSitopContainer(forceClose = false) {
       const isVisible = sitopContainer.style.display === "block";
@@ -2687,16 +2692,16 @@
     }
     function handleValidateOperationality(event) {
       preselectCorpInSitopCB();
-      const btn = event.target;
+      const btn = event.currentTarget;
       const recordAttr = btn.getAttribute("data-record");
-      if (!recordAttr) return console.error("Erro: Atributo data-record não encontrado.");
+      if (!recordAttr) return console.error("Erro: data-record não encontrado.");
       const record = JSON.parse(recordAttr);
-      inopsTableContainer.style.display = "none";      
-      oldInopBtn.classList.remove("active");
+      inopsTableContainer.style.display = "none";
+      if (oldInopBtn) oldInopBtn.classList.remove("active");
       sitopContainer.style.display = "block";
       sitopContainer.style.opacity = "0";
       setTimeout(() => sitopContainer.style.opacity = "1", 10);
-      document.querySelector("#sitop_container .card-header").textContent = "COMUNICAR OPERACIONALIDADE";
+      setSitopHeader("validate");
       document.getElementById("sitop_veíc").value = record.vehicle || "";
       document.getElementById("sitop_veíc_registration").value = record.registration || "";
       document.getElementById("sitop_gdh_inop").value = record.gdh_inop || "";
@@ -2706,216 +2711,19 @@
       document.getElementById("sitop_optel").value = record.optel || "";
       document.getElementById("ppi_yes").checked = record.ppi_part === true;
       document.getElementById("ppi_no").checked = record.ppi_part === false;
-      document.getElementById("ppi_a2").checked = record.ppi_a2 === true;
-      document.getElementById("ppi_a22").checked = record.ppi_a22 === true;
-      document.getElementById("ppi_airport").checked = record.ppi_airport === true;
-      document.getElementById("ppi_linfer").checked = record.ppi_linfer === true;
-      document.getElementById("ppi_airfield").checked = record.ppi_airfield === true;
-      document.getElementById("ppi_subs_yes").checked = record.ppi_subs === true;
-      document.getElementById("ppi_subs_no").checked = record.ppi_subs === false;
-      NewInopBtn.classList.add("active");      
+      if (NewInopBtn) NewInopBtn.classList.add("active");
       sitopContainer.setAttribute("data-record-id", record.id);
       saveBtn.textContent = "📄 Emitir Operacionalidade";
       saveBtn.classList.remove("btn-danger");
       saveBtn.classList.add("btn-success");
     }
-    async function fetchCREPCSitopRecipientsFromSupabase(corpOperNr) {
-      const categories = ['crepcsitop_mail_to', 'crepcsitop_mail_cc', 'crepcsitop_mail_bcc'];
-      const url = `${SUPABASE_URL}/rest/v1/mails_config` + `?category=in.(${categories.join(',')})` + `&corp_oper_nr=eq.${corpOperNr}` + `&select=category,value`;
-      try {
-        const response = await fetch(url, { headers: getSupabaseHeaders() });
-        if (!response.ok) throw new Error("Falha ao conectar ao Supabase.");
-        const data = await response.json();
-        const recipients = { to: [], cc: [], bcc: [] };
-        data.forEach(row => {
-          const emails = row.value?.split(",")
-          .map(e => e.trim())
-          .filter(e => e) || [];
-          if (row.category.endsWith("_to")) recipients.to = emails;
-          if (row.category.endsWith("_cc")) recipients.cc = emails;
-          if (row.category.endsWith("_bcc")) recipients.bcc = emails;
-        });
-        if (recipients.to.length === 0) recipients.to = [""];
-        return recipients;
-      } catch (err) {
-        console.error("Erro ao buscar e-mails:", err);
-        return { to: ["central0805.ahbfaro@gmail.com"], cc: [], bcc: [] };
-      }
-    }
-    /* ================= EMISSION LOGIC ================ */
-    async function emitSitop() {
-      const cb_type = document.getElementById("sitop_cb").value.trim();
-      const vehicle = document.getElementById("sitop_veíc").value.trim();
-      const registration = document.getElementById("sitop_veíc_registration").value.trim();
-      const gdh_inop = document.getElementById("sitop_gdh_inop").value.trim();
-      const gdh_op = document.getElementById("sitop_gdh_op").value.trim() || null;
-      const failure_type = document.getElementById("sitop_type_failure").value.trim();
-      const failure_description = document.getElementById("sitop_failure_description").value.trim();
-      const ppi_part = document.getElementById("ppi_yes").checked;
-      const ppi_a2 = document.getElementById("ppi_a2").checked;
-      const ppi_a22 = document.getElementById("ppi_a22").checked;
-      const ppi_airport = document.getElementById("ppi_airport").checked;
-      const ppi_linfer = document.getElementById("ppi_linfer").checked;
-      const ppi_airfield = document.getElementById("ppi_airfield").checked;
-      const ppi_subs = document.getElementById("ppi_subs_yes").checked;
-      const optel = document.getElementById("sitop_optel").value.trim();
-      if (!vehicle || !registration || !gdh_inop) {
-        showPopup('popup-danger', "Por favor preencha os campos obrigatórios: Veículo, Matrícula e GDH INOP.");
-        return;
-      }
-      showPopup('popup-success', `Estado Operacional do veículo ${vehicle} criado com sucesso. Por favor aguarde uns segundos, receberá uma nova notificação após o envio para as entidades estar concluído!`);
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
-      if (!corpOperNr) {
-        showPopup('popup-danger', "Erro: O número da corporação não foi encontrado. Por favor, faça login novamente.");
-        return;
-      }
-      saveBtn.disabled = true;
-      const recordId = sitopContainer.getAttribute("data-record-id");
-      const isUpdate = !!recordId;
-      const isOperational = !!gdh_op;
-      const data = {cb_type, vehicle, registration, gdh_inop, gdh_op, failure_type, failure_description, ppi_part, 
-                    ppi_a2, ppi_a22, ppi_airport, ppi_linfer, ppi_airfield, ppi_subs, optel, corp_oper_nr: corpOperNr};
-      const supabaseData = { ...data };
-      delete supabaseData.cb_type;
-      try {
-        if (!isUpdate && !isOperational) {
-          const checkUrl = `${SUPABASE_URL}/rest/v1/sitop_vehicles?select=vehicle&vehicle=eq.${encodeURIComponent(vehicle)}&gdh_op=is.null&corp_oper_nr=eq.${encodeURIComponent(corpOperNr)}`;
-          const checkRes = await fetch(checkUrl, { headers: getSupabaseHeaders() });
-          if (!checkRes.ok) throw new Error(`Erro ao verificar duplicado.`);
-          const existing = await checkRes.json();
-          if (existing.length > 0) {
-            showPopup('popup-danger', `O veículo ${vehicle} já se encontra INOP!`);
-            saveBtn.disabled = false;
-            return;
-          }
-        }
-        const supabaseUrl = isUpdate ? `${SUPABASE_URL}/rest/v1/sitop_vehicles?id=eq.${recordId}` : `${SUPABASE_URL}/rest/v1/sitop_vehicles`;
-        const method = isUpdate ? "PATCH" : "POST";
-        const response = await fetch(supabaseUrl, {
-          method,
-          headers: { ...getSupabaseHeaders(), "Content-Type": "application/json" },
-          body: JSON.stringify(supabaseData)
-        });
-        if (!response.ok) throw new Error("Erro ao enviar dados ao Supabase.");
-        const statusRes = await fetch(`${SUPABASE_URL}/rest/v1/vehicle_status?vehicle=eq.${encodeURIComponent(vehicle)}`, {
-          method: "PATCH",
-          headers: { ...getSupabaseHeaders(), "Content-Type": "application/json" },
-          body: JSON.stringify({ is_inop: !isOperational })
-        });
-        if (!statusRes.ok) console.warn("⚠️ Erro ao atualizar status do veículo.");
-        const { to, cc, bcc } = await fetchCREPCSitopRecipientsFromSupabase(corpOperNr);
-        const signature = getEmailSignature();
-        const greeting = getGreeting();
-        const commanderName = await getCommanderName(corpOperNr);
-        const corpName = cb_type.includes(" - ") ? cb_type.split(" - ").slice(1).join(" - ") : cb_type;
-        const article = corpName.includes("Companhia") ? "da" : "do";
-        const emailBodyHTML = `${greeting}<br><br>
-        Encarrega-me o Sr. Comandante ${commanderName} de remeter em anexo a Vossas Exª.s o Formulário de Situação Operacional 
-        do veículo ${vehicle} ${article} ${corpName}.<br><br>
-        Com os melhores cumprimentos,<br><br>
-        OPTEL<br>${optel}<br><br>
-        <span style="font-family: 'Arial'; font-size: 10px; color: gray;">
-        Este email foi processado automaticamente por: CB360 Online<br><br>
-        </span>
-        ${signature}`;
-        const emailRes = await fetch('https://cb360-online.vercel.app/api/crepc_convert_and_send', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({mode: "sitop", data, recipients: to, ccRecipients: cc, bccRecipients: bcc, emailSubject: `Situação Operacional do Veículo ${vehicle}`, emailBody: emailBodyHTML})
-        });
-        if (!emailRes.ok) throw new Error("Erro ao enviar email via Vercel.");
-        showPopup('popup-success', `A situação operacional do veículo ${vehicle} foi enviada para as entidades.`);
-        if (isOperational && isUpdate) {
-          await fetch(`${SUPABASE_URL}/rest/v1/sitop_vehicles?id=eq.${recordId}`, {
-            method: 'DELETE',
-            headers: getSupabaseHeaders()
-          });
-        }
-        toggleSitopContainer(true);
-        NewInopBtn.classList.remove("active");
-        if (oldInopBtn) oldInopBtn.classList.remove("active");
-      } catch (err) {
-        console.error(err);
-        showPopup('popup-danger', `Erro: ${err.message}`);
-      } finally {
-        saveBtn.disabled = false;
-      }
-    }
-    /* ================ EVENT LISTENERS ================ */
-    NewInopBtn.addEventListener("click", () => {
-      preselectCorpInSitopCB();
-      const isActive = NewInopBtn.classList.toggle("active");
-      oldInopBtn.classList.remove("active");
-      if (isActive) {
-        toggleSitopContainer(false);
-        inopsTableContainer.style.display = "none";
-        document.querySelector("#sitop_container .card-header").textContent = "INSERÇÃO DE NOVA INOPERACIONALIDADE";
-        preselectCorpInSitopCB() ;
-      } else {
-        toggleSitopContainer(true);
-      }
-    });
-    saveBtn.addEventListener("click", async () => await emitSitop());
-    if (oldInopBtn) {  
-      oldInopBtn.addEventListener("click", async () => {    
-        const isActive = oldInopBtn.classList.toggle("active");
-        NewInopBtn.classList.remove("active");    
-        if (!isActive) {
-          inopsTableContainer.style.display = "none";
-          return;
-        }
-        sitopContainer.style.display = "none";
-        inopsTableBody.innerHTML =
-          "<tr><td colspan='5' style='text-align:center;'>Carregando...</td></tr>";
-        try {
-            const corpOperNr = sessionStorage.getItem("currentCorpOperNr");            
-            const res = await fetch(
-              `${SUPABASE_URL}/rest/v1/sitop_vehicles?select=*&gdh_op=is.null&corp_oper_nr=eq.${corpOperNr}`,
-              { headers: getSupabaseHeaders() }
-            );
-          if (!res.ok) throw new Error("Erro ao buscar inoperacionalidades");
-          const data = await res.json();
-          inopsTableBody.innerHTML = "";
-          if (data.length === 0) {
-            inopsTableBody.innerHTML =
-              `<tr><td colspan="6" style="text-align:center;">Não foram encontrados veículos inoperacionais.</td></tr>`;
-          } else {
-            data.forEach(item => {
-              const tr = document.createElement("tr");
-              tr.innerHTML = `
-                <td style="text-align:center;">${item.vehicle || ''}</td>
-                <td style="text-align:center;">${item.gdh_inop || ''}</td>
-                <td style="text-align:center;">${item.failure_type || ''}</td>
-                <td>${item.failure_description || ''}</td>
-                <td>${item.optel || ''}</td>
-                <td style="text-align:center;">
-                  <button class="btn btn-danger validate-btn" 
-                          data-record='${JSON.stringify(item)}'
-                          style="height:30px; padding:5px 10px;">
-                    Validar Operacionalidade
-                  </button>
-                </td>`;
-              inopsTableBody.appendChild(tr);
-            });
-            document.querySelectorAll(".validate-btn").forEach(btn =>
-              btn.addEventListener("click", handleValidateOperationality)
-            );
-          }    
-          inopsTableContainer.style.display = "block";
-        } catch (err) {
-          console.error(err);
-          showPopup('popup-danger', "Erro ao carregar inoperacionalidades: " + err.message);
-        }
-      });
-    }
-    yesCheckbox.addEventListener("change", () => { if (yesCheckbox.checked) noCheckbox.checked = false; });
-    noCheckbox.addEventListener("change", () => { if (noCheckbox.checked) yesCheckbox.checked = false; });
-    subsYesCheckbox.addEventListener("change", () => { if (subsYesCheckbox.checked) subsNoCheckbox.checked = false; });
-    subsNoCheckbox.addEventListener("change", () => { if (subsNoCheckbox.checked) subsYesCheckbox.checked = false; });
     sitopVeicSelect.addEventListener("change", async () => {
       const selectedVehicle = sitopVeicSelect.value;
       sitopGdhInopInput.value = formatSITOPGDH();
-      if (!selectedVehicle) return sitopVeicRegInput.value = "";
+      if (!selectedVehicle) {
+        sitopVeicRegInput.value = "";
+        return;
+      }
       try {
         const res = await fetch(
           `${SUPABASE_URL}/rest/v1/vehicle_status?select=vehicle_registration&vehicle=eq.${encodeURIComponent(selectedVehicle)}`, {
@@ -2930,10 +2738,73 @@
         sitopVeicRegInput.value = "";
       }
     });
-    /* ================== RESTART PAGE ================= */
+    NewInopBtn.addEventListener("click", () => {
+      preselectCorpInSitopCB();
+      const isActive = NewInopBtn.classList.toggle("active");
+      oldInopBtn.classList.remove("active");
+      if (isActive) {
+        toggleSitopContainer(false);
+        inopsTableContainer.style.display = "none";
+        setSitopHeader("new");
+        preselectCorpInSitopCB();
+      } else {
+        toggleSitopContainer(true);
+      }
+    });
+    if (oldInopBtn) {
+      oldInopBtn.addEventListener("click", async () => {
+        const isActive = oldInopBtn.classList.toggle("active");
+        NewInopBtn.classList.remove("active");
+        if (!isActive) {
+          inopsTableContainer.style.display = "none";
+          return;
+        }
+        sitopContainer.style.display = "none";
+        inopsTableBody.innerHTML = "<tr><td colspan='5' style='text-align:center;'>Carregando...</td></tr>";
+        try {
+          const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+          const res = await fetch(
+            `${SUPABASE_URL}/rest/v1/sitop_vehicles?select=*&gdh_op=is.null&corp_oper_nr=eq.${corpOperNr}`, {
+              headers: getSupabaseHeaders()
+            }
+          );
+          if (!res.ok) throw new Error("Erro ao buscar inoperacionalidades");
+          const data = await res.json();
+          inopsTableBody.innerHTML = "";
+          if (data.length === 0) {
+            inopsTableBody.innerHTML =
+              `<tr><td colspan="6" style="text-align:center;">Não foram encontrados veículos inoperacionais.</td></tr>`;
+          } else {
+            data.forEach(item => {
+              const tr = document.createElement("tr");
+              const btn = document.createElement("button");
+              btn.className = "btn btn-danger validate-btn";
+              btn.textContent = "Validar Operacionalidade";
+              btn.dataset.record = JSON.stringify(item);
+              btn.addEventListener("click", handleValidateOperationality);
+              tr.innerHTML = `
+                <td style="text-align:center;">${item.vehicle || ''}</td>
+                <td style="text-align:center;">${item.gdh_inop || ''}</td>
+                <td style="text-align:center;">${item.failure_type || ''}</td>
+                <td>${item.failure_description || ''}</td>
+                <td>${item.optel || ''}</td>
+                <td></td>
+              `;
+              tr.querySelector("td:last-child").appendChild(btn);
+              inopsTableBody.appendChild(tr);
+            });
+          }
+          inopsTableContainer.style.display = "block";
+        } catch (err) {
+          console.error(err);
+          showPopup('popup-danger', "Erro ao carregar inoperacionalidades: " + err.message);
+        }
+      });
+    }
     document.querySelector('[data-page="page-inocrepc"]').addEventListener('click', () => {
       sitopContainer.style.display = 'none';
-      inopsTableContainer.style.display = 'none';
+      inopsTableContainer.style.display = 'none';    
+      setSitopHeader("new");
     });
     /* =======================================
     ALARM CONSOLE

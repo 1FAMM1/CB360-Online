@@ -1,0 +1,53 @@
+    /* ================== SIDEBARS ================== */
+    /* ================ MAIN SIDEBAR ================ */
+    .sidebar {position: fixed; left: 0; top: 70px; width: 240px; height: calc(100vh - 70px); background: linear-gradient(180deg, #2a2f36, #1e232a); padding: 30px 10px 40px 10px; box-shadow: 4px 0 10px rgba(0,0,0,0.50);
+              border-right: 1px solid rgba(255,255,255,0.06); overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none;}
+    .sidebar::-webkit-scrollbar {width: 0px; height: 0px; background: transparent;}
+    .sidebar-menu-button {width: 100%; height: 45px; background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03)); color: #d6dbe3; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px;
+                          text-align: left; padding: 0 14px; margin-bottom: 5px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s ease; display: none; position: relative; overflow: hidden;}
+    .sidebar-menu-button::before {content: ""; position: absolute; top: -50%; left: -30%; width: 160%; height: 120%; background: linear-gradient(120deg, transparent, rgba(255,255,255,0.12), transparent);
+                                  transform: rotate(10deg); opacity: 0; transition: opacity 0.3s ease;}
+    .sidebar-menu-button:hover {background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.05)); color: #fff; transform: translateX(4px);}
+    .sidebar-menu-button:hover::before {opacity: 1;}
+    .sidebar-menu-button.active {background: linear-gradient(180deg, rgba(220, 53, 69, 0.50), rgba(220, 53, 69, 0.25)); color: #fff; border-left: 3px solid rgba(220, 53, 69, 0.65); padding-left: 11px;
+                                 box-shadow: inset 0 0 0 1px rgba(220, 53, 69, 0.10), 0 6px 14px rgba(0, 0, 0, 0.25);}
+    .submenu, .sub-submenu {display: none; flex-direction: column; margin: 6px 0 10px 14px; padding: 6px 0; border-left: 1px solid rgba(255,255,255,0.06);}
+    .sidebar-submenu-button, .sidebar-sub-submenu-button {background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01)); border: 1px solid rgba(255,255,255,0.04); color: #aab4c0;
+                                                          text-align: left; padding: 9px 14px; cursor: pointer; font-size: 12px; border-radius: 8px; transition: all 0.2s ease; position: relative; margin: 2px 0;
+                                                          overflow: hidden;}
+    .sidebar-submenu-button::before, .sidebar-sub-submenu-button::before {content: ""; position: absolute; top: -40%; left: -30%; width: 160%; height: 120%; 
+                                                                          background: linear-gradient(120deg, transparent, rgba(255,255,255,0.08), transparent); transform: rotate(10deg); opacity: 0;
+                                                                          transition: opacity 0.3s ease;}
+    .sidebar-submenu-button:hover, .sidebar-sub-submenu-button:hover {background: rgba(255,255,255,0.06); color: #fff; transform: translateX(3px);}
+    .sidebar-submenu-button:hover::before, .sidebar-sub-submenu-button:hover::before {opacity: 1;}
+    .sidebar-submenu-button.active, .sidebar-sub-submenu-button.active {background: rgba(220, 53, 69, 0.50); color: #fff; font-weight: 600; transform: translateX(5px);}
+    .sidebar-submenu-button.active::after, .sidebar-sub-submenu-button.active::after {content: ""; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 55%; background: #dc3545;
+                                                                                      border-radius: 2px;}
+    .submenu, .sub-submenu {animation: fadeSlide 0.2s ease-out;}
+    @keyframes fadeSlide {from {opacity: 0; transform: translateX(-6px);} to {opacity: 1; transform: translateX(0);}}
+    .sidebar-menu-button.active::before, .sidebar-submenu-button.active::before, 
+    .sidebar-sub-submenu-button.active::before {opacity: 1; background: linear-gradient(120deg, transparent, rgba(255,255,255,0.14), transparent);}
+    /* =============== PANEL SIDEBAR ================ */
+    .panel-sidebar {width: 240px; background: #0f1216; backdrop-filter: blur(15px); display: flex; flex-direction: column; padding: 12px 8px; border-right: 1px solid rgba(220, 53, 69, 0.15); 
+                    box-shadow: 10px 0 30px rgba(0,0,0,0.5);}
+    .panel-sidebar-menu-button {width: 100%; height: 44px; background: rgba(255, 255, 255, 0.02); color: #94a3b8; border: 1px solid rgba(255, 255, 255, 0.03); border-radius: 8px; text-align: left;
+                                padding: 0 14px; cursor: pointer; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 12px; position: relative; margin-bottom: 6px;
+                                transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden;}
+    .panel-sidebar-menu-button::after {content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);}
+    .panel-sidebar-menu-button:hover {background: rgba(255, 255, 255, 0.06); transform: translateX(6px); color: #fff; border-color: rgba(255, 255, 255, 0.1);}
+    .panel-sidebar-menu-button.active {background: linear-gradient(90deg, rgba(220, 53, 69, 0.2) 0%, rgba(220, 53, 69, 0.05) 100%); color: #fff; font-weight: 700; border-left: 4px solid #dc3545;
+                                       border-right: 1px solid rgba(220, 53, 69, 0.3); border-top: 1px solid rgba(220, 53, 69, 0.3); border-bottom: 1px solid rgba(220, 53, 69, 0.3);
+                                       box-shadow: 0 4px 15px rgba(220, 53, 69, 0.15), inset 0 0 10px rgba(220, 53, 69, 0.1);  padding-left: 18px;}
+    .panel-sidebar-menu-button::before {content: ""; width: 4px; height: 4px; border-radius: 50%; background: #dc3545; opacity: 0; transition: all 0.3s ease; filter: blur(1px);}
+    .panel-sidebar-menu-button.active::before {opacity: 1; width: 6px; height: 6px; background: #ff4d5d; box-shadow: 0 0 10px #ff4d5d, 0 0 20px rgba(220, 53, 69, 0.6);}
+    .panel-sidebar-menu-button i, .panel-sidebar-menu-button svg {font-size: 16px; opacity: 0.7; transition: 0.3s;}
+    .panel-sidebar-menu-button:hover i, .panel-sidebar-menu-button.active i {opacity: 1; color: #dc3545; filter: drop-shadow(0 0 5px rgba(220, 53, 69, 0.5));}
+    /* ================= CONTAINERS ================= */
+    .container {width: 100vw; height: 100vh; background-color: #F8F9FA; position: relative; margin: 0; box-shadow: none;}
+    .page {display: none;}
+    .page.active {display: block;}
+    .main-content {position: absolute; left: 240px; top: 60px; width: calc(100vw - 240px); height: calc(100vh - 70px); padding: 30px; overflow-y: auto; -ms-overflow-style: none; scrollbar-width: none;}
+    .main-content::-webkit-scrollbar {width: 0px; height: 0px; background: transparent;}
+    .section-title {font-size: 18px; font-weight: bold; color: #212529; margin-bottom: 20px;}
+    .options-panel-container {display: flex; min-height: 650px; height: auto; position: relative;}
+    .panel-content {flex: 1; background: rgba(248, 249, 250, 0.95); position: relative; overflow-y: auto;}

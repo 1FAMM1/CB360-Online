@@ -1,0 +1,26 @@
+    /* =================== TABLES =================== */
+    /* ================ MASTER TABLE ================ */
+    .table-container {margin-top: 20px; border: 1px solid #ccc; border-radius: 6px; overflow: hidden auto; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05); background-color: #fff; max-height: 800px;
+                      transition: all 0.3s ease; overflow-x: auto;}
+    .table-container::-webkit-scrollbar {height: 8px; width: 8px;}
+    .table-container::-webkit-scrollbar-thumb {background-color: #bbb; border-radius: 4px;}
+    .table-container::-webkit-scrollbar-thumb:hover {background-color: #999;}
+    .table-container table {width: 100%; font-size: 13px; text-align: center; border-collapse: separate; border-spacing: 0;}
+    .table-container thead {position: sticky; top: 0; z-index: 1; background-color: #f4f6f8;}
+    .table-container th, .table-container td {padding: 8px 10px; border: 1px solid #ddd; border-top: none; border-left: none; border-bottom: 1px solid #ddd; white-space: nowrap; color: #444;}
+    .table-container tbody tr:last-child td {border-bottom: none;}
+    .table-container th:last-child, .table-container td:last-child {border-right: none;}
+    .table-container th {font-weight: bold; color: #333; font-size: 12.5px; letter-spacing: 0.2px; background-color: #f4f6f8;}
+    .table-container tbody tr:nth-child(even) {background-color: #fafafa;}
+    .table-container tbody tr:hover {background-color: #eef4fb; transition: background-color 0.2s ease;}
+    /* ================= PPI TABLES ================= */
+    .table-elements {width: 100%; border-collapse: collapse;}
+    .table-elements th, .table-elements td {border: 1px solid #bbb; padding: 2px; text-align: center;}
+    .table-elements th {background-color: #f2f2f2;}
+    /* ================ ADMIN WINDOW ================ */    
+    .tab-header {display: flex; border-bottom: 1px solid #444; margin: 0; background: #f8fafc;}
+    .tab-btn {flex: 1; font-size: 10px; padding: 10px 5px; background: #f1f5f9; border: none; border-right: 1px solid #ddd; cursor: pointer; color: #64748b; font-weight: 600; text-transform: uppercase; 
+              transition: all 0.2s;}
+    .tab-btn.active {background: #fff; border-bottom: 2px solid #1e40af; color: #1e40af; font-weight: bold;}
+    .tab-content {display: none; padding: 10px; height: 250px; overflow-y: auto;}
+    .tab-content.active {display: block;} 

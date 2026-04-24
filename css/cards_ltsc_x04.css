@@ -1,0 +1,103 @@
+    /* =================== CARDS =================== */
+    /* ================= MAJOR CARD ================ */
+    .major-card {border: 0.5px solid #d0d0d0; border-radius: 8px; overflow: visible; background: #fff;}
+    .major-card .major-card-header {border-radius: 8px 8px 0 0;}
+    .major-card .major-card-footer {border-radius: 0 0 8px 8px;}
+    .major-card.major-last-card {margin-bottom: 30px;}    
+    .major-card-header {position: relative; overflow: hidden; background: linear-gradient(to bottom, #6e90aa 0%, #3b5d7a 100%); color: #ffffff; border-bottom: 1px solid #2e4a61; 
+                        border-top: 1px solid rgba(255,255,255,0.3); padding: 5px 18px; font-size: 12px; font-weight: 600; letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px;
+                        text-shadow: 0 1px 3px rgba(0,0,0,0.4); box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 2px 4px rgba(0,0,0,0.2); z-index: 1;}
+    .major-card-header::before {content: ''; position: absolute; top: 0; left: -5%; width: 110%; height: 75%; border-radius: 0 0 50% 50% / 0 0 40px 40px; pointer-events: none;
+                                background: linear-gradient(160deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.05) 40%, transparent 70%); 
+                                box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.2), 0 4px 10px rgba(0, 0, 0, 0.3); z-index: 1;}
+    .major-card-header span, .major-card-header svg, .major-card-header i, .major-card-header div {position: relative;z-index: 20;}
+    .major-card-header.header-red {background: linear-gradient(135deg, #e74c3c, #c0392b); color: #ffffff; border-bottom: 1px solid #b03021; padding: 5px 18px; font-size: 12px; font-weight: 600;
+                                   letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px; text-shadow: 0 1px 2px rgba(0,0,0,0.25);}
+    .major-card-header.header-orange {background: linear-gradient(135deg, #f39c12, #d35400); color: #000; border-bottom: 1px solid #bc4b00; padding: 5px 18px; font-size: 12px; font-weight: 600;
+                                      letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px; text-shadow: 0 1px 2px rgba(0,0,0,0.25);}
+    .major-card-header.header-black {background: linear-gradient(135deg, #4b4b4b, #1a1a1a); color: #ffffff; border-bottom: 1px solid #000000; padding: 5px 18px; font-size: 12px; font-weight: 600;
+                                     letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px; text-shadow: 0 1px 2px rgba(0,0,0,0.4);}
+    .major-card-header.header-blue {background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%); color: #ffffff; border-bottom: 1px solid #000000; padding: 5px 18px; font-size: 12px; font-weight: 600;
+                                    letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px; text-shadow: 0 1px 2px rgba(0,0,0,0.4);}    
+    .major-card-header svg, .wsms-card-header svg, .wsms-card-header-ems svg {animation: pulse-red 2s infinite;}
+    .wsms-card.theme-inem .wsms-card-header-ems svg {animation: pulse-red-inem 2s infinite;}
+    .major-card-body {background: rgba(235, 235, 235, 0.85); padding: 20px; color: #495057; font-size: 14px; line-height: 1.6; padding: 16px 20px; display: flex; flex-direction: column;}
+    .major-card-footer {border-top: 1px solid #e0e0e0; padding: 10px 20px; display: flex; justify-content: flex-end; background: #c6c6c6; box-shadow: inset 0 5px 10px rgba(0,0,0,0.03); position: relative;
+                        overflow: hidden; z-index: 0;}
+    .major-card-footer::before {content: ''; position: absolute; bottom: 0; left: -5%; width: 110%; height: 80%; border-radius: 50% 50% 0 0 / 40px 40px 0 0; pointer-events: none; z-index: 1;
+                                background: linear-gradient(0deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.2) 50%, transparent 100%);}
+    .major-card-footer button, .major-card-footer a {position: relative; z-index: 2;}
+    /* ================= WSMS CARD ================= */
+    .wsms-card {border: 0.5px solid #d0d0d0; border-radius: 8px; overflow: hidden; background: #fff;}
+    .wsms-card-header {background: #2c3e50; color: #fff; padding: 9px 18px; font-size: 12px; font-weight: 600; letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px;}
+    .wsms-card-header-ems {background: #c0392b; color: #fff; padding: 9px 18px; font-size: 12px; font-weight: 600; letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px; 
+                           text-shadow: 0 1px 2px rgba(0,0,0,0.25);}
+    .wsms-card-header {background: #2c3e50; color: #fff; padding: 5px 18px; font-size: 12px; font-weight: 600; letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px; position: relative;
+                       overflow: hidden; z-index: 0;}
+    .wsms-card-header-ems {background: #c0392b; color: #fff; padding: 5px 18px; font-size: 12px; font-weight: 600; letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px; 
+                           text-shadow: 0 1px 2px rgba(0,0,0,0.25); position: relative; overflow: hidden; z-index: 0;}
+    .wsms-card-header::before, .wsms-card-header-ems::before {content: ''; position: absolute; top: 0; left: -5%; width: 110%; height: 75%; border-radius: 0 0 50% 50% / 0 0 40px 40px;
+                                                              background: linear-gradient(160deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.05) 40%, transparent 70%);
+                                                              box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.2), 0 4px 10px rgba(0, 0, 0, 0.3); pointer-events: none; z-index: 1;}
+    .wsms-card-header span, .wsms-card-header svg, .wsms-card-header i, .wsms-card-header-ems span, .wsms-card-header-ems svg, .wsms-card-header-ems i {position: relative; z-index: 2;}    
+    .wsms-card-body {padding: 16px 20px; display: flex; flex-direction: column; gap: 20px;}
+    .wsms-card-footer {border-top: 0.5px solid #e0e0e0; padding: 10px 20px; display: flex; justify-content: flex-end; background: #fafafa;}
+    .wsms-section {display: flex; flex-direction: column; gap: 8px;}
+    .wsms-section-label {font-size: 12px; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.08em; padding-bottom: 4px; border-bottom: 0.5px solid #e8e8e8;}    
+    .wsms-type-row {display: flex; gap: 10px;}
+    .wsms-type-opt {display: flex; align-items: center; gap: 7px; padding: 6px 16px; border: 1px solid #d0d0d0; border-radius: 6px; background: #f9f9f9; cursor: pointer; transition: border-color 0.15s, 
+                    background 0.15s; user-select: none;}
+    .wsms-type-opt:hover {border-color: #c0392b; background: #fdf4f3;}
+    .wsms-type-opt.active {border-color: #c0392b; background: #fdf0ee;}
+    .wsms-card.theme-inem .wsms-card-header-ems {background: #f0b400; color: #1a2e4a;}
+    .wsms-card.theme-inem .wsms-card-header-ems svg {stroke: #1a2e4a;}
+    .wsms-card.theme-inem .major-field input:focus, .wsms-card.theme-inem .major-field select:focus {border-color: #f0b400 !important; box-shadow: 0 0 0 2px rgba(240,180,0,0.18) !important;}
+    .wsms-card.theme-inem .wsms-type-opt:hover {border-color: #f0b400; background: #fffbea;}
+    .wsms-card.theme-inem .wsms-type-opt.active {border-color: #f0b400; background: #fffbea;}
+    .wsms-card.theme-inem .wsms-type-opt.active input[type="checkbox"] {accent-color: #f0b400;}
+    .wsms-card.theme-inem .wsms-btn-send {background: #f0b400; color: #1a2e4a;}
+    .wsms-card.theme-inem .wsms-btn-send:hover {background: #d4a000; color: #1a2e4a;}
+    .wsms-card.theme-inem .wsms-btn-send:active {background: #b88c00; color: #1a2e4a;}
+    .wsms-type-opt input[type="checkbox"] {width: 14px; height: 14px; accent-color: #c0392b; cursor: pointer !important; margin: 0;}
+    .wsms-type-opt label {font-size: 12px; font-weight: 600; color: #444; cursor: pointer; letter-spacing: 0.03em;}    
+    .wsms-vehicle-card, .wsms-victims-card, 
+    .wsms-extras-card, .wsms-demage-card,
+    .wsms-burned-card, .wsms-observ-card {background: #fff; border-radius: 6px; border: 0.5px solid #d0d0d0; box-shadow: 0 1px 3px rgba(0,0,0,0.08); overflow: hidden; 
+                                          transition: transform 0.2s ease, box-shadow 0.2s ease;}    
+    .wsms-vehicle-card .field-card-title, 
+    .wsms-victims-card .field-card-title, 
+    .wsms-extras-card .field-card-title, 
+    .wsms-demage-card .field-card-title,
+    .wsms-burned-card .field-card-title, 
+    .wsms-observ-card .field-card-title{background: linear-gradient(to right, #061426, #0d2a4d, #1a3d73); color: #fff; font-size: 11px; font-weight: 600; letter-spacing: 0.06em;                                                                                 padding: 6px 12px; text-shadow: 0 1px 2px rgba(0,0,0,0.4);}
+    .wsms-vehicle-card .major-row {padding: 10px 10px;}
+    #vehicles-container {gap: 10px;}
+    .wsms-card-mini {background: #fff; border-radius: 6px; border: 0.5px solid #d0d0d0; box-shadow: 0 1px 3px rgba(0,0,0,0.08); overflow: hidden;}
+    .wsms-card-mini .field-card-title {background: linear-gradient(to right, #061426, #0d2a4d, #1a3d73); color: #fff; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; padding: 6px 12px;}
+    .wsms-card-mini .major-row {padding: 4px 10px;}
+    .wsms-card-mini .major-field {display: flex !important; flex-direction: row !important; align-items: center; gap: 6px;}
+    .wsms-card-mini .major-field label {margin: 0; white-space: nowrap; font-size: 11px;}
+    /* ================= IPMA CARDS ================ */
+    #ipma-alerts {display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;}
+    .ipma-card {border-radius: 12px; padding: 16px 16px 14px 16px; font-size: 13px; display: flex; flex-direction: column; justify-content: space-between; min-height: 160px; position: relative;
+                background: #ffffff; border: 1px solid rgba(0,0,0,0.06); border-left: 6px solid; box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: all 0.18s ease;}
+    .ipma-card:hover {transform: translateY(-4px); box-shadow: 0 8px 18px rgba(0,0,0,0.12);}
+    .ipma-green  {border-left-color: #43a047; background: linear-gradient(180deg, #f4fbf4 0%, #ffffff 100%);}
+    .ipma-yellow {border-left-color: #fbc02d; background: linear-gradient(180deg, #fffdf3 0%, #ffffff 100%);}
+    .ipma-orange {border-left-color: #fb8c00; background: linear-gradient(180deg, #fff7f0 0%, #ffffff 100%);}
+    .ipma-red    { border-left-color: #e53935; background: linear-gradient(180deg, #fff3f3 0%, #ffffff 100%);}
+    .ipma-title {font-weight: 700; font-size: 14px; margin-bottom: 6px; color: #1a1a1a; letter-spacing: 0.3px;}
+    .ipma-desc {font-size: 12px; color: #555; line-height: 1.4;}
+    .ipma-time {font-size: 11px; color: #888; margin-top: 6px;}
+    .ipma-card button {align-self: flex-end; margin-top: 12px; padding: 0 12px; font-size: 11px; font-weight: 600; border: none; border-radius: 6px; background: linear-gradient(135deg, #2980b9, #1f5f8a);
+                       color: #fff; cursor: pointer; height: 26px; letter-spacing: 0.04em; transition: all 0.15s ease;}
+    .ipma-card button:hover {transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0,0,0,0.15);}
+    .ipma-card button:active {transform: scale(0.97);}
+    /* ================ PANEL CARDS ================ */
+    .panel-card {display: none; background: rgba(235, 235, 235, 0.85); padding: 25px; min-height: 650px; height: auto !important; animation: cardFadeIn 0.4s ease-out;}
+    .panel-card.active {display: block; flex: 1; height: auto}
+    .panel-card h3 {color: #343A40; font-size: 18px; margin-bottom: 20px; border-bottom: 2px solid #DC3545; padding-bottom: 10px;}
+    .panel-card p {color: #495057; line-height: 1.6; margin-bottom: 15px;}
+    .transparent-card {border: 2px solid #888; border-radius: 8px; background-color: transparent; padding: 15px; margin: 0 0 0 0;}
+    .transparent-card .card-header {font-weight: bold; font-size: 16px; margin-bottom: 10px;}    
+    .options-main-card {background: linear-gradient(to bottom, #f1f5f9, #e2e8f0); box-shadow: 0 3px 10px rgba(0,0,0,0.1); border-radius: 10px; border: 1px solid #cbd5e1; padding: 12px; min-height: 50px;}

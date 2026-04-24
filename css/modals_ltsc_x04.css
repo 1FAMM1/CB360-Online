@@ -1,0 +1,61 @@
+    /* =================== MODALS =================== */
+    .popup-modal {display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);}
+    .popup-modal.show {display: flex; justify-content: center; align-items: center;}
+    .popup-content {background: #f8f9fa; border-radius: 10px; max-width: 400px; width: 90%; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.3);}
+    .popup-header {padding: 18px 20px 14px; position: relative; overflow: hidden;}
+    .popup-header::before {content: ''; position: absolute; right: -10px; top: 0; bottom: 0; width: 60%; 
+                           background: repeating-linear-gradient(135deg, transparent, transparent 8px, rgba(0,0,0,0.12) 8px, rgba(0,0,0,0.12) 16px);}
+    .popup-header::after {content: ''; display: block; height: 8px; border-radius: 4px; margin-top: 10px;
+                         background: linear-gradient(90deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.6) 40%, rgba(255,255,255,0.9) 50%, rgba(255,255,255,0.6) 60%, rgba(255,255,255,0.15) 100%);
+                         background-size: 200% 100%; animation: barShine 2s ease-in-out infinite;}
+    .popup-header h3 {margin: 0; font-size: 14px; font-weight: bold; color: #fff; position: relative; z-index: 1; text-shadow: 0 1px 2px rgba(0,0,0,0.25);}
+    .popup-body {padding: 20px 20px 5px;}
+    .popup-body ul {list-style: disc; padding-left: 20px; margin-bottom: 15px; font-size: 14px; color: #495057;}
+    .popup-footer {padding: 12px 20px 16px; background: #f0f1f3; border-top: 1px solid #e2e4e7; display: flex; justify-content: center;}
+    .popup-btn {border: none; padding: 8px 28px; border-radius: 5px; font-size: 12px; font-weight: bold; cursor: pointer; color: #fff;
+                background-image: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, rgba(0,0,0,0.1) 100%); box-shadow: inset 0 1px 1px rgba(255,255,255,0.35), 0 2px 4px rgba(0,0,0,0.2);
+                text-shadow: 0 1px 1px rgba(0,0,0,0.2);}
+    .popup-btn:hover {filter: brightness(1.1);}    
+    /* Vermelho */
+    .popup-danger .popup-header {background: linear-gradient(135deg, #E8404F 0%, #C82333 60%, #B01E2B 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.15);}
+    .popup-danger .popup-btn {background-color: #DC3545;}
+    #popup-danger {z-index: 10001;}
+    /* Verde */
+    .popup-success .popup-header {background: linear-gradient(135deg, #28A96A 0%, #157347 60%, #0F5C38 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.15);}
+    .popup-success .popup-btn {background-color: #198754;}
+    /* Azul */
+    .popup-info .popup-header {background: linear-gradient(135deg, #3D8BFD 0%, #0A58CA 60%, #0847A8 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.15);}
+    .popup-info .popup-btn {background-color: #0D6EFD;}
+    /* Laranja */
+    .popup-warning .popup-header {background: linear-gradient(135deg, #FD7E14 0%, #D96308 60%, #B85205 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.15);}
+    .popup-warning .popup-btn {background-color: #FD7E14;}    
+    .popup-analyze .popup-header {background: linear-gradient(135deg, #E8404F 0%, #C82333 60%, #B01E2B 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.15);}
+    .popup-analyze .popup-btn {background-color: #DC3545;}
+    #popup-analyze {z-index: 10001;}
+    .popup-analyze .popup-body {min-height: 100px; max-height: 400px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #C82333 #f0f0f0;}
+    .popup-analyze .popup-body::-webkit-scrollbar {width: 6px;}
+    .popup-analyze .popup-body::-webkit-scrollbar-track {background: #f0f0f0; border-radius: 10px;}
+    .popup-analyze .popup-body::-webkit-scrollbar-thumb {background: linear-gradient(180deg, #E8404F, #B01E2B); border-radius: 10px;}
+    .popup-analyze .popup-body::-webkit-scrollbar-thumb:hover {background: linear-gradient(180deg, #C82333, #8e1520);}    
+    #popup-service-type-modal input[type="text"]:focus {outline: none; border-color: #dee2e6; box-shadow: 0 0 0 2px rgba(253, 126, 20, 0.25); cursor: not-allowed;}    
+    .decir-modal-custom {display: none; position: fixed; inset: 0; z-index: 999999; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(6px); animation: fadeIn 0.2s ease;}    
+    .decir-modal-custom.show {display: block;}
+    .decir-modal-content {position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 400px; max-width: 92%; background: #ffffff; border-radius: 14px;
+                          box-shadow: 0 30px 70px rgba(0,0,0,0.45); overflow: hidden; font-family: 'Segoe UI', sans-serif; animation: modalPop 0.28s cubic-bezier(.22,.68,0,1.2);}
+    .decir-modal-header {background: linear-gradient(135deg, #1e3a8a, #2563eb); padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;}
+    .decir-modal-header h3 {margin: 0; font-size: 13.5px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px;}
+    .decir-close-btn {background: rgba(255,255,255,0.15); border: none; color: #fff; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-size: 14px; transition: 0.15s;}
+    .decir-close-btn:hover {background: rgba(255,255,255,0.3);}
+    .decir-modal-body {padding: 20px 22px;}
+    .decir-form-group {margin-bottom: 16px;}
+    .decir-form-group label {display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .5px;}
+    .decir-input-wrapper {position: relative;}
+    .decir-input-wrapper input {width: 100%; padding: 11px 36px 11px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 14px; font-weight: 500; color: #1e293b; transition: all 0.15s ease;}
+    .decir-input-wrapper input:focus {border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); outline: none;}
+    .decir-input-wrapper::after {content: "€"; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-weight: 600; font-size: 13px;}
+    .decir-modal-footer {padding: 14px 18px; border-top: 1px solid #f1f5f9; background: #f8fafc; display: flex; justify-content: flex-end; gap: 10px;}
+    .decir-btn {padding: 9px 16px; border-radius: 7px; font-size: 12.5px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s ease;}
+    .decir-btn-secondary {background: #e2e8f0; color: #334155;}
+    .decir-btn-secondary:hover {background: #cbd5f5;}
+    .decir-btn-primary {background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff;}
+    .decir-btn-primary:hover {transform: translateY(-1px); box-shadow: 0 6px 14px rgba(37, 99, 235, 0.35);}

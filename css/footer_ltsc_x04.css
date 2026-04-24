@@ -1,0 +1,8 @@
+    /* =================== FOOTER =================== */
+    .status-bar {position: fixed; bottom: 0; left: 0; right: 0; height: 30px; background: #F8F9FA; background: linear-gradient(135deg, #343A40, #2d3237); border-top: 3px solid #DC3545; padding: 0 20px; display: flex;
+                 align-items: center; justify-content: space-between;}
+    .system-info {width: 100%; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #aaa;}
+    .left-info {font-weight: 500;}
+    .right-info {font-style: italic;}
+    .left-info, .right-info {line-height: 25px; display: flex; align-items: center;}
+    .loading {text-align: center; color: #7f8c8d; font-style: italic; margin: 20px 0; padding: 20px; background: #f0f0f0; border-radius: 8px;}

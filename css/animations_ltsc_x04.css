@@ -1,0 +1,20 @@
+    /* ================= ANIMATIONS ================= */
+    #page-main {opacity: 0; animation: pageEnter 1s ease-out forwards;}
+    #page-main .major-card {transform: translateY(50px); opacity: 0; animation: cardSlideUp 0.8s ease-out 0.3s forwards;}
+    #ocrReport {display: grid; grid-template-columns: 1fr 1fr; gap: 3px 20px;}
+    @keyframes pageEnter {from {opacity: 0; transform: scale(0.98);} to {opacity: 1; transform: scale(1);}}
+    @keyframes cardSlideUp {from {transform: translateY(50px); opacity: 0;} to {transform: translateY(0); opacity: 1;}}
+    @keyframes textSlideIn {from {opacity: 0; transform: translateX(-20px);} to {opacity: 1; transform: translateX(0);}}
+    @keyframes finalTextAppear {from {opacity: 0; transform: translateY(20px);} to {opacity: 1; transform: translateY(0);}}
+    @keyframes shimmer {0% {transform: translateX(-100%) translateY(-100%) rotate(45deg);} 100% {transform: translateX(100%) translateY(100%) rotate(45deg);}}
+    @keyframes inopFade {0%, 100% {opacity: 1} 50% {opacity: 0.5}}
+    @keyframes gentleShake {0%, 100% {transform: translateX(0)} 25% {transform: translateX(-1px)} 75% {transform: translateX(1px)}}
+    @keyframes borderBlink {0%, 100% {border-color: #f1c40f} 50% {border-color: #e67e22}}
+    @keyframes modalPop {from {opacity: 0; transform: translate(-50%, -40%) scale(0.96);} to {opacity: 1; transform: translate(-50%, -50%) scale(1);}}
+    @keyframes fadeIn {from {opacity: 0;} to {opacity: 1;}}
+    @keyframes pulse-red {0% {filter: drop-shadow(0 0 0px rgba(220, 53, 69, 0));} 50% {filter: drop-shadow(0 0 3px rgba(220, 53, 69, 0.8)); color: #dc3545;} 100% {filter: drop-shadow(0 0 0px rgba(220, 53, 69, 0));}}
+    @keyframes pulse-red-inem {0% {filter: drop-shadow(0 0 0px rgba(220, 53, 69, 0)); stroke: #1a2e4a;} 50% {filter: drop-shadow(0 0 3px rgba(220, 53, 69, 0.8)); 
+                                   stroke: #dc3545;} 100% {filter: drop-shadow(0 0 0px rgba(220, 53, 69, 0)); stroke: #1a2e4a;}}
+    @keyframes pulse-live {0% {box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.7); transform: scale(1);} 50% {box-shadow: 0 0 0 10px rgba(255, 68, 68, 0);
+                           transform: scale(1.02);} 100% {box-shadow: 0 0 0 0 rgba(255, 68, 68, 0); transform: scale(1);}}
+    @keyframes barShine {0% {background-position: 200% 0;} 100% {background-position: -200% 0;}}

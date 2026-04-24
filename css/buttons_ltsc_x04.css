@@ -1,0 +1,61 @@
+    /* ================== BUTTONS =================== */
+    .action-buttons {display: flex; gap: 10px; justify-content: flex-end;}
+    .action-buttons button {min-width: 100px;}
+    .btn {padding: 7px 18px; border: none; border-radius: 5px; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; transition: all 0.2s ease; display: inline-flex;
+          align-items: center; justify-content: center; color: #ffffff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);}
+    .btn:hover {filter: brightness(1.08); transform: translateY(-1px); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);}
+    .btn:active {transform: translateY(0px); filter: brightness(0.95); box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15);}
+    .btn-success {background-color: #28a745; border-bottom: 2px solid #1e7e34;}
+    .btn-danger {background-color: #dc3545; border-bottom: 2px solid #bd2130;}
+    .btn-clean {background-color: #2c2c2c; border-bottom: 2px solid #1a1a1a;}
+    .btn-add {background-color: #3354a1; border-bottom: 2px solid #284078;}
+    .btn-add.active {background-color: #bf2828; border-bottom: 2px solid #8e1d1d; color: #ffffff; transform: translateY(1px); box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);}
+    .btn:focus {outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 4px rgba(51, 84, 161, 0.4);}
+    .btn-special {background-color: #fac30f; color: black; font-weight: bold; border: none; cursor: pointer; transition: background-color 0.2s;}
+    .btn-special:hover {background-color: #e0ac0a;}
+    .btn-special:focus {outline: 1px solid #284078; outline-offset: 1px;}
+    .btn-special.active {background-color: #bf2828;}    
+    .btn-toggle {background-color: #f97316; border-bottom: 2px solid #ea580c;}
+    .btn-toggle.active {background-color: #6b7280; border-bottom: 2px solid #4b5563; transform: translateY(1px); box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);}
+    .button-container {display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 10px; width: 100%; height: 60px;}    
+    .epeppi-panel-btn {flex: 1; min-width: 0; height: 52px; padding: 0 4px; border: 1.5px solid #D3D1C7; border-radius: 5px; background: #F1EFE8; color: #5F5E5A; cursor: pointer; font-weight: 500; font-size: 11px;
+                       letter-spacing: 0.04em; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; transition: border-color 0.2s, background 0.2s, color 0.2s; 
+                       overflow: hidden; text-align: center;}
+    .epeppi-panel-btn::before {content: ''; width: 6px; height: 6px; border-radius: 50%; background: #B4B2A9; flex-shrink: 0; transition: background 0.2s, box-shadow 0.2s; margin-bottom: 5px; }
+    .epeppi-panel-btn:hover {border-color: #888780; background: white; color: #2C2C2A;}
+    .epeppi-panel-btn:empty {border-color: transparent; background: transparent; pointer-events: none;}
+    .epeppi-panel-btn.s-monitor {background: #E6F1FB; color: #0C447C;}
+    .epeppi-panel-btn.s-yellow {background: #FAEEDA; color: #633806;}
+    .epeppi-panel-btn.s-orange {background: #FAECE7; color: #712B13;}
+    .epeppi-panel-btn.s-red {background: #FCEBEB; color: #791F1F;}
+    .epeppi-panel-btn.s-critical {background: #A32D2D; color: #FCEBEB;}
+    .epeppi-panel-btn.s-monitor::before, .epeppi-panel-btn.s-yellow::before, .epeppi-panel-btn.s-orange::before, .epeppi-panel-btn.s-red::before, 
+    .epeppi-panel-btn.s-critical::before {background: lime; box-shadow: 0 0 6px 2px lime;}
+    .epeppi-panel-btn.inactive::before {background: #E24B4A; box-shadow: 0 0 6px 2px #E24B4A;}
+    .wsms-btn-send {background: #c0392b; color: #fff; border: none; border-radius: 6px; padding: 0 22px; height: 32px; font-size: 12px; font-weight: 600; letter-spacing: 0.05em; cursor: pointer; 
+                    transition: background 0.15s;}
+    .wsms-btn-send:hover {background: #a93226;}
+    .wsms-btn-send:active {background: #922b21; transform: scale(0.98);}
+    .wsms-btn-green {background: #27ae60; color: #fff; border: none; border-radius: 6px; padding: 0 22px; height: 32px; font-size: 12px; font-weight: 600; letter-spacing: 0.05em; cursor: pointer; 
+                     transition: background 0.15s;}
+    .wsms-btn-green:hover {background: #219a52; }
+    .wsms-btn-green:active {background: #1a7a41; transform: scale(0.98);}
+    .wsms-btn-blue {background: #2980b9; color: #fff; border: none; border-radius: 6px; padding: 0 22px; height: 32px; font-size: 12px; font-weight: 600; letter-spacing: 0.05em; cursor: pointer; 
+                    transition: background 0.15s;}
+    .wsms-btn-blue:hover {background: #2471a3;}
+    .wsms-btn-blue:active {background: #1a5276; transform: scale(0.98);}
+    .wsms-btn-blue.active {background: #922b21; outline: 2px solid #e8a09a; outline-offset: 1px;}
+    .options-btn {padding: 7px 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid #c5c9d1; border-radius: 6px; background-color: #e2e4e9; 
+                  color: #2d3748; cursor: pointer; transition: all 0.2s ease; border-bottom: 2px solid #b1b5be;}
+    .options-btn:hover {background-color: #d1d5db; transform: translateY(-1px);}
+    .options-btn.active {background-color: #1e40af; color: #ffffff; border-bottom: 0; transform: translateY(1px); box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);}
+    .options-black-btn {padding: 7px 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; border: 1px solid #000; border-radius: 6px; background-color: #1a1a1a; color: #fff; cursor: pointer;
+                        transition: all 0.2s; border-bottom: 2px solid #000;}
+    .options-black-btn:hover {background-color: #262626; transform: translateY(-1px);}
+    .options-black-btn.active {background-color: #880808; color: #fff; border-bottom: 0; transform: translateY(1px); box-shadow: inset 0 2px 6px rgba(0,0,0,0.5);}
+    .options-yellow-btn {padding: 7px 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; border: 1px solid #d9a406; border-radius: 6px; background-color: #f5b800; color: #453200; cursor: pointer;
+                         transition: all 0.2s; border-bottom: 2px solid #c29200;}
+    .options-yellow-btn:hover {background-color: #ffc800; transform: translateY(-1px);}
+    .options-yellow-btn.active {background-color: #c2410c; color: #fff; border-bottom: 0; transform: translateY(1px); box-shadow: inset 0 2px 5px rgba(0,0,0,0.3);}
+    .options-btn:focus, .options-black-btn:focus, .options-yellow-btn:focus {outline: none !important; box-shadow: none;}
+    .options-btn.active:focus, .options-black-btn.active:focus, .options-yellow-btn.active:focus {box-shadow: inset 0 2px 5px rgba(0,0,0,0.3) !important;}

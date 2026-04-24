@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CB360 Online — Em Manutenção</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --red:      #c0392b;
+      --red-dark: #96281b;
+      --red-glow: rgba(192, 57, 43, 0.35);
+      --bg:       #0a0c0f;
+      --bg2:      #10141a;
+      --line:     rgba(192, 57, 43, 0.2);
+      --text:     #e8eaf0;
+      --muted:    #5a6070;
+      --mono:     'Share Tech Mono', monospace;
+      --sans:     'Rajdhani', sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      overflow: hidden;
+    }
+
+    /* ── Grid background ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--line) 1px, transparent 1px);
+      background-size: 60px 60px;
+      z-index: 0;
+      animation: gridShift 20s linear infinite;
+    }
+
+    @keyframes gridShift {
+      from { background-position: 0 0; }
+      to   { background-position: 60px 60px; }
+    }
+
+    /* ── Vignette ── */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 30%, var(--bg) 80%);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ── Red glow blob ── */
+    .glow-blob {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px;
+      height: 400px;
+      background: radial-gradient(ellipse, var(--red-glow) 0%, transparent 70%);
+      filter: blur(40px);
+      z-index: 0;
+      animation: pulse 4s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
+      50%       { opacity: 1;   transform: translate(-50%, -50%) scale(1.1); }
+    }
+
+    /* ── Main layout ── */
+    .stage {
+      position: relative;
+      z-index: 1;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      padding: 40px 20px;
+    }
+
+    /* ── Top bar ── */
+    .topbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, transparent, var(--red), transparent);
+      z-index: 10;
+      animation: scanline 3s ease-in-out infinite;
+    }
+    @keyframes scanline {
+      0%   { opacity: 0.4; }
+      50%  { opacity: 1; }
+      100% { opacity: 0.4; }
+    }
+
+    /* ── Corner decorations ── */
+    .corner {
+      position: fixed;
+      width: 40px;
+      height: 40px;
+      z-index: 2;
+    }
+    .corner::before, .corner::after {
+      content: '';
+      position: absolute;
+      background: var(--red);
+    }
+    .corner::before { width: 100%; height: 2px; top: 0; }
+    .corner::after  { width: 2px; height: 100%; }
+    .corner.tl { top: 16px; left: 16px; }
+    .corner.tr { top: 16px; right: 16px; transform: scaleX(-1); }
+    .corner.bl { bottom: 16px; left: 16px; transform: scaleY(-1); }
+    .corner.br { bottom: 16px; right: 16px; transform: scale(-1); }
+
+    /* ── Badge ── */
+    .badge {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: var(--red);
+      text-transform: uppercase;
+      border: 1px solid var(--red-glow);
+      padding: 5px 16px;
+      margin-bottom: 32px;
+      animation: fadeUp 0.8s ease both;
+      animation-delay: 0.1s;
+    }
+
+    /* ── Icon ── */
+    .icon-wrap {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      border: 2px solid var(--red);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 32px;
+      box-shadow: 0 0 30px var(--red-glow), inset 0 0 20px rgba(192,57,43,0.1);
+      animation: fadeUp 0.8s ease both, spinGlow 6s linear infinite;
+      animation-delay: 0.2s, 0s;
+      position: relative;
+    }
+
+    .icon-wrap::before {
+      content: '';
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      border: 1px solid var(--red-glow);
+      animation: rotate 8s linear infinite;
+    }
+
+    @keyframes rotate { to { transform: rotate(360deg); } }
+
+    @keyframes spinGlow {
+      0%, 100% { box-shadow: 0 0 30px var(--red-glow), inset 0 0 20px rgba(192,57,43,0.1); }
+      50%       { box-shadow: 0 0 60px var(--red-glow), inset 0 0 30px rgba(192,57,43,0.2); }
+    }
+
+    .icon-wrap svg {
+      animation: fadeUp 0.8s ease both;
+      animation-delay: 0.3s;
+    }
+
+    /* ── Heading ── */
+    h1 {
+      font-size: clamp(42px, 8vw, 80px);
+      font-weight: 700;
+      letter-spacing: 8px;
+      text-transform: uppercase;
+      line-height: 1;
+      text-align: center;
+      animation: fadeUp 0.8s ease both;
+      animation-delay: 0.3s;
+    }
+
+    h1 span {
+      color: var(--red);
+      text-shadow: 0 0 20px var(--red-glow);
+    }
+
+    /* ── Divider ── */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin: 24px 0;
+      width: 380px;
+      max-width: 90vw;
+      animation: fadeUp 0.8s ease both;
+      animation-delay: 0.4s;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--red));
+    }
+    .divider::after {
+      background: linear-gradient(90deg, var(--red), transparent);
+    }
+    .divider-dot {
+      width: 6px; height: 6px;
+      background: var(--red);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--red);
+    }
+
+    /* ── Subtitle ── */
+    .subtitle {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--muted);
+      letter-spacing: 2px;
+      text-align: center;
+      line-height: 1.8;
+      max-width: 480px;
+      animation: fadeUp 0.8s ease both;
+      animation-delay: 0.5s;
+    }
+
+    .subtitle strong {
+      color: var(--text);
+      font-family: var(--mono);
+    }
+
+    /* ── Progress bar ── */
+    .progress-wrap {
+      margin-top: 40px;
+      width: 380px;
+      max-width: 90vw;
+      animation: fadeUp 0.8s ease both;
+      animation-delay: 0.6s;
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .progress-bar {
+      height: 3px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 2px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--red-dark), var(--red));
+      border-radius: 2px;
+      animation: fillBar 3s ease-out both;
+      animation-delay: 0.8s;
+      box-shadow: 0 0 10px var(--red);
+    }
+
+    @keyframes fillBar {
+      from { width: 0%; }
+      to   { width: 73%; }
+    }
+
+    /* ── Status dots ── */
+    .status-row {
+      display: flex;
+      gap: 24px;
+      margin-top: 32px;
+      animation: fadeUp 0.8s ease both;
+      animation-delay: 0.7s;
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+    }
+    .dot.green  { background: #27ae60; box-shadow: 0 0 6px #27ae60; animation: blink 2s ease-in-out infinite; }
+    .dot.yellow { background: #f39c12; box-shadow: 0 0 6px #f39c12; animation: blink 1.5s ease-in-out infinite 0.5s; }
+    .dot.red    { background: var(--red); box-shadow: 0 0 6px var(--red); animation: blink 1s ease-in-out infinite 0.2s; }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+
+    /* ── Footer ── */
+    .footer-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 40px;
+      background: rgba(10,12,15,0.9);
+      border-top: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      z-index: 10;
+    }
+
+    .footer-bar span {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--muted);
+    }
+
+    .footer-bar .version {
+      color: var(--red);
+    }
+
+    /* ── Animate in ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Countdown ── */
+    .countdown-wrap {
+      margin-top: 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      animation: fadeUp 0.8s ease both;
+      animation-delay: 0.65s;
+    }
+
+    .countdown-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .countdown-digits {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .cd-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .cd-num {
+      font-family: var(--mono);
+      font-size: 36px;
+      font-weight: 400;
+      color: var(--text);
+      background: rgba(192,57,43,0.08);
+      border: 1px solid var(--line);
+      padding: 6px 14px;
+      min-width: 70px;
+      text-align: center;
+      letter-spacing: 2px;
+      line-height: 1;
+    }
+
+    .cd-unit {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .cd-sep {
+      font-family: var(--mono);
+      font-size: 28px;
+      color: var(--red);
+      margin-bottom: 18px;
+      opacity: 0.7;
+      animation: blink 1s ease-in-out infinite;
+    }
+
+    .cd-expired {
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing: 3px;
+      color: var(--red);
+      text-transform: uppercase;
+    }
+
+    /* ── Scanlines overlay ── */
+    .scanlines {
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.03) 2px,
+        rgba(0,0,0,0.03) 4px
+      );
+      pointer-events: none;
+      z-index: 5;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="topbar"></div>
+  <div class="glow-blob"></div>
+  <div class="scanlines"></div>
+
+  <div class="corner tl"></div>
+  <div class="corner tr"></div>
+  <div class="corner bl"></div>
+  <div class="corner br"></div>
+
+  <div class="stage">
+
+    <div class="badge">Sistema Temporariamente Indisponível</div>
+
+    <div class="icon-wrap">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#c0392b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+      </svg>
+    </div>
+
+    <h1>CB360 <span>Online</span></h1>
+
+    <div class="divider"><div class="divider-dot"></div></div>
+
+    <p class="subtitle">
+      O sistema encontra-se em <strong>manutenção programada</strong>.<br>
+      Estamos a trabalhar para repor o serviço o mais rapidamente possível.<br><br>
+      Pedimos desculpa pela indisponibilidade.
+    </p>
+
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <span>Progresso da Manutenção</span>
+        <span>Em Curso</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill"></div>
+      </div>
+    </div>
+
+    <div class="countdown-wrap">
+      <div class="countdown-label">Retorno previsto em</div>
+      <div class="countdown-digits">
+        <div class="cd-block">
+          <div class="cd-num" id="cd-h">00</div>
+          <div class="cd-unit">Horas</div>
+        </div>
+        <div class="cd-sep">:</div>
+        <div class="cd-block">
+          <div class="cd-num" id="cd-m">00</div>
+          <div class="cd-unit">Minutos</div>
+        </div>
+        <div class="cd-sep">:</div>
+        <div class="cd-block">
+          <div class="cd-num" id="cd-s">00</div>
+          <div class="cd-unit">Segundos</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="status-row">
+      <div class="status-item">
+        <div class="dot green"></div>
+        Base de Dados
+      </div>
+      <div class="status-item">
+        <div class="dot yellow"></div>
+        Aplicação
+      </div>
+      <div class="status-item">
+        <div class="dot red"></div>
+        Interface
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="footer-bar">
+    <span>© 2026 | Fábio Martins | Sistemas de Informação</span>
+    <span class="version">CB360 Online</span>
+  </footer>
+
+  <script>
+    // ── ⚙️ ALTERA ESTA LINHA COM A DATA/HORA PREVISTA DE FIM ──
+    const fimManutencao = new Date("2026-04-24T13:00:00");
+    // ─────────────────────────────────────────────────────────
+
+    const cdH = document.getElementById("cd-h");
+    const cdM = document.getElementById("cd-m");
+    const cdS = document.getElementById("cd-s");
+    const label = document.querySelector(".countdown-label");
+
+    let expirado = false;
+    let reloadCountdown = 10;
+
+    function pad(n) { return String(n).padStart(2, "0"); }
+
+    function mostrarBotaoReload() {
+      // Esconde os dígitos
+      document.querySelector(".countdown-digits").style.display = "none";
+
+      // Mostra mensagem + botão
+      const wrap = document.querySelector(".countdown-wrap");
+
+      const msg = document.createElement("div");
+      msg.id = "reload-msg";
+      msg.style.cssText = "font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--muted);text-align:center;margin-top:4px;";
+      msg.innerHTML = `A recarregar automaticamente em <span id="reload-sec" style="color:var(--red);">${reloadCountdown}</span>s...`;
+      wrap.appendChild(msg);
+
+      const btn = document.createElement("button");
+      btn.textContent = "↺  Recarregar Agora";
+      btn.style.cssText = `
+        margin-top: 12px;
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--text);
+        background: transparent;
+        border: 1px solid var(--red);
+        padding: 8px 24px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 0 10px var(--red-glow);
+      `;
+      btn.onmouseover = () => { btn.style.background = "var(--red)"; btn.style.color = "#fff"; };
+      btn.onmouseout  = () => { btn.style.background = "transparent"; btn.style.color = "var(--text)"; };
+      btn.onclick     = () => location.reload();
+      wrap.appendChild(btn);
+
+      // Contagem regressiva para reload automático
+      const reloadTimer = setInterval(() => {
+        reloadCountdown--;
+        const secEl = document.getElementById("reload-sec");
+        if (secEl) secEl.textContent = reloadCountdown;
+        if (reloadCountdown <= 0) {
+          clearInterval(reloadTimer);
+          location.reload();
+        }
+      }, 1000);
+    }
+
+    function tick() {
+      const agora = new Date();
+      const diff  = fimManutencao - agora;
+
+      if (diff <= 0) {
+        if (!expirado) {
+          expirado = true;
+          cdH.textContent = "00";
+          cdM.textContent = "00";
+          cdS.textContent = "00";
+          label.textContent = "Manutenção concluída!";
+          label.style.color = "var(--red)";
+          setTimeout(mostrarBotaoReload, 800);
+        }
+        return;
+      }
+
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+
+      cdH.textContent = pad(h);
+      cdM.textContent = pad(m);
+      cdS.textContent = pad(s);
+    }
+
+    tick();
+    setInterval(tick, 1000);
+  </script>
+</body>
+</html>

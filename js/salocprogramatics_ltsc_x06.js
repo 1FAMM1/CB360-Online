@@ -2711,6 +2711,13 @@
       document.getElementById("sitop_optel").value = record.optel || "";
       document.getElementById("ppi_yes").checked = record.ppi_part === true;
       document.getElementById("ppi_no").checked = record.ppi_part === false;
+      document.getElementById("ppi_a2").checked = record.ppi_a2 === true;
+      document.getElementById("ppi_a22").checked = record.ppi_a22 === true;
+      document.getElementById("ppi_airport").checked = record.ppi_airport === true;
+      document.getElementById("ppi_linfer").checked = record.ppi_linfer === true;
+      document.getElementById("ppi_airfield").checked = record.ppi_airfield === true;
+      document.getElementById("ppi_subs_yes").checked = record.ppi_subs === true;
+      document.getElementById("ppi_subs_no").checked = record.ppi_subs === false;
       if (NewInopBtn) NewInopBtn.classList.add("active");
       sitopContainer.setAttribute("data-record-id", record.id);
       saveBtn.textContent = "📄 Emitir Operacionalidade";

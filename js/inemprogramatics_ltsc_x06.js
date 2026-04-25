@@ -472,7 +472,7 @@
         });
         updated['tas'] = tasNameInput.value.trim() || null;
         try {
-          const res = await fetch(`${SUPABASE_URL}/rest/v1/inem_entries?nr_codu=eq.${item.nr_codu}`, {
+          const res = await fetch(`${SUPABASE_URL}/rest/v1/inem_entries?id=eq.${item.id}`, {
             method: "PATCH",
             headers: {...getSupabaseHeaders(), "Content-Type":"application/json", "Prefer":"return=minimal"},
             body: JSON.stringify(updated)

@@ -316,6 +316,37 @@
         </div>
       </div>
     </div>
+    <!-- POPUP TIPO INEM -->
+    <div id="popup-inem-type-modal" class="popup-modal popup-superdanger">
+      <div class="popup-content">
+        <div class="popup-header">
+          <div class="header-content" style="display: flex; align-items: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle;">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <h3 style="margin: 0; color: #ffffff; font-size: 13px; font-weight: 850; letter-spacing: 1px;">TIPO DE VERBETE</h3>
+          </div>
+        </div>
+        <div class="popup-body">
+          <ul style="list-style:none; padding:0; margin:0;">
+            <li style="list-style:none; margin-bottom: 12px; display:flex; justify-content:center; gap:30px;">
+              <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                <input type="radio" name="popup-inem-type" value="ITeams" style="cursor:pointer !important;">
+                iTeams
+              </label>
+              <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                <input type="radio" name="popup-inem-type" value="Verbete" style="cursor:pointer !important;">
+                Verbete Manual
+              </label>
+            </li>
+          </ul>
+        </div>
+        <div class="popup-footer" style="gap: 10px;">
+          <button id="popup-inem-type-ok-btn" class="popup-btn">Confirmar</button>
+          <button id="popup-inem-type-cancel-btn" class="popup-btn" style="background-color: #6C757D;">Cancelar</button>
+        </div>
+      </div>
+    </div>
     <!-- VEHICLES MODAL -->
     <div id="vehicle-status-modal" class="vehicle-status-modal" tabindex="0">
       <div class="vehicle-status-modal-content">

@@ -211,6 +211,9 @@
       } else {
         blockAllSidebar();
       }
+      await loadNotifications();
+      startNotifPolling();
+      initNotifDropdown();  
       generateAccessCheckboxes();
       loadElementsTable();
       /* ============== LOGOUT ============== */

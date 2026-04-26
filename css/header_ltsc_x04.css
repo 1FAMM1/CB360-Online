@@ -18,3 +18,10 @@
     .header-logout-btn {background: transparent; border: 1px solid rgba(255, 255, 255, 0.25); color: #ffffff; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
                         cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.4); transition: all 0.2s ease;}
     .header-logout-btn:hover {background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.5); box-shadow: 0 4px 12px rgba(0,0,0,0.5); transform: translateY(-1px) scale(1.05);}
+    .header-notif-btn {background: transparent; border: 1px solid rgba(255, 255, 255, 0.25); color: #ffffff; width: 36px; height: 36px; border-radius: 50%; display: flex; 
+                       align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.4); transition: all 0.2s ease; position: relative;}
+    .header-notif-btn:hover {background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.5); box-shadow: 0 4px 12px rgba(0,0,0,0.5); transform: translateY(-1px) scale(1.05);}
+    .header-notif-btn.has-notif {border-color: rgba(255, 200, 0, 0.6); animation: notif-pulse 1s ease infinite;}
+    .header-notif-btn.has-notif i {animation: notif-shake 0.7s ease infinite;}
+    .header-notif-badge {position: absolute; top: -4px; right: -4px; background: #e74c3c; color: #fff; font-size: 10px; font-weight: 700; font-family: 'Segoe UI', sans-serif; min-width: 16px; height: 16px; 
+                         border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 0 3px; border: 1.5px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.4); pointer-events: none;}

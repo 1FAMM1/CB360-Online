@@ -1,4 +1,4 @@
-function setNotifCount(n) {
+    function setNotifCount(n) {
       const btn = document.getElementById("notifBtn");
       const badge = document.getElementById("notifBadge");
       badge.textContent = n > 99 ? "99+" : n;
@@ -14,7 +14,7 @@ function setNotifCount(n) {
       const corpNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       try {
         const res = await fetch(
-          `${SUPABASE_URL}/rest/v1/business_notifications?corp_oper_nr=eq.${corpNr}&or=(n_int_to.eq.${nInt},n_int_to.is.null)&readed=eq.false&select=*,business_notifications_read(n_int)&order=created_at.desc`, {
+          `${SUPABASE_URL}/rest/v1/business_notifications?corp_oper_nr=eq.${corpNr}&or=(n_int_to.eq.${nInt},n_int_to.is.null)&select=*,business_notifications_read(n_int)&order=created_at.desc`, {
             headers: getSupabaseHeaders()
           }
         );
@@ -71,7 +71,7 @@ function setNotifCount(n) {
       dropdown.addEventListener("click", e => e.stopPropagation());
       try {
         const res = await fetch(
-          `${SUPABASE_URL}/rest/v1/business_notifications?corp_oper_nr=eq.${corpNr}&or=(n_int_to.eq.${nInt},n_int_to.is.null)&readed=eq.false&select=*,business_notifications_read(n_int)&order=created_at.desc`, {
+          `${SUPABASE_URL}/rest/v1/business_notifications?corp_oper_nr=eq.${corpNr}&or=(n_int_to.eq.${nInt},n_int_to.is.null)&select=*,business_notifications_read(n_int)&order=created_at.desc`, {
             headers: getSupabaseHeaders()
           }
         );

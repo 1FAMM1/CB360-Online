@@ -18,3 +18,9 @@
     @keyframes pulse-live {0% {box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.7); transform: scale(1);} 50% {box-shadow: 0 0 0 10px rgba(255, 68, 68, 0);
                            transform: scale(1.02);} 100% {box-shadow: 0 0 0 0 rgba(255, 68, 68, 0); transform: scale(1);}}
     @keyframes barShine {0% {background-position: 200% 0;} 100% {background-position: -200% 0;}}
+    @keyframes fadeSlide {from {opacity: 0; transform: translateX(-6px);} to {opacity: 1; transform: translateX(0);}}
+    @keyframes notif-shake {0%, 100% {transform: rotate(0deg);} 20% {transform: rotate(-15deg);} 40% {transform: rotate(15deg);} 60% {transform: rotate(-10deg);} 80% {transform: rotate(10deg);}}   
+    @keyframes notif-pulse {0%, 100% {box-shadow: 0 0 0 0 rgba(255, 200, 0, 0.7), 0 2px 6px rgba(0,0,0,0.4); 
+                                      border-color: rgba(255, 200, 0, 0.6);} 50% {box-shadow: 0 0 0 8px rgba(255, 200, 0, 0), 0 2px 6px rgba(0,0,0,0.4);
+                                      border-color: rgba(255, 200, 0, 1);}}
+    @keyframes ticker-scroll {0% {transform: translateX(100vw);} 100% {transform: translateX(-100%);}}

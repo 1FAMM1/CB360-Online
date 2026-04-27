@@ -385,9 +385,11 @@
       Object.assign(row1.style, {display: 'flex', gap: '10px'});
       const coduField = makeField('nr_codu', 'Nr. CODU', 'text');
       Object.assign(coduField.style, {flex: '1'});
+      const alertDateField = makeField('alert_date', 'Data Alerta', 'date');
+      Object.assign(alertDateField.style, {flex: '1'});
       const alertHourField = makeField('alert_hour', 'Hora Alerta', 'time');
       Object.assign(alertHourField.style, {flex: '1'});
-      row1.append(coduField, alertHourField);
+      row1.append(coduField, alertDateField, alertHourField);
       body.appendChild(row1);
       const row2 = document.createElement('div');
       Object.assign(row2.style, {display: 'flex', gap: '10px', alignItems: 'flex-end'});
@@ -466,7 +468,7 @@
                                     fontWeight: '600', cursor: 'pointer'});
       btnSave.onclick = async () => {
         const updated = {};
-        const FIELDS = [{key: 'nr_codu'}, {key: 'alert_hour'}, {key: 'victim_type'}, {key: 'victim_address'}, {key: 'victim_location'}, {key: 'victim_age_type'}, {key: 'victim_age_unit'}];
+        const FIELDS = [{key: 'nr_codu'}, {key: 'alert_date'}, {key: 'alert_hour'}, {key: 'victim_type'}, {key: 'victim_address'}, {key: 'victim_location'}, {key: 'victim_age_type'}, {key: 'victim_age_unit'}];
         FIELDS.forEach(f => {
           updated[f.key] = inputs[f.key].value.trim() || null;
         });

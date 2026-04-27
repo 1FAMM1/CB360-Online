@@ -1188,6 +1188,7 @@
       if (reserv.checked) {
         inem.checked = false;
         selectedInemServiceType = "";
+        setCurrentTimeForINEMService();
       }
       updateTypeSelection();
     });

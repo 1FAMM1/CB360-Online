@@ -9,7 +9,7 @@
     .mark-logo {height: 46px; width: 42px;}
     .header-title-container {flex-grow: 1; margin-left: 95px; display: flex; flex-direction: column; justify-content: center; gap: 2px; text-shadow: 0 1px 2px rgba(0,0,0,0.4);}
     .header-title {color: #ffffff; font-size: 15px; font-weight: 500; letter-spacing: 0.3px; margin: 0;}
-    
+    .header-nr {display: none;}
     .header-subtitle {color: rgba(255, 235, 235, 0.7); font-size: 11.5px; font-weight: 400; margin: 0; text-shadow: 0 1px 2px rgba(0,0,0,0.35);}
     .header-authorization {color: rgba(255, 235, 235, 0.5); font-style: italic; font-size: 10.5px; margin-top: 1px; text-shadow: 0 1px 2px rgba(0,0,0,0.3);}
     .header-actions {display: flex; align-items: center; gap: 10px;}

@@ -3126,15 +3126,37 @@
                 <button class="btn btn-success" onclick="saveOcrReportsToSupabase(20)">ATUALIZAR</button>
               </div>                
             </div>
-            <div id="panel-sendNotifications" class="panel-card">
+            <div id="panel-sendNotifications" class="panel-card">  
               <h3>ENVIO DE NOTIFICAÇÕES</h3>
               <p>Envio interno de notificações: Utilizador para Utilizador, ou Utilizador para Geral.</p>
               <div class="options-main-card">
+                <div class="major-row">
+                  <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                    <label for="notification-to">PARA</label>
+                    <div style="position: relative; display: inline-block;">
+                      <input type="text" id="notification-to" placeholder="000" maxlength="3" inputmode="numeric" style="width: 75px; text-align: center;" 
+                             oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 3)">
+                      <span style="position: absolute; top: -5px; right: -8px; color: red; font-size: 14px; font-weight: bold;">*</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="major-row" style="margin-top: 10px;">
+                  <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px; width: 100%;">
+                    <label for="notification-to">NOTIFICAÇÃO</label>
+                    <textarea id="notification-message" placeholder="Escreva a sua notificação..."  
+                              style="flex: 1; min-height: 80px; padding: 8px 10px; border-radius: 8px; border: 1px solid #ddd; font-size: 13px; font-family: 'Segoe UI', sans-serif; 
+                                     resize: vertical; box-sizing: border-box; outline: none; transition: border-color .15s; text-transform: uppercase;"
+                              onfocus="this.style.borderColor='#7b0000'" onblur="this.style.borderColor='#ddd'"></textarea>
+                  </div>
+                </div>
+                <div class="major-row" style="margin-top: 20px;">
+                  <label for="notification-advisor" style="font-size: 11px; color: red;">*Caso a notificação seja para todos os elementos não preencher o campo.</label>                
+                </div>
                 <div id="sendNotifications" style="margin: 5px 0 0 0;"></div> 
               </div>
               <div class="action-buttons" style="margin: 15px 0 0 0;">
-                <button class="btn btn-success" onclick="">ENVIAR</button>
-              </div>                
+                <button class="btn btn-success" onclick="sendNotification()">ENVIAR</button>
+              </div>
             </div>
           </div>
         </div>

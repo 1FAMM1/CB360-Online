@@ -13,8 +13,8 @@
       }
     }
     async function loadNotifications() {
-      const nInt = sessionStorage.getItem("currentNInt") || "205";
-      const corpNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const nInt = sessionStorage.getItem("currentNInt")";
+      const corpNr = sessionStorage.getItem("currentCorpOperNr");
       try {
         const res = await fetch(
           `${SUPABASE_URL}/rest/v1/business_notifications?corp_oper_nr=eq.${corpNr}&or=(n_int_to.eq.${nInt},n_int_to.is.null)&select=*,business_notifications_read(n_int)&order=created_at.desc`, {
@@ -52,8 +52,8 @@
       });
     }
     async function openNotifDropdown(btn) {
-      const nInt = sessionStorage.getItem("currentNInt") || "205";
-      const corpNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const nInt = sessionStorage.getItem("currentNInt");
+      const corpNr = sessionStorage.getItem("currentCorpOperNr");
       const dropdown = document.createElement("div");
       dropdown.id = "notif-dropdown";
       Object.assign(dropdown.style, {position: "fixed", zIndex: "99999", background: "#fff", borderRadius: "10px", boxShadow: "0 8px 32px rgba(0,0,0,0.22)", width: "320px",
@@ -117,7 +117,7 @@
       }
     }
     async function getAbvNameByNInt(nInt) {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       try {
         const data = await supabaseFetch(
           `reg_elems?corp_oper_nr=eq.${corpOperNr}&n_int=eq.${nInt}&select=abv_name&limit=1`
@@ -129,8 +129,8 @@
     }
     async function openNotifModal(notif) {
       document.getElementById("notif-modal")?.remove();
-      const nInt = sessionStorage.getItem("currentNInt") || "205";
-      const corpNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const nInt = sessionStorage.getItem("currentNInt");
+      const corpNr = sessionStorage.getItem("currentCorpOperNr");
       const overlay = document.createElement("div");
       overlay.id = "notif-modal";
       Object.assign(overlay.style, {position: "fixed", inset: "0", background: "rgba(10,8,8,0.78)", zIndex: "100000", display: "flex", alignItems: "center", justifyContent: "center",

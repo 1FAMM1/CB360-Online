@@ -252,6 +252,7 @@
           page.scrollTop = 0;
           window.scrollTo(0, 0);
           if (typeof clearFormFields === "function") clearFormFields();
+          if (typeof updateTypeSelection === "function") updateTypeSelection();
         });
       }
       function closeSubmenuRecursive(menu) {

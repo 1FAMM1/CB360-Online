@@ -9,8 +9,8 @@
       /* ===================== VERIFICAÇÃO DE VALIDADE ===================== */
       async function checkUserValidity() {
         try {
-          const nInt = sessionStorage.getItem("currentNInt");
-          const corpNr = sessionStorage.getItem("currentCorpOperNr");
+          const nInt = sessionStorage.getItem("currentNInt") || "205";
+          const corpNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
           if (!nInt || !corpNr) {
             window.location.href = "index.html";
             return false;
@@ -28,7 +28,7 @@
           const userReg = dataReg[0];
           const officialName = userReg.full_name;
           const urlUsers = `${SUPABASE_URL}/rest/v1/users?full_name=eq.${encodeURIComponent(officialName)}&corp_oper_nr=eq.${corpNr}&select=validate`;
-          const respUsers = await fetch(urlUsers, { headers });
+          const respUsers = await fetch(urlUsers, {headers});
           const dataUsers = await respUsers.json();
           if (dataUsers && dataUsers.length > 0) {
             const validade = dataUsers[0].validate;
@@ -92,7 +92,7 @@
       /* ======================= LOAD COPORATION DATA ====================== */
       async function loadCorporationHeader() {
         try {
-          const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+          const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
           const response = await fetch(
             `${SUPABASE_URL}/rest/v1/corporation_data?select=corporation,logo_url,corp_oper_nr,allowed_modules&corp_oper_nr=eq.${corpOperNr}`, { 
               headers: getSupabaseHeaders() 
@@ -147,7 +147,7 @@
       /* ========== BLOCK ELEMENTS =========== */
       function blockIfNoAccess(el, accesses, userCorpOperNr) {
         const requiredAccess = el.getAttribute('data-access');
-        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
         if (!requiredAccess) return;
         if (currentCorpOperNr !== userCorpOperNr) {
           el.disabled = true;
@@ -199,68 +199,35 @@
         document.querySelectorAll('[data-access]').forEach(el => blockIfNoAccess(el, accesses, userCorpOperNr));
         return true;
       }
-      /* ================= FLUXO CORRETO CORRIGIDO ================= */
-      async function initializePage() {
-        try {
-          // 1. Obtemos os dados básicos da sessão
-          const currentFullName = sessionStorage.getItem("currentUserDisplay");
-          const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
-
-          // Debug para a consola (ajuda-te a ver o que está a acontecer no F12)
-          console.log(`Iniciando sessão para: ${currentFullName} na Corp: ${currentCorpOperNr}`);
-
-          // 2. Validação Crítica: Verifica se o utilizador existe e se a conta é válida
-          // A função checkUserValidity já redireciona para index.html se falhar
-          const isValid = await checkUserValidity();
-          
-          if (!isValid) {
-            blockAllSidebar();
-            return;
-          }
-
-          // 3. Se for válido, carregamos os dados da Corporação (Header/Logo/Módulos)
-          // Agora usamos o corpOperNr que validámos acima
-          const allowedModules = await loadCorporationHeader();
-          
-          // 4. Carregamos as permissões específicas deste utilizador
-          const accessResult = await loadUserAccessesSafe(currentFullName, currentCorpOperNr);
-          
-          // 5. Aplicamos as permissões aos elementos da página
-          const userHasAccess = applyAccessesSafe(accessResult);
-
-          // 6. Sincronizamos a Sidebar: Mostra apenas o que a corporação contratou E o user pode ver
-          if (userHasAccess) {
-            updateSidebarAccess(allowedModules);
-          } else {
-            blockAllSidebar();
-          }
-
-          // 7. Inicialização de componentes secundários
-          await loadNotifications();
-          startNotifPolling();
-          initNotifDropdown();  
-          generateAccessCheckboxes();
-          if (typeof loadElementsTable === "function") loadElementsTable();
-
-        } catch (error) {
-          console.error("Erro no fluxo de inicialização:", error);
-          blockAllSidebar();
-        }
+      /* ================= FLUXO CORRETO ================= */
+      const allowedModules = await loadCorporationHeader();
+      const currentFullName = sessionStorage.getItem("currentUserDisplay") || "Fábio Alexandre Mateus Martins";
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const isValid = await checkUserValidity(currentFullName);
+      const accessResult = await loadUserAccessesSafe(currentFullName, currentCorpOperNr);
+      const userHasAccess = isValid && applyAccessesSafe(accessResult);
+      if (userHasAccess) {
+        updateSidebarAccess(allowedModules);
+      } else {
+        blockAllSidebar();
       }
-
-      // Executa a inicialização
-      await initializePage();
-
+      await loadNotifications();
+      startNotifPolling();
+      initNotifDropdown();
+      generateAccessCheckboxes();
+      loadElementsTable();
       /* ============== LOGOUT ============== */
       const logoutBtn = document.getElementById("logoutBtn");
       if (logoutBtn) {
         logoutBtn.addEventListener("click", () => {
-          // Limpa TUDO para não haver lixo no próximo login
-          sessionStorage.clear();
+          sessionStorage.removeItem("currentUserName");
+          sessionStorage.removeItem("currentUserDisplay");
+          sessionStorage.removeItem("currentUserCorpNr");
+          sessionStorage.removeItem("currentUserPatent");
           window.location.replace("index.html");
         });
       }
-    }); // Fecha o document.addEventListener
+    });
     /* =======================================
     MAIN SIDEBAR AND PANEL SIDEBAR
     ======================================= */

@@ -267,9 +267,7 @@
     /* =======================================
     FIREFIGHTER LISTING
     ======================================= */
-    sessionStorage.setItem("currentUserRole");
-    sessionStorage.setItem("currentCorpOperNr");
-    let currentEditId = null;
+   
     const ACCESS_OPTIONS = [
       {label: "Menu Principal"},
       {label: "Gestão DECIR", children: [

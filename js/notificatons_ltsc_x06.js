@@ -1,3 +1,6 @@
+    /* =======================================
+    NOTIFICATIONS
+    ======================================= */
     function setNotifCount(n) {
       const btn = document.getElementById("notifBtn");
       const badge = document.getElementById("notifBadge");
@@ -89,14 +92,16 @@
           dropdown.appendChild(empty);
           return;
         }
-        unread.forEach(notif => {
+        for (const notif of unread) {
           const item = document.createElement("div");
           Object.assign(item.style, {padding: "10px 14px", borderBottom: "1px solid #f0f0f0", cursor: "pointer", transition: "background .15s"});
           item.addEventListener("mouseenter", () => item.style.background = "#fdf5f5");
           item.addEventListener("mouseleave", () => item.style.background = "#fff");
           const from = document.createElement("div");
           Object.assign(from.style, {fontSize: "11px", color: "#999", marginBottom: "3px"});
-          from.textContent = `De: ${notif.n_int_from || "Sistema"} · ${new Date(notif.created_at).toLocaleString("pt-PT")}`;
+          const abvName = await getAbvNameByNInt(notif.n_int_from);
+          const fromLabel = notif.n_int_from ? `${notif.n_int_from}${abvName ? ` - ${abvName}` : ""}` : "Sistema";
+          from.textContent = `De: ${fromLabel} · ${new Date(notif.created_at).toLocaleString("pt-PT")}`;
           const msg = document.createElement("div");
           Object.assign(msg.style, {fontSize: "13px", color: "#333", fontWeight: "600", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"});
           msg.textContent = notif.message;
@@ -106,12 +111,23 @@
             openNotifModal(notif);
           });
           dropdown.appendChild(item);
-        });
+        }
       } catch(err) {
         console.error("Erro ao carregar notificações:", err);
       }
     }
-    function openNotifModal(notif) {
+    async function getAbvNameByNInt(nInt) {
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      try {
+        const data = await supabaseFetch(
+          `reg_elems?corp_oper_nr=eq.${corpOperNr}&n_int=eq.${nInt}&select=abv_name&limit=1`
+        );
+        return data?.[0]?.abv_name || "";
+      } catch {
+        return "";
+      }
+    }
+    async function openNotifModal(notif) {
       document.getElementById("notif-modal")?.remove();
       const nInt = sessionStorage.getItem("currentNInt") || "205";
       const corpNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
@@ -133,7 +149,9 @@
       Object.assign(body.style, {padding: "20px", display: "flex", flexDirection: "column", gap: "10px"});    
       const from = document.createElement("div");
       Object.assign(from.style, {fontSize: "12px", color: "#999"});
-      from.textContent = `De: ${notif.n_int_from || "Sistema"} · ${new Date(notif.created_at).toLocaleString("pt-PT")}`;    
+      const abvName = await getAbvNameByNInt(notif.n_int_from);
+      const fromLabel = notif.n_int_from ? `${notif.n_int_from}${abvName ? ` - ${abvName}` : ""}` : "Sistema";
+      from.textContent = `De: ${fromLabel} · ${new Date(notif.created_at).toLocaleString("pt-PT")}`;    
       const msg = document.createElement("div");
       Object.assign(msg.style, {fontSize: "14px", color: "#333", lineHeight: "1.6", background: "#fdf5f5", padding: "12px", borderRadius: "8px", border: "1px solid #f5d0d0"});
       msg.textContent = notif.message;

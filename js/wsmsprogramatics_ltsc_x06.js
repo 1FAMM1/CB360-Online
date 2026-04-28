@@ -758,8 +758,8 @@
     ======================================= */
     /* ============== FIELD VALIDATION ============== */
     function validateAvailabilityForm() {
-      const fields = [{id: 'solicitation_type', label: 'Tipo de Solicitação'}, {id: 'solicitation_motive', label: 'Motivo'}, {id: 'solicitation_shift', label: 'Turno'},
-                      {id: 'exit_hour', label: 'Hora de Saída'}, {id: 'uls_desteny', label: 'Destino'}, {id: 'drivers', label: 'Motoristas'}, {id: 'elements', label: 'Elementos'}];
+      const fields = [{id: 'solicitation_type', label: 'Tipo de Solicitação'}, {id: 'solicitation_motive', label: 'Motivo'},
+                      {id: 'solicitation_shift', label: 'Turno'}, {id: 'exit_hour', label: 'Hora de Saída'}, {id: 'uls_desteny', label: 'Destino'}];
       const typeSelect = document.getElementById('solicitation_type')?.value;
       const missing = [];
       fields.forEach(f => {

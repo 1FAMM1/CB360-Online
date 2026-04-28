@@ -9,8 +9,8 @@
       /* ===================== VERIFICAÇÃO DE VALIDADE ===================== */
       async function checkUserValidity() {
         try {
-          const nInt = sessionStorage.getItem("currentNInt") || "205";
-          const corpNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+          const nInt = sessionStorage.getItem("currentNInt");
+          const corpNr = sessionStorage.getItem("currentCorpOperNr");
           if (!nInt || !corpNr) {
             window.location.href = "index.html";
             return false;
@@ -92,7 +92,7 @@
       /* ======================= LOAD COPORATION DATA ====================== */
       async function loadCorporationHeader() {
         try {
-          const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+          const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
           const response = await fetch(
             `${SUPABASE_URL}/rest/v1/corporation_data?select=corporation,logo_url,corp_oper_nr,allowed_modules&corp_oper_nr=eq.${corpOperNr}`, { 
               headers: getSupabaseHeaders() 
@@ -147,7 +147,7 @@
       /* ========== BLOCK ELEMENTS =========== */
       function blockIfNoAccess(el, accesses, userCorpOperNr) {
         const requiredAccess = el.getAttribute('data-access');
-        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
         if (!requiredAccess) return;
         if (currentCorpOperNr !== userCorpOperNr) {
           el.disabled = true;
@@ -201,8 +201,8 @@
       }
       /* ================= FLUXO CORRETO ================= */
       const allowedModules = await loadCorporationHeader();
-      const currentFullName = sessionStorage.getItem("currentUserDisplay") || "Fábio Alexandre Mateus Martins";
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const currentFullName = sessionStorage.getItem("currentUserDisplay");
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const isValid = await checkUserValidity(currentFullName);
       const accessResult = await loadUserAccessesSafe(currentFullName, currentCorpOperNr);
       const userHasAccess = isValid && applyAccessesSafe(accessResult);

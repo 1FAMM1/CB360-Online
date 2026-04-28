@@ -89,34 +89,35 @@
           }
         });
       }
-      /* ======================= LOAD COPORATION DATA ====================== */
+      /* ======================= LOAD CORPORATION DATA ====================== */
       async function loadCorporationHeader() {
-  try {
-    const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
-    const response = await fetch(
-      `${SUPABASE_URL}/rest/v1/corporation_data?select=corporation,logo_url,corp_oper_nr,allowed_modules&corp_oper_nr=eq.${corpOperNr}`, { 
-        headers: getSupabaseHeaders() 
+        try {
+          const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+          const response = await fetch(
+            `${SUPABASE_URL}/rest/v1/corporation_data?select=corporation,logo_url,corp_oper_nr,allowed_modules&corp_oper_nr=eq.${corpOperNr}`, { 
+              headers: getSupabaseHeaders() 
+            }
+          );
+          const data = await response.json();
+          if (data && data.length > 0) {
+            const corp = data[0];
+            const titleEl = document.querySelector('.header-title');
+            const logoEl = document.querySelector('.cb-logo img');
+            const nrEl = document.querySelector('.header-nr');
+            if (titleEl) titleEl.textContent = corp.corporation;
+            if (logoEl && corp.logo_url) logoEl.src = corp.logo_url;
+            // ✅ CORRIGIDO: atualiza o sessionStorage com o corp_oper_nr correto
+            if (nrEl) nrEl.textContent = corp.corp_oper_nr;
+            sessionStorage.setItem("currentCorpOperNr", corp.corp_oper_nr);
+            const allowedModulesString = corp.allowed_modules || "";
+            return allowedModulesString.split(",").map(m => m.trim()).filter(m => m);
+          }
+          return [];
+        } catch (error) {
+          console.error("Erro ao carregar header da corporação:", error);
+          return [];
+        }
       }
-    );
-    const data = await response.json();
-    if (data && data.length > 0) {
-      const corp = data[0];
-      const titleEl = document.querySelector('.header-title');
-      const logoEl = document.querySelector('.cb-logo img');
-      const nrEl = document.querySelector('.header-nr');
-      if (titleEl) titleEl.textContent = corp.corporation;
-      if (logoEl && corp.logo_url) logoEl.src = corp.logo_url;
-      if (nrEl) nrEl.textContent = corp.corp_oper_nr;    
-      const allowedModulesString = corp.allowed_modules || "";
-      // ✅ REMOVIDO: sessionStorage.setItem("allowedModules", allowedModulesString);
-      return allowedModulesString.split(",").filter(m => m.trim());
-    }
-    return [];
-  } catch (error) {
-    console.error("Erro ao carregar header da corporação:", error);
-    return [];
-  }
-}
       /* ========== USER ACCESSES =========== */
       async function loadUserAccessesSafe(fullName, corpOperNr) {
         if (!fullName || !corpOperNr) {
@@ -220,10 +221,8 @@
       const logoutBtn = document.getElementById("logoutBtn");
       if (logoutBtn) {
         logoutBtn.addEventListener("click", () => {
-          sessionStorage.removeItem("currentUserName");
-          sessionStorage.removeItem("currentUserDisplay");
-          sessionStorage.removeItem("currentUserCorpNr");
-          sessionStorage.removeItem("currentUserPatent");
+          // ✅ CORRIGIDO: limpa todo o sessionStorage de uma vez
+          sessionStorage.clear();
           window.location.replace("index.html");
         });
       }

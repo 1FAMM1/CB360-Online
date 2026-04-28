@@ -1,12 +1,13 @@
     /* =======================================
     LOAD MAIN DATA
     ======================================= */
-    document.addEventListener('DOMContentLoaded', async () => {
+    document.addEventListener('DOMContentLoaded', async () => {      
+      const currentUser = sessionStorage.getItem("currentUserName") || "FMartins";
       const currentUserDisplay = sessionStorage.getItem("currentUserDisplay");
       const authNameEl = document.getElementById('authName');
       if (authNameEl) authNameEl.textContent = currentUserDisplay || "";
-     /* ========== VALIDITY CHECK ========== */
-     async function checkUserValidity() {
+      /* ===================== VERIFICAÇÃO DE VALIDADE ===================== */
+      async function checkUserValidity() {
         try {
           const nInt = sessionStorage.getItem("currentNInt");
           const corpNr = sessionStorage.getItem("currentCorpOperNr");
@@ -50,7 +51,7 @@
           return false;
         }
       }
-      /* ===== SIDEBAR SYNCHRONIZATION ====== */
+      /* ====================== SINCRONIZAÇÃO SIDEBAR ====================== */
       function updateSidebarAccess(allowedModules) {
         const sidebarButtons = document.querySelectorAll(".sidebar-menu-button, .sidebar-submenu-button, .sidebar-sub-submenu-button");
         sidebarButtons.forEach(btn => {
@@ -62,7 +63,7 @@
           }
         });
       }
-      /* ========== BLOCK SIDEBAR =========== */      
+      /* ===================== BLOQUEIA SIDEBAR COMPLETAMENTE ===================== */
       function blockAllSidebar() {
         const sidebarButtons = document.querySelectorAll(".sidebar-menu-button, .sidebar-submenu-button, .sidebar-sub-submenu-button");
         sidebarButtons.forEach(btn => {
@@ -87,24 +88,28 @@
             btn.dataset.blocked = "true";
           }
         });
-      }      
-      /* ========= LOAD CORPORATION ========= */
+      }
+      /* ======================= LOAD COPORATION DATA ====================== */
       async function loadCorporationHeader() {
         try {
           const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
           const response = await fetch(
-            `${SUPABASE_URL}/rest/v1/corporation_data?select=corporation,logo_url,corp_oper_nr,allowed_modules&corp_oper_nr=eq.${corpOperNr}`, {
-              headers: getSupabaseHeaders()
+            `${SUPABASE_URL}/rest/v1/corporation_data?select=corporation,logo_url,corp_oper_nr,allowed_modules&corp_oper_nr=eq.${corpOperNr}`, { 
+              headers: getSupabaseHeaders() 
             }
           );
           const data = await response.json();
           if (data && data.length > 0) {
             const corp = data[0];
-            if (document.querySelector('.header-title')) document.querySelector('.header-title').textContent = corp.corporation;
-            if (document.querySelector('.cb-logo img') && corp.logo_url) document.querySelector('.cb-logo img').src = corp.logo_url;
-            if (document.querySelector('.header-nr')) document.querySelector('.header-nr').textContent = corp.corp_oper_nr;
+            const titleEl = document.querySelector('.header-title');
+            const logoEl = document.querySelector('.cb-logo img');
+            const nrEl = document.querySelector('.header-nr');
+            if (titleEl) titleEl.textContent = corp.corporation;
+            if (logoEl && corp.logo_url) logoEl.src = corp.logo_url;
+            if (nrEl) nrEl.textContent = corp.corp_oper_nr;    
             const allowedModulesString = corp.allowed_modules || "";
-            return allowedModulesString.split(",").map(m => m.trim()).filter(m => m);
+            sessionStorage.setItem("allowedModules", allowedModulesString);
+            return allowedModulesString.split(",").filter(m => m.trim());
           }
           return [];
         } catch (error) {
@@ -112,53 +117,113 @@
           return [];
         }
       }
-      /* ========== APPLY ACCESSES ========== */      
-      function applyAccessesSafe(accesses) {
+      /* ========== USER ACCESSES =========== */
+      async function loadUserAccessesSafe(fullName, corpOperNr) {
+        if (!fullName || !corpOperNr) {
+          return {acess: [], corpOperNr};
+        }    
+        const corpOperNrString = String(corpOperNr).trim();    
+        try {
+          const url = `${SUPABASE_URL}/rest/v1/reg_elems?select=acess,section,corp_oper_nr&full_name=eq.${encodeURIComponent(fullName)}&corp_oper_nr=eq.${corpOperNrString}`;
+          const response = await fetch(url, { headers: getSupabaseHeaders() });
+          if (!response.ok) throw new Error("Erro ao buscar dados do usuário");
+          const data = await response.json();
+          const correctRecords = data.filter(record => {
+            const recordCorpNr = String(record.corp_oper_nr).trim();
+            return recordCorpNr === corpOperNrString;
+          });    
+          if (!correctRecords.length) {
+            console.warn(`❌ Nenhum acesso encontrado para ${fullName} na corporação ${corpOperNrString}`);
+            return { acess: [], corpOperNr: corpOperNrString };
+          }
+          const firstRecord = correctRecords[0];
+          const accesses = firstRecord.acess?.split(",").map(a => a.trim()).filter(a => a) || [];
+          return { acess: accesses, corpOperNr: corpOperNrString };
+        } catch (err) {
+          console.error("❌ ERRO:", err);
+          return { acess: [], corpOperNr: corpOperNrString };
+        }
+      }
+      /* ========== BLOCK ELEMENTS =========== */
+      function blockIfNoAccess(el, accesses, userCorpOperNr) {
+        const requiredAccess = el.getAttribute('data-access');
         const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
-        const allDataAccess = document.querySelectorAll('[data-access]');
+        if (!requiredAccess) return;
+        if (currentCorpOperNr !== userCorpOperNr) {
+          el.disabled = true;
+          el.style.opacity = 0.5;
+          el.style.cursor = "not-allowed";
+          if (!el.dataset.accessListener) {
+            el.addEventListener('click', e => {
+              e.preventDefault();
+              e.stopPropagation();
+              alert(`❌ Acesso negado: corporação não corresponde.`);
+            });
+            el.dataset.accessListener = "true";
+          }
+          return;
+        }
+        if (!accesses.includes(requiredAccess)) {
+          el.disabled = true;
+          el.style.opacity = 0.5;
+          el.style.cursor = "not-allowed";
+          if (!el.dataset.accessListener) {
+            el.addEventListener('click', e => {
+              e.preventDefault();
+              e.stopPropagation();
+              alert(`❌ Acesso negado: você não tem permissão para "${requiredAccess}".`);
+            });
+            el.dataset.accessListener = "true";
+          }
+        }
+      }
+      /* ========== APPLY ACCESSES =========== */
+      function applyAccessesSafe(accessesObj) {
+        const { acess: accesses, corpOperNr: userCorpOperNr } = accessesObj;
         if (!accesses || accesses.length === 0) {
-          allDataAccess.forEach(el => {
+          document.querySelectorAll('[data-access]').forEach(el => {
             el.disabled = true;
             el.style.opacity = 0.5;
             el.style.cursor = "not-allowed";
-          });
+            if (!el.dataset.accessListener) {
+              el.addEventListener('click', e => {
+                e.preventDefault();
+                e.stopPropagation();
+                alert(`❌ Acesso negado: você não tem permissões registadas.`);
+              });
+              el.dataset.accessListener = "true";
+            }
+          });          
           return false;
         }
-        allDataAccess.forEach(el => {
-          const required = el.getAttribute('data-access');
-          if (!accesses.includes(required)) {
-            el.disabled = true;
-            el.style.opacity = 0.5;
-            el.style.cursor = "not-allowed";
-            if (!el.dataset.listenerAdded) {
-              el.addEventListener('click', (e) => {
-                e.preventDefault();
-                alert(`Acesso negado a: ${required}`);
-              }, true);
-              el.dataset.listenerAdded = "true";
-            }          
-          }
-        });
+        document.querySelectorAll('[data-access]').forEach(el => blockIfNoAccess(el, accesses, userCorpOperNr));
         return true;
       }
-      /* ========== EXECUTION FLOW ========== */
-      const isValid = await checkUserValidity();
+      /* ================= FLUXO CORRETO ================= */
       const allowedModules = await loadCorporationHeader();
-      const userAccessStr = sessionStorage.getItem("allowedModules") || "";
-      const userAccessArray = userAccessStr.split(",").map(a => a.trim());
-      if (isValid && userAccessArray.length > 0) {
+      const currentFullName = sessionStorage.getItem("currentUserDisplay");
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const isValid = await checkUserValidity(currentFullName);
+      const accessResult = await loadUserAccessesSafe(currentFullName, currentCorpOperNr);
+      const userHasAccess = isValid && applyAccessesSafe(accessResult);
+      if (userHasAccess) {
         updateSidebarAccess(allowedModules);
-        applyAccessesSafe(userAccessArray);
       } else {
         blockAllSidebar();
       }
-      if (typeof generateAccessCheckboxes === "function") generateAccessCheckboxes();
-      if (typeof loadElementsTable === "function") loadElementsTable();
+      await loadNotifications();
+      startNotifPolling();
+      initNotifDropdown();  
+      generateAccessCheckboxes();
+      loadElementsTable();
       /* ============== LOGOUT ============== */
       const logoutBtn = document.getElementById("logoutBtn");
       if (logoutBtn) {
         logoutBtn.addEventListener("click", () => {
-          sessionStorage.clear();
+          sessionStorage.removeItem("currentUserName");
+          sessionStorage.removeItem("currentUserDisplay");
+          sessionStorage.removeItem("currentUserCorpNr");
+          sessionStorage.removeItem("currentUserPatent");
           window.location.replace("index.html");
         });
       }

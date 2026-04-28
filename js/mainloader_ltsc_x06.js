@@ -199,35 +199,68 @@
         document.querySelectorAll('[data-access]').forEach(el => blockIfNoAccess(el, accesses, userCorpOperNr));
         return true;
       }
-      /* ================= FLUXO CORRETO ================= */
-      const allowedModules = await loadCorporationHeader();
-      const currentFullName = sessionStorage.getItem("currentUserDisplay");
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
-      const isValid = await checkUserValidity(currentFullName);
-      const accessResult = await loadUserAccessesSafe(currentFullName, currentCorpOperNr);
-      const userHasAccess = isValid && applyAccessesSafe(accessResult);
-      if (userHasAccess) {
-        updateSidebarAccess(allowedModules);
-      } else {
-        blockAllSidebar();
+      /* ================= FLUXO CORRETO CORRIGIDO ================= */
+      async function initializePage() {
+        try {
+          // 1. Obtemos os dados básicos da sessão
+          const currentFullName = sessionStorage.getItem("currentUserDisplay");
+          const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
+
+          // Debug para a consola (ajuda-te a ver o que está a acontecer no F12)
+          console.log(`Iniciando sessão para: ${currentFullName} na Corp: ${currentCorpOperNr}`);
+
+          // 2. Validação Crítica: Verifica se o utilizador existe e se a conta é válida
+          // A função checkUserValidity já redireciona para index.html se falhar
+          const isValid = await checkUserValidity();
+          
+          if (!isValid) {
+            blockAllSidebar();
+            return;
+          }
+
+          // 3. Se for válido, carregamos os dados da Corporação (Header/Logo/Módulos)
+          // Agora usamos o corpOperNr que validámos acima
+          const allowedModules = await loadCorporationHeader();
+          
+          // 4. Carregamos as permissões específicas deste utilizador
+          const accessResult = await loadUserAccessesSafe(currentFullName, currentCorpOperNr);
+          
+          // 5. Aplicamos as permissões aos elementos da página
+          const userHasAccess = applyAccessesSafe(accessResult);
+
+          // 6. Sincronizamos a Sidebar: Mostra apenas o que a corporação contratou E o user pode ver
+          if (userHasAccess) {
+            updateSidebarAccess(allowedModules);
+          } else {
+            blockAllSidebar();
+          }
+
+          // 7. Inicialização de componentes secundários
+          await loadNotifications();
+          startNotifPolling();
+          initNotifDropdown();  
+          generateAccessCheckboxes();
+          if (typeof loadElementsTable === "function") loadElementsTable();
+
+        } catch (error) {
+          console.error("Erro no fluxo de inicialização:", error);
+          blockAllSidebar();
+        }
       }
-      await loadNotifications();
-      startNotifPolling();
-      initNotifDropdown();  
-      generateAccessCheckboxes();
-      loadElementsTable();
+
+      // Executa a inicialização
+      await initializePage();
+
       /* ============== LOGOUT ============== */
       const logoutBtn = document.getElementById("logoutBtn");
       if (logoutBtn) {
         logoutBtn.addEventListener("click", () => {
-          sessionStorage.removeItem("currentUserName");
-          sessionStorage.removeItem("currentUserDisplay");
-          sessionStorage.removeItem("currentUserCorpNr");
-          sessionStorage.removeItem("currentUserPatent");
+          // Limpa TUDO para não haver lixo no próximo login
+          sessionStorage.clear();
           window.location.replace("index.html");
         });
       }
-    });
+    }); // Fecha o document.addEventListener
     /* =======================================
     MAIN SIDEBAR AND PANEL SIDEBAR
     ======================================= */

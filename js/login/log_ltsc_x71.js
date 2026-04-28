@@ -1,4 +1,6 @@
-      async function loginUser(user, pass) {
+     /* ================= LOGIN ================= */
+
+async function loginUser(user, pass) {
   try {
     const response = await fetch(
       `${SUPABASE_URL}/rest/v1/users?username=eq.${user}&select=username,password,full_name,corp_oper_nr,n_int,validate&limit=1`,
@@ -9,7 +11,6 @@
 
     const data = await response.json();
 
-    // 🔒 Validação básica
     if (!data || data.length === 0) {
       showToast("Utilizador não encontrado.", 2000, "error");
       return;
@@ -17,15 +18,15 @@
 
     const userData = data[0];
 
-    console.log("LOGIN DEBUG USER:", userData);
+    console.log("LOGIN DEBUG:", userData);
 
-    // 🔐 Password
+    // 🔐 PASSWORD
     if (userData.password !== pass) {
       showToast("Password incorreta.", 2000, "error");
       return;
     }
 
-    // 📅 Validade
+    // 📅 VALIDADE
     if (userData.validate) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -43,7 +44,7 @@
       }
     }
 
-    // 🏢 Corporação (SEM fallback!)
+    // 🏢 CORP
     const corp = userData.corp_oper_nr;
 
     if (!corp) {
@@ -54,7 +55,7 @@
 
     console.log("CORP DETETADO:", corp);
 
-    // 👤 Buscar reg_elems (acessos)
+    // 👤 REG_ELEMS
     const regResp = await fetch(
       `${SUPABASE_URL}/rest/v1/reg_elems?select=user_role,elem_state,acess&n_int=eq.${userData.n_int}&corp_oper_nr=eq.${corp}`,
       { headers: getSupabaseHeaders() }
@@ -66,13 +67,12 @@
 
     console.log("REG DATA:", regData);
 
-    // 🚫 Conta inativa
     if (regData.length > 0 && regData[0].elem_state === false) {
       showToast("Conta inativa nesta corporação.", 3000, "error");
       return;
     }
 
-    // 💾 GUARDAR SESSION (fonte única!)
+    /* ========== SESSION STORAGE (FONTE ÚNICA) ========== */
     sessionStorage.setItem("currentUserDisplay", userData.full_name);
     sessionStorage.setItem("currentUserName", userData.username);
     sessionStorage.setItem("currentCorpOperNr", corp);
@@ -88,7 +88,7 @@
 
     showToast("Login efetuado com sucesso!", 2000, "success");
 
-    // 🚀 Redirecionamento correto
+    /* ========== REDIRECT ========== */
     const userRole = regData[0]?.user_role || "user";
 
     setTimeout(() => {
@@ -104,3 +104,98 @@
     showToast("Erro ao validar acesso.", 3000, "error");
   }
 }
+
+/* ================= FORM SUBMIT ================= */
+
+document.getElementById("loginForm").addEventListener("submit", e => {
+  e.preventDefault();
+
+  const user = document.getElementById("username").value.trim();
+  const pass = document.getElementById("password").value.trim();
+
+  if (!user || !pass) {
+    showToast("Preencha todos os campos.", 2000, "error");
+    return;
+  }
+
+  loginUser(user, pass);
+});
+
+/* ================= TOGGLE PASSWORD ================= */
+
+const togglePassword = document.getElementById("togglePassword");
+const passwordInput = document.getElementById("password");
+
+if (togglePassword && passwordInput) {
+  togglePassword.addEventListener("click", () => {
+    const type = passwordInput.type === "password" ? "text" : "password";
+    passwordInput.type = type;
+
+    togglePassword.classList.toggle("fa-eye");
+    togglePassword.classList.toggle("fa-eye-slash");
+  });
+}
+
+/* ================= TOAST ================= */
+
+function showToast(message, duration = 2000, type = "error") {
+  let toast = document.getElementById("toast");
+
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "toast";
+    toast.className = "toast";
+    document.body.appendChild(toast);
+  }
+
+  toast.textContent = message;
+  toast.className = "toast show";
+
+  if (type === "success") toast.classList.add("success");
+
+  setTimeout(() => {
+    toast.classList.remove("show");
+  }, duration);
+}
+
+/* ================= GREETING + CLOCK ================= */
+
+function updateGreeting() {
+  const now = new Date();
+  const hour = now.getHours();
+
+  let greetingText = "🌙 Boa noite";
+  if (hour >= 6 && hour < 12) greetingText = "☀️ Bom dia";
+  else if (hour >= 12 && hour < 19) greetingText = "🌤️ Boa tarde";
+
+  const greetingEl = document.getElementById("greetingText");
+  const clockEl = document.getElementById("clock");
+
+  if (greetingEl) greetingEl.textContent = greetingText;
+
+  if (clockEl) {
+    clockEl.textContent = now.toLocaleTimeString("pt-PT", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit"
+    });
+  }
+}
+
+function startClock() {
+  updateGreeting();
+
+  const now = new Date();
+
+  setTimeout(() => {
+    updateGreeting();
+    setInterval(updateGreeting, 1000);
+  }, 1000 - now.getMilliseconds());
+}
+
+startClock();
+
+/* ================= AUTO FOCUS ================= */
+
+const usernameInput = document.getElementById("username");
+if (usernameInput) usernameInput.focus();

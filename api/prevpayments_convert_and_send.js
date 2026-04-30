@@ -86,7 +86,7 @@
         sheet.getCell('B38').value = `${now.getDate()} de ${MONTH_NAMES_PT[now.getMonth()]} de ${now.getFullYear()}`;
         sheet.pageSetup = {orientation: "portrait", paperSize: 9, fitToPage: true,
                            fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
-                           margins: {left: 0.3, right: 0.3, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3}};
+                           margins: {left: 0.3, right: 0.7, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3}};
         const safeFileName = `pagamento_prevencoes_${year}_${String(month).padStart(2, '0')}`;
         if (format === 'pdf') {
           const xlsxBuffer = await workbook.xlsx.writeBuffer();

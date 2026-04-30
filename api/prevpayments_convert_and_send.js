@@ -104,7 +104,7 @@ export default async function handler(req, res) {
     sheet.getCell('G31').value = '=IFERROR(SUM(D9:D28,H9:H28),"")';
 
     sheet.pageSetup = {
-      orientation: "landscape", paperSize: 9, fitToPage: true,
+      orientation: "portrait", paperSize: 9, fitToPage: true,
       fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
       margins: { left: 0.3, right: 0.3, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3 }
     };

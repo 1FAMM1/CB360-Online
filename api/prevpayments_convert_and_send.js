@@ -88,12 +88,12 @@ export default async function handler(req, res) {
 
     rows.forEach((item, idx) => {
       if (idx < MAX_PER_SIDE) {
-        const rowNum = 9 + idx;
+        const rowNum = 10 + idx;
         sheet.getCell(`B${rowNum}`).value = item.n_int || '';
         sheet.getCell(`C${rowNum}`).value = item.abv_name || '';
         sheet.getCell(`D${rowNum}`).value = parseFloat(item.total) || 0;
       } else {
-        const rowNum = 9 + (idx - MAX_PER_SIDE);
+        const rowNum = 10 + (idx - MAX_PER_SIDE);
         sheet.getCell(`F${rowNum}`).value = item.n_int || '';
         sheet.getCell(`G${rowNum}`).value = item.abv_name || '';
         sheet.getCell(`H${rowNum}`).value = parseFloat(item.total) || 0;

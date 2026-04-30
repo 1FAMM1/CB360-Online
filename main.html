@@ -1103,6 +1103,152 @@
         </div>
       </div>
     </div>
+    <!---- VOLUNTEER SERVICES ---->
+    <!---- VOLUNTEER SERVICES REGISTER ---->
+    <div id="volunteer-services-register" class="page" style="display:none;">
+      <div class="major-card last-card">
+        <div class="major-card-header header-red">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
+            <path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"></path>
+            <path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"></path>
+            <path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"></path>
+            <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"></path>
+          </svg>
+          REGISTO DE SERVIÇOS VOLUNTARIADO
+        </div>
+        <div class="major-card-body">
+          <div class="volunteer-service-section-label">Tipologia de Serviço</div>
+          <div class="major-row" style="margin: 15px 0;">
+            <div class="major-field">
+              <label for="vsDate">Data do Serviço</label>
+              <input type="date" id="vsDate" style="width: 175px;">
+            </div>
+            <div class="major-field">
+              <label for="vsType">Tipo de Serviço</label>
+              <select id="vsType" style="width: 350px;">
+                <option value="">Selecione...</option>
+                <option value="PREVENÇÃO">PREVENÇÃO</option>
+                <option value="TRANSPORTE DE DOENTES">TRANSPORTE DE DOENTES</option>
+                <option value="INEM">INEM</option>
+                <option value="SERVIÇO GERAL">SERVIÇO GERAL</option>
+                <option value="CENTRAL">CENTRAL</option>
+                <option value="EIP">EIP</option>
+                <option value="OUTRO">OUTRO</option>
+              </select>
+            </div>
+            <div class="major-field">
+              <label for="vsLocal">Local</label>
+              <input type="text" id="vsLocal" placeholder="Exp. Lisboa" style="width: 350px;">
+            </div>
+          </div>
+          <div class="volunteer-service-section-label">Transporte de Doentes\INEM\Serviço Geral\Central\EIP</div>
+          <div class="major-row" style="margin: 15px 0 5px 0;">
+            <div class="major-field">
+              <label for="vsValue">Valor €</label>
+              <input type="number" id="vsValue" step="0.50" placeholder="0.00" style="width: 100px; text-align: center;">
+            </div>
+          </div>
+          <div class="major-row">
+            <div class="major-field">
+              <label for="vsQtdSick">Qtd. +Doentes</label>
+              <input type="text" id="vsQtdSick" placeholder="00" style="width: 100px; text-align: center;">
+            </div>
+            <div class="major-field">
+              <label for="vsSickValue">Valor €</label>
+              <input type="number" id="vsSickValue" step="0.50" placeholder="0.00" style="width: 100px; text-align: center;" readonly tabindex="-1">
+            </div>
+            <div class="major-field" style="margin-left: 15px;">
+              <label for="vsWaitHrs">Hrs. Espera</label>
+              <input type="text" id="vsWaitHrs" placeholder="00" style="width: 100px; text-align: center;">
+            </div>
+            <div class="major-field">
+              <label for="vsWaitHrsValue">Valor €</label>
+              <input type="number" id="vsWaitHrsValue" step="0.50" placeholder="0.00" style="width: 100px; text-align: center;" readonly tabindex="-1">
+            </div>
+          </div>
+          <div class="volunteer-service-section-label" style="margin: 15px 0;">Prevenções</div>
+          <div class="major-row" style="margin: 0 0 5px 0;">
+            <div class="major-field">
+              <label for="vsPrevValueHour">Valor Hora €</label>
+              <input type="number" id="vsPrevValueHour" step="0.50" placeholder="0.00" style="width: 100px; text-align: center;">
+            </div>
+          </div>
+          <div class="major-row">
+            <div class="major-field">
+              <label for="vsQtdPrevHours">Qtd. Horas</label>
+              <input type="text" id="vsQtdPrevHours" placeholder="00" style="width: 100px; text-align: center;">
+            </div>
+            <div class="major-field">
+              <label for="vsPrevValue">Valor €</label>
+              <input type="number" id="vsPrevValue" step="0.50" placeholder="0.00" style="width: 100px; text-align: center;" readonly tabindex="-1">
+            </div>
+          </div>
+          <div class="volunteer-service-section-label" style="margin: 15px 0;">Elemento</div>
+          <div class="major-row" style="margin: 0 0 5px 0; align-items: center;">
+            <div class="major-field">
+              <input type="text" id="vsElementNInt" placeholder="Nº Int." style="width: 100px; text-align: center;">
+            </div>
+            <div class="major-field">
+              <input type="text" id="vsElementName" placeholder="Nome" style="width: 300px; text-align: left;" readonly tabindex="-1">
+            </div>
+            <div class="major-field" style="margin-left: auto; display: flex; flex-direction: row; align-items: center; gap: 6px;">
+              <input type="number" id="vsElementValue" step="0.50" placeholder="0.00" style="width: 100px; text-align: center; font-size: 20px !important; height: 40px !important;" readonly>
+              <span style="font-size: 13px; font-weight: 600; color: #555;">€</span>
+            </div>
+          </div>
+        </div>
+        <div class="major-card-footer">
+          <button id="services-save-button" class="btn btn-add">💾 GUARDAR</button>
+        </div>
+      </div>
+    </div>
+    <!---- VOLUNTEER SERVICES CONSULTING ---->
+    <div id="volunteer-services-consulting" class="page" style="display:none;">
+      <div class="major-card last-card">
+        <div class="major-card-header header-red">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
+            <path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"></path>
+            <path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"></path>
+            <path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"></path>
+            <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"></path>
+          </svg>
+          CONSULTA DE SERVIÇOS VOLUNTARIADO
+        </div>
+        <div class="major-card-body">
+          <div class="volunteer-service-section-label">Histórico de Serviços</div>
+          <div style="margin: 15px 0 0 0; display: flex !important; flex-direction: row !important; gap: 10px; align-items: center; justify-content: flex-start;">
+            <div class="major-field">
+              <div style="display: flex !important; flex-direction: row !important; align-items: center; gap: 10px;">              
+                <label for="vsConsYear" style="margin: 0 !important; font-weight: bold; font-size: 13px; white-space: nowrap;">Ano</label>
+                <select id="vsConsYear" style="width: 90px; padding: 4px; border: 1px solid #ccc; border-radius: 4px; height: 30px;"></select>
+              </div>
+            </div>
+            <div class="major-field">
+              <div style="display: flex !important; flex-direction: row !important; align-items: center; gap: 10px;">
+                <label for="vsConsMonth" style="margin: 0 !important; font-weight: bold; font-size: 13px; white-space: nowrap;">Mês</label>
+                <select id="vsConsMonth" style="width: 140px; padding: 4px; border: 1px solid #ccc; border-radius: 4px; height: 30px;"></select>
+              </div>
+            </div>
+          </div>
+          <div id="services-table-container"></div>
+          <div id="services-summary-container" style="display: flex; justify-content: flex-end;"></div>
+        </div>
+        <div class="major-card-footer">         
+          <div class="major-field" style="margin-right: 10px;">
+            <div style="display: flex !important; flex-direction: row !important; align-items: center; gap: 10px;">              
+              <label for="vsReportSelect" style="margin: 0 !important; font-weight: bold; font-size: 13px; white-space: nowrap;">Tipo de Relatório</label>
+              <select id="vsReportSelect" style="width: 130px; padding: 4px; border: 1px solid #ccc; border-radius: 4px; height: 30px;">
+                <option></option>
+                <option>Simplificado</option>
+                <option>Detalhado</option>
+              </select>
+            </div>
+          </div>
+          <button id="vsPDFReport" class="btn btn-danger" style="margin-right: 5px; opacity: 0.5; cursor: not-allowed;">📄 PDF</button>
+          <button id="vsEXCELReport" class="btn btn-success" style="opacity: 0.5; cursor: not-allowed;">📊 EXCEL</button>
+        </div>
+      </div>      
+    </div>
     <!---- EMPLOYEES 360 MODULE ---->
     <!---- MONTHLY SCHEDULES ---->
     <div id="page-employee-scales" class="page">

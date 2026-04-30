@@ -122,9 +122,14 @@ function fillDetailed(sheet, rows, year, month, globalTotal) {
     sheet.getCell(`N${rowNum}`).value = parseVal(item.global_value);
   });
 
-  const sumRow = 10 + rows.length + 1;
-  sheet.getCell(`M${sumRow}`).value = 'Sumatório:';
-  sheet.getCell(`N${sumRow}`).value = parseFloat(globalTotal) || 0;
+  // Sumatório sempre fixo em N46
+  sheet.getCell('N46').value = parseFloat(globalTotal) || 0;
+
+  // Ocultar linhas vazias entre o fim dos dados e a linha 44
+  const lastDataRow = 10 + rows.length - 1;
+  for (let r = lastDataRow + 1; r <= 44; r++) {
+    sheet.getRow(r).hidden = true;
+  }
 
   sheet.pageSetup = {
     orientation: "landscape", paperSize: 9, fitToPage: true,

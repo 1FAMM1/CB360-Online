@@ -252,7 +252,9 @@
           page.scrollTop = 0;
           window.scrollTo(0, 0);
           if (typeof clearFormFields === "function") clearFormFields();
-          if (typeof updateTypeSelection === "function") updateTypeSelection();
+          if (pageId === "volunteer-services-consulting") {
+            if (typeof initializeFilters === "function") initializeFilters();
+          }
         });
       }
       function closeSubmenuRecursive(menu) {

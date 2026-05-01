@@ -1138,9 +1138,9 @@
             <div class="major-field" id="container-vsLocal">
               <label for="vsLocal">Local</label>
               <select id="vsLocal" style="width: 350px;">
-                <option value="">Selecione...</option>
-                <input type="text" id="vsLocalText" placeholder="Escreva o local..." style="width: 350px; display: none;">
+                <option value="">Selecione...</option>                
               </select>
+              <input type="text" id="vsLocalText" placeholder="Escreva o local..." style="width: 350px; display: none;">
             </div>
           </div>
           <div class="volunteer-service-section-label">Transporte de Doentes\INEM\Serviço Geral\Central\EIP</div>
@@ -1231,6 +1231,14 @@
                 <select id="vsConsMonth" style="width: 140px; padding: 4px; border: 1px solid #ccc; border-radius: 4px; height: 30px;"></select>
               </div>
             </div>
+            <div class="major-field">
+              <div style="display: flex !important; flex-direction: row !important; align-items: center; gap: 10px;">
+                <label for="vsConsType" style="margin: 0 !important; font-weight: bold; font-size: 13px; white-space: nowrap;">Tipo de Serviço</label>
+                <select id="vsConsType" style="width: 200px; padding: 4px; border: 1px solid #ccc; border-radius: 4px; height: 30px;">
+                  <option value="">Todos os Tipos</option>
+                </select>
+              </div>
+            </div>
           </div>
           <div id="services-table-container"></div>
           <div id="services-summary-container" style="display: flex; justify-content: flex-end;"></div>
@@ -1307,8 +1315,7 @@
                 <input type="text" id="vsOValue" placeholder="00" style="width: 100px; text-align: center;">
               </div>
             </div>             
-          </div>
-          
+          </div>          
           <div class="volunteer-service-section-label" style="margin-bottom: 10px;">Valores Configurados</div>
           <div id="sv-values-table-container"></div>
         </div>

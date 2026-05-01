@@ -1132,18 +1132,14 @@
               <label for="vsType">Tipo de Serviço</label>
               <select id="vsType" style="width: 350px;">
                 <option value="">Selecione...</option>
-                <option value="PREVENÇÃO">PREVENÇÃO</option>
-                <option value="TRANSPORTE DE DOENTES">TRANSPORTE DE DOENTES</option>
-                <option value="INEM">INEM</option>
-                <option value="SERVIÇO GERAL">SERVIÇO GERAL</option>
-                <option value="CENTRAL">CENTRAL</option>
-                <option value="EIP">EIP</option>
-                <option value="OUTRO">OUTRO</option>
               </select>
             </div>
-            <div class="major-field">
+            <div class="major-field" id="container-vsLocal">
               <label for="vsLocal">Local</label>
-              <input type="text" id="vsLocal" placeholder="Exp. Lisboa" style="width: 350px;">
+              <select id="vsLocal" style="width: 350px;">
+                <option value="">Selecione...</option>
+                <input type="text" id="vsLocalText" placeholder="Escreva o local..." style="width: 350px; display: none;">
+              </select>
             </div>
           </div>
           <div class="volunteer-service-section-label">Transporte de Doentes\INEM\Serviço Geral\Central\EIP</div>
@@ -1251,6 +1247,72 @@
           </div>
           <button id="vsPDFReport" class="btn btn-danger" style="margin-right: 5px; opacity: 0.5; cursor: not-allowed;">📄 PDF</button>
           <button id="vsEXCELReport" class="btn btn-success" style="opacity: 0.5; cursor: not-allowed;">📊 EXCEL</button>
+        </div>
+      </div>      
+    </div>
+    <!---- VOLUNTEER SERVICES VALUES ---->
+    <div id="volunteer-services-values" class="page" style="display:none;">
+      <div class="major-card last-card">
+        <div class="major-card-header header-red">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
+            <path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"></path>
+            <path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"></path>
+            <path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"></path>
+            <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"></path>
+          </svg>
+          CONFIGURAÇÃO DE VALORES DE SERVIÇOS VOLUNTARIADO
+        </div>
+        <div class="major-card-body">
+          <div class="volunteer-service-section-label">Serviços de Longo Curso</div>    
+          <div style="margin: 15px 0 0 0; display: flex !important; flex-direction: row !important; gap: 10px; align-items: center; justify-content: flex-start;">
+            <div class="major-field">
+              <div style="display: flex !important; flex-direction: row !important; align-items: center; gap: 10px;">              
+                <label for="vsLCDesteny" style="margin: 0 !important; font-weight: bold; font-size: 13px; white-space: nowrap;">Destino</label>
+                <input type="text" id="vsLCDesteny" placeholder="Exp.: Lisboa" style="width: 250px;">
+              </div>
+            </div>
+            <div class="major-field">
+              <div style="display: flex !important; flex-direction: row !important; align-items: center; gap: 10px;">
+                <label for="vsLCValue" style="margin: 0 !important; font-weight: bold; font-size: 13px; white-space: nowrap;">Valor</label>
+                <input type="text" id="vsLCValue" placeholder="00" style="width: 100px; text-align: center;">
+              </div>
+            </div>             
+          </div>
+          <div style="margin: 5px 0 25px 0; display: flex !important; flex-direction: row !important; gap: 10px; align-items: center; justify-content: flex-start;">
+            <div class="major-field">
+              <div style="display: flex !important; flex-direction: row !important; align-items: center; gap: 10px;">              
+                <label for="vsLCESick" style="margin: 0 !important; font-weight: bold; font-size: 13px; white-space: nowrap;">Doente Extra</label>
+                <input type="text" id="vsLCESick" placeholder="00" style="width: 100px; text-align: center;">
+              </div>
+            </div>
+            <div class="major-field">
+              <div style="display: flex !important; flex-direction: row !important; align-items: center; gap: 10px;">
+                <label for="vsLCEHour" style="margin: 0 !important; font-weight: bold; font-size: 13px; white-space: nowrap;">Hora de Espera</label>
+                <input type="text" id="vsLCEHour" placeholder="00" style="width: 100px; text-align: center;">
+              </div>
+            </div>             
+          </div>
+          <div class="volunteer-service-section-label">Prevenções e Outros Serviços</div>
+          <div style="margin: 15px 0 15px 0; display: flex !important; flex-direction: row !important; gap: 10px; align-items: center; justify-content: flex-start;">
+            <div class="major-field">
+              <div style="display: flex !important; flex-direction: row !important; align-items: center; gap: 10px;">              
+                <label for="vsOType" style="margin: 0 !important; font-weight: bold; font-size: 13px; white-space: nowrap;">Tipo</label>
+                <input type="text" id="vsOType" placeholder="Exp.: INEM" style="width: 300px;">
+              </div>
+            </div>
+            <div class="major-field">
+              <div style="display: flex !important; flex-direction: row !important; align-items: center; gap: 10px;">
+                <label for="vsOValue" style="margin: 0 !important; font-weight: bold; font-size: 13px; white-space: nowrap;">Valor\Valor Hora</label>
+                <input type="text" id="vsOValue" placeholder="00" style="width: 100px; text-align: center;">
+              </div>
+            </div>             
+          </div>
+          
+          <div class="volunteer-service-section-label" style="margin-bottom: 10px;">Valores Configurados</div>
+          <div id="sv-values-table-container"></div>
+        </div>
+        <div class="major-card-footer">          
+          <button id="services-values-save-button" class="btn btn-add">💾 GUARDAR</button>
         </div>
       </div>      
     </div>

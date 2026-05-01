@@ -2,6 +2,24 @@
     SERVIÇOS VOLUNTARIADO
     ======================================= */
     /* ============= INSERÇÃO ============= */
+    let vsValuesCache = [];
+    async function loadVsValuesCache() {
+      const corpOperNr = sessionStorage.getItem('currentCorpOperNr');
+      if (!corpOperNr) return;
+      try {
+        const url = `${SUPABASE_URL}/rest/v1/reg_volunteer_services_values?corp_oper_nr=eq.${corpOperNr}&select=*`;
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: getSupabaseHeaders()
+        });
+        if (!response.ok) return;
+        vsValuesCache = await response.json();
+        populateVsTypeSelect();
+        populateVsLocalSelect();
+      } catch (err) {
+        console.error('Erro ao carregar valores:', err);
+      }
+    }
     const transportFields = ['vsValue', 'vsQtdSick', 'vsSickValue', 'vsWaitHrs', 'vsWaitHrsValue'];
     const transportValueOnly = ['vsValue'];
     const transportExtraFields = ['vsQtdSick', 'vsSickValue', 'vsWaitHrs', 'vsWaitHrsValue'];
@@ -27,8 +45,31 @@
                                    'vsQtdPrevHours', 'vsPrevValue', 'vsElementValue', 'vsElementNInt', 'vsElementName'];
     function handleVsTypeChange() {
       clearFields(typeChangeClearFields);
-      const type = document.getElementById('vsType').value;
-      switch (type) {
+      const typeValue = document.getElementById('vsType').value;
+      const typeNormalized = normalizeText(typeValue);
+      const containerLocal = document.getElementById('container-vsLocal');
+      const localSelect = document.getElementById('vsLocal');
+      const localText = document.getElementById('vsLocalText');
+      if (containerLocal) {
+        if (typeNormalized === 'transporte de doentes') {
+          containerLocal.style.display = '';
+          localSelect.style.display = 'block';
+          localText.style.display = 'none';
+          localText.value = '';
+        }
+        else if (typeNormalized === 'prevencao' || typeNormalized === 'outro') {
+          containerLocal.style.display = '';
+          localSelect.style.display = 'none';
+          localText.style.display = 'block';
+          localSelect.value = ''; 
+        }
+        else {
+          containerLocal.style.display = 'none';
+          localSelect.value = '';
+          localText.value = '';
+        }
+      }
+      switch (typeValue) {
         case 'PREVENÇÃO':
         case 'OUTRO':
           setFieldsState(transportFields, true);
@@ -50,33 +91,73 @@
           setFieldsState(transportFields, true);
           setFieldsState(prevFields, true);
           break;
-      }
+      }    
       calculateGlobalTotal();
     }
     function normalizeText(text) {
       return (text || '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
     }
     function applyRules() {
-      const type = normalizeText(document.getElementById('vsType').value);
+      const typeRaw = document.getElementById('vsType').value;
+      const type = normalizeText(typeRaw);
       const local = normalizeText(document.getElementById('vsLocal').value);
       const vsValue = document.getElementById('vsValue');
+      const vsPrevValueHour = document.getElementById('vsPrevValueHour');
+      vsValue.value = '';
+      vsPrevValueHour.value = '';
       if (type === 'transporte de doentes') {
-        if (local === 'lisboa') {
-          vsValue.value = 50;
-        } else if (local === 'coimbra') {
-          vsValue.value = 65;
+        const match = vsValuesCache.find(item => item.type === 'TRANSPORTE DE DOENTES' && normalizeText(item.desteny) === local);
+        if (match) {
+          vsValue.value = match.value || '';
+          document.getElementById('vsQtdSick')._extraSickRate = parseFloat(match.extra_sick) || 0;
+          document.getElementById('vsWaitHrs')._extraHourRate = parseFloat(match.extra_hour) || 0;
         }
-        calculateGlobalTotal();
+      } 
+      else if (type === 'prevencao' || type === 'prevencao ') {
+        const match = vsValuesCache.find(item => normalizeText(item.type) === 'prevencao');
+        if (match) {
+          vsPrevValueHour.value = match.value || '';
+        }
       }
+      else if (type !== '') {
+        const match = vsValuesCache.find(item => normalizeText(item.type) === type);
+        if (match) {
+          vsValue.value = match.value || '';
+        }
+      }
+      calculateGlobalTotal();
+    }
+    function populateVsTypeSelect() {
+      const vsType = document.getElementById('vsType');
+      if (!vsType) return;
+      const allTypes = [...new Set(vsValuesCache.map(item => item.type).filter(Boolean))].sort();
+      vsType.innerHTML = `
+        <option value="">Selecione...</option>
+        ${allTypes.map(t => `<option value="${t}">${t}</option>`).join('')}
+      `;
+    }
+    function populateVsLocalSelect() {
+      const vsLocal = document.getElementById('vsLocal');
+      if (!vsLocal) return;
+      const destinos = vsValuesCache
+      .filter(item => item.type === 'TRANSPORTE DE DOENTES' && item.desteny && item.desteny.trim() !== '-')
+      .map(item => item.desteny);
+      const uniqueDestinos = [...new Set(destinos)].sort();
+      vsLocal.innerHTML = `
+        <option value="">Selecione...</option>
+        ${uniqueDestinos.map(d => `<option value="${d}">${d}</option>`).join('')}
+      `;
     }
     function calculateSickValue() {
       const qtd = parseFloat(document.getElementById('vsQtdSick').value) || 0;
-      document.getElementById('vsSickValue').value = qtd * 5;
+      const rate = document.getElementById('vsQtdSick')._extraSickRate || 5;
+      document.getElementById('vsSickValue').value = qtd * rate;
       calculateGlobalTotal();
     }
     function calculateWaitHrsValue() {
       const hrs = parseFloat(document.getElementById('vsWaitHrs').value) || 0;
-      document.getElementById('vsWaitHrsValue').value = hrs * 3;
+      const rate = document.getElementById('vsWaitHrs')._extraHourRate || 3;
+      document.getElementById('vsWaitHrsValue').value = hrs * rate;
       calculateGlobalTotal();
     }
     function calculatePrevValue() {
@@ -125,43 +206,59 @@
       };
     }
     async function saveVolunteerService() {
-      const payload = {service_date: document.getElementById('vsDate').value || null, service_type: document.getElementById('vsType').value || null,
-                       service_local: document.getElementById('vsLocal').value || null, service_type_global_value: document.getElementById('vsValue').value || null,
+      const serviceDate = document.getElementById('vsDate').value;
+      const serviceType = document.getElementById('vsType').value;
+      const nInt = document.getElementById('vsElementNInt').value;
+      const abvName = document.getElementById('vsElementName').value;
+      const globalValue = document.getElementById('vsElementValue').value;
+      const typeNormalized = normalizeText(serviceType);
+      const valSelect = document.getElementById('vsLocal').value;
+      const valText = document.getElementById('vsLocalText').value;
+      let finalLocal = valSelect || valText;
+      if (!serviceDate || !serviceType || !nInt || !abvName) {
+        showPopup('popup-danger', 'Falta preencher campos obrigatórios.');
+        return;
+      }
+      if (typeNormalized === 'transporte de doentes' && !finalLocal) {
+        showPopup('popup-danger', 'Para este serviço, o Local é obrigatório.');
+        return;
+      }
+      const internalServices = ['CENTRAL', 'EIP', 'SERVIÇO GERAL', 'INEM'];
+      if (internalServices.includes(serviceType)) {
+        finalLocal = 'Quartel Sede';
+      }
+      const payload = {service_date: serviceDate, service_type: serviceType, service_local: finalLocal || null, service_type_global_value: document.getElementById('vsValue').value || null,
                        service_sicks: document.getElementById('vsQtdSick').value || null, service_sicks_value: document.getElementById('vsSickValue').value || null,
                        service_whait_hours: document.getElementById('vsWaitHrs').value || null, service_whait_hours_value: document.getElementById('vsWaitHrsValue').value || null,
                        prev_value_hour: document.getElementById('vsPrevValueHour').value || null, prev_total_hours: document.getElementById('vsQtdPrevHours').value || null,
-                       prev_global_value: document.getElementById('vsPrevValue').value || null, n_int: document.getElementById('vsElementNInt').value || null,
-                       abv_name: document.getElementById('vsElementName').value || null, global_value: document.getElementById('vsElementValue').value || null,
-                       corp_oper_nr: sessionStorage.getItem('currentCorpOperNr') || null,};
-      if (!payload.service_date || !payload.service_type) {
-        showPopup('popup-danger', 'Por favor preencha a Data e o Tipo de Serviço.');
-        return;
-      }
+                       prev_global_value: document.getElementById('vsPrevValue').value || null, n_int: nInt, abv_name: abvName, global_value: globalValue,
+                       corp_oper_nr: sessionStorage.getItem('currentCorpOperNr')};
       const btn = document.getElementById('services-save-button');
       const originalText = btn.innerHTML;
       btn.disabled = true;
-      btn.innerHTML = '⏳ A verificar...';
+      btn.innerHTML = '⏳ A guardar...';
       try {
         const checkUrl = `${SUPABASE_URL}/rest/v1/reg_volunteer_services?service_date=eq.${payload.service_date}&service_type=eq.${encodeURIComponent(payload.service_type)}&n_int=eq.${payload.n_int}&corp_oper_nr=eq.${payload.corp_oper_nr}&select=id`;
-        const checkResponse = await fetch(checkUrl, { method: 'GET', headers: getSupabaseHeaders() });
-        const existing = await checkResponse.json();
-        
+        const checkRes = await fetch(checkUrl, {headers: getSupabaseHeaders()});
+        const existing = await checkRes.json();
         if (existing.length > 0) {
-            showPopup('popup-danger', 'Já existe um registo para este elemento, neste tipo de serviço e nesta data.');
-            return;
+          showPopup('popup-danger', 'Já existe um registo idêntico para este elemento.');
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+          return;
         }
-        btn.innerHTML = '⏳ A guardar...';
         const response = await fetch(`${SUPABASE_URL}/rest/v1/reg_volunteer_services`, {
-            method: 'POST',
-            headers: getSupabaseHeaders({ returnRepresentation: true }),
-            body: JSON.stringify(payload)
+          method: 'POST',
+          headers: getSupabaseHeaders({returnRepresentation: true}),
+          body: JSON.stringify(payload)
         });
         if (!response.ok) throw await response.json();
-        showPopup('popup-success', 'Serviço guardado com sucesso!');
+        showPopup('popup-success', `Serviço de voluntariado guardado com sucesso, no elemento ${payload.abv_name}!`);
         clearVolunteerForm();
+        handleVsTypeChange();
       } catch (err) {
-        console.error('Erro:', err);
-        showPopup('popup-danger', 'Erro ao guardar.');
+        console.error(err);
+        showPopup('popup-danger', 'Erro ao guardar serviço.');
       } finally {
         btn.disabled = false;
         btn.innerHTML = originalText;
@@ -181,10 +278,11 @@
     }
     document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('services-save-button')?.addEventListener('click', saveVolunteerService);
+      loadVsValuesCache();
       const vsType = document.getElementById('vsType');
       const vsLocal = document.getElementById('vsLocal');
       if (vsType) {
-        vsType.addEventListener('change', () => {handleVsTypeChange();applyRules();});
+        vsType.addEventListener('change', () => {handleVsTypeChange(); applyRules();});
         handleVsTypeChange();
       }
       vsLocal?.addEventListener('change', applyRules);
@@ -220,11 +318,11 @@
           <thead>
             <tr>
               <th colspan="3" rowspan="2" style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-bottom:1px solid #aaa; padding:5px;">Data | Tipo Serviço</th>
-              <th rowspan="3" style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Valor<br>Serviço</th>
+              <th rowspan="3" style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Valor do<br>Serviço</th>
               <th colspan="3" rowspan="2" style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Prevenções</th>
-              <th colspan="4" style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Transporte Doentes</th>
+              <th colspan="4" style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Transporte de Doentes</th>
               <th rowspan="3" style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Elemento</th>
-              <th rowspan="3" style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Valor Global</th>
+              <th rowspan="3" style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Valor Global<br>a Receber</th>
             </tr>
             <tr>
               <th colspan="2" style="position:sticky; top:27px; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:4px;">Doentes Extra</th>
@@ -233,7 +331,7 @@
             <tr>
               <th style="position:sticky; top:52px; z-index:10; background-color:#d1d1d1; color:black; border-bottom:1px solid #aaa; padding:5px;">Data</th>
               <th style="position:sticky; top:52px; z-index:10; background-color:#d1d1d1; color:black; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Tipo</th>
-              <th style="position:sticky; top:52px; z-index:10; background-color:#d1d1d1; color:black; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Prevenção/<br>Destino</th>
+              <th style="position:sticky; top:52px; z-index:10; background-color:#d1d1d1; color:black; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Local</th>
               <th style="position:sticky; top:52px; z-index:10; background-color:#d1d1d1; color:black; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Valor/Hora</th>
               <th style="position:sticky; top:52px; z-index:10; background-color:#d1d1d1; color:black; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Qtd.</th>
               <th style="position:sticky; top:52px; z-index:10; background-color:#d1d1d1; color:black; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Total</th>
@@ -257,6 +355,15 @@
       const yearEl = document.getElementById('vsConsYear');
       const monthEl = document.getElementById('vsConsMonth');
       if (!container || !yearEl || !monthEl) return;
+      document.getElementById('vsReportSelect').value = '';
+      const pdfBtn = document.getElementById('vsPDFReport');
+      const excelBtn = document.getElementById('vsEXCELReport');
+      pdfBtn.disabled = true;
+      excelBtn.disabled = true;
+      pdfBtn.style.opacity = '0.5';
+      excelBtn.style.opacity = '0.5';
+      pdfBtn.style.cursor = 'not-allowed';
+      excelBtn.style.cursor = 'not-allowed';
       if (!document.getElementById('table-body')) {
         container.innerHTML = tableHTML;
       }
@@ -273,7 +380,7 @@
         dateFilter = `&service_date=gte.${selectedYear}-${selectedMonth}-01&service_date=lte.${selectedYear}-${selectedMonth}-${lastDay}`;
       }
       try {
-        const url = `${SUPABASE_URL}/rest/v1/reg_volunteer_services?corp_oper_nr=eq.${corpOperNr}${dateFilter}&order=service_date.desc`;
+        const url = `${SUPABASE_URL}/rest/v1/reg_volunteer_services?corp_oper_nr=eq.${corpOperNr}${dateFilter}&order=service_date.asc`;
         const response = await fetch(url, {
           method: 'GET',
           headers: getSupabaseHeaders()
@@ -314,7 +421,7 @@
               <td style="${tdStyle} border-left: 1px solid #ccc; text-align: center;">${item.service_whait_hours || ''}</td>
               <td style="${tdStyle} border-left: 1px solid #ccc; text-align: right;">${item.service_whait_hours_value || '-'} €</td>
               <td style="${tdStyle} border-left: 1px solid #ccc; text-align: center;">${item.abv_name || ''}</td>
-              <td style="${tdStyle} border-left: 1px solid #ccc; text-align: right; font-weight: bold; font-size: 13px;">
+              <td style="${tdStyle} border-left: 1px solid #ccc; text-align: right; font-weight: bold; font-size: 14px;">
                 ${item.global_value || '0,00'} €
               </td>
             </tr>
@@ -452,4 +559,162 @@
     });
     document.getElementById('vsEXCELReport').addEventListener('click', async function () {
       await generateVolunteerReport('excel');
+    });
+    /* ====== CONFIGURAÇÃO DE VALORES ===== */
+    async function saveVolunteerServiceValue() {
+      const lcDesteny = document.getElementById('vsLCDesteny').value.trim();
+      const lcValue = document.getElementById('vsLCValue').value.trim();
+      const lcESick = document.getElementById('vsLCESick').value.trim();
+      const lcEHour = document.getElementById('vsLCEHour').value.trim();
+      const oType = document.getElementById('vsOType').value.trim();
+      const oValue = document.getElementById('vsOValue').value.trim();
+      if (lcDesteny && oType) {
+        showPopup('popup-danger', 'Preencha apenas um lado: Longo Curso OU Prevenções/Outros.');
+        return;
+      }
+      if (!lcDesteny && !oType) {
+        showPopup('popup-danger', 'Por favor preencha pelo menos um dos lados.');
+        return;
+      }
+      let payload = {};
+      if (lcDesteny) {
+        if (!lcValue) {
+          showPopup('popup-danger', 'Por favor preencha o Valor do Longo Curso.');
+          return;
+        }
+        payload = {type: 'TRANSPORTE DE DOENTES', desteny: lcDesteny, value: lcValue, extra_sick: lcESick || null, extra_hour: lcEHour || null, corp_oper_nr: sessionStorage.getItem('currentCorpOperNr') || null,};
+      } else {
+        if (!oValue) {
+          showPopup('popup-danger', 'Por favor preencha o Valor/Hora.');
+          return;
+        }
+        payload = {type: oType, value: oValue, desteny: null, extra_sick: null, extra_hour: null, corp_oper_nr: sessionStorage.getItem('currentCorpOperNr') || null,};
+      }
+      const btn = document.getElementById('services-values-save-button');
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '⏳ A verificar...';
+      try {
+        const checkUrl = `${SUPABASE_URL}/rest/v1/reg_volunteer_services_values?type=eq.${encodeURIComponent(payload.type)}&desteny=eq.${payload.desteny ?? ''}&corp_oper_nr=eq.${payload.corp_oper_nr}&select=id`;
+        const checkResponse = await fetch(checkUrl, {
+          method: 'GET',
+          headers: getSupabaseHeaders()
+        });
+        const existing = await checkResponse.json();
+        if (existing.length > 0) {
+          showPopup('popup-danger', 'Já existe um registo para este tipo e destino.');
+          return;
+        }
+        btn.innerHTML = '⏳ A guardar...';
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/reg_volunteer_services_values`, {
+          method: 'POST',
+          headers: getSupabaseHeaders({returnRepresentation: true}),
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) throw await response.json();
+        showPopup('popup-success', 'Valor guardado com sucesso!');
+        clearServiceValuesForm();
+      } catch (err) {
+        console.error('Erro:', err);
+        showPopup('popup-danger', 'Erro ao guardar.');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    }
+    const svValuesTableHTML = `
+      <div style="margin: 10px 0 15px 0;">
+        <div class="no-scrollbar" style="max-height: 400px; overflow-y: auto; border: 1px solid #aaa; border-radius: 4px;">
+          <table style="width:100%; border-collapse: separate; border-spacing: 0; font-family: sans-serif; font-size: 11px; text-align: center; table-layout: fixed;">
+            <colgroup>
+              <col style="width: 200px;">
+              <col style="width: 150px;">
+              <col style="width: 80px;">
+              <col style="width: 80px;">
+              <col style="width: 80px;">
+              <col style="width: 60px;">
+            </colgroup>
+            <thead>
+              <tr>
+                <th style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-bottom:1px solid #aaa; padding:6px;">Tipo</th>
+                <th style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:6px;">Destino</th>
+                <th style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:6px;">Valor\\Valor Hora</th>
+                <th style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:6px;">Doente Extra</th>
+                <th style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:6px;">Hora de Espera</th>
+                <th style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:6px;">Ação</th>
+              </tr>
+            </thead>
+            <tbody id="sv-values-table-body">
+              <tr><td colspan="6" style="padding: 20px; font-size: 13px;">A carregar...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+    async function loadServiceValuesTable() {
+      const container = document.getElementById('sv-values-table-container');
+      if (!container) return;
+      if (!document.getElementById('sv-values-table-body')) {
+        container.innerHTML = svValuesTableHTML;
+      }
+      const tbody = document.getElementById('sv-values-table-body');
+      const corpOperNr = sessionStorage.getItem('currentCorpOperNr') || null;
+      tbody.style.opacity = '0.5';
+      try {
+        const url = `${SUPABASE_URL}/rest/v1/reg_volunteer_services_values?corp_oper_nr=eq.${corpOperNr}&order=type.asc,desteny.asc`;
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: getSupabaseHeaders()
+        });
+        if (!response.ok) throw new Error('Erro na resposta');
+        const data = await response.json();
+        tbody.style.opacity = '1';
+        if (data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" style="padding:20px; font-size:13px;">Nenhum registo encontrado.</td></tr>';
+          return;
+        }
+        const tdStyle = `border-bottom: 1px solid #ccc; padding: 6px; font-size: 12px;`;
+        tbody.innerHTML = data.map(item => `
+          <tr>
+            <td style="${tdStyle}">${item.type || ''}</td>
+            <td style="${tdStyle} border-left:1px solid #ccc;">${item.desteny || '-'}</td>
+            <td style="${tdStyle} border-left:1px solid #ccc; text-align:right;">${item.value ? item.value + ' €' : '-'}</td>
+            <td style="${tdStyle} border-left:1px solid #ccc; text-align:right;">${item.extra_sick ? item.extra_sick + ' €' : '-'}</td>
+            <td style="${tdStyle} border-left:1px solid #ccc; text-align:right;">${item.extra_hour ? item.extra_hour + ' €' : '-'}</td>
+            <td style="${tdStyle} border-left:1px solid #ccc;">
+              <button onclick="deleteServiceValue(${item.id})" style="background:none; border:none; cursor:pointer; font-size:15px;" title="Eliminar">🗑️</button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        tbody.style.opacity = '1';
+        console.error('Erro:', err);
+        tbody.innerHTML = '<tr><td colspan="6" style="padding:20px; color:red;">Erro ao carregar dados.</td></tr>';
+      }
+    }
+    async function deleteServiceValue(id) {
+      if (!confirm('Tem a certeza que pretende eliminar este registo?')) return;
+      try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/reg_volunteer_services_values?id=eq.${id}`, {
+          method: 'DELETE',
+          headers: getSupabaseHeaders()
+        });
+        if (!response.ok) throw new Error('Erro ao eliminar');
+        showPopup('popup-success', 'Registo eliminado com sucesso!');
+        loadServiceValuesTable();
+      } catch (err) {
+        console.error('Erro:', err);
+        showPopup('popup-danger', 'Erro ao eliminar.');
+      }
+    }
+    function clearServiceValuesForm() {
+      ['vsLCDesteny', 'vsLCValue', 'vsLCESick', 'vsLCEHour', 'vsOType', 'vsOValue'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      loadServiceValuesTable();
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('services-values-save-button')?.addEventListener('click', saveVolunteerServiceValue);
+      loadServiceValuesTable();
     });

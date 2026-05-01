@@ -350,28 +350,51 @@
       const [year, month, day] = dataISO.split('-');
       return `${day}/${month}/${year}`;
     }
+    async function getUniqueServiceTypes() {
+      const url = `${SUPABASE_URL}/rest/v1/reg_volunteer_services_values?select=type`;
+      try {
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: getSupabaseHeaders()
+        });
+        if (!response.ok) throw new Error('Erro ao carregar tipos');
+        const data = await response.json();
+        return [...new Set(data.map(item => item.type))]
+          .filter(t => t && String(t).trim() !== '')
+          .sort();
+      } catch (error) {
+        console.error("Erro na busca de tipos:", error);
+        return [];
+      }
+    }
     async function loadVolunteerServicesTable() {
       const container = document.getElementById('services-table-container');
       const yearEl = document.getElementById('vsConsYear');
       const monthEl = document.getElementById('vsConsMonth');
-      if (!container || !yearEl || !monthEl) return;
+      const typeEl = document.getElementById('vsConsType');
+      if (!container || !yearEl || !monthEl || !typeEl) return;
+      const type = typeEl.value;
+      const selectedYear = yearEl.value;
+      const selectedMonth = monthEl.value;
+      const corpOperNr = sessionStorage.getItem('currentCorpOperNr') || "0805";
       document.getElementById('vsReportSelect').value = '';
       const pdfBtn = document.getElementById('vsPDFReport');
       const excelBtn = document.getElementById('vsEXCELReport');
-      pdfBtn.disabled = true;
-      excelBtn.disabled = true;
-      pdfBtn.style.opacity = '0.5';
-      excelBtn.style.opacity = '0.5';
-      pdfBtn.style.cursor = 'not-allowed';
-      excelBtn.style.cursor = 'not-allowed';
+      const setButtonsState = (disabled) => {
+        [pdfBtn, excelBtn].forEach(btn => {
+          if (btn) {
+            btn.disabled = disabled;
+            btn.style.opacity = disabled ? '0.5' : '1';
+            btn.style.cursor = disabled ? 'not-allowed' : 'pointer';
+          }
+        });
+      };
+      setButtonsState(true);
       if (!document.getElementById('table-body')) {
-        container.innerHTML = tableHTML;
+        container.innerHTML = typeof tableHTML !== 'undefined' ? tableHTML : '<div class="no-scrollbar" style="max-height: 500px; overflow-y: auto; margin-top: 15px; border: 1px solid #aaa; border-radius: 4px;"><table style="width:100%; border-collapse: separate; border-spacing: 0;"><tbody id="table-body"></tbody></table></div>';
       }
       const tableBody = document.getElementById('table-body');
-      const selectedYear = yearEl.value;
-      const selectedMonth = monthEl.value;
       tableBody.style.opacity = "0.5";
-      const corpOperNr = sessionStorage.getItem('currentCorpOperNr') || "0805";
       let dateFilter = "";
       if (selectedMonth === "todos") {
         dateFilter = `&service_date=gte.${selectedYear}-01-01&service_date=lte.${selectedYear}-12-31`;
@@ -379,33 +402,25 @@
         const lastDay = new Date(selectedYear, parseInt(selectedMonth), 0).getDate();
         dateFilter = `&service_date=gte.${selectedYear}-${selectedMonth}-01&service_date=lte.${selectedYear}-${selectedMonth}-${lastDay}`;
       }
+      let typeFilter = (type !== "todos") ? `&service_type=eq.${encodeURIComponent(type)}` : "";
       try {
-        const url = `${SUPABASE_URL}/rest/v1/reg_volunteer_services?corp_oper_nr=eq.${corpOperNr}${dateFilter}&order=service_date.asc`;
+        const url = `${SUPABASE_URL}/rest/v1/reg_volunteer_services?corp_oper_nr=eq.${corpOperNr}${dateFilter}${typeFilter}&order=service_date.asc`;
         const response = await fetch(url, {
           method: 'GET',
           headers: getSupabaseHeaders()
         });
-        if (!response.ok) throw new Error('Erro na resposta');
+        if (!response.ok) throw new Error('Erro na resposta do servidor');
         const data = await response.json();
         currentVolunteerData = data;
         tableBody.style.opacity = "1";
         tableBody.innerHTML = '';
         if (data.length === 0) {
-          tableBody.innerHTML = '<tr><td colspan="13" style="padding: 20px; font-size: 13px;">Nenhum registo encontrado para este período.</td></tr>';
-          const summaryContainer = document.getElementById('services-summary-container');
-          if (summaryContainer) {
-            summaryContainer.innerHTML = `
-              <table style="border-collapse: collapse; font-family: sans-serif; font-size: 12px; margin-top: 8px;">
-                <tr>
-                  <td style="border: 1px solid #aaa; padding: 5px 10px; background-color: #2b6ca3; color: white; font-weight: bold;">Valor Global</td>
-                  <td style="width: 100px; border: 1px solid #aaa; padding: 5px 15px; font-weight: bold; font-size: 13px; text-align: right;">0.00 €</td>
-                </tr>
-              </table>
-            `;
-          }
+          tableBody.innerHTML = '<tr><td colspan="13" style="padding: 20px; font-size: 13px; text-align: center;">Nenhum registo encontrado para este período ou tipo.</td></tr>';
+          updateSummary(0, 0);
           return;
         }
-        const rowsHTML = data.map(item => {
+        setButtonsState(false);
+        tableBody.innerHTML = data.map(item => {
           const tdStyle = `border-bottom: 1px solid #ccc; padding: 6px; font-size: 12px;`;
           return `
             <tr>
@@ -421,73 +436,86 @@
               <td style="${tdStyle} border-left: 1px solid #ccc; text-align: center;">${item.service_whait_hours || ''}</td>
               <td style="${tdStyle} border-left: 1px solid #ccc; text-align: right;">${item.service_whait_hours_value || '-'} €</td>
               <td style="${tdStyle} border-left: 1px solid #ccc; text-align: center;">${item.abv_name || ''}</td>
-              <td style="${tdStyle} border-left: 1px solid #ccc; text-align: right; font-weight: bold; font-size: 14px;">
-                ${item.global_value || '0,00'} €
-              </td>
+              <td style="${tdStyle} border-left: 1px solid #ccc; text-align: right; font-weight: bold; font-size: 13px;">${item.global_value || '0,00'} €</td>
             </tr>
           `;
         }).join('');
-        tableBody.innerHTML = rowsHTML;
-        const total = data.reduce((sum, item) => {
-          const val = parseFloat(item.global_value) || 0;
-          return sum + val;
-        }, 0);
-        const summaryContainer = document.getElementById('services-summary-container');
-        if (summaryContainer) {
-          summaryContainer.innerHTML = `
-            <table style="border-collapse: collapse; font-family: sans-serif; font-size: 12px; margin-top: 8px;">
-              <tr>
-                <td style="border: 1px solid #aaa; padding: 5px 10px; background-color: #2b6ca3; color: white; font-weight: bold;">Valor Global</td>
-                <td style="width: 100px; border: 1px solid #aaa; padding: 5px 15px; font-weight: bold; font-size: 13px; text-align: right;">${total.toFixed(2)} €</td>
-              </tr>
-            </table>
-          `;
-        }
+        const total = data.reduce((sum, item) => sum + (parseFloat(item.global_value) || 0), 0);
+        updateSummary(total, data.length);
       } catch (err) {
         tableBody.style.opacity = "1";
         console.error('Erro:', err);
-        tableBody.innerHTML = '<tr><td colspan="13" style="padding: 20px; color: red;">Erro ao carregar dados.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="13" style="padding: 20px; color: red; text-align: center;">Erro ao carregar dados. Verifique a consola.</td></tr>';
       }
     }
-    function initializeFilters() {
+    function updateSummary(total, count) {
+      const summaryContainer = document.getElementById('services-summary-container');
+      if (summaryContainer) {
+        const displayCount = count || 0;
+        const displayTotal = typeof total === 'number' ? total.toFixed(2) : '0.00';        
+        summaryContainer.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-top: 10px; font-family: sans-serif;">
+            <div style="border: 1px solid #aaa; border-radius: 4px; overflow: hidden; display: flex; height: 28px; align-items: center;">
+              <div style="padding: 0 12px; background-color: #2b6ca3; color: white; font-weight: bold; font-size: 12px; border-right: 1px solid #aaa; line-height: 28px;">
+                Total de Serviços
+              </div>
+              <div style="padding: 0 15px; background-color: white; color: darkred; font-weight: bold; font-size: 14px; min-width: 50px; text-align: center; line-height: 28px;">
+                ${displayCount}
+              </div>
+            </div>
+            <div style="border: 1px solid #aaa; border-radius: 4px; overflow: hidden; display: flex; height: 28px; align-items: center;">
+              <div style="padding: 0 12px; background-color: #2b6ca3; color: white; font-weight: bold; font-size: 12px; border-right: 1px solid #aaa; line-height: 28px;">
+                Valor Global
+              </div>
+              <div style="padding: 0 15px; background-color: white; color: darkred; font-weight: bold; font-size: 14px; min-width: 120px; text-align: right; line-height: 28px;">
+                ${displayTotal} €
+              </div>
+            </div>    
+          </div>
+        `;
+      }
+    }
+    async function initializeFilters() {
       const yearSelect  = document.getElementById('vsConsYear');
       const monthSelect = document.getElementById('vsConsMonth');
+      const typeSelect  = document.getElementById('vsConsType');
       if (!yearSelect || !monthSelect) return;
       const now = new Date();
       const currentYear = now.getFullYear();
       const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
       let yearsHTML = '';
       for (let year = 2026; year <= 2036; year++) {
-        const isSelected = year === currentYear ? 'selected' : '';
-        yearsHTML += `<option value="${year}" ${isSelected}>${year}</option>`;
+        yearsHTML += `<option value="${year}" ${year === currentYear ? 'selected' : ''}>${year}</option>`;
       }
       yearSelect.innerHTML = yearsHTML;
-      const months = [{val: 'todos', name: 'Todos os Meses'}, {val: '01', name: 'Janeiro'}, {val: '02', name: 'Fevereiro'}, {val: '03', name: 'Março'},
+      const months = [{val: 'todos', name: 'Todos os Meses'}, {val: '01', name: 'Janeiro'}, {val: '02', name: 'Fevereiro'}, {val: '03', name: 'Março'}, 
                       {val: '04', name: 'Abril'}, {val: '05', name: 'Maio'}, {val: '06', name: 'Junho'}, {val: '07', name: 'Julho'}, {val: '08', name: 'Agosto'},
-                      {val: '09', name: 'Setembro'}, {val: '10', name: 'Outubro'}, {val: '11', name: 'Novembro'}, {val: '12', name: 'Dezembro'},];
-      monthSelect.innerHTML = months.map(m => {
-        const isSelected = m.val === currentMonth ? 'selected="selected"' : '';
-        return `<option value="${m.val}" ${isSelected}>${m.name}</option>`;
-      }).join('');
-      yearSelect.value = currentYear;
-      monthSelect.value = currentMonth;
+                      {val: '09', name: 'Setembro'}, {val: '10', name: 'Outubro'}, {val: '11', name: 'Novembro'}, {val: '12', name: 'Dezembro'}];
+      monthSelect.innerHTML = months.map(m => `<option value="${m.val}" ${m.val === currentMonth ? 'selected' : ''}>${m.name}</option>`).join('');
+      if (typeSelect) {
+        typeSelect.innerHTML = '<option value="todos">A carregar...</option>';
+        const types = await getUniqueServiceTypes();
+        typeSelect.innerHTML = '<option value="todos">Todos os Tipos</option>' + types.map(t => `<option value="${t}">${t}</option>`).join('');
+        typeSelect.onchange = loadVolunteerServicesTable;
+      }
       yearSelect.onchange = loadVolunteerServicesTable;
       monthSelect.onchange = loadVolunteerServicesTable;
+      yearSelect.value = currentYear;
+      monthSelect.value = currentMonth;
       loadVolunteerServicesTable();
       const reportSelect = document.getElementById('vsReportSelect');
-      const pdfBtn = document.getElementById('vsPDFReport');
-      const excelBtn = document.getElementById('vsEXCELReport');
-      pdfBtn.disabled = true;
-      excelBtn.disabled = true;
-      reportSelect.addEventListener('change', function () {
-        const hasValue = this.value.trim() !== '';
-        pdfBtn.disabled = !hasValue;
-        excelBtn.disabled = !hasValue;
-        pdfBtn.style.opacity = hasValue ? '1' : '0.5';
-        excelBtn.style.opacity = hasValue ? '1' : '0.5';
-        pdfBtn.style.cursor = hasValue ? 'pointer' : 'not-allowed';
-        excelBtn.style.cursor = hasValue ? 'pointer' : 'not-allowed';
-      });
+      if (reportSelect) {
+        reportSelect.addEventListener('change', function () {
+          const hasValue = this.value.trim() !== '';
+          const pdfBtn = document.getElementById('vsPDFReport');
+          const excelBtn = document.getElementById('vsEXCELReport');
+          [pdfBtn, excelBtn].forEach(btn => {
+            btn.disabled = !hasValue;
+            btn.style.opacity = hasValue ? '1' : '0.5';
+            btn.style.cursor = hasValue ? 'pointer' : 'not-allowed';
+          });
+        });
+      }
     }
     /* ============= EMISSÃO ============== */
     async function generateVolunteerReport(format) {

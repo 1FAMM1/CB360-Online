@@ -59,11 +59,9 @@
         showToast("Login efetuado com sucesso!", 2000, "success");
         const userRole = regData[0]?.user_role || "user";
         setTimeout(() => {
-          // Só entra se for as DUAS coisas ao mesmo tempo: role admin E corporação 0000
           if (userRole === "admin" && corp === "0000") {
             window.location.href = "system_admin.html";
           } else {
-            // Todos os outros (admins de outras corps ou users normais) vão para a main
             window.location.href = "main.html";
           }
         }, 1500);

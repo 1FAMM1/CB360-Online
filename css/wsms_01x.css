@@ -5,7 +5,8 @@
     .wsms-card-body {padding: 16px 20px; display: flex; flex-direction: column; gap: 20px;}
     .wsms-card-footer {border-top: 0.5px solid #e0e0e0; padding: 10px 20px; display: flex; justify-content: flex-end; background: #fafafa;}
     .wsms-section {display: flex; flex-direction: column; gap: 8px;}
-    .wsms-section-label {font-size: 12px; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.08em; padding-bottom: 4px; border-bottom: 0.5px solid #e8e8e8;}
+    .wsms-section-label, .volunteer-service-section-label {font-size: 12px; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.08em; padding-bottom: 4px; border-bottom: 0.5px solid #e8e8e8;}  
+    .volunteer-service-section-label {border-bottom: 0.5px solid #d1d1d1;}
     .wsms-row {display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end;}
     .wsms-field {display: flex; flex-direction: column; gap: 3px;}
     .wsms-field--grow {flex: 1; min-width: 160px;}

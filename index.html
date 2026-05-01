@@ -333,114 +333,207 @@
 
   <script src="js/mainparogramatics/initcfg_ltsc_x07.js"></script>
   <script>
-    async function loginUser(user, pass) {
-      try {
-        const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/users?select=username,password,full_name,corp_oper_nr,n_int,validate&username=eq.${user}`, {
-            headers: getSupabaseHeaders()
-          }
+    /* ================= LOGIN ================= */
+
+async function loginUser(user, pass) {
+  try {
+    const response = await fetch(
+      `${SUPABASE_URL}/rest/v1/users?username=eq.${user}&select=username,password,full_name,corp_oper_nr,n_int,validate&limit=1`,
+      { headers: getSupabaseHeaders() }
+    );
+
+    if (!response.ok) throw new Error(`Erro: ${response.status}`);
+
+    const data = await response.json();
+
+    if (!data || data.length === 0) {
+      showToast("Utilizador não encontrado.", 2000, "error");
+      return;
+    }
+
+    const userData = data[0];
+
+    console.log("LOGIN DEBUG:", userData);
+
+    // 🔐 PASSWORD
+    if (userData.password !== pass) {
+      showToast("Password incorreta.", 2000, "error");
+      return;
+    }
+
+    // 📅 VALIDADE
+    if (userData.validate) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const expireDate = new Date(userData.validate);
+      expireDate.setHours(0, 0, 0, 0);
+
+      if (expireDate < today) {
+        showToast(
+          "A sua conta expirou em " + expireDate.toLocaleDateString(),
+          3000,
+          "error"
         );
-        if (!response.ok) throw new Error(`Erro: ${response.status}`);
-        const data = await response.json();
-        if (data.length === 0) {
-          showToast("Utilizador não encontrado.", 2000, "error");
-          return;
-        }
-        const userData = data.find(u => u.password === pass);
-        if (!userData) {
-          showToast("Password incorreta.", 2000, "error");
-          return;
-        }
-        if (userData.validate) {
-          const today = new Date();
-          today.setHours(0,0,0,0);
-          const expireDate = new Date(userData.validate);
-          if (expireDate < today) {
-            showToast("A sua conta expirou em " + expireDate.toLocaleDateString(), 3000, "error");
-            return;
-          }
-        }
-        const corp = String(userData.corp_oper_nr || "").padStart(4, "0");
-        const regResp = await fetch(
-          `${SUPABASE_URL}/rest/v1/reg_elems?select=user_role,elem_state,acess&n_int=eq.${userData.n_int}&corp_oper_nr=eq.${corp}`, {
-            headers: getSupabaseHeaders()
-          }
-        );
-        const regData = await regResp.json();
-        if (regData.length > 0 && regData[0].elem_state === false) {
-          showToast("Conta inativa nesta corporação.", 3000, "error");
-          return;
-        }
-        sessionStorage.setItem("currentUserDisplay", userData.full_name);
-        sessionStorage.setItem("currentUserName", userData.username);
-        sessionStorage.setItem("currentCorpOperNr", corp);
-        sessionStorage.setItem("currentNInt", userData.n_int);
-        if (regData.length > 0) {
-          sessionStorage.setItem("currentUserRole", regData[0].user_role || "user");
-          sessionStorage.setItem("allowedModules", regData[0].acess || "Menu Principal");
-        }
-        showToast("Login efetuado com sucesso!", 2000, "success");
-        setTimeout(() => {
-          window.location.href = (userData.user_role === "admin" || corp === "0000") ? "system_admin.html" : "main.html"; 
-        }, 1500);
-      } catch (err) {
-        console.error(err);
-        showToast("Erro ao validar acesso.", 3000, "error");
+        return;
       }
     }
-    document.getElementById("loginForm").addEventListener("submit", e => {
-      e.preventDefault();
-      const user = document.getElementById("username").value.trim();
-      const pass = document.getElementById("password").value.trim();
-      loginUser(user, pass);
-    });
-    const togglePassword = document.getElementById("togglePassword");
-    const passwordInput = document.getElementById("password");
-    togglePassword.addEventListener("click", () => {
-      const type = passwordInput.type === "password" ? "text" : "password";
-      passwordInput.type = type;
-      togglePassword.classList.toggle("fa-eye");
-      togglePassword.classList.toggle("fa-eye-slash");
-    });
 
-    function showToast(message, duration = 2000, type = "error") {
-      let toast = document.getElementById("toast");
-      if (!toast) {
-        toast = document.createElement("div");
-        toast.id = "toast";
-        toast.className = "toast";
-        document.body.appendChild(toast);
+    // 🏢 CORP
+    const corp = userData.corp_oper_nr;
+
+    if (!corp) {
+      console.error("❌ corp_oper_nr inválido:", userData);
+      showToast("Erro interno: corporação inválida.", 3000, "error");
+      return;
+    }
+
+    console.log("CORP DETETADO:", corp);
+
+    // 👤 REG_ELEMS
+    const regResp = await fetch(
+      `${SUPABASE_URL}/rest/v1/reg_elems?select=user_role,elem_state,acess&n_int=eq.${userData.n_int}&corp_oper_nr=eq.${corp}`,
+      { headers: getSupabaseHeaders() }
+    );
+
+    if (!regResp.ok) throw new Error("Erro ao buscar reg_elems");
+
+    const regData = await regResp.json();
+
+    console.log("REG DATA:", regData);
+
+    if (regData.length > 0 && regData[0].elem_state === false) {
+      showToast("Conta inativa nesta corporação.", 3000, "error");
+      return;
+    }
+
+    /* ========== SESSION STORAGE (FONTE ÚNICA) ========== */
+    sessionStorage.setItem("currentUserDisplay", userData.full_name);
+    sessionStorage.setItem("currentUserName", userData.username);
+    sessionStorage.setItem("currentCorpOperNr", corp);
+    sessionStorage.setItem("currentNInt", userData.n_int);
+
+    if (regData.length > 0) {
+      sessionStorage.setItem("currentUserRole", regData[0].user_role || "user");
+      sessionStorage.setItem("allowedModules", regData[0].acess || "");
+    } else {
+      sessionStorage.setItem("currentUserRole", "user");
+      sessionStorage.setItem("allowedModules", "");
+    }
+
+    showToast("Login efetuado com sucesso!", 2000, "success");
+
+    /* ========== REDIRECT ========== */
+    const userRole = regData[0]?.user_role || "user";
+
+    setTimeout(() => {
+      if (userRole === "admin" || corp === "0000") {
+        window.location.href = "system_admin.html";
+      } else {
+        window.location.href = "main.html";
       }
-      toast.textContent = message;
-      toast.className = "toast show";
-      if (type === "success") toast.classList.add("success");
-      setTimeout(() => toast.classList.remove("show"), duration);
-    }
+    }, 1500);
 
-    function updateGreeting() {
-      const now = new Date();
-      const hour = now.getHours();
-      let greetingText = "🌙 Boa noite";
-      if (hour >= 6 && hour < 12) greetingText = "☀️ Bom dia";
-      else if (hour >= 12 && hour < 19) greetingText = "🌤️ Boa tarde";
-      document.getElementById("greetingText").textContent = greetingText;
-      document.getElementById("clock").textContent = now.toLocaleTimeString('pt-PT', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      });
-    }
+  } catch (err) {
+    console.error("❌ ERRO LOGIN:", err);
+    showToast("Erro ao validar acesso.", 3000, "error");
+  }
+}
 
-    function startClock() {
-      updateGreeting();
-      const now = new Date();
-      setTimeout(() => {
-        updateGreeting();
-        setInterval(updateGreeting, 1000);
-      }, 1000 - now.getMilliseconds());
-    }
-    startClock();
-    document.getElementById("username").focus();
+/* ================= FORM SUBMIT ================= */
+
+document.getElementById("loginForm").addEventListener("submit", e => {
+  e.preventDefault();
+
+  const user = document.getElementById("username").value.trim();
+  const pass = document.getElementById("password").value.trim();
+
+  if (!user || !pass) {
+    showToast("Preencha todos os campos.", 2000, "error");
+    return;
+  }
+
+  loginUser(user, pass);
+});
+
+/* ================= TOGGLE PASSWORD ================= */
+
+const togglePassword = document.getElementById("togglePassword");
+const passwordInput = document.getElementById("password");
+
+if (togglePassword && passwordInput) {
+  togglePassword.addEventListener("click", () => {
+    const type = passwordInput.type === "password" ? "text" : "password";
+    passwordInput.type = type;
+
+    togglePassword.classList.toggle("fa-eye");
+    togglePassword.classList.toggle("fa-eye-slash");
+  });
+}
+
+/* ================= TOAST ================= */
+
+function showToast(message, duration = 2000, type = "error") {
+  let toast = document.getElementById("toast");
+
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "toast";
+    toast.className = "toast";
+    document.body.appendChild(toast);
+  }
+
+  toast.textContent = message;
+  toast.className = "toast show";
+
+  if (type === "success") toast.classList.add("success");
+
+  setTimeout(() => {
+    toast.classList.remove("show");
+  }, duration);
+}
+
+/* ================= GREETING + CLOCK ================= */
+
+function updateGreeting() {
+  const now = new Date();
+  const hour = now.getHours();
+
+  let greetingText = "🌙 Boa noite";
+  if (hour >= 6 && hour < 12) greetingText = "☀️ Bom dia";
+  else if (hour >= 12 && hour < 19) greetingText = "🌤️ Boa tarde";
+
+  const greetingEl = document.getElementById("greetingText");
+  const clockEl = document.getElementById("clock");
+
+  if (greetingEl) greetingEl.textContent = greetingText;
+
+  if (clockEl) {
+    clockEl.textContent = now.toLocaleTimeString("pt-PT", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit"
+    });
+  }
+}
+
+function startClock() {
+  updateGreeting();
+
+  const now = new Date();
+
+  setTimeout(() => {
+    updateGreeting();
+    setInterval(updateGreeting, 1000);
+  }, 1000 - now.getMilliseconds());
+}
+
+startClock();
+
+/* ================= AUTO FOCUS ================= */
+
+const usernameInput = document.getElementById("username");
+if (usernameInput) usernameInput.focus();
   </script>
 </body>
 

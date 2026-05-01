@@ -317,7 +317,7 @@
           </colgroup>
           <thead>
             <tr>
-              <th colspan="3" rowspan="2" style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-bottom:1px solid #aaa; padding:5px;">Data | Tipo Serviço</th>
+              <th colspan="3" rowspan="2" style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-bottom:1px solid #aaa; padding:5px;">Data | Tipo de Serviço</th>
               <th rowspan="3" style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Valor do<br>Serviço</th>
               <th colspan="3" rowspan="2" style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Prevenções</th>
               <th colspan="4" style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Transporte de Doentes</th>
@@ -329,9 +329,9 @@
               <th colspan="2" style="position:sticky; top:27px; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:4px;">Horas Espera</th>
             </tr>
             <tr>
-              <th style="position:sticky; top:52px; z-index:10; background-color:#d1d1d1; color:black; border-bottom:1px solid #aaa; padding:5px;">Data</th>
-              <th style="position:sticky; top:52px; z-index:10; background-color:#d1d1d1; color:black; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Tipo</th>
-              <th style="position:sticky; top:52px; z-index:10; background-color:#d1d1d1; color:black; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Local</th>
+              <th style="position:sticky; top:52px; z-index:10; background-color:#d1d1d1; color:black; border-bottom:1px solid #aaa; padding:5px;">Data do Serviço</th>
+              <th style="position:sticky; top:52px; z-index:10; background-color:#d1d1d1; color:black; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Tipo de Serviço</th>
+              <th style="position:sticky; top:52px; z-index:10; background-color:#d1d1d1; color:black; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Local do Serviço</th>
               <th style="position:sticky; top:52px; z-index:10; background-color:#d1d1d1; color:black; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Valor/Hora</th>
               <th style="position:sticky; top:52px; z-index:10; background-color:#d1d1d1; color:black; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Qtd.</th>
               <th style="position:sticky; top:52px; z-index:10; background-color:#d1d1d1; color:black; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Total</th>
@@ -561,19 +561,22 @@
       await generateVolunteerReport('excel');
     });
     /* ====== CONFIGURAÇÃO DE VALORES ===== */
+    let currentEditingValueId = null;
     async function saveVolunteerServiceValue() {
+      const btn = document.getElementById('services-values-save-button');
       const lcDesteny = document.getElementById('vsLCDesteny').value.trim();
       const lcValue = document.getElementById('vsLCValue').value.trim();
       const lcESick = document.getElementById('vsLCESick').value.trim();
       const lcEHour = document.getElementById('vsLCEHour').value.trim();
       const oType = document.getElementById('vsOType').value.trim();
       const oValue = document.getElementById('vsOValue').value.trim();
+      const corpOperNr = sessionStorage.getItem('currentCorpOperNr');
       if (lcDesteny && oType) {
         showPopup('popup-danger', 'Preencha apenas um lado: Longo Curso OU Prevenções/Outros.');
         return;
       }
       if (!lcDesteny && !oType) {
-        showPopup('popup-danger', 'Por favor preencha pelo menos um dos lados.');
+        showPopup('popup-danger', 'Por favor preencha pelo menos um dos campos.');
         return;
       }
       let payload = {};
@@ -582,70 +585,93 @@
           showPopup('popup-danger', 'Por favor preencha o Valor do Longo Curso.');
           return;
         }
-        payload = {type: 'TRANSPORTE DE DOENTES', desteny: lcDesteny, value: lcValue, extra_sick: lcESick || null, extra_hour: lcEHour || null, corp_oper_nr: sessionStorage.getItem('currentCorpOperNr') || null,};
+        payload = {type: 'TRANSPORTE DE DOENTES', desteny: lcDesteny, value: lcValue, extra_sick: lcESick || null, extra_hour: lcEHour || null, corp_oper_nr: corpOperNr};
       } else {
         if (!oValue) {
           showPopup('popup-danger', 'Por favor preencha o Valor/Hora.');
           return;
         }
-        payload = {type: oType, value: oValue, desteny: null, extra_sick: null, extra_hour: null, corp_oper_nr: sessionStorage.getItem('currentCorpOperNr') || null,};
+        payload = {type: oType, value: oValue, desteny: null, extra_sick: null, extra_hour: null, corp_oper_nr: corpOperNr};
       }
-      const btn = document.getElementById('services-values-save-button');
       const originalText = btn.innerHTML;
       btn.disabled = true;
-      btn.innerHTML = '⏳ A verificar...';
+      btn.innerHTML = '⏳ A processar...';
       try {
-        const checkUrl = `${SUPABASE_URL}/rest/v1/reg_volunteer_services_values?type=eq.${encodeURIComponent(payload.type)}&desteny=eq.${payload.desteny ?? ''}&corp_oper_nr=eq.${payload.corp_oper_nr}&select=id`;
-        const checkResponse = await fetch(checkUrl, {
-          method: 'GET',
-          headers: getSupabaseHeaders()
-        });
-        const existing = await checkResponse.json();
-        if (existing.length > 0) {
-          showPopup('popup-danger', 'Já existe um registo para este tipo e destino.');
-          return;
+        let response;
+        if (currentEditingValueId) {
+          response = await fetch(`${SUPABASE_URL}/rest/v1/reg_volunteer_services_values?id=eq.${currentEditingValueId}`, {
+            method: 'PATCH',
+            headers: getSupabaseHeaders({returnRepresentation: true}),
+            body: JSON.stringify(payload)
+          });
+        } else {
+          const checkUrl = `${SUPABASE_URL}/rest/v1/reg_volunteer_services_values?type=eq.${encodeURIComponent(payload.type)}&desteny=eq.${payload.desteny ?? ''}&corp_oper_nr=eq.${payload.corp_oper_nr}&select=id`;
+          const checkRes = await fetch(checkUrl, {headers: getSupabaseHeaders()});
+          const existing = await checkRes.json();
+          if (existing.length > 0) {
+            showPopup('popup-danger', 'Já existe um registo para este tipo e destino.');
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+            return;
+          }
+          response = await fetch(`${SUPABASE_URL}/rest/v1/reg_volunteer_services_values`, {
+            method: 'POST',
+            headers: getSupabaseHeaders({returnRepresentation: true}),
+            body: JSON.stringify(payload)
+          });
         }
-        btn.innerHTML = '⏳ A guardar...';
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/reg_volunteer_services_values`, {
-          method: 'POST',
-          headers: getSupabaseHeaders({returnRepresentation: true}),
-          body: JSON.stringify(payload)
-        });
         if (!response.ok) throw await response.json();
-        showPopup('popup-success', 'Valor guardado com sucesso!');
+        showPopup('popup-success', currentEditingValueId ? 'Registo atualizado!' : 'Valor guardado com sucesso!');
         clearServiceValuesForm();
       } catch (err) {
         console.error('Erro:', err);
-        showPopup('popup-danger', 'Erro ao guardar.');
+        showPopup('popup-danger', 'Erro ao processar o pedido.');
       } finally {
         btn.disabled = false;
-        btn.innerHTML = originalText;
       }
+    }
+    function editServiceValue(itemJson) {
+      const item = JSON.parse(decodeURIComponent(itemJson));
+      currentEditingValueId = item.id;
+      ['vsLCDesteny', 'vsLCValue', 'vsLCESick', 'vsLCEHour', 'vsOType', 'vsOValue'].forEach(id => document.getElementById(id).value = '');
+      if (item.type === 'TRANSPORTE DE DOENTES') {
+        document.getElementById('vsLCDesteny').value = item.desteny || '';
+        document.getElementById('vsLCValue').value = item.value || '';
+        document.getElementById('vsLCESick').value = item.extra_sick || '';
+        document.getElementById('vsLCEHour').value = item.extra_hour || '';
+      } else {
+        document.getElementById('vsOType').value = item.type || '';
+        document.getElementById('vsOValue').value = item.value || '';
+      }
+      const btn = document.getElementById('services-values-save-button');
+      btn.innerHTML = '✏️ Atualizar Configuração';
+      btn.style.backgroundColor = '#e67e22';
+      window.scrollTo({top: 0, behavior: 'smooth'});
     }
     const svValuesTableHTML = `
       <div style="margin: 10px 0 15px 0;">
         <div class="no-scrollbar" style="max-height: 400px; overflow-y: auto; border: 1px solid #aaa; border-radius: 4px;">
           <table style="width:100%; border-collapse: separate; border-spacing: 0; font-family: sans-serif; font-size: 11px; text-align: center; table-layout: fixed;">
             <colgroup>
-              <col style="width: 200px;">
-              <col style="width: 150px;">
+              <col style="width: 180px;">
+              <col style="width: 140px;">
               <col style="width: 80px;">
               <col style="width: 80px;">
               <col style="width: 80px;">
-              <col style="width: 60px;">
+              <col style="width: 70px;">
             </colgroup>
             <thead>
               <tr>
                 <th style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-bottom:1px solid #aaa; padding:6px;">Tipo</th>
                 <th style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:6px;">Destino</th>
-                <th style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:6px;">Valor\\Valor Hora</th>
-                <th style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:6px;">Doente Extra</th>
-                <th style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:6px;">Hora de Espera</th>
-                <th style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:6px;">Ação</th>
+                <th style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:6px;">Valor</th>
+                <th style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:6px;">Extra Doente</th>
+                <th style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:6px;">Hora Espera</th>
+                <th style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:6px;">Ações</th>
               </tr>
             </thead>
             <tbody id="sv-values-table-body">
-              <tr><td colspan="6" style="padding: 20px; font-size: 13px;">A carregar...</td></tr>
+              <tr><td colspan="6" style="padding: 20px;">A carregar...</td></tr>
             </tbody>
           </table>
         </div>
@@ -658,37 +684,37 @@
         container.innerHTML = svValuesTableHTML;
       }
       const tbody = document.getElementById('sv-values-table-body');
-      const corpOperNr = sessionStorage.getItem('currentCorpOperNr') || null;
+      const corpOperNr = sessionStorage.getItem('currentCorpOperNr');
       tbody.style.opacity = '0.5';
       try {
-        const url = `${SUPABASE_URL}/rest/v1/reg_volunteer_services_values?corp_oper_nr=eq.${corpOperNr}&order=type.asc,desteny.asc`;
-        const response = await fetch(url, {
-          method: 'GET',
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/reg_volunteer_services_values?corp_oper_nr=eq.${corpOperNr}&order=type.asc,desteny.asc`, {
           headers: getSupabaseHeaders()
         });
-        if (!response.ok) throw new Error('Erro na resposta');
         const data = await response.json();
         tbody.style.opacity = '1';
         if (data.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6" style="padding:20px; font-size:13px;">Nenhum registo encontrado.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="6" style="padding:20px;">Nenhum registo configurado.</td></tr>';
           return;
         }
         const tdStyle = `border-bottom: 1px solid #ccc; padding: 6px; font-size: 12px;`;
-        tbody.innerHTML = data.map(item => `
-          <tr>
-            <td style="${tdStyle}">${item.type || ''}</td>
-            <td style="${tdStyle} border-left:1px solid #ccc;">${item.desteny || '-'}</td>
-            <td style="${tdStyle} border-left:1px solid #ccc; text-align:right;">${item.value ? item.value + ' €' : '-'}</td>
-            <td style="${tdStyle} border-left:1px solid #ccc; text-align:right;">${item.extra_sick ? item.extra_sick + ' €' : '-'}</td>
-            <td style="${tdStyle} border-left:1px solid #ccc; text-align:right;">${item.extra_hour ? item.extra_hour + ' €' : '-'}</td>
-            <td style="${tdStyle} border-left:1px solid #ccc;">
-              <button onclick="deleteServiceValue(${item.id})" style="background:none; border:none; cursor:pointer; font-size:15px;" title="Eliminar">🗑️</button>
-            </td>
-          </tr>
-        `).join('');
+        tbody.innerHTML = data.map(item => {
+          const itemData = encodeURIComponent(JSON.stringify(item));
+          return `
+            <tr>
+              <td style="${tdStyle}">${item.type || ''}</td>
+              <td style="${tdStyle} border-left:1px solid #ccc;">${item.desteny || '-'}</td>
+              <td style="${tdStyle} border-left:1px solid #ccc; text-align:right;">${item.value ? item.value + ' €' : '-'}</td>
+              <td style="${tdStyle} border-left:1px solid #ccc; text-align:right;">${item.extra_sick ? item.extra_sick + ' €' : '-'}</td>
+              <td style="${tdStyle} border-left:1px solid #ccc; text-align:right;">${item.extra_hour ? item.extra_hour + ' €' : '-'}</td>
+              <td style="${tdStyle} border-left:1px solid #ccc;">
+                <button onclick="editServiceValue('${itemData}')" style="background:none; border:none; cursor:pointer; font-size:14px;" title="Editar">✏️</button>
+                <button onclick="deleteServiceValue(${item.id})" style="background:none; border:none; cursor:pointer; font-size:14px; margin-left:8px;" title="Eliminar">🗑️</button>
+              </td>
+            </tr>
+          `;
+        }).join('');
       } catch (err) {
         tbody.style.opacity = '1';
-        console.error('Erro:', err);
         tbody.innerHTML = '<tr><td colspan="6" style="padding:20px; color:red;">Erro ao carregar dados.</td></tr>';
       }
     }
@@ -699,19 +725,24 @@
           method: 'DELETE',
           headers: getSupabaseHeaders()
         });
-        if (!response.ok) throw new Error('Erro ao eliminar');
-        showPopup('popup-success', 'Registo eliminado com sucesso!');
+        if (!response.ok) throw new Error();
+        showPopup('popup-success', 'Registo eliminado!');
         loadServiceValuesTable();
       } catch (err) {
-        console.error('Erro:', err);
         showPopup('popup-danger', 'Erro ao eliminar.');
       }
     }
     function clearServiceValuesForm() {
+      currentEditingValueId = null; 
       ['vsLCDesteny', 'vsLCValue', 'vsLCESick', 'vsLCEHour', 'vsOType', 'vsOValue'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
       });
+      const btn = document.getElementById('services-values-save-button');
+      if (btn) {
+        btn.innerHTML = 'Guardar Configuração';
+        btn.style.backgroundColor = ''; 
+      }
       loadServiceValuesTable();
     }
     document.addEventListener('DOMContentLoaded', () => {

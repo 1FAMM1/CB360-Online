@@ -48,6 +48,7 @@
           monthsWrapper.querySelectorAll(".btn.btn-add").forEach(b => b.classList.remove("active"));
           btn.classList.add("active");
           if (currentSection === "Emissão Escala") toggleButtons(true, true, true);
+          else if (currentSection === "DECIR") toggleButtons(true, false, true);
           else if (currentSection === "Consultar Escalas") toggleButtons(false, false, false);
           else toggleButtons(true, false, false);
           const data = await loadSectionData();
@@ -123,7 +124,7 @@
           if (td && td.style.display !== "none") dayTotal += computeTotalValue(td.textContent.toUpperCase().trim(), section === "DECIR", false);
         });
         const totalCell = totalsRow.querySelector(`.total-day-${d}`);
-        if (totalCell) {totalCell.textContent = dayTotal; applyTotalCellStyle(totalCell, dayTotal, section === "DECIR");}
+        if (totalCell) {totalCell.textContent = dayTotal; totalCell.style.fontWeight = "bold"; applyTotalCellStyle(totalCell, dayTotal, section === "DECIR");}
       }
     }
     /* ─── LINHAS DE RESUMO ML / MP / TAS (FOMIO) ────────────── */
@@ -163,13 +164,40 @@
     }
     function createMPRows(tbody, daysInMonth, section) {
       if (section === "DECIR") {
-        const dia = makeSummaryRow(tbody, "mp-dia-row",   "Motoristas de Pesados Turno D", "#fde8a3", "#fde8a390", "mp-dia");
-        const noite = makeSummaryRow(tbody, "mp-noite-row", "Motoristas de Pesados Turno N", "#466c9a", "#466c9a50", "mp-noite");
-        showHideCells(dia,   "mp-dia",   daysInMonth);
-        showHideCells(noite, "mp-noite", daysInMonth);
+        const mpDay = makeSummaryRow(tbody, "mp-dia-row",   "Motoristas de Pesados Turno ED", "#fde8a3", "#fde8a390", "mp-dia");
+        const mpNight = makeSummaryRow(tbody, "mp-noite-row", "Motoristas de Pesados Turno EN", "#466c9a", "#466c9a50", "mp-noite");
+        showHideCells(mpDay, "mp-dia",   daysInMonth);
+        showHideCells(mpNight, "mp-noite", daysInMonth);
       } else {
         const row = makeSummaryRow(tbody, "mp-row", "Motoristas de Pesados", "#fde8a3", "#fde8a390", "mp");
         showHideCells(row, "mp", daysInMonth);
+      }
+    }
+    function createElementsDayNightRows(tbody, daysInMonth) {
+      const elementsDay = makeSummaryRow(tbody, "elem-dia-row", "Elementos Turno ED", "#b6fcb6", "#b6fcb690", "elem-dia");
+      const elementsNight = makeSummaryRow(tbody, "elem-noite-row", "Elementos Turno EN", "#1e3a8a", "#1e3a8a50", "elem-noite");
+      const nightLabel = elementsNight.querySelector("td");
+      if (nightLabel) nightLabel.style.color = "#fff";
+      showHideCells(elementsDay, "elem-dia", daysInMonth);
+      showHideCells(elementsNight, "elem-noite", daysInMonth);
+    }
+    function calculateElementsDayNightTotals(tbody, daysInMonth) {
+      const dayRow = tbody.querySelector(".elem-dia-row");
+      const nightRow = tbody.querySelector(".elem-noite-row");
+      if (!dayRow || !nightRow) return;
+      for (let d = 1; d <= daysInMonth; d++) {
+        let day = 0, night = 0;
+        tbody.querySelectorAll("tr:not(.totals-row):not(.mp-dia-row):not(.mp-noite-row):not(.elem-dia-row):not(.elem-noite-row):not(.fixed-row)").forEach(tr => {
+          const td = tr.querySelector(`.day-cell-${d}`);
+          if (!td || td.style.display === "none") return;
+          const v = td.textContent.toUpperCase().trim();
+          if (v === "ED" || v === "ET") day++;
+          if (v === "EN" || v === "ET") night++;
+        });
+        const cDay = dayRow.querySelector(`.elem-dia-${d}`);
+        if (cDay) {cDay.textContent = day; cDay.style.fontWeight = "bold";}
+        const cNight = nightRow.querySelector(`.elem-noite-${d}`);
+        if (cNight) {cNight.textContent = night; cNight.style.fontWeight = "bold";}
       }
     }
     function calculateSummaryRow(tbody, daysInMonth, data, rowClass, cellPrefix, filterFn, valueFn) {
@@ -196,11 +224,11 @@
     }
     function calculateMPTotals(tbody, daysInMonth, data, section) {
       if (section === "DECIR") {
-        const mpDia = tbody.querySelector(".mp-dia-row");
-        const mpNoite = tbody.querySelector(".mp-noite-row");
-        if (!mpDia || !mpNoite) return;
+        const mpDay = tbody.querySelector(".mp-dia-row");
+        const mpNight = tbody.querySelector(".mp-noite-row");
+        if (!mpDay || !mpNight) return;
         for (let d = 1; d <= daysInMonth; d++) {
-          let dia = 0, noite = 0;
+          let day = 0, night = 0;
           tbody.querySelectorAll("tr:not(.totals-row):not(.mp-dia-row):not(.mp-noite-row):not(.fixed-row)").forEach(tr => {
             const nInt = parseInt(tr.getAttribute("data-nint"), 10);
             const person = data.find(item => parseInt(item.n_int, 10) === nInt);
@@ -208,10 +236,12 @@
             const td = tr.querySelector(`.day-cell-${d}`);
             if (!td || td.style.display === "none") return;
             const v = td.textContent.toUpperCase().trim();
-            if (v === "ED") dia++; else if (v === "EN") noite++; else if (v === "ET") {dia++; noite++;}
+            if (v === "ED") day++; else if (v === "EN") night++; else if (v === "ET") {day++; night++;}
           });
-          const cDia = mpDia.querySelector(`.mp-dia-${d}`); if (cDia) cDia.textContent = dia;
-          const cNoite = mpNoite.querySelector(`.mp-noite-${d}`); if (cNoite) cNoite.textContent = noite;
+          const cDay = mpDay.querySelector(`.mp-dia-${d}`);
+          if (cDay) { cDay.textContent = day; cDay.style.fontWeight = "bold";}
+          const cNight = mpNight.querySelector(`.mp-noite-${d}`);
+          if (cNight) { cNight.textContent = night; cNight.style.fontWeight = "bold";}
         }
       } else {
         calculateSummaryRow(tbody, daysInMonth, data, "mp-row", "mp", p => p.MP === true, v => ["PD","PN","PT","EP"].includes(v) ? 1 : 0);
@@ -325,6 +355,9 @@
         calculateMLTotals(tr.parentElement, daysInMonth, currentTableData);
         calculateMPTotals(tr.parentElement, daysInMonth, currentTableData, section);
         calculateTASTotals(tr.parentElement, daysInMonth, currentTableData);
+        if (section === "DECIR") {
+          calculateElementsDayNightTotals(tr.parentElement, daysInMonth);
+        }
         if (value.length === 2) {const next = td.nextElementSibling; if (next?.contentEditable === "true") next.focus();}
       });
       td.addEventListener("keydown", e => handleKeyNav(e, td, tr));
@@ -550,6 +583,10 @@
       const isEscala = currentSection === "Emissão Escala" || currentSection === "Consultar Escalas";
       if (isEscala) createFixedRows(tbody, data, savedMap, year, month, daysInMonth, currentSection, calculateVolunteersRowTotal, calculateColumnTotals, holidays);
       createDataRows(tbody, data, savedMap, year, month, daysInMonth, currentSection, calculateVolunteersRowTotal, calculateColumnTotals, holidays);
+      if (currentSection === "DECIR") {
+        createElementsDayNightRows(tbody, daysInMonth);
+        calculateElementsDayNightTotals(tbody, daysInMonth);
+      }
       const needsMP = ["DECIR","1ª Secção","2ª Secção","Emissão Escala"].includes(currentSection);
       const needsTAS = ["1ª Secção","2ª Secção","Emissão Escala"].includes(currentSection);
       if (needsMP) createMPRows(tbody, daysInMonth, currentSection);
@@ -558,7 +595,10 @@
       if (needsMP) calculateMPTotals(tbody, daysInMonth, data, currentSection);
       if (needsTAS) calculateTASTotals(tbody, daysInMonth, data);
       if (currentSection === "Emissão Escala") {
-        calculateMLTotals(tbody, daysInMonth, data); calculateMPTotals(tbody, daysInMonth, data, currentSection); calculateTASTotals(tbody, daysInMonth, data);}
+        calculateMLTotals(tbody, daysInMonth, data);
+        calculateMPTotals(tbody, daysInMonth, data, currentSection);
+        calculateTASTotals(tbody, daysInMonth, data);
+      }
       createTotalsRow(tbody, daysInMonth);
       calculateColumnTotals(tbody, currentSection, daysInMonth);
     }
@@ -685,7 +725,10 @@
       const emitBtn = $("emit-button");
       if (emitBtn) emitBtn.addEventListener("click", () => {if (currentSection === "Emissão Escala") initScaleEmission();});
       const analyzeBtn = $("analyze-button");
-      if (analyzeBtn) analyzeBtn.addEventListener("click", analyzeSchedule);
+      if (analyzeBtn) analyzeBtn.addEventListener("click", () => {
+        if (currentSection === "Emissão Escala") analyzeSchedule();
+        else if (currentSection === "DECIR") analyzeDecirSchedule();
+      });
     });
     function getActiveMonthIndex() {
       const container = document.querySelector("#months-container, #months-container-scales");
@@ -854,6 +897,80 @@
         showPopup('popup-analyze', "<b>⚠️ Dias com dotação insuficiente:</b>" + "<div style='max-height:200px; overflow-y:auto; margin: 10px 0; font-weight: bold;'>" + issues.join("<br>") + "</div>" +
                   "<small>ℹ️ A análise é efetuada com base nas diferenciações registadas para cada elemento e nas dotações mínimas necessárias ao funcionamento da Grelha Municipal e demais necessidades operacionais do Corpo de Bombeiros.</small>"
                  );
+      }
+    }
+    async function analyzeDecirSchedule() {
+      const tbody = document.querySelector(".month-table tbody");
+      if (!tbody) {
+        showPopup('popup-danger', "Nenhuma escala carregada.");
+        return;
+      }
+      const selectedYear = parseInt($("year-selector")?.value, 10);
+      const monthIndex = getActiveMonthIndex();
+      if (!monthIndex) {
+        showPopup('popup-danger', "Nenhum mês selecionado.");
+        return;
+      }
+      let mode = '1_ecin';
+      try {
+        const resp = await fetch(`${SUPABASE_URL}/rest/v1/decir_mode?corp_oper_nr=eq.${getCorpId()}&select=mode`, {
+          headers: getSupabaseHeaders()
+        });
+        const modeData = await resp.json();
+        if (modeData.length > 0) mode = modeData[0].mode;
+      } catch (err) {
+        console.error("Erro ao carregar modo DECIR:", err);
+      }
+      const DECIR_MODES = {'1_ecin': {minMP: 1, minElems: 5}, '1_ecin_1_elac': {minMP: 2, minElems: 7}, 'brigada': {minMP: 3, minElems: 12}};
+      const limits = DECIR_MODES[mode] || DECIR_MODES['1_ecin_1_elac'];
+      const daysInMonth = new Date(selectedYear, monthIndex, 0).getDate();
+      const startDay = monthIndex === 5 ? 15 : 1;
+      const endDay = monthIndex === 10 ? 15 : daysInMonth;
+      const issues = [];
+      for (let d = startDay; d <= endDay; d++) {
+        const dayIssues = [];
+        let mpDayCount = 0;
+        let mpNightCount = 0;
+        let elemDayCount = 0;
+        let elemNightCount = 0;
+        tbody.querySelectorAll("tr:not(.totals-row):not(.mp-dia-row):not(.mp-noite-row):not(.elem-dia-row):not(.elem-noite-row):not(.fixed-row)").forEach(tr => {
+          const nInt = parseInt(tr.getAttribute("data-nint"), 10);
+          const person = currentTableData.find(p => parseInt(p.n_int, 10) === nInt);
+          if (!person) return;
+          const td = tr.querySelector(`.day-cell-${d}`);
+          if (!td || td.style.display === "none") return;
+          const v = td.textContent.toUpperCase().trim();
+          if (v === "ED" || v === "ET") elemDayCount++;
+          if (v === "EN" || v === "ET") elemNightCount++;
+          if (person.MP) {
+            if (v === "ED") mpDayCount++;
+            else if (v === "EN") mpNightCount++;
+            else if (v === "ET") {mpDayCount++; mpNightCount++;}
+          }
+        });
+        if (mpDayCount < limits.minMP) dayIssues.push(`Motoristas de Pesados ED: ${mpDayCount}/${limits.minMP}`);
+        if (mpNightCount < limits.minMP) dayIssues.push(`Motoristas de Pesados EN: ${mpNightCount}/${limits.minMP}`);
+        if (elemDayCount < limits.minElems) dayIssues.push(`Elementos ED: ${elemDayCount}/${limits.minElems}`);
+        else if (elemDayCount > limits.minElems) dayIssues.push(`<span style="color:red;">Elementos ED: excesso de ${elemDayCount - limits.minElems}</span>`);
+        if (elemNightCount < limits.minElems) dayIssues.push(`Elementos EN: ${elemNightCount}/${limits.minElems}`);
+        else if (elemNightCount > limits.minElems) dayIssues.push(`<span style="color:red;">Elementos EN: excesso de ${elemNightCount - limits.minElems}</span>`);
+        if (dayIssues.length > 0) issues.push(`Dia ${d}: ${dayIssues.join(" | ")}`);
+      }
+      const modeLabel = {'1_ecin': '1 ECIN', '1_ecin_1_elac': '1 ECIN + 1 ELAC', 'brigada': 'Brigada'}[mode] || mode;
+      if (issues.length === 0) {
+        showPopup('popup-success', `✅ Todos os dias têm a dotação mínima assegurada para o modo <b>${modeLabel}</b>.`);
+      } else {
+        const popupDecir = document.getElementById('popup-analyze-decir');
+        if (popupDecir) {
+          popupDecir.querySelector('.popup-body').innerHTML =
+            `<ul style="list-style:none; padding:0; margin:0;">
+              <li><span style="font-size:20px;">•</span> <b>⚠️ Modo DECIR: ${modeLabel}</b></li>
+              <li style="margin-left: 14px;"><small>Motoristas de Pesados - Mín: ${limits.minMP} | Elementos - Mín: ${limits.minElems} (por turno)</small></li>
+              <li><div style='max-height:200px; overflow-y:auto; margin: 10px 0; font-weight: bold;'>${issues.join("<br>")}</div></li>
+              <li><small>ℹ️ A análise verifica as dotações mínimas por turno (Dia/Noite) de acordo com o modo DECIR configurado.</small></li>
+            </ul>`;
+          popupDecir.classList.add('show');
+        }
       }
     }
     function initSaveButton() {

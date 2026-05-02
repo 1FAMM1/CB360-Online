@@ -2850,7 +2850,7 @@
       if (isActive) {
         toggleSitopContainer(false);
         inopsTableContainer.style.display = "none";
-        document.querySelector("#sitop_container .card-header").textContent = "INSERÇÃO DE NOVA INOPERACIONALIDADE";
+        document.querySelector("#sitop_container .major-card-header").textContent = "INSERÇÃO DE NOVA INOPERACIONALIDADE";
         preselectCorpInSitopCB() ;
       } else {
         toggleSitopContainer(true);

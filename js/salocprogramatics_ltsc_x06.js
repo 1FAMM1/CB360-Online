@@ -2694,14 +2694,18 @@
       preselectCorpInSitopCB();
       const btn = event.currentTarget;
       const recordAttr = btn.getAttribute("data-record");
-      if (!recordAttr) return console.error("Erro: data-record não encontrado.");
+      if (!recordAttr) {
+        console.error("Erro: Atributo data-record não encontrado.");
+        return;
+      }
       const record = JSON.parse(recordAttr);
       inopsTableContainer.style.display = "none";
       if (oldInopBtn) oldInopBtn.classList.remove("active");
       sitopContainer.style.display = "block";
       sitopContainer.style.opacity = "0";
       setTimeout(() => sitopContainer.style.opacity = "1", 10);
-      setSitopHeader("validate");
+      const header = sitopContainer.querySelector(".card-header") || sitopContainer.querySelector(".major-card-header");
+      if (header) header.textContent = "COMUNICAR OPERACIONALIDADE";
       document.getElementById("sitop_veíc").value = record.vehicle || "";
       document.getElementById("sitop_veíc_registration").value = record.registration || "";
       document.getElementById("sitop_gdh_inop").value = record.gdh_inop || "";

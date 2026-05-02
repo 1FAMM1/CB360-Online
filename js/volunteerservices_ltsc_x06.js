@@ -83,6 +83,7 @@
         case 'CENTRAL':
         case 'EIP':
         case 'INEM':
+        case 'REMOÇÃO DE CADÁVER':
           setFieldsState(transportValueOnly, false);
           setFieldsState(transportExtraFields, true);
           setFieldsState(prevFields, true);
@@ -100,30 +101,35 @@
     function applyRules() {
       const typeRaw = document.getElementById('vsType').value;
       const type = normalizeText(typeRaw);
-      const local = normalizeText(document.getElementById('vsLocal').value);
+      const localRaw = document.getElementById('vsLocal').value;
+      const local = normalizeText(localRaw);
       const vsValue = document.getElementById('vsValue');
       const vsPrevValueHour = document.getElementById('vsPrevValueHour');
+      const containerOtherLocal = document.getElementById('container-vsOtherLocal');
+      const vsOtherLocal = document.getElementById('vsOtherLocal');
       vsValue.value = '';
       vsPrevValueHour.value = '';
+      containerOtherLocal.style.display = 'none';
+      vsOtherLocal.value = '';
       if (type === 'transporte de doentes') {
-        const match = vsValuesCache.find(item => item.type === 'TRANSPORTE DE DOENTES' && normalizeText(item.desteny) === local);
-        if (match) {
-          vsValue.value = match.value || '';
-          document.getElementById('vsQtdSick')._extraSickRate = parseFloat(match.extra_sick) || 0;
-          document.getElementById('vsWaitHrs')._extraHourRate = parseFloat(match.extra_hour) || 0;
+        if (localRaw === 'Outro') {
+          containerOtherLocal.style.display = 'flex';
+        } else {
+          const match = vsValuesCache.find(item => item.type === 'TRANSPORTE DE DOENTES' && normalizeText(item.desteny) === local);
+          if (match) {
+            vsValue.value = match.value || '';
+            document.getElementById('vsQtdSick')._extraSickRate = parseFloat(match.extra_sick) || 0;
+            document.getElementById('vsWaitHrs')._extraHourRate = parseFloat(match.extra_hour) || 0;
+          }
         }
-      } 
-      else if (type === 'prevencao' || type === 'prevencao ') {
+      }
+      else if (type === 'prevencao') {
         const match = vsValuesCache.find(item => normalizeText(item.type) === 'prevencao');
-        if (match) {
-          vsPrevValueHour.value = match.value || '';
-        }
+        if (match) vsPrevValueHour.value = match.value || '';
       }
       else if (type !== '') {
         const match = vsValuesCache.find(item => normalizeText(item.type) === type);
-        if (match) {
-          vsValue.value = match.value || '';
-        }
+        if (match) vsValue.value = match.value || '';
       }
       calculateGlobalTotal();
     }
@@ -214,7 +220,8 @@
       const typeNormalized = normalizeText(serviceType);
       const valSelect = document.getElementById('vsLocal').value;
       const valText = document.getElementById('vsLocalText').value;
-      let finalLocal = valSelect || valText;
+      const valOther = document.getElementById('vsOtherLocal').value;
+      let finalLocal = valSelect === 'Outro' ? valOther : (valSelect || valText);
       if (!serviceDate || !serviceType || !nInt || !abvName) {
         showPopup('popup-danger', 'Falta preencher campos obrigatórios.');
         return;
@@ -275,6 +282,10 @@
           el.setAttribute('style', 'width:100px; text-align:center; font-size:20px !important; height:40px !important;');
         }
       });
+      document.getElementById('vsLocalText').value = '';
+      document.getElementById('vsLocalText').style.display = 'none';
+      document.getElementById('vsOtherLocal').value = '';
+      document.getElementById('container-vsOtherLocal').style.display = 'none';
     }
     document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('services-save-button')?.addEventListener('click', saveVolunteerService);
@@ -672,8 +683,9 @@
         document.getElementById('vsOValue').value = item.value || '';
       }
       const btn = document.getElementById('services-values-save-button');
-      btn.innerHTML = '✏️ Atualizar Configuração';
-      btn.style.backgroundColor = '#e67e22';
+      btn.innerHTML = '✏️ Atualizar';
+      btn.classList.remove('btn-add');
+      btn.classList.add('btn-danger');
       window.scrollTo({top: 0, behavior: 'smooth'});
     }
     const svValuesTableHTML = `
@@ -735,8 +747,8 @@
               <td style="${tdStyle} border-left:1px solid #ccc; text-align:right;">${item.extra_sick ? item.extra_sick + ' €' : '-'}</td>
               <td style="${tdStyle} border-left:1px solid #ccc; text-align:right;">${item.extra_hour ? item.extra_hour + ' €' : '-'}</td>
               <td style="${tdStyle} border-left:1px solid #ccc;">
-                <button onclick="editServiceValue('${itemData}')" style="background:none; border:none; cursor:pointer; font-size:14px;" title="Editar">✏️</button>
-                <button onclick="deleteServiceValue(${item.id})" style="background:none; border:none; cursor:pointer; font-size:14px; margin-left:8px;" title="Eliminar">🗑️</button>
+                <button onclick="editServiceValue('${itemData}')" class="btn btn-add" style="padding: 2px 8px; font-size: 14px;" title="Editar">✏️</button>
+                <button onclick="deleteServiceValue(${item.id})" class="btn btn-danger" style="padding: 2px 8px; font-size:14px; margin-left:5px;" title="Eliminar">🗑️</button>
               </td>
             </tr>
           `;
@@ -768,8 +780,9 @@
       });
       const btn = document.getElementById('services-values-save-button');
       if (btn) {
-        btn.innerHTML = 'Guardar Configuração';
-        btn.style.backgroundColor = ''; 
+        btn.innerHTML = '💾 Guardar';
+        btn.classList.remove('btn-danger');
+        btn.classList.add('btn-add'); 
       }
       loadServiceValuesTable();
     }

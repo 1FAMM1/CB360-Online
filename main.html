@@ -1137,10 +1137,16 @@
             </div>
             <div class="major-field" id="container-vsLocal">
               <label for="vsLocal">Local</label>
-              <select id="vsLocal" style="width: 350px;">
-                <option value="">Selecione...</option>                
-              </select>
-              <input type="text" id="vsLocalText" placeholder="Escreva o local..." style="width: 350px; display: none;">
+              <div style="display: flex; flex-direction: row; align-items: center; gap: 10px;">
+                <select id="vsLocal" style="width: 200px;">
+                  <option value="">Selecione...</option>
+                </select>
+                <input type="text" id="vsLocalText" placeholder="Escreva o local..." style="width: 350px; display: none;">                
+              </div>
+            </div>
+            <div class="major-field" id="container-vsOtherLocal" style="display: none;">
+              <label for="vsOtherLocal">Qual?</label>
+              <input type="text" id="vsOtherLocal" placeholder="Escreva o local..." style="width: 350px;">
             </div>
           </div>
           <div class="volunteer-service-section-label">Transporte de Doentes\INEM\Serviço Geral\Central\EIP</div>

@@ -133,3 +133,4 @@
     startClock();
     const usernameInput = document.getElementById("username");
     if (usernameInput) usernameInput.focus();
+    document.getElementById('login-footer-year').textContent = new Date().getFullYear();

@@ -2696,7 +2696,7 @@
       sitopContainer.style.display = "block";
       sitopContainer.style.opacity = "0";
       setTimeout(() => sitopContainer.style.opacity = "1", 10);
-      const header = sitopContainer.querySelector(".card-header") || sitopContainer.querySelector(".major-card-header");
+      const header = sitopContainer.querySelector(".major-card-header") || sitopContainer.querySelector(".major-card-header");
       if (header) header.textContent = "COMUNICAR OPERACIONALIDADE";
       document.getElementById("sitop_veíc").value = record.vehicle || "";
       document.getElementById("sitop_veíc_registration").value = record.registration || "";

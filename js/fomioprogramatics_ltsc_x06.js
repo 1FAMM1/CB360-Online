@@ -921,59 +921,65 @@
       } catch (err) {
         console.error("Erro ao carregar modo DECIR:", err);
       }
-      const DECIR_MODES = {'1_ecin': {minMP: 1, minTotal: 5}, '1_ecin_1_elac': {minMP: 2, minTotal: 7}, 'brigada': {minMP: 3, minTotal: 12}};
+      const DECIR_MODES = {'1_ecin': {minMP: 1, minTotal: 5}, '1_ecin_1_elac': {minMP: 2, minTotal: 7}, 'brigada': {minMP: 3, minTotal: 12}};      
       const limits = DECIR_MODES[mode] || DECIR_MODES['1_ecin'];
-      const minBBs = limits.minTotal - limits.minMP;
+      const minBBs = limits.minTotal - limits.minMP;    
       const daysInMonth = new Date(selectedYear, monthIndex, 0).getDate();
       const startDay = monthIndex === 5 ? 15 : 1;
       const endDay = monthIndex === 10 ? 15 : daysInMonth;
-      const issues = [];
+      const issues = [];    
       for (let d = startDay; d <= endDay; d++) {
-        let mpDayCount = 0, mpNightCount = 0, totalDayCount = 0, totalNightCount = 0;
+        let mpDayCount = 0, mpNightCount = 0, totalDayCount = 0, totalNightCount = 0;        
         tbody.querySelectorAll("tr:not(.totals-row):not(.mp-dia-row):not(.mp-noite-row):not(.elem-dia-row):not(.elem-noite-row):not(.fixed-row)").forEach(tr => {
           const nInt = parseInt(tr.getAttribute("data-nint"), 10);
           const person = currentTableData.find(p => parseInt(p.n_int, 10) === nInt);
           if (!person) return;
           const td = tr.querySelector(`.day-cell-${d}`);
           if (!td || td.style.display === "none") return;
-          const v = td.textContent.toUpperCase().trim();
+          const v = td.textContent.toUpperCase().trim();          
           const isDay = (v === "ED" || v === "ET");
-          const isNight = (v === "EN" || v === "ET");
+          const isNight = (v === "EN" || v === "ET");    
           if (isDay) totalDayCount++;
-          if (isNight) totalNightCount++;
+          if (isNight) totalNightCount++;          
           if (person.MP) {
             if (v === "ED") mpDayCount++;
             else if (v === "EN") mpNightCount++;
             else if (v === "ET") {mpDayCount++; mpNightCount++;}
           }
-        });
+        });    
         const red = (txt) => `<span style="color: #ff4d4d;">${txt}</span>`;
         const styleED = `<span style="color: #DAA520;">Turno ED</span>`;
-        const styleEN = `<span style="color: #4A90E2;">Turno EN</span>`;
+        const styleEN = `<span style="color: #4A90E2;">Turno EN</span>`;    
         let dayED = [];
         let dayEN = [];
+        let faltaMP_D = 0;
         if (mpDayCount < limits.minMP) {
-          dayED.push(`MP: ${red(limits.minMP - mpDayCount)}`);
-        }
+          faltaMP_D = limits.minMP - mpDayCount;
+          dayED.push(`MP: ${red(faltaMP_D)}`);
+        }        
         if (totalDayCount < limits.minTotal) {
-          const faltaTotal = limits.minTotal - totalDayCount;
-          dayED.push(`BBs: ${red(faltaTotal)}`);
+          const vagasAbertas = limits.minTotal - totalDayCount;
+          const faltaBBs = vagasAbertas - faltaMP_D; 
+          if (faltaBBs > 0) dayED.push(`BBs: ${red(faltaBBs)}`);
         } else if (totalDayCount > limits.minTotal) {
-          dayED.push(red(`${totalDayCount - limits.minTotal} BBs em excesso`));
+          dayED.push(red(`${totalDayCount - limits.minTotal} em excesso`));
         }
+        let faltaMP_N = 0;
         if (mpNightCount < limits.minMP) {
-          dayEN.push(`MP: ${red(limits.minMP - mpNightCount)}`);
-        }
+          faltaMP_N = limits.minMP - mpNightCount;
+          dayEN.push(`MP: ${red(faltaMP_N)}`);
+        }        
         if (totalNightCount < limits.minTotal) {
-          const faltaTotal = limits.minTotal - totalNightCount;
-          dayEN.push(`BBs: ${red(faltaTotal)}`);
+          const vagasAbertasN = limits.minTotal - totalNightCount;
+          const faltaBBsN = vagasAbertasN - faltaMP_N;
+          if (faltaBBsN > 0) dayEN.push(`BBs: ${red(faltaBBsN)}`);
         } else if (totalNightCount > limits.minTotal) {
-          dayEN.push(red(`${totalNightCount - limits.minTotal} BBs em excesso`));
-        }
+          dayEN.push(red(`${totalNightCount - limits.minTotal} em excesso`));
+        }    
         if (dayED.length > 0) issues.push(`Dia ${d}: ${styleED} ${dayED.join(" | ")}`);
         if (dayEN.length > 0) issues.push(`Dia ${d}: ${styleEN} ${dayEN.join(" | ")}`);
-      }
-      const modeLabel = { '1_ecin': '1 ECIN', '1_ecin_1_elac': '1 ECIN + 1 ELAC', 'brigada': 'Brigada' }[mode] || mode;
+      }    
+      const modeLabel = { '1_ecin': '1 ECIN', '1_ecin_1_elac': '1 ECIN + 1 ELAC', 'brigada': 'Brigada' }[mode] || mode;      
       if (issues.length === 0) {
         showPopup('popup-success', `✅ Dotação mínima assegurada para <b>${modeLabel}</b>.`);
       } else {
@@ -984,7 +990,7 @@
               <li><span style="font-size:20px;">•</span> <b>⚠️ Análise DECIR (${modeLabel})</b></li>
               <li style="margin-left: 14px;"><small>Dotação: ${limits.minMP} MP + ${minBBs} BBs (Total: ${limits.minTotal})</small></li>
               <li><div style='max-height:200px; overflow-y:auto; margin: 10px 0; font-weight: bold;'>${issues.join("<br>")}</div></li>
-              <li><small>ℹ️ Faltas de MP são prioritárias. Falta de BBs só aparece se o total for inferior a ${limits.minTotal}.</small></li>
+              <li><small>ℹ️ Faltas de MP são prioritárias. Excessos baseados no total do turno.</small></li>
             </ul>`;
           popupDecir.classList.add('show');
         }

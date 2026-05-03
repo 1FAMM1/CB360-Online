@@ -988,7 +988,7 @@
           popupDecir.querySelector('.popup-body').innerHTML = `
             <ul style="list-style:none; padding:0; margin:0;">
               <li><span style="font-size:20px;">•</span> <b>⚠️ Análise DECIR (${modeLabel})</b></li>
-              <li style="margin-left: 14px;"><small>Dotação: ${limits.minMP} MP + ${minBBs} BBs (Total: ${limits.minTotal})</small></li>
+              <li style="margin-left: 14px;"><small>Dotação: ${limits.minMP} Motortista + ${minBBs} Bombeiros (Total: ${limits.minTotal} Elementos.)</small></li>
               <li><div style='max-height:200px; overflow-y:auto; margin: 10px 0; font-weight: bold;'>${issues.join("<br>")}</div></li>
               <li><small>ℹ️ A análise verifica as dotações mínimas por turno (Dia/Noite) de acordo com o modo DECIR configurado. Separando Motoristas de Pesados e Bombeiros.</small></li>
             </ul>`;

@@ -952,29 +952,29 @@
         const styleEN = `<span style="color: #4A90E2;">Turno EN</span>`;    
         let dayED = [];
         let dayEN = [];
-        let faltaMP_D = 0;
+        let absentMP_D = 0;
         if (mpDayCount < limits.minMP) {
-          faltaMP_D = limits.minMP - mpDayCount;
-          dayED.push(`MP: ${red(faltaMP_D)}`);
+          absentMP_D = limits.minMP - mpDayCount;
+          dayED.push(`MP: ${red(absentMP_D)}`);
         }        
         if (totalDayCount < limits.minTotal) {
-          const vagasAbertas = limits.minTotal - totalDayCount;
-          const faltaBBs = vagasAbertas - faltaMP_D; 
-          if (faltaBBs > 0) dayED.push(`BBs: ${red(faltaBBs)}`);
+          const openPositionsD = limits.minTotal - totalDayCount;
+          const absentBBsD = openPositionsD - absentMP_D; 
+          if (absentBBsD > 0) dayED.push(`BBs: ${red(absentBBsD)}`);
         } else if (totalDayCount > limits.minTotal) {
-          dayED.push(red(`${totalDayCount - limits.minTotal} em excesso`));
+          dayED.push(red(`${totalDayCount - limits.minTotal} BBs em excesso`));
         }
-        let faltaMP_N = 0;
+        let absentMP_N = 0;
         if (mpNightCount < limits.minMP) {
-          faltaMP_N = limits.minMP - mpNightCount;
-          dayEN.push(`MP: ${red(faltaMP_N)}`);
+          absentMP_N = limits.minMP - mpNightCount;
+          dayEN.push(`MP: ${red(absentMP_N)}`);
         }        
         if (totalNightCount < limits.minTotal) {
-          const vagasAbertasN = limits.minTotal - totalNightCount;
-          const faltaBBsN = vagasAbertasN - faltaMP_N;
-          if (faltaBBsN > 0) dayEN.push(`BBs: ${red(faltaBBsN)}`);
+          const openPositionsN = limits.minTotal - totalNightCount;
+          const absenBBsN = openPositionsN - absentMP_N;
+          if (absenBBsN > 0) dayEN.push(`BBs: ${red(absenBBsN)}`);
         } else if (totalNightCount > limits.minTotal) {
-          dayEN.push(red(`${totalNightCount - limits.minTotal} em excesso`));
+          dayEN.push(red(`${totalNightCount - limits.minTotal} BBs em excesso`));
         }    
         if (dayED.length > 0) issues.push(`Dia ${d}: ${styleED} ${dayED.join(" | ")}`);
         if (dayEN.length > 0) issues.push(`Dia ${d}: ${styleEN} ${dayEN.join(" | ")}`);

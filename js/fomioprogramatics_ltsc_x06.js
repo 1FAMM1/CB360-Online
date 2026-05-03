@@ -922,17 +922,14 @@
         console.error("Erro ao carregar modo DECIR:", err);
       }
       const DECIR_MODES = {'1_ecin': {minMP: 1, minElems: 5}, '1_ecin_1_elac': {minMP: 2, minElems: 7}, 'brigada': {minMP: 3, minElems: 12}};
-      const limits = DECIR_MODES[mode] || DECIR_MODES['1_ecin_1_elac'];
+      const limits = DECIR_MODES[mode] || DECIR_MODES['1_ecin'];
       const daysInMonth = new Date(selectedYear, monthIndex, 0).getDate();
       const startDay = monthIndex === 5 ? 15 : 1;
       const endDay = monthIndex === 10 ? 15 : daysInMonth;
       const issues = [];
       for (let d = startDay; d <= endDay; d++) {
         const dayIssues = [];
-        let mpDayCount = 0;
-        let mpNightCount = 0;
-        let elemDayCount = 0;
-        let elemNightCount = 0;
+        let mpDayCount = 0, mpNightCount = 0, elemDayCount = 0, elemNightCount = 0;
         tbody.querySelectorAll("tr:not(.totals-row):not(.mp-dia-row):not(.mp-noite-row):not(.elem-dia-row):not(.elem-noite-row):not(.fixed-row)").forEach(tr => {
           const nInt = parseInt(tr.getAttribute("data-nint"), 10);
           const person = currentTableData.find(p => parseInt(p.n_int, 10) === nInt);
@@ -948,23 +945,32 @@
             else if (v === "ET") {mpDayCount++; mpNightCount++;}
           }
         });
-        if (mpDayCount < limits.minMP) dayIssues.push(`Motoristas de Pesados ED: ${mpDayCount}/${limits.minMP}`);
-        if (mpNightCount < limits.minMP) dayIssues.push(`Motoristas de Pesados EN: ${mpNightCount}/${limits.minMP}`);
-        if (elemDayCount < limits.minElems) dayIssues.push(`Elementos ED: ${elemDayCount}/${limits.minElems}`);
-        else if (elemDayCount > limits.minElems) dayIssues.push(`<span style="color:red;">Elementos ED: excesso de ${elemDayCount - limits.minElems}</span>`);
-        if (elemNightCount < limits.minElems) dayIssues.push(`Elementos EN: ${elemNightCount}/${limits.minElems}`);
-        else if (elemNightCount > limits.minElems) dayIssues.push(`<span style="color:red;">Elementos EN: excesso de ${elemNightCount - limits.minElems}</span>`);
+        const red = (txt) => `<span style="color: #ff4d4d;">${txt}</span>`;
+        if (mpDayCount < limits.minMP) dayIssues.push(`Turno ED MP: ${red(limits.minMP - mpDayCount)}`);
+        if (mpNightCount < limits.minMP) dayIssues.push(`Turno EN MP: ${red(limits.minMP - mpNightCount)}`);
+        if (elemDayCount < limits.minElems) {
+          dayIssues.push(`Turno ED Elems.: ${red(limits.minElems - elemDayCount)}`);
+        } else if (elemDayCount > limits.minElems) {
+          const excesso = elemDayCount - limits.minElems;
+          dayIssues.push(red(`Turno ED Elems.: ${excesso} em excesso`));
+        }
+        if (elemNightCount < limits.minElems) {
+          dayIssues.push(`Turno EN Elems.: ${red(limits.minElems - elemNightCount)}`);
+        } else if (elemNightCount > limits.minElems) {
+          const excesso = elemNightCount - limits.minElems;
+          dayIssues.push(red(`Turno EN Elems.: ${excesso} em excesso`));
+        }
         if (dayIssues.length > 0) issues.push(`Dia ${d}: ${dayIssues.join(" | ")}`);
       }
-      const modeLabel = {'1_ecin': '1 ECIN', '1_ecin_1_elac': '1 ECIN + 1 ELAC', 'brigada': 'Brigada'}[mode] || mode;
+      const modeLabel = { '1_ecin': '1 ECIN', '1_ecin_1_elac': '1 ECIN + 1 ELAC', 'brigada': 'Brigada' }[mode] || mode;
       if (issues.length === 0) {
         showPopup('popup-success', `✅ Todos os dias têm a dotação mínima assegurada para o modo <b>${modeLabel}</b>.`);
       } else {
         const popupDecir = document.getElementById('popup-analyze-decir');
         if (popupDecir) {
-          popupDecir.querySelector('.popup-body').innerHTML =
-            `<ul style="list-style:none; padding:0; margin:0;">
-              <li><span style="font-size:20px;">•</span> <b>⚠️ Modo DECIR: ${modeLabel}</b></li>
+          popupDecir.querySelector('.popup-body').innerHTML = `
+            <ul style="list-style:none; padding:0; margin:0;">
+              <li><span style="font-size:20px;">•</span> <b>⚠️ Turnos por Preencher (Modo: ${modeLabel})</b></li>
               <li style="margin-left: 14px;"><small>Motoristas de Pesados - Mín: ${limits.minMP} | Elementos - Mín: ${limits.minElems} (por turno)</small></li>
               <li><div style='max-height:200px; overflow-y:auto; margin: 10px 0; font-weight: bold;'>${issues.join("<br>")}</div></li>
               <li><small>ℹ️ A análise verifica as dotações mínimas por turno (Dia/Noite) de acordo com o modo DECIR configurado.</small></li>
@@ -972,6 +978,55 @@
           popupDecir.classList.add('show');
         }
       }
+    }
+    function requestDecirElements() {
+      const selectedYear = parseInt($("year-selector")?.value, 10);
+      const monthIndex = getActiveMonthIndex();
+      const nameMonth = MONTH_NAMES_PT[monthIndex - 1];
+      const divIssues = document.querySelector('#popup-analyze-decir .popup-body div');
+      if (!divIssues) return;
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = divIssues.innerHTML;
+      tempDiv.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
+      let lines = tempDiv.innerText.split('\n').filter(line => line.trim() !== "");
+      let finalLines = [];
+      lines.forEach(line => {
+        const parts = line.split(':');
+        if (parts.length < 2) return;
+        const diaLabel = parts[0].trim();
+        const content = parts.slice(1).join(':');
+        const issues = content.split('|')
+        .map(i => i.trim())
+        .filter(i => i !== "" && !i.toLowerCase().includes('excesso'));
+        const clearText = (text) => {
+          let cleaned = text
+          .replace(/Motoristas (de )?Pesados/gi, "MP")
+          .replace(/Elementos|Elems\.?|Elems/gi, "BBs")
+          .replace(/Turno|ED|EN/gi, "")
+          .replace(/\s+/g, " ")
+          .trim();
+          return cleaned.replace(/:\s*(\d+)/, ": *$1*");
+        };
+        const absencesED = issues.filter(i => i.toUpperCase().includes('ED')).map(clearText);
+        const absencesEN = issues.filter(i => i.toUpperCase().includes('EN')).map(clearText);
+        if (absencesED.length > 0) {
+          finalLines.push(`${diaLabel}: Turno ED ${absencesED.join(' | ')}`);
+        }
+        if (absencesEN.length > 0) {
+          finalLines.push(`${diaLabel}: Turno EN ${absencesEN.join(' | ')}`);
+        }
+      });
+      let message = `*🚨INFORMAÇÃO🚨*\n\n`;
+      message += `*Turnos DECIR por Preencher - ${nameMonth} ${selectedYear}*\n\n`;
+      message += `${finalLines.join('\n')}\n\n`;
+      message += `As disponibilidades devem ser remetidas para adjunto.faroahb@gamil.com com conhecimento de comando0805.ahbfaro@gamil.com.`;
+      message += `Obrigado pela vossa colaboração!`;
+      navigator.clipboard.writeText(message).then(() => {
+        closePopup('popup-analyze-decir');
+        showPopup('popup-success', "Mensagem criada e copiada! Pode colar no WhatsApp.");
+      }).catch(() => {
+        showPopup('popup-danger', 'Erro ao copiar. Tente novamente.');
+      });
     }
     function initSaveButton() {
       const saveBtn = $("save-button");

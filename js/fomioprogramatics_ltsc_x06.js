@@ -990,7 +990,7 @@
               <li><span style="font-size:20px;">•</span> <b>⚠️ Análise DECIR (${modeLabel})</b></li>
               <li style="margin-left: 14px;"><small>Dotação: ${limits.minMP} MP + ${minBBs} BBs (Total: ${limits.minTotal})</small></li>
               <li><div style='max-height:200px; overflow-y:auto; margin: 10px 0; font-weight: bold;'>${issues.join("<br>")}</div></li>
-              <li><small>ℹ️ Faltas de MP são prioritárias. Excessos baseados no total do turno.</small></li>
+              <li><small>ℹ️ A análise verifica as dotações mínimas por turno (Dia/Noite) de acordo com o modo DECIR configurado. Separando Motoristas de Pesados e Bombeiros.</small></li>
             </ul>`;
           popupDecir.classList.add('show');
         }
@@ -1011,26 +1011,27 @@
         const parts = line.split(':');
         if (parts.length < 2) return;
         const diaLabel = parts[0].trim();
-        const content = parts.slice(1).join(':');
-        const issues = content.split('|')
-        .map(i => i.trim())
-        .filter(i => i !== "" && !i.toLowerCase().includes('excesso'));
+        const restOfLine = parts.slice(1).join(':');
+        const isED = restOfLine.toUpperCase().includes('ED');
+        const isEN = restOfLine.toUpperCase().includes('EN');
+        const issues = restOfLine.split('|')
+          .map(i => i.trim())
+          .filter(i => i !== "" && !i.toLowerCase().includes('excesso'));
+        if (issues.length === 0) return;
         const clearText = (text) => {
-          let cleaned = text
-          .replace(/Motoristas (de )?Pesados/gi, "MP")
-          .replace(/Elementos|Elems\.?|Elems/gi, "BBs")
-          .replace(/Turno|ED|EN/gi, "")
-          .replace(/\s+/g, " ")
-          .trim();
-          return cleaned.replace(/:\s*(\d+)/, ": *$1*");
+          return text
+            .replace(/Turno|ED|EN/gi, "") 
+            .replace(/Motoristas (de )?Pesados/gi, "MP")
+            .replace(/Elementos|Elems\.?|Elems/gi, "BBs")
+            .replace(/:\s*(\d+)/g, ": *$1*") 
+            .replace(/\s+/g, " ")
+            .trim();
         };
-        const absencesED = issues.filter(i => i.toUpperCase().includes('ED')).map(clearText);
-        const absencesEN = issues.filter(i => i.toUpperCase().includes('EN')).map(clearText);
-        if (absencesED.length > 0) {
-          finalLines.push(`${diaLabel}: Turno ED ${absencesED.join(' | ')}`);
-        }
-        if (absencesEN.length > 0) {
-          finalLines.push(`${diaLabel}: Turno EN ${absencesEN.join(' | ')}`);
+        const cleanedIssues = issues.map(clearText).join(' | ');
+        if (isED) {
+          finalLines.push(`${diaLabel}: Turno ED ${cleanedIssues}`);
+        } else if (isEN) {
+          finalLines.push(`${diaLabel}: Turno EN ${cleanedIssues}`);
         }
       });
       let message = `*🚨INFORMAÇÃO🚨*\n\n`;
@@ -1042,7 +1043,7 @@
         closePopup('popup-analyze-decir');
         showPopup('popup-success', "Mensagem criada e copiada! Pode colar no WhatsApp.");
       }).catch(() => {
-        showPopup('popup-danger', 'Erro ao copiar. Tente novamente.');
+        showPopup('popup-danger', 'Erro ao copiar.');
       });
     }
     function initSaveButton() {

@@ -921,14 +921,13 @@
       } catch (err) {
         console.error("Erro ao carregar modo DECIR:", err);
       }
-      const DECIR_MODES = {'1_ecin': {minMP: 1, minElems: 5}, '1_ecin_1_elac': {minMP: 2, minElems: 7}, 'brigada': {minMP: 3, minElems: 12}};
+      const DECIR_MODES = { '1_ecin': {minMP: 1, minElems: 5}, '1_ecin_1_elac': {minMP: 2, minElems: 7}, 'brigada': {minMP: 3, minElems: 12}};
       const limits = DECIR_MODES[mode] || DECIR_MODES['1_ecin'];
       const daysInMonth = new Date(selectedYear, monthIndex, 0).getDate();
       const startDay = monthIndex === 5 ? 15 : 1;
       const endDay = monthIndex === 10 ? 15 : daysInMonth;
       const issues = [];
       for (let d = startDay; d <= endDay; d++) {
-        const dayIssues = [];
         let mpDayCount = 0, mpNightCount = 0, elemDayCount = 0, elemNightCount = 0;
         tbody.querySelectorAll("tr:not(.totals-row):not(.mp-dia-row):not(.mp-noite-row):not(.elem-dia-row):not(.elem-noite-row):not(.fixed-row)").forEach(tr => {
           const nInt = parseInt(tr.getAttribute("data-nint"), 10);
@@ -946,23 +945,26 @@
           }
         });
         const red = (txt) => `<span style="color: #ff4d4d;">${txt}</span>`;
-        if (mpDayCount < limits.minMP) dayIssues.push(`Turno ED MP: ${red(limits.minMP - mpDayCount)}`);
-        if (mpNightCount < limits.minMP) dayIssues.push(`Turno EN MP: ${red(limits.minMP - mpNightCount)}`);
+        const styleED = `<span style="color: #DAA520;">Turno ED</span>`;
+        const styleEN = `<span style="color: #4A90E2;">Turno EN</span>`;
+        let dayED = [];
+        let dayEN = [];
+        if (mpDayCount < limits.minMP) dayED.push(`MP: ${red(limits.minMP - mpDayCount)}`);
         if (elemDayCount < limits.minElems) {
-          dayIssues.push(`Turno ED Elems.: ${red(limits.minElems - elemDayCount)}`);
+          dayED.push(`BBs: ${red(limits.minElems - elemDayCount)}`);
         } else if (elemDayCount > limits.minElems) {
-          const excesso = elemDayCount - limits.minElems;
-          dayIssues.push(red(`Turno ED Elems.: ${excesso} em excesso`));
+          dayED.push(red(`${elemDayCount - limits.minElems} BBs em excesso`));
         }
+        if (mpNightCount < limits.minMP) dayEN.push(`MP: ${red(limits.minMP - mpNightCount)}`);
         if (elemNightCount < limits.minElems) {
-          dayIssues.push(`Turno EN Elems.: ${red(limits.minElems - elemNightCount)}`);
+          dayEN.push(`BBs: ${red(limits.minElems - elemNightCount)}`);
         } else if (elemNightCount > limits.minElems) {
-          const excesso = elemNightCount - limits.minElems;
-          dayIssues.push(red(`Turno EN Elems.: ${excesso} em excesso`));
+          dayEN.push(red(`${elemNightCount - limits.minElems} BBs em excesso`));
         }
-        if (dayIssues.length > 0) issues.push(`Dia ${d}: ${dayIssues.join(" | ")}`);
+        if (dayED.length > 0) issues.push(`Dia ${d}: ${styleED} ${dayED.join(" | ")}`);
+        if (dayEN.length > 0) issues.push(`Dia ${d}: ${styleEN} ${dayEN.join(" | ")}`);
       }
-      const modeLabel = { '1_ecin': '1 ECIN', '1_ecin_1_elac': '1 ECIN + 1 ELAC', 'brigada': 'Brigada' }[mode] || mode;
+      const modeLabel = {'1_ecin': '1 ECIN', '1_ecin_1_elac': '1 ECIN + 1 ELAC', 'brigada': 'Brigada'}[mode] || mode;
       if (issues.length === 0) {
         showPopup('popup-success', `✅ Todos os dias têm a dotação mínima assegurada para o modo <b>${modeLabel}</b>.`);
       } else {
@@ -971,7 +973,7 @@
           popupDecir.querySelector('.popup-body').innerHTML = `
             <ul style="list-style:none; padding:0; margin:0;">
               <li><span style="font-size:20px;">•</span> <b>⚠️ Turnos por Preencher (Modo: ${modeLabel})</b></li>
-              <li style="margin-left: 14px;"><small>Motoristas de Pesados - Mín: ${limits.minMP} | Elementos - Mín: ${limits.minElems} (por turno)</small></li>
+              <li style="margin-left: 14px;"><small>Motoristas de Pesados - Mín: ${limits.minMP} | BBs - Mín: ${limits.minElems} (por turno)</small></li>
               <li><div style='max-height:200px; overflow-y:auto; margin: 10px 0; font-weight: bold;'>${issues.join("<br>")}</div></li>
               <li><small>ℹ️ A análise verifica as dotações mínimas por turno (Dia/Noite) de acordo com o modo DECIR configurado.</small></li>
             </ul>`;

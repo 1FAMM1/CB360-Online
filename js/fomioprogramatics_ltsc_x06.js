@@ -972,7 +972,7 @@
         if (popupDecir) {
           popupDecir.querySelector('.popup-body').innerHTML = `
             <ul style="list-style:none; padding:0; margin:0;">
-              <li><span style="font-size:20px;">•</span> <b>⚠️ Turnos por Preencher (Modo: ${modeLabel})</b></li>
+              <li><span style="font-size:20px;">•</span> <b>⚠️ Turnos por Preencher (Modo: ${modeLabel}) e Turnos com Excessos.</b></li>
               <li style="margin-left: 14px;"><small>Motoristas de Pesados - Mín: ${limits.minMP} | BBs - Mín: ${limits.minElems} (por turno)</small></li>
               <li><div style='max-height:200px; overflow-y:auto; margin: 10px 0; font-weight: bold;'>${issues.join("<br>")}</div></li>
               <li><small>ℹ️ A análise verifica as dotações mínimas por turno (Dia/Noite) de acordo com o modo DECIR configurado.</small></li>

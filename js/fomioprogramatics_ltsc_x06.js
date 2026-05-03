@@ -1019,7 +1019,7 @@
       let message = `*🚨INFORMAÇÃO🚨*\n\n`;
       message += `*Turnos DECIR por Preencher - ${nameMonth} ${selectedYear}*\n\n`;
       message += `${finalLines.join('\n')}\n\n`;
-      message += `As disponibilidades devem ser remetidas para adjunto.faroahb@gamil.com com conhecimento de comando0805.ahbfaro@gamil.com.`;
+      message += `As disponibilidades devem ser remetidas para adjunto.faroahb@gamil.com com conhecimento de comando0805.ahbfaro@gamil.com.\n`;
       message += `Obrigado pela vossa colaboração!`;
       navigator.clipboard.writeText(message).then(() => {
         closePopup('popup-analyze-decir');

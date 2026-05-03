@@ -921,14 +921,15 @@
       } catch (err) {
         console.error("Erro ao carregar modo DECIR:", err);
       }
-      const DECIR_MODES = { '1_ecin': {minMP: 1, minElems: 5}, '1_ecin_1_elac': {minMP: 2, minElems: 7}, 'brigada': {minMP: 3, minElems: 12}};
+      const DECIR_MODES = {'1_ecin': {minMP: 1, minTotal: 5}, '1_ecin_1_elac': {minMP: 2, minTotal: 7}, 'brigada': {minMP: 3, minTotal: 12}};
       const limits = DECIR_MODES[mode] || DECIR_MODES['1_ecin'];
+      const minBBs = limits.minTotal - limits.minMP;
       const daysInMonth = new Date(selectedYear, monthIndex, 0).getDate();
       const startDay = monthIndex === 5 ? 15 : 1;
       const endDay = monthIndex === 10 ? 15 : daysInMonth;
       const issues = [];
       for (let d = startDay; d <= endDay; d++) {
-        let mpDayCount = 0, mpNightCount = 0, elemDayCount = 0, elemNightCount = 0;
+        let mpDayCount = 0, mpNightCount = 0, totalDayCount = 0, totalNightCount = 0;
         tbody.querySelectorAll("tr:not(.totals-row):not(.mp-dia-row):not(.mp-noite-row):not(.elem-dia-row):not(.elem-noite-row):not(.fixed-row)").forEach(tr => {
           const nInt = parseInt(tr.getAttribute("data-nint"), 10);
           const person = currentTableData.find(p => parseInt(p.n_int, 10) === nInt);
@@ -936,8 +937,10 @@
           const td = tr.querySelector(`.day-cell-${d}`);
           if (!td || td.style.display === "none") return;
           const v = td.textContent.toUpperCase().trim();
-          if (v === "ED" || v === "ET") elemDayCount++;
-          if (v === "EN" || v === "ET") elemNightCount++;
+          const isDay = (v === "ED" || v === "ET");
+          const isNight = (v === "EN" || v === "ET");
+          if (isDay) totalDayCount++;
+          if (isNight) totalNightCount++;
           if (person.MP) {
             if (v === "ED") mpDayCount++;
             else if (v === "EN") mpNightCount++;
@@ -949,35 +952,39 @@
         const styleEN = `<span style="color: #4A90E2;">Turno EN</span>`;
         let dayED = [];
         let dayEN = [];
-        if (mpDayCount < limits.minMP) dayED.push(`MP: ${red(limits.minMP - mpDayCount)}`);
-        if (elemDayCount < limits.minElems) {
-          dayED.push(`BBs: ${red(limits.minElems - elemDayCount)}`);
-        } else if (elemDayCount > limits.minElems) {
-          dayED.push(red(`${elemDayCount - limits.minElems} BBs em excesso`));
+        if (mpDayCount < limits.minMP) {
+          dayED.push(`MP: ${red(limits.minMP - mpDayCount)}`);
         }
-        if (mpNightCount < limits.minMP) dayEN.push(`MP: ${red(limits.minMP - mpNightCount)}`);
-        if (elemNightCount < limits.minElems) {
-          dayEN.push(`BBs: ${red(limits.minElems - elemNightCount)}`);
-        } else if (elemNightCount > limits.minElems) {
-          dayEN.push(red(`${elemNightCount - limits.minElems} BBs em excesso`));
+        if (totalDayCount < limits.minTotal) {
+          const faltaTotal = limits.minTotal - totalDayCount;
+          dayED.push(`BBs: ${red(faltaTotal)}`);
+        } else if (totalDayCount > limits.minTotal) {
+          dayED.push(red(`${totalDayCount - limits.minTotal} BBs em excesso`));
+        }
+        if (mpNightCount < limits.minMP) {
+          dayEN.push(`MP: ${red(limits.minMP - mpNightCount)}`);
+        }
+        if (totalNightCount < limits.minTotal) {
+          const faltaTotal = limits.minTotal - totalNightCount;
+          dayEN.push(`BBs: ${red(faltaTotal)}`);
+        } else if (totalNightCount > limits.minTotal) {
+          dayEN.push(red(`${totalNightCount - limits.minTotal} BBs em excesso`));
         }
         if (dayED.length > 0) issues.push(`Dia ${d}: ${styleED} ${dayED.join(" | ")}`);
         if (dayEN.length > 0) issues.push(`Dia ${d}: ${styleEN} ${dayEN.join(" | ")}`);
       }
-      const modeLabel = {'1_ecin': '1 ECIN', '1_ecin_1_elac': '1 ECIN + 1 ELAC', 'brigada': 'Brigada'}[mode] || mode;
+      const modeLabel = { '1_ecin': '1 ECIN', '1_ecin_1_elac': '1 ECIN + 1 ELAC', 'brigada': 'Brigada' }[mode] || mode;
       if (issues.length === 0) {
-        showPopup('popup-success', `✅ Todos os dias têm a dotação mínima assegurada para o modo <b>${modeLabel}</b>.`);
+        showPopup('popup-success', `✅ Dotação mínima assegurada para <b>${modeLabel}</b>.`);
       } else {
         const popupDecir = document.getElementById('popup-analyze-decir');
         if (popupDecir) {
           popupDecir.querySelector('.popup-body').innerHTML = `
             <ul style="list-style:none; padding:0; margin:0;">
-              <li><span style="font-size:20px;">•</span> <b>⚠️ Turnos por Preencher (Modo: ${modeLabel}) e Turnos com Excessos.</b></li>
-              <li style="margin-left: 14px;">
-                <small>MP - Mín: ${limits.minMP} | BBs - Mín: ${limits.minElems - limits.minMP} (por turno)</small>
-              </li>
+              <li><span style="font-size:20px;">•</span> <b>⚠️ Análise DECIR (${modeLabel})</b></li>
+              <li style="margin-left: 14px;"><small>Dotação: ${limits.minMP} MP + ${minBBs} BBs (Total: ${limits.minTotal})</small></li>
               <li><div style='max-height:200px; overflow-y:auto; margin: 10px 0; font-weight: bold;'>${issues.join("<br>")}</div></li>
-              <li><small>ℹ️ A análise verifica as dotações mínimas por turno (Dia/Noite) de acordo com o modo DECIR configurado.</small></li>
+              <li><small>ℹ️ Faltas de MP são prioritárias. Falta de BBs só aparece se o total for inferior a ${limits.minTotal}.</small></li>
             </ul>`;
           popupDecir.classList.add('show');
         }

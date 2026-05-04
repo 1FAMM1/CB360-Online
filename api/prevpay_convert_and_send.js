@@ -2,14 +2,17 @@
     import fs from 'fs';
     import os from 'os';
     import https from 'https';
+    import nodemailer from "nodemailer";
     import {ServicePrincipalCredentials, PDFServices, MimeType, CreatePDFResult, CreatePDFJob}
     from "@adobe/pdfservices-node-sdk";
     const CLIENT_ID = process.env.ADOBE_CLIENT_ID;
     const CLIENT_SECRET = process.env.ADOBE_CLIENT_SECRET;
+    const GMAIL_EMAIL = process.env.GMAIL_EMAIL;
+    const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
     const TEMPLATE_SIMPLIFIED = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/prevpay_simplified_template.xlsx";
     const TEMPLATE_DETAILED = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/prevpay_detailed_template.xlsx";
     export const config = {
-      api: {bodyParser: {sizeLimit: '10mb'}}
+      api: { bodyParser: {sizeLimit: '10mb'}}
     };
     async function downloadTemplate(url) {
       return new Promise((resolve, reject) => {
@@ -81,7 +84,8 @@
       const now = new Date();
       sheet.getCell('B38').value = `${now.getDate()} de ${MONTH_NAMES[now.getMonth()]} de ${now.getFullYear()}`;
       sheet.pageSetup = {orientation: "portrait", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
-                         margins: {left: 0.3, right: 0.7, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3}};}
+                         margins: {left: 0.3, right: 0.7, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3}};
+    }
     function fillDetailed(sheet, rows, year, month, globalTotal) {
       const monthName = MONTH_NAMES[parseInt(month)] || month;
       sheet.getCell('B5').value = `${monthName} ${year}`;
@@ -107,48 +111,71 @@
         sheet.getRow(r).hidden = true;
       }
       sheet.pageSetup = {orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
-                         margins: {left: 0.3, right: 0.3, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3}};}
+                         margins: {left: 0.3, right: 0.3, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3}};
+    }
+    async function handleSendEmail(req, res) {
+      const { to, subject, body } = req.body || {};
+      if (!to || !subject || !body) {
+        return res.status(400).json({ error: "Faltam dados essenciais (to, subject, body)." });
+      }
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: { user: GMAIL_EMAIL, pass: GMAIL_APP_PASSWORD }
+      });
+      await transporter.sendMail({ from: GMAIL_EMAIL, to, subject, html: body });
+      return res.status(200).json({ success: true, message: "Email enviado com sucesso." });
+    }
+    async function handleGenerateReport(req, res) {
+      const tempDir = os.tmpdir();
+      let outputFile = null;
+      const { rows, year, month, format, globalTotal, reportType } = req.body;
+      if (!Array.isArray(rows)) return res.status(400).json({ error: 'Rows inválidas' });
+      const isDetailed = reportType === 'Detalhado';
+      const templateUrl = isDetailed ? TEMPLATE_DETAILED : TEMPLATE_SIMPLIFIED;
+      const templateBuffer = await downloadTemplate(templateUrl);
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.load(templateBuffer);
+      const sheet = workbook.worksheets[0];
+      if (isDetailed) {
+        fillDetailed(sheet, rows, year, month, globalTotal);
+      } else {
+        fillSimplified(sheet, rows, year, month, globalTotal);
+      }
+      const prefix = isDetailed ? 'prevencoes_detalhado' : 'pagamento_prevencoes';
+      const safeFileName = `${prefix}_${year}_${String(month).padStart(2, '0')}`;
+      if (format === 'pdf') {
+        const xlsxBuffer = await workbook.xlsx.writeBuffer();
+        const pdfBuffer = await convertXLSXToPDF(xlsxBuffer, safeFileName);
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="${safeFileName}.pdf"`);
+        return res.status(200).send(pdfBuffer);
+      } else {
+        outputFile = `${tempDir}/${safeFileName}_${Date.now()}.xlsx`;
+        await workbook.xlsx.writeFile(outputFile);
+        const fileBuffer = fs.readFileSync(outputFile);
+        try { fs.unlinkSync(outputFile); } catch {}
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename="${safeFileName}.xlsx"`);
+        return res.status(200).send(fileBuffer);
+      }
+    }
     export default async function handler(req, res) {
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
       res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
       if (req.method === 'OPTIONS') return res.status(200).end();
       if (req.method !== 'POST') return res.status(405).json({error: 'Método não permitido'});
-      const tempDir = os.tmpdir();
-      let outputFile = null;
       try {
-        const {rows, year, month, format, globalTotal, reportType} = req.body;
-        if (!Array.isArray(rows)) return res.status(400).json({error: 'Rows inválidas'});
-        const isDetailed = reportType === 'Detalhado';
-        const templateUrl = isDetailed ? TEMPLATE_DETAILED : TEMPLATE_SIMPLIFIED;
-        const templateBuffer = await downloadTemplate(templateUrl);
-        const workbook = new ExcelJS.Workbook();
-        await workbook.xlsx.load(templateBuffer);
-        const sheet = workbook.worksheets[0];
-        if (isDetailed) {
-          fillDetailed(sheet, rows, year, month, globalTotal);
+        const { action } = req.body || {};
+        if (action === 'send-email') {
+          return await handleSendEmail(req, res);
+        } else if (action === 'generate-report') {
+          return await handleGenerateReport(req, res);
         } else {
-          fillSimplified(sheet, rows, year, month, globalTotal);
+          return res.status(400).json({error: "Action inválida. Use 'send-email' ou 'generate-report'."});
         }
-        const prefix = isDetailed ? 'prevencoes_detalhado' : 'pagamento_prevencoes';
-        const safeFileName = `${prefix}_${year}_${String(month).padStart(2, '0')}`;
-        if (format === 'pdf') {
-          const xlsxBuffer = await workbook.xlsx.writeBuffer();
-          const pdfBuffer = await convertXLSXToPDF(xlsxBuffer, safeFileName);
-          res.setHeader('Content-Type', 'application/pdf');
-          res.setHeader('Content-Disposition', `attachment; filename="${safeFileName}.pdf"`);
-          return res.status(200).send(pdfBuffer);
-        } else {
-          outputFile = `${tempDir}/${safeFileName}_${Date.now()}.xlsx`;
-          await workbook.xlsx.writeFile(outputFile);
-          const fileBuffer = fs.readFileSync(outputFile);
-          try { fs.unlinkSync(outputFile); } catch {}
-          res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-          res.setHeader('Content-Disposition', `attachment; filename="${safeFileName}.xlsx"`);
-          return res.status(200).send(fileBuffer);
-        }
-      } catch (e) {
-        try { if (outputFile) fs.unlinkSync(outputFile); } catch {}
-        return res.status(500).json({error: 'Erro interno', details: e.message});
+      } catch (err) {
+        console.error("Erro:", err);
+        return res.status(500).json({error: 'Erro interno', details: err.message});
       }
     }

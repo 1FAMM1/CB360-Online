@@ -24,7 +24,7 @@
 <body>
   <div class="container">
     <div class="cb-logo">
-      <img src="" alt="" class="cb-logo">
+      <img src="..." alt="" class="cb-logo">
     </div>
     <!--<div class="mark-logo">
       <img src="https://rjkbodfqsvckvnhjwmhg.supabase.co/storage/v1/object/public/cb_logos/Mark_Logo_White.png" alt="Logo CB" class="mark-logo">
@@ -33,7 +33,7 @@
       <div class="mark-logo"></div>
       <div class="header-title-container">
         <h1 class="header-title">Nome do CB</h1>
-        <h2 class="header-nr" ></h2>
+        <h2 class="header-nr">...</h2>
         <p class="header-subtitle">CB360 Online</p>
         <p class="header-authorization">
           Acesso Autorizado: <span id="authName">Administrador</span>
@@ -48,7 +48,7 @@
         <button id="logoutBtn" class="header-logout-btn fa fa-power-off" title="Sair do Sistema"></button>
       </div>
     </header>
-    <!---- SIDEBAR MODULE ---->
+    <!-- SIDEBAR MODULE -->
     <aside class="sidebar">
       <button class="sidebar-menu-button active" data-page="page-main" data-access="Menu Principal">
         <span class="fa fa-home" style="display: inline-flex; align-items: center; justify-content: center; background: #ddd; color: #444; width: 24px; height: 20px; border-radius: 4px;
@@ -373,6 +373,25 @@
         </div>
       </div>
     </div>
+    <!-- MAIN INFO -->
+    <div id="popup-maininfo" class="popup-modal">
+      <div class="popup-content popup-maininfo">
+        <div class="popup-header">
+          <div class="header-content" style="display: flex; align-items: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle;">
+              <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13 17H11V11H13V17ZM13 9H11V7H13V9Z" fill="#ffffff"/>
+            </svg>
+            <h3 style="margin: 0; color: #ffffff; font-size: 13px; font-weight: 850; letter-spacing: 1px;">INFORMAÇÃO</h3>
+          </div>
+        </div>
+        <div class="popup-body">
+          <ul><li>Mensagem informativa aqui</li></ul>
+        </div>
+        <div class="popup-footer">
+          <button class="popup-btn" onclick="closePopup('popup-info')">OK</button>
+        </div>
+      </div>
+    </div>
     <!-- VEHICLES MODAL -->
     <div id="vehicle-status-modal" class="vehicle-status-modal" tabindex="0">
       <div class="vehicle-status-modal-content">
@@ -382,7 +401,7 @@
             <rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v3h-7V8z"/>
               <circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
             </svg>
-            <span id="vehicle-status-modal-title"></span>
+            <span id="vehicle-status-modal-title">...</span>
           </h3>
           <button class="vehicle-status-modal-close" onclick="closeVehicleStatusModal()">✕</button>
         </div>
@@ -405,12 +424,11 @@
         </div>
         <div class="vehicle-status-modal-footer">
           <button id="vehicle-status-cancel-btn" class="vehicle-status-btn secondary" onclick="closeVehicleStatusModal()">Cancelar</button>
-          <button id="vehicle-status-ok-btn" class="vehicle-status-btn primary">Confirmar</button>
+          <button id="vehicle-status-ok-btn" class="vehicle-status-btn primary" onclick="">Confirmar</button>
         </div>
       </div>
-    </div>    
-    <!--------------------------->
-    <!---- TEMP POPUP MODULE ---->
+    </div>
+    <!-- TEMP POPUP MODULE -->
     <div id="popup-temp-modal" class="popup-modal" tabindex="0">
       <div class="popup-content">
         <h3>BREVEMENTE</h3>
@@ -418,8 +436,8 @@
         <button id="popup-temp-ok-btn" class="btn btn-success">OK</button>
       </div>
     </div>
-    <!---- DISPLAY CARDS MODULE ---->
-    <!----- MAIN CARD ----->
+    <!-- DISPLAY CARDS MODULE -->
+    <!-- MAIN CARD -->
     <main class="main-content">
       <div id="page-main" class="page active">
         <div class="major-card major-last-card">
@@ -454,7 +472,7 @@
           <div class="major-card-footer"></div>
         </div>
       </div>
-      <!---- CARD DECIR 360 ---->       
+      <!-- CARD DECIR 360 -->       
       <div id="page-decir" class="page">
         <div class="major-card major-last-card">
           <div class="major-card-header">BEM-VINDO À GESTÃO DECIR</div>
@@ -481,7 +499,7 @@
           <div class="major-card-footer"></div>
         </div>
       </div>
-      <!---- CARD FOMIO 360 ---->
+      <!-- CARD FOMIO 360 -->
       <div id="page-fomio" class="page">
         <div class="major-card major-last-card">
           <div class="major-card-header">BEM-VINDO À GESTÃO OPERACIONAL</div>
@@ -510,7 +528,7 @@
           <div class="major-card-footer"></div>
         </div>
       </div>
-      <!---- CARD EMPLOYEES 360 ---->
+      <!-- CARD EMPLOYEES 360 -->
       <div id="page-employees" class="page">
         <div class="major-card major-last-card">
           <div class="major-card-header">BEM-VINDO À GESTÃO DE RECURSOS HUMANOS</div>
@@ -542,7 +560,7 @@
           <div class="major-card-footer"></div>
         </div>
       </div>
-      <!---- CARD SALOC 360 ---->
+      <!-- CARD SALOC 360 -->
       <div id="page-saloc" class="page">
         <div class="major-card last-card">
           <div class="major-card-header">BEM-VINDO AO SALOC 360</div>
@@ -578,7 +596,7 @@
           <div class="major-card-footer"></div>
         </div>
       </div>
-      <!---- SUB-CARD PPI's 360 ---->
+      <!-- SUB-CARD PPI's 360 -->
       <div id="page-ppis" class="page">
         <div class="major-card major-last-card">
           <div class="major-card-header">PLANOS PRÉVIOS DE INTERVENÇÃO (PPI) – ALGARVE</div>
@@ -618,7 +636,7 @@
           <div class="major-card-footer"></div>
         </div>
       </div>
-      <!---- SUB-CARD REFUSALS AND INOPERACIONALITIES ---->
+      <!-- SUB-CARD REFUSALS AND INOPERACIONALITIES -->
       <div id="page-recservdescr" class="page">
         <div class="major-card major-last-card">
           <div class="major-card-header">GESTÃO DE RECUSAS DE SERVIÇOS E INOPERACIONALIDADES (INEM)</div>
@@ -658,7 +676,7 @@
           <div class="major-card-footer"></div>
         </div>
       </div>
-      <!---- SUB-CARD IMPORTANT DOCUMENTATTION ---->
+      <!-- SUB-CARD IMPORTANT DOCUMENTATTION -->
       <div id="page-docimport" class="page">
         <div class="major-card last-card">
           <div class="major-card-header">GESTÃO DE DOCUMENTAÇÃO OPERACIONAL E INSTITUCIONAL (DOC 360)</div>
@@ -684,7 +702,7 @@
           <div class="major-card-footer"></div>
         </div>
       </div>
-      <!---- CARD WSMS ---->
+      <!-- CARD WSMS -->
       <div id="page-wsms" class="page">
         <div class="major-card major-last-card">
           <div class="major-card-header">BEM-VINDO À COMUNICAÇÃO WSMS</div>
@@ -714,8 +732,8 @@
           <div class="major-card-footer"></div>
         </div>
       </div>
-      <!---- PROGRAM MODULES ---->
-      <!---- DECIR 360 ---->
+      <!-- PROGRAM MODULES -->
+      <!-- DECIR 360 -->
       <div id="modalConfigDecir" class="decir-modal-custom">
         <div class="decir-modal-content">
           <div class="decir-modal-header">
@@ -867,7 +885,7 @@
             REGISTO MENSAL DE OCORRÊNCIAS DECIR
           </div>
           <div class="major-card-body" style="font-family: 'Segoe UI', sans-serif;">
-            <div id="months-container-dec-reg" style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 0 0 0 0;"></div>
+            <div id="months-container-dec-reg-ocorr" style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 0 0 0 0;"></div>
           </div>          
           <div class="major-card-footer">
             <div class="action-buttons" id="decir-ocorr-options">
@@ -933,7 +951,7 @@
           <div class="major-card-footer"></div>
         </div>
       </div>
-      <!---- SCALE CREATION MODULE ---->
+      <!-- SCALE CREATION MODULE -->
       <div id="page-scales" class="page">
         <div class="major-card major-last-card">
           <div class="major-card-header header-red" id="scales-card-header">
@@ -964,7 +982,7 @@
           </div>
         </div>
       </div>
-      <!---- EVENT CREATION MODULE ---->
+      <!-- EVENT CREATION MODULE -->
       <div id="page-events" class="page">
         <div class="major-card" style="margin-bottom: 10px;">
           <div class="major-card-header header-red">
@@ -985,7 +1003,7 @@
                 <div class="major-field major-field--grow2">
                   <label for="eventType">Tipo</label>
                   <select id="eventType">
-                    <option value="">Selecione...</option>
+                    <option>Selecione...</option>
                     <option value="PREVENÇÃO">PREVENÇÃO</option>
                     <option value="TRANSPORTE">TRANSPORTE</option>
                     <option value="OUTRO">OUTRO</option>
@@ -1095,7 +1113,7 @@
         </div>
       </div>
     </div>
-    <!---- VACATIONS CREATION MODULE ---->
+    <!-- VACATIONS CREATION MODULE -->
     <div id="page-vacations-request" class="page" style="display:none;">
       <div class="major-card last-card">
         <div class="major-card-header header-red">
@@ -1123,13 +1141,13 @@
               </table>
             </div>
           </div>
-        <div class="major-card-footer">
+          <div class="major-card-footer">
           <span style="font-size: 11px; color: #fff;">* Expanda o mês para gerir as aprovações.</span>
         </div>
       </div>
-    </div>
-    <!---- VOLUNTEER SERVICES ---->
-    <!---- VOLUNTEER SERVICES REGISTER ---->
+    </div>    
+    <!-- VOLUNTEER SERVICES -->
+    <!-- VOLUNTEER SERVICES REGISTER -->
     <div id="volunteer-services-register" class="page" style="display:none;">
       <div class="major-card last-card">
         <div class="major-card-header header-red">
@@ -1151,14 +1169,14 @@
             <div class="major-field">
               <label for="vsType">Tipo de Serviço</label>
               <select id="vsType" style="width: 350px;">
-                <option value="">Selecione...</option>
+                <option>Selecione...</option>
               </select>
             </div>
             <div class="major-field" id="container-vsLocal">
               <label for="vsLocal">Local</label>
               <div style="display: flex; flex-direction: row; align-items: center; gap: 10px;">
                 <select id="vsLocal" style="width: 200px;">
-                  <option value="">Selecione...</option>
+                  <option>Selecione...</option>
                 </select>
                 <input type="text" id="vsLocalText" placeholder="Escreva o local..." style="width: 350px; display: none;">                
               </div>
@@ -1229,7 +1247,7 @@
         </div>
       </div>
     </div>
-    <!---- VOLUNTEER SERVICES CONSULTING ---->
+    <!-- VOLUNTEER SERVICES CONSULTING -->
     <div id="volunteer-services-consulting" class="page" style="display:none;">
       <div class="major-card last-card">
         <div class="major-card-header header-red">
@@ -1260,7 +1278,7 @@
               <div style="display: flex !important; flex-direction: row !important; align-items: center; gap: 10px;">
                 <label for="vsConsType" style="margin: 0 !important; font-weight: bold; font-size: 13px; white-space: nowrap;">Tipo de Serviço</label>
                 <select id="vsConsType" style="width: 200px; padding: 4px; border: 1px solid #ccc; border-radius: 4px; height: 30px;">
-                  <option value="">Todos os Tipos</option>
+                  <option>Todos os Tipos</option>
                 </select>
               </div>
             </div>
@@ -1273,7 +1291,7 @@
             <div style="display: flex !important; flex-direction: row !important; align-items: center; gap: 10px;">              
               <label for="vsReportSelect" style="margin: 0 !important; font-weight: bold; font-size: 13px; white-space: nowrap;">Tipo de Relatório</label>
               <select id="vsReportSelect" style="width: 130px; padding: 4px; border: 1px solid #ccc; border-radius: 4px; height: 30px;">
-                <option></option>
+                <option>&nbsp;</option>
                 <option>Simplificado</option>
                 <option>Detalhado</option>
               </select>
@@ -1284,7 +1302,7 @@
         </div>
       </div>      
     </div>
-    <!---- VOLUNTEER SERVICES VALUES ---->
+    <!-- VOLUNTEER SERVICES VALUES -->
     <div id="volunteer-services-values" class="page" style="display:none;">
       <div class="major-card last-card">
         <div class="major-card-header header-red">
@@ -1349,8 +1367,8 @@
         </div>
       </div>      
     </div>
-    <!---- EMPLOYEES 360 MODULE ---->
-    <!---- MONTHLY SCHEDULES ---->
+    <!-- EMPLOYEES 360 MODULE -->
+    <!-- MONTHLY SCHEDULES -->
     <div id="page-employee-scales" class="page">
       <div class="major-card major-last-card" id="employee-monthly-schedules">
         <div class="major-card-header header-orange">
@@ -1373,12 +1391,12 @@
             <button id="employees-save-btn" class="btn btn-add">💾 Guardar</button>
             <button id="employees-emit-xlsx-btn" class="btn btn-success">📊 EXCEL</button>
             <button id="employees-emit-pdf-btn" class="btn btn-danger">📄 PDF</button>            
-            <!---<button id="employees-emit-stitch-marker-btn" class="btn btn-success" style="background: #666;">Folhas de Ponto</button>--->
+            <!--<button id="employees-emit-stitch-marker-btn" class="btn btn-success" style="background: #666;">Folhas de Ponto</button>-->
           </div>
         </div>
       </div>
     </div>
-    <!---- OVERTIME TRACKING ---->  
+    <!-- OVERTIME TRACKING -->  
     <div id="page-employee-extra-hour" class="page">
       <div class="major-card major-last-card" id="employee-monthly-extra-hour-schedules">
         <div class="major-card-header header-orange">
@@ -1401,7 +1419,7 @@
         </div>
       </div>
     </div>
-    <!---- INDIVIDUAL RECORDS ---->
+    <!-- INDIVIDUAL RECORDS -->
     <div id="individual-records" class="page">
       <div class="major-card major-last-card" id="individual-records-card">
         <div class="major-card-header header-orange">
@@ -1415,7 +1433,7 @@
         <div class="major-card-footer"></div>
       </div>
     </div>
-    <!---- VACATION MANAGEMENT ---->  
+    <!-- VACATION MANAGEMENT -->  
     <div id="vacation-scheduling" class="page">
       <div class="major-card major-last-card" id="vacation-scheduling-card">
         <div class="major-card-header header-orange">
@@ -1463,7 +1481,7 @@
         <div class="major-card-footer"></div>
       </div>
     </div>
-    <!---- UTILITIES ---->  
+    <!-- UTILITIES -->  
     <div id="eligibility-subs-shift" class="page">
       <div class="major-card major-last-card" id="eligibility-subs-shift-card">
         <div class="major-card-header header-orange">
@@ -1522,7 +1540,7 @@
         <div class="major-card-footer"></div>
       </div>
     </div>
-    <!---- EMPLOYEE REGISTRY ----> 
+    <!-- EMPLOYEE REGISTRY --> 
     <div id="employee-registration" class="page">
       <div class="major-card major-last-card" id="employee-registration-card">
         <div class="major-card-header header-orange">
@@ -1540,7 +1558,7 @@
     </div>
     <!-- VERBETES INEM MODULE -->
     <div id="inem-entries" class="page">
-      <div class="major-card major-last-card" id="employee-registration">
+      <div class="major-card major-last-card" id="inem-entries-registration">
         <div class="major-card-header">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;">
             <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
@@ -1552,8 +1570,8 @@
         <div class="major-card-footer"></div>           
       </div>
     </div>
-    <!---- SALOC 360 MODULE ---->
-    <!---- PPI'S SUB-MODULE ---->
+    <!-- SALOC 360 MODULE -->
+    <!-- PPI'S SUB-MODULE -->
     <div id="page-ppia2" class="page">
       <div class="major-card major-last-card">
         <div class="major-card-header">PLANO PRÉVIO DE INTERVENÇÃO - AUTO ESTRADA DO SUL - A2</div>
@@ -1585,8 +1603,7 @@
           </div>
           <div id="ppia22-grid-controls"></div>
           <div id="ppia22-grid-references"></div>
-          <div id="ppia22-grid-container"></div>
-          <div id="ppia22-grid-container" class="major-row"></div>
+          <div id="ppia22-grid-container"></div>          
           <div id="ppia22-specials-container"></div>
         </div>
         <div class="major-card-footer"></div>
@@ -1635,8 +1652,8 @@
         <div class="major-card-footer"></div>
       </div>
     </div>
-    <!---- REFUSALS AND INOPERATIONALITIES SUB-MODULE ---->
-    <!---- SERVICE REFUSALS SUB SUB-MODULE ---->
+    <!-- REFUSALS AND INOPERATIONALITIES SUB-MODULE -->
+    <!-- SERVICE REFUSALS SUB SUB-MODULE -->
     <div id="page-recserv" class="page">
       <div class="major-card major-last-card">
         <div class="major-card-header">
@@ -1732,7 +1749,7 @@
         <div class="major-card-footer"></div>
       </div>
     </div>
-    <!---- INOPS INEM SUB SUB-MODULE ---->
+    <!-- INOPS INEM SUB SUB-MODULE -->
     <div id="page-ineminop" class="page">
       <div class="major-card major-last-card">
         <div class="major-card-header">
@@ -1760,7 +1777,7 @@
                 <div class="major-field" style="flex-direction: row; align-items: center; gap: 10px;">
                   <label>Turno:</label>
                   <select id="ineinop_shift" style="width: 75px;">
-                    <option></option>
+                    <option>&nbsp;</option>
                     <option>D</option>
                     <option>N</option>
                   </select>
@@ -1826,7 +1843,7 @@
         <div class="major-card-footer"></div>
       </div>
     </div>
-    <!---- MONTHLY REPORTS OF REFUSALS AND INOPS SUB SUB-MODULE ---->
+    <!-- MONTHLY REPORTS OF REFUSALS AND INOPS SUB SUB-MODULE -->
     <div id="page-recinoreports" class="page">
       <div class="major-card major-last-card">
         <div class="major-card-header">
@@ -1852,7 +1869,7 @@
         <div class="major-card-footer"></div>
       </div>
     </div>
-    <!---- STATISTICS GRAPHIC DASHBOARD SUB SUB-MODULE ---->
+    <!-- STATISTICS GRAPHIC DASHBOARD SUB SUB-MODULE -->
       <div id="page-dashboard" class="page">
         <div class="major-card major-last-card">
           <div class="major-card-header" style="display:flex; align-items:center; gap:8px;">
@@ -1923,8 +1940,8 @@
           <div class="major-card-footer"></div>
         </div>
       </div>
-      <!---- IMPORTANT DOCUMENTATION SUB MODULE ---->
-      <!---- CREPC DOCUMENTATION SUB SUB-MODULE ---->
+      <!-- IMPORTANT DOCUMENTATION SUB MODULE -->
+      <!-- CREPC DOCUMENTATION SUB SUB-MODULE -->
       <div id="page-crepcalg" class="page">
         <div class="major-card major-last-card">
           <div class="major-card-header" style="display:flex; align-items:center; gap:8px;">
@@ -1944,12 +1961,12 @@
                   <label style="margin-bottom: 10px; font-size: 14px; font-weight: bold;">Selecione uma Opção</label>
                   <div class="action-buttons" id="docs-crepc" style="gap: 5px;">
                     <button id="NewMOABtn" class="btn btn-add options-btn" style="height: 35px;">MOA's</button>
-                    <button class="btn btn-add options-btn" style="height: 35px;" onclick=""></button>
-                    <button class="btn btn-add options-btn" style="height: 35px;" onclick=""></button>
+                    <button class="btn btn-add options-btn" style="height: 35px;" onclick="showbreve()">Anexo G1</button>
+                    <button class="btn btn-add options-btn" style="height: 35px;" onclick="showbreve()">Anexo G2</button>
                   </div>
                 </div>
               </div>
-              <!---- MOA (CREPC SUB SUB-MODULE) ---->
+              <!-- MOA (CREPC SUB SUB-MODULE) -->
               <div id="moa-container" style="margin: 20px 0 0 0; display: none;">
                 <div class="major-card major-last-card" style="margin:0 0 0 0;">
                   <div class="major-card-header header-black" style="display: flex; justify-content: center;">MEDIDAS OPERACIONAIS DE ANTECIPAÇÃO (MOA)</div>
@@ -2051,7 +2068,7 @@
                           <input id="moa_mef" type="checkbox" style="width:17px; height:17px; cursor: pointer !important;"> Mobilização do efetivo:</label>
                           <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
                             <select id="moa_mef_sit" style="width: 200px;"></select>
-                            <select id="moa_mef_pront" type="text" style="width: 250px; background: #5e5e5e;" disabled></select>
+                            <select id="moa_mef_pront" style="width: 250px; background: #5e5e5e;" disabled></select>
                             <input id="moa_mef_observ" type="text" style="width: 754px; background: #909090" placeholder="Observações" disabled>
                           </div>
                         </div>
@@ -2108,7 +2125,7 @@
                         <label style="font-size: 15px;"> Período:</label>
                         <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
                           <input type="text" id="moa_reie_time_03" style="width: 250px;">
-                        </div style="font-size: 15px;">
+                        </div>
                         <label style="font-size: 15px;"> Nº Operacionais:</label>
                         <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
                           <input type="text" id="moa_reie_nop_03" style="width: 75px; text-align: center;">
@@ -2184,7 +2201,7 @@
         <div class="major-card-footer"></div>
       </div>
     </div>
-    <!---- DAYLY PLANS SUB-MODULE ---->
+    <!-- DAYLY PLANS SUB-MODULE -->
       <div id="page-plandir" class="page">
         <div class="major-card major-last-card">
           <div class="major-card-header">
@@ -2235,7 +2252,7 @@
           <div class="major-card-footer"></div>
         </div>
       </div>
-      <!---- VEHICLE OPERATIONAL STATUS SUB-MODULE ---->
+      <!-- VEHICLE OPERATIONAL STATUS SUB-MODULE -->
       <div id="page-inocrepc" class="page">
       <div class="major-card major-last-card">
         <div class="major-card-header">
@@ -2369,7 +2386,7 @@
                 </div>
               </div>
               <div class="major-card-footer" style="display: flex; flex-wrap: wrap; justify-content: flex-end;">
-                <button class="btn btn-danger" id="saveBtn" style="font-size: 12px; wight: 25px;">Salvar</button>
+                <button class="btn btn-danger" id="saveBtn" style="font-size: 12px; width: 25px;">Salvar</button>
               </div>
             </div>
           </div>
@@ -2377,7 +2394,7 @@
         <div class="major-card-footer"></div>
       </div>
     </div>
-    <!---- ALARM CONSOLE SUB-MODULE ---->
+    <!-- ALARM CONSOLE SUB-MODULE -->
     <div id="page-alarm-console" class="page">
       <div class="major-card">
         <div class="major-card-header" style="display: flex; align-items: center; gap: 10px;">
@@ -2420,7 +2437,7 @@
               <div class="major-field" style="display: flex; align-items: center; gap: 10px; width: 100%; margin-top: 25px;">
                 <label style="font-size: 13px; white-space: nowrap;">Grupo:</label>
                 <select id="ca-group-catch" style="flex-grow: 1; height: 32px; background: #1b1e22; border: 1px solid #333; color: white; border-radius: 6px; padding: 0 10px;">
-                  <option></option>
+                  <option>&nbsp;</option>
                   <option>Elementos de Serviço</option>
                   <option>EIP</option>
                 </select>
@@ -2440,8 +2457,8 @@
         <div class="major-card-footer" style="height: 20px;"></div>
       </div>
     </div>
-    <!---- WSMS 360 MODULE ---->
-    <!---- ON-GOING OCCURRENCES SUB-MODULE ---->
+    <!-- WSMS 360 MODULE -->
+    <!-- ON-GOING OCCURRENCES SUB-MODULE -->
     <div id="page-active_occurrences" class="page">
       <div class="wsms-card">
         <div class="wsms-card-header">
@@ -2541,7 +2558,7 @@
         </div>
       </div>
     </div>
-    <!---- NEW OCCURRENCE SUB-MODULE ---->
+    <!-- NEW OCCURRENCE SUB-MODULE -->
     <div id="page_insert_occurrence" class="page">
       <!-- CARD 1: DADOS GLOBAIS -->
       <div class="wsms-card" style="margin-bottom: 10px;">
@@ -2592,7 +2609,7 @@
               <div class="major-field">
                 <label for="channel_maneuver">Canal de Manobra</label>
                 <select id="channel_maneuver" style="width: 130px;">
-                  <option></option>
+                  <option>&nbsp;</option>
                 </select>
               </div>
             </div>
@@ -2612,7 +2629,7 @@
               <div class="major-field major-field--grow2">
                 <label for="council_select">Concelho</label>
                 <select id="council_select">
-                  <option></option>
+                  <option>&nbsp;</option>
                 </select>
               </div>
               <div class="major-field major-field--grow2">
@@ -2648,13 +2665,13 @@
               <div class="major-field major-field--grow2">
                 <label for="alert_level">Nível de Alerta</label>
                 <select id="alert_level">
-                  <option></option>
+                  <option>&nbsp;</option>
                 </select>
               </div>
               <div class="major-field">
                 <label for="alarm_grid">Grelha de Alarme</label>
                 <select id="alarm_grid" style="width: 120px;">
-                  <option></option>
+                  <option>&nbsp;</option>
                 </select>
               </div>
               <div class="major-field">
@@ -2715,7 +2732,7 @@
         </div>
       </div>
     </div>
-    <!---- CLOSE OCCURRENCE SUB-MODULE ---->
+    <!-- CLOSE OCCURRENCE SUB-MODULE -->
     <div id="page_close_occurrence" class="page">
       <!-- CARD 1: DADOS GLOBAIS -->
       <div class="wsms-card" style="margin-bottom: 10px;">
@@ -2885,7 +2902,7 @@
         </div>
       </div>
     </div>
-    <!---- AVAILABILITY REQUEST SUB-MODULE ---->
+    <!-- AVAILABILITY REQUEST SUB-MODULE -->
     <div id="page-solicitation" class="page">
       <!-- CARD 1: TIPO DE SOLICITAÇÃO -->
       <div class="wsms-card" style="margin-bottom: 10px;">
@@ -2982,7 +2999,7 @@
         </button>
       </div>
     </div>
-    <!---- VEHICLE UNAVAILABILITY SUB-MODULE ---->
+    <!-- VEHICLE UNAVAILABILITY SUB-MODULE -->
     <div id="page-indisp" class="page">
       <!-- CARD 1: NOVA INDISPONIBILIDADE -->
       <div class="wsms-card" style="margin-bottom: 10px;">
@@ -3106,7 +3123,7 @@
         </div>
       </div>
     </div>
-    <!---- STATUS INFORMATION MUNICIPALITY GRID SUB-MODULE ---->
+    <!-- STATUS INFORMATION MUNICIPALITY GRID SUB-MODULE -->
     <div id="page-municipality-grid" class="page">
       <div class="wsms-card" style="margin-bottom: 10px;">
         <div class="wsms-card-header">
@@ -3144,7 +3161,7 @@
         </div>
       </div>
     </div>
-    <!---- EMS SERVICES SUB-MODULE ---->
+    <!-- EMS SERVICES SUB-MODULE -->
     <div id="page-inem-services" class="page">
       <div class="wsms-card" style="margin: 0 0 25px 0;">
         <div class="wsms-card-header-ems">
@@ -3202,7 +3219,7 @@
               <div class="major-field">
                 <label for="victim-gender-service">Género</label>
                 <select id="victim-gender-service" style="width: 90px;">
-                  <option></option>
+                  <option>&nbsp;</option>
                   <option>Masc.</option>
                   <option>Fem.</option>
                   <option>Desc.</option>
@@ -3217,7 +3234,7 @@
               <div class="major-field">
                 <label for="victim-age-type-service"> </label>
                 <select id="victim-age-type-service" style="width: 85px;">
-                  <option></option>
+                  <option>&nbsp;</option>
                   <option>Dias</option>
                   <option>Meses</option>
                   <option>Anos</option>
@@ -3264,7 +3281,7 @@
         </div>
       </div>
     </div>
-    <!---- WEATHER WARNINGS SUB-MODULE ---->
+    <!-- WEATHER WARNINGS SUB-MODULE -->
     <div id="page-weather-warnings" class="page">
       <div class="wsms-card last-major-card">        
         <div class="wsms-card-header">
@@ -3283,7 +3300,7 @@
         <div class="major-card-footer"></div>
       </div>
     </div>
-    <!---- UTILITIES MODULE ---->
+    <!-- UTILITIES MODULE -->
     <div id="page-utilities" class="page">
       <div class="major-card card major-last-card">
         <div class="major-card-header">
@@ -3397,7 +3414,7 @@
                   </div>
                 </div>
                 <div class="major-row" style="margin-top: 20px;">
-                  <label for="notification-advisor" style="font-size: 11px; color: red;">*Caso a notificação seja para todos os elementos não preencher o campo.</label>                
+                  <label style="font-size: 11px; color: red;">*Caso a notificação seja para todos os elementos não preencher o campo.</label>                
                 </div>
                 <div id="sendNotifications" style="margin: 5px 0 0 0;"></div> 
               </div>
@@ -3410,7 +3427,7 @@
         <div class="major-card-footer"></div>
       </div>
     </div>
-    <!---- DATA MANAGEMENT MODULE ---->
+    <!-- DATA MANAGEMENT MODULE -->
     <div id="page-data" class="page">
       <div class="major-card major-last-card">
         <div class="major-card-header">
@@ -3446,7 +3463,7 @@
                   </div>
                   <div class="card-content" style="text-align: center;">
                     <div style="margin: 10px 0;">
-                      <img src="" alt="CB Faro Cruz Lusa" class="data-logo" style="width: 140px; height: 140px;">
+                      <img src="..." alt="CB Faro Cruz Lusa" class="data-logo" style="width: 140px; height: 140px;">
                     </div>
                     <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 5px;">
                       <button class="btn btn-success" style="width: 100%;">ALTERAR LOGO</button>
@@ -3542,13 +3559,13 @@
                       <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
                         <label>Estado:</label>
                         <select id="win_state" style="width:100px;">
-                          <option></option>
+                          <option>&nbsp;</option>
                           <option>Ativo</option>
                           <option>Inativo</option>
                         </select>
                         <label>Tipo:</label>
                         <select id="win_type" style="width:150px;">
-                          <option></option>
+                          <option>&nbsp;</option>
                           <option>Administrador</option>
                           <option>Sub-Administrador</option>
                           <option>Utilizador</option>
@@ -3570,7 +3587,7 @@
                         <input type="text" id="win_patent_abv" readonly tabindex="-1" style="width:75px; text-align:center;">
                         <label>Secção:</label>
                         <select id="win_section" style="width:110px;">
-                          <option></option>
+                          <option>&nbsp;</option>
                           <option>1ª Secção</option>
                           <option>2ª Secção</option>
                           <option>3ª Secção</option>
@@ -3578,7 +3595,7 @@
                         </select>
                         <label>Quadro:</label>
                         <select id="win_quad" style="width:110px;">
-                          <option></option>
+                          <option>&nbsp;</option>
                           <option>QCOM</option>
                           <option>QATIV</option>
                           <option>QEST</option>
@@ -3663,7 +3680,7 @@
                     <div class="major-field">
                       <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
                         <label>Válido até:</label>
-                        <input type="date" id="win_validate_mobile" style="width: 175px;" placeholder="dd/mm/aaaa">
+                        <input type="date" id="win_validate_mobile" style="width: 175px;">
                       </div>
                     </div>
                   </div>
@@ -3715,7 +3732,7 @@
                       <input type="date" id="new-veíc-registration-date" style="width: 150px; padding: 4px; border: 1px solid #ccc; border-radius: 4px;">
                       <label style="font-size: 12px; color: #555;">ESTADO OPERACIONAL:</label>
                       <select id="new-veíc-state" style="width: 250px; padding: 5px; border: 1px solid #ccc; border-radius: 4px; background: white;">
-                        <option value=""></option>
+                        <option>&nbsp;</option>
                         <option>Disponível no Quartel</option>
                         <option>Em Serviço</option>
                         <option>Inoperacional</option>
@@ -3777,7 +3794,7 @@
                 </div>
               </div>
               <div class="major-card-footer">
-                <div class="action-buttons" id="new-veíc-save">
+                <div class="action-buttons" id="config_sitop_mail">
                   <button class="btn btn-add" id="config_sitop_mail_save">ADICIONAR</button>
                 </div>
               </div>
@@ -3788,7 +3805,7 @@
                   <rect x="3" y="5" width="18" height="14" rx="2"></rect>
                   <path d="M3 7l9 6 9-6"></path>
                 </svg>
-                <sapn>CONFIGURAÇÃO DE EMAILS PARA MEDIDAS OPERACIONAIS DE ANTECIPAÇÃO (CREPC).</sapn>
+                <span>CONFIGURAÇÃO DE EMAILS PARA MEDIDAS OPERACIONAIS DE ANTECIPAÇÃO (CREPC).</span>
               </div>
               <div class="major-card-body">
                 <div class="major-field">
@@ -3811,7 +3828,7 @@
                     </div>
                   </div>
                 <div class="major-card-footer">
-                  <div class="action-buttons" id="new-veíc-save">
+                  <div class="action-buttons" id="config_moa_mail">
                     <button class="btn btn-add" id="config_moa_mail_save">ADICIONAR</button>
                   </div>
                 </div>
@@ -3822,11 +3839,11 @@
         <div class="major-card-footer"></div>
       </div>
     </div>
-  </main>
+  </main>  
   <footer class="status-bar">
     <div class="system-info">
-     <span class="left-info">© 2026 | Fábio Martins | Sistemas de Informação</span>
-     <span class="right-info">CB360 Online v18.001.74</span>
+      <span class="left-info">©&nbsp;<span id="footer-year"></span>&nbsp;| Fábio Martins | Sistemas de Informação</span>
+     <span class="right-info">CB360 Online v17.201.74</span>
     </div>
   </footer>
     <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>

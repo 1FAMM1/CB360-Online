@@ -583,7 +583,7 @@
         console.warn("Não foi possível obter o nome do comandante:", e);
       }
       const emailVerified = {
-        to: "fmartins.ahbfaro@gmail.com",
+        to: "secretaria.ahbfaro@gmail.com",
         subject: "Validação de Serviços Remunerados - Voluntariado",
         body: `
           ${greeting}<br><br>

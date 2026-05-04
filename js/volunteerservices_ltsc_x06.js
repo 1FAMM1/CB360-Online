@@ -459,11 +459,13 @@
         tableBody.innerHTML = '<tr><td colspan="13" style="padding: 20px; color: red; text-align: center;">Erro ao carregar dados. Verifique a consola.</td></tr>';
       }
     }
-    function updateSummary(total, count) {
+    async function updateSummary(total, count) {
       const summaryContainer = document.getElementById('services-summary-container');
       if (summaryContainer) {
         const displayCount = count || 0;
-        const displayTotal = typeof total === 'number' ? total.toFixed(2) : '0.00';        
+        const displayTotal = typeof total === 'number' ? total.toFixed(2) : '0.00';
+        summaryContainer.style.display = "flex";
+        summaryContainer.style.flexDirection = "column";
         summaryContainer.innerHTML = `
           <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-top: 10px; font-family: sans-serif;">
             <div style="border: 1px solid #aaa; border-radius: 4px; overflow: hidden; display: flex; height: 28px; align-items: center;">
@@ -483,7 +485,158 @@
               </div>
             </div>    
           </div>
+          <div id="validation-card" class="major-card card major-last-card" style="display: none; margin: 8px 0 0 0; min-width: 15%; align-self: flex-end; clear: both;">
+            <div class="major-card-header header-red" style="padding: 1px 8px; font-size: 11px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align: middle; margin-right: 4px;">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a2 2 0 0 1-2.83-2.83l-3.94 3.6z"/>
+                <path d="M11.5 9.5l-7 7l-2 3l3-2l7-7"/>
+                <path d="M10 22L13 19"/>
+                <path d="M22 10l-3 3"/>
+                <path d="M12 12l-6-6"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              VALIDAÇÃO
+            </div>            
+            <div style="padding: 6px 10px; display: flex; align-items: center; justify-content: flex-end; background: #fff; gap: 8px;">
+              <div style="display: flex; gap: 8px;">
+                <label style="display: flex; align-items: center; cursor: pointer; color: #155724; font-weight: bold; font-size: 12px; white-space: nowrap;">
+                  <input type="checkbox" id="vsValidado" style="margin-right: 3px; width: 15px; height: 15px; cursor: pointer !important; outline: none; transition: box-shadow 0.2s;"> 
+                  Validado
+                </label>
+                <label style="display: flex; align-items: center; cursor: pointer; color: #721c24; font-weight: bold; font-size: 12px; white-space: nowrap;">
+                  <input type="checkbox" id="vsNaoValidado" style="margin-right: 3px; width: 15px; height: 15px; cursor: pointer !important; outline: none; transition: box-shadow 0.2s;"> 
+                  Não Validado
+                </label>
+              </div>              
+              <button id="btnConfirmarValidacao" style="background-color: #2b6ca3; color: white; border: none; margin-left: 10px; padding: 4px 8px; border-radius: 3px; font-weight: bold; 
+                                                        cursor: pointer; font-size: 11px; outline: none; transition: all 0.2s;">
+                OK
+              </button>
+            </div>
+          </div>
         `;
+        const cbV = document.getElementById('vsValidado');
+        const cbN = document.getElementById('vsNaoValidado');
+        const btnOk = document.getElementById('btnConfirmarValidacao');
+        const validationCard = document.getElementById('validation-card');
+        try {
+          const nInt = sessionStorage.getItem("currentNInt") || "205";
+          const corpNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+          const url = `${SUPABASE_URL}/rest/v1/reg_elems?select=patent&n_int=eq.${nInt}&corp_oper_nr=eq.${corpNr}&limit=1`;
+          const response = await fetch(url, {
+            method: 'GET',
+            headers: getSupabaseHeaders()
+          });
+          if (response.ok) {
+            const data = await response.json();
+            if (data.length > 0 && data[0]?.patent?.toLowerCase().includes('bombeiro')) {
+              if (validationCard) validationCard.style.display = 'block';
+            }
+          }
+        } catch (err) {
+          console.warn("Erro ao verificar patente:", err);
+        }
+        [cbV, cbN].forEach(cb => {
+          if (!cb) return;
+          cb.onfocus = () => { cb.style.boxShadow = "0 0 0 3px rgba(43, 108, 163, 0.4)"; };
+          cb.onblur = () => { cb.style.boxShadow = "none"; };
+          cb.addEventListener('change', () => {
+            if (cb.checked) {
+              if (cb === cbV) cbN.checked = false;
+              else cbV.checked = false;
+            }
+          });
+        });
+        if (btnOk) {
+          btnOk.onmouseover = () => btnOk.style.backgroundColor = "#1e4d75";
+          btnOk.onmouseout = () => {if (document.activeElement !== btnOk) btnOk.style.backgroundColor = "#2b6ca3";};
+          btnOk.onfocus = () => {
+            btnOk.style.backgroundColor = "#1e4d75";
+            btnOk.style.boxShadow = "0 0 0 3px rgba(43, 108, 163, 0.4)";
+          };
+          btnOk.onblur = () => {
+            btnOk.style.backgroundColor = "#2b6ca3";
+            btnOk.style.boxShadow = "none";
+          };
+          btnOk.onclick = () => confirmValidation(cbV, cbN, btnOk);
+        }
+      }
+    }
+    async function confirmValidation(cbV, cbN, btnOk) {
+      const selected = cbV.checked ? "SIM" : cbN.checked ? "NÃO" : null;
+      if (!selected) {
+        if (typeof showPopup === 'function') {
+          showPopup('popup-danger', "Por favor selecione Validado ou Não Validado.");
+        } else {
+          alert("Por favor selecione Validado ou Não Validado.");
+        }
+        return;
+      }
+      const corpNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const greeting = typeof getGreeting === 'function' ? getGreeting() : "Bom dia";
+      let commanderName = "O Comandante";
+      try {
+        if (typeof getCommanderName === 'function') {
+          commanderName = await getCommanderName(corpNr);
+        }
+      } catch (e) {
+        console.warn("Não foi possível obter o nome do comandante:", e);
+      }
+      const emailVerified = {
+        to: "fmartins.ahbfaro@gmail.com",
+        subject: "Validação de Serviços Remunerados - Voluntariado",
+        body: `
+          ${greeting}<br><br>
+          Foi validado o formulário de serviços remunerados efetuados por elementos em regime de voluntariado.<br><br>
+          Proceda à sua impressão em CB360 Online.<br><br>
+          Com os melhores cumprimentos,<br><br>
+          O Comandante,<br>
+          ${commanderName}<br><br>
+          <span style="font-family: 'Arial'; font-size: 10px; color: gray;">
+            Este email foi processado automaticamente por: CB360 Online
+          </span>
+        `
+      };
+      const emailNotValidated = {
+        to: "mcavaco.ahbfaro@gmail.com",
+        subject: "Inconsistências - Serviços Remunerados - Voluntariado",
+        body: `
+          ${greeting}<br><br>
+          O formulário de serviços remunerados efetuados por elementos em regime de voluntariado contém inconsistências.<br><br>
+          Proceda à sua correção.<br><br>
+          Com os melhores cumprimentos,<br><br>
+          O Comandante,<br>
+          ${commanderName}<br><br>
+          <span style="font-family: 'Arial'; font-size: 10px; color: gray;">
+            Este email foi processado automaticamente por: CB360 Online
+          </span>
+        `
+      };
+      const emailData = selected === "SIM" ? emailVerified : emailNotValidated;
+      try {
+        btnOk.disabled = true;
+        const originalText = btnOk.textContent;
+        btnOk.textContent = "A enviar...";    
+        const response = await fetch("https://cb360-online.vercel.app/api/prevpay_convert_and_send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "send-email",
+            ...emailData
+          })
+        });
+        const result = await response.json().catch(() => ({}));    
+        if (response.ok) {
+          showPopup('popup-success', "Email enviado com sucesso!");
+        } else {
+          showPopup('popup-danger', "Erro ao enviar email: " + (result.error || "Erro no servidor."));
+        }
+      } catch (err) {
+    console.error("Erro no fetch:", err);
+        showPopup('popup-danger', "Erro de ligação ao servidor.");
+      } finally {
+        btnOk.disabled = false;
+        btnOk.textContent = "OK";
       }
     }
     async function initializeFilters() {

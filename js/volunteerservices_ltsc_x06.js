@@ -529,7 +529,7 @@
           });
           if (response.ok) {
             const data = await response.json();
-            if (data.length > 0 && data[0]?.patent?.toLowerCase().includes('bombeiro')) {
+            if (data.length > 0 && data[0]?.patent?.toLowerCase().includes('comandante')) {
               if (validationCard) validationCard.style.display = 'block';
             }
           }

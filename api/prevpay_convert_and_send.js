@@ -114,16 +114,27 @@
                          margins: {left: 0.3, right: 0.3, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3}};
     }
     async function handleSendEmail(req, res) {
-      const { to, subject, body } = req.body || {};
+      const { to, cc, subject, body } = req.body || {};
       if (!to || !subject || !body) {
-        return res.status(400).json({ error: "Faltam dados essenciais (to, subject, body)." });
+        return res.status(400).json({error: "Faltam dados essenciais (to, subject, body)."});
       }
-      const transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: { user: GMAIL_EMAIL, pass: GMAIL_APP_PASSWORD }
-      });
-      await transporter.sendMail({ from: GMAIL_EMAIL, to, subject, html: body });
-      return res.status(200).json({ success: true, message: "Email enviado com sucesso." });
+      try {
+        const transporter = nodemailer.createTransport({
+          service: "gmail",
+          auth: {user: GMAIL_EMAIL, pass: GMAIL_APP_PASSWORD}
+        });
+        await transporter.sendMail({ 
+          from: `CB360 Online <${GMAIL_EMAIL}>`,
+          to,
+          cc,
+          subject,
+          html: body
+        });
+        return res.status(200).json({success: true, message: "Email enviado com sucesso."});
+      } catch (error) {
+        console.error("Erro no envio de email:", error);
+        return res.status(500).json({error: "Falha ao enviar e-mail", details: error.message});
+      }
     }
     async function handleGenerateReport(req, res) {
       const tempDir = os.tmpdir();

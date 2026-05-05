@@ -523,7 +523,7 @@
         const btnOk = document.getElementById('btnConfirmarValidacao');
         const validationCard = document.getElementById('validation-card');
         try {
-          const nInt  = sessionStorage.getItem("currentNInt") || "205";
+          const nInt = sessionStorage.getItem("currentNInt") || "205";
           const corpNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
           const url = `${SUPABASE_URL}/rest/v1/reg_elems?select=patent&n_int=eq.${nInt}&corp_oper_nr=eq.${corpNr}&limit=1`;
           const response = await fetch(url, {
@@ -532,7 +532,7 @@
           });
           if (response.ok) {
             const data = await response.json();
-            if (data.length > 0 && data[0]?.patent?.toLowerCase().includes('comandante')) {
+            if (data.length > 0 && data[0]?.patent?.toLowerCase().includes('bombeiro')) {
               if (validationCard) validationCard.style.display = 'block';
             }
           }
@@ -542,11 +542,23 @@
         [cbV, cbN].forEach(cb => {
           if (!cb) return;
           cb.onfocus = () => {cb.style.boxShadow = "0 0 0 3px rgba(43, 108, 163, 0.4)";};
-          cb.onblur  = () => {cb.style.boxShadow = "none";};
+          cb.onblur = () => {cb.style.boxShadow = "none";};
           cb.addEventListener('change', () => {
             if (cb.checked) {
-              if (cb === cbV) cbN.checked = false;
-              else cbV.checked = false;
+              const validationHeader = document.querySelector('#validation-card .major-card-header');
+              if (cb === cbV) {
+                cbN.checked = false;
+                if (validationHeader) {
+                  validationHeader.classList.remove('header-red');
+                  validationHeader.classList.add('header-green');
+                }
+              } else {
+                cbV.checked = false;
+                if (validationHeader) {
+                  validationHeader.classList.remove('header-green');
+                  validationHeader.classList.add('header-red');
+                }
+              }
             }
           });
         });
@@ -561,32 +573,34 @@
             btnOk.style.backgroundColor = "#2b6ca3";
             btnOk.style.boxShadow = "none";
           };
-          btnOk.onclick = () => confirmarValidacao(cbV, cbN, btnOk);
+          btnOk.onclick = () => confirmValidation(cbV, cbN, btnOk);
         }
       }
     }
     async function confirmValidation(cbV, cbN, btnOk) {
       const selected = cbV.checked ? "SIM" : cbN.checked ? "NÃO" : null;
       if (!selected) {
-        if (typeof showPopup === 'function') {
-          showPopup('popup-danger', "Por favor selecione Validado ou Não Validado.");
-        } else {
-          alert("Por favor selecione Validado ou Não Validado.");
-        }
+        showPopup('popup-danger', "Por favor selecione Validado ou Não Validado.");
         return;
       }
-      const corpNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
-      const greeting = typeof getGreeting === 'function' ? getGreeting() : "Bom dia";
-      let commanderName = "O Comandante";
-      try {
-        if (typeof getCommanderName === 'function') {
-          commanderName = await getCommanderName(corpNr);
-        }
-      } catch (e) {
-        console.warn("Não foi possível obter o nome do comandante:", e);
+      if (selected === "SIM") {
+        cbN.checked = false;
+        cbN.disabled = true;
+        cbV.disabled = true;
+      } else {
+        cbV.checked = false;
+        cbV.disabled = true;
+        cbN.disabled = true;
       }
-      const emailVerified = {
-        to: "fmartins.ahbfaro@gmail.com",
+      btnOk.disabled = true;
+      btnOk.style.opacity = '0.5';
+      btnOk.style.cursor = 'not-allowed';
+      const corpNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const greeting = getGreeting();
+      const commanderName = await getCommanderName(corpNr);
+      const emailValidado = {
+        to: "secretaria.ahbfaro@gmail.com",
+        cc: "comando0805.ahbfaro@gmail.com",
         subject: "Validação de Serviços Remunerados - Voluntariado",
         body: `
           ${greeting}<br><br>
@@ -600,8 +614,9 @@
           </span>
         `
       };
-      const emailNotValidated = {
+      const emailNaoValidado = {
         to: "mcavaco.ahbfaro@gmail.com",
+        cc: "comando0805.ahbfaro@gmail.com",
         subject: "Inconsistências - Serviços Remunerados - Voluntariado",
         body: `
           ${greeting}<br><br>
@@ -615,31 +630,35 @@
           </span>
         `
       };
-      const emailData = selected === "SIM" ? emailVerified : emailNotValidated;
+      const emailData = selected === "SIM" ? emailValidado : emailNaoValidado;
       try {
-        btnOk.disabled = true;
-        const originalText = btnOk.textContent;
-        btnOk.textContent = "A enviar...";    
-        const response = await fetch("https://cb360-online.vercel.app/api/prevpay_convert_and_send", {
+        btnOk.textContent = "A enviar...";
+        const response = await fetch("https://cb360-online.vercel.app/api/volunteer-services", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "send-email",
-            ...emailData
-          })
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({action: "send-email", ...emailData})
         });
-        const result = await response.json().catch(() => ({}));    
+        const result = await response.json();
         if (response.ok) {
           showPopup('popup-success', "Email enviado com sucesso!");
         } else {
-          showPopup('popup-danger', "Erro ao enviar email: " + (result.error || "Erro no servidor."));
+          showPopup('popup-danger', "Erro ao enviar email: " + result.error);
+          btnOk.disabled = false;
+          btnOk.style.opacity = '1';
+          btnOk.style.cursor = 'pointer';
+          btnOk.textContent = "OK";
+          cbV.disabled = false;
+          cbN.disabled = false;
         }
       } catch (err) {
-    console.error("Erro no fetch:", err);
-        showPopup('popup-danger', "Erro de ligação ao servidor.");
-      } finally {
+        console.error("Erro:", err);
+        showPopup('popup-danger', "Erro ao enviar email.");
         btnOk.disabled = false;
+        btnOk.style.opacity = '1';
+        btnOk.style.cursor = 'pointer';
         btnOk.textContent = "OK";
+        cbV.disabled = false;
+        cbN.disabled = false;
       }
     }
     async function initializeFilters() {

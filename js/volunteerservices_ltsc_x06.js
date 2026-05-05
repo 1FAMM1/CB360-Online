@@ -532,7 +532,7 @@
           });
           if (response.ok) {
             const data = await response.json();
-            if (data.length > 0 && data[0]?.patent?.toLowerCase().includes('bombeiro')) {
+            if (data.length > 0 && data[0]?.patent?.toLowerCase().includes('comandante')) {
               if (validationCard) validationCard.style.display = 'block';
             }
           }
@@ -728,7 +728,7 @@
       const reportType = document.getElementById('vsReportSelect').value;
       let rows;
       if (reportType === 'Detalhado') {
-        rows = currentVolunteerData;
+        rows = [...currentVolunteerData];
       } else {
         const grouped = {};
         currentVolunteerData.forEach(item => {
@@ -740,6 +740,11 @@
         });
         rows = Object.values(grouped);
       }
+      rows.sort((a, b) => {
+        const nA = parseInt(a.n_int) || 0;
+        const nB = parseInt(b.n_int) || 0;
+        return nA - nB;
+      });
       const globalTotal = currentVolunteerData.reduce((sum, item) => {
         return sum + (parseFloat(item.global_value) || 0);
       }, 0);
@@ -749,8 +754,8 @@
       try {
         const response = await fetch('https://cb360-online.vercel.app/api/prevpay_convert_and_send', {
           method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({rows, year, month, format, globalTotal, reportType})
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({action: 'generate-report', rows, year, month, format, globalTotal, reportType })
         });
         if (!response.ok) {
           let errMsg = 'Erro desconhecido';
@@ -761,7 +766,7 @@
             errMsg = `Erro HTTP ${response.status}`;
           }
           hideLoadingPopup();
-          alert('Erro ao gerar relatório: ' + errMsg);
+          showPopup('popup-danger', 'Erro ao gerar relatório: ' + errMsg);
           return;
         }
         const blob = await response.blob();
@@ -772,18 +777,20 @@
         a.click();
         URL.revokeObjectURL(url);
       } catch (e) {
-        alert('Erro de ligação: ' + e.message);
+        console.error("Erro de ligação:", e);
+        showPopup('popup-danger', 'Erro de ligação: ' + e.message);
       } finally {
         hideLoadingPopup();
         document.getElementById('vsReportSelect').value = '';
         const pdfBtn = document.getElementById('vsPDFReport');
         const excelBtn = document.getElementById('vsEXCELReport');
-        pdfBtn.disabled = true;
-        excelBtn.disabled = true;
-        pdfBtn.style.opacity = '0.5';
-        excelBtn.style.opacity = '0.5';
-        pdfBtn.style.cursor = 'not-allowed';
-        excelBtn.style.cursor = 'not-allowed';
+        [pdfBtn, excelBtn].forEach(btn => {
+          if (btn) {
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+            btn.style.cursor = 'not-allowed';
+          }
+        });
       }
     }
     document.getElementById('vsPDFReport').addEventListener('click', async function () {

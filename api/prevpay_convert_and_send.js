@@ -107,7 +107,7 @@
       });
       sheet.getCell('N46').value = parseFloat(globalTotal) || 0;
       const lastDataRow = 10 + rows.length - 1;
-      for (let r = lastDataRow + 1; r <= 44; r++) {
+      for (let r = lastDataRow + 1; r <= 66; r++) {
         sheet.getRow(r).hidden = true;
       }
       sheet.pageSetup = {orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,

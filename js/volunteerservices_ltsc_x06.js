@@ -383,10 +383,12 @@
       const yearEl = document.getElementById('vsConsYear');
       const monthEl = document.getElementById('vsConsMonth');
       const typeEl = document.getElementById('vsConsType');
+      const elementEl = document.getElementById('vsConsElement');
       if (!container || !yearEl || !monthEl || !typeEl) return;
       const type = typeEl.value;
       const selectedYear = yearEl.value;
       const selectedMonth = monthEl.value;
+      const selectedElement = elementEl ? elementEl.value : 'todos';
       const corpOperNr = sessionStorage.getItem('currentCorpOperNr') || "0805";
       document.getElementById('vsReportSelect').value = '';
       const pdfBtn = document.getElementById('vsPDFReport');
@@ -396,7 +398,7 @@
           if (btn) {
             btn.disabled = disabled;
             btn.style.opacity = disabled ? '0.5' : '1';
-            btn.style.cursor = disabled ? 'not-allowed' : 'pointer';
+            btn.style.cursor  = disabled ? 'not-allowed' : 'pointer';
           }
         });
       };
@@ -414,8 +416,9 @@
         dateFilter = `&service_date=gte.${selectedYear}-${selectedMonth}-01&service_date=lte.${selectedYear}-${selectedMonth}-${lastDay}`;
       }
       let typeFilter = (type !== "todos") ? `&service_type=eq.${encodeURIComponent(type)}` : "";
+      let elementFilter = (selectedElement !== "todos") ? `&n_int=eq.${encodeURIComponent(selectedElement)}` : "";
       try {
-        const url = `${SUPABASE_URL}/rest/v1/reg_volunteer_services?corp_oper_nr=eq.${corpOperNr}${dateFilter}${typeFilter}&order=service_date.asc`;
+        const url = `${SUPABASE_URL}/rest/v1/reg_volunteer_services?corp_oper_nr=eq.${corpOperNr}${dateFilter}${typeFilter}${elementFilter}&order=service_date.asc`;
         const response = await fetch(url, {
           method: 'GET',
           headers: getSupabaseHeaders()
@@ -520,7 +523,7 @@
         const btnOk = document.getElementById('btnConfirmarValidacao');
         const validationCard = document.getElementById('validation-card');
         try {
-          const nInt = sessionStorage.getItem("currentNInt") || "205";
+          const nInt  = sessionStorage.getItem("currentNInt") || "205";
           const corpNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
           const url = `${SUPABASE_URL}/rest/v1/reg_elems?select=patent&n_int=eq.${nInt}&corp_oper_nr=eq.${corpNr}&limit=1`;
           const response = await fetch(url, {
@@ -538,8 +541,8 @@
         }
         [cbV, cbN].forEach(cb => {
           if (!cb) return;
-          cb.onfocus = () => { cb.style.boxShadow = "0 0 0 3px rgba(43, 108, 163, 0.4)"; };
-          cb.onblur = () => { cb.style.boxShadow = "none"; };
+          cb.onfocus = () => {cb.style.boxShadow = "0 0 0 3px rgba(43, 108, 163, 0.4)";};
+          cb.onblur  = () => {cb.style.boxShadow = "none";};
           cb.addEventListener('change', () => {
             if (cb.checked) {
               if (cb === cbV) cbN.checked = false;
@@ -558,7 +561,7 @@
             btnOk.style.backgroundColor = "#2b6ca3";
             btnOk.style.boxShadow = "none";
           };
-          btnOk.onclick = () => confirmValidation(cbV, cbN, btnOk);
+          btnOk.onclick = () => confirmarValidacao(cbV, cbN, btnOk);
         }
       }
     }
@@ -583,7 +586,7 @@
         console.warn("Não foi possível obter o nome do comandante:", e);
       }
       const emailVerified = {
-        to: "secretaria.ahbfaro@gmail.com",
+        to: "fmartins.ahbfaro@gmail.com",
         subject: "Validação de Serviços Remunerados - Voluntariado",
         body: `
           ${greeting}<br><br>
@@ -640,9 +643,10 @@
       }
     }
     async function initializeFilters() {
-      const yearSelect  = document.getElementById('vsConsYear');
+      const yearSelect = document.getElementById('vsConsYear');
       const monthSelect = document.getElementById('vsConsMonth');
-      const typeSelect  = document.getElementById('vsConsType');
+      const typeSelect = document.getElementById('vsConsType');
+      const elementSelect = document.getElementById('vsConsElement');
       if (!yearSelect || !monthSelect) return;
       const now = new Date();
       const currentYear = now.getFullYear();
@@ -653,7 +657,7 @@
       }
       yearSelect.innerHTML = yearsHTML;
       const months = [{val: 'todos', name: 'Todos os Meses'}, {val: '01', name: 'Janeiro'}, {val: '02', name: 'Fevereiro'}, {val: '03', name: 'Março'}, 
-                      {val: '04', name: 'Abril'}, {val: '05', name: 'Maio'}, {val: '06', name: 'Junho'}, {val: '07', name: 'Julho'}, {val: '08', name: 'Agosto'},
+                      {val: '04', name: 'Abril'}, {val: '05', name: 'Maio'}, {val: '06', name: 'Junho'}, {val: '07', name: 'Julho'}, {val: '08', name: 'Agosto'}, 
                       {val: '09', name: 'Setembro'}, {val: '10', name: 'Outubro'}, {val: '11', name: 'Novembro'}, {val: '12', name: 'Dezembro'}];
       monthSelect.innerHTML = months.map(m => `<option value="${m.val}" ${m.val === currentMonth ? 'selected' : ''}>${m.name}</option>`).join('');
       if (typeSelect) {
@@ -661,6 +665,23 @@
         const types = await getUniqueServiceTypes();
         typeSelect.innerHTML = '<option value="todos">Todos os Tipos</option>' + types.map(t => `<option value="${t}">${t}</option>`).join('');
         typeSelect.onchange = loadVolunteerServicesTable;
+      }
+      if (elementSelect) {
+      elementSelect.innerHTML = '<option value="todos">A carregar...</option>';
+      try {
+        const corpNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const url = `${SUPABASE_URL}/rest/v1/reg_volunteer_services?select=n_int,abv_name&corp_oper_nr=eq.${corpNr}&order=n_int.asc`;
+        const response = await fetch(url, { method: 'GET', headers: getSupabaseHeaders() });
+        if (response.ok) {
+          const data = await response.json();
+          const unique = [...new Map(data.map(e => [e.n_int, e])).values()];
+          elementSelect.innerHTML = '<option value="todos">Todos os Elementos</option>' + unique.map(e => `<option value="${e.n_int}">${e.n_int} - ${e.abv_name}</option>`).join('');
+        }
+      } catch (err) {
+        console.warn("Erro ao carregar elementos:", err);
+        elementSelect.innerHTML = '<option value="todos">Todos os Elementos</option>';
+      }
+        elementSelect.onchange = loadVolunteerServicesTable;
       }
       yearSelect.onchange = loadVolunteerServicesTable;
       monthSelect.onchange = loadVolunteerServicesTable;
@@ -710,7 +731,7 @@
         const response = await fetch('https://cb360-online.vercel.app/api/prevpay_convert_and_send', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({action: "generate-report", rows, year, month, format, globalTotal, reportType})
+          body: JSON.stringify({rows, year, month, format, globalTotal, reportType})
         });
         if (!response.ok) {
           let errMsg = 'Erro desconhecido';

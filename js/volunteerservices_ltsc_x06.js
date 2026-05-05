@@ -464,201 +464,203 @@
     }
     async function updateSummary(total, count) {
       const summaryContainer = document.getElementById('services-summary-container');
-      if (summaryContainer) {
-        const displayCount = count || 0;
-        const displayTotal = typeof total === 'number' ? total.toFixed(2) : '0.00';
-        summaryContainer.style.display = "flex";
-        summaryContainer.style.flexDirection = "column";
-        summaryContainer.innerHTML = `
-          <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-top: 10px; font-family: sans-serif;">
-            <div style="border: 1px solid #aaa; border-radius: 4px; overflow: hidden; display: flex; height: 28px; align-items: center;">
-              <div style="padding: 0 12px; background-color: #2b6ca3; color: white; font-weight: bold; font-size: 12px; border-right: 1px solid #aaa; line-height: 28px;">
-                Total de Serviços
-              </div>
-              <div style="padding: 0 15px; background-color: white; color: darkred; font-weight: bold; font-size: 14px; min-width: 50px; text-align: center; line-height: 28px;">
-                ${displayCount}
-              </div>
+      if (!summaryContainer) return;
+      const displayCount = count || 0;
+      const displayTotal = typeof total === 'number' ? total.toFixed(2) : '0.00';
+      summaryContainer.style.display = "flex";
+      summaryContainer.style.flexDirection = "column";
+      summaryContainer.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-top: 10px; font-family: sans-serif;">
+          <div style="border: 1px solid #aaa; border-radius: 4px; overflow: hidden; display: flex; height: 28px; align-items: center;">
+            <div style="padding: 0 12px; background-color: #2b6ca3; color: white; font-weight: bold; font-size: 12px; border-right: 1px solid #aaa; line-height: 28px;">
+              Total de Serviços
             </div>
-            <div style="border: 1px solid #aaa; border-radius: 4px; overflow: hidden; display: flex; height: 28px; align-items: center;">
-              <div style="padding: 0 12px; background-color: #2b6ca3; color: white; font-weight: bold; font-size: 12px; border-right: 1px solid #aaa; line-height: 28px;">
-                Valor Global
-              </div>
-              <div style="padding: 0 15px; background-color: white; color: darkred; font-weight: bold; font-size: 14px; min-width: 120px; text-align: right; line-height: 28px;">
-                ${displayTotal} €
-              </div>
-            </div>    
-          </div>
-          <div id="validation-card" class="major-card card major-last-card" style="display: none; margin: 8px 0 0 0; min-width: 15%; align-self: flex-end; clear: both;">
-            <div class="major-card-header header-red" style="padding: 1px 8px; font-size: 11px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align: middle; margin-right: 4px;">
-                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a2 2 0 0 1-2.83-2.83l-3.94 3.6z"/>
-                <path d="M11.5 9.5l-7 7l-2 3l3-2l7-7"/>
-                <path d="M10 22L13 19"/>
-                <path d="M22 10l-3 3"/>
-                <path d="M12 12l-6-6"/>
-                <circle cx="12" cy="12" r="3"/>
-              </svg>
-              VALIDAÇÃO
-            </div>            
-            <div style="padding: 6px 10px; display: flex; align-items: center; justify-content: flex-end; background: #fff; gap: 8px;">
-              <div style="display: flex; gap: 8px;">
-                <label style="display: flex; align-items: center; cursor: pointer; color: #155724; font-weight: bold; font-size: 12px; white-space: nowrap;">
-                  <input type="checkbox" id="vsValidado" style="margin-right: 3px; width: 15px; height: 15px; cursor: pointer !important; outline: none; transition: box-shadow 0.2s;"> 
-                  Validado
-                </label>
-                <label style="display: flex; align-items: center; cursor: pointer; color: #721c24; font-weight: bold; font-size: 12px; white-space: nowrap;">
-                  <input type="checkbox" id="vsNaoValidado" style="margin-right: 3px; width: 15px; height: 15px; cursor: pointer !important; outline: none; transition: box-shadow 0.2s;"> 
-                  Não Validado
-                </label>
-              </div>              
-              <button id="btnConfirmarValidacao" style="background-color: #2b6ca3; color: white; border: none; margin-left: 10px; padding: 4px 8px; border-radius: 3px; font-weight: bold; 
-                                                        cursor: pointer; font-size: 11px; outline: none; transition: all 0.2s;">
-                OK
-              </button>
+            <div style="padding: 0 15px; background-color: white; color: darkred; font-weight: bold; font-size: 14px; min-width: 50px; text-align: center; line-height: 28px;">
+              ${displayCount}
             </div>
           </div>
-        `;
-        const cbV = document.getElementById('vsValidado');
-        const cbN = document.getElementById('vsNaoValidado');
-        const btnOk = document.getElementById('btnConfirmarValidacao');
-        const validationCard = document.getElementById('validation-card');
-        try {
-          const nInt = sessionStorage.getItem("currentNInt") || "205";
-          const corpNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
-          const url = `${SUPABASE_URL}/rest/v1/reg_elems?select=patent&n_int=eq.${nInt}&corp_oper_nr=eq.${corpNr}&limit=1`;
-          const response = await fetch(url, {
-            method: 'GET',
-            headers: getSupabaseHeaders()
-          });
-          if (response.ok) {
-            const data = await response.json();
-            if (data.length > 0 && data[0]?.patent?.toLowerCase().includes('comandante')) {
-              if (validationCard) validationCard.style.display = 'block';
-            }
+          <div style="border: 1px solid #aaa; border-radius: 4px; overflow: hidden; display: flex; height: 28px; align-items: center;">
+            <div style="padding: 0 12px; background-color: #2b6ca3; color: white; font-weight: bold; font-size: 12px; border-right: 1px solid #aaa; line-height: 28px;">
+              Valor Global
+            </div>
+            <div style="padding: 0 15px; background-color: white; color: darkred; font-weight: bold; font-size: 14px; min-width: 120px; text-align: right; line-height: 28px;">
+              ${displayTotal} €
+            </div>
+          </div>    
+        </div>
+        <div id="validation-card" class="major-card card major-last-card" style="display: none; margin: 8px 0 0 0; min-width: 15%; align-self: flex-end; clear: both;">
+          <div class="major-card-header header-red" style="padding: 1px 8px; font-size: 11px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align: middle; margin-right: 4px;">
+              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a2 2 0 0 1-2.83-2.83l-3.94 3.6z"/>
+              <path d="M11.5 9.5l-7 7l-2 3l3-2l7-7"/><path d="M10 22L13 19"/><path d="M22 10l-3 3"/><path d="M12 12l-6-6"/><circle cx="12" cy="12" r="3"/>
+            </svg>
+            VALIDAÇÃO
+          </div>            
+          <div style="padding: 6px 10px; display: flex; align-items: center; justify-content: flex-end; background: #fff; gap: 8px;">
+            <div style="display: flex; gap: 8px;">
+              <label style="display: flex; align-items: center; cursor: pointer; color: #155724; font-weight: bold; font-size: 12px; white-space: nowrap;">
+                <input type="checkbox" id="vsValidado" style="margin-right: 3px; width: 15px; height: 15px; cursor: pointer;"> 
+                Validado
+              </label>
+              <label style="display: flex; align-items: center; cursor: pointer; color: #721c24; font-weight: bold; font-size: 12px; white-space: nowrap;">
+                <input type="checkbox" id="vsNaoValidado" style="margin-right: 3px; width: 15px; height: 15px; cursor: pointer;"> 
+                Não Validado
+              </label>
+            </div>              
+            <button id="btnConfirmarValidacao" style="background-color: #2b6ca3; color: white; border: none; margin-left: 10px; padding: 4px 8px; border-radius: 3px; font-weight: bold; 
+                                                      cursor: pointer; font-size: 11px;">
+              OK
+            </button>
+          </div>
+        </div>
+        <div id="direct-send-container" style="display: none; margin-top: 10px; align-self: flex-end;">
+          <button id="btnEnviarVoluntario" style="background-color: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; 
+                                                  display: flex; align-items: center; gap: 8px; transition: background 0.2s;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+            ENVIAR PARA VALIDAÇÃO
+          </button>
+        </div>
+      `;
+      const cbV = document.getElementById('vsValidado');
+      const cbN = document.getElementById('vsNaoValidado');
+      const btnOk = document.getElementById('btnConfirmarValidacao');
+      const validationCard = document.getElementById('validation-card');
+      const directSendContainer = document.getElementById('direct-send-container');
+      const btnEnviar = document.getElementById('btnEnviarVoluntario');
+      try {
+        const nInt = sessionStorage.getItem("currentNInt") || "205";
+        const corpNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const url = `${SUPABASE_URL}/rest/v1/reg_elems?select=patent&n_int=eq.${nInt}&corp_oper_nr=eq.${corpNr}&limit=1`;
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: getSupabaseHeaders()
+        });
+        if (response.ok) {
+          const data = await response.json();
+          const patente = data[0]?.patent?.toLowerCase() || '';
+          if (patente.includes('comandante')) {
+            validationCard.style.display = 'block';
+          } else if (patente.includes('bombeiro')) {
+            directSendContainer.style.display = 'block';
           }
-        } catch (err) {
-          console.warn("Erro ao verificar patente:", err);
         }
+      } catch (err) {
+        console.warn("Erro ao verificar patente:", err);
+      }
+      if (cbV && cbN) {
         [cbV, cbN].forEach(cb => {
-          if (!cb) return;
-          cb.onfocus = () => {cb.style.boxShadow = "0 0 0 3px rgba(43, 108, 163, 0.4)";};
-          cb.onblur = () => {cb.style.boxShadow = "none";};
           cb.addEventListener('change', () => {
+            const header = document.querySelector('#validation-card .major-card-header');
             if (cb.checked) {
-              const validationHeader = document.querySelector('#validation-card .major-card-header');
               if (cb === cbV) {
                 cbN.checked = false;
-                if (validationHeader) {
-                  validationHeader.classList.remove('header-red');
-                  validationHeader.classList.add('header-green');
-                }
+                header.classList.remove('header-red');
+                header.classList.add('header-green');
               } else {
                 cbV.checked = false;
-                if (validationHeader) {
-                  validationHeader.classList.remove('header-green');
-                  validationHeader.classList.add('header-red');
-                }
+                header.classList.remove('header-green');
+                header.classList.add('header-red');
+              }
+            } else {
+              if (!cbV.checked && !cbN.checked) {
+                header.classList.remove('header-green');
+                header.classList.add('header-red');
               }
             }
           });
         });
-        if (btnOk) {
-          btnOk.onmouseover = () => btnOk.style.backgroundColor = "#1e4d75";
-          btnOk.onmouseout = () => {if (document.activeElement !== btnOk) btnOk.style.backgroundColor = "#2b6ca3";};
-          btnOk.onfocus = () => {
-            btnOk.style.backgroundColor = "#1e4d75";
-            btnOk.style.boxShadow = "0 0 0 3px rgba(43, 108, 163, 0.4)";
-          };
-          btnOk.onblur = () => {
-            btnOk.style.backgroundColor = "#2b6ca3";
-            btnOk.style.boxShadow = "none";
-          };
-          btnOk.onclick = () => confirmValidation(cbV, cbN, btnOk);
-        }
+        btnOk.onclick = () => confirmValidation(cbV, cbN, btnOk);
+      }
+      if (btnEnviar) {
+        btnEnviar.onmouseover = () => btnEnviar.style.backgroundColor = "#218838";
+        btnEnviar.onmouseout = () => btnEnviar.style.backgroundColor = "#28a745";
+        btnEnviar.onclick = () => {
+          console.log("Enviando dados para validação pelo utilizador comum...");
+          if(typeof confirmValidation === 'function') {
+            confirmValidation(null, null, btnEnviar);
+          }
+        };
       }
     }
-    async function confirmValidation(cbV, cbN, btnOk) {
-      const selected = cbV.checked ? "SIM" : cbN.checked ? "NÃO" : null;
-      if (!selected) {
+    async function confirmValidation(cbV, cbN, btn) {
+      const isDirectSend = !cbV || !cbN;
+      const selected = isDirectSend ? "SEND" : (cbV.checked ? "SIM" : cbN.checked ? "NÃO" : null);
+      if (!isDirectSend && !selected) {
         showPopup('popup-danger', "Por favor selecione Validado ou Não Validado.");
         return;
       }
-      if (selected === "SIM") {
-        cbN.checked = false;
-        cbN.disabled = true;
-        cbV.disabled = true;
-      } else {
-        cbV.checked = false;
+      if (!isDirectSend) {
         cbV.disabled = true;
         cbN.disabled = true;
       }
-      btnOk.disabled = true;
-      btnOk.style.opacity = '0.5';
-      btnOk.style.cursor = 'not-allowed';
+      btn.disabled = true;
+      btn.style.opacity = '0.5';
+      btn.style.cursor = 'not-allowed';
       const corpNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const greeting = getGreeting();
       const commanderName = await getCommanderName(corpNr);
-      const emailValidado = {
+      const senderName = sessionStorage.getItem("currentUserName") || "Elemento do Corpo Ativo";
+      const emailValidated = {
         to: "secretaria.ahbfaro@gmail.com",
         cc: "comando0805.ahbfaro@gmail.com",
         subject: "Validação de Serviços Remunerados - Voluntariado",
-        body: `
-          ${greeting}<br><br>
-          Foi validado o formulário de serviços remunerados efetuados por elementos em regime de voluntariado.<br><br>
-          Proceda à sua impressão em CB360 Online.<br><br>
-          Com os melhores cumprimentos,<br><br>
-          O Comandante,<br>
-          ${commanderName}<br><br>
-          <span style="font-family: 'Arial'; font-size: 10px; color: gray;">
-            Este email foi processado automaticamente por: CB360 Online
-          </span>
-        `
-      };
-      const emailNaoValidado = {
+        body: `${greeting}<br><br>
+               Foi validado o formulário de serviços remunerados efetuados por elementos em regime de voluntariado.<br><br>Proceda à sua impressão em CB360 Online.<br><br>
+               Com os melhores cumprimentos,<br><br>
+               O Comandante,<br>
+               ${commanderName}`};
+      const emailNotValidated = {
         to: "mcavaco.ahbfaro@gmail.com",
         cc: "comando0805.ahbfaro@gmail.com",
         subject: "Inconsistências - Serviços Remunerados - Voluntariado",
-        body: `
-          ${greeting}<br><br>
-          O formulário de serviços remunerados efetuados por elementos em regime de voluntariado contém inconsistências.<br><br>
-          Proceda à sua correção.<br><br>
-          Com os melhores cumprimentos,<br><br>
-          O Comandante,<br>
-          ${commanderName}<br><br>
-          <span style="font-family: 'Arial'; font-size: 10px; color: gray;">
-            Este email foi processado automaticamente por: CB360 Online
-          </span>
-        `
-      };
-      const emailData = selected === "SIM" ? emailValidado : emailNaoValidado;
+        body: `${greeting}<br><br>
+               O formulário de serviços remunerados efetuados por elementos em regime de voluntariado contém inconsistências.<br><br>Proceda à sua correção.<br><br>
+               Com os melhores cumprimentos,<br><br>
+               O Comandante,<br>
+               ${commanderName}`};
+      const EmailForVerification = {
+        to: "comandante.faroahb@gmail.com",
+        cc: "comando0805.ahbfaro@gmail.com",
+        subject: "Novo Mapa de Serviços para Validação - Voluntariado",
+        body: `${greeting}<br><br>
+               O elemento <b>${senderName}</b> submeteu um novo mapa de serviços remunerados (Voluntariado) para validação.<br><br>
+               Aceda ao CB360 Online para validar os dados.<br><br>
+               Com os melhores cumprimentos.`};
+      let emailData;
+      if (isDirectSend) {
+        emailData = EmailForVerification;
+      } else {
+        emailData = selected === "SIM" ? emailValidated : emailNotValidated;
+      }
       try {
-        btnOk.textContent = "A enviar...";
-        const response = await fetch("https://cb360-online.vercel.app/api/volunteer-services", {
+        const originalText = btn.textContent;
+        btn.textContent = "A enviar...";
+        const response = await fetch("https://cb360-online.vercel.app/api/prevpay_convert_and_send", {
           method: "POST",
-          headers: {"Content-Type": "application/json"},
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({action: "send-email", ...emailData})
         });
         const result = await response.json();
         if (response.ok) {
-          showPopup('popup-success', "Email enviado com sucesso!");
+          showPopup('popup-success', isDirectSend ? "Enviado para o Comando com sucesso!" : "Email de validação enviado!");
+          if(isDirectSend) btn.textContent = "ENVIADO";
         } else {
-          showPopup('popup-danger', "Erro ao enviar email: " + result.error);
-          btnOk.disabled = false;
-          btnOk.style.opacity = '1';
-          btnOk.style.cursor = 'pointer';
-          btnOk.textContent = "OK";
-          cbV.disabled = false;
-          cbN.disabled = false;
+          throw new Error(result.error);
         }
       } catch (err) {
         console.error("Erro:", err);
-        showPopup('popup-danger', "Erro ao enviar email.");
-        btnOk.disabled = false;
-        btnOk.style.opacity = '1';
-        btnOk.style.cursor = 'pointer';
-        btnOk.textContent = "OK";
-        cbV.disabled = false;
-        cbN.disabled = false;
+        showPopup('popup-danger', "Erro ao enviar: " + err.message);
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+        btn.textContent = isDirectSend ? "ENVIAR PARA VALIDAÇÃO" : "OK";
+        if (!isDirectSend) {
+          cbV.disabled = false;
+          cbN.disabled = false;
+        }
       }
     }
     async function initializeFilters() {
@@ -672,133 +674,140 @@
       const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
       let yearsHTML = '';
       for (let year = 2026; year <= 2036; year++) {
-        yearsHTML += `<option value="${year}" ${year === currentYear ? 'selected' : ''}>${year}</option>`;
+        yearsHTML += `<option value="${year}">${year}</option>`;
       }
       yearSelect.innerHTML = yearsHTML;
       const months = [{val: 'todos', name: 'Todos os Meses'}, {val: '01', name: 'Janeiro'}, {val: '02', name: 'Fevereiro'}, {val: '03', name: 'Março'}, 
                       {val: '04', name: 'Abril'}, {val: '05', name: 'Maio'}, {val: '06', name: 'Junho'}, {val: '07', name: 'Julho'}, {val: '08', name: 'Agosto'}, 
                       {val: '09', name: 'Setembro'}, {val: '10', name: 'Outubro'}, {val: '11', name: 'Novembro'}, {val: '12', name: 'Dezembro'}];
-      monthSelect.innerHTML = months.map(m => `<option value="${m.val}" ${m.val === currentMonth ? 'selected' : ''}>${m.name}</option>`).join('');
-      if (typeSelect) {
-        typeSelect.innerHTML = '<option value="todos">A carregar...</option>';
-        const types = await getUniqueServiceTypes();
-        typeSelect.innerHTML = '<option value="todos">Todos os Tipos</option>' + types.map(t => `<option value="${t}">${t}</option>`).join('');
-        typeSelect.onchange = loadVolunteerServicesTable;
-      }
-      if (elementSelect) {
-      elementSelect.innerHTML = '<option value="todos">A carregar...</option>';
-      try {
-        const corpNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
-        const url = `${SUPABASE_URL}/rest/v1/reg_volunteer_services?select=n_int,abv_name&corp_oper_nr=eq.${corpNr}&order=n_int.asc`;
-        const response = await fetch(url, { method: 'GET', headers: getSupabaseHeaders() });
-        if (response.ok) {
-          const data = await response.json();
-          const unique = [...new Map(data.map(e => [e.n_int, e])).values()];
-          elementSelect.innerHTML = '<option value="todos">Todos os Elementos</option>' + unique.map(e => `<option value="${e.n_int}">${e.n_int} - ${e.abv_name}</option>`).join('');
-        }
-      } catch (err) {
-        console.warn("Erro ao carregar elementos:", err);
-        elementSelect.innerHTML = '<option value="todos">Todos os Elementos</option>';
-      }
-        elementSelect.onchange = loadVolunteerServicesTable;
-      }
-      yearSelect.onchange = loadVolunteerServicesTable;
-      monthSelect.onchange = loadVolunteerServicesTable;
+      monthSelect.innerHTML = months.map(m => `<option value="${m.val}">${m.name}</option>`).join('');
       yearSelect.value = currentYear;
       monthSelect.value = currentMonth;
-      loadVolunteerServicesTable();
-      const reportSelect = document.getElementById('vsReportSelect');
-      if (reportSelect) {
-        reportSelect.addEventListener('change', function () {
-          const hasValue = this.value.trim() !== '';
-          const pdfBtn = document.getElementById('vsPDFReport');
-          const excelBtn = document.getElementById('vsEXCELReport');
-          [pdfBtn, excelBtn].forEach(btn => {
-            btn.disabled = !hasValue;
-            btn.style.opacity = hasValue ? '1' : '0.5';
-            btn.style.cursor = hasValue ? 'pointer' : 'not-allowed';
-          });
-        });
-      }
-    }
-    /* ============= EMISSÃO ============== */
-    async function generateVolunteerReport(format) {
-      const year = document.getElementById('vsConsYear').value;
-      const month = document.getElementById('vsConsMonth').value;
-      const reportType = document.getElementById('vsReportSelect').value;
-      let rows;
-      if (reportType === 'Detalhado') {
-        rows = [...currentVolunteerData];
-      } else {
-        const grouped = {};
-        currentVolunteerData.forEach(item => {
-          const key = item.abv_name;
-          if (!grouped[key]) {
-            grouped[key] = {n_int: item.n_int, abv_name: item.abv_name, total: 0};
-          }
-          grouped[key].total += parseFloat(item.global_value) || 0;
-        });
-        rows = Object.values(grouped);
-      }
-      rows.sort((a, b) => {
-        const nA = parseInt(a.n_int) || 0;
-        const nB = parseInt(b.n_int) || 0;
-        return nA - nB;
-      });
-      const globalTotal = currentVolunteerData.reduce((sum, item) => {
-        return sum + (parseFloat(item.global_value) || 0);
-      }, 0);
-      const tipoRelatorio = reportType === 'Detalhado' ? 'detalhado' : 'simplificado';
-      const tipoFicheiro  = format === 'pdf' ? 'PDF' : 'EXCEL';
-      showLoadingPopup(`A gerar relatório de pagamentos ${tipoRelatorio} em ${tipoFicheiro}...`);
-      try {
-        const response = await fetch('https://cb360-online.vercel.app/api/prevpay_convert_and_send', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({action: 'generate-report', rows, year, month, format, globalTotal, reportType })
-        });
-        if (!response.ok) {
-          let errMsg = 'Erro desconhecido';
-          try {
-            const err = await response.json();
-            errMsg = err.details || err.error || errMsg;
-          } catch {
-            errMsg = `Erro HTTP ${response.status}`;
-          }
-          hideLoadingPopup();
-          showPopup('popup-danger', 'Erro ao gerar relatório: ' + errMsg);
-          return;
+      async function refreshDynamicFilters() {
+        const year = yearSelect.value;
+        const month = monthSelect.value;
+        const corpNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        if (typeSelect) typeSelect.innerHTML = '<option value="todos">A carregar...</option>';
+        if (elementSelect) elementSelect.innerHTML = '<option value="todos">A carregar...</option>';
+        let nextMonth = parseInt(month) + 1;
+        let nextYear = parseInt(year);
+        if (nextMonth > 12) {nextMonth = 1; nextYear++;}
+        const startDate = `${year}-${month}-01`;
+        const endDate = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
+        let dateFilter = `service_date=gte.${startDate}&service_date=lt.${endDate}`;
+        if (month === 'todos') {
+          dateFilter = `service_date=gte.${year}-01-01&service_date=lt.${nextYear}-01-01`;
         }
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `pagamento_prevencoes_${year}_${String(month).padStart(2, '0')}.${format === 'pdf' ? 'pdf' : 'xlsx'}`;
-        a.click();
-        URL.revokeObjectURL(url);
-      } catch (e) {
-        console.error("Erro de ligação:", e);
-        showPopup('popup-danger', 'Erro de ligação: ' + e.message);
-      } finally {
-        hideLoadingPopup();
-        document.getElementById('vsReportSelect').value = '';
-        const pdfBtn = document.getElementById('vsPDFReport');
-        const excelBtn = document.getElementById('vsEXCELReport');
-        [pdfBtn, excelBtn].forEach(btn => {
-          if (btn) {
-            btn.disabled = true;
-            btn.style.opacity = '0.5';
-            btn.style.cursor = 'not-allowed';
+        try {
+          const url = `${SUPABASE_URL}/rest/v1/reg_volunteer_services?select=n_int,abv_name,service_type&corp_oper_nr=eq.${corpNr}&${dateFilter}&order=n_int.asc`;
+          const response = await fetch(url, {
+            method: 'GET',
+            headers: getSupabaseHeaders()
+          });
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Status: ${response.status} - ${errorText}`);
           }
-        });
+          const data = await response.json();
+          if (!data || data.length === 0) {
+            if (elementSelect) elementSelect.innerHTML = '<option value="todos">Sem elementos (período vazio)</option>';
+            if (typeSelect) typeSelect.innerHTML = '<option value="todos">Sem serviços (período vazio)</option>';
+            return;
+          }
+          const uniqueElements = [...new Map(data.map(e => [e.n_int, e])).values()];
+          elementSelect.innerHTML = '<option value="todos">Todos os Elementos</option>' + uniqueElements.map(e => `<option value="${e.n_int}">${e.n_int} - ${e.abv_name}</option>`).join('');
+          const uniqueTypes = [...new Set(data.map(e => e.service_type))].filter(Boolean).sort();
+          typeSelect.innerHTML = '<option value="todos">Todos os Tipos</option>' + uniqueTypes.map(t => `<option value="${t}">${t}</option>`).join('');
+        } catch (err) {
+          console.error("ERRO CRÍTICO FILTROS:", err);
+          if (elementSelect) elementSelect.innerHTML = '<option value="todos">Erro de Conexão</option>';
+          if (typeSelect) typeSelect.innerHTML = '<option value="todos">Erro de Conexão</option>';
+        }
       }
+      const onMasterChange = async () => {
+        await refreshDynamicFilters();
+        loadVolunteerServicesTable();
+      };
+      yearSelect.onchange = onMasterChange;
+      monthSelect.onchange = onMasterChange;
+      if (typeSelect) typeSelect.onchange = loadVolunteerServicesTable;
+      if (elementSelect) elementSelect.onchange = loadVolunteerServicesTable;
+      await refreshDynamicFilters();
+      loadVolunteerServicesTable();
+    }
+    /* ============= EMISSÃO DE RELATÓRIOS ============== */
+    async function generateVolunteerReport(format) {
+      const EXTENDED_MONTHS = ['', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+      const year = document.getElementById('vsConsYear').value;
+      const monthValue = document.getElementById('vsConsMonth').value;
+      const reportType = document.getElementById('vsReportSelect').value;
+      if (!reportType || reportType.trim() === "") return;
+      const monthName = EXTENDED_MONTHS[parseInt(monthValue)] || 'Mes';
+      const typesToGenerate = reportType === 'Ambos' ? ['Simplificado', 'Detalhado'] : [reportType];
+      for (const type of typesToGenerate) {
+        let rows;
+        if (type === 'Detalhado') {
+          rows = [...currentVolunteerData];
+        } else {
+          const grouped = {};
+          currentVolunteerData.forEach(item => {
+            const key = item.abv_name;
+            if (!grouped[key]) {
+              grouped[key] = {n_int: item.n_int, abv_name: item.abv_name, total: 0};
+            }
+            grouped[key].total += parseFloat(item.global_value) || 0;
+          });
+          rows = Object.values(grouped);
+        }
+        rows.sort((a, b) => (parseInt(a.n_int) || 0) - (parseInt(b.n_int) || 0));
+        const globalTotal = currentVolunteerData.reduce((sum, item) => sum + (parseFloat(item.global_value) || 0), 0);
+        const tipoFicheiro = format === 'pdf' ? 'PDF' : 'EXCEL';
+        showLoadingPopup(`A gerar relatório ${type} em ${tipoFicheiro}...`);
+        try {
+          const response = await fetch('https://cb360-online.vercel.app/api/prevpay_convert_and_send', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({action: 'generate-report', rows, year, month: monthValue, format, globalTotal, reportType: type})
+          });
+          if (!response.ok) throw new Error(`Falha na API`);
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          const reportSuffix = type.toLowerCase();
+          const extension = format === 'pdf' ? 'pdf' : 'xlsx';
+          a.download = `pagamento_${reportSuffix}_${monthName}_${year}.${extension}`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          if (reportType === 'Ambos' && type === 'Simplificado') {
+            await new Promise(resolve => setTimeout(resolve, 1500));
+          }
+        } catch (e) {
+          console.error("Erro:", e);
+          showPopup('popup-danger', `Erro ao gerar ${type}: ` + e.message);
+          break;
+        }
+      }
+      hideLoadingPopup();
+      document.getElementById('vsReportSelect').value = '';
+      const pdfBtn = document.getElementById('vsPDFReport');
+      const excelBtn = document.getElementById('vsEXCELReport');
+      [pdfBtn, excelBtn].forEach(btn => {
+        if (btn) {
+          btn.disabled = true;
+          btn.style.opacity = '0.5';
+          btn.style.cursor = 'not-allowed';
+        }
+      });
     }
     document.getElementById('vsPDFReport').addEventListener('click', async function () {
       await generateVolunteerReport('pdf');
     });
     document.getElementById('vsEXCELReport').addEventListener('click', async function () {
       await generateVolunteerReport('excel');
-    });
+    }); 
     /* ====== CONFIGURAÇÃO DE VALORES ===== */
     let currentEditingValueId = null;
     async function saveVolunteerServiceValue() {

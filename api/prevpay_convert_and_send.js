@@ -87,29 +87,44 @@
                          margins: {left: 0.3, right: 0.7, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3}};
     }
     function fillDetailed(sheet, rows, year, month, globalTotal) {
-      const monthName = MONTH_NAMES[parseInt(month)] || month;
-      sheet.getCell('B5').value = `${monthName} ${year}`;
-      rows.forEach((item, idx) => {
-        const rowNum = 10 + idx;
-        sheet.getCell(`B${rowNum}`).value = formatDate(item.service_date);
-        sheet.getCell(`C${rowNum}`).value = item.service_type || '';
-        sheet.getCell(`D${rowNum}`).value = item.service_local || '';
-        sheet.getCell(`E${rowNum}`).value = parseVal(item.service_type_global_value);
-        sheet.getCell(`F${rowNum}`).value = parseVal(item.prev_value_hour);
-        sheet.getCell(`G${rowNum}`).value = parseVal(item.prev_total_hours);
-        sheet.getCell(`H${rowNum}`).value = parseVal(item.prev_global_value);
-        sheet.getCell(`I${rowNum}`).value = parseVal(item.service_sicks);
-        sheet.getCell(`J${rowNum}`).value = parseVal(item.service_sicks_value);
-        sheet.getCell(`K${rowNum}`).value = parseVal(item.service_whait_hours);
-        sheet.getCell(`L${rowNum}`).value = parseVal(item.service_whait_hours_value);
-        sheet.getCell(`M${rowNum}`).value = item.abv_name || '';
-        sheet.getCell(`N${rowNum}`).value = parseVal(item.global_value);
-      });
-      sheet.getCell('N68').value = parseFloat(globalTotal) || 0;
-      const lastDataRow = 10 + rows.length - 1;
-      for (let r = lastDataRow + 1; r <= 66; r++) {
-        sheet.getRow(r).hidden = true;
-      }
+  const monthName = MONTH_NAMES[parseInt(month)] || month;
+  
+  // 1. Cabeçalho (Data e Ano)
+  sheet.getCell('B5').value = `${monthName} ${year}`;
+
+  // 2. Preenchimento dos dados (Começa na Row 10)
+  rows.forEach((item, idx) => {
+    const rowNum = 10 + idx;
+    sheet.getCell(`B${rowNum}`).value = formatDate(item.service_date);
+    sheet.getCell(`C${rowNum}`).value = item.service_type || '';
+    sheet.getCell(`D${rowNum}`).value = item.service_local || '';
+    sheet.getCell(`E${rowNum}`).value = parseVal(item.service_type_global_value);
+    sheet.getCell(`F${rowNum}`).value = parseVal(item.prev_value_hour);
+    sheet.getCell(`G${rowNum}`).value = parseVal(item.prev_total_hours);
+    sheet.getCell(`H${rowNum}`).value = parseVal(item.prev_global_value);
+    sheet.getCell(`I${rowNum}`).value = parseVal(item.service_sicks);
+    sheet.getCell(`J${rowNum}`).value = parseVal(item.service_sicks_value);
+    sheet.getCell(`K${rowNum}`).value = parseVal(item.service_whait_hours);
+    sheet.getCell(`L${rowNum}`).value = parseVal(item.service_whait_hours_value);
+    sheet.getCell(`M${rowNum}`).value = item.abv_name || '';
+    sheet.getCell(`N${rowNum}`).value = parseVal(item.global_value);
+  });
+
+  // 3. Colocação do Total na linha 68
+  sheet.getCell('N68').value = parseFloat(globalTotal) || 0;
+
+  // 4. Lógica de Ocultação Reforçada
+  const lastDataRow = 10 + rows.length - 1;
+  
+  // Reset da área de impressão para evitar que o PDF force o tamanho total do template
+  sheet.pageSetup.printArea = false;
+
+  // Ocultar da linha seguinte aos dados até à 67 (antes do total)
+  for (let r = lastDataRow + 1; r <= 67; r++) {
+    const row = sheet.getRow(r);
+    row.hidden = true;
+    row.height = 0; // REFORÇO: Define altura zero para garantir que não ocupa espaço no PDF
+  }
       sheet.pageSetup = {orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
                          margins: {left: 0.3, right: 0.3, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3}};
     }

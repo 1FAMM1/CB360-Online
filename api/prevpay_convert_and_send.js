@@ -120,7 +120,7 @@
   sheet.pageSetup.printArea = false;
 
   // Ocultar da linha seguinte aos dados até à 67 (antes do total)
-  for (let r = lastDataRow + 1; r <= 67; r++) {
+  for (let r = lastDataRow + 1; r <= 66; r++) {
     const row = sheet.getRow(r);
     row.hidden = true;
     row.height = 0; // REFORÇO: Define altura zero para garantir que não ocupa espaço no PDF

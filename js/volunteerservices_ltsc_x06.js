@@ -710,7 +710,7 @@
         const response = await fetch('https://cb360-online.vercel.app/api/prevpay_convert_and_send', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({rows, year, month, format, globalTotal, reportType})
+          body: JSON.stringify({action: "generate-report", rows, year, month, format, globalTotal, reportType})
         });
         if (!response.ok) {
           let errMsg = 'Erro desconhecido';

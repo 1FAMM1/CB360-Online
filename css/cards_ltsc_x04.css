@@ -18,7 +18,9 @@
     .major-card-header.header-black {background: linear-gradient(135deg, #4b4b4b, #1a1a1a); color: #ffffff; border-bottom: 1px solid #000000; padding: 5px 18px; font-size: 12px; font-weight: 600;
                                      letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px; text-shadow: 0 1px 2px rgba(0,0,0,0.4);}
     .major-card-header.header-blue {background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%); color: #ffffff; border-bottom: 1px solid #000000; padding: 5px 18px; font-size: 12px; font-weight: 600;
-                                    letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px; text-shadow: 0 1px 2px rgba(0,0,0,0.4);}    
+                                    letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px; text-shadow: 0 1px 2px rgba(0,0,0,0.4);}
+    .major-card-header.header-green {background: linear-gradient(135deg, #27ae60, #1e8449); color: #fff; border-bottom: 1px solid #196f3d; padding: 5px 18px; font-size: 12px; font-weight: 600;
+                                     letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px; text-shadow: 0 1px 2px rgba(0,0,0,0.25);}
     .major-card-header svg, .wsms-card-header svg, .wsms-card-header-ems svg {animation: pulse-red 2s infinite;}
     .wsms-card.theme-inem .wsms-card-header-ems svg {animation: pulse-red-inem 2s infinite;}
     .major-card-body {background: rgba(235, 235, 235, 0.85); padding: 20px; color: #495057; font-size: 14px; line-height: 1.6; padding: 16px 20px; display: flex; flex-direction: column;}

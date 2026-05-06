@@ -951,6 +951,9 @@
         };
       }
     }
+    function showbreve() {
+      showPopup('popup-maininfo', `Este módulo estará brevemente disponível no CB360.`);
+    }
     function closePopup(id) {
       const modal = document.getElementById(id);
       if (modal) modal.classList.remove('show');

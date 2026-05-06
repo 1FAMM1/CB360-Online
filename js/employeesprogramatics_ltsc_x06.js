@@ -1255,7 +1255,102 @@
     document.getElementById("employees-save-btn")?.addEventListener("click", saveEmployeeScales);
     document.getElementById("employees-emit-xlsx-btn")?.addEventListener("click", () => emitEmployeesScale("xlsx"));
     document.getElementById("employees-emit-pdf-btn")?.addEventListener("click", () => emitEmployeesScale("pdf"));
-    document.getElementById("employees-emit-stitch-marker-btn")?.addEventListener("click", emitStitchSheets);    
+    document.getElementById("employees-emit-stitch-marker-btn")?.addEventListener("click", emitStitchSheets);
+    function analyzeINEMSchedule() {
+      const tbody = document.querySelector("table.employees-table tbody");
+      if (!tbody) {
+        showPopup('popup-danger', "Nenhuma tabela aberta.");
+        return;
+      }
+      if (!__currentYear || !__currentMonth) {
+        showPopup('popup-danger', "Seleciona mês e ano primeiro.");
+        return;
+      }    
+      const daysInMonth = __currentDaysInMonth;
+      const issues = [];
+      const MIN_D = 2, MIN_N = 2;    
+      for (let d = 1; d <= daysInMonth; d++) {
+        let countD = 0, countN = 0;    
+        tbody.querySelectorAll("tr.data-row").forEach(row => {
+          const team = normalizeTeam(row.querySelector("td:nth-child(4)")?.textContent || "");
+          const isEQ = team.startsWith("EQ");
+          const isTDNU = team.startsWith("TDNU");    
+          if (!isEQ && !isTDNU) return;    
+          const cell = row.querySelector(`.day-cell-${d}`);
+          if (!cell) return;    
+          const val = cell.textContent.trim().toUpperCase();
+          const isDriver = cell.dataset.driver === "1";
+          if (isTDNU && !isDriver) return;    
+          if (val === "D") countD++;
+          if (val === "N") countN++;
+        });    
+        const red = (txt) => `<span style="color:#ff4d4d;font-weight:bold;">${txt}</span>`;
+        const styleD = `<span style="color:#DAA520;font-weight:bold;">Turno D</span>`;
+        const styleN = `<span style="color:#4A90E2;font-weight:bold;">Turno N</span>`;    
+        if (countD < MIN_D) issues.push(`Dia ${d}: ${styleD} — ${red(MIN_D - countD)} elemento(s) em falta`);
+        if (countN < MIN_N) issues.push(`Dia ${d}: ${styleN} — ${red(MIN_N - countN)} elemento(s) em falta`);
+      }    
+      if (issues.length === 0) {
+        showPopup('popup-success', "✅ Dotação mínima INEM assegurada para todos os dias.");
+        return;
+      }    
+      const popup = document.getElementById('popup-analyze-inem');
+      if (popup) {
+        popup.querySelector('.popup-body').innerHTML = `
+          <ul style="list-style:none;padding:0;margin:0;">
+            <li><span style="font-size:20px;">•</span> <b>⚠️ Turnos INEM por Preencher</b></li>
+            <li style="margin-left:14px;"><small>Dotação mínima: ${MIN_D} elementos no Turno D e ${MIN_N} no Turno N por dia.</small></li>
+            <li>
+              <div style="max-height:250px;overflow-y:auto;margin:10px 0;font-weight:bold;">
+                ${issues.join("<br>")}
+              </div>
+            </li>
+            <li><small>ℹ️ Análise das equipas INEM (EQ01–EQ10) + elementos TDNU marcados como Motorista INEM.</small></li>
+          </ul>`;
+        popup.classList.add('show');
+      }
+    }    
+    function requestINEMElements() {
+      const nameMonth = MONTH_NAMES[__currentMonth - 1];
+      const divIssues = document.querySelector('#popup-analyze-inem .popup-body div');
+      if (!divIssues) return;
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = divIssues.innerHTML;
+      tempDiv.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
+      let lines = tempDiv.innerText.split('\n').filter(line => line.trim() !== "");
+      let finalLines = [];
+      lines.forEach(line => {
+        const parts = line.split(':');
+        if (parts.length < 2) return;
+        const diaLabel = parts[0].trim();
+        const restOfLine = parts.slice(1).join(':');
+        const isD = restOfLine.toUpperCase().includes('TURNO D');
+        const isN = restOfLine.toUpperCase().includes('TURNO N');
+        const clearINEMText = (text) => {
+          return text
+            .replace(/Turno\s+[DN]/gi, "")
+            .replace(/elemento\(s\) em falta/gi, "OP")
+            .replace(/em falta/gi, "")
+            .replace(/:\s*(\d+)/g, ": *$1*")
+            .replace(/\s+/g, " ")
+            .trim();
+        };
+        const cleaned = clearINEMText(restOfLine);
+        if (isD) finalLines.push(`${diaLabel}: Turno D ${cleaned}`);
+        else if (isN) finalLines.push(`${diaLabel}: Turno N ${cleaned}`);
+      });      
+      let message = `*🚨INFORMAÇÃO🚨*\n\n`;
+      message += `*Turnos INEM por Preencher - ${nameMonth} ${__currentYear}*\n\n`;
+      message += `${finalLines.join('\n')}\n\n`;
+      message += `As disponibilidades devem ser remetidas para comando0805.ahbfaro@gmail.com.\n`;
+      message += `Obrigado pela vossa colaboração!`;
+      navigator.clipboard.writeText(message).then(() => {
+        closePopup('popup-analyze-inem');
+        showPopup('popup-success', "Mensagem criada e copiada! Pode colar no WhatsApp.");
+      }).catch(() => {
+        showPopup('popup-danger', 'Erro ao copiar.');
+      });
+    }
     /* ================================
     FASE 02 - EMPLOYEE EXTRA HOURS CONTROL
     =============================== */

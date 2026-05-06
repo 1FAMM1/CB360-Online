@@ -2664,6 +2664,7 @@
       saveBtn.textContent = "Emitir Inoperacionalidade";
       saveBtn.classList.remove("btn-success");
       saveBtn.classList.add("btn-danger");
+      saveBtn.style.width = "18%";
     }
     function toggleSitopContainer(forceClose = false) {
       const isVisible = sitopContainer.style.display === "block";
@@ -2716,9 +2717,10 @@
       document.getElementById("ppi_subs_no").checked = record.ppi_subs === false;
       if (NewInopBtn) NewInopBtn.classList.add("active");
       sitopContainer.setAttribute("data-record-id", record.id);
-      saveBtn.textContent = "📄 Emitir Operacionalidade";
+      saveBtn.textContent = "Emitir Operacionalidade";
       saveBtn.classList.remove("btn-danger");
       saveBtn.classList.add("btn-success");
+      saveBtn.style.width = "18%";
     }
     async function fetchCREPCSitopRecipientsFromSupabase(corpOperNr) {
       const categories = ['crepcsitop_mail_to', 'crepcsitop_mail_cc', 'crepcsitop_mail_bcc'];

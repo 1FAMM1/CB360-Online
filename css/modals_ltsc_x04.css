@@ -32,6 +32,9 @@
     /* superdanger */
     .popup-superdanger .popup-header {background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 60%, #0d0d0d 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.3);}
     .popup-superdanger .popup-btn {background-color: #2a2a2a;}
+    .popup-maininfo .popup-header {background: linear-gradient(135deg, #4b0082 0%, #2e004f 60%, #1a002d 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -1px 0 rgba(0,0,0,0.4);
+                                   border-bottom: 2px solid #6a0dad;}
+    .popup-maininfo .popup-btn {background-color: #4b0082;}
     /* analyze */
     .popup-analyze .popup-header {background: linear-gradient(135deg, #E8404F 0%, #C82333 60%, #B01E2B 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.15);}
     .popup-analyze .popup-btn {background-color: #DC3545;}

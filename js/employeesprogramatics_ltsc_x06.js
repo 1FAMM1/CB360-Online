@@ -1287,8 +1287,8 @@
         const red = (txt) => `<span style="color:#ff4d4d;font-weight:bold;">${txt}</span>`;
         const styleD = `<span style="color:#DAA520;font-weight:bold;">Turno D</span>`;
         const styleN = `<span style="color:#4A90E2;font-weight:bold;">Turno N</span>`;    
-        if (countD < MIN_D) issues.push(`Dia ${d}: ${styleD} — ${red(MIN_D - countD)} elemento(s) em falta`);
-        if (countN < MIN_N) issues.push(`Dia ${d}: ${styleN} — ${red(MIN_N - countN)} elemento(s) em falta`);
+        if (countD < MIN_D) issues.push(`Dia ${d}: ${styleD} ${red(MIN_D - countD)} OP(s)`);
+        if (countN < MIN_N) issues.push(`Dia ${d}: ${styleN} ${red(MIN_N - countN)} OP(s)`);
       }    
       if (issues.length === 0) {
         showPopup('popup-success', "✅ Dotação mínima INEM assegurada para todos os dias.");
@@ -1327,13 +1327,14 @@
         const isD = restOfLine.toUpperCase().includes('TURNO D');
         const isN = restOfLine.toUpperCase().includes('TURNO N');
         const clearINEMText = (text) => {
-          return text
-            .replace(/Turno\s+[DN]/gi, "")
-            .replace(/elemento\(s\) em falta/gi, "OP")
-            .replace(/em falta/gi, "")
-            .replace(/:\s*(\d+)/g, ": *$1*")
-            .replace(/\s+/g, " ")
-            .trim();
+        return text
+          .replace(/—/g, "")
+          .replace(/Turno\s+[DN]/gi, "")
+          .replace(/elemento\(s\)/gi, "OP")
+          .replace(/em falta/gi, "")
+          .replace(/:\s*(\d+)/g, ": *$1*")
+          .replace(/\s+/g, " ")
+          .trim();
         };
         const cleaned = clearINEMText(restOfLine);
         if (isD) finalLines.push(`${diaLabel}: Turno D ${cleaned}`);

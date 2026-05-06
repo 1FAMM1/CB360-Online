@@ -1231,7 +1231,8 @@
           <div class="volunteer-service-section-label" style="margin: 15px 0;">Elemento</div>
           <div class="major-row" style="margin: 0 0 5px 0; align-items: center;">
             <div class="major-field">
-              <input type="text" id="vsElementNInt" placeholder="Nº Int." style="width: 100px; text-align: center;">
+              <input type="text" id="vsElementNInt" placeholder="Nº Int." style="width: 100px; text-align: center;" maxlength="3" inputmode="numeric" 
+                     oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 3)">
             </div>
             <div class="major-field">
               <input type="text" id="vsElementName" placeholder="Nome" style="width: 300px; text-align: left;" readonly tabindex="-1">

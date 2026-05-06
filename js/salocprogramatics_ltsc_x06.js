@@ -2892,11 +2892,7 @@
                 <td>${item.failure_description || ''}</td>
                 <td>${item.optel || ''}</td>
                 <td style="text-align:center;">
-                  <button class="btn btn-danger validate-btn" 
-                          data-record='${JSON.stringify(item)}'
-                          style="height:30px; padding:5px 10px;">
-                    Validar Operacionalidade
-                  </button>
+                  <button class="btn btn-success validate-btn" data-record='${JSON.stringify(item)}' style="height:30px; padding:5px 10px;">Validar Operacionalidade</button>
                 </td>`;
               inopsTableBody.appendChild(tr);
             });

@@ -310,7 +310,7 @@
       document.getElementById('vsPrevValueHour')?.addEventListener('input', calculatePrevValue);
       document.getElementById('vsQtdPrevHours')?.addEventListener('input', calculatePrevValue);
       document.getElementById('vsValue')?.addEventListener('input', calculateGlobalTotal);
-      document.getElementById('vsElementNInt')?.addEventListener('input', debounce(fetchElementName, 50));
+      document.getElementById('vsElementNInt')?.addEventListener('input', debounce(fetchElementName, 10));
     });
     /* =========== VISULIZAÇÃO ============ */
     let currentVolunteerData = [];

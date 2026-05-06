@@ -195,21 +195,22 @@
       const nameField = document.getElementById('vsElementName');
       nameField.value = '';
       if (!n_int || !corp_oper_nr) return;
-      if (n_int.length < 2) return;
+      if (n_int.length < 3) return;
       try {
         const url = `${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${n_int}&corp_oper_nr=eq.${corp_oper_nr}&select=abv_name`;
-        const response = await fetch(url, {method: 'GET', headers: getSupabaseHeaders()});
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: getSupabaseHeaders()
+        });
         if (!response.ok) return;
         const data = await response.json();
-        if (data.length > 0) nameField.value = data[0].abv_name;
+        if (data.length > 0) {
+          nameField.value = data[0].abv_name;
+        } else {
+          showPopup('popup-danger', `Elemento com Nº ${n_int} não existe na base de dados.`);
+          document.getElementById('vsElementNInt').value = '';
+        }
       } catch (err) {console.error('Erro de rede:', err);}
-    }
-    function debounce(fn, delay) {
-      let timeout;
-      return (...args) => {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => fn(...args), delay);
-      };
     }
     async function saveVolunteerService() {
       const serviceDate = document.getElementById('vsDate').value;

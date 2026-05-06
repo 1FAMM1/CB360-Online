@@ -212,6 +212,13 @@
         }
       } catch (err) {console.error('Erro de rede:', err);}
     }
+    function debounce(fn, delay) {
+      let timeout;
+      return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => fn(...args), delay);
+      };
+    }
     async function saveVolunteerService() {
       const serviceDate = document.getElementById('vsDate').value;
       const serviceType = document.getElementById('vsType').value;

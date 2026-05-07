@@ -282,7 +282,26 @@
         const value = newValue.toUpperCase();
         const params = { n_int, year, month, day, corp_oper_nr: getCorpId() };
         if (section === "DECIR" && ["EN","ET"].includes(value) && await hasConflict(params, "PN")) return CONFLICT_MESSAGES.DECIR_TO_PIQUETE;
-        if (section !== "DECIR" && value === "PN" && await hasConflict({...params, section:"DECIR"}, ["EN","ET"])) return CONFLICT_MESSAGES.PIQUETE_TO_DECIR;
+        if (section !== "DECIR" && value === "PN" && await hasConflict({...params, section:"DECIR"}, ["EN","ET"])) return CONFLICT_MESSAGES.PIQUETE_TO_DECIR;    
+        if (["PN","ED","EN","ET"].includes(value)) {
+          const corpOperNr = getCorpId();
+          if (["ED","ET"].includes(value)) {
+            const respD = await fetch(
+              `${SUPABASE_URL}/rest/v1/reg_employee_shifts?n_int=eq.${n_int}&year=eq.${year}&month=eq.${month}&day=eq.${day}&shift=eq.D&corp_oper_nr=eq.${corpOperNr}`,
+              { headers: getSupabaseHeaders() }
+            );
+            if (respD.ok && (await respD.json()).length > 0)
+              return "Este elemento está escalado como funcionário durante o dia neste dia.";
+          }
+          if (["EN","ET","PN"].includes(value)) {
+            const respN = await fetch(
+              `${SUPABASE_URL}/rest/v1/reg_employee_shifts?n_int=eq.${n_int}&year=eq.${year}&month=eq.${month}&day=eq.${day}&shift=eq.N&corp_oper_nr=eq.${corpOperNr}`,
+              { headers: getSupabaseHeaders() }
+            );
+            if (respN.ok && (await respN.json()).length > 0)
+              return "Este elemento está escalado como funcionário durante a noite neste dia.";
+          }
+        }    
         return null;
       } catch (err) {
         console.error("Erro ao verificar conflitos:", err);

@@ -46,15 +46,15 @@
           else if (typeof occ.vehicles === 'string') vehiclesCount = occ.vehicles.split(',').filter(v => v.trim() !== '').length;
           const tr = document.createElement('tr');
           tr.innerHTML = `
-          <td style="text-align: center; border: 1px solid #DEE2E6;">${formattedDate}</td>
-          <td style="text-align: center; border: 1px solid #DEE2E6;">${occ.occorrence}</td>
-          <td style="text-align: center; border: 1px solid #DEE2E6;">${occ.local}</td>
-          <td style="text-align: center; border: 1px solid #DEE2E6;">${occ.localitie}</td>
-          <td style="text-align: center; border: 1px solid #DEE2E6;">${vehiclesCount}</td>
-          <td style="text-align: center; border: 1px solid #DEE2E6;">${occ.status}</td>
-          <td style="text-align: center; border: 1px solid #DEE2E6;">
+            <td style="text-align: center; border: 1px solid #DEE2E6;">${formattedDate}</td>
+            <td style="text-align: center; border: 1px solid #DEE2E6;">${occ.occorrence}</td>
+            <td style="text-align: center; border: 1px solid #DEE2E6;">${occ.local}</td>
+            <td style="text-align: center; border: 1px solid #DEE2E6;">${occ.localitie}</td>
+            <td style="text-align: center; border: 1px solid #DEE2E6;">${vehiclesCount}</td>
+            <td style="text-align: center; border: 1px solid #DEE2E6;">${occ.status}</td>
+            <td style="text-align: center; border: 1px solid #DEE2E6;">
             <button class="btn btn-danger posit-btn" style="font-size: 10px;">POSIT</button>
-          </td>        
+            </td>        
           `;
           tbody.appendChild(tr);
           tr.querySelector('.posit-btn').addEventListener('click', () => openPositPopup(occ));
@@ -62,11 +62,12 @@
       } catch (error) {
         console.error("Erro ao carregar ocorrências ativas:", error);
         tbody.innerHTML = `
-      <tr>
-        <td colspan="8" style="padding: 20px; text-align: center; color: red;">
-          Erro ao carregar ocorrências
-        </td>
-      </tr>`;
+          <tr>
+            <td colspan="8" style="padding: 20px; text-align: center; color: red;">
+              Erro ao carregar ocorrências
+            </td>
+          </tr>
+        `;
       }
     }
     /* ========== POSIT SPECIAL POPUP ========== */
@@ -130,13 +131,18 @@
       let mensagem = `*🚨🚨INFORMAÇÃO🚨🚨*\n\n`;
       mensagem += `*Ocorrência: ${occorrence}, _${local}, ${localidade}._*\n`;
       mensagem += `*\\\\POSIT: ${horaPosit},* _${positText}_`;
-      if (desmobilizacao) mensagem += ` _*Desmobilização dos Meios Integrantes.*_`;
+      if (desmobilizacao) {
+        mensagem += ` _*Desmobilização dos Meios Integrantes.*_`;
+      }
+      const optelFooter = await getOptelSignature();
+      mensagem += optelFooter;
       try {
         /* ========== IF CLOSED → DELETE =========== */
         if (status === "Encerrada") {
           const del = await fetch(
             `${SUPABASE_URL}/rest/v1/occurrences_control?id=eq.${currentPositId}`, {
-              method: "DELETE", headers: getSupabaseHeaders()
+              method: "DELETE", 
+              headers: getSupabaseHeaders()
             }
           );
           if (!del.ok) throw new Error("Erro ao apagar ocorrência.");
@@ -147,7 +153,7 @@
             `${SUPABASE_URL}/rest/v1/occurrences_control?id=eq.${currentPositId}`, {
               method: "PATCH",
               headers: getSupabaseHeaders({ returnRepresentation: true }),
-              body: JSON.stringify({ status })
+              body: JSON.stringify({status})
             }
           );
           if (!upd.ok) throw new Error("Erro ao atualizar status.");
@@ -473,14 +479,8 @@
       if (!validateRequiredFields()) return '';
       await new Promise(resolve => {
         const interval = setInterval(() => {
-          const allFieldsReady =
-            document.getElementById('alert_type') &&
-            document.getElementById('alert_source') &&
-            document.getElementById('alert_level') &&
-            document.getElementById('ppi_type') &&
-            document.getElementById('km') &&
-            document.getElementById('on_going') &&
-            document.getElementById('incident_type');
+          const allFieldsReady = document.getElementById('alert_type') && document.getElementById('alert_source') && document.getElementById('alert_level') &&
+                                 document.getElementById('ppi_type') && document.getElementById('km') && document.getElementById('on_going') && document.getElementById('incident_type');
           if (allFieldsReady) {
             clearInterval(interval);
             resolve(true);
@@ -507,13 +507,7 @@
         if (vehicle) vehicles.push(bbs ? `${vehicle}|${bbs} BBs.` : vehicle);
       });
       try {
-        const saveResult = await saveOccurrenceToSupabase({
-            descrOccorr,
-            localOccorr,
-            localitie
-          },
-          vehicles.length
-        );
+        const saveResult = await saveOccurrenceToSupabase({descrOccorr, localOccorr, localitie}, vehicles.length);
         if (saveResult === "DUPLICATE") {
           return '';
         }
@@ -535,20 +529,24 @@
             const zoneZCR = "37.019382,-7.977624";
             const vehiclesLRT = "VCOT, ABSC - Devem Posicionar-se na LRT";
             const vehiclesZCR = "VCI, VTT - Devem Posicionar-se na ZCR";
-            message = `*🚨🚨INFORMAÇÃO🚨🚨*\n\n*\\\\${alertSource}, HI: ${alertTime}, Ativação do ${ppiType} de nível VERMELHO, para a Grelha ${ppiGrid}, MOBILIZAÇÃO TOTAL DO CB.*\n\n*Veículos: ${vehiclesLRT}*\n*Veículos: ${vehiclesZCR}*\n\n*LOCALIZAÇÃO LRT:* (https://www.google.com/maps?q=${zoneLRT})\n*LOCALIZAÇÃO ZCR:* (https://www.google.com/maps?q=${zoneZCR})`;
-          }
+            message = `*🚨🚨INFORMAÇÃO🚨🚨*\n\n*\\\\${alertSource}, HI: ${alertTime}, Ativação do ${ppiType} de nível VERMELHO, para a Grelha ${ppiGrid}, 
+                       MOBILIZAÇÃO TOTAL DO CB.*\n\n*Veículos: ${vehiclesLRT}*\n*Veículos: ${vehiclesZCR}*\n\n*LOCALIZAÇÃO LRT:*
+                       (https://www.google.com/maps?q=${zoneLRT})\n*LOCALIZAÇÃO ZCR:* (https://www.google.com/maps?q=${zoneZCR})`;}
         } else {
-          message = `*🚨🚨INFORMAÇÃO🚨🚨*\n\n*\\\\${alertSource}, HI: ${alertTime}, Ativação do ${alertLevel} para o ${ppiType}, para a Grelha ${ppiGrid}, ao km: ${ppiKm}, no sentido ${ppiDirection} para ${ppiIncident}*`;
-        }
-      }
+          message = `*🚨🚨INFORMAÇÃO🚨🚨*\n\n*\\\\${alertSource}, HI: ${alertTime}, Ativação do ${alertLevel} para o ${ppiType}, para a Grelha ${ppiGrid}, ao km: ${ppiKm}, 
+                     no sentido ${ppiDirection} para ${ppiIncident}*`;}}
       if (channelManeuver) message += `\n*Canal Manobra:* ${channelManeuver}`;
+      const optelFooter = await getOptelSignature();
+      message += optelFooter;
       const out = document.getElementById('wsms_output');
       if (out) out.value = message;
-      if (navigator.clipboard?.writeText) navigator.clipboard.writeText(message).catch(() => {});
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(message).catch(() => {});
+      }
       showPopup('popup-success', "Mensagem criada e copiada! Pode colar no WhatsApp.", false);
       loadActiveOccurrences();
       return message;
-    }    
+    }
     /* ========== RECORDING INCIDENTS IN DATABASE ========== */
     async function safeJson(resp) {
       try {
@@ -758,8 +756,8 @@
     ======================================= */
     /* ============== FIELD VALIDATION ============== */
     function validateAvailabilityForm() {
-      const fields = [{id: 'solicitation_type', label: 'Tipo de Solicitação'}, {id: 'solicitation_motive', label: 'Motivo'},
-                      {id: 'solicitation_shift', label: 'Turno'}, {id: 'exit_hour', label: 'Hora de Saída'}, {id: 'uls_desteny', label: 'Destino'}];
+      const fields = [{id: 'solicitation_type', label: 'Tipo de Solicitação'}, {id: 'solicitation_motive', label: 'Motivo'}, {id: 'solicitation_shift', label: 'Turno'},
+                      {id: 'exit_hour', label: 'Hora de Saída'}, {id: 'uls_desteny', label: 'Destino'}, {id: 'drivers', label: 'Motoristas'}, {id: 'elements', label: 'Elementos'}];
       const typeSelect = document.getElementById('solicitation_type')?.value;
       const missing = [];
       fields.forEach(f => {
@@ -783,30 +781,49 @@
       return true;
     }
     /* ============== GENERATE MESSAGE ============== */
-    function generateAvailability() {
-      if (!validateAvailabilityForm()) return;
+    async function generateAvailability() {
+      const typeRequest = document.getElementById('solicitation_type')?.value;
+      const driversVal = document.getElementById('drivers')?.value?.trim();
+      const elementsVal = document.getElementById('elements')?.value?.trim();
+      const dateService = document.getElementById('solicitation_date')?.value?.trim();
+      const motiveRequest = document.getElementById('solicitation_motive')?.value?.trim();
+      const shift = document.getElementById('solicitation_shift')?.value?.trim();
+      const hourOut = document.getElementById('exit_hour')?.value;
+      const destination = document.getElementById('uls_desteny')?.value?.trim() || '';
+      if (!typeRequest) {
+        showPopup('popup-danger', "Selecione o tipo de solicitação.");
+        return;
+      }
+      if (!driversVal && !elementsVal) {
+        showPopup('popup-danger', "Deve indicar pelo menos um Motorista ou um Elemento.");
+        return;
+      }
+      if (typeRequest === 'Transporte de Doentes' && (!destination || !hourOut)) {
+        showPopup('popup-danger', "Para Transporte de Doentes, o Destino e a Hora de Saída são obrigatórios.");
+        return;
+      }
       const formatDate = (dateStr) => {
         if (!dateStr) return '';
         const [year, month, day] = dateStr.split('-');
         return `${day}/${month}/${year}`;
       };
-      const dateService = document.getElementById('solicitation_date')?.value?.trim();
-      const typeRequest = document.getElementById('solicitation_type')?.value?.trim();
-      const motiveRequest = document.getElementById('solicitation_motive')?.value?.trim();
-      const shift = document.getElementById('solicitation_shift')?.value?.trim();
-      const drivers = document.getElementById('drivers')?.value?.trim();
-      const elements = document.getElementById('elements')?.value?.trim();
-      const hourOut = document.getElementById('exit_hour')?.value;
-      const destination = document.getElementById('uls_desteny')?.value?.trim() || '';
+      const drivers = parseInt(driversVal) || 0;
+      const elements = parseInt(elementsVal) || 0;
       let message = '*🚨🚨INFORMAÇÃO🚨🚨*\n\n';
       let parts = [];
-      if (drivers || elements) {
+      if (drivers > 0 || elements > 0) {
         let meioText = 'Solicita-se ';
-        if (drivers) meioText += `${drivers} Motorista(s)`;
-        if (drivers && elements) meioText += ' e ';
-        if (elements) meioText += `${elements} Elemento(s)`;
+        if (drivers > 0) {
+          meioText += `${drivers} Motorista${drivers > 1 ? 's' : ''}`;
+        }
+        if (drivers > 0 && elements > 0) {
+          meioText += ' e ';
+        }
+        if (elements > 0) {
+          meioText += `${elements} Elemento${elements > 1 ? 's' : ''}`;
+        }
         if (typeRequest === 'INEM') meioText += ' TAS';
-        if (typeRequest === 'Reforço Piquete') meioText += ' Preferencialmente TAS';
+        if (typeRequest === 'Reforço Piquete') meioText += ' preferencialmente TAS';
         parts.push(meioText);
       }
       if (typeRequest) {
@@ -814,7 +831,7 @@
         if (typeRequest === 'Transporte de Doentes') {
           tipoText += ` para ${destination}`;
           if (dateService) tipoText += ` no dia ${formatDate(dateService)}`;
-          tipoText += `, com saída da unidade pelas ${hourOut || '10:10'}`;
+          tipoText += `, com saída da unidade pelas ${hourOut}`;
         } else {
           if (dateService) tipoText += ` no dia ${formatDate(dateService)}`;
           if (shift) tipoText += ` no turno ${shift}`;
@@ -822,18 +839,23 @@
         parts.push(tipoText);
       }
       if (typeRequest === 'Reforço Piquete' && motiveRequest === 'Grelha Município') {
-        parts.push(`afim de assegurar a ${motiveRequest}`);
+        parts.push(`a fim de assegurar a ${motiveRequest}`);
       }
       message += parts.join(' ') + '. ';
-      const destinatario = (typeRequest === 'DECIR' || typeRequest === 'DIOPS') ? 'ao Sr. Adjunto de Comando' : 'à SALOC';
+      let destinatario = 'à SALOC';
+      if (['DECIR', 'DIOPS', 'Dispositivo Especial'].includes(typeRequest)) {
+        destinatario = 'ao Sr. Adjunto de Comando';
+      }
       message += `As disponibilidades deverão ser remetidas ${destinatario}, com a maior brevidade possível. Obrigado!`;
+      const optelFooter = await getOptelSignature();
+      message += optelFooter;
       const out = document.getElementById('wsms_output');
       if (out) out.value = message;
       if (navigator.clipboard?.writeText) {
-        navigator.clipboard.writeText(message).catch(() => {});
+        await navigator.clipboard.writeText(message).catch(() => {});
       }
-      showPopup('popup-success', "Mensagem criada e copiada! Pode colar no WhatsApp.", true);
-      ['solicitation_motive','solicitation_shift','exit_hour','uls_desteny'].forEach(id => {
+      showPopup('popup-success', "Mensagem criada e copiada!", true);
+      ['solicitation_motive', 'solicitation_shift', 'exit_hour', 'uls_desteny'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.disabled = true;
       });
@@ -846,19 +868,28 @@
       const shiftSelect = document.getElementById('solicitation_shift');
       const hourOutInput = document.getElementById('exit_hour');
       const destinationInput = document.getElementById('uls_desteny');
+      const type = typeSelect?.value;
       [motiveSelect, shiftSelect, hourOutInput, destinationInput].forEach(el => {
-        if (el) el.disabled = true;
+        if (el) {
+          el.disabled = true;
+          el.style.backgroundColor = "#e9ecef";
+        }
       });
-      if (!typeSelect || !typeSelect.value) return;
-      if (typeSelect.value === 'Transporte de Doentes') {
+      if (!type) return;
+      if (type === 'Transporte de Doentes') {
         if (hourOutInput) hourOutInput.disabled = false;
         if (destinationInput) destinationInput.disabled = false;
-      } else {
+      } 
+      else if (type === 'INEM' || type === 'Serviço Geral') {
+        if (shiftSelect) shiftSelect.disabled = false;
+      } 
+      else if (type === 'Reforço Piquete' || type === 'DECIR') {
         if (motiveSelect) motiveSelect.disabled = false;
         if (shiftSelect) shiftSelect.disabled = false;
-        if (hourOutInput) hourOutInput.value = '';
-        if (destinationInput) destinationInput.value = '';
       }
+      [motiveSelect, shiftSelect, hourOutInput, destinationInput].forEach(el => {
+        if (el && !el.disabled) el.style.backgroundColor = "";
+      });
     }
     /* ============== INIT ============== */
     document.addEventListener('DOMContentLoaded', () => {
@@ -912,14 +943,18 @@
       } else {
         message = `*🚨INFORMAÇÃO🚨*\n\n*${displayVehicle}:*\nInoperacional por: ${motive}, ${local}, ${gdh}.`;
       }
+      const optelFooter = await getOptelSignature();
+      message += optelFooter;
       document.getElementById('wsms_output').value = message;
-      if (navigator.clipboard?.writeText) navigator.clipboard.writeText(message).catch(() => {});
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(message).catch(() => {});
+      }
       showPopup('popup-success', "Mensagem criada e copiada! Pode colar no WhatsApp.", true);
       try {
         await saveUnavailabilityToSupabase(currentData);
       } catch (e) {
         console.error("Erro ao gravar indisponibilidade:", e);
-      }
+      }    
       loadActiveUnavailability();
       return message;
     }
@@ -998,7 +1033,7 @@
       return `${day}/${month}/${year} ${timeStr || ''}`;
     }
     /* ============== GENERATE END OF UNAVAILABILITY MESSAGE (FINAL & BLINDADA) ============== */
-     async function generateEndUnavailability() {
+    async function generateEndUnavailability() {
       if (!validateVehicleUnavailabilityForm(true)) return '';
       const vehicle = document.getElementById('end_vehicle_unavailable')?.value;
       const motive = document.getElementById('end_reason_unavailability')?.value;
@@ -1023,18 +1058,22 @@
         const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
         const timeUnavailable = `${padNumber(hours)}h${padNumber(minutes)}m`;
         const gdhEnd = formatWSMSGDH(endDate, endHour);
-        let displayName = vehicle === "ABSC-02" ? "INEM-Reserva" : ["ABSC-01","ABSC-03"].includes(vehicle) ? "INEM" : vehicle;
+        let displayName = vehicle === "ABSC-02" ? "INEM-Reserva" : ["ABSC-01", "ABSC-03"].includes(vehicle) ? "INEM" : vehicle;
         let message = '';
         if (motive === "Pausa para Alimentação") {
           message = `*🚨INFORMAÇÃO🚨*\n\n*${displayName}:*\nFim de: ${motive}, ${gdhEnd}.\nTempo Indisponível: ${timeUnavailable}.`;
-        } else if (["Falta de Macas","Aguarda Triagem"].includes(motive)) {
+        } else if (["Falta de Macas", "Aguarda Triagem"].includes(motive)) {
           message = `*🚨INFORMAÇÃO🚨*\n\n*${displayName}:*\nFim de Retenção por: ${motive}, ${gdhEnd}.\nTempo Indisponível: ${timeUnavailable}.`;
         } else {
           message = `*🚨INFORMAÇÃO🚨*\n\n*${displayName}:*\nFim de Inoperacionalidade por: ${motive}, ${gdhEnd}.\nTempo Indisponível: ${timeUnavailable}.`;
         }
+        const optelFooter = await getOptelSignature();
+        message += optelFooter;
         const out = document.getElementById('wsms_output');
         if (out) out.value = message;
-        if (navigator.clipboard?.writeText) navigator.clipboard.writeText(message).catch(() => {});
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(message).catch(() => {});
+        }
         showPopup('popup-success', "Mensagem criada e copiada! Pode colar no WhatsApp.", true);
         await fetch(`${SUPABASE_URL}/rest/v1/vehicle_unavailability?id=eq.${record.id}`, {
           method: 'DELETE',
@@ -1093,7 +1132,7 @@
     }
     document.getElementById('state_municipality_grid')?.addEventListener('change', autoFillMunicipalityGrid);
     /* ========== CREATION OF MUNICIPALITY GRID STATUS MESSAGE ========== */
-    function generateMunicipalityGridMessage() {
+    async function generateMunicipalityGridMessage() {
       if (!validateMunicipalityGridForm()) return '';
       const state = document.getElementById('state_municipality_grid')?.value?.trim();
       const motive = document.getElementById('municipality_grid_output');
@@ -1105,8 +1144,12 @@
       } else if (state === 'Inoperacional') {
         message = `*🚨INFORMAÇÃO🚨*\n\n*❌ Grelha do Município irá ficar Inoperacional.*\n\n*Motivo: ${motive.value}*\n_Planeamento será emitido oportunamente._`;
       }
+      const optelFooter = await getOptelSignature();
+      message += optelFooter;
+      const out = document.getElementById('wsms_output');
+      if (out) out.value = message;
       if (navigator.clipboard?.writeText) {
-        navigator.clipboard.writeText(message).catch(() => {});
+        await navigator.clipboard.writeText(message).catch(() => {});
       }
       showPopup('popup-success', "Mensagem criada e copiada! Pode colar no WhatsApp.", false);
       return message;
@@ -1425,4 +1468,33 @@
       const month = date.toLocaleString("en-US", { month: "short" }).toUpperCase();
       const year = String(date.getFullYear()).slice(-2);
       return `${day}${hour}${min}${month}${year}`;
+    }
+    async function getOptelSignature() {
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      if (!currentCorpOperNr) {
+        console.warn("OPTEL: currentCorpOperNr não encontrado no sessionStorage.");
+        return "";
+      }
+      try {
+        const teamUrl = `${SUPABASE_URL}/rest/v1/fomio_teams?select=n_int&team_name=eq.optel&corp_oper_nr=eq.${currentCorpOperNr}`;
+        const teamResp = await fetch(teamUrl, {headers: getSupabaseHeaders()});
+        const teamData = await teamResp.json();
+        if (teamData && teamData.length > 0) {
+          const nInt = teamData[0].n_int;
+          const elemUrl = `${SUPABASE_URL}/rest/v1/reg_elems?select=patent_abv,abv_name&n_int=eq.${nInt}`;
+          const elemResp = await fetch(elemUrl, {headers: getSupabaseHeaders()});
+          const elemData = await elemResp.json();
+          if (elemData && elemData.length > 0) {
+            const user = elemData[0];
+            return `\nOPTEL: ${user.patent_abv} ${user.abv_name}`;
+          } else {
+            console.warn(`OPTEL: n_int ${nInt} não encontrado na reg_elems.`);
+          }
+        } else {
+          console.warn("OPTEL: Nenhum elemento com team='optel' encontrado para esta corporação.");
+        }
+      } catch (error) {
+        console.error("Erro crítico ao obter OPTEL:", error);
+      }
+      return ""; 
     }

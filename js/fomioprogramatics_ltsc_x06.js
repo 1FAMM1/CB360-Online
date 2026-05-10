@@ -32,10 +32,14 @@
         if (saveBtn) saveBtn.style.display = showSave ? "inline-block" : "none";
         if (emitBtn) emitBtn.style.display = showEmit ? "inline-block" : "none";
       };
+      const DECIR_HIDDEN_MONTHS = [0, 1, 2, 3, 10, 11];
       MONTH_NAMES_PT.forEach((month, index) => {
         const btn = document.createElement("button");
         btn.textContent = month; btn.className = "btn btn-add";
         Object.assign(btn.style, {fontSize:"14px",fontWeight:"bold",width:"110px",height:"40px",borderRadius:"4px",margin:"2px"});
+        if (currentSection === "DECIR" && DECIR_HIDDEN_MONTHS.includes(index)) {
+          btn.style.display = "none";
+        }
         btn.addEventListener("click", async () => {
           const selectedYear = parseInt(yearSelect.value, 10);
           const tableContainer = $(tableContainerId);

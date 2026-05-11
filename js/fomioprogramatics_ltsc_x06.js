@@ -1191,7 +1191,7 @@
         const rowData = {ni:tr.cells[0].textContent.trim(), nome:tr.cells[1].textContent.trim(), catg:tr.cells[2].textContent.trim(), days:{}};
         for (let d=1; d<=daysInMonth; d++) {
           const val = tr.querySelector(`.fixed-day-cell-${d}`)?.textContent.trim() || "";
-          rowData.days[d] = PROTECTED.includes(val.toUpperCase()) ? "" : val;
+          rowData.days[d] = val;
         }
         fixedRows.push(rowData);
       });

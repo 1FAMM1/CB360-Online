@@ -941,68 +941,69 @@
         });
         const modeData = await resp.json();
         if (modeData.length > 0) mode = modeData[0].mode;
-      } catch (err) {
-        console.error("Erro ao carregar modo DECIR:", err);
-      }
-      const DECIR_MODES = {'1_ecin': {minMP: 1, minTotal: 5}, '1_ecin_1_elac': {minMP: 2, minTotal: 7}, 'brigada': {minMP: 3, minTotal: 12}};      
+      } catch (err) {console.error("Erro ao carregar modo DECIR:", err);}
+      const DECIR_MODES = {'1_ecin': {minMP: 1, minTotal: 5,  minB2C: 1}, '1_ecin_1_elac': {minMP: 2, minTotal: 7,  minB2C: 2}, 'brigada': {minMP: 3, minTotal: 12, minB2C: 3}};
       const limits = DECIR_MODES[mode] || DECIR_MODES['1_ecin'];
-      const minBBs = limits.minTotal - limits.minMP;    
+      const minBBs = limits.minTotal - limits.minMP;
       const daysInMonth = new Date(selectedYear, monthIndex, 0).getDate();
       const startDay = monthIndex === 5 ? 15 : 1;
       const endDay = monthIndex === 10 ? 15 : daysInMonth;
-      const issues = [];    
+      const issues = [];
       for (let d = startDay; d <= endDay; d++) {
-        let mpDayCount = 0, mpNightCount = 0, totalDayCount = 0, totalNightCount = 0;        
+        let mpDayCount = 0, mpNightCount = 0, totalDayCount = 0, totalNightCount = 0;
+        const dayPatents = [], nightPatents = [];
         tbody.querySelectorAll("tr:not(.totals-row):not(.mp-dia-row):not(.mp-noite-row):not(.elem-dia-row):not(.elem-noite-row):not(.fixed-row)").forEach(tr => {
           const nInt = parseInt(tr.getAttribute("data-nint"), 10);
           const person = currentTableData.find(p => parseInt(p.n_int, 10) === nInt);
           if (!person) return;
           const td = tr.querySelector(`.day-cell-${d}`);
           if (!td || td.style.display === "none") return;
-          const v = td.textContent.toUpperCase().trim();          
+          const v = td.textContent.toUpperCase().trim();
           const isDay = (v === "ED" || v === "ET");
-          const isNight = (v === "EN" || v === "ET");    
-          if (isDay) totalDayCount++;
-          if (isNight) totalNightCount++;          
+          const isNight = (v === "EN" || v === "ET");
+          if (isDay) {totalDayCount++; dayPatents.push(person.patent_abv || ""); }
+          if (isNight) {totalNightCount++; nightPatents.push(person.patent_abv || "");}
           if (person.MP) {
             if (v === "ED") mpDayCount++;
             else if (v === "EN") mpNightCount++;
             else if (v === "ET") {mpDayCount++; mpNightCount++;}
           }
-        });    
+        });
         const red = (txt) => `<span style="color: #ff4d4d;">${txt}</span>`;
         const styleED = `<span style="color: #DAA520;">Turno ED</span>`;
-        const styleEN = `<span style="color: #4A90E2;">Turno EN</span>`;    
+        const styleEN = `<span style="color: #4A90E2;">Turno EN</span>`;
         let dayED = [];
         let dayEN = [];
         let absentMP_D = 0;
-        if (mpDayCount < limits.minMP) {
-          absentMP_D = limits.minMP - mpDayCount;
-          dayED.push(`MP: ${red(absentMP_D)}`);
-        }        
+        if (mpDayCount < limits.minMP) {absentMP_D = limits.minMP - mpDayCount; dayED.push(`MP: ${red(absentMP_D)}`);}
         if (totalDayCount < limits.minTotal) {
           const openPositionsD = limits.minTotal - totalDayCount;
-          const absentBBsD = openPositionsD - absentMP_D; 
+          const absentBBsD = openPositionsD - absentMP_D;
           if (absentBBsD > 0) dayED.push(`BBs: ${red(absentBBsD)}`);
         } else if (totalDayCount > limits.minTotal) {
           dayED.push(red(`${totalDayCount - limits.minTotal} BBs em excesso`));
         }
+        const dayB2CCount = dayPatents.filter(p => p.toUpperCase() !== "B3C").length;
+        if (dayPatents.length > 0 && totalDayCount >= limits.minTotal && dayB2CCount < limits.minB2C) {
+          dayED.push(red(`está composto por ${dayPatents.length} Bombeiros de 3ª Classe, a composição deve conter no mínimo ${limits.minB2C} Bombeiro(s) de 2ª Classe.`));
+        }
         let absentMP_N = 0;
-        if (mpNightCount < limits.minMP) {
-          absentMP_N = limits.minMP - mpNightCount;
-          dayEN.push(`MP: ${red(absentMP_N)}`);
-        }        
+        if (mpNightCount < limits.minMP) {absentMP_N = limits.minMP - mpNightCount; dayEN.push(`MP: ${red(absentMP_N)}`);}
         if (totalNightCount < limits.minTotal) {
           const openPositionsN = limits.minTotal - totalNightCount;
           const absenBBsN = openPositionsN - absentMP_N;
           if (absenBBsN > 0) dayEN.push(`BBs: ${red(absenBBsN)}`);
         } else if (totalNightCount > limits.minTotal) {
           dayEN.push(red(`${totalNightCount - limits.minTotal} BBs em excesso`));
-        }    
+        }
+        const nightB2CCount = nightPatents.filter(p => p.toUpperCase() !== "B3C").length;
+        if (nightPatents.length > 0 && totalNightCount >= limits.minTotal && nightB2CCount < limits.minB2C) {
+          dayEN.push(red(`está composto por ${nightPatents.length} Bombeiros de 3ª Classe, a composição deve conter no mínimo ${limits.minB2C} Bombeiro(s) de 2ª Classe.`));
+        }
         if (dayED.length > 0) issues.push(`Dia ${d}: ${styleED} ${dayED.join(" | ")}`);
         if (dayEN.length > 0) issues.push(`Dia ${d}: ${styleEN} ${dayEN.join(" | ")}`);
-      }    
-      const modeLabel = { '1_ecin': '1 ECIN', '1_ecin_1_elac': '1 ECIN + 1 ELAC', 'brigada': 'Brigada' }[mode] || mode;      
+      }
+      const modeLabel = { '1_ecin': '1 ECIN', '1_ecin_1_elac': '1 ECIN + 1 ELAC', 'brigada': 'Brigada' }[mode] || mode;
       if (issues.length === 0) {
         showPopup('popup-success', `✅ Dotação mínima assegurada para <b>${modeLabel}</b>.`);
       } else {
@@ -1011,7 +1012,7 @@
           popupDecir.querySelector('.popup-body').innerHTML = `
             <ul style="list-style:none; padding:0; margin:0;">
               <li><span style="font-size:20px;">•</span> <b>⚠️ Turnos DECIR por Preencher e/ou Turnos com excessos. (${modeLabel})</b></li>
-              <li style="margin-left: 14px;"><small>Dotação: ${limits.minMP} Motortista + ${minBBs} Bombeiros (Total: ${limits.minTotal} Elementos.)</small></li>
+              <li style="margin-left: 14px;"><small>Dotação: ${limits.minMP} Motorista + ${minBBs} Bombeiros (Total: ${limits.minTotal} Elementos.)</small></li>
               <li><div style='max-height:200px; overflow-y:auto; margin: 10px 0; font-weight: bold;'>${issues.join("<br>")}</div></li>
               <li><small>ℹ️ A análise verifica as dotações mínimas por turno (Dia/Noite) de acordo com o modo DECIR configurado. Separando Motoristas de Pesados e Bombeiros.</small></li>
             </ul>`;
@@ -1219,711 +1220,4 @@
       } catch (error) {
         console.error("Erro PDF:", error);      
       }
-    }
-    /* =======================================
-    EVENTS
-    ======================================= */
-    document.addEventListener('click', async function(e) {
-      const btn = e.target.closest('.sidebar-sub-submenu-button');
-      if (btn && btn.getAttribute('data-page') === 'page-event-disp') {
-        console.log("A carregar eventos para consulta...");
-        await loadEvents();
-      }
-    });
-    /* ============ ADD SHIFT ============= */
-    function addShift() {
-      const container = document.getElementById('shiftsList');
-      const div = document.createElement('div');
-      div.className = 'events-shift-item';
-      div.style.cssText = 'display: flex; align-items: center; gap: 5px; margin-bottom: 3px; background: transparent; padding: 0px;';
-      div.innerHTML = `
-        <div class="major-field">
-          <label>Data:</label>
-          <input type="date" class="shift-date">
-        </div>
-        <div class="major-field">
-          <label>Início:</label>
-          <input type="time" class="shift-start-time">
-        </div>
-        <div class="major-field">
-          <label>Fim:</label>
-          <input type="time" class="shift-end-time">
-        </div>
-        <button type="button" onclick="removeShift(this)" style="background:#fff5f5;border:1px solid #ffcccc;color:red;width:22px;height:22px;cursor:pointer;border-radius:3px;font-size:10px;">✕</button>
-      `;
-      container.appendChild(div);
-      container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
-      updateCounter();
-    }
-    function updateCounter() {
-      const totalShifs = document.querySelectorAll('.events-shift-item').length;
-      document.getElementById('turno-count').innerText = `(${totalShifs} Inseridos)`;
-    }
-    /* =========== REMOVE SHIFT =========== */
-    function removeShift(btn) {
-      btn.parentElement.remove();
-      updateCounter();
-    }
-    /* ============ CLEAR FORM ============ */
-    function clearForm() {
-      document.querySelectorAll('.admin-container input').forEach(i => i.value = '');
-      document.getElementById('eventType').value = '';
-      document.getElementById('shiftsList').innerHTML = '';
-    }
-    /* =========== SUBMIT EVENT =========== */
-    async function submitEvent() {
-      const eventName = document.getElementById('eventName').value.trim();
-      const eventType = document.getElementById('eventType').value;
-      const location = document.getElementById('eventLocation').value.trim();
-      const startDate = document.getElementById('eventStartDate').value;
-      const endDate = document.getElementById('eventEndDate').value;
-      const operational = parseInt(document.getElementById('operational').value);
-      const valueHour = parseFloat(document.getElementById('valueHour').value);
-      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr') || "0805";
-      if (!eventName || !eventType || !location || !startDate || !endDate || isNaN(operational) || isNaN(valueHour)) {
-        showPopup('popup-danger', "Preencha todos os campos corretamente!"); 
-        return;
-      }
-      const shifts = [...document.querySelectorAll('.events-shift-item')].map(item => ({
-        event_shift_date : item.querySelector('.shift-date').value, 
-        event_shift : `${item.querySelector('.shift-start-time').value}-${item.querySelector('.shift-end-time').value}`, 
-        nec_oper : operational
-      })).filter(t => t.event_shift_date && t.event_shift !== "-");
-      if (shifts.length === 0) {
-        showPopup('popup-danger', "Adicione pelo menos um turno completo!");
-        return;
-      }
-      try {
-        const headers = getSupabaseHeaders();
-        const respCheck = await fetch(
-          `${SUPABASE_URL}/rest/v1/event_list?event=eq.${encodeURIComponent(eventName)}&corp_oper_nr=eq.${corp_oper_nr}`, {
-            headers
-          }
-        );
-        const existingEvents = await respCheck.json();
-        if (existingEvents.length > 0) { 
-          showPopup('popup-danger', `O evento "${eventName}" já existe na sua corporação!`);
-          return;
-        }        
-
-        const respEvent = await fetch(`${SUPABASE_URL}/rest/v1/event_list`, {
-          method : 'POST',
-          headers,
-          body : JSON.stringify({event: eventName, event_type: eventType, corp_oper_nr, date_start: startDate, date_end: endDate, value: valueHour, location})
-        });        
-        if (!respEvent.ok) throw new Error("Erro ao criar cabeçalho do evento");        
-
-        await Promise.all(shifts.map(shift => fetch(`${SUPABASE_URL}/rest/v1/event_shifts`, {
-          method : 'POST',
-          headers,
-          body : JSON.stringify({event: eventName, event_shift_date: shift.event_shift_date, event_shift: shift.event_shift, nec_oper: shift.nec_oper, act_oper: 0, corp_oper_nr})
-        })));
-        try {
-          const respUsers  = await fetch(
-            `${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${corp_oper_nr}&elem_state=eq.true&select=n_int`, {
-              headers
-            }
-          );
-          const activeUsers = await respUsers.json();          
-          if (activeUsers.length > 0) {
-            const now           = new Date().toISOString();
-            const notifications = activeUsers.map(u => ({n_int : u.n_int, corp_oper_nr, title : "EVENTOS", message : `📢 Novo evento: "${eventName}". Inscrições abertas na área de eventos!`,
-                                                         is_read : false, created_at : now}));
-            await fetch(`${SUPABASE_URL}/rest/v1/user_notifications`, {
-              method : 'POST',
-              headers,
-              body : JSON.stringify(notifications)
-            });
-            try {
-              await fetch('https://cb-360-app.vercel.app/api/sendPush', {
-                method : 'POST',
-                headers : {'Content-Type': 'application/json'},
-                body : JSON.stringify({recipient_nint: 'geral', corp_nr: corp_oper_nr, sender_name: 'CB360 Online', message_text: `📢 Novo evento: "${eventName}". Inscrições abertas!`, sender_nint: '0'})
-              });
-              console.log('Push notifications enviadas com sucesso!');
-            } catch (errPush) {
-              console.error('Erro ao enviar push notifications:', errPush);
-            }
-          }
-        } catch (errNotif) {
-          console.error("Erro ao notificar elementos:", errNotif);
-        }
-        showPopup('popup-success', "Evento criado e operacionais notificados com sucesso!");
-        clearForm();
-        if (typeof loadEvents === "function") loadEvents();
-      } catch(e) { 
-        console.error("Erro no submitEvent:", e);
-        showPopup('popup-danger', "Erro ao criar evento.");
-      }
-    }
-    /* ========== HELPERS ========== */    
-    function formatDateDisplay(dateStr) {
-      if (!dateStr) return '---';
-      const parts = dateStr.split('-');
-      return parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : dateStr;
-    }
-    function getEventsStatusClass(state) {
-      if (state === 'Aprovado') return 'bg-aprovado';
-      if (state === 'Não Aprovado') return 'bg-rejeitado';
-      if (state === 'Em Aprovação') return 'bg-pendente';
-      return 'bg-default';
-    }
-    function badgeStyle(cssClass) {
-      const map = {'bg-aprovado' : 'background:#2e7d32;', 'bg-rejeitado': 'background:#e53935;', 'bg-pendente' : 'background:#7f0000;', 'bg-default' : 'background:#6c757d;'};
-      return (map[cssClass] || map['bg-default']) +
-        'padding:3px 8px;border-radius:10px;color:#fff;font-weight:bold;font-size:10px;display:inline-block;min-width:80px;text-align:center;';
-    }
-    /* ========== LOADING EVENT =========== */    
-    async function loadEvents() {
-      const tbody = document.querySelector('#eventTable tbody');
-      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr') || "0805";
-      if (!tbody) {console.warn("loadEvents: #eventTable tbody não encontrado"); return;}
-      tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 12px; font-size: 13px; color: #666;">A carregar...</td></tr>';
-      try {
-        const resp   = await fetch(
-          `${SUPABASE_URL}/rest/v1/event_list?corp_oper_nr=eq.${corp_oper_nr}&order=date_start.desc`, {
-            headers: getSupabaseHeaders()
-          }
-        );
-        const eventos = await resp.json();
-        tbody.innerHTML = '';
-        if (eventos.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 12px; font-size: 13px; color: #888;">Sem eventos registados.</td></tr>';
-          return;
-        }
-        eventos.forEach(ev => {
-          const safeId = ev.event.replace(/\W/g, '');
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td style="padding: 6px 5px; border: 1px solid #dee2e6; text-align: center; font-size: 12px;"><b>${ev.event}</b></td>
-            <td style="padding: 6px 5px; border: 1px solid #dee2e6; text-align: center; font-size: 12px;">${ev.location || '---'}</td>
-            <td style="padding: 6px 5px; border: 1px solid #dee2e6; text-align: center; font-size: 12px;">${formatDateDisplay(ev.date_start)}</td>
-            <td style="padding: 6px 5px; border: 1px solid #dee2e6; text-align: center; font-size: 12px;">${formatDateDisplay(ev.date_end)}</td>
-            <td style="padding: 6px 5px; border: 1px solid #dee2e6; text-align: center; font-size: 12px;">
-              <button id="btn-v-${safeId}"
-                onclick="toggleDisp('${ev.event.replace(/'/g,"\\'")}', this)"
-                style="display: inline-flex; align-items: center; justify-content: center; height: 26px; padding: 0 12px; font-size: 11px; border-radius: 4px; border:none; cursor: pointer; 
-                       font-weight: 600; background: #1976d2; color: #fff;">Ver</button>
-              <button onclick="deleteFullEvent('${ev.event.replace(/'/g,"\\'")}')"
-                      style="display: inline-flex; align-items: center; justify-content: center; height: 26px; padding: 0 12px; font-size: 11px; border-radius: 4px; border: none; cursor:pointer;
-                             font-weight: 600; background: #ce1212; color: #fff;">🗑️</button>
-            </td>
-          `;
-          tbody.appendChild(tr);
-          const trExp = document.createElement('tr');
-          trExp.id = `row-expand-${safeId}`;
-          trExp.style.display = 'none';
-          trExp.innerHTML = `<td colspan="5" id="container-${safeId}" style="padding: 15px; background: #f9f9f9; border: 1px solid #dee2e6;"></td>`;
-          tbody.appendChild(trExp);
-        });
-      } catch(e) { 
-        console.error(e);
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:12px;color:red;font-size:13px;">Erro ao carregar dados.</td></tr>'; 
-      }
-    }
-    /* ======= BUILD DISP TABLE ======= */
-    async function buildDispTable(eventName) {
-      const corp_oper_nr  = sessionStorage.getItem('currentCorpOperNr') || "0805";
-      const encodedName   = encodeURIComponent(eventName);
-      try {
-        const [rShifts, rDisp] = await Promise.all([
-          fetch(`${SUPABASE_URL}/rest/v1/event_shifts?event=eq.${encodedName}&corp_oper_nr=eq.${corp_oper_nr}&order=event_shift_date.asc,event_shift.asc`, {
-            headers: getSupabaseHeaders()
-          }),
-          fetch(`${SUPABASE_URL}/rest/v1/event_disp?event=eq.${encodedName}&corp_oper_nr=eq.${corp_oper_nr}&order=event_shift_date.asc,event_shift.asc`,   {
-            headers: getSupabaseHeaders()
-          })
-        ]);
-        const shifts = await rShifts.json();
-        const disps  = await rDisp.json();
-        if (disps.length === 0) {
-          return "<div style='padding:10px;color:#666;font-size:13px;'>Sem disponibilidades registadas para este evento.</div>";
-        }
-        const nInts  = disps.map(d => d.n_int);
-        const rElems = await fetch(
-          `${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${corp_oper_nr}&n_int=in.(${nInts.join(',')})&select=n_int,full_name,patent`, {
-            headers: getSupabaseHeaders()
-          }
-        );
-        const elems   = await rElems.json();
-        const elemMap = {};
-        elems.forEach(e => {elemMap[e.n_int] = {full_name: e.full_name, patent: e.patent };});
-        const thStyle = 'background: #f1f3f5; padding: 8px 5px; border: 1px solid #dee2e6; text-align: center; font-size: 11px; text-transform: uppercase; color: #495057;';
-        const tdStyle = 'padding:6px 5px;border:1px solid #dee2e6;text-align:center;font-size:12px;color:#333;';
-        let html = `
-          <div style="overflow-x:auto;">
-            <table style="width:100%;border-collapse:collapse;background:#fff;">
-              <thead>
-                <tr>
-                  <th style="${thStyle}">Nº Int</th>
-                  <th style="${thStyle}">Patente</th>
-                  <th style="${thStyle}">Nome</th>
-                  <th style="${thStyle}">Data</th>
-                  <th style="${thStyle}">Turno</th>
-                  <th style="${thStyle}">Estado</th>
-                  <th style="${thStyle}">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-        `;
-        disps.forEach(d => {
-          const sInfo = shifts.find(s => s.event_shift_date === d.event_shift_date && s.event_shift === d.event_shift);
-          const act = sInfo ? parseInt(sInfo.act_oper || 0) : 0;
-          const nec = sInfo ? parseInt(sInfo.nec_oper || 0) : 0;
-          const isFull = act >= nec;
-          const canAction = !isFull || d.shift_state === 'Aprovado';
-          const rowBg = (isFull && d.shift_state !== 'Aprovado') ? 'background:#f8f9fa;color:#adb5bd;' : '';
-          const statusCls = (isFull && d.shift_state !== 'Aprovado') ? 'bg-default' : getEventsStatusClass(d.shift_state);
-          const statusText = (isFull && d.shift_state !== 'Aprovado') ? 'Turno Cheio'  : d.shift_state;
-          const elemData = elemMap[d.n_int] || {};
-          const safeEvent = d.event.replace(/'/g, "\\'");
-          html += `
-            <tr id="disp-row-${d.id}" style="${rowBg}">
-              <td style="${tdStyle}">${d.n_int}</td>
-              <td style="${tdStyle}">${elemData.patent || '---'}</td>
-              <td style="${tdStyle}">${elemData.full_name || d.n_int}</td>
-              <td style="${tdStyle}">${formatDateDisplay(d.event_shift_date)}</td>
-              <td style="${tdStyle}">${d.event_shift}<br><small style="color: #666;">Vagas: ${act}/${nec}</small></td>
-              <td style="${tdStyle}">
-                <span style="${badgeStyle(statusCls)}" data-state="${d.shift_state}">${statusText}</span>
-              </td>
-              <td style="${tdStyle}">
-                <div style="display:flex;gap:4px;justify-content:center;">
-                  ${canAction ? `
-                    <button title="Aprovar"
-                      onclick="updateState(${d.id},'Aprovado','${safeEvent}','${d.event_shift_date}','${d.event_shift}')"
-                      style="padding: 4px 8px; border: none; border-radius: 3px; cursor: pointer; font-size: 10px; font-weight: bold; background: #2e7d32; color: #fff;">✓</button>
-                    <button title="Rejeitar"
-                      onclick="updateState(${d.id},'Não Aprovado','${safeEvent}','${d.event_shift_date}','${d.event_shift}')"
-                      style="padding: 4px 8px; border: none; border-radius: 3px; cursor: pointer; font-size: 10px; font-weight: bold; background: #e53935; color: #fff;">✕</button>
-                  ` : '<small style="color:#999;">Esgotado</small>'}
-                </div>
-              </td>
-            </tr>
-          `;
-        });
-        html += `</tbody></table></div>`;
-        return html;    
-      } catch (e) {
-        console.error("Erro em buildDispTable:", e);
-        return "<div style='color:red;padding:10px;'>Erro ao processar tabela de detalhes.</div>";
-      }
-    }
-    /* ========== TOGGLE DISPLAY ========== */
-    async function toggleDisp(eventName, btn) {
-      const safeId    = eventName.replace(/\W/g, '');
-      const container = document.getElementById(`container-${safeId}`);
-      const trParent  = document.getElementById(`row-expand-${safeId}`);
-      if (trParent.style.display !== 'table-row') {
-        document.querySelectorAll('[id^="row-expand-"]').forEach(el => el.style.display = 'none');
-        document.querySelectorAll('[id^="btn-v-"]').forEach(b => {
-          b.textContent = 'Ver';
-          b.style.background = '#1976d2';
-        });
-      }
-      if (trParent.style.display === 'table-row') {
-        trParent.style.display = 'none';
-        btn.textContent = 'Ver';
-        btn.style.background = '#1976d2';
-        return;
-      }
-      btn.textContent = 'Fechar';
-      btn.style.background = '#6c757d';
-      trParent.style.display = 'table-row';
-      container.innerHTML = "<em style='font-size: 13px; color: #666;'>A carregar...</em>";
-      try {
-        container.innerHTML = await buildDispTable(eventName);
-      } catch(e) {
-        console.error(e);
-        container.innerHTML = "<span style='color: red; font-size: 13px;'>Erro ao carregar detalhes.</span>";
-      }
-    }
-    /* ========== REFRESH TABLE =========== */
-    async function refreshTableOnly(eventName, safeId) {
-      const container = document.getElementById(`container-${safeId}`);
-      try {
-        container.innerHTML = await buildDispTable(eventName);
-      } catch(e) { 
-        console.error(e);
-      }
-    }
-    /* =========== UPDATE STATE =========== */
-    async function updateState(id, newState, evName, sDate, sTime) {
-      const row = document.getElementById(`disp-row-${id}`);
-      const badge = row.querySelector('[data-state]');
-      const oldState = badge.dataset.state;
-      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr') || "0805";
-      const userNInt = row.cells[0].innerText;
-      if (oldState === newState) return;
-      try {
-        if (newState === 'Aprovado') {
-          const r = await fetch(
-            `${SUPABASE_URL}/rest/v1/event_shifts?event=eq.${encodeURIComponent(evName)}&event_shift_date=eq.${sDate}&event_shift=eq.${sTime}&corp_oper_nr=eq.${corp_oper_nr}`, {
-              headers: getSupabaseHeaders()
-            }
-          );
-          const s = await r.json();
-          if (s.length > 0) {
-            const currentAct = parseInt(s[0].act_oper) || 0;
-            const currentNec = parseInt(s[0].nec_oper) || 0;
-            if (currentAct >= currentNec) {
-              showPopup('popup-danger', "Atenção: Este turno já atingiu o limite de vagas!");
-              return;
-            }
-          }
-        }
-        const rUp = await fetch(`${SUPABASE_URL}/rest/v1/event_disp?id=eq.${id}`, {
-          method : 'PATCH',
-          headers : getSupabaseHeaders(),
-          body : JSON.stringify({ shift_state: newState })
-        });
-        if (!rUp.ok) throw new Error("Erro ao atualizar o estado da disponibilidade");
-        const msgNotif = newState === 'Aprovado' 
-          ? `✅ A tua disponibilidade para o evento "${evName}" (${formatDateDisplay(sDate)}) foi APROVADA.`
-          : `❌ A tua disponibilidade para o evento "${evName}" (${formatDateDisplay(sDate)}) não foi aprovada.`;
-        await fetch(`${SUPABASE_URL}/rest/v1/user_notifications`, {
-          method : 'POST',
-          headers : getSupabaseHeaders(),
-          body : JSON.stringify({n_int: userNInt, corp_oper_nr, title: "Eventos", message: msgNotif, is_read: false, created_at: new Date().toISOString()})
-        });
-        try {
-          await fetch('https://cb-360-app.vercel.app/api/sendPush', {
-            method : 'POST',
-            headers : { 'Content-Type': 'application/json' },
-            body : JSON.stringify({recipient_nint: userNInt, corp_nr: corp_oper_nr, sender_name: 'CB360 Online', message_text: msgNotif, sender_nint: '0'})
-          });
-          console.log(`Push notification enviada para ${userNInt}`);
-        } catch (errPush) {
-          console.error('Erro ao enviar push notification:', errPush);
-        }
-        let inc = 0;
-        if (newState === 'Aprovado'  && oldState !== 'Aprovado') inc =  1;
-        else if (newState !== 'Aprovado' && oldState === 'Aprovado') inc = -1;
-        if (inc !== 0) {
-          const rGet = await fetch(
-            `${SUPABASE_URL}/rest/v1/event_shifts?event=eq.${encodeURIComponent(evName)}&event_shift_date=eq.${sDate}&event_shift=eq.${sTime}&corp_oper_nr=eq.${corp_oper_nr}`,
-            { headers: getSupabaseHeaders() }
-          );
-          const cur = await rGet.json();
-          if (cur.length > 0) {
-            const newActOper = Math.max(0, (parseInt(cur[0].act_oper) || 0) + inc);
-            await fetch(`${SUPABASE_URL}/rest/v1/event_shifts?id=eq.${cur[0].id}`, {
-              method : 'PATCH',
-              headers : getSupabaseHeaders(),
-              body : JSON.stringify({act_oper: newActOper})
-            });
-          }
-        }
-        const safeId = evName.replace(/\W/g, '');
-        await refreshTableOnly(evName, safeId);
-        console.log(`Estado atualizado: ${userNInt} -> ${newState}`);
-      } catch (e) {
-        console.error("Erro crítico no updateState:", e);
-        showPopup('popup-danger', "Ocorreu um erro ao processar o estado ou a notificação.");
-      }
-    }
-    /* =========== DELETE EVENT =========== */
-    async function deleteFullEvent(eventName) {
-      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr') || "0805";
-      const confirmation = confirm(`Deseja eliminar o evento "${eventName}"?`);
-      if (!confirmation) return;
-
-      try {
-        const headers = getSupabaseHeaders();
-        const filter = `event=eq.${encodeURIComponent(eventName)}&corp_oper_nr=eq.${corp_oper_nr}`;        
-        await Promise.all([
-          fetch(`${SUPABASE_URL}/rest/v1/event_list?${filter}`, {method: 'DELETE', headers}),
-          fetch(`${SUPABASE_URL}/rest/v1/event_shifts?${filter}`, {method: 'DELETE', headers}),
-          fetch(`${SUPABASE_URL}/rest/v1/event_disp?${filter}`, {method: 'DELETE', headers})
-        ]);        
-        showPopup('popup-success', "Eliminado com sucesso.");
-        loadEvents();
-      } catch (e) {
-        console.error(e);
-        showPopup('popup-danger', "Erro ao eliminar evento.");
-      }
-    }
-    /* =======================================
-    VACATIONS
-    ======================================= */
-     document.addEventListener('click', async function(e) {
-      const btn = e.target.closest('.sidebar-sub-submenu-button');
-      if (btn && btn.getAttribute('data-page') === 'page-vacations-request') {
-        console.log("A carregar eventos para consulta...");
-        await loadVacationsAdmin();
-      }
-    });
-    /* === LOAD VACATIONS SOLICITATIONS === */    
-    async function loadVacationsAdmin() {
-      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr') || "0805";
-      const tbody = document.getElementById('vacationsSummaryBody');
-      if (!tbody) return;
-      tbody.innerHTML = '<tr><td colspan="4">A carregar pedidos...</td></tr>';
-       try {
-         const res = await fetch(`${SUPABASE_URL}/rest/v1/ped_vacat?corp_oper_nr=eq.${corp_oper_nr}&order=year.desc,month.desc`, {
-           headers: getSupabaseHeaders()
-         });
-         const allData = await res.json();
-         if (!allData || allData.length === 0) {
-           tbody.innerHTML = '<tr><td colspan="4">Não existem pedidos de férias registados.</td></tr>';
-           return;
-         }
-         const summary = {};
-         allData.forEach(item => {
-           const key = `${item.year}-${item.month}`;
-           if (!summary[key]) {
-             summary[key] = { year: item.year, month: item.month, total: 0, pending: 0 };
-           }
-           summary[key].total++;
-           if (item.state === 'Em Aprovação') summary[key].pending++;
-         });
-         const monthNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-         let html = '';
-         Object.values(summary).forEach((s, index) => {
-           const rowId = `details-vacat-${index}`;
-           const counterId = `pending-count-${s.year}-${s.month}`;
-           html += `
-             <tr>
-               <td style="padding: 6px 5px; border: 1px solid #dee2e6; text-align: center; font-size: 12px;"><b>${monthNames[s.month - 1]} ${s.year}</b></td>
-               <td style="padding: 6px 5px; border: 1px solid #dee2e6; text-align: center; font-size: 12px;">${s.total}</td>
-               <td style="padding: 6px 5px; border: 1px solid #dee2e6; text-align: center; font-size: 12px;">
-                 <span id="${counterId}" style="color: ${s.pending > 0 ? '#e67e22' : '#27ae60'}; font-weight: bold;">${s.pending}</span>
-               </td>
-               <td style="padding: 6px 5px; border: 1px solid #dee2e6; text-align: center; font-size: 12px;">
-                  <button class="view-btn" style="display: inline-flex; align-items: center; justify-content: center; height: 26px; padding: 0 12px; font-size: 11px; border-radius: 4px; border: none; cursor:pointer;
-                                                  font-weight: 600; background: #ce1212; color: #fff;" onclick="toggleVacatDetails('${rowId}', ${s.month}, ${s.year})">Ver</button>
-               </td>
-             </tr>
-             <tr id="${rowId}" class="expandable" style="display: none;">
-               <td colspan="4" id="content-${rowId}" style="padding:15px; background:#f0f0f0"></td>
-             </tr>
-           `;
-         });
-         tbody.innerHTML = html;
-       } catch (err) {
-         console.error(err);
-         tbody.innerHTML = '<tr><td colspan="4" style="color:red;">Erro ao carregar dados.</td></tr>';
-       }
-    }
-    /* ========== TOGGLE DISPLAY ========== */
-    async function toggleVacatDetails(rowId, month, year) {
-      const trParent = document.getElementById(rowId);
-      const container = document.getElementById(`content-${rowId}`);
-      const btn = event.target;
-      if (trParent.style.display !== 'table-row') {
-        document.querySelectorAll('.expandable').forEach(el => el.style.display = 'none');
-        document.querySelectorAll('.view-btn').forEach(b => {
-          b.textContent = "Ver";
-          b.classList.remove('close-btn');
-        });
-        trParent.style.display = 'table-row';
-        btn.textContent = "Fechar";
-        btn.classList.add('close-btn');
-        container.innerHTML = "<em>A carregar...</em>";
-        container.innerHTML = await buildVacatTable(month, year);
-      } else {
-        trParent.style.display = 'none';
-        btn.textContent = "Ver";
-        btn.classList.remove('close-btn');
-      }
-    }    
-    /* ====== BUILD VACATIONS TABLE ======= */
-    async function buildVacatTable(month, year) {
-      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr') || "0805";
-      try {
-        const rVacat = await fetch(
-          `${SUPABASE_URL}/rest/v1/ped_vacat?month=eq.${month}&year=eq.${year}&corp_oper_nr=eq.${corp_oper_nr}&order=n_int.asc`, {
-            headers: getSupabaseHeaders()
-          }
-        );
-        const vacations = await rVacat.json();
-        if (!vacations.length) {
-          return "<div style='padding: 10px; color: #666; font-size: 13px;'>Sem pedidos para este período.</div>";
-        }
-        const nInts = [...new Set(vacations.map(v => v.n_int))];
-        const rElems = await fetch(
-          `${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${corp_oper_nr}&n_int=in.(${nInts.join(',')})&select=n_int,full_name,patent`, {
-            headers: getSupabaseHeaders()
-          }
-        );
-        const elems = await rElems.json();
-        const elemMap = {};
-        elems.forEach(e => {
-          elemMap[e.n_int] = e;
-        });
-        const thStyle = 'background: #f1f3f5; padding: 8px 5px; border: 1px solid #dee2e6; text-align: center; font-size: 11px; text-transform: uppercase; color: #495057;';
-        const tdStyle = 'padding: 6px 5px; border: 1px solid #dee2e6; text-align: center; font-size: 12px; color: #333;';
-        let html = `
-          <div style="overflow-x:auto;">
-            <table style="width:100%;border-collapse:collapse;background:#fff;">
-              <thead>
-                <tr>
-                  <th style="${thStyle}">Nº Int</th>
-                  <th style="${thStyle}">Patente</th>
-                  <th style="${thStyle}">Nome</th>
-                  <th style="${thStyle}">Dias</th>
-                  <th style="${thStyle}">Estado</th>
-                  <th style="${thStyle}">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-            `;
-        vacations.forEach(v => {
-          const elem = elemMap[v.n_int] || { full_name: v.n_int, patent: '---' };
-          const statusCls = getVacatiosStatusClass(v.state);
-          const statusText = v.state;
-          html += `
-            <tr id="vacat-row-${v.id}">
-              <td style="${tdStyle}">${v.n_int}</td>
-              <td style="${tdStyle}">${elem.patent}</td>
-              <td style="${tdStyle}">${elem.full_name}</td>
-              <td style="${tdStyle}"><strong>${formatDaysGrouped(v.day)}</strong></td>
-              <td style="${tdStyle}">
-                <span id="badge-${v.id}" style="${badgeStyle(statusCls)}">${statusText}</span>
-              </td>
-              <td style="${tdStyle}">
-                <div style="display:flex;gap:4px;justify-content:center;">
-                  <button title="Aprovar"
-                    onclick="updateVacatState(${v.id}, 'Aprovadas', ${year}, ${month})"
-                    style="padding: 4px 8px; border: none; border-radius: 3px; cursor: pointer; font-size: 10px; font-weight: bold; background: #2e7d32; color: #fff;">✓</button>
-    
-                  <button title="Rejeitar"
-                    onclick="updateVacatState(${v.id}, 'Recusadas', ${year}, ${month})"
-                    style="padding: 4px 8px; border: none; border-radius: 3px; cursor: pointer; font-size: 10px; font-weight: bold; background: #e53935; color: #fff;">✕</button>
-                </div>
-              </td>
-            </tr>
-          `;
-        });
-        html += `</tbody></table></div>`;
-        return html;
-      } catch (e) {
-        console.error(e);
-        return "<div style='color:red;padding:10px;'>Erro ao processar tabela.</div>";
-      }
-    }
-    /* ====== UPDATE VACATIONS STATE ====== */
-    async function updateVacatState(id, newState, year, month) {
-      try {
-        const badge = document.getElementById(`badge-${id}`);
-        const oldState = badge ? badge.textContent.trim() : "";
-        if (oldState === newState) return;
-        const respPed = await fetch(`${SUPABASE_URL}/rest/v1/ped_vacat?id=eq.${id}`, {
-          headers: getSupabaseHeaders()
-        });
-        const [request] = await respPed.json();
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/ped_vacat?id=eq.${id}`, {
-          method: 'PATCH',
-          headers: getSupabaseHeaders(),
-          body: JSON.stringify({ state: newState })
-        });
-        if (res.ok) {
-          if (newState === 'Aprovadas') {
-            await deleteDaysOnVacation(request);
-            await recordDaysOnVacation(request);
-          } else if (oldState === 'Aprovadas' && newState !== 'Aprovadas') {
-            await deleteDaysOnVacation(request);
-          }
-          const MONTH_NAMES_PT_VACT = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-          const monthName = MONTH_NAMES_PT_VACT[parseInt(month) - 1] || month;
-          const msgNotif = newState === 'Aprovadas'
-            ? `As tuas férias de voluntariado para ${monthName} de ${year} foram aprovadas! ✅` 
-            : newState === 'Recusadas'
-            ? `As tuas férias de voluntariado para ${monthName} de ${year} foram recusadas. ❌`
-            : `O teu pedido de férias de voluntariado para ${monthName} de ${year} foi colocado como: ${newState}.`;
-          await fetch(`${SUPABASE_URL}/rest/v1/user_notifications`, {
-            method: 'POST',
-            headers: getSupabaseHeaders(),
-            body: JSON.stringify({n_int: request.n_int, corp_oper_nr: request.corp_oper_nr, title: "Gestão de Férias", message: msgNotif, is_read: false, created_at: new Date().toISOString()})
-          });
-          try {
-            await fetch('https://cb-360-app.vercel.app/api/sendPush', {
-              method: 'POST',
-              headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({recipient_nint: Number(request.n_int), corp_nr: String(request.corp_oper_nr), sender_name: "Gestão de Férias", message_text: msgNotif, sender_nint: 0})
-            });
-          } catch (e) {
-            console.error("Erro no Push de férias:", e);
-          }
-          if (badge) {
-            const cls = getVacatiosStatusClass(newState);
-            badge.textContent = newState;
-            badge.setAttribute('style', badgeStyle(cls));
-          }
-          if (oldState === "Em Aprovação") {
-            const counterSpan = document.getElementById(`pending-count-${year}-${month}`);
-            if (counterSpan) {
-              let currentVal = parseInt(counterSpan.textContent) || 0;
-              if (currentVal > 0) {
-                let newVal = currentVal - 1;
-                counterSpan.textContent = newVal;
-                if (newVal === 0) counterSpan.style.color = '#27ae60';
-              }
-            }
-          }
-          console.log("Fluxo concluído: Base de dados atualizada e notificação enviada.");
-        } else {
-          throw new Error("Falha ao atualizar o estado no servidor.");
-        }
-      } catch (err) {
-        console.error("Erro no fluxo updateVacatState:", err);
-        showPopup('popup-danger', "Erro ao processar alteração.");
-      }
-    }
-    /* ========== SAVE VACATIONS ========== */
-    async function recordDaysOnVacation(request) {
-      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr') || "0805";
-      const respElem = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${request.n_int}&corp_oper_nr=eq.${corp_oper_nr}`, {
-        headers: getSupabaseHeaders()
-      });
-      const [elem] = await respElem.json();
-      if (!elem) return;    
-      const listaDias = request.day.split(',').map(d => d.trim());    
-      const promises = listaDias.map(dia => fetch(`${SUPABASE_URL}/rest/v1/reg_serv`, {
-          method: 'POST',
-          headers: getSupabaseHeaders(),
-          body: JSON.stringify({n_int: request.n_int, section: elem.section, abv_name: elem.abv_name, year: request.year, month: request.month, day: parseInt(dia), value: "FE", corp_oper_nr: corp_oper_nr})
-        })
-      );
-      await Promise.all(promises);
-    }    
-    /* ========= DELETE VACATIONS ========= */
-    async function deleteDaysOnVacation(request) {
-      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr') || "0805";
-      const query = `n_int=eq.${request.n_int}&year=eq.${request.year}&month=eq.${request.month}&value=eq.FE&corp_oper_nr=eq.${corp_oper_nr}`;      
-      try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/reg_serv?${query}`, {
-          method: 'DELETE',
-          headers: getSupabaseHeaders()
-        });       
-      } catch (err) {
-        console.error("Erro ao apagar dias de férias:", err);
-      }
-    }
-    function formatDaysGrouped(daysString) {
-      const days = daysString.split(',').map(Number).sort((a, b) => a - b);
-      let groups = [], start = days[0], end = start;
-      for (let i = 1; i <= days.length; i++) {
-        if (days[i] === end + 1) { end = days[i]; } 
-        else {
-          groups.push(start === end ? String(start).padStart(2,'0') : `${String(start).padStart(2,'0')} a ${String(end).padStart(2,'0')}`);
-          start = days[i]; end = start;
-        }
-      }
-      return groups.join(', ');
-    }
-    function getVacatiosStatusClass(state) {
-      const s = state ? state.trim() : '';      
-      if (s === 'Aprovadas' || s === 'Aprovado') return 'bg-approved';
-      if (s === 'Recusadas' || s === 'Não Aprovado' || s === 'Rejeitado') return 'bg-rejected';
-      return 'bg-pending';
-    }
-    function badgeStyle(cls) {
-      if (cls === 'bg-approved') {
-        return 'background: #2e7d32; color:#fff; padding: 3px 6px;border-radius: 50px;';
-      }
-      if (cls === 'bg-rejected') {
-        return 'background: #e53935; color:#fff; padding: 3px 6px;border-radius: 50px;';
-      }
-      return 'background: #f39c12; color:#fff; padding: 3px 6px;border-radius: 50px;';
     }

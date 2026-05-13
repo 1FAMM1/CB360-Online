@@ -570,55 +570,127 @@
           else { cell.dataset.driver = "0"; cell.dataset.other = "0"; }
         });
       });
+    }    
+    function getNextTeamNumber(teamPrefix) {
+      const tbody = document.querySelector("table.employees-table tbody");
+      if (!tbody) return teamPrefix === "EQ" ? "EQ05" : `${teamPrefix}02`;
+      const existingTeams = Array.from(tbody.querySelectorAll("tr.data-row"))
+      .map(r => r.querySelector("td:nth-child(4)")?.textContent.trim())
+      .filter(Boolean);
+      if (teamPrefix === "EQ") {
+        const teamCount = {};
+        existingTeams.forEach(t => { 
+          if (/^EQ\d+$/.test(t)) teamCount[t] = (teamCount[t] || 0) + 1; 
+        });
+        const incomplete = Object.keys(teamCount).sort().find(t => teamCount[t] < 2);
+        if (incomplete) return incomplete;
+        let max = 4;
+        Object.keys(teamCount).forEach(t => { 
+          const m = t.match(/^EQ(\d+)$/); 
+          if (m) max = Math.max(max, parseInt(m[1], 10)); 
+        });
+        return `EQ${String(max + 1).padStart(2, "0")}`;
+      } else {
+        let max = 1;
+        existingTeams
+          .filter(t => t.startsWith(teamPrefix))
+          .forEach(t => { 
+          const m = t.match(/\d+$/); 
+          if (m) max = Math.max(max, parseInt(m[0], 10)); 
+        });
+        return `${teamPrefix}${String(max + 1).padStart(2, "0")}`;
+      }
+    }
+    function renumberEQTeams(tbody) {
+      const rows = Array.from(tbody.querySelectorAll("tr.data-row"));
+      const eqRows = rows.filter(r => {
+        const team = normalizeTeam(r.querySelector("td:nth-child(4)")?.textContent || "");
+        return team.startsWith("EQ");
+      });
+      let teamNum = 1;
+      let countInTeam = 0;
+      eqRows.forEach(row => {
+        const td = row.querySelector("td:nth-child(4)");
+        if (!td) return;
+        if (countInTeam === 2) {teamNum++; countInTeam = 0;}
+        td.textContent = `EQ${String(teamNum).padStart(2, "0")}`;
+        countInTeam++;
+      });
+      const tdnuRows = rows.filter(r => {
+        const team = normalizeTeam(r.querySelector("td:nth-child(4)")?.textContent || "");
+        return team.startsWith("TDNU");
+      });
+      tdnuRows.forEach((row, idx) => {
+        const td = row.querySelector("td:nth-child(4)");
+        if (td) td.textContent = `TDNU${String(idx + 1).padStart(2, "0")}`;
+      });
+      const opcRows = rows.filter(r => {
+        const team = normalizeTeam(r.querySelector("td:nth-child(4)")?.textContent || "");
+        return team.startsWith("OPC");
+      });
+      opcRows.forEach((row, idx) => {
+        const td = row.querySelector("td:nth-child(4)");
+        if (td) td.textContent = `OPC${String(idx + 1).padStart(2, "0")}`;
+      });
     }
     function enableRowDragAndDrop(tbody) {
       tbody.querySelectorAll("tr.data-row").forEach(row => {
-        row.draggable = true; row.style.cursor = "move";
-        row.addEventListener("dragstart", e => { globalDraggedRow = row; row.style.opacity = "0.5"; e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", ""); });
-        row.addEventListener("dragend", () => { row.style.opacity = "1"; document.querySelectorAll("tr.data-row").forEach(r => r.style.backgroundColor = ""); globalDraggedRow = null; });
-        row.addEventListener("dragover", e => { e.preventDefault(); if (globalDraggedRow && globalDraggedRow !== row) row.style.backgroundColor = "#e3f2fd"; });
-        row.addEventListener("dragleave", () => { row.style.backgroundColor = ""; });
+        row.draggable = true;
+        row.style.cursor = "move";
+        row.addEventListener("dragstart", e => {
+          globalDraggedRow = row;
+          row.style.opacity = "0.5";
+          e.dataTransfer.effectAllowed = "move";
+          e.dataTransfer.setData("text/plain", "");
+        });
+        row.addEventListener("dragend", () => {
+          row.style.opacity = "1";
+          globalDraggedRow = null;
+        });
+        row.addEventListener("dragover", e => {
+          e.preventDefault();
+        });
         row.addEventListener("drop", e => {
           e.preventDefault();
           if (!globalDraggedRow || globalDraggedRow === row) return;
-          const dNint = globalDraggedRow.getAttribute("data-nint"), tNint = row.getAttribute("data-nint");
-          [[0,""], [1,""], [2,""]].forEach(([ci]) => {
-            const tmp = globalDraggedRow.cells[ci].textContent;
-            globalDraggedRow.cells[ci].textContent = row.cells[ci].textContent;
-            row.cells[ci].textContent = tmp;
-          });
-          globalDraggedRow.setAttribute("data-nint", tNint); row.setAttribute("data-nint", dNint);
+          for (let i = 0; i < 3; i++) {
+            const tmp = globalDraggedRow.cells[i].textContent;
+            globalDraggedRow.cells[i].textContent = row.cells[i].textContent;
+            row.cells[i].textContent = tmp;
+          }
+          const tmpNint = globalDraggedRow.getAttribute("data-nint");
+          globalDraggedRow.setAttribute("data-nint", row.getAttribute("data-nint"));
+          row.setAttribute("data-nint", tmpNint);
+          const tmpEntry = globalDraggedRow.dataset.entryDate;
+          globalDraggedRow.dataset.entryDate = row.dataset.entryDate;
+          row.dataset.entryDate = tmpEntry;
           const dShifts = Array.from(globalDraggedRow.querySelectorAll("td[contenteditable='true']"));
           const tShifts = Array.from(row.querySelectorAll("td[contenteditable='true']"));
           dShifts.forEach((cell, i) => {
             const tc = tShifts[i];
-            const [tt, tbg, tc2, tw, td2] = [tc.textContent, tc.style.backgroundColor, tc.style.color, tc.style.fontWeight, tc.dataset.driver];
-            tc.textContent = cell.textContent; tc.style.backgroundColor = cell.style.backgroundColor; tc.style.color = cell.style.color; 
-            tc.style.fontWeight = cell.style.fontWeight; tc.dataset.driver = cell.dataset.driver;
-            cell.textContent = tt; cell.style.backgroundColor = tbg; cell.style.color = tc2; cell.style.fontWeight = tw; cell.dataset.driver = td2;
+            if (!tc) return;
+            const tmp = {text: tc.textContent, bg: tc.style.backgroundColor, color: tc.style.color, fontWeight: tc.style.fontWeight, driver: tc.dataset.driver, 
+                         other: tc.dataset.other, customBg: tc.dataset.customBg, customColor: tc.dataset.customColor};
+            tc.textContent = cell.textContent; tc.style.backgroundColor = cell.style.backgroundColor; tc.style.color = cell.style.color;
+            tc.style.fontWeight = cell.style.fontWeight; tc.dataset.driver = cell.dataset.driver; tc.dataset.other = cell.dataset.other;
+            tc.dataset.customBg = cell.dataset.customBg; tc.dataset.customColor = cell.dataset.customColor;
+            cell.textContent = tmp.text; cell.style.backgroundColor = tmp.bg; cell.style.color = tmp.color; cell.style.fontWeight = tmp.fontWeight;
+            cell.dataset.driver = tmp.driver; cell.dataset.other = tmp.other; cell.dataset.customBg = tmp.customBg; cell.dataset.customColor = tmp.customColor;
           });
-          updateRowTotal(globalDraggedRow); updateRowTotal(row);
-          row.style.backgroundColor = ""; globalDraggedRow = null;
+          const dAcum = globalDraggedRow.querySelector(".total-accumulated-cell");
+          const tAcum = row.querySelector(".total-accumulated-cell");
+          if (dAcum && tAcum) {
+            const tmp = {text: tAcum.textContent, base: tAcum.dataset.base, extra: tAcum.dataset.extraHours, isJan: tAcum.dataset.isJanuary};
+            tAcum.textContent = dAcum.textContent; tAcum.dataset.base = dAcum.dataset.base; tAcum.dataset.extraHours = dAcum.dataset.extraHours;
+            tAcum.dataset.isJanuary = dAcum.dataset.isJanuary; dAcum.textContent = tmp.text; dAcum.dataset.base = tmp.base;  dAcum.dataset.extraHours = tmp.extra;
+            dAcum.dataset.isJanuary = tmp.isJan;
+          }
+          renumberEQTeams(tbody);
+          updateRowTotal(globalDraggedRow);
+          updateRowTotal(row);
+          globalDraggedRow = null;
         });
       });
-    }
-    function getNextTeamNumber(teamPrefix) {
-      const tbody = document.querySelector("table.employees-table tbody");
-      if (!tbody) return teamPrefix === "EQ" ? "EQ05" : `${teamPrefix}02`;
-      const existingTeams = Array.from(tbody.querySelectorAll("tr.data-row")).map(r => r.querySelector("td:nth-child(4)")?.textContent.trim()).filter(Boolean);
-      if (teamPrefix === "EQ") {
-        const teamCount = {};
-        existingTeams.forEach(t => { if (/^EQ\d+$/.test(t)) teamCount[t] = (teamCount[t] || 0) + 1; });
-        const incomplete = Object.keys(teamCount).sort().find(t => teamCount[t] < 2);
-        if (incomplete) return incomplete;
-        let max = 4;
-        Object.keys(teamCount).forEach(t => { const m = t.match(/^EQ(\d+)$/); if (m) max = Math.max(max, parseInt(m[1], 10)); });
-        return `EQ${String(max + 1).padStart(2, "0")}`;
-      } else {
-        let max = 1;
-        existingTeams.filter(t => t.startsWith(teamPrefix)).forEach(t => { const m = t.match(/\d+$/); if (m) max = Math.max(max, parseInt(m[0], 10)); });
-        return `${teamPrefix}${String(max + 1).padStart(2, "0")}`;
-      }
     }
     function addTeamRows(teamCode, count) {
       const tbody = document.querySelector("table.employees-table tbody");
@@ -1283,7 +1355,7 @@
       } catch (err) {
         console.error("Erro ao guardar escala:", err); showPopup('popup-danger', "❌ Erro ao guardar: " + err.message);
       } finally {
-        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = "💾 Guardar"; }
+        if (saveBtn) {saveBtn.disabled = false; saveBtn.textContent = "💾 Guardar";}
       }
     }
     async function emitEmployeesScale(format = "xlsx") {
@@ -1351,7 +1423,7 @@
     document.getElementById("employees-save-btn")?.addEventListener("click", saveEmployeeScales);
     document.getElementById("employees-emit-xlsx-btn")?.addEventListener("click", () => emitEmployeesScale("xlsx"));
     document.getElementById("employees-emit-pdf-btn")?.addEventListener("click", () => emitEmployeesScale("pdf"));
-    document.getElementById("employees-emit-stitch-marker-btn")?.addEventListener("click", emitStitchSheets);    
+    document.getElementById("employees-emit-stitch-marker-btn")?.addEventListener("click", emitStitchSheets);
     /* ================================
     FASE 02 - EMPLOYEE EXTRA HOURS CONTROL
     =============================== */

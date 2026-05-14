@@ -71,7 +71,7 @@ export default async function handler(req, res) {
 
       // No seu template, o rodapé da pág 1 acaba na linha 43. 
       // Forçamos a quebra na 44 para que a pág 2 (TQS) comece limpa.
-      ws.getRow(44).addPageBreak(); 
+      ws.getRow(45).addPageBreak(); 
 
       // Limpeza de segurança
       for (let i = 14; i <= 36; i++) ws.getCell(`B${i}`).value = null;

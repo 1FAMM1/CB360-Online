@@ -87,7 +87,7 @@ export default async function handler(req, res) {
       ws.pageSetup = {
   paperSize: 9,          // Formato A4
   orientation: 'portrait',
-  fitToPage: true,       // Ativar o ajuste automático
+  fitToPage: false,       // Ativar o ajuste automático
   fitToWidth: 1,         // Forçar a largura a caber numa página
   fitToHeight: 0,        // Deixar a altura livre (cria nova página se necessário)
   margins: { left: 0.5, right: 0.5, top: 0.5, bottom: 0.5, header: 0, footer: 0 }

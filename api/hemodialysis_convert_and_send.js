@@ -84,6 +84,15 @@ export default async function handler(req, res) {
       await workbook.xlsx.load(await tplRes.arrayBuffer());
       const ws = workbook.worksheets[0];
 
+      ws.pageSetup = {
+  paperSize: 9,          // Formato A4
+  orientation: 'portrait',
+  fitToPage: true,       // Ativar o ajuste automático
+  fitToWidth: 1,         // Forçar a largura a caber numa página
+  fitToHeight: 0,        // Deixar a altura livre (cria nova página se necessário)
+  margins: { left: 0.5, right: 0.5, top: 0.5, bottom: 0.5, header: 0, footer: 0 }
+};
+
       // SQX - só nomes por turno
       const sqx0700 = sqx.filter(u => u.utent_shift === "07:00-12:00");
       const sqx1100 = sqx.filter(u => u.utent_shift === "11:00-17:00");

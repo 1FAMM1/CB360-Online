@@ -96,23 +96,38 @@ export default async function handler(req, res) {
       await workbook.xlsx.load(await tplRes.arrayBuffer());
       const ws = workbook.worksheets[0];
       
-      ws.pageSetup = { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0 };
+      // FORÇAR ORIENTAÇÃO VERTICAL (PORTRAIT) E AJUSTAR MARGENS
+      ws.pageSetup = { 
+        paperSize: 9, 
+        orientation: 'portrait', 
+        fitToPage: true, 
+        fitToWidth: 1, 
+        fitToHeight: 0,
+        margins: { left: 0.4, right: 0.4, top: 0.4, bottom: 0.4, header: 0, footer: 0 }
+      };
 
       const fill = (list, start) => {
         list.forEach((u, i) => {
-          if (i >= 21) return;
+          if (i >= 21) return; // Limite de linhas por bloco no template
           const r = start + i;
-          ws.getCell(`A${r}`).value = u.utent_name || "";
-          ws.getCell(`B${r}`).value = u.utent_niss || "";
-          ws.getCell(`C${r}`).value = u.utent_adress || "";
-          ws.getCell(`D${r}`).value = u.utent_localitie || "";
-          ws.getCell(`E${r}`).value = u.utent_desteny || "";
-          ws.getCell(`F${r}`).value = u.utent_contact || "";
-          ws.getCell(`G${r}`).value = u.utent_position || "";
+          
+          // Verifica se as colunas no teu Excel batem com estas:
+          ws.getCell(`B${r}`).value = u.utent_name || "";
+          ws.getCell(`C${r}`).value = u.utent_niss || "";
+          ws.getCell(`D${r}`).value = u.utent_adress || "";
+          ws.getCell(`E${r}`).value = u.utent_localitie || "";
+          ws.getCell(`F${r}`).value = u.utent_desteny || "";
+          ws.getCell(`G${r}`).value = u.utent_contact || "";
+          ws.getCell(`H${r}`).value = u.utent_position || "";
+
+          // Garante que o texto não quebra a formatação
+          ws.getRow(r).alignment = { vertical: 'middle', horizontal: 'left', wrapText: false };
         });
       };
-      fill(sqx, 13);
-      fill(tqs, 37);
+
+      // Preenchimento dos dois blocos do Global
+      fill(sqx, 13); // Bloco Seg/Qua/Sex começa na linha 13
+      fill(tqs, 37); // Bloco Ter/Qui/Sab começa na linha 37
 
       const pdfBuf = await workbookToPdfBuffer(workbook, "global");
       const doc = await PDFDocument.load(pdfBuf);

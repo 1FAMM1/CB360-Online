@@ -61,7 +61,7 @@ export default async function handler(req, res) {
       await workbook.xlsx.load(await tplRes.arrayBuffer());
       const ws = workbook.worksheets[0];
 
-      // --- AJUSTE DE PÁGINA BASEADO NO TEMPLATE ---
+      // Ajustes para respeitar as 2 páginas do template
       ws.pageSetup = {
         paperSize: 9,
         orientation: 'portrait',
@@ -69,13 +69,8 @@ export default async function handler(req, res) {
         margins: { left: 0.4, right: 0.4, top: 0.4, bottom: 0.4, header: 0, footer: 0 }
       };
 
-      // No seu template, o rodapé da pág 1 acaba na linha 43. 
-      // Forçamos a quebra na 44 para que a pág 2 (TQS) comece limpa.
+      // Força a quebra de página logo após o rodapé da pág 1 (linha 43)
       ws.getRow(43).addPageBreak(); 
-
-      // Limpeza de segurança
-      for (let i = 14; i <= 36; i++) ws.getCell(`B${i}`).value = null;
-      for (let i = 57; i <= 79; i++) ws.getCell(`B${i}`).value = null;
 
       // Preenchimento SQX (Página 1)
       sqx.filter(u => u.utent_shift === "07:00-12:00").forEach((u, i) => { if (i < 7) ws.getCell(`B${14 + i}`).value = u.utent_name; });

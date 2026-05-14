@@ -49,35 +49,32 @@ export default async function handler(req, res) {
 
   try {
     const { type, data } = req.body;
-    const sqx = data.filter(u => (u.utent_shift_days || "").toUpperCase() === "SQX");
-    const tqs = data.filter(u => (u.utent_shift_days || "").toUpperCase() === "TQS");
-
     const { PDFDocument } = await import("pdf-lib");
     const mergedPdf = await PDFDocument.create();
 
-    // --- BLOCO SALOC (Turnos Diários) ---
-    // Executa se for "saloc" ou "ambos"
+    // 1. LÓGICA SALOC (Turnos - Portrait)
     if (type === "saloc" || type === "ambos") {
+      const sqx = data.filter(u => (u.utent_shift_days || "").toUpperCase() === "SQX");
+      const tqs = data.filter(u => (u.utent_shift_days || "").toUpperCase() === "TQS");
+
       const tplRes = await fetch(TEMPLATES.saloc);
       const workbook = new ExcelJS.Workbook();
       await workbook.xlsx.load(await tplRes.arrayBuffer());
       const ws = workbook.worksheets[0];
 
-      ws.pageSetup = {
-        paperSize: 9,
-        orientation: 'portrait',
-        fitToPage: false, 
+      ws.pageSetup = { 
+        paperSize: 9, 
+        orientation: 'portrait', 
+        fitToPage: false,
         margins: { left: 0.4, right: 0.4, top: 0.4, bottom: 0.4, header: 0, footer: 0 }
       };
+      ws.getRow(43).addPageBreak();
 
-      ws.getRow(43).addPageBreak(); 
-
-      // Preenchimento SQX (Página 1)
+      // Preenchimento SALOC (Lógica de turnos específicos)
       sqx.filter(u => u.utent_shift === "07:00-12:00").forEach((u, i) => { if (i < 7) ws.getCell(`B${14 + i}`).value = u.utent_name; });
       sqx.filter(u => u.utent_shift === "11:00-17:00").forEach((u, i) => { if (i < 7) ws.getCell(`B${22 + i}`).value = u.utent_name; });
       sqx.filter(u => u.utent_shift === "16:00-23:00").forEach((u, i) => { if (i < 7) ws.getCell(`B${30 + i}`).value = u.utent_name; });
 
-      // Preenchimento TQS (Página 2)
       tqs.filter(u => u.utent_shift === "07:00-12:00").forEach((u, i) => { if (i < 7) ws.getCell(`B${57 + i}`).value = u.utent_name; });
       tqs.filter(u => u.utent_shift === "11:00-17:00").forEach((u, i) => { if (i < 7) ws.getCell(`B${65 + i}`).value = u.utent_name; });
       tqs.filter(u => u.utent_shift === "16:00-23:00").forEach((u, i) => { if (i < 7) ws.getCell(`B${73 + i}`).value = u.utent_name; });
@@ -88,30 +85,29 @@ export default async function handler(req, res) {
       pages.forEach(p => mergedPdf.addPage(p));
     }
 
-    // --- BLOCO GLOBAL (Listagem Geral) ---
-    // Agora também executa se o type for "saloc"
+    // 2. LÓGICA GLOBAL (Listagem Detalhada - LANDSCAPE)
     if (type === "global" || type === "ambos" || type === "saloc") {
+      const sqxGlobal = data.filter(u => (u.utent_shift_days || "").toUpperCase() === "SQX");
+      const tqsGlobal = data.filter(u => (u.utent_shift_days || "").toUpperCase() === "TQS");
+
       const tplRes = await fetch(TEMPLATES.global);
       const workbook = new ExcelJS.Workbook();
       await workbook.xlsx.load(await tplRes.arrayBuffer());
       const ws = workbook.worksheets[0];
       
-      // FORÇAR ORIENTAÇÃO VERTICAL (PORTRAIT) E AJUSTAR MARGENS
+      // FORÇAR LANDSCAPE AQUI
       ws.pageSetup = { 
         paperSize: 9, 
-        orientation: 'portrait', 
+        orientation: 'landscape', 
         fitToPage: true, 
         fitToWidth: 1, 
-        fitToHeight: 0,
-        margins: { left: 0.4, right: 0.4, top: 0.4, bottom: 0.4, header: 0, footer: 0 }
+        fitToHeight: 0 
       };
 
-      const fill = (list, start) => {
+      const fillGlobal = (list, startRow) => {
         list.forEach((u, i) => {
-          if (i >= 21) return; // Limite de linhas por bloco no template
-          const r = start + i;
-          
-          // Verifica se as colunas no teu Excel batem com estas:
+          if (i >= 21) return;
+          const r = startRow + i;
           ws.getCell(`B${r}`).value = u.utent_name || "";
           ws.getCell(`C${r}`).value = u.utent_niss || "";
           ws.getCell(`D${r}`).value = u.utent_adress || "";
@@ -119,15 +115,11 @@ export default async function handler(req, res) {
           ws.getCell(`F${r}`).value = u.utent_desteny || "";
           ws.getCell(`G${r}`).value = u.utent_contact || "";
           ws.getCell(`H${r}`).value = u.utent_position || "";
-
-          // Garante que o texto não quebra a formatação
-          ws.getRow(r).alignment = { vertical: 'middle', horizontal: 'left', wrapText: false };
         });
       };
 
-      // Preenchimento dos dois blocos do Global
-      fill(sqx, 13); // Bloco Seg/Qua/Sex começa na linha 13
-      fill(tqs, 37); // Bloco Ter/Qui/Sab começa na linha 37
+      fillGlobal(sqxGlobal, 13);
+      fillGlobal(tqsGlobal, 37);
 
       const pdfBuf = await workbookToPdfBuffer(workbook, "global");
       const doc = await PDFDocument.load(pdfBuf);
@@ -136,17 +128,14 @@ export default async function handler(req, res) {
     }
 
     const finalPdf = await mergedPdf.save();
-    
     const dataHoje = new Date().toLocaleDateString('pt-PT').replace(/\//g, '-');
     const nomeFicheiro = `Listagem_Hemo_${type}_${dataHoje}.pdf`;
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `inline; filename="${nomeFicheiro}"`);
-    
     res.status(200).send(Buffer.from(finalPdf));
 
   } catch (err) {
-    console.error("Erro na API:", err);
     res.status(500).json({ error: "Erro", details: err.message });
   }
 }

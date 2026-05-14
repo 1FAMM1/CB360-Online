@@ -3,11 +3,9 @@ import fetch from "node-fetch";
 import fs from "fs";
 import os from "os";
 import path from "path";
-import { ServicePrincipalCredentials, PDFServices, MimeType, CreatePDFJob, CreatePDFResult, SDKError, ServiceUsageError, ServiceApiError } from "@adobe/pdfservices-node-sdk";
+import { ServicePrincipalCredentials, PDFServices, MimeType, CreatePDFJob, CreatePDFResult } from "@adobe/pdfservices-node-sdk";
 
-export const config = {
-  api: { bodyParser: { sizeLimit: "10mb" } },
-};
+export const config = { api: { bodyParser: { sizeLimit: "10mb" } } };
 
 const CLIENT_ID = process.env.ADOBE_CLIENT_ID;
 const CLIENT_SECRET = process.env.ADOBE_CLIENT_SECRET;
@@ -21,12 +19,10 @@ async function workbookToPdfBuffer(workbook, prefix = "doc") {
   const tempDir = os.tmpdir();
   const inputFilePath = path.join(tempDir, `${prefix}_${Date.now()}.xlsx`);
   const outputFilePath = path.join(tempDir, `${prefix}_${Date.now()}_out.pdf`);
-
   const cleanup = () => {
     try { if (fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath); } catch { }
     try { if (fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath); } catch { }
   };
-
   try {
     await workbook.xlsx.writeFile(inputFilePath);
     const credentials = new ServicePrincipalCredentials({ clientId: CLIENT_ID, clientSecret: CLIENT_SECRET });
@@ -34,38 +30,25 @@ async function workbookToPdfBuffer(workbook, prefix = "doc") {
     const inputAsset = await pdfServices.upload({ readStream: fs.createReadStream(inputFilePath), mimeType: MimeType.XLSX });
     const job = new CreatePDFJob({ inputAsset });
     const pollingURL = await pdfServices.submit({ job });
-    const pdfServicesResponse = await pdfServices.getJobResult({ pollingURL, resultType: CreatePDFResult });
-    const streamAsset = await pdfServices.getContent({ asset: pdfServicesResponse.result.asset });
-
+    const resAdobe = await pdfServices.getJobResult({ pollingURL, resultType: CreatePDFResult });
+    const streamAsset = await pdfServices.getContent({ asset: resAdobe.result.asset });
     const writeStream = fs.createWriteStream(outputFilePath);
     streamAsset.readStream.pipe(writeStream);
-
-    await new Promise((resolve, reject) => {
-      writeStream.on("finish", resolve);
-      writeStream.on("error", reject);
-    });
-
-    const pdfBuffer = fs.readFileSync(outputFilePath);
+    await new Promise((res, rej) => { writeStream.on("finish", res); writeStream.on("error", rej); });
+    const buf = fs.readFileSync(outputFilePath);
     cleanup();
-    return pdfBuffer;
-  } catch (err) {
-    cleanup();
-    throw err;
-  }
+    return buf;
+  } catch (err) { cleanup(); throw err; }
 }
 
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
   if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "POST") return res.status(405).json({ error: "Método não permitido" });
 
   try {
     const { type, data } = req.body;
-    if (!data || !Array.isArray(data)) return res.status(400).json({ error: "Dados incompletos" });
-
     const sqx = data.filter(u => (u.utent_shift_days || "").toUpperCase() === "SQX");
     const tqs = data.filter(u => (u.utent_shift_days || "").toUpperCase() === "TQS");
 
@@ -78,27 +61,28 @@ export default async function handler(req, res) {
       await workbook.xlsx.load(await tplRes.arrayBuffer());
       const ws = workbook.worksheets[0];
 
-      // --- CORREÇÃO DE PÁGINA ---
+      // --- AJUSTE DE PÁGINA BASEADO NO TEMPLATE ---
       ws.pageSetup = {
-        paperSize: 9, // A4
+        paperSize: 9,
         orientation: 'portrait',
-        fitToPage: false, // NÃO forçar ajuste para não encolher a 2ª página na 1ª
-        margins: { left: 0.4, right: 0.4, top: 0.5, bottom: 0.5, header: 0, footer: 0 }
+        fitToPage: false, 
+        margins: { left: 0.4, right: 0.4, top: 0.4, bottom: 0.4, header: 0, footer: 0 }
       };
 
-      // FORÇAR QUEBRA DE PÁGINA (Ajusta a linha 45 se o cabeçalho da 2ª pág estiver na 46)
-      ws.getRow(45).addPageBreak(); 
+      // No seu template, o rodapé da pág 1 acaba na linha 43. 
+      // Forçamos a quebra na 44 para que a pág 2 (TQS) comece limpa.
+      ws.getRow(44).addPageBreak(); 
 
-      // Limpeza para evitar sobreposição de nomes antigos
-      for (let i = 14; i <= 40; i++) ws.getCell(`B${i}`).value = null;
-      for (let i = 57; i <= 85; i++) ws.getCell(`B${i}`).value = null;
+      // Limpeza de segurança
+      for (let i = 14; i <= 36; i++) ws.getCell(`B${i}`).value = null;
+      for (let i = 57; i <= 79; i++) ws.getCell(`B${i}`).value = null;
 
-      // Preenchimento SQX
+      // Preenchimento SQX (Página 1)
       sqx.filter(u => u.utent_shift === "07:00-12:00").forEach((u, i) => { if (i < 7) ws.getCell(`B${14 + i}`).value = u.utent_name; });
       sqx.filter(u => u.utent_shift === "11:00-17:00").forEach((u, i) => { if (i < 7) ws.getCell(`B${22 + i}`).value = u.utent_name; });
       sqx.filter(u => u.utent_shift === "16:00-23:00").forEach((u, i) => { if (i < 7) ws.getCell(`B${30 + i}`).value = u.utent_name; });
 
-      // Preenchimento TQS (Segunda Página)
+      // Preenchimento TQS (Página 2)
       tqs.filter(u => u.utent_shift === "07:00-12:00").forEach((u, i) => { if (i < 7) ws.getCell(`B${57 + i}`).value = u.utent_name; });
       tqs.filter(u => u.utent_shift === "11:00-17:00").forEach((u, i) => { if (i < 7) ws.getCell(`B${65 + i}`).value = u.utent_name; });
       tqs.filter(u => u.utent_shift === "16:00-23:00").forEach((u, i) => { if (i < 7) ws.getCell(`B${73 + i}`).value = u.utent_name; });
@@ -109,7 +93,6 @@ export default async function handler(req, res) {
       pages.forEach(p => mergedPdf.addPage(p));
     }
 
-    // --- BLOCO GLOBAL (Ajuste Semelhante) ---
     if (type === "global" || type === "ambos") {
       const tplRes = await fetch(TEMPLATES.global);
       const workbook = new ExcelJS.Workbook();
@@ -118,10 +101,10 @@ export default async function handler(req, res) {
       
       ws.pageSetup = { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0 };
 
-      const fillGlobal = (list, startRow) => {
+      const fill = (list, start) => {
         list.forEach((u, i) => {
           if (i >= 21) return;
-          const r = startRow + i;
+          const r = start + i;
           ws.getCell(`A${r}`).value = u.utent_name || "";
           ws.getCell(`B${r}`).value = u.utent_niss || "";
           ws.getCell(`C${r}`).value = u.utent_adress || "";
@@ -131,8 +114,8 @@ export default async function handler(req, res) {
           ws.getCell(`G${r}`).value = u.utent_position || "";
         });
       };
-      fillGlobal(sqx, 13);
-      fillGlobal(tqs, 37);
+      fill(sqx, 13);
+      fill(tqs, 37);
 
       const pdfBuf = await workbookToPdfBuffer(workbook, "global");
       const doc = await PDFDocument.load(pdfBuf);
@@ -143,8 +126,7 @@ export default async function handler(req, res) {
     const finalPdf = await mergedPdf.save();
     res.setHeader("Content-Type", "application/pdf");
     res.status(200).send(Buffer.from(finalPdf));
-
   } catch (err) {
-    res.status(500).json({ error: "Erro ao processar", details: err.message });
+    res.status(500).json({ error: "Erro", details: err.message });
   }
 }

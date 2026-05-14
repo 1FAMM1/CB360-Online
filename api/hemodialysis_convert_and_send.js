@@ -55,13 +55,14 @@ export default async function handler(req, res) {
     const { PDFDocument } = await import("pdf-lib");
     const mergedPdf = await PDFDocument.create();
 
+    // --- BLOCO SALOC (Turnos Diários) ---
+    // Executa se for "saloc" ou "ambos"
     if (type === "saloc" || type === "ambos") {
       const tplRes = await fetch(TEMPLATES.saloc);
       const workbook = new ExcelJS.Workbook();
       await workbook.xlsx.load(await tplRes.arrayBuffer());
       const ws = workbook.worksheets[0];
 
-      // Ajustes para respeitar as 2 páginas do template
       ws.pageSetup = {
         paperSize: 9,
         orientation: 'portrait',
@@ -69,7 +70,6 @@ export default async function handler(req, res) {
         margins: { left: 0.4, right: 0.4, top: 0.4, bottom: 0.4, header: 0, footer: 0 }
       };
 
-      // Força a quebra de página logo após o rodapé da pág 1 (linha 43)
       ws.getRow(43).addPageBreak(); 
 
       // Preenchimento SQX (Página 1)
@@ -88,7 +88,9 @@ export default async function handler(req, res) {
       pages.forEach(p => mergedPdf.addPage(p));
     }
 
-    if (type === "global" || type === "ambos") {
+    // --- BLOCO GLOBAL (Listagem Geral) ---
+    // Agora também executa se o type for "saloc"
+    if (type === "global" || type === "ambos" || type === "saloc") {
       const tplRes = await fetch(TEMPLATES.global);
       const workbook = new ExcelJS.Workbook();
       await workbook.xlsx.load(await tplRes.arrayBuffer());
@@ -119,9 +121,17 @@ export default async function handler(req, res) {
     }
 
     const finalPdf = await mergedPdf.save();
+    
+    const dataHoje = new Date().toLocaleDateString('pt-PT').replace(/\//g, '-');
+    const nomeFicheiro = `Listagem_Hemo_${type}_${dataHoje}.pdf`;
+
     res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `inline; filename="${nomeFicheiro}"`);
+    
     res.status(200).send(Buffer.from(finalPdf));
+
   } catch (err) {
+    console.error("Erro na API:", err);
     res.status(500).json({ error: "Erro", details: err.message });
   }
 }

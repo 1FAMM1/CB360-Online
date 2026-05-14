@@ -17,7 +17,6 @@ const TEMPLATES = {
   global: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/hemodialysis_list_global_template.xlsx"
 };
 
-// Função para converter o Workbook preenchido em Buffer PDF via Adobe
 async function workbookToPdfBuffer(workbook, prefix = "doc") {
   const tempDir = os.tmpdir();
   const inputFilePath = path.join(tempDir, `${prefix}_${Date.now()}.xlsx`);
@@ -65,9 +64,7 @@ export default async function handler(req, res) {
 
   try {
     const { type, data } = req.body;
-
     if (!data || !Array.isArray(data)) return res.status(400).json({ error: "Dados incompletos" });
-    if (!CLIENT_ID || !CLIENT_SECRET) return res.status(500).json({ error: "Chaves Adobe não configuradas" });
 
     const sqx = data.filter(u => (u.utent_shift_days || "").toUpperCase() === "SQX");
     const tqs = data.filter(u => (u.utent_shift_days || "").toUpperCase() === "TQS");
@@ -75,32 +72,33 @@ export default async function handler(req, res) {
     const { PDFDocument } = await import("pdf-lib");
     const mergedPdf = await PDFDocument.create();
 
-    // --- TEMPLATE SALOC ---
     if (type === "saloc" || type === "ambos") {
       const tplRes = await fetch(TEMPLATES.saloc);
       const workbook = new ExcelJS.Workbook();
       await workbook.xlsx.load(await tplRes.arrayBuffer());
       const ws = workbook.worksheets[0];
 
-      // Configuração de Impressão para SALOC
+      // --- CORREÇÃO DE PÁGINA ---
       ws.pageSetup = {
-        paperSize: 9,
+        paperSize: 9, // A4
         orientation: 'portrait',
-        fitToPage: false, // Mantém escala original para respeitar as 2 páginas
+        fitToPage: false, // NÃO forçar ajuste para não encolher a 2ª página na 1ª
         margins: { left: 0.4, right: 0.4, top: 0.5, bottom: 0.5, header: 0, footer: 0 }
       };
-      ws.getRow(50).addPageBreak(); // Garante que TQS começa na página 2
 
-      // Limpeza de células (evita nomes do template original)
-      for (let i = 14; i <= 36; i++) ws.getCell(`B${i}`).value = null;
-      for (let i = 57; i <= 79; i++) ws.getCell(`B${i}`).value = null;
+      // FORÇAR QUEBRA DE PÁGINA (Ajusta a linha 45 se o cabeçalho da 2ª pág estiver na 46)
+      ws.getRow(45).addPageBreak(); 
 
-      // Preenchimento SQX (Pág 1)
+      // Limpeza para evitar sobreposição de nomes antigos
+      for (let i = 14; i <= 40; i++) ws.getCell(`B${i}`).value = null;
+      for (let i = 57; i <= 85; i++) ws.getCell(`B${i}`).value = null;
+
+      // Preenchimento SQX
       sqx.filter(u => u.utent_shift === "07:00-12:00").forEach((u, i) => { if (i < 7) ws.getCell(`B${14 + i}`).value = u.utent_name; });
       sqx.filter(u => u.utent_shift === "11:00-17:00").forEach((u, i) => { if (i < 7) ws.getCell(`B${22 + i}`).value = u.utent_name; });
       sqx.filter(u => u.utent_shift === "16:00-23:00").forEach((u, i) => { if (i < 7) ws.getCell(`B${30 + i}`).value = u.utent_name; });
 
-      // Preenchimento TQS (Pág 2)
+      // Preenchimento TQS (Segunda Página)
       tqs.filter(u => u.utent_shift === "07:00-12:00").forEach((u, i) => { if (i < 7) ws.getCell(`B${57 + i}`).value = u.utent_name; });
       tqs.filter(u => u.utent_shift === "11:00-17:00").forEach((u, i) => { if (i < 7) ws.getCell(`B${65 + i}`).value = u.utent_name; });
       tqs.filter(u => u.utent_shift === "16:00-23:00").forEach((u, i) => { if (i < 7) ws.getCell(`B${73 + i}`).value = u.utent_name; });
@@ -111,17 +109,14 @@ export default async function handler(req, res) {
       pages.forEach(p => mergedPdf.addPage(p));
     }
 
-    // --- TEMPLATE GLOBAL ---
+    // --- BLOCO GLOBAL (Ajuste Semelhante) ---
     if (type === "global" || type === "ambos") {
       const tplRes = await fetch(TEMPLATES.global);
       const workbook = new ExcelJS.Workbook();
       await workbook.xlsx.load(await tplRes.arrayBuffer());
       const ws = workbook.worksheets[0];
-
-      ws.pageSetup = { 
-        paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0,
-        margins: { left: 0.3, right: 0.3, top: 0.5, bottom: 0.5, header: 0, footer: 0 } 
-      };
+      
+      ws.pageSetup = { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0 };
 
       const fillGlobal = (list, startRow) => {
         list.forEach((u, i) => {
@@ -136,7 +131,6 @@ export default async function handler(req, res) {
           ws.getCell(`G${r}`).value = u.utent_position || "";
         });
       };
-
       fillGlobal(sqx, 13);
       fillGlobal(tqs, 37);
 
@@ -151,7 +145,6 @@ export default async function handler(req, res) {
     res.status(200).send(Buffer.from(finalPdf));
 
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: "Erro ao processar", details: err.message });
   }
 }

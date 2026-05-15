@@ -107,7 +107,7 @@
           const pages = await mergedPdf.copyPages(doc, doc.getPageIndices());
           pages.forEach(p => mergedPdf.addPage(p));
         }
-        if (["saloc", "veiculos", "ambos", "global"].includes(type)) {
+        if (["saloc", "veiculos", "veículos", "ambos", "global"].includes(type)) {
           const tplRes = await fetch(TEMPLATES.global);
           const workbook = new ExcelJS.Workbook();
           await workbook.xlsx.load(await tplRes.arrayBuffer());

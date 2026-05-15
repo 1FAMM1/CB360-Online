@@ -13,7 +13,13 @@ const CLIENT_SECRET = process.env.ADOBE_CLIENT_SECRET;
 const TEMPLATES = {
   saloc: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/hemodialysis_list_saloc_template.xlsx",
   global: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/hemodialysis_list_global_template.xlsx",
-  veiculos: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/hemodialysis_list_veícs_template.xlsx" // AJUSTA ESTE URL
+  veiculos: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/hemodialysis_list_veiculos_template.xlsx"
+};
+
+// Função auxiliar para evitar que o texto saia da célula
+const fitCell = (cell) => {
+  cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
+  // Nota: ExcelJS suporta shrinkToFit, mas o Adobe PDF pode ignorar se a célula for muito pequena.
 };
 
 async function workbookToPdfBuffer(workbook, prefix = "doc") {
@@ -56,23 +62,29 @@ export default async function handler(req, res) {
     const sqx = data.filter(u => (u.utent_shift_days || "").toUpperCase() === "SQX");
     const tqs = data.filter(u => (u.utent_shift_days || "").toUpperCase() === "TQS");
 
-    // --- 1. LÓGICA SALOC (Portrait) ---
+    // 1. LÓGICA SALOC (Apenas Nomes)
     if (type === "saloc" || type === "ambos") {
       const tplRes = await fetch(TEMPLATES.saloc);
       const workbook = new ExcelJS.Workbook();
       await workbook.xlsx.load(await tplRes.arrayBuffer());
       const ws = workbook.worksheets[0];
-      ws.pageSetup = { paperSize: 9, orientation: 'portrait', fitToPage: false };
+      ws.pageSetup = { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0 };
       ws.getRow(43).addPageBreak();
 
-      const shifts = ["07:00-12:00", "11:00-17:00", "16:00-23:00"];
-      const rowsSQX = [14, 22, 30];
-      const rowsTQS = [57, 65, 73];
-
-      shifts.forEach((s, idx) => {
-        sqx.filter(u => u.utent_shift === s).forEach((u, i) => { if (i < 7) ws.getCell(`B${rowsSQX[idx] + i}`).value = u.utent_name; });
-        tqs.filter(u => u.utent_shift === s).forEach((u, i) => { if (i < 7) ws.getCell(`B${rowsTQS[idx] + i}`).value = u.utent_name; });
-      });
+      const fillS = (list, rows) => {
+        const shifts = ["07:00-12:00", "11:00-17:00", "16:00-23:00"];
+        shifts.forEach((s, idx) => {
+          list.filter(u => u.utent_shift === s).forEach((u, i) => {
+            if (i < 7) {
+              const cell = ws.getCell(`B${rows[idx] + i}`);
+              cell.value = u.utent_name || "";
+              fitCell(cell);
+            }
+          });
+        });
+      };
+      fillS(sqx, [14, 22, 30]);
+      fillS(tqs, [57, 65, 73]);
 
       const pdfBuf = await workbookToPdfBuffer(workbook, "saloc");
       const doc = await PDFDocument.load(pdfBuf);
@@ -80,13 +92,13 @@ export default async function handler(req, res) {
       pages.forEach(p => mergedPdf.addPage(p));
     }
 
-    // --- 2. LÓGICA VEÍCULOS (Portrait - Novo Mapeamento) ---
+    // 2. LÓGICA VEÍCULOS (Nome, Destino, Contacto)
     if (type === "veiculos" || type === "ambos") {
       const tplRes = await fetch(TEMPLATES.veiculos);
       const workbook = new ExcelJS.Workbook();
       await workbook.xlsx.load(await tplRes.arrayBuffer());
       const ws = workbook.worksheets[0];
-      ws.pageSetup = { paperSize: 9, orientation: 'portrait', fitToPage: false };
+      ws.pageSetup = { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0 };
       
       const fillV = (list, startRows) => {
         const shifts = ["07:00-12:00", "11:00-17:00", "16:00-23:00"];
@@ -94,16 +106,19 @@ export default async function handler(req, res) {
           list.filter(u => u.utent_shift === s).forEach((u, i) => {
             if (i < 7) {
               const r = startRows[idx] + i;
-              ws.getCell(`B${r}`).value = u.utent_name || "";
-              ws.getCell(`F${r}`).value = u.utent_desteny || "";
-              ws.getCell(`I${r}`).value = u.utent_contact || "";
+              const cName = ws.getCell(`B${r}`);
+              const cDest = ws.getCell(`F${r}`);
+              const cCont = ws.getCell(`I${r}`);
+              cName.value = u.utent_name || "";
+              cDest.value = u.utent_desteny || "";
+              cCont.value = u.utent_contact || "";
+              [cName, cDest, cCont].forEach(fitCell);
             }
           });
         });
       };
-
-      fillV(sqx, [16, 28, 40]); // Seg/Qua/Sex
-      fillV(tqs, [69, 81, 93]); // Ter/Qui/Sáb
+      fillV(sqx, [16, 28, 40]);
+      fillV(tqs, [69, 81, 93]);
 
       const pdfBuf = await workbookToPdfBuffer(workbook, "veiculos");
       const doc = await PDFDocument.load(pdfBuf);
@@ -111,7 +126,7 @@ export default async function handler(req, res) {
       pages.forEach(p => mergedPdf.addPage(p));
     }
 
-    // --- 3. LÓGICA GLOBAL (Landscape - Sempre incluído para Saloc/Veículos/Ambos) ---
+    // 3. LÓGICA GLOBAL (Landscape) - SEMPRE NO FIM
     if (["saloc", "veiculos", "ambos", "global"].includes(type)) {
       const tplRes = await fetch(TEMPLATES.global);
       const workbook = new ExcelJS.Workbook();
@@ -123,16 +138,20 @@ export default async function handler(req, res) {
         list.forEach((u, i) => {
           if (i >= 21) return;
           const r = start + i;
-          ws.getCell(`A${r}`).value = u.utent_name || "";
-          ws.getCell(`B${r}`).value = u.utent_niss || "";
-          ws.getCell(`C${r}`).value = u.utent_adress || "";
-          ws.getCell(`D${r}`).value = u.utent_localitie || "";
-          ws.getCell(`E${r}`).value = u.utent_desteny || "";
-          ws.getCell(`F${r}`).value = u.utent_contact || "";
-          ws.getCell(`G${r}`).value = u.utent_position || "";
+          const cells = [
+            ws.getCell(`A${r}`), ws.getCell(`B${r}`), ws.getCell(`C${r}`),
+            ws.getCell(`D${r}`), ws.getCell(`E${r}`), ws.getCell(`F${r}`), ws.getCell(`G${r}`)
+          ];
+          cells[0].value = u.utent_name || "";
+          cells[1].value = u.utent_niss || "";
+          cells[2].value = u.utent_adress || "";
+          cells[3].value = u.utent_localitie || "";
+          cells[4].value = u.utent_desteny || "";
+          cells[5].value = u.utent_contact || "";
+          cells[6].value = u.utent_position || "";
+          cells.forEach(fitCell);
         });
       };
-
       fillG(sqx, 13);
       fillG(tqs, 37);
 
@@ -143,10 +162,8 @@ export default async function handler(req, res) {
     }
 
     const finalPdf = await mergedPdf.save();
-    const dataHoje = new Date().toLocaleDateString('pt-PT').replace(/\//g, '-');
-    
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `inline; filename="Listagem_Hemo_${type}_${dataHoje}.pdf"`);
+    res.setHeader("Content-Disposition", `inline; filename="Listagem_Hemo_${Date.now()}.pdf"`);
     res.status(200).send(Buffer.from(finalPdf));
 
   } catch (err) {

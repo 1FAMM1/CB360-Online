@@ -1,4 +1,4 @@
-import ExcelJS from "exceljs";
+    import ExcelJS from "exceljs";
     import fetch from "node-fetch";
     import fs from "fs";
     import os from "os";
@@ -76,7 +76,7 @@ import ExcelJS from "exceljs";
           const pages = await mergedPdf.copyPages(doc, doc.getPageIndices());
           pages.forEach(p => mergedPdf.addPage(p));
         }
-        if (type === "veÍculos" || type === "ambos") {
+        if (type === "veículos" || type === "ambos") {
           const tplRes = await fetch(TEMPLATES.veiculos);
           const workbook = new ExcelJS.Workbook();
           await workbook.xlsx.load(await tplRes.arrayBuffer());

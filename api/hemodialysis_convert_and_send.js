@@ -82,7 +82,7 @@
           await workbook.xlsx.load(await tplRes.arrayBuffer());
           const ws = workbook.worksheets[0];
           ws.pageSetup = {paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0};
-          ws.getRow(55).addPageBreak();
+          ws.getRow(53).addPageBreak();
           const fillV = (list, startRows) => {
             const shifts = ["07:00-12:00", "11:00-17:00", "16:00-23:00"];
             shifts.forEach((s, idx) => {

@@ -2377,30 +2377,29 @@
             if (existsInSide) {
               const obsInput = row.querySelectorAll('td input')[5];
               if (shift === 'D') {
-  try {
-    // Verifica secção na side table
-    let secao = '';
-    let currentSection = '';
-    const sideTbody = document.getElementById('plandir-side-tbody');
-    sideTbody.querySelectorAll('tr').forEach(tr => {
-      const sectionCell = tr.querySelector('td.plandir-card-title');
-      if (sectionCell) currentSection = sectionCell.textContent.trim();
-      if (tr.getAttribute('data-side-nint') === nIntFormatted) secao = currentSection;
-    });
-
-    if (secao === 'ECIN') {
-      if (obsInput) obsInput.value = 'ECIN';
-    } else {
-      // Só vai ao reg_employees se não for ECIN
-      const resTeam = await fetch(`${SUPABASE_URL}/rest/v1/reg_employees?n_int=eq.${this.value}&select=team`, {headers: getSupabaseHeaders()});
-      const teamData = await resTeam.json();
-      const team = teamData[0]?.team || '';
-      if (obsInput) obsInput.value = team.startsWith('EIP') ? 'EIP' : 'Profissional';
-    }
-  } catch (err) {
-    console.error('Erro ao buscar team:', err);
-    if (obsInput) obsInput.value = 'Profissional';
-  }
+                try {
+                  let secao = '';
+                  let currentSection = '';
+                  const sideTbody = document.getElementById('plandir-side-tbody');
+                  sideTbody.querySelectorAll('tr').forEach(tr => {
+                    const sectionCell = tr.querySelector('td.plandir-card-title');
+                    if (sectionCell) currentSection = sectionCell.textContent.trim();
+                    if (tr.getAttribute('data-side-nint') === nIntFormatted) secao = currentSection;
+                  });
+                  if (secao === 'ECIN') {
+                    if (obsInput) obsInput.value = 'ECIN';
+                  } else {
+                    const resTeam = await fetch(`${SUPABASE_URL}/rest/v1/reg_employees?n_int=eq.${this.value}&select=team`, {
+                      headers: getSupabaseHeaders()
+                    });
+                    const teamData = await resTeam.json();
+                    const team = teamData[0]?.team || '';
+                    if (obsInput) obsInput.value = team.startsWith('EIP') ? 'EIP' : 'Profissional';
+                  }
+                } catch (err) {
+                  console.error('Erro ao buscar team:', err);
+                  if (obsInput) obsInput.value = 'Profissional';
+                }
               } else {
                 let secao = '';
                 let currentSection = '';

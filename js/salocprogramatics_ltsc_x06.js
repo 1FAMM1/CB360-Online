@@ -3650,3 +3650,155 @@
         });
       });
     });
+
+
+
+
+
+
+
+
+
+
+
+/* ===== FLEET CARDS INIT ===== */
+    document.querySelector('.sidebar-sub-submenu-button[data-page="page-fleet-cards"]')?.addEventListener("click", () => {
+      fleetEditId = null;
+      document.getElementById("card-fleet-save").innerHTML = "💾 GRAVAR";
+      ["veíc_card_name", "veíc_card_register", "veíc_card_code", "veíc_card_contact"]
+        .forEach(id => document.getElementById(id).value = "");
+      loadFleetCardsTable();
+    });
+    /* ===== LOAD, ADD, EDIT, REMOVE FLEET CARDS ===== */
+    let fleetEditId = null;
+    async function loadFleetCardsTable() {
+      const tbody = document.getElementById("fleet-cards-tbody");
+      if (!tbody) return;
+      tbody.style.opacity = "0.5";
+      try {
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/fleet_cards?corp_oper_nr=eq.${corpOperNr}&order=vehicle.asc`, {
+            headers: getSupabaseHeaders()
+          }
+        );
+        if (!response.ok) throw new Error("Erro ao carregar cartões frota");
+        const data = await response.json();
+        tbody.style.opacity = "1";
+        if (!data.length) {
+          tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:8px;font-size:12px;color:#999;">Sem registos</td></tr>`;
+          return;
+        }
+        const tdStyle = `padding:5px;border:1px solid #ccc;font-size:13px; text-align: center;`;
+        tbody.innerHTML = "";
+        data.forEach(item => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td style="${tdStyle} font-weight:bold;">${item.vehicle || ""}</td>
+            <td style="${tdStyle}">${item.registration || ""}</td>
+            <td style="${tdStyle}">${item.card_code || ""}</td>
+            <td style="${tdStyle}">${item.contact || ""}</td>
+            <td style="${tdStyle} text-align:center;">
+              <button onclick="fleetCardEdit(${item.id})" style="background:#1e3a8a;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;margin-right:3px;">✏️</button>
+              <button onclick="fleetCardDelete(${item.id})" style="background:#dc2626;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;">🗑️</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        tbody.style.opacity = "1";
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:8px;font-size:12px;color:red;">Erro ao carregar dados.</td></tr>`;
+        console.error("Erro ao carregar cartões frota:", err);
+      }
+    }
+    async function fleetCardEdit(id) {
+      try {
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/fleet_cards?id=eq.${id}&corp_oper_nr=eq.${corpOperNr}&select=*`, {
+            headers: getSupabaseHeaders()
+          }
+        );
+        if (!response.ok) throw new Error("Erro ao carregar registo");
+        const data = await response.json();
+        if (!data.length) return;
+        const item = data[0];
+        document.getElementById("veíc_card_name").value = item.vehicle || "";
+        document.getElementById("veíc_card_register").value = item.registration || "";
+        document.getElementById("veíc_card_code").value = item.card_code || "";
+        document.getElementById("veíc_card_contact").value = item.contact || "";
+        fleetEditId = id;
+        document.getElementById("card-fleet-save").innerHTML = "💾 ATUALIZAR";
+        document.getElementById("veíc_card_name").focus();
+      } catch (err) {
+        console.error("Erro ao editar cartão frota:", err);
+        showPopup("popup-danger", "Erro ao carregar dados: " + err.message);
+      }
+    }
+    async function fleetCardDelete(id) {
+      if (!confirm("Tem a certeza que pretende eliminar este registo?")) return;
+      try {
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/fleet_cards?id=eq.${id}&corp_oper_nr=eq.${corpOperNr}`, {
+            method: "DELETE",
+            headers: getSupabaseHeaders()
+          }
+        );
+        if (!response.ok) throw new Error("Erro ao eliminar registo");
+        showPopup("popup-success", "Registo eliminado com sucesso!");
+        loadFleetCardsTable();
+      } catch (err) {
+        console.error("Erro ao eliminar cartão frota:", err);
+        showPopup("popup-danger", "Erro ao eliminar: " + err.message);
+      }
+    }
+    async function fleetCardSave() {
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const vehicle = document.getElementById("veíc_card_name").value.trim();
+      const registration = document.getElementById("veíc_card_register").value.trim();
+      const card_code = document.getElementById("veíc_card_code").value.trim();
+      const contact = document.getElementById("veíc_card_contact").value.trim();
+      if (!vehicle || !registration) {
+        showPopup("popup-danger", "Preencha pelo menos o Veículo e a Matrícula.");
+        return;
+      }
+      const saveBtn = document.getElementById("card-fleet-save");
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = "A guardar...";
+      const payload = {vehicle, registration, card_code, contact};
+      try {
+        let response;
+        if (fleetEditId !== null) {
+          response = await fetch(
+            `${SUPABASE_URL}/rest/v1/fleet_cards?id=eq.${fleetEditId}&corp_oper_nr=eq.${corpOperNr}`, {
+              method: "PATCH",
+              headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
+              body: JSON.stringify(payload)
+            }
+          );
+          if (!response.ok) throw new Error("Erro ao atualizar: " + await response.text());
+          showPopup("popup-success", "Registo atualizado com sucesso!");
+          fleetEditId = null;
+        } else {
+          response = await fetch(`${SUPABASE_URL}/rest/v1/fleet_cards`, {
+            method: "POST",
+            headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
+            body: JSON.stringify({...payload, corp_oper_nr: corpOperNr})
+          });
+          if (!response.ok) throw new Error("Erro ao guardar: " + await response.text());
+          showPopup("popup-success", "Registo guardado com sucesso!");
+        }
+        ["veíc_card_name", "veíc_card_register", "veíc_card_code", "veíc_card_contact"]
+          .forEach(id => document.getElementById(id).value = "");
+        loadFleetCardsTable();
+      } catch (err) {
+        console.error("Erro ao guardar cartão frota:", err);
+        showPopup("popup-danger", "Erro ao guardar: " + err.message);
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = "💾 GRAVAR";
+      }
+    }
+    /* ===== DOM FLEET CARDS ===== */
+    document.getElementById("card-fleet-save")?.addEventListener("click", fleetCardSave);

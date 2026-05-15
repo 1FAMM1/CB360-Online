@@ -158,6 +158,15 @@
           <button class="sidebar-sub-submenu-button" data-page="page-plandir" data-access="Planeamento Diário">Planeamento Diário</button>
           <button class="sidebar-sub-submenu-button" data-page="page-inocrepc" data-access="Sitop de Veículos">Sitop de Veículos</button>
         </div>
+        <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-saloc" data-access="Diversos">Diversos</button>
+        <div class="sub-submenu">
+          <button class="sidebar-sub-submenu-button" data-page="page-hemodialysis" data-access="Diversos">Listagem Hemodiálises</button>
+          <button class="sidebar-sub-submenu-button" data-page="" data-access="Diversos" onclick="showbreve()">Formulário Formação</button>
+          <button class="sidebar-sub-submenu-button" data-page="" data-access="Diversos" onclick="showbreve()">Formulário Requisição de Equipamentos</button>
+          <button class="sidebar-sub-submenu-button" data-page="" data-access="Diversos" onclick="showbreve()">Cartões Frota</button>
+          <button class="sidebar-sub-submenu-button" data-page="" data-access="Diversos" onclick="showbreve()">Lista de Contactos</button>
+          <button class="sidebar-sub-submenu-button" data-page="" data-access="Diversos" onclick="showbreve()">Lista Nominal (Comparências a Eventos)</button>
+        </div>
         <button class="sidebar-submenu-button" data-page="page-alarm-console" data-access="Consola de Alarmes">Consola de Alarmes</button>
       </div>
       <!-- ======================= WSMS 360 ======================= -->
@@ -391,6 +400,41 @@
         <div class="popup-footer" style="gap: 10px;">
           <button id="popup-inem-type-ok-btn" class="popup-btn">Confirmar</button>
           <button id="popup-inem-type-cancel-btn" class="popup-btn" style="background-color: #6C757D;">Cancelar</button>
+        </div>
+      </div>
+    </div>
+    <!-- POPUP TIPO DÁLISES -->
+    <div id="popup-hemodialysis-type-modal" class="popup-modal popup-superdanger">
+      <div class="popup-content">
+        <div class="popup-header">
+          <div class="header-content" style="display: flex; align-items: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle;">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <h3 style="margin: 0; color: #ffffff; font-size: 13px; font-weight: 850; letter-spacing: 1px;">TIPO DE FORMULÁRIO</h3>
+          </div>
+        </div>
+        <div class="popup-body">
+          <ul style="list-style:none; padding:0; margin:0;">
+            <li style="list-style:none; margin-bottom: 12px; display:flex; justify-content:center; gap:30px;">
+              <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                <input type="radio" name="popup-hemos-type" value="SALOC" style="cursor:pointer !important;">
+                SALOC
+              </label>
+              <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                <input type="radio" name="popup-hemos-type" value="Veículos" style="cursor:pointer !important;">
+                Veículos
+              </label>
+              <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                <input type="radio" name="popup-hemos-type" value="Ambos" style="cursor:pointer !important;">
+                Ambos
+              </label>
+            </li>
+          </ul>
+        </div>
+        <div class="popup-footer" style="gap: 10px;">
+          <button id="popup-hemos-type-ok-btn" class="popup-btn">Confirmar</button>
+          <button id="popup-hemos-type-cancel-btn" class="popup-btn" style="background-color: #6C757D;">Cancelar</button>
         </div>
       </div>
     </div>
@@ -2425,6 +2469,258 @@
           </div>
         </div>
         <div class="major-card-footer"></div>
+      </div>
+    </div>
+    <!-- HEMODIALYSIS LIST -->
+    <div id="page-hemodialysis" class="page">
+      <div class="major-card">
+        <div class="major-card-header" style="display: flex; align-items: center; gap: 10px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            <polyline points="22 12 18 12 15 19 9 5 6 12 2 12"/>
+          </svg>
+          UTENTES DE HEMODIÁLISE
+        </div>
+        <div class="major-card-body">
+          <div class="major-row" style="margin: 0; display: flex; justify-content: center;">
+            <div class="options-main-card" style="display: flex; flex-direction: column; align-items: center;">
+              <label style="margin-bottom: 10px; font-size: 14px; font-weight: bold;">Selecione uma Opção</label>
+              <div class="action-buttons" id="docs-crepc" style="gap: 5px;">
+                <button id="HemoWeekList" class="btn btn-add options-btn" style="width: 100px; height: 35px;">Listagem Semanal</button>
+                <button id="HemoWAdresses" class="btn btn-add options-btn" style="width: 100px; height: 35px;">Utentes</button>
+                <button id="HemoOther" class="btn btn-add options-btn" style="width: 100px; height: 35px;" onclick="showbreve()">Outros</button>
+              </div>
+            </div>
+          </div>          
+          <div id="hemo-utentdata-card" style="display: none; margin-top: 20px;">
+            <div class="options-main-card">
+              <h3 style="font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: #444; margin: -12px -12px 15px -12px; padding: 5px 14px; 
+                         background: linear-gradient(90deg, rgba(220,53,69,0.16), rgba(255,255,255,0.03)); border-left: 3px solid rgba(220,53,69,0.9); border-radius: 6px 6px 0 0;
+                         box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);">
+               DADOS DO UTENTE
+              </h3>
+              <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                <label style="font-size: 13px;">Nome do Utente:</label>
+                <input type="text" id="utent_h_name" style="width: 700px;">
+                <label style="font-size: 13px;">Nr. de Utente:</label>
+                <input type="text" id="utent_h_nr" style="width: 150px;">
+              </div>
+              <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px; margin-top: 5px;">
+                <label style="font-size: 13px;">Morada do Utente:</label>
+                <input type="text" id="utent_h_adress" style="width: 550px;">
+                <label style="font-size: 13px;">Localidade:</label>
+                <input type="text" id="utent_h_localitie" style="width: 500px;">
+              </div>
+              <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px; margin-top: 5px;">
+                <label style="font-size: 13px;">Contactos:</label>
+                <input type="text" id="utent_h_contacts" style="width: 300px;">
+              </div>
+              <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px; margin-top: 5px;">
+                <label style="font-size: 13px;">Dias Tratamento:</label>
+                <div style="position: relative; display: inline-block;">
+                  <div id="utent_h_treatment_days_btn" onclick="toggleDaysDropdown()"
+                       style="width: 200px; padding: 4px 8px; border: 1px solid #ccc; border-radius: 3px; cursor: pointer; background: #fff; font-size: 13px; min-height: 28px;">
+                    Selecionar dias...
+                  </div>
+                  <div id="utent_h_treatment_days_dropdown" style="display: none; position: absolute; z-index: 999; background: #fff; border: 1px solid #ccc; border-radius: 4px; 
+                                                                   padding: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); min-width: 160px; text-align: left;">
+                    <label style="display: flex; align-items: center; justify-content: flex-start; gap: 6px; font-size: 13px; padding: 3px 0; cursor: pointer; width: 100%; text-align: left;">
+                      <input type="checkbox" value="SEG" style="width: 16px; height: 16px; margin: 0; cursor: pointer !important; outline: none !important; box-shadow: none !important;">Segunda</label>
+                    <label style="display: flex; align-items: center; justify-content: flex-start; gap: 6px; font-size: 13px; padding: 3px 0; cursor: pointer; width: 100%; text-align: left;">
+                      <input type="checkbox" value="TER" style="width: 16px; height: 16px; margin: 0; cursor: pointer !important; outline: none !important; box-shadow: none !important;">Terça</label>
+                    <label style="display: flex; align-items: center; justify-content: flex-start; gap: 6px; font-size: 13px; padding: 3px 0; cursor: pointer; width: 100%; text-align: left;">
+                      <input type="checkbox" value="QUA" style="width: 16px; height: 16px; margin: 0; cursor: pointer !important; outline: none !important; box-shadow: none !important;">Quarta</label>
+                    <label style="display: flex; align-items: center; justify-content: flex-start; gap: 6px; font-size: 13px; padding: 3px 0; cursor: pointer; width: 100%; text-align: left;">
+                      <input type="checkbox" value="QUI" style="width: 16px; height: 16px; margin: 0; cursor: pointer !important; outline: none !important; box-shadow: none !important;">Quinta</label>
+                    <label style="display: flex; align-items: center; justify-content: flex-start; gap: 6px; font-size: 13px; padding: 3px 0; cursor: pointer; width: 100%; text-align: left;">
+                      <input type="checkbox" value="SEX" style="width: 16px; height: 16px; margin: 0; cursor: pointer !important; outline: none !important; box-shadow: none !important;">Sexta</label>
+                    <label style="display: flex; align-items: center; justify-content: flex-start; gap: 6px; font-size: 13px; padding: 3px 0; cursor: pointer; width: 100%; text-align: left;">
+                      <input type="checkbox" value="SAB" style="width: 16px; height: 16px; margin: 0; cursor: pointer !important; outline: none !important; box-shadow: none !important;">Sábado</label>
+                  </div>
+                </div>
+                <label style="font-size: 13px;">Turno Tratamento:</label>
+                <select id="utent_h_treatment_sift" style="width: 150px;">
+                  <option></option>
+                  <option>07:00-12:00</option>
+                  <option>11:00-17:00</option>
+                  <option>16:00-23:00</option>
+                </select>
+                <label style="font-size: 13px;">Loacal Tratamento:</label>
+                <select id="utent_h_treatment_local" style="width: 200px;">
+                  <option></option>
+                  <option>ULSA Faro</option>
+                  <option>Nephrocare Faro</option>
+                  <option>Outro</option>
+                </select>
+                <label style="font-size: 13px;">Posição:</label>
+                <select id="utent_h_treatment_position" style="width: 200px;">
+                  <option></option>
+                  <option>Sentado</option>
+                  <option>Deitado</option>
+                  <option>Cadeira de Rodas</option>
+                </select>
+              </div>
+              <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px; justify-content: flex-end; margin-top: 15px;">
+                <button id="utent_h_save" class="btn btn-add">💾 GRAVAR</button> 
+              </div>
+            </div>
+          </div>
+          <div id="hemo-utentlist-card" style="display: none; margin-top: 20px;">
+            <div class="options-main-card">
+              <h3 style="font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: #444; margin: -12px -12px 15px -12px; padding: 5px 14px;
+                         background: linear-gradient(90deg, rgba(220,53,69,0.16), rgba(255,255,255,0.03)); border-left: 3px solid rgba(220,53,69,0.9); border-radius: 6px 6px 0 0;
+                         box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);">
+                LISTAGEM DE UTENTES
+              </h3>
+              <div class="hemo-scroll" style="max-height: 500px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #bdc3c7 #f1f1f1;">
+                <table style="width: 100%; border-collapse: collapse;">
+                  <thead style="position: sticky; top: 0; z-index: 1;">
+                    <tr style="background: #1e3a8a; color: #fff;">
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Nome</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Morada</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Localidade</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Contacto</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Nr. Benif.</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Destino</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Dias</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Turno</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Posição</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px; width: 100px;">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="hemo-utentlist-tbody">
+                    <tr><td colspan="9" style="text-align: center; padding: 8px; font-size: 12px; color: #999;">Sem registos</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div id="hemo-week-cards" style="display: none; margin-top: 20px;">
+            <div class="major-row" style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; align-items: stretch; padding: 0;">
+              <div class="options-main-card" style="min-width: 250px; display: flex; flex-direction: column; align-items: center; height: 100%; margin-left: 0;">
+                <div style="font-size: 14px; font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #ddd; padding-bottom: 5px; width: 100%; text-align: center;">
+                  Segundas / Quartas / Sextas
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 15px; width: 100%; max-height: 500px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #bdc3c7 #f1f1f1;">
+                  <div>
+                    <div style="font-size: 13px; font-weight: bold; background: #1e3a8a; color: #fff; padding: 5px 10px; border-radius: 4px 4px 0 0; text-align: center;">
+                      07:00 — 12:00
+                    </div>
+                    <table style="width: 100%; border-collapse: collapse;">
+                      <thead>
+                        <tr style="background: #f0f0f0;">
+                          <th style="padding: 5px; width: 200px; border: 1px solid #ddd; font-size: 12px;">Nome</th>
+                          <th style="padding: 5px; width: 390px; border: 1px solid #ddd; font-size: 12px;">Origem</th>
+                          <th style="padding: 5px; width: 150px; border: 1px solid #ddd; font-size: 12px;">Destino</th>
+                        </tr>
+                      </thead>
+                      <tbody id="hemo-sqx-0700">
+                        <tr><td colspan="3" style="text-align: center; padding: 8px; font-size: 12px; color: #999;">Sem registos</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div>
+                    <div style="font-size: 13px; font-weight: bold; background: #1e3a8a; color: #fff; padding: 5px 10px; border-radius: 4px 4px 0 0; text-align: center;">
+                      11:00 — 17:00
+                    </div>
+                    <table style="width: 100%; border-collapse: collapse;">
+                      <thead>
+                        <tr style="background: #f0f0f0;">
+                          <th style="padding: 5px; width: 200px; border: 1px solid #ddd; font-size: 12px;">Nome</th>
+                          <th style="padding: 5px; width: 390px; border: 1px solid #ddd; font-size: 12px;">Origem</th>
+                          <th style="padding: 5px; width: 150px; border: 1px solid #ddd; font-size: 12px;">Destino</th>
+                        </tr>
+                      </thead>
+                      <tbody id="hemo-sqx-1100">
+                        <tr><td colspan="3" style="text-align: center; padding: 8px; font-size: 12px; color: #999;">Sem registos</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div>
+                    <div style="font-size: 13px; font-weight: bold; background: #1e3a8a; color: #fff; padding: 5px 10px; border-radius: 4px 4px 0 0; text-align: center;">
+                      16:00 — 23:00
+                    </div>
+                    <table style="width: 100%; border-collapse: collapse;">
+                      <thead>
+                        <tr style="background: #f0f0f0;">
+                          <th style="padding: 5px; width: 200px; border: 1px solid #ddd; font-size: 12px;">Nome</th>
+                          <th style="padding: 5px; width: 390px; border: 1px solid #ddd; font-size: 12px;">Origem</th>
+                          <th style="padding: 5px; width: 150px; border: 1px solid #ddd; font-size: 12px;">Destino</th>
+                        </tr>
+                      </thead>
+                      <tbody id="hemo-sqx-1600">
+                        <tr><td colspan="3" style="text-align: center; padding: 8px; font-size: 12px; color: #999;">Sem registos</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <div class="options-main-card" style="min-width: 250px; display: flex; flex-direction: column; align-items: center; height: 100%; margin-right: 0;">
+                <div style="font-size: 14px; font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #ddd; padding-bottom: 5px; width: 100%; text-align: center;">
+                  Terças / Quintas / Sábados
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 15px; width: 100%; max-height: 500px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #bdc3c7 #f1f1f1;">
+                  <div>
+                    <div style="font-size: 13px; font-weight: bold; background: #6b0000; color: #fff; padding: 5px 10px; border-radius: 4px 4px 0 0; text-align: center;">
+                      07:00 — 12:00
+                    </div>
+                    <table style="width: 100%; border-collapse: collapse;">
+                      <thead>
+                        <tr style="background: #f0f0f0;">
+                          <th style="padding: 5px; width: 200px; border: 1px solid #ddd; font-size: 12px;">Nome</th>
+                          <th style="padding: 5px; width: 390px; border: 1px solid #ddd; font-size: 12px;">Origem</th>
+                          <th style="padding: 5px; width: 150px; border: 1px solid #ddd; font-size: 12px;">Destino</th>
+                        </tr>
+                      </thead>
+                      <tbody id="hemo-tqs-0700">
+                        <tr><td colspan="3" style="text-align: center; padding: 8px; font-size: 12px; color: #999;">Sem registos</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div>
+                    <div style="font-size: 13px; font-weight: bold; background: #6b0000; color: #fff; padding: 5px 10px; border-radius: 4px 4px 0 0; text-align: center;">
+                      11:00 — 17:00
+                    </div>
+                    <table style="width: 100%; border-collapse: collapse;">
+                      <thead>
+                        <tr style="background: #f0f0f0;">
+                          <th style="padding: 5px; width: 200px; border: 1px solid #ddd; font-size: 12px;">Nome</th>
+                          <th style="padding: 5px; width: 390px; border: 1px solid #ddd; font-size: 12px;">Origem</th>
+                          <th style="padding: 5px; width: 150px; border: 1px solid #ddd; font-size: 12px;">Destino</th>
+                        </tr>
+                      </thead>
+                      <tbody id="hemo-tqs-1100">
+                        <tr><td colspan="3" style="text-align: center; padding: 8px; font-size: 12px; color: #999;">Sem registos</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div>
+                    <div style="font-size: 13px; font-weight: bold; background: #6b0000; color: #fff; padding: 5px 10px; border-radius: 4px 4px 0 0; text-align: center;">
+                      16:00 — 23:00
+                    </div>
+                    <table style="width: 100%; border-collapse: collapse;">
+                      <thead>
+                        <tr style="background: #f0f0f0;">
+                          <th style="padding: 5px; width: 200px; border: 1px solid #ddd; font-size: 12px;">Nome</th>
+                          <th style="padding: 5px; width: 390px; border: 1px solid #ddd; font-size: 12px;">Origem</th>
+                          <th style="padding: 5px; width: 150px; border: 1px solid #ddd; font-size: 12px;">Destino</th>
+                        </tr>
+                      </thead>
+                      <tbody id="hemo-tqs-1600">
+                        <tr><td colspan="3" style="text-align: center; padding: 8px; font-size: 12px; color: #999;">Sem registos</td></tr>                        
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="major-card-footer">
+          <div id="hemodialysis-options" style="display: none; justify-content: flex-end; gap: 10px;">            
+            <button id="hemodialysis-emit" class="btn btn-danger">📄 EMITIR LISTAGEM</button> 
+          </div>
+        </div>
       </div>
     </div>
     <!-- ALARM CONSOLE SUB-MODULE -->

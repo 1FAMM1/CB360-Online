@@ -3360,7 +3360,7 @@
       cards.style.display = isVisible ? "none" : "block";
       utentData.style.display = "none";
       utentList.style.display = "none";
-      options.style.display = isVisible ? "none" : "flex";alarm
+      options.style.display = isVisible ? "none" : "flex";
       this.classList.toggle("active", !isVisible);
       document.getElementById("HemoWAdresses").classList.remove("active");
       if (!isVisible) loadHemoWeekList();

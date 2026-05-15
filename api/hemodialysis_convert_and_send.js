@@ -13,7 +13,7 @@ const CLIENT_SECRET = process.env.ADOBE_CLIENT_SECRET;
 const TEMPLATES = {
   saloc: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/hemodialysis_list_saloc_template.xlsx",
   global: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/hemodialysis_list_global_template.xlsx",
-  veiculos: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/hemodialysis_list_veiculos_template.xlsx"
+  veiculos: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/hemodialysis_list_veics_template.xlsx"
 };
 
 // Função auxiliar para evitar que o texto saia da célula

@@ -1,4 +1,4 @@
-    import ExcelJS from "exceljs";
+import ExcelJS from "exceljs";
 import fetch from "node-fetch";
 import fs from "fs";
 import os from "os";
@@ -60,7 +60,7 @@ export default async function handler(req, res) {
     const sqx = data.filter(u => (u.utent_shift_days || "").toUpperCase() === "SQX");
     const tqs = data.filter(u => (u.utent_shift_days || "").toUpperCase() === "TQS");
 
-    // --- 1. LÓGICA SALOC ---
+    // --- 1. SALOC (NÃO OCULTA LINHAS) ---
     if (type === "saloc" || type === "ambos") {
       const tplRes = await fetch(TEMPLATES.saloc);
       const workbook = new ExcelJS.Workbook();
@@ -73,15 +73,10 @@ export default async function handler(req, res) {
           const shiftData = list.filter(u => u.utent_shift === s);
           for (let i = 0; i < 7; i++) {
             const rowNum = rows[idx] + i;
-            const row = ws.getRow(rowNum);
+            const cell = ws.getCell(`B${rowNum}`);
             const u = shiftData[i];
-            if (u) {
-              const cell = ws.getCell(`B${rowNum}`);
-              cell.value = u.utent_name || "";
-              fitCell(cell);
-            } else {
-              row.hidden = true; // OCULTA A LINHA SE VAZIA
-            }
+            cell.value = u ? (u.utent_name || "") : null;
+            if (u) fitCell(cell);
           }
         });
       };
@@ -94,7 +89,7 @@ export default async function handler(req, res) {
       pages.forEach(p => mergedPdf.addPage(p));
     }
 
-    // --- 2. LÓGICA VEÍCULOS ---
+    // --- 2. VEÍCULOS (NÃO OCULTA LINHAS) ---
     if (type === "veículos" || type === "ambos") {
       const tplRes = await fetch(TEMPLATES.veiculos);
       const workbook = new ExcelJS.Workbook();
@@ -107,18 +102,18 @@ export default async function handler(req, res) {
           const shiftData = list.filter(u => u.utent_shift === s);
           for (let i = 0; i < 7; i++) {
             const rowNum = startRows[idx] + i;
-            const row = ws.getRow(rowNum);
             const u = shiftData[i];
+            const cName = ws.getCell(`B${rowNum}`);
+            const cDest = ws.getCell(`F${rowNum}`);
+            const cCont = ws.getCell(`I${rowNum}`);
+
             if (u) {
-              const cName = ws.getCell(`B${rowNum}`);
-              const cDest = ws.getCell(`F${rowNum}`);
-              const cCont = ws.getCell(`I${rowNum}`);
               cName.value = u.utent_name || "";
               cDest.value = u.utent_desteny || "";
               cCont.value = u.utent_contact || "";
               [cName, cDest, cCont].forEach(fitCell);
             } else {
-              row.hidden = true; // OCULTA A LINHA SE VAZIA
+              cName.value = cDest.value = cCont.value = null;
             }
           }
         });
@@ -132,7 +127,7 @@ export default async function handler(req, res) {
       pages.forEach(p => mergedPdf.addPage(p));
     }
 
-    // --- 3. LÓGICA GLOBAL (13-33 e 37-57) ---
+    // --- 3. GLOBAL (OCULTA LINHAS VAZIAS) ---
     if (["saloc", "veículos", "veiculos", "ambos", "global"].includes(type)) {
       const tplRes = await fetch(TEMPLATES.global);
       const workbook = new ExcelJS.Workbook();
@@ -145,6 +140,7 @@ export default async function handler(req, res) {
           const rowNum = start + i;
           const row = ws.getRow(rowNum);
           const u = sortedList[i];
+          
           if (u) {
             const cells = ["B", "C", "D", "E", "F", "G", "H"].map(col => ws.getCell(`${col}${rowNum}`));
             cells[0].value = u.utent_name || "";
@@ -155,8 +151,9 @@ export default async function handler(req, res) {
             cells[5].value = u.utent_contact || "";
             cells[6].value = u.utent_position || "";
             cells.forEach(fitCell);
+            row.hidden = false; // Garante que a linha está visível se houver dados
           } else {
-            row.hidden = true; // OCULTA A LINHA SE VAZIA
+            row.hidden = true; // SÓ OCULTA NO GLOBAL
           }
         }
       };
@@ -170,7 +167,9 @@ export default async function handler(req, res) {
     }
 
     const finalPdf = await mergedPdf.save();
+    const dataHoje = new Date().toLocaleDateString('pt-PT').replace(/\//g, '-');
     res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `inline; filename="Listagem_Hemo_${dataHoje}.pdf"`);
     res.status(200).send(Buffer.from(finalPdf));
 
   } catch (err) {

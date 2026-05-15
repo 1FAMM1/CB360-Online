@@ -161,9 +161,9 @@
         <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-saloc" data-access="Diversos">Diversos</button>
         <div class="sub-submenu">
           <button class="sidebar-sub-submenu-button" data-page="page-hemodialysis" data-access="Diversos">Listagem Hemodiálises</button>
-          <button class="sidebar-sub-submenu-button" data-page="" data-access="Diversos" onclick="showbreve()">Formulário Formação</button>
+          <button class="sidebar-sub-submenu-button" data-page="" data-access="Diversos">Formulário Formação</button>
           <button class="sidebar-sub-submenu-button" data-page="" data-access="Diversos" onclick="showbreve()">Formulário Requisição de Equipamentos</button>
-          <button class="sidebar-sub-submenu-button" data-page="" data-access="Diversos" onclick="showbreve()">Cartões Frota</button>
+          <button class="sidebar-sub-submenu-button" data-page="page-fleet-cards" data-access="Diversos">Cartões Frota</button>
           <button class="sidebar-sub-submenu-button" data-page="" data-access="Diversos" onclick="showbreve()">Lista de Contactos</button>
           <button class="sidebar-sub-submenu-button" data-page="" data-access="Diversos" onclick="showbreve()">Lista Nominal (Comparências a Eventos)</button>
         </div>
@@ -2723,6 +2723,85 @@
         </div>
       </div>
     </div>
+    <!-- REQUEST MATRIAL SUB-MODULE -->
+    <div id="page-material-request" class="page">
+      <div class="major-card">
+        <div class="major-card-header" style="display: flex; align-items: center; gap: 10px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
+            <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+            <rect x="9" y="3" width="6" height="4" rx="1"/>
+            <line x1="9" y1="12" x2="15" y2="12"/>
+            <line x1="9" y1="16" x2="13" y2="16"/>
+          </svg>
+          REQUISIÇÃO DE EQUIPAMENTOS
+        </div>
+        <div class="major-card-body">
+          
+          
+        </div>
+        <div class="major-card-footer" style="height: 20px;"></div>
+      </div>
+    </div>
+    <!-- FLEET CARDS SUB-MODULE -->
+<div id="page-fleet-cards" class="page">
+<div class="major-card">
+  <div class="major-card-header" style="display: flex; align-items: center; gap: 10px;">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
+      <path d="M3 22V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/>
+      <path d="M3 22h12"/>
+      <path d="M15 8h2a2 2 0 0 1 2 2v6a1 1 0 0 0 2 0v-7l-2-3"/>
+      <line x1="7" y1="10" x2="11" y2="10"/>
+    </svg>
+    CARTÕES FROTA
+  </div>
+  <div class="major-card-body">
+    <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+      <label style="font-size: 13px;">Veículo:</label>
+      <input type="text" id="veíc_card_name" style="width: 150px;">
+      <label style="font-size: 13px;">Matricula:</label>
+      <input type="text" id="veíc_card_register" style="width: 150px;">
+      <label style="font-size: 13px;">Código Cartão:</label>
+      <input type="text" id="veíc_card_code" style="width: 150px;">
+      <label style="font-size: 13px;">Telemóvel:</label>
+      <input type="text" id="veíc_card_contact" style="width: 150px;">
+    </div>
+
+    <!-- TABELA DE REGISTOS -->
+    <div style="margin-top: 20px;">
+      <div class="options-main-card">
+        <h3 style="font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: #444; margin: -12px -12px 15px -12px; padding: 5px 14px;
+                   background: linear-gradient(90deg, rgba(30,58,138,0.13), rgba(255,255,255,0.03)); border-left: 3px solid rgba(30,58,138,0.9); border-radius: 6px 6px 0 0;
+                   box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);">
+          LISTAGEM DE CARTÕES FROTA
+        </h3>
+        <div style="max-height: 400px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #bdc3c7 #f1f1f1;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead style="position: sticky; top: 0; z-index: 1;">
+              <tr style="background: #1e3a8a; color: #fff;">
+                <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Veículo</th>
+                <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Matrícula</th>
+                <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Código Cartão</th>
+                <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Contacto</th>
+                <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px; width: 120px;">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="fleet-cards-tbody">
+              <tr><td colspan="5" style="text-align: center; padding: 8px; font-size: 12px; color: #999;">Sem registos</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <div class="major-card-footer">
+    <div id="card-fleet-options" style="justify-content: flex-end; gap: 10px;">
+      <button id="card-fleet-save" class="btn btn-add">💾 GRAVAR</button>
+      <button id="card-fleet-emit" class="btn btn-danger">📄 EMITIR</button>
+    </div>
+  </div>
+</div>
+</div>
     <!-- ALARM CONSOLE SUB-MODULE -->
     <div id="page-alarm-console" class="page">
       <div class="major-card">

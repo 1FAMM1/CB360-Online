@@ -2949,6 +2949,510 @@
       inopsTableContainer.style.display = 'none';
     });
     /* =======================================
+    VARIOUS MODULE
+    ======================================= */
+    /* ===== VARIOUS PDF MODAL =====*/
+    const VARIOUS_MODAL_STYLES = `
+      @keyframes variousFadeIn {from {opacity: 0;} to {opacity: 1;}}
+      @keyframes variousSlideUp {from {opacity: 0; transform: translateY(28px) scale(0.96);} to {opacity: 1; transform: translateY(0) scale(1);}}
+      @keyframes variousSpin {to {transform: rotate(360deg);}}
+      #various-pdf-modal {animation: variousFadeIn .22s ease;}
+      #various-pdf-modal .various-box {animation: variousSlideUp .28s cubic-bezier(.22,.68,0,1.2);}
+      .various-spinner {width: 36px; height: 36px; border: 3px solid #f0e8e8; border-top-color: #2c3e50; border-radius: 50%; animation: variousSpin .75s linear infinite;}
+      .various-btn {border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.8); width: 30px; height: 30px; border-radius: 7px; cursor: pointer;
+                   font-size: 14px; display: inline-flex; align-items: center; justify-content: center; transition: background .15s, border-color .15s, transform .1s;}
+      .various-btn:hover {background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.25); color: #fff;}
+      .various-btn:active {transform: scale(.91);}
+      .various-btn.various-close-btn {border-color: rgba(255,80,80,0.22);}
+      .various-btn.various-close-btn:hover {background: rgba(180,0,0,0.4); border-color: rgba(255,80,80,0.5);}
+      .various-print-btn {border: 1px solid rgba(255,255,255,0.2); background: #27ae60; color: white; padding: 6px 14px; border-radius: 7px; cursor: pointer; font-size: 12.5px; font-weight: 600;
+                         font-family: 'Segoe UI', sans-serif; letter-spacing: .3px; display: inline-flex; align-items: center; gap: 6px; transition: all .15s;}
+      .various-print-btn:hover {background: #2ecc71; border-color: rgba(255,255,255,0.38);}
+      .various-print-btn:active {transform: scale(.96);}
+      .various-header {background: linear-gradient(135deg, #1a2a3a 0%, #2c3e50 45%, #34495e 100%); padding: 11px 14px; display: flex; align-items: center; justify-content: space-between;
+                      gap: 10px; flex-shrink: 0; border-bottom: 1px solid rgba(0,0,0,0.2); position: relative;}
+      .various-header::before {content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255,255,255,0.07) 0%, transparent 100%); pointer-events: none;}
+      .various-footer {background: linear-gradient(135deg, #1a2a3a 0%, #2c3e50 100%); padding: 9px 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+                      flex-shrink: 0; border-top: 1px solid rgba(0,0,0,0.15); position: relative;}
+      .various-footer::before {content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, transparent 100%); pointer-events: none;}
+      .various-sep {width: 1px; height: 28px; background: rgba(255,255,255,0.18); flex-shrink: 0;}
+      .various-title-main {color: #fff; font-weight: 700; font-size: 13px; font-family: 'Segoe UI', sans-serif; letter-spacing: .1px;}
+      .various-title-sub {color: rgba(255,255,255,0.5); font-size: 10.5px; font-family: 'Segoe UI', sans-serif; margin-top: 2px;}
+      .various-badge {background: rgba(46, 204, 113, 0.2); border: 1px solid rgba(46, 204, 113, 0.4); border-radius: 5px; padding: 2px 7px; font-size: 10px; font-weight: 700;
+                     font-family: 'Segoe UI', sans-serif; color: #2ecc71; letter-spacing: .7px; text-transform: uppercase;}
+      .various-footer-info {color: rgba(255,255,255,0.38); font-size: 10.5px; font-family: 'Segoe UI', sans-serif;}
+    `;
+    function _variousInjectStyles() {
+      if (document.getElementById('various-modal-styles')) return;
+      const style = document.createElement('style');
+      style.id = 'various-modal-styles';
+      style.textContent = VARIOUS_MODAL_STYLES;
+      document.head.appendChild(style);
+    }
+    /* ===== HEMODIALYSIS INIT =====*/
+    document.querySelector('.sidebar-sub-submenu-button[data-page="page-hemodialysis"]')?.addEventListener("click", () => {
+      document.getElementById("hemo-week-cards").style.display = "none";
+      document.getElementById("hemo-utentdata-card").style.display = "none";
+      document.getElementById("hemo-utentlist-card").style.display = "none";
+      document.getElementById("hemodialysis-options").style.display = "none";
+      document.getElementById("HemoWeekList").classList.remove("active");
+      document.getElementById("HemoWAdresses").classList.remove("active");
+      document.getElementById("utent_h_name").value = "";
+      document.getElementById("utent_h_nr").value = "";
+      document.getElementById("utent_h_adress").value = "";
+      document.getElementById("utent_h_localitie").value = "";
+      document.getElementById("utent_h_contacts").value = "";
+      document.getElementById("utent_h_treatment_local").value = "";
+      document.getElementById("utent_h_treatment_position").value = "";
+      document.getElementById("utent_h_treatment_sift").value = "";
+      document.querySelectorAll("#utent_h_treatment_days_dropdown input:checked")
+        .forEach(cb => cb.checked = false);
+      document.getElementById("utent_h_treatment_days_btn").textContent = "Selecionar dias...";
+      const saveBtn = document.getElementById("utent_h_save");
+      if (saveBtn) {delete saveBtn.dataset.editId; saveBtn.textContent = "💾 GRAVAR";}
+    });    
+    /* ===== LOAD, EMIT HEMODIALYSIS LIST =====*/
+    async function loadHemoWeekList() {
+      try {
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/hemodialysis_list?corp_oper_nr=eq.${corpOperNr}&select=utent_name,utent_adress,utent_desteny,utent_shift,utent_shift_days`, {
+            headers: getSupabaseHeaders()
+          }
+        );
+        if (!response.ok) throw new Error("Erro ao carregar hemodiálises");
+        const data = await response.json();
+        ["hemo-sqx-0700", "hemo-sqx-1100", "hemo-sqx-1600", "hemo-tqs-0700", "hemo-tqs-1100", "hemo-tqs-1600"].forEach(id => {
+          document.getElementById(id).innerHTML =
+            `<tr><td colspan="3" style="text-align:center;padding:8px;font-size:12px;color:#999;">Sem registos</td></tr>`;
+        });
+        data.forEach(utent => {
+          const days = (utent.utent_shift_days || "").toUpperCase();
+          const shift = (utent.utent_shift || "").replace(/ /g, "");
+          const prefix = days.includes("SQX") || days === "SQX" || ["SEG","QUA","SEX"].some(d => days.includes(d))
+            ? "hemo-sqx"
+            : days.includes("TQS") || days === "TQS" || ["TER","QUI","SAB"].some(d => days.includes(d))
+            ? "hemo-tqs"
+            : null;
+          if (!prefix) return;
+          let suffix = "";
+          if (shift === "07:00-12:00") suffix = "0700";
+          else if (shift === "11:00-17:00") suffix = "1100";
+          else if (shift === "16:00-23:00") suffix = "1600";
+          else return;
+          const tbodyId = `${prefix}-${suffix}`;
+          const tbody = document.getElementById(tbodyId);
+          if (!tbody) return;
+          if (tbody.querySelector("td[colspan]")) tbody.innerHTML = "";
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td style="padding:5px;border:1px solid #ddd;font-size:13px;font-weight:bold;">${utent.utent_name || ""}</td>
+            <td style="padding:5px;border:1px solid #ddd;font-size:13px;font-weight:bold;">${utent.utent_adress || ""}</td>
+            <td style="padding:5px;border:1px solid #ddd;font-size:13px;font-weight:bold;">${utent.utent_desteny || ""}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        console.error("Erro ao carregar hemodiálises:", err);
+      }
+    }
+    function openHemodialysisTypePopup() {
+      const modal = document.getElementById("popup-hemodialysis-type-modal");
+      if (!modal) return;
+      document.querySelectorAll('input[name="popup-hemos-type"]').forEach(el => {
+        el.checked = false;
+      });
+      modal.classList.add("show");
+    }
+    function closeHemodialysisTypePopup() {
+      const modal = document.getElementById("popup-hemodialysis-type-modal");
+      if (modal) modal.classList.remove("show");
+    }
+    document.getElementById("hemodialysis-emit")?.addEventListener("click", openHemodialysisTypePopup);
+    document.getElementById("popup-hemos-type-cancel-btn")?.addEventListener("click", closeHemodialysisTypePopup);
+    document.getElementById("popup-hemos-type-ok-btn")?.addEventListener("click", () => {
+      const selected = document.querySelector('input[name="popup-hemos-type"]:checked');
+      if (!selected) {
+        showPopup('popup-danger', "Selecione uma opção.");
+        return;
+      }
+      const typeValue = selected.value.toLowerCase();
+      closeHemodialysisTypePopup();
+      emitHemoWeekList(typeValue); 
+    });
+    async function emitHemoWeekList(type) {
+      try {
+        showLoadingPopup("🔄 A preparar listagem...");
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const fields = ["utent_name", "utent_adress", "utent_desteny", "utent_shift", "utent_shift_days", "utent_niss", "utent_localitie", "utent_contact", "utent_position"].join(",");
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/hemodialysis_list?corp_oper_nr=eq.${corpOperNr}&select=${fields}&order=utent_shift_days.asc,utent_shift.asc`, {
+            headers: getSupabaseHeaders()
+          }
+        );
+        if (!response.ok) throw new Error("Erro ao carregar dados do banco de dados.");
+        const data = await response.json();
+        updateLoadingPopup("📊 A gerar Listagem...");
+        const res = await fetch("https://cb360-online.vercel.app/api/hemodialysis_convert_and_send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({type: type, data: data})
+        });
+        if (!res.ok) {
+          const errorText = await res.text();
+          throw new Error(`Erro na API: ${errorText}`);
+        }
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        hideLoadingPopup();
+        document.getElementById('various-pdf-modal')?.remove();
+        _variousInjectStyles();
+        const overlay = document.createElement('div');
+        overlay.id = 'various-pdf-modal';
+        Object.assign(overlay.style, {position: 'fixed', inset: '0', background: 'rgba(10,8,8,0.78)', zIndex: '9999', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)'});
+        const box = document.createElement('div');
+        box.className = 'various-box';
+        Object.assign(box.style, {background: '#f8f8f8', borderRadius: '14px', width: '82vw', height: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 28px 72px rgba(0,0,0,0.45)', overflow: 'hidden'});
+        const header = document.createElement('div');
+        header.className = 'various-header';
+        header.innerHTML = `
+          <div style="display:flex;align-items:center;gap:10px;flex:1;position:relative;z-index:1;">
+            <div style="color:#fff;font-weight:700;font-size:13px;">📋 Listagem de Diversos</div>
+          </div>
+          <div style="display:flex;gap:5px;position:relative;z-index:1;">
+            <button class="various-btn" id="various-pdf-fullscreen" title="Ecrã inteiro">⛶</button>
+            <button class="various-btn various-close-btn" id="various-pdf-close" title="Fechar">✕</button>
+          </div>
+        `;
+        const content = document.createElement('div');
+        Object.assign(content.style, {flex: '1', position: 'relative', overflow: 'hidden', background: '#fff'});
+        const iframe = document.createElement('iframe');
+        Object.assign(iframe.style, {position: 'absolute', inset: '0', width: '100%', height: '100%', border: 'none'});
+        iframe.src = url;
+        content.appendChild(iframe);
+        const footer = document.createElement('div');
+        footer.className = 'various-footer';
+        footer.innerHTML = `
+          <div class="various-footer-info">Documento gerado com sucesso</div>
+          <button class="various-print-btn" id="various-pdf-print">🖨️ Imprimir</button>
+        `;
+        box.append(header, content, footer);
+        overlay.appendChild(box);
+        document.body.appendChild(overlay);
+        let isFs = false;
+        document.getElementById("various-pdf-fullscreen").onclick = () => {
+          isFs = !isFs;
+          Object.assign(box.style, {width: isFs ? '100vw' : '82vw', height: isFs ? '100vh' : '90vh', borderRadius: isFs ? '0' : '14px'});
+        };
+        document.getElementById("various-pdf-close").onclick = () => {
+          URL.revokeObjectURL(url);
+          overlay.remove();
+        };
+        document.getElementById("various-pdf-print").onclick = () => {
+          iframe.contentWindow.focus();
+          iframe.contentWindow.print();
+        };
+        overlay.addEventListener('click', e => {if (e.target === overlay) overlay.remove();});
+      } catch (err) {
+        hideLoadingPopup();
+        console.error("Erro:", err);
+        showPopup('popup-danger', err.message);
+      }
+    }
+    /* ===== ADD, EDIT, REMOVE HEMODIALYSIS UTENT ===== */
+    async function loadHemoUtentList() {
+      try {
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/hemodialysis_list?
+          corp_oper_nr=eq.${corpOperNr}&select=id,utent_name,utent_adress,utent_localitie,utent_contact,utent_niss,utent_desteny,utent_shift_days,utent_shift,utent_position,utent_days_selected&order=utent_name.asc`, {headers: getSupabaseHeaders()}
+        );
+        if (!response.ok) throw new Error("Erro ao carregar utentes");
+        const data = await response.json();
+        const tbody = document.getElementById("hemo-utentlist-tbody");
+        if (!data.length) {
+          tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:8px;font-size:12px;color:#999;">Sem registos</td></tr>`;
+          return;
+        }
+        tbody.innerHTML = "";
+        data.forEach(utent => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td style="padding:5px;border:1px solid #ccc;font-size:13px;font-weight:bold;">${utent.utent_name || ""}</td>
+            <td style="padding:5px;border:1px solid #ccc;font-size:13px;">${utent.utent_adress || ""}</td>
+            <td style="padding:5px;border:1px solid #ccc;font-size:13px;">${utent.utent_localitie || ""}</td>
+            <td style="padding:5px;border:1px solid #ccc;font-size:13px;">${utent.utent_contact || ""}</td>
+            <td style="padding:5px;border:1px solid #ccc;font-size:13px;text-align:center;">${utent.utent_niss || ""}</td>
+            <td style="padding:5px;border:1px solid #ccc;font-size:13px;">${utent.utent_desteny || ""}</td>
+            <td style="padding:5px;border:1px solid #ccc;font-size:13px;text-align:center;">${utent.utent_days_selected || utent.utent_shift_days || ""}</td>
+            <td style="padding:5px;border:1px solid #ccc;font-size:13px;text-align:center;">${utent.utent_shift || ""}</td>
+            <td style="padding:5px;border:1px solid #ccc;font-size:13px;text-align:center;">${utent.utent_position || ""}</td>
+            <td style="padding:5px;border:1px solid #ccc;text-align:center;">
+              <button onclick="editHemoUtent(${utent.id})" style="background:#1e3a8a;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;margin-right:3px;">✏️</button>
+              <button onclick="deleteHemoUtent(${utent.id})" style="background:#dc2626;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;">🗑️</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        console.error("Erro ao carregar utentes:", err);
+      }
+    }
+    function toggleDaysDropdown() {
+      const dropdown = document.getElementById("utent_h_treatment_days_dropdown");
+      dropdown.style.display = dropdown.style.display === "none" ? "block" : "none";
+    }
+    document.addEventListener("click", function(e) {
+      const btn = document.getElementById("utent_h_treatment_days_btn");
+      const dropdown = document.getElementById("utent_h_treatment_days_dropdown");
+      if (!btn?.contains(e.target) && !dropdown?.contains(e.target)) {
+        dropdown.style.display = "none";
+      }
+    });
+    document.querySelectorAll("#utent_h_treatment_days_dropdown input[type='checkbox']").forEach(cb => {
+      cb.addEventListener("change", () => {
+        const selected = Array.from(document.querySelectorAll("#utent_h_treatment_days_dropdown input:checked")).map(c => c.value);
+        document.getElementById("utent_h_treatment_days_btn").textContent = selected.length > 0 ? selected.join(", ") : "Selecionar dias...";
+      });
+    });
+    async function editHemoUtent(id) {
+      try {
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/hemodialysis_list?id=eq.${id}&corp_oper_nr=eq.${corpOperNr}&select=*`, {
+            headers: getSupabaseHeaders()
+          }
+        );
+        if (!response.ok) throw new Error("Erro ao carregar utente");
+        const data = await response.json();
+        if (!data.length) return;
+        const utent = data[0];
+        document.getElementById("utent_h_name").value = utent.utent_name || "";
+        document.getElementById("utent_h_nr").value = utent.utent_niss || "";
+        document.getElementById("utent_h_adress").value = utent.utent_adress || "";
+        document.getElementById("utent_h_localitie").value = utent.utent_localitie || "";
+        document.getElementById("utent_h_contacts").value = utent.utent_contact || "";
+        document.getElementById("utent_h_treatment_local").value = utent.utent_desteny || "";
+        document.getElementById("utent_h_treatment_position").value = utent.utent_position || "";
+        document.getElementById("utent_h_treatment_sift").value = utent.utent_shift || "";
+        const selectedDays = (utent.utent_days_selected || "").split("/");
+        document.querySelectorAll("#utent_h_treatment_days_dropdown input[type='checkbox']").forEach(cb => {
+          cb.checked = selectedDays.includes(cb.value);
+        });
+        const checkedDays = selectedDays.filter(d => d).join(", ");
+        document.getElementById("utent_h_treatment_days_btn").textContent = checkedDays || "Selecionar dias...";
+        document.getElementById("utent_h_save").dataset.editId = id;
+        document.getElementById("utent_h_save").textContent = "💾 ATUALIZAR";
+        document.getElementById("hemo-utentdata-card").scrollIntoView({behavior: "smooth"});
+      } catch (err) {
+        console.error("Erro ao editar utente:", err);
+        showPopup('popup-danger', "Erro ao carregar dados: " + err.message);
+      }
+    }
+    async function deleteHemoUtent(id) {
+      if (!confirm("Tem a certeza que pretende eliminar este utente?")) return;
+      try {
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/hemodialysis_list?id=eq.${id}&corp_oper_nr=eq.${corpOperNr}`, {
+            method: "DELETE", 
+            headers: getSupabaseHeaders()
+          }
+        );
+        if (!response.ok) throw new Error("Erro ao eliminar utente");
+        showPopup('popup-success', "Utente eliminado com sucesso!");
+        loadHemoUtentList();
+      } catch (err) {
+        console.error("Erro ao eliminar utente:", err);
+        showPopup('popup-danger', "Erro ao eliminar: " + err.message);
+      }
+    }
+    async function saveHemoUtent() {
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const name = document.getElementById("utent_h_name").value.trim();
+      const nr = document.getElementById("utent_h_nr").value.trim();
+      const adress = document.getElementById("utent_h_adress").value.trim();
+      const localitie = document.getElementById("utent_h_localitie").value.trim();
+      const contact = document.getElementById("utent_h_contacts").value.trim();
+      const desteny = document.getElementById("utent_h_treatment_local").value.trim();
+      const position = document.getElementById("utent_h_treatment_position").value.trim();
+      const shift = document.getElementById("utent_h_treatment_sift").value.trim();
+      const selectedDays = Array.from(
+        document.querySelectorAll("#utent_h_treatment_days_dropdown input:checked")
+      ).map(c => c.value);
+      const SQX_DAYS = ["SEG", "QUA", "SEX"];
+      const TQS_DAYS = ["TER", "QUI", "SAB"];
+      const hasSQX = selectedDays.some(d => SQX_DAYS.includes(d));
+      const hasTQS = selectedDays.some(d => TQS_DAYS.includes(d));
+      let shiftDays = "";
+      if (hasSQX && !hasTQS) shiftDays = "SQX";
+      else if (hasTQS && !hasSQX) shiftDays = "TQS";
+      else shiftDays = selectedDays.join("/");
+      if (!name) {
+        showPopup('popup-danger', "Nome do utente é obrigatório.");
+        return;
+      }
+      if (!desteny) {
+        showPopup('popup-danger', "Local de tratamento é obrigatório.");
+        return;
+      }
+      if (!selectedDays.length) {
+        showPopup('popup-danger', "Selecione pelo menos um dia de tratamento.");
+        return;
+      }
+      if (!shift) {
+        showPopup('popup-danger', "Selecione o turno de tratamento.");
+        return;
+      }
+      const saveBtn = document.getElementById("utent_h_save");
+      const editId = saveBtn.dataset.editId;
+      if (saveBtn) {saveBtn.disabled = true; saveBtn.textContent = "A guardar...";}
+      const payload = {utent_name: name, utent_niss: nr, utent_adress: adress, utent_localitie: localitie, utent_contact: contact, utent_desteny: desteny, 
+                       utent_position: position, utent_shift_days: shiftDays, utent_shift: shift, utent_days_selected: selectedDays.join("/")};
+      try {
+        let response;
+        if (editId) {
+          response = await fetch(
+            `${SUPABASE_URL}/rest/v1/hemodialysis_list?id=eq.${editId}&corp_oper_nr=eq.${corpOperNr}`, {
+              method: "PATCH", 
+              headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
+              body: JSON.stringify(payload)}
+          );
+          if (!response.ok) throw new Error("Erro ao atualizar utente: " + await response.text());
+          showPopup('popup-success', "Utente atualizado com sucesso!");
+          delete saveBtn.dataset.editId;
+        } else {
+          response = await fetch(`${SUPABASE_URL}/rest/v1/hemodialysis_list`, {
+            method: "POST",
+            headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
+            body: JSON.stringify({...payload, corp_oper_nr: corpOperNr})
+          });
+          if (!response.ok) throw new Error("Erro ao guardar utente: " + await response.text());
+          showPopup('popup-success', "Utente guardado com sucesso!");
+        }
+        document.getElementById("utent_h_name").value = "";
+        document.getElementById("utent_h_nr").value = "";
+        document.getElementById("utent_h_adress").value = "";
+        document.getElementById("utent_h_localitie").value = "";
+        document.getElementById("utent_h_contacts").value = "";
+        document.getElementById("utent_h_treatment_local").value = "";
+        document.getElementById("utent_h_treatment_position").value = "";
+        document.getElementById("utent_h_treatment_sift").value = "";
+        document.querySelectorAll("#utent_h_treatment_days_dropdown input:checked")
+          .forEach(cb => cb.checked = false);
+        document.getElementById("utent_h_treatment_days_btn").textContent = "Selecionar dias...";
+        loadHemoUtentList();
+      } catch (err) {
+        console.error("Erro ao guardar utente:", err);
+        showPopup('popup-danger', "Erro ao guardar: " + err.message);
+      } finally {
+        if (saveBtn) {saveBtn.disabled = false; saveBtn.textContent = "💾 GRAVAR";}
+      }
+    }
+    /* ===== DOM HEMODIALYSIS ===== */
+    document.getElementById("utent_h_save").addEventListener("click", saveHemoUtent);
+    document.getElementById("HemoWeekList").addEventListener("click", function() {
+      const cards = document.getElementById("hemo-week-cards");
+      const utentData = document.getElementById("hemo-utentdata-card");
+      const utentList = document.getElementById("hemo-utentlist-card");
+      const options = document.getElementById("hemodialysis-options");
+      const isVisible = cards.style.display !== "none";
+      cards.style.display = isVisible ? "none" : "block";
+      utentData.style.display = "none";
+      utentList.style.display = "none";
+      options.style.display = isVisible ? "none" : "flex";alarm
+      this.classList.toggle("active", !isVisible);
+      document.getElementById("HemoWAdresses").classList.remove("active");
+      if (!isVisible) loadHemoWeekList();
+    });
+    document.getElementById("HemoWAdresses").addEventListener("click", function() {
+      const utentData = document.getElementById("hemo-utentdata-card");
+      const utentList = document.getElementById("hemo-utentlist-card");
+      const cards = document.getElementById("hemo-week-cards");
+      const options = document.getElementById("hemodialysis-options");
+      const isVisible = utentData.style.display !== "none";
+      utentData.style.display = isVisible ? "none" : "block";
+      utentList.style.display = isVisible ? "none" : "block";
+      cards.style.display = "none";
+      options.style.display = "none";
+      this.classList.toggle("active", !isVisible);
+      document.getElementById("HemoWeekList").classList.remove("active");
+      if (!isVisible) loadHemoUtentList();
+    });
+    /* ===== FORMATION FORM ===== */
+    document.querySelectorAll('.sidebar-sub-submenu-button[data-access="Diversos"]').forEach(btn => {
+      if (btn.textContent.trim() === "Formulário Formação") {
+        btn.removeAttribute("onclick");
+        btn.addEventListener("click", async () => {
+          try {
+            showLoadingPopup("🔄 A preparar formulário...");
+            const res = await fetch("https://cb360-online.vercel.app/api/hemodialysis_convert_and_send", {
+              method: "POST",
+              headers: {"Content-Type": "application/json"},
+              body: JSON.stringify({type: "formacao"})
+            });
+            if (!res.ok) throw new Error(await res.text());
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            hideLoadingPopup();
+            document.getElementById('various-pdf-modal')?.remove();
+            _variousInjectStyles();
+            const overlay = document.createElement('div');
+            overlay.id = 'various-pdf-modal';
+            Object.assign(overlay.style, {position: 'fixed', inset: '0', background: 'rgba(10,8,8,0.78)', zIndex: '9999', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)'});
+            const box = document.createElement('div');
+            box.className = 'various-box';
+            Object.assign(box.style, {background: '#f8f8f8', borderRadius: '14px', width: '82vw', height: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 28px 72px rgba(0,0,0,0.45)', overflow: 'hidden'});
+            const header = document.createElement('div');
+            header.className = 'various-header';
+            header.innerHTML = `
+              <div style="display:flex;align-items:center;gap:10px;flex:1;position:relative;z-index:1;">
+                <div style="color:#fff;font-weight:700;font-size:13px;">📋 Formulário de Formação</div>
+              </div>
+              <div style="display:flex;gap:5px;position:relative;z-index:1;">
+                <button class="various-btn" id="various-pdf-fullscreen" title="Ecrã inteiro">⛶</button>
+                <button class="various-btn various-close-btn" id="various-pdf-close" title="Fechar">✕</button>
+              </div>
+            `;
+            const content = document.createElement('div');
+            Object.assign(content.style, {flex: '1', position: 'relative', overflow: 'hidden', background: '#fff'});
+            const iframe = document.createElement('iframe');
+            Object.assign(iframe.style, {position: 'absolute', inset: '0', width: '100%', height: '100%', border: 'none'});
+            iframe.src = url;
+            content.appendChild(iframe);
+            const footer = document.createElement('div');
+            footer.className = 'various-footer';
+            footer.innerHTML = `
+              <div class="various-footer-info">Documento gerado com sucesso</div>
+              <button class="various-print-btn" id="various-pdf-print">🖨️ Imprimir</button>
+            `;
+            box.append(header, content, footer);
+            overlay.appendChild(box);
+            document.body.appendChild(overlay);
+            let isFs = false;
+            document.getElementById("various-pdf-fullscreen").onclick = () => {
+              isFs = !isFs;
+              Object.assign(box.style, {width: isFs ? '100vw' : '82vw', height: isFs ? '100vh' : '90vh', borderRadius: isFs ? '0' : '14px'});
+            };
+            document.getElementById("various-pdf-close").onclick = () => {
+              URL.revokeObjectURL(url);
+              overlay.remove();
+            };
+            document.getElementById("various-pdf-print").onclick = () => {
+              iframe.contentWindow.focus();
+              iframe.contentWindow.print();
+            };
+            setTimeout(() => {
+              overlay.addEventListener('click', e => {if (e.target === overlay) overlay.remove();});
+            }, 100);
+          } catch (err) {
+            hideLoadingPopup();
+            showPopup('popup-danger', err.message);
+          }
+        });
+      }
+    });
+    /* =======================================
     ALARM CONSOLE
     ======================================= */
     async function fetchRegElemsFromSupabase() {

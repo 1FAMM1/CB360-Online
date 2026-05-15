@@ -16,10 +16,8 @@ const TEMPLATES = {
   veiculos: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/hemodialysis_list_veícs_template.xlsx"
 };
 
-// Função auxiliar para evitar que o texto saia da célula
 const fitCell = (cell) => {
   cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
-  // Nota: ExcelJS suporta shrinkToFit, mas o Adobe PDF pode ignorar se a célula for muito pequena.
 };
 
 async function workbookToPdfBuffer(workbook, prefix = "doc") {
@@ -62,7 +60,7 @@ export default async function handler(req, res) {
     const sqx = data.filter(u => (u.utent_shift_days || "").toUpperCase() === "SQX");
     const tqs = data.filter(u => (u.utent_shift_days || "").toUpperCase() === "TQS");
 
-    // 1. LÓGICA SALOC (Apenas Nomes)
+    // 1. LÓGICA SALOC
     if (type === "saloc" || type === "ambos") {
       const tplRes = await fetch(TEMPLATES.saloc);
       const workbook = new ExcelJS.Workbook();
@@ -92,7 +90,7 @@ export default async function handler(req, res) {
       pages.forEach(p => mergedPdf.addPage(p));
     }
 
-    // 2. LÓGICA VEÍCULOS (Nome, Destino, Contacto)
+    // 2. LÓGICA VEÍCULOS (Removido acento do "veiculos")
     if (type === "veiculos" || type === "ambos") {
       const tplRes = await fetch(TEMPLATES.veiculos);
       const workbook = new ExcelJS.Workbook();
@@ -100,6 +98,9 @@ export default async function handler(req, res) {
       const ws = workbook.worksheets[0];
       ws.pageSetup = { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0 };
       
+      // Quebra de página para separar SQX de TQS nos veículos
+      ws.getRow(54).addPageBreak();
+
       const fillV = (list, startRows) => {
         const shifts = ["07:00-12:00", "11:00-17:00", "16:00-23:00"];
         shifts.forEach((s, idx) => {
@@ -126,7 +127,7 @@ export default async function handler(req, res) {
       pages.forEach(p => mergedPdf.addPage(p));
     }
 
-    // 3. LÓGICA GLOBAL (Landscape) - SEMPRE NO FIM
+    // 3. LÓGICA GLOBAL (Landscape)
     if (["saloc", "veiculos", "ambos", "global"].includes(type)) {
       const tplRes = await fetch(TEMPLATES.global);
       const workbook = new ExcelJS.Workbook();
@@ -139,9 +140,10 @@ export default async function handler(req, res) {
           if (i >= 21) return;
           const r = start + i;
           const cells = [
-            ws.getCell(`A${r}`), ws.getCell(`B${r}`), ws.getCell(`C${r}`),
-            ws.getCell(`D${r}`), ws.getCell(`E${r}`), ws.getCell(`F${r}`), ws.getCell(`G${r}`)
+            ws.getCell(`B${r}`), ws.getCell(`C${r}`), ws.getCell(`D${r}`),
+            ws.getCell(`E${r}`), ws.getCell(`F${r}`), ws.getCell(`G${r}`), ws.getCell(`H${r}`)
           ];
+          // Mapeamento correto: A=Nome, B=NISS, C=Morada, etc.
           cells[0].value = u.utent_name || "";
           cells[1].value = u.utent_niss || "";
           cells[2].value = u.utent_adress || "";
@@ -162,8 +164,10 @@ export default async function handler(req, res) {
     }
 
     const finalPdf = await mergedPdf.save();
+    const dataHoje = new Date().toLocaleDateString('pt-PT').replace(/\//g, '-');
+
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `inline; filename="Listagem_Hemo_${Date.now()}.pdf"`);
+    res.setHeader("Content-Disposition", `inline; filename="Listagem_Hemo_${dataHoje}.pdf"`);
     res.status(200).send(Buffer.from(finalPdf));
 
   } catch (err) {

@@ -12,7 +12,8 @@ const TEMPLATES = {
   global: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/hemodialysis_list_global_template.xlsx",
   veiculos: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/hemodialysis_list_veícs_template.xlsx",
   formacao: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/formation_template.xlsx",
-  fleet_cards: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/fleet_cards_template.xlsx"
+  fleet_cards: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/fleet_cards_template.xlsx",
+  equipment_request: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/request_equipment_template.xlsx"
 };
 const fitCell = (cell) => {
   cell.alignment = {vertical: 'middle', horizontal: 'left', wrapText: true};
@@ -98,6 +99,37 @@ export default async function handler(req, res) {
       const dataHoje = new Date().toLocaleDateString('pt-PT').replace(/\//g, '-');
       res.setHeader("Content-Type", "application/pdf");
       res.setHeader("Content-Disposition", `inline; filename="Cartoes_Frota_${dataHoje}.pdf"`);
+      return res.status(200).send(Buffer.from(finalPdf));
+    }
+
+    // ===== EQUIPMENT REQUEST =====
+    if (type === "equipment_request") {
+      const tplRes = await fetch(TEMPLATES.equipment_request);
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.load(await tplRes.arrayBuffer());
+      const ws = workbook.worksheets[0];
+      ws.pageSetup = {paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0};
+      const cName     = ws.getCell("F16");
+      const cCC       = ws.getCell("B18");
+      const cContact  = ws.getCell("G18");
+      const cEquip    = ws.getCell("B22");
+      const cPreview  = ws.getCell("F30");
+      const cDelivery = ws.getCell("H38");
+      cName.value     = data.requesting_name      || "";
+      cCC.value       = data.requesting_cc        || "";
+      cContact.value  = data.requesting_contact   || "";
+      cEquip.value    = data.requesting_equipment || "";
+      cPreview.value  = data.preview_return_date  || "";
+      cDelivery.value = data.delivery_date        || "";
+      [cName, cCC, cContact, cEquip, cPreview, cDelivery].forEach(fitCellTemplate);
+      const pdfBuf = await workbookToPdfBuffer(workbook, "equipment_request");
+      const doc = await PDFDocument.load(pdfBuf);
+      const pages = await mergedPdf.copyPages(doc, doc.getPageIndices());
+      pages.forEach(p => mergedPdf.addPage(p));
+      const finalPdf = await mergedPdf.save();
+      const dataHoje = new Date().toLocaleDateString('pt-PT').replace(/\//g, '-');
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `inline; filename="Requisicao_Equipamento_${dataHoje}.pdf"`);
       return res.status(200).send(Buffer.from(finalPdf));
     }
 

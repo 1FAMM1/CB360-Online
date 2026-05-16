@@ -17,6 +17,9 @@ const TEMPLATES = {
 const fitCell = (cell) => {
   cell.alignment = {vertical: 'middle', horizontal: 'left', wrapText: true};
 };
+const fitCellTemplate = (cell) => {
+  cell.alignment = {vertical: 'middle', wrapText: true};
+};
 async function workbookToPdfBuffer(workbook, prefix = "doc") {
   const tempDir = os.tmpdir();
   const inputFilePath = path.join(tempDir, `${prefix}_${Date.now()}.xlsx`);
@@ -79,13 +82,13 @@ export default async function handler(req, res) {
         const r = 13 + i;
         const cVehicle = ws.getCell(`C${r}`);
         const cRegist  = ws.getCell(`F${r}`);
-        const cCode    = ws.getCell(`I${r}`);
-        const cContact = ws.getCell(`L${r}`);
+        const cContact = ws.getCell(`I${r}`);
+        const cCode    = ws.getCell(`L${r}`);
         cVehicle.value = item.vehicle      || "";
         cRegist.value  = item.registration || "";
-        cCode.value    = item.card_code    || "";
         cContact.value = item.contact      || "";
-        [cVehicle, cRegist, cCode, cContact].forEach(fitCell);
+        cCode.value    = item.card_code    || "";
+        [cVehicle, cRegist, cContact, cCode].forEach(fitCellTemplate);
       });
       const pdfBuf = await workbookToPdfBuffer(workbook, "fleet_cards");
       const doc = await PDFDocument.load(pdfBuf);

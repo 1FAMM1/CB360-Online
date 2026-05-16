@@ -121,7 +121,7 @@ export default async function handler(req, res) {
       cEquip.value    = data.requesting_equipment || "";
       cPreview.value  = data.preview_return_date  || "";
       cDelivery.value = data.delivery_date        || "";
-      [cName, cCC, cContact, cEquip, cPreview, cDelivery].forEach(fitCellTemplate);
+      [cName, cCC, cContact, cEquip, cPreview, cDelivery].forEach(fitCell);
       const pdfBuf = await workbookToPdfBuffer(workbook, "equipment_request");
       const doc = await PDFDocument.load(pdfBuf);
       const pages = await mergedPdf.copyPages(doc, doc.getPageIndices());

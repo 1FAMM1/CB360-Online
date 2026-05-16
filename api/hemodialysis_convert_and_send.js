@@ -109,7 +109,7 @@ export default async function handler(req, res) {
       await workbook.xlsx.load(await tplRes.arrayBuffer());
       const ws = workbook.worksheets[0];
       ws.pageSetup = {paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0};
-      const cName     = ws.getCell("V12");
+      const cName     = ws.getCell("W12");
       const cCC       = ws.getCell("B14");
       const cContact  = ws.getCell("Z14");
       const cEquip    = ws.getCell("B18");

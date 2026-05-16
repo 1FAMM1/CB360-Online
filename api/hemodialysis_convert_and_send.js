@@ -1,4 +1,4 @@
-    import ExcelJS from "exceljs";
+import ExcelJS from "exceljs";
 import fetch from "node-fetch";
 import fs from "fs";
 import os from "os";
@@ -11,7 +11,8 @@ const TEMPLATES = {
   saloc: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/hemodialysis_list_saloc_template.xlsx",
   global: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/hemodialysis_list_global_template.xlsx",
   veiculos: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/hemodialysis_list_veícs_template.xlsx",
-  formacao: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/formation_template.xlsx"
+  formacao: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/formation_template.xlsx",
+  fleet_cards: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/fleet_cards_template.xlsx"
 };
 const fitCell = (cell) => {
   cell.alignment = {vertical: 'middle', horizontal: 'left', wrapText: true};
@@ -51,7 +52,7 @@ export default async function handler(req, res) {
     const {PDFDocument} = await import("pdf-lib");
     const mergedPdf = await PDFDocument.create();
 
-    // ===== FORMAÇÃO - apenas conversão, sem preenchimento =====
+    // ===== FORMAÇÃO =====
     if (type === "formacao") {
       const tplRes = await fetch(TEMPLATES.formacao);
       const workbook = new ExcelJS.Workbook();
@@ -64,6 +65,36 @@ export default async function handler(req, res) {
       const dataHoje = new Date().toLocaleDateString('pt-PT').replace(/\//g, '-');
       res.setHeader("Content-Type", "application/pdf");
       res.setHeader("Content-Disposition", `inline; filename="Formulario_Formacao_${dataHoje}.pdf"`);
+      return res.status(200).send(Buffer.from(finalPdf));
+    }
+
+    // ===== FLEET CARDS =====
+    if (type === "fleet_cards") {
+      const tplRes = await fetch(TEMPLATES.fleet_cards);
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.load(await tplRes.arrayBuffer());
+      const ws = workbook.worksheets[0];
+      ws.pageSetup = {paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0};
+      data.forEach((item, i) => {
+        const r = 13 + i;
+        const cVehicle = ws.getCell(`C${r}`);
+        const cRegist  = ws.getCell(`F${r}`);
+        const cCode    = ws.getCell(`I${r}`);
+        const cContact = ws.getCell(`L${r}`);
+        cVehicle.value = item.vehicle      || "";
+        cRegist.value  = item.registration || "";
+        cCode.value    = item.card_code    || "";
+        cContact.value = item.contact      || "";
+        [cVehicle, cRegist, cCode, cContact].forEach(fitCell);
+      });
+      const pdfBuf = await workbookToPdfBuffer(workbook, "fleet_cards");
+      const doc = await PDFDocument.load(pdfBuf);
+      const pages = await mergedPdf.copyPages(doc, doc.getPageIndices());
+      pages.forEach(p => mergedPdf.addPage(p));
+      const finalPdf = await mergedPdf.save();
+      const dataHoje = new Date().toLocaleDateString('pt-PT').replace(/\//g, '-');
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `inline; filename="Cartoes_Frota_${dataHoje}.pdf"`);
       return res.status(200).send(Buffer.from(finalPdf));
     }
 

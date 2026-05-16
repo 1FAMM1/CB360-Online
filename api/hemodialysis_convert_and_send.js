@@ -109,12 +109,12 @@ export default async function handler(req, res) {
       await workbook.xlsx.load(await tplRes.arrayBuffer());
       const ws = workbook.worksheets[0];
       ws.pageSetup = {paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0};
-      const cName     = ws.getCell("F16");
-      const cCC       = ws.getCell("B18");
-      const cContact  = ws.getCell("G18");
-      const cEquip    = ws.getCell("B22");
-      const cPreview  = ws.getCell("F30");
-      const cDelivery = ws.getCell("H38");
+      const cName     = ws.getCell("V12");
+      const cCC       = ws.getCell("B14");
+      const cContact  = ws.getCell("Y14");
+      const cEquip    = ws.getCell("B18");
+      const cPreview  = ws.getCell("AU26");
+      const cDelivery = ws.getCell("P26");
       cName.value     = data.requesting_name      || "";
       cCC.value       = data.requesting_cc        || "";
       cContact.value  = data.requesting_contact   || "";

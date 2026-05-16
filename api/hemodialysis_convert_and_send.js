@@ -103,35 +103,41 @@ export default async function handler(req, res) {
     }
 
     // ===== EQUIPMENT REQUEST =====
-    if (type === "equipment_request") {
-      const tplRes = await fetch(TEMPLATES.equipment_request);
-      const workbook = new ExcelJS.Workbook();
-      await workbook.xlsx.load(await tplRes.arrayBuffer());
-      const ws = workbook.worksheets[0];
-      ws.pageSetup = {paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0};
-      const cName     = ws.getCell("W12");
-      const cCC       = ws.getCell("B14");
-      const cContact  = ws.getCell("Z14");
-      const cEquip    = ws.getCell("B18");
-      const cPreview  = ws.getCell("AV26");
-      const cDelivery = ws.getCell("Q26");
-      cName.value     = data.requesting_name      || "";
-      cCC.value       = data.requesting_cc        || "";
-      cContact.value  = data.requesting_contact   || "";
-      cEquip.value    = data.requesting_equipment || "";
-      cPreview.value  = data.preview_return_date  || "";
-      cDelivery.value = data.delivery_date        || "";
-      [cName, cCC, cContact, cEquip, cPreview, cDelivery].forEach(fitCell);
-      const pdfBuf = await workbookToPdfBuffer(workbook, "equipment_request");
-      const doc = await PDFDocument.load(pdfBuf);
-      const pages = await mergedPdf.copyPages(doc, doc.getPageIndices());
-      pages.forEach(p => mergedPdf.addPage(p));
-      const finalPdf = await mergedPdf.save();
-      const dataHoje = new Date().toLocaleDateString('pt-PT').replace(/\//g, '-');
-      res.setHeader("Content-Type", "application/pdf");
-      res.setHeader("Content-Disposition", `inline; filename="Requisicao_Equipamento_${dataHoje}.pdf"`);
-      return res.status(200).send(Buffer.from(finalPdf));
-    }
+if (type === "equipment_request") {
+  const formatDate = (d) => {
+    if (!d) return "";
+    const [y, m, day] = d.split("-");
+    return `${day}/${m}/${y}`;
+  };
+
+  const tplRes = await fetch(TEMPLATES.equipment_request);
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(await tplRes.arrayBuffer());
+  const ws = workbook.worksheets[0];
+  ws.pageSetup = {paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0};
+  const cName     = ws.getCell("W12");
+  const cCC       = ws.getCell("B14");
+  const cContact  = ws.getCell("Z14");
+  const cEquip    = ws.getCell("B18");
+  const cPreview  = ws.getCell("AV26");
+  const cDelivery = ws.getCell("Q26");
+  cName.value     = data.requesting_name               || "";
+  cCC.value       = data.requesting_cc                 || "";
+  cContact.value  = data.requesting_contact            || "";
+  cEquip.value    = data.requesting_equipment          || "";
+  cPreview.value  = formatDate(data.preview_return_date);
+  cDelivery.value = formatDate(data.delivery_date);
+  [cName, cCC, cContact, cEquip, cPreview, cDelivery].forEach(fitCell);
+  const pdfBuf = await workbookToPdfBuffer(workbook, "equipment_request");
+  const doc = await PDFDocument.load(pdfBuf);
+  const pages = await mergedPdf.copyPages(doc, doc.getPageIndices());
+  pages.forEach(p => mergedPdf.addPage(p));
+  const finalPdf = await mergedPdf.save();
+  const dataHoje = new Date().toLocaleDateString('pt-PT').replace(/\//g, '-');
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `inline; filename="Requisicao_Equipamento_${dataHoje}.pdf"`);
+  return res.status(200).send(Buffer.from(finalPdf));
+}
 
     // ===== HEMODIÁLISES =====
     const sqx = data.filter(u => (u.utent_shift_days || "").toUpperCase() === "SQX");

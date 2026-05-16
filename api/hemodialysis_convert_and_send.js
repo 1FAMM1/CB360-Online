@@ -18,7 +18,7 @@ const fitCell = (cell) => {
   cell.alignment = {vertical: 'middle', horizontal: 'left', wrapText: true};
 };
 const fitCellTemplate = (cell) => {
-  cell.alignment = {vertical: 'middle', wrapText: true};
+  cell.alignment = {vertical: 'middle', horizontal: 'center', wrapText: true};
 };
 async function workbookToPdfBuffer(workbook, prefix = "doc") {
   const tempDir = os.tmpdir();

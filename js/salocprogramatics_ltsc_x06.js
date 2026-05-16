@@ -3452,6 +3452,490 @@
         });
       }
     });
+    /* ===== EQUIPMENT REQUEST INIT ===== */
+    document.querySelector('.sidebar-sub-submenu-button[data-page="page-material-request"]')?.addEventListener("click", () => {
+      equipmentRequestEditId = null;
+      document.getElementById("equipment-request-save").innerHTML = "💾 GRAVAR";
+      ["requesting_name", "requesting_cc", "requesting_cc_secur", "requesting_contact", "requesting_equipment", "autoryzed_by", "optel", "return_status"]
+        .forEach(id => document.getElementById(id).value = "");
+      setTimeout(() => {
+        ["delivery_date", "return_estimate", "return_date"]
+          .forEach(id => document.getElementById(id).value = "");
+      }, 50);
+      loadEquipmentRequestTable();
+      document.getElementById("equipment-request-emit").disabled = true;
+      document.getElementById("equipment-request-emit").style.opacity = "0.4";
+      document.getElementById("equipment-request-emit").style.cursor = "not-allowed";
+      document.getElementById("equipment-request-emit").style.filter = "grayscale(60%)";
+    });
+    /* ===== LOAD EQUIPMENT REQUEST ===== */
+    async function loadEquipmentRequestTable() {
+      const tbody = document.getElementById("equipment-request-tbody");
+      if (!tbody) return;
+      tbody.style.opacity = "0.5";
+      try {
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/equipment_request?corp_opr_nr=eq.${corpOperNr}&order=created_at.desc`, {
+            headers: getSupabaseHeaders()
+          }
+        );
+        if (!response.ok) throw new Error("Erro ao carregar requisições");
+        const data = await response.json();
+        tbody.style.opacity = "1";
+        if (!data.length) {
+          tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:8px;font-size:12px;color:#999;">Sem registos</td></tr>`;
+          return;
+        }
+        const tdStyle = `padding:5px;border:1px solid #ccc;font-size:12px;text-align:center;`;
+        tbody.innerHTML = "";
+        data.forEach(item => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td style="${tdStyle} font-weight:bold;">${item.requesting_name || ""}</td>
+            <td style="${tdStyle}">${item.requesting_cc || ""}</td>
+            <td style="${tdStyle}">${item.requesting_contact || ""}</td>
+            <td style="${tdStyle}">${item.requesting_equipment || ""}</td>
+            <td style="${tdStyle}">${item.delivery_date || ""}</td>
+            <td style="${tdStyle}">${item.preview_return_date || ""}</td>
+            <td style="${tdStyle}">${item.autotized_by || ""}</td>
+            <td style="${tdStyle}">${item.status || ""}</td>
+            <td style="${tdStyle}">
+              <button onclick="equipmentRequestEdit(${item.id})" style="background:#1e3a8a;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;margin-right:3px;">✏️</button>
+              <button onclick="equipmentRequestDelete(${item.id})" style="background:#dc2626;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;">🗑️</button>
+            </td>
+          `;
+          tr.addEventListener("mouseover", () => tr.style.background = "#c8d8f5");
+          tr.addEventListener("mouseout",  () => tr.style.background = "");
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        tbody.style.opacity = "1";
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:8px;font-size:12px;color:red;">Erro ao carregar dados.</td></tr>`;
+        console.error("Erro ao carregar requisições:", err);
+      }
+    }
+    /* ===== EDIT EQUIPMENT REQUEST ===== */
+    async function equipmentRequestEdit(id) {
+      try {
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/equipment_request?id=eq.${id}&corp_opr_nr=eq.${corpOperNr}&select=*`, {
+            headers: getSupabaseHeaders()
+          }
+        );
+        if (!response.ok) throw new Error("Erro ao carregar registo");
+        const data = await response.json();
+        if (!data.length) return;
+        const item = data[0];
+        const cc_parts = (item.requesting_cc || "").split("-");
+        document.getElementById("requesting_name").value = item.requesting_name || "";
+        document.getElementById("requesting_cc").value = cc_parts[0] || "";
+        document.getElementById("requesting_cc_secur").value = cc_parts[1] || "";
+        document.getElementById("requesting_contact").value = item.requesting_contact || "";
+        document.getElementById("requesting_equipment").value = item.requesting_equipment || "";
+        document.getElementById("delivery_date").value = item.delivery_date || "";
+        document.getElementById("return_estimate").value = item.preview_return_date || "";
+        document.getElementById("autoryzed_by").value = item.autotized_by || "";
+        document.getElementById("optel").value = item.optel || "";
+        document.getElementById("return_date").value = item.return_date || "";
+        document.getElementById("return_status").value = item.status || "";
+        equipmentRequestEditId = id;
+        document.getElementById("equipment-request-save").innerHTML = "💾 ATUALIZAR";
+        document.getElementById("requesting_name").focus();
+      } catch (err) {
+        console.error("Erro ao editar requisição:", err);
+        showPopup("popup-danger", "Erro ao carregar dados: " + err.message);
+      }
+    }
+    document.getElementById("return_date")?.addEventListener("change", () => {
+      const returnDate = document.getElementById("return_date").value;
+      document.getElementById("return_status").value = returnDate ? "Devolvido" : "Por Devolver";
+    });
+    /* ===== DELETE EQUIPMENT REQUEST ===== */
+    async function equipmentRequestDelete(id) {
+      if (!confirm("Tem a certeza que pretende eliminar esta requisição?")) return;
+      try {
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/equipment_request?id=eq.${id}&corp_opr_nr=eq.${corpOperNr}`, {
+            method: "DELETE",
+            headers: getSupabaseHeaders()
+          }
+        );
+        if (!response.ok) throw new Error("Erro ao eliminar requisição");
+        showPopup("popup-success", "Requisição eliminada com sucesso!");
+        loadEquipmentRequestTable();
+      } catch (err) {
+        console.error("Erro ao eliminar requisição:", err);
+        showPopup("popup-danger", "Erro ao eliminar: " + err.message);
+      }
+    }
+    /* ===== SAVE EQUIPMENT REQUEST ===== */
+    let equipmentRequestEditId = null;
+    async function equipmentRequestSave() {
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const requesting_name = document.getElementById("requesting_name").value.trim();
+      const cc = document.getElementById("requesting_cc").value.trim();
+      const cc_secur = document.getElementById("requesting_cc_secur").value.trim();
+      const requesting_cc = cc_secur ? `${cc}-${cc_secur}` : cc;
+      const requesting_contact = document.getElementById("requesting_contact").value.trim();
+      const requesting_equipment = document.getElementById("requesting_equipment").value.trim();
+      const delivery_date = document.getElementById("delivery_date").value || null;
+      const preview_return_date = document.getElementById("return_estimate").value || null;
+      const autotized_by = document.getElementById("autoryzed_by").value.trim();
+      const optel = document.getElementById("optel").value.trim();
+      const return_date = document.getElementById("return_date").value || null;
+      const status = document.getElementById("return_status").value.trim() || (!return_date ? "Por Devolver" : "");
+      if (!requesting_name) {showPopup("popup-danger", "O Nome do Requisitante é obrigatório.");return;}
+      if (!requesting_cc) {showPopup("popup-danger", "O BI/CC/Passaporte é obrigatório.");return;}
+      if (!requesting_contact) {showPopup("popup-danger", "O Contacto é obrigatório."); return;}
+      if (!requesting_equipment) {showPopup("popup-danger", "Indique o(s) Equipamento(s) Requisitado(s)."); return;}
+      if (!delivery_date) {showPopup("popup-danger", "A Data de Entrega é obrigatória."); return;}
+      if (!preview_return_date) {showPopup("popup-danger", "A Previsão de Devolução é obrigatória."); return;}
+      if (!autotized_by) {showPopup("popup-danger", "O campo Autorizado Por é obrigatório."); return;}
+      if (!optel) {showPopup("popup-danger", "O campo OPTEL é obrigatório."); return;}
+      const saveBtn = document.getElementById("equipment-request-save");
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = "A guardar...";
+      const payload = {requesting_name, requesting_cc, requesting_contact, requesting_equipment, delivery_date, preview_return_date, autotized_by, optel, return_date, status};
+      try {
+        let response;
+        if (equipmentRequestEditId !== null) {
+          response = await fetch(
+            `${SUPABASE_URL}/rest/v1/equipment_request?id=eq.${equipmentRequestEditId}&corp_opr_nr=eq.${corpOperNr}`, {
+              method: "PATCH",
+              headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
+              body: JSON.stringify(payload)
+            }
+          );
+          if (!response.ok) throw new Error("Erro ao atualizar: " + await response.text());
+          showPopup("popup-success", "Requisição atualizada com sucesso!");
+          document.getElementById("equipment-request-emit").disabled = false;
+          document.getElementById("equipment-request-emit").style.opacity = "";
+          document.getElementById("equipment-request-emit").style.cursor = "";
+          document.getElementById("equipment-request-emit").style.filter = "";
+          equipmentRequestEditId = null;
+        } else {
+          response = await fetch(`${SUPABASE_URL}/rest/v1/equipment_request`, {
+            method: "POST",
+            headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
+            body: JSON.stringify({...payload, corp_opr_nr: corpOperNr})
+          });
+          if (!response.ok) throw new Error("Erro ao guardar: " + await response.text());
+          showPopup("popup-success", "Requisição gravada com sucesso!");
+          document.getElementById("equipment-request-emit").disabled = false;
+          document.getElementById("equipment-request-emit").style.opacity = "";
+          document.getElementById("equipment-request-emit").style.cursor = "";
+          document.getElementById("equipment-request-emit").style.filter = "";
+        }
+        loadEquipmentRequestTable();
+      } catch (err) {
+        console.error("Erro ao guardar requisição:", err);
+        showPopup("popup-danger", "Erro ao guardar: " + err.message);
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = "💾 GRAVAR";
+      }
+    }
+    document.getElementById("equipment-request-save")?.addEventListener("click", equipmentRequestSave);
+    /* ===== EMIT EQUIPMENT REQUEST ===== */
+    document.getElementById("equipment-request-emit")?.addEventListener("click", async () => {
+      const requesting_name = document.getElementById("requesting_name").value.trim();
+      const cc = document.getElementById("requesting_cc").value.trim();
+      const cc_secur = document.getElementById("requesting_cc_secur").value.trim();
+      const requesting_cc = cc_secur ? `${cc}-${cc_secur}` : cc;
+      const requesting_contact = document.getElementById("requesting_contact").value.trim();
+      const requesting_equipment = document.getElementById("requesting_equipment").value.trim();
+      const delivery_date = document.getElementById("delivery_date").value || "";
+      const preview_return_date = document.getElementById("return_estimate").value || "";
+      if (!requesting_name || !requesting_equipment) {
+        showPopup("popup-danger", "Preencha pelo menos o Nome e o(s) Equipamento(s).");
+        return;
+      }
+      try {
+        showLoadingPopup("🔄 A preparar requisição...");
+        const res = await fetch("https://cb360-online.vercel.app/api/hemodialysis_convert_and_send", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            type: "equipment_request",
+            data: {requesting_name, requesting_cc, requesting_contact, requesting_equipment, delivery_date, preview_return_date}
+          })
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        hideLoadingPopup();
+        ["requesting_name", "requesting_cc", "requesting_cc_secur", "requesting_contact", "requesting_equipment", "delivery_date", "return_estimate", "autoryzed_by", "optel", "return_date", "return_status"]
+          .forEach(id => document.getElementById(id).value = "");
+        equipmentRequestEditId = null;
+        document.getElementById("equipment-request-save").innerHTML = "💾 GRAVAR";
+        document.getElementById("equipment-request-emit").disabled = true;
+        document.getElementById("equipment-request-emit").style.opacity = "0.4";
+        document.getElementById("equipment-request-emit").style.cursor = "not-allowed";
+        document.getElementById("equipment-request-emit").style.filter = "grayscale(60%)";
+        document.getElementById('various-pdf-modal')?.remove();
+        _variousInjectStyles();
+        const overlay = document.createElement('div');
+        overlay.id = 'various-pdf-modal';
+        Object.assign(overlay.style, {position: 'fixed', inset: '0', background: 'rgba(10,8,8,0.78)', zIndex: '9999', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)'});
+        const box = document.createElement('div');
+        box.className = 'various-box';
+        Object.assign(box.style, {background: '#f8f8f8', borderRadius: '14px', width: '82vw', height: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 28px 72px rgba(0,0,0,0.45)', overflow: 'hidden'});
+        const header = document.createElement('div');
+        header.className = 'various-header';
+        header.innerHTML = `
+          <div style="display:flex;align-items:center;gap:10px;flex:1;position:relative;z-index:1;">
+            <div style="color:#fff;font-weight:700;font-size:13px;">📋 Requisição de Equipamento</div>
+          </div>
+          <div style="display:flex;gap:5px;position:relative;z-index:1;">
+            <button class="various-btn" id="various-pdf-fullscreen" title="Ecrã inteiro">⛶</button>
+            <button class="various-btn various-close-btn" id="various-pdf-close" title="Fechar">✕</button>
+          </div>
+        `;
+        const content = document.createElement('div');
+        Object.assign(content.style, {flex: '1', position: 'relative', overflow: 'hidden', background: '#fff'});
+        const iframe = document.createElement('iframe');
+        Object.assign(iframe.style, {position: 'absolute', inset: '0', width: '100%', height: '100%', border: 'none'});
+        iframe.src = url;
+        content.appendChild(iframe);
+        const footer = document.createElement('div');
+        footer.className = 'various-footer';
+        footer.innerHTML = `
+          <div class="various-footer-info">Documento gerado com sucesso</div>
+            <button class="various-print-btn" id="various-pdf-print">🖨️ Imprimir</button>
+          `;
+        box.append(header, content, footer);
+        overlay.appendChild(box);
+        document.body.appendChild(overlay);
+        let isFs = false;
+        document.getElementById("various-pdf-fullscreen").onclick = () => {
+          isFs = !isFs;
+          Object.assign(box.style, {width: isFs ? '100vw' : '82vw', height: isFs ? '100vh' : '90vh', borderRadius: isFs ? '0' : '14px'});
+        };
+        document.getElementById("various-pdf-close").onclick = () => {URL.revokeObjectURL(url); overlay.remove();};
+        document.getElementById("various-pdf-print").onclick = () => {iframe.contentWindow.focus(); iframe.contentWindow.print();};
+        overlay.addEventListener('click', e => {if (e.target === overlay) overlay.remove();});
+      } catch (err) {
+        hideLoadingPopup();
+        console.error("Erro:", err);
+        showPopup("popup-danger", err.message);
+      }
+    });
+    /* ===== FLEET CARDS INIT ===== */
+    document.querySelector('.sidebar-sub-submenu-button[data-page="page-fleet-cards"]')?.addEventListener("click", () => {
+      fleetEditId = null;
+      document.getElementById("card-fleet-save").innerHTML = "💾 GRAVAR";
+      ["veíc_card_name", "veíc_card_register", "veíc_card_code", "veíc_card_contact"]
+        .forEach(id => document.getElementById(id).value = "");
+      loadFleetCardsTable();
+    });
+    /* ===== LOAD, ADD, EDIT, REMOVE FLEET CARDS ===== */
+    let fleetEditId = null;
+    async function loadFleetCardsTable() {
+      const tbody = document.getElementById("fleet-cards-tbody");
+      if (!tbody) return;
+      tbody.style.opacity = "0.5";
+      try {
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/fleet_cards?corp_oper_nr=eq.${corpOperNr}&order=vehicle.asc`, {
+            headers: getSupabaseHeaders()
+          }
+        );
+        if (!response.ok) throw new Error("Erro ao carregar cartões frota");
+        const data = await response.json();
+        tbody.style.opacity = "1";
+        if (!data.length) {
+          tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:8px;font-size:12px;color:#999;">Sem registos</td></tr>`;
+          return;
+        }
+        const tdStyle = `padding:5px;border:1px solid #ccc;font-size:13px; text-align: center;`;
+        tbody.innerHTML = "";
+        data.forEach(item => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td style="${tdStyle} font-weight:bold;">${item.vehicle || ""}</td>
+            <td style="${tdStyle}">${item.registration || ""}</td>
+            <td style="${tdStyle}">${item.card_code || ""}</td>
+            <td style="${tdStyle}">${item.contact || ""}</td>
+            <td style="${tdStyle} text-align:center;">
+              <button onclick="fleetCardEdit(${item.id})" style="background:#1e3a8a;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;margin-right:3px;">✏️</button>
+              <button onclick="fleetCardDelete(${item.id})" style="background:#dc2626;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;">🗑️</button>
+            </td>
+          `;
+          tr.addEventListener("mouseover", () => tr.style.background = "#c8d8f5");
+          tr.addEventListener("mouseout",  () => tr.style.background = "");
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        tbody.style.opacity = "1";
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:8px;font-size:12px;color:red;">Erro ao carregar dados.</td></tr>`;
+        console.error("Erro ao carregar cartões frota:", err);
+      }
+    }
+    async function fleetCardEdit(id) {
+      try {
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/fleet_cards?id=eq.${id}&corp_oper_nr=eq.${corpOperNr}&select=*`, {
+            headers: getSupabaseHeaders()
+          }
+        );
+        if (!response.ok) throw new Error("Erro ao carregar registo");
+        const data = await response.json();
+        if (!data.length) return;
+        const item = data[0];
+        document.getElementById("veíc_card_name").value = item.vehicle || "";
+        document.getElementById("veíc_card_register").value = item.registration || "";
+        document.getElementById("veíc_card_code").value = item.card_code || "";
+        document.getElementById("veíc_card_contact").value = item.contact || "";
+        fleetEditId = id;
+        document.getElementById("card-fleet-save").innerHTML = "💾 ATUALIZAR";
+        document.getElementById("veíc_card_name").focus();
+      } catch (err) {
+        console.error("Erro ao editar cartão frota:", err);
+        showPopup("popup-danger", "Erro ao carregar dados: " + err.message);
+      }
+    }
+    async function fleetCardDelete(id) {
+      if (!confirm("Tem a certeza que pretende eliminar este registo?")) return;
+      try {
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/fleet_cards?id=eq.${id}&corp_oper_nr=eq.${corpOperNr}`, {
+            method: "DELETE",
+            headers: getSupabaseHeaders()
+          }
+        );
+        if (!response.ok) throw new Error("Erro ao eliminar registo");
+        showPopup("popup-success", "Registo eliminado com sucesso!");
+        loadFleetCardsTable();
+      } catch (err) {
+        console.error("Erro ao eliminar cartão frota:", err);
+        showPopup("popup-danger", "Erro ao eliminar: " + err.message);
+      }
+    }
+    async function fleetCardSave() {
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const vehicle = document.getElementById("veíc_card_name").value.trim();
+      const registration = document.getElementById("veíc_card_register").value.trim();
+      const card_code = document.getElementById("veíc_card_code").value.trim();
+      const contact = document.getElementById("veíc_card_contact").value.trim();
+      if (!vehicle || !registration) {
+        showPopup("popup-danger", "Preencha pelo menos o Veículo e a Matrícula.");
+        return;
+      }
+      const saveBtn = document.getElementById("card-fleet-save");
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = "A guardar...";
+      const payload = {vehicle, registration, card_code, contact};
+      try {
+        let response;
+        if (fleetEditId !== null) {
+          response = await fetch(
+            `${SUPABASE_URL}/rest/v1/fleet_cards?id=eq.${fleetEditId}&corp_oper_nr=eq.${corpOperNr}`, {
+              method: "PATCH",
+              headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
+              body: JSON.stringify(payload)
+            }
+          );
+          if (!response.ok) throw new Error("Erro ao atualizar: " + await response.text());
+          showPopup("popup-success", "Registo atualizado com sucesso!");
+          fleetEditId = null;
+        } else {
+          response = await fetch(`${SUPABASE_URL}/rest/v1/fleet_cards`, {
+            method: "POST",
+            headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
+            body: JSON.stringify({...payload, corp_oper_nr: corpOperNr})
+          });
+          if (!response.ok) throw new Error("Erro ao guardar: " + await response.text());
+          showPopup("popup-success", "Registo guardado com sucesso!");
+        }
+        ["veíc_card_name", "veíc_card_register", "veíc_card_code", "veíc_card_contact"]
+          .forEach(id => document.getElementById(id).value = "");
+        loadFleetCardsTable();
+      } catch (err) {
+        console.error("Erro ao guardar cartão frota:", err);
+        showPopup("popup-danger", "Erro ao guardar: " + err.message);
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = "💾 GRAVAR";
+      }
+    }
+    /* ===== DOM FLEET CARDS ===== */
+    document.getElementById("card-fleet-save")?.addEventListener("click", fleetCardSave);
+    
+    
+    document.getElementById("card-fleet-emit")?.addEventListener("click", async () => {
+      try {
+        showLoadingPopup("🔄 A preparar listagem...");
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/fleet_cards?corp_oper_nr=eq.${corpOperNr}&order=vehicle.asc`, {
+            headers: getSupabaseHeaders()
+          }
+        );
+        const data = await response.json();
+        updateLoadingPopup("📊 A gerar PDF...");
+        const res = await fetch("https://cb360-online.vercel.app/api/hemodialysis_convert_and_send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: "fleet_cards", data })
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        hideLoadingPopup();
+        document.getElementById('various-pdf-modal')?.remove();
+        _variousInjectStyles();
+        const overlay = document.createElement('div');
+        overlay.id = 'various-pdf-modal';
+        Object.assign(overlay.style, { position: 'fixed', inset: '0', background: 'rgba(10,8,8,0.78)', zIndex: '9999', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' });
+        const box = document.createElement('div');
+        box.className = 'various-box';
+        Object.assign(box.style, { background: '#f8f8f8', borderRadius: '14px', width: '82vw', height: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 28px 72px rgba(0,0,0,0.45)', overflow: 'hidden' });
+        const header = document.createElement('div');
+        header.className = 'various-header';
+        header.innerHTML = `
+          <div style="display:flex;align-items:center;gap:10px;flex:1;position:relative;z-index:1;">
+            <div style="color:#fff;font-weight:700;font-size:13px;">📋 Cartões Frota</div>
+          </div>
+          <div style="display:flex;gap:5px;position:relative;z-index:1;">
+            <button class="various-btn" id="various-pdf-fullscreen" title="Ecrã inteiro">⛶</button>
+            <button class="various-btn various-close-btn" id="various-pdf-close" title="Fechar">✕</button>
+          </div>
+        `;
+        const content = document.createElement('div');
+        Object.assign(content.style, { flex: '1', position: 'relative', overflow: 'hidden', background: '#fff' });
+        const iframe = document.createElement('iframe');
+        Object.assign(iframe.style, { position: 'absolute', inset: '0', width: '100%', height: '100%', border: 'none' });
+        iframe.src = url;
+        content.appendChild(iframe);
+        const footer = document.createElement('div');
+        footer.className = 'various-footer';
+        footer.innerHTML = `
+          <div class="various-footer-info">Documento gerado com sucesso</div>
+          <button class="various-print-btn" id="various-pdf-print">🖨️ Imprimir</button>
+        `;
+        box.append(header, content, footer);
+        overlay.appendChild(box);
+        document.body.appendChild(overlay);
+        let isFs = false;
+        document.getElementById("various-pdf-fullscreen").onclick = () => {
+          isFs = !isFs;
+          Object.assign(box.style, { width: isFs ? '100vw' : '82vw', height: isFs ? '100vh' : '90vh', borderRadius: isFs ? '0' : '14px' });
+        };
+        document.getElementById("various-pdf-close").onclick = () => { URL.revokeObjectURL(url); overlay.remove(); };
+        document.getElementById("various-pdf-print").onclick = () => { iframe.contentWindow.focus(); iframe.contentWindow.print(); };
+        overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+      } catch (err) {
+        hideLoadingPopup();
+        console.error("Erro:", err);
+        showPopup('popup-danger', err.message);
+      }
+    });
     /* =======================================
     ALARM CONSOLE
     ======================================= */
@@ -3650,155 +4134,3 @@
         });
       });
     });
-
-
-
-
-
-
-
-
-
-
-
-/* ===== FLEET CARDS INIT ===== */
-    document.querySelector('.sidebar-sub-submenu-button[data-page="page-fleet-cards"]')?.addEventListener("click", () => {
-      fleetEditId = null;
-      document.getElementById("card-fleet-save").innerHTML = "💾 GRAVAR";
-      ["veíc_card_name", "veíc_card_register", "veíc_card_code", "veíc_card_contact"]
-        .forEach(id => document.getElementById(id).value = "");
-      loadFleetCardsTable();
-    });
-    /* ===== LOAD, ADD, EDIT, REMOVE FLEET CARDS ===== */
-    let fleetEditId = null;
-    async function loadFleetCardsTable() {
-      const tbody = document.getElementById("fleet-cards-tbody");
-      if (!tbody) return;
-      tbody.style.opacity = "0.5";
-      try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
-        const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/fleet_cards?corp_oper_nr=eq.${corpOperNr}&order=vehicle.asc`, {
-            headers: getSupabaseHeaders()
-          }
-        );
-        if (!response.ok) throw new Error("Erro ao carregar cartões frota");
-        const data = await response.json();
-        tbody.style.opacity = "1";
-        if (!data.length) {
-          tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:8px;font-size:12px;color:#999;">Sem registos</td></tr>`;
-          return;
-        }
-        const tdStyle = `padding:5px;border:1px solid #ccc;font-size:13px; text-align: center;`;
-        tbody.innerHTML = "";
-        data.forEach(item => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td style="${tdStyle} font-weight:bold;">${item.vehicle || ""}</td>
-            <td style="${tdStyle}">${item.registration || ""}</td>
-            <td style="${tdStyle}">${item.card_code || ""}</td>
-            <td style="${tdStyle}">${item.contact || ""}</td>
-            <td style="${tdStyle} text-align:center;">
-              <button onclick="fleetCardEdit(${item.id})" style="background:#1e3a8a;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;margin-right:3px;">✏️</button>
-              <button onclick="fleetCardDelete(${item.id})" style="background:#dc2626;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;">🗑️</button>
-            </td>
-          `;
-          tbody.appendChild(tr);
-        });
-      } catch (err) {
-        tbody.style.opacity = "1";
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:8px;font-size:12px;color:red;">Erro ao carregar dados.</td></tr>`;
-        console.error("Erro ao carregar cartões frota:", err);
-      }
-    }
-    async function fleetCardEdit(id) {
-      try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
-        const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/fleet_cards?id=eq.${id}&corp_oper_nr=eq.${corpOperNr}&select=*`, {
-            headers: getSupabaseHeaders()
-          }
-        );
-        if (!response.ok) throw new Error("Erro ao carregar registo");
-        const data = await response.json();
-        if (!data.length) return;
-        const item = data[0];
-        document.getElementById("veíc_card_name").value = item.vehicle || "";
-        document.getElementById("veíc_card_register").value = item.registration || "";
-        document.getElementById("veíc_card_code").value = item.card_code || "";
-        document.getElementById("veíc_card_contact").value = item.contact || "";
-        fleetEditId = id;
-        document.getElementById("card-fleet-save").innerHTML = "💾 ATUALIZAR";
-        document.getElementById("veíc_card_name").focus();
-      } catch (err) {
-        console.error("Erro ao editar cartão frota:", err);
-        showPopup("popup-danger", "Erro ao carregar dados: " + err.message);
-      }
-    }
-    async function fleetCardDelete(id) {
-      if (!confirm("Tem a certeza que pretende eliminar este registo?")) return;
-      try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
-        const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/fleet_cards?id=eq.${id}&corp_oper_nr=eq.${corpOperNr}`, {
-            method: "DELETE",
-            headers: getSupabaseHeaders()
-          }
-        );
-        if (!response.ok) throw new Error("Erro ao eliminar registo");
-        showPopup("popup-success", "Registo eliminado com sucesso!");
-        loadFleetCardsTable();
-      } catch (err) {
-        console.error("Erro ao eliminar cartão frota:", err);
-        showPopup("popup-danger", "Erro ao eliminar: " + err.message);
-      }
-    }
-    async function fleetCardSave() {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
-      const vehicle = document.getElementById("veíc_card_name").value.trim();
-      const registration = document.getElementById("veíc_card_register").value.trim();
-      const card_code = document.getElementById("veíc_card_code").value.trim();
-      const contact = document.getElementById("veíc_card_contact").value.trim();
-      if (!vehicle || !registration) {
-        showPopup("popup-danger", "Preencha pelo menos o Veículo e a Matrícula.");
-        return;
-      }
-      const saveBtn = document.getElementById("card-fleet-save");
-      saveBtn.disabled = true;
-      saveBtn.innerHTML = "A guardar...";
-      const payload = {vehicle, registration, card_code, contact};
-      try {
-        let response;
-        if (fleetEditId !== null) {
-          response = await fetch(
-            `${SUPABASE_URL}/rest/v1/fleet_cards?id=eq.${fleetEditId}&corp_oper_nr=eq.${corpOperNr}`, {
-              method: "PATCH",
-              headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
-              body: JSON.stringify(payload)
-            }
-          );
-          if (!response.ok) throw new Error("Erro ao atualizar: " + await response.text());
-          showPopup("popup-success", "Registo atualizado com sucesso!");
-          fleetEditId = null;
-        } else {
-          response = await fetch(`${SUPABASE_URL}/rest/v1/fleet_cards`, {
-            method: "POST",
-            headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
-            body: JSON.stringify({...payload, corp_oper_nr: corpOperNr})
-          });
-          if (!response.ok) throw new Error("Erro ao guardar: " + await response.text());
-          showPopup("popup-success", "Registo guardado com sucesso!");
-        }
-        ["veíc_card_name", "veíc_card_register", "veíc_card_code", "veíc_card_contact"]
-          .forEach(id => document.getElementById(id).value = "");
-        loadFleetCardsTable();
-      } catch (err) {
-        console.error("Erro ao guardar cartão frota:", err);
-        showPopup("popup-danger", "Erro ao guardar: " + err.message);
-      } finally {
-        saveBtn.disabled = false;
-        saveBtn.innerHTML = "💾 GRAVAR";
-      }
-    }
-    /* ===== DOM FLEET CARDS ===== */
-    document.getElementById("card-fleet-save")?.addEventListener("click", fleetCardSave);

@@ -44,7 +44,7 @@
         <body>
           <div class="email-container">
             <div class="email-header">
-              ${logoUrl ? `<img src="${logoUrl}" alt="Logótipo" class="brand-logo" />` : ''}
+              ${logoUrl ? `<img src="${logoUrl}" alt="Logótipo" class="brand-logo" height="100" style="height: 100px; max-height: 100px;" />` : ''}
               <h2>${corpName}</h2>
               <p>Mensagem Enviada via CB360 Online</p>
             </div>

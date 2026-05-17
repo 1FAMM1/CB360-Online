@@ -20,7 +20,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { to, subject, message } = req.body || {};
+    // ATUALIZADO: Extrai também o corpName enviado pelo Front-End
+    const { to, subject, message, corpName } = req.body || {};
 
     // Validação de dados essenciais
     if (!to || !subject || !message) {
@@ -30,13 +31,16 @@ export default async function handler(req, res) {
       });
     }
 
+    // Define o nome da corporação dinamicamente com Fallback de segurança
+    const finalCorpName = corpName || "Corpo de Bombeiros de Faro";
+
     // Configuração do Transportador do Nodemailer (usando o teu Gmail atual)
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: { user: GMAIL_EMAIL, pass: GMAIL_APP_PASSWORD }
     });        
 
-    // Envio do e-mail com o HTML corrigido para Vermelho
+    // Envio do e-mail com o HTML Vermelho e Corporação Dinâmica
     await transporter.sendMail({
       from: GMAIL_EMAIL,
       to: to,
@@ -46,7 +50,7 @@ export default async function handler(req, res) {
           <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #e2e8f0;">
             
             <div style="background: linear-gradient(135deg, #a70c0c 0%, #d81c1c 45%, #b91010 100%); color: #ffffff; padding: 20px; text-align: center; border-bottom: 1px solid rgba(0,0,0,0.1);">
-              <h2 style="margin: 0; font-size: 18px; font-weight: 600; letter-spacing: 0.5px;">Corpo de Bombeiros de Faro</h2>
+              <h2 style="margin: 0; font-size: 18px; font-weight: 600; letter-spacing: 0.5px;">${finalCorpName}</h2>
               <p style="margin: 5px 0 0 0; font-size: 12px; color: rgba(255,255,255,0.75);">Mensagem Enviada via Painel CB360 Online</p>
             </div>
 

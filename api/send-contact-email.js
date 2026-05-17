@@ -53,7 +53,7 @@
                 ${message}
               </div>
               <div class="signature-section">
-                <div class="signature-user">--<br>${senderName}</div>
+                <div class="signature-user">${senderName}</div>
                 <div class="signature-corp">CORPO DE BOMBEIROS DE FARO CRUZ LUSA</div>
                 <div class="signature-contacts">
                   Rua Comandante Francisco Manuel, 7 a 13 | 8000-250 Faro | Portugal<br>

@@ -36,22 +36,25 @@ export default async function handler(req, res) {
       auth: { user: GMAIL_EMAIL, pass: GMAIL_APP_PASSWORD }
     });        
 
-    // Envio do e-mail
+    // Envio do e-mail com o HTML corrigido para Vermelho
     await transporter.sendMail({
       from: GMAIL_EMAIL,
       to: to,
       subject: subject,
       html: `
-        <div style="font-family: 'Segoe UI', Arial, sans-serif; padding: 20px; color: #333; background-color: #f8fafc;">
-          <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #e2e8f0;">
-            <div style="background: linear-gradient(135deg, #1e3a8a 0%, #111827 100%); color: #ffffff; padding: 20px; text-align: center;">
+        <div style="font-family: 'Segoe UI', Arial, sans-serif; padding: 20px; color: #333; background-color: #f1f5f9;">
+          <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #e2e8f0;">
+            
+            <div style="background: linear-gradient(135deg, #a70c0c 0%, #d81c1c 45%, #b91010 100%); color: #ffffff; padding: 20px; text-align: center; border-bottom: 1px solid rgba(0,0,0,0.1);">
               <h2 style="margin: 0; font-size: 18px; font-weight: 600; letter-spacing: 0.5px;">Corpo de Bombeiros de Faro</h2>
-              <p style="margin: 5px 0 0 0; font-size: 12px; color: #93c5fd;">Mensagem Enviada via Painel CB360 Online</p>
+              <p style="margin: 5px 0 0 0; font-size: 12px; color: rgba(255,255,255,0.75);">Mensagem Enviada via Painel CB360 Online</p>
             </div>
-            <div style="padding: 24px; line-height: 1.6; font-size: 14px;">
+
+            <div style="padding: 24px; line-height: 1.6; font-size: 14px; color: #333;">
               ${message.replace(/\n/g, '<br>')}
             </div>
-            <div style="background: #f1f5f9; padding: 12px; text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #e2e8f0;">
+
+            <div style="background: #f8fafc; padding: 12px; text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #e2e8f0;">
               Por favor, não responda diretamente a este e-mail automático.
             </div>
           </div>

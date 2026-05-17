@@ -413,28 +413,35 @@
         const itemDiv = document.createElement("div");
         itemDiv.classList.add("options-main-card");
         itemDiv.innerHTML = `
-          <div class="data-value" style="font-size: 16px; font-weight: bold; margin-bottom: 12px; border-bottom: 1px solid #ddd; padding-bottom: 5px;">
-            ${cma.name}
+          <div class="data-value" style="font-size: 16px; font-weight: bold; margin-bottom: 12px; border-bottom: 1px solid #ddd; padding-bottom: 5px; display: flex;
+                                         justify-content: space-between; align-items: center;">
+            <span>${cma.name}</span>
+            <label style="position: relative; display: inline-block; width: 46px; height: 24px;">
+              <input type="checkbox" id="cma_toggle_${id}" style="opacity: 0; width: 0; height: 0;" onchange="toggleCMAFields('${id}', this.checked)">
+              <span style="position: absolute; cursor: pointer; inset: 0; background: #ff3b30; transition: .3s; border-radius: 24px;">
+                <span style="position: absolute; height: 18px; width: 18px; left: 3px; bottom: 3px; background: white; transition: .3s; border-radius: 50%;"></span>
+              </span>
+            </label>
           </div>
-          <div style="display: flex; gap: 15px; align-items: flex-start;">        
+          <div style="display: flex; gap: 15px; align-items: flex-start;">
             <div style="flex: 0 0 125px; background: #f9f9f9; padding: 5px; border-radius: 4px; border: 1px solid #ddd;">
-              <img id="cma_image_${id}" src="https://i.imgur.com/4Ho5HRV.png" alt="Foto CMA" style="object-fit: contain; width: 100%; height: 80px;">
+              <img id="cma_image_${id}" src="https://i.imgur.com/4Ho5HRV.png" alt="Foto CMA" style=" object-fit: contain; width: 100%; height: 80px;">
             </div>
-            <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">          
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
               <div style="display: flex; align-items: center;">
                 <label style="width: 90px; font-weight: bold; font-size: 11px; margin-bottom: 0;">AERONAVE:</label>
-                <input id="cma_aero_type_${id}" type="text" style="flex: 1; padding: 4px; border: 1px solid #ccc; border-radius: 3px; outline: none; font-size: 12px;">
+                <input id="cma_aero_type_${id}" type="text" disabled style=" flex: 1; padding: 4px; border: 1px solid #ccc; border-radius: 3px; outline: none; font-size: 12px; background: #f3f3f3; color: #999;">
               </div>
               <div style="display: flex; align-items: center;">
                 <label style="width: 90px; font-weight: bold; font-size: 11px; margin-bottom: 0;">TIPOLOGIA:</label>
-                <select id="cma_type_${id}" style="flex: 1; padding: 4px; border: 1px solid #ccc; border-radius: 3px; outline: none; font-size: 12px;"></select>
+                <select id="cma_type_${id}" disabled style="flex: 1; padding: 4px; border: 1px solid #ccc; border-radius: 3px; outline: none; font-size: 12px; background: #f3f3f3; color: #999;"></select>
               </div>
               <div style="display: flex; align-items: center;">
                 <label style="width: 90px; font-weight: bold; font-size: 11px; margin-bottom: 0;">AUTONOMIA:</label>
-                <input id="cma_auto_${id}" type="text" style="flex: 1; padding: 4px; border: 1px solid #ccc; border-radius: 3px; outline: none; font-size: 12px;">
+                <input id="cma_auto_${id}" type="text" disabled style="flex: 1; padding: 4px; border: 1px solid #ccc; border-radius: 3px; outline: none; font-size: 12px; background: #f3f3f3; color: #999;">
               </div>
             </div>
-          </div>
+          </div> 
         `;
         container.appendChild(itemDiv);
         const selectElement = document.getElementById(`cma_type_${id}`);

@@ -44,8 +44,7 @@ export default async function handler(req, res) {
         .email-body { padding: 35px 30px; line-height: 1.6; font-size: 14px; }
         .message-box { background-color: #f8fafc; border-left: 4px solid #d81c1c; padding: 20px; margin: 5px 0 25px 0; border-radius: 0 6px 6px 0; white-space: pre-line; color: #1e293b; font-size: 14.5px; }
         .signature-section { margin-top: 30px; border-top: 1px dashed #cbd5e1; padding-top: 15px; font-size: 13px; color: #475569; }
-        .signature-user { font-weight: bold; font-size: 14px; color: #1e293b; text-transform: uppercase; margin-bottom: 2px; }
-        .signature-role { color: #64748b; font-style: italic; margin-bottom: 12px; }
+        .signature-user { font-weight: bold; font-size: 14px; color: #1e293b; text-transform: uppercase; margin-bottom: 2px; }    
         .signature-corp { font-weight: bold; color: #d81c1c; font-size: 12px; text-transform: uppercase; margin-bottom: 2px; }
         .signature-contacts { color: #475569; font-size: 11.5px; }
         .eco-note { font-size: 11px; color: #16a34a; margin-top: 25px; line-height: 1.4; }
@@ -58,7 +57,7 @@ export default async function handler(req, res) {
         <div class="email-header">
           ${logoUrl ? `<img src="${logoUrl}" alt="Logótipo" class="brand-logo" />` : ''}
           <h2>${corpName}</h2>
-          <p>Mensagem Enviada via Painel CB360 Online</p>
+          <p>Mensagem Enviada via CB360 Online</p>
         </div>
         <div class="email-body">
           <div class="message-box">
@@ -66,7 +65,6 @@ export default async function handler(req, res) {
           </div>
           <div class="signature-section">
             <div class="signature-user">--<br>${senderName}</div>
-            <div class="signature-role">Operador do Sistema / Setor SGTD</div>
             <div class="signature-corp">CORPO DE BOMBEIROS DE FARO CRUZ LUSA</div>
             <div class="signature-contacts">
               Rua Comandante Francisco Manuel, 7 a 13 | 8000-250 Faro | Portugal<br>

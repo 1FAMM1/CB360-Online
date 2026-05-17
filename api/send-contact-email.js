@@ -14,14 +14,14 @@ export default async function handler(req, res) {
     return res.status(405).json({ success: false, error: 'Método não permitido' });
   }
 
-  // 1. CAPTURA O corpOperNr ENVIADO PELO FRONT-END
-  const { to, subject, message, corpOperNr, logoUrl } = req.body;
+  // Recebe todos os parâmetros estruturados vindos do Front-End
+  const { to, subject, message, corpOperNr, corpName, logoUrl } = req.body;
 
   if (!to || !subject || !message) {
     return res.status(400).json({ success: false, error: 'Campos obrigatórios em falta' });
   }
 
-  // 2. MONTA O NOME DO REMETENTE DINÂMICO (Ex: "CB360 Online - 0805")
+  // Define o formato limpo para quem visualiza a Inbox (ex: "CB360 Online - 0805")
   const senderDisplayName = `CB360 Online - ${corpOperNr || 'Corporação'}`;
 
   const transporter = nodemailer.createTransport({
@@ -32,7 +32,6 @@ export default async function handler(req, res) {
     },
   });
 
-  // TEMPLATE HTML (Alargado para 700px e sem a linha duplicada do Assunto)
   const htmlTemplate = `
     <!DOCTYPE html>
     <html>
@@ -40,13 +39,17 @@ export default async function handler(req, res) {
       <meta charset="utf-8">
       <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; background-color: #f3f4f6; color: #333333; }
-        .email-container { max-width: 1000px; margin: 25px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .email-container { max-width: 700px; margin: 25px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        
         .email-header { background: linear-gradient(135deg, #a70c0c 0%, #d81c1c 50%, #b91010 100%); padding: 30px 20px; text-align: center; color: #ffffff; }
         .brand-logo { max-height: 75px; width: auto; margin-bottom: 12px; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.2)); }
-        .email-header h2 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: 0.5px; }
+        
+        .email-header h2 { margin: 0; font-size: 19px; font-weight: 600; letter-spacing: 0.5px; line-height: 1.4; }
         .email-header p { margin: 6px 0 0 0; font-size: 13px; color: #fecaca; opacity: 0.9; }
+        
         .email-body { padding: 35px 30px; line-height: 1.6; font-size: 14px; }
         .message-box { background-color: #f8fafc; border-left: 4px solid #d81c1c; padding: 20px; margin: 5px 0; border-radius: 0 6px 6px 0; white-space: pre-line; color: #1e293b; font-size: 14.5px; }
+        
         .email-footer { background-color: #f9fafb; padding: 18px; text-align: center; font-size: 11px; color: #6b7280; border-top: 1px solid #f3f4f6; }
       </style>
     </head>
@@ -55,8 +58,8 @@ export default async function handler(req, res) {
         
         <div class="email-header">
           ${logoUrl ? `<img src="${logoUrl}" alt="Logótipo" class="brand-logo" />` : ''}
-          <h2>${senderDisplayName}</h2>
-          <p>Mensagem Enviada via CB360 Online</p>
+          <h2>${corpName}</h2>
+          <p>Mensagem Enviada via Painel CB360 Online</p>
         </div>
         
         <div class="email-body">
@@ -64,7 +67,7 @@ export default async function handler(req, res) {
             ${message}
           </div>
           <p style="font-size: 12px; color: #6b7280; margin-top: 30px; font-style: italic;">
-            Este é um e-mail automático enviado a partir de CB360 Online.
+            Este é um e-mail automático enviado a partir do módulo de listagem de contactos.
           </p>
         </div>
         
@@ -78,7 +81,7 @@ export default async function handler(req, res) {
   `;
 
   const mailOptions = {
-    // AQUI: Usa a nova variável formatada para o cabeçalho do remetente no e-mail
+    // Aqui aplica-se a máscara padrão na Inbox (ex: "CB360 Online - 0805")
     from: `"${senderDisplayName}" <${process.env.GMAIL_EMAIL}>`,
     to: to,
     subject: subject,

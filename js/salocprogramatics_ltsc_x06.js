@@ -3739,28 +3739,33 @@
       tbody.style.opacity = "0.5";
       try {
         const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
-        const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/fleet_cards?corp_oper_nr=eq.${corpOperNr}&order=vehicle.asc`, {
-            headers: getSupabaseHeaders()
-          }
-        );
-        if (!response.ok) throw new Error("Erro ao carregar cartões frota");
-        const data = await response.json();
+        const [responseFleet, responseStatus] = await Promise.all([
+          fetch(`${SUPABASE_URL}/rest/v1/fleet_cards?corp_oper_nr=eq.${corpOperNr}&order=vehicle.asc`, {headers: getSupabaseHeaders()}),
+          fetch(`${SUPABASE_URL}/rest/v1/vehicle_status?corp_oper_nr=eq.${corpOperNr}`, {headers: getSupabaseHeaders()})
+        ]);
+        if (!responseFleet.ok) throw new Error("Erro ao carregar cartões frota");
+        const data = await responseFleet.json();
+        const statusData = responseStatus.ok ? await responseStatus.json() : [];
         tbody.style.opacity = "1";
         if (!data.length) {
-          tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:8px;font-size:12px;color:#999;">Sem registos</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:8px;font-size:12px;color:#999;">Sem registos</td></tr>`;
           return;
         }
-        const tdStyle = `padding:5px;border:1px solid #ccc;font-size:13px; text-align: center;`;
+        const tdStyle = `padding:5px;border:1px solid #ccc;font-size:13px;text-align:center;`;
         tbody.innerHTML = "";
         data.forEach(item => {
+          const status = statusData.find(s => s.vehicle === item.vehicle);
+          const isInop = status ? status.is_inop : false;
           const tr = document.createElement("tr");
           tr.innerHTML = `
             <td style="${tdStyle} font-weight:bold;">${item.vehicle || ""}</td>
             <td style="${tdStyle}">${item.registration || ""}</td>
             <td style="${tdStyle}">${item.card_code || ""}</td>
             <td style="${tdStyle}">${item.contact || ""}</td>
-            <td style="${tdStyle} text-align:center;">
+            <td style="${tdStyle} font-weight:bold; color:${isInop ? '#dc2626' : '#16a34a'};">
+              ${isInop ? "Inoperacional" : "Operacional"}
+            </td>
+            <td style="${tdStyle}">
               <button onclick="fleetCardEdit(${item.id})" style="background:#1e3a8a;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;margin-right:3px;">✏️</button>
               <button onclick="fleetCardDelete(${item.id})" style="background:#dc2626;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;">🗑️</button>
             </td>
@@ -3769,12 +3774,22 @@
           tr.addEventListener("mouseout",  () => tr.style.background = "");
           tbody.appendChild(tr);
         });
+        document.getElementById("fleet-total").textContent = data.length;
+        document.getElementById("fleet-operacional").textContent = data.filter(item => {
+          const status = statusData.find(s => s.vehicle === item.vehicle);
+          return !status || !status.is_inop;
+        }).length;
+        document.getElementById("fleet-inoperacional").textContent = data.filter(item => {
+          const status = statusData.find(s => s.vehicle === item.vehicle);
+          return status && status.is_inop;
+        }).length;
       } catch (err) {
         tbody.style.opacity = "1";
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:8px;font-size:12px;color:red;">Erro ao carregar dados.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:8px;font-size:12px;color:red;">Erro ao carregar dados.</td></tr>`;
         console.error("Erro ao carregar cartões frota:", err);
       }
     }
+    /* ===== FLEET CARDS EDIT ===== */
     async function fleetCardEdit(id) {
       try {
         const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
@@ -3799,6 +3814,7 @@
         showPopup("popup-danger", "Erro ao carregar dados: " + err.message);
       }
     }
+    /* ===== FLEET CARDS DELETE ===== */
     async function fleetCardDelete(id) {
       if (!confirm("Tem a certeza que pretende eliminar este registo?")) return;
       try {
@@ -3817,6 +3833,7 @@
         showPopup("popup-danger", "Erro ao eliminar: " + err.message);
       }
     }
+    /* ===== FLEET CARDS SAVE ===== */
     async function fleetCardSave() {
       const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const vehicle = document.getElementById("veíc_card_name").value.trim();
@@ -3864,10 +3881,8 @@
         saveBtn.innerHTML = "💾 GRAVAR";
       }
     }
-    /* ===== DOM FLEET CARDS ===== */
     document.getElementById("card-fleet-save")?.addEventListener("click", fleetCardSave);
-    
-    
+    /* ===== FLEET CARDS EMIT ===== */
     document.getElementById("card-fleet-emit")?.addEventListener("click", async () => {
       try {
         showLoadingPopup("🔄 A preparar listagem...");
@@ -3878,7 +3893,7 @@
           }
         );
         const data = await response.json();
-        updateLoadingPopup("📊 A gerar PDF...");
+        updateLoadingPopup("📊 A gerar Listagem Cartões Frota...");
         const res = await fetch("https://cb360-online.vercel.app/api/hemodialysis_convert_and_send", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -3936,6 +3951,54 @@
         showPopup('popup-danger', err.message);
       }
     });
+    /* ===== CONTACT LIST INIT ===== */
+    document.querySelector('.sidebar-sub-submenu-button[data-page="page-contact-list"]')?.addEventListener("click", () => {
+      loadContactList();
+    });
+    async function loadContactList() {
+      const tbody = document.getElementById("contact-list-tbody");
+      if (!tbody) return;
+      tbody.style.opacity = "0.5";
+      try {
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${corpOperNr}&n_int=lt.900&elem_state=eq.true&select=n_int,patent,full_name,phone,mobile_phone,email&order=n_int.asc`, {
+            headers: getSupabaseHeaders()
+          }
+        );
+        if (!response.ok) throw new Error("Erro ao carregar contactos");
+        const data = await response.json();
+        tbody.style.opacity = "1";
+        if (!data.length) {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:8px;font-size:13px;color:#999;">Sem registos</td></tr>`;
+          return;
+        }
+        const tdStyle = `padding:5px;border:1px solid #ccc;font-size:12px;text-align:center;`;
+        tbody.innerHTML = "";
+        data.forEach(item => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td style="${tdStyle}">${item.n_int || ""}</td>
+            <td style="${tdStyle}">${item.patent || ""}</td>
+            <td style="${tdStyle} text-align:left; font-weight:bold;">${item.full_name || ""}</td>
+            <td style="${tdStyle}">${item.phone || ""}</td>
+            <td style="${tdStyle}">${item.mobile_phone || ""}</td>
+            <td style="${tdStyle}">${item.email || ""}</td>
+            <td style="${tdStyle}">
+              <button onclick="contactEdit(${item.id})" style="background:#1e3a8a;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;margin-right:3px;">✏️</button>
+              <button onclick="contactDelete(${item.id})" style="background:#dc2626;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;">🗑️</button>
+            </td>
+          `;
+          tr.addEventListener("mouseover", () => tr.style.background = "#c8d8f5");
+          tr.addEventListener("mouseout",  () => tr.style.background = "");
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        tbody.style.opacity = "1";
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:8px;font-size:12px;color:red;">Erro ao carregar contactos.</td></tr>`;
+        console.error("Erro ao carregar contactos:", err);
+      }
+    }
     /* =======================================
     ALARM CONSOLE
     ======================================= */

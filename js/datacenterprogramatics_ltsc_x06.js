@@ -267,7 +267,9 @@
     /* =======================================
     FIREFIGHTER LISTING
     ======================================= */
-   
+    sessionStorage.setItem("currentUserRole", "admin");
+    sessionStorage.setItem("currentCorpOperNr", "0805");
+    let currentEditId = null;
     const ACCESS_OPTIONS = [
       {label: "Menu Principal"},
       {label: "Gestão DECIR", children: [
@@ -279,7 +281,8 @@
       {label: "Gestão Operacional", children: [
         {label: "Escalas", children: [{label: "DECIR"}, {label: "1ª Secção"}, {label: "2ª Secção"}, {label: "3ª Secção"}, {label: "4ª Secção"}, {label: "Emissão Escala"}, {label: "Consultar Escalas"}]},
         {label: "Eventos", children: [{label: "Criação de Eventos"}, {label: "Consulta Disponibilidades"}]},
-        {label: "Pedidos de Férias", children: [{label: "Consultar Pedidos"}]}
+        {label: "Pedidos de Férias", children: [{label: "Consultar Pedidos"}]},
+        {label: "Serviços de Voluntariado", children: [{label: "Registo de Serviços"}, {label: "Consulta de Serviços"}, {label: "Configuração de Valores"}]}
       ]},
       {label: "Recursos Humanos", children: [
         {label: "Escalas Mensais"}, {label: "Controlo de Horas Extras"}, {label: "Registos Individuais"},
@@ -340,7 +343,7 @@
     }
     async function loadElementsTable() {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
         const response = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?select=*&corp_oper_nr=eq.${corpOperNr}`, {
           method: "GET",
           headers: getSupabaseHeaders()
@@ -369,8 +372,8 @@
       }
     }
     function clearEditForm() {
-      const ids = ["win_state", "win_type", "win_n_int", "win_n_file", "win_patent", "win_patent_abv", "win_section", "win_abv_name", "win_full_name", "win_MP", 
-                   "win_ML", "win_TAS", "win_nif", "win_niss", "win_nib", "win_user_name_main", "win_password_main", "win_user_name_mobile", "win_password_mobile"];
+      const ids = ["win_state", "win_type", "win_n_int", "win_n_file", "win_patent", "win_patent_abv", "win_section", "win_quad", "win_abv_name", "win_full_name", "win_MP", "win_ML", "win_TAS",
+                   "win_nif", "win_niss", "win_nib", "win_phone", "win_mobile", "win_mail", "win_user_name_main", "win_password_main", "win_user_name_mobile", "win_password_mobile"];
       ids.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = "";
@@ -414,6 +417,10 @@
       if (document.getElementById("win_ML")) document.getElementById("win_ML").value = String(row.ML);
       if (document.getElementById("win_MP")) document.getElementById("win_MP").value = String(row.MP);      
       if (document.getElementById("win_TAS")) document.getElementById("win_TAS").value = String(row.TAS);
+      document.getElementById("win_quad").value = row.type_quad || "";
+      document.getElementById("win_phone").value = row.phone || "";
+      document.getElementById("win_mobile").value = row.mobile_phone || "";
+      document.getElementById("win_mail").value = row.email || "";
       if (document.getElementById("win_state")) document.getElementById("win_state").value = row.elem_state ? "Ativo" : "Inativo";
       const roleMap = {admin: "Administrador", subadmin: "Sub-Administrador", user: "Utilizador"};
       if (document.getElementById("win_type")) document.getElementById("win_type").value = roleMap[row.user_role] || "";
@@ -437,12 +444,14 @@
         showPopup('popup-danger', "O Nº Interno e o Nome Completo são obrigatórios.");
         return;
       }
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const payloadReg = {n_int: document.getElementById("win_n_int").value, n_file: document.getElementById("win_n_file").value, patent: document.getElementById("win_patent").value,
                           patent_abv: document.getElementById("win_patent_abv").value, abv_name: document.getElementById("win_abv_name").value, full_name: document.getElementById("win_full_name").value,
                           ML: document.getElementById("win_ML").value === "true", MP: document.getElementById("win_MP").value === "true", TAS: document.getElementById("win_TAS").value === "true", 
-                          section: document.getElementById("win_section").value, nif: document.getElementById("win_nif").value, nib: document.getElementById("win_nib").value, 
-                          elem_state: document.getElementById("win_state").value === "Ativo", acess: Array.from(document.querySelectorAll('.access-checkbox:checked')).map(cb => cb.value).join(", "), 
+                          section: document.getElementById("win_section").value, type_quad: document.getElementById("win_quad").value, phone: document.getElementById("win_phone").value, 
+                          mobile_phone: document.getElementById("win_mobile").value, email: document.getElementById("win_mail").value, nif: document.getElementById("win_nif").value, 
+                          nib: document.getElementById("win_nib").value, elem_state: document.getElementById("win_state").value === "Ativo", 
+                          acess: Array.from(document.querySelectorAll('.access-checkbox:checked')).map(cb => cb.value).join(", "), 
                           user_role: mapUserRole(), corp_oper_nr: corpOperNr,last_updated: new Date().toISOString()};
       if (!payloadReg.user_role) {
         showPopup('popup-danger', "⚠️ Selecione o tipo de utilizador (Administrador / Sub-Administrador / Utilizador).");

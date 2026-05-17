@@ -26,7 +26,7 @@
           <style>
             body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; background-color: #f3f4f6; color: #333333; }
             .email-container { max-width: 1000px; margin: 25px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-            .email-header { background: linear-gradient(135deg, #a70c0c 0%, #d81c1c 50%, #b91010 100%); padding: 30px 20px; text-align: center; color: #ffffff; }
+            .email-header { background: linear-gradient(135deg, #a70c0c 0%, #d81c1c 50%, #b91010 100%); padding: 15px 20px; text-align: center; color: #ffffff; }
             .brand-logo { max-height: 75px; width: auto; margin-bottom: 12px; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.2)); }
             .email-header h2 { margin: 0; font-size: 19px; font-weight: 600; letter-spacing: 0.5px; line-height: 1.4; }
             .email-header p { margin: 6px 0 0 0; font-size: 13px; color: #fecaca; opacity: 0.9; }

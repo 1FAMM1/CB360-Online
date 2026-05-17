@@ -1,7 +1,6 @@
 import nodemailer from 'nodemailer';
 
 export default async function handler(req, res) {
-  // CONFIGURAÇÃO DE CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -14,14 +13,13 @@ export default async function handler(req, res) {
     return res.status(405).json({ success: false, error: 'Método não permitido' });
   }
 
-  // Recebe todos os parâmetros estruturados vindos do Front-End
-  const { to, subject, message, corpOperNr, corpName, logoUrl } = req.body;
+  // Recebe o senderName enviado pelo Front-End
+  const { to, subject, message, corpOperNr, corpName, logoUrl, senderName } = req.body;
 
   if (!to || !subject || !message) {
     return res.status(400).json({ success: false, error: 'Campos obrigatórios em falta' });
   }
 
-  // Define o formato limpo para quem visualiza a Inbox (ex: "CB360 Online - 0805")
   const senderDisplayName = `CB360 Online - ${corpOperNr || 'Corporação'}`;
 
   const transporter = nodemailer.createTransport({
@@ -39,16 +37,26 @@ export default async function handler(req, res) {
       <meta charset="utf-8">
       <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; background-color: #f3f4f6; color: #333333; }
-        .email-container { max-width: 1000px; margin: 25px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .email-container { max-width: 700px; margin: 25px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
         
         .email-header { background: linear-gradient(135deg, #a70c0c 0%, #d81c1c 50%, #b91010 100%); padding: 30px 20px; text-align: center; color: #ffffff; }
         .brand-logo { max-height: 75px; width: auto; margin-bottom: 12px; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.2)); }
-        
         .email-header h2 { margin: 0; font-size: 19px; font-weight: 600; letter-spacing: 0.5px; line-height: 1.4; }
         .email-header p { margin: 6px 0 0 0; font-size: 13px; color: #fecaca; opacity: 0.9; }
         
         .email-body { padding: 35px 30px; line-height: 1.6; font-size: 14px; }
-        .message-box { background-color: #f8fafc; border-left: 4px solid #d81c1c; padding: 20px; margin: 5px 0; border-radius: 0 6px 6px 0; white-space: pre-line; color: #1e293b; font-size: 14.5px; }
+        .message-box { background-color: #f8fafc; border-left: 4px solid #d81c1c; padding: 20px; margin: 5px 0 25px 0; border-radius: 0 6px 6px 0; white-space: pre-line; color: #1e293b; font-size: 14.5px; }
+        
+        /* ESTILOS DA TUA ASSINATURA */
+        .signature-section { margin-top: 30px; border-top: 1px dashed #cbd5e1; padding-top: 15px; font-size: 13px; color: #475569; }
+        .signature-user { font-weight: bold; font-size: 14px; color: #1e293b; text-transform: uppercase; margin-bottom: 2px; }
+        .signature-role { color: #64748b; font-style: italic; margin-bottom: 12px; }
+        .signature-corp { font-weight: bold; color: #d81c1c; font-size: 12px; text-transform: uppercase; margin-bottom: 2px; }
+        .signature-contacts { color: #475569; font-size: 11.5px; }
+        
+        /* NOTAS LEGAIS E AMBIENTAIS */
+        .eco-note { font-size: 11px; color: #16a34a; margin-top: 25px; line-height: 1.4; }
+        .confidentiality-note { font-size: 10px; color: #94a3b8; margin-top: 15px; line-height: 1.4; text-align: justify; border-top: 1px solid #f1f5f9; padding-top: 10px; }
         
         .email-footer { background-color: #f9fafb; padding: 18px; text-align: center; font-size: 11px; color: #6b7280; border-top: 1px solid #f3f4f6; }
       </style>
@@ -66,9 +74,26 @@ export default async function handler(req, res) {
           <div class="message-box">
             ${message}
           </div>
-          <p style="font-size: 12px; color: #6b7280; margin-top: 30px; font-style: italic;">
-            Este é um e-mail automático enviado a partir do módulo de listagem de contactos.
-          </p>
+          
+          <div class="signature-section">
+            <div class="signature-user">--<br>${senderName}</div>
+            <div class="signature-role">Operador do Sistema / Setor SGTD</div>
+            
+            <div class="signature-corp">CORPO DE BOMBEIROS DE FARO CRUZ LUSA</div>
+            <div class="signature-contacts">
+              Rua Comandante Francisco Manuel, 7 a 13 | 8000-250 Faro | Portugal<br>
+              Telem.: +351 917 629 626 | Telef: +351 289 803 066
+            </div>
+          </div>
+          
+          <div class="eco-note">
+            🌱 <strong>Antes de imprimir este e-mail pense bem se é mesmo necessário.</strong> Poupe eletricidade, toner e papel.
+          </div>
+          
+          <div class="confidentiality-note">
+            <strong>AVISO DE CONFIDENCIALIDADE:</strong><br>
+            Esta mensagem e quaisquer anexos, podem conter informação confidencial para uso exclusivo do destinatário. Cabe ao destinatário assegurar a verificação de vírus e outras medidas que assegurem que esta mensagem não afeta os seus sistemas. Se não for o destinatário, não deverá usar, distribuir ou copiar este email, devendo proceder à sua eliminação e informar o emissor. É estritamente proibido o uso, a distribuição, a cópia ou qualquer forma de disseminação não autorizada deste email e dos seus anexos. Obrigado.
+          </div>
         </div>
         
         <div class="email-footer">
@@ -81,7 +106,6 @@ export default async function handler(req, res) {
   `;
 
   const mailOptions = {
-    // Aqui aplica-se a máscara padrão na Inbox (ex: "CB360 Online - 0805")
     from: `"${senderDisplayName}" <${process.env.GMAIL_EMAIL}>`,
     to: to,
     subject: subject,

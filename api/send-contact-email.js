@@ -65,7 +65,7 @@
               </div>
               <div class="confidentiality-note">
                 <strong>AVISO DE CONFIDENCIALIDADE:</strong><br>
-                Esta mensagem e quaisquer anexos, podem conter informação confidencial para uso exclusivo do destinatário...
+                Esta mensagem e quaisquer anexos, podem conter informação confidencial para uso exclusivo do destinatário. Cabe ao destinatário assegurar a verificação de vírus e outras medidas que assegurem que esta mensagem não afeta os seus sistemas. Se não for o destinatário, não deverá usar, distribuir ou copiar este email, devendo proceder à sua eliminação e informar o emissor. É estritamente proibido o uso, a distribuição, a cópia ou qualquer forma de disseminação não autorizada deste email e dos seus anexos. Obrigado.
               </div>
             </div>
             <div class="email-footer">

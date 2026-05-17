@@ -550,6 +550,38 @@
     /* =======================================
     AIR RESOURCE CENTERS
     ======================================= */
+    function toggleCMAFields(id, enabled) {
+      const aero = document.getElementById(`cma_aero_type_${id}`);
+      const type = document.getElementById(`cma_type_${id}`);
+      const auto = document.getElementById(`cma_auto_${id}`);
+      const toggle = document.getElementById(`cma_toggle_${id}`);
+      if (!aero || !type || !auto || !toggle) return;
+      aero.disabled = !enabled;
+      type.disabled = !enabled;
+      auto.disabled = !enabled;
+      if (!enabled) {
+        aero.value = "";
+        type.value = "";
+        auto.value = "";
+      }
+      aero.style.background = enabled ? "#fff" : "#f3f3f3";
+      type.style.background = enabled ? "#fff" : "#f3f3f3";
+      auto.style.background = enabled ? "#fff" : "#f3f3f3";
+      aero.style.color = enabled ? "#000" : "#999";
+      type.style.color = enabled ? "#000" : "#999";
+      auto.style.color = enabled ? "#000" : "#999";
+      const slider = toggle.nextElementSibling;
+      const circle = slider.firstElementChild;
+      if (enabled) {
+        slider.style.background = "#28c840";
+        circle.style.transform = "translateX(22px)";
+        toggle.checked = true;
+      } else {
+        slider.style.background = "#ff3b30";
+        circle.style.transform = "translateX(0px)";
+        toggle.checked = false;
+      }
+    }
     async function loadCMAsFromSupabase() {
       try {
         if (typeof createCmaInputs === "function") createCmaInputs();

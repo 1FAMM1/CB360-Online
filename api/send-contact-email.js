@@ -1,83 +1,97 @@
-import nodemailer from "nodemailer";
-
-const GMAIL_EMAIL = process.env.GMAIL_EMAIL;
-const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
-
-export const config = {
-  api: { bodyParser: { sizeLimit: '1mb' } },
-};
+import nodemailer from 'nodemailer';
 
 export default async function handler(req, res) {
-  // Configuração de CORS para permitir pedidos do teu painel
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
-  if (req.method === "OPTIONS") return res.status(200).end();
-
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Método não permitido. Utilize POST." });
+  // Apenas permite pedidos POST
+  if (req.method !== 'POST') {
+    return res.status(405).json({ success: false, error: 'Método não permitido' });
   }
 
-  try {
-    // ATUALIZADO: Extrai também o corpName enviado pelo Front-End
-    const { to, subject, message, corpName } = req.body || {};
+  // 1. CAPTURA AS VARIÁVEIS ENVIADAS PELO FRONT-END (Incluindo o logoUrl e corpName)
+  const { to, subject, message, corpName, logoUrl } = req.body;
 
-    // Validação de dados essenciais
-    if (!to || !subject || !message) {
-      return res.status(400).json({
-        error: "Faltam dados essenciais para o envio.",
-        details: "Certifique-se que preencheu o destinatário, o assunto e o corpo da mensagem."
-      });
-    }
+  // Validação básica dos campos obrigatórios
+  if (!to || !subject || !message) {
+    return res.status(400).json({ success: false, error: 'Campos obrigatórios em falta' });
+  }
 
-    // Define o nome da corporação dinamicamente com Fallback de segurança
-    const finalCorpName = corpName || "Corpo de Bombeiros de Faro";
+  // 2. CONFIGURAÇÃO DO TRANSPORTADOR GMAIL (Nodemailer)
+  // Certifica-te de que estas variáveis estão configuradas no painel de Environment Variables do Vercel
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.GMAIL_EMAIL,
+      pass: process.env.GMAIL_APP_PASSWORD, // Palavra-passe de aplicação gerada no Google
+    },
+  });
 
-    // Configuração do Transportador do Nodemailer (usando o teu Gmail atual)
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: { user: GMAIL_EMAIL, pass: GMAIL_APP_PASSWORD }
-    });        
-
-    // Envio do e-mail com o HTML Vermelho e Corporação Dinâmica
-    await transporter.sendMail({
-      from: GMAIL_EMAIL,
-      to: to,
-      subject: subject,
-      html: `
-        <div style="font-family: 'Segoe UI', Arial, sans-serif; padding: 20px; color: #333; background-color: #f1f5f9;">
-          <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #e2e8f0;">
-            
-            <div style="background: linear-gradient(135deg, #a70c0c 0%, #d81c1c 45%, #b91010 100%); color: #ffffff; padding: 20px; text-align: center; border-bottom: 1px solid rgba(0,0,0,0.1);">
-              <h2 style="margin: 0; font-size: 18px; font-weight: 600; letter-spacing: 0.5px;">${finalCorpName}</h2>
-              <p style="margin: 5px 0 0 0; font-size: 12px; color: rgba(255,255,255,0.75);">Mensagem Enviada via Painel CB360 Online</p>
-            </div>
-
-            <div style="padding: 24px; line-height: 1.6; font-size: 14px; color: #333;">
-              ${message.replace(/\n/g, '<br>')}
-            </div>
-
-            <div style="background: #f8fafc; padding: 12px; text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #e2e8f0;">
-              Por favor, não responda diretamente a este e-mail automático.
-            </div>
-          </div>
+  // 3. CONSTRUÇÃO DO TEMPLATE HTML DO E-MAIL (Agora com o Logótipo Dinâmico)
+  const htmlTemplate = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; background-color: #f3f4f6; color: #333333; }
+        .email-container { max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        
+        /* CABEÇALHO INSTITUCIONAL VERMELHO */
+        .email-header { background: linear-gradient(135deg, #a70c0c 0%, #d81c1c 50%, #b91010 100%); padding: 25px 20px; text-align: center; color: #ffffff; }
+        
+        /* ESTILIZAÇÃO DO LOGÓTIPO */
+        .brand-logo { max-height: 70px; width: auto; margin-bottom: 12px; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.2)); }
+        
+        .email-header h2 { margin: 0; font-size: 18px; font-weight: 600; letter-spacing: 0.5px; }
+        .email-header p { margin: 5px 0 0 0; font-size: 12px; color: #fecaca; opacity: 0.9; }
+        
+        .email-body { padding: 25px; line-height: 1.6; font-size: 14px; }
+        .email-body h3 { color: #111827; margin-top: 0; font-size: 15px; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px; }
+        .message-box { background-color: #f8fafc; border-left: 4px solid #d81c1c; padding: 15px; margin: 15px 0; border-radius: 0 6px 6px 0; white-space: pre-line; color: #1e293b; }
+        
+        .email-footer { background-color: #f9fafb; padding: 15px; text-align: center; font-size: 11px; color: #6b7280; border-top: 1px solid #f3f4f6; }
+      </style>
+    </head>
+    <body>
+      <div class="email-container">
+        
+        <div class="email-header">
+          ${logoUrl ? `<img src="${logoUrl}" alt="Logótipo Corporação" class="brand-logo" />` : ''}
+          <h2>${corpName}</h2>
+          <p>Mensagem Enviada via Painel CB360 Online</p>
         </div>
-      `,
-      // Versão em texto limpo caso o cliente do elemento não suporte HTML
-      text: message 
-    });
+        
+        <div class="email-body">
+          <h3>Assunto: ${subject}</h3>
+          <div class="message-box">
+            ${message}
+          </div>
+          <p style="font-size: 12px; color: #6b7280; margin-top: 25px;">
+            Este é um e-mail automático enviado a partir do módulo de listagem de contactos. Por favor, responda diretamente para o e-mail institucional se necessário.
+          </p>
+        </div>
+        
+        <div class="email-footer">
+          &copy; ${new Date().getFullYear()} CB360 Online - Todos os direitos reservados.
+        </div>
+        
+      </div>
+    </body>
+    </html>
+  `;
 
-    return res.status(200).json({
-      success: true,
-      message: "E-mail enviado com sucesso em segundo plano."
-    });
+  // 4. PREPARAÇÃO DOS PARÂMETROS DO ENVIO
+  const mailOptions = {
+    from: `"${corpName}" <${process.env.GMAIL_EMAIL}>`, // Aparece o nome da Associação como remetente
+    to: to,
+    subject: subject,
+    html: htmlTemplate,
+  };
 
-  } catch (err) {
-    console.error("Erro no processo de envio de email:", err);
-    return res.status(500).json({
-      error: "Erro ao enviar o e-mail.",
-      details: err.message
-    });
+  try {
+    // Dispara o e-mail
+    await transporter.sendMail(mailOptions);
+    return res.status(200).json({ success: true, message: 'E-mail enviado com sucesso!' });
+  } catch (error) {
+    console.error('Erro ao enviar e-mail através do Nodemailer:', error);
+    return res.status(500).json({ success: false, error: error.message || 'Erro interno no servidor de e-mail' });
   }
 }

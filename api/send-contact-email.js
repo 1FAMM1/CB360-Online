@@ -31,7 +31,7 @@
             .email-header h2 { margin: 0; font-size: 19px; font-weight: 600; letter-spacing: 0.5px; line-height: 1.4; }
             .email-header p { margin: 6px 0 0 0; font-size: 13px; color: #fecaca; opacity: 0.9; }
             .email-body { padding: 35px 30px; line-height: 1.6; font-size: 14px; }
-            .message-box { background-color: #f8fafc; border-left: 4px solid #d81c1c; padding: 0px 20px; margin: 5px 0 25px 0; border-radius: 0 6px 6px 0; white-space: pre-line; color: #1e293b; font-size: 14.5px; }
+            .message-box { background-color: #f8fafc; border-left: 4px solid #d81c1c; padding: 20px; margin: 0 0 25px 0; border-radius: 0 6px 6px 0; white-space: pre-line; color: #1e293b; font-size: 14.5px; }
             .signature-section { margin-top: 30px; border-top: 1px dashed #cbd5e1; padding-top: 15px; font-size: 13px; color: #475569; }
             .signature-user { font-weight: bold; font-size: 14px; color: #1e293b; text-transform: uppercase; margin-bottom: 2px; }    
             .signature-corp { font-weight: bold; color: #d81c1c; font-size: 12px; text-transform: uppercase; margin-bottom: 2px; }

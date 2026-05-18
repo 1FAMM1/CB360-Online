@@ -489,9 +489,9 @@
         }
       };
       footer.append(btnCancel, btnSave);
-        box.append(header, body, footer);
+      box.append(header, body, footer);
       overlay.appendChild(box);
-      overlay.addEventListener('click', e => {if (e.target === overlay) overlay.remove();});
+      //overlay.addEventListener('click', e => {if (e.target === overlay) overlay.remove();});
       document.body.appendChild(overlay);
     }
     /* ─── UPLOAD ────────────────────────────────────────── */

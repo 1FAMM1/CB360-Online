@@ -761,7 +761,7 @@
       const footer = _inemBuildFooter(ext, iframe);
       box.append(header, content, footer);
       overlay.appendChild(box);
-      overlay.addEventListener('click', e => {if (e.target === overlay) _inemCloseModal(overlay, box);});
+      //overlay.addEventListener('click', e => {if (e.target === overlay) _inemCloseModal(overlay, box);});
       const onKeyDown = e => {
         if (e.key === 'Escape') {_inemCloseModal(overlay, box); document.removeEventListener('keydown', onKeyDown);}
       };
@@ -808,7 +808,7 @@
                                          fontWeight: '600', cursor: 'pointer'});
         btnCancel.onclick  = () => {overlay.remove(); resolve(false);};
         btnConfirm.onclick = () => {overlay.remove(); resolve(true);};
-        overlay.addEventListener('click', e => { if (e.target === overlay) {overlay.remove(); resolve(false);}});
+        //overlay.addEventListener('click', e => { if (e.target === overlay) {overlay.remove(); resolve(false);}});
         footer.append(btnCancel, btnConfirm);
         box.append(header, body, footer);
         overlay.appendChild(box);

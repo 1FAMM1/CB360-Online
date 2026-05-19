@@ -81,7 +81,7 @@
         mailOptions.cc = cc;
       } else {
         mailOptions.to = to;
-        mailOptions.cc = "central0805.ahbfaro@gmail.com";
+        mailOptions.cc = "";
       }
       if (attachment) {
         mailOptions.attachments = [{

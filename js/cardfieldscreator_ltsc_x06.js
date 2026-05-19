@@ -471,7 +471,7 @@
     AVAILABILITY OF ELEMENTS
     ======================================= */
     async function fetchElemsFromSupabase() {
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
       if (!currentCorpOperNr) return [];
       const response = await fetch(
         `${SUPABASE_URL}/rest/v1/reg_elems?select=*`, {
@@ -490,7 +490,7 @@
     }
     async function loadElemsButtons() {
       try {
-        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
         if (!currentCorpOperNr) {
           const container = document.getElementById("elems-container");
           container.style.display = "block";
@@ -564,7 +564,7 @@
     async function toggleElemSituation(row, btn) {
       if (row.elem_state === false) return;
       const newSituation = row.situation === "available" ? "unavailable" : "available";
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
       try {
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${encodeURIComponent(row.n_int)}&corp_oper_nr=eq.${currentCorpOperNr}`, {

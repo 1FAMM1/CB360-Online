@@ -501,7 +501,7 @@
     }
     async function loadScalesShifts(year, month) {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const response = await fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`, {headers: getSupabaseHeaders()});
         if (!response.ok) { console.warn("Nenhum shift salvo ou erro ao carregar"); return {shifts: {}, employeeData: {}}; }
         const data = await response.json();
@@ -516,7 +516,7 @@
     }
     async function loadScalesEmployees(year, month) {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const monthStart = `${year}-${String(month).padStart(2, "0")}-01`;
         const lastDay = new Date(year, month, 0).getDate();
         const monthEnd = `${year}-${String(month).padStart(2, "0")}-${lastDay}`;
@@ -771,7 +771,7 @@
       removedCount > 0 ? showPopup('popup-success', `${removedCount} Elemento(s) Removido(s).`) : showPopup('popup-danger', "Nenhuma linha vazia encontrada");
     }
     async function loadWeekendAdjacentData(year, month) {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       __prevMonthShiftsCache = {}; __nextMonthShiftsCache = {}; __lastFridayPrevCache = null; __firstMondayNextCache = null;
       let prevMonth = month - 1, prevYear = year;
       if (prevMonth === 0) { prevMonth = 12; prevYear--; }
@@ -934,7 +934,7 @@
     }
     async function loadBXPreference(year, month) {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/reg_employees_bx?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`,
           {headers: getSupabaseHeaders()}
@@ -949,7 +949,7 @@
     }
     async function saveBXPreference(year, month, hidden) {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         await fetch(
           `${SUPABASE_URL}/rest/v1/reg_employees_bx?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`,
           {method: "DELETE", headers: getSupabaseHeaders()}
@@ -1300,7 +1300,7 @@
       const ym = _getActiveYearMonth();
       if (!ym) {showPopup('popup-danger', "Seleciona mês e ano primeiro."); return;}
       const {year, month, monthBtn} = ym;
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const saveBtn = document.getElementById("employees-save-btn");
       if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = "A guardar..."; }
       try {
@@ -1649,7 +1649,7 @@
       }
       const year = parseInt(yearSelect.value, 10);
       const month = Array.from(document.querySelectorAll("#months-container-extra-hour-employees .btn")).indexOf(monthBtn) + 1;
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const saveExtraHoursBtn = document.getElementById("employees-extra-save-btn");
       if (saveExtraHoursBtn) {
         saveExtraHoursBtn.disabled = true;
@@ -1763,7 +1763,7 @@
     }
     async function loadExtraHours(year, month) {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const monthStart = `${year}-${String(month).padStart(2, "0")}-01`;
         const lastDay = new Date(year, month, 0).getDate();
         const monthEnd = `${year}-${String(month).padStart(2, "0")}-${lastDay}`;
@@ -1858,7 +1858,7 @@
     }
     async function loadEmployeesForGraphic() {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/reg_employees?select=n_int,abv_name&corp_oper_nr=eq.${corpOperNr}&order=n_int`, {
             headers: getSupabaseHeaders()
@@ -1888,7 +1888,7 @@
         if (!contentWrapper.dataset.loaded) {
           contentWrapper.innerHTML = "A Carregar...";
         }
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const [employeeRes, accumulatedRes, shiftsRes, extraHoursRes] = await Promise.all([
           fetch(
             `${SUPABASE_URL}/rest/v1/reg_employees?select=n_int,abv_name&corp_oper_nr=eq.${corpOperNr}&n_int=eq.${nInt}`, {
@@ -2415,7 +2415,7 @@
     let employeesForHolidays = [];
     async function loadEmployeesForHolidays() {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/reg_employees?select=n_int,abv_name,team,function&corp_oper_nr=eq.${corpOperNr}&order=n_int`, {
             headers: getSupabaseHeaders()
@@ -2440,7 +2440,7 @@
     }
     async function loadHolidayData(nInt, year) {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const shiftsResponse = await fetch(
           `${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&n_int=eq.${nInt}&shift=eq.FE&order=month.asc,day.asc`, {
             headers: getSupabaseHeaders()
@@ -2601,7 +2601,7 @@
       }
       const nInt = parseInt(select.value);
       const year = parseInt(yearSelect.value);
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const allFERecords = [];
       for (let i = 1; i <= 3; i++) {
         const startInput = document.getElementById(`holiday-start-${i}`);
@@ -2840,7 +2840,7 @@
     async function loadGlobalHolidayData() {
       const filterElem = document.getElementById("global-year-filter");
       const year = filterElem ? parseInt(filterElem.value) : new Date().getFullYear();
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const tableBody = document.getElementById("holiday-table-body");
       const titleElem = document.getElementById("holiday-map-title");
       if (titleElem) titleElem.innerHTML = `<span class="m-badge-rh">RH</span> MAPA DE FÉRIAS ${year}`;
@@ -2916,7 +2916,7 @@
     }
     async function exportGlobalHolidayMap() {
       const year = parseInt(document.getElementById("holiday-year-select")?.value || new Date().getFullYear());
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const btn = document.querySelector(".m-btn");
       const originalText = btn.innerHTML;
       showLoadingPopup(`A gerar mapa global de férias para ${year}.`);
@@ -2984,7 +2984,7 @@
     }
     async function consultDiscrepancies() {
       const year = parseInt(document.getElementById("global-year-filter")?.value || new Date().getFullYear());
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const DAYS_RIGHT = 22;
       let modal = document.getElementById("discrepancy-modal");
       if (!modal) {
@@ -3258,7 +3258,7 @@
       const filterElem = document.getElementById("priority-year-filter");
       const selectedYear = filterElem ? parseInt(filterElem.value) : new Date().getFullYear();
       const priorityYear = selectedYear + 1;
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const tableBody = document.getElementById("priority-table-body");
       const titleElem = document.getElementById("priority-map-title");
       if (titleElem) titleElem.innerHTML = `<span class="p-badge-rh">RH</span> PRIORIDADE DE MARCAÇÃO DE FÉRIAS ${priorityYear}`;
@@ -3313,7 +3313,7 @@
     async function exportPrioritiesMap(event) {
       const selectedYear = parseInt(document.getElementById("holiday-year-select")?.value || new Date().getFullYear());
       const priorityYear = selectedYear + 1;
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const btn = event?.target;
       const originalText = btn ? btn.innerText : "";
       if (btn) {
@@ -3467,7 +3467,7 @@
     async function loadEligibilityData() {
       const filterElem = document.getElementById("eligibility-year-filter");
       const year = filterElem ? parseInt(filterElem.value) : new Date().getFullYear();
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const tableBody = document.getElementById("eligibility-table-body");
       tableBody.innerHTML = `<tr><td colspan="13" style="padding:40px; text-align:center;">⌛ A carregar dados de ${year}...</td></tr>`;
       try {
@@ -3509,7 +3509,7 @@
     async function createConsultationEligibility() {
       const filterElem = document.getElementById("eligibility-year-filter");
       const year = filterElem ? parseInt(filterElem.value) : new Date().getFullYear();
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       let modal = document.getElementById("eligibility-modal");
       if (!modal) {
         modal = document.createElement("div");
@@ -3616,7 +3616,7 @@
     async function exportShiftEligibility(event) {
       const filterElem = document.getElementById("eligibility-year-filter");
       const year = filterElem ? parseInt(filterElem.value) : new Date().getFullYear();
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const btn = event?.target;
       const originalText = btn ? btn.innerText : "";
       if (btn) {
@@ -3838,7 +3838,7 @@
     async function loadSalaryData() {
       const monthFilter = parseInt(document.getElementById("salary-month-filter").value);
       const year = parseInt(document.getElementById("salary-year-filter").value);
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const tableBody = document.getElementById("salary-table-body");
       const firstDayOfMonth = `${year}-${String(monthFilter).padStart(2, '0')}-01`;
       const lastDayMonth = new Date(year, monthFilter, 0).getDate();
@@ -4208,7 +4208,7 @@
     async function loadEIPData() {
       const filterElem = document.getElementById("annual-year-filter");
       const year = filterElem ? parseInt(filterElem.value) : new Date().getFullYear();
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const tableBody = document.getElementById("annual-table-body");
       const titleElem = document.getElementById("annual-map-title");
       if (titleElem) titleElem.innerHTML = `<span class="a-badge-rh">RH</span> ENQUADRAMENTO ANUAL (EIPs) - ${year}`;
@@ -4333,7 +4333,7 @@
       }
     }
     async function checkAndSeedEIPYear(year) {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const checkRes = await fetch(
         `${SUPABASE_URL}/rest/v1/reg_eip_anual?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&limit=1`,
         { headers: getSupabaseHeaders() }
@@ -4659,7 +4659,7 @@
       if (!tbody) return;
       tbody.innerHTML = `<tr><td colspan="6" class="reg-empty">⌛ A carregar...</td></tr>`;
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const res = await fetch(
           `${SUPABASE_URL}/rest/v1/reg_employees?corp_oper_nr=eq.${corpOperNr}&order=n_int.asc`, {
             headers: getSupabaseHeaders()
@@ -4769,7 +4769,7 @@
       if (entryDate && exitDate && new Date(exitDate) < new Date(entryDate)) {
         showPopup('popup-danger',"A Data de Saída não pode ser anterior à Data de Entrada."); return;
       }
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const saveBtn = document.getElementById("reg-save-btn");
       saveBtn.disabled = true;
       saveBtn.textContent = "A guardar...";
@@ -5040,7 +5040,7 @@
     let _dashChartTeam = null;
     let _dashChartVac = null;
     async function loadDashboardData() {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const filterMonth = document.getElementById("dash-filter-month");
       const filterYear = document.getElementById("dash-filter-year");
       const selectedMonth = filterMonth ? parseInt(filterMonth.value) : new Date().getMonth() + 1;

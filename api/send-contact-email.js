@@ -44,6 +44,9 @@ export default async function handler(req, res) {
         </div>
         <div class="email-body">
           <div class="message-box">${message}</div>
+          <div style="margin-top:20px; margin-bottom:10px; font-size:14px; color:#1e293b;">
+  Com os melhores cumprimentos,
+</div>
           <div class="signature-section">
             <div class="signature-user">${senderName}</div>
             <div class="signature-corp">CORPO DE BOMBEIROS DE FARO CRUZ LUSA</div>

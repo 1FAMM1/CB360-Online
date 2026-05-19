@@ -14,7 +14,7 @@
     }
     /* ========== READING AND CHARGING ========== */    
     async function loadActiveOccurrences() {
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "";
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const tbody = document.getElementById('active-occurrences-tbody');
       if (!tbody) return;
       tbody.innerHTML = '';
@@ -960,7 +960,7 @@
     }
     /* ============== SAVE UNAVAILABILITY TO DATABASE ============== */
     async function saveUnavailabilityToSupabase(data) {
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
       try {
         const insertResp = await fetch(`${SUPABASE_URL}/rest/v1/vehicle_unavailability`, {
           method: 'POST',
@@ -980,7 +980,7 @@
     }
     /* ============== LOAD ACTIVE UNAVAILABILITIES ============== */
     async function loadActiveUnavailability() {
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const tbody = document.getElementById('active-unavailability-tbody');
       if (!tbody) return;
       try {
@@ -1039,7 +1039,7 @@
       const motive = document.getElementById('end_reason_unavailability')?.value;
       const endDate = document.getElementById('end_unavailability_date')?.value;
       const endHour = document.getElementById('end_unavailability_hour')?.value;
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
       try {
         const query = `vehicle=eq.${encodeURIComponent(vehicle)}&unavailability_motive=eq.${encodeURIComponent(motive)}&status=eq.Em%20Aberto&corp_oper_nr=eq.${currentCorpOperNr}`;
         const resp = await fetch(`${SUPABASE_URL}/rest/v1/vehicle_unavailability?${query}`, {
@@ -1196,7 +1196,7 @@
           return;
         }
         try {
-          const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+          const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
           const data = await supabaseFetch(
             `reg_elems?corp_oper_nr=eq.${corpOperNr}&n_int=eq.${ni}&select=abv_name&limit=1`
           );
@@ -1319,7 +1319,7 @@
       const serviceType = selectedInemServiceType || (inem.checked ? "ITeams" : "Verbete");
       const now = new Date();
       const alertDate = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       try {
         await navigator.clipboard.writeText(message);
         showPopup('popup-success', "Mensagem criada e copiada!");
@@ -1470,7 +1470,7 @@
       return `${day}${hour}${min}${month}${year}`;
     }
     async function getOptelSignature() {
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
       if (!currentCorpOperNr) {
         console.warn("OPTEL: currentCorpOperNr não encontrado no sessionStorage.");
         return "";

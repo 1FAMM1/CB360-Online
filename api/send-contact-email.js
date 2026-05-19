@@ -32,7 +32,7 @@ export default async function handler(req, res) {
         .signature-contacts { color: #475569; font-size: 11.5px; }
         .eco-note { font-size: 11px; color: #16a34a; margin-top: 25px; line-height: 1.4; }
         .confidentiality-note { font-size: 10px; color: #94a3b8; margin-top: 15px; line-height: 1.4; text-align: justify; border-top: 1px solid #f1f5f9; padding-top: 10px; }
-        .email-footer { background-color: #f9fafb; padding: 18px; text-align: center; font-size: 11px; color: #6b7280; border-top: 1px solid #f3f4f6; }
+        .email-footer { background-color: #f1f5f9; padding: 18px; text-align: center; font-size: 11px; color: #6b7280; border-top: 1px solid #f3f4f6; }
       </style>
     </head>
     <body>
@@ -44,7 +44,7 @@ export default async function handler(req, res) {
         </div>
         <div class="email-body">
           <div class="message-box">${message}</div>
-          <div style="margin-top:20px; margin-bottom:10px; font-size:14px; color:#1e293b;">
+          <div style="margin-top:10px; margin-bottom:10px; font-size:14px; color:#1e293b;">
   Com os melhores cumprimentos,
 </div>
           <div class="signature-section">

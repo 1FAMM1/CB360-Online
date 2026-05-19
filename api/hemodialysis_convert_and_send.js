@@ -187,12 +187,16 @@ export default async function handler(req, res) {
       const ws = workbook.worksheets[0];
       ws.pageSetup = { paperSize: 9, orientation: "portrait", fitToPage: true, fitToWidth: 1, fitToHeight: 0 };
 
+      // Quebra de página no fim do QATIV (antes do QEST)
+      ws.getRow(117).addPageBreak();
+
       quadros.forEach(({ code, elements }) => {
         const map = quadroMap[code];
         if (!map) return;
 
         const maxRows = map.endRow - map.startRow + 1;
 
+        // Preenche as linhas com dados
         elements.slice(0, maxRows).forEach((el, i) => {
           const r = map.startRow + i;
 
@@ -203,15 +207,23 @@ export default async function handler(req, res) {
           const cMobile = ws.getCell(`N${r}`);
           const cEmail  = ws.getCell(`O${r}`);
 
-          cNInt.value   = el.n_int         || "";
-          cPatent.value = el.patent        || "";
-          cName.value   = el.full_name     || "";
-          cPhone.value  = el.phone         || "";
-          cMobile.value = el.mobile_phone  || "";
-          cEmail.value  = el.email         || "";
+          cNInt.value   = el.n_int        || "";
+          cPatent.value = el.patent       || "";
+          cName.value   = el.full_name    || "";
+          cPhone.value  = el.phone        || "";
+          cMobile.value = el.mobile_phone || "";
+          cEmail.value  = el.email        || "";
 
           [cNInt, cPatent, cName, cPhone, cMobile, cEmail].forEach(fitCellTemplate);
         });
+
+        // Oculta linhas não preenchidas do quadro
+        const filledCount = Math.min(elements.length, maxRows);
+        for (let i = filledCount; i < maxRows; i++) {
+          const row = ws.getRow(map.startRow + i);
+          row.hidden = true;
+          row.commit();
+        }
       });
 
       const pdfBuf = await workbookToPdfBuffer(workbook, "contact_list");

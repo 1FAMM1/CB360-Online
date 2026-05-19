@@ -1,4 +1,4 @@
-   import ExcelJS from "exceljs";
+  import ExcelJS from "exceljs";
 import fetch from "node-fetch";
 import fs from "fs";
 import os from "os";
@@ -223,6 +223,15 @@ export default async function handler(req, res) {
           const row = ws.getRow(map.startRow + i);
           row.hidden = true;
           row.commit();
+        }
+
+        // Se o quadro estiver vazio, oculta também as 4 rows do cabeçalho
+        if (elements.length === 0) {
+          for (let r = map.startRow - 4; r < map.startRow; r++) {
+            const row = ws.getRow(r);
+            row.hidden = true;
+            row.commit();
+          }
         }
       });
 

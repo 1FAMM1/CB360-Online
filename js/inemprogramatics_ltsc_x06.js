@@ -6,7 +6,7 @@
       const dateFrom = document.getElementById("inem-date-from")?.value;
       const dateTo = document.getElementById("inem-date-to")?.value;
       const codu = document.getElementById("inem-filter-codu")?.value.trim();      
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const nInt = sessionStorage.getItem("currentNInt");
       const isReadOnly = parseInt(nInt) === 9000;
       const tbody = document.querySelector("#inem-entries table tbody");

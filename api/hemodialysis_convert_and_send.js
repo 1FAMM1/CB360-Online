@@ -223,6 +223,11 @@
             cCode.value = item.card_code || "";
             [cVehicle, cRegist, cContact, cCode].forEach(fitCellTemplate);
           });
+          const startRow = 11 + data.length;
+          for (let r = startRow; r <= 33; r++) {
+            const row = ws.getRow(r);
+            row.hidden = true;
+          }
           const pdfBuf = await workbookToPdfBuffer(workbook, "fleet_cards");
           const doc = await PDFDocument.load(pdfBuf);
           const pages = await mergedPdf.copyPages(doc, doc.getPageIndices());

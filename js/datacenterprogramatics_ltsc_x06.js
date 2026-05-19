@@ -341,7 +341,7 @@
     }
     async function loadElementsTable() {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const response = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?select=*&corp_oper_nr=eq.${corpOperNr}`, {
           method: "GET",
           headers: getSupabaseHeaders()
@@ -442,7 +442,7 @@
         showPopup('popup-danger', "O Nº Interno e o Nome Completo são obrigatórios.");
         return;
       }
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const payloadReg = {n_int: document.getElementById("win_n_int").value, n_file: document.getElementById("win_n_file").value, patent: document.getElementById("win_patent").value,
                           patent_abv: document.getElementById("win_patent_abv").value, abv_name: document.getElementById("win_abv_name").value, full_name: document.getElementById("win_full_name").value,
                           ML: document.getElementById("win_ML").value === "true", MP: document.getElementById("win_MP").value === "true", TAS: document.getElementById("win_TAS").value === "true", 

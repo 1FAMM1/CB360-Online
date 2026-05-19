@@ -2,7 +2,7 @@
     LOAD MAIN DATA
     ======================================= */
     document.addEventListener('DOMContentLoaded', async () => {      
-      const currentUser = sessionStorage.getItem("currentUserName") || "FMartins";
+      const currentUser = sessionStorage.getItem("currentUserName") || "";
       const currentUserDisplay = sessionStorage.getItem("currentUserDisplay");
       const authNameEl = document.getElementById('authName');
       if (authNameEl) authNameEl.textContent = currentUserDisplay || "";

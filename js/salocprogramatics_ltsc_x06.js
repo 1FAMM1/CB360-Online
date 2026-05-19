@@ -3952,17 +3952,50 @@
       }
     });
     /* ===== CONTACT LIST INIT ===== */
-    document.querySelector('.sidebar-sub-submenu-button[data-page="page-contact-list"]')?.addEventListener("click", () => {
+   document.querySelector('.sidebar-sub-submenu-button[data-page="page-contact-list"]')?.addEventListener("click", () => {
       loadContactList();
+    });
+    document.getElementById("contact-list-search")?.addEventListener("input", function() {
+      const filterText = this.value.toLowerCase().trim();
+      const tbody = document.getElementById("contact-list-tbody");
+      if (!tbody) return;
+      const rows = tbody.querySelectorAll("tr");
+      if (rows.length === 1 && rows[0].querySelector('td')?.getAttribute('colspan') === '8') return;
+      rows.forEach(row => {
+        if (row.classList.contains("quadro-header-row")) return;
+        const nInt = row.children[0]?.textContent.toLowerCase() || "";
+        const patent = row.children[1]?.textContent.toLowerCase() || "";
+        const fullName = row.children[2]?.textContent.toLowerCase() || "";
+        if (nInt.includes(filterText) || patent.includes(filterText) || fullName.includes(filterText)) {
+          row.style.display = "";
+        } else {
+          row.style.display = "none";
+        }
+      });
+      const headers = tbody.querySelectorAll(".quadro-header-row");
+      headers.forEach(header => {
+        let next = header.nextElementSibling;
+        let hasVisibleRows = false;
+        while (next && !next.classList.contains("quadro-header-row")) {
+          if (next.style.display !== "none") {
+            hasVisibleRows = true;
+            break;
+          }
+          next = next.nextElementSibling;
+        }
+        header.style.display = hasVisibleRows || filterText === "" ? "" : "none";
+      });
     });
     async function loadContactList() {
       const tbody = document.getElementById("contact-list-tbody");
       if (!tbody) return;
+      const searchInput = document.getElementById("contact-list-search");
+      if (searchInput) searchInput.value = "";
       tbody.style.opacity = "0.5";
       try {
         const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
         const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${corpOperNr}&n_int=lt.900&elem_state=eq.true&select=n_int,patent,full_name,phone,mobile_phone,email&order=n_int.asc`, {
+          `${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${corpOperNr}&n_int=lt.900&elem_state=eq.true&select=id,n_int,patent,full_name,phone,mobile_phone,email,type_quad&order=n_int.asc`, {
             headers: getSupabaseHeaders()
           }
         );
@@ -3970,35 +4003,534 @@
         const data = await response.json();
         tbody.style.opacity = "1";
         if (!data.length) {
-          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:8px;font-size:13px;color:#999;">Sem registos</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:8px;font-size:13px;color:#999;">Sem registos</td></tr>`;
+          ["contact-total", "contact-qcom", "contact-qativ", "contact-qest", "contact-qea", "contact-qhr"].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = "0";
+          });
           return;
         }
-        const tdStyle = `padding:5px;border:1px solid #ccc;font-size:12px;text-align:center;`;
+        const masterCheckbox = document.getElementById("contact-list-master-checkbox");
+        if (masterCheckbox) masterCheckbox.checked = false;
+        if (document.getElementById("contact-selected-count")) {
+          document.getElementById("contact-selected-count").textContent = "0";
+        }
+        const quadDef = [{code: "QCOM", title: "QUADRO DE COMANDO"}, {code: "QATIV", title: "QUADRO ATIVO"}, {code: "QEST", title: "QUADRO DE ESTAGIÁRIOS"}, {code: "QEA", title: "QUADRO DE ESPECIALISTAS E AUXILIARES"}, {code: "QHR", title: "QUADRO DE HONRA"}];
         tbody.innerHTML = "";
-        data.forEach(item => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td style="${tdStyle}">${item.n_int || ""}</td>
-            <td style="${tdStyle}">${item.patent || ""}</td>
-            <td style="${tdStyle} text-align:left; font-weight:bold;">${item.full_name || ""}</td>
-            <td style="${tdStyle}">${item.phone || ""}</td>
-            <td style="${tdStyle}">${item.mobile_phone || ""}</td>
-            <td style="${tdStyle}">${item.email || ""}</td>
-            <td style="${tdStyle}">
-              <button onclick="contactEdit(${item.id})" style="background:#1e3a8a;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;margin-right:3px;">✏️</button>
-              <button onclick="contactDelete(${item.id})" style="background:#dc2626;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;">🗑️</button>
+        const tdStyle = `padding:5px;border:1px solid #ccc;font-size:13px;text-align:center;`;
+        let totalRendered = 0;
+        quadDef.forEach(quadro => {
+          const elemDoQuadro = data.filter(item => item.type_quad === quadro.code);
+          if (elemDoQuadro.length === 0) return;
+          totalRendered += elemDoQuadro.length;
+          const headerTr = document.createElement("tr");
+          headerTr.className = "quadro-header-row";
+          headerTr.innerHTML = `
+            <td colspan="8" style="background: #ffebeb; color: #a70c0c; font-weight: bold; text-align: left; padding: 8px 10px; font-size: 13px; border: 1px solid #ccc; border-left: 2px solid #d81c1c; letter-spacing: 0.05em;">
+              🔹 ${quadro.title} (${elemDoQuadro.length})
             </td>
           `;
-          tr.addEventListener("mouseover", () => tr.style.background = "#c8d8f5");
-          tr.addEventListener("mouseout",  () => tr.style.background = "");
-          tbody.appendChild(tr);
+          tbody.appendChild(headerTr);
+          elemDoQuadro.forEach(item => {
+            const tr = document.createElement("tr");
+            const emailTarget = item.email || "";
+            const phoneTarget = item.mobile_phone || item.phone || "";            
+            tr.dataset.typeQuad = quadro.code;
+            tr.innerHTML = `
+              <td style="${tdStyle}; font-weight: bold;">${item.n_int || ""}</td>
+              <td style="${tdStyle}; font-weight: bold;">${item.patent || ""}</td>
+              <td style="${tdStyle}; text-align:left; font-weight: bold;">${item.full_name || ""}</td>
+              <td style="${tdStyle}; font-weight: bold;">${item.phone || ""}</td>
+              <td style="${tdStyle}; font-weight: bold;">${item.mobile_phone || ""}</td>
+              <td style="${tdStyle}; font-weight:bold; color: blue;">${item.email || ""}</td>
+              <td style="${tdStyle}; width: 75px; text-align: center; white-space: nowrap;">
+                <input type="checkbox" class="contact-row-checkbox contact-email-cb" data-email="${emailTarget}" style="margin-right: 6px; vertical-align: middle; width: 18px; height: 18px; cursor: pointer !important;">
+                <button onclick="contactEmail('${emailTarget}')" style="background:#d81c1c; color:#fff; border:none; border-radius:4px; padding:4px 8px; cursor:pointer; font-size:14px; vertical-align: middle;">✉️</button>
+              </td>
+              <td style="${tdStyle} width: 75px; text-align: center; white-space: nowrap;">
+                <input type="checkbox" class="contact-row-checkbox contact-sms-cb" disabled data-phone="${phoneTarget}" style="margin-right: 6px; vertical-align: middle; width: 18px; height: 18px; cursor: pointer !important;">
+                <button /*onclick="contactMessage('${phoneTarget}')"*/  onclick="showbreve()" style="background:#27ae60; color:#fff; border:none; border-radius:4px; padding:4px 8px; cursor:pointer; font-size:14px; vertical-align: middle;">💬</button>
+              </td>
+            `;
+            tr.addEventListener("mouseover", () => tr.style.background = "#c8d8f5");
+            tr.addEventListener("mouseout", () => tr.style.background = "");
+            tbody.appendChild(tr);
+          });
         });
+        if (totalRendered === 0) {
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:8px;font-size:13px;color:#999;">Sem registos classificados</td></tr>`;
+        }
+        document.getElementById("contact-total").textContent = data.length;
+        document.getElementById("contact-qcom").textContent = data.filter(item => item.type_quad === "QCOM").length;
+        document.getElementById("contact-qativ").textContent = data.filter(item => item.type_quad === "QATIV").length;
+        document.getElementById("contact-qest").textContent = data.filter(item => item.type_quad === "QEST").length;
+        document.getElementById("contact-qea").textContent = data.filter(item => item.type_quad === "QEA").length;
+        document.getElementById("contact-qhr").textContent = data.filter(item => item.type_quad === "QHR").length;
       } catch (err) {
         tbody.style.opacity = "1";
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:8px;font-size:12px;color:red;">Erro ao carregar contactos.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:8px;font-size:12px;color:red;">Erro ao carregar contactos.</td></tr>`;
         console.error("Erro ao carregar contactos:", err);
+        ["contact-total", "contact-qcom", "contact-qativ", "contact-qest", "contact-qea", "contact-qhr"].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.textContent = "0";
+        });
       }
     }
+    const CONTACT_EMAIL_POPUP_STYLES = `
+      @keyframes contactPopIn {from {opacity: 0; transform: scale(0.9) translateY(10px);} to {opacity: 1; transform: scale(1) translateY(0);}}
+      @keyframes contactFadeIn {from {opacity: 0;} to {opacity: 1;}}
+      .contact-email-overlay {position: fixed; inset: 0; background: rgba(10, 12, 15, 0.6); z-index: 10005; display: flex; align-items: center; justify-content: center; 
+                              backdrop-filter: blur(3px); animation: contactFadeIn 0.2s ease;}
+      .contact-email-card {background: #fff; width: 480px; border-radius: 12px; box-shadow: 0 15px 45px rgba(0,0,0,0.3); overflow: hidden; animation: contactPopIn 0.25s cubic-bezier(.22,.68,0,1.2); 
+                           font-family: 'Segoe UI', sans-serif;}
+      .contact-email-header {background: linear-gradient(135deg, #a70c0c 0%, #d81c1c 45%, #b91010 100%); color: #fff; padding: 12px 16px; font-size: 13.5px; font-weight: 600; display: flex; 
+                             justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.1);}
+      .contact-email-body {padding: 16px; display: flex; flex-direction: column; gap: 12px;}
+      .contact-email-field {display: flex; flex-direction: column; gap: 4px;}
+      .contact-email-field label {font-size: 11.5px; font-weight: 600; color: #4b5563; text-transform: uppercase; letter-spacing: 0.5px;}
+      .contact-email-input-box {display: flex; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; background: #f8fafc; transition: all 0.2s;}
+      .contact-email-input-box:focus-within {border-color: #d81c1c; background: #fff;}
+      .contact-email-input {flex: 1; border: none; background: transparent; padding: 8px 10px; font-size: 13px; color: #333; outline: none;}
+      .contact-email-textarea {width: 100%; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px; font-size: 13px; color: #333; outline: none; background: #f8fafc; resize: vertical; 
+                               min-height: 120px; font-family: inherit; box-sizing: border-box; transition: all 0.2s;}
+      .contact-email-textarea:focus {background: #fff; border-color: #d81c1c;}
+      .contact-email-btn-action {background: #d81c1c; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; text-align: center; 
+                                 display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.15s; margin-top: 6px; width: 100%;}
+      .contact-email-btn-action:hover {background: #b91010;}
+      .contact-email-btn-copy {background: #e2e8f0; border: none; border-left: 1px solid #cbd5e1; padding: 0 12px; cursor: pointer; transition: background 0.15s;}
+      .contact-email-btn-copy:hover {background: #cbd5e1;}
+    `;
+    function _contactInjectPopupStyles() {
+      if (document.getElementById('contact-popup-styles-tag')) return;
+      const style = document.createElement('style');
+      style.id = 'contact-popup-styles-tag';
+      style.innerHTML = CONTACT_EMAIL_POPUP_STYLES;
+      document.head.appendChild(style);
+    }
+    /* ===== COMMON DATA ===== */
+    async function _getEmailCommonData() {
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const nInt = sessionStorage.getItem("currentNInt") || "205";
+      let corpName = "Corpo de Bombeiros de Faro";
+      let logoUrl = "";
+      let senderName = "Utilizador";
+      try {
+        const [corpRes, elemRes] = await Promise.all([
+          fetch(`${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${corpOperNr}&select=cb_name,logo_url`, {
+            headers: getSupabaseHeaders()
+          }),
+          fetch(`${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${corpOperNr}&n_int=eq.${nInt}&select=abv_name,patent`, {
+            headers: getSupabaseHeaders()})
+        ]);
+        const corpData = await corpRes.json();
+        const elemData = await elemRes.json();
+        if (corpData.length) {corpName = corpData[0].cb_name || corpName; logoUrl = corpData[0].logo_url || "";}
+        if (elemData.length) {senderName = `${elemData[0].abv_name || "Utilizador"}<br>${elemData[0].patent || "CB360"}`;}
+      } catch (err) {console.error("Erro ao carregar dados comuns:", err);}
+      return {corpOperNr, corpName, logoUrl, senderName};
+    }
+    /* ===== HELPER: LÊ FICHEIRO E CONVERTE PARA BASE64 ===== */
+    async function _readAttachment() {
+      const fileInput = document.getElementById('contact-email-attachment');
+      if (!fileInput?.files.length) return null;
+      const file = fileInput.files[0];
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      return {filename: file.name, content: base64, encoding: 'base64'};
+    }
+    /* ===== HELPER: LISTENER DO NOME DO FICHEIRO ===== */
+    function _attachFileListener() {
+      document.getElementById('contact-email-attachment')?.addEventListener('change', function() {
+        const name = this.files.length > 0 ? this.files[0].name : 'Nenhum ficheiro selecionado';
+        document.getElementById('contact-attachment-name').textContent = name;
+      });
+    }
+    const ATTACHMENT_FIELD_HTML = `
+      <div class="contact-email-field">
+        <label>Anexo (opcional):</label>
+        <div class="contact-email-input-box" style="padding: 6px 10px; align-items: center; gap: 8px;">
+          <input type="file" id="contact-email-attachment" style="display:none;">
+          <button type="button" onclick="document.getElementById('contact-email-attachment').click()" 
+                                style="background:#1e3a8a; color:#fff; border:none; border-radius:4px; padding:5px 12px; font-size:12px; cursor:pointer; white-space:nowrap;">📎 Escolher Ficheiro</button>
+          <span id="contact-attachment-name" style="font-size:12px; color:#64748b; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+            Nenhum ficheiro selecionado
+          </span>
+        </div>
+      </div>
+    `;
+   async function _autoCopyForWhatsApp() {
+     const subjectInput = document.getElementById('contact-email-subject');
+     const messageTextarea = document.getElementById('contact-email-body-text');
+     if (!subjectInput || !messageTextarea) return;
+     const subjectText = subjectInput.value
+     .toLowerCase()
+     .normalize("NFD")
+     .replace(/[\u0300-\u036f]/g, "");
+     const messageText = messageTextarea.value.trim();
+     if (!messageText) return;
+     try {
+       const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+       const nInt = sessionStorage.getItem("currentNInt") || "205";
+       const res = await fetch(
+         `${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${corpOperNr}&n_int=eq.${nInt}&select=abv_name,patent_abv`, {
+           headers: getSupabaseHeaders()
+         }
+       );
+       const data = await res.json();
+       const abvName = data[0]?.abv_name || "";
+       const patentAbv = data[0]?.patent_abv || "";
+       const signature = `OPTEL: ${patentAbv} ${abvName}`;
+       const finalText = `⚠️*AVISO*⚠️\n\n${messageText}\n\n${signature}`;
+       if (subjectText.includes('ro') || subjectText.includes('relatorio')) {
+         await navigator.clipboard.writeText(finalText);
+         messageTextarea.style.borderColor = "#25D366";
+         messageTextarea.style.boxShadow = "0 0 4px rgba(37,211,102,0.4)";
+       } else {
+         messageTextarea.style.borderColor = "#cbd5e1";
+         messageTextarea.style.boxShadow = "none";
+       }
+     } catch(err) {
+       console.error("Erro ao copiar automaticamente:", err);
+     }
+   }
+    function contactEmail(email) {
+      if (!email) { showPopup('popup-danger', "Este elemento não tem e-mail registado."); return; }
+      _contactInjectPopupStyles();
+      document.getElementById('contact-email-popup-overlay')?.remove();
+      const overlay = document.createElement('div');
+      overlay.id = 'contact-email-popup-overlay';
+      overlay.className = 'contact-email-overlay';
+      overlay.innerHTML = `
+        <div class="contact-email-card">
+          <div class="contact-email-header">
+            <span>✉️ Escrever E-mail para o Contacto</span>
+            <button style="background:none; border:none; color:#fff; cursor:pointer; font-size:14px;" id="contact-email-close">✕</button>
+          </div>
+          <div class="contact-email-body">
+            <div class="contact-email-field">
+              <label>Para:</label>
+              <div class="contact-email-input-box" style="background: #e2e8f0;">
+                <input type="text" class="contact-email-input" value="${email}" readonly id="contact-email-to" style="color: #475569; font-weight: 500;">
+                <button class="contact-email-btn-copy" id="contact-email-copy" title="Copiar Destinatário">📋</button>
+              </div>
+            </div>
+            <div class="contact-email-field">
+              <label>Assunto:</label>
+              <div class="contact-email-input-box">
+                <input type="text" class="contact-email-input" id="contact-email-subject" placeholder="Introduza o assunto do e-mail...">
+              </div>
+            </div>
+            <div class="contact-email-field">
+              <label>Mensagem:</label>
+              <textarea class="contact-email-textarea" id="contact-email-body-text" placeholder="Escreva a sua mensagem aqui..."></textarea>
+            </div>
+            ${ATTACHMENT_FIELD_HTML}
+            <button class="contact-email-btn-action" id="contact-email-send"><span>🚀 Enviar E-mail</span></button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+      const subjectEl = document.getElementById('contact-email-subject');
+      const messageEl = document.getElementById('contact-email-body-text');
+      if (subjectEl && messageEl) {
+        subjectEl.addEventListener('input', _autoCopyForWhatsApp);
+        messageEl.addEventListener('input', _autoCopyForWhatsApp);
+      }
+      _attachFileListener();
+      const closePopup = () => overlay.remove();
+      document.getElementById('contact-email-close').onclick = closePopup;
+      //overlay.onclick = (e) => {if (e.target === overlay) closePopup();};
+      document.getElementById('contact-email-copy').onclick = function() {
+        const emailInput = document.getElementById('contact-email-to');
+        emailInput.select();
+        navigator.clipboard.writeText(emailInput.value);
+        this.textContent = "✅";
+        setTimeout(() => {this.textContent = "📋";}, 1500);
+      };
+      document.getElementById('contact-email-send').onclick = async function() {
+        const to = document.getElementById('contact-email-to').value;
+        const subject = document.getElementById('contact-email-subject').value.trim();
+        const message = document.getElementById('contact-email-body-text').value.trim();
+        const btn = this;
+        if (!subject || !message) {
+          showPopup('popup-danger', "Por favor, preencha o assunto e o corpo da mensagem.");
+          return;
+        }
+        btn.disabled = true; btn.style.background = "#64748b"; btn.style.cursor = "not-allowed"; btn.innerHTML = `<span>⏳ A enviar...</span>`;
+        try {
+          const {corpOperNr, corpName, logoUrl, senderName} = await _getEmailCommonData();
+          const attachment = await _readAttachment();
+          const response = await fetch("https://cb360-online.vercel.app/api/various_convert_and_send", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({type: "email", data: {to, subject, message, corpOperNr, corpName, logoUrl, senderName, attachment}})
+          });
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText.trim().startsWith("<") ? `Erro do Vercel (${response.status}).` : errorText || "Falha na resposta do servidor.");
+          }
+          const result = await response.json();
+          if (result.success) {
+            showPopup('popup-success', "E-mail enviado com sucesso!"); closePopup();
+          }
+          else throw new Error(result.error || "Erro desconhecido no servidor.");
+        } catch (err) {
+          console.error("Erro:", err);
+          showPopup('popup-danger', `Falha no envio: ${err.message}`);
+          btn.disabled = false; btn.style.background = "#d81c1c"; btn.style.cursor = "pointer"; btn.innerHTML = `<span>🚀 Enviar E-mail</span>`;
+        }
+      };
+    }
+    document.getElementById("contact-list-global-email")?.addEventListener("click", async () => {
+      const tbody = document.getElementById("contact-list-tbody");
+      if (!tbody) return;
+      if (tbody.textContent.includes("Sem registos")) {
+        showPopup('popup-danger', "Não há contactos carregados.");
+        return;
+      }
+      const rows = tbody.querySelectorAll("tr:not(.quadro-header-row)");
+      const emails = [];
+      rows.forEach(row => {
+        if (row.style.display === "none") return;
+        const email = row.children[5]?.textContent.trim();
+        if (email) emails.push(email);
+      });
+      if (!emails.length) {
+        showPopup('popup-danger', "Nenhum dos elementos visíveis tem e-mail registado.");
+        return;
+      }
+      _contactInjectPopupStyles();
+      document.getElementById('contact-email-popup-overlay')?.remove();
+      const overlay = document.createElement('div');
+      overlay.id = 'contact-email-popup-overlay';
+      overlay.className = 'contact-email-overlay';
+      overlay.innerHTML = `
+        <div class="contact-email-card">
+          <div class="contact-email-header">
+            <span>✉️ Este e-mail vai ser enviado para ${emails.length} destinatários</span>
+            <button style="background:none; border:none; color:#fff; cursor:pointer; font-size:14px;" id="contact-email-close">✕</button>
+          </div>
+          <div class="contact-email-body">
+            <div class="contact-email-field">
+              <label>Assunto:</label>
+              <div class="contact-email-input-box">
+                <input type="text" class="contact-email-input" id="contact-email-subject" placeholder="Introduza o assunto do e-mail...">
+              </div>
+            </div>
+            <div class="contact-email-field">
+              <label>Mensagem:</label>
+              <textarea class="contact-email-textarea" id="contact-email-body-text" placeholder="Escreva a sua mensagem aqui..."></textarea>
+            </div>
+            ${ATTACHMENT_FIELD_HTML}
+            <button class="contact-email-btn-action" id="contact-email-send"><span>🚀 Enviar para Todos</span></button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+      _attachFileListener();
+      const closePopup = () => overlay.remove();
+      document.getElementById('contact-email-close').onclick = closePopup;
+      //overlay.onclick = (e) => {if (e.target === overlay) closePopup();};
+      document.getElementById('contact-email-send').onclick = async function() {
+        const subject = document.getElementById('contact-email-subject').value.trim();
+        const message = document.getElementById('contact-email-body-text').value.trim();
+        const btn = this;
+        if (!subject || !message) {
+          showPopup('popup-danger', "Por favor, preencha o assunto e o corpo da mensagem.");
+          return;
+        }
+        btn.disabled = true; btn.style.background = "#64748b"; btn.style.cursor = "not-allowed"; btn.innerHTML = `<span>⏳ A enviar...</span>`;
+        try {
+          const {corpOperNr, corpName, logoUrl, senderName} = await _getEmailCommonData();
+          const attachment = await _readAttachment();
+          const response = await fetch("https://cb360-online.vercel.app/api/various_convert_and_send", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({type: "email", data: {to: "comando0805.ahbfaro@gmail.com", subject, message, corpOperNr, corpName, logoUrl, senderName, isBulk: true, cc: emails, attachment}})
+          });
+          if (!response.ok) throw new Error(await response.text());
+          const result = await response.json();
+          if (result.success) {
+            showPopup('popup-success', `E-mail enviado com sucesso para ${emails.length} destinatários!`); closePopup();
+          }
+          else throw new Error(result.error || "Erro desconhecido.");
+        } catch (err) {
+          console.error("Erro:", err);
+          showPopup('popup-danger', `Falha no envio: ${err.message}`);
+          btn.disabled = false; btn.style.background = "#d81c1c"; btn.style.cursor = "pointer"; btn.innerHTML = `<span>🚀 Enviar para Todos</span>`;
+        }
+      };
+    });
+    document.getElementById("contact-list-tbody")?.addEventListener("change", function(e) {
+      if (!e.target.classList.contains("contact-row-checkbox")) return;
+      const checked = document.querySelectorAll(".contact-row-checkbox:checked");
+      const count = checked.length;
+      const btn = document.getElementById("contact-list-selected-email");
+      document.getElementById("contact-selected-count").textContent = count;
+      if (count > 0) {btn.disabled = false; btn.style.opacity = "1"; btn.style.cursor = "pointer";}
+      else {btn.disabled = true; btn.style.opacity = "0.4"; btn.style.cursor = "not-allowed";}
+    });
+    document.getElementById("contact-list-selected-email")?.addEventListener("click", () => {
+      const checked = document.querySelectorAll(".contact-row-checkbox:checked");
+      const emails = [];
+      checked.forEach(cb => {const email = cb.dataset.email; if (email) emails.push(email);});
+      if (!emails.length) {
+        showPopup('popup-danger', "Nenhum elemento selecionado tem e-mail registado.");
+        return;
+      }
+      _contactInjectPopupStyles();
+      document.getElementById('contact-email-popup-overlay')?.remove();
+      const overlay = document.createElement('div');
+      overlay.id = 'contact-email-popup-overlay';
+      overlay.className = 'contact-email-overlay';
+      overlay.innerHTML = `
+        <div class="contact-email-card">
+          <div class="contact-email-header">
+            <span>✉️ Este e-mail vai ser enviado para ${emails.length} destinatários</span>
+            <button style="background:none; border:none; color:#fff; cursor:pointer; font-size:14px;" id="contact-email-close">✕</button>
+          </div>
+          <div class="contact-email-body">
+            <div class="contact-email-field">
+              <label>Assunto:</label>
+              <div class="contact-email-input-box">
+                <input type="text" class="contact-email-input" id="contact-email-subject" placeholder="Introduza o assunto do e-mail...">
+              </div>
+            </div>
+            <div class="contact-email-field">
+              <label>Mensagem:</label>
+              <textarea class="contact-email-textarea" id="contact-email-body-text" placeholder="Escreva a sua mensagem aqui..."></textarea>
+            </div>
+            ${ATTACHMENT_FIELD_HTML}
+            <button class="contact-email-btn-action" id="contact-email-send"><span>🚀 Enviar para Selecionados</span></button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+      _attachFileListener();
+      const closePopup = () => overlay.remove();
+      document.getElementById('contact-email-close').onclick = closePopup;
+      //overlay.onclick = (e) => {if (e.target === overlay) closePopup();};
+      document.getElementById('contact-email-send').onclick = async function() {
+        const subject = document.getElementById('contact-email-subject').value.trim();
+        const message = document.getElementById('contact-email-body-text').value.trim();
+        const btn = this;
+        if (!subject || !message) {
+          showPopup('popup-danger', "Por favor, preencha o assunto e o corpo da mensagem.");
+          return;
+        }
+        btn.disabled = true; btn.style.background = "#64748b"; btn.style.cursor = "not-allowed"; btn.innerHTML = `<span>⏳ A enviar...</span>`;
+        try {
+          const {corpOperNr, corpName, logoUrl, senderName} = await _getEmailCommonData();
+          const attachment = await _readAttachment();
+          const response = await fetch("https://cb360-online.vercel.app/api/various_convert_and_send", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({type: "email", data: {to: "comando0805.ahbfaro@gmail.com", subject, message, corpOperNr, corpName, logoUrl, senderName, isBulk: true, cc: emails, attachment}})
+          });
+          if (!response.ok) throw new Error(await response.text());
+          const result = await response.json();
+          if (result.success) {
+            showPopup('popup-success', `E-mail enviado com sucesso para ${emails.length} destinatários!`);
+            document.querySelectorAll(".contact-row-checkbox:checked").forEach(cb => cb.checked = false);
+            document.getElementById("contact-selected-count").textContent = "0";
+            const selBtn = document.getElementById("contact-list-selected-email");
+            selBtn.disabled = true; selBtn.style.opacity = "0.4"; selBtn.style.cursor = "not-allowed";
+            closePopup();
+          } else throw new Error(result.error || "Erro desconhecido.");
+        } catch (err) {
+          console.error("Erro:", err);
+          showPopup('popup-danger', `Falha no envio: ${err.message}`);
+          btn.disabled = false; btn.style.background = "#d81c1c"; btn.style.cursor = "pointer"; btn.innerHTML = `<span>🚀 Enviar para Selecionados</span>`;
+        }
+      };
+    });
+    /* ===== CONTACT LIST EMIT ===== */
+    document.getElementById("contact-list-emit")?.addEventListener("click", async () => {
+      const tbody = document.getElementById("contact-list-tbody");
+      if (!tbody || tbody.textContent.includes("Sem registos")) {
+        showPopup('popup-danger', "Não há contactos carregados.");
+        return;
+      }
+      try {
+        showLoadingPopup("🔄 A preparar listagem...");
+        const { corpName } = await _getEmailCommonData();
+        const quadDef = [{code: "QCOM", title: "QUADRO DE COMANDO"}, {code: "QATIV", title: "QUADRO ATIVO"}, {code: "QEST", title: "QUADRO DE ESTAGIÁRIOS"},
+                         {code: "QEA", title: "QUADRO DE ESPECIALISTAS E AUXILIARES"}, {code: "QHR", title: "QUADRO DE HONRA"}];
+        const rows = tbody.querySelectorAll("tr:not(.quadro-header-row)");
+        const allElements = [];
+        rows.forEach(row => {
+          if (row.style.display === "none") return;
+          allElements.push({type_quad: row.dataset.typeQuad || "", n_int: row.children[0]?.textContent.trim(), patent: row.children[1]?.textContent.trim(), full_name: row.children[2]?.textContent.trim(), 
+                            phone: row.children[3]?.textContent.trim(), mobile_phone: row.children[4]?.textContent.trim(), email: row.children[5]?.textContent.trim()});});
+        const quad = quadDef.map(q => ({code: q.code, elements: allElements.filter(el => el.type_quad === q.code)}));
+        updateLoadingPopup("📊 A gerar Listagem de Contactos...");
+        const response = await fetch("https://cb360-online.vercel.app/api/various_convert_and_send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({type: "contact_list", data: {corpName, quad}}),
+        });
+        if (!response.ok) throw new Error(await response.text());
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        hideLoadingPopup();
+        document.getElementById('various-pdf-modal')?.remove();
+        _variousInjectStyles();
+        const overlay = document.createElement('div');
+        overlay.id = 'various-pdf-modal';
+        Object.assign(overlay.style, {position: 'fixed', inset: '0', background: 'rgba(10,8,8,0.78)', zIndex: '9999', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)'});
+        const box = document.createElement('div');
+        box.className = 'various-box';
+        Object.assign(box.style, {background: '#f8f8f8', borderRadius: '14px', width: '82vw', height: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 28px 72px rgba(0,0,0,0.45)', overflow: 'hidden'});
+        const header = document.createElement('div');
+        header.className = 'various-header';
+        header.innerHTML = `
+          <div style="display:flex;align-items:center;gap:10px;flex:1;position:relative;z-index:1;">
+            <div style="color:#fff;font-weight:700;font-size:13px;">📋 Listagem de Contactos</div>
+          </div>
+          <div style="display:flex;gap:5px;position:relative;z-index:1;">
+            <button class="various-btn" id="various-pdf-fullscreen" title="Ecrã inteiro">⛶</button>
+            <button class="various-btn various-close-btn" id="various-pdf-close" title="Fechar">✕</button>
+          </div>
+        `;
+        const content = document.createElement('div');
+        Object.assign(content.style, {flex: '1', position: 'relative', overflow: 'hidden', background: '#fff'});
+        const iframe = document.createElement('iframe');
+        Object.assign(iframe.style, {position: 'absolute', inset: '0', width: '100%', height: '100%', border: 'none'});
+        iframe.src = url;
+        content.appendChild(iframe);
+        const footer = document.createElement('div');
+        footer.className = 'various-footer';
+        footer.innerHTML = `
+          <div class="various-footer-info">Documento gerado com sucesso</div>
+          <button class="various-print-btn" id="various-pdf-print">🖨️ Imprimir</button>
+        `;
+        box.append(header, content, footer);
+        overlay.appendChild(box);
+        document.body.appendChild(overlay);
+        let isFs = false;
+        document.getElementById("various-pdf-fullscreen").onclick = () => {
+          isFs = !isFs;
+          Object.assign(box.style, {width: isFs ? '100vw' : '82vw', height: isFs ? '100vh' : '90vh', borderRadius: isFs ? '0' : '14px'});
+        };
+        document.getElementById("various-pdf-close").onclick = () => { 
+          URL.revokeObjectURL(url);
+          overlay.remove();
+        };
+        document.getElementById("various-pdf-print").onclick = () => {
+          iframe.contentWindow.focus();
+          iframe.contentWindow.print();
+        };
+        // overlay.addEventListener('click', e => {if (e.target === overlay) {URL.revokeObjectURL(url); overlay.remove();}});
+      } catch (err) {
+        hideLoadingPopup();
+        console.error("Erro ao emitir listagem:", err);
+        showPopup('popup-danger', `Erro ao gerar PDF: ${err.message}`);
+      }
+    });
     /* =======================================
     ALARM CONSOLE
     ======================================= */

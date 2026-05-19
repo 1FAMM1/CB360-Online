@@ -62,7 +62,7 @@
       }
       async loadFromSupabase() {
       try {
-        const corpId = sessionStorage.getItem('currentCorpOperNr') || "0805";
+        const corpId = sessionStorage.getItem('currentCorpOperNr');
         const headers = getSupabaseHeaders();
         headers['x-my-corpo'] = corpId;
         const resp = await fetch(`${this.SUPABASE_URL}/rest/v1/epe_status?corp_oper_nr=eq.${corpId}`, {
@@ -99,7 +99,7 @@
      }
       async saveToSupabase(epe_type, epe_value) {
         try {
-          const corpId = sessionStorage.getItem('currentCorpOperNr') || "0805";
+          const corpId = sessionStorage.getItem('currentCorpOperNr');
           const headers = getSupabaseHeaders({ returnRepresentation: true });
           headers['x-my-corpo'] = corpId;
           const body = {epe: epe_value, corp_oper_nr: corpId};
@@ -163,7 +163,7 @@
     }
     async function loadVehiclesFromsessionStorage() {
       const vehicleStatusEl = document.getElementById('vehicleStatus');
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
       if (!currentCorpOperNr) {
         vehicleGrid.style.display = "block";
         vehicleGrid.innerHTML = `
@@ -219,7 +219,7 @@
       }
     }
     async function updateVehicleStatussessionStorage(vehicleCode, newStatus) {
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
       if (!currentCorpOperNr) {
         showPopup('popup-danger', "Nenhuma corporação selecionada.");
         return;
@@ -340,7 +340,7 @@
       });
     }
     async function loadInfosFromSupabase() {
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
       if (!currentCorpOperNr) return console.error("❌ currentCorpOperNr não definido!");
       try {
         const infoContainer = document.getElementById('info-container');
@@ -380,7 +380,7 @@
       }
     }
     async function saveInfoGroupFields(n) {
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const group = document.getElementById(`relev-info-${n}`);
       if (!group || !currentCorpOperNr) return;    
       const fromVal = document.getElementById(`from-${n}`).value || "";
@@ -415,7 +415,7 @@
       }
     }
     async function clearInfoGroupFields(n) {
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805"; 
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr"); 
       const group = document.getElementById(`relev-info-${n}`);
       if (!group || !currentCorpOperNr) return;
       const rowId = group.dataset.rowId;
@@ -456,7 +456,7 @@
     async function loadRoutesFromSupabase(total = 12) {
       createRouteInputs(total);
       await waitForRouteInputs(total);
-      const currentCorpOperNr = sessionStorage.getItem('currentCorpOperNr') || "0805";
+      const currentCorpOperNr = sessionStorage.getItem('currentCorpOperNr');
       if (!currentCorpOperNr) {
         return console.error("❌ [ROUTES] currentCorpOperNr não definido!");
       }
@@ -489,7 +489,7 @@
       }
     }
     async function saveRoutesGroupFields(total = 12) {
-      const currentCorpOperNr = sessionStorage.getItem('currentCorpOperNr') || "0805";
+      const currentCorpOperNr = sessionStorage.getItem('currentCorpOperNr');
       if (!currentCorpOperNr) {
         showPopup('popup-danger', "Erro: Sessão não identificada.");
         return;
@@ -585,7 +585,7 @@
     async function loadCMAsFromSupabase() {
       try {
         if (typeof createCmaInputs === "function") createCmaInputs();
-        const currentCorpOperNr = sessionStorage.getItem('currentCorpOperNr') || "0805";
+        const currentCorpOperNr = sessionStorage.getItem('currentCorpOperNr');
         if (!currentCorpOperNr) {
           console.error("❌ Erro: currentCorpOperNr não encontrado!");
           return;
@@ -638,7 +638,7 @@
     }
     async function saveCMAsGroupFields() {
       try {
-        const currentCorpOperNr = sessionStorage.getItem('currentCorpOperNr') || "0805";
+        const currentCorpOperNr = sessionStorage.getItem('currentCorpOperNr');
         if (!currentCorpOperNr) {
           showPopup('popup-danger', "Erro: Sessão expirada. Faça login novamente.");
           return;
@@ -680,7 +680,7 @@
     ======================================= */    
     async function loadNoHospFromSupabase(total = 12) {
       createNoHospInputs(total);
-      const currentCorpOperNr = sessionStorage.getItem('currentCorpOperNr') || "0805";
+      const currentCorpOperNr = sessionStorage.getItem('currentCorpOperNr');
       if (!currentCorpOperNr) return console.error("❌ [NOHOSP] CorpOperNr não definido!");
       try {
         const headers = getSupabaseHeaders();
@@ -721,7 +721,7 @@
     }
     /* ====== SAVE NO HOSP GROUP FIELDS (VERSÃO OTIMIZADA) ====== */
     async function saveNoHospGroupFields(total = 12) {
-      const currentCorpOperNr = sessionStorage.getItem('currentCorpOperNr') || "0805";
+      const currentCorpOperNr = sessionStorage.getItem('currentCorpOperNr');
       if (!currentCorpOperNr) {
         showPopup('popup-danger', "Erro: Sessão não identificada.");
         return;
@@ -781,7 +781,7 @@
     ======================================= */
     async function loadocrReportsFromSupabase(total = 24) {
       createOcrReportsInputs(total);
-      const currentCorpOperNr = sessionStorage.getItem('currentCorpOperNr') || "0805";
+      const currentCorpOperNr = sessionStorage.getItem('currentCorpOperNr');
       if (!currentCorpOperNr) {
         showPopup('popup-danger', "Erro: Sessão não identificada.");
         return;
@@ -827,7 +827,7 @@
         saveBtn.disabled = true;
         saveBtn.textContent = "A guardar...";
       }    
-      const corp_oper_nr_raw = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corp_oper_nr_raw = sessionStorage.getItem("currentCorpOperNr");
       if (!corp_oper_nr_raw) {
         showPopup('popup-danger', "Erro: Corporação não identificada.");
         if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = "Guardar"; }

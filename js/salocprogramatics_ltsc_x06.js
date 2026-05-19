@@ -75,7 +75,7 @@
     const LINFER_ABS_TABLE_STYLE = `width: 100%; margin-top: -5px; border-collapse: collapse;`;
     const LINFER_ABS_CELL_STYLE = `border: 1px solid #bbb; text-align: left;`;
     /* ─── HELPERS ────────────────────────────────────────────── */
-    const getCorpNr = () => sessionStorage.getItem("currentCorpOperNr") || "0805";
+    const getCorpNr = () => sessionStorage.getItem("currentCorpOperNr");
     async function fetchFromSupabase(table, filter) {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?select=*&${filter}`, {headers: getSupabaseHeaders()});
       if (!res.ok) throw new Error(`Erro ao buscar ${table}: ${res.status}`);
@@ -1079,7 +1079,7 @@
     /* ============= INSERTION OF NEW REFUSAL ============= */
     async function insertServiceRefusal() { 
       if (!validateRequiredServiceRefusalFields()) return;
-      const corpOperNr = sessionStorage.getItem('currentCorpOperNr') || "0805";
+      const corpOperNr = sessionStorage.getItem('currentCorpOperNr');
       const payload = {corp_oper_nr: corpOperNr, refusal_date: document.getElementById('service_refusal_date').value, refusal_time: document.getElementById('service_refusal_time').value,
                        service_type: document.getElementById('service_refusal_type').value, reason_for_refusal: document.getElementById('service_refusal_motive').value,
                        service_origin: document.getElementById('service_refusal_origin').value, service_destination: document.getElementById('service_refusal_destination').value,
@@ -1138,7 +1138,7 @@
     /* ================= LOADING REFUSALS ================= */
     async function loadServiceRefusals() {
       try {
-        const corpOperNr = sessionStorage.getItem('currentCorpOperNr') || "0805";
+        const corpOperNr = sessionStorage.getItem('currentCorpOperNr');
         const url = `${SUPABASE_URL}/rest/v1/service_refusals?corp_oper_nr=eq.${corpOperNr}&order=refusal_date.desc`;
         const res = await fetch(url, {
           headers: getSupabaseHeaders()
@@ -1239,7 +1239,7 @@
     /* ======= INSERTION OF NEW NON-OPERATIONALITY ======== */
     async function insertIneInop() {
       if (!validateRequiredIneInopFields()) return;
-      const corpOperNr = sessionStorage.getItem('currentCorpOperNr') || "0805";    
+      const corpOperNr = sessionStorage.getItem('currentCorpOperNr');    
       const payload = {corp_oper_nr: corpOperNr, ineinop_date: document.getElementById('ineinop_date').value, ineinop_shift: document.getElementById('ineinop_shift').value,
                        ineinop_hour_qtd: document.getElementById('ineinop_hour_qtd').value, reason_for_ineinop: document.getElementById('reason_for_ineinop').value,
                        ineinop_crew: document.getElementById('ineinop_crew').value, optel_refusal: document.getElementById('ineinop_optel').value,
@@ -1297,7 +1297,7 @@
     /* =========== LOADING NON-OPERATIONALITIES =========== */
     async function loadIneInops(yearFilter = null) {
       try {
-        const corpOperNr = sessionStorage.getItem('currentCorpOperNr') || "0805";
+        const corpOperNr = sessionStorage.getItem('currentCorpOperNr');
         let url = `${SUPABASE_URL}/rest/v1/inem_inop?corp_oper_nr=eq.${corpOperNr}&order=ineinop_date.desc`;
         if (yearFilter) url += `&ineinop_date=ilike.${yearFilter}%`;    
         const res = await fetch(url, {
@@ -1424,7 +1424,7 @@
     /* ================== SUMARY DATA ===================== */
     async function loadSummaryData() {
       try {
-        const corpOperNr = sessionStorage.getItem('currentCorpOperNr') || "0805";
+        const corpOperNr = sessionStorage.getItem('currentCorpOperNr');
         const inemRes = await fetch(`${SUPABASE_URL}/rest/v1/inem_inop?select=ineinop_shift,ineinop_hour_qtd&corp_oper_nr=eq.${corpOperNr}`, {
           headers: getSupabaseHeaders()
         });        
@@ -1466,7 +1466,7 @@
                            'rgba(186, 85, 211, 0.7)', 'rgba(46, 139, 87, 0.7)', 'rgba(70, 130, 180, 0.7)'];
     async function loadServiceRefusalsCharts() {
       try {
-        const corpOperNr = sessionStorage.getItem('currentCorpOperNr') || "0805";
+        const corpOperNr = sessionStorage.getItem('currentCorpOperNr');
         const res = await fetch(`${SUPABASE_URL}/rest/v1/service_refusals?select=refusal_date,service_type&corp_oper_nr=eq.${corpOperNr}`, {
           headers: getSupabaseHeaders()
         });        
@@ -1648,7 +1648,7 @@
     }    
     /* ================= MAIN FUNCTION ================= */
     async function emitMOAGlobal() {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       if (!corpOperNr) {showPopup('popup-danger', "Erro: O número da corporação não foi encontrado."); return;}
       const moa_device_type = document.getElementById("moa_device_type")?.value.trim();
       const moa_cb = document.getElementById("moa_cb")?.value.trim();
@@ -2115,7 +2115,7 @@
       return optelTable.rows[0].nome || "";
     }
     async function emitPlanning(shift, date, baixar = false) {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       if (!corpOperNr) {
         showPopup('popup-danger', "Erro: Sessão expirada. Por favor, faça login novamente.");
         return;
@@ -2193,7 +2193,7 @@
       const tbody = document.getElementById('plandir-side-tbody');
       const rightCol = document.getElementById('plandir-right-col');
       if (!tbody || !rightCol) return;
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       if (!corpOperNr) return;
       const now = new Date();
       const day = String(now.getDate()).padStart(2, '0');
@@ -2273,7 +2273,7 @@
         localStorage.setItem("originalShift", shift);
       }
       let header;
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       if (shift === 'LAST') {
         try {
           const res = await fetch(`${SUPABASE_URL}/rest/v1/fomio_date?select=header_text&limit=1`, {method: 'GET', headers: getSupabaseHeaders()});
@@ -3014,7 +3014,7 @@
     /* ===== LOAD, EMIT HEMODIALYSIS LIST =====*/
     async function loadHemoWeekList() {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/hemodialysis_list?corp_oper_nr=eq.${corpOperNr}&select=utent_name,utent_adress,utent_desteny,utent_shift,utent_shift_days`, {
             headers: getSupabaseHeaders()
@@ -3083,7 +3083,7 @@
     async function emitHemoWeekList(type) {
       try {
         showLoadingPopup("🔄 A preparar listagem...");
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const fields = ["utent_name", "utent_adress", "utent_desteny", "utent_shift", "utent_shift_days", "utent_niss", "utent_localitie", "utent_contact", "utent_position"].join(",");
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/hemodialysis_list?corp_oper_nr=eq.${corpOperNr}&select=${fields}&order=utent_shift_days.asc,utent_shift.asc`, {
@@ -3162,7 +3162,7 @@
     /* ===== ADD, EDIT, REMOVE HEMODIALYSIS UTENT ===== */
     async function loadHemoUtentList() {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/hemodialysis_list?
           corp_oper_nr=eq.${corpOperNr}&select=id,utent_name,utent_adress,utent_localitie,utent_contact,utent_niss,utent_desteny,utent_shift_days,utent_shift,utent_position,utent_days_selected&order=utent_name.asc`, {headers: getSupabaseHeaders()}
@@ -3217,7 +3217,7 @@
     });
     async function editHemoUtent(id) {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/hemodialysis_list?id=eq.${id}&corp_oper_nr=eq.${corpOperNr}&select=*`, {
             headers: getSupabaseHeaders()
@@ -3252,7 +3252,7 @@
     async function deleteHemoUtent(id) {
       if (!confirm("Tem a certeza que pretende eliminar este utente?")) return;
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/hemodialysis_list?id=eq.${id}&corp_oper_nr=eq.${corpOperNr}`, {
             method: "DELETE", 
@@ -3268,7 +3268,7 @@
       }
     }
     async function saveHemoUtent() {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const name = document.getElementById("utent_h_name").value.trim();
       const nr = document.getElementById("utent_h_nr").value.trim();
       const adress = document.getElementById("utent_h_adress").value.trim();
@@ -3474,7 +3474,7 @@
       if (!tbody) return;
       tbody.style.opacity = "0.5";
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/equipment_request?corp_opr_nr=eq.${corpOperNr}&order=created_at.desc`, {
             headers: getSupabaseHeaders()
@@ -3518,7 +3518,7 @@
     /* ===== EDIT EQUIPMENT REQUEST ===== */
     async function equipmentRequestEdit(id) {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/equipment_request?id=eq.${id}&corp_opr_nr=eq.${corpOperNr}&select=*`, {
             headers: getSupabaseHeaders()
@@ -3556,7 +3556,7 @@
     async function equipmentRequestDelete(id) {
       if (!confirm("Tem a certeza que pretende eliminar esta requisição?")) return;
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/equipment_request?id=eq.${id}&corp_opr_nr=eq.${corpOperNr}`, {
             method: "DELETE",
@@ -3574,7 +3574,7 @@
     /* ===== SAVE EQUIPMENT REQUEST ===== */
     let equipmentRequestEditId = null;
     async function equipmentRequestSave() {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const requesting_name = document.getElementById("requesting_name").value.trim();
       const cc = document.getElementById("requesting_cc").value.trim();
       const cc_secur = document.getElementById("requesting_cc_secur").value.trim();
@@ -3738,7 +3738,7 @@
       if (!tbody) return;
       tbody.style.opacity = "0.5";
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const [responseFleet, responseStatus] = await Promise.all([
           fetch(`${SUPABASE_URL}/rest/v1/fleet_cards?corp_oper_nr=eq.${corpOperNr}&order=vehicle.asc`, {headers: getSupabaseHeaders()}),
           fetch(`${SUPABASE_URL}/rest/v1/vehicle_status?corp_oper_nr=eq.${corpOperNr}`, {headers: getSupabaseHeaders()})
@@ -3792,7 +3792,7 @@
     /* ===== FLEET CARDS EDIT ===== */
     async function fleetCardEdit(id) {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/fleet_cards?id=eq.${id}&corp_oper_nr=eq.${corpOperNr}&select=*`, {
             headers: getSupabaseHeaders()
@@ -3818,7 +3818,7 @@
     async function fleetCardDelete(id) {
       if (!confirm("Tem a certeza que pretende eliminar este registo?")) return;
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/fleet_cards?id=eq.${id}&corp_oper_nr=eq.${corpOperNr}`, {
             method: "DELETE",
@@ -3835,7 +3835,7 @@
     }
     /* ===== FLEET CARDS SAVE ===== */
     async function fleetCardSave() {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const vehicle = document.getElementById("veíc_card_name").value.trim();
       const registration = document.getElementById("veíc_card_register").value.trim();
       const card_code = document.getElementById("veíc_card_code").value.trim();
@@ -3886,7 +3886,7 @@
     document.getElementById("card-fleet-emit")?.addEventListener("click", async () => {
       try {
         showLoadingPopup("🔄 A preparar listagem...");
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/fleet_cards?corp_oper_nr=eq.${corpOperNr}&order=vehicle.asc`, {
             headers: getSupabaseHeaders()
@@ -3993,7 +3993,7 @@
       if (searchInput) searchInput.value = "";
       tbody.style.opacity = "0.5";
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${corpOperNr}&n_int=lt.900&elem_state=eq.true&select=id,n_int,patent,full_name,phone,mobile_phone,email,type_quad&order=n_int.asc`, {
             headers: getSupabaseHeaders()
@@ -4109,8 +4109,8 @@
     }
     /* ===== COMMON DATA ===== */
     async function _getEmailCommonData() {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
-      const nInt = sessionStorage.getItem("currentNInt") || "205";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const nInt = sessionStorage.getItem("currentNInt");
       let corpName = "Corpo de Bombeiros de Faro";
       let logoUrl = "";
       let senderName = "Utilizador";
@@ -4173,8 +4173,8 @@
      const messageText = messageTextarea.value.trim();
      if (!messageText) return;
      try {
-       const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
-       const nInt = sessionStorage.getItem("currentNInt") || "205";
+       const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+       const nInt = sessionStorage.getItem("currentNInt");
        const res = await fetch(
          `${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${corpOperNr}&n_int=eq.${nInt}&select=abv_name,patent_abv`, {
            headers: getSupabaseHeaders()

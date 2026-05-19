@@ -3152,7 +3152,7 @@
           iframe.contentWindow.focus();
           iframe.contentWindow.print();
         };
-        overlay.addEventListener('click', e => {if (e.target === overlay) overlay.remove();});
+        //overlay.addEventListener('click', e => {if (e.target === overlay) overlay.remove();});
       } catch (err) {
         hideLoadingPopup();
         console.error("Erro:", err);
@@ -3443,7 +3443,7 @@
               iframe.contentWindow.print();
             };
             setTimeout(() => {
-              overlay.addEventListener('click', e => {if (e.target === overlay) overlay.remove();});
+              //overlay.addEventListener('click', e => {if (e.target === overlay) overlay.remove();});
             }, 100);
           } catch (err) {
             hideLoadingPopup();
@@ -3716,7 +3716,7 @@
         };
         document.getElementById("various-pdf-close").onclick = () => {URL.revokeObjectURL(url); overlay.remove();};
         document.getElementById("various-pdf-print").onclick = () => {iframe.contentWindow.focus(); iframe.contentWindow.print();};
-        overlay.addEventListener('click', e => {if (e.target === overlay) overlay.remove();});
+        //overlay.addEventListener('click', e => {if (e.target === overlay) overlay.remove();});
       } catch (err) {
         hideLoadingPopup();
         console.error("Erro:", err);
@@ -3944,7 +3944,7 @@
         };
         document.getElementById("various-pdf-close").onclick = () => { URL.revokeObjectURL(url); overlay.remove(); };
         document.getElementById("various-pdf-print").onclick = () => { iframe.contentWindow.focus(); iframe.contentWindow.print(); };
-        overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+        //overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
       } catch (err) {
         hideLoadingPopup();
         console.error("Erro:", err);

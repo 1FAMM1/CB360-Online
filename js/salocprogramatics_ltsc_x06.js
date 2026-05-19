@@ -3092,8 +3092,8 @@
         );
         if (!response.ok) throw new Error("Erro ao carregar dados do banco de dados.");
         const data = await response.json();
-        updateLoadingPopup("📊 A gerar Listagem...");
-        const res = await fetch("https://cb360-online.vercel.app/api/hemodialysis_convert_and_send", {
+        updateLoadingPopup("📊 A gerar Listagem de Hemodiálises...");
+        const res = await fetch("https://cb360-online.vercel.app/api/various_convert_and_send", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({type: type, data: data})
@@ -3385,8 +3385,8 @@
         btn.removeAttribute("onclick");
         btn.addEventListener("click", async () => {
           try {
-            showLoadingPopup("🔄 A preparar formulário...");
-            const res = await fetch("https://cb360-online.vercel.app/api/hemodialysis_convert_and_send", {
+            showLoadingPopup("🔄 A preparar Formulário de Formação...");
+            const res = await fetch("https://cb360-online.vercel.app/api/various_convert_and_send", {
               method: "POST",
               headers: {"Content-Type": "application/json"},
               body: JSON.stringify({type: "formacao"})
@@ -3655,7 +3655,7 @@
       }
       try {
         showLoadingPopup("🔄 A preparar requisição...");
-        const res = await fetch("https://cb360-online.vercel.app/api/hemodialysis_convert_and_send", {
+        const res = await fetch("https://cb360-online.vercel.app/api/various_convert_and_send", {
           method: "POST",
           headers: {"Content-Type": "application/json"},
           body: JSON.stringify({
@@ -3894,7 +3894,7 @@
         );
         const data = await response.json();
         updateLoadingPopup("📊 A gerar Listagem Cartões Frota...");
-        const res = await fetch("https://cb360-online.vercel.app/api/hemodialysis_convert_and_send", {
+        const res = await fetch("https://cb360-online.vercel.app/api/various_convert_and_send", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ type: "fleet_cards", data })

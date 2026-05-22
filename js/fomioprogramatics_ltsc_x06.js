@@ -504,7 +504,7 @@
     }
     /* ─── LINHAS FIXAS (FOMIO) ───────────────────────────────── */
     function createFixedRows(tbody, data, savedMap, year, month, daysInMonth, section, calculateVolunteersRowTotal, calculateColumnTotals, holidays) {
-      const fixedRowsData = [{idx:0, text:savedMap[`fixed_0_text`]||"OFOPE", isHeader:true}, {idx:1, dataIndex:0}, {idx:2, dataIndex:1}, {idx:3, dataIndex:2},
+      const fixedRowsData = [{idx:0, text:savedMap[`fixed_0_text`]||"OFOPE", isHeader:true}, {idx:1, dataIndex:0}, {idx:2, dataIndex:1}, /*{idx:3, dataIndex:2},*/
                              {idx:5, text:savedMap[`fixed_3_text`]||"CORPO ATIVO", isHeader:true}];
       fixedRowsData.forEach(rowInfo => {
         let fixedRow = tbody.querySelector(`tr.fixed-row[data-fixed="${rowInfo.idx}"]`);
@@ -540,7 +540,7 @@
     function createDataRows(tbody, data, savedMap, year, month, daysInMonth, section, calculateVolunteersRowTotal, calculateColumnTotals, holidays) {
       const isEscalaSection = section === "Emissão Escala" || section === "Consultar Escalas";
       data.forEach((item, dataIdx) => {
-        if (isEscalaSection && dataIdx < 3) return;
+        if (isEscalaSection && dataIdx < 2) return;
         const nIntStr = String(item.n_int).padStart(3,"0");
         let tr = tbody.querySelector(`tr[data-nint="${nIntStr}"]`);
         if (!tr) {

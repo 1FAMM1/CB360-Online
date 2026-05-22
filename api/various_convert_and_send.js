@@ -371,7 +371,11 @@
             subject: `Lista de Comparências - ${eventName}`,
             html: `<p>Segue em anexo a lista de comparências do evento: <strong>${eventName}</strong>.</p>`,
             attachments: [{filename: fileName, content: Buffer.from(finalPdf), contentType: "application/pdf"}],
-          }).catch(err => console.warn("⚠️ Aviso: erro ao enviar email da lista de comparências:", err));
+          }).then(() => {
+            console.log("✅ Email de comparências enviado com sucesso para:", ALWAYS_TO_ATTENDANCE);
+          }).catch(err => {
+            console.error("❌ Erro ao enviar email da lista de comparências:", err);
+          });
           const dateToday = new Date().toLocaleDateString("pt-PT").replace(/\//g, "-");
           res.setHeader("Content-Type", "application/pdf");
           res.setHeader("Content-Disposition", `inline; filename="${fileName}"`);

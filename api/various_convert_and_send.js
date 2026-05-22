@@ -313,7 +313,7 @@
 if (type === "attendance_list") {
   const quadMap = {QCOM: {startRow: 11, endRow: 13}, QATIV: {startRow: 19, endRow: 118}, QEST: {startRow: 124, endRow: 144},
                    QEA: {startRow: 150, endRow: 159}, QHR: {startRow: 165, endRow: 184},};
-  const { quad, eventName, corpName, logoUrl, senderName = "CB360" } = data;  // ← extrair aqui
+  const { quad, eventName, corpName: attCorpName, logoUrl: attLogoUrl, senderName = "CB360" } = data;
   const ALWAYS_TO_ATTENDANCE = ["comando0805.ahbfaro@gmail.com", "central0805.ahbfaro@gmail.com"];
   const tplRes = await fetch(TEMPLATES.attendance_list);
   const workbook = new ExcelJS.Workbook();

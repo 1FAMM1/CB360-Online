@@ -585,7 +585,7 @@
     async function loadCMAsFromSupabase() {
       try {
         if (typeof createCmaInputs === "function") createCmaInputs();
-        const currentCorpOperNr = sessionStorage.getItem('currentCorpOperNr');
+        const currentCorpOperNr = sessionStorage.getItem('currentCorpOperNr') || "0805";
         if (!currentCorpOperNr) {
           console.error("❌ Erro: currentCorpOperNr não encontrado!");
           return;
@@ -631,6 +631,9 @@
           if (autoInput) {
             autoInput.value = row.aero_autonomy || "";
           }
+          if (row.is_active) {
+            toggleCMAFields(n, true);
+          }
         });
       } catch (error) {
         console.error("❌ Erro no load:", error);
@@ -638,7 +641,7 @@
     }
     async function saveCMAsGroupFields() {
       try {
-        const currentCorpOperNr = sessionStorage.getItem('currentCorpOperNr');
+        const currentCorpOperNr = sessionStorage.getItem('currentCorpOperNr') || "0805";
         if (!currentCorpOperNr) {
           showPopup('popup-danger', "Erro: Sessão expirada. Faça login novamente.");
           return;
@@ -650,9 +653,10 @@
           const nameInput = document.getElementById(`cma_aero_type_${n}`);
           const typeSelect = document.getElementById(`cma_type_${n}`);
           const autoInput = document.getElementById(`cma_auto_${n}`);
+          const toggle = document.getElementById(`cma_toggle_${n}`);
           if (nameInput && nameInput.dataset.rowId) {
             const dbId = nameInput.dataset.rowId;
-            const payload = {aero_name: nameInput.value || "", aero_type: typeSelect.value || "", aero_autonomy: autoInput.value || "", corp_oper_nr: currentCorpOperNr};
+            const payload = {aero_name: nameInput.value || "", aero_type: typeSelect.value || "", aero_autonomy: autoInput.value || "", is_active: toggle ? toggle.checked : false, corp_oper_nr: currentCorpOperNr};
             const res = await fetch(
               `${SUPABASE_URL}/rest/v1/air_centers?id=eq.${dbId}`, {
                 method: "PATCH",

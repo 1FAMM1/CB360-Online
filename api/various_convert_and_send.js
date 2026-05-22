@@ -364,7 +364,7 @@ if (type === "attendance_list") {
   const dateToday = new Date().toLocaleDateString("pt-PT").replace(/\//g, "-");
   const fileName = `Lista_Comparencias_${dateToday}.pdf`;
 
-  // ===== ENVIO EMAIL EM SEGUNDO PLANO =====
+  // ===== ENVIO EMAIL =====
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {user: process.env.GMAIL_EMAIL, pass: process.env.GMAIL_APP_PASSWORD},
@@ -387,8 +387,8 @@ if (type === "attendance_list") {
   </style></head><body>
     <div class="email-container">
       <div class="email-header">
-        ${attlogoUrl ? `<img src="${attlogoUrl}" alt="Logótipo" class="brand-logo" height="100" />` : ""}
-        <h2>${attcorpName}</h2>
+        ${attLogoUrl ? `<img src="${attLogoUrl}" alt="Logótipo" class="brand-logo" height="100" />` : ""}
+        <h2>${attCorpName}</h2>
         <p>Lista de Comparências em Eventos</p>
       </div>
       <div class="email-body">
@@ -405,14 +405,18 @@ if (type === "attendance_list") {
       <div class="email-footer">&copy; ${new Date().getFullYear()} CB360 Online - Todos os direitos reservados.</div>
     </div>
   </body></html>`;
-  transporter.sendMail({
-    from: `"CB360 Online" <${process.env.GMAIL_EMAIL}>`,
-    to: ALWAYS_TO_ATTENDANCE,
-    subject: `Lista de Comparências - ${eventName}`,
-    html: htmlAttendanceTemplate,
-    attachments: [{filename: fileName, content: Buffer.from(finalPdf), contentType: "application/pdf"}],
-  }).then(() => console.log("✅ Email de comparências enviado para:", ALWAYS_TO_ATTENDANCE))
-    .catch(err => console.error("❌ Erro ao enviar email:", err));
+  try {
+    await transporter.sendMail({
+      from: `"CB360 Online" <${process.env.GMAIL_EMAIL}>`,
+      to: ALWAYS_TO_ATTENDANCE,
+      subject: `Lista de Comparências - ${eventName}`,
+      html: htmlAttendanceTemplate,
+      attachments: [{filename: fileName, content: Buffer.from(finalPdf), contentType: "application/pdf"}],
+    });
+    console.log("✅ Email de comparências enviado para:", ALWAYS_TO_ATTENDANCE);
+  } catch (emailErr) {
+    console.error("❌ Erro ao enviar email:", emailErr);
+  }
 
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", `inline; filename="${fileName}"`);

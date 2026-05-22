@@ -310,138 +310,114 @@
           return res.status(200).send(Buffer.from(finalPdf));
         }
         // ===== ATTENDANCE LIST =====
-        if (type === "attendance_list") {
-          const quadMap = {QCOM: {startRow: 11, endRow: 13}, QATIV: {startRow: 19, endRow: 118}, QEST: {startRow: 124, endRow: 144},
-                           QEA: {startRow: 150, endRow: 159}, QHR: {startRow: 165, endRow: 184},};
-          const { quad, eventName, corpName } = data;
-          const tplRes = await fetch(TEMPLATES.attendance_list);
-          const workbook = new ExcelJS.Workbook();
-          await workbook.xlsx.load(await tplRes.arrayBuffer());
-          const ws = workbook.worksheets[0];
-          ws.pageSetup = {paperSize: 9, orientation: "portrait", fitToPage: true, fitToWidth: 1, fitToHeight: 0};
-          ws.getRow(119).addPageBreak();
-          const cEventName = ws.getCell("B5");
-          cEventName.value = eventName || "";
-          fitCellTemplate(cEventName);
-          quad.forEach(({code, elements}) => {
-            const map = quadMap[code];
-            if (!map) return;
-            const maxRows = map.endRow - map.startRow + 1;
-            elements.slice(0, maxRows).forEach((el, i) => {
-              const r = map.startRow + i;
-              const cNInt = ws.getCell(`B${r}`);
-              const cPatent = ws.getCell(`C${r}`);
-              const cName = ws.getCell(`F${r}`);
-              const cAttends = ws.getCell(`M${r}`);
-              const cMotive = ws.getCell(`N${r}`);
-              cNInt.value = el.n_int || "";
-              cPatent.value = el.patent || "";
-              cName.value = el.full_name || "";
-              cAttends.value = el.attends || "—";
-              cMotive.value = el.motive || "";
-              [cNInt, cPatent, cName, cAttends, cMotive].forEach(fitCellTemplate);
-            });
-            const filledCount = Math.min(elements.length, maxRows);
-            for (let i = filledCount; i < maxRows; i++) {
-              const row = ws.getRow(map.startRow + i);
-              row.hidden = true;
-              row.commit();
-            }
-            if (elements.length === 0) {
-              for (let r = map.startRow - 4; r < map.startRow; r++) {
-                const row = ws.getRow(r);
-                row.hidden = true;
-                row.commit();
-              }
-            }
-          });
-          const pdfBuf = await workbookToPdfBuffer(workbook, "attendance_list");
-          const doc = await PDFDocument.load(pdfBuf);
-          const pages = await mergedPdf.copyPages(doc, doc.getPageIndices());
-          pages.forEach(p => mergedPdf.addPage(p));
-          const finalPdf = await mergedPdf.save();
-          const fileName = `Lista_Comparencias_${eventName}.pdf`;
-          // ===== ENVIO EMAIL EM SEGUNDO PLANO =====
-          const transporter = nodemailer.createTransport({
-            service: "gmail",
-            auth: {user: process.env.GMAIL_EMAIL, pass: process.env.GMAIL_APP_PASSWORD},
-          });
-          const {logoUrl, corpOperNr: corpNr, corpName, eventName, senderName = "Utilizador"} = data;
-          const htmlAttendanceTemplate = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-              <meta charset="utf-8">
-              <style>
-                body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; background-color: #f3f4f6; color: #333333; }
-                .email-container { max-width: 1000px; margin: 25px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-                .email-header { background: linear-gradient(135deg, #a70c0c 0%, #d81c1c 50%, #b91010 100%); padding: 15px 20px; text-align: center; color: #ffffff; }
-                .brand-logo { max-height: 75px; width: auto; margin-bottom: 12px; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.2)); }
-                .email-header h2 { margin: 0; font-size: 19px; font-weight: 600; letter-spacing: 0.5px; line-height: 1.4; }
-                .email-header p { margin: 6px 0 0 0; font-size: 13px; color: #fecaca; opacity: 0.9; }
-                .email-body { padding: 15px 10px; line-height: 1.6; font-size: 14px; }
-                .message-box { background-color: #f8fafc; border-left: 4px solid #d81c1c; padding: 20px; margin: 0 0 25px 0; border-radius: 0 6px 6px 0; white-space: pre-line; color: #1e293b; font-size: 14.5px; }
-                .signature-section { margin-top: 30px; border-top: 1px dashed #cbd5e1; padding-top: 15px; font-size: 13px; color: #475569; }
-                .signature-user { font-weight: bold; font-size: 14px; color: #1e293b; text-transform: uppercase; margin-bottom: 2px; }
-                .signature-corp { font-weight: bold; color: #d81c1c; font-size: 12px; text-transform: uppercase; margin-bottom: 2px; }
-                .signature-contacts { color: #475569; font-size: 11.5px; }
-                .eco-note { font-size: 11px; color: #16a34a; margin-top: 25px; line-height: 1.4; }
-                .confidentiality-note { font-size: 10px; color: #94a3b8; margin-top: 15px; line-height: 1.4; text-align: justify; border-top: 1px solid #f1f5f9; padding-top: 10px; }
-                .email-footer { background-color: #f1f5f9; padding: 18px; text-align: center; font-size: 11px; color: #6b7280; border-top: 1px solid #f3f4f6; }
-              </style>
-            </head>
-            <body>
-              <div class="email-container">
-                <div class="email-header">
-                  ${logoUrl ? `<img src="${logoUrl}" alt="Logótipo" class="brand-logo" height="100" style="height: 100px; max-height: 100px;" />` : ""}
-                  <h2>${corpName}</h2>
-                  <p>Lista de Comparências em Eventos</p>
-                </div>
-                <div class="email-body">
-                  <div class="message-box">Segue em anexo a lista de comparências do evento: <strong>${eventName}</strong>.</div>
-                  <div style="margin-top:10px; margin-bottom:10px; font-size:14px; color:#1e293b;">
-                    Com os melhores cumprimentos,
-                  </div>
-                  <div class="signature-section">
-                    <div class="signature-user">${senderName}</div>
-                    <div class="signature-corp">CORPO DE BOMBEIROS DE FARO CRUZ LUSA</div>
-                    <div class="signature-contacts">
-                      Rua Comandante Francisco Manuel, 7 a 13 | 8000-250 Faro | Portugal<br>
-                      Telem.: +351 917 629 626 | Telef: +351 289 803 066
-                    </div>
-                  </div>
-                  <div class="eco-note">
-                    🌱 <strong>Antes de imprimir este e-mail pense bem se é mesmo necessário.</strong> Poupe eletricidade, toner e papel.
-                  </div>
-                  <div class="confidentiality-note">
-                    <strong>AVISO DE CONFIDENCIALIDADE:</strong><br>
-                    Esta mensagem e quaisquer anexos, podem conter informação confidencial para uso exclusivo do destinatário. Cabe ao destinatário assegurar a verificação de vírus e outras medidas que assegurem que esta mensagem não afeta os seus sistemas. Se não for o destinatário, não deverá usar, distribuir ou copiar este email, devendo proceder à sua eliminação e informar o emissor. É estritamente proibido o uso, a distribuição, a cópia ou qualquer forma de disseminação não autorizada deste email e dos seus anexos. Obrigado.
-                  </div>
-                </div>
-                <div class="email-footer">
-                  &copy; ${new Date().getFullYear()} CB360 Online - Todos os direitos reservados.
-                </div>
-              </div>
-            </body>
-            </html>
-          `;
-          try {
-            await transporter.sendMail({
-              from: `"CB360 Online" <${process.env.GMAIL_EMAIL}>`,
-              to: ALWAYS_TO_ATTENDANCE,
-              subject: `Lista de Comparências - ${eventName}`,
-              html: htmlAttendanceTemplate,
-              attachments: [{filename: fileName, content: Buffer.from(finalPdf), contentType: "application/pdf"}],
-            });
-            console.log("✅ Email de comparências enviado com sucesso para:", ALWAYS_TO_ATTENDANCE);
-          } catch (emailErr) {
-            console.error("❌ Erro ao enviar email:", emailErr);
-          }
-          const dateToday = new Date().toLocaleDateString("pt-PT").replace(/\//g, "-");
-          res.setHeader("Content-Type", "application/pdf");
-          res.setHeader("Content-Disposition", `inline; filename="${fileName}"`);
-          return res.status(200).send(Buffer.from(finalPdf));
-        }
+if (type === "attendance_list") {
+  const quadMap = {QCOM: {startRow: 11, endRow: 13}, QATIV: {startRow: 19, endRow: 118}, QEST: {startRow: 124, endRow: 144},
+                   QEA: {startRow: 150, endRow: 159}, QHR: {startRow: 165, endRow: 184},};
+  const { quad, eventName, corpName, logoUrl, senderName = "CB360" } = data;  // ← extrair aqui
+  const ALWAYS_TO_ATTENDANCE = ["comando0805.ahbfaro@gmail.com", "central0805.ahbfaro@gmail.com"];
+  const tplRes = await fetch(TEMPLATES.attendance_list);
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(await tplRes.arrayBuffer());
+  const ws = workbook.worksheets[0];
+  ws.pageSetup = {paperSize: 9, orientation: "portrait", fitToPage: true, fitToWidth: 1, fitToHeight: 0};
+  ws.getRow(119).addPageBreak();
+  const cEventName = ws.getCell("B5");
+  cEventName.value = eventName || "";
+  fitCellTemplate(cEventName);
+  quad.forEach(({code, elements}) => {
+    const map = quadMap[code];
+    if (!map) return;
+    const maxRows = map.endRow - map.startRow + 1;
+    elements.slice(0, maxRows).forEach((el, i) => {
+      const r = map.startRow + i;
+      const cNInt = ws.getCell(`B${r}`);
+      const cPatent = ws.getCell(`C${r}`);
+      const cName = ws.getCell(`F${r}`);
+      const cAttends = ws.getCell(`M${r}`);
+      const cMotive = ws.getCell(`N${r}`);
+      cNInt.value = el.n_int || "";
+      cPatent.value = el.patent || "";
+      cName.value = el.full_name || "";
+      cAttends.value = el.attends || "—";
+      cMotive.value = el.motive || "";
+      [cNInt, cPatent, cName, cAttends, cMotive].forEach(fitCellTemplate);
+    });
+    const filledCount = Math.min(elements.length, maxRows);
+    for (let i = filledCount; i < maxRows; i++) {
+      const row = ws.getRow(map.startRow + i);
+      row.hidden = true;
+      row.commit();
+    }
+    if (elements.length === 0) {
+      for (let r = map.startRow - 4; r < map.startRow; r++) {
+        const row = ws.getRow(r);
+        row.hidden = true;
+        row.commit();
+      }
+    }
+  });
+  const pdfBuf = await workbookToPdfBuffer(workbook, "attendance_list");
+  const doc = await PDFDocument.load(pdfBuf);
+  const pages = await mergedPdf.copyPages(doc, doc.getPageIndices());
+  pages.forEach(p => mergedPdf.addPage(p));
+  const finalPdf = await mergedPdf.save();
+  const dateToday = new Date().toLocaleDateString("pt-PT").replace(/\//g, "-");
+  const fileName = `Lista_Comparencias_${dateToday}.pdf`;
+
+  // ===== ENVIO EMAIL EM SEGUNDO PLANO =====
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {user: process.env.GMAIL_EMAIL, pass: process.env.GMAIL_APP_PASSWORD},
+  });
+  const htmlAttendanceTemplate = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+    body{font-family:'Segoe UI',Arial,sans-serif;margin:0;padding:0;background-color:#f3f4f6;color:#333}
+    .email-container{max-width:1000px;margin:25px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.08)}
+    .email-header{background:linear-gradient(135deg,#a70c0c 0%,#d81c1c 50%,#b91010 100%);padding:15px 20px;text-align:center;color:#fff}
+    .brand-logo{max-height:75px;width:auto;margin-bottom:12px}
+    .email-header h2{margin:0;font-size:19px;font-weight:600}
+    .email-header p{margin:6px 0 0;font-size:13px;color:#fecaca}
+    .email-body{padding:15px 10px;line-height:1.6;font-size:14px}
+    .message-box{background:#f8fafc;border-left:4px solid #d81c1c;padding:20px;margin:0 0 25px;border-radius:0 6px 6px 0;color:#1e293b;font-size:14.5px}
+    .signature-section{margin-top:30px;border-top:1px dashed #cbd5e1;padding-top:15px;font-size:13px;color:#475569}
+    .signature-user{font-weight:bold;font-size:14px;color:#1e293b;text-transform:uppercase;margin-bottom:2px}
+    .signature-corp{font-weight:bold;color:#d81c1c;font-size:12px;text-transform:uppercase;margin-bottom:2px}
+    .eco-note{font-size:11px;color:#16a34a;margin-top:25px}
+    .confidentiality-note{font-size:10px;color:#94a3b8;margin-top:15px;border-top:1px solid #f1f5f9;padding-top:10px;text-align:justify}
+    .email-footer{background:#f1f5f9;padding:18px;text-align:center;font-size:11px;color:#6b7280;border-top:1px solid #f3f4f6}
+  </style></head><body>
+    <div class="email-container">
+      <div class="email-header">
+        ${logoUrl ? `<img src="${logoUrl}" alt="Logótipo" class="brand-logo" height="100" />` : ""}
+        <h2>${corpName}</h2>
+        <p>Lista de Comparências em Eventos</p>
+      </div>
+      <div class="email-body">
+        <div class="message-box">Segue em anexo a lista de comparências do evento: <strong>${eventName}</strong>.</div>
+        <div style="margin-top:10px;margin-bottom:10px;font-size:14px;color:#1e293b;">Com os melhores cumprimentos,</div>
+        <div class="signature-section">
+          <div class="signature-user">${senderName}</div>
+          <div class="signature-corp">CORPO DE BOMBEIROS DE FARO CRUZ LUSA</div>
+          <div style="color:#475569;font-size:11.5px;">Rua Comandante Francisco Manuel, 7 a 13 | 8000-250 Faro | Portugal<br>Telem.: +351 917 629 626 | Telef: +351 289 803 066</div>
+        </div>
+        <div class="eco-note">🌱 <strong>Antes de imprimir este e-mail pense bem se é mesmo necessário.</strong></div>
+        <div class="confidentiality-note"><strong>AVISO DE CONFIDENCIALIDADE:</strong><br>Esta mensagem e quaisquer anexos, podem conter informação confidencial para uso exclusivo do destinatário. Se não for o destinatário, não deverá usar, distribuir ou copiar este email. Obrigado.</div>
+      </div>
+      <div class="email-footer">&copy; ${new Date().getFullYear()} CB360 Online - Todos os direitos reservados.</div>
+    </div>
+  </body></html>`;
+  transporter.sendMail({
+    from: `"CB360 Online" <${process.env.GMAIL_EMAIL}>`,
+    to: ALWAYS_TO_ATTENDANCE,
+    subject: `Lista de Comparências - ${eventName}`,
+    html: htmlAttendanceTemplate,
+    attachments: [{filename: fileName, content: Buffer.from(finalPdf), contentType: "application/pdf"}],
+  }).then(() => console.log("✅ Email de comparências enviado para:", ALWAYS_TO_ATTENDANCE))
+    .catch(err => console.error("❌ Erro ao enviar email:", err));
+
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `inline; filename="${fileName}"`);
+  return res.status(200).send(Buffer.from(finalPdf));
+}
         // ===== EMAIL =====
         if (type === "email") {
           const {to, subject, message, corpOperNr, corpName, logoUrl, senderName, isBulk, cc, attachment} = data;

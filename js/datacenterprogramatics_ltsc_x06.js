@@ -267,6 +267,8 @@
     /* =======================================
     FIREFIGHTER LISTING
     ======================================= */
+    sessionStorage.setItem("currentUserRole", "admin");
+    sessionStorage.setItem("currentCorpOperNr", "0805");
     let currentEditId = null;
     const ACCESS_OPTIONS = [
       {label: "Menu Principal"},
@@ -339,9 +341,28 @@
         edit.style.display = "none";
       }
     }
+    function toggleStateDateVisibility() {
+      const stateSelect = document.getElementById("win_state");
+      const stateFromInput = document.getElementById("win_state_from");
+      const stateFromLabel = stateFromInput ? stateFromInput.previousElementSibling : null;
+      if (stateSelect && stateSelect.value === "Inativo") {
+        if (stateFromInput) stateFromInput.style.display = "inline-block";
+        if (stateFromLabel && stateFromLabel.tagName === "LABEL") {
+          stateFromLabel.style.display = "inline-block";
+        }
+      } else {
+        if (stateFromInput) {
+          stateFromInput.style.display = "none";
+          stateFromInput.value = "";
+        }
+        if (stateFromLabel && stateFromLabel.tagName === "LABEL") {
+          stateFromLabel.style.display = "none";
+        }
+      }
+    }
     async function loadElementsTable() {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
         const response = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?select=*&corp_oper_nr=eq.${corpOperNr}`, {
           method: "GET",
           headers: getSupabaseHeaders()
@@ -370,12 +391,13 @@
       }
     }
     function clearEditForm() {
-      const ids = ["win_state", "win_type", "win_n_int", "win_n_file", "win_patent", "win_patent_abv", "win_section", "win_quad", "win_abv_name", "win_full_name", "win_MP", "win_ML", "win_TAS",
-                   "win_nif", "win_niss", "win_nib", "win_phone", "win_mobile", "win_mail", "win_user_name_main", "win_password_main", "win_user_name_mobile", "win_password_mobile"];
+      const ids = ["win_state", "win_state_from","win_type", "win_n_int", "win_n_file", "win_patent", "win_patent_abv", "win_section", "win_quad", "win_abv_name", "win_full_name", "win_MP", 
+                   "win_ML", "win_TAS", "win_nif", "win_niss", "win_nib", "win_phone", "win_mobile", "win_mail", "win_user_name_main", "win_password_main", "win_user_name_mobile", "win_password_mobile"];
       ids.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = "";
       });
+      toggleStateDateVisibility();
     }
     function mapPatentToAbv() {
       const patentSelect = document.getElementById("win_patent");
@@ -419,7 +441,13 @@
       document.getElementById("win_phone").value = row.phone || "";
       document.getElementById("win_mobile").value = row.mobile_phone || "";
       document.getElementById("win_mail").value = row.email || "";
-      if (document.getElementById("win_state")) document.getElementById("win_state").value = row.elem_state ? "Ativo" : "Inativo";
+      if (document.getElementById("win_state")) {
+        document.getElementById("win_state").value = row.elem_state ? "Ativo" : "Inativo";
+      }
+      if (document.getElementById("win_state_from")) {
+        document.getElementById("win_state_from").value = row.inactive_from ?? "";
+      }
+      toggleStateDateVisibility();
       const roleMap = {admin: "Administrador", subadmin: "Sub-Administrador", user: "Utilizador"};
       if (document.getElementById("win_type")) document.getElementById("win_type").value = roleMap[row.user_role] || "";
       generateAccessCheckboxes();
@@ -442,13 +470,14 @@
         showPopup('popup-danger', "O Nº Interno e o Nome Completo são obrigatórios.");
         return;
       }
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const payloadReg = {n_int: document.getElementById("win_n_int").value, n_file: document.getElementById("win_n_file").value, patent: document.getElementById("win_patent").value,
                           patent_abv: document.getElementById("win_patent_abv").value, abv_name: document.getElementById("win_abv_name").value, full_name: document.getElementById("win_full_name").value,
                           ML: document.getElementById("win_ML").value === "true", MP: document.getElementById("win_MP").value === "true", TAS: document.getElementById("win_TAS").value === "true", 
                           section: document.getElementById("win_section").value, type_quad: document.getElementById("win_quad").value, phone: document.getElementById("win_phone").value, 
                           mobile_phone: document.getElementById("win_mobile").value, email: document.getElementById("win_mail").value, nif: document.getElementById("win_nif").value, 
                           nib: document.getElementById("win_nib").value, elem_state: document.getElementById("win_state").value === "Ativo", 
+                          inactive_from: document.getElementById("win_state").value === "Inativo" ? document.getElementById("win_state_from").value : null,
                           acess: Array.from(document.querySelectorAll('.access-checkbox:checked')).map(cb => cb.value).join(", "), 
                           user_role: mapUserRole(), corp_oper_nr: corpOperNr,last_updated: new Date().toISOString()};
       if (!payloadReg.user_role) {
@@ -640,12 +669,13 @@
     }
     document.addEventListener("DOMContentLoaded", () => {      
       initTabs();
-      loadElementsTable();
+      loadElementsTable();      
     });
     document.addEventListener("DOMContentLoaded", () => {
       initTabs();
       loadElementsTable();
       document.getElementById("elems-saveBtn").addEventListener("click", saveElement);
+      document.getElementById("win_state").addEventListener("change", toggleStateDateVisibility);
     });
     /* =======================================
     VEHICLE LISTING

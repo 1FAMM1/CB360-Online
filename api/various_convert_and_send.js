@@ -366,7 +366,7 @@
             service: "gmail",
             auth: {user: process.env.GMAIL_EMAIL, pass: process.env.GMAIL_APP_PASSWORD},
           });
-          const { logoUrl, corpOperNr: corpNr } = data;
+          const {logoUrl, corpOperNr: corpNr, corpName, eventName, senderName = "Utilizador"} = data;
           const htmlAttendanceTemplate = `
             <!DOCTYPE html>
             <html>

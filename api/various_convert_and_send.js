@@ -365,17 +365,18 @@
             service: "gmail",
             auth: {user: process.env.GMAIL_EMAIL, pass: process.env.GMAIL_APP_PASSWORD},
           });
-          transporter.sendMail({
-            from: `"CB360 Online" <${process.env.GMAIL_EMAIL}>`,
-            to: ALWAYS_TO_ATTENDANCE,
-            subject: `Lista de Comparências - ${eventName}`,
-            html: `<p>Segue em anexo a lista de comparências do evento: <strong>${eventName}</strong>.</p>`,
-            attachments: [{filename: fileName, content: Buffer.from(finalPdf), contentType: "application/pdf"}],
-          }).then(() => {
+          try {
+            await transporter.sendMail({
+              from: `"CB360 Online" <${process.env.GMAIL_EMAIL}>`,
+              to: ALWAYS_TO_ATTENDANCE,
+              subject: `Lista de Comparências - ${eventName}`,
+              html: `<p>Segue em anexo a lista de comparências do evento: <strong>${eventName}</strong>.</p>`,
+              attachments: [{filename: fileName, content: Buffer.from(finalPdf), contentType: "application/pdf"}],
+            });
             console.log("✅ Email de comparências enviado com sucesso para:", ALWAYS_TO_ATTENDANCE);
-          }).catch(err => {
-            console.error("❌ Erro ao enviar email da lista de comparências:", err);
-          });
+          } catch (emailErr) {
+            console.error("❌ Erro ao enviar email:", emailErr);
+          }
           const dateToday = new Date().toLocaleDateString("pt-PT").replace(/\//g, "-");
           res.setHeader("Content-Type", "application/pdf");
           res.setHeader("Content-Disposition", `inline; filename="${fileName}"`);

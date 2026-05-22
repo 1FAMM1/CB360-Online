@@ -366,13 +366,7 @@
             service: "gmail",
             auth: {user: process.env.GMAIL_EMAIL, pass: process.env.GMAIL_APP_PASSWORD},
           });
-          
-          // 1. EXTRAIR O SENDERNAME DE DENTRO DO DATA
-          const { logoUrl, corpOperNr: corpNr, senderName } = data;
-          
-          // Ajustar o nome de exibição do remetente (opcional, mas fica mais profissional)
-          const senderDisplayName = `CB360 Online - ${senderName ? senderName.replace('<br>', ' - ') : (corpNr || "Corporação")}`;
-
+          const { logoUrl, corpOperNr: corpNr } = data;
           const htmlAttendanceTemplate = `
             <!DOCTYPE html>
             <html>
@@ -409,7 +403,7 @@
                     Com os melhores cumprimentos,
                   </div>
                   <div class="signature-section">
-                    <div class="signature-user">${senderName || "CB360 Online"}</div>
+                    <div class="signature-user">${senderName}</div>
                     <div class="signature-corp">CORPO DE BOMBEIROS DE FARO CRUZ LUSA</div>
                     <div class="signature-contacts">
                       Rua Comandante Francisco Manuel, 7 a 13 | 8000-250 Faro | Portugal<br>
@@ -433,8 +427,7 @@
           `;
           try {
             await transporter.sendMail({
-              // 3. ALTERADO O REMETENTE PARA MOSTRAR QUEM ESTÁ LOGADO NO CABEÇALHO DO EMAIL
-              from: `"${senderDisplayName}" <${process.env.GMAIL_EMAIL}>`,
+              from: `"CB360 Online" <${process.env.GMAIL_EMAIL}>`,
               to: ALWAYS_TO_ATTENDANCE,
               subject: `Lista de Comparências - ${eventName}`,
               html: htmlAttendanceTemplate,

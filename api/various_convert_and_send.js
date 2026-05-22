@@ -66,66 +66,66 @@
         const {PDFDocument} = await import("pdf-lib");
         const mergedPdf = await PDFDocument.create();
         // ===== HEMODIÁLISES =====
-        const sqx = data.filter(u => (u.utent_shift_days || "").toUpperCase() === "SQX");
-        const tqs = data.filter(u => (u.utent_shift_days || "").toUpperCase() === "TQS");
-        if (type === "saloc" || type === "ambos") {
-          const tplRes = await fetch(TEMPLATES.saloc);
-          const workbook = new ExcelJS.Workbook();
-          await workbook.xlsx.load(await tplRes.arrayBuffer());
-          const ws = workbook.worksheets[0];
-          ws.pageSetup = {paperSize: 9, orientation: "portrait", fitToPage: true, fitToWidth: 1, fitToHeight: 0};
-          ws.getRow(43).addPageBreak();
-          const fillS = (list, rows) => {
-            const shifts = ["07:00-12:00", "11:00-17:00", "16:00-23:00"];
-            shifts.forEach((s, idx) => {
-              list.filter(u => u.utent_shift === s).forEach((u, i) => {
-                if (i < 7) {
-                  const cell = ws.getCell(`B${rows[idx] + i}`);
-                  cell.value = u.utent_name || "";
-                  fitCell(cell);
-                }
-              });
-            });
-          };
-          fillS(sqx, [14, 22, 30]);
-          fillS(tqs, [57, 65, 73]);
-          const pdfBuf = await workbookToPdfBuffer(workbook, "saloc");
-          const doc = await PDFDocument.load(pdfBuf);
-          const pages = await mergedPdf.copyPages(doc, doc.getPageIndices());
-          pages.forEach(p => mergedPdf.addPage(p));
-        }
-        if (type === "veículos" || type === "ambos") {
-          const tplRes = await fetch(TEMPLATES.veiculos);
-          const workbook = new ExcelJS.Workbook();
-          await workbook.xlsx.load(await tplRes.arrayBuffer());
-          const ws = workbook.worksheets[0];
-          ws.pageSetup = {paperSize: 9, orientation: "portrait", fitToPage: true, fitToWidth: 1, fitToHeight: 0};
-          ws.getRow(53).addPageBreak();
-          const fillV = (list, startRows) => {
-            const shifts = ["07:00-12:00", "11:00-17:00", "16:00-23:00"];
-            shifts.forEach((s, idx) => {
-              list.filter(u => u.utent_shift === s).forEach((u, i) => {
-                if (i < 7) {
-                  const r = startRows[idx] + i;
-                  const cName = ws.getCell(`B${r}`);
-                  const cDest = ws.getCell(`F${r}`);
-                  const cCont = ws.getCell(`I${r}`);
-                  cName.value = u.utent_name || "";
-                  cDest.value = u.utent_desteny || "";
-                  cCont.value = u.utent_contact || "";
-                  [cName, cDest, cCont].forEach(fitCell);
-                }
-              });
-            });
-          };
-          fillV(sqx, [16, 28, 40]);
-          fillV(tqs, [69, 81, 93]);
-          const pdfBuf = await workbookToPdfBuffer(workbook, "veiculos");
-          const doc = await PDFDocument.load(pdfBuf);
-          const pages = await mergedPdf.copyPages(doc, doc.getPageIndices());
-          pages.forEach(p => mergedPdf.addPage(p));
-        }
         if (["saloc", "veiculos", "veículos", "ambos", "global"].includes(type)) {
+          const sqx = data.filter(u => (u.utent_shift_days || "").toUpperCase() === "SQX");
+          const tqs = data.filter(u => (u.utent_shift_days || "").toUpperCase() === "TQS");
+          if (type === "saloc" || type === "ambos") {
+            const tplRes = await fetch(TEMPLATES.saloc);
+            const workbook = new ExcelJS.Workbook();
+            await workbook.xlsx.load(await tplRes.arrayBuffer());
+            const ws = workbook.worksheets[0];
+            ws.pageSetup = {paperSize: 9, orientation: "portrait", fitToPage: true, fitToWidth: 1, fitToHeight: 0};
+            ws.getRow(43).addPageBreak();
+            const fillS = (list, rows) => {
+              const shifts = ["07:00-12:00", "11:00-17:00", "16:00-23:00"];
+              shifts.forEach((s, idx) => {
+                list.filter(u => u.utent_shift === s).forEach((u, i) => {
+                  if (i < 7) {
+                    const cell = ws.getCell(`B${rows[idx] + i}`);
+                    cell.value = u.utent_name || "";
+                    fitCell(cell);
+                  }
+                });
+              });
+            };
+            fillS(sqx, [14, 22, 30]);
+            fillS(tqs, [57, 65, 73]);
+            const pdfBuf = await workbookToPdfBuffer(workbook, "saloc");
+            const doc = await PDFDocument.load(pdfBuf);
+            const pages = await mergedPdf.copyPages(doc, doc.getPageIndices());
+            pages.forEach(p => mergedPdf.addPage(p));
+          }
+          if (type === "veículos" || type === "ambos") {
+            const tplRes = await fetch(TEMPLATES.veiculos);
+            const workbook = new ExcelJS.Workbook();
+            await workbook.xlsx.load(await tplRes.arrayBuffer());
+            const ws = workbook.worksheets[0];
+            ws.pageSetup = {paperSize: 9, orientation: "portrait", fitToPage: true, fitToWidth: 1, fitToHeight: 0};
+            ws.getRow(53).addPageBreak();
+            const fillV = (list, startRows) => {
+              const shifts = ["07:00-12:00", "11:00-17:00", "16:00-23:00"];
+              shifts.forEach((s, idx) => {
+                list.filter(u => u.utent_shift === s).forEach((u, i) => {
+                  if (i < 7) {
+                    const r = startRows[idx] + i;
+                    const cName = ws.getCell(`B${r}`);
+                    const cDest = ws.getCell(`F${r}`);
+                    const cCont = ws.getCell(`I${r}`);
+                    cName.value = u.utent_name || "";
+                    cDest.value = u.utent_desteny || "";
+                    cCont.value = u.utent_contact || "";
+                    [cName, cDest, cCont].forEach(fitCell);
+                  }
+                });
+              });
+            };
+            fillV(sqx, [16, 28, 40]);
+            fillV(tqs, [69, 81, 93]);
+            const pdfBuf = await workbookToPdfBuffer(workbook, "veiculos");
+            const doc = await PDFDocument.load(pdfBuf);
+            const pages = await mergedPdf.copyPages(doc, doc.getPageIndices());
+            pages.forEach(p => mergedPdf.addPage(p));
+          }
           const tplRes = await fetch(TEMPLATES.global);
           const workbook = new ExcelJS.Workbook();
           await workbook.xlsx.load(await tplRes.arrayBuffer());

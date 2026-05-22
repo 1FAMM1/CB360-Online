@@ -1,4 +1,4 @@
-   import ExcelJS from "exceljs";
+    import ExcelJS from "exceljs";
     import fetch from "node-fetch";
     import fs from "fs";
     import os from "os";
@@ -18,7 +18,8 @@
                        attendance_list: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/attendance_list_template.xlsx",
                       };
     const ALWAYS_TO = ["comando0805.ahbfaro@gmail.com", "central0805.ahbfaro@gmail.com"];
-    const ALWAYS_TO_ATTENDANCE = ["comandante.faroahb@gmail.com", "comando0805.ahbfaro@gmail.com", "central0805.ahbfaro@gmail.com"];
+    const ALWAYS_TO_ATTENDANCE2 = ["comandante.faroahb@gmail.com", "comando0805.ahbfaro@gmail.com", "central0805.ahbfaro@gmail.com"];
+    const ALWAYS_TO_ATTENDANCE = ["fmartins.ahbfaro@gmail.com"];
     // ===== CELL ALIGNMENT HELPERS =====
     const fitCell = (cell) => {
       cell.alignment = {vertical: "middle", horizontal: "left", wrapText: true};

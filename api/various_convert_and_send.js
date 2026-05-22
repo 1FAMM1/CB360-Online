@@ -319,7 +319,7 @@
           ws.getRow(119).addPageBreak();
           const cEventName = ws.getCell("B5");
           cEventName.value = eventName || "";
-          fitCell(cEventName);
+          fitCellTemplate(cEventName);
           quad.forEach(({code, elements}) => {
             const map = quadMap[code];
             if (!map) return;

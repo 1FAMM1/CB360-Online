@@ -15,6 +15,7 @@
                        fleet_cards: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/fleet_cards_template.xlsx",
                        equipment_request: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/request_equipment_template.xlsx",
                        contact_list: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/contact_list_template.xlsx",
+                       attendance_list: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/attendance_list_template.xlsx",
                       };
     // ===== CELL ALIGNMENT HELPERS =====
     const fitCell = (cell) => {
@@ -293,6 +294,67 @@
           res.setHeader("Content-Disposition", `inline; filename="Lista_Contactos_${dateToday}.pdf"`);
           return res.status(200).send(Buffer.from(finalPdf));
         }
+          // ===== ATTENDANCE LIST =====
+if (type === "attendance_list") {
+  const quadMap = {
+    QCOM:  { startRow: 11,  endRow: 13  },
+    QATIV: { startRow: 19,  endRow: 118 },
+    QEST:  { startRow: 124, endRow: 144 },
+    QEA:   { startRow: 150, endRow: 159 },
+    QHR:   { startRow: 165, endRow: 184 },
+  };
+  const { quad, eventName } = data;
+  const tplRes = await fetch(TEMPLATES.attendance_list);
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(await tplRes.arrayBuffer());
+  const ws = workbook.worksheets[0];
+  ws.pageSetup = { paperSize: 9, orientation: "portrait", fitToPage: true, fitToWidth: 1, fitToHeight: 0 };
+  ws.getRow(119).addPageBreak();
+  const cEventName = ws.getCell("B5");
+  cEventName.value = eventName || "";
+  fitCell(cEventName);
+  quad.forEach(({ code, elements }) => {
+    const map = quadMap[code];
+    if (!map) return;
+    const maxRows = map.endRow - map.startRow + 1;
+    elements.slice(0, maxRows).forEach((el, i) => {
+      const r = map.startRow + i;
+      const cNInt    = ws.getCell(`B${r}`);
+      const cPatent  = ws.getCell(`C${r}`);
+      const cName    = ws.getCell(`F${r}`);
+      const cAttends = ws.getCell(`M${r}`);
+      const cMotive  = ws.getCell(`N${r}`);
+      cNInt.value    = el.n_int || "";
+      cPatent.value  = el.patent || "";
+      cName.value    = el.full_name || "";
+      cAttends.value = el.attends || "—";
+      cMotive.value  = el.motive || "";
+      [cNInt, cPatent, cName, cAttends, cMotive].forEach(fitCellTemplate);
+    });
+    const filledCount = Math.min(elements.length, maxRows);
+    for (let i = filledCount; i < maxRows; i++) {
+      const row = ws.getRow(map.startRow + i);
+      row.hidden = true;
+      row.commit();
+    }
+    if (elements.length === 0) {
+      for (let r = map.startRow - 4; r < map.startRow; r++) {
+        const row = ws.getRow(r);
+        row.hidden = true;
+        row.commit();
+      }
+    }
+  });
+  const pdfBuf = await workbookToPdfBuffer(workbook, "attendance_list");
+  const doc = await PDFDocument.load(pdfBuf);
+  const pages = await mergedPdf.copyPages(doc, doc.getPageIndices());
+  pages.forEach(p => mergedPdf.addPage(p));
+  const finalPdf = await mergedPdf.save();
+  const dateToday = new Date().toLocaleDateString("pt-PT").replace(/\//g, "-");
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `inline; filename="Lista_Comparencias_${dateToday}.pdf"`);
+  return res.status(200).send(Buffer.from(finalPdf));
+}
         // ===== HEMODIÁLISES =====
         const sqx = data.filter(u => (u.utent_shift_days || "").toUpperCase() === "SQX");
         const tqs = data.filter(u => (u.utent_shift_days || "").toUpperCase() === "TQS");

@@ -1,4 +1,4 @@
-    import ExcelJS from "exceljs";
+   import ExcelJS from "exceljs";
     import fetch from "node-fetch";
     import fs from "fs";
     import os from "os";
@@ -18,8 +18,7 @@
                        attendance_list: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/attendance_list_template.xlsx",
                       };
     const ALWAYS_TO = ["comando0805.ahbfaro@gmail.com", "central0805.ahbfaro@gmail.com"];
-    const ALWAYS_TO_ATTENDANCE2 = ["comandante.faroahb@gmail.com", "comando0805.ahbfaro@gmail.com", "central0805.ahbfaro@gmail.com"];
-    const ALWAYS_TO_ATTENDANCE = ["fmartins.ahbfaro@gmail.com"];
+    const ALWAYS_TO_ATTENDANCE = ["comandante.faroahb@gmail.com", "comando0805.ahbfaro@gmail.com", "central0805.ahbfaro@gmail.com"];
     // ===== CELL ALIGNMENT HELPERS =====
     const fitCell = (cell) => {
       cell.alignment = {vertical: "middle", horizontal: "left", wrapText: true};
@@ -310,61 +309,58 @@
           return res.status(200).send(Buffer.from(finalPdf));
         }
         // ===== ATTENDANCE LIST =====
-if (type === "attendance_list") {
-  const quadMap = {QCOM: {startRow: 11, endRow: 13}, QATIV: {startRow: 19, endRow: 118}, QEST: {startRow: 124, endRow: 144},
-                   QEA: {startRow: 150, endRow: 159}, QHR: {startRow: 165, endRow: 184},};
-  const { quad, eventName, corpName: attCorpName, logoUrl: attLogoUrl, senderName = "CB360" } = data;
-  const ALWAYS_TO_ATTENDANCE = ["comando0805.ahbfaro@gmail.com", "central0805.ahbfaro@gmail.com"];
-  const tplRes = await fetch(TEMPLATES.attendance_list);
-  const workbook = new ExcelJS.Workbook();
-  await workbook.xlsx.load(await tplRes.arrayBuffer());
-  const ws = workbook.worksheets[0];
-  ws.pageSetup = {paperSize: 9, orientation: "portrait", fitToPage: true, fitToWidth: 1, fitToHeight: 0};
-  ws.getRow(119).addPageBreak();
-  const cEventName = ws.getCell("B5");
-  cEventName.value = eventName || "";
-  fitCellTemplate(cEventName);
-  quad.forEach(({code, elements}) => {
-    const map = quadMap[code];
-    if (!map) return;
-    const maxRows = map.endRow - map.startRow + 1;
-    elements.slice(0, maxRows).forEach((el, i) => {
-      const r = map.startRow + i;
-      const cNInt = ws.getCell(`B${r}`);
-      const cPatent = ws.getCell(`C${r}`);
-      const cName = ws.getCell(`F${r}`);
-      const cAttends = ws.getCell(`M${r}`);
-      const cMotive = ws.getCell(`N${r}`);
-      cNInt.value = el.n_int || "";
-      cPatent.value = el.patent || "";
-      cName.value = el.full_name || "";
-      cAttends.value = el.attends || "—";
-      cMotive.value = el.motive || "";
-      [cNInt, cPatent, cName, cAttends, cMotive].forEach(fitCellTemplate);
-    });
-    const filledCount = Math.min(elements.length, maxRows);
-    for (let i = filledCount; i < maxRows; i++) {
-      const row = ws.getRow(map.startRow + i);
-      row.hidden = true;
-      row.commit();
-    }
-    if (elements.length === 0) {
-      for (let r = map.startRow - 4; r < map.startRow; r++) {
-        const row = ws.getRow(r);
-        row.hidden = true;
-        row.commit();
-      }
-    }
-  });
-  const pdfBuf = await workbookToPdfBuffer(workbook, "attendance_list");
-  const doc = await PDFDocument.load(pdfBuf);
-  const pages = await mergedPdf.copyPages(doc, doc.getPageIndices());
-  pages.forEach(p => mergedPdf.addPage(p));
-  const finalPdf = await mergedPdf.save();
-  const dateToday = new Date().toLocaleDateString("pt-PT").replace(/\//g, "-");
-  const fileName = `Lista_Comparencias_${dateToday}.pdf`;
-
-      // ===== ENVIO EMAIL EM SEGUNDO PLANO =====
+        if (type === "attendance_list") {
+          const quadMap = {QCOM: {startRow: 11, endRow: 13}, QATIV: {startRow: 19, endRow: 118}, QEST: {startRow: 124, endRow: 144},
+                           QEA: {startRow: 150, endRow: 159}, QHR: {startRow: 165, endRow: 184},};
+          const { quad, eventName, corpName } = data;
+          const tplRes = await fetch(TEMPLATES.attendance_list);
+          const workbook = new ExcelJS.Workbook();
+          await workbook.xlsx.load(await tplRes.arrayBuffer());
+          const ws = workbook.worksheets[0];
+          ws.pageSetup = {paperSize: 9, orientation: "portrait", fitToPage: true, fitToWidth: 1, fitToHeight: 0};
+          ws.getRow(119).addPageBreak();
+          const cEventName = ws.getCell("B5");
+          cEventName.value = eventName || "";
+          fitCellTemplate(cEventName);
+          quad.forEach(({code, elements}) => {
+            const map = quadMap[code];
+            if (!map) return;
+            const maxRows = map.endRow - map.startRow + 1;
+            elements.slice(0, maxRows).forEach((el, i) => {
+              const r = map.startRow + i;
+              const cNInt = ws.getCell(`B${r}`);
+              const cPatent = ws.getCell(`C${r}`);
+              const cName = ws.getCell(`F${r}`);
+              const cAttends = ws.getCell(`M${r}`);
+              const cMotive = ws.getCell(`N${r}`);
+              cNInt.value = el.n_int || "";
+              cPatent.value = el.patent || "";
+              cName.value = el.full_name || "";
+              cAttends.value = el.attends || "—";
+              cMotive.value = el.motive || "";
+              [cNInt, cPatent, cName, cAttends, cMotive].forEach(fitCellTemplate);
+            });
+            const filledCount = Math.min(elements.length, maxRows);
+            for (let i = filledCount; i < maxRows; i++) {
+              const row = ws.getRow(map.startRow + i);
+              row.hidden = true;
+              row.commit();
+            }
+            if (elements.length === 0) {
+              for (let r = map.startRow - 4; r < map.startRow; r++) {
+                const row = ws.getRow(r);
+                row.hidden = true;
+                row.commit();
+              }
+            }
+          });
+          const pdfBuf = await workbookToPdfBuffer(workbook, "attendance_list");
+          const doc = await PDFDocument.load(pdfBuf);
+          const pages = await mergedPdf.copyPages(doc, doc.getPageIndices());
+          pages.forEach(p => mergedPdf.addPage(p));
+          const finalPdf = await mergedPdf.save();
+          const fileName = `Lista_Comparencias_${eventName}.pdf`;
+          // ===== ENVIO EMAIL EM SEGUNDO PLANO =====
           const transporter = nodemailer.createTransport({
             service: "gmail",
             auth: {user: process.env.GMAIL_EMAIL, pass: process.env.GMAIL_APP_PASSWORD},
@@ -450,7 +446,6 @@ if (type === "attendance_list") {
           const {to, subject, message, corpOperNr, corpName, logoUrl, senderName, isBulk, cc, attachment} = data;
           if (!to || !subject || !message) return res.status(400).json({success: false, error: "Campos obrigatórios em falta"});
           const senderDisplayName = `CB360 Online - ${corpOperNr || "Corporação"}`;
-          const ALWAYS_TO = ["comando0805.ahbfaro@gmail.com", "central0805.ahbfaro@gmail.com"];
           const transporter = nodemailer.createTransport({
             service: "gmail",
             auth: {user: process.env.GMAIL_EMAIL, pass: process.env.GMAIL_APP_PASSWORD},

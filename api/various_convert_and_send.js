@@ -1,4 +1,4 @@
-    import ExcelJS from "exceljs";
+        import ExcelJS from "exceljs";
     import fetch from "node-fetch";
     import fs from "fs";
     import os from "os";
@@ -366,13 +366,7 @@
             service: "gmail",
             auth: {user: process.env.GMAIL_EMAIL, pass: process.env.GMAIL_APP_PASSWORD},
           });
-
-          // CORREÇÃO: Extraímos o senderName e corpName enviados pelo frontend
-          const { logoUrl, corpOperNr: corpNr, senderName, corpName } = data;
-          
-          // Formatação limpa do nome que aparece na caixa de entrada (ex: CB360 Online - Chefe Silva)
-          const senderDisplayName = `CB360 Online - ${senderName ? senderName.replace('<br>', ' - ') : (corpNr || "Corporação")}`;
-
+          const { logoUrl, corpOperNr: corpNr } = data;
           const htmlAttendanceTemplate = `
             <!DOCTYPE html>
             <html>
@@ -400,7 +394,7 @@
               <div class="email-container">
                 <div class="email-header">
                   ${logoUrl ? `<img src="${logoUrl}" alt="Logótipo" class="brand-logo" height="100" style="height: 100px; max-height: 100px;" />` : ""}
-                  <h2>${corpName || "Corpo de Bombeiros"}</h2>
+                  <h2>${corpName}</h2>
                   <p>Lista de Comparências em Eventos</p>
                 </div>
                 <div class="email-body">
@@ -409,8 +403,8 @@
                     Com os melhores cumprimentos,
                   </div>
                   <div class="signature-section">
-                    <div class="signature-user">${senderName || "CB360 Online"}</div>
-                    <div class="signature-corp">${corpName || "CORPO DE BOMBEIROS"}</div>
+                    <div class="signature-user">${senderName}</div>
+                    <div class="signature-corp">CORPO DE BOMBEIROS DE FARO CRUZ LUSA</div>
                     <div class="signature-contacts">
                       Rua Comandante Francisco Manuel, 7 a 13 | 8000-250 Faro | Portugal<br>
                       Telem.: +351 917 629 626 | Telef: +351 289 803 066
@@ -433,8 +427,7 @@
           `;
           try {
             await transporter.sendMail({
-              // CORREÇÃO: Usando o remetente dinâmico na caixa de entrada também
-              from: `"${senderDisplayName}" <${process.env.GMAIL_EMAIL}>`,
+              from: `"CB360 Online" <${process.env.GMAIL_EMAIL}>`,
               to: ALWAYS_TO_ATTENDANCE,
               subject: `Lista de Comparências - ${eventName}`,
               html: htmlAttendanceTemplate,
@@ -448,7 +441,7 @@
           res.setHeader("Content-Type", "application/pdf");
           res.setHeader("Content-Disposition", `inline; filename="${fileName}"`);
           return res.status(200).send(Buffer.from(finalPdf));
-        }        
+        }
         // ===== EMAIL =====
         if (type === "email") {
           const {to, subject, message, corpOperNr, corpName, logoUrl, senderName, isBulk, cc, attachment} = data;
@@ -478,7 +471,7 @@
                 .signature-contacts { color: #475569; font-size: 11.5px; }
                 .eco-note { font-size: 11px; color: #16a34a; margin-top: 25px; line-height: 1.4; }
                 .confidentiality-note { font-size: 10px; color: #94a3b8; margin-top: 15px; line-height: 1.4; text-align: justify; border-top: 1px solid #f1f5f9; padding-top: 10px; }
-                .email-footer { background-color: #f1f5f9; padding: 18px; text-align: center; font-size: 11px; color: #6b7280; border-top: 1px solid #f3f4f6; }
+                .email-footer {background-color: #f1f5f9; padding: 18px; text-align: center; font-size: 11px; color: #6b7280; border-top: 1px solid #f3f4f6;}
               </style>
             </head>
             <body>

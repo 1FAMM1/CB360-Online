@@ -73,7 +73,7 @@ export default async function handler(req, res) {
       row.commit();
     });
     // Oculta linhas OFOPE vazias (14 a 20)
-    for (let r = 14; r <= 20; r++) {
+    for (let r = 14; r <= 19; r++) {
       const row = sheet.getRow(r);
       const nome = row.getCell(4).value;
       if (!nome || nome.toString().trim() === '') row.hidden = true;

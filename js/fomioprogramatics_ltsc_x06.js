@@ -55,9 +55,8 @@
           else if (currentSection === "DECIR") toggleButtons(true, false, true);
           else if (currentSection === "Consultar Escalas") toggleButtons(false, false, false);
           else toggleButtons(true, false, false);
-          const data = await loadSectionData();
-          createMonthTable(tableContainerId, selectedYear, index + 1, data);
-          handleLegend(tableContainerId);
+          const data = await loadSectionData(selectedYear, index + 1);
+          createMonthTable(tableContainerId, selectedYear, index + 1, data);          
         });
         monthsWrapper.appendChild(btn);
       });
@@ -504,8 +503,12 @@
     }
     /* ─── LINHAS FIXAS (FOMIO) ───────────────────────────────── */
     function createFixedRows(tbody, data, savedMap, year, month, daysInMonth, section, calculateVolunteersRowTotal, calculateColumnTotals, holidays) {
-      const fixedRowsData = [{idx:0, text:savedMap[`fixed_0_text`]||"OFOPE", isHeader:true}, {idx:1, dataIndex:0}, {idx:2, dataIndex:1}, /*{idx:3, dataIndex:2},*/
-                             {idx:5, text:savedMap[`fixed_3_text`]||"CORPO ATIVO", isHeader:true}];
+      const ofopeItems = data.filter(p => p.is_ofope).slice(0, 6);
+      const fixedRowsData = [{idx: 0, text: savedMap[`fixed_0_text`] || "OFOPE", isHeader: true}];
+      for (let i = 0; i < 6; i++) {
+        fixedRowsData.push({idx: i + 1, item: ofopeItems[i] || null});
+      }
+      fixedRowsData.push({idx: 7, text: savedMap[`fixed_3_text`] || "CORPO ATIVO", isHeader: true});
       fixedRowsData.forEach(rowInfo => {
         let fixedRow = tbody.querySelector(`tr.fixed-row[data-fixed="${rowInfo.idx}"]`);
         if (!fixedRow) {
@@ -516,7 +519,7 @@
             td.colSpan = 3+31+1; td.style.cssText = COMMON_TDSPECIAL_STYLE; td.textContent = rowInfo.text;
             fixedRow.appendChild(td);
           } else {
-            const item = data[rowInfo.dataIndex];
+            const item = rowInfo.item;
             ["NI","Nome","Catg."].forEach(f => {
               const td = document.createElement("td"); td.style.cssText = COMMON_TD_STYLE;
               if (item) td.textContent = f==="NI" ? String(item.n_int).padStart(3,"0") : f==="Nome" ? item.abv_name : item.patent_abv||"";
@@ -534,13 +537,15 @@
           tbody.appendChild(fixedRow);
           if (!rowInfo.isHeader) calculateVolunteersRowTotal(fixedRow, section, daysInMonth);
         }
+        if (!rowInfo.isHeader && !rowInfo.item) fixedRow.style.display = "none";
+        else fixedRow.style.display = "";
       });
     }
     /* ─── LINHAS DE DADOS (FOMIO) ────────────────────────────── */
     function createDataRows(tbody, data, savedMap, year, month, daysInMonth, section, calculateVolunteersRowTotal, calculateColumnTotals, holidays) {
       const isEscalaSection = section === "Emissão Escala" || section === "Consultar Escalas";
-      data.forEach((item, dataIdx) => {
-        if (isEscalaSection && dataIdx < 2) return;
+      data.forEach((item) => {
+        if (isEscalaSection && item.is_ofope) return;
         const nIntStr = String(item.n_int).padStart(3,"0");
         let tr = tbody.querySelector(`tr[data-nint="${nIntStr}"]`);
         if (!tr) {
@@ -593,6 +598,9 @@
       currentTableData = data;
       const container = $(containerId);
       if (!container) return;
+      container.style.transition = "opacity 0.5s";
+      container.style.opacity = "0.5";
+      await new Promise(r => setTimeout(r, 150));
       container.innerHTML = "";
       createTableHeaders(container, year, month, currentSection);
       const wrapper = createTableWrapper(container);
@@ -608,8 +616,7 @@
       createDataRows(tbody, data, savedMap, year, month, daysInMonth, currentSection, calculateVolunteersRowTotal, calculateColumnTotals, holidays);
       if (currentSection === "DECIR") {
         createElementsDayNightRows(tbody, daysInMonth);
-        calculateElementsDayNightTotals(tbody, daysInMonth);
-      }
+        calculateElementsDayNightTotals(tbody, daysInMonth);  }
       const needsMP = ["DECIR","1ª Secção","2ª Secção","Emissão Escala"].includes(currentSection);
       const needsTAS = ["1ª Secção","2ª Secção","Emissão Escala"].includes(currentSection);
       if (needsMP) createMPRows(tbody, daysInMonth, currentSection);
@@ -624,6 +631,8 @@
       }
       createTotalsRow(tbody, daysInMonth);
       calculateColumnTotals(tbody, currentSection, daysInMonth);
+      handleLegend(containerId); 
+      container.style.opacity = "1";
     }
     /* ─── LEGENDA (FOMIO) ────────────────────────────────────── */
     function createLegendScale(containerId, legendItems) {
@@ -655,37 +664,68 @@
       createLegendScale(containerId, items);
     }
     /* ─── LOADERS (FOMIO) ────────────────────────────────────── */
-    async function loadSetionData(secao) {
+    async function loadSetionData(secao, year, month) {
       try {
-        const data = await supabaseFetch(`reg_elems?select=n_int,abv_name,patent_abv,MP,TAS&section=eq.${secao}&corp_oper_nr=eq.${getCorpId()}&n_int=lt.900&elem_state=eq.true`);
-        return data.sort((a,b) => parseInt(a.n_int,10) - parseInt(b.n_int,10));
+        const data = await supabaseFetch(
+          `reg_elems?select=n_int,abv_name,patent_abv,MP,TAS,elem_state,inactive_from,is_ofope&section=eq.${secao}&corp_oper_nr=eq.${getCorpId()}&n_int=lt.900`
+        );
+        const firstOfMonth = new Date(year, month - 1, 1);
+        return data
+          .filter(item => {
+            if (!item.inactive_from && item.elem_state) return true;
+            if (!item.inactive_from) return false;
+            return new Date(item.inactive_from) > firstOfMonth;
+          })
+          .sort((a, b) => parseInt(a.n_int, 10) - parseInt(b.n_int, 10));
       } catch (err) {
         console.error(err); return [];
       }
     }
-    async function loadDecirData() {
+    async function loadDecirData(year, month) {
       try {
-        const data = await supabaseFetch(`reg_elems?select=n_int,abv_name,patent_abv,MP&corp_oper_nr=eq.${getCorpId()}&elem_state=eq.true`);
-        return data.filter(item => parseInt(item.n_int,10) > 8 && parseInt(item.n_int,10) < 400).sort((a,b) => parseInt(a.n_int,10) - parseInt(b.n_int,10));
+        const data = await supabaseFetch(
+          `reg_elems?select=n_int,abv_name,patent_abv,MP,elem_state,inactive_from,is_ofope&corp_oper_nr=eq.${getCorpId()}`
+        );
+        const firstOfMonth = new Date(year, month - 1, 1);
+        return data
+          .filter(item => {
+            const n = parseInt(item.n_int, 10);
+            if (n <= 8 || n >= 400) return false;
+            if (!item.inactive_from && item.elem_state) return true;
+            if (!item.inactive_from) return false;
+            return new Date(item.inactive_from) > firstOfMonth;
+          })
+          .sort((a, b) => parseInt(a.n_int, 10) - parseInt(b.n_int, 10));
       } catch (err) {
         console.error(err); return [];
       }
     }
-    async function loadAllSectionsData() {
+    async function loadAllSectionsData(year, month) {
       try {
-        const data = await supabaseFetch(`reg_elems?select=n_int,abv_name,patent_abv,section,MP,TAS,ML&corp_oper_nr=eq.${getCorpId()}&n_int=gte.003&n_int=lt.900&elem_state=eq.true`);
+        const data = await supabaseFetch(
+          `reg_elems?select=n_int,abv_name,patent_abv,section,MP,TAS,ML,elem_state,inactive_from,is_ofope&corp_oper_nr=eq.${getCorpId()}&n_int=gte.003&n_int=lt.900`
+        );
+        const firstOfMonth = new Date(year, month - 1, 1);
         const seen = new Set();
-        return data.filter(item => {const n=parseInt(item.n_int,10); if(seen.has(n)) return false; seen.add(n); return true;})
-                   .sort((a,b) => parseInt(a.n_int,10) - parseInt(b.n_int,10));
+        return data
+          .filter(item => {
+            const n = parseInt(item.n_int, 10);
+            if (seen.has(n)) return false;
+            seen.add(n);
+            if (!item.inactive_from && item.elem_state) return true;
+            if (!item.inactive_from) return false;
+            return new Date(item.inactive_from) > firstOfMonth;
+          })
+          .sort((a, b) => parseInt(a.n_int, 10) - parseInt(b.n_int, 10));
       } catch (err) {
         console.error(err); return [];
       }
     }
-    async function loadSectionData() {
+    async function loadSectionData(year, month) {
       switch (currentSection) {
-        case "Emissão Escala": case "Consultar Escalas": return loadAllSectionsData();
-        case "DECIR": return loadDecirData();
-        default: return loadSetionData(currentSection);
+        case "Emissão Escala": case "Consultar Escalas": return loadAllSectionsData(year, month);
+        case "DECIR": return loadDecirData(year, month);
+        default: return loadSetionData(currentSection, year, month);
       }
     }
     async function loadSavedData(section, year, month) {

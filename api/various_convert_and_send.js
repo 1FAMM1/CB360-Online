@@ -387,8 +387,8 @@ if (type === "attendance_list") {
   </style></head><body>
     <div class="email-container">
       <div class="email-header">
-        ${logoUrl ? `<img src="${logoUrl}" alt="Logótipo" class="brand-logo" height="100" />` : ""}
-        <h2>${corpName}</h2>
+        ${attlogoUrl ? `<img src="${attlogoUrl}" alt="Logótipo" class="brand-logo" height="100" />` : ""}
+        <h2>${attcorpName}</h2>
         <p>Lista de Comparências em Eventos</p>
       </div>
       <div class="email-body">
@@ -423,6 +423,7 @@ if (type === "attendance_list") {
           const {to, subject, message, corpOperNr, corpName, logoUrl, senderName, isBulk, cc, attachment} = data;
           if (!to || !subject || !message) return res.status(400).json({success: false, error: "Campos obrigatórios em falta"});
           const senderDisplayName = `CB360 Online - ${corpOperNr || "Corporação"}`;
+          const ALWAYS_TO = ["comando0805.ahbfaro@gmail.com", "central0805.ahbfaro@gmail.com"];
           const transporter = nodemailer.createTransport({
             service: "gmail",
             auth: {user: process.env.GMAIL_EMAIL, pass: process.env.GMAIL_APP_PASSWORD},
@@ -453,8 +454,8 @@ if (type === "attendance_list") {
             <body>
               <div class="email-container">
                 <div class="email-header">
-                  ${attLogoUrl ? `<img src="${attLogoUrl}" alt="Logótipo" class="brand-logo" height="100" style="height: 100px; max-height: 100px;" />` : ""}
-                  <h2>${attCorpName}</h2>
+                  ${logoUrl ? `<img src="${logoUrl}" alt="Logótipo" class="brand-logo" height="100" style="height: 100px; max-height: 100px;" />` : ""}
+                  <h2>${corpName}</h2>
                   <p>Mensagem Enviada via CB360 Online</p>
                 </div>
                 <div class="email-body">

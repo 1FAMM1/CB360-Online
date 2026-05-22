@@ -1,4 +1,4 @@
-    import ExcelJS from "exceljs";
+import ExcelJS from "exceljs";
     import fetch from "node-fetch";
     import fs from "fs";
     import os from "os";
@@ -17,6 +17,8 @@
                        contact_list: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/contact_list_template.xlsx",
                        attendance_list: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/attendance_list_template.xlsx",
                       };
+    const ALWAYS_TO = ["comando0805.ahbfaro@gmail.com", "central0805.ahbfaro@gmail.com"];
+    const ALWAYS_TO_ATTENDANCE = ["comandante.faroahb@gmail.com", "comando0805.ahbfaro@gmail.com", "central0805.ahbfaro@gmail.com"];
     // ===== CELL ALIGNMENT HELPERS =====
     const fitCell = (cell) => {
       cell.alignment = {vertical: "middle", horizontal: "left", wrapText: true};
@@ -310,7 +312,7 @@
         if (type === "attendance_list") {
           const quadMap = {QCOM: {startRow: 11, endRow: 13}, QATIV: {startRow: 19, endRow: 118}, QEST: {startRow: 124, endRow: 144},
                            QEA: {startRow: 150, endRow: 159}, QHR: {startRow: 165, endRow: 184},};
-          const { quad, eventName } = data;
+          const { quad, eventName, corpName } = data;
           const tplRes = await fetch(TEMPLATES.attendance_list);
           const workbook = new ExcelJS.Workbook();
           await workbook.xlsx.load(await tplRes.arrayBuffer());
@@ -357,9 +359,22 @@
           const pages = await mergedPdf.copyPages(doc, doc.getPageIndices());
           pages.forEach(p => mergedPdf.addPage(p));
           const finalPdf = await mergedPdf.save();
+          const fileName = `Lista_Comparencias_${eventName}.pdf`;
+          // ===== ENVIO EMAIL EM SEGUNDO PLANO =====
+          const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {user: process.env.GMAIL_EMAIL, pass: process.env.GMAIL_APP_PASSWORD},
+          });
+          transporter.sendMail({
+            from: `"CB360 Online" <${process.env.GMAIL_EMAIL}>`,
+            to: ALWAYS_TO_ATTENDANCE,
+            subject: `Lista de Comparências - ${eventName}`,
+            html: `<p>Segue em anexo a lista de comparências do evento: <strong>${eventName}</strong>.</p>`,
+            attachments: [{filename: fileName, content: Buffer.from(finalPdf), contentType: "application/pdf"}],
+          }).catch(err => console.warn("⚠️ Aviso: erro ao enviar email da lista de comparências:", err));
           const dateToday = new Date().toLocaleDateString("pt-PT").replace(/\//g, "-");
           res.setHeader("Content-Type", "application/pdf");
-          res.setHeader("Content-Disposition", `inline; filename="Lista_Comparencias_${dateToday}.pdf"`);
+          res.setHeader("Content-Disposition", `inline; filename="${fileName}"`);
           return res.status(200).send(Buffer.from(finalPdf));
         }
         // ===== EMAIL =====
@@ -367,7 +382,6 @@
           const {to, subject, message, corpOperNr, corpName, logoUrl, senderName, isBulk, cc, attachment} = data;
           if (!to || !subject || !message) return res.status(400).json({success: false, error: "Campos obrigatórios em falta"});
           const senderDisplayName = `CB360 Online - ${corpOperNr || "Corporação"}`;
-          const ALWAYS_TO = ["comando0805.ahbfaro@gmail.com", "central0805.ahbfaro@gmail.com"];
           const transporter = nodemailer.createTransport({
             service: "gmail",
             auth: {user: process.env.GMAIL_EMAIL, pass: process.env.GMAIL_APP_PASSWORD},

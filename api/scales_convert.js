@@ -72,7 +72,7 @@
           }
           row.commit();
         });
-        currentRow = 18;
+        currentRow = 21;
         (data.normalRows || []).forEach(normalRow => {
           const row = sheet.getRow(currentRow++);
           row.getCell(3).value = normalRow.ni;
@@ -84,7 +84,7 @@
           }
           row.commit();
         });
-        for (let r = 18; r <= 117; r++) {
+        for (let r = 21; r <= 120; r++) {
           const row = sheet.getRow(r);
           let hasShift = false;
           for (let c = 6; c < 6 + data.daysInMonth; c++) {

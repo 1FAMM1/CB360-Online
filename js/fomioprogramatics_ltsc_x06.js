@@ -1320,7 +1320,7 @@
       const endDate = document.getElementById('eventEndDate').value;
       const operational = parseInt(document.getElementById('operational').value);
       const valueHour = parseFloat(document.getElementById('valueHour').value);
-      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr') || "0805";
+      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
       if (!eventName || !eventType || !location || !startDate || !endDate || isNaN(operational) || isNaN(valueHour)) {
         showPopup('popup-danger', "Preencha todos os campos corretamente!"); 
         return;
@@ -1417,7 +1417,7 @@
     /* ========== LOADING EVENT =========== */    
     async function loadEvents() {
       const tbody = document.querySelector('#eventTable tbody');
-      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr') || "0805";
+      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
       if (!tbody) {console.warn("loadEvents: #eventTable tbody não encontrado"); return;}
       tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 12px; font-size: 13px; color: #666;">A carregar...</td></tr>';
       try {
@@ -1464,7 +1464,7 @@
     }
     /* ======= BUILD DISP TABLE ======= */
     async function buildDispTable(eventName) {
-      const corp_oper_nr  = sessionStorage.getItem('currentCorpOperNr') || "0805";
+      const corp_oper_nr  = sessionStorage.getItem('currentCorpOperNr');
       const encodedName   = encodeURIComponent(eventName);
       try {
         const [rShifts, rDisp] = await Promise.all([
@@ -1593,7 +1593,7 @@
       const row = document.getElementById(`disp-row-${id}`);
       const badge = row.querySelector('[data-state]');
       const oldState = badge.dataset.state;
-      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr') || "0805";
+      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
       const userNInt = row.cells[0].innerText;
       if (oldState === newState) return;
       try {
@@ -1665,7 +1665,7 @@
     }
     /* =========== DELETE EVENT =========== */
     async function deleteFullEvent(eventName) {
-      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr') || "0805";
+      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
       const confirmation = confirm(`Deseja eliminar o evento "${eventName}"?`);
       if (!confirmation) return;
 
@@ -1696,7 +1696,7 @@
     });
     /* === LOAD VACATIONS SOLICITATIONS === */    
     async function loadVacationsAdmin() {
-      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr') || "0805";
+      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
       const tbody = document.getElementById('vacationsSummaryBody');
       if (!tbody) return;
       tbody.innerHTML = '<tr><td colspan="4">A carregar pedidos...</td></tr>';
@@ -1770,7 +1770,7 @@
     }    
     /* ====== BUILD VACATIONS TABLE ======= */
     async function buildVacatTable(month, year) {
-      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr') || "0805";
+      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
       try {
         const rVacat = await fetch(
           `${SUPABASE_URL}/rest/v1/ped_vacat?month=eq.${month}&year=eq.${year}&corp_oper_nr=eq.${corp_oper_nr}&order=n_int.asc`, {
@@ -1913,7 +1913,7 @@
     }
     /* ========== SAVE VACATIONS ========== */
     async function recordDaysOnVacation(request) {
-      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr') || "0805";
+      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
       const respElem = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${request.n_int}&corp_oper_nr=eq.${corp_oper_nr}`, {
         headers: getSupabaseHeaders()
       });
@@ -1930,7 +1930,7 @@
     }    
     /* ========= DELETE VACATIONS ========= */
     async function deleteDaysOnVacation(request) {
-      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr') || "0805";
+      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
       const query = `n_int=eq.${request.n_int}&year=eq.${request.year}&month=eq.${request.month}&value=eq.FE&corp_oper_nr=eq.${corp_oper_nr}`;      
       try {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/reg_serv?${query}`, {

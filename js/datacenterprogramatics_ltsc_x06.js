@@ -267,8 +267,6 @@
     /* =======================================
     FIREFIGHTER LISTING
     ======================================= */
-    sessionStorage.setItem("currentUserRole", "admin");
-    sessionStorage.setItem("currentCorpOperNr", "0805");
     let currentEditId = null;
     const ACCESS_OPTIONS = [
       {label: "Menu Principal"},

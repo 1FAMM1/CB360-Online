@@ -1940,43 +1940,50 @@
       `;
     }
     function updateStatusDots() {
-  const thresholds = {"EQUIPA 01": {yellow: 4, green: 5}, "EQUIPA 02": {yellow: 4, green: 5}, "LOGÍSTICA": {yellow: 1, green: 2},
-                      "INEM": {yellow: 1, green: 2}, "INEM - Reserva": {yellow: 1, green: 2}};
-  document.querySelectorAll('.plandir-main-card').forEach(card => {
-    const dot = card.querySelector('.plandir-status-dot');
-    if (!dot) return;
-    const titleEl = card.querySelector('.plandir-card-title');
-    const title = titleEl ? titleEl.textContent.trim() : '';
-    const filledCount = [...card.querySelectorAll('.plandir-nint-input')].filter(input => input.value.trim() !== '').length;
-    const config = thresholds[title];
-    if (config) {
-      dot.classList.remove('filled', 'dot-yellow', 'dot-red');
-      if (filledCount >= config.green) dot.classList.add('filled');
-      else if (filledCount >= config.yellow) dot.classList.add('dot-yellow');
-      else dot.classList.add('dot-red');
-    } else {
-      dot.classList.remove('dot-yellow', 'dot-red');
-      dot.classList.toggle('filled', filledCount > 0);
+      const thresholds = {"EQUIPA 01": {yellow: 4, green: 5}, "EQUIPA 02": {yellow: 4, green: 5}, "LOGÍSTICA": {yellow: 1, green: 2},
+                          "INEM": {yellow: 1, green: 2}, "INEM - Reserva": {yellow: 1, green: 2}};
+      document.querySelectorAll('.plandir-main-card').forEach(card => {
+        const dot = card.querySelector('.plandir-status-dot');
+        if (!dot) return;
+        const titleEl = card.querySelector('.plandir-card-title');
+        const title = titleEl ? titleEl.textContent.trim() : '';
+        const filledCount = [...card.querySelectorAll('.plandir-nint-input')].filter(input => input.value.trim() !== '').length;
+        const config = thresholds[title];
+        if (config) {
+          dot.classList.remove('filled', 'dot-yellow', 'dot-red');
+          if (filledCount >= config.green) dot.classList.add('filled');
+          else if (filledCount >= config.yellow) dot.classList.add('dot-yellow');
+          else dot.classList.add('dot-red');
+        } else {
+          dot.classList.remove('dot-yellow', 'dot-red');
+          dot.classList.toggle('filled', filledCount > 0);
+        }
+      });
+      const sideTbody = document.getElementById('plandir-side-tbody');
+      if (!sideTbody) return;
+      const currentInputs = Array.from(document.querySelectorAll('.plandir-nint-input'))
+      .map(i => i.value.trim().padStart(3, '0'))
+      .filter(val => val !== '' && val !== '000');
+      const tables = collectTableData();
+      const swapNints = [];
+      tables.forEach(table => {
+        table.rows.forEach(row => {
+          if (row.obs && row.obs.includes('Troca de Serviço')) {
+            const parts = row.obs.split('|');
+            const lastPart = parts[parts.length - 1].trim();
+            const match = lastPart.match(/^(\d{1,3})/);
+            if (match) swapNints.push(match[1].padStart(3, '0'));
+          }
+        });
+      });
+      const allFilledNints = [...new Set([...currentInputs, ...swapNints])];
+      sideTbody.querySelectorAll('tr[data-side-nint]').forEach(tr => {
+        const nint = tr.getAttribute('data-side-nint');
+        const isFilled = allFilledNints.includes(nint);
+        tr.classList.toggle('row-highlight-green', isFilled);
+        tr.classList.toggle('row-pending-red', !isFilled);
+      });
     }
-  });
-  const sideTbody = document.getElementById('plandir-side-tbody');
-  if (!sideTbody) return;
-  const currentInputs = Array.from(document.querySelectorAll('.plandir-nint-input'))
-    .map(i => i.value.trim().padStart(3, '0'))
-    .filter(val => val !== '' && val !== '000');
-  const allObsValues = Array.from(document.querySelectorAll('input, textarea'))
-    .map(i => i.value || '')
-    .filter(val => val.includes('Troca de Serviço'));
-  sideTbody.querySelectorAll('tr[data-side-nint]').forEach(tr => {
-    const nint = tr.getAttribute('data-side-nint');
-    const nintNum = String(parseInt(nint, 10));
-    const isInPlanning = currentInputs.includes(nint);
-    const isInObs = allObsValues.some(val => val.includes(nintNum));
-    const isFilled = isInPlanning || isInObs;
-    tr.classList.toggle('row-highlight-green', isFilled);
-    tr.classList.toggle('row-pending-red', !isFilled);
-  });
-}
     function updateRowFields(row, data, shift) {
       const entrance = row.querySelector('.plandir-entrance-input');
       const exit = row.querySelector('.plandir-exit-input');
@@ -2057,12 +2064,56 @@
       if (document.getElementById('emit-pp')) return;
       const btnWrapper = document.createElement('div');
       btnWrapper.style.display = 'flex';
+      btnWrapper.style.flexDirection = 'row';
       btnWrapper.style.justifyContent = 'center';
-      btnWrapper.style.marginTop = '10px';
+      btnWrapper.style.alignItems = 'center';
+      btnWrapper.style.gap = '10px';
+      btnWrapper.style.margin = '10px auto 0 auto';
+      const btnStyle = (btn) => {
+        btn.style.padding = '10px 20px';
+        btn.style.fontSize = '12px';
+        btn.style.fontWeight = '500';
+        btn.style.letterSpacing = '0.01em';
+        btn.style.textTransform = 'uppercase';
+        btn.style.border = 'none';
+        btn.style.borderRadius = '5px';
+        btn.style.cursor = 'pointer';
+        btn.style.color = '#ffffff';
+      };
+      const draftBtn = document.createElement('button');
+      draftBtn.id = 'draft-pp';
+      draftBtn.className = 'btn btn-add';
+      draftBtn.textContent = '💾 GUARDAR RASCUNHO';
+      btnStyle(draftBtn);
+      draftBtn.addEventListener('click', async () => {
+        if (draftBtn.disabled) return;
+        draftBtn.disabled = true;
+        draftBtn.textContent = 'A GUARDAR...';
+        draftBtn.style.opacity = '0.6';
+        draftBtn.style.cursor = 'not-allowed';
+        try {
+          let shift = document.querySelector('.options-btn.active')?.dataset.shift;
+          if (!shift || shift === 'LAST') {
+            shift = sessionStorage.getItem("originalShift") || localStorage.getItem("originalShift");
+          }
+          if (!shift) {
+            showPopup('popup-danger', 'Não foi possível determinar o turno.');
+            return;
+          }
+          await saveDraft(shift);
+          showPopup('popup-success', 'Rascunho guardado com sucesso!');
+        } finally {
+          draftBtn.disabled = false;
+          draftBtn.textContent = '💾 GUARDAR RASCUNHO';
+          draftBtn.style.opacity = '1';
+          draftBtn.style.cursor = 'pointer';
+        }
+      });
       const emitBtn = document.createElement('button');
       emitBtn.id = 'emit-pp';
       emitBtn.className = 'btn btn-success';
-      emitBtn.textContent = 'EMITIR PLANEAMENTO';
+      emitBtn.textContent = '📤 EMITIR PLANEAMENTO';
+      btnStyle(emitBtn);
       emitBtn.addEventListener('click', async () => {
         if (emitBtn.disabled) return;
         emitBtn.disabled = true;
@@ -2084,11 +2135,12 @@
           await emitPlanning(shift, date);
         } finally {
           emitBtn.disabled = false;
-          emitBtn.textContent = 'EMITIR PLANEAMENTO';
+          emitBtn.textContent = '📤 EMITIR PLANEAMENTO';
           emitBtn.style.opacity = '1';
           emitBtn.style.cursor = 'pointer';
         }
       });
+      btnWrapper.appendChild(draftBtn);
       btnWrapper.appendChild(emitBtn);
       container.appendChild(btnWrapper);
     }
@@ -2121,7 +2173,7 @@
       return optelTable.rows[0].nome || "";
     }
     async function emitPlanning(shift, date, baixar = false) {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       if (!corpOperNr) {
         showPopup('popup-danger', "Erro: Sessão expirada. Por favor, faça login novamente.");
         return;
@@ -2190,6 +2242,10 @@
           return;
         }
         showPopup('popup-success', `Planeamento do dia ${day}/${month}/${year} (Turno ${shift}) emitido e enviado com sucesso!`);
+        await fetch(`${SUPABASE_URL}/rest/v1/fomio_draft?corp_oper_nr=eq.${corpOperNr}&shift=eq.${shift}`, {
+          method: "DELETE",
+          headers: getSupabaseHeaders()
+        });
       } catch (err) {
         console.error('Erro no processo de emissão:', err);
         showPopup('popup-danger', 'Erro ao processar o planeamento. Por favor, tente novamente.');
@@ -2199,7 +2255,7 @@
       const tbody = document.getElementById('plandir-side-tbody');
       const rightCol = document.getElementById('plandir-right-col');
       if (!tbody || !rightCol) return;
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       if (!corpOperNr) return;
       const now = new Date();
       const day = String(now.getDate()).padStart(2, '0');
@@ -2279,7 +2335,7 @@
         localStorage.setItem("originalShift", shift);
       }
       let header;
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       if (shift === 'LAST') {
         try {
           const res = await fetch(`${SUPABASE_URL}/rest/v1/fomio_date?select=header_text&limit=1`, {method: 'GET', headers: getSupabaseHeaders()});
@@ -2330,8 +2386,8 @@
                   if (inputs[2]) inputs[2].value = member.nome || '';
                   if (inputs[3]) inputs[3].value = member.h_entrance || '';
                   if (inputs[4]) inputs[4].value = member.h_exit || '';
-                  if (mpCell) { mpCell.textContent = member.MP ? 'X' : ''; mpCell.classList.toggle('plandir-mp-active', !!member.MP); }
-                  if (tasCell) { tasCell.textContent = member.TAS ? 'X' : ''; tasCell.classList.toggle('plandir-tas-active', !!member.TAS); }
+                  if (mpCell) {mpCell.textContent = member.MP ? 'X' : ''; mpCell.classList.toggle('plandir-mp-active', !!member.MP);}
+                  if (tasCell) {tasCell.textContent = member.TAS ? 'X' : ''; tasCell.classList.toggle('plandir-tas-active', !!member.TAS);}
                   if (inputs[5]) inputs[5].value = member.observ || '';
                 });
               });
@@ -2351,6 +2407,41 @@
         header = createPlanDirHeader(shift);
         if (header && headerContainer) headerContainer.appendChild(header);
         container.insertAdjacentHTML('beforeend', tableConfig.map(cfg => createTable(cfg.rows, cfg.special, cfg.title)).join(''));
+        const draftMembers = await loadDraft(shift, corpOperNr);
+        if (draftMembers) {
+          const teamNameMap = {"ofope": "OFOPE", "chefe_servico": "CHEFE DE SERVIÇO", "optel": "OPTEL", "equipa_01": "EQUIPA 01", "equipa_02": "EQUIPA 02", "logistica": "LOGÍSTICA",
+                               "inem": "INEM", "inem_reserva": "INEM - Reserva", "servico_geral": "SERVIÇO GERAL"};
+          const teamsData = draftMembers.reduce((acc, member) => {
+            if (!acc[member.team_name]) acc[member.team_name] = [];
+            acc[member.team_name].push(member);
+            return acc;
+          }, {});
+          Object.keys(teamsData).forEach(dbTeamName => {
+            const displayTitle = teamNameMap[dbTeamName];
+            if (!displayTitle) return;
+            const card = Array.from(document.querySelectorAll('.plandir-main-card')).find(
+              c => c.querySelector('.plandir-card-title')?.textContent.trim() === displayTitle
+            );
+            if (!card) return;
+            const rows = Array.from(card.querySelectorAll('tbody tr'));
+            teamsData[dbTeamName].forEach((member, i) => {
+              const tr = rows[i];
+              if (!tr) return;
+              const inputs = tr.querySelectorAll('input');
+              const mpCell = tr.querySelector('.mp-cell');
+              const tasCell = tr.querySelector('.tas-cell');
+              if (inputs[0]) inputs[0].value = member.n_int || '';
+              if (inputs[1]) inputs[1].value = member.patente || '';
+              if (inputs[2]) inputs[2].value = member.abv_name || '';
+              if (inputs[3]) inputs[3].value = member.h_entrance || '';
+              if (inputs[4]) inputs[4].value = member.h_exit || '';
+              if (mpCell) {mpCell.textContent = member.MP ? 'X' : ''; mpCell.classList.toggle('plandir-mp-active', !!member.MP);}
+              if (tasCell) {tasCell.textContent = member.TAS ? 'X' : ''; tasCell.classList.toggle('plandir-tas-active', !!member.TAS);}
+              if (inputs[5]) inputs[5].value = member.observ || '';
+            });
+          });
+          updateStatusDots();
+        }
         loadSideTable(shift);
       }
       container.querySelectorAll('.plandir-nint-input').forEach(input => {
@@ -2516,6 +2607,7 @@
                 } else {
                   if (obsInput) obsInput.value = selected.value;
                 }
+                updateStatusDots();
               };
               cancelBtn2.onclick = () => {
                 modal2.classList.remove('show');
@@ -2577,10 +2669,10 @@
     document.querySelector('[data-page="page-plandir"]').addEventListener('click', () => {
       const container = document.getElementById('plandir_container');
       const rightCol = document.getElementById('plandir-right-col');
-      const headerContainer = document.getElementById('plandir-header-container'); // ← NOVO
+      const headerContainer = document.getElementById('plandir-header-container');
       if (container && container.innerHTML.trim() !== '') {
         container.innerHTML = '';
-        if (headerContainer) headerContainer.innerHTML = ''; // ← NOVO
+        if (headerContainer) headerContainer.innerHTML = '';
         if (rightCol) rightCol.style.display = 'none';
         document.querySelectorAll('.options-btn').forEach(btn => btn.classList.remove('active'));
       }
@@ -2624,7 +2716,48 @@
         btnD.disabled = true; btnD.style.opacity = '0.4'; btnD.style.cursor = 'not-allowed'; btnD.title = 'Turno D disponível após as 08:00';
       }
     }
-    blockShiftButtons();
+    blockShiftButtons();    
+    async function saveDraft(shift) {
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      if (!corpOperNr || !shift || shift === 'LAST') return;
+      const tables = collectTableData();
+      const teamNameMap = {"OFOPE": "ofope", "CHEFE DE SERVIÇO": "chefe_servico", "OPTEL": "optel", "EQUIPA 01": "equipa_01", "EQUIPA 02": "equipa_02", "LOGÍSTICA": "logistica",
+                           "INEM": "inem", "INEM - Reserva": "inem_reserva", "SERVIÇO GERAL": "servico_geral"};
+      try {
+        await fetch(`${SUPABASE_URL}/rest/v1/fomio_draft?corp_oper_nr=eq.${corpOperNr}&shift=eq.${shift}`, {
+          method: "DELETE", 
+          headers: getSupabaseHeaders()
+        });
+        for (let table of tables) {
+          const team_name = teamNameMap[table.title];
+          if (!team_name) continue;
+          const nonEmptyRows = table.rows.filter(r => r.n_int || r.patente || r.nome || r.entrada || r.saida || r.MP || r.TAS || r.obs);
+          if (nonEmptyRows.length > 0) {
+            await fetch(`${SUPABASE_URL}/rest/v1/fomio_draft`, {
+              method: "POST",
+              headers: getSupabaseHeaders(),
+              body: JSON.stringify(nonEmptyRows.map(r => ({team_name, shift, n_int: r.n_int || '', patente: r.patente || '', abv_name: r.nome || '', h_entrance: r.entrada || '',
+                                                           h_exit: r.saida || '', MP: !!r.MP, TAS: !!r.TAS, observ: r.obs || '', corp_oper_nr: corpOperNr})))
+            });
+          }
+        }
+        console.log(`✅ Draft guardado (Turno ${shift})`);
+      } catch (err) {
+        console.error('❌ Erro ao guardar draft:', err);
+      }
+    }
+    async function loadDraft(shift, corpOperNr) {
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/fomio_draft?corp_oper_nr=eq.${corpOperNr}&shift=eq.${shift}&select=*`, {
+          headers: getSupabaseHeaders()
+        });
+        const members = await res.json();
+        return members && members.length > 0 ? members : null;
+      } catch (err) {
+        console.error('❌ Erro ao carregar draft:', err);
+        return null;
+      }
+    }
     /* =======================================
     INOP CREPC
     ======================================= */

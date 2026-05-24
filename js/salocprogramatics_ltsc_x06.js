@@ -1940,37 +1940,43 @@
       `;
     }
     function updateStatusDots() {
-      const thresholds = {"EQUIPA 01": {yellow: 4, green: 5}, "EQUIPA 02": {yellow: 4, green: 5}, "LOGÍSTICA": {yellow: 1, green: 2},
-                          "INEM": {yellow: 1, green: 2}, "INEM - Reserva": {yellow: 1, green: 2}};
-      document.querySelectorAll('.plandir-main-card').forEach(card => {
-        const dot = card.querySelector('.plandir-status-dot');
-        if (!dot) return;
-        const titleEl = card.querySelector('.plandir-card-title');
-        const title = titleEl ? titleEl.textContent.trim() : '';
-        const filledCount = [...card.querySelectorAll('.plandir-nint-input')].filter(input => input.value.trim() !== '').length;
-        const config = thresholds[title];
-        if (config) {
-          dot.classList.remove('filled', 'dot-yellow', 'dot-red');
-          if (filledCount >= config.green) dot.classList.add('filled');
-          else if (filledCount >= config.yellow) dot.classList.add('dot-yellow');
-          else dot.classList.add('dot-red');
-        } else {
-          dot.classList.remove('dot-yellow', 'dot-red');
-          dot.classList.toggle('filled', filledCount > 0);
-        }
-      });
-      const sideTbody = document.getElementById('plandir-side-tbody');
-      if (!sideTbody) return;
-      const currentInputs = Array.from(document.querySelectorAll('.plandir-nint-input'))
-        .map(i => i.value.trim().padStart(3, '0'))
-        .filter(val => val !== '' && val !== '000');
-      sideTbody.querySelectorAll('tr[data-side-nint]').forEach(tr => {
-        const nint = tr.getAttribute('data-side-nint');
-        const isFilled = currentInputs.includes(nint);
-        tr.classList.toggle('row-highlight-green', isFilled);
-        tr.classList.toggle('row-pending-red', !isFilled);
-      });
+  const thresholds = {"EQUIPA 01": {yellow: 4, green: 5}, "EQUIPA 02": {yellow: 4, green: 5}, "LOGÍSTICA": {yellow: 1, green: 2},
+                      "INEM": {yellow: 1, green: 2}, "INEM - Reserva": {yellow: 1, green: 2}};
+  document.querySelectorAll('.plandir-main-card').forEach(card => {
+    const dot = card.querySelector('.plandir-status-dot');
+    if (!dot) return;
+    const titleEl = card.querySelector('.plandir-card-title');
+    const title = titleEl ? titleEl.textContent.trim() : '';
+    const filledCount = [...card.querySelectorAll('.plandir-nint-input')].filter(input => input.value.trim() !== '').length;
+    const config = thresholds[title];
+    if (config) {
+      dot.classList.remove('filled', 'dot-yellow', 'dot-red');
+      if (filledCount >= config.green) dot.classList.add('filled');
+      else if (filledCount >= config.yellow) dot.classList.add('dot-yellow');
+      else dot.classList.add('dot-red');
+    } else {
+      dot.classList.remove('dot-yellow', 'dot-red');
+      dot.classList.toggle('filled', filledCount > 0);
     }
+  });
+  const sideTbody = document.getElementById('plandir-side-tbody');
+  if (!sideTbody) return;
+  const currentInputs = Array.from(document.querySelectorAll('.plandir-nint-input'))
+    .map(i => i.value.trim().padStart(3, '0'))
+    .filter(val => val !== '' && val !== '000');
+  const allObsValues = Array.from(document.querySelectorAll('input, textarea'))
+    .map(i => i.value || '')
+    .filter(val => val.includes('Troca de Serviço'));
+  sideTbody.querySelectorAll('tr[data-side-nint]').forEach(tr => {
+    const nint = tr.getAttribute('data-side-nint');
+    const nintNum = String(parseInt(nint, 10));
+    const isInPlanning = currentInputs.includes(nint);
+    const isInObs = allObsValues.some(val => val.includes(nintNum));
+    const isFilled = isInPlanning || isInObs;
+    tr.classList.toggle('row-highlight-green', isFilled);
+    tr.classList.toggle('row-pending-red', !isFilled);
+  });
+}
     function updateRowFields(row, data, shift) {
       const entrance = row.querySelector('.plandir-entrance-input');
       const exit = row.querySelector('.plandir-exit-input');

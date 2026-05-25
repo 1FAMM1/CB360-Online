@@ -267,6 +267,8 @@
     /* =======================================
     FIREFIGHTER LISTING
     ======================================= */
+    sessionStorage.setItem("currentUserRole", "admin");
+    sessionStorage.setItem("currentCorpOperNr", "0805");
     let currentEditId = null;
     const ACCESS_OPTIONS = [
       {label: "Menu Principal"},
@@ -369,27 +371,46 @@
         const tbody = document.querySelector("#elements-container tbody");
         tbody.innerHTML = "";
         data.sort((a, b) => String(a.n_int).localeCompare(String(b.n_int), undefined, {numeric: true}));
-        data.forEach(row => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td style="text-align:center">${row.n_int ?? ""}</td>
-            <td style="text-align:center">${row.n_file ?? ""}</td>
-            <td style="text-align:center">${row.patent ?? ""}</td>
-            <td style="text-align:center">${row.full_name ?? ""}</td>
-            <td style="text-align:center; color: ${row.elem_state ? 'green' : 'red'}">${row.elem_state ? 'ATIVO' : 'INATIVO'}</td>
-            <td style="text-align:center">
-              <button class="btn-action" onclick='openEditCard(${JSON.stringify(row)})'>✏️</button>
-              <button class="btn-delete" onclick="deleteRecord('${row.id}', '${row.full_name}', '${row.corp_oper_nr}')">🗑️</button>
+        const quadDef = [{code: "QCOM", title: "QUADRO DE COMANDO"}, {code: "QATIV", title: "QUADRO ATIVO"}, {code: "QEST", title: "QUADRO DE ESTAGIÁRIOS"}, {code: "QEA", title: "QUADRO DE ESPECIALISTAS E AUXILIARES"}, 
+                         {code: "QRES", title: "QUADRO DE RESERVA"}, {code: "QHR", title: "QUADRO DE HONRA"}, {code: null, title: "SEM QUADRO"}];
+        quadDef.forEach(quadro => {
+          const elems = data.filter(row => 
+            quadro.code === null 
+              ? !row.type_quad || row.type_quad === "" 
+              : row.type_quad === quadro.code
+          );
+          if (!elems.length) return;
+          const headerTr = document.createElement("tr");
+          headerTr.innerHTML = `
+            <td colspan="6" style="background:#ffebeb;color:#a70c0c;font-weight:bold;text-align:left;
+              padding:8px 10px;font-size:13px;border:1px solid #ccc;border-left:2px solid #d81c1c;
+              letter-spacing:0.05em;">
+              🔹 ${quadro.title} (${elems.length})
             </td>
           `;
-          tbody.appendChild(tr);
+          tbody.appendChild(headerTr);
+          elems.forEach(row => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td style="text-align:center">${row.n_int ?? ""}</td>
+              <td style="text-align:center">${row.n_file ?? ""}</td>
+              <td style="text-align:center">${row.patent ?? ""}</td>
+              <td style="text-align:center">${row.full_name ?? ""}</td>
+              <td style="text-align:center; color: ${row.elem_state ? 'green' : 'red'}">${row.elem_state ? 'ATIVO' : 'INATIVO'}</td>
+              <td style="text-align:center">
+                <button class="btn-action" onclick='openEditCard(${JSON.stringify(row)})'>✏️</button>
+                <button class="btn-delete" onclick="deleteRecord('${row.id}', '${row.full_name}', '${row.corp_oper_nr}')">🗑️</button>
+              </td>
+            `;
+            tbody.appendChild(tr);
+          });
         });
       } catch (error) {
         console.error("Erro ao carregar tabela:", error);
       }
     }
     function clearEditForm() {
-      const ids = ["win_state", "win_state_from","win_type", "win_n_int", "win_n_file", "win_patent", "win_patent_abv", "win_section", "win_quad", "win_abv_name", "win_full_name", "win_MP", 
+      const ids = ["win_state", "win_state_from", "win_type", "win_ofope", "win_n_int", "win_n_file", "win_patent", "win_patent_abv", "win_section", "win_quad", "win_abv_name", "win_full_name", "win_MP", 
                    "win_ML", "win_TAS", "win_nif", "win_niss", "win_nib", "win_phone", "win_mobile", "win_mail", "win_user_name_main", "win_password_main", "win_user_name_mobile", "win_password_mobile"];
       ids.forEach(id => {
         const el = document.getElementById(id);
@@ -445,6 +466,9 @@
       if (document.getElementById("win_state_from")) {
         document.getElementById("win_state_from").value = row.inactive_from ?? "";
       }
+      if (document.getElementById("win_ofope")) {
+        document.getElementById("win_ofope").value = row.is_ofope ? "Sim" : "Não";
+      }
       toggleStateDateVisibility();
       const roleMap = {admin: "Administrador", subadmin: "Sub-Administrador", user: "Utilizador"};
       if (document.getElementById("win_type")) document.getElementById("win_type").value = roleMap[row.user_role] || "";
@@ -474,7 +498,7 @@
                           ML: document.getElementById("win_ML").value === "true", MP: document.getElementById("win_MP").value === "true", TAS: document.getElementById("win_TAS").value === "true", 
                           section: document.getElementById("win_section").value, type_quad: document.getElementById("win_quad").value, phone: document.getElementById("win_phone").value, 
                           mobile_phone: document.getElementById("win_mobile").value, email: document.getElementById("win_mail").value, nif: document.getElementById("win_nif").value, 
-                          nib: document.getElementById("win_nib").value, elem_state: document.getElementById("win_state").value === "Ativo", 
+                          is_ofope: document.getElementById("win_ofope").value === "Sim", nib: document.getElementById("win_nib").value, elem_state: document.getElementById("win_state").value === "Ativo", 
                           inactive_from: document.getElementById("win_state").value === "Inativo" ? document.getElementById("win_state_from").value : null,
                           acess: Array.from(document.querySelectorAll('.access-checkbox:checked')).map(cb => cb.value).join(", "), 
                           user_role: mapUserRole(), corp_oper_nr: corpOperNr,last_updated: new Date().toISOString()};

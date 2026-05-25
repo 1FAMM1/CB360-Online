@@ -159,14 +159,26 @@
     async function loadDecirRegData(year, month) {
       try {
         const firstOfMonth = new Date(year, month - 1, 1);
-        const data = await supabaseFetch("reg_elems?select=n_int,abv_name,patent_abv,MP,elem_state,inactive_from&n_int=gt.008&n_int=lt.400");
+        const data = await supabaseFetch(`reg_elems?select=n_int,abv_name,patent_abv,MP,elem_state,inactive_from&corp_oper_nr=eq.${getCorpId()}`);
         return data
           .filter(item => {
-            if (!item.inactive_from && item.elem_state) return true;
-            if (!item.inactive_from) return false;
-            return new Date(item.inactive_from) > firstOfMonth;
-          })
-          .sort((a,b) => parseInt(a.n_int,10) - parseInt(b.n_int,10));
+          const n = parseInt(item.n_int, 10);
+          if (n <= 8) return false;
+          if (n >= 400 && n < 700) return false;
+          if (n >= 800) return false;
+          if (!item.inactive_from && item.elem_state) return true;
+          if (!item.inactive_from) return false;
+          return new Date(item.inactive_from) > firstOfMonth;
+        })
+          .sort((a, b) => {
+          const n1 = parseInt(a.n_int, 10);
+          const n2 = parseInt(b.n_int, 10);
+          const isDecir1 = n1 >= 700 && n1 < 800;
+          const isDecir2 = n2 >= 700 && n2 < 800;
+          if (isDecir1 && !isDecir2) return -1;
+          if (!isDecir1 && isDecir2) return 1;
+          return n1 - n2;
+        });
       } catch {
         showPopup('popup-danger', "Erro ao carregar dados dos elementos.");
         return [];
@@ -175,14 +187,26 @@
     async function loadDecirElements(select, year, month) {
       try {
         const firstOfMonth = new Date(year, month - 1, 1);
-        const data = await supabaseFetch(`reg_elems?select=${select},elem_state,inactive_from&n_int=gt.008&n_int=lt.400`);
+        const data = await supabaseFetch(`reg_elems?select=${select},elem_state,inactive_from&corp_oper_nr=eq.${getCorpId()}`);
         return data
           .filter(item => {
-            if (!item.inactive_from && item.elem_state) return true;
-            if (!item.inactive_from) return false;
-            return new Date(item.inactive_from) > firstOfMonth;
-          })
-          .sort((a,b) => parseInt(a.n_int,10) - parseInt(b.n_int,10));
+          const n = parseInt(item.n_int, 10);
+          if (n <= 8) return false;
+          if (n >= 400 && n < 700) return false;
+          if (n >= 800) return false;
+          if (!item.inactive_from && item.elem_state) return true;
+          if (!item.inactive_from) return false;
+          return new Date(item.inactive_from) > firstOfMonth;
+        })
+          .sort((a, b) => {
+          const n1 = parseInt(a.n_int, 10);
+          const n2 = parseInt(b.n_int, 10);
+          const isDecir1 = n1 >= 700 && n1 < 800;
+          const isDecir2 = n2 >= 700 && n2 < 800;
+          if (isDecir1 && !isDecir2) return -1;
+          if (!isDecir1 && isDecir2) return 1;
+          return n1 - n2;
+        });
       } catch {
         showPopup('popup-danger', "Erro ao carregar lista de elementos.");
         return [];

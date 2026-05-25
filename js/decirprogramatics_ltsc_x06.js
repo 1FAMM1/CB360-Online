@@ -1,6 +1,112 @@
     /* =======================================
     DECIR PROGRAMATICS
     ======================================= */
+    const DECIR_PDF_MODAL_STYLES = `
+      @keyframes decirModalFadeIn {from {opacity: 0;} to {opacity: 1;}}
+      @keyframes decirModalSlideUp {from {opacity: 0; transform: translateY(28px) scale(0.97);} to {opacity: 1; transform: translateY(0) scale(1);}}
+      .decir-pdf-overlay {position: fixed; inset: 0; background: rgba(8, 10, 20, 0.72); z-index: 10010; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px);
+                          animation: decirModalFadeIn 0.2s ease;}
+      .decir-pdf-box {background: #f0f2f8; border-radius: 16px; width: 82vw; height: 90vh; display: flex; flex-direction: column; box-shadow: 0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.08);
+                      overflow: hidden; animation: decirModalSlideUp 0.28s cubic-bezier(0.22,1,0.36,1); transition: width 0.25s ease, height 0.25s ease, border-radius 0.25s ease;}
+      .decir-pdf-header {background: linear-gradient(135deg, #0d1254 0%, #131a69 55%, #1a237e 100%); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between;
+                         border-bottom: 1px solid rgba(255,255,255,0.1); flex-shrink: 0;}
+      .decir-pdf-header-left {display: flex; align-items: center; gap: 10px;}
+      .decir-pdf-icon {width: 32px; height: 32px; background: rgba(255,255,255,0.12); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;}
+      .decir-pdf-title {color: #fff; font-size: 13px; font-weight: 700; font-family: 'Segoe UI', sans-serif; letter-spacing: 0.3px;}
+      .decir-pdf-subtitle {color: rgba(255,255,255,0.6); font-size: 11px; font-family: 'Segoe UI', sans-serif; margin-top: 1px;}
+      .decir-pdf-header-btns {display: flex; gap: 6px; align-items: center;}
+      .decir-pdf-btn {background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); color: #fff; border-radius: 6px; padding: 5px 10px; font-size: 12px; font-weight: 600; cursor: pointer;
+                      transition: background 0.15s, transform 0.1s; font-family: 'Segoe UI', sans-serif; display: flex; align-items: center; gap: 5px;}
+      .decir-pdf-btn:hover {background: rgba(255,255,255,0.2); transform: translateY(-1px);}
+      .decir-pdf-btn:active {transform: translateY(0);}
+      .decir-pdf-btn-close {background: rgba(220, 38, 38, 0.25); border-color: rgba(220, 38, 38, 0.4);}
+      .decir-pdf-btn-close:hover {background: rgba(220, 38, 38, 0.55);}
+      .decir-pdf-btn-download {background: rgba(34, 197, 94, 0.2); border-color: rgba(34, 197, 94, 0.35);}
+      .decir-pdf-btn-download:hover {background: rgba(34, 197, 94, 0.4);}
+      .decir-pdf-content {flex: 1; position: relative; overflow: hidden; background: #e8eaf0;}
+      .decir-pdf-content iframe {position: absolute; inset: 0; width: 100%; height: 100%; border: none;}
+      .decir-pdf-footer {background: #1a1f3a; padding: 8px 16px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; border-top: 1px solid rgba(255,255,255,0.06);}
+      .decir-pdf-footer-info {color: rgba(255,255,255,0.45); font-size: 11px; font-family: 'Segoe UI', sans-serif; display: flex; align-items: center; gap: 6px;}
+      .decir-pdf-footer-info::before {content: ''; width: 6px; height: 6px; border-radius: 50%; background: #22c55e; display: inline-block; animation: decirPulse 2s ease-in-out infinite;}
+      @keyframes decirPulse {0%, 100% {opacity: 1;} 50% {opacity: 0.3;}}
+      .decir-pdf-print-btn {background: linear-gradient(135deg, #131a69, #1e2a80); border: 1px solid rgba(255,255,255,0.15); color: #fff; border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 600;
+                            cursor: pointer; font-family: 'Segoe UI', sans-serif; display: flex; align-items: center; gap: 6px; transition: background 0.15s, transform 0.1s;}
+      .decir-pdf-print-btn:hover {background: linear-gradient(135deg, #1e2a80, #2a3ab0); transform: translateY(-1px);}
+    `;
+    function _decirInjectPdfModalStyles() {
+      if (document.getElementById('decir-pdf-modal-styles')) return;
+      const style = document.createElement('style');
+      style.id = 'decir-pdf-modal-styles';
+      style.textContent = DECIR_PDF_MODAL_STYLES;
+      document.head.appendChild(style);
+    }
+    function openDecirPdfModal(blobUrl, fileName) {
+      _decirInjectPdfModalStyles();
+      document.getElementById('decir-pdf-modal-overlay')?.remove();
+      const overlay = document.createElement('div');
+      overlay.id = 'decir-pdf-modal-overlay';
+      overlay.className = 'decir-pdf-overlay';
+      const box = document.createElement('div');
+      box.className = 'decir-pdf-box';
+      /* ── Header ── */
+      const header = document.createElement('div');
+      header.className = 'decir-pdf-header';
+      header.innerHTML = `
+        <div class="decir-pdf-header-left">
+          <div class="decir-pdf-icon">📄</div>
+          <div>
+            <div class="decir-pdf-title">DECIR — Visualização de Documento</div>
+            <div class="decir-pdf-subtitle">${fileName}.pdf</div>
+          </div>
+        </div>
+        <div class="decir-pdf-header-btns">
+          <button class="decir-pdf-btn" id="decir-pdf-fullscreen" title="Ecrã inteiro">⛶ Expandir</button>
+          <button class="decir-pdf-btn decir-pdf-btn-download" id="decir-pdf-download" title="Descarregar">⬇️ Descarregar</button>
+          <button class="decir-pdf-btn decir-pdf-btn-close" id="decir-pdf-close" title="Fechar">✕ Fechar</button>
+        </div>
+      `;
+      /* ── Content ── */
+      const content = document.createElement('div');
+      content.className = 'decir-pdf-content';
+      const iframe = document.createElement('iframe');
+      iframe.src = blobUrl;
+      content.appendChild(iframe);
+      /* ── Footer ── */
+      const footer = document.createElement('div');
+      footer.className = 'decir-pdf-footer';
+      footer.innerHTML = `
+        <div class="decir-pdf-footer-info">Documento gerado com sucesso</div>
+        <button class="decir-pdf-print-btn" id="decir-pdf-print">🖨️ Imprimir</button>
+      `; 
+      box.append(header, content, footer);
+      overlay.appendChild(box);
+      document.body.appendChild(overlay);
+      /* ── Fullscreen toggle ── */
+      let isFs = false;
+      document.getElementById('decir-pdf-fullscreen').onclick = () => {
+        isFs = !isFs;
+        Object.assign(box.style, {width: isFs ? '100vw' : '82vw', height: isFs ? '100vh' : '90vh', borderRadius: isFs ? '0' : '16px'});
+        document.getElementById('decir-pdf-fullscreen').textContent = isFs ? '⛶ Reduzir' : '⛶ Expandir';
+      };
+      /* ── Download ── */
+      document.getElementById('decir-pdf-download').onclick = () => {
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = `${fileName}.pdf`;
+        a.click();
+      };
+      /* ── Close ── */
+      const closeModal = () => {
+        URL.revokeObjectURL(blobUrl);
+        overlay.remove();
+      };
+      document.getElementById('decir-pdf-close').onclick = closeModal;
+      /* ── Print ── */
+      document.getElementById('decir-pdf-print').onclick = () => {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+      };
+    }
     /* ─── BOTÕES GENÉRICOS DE MÊS (DECIR) ───────────────────── */
     function createDecirButtonsGeneric({
       containerId, tableContainerId, yearSelectId, optionsContainerId,
@@ -2291,11 +2397,10 @@
       if (!inp1?.value || !inp2?.value) {
         return showPopup('popup-danger', "Selecione as duas datas.");
       }
-      const mode = document.querySelector("#decir-reg-signa .mode-highlight")?.textContent === "1 ECIN"
-        ? "1_ecin"
-        : document.querySelector("#decir-reg-signa .mode-highlight")?.textContent === "BRIGADA"
-        ? "brigada"
-        : "1_ecin_1_elac";
+      const modeText = document.querySelector("#decir-reg-signa .mode-highlight")?.textContent;
+      const mode = modeText === "1 ECIN" ? "1_ecin"
+                 : modeText === "BRIGADA" ? "brigada"
+                 : "1_ecin_1_elac";
       const isBrigade = mode === "brigada";
       const formatDateForName = (dateStr) => {
         const [y, m, d] = dateStr.split("-");
@@ -2306,17 +2411,15 @@
       const d2 = formatDateForName(inp2.value);
       const fileName = isBrigade
         ? `ASSINATURAS_DECIR_${d1.day}_${d1.month}_${d1.year}`
-        : `ASSINATURAS_DECIR_${d1.day}_a_${d2.day}_${d2.month}_${d2.year}`;
+        : `ASSINATURAS_DECIR_${d1.day}_a_${d2.day}_${d2.month}_${d2.year}`; 
       const getTeamData = (day, shift, section) => {
         const container = document.querySelector("#decir-reg-signa .major-card-body");
         return Array.from(container.querySelectorAll(
           `.signa-drop-zone[data-day="${day}"][data-shift="${shift}"][data-section="${section}"]`
         )).map(zone => {
           const tr = zone.closest("tr");
-          return {nint: zone.dataset.nint || "", n_file: tr?.querySelector(".field-nfile")?.value || "", patent: tr?.querySelector(".field-patent")?.value || "",
-                  abv_name: tr?.querySelector(".field-abvname")?.value || "", full_name: zone.dataset.fullname || ""};
-        });
-      };
+          return {nint:  zone.dataset.nint || "", n_file: tr?.querySelector(".field-nfile")?.value || "", patent: tr?.querySelector(".field-patent")?.value || "",
+                  abv_name: tr?.querySelector(".field-abvname")?.value || "", full_name: zone.dataset.fullname || ""};});};
       const getTeamDataBrigada = (shift, team) => {
         const container = document.querySelector("#decir-reg-signa .major-card-body");
         const allZones = Array.from(container.querySelectorAll(
@@ -2325,17 +2428,19 @@
         const zones = team === "A" ? allZones.slice(0, 5) : allZones.slice(5, 10);
         return zones.map(zone => {
           const tr = zone.closest("tr");
-          return {nint: zone.dataset.nint || "", n_file: tr?.querySelector(".field-nfile")?.value || "", patent: tr?.querySelector(".field-patent")?.value || "",
-                  abv_name: tr?.querySelector(".field-abvname")?.value || "", full_name: zone.dataset.fullname || ""};
-        });
-      };
+          return {nint: zone.dataset.nint || "", n_file: tr?.querySelector(".field-nfile")?.value || "", patent:   tr?.querySelector(".field-patent")?.value || "",
+                  abv_name: tr?.querySelector(".field-abvname")?.value || "", full_name: zone.dataset.fullname || ""};});};
       showLoadingPopup("A gerar ficheiro de assinaturas...");
       try {
         const payload = {type: "signa", date1: inp1.value, date2: inp2.value, year: inp1.value.split("-")[0], fileName, format, mode,
-                         ecin: {day1: {day: isBrigade ? getTeamDataBrigada("day", "A") : getTeamData("1","day","ecin"), night: isBrigade ? getTeamDataBrigada("night", "A") : getTeamData("1","night","ecin")},
-                                day2: {day: isBrigade ? getTeamDataBrigada("day", "B") : getTeamData("2","day","ecin"), night: isBrigade ? getTeamDataBrigada("night", "B") : getTeamData("2","night","ecin")}},
-                         elac: {day1: {day: getTeamData("1","day","elac"), night: getTeamData("1","night","elac")},
-                                day2: {day: getTeamData("2","day","elac"), night: getTeamData("2","night","elac")}}};
+                         ecin: {day1: {day: isBrigade ? getTeamDataBrigada("day", "A") : getTeamData("1","day","ecin"),
+                                       night: isBrigade ? getTeamDataBrigada("night", "A") : getTeamData("1","night","ecin")},
+                                day2: {day: isBrigade ? getTeamDataBrigada("day", "B") : getTeamData("2","day","ecin"),
+                                       night: isBrigade ? getTeamDataBrigada("night", "B") : getTeamData("2","night","ecin")}},
+                         elac: {day1: {day: getTeamData("1","day","elac"),
+                                       night: getTeamData("1","night","elac")},
+                                day2: {day: getTeamData("2","day","elac"),   
+                                       night: getTeamData("2","night","elac")}}};
         const res = await fetch("https://cb360-online.vercel.app/api/decir_reg_pag", {
           method: "POST",
           headers: {"Content-Type": "application/json"},
@@ -2346,18 +2451,16 @@
           throw new Error(err.details || err.error);
         }
         const blob = await res.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `${fileName}.${format}`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        window.URL.revokeObjectURL(url);
-        setTimeout(() => {
-          hideLoadingPopup();
-          showPopup('popup-info', "Ficheiro de assinaturas gerado com sucesso.");
-        }, 400);
+        hideLoadingPopup();
+        if (format === "pdf") {
+          const blobUrl = URL.createObjectURL(blob);
+          openDecirPdfModal(blobUrl, fileName);
+        } else {
+          downloadBlob(blob, `${fileName}.xlsx`);
+          setTimeout(() => {
+            showPopup('popup-info', "Ficheiro de assinaturas gerado com sucesso.");
+          }, 400);
+        }
       } catch (err) {
         hideLoadingPopup();
         console.error("Erro:", err);
@@ -2565,11 +2668,18 @@
           throw new Error(err.details || err.error);
         }
         const blob = await res.blob();
-        downloadBlob(blob, `${data.fileName}.${format}`);
-        setTimeout(() => {
-          hideLoadingPopup();
-          showPopup('popup-info', `Ficheiro de "${data.fileName}.${format}" gerado com sucesso.`);
-        }, 400);
+        hideLoadingPopup();
+        if (format === "pdf") {
+          /* ── Abre no modal ── */
+          const blobUrl = URL.createObjectURL(blob);
+          openDecirPdfModal(blobUrl, data.fileName);
+        } else {
+          /* ── XLSX: download direto (comportamento anterior) ── */
+          downloadBlob(blob, `${data.fileName}.${format}`);
+          setTimeout(() => {
+            showPopup('popup-info', `Ficheiro "${data.fileName}.${format}" gerado com sucesso.`);
+          }, 400);
+        }
       } catch (err) {
         hideLoadingPopup();
         console.error(err);

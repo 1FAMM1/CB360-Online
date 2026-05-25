@@ -697,6 +697,34 @@
       document.getElementById("elems-saveBtn").addEventListener("click", saveElement);
       document.getElementById("win_state").addEventListener("change", toggleStateDateVisibility);
     });
+    document.getElementById("win_search_element")?.addEventListener("input", function() {
+      const filterText = this.value.toLowerCase().trim();
+      const tbody = document.querySelector("#elements-container tbody");
+      if (!tbody) return;
+      const rows = tbody.querySelectorAll("tr");
+      rows.forEach(row => {
+        if (row.querySelector('td[colspan]')) return;
+        const nInt = row.children[0]?.textContent.toLowerCase() || "";
+        const nFile = row.children[1]?.textContent.toLowerCase() || "";
+        const patent = row.children[2]?.textContent.toLowerCase() || "";
+        const fullName = row.children[3]?.textContent.toLowerCase() || "";
+        if (nInt.includes(filterText) || nFile.includes(filterText) || patent.includes(filterText) || fullName.includes(filterText)) {
+          row.style.display = "";
+        } else {
+          row.style.display = "none";
+        }
+      });
+      rows.forEach(row => {
+        if (!row.querySelector('td[colspan]')) return;
+        let next = row.nextElementSibling;
+        let hasVisible = false;
+        while (next && !next.querySelector('td[colspan]')) {
+          if (next.style.display !== "none") {hasVisible = true; break;}
+          next = next.nextElementSibling;
+        }
+        row.style.display = hasVisible || filterText === "" ? "" : "none";
+      });
+    });
     /* =======================================
     VEHICLE LISTING
     ======================================= */

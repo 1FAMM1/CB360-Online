@@ -2885,12 +2885,14 @@
         <div class="major-card-body">
           <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px; margin-bottom: 15px;">
             <label style="font-size: 13px;">Pesquisar:</label>
-            <input type="text" id="contact-list-search" style="width: 300px;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color: #1e3a8a; opacity: 0.85; vertical-align: middle; cursor: pointer;" title="Pesquisar"
-                  onclick="document.getElementById('contact-list-search').focus();">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
+            <div style="position: relative; display: flex; align-items: center;">
+              <input type="text" id="contact-list-search" style="width: 300px; padding-right: 30px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" 
+                   style="position: absolute; right: 8px; color: #aaa; cursor: pointer; pointer-events: none;" title="Pesquisar">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </div>
           </div>
           <div class="options-main-card">
             <h3 style="font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: #444; margin: -12px -12px 15px -12px; padding: 5px 14px; 

@@ -2173,7 +2173,7 @@
       return optelTable.rows[0].nome || "";
     }
     async function emitPlanning(shift, date, baixar = false) {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       if (!corpOperNr) {
         showPopup('popup-danger', "Erro: Sessão expirada. Por favor, faça login novamente.");
         return;
@@ -2255,7 +2255,7 @@
       const tbody = document.getElementById('plandir-side-tbody');
       const rightCol = document.getElementById('plandir-right-col');
       if (!tbody || !rightCol) return;
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       if (!corpOperNr) return;
       const now = new Date();
       const day = String(now.getDate()).padStart(2, '0');
@@ -2335,7 +2335,7 @@
         localStorage.setItem("originalShift", shift);
       }
       let header;
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       if (shift === 'LAST') {
         try {
           const res = await fetch(`${SUPABASE_URL}/rest/v1/fomio_date?select=header_text&limit=1`, {method: 'GET', headers: getSupabaseHeaders()});
@@ -2718,7 +2718,7 @@
     }
     blockShiftButtons();    
     async function saveDraft(shift) {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       if (!corpOperNr || !shift || shift === 'LAST') return;
       const tables = collectTableData();
       const teamNameMap = {"OFOPE": "ofope", "CHEFE DE SERVIÇO": "chefe_servico", "OPTEL": "optel", "EQUIPA 01": "equipa_01", "EQUIPA 02": "equipa_02", "LOGÍSTICA": "logistica",
@@ -4093,8 +4093,8 @@
     /* ===== CONTACT LIST INIT ===== */
     /* ===== COMMON DATA ===== */
     async function _getEmailCommonData() {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
-      const nInt = sessionStorage.getItem("currentNInt") || "205";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const nInt = sessionStorage.getItem("currentNInt");
       let corpName = "Corpo de Bombeiros de Faro";
       let logoUrl = "";
       let senderName = "Utilizador";
@@ -4154,7 +4154,7 @@
       if (searchInput) searchInput.value = "";
       tbody.style.opacity = "0.5";
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${corpOperNr}&n_int=lt.900&select=id,n_int,patent,full_name,phone,mobile_phone,email,type_quad,elem_state,inactive_from&order=n_int.asc`, {
             headers: getSupabaseHeaders()
@@ -4322,8 +4322,8 @@
      const messageText = messageTextarea.value.trim();
      if (!messageText) return;
      try {
-       const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
-       const nInt = sessionStorage.getItem("currentNInt") || "205";
+       const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+       const nInt = sessionStorage.getItem("currentNInt");
        const res = await fetch(
          `${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${corpOperNr}&n_int=eq.${nInt}&select=abv_name,patent_abv`, {
            headers: getSupabaseHeaders()
@@ -4759,7 +4759,7 @@
       document.getElementById("contact-noattendance").textContent = "0";
       tbody.style.opacity = "0.5";
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${corpOperNr}&n_int=lt.900&select=id,n_int,patent,full_name,type_quad,elem_state,inactive_from,phone,mobile_phone&order=n_int.asc`, {
             headers: getSupabaseHeaders()
@@ -4969,7 +4969,7 @@
         showPopup('popup-danger', "Por favor indique o nome do evento antes de guardar.");
         return;
       }
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const saveBtn = document.getElementById("attendance-list-save");
       saveBtn.disabled = true;
       saveBtn.textContent = "⌛ A guardar...";
@@ -5039,7 +5039,7 @@
     async function loadRecentAttendanceEvents() {
       const select = document.getElementById("attendance-recent-events");
       if (!select) return;
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       try {
         const resp = await fetch(
           `${SUPABASE_URL}/rest/v1/attendance_events?corp_oper_nr=eq.${corpOperNr}&select=id,event_name,updated_at&order=updated_at.desc&limit=20`, {
@@ -5112,7 +5112,7 @@
         showPopup('popup-danger', "Nenhum evento selecionado para eliminar.");
         return;
       }
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       try {
         const checkResp = await fetch(
           `${SUPABASE_URL}/rest/v1/attendance_events?corp_oper_nr=eq.${corpOperNr}&event_name=eq.${encodeURIComponent(eventName)}&select=id`, {
@@ -5178,7 +5178,7 @@
       if (!tbody) return;
       tbody.style.opacity = "0.5";
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/phonebook?corp_oper_nr=eq.${corpOperNr}&order=name.asc`, {
             headers: getSupabaseHeaders()
@@ -5231,7 +5231,7 @@
     /* ===== PHONEBOOK EDIT ===== */
     async function phonebookEdit(id) {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/phonebook?id=eq.${id}&corp_oper_nr=eq.${corpOperNr}&select=*`, {
             headers: getSupabaseHeaders()
@@ -5267,7 +5267,7 @@
     async function phonebookDelete(id) {
       if (!confirm("Tem a certeza que pretende eliminar este contacto?")) return;
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/phonebook?id=eq.${id}&corp_oper_nr=eq.${corpOperNr}`, {
             method: "DELETE",
@@ -5294,7 +5294,7 @@
     }
     /* ===== PHONEBOOK SAVE ===== */
     async function phonebookSave() {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const name = document.getElementById("phonebook-name").value.trim();
       if (!name) {
         showPopup("popup-danger", "Preencha pelo menos o Nome / Designação.");

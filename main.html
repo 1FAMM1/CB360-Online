@@ -4248,7 +4248,19 @@
             <div id="panel-elems" class="panel-card">
               <h3>LISTAGEM DE ELEMENTOS</h3>
               <p>Adição, Remoção e Edição de elementos.</p>
-              <button class="btn btn-add" onclick="toggleElementsView()">ADICIONAR</button>
+              <div class="major-field">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                  <label for="win_search_element">Procurar</label>
+                  <div style="position: relative; display: flex; align-items: center;">
+                    <input type="text" id="win_search_element" style="width: 300px; padding-right: 30px;" placeholder="Procurar Elemento">
+                    <svg style="position: absolute; right: 8px; pointer-events: none; color: #aaa;" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                  </div>
+                  <div style="flex: 1;"></div>
+                  <button class="btn btn-add" onclick="toggleElementsView()">ADICIONAR</button>
+                </div>
+              </div>
               <div class="options-main-card" id="elements-list" style="padding: 0px; margin-top: 20px;">
                 <div class="table-container" style="height: 500px; margin: 0 0 0 0;">
                   <table id="elements-container">

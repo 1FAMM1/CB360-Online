@@ -122,18 +122,18 @@
     const PAGE_CONFIGS = {
       "decir-reg": {tableId: "table-container-dec-reg", optionsId: "decir-reg-options", monthsId: "months-container-dec-reg",
                     generic: {containerId: "months-container-dec-reg", tableContainerId: "table-container-dec-reg", yearSelectId: "year-dec-reg", optionsContainerId: "decir-reg-options",
-                              monthNames: DECIR_MONTH_NAMES, blockedMonths:[], loadDataFunc: async () => loadDecirRegData(), createTableFunc: (cId, y, m, d) => createDecirRegTable(cId, y, m + 4, d), 
+                              monthNames: DECIR_MONTH_NAMES, blockedMonths:[], loadDataFunc: async (y, m) => loadDecirRegData(y, m + 4), createTableFunc: (cId, y, m, d) => createDecirRegTable(cId, y, m + 4, d), 
                               loadByMonthFunc: async (y, m) => window.loadDecirByMonth?.(y, m + 4)}},
       "decir-pag": {tableId: "table-container-dec-pag", optionsId: "decir-pag-options", monthsId: "months-container-dec-pag",
                     extra: ["table-container-dec-coda33","decir-coda33-options","decir-payment-totals"],
                     generic: {containerId: "months-container-dec-pag", tableContainerId: "table-container-dec-pag", yearSelectId: "year-dec-pag", optionsContainerId: "decir-pag-options",
                     monthNames: [...DECIR_MONTH_NAMES, "Cod.A33"], includeExtraButton: true, extraButtonFunc: handleCodA33Button,
-                    loadDataFunc: async (y, m) => ({elems: await loadDecirPayElements(), turnos: await loadShiftsByNI(y, m + 4)}), 
+                    loadDataFunc: async (y, m) => ({elems: await loadDecirPayElements(y, m + 4), turnos: await loadShiftsByNI(y, m + 4)}), 
                     createTableFunc: (cId, y, m, d) => createDecirPayTable(cId, y, m + 4, d.elems, d.turnos),
                     totalContainerId: "decir-payment-totals", blockedMonths: []}},
       "decir-anepc": {tableId: "table-container-dec-anepc", optionsId: "decir-anepc-options", monthsId: "months-container-dec-anepc",
                       generic: {containerId: "months-container-dec-anepc", tableContainerId: "table-container-dec-anepc", yearSelectId: "year-dec-anepc", optionsContainerId: "decir-anepc-options",
-                      monthNames: DECIR_MONTH_NAMES, blockedMonths: [], loadDataFunc: async (y, m) => ({elems: await loadDecirANEPCElements(), turnos: await loadShiftsByNI(y, m + 4)}),
+                      monthNames: DECIR_MONTH_NAMES, blockedMonths: [], loadDataFunc: async (y, m) => ({elems: await loadDecirANEPCElements(y, m + 4), turnos: await loadShiftsByNI(y, m + 4)}),
                       createTableFunc: (cId, y, m, d) => createDecirAnepcTable(cId, y, m + 4, d.elems, d.turnos)}},
       "decir-reg-ocorr": {init: createDecirOccurrencesTable},
       "decir-reg-ref": {tableId: "table-container-dec-ref", optionsId: "decir-ref-options", monthsId: "months-container-dec-ref",
@@ -156,27 +156,41 @@
         showPopup('popup-danger', "Erro ao carregar valores de configuração.");
       }
     }
-    async function loadDecirRegData() {
+    async function loadDecirRegData(year, month) {
       try {
-        const data = await supabaseFetch("reg_elems?select=n_int,abv_name,patent_abv&n_int=gt.008&n_int=lt.400&elem_state=eq.true");
-        return data.sort((a,b) => parseInt(a.n_int,10) - parseInt(b.n_int,10));
+        const firstOfMonth = new Date(year, month - 1, 1);
+        const data = await supabaseFetch("reg_elems?select=n_int,abv_name,patent_abv,MP,elem_state,inactive_from&n_int=gt.008&n_int=lt.400");
+        return data
+          .filter(item => {
+            if (!item.inactive_from && item.elem_state) return true;
+            if (!item.inactive_from) return false;
+            return new Date(item.inactive_from) > firstOfMonth;
+          })
+          .sort((a,b) => parseInt(a.n_int,10) - parseInt(b.n_int,10));
       } catch {
         showPopup('popup-danger', "Erro ao carregar dados dos elementos.");
         return [];
       }
     }
-    async function loadDecirElements(select) {
+    async function loadDecirElements(select, year, month) {
       try {
-        const data = await supabaseFetch(`reg_elems?select=${select}&n_int=gt.008&n_int=lt.400&elem_state=eq.true`);
-        return data.sort((a,b) => parseInt(a.n_int,10) - parseInt(b.n_int,10));
+        const firstOfMonth = new Date(year, month - 1, 1);
+        const data = await supabaseFetch(`reg_elems?select=${select},elem_state,inactive_from&n_int=gt.008&n_int=lt.400`);
+        return data
+          .filter(item => {
+            if (!item.inactive_from && item.elem_state) return true;
+            if (!item.inactive_from) return false;
+            return new Date(item.inactive_from) > firstOfMonth;
+          })
+          .sort((a,b) => parseInt(a.n_int,10) - parseInt(b.n_int,10));
       } catch {
         showPopup('popup-danger', "Erro ao carregar lista de elementos.");
         return [];
       }
     }
-    const loadDecirPayElements = () => loadDecirElements("n_int,full_name,nif,nib");
-    const loadDecirCodA33Elements = () => loadDecirElements("n_int,full_name,nif");
-    const loadDecirANEPCElements = () => loadDecirElements("n_int,n_file,patent,full_name");
+    const loadDecirPayElements = (y, m) => loadDecirElements("n_int,full_name,nif,nib", y, m);
+    const loadDecirCodA33Elements = (y, m) => loadDecirElements("n_int,full_name,nif", y, m);
+    const loadDecirANEPCElements = (y, m) => loadDecirElements("n_int,n_file,patent,full_name", y, m);
     async function loadShiftsByNI(year, month) {
       try {
         const data = await supabaseFetch(`decir_reg_pag?select=n_int,turno,day&year=eq.${year}&month=eq.${month}`);
@@ -708,7 +722,8 @@
             <td style="text-align:left;width:100px;border:1px solid #ccc;"><strong>${lbl}</strong></td>
             <td style="text-align:right;font-weight:bold;${style}width:116px;border:1px solid #ccc;">${formatCurrency(val)}</td>
           </tr>`).join('')}
-        </table>`;
+        </table>
+      `;
     }
     function updateDECIRTotalPaymentsByMonth() {
       const table = document.querySelector("table.pag-table");
@@ -734,7 +749,8 @@
                       border-bottom-left-radius:5px;">TOTAL A PAGAR:</div>
           <div style="padding: 8px 10px; border: 1px solid #ccc; background: #e0f7e0; color: #006400; width: 203px; text-align: right; border-top-right-radius: 5px;
                       border-bottom-right-radius: 5px;">${formatCurrency(grandTotalCents/100)}</div>
-        </div>`;
+        </div>
+      `;
       tc.style.display = "flex";
       tc.style.justifyContent = "flex-end";
     }
@@ -934,7 +950,7 @@
       if (tableContainer) tableContainer.style.display = "block";
       const year = parseInt($("year-dec-pag")?.value || new Date().getFullYear(), 10);
       try {
-        const elements = await loadDecirCodA33Elements();
+        const elements = await loadDecirCodA33Elements(year, 1);
         const months = [4, 5, 6, 7, 8, 9, 10];
         const turnosPorMes = {};
         const allShifts = await Promise.all(months.map(m => loadShiftsByNI(year, m)));
@@ -976,9 +992,9 @@
         const niKey = parseInt(elem.n_int,10);
         const qtyShifts = turnosPorNI?.[niKey] || 0;
         tr.appendChild(makeTd(elem.n_file ? String(elem.n_file) : "", "text-align:center;"));
-        tr.appendChild(makeTd(elem.patent||"",    "text-align:center;padding:6px 8px;"));
+        tr.appendChild(makeTd(elem.patent||"", "text-align:center;padding:6px 8px;"));
         tr.appendChild(makeTd(elem.full_name||"", "text-align:center;padding:6px 8px;"));
-        tr.appendChild(makeTd(String(qtyShifts),  "text-align:center;font-weight:bold;padding:6px 8px;"));
+        tr.appendChild(makeTd(String(qtyShifts), "text-align:center;font-weight:bold;padding:6px 8px;"));
         const tdValue = document.createElement("td");
         tdValue.style.cssText = COMMON_TDTOTAL_STYLE + "text-align:right;font-weight:bold;padding:6px 8px;";
         const updateValor = () => {tdValue.textContent = formatCurrency(parseVal("anepc-value-anepc") * qtyShifts);};
@@ -2562,7 +2578,7 @@
           if (tableContainer) tableContainer.innerHTML = "";
           createDecirButtonsGeneric({
             containerId: "months-container-dec-view", tableContainerId: "table-container-dec-view", yearSelectId: "year-dec-view", 
-            optionsContainerId: "decir-view-options", monthNames: DECIR_MONTH_NAMES, blockedMonths: [], loadDataFunc: async (y, m) => loadDecirData(), 
+            optionsContainerId: "decir-view-options", monthNames: DECIR_MONTH_NAMES, blockedMonths: [], loadDataFunc: async (y, m) => loadDecirData(y, m + 4),
             createTableFunc: (cId, y, m, data) => createDecirViewTable(cId, y, m + 4, data)});
           return;
         }

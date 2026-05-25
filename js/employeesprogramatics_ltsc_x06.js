@@ -501,7 +501,7 @@
     }
     async function loadScalesShifts(year, month) {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
         const response = await fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`, {headers: getSupabaseHeaders()});
         if (!response.ok) { console.warn("Nenhum shift salvo ou erro ao carregar"); return {shifts: {}, employeeData: {}}; }
         const data = await response.json();
@@ -516,7 +516,7 @@
     }
     async function loadScalesEmployees(year, month) {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
         const monthStart = `${year}-${String(month).padStart(2, "0")}-01`;
         const lastDay = new Date(year, month, 0).getDate();
         const monthEnd = `${year}-${String(month).padStart(2, "0")}-${lastDay}`;
@@ -548,7 +548,14 @@
         data.sort((a, b) => {
           const ka = getOrderKey(a.team), kb = getOrderKey(b.team);
           const ia = idx(ka), ib = idx(kb);
-          return ia !== ib ? ia - ib : parseInt(a.n_int, 10) - parseInt(b.n_int, 10);
+          if (ia !== ib) return ia - ib;
+          const na = parseInt(a.n_int, 10);
+          const nb = parseInt(b.n_int, 10);
+          const is700a = na >= 700 && na < 800;
+          const is700b = nb >= 700 && nb < 800;
+          if (is700a && !is700b) return -1;
+          if (!is700a && is700b) return 1;
+          return na - nb;
         });
         data._shifts = shifts;
         return data;
@@ -771,7 +778,7 @@
       removedCount > 0 ? showPopup('popup-success', `${removedCount} Elemento(s) Removido(s).`) : showPopup('popup-danger', "Nenhuma linha vazia encontrada");
     }
     async function loadWeekendAdjacentData(year, month) {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       __prevMonthShiftsCache = {}; __nextMonthShiftsCache = {}; __lastFridayPrevCache = null; __firstMondayNextCache = null;
       let prevMonth = month - 1, prevYear = year;
       if (prevMonth === 0) { prevMonth = 12; prevYear--; }
@@ -934,7 +941,7 @@
     }
     async function loadBXPreference(year, month) {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/reg_employees_bx?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`,
           {headers: getSupabaseHeaders()}
@@ -949,7 +956,7 @@
     }
     async function saveBXPreference(year, month, hidden) {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
         await fetch(
           `${SUPABASE_URL}/rest/v1/reg_employees_bx?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`,
           {method: "DELETE", headers: getSupabaseHeaders()}
@@ -1300,7 +1307,7 @@
       const ym = _getActiveYearMonth();
       if (!ym) {showPopup('popup-danger', "Seleciona mês e ano primeiro."); return;}
       const {year, month, monthBtn} = ym;
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const saveBtn = document.getElementById("employees-save-btn");
       if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = "A guardar..."; }
       try {
@@ -1355,7 +1362,7 @@
       } catch (err) {
         console.error("Erro ao guardar escala:", err); showPopup('popup-danger', "❌ Erro ao guardar: " + err.message);
       } finally {
-        if (saveBtn) {saveBtn.disabled = false; saveBtn.textContent = "💾 Guardar";}
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = "💾 Guardar"; }
       }
     }
     async function emitEmployeesScale(format = "xlsx") {
@@ -1423,7 +1430,7 @@
     document.getElementById("employees-save-btn")?.addEventListener("click", saveEmployeeScales);
     document.getElementById("employees-emit-xlsx-btn")?.addEventListener("click", () => emitEmployeesScale("xlsx"));
     document.getElementById("employees-emit-pdf-btn")?.addEventListener("click", () => emitEmployeesScale("pdf"));
-    document.getElementById("employees-emit-stitch-marker-btn")?.addEventListener("click", emitStitchSheets);
+    document.getElementById("employees-emit-stitch-marker-btn")?.addEventListener("click", emitStitchSheets); 
     /* ================================
     FASE 02 - EMPLOYEE EXTRA HOURS CONTROL
     =============================== */

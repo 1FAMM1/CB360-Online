@@ -4091,7 +4091,29 @@
       }
     });
     /* ===== CONTACT LIST INIT ===== */
-   document.querySelector('.sidebar-sub-submenu-button[data-page="page-contact-list"]')?.addEventListener("click", () => {
+    /* ===== COMMON DATA ===== */
+    async function _getEmailCommonData() {
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const nInt = sessionStorage.getItem("currentNInt") || "205";
+      let corpName = "Corpo de Bombeiros de Faro";
+      let logoUrl = "";
+      let senderName = "Utilizador";
+      try {
+        const [corpRes, elemRes] = await Promise.all([
+          fetch(`${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${corpOperNr}&select=cb_name,logo_url`, {
+            headers: getSupabaseHeaders()
+          }),
+          fetch(`${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${corpOperNr}&n_int=eq.${nInt}&select=abv_name,patent`, {
+            headers: getSupabaseHeaders()})
+        ]);
+        const corpData = await corpRes.json();
+        const elemData = await elemRes.json();
+        if (corpData.length) {corpName = corpData[0].cb_name || corpName; logoUrl = corpData[0].logo_url || "";}
+        if (elemData.length) {senderName = `${elemData[0].abv_name || "Utilizador"}<br>${elemData[0].patent || "CB360"}`;}
+      } catch (err) {console.error("Erro ao carregar dados comuns:", err);}
+      return {corpOperNr, corpName, logoUrl, senderName};
+    }
+    document.querySelector('.sidebar-sub-submenu-button[data-page="page-contact-list"]')?.addEventListener("click", () => {
       loadContactList();
     });
     document.getElementById("contact-list-search")?.addEventListener("input", function() {
@@ -4132,18 +4154,25 @@
       if (searchInput) searchInput.value = "";
       tbody.style.opacity = "0.5";
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
         const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${corpOperNr}&n_int=lt.900&elem_state=eq.true&select=id,n_int,patent,full_name,phone,mobile_phone,email,type_quad&order=n_int.asc`, {
+          `${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${corpOperNr}&n_int=lt.900&select=id,n_int,patent,full_name,phone,mobile_phone,email,type_quad,elem_state,inactive_from&order=n_int.asc`, {
             headers: getSupabaseHeaders()
           }
         );
         if (!response.ok) throw new Error("Erro ao carregar contactos");
         const data = await response.json();
+        const now = new Date();
+        const filtered = data.filter(item => {
+          if (["QHR", "QRES"].includes(item.type_quad)) return true;
+          if (!item.inactive_from && item.elem_state) return true;
+          if (!item.inactive_from) return false;
+          return new Date(item.inactive_from) > now;
+        });
         tbody.style.opacity = "1";
-        if (!data.length) {
+        if (!filtered.length) {
           tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:8px;font-size:13px;color:#999;">Sem registos</td></tr>`;
-          ["contact-total", "contact-qcom", "contact-qativ", "contact-qest", "contact-qea", "contact-qhr"].forEach(id => {
+          ["contact-total", "contact-qcom", "contact-qativ", "contact-qest", "contact-qea", "contact-qres", "contact-qhr"].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.textContent = "0";
           });
@@ -4154,12 +4183,13 @@
         if (document.getElementById("contact-selected-count")) {
           document.getElementById("contact-selected-count").textContent = "0";
         }
-        const quadDef = [{code: "QCOM", title: "QUADRO DE COMANDO"}, {code: "QATIV", title: "QUADRO ATIVO"}, {code: "QEST", title: "QUADRO DE ESTAGIÁRIOS"}, {code: "QEA", title: "QUADRO DE ESPECIALISTAS E AUXILIARES"}, {code: "QHR", title: "QUADRO DE HONRA"}];
+        const quadDef = [{code: "QCOM", title: "QUADRO DE COMANDO"}, {code: "QATIV", title: "QUADRO ATIVO"}, {code: "QEST", title: "QUADRO DE ESTAGIÁRIOS"}, 
+                         {code: "QEA", title: "QUADRO DE ESPECIALISTAS E AUXILIARES"}, {code: "QRES", title: "QUADRO DE RESERVA"}, {code: "QHR", title: "QUADRO DE HONRA"}];
         tbody.innerHTML = "";
         const tdStyle = `padding:5px;border:1px solid #ccc;font-size:13px;text-align:center;`;
         let totalRendered = 0;
         quadDef.forEach(quadro => {
-          const elemDoQuadro = data.filter(item => item.type_quad === quadro.code);
+          const elemDoQuadro = filtered.filter(item => item.type_quad === quadro.code);
           if (elemDoQuadro.length === 0) return;
           totalRendered += elemDoQuadro.length;
           const headerTr = document.createElement("tr");
@@ -4173,7 +4203,7 @@
           elemDoQuadro.forEach(item => {
             const tr = document.createElement("tr");
             const emailTarget = item.email || "";
-            const phoneTarget = item.mobile_phone || item.phone || "";            
+            const phoneTarget = item.mobile_phone || item.phone || "";
             tr.dataset.typeQuad = quadro.code;
             tr.innerHTML = `
               <td style="${tdStyle}; font-weight: bold;">${item.n_int || ""}</td>
@@ -4188,7 +4218,7 @@
               </td>
               <td style="${tdStyle} width: 75px; text-align: center; white-space: nowrap;">
                 <input type="checkbox" class="contact-row-checkbox contact-sms-cb" disabled data-phone="${phoneTarget}" style="margin-right: 6px; vertical-align: middle; width: 18px; height: 18px; cursor: pointer !important;">
-                <button /*onclick="contactMessage('${phoneTarget}')"*/  onclick="showbreve()" style="background:#27ae60; color:#fff; border:none; border-radius:4px; padding:4px 8px; cursor:pointer; font-size:14px; vertical-align: middle;">💬</button>
+                <button onclick="showbreve()" style="background:#27ae60; color:#fff; border:none; border-radius:4px; padding:4px 8px; cursor:pointer; font-size:14px; vertical-align: middle;">💬</button>
               </td>
             `;
             tr.addEventListener("mouseover", () => tr.style.background = "#c8d8f5");
@@ -4199,17 +4229,18 @@
         if (totalRendered === 0) {
           tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:8px;font-size:13px;color:#999;">Sem registos classificados</td></tr>`;
         }
-        document.getElementById("contact-total").textContent = data.length;
-        document.getElementById("contact-qcom").textContent = data.filter(item => item.type_quad === "QCOM").length;
-        document.getElementById("contact-qativ").textContent = data.filter(item => item.type_quad === "QATIV").length;
-        document.getElementById("contact-qest").textContent = data.filter(item => item.type_quad === "QEST").length;
-        document.getElementById("contact-qea").textContent = data.filter(item => item.type_quad === "QEA").length;
-        document.getElementById("contact-qhr").textContent = data.filter(item => item.type_quad === "QHR").length;
+        document.getElementById("contact-total").textContent = filtered.length;
+        document.getElementById("contact-qcom").textContent = filtered.filter(item => item.type_quad === "QCOM").length;
+        document.getElementById("contact-qativ").textContent = filtered.filter(item => item.type_quad === "QATIV").length;
+        document.getElementById("contact-qest").textContent = filtered.filter(item => item.type_quad === "QEST").length;
+        document.getElementById("contact-qea").textContent = filtered.filter(item => item.type_quad === "QEA").length;
+        document.getElementById("contact-qres").textContent = filtered.filter(item => item.type_quad === "QRES").length;
+        document.getElementById("contact-qhr").textContent = filtered.filter(item => item.type_quad === "QHR").length;
       } catch (err) {
         tbody.style.opacity = "1";
         tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:8px;font-size:12px;color:red;">Erro ao carregar contactos.</td></tr>`;
         console.error("Erro ao carregar contactos:", err);
-        ["contact-total", "contact-qcom", "contact-qativ", "contact-qest", "contact-qea", "contact-qhr"].forEach(id => {
+        ["contact-total", "contact-qcom", "contact-qativ", "contact-qest", "contact-qea", "contact-qres", "contact-qhr"].forEach(id => {
           const el = document.getElementById(id);
           if (el) el.textContent = "0";
         });
@@ -4246,28 +4277,7 @@
       style.innerHTML = CONTACT_EMAIL_POPUP_STYLES;
       document.head.appendChild(style);
     }
-    /* ===== COMMON DATA ===== */
-    async function _getEmailCommonData() {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
-      const nInt = sessionStorage.getItem("currentNInt");
-      let corpName = "Corpo de Bombeiros de Faro";
-      let logoUrl = "";
-      let senderName = "Utilizador";
-      try {
-        const [corpRes, elemRes] = await Promise.all([
-          fetch(`${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${corpOperNr}&select=cb_name,logo_url`, {
-            headers: getSupabaseHeaders()
-          }),
-          fetch(`${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${corpOperNr}&n_int=eq.${nInt}&select=abv_name,patent`, {
-            headers: getSupabaseHeaders()})
-        ]);
-        const corpData = await corpRes.json();
-        const elemData = await elemRes.json();
-        if (corpData.length) {corpName = corpData[0].cb_name || corpName; logoUrl = corpData[0].logo_url || "";}
-        if (elemData.length) {senderName = `${elemData[0].abv_name || "Utilizador"}<br>${elemData[0].patent || "CB360"}`;}
-      } catch (err) {console.error("Erro ao carregar dados comuns:", err);}
-      return {corpOperNr, corpName, logoUrl, senderName};
-    }
+    
     /* ===== HELPER: LÊ FICHEIRO E CONVERTE PARA BASE64 ===== */
     async function _readAttachment() {
       const fileInput = document.getElementById('contact-email-attachment');
@@ -4312,8 +4322,8 @@
      const messageText = messageTextarea.value.trim();
      if (!messageText) return;
      try {
-       const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
-       const nInt = sessionStorage.getItem("currentNInt");
+       const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+       const nInt = sessionStorage.getItem("currentNInt") || "205";
        const res = await fetch(
          `${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${corpOperNr}&n_int=eq.${nInt}&select=abv_name,patent_abv`, {
            headers: getSupabaseHeaders()
@@ -4596,9 +4606,9 @@
       }
       try {
         showLoadingPopup("🔄 A preparar listagem...");
-        const { corpName } = await _getEmailCommonData();
+        const {corpName} = await _getEmailCommonData();
         const quadDef = [{code: "QCOM", title: "QUADRO DE COMANDO"}, {code: "QATIV", title: "QUADRO ATIVO"}, {code: "QEST", title: "QUADRO DE ESTAGIÁRIOS"},
-                         {code: "QEA", title: "QUADRO DE ESPECIALISTAS E AUXILIARES"}, {code: "QHR", title: "QUADRO DE HONRA"}];
+                         {code: "QEA", title: "QUADRO DE ESPECIALISTAS E AUXILIARES"}, {code: "QRES", title: "QUADRO DE RESERVA"}, {code: "QHR", title: "QUADRO DE HONRA"}];
         const rows = tbody.querySelectorAll("tr:not(.quadro-header-row)");
         const allElements = [];
         rows.forEach(row => {
@@ -4609,7 +4619,7 @@
         updateLoadingPopup("📊 A gerar Listagem de Contactos...");
         const response = await fetch("https://cb360-online.vercel.app/api/various_convert_and_send", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {"Content-Type": "application/json"},
           body: JSON.stringify({type: "contact_list", data: {corpName, quad}}),
         });
         if (!response.ok) throw new Error(await response.text());
@@ -4663,12 +4673,706 @@
           iframe.contentWindow.focus();
           iframe.contentWindow.print();
         };
-        // overlay.addEventListener('click', e => {if (e.target === overlay) {URL.revokeObjectURL(url); overlay.remove();}});
+        //overlay.addEventListener('click', e => {if (e.target === overlay) {URL.revokeObjectURL(url); overlay.remove();}});
       } catch (err) {
         hideLoadingPopup();
         console.error("Erro ao emitir listagem:", err);
         showPopup('popup-danger', `Erro ao gerar PDF: ${err.message}`);
       }
+    });
+    /* ===== ATTENDANCE LIST INIT ===== */
+    document.querySelector('.sidebar-sub-submenu-button[data-page="page-attendance-list"]')?.addEventListener("click", () => {
+      loadAttendanceList();
+    });
+    document.getElementById("attendance-list-tbody")?.addEventListener("change", (e) => {
+      const tbody = document.getElementById("attendance-list-tbody");
+      if (!tbody) return;
+      if (e.target.classList.contains("att-radio")) {
+        const emptyMotives = tbody.querySelectorAll('.att-motive:not([disabled])');
+        for (const motive of emptyMotives) {
+          if (motive.dataset.id === e.target.dataset.id) continue;
+          if (motive.value.trim() === "") {
+            const tr = motive.closest("tr");
+            const name = tr?.children[2]?.textContent.trim() || "desconhecido";
+            e.target.checked = false;
+            showPopup('popup-danger', `⚠️ O elemento <strong>${name}</strong> tem motivo de não comparência por preencher!`);
+            const modal = document.getElementById('popup-danger');
+            if (modal) {
+              const observer = new MutationObserver(() => {
+                if (!modal.classList.contains('show')) {
+                  motive.dataset.errorFocus = "true";
+                  motive.focus();
+                  observer.disconnect();
+                }
+              });
+              observer.observe(modal, { attributes: true, attributeFilter: ['class'] });
+            }
+            return;
+          }
+        }
+      }
+      if (tbody) updateAttendanceCounts(tbody);
+      if (e.target.classList.contains("att-radio")) {
+        const id = e.target.dataset.id;
+        const motiveInput = tbody.querySelector(`.att-motive[data-id="${id}"]`);
+        if (!motiveInput) return;
+        if (e.target.value === "nao") {
+          motiveInput.disabled = false;
+          motiveInput.style.background = "";
+          motiveInput.style.color = "";
+          motiveInput.style.cursor = "text";
+          motiveInput.focus();
+        } else {
+          motiveInput.disabled = true;
+          motiveInput.value = "";
+          motiveInput.style.background = "#f5f5f5";
+          motiveInput.style.color = "#999";
+          motiveInput.style.cursor = "not-allowed";
+        }
+      }
+    });
+    document.getElementById("attendance-list-emit")?.addEventListener("click", () => {
+      const tbody = document.getElementById("attendance-list-tbody");
+      if (!tbody) return;
+      const rows = tbody.querySelectorAll("tr:not(.quadro-header-row)");
+      const result = [];
+      rows.forEach(tr => {
+        const radioYes = tr.querySelector('.att-radio[value="sim"]');
+        const radioNo = tr.querySelector('.att-radio[value="nao"]');
+        if (!radioYes && !radioNo) return;
+        result.push({
+          n_int: tr.children[0]?.textContent.trim(),
+          patent: tr.children[1]?.textContent.trim(),
+          full_name: tr.children[2]?.textContent.trim(),
+          attends: radioYes?.checked ? "Sim" : radioNo?.checked ? "Não" : "—",
+          motive: tr.querySelector('.att-motive')?.value.trim() || ""
+        });
+      });
+    });
+    async function loadAttendanceList() {
+      const tbody = document.getElementById("attendance-list-tbody");
+      if (!tbody) return;
+      const totalEl = document.getElementById("contact-attendance-total");
+      totalEl.textContent = "0/0";
+      totalEl.dataset.total = "0";
+      document.getElementById("contact-attendance").textContent = "0";
+      document.getElementById("contact-noattendance").textContent = "0";
+      tbody.style.opacity = "0.5";
+      try {
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${corpOperNr}&n_int=lt.900&select=id,n_int,patent,full_name,type_quad,elem_state,inactive_from,phone,mobile_phone&order=n_int.asc`, {
+            headers: getSupabaseHeaders()
+          }
+        );
+        if (!response.ok) throw new Error("Erro ao carregar lista");
+        const data = await response.json();
+        const now = new Date();
+        const filtered = data.filter(item => {
+          if (["QHR", "QRES"].includes(item.type_quad)) return true;
+          if (!item.inactive_from && item.elem_state) return true;
+          if (!item.inactive_from) return false;
+          return new Date(item.inactive_from) > now;
+        });
+        tbody.style.opacity = "1";
+        if (!filtered.length) {
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:8px;font-size:14px;color:#999;">Sem registos</td></tr>`;
+          return;
+        }
+        const quadDef = [{code: "QCOM", title: "QUADRO DE COMANDO"}, {code: "QATIV", title: "QUADRO ATIVO"}, {code: "QEST", title: "QUADRO DE ESTAGIÁRIOS"},
+                         {code: "QEA", title: "QUADRO DE ESPECIALISTAS E AUXILIARES"}, {code: "QRES", title: "QUADRO DE RESERVA"}, {code: "QHR", title: "QUADRO DE HONRA"}];
+        tbody.innerHTML = "";
+        const tdStyle = `padding:5px;border:1px solid #ccc;font-size:13px;text-align:center;`;
+        let totalRendered = 0;
+        quadDef.forEach(quadro => {
+          const elems = filtered.filter(item => item.type_quad === quadro.code);
+          if (!elems.length) return;
+          totalRendered += elems.length;
+          const headerTr = document.createElement("tr");
+          headerTr.className = "quadro-header-row";
+          headerTr.innerHTML = `
+            <td colspan="8" style="background:#ffebeb;color:#a70c0c;font-weight:bold;text-align:left;
+                padding:8px 10px;font-size:13px;border:1px solid #ccc;border-left:2px solid #d81c1c;
+                letter-spacing:0.05em;">
+              🔹 ${quadro.title} (${elems.length})
+            </td>
+          `;
+          tbody.appendChild(headerTr);
+          elems.forEach(item => {
+            const tr = document.createElement("tr");
+            tr.dataset.typeQuad = quadro.code;
+            tr.innerHTML = `
+              <td style="${tdStyle} font-weight:bold;">${item.n_int || ""}</td>
+              <td style="${tdStyle} font-weight:bold;">${item.patent || ""}</td>
+              <td style="${tdStyle} text-align:left; font-weight:bold;">${item.full_name || ""}</td>
+              <td style="${tdStyle}; font-weight:bold;">${item.phone || ""}</td>
+              <td style="${tdStyle}; font-weight:bold;">${item.mobile_phone || ""}</td>
+              <td style="${tdStyle} width:80px;">
+                <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;color:#166534;font-weight:600;">
+                  <input type="radio" name="att_${item.id}" value="sim" class="att-radio" data-id="${item.id}" style="width:16px;height:16px;cursor:pointer!important;accent-color:#16a34a;">
+                  Sim
+                </label>
+              </td>
+              <td style="${tdStyle} width:80px;">
+                <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;color:#991b1b;font-weight:600;">
+                  <input type="radio" name="att_${item.id}" value="nao" class="att-radio" data-id="${item.id}" style="width:16px;height:16px;cursor:pointer!important;accent-color:#dc2626;">
+                  Não
+                </label>
+              </td>
+              <td style="${tdStyle} text-align:left;">
+                <input type="text" class="att-motive" data-id="${item.id}" placeholder="Motivo de não comparência." disabled
+                style="width:100%;font-size:12px;padding:3px 6px;border:1px solid #ccc;border-radius:3px;background:#f5f5f5;color:#999;cursor:not-allowed;"
+                onfocus="
+                  this.style.outline='none';
+                  if(this.dataset.errorFocus === 'true'){
+                    this.style.border='1px solid #fca5a5';
+                    this.style.boxShadow='0 0 0 3px rgba(252,165,165,0.3)';
+                    this.dataset.errorFocus='false';
+                  } else {
+                    this.style.border='1px solid #93c5fd';
+                    this.style.boxShadow='0 0 0 3px rgba(147,197,253,0.3)';
+                  }"
+                onblur="this.style.border='1px solid #ccc';this.style.boxShadow='';">
+              </td>
+            `;
+            tr.addEventListener("mouseover", () => tr.style.background = "#c8d8f5");
+            tr.addEventListener("mouseout", () => tr.style.background = "");
+            tbody.appendChild(tr);
+          });
+        });
+        if (!totalRendered) {
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:8px;font-size:13px;color:#999;">Sem registos classificados</td></tr>`;
+        }
+        totalEl.textContent = `0/${filtered.length}`;
+        totalEl.dataset.total = filtered.length;
+        await loadRecentAttendanceEvents(); 
+      } catch (err) {
+        tbody.style.opacity = "1";
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:8px;font-size:12px;color:red;">Erro ao carregar lista.</td></tr>`;
+        console.error("Erro ao carregar lista de comparências:", err);
+      }
+    }
+    function updateAttendanceCounts(tbody) {
+      const yesCount = tbody.querySelectorAll('.att-radio[value="sim"]:checked').length;
+      const noCount = tbody.querySelectorAll('.att-radio[value="nao"]:checked').length;
+      const totalEl = document.getElementById("contact-attendance-total");
+      const total = totalEl.dataset.total || "0";
+      document.getElementById("contact-attendance").textContent = yesCount;
+      document.getElementById("contact-noattendance").textContent = noCount;
+      totalEl.textContent = `${yesCount + noCount}/${total}`;
+    }
+    /* ===== ATTENDANCE LIST EMIT ===== */
+    document.getElementById("attendance-list-emit")?.addEventListener("click", async () => {
+      const tbody = document.getElementById("attendance-list-tbody");
+      if (!tbody || tbody.textContent.includes("Sem registos")) {
+        showPopup('popup-danger', "Não há lista carregada.");
+        return;
+      }
+      const eventName = document.getElementById("attendance-event-name")?.value.trim() || "";
+      if (!eventName) {
+        showPopup('popup-danger', "Por favor indique o nome do evento antes de emitir.");
+        return;
+      }
+      try {
+        showLoadingPopup("🔄 A preparar listagem...");
+        const {corpName, logoUrl, senderName} = await _getEmailCommonData();
+        const quadDef = [{code: "QCOM", title: "QUADRO DE COMANDO"}, {code: "QATIV", title: "QUADRO ATIVO"}, {code: "QEST", title: "QUADRO DE ESTAGIÁRIOS"},
+                         {code: "QEA", title: "QUADRO DE ESPECIALISTAS E AUXILIARES"}, {code: "QRES", title: "QUADRO DE RESERVA"}, {code: "QHR", title: "QUADRO DE HONRA"}];
+        const rows = tbody.querySelectorAll("tr:not(.quadro-header-row)");
+        const allElements = [];
+        rows.forEach(row => {
+          const radioYes = row.querySelector('.att-radio[value="sim"]');
+          const radioNo = row.querySelector('.att-radio[value="nao"]');
+          if (!radioYes && !radioNo) return;
+          allElements.push({
+            type_quad: row.dataset.typeQuad || "",
+            n_int: row.children[0]?.textContent.trim(),
+            patent: row.children[1]?.textContent.trim(),
+            full_name: row.children[2]?.textContent.trim(),
+            attends: radioYes?.checked ? "Sim" : radioNo?.checked ? "Não" : "—",
+            motive: row.querySelector('.att-motive')?.value.trim() || ""
+          });
+        });
+        const quad = quadDef.map(q => ({code: q.code, elements: allElements.filter(el => el.type_quad === q.code)}));
+        updateLoadingPopup("📊 A gerar Lista de Comparências...");
+        const response = await fetch("https://cb360-online.vercel.app/api/various_convert_and_send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({type: "attendance_list", data: {corpName, logoUrl, senderName, eventName, quad}}),
+        });
+        if (!response.ok) throw new Error(await response.text());
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        hideLoadingPopup();
+        document.getElementById('various-pdf-modal')?.remove();
+        _variousInjectStyles();
+        const overlay = document.createElement('div');
+        overlay.id = 'various-pdf-modal';
+        Object.assign(overlay.style, {position: 'fixed', inset: '0', background: 'rgba(10,8,8,0.78)', zIndex: '9999', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)'});
+        const box = document.createElement('div');
+        box.className = 'various-box';
+        Object.assign(box.style, {background: '#f8f8f8', borderRadius: '14px', width: '82vw', height: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 28px 72px rgba(0,0,0,0.45)', overflow: 'hidden'});
+        const header = document.createElement('div');
+        header.className = 'various-header';
+        header.innerHTML = `
+          <div style="display:flex;align-items:center;gap:10px;flex:1;position:relative;z-index:1;">
+            <div style="color:#fff;font-weight:700;font-size:13px;">📋 Lista de Comparências - ${eventName}</div>
+          </div>
+          <div style="display:flex;gap:5px;position:relative;z-index:1;">
+            <button class="various-btn" id="various-pdf-fullscreen" title="Ecrã inteiro">⛶</button>
+            <button class="various-btn various-close-btn" id="various-pdf-close" title="Fechar">✕</button>
+          </div>
+        `;
+        const content = document.createElement('div');
+        Object.assign(content.style, {flex: '1', position: 'relative', overflow: 'hidden', background: '#fff'});
+        const iframe = document.createElement('iframe');
+        Object.assign(iframe.style, {position: 'absolute', inset: '0', width: '100%', height: '100%', border: 'none'});
+        iframe.src = url;
+        content.appendChild(iframe);
+        const footer = document.createElement('div');
+        footer.className = 'various-footer';
+        footer.innerHTML = `
+          <div class="various-footer-info">Documento gerado com sucesso</div>
+          <button class="various-print-btn" id="various-pdf-print">🖨️ Imprimir</button>
+        `;
+        box.append(header, content, footer);
+        overlay.appendChild(box);
+        document.body.appendChild(overlay);
+        let isFs = false;
+        document.getElementById("various-pdf-fullscreen").onclick = () => {
+          isFs = !isFs;
+          Object.assign(box.style, {width: isFs ? '100vw' : '82vw', height: isFs ? '100vh' : '90vh', borderRadius: isFs ? '0' : '14px'});
+        };
+        document.getElementById("various-pdf-close").onclick = () => {
+          URL.revokeObjectURL(url);
+          overlay.remove();
+        };
+        document.getElementById("various-pdf-print").onclick = () => {
+          iframe.contentWindow.focus();
+          iframe.contentWindow.print();
+        };
+      } catch (err) {
+        hideLoadingPopup();
+        console.error("Erro ao emitir lista de comparências:", err);
+        showPopup('popup-danger', `Erro ao gerar PDF: ${err.message}`);
+      }
+    });
+    /* ===== ATTENDANCE LIST SAVE ===== */
+    document.getElementById("attendance-list-save")?.addEventListener("click", async () => {
+      const tbody = document.getElementById("attendance-list-tbody");
+      if (!tbody || tbody.textContent.includes("Sem registos")) {
+        showPopup('popup-danger', "Não há lista carregada.");
+        return;
+      }
+      const eventName = document.getElementById("attendance-event-name")?.value.trim() || "";
+      if (!eventName) {
+        showPopup('popup-danger', "Por favor indique o nome do evento antes de guardar.");
+        return;
+      }
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const saveBtn = document.getElementById("attendance-list-save");
+      saveBtn.disabled = true;
+      saveBtn.textContent = "⌛ A guardar...";
+      try {
+        const checkResp = await fetch(
+          `${SUPABASE_URL}/rest/v1/attendance_events?corp_oper_nr=eq.${corpOperNr}&event_name=eq.${encodeURIComponent(eventName)}&select=id`, {
+            headers: getSupabaseHeaders()
+          }
+        );
+        const existing = await checkResp.json();
+        let eventId;
+        if (existing.length > 0) {
+          eventId = existing[0].id;
+          await fetch(
+            `${SUPABASE_URL}/rest/v1/attendance_events?id=eq.${eventId}`, {
+              method: "PATCH",
+              headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
+              body: JSON.stringify({updated_at: new Date().toISOString()})
+            }
+          );
+          await fetch(
+            `${SUPABASE_URL}/rest/v1/attendance_records?event_id=eq.${eventId}`, {
+              method: "DELETE",
+              headers: getSupabaseHeaders()
+            }
+          );
+        } else {
+          const insertResp = await fetch(
+            `${SUPABASE_URL}/rest/v1/attendance_events`, {
+              method: "POST",
+              headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=representation"},
+              body: JSON.stringify({corp_oper_nr: corpOperNr, event_name: eventName})
+            }
+          );
+          const inserted = await insertResp.json();
+          eventId = inserted[0].id;
+        }
+        const records = [];
+        tbody.querySelectorAll("tr:not(.quadro-header-row)").forEach(tr => {
+          const radioYes = tr.querySelector('.att-radio[value="sim"]');
+          const radioNo = tr.querySelector('.att-radio[value="nao"]');
+          if (!radioYes && !radioNo) return;
+          const n_int = parseInt(tr.children[0]?.textContent.trim(), 10);
+          if (isNaN(n_int)) return;
+          records.push({event_id: eventId, n_int, attends: radioYes?.checked ? "sim" : radioNo?.checked ? "nao" : null, motive: tr.querySelector('.att-motive')?.value.trim() || null});
+        });
+        if (records.length > 0) {
+          await fetch(
+            `${SUPABASE_URL}/rest/v1/attendance_records`, {
+              method: "POST",
+              headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
+              body: JSON.stringify(records)
+            }
+          );
+        }
+        showPopup('popup-success', "Lista de comparências guardada com sucesso!");
+        await loadRecentAttendanceEvents();
+      } catch (err) {
+        console.error("Erro ao guardar lista:", err);
+        showPopup('popup-danger', "Erro ao guardar: " + err.message);
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = "💾 Guardar";
+      }
+    });
+    /* ===== CARREGAR EVENTOS RECENTES ===== */
+    async function loadRecentAttendanceEvents() {
+      const select = document.getElementById("attendance-recent-events");
+      if (!select) return;
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      try {
+        const resp = await fetch(
+          `${SUPABASE_URL}/rest/v1/attendance_events?corp_oper_nr=eq.${corpOperNr}&select=id,event_name,updated_at&order=updated_at.desc&limit=20`, {
+            headers: getSupabaseHeaders()
+          }
+        );
+        const events = await resp.json();
+        select.innerHTML = `<option value="">-- Selecionar evento --</option>`;
+        events.forEach(ev => {
+          const opt = document.createElement("option");
+          opt.value = ev.id;
+          opt.textContent = ev.event_name;
+          select.appendChild(opt);
+        });
+      } catch (err) {
+        console.error("Erro ao carregar eventos recentes:", err);
+      }
+    }
+    /* ===== RECARREGAR EVENTO SELECIONADO ===== */
+    document.getElementById("attendance-recent-events")?.addEventListener("change", async (e) => {
+      const eventId = e.target.value;
+      if (!eventId) return;
+      const tbody = document.getElementById("attendance-list-tbody");
+      if (!tbody) return;
+      try {
+        const evResp = await fetch(
+          `${SUPABASE_URL}/rest/v1/attendance_events?id=eq.${eventId}&select=event_name`, {
+            headers: getSupabaseHeaders()
+          }
+        );
+        const evData = await evResp.json();
+        if (evData.length > 0) {
+          const input = document.getElementById("attendance-event-name");
+          if (input) input.value = evData[0].event_name;
+        }
+        const recResp = await fetch(
+          `${SUPABASE_URL}/rest/v1/attendance_records?event_id=eq.${eventId}&select=n_int,attends,motive`, {
+            headers: getSupabaseHeaders()
+          }
+        );
+        const records = await recResp.json();
+        const recordMap = {};
+        records.forEach(r => {recordMap[r.n_int] = r;});
+        tbody.querySelectorAll("tr:not(.quadro-header-row)").forEach(tr => {
+          const n_int = parseInt(tr.children[0]?.textContent.trim(), 10);
+          if (isNaN(n_int)) return;
+          const rec = recordMap[n_int];
+          if (!rec) return;
+          const radioYes = tr.querySelector('.att-radio[value="sim"]');
+          const radioNo = tr.querySelector('.att-radio[value="nao"]');
+          const motiveInput = tr.querySelector('.att-motive');
+          if (rec.attends === "sim" && radioYes) {
+            radioYes.checked = true;
+            if (motiveInput) {motiveInput.disabled = true; motiveInput.value = ""; motiveInput.style.background = "#f5f5f5"; motiveInput.style.color = "#999"; motiveInput.style.cursor = "not-allowed";}
+          } else if (rec.attends === "nao" && radioNo) {
+            radioNo.checked = true;
+            if (motiveInput) {motiveInput.disabled = false; motiveInput.value = rec.motive || ""; motiveInput.style.background = ""; motiveInput.style.color = ""; motiveInput.style.cursor = "text";}
+          }
+        });
+        updateAttendanceCounts(tbody);
+      } catch (err) {
+        console.error("Erro ao carregar evento:", err);
+        showPopup('popup-danger', "Erro ao carregar evento: " + err.message);
+      }
+    });
+    /* ===== ELIMINAR EVENTO ===== */
+    document.getElementById("attendance-list-delete")?.addEventListener("click", async () => {
+      const eventName = document.getElementById("attendance-event-name")?.value.trim() || "";
+      if (!eventName) {
+        showPopup('popup-danger', "Nenhum evento selecionado para eliminar.");
+        return;
+      }
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      try {
+        const checkResp = await fetch(
+          `${SUPABASE_URL}/rest/v1/attendance_events?corp_oper_nr=eq.${corpOperNr}&event_name=eq.${encodeURIComponent(eventName)}&select=id`, {
+            headers: getSupabaseHeaders()
+          }
+        );
+        const existing = await checkResp.json();
+        if (!existing.length) {
+          showPopup('popup-danger', "Evento não encontrado na base de dados.");
+          return;
+        }
+        const eventId = existing[0].id;
+        await fetch(
+          `${SUPABASE_URL}/rest/v1/attendance_events?id=eq.${eventId}`, {
+            method: "DELETE",
+            headers: getSupabaseHeaders()
+          }
+        );
+        document.getElementById("attendance-event-name").value = "";
+        const tbody = document.getElementById("attendance-list-tbody");
+        if (tbody) {
+          tbody.querySelectorAll("tr:not(.quadro-header-row)").forEach(tr => {
+            tr.querySelectorAll('.att-radio').forEach(r => r.checked = false);
+            const motiveInput = tr.querySelector('.att-motive');
+            if (motiveInput) {motiveInput.value = ""; motiveInput.disabled = true; motiveInput.style.background = "#f5f5f5"; motiveInput.style.color = "#999";}
+          });
+          updateAttendanceCounts(tbody);
+        }
+        showPopup('popup-success', "Evento eliminado com sucesso!");
+        await loadRecentAttendanceEvents();
+      } catch (err) {
+        console.error("Erro ao eliminar evento:", err);
+        showPopup('popup-danger', "Erro ao eliminar: " + err.message);
+      }
+    });
+    /* ===== PHONEBOOK INIT ===== */
+    document.querySelector('.sidebar-sub-submenu-button[data-page="page-phonebook"]')?.addEventListener("click", () => {
+      phonebookEditId = null;
+      document.getElementById("phonebook-save").innerHTML = "💾 GRAVAR";
+      ["phonebook-name", "phonebook-subcategory", "phonebook-phone", "phonebook-mobile", "phonebook-email", "phonebook-address", "phonebook-locality", "phonebook-zipcode", "phonebook-notes"]
+        .forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+      document.getElementById("phonebook-type").value = "";
+      document.getElementById("phonebook-category").value = "";
+      document.getElementById("phonebook-availability").value = "";
+      document.getElementById("phonebook-favorite").checked = false;
+      document.getElementById("phonebook-delete").disabled = true;
+      loadPhonebookTable();
+    });
+    /* ===== PHONEBOOK SEARCH ===== */
+    document.getElementById("phonebook-search")?.addEventListener("input", function() {
+      const filter = this.value.toLowerCase().trim();
+      const rows = document.querySelectorAll("#phonebook-tbody tr");
+      rows.forEach(row => {
+        if (row.querySelector('td[colspan]')) return;
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(filter) ? "" : "none";
+      });
+    });
+    /* ===== PHONEBOOK LOAD ===== */
+    let phonebookEditId = null;
+    async function loadPhonebookTable() {
+      const tbody = document.getElementById("phonebook-tbody");
+      if (!tbody) return;
+      tbody.style.opacity = "0.5";
+      try {
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/phonebook?corp_oper_nr=eq.${corpOperNr}&order=name.asc`, {
+            headers: getSupabaseHeaders()
+          }
+        );
+        if (!response.ok) throw new Error("Erro ao carregar agenda");
+        const data = await response.json();
+        tbody.style.opacity = "1";
+        if (!data.length) {
+          tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:8px;font-size:12px;color:#999;">Sem registos</td></tr>`;
+          document.getElementById("phonebook-total").textContent = "0";
+          document.getElementById("phonebook-favorites").textContent = "0";
+          return;
+        }
+        const tdStyle = `padding:5px;border:1px solid #ccc;font-size:13px;text-align:center;`;
+        tbody.innerHTML = "";
+        // Favoritos primeiro, depois por nome
+        const sorted = [...data].sort((a, b) => {
+          if (b.is_favorite - a.is_favorite) return b.is_favorite - a.is_favorite;
+          return (a.name || "").localeCompare(b.name || "");
+        });
+        sorted.forEach(item => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td style="${tdStyle}">${item.is_favorite ? "⭐" : ""}</td>
+            <td style="${tdStyle} text-align:left; font-weight:bold;">${item.name || ""}</td>
+            <td style="${tdStyle}">${item.contact_type || ""}</td>
+            <td style="${tdStyle}">${item.category || ""}</td>
+            <td style="${tdStyle}; font-weight: bold;">${item.phone || ""}</td>
+            <td style="${tdStyle}">${item.mobile || ""}</td>
+            <td style="${tdStyle}">${item.email || ""}</td>
+            <td style="${tdStyle}">${item.availability || ""}</td>
+            <td style="${tdStyle}">
+              <button onclick="phonebookEdit(${item.id})" style="background:#1e3a8a;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;margin-right:3px;">✏️</button>
+              <button onclick="phonebookDelete(${item.id})" style="background:#dc2626;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;">🗑️</button>
+            </td>
+          `;
+          tr.addEventListener("mouseover", () => tr.style.background = "#c8d8f5");
+          tr.addEventListener("mouseout",  () => tr.style.background = "");
+          tbody.appendChild(tr);
+        });
+        document.getElementById("phonebook-total").textContent = data.length;
+        document.getElementById("phonebook-favorites").textContent = data.filter(i => i.is_favorite).length;
+      } catch (err) {
+        tbody.style.opacity = "1";
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:8px;font-size:12px;color:red;">Erro ao carregar dados.</td></tr>`;
+        console.error("Erro ao carregar agenda:", err);
+      }
+    }
+    /* ===== PHONEBOOK EDIT ===== */
+    async function phonebookEdit(id) {
+      try {
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/phonebook?id=eq.${id}&corp_oper_nr=eq.${corpOperNr}&select=*`, {
+            headers: getSupabaseHeaders()
+          }
+        );
+        if (!response.ok) throw new Error("Erro ao carregar registo");
+        const data = await response.json();
+        if (!data.length) return;
+        const item = data[0];
+        document.getElementById("phonebook-name").value = item.name || "";
+        document.getElementById("phonebook-type").value = item.contact_type || "";
+        document.getElementById("phonebook-category").value = item.category || "";
+        document.getElementById("phonebook-subcategory").value = item.subcategory || "";
+        document.getElementById("phonebook-phone").value = item.phone || "";
+        document.getElementById("phonebook-mobile").value = item.mobile || "";
+        document.getElementById("phonebook-email").value = item.email || "";
+        document.getElementById("phonebook-availability").value = item.availability || "";
+        document.getElementById("phonebook-favorite").checked = item.is_favorite || false;
+        document.getElementById("phonebook-address").value = item.address || "";
+        document.getElementById("phonebook-locality").value = item.locality || "";
+        document.getElementById("phonebook-zipcode").value = item.zipcode || "";
+        document.getElementById("phonebook-notes").value = item.notes || "";
+        phonebookEditId = id;
+        document.getElementById("phonebook-save").innerHTML = "💾 ATUALIZAR";
+        document.getElementById("phonebook-delete").disabled = false;
+        document.getElementById("phonebook-name").focus();
+      } catch (err) {
+        console.error("Erro ao editar contacto:", err);
+        showPopup("popup-danger", "Erro ao carregar dados: " + err.message);
+      }
+    }
+    /* ===== PHONEBOOK DELETE ===== */
+    async function phonebookDelete(id) {
+      if (!confirm("Tem a certeza que pretende eliminar este contacto?")) return;
+      try {
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/phonebook?id=eq.${id}&corp_oper_nr=eq.${corpOperNr}`, {
+            method: "DELETE",
+            headers: getSupabaseHeaders()
+          }
+        );
+        if (!response.ok) throw new Error("Erro ao eliminar registo");
+        showPopup("popup-success", "Contacto eliminado com sucesso!");
+        phonebookEditId = null;
+        document.getElementById("phonebook-save").innerHTML = "💾 GRAVAR";
+        document.getElementById("phonebook-delete").disabled = true;
+        ["phonebook-name", "phonebook-subcategory", "phonebook-phone", "phonebook-mobile",
+         "phonebook-email", "phonebook-address", "phonebook-locality", "phonebook-zipcode", "phonebook-notes"]
+          .forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+        document.getElementById("phonebook-type").value = "";
+        document.getElementById("phonebook-category").value = "";
+        document.getElementById("phonebook-availability").value = "";
+        document.getElementById("phonebook-favorite").checked = false;
+        loadPhonebookTable();
+      } catch (err) {
+        console.error("Erro ao eliminar contacto:", err);
+        showPopup("popup-danger", "Erro ao eliminar: " + err.message);
+      }
+    }
+    /* ===== PHONEBOOK SAVE ===== */
+    async function phonebookSave() {
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const name = document.getElementById("phonebook-name").value.trim();
+      if (!name) {
+        showPopup("popup-danger", "Preencha pelo menos o Nome / Designação.");
+        return;
+      }
+      const payload = {
+        name,
+        contact_type: document.getElementById("phonebook-type").value,
+        category: document.getElementById("phonebook-category").value,
+        subcategory: document.getElementById("phonebook-subcategory").value.trim(),
+        phone: document.getElementById("phonebook-phone").value.trim(),
+        mobile: document.getElementById("phonebook-mobile").value.trim(),
+        email: document.getElementById("phonebook-email").value.trim(),
+        availability: document.getElementById("phonebook-availability").value,
+        is_favorite: document.getElementById("phonebook-favorite").checked,
+        address: document.getElementById("phonebook-address").value.trim(),
+        locality: document.getElementById("phonebook-locality").value.trim(),
+        zipcode: document.getElementById("phonebook-zipcode").value.trim(),
+        notes: document.getElementById("phonebook-notes").value.trim()
+      };
+      const saveBtn = document.getElementById("phonebook-save");
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = "A guardar...";
+      try {
+        let response;
+        if (phonebookEditId !== null) {
+          response = await fetch(
+            `${SUPABASE_URL}/rest/v1/phonebook?id=eq.${phonebookEditId}&corp_oper_nr=eq.${corpOperNr}`, {
+              method: "PATCH",
+              headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
+              body: JSON.stringify(payload)
+            }
+          );
+          if (!response.ok) throw new Error("Erro ao atualizar: " + await response.text());
+          showPopup("popup-success", "Contacto atualizado com sucesso!");
+          phonebookEditId = null;
+        } else {
+          response = await fetch(`${SUPABASE_URL}/rest/v1/phonebook`, {
+            method: "POST",
+            headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
+            body: JSON.stringify({...payload, corp_oper_nr: corpOperNr})
+          });
+          if (!response.ok) throw new Error("Erro ao guardar: " + await response.text());
+          showPopup("popup-success", "Contacto guardado com sucesso!");
+        }
+        ["phonebook-name", "phonebook-subcategory", "phonebook-phone", "phonebook-mobile",
+         "phonebook-email", "phonebook-address", "phonebook-locality", "phonebook-zipcode", "phonebook-notes"]
+          .forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+        document.getElementById("phonebook-type").value = "";
+        document.getElementById("phonebook-category").value = "";
+        document.getElementById("phonebook-availability").value = "";
+        document.getElementById("phonebook-favorite").checked = false;
+        document.getElementById("phonebook-delete").disabled = true;
+        loadPhonebookTable();
+      } catch (err) {
+        console.error("Erro ao guardar contacto:", err);
+        showPopup("popup-danger", "Erro ao guardar: " + err.message);
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = phonebookEditId !== null ? "💾 ATUALIZAR" : "💾 GRAVAR";
+      }
+    }
+    document.getElementById("phonebook-save")?.addEventListener("click", phonebookSave);
+    document.getElementById("phonebook-add")?.addEventListener("click", () => {
+      phonebookEditId = null;
+      document.getElementById("phonebook-save").innerHTML = "💾 GRAVAR";
+      document.getElementById("phonebook-delete").disabled = true;
+      ["phonebook-name", "phonebook-subcategory", "phonebook-phone", "phonebook-mobile",
+       "phonebook-email", "phonebook-address", "phonebook-locality", "phonebook-zipcode", "phonebook-notes"]
+        .forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+      document.getElementById("phonebook-type").value = "";
+      document.getElementById("phonebook-category").value = "";
+      document.getElementById("phonebook-availability").value = "";
+      document.getElementById("phonebook-favorite").checked = false;
+      document.getElementById("phonebook-name").focus();
+    });
+    document.getElementById("phonebook-delete")?.addEventListener("click", () => {
+      if (phonebookEditId) phonebookDelete(phonebookEditId);
     });
     /* =======================================
     ALARM CONSOLE

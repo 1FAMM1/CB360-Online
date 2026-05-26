@@ -4312,42 +4312,45 @@
       </div>
     `;
    async function _autoCopyForWhatsApp() {
-     const subjectInput = document.getElementById('contact-email-subject');
-     const messageTextarea = document.getElementById('contact-email-body-text');
-     if (!subjectInput || !messageTextarea) return;
-     const subjectText = subjectInput.value
-     .toLowerCase()
-     .normalize("NFD")
-     .replace(/[\u0300-\u036f]/g, "");
-     const messageText = messageTextarea.value.trim();
-     if (!messageText) return;
-     try {
-       const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
-       const nInt = sessionStorage.getItem("currentNInt");
-       const res = await fetch(
-         `${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${corpOperNr}&n_int=eq.${nInt}&select=abv_name,patent_abv`, {
-           headers: getSupabaseHeaders()
-         }
-       );
-       const data = await res.json();
-       const abvName = data[0]?.abv_name || "";
-       const patentAbv = data[0]?.patent_abv || "";
-       const signature = `OPTEL: ${patentAbv} ${abvName}`;
-       const finalText = `⚠️*AVISO*⚠️\n\n${messageText}\n\n${signature}`;
-       if (subjectText.includes('ro') || subjectText.includes('relatorio')) {
-         await navigator.clipboard.writeText(finalText);
-         messageTextarea.style.borderColor = "#25D366";
-         messageTextarea.style.boxShadow = "0 0 4px rgba(37,211,102,0.4)";
-       } else {
-         messageTextarea.style.borderColor = "#cbd5e1";
-         messageTextarea.style.boxShadow = "none";
-       }
-     } catch(err) {
-       console.error("Erro ao copiar automaticamente:", err);
-     }
-   }
+      const subjectInput = document.getElementById('contact-email-subject');
+      const messageTextarea = document.getElementById('contact-email-body-text');
+      if (!subjectInput || !messageTextarea) return;
+      const subjectText = subjectInput.value
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+      const messageText = messageTextarea.value.trim();
+      if (!messageText) return;
+      try {
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const nInt = sessionStorage.getItem("currentNInt") || "205";
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${corpOperNr}&n_int=eq.${nInt}&select=abv_name,patent_abv`, {
+            headers: getSupabaseHeaders()
+          }
+        );
+        const data = await res.json();
+        const abvName = data[0]?.abv_name || "";
+        const patentAbv = data[0]?.patent_abv || "";
+        const signature = `OPTEL: ${patentAbv} ${abvName}`;
+        const finalText = `⚠️*AVISO*⚠️\n\n${messageText}\n\n${signature}`;
+        if (subjectText.includes('ro') || subjectText.includes('relatorio')) {
+          await navigator.clipboard.writeText(finalText);
+          messageTextarea.style.borderColor = "#25D366";
+          messageTextarea.style.boxShadow = "0 0 4px rgba(37,211,102,0.4)";
+        } else {
+          messageTextarea.style.borderColor = "#cbd5e1";
+          messageTextarea.style.boxShadow = "none";
+        }
+      } catch(err) {
+        console.error("Erro ao copiar automaticamente:", err);
+      }
+    }
     function contactEmail(email) {
-      if (!email) { showPopup('popup-danger', "Este elemento não tem e-mail registado."); return; }
+      if (!email) {
+        showPopup('popup-danger', "Este elemento não tem e-mail registado.");
+        return;
+      }
       _contactInjectPopupStyles();
       document.getElementById('contact-email-popup-overlay')?.remove();
       const overlay = document.createElement('div');
@@ -4375,7 +4378,7 @@
             </div>
             <div class="contact-email-field">
               <label>Mensagem:</label>
-              <textarea class="contact-email-textarea" id="contact-email-body-text" placeholder="Escreva a sua mensagem aqui..."></textarea>
+             <textarea class="contact-email-textarea" id="contact-email-body-text" placeholder="Escreva a sua mensagem aqui..."></textarea>
             </div>
             ${ATTACHMENT_FIELD_HTML}
             <button class="contact-email-btn-action" id="contact-email-send"><span>🚀 Enviar E-mail</span></button>
@@ -4383,16 +4386,9 @@
         </div>
       `;
       document.body.appendChild(overlay);
-      const subjectEl = document.getElementById('contact-email-subject');
-      const messageEl = document.getElementById('contact-email-body-text');
-      if (subjectEl && messageEl) {
-        subjectEl.addEventListener('input', _autoCopyForWhatsApp);
-        messageEl.addEventListener('input', _autoCopyForWhatsApp);
-      }
       _attachFileListener();
       const closePopup = () => overlay.remove();
       document.getElementById('contact-email-close').onclick = closePopup;
-      //overlay.onclick = (e) => {if (e.target === overlay) closePopup();};
       document.getElementById('contact-email-copy').onclick = function() {
         const emailInput = document.getElementById('contact-email-to');
         emailInput.select();
@@ -4424,7 +4420,9 @@
           }
           const result = await response.json();
           if (result.success) {
-            showPopup('popup-success', "E-mail enviado com sucesso!"); closePopup();
+            await _autoCopyForWhatsApp();
+            showPopup('popup-success', "E-mail enviado com sucesso!");
+            closePopup();
           }
           else throw new Error(result.error || "Erro desconhecido no servidor.");
         } catch (err) {
@@ -4558,7 +4556,7 @@
           </div>
         </div>
       `;
-      document.body.appendChild(overlay);
+      document.body.appendChild(overlay);      
       _attachFileListener();
       const closePopup = () => overlay.remove();
       document.getElementById('contact-email-close').onclick = closePopup;

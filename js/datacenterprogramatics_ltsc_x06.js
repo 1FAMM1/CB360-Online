@@ -382,11 +382,13 @@
           headerTr.innerHTML = `
             <td colspan="6" style="background:#ffebeb;color:#a70c0c;font-weight:bold;text-align:left;
               padding:8px 10px;font-size:13px;border:1px solid #ccc;border-left:2px solid #d81c1c;
-              letter-spacing:0.05em;">
+              letter-spacing:0.05em;cursor:pointer;user-select:none;">
+              <span style="float:right;font-size:16px;" class="toggle-icon">▲</span>
               🔹 ${quadro.title} (${elems.length})
             </td>
           `;
           tbody.appendChild(headerTr);
+          const quadroRows = [];
           elems.forEach(row => {
             const tr = document.createElement("tr");
             tr.innerHTML = `
@@ -401,6 +403,13 @@
               </td>
             `;
             tbody.appendChild(tr);
+            quadroRows.push(tr);
+          });
+          headerTr.addEventListener("click", () => {
+            const icon = headerTr.querySelector(".toggle-icon");
+            const isVisible = quadroRows[0]?.style.display !== "none";
+            quadroRows.forEach(tr => tr.style.display = isVisible ? "none" : "");
+            icon.textContent = isVisible ? "▼" : "▶";
           });
         });
       } catch (error) {

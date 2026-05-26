@@ -859,7 +859,7 @@
       });
       return {toInsert, toUpdate, toDelete};
     }
-    
+    function diffFixedRowsChanges(table, savedMap) {
       const toInsert = [], toUpdate = [], toDelete = [];
       const PROTECTED = ["ED", "EN", "ET", "EP"];
       table.querySelectorAll("tr.fixed-row").forEach(row => {

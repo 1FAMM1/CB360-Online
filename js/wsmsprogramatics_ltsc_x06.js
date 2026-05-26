@@ -1470,31 +1470,30 @@
       return `${day}${hour}${min}${month}${year}`;
     }
     async function getOptelSignature() {
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
-      if (!currentCorpOperNr) {
-        console.warn("OPTEL: currentCorpOperNr não encontrado no sessionStorage.");
-        return "";
-      }
+      const nInt = sessionStorage.getItem("currentNInt");
+      const corpNr = sessionStorage.getItem("currentCorpOperNr");
+      if (!nInt || !corpNr) return "";
       try {
-        const teamUrl = `${SUPABASE_URL}/rest/v1/fomio_teams?select=n_int&team_name=eq.optel&corp_oper_nr=eq.${currentCorpOperNr}`;
-        const teamResp = await fetch(teamUrl, {headers: getSupabaseHeaders()});
-        const teamData = await teamResp.json();
-        if (teamData && teamData.length > 0) {
-          const nInt = teamData[0].n_int;
-          const elemUrl = `${SUPABASE_URL}/rest/v1/reg_elems?select=patent_abv,abv_name&n_int=eq.${nInt}`;
-          const elemResp = await fetch(elemUrl, {headers: getSupabaseHeaders()});
-          const elemData = await elemResp.json();
-          if (elemData && elemData.length > 0) {
-            const user = elemData[0];
-            return `\nOPTEL: ${user.patent_abv} ${user.abv_name}`;
-          } else {
-            console.warn(`OPTEL: n_int ${nInt} não encontrado na reg_elems.`);
+        const respElems = await fetch(
+          `${SUPABASE_URL}/rest/v1/reg_elems?select=patent_abv,abv_name&n_int=eq.${nInt}&corp_oper_nr=eq.${corpNr}`, {
+            headers: getSupabaseHeaders()
           }
-        } else {
-          console.warn("OPTEL: Nenhum elemento com team='optel' encontrado para esta corporação.");
-        }
+        );
+        const dataElems = await respElems.json();
+        if (!dataElems || dataElems.length === 0) return "";
+        const user = dataElems[0];
+        const respEmp = await fetch(
+          `${SUPABASE_URL}/rest/v1/reg_employees?select=function&n_int=eq.${nInt}&corp_oper_nr=eq.${corpNr}`, {
+            headers: getSupabaseHeaders()
+          }
+        );
+        const dataEmp = await respEmp.json();
+        const isOptel = dataEmp?.[0]?.function === "OPTEL";
+        return isOptel
+          ? `\nOPTEL: ${user.patent_abv} ${user.abv_name}`
+          : `\n${user.patent_abv} ${user.abv_name}`;
       } catch (error) {
-        console.error("Erro crítico ao obter OPTEL:", error);
+        console.error("Erro ao obter assinatura OPTEL:", error);
       }
-      return ""; 
+      return "";
     }

@@ -859,7 +859,7 @@
       });
       return {toInsert, toUpdate, toDelete};
     }
-    function diffFixedRowsChanges(table, savedMap) {
+    
       const toInsert = [], toUpdate = [], toDelete = [];
       const PROTECTED = ["ED", "EN", "ET", "EP"];
       table.querySelectorAll("tr.fixed-row").forEach(row => {
@@ -892,19 +892,24 @@
         const elemSection = person?.section || "Emissão Escala";
         for (let d = 3; d < cells.length - 1; d++) {
           const cellText = cells[d]?.textContent.trim().toUpperCase();
-          const value = cellText.slice(0, 2).trim();
+          let value = cellText.slice(0, 2).trim();
           const day = d - 2, key = `${n_int}_${day}`, existingVal = savedMap[key];
           const existingValue = typeof existingVal === 'object' ? existingVal?.value : existingVal;
           const existingSection = typeof existingVal === 'object' ? existingVal?.section : elemSection;
+          let saveSection = existingSection;
+          if (value === "EP") {
+            value = "ED";
+            saveSection = "DECIR";
+          }
           if (existingValue) {
-            if (!value) toDelete.push({n_int, day, section: existingSection});
-            else if (existingValue.toUpperCase() !== value) toUpdate.push({n_int, day, value, section: existingSection});
+            if (!value) toDelete.push({n_int, day, section: saveSection});
+            else if (existingValue.toUpperCase() !== value) toUpdate.push({n_int, day, value, section: saveSection});
           } else if (value) {
-            toInsert.push({n_int, abv_name, day, value, section: elemSection});
+            toInsert.push({n_int, abv_name, day, value, section: saveSection});
           }
         }
       });
-      return { toInsert, toUpdate, toDelete };
+      return {toInsert, toUpdate, toDelete};
     }
     function analyzeSchedule() {
       const tbody = document.querySelector(".month-table tbody");

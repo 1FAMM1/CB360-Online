@@ -997,13 +997,16 @@
         const modeData = await resp.json();
         if (modeData.length > 0) mode = modeData[0].mode;
       } catch (err) {console.error("Erro ao carregar modo DECIR:", err);}
-      const DECIR_MODES = {'1_ecin': {minMP: 1, minTotal: 5,  minB2C: 1}, '1_ecin_1_elac': {minMP: 2, minTotal: 7,  minB2C: 2}, 'brigada': {minMP: 3, minTotal: 12, minB2C: 3}};
+      const DECIR_MODES = {'1_ecin': {minMP: 1, minTotal: 5, minChiefs: 1}, '1_ecin_1_elac': {minMP: 2, minTotal: 7, minChiefs: 2}, 'brigada': {minMP: 3, minTotal: 12, minChiefs: 3}};
+      const CHIEFS = ["B2C", "B1C", "SCH", "CH"];
+      const CHIEFS_LABEL = {"CH": "Chefe", "SCH": "Subchefe", "B1C": "Bombeiro(a) 1ª", "B2C": "Bombeiro(a) 2ª"};
       const limits = DECIR_MODES[mode] || DECIR_MODES['1_ecin'];
       const minBBs = limits.minTotal - limits.minMP;
       const daysInMonth = new Date(selectedYear, monthIndex, 0).getDate();
       const startDay = monthIndex === 5 ? 15 : 1;
       const endDay = monthIndex === 10 ? 15 : daysInMonth;
-      const issues = [];
+      const issuesAbsents = [];
+      const issuesChiefs = [];
       for (let d = startDay; d <= endDay; d++) {
         let mpDayCount = 0, mpNightCount = 0, totalDayCount = 0, totalNightCount = 0;
         const dayPatents = [], nightPatents = [];
@@ -1016,7 +1019,7 @@
           const v = td.textContent.toUpperCase().trim();
           const isDay = (v === "ED" || v === "ET");
           const isNight = (v === "EN" || v === "ET");
-          if (isDay) {totalDayCount++; dayPatents.push(person.patent_abv || ""); }
+          if (isDay) {totalDayCount++; dayPatents.push(person.patent_abv || "");}
           if (isNight) {totalNightCount++; nightPatents.push(person.patent_abv || "");}
           if (person.MP) {
             if (v === "ED") mpDayCount++;
@@ -1027,48 +1030,70 @@
         const red = (txt) => `<span style="color: #ff4d4d;">${txt}</span>`;
         const styleED = `<span style="color: #DAA520;">Turno ED</span>`;
         const styleEN = `<span style="color: #4A90E2;">Turno EN</span>`;
-        let dayED = [];
-        let dayEN = [];
+        const checkChiefs = (patents, totalCount) => {
+          const msgs = [];
+          if (totalCount < limits.minTotal) return msgs;
+          const chiefsCount = patents.filter(p => CHIEFS.includes(p.toUpperCase())).length;
+          const allB3C = chiefsCount === 0;
+          const modeLabel = {'1_ecin': '1 ECIN', '1_ecin_1_elac': '1 ECIN + 1 ELAC', 'brigada': 'Brigada'}[mode];
+          if (allB3C) {
+            msgs.push(red(`todos os elementos são B3C, deve conter pelo menos ${limits.minChiefs} graduado(s) (Chefe, Subchefe, Bombeiro(a) 1ª ou Bombeiro(a) 2ª).`));
+          } else if (chiefsCount < limits.minChiefs) {
+            const absents = limits.minChiefs - chiefsCount;
+            const chiefAbv = patents.find(p => CHIEFS.includes(p.toUpperCase())) || "";
+            const chiefLabel = CHIEFS_LABEL[chiefAbv.toUpperCase()] || chiefAbv;
+            msgs.push(red(`o modo ativo é ${modeLabel}, tem apenas como graduado ${chiefsCount} ${chiefLabel}, deve conter pelo menos mais ${absents} graduado(s) (Chefe, Subchefe, Bombeiro(a) 1ª ou no mínimo Bombeiro(a) 2ª).`));
+          }
+          return msgs;
+        };
+        let dayED_absents = [], dayED_chiefs = [], dayEN_absents = [], dayEN_chiefs = [];
         let absentMP_D = 0;
-        if (mpDayCount < limits.minMP) {absentMP_D = limits.minMP - mpDayCount; dayED.push(`MP: ${red(absentMP_D)}`);}
+        if (mpDayCount < limits.minMP) {absentMP_D = limits.minMP - mpDayCount; dayED_absents.push(`MP: ${red(absentMP_D)}`);}
         if (totalDayCount < limits.minTotal) {
           const openPositionsD = limits.minTotal - totalDayCount;
           const absentBBsD = openPositionsD - absentMP_D;
-          if (absentBBsD > 0) dayED.push(`BBs: ${red(absentBBsD)}`);
+          if (absentBBsD > 0) dayED_absents.push(`BBs: ${red(absentBBsD)}`);
         } else if (totalDayCount > limits.minTotal) {
-          dayED.push(red(`${totalDayCount - limits.minTotal} BBs em excesso`));
+          dayED_absents.push(red(`${totalDayCount - limits.minTotal} BBs em excesso`));
         }
-        const dayB2CCount = dayPatents.filter(p => p.toUpperCase() !== "B3C").length;
-        if (dayPatents.length > 0 && totalDayCount >= limits.minTotal && dayB2CCount < limits.minB2C) {
-          dayED.push(red(`está composto por ${dayPatents.length} Bombeiros de 3ª Classe, a composição deve conter no mínimo ${limits.minB2C} Bombeiro(s) de 2ª Classe.`));
-        }
+        dayED_chiefs.push(...checkChiefs(dayPatents, totalDayCount));
         let absentMP_N = 0;
-        if (mpNightCount < limits.minMP) {absentMP_N = limits.minMP - mpNightCount; dayEN.push(`MP: ${red(absentMP_N)}`);}
+        if (mpNightCount < limits.minMP) {absentMP_N = limits.minMP - mpNightCount; dayEN_absents.push(`MP: ${red(absentMP_N)}`);}
         if (totalNightCount < limits.minTotal) {
           const openPositionsN = limits.minTotal - totalNightCount;
-          const absenBBsN = openPositionsN - absentMP_N;
-          if (absenBBsN > 0) dayEN.push(`BBs: ${red(absenBBsN)}`);
+          const absentBBsN = openPositionsN - absentMP_N;
+          if (absentBBsN > 0) dayEN_absents.push(`BBs: ${red(absentBBsN)}`);
         } else if (totalNightCount > limits.minTotal) {
-          dayEN.push(red(`${totalNightCount - limits.minTotal} BBs em excesso`));
+          dayEN_absents.push(red(`${totalNightCount - limits.minTotal} BBs em excesso`));
         }
-        const nightB2CCount = nightPatents.filter(p => p.toUpperCase() !== "B3C").length;
-        if (nightPatents.length > 0 && totalNightCount >= limits.minTotal && nightB2CCount < limits.minB2C) {
-          dayEN.push(red(`está composto por ${nightPatents.length} Bombeiros de 3ª Classe, a composição deve conter no mínimo ${limits.minB2C} Bombeiro(s) de 2ª Classe.`));
-        }
-        if (dayED.length > 0) issues.push(`Dia ${d}: ${styleED} ${dayED.join(" | ")}`);
-        if (dayEN.length > 0) issues.push(`Dia ${d}: ${styleEN} ${dayEN.join(" | ")}`);
+        dayEN_chiefs.push(...checkChiefs(nightPatents, totalNightCount));
+        if (dayED_absents.length > 0) issuesAbsents.push(`Dia ${d}: ${styleED} ${dayED_absents.join(" | ")}`);
+        if (dayEN_absents.length > 0) issuesAbsents.push(`Dia ${d}: ${styleEN} ${dayEN_absents.join(" | ")}`);
+        if (dayED_chiefs.length > 0) issuesChiefs.push(`Dia ${d}: ${styleED} ${dayED_chiefs.join(" | ")}`);
+        if (dayEN_chiefs.length > 0) issuesChiefs.push(`Dia ${d}: ${styleEN} ${dayEN_chiefs.join(" | ")}`);
       }
-      const modeLabel = { '1_ecin': '1 ECIN', '1_ecin_1_elac': '1 ECIN + 1 ELAC', 'brigada': 'Brigada' }[mode] || mode;
-      if (issues.length === 0) {
+      const modeLabel = {'1_ecin': '1 ECIN', '1_ecin_1_elac': '1 ECIN + 1 ELAC', 'brigada': 'Brigada'}[mode] || mode;
+      if (issuesAbsents.length === 0 && issuesChiefs.length === 0) {
         showPopup('popup-success', `✅ Dotação mínima assegurada para <b>${modeLabel}</b>.`);
       } else {
         const popupDecir = document.getElementById('popup-analyze-decir');
         if (popupDecir) {
+          const absentsSection = issuesAbsents.length > 0
+            ? `<b>⚠️ Turnos por Preencher / Excessos:</b><br>${issuesAbsents.join("<br>")}`
+            : "";
+          const chiefsSection = issuesChiefs.length > 0
+            ? `<br><br><b>⚠️ Turnos sem Graduados:</b><br>${issuesChiefs.join("<br>")}<br><br><small>ℹ️ A alteração aos graduados é facultativa mas aconselhável.</small>`
+            : "";
           popupDecir.querySelector('.popup-body').innerHTML = `
             <ul style="list-style:none; padding:0; margin:0;">
               <li><span style="font-size:20px;">•</span> <b>⚠️ Turnos DECIR por Preencher e/ou Turnos com excessos. (${modeLabel})</b></li>
               <li style="margin-left: 14px;"><small>Dotação: ${limits.minMP} Motorista + ${minBBs} Bombeiros (Total: ${limits.minTotal} Elementos.)</small></li>
-              <li><div style='max-height:200px; overflow-y:auto; margin: 10px 0; font-weight: bold;'>${issues.join("<br>")}</div></li>
+              <li>
+                <div style='max-height:200px; overflow-y:auto; margin: 10px 0; font-weight: bold;'>
+                  <div id="decir-absents-section">${absentsSection}</div>
+                  <div id="decir-chiefs-section">${chiefsSection}</div>
+                </div>
+              </li>
               <li><small>ℹ️ A análise verifica as dotações mínimas por turno (Dia/Noite) de acordo com o modo DECIR configurado. Separando Motoristas de Pesados e Bombeiros.</small></li>
             </ul>`;
           popupDecir.classList.add('show');
@@ -1079,7 +1104,7 @@
       const selectedYear = parseInt($("year-selector")?.value, 10);
       const monthIndex = getActiveMonthIndex();
       const nameMonth = MONTH_NAMES_PT[monthIndex - 1];
-      const divIssues = document.querySelector('#popup-analyze-decir .popup-body div');
+      const divIssues = document.querySelector('#decir-absents-section');
       if (!divIssues) return;
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = divIssues.innerHTML;
@@ -1099,10 +1124,10 @@
         if (issues.length === 0) return;
         const clearText = (text) => {
           return text
-            .replace(/Turno|ED|EN/gi, "") 
+            .replace(/Turno|ED|EN/gi, "")
             .replace(/Motoristas (de )?Pesados/gi, "MP")
             .replace(/Elementos|Elems\.?|Elems/gi, "BBs")
-            .replace(/:\s*(\d+)/g, ": *$1*") 
+            .replace(/:\s*(\d+)/g, ": *$1*")
             .replace(/\s+/g, " ")
             .trim();
         };
@@ -1116,7 +1141,7 @@
       let message = `*🚨INFORMAÇÃO🚨*\n\n`;
       message += `*Turnos DECIR por Preencher - ${nameMonth} ${selectedYear}*\n\n`;
       message += `${finalLines.join('\n')}\n\n`;
-      message += `As disponibilidades devem ser remetidas para adjunto.faroahb@gamil.com com conhecimento de comando0805.ahbfaro@gamil.com.\n`;
+      message += `As disponibilidades devem ser remetidas para adjunto.faroahb@gmail.com com conhecimento de comando0805.ahbfaro@gmail.com.\n`;
       message += `Obrigado pela vossa colaboração!`;
       navigator.clipboard.writeText(message).then(() => {
         closePopup('popup-analyze-decir');

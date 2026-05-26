@@ -1079,15 +1079,15 @@
         const popupDecir = document.getElementById('popup-analyze-decir');
         if (popupDecir) {
           const absentsSection = issuesAbsents.length > 0
-            ? `<b>⚠️ Turnos por Preencher / Excessos:</b><br>${issuesAbsents.join("<br>")}`
+            ? `<b>🚫 Turnos por Preencher / Excessos:</b><br>${issuesAbsents.join("<br>")}`
             : "";
           const chiefsSection = issuesChiefs.length > 0
-            ? `<br><br><b>⚠️ Turnos sem Graduados:</b><br>${issuesChiefs.join("<br>")}<br><br><small>ℹ️ A alteração aos graduados é facultativa mas aconselhável.</small>`
+            ? `<br><br><b>🚫 Turnos sem Graduados:</b><br>${issuesChiefs.join("<br>")}<br><br><small>ℹ️ A alteração aos graduados é facultativa mas aconselhável.</small>`
             : "";
           popupDecir.querySelector('.popup-body').innerHTML = `
             <ul style="list-style:none; padding:0; margin:0;">
               <li><span style="font-size:20px;">•</span> <b>⚠️ Turnos DECIR por Preencher e/ou Turnos com excessos. (${modeLabel})</b></li>
-              <li style="margin-left: 14px;"><small>Dotação: ${limits.minMP} Motorista + ${minBBs} Bombeiros (Total: ${limits.minTotal} Elementos.)</small></li>
+              <li style="margin-left: 14px;"><small>Dotação: ${limits.minMP} Motoristas + ${minBBs} Bombeiros (Total: ${limits.minTotal} Elementos.)</small></li>
               <li>
                 <div style='max-height:200px; overflow-y:auto; margin: 10px 0; font-weight: bold;'>
                   <div id="decir-absents-section">${absentsSection}</div>

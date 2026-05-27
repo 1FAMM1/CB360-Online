@@ -23,198 +23,244 @@
     /* =======================================
     CORPORATION DATA
     ======================================= */
+    /* ================= STATE ================= */
+    let originalCorpLogo = null;
+    let tempCorpLogoFile = null;
+    /* ================= DOM READY SAFE ================= */
+    document.addEventListener("DOMContentLoaded", () => {
+      const fileInput = document.getElementById("corp-logo-input");
+      if (fileInput) {
+        fileInput.addEventListener("change", (e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          tempCorpLogoFile = file;
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            document.querySelector(".data-logo").src = ev.target.result;
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+      const resetBtn = document.querySelector("#btn-reset-logo");
+      if (resetBtn) {
+        resetBtn.addEventListener("click", resetCorpLogo);
+      }
+    });
+    /* ================= RESET LOGO ================= */
+    function resetCorpLogo() {
+      const img = document.querySelector(".data-logo");
+      const input = document.getElementById("corp-logo-input");
+      if (!img) return;
+      if (originalCorpLogo) {
+        img.src = originalCorpLogo;
+      } else {
+        img.src = "";
+      }
+      if (input) input.value = "";
+      tempCorpLogoFile = null;
+    }
+    /* ================= CHECK EXISTING ================= */
     async function checkExistingCorporation() {
       try {
-        const currentCorpNr = sessionStorage.getItem("currentUserCorpNr");
+        const currentCorpNr = sessionStorage.getItem("currentUserCorpNr") || "0805";
         const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/corporation_data?select=id&corp_oper_nr=eq.${currentCorpNr}&limit=1`, { 
-            headers: getSupabaseHeaders() }
+          `${SUPABASE_URL}/rest/v1/corporation_data?select=id&corp_oper_nr=eq.${currentCorpNr}&limit=1`, {
+            headers: getSupabaseHeaders()
+          }
         );
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
         return data.length > 0 ? data[0] : null;
       } catch (error) {
-        console.error('Erro ao verificar corporação existente:', error);
+        console.error("Erro ao verificar corporação existente:", error);
         return null;
       }
-    }    
+    }
+    /* ================= LOAD CORPORATION DATA ================= */
     async function loadCorporationData() {
       try {
-        const currentCorpNr = sessionStorage.getItem("currentCorpOperNr");
-        if (!currentCorpNr) {
-          console.warn('⚠️ Nenhuma corporação identificada. Faça login novamente.');
-          return;
-        }
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${encodeURIComponent(currentCorpNr)}&select=*`, {
-          headers: getSupabaseHeaders()
-        });
+        const currentCorpNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        if (!currentCorpNr) return;
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${encodeURIComponent(currentCorpNr)}&select=*`,{
+            headers: getSupabaseHeaders()
+          }
+        );
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
-        if (!data.length) {
-          return;
-        }
+        if (!data.length) return;
         const corporation = data[0];
-        document.getElementById('assoc-nome').value = corporation.corporation || '';
-        document.getElementById('assoc-morada').value = corporation.corp_adress || '';
-        document.getElementById('assoc-localidade').value = corporation.corp_localitie || '';
-        document.getElementById('assoc-nif').value = corporation.corp_fiscal_nr || '';
-        document.getElementById('assoc-operacional').value = corporation.corp_oper_nr || '';
-        const { cp1, cp2 } = splitPostalCode(corporation.corp_cp);
-        document.getElementById('assoc-cp1').value = cp1;
-        document.getElementById('assoc-cp2').value = cp2;
+        document.getElementById("assoc-nome").value = corporation.corporation || "";
+        document.getElementById("assoc-morada").value = corporation.corp_adress || "";
+        document.getElementById("assoc-localidade").value = corporation.corp_localitie || "";
+        document.getElementById("assoc-nif").value = corporation.corp_fiscal_nr || "";
+        document.getElementById("assoc-operacional").value = corporation.corp_oper_nr || "";
+        const {cp1, cp2} = splitPostalCode(corporation.corp_cp);
+        document.getElementById("assoc-cp1").value = cp1;
+        document.getElementById("assoc-cp2").value = cp2;
         await loadHierarchicalSelects(corporation);
       } catch (error) {
-        console.error('❌ Erro ao carregar dados da corporação:', error);
+        console.error("❌ Erro ao carregar dados da corporação:", error);
       }
     }
+    /* ================= LOAD LOGO ================= */
     async function loadCorporationLogo() {
-      try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");        
-        if (!corpOperNr) {
-          console.warn("currentCorpOperNr não encontrado no sessionStorage. Não foi possível carregar o logo.");
-          return;
-        }
-        const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/corporation_data?select=logo_url&corp_oper_nr=eq.${corpOperNr}&limit=1`, {
-            headers: getSupabaseHeaders()
-          }
-        );        
-        const data = await response.json();        
-        if (data && data.length > 0) {
-          const corp = data[0];
-          if (corp.logo_url) {
-            document.querySelector('.data-logo').src = corp.logo_url;
-          }
-        }
-      } catch (error) {
-        console.error("Erro ao carregar logo da corporação:", error);
-      }
-    }    
-    document.addEventListener('DOMContentLoaded', loadCorporationLogo);    
+      try {
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        if (!corpOperNr) return;
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/corporation_data?select=logo_url&corp_oper_nr=eq.${corpOperNr}&limit=1`, {
+            headers: getSupabaseHeaders()
+          }
+        );
+        const data = await response.json();
+        if (data?.length > 0 && data[0].logo_url) {
+          const img = document.querySelector(".data-logo");
+          if (img) {
+            originalCorpLogo = data[0].logo_url;
+            img.src = originalCorpLogo;
+          }
+        }
+      } catch (error) {
+        console.error("Erro ao carregar logo:", error);
+      }
+    }
+    document.addEventListener("DOMContentLoaded", loadCorporationLogo);
+    /* ================= SAVE CORPORATION ================= */
     async function saveCorporationData() {
-      const saveButton = document.querySelector('button[onclick="saveCorporationData()"]');
-      const originalText = saveButton ? saveButton.textContent : 'ATUALIZAR';
+      const saveButton = document.querySelector(
+        'button[onclick="saveCorporationData()"]'
+      );
+      const originalText = saveButton?.textContent || "ATUALIZAR";
       try {
         if (saveButton) {
           saveButton.disabled = true;
-          saveButton.textContent = 'A SALVAR...';
+          saveButton.textContent = "A SALVAR...";
         }
-        const currentCorpNr = sessionStorage.getItem("currentCorpOperNr");
-        const corporationData = {
-          corporation: document.getElementById('assoc-nome')?.value?.trim() || null,
-          corp_adress: document.getElementById('assoc-morada')?.value?.trim() || null,
-          corp_localitie: document.getElementById('assoc-localidade')?.value?.trim() || null,
-          corp_cp: getCombinedPostalCode(),
-          corp_district: getSelectedDistrictName(),
-          corp_council: getSelectedCouncilName(),
-          corp_parish: document.getElementById('parish_select_corp')?.value?.trim() || null,
-          corp_fiscal_nr: document.getElementById('assoc-nif')?.value?.trim() || null,
-          corp_oper_nr: currentCorpNr || document.getElementById('assoc-operacional')?.value?.trim() || null
-        };
+        const currentCorpNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corporationData = {corporation: document.getElementById("assoc-nome")?.value?.trim() || null, corp_adress: document.getElementById("assoc-morada")?.value?.trim() || null,
+                                 corp_localitie: document.getElementById("assoc-localidade")?.value?.trim() || null, corp_cp: getCombinedPostalCode(), corp_district: getSelectedDistrictName(),
+                                 corp_council: getSelectedCouncilName(), corp_parish: document.getElementById("parish_select_corp")?.value?.trim() || null,
+                                 corp_fiscal_nr: document.getElementById("assoc-nif")?.value?.trim() || null, corp_oper_nr: currentCorpNr || document.getElementById("assoc-operacional")?.value?.trim() || null
+                                };
         const validation = validateCorporationData(corporationData);
         if (!validation.isValid) throw new Error(validation.message);
-        let response;
-        const existingResponse = await fetch(`${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${encodeURIComponent(corporationData.corp_oper_nr)}&select=id&limit=1`, {
-          headers: getSupabaseHeaders()
-        });
+        const existingResponse = await fetch(
+          `${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${encodeURIComponent(corporationData.corp_oper_nr)}&select=id&limit=1`, {
+            headers: getSupabaseHeaders()
+          }
+        );
         const existingData = await existingResponse.json();
+        let response;
         if (existingData.length > 0) {
-          response = await updateCorporationData(existingData[0].id, corporationData);
+          response = await updateCorporationData(
+            existingData[0].id,
+            corporationData
+          );
         } else {
           response = await createCorporationData(corporationData);
         }
-        showPopup('popup-success', 'Dados da corporação salvos com sucesso!');
+        showPopup("popup-success", "Dados da corporação salvos com sucesso!");
       } catch (error) {
-        console.error('❌ Erro ao salvar dados da corporação:', error);
-        showPopup('popup-danger', error.message || 'Erro ao salvar dados da corporação');
+        console.error("❌ Erro ao salvar:", error);
+        showPopup("popup-danger", error.message || "Erro ao salvar dados da corporação");
       } finally {
         if (saveButton) {
           saveButton.disabled = false;
           saveButton.textContent = originalText;
         }
       }
-    }    
+    }
+    /* ================= CREATE ================= */
     async function createCorporationData(data) {
       const response = await fetch(`${SUPABASE_URL}/rest/v1/corporation_data`, {
-        method: 'POST',
-        headers: {
-          ...getSupabaseHeaders(),
-          'Content-Type': 'application/json',
-          'Prefer': 'return=representation'
-        },
+        method: "POST",
+        headers: {...getSupabaseHeaders(), "Content-Type": "application/json", Prefer: "return=representation"},
         body: JSON.stringify(data)
       });
       if (!response.ok) {
-        const errorData = await response.text();
-        throw new Error(`Erro ao criar corporação: ${response.status} - ${errorData}`);
-      }
-      return await response.json();
-    }    
-    async function updateCorporationData(id, data) {
-      const response = await fetch(`${SUPABASE_URL}/rest/v1/corporation_data?id=eq.${id}`, {
-        method: 'PATCH',
-        headers: {
-          ...getSupabaseHeaders(),
-          'Content-Type': 'application/json',
-          'Prefer': 'return=representation'
-        },
-        body: JSON.stringify(data)
-      });
-      if (!response.ok) {
-        const errorData = await response.text();
-        throw new Error(`Erro ao atualizar corporação: ${response.status} - ${errorData}`);
+        const errorText = await response.text();
+        throw new Error(`CREATE ERROR: ${errorText}`);
       }
       return await response.json();
     }
+    /* ================= UPDATE ================= */
+    async function updateCorporationData(id, data) {
+      const response = await fetch(
+        `${SUPABASE_URL}/rest/v1/corporation_data?id=eq.${id}`, {
+          method: "PATCH",
+          headers: {...getSupabaseHeaders(), "Content-Type": "application/json", Prefer: "return=representation"},
+          body: JSON.stringify(data)
+        }
+      );
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`UPDATE ERROR: ${errorText}`);
+      }
+      return await response.json();
+    }
+    /* ================= HELPERS ================= */
     function splitPostalCode(fullPostalCode) {
-      if (!fullPostalCode) return {cp1: '', cp2: ''};
-      if (fullPostalCode.includes('-')) {
-        const [cp1, cp2] = fullPostalCode.split('-');
-        return {cp1: cp1 || '', cp2: cp2 || ''};
+      if (!fullPostalCode) return { cp1: "", cp2: "" };
+      if (fullPostalCode.includes("-")) {
+        const [cp1, cp2] = fullPostalCode.split("-");
+        return { cp1: cp1 || "", cp2: cp2 || "" };
       }
       if (fullPostalCode.length === 7 && /^\d{7}$/.test(fullPostalCode)) {
         return {cp1: fullPostalCode.substring(0, 4), cp2: fullPostalCode.substring(4, 7)};
       }
-      return {cp1: fullPostalCode, cp2: ''};
-    }    
+      return {cp1: fullPostalCode, cp2: ""};
+    }
     function getCombinedPostalCode() {
-      const cp1 = document.getElementById('assoc-cp1')?.value?.trim();
-      const cp2 = document.getElementById('assoc-cp2')?.value?.trim();
-      if (cp1 && cp2) {
-        return `${cp1}-${cp2}`;
-      }
+      const cp1 = document.getElementById("assoc-cp1")?.value?.trim();
+      const cp2 = document.getElementById("assoc-cp2")?.value?.trim();
+      if (cp1 && cp2) return `${cp1}-${cp2}`;
       return cp1 || cp2 || null;
     }
     function getSelectedDistrictName() {
-      const districtSelect = document.getElementById('district_select_corp');
-      if (!districtSelect || !districtSelect.value || districtSelect.value === '') return null;
-      const selectedOption = districtSelect.options[districtSelect.selectedIndex];
-      return selectedOption ? selectedOption.textContent.trim() : null;
+      const el = document.getElementById("district_select_corp");
+      if (!el?.value) return null;
+      return el.options[el.selectedIndex]?.textContent?.trim() || null;
     }
     function getSelectedCouncilName() {
-      const councilSelect = document.getElementById('council_select_corp');
-      if (!councilSelect || !councilSelect.value || councilSelect.value === '') return null;
-      const selectedOption = councilSelect.options[councilSelect.selectedIndex];
-      return selectedOption ? selectedOption.textContent.trim() : null;
+      const el = document.getElementById("council_select_corp");
+      if (!el?.value) return null;
+      return el.options[el.selectedIndex]?.textContent?.trim() || null;
     }
-    function validateCorporationData(data) {
-      if (!data.corporation) {
-        return {isValid: false, message: 'Nome da corporação é obrigatório'};
+    async function loadHierarchicalSelects(corporation) {
+      try {
+        if (corporation.corp_district) {
+          const districtId = await findDistrictIdByName(corporation.corp_district);
+          if (districtId) {
+            document.getElementById('district_select_corp').value = districtId;
+            await populateCouncilSelectByDistrict(districtId, 'district_select_corp');
+          }
+        }
+        if (corporation.corp_council) {
+          const councilId = await findCouncilIdByName(corporation.corp_council);
+          if (councilId) {
+            document.getElementById('council_select_corp').value = councilId;
+            await populateParishesByCouncil(councilId, 'council_select_corp');
+          }
+        }
+        if (corporation.corp_parish) {
+          document.getElementById('parish_select_corp').value = corporation.corp_parish;
+        }
+      } catch (error) {
+        console.error('❌ Erro ao carregar selects hierárquicos:', error);
       }
-      if (!data.corp_fiscal_nr) {
-        return {isValid: false, message: 'NIF é obrigatório'};
-      }
-      if (data.corp_fiscal_nr && !/^\d{9}$/.test(data.corp_fiscal_nr.replace(/\s/g, ''))) {
-        return {isValid: false, message: 'NIF deve ter 9 dígitos'};
-      }
-      if (!data.corp_oper_nr) {
-        return {isValid: false, message: 'Número Operacional da corporação é obrigatório'};
-      }
-      if (data.corp_cp && !/^\d{4}-\d{3}$/.test(data.corp_cp)) {
-        return {isValid: false, message: 'Código postal deve ter o formato XXXX-XXX'};
-      }
-      return {isValid: true};
     }    
+    function validateCorporationData(data) {
+      if (!data.corporation)
+        return {isValid: false, message: "Nome obrigatório"};
+      if (!data.corp_fiscal_nr)
+        return {isValid: false, message: "NIF obrigatório"};
+      if (!/^\d{9}$/.test(data.corp_fiscal_nr))
+        return {isValid: false, message: "NIF inválido"};
+      if (!data.corp_oper_nr)
+        return {isValid: false, message: "Operacional obrigatório"};
+      return {isValid: true};
+    }
     async function findDistrictIdByName(districtName) {
       try {
         const response = await fetch(`${SUPABASE_URL}/rest/v1/districts_select?select=id&district=eq.${encodeURIComponent(districtName)}`, {
@@ -240,35 +286,107 @@
         console.error('Erro ao buscar ID do concelho:', error);
         return null;
       }
-    }    
-    async function loadHierarchicalSelects(corporation) {
-      try {
-        if (corporation.corp_district) {
-          const districtId = await findDistrictIdByName(corporation.corp_district);
-          if (districtId) {
-            document.getElementById('district_select_corp').value = districtId;
-            await populateCouncilSelectByDistrict(districtId, 'district_select_corp');
-          }
-        }
-        if (corporation.corp_council) {
-          const councilId = await findCouncilIdByName(corporation.corp_council);
-          if (councilId) {
-            document.getElementById('council_select_corp').value = councilId;
-            await populateParishesByCouncil(councilId, 'council_select_corp');
-          }
-        }
-        if (corporation.corp_parish) {
-          document.getElementById('parish_select_corp').value = corporation.corp_parish;
-        }
-      } catch (error) {
-        console.error('❌ Erro ao carregar selects hierárquicos:', error);
-      }
-    }    
-    document.addEventListener('DOMContentLoaded', async () => {
+    }   
+    /* ================= LOAD INIT ================= */
+    document.addEventListener("DOMContentLoaded", async () => {
       setTimeout(async () => {
         await loadCorporationData();
-      }, 1000);
+      }, 500);
     });
+    async function uploadCorpLogo(file, corpOperNr) {
+      const fileExt = file.name.split(".").pop();
+      const timestamp = Date.now();
+      const fileName = `logo_cb_${corpOperNr}_${timestamp}.${fileExt}`;
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await fetch(
+        `${SUPABASE_URL}/storage/v1/object/cb_logos/${fileName}`, {
+          method: "POST",
+          headers: {Authorization: `Bearer ${SUPABASE_ANON_KEY}`},
+          body: formData
+        }
+      );
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+      return {
+        fileName,
+        url: `${SUPABASE_URL}/storage/v1/object/public/cb_logos/${fileName}`
+      };
+    }
+    async function saveCorpLogo() {
+      try {
+        if (!tempCorpLogoFile) {
+          showPopup("popup-danger", "Seleciona uma imagem primeiro!");
+          return;
+        }
+        const localPreviewUrl = URL.createObjectURL(tempCorpLogoFile);
+        const logoImg = document.querySelector(".data-logo");
+        const logoHeaderImg = document.querySelector(".cb-logo img");
+        if (logoImg) logoImg.src = localPreviewUrl;
+        if (logoHeaderImg) logoHeaderImg.src = localPreviewUrl;
+        const corpOperNr = (sessionStorage.getItem("currentCorpOperNr") || "0805").trim();
+        console.log("1. A apagar ficheiro antigo...");
+        await deleteCorpLogo(originalCorpLogo);
+        console.log("2. A fazer upload novo...");
+        const upload = await uploadCorpLogo(tempCorpLogoFile, corpOperNr);
+        console.log("3. Upload OK:", upload.url);
+        console.log("4. A atualizar DB...");
+        await updateLogoInDB(corpOperNr, upload.url);
+        console.log("5. DB OK");
+        const cacheBusterUrl = `${upload.url}?t=${Date.now()}`;
+        if (logoImg) logoImg.src = cacheBusterUrl;
+        if (logoHeaderImg) logoHeaderImg.src = cacheBusterUrl;
+        originalCorpLogo = upload.url;
+        tempCorpLogoFile = null;
+        const input = document.getElementById("corp-logo-input");
+        if (input) input.value = "";
+        showPopup("popup-success", "Logo atualizado com sucesso!");
+      } catch (error) {
+        console.error("SAVE LOGO ERROR:", error);
+        showPopup("popup-danger", error.message || "Erro ao guardar logo");
+        loadCorporationHeader();
+      }
+    }
+    async function updateLogoInDB(corpOperNr, logoUrl) {
+      const findRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/corporation_data?select=id&corp_oper_nr=eq.${corpOperNr}`, {
+          headers: getSupabaseHeaders()
+        }
+      );
+      const findData = await findRes.json();
+      if (!findData.length) {
+        throw new Error("Corporação não encontrada");
+      }
+      const id = findData[0].id;
+      const updateRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/corporation_data?id=eq.${id}`, {
+          method: "PATCH",
+          headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=representation"},
+          body: JSON.stringify({logo_url: logoUrl})
+        }
+      );
+      const text = await updateRes.text();
+      if (!updateRes.ok) {
+        throw new Error(text);
+      }
+      return JSON.parse(text);
+    }
+    async function deleteCorpLogo(oldFileUrl) {
+      if (!oldFileUrl) return;
+      try {
+        const fileName = oldFileUrl.split("/cb_logos/")[1];
+        if (!fileName) return;
+        await fetch(
+          `${SUPABASE_URL}/storage/v1/object/cb_logos/${fileName}`, {
+            method: "DELETE",
+            headers: {Authorization: `Bearer ${SUPABASE_ANON_KEY}`}
+          }
+        );
+      } catch (e) {
+        console.warn("Erro ao apagar logo antigo:", e);
+      }
+    }
     /* =======================================
     FIREFIGHTER LISTING
     ======================================= */

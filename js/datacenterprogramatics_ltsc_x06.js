@@ -10,6 +10,11 @@
       if (panelId === "assoc") {
         loadCorporationData();
       }
+      if (panelId === "elems") {
+        resetElementsTable();
+        const search = document.getElementById("win_search_element");
+        if (search) search.value = "";
+      }
       const list = document.getElementById("elements-list");
       const edit = document.getElementById("elements-edit");
       if (list) list.style.display = "block";
@@ -303,6 +308,18 @@
       {label: "Utilitários"},
       {label: "Data Center"}
     ];
+    function resetElementsTable() {
+      const tbody = document.querySelector("#elements-container tbody");
+      if (!tbody) return;
+      tbody.querySelectorAll("tr").forEach(tr => {
+        if (tr.querySelector('td[colspan]')) {
+          const icon = tr.querySelector(".toggle-icon");
+          if (icon) icon.textContent = "▶";
+        } else {
+          tr.style.display = "none";
+        }
+      });
+    }
     function initTabs() {
       document.querySelectorAll("#elements-tabs .tab-btn").forEach(btn => {
         btn.addEventListener("click", () => {
@@ -381,9 +398,9 @@
           const headerTr = document.createElement("tr");
           headerTr.innerHTML = `
             <td colspan="6" style="background:#ffebeb;color:#a70c0c;font-weight:bold;text-align:left;
-              padding:8px 10px;font-size:13px;border:1px solid #ccc;border-left:2px solid #d81c1c;
+              padding:8px 10px;font-size:12px;border-left:2px solid #d81c1c;
               letter-spacing:0.05em;cursor:pointer;user-select:none;">
-              <span style="float:right;font-size:16px;" class="toggle-icon">▲</span>
+              <span style="float:right;font-size:16px;" class="toggle-icon">▶</span>
               🔹 ${quadro.title} (${elems.length})
             </td>
           `;
@@ -405,13 +422,23 @@
             tbody.appendChild(tr);
             quadroRows.push(tr);
           });
+          quadroRows.forEach(tr => tr.style.display = "none");
+          headerTr.querySelector(".toggle-icon").textContent = "▶";
           headerTr.addEventListener("click", () => {
             const icon = headerTr.querySelector(".toggle-icon");
             const isVisible = quadroRows[0]?.style.display !== "none";
+            document.querySelectorAll("#elements-container tbody tr").forEach(tr => {
+              if (tr === headerTr) return;
+              if (tr.querySelector('td[colspan]')) {
+                tr.querySelector(".toggle-icon").textContent = "▶";
+              } else {
+                tr.style.display = "none";
+              }
+            });
             quadroRows.forEach(tr => tr.style.display = isVisible ? "none" : "");
-            icon.textContent = isVisible ? "▼" : "▶";
-          });
-        });
+            icon.textContent = isVisible ? "▶" : "▼";
+          })
+        });        
       } catch (error) {
         console.error("Erro ao carregar tabela:", error);
       }
@@ -552,7 +579,7 @@
         }
         showPopup('popup-success', currentEditId ? "✅ Elemento editado com sucesso!" : "✅ Elemento adicionado com sucesso!");
         toggleElementsView();
-        loadElementsTable();
+        loadElementsTable();        
       } catch (err) {
         console.error(err);
         showPopup('popup-danger', "Erro ao gravar registro.");
@@ -698,7 +725,7 @@
     }
     document.addEventListener("DOMContentLoaded", () => {      
       initTabs();
-      loadElementsTable();      
+      loadElementsTable();
     });
     document.addEventListener("DOMContentLoaded", () => {
       initTabs();

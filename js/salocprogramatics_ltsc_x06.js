@@ -5146,17 +5146,21 @@
         showPopup('popup-danger', "Erro ao eliminar: " + err.message);
       }
     });
+    /* ===== PHONEBOOK SUB-MODULE VARIABLES ===== */
+    let phonebookEditId = null;
     /* ===== PHONEBOOK INIT ===== */
     document.querySelector('.sidebar-sub-submenu-button[data-page="page-phonebook"]')?.addEventListener("click", () => {
       phonebookEditId = null;
       document.getElementById("phonebook-save").innerHTML = "💾 GRAVAR";
       ["phonebook-name", "phonebook-subcategory", "phonebook-phone", "phonebook-mobile", "phonebook-email", "phonebook-address", "phonebook-locality", "phonebook-zipcode", "phonebook-notes"]
-        .forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+        .forEach(id => {const el = document.getElementById(id); if (el) el.value = "";});
       document.getElementById("phonebook-type").value = "";
       document.getElementById("phonebook-category").value = "";
       document.getElementById("phonebook-availability").value = "";
       document.getElementById("phonebook-favorite").checked = false;
       document.getElementById("phonebook-delete").disabled = true;
+      const formContainer = document.getElementById("phonebook-form-container");
+      if (formContainer) formContainer.style.display = "none";
       loadPhonebookTable();
     });
     /* ===== PHONEBOOK SEARCH ===== */
@@ -5169,14 +5173,13 @@
         row.style.display = text.includes(filter) ? "" : "none";
       });
     });
-    /* ===== PHONEBOOK LOAD ===== */
-    let phonebookEditId = null;
+    /* ===== PHONEBOOK LOAD TABLE ===== */
     async function loadPhonebookTable() {
       const tbody = document.getElementById("phonebook-tbody");
       if (!tbody) return;
       tbody.style.opacity = "0.5";
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/phonebook?corp_oper_nr=eq.${corpOperNr}&order=name.asc`, {
             headers: getSupabaseHeaders()
@@ -5193,11 +5196,10 @@
         }
         const tdStyle = `padding:5px;border:1px solid #ccc;font-size:13px;text-align:center;`;
         tbody.innerHTML = "";
-        // Favoritos primeiro, depois por nome
         const sorted = [...data].sort((a, b) => {
           if (b.is_favorite - a.is_favorite) return b.is_favorite - a.is_favorite;
           return (a.name || "").localeCompare(b.name || "");
-        });
+        });    
         sorted.forEach(item => {
           const tr = document.createElement("tr");
           tr.innerHTML = `
@@ -5226,10 +5228,10 @@
         console.error("Erro ao carregar agenda:", err);
       }
     }
-    /* ===== PHONEBOOK EDIT ===== */
+    /* ===== PHONEBOOK EDIT (CLICK NO LÁPIS) ===== */
     async function phonebookEdit(id) {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/phonebook?id=eq.${id}&corp_oper_nr=eq.${corpOperNr}&select=*`, {
             headers: getSupabaseHeaders()
@@ -5239,6 +5241,8 @@
         const data = await response.json();
         if (!data.length) return;
         const item = data[0];
+        const formContainer = document.getElementById("phonebook-form-container");
+        if (formContainer) formContainer.style.display = "block";
         document.getElementById("phonebook-name").value = item.name || "";
         document.getElementById("phonebook-type").value = item.contact_type || "";
         document.getElementById("phonebook-category").value = item.category || "";
@@ -5251,21 +5255,21 @@
         document.getElementById("phonebook-address").value = item.address || "";
         document.getElementById("phonebook-locality").value = item.locality || "";
         document.getElementById("phonebook-zipcode").value = item.zipcode || "";
-        document.getElementById("phonebook-notes").value = item.notes || "";
+        document.getElementById("phonebook-notes").value = item.notes || "";    
         phonebookEditId = id;
         document.getElementById("phonebook-save").innerHTML = "💾 ATUALIZAR";
         document.getElementById("phonebook-delete").disabled = false;
-        document.getElementById("phonebook-name").focus();
+        document.getElementById("phonebook-name").focus();    
       } catch (err) {
         console.error("Erro ao editar contacto:", err);
         showPopup("popup-danger", "Erro ao carregar dados: " + err.message);
       }
     }
-    /* ===== PHONEBOOK DELETE ===== */
+    /* ===== PHONEBOOK DELETE FUNÇÃO BASE ===== */
     async function phonebookDelete(id) {
       if (!confirm("Tem a certeza que pretende eliminar este contacto?")) return;
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/phonebook?id=eq.${id}&corp_oper_nr=eq.${corpOperNr}`, {
             method: "DELETE",
@@ -5277,42 +5281,35 @@
         phonebookEditId = null;
         document.getElementById("phonebook-save").innerHTML = "💾 GRAVAR";
         document.getElementById("phonebook-delete").disabled = true;
-        ["phonebook-name", "phonebook-subcategory", "phonebook-phone", "phonebook-mobile",
-         "phonebook-email", "phonebook-address", "phonebook-locality", "phonebook-zipcode", "phonebook-notes"]
-          .forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+        ["phonebook-name", "phonebook-subcategory", "phonebook-phone", "phonebook-mobile", "phonebook-email", "phonebook-address", "phonebook-locality", "phonebook-zipcode", "phonebook-notes"]
+          .forEach(id => {const el = document.getElementById(id); if (el) el.value = "";});
         document.getElementById("phonebook-type").value = "";
         document.getElementById("phonebook-category").value = "";
         document.getElementById("phonebook-availability").value = "";
         document.getElementById("phonebook-favorite").checked = false;
+        const formContainer = document.getElementById("phonebook-form-container");
+        if (formContainer) formContainer.style.display = "none";
         loadPhonebookTable();
       } catch (err) {
         console.error("Erro ao eliminar contacto:", err);
         showPopup("popup-danger", "Erro ao eliminar: " + err.message);
       }
     }
-    /* ===== PHONEBOOK SAVE ===== */
+    /* ===== PHONEBOOK SAVE / UPDATE (AÇÃO DO BOTÃO GRAVAR) ===== */
     async function phonebookSave() {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const name = document.getElementById("phonebook-name").value.trim();
       if (!name) {
         showPopup("popup-danger", "Preencha pelo menos o Nome / Designação.");
         return;
       }
-      const payload = {
-        name,
-        contact_type: document.getElementById("phonebook-type").value,
-        category: document.getElementById("phonebook-category").value,
-        subcategory: document.getElementById("phonebook-subcategory").value.trim(),
-        phone: document.getElementById("phonebook-phone").value.trim(),
-        mobile: document.getElementById("phonebook-mobile").value.trim(),
-        email: document.getElementById("phonebook-email").value.trim(),
-        availability: document.getElementById("phonebook-availability").value,
-        is_favorite: document.getElementById("phonebook-favorite").checked,
-        address: document.getElementById("phonebook-address").value.trim(),
-        locality: document.getElementById("phonebook-locality").value.trim(),
-        zipcode: document.getElementById("phonebook-zipcode").value.trim(),
-        notes: document.getElementById("phonebook-notes").value.trim()
-      };
+      const payload = {name, contact_type: document.getElementById("phonebook-type").value, category: document.getElementById("phonebook-category").value,
+                       subcategory: document.getElementById("phonebook-subcategory").value.trim(), phone: document.getElementById("phonebook-phone").value.trim(),
+                       mobile: document.getElementById("phonebook-mobile").value.trim(), email: document.getElementById("phonebook-email").value.trim(),
+                       availability: document.getElementById("phonebook-availability").value, is_favorite: document.getElementById("phonebook-favorite").checked,
+                       address: document.getElementById("phonebook-address").value.trim(), locality: document.getElementById("phonebook-locality").value.trim(),
+                       zipcode: document.getElementById("phonebook-zipcode").value.trim(), notes: document.getElementById("phonebook-notes").value.trim()
+                      };
       const saveBtn = document.getElementById("phonebook-save");
       saveBtn.disabled = true;
       saveBtn.innerHTML = "A guardar...";
@@ -5338,14 +5335,15 @@
           if (!response.ok) throw new Error("Erro ao guardar: " + await response.text());
           showPopup("popup-success", "Contacto guardado com sucesso!");
         }
-        ["phonebook-name", "phonebook-subcategory", "phonebook-phone", "phonebook-mobile",
-         "phonebook-email", "phonebook-address", "phonebook-locality", "phonebook-zipcode", "phonebook-notes"]
-          .forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+        ["phonebook-name", "phonebook-subcategory", "phonebook-phone", "phonebook-mobile", "phonebook-email", "phonebook-address", "phonebook-locality", "phonebook-zipcode", "phonebook-notes"]
+          .forEach(id => {const el = document.getElementById(id); if (el) el.value = "";});
         document.getElementById("phonebook-type").value = "";
         document.getElementById("phonebook-category").value = "";
         document.getElementById("phonebook-availability").value = "";
         document.getElementById("phonebook-favorite").checked = false;
         document.getElementById("phonebook-delete").disabled = true;
+        const formContainer = document.getElementById("phonebook-form-container");
+        if (formContainer) formContainer.style.display = "none";
         loadPhonebookTable();
       } catch (err) {
         console.error("Erro ao guardar contacto:", err);
@@ -5355,18 +5353,20 @@
         saveBtn.innerHTML = phonebookEditId !== null ? "💾 ATUALIZAR" : "💾 GRAVAR";
       }
     }
+    /* ===== EVENT LISTENERS PRINCIPAIS ===== */
     document.getElementById("phonebook-save")?.addEventListener("click", phonebookSave);
     document.getElementById("phonebook-add")?.addEventListener("click", () => {
       phonebookEditId = null;
       document.getElementById("phonebook-save").innerHTML = "💾 GRAVAR";
       document.getElementById("phonebook-delete").disabled = true;
-      ["phonebook-name", "phonebook-subcategory", "phonebook-phone", "phonebook-mobile",
-       "phonebook-email", "phonebook-address", "phonebook-locality", "phonebook-zipcode", "phonebook-notes"]
-        .forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+      ["phonebook-name", "phonebook-subcategory", "phonebook-phone", "phonebook-mobile", "phonebook-email", "phonebook-address", "phonebook-locality", "phonebook-zipcode", "phonebook-notes"]
+        .forEach(id => {const el = document.getElementById(id); if (el) el.value = "";});
       document.getElementById("phonebook-type").value = "";
       document.getElementById("phonebook-category").value = "";
       document.getElementById("phonebook-availability").value = "";
       document.getElementById("phonebook-favorite").checked = false;
+      const formContainer = document.getElementById("phonebook-form-container");
+      if (formContainer) formContainer.style.display = "block";
       document.getElementById("phonebook-name").focus();
     });
     document.getElementById("phonebook-delete")?.addEventListener("click", () => {

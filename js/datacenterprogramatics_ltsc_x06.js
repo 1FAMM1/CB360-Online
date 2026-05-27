@@ -885,7 +885,7 @@
     /* ================= LOAD VEHICLES TABLE ================= */
     async function loadVehiclesTable() {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
         if (!corpOperNr) throw new Error("Corporação não definida");
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/vehicle_status?select=*&corp_oper_nr=eq.${encodeURIComponent(corpOperNr)}`, {
@@ -915,8 +915,8 @@
             td.style.textAlign = "center";
             if (field === "current_status") {
               if (row.current_status === "Disponível no Quartel") td.style.color = "green";
-              else if (row.current_status === "Em Serviço") td.style.color = "orange";
-              else if (row.current_status === "Inoperacional") td.style.color = "red";
+             else if (row.current_status === "Em Serviço") td.style.color = "orange";
+             else if (row.current_status === "Inoperacional") td.style.color = "red";
             }
             tr.appendChild(td);
           });
@@ -956,7 +956,7 @@
     document.querySelector("#new-veíc-save-update").addEventListener("click", async () => {
       const vehicleName = document.getElementById("new-veíc-name").value.trim();
       const vehicleRegistration = document.getElementById("new-veíc-registration").value.trim();
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       if (!vehicleName || !vehicleRegistration) {
         showPopup('popup-danger', "Nome e matrícula são obrigatórios!");
         return;

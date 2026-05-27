@@ -3078,7 +3078,13 @@
               </h3>
               <div style="margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
                 <label style="font-size: 13px;">Pesquisar:</label>
-                <input type="text" id="phonebook-search" style="width: 250px;" placeholder="Nome, categoria, telefone...">
+                <div style="position: relative; display: flex; align-items: center;">
+                  <input type="text" id="phonebook-search" style="width: 300px; padding-right: 30px;" placeholder="Nome, categoria, telefone...">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="position: absolute; right: 8px; color: #aaa; cursor: pointer; pointer-events: none;"  title="Pesquisar" >
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                </div>
               </div>
               <div style="max-height: 400px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #bdc3c7 #f1f1f1;">
                 <table style="width: 100%; border-collapse: collapse;">

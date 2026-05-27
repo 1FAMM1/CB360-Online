@@ -3996,10 +3996,12 @@
             .map(s => parseInt(s.day))
             .sort((a, b) => a - b);
             const parts = [];
+            const monthNames = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho", "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+            const nextMonthIndex = monthFilter % 12;
+            const nextMonthName = monthNames[nextMonthIndex];
             if (prevDays.length > 0) {
               const monthSelect = document.getElementById("salary-month-filter");
               const prevMonthIndex = parseInt(monthSelect.value) - 2;
-              const monthNames = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
               const prevMonthName = monthNames[prevMonthIndex < 0 ? 11 : prevMonthIndex];
               const prevHolidayMap = getHolidayMapForMonth(prevYear, prevMonth);
               const usedPrevDays = [];
@@ -4023,9 +4025,19 @@
               });
               processedPrevDays.sort((a, b) => a.display - b.display);
               const hasMoved = processedPrevDays.some(d => d.moved);
-              const text = processedPrevDays.map(d => d.moved ? `${String(d.display).padStart(2,'0')}` : String(d.display).padStart(2,'0')).join(", ");
-              const suffix = hasMoved ? ` <small style="font-weight:400;"></small>` : "";
-              parts.push(`<div class="s-card-base ${classeCss}" style="opacity:1;"> Ref. ${prevMonthName}: ${text} (${prevDays.length} Dia${prevDays.length > 1 ? 's' : ''})${suffix}</div>`);
+              const text = processedPrevDays
+              .map(d => String(d.display).padStart(2, "0"))
+              .join(", ");
+              const suffix = hasMoved
+                ? ` <small style="font-weight:400;"></small>`
+                : "";
+              parts.push(`
+                <div class="s-card-base ${classeCss}" style="opacity:1;">
+                  Ref. ${prevMonthName}: ${text}
+                  (${prevDays.length} Dia${prevDays.length > 1 ? "s" : ""})
+                  ${suffix}
+                </div>
+              `);
             }
             if (days.length > 0) {
               const holidayMap = getHolidayMapForMonth(year, monthFilter);
@@ -4045,11 +4057,14 @@
                 }
               });
               processedDays.sort((a, b) => a.display - b.display);
-              const text = processedDays.map(d => d.moved ? `${String(d.display).padStart(2,'0')}` : String(d.display).padStart(2,'0')).join(", ");
+              const text = processedDays
+              .map(d => String(d.display).padStart(2, "0"))
+              .join(", ");
               const hasMoved = processedDays.some(d => d.moved);
               const count = days.length;
-              const suffix = hasMoved ? ` <small style="font-weight:400;"></small>` : "";
-              parts.push(`<div class="s-card-base ${classeCss}">${text} (${count} Dia${count > 1 ? 's' : ''})${suffix}</div>`);
+              const suffix = hasMoved
+                ? ` <small style="font-weight:400; font-size:10px; color:red;"> Transitado para Processamento de ${nextMonthName}</small>` : "";
+              parts.push(`<div class="s-card-base ${classeCss}">${text}(${count} Dia${count > 1 ? "s" : ""})${suffix}</div>`);
             }
             return parts.length > 0 ? parts.join("") : "-";
           };

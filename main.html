@@ -4197,17 +4197,20 @@
               <h3>DADOS DA CORPORAÇÃO</h3>
               <p>Dados Gerais do Corpo de Bombeiros.</p>
               <div style="display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap;">
-                <div class="transparent-card" style="flex: 0 0 auto; border: 2px solid #ccc; border-radius: 8px; background-color: transparent; padding: 10px; max-width: 250px;">
-                  <div class="card-header" style="text-align: center; font-weight: bold; font-size: 16px; margin-bottom: 10px;">
-                    LOGO
-                  </div>
+                <div class="transparent-card" style="flex: 0 0 auto; border: 2px solid #ccc; border-radius: 8px; background-color: transparent; padding: 10px; width: 250px;">
+                  <div class="card-header" style="text-align: center; font-weight: bold; font-size: 16px; margin-bottom: 10px;">LOGO</div>
                   <div class="card-content" style="text-align: center;">
                     <div style="margin: 10px 0;">
-                      <img src="..." alt="CB Faro Cruz Lusa" class="data-logo" style="width: 140px; height: 140px;">
+                      <img src="..." alt="logo" class="data-logo" style="width: 140px; height: 140px;">
                     </div>
-                    <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 5px;">
-                      <button class="btn btn-success" style="width: 100%;">ALTERAR LOGO</button>
-                      <button class="btn btn-danger" style="width: 100%;">REMOVER LOGO</button>
+                    <input type="file" id="corp-logo-input" accept="image/*" style="display:none">
+                    <div style="display: flex; gap: 5px; margin-top: 15px;">
+                      <button class="btn btn-success" style="flex: 1;" onclick="document.getElementById('corp-logo-input').click()">ALTERAR</button>
+                      <button class="btn btn-analyze" style="flex: 1;" onclick="resetCorpLogo()">REPOR</button>
+                    </div>
+                    <div style="display: flex; gap: 5px; margin-top: 5px;">
+                      <button class="btn btn-danger" style="flex: 1;" onclick="removeCorpLogo()">REMOVER</button>
+                      <button class="btn btn-add" style="flex: 1;" onclick="saveCorpLogo()">GUARDAR</button>
                     </div>
                   </div>
                 </div>

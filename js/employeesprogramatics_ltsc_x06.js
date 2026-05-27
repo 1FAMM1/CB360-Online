@@ -4025,7 +4025,7 @@
               const hasMoved = processedPrevDays.some(d => d.moved);
               const text = processedPrevDays.map(d => d.moved ? `${String(d.display).padStart(2,'0')}` : String(d.display).padStart(2,'0')).join(", ");
               const suffix = hasMoved ? ` <small style="font-weight:400;"></small>` : "";
-              parts.push(`<div class="s-card-base ${classeCss}" style="opacity:0.7;"> Ref. ${prevMonthName}: ${text} (${prevDays.length} Dia${prevDays.length > 1 ? 's' : ''})${suffix}</div>`);
+              parts.push(`<div class="s-card-base ${classeCss}" style="opacity:1;"> Ref. ${prevMonthName}: ${text} (${prevDays.length} Dia${prevDays.length > 1 ? 's' : ''})${suffix}</div>`);
             }
             if (days.length > 0) {
               const holidayMap = getHolidayMapForMonth(year, monthFilter);

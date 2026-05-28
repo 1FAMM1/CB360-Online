@@ -1378,13 +1378,25 @@
     DASHBOARD: NON-OPERATIONALITIES
     DASHBOARD: REFUSALS
     ======================================= */
-    const monthLabels = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+    const monthLabels = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
     const charts = {};
+    function parseDateFlexible(dateStr) {
+      if (!dateStr) return new Date(NaN);
+      const cleanStr = String(dateStr).trim();
+      if (cleanStr.includes('-')) {
+        const parts = cleanStr.split('-');
+        if (parts[0].length === 4) {
+          return new Date(parts[0], parts[1] - 1, parts[2]);
+        }
+        return new Date(parts[2], parts[1] - 1, parts[0]);
+      }
+      return new Date(cleanStr);
+    }
     function groupByMonth(records, dateField) {
       const monthCounts = {};
       records.forEach(item => {
         if (!item[dateField]) return;
-        const date = new Date(item[dateField]);
+        const date = parseDateFlexible(item[dateField]);
         if (isNaN(date)) return;
         const month = date.getMonth();
         monthCounts[month] = (monthCounts[month] || 0) + 1;
@@ -1397,7 +1409,7 @@
       if (charts[canvasId]) {
         charts[canvasId].data.labels = labels;
         charts[canvasId].data.datasets[0].data = data;
-        charts[canvasId].update();
+        charts[canvasId].update('none');
       } else {
         charts[canvasId] = new Chart(ctx, {
           type: 'line',
@@ -1412,7 +1424,7 @@
       if (charts[canvasId]) {
         charts[canvasId].data.labels = labels;
         charts[canvasId].data.datasets = datasets;
-        charts[canvasId].update();
+        charts[canvasId].update('none');
       } else {
         charts[canvasId] = new Chart(ctx, {
           type: 'line',
@@ -1420,16 +1432,72 @@
           options: {responsive: true,
             plugins: {legend: {display: true},
             tooltip: {mode: 'index', intersect: false}},
-            scales: {y: {beginAtZero: true, ticks: {stepSize: 1}}}}});}}
-    /* ================== SUMARY DATA ===================== */
+            scales: {y: {beginAtZero: true, ticks: {stepSize: 1}}}}});}}    
+    /* ================== INICIALIZAR FILTROS ===================== */
+    function initializeDashboardFilters() {
+      const monthSelect = document.getElementById('dashboard_refusal_month_filter');
+      const yearSelect = document.getElementById('dashboard_refusal_year_filter');
+      if (!monthSelect || !yearSelect) return;
+      monthSelect.innerHTML =`<option value="ALL">Todos os Meses</option>` + monthLabels.map((m, i) => `<option value="${i}">${m}</option>`).join('');
+      let yearHTML = "";
+      for (let y = 2025; y <= 2035; y++) {
+        yearHTML += `<option value="${y}">${y}</option>`;
+      }
+      yearSelect.innerHTML = yearHTML;
+      const currentDate = new Date();
+      const currentMonth = String(currentDate.getMonth());
+      const currentYear = String(currentDate.getFullYear());
+      const validYears = Array.from({ length: 11 }, (_, i) => String(2025 + i));
+      const savedMonth = sessionStorage.getItem('dash_filter_month');
+      const finalMonth = (savedMonth !== null) ? savedMonth : currentMonth;
+      const savedYear = sessionStorage.getItem('dash_filter_year');
+      const finalYear = (savedYear && validYears.includes(savedYear))
+        ? savedYear
+        : (validYears.includes(currentYear) ? currentYear : "2025");
+      monthSelect.value = finalMonth;
+      yearSelect.value = finalYear;
+      sessionStorage.setItem('dash_filter_month', finalMonth);
+      sessionStorage.setItem('dash_filter_year', finalYear);
+    }
+    /* ================== ESCUTADOR DE EVENTOS ===================== */
+    document.addEventListener('DOMContentLoaded', () => {
+      const monthSelect = document.getElementById('dashboard_refusal_month_filter');
+      const yearSelect = document.getElementById('dashboard_refusal_year_filter');
+      if (monthSelect) {
+        monthSelect.addEventListener('change', () => {
+          sessionStorage.setItem('dash_filter_month', monthSelect.value);
+          loadIneInopsCharts();
+          loadServiceRefusalsCharts();
+          loadSummaryData();
+        });
+      }
+      if (yearSelect) {
+        yearSelect.addEventListener('change', () => {
+          sessionStorage.setItem('dash_filter_year', yearSelect.value);
+          loadIneInopsCharts();
+          loadServiceRefusalsCharts();
+          loadSummaryData();
+        });
+      }
+    });
+    /* ================== SUMMARY DATA & CARTS FILTERS ===================== */
     async function loadSummaryData() {
       try {
         const corpOperNr = sessionStorage.getItem('currentCorpOperNr');
-        const inemRes = await fetch(`${SUPABASE_URL}/rest/v1/inem_inop?select=ineinop_shift,ineinop_hour_qtd&corp_oper_nr=eq.${corpOperNr}`, {
+        const targetYear = parseInt(sessionStorage.getItem('dash_filter_year') || new Date().getFullYear());
+        const targetMonth = sessionStorage.getItem('dash_filter_month') || "ALL";
+        const inemRes = await fetch(`${SUPABASE_URL}/rest/v1/inem_inop?select=ineinop_date,ineinop_shift,ineinop_hour_qtd&corp_oper_nr=eq.${corpOperNr}`, {
           headers: getSupabaseHeaders()
         });        
         if (!inemRes.ok) throw new Error("Falha ao carregar inem_inop");
-        const inemData = await inemRes.json();    
+        const rawInemData = await inemRes.json();
+        const inemData = rawInemData.filter(r => {
+          const d = parseDateFlexible(r.ineinop_date);
+          if (isNaN(d)) return false;
+          const matchYear = d.getFullYear() === targetYear;
+          const matchMonth = targetMonth === "ALL" || d.getMonth() === parseInt(targetMonth);
+          return matchYear && matchMonth;
+        });
         const parseHourQuantity = (str) => {
           if (!str) return {h: 0, m: 0};
           const [h, m] = str.split(':').map(Number);
@@ -1445,50 +1513,65 @@
           totalH += Math.floor(totalM / 60);
           totalM = totalM % 60;
           return `🕒 ${totalH} Hrs. ${totalM} Mts.`;
-        };    
-        const dRecords = inemData.filter(r => (r.ineinop_shift || "").toUpperCase() === "D");
-        const nRecords = inemData.filter(r => (r.ineinop_shift || "").toUpperCase() === "N");    
-        document.getElementById("sum-inop-d").textContent = sumTimes(dRecords);
-        document.getElementById("sum-inop-n").textContent = sumTimes(nRecords);
+        };
+        document.getElementById("sum-inop-d").textContent = sumTimes(inemData.filter(r => (r.ineinop_shift || "").toUpperCase() === "D"));
+        document.getElementById("sum-inop-n").textContent = sumTimes(inemData.filter(r => (r.ineinop_shift || "").toUpperCase() === "N"));
         document.getElementById("sum-inop-total").textContent = sumTimes(inemData);
-        const refusalsRes = await fetch(`${SUPABASE_URL}/rest/v1/service_refusals?select=id&corp_oper_nr=eq.${corpOperNr}`, {
+        const refusalsRes = await fetch(`${SUPABASE_URL}/rest/v1/service_refusals?select=refusal_date&corp_oper_nr=eq.${corpOperNr}`, {
           headers: getSupabaseHeaders()
         });
-        const refusalsData = await refusalsRes.json();
+        const rawRefusals = await refusalsRes.json();        
+        const refusalsData = rawRefusals.filter(r => {
+          const d = parseDateFlexible(r.refusal_date);
+          if (isNaN(d)) return false;
+          const matchYear = d.getFullYear() === targetYear;
+          const matchMonth = targetMonth === "ALL" || d.getMonth() === parseInt(targetMonth);
+          return matchYear && matchMonth;
+        });
+        console.log(`📊 RECUSAS: Total brutas = ${rawRefusals.length} | Filtradas (${targetYear}-${targetMonth}) = ${refusalsData.length}`);
         document.getElementById("sum-refusals-total").textContent = `🤒 ${refusalsData.length}`;    
       } catch (e) {
         console.error("❌ Erro ao atualizar cards resumo:", e);
       }
     }
     /* ================== REFUSALS CHARTS ================= */
-    const refusalColors = ['rgba(255, 99, 132, 0.7)', 'rgba(54, 162, 235, 0.7)', 'rgba(255, 206, 86, 0.7)', 'rgba(75, 192, 192, 0.7)', 'rgba(153, 102, 255, 0.7)', 'rgba(255, 159, 64, 0.7)',
-                           'rgba(199, 199, 199, 0.7)', 'rgba(255, 99, 71, 0.7)', 'rgba(60, 179, 113, 0.7)', 'rgba(100, 149, 237, 0.7)', 'rgba(255, 140, 0, 0.7)', 'rgba(220, 20, 60, 0.7)',
-                           'rgba(186, 85, 211, 0.7)', 'rgba(46, 139, 87, 0.7)', 'rgba(70, 130, 180, 0.7)'];
+    const refusalColors = ['rgba(255, 99, 132, 0.7)', 'rgba(54, 162, 235, 0.7)', 'rgba(255, 206, 86, 0.7)', 'rgba(75, 192, 192, 0.7)', 'rgba(153, 102, 255, 0.7)', 'rgba(255, 159, 64, 0.7)'];
     async function loadServiceRefusalsCharts() {
       try {
         const corpOperNr = sessionStorage.getItem('currentCorpOperNr');
+        const targetYear = parseInt(sessionStorage.getItem('dash_filter_year') || new Date().getFullYear());
+        const selectedMonth = sessionStorage.getItem('dash_filter_month') || "ALL";
         const res = await fetch(`${SUPABASE_URL}/rest/v1/service_refusals?select=refusal_date,service_type&corp_oper_nr=eq.${corpOperNr}`, {
           headers: getSupabaseHeaders()
         });        
         if (!res.ok) throw new Error(await res.text());
-        const registros = await res.json();
-        if (!registros?.length) return;    
+        const allRegistros = await res.json();        
+        const registros = allRegistros.filter(r => {
+          const d = parseDateFlexible(r.refusal_date);
+          return !isNaN(d) && d.getFullYear() === targetYear;
+        });        
         const serviceTypes = [...new Set(registros.map(r => r.service_type).filter(Boolean))];
         const datasets = serviceTypes.map((type, index) => {
           const typeRecords = registros.filter(r => r.service_type === type);
-          const countsByMonth = groupByMonth(typeRecords, 'refusal_date');
-          const data = monthLabels.map((_, i) => countsByMonth[i] || 0);
+          const countsByMonth = groupByMonth(typeRecords, 'refusal_date');          
+          const data = monthLabels.map((_, i) => {
+            if (selectedMonth !== "ALL" && parseInt(selectedMonth) !== i) return 0;
+            return countsByMonth[i] || 0;
+          });
           const color = refusalColors[index % refusalColors.length];
           return {label: type, data, borderColor: color, backgroundColor: color, fill: false, tension: 0.2, pointRadius: 5};
         });    
-        createOrUpdateMultiDatasetChart('chart-refusals-type', monthLabels, datasets);    
+        createOrUpdateMultiDatasetChart('chart-refusals-type', monthLabels, datasets);
         const totalCounts = {};
         registros.forEach(r => {
-          if (!r.refusal_date) return;
-          const m = new Date(r.refusal_date).getMonth();
-          if (!isNaN(m)) totalCounts[m] = (totalCounts[m] || 0) + 1;
+          const d = parseDateFlexible(r.refusal_date);
+          if (isNaN(d)) return;
+          totalCounts[d.getMonth()] = (totalCounts[d.getMonth()] || 0) + 1;
+        });        
+        const totalData = monthLabels.map((_, i) => {
+          if (selectedMonth !== "ALL" && parseInt(selectedMonth) !== i) return 0;
+          return totalCounts[i] || 0;
         });
-        const totalData = monthLabels.map((_, i) => totalCounts[i] || 0);
         createOrUpdateChart('chart-refusals-total', monthLabels, totalData, 'Total de Recusas', 'rgba(255, 159, 64, 0.7)');    
       } catch (e) {
         console.error("Erro Recusas:", e);
@@ -1498,29 +1581,39 @@
     async function loadIneInopsCharts() {
       try {
         const corpOperNr = sessionStorage.getItem('currentCorpOperNr');
+        const targetYear = parseInt(sessionStorage.getItem('dash_filter_year') || new Date().getFullYear());
+        const selectedMonth = sessionStorage.getItem('dash_filter_month') || "ALL";
         const res = await fetch(`${SUPABASE_URL}/rest/v1/inem_inop?select=ineinop_date,ineinop_shift&corp_oper_nr=eq.${corpOperNr}`, {
           headers: getSupabaseHeaders()
         });        
         if (!res.ok) throw new Error(await res.text());
-        const registros = await res.json();
-        if (!registros?.length) return;    
+        const allRegistros = await res.json();
+        
+        const registros = allRegistros.filter(r => {
+          const d = parseDateFlexible(r.ineinop_date);
+          return !isNaN(d) && d.getFullYear() === targetYear;
+        });        
         const dShifts = registros.filter(r => r.ineinop_shift === 'D');
         const nShifts = registros.filter(r => r.ineinop_shift === 'N');
         const dCounts = groupByMonth(dShifts, 'ineinop_date');
-        const nCounts = groupByMonth(nShifts, 'ineinop_date');    
-        createOrUpdateChart('chart-ine-d', monthLabels, monthLabels.map((_, i) => dCounts[i] || 0), 'Inoperacionalidades D', 'rgba(75,192,192,0.6)');
-        createOrUpdateChart('chart-ine-n', monthLabels, monthLabels.map((_, i) => nCounts[i] || 0), 'Inoperacionalidades N', 'rgba(255,99,132,0.6)');        
-        const totalData = monthLabels.map((_, i) => (dCounts[i] || 0) + (nCounts[i] || 0));
+        const nCounts = groupByMonth(nShifts, 'ineinop_date');        
+        const totalData = monthLabels.map((_, i) => {
+          if (selectedMonth !== "ALL" && parseInt(selectedMonth) !== i) return 0;
+          return (dCounts[i] || 0) + (nCounts[i] || 0);
+        });
+        createOrUpdateChart('chart-ine-d', monthLabels, monthLabels.map((_, i) => (selectedMonth !== "ALL" && parseInt(selectedMonth) !== i) ? 0 : (dCounts[i] || 0)), 'Inoperacionalidades D', 'rgba(75,192,192,0.6)');
+        createOrUpdateChart('chart-ine-n', monthLabels, monthLabels.map((_, i) => (selectedMonth !== "ALL" && parseInt(selectedMonth) !== i) ? 0 : (nCounts[i] || 0)), 'Inoperacionalidades N', 'rgba(255,99,132,0.6)');   
         createOrUpdateChart('chart-ine-total', monthLabels, totalData, 'Inoperacionalidades Total', 'rgba(54,162,235,0.6)');    
       } catch (e) {
         console.error("Erro INEM Charts:", e);
       }
     }
-    /* ================ LOAD DASHBORAD ==================== */
+    /* ================ LOAD DASHBOARD ==================== */
     function loadDashboardCharts() {
+      initializeDashboardFilters();
       loadIneInopsCharts();
       loadServiceRefusalsCharts();
-      loadSummaryData()
+      loadSummaryData();
     }
     document.querySelectorAll('.sidebar-sub-submenu-button').forEach(btn => {
       btn.addEventListener('click', () => {

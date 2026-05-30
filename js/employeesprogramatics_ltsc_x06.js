@@ -3776,6 +3776,7 @@
           .s-table td {border-bottom: 1px solid #cbd5e1; border-right: 1px solid #cbd5e1; padding: 6px 4px; text-align: center; vertical-align: middle !important;}
           .s-row:hover td {background-color: #f8fafc !important;}
           .s-card-base {background: #fee2e2; color: #991b1b; border: 1px solid currentColor; border-radius: 4px; font-weight: 700; font-size: 9px; padding: 3px; line-height: 1.2;}
+          .s-card-base:not(:last-child) {margin-bottom: 4px;}
           .s-val-sickleave {color: #dc2626; background: #fef2f2;}
           .s-val-vacation {color: #2563eb; background: #eff6ff;}
           .s-val-parental {color: #7c3aed; background: #f5f3ff;}
@@ -3793,14 +3794,13 @@
         document.head.appendChild(s);
       }
       const defaultYear = new Date().getFullYear();
-        const defaultPriorityYear = defaultYear + 1;
-        let yearOptions = "";
-        for (let y = 2026; y <= 2036; y++) {
-          yearOptions += `<option value="${y}" ${y === defaultYear ? 'selected' : ''}>${y}</option>`;
-        }
+      let yearOptions = "";
+      for (let y = 2026; y <= 2036; y++) {
+        yearOptions += `<option value="${y}" ${y === defaultYear ? 'selected' : ''}>${y}</option>`;
+      }
       const months = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
       const defaultMonth = new Date().getMonth() + 1;
-      let monthOptions = months.map((m, i) => `<option value="${i + 1}">${m}</option>`).join('');;
+      let monthOptions = months.map((m, i) => `<option value="${i + 1}">${m}</option>`).join('');
       cardBody.innerHTML = `
         <div class="s-wrapper">
           <div class="s-header-flex">
@@ -3854,7 +3854,7 @@
       const nextMonth = monthFilter === 12 ? 1 : monthFilter + 1;
       const nextYear = monthFilter === 12 ? year + 1 : year;
       const monthName = document.getElementById("salary-month-filter")
-      .options[document.getElementById("salary-month-filter").selectedIndex].text;
+        .options[document.getElementById("salary-month-filter").selectedIndex].text;
       tableBody.innerHTML =
         `<tr><td colspan="8" style="padding:40px; text-align:center;">⌛ A carregar dados de ${monthName}...</td></tr>`;
       try {
@@ -3868,7 +3868,7 @@
           fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${monthFilter}`, {
             headers: getSupabaseHeaders()
           }),
-          fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${prevYear}&month=eq.${prevMonth}&day=gt.20`, {
+          fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${prevYear}&month=eq.${prevMonth}`, {
             headers: getSupabaseHeaders()
           }),
           fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${nextYear}&month=eq.${nextMonth}&day=lt.6`, {
@@ -3879,6 +3879,7 @@
         const allEligibility = await eligRes.json();
         const shifts = await shiftRes.json();
         const prevShifts = await prevShiftRes.json();
+        const prevShiftsFrom20 = prevShifts.filter(s => parseInt(s.day) >= 20);
         const nextShifts = await nextShiftRes.json();
         employees.sort((a, b) => parseInt(a.n_int) - parseInt(b.n_int));
         let html = "";
@@ -3886,6 +3887,7 @@
           const n_int_formatted = String(emp.n_int).padStart(3, '0');
           const empShifts = shifts.filter(s => String(s.n_int).padStart(3, '0') === n_int_formatted);
           const empPrevShifts = prevShifts.filter(s => String(s.n_int).padStart(3, '0') === n_int_formatted);
+          const empPrevShiftsFrom20 = prevShiftsFrom20.filter(s => String(s.n_int).padStart(3, '0') === n_int_formatted);
           const empNextShifts = nextShifts.filter(s => String(s.n_int).padStart(3, '0') === n_int_formatted);
           const hasSubsidy = allEligibility.some(reg =>
             String(reg.n_int).padStart(3, '0') === n_int_formatted &&
@@ -3895,62 +3897,103 @@
             ? `<span class="s-status-badge s-status-yes">SIM</span>`
             : `<span class="s-status-badge s-status-no">NÃO</span>`;
           const formatPeriod = (code, classeCss) => {
-            const days = empShifts
-              .filter(s => s.shift === code)
-              .map(s => parseInt(s.day))
-              .sort((a, b) => a - b);
-            if (days.length === 0) return "-";
-            let periods = [], current = [days[0]];
+            const allDays = empShifts
+            .filter(s => s.shift === code)
+            .map(s => parseInt(s.day))
+            .sort((a, b) => a - b);
+            const monthNames = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+            const nextMonthName = monthNames[monthFilter % 12];
+            const prevMonthName = monthNames[prevMonth - 1];
             const GAP_LIMIT = 4;
-            for (let i = 1; i < days.length; i++) {
-              const gap = days[i] - days[i - 1];
-              const intermediateDays = Array.from(
-                { length: gap - 1 },
-                (_, k) => days[i - 1] + 1 + k
-              );
-              const hasWorkInGap = intermediateDays.some(d =>
-                empShifts.some(s => parseInt(s.day) === d && s.shift !== code)
-              );
+            const holidayMap = getHolidayMapForMonth(year, monthFilter);
+            const allPrevDays = empPrevShifts
+            .filter(s => s.shift === code)
+            .map(s => parseInt(s.day))
+            .sort((a, b) => a - b);
+            const prevTransitDays = allPrevDays.filter(d => d >= 20);
+            const parts = [];
+            const firstCurrDay = allDays.length > 0 ? allDays[0] : null;
+            const lastTransitDay = prevTransitDays.length > 0 ? prevTransitDays[prevTransitDays.length - 1] : null;
+            const prevDaysBelow20 = allPrevDays.filter(d => d < 20);
+            const lastPrevBelow20 = prevDaysBelow20.length > 0 ? prevDaysBelow20[prevDaysBelow20.length - 1] : null;
+            const transitIsPartOfLargerPeriod = prevTransitDays.length > 0 && lastPrevBelow20 !== null && (prevTransitDays[0] - lastPrevBelow20) <= 4;
+            const hasContinuity = transitIsPartOfLargerPeriod && lastTransitDay !== null && firstCurrDay !== null && (() => {
+              const diff = Math.round((new Date(year, monthFilter - 1, firstCurrDay) - new Date(prevYear, prevMonth - 1, lastTransitDay)) / 86400000);
+              return diff <= 4;
+            })();
+            if (prevTransitDays.length > 0 && !hasContinuity && !transitIsPartOfLargerPeriod) {
+              const pStart = prevTransitDays[0];
+              const lastDayPrevMonth = new Date(prevYear, prevMonth, 0).getDate();
+              const pEnd = prevTransitDays[prevTransitDays.length - 1];
+              const pEndFinal = (lastDayPrevMonth - pEnd) <= 2 ? lastDayPrevMonth : pEnd;
+              const totalDias = (pEndFinal - pStart) + 1;
+              const label = pStart === pEndFinal
+                ? `${String(pStart).padStart(2,'0')}`
+                : `${String(pStart).padStart(2,'0')} a ${String(pEndFinal).padStart(2,'0')}`;
+              parts.push(`
+                <div class="s-card-base ${classeCss}" style="opacity:1; background-color: #A30000; color: #FFFFFF;">
+                  Ref. ${prevMonthName}: ${label}
+                  (${totalDias} Dia${totalDias > 1 ? "s" : ""})
+                </div>
+              `);
+            }
+            if (allDays.length === 0) {
+              return parts.length > 0 ? parts.join("") : "-";
+            }
+            let periods = [], current = [allDays[0]];
+            for (let i = 1; i < allDays.length; i++) {
+              const gap = allDays[i] - allDays[i - 1];
+              const intermediateDays = Array.from({ length: gap - 1 }, (_, k) => allDays[i - 1] + 1 + k);
+              const hasWorkInGap = intermediateDays.some(d => {
+                const dow = new Date(year, monthFilter - 1, d).getDay();
+                const isWeekend = dow === 0 || dow === 6;
+                const isHoliday = holidayMap.has(d);
+                if (isWeekend || isHoliday) return false;
+                return empShifts.some(s => parseInt(s.day) === d && s.shift !== code);
+              });
               if (gap <= GAP_LIMIT && !hasWorkInGap) {
-                current.push(days[i]);
+                current.push(allDays[i]);
               } else {
                 periods.push(current);
-                current = [days[i]];
+                current = [allDays[i]];
               }
             }
             periods.push(current);
-            return periods.map((period, index) => {
+            periods.forEach((period, index) => {
               let pStart = period[0];
               let pEnd = period[period.length - 1];
-              if (index === 0) {
-                const codePrev = empPrevShifts
-                  .filter(s => s.shift === code)
-                  .sort((a, b) => b.day - a.day);
-                if (codePrev.length > 0) {
-                  const diff = Math.round(
-                    (new Date(year, monthFilter - 1, pStart) -
-                     new Date(prevYear, prevMonth - 1, codePrev[0].day)) / 86400000
-                  );
-                  if (diff <= 4) pStart = 1;
-                }
-              }
+              if (index === 0 && hasContinuity) {pStart = 1;}
               if (index === periods.length - 1) {
                 const codeNext = empNextShifts
-                  .filter(s => s.shift === code)
-                  .sort((a, b) => a.day - b.day);
+                .filter(s => s.shift === code)
+                .sort((a, b) => a.day - b.day);
                 if (codeNext.length > 0) {
-                  const diff = Math.round(
-                    (new Date(nextYear, nextMonth - 1, codeNext[0].day) -
-                     new Date(year, monthFilter - 1, pEnd)) / 86400000
-                  );
+                  const diff = Math.round((new Date(nextYear, nextMonth - 1, codeNext[0].day) - new Date(year, monthFilter - 1, pEnd)) / 86400000);
                   if (diff <= 4) pEnd = lastDayMonth;
                 }
               }
-              return `<div class="s-card-base ${classeCss}">
-                ${String(pStart).padStart(2,'0')} a ${String(pEnd).padStart(2,'0')}
-                (${(pEnd - pStart) + 1} Dias)
-              </div>`;
-            }).join("");
+              const isFrom20Only = pStart >= 20;
+              if (isFrom20Only) {
+                  parts.push(`
+                  <div class="s-card-base ${classeCss}" style="opacity:0.85;">
+                    ${String(pStart).padStart(2,'0')} a ${String(pEnd).padStart(2,'0')}
+                    (${(pEnd - pStart) + 1} Dias)
+                    <small style="font-weight:400; font-size:11px; color:red;"> → Transita para processamento de <strong>${nextMonthName}</strong></small>
+                  </div>
+                `);
+              } else {
+                const totalDias = (pEnd - pStart) + 1;
+                const label = totalDias === 1
+                  ? `${String(pStart).padStart(2,'0')} (1 Dia)`
+                  : `${String(pStart).padStart(2,'0')} a ${String(pEnd).padStart(2,'0')} (${totalDias} Dias)`;
+                parts.push(`
+                  <div class="s-card-base ${classeCss}">
+                    ${label}
+                  </div>
+                `);
+              }
+            });
+            return parts.join("") || "-";
           };
           const vacationDays = empShifts
             .filter(s => s.shift === 'FE')
@@ -3969,10 +4012,10 @@
                 const dw = new Date(year, monthFilter - 1, d).getDay();
                 return dw !== 0 && dw !== 6;
               }).length;
-              return `<div class="s-card-base s-val-vacation">
-                ${String(p[0]).padStart(2,'0')} a ${String(p[p.length-1]).padStart(2,'0')}
-                (${useful} Úteis)
-              </div>`;
+              const label = p.length === 1
+                ? `${String(p[0]).padStart(2,'0')} (${useful} Dia Útil)`
+                : `${String(p[0]).padStart(2,'0')} a ${String(p[p.length-1]).padStart(2,'0')} (${useful} Dias Úteis)`;
+              return `<div class="s-card-base s-val-vacation">${label}</div>`;
             }).join("");
           }
           const getPrevWorkDay = (day, usedDays = []) => {
@@ -3987,16 +4030,18 @@
             return day;
           };
           const formatAbsence = (code, classeCss) => {
-            const days = empShifts
-            .filter(s => s.shift === code)
-            .map(s => parseInt(s.day))
-            .sort((a, b) => a - b);
-            const prevDays = empPrevShifts
-            .filter(s => s.shift === code && parseInt(s.day) > 20)
-            .map(s => parseInt(s.day))
-            .sort((a, b) => a - b);
+            const allDays = empShifts
+              .filter(s => s.shift === code)
+              .map(s => parseInt(s.day))
+              .sort((a, b) => a - b);
+            const days = allDays.filter(d => d < 20);
+            const daysFrom20 = allDays.filter(d => d >= 20);
+            const prevDays = empPrevShiftsFrom20
+              .filter(s => s.shift === code && parseInt(s.day) > 20)
+              .map(s => parseInt(s.day))
+              .sort((a, b) => a - b);
             const parts = [];
-            const monthNames = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho", "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+            const monthNames = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
             const nextMonthIndex = monthFilter % 12;
             const nextMonthName = monthNames[nextMonthIndex];
             if (prevDays.length > 0) {
@@ -4018,19 +4063,15 @@
                     pd--;
                   }
                   usedPrevDays.push(pd);
-                  return {display: pd, moved: true};
+                  return { display: pd, moved: true };
                 }
                 usedPrevDays.push(d);
-                return {display: d, moved: false};
+                return { display: d, moved: false };
               });
               processedPrevDays.sort((a, b) => a.display - b.display);
               const hasMoved = processedPrevDays.some(d => d.moved);
-              const text = processedPrevDays
-              .map(d => String(d.display).padStart(2, "0"))
-              .join(", ");
-              const suffix = hasMoved
-                ? ` <small style="font-weight:400;"></small>`
-                : "";
+              const text = processedPrevDays.map(d => String(d.display).padStart(2, "0")).join(", ");
+              const suffix = hasMoved ? ` <small style="font-weight:400;"></small>` : "";
               parts.push(`
                 <div class="s-card-base ${classeCss}" style="opacity:1;">
                   Ref. ${prevMonthName}: ${text}
@@ -4050,21 +4091,43 @@
                 if (isWeekend || isHoliday) {
                   const prevWorkDay = getPrevWorkDay(d, usedDays);
                   usedDays.push(prevWorkDay);
-                  processedDays.push({original: d, display: prevWorkDay, moved: true});
+                  processedDays.push({ original: d, display: prevWorkDay, moved: true });
                 } else {
                   usedDays.push(d);
-                  processedDays.push({original: d, display: d, moved: false});
+                  processedDays.push({ original: d, display: d, moved: false });
                 }
               });
               processedDays.sort((a, b) => a.display - b.display);
-              const text = processedDays
-              .map(d => String(d.display).padStart(2, "0"))
-              .join(", ");
-              const hasMoved = processedDays.some(d => d.moved);
+              const text = processedDays.map(d => String(d.display).padStart(2, "0")).join(", ");
               const count = days.length;
-              const suffix = hasMoved
-                ? ` <small style="font-weight:400; font-size:10px; color:red;"> Transitado para Processamento de ${nextMonthName}</small>` : "";
-              parts.push(`<div class="s-card-base ${classeCss}">${text} (${count} Dia${count > 1 ? "s" : ""}) ${suffix}</div>`);
+              parts.push(`<div class="s-card-base ${classeCss}">${text} (${count} Dia${count > 1 ? "s" : ""})</div>`);
+            }
+            if (daysFrom20.length > 0) {
+              const holidayMap = getHolidayMapForMonth(year, monthFilter);
+              const usedDays = [];
+              const processedDays = [];
+              daysFrom20.forEach(d => {
+                const dow = new Date(year, monthFilter - 1, d).getDay();
+                const isWeekend = dow === 0 || dow === 6;
+                const isHoliday = holidayMap.has(d);
+                if (isWeekend || isHoliday) {
+                  const prevWorkDay = getPrevWorkDay(d, usedDays);
+                  usedDays.push(prevWorkDay);
+                  processedDays.push({ original: d, display: prevWorkDay, moved: true });
+                } else {
+                  usedDays.push(d);
+                  processedDays.push({ original: d, display: d, moved: false });
+                }
+              });
+              processedDays.sort((a, b) => a.display - b.display);
+              const text = processedDays.map(d => String(d.display).padStart(2, "0")).join(", ");
+              const count = daysFrom20.length;
+              parts.push(`
+                <div class="s-card-base ${classeCss}" style="opacity:0.85;">
+                  ${text} (${count} Dia${count > 1 ? "s" : ""})                  
+                  <small style="font-weight:400; font-size:11px; color:red;"> → Transita para processamento de <strong>${nextMonthName}</strong></small>
+                </div>
+              `);
             }
             return parts.length > 0 ? parts.join("") : "-";
           };
@@ -4115,8 +4178,17 @@
             const badge = cell.querySelector(".s-status-badge");
             return badge ? badge.innerText.trim() : "-";
           };
-          employees.push({name: cells[0].innerText.trim(), subShift: extractBadge(cells[1]), casualties: extractCards(cells[2]), vacations: extractCards(cells[3]), parental: extractCards(cells[4]),
-                          disgust: extractCards(cells[5]), justified: extractCards(cells[6]), unjustified: extractCards(cells[7])});});
+          employees.push({
+            name: cells[0].innerText.trim(),
+            subShift: extractBadge(cells[1]),
+            casualties: extractCards(cells[2]),
+            vacations: extractCards(cells[3]),
+            parental: extractCards(cells[4]),
+            disgust: extractCards(cells[5]),
+            justified: extractCards(cells[6]),
+            unjustified: extractCards(cells[7])
+          });
+        });
         showLoadingPopup(`A gerar mapa salarial em formato PDF para ${monthName} de ${year}...`);
         const response = await fetch("https://cb360-online.vercel.app/api/employees_convert_and_send", {
           method: "POST",
@@ -4176,8 +4248,8 @@
             const badge = cell.querySelector(".s-status-badge");
             return badge ? badge.innerText.trim() : "-";
           };
-          employees.push({name: cells[0].innerText.trim(), subShift: extractBadge(cells[1]), casualties: extractCards(cells[2]), vacations: extractCards(cells[3]), parental: extractCards(cells[4]),
-                          disgust: extractCards(cells[5]), justified: extractCards(cells[6]), unjustified: extractCards(cells[7])});});
+          employees.push({name: cells[0].innerText.trim(), subShift: extractBadge(cells[1]), casualties: extractCards(cells[2]), vacations: extractCards(cells[3]),
+                          parental: extractCards(cells[4]), disgust: extractCards(cells[5]), justified: extractCards(cells[6]), unjustified: extractCards(cells[7])});});
         showLoadingPopup(`A gerar mapa salarial em formato EXCEL para ${monthName} de ${year}...`);
         const response = await fetch("https://cb360-online.vercel.app/api/employees_convert_and_send", {
           method: "POST",
@@ -4212,7 +4284,6 @@
     document.querySelectorAll(".sidebar-sub-submenu-button").forEach((btn) => {
       btn.addEventListener("click", () => {
         const access = btn.dataset.access;
-        const pageId = btn.dataset.page;
         if (access === "Processamento Salarial") {
           createSalaryProcessingMap();
         }

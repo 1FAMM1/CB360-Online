@@ -2356,7 +2356,7 @@
       emitBtn.addEventListener('click', async () => {
         if (emitBtn.disabled) return;
         emitBtn.disabled = true;
-        emitBtn.textContent = 'A EMITIR...';
+        emitBtn.textContent = 'A EMITIR PLANEAMENTO...';
         emitBtn.style.opacity = '0.6';
         emitBtn.style.cursor = 'not-allowed';
         try {

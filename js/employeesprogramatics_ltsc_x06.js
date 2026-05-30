@@ -277,7 +277,7 @@
       const legendDiv = document.createElement("div");
       legendDiv.style.cssText = `margin-top: 5px; padding: 12px; background: #f0f8ff; border: 1px solid #4682b4; border-radius: 5px; font-family: 'Segoe UI', sans-serif;
                                  display: inline-block; width: fit-content; margin-left: 5px;vertical-align:top; height:150px;`;
-      const shifts = [{code: "M", desc: "08:00 - 15:00"}, {code: "D", desc: "08:00 - 20:00"}, {code: "N", desc: "20:00 - 08:00"}, {code: "", desc: "Condutor INEM", special: "driver"},
+      const shifts = [{code: "M", desc: "08:00 - 16:00"}, {code: "D", desc: "08:00 - 20:00"}, {code: "N", desc: "20:00 - 08:00"}, {code: "", desc: "Condutor INEM", special: "driver"},
                       {code: "", desc: "Outro", special: "other"}, {code: "FO", desc: "Folga"}, {code: "FE", desc: "Férias"}, {code: "FOR", desc: "Formação"}, {code: "BX", desc: "Baixa"},
                       {code: "FI", desc: "Falta Injustificada"}, {code: "FJ", desc: "Falta Justificada"}, {code: "LP", desc: "Lic. Paternidade"}, {code: "LN", desc: "Lic. Nojo"},
                       {code: "LC", desc: "Lic. Casamento"}, {code: "DP", desc: "Dispensa"}];

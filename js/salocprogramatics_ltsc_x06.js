@@ -1460,7 +1460,7 @@
         }
         /* --- INOPS --- */
         const inopRes = await fetch(
-          `${SUPABASE_URL}/rest/v1/inem_inop?select=ineinop_date,ineinop_shift,ineinop_hour_qtd&corp_oper_nr=eq.${corpOperNr}`,
+          `${SUPABASE_URL}/rest/v1/inem_inop?select=ineinop_date,ineinop_shift,ineinop_hour_qtd,reason_for_ineinop&corp_oper_nr=eq.${corpOperNr}`,
           { headers: getSupabaseHeaders() }
         );
         if (!inopRes.ok) throw new Error('Falha ao carregar inem_inop');
@@ -1472,17 +1472,20 @@
           const totalQty = document.getElementById(totalQtyId);
           const totalHrs = document.getElementById(totalHrsId);
           if (!body) return;
-          const rows = monthsToShow.map(({ name, index }) => {
+          const rows = monthsToShow.flatMap(({ name, index }) => {
             const monthRecords = shiftData.filter(r => parseDateFlexible(r.ineinop_date).getMonth() === index);
-            if (monthRecords.length === 0) return '';
-            return `<tr style="border-bottom:1px solid #f1f3f5;">
-              <td style="padding:6px 10px;">${name}</td>
-              <td style="padding:6px 10px;text-align:center;font-weight:600;">${monthRecords.length}</td>
-              <td style="padding:6px 10px;text-align:center;">${sumHours(monthRecords)}</td>
-            </tr>`;
-          }).filter(Boolean);
+            if (monthRecords.length === 0) return [];
+            return monthRecords.map(r => `
+              <tr style="border-bottom:1px solid #f1f3f5;">
+                <td style="padding:6px 10px;text-align:center;">${name}</td>
+                <td style="padding:6px 10px;text-align:center;">${r.reason_for_ineinop || '-'}</td>
+                <td style="padding:6px 10px;text-align:center;font-weight:600;">1</td>
+                <td style="padding:6px 10px;text-align:center;">${r.ineinop_hour_qtd || '-'}</td>
+              </tr>
+            `);
+          });
           if (rows.length === 0) {
-            body.innerHTML = `<tr><td colspan="3" style="text-align:center;padding:12px;color:#aaa;">Sem registos</td></tr>`;
+            body.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:12px;color:#aaa;">Sem registos</td></tr>`;
           } else {
             body.innerHTML = rows.join('');
           }
@@ -1503,7 +1506,7 @@
       }, 5);
     }
     document.querySelectorAll('.sidebar-sub-submenu-button').forEach(btn => {
-      btn.addEventListener('click', () => {        
+      btn.addEventListener('click', () => {
         if (btn.getAttribute('data-page') === 'page-recinoreports') {
           loadRecinoReportsPage();
         }

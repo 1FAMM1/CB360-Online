@@ -1438,26 +1438,32 @@
       const monthSelect = document.getElementById('dashboard_refusal_month_filter');
       const yearSelect = document.getElementById('dashboard_refusal_year_filter');
       if (!monthSelect || !yearSelect) return;
-      monthSelect.innerHTML =`<option value="ALL">Todos os Meses</option>` + monthLabels.map((m, i) => `<option value="${i}">${m}</option>`).join('');
+      const monthLabels = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho", "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+      monthSelect.innerHTML = `<option value="ALL">Todos os Meses</option>` + monthLabels.map((m, i) => `<option value="${i}">${m}</option>`).join('');
       let yearHTML = "";
       for (let y = 2025; y <= 2035; y++) {
         yearHTML += `<option value="${y}">${y}</option>`;
       }
       yearSelect.innerHTML = yearHTML;
-      const currentDate = new Date();
-      const currentMonth = String(currentDate.getMonth());
-      const currentYear = String(currentDate.getFullYear());
-      const validYears = Array.from({ length: 11 }, (_, i) => String(2025 + i));
-      const savedMonth = sessionStorage.getItem('dash_filter_month');
-      const finalMonth = (savedMonth !== null) ? savedMonth : currentMonth;
-      const savedYear = sessionStorage.getItem('dash_filter_year');
-      const finalYear = (savedYear && validYears.includes(savedYear))
-        ? savedYear
-        : (validYears.includes(currentYear) ? currentYear : "2025");
-      monthSelect.value = finalMonth;
-      yearSelect.value = finalYear;
-      sessionStorage.setItem('dash_filter_month', finalMonth);
-      sessionStorage.setItem('dash_filter_year', finalYear);
+      const now = new Date();
+      setTimeout(() => {
+        const currentMonth = String(new Date().getMonth());
+        const currentYear = String(new Date().getFullYear());
+        const validYears = Array.from({ length: 11 }, (_, i) => String(2025 + i));
+        let savedMonth = sessionStorage.getItem('dash_filter_month');
+        let savedYear = sessionStorage.getItem('dash_filter_year');
+        const monthOptions = Array.from(monthSelect.options).map(o => o.value);
+        if (!monthOptions.includes(savedMonth)) {
+          savedMonth = currentMonth;
+        }
+        if (!validYears.includes(savedYear)) {
+          savedYear = currentYear;
+        }
+        monthSelect.value = savedMonth;
+        yearSelect.value = savedYear;
+        sessionStorage.setItem('dash_filter_month', savedMonth);
+        sessionStorage.setItem('dash_filter_year', savedYear);
+      }, 0);
     }
     /* ================== ESCUTADOR DE EVENTOS ===================== */
     document.addEventListener('DOMContentLoaded', () => {
@@ -1611,9 +1617,11 @@
     /* ================ LOAD DASHBOARD ==================== */
     function loadDashboardCharts() {
       initializeDashboardFilters();
-      loadIneInopsCharts();
-      loadServiceRefusalsCharts();
-      loadSummaryData();
+      setTimeout(() => {
+        loadIneInopsCharts();
+        loadServiceRefusalsCharts();
+        loadSummaryData();
+      }, 5);
     }
     document.querySelectorAll('.sidebar-sub-submenu-button').forEach(btn => {
       btn.addEventListener('click', () => {

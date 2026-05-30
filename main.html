@@ -1935,16 +1935,95 @@
           RELATÓRIOS MENSAIS DE RECUSAS DE SERVIÇOS E INOPERACIONALIDADES (INEM)
         </div>
         <div class="major-card-body">
-          <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+          <!-- FILTROS -->
+          <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px; margin-bottom: 18px;">
             <label style="font-size: 14px;">Mês:</label>
-            <select id="refusal_month_filter" style="width: 100px;"></select>
-            <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-              <label style="font-size: 14px;">Ano:</label>
-              <select id="refusal_year_filter" style="width: 70px;"></select>
+            <select id="refusal_month_filter" style="width: 130px;"></select>
+            <label style="font-size: 14px; margin-left: 8px;">Ano:</label>
+            <select id="refusal_year_filter" style="width: 80px;"></select>
+          </div>
+          <!-- TABELAS -->
+          <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start;">
+            <!-- TABELA RECUSAS -->
+            <div style="flex: 1; min-width: 220px;">
+              <div style="font-size: 13px; font-weight: 600; color: #fff; background: #dc3545; padding: 7px 12px; border-radius: 6px 6px 0 0; letter-spacing: 0.4px;">
+                🚫 Recusas de Serviço
+              </div>
+              <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                <thead>
+                  <tr style="background: #f1f3f5;">
+                    <th style="padding: 7px 10px; text-align: left; border-bottom: 2px solid #dee2e6; color: #495057;">Tipo de Serviço</th>
+                    <th style="padding: 7px 10px; text-align: center; border-bottom: 2px solid #dee2e6; color: #495057;">Qtd.</th>
+                  </tr>
+                </thead>
+                <tbody id="table-refusals-body">
+                  <tr><td colspan="2" style="text-align:center; padding: 12px; color: #aaa;">A carregar...</td></tr>
+                </tbody>
+                <tfoot>
+                  <tr style="background: #f8f9fa; font-weight: 600;">
+                    <td style="padding: 7px 10px; border-top: 2px solid #dee2e6;">Total</td>
+                    <td id="table-refusals-total" style="padding: 7px 10px; text-align: center; border-top: 2px solid #dee2e6;">0</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            <!-- TABELA INEM D -->
+            <div style="flex: 1; min-width: 280px;">
+              <div style="font-size: 13px; font-weight: 600; color: #fff; background: #198754; padding: 7px 12px; border-radius: 6px 6px 0 0; letter-spacing: 0.4px;">
+                🌤️ Inoperacionalidades INEM — Turno D
+              </div>
+              <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                <thead>
+                  <tr style="background: #f1f3f5;">
+                    <th style="padding: 7px 10px; text-align: left; border-bottom: 2px solid #dee2e6; color: #495057;">Mês</th>
+                    <th style="padding: 7px 10px; text-align: center; border-bottom: 2px solid #dee2e6; color: #495057;">Qtd.</th>
+                    <th style="padding: 7px 10px; text-align: center; border-bottom: 2px solid #dee2e6; color: #495057;">Total Horas</th>
+                  </tr>
+                </thead>
+                <tbody id="table-inemD-body">
+                  <tr><td colspan="3" style="text-align:center; padding: 12px; color: #aaa;">A carregar...</td></tr>
+                </tbody>
+                <tfoot>
+                  <tr style="background: #f8f9fa; font-weight: 600;">
+                    <td style="padding: 7px 10px; border-top: 2px solid #dee2e6;">Total</td>
+                    <td id="table-inemD-total-qty" style="padding: 7px 10px; text-align: center; border-top: 2px solid #dee2e6;">0</td>
+                    <td id="table-inemD-total-hrs" style="padding: 7px 10px; text-align: center; border-top: 2px solid #dee2e6;">0h 0m</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            <!-- TABELA INEM N -->
+            <div style="flex: 1; min-width: 280px;">
+              <div style="font-size: 13px; font-weight: 600; color: #fff; background: #0d6efd; padding: 7px 12px; border-radius: 6px 6px 0 0; letter-spacing: 0.4px;">
+                🌙 Inoperacionalidades INEM — Turno N
+              </div>
+              <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                <thead>
+                  <tr style="background: #f1f3f5;">
+                    <th style="padding: 7px 10px; text-align: left; border-bottom: 2px solid #dee2e6; color: #495057;">Mês</th>
+                    <th style="padding: 7px 10px; text-align: center; border-bottom: 2px solid #dee2e6; color: #495057;">Qtd.</th>
+                    <th style="padding: 7px 10px; text-align: center; border-bottom: 2px solid #dee2e6; color: #495057;">Total Horas</th>
+                  </tr>
+                </thead>
+                <tbody id="table-inemN-body">
+                  <tr><td colspan="3" style="text-align:center; padding: 12px; color: #aaa;">A carregar...</td></tr>
+                </tbody>
+                <tfoot>
+                  <tr style="background: #f8f9fa; font-weight: 600;">
+                    <td style="padding: 7px 10px; border-top: 2px solid #dee2e6;">Total</td>
+                    <td id="table-inemN-total-qty" style="padding: 7px 10px; text-align: center; border-top: 2px solid #dee2e6;">0</td>
+                    <td id="table-inemN-total-hrs" style="padding: 7px 10px; text-align: center; border-top: 2px solid #dee2e6;">0h 0m</td>
+                  </tr>
+                </tfoot>
+              </table>
             </div>
           </div>
         </div>
-        <div class="major-card-footer"></div>
+        <div class="major-card-footer">
+          <div class="action-buttons" id="inem-inop">
+            <button class="btn btn-danger" onclick="insertIneInop()">📄 EMITIR</button>
+          </div>
+        </div>
       </div>
     </div>
     <!-- STATISTICS GRAPHIC DASHBOARD SUB SUB-MODULE -->

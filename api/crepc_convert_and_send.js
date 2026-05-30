@@ -158,6 +158,7 @@
       sheet.getCell("B17").value = data.gdh_inop || '';
       sheet.getCell("O14").value = data.failure_type || '';
       sheet.getCell("K16").value = data.failure_description ? `Descrição: ${data.failure_description}` : '';
+      sheet.getCell("H17").value = data.failure_noc || '';
       sheet.getCell("G30").value = data.gdh_op || '';
       sheet.getCell("E41").value = data.optel || '';
       if (data.ppi_part) {sheet.getCell("R20").value = 'X'; sheet.getCell("T20").value = '';}

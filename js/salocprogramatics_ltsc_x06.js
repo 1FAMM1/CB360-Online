@@ -1375,6 +1375,141 @@
       });
     });
     /* =======================================
+    MONTHLY REPORTS: REFUSALS & INOPS
+    ======================================= */
+    function initRecinoReportsFilters() {
+      const monthSelect = document.getElementById('refusal_month_filter');
+      const yearSelect = document.getElementById('refusal_year_filter');
+      if (!monthSelect || !yearSelect) return;
+      const monthLabelsLocal = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+      monthSelect.innerHTML = `<option value="ALL">Todos os Meses</option>` +
+        monthLabelsLocal.map((m, i) => `<option value="${i}">${m}</option>`).join('');
+      let yearHTML = '';
+      for (let y = 2025; y <= 2035; y++) yearHTML += `<option value="${y}">${y}</option>`;
+      yearSelect.innerHTML = yearHTML;
+      const now = new Date();
+      setTimeout(() => {
+        monthSelect.value = String(now.getMonth());
+        yearSelect.value = String(now.getFullYear());
+      }, 0);
+      monthSelect.addEventListener('change', loadRecinoReports);
+      yearSelect.addEventListener('change', loadRecinoReports);
+    }
+    async function loadRecinoReports() {
+      const corpOperNr = sessionStorage.getItem('currentCorpOperNr') || '0805';
+      const monthSelect = document.getElementById('refusal_month_filter');
+      const yearSelect = document.getElementById('refusal_year_filter');
+      if (!monthSelect || !yearSelect) return;
+      const selectedMonth = monthSelect.value;
+      const selectedYear = parseInt(yearSelect.value);
+      const monthLabelsLocal = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+      const parseHourQty = (str) => {
+        if (!str) return { h: 0, m: 0 };
+        const [h, m] = str.split(':').map(Number);
+        return { h: isNaN(h) ? 0 : h, m: isNaN(m) ? 0 : m };
+      };
+      const sumHours = (records) => {
+        let totalH = 0, totalM = 0;
+        records.forEach(r => {
+          const { h, m } = parseHourQty(r.ineinop_hour_qtd);
+          totalH += h; totalM += m;
+        });
+        totalH += Math.floor(totalM / 60);
+        totalM = totalM % 60;
+        return `${totalH}h ${totalM}m`;
+      };
+      const filterByYearMonth = (records, dateField) => records.filter(r => {
+        const d = parseDateFlexible(r[dateField]);
+        if (isNaN(d)) return false;
+        if (d.getFullYear() !== selectedYear) return false;
+        if (selectedMonth !== 'ALL' && d.getMonth() !== parseInt(selectedMonth)) return false;
+        return true;
+      });
+      const monthsToShow = selectedMonth === 'ALL'
+        ? monthLabelsLocal.map((name, i) => ({ name, index: i }))
+        : [{ name: monthLabelsLocal[parseInt(selectedMonth)], index: parseInt(selectedMonth) }];
+      try {
+        /* --- RECUSAS --- */
+        const refRes = await fetch(
+          `${SUPABASE_URL}/rest/v1/service_refusals?select=refusal_date,service_type&corp_oper_nr=eq.${corpOperNr}`,
+          { headers: getSupabaseHeaders() }
+        );
+        if (!refRes.ok) throw new Error('Falha ao carregar service_refusals');
+        const allRefusals = await refRes.json();
+        const refusals = filterByYearMonth(allRefusals, 'refusal_date');
+        const refByType = {};
+        refusals.forEach(r => {
+          const type = r.service_type || '(sem tipo)';
+          refByType[type] = (refByType[type] || 0) + 1;
+        });
+        const refBody = document.getElementById('table-refusals-body');
+        const refTotal = document.getElementById('table-refusals-total');
+        if (refBody) {
+          const types = Object.keys(refByType);
+          if (types.length === 0) {
+            refBody.innerHTML = `<tr><td colspan="2" style="text-align:center;padding:12px;color:#aaa;">Sem registos</td></tr>`;
+          } else {
+            refBody.innerHTML = types.map(t =>
+              `<tr style="border-bottom:1px solid #f1f3f5;">
+                <td style="padding:6px 10px;">${t}</td>
+                <td style="padding:6px 10px;text-align:center;font-weight:600;">${refByType[t]}</td>
+              </tr>`
+            ).join('');
+          }
+          if (refTotal) refTotal.textContent = refusals.length;
+        }
+        /* --- INOPS --- */
+        const inopRes = await fetch(
+          `${SUPABASE_URL}/rest/v1/inem_inop?select=ineinop_date,ineinop_shift,ineinop_hour_qtd&corp_oper_nr=eq.${corpOperNr}`,
+          { headers: getSupabaseHeaders() }
+        );
+        if (!inopRes.ok) throw new Error('Falha ao carregar inem_inop');
+        const allInops = await inopRes.json();
+        const inops = filterByYearMonth(allInops, 'ineinop_date');
+        const buildInopTable = (shift, bodyId, totalQtyId, totalHrsId) => {
+          const shiftData = inops.filter(r => (r.ineinop_shift || '').toUpperCase() === shift);
+          const body = document.getElementById(bodyId);
+          const totalQty = document.getElementById(totalQtyId);
+          const totalHrs = document.getElementById(totalHrsId);
+          if (!body) return;
+          const rows = monthsToShow.map(({ name, index }) => {
+            const monthRecords = shiftData.filter(r => parseDateFlexible(r.ineinop_date).getMonth() === index);
+            if (monthRecords.length === 0) return '';
+            return `<tr style="border-bottom:1px solid #f1f3f5;">
+              <td style="padding:6px 10px;">${name}</td>
+              <td style="padding:6px 10px;text-align:center;font-weight:600;">${monthRecords.length}</td>
+              <td style="padding:6px 10px;text-align:center;">${sumHours(monthRecords)}</td>
+            </tr>`;
+          }).filter(Boolean);
+          if (rows.length === 0) {
+            body.innerHTML = `<tr><td colspan="3" style="text-align:center;padding:12px;color:#aaa;">Sem registos</td></tr>`;
+          } else {
+            body.innerHTML = rows.join('');
+          }
+          if (totalQty) totalQty.textContent = shiftData.length;
+          if (totalHrs) totalHrs.textContent = sumHours(shiftData);
+        };
+        buildInopTable('D', 'table-inemD-body', 'table-inemD-total-qty', 'table-inemD-total-hrs');
+        buildInopTable('N', 'table-inemN-body', 'table-inemN-total-qty', 'table-inemN-total-hrs');
+      } catch (e) {
+        console.error('❌ Erro ao carregar relatório:', e);
+        showPopup('popup-danger', 'Erro ao carregar relatório.');
+      }
+    }
+    function loadRecinoReportsPage() {
+      initRecinoReportsFilters();
+      setTimeout(() => {
+        loadRecinoReports();
+      }, 5);
+    }
+    document.querySelectorAll('.sidebar-sub-submenu-button').forEach(btn => {
+      btn.addEventListener('click', () => {        
+        if (btn.getAttribute('data-page') === 'page-recinoreports') {
+          loadRecinoReportsPage();
+        }
+      });
+    });
+    /* =======================================
     DASHBOARD: NON-OPERATIONALITIES
     DASHBOARD: REFUSALS
     ======================================= */

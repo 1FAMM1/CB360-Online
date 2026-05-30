@@ -174,7 +174,10 @@
     }
     function applyBaseDayColor(td, year, month, dayNum, holidayMap) {
       const val = (td.textContent || "").trim().toUpperCase();
-      if (SHIFT_VALUES[val] !== undefined || SHIFT_COLORS[val] || td.dataset.customBg || td.dataset.customColor) return;
+      if (SHIFT_VALUES[val] !== undefined || SHIFT_COLORS[val] || td.dataset.customBg || td.dataset.customColor) {
+        td.style.fontWeight = "bold";
+        return;
+      }
       td.style.color = ""; td.style.fontWeight = "";
       const holiday = holidayMap?.get(dayNum);
       if (holiday) {

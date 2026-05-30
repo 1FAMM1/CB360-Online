@@ -3056,7 +3056,7 @@
       saveBtn.textContent = "Emitir Inoperacionalidade";
       saveBtn.classList.remove("btn-success");
       saveBtn.classList.add("btn-danger");
-      saveBtn.style.width = "18%";
+      saveBtn.style.width ="18%";
     }
     function toggleSitopContainer(forceClose = false) {
       const isVisible = sitopContainer.style.display === "block";
@@ -3097,6 +3097,7 @@
       document.getElementById("sitop_gdh_op").value = formatSITOPGDH();
       document.getElementById("sitop_type_failure").value = record.failure_type || "";
       document.getElementById("sitop_failure_description").value = record.failure_description || "";
+      document.getElementById("sitop_failure_noc").value = record.failure_noc || "";
       document.getElementById("sitop_optel").value = record.optel || "";
       document.getElementById("ppi_yes").checked = record.ppi_part === true;
       document.getElementById("ppi_no").checked = record.ppi_part === false;
@@ -3134,7 +3135,7 @@
         return recipients;
       } catch (err) {
         console.error("Erro ao buscar e-mails:", err);
-        return { to: ["central0805.ahbfaro@gmail.com"], cc: [], bcc: [] };
+        return {to: ["central0805.ahbfaro@gmail.com"], cc: [], bcc: []};
       }
     }
     /* ================= EMISSION LOGIC ================ */
@@ -3146,6 +3147,7 @@
       const gdh_op = document.getElementById("sitop_gdh_op").value.trim() || null;
       const failure_type = document.getElementById("sitop_type_failure").value.trim();
       const failure_description = document.getElementById("sitop_failure_description").value.trim();
+      const failure_noc = document.getElementById("sitop_failure_noc").value.trim();
       const ppi_part = document.getElementById("ppi_yes").checked;
       const ppi_a2 = document.getElementById("ppi_a2").checked;
       const ppi_a22 = document.getElementById("ppi_a22").checked;
@@ -3168,8 +3170,7 @@
       const recordId = sitopContainer.getAttribute("data-record-id");
       const isUpdate = !!recordId;
       const isOperational = !!gdh_op;
-      const data = {cb_type, vehicle, registration, gdh_inop, gdh_op, failure_type, failure_description, ppi_part, 
-                    ppi_a2, ppi_a22, ppi_airport, ppi_linfer, ppi_airfield, ppi_subs, optel, corp_oper_nr: corpOperNr};
+      const data = {cb_type, vehicle, registration, gdh_inop, gdh_op, failure_type, failure_description, failure_noc, ppi_part, ppi_a2, ppi_a22, ppi_airport, ppi_linfer, ppi_airfield, ppi_subs, optel, corp_oper_nr: corpOperNr};
       const supabaseData = { ...data };
       delete supabaseData.cb_type; // O Supabase não precisa do nome da corporação formatado, apenas do NR
       try {

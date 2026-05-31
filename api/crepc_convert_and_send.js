@@ -262,7 +262,7 @@ async function handleSITOP(req, res) {
     corpName,
   });
   await transporter.sendMail({
-    from: GMAIL_EMAIL,
+    from: `"SALOC ${data.corp_oper_nr || "Corporação"}" <${GMAIL_EMAIL}>`,
     to: recipients.join(", "),
     cc: ccRecipients && ccRecipients.length  > 0 ? ccRecipients.join(", ")  : '',
     bcc: bccRecipients && bccRecipients.length > 0 ? bccRecipients.join(", ") : '',

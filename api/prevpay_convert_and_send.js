@@ -2,40 +2,124 @@
     * * 🟦 CB360 ONLINE - API ENGINE
     * 🚀 Desenvolvido por: [Fábio Martins / Sistemas de Informação]
     * 📅 Ano: 2023 - 2026
-    * * Descrição: Handler principal para geração de relatórios Pagamentos de Gratificados
+    * * Descrição: Handler principal para geração de Escalas de Serviço
     * com integração ExcelJS, Adobe PDF Services e Mailer.
     * *************************************************************************/
     import ExcelJS from 'exceljs';
     import fs from 'fs';
     import os from 'os';
+    import path from 'path';
     import https from 'https';
-    import nodemailer from "nodemailer";
-    import {ServicePrincipalCredentials, PDFServices, MimeType, CreatePDFResult, CreatePDFJob}
+    import {ServicePrincipalCredentials, PDFServices, MimeType, CreatePDFJob, CreatePDFResult, SDKError, ServiceUsageError, ServiceApiError}
     from "@adobe/pdfservices-node-sdk";
     const CLIENT_ID = process.env.ADOBE_CLIENT_ID;
     const CLIENT_SECRET = process.env.ADOBE_CLIENT_SECRET;
-    const GMAIL_EMAIL = process.env.GMAIL_EMAIL;
-    const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
-    const TEMPLATE_SIMPLIFIED = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/prevpay_simplified_template.xlsx";
-    const TEMPLATE_DETAILED = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/prevpay_detailed_template.xlsx";
-    export const config = {
-      api: { bodyParser: {sizeLimit: '10mb'}}
-    };
+    const TEMPLATE_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/fomio_template.xlsx";
+    export const config = {api: {bodyParser: {sizeLimit: '10mb'}}};
     async function downloadTemplate(url) {
       return new Promise((resolve, reject) => {
-        https.get(url, res => {
+        https.get(url, (response) => {
           const chunks = [];
-          res.on('data', chunk => chunks.push(chunk));
-          res.on('end', () => resolve(Buffer.concat(chunks)));
-          res.on('error', reject);
+          response.on('data', (chunk) => chunks.push(chunk));
+          response.on('end', () => resolve(Buffer.concat(chunks)));
+          response.on('error', reject);
         }).on('error', reject);
       });
     }
-    async function convertXLSXToPDF(xlsxBuffer, fileName) {
-      if (!CLIENT_ID || !CLIENT_SECRET) throw new Error("Chaves Adobe não configuradas.");
-      const inputFilePath = `/tmp/${fileName}_input_${Date.now()}.xlsx`;
-      fs.writeFileSync(inputFilePath, xlsxBuffer);
+    export default async function handler(req, res) {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+      if (req.method === 'OPTIONS') return res.status(200).end();
+      if (req.method !== 'POST') return res.status(405).json({error: 'Método não permitido'});
+      if (!CLIENT_ID || !CLIENT_SECRET) return res.status(500).json({error: "Erro: Chaves da Adobe não configuradas."});
+      const tempDir = os.tmpdir();
+      let inputFilePath = null;
+      let outputFilePath = null;
       try {
+        const data = req.body;
+        const templateBuffer = await downloadTemplate(TEMPLATE_URL);
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.load(templateBuffer);
+        while (workbook.worksheets.length > 1) {
+          workbook.removeWorksheet(workbook.worksheets[1].id);
+        }
+        const sheet = workbook.worksheets[0];
+        sheet.getCell("C9").value = `${data.monthName} ${data.year}`;
+        const row11 = sheet.getRow(11);
+        const row12 = sheet.getRow(12);
+        for (let d = 1; d <= data.daysInMonth; d++) {
+          const col = 6 + (d - 1);
+          row11.getCell(col).value = data.weekdays[d - 1] || '';
+          row12.getCell(col).value = d;
+        }
+        row11.commit();
+        row12.commit();
+        const row8 = sheet.getRow(8);
+        (data.holidayDays || []).forEach(day => {
+          const col = 6 + (day - 1);
+          row8.getCell(col).value = 'FR';
+        });
+        (data.optionalDays || []).forEach(day => {
+          const col = 6 + (day - 1);
+          row8.getCell(col).value = 'CA';
+        });
+        row8.commit();
+        let currentRow = 14;
+        (data.fixedRows || []).forEach(fixedRow => {
+          const row = sheet.getRow(currentRow++);
+          row.getCell(3).value = fixedRow.ni;
+          row.getCell(4).value = fixedRow.nome;
+          row.getCell(5).value = fixedRow.catg;
+          for (let d = 1; d <= data.daysInMonth; d++) {
+            const col = 6 + (d - 1);
+            row.getCell(col).value = fixedRow.days[d] || '';
+          }
+          row.commit();
+        });
+        for (let r = 14; r <= 19; r++) {
+          const row = sheet.getRow(r);
+          const nome = row.getCell(4).value;
+          if (!nome || nome.toString().trim() === '') row.hidden = true;
+        }
+        currentRow = 21;
+        (data.normalRows || []).forEach(normalRow => {
+          const row = sheet.getRow(currentRow++);
+          row.getCell(3).value = normalRow.ni;
+          row.getCell(4).value = normalRow.nome;
+          row.getCell(5).value = normalRow.catg;
+          for (let d = 1; d <= data.daysInMonth; d++) {
+            const col = 6 + (d - 1);
+            row.getCell(col).value = normalRow.days[d] || '';
+          }
+          row.commit();
+        });
+        for (let r = 21; r <= 120; r++) {
+          const row = sheet.getRow(r);
+          let hasShift = false;
+          for (let c = 6; c < 6 + data.daysInMonth; c++) {
+            const cell = row.getCell(c);
+            if (cell.value && cell.value.toString().trim() !== '') {
+              hasShift = true;
+              break;
+            }
+          }
+          if (!hasShift) row.hidden = true;
+        }
+        for (let c = 6; c <= 36; c++) {
+          const cell = sheet.getRow(12).getCell(c);
+          if (!cell.value || cell.value.toString().trim() === '') {
+            sheet.getColumn(c).hidden = true;
+          }
+        }
+        sheet.eachRow(row => row.eachCell(cell => {
+          if (cell.value === undefined || cell.value === null) cell.value = '';
+        }));
+        sheet.pageSetup = {orientation: 'portrait', paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: false,
+                           margins: {left: 0.1, right: 0.1, top: 0.2, bottom: 0.2, header: 0, footer: 0}};
+        inputFilePath = path.join(tempDir, `${data.fileName}_${Date.now()}.xlsx`);
+        outputFilePath = path.join(tempDir, `${data.fileName}_${Date.now()}.pdf`);
+        await workbook.xlsx.writeFile(inputFilePath);
         const credentials = new ServicePrincipalCredentials({clientId: CLIENT_ID, clientSecret: CLIENT_SECRET});
         const pdfServices = new PDFServices({credentials});
         const inputAsset = await pdfServices.upload({readStream: fs.createReadStream(inputFilePath), mimeType: MimeType.XLSX});
@@ -44,159 +128,25 @@
         const pdfServicesResponse = await pdfServices.getJobResult({pollingURL, resultType: CreatePDFResult});
         const resultAsset = pdfServicesResponse.result.asset;
         const streamAsset = await pdfServices.getContent({asset: resultAsset});
-        const chunks = [];
-        await new Promise((resolve, reject) => {
-          streamAsset.readStream.on("data", chunk => chunks.push(chunk));
-          streamAsset.readStream.on("end", resolve);
-          streamAsset.readStream.on("error", reject);
-        });
-        return Buffer.concat(chunks);
-      } catch (error) {
-        console.error("Erro Adobe:", error);
-        throw new Error("Falha na conversão XLSX para PDF.");
-      } finally {
-        try {if (fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);} catch {}
-      }
-    }
-    const MONTH_NAMES = ['', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-    function formatDate(dataISO) {
-      if (!dataISO) return '';
-      const [y, m, d] = dataISO.split('-');
-      return `${d}/${m}/${y}`;
-    }
-    function parseVal(val) {
-      if (val === null || val === undefined || val === '' || val === '-') return null;
-      const n = parseFloat(String(val).replace(',', '.'));
-      return isNaN(n) ? null : n;
-    }
-    function fillSimplified(sheet, rows, year, month, globalTotal) {
-      const monthName = MONTH_NAMES[parseInt(month)] || month;
-      sheet.getCell('D5').value = monthName;
-      sheet.getCell('F5').value = year;
-      const MAX_PER_SIDE = 20;
-      rows.forEach((item, idx) => {
-        if (idx < MAX_PER_SIDE) {
-          const rowNum = 10 + idx;
-          sheet.getCell(`B${rowNum}`).value = item.n_int || '';
-          sheet.getCell(`C${rowNum}`).value = item.abv_name || '';
-          sheet.getCell(`D${rowNum}`).value = parseFloat(item.total) || null;
-        } else {
-          const rowNum = 10 + (idx - MAX_PER_SIDE);
-          sheet.getCell(`F${rowNum}`).value = item.n_int || '';
-          sheet.getCell(`G${rowNum}`).value = item.abv_name || '';
-          sheet.getCell(`H${rowNum}`).value = parseFloat(item.total) || null;
-        }
-      });
-      sheet.getCell('G31').value = parseFloat(globalTotal) || 0;
-      const now = new Date();
-      sheet.getCell('B38').value = `${now.getDate()} de ${MONTH_NAMES[now.getMonth()]} de ${now.getFullYear()}`;
-      sheet.pageSetup = {orientation: "portrait", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
-                         margins: {left: 0.3, right: 0.7, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3}};
-    }
-    function fillDetailed(sheet, rows, year, month, globalTotal) {
-      const monthName = MONTH_NAMES[parseInt(month)] || month;
-      sheet.getCell('B5').value = `${monthName} ${year}`;
-      rows.forEach((item, idx) => {
-        const rowNum = 10 + idx;
-        sheet.getCell(`B${rowNum}`).value = formatDate(item.service_date);
-        sheet.getCell(`C${rowNum}`).value = item.service_type || '';
-        sheet.getCell(`D${rowNum}`).value = item.service_local || '';
-        sheet.getCell(`E${rowNum}`).value = parseVal(item.service_type_global_value);
-        sheet.getCell(`F${rowNum}`).value = parseVal(item.prev_value_hour);
-        sheet.getCell(`G${rowNum}`).value = parseVal(item.prev_total_hours);
-        sheet.getCell(`H${rowNum}`).value = parseVal(item.prev_global_value);
-        sheet.getCell(`I${rowNum}`).value = parseVal(item.service_sicks);
-        sheet.getCell(`J${rowNum}`).value = parseVal(item.service_sicks_value);
-        sheet.getCell(`K${rowNum}`).value = parseVal(item.service_whait_hours);
-        sheet.getCell(`L${rowNum}`).value = parseVal(item.service_whait_hours_value);
-        sheet.getCell(`M${rowNum}`).value = item.abv_name || '';
-        sheet.getCell(`N${rowNum}`).value = parseVal(item.global_value);
-      });
-      sheet.getCell('N68').value = parseFloat(globalTotal) || 0;
-      const lastDataRow = 10 + rows.length - 1;
-      sheet.pageSetup.printArea = false;
-      for (let r = lastDataRow + 1; r <= 66; r++) {
-        const row = sheet.getRow(r);
-        row.hidden = true;
-        row.height = 0;
-      }
-      sheet.pageSetup = {orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
-                         margins: {left: 0.3, right: 0.3, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3}};
-    }
-    async function handleSendEmail(req, res) {
-      const { to, cc, subject, body } = req.body || {};
-      if (!to || !subject || !body) {
-        return res.status(400).json({error: "Faltam dados essenciais (to, subject, body)."});
-      }
-      try {
-        const transporter = nodemailer.createTransport({
-          service: "gmail",
-          auth: {user: GMAIL_EMAIL, pass: GMAIL_APP_PASSWORD}
-        });
-        await transporter.sendMail({ 
-          from: `CB360 Online <${GMAIL_EMAIL}>`,
-          to,
-          cc,
-          subject,
-          html: body
-        });
-        return res.status(200).json({success: true, message: "Email enviado com sucesso."});
-      } catch (error) {
-        console.error("Erro no envio de email:", error);
-        return res.status(500).json({error: "Falha ao enviar e-mail", details: error.message});
-      }
-    }
-    async function handleGenerateReport(req, res) {
-      const tempDir = os.tmpdir();
-      let outputFile = null;
-      const { rows, year, month, format, globalTotal, reportType } = req.body;
-      if (!Array.isArray(rows)) return res.status(400).json({ error: 'Rows inválidas' });
-      const isDetailed = reportType === 'Detalhado';
-      const templateUrl = isDetailed ? TEMPLATE_DETAILED : TEMPLATE_SIMPLIFIED;
-      const templateBuffer = await downloadTemplate(templateUrl);
-      const workbook = new ExcelJS.Workbook();
-      await workbook.xlsx.load(templateBuffer);
-      const sheet = workbook.worksheets[0];
-      if (isDetailed) {
-        fillDetailed(sheet, rows, year, month, globalTotal);
-      } else {
-        fillSimplified(sheet, rows, year, month, globalTotal);
-      }
-      const prefix = isDetailed ? 'prevencoes_detalhado' : 'pagamento_prevencoes';
-      const safeFileName = `${prefix}_${year}_${String(month).padStart(2, '0')}`;
-      if (format === 'pdf') {
-        const xlsxBuffer = await workbook.xlsx.writeBuffer();
-        const pdfBuffer = await convertXLSXToPDF(xlsxBuffer, safeFileName);
+        const writeStream = fs.createWriteStream(outputFilePath);
+        streamAsset.readStream.pipe(writeStream);
+        await new Promise((resolve, reject) => {writeStream.on('finish', resolve); writeStream.on('error', reject);});
+        const pdfBuffer = fs.readFileSync(outputFilePath);
+        try {
+          if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
+          if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
+        } catch { }
         res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename="${safeFileName}.pdf"`);
+        res.setHeader('Content-Disposition', `attachment; filename="${data.fileName}.pdf"`);
         return res.status(200).send(pdfBuffer);
-      } else {
-        outputFile = `${tempDir}/${safeFileName}_${Date.now()}.xlsx`;
-        await workbook.xlsx.writeFile(outputFile);
-        const fileBuffer = fs.readFileSync(outputFile);
-        try { fs.unlinkSync(outputFile); } catch {}
-        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        res.setHeader('Content-Disposition', `attachment; filename="${safeFileName}.xlsx"`);
-        return res.status(200).send(fileBuffer);
-      }
-    }
-    export default async function handler(req, res) {
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-      if (req.method === 'OPTIONS') return res.status(200).end();
-      if (req.method !== 'POST') return res.status(405).json({error: 'Método não permitido'});
-      try {
-        const { action } = req.body || {};
-        if (action === 'send-email') {
-          return await handleSendEmail(req, res);
-        } else if (action === 'generate-report') {
-          return await handleGenerateReport(req, res);
-        } else {
-          return res.status(400).json({error: "Action inválida. Use 'send-email' ou 'generate-report'."});
+      } catch (error) {
+        try {
+          if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
+          if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
+        } catch {}
+        if (error instanceof SDKError || error instanceof ServiceUsageError || error instanceof ServiceApiError) {
+          return res.status(500).json({error: "Erro no serviço Adobe PDF Services", details: error.message});
         }
-      } catch (err) {
-        console.error("Erro:", err);
-        return res.status(500).json({error: 'Erro interno', details: err.message});
+        return res.status(500).json({error: "Erro interno ao converter para PDF", details: error.message});
       }
     }

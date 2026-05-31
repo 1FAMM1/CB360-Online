@@ -68,7 +68,7 @@
               </div>
             </div>
             <div class="email-footer">
-              &copy; ${new Date().getFullYear()} CB360 Online - Todos os direitos reservados.
+              &copy; 2023 - ${new Date().getFullYear()} CB360 Online - Todos os direitos reservados.
             </div>
           </div>
         </body>

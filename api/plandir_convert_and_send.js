@@ -119,7 +119,7 @@
       res.setHeader("Access-Control-Allow-Headers", "Content-Type");
       if (req.method === "OPTIONS") return res.status(200).end();
       try {
-        const {shift, date, tables, recipients, ccRecipients, bccRecipients, emailBody, logoUrl, corpName} = req.body || {};
+        const {shift, date, tables, recipients, ccRecipients, bccRecipients, emailBody, logoUrl, corpName, corpOperNr} = req.body || {};
         if (!shift || !date || !tables || !recipients || recipients.length === 0) {
           return res.status(400).json({
             error: "Faltam dados essenciais ou a lista de destinatários principais está vazia.",
@@ -173,7 +173,7 @@
           corpName: corpName || ""
         });
         await transporter.sendMail({
-          from: `"SALOC ${data.corp_oper_nr || "Corporacao"}" <${GMAIL_EMAIL}>`, 
+          from: `"SALOC ${corpOperNr || 'Corporacao'}" <${GMAIL_EMAIL}>`,
           to: recipients.join(', '),
           cc: ccRecipients && ccRecipients.length > 0 ? ccRecipients.join(', ') : '',
           bcc: bccRecipients && bccRecipients.length > 0 ? bccRecipients.join(', ') : '',

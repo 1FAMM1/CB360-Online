@@ -57,7 +57,7 @@ function buildEmailTemplate({title, subtitle, logoUrl, emailBody, senderName, co
             Com os melhores cumprimentos,
           </div>
           <div class="signature-section">
-            
+            <div class="signature-corp">${corpName}</div>
             <div class="signature-contacts">
               Rua Comandante Francisco Manuel, 7 a 13 | 8000-250 Faro | Portugal<br>
               Telem.: +351 917 629 626 | Telef: +351 289 803 066

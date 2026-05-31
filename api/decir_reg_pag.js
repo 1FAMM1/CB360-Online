@@ -1,3 +1,10 @@
+    /*************************************************************************
+    * * 🟦 CB360 ONLINE - API ENGINE
+    * 🚀 Desenvolvido por: [Fábio Martins / Sistemas de Informação]
+    * 📅 Ano: 2023 - 2026
+    * * Descrição: Handler principal para geração de relatórios DECIR
+    * com integração ExcelJS, Adobe PDF Services e Mailer.
+    * *************************************************************************/
     import ExcelJS from 'exceljs';
     import fs from 'fs';
     import os from 'os';

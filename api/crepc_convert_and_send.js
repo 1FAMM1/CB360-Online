@@ -238,7 +238,7 @@
                                             emailBody: emailBody || `<p>Segue em anexo o documento de Situação operacional do veiculo ${data.vehicle || ""}.</p>`, corpName,
                                            });
       await transporter.sendMail({from: `"SALOC ${data.corp_oper_nr || "Corporacao"}" <${GMAIL_EMAIL}>`, to: recipients.join(", "), cc: ccRecipients && ccRecipients.length  > 0 ? ccRecipients.join(", ")  : '',
-                                  bcc: bccRecipients && bccRecipients.length > 0 ? bccRecipients.join(", ") : '', subject: emailSubject || `Situação Operacional - ${prefix} ${data.vehicle}`, html: htmlEmail,
+                                  bcc: bccRecipients && bccRecipients.length > 0 ? bccRecipients.join(", ") : '', subject: emailSubject || `Situação Operacional - ${prefix} ${data.vehicle}_${data.corp_oper_nr || "Corporacao"}`, html: htmlEmail,
                                   text: 'Segue em anexo o documento de Situação operacional de veiculos.',
                                   attachments: [{filename: `${fileName}.pdf`, content: pdfBuffer, contentType: 'application/pdf'}],
                                  });

@@ -4,23 +4,23 @@ import fs from "fs";
 import https from "https";
 import {ServicePrincipalCredentials, PDFServices, MimeType, CreatePDFResult, CreatePDFJob,}
 from "@adobe/pdfservices-node-sdk";
- 
+
 const CLIENT_ID = process.env.ADOBE_CLIENT_ID;
 const CLIENT_SECRET = process.env.ADOBE_CLIENT_SECRET;
 const GMAIL_EMAIL = process.env.GMAIL_EMAIL;
 const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
- 
+
 const TEMPLATES = {
   moa: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/moa_template.xlsx",
   sitop: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/sitop_template.xlsx",
 };
- 
+
 export const config = {
   api: {bodyParser: {sizeLimit: "10mb"}},
 };
- 
+
 // ─── Template HTML partilhado ─────────────────────────────────────────────────
-function buildEmailTemplate({title, subtitle, logoUrl, emailBody}) {
+function buildEmailTemplate({title, subtitle, logoUrl, emailBody, senderName, corpName}) {
   return `
     <!DOCTYPE html>
     <html>
@@ -34,7 +34,11 @@ function buildEmailTemplate({title, subtitle, logoUrl, emailBody}) {
         .email-header h2 {margin: 0; font-size: 19px; font-weight: 600; letter-spacing: 0.5px; line-height: 1.4;}
         .email-header p {margin: 6px 0 0 0; font-size: 13px; color: #fecaca; opacity: 0.9;}
         .email-body {padding: 15px 10px; line-height: 1.6; font-size: 14px;}
-        .message-box {background-color: #f8fafc; border-left: 4px solid #d81c1c; padding: 20px; margin: 0 0 25px 0; border-radius: 0 6px 6px 0; color: #1e293b; font-size: 14.5px;}
+        .message-box {background-color: #f8fafc; border-left: 4px solid #d81c1c; padding: 20px; margin: 0 0 25px 0; border-radius: 0 6px 6px 0; white-space: pre-line; color: #1e293b; font-size: 14.5px;}
+        .signature-section {margin-top: 30px; border-top: 1px dashed #cbd5e1; padding-top: 15px; font-size: 13px; color: #475569;}
+        .signature-user {font-weight: bold; font-size: 14px; color: #1e293b; text-transform: uppercase; margin-bottom: 2px;}
+        .signature-corp {font-weight: bold; color: #d81c1c; font-size: 12px; text-transform: uppercase; margin-bottom: 2px;}
+        .signature-contacts {color: #475569; font-size: 11.5px;}
         .eco-note {font-size: 11px; color: #16a34a; margin-top: 25px; line-height: 1.4;}
         .confidentiality-note {font-size: 10px; color: #94a3b8; margin-top: 15px; line-height: 1.4; text-align: justify; border-top: 1px solid #f1f5f9; padding-top: 10px;}
         .email-footer {background-color: #f1f5f9; padding: 18px; text-align: center; font-size: 11px; color: #6b7280; border-top: 1px solid #f3f4f6;}
@@ -48,8 +52,17 @@ function buildEmailTemplate({title, subtitle, logoUrl, emailBody}) {
           <p>${subtitle || ""}</p>
         </div>
         <div class="email-body">
-          <div class="message-box">
-            ${emailBody || ""}
+          <div class="message-box">${emailBody || ""}</div>
+          <div style="margin-top:10px; margin-bottom:10px; font-size:14px; color:#1e293b;">
+            Com os melhores cumprimentos,
+          </div>
+          <div class="signature-section">
+            <div class="signature-user">${senderName || ""}</div>
+            <div class="signature-corp">${corpName || ""}</div>
+            <div class="signature-contacts">
+              Rua Comandante Francisco Manuel, 7 a 13 | 8000-250 Faro | Portugal<br>
+              Telem.: +351 917 629 626 | Telef: +351 289 803 066
+            </div>
           </div>
           <div class="eco-note">
             🌱 <strong>Antes de imprimir este e-mail pense bem se é mesmo necessário.</strong> Poupe eletricidade, toner e papel.
@@ -67,7 +80,7 @@ function buildEmailTemplate({title, subtitle, logoUrl, emailBody}) {
     </html>
   `;
 }
- 
+
 // ─── Helpers partilhados ──────────────────────────────────────────────────────
 async function downloadTemplate(url) {
   return new Promise((resolve, reject) => {
@@ -79,7 +92,7 @@ async function downloadTemplate(url) {
     }).on("error", reject);
   });
 }
- 
+
 async function convertXLSXToPDF(xlsxBuffer, fileName) {
   if (!CLIENT_ID || !CLIENT_SECRET) {
     throw new Error("Erro de Configuração Adobe: As chaves não estão definidas.");
@@ -111,7 +124,7 @@ async function convertXLSXToPDF(xlsxBuffer, fileName) {
     }
   }
 }
- 
+
 // ─── Handler MOA ──────────────────────────────────────────────────────────────
 async function handleMOA(req, res) {
   const {data, recipients, ccRecipients, bccRecipients, emailBody, emailSubject} = req.body || {};
@@ -185,11 +198,14 @@ async function handleMOA(req, res) {
   const xlsxBuffer = await workbook.xlsx.writeBuffer();
   const pdfBuffer  = await convertXLSXToPDF(xlsxBuffer, fileName);
   const transporter = nodemailer.createTransport({service: "gmail", auth: {user: GMAIL_EMAIL, pass: GMAIL_APP_PASSWORD}});
+  const corpName = data.moa_cb?.includes(" - ") ? data.moa_cb.split(" - ").slice(1).join(" - ") : data.moa_cb || data.moa_device_type || "";
   const htmlEmail = buildEmailTemplate({
-    title: data.moa_cb || data.moa_device_type || "MOA",
+    title: corpName,
     subtitle: "Módulo de Ocorrências e Avarias",
     logoUrl: data.logoUrl || "",
-    emailBody: emailBody || `<p>Segue em anexo a MOA.</p><p>OPTEL<br>${data.moa_optel || ""}</p>`,
+    emailBody: emailBody || `<p>Segue em anexo a MOA.</p>`,
+    senderName: `OPTEL ${data.moa_optel || ""}`,
+    corpName,
   });
   await transporter.sendMail({
     from: GMAIL_EMAIL,
@@ -203,7 +219,7 @@ async function handleMOA(req, res) {
   });
   return res.status(200).json({success: true, message: `MOA gerada e enviada com sucesso para ${recipients.length} destinatário(s).`});
 }
- 
+
 // ─── Handler SITOP ────────────────────────────────────────────────────────────
 async function handleSITOP(req, res) {
   const {data, recipients, ccRecipients, bccRecipients, emailBody, emailSubject} = req.body || {};
@@ -245,6 +261,8 @@ async function handleSITOP(req, res) {
     subtitle: `Situação Operacional de Veículos — ${prefix} ${data.vehicle}`,
     logoUrl: data.logoUrl || "",
     emailBody: emailBody || `<p>Segue em anexo o documento de situação operacional do veículo ${data.vehicle || ""}.</p>`,
+    senderName: `OPTEL ${data.optel || ""}`,
+    corpName,
   });
   await transporter.sendMail({
     from: GMAIL_EMAIL,
@@ -258,7 +276,7 @@ async function handleSITOP(req, res) {
   });
   return res.status(200).json({success: true, message: `PDF gerado e enviado com sucesso para ${recipients.length} destinatário(s).`});
 }
- 
+
 // ─── Handler principal ────────────────────────────────────────────────────────
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");

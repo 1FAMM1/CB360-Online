@@ -822,8 +822,8 @@
         if (elements > 0) {
           meioText += `${elements} Elemento${elements > 1 ? 's' : ''}`;
         }
-        if (typeRequest === 'INEM') meioText += ' TAS';
-        if (typeRequest === 'Reforço Piquete') meioText += ' preferencialmente TAS';
+        if (typeRequest === 'INEM' && elements > 0) meioText += ' preferencialmente TAS';
+        if (typeRequest === 'Reforço Piquete' && elements > 0) meioText += ' preferencialmente TAS';
         parts.push(meioText);
       }
       if (typeRequest) {

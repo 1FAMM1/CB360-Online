@@ -19,8 +19,8 @@ export const config = {
   api: {bodyParser: {sizeLimit: "10mb"}},
 };
 
-// ─── Template HTML partilhado ─────────────────────────────────────────────────
-function buildEmailTemplate({title, subtitle, logoUrl, emailBody, senderName, corpName}) {
+// Template HTML partilhado
+function buildEmailTemplate({title, subtitle, logoUrl, emailBody, corpName}) {
   return `
     <!DOCTYPE html>
     <html>
@@ -36,7 +36,6 @@ function buildEmailTemplate({title, subtitle, logoUrl, emailBody, senderName, co
         .email-body {padding: 15px 10px; line-height: 1.6; font-size: 14px;}
         .message-box {background-color: #f8fafc; border-left: 4px solid #d81c1c; padding: 20px; margin: 0 0 25px 0; border-radius: 0 6px 6px 0; white-space: pre-line; color: #1e293b; font-size: 14.5px;}
         .signature-section {margin-top: 30px; border-top: 1px dashed #cbd5e1; padding-top: 15px; font-size: 13px; color: #475569;}
-        .signature-user {font-weight: bold; font-size: 14px; color: #1e293b; text-transform: uppercase; margin-bottom: 2px;}
         .signature-corp {font-weight: bold; color: #d81c1c; font-size: 12px; text-transform: uppercase; margin-bottom: 2px;}
         .signature-contacts {color: #475569; font-size: 11.5px;}
         .eco-note {font-size: 11px; color: #16a34a; margin-top: 25px; line-height: 1.4;}
@@ -47,26 +46,25 @@ function buildEmailTemplate({title, subtitle, logoUrl, emailBody, senderName, co
     <body>
       <div class="email-container">
         <div class="email-header">
-          ${logoUrl ? `<img src="${logoUrl}" alt="Logótipo" class="brand-logo" height="100" style="height: 100px; max-height: 100px;" />` : ""}
+          ${logoUrl ? `<img src="${logoUrl}" alt="Logotipo" class="brand-logo" height="100" style="height: 100px; max-height: 100px;" />` : ""}
           <h2>${title || ""}</h2>
           <p>${subtitle || ""}</p>
         </div>
         <div class="email-body">
           <div class="message-box">${emailBody || ""}</div>
-          
           <div class="signature-section">
-            <div class="signature-corp">${corpName}</div>
+            <div class="signature-corp">${corpName || ""}</div>
             <div class="signature-contacts">
               Rua Comandante Francisco Manuel, 7 a 13 | 8000-250 Faro | Portugal<br>
               Telem.: +351 917 629 626 | Telef: +351 289 803 066
             </div>
           </div>
           <div class="eco-note">
-            🌱 <strong>Antes de imprimir este e-mail pense bem se é mesmo necessário.</strong> Poupe eletricidade, toner e papel.
+            Antes de imprimir este e-mail pense bem se e mesmo necessario. Poupe eletricidade, toner e papel.
           </div>
           <div class="confidentiality-note">
             <strong>AVISO DE CONFIDENCIALIDADE:</strong><br>
-            Esta mensagem e quaisquer anexos, podem conter informação confidencial para uso exclusivo do destinatário. Cabe ao destinatário assegurar a verificação de vírus e outras medidas que assegurem que esta mensagem não afeta os seus sistemas. Se não for o destinatário, não deverá usar, distribuir ou copiar este email, devendo proceder à sua eliminação e informar o emissor. É estritamente proibido o uso, a distribuição, a cópia ou qualquer forma de disseminação não autorizada deste email e dos seus anexos. Obrigado.
+            Esta mensagem e quaisquer anexos, podem conter informacao confidencial para uso exclusivo do destinatario. Cabe ao destinatario assegurar a verificacao de virus e outras medidas que assegurem que esta mensagem nao afeta os seus sistemas. Se nao for o destinatario, nao devera usar, distribuir ou copiar este email, devendo proceder a sua eliminacao e informar o emissor. E estritamente proibido o uso, a distribuicao, a copia ou qualquer forma de disseminacao nao autorizada deste email e dos seus anexos. Obrigado.
           </div>
         </div>
         <div class="email-footer">
@@ -78,7 +76,7 @@ function buildEmailTemplate({title, subtitle, logoUrl, emailBody, senderName, co
   `;
 }
 
-// ─── Helpers partilhados ──────────────────────────────────────────────────────
+// Helpers partilhados
 async function downloadTemplate(url) {
   return new Promise((resolve, reject) => {
     https.get(url, (response) => {
@@ -92,7 +90,7 @@ async function downloadTemplate(url) {
 
 async function convertXLSXToPDF(xlsxBuffer, fileName) {
   if (!CLIENT_ID || !CLIENT_SECRET) {
-    throw new Error("Erro de Configuração Adobe: As chaves não estão definidas.");
+    throw new Error("Erro de Configuracao Adobe: As chaves nao estao definidas.");
   }
   const inputFilePath = `/tmp/${fileName}_input_${Date.now()}.xlsx`;
   fs.writeFileSync(inputFilePath, xlsxBuffer);
@@ -114,19 +112,19 @@ async function convertXLSXToPDF(xlsxBuffer, fileName) {
     return Buffer.concat(chunks);
   } catch (error) {
     console.error("Erro na API da Adobe:", error);
-    throw new Error("Falha na conversão XLSX para PDF.");
+    throw new Error("Falha na conversao XLSX para PDF.");
   } finally {
     try { if (fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath); } catch (e) {
-      console.warn("Falha na limpeza de ficheiros temporários:", e);
+      console.warn("Falha na limpeza de ficheiros temporarios:", e);
     }
   }
 }
 
-// ─── Handler MOA ──────────────────────────────────────────────────────────────
+// Handler MOA
 async function handleMOA(req, res) {
   const {data, recipients, ccRecipients, bccRecipients, emailBody, emailSubject} = req.body || {};
   if (!data || !recipients || recipients.length === 0) {
-    return res.status(400).json({error: "Faltam dados essenciais ou a lista de destinatários principais está vazia."});
+    return res.status(400).json({error: "Faltam dados essenciais ou a lista de destinatarios principais esta vazia."});
   }
   const templateBuffer = await downloadTemplate(TEMPLATES.moa);
   const workbook = new ExcelJS.Workbook();
@@ -198,30 +196,29 @@ async function handleMOA(req, res) {
   const corpName = data.moa_cb?.includes(" - ") ? data.moa_cb.split(" - ").slice(1).join(" - ") : data.moa_cb || data.moa_device_type || "";
   const htmlEmail = buildEmailTemplate({
     title: corpName,
-    subtitle: "Módulo de Ocorrências e Avarias",
+    subtitle: "Modulo de Ocorrencias e Avarias",
     logoUrl: data.logoUrl || "",
     emailBody: emailBody || `<p>Segue em anexo a MOA.</p>`,
-    senderName: `OPTEL ${data.moa_optel || ""}`,
     corpName,
   });
   await transporter.sendMail({
-    from: GMAIL_EMAIL,
+    from: `"SALOC ${data.corp_oper_nr || "Corporacao"}" <${GMAIL_EMAIL}>`,
     to: recipients.join(", "),
     cc: ccRecipients && ccRecipients.length  > 0 ? ccRecipients.join(", ")  : "",
     bcc: bccRecipients && bccRecipients.length > 0 ? bccRecipients.join(", ") : "",
-    subject: emailSubject || `MOA – ${data.moa_cb || data.moa_device_type || ""}`,
+    subject: emailSubject || `MOA - ${data.moa_cb || data.moa_device_type || ""}`,
     html: htmlEmail,
     text: "Segue em anexo a MOA.",
     attachments: [{filename: `${fileName}.pdf`, content: pdfBuffer, contentType: "application/pdf"}],
   });
-  return res.status(200).json({success: true, message: `MOA gerada e enviada com sucesso para ${recipients.length} destinatário(s).`});
+  return res.status(200).json({success: true, message: `MOA gerada e enviada com sucesso para ${recipients.length} destinatario(s).`});
 }
 
-// ─── Handler SITOP ────────────────────────────────────────────────────────────
+// Handler SITOP
 async function handleSITOP(req, res) {
   const {data, recipients, ccRecipients, bccRecipients, emailBody, emailSubject} = req.body || {};
   if (!data || !recipients || recipients.length === 0) {
-    return res.status(400).json({error: "Faltam dados essenciais ou a lista de destinatários principais está vazia."});
+    return res.status(400).json({error: "Faltam dados essenciais ou a lista de destinatarios principais esta vazia."});
   }
   const templateBuffer = await downloadTemplate(TEMPLATES.sitop);
   const workbook = new ExcelJS.Workbook();
@@ -232,7 +229,7 @@ async function handleSITOP(req, res) {
   sheet.getCell("E17").value = data.registration || '';
   sheet.getCell("B17").value = data.gdh_inop || '';
   sheet.getCell("O14").value = data.failure_type || '';
-  sheet.getCell("K16").value = data.failure_description ? `Descrição: ${data.failure_description}` : '';
+  sheet.getCell("K16").value = data.failure_description ? `Descricao: ${data.failure_description}` : '';
   sheet.getCell("H17").value = data.failure_noc || '';
   sheet.getCell("G30").value = data.gdh_op || '';
   sheet.getCell("E41").value = data.optel || '';
@@ -255,26 +252,25 @@ async function handleSITOP(req, res) {
   const corpName = data.cb_type?.includes(" - ") ? data.cb_type.split(" - ").slice(1).join(" - ") : data.cb_type || "";
   const htmlEmail = buildEmailTemplate({
     title: corpName,
-    subtitle: `Situação Operacional de Veículos — ${prefix} ${data.vehicle}`,
+    subtitle: `Situacao Operacional de Veiculos - ${prefix} ${data.vehicle}`,
     logoUrl: data.logoUrl || "",
-    emailBody: emailBody || `<p>Segue em anexo o documento de situação operacional do veículo ${data.vehicle || ""}.</p>`,
-    senderName: `OPTEL ${data.optel || ""}`,
+    emailBody: emailBody || `<p>Segue em anexo o documento de situacao operacional do veiculo ${data.vehicle || ""}.</p>`,
     corpName,
   });
   await transporter.sendMail({
-    from: `"SALOC ${data.corp_oper_nr || "Corporação"}" <${GMAIL_EMAIL}>`,
+    from: `"SALOC ${data.corp_oper_nr || "Corporacao"}" <${GMAIL_EMAIL}>`,
     to: recipients.join(", "),
     cc: ccRecipients && ccRecipients.length  > 0 ? ccRecipients.join(", ")  : '',
     bcc: bccRecipients && bccRecipients.length > 0 ? bccRecipients.join(", ") : '',
-    subject: emailSubject || `Situação Operacional - ${prefix} ${data.vehicle}`,
+    subject: emailSubject || `Situacao Operacional - ${prefix} ${data.vehicle}`,
     html: htmlEmail,
-    text: 'Segue em anexo o documento de situação operacional de veículos.',
+    text: 'Segue em anexo o documento de situacao operacional de veiculos.',
     attachments: [{filename: `${fileName}.pdf`, content: pdfBuffer, contentType: 'application/pdf'}],
   });
-  return res.status(200).json({success: true, message: `PDF gerado e enviado com sucesso para ${recipients.length} destinatário(s).`});
+  return res.status(200).json({success: true, message: `PDF gerado e enviado com sucesso para ${recipients.length} destinatario(s).`});
 }
 
-// ─── Handler principal ────────────────────────────────────────────────────────
+// Handler principal
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
@@ -283,14 +279,14 @@ export default async function handler(req, res) {
   try {
     const {mode} = req.body || {};
     if (!mode || !["moa", "sitop"].includes(mode)) {
-      return res.status(400).json({error: "Modo inválido. Use 'moa' ou 'sitop'."});
+      return res.status(400).json({error: "Modo invalido. Use 'moa' ou 'sitop'."});
     }
     if (mode === "moa")   return await handleMOA(req, res);
     if (mode === "sitop") return await handleSITOP(req, res);
   } catch (err) {
     console.error("Erro no processo:", err);
     return res.status(500).json({
-      error: "Erro no processo de geração e envio",
+      error: "Erro no processo de geracao e envio",
       details: err.message,
       stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
     });

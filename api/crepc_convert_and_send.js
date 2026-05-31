@@ -60,7 +60,7 @@
                 </div>
               </div>
               <div class="eco-note">
-                Antes de imprimir este e-mail pense bem se e mesmo necessario. Poupe eletricidade, toner e papel.
+                 🌱 <strong>Antes de imprimir este e-mail pense bem se é mesmo necessário.</strong> Poupe eletricidade, toner e papel.
               </div>
               <div class="confidentiality-note">
                 <strong>AVISO DE CONFIDENCIALIDADE:</strong><br>

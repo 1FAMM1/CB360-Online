@@ -3185,7 +3185,7 @@
       const recordId = sitopContainer.getAttribute("data-record-id");
       const isUpdate = !!recordId;
       const isOperational = !!gdh_op;
-      const { logoUrl } = await _getCREPCEmailCommonData(corpOperNr);
+      const {logoUrl} = await _getCREPCEmailCommonData(corpOperNr);
       const data = {cb_type, vehicle, registration, gdh_inop, gdh_op, failure_type, failure_description, failure_noc, ppi_part, ppi_a2, ppi_a22, ppi_airport, ppi_linfer, ppi_airfield, ppi_subs, optel, corp_oper_nr: corpOperNr, logoUrl};
       const supabaseData = { ...data };
       delete supabaseData.cb_type;

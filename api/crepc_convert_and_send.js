@@ -53,9 +53,7 @@ function buildEmailTemplate({title, subtitle, logoUrl, emailBody, senderName, co
         </div>
         <div class="email-body">
           <div class="message-box">${emailBody || ""}</div>
-          <div style="margin-top:10px; margin-bottom:10px; font-size:14px; color:#1e293b;">
-            Com os melhores cumprimentos,
-          </div>
+          
           <div class="signature-section">
             <div class="signature-corp">${corpName}</div>
             <div class="signature-contacts">

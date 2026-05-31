@@ -1771,6 +1771,22 @@
     /* =======================================
     OPERATIONAL ANTICIPATION MEASURES
     ======================================= */
+    async function _getMOAEmailCommonData(corpOperNr) {
+      try {
+        const corpRes = await fetch(
+          `${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${corpOperNr}&select=logo_url,cb_name`,
+          { headers: getSupabaseHeaders() }
+        );
+        const corpData = await corpRes.json();
+        return {
+          logoUrl: corpData[0]?.logo_url || "",
+          cbName: corpData[0]?.cb_name || ""
+        };
+      } catch (err) {
+        console.error("Erro ao carregar dados da corporação:", err);
+        return { logoUrl: "", cbName: "" };
+      }
+    }
     /* ================ SELECT UTILITIES =============== */
     function styleGrayIfSecond(select) {
       const updateColor = () => {
@@ -1779,7 +1795,6 @@
       select.addEventListener("change", updateColor);
       updateColor();
     }
-    
     function setupMOASelects(page) {
       page.querySelectorAll('select[id$="_sit"]').forEach(select => {
         if (select.options.length > 1) {
@@ -1816,7 +1831,6 @@
       const dateEnd = document.getElementById("moa_date_end")?.value;
       const timeEnd = document.getElementById("moa_time_end")?.value;
       const monthNames = ["JAN","FEV","MAR","ABR","MAI","JUN","JUL","AGO","SET","OUT","NOV","DEZ"];
-      
       function formatGDH(dateStr, timeStr) {
         if (!dateStr || !timeStr) return "";
         const d = new Date(dateStr + "T" + timeStr);
@@ -1860,18 +1874,17 @@
     }
     /* ================ BUILD EMAIL HTML =============== */
     async function buildMOAEmailHTML(data, corpOperNr) {
-      const signature = getEmailSignature();
       const greeting = getGreeting();
       const commanderName = await getCommanderName(corpOperNr);
-      return `${greeting}<br><br>
+      const article = data.moa_cb?.includes("Companhia") ? "da" : "do";
+      return `${greeting}<br>
       Encarrega-me o Sr. Comandante ${commanderName} de remeter em anexo a Vossas Exª.s o Formulário das <strong>MEDIDAS OPERACIONAIS DE ANTECIPAÇÃO</strong> 
       para o <strong>${data.moa_device_type}</strong> de <strong>${data.moa_gdh_init}</strong> a <strong>${data.moa_gdh_end}</strong> 
-      do Corpo de Bombeiros <strong>${data.moa_cb}</strong>.<br><br>
-      Com os melhores cumprimentos,<br><br>
-      OPTEL<br>${data.moa_optel}<br><br>
+      ${article} <strong>${data.moa_cb}</strong>.<br>
+      Com os melhores cumprimentos,<br>
+      OPTEL<br>${data.moa_optel}<br>
       <span style="font-family: 'Arial'; font-size: 10px; color: gray;">
-      Este email foi processado automaticamente por: CB360 Online<br><br></span>
-      ${signature}`;
+      Este email foi processado automaticamente por: CB360 Online</span>`;
     }
     /* =================== SEND EMAIL ================== */
     async function sendMOAEmail(data, recipients, corpOperNr) {
@@ -1884,10 +1897,10 @@
                               emailBody: emailBodyHTML})
       });
       return result.json();
-    }    
+    }
     /* ================= MAIN FUNCTION ================= */
     async function emitMOAGlobal() {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       if (!corpOperNr) {showPopup('popup-danger', "Erro: O número da corporação não foi encontrado."); return;}
       const moa_device_type = document.getElementById("moa_device_type")?.value.trim();
       const moa_cb = document.getElementById("moa_cb")?.value.trim();
@@ -1897,7 +1910,7 @@
       const btn = document.getElementById("saveMOABtn");
       if (btn) btn.disabled = true;
       const data = {};
-      const baseFields = ["device_type","cb","epe_type","date_init","time_init","date_end","time_end", "gdh_init","gdh_end","eco","ned","oco","era","eob","rsc","mef"];
+      const baseFields = ["device_type","cb","epe_type","date_init","time_init","date_end","time_end","gdh_init","gdh_end","eco","ned","oco","era","eob","rsc","mef"];
       baseFields.forEach(f => {
         const el = document.getElementById(`moa_${f}`);
         if (!el) return;
@@ -1913,6 +1926,9 @@
       });
       data.corp_oper_nr = corpOperNr;
       try {
+        const { logoUrl, cbName } = await _getMOAEmailCommonData(corpOperNr);
+        data.logoUrl = logoUrl;
+        if (cbName) data.moa_cb = cbName;
         const recipients = await fetchMOARecipients(corpOperNr);
         await sendMOAEmail(data, recipients, corpOperNr);
         if (typeof showPopup === "function")
@@ -1971,7 +1987,7 @@
             });
             setupMOASelects(moaContainer);
             updateMOAGDH();
-          } else { window.hideMOAContainer();}
+          } else { window.hideMOAContainer(); }
         };
       }
       if (saveMOABtn) {

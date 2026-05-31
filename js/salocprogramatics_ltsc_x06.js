@@ -3000,6 +3000,21 @@
     /* =======================================
     INOP CREPC
     ======================================= */
+    async function _getCREPCEmailCommonData(corpOperNr) {
+      let logoUrl = "";
+      try {
+        const corpRes = await fetch(
+          `${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${corpOperNr}&select=logo_url`, {
+            headers: getSupabaseHeaders()
+          }
+        );
+        const corpData = await corpRes.json();
+        if (corpData.length) logoUrl = corpData[0].logo_url || "";
+      } catch (err) {
+        console.error("Erro ao carregar logo:", err);
+      }
+      return {logoUrl};
+    }
     function preselectCorpInSitopCB() {
       const current = sessionStorage.getItem("currentCorpOperNr");
       if (!current) {
@@ -3170,9 +3185,11 @@
       const recordId = sitopContainer.getAttribute("data-record-id");
       const isUpdate = !!recordId;
       const isOperational = !!gdh_op;
-      const data = {cb_type, vehicle, registration, gdh_inop, gdh_op, failure_type, failure_description, failure_noc, ppi_part, ppi_a2, ppi_a22, ppi_airport, ppi_linfer, ppi_airfield, ppi_subs, optel, corp_oper_nr: corpOperNr};
+      const { logoUrl } = await _getCREPCEmailCommonData(corpOperNr);
+      const data = {cb_type, vehicle, registration, gdh_inop, gdh_op, failure_type, failure_description, failure_noc, ppi_part, ppi_a2, ppi_a22, ppi_airport, ppi_linfer, ppi_airfield, ppi_subs, optel, corp_oper_nr: corpOperNr, logoUrl};
       const supabaseData = { ...data };
-      delete supabaseData.cb_type; // O Supabase não precisa do nome da corporação formatado, apenas do NR
+      delete supabaseData.cb_type;
+      delete supabaseData.logoUrl;
       try {
         if (!isUpdate && !isOperational) {
           const checkUrl = `${SUPABASE_URL}/rest/v1/sitop_vehicles?select=vehicle&vehicle=eq.${encodeURIComponent(vehicle)}&gdh_op=is.null&corp_oper_nr=eq.${encodeURIComponent(corpOperNr)}`;
@@ -3200,24 +3217,22 @@
         });
         if (!statusRes.ok) console.warn("⚠️ Erro ao atualizar status do veículo.");
         const { to, cc, bcc } = await fetchCREPCSitopRecipientsFromSupabase(corpOperNr);
-        const signature = getEmailSignature();
         const greeting = getGreeting();
         const commanderName = await getCommanderName(corpOperNr);
         const corpName = cb_type.includes(" - ") ? cb_type.split(" - ").slice(1).join(" - ") : cb_type;
         const article = corpName.includes("Companhia") ? "da" : "do";
-        const emailBodyHTML = `${greeting}<br><br>
-        Encarrega-me o Sr. Comandante ${commanderName} de remeter em anexo a Vossas Exª.s o Formulário de Situação Operacional 
-        do veículo ${vehicle} ${article} ${corpName}.<br><br>
-        Com os melhores cumprimentos,<br><br>
-        OPTEL<br>${optel}<br><br>
+        const emailBodyHTML = `${greeting}<br>
+        Encarrega-me o Sr. Comandante ${commanderName} de remeter em anexo a Vossas Exª.s o Formulário de Situação Operacional do veículo <strong>${data.vehicle || ""}</strong> 
+        ${article} ${corpName}.<br>
+        Com os melhores cumprimentos,<br>
+        OPTEL<br>${optel}<br>
         <span style="font-family: 'Arial'; font-size: 10px; color: gray;">
-        Este email foi processado automaticamente por: CB360 Online<br><br>
-        </span>
-        ${signature}`;
+        Este email foi processado automaticamente por: CB360 Online
+        </span>`;
         const emailRes = await fetch('https://cb360-online.vercel.app/api/crepc_convert_and_send', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({mode: "sitop", data, recipients: to, ccRecipients: cc, bccRecipients: bcc, emailSubject: `Situação Operacional do Veículo ${vehicle}`, emailBody: emailBodyHTML})
+          body: JSON.stringify({mode: "sitop", data, recipients: to, ccRecipients: cc, bccRecipients: bcc, emailSubject: `Situação Operacional do Veículo ${vehicle}_${corpOperNr}`, emailBody: emailBodyHTML})
         });
         if (!emailRes.ok) throw new Error("Erro ao enviar email via Vercel.");
         showPopup('popup-success', `A situação operacional do veículo ${vehicle} foi enviada para as entidades.`);

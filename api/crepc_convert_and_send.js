@@ -191,7 +191,7 @@
       const pdfBuffer  = await convertXLSXToPDF(xlsxBuffer, fileName);
       const transporter = nodemailer.createTransport({service: "gmail", auth: {user: GMAIL_EMAIL, pass: GMAIL_APP_PASSWORD}});
       const corpName = data.moa_cb || data.moa_device_type || "";
-      const htmlEmail = buildEmailTemplate({title: corpName, subtitle: "MEDIDAS OPERACIONAIS DE ANTECIPAÇÃO", logoUrl: data.logoUrl || "", emailBody: emailBody || `<p>Segue em anexo a MOA.</p>`, corpName,});
+      const htmlEmail = buildEmailTemplate({title: corpName, subtitle: "Medidas Operacionais de Antecipação", logoUrl: data.logoUrl || "", emailBody: emailBody || `<p>Segue em anexo a MOA.</p>`, corpName,});
       await transporter.sendMail({from: `"SALOC ${data.corp_oper_nr || "Corporacao"}" <${GMAIL_EMAIL}>`, to: recipients.join(", "), cc: ccRecipients && ccRecipients.length  > 0 ? ccRecipients.join(", ")  : "",
                                   bcc: bccRecipients && bccRecipients.length > 0 ? bccRecipients.join(", ") : "", subject: emailSubject || `MOA - ${data.moa_cb || data.moa_device_type || ""}`,
                                   html: htmlEmail, text: "Segue em anexo a MOA.", attachments: [{filename: `${fileName}.pdf`, content: pdfBuffer, contentType: "application/pdf"}],

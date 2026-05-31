@@ -2002,6 +2002,23 @@
     /* =======================================
     DAILY PLANNING
     ======================================= */
+    async function _getPLANDIREmailCommonData(corpOperNr) {
+      try {
+        const corpRes = await fetch(
+          `${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${corpOperNr}&select=logo_url,cb_name`, {
+            headers: getSupabaseHeaders()
+          }
+        );
+        const corpData = await corpRes.json();
+        return {
+          logoUrl: corpData[0]?.logo_url || "",
+          cbName: corpData[0]?.cb_name || ""
+        };
+      } catch (err) {
+        console.error("Erro ao carregar dados da corporação:", err);
+        return {logoUrl: "", cbName: ""};
+      }
+    }
     const tableConfig = [{rows: 1, special: false, title: "OFOPE"}, {rows: 1, special: false, title: "CHEFE DE SERVIÇO"}, {rows: 1, special: false, title: "OPTEL"},
                      {rows: 5, special: true, title: "EQUIPA 01"}, {rows: 5, special: false, title: "EQUIPA 02"}, {rows: 2, special: false, title: "LOGÍSTICA"},
                      {rows: 3, special: false, title: "INEM"}, {rows: 3, special: false, title: "INEM - Reserva"}, {rows: 10, special: false, title: "SERVIÇO GERAL"}];
@@ -2428,7 +2445,7 @@
       return optelTable.rows[0].nome || "";
     }
     async function emitPlanning(shift, date, baixar = false) {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       if (!corpOperNr) {
         showPopup('popup-danger', "Erro: Sessão expirada. Por favor, faça login novamente.");
         return;
@@ -2452,6 +2469,7 @@
                            "INEM": "inem", "INEM - Reserva": "inem_reserva", "SERVIÇO GERAL": "servico_geral"};
       showPopup('popup-success', `Planeamento gerado com sucesso. O mesmo está a ser enviado para as entidades.`);
       try {
+        const { logoUrl, cbName } = await _getPLANDIREmailCommonData(corpOperNr);
         for (let table of tables) {
           const team_name = teamNameMap[table.title];
           if (!team_name) continue;
@@ -2480,16 +2498,15 @@
         const greeting = getGreeting();
         const signature = getEmailSignature();
         const emailBodyHTML = `
-          ${greeting}<br><br>
-          Remeto em anexo a Vossas Exª.s o ${fileDisplayName}<br><br>
-          Com os melhores cumprimentos,<br><br>
-          OPTEL<br>${optelName}<br><br>
-          ${signature}
-        `;        
+          ${greeting}<br>
+          Remeto em anexo a Vossas Exª.s o  ${fileDisplayName}<br>
+          Com os melhores cumprimentos,<br>
+          OPTEL<br>${optelName}`;
         const response = await fetch("https://cb360-online.vercel.app/api/plandir_convert_and_send", {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({shift, date, tables, recipients: RECIPIENTS, ccRecipients: CC_RECIPIENTS, bccRecipients: BCC_RECIPIENTS, emailBody: emailBodyHTML})
+          body: JSON.stringify({shift, date, tables, recipients: RECIPIENTS, ccRecipients: CC_RECIPIENTS, bccRecipients: BCC_RECIPIENTS, emailBody: emailBodyHTML,
+                                logoUrl: logoUrl, corpName: cbName, corpOperNr: corpOperNr})
         });
         const result = await response.json();
         if (!response.ok) {
@@ -2510,7 +2527,7 @@
       const tbody = document.getElementById('plandir-side-tbody');
       const rightCol = document.getElementById('plandir-right-col');
       if (!tbody || !rightCol) return;
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       if (!corpOperNr) return;
       const now = new Date();
       const day = String(now.getDate()).padStart(2, '0');
@@ -2590,7 +2607,7 @@
         localStorage.setItem("originalShift", shift);
       }
       let header;
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       if (shift === 'LAST') {
         try {
           const res = await fetch(`${SUPABASE_URL}/rest/v1/fomio_date?select=header_text&limit=1`, {method: 'GET', headers: getSupabaseHeaders()});
@@ -2973,7 +2990,7 @@
     }
     blockShiftButtons();    
     async function saveDraft(shift) {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       if (!corpOperNr || !shift || shift === 'LAST') return;
       const tables = collectTableData();
       const teamNameMap = {"OFOPE": "ofope", "CHEFE DE SERVIÇO": "chefe_servico", "OPTEL": "optel", "EQUIPA 01": "equipa_01", "EQUIPA 02": "equipa_02", "LOGÍSTICA": "logistica",

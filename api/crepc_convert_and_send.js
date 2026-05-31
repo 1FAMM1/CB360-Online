@@ -234,12 +234,12 @@
       const pdfBuffer = await convertXLSXToPDF(xlsxBuffer, fileName);
       const transporter = nodemailer.createTransport({service: "gmail", auth: {user: GMAIL_EMAIL, pass: GMAIL_APP_PASSWORD}});
       const corpName = data.cb_type?.includes(" - ") ? data.cb_type.split(" - ").slice(1).join(" - ") : data.cb_type || "";
-      const htmlEmail = buildEmailTemplate({title: corpName, subtitle: `Situacao Operacional de Veiculos - ${prefix} ${data.vehicle}`, logoUrl: data.logoUrl || "",
-                                            emailBody: emailBody || `<p>Segue em anexo o documento de situacao operacional do veiculo ${data.vehicle || ""}.</p>`, corpName,
+      const htmlEmail = buildEmailTemplate({title: corpName, subtitle: `Situação Operacional de Veiculos - ${prefix} ${data.vehicle}`, logoUrl: data.logoUrl || "",
+                                            emailBody: emailBody || `<p>Segue em anexo o documento de Situação operacional do veiculo ${data.vehicle || ""}.</p>`, corpName,
                                            });
       await transporter.sendMail({from: `"SALOC ${data.corp_oper_nr || "Corporacao"}" <${GMAIL_EMAIL}>`, to: recipients.join(", "), cc: ccRecipients && ccRecipients.length  > 0 ? ccRecipients.join(", ")  : '',
-                                  bcc: bccRecipients && bccRecipients.length > 0 ? bccRecipients.join(", ") : '', subject: emailSubject || `Situacao Operacional - ${prefix} ${data.vehicle}`, html: htmlEmail,
-                                  text: 'Segue em anexo o documento de situacao operacional de veiculos.',
+                                  bcc: bccRecipients && bccRecipients.length > 0 ? bccRecipients.join(", ") : '', subject: emailSubject || `Situação Operacional - ${prefix} ${data.vehicle}`, html: htmlEmail,
+                                  text: 'Segue em anexo o documento de Situação operacional de veiculos.',
                                   attachments: [{filename: `${fileName}.pdf`, content: pdfBuffer, contentType: 'application/pdf'}],
                                  });
       return res.status(200).json({success: true, message: `PDF gerado e enviado com sucesso para ${recipients.length} destinatario(s).`});

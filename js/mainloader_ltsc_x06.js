@@ -1031,7 +1031,7 @@
       const hour = now.getHours();
       if (hour >= 6 && hour < 12) {
         return "Bom dia,";
-      } else if (hour >= 12 && hour < 18) {
+      } else if (hour >= 12 && hour < 20) {
         return "Boa tarde,";
       } else {
         return "Boa noite,";

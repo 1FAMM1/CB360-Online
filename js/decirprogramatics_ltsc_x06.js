@@ -245,6 +245,9 @@
       "decir-reg-ref": {tableId: "table-container-dec-ref", optionsId: "decir-ref-options", monthsId: "months-container-dec-ref",
                         generic: {containerId: "months-container-dec-ref", tableContainerId: "table-container-dec-ref", yearSelectId: "year-dec-ref", optionsContainerId: "decir-ref-options",
                         monthNames: DECIR_MONTH_NAMES, blockedMonths: [], loadDataFunc: async (y, m) => m, createTableFunc: (cId, y, m, d) => createDecirMealTable(cId, y, m + 4, d)}},
+      "decir-reg-lepp": {tableId: "table-container-dec-lepp", optionsId: "decir-lepp-options", monthsId: "months-container-dec-lepp",
+                         generic: {containerId: "months-container-dec-lepp", tableContainerId: "table-container-dec-lepp", yearSelectId: "year-dec-lepp", optionsContainerId: "decir-lepp-options",
+                         monthNames: DECIR_MONTH_NAMES, blockedMonths: [], loadDataFunc: async (y, m) => m, createTableFunc: (cId, y, m, d) => createLeppTable(cId, y, m + 4, d)}},
       "decir-reg-signa": {init: openDecirSignaWithMode},
       "decir-dashboard": {init: createDecirDashboard} 
     };
@@ -932,7 +935,7 @@
       const monthBtn = document.querySelector("#months-container-dec-reg .btn.active");
       if (!monthBtn) return showPopup('popup-danger', "Nenhum mês selecionado.");
       const month = Array.from(document.querySelectorAll("#months-container-dec-reg .btn")).indexOf(monthBtn) + 1 + 4;
-      const btn = $("guardar-dec-btn");
+      const btn = $("save-dec-btn");
       if (btn) {btn.disabled=true; btn.textContent="A gravar...";}
       try {
         let last_n_int=null, last_abv_name=null;
@@ -1351,7 +1354,7 @@
       if (!container) return showPopup('popup-danger', "Tabela não encontrada.");
       const year = document.getElementById("year-dec-ocorr")?.value || String(new Date().getFullYear());
       const corpOperNr = getCorpId();
-      const btn = document.getElementById("guardar-ocorr-btn");
+      const btn = document.getElementById("save-ocorr-btn");
       if (btn) {btn.disabled = true; btn.textContent = "A gravar...";}
       try {
         const payload = [];
@@ -1679,7 +1682,7 @@
       const month = String(monthIdx + 4).padStart(2,"0");
       const year = document.getElementById("year-dec-ref")?.value || String(new Date().getFullYear());
       const corpOperNr = getCorpId();
-      const btn = document.getElementById("guardar-ref-btn");
+      const btn = document.getElementById("save-ref-btn");
       if (btn) {btn.disabled = true; btn.textContent = "A gravar...";}
       try {
         const payload = [];
@@ -1710,6 +1713,333 @@
         showPopup('popup-danger', "❌ Erro ao gravar: " + err.message);
       } finally {
         if (btn) {btn.disabled = false; btn.textContent = "💾 Guardar";}
+      }
+    }
+    /* ─── LOAD LEPP ─────────────────────────────────────────── */
+    async function loadLeppData() {
+      const month_btn = document.querySelector("#months-container-dec-lepp .btn.active");
+      if (!month_btn) return;
+      const monthIdx = Array.from(document.querySelectorAll("#months-container-dec-lepp .btn")).indexOf(month_btn) + 1;
+      const month = String(monthIdx + 4).padStart(2, "0");
+      const year = document.getElementById("year-dec-lepp")?.value || String(new Date().getFullYear());
+      const corpOperNr = getCorpId();
+      try {
+        const data = await supabaseFetch(
+          `decir_reg_lepp?corp_oper_nr=eq.${corpOperNr}&month=eq.${month}&year=eq.${year}`
+        );
+        if (!data?.length) return;
+        const tbody = document.querySelector("#table-container-dec-lepp table tbody");
+        if (!tbody) return;
+        const rows = Array.from(tbody.querySelectorAll("tr"));
+        data.forEach(item => {
+          const day = parseInt(item.day, 10);
+          const shiftOffset = item.shift === "N" ? 1 : 0;
+          const rowIdx = (day - 1) * 2 + shiftOffset;
+          const tr = rows[rowIdx];
+          if (!tr) return;
+          const tds = Array.from(tr.querySelectorAll("td"));
+          const offset = item.shift === "D" ? 3 : 1;
+          const selV1 = tds[offset]?.querySelector("select");
+          if (selV1 && item.vehicle_01) selV1.value = item.vehicle_01;
+          const selL1 = tds[offset + 1]?.querySelector("select");
+          if (selL1 && item.vehicle_01_lepp) {
+            selL1.value = item.vehicle_01_lepp;
+            selL1.dispatchEvent(new Event("change"));
+          }
+          if (tds[offset + 2]) tds[offset + 2].textContent = item.vehicle_01_kms || "";
+          const selV2 = tds[offset + 3]?.querySelector("select");
+          if (selV2 && item.vehicle_02) selV2.value = item.vehicle_02;
+          const selL2 = tds[offset + 4]?.querySelector("select");
+          if (selL2 && item.vehicle_02_lepp) {
+            selL2.value = item.vehicle_02_lepp;
+            selL2.dispatchEvent(new Event("change"));
+          }
+          if (tds[offset + 5]) tds[offset + 5].textContent = item.vehicle_02_kms || "";
+          const selV3 = tds[offset + 6]?.querySelector("select");
+          if (selV3 && item.vehicle_03) selV3.value = item.vehicle_03;
+          const selL3 = tds[offset + 7]?.querySelector("select");
+          if (selL3 && item.vehicle_03_lepp) {
+            selL3.value = item.vehicle_03_lepp;
+            selL3.dispatchEvent(new Event("change"));
+          }
+          if (tds[offset + 8]) tds[offset + 8].textContent = item.vehicle_03_kms || "";
+        });
+      } catch (err) {
+        console.error("Erro ao carregar LEPP:", err);
+        showPopup('popup-danger', "Erro ao carregar dados LEPP.");
+      }
+    }
+    /* ─── TABELA: LEPP ───────────────────────────────────────── */
+    async function createLeppTable(containerId, year, month) {
+      const container = document.getElementById(containerId) || $(containerId);
+      if (!container) return;
+      container.innerHTML = "";
+      const corpOperNr = getCorpId();
+      let vehicles = [];
+      try {
+        const ALLOWED_TYPES = ["VFCI", "VTTF", "VTTU", "VTTP", "VCOT"];
+        const TYPE_ORDER = ["VCOT", "VFCI", "VTTF", "VTTU", "VTTP"];
+        const vData = await supabaseFetch(`vehicle_status?corp_oper_nr=eq.${corpOperNr}&select=vehicle`);
+        vehicles = (vData || [])
+          .filter(v => v.vehicle && ALLOWED_TYPES.some(t => v.vehicle.startsWith(t)))
+          .map(v => v.vehicle)
+          .sort((a, b) => {
+          const getOrder = v => TYPE_ORDER.findIndex(t => v.toUpperCase().startsWith(t));
+          return getOrder(a) - getOrder(b);
+        });
+      } catch {
+        vehicles = [];
+      }
+      const LEPP_OPTIONS = ["", "VEÍCULO INOP", "LEPP GORJÕES", "LEPP BARRANCO DO VELHO", "LEPP CACHOPO", "LEPP VAQUEIROS"];
+      const LEPP_COLORS = {"VEÍCULO INOP": {bg: "#b0bec5", color: "#263238"},"LEPP GORJÕES": {bg: "linear-gradient(135deg, #a5d6a7, #90caf9, #fff176)", color: "#1b5e20"}, 
+                           "LEPP BARRANCO DO VELHO": {bg: "linear-gradient(135deg, #fff176, #ffb74d)", color: "#0d47a1"}, "LEPP CACHOPO": {bg: "#ef9a9a", color: "#b71c1c"}, 
+                           "LEPP VAQUEIROS": {bg: "#ef9a9a", color: "#b71c1c"}
+                          };
+      /* ─── HELPER: dia bloqueado? ─────────────────────────── */
+      const isDayLocked = (day, month) => {
+        const m = parseInt(month, 10);
+        const d = parseInt(day, 10);
+        if (m === 5  && d >= 1  && d <= 14) return true;
+        if (m === 10 && d >= 16 && d <= 31) return true;
+        return false;
+      };
+      const daysInMonth = new Date(year, month, 0).getDate();
+      const holidays = getPortugalHolidays(year);
+      const WEEKDAYS_PT = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
+      const title = document.createElement("div");
+      title.textContent = `REGISTO LEPP - ${MONTH_NAMES_UPPER[month - 1]} ${year}`;
+      Object.assign(title.style, {textAlign: "center", fontWeight: "bold", fontSize: "15px", fontFamily: "Segoe UI, sans-serif", color: "#131a69", marginBottom: "10px", marginTop: "10px", letterSpacing: "0.5px"});
+      container.appendChild(title);
+      const wrapper = document.createElement("div");
+      wrapper.id = "decir-lepp-wrapper";
+      Object.assign(wrapper.style, {overflowX: "auto", overflowY: "auto", width: "100%", maxHeight: "500px", borderRadius: "8px", border: "1px solid #ddd", boxShadow: "0 2px 8px rgba(0,0,0,0.08)"});
+      const style = document.createElement("style");
+      style.textContent = `
+        #decir-lepp-wrapper::-webkit-scrollbar {height: 6px; width: 0px;}
+        #decir-lepp-wrapper::-webkit-scrollbar-thumb:horizontal {background: #131a69; border-radius: 10px;}
+        #decir-lepp-wrapper::-webkit-scrollbar-track:horizontal {background: #f0f0f0; border-radius: 10px;}
+        .lepp-select {width: 100%; border: none; background: transparent; cursor: pointer;
+          font-size: 11px; text-align: center; outline: none;
+          appearance: none; -webkit-appearance: none; color: #333; padding: 0;}
+        .lepp-select:focus {background: #eef0ff;}
+        .lepp-select option {background: #fff; color: #333;}
+        .lepp-select:disabled {cursor: not-allowed; color: #999;}
+      `;
+      document.head.appendChild(style);
+      const table = document.createElement("table");
+      Object.assign(table.style, {width: "100%", minWidth: "1100px", borderCollapse: "separate", borderSpacing: "0", fontFamily: "Segoe UI, sans-serif", fontSize: "12px"});
+      const thead = document.createElement("thead");
+      const trh1 = document.createElement("tr");
+      const groupHeaders = [{label: "Dia", rowSpan: 2, colSpan: 1, width: "45px"}, {label: "Dia Sem.", rowSpan: 2, colSpan: 1, width: "45px"}, {label: "Turno", rowSpan: 2, colSpan: 1, width: "45px"},
+                            {label: "Veículo 01", rowSpan: 1, colSpan: 3, width: ""}, {label: "Veículo 02", rowSpan: 1, colSpan: 3, width: ""}, {label: "Veículo 03", rowSpan: 1, colSpan: 3, width: ""},];
+      groupHeaders.forEach((h, i) => {
+        const th = document.createElement("th");
+        th.textContent = h.label;
+        if (h.rowSpan > 1) th.rowSpan = h.rowSpan;
+        if (h.colSpan > 1) th.colSpan = h.colSpan;
+        Object.assign(th.style, {borderBottom: "1px solid #4a5aa0", borderLeft: "1px solid #4a5aa0", background: "#131a69", color: "#fff", textAlign: "center", padding: "6px 4px", fontWeight: "bold", 
+                                 position: "sticky", top: "0", zIndex: "2", whiteSpace: "nowrap"});
+        if (h.width) th.style.width = h.width;
+        if (i === 0) th.style.borderTopLeftRadius = "8px";
+        if (i === groupHeaders.length - 1) th.style.borderTopRightRadius = "8px";
+        trh1.appendChild(th);
+      });
+      thead.appendChild(trh1);
+      const trh2 = document.createElement("tr");
+      const subHeaders = [{label: "Viatura", width: "140px"}, {label: "LEPP", width: "160px"}, {label: "Kms", width: "70px"}, {label: "Viatura", width: "140px"}, {label: "LEPP", width: "160px"}, 
+                          {label: "Kms", width: "70px"}, {label: "Viatura", width: "140px"}, {label: "LEPP", width: "160px"}, {label: "Kms", width: "70px"},];
+      subHeaders.forEach(h => {
+        const th = document.createElement("th");
+        th.textContent = h.label;
+        Object.assign(th.style, {borderBottom: "1px solid #4a5aa0", borderLeft: "1px solid #4a5aa0", background: "#1e2d8a", color: "#fff", textAlign: "center", padding: "5px 4px",
+                                 fontWeight: "bold", position: "sticky", top: "29px", zIndex: "2", width: h.width, whiteSpace: "nowrap"});
+        trh2.appendChild(th);
+      });
+      thead.appendChild(trh2);
+      table.appendChild(thead);
+      requestAnimationFrame(() => {
+        const h = trh1.getBoundingClientRect().height;
+        trh2.querySelectorAll("th").forEach(th => th.style.top = h + "px");
+      });
+      const tbody = document.createElement("tbody");
+      const allEditableCells = [];
+      const navigateCell = (currentTd, dir) => {
+        const idx = allEditableCells.indexOf(currentTd);
+        if (idx === -1) return;
+        const next = (dir === "right" || dir === "down") ? allEditableCells[idx + 1] : allEditableCells[idx - 1];
+        if (next) next.focus();
+      };
+      const getDayBg = (d) => {
+        const date = new Date(year, month - 1, d);
+        const holiday = holidays.find(h => h.date.getDate() === d && h.date.getMonth() === month - 1);
+        const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+        if (holiday) return { bg: holiday.optional ? "#2ecc71" : "#ffcccc", color: "#000", title: holiday.name };
+        if (isWeekend) return { bg: WEEKEND_COLOR, color: "#000", title: "" };
+        return { bg: "", color: "", title: "" };
+      };
+      /* ─── makeKmsTd ──────────────────────────────────────── */
+      const makeKmsTd = (dayStyle, isLast, isLastCol, locked) => {
+        const td = document.createElement("td");
+        const lockedBg = "#e0e0e0";
+        Object.assign(td.style, {borderBottom: "1px solid #ddd", borderLeft: "1px solid #ddd", padding: "3px 4px", height: "26px", verticalAlign: "middle", textAlign: "center", fontSize: "11px",
+                                 background: locked ? lockedBg : (dayStyle.bg || ""), color: locked ? "#999" : (dayStyle.color || ""), borderBottomRightRadius: isLast && isLastCol ? "8px" : "",
+                                 cursor: locked ? "not-allowed" : "text", opacity: locked ? "0.6" : "1"});
+        if (!locked) {
+          td.contentEditable = true;
+          td.style.outline = "none";
+          td.addEventListener("focus", () => td.style.background = "#eef0ff");
+          td.addEventListener("blur", () => td.style.background = dayStyle.bg || "");
+          td.addEventListener("keydown", e => {
+            if (["ArrowRight", "ArrowDown", "Enter"].includes(e.key)) { e.preventDefault(); navigateCell(td, "right"); }
+            else if (["ArrowLeft", "ArrowUp"].includes(e.key)) { e.preventDefault(); navigateCell(td, "left"); }
+            else if (!/^\d$/.test(e.key) && !["Backspace", "Delete", "Tab"].includes(e.key)) e.preventDefault();
+          });
+          allEditableCells.push(td);
+        } else {
+          td.contentEditable = false;
+          td.style.pointerEvents = "none";
+        }
+        return td;
+      };
+      /* ─── makeSelectTd ───────────────────────────────────── */
+      const makeSelectTd = (options, dayStyle, colorMap, locked) => {
+        const td = document.createElement("td");
+        const lockedBg = "#e0e0e0";
+        Object.assign(td.style, {borderBottom: "1px solid #ddd", borderLeft: "1px solid #ddd", padding: "3px 4px", height: "26px", verticalAlign: "middle", textAlign: "center", fontSize: "11px",
+                                 background: locked ? lockedBg : (dayStyle.bg || ""), color: locked ? "#999" : (dayStyle.color || ""), opacity: locked ? "0.6" : "1"});
+        const sel = document.createElement("select");
+        sel.className = "lepp-select";
+        options.forEach(opt => {
+          const o = document.createElement("option");
+          o.value = opt; o.textContent = opt || "—";
+          sel.appendChild(o);
+        });
+        if (locked) {
+          sel.disabled = true;
+          td.style.pointerEvents = "none";
+          td.style.cursor = "not-allowed";
+        } else if (colorMap) {
+          sel.addEventListener("change", () => {
+            const c = colorMap[sel.value];
+            td.style.background = c ? c.bg : (dayStyle.bg || "");
+            sel.style.color = c ? c.color : "#333";
+            sel.style.fontWeight = sel.value ? "bold" : "normal";
+          });
+        }
+        td.appendChild(sel);
+        return td;
+      };
+      /* ─── LINHAS ─────────────────────────────────────────── */
+      for (let d = 1; d <= daysInMonth; d++) {
+        const isLast = d === daysInMonth;
+        const dayStyle = getDayBg(d);
+        const date = new Date(year, month - 1, d);
+        const weekday = WEEKDAYS_PT[date.getDay()];
+        const rowBg = dayStyle.bg || (d % 2 === 0 ? "#f5f6fa" : "#fff");
+        const locked = isDayLocked(d, month);
+        ["D", "N"].forEach((shift, si) => {
+          const tr = document.createElement("tr");
+          tr.style.background = locked ? "#e8e8e8" : rowBg;
+          const isLastRow = isLast && shift === "N";
+          const makeTdBase = (isFirstCol, isLastCol) => {
+            const td = document.createElement("td");
+            Object.assign(td.style, {borderBottom: "1px solid #ddd", borderLeft: "1px solid #ddd", padding: "3px 4px", height: "26px", verticalAlign: "middle", textAlign: "center", fontSize: "11px",
+                                     background: locked ? "#e0e0e0" : (dayStyle.bg || ""), color: locked ? "#999" : (dayStyle.color || ""), opacity: locked ? "0.7" : "1",
+                                     borderBottomLeftRadius: isLastRow && isFirstCol ? "8px" : "", borderBottomRightRadius: isLastRow && isLastCol ? "8px" : ""});
+            if (dayStyle.title) td.title = dayStyle.title;
+            return td;
+          };
+          if (shift === "D") {
+            const tdDay = makeTdBase(true, false);
+            tdDay.textContent = String(d).padStart(2, "0");
+            tdDay.style.fontWeight = "bold";
+            tdDay.rowSpan = 2;
+            tdDay.style.borderBottomLeftRadius = isLast ? "8px" : "";
+            if (locked) {
+              tdDay.title = "Período bloqueado";
+              tdDay.textContent = String(d).padStart(2, "0") + " 🔒";
+              tdDay.style.fontSize = "10px";
+            }
+            tr.appendChild(tdDay);
+            const tdWek = makeTdBase(false, false);
+            tdWek.textContent = weekday;
+            tdWek.style.fontWeight = "bold";
+            tdWek.rowSpan = 2;
+            tr.appendChild(tdWek);
+          }
+          const tdShift = makeTdBase(false, false);
+          tdShift.textContent = shift;
+          tdShift.style.fontWeight = "bold";
+          tdShift.style.color = locked ? "#999" : (shift === "D" ? "#e65100" : "#1a237e");
+          tr.appendChild(tdShift);
+          tr.appendChild(makeSelectTd(["", ...vehicles], dayStyle, null, locked));
+          tr.appendChild(makeSelectTd(LEPP_OPTIONS, dayStyle, LEPP_COLORS, locked));
+          tr.appendChild(makeKmsTd(dayStyle, isLastRow, false, locked));
+          tr.appendChild(makeSelectTd(["", ...vehicles], dayStyle, null, locked));
+          tr.appendChild(makeSelectTd(LEPP_OPTIONS, dayStyle, LEPP_COLORS, locked));
+          tr.appendChild(makeKmsTd(dayStyle, isLastRow, false, locked));
+          tr.appendChild(makeSelectTd(["", ...vehicles], dayStyle, null, locked));
+          tr.appendChild(makeSelectTd(LEPP_OPTIONS, dayStyle, LEPP_COLORS, locked));
+          tr.appendChild(makeKmsTd(dayStyle, isLastRow, true, locked));
+          tbody.appendChild(tr);
+        });
+      }
+      table.appendChild(tbody);
+      wrapper.appendChild(table);
+      container.appendChild(wrapper);
+      const options = document.getElementById("decir-lepp-options");
+      if (options) options.style.display = "flex";
+      requestAnimationFrame(() => requestAnimationFrame(() => loadLeppData()));
+    }
+    /* ─── GUARDAR LEPP ───────────────────────────────────────── */
+    async function saveLeppData() {
+      const tbody = document.querySelector("#table-container-dec-lepp table tbody");
+      if (!tbody) return showPopup('popup-danger', "Nenhuma tabela aberta.");
+      const monthBtn = document.querySelector("#months-container-dec-lepp .btn.active");
+      if (!monthBtn) return showPopup('popup-danger', "Nenhum mês selecionado.");
+      const monthIdx = Array.from(document.querySelectorAll("#months-container-dec-lepp .btn")).indexOf(monthBtn) + 1;
+      const month = String(monthIdx + 4).padStart(2, "0");
+      const year = document.getElementById("year-dec-lepp")?.value || String(new Date().getFullYear());
+      const corpOperNr = getCorpId();
+      const btn = document.getElementById("save-lepp-btn");
+      if (btn) { btn.disabled = true; btn.textContent = "A gravar..."; }
+      try {
+        const payload = [];
+        const rows = Array.from(tbody.querySelectorAll("tr"));
+        rows.forEach((tr, idx) => {
+          const shift = idx % 2 === 0 ? "D" : "N";
+          const day = String(Math.floor(idx / 2) + 1).padStart(2, "0");
+          const tds = Array.from(tr.querySelectorAll("td"));
+          const offset = shift === "D" ? 3 : 1;
+          const vehicle_01 = tds[offset]?.querySelector("select")?.value || "";
+          const vehicle_01_lepp = tds[offset + 1]?.querySelector("select")?.value || "";
+          const vehicle_01_kms = tds[offset + 2]?.textContent.trim();
+          const vehicle_02 = tds[offset + 3]?.querySelector("select")?.value || "";
+          const vehicle_02_lepp = tds[offset + 4]?.querySelector("select")?.value || "";
+          const vehicle_02_kms = tds[offset + 5]?.textContent.trim();
+          const vehicle_03 = tds[offset + 6]?.querySelector("select")?.value || "";
+          const vehicle_03_lepp = tds[offset + 7]?.querySelector("select")?.value || "";
+          const vehicle_03_kms = tds[offset + 8]?.textContent.trim();
+          if (!vehicle_01 && !vehicle_01_lepp && !vehicle_01_kms && !vehicle_02 && !vehicle_02_lepp && !vehicle_02_kms && !vehicle_03 && !vehicle_03_lepp && !vehicle_03_kms) return;
+          payload.push({corp_oper_nr: corpOperNr, day, month, year, shift, vehicle_01, vehicle_01_lepp, vehicle_01_kms, vehicle_02, vehicle_02_lepp, vehicle_02_kms, vehicle_03, vehicle_03_lepp, vehicle_03_kms});
+        });
+        await fetch(`${SUPABASE_URL}/rest/v1/decir_reg_lepp?corp_oper_nr=eq.${corpOperNr}&month=eq.${month}&year=eq.${year}`, {
+          method: "DELETE", headers: getSupabaseHeaders()
+        }).then(r => { if (!r.ok) throw new Error("Erro ao limpar registos antigos"); });
+        if (payload.length > 0) {
+          const r = await fetch(`${SUPABASE_URL}/rest/v1/decir_reg_lepp`, {
+            method: "POST",
+            headers: { ...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
+            body: JSON.stringify(payload)
+          });
+          if (!r.ok) throw new Error(await r.text() || "Erro desconhecido ao gravar");
+        }
+        showPopup('popup-success', "LEPP gravado com sucesso!");
+      } catch (err) {
+        console.error(err);
+        showPopup('popup-danger', "❌ Erro ao gravar: " + err.message);
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = "💾 Guardar"; }
       }
     }
     /* ─── FUNÇÕES GLOBAIS SIGNA (DECIR) ─────────────────────── */
@@ -2694,14 +3024,15 @@
     });
     $("emit-reg-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('reg', 'pdf'));
     $("delete-dec-btn")?.addEventListener("click", clearDecirTable);
-    $("guardar-dec-btn")?.addEventListener("click", saveDecirFull);
+    $("save-dec-btn")?.addEventListener("click", saveDecirFull);
     $("emit-pag-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('pag', 'pdf'));
     $("emit-coda33-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('code_a33', 'pdf'));
     $("emit-anepc-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('anepc', 'pdf'));
-    $("guardar-ocorr-btn")?.addEventListener("click", saveDecirOccurrences);
+    $("save-ocorr-btn")?.addEventListener("click", saveDecirOccurrences);
     $("emit-ocorr-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('ocorr', 'pdf'));
-    $("guardar-ref-btn")?.addEventListener("click", saveDecirMeals);
+    $("save-ref-btn")?.addEventListener("click", saveDecirMeals);
     $("emit-ref-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('ref', 'pdf'));
+    $("save-lepp-btn")?.addEventListener("click", saveLeppData);
     document.querySelectorAll(".sidebar-submenu-button, .sidebar-sub-submenu-button").forEach(btn => {
       btn.addEventListener("click", (e) => {
         if (btn.dataset.page === "decir-sca-view") {
@@ -2875,131 +3206,193 @@
         });
         canvas._chartInstance.update();
       }
-    }
-    /* ─── CARD: REFEIÇÕES (DECIR) ───────────────────────────── */
-    async function createDecirMealsStatsCard(wrapper, year) {
+    }    
+    /* ─── CARD: LEPP ────────────────────────────────────────── */
+    async function createDecirLeppStatsCard(wrapper, year) {
       const corp = getCorpId();
       const MONTHS = [{name: "MAIO", num: "05"}, {name: "JUNHO", num: "06"}, {name: "JULHO", num: "07"}, {name: "AGOSTO", num: "08"}, {name: "SETEMBRO", num: "09"}, {name: "OUTUBRO", num: "10"}];
-      const RESTAURANTS = [{key: "O Cristina", label: 'Restaurante "O Cristina"', color: "#3b82f6", bg: "#dbeafe"},{key: "O Sol", label: 'Restaurante "O Sol"', color: "#22c55e", bg: "#dcfce7"}];
-      const data = await supabaseFetch(`decir_reg_meals?corp_oper_nr=eq.${corp}&year=eq.${year}&month=in.(05,06,07,08,09,10)&select=month,restaurant,meal_efet`);
+      const LEPPS = [{key: "LEPP GORJÕES", label: "LEPP Gorjões", color: "#16a34a", bg: "#dcfce7"}, {key: "LEPP BARRANCO DO VELHO", label: "LEPP Barranco do Velho", color: "#2563eb", bg: "#dbeafe"},
+                     {key: "LEPP CACHOPO", label: "LEPP Cachopo", color: "#dc2626", bg: "#fee2e2"}, {key: "LEPP VAQUEIROS", label: "LEPP Vaqueiros", color: "#b91c1c", bg: "#fecaca"},];
+      const data = await supabaseFetch(`decir_reg_lepp?corp_oper_nr=eq.${corp}&year=eq.${year}&month=in.(05,06,07,08,09,10)` + `&select=month,vehicle_01_lepp,vehicle_02_lepp,vehicle_03_lepp`);
       const stats = {};
-      MONTHS.forEach(m => {stats[m.num] = {}; RESTAURANTS.forEach(r => {stats[m.num][r.key] = 0;});});
-      data.forEach(item => {if (stats[item.month] && item.restaurant && stats[item.month][item.restaurant] !== undefined) stats[item.month][item.restaurant] += parseInt(item.meal_efet) || 0;});
+      MONTHS.forEach(m => {
+        stats[m.num] = {};
+        LEPPS.forEach(l => { stats[m.num][l.key] = 0; });
+      });
+      data.forEach(item => {
+        ["vehicle_01_lepp", "vehicle_02_lepp", "vehicle_03_lepp"].forEach(col => {
+          const val = item[col];
+          if (val && stats[item.month] && stats[item.month][val] !== undefined) {
+            stats[item.month][val]++;
+          }
+        });
+      });
       const totals = {};
-      RESTAURANTS.forEach(r => {totals[r.key] = MONTHS.reduce((sum, m) => sum + (stats[m.num][r.key] || 0), 0);});
+      LEPPS.forEach(l => {
+        totals[l.key] = MONTHS.reduce((sum, m) => sum + (stats[m.num][l.key] || 0), 0);
+      });
       const grandTotal = Object.values(totals).reduce((a, b) => a + b, 0);
       const pcts = {};
-      RESTAURANTS.forEach(r => {pcts[r.key] = grandTotal > 0 ? (totals[r.key] / grandTotal * 100).toFixed(2) : "0.00";});
-      const styleId = "dash-meals-style";
+      LEPPS.forEach(l => {
+        pcts[l.key] = grandTotal > 0 ? (totals[l.key] / grandTotal * 100).toFixed(2) : "0.00";
+      });
+      const styleId = "dash-lepp-style";
       if (!document.getElementById(styleId)) {
         const s = document.createElement("style"); s.id = styleId;
         s.textContent = `
-          .meals-card {background: rgba(0, 0, 0, 0.10); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.9); border-radius: 20px; 
-                       box-shadow: 0 4px 8px rgba(0,0,0,0.25); padding: 24px; margin-bottom: 24px;}
-          .meals-card-title {font-size: 16px; font-weight: 700; color: #131a69; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;}
-          .meals-layout {display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;}
-          .meals-table {border-radius: 10px; overflow: hidden;width: 100%; border-collapse: collapse; font-size: 14px;}
-          .meals-table th {padding: 6px 8px; text-align: center; font-weight: 700; font-size: 14px; border: 1px solid #ccc; background: #131a69; color: #fff;}
-          .meals-table td {padding: 6px 8px; text-align: center; border: 1px solid #ccc; font-weight: 500; color: #374151;}
-          .meals-table tr:hover td {background: #f8faff;}
-          .meals-month-cell {font-weight: 700; color: #131a69; text-align: left !important; padding-left: 10px !important;}
-          .meals-total-row td {font-weight: 700; background: #f1f5f9; border-top: 2px solid #131a69;}
-          .meals-chart-wrap {position: relative; height: 390px;}
+          .lepp-card {background: rgba(0,0,0,0.10); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.9); border-radius: 20px;
+                      box-shadow: 0 4px 8px rgba(0,0,0,0.25); padding: 24px; margin-bottom: 24px;}
+          .lepp-card-title {font-size: 16px; font-weight: 700; color: #131a69; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;}
+          .lepp-layout {display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;}
+          .lepp-stats-table {border-radius: 10px; overflow: hidden; width: 100%; border-collapse: collapse; font-size: 13px;}
+          .lepp-stats-table th {padding: 6px 8px; text-align: center; font-weight: 700; font-size: 13px; border: 1px solid #ccc; background: #131a69; color: #fff;}
+          .lepp-stats-table td {padding: 6px 8px; text-align: center; border: 1px solid #ccc; font-weight: 500; color: #374151;}
+          .lepp-stats-table tr:hover td {background: #f8faff;}
+          .lepp-month-cell {font-weight: 700; color: #131a69; text-align: left !important; padding-left: 10px !important;}
+          .lepp-total-row td {font-weight: 700; background: #f1f5f9; border-top: 2px solid #131a69;}
+          .lepp-chart-wrap {position: relative; height: 390px;}
         `;
         document.head.appendChild(s);
       }
-      const card = document.createElement("div"); card.className = "meals-card";
-      const cardTitle = document.createElement("div"); cardTitle.className = "meals-card-title";
-      cardTitle.innerHTML = `🍽️ REFEIÇÕES SERVIDAS`; card.appendChild(cardTitle);
-      const layout = document.createElement("div"); layout.className = "meals-layout";
+      const card = document.createElement("div"); card.className = "lepp-card";
+      const cardTitle = document.createElement("div"); cardTitle.className = "lepp-card-title";
+      cardTitle.innerHTML = `🔥 LOCAIS ESTRATÉGICOS DE PRÉ-POSICIONAMENTO`; card.appendChild(cardTitle);
+      const layout = document.createElement("div"); layout.className = "lepp-layout";
       const tableWrap = document.createElement("div");
-      const table = document.createElement("table"); table.className = "meals-table";
+      const table = document.createElement("table"); table.className = "lepp-stats-table";
       const thead = document.createElement("thead");
       const trh1 = document.createElement("tr");
       const thMonth = document.createElement("th"); thMonth.textContent = "Mês"; thMonth.rowSpan = 2; thMonth.style.background = "#0f1660"; trh1.appendChild(thMonth);
-      const thRest = document.createElement("th"); thRest.textContent = "Refeições Servidas por Restaurante"; thRest.colSpan = 2; thRest.style.background = "#1e2a80"; trh1.appendChild(thRest);
+      const thLepp = document.createElement("th"); thLepp.textContent = "Registos por LEPP"; thLepp.colSpan = LEPPS.length; thLepp.style.background = "#1e2a80"; trh1.appendChild(thLepp);
       thead.appendChild(trh1);
       const trh2 = document.createElement("tr");
-      RESTAURANTS.forEach(r => {const th = document.createElement("th"); th.textContent = r.label; th.style.background = r.color; th.style.color = "#fff"; trh2.appendChild(th);});
-      thead.appendChild(trh2); table.appendChild(thead);
+      LEPPS.forEach(l => {
+        const th = document.createElement("th");
+        th.textContent = l.label;
+        th.style.background = l.color;
+        th.style.color = "#fff";
+        th.style.fontSize = "11px";
+        trh2.appendChild(th);
+      });
+      thead.appendChild(trh2);
+      table.appendChild(thead);
       const tbody = document.createElement("tbody");
       MONTHS.forEach(m => {
         const tr = document.createElement("tr");
-        const tdM = document.createElement("td"); tdM.className = "meals-month-cell"; tdM.textContent = m.name; tr.appendChild(tdM);
-        RESTAURANTS.forEach(r => {const td = document.createElement("td"); const val = stats[m.num][r.key] || 0; td.textContent = val; if (val > 0) {
-                                 td.style.background = r.bg; td.style.color = r.color; td.style.fontWeight = "700"; } tr.appendChild(td);}); tbody.appendChild(tr);
+        const tdM = document.createElement("td"); tdM.className = "lepp-month-cell"; tdM.textContent = m.name; tr.appendChild(tdM);
+        LEPPS.forEach(l => {
+          const td = document.createElement("td");
+          const val = stats[m.num][l.key] || 0;
+          td.textContent = val;
+          if (val > 0) { td.style.background = l.bg; td.style.color = l.color; td.style.fontWeight = "700"; }
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
       });
-      const trTotal = document.createElement("tr"); trTotal.className = "meals-total-row";
-      const tdTL = document.createElement("td"); tdTL.className = "meals-month-cell"; tdTL.textContent = "Totais"; trTotal.appendChild(tdTL);
-      RESTAURANTS.forEach(r => {const td = document.createElement("td"); td.textContent = totals[r.key]; td.style.color = r.color; trTotal.appendChild(td);});
+      const trTotal = document.createElement("tr"); trTotal.className = "lepp-total-row";
+      const tdTL = document.createElement("td"); tdTL.className = "lepp-month-cell"; tdTL.textContent = "Totais"; trTotal.appendChild(tdTL);
+      LEPPS.forEach(l => {
+        const td = document.createElement("td");
+        td.textContent = totals[l.key];
+        td.style.color = l.color;
+        trTotal.appendChild(td);
+      });
       tbody.appendChild(trTotal);
       const trGrand = document.createElement("tr");
-      const tdGrand = document.createElement("td"); tdGrand.colSpan = 3; tdGrand.style.cssText = "background: #dbeafe; color: #1d4ed8; text-align: center; padding: 6px; font-weight: 700;";
-                                                    tdGrand.textContent = `${grandTotal} Refeições`; trGrand.appendChild(tdGrand); tbody.appendChild(trGrand);
+      const tdGrand = document.createElement("td");
+      tdGrand.colSpan = LEPPS.length + 1;
+      tdGrand.style.cssText = "background: #dbeafe; color: #1d4ed8; text-align: center; padding: 6px; font-weight: 700;";
+      tdGrand.textContent = `${grandTotal} Registos LEPP`;
+      trGrand.appendChild(tdGrand);
+      tbody.appendChild(trGrand);
       const trPct = document.createElement("tr");
-      RESTAURANTS.forEach(r => {const td = document.createElement("td"); td.style.cssText = `background: ${r.bg}; color: ${r.color}; text-align: center; padding :6px; font-weight: 700;`;
-                                                                         td.textContent = `% ${r.label.replace('Restaurante "','').replace('"','')}: ${pcts[r.key]}%`; trPct.appendChild(td);});
-      const tdPctLabel = document.createElement("td"); tdPctLabel.style.cssText = "background: #f1f5f9; color: #131a69; text-align: left; padding: 6px; padding-left: 10px; font-weight: 700;"; 
-                                                       tdPctLabel.textContent = "% por Rest."; trPct.insertBefore(tdPctLabel, trPct.firstChild);
-      tbody.appendChild(trPct); table.appendChild(tbody); tableWrap.appendChild(table); layout.appendChild(tableWrap);
-      const chartWrap = document.createElement("div"); chartWrap.className = "meals-chart-wrap";
-      const canvas = document.createElement("canvas"); canvas.id = `meals-chart-${Date.now()}`;
-      chartWrap.appendChild(canvas); layout.appendChild(chartWrap); card.appendChild(layout); wrapper.appendChild(card);
-      if (window.Chart) {
-        canvas._chartInstance = new Chart(canvas, {type: "line", data: {labels: MONTHS.map(m => m.name), datasets: RESTAURANTS.map(r => ({label: r.label, data: MONTHS.map(m => stats[m.num][r.key] || 0), 
-                                                   borderColor: r.color, backgroundColor: r.color + "33", tension: 0.4, pointRadius: 4, pointHoverRadius: 6, fill: false, borderWidth: 2}))},
-                                                   options: {responsive: true, maintainAspectRatio: false,
-                                                   plugins: {legend: {position: "bottom", labels: {font: {size: 14}, boxWidth: 16}},
-                                                   title: {display: true, text: `Refeições Servidas`, font: {size: 14}, color: "#131a69"}},
-                                                   scales: {y: {beginAtZero: true, ticks: {font: {size: 10}}, grid: {color: "#ccc"}},
-                                                            x: {ticks: {font: {size: 10}}, grid: {display: false}}}}});}}
-    async function updateDecirMealsStatsCard(year) {
+      const tdPctLabel = document.createElement("td");
+      tdPctLabel.style.cssText = "background: #f1f5f9; color: #131a69; text-align: left; padding: 6px; padding-left: 10px; font-weight: 700;";
+      tdPctLabel.textContent = "% por LEPP";
+      trPct.appendChild(tdPctLabel);
+      LEPPS.forEach(l => {
+        const td = document.createElement("td");
+        td.style.cssText = `background: ${l.bg}; color: ${l.color}; text-align: center; padding: 6px; font-weight: 700; font-size: 11px;`;
+        td.textContent = `${l.label.replace("LEPP ", "")}: ${pcts[l.key]}%`;
+        trPct.appendChild(td);
+      });
+      tbody.appendChild(trPct);
+      table.appendChild(tbody);
+      tableWrap.appendChild(table);
+      layout.appendChild(tableWrap);
+      const chartWrap = document.createElement("div"); chartWrap.className = "lepp-chart-wrap";
+      const canvas = document.createElement("canvas"); canvas.id = `lepp-chart-${Date.now()}`;
+      chartWrap.appendChild(canvas);
+      layout.appendChild(chartWrap);
+      card.appendChild(layout);
+      wrapper.appendChild(card);
+      if (window.Chart) {canvas._chartInstance = new Chart(canvas, {type: "line", data: {labels: MONTHS.map(m => m.name), datasets: LEPPS.map(l => ({label: l.label, data: MONTHS.map(m => stats[m.num][l.key] || 0), 
+                                                                    borderColor: l.color, backgroundColor: l.color + "33", tension: 0.4, pointRadius: 4, pointHoverRadius: 6, fill: false, borderWidth: 2}))},
+                                                                    options: {responsive: true, maintainAspectRatio: false,
+                                                                    plugins: {legend: {position: "bottom", labels: {font: {size: 12}, boxWidth: 16}}, 
+                                                                    title: {display: true, text: "Registos LEPP por Mês", font: {size: 14}, color: "#131a69"}},
+                                                                    scales: {y: {beginAtZero: true, ticks: {font: {size: 10}}, grid: {color: "#ccc"}},
+                                                                             x: {ticks: {font: {size: 10}}, grid: {display: false}}}}});}}
+    async function updateDecirLeppStatsCard(year) {
       const corp = getCorpId();
       const MONTHS = [{name: "MAIO", num: "05"}, {name: "JUNHO", num: "06"}, {name: "JULHO", num: "07"}, {name: "AGOSTO", num: "08"}, {name: "SETEMBRO", num: "09"}, {name: "OUTUBRO", num: "10"}];
-      const RESTAURANTS = [{key: "O Cristina", label: 'Restaurante "O Cristina"', color: "#3b82f6", bg: "#dbeafe"}, {key: "O Sol", label: 'Restaurante "O Sol"', color: "#22c55e", bg: "#dcfce7"}];
-      const data = await supabaseFetch(`decir_reg_meals?corp_oper_nr=eq.${corp}&year=eq.${year}&month=in.(05,06,07,08,09,10)&select=month,restaurant,meal_efet`);
+      const LEPPS = [{key: "LEPP GORJÕES", label: "LEPP Gorjões", color: "#16a34a", bg: "#dcfce7"}, {key: "LEPP BARRANCO DO VELHO", label: "LEPP Barranco do Velho", color: "#2563eb", bg: "#dbeafe"},
+                     {key: "LEPP CACHOPO", label: "LEPP Cachopo", color: "#dc2626", bg: "#fee2e2"}, {key: "LEPP VAQUEIROS", label: "LEPP Vaqueiros", color: "#b91c1c", bg: "#fecaca"},];
+      const data = await supabaseFetch(`decir_reg_lepp?corp_oper_nr=eq.${corp}&year=eq.${year}&month=in.(05,06,07,08,09,10)` + `&select=month,vehicle_01_lepp,vehicle_02_lepp,vehicle_03_lepp`);
       const stats = {};
-      MONTHS.forEach(m => {stats[m.num] = {}; RESTAURANTS.forEach(r => { stats[m.num][r.key] = 0; });});
-      data.forEach(item => {if (stats[item.month] && item.restaurant && stats[item.month][item.restaurant] !== undefined) stats[item.month][item.restaurant] += parseInt(item.meal_efet) || 0;});
+      MONTHS.forEach(m => {
+        stats[m.num] = {};
+        LEPPS.forEach(l => { stats[m.num][l.key] = 0; });
+      });
+      data.forEach(item => {
+        ["vehicle_01_lepp", "vehicle_02_lepp", "vehicle_03_lepp"].forEach(col => {
+          const val = item[col];
+          if (val && stats[item.month] && stats[item.month][val] !== undefined) stats[item.month][val]++;
+        });
+      });
       const totals = {};
-      RESTAURANTS.forEach(r => {totals[r.key] = MONTHS.reduce((sum, m) => sum + (stats[m.num][r.key] || 0), 0);});
+      LEPPS.forEach(l => {
+        totals[l.key] = MONTHS.reduce((sum, m) => sum + (stats[m.num][l.key] || 0), 0);
+      });
       const grandTotal = Object.values(totals).reduce((a, b) => a + b, 0);
       const pcts = {};
-      RESTAURANTS.forEach(r => {pcts[r.key] = grandTotal > 0 ? (totals[r.key] / grandTotal * 100).toFixed(2) : "0.00";});
-      const tbody = document.querySelector(".meals-table tbody");
+      LEPPS.forEach(l => {
+        pcts[l.key] = grandTotal > 0 ? (totals[l.key] / grandTotal * 100).toFixed(2) : "0.00";
+      });
+      const tbody = document.querySelector(".lepp-stats-table tbody");
       if (tbody) {
-        const rows = tbody.querySelectorAll("tr:not(.meals-total-row)");
+        const rows = tbody.querySelectorAll("tr:not(.lepp-total-row)");
         MONTHS.forEach((m, i) => {
-          const tds = rows[i]?.querySelectorAll("td:not(.meals-month-cell)");
+          const tds = rows[i]?.querySelectorAll("td:not(.lepp-month-cell)");
           if (!tds) return;
-          RESTAURANTS.forEach((r, j) => {
-            const val = stats[m.num][r.key] || 0;
+          LEPPS.forEach((l, j) => {
+            const val = stats[m.num][l.key] || 0;
             tds[j].textContent = val;
-            tds[j].style.background = val > 0 ? r.bg : "";
-            tds[j].style.color = val > 0 ? r.color : "";
+            tds[j].style.background = val > 0 ? l.bg : "";
+            tds[j].style.color = val > 0 ? l.color : "";
             tds[j].style.fontWeight = val > 0 ? "700" : "";
           });
         });
-        const totalRow = tbody.querySelector(".meals-total-row");
+        const totalRow = tbody.querySelector(".lepp-total-row");
         if (totalRow) {
-          const totalTds = totalRow.querySelectorAll("td:not(.meals-month-cell)");
-          RESTAURANTS.forEach((r, j) => {totalTds[j].textContent = totals[r.key]; totalTds[j].style.color = r.color;});
+          const totalTds = totalRow.querySelectorAll("td:not(.lepp-month-cell)");
+          LEPPS.forEach((l, j) => { totalTds[j].textContent = totals[l.key]; totalTds[j].style.color = l.color; });
         }
         const allRows = tbody.querySelectorAll("tr");
         const grandRow = allRows[allRows.length - 2];
         const pctRow = allRows[allRows.length - 1];
-        if (grandRow) grandRow.querySelector("td").textContent = `${grandTotal} Refeições`;
+        if (grandRow) grandRow.querySelector("td").textContent = `${grandTotal} Registos LEPP`;
         if (pctRow) {
           const pctTds = pctRow.querySelectorAll("td:not(:first-child)");
-          RESTAURANTS.forEach((r, j) => {
-            if (pctTds[j]) pctTds[j].textContent = `% ${r.label.replace('Restaurante "','').replace('"','')}: ${pcts[r.key]}%`;
+          LEPPS.forEach((l, j) => {
+            if (pctTds[j]) pctTds[j].textContent = `${l.label.replace("LEPP ", "")}: ${pcts[l.key]}%`;
           });
         }
       }
-      const canvas = document.querySelector("[id^='meals-chart-']");
+      const canvas = document.querySelector("[id^='lepp-chart-']");
       if (canvas && canvas._chartInstance) {
         canvas._chartInstance.data.datasets.forEach((ds, i) => {
-          ds.data = MONTHS.map(m => stats[m.num][RESTAURANTS[i].key] || 0);
+          ds.data = MONTHS.map(m => stats[m.num][LEPPS[i].key] || 0);
         });
         canvas._chartInstance.update();
       }
@@ -3136,6 +3529,134 @@
         canvas._chartInstance.data.datasets[0].data = MONTHS.map(m => stats[m.num].total);
         canvas._chartInstance.data.datasets[1].data = MONTHS.map(m => stats[m.num].with);
         canvas._chartInstance.data.datasets[2].data = MONTHS.map(m => stats[m.num].without);
+        canvas._chartInstance.update();
+      }
+    }
+    /* ─── CARD: REFEIÇÕES (DECIR) ───────────────────────────── */
+    async function createDecirMealsStatsCard(wrapper, year) {
+      const corp = getCorpId();
+      const MONTHS = [{name: "MAIO", num: "05"}, {name: "JUNHO", num: "06"}, {name: "JULHO", num: "07"}, {name: "AGOSTO", num: "08"}, {name: "SETEMBRO", num: "09"}, {name: "OUTUBRO", num: "10"}];
+      const RESTAURANTS = [{key: "O Cristina", label: 'Restaurante "O Cristina"', color: "#3b82f6", bg: "#dbeafe"},{key: "O Sol", label: 'Restaurante "O Sol"', color: "#22c55e", bg: "#dcfce7"}];
+      const data = await supabaseFetch(`decir_reg_meals?corp_oper_nr=eq.${corp}&year=eq.${year}&month=in.(05,06,07,08,09,10)&select=month,restaurant,meal_efet`);
+      const stats = {};
+      MONTHS.forEach(m => {stats[m.num] = {}; RESTAURANTS.forEach(r => {stats[m.num][r.key] = 0;});});
+      data.forEach(item => {if (stats[item.month] && item.restaurant && stats[item.month][item.restaurant] !== undefined) stats[item.month][item.restaurant] += parseInt(item.meal_efet) || 0;});
+      const totals = {};
+      RESTAURANTS.forEach(r => {totals[r.key] = MONTHS.reduce((sum, m) => sum + (stats[m.num][r.key] || 0), 0);});
+      const grandTotal = Object.values(totals).reduce((a, b) => a + b, 0);
+      const pcts = {};
+      RESTAURANTS.forEach(r => {pcts[r.key] = grandTotal > 0 ? (totals[r.key] / grandTotal * 100).toFixed(2) : "0.00";});
+      const styleId = "dash-meals-style";
+      if (!document.getElementById(styleId)) {
+        const s = document.createElement("style"); s.id = styleId;
+        s.textContent = `
+          .meals-card {background: rgba(0, 0, 0, 0.10); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.9); border-radius: 20px; 
+                       box-shadow: 0 4px 8px rgba(0,0,0,0.25); padding: 24px; margin-bottom: 24px;}
+          .meals-card-title {font-size: 16px; font-weight: 700; color: #131a69; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;}
+          .meals-layout {display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;}
+          .meals-table {border-radius: 10px; overflow: hidden;width: 100%; border-collapse: collapse; font-size: 14px;}
+          .meals-table th {padding: 6px 8px; text-align: center; font-weight: 700; font-size: 14px; border: 1px solid #ccc; background: #131a69; color: #fff;}
+          .meals-table td {padding: 6px 8px; text-align: center; border: 1px solid #ccc; font-weight: 500; color: #374151;}
+          .meals-table tr:hover td {background: #f8faff;}
+          .meals-month-cell {font-weight: 700; color: #131a69; text-align: left !important; padding-left: 10px !important;}
+          .meals-total-row td {font-weight: 700; background: #f1f5f9; border-top: 2px solid #131a69;}
+          .meals-chart-wrap {position: relative; height: 390px;}
+        `;
+        document.head.appendChild(s);
+      }
+      const card = document.createElement("div"); card.className = "meals-card";
+      const cardTitle = document.createElement("div"); cardTitle.className = "meals-card-title";
+      cardTitle.innerHTML = `🍽️ REFEIÇÕES SERVIDAS`; card.appendChild(cardTitle);
+      const layout = document.createElement("div"); layout.className = "meals-layout";
+      const tableWrap = document.createElement("div");
+      const table = document.createElement("table"); table.className = "meals-table";
+      const thead = document.createElement("thead");
+      const trh1 = document.createElement("tr");
+      const thMonth = document.createElement("th"); thMonth.textContent = "Mês"; thMonth.rowSpan = 2; thMonth.style.background = "#0f1660"; trh1.appendChild(thMonth);
+      const thRest = document.createElement("th"); thRest.textContent = "Refeições Servidas por Restaurante"; thRest.colSpan = 2; thRest.style.background = "#1e2a80"; trh1.appendChild(thRest);
+      thead.appendChild(trh1);
+      const trh2 = document.createElement("tr");
+      RESTAURANTS.forEach(r => {const th = document.createElement("th"); th.textContent = r.label; th.style.background = r.color; th.style.color = "#fff"; trh2.appendChild(th);});
+      thead.appendChild(trh2); table.appendChild(thead);
+      const tbody = document.createElement("tbody");
+      MONTHS.forEach(m => {
+        const tr = document.createElement("tr");
+        const tdM = document.createElement("td"); tdM.className = "meals-month-cell"; tdM.textContent = m.name; tr.appendChild(tdM);
+        RESTAURANTS.forEach(r => {const td = document.createElement("td"); const val = stats[m.num][r.key] || 0; td.textContent = val; if (val > 0) {
+                                 td.style.background = r.bg; td.style.color = r.color; td.style.fontWeight = "700"; } tr.appendChild(td);}); tbody.appendChild(tr);
+      });
+      const trTotal = document.createElement("tr"); trTotal.className = "meals-total-row";
+      const tdTL = document.createElement("td"); tdTL.className = "meals-month-cell"; tdTL.textContent = "Totais"; trTotal.appendChild(tdTL);
+      RESTAURANTS.forEach(r => {const td = document.createElement("td"); td.textContent = totals[r.key]; td.style.color = r.color; trTotal.appendChild(td);});
+      tbody.appendChild(trTotal);
+      const trGrand = document.createElement("tr");
+      const tdGrand = document.createElement("td"); tdGrand.colSpan = 3; tdGrand.style.cssText = "background: #dbeafe; color: #1d4ed8; text-align: center; padding: 6px; font-weight: 700;";
+                                                    tdGrand.textContent = `${grandTotal} Refeições`; trGrand.appendChild(tdGrand); tbody.appendChild(trGrand);
+      const trPct = document.createElement("tr");
+      RESTAURANTS.forEach(r => {const td = document.createElement("td"); td.style.cssText = `background: ${r.bg}; color: ${r.color}; text-align: center; padding :6px; font-weight: 700;`;
+                                                                         td.textContent = `% ${r.label.replace('Restaurante "','').replace('"','')}: ${pcts[r.key]}%`; trPct.appendChild(td);});
+      const tdPctLabel = document.createElement("td"); tdPctLabel.style.cssText = "background: #f1f5f9; color: #131a69; text-align: left; padding: 6px; padding-left: 10px; font-weight: 700;"; 
+                                                       tdPctLabel.textContent = "% por Rest."; trPct.insertBefore(tdPctLabel, trPct.firstChild);
+      tbody.appendChild(trPct); table.appendChild(tbody); tableWrap.appendChild(table); layout.appendChild(tableWrap);
+      const chartWrap = document.createElement("div"); chartWrap.className = "meals-chart-wrap";
+      const canvas = document.createElement("canvas"); canvas.id = `meals-chart-${Date.now()}`;
+      chartWrap.appendChild(canvas); layout.appendChild(chartWrap); card.appendChild(layout); wrapper.appendChild(card);
+      if (window.Chart) {
+        canvas._chartInstance = new Chart(canvas, {type: "line", data: {labels: MONTHS.map(m => m.name), datasets: RESTAURANTS.map(r => ({label: r.label, data: MONTHS.map(m => stats[m.num][r.key] || 0), 
+                                                   borderColor: r.color, backgroundColor: r.color + "33", tension: 0.4, pointRadius: 4, pointHoverRadius: 6, fill: false, borderWidth: 2}))},
+                                                   options: {responsive: true, maintainAspectRatio: false,
+                                                   plugins: {legend: {position: "bottom", labels: {font: {size: 14}, boxWidth: 16}},
+                                                   title: {display: true, text: `Refeições Servidas`, font: {size: 14}, color: "#131a69"}},
+                                                   scales: {y: {beginAtZero: true, ticks: {font: {size: 10}}, grid: {color: "#ccc"}},
+                                                            x: {ticks: {font: {size: 10}}, grid: {display: false}}}}});}}
+    async function updateDecirMealsStatsCard(year) {
+      const corp = getCorpId();
+      const MONTHS = [{name: "MAIO", num: "05"}, {name: "JUNHO", num: "06"}, {name: "JULHO", num: "07"}, {name: "AGOSTO", num: "08"}, {name: "SETEMBRO", num: "09"}, {name: "OUTUBRO", num: "10"}];
+      const RESTAURANTS = [{key: "O Cristina", label: 'Restaurante "O Cristina"', color: "#3b82f6", bg: "#dbeafe"}, {key: "O Sol", label: 'Restaurante "O Sol"', color: "#22c55e", bg: "#dcfce7"}];
+      const data = await supabaseFetch(`decir_reg_meals?corp_oper_nr=eq.${corp}&year=eq.${year}&month=in.(05,06,07,08,09,10)&select=month,restaurant,meal_efet`);
+      const stats = {};
+      MONTHS.forEach(m => {stats[m.num] = {}; RESTAURANTS.forEach(r => { stats[m.num][r.key] = 0; });});
+      data.forEach(item => {if (stats[item.month] && item.restaurant && stats[item.month][item.restaurant] !== undefined) stats[item.month][item.restaurant] += parseInt(item.meal_efet) || 0;});
+      const totals = {};
+      RESTAURANTS.forEach(r => {totals[r.key] = MONTHS.reduce((sum, m) => sum + (stats[m.num][r.key] || 0), 0);});
+      const grandTotal = Object.values(totals).reduce((a, b) => a + b, 0);
+      const pcts = {};
+      RESTAURANTS.forEach(r => {pcts[r.key] = grandTotal > 0 ? (totals[r.key] / grandTotal * 100).toFixed(2) : "0.00";});
+      const tbody = document.querySelector(".meals-table tbody");
+      if (tbody) {
+        const rows = tbody.querySelectorAll("tr:not(.meals-total-row)");
+        MONTHS.forEach((m, i) => {
+          const tds = rows[i]?.querySelectorAll("td:not(.meals-month-cell)");
+          if (!tds) return;
+          RESTAURANTS.forEach((r, j) => {
+            const val = stats[m.num][r.key] || 0;
+            tds[j].textContent = val;
+            tds[j].style.background = val > 0 ? r.bg : "";
+            tds[j].style.color = val > 0 ? r.color : "";
+            tds[j].style.fontWeight = val > 0 ? "700" : "";
+          });
+        });
+        const totalRow = tbody.querySelector(".meals-total-row");
+        if (totalRow) {
+          const totalTds = totalRow.querySelectorAll("td:not(.meals-month-cell)");
+          RESTAURANTS.forEach((r, j) => {totalTds[j].textContent = totals[r.key]; totalTds[j].style.color = r.color;});
+        }
+        const allRows = tbody.querySelectorAll("tr");
+        const grandRow = allRows[allRows.length - 2];
+        const pctRow = allRows[allRows.length - 1];
+        if (grandRow) grandRow.querySelector("td").textContent = `${grandTotal} Refeições`;
+        if (pctRow) {
+          const pctTds = pctRow.querySelectorAll("td:not(:first-child)");
+          RESTAURANTS.forEach((r, j) => {
+            if (pctTds[j]) pctTds[j].textContent = `% ${r.label.replace('Restaurante "','').replace('"','')}: ${pcts[r.key]}%`;
+          });
+        }
+      }
+      const canvas = document.querySelector("[id^='meals-chart-']");
+      if (canvas && canvas._chartInstance) {
+        canvas._chartInstance.data.datasets.forEach((ds, i) => {
+          ds.data = MONTHS.map(m => stats[m.num][RESTAURANTS[i].key] || 0);
+        });
         canvas._chartInstance.update();
       }
     }
@@ -3460,8 +3981,9 @@
         const isFirstLoad = cardsContainer.children.length === 0;
         if (isFirstLoad) {
           await createDecirAlertStatsCard(cardsContainer, year);
-          await createDecirMealsStatsCard(cardsContainer, year);
+          await createDecirLeppStatsCard(cardsContainer, year);
           await createDecirOcorrStatsCard(cardsContainer, year);
+          await createDecirMealsStatsCard(cardsContainer, year);                    
           await createDecirPodiumCard(year);
         } else {
           await updateDecirAlertStatsCard(year);

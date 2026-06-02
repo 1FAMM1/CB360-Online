@@ -71,6 +71,7 @@
           <button class="sidebar-sub-submenu-button" data-page="decir-reg-ocorr" data-access="Controlo de Ocorrências">Controlo de Ocorrências</button>
           <button class="sidebar-sub-submenu-button" data-page="decir-reg-signa" data-access="Assinaturas Diárias">Assinaturas Diárias</button>
           <button class="sidebar-sub-submenu-button" data-page="decir-reg-ref" data-access="Refeições Diárias">Refeições Diárias</button>
+          <button class="sidebar-sub-submenu-button" data-page="decir-reg-lepp" data-access="LEPP Ativas">Pré-Posicionamentos</button>
        </div>
         <button class="sidebar-submenu-button" data-page="decir-dashboard" data-access="DashBoard DECIR">Dados Estatísticos</button>
       </div>
@@ -1000,6 +1001,28 @@
               <button class="btn btn-add" id="guardar-ref-btn">💾 Guardar</button>
               <button class="btn btn-success" id="emit-ref-dec-btn">📊 Excel</button>
               <button class="btn btn-danger" id="emit-ref-pdf-btn">📄 PDF</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="decir-reg-lepp" class="page">
+        <div class="major-card major-last-card">
+          <div class="major-card-header header-black">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.9; vertical-align: middle;">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+              <circle cx="12" cy="10" r="3"></circle>
+            </svg>
+            REGISTO MENSAL DE PRÉ-POSICIONAMENTO EM LOCAIS ESTRATÉGICOS DE PRÉ-POSICIONAMENTO
+          </div>
+          <div class="major-card-body" style="font-family: 'Segoe UI', sans-serif;">
+            <div id="months-container-dec-lepp" style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 0 0 0 0;"></div>
+            <div id="table-container-dec-lepp"></div>
+          </div>
+          <div class="major-card-footer">
+            <div class="action-buttons" id="decir-lepp-options" style="display:none;">
+              <button class="btn btn-add" id="save-lepp-btn">💾 Guardar</button>
+              <button class="btn btn-success" id="emit-lepp-dec-btn">📊 Excel</button>
+              <button class="btn btn-danger" id="emit-lepp-pdf-btn">📄 PDF</button>
             </div>
           </div>
         </div>

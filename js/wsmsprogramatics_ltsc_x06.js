@@ -1216,7 +1216,7 @@
       const header = card?.querySelector('.wsms-card-header-ems span');
       if (header) {
         header.textContent = reserv.checked
-          ? 'SERVIÇOS DE EMERGÊNCIA PRÉ-HOSPITALAR - RESERVA'  : 'SERVIÇOS DE EMERGÊNCIA PRÉ-HOSPITALA';
+          ? 'SERVIÇOS DE EMERGÊNCIA PRÉ-HOSPITALAR - RESERVA'  : 'SERVIÇOS DE EMERGÊNCIA PRÉ-HOSPITALAR';
       }
     }
     inem.addEventListener('change', () => {

@@ -396,7 +396,7 @@
       {label: "Gestão DECIR", children: [
         {label: "Ver Escalas"},
         {label: "Gestão Financeira", children: [{label: "Atualização de Valores"}, {label: "Registo por Elemento"}, {label: "Núcleo Financeiro"}, {label: "Relatórios ANEPC"}]},
-        {label: "Registos Complementares", children: [{label: "Controlo de Ocorrências"}, {label: "Assinaturas Diárias"}, {label: "Refeições Diárias"}]},
+        {label: "Registos Complementares", children: [{label: "Controlo de Ocorrências"}, {label: "Assinaturas Diárias"}, {label: "Refeições Diárias"}, {label: "Pré Posicionamentos"}]},
         {label: "DashBoard DECIR"}
       ]},
       {label: "Gestão Operacional", children: [

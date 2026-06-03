@@ -1715,6 +1715,25 @@
         if (btn) {btn.disabled = false; btn.textContent = "💾 Guardar";}
       }
     }
+    /* ─── VEÍCULOS LEPP (pré-carregados) ────────────────────── */
+    let leppVehicles = [];
+    async function initLeppVehicles() {
+      try {
+        const ALLOWED_TYPES = ["VFCI", "VTTF", "VTTU", "VTTP", "VCOT"];
+        const TYPE_ORDER = ["VCOT", "VFCI", "VTTF", "VTTU", "VTTP"];
+        const vData = await supabaseFetch(`vehicle_status?corp_oper_nr=eq.${getCorpId()}&select=vehicle`);
+        leppVehicles = (vData || [])
+          .filter(v => v.vehicle && ALLOWED_TYPES.some(t => v.vehicle.startsWith(t)))
+          .map(v => v.vehicle)
+          .sort((a, b) => {
+          const getOrder = v => TYPE_ORDER.findIndex(t => v.toUpperCase().startsWith(t));
+          return getOrder(a) - getOrder(b);
+        });
+      } catch (err) {
+        console.error("Erro ao carregar veículos para LEPP:", err);
+        leppVehicles = [];
+      }
+    }
     /* ─── LOAD LEPP ─────────────────────────────────────────── */
     async function loadLeppData() {
       const month_btn = document.querySelector("#months-container-dec-lepp .btn.active");
@@ -1742,26 +1761,17 @@
           const selV1 = tds[offset]?.querySelector("select");
           if (selV1 && item.vehicle_01) selV1.value = item.vehicle_01;
           const selL1 = tds[offset + 1]?.querySelector("select");
-          if (selL1 && item.vehicle_01_lepp) {
-            selL1.value = item.vehicle_01_lepp;
-            selL1.dispatchEvent(new Event("change"));
-          }
+          if (selL1 && item.vehicle_01_lepp) {selL1.value = item.vehicle_01_lepp; selL1.dispatchEvent(new Event("change"));}
           if (tds[offset + 2]) tds[offset + 2].textContent = item.vehicle_01_kms || "";
           const selV2 = tds[offset + 3]?.querySelector("select");
           if (selV2 && item.vehicle_02) selV2.value = item.vehicle_02;
           const selL2 = tds[offset + 4]?.querySelector("select");
-          if (selL2 && item.vehicle_02_lepp) {
-            selL2.value = item.vehicle_02_lepp;
-            selL2.dispatchEvent(new Event("change"));
-          }
+          if (selL2 && item.vehicle_02_lepp) {selL2.value = item.vehicle_02_lepp; selL2.dispatchEvent(new Event("change"));}
           if (tds[offset + 5]) tds[offset + 5].textContent = item.vehicle_02_kms || "";
           const selV3 = tds[offset + 6]?.querySelector("select");
           if (selV3 && item.vehicle_03) selV3.value = item.vehicle_03;
           const selL3 = tds[offset + 7]?.querySelector("select");
-          if (selL3 && item.vehicle_03_lepp) {
-            selL3.value = item.vehicle_03_lepp;
-            selL3.dispatchEvent(new Event("change"));
-          }
+          if (selL3 && item.vehicle_03_lepp) {selL3.value = item.vehicle_03_lepp; selL3.dispatchEvent(new Event("change"));}
           if (tds[offset + 8]) tds[offset + 8].textContent = item.vehicle_03_kms || "";
         });
       } catch (err) {
@@ -1774,28 +1784,15 @@
       const container = document.getElementById(containerId) || $(containerId);
       if (!container) return;
       container.innerHTML = "";
-      const corpOperNr = getCorpId();
-      let vehicles = [];
-      try {
-        const ALLOWED_TYPES = ["VFCI", "VTTF", "VTTU", "VTTP", "VCOT"];
-        const TYPE_ORDER = ["VCOT", "VFCI", "VTTF", "VTTU", "VTTP"];
-        const vData = await supabaseFetch(`vehicle_status?corp_oper_nr=eq.${corpOperNr}&select=vehicle`);
-        vehicles = (vData || [])
-          .filter(v => v.vehicle && ALLOWED_TYPES.some(t => v.vehicle.startsWith(t)))
-          .map(v => v.vehicle)
-          .sort((a, b) => {
-          const getOrder = v => TYPE_ORDER.findIndex(t => v.toUpperCase().startsWith(t));
-          return getOrder(a) - getOrder(b);
-        });
-      } catch {
-        vehicles = [];
+      if (!leppVehicles || leppVehicles.length === 0) {
+        if (typeof initLeppVehicles === "function") {
+          await initLeppVehicles();
+        }
       }
+      const vehicles = leppVehicles || [];
       const LEPP_OPTIONS = ["", "VEÍCULO INOP", "LEPP GORJÕES", "LEPP BARRANCO DO VELHO", "LEPP CACHOPO", "LEPP VAQUEIROS"];
-      const LEPP_COLORS = {"VEÍCULO INOP": {bg: "#b0bec5", color: "#263238"},"LEPP GORJÕES": {bg: "linear-gradient(135deg, #a5d6a7, #90caf9, #fff176)", color: "#1b5e20"}, 
-                           "LEPP BARRANCO DO VELHO": {bg: "linear-gradient(135deg, #fff176, #ffb74d)", color: "#0d47a1"}, "LEPP CACHOPO": {bg: "#ef9a9a", color: "#b71c1c"}, 
-                           "LEPP VAQUEIROS": {bg: "#ef9a9a", color: "#b71c1c"}
-                          };
-      /* ─── HELPER: dia bloqueado? ─────────────────────────── */
+      const LEPP_COLORS = {"VEÍCULO INOP": {bg: "#b0bec5", color: "#263238"}, "LEPP GORJÕES": {bg: "#c8e6c9", color: "#1b5e20"}, "LEPP BARRANCO DO VELHO": {bg: "#fff9c4", color: "#0d47a1"},
+                           "LEPP CACHOPO": {bg: "#ef9a9a", color: "#b71c1c"}, "LEPP VAQUEIROS": {bg: "#ffcc80", color: "#bf360c"}};
       const isDayLocked = (day, month) => {
         const m = parseInt(month, 10);
         const d = parseInt(day, 10);
@@ -1817,50 +1814,43 @@
       style.textContent = `
         #decir-lepp-wrapper::-webkit-scrollbar {height: 6px; width: 0px;}
         #decir-lepp-wrapper::-webkit-scrollbar-thumb:horizontal {background: #131a69; border-radius: 10px;}
-        #decir-lepp-wrapper::-webkit-scrollbar-track:horizontal {background: #f0f0f0; border-radius: 10px;}
-        .lepp-select {width: 100%; border: none; background: transparent; cursor: pointer;
-          font-size: 11px; text-align: center; outline: none;
-          appearance: none; -webkit-appearance: none; color: #333; padding: 0;}
+        #decir-lepp-wrapper::-webkit-scrollbar-track:horizontal {background: #f0f0f0; border-radius: 10px;}    
+        .lepp-select {width: 100%; border: none; background: transparent; cursor: pointer; font-size: 11px; text-align: center; outline: none; appearance: none; -webkit-appearance: none; color: #333; padding: 0;}
         .lepp-select:focus {background: #eef0ff;}
         .lepp-select option {background: #fff; color: #333;}
         .lepp-select:disabled {cursor: not-allowed; color: #999;}
+        #decir-lepp-wrapper table {border-collapse: separate !important; border-spacing: 0 !important; table-layout: fixed;}    
+        #decir-lepp-wrapper table thead tr:nth-child(1) th {position: sticky; top: 0; z-index: 3; height: 32px; box-sizing: border-box; box-shadow: inset 0 -1px 0 #4a5aa0, inset 1px 0 0 #4a5aa0;}
+        #decir-lepp-wrapper table thead tr:nth-child(2) th {position: sticky; top: 32px; z-index: 2; height: 28px; box-sizing: border-box; box-shadow: inset 0 -1px 0 #4a5aa0, inset 1px 0 0 #4a5aa0;}
       `;
       document.head.appendChild(style);
       const table = document.createElement("table");
-      Object.assign(table.style, {width: "100%", minWidth: "1100px", borderCollapse: "separate", borderSpacing: "0", fontFamily: "Segoe UI, sans-serif", fontSize: "12px"});
+      Object.assign(table.style, {width: "100%", minWidth: "1100px", borderCollapse: "separate", fontFamily: "Segoe UI, sans-serif", fontSize: "12px"});
       const thead = document.createElement("thead");
       const trh1 = document.createElement("tr");
-      const groupHeaders = [{label: "Dia", rowSpan: 2, colSpan: 1, width: "45px"}, {label: "Dia Sem.", rowSpan: 2, colSpan: 1, width: "45px"}, {label: "Turno", rowSpan: 2, colSpan: 1, width: "45px"},
+      const groupHeaders = [{label: "Dia", rowSpan: 2, colSpan: 1, width: "45px"}, {label: "Dia Sem.", rowSpan: 2, colSpan: 1, width: "55px"}, {label: "Turno", rowSpan: 2, colSpan: 1, width: "45px"},
                             {label: "Veículo 01", rowSpan: 1, colSpan: 3, width: ""}, {label: "Veículo 02", rowSpan: 1, colSpan: 3, width: ""}, {label: "Veículo 03", rowSpan: 1, colSpan: 3, width: ""},];
-      groupHeaders.forEach((h, i) => {
+      groupHeaders.forEach((h) => {
         const th = document.createElement("th");
         th.textContent = h.label;
         if (h.rowSpan > 1) th.rowSpan = h.rowSpan;
         if (h.colSpan > 1) th.colSpan = h.colSpan;
-        Object.assign(th.style, {borderBottom: "1px solid #4a5aa0", borderLeft: "1px solid #4a5aa0", background: "#131a69", color: "#fff", textAlign: "center", padding: "6px 4px", fontWeight: "bold", 
-                                 position: "sticky", top: "0", zIndex: "2", whiteSpace: "nowrap"});
+        Object.assign(th.style, {background: "#131a69", color: "#fff", textAlign: "center", padding: "6px 4px", fontWeight: "bold", whiteSpace: "nowrap"});
         if (h.width) th.style.width = h.width;
-        if (i === 0) th.style.borderTopLeftRadius = "8px";
-        if (i === groupHeaders.length - 1) th.style.borderTopRightRadius = "8px";
         trh1.appendChild(th);
       });
       thead.appendChild(trh1);
       const trh2 = document.createElement("tr");
-      const subHeaders = [{label: "Viatura", width: "140px"}, {label: "LEPP", width: "160px"}, {label: "Kms", width: "70px"}, {label: "Viatura", width: "140px"}, {label: "LEPP", width: "160px"}, 
-                          {label: "Kms", width: "70px"}, {label: "Viatura", width: "140px"}, {label: "LEPP", width: "160px"}, {label: "Kms", width: "70px"},];
+      const subHeaders = [{label: "Viatura", width: "140px"}, {label: "LEPP", width: "160px" }, {label: "Kms", width: "70px"}, {label: "Viatura", width: "140px"}, 
+                          {label: "LEPP", width: "160px"}, {label: "Kms", width: "70px"}, {label: "Viatura", width: "140px"}, {label: "LEPP", width: "160px"}, {label: "Kms", width: "70px"},];
       subHeaders.forEach(h => {
         const th = document.createElement("th");
         th.textContent = h.label;
-        Object.assign(th.style, {borderBottom: "1px solid #4a5aa0", borderLeft: "1px solid #4a5aa0", background: "#1e2d8a", color: "#fff", textAlign: "center", padding: "5px 4px",
-                                 fontWeight: "bold", position: "sticky", top: "29px", zIndex: "2", width: h.width, whiteSpace: "nowrap"});
+        Object.assign(th.style, {background: "#1e2d8a", color: "#fff", textAlign: "center", padding: "5px 4px", fontWeight: "bold", width: h.width, whiteSpace: "nowrap"});
         trh2.appendChild(th);
       });
       thead.appendChild(trh2);
       table.appendChild(thead);
-      requestAnimationFrame(() => {
-        const h = trh1.getBoundingClientRect().height;
-        trh2.querySelectorAll("th").forEach(th => th.style.top = h + "px");
-      });
       const tbody = document.createElement("tbody");
       const allEditableCells = [];
       const navigateCell = (currentTd, dir) => {
@@ -1873,25 +1863,23 @@
         const date = new Date(year, month - 1, d);
         const holiday = holidays.find(h => h.date.getDate() === d && h.date.getMonth() === month - 1);
         const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-        if (holiday) return { bg: holiday.optional ? "#2ecc71" : "#ffcccc", color: "#000", title: holiday.name };
-        if (isWeekend) return { bg: WEEKEND_COLOR, color: "#000", title: "" };
-        return { bg: "", color: "", title: "" };
+        if (holiday) return {bg: holiday.optional ? "#2ecc71" : "#ffcccc", color: "#000", title: holiday.name};
+        if (isWeekend) return {bg: WEEKEND_COLOR, color: "#000", title: ""};
+        return {bg: "", color: "", title: ""};
       };
-      /* ─── makeKmsTd ──────────────────────────────────────── */
-      const makeKmsTd = (dayStyle, isLast, isLastCol, locked) => {
+      const makeKmsTd = (dayStyle, isLastRow, isLastCol, locked, targetWidth) => {
         const td = document.createElement("td");
-        const lockedBg = "#e0e0e0";
-        Object.assign(td.style, {borderBottom: "1px solid #ddd", borderLeft: "1px solid #ddd", padding: "3px 4px", height: "26px", verticalAlign: "middle", textAlign: "center", fontSize: "11px",
-                                 background: locked ? lockedBg : (dayStyle.bg || ""), color: locked ? "#999" : (dayStyle.color || ""), borderBottomRightRadius: isLast && isLastCol ? "8px" : "",
+        Object.assign(td.style, {borderBottom: "1px solid #ddd", borderLeft: "1px solid #ddd",  padding: "3px 4px", height: "26px", verticalAlign: "middle", textAlign: "center", fontSize: "11px",
+                                 width: targetWidth, background: locked ? "#e0e0e0" : (dayStyle.bg || ""), color: locked ? "#999" : (dayStyle.color || ""), borderBottomRightRadius: isLastRow && isLastCol ? "8px" : "",
                                  cursor: locked ? "not-allowed" : "text", opacity: locked ? "0.6" : "1"});
         if (!locked) {
           td.contentEditable = true;
           td.style.outline = "none";
           td.addEventListener("focus", () => td.style.background = "#eef0ff");
-          td.addEventListener("blur", () => td.style.background = dayStyle.bg || "");
+          td.addEventListener("blur",  () => td.style.background = dayStyle.bg || "");
           td.addEventListener("keydown", e => {
-            if (["ArrowRight", "ArrowDown", "Enter"].includes(e.key)) { e.preventDefault(); navigateCell(td, "right"); }
-            else if (["ArrowLeft", "ArrowUp"].includes(e.key)) { e.preventDefault(); navigateCell(td, "left"); }
+            if (["ArrowRight", "ArrowDown", "Enter"].includes(e.key)) {e.preventDefault(); navigateCell(td, "right");}
+            else if (["ArrowLeft", "ArrowUp"].includes(e.key)) {e.preventDefault(); navigateCell(td, "left");}
             else if (!/^\d$/.test(e.key) && !["Backspace", "Delete", "Tab"].includes(e.key)) e.preventDefault();
           });
           allEditableCells.push(td);
@@ -1901,12 +1889,10 @@
         }
         return td;
       };
-      /* ─── makeSelectTd ───────────────────────────────────── */
-      const makeSelectTd = (options, dayStyle, colorMap, locked) => {
+      const makeSelectTd = (options, dayStyle, colorMap, locked, targetWidth) => {
         const td = document.createElement("td");
-        const lockedBg = "#e0e0e0";
-        Object.assign(td.style, {borderBottom: "1px solid #ddd", borderLeft: "1px solid #ddd", padding: "3px 4px", height: "26px", verticalAlign: "middle", textAlign: "center", fontSize: "11px",
-                                 background: locked ? lockedBg : (dayStyle.bg || ""), color: locked ? "#999" : (dayStyle.color || ""), opacity: locked ? "0.6" : "1"});
+        Object.assign(td.style, {borderBottom: "1px solid #ddd", borderLeft: "1px solid #ddd", padding: "3px 4px", height: "26px", verticalAlign: "middle", textAlign: "center", fontSize: "11px", width: targetWidth,
+                                 background: locked ? "#e0e0e0" : (dayStyle.bg || ""), color: locked ? "#999" : (dayStyle.color || ""), opacity: locked ? "0.6" : "1"});
         const sel = document.createElement("select");
         sel.className = "lepp-select";
         options.forEach(opt => {
@@ -1929,7 +1915,6 @@
         td.appendChild(sel);
         return td;
       };
-      /* ─── LINHAS ─────────────────────────────────────────── */
       for (let d = 1; d <= daysInMonth; d++) {
         const isLast = d === daysInMonth;
         const dayStyle = getDayBg(d);
@@ -1937,50 +1922,49 @@
         const weekday = WEEKDAYS_PT[date.getDay()];
         const rowBg = dayStyle.bg || (d % 2 === 0 ? "#f5f6fa" : "#fff");
         const locked = isDayLocked(d, month);
-        ["D", "N"].forEach((shift, si) => {
+        ["D", "N"].forEach((shift) => {
           const tr = document.createElement("tr");
           tr.style.background = locked ? "#e8e8e8" : rowBg;
           const isLastRow = isLast && shift === "N";
-          const makeTdBase = (isFirstCol, isLastCol) => {
+          const makeTdBase = (isFirstCol, isLastCol, targetWidth) => {
             const td = document.createElement("td");
-            Object.assign(td.style, {borderBottom: "1px solid #ddd", borderLeft: "1px solid #ddd", padding: "3px 4px", height: "26px", verticalAlign: "middle", textAlign: "center", fontSize: "11px",
-                                     background: locked ? "#e0e0e0" : (dayStyle.bg || ""), color: locked ? "#999" : (dayStyle.color || ""), opacity: locked ? "0.7" : "1",
+            Object.assign(td.style, {borderBottom: "1px solid #ddd", borderLeft: "1px solid #ddd", padding: "3px 4px", height: "26px", verticalAlign: "middle", textAlign: "center", fontSize: "11px", 
+                                     width: targetWidth, background: locked ? "#e0e0e0" : (dayStyle.bg || ""), color: locked ? "#999" : (dayStyle.color || ""), opacity: locked ? "0.7" : "1",
                                      borderBottomLeftRadius: isLastRow && isFirstCol ? "8px" : "", borderBottomRightRadius: isLastRow && isLastCol ? "8px" : ""});
             if (dayStyle.title) td.title = dayStyle.title;
             return td;
           };
           if (shift === "D") {
-            const tdDay = makeTdBase(true, false);
-            tdDay.textContent = String(d).padStart(2, "0");
-            tdDay.style.fontWeight = "bold";
+            const tdDay = makeTdBase(true, false, "45px");
             tdDay.rowSpan = 2;
-            tdDay.style.borderBottomLeftRadius = isLast ? "8px" : "";
+            tdDay.style.fontWeight = "bold";
             if (locked) {
-              tdDay.title = "Período bloqueado";
               tdDay.textContent = String(d).padStart(2, "0") + " 🔒";
               tdDay.style.fontSize = "10px";
+            } else {
+              tdDay.textContent = String(d).padStart(2, "0");
             }
             tr.appendChild(tdDay);
-            const tdWek = makeTdBase(false, false);
+            const tdWek = makeTdBase(false, false, "55px");
             tdWek.textContent = weekday;
             tdWek.style.fontWeight = "bold";
             tdWek.rowSpan = 2;
             tr.appendChild(tdWek);
           }
-          const tdShift = makeTdBase(false, false);
+          const tdShift = makeTdBase(false, false, "45px");
           tdShift.textContent = shift;
           tdShift.style.fontWeight = "bold";
           tdShift.style.color = locked ? "#999" : (shift === "D" ? "#e65100" : "#1a237e");
           tr.appendChild(tdShift);
-          tr.appendChild(makeSelectTd(["", ...vehicles], dayStyle, null, locked));
-          tr.appendChild(makeSelectTd(LEPP_OPTIONS, dayStyle, LEPP_COLORS, locked));
-          tr.appendChild(makeKmsTd(dayStyle, isLastRow, false, locked));
-          tr.appendChild(makeSelectTd(["", ...vehicles], dayStyle, null, locked));
-          tr.appendChild(makeSelectTd(LEPP_OPTIONS, dayStyle, LEPP_COLORS, locked));
-          tr.appendChild(makeKmsTd(dayStyle, isLastRow, false, locked));
-          tr.appendChild(makeSelectTd(["", ...vehicles], dayStyle, null, locked));
-          tr.appendChild(makeSelectTd(LEPP_OPTIONS, dayStyle, LEPP_COLORS, locked));
-          tr.appendChild(makeKmsTd(dayStyle, isLastRow, true, locked));
+          tr.appendChild(makeSelectTd(["", ...vehicles], dayStyle, null, locked, "140px"));
+          tr.appendChild(makeSelectTd(LEPP_OPTIONS, dayStyle, LEPP_COLORS, locked, "160px"));
+          tr.appendChild(makeKmsTd(dayStyle, isLastRow, false, locked, "70px"));
+          tr.appendChild(makeSelectTd(["", ...vehicles], dayStyle, null, locked, "140px"));
+          tr.appendChild(makeSelectTd(LEPP_OPTIONS, dayStyle, LEPP_COLORS, locked, "160px"));
+          tr.appendChild(makeKmsTd(dayStyle, isLastRow, false, locked, "70px"));
+          tr.appendChild(makeSelectTd(["", ...vehicles], dayStyle, null, locked, "140px"));
+          tr.appendChild(makeSelectTd(LEPP_OPTIONS, dayStyle, LEPP_COLORS, locked, "160px"));
+          tr.appendChild(makeKmsTd(dayStyle, isLastRow, true, locked, "70px"));
           tbody.appendChild(tr);
         });
       }
@@ -1989,7 +1973,9 @@
       container.appendChild(wrapper);
       const options = document.getElementById("decir-lepp-options");
       if (options) options.style.display = "flex";
-      requestAnimationFrame(() => requestAnimationFrame(() => loadLeppData()));
+      if (typeof loadLeppData === "function") {
+        await loadLeppData();
+      }
     }
     /* ─── GUARDAR LEPP ───────────────────────────────────────── */
     async function saveLeppData() {
@@ -2002,7 +1988,7 @@
       const year = document.getElementById("year-dec-lepp")?.value || String(new Date().getFullYear());
       const corpOperNr = getCorpId();
       const btn = document.getElementById("save-lepp-btn");
-      if (btn) { btn.disabled = true; btn.textContent = "A gravar..."; }
+      if (btn) {btn.disabled = true; btn.textContent = "A gravar...";}
       try {
         const payload = [];
         const rows = Array.from(tbody.querySelectorAll("tr"));
@@ -2016,20 +2002,20 @@
           const vehicle_01_kms = tds[offset + 2]?.textContent.trim();
           const vehicle_02 = tds[offset + 3]?.querySelector("select")?.value || "";
           const vehicle_02_lepp = tds[offset + 4]?.querySelector("select")?.value || "";
-          const vehicle_02_kms = tds[offset + 5]?.textContent.trim();
+          const vehicle_02_kms = tds[offset + 5]?.textContent.trim();
           const vehicle_03 = tds[offset + 6]?.querySelector("select")?.value || "";
           const vehicle_03_lepp = tds[offset + 7]?.querySelector("select")?.value || "";
-          const vehicle_03_kms = tds[offset + 8]?.textContent.trim();
+          const vehicle_03_kms = tds[offset + 8]?.textContent.trim();
           if (!vehicle_01 && !vehicle_01_lepp && !vehicle_01_kms && !vehicle_02 && !vehicle_02_lepp && !vehicle_02_kms && !vehicle_03 && !vehicle_03_lepp && !vehicle_03_kms) return;
           payload.push({corp_oper_nr: corpOperNr, day, month, year, shift, vehicle_01, vehicle_01_lepp, vehicle_01_kms, vehicle_02, vehicle_02_lepp, vehicle_02_kms, vehicle_03, vehicle_03_lepp, vehicle_03_kms});
         });
         await fetch(`${SUPABASE_URL}/rest/v1/decir_reg_lepp?corp_oper_nr=eq.${corpOperNr}&month=eq.${month}&year=eq.${year}`, {
           method: "DELETE", headers: getSupabaseHeaders()
-        }).then(r => { if (!r.ok) throw new Error("Erro ao limpar registos antigos"); });
+        }).then(r => {if (!r.ok) throw new Error("Erro ao limpar registos antigos");});
         if (payload.length > 0) {
           const r = await fetch(`${SUPABASE_URL}/rest/v1/decir_reg_lepp`, {
             method: "POST",
-            headers: { ...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
+            headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
             body: JSON.stringify(payload)
           });
           if (!r.ok) throw new Error(await r.text() || "Erro desconhecido ao gravar");
@@ -2039,7 +2025,7 @@
         console.error(err);
         showPopup('popup-danger', "❌ Erro ao gravar: " + err.message);
       } finally {
-        if (btn) { btn.disabled = false; btn.textContent = "💾 Guardar"; }
+        if (btn) {btn.disabled = false; btn.textContent = "💾 Guardar";}
       }
     }
     /* ─── FUNÇÕES GLOBAIS SIGNA (DECIR) ─────────────────────── */

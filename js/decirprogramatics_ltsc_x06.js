@@ -1407,14 +1407,27 @@
       const year = document.getElementById("year-dec-ref")?.value || String(new Date().getFullYear());
       const corpOperNr = getCorpId();
       try {
-        const [data, regServ] = await Promise.all([
+        const [data, regServ, leppData] = await Promise.all([
           supabaseFetch(`decir_reg_meals?corp_oper_nr=eq.${corpOperNr}&month=eq.${month}&year=eq.${year}`),
-          supabaseFetch(`reg_serv?corp_oper_nr=eq.${corpOperNr}&month=eq.${month}&year=eq.${year}&value=in.(ED,ET)`)
+          supabaseFetch(`reg_serv?corp_oper_nr=eq.${corpOperNr}&month=eq.${month}&year=eq.${year}&value=in.(ED,ET)`),
+          supabaseFetch(`decir_reg_lepp?corp_oper_nr=eq.${corpOperNr}&month=eq.${month}&year=eq.${year}&shift=eq.D`)
         ]);
+        const LEPP_DISCOUNT = ["LEPP BARRANCO DO VELHO", "LEPP CACHOPO", "LEPP VAQUEIROS"];
         const prevByDay = {};
         (regServ || []).forEach(item => {
           const d = String(parseInt(item.day, 10));
           prevByDay[d] = (prevByDay[d] || 0) + 1;
+        });
+        (leppData || []).forEach(item => {
+          const d = String(parseInt(item.day, 10));
+          const vehicles = [{type: item.vehicle_01, lepp: item.vehicle_01_lepp}, {type: item.vehicle_02, lepp: item.vehicle_02_lepp}, {type: item.vehicle_03, lepp: item.vehicle_03_lepp},];
+          const hasINOP = vehicles.some(v => v.lepp === "VEÍCULO INOP");
+          const hasVFCI = vehicles.some(v => v.type?.startsWith("VFCI") && LEPP_DISCOUNT.includes(v.lepp));
+          if (hasINOP) {
+            prevByDay[d] = 0;
+          } else if (hasVFCI) {
+            prevByDay[d] = (prevByDay[d] || 0) - 5;
+          }
         });
         if (!data?.length && Object.keys(prevByDay).length === 0) return;
         const tbody = document.querySelector("#table-container-dec-ref table tbody");
@@ -1791,8 +1804,8 @@
       }
       const vehicles = leppVehicles || [];
       const LEPP_OPTIONS = ["", "VEÍCULO INOP", "LEPP GORJÕES", "LEPP BARRANCO DO VELHO", "LEPP CACHOPO", "LEPP VAQUEIROS"];
-      const LEPP_COLORS = {"VEÍCULO INOP": {bg: "#b0bec5", color: "#263238"},"LEPP GORJÕES": {bg: "linear-gradient(135deg, #a5d6a7, #90caf9, #fff176)", color: "#1b5e20"}, 
-                           "LEPP BARRANCO DO VELHO": {bg: "linear-gradient(135deg, #fff176, #ffb74d)", color: "#0d47a1"}, "LEPP CACHOPO": {bg: "#ef9a9a", color: "#b71c1c"}, 
+      const LEPP_COLORS = {"VEÍCULO INOP": {bg: "#b0bec5", color: "#263238"},"LEPP GORJÕES": {bg: "linear-gradient(135deg, #a5d6a7, #90caf9, #fff176)", color: "#000"}, 
+                           "LEPP BARRANCO DO VELHO": {bg: "linear-gradient(135deg, #fff176, #ffb74d)", color: "#000"}, "LEPP CACHOPO": {bg: "#ef9a9a", color: "#b71c1c"}, 
                            "LEPP VAQUEIROS": {bg: "#ef9a9a", color: "#b71c1c"}
                           };
       const isDayLocked = (day, month) => {
@@ -3327,7 +3340,7 @@
                                                                     borderColor: l.color, backgroundColor: l.color + "33", tension: 0.4, pointRadius: 4, pointHoverRadius: 6, fill: false, borderWidth: 2}))},
                                                                     options: {responsive: true, maintainAspectRatio: false,
                                                                     plugins: {legend: {position: "bottom", labels: {font: {size: 12}, boxWidth: 16}}, 
-                                                                    title: {display: true, text: "Registos LEPP por Mês", font: {size: 14}, color: "#131a69"}},
+                                                                    title: {display: true, text: "Veículos em LEPP", font: {size: 14}, color: "#131a69"}},
                                                                     scales: {y: {beginAtZero: true, ticks: {font: {size: 10}}, grid: {color: "#ccc"}},
                                                                              x: {ticks: {font: {size: 10}}, grid: {display: false}}}}});}}
     async function updateDecirLeppStatsCard(year) {

@@ -1791,8 +1791,10 @@
       }
       const vehicles = leppVehicles || [];
       const LEPP_OPTIONS = ["", "VEÍCULO INOP", "LEPP GORJÕES", "LEPP BARRANCO DO VELHO", "LEPP CACHOPO", "LEPP VAQUEIROS"];
-      const LEPP_COLORS = {"VEÍCULO INOP": {bg: "#b0bec5", color: "#263238"}, "LEPP GORJÕES": {bg: "#c8e6c9", color: "#1b5e20"}, "LEPP BARRANCO DO VELHO": {bg: "#fff9c4", color: "#0d47a1"},
-                           "LEPP CACHOPO": {bg: "#ef9a9a", color: "#b71c1c"}, "LEPP VAQUEIROS": {bg: "#ffcc80", color: "#bf360c"}};
+      const LEPP_COLORS = {"VEÍCULO INOP": {bg: "#b0bec5", color: "#263238"},"LEPP GORJÕES": {bg: "linear-gradient(135deg, #a5d6a7, #90caf9, #fff176)", color: "#1b5e20"}, 
+                           "LEPP BARRANCO DO VELHO": {bg: "linear-gradient(135deg, #fff176, #ffb74d)", color: "#0d47a1"}, "LEPP CACHOPO": {bg: "#ef9a9a", color: "#b71c1c"}, 
+                           "LEPP VAQUEIROS": {bg: "#ef9a9a", color: "#b71c1c"}
+                          };
       const isDayLocked = (day, month) => {
         const m = parseInt(month, 10);
         const d = parseInt(day, 10);
@@ -1810,6 +1812,7 @@
       const wrapper = document.createElement("div");
       wrapper.id = "decir-lepp-wrapper";
       Object.assign(wrapper.style, {overflowX: "auto", overflowY: "auto", width: "100%", maxHeight: "500px", borderRadius: "8px", border: "1px solid #ddd", boxShadow: "0 2px 8px rgba(0,0,0,0.08)"});
+      
       const style = document.createElement("style");
       style.textContent = `
         #decir-lepp-wrapper::-webkit-scrollbar {height: 6px; width: 0px;}
@@ -1819,7 +1822,7 @@
         .lepp-select:focus {background: #eef0ff;}
         .lepp-select option {background: #fff; color: #333;}
         .lepp-select:disabled {cursor: not-allowed; color: #999;}
-        #decir-lepp-wrapper table {border-collapse: separate !important; border-spacing: 0 !important; table-layout: fixed;}    
+        #decir-lepp-wrapper table {border-collapse: separate !important; border-spacing: 0 !important; table-layout: auto !important;}    
         #decir-lepp-wrapper table thead tr:nth-child(1) th {position: sticky; top: 0; z-index: 3; height: 32px; box-sizing: border-box; box-shadow: inset 0 -1px 0 #4a5aa0, inset 1px 0 0 #4a5aa0;}
         #decir-lepp-wrapper table thead tr:nth-child(2) th {position: sticky; top: 32px; z-index: 2; height: 28px; box-sizing: border-box; box-shadow: inset 0 -1px 0 #4a5aa0, inset 1px 0 0 #4a5aa0;}
       `;
@@ -1829,24 +1832,30 @@
       const thead = document.createElement("thead");
       const trh1 = document.createElement("tr");
       const groupHeaders = [{label: "Dia", rowSpan: 2, colSpan: 1, width: "45px"}, {label: "Dia Sem.", rowSpan: 2, colSpan: 1, width: "55px"}, {label: "Turno", rowSpan: 2, colSpan: 1, width: "45px"},
-                            {label: "Veículo 01", rowSpan: 1, colSpan: 3, width: ""}, {label: "Veículo 02", rowSpan: 1, colSpan: 3, width: ""}, {label: "Veículo 03", rowSpan: 1, colSpan: 3, width: ""},];
+                            {label: "Veículo 01", rowSpan: 1, colSpan: 3, width: ""}, {label: "Veículo 02", rowSpan: 1, colSpan: 3, width: ""}, {label: "Veículo 03", rowSpan: 1, colSpan: 3, width: ""},];      
       groupHeaders.forEach((h) => {
         const th = document.createElement("th");
         th.textContent = h.label;
         if (h.rowSpan > 1) th.rowSpan = h.rowSpan;
         if (h.colSpan > 1) th.colSpan = h.colSpan;
         Object.assign(th.style, {background: "#131a69", color: "#fff", textAlign: "center", padding: "6px 4px", fontWeight: "bold", whiteSpace: "nowrap"});
-        if (h.width) th.style.width = h.width;
+        if (h.width) {
+          th.style.width = h.width;
+          th.style.minWidth = h.width;
+          th.style.maxWidth = h.width;
+        }
         trh1.appendChild(th);
       });
       thead.appendChild(trh1);
+      
       const trh2 = document.createElement("tr");
-      const subHeaders = [{label: "Viatura", width: "140px"}, {label: "LEPP", width: "160px" }, {label: "Kms", width: "70px"}, {label: "Viatura", width: "140px"}, 
-                          {label: "LEPP", width: "160px"}, {label: "Kms", width: "70px"}, {label: "Viatura", width: "140px"}, {label: "LEPP", width: "160px"}, {label: "Kms", width: "70px"},];
+      const subHeaders = [{label: "Viatura", width: "130px"}, {label: "LEPP", width: "200px" }, {label: "Kms", width: "100px"}, 
+                          {label: "Viatura", width: "130px"}, {label: "LEPP", width: "200px"}, {label: "Kms", width: "100px"},
+                          {label: "Viatura", width: "130px"}, {label: "LEPP", width: "200px"}, {label: "Kms", width: "100px"},];      
       subHeaders.forEach(h => {
         const th = document.createElement("th");
         th.textContent = h.label;
-        Object.assign(th.style, {background: "#1e2d8a", color: "#fff", textAlign: "center", padding: "5px 4px", fontWeight: "bold", width: h.width, whiteSpace: "nowrap"});
+        Object.assign(th.style, {background: "#1e2d8a", color: "#fff", textAlign: "center", padding: "5px 4px", fontWeight: "bold", whiteSpace: "nowrap", width: h.width, minWidth: h.width, maxWidth: h.width});
         trh2.appendChild(th);
       });
       thead.appendChild(trh2);
@@ -1870,7 +1879,8 @@
       const makeKmsTd = (dayStyle, isLastRow, isLastCol, locked, targetWidth) => {
         const td = document.createElement("td");
         Object.assign(td.style, {borderBottom: "1px solid #ddd", borderLeft: "1px solid #ddd",  padding: "3px 4px", height: "26px", verticalAlign: "middle", textAlign: "center", fontSize: "11px",
-                                 width: targetWidth, background: locked ? "#e0e0e0" : (dayStyle.bg || ""), color: locked ? "#999" : (dayStyle.color || ""), borderBottomRightRadius: isLastRow && isLastCol ? "8px" : "",
+                                 width: targetWidth, minWidth: targetWidth, maxWidth: targetWidth, background: locked ? "#e0e0e0" : (dayStyle.bg || ""), color: locked ? "#999" : (dayStyle.color || ""), 
+                                 orderBottomRightRadius: isLastRow && isLastCol ? "8px" : "",
                                  cursor: locked ? "not-allowed" : "text", opacity: locked ? "0.6" : "1"});
         if (!locked) {
           td.contentEditable = true;
@@ -1891,8 +1901,9 @@
       };
       const makeSelectTd = (options, dayStyle, colorMap, locked, targetWidth) => {
         const td = document.createElement("td");
-        Object.assign(td.style, {borderBottom: "1px solid #ddd", borderLeft: "1px solid #ddd", padding: "3px 4px", height: "26px", verticalAlign: "middle", textAlign: "center", fontSize: "11px", width: targetWidth,
-                                 background: locked ? "#e0e0e0" : (dayStyle.bg || ""), color: locked ? "#999" : (dayStyle.color || ""), opacity: locked ? "0.6" : "1"});
+        Object.assign(td.style, {borderBottom: "1px solid #ddd", borderLeft: "1px solid #ddd", padding: "3px 4px", height: "26px", verticalAlign: "middle", textAlign: "center", fontSize: "11px", 
+                                 width: targetWidth, minWidth: targetWidth, maxWidth: targetWidth, background: locked ? "#e0e0e0" : (dayStyle.bg || ""), color: locked ? "#999" : (dayStyle.color || ""), 
+                                 opacity: locked ? "0.6" : "1"});
         const sel = document.createElement("select");
         sel.className = "lepp-select";
         options.forEach(opt => {
@@ -1929,8 +1940,8 @@
           const makeTdBase = (isFirstCol, isLastCol, targetWidth) => {
             const td = document.createElement("td");
             Object.assign(td.style, {borderBottom: "1px solid #ddd", borderLeft: "1px solid #ddd", padding: "3px 4px", height: "26px", verticalAlign: "middle", textAlign: "center", fontSize: "11px", 
-                                     width: targetWidth, background: locked ? "#e0e0e0" : (dayStyle.bg || ""), color: locked ? "#999" : (dayStyle.color || ""), opacity: locked ? "0.7" : "1",
-                                     borderBottomLeftRadius: isLastRow && isFirstCol ? "8px" : "", borderBottomRightRadius: isLastRow && isLastCol ? "8px" : ""});
+                                     width: targetWidth, minWidth: targetWidth, maxWidth: targetWidth, background: locked ? "#e0e0e0" : (dayStyle.bg || ""), color: locked ? "#999" : (dayStyle.color || ""), 
+                                     opacity: locked ? "0.7" : "1", borderBottomLeftRadius: isLastRow && isFirstCol ? "8px" : "", borderBottomRightRadius: isLastRow && isLastCol ? "8px" : ""});
             if (dayStyle.title) td.title = dayStyle.title;
             return td;
           };
@@ -1956,15 +1967,15 @@
           tdShift.style.fontWeight = "bold";
           tdShift.style.color = locked ? "#999" : (shift === "D" ? "#e65100" : "#1a237e");
           tr.appendChild(tdShift);
-          tr.appendChild(makeSelectTd(["", ...vehicles], dayStyle, null, locked, "140px"));
-          tr.appendChild(makeSelectTd(LEPP_OPTIONS, dayStyle, LEPP_COLORS, locked, "160px"));
-          tr.appendChild(makeKmsTd(dayStyle, isLastRow, false, locked, "70px"));
-          tr.appendChild(makeSelectTd(["", ...vehicles], dayStyle, null, locked, "140px"));
-          tr.appendChild(makeSelectTd(LEPP_OPTIONS, dayStyle, LEPP_COLORS, locked, "160px"));
-          tr.appendChild(makeKmsTd(dayStyle, isLastRow, false, locked, "70px"));
-          tr.appendChild(makeSelectTd(["", ...vehicles], dayStyle, null, locked, "140px"));
-          tr.appendChild(makeSelectTd(LEPP_OPTIONS, dayStyle, LEPP_COLORS, locked, "160px"));
-          tr.appendChild(makeKmsTd(dayStyle, isLastRow, true, locked, "70px"));
+          tr.appendChild(makeSelectTd(["", ...vehicles], dayStyle, null, locked, "130px"));
+          tr.appendChild(makeSelectTd(LEPP_OPTIONS, dayStyle, LEPP_COLORS, locked, "200px"));
+          tr.appendChild(makeKmsTd(dayStyle, isLastRow, false, locked, "100px"));
+          tr.appendChild(makeSelectTd(["", ...vehicles], dayStyle, null, locked, "130px"));
+          tr.appendChild(makeSelectTd(LEPP_OPTIONS, dayStyle, LEPP_COLORS, locked, "200px"));
+          tr.appendChild(makeKmsTd(dayStyle, isLastRow, false, locked, "100px"));
+          tr.appendChild(makeSelectTd(["", ...vehicles], dayStyle, null, locked, "130px"));
+          tr.appendChild(makeSelectTd(LEPP_OPTIONS, dayStyle, LEPP_COLORS, locked, "200px"));
+          tr.appendChild(makeKmsTd(dayStyle, isLastRow, true, locked, "100px"));
           tbody.appendChild(tr);
         });
       }
@@ -2002,10 +2013,10 @@
           const vehicle_01_kms = tds[offset + 2]?.textContent.trim();
           const vehicle_02 = tds[offset + 3]?.querySelector("select")?.value || "";
           const vehicle_02_lepp = tds[offset + 4]?.querySelector("select")?.value || "";
-          const vehicle_02_kms = tds[offset + 5]?.textContent.trim();
+          const vehicle_02_kms = tds[offset + 5]?.textContent.trim();
           const vehicle_03 = tds[offset + 6]?.querySelector("select")?.value || "";
           const vehicle_03_lepp = tds[offset + 7]?.querySelector("select")?.value || "";
-          const vehicle_03_kms = tds[offset + 8]?.textContent.trim();
+          const vehicle_03_kms = tds[offset + 8]?.textContent.trim();
           if (!vehicle_01 && !vehicle_01_lepp && !vehicle_01_kms && !vehicle_02 && !vehicle_02_lepp && !vehicle_02_kms && !vehicle_03 && !vehicle_03_lepp && !vehicle_03_kms) return;
           payload.push({corp_oper_nr: corpOperNr, day, month, year, shift, vehicle_01, vehicle_01_lepp, vehicle_01_kms, vehicle_02, vehicle_02_lepp, vehicle_02_kms, vehicle_03, vehicle_03_lepp, vehicle_03_kms});
         });

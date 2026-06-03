@@ -3273,7 +3273,7 @@
       const thead = document.createElement("thead");
       const trh1 = document.createElement("tr");
       const thMonth = document.createElement("th"); thMonth.textContent = "Mês"; thMonth.rowSpan = 2; thMonth.style.background = "#0f1660"; trh1.appendChild(thMonth);
-      const thLepp = document.createElement("th"); thLepp.textContent = "Registos por LEPP"; thLepp.colSpan = LEPPS.length; thLepp.style.background = "#1e2a80"; trh1.appendChild(thLepp);
+      const thLepp = document.createElement("th"); thLepp.textContent = "Turnos por LEPP"; thLepp.colSpan = LEPPS.length; thLepp.style.background = "#1e2a80"; trh1.appendChild(thLepp);
       thead.appendChild(trh1);
       const trh2 = document.createElement("tr");
       LEPPS.forEach(l => {
@@ -3312,7 +3312,7 @@
       const tdGrand = document.createElement("td");
       tdGrand.colSpan = LEPPS.length + 1;
       tdGrand.style.cssText = "background: #dbeafe; color: #1d4ed8; text-align: center; padding: 6px; font-weight: 700;";
-      tdGrand.textContent = `${grandTotal} Registos LEPP`;
+      tdGrand.textContent = `${grandTotal} Turnos | ${grandTotal * 12} Horas`;
       trGrand.appendChild(tdGrand);
       tbody.appendChild(trGrand);
       const trPct = document.createElement("tr");
@@ -3340,7 +3340,7 @@
                                                                     borderColor: l.color, backgroundColor: l.color + "33", tension: 0.4, pointRadius: 4, pointHoverRadius: 6, fill: false, borderWidth: 2}))},
                                                                     options: {responsive: true, maintainAspectRatio: false,
                                                                     plugins: {legend: {position: "bottom", labels: {font: {size: 12}, boxWidth: 16}}, 
-                                                                    title: {display: true, text: "Veículos em LEPP", font: {size: 14}, color: "#131a69"}},
+                                                                    title: {display: true, text: "Turnos em LEPP", font: {size: 14}, color: "#131a69"}},
                                                                     scales: {y: {beginAtZero: true, ticks: {font: {size: 10}}, grid: {color: "#ccc"}},
                                                                              x: {ticks: {font: {size: 10}}, grid: {display: false}}}}});}}
     async function updateDecirLeppStatsCard(year) {
@@ -3391,7 +3391,7 @@
         const allRows = tbody.querySelectorAll("tr");
         const grandRow = allRows[allRows.length - 2];
         const pctRow = allRows[allRows.length - 1];
-        if (grandRow) grandRow.querySelector("td").textContent = `${grandTotal} Registos LEPP`;
+        if (grandRow) grandRow.querySelector("td").textContent = `${grandTotal} Turnos | ${grandTotal * 12} Horas`;
         if (pctRow) {
           const pctTds = pctRow.querySelectorAll("td:not(:first-child)");
           LEPPS.forEach((l, j) => {

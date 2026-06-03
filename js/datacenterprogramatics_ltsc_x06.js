@@ -91,6 +91,7 @@
         if (!data.length) return;
         const corporation = data[0];
         document.getElementById("assoc-nome").value = corporation.corporation || "";
+        document.getElementById("cb-nome").value = corporation.cb_name || "";
         document.getElementById("assoc-morada").value = corporation.corp_adress || "";
         document.getElementById("assoc-localidade").value = corporation.corp_localitie || "";
         document.getElementById("assoc-nif").value = corporation.corp_fiscal_nr || "";
@@ -138,9 +139,9 @@
           saveButton.textContent = "A SALVAR...";
         }
         const currentCorpNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
-        const corporationData = {corporation: document.getElementById("assoc-nome")?.value?.trim() || null, corp_adress: document.getElementById("assoc-morada")?.value?.trim() || null,
-                                 corp_localitie: document.getElementById("assoc-localidade")?.value?.trim() || null, corp_cp: getCombinedPostalCode(), corp_district: getSelectedDistrictName(),
-                                 corp_council: getSelectedCouncilName(), corp_parish: document.getElementById("parish_select_corp")?.value?.trim() || null,
+        const corporationData = {corporation: document.getElementById("assoc-nome")?.value?.trim() || null, cb_name: document.getElementById("cb-nome")?.value?.trim() || null, 
+                                 corp_adress: document.getElementById("assoc-morada")?.value?.trim() || null, corp_localitie: document.getElementById("assoc-localidade")?.value?.trim() || null, 
+                                 corp_cp: getCombinedPostalCode(), corp_district: getSelectedDistrictName(), corp_council: getSelectedCouncilName(), corp_parish: document.getElementById("parish_select_corp")?.value?.trim() || null,
                                  corp_fiscal_nr: document.getElementById("assoc-nif")?.value?.trim() || null, corp_oper_nr: currentCorpNr || document.getElementById("assoc-operacional")?.value?.trim() || null
                                 };
         const validation = validateCorporationData(corporationData);
@@ -252,7 +253,9 @@
     }    
     function validateCorporationData(data) {
       if (!data.corporation)
-        return {isValid: false, message: "Nome obrigatório"};
+        return {isValid: false, message: "Nome da associação obrigatório"};
+      if (!data.cb_name)
+        return {isValid: false, message: "Nome do CB obrigatório"};
       if (!data.corp_fiscal_nr)
         return {isValid: false, message: "NIF obrigatório"};
       if (!/^\d{9}$/.test(data.corp_fiscal_nr))

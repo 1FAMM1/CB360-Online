@@ -119,7 +119,7 @@
       res.setHeader("Access-Control-Allow-Headers", "Content-Type");
       if (req.method === "OPTIONS") return res.status(200).end();
       try {
-        const {shift, date, tables, recipients, ccRecipients, bccRecipients, emailBody, logoUrl, corpName, corpOperNr} = req.body || {};
+        const {shift, date, tables, recipients, ccRecipients, bccRecipients, emailBody, logoUrl, corpName, corpOperNr, lastUpdated} = req.body || {};
         if (!shift || !date || !tables || !recipients || recipients.length === 0) {
           return res.status(400).json({
             error: "Faltam dados essenciais ou a lista de destinatários principais está vazia.",
@@ -157,6 +157,7 @@
             sheet.getCell(`I${rowNum}`).value = rowData.obs || "";
           }
         }
+        sheet.getCell("B83").value = lastUpdated ? `Última atualização às: ${lastUpdated}` : "";
         sheet.pageSetup = {orientation: 'portrait', paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true, verticalCentered: true,
                            margins: {left: 0.059, right: 0.059, top: 0.25, bottom: 0.25, header: 0.1, footer: 0.1}};
         const finalXLSXBuffer = await workbook.xlsx.writeBuffer();

@@ -2502,11 +2502,14 @@
           Remeto em anexo a Vossas Exª.s o  ${fileDisplayName}<br>
           Com os melhores cumprimentos,<br>
           OPTEL<br>${optelName}`;
+        const now = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        const lastUpdated = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
         const response = await fetch("https://cb360-online.vercel.app/api/plandir_convert_and_send", {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({shift, date, tables, recipients: RECIPIENTS, ccRecipients: CC_RECIPIENTS, bccRecipients: BCC_RECIPIENTS, emailBody: emailBodyHTML,
-                                logoUrl: logoUrl, corpName: cbName, corpOperNr: corpOperNr})
+                                logoUrl: logoUrl, corpName: cbName, corpOperNr: corpOperNr, lastUpdated})
         });
         const result = await response.json();
         if (!response.ok) {

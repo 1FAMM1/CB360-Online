@@ -572,15 +572,20 @@
           if (!rec) return;
           const shiftVal = (rec.shift || "").toUpperCase();
           cell.textContent = shiftVal;
-          if (!rec.custom_bg_color && !rec.custom_text_color) applyCellColor(cell, shiftVal);
-          if (rec.custom_bg_color) { cell.dataset.customBg = rec.custom_bg_color; cell.style.backgroundColor = rec.custom_bg_color; }
-          if (rec.custom_text_color) { cell.dataset.customColor = rec.custom_text_color; cell.style.color = rec.custom_text_color; }
-          if (rec.is_driver) { cell.dataset.driver = "1"; cell.dataset.other = "0"; applyDriverStyle(cell); }
-          else if (rec.is_other) { cell.dataset.other = "1"; cell.dataset.driver = "0"; applyOtherStyle(cell); }
-          else { cell.dataset.driver = "0"; cell.dataset.other = "0"; }
+          if (!rec.custom_bg_color && !rec.custom_text_color) {
+            applyCellColor(cell, shiftVal);
+          } else if (shiftVal) {
+            if (rec.custom_bg_color) {cell.dataset.customBg = rec.custom_bg_color; cell.style.backgroundColor = rec.custom_bg_color;}
+            if (rec.custom_text_color) {cell.dataset.customColor = rec.custom_text_color; cell.style.color = rec.custom_text_color;}
+          } else {
+            applyCellColor(cell, shiftVal);
+          }
+          if (rec.is_driver) {cell.dataset.driver = "1"; cell.dataset.other = "0"; applyDriverStyle(cell);}
+          else if (rec.is_other) {cell.dataset.other = "1"; cell.dataset.driver = "0"; applyOtherStyle(cell);}
+          else {cell.dataset.driver = "0"; cell.dataset.other = "0";}
         });
       });
-    }    
+    }
     function getNextTeamNumber(teamPrefix) {
       const tbody = document.querySelector("table.employees-table tbody");
       if (!tbody) return teamPrefix === "EQ" ? "EQ05" : `${teamPrefix}02`;
@@ -1325,7 +1330,8 @@
           employeesUpdate.push({n_int: nInt, abv_name: abvName, function: func, team, corp_oper_nr: corpOperNr});
           row.querySelectorAll("td[contenteditable='true']").forEach((cell, idx) => {
             const shift = cell.textContent.trim().toUpperCase();
-            const customBg = cell.dataset.customBg || null, customColor = cell.dataset.customColor || null;
+            const customBg = (cell.dataset.customBg && cell.dataset.customBg !== "undefined") ? cell.dataset.customBg : null;
+            const customColor = (cell.dataset.customColor && cell.dataset.customColor !== "undefined") ? cell.dataset.customColor : null;
             if (shift || customBg || customColor)
               shiftsPayload.push({n_int: nInt, abv_name: abvName, day: idx + 1, month, year, shift: shift || " ", team, function: func, position,
                                   corp_oper_nr: corpOperNr, is_driver: cell.dataset.driver === "1", is_other: cell.dataset.other === "1",
@@ -1433,7 +1439,7 @@
     document.getElementById("employees-save-btn")?.addEventListener("click", saveEmployeeScales);
     document.getElementById("employees-emit-xlsx-btn")?.addEventListener("click", () => emitEmployeesScale("xlsx"));
     document.getElementById("employees-emit-pdf-btn")?.addEventListener("click", () => emitEmployeesScale("pdf"));
-    document.getElementById("employees-emit-stitch-marker-btn")?.addEventListener("click", emitStitchSheets); 
+    document.getElementById("employees-emit-stitch-marker-btn")?.addEventListener("click", emitStitchSheets);
     /* ================================
     FASE 02 - EMPLOYEE EXTRA HOURS CONTROL
     =============================== */

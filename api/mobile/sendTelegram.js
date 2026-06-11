@@ -13,7 +13,7 @@
         res.status(500).json({ success: false, error: error.message });
       },
       onNoMatch(req, res) {
-        res.status(405).json({ success: false, error: 'Method not allowed' });
+        res.status(405).json({success: false, error: 'Method not allowed'});
       },
     });
     apiRoute.use(upload.array('photos'));

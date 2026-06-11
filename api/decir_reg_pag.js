@@ -230,7 +230,7 @@
             if (empty || (qtd === 0 && val === 0)) line.hidden = true;
           }
           sheet.pageSetup = {orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight:1, horizontalCentered: true,
-                             margins: {left: 0.3, right: 0.3, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3}};}
+                             margins: {left: 0.1, right: 0.1, top: 0.3, bottom: 0.3, header: 0.3, footer: 0.3}};}
         // ---------- OCORRÊNCIAS ----------
         else if (data.type === 'ocorr') {
           if (!Array.isArray(data.rows)) return res.status(400).json({error: "Rows inválidas para ocorrências"});

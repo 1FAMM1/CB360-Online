@@ -91,11 +91,11 @@
     const COMMON_EMP_TH_STYLE = "border: 1px solid #ccc; border-top: 0px solid #ccc; border-left: 0px solid #ccc; width: 35px; padding: 2px; font-size: 11px; text-align: center; background: #f0f0f0;";
     const COMMON_EMP_TD_STYLE = "border: 1px solid #ccc; border-top: 0px solid #ccc; border-left: 0px solid #ccc; padding: 4px; text-align: center; font-size: 13px; width: 35px;";
     const TEAM_ORDER = ["EQ01", "EQ02", "EQ03", "EQ04", "EQ05", "EQ06", "EQ07", "EQ08", "EQ09", "EQ10","TDNU", "OPC", "EP1", "EP2"];
-    const SHIFT_VALUES = {"D": 12, "N": 12, "FE": 8, "M": 8, "BX": 8, "FOR": 8, "FO": 0, "LC": 8, "LP": 8, "DP": 0, "LN": 8, "FI": 8, "FJ": 8};
+    const SHIFT_VALUES = {"D": 12, "N": 12, "FE": 8, "M": 8, "BX": 8, "FOR": 8, "FO": 0, "LC": 8, "LP": 8, "DP": 0, "LN": 8, "FI": 8, "FJ": 8, "HA": 8};
     const SHIFT_COLORS = {"D": {bg: "#FFFF00", color: "#000000"}, "N": {bg: "#00008B", color: "#FFFFFF"}, "M": {bg: "#D3D3D3", color: "#000000"}, "FR": {bg: "#FFA500", color: "#000000"},
                           "FO": {bg: "#92D050", color: "#000000"}, "FE": {bg: "#00B0F0", color: "#000000"}, "BX": {bg: "#FF0000", color: "#FFFFFF"}, "LC": {bg: "#FF0000", color: "#FFFFFF"},
                           "LN": {bg: "#FF0000", color: "#FFFFFF"}, "LP": {bg: "#FF0000", color: "#FFFFFF"}, "FI": {bg: "#FF0000", color: "#FFFFFF"}, "FJ": {bg: "#FF0000", color: "#FFFFFF"},
-                          "FOR": {bg: "#808080", color: "#FFFFFF"}, "DP": {bg: "#000000", color: "#FFFFFF"}};
+                          "FOR": {bg: "#808080", color: "#FFFFFF"}, "DP": {bg: "#000000", color: "#FFFFFF"}, "HA": {bg: "#FFB6C1", color: "#000000"}};
     const WEEKEND_EMPLOYEES_COLOR = "#f9e0b0";
     const HOLIDAY_COLOR = "#f7c6c7";
     const HOLIDAY_OPTIONAL_COLOR = "#d6ecff";
@@ -280,10 +280,10 @@
       const legendDiv = document.createElement("div");
       legendDiv.style.cssText = `margin-top: 5px; padding: 12px; background: #f0f8ff; border: 1px solid #4682b4; border-radius: 5px; font-family: 'Segoe UI', sans-serif;
                                  display: inline-block; width: fit-content; margin-left: 5px;vertical-align:top; height:150px;`;
-      const shifts = [{code: "M", desc: "08:00 - 16:00"}, {code: "D", desc: "08:00 - 20:00"}, {code: "N", desc: "20:00 - 08:00"}, {code: "", desc: "Condutor INEM", special: "driver"},
-                      {code: "", desc: "Outro", special: "other"}, {code: "FO", desc: "Folga"}, {code: "FE", desc: "Férias"}, {code: "FOR", desc: "Formação"}, {code: "BX", desc: "Baixa"},
+      const shifts = [ {code: "", desc: "Condutor INEM", special: "driver"}, {code: "", desc: "Outro", special: "other"}, {code: "M", desc: "08:00 - 16:00"}, {code: "D", desc: "08:00 - 20:00"}, 
+                      {code: "N", desc: "20:00 - 08:00"}, {code: "FO", desc: "Folga"}, {code: "FE", desc: "Férias"}, {code: "FOR", desc: "Formação"}, {code: "BX", desc: "Baixa"},
                       {code: "FI", desc: "Falta Injustificada"}, {code: "FJ", desc: "Falta Justificada"}, {code: "LP", desc: "Lic. Parental"}, {code: "LN", desc: "Lic. Nojo"},
-                      {code: "LC", desc: "Lic. Casamento"}, {code: "DP", desc: "Dispensa"}];
+                      {code: "LC", desc: "Lic. Casamento"}, {code: "DP", desc: "Dispensa"}, {code: "HA", desc: "Amamentação"}];
       const itemHTML = (shift) => {        
         const codeBg = shift.special === "driver" ? DRIVER_BG : shift.special === "other" ? OTHER_BG : (SHIFT_COLORS[shift.code]?.bg || "#FFFFFF");
         const codeColor = shift.special === "driver" ? DRIVER_TEXT : (SHIFT_COLORS[shift.code]?.color || "#000000");
@@ -294,7 +294,7 @@
         </div>`;
       };
       let html = `<div style="font-weight:bold;font-size:14px;color:#1e3a8a;margin-bottom:10px;text-align:center;">LEGENDA DE TURNOS</div><div style="display:flex;flex-direction:column;gap:6px;">`;
-      [[0,5],[5,10],[10,15]].forEach(([from, to]) => {
+      [[0,7],[7,14],[14,16]].forEach(([from, to]) => {
         html += `<div style="display:flex;gap:6px;">${shifts.slice(from, to).map(itemHTML).join("")}</div>`;
       });
       html += `</div>`;
@@ -378,7 +378,7 @@
       const shiftsList = [{code:"M",desc:"Manhã"},{code:"D",desc:"Dia"},{code:"N",desc:"Noite"},{code:"FR",desc:"Feriado"},{code:"FO",desc:"Folga"},
                           {code:"FE",desc:"Férias"},{code:"FOR",desc:"Formação"},{code:"BX",desc:"Baixa"},{code:"DP",desc:"Dispensa"},
                           {code:"DRIVER",desc:"Motorista",bg:DRIVER_BG,color:DRIVER_TEXT},{code:"OTHER",desc:"Outro Tipo",bg:OTHER_BG,color:OTHER_TEXT},
-                          {code:"RESET",desc:"Limpar Cor",bg:"#ffffff",color:"#000000"}];
+                          {code:"HA",desc:"Amamentação"},{code:"RESET",desc:"Limpar Cor",bg:"#ffffff",color:"#000000"}];
       shiftsList.forEach(shift => {
         const colors = SHIFT_COLORS[shift.code] || {bg: shift.bg || "#ffffff", color: shift.color || "#000000"};
         const btn = document.createElement("button");
@@ -1665,7 +1665,7 @@
       }
       const year = parseInt(yearSelect.value, 10);
       const month = Array.from(document.querySelectorAll("#months-container-extra-hour-employees .btn")).indexOf(monthBtn) + 1;
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const saveExtraHoursBtn = document.getElementById("employees-extra-save-btn");
       if (saveExtraHoursBtn) {
         saveExtraHoursBtn.disabled = true;
@@ -1779,7 +1779,7 @@
     }
     async function loadExtraHours(year, month) {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
         const monthStart = `${year}-${String(month).padStart(2, "0")}-01`;
         const lastDay = new Date(year, month, 0).getDate();
         const monthEnd = `${year}-${String(month).padStart(2, "0")}-${lastDay}`;
@@ -1874,7 +1874,7 @@
     }
     async function loadEmployeesForGraphic() {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/reg_employees?select=n_int,abv_name&corp_oper_nr=eq.${corpOperNr}&order=n_int`, {
             headers: getSupabaseHeaders()
@@ -1904,7 +1904,7 @@
         if (!contentWrapper.dataset.loaded) {
           contentWrapper.innerHTML = "A Carregar...";
         }
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
         const [employeeRes, accumulatedRes, shiftsRes, extraHoursRes] = await Promise.all([
           fetch(
             `${SUPABASE_URL}/rest/v1/reg_employees?select=n_int,abv_name&corp_oper_nr=eq.${corpOperNr}&n_int=eq.${nInt}`, {
@@ -2431,7 +2431,7 @@
     let employeesForHolidays = [];
     async function loadEmployeesForHolidays() {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/reg_employees?select=n_int,abv_name,team,function&corp_oper_nr=eq.${corpOperNr}&order=n_int`, {
             headers: getSupabaseHeaders()
@@ -2456,7 +2456,7 @@
     }
     async function loadHolidayData(nInt, year) {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
         const shiftsResponse = await fetch(
           `${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&n_int=eq.${nInt}&shift=eq.FE&order=month.asc,day.asc`, {
             headers: getSupabaseHeaders()
@@ -2617,7 +2617,7 @@
       }
       const nInt = parseInt(select.value);
       const year = parseInt(yearSelect.value);
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const allFERecords = [];
       for (let i = 1; i <= 3; i++) {
         const startInput = document.getElementById(`holiday-start-${i}`);
@@ -2856,7 +2856,7 @@
     async function loadGlobalHolidayData() {
       const filterElem = document.getElementById("global-year-filter");
       const year = filterElem ? parseInt(filterElem.value) : new Date().getFullYear();
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const tableBody = document.getElementById("holiday-table-body");
       const titleElem = document.getElementById("holiday-map-title");
       if (titleElem) titleElem.innerHTML = `<span class="m-badge-rh">RH</span> MAPA DE FÉRIAS ${year}`;
@@ -2932,7 +2932,7 @@
     }
     async function exportGlobalHolidayMap() {
       const year = parseInt(document.getElementById("holiday-year-select")?.value || new Date().getFullYear());
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const btn = document.querySelector(".m-btn");
       const originalText = btn.innerHTML;
       showLoadingPopup(`A gerar mapa global de férias para ${year}.`);
@@ -3000,7 +3000,7 @@
     }
     async function consultDiscrepancies() {
       const year = parseInt(document.getElementById("global-year-filter")?.value || new Date().getFullYear());
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const DAYS_RIGHT = 22;
       let modal = document.getElementById("discrepancy-modal");
       if (!modal) {
@@ -3274,7 +3274,7 @@
       const filterElem = document.getElementById("priority-year-filter");
       const selectedYear = filterElem ? parseInt(filterElem.value) : new Date().getFullYear();
       const priorityYear = selectedYear + 1;
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const tableBody = document.getElementById("priority-table-body");
       const titleElem = document.getElementById("priority-map-title");
       if (titleElem) titleElem.innerHTML = `<span class="p-badge-rh">RH</span> PRIORIDADE DE MARCAÇÃO DE FÉRIAS ${priorityYear}`;
@@ -3329,7 +3329,7 @@
     async function exportPrioritiesMap(event) {
       const selectedYear = parseInt(document.getElementById("holiday-year-select")?.value || new Date().getFullYear());
       const priorityYear = selectedYear + 1;
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const btn = event?.target;
       const originalText = btn ? btn.innerText : "";
       if (btn) {
@@ -3483,7 +3483,7 @@
     async function loadEligibilityData() {
       const filterElem = document.getElementById("eligibility-year-filter");
       const year = filterElem ? parseInt(filterElem.value) : new Date().getFullYear();
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const tableBody = document.getElementById("eligibility-table-body");
       tableBody.innerHTML = `<tr><td colspan="13" style="padding:40px; text-align:center;">⌛ A carregar dados de ${year}...</td></tr>`;
       try {
@@ -3525,7 +3525,7 @@
     async function createConsultationEligibility() {
       const filterElem = document.getElementById("eligibility-year-filter");
       const year = filterElem ? parseInt(filterElem.value) : new Date().getFullYear();
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       let modal = document.getElementById("eligibility-modal");
       if (!modal) {
         modal = document.createElement("div");
@@ -3632,7 +3632,7 @@
     async function exportShiftEligibility(event) {
       const filterElem = document.getElementById("eligibility-year-filter");
       const year = filterElem ? parseInt(filterElem.value) : new Date().getFullYear();
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const btn = event?.target;
       const originalText = btn ? btn.innerText : "";
       if (btn) {
@@ -4377,7 +4377,7 @@
     async function loadEIPData() {
       const filterElem = document.getElementById("annual-year-filter");
       const year = filterElem ? parseInt(filterElem.value) : new Date().getFullYear();
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const tableBody = document.getElementById("annual-table-body");
       const titleElem = document.getElementById("annual-map-title");
       if (titleElem) titleElem.innerHTML = `<span class="a-badge-rh">RH</span> ENQUADRAMENTO ANUAL (EIPs) - ${year}`;
@@ -4502,7 +4502,7 @@
       }
     }
     async function checkAndSeedEIPYear(year) {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const checkRes = await fetch(
         `${SUPABASE_URL}/rest/v1/reg_eip_anual?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&limit=1`,
         { headers: getSupabaseHeaders() }
@@ -4828,7 +4828,7 @@
       if (!tbody) return;
       tbody.innerHTML = `<tr><td colspan="6" class="reg-empty">⌛ A carregar...</td></tr>`;
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
         const res = await fetch(
           `${SUPABASE_URL}/rest/v1/reg_employees?corp_oper_nr=eq.${corpOperNr}&order=n_int.asc`, {
             headers: getSupabaseHeaders()
@@ -4904,10 +4904,21 @@
       nIntField.value = String(emp.n_int).padStart(3, "0");
       nIntField.disabled = true;
       document.getElementById("reg-name").value = emp.abv_name || "";
-      const FUNCTION_REVERSE = {"COM": "Comando", "CRD": "Coordenador", "SEC": "Secretariado"};
-      document.getElementById("reg-function").value = FUNCTION_REVERSE[emp.function] || emp.function || "";
-      const TEAM_REVERSE = {"COM": "Comando", "CRD": "Coordenação", "SEC": "Secretariado"};
-      document.getElementById("reg-team").value = TEAM_REVERSE[emp.team] || emp.team || "";
+      let funcDisplay = emp.function || "";
+      if (funcDisplay === "COM") funcDisplay = "Comando";
+      else if (funcDisplay === "CRD") funcDisplay = "Coordenador";
+      else if (funcDisplay === "SEC") funcDisplay = "Secretariado";
+      else if (/^EP\d+\d{2}$/.test(funcDisplay)) funcDisplay = "EIP";
+      document.getElementById("reg-function").value = funcDisplay;
+      let teamDisplay = emp.team || "";
+      if (teamDisplay === "COM") teamDisplay = "Comando";
+      else if (teamDisplay === "CRD") teamDisplay = "Coordenação";
+      else if (teamDisplay === "SEC") teamDisplay = "Secretariado";
+      else if (/^OPC\d+$/.test(teamDisplay)) teamDisplay = "SALOC";
+      else if (/^EQ\d+$/.test(teamDisplay)) teamDisplay = "INEM";
+      else if (/^TDNU\d+$/.test(teamDisplay)) teamDisplay = "TDNU";
+      else if (/^EIP\d+$/.test(teamDisplay)) teamDisplay = teamDisplay;
+      document.getElementById("reg-team").value = teamDisplay;
       document.getElementById("reg-entry-date").value = emp.entry_date ? emp.entry_date.split("T")[0] : "";
       document.getElementById("reg-exit-date").value = emp.exit_date ? emp.exit_date.split("T")[0] : "";
       document.getElementById("reg-save-btn").textContent = "💾 Atualizar";
@@ -4934,18 +4945,23 @@
       const teamRaw = document.getElementById("reg-team").value;
       const entryDate = document.getElementById("reg-entry-date").value;
       const exitDate = document.getElementById("reg-exit-date").value;
-      if (!nInt || !name) {showPopup('popup-danger', "Nº Interno e Nome são obrigatórios."); return;}
-      if (entryDate && exitDate && new Date(exitDate) < new Date(entryDate)) {
-        showPopup('popup-danger',"A Data de Saída não pode ser anterior à Data de Entrada."); return;
+      if (!nInt || !name) {
+        showPopup('popup-danger', "Nº Interno e Nome são obrigatórios.");
+        return;
       }
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      if (entryDate && exitDate && new Date(exitDate) < new Date(entryDate)) {
+        showPopup('popup-danger', "A Data de Saída não pode ser anterior à Data de Entrada.");
+        return;
+      }
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const saveBtn = document.getElementById("reg-save-btn");
       saveBtn.disabled = true;
       saveBtn.textContent = "A guardar...";
       try {
         const allRes = await fetch(
-          `${SUPABASE_URL}/rest/v1/reg_employees?corp_oper_nr=eq.${corpOperNr}&select=function,team,n_int`,
-          { headers: getSupabaseHeaders() }
+          `${SUPABASE_URL}/rest/v1/reg_employees?corp_oper_nr=eq.${corpOperNr}&select=function,team,n_int,exit_date`, {
+            headers: getSupabaseHeaders()
+          }
         );
         const allEmps = await allRes.json();
         if (!__regEditingNInt) {
@@ -4957,44 +4973,86 @@
           }
         }
         let func = funcRaw;
-        const FUNCTION_MAP = {"Comando":"COM","Coordenador":"CRD","Secretariado":"SEC","TAS":"TAS","TAT":"TAT","OPTEL":"OPTEL"};
-        if (FUNCTION_MAP[funcRaw]) func = FUNCTION_MAP[funcRaw];
-        else if (funcRaw === "EIP") {
-          const eipMatch = teamRaw.match(/^EIP0?(\d+)$/);
-          if (eipMatch) {
-            const prefix = `EP${eipMatch[1]}`;
-            const existing = allEmps.map(e => e.function || "").filter(f => f.startsWith(prefix))
-              .map(f => parseInt(f.replace(prefix, ""), 10)).filter(n => !isNaN(n));
-            func = `${prefix}${String((existing.length > 0 ? Math.max(...existing) : 0) + 1).padStart(2,"0")}`;
+        let team = teamRaw;
+        if (__regEditingNInt) {
+          const empAtual = allEmps.find(e => e.n_int == __regEditingNInt);
+          const FUNCTION_MAP = {"Comando": "COM", "Coordenador": "CRD", "Secretariado": "SEC", "TAS": "TAS", "TAT": "TAT", "OPTEL": "OPTEL"};
+          if (FUNCTION_MAP[funcRaw]) {
+            func = FUNCTION_MAP[funcRaw];
+          } else if (funcRaw === "EIP") {
+            func = empAtual?.function || funcRaw;
+          }
+          const TEAM_MAP = {"Comando": "COM", "Coordenação": "CRD", "Secretariado": "SEC"};
+          if (TEAM_MAP[teamRaw]) {
+            team = TEAM_MAP[teamRaw];
+          } else if (teamRaw === "SALOC") {
+            team = /^OPC\d+$/.test(empAtual?.team) ? empAtual.team : teamRaw;
+          } else if (teamRaw === "INEM") {
+            team = /^EQ\d+$/.test(empAtual?.team) ? empAtual.team : teamRaw;
+          } else if (teamRaw === "TDNU") {
+            team = /^TDNU\d+$/.test(empAtual?.team) ? empAtual.team : teamRaw;
+          } else if (/^EIP\d+$/.test(teamRaw)) {
+            team = teamRaw;
+          }
+        } else {
+          const FUNCTION_MAP = {"Comando": "COM", "Coordenador": "CRD", "Secretariado": "SEC", "TAS": "TAS", "TAT": "TAT", "OPTEL": "OPTEL"};
+          if (FUNCTION_MAP[funcRaw]) {
+            func = FUNCTION_MAP[funcRaw];
+          } else if (funcRaw === "EIP") {
+            const eipMatch = teamRaw.match(/^EIP0?(\d+)$/);
+            if (eipMatch) {
+              const prefix = `EP${eipMatch[1]}`;
+              const eipEmps = allEmps.filter(e => (e.function || "").startsWith(prefix));
+              const ativos = eipEmps.filter(e => !e.exit_date);
+              if (ativos.length >= 5) {
+                showPopup('popup-danger', `A equipa ${teamRaw} já tem 5 elementos ativos.`);
+                saveBtn.disabled = false;
+                saveBtn.textContent = "💾 Guardar";
+                return;
+              }
+              const vagos = eipEmps
+              .filter(e => e.exit_date)
+              .map(e => parseInt((e.function || "").replace(prefix, ""), 10))
+              .filter(n => !isNaN(n))
+              .sort((a, b) => a - b);
+              if (vagos.length > 0) {
+                func = `${prefix}${String(vagos[0]).padStart(2, "0")}`;
+              } else {
+                const todos = eipEmps
+                .map(e => parseInt((e.function || "").replace(prefix, ""), 10))
+                .filter(n => !isNaN(n));
+                func = `${prefix}${String((todos.length > 0 ? Math.max(...todos) : 0) + 1).padStart(2, "0")}`;
+              }
+            }
+          }
+          const TEAM_MAP = {"Comando": "COM", "Coordenação": "CRD", "Secretariado": "SEC"};
+          if (TEAM_MAP[teamRaw]) {
+            team = TEAM_MAP[teamRaw];
+          } else if (teamRaw === "INEM") {
+            const existing = allEmps.map(e => e.team || "").filter(t => /^EQ\d+$/.test(t)).map(t => parseInt(t.replace("EQ", ""), 10)).filter(n => !isNaN(n));
+            team = `EQ${String((existing.length > 0 ? Math.max(...existing) : 0) + 1).padStart(2, "0")}`;
+          } else if (teamRaw === "TDNU") {
+            const existing = allEmps.map(e => e.team || "").filter(t => /^TDNU\d+$/.test(t)).map(t => parseInt(t.replace("TDNU", ""), 10)).filter(n => !isNaN(n));
+            team = `TDNU${String((existing.length > 0 ? Math.max(...existing) : 0) + 1).padStart(2, "0")}`;
+          } else if (teamRaw === "SALOC") {
+            const existing = allEmps.map(e => e.team || "").filter(t => /^OPC\d+$/.test(t)).map(t => parseInt(t.replace("OPC", ""), 10)).filter(n => !isNaN(n));
+            team = `OPC${String((existing.length > 0 ? Math.max(...existing) : 0) + 1).padStart(2, "0")}`;
+          } else if (/^EIP\d+$/.test(teamRaw)) {
+            team = teamRaw;
           }
         }
-        let team = teamRaw;
-        const TEAM_MAP = {"Comando":"COM","Coordenação":"CRD","Secretariado":"SEC"};
-        if (TEAM_MAP[teamRaw]) team = TEAM_MAP[teamRaw];
-        else if (teamRaw === "INEM") {
-          const existing = allEmps.map(e => e.team||"").filter(t => /^EQ\d+$/.test(t)).map(t => parseInt(t.replace("EQ",""),10)).filter(n => !isNaN(n));
-          team = `EQ${String((existing.length > 0 ? Math.max(...existing) : 0) + 1).padStart(2,"0")}`;
-        } else if (teamRaw === "TDNU") {
-          const existing = allEmps.map(e => e.team||"").filter(t => /^TDNU\d+$/.test(t)).map(t => parseInt(t.replace("TDNU",""),10)).filter(n => !isNaN(n));
-          team = `TDNU${String((existing.length > 0 ? Math.max(...existing) : 0) + 1).padStart(2,"0")}`;
-        } else if (teamRaw === "SALOC") {
-          const existing = allEmps.map(e => e.team||"").filter(t => /^OPC\d+$/.test(t)).map(t => parseInt(t.replace("OPC",""),10)).filter(n => !isNaN(n));
-          team = `OPC${String((existing.length > 0 ? Math.max(...existing) : 0) + 1).padStart(2,"0")}`;
-        } else if (/^EIP\d+$/.test(teamRaw)) {
-          team = teamRaw;
-        }
-        const payload = {n_int: parseInt(nInt,10), abv_name: name, function: func||null, team: team||null, entry_date: entryDate||null, exit_date: exitDate||null, corp_oper_nr: corpOperNr};
+        const payload = {n_int: parseInt(nInt, 10), abv_name: name, function: func || null, team: team || null, entry_date: entryDate || null, exit_date: exitDate || null, corp_oper_nr: corpOperNr};
         let res;
         if (__regEditingNInt) {
           res = await fetch(`${SUPABASE_URL}/rest/v1/reg_employees?n_int=eq.${__regEditingNInt}&corp_oper_nr=eq.${corpOperNr}`, {
             method: "PATCH",
-            headers: {...getSupabaseHeaders(), "Content-Type":"application/json","Prefer":"return=minimal"},
+            headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
             body: JSON.stringify(payload)
           });
         } else {
           res = await fetch(`${SUPABASE_URL}/rest/v1/reg_employees`, {
             method: "POST",
-            headers: {...getSupabaseHeaders(), "Content-Type":"application/json","Prefer":"return=minimal"},
+            headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
             body: JSON.stringify(payload)
           });
         }
@@ -5209,7 +5267,7 @@
     let _dashChartTeam = null;
     let _dashChartVac = null;
     async function loadDashboardData() {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const filterMonth = document.getElementById("dash-filter-month");
       const filterYear = document.getElementById("dash-filter-year");
       const selectedMonth = filterMonth ? parseInt(filterMonth.value) : new Date().getMonth() + 1;

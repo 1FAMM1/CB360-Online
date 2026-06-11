@@ -404,6 +404,7 @@
           if (cell) cell.textContent = count;
         }
         window.updateAllValues?.();
+        updateDailyTotals?.();
       }
       async function loadDecirByMonth(year, month) {
         try {
@@ -749,6 +750,7 @@
       };
       updateDailyTotals();
       updateAllValues();
+      window.updateDailyTotals = updateDailyTotals;
       const firstEditable = tbody.querySelector("td[contenteditable='true']");
       if (firstEditable) firstEditable.focus();
     }

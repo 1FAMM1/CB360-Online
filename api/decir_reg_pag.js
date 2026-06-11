@@ -229,7 +229,7 @@
             const val = Number(line.getCell("H").value) || 0;
             if (empty || (qtd === 0 && val === 0)) line.hidden = true;
           }
-          sheet.pageSetup = {orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
+          sheet.pageSetup = {orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight:1, horizontalCentered: true,
                              margins: {left: 0.3, right: 0.3, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3}};}
         // ---------- OCORRÊNCIAS ----------
         else if (data.type === 'ocorr') {

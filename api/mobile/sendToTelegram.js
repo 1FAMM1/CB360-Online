@@ -1,4 +1,4 @@
-    import nextConnect from 'next-connect';
+import nextConnect from 'next-connect';
 import multer from 'multer';
 import FormData from 'form-data';
 import fetch from 'node-fetch';
@@ -11,24 +11,29 @@ const TOKEN = '8596696700:AAGpN0uh_XPAjDkajIR-Wpey8_EkWFPjbPI';
 
 const apiRoute = nextConnect({
   onError(error, req, res) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
     res.status(500).json({ success: false, error: error.message });
   },
   onNoMatch(req, res) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
     res.status(405).json({ success: false, error: 'Method not allowed' });
   },
 });
 
-apiRoute.use(upload.array('photos'));
-
-apiRoute.options((req, res) => {
+apiRoute.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  res.status(200).end();
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+  next();
 });
 
+apiRoute.use(upload.array('photos'));
+
 apiRoute.post(async (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
   const { message, corp_oper_nr } = req.body;
   const files = req.files || [];
 

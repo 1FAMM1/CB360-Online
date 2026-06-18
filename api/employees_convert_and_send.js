@@ -684,14 +684,14 @@
       const templateBuffer = await templateResponse.buffer();
       const zip = new AdmZip(templateBuffer);
       let sheetXml = zip.readAsText("xl/worksheets/sheet1.xml");
-      const ROW_START = 9;
+      const ROW_START = 10;
       const ROW_MAX = 220;
       const sheetDataStart = sheetXml.indexOf("<sheetData>");
       const sheetDataEnd = sheetXml.indexOf("</sheetData>") + "</sheetData>".length;
       const beforeSheetData = sheetXml.substring(0, sheetDataStart);
       const afterSheetData = sheetXml.substring(sheetDataEnd);
       const headerRows = [];
-      for (const r of ["2", "3", "4", "6", "7", "8"]) {
+      for (const r of ["2", "3", "4", "6", "7", "8", "9"]) {
         const match = sheetXml.match(new RegExp(`<row r="${r}"[^>]*>.*?</row>`, "s"));
         if (match) headerRows.push(match[0]);
       }

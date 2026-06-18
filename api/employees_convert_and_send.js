@@ -126,22 +126,25 @@
         .replace(/'/g, "&apos;")
         .replace(/\n/g, "&#10;");
     }
-    
-
     function makeCellXml(ref, styleIndex, value) {
-      const escaped = escapeXml(value);
-      return `<c r="${ref}" s="${styleIndex}" t="inlineStr"><is><t xml:space="preserve">${escaped}</t></is></c>`;
-    }
-    function makeRowXml(rowNum, emp) {
-      const isFirst = rowNum === 10;
-      const styles = isFirst
-        ? {B: 7,  C: 12, D: 12, E: 12, F: 12, G: 12, H: 12, I: 12, J: 12}
-        : {B: 8,  C: 14, D: 14, E: 14, F: 14, G: 14, H: 14, I: 14, J: 14};
-      const cols = ["B", "C", "D", "E", "F", "G", "H", "I", "J"];
-      const values = {B: emp.name, C: emp.subShiftCurrent, D: emp.subShiftPrevious, E: emp.casualties, F: emp.vacations, G: emp.parental, H: emp.disgust, I: emp.justified, J: emp.unjustified,};
-      const cells = cols.map((col) => makeCellXml(`${col}${rowNum}`, styles[col], values[col] || "-")).join("");
-      return `<row r="${rowNum}" spans="2:9" ht="20" x14ac:dyDescent="0.25">${cells}</row>`;
-    }
+  const escaped = escapeXml(value);
+  return `<c r="${ref}" s="${styleIndex}" t="inlineStr"><is><t xml:space="preserve">${escaped}</t></is></c>`;
+}
+
+function makeRowXml(rowNum, emp) {
+  const isFirst = rowNum === 10;
+  const styles = isFirst
+    ? { B: 10, C: 7, D: 7, E: 7, F: 7, G: 7, H: 7, I: 7, J: 11 }
+    : { B: 12, C: 8, D: 8, E: 8, F: 8, G: 8, H: 8, I: 8, J: 13 };
+  const cols = ["B", "C", "D", "E", "F", "G", "H", "I", "J"];
+  const values = {
+    B: emp.name, C: emp.subShiftCurrent, D: emp.subShiftPrevious,
+    E: emp.casualties, F: emp.vacations, G: emp.parental,
+    H: emp.disgust, I: emp.justified, J: emp.unjustified,
+  };
+  const cells = cols.map((col) => makeCellXml(`${col}${rowNum}`, styles[col], values[col] || "-")).join("");
+  return `<row r="${rowNum}" spans="2:9" ht="20" x14ac:dyDescent="0.25">${cells}</row>`;
+}
     // ─── Adobe PDF conversion helper ─────────────────────────────────────────────
     async function workbookToPdfBuffer(workbook, prefix = "doc") {
       const tempDir = os.tmpdir();

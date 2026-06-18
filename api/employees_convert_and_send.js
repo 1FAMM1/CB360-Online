@@ -150,7 +150,7 @@
    J: emp.unjustified
 };
       const cells = cols.map((col) => makeCellXml(`${col}${rowNum}`, styles[col], values[col] || "-")).join("");
-      return `<row r="${rowNum}" spans="2:9" ht="20" x14ac:dyDescent="0.25">${cells}</row>`;
+      return `<row r="${rowNum}" spans="2:10" ht="20" x14ac:dyDescent="0.25">${cells}</row>`;
     }
     // ─── Adobe PDF conversion helper ─────────────────────────────────────────────
     async function workbookToPdfBuffer(workbook, prefix = "doc") {

@@ -2209,6 +2209,32 @@
     FASE 04 - EMPLOYEE HOLIDAY MANAGEMENT
     =============================== */
     /* ================================ CREATE EMPLOYEE VACATIONS MANAGER =============================== */
+    let employeesForHolidays = [];
+    async function loadEmployeesForHolidays() {
+      try {
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/reg_employees?select=n_int,abv_name,team,function&corp_oper_nr=eq.${corpOperNr}&order=n_int`, {
+            headers: getSupabaseHeaders()
+          }
+        );
+        if (!response.ok) throw new Error("Erro ao carregar funcionários");
+        const employees = await response.json();
+        employeesForHolidays = employees;
+        const select = document.getElementById("holiday-employee-select");
+        if (!select) return;        
+        select.innerHTML = '<option value="">-- Selecionar --</option>';
+        employees.forEach(emp => {
+          const option = document.createElement("option");
+          option.value = emp.n_int;
+          option.textContent = emp.abv_name;
+          select.appendChild(option);
+        });
+      } catch (error) {
+        console.error("Error loading employees:", error);
+        if (typeof showPopup === "function") showPopup('popup-danger', "Erro ao carregar funcionários");
+      }
+    }
     function getEasterDateForHolidays(year) {
       const a = year % 19;
       const b = Math.floor(year / 100);
@@ -2247,26 +2273,26 @@
     function createHolidayManagement() {
       const cardBody = document.querySelector("#vacation-scheduling .major-card-body");
       if (!cardBody) return;
-      cardBody.innerHTML = "";
+      cardBody.innerHTML = "";      
       const mainWrapper = document.createElement("div");
-      mainWrapper.style.cssText = `display: flex; flex-direction: column; margin-top: -20px; gap: 5px; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;`;
+      mainWrapper.style.cssText = `display: flex; flex-direction: column; margin-top: -20px; gap: 5px; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;`;      
       const titleSection = document.createElement("div");
       titleSection.style.cssText = `display: flex; align-items: center; margin-bottom: 10px; gap: 8px; font-size: 16px; font-weight: 800; color: #1e293b;`;
-      titleSection.innerHTML = `<span style="background: #1e293b; color: #fff; padding: 2px 7px; border-radius: 4px; font-size: 10px;">RH</span> MARCAÇÃO DE FÉRIAS`;
+      titleSection.innerHTML = `<span style="background: #1e293b; color: #fff; padding: 2px 7px; border-radius: 4px; font-size: 10px;">RH</span> MARCAÇÃO DE FÉRIAS`;      
       const selectorSection = document.createElement("div");
-      selectorSection.style.cssText = `display: flex; align-items: center; gap: 15px; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);`;
+      selectorSection.style.cssText = `display: flex; align-items: center; gap: 15px; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);`;      
       const label = document.createElement("label");
       label.textContent = "Selecionar Funcionário:";
-      label.style.cssText = "font-weight: bold; font-size: 14px;";
+      label.style.cssText = "font-weight: bold; font-size: 14px;";      
       const select = document.createElement("select");
       select.id = "holiday-employee-select";
-      select.style.cssText = `padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; min-width: 250px; cursor: pointer;`;
+      select.style.cssText = `padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; min-width: 250px; cursor: pointer;`;      
       const yearLabel = document.createElement("label");
       yearLabel.textContent = "Ano:";
-      yearLabel.style.cssText = "font-weight: bold; font-size: 14px; margin-left: 20px;";
+      yearLabel.style.cssText = "font-weight: bold; font-size: 14px; margin-left: 20px;";      
       const yearSelect = document.createElement("select");
       yearSelect.id = "holiday-year-select";
-      yearSelect.style.cssText = `padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; cursor: pointer;`;
+      yearSelect.style.cssText = `padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; cursor: pointer;`;      
       const currentYear = new Date().getFullYear();
       for (let y = 2026; y <= 2036; y++) {
         const opt = document.createElement("option");
@@ -2275,67 +2301,92 @@
         if (y === currentYear) opt.selected = true;
         yearSelect.appendChild(opt);
       }
-      selectorSection.append(label, select, yearLabel, yearSelect);
+      selectorSection.append(label, select, yearLabel, yearSelect);      
       const infoSection = document.createElement("div");
       infoSection.id = "holiday-info-section";
-      infoSection.style.cssText = `display: none; grid-template-columns: repeat(3, 1fr); gap: 15px; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);`;
-      const createInfoCard = (id, label, icon, color) => {
+      infoSection.style.cssText = `display: none; grid-template-columns: repeat(4, 1fr); gap: 15px; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);`;      
+      const createInfoCard = (id, label, icon, color, labelId = "") => {
         const card = document.createElement("div");
         card.style.cssText = `background: linear-gradient(135deg, ${color}22 0%, ${color}11 100%); border: 2px solid ${color}; border-radius: 8px; padding: 15px; text-align: center;`;
         card.innerHTML = `
-          <div style="color: ${color}; font-size: 12px; font-weight: 600; margin-bottom: 8px;">
+          <div ${labelId ? `id="${labelId}"` : ""} style="color: ${color} !important; font-size: 12px; font-weight: 600; margin-bottom: 8px;">
             ${icon} ${label}
           </div>
-          <div id="${id}" style="color: #333; font-size: 24px; font-weight: bold;">
-            ---
-          </div>
+          <div id="${id}" style="color: #333; font-size: 24px; font-weight: bold;">---</div>
         `;
         return card;
       };
+      const initialPrevYear = parseInt(yearSelect.value) - 1;
+      infoSection.appendChild(createInfoCard("holiday-remaining-prev-days", `Dias Remanescentes (${initialPrevYear})`, "⏮️", "#9c27b0", "holiday-remaining-prev-days-label"));      
       infoSection.appendChild(createInfoCard("holiday-total-days", "Total de Férias", "📅", "#2196f3"));
       infoSection.appendChild(createInfoCard("holiday-used-days", "Dias Usados", "✅", "#ff9800"));
-      infoSection.appendChild(createInfoCard("holiday-available-days", "Dias Disponíveis", "🎯", "#00c853"));
+      infoSection.appendChild(createInfoCard("holiday-available-days", "Dias Disponíveis", "🎯", "#00c853"));      
       const periodsSection = document.createElement("div");
       periodsSection.id = "holiday-periods-section";
-      periodsSection.style.cssText = `display: none; flex-direction: column; gap: 5px; margin-top: 10px;`;
+      periodsSection.style.cssText = `display: none; flex-direction: column; gap: 5px; margin-top: 10px;`;      
       const periodsTitle = document.createElement("h3");
-      periodsTitle.textContent = "Marcar Períodos de Férias";
-      periodsTitle.style.cssText = `margin: 0; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); font-size: 18px; color: #333;`;
+      periodsTitle.style.cssText = `margin: 0; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); font-size: 18px; color: #333; display: flex; justify-content: space-between; align-items: center;`;
+      periodsTitle.innerHTML = `<span>Marcar Períodos de Férias</span>`;      
       const cardsWrapper = document.createElement("div");
-      cardsWrapper.style.cssText = `display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 5px;`;
+      cardsWrapper.id = "holiday-cards-wrapper";
+      cardsWrapper.style.cssText = `display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 5px;`;      
       periodsSection.appendChild(periodsTitle);
-      periodsSection.appendChild(cardsWrapper);
+      periodsSection.appendChild(cardsWrapper);      
       for (let i = 1; i <= 3; i++) {
-        const periodCard = createPeriodCard(i);
-        cardsWrapper.appendChild(periodCard);
+        cardsWrapper.appendChild(createPeriodCard(i));
       }
+      const addPeriodBtn = document.createElement("button");
+      addPeriodBtn.id = "holiday-add-period-btn";
+      addPeriodBtn.textContent = "➕ Adicionar Período";
+      addPeriodBtn.className = "btn btn-info";
+      addPeriodBtn.style.cssText = "padding: 10px 20px; font-size: 13px; font-weight: bold; cursor: pointer; background-color: #2196f3; color: white; border: none; border-radius: 4px;";
+      periodsTitle.appendChild(addPeriodBtn);
+      addPeriodBtn.addEventListener("click", () => {
+        const currentCards = cardsWrapper.querySelectorAll(".holiday-period-card").length;
+        if (currentCards < 6) {
+          const nextIndex = currentCards + 1;
+          const newCard = createPeriodCard(nextIndex);
+          cardsWrapper.appendChild(newCard);          
+          const start = document.getElementById(`holiday-start-${nextIndex}`);
+          const end = document.getElementById(`holiday-end-${nextIndex}`);
+          if (start) start.value = "";
+          if (end) end.value = "";
+          if (nextIndex === 6) {
+            addPeriodBtn.disabled = true;
+            addPeriodBtn.style.backgroundColor = "#ccc";
+            addPeriodBtn.style.cursor = "not-allowed";
+            addPeriodBtn.textContent = "❌ Limite Máximo de 6 Períodos Atingido";
+          }
+        }
+      });      
       const actionsDiv = document.createElement("div");
-      actionsDiv.style.cssText = `display: flex; gap: 10px; margin-top: 10px; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);`;
+      actionsDiv.style.cssText = `display: flex; gap: 10px; margin-top: 10px; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);`;      
       const previewBtn = document.createElement("button");
       previewBtn.id = "holiday-preview-btn";
       previewBtn.textContent = "👁️ Pré-visualizar";
       previewBtn.className = "btn btn-clean";
-      previewBtn.style.cssText = `flex: 1; padding: 12px; font-size: 14px; font-weight: bold; cursor: pointer;`;
+      previewBtn.style.cssText = `flex: 1; padding: 12px; font-size: 14px; font-weight: bold; cursor: pointer;`;      
       const saveBtn = document.createElement("button");
       saveBtn.id = "holiday-save-btn";
       saveBtn.textContent = "💾 Gravar Férias";
       saveBtn.className = "btn btn-add";
-      saveBtn.style.cssText = `flex: 1; padding: 12px; font-size: 14px; font-weight: bold; cursor: pointer;`;
+      saveBtn.style.cssText = `flex: 1; padding: 12px; font-size: 14px; font-weight: bold; cursor: pointer;`;      
       const pdfBtn = document.createElement("button");
       pdfBtn.id = "holiday-pdf-btn";
       pdfBtn.textContent = "📄 Gerar Formulário (PDF)";
       pdfBtn.className = "btn btn-info";
-      pdfBtn.style.cssText = `flex: 1; padding: 12px; font-size: 14px; font-weight: bold; cursor: pointer; background-color: #455a64; color: white; border: none; border-radius: 4px;`;
+      pdfBtn.style.cssText = `flex: 1; padding: 12px; font-size: 14px; font-weight: bold; cursor: pointer; background-color: #455a64; color: white; border: none; border-radius: 4px;`;      
       actionsDiv.append(previewBtn, saveBtn, pdfBtn);
-      periodsSection.appendChild(actionsDiv);
+      periodsSection.appendChild(actionsDiv);      
       const previewSection = document.createElement("div");
       previewSection.id = "holiday-preview-section";
       previewSection.style.cssText = `display: none; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);`;
-      periodsSection.appendChild(previewSection);
+      periodsSection.appendChild(previewSection);      
       mainWrapper.append(titleSection, selectorSection, infoSection, periodsSection);
-      cardBody.appendChild(mainWrapper);
+      cardBody.appendChild(mainWrapper);      
       setTimeout(() => {
-        for (let i = 1; i <= 3; i++) {
+        const currentCards = cardsWrapper.querySelectorAll(".holiday-period-card").length;
+        for (let i = 1; i <= currentCards; i++) {
           const start = document.getElementById(`holiday-start-${i}`);
           const end = document.getElementById(`holiday-end-${i}`);
           if (start) start.value = "";
@@ -2346,9 +2397,30 @@
       select.addEventListener("change", () => {
         if (select.value && yearSelect.value) {
           loadHolidayData(select.value, parseInt(yearSelect.value));
+        } else {
+          const wrapper = document.getElementById("holiday-cards-wrapper");
+          if (wrapper) {
+            wrapper.innerHTML = "";
+            for (let i = 1; i <= 3; i++) {
+              wrapper.appendChild(createPeriodCard(i));
+            }
+          }
+          document.getElementById("holiday-info-section").style.display = "none";
+          document.getElementById("holiday-periods-section").style.display = "none";
+          const addPeriodBtn = document.getElementById("holiday-add-period-btn");
+          if (addPeriodBtn) {
+            addPeriodBtn.disabled = false;
+            addPeriodBtn.style.backgroundColor = "#2196f3";
+            addPeriodBtn.style.cursor = "pointer";
+            addPeriodBtn.textContent = "➕ Adicionar Período";
+          }
         }
       });
       yearSelect.addEventListener("change", () => {
+        const remainingLabelEl = document.getElementById("holiday-remaining-prev-days-label");
+        if (remainingLabelEl) {
+          remainingLabelEl.textContent = `⏮️ Dias Remanescentes (${parseInt(yearSelect.value) - 1})`;
+        }
         if (select.value && yearSelect.value) {
           loadHolidayData(select.value, parseInt(yearSelect.value));
         }
@@ -2360,51 +2432,76 @@
     function createPeriodCard(periodNumber) {
       const card = document.createElement("div");
       card.className = "holiday-period-card";
-      card.style.cssText = `padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid #2196f3;`;
+      card.style.cssText = `padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid #2196f3; position: relative;`;
       const title = document.createElement("div");
+      title.className = "holiday-card-title";
       title.textContent = `Período ${periodNumber}`;
       title.style.cssText = `font-size: 16px; font-weight: bold; color: #2196f3; margin-bottom: 15px;`;
+      card.append(title);
+      const removeBtn = document.createElement("button");
+      removeBtn.textContent = "❌";
+      removeBtn.title = "Remover este período";
+      removeBtn.style.cssText = `position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 14px; cursor: pointer; padding: 5px; line-height: 1;`;
+      if (periodNumber <= 3) {
+        removeBtn.style.display = "none";
+      }
+      removeBtn.addEventListener("click", () => {
+        const wrapper = document.getElementById("holiday-cards-wrapper");
+        if (!wrapper) return;
+        card.remove();
+        const allCards = wrapper.querySelectorAll(".holiday-period-card");
+        allCards.forEach((currentCard, index) => {
+          const newIndex = index + 1;
+          const titleEl = currentCard.querySelector(".holiday-card-title");
+          if (titleEl) titleEl.textContent = `Período ${newIndex}`;
+          const startInputEl = currentCard.querySelector("input[id^='holiday-start-']");
+          if (startInputEl) {
+            startInputEl.id = `holiday-start-${newIndex}`;
+          }
+          const endInputEl = currentCard.querySelector("input[id^='holiday-end-']");
+          if (endInputEl) {
+            endInputEl.id = `holiday-end-${newIndex}`;
+          }
+          const daysDisplayEl = currentCard.querySelector("[id^='holiday-days-']");
+          if (daysDisplayEl) {
+            daysDisplayEl.id = `holiday-days-${newIndex}`;
+          }
+          const cardRemoveBtn = currentCard.querySelector("button");
+          if (cardRemoveBtn) {
+            cardRemoveBtn.style.display = newIndex <= 3 ? "none" : "block";
+          }
+        });
+        const addPeriodBtn = document.getElementById("holiday-add-period-btn");
+        if (addPeriodBtn) {
+          addPeriodBtn.disabled = false;
+          addPeriodBtn.style.backgroundColor = "#2196f3";
+          addPeriodBtn.style.cursor = "pointer";
+          addPeriodBtn.textContent = "➕ Adicionar Período";
+        }
+      });
+      card.append(removeBtn);
       const fieldsContainer = document.createElement("div");
       fieldsContainer.style.cssText = `display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; align-items: end;`;
       const startGroup = document.createElement("div");
       startGroup.innerHTML = `
-        <label style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 13px;">
-          Data Início
-        </label>
-        <input
-          type="date"
-          id="holiday-start-${periodNumber}"
-          style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;"
-        />
+        <label style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 13px;">Data Início</label>
+        <input type="date" id="holiday-start-${periodNumber}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;"/>
       `;
       const endGroup = document.createElement("div");
       endGroup.innerHTML = `
-        <label style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 13px;">
-          Data Fim
-        </label>
-        <input
-          type="date"
-          id="holiday-end-${periodNumber}"
-          style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;"
-        />
+        <label style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 13px;">Data</label>
+        <input type="date" id="holiday-end-${periodNumber}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;"/>
       `;
       const daysInfo = document.createElement("div");
       daysInfo.innerHTML = `
-        <label style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 13px;">
-          Dias Úteis
-        </label>
-        <div
-          id="holiday-days-${periodNumber}"
-          style="padding: 8px 12px; background: #f0f0f0; border-radius: 4px; font-weight: bold; text-align: center; min-width: 80px;"
-        >
-          ---
-        </div>
+        <label style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 13px;">Dias Úteis</label>
+        <div id="holiday-days-${periodNumber}" style="padding: 8px 12px; background: #f0f0f0; border-radius: 4px; font-weight: bold; text-align: center; min-width: 80px;">---</div>
       `;
       fieldsContainer.append(startGroup, endGroup, daysInfo);
-      card.append(title, fieldsContainer);
-      const startInput = card.querySelector(`#holiday-start-${periodNumber}`);
-      const endInput = card.querySelector(`#holiday-end-${periodNumber}`);
-      const daysDisplay = card.querySelector(`#holiday-days-${periodNumber}`);
+      card.append(fieldsContainer);
+      const startInput = card.querySelector(`input[id^='holiday-start-']`);
+      const endInput = card.querySelector(`input[id^='holiday-end-']`);
+      const daysDisplay = card.querySelector(`div[id^='holiday-days-']`);
       const updateDays = () => {
         if (startInput.value && endInput.value) {
           const start = new Date(startInput.value.replace(/-/g, '\/'));
@@ -2428,47 +2525,79 @@
       endInput.addEventListener("change", updateDays);
       return card;
     }
-    let employeesForHolidays = [];
-    async function loadEmployeesForHolidays() {
-      try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
-        const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/reg_employees?select=n_int,abv_name,team,function&corp_oper_nr=eq.${corpOperNr}&order=n_int`, {
-            headers: getSupabaseHeaders()
-          }
-        );
-        if (!response.ok) throw new Error("Erro ao carregar funcionários");
-        const employees = await response.json();
-        employeesForHolidays = employees;
-        const select = document.getElementById("holiday-employee-select");
-        if (!select) return;
-        select.innerHTML = '<option value="">-- Selecionar --</option>';
-        employees.forEach(emp => {
-          const option = document.createElement("option");
-          option.value = emp.n_int;
-          option.textContent = emp.abv_name;
-          select.appendChild(option);
-        });
-      } catch (error) {
-        console.error("Error loading employees:", error);
-        showPopup && showPopup('popup-danger', "Erro ao carregar funcionários");
-      }
-    }
     async function loadHolidayData(nInt, year) {
       try {
         const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
-        const shiftsResponse = await fetch(
-          `${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&n_int=eq.${nInt}&shift=eq.FE&order=month.asc,day.asc`, {
-            headers: getSupabaseHeaders()
+        const prevYear = year - 1;
+        const remainingLabelEl = document.getElementById("holiday-remaining-prev-days-label");
+        if (remainingLabelEl) {
+          remainingLabelEl.textContent = `⏮️ Dias Remanescentes (${prevYear})`;
+        }
+        const employeeResponse = await fetch(`${SUPABASE_URL}/rest/v1/reg_employees?corp_oper_nr=eq.${corpOperNr}&n_int=eq.${nInt}`, {
+          headers: getSupabaseHeaders()
+        });
+        if (!employeeResponse.ok) throw new Error("Erro ao obter dados do funcionário");
+        const employeeData = await employeeResponse.json();
+        let totalBaseDays = 22; 
+        let entryYear = null;
+        let entryMonth = null;
+        let entryDay = null;
+        if (employeeData && employeeData.length > 0 && employeeData[0].entry_date) {
+          const parts = employeeData[0].entry_date.split('-');
+          entryYear = parseInt(parts[0], 10);
+          entryMonth = parseInt(parts[1], 10);
+          entryDay = parseInt(parts[2], 10);
+          if (entryYear === year) {
+            let completedMonths = 12 - entryMonth + 1;
+            if (entryDay > 11 && completedMonths > 0) {
+              completedMonths--;
+            }
+            totalBaseDays = Math.min(completedMonths * 2, 20);
+            if (totalBaseDays < 0) totalBaseDays = 0; 
           }
-        );
-        if (!shiftsResponse.ok) throw new Error("Erro ao carregar dados do servidor");
-        const shifts = await shiftsResponse.json();
+        }
+        let remainingPrevYearDays = 0;
+        if (prevYear > 2025) {
+          const [shiftsResponse, prevShiftsResponse] = await Promise.all([
+            fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&n_int=eq.${nInt}&shift=eq.FE&order=month.asc,day.asc`, {
+              headers: getSupabaseHeaders()
+            }),
+            fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${prevYear}&n_int=eq.${nInt}&shift=eq.FE`, {
+              headers: getSupabaseHeaders()
+            })
+          ]);
+          if (!shiftsResponse.ok || !prevShiftsResponse.ok) throw new Error("Erro ao carregar dados do servidor");
+          const shifts = await shiftsResponse.json();
+          const prevShifts = await prevShiftsResponse.json();
+          const prevUsedDays = prevShifts.length;
+          let prevYearBase = 22;
+          if (entryYear && entryYear === prevYear) {
+            let compMonths = 12 - entryMonth + 1;
+            if (entryDay > 11 && compMonths > 0) {
+              compMonths--;
+            }
+            prevYearBase = Math.min(compMonths * 2, 20);
+          }
+          remainingPrevYearDays = Math.max(prevYearBase - prevUsedDays, 0);
+          window.currentLoadedShifts = shifts; 
+        } else {
+          const shiftsResponse = await fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&n_int=eq.${nInt}&shift=eq.FE&order=month.asc,day.asc`, {
+            headers: getSupabaseHeaders()
+          });
+          if (!shiftsResponse.ok) throw new Error("Erro ao carregar dados do servidor");
+          window.currentLoadedShifts = await shiftsResponse.json();
+        }
+        const shifts = window.currentLoadedShifts;
+        const prevDaysEl = document.getElementById("holiday-remaining-prev-days");
+        if (prevDaysEl) {
+          prevDaysEl.textContent = remainingPrevYearDays;
+          prevDaysEl.style.color = remainingPrevYearDays > 0 ? "#9c27b0" : "#333";
+        }
+        const totalHolidaysWithRemaining = totalBaseDays + remainingPrevYearDays; 
         const usedDays = shifts.length;
-        const totalDays = 22;
-        const availableDays = totalDays - usedDays;
-        document.getElementById("holiday-total-days").textContent = totalDays;
-        document.getElementById("holiday-used-days").textContent = usedDays;
+        const availableDays = totalHolidaysWithRemaining - usedDays;
+        document.getElementById("holiday-total-days").textContent = totalHolidaysWithRemaining;
+        document.getElementById("holiday-used-days").textContent = usedDays;        
         const availEl = document.getElementById("holiday-available-days");
         if (availEl) {
           availEl.textContent = availableDays;
@@ -2493,22 +2622,44 @@
         }
         document.getElementById("holiday-info-section").style.display = "grid";
         document.getElementById("holiday-periods-section").style.display = "flex";
-        for (let i = 1; i <= 3; i++) {
-          const startInput = document.getElementById(`holiday-start-${i}`);
-          const endInput = document.getElementById(`holiday-end-${i}`);
-          const daysDisplay = document.getElementById(`holiday-days-${i}`);
-          const p = periods[i - 1];
-          if (p) {
-            startInput.value = p.start.toLocaleDateString('sv-SE');
-            endInput.value = p.end.toLocaleDateString('sv-SE');
-            const workingDays = calculateWorkingDaysInPeriod(p.start, p.end, year);
-            daysDisplay.textContent = `${workingDays} dias`;
-            daysDisplay.style.color = "#2196f3";
-          } else {
-            startInput.value = "";
-            endInput.value = "";
-            daysDisplay.textContent = "---";
-            daysDisplay.style.color = "#333";
+        const wrapper = document.getElementById("holiday-cards-wrapper");
+        if (wrapper) {
+          wrapper.innerHTML = "";
+          const totalToShow = Math.min(Math.max(periods.length, 3), 6);
+          for (let i = 1; i <= totalToShow; i++) {
+            wrapper.appendChild(createPeriodCard(i));
+          }
+          const addPeriodBtn = document.getElementById("holiday-add-period-btn");
+          if (addPeriodBtn) {
+            if (totalToShow >= 6) {
+              addPeriodBtn.disabled = true;
+              addPeriodBtn.style.backgroundColor = "#ccc";
+              addPeriodBtn.style.cursor = "not-allowed";
+              addPeriodBtn.textContent = "❌ Limite Máximo de 6 Períodos Atingido";
+            } else {
+              addPeriodBtn.disabled = false;
+              addPeriodBtn.style.backgroundColor = "#2196f3";
+              addPeriodBtn.style.cursor = "pointer";
+              addPeriodBtn.textContent = "➕ Adicionar Período";
+            }
+          }
+          for (let i = 1; i <= totalToShow; i++) {
+            const startInput = document.getElementById(`holiday-start-${i}`);
+            const endInput = document.getElementById(`holiday-end-${i}`);
+            const daysDisplay = document.getElementById(`holiday-days-${i}`);
+            const p = periods[i - 1];
+            if (p) {
+              startInput.value = p.start.toLocaleDateString('sv-SE');
+              endInput.value = p.end.toLocaleDateString('sv-SE');
+              const workingDays = calculateWorkingDaysInPeriod(p.start, p.end, year);
+              daysDisplay.textContent = `${workingDays} dias`;
+              daysDisplay.style.color = "#2196f3";
+            } else {
+              startInput.value = "";
+              endInput.value = "";
+              daysDisplay.textContent = "---";
+              daysDisplay.style.color = "#333";
+            }
           }
         }
         const previewSection = document.getElementById("holiday-preview-section");
@@ -2634,11 +2785,13 @@
           allFERecords.push(...feRecords);
         }
       }
-      if (allFERecords.length > 22) {
+      const totalDaysEl = document.getElementById("holiday-total-days");
+      const allowedTotalDays = totalDaysEl ? parseInt(totalDaysEl.textContent, 10) : 22;
+      if (allFERecords.length > allowedTotalDays) {
         const excess = allFERecords.length;
         const confirmExcess = confirm(
           `⚠️ ATENÇÃO: O plano selecionado tem ${excess} dias úteis.\n\n` +
-          `O limite padrão anual é de 22 dias. Isto inclui dias transferidos do ano anterior?\n\n` +
+          `O limite calculado para este cenário é de ${allowedTotalDays} dias (incluindo proporcional de entrada ou remanescentes).\n\n` +
           `Clique em 'OK' para gravar ${excess} dias ou 'Cancelar' para rever.`
         );
         if (!confirmExcess) return;
@@ -2849,7 +3002,8 @@
               <button class="m-btn-secondary" onclick="consultDiscrepancies()">🔍 Consultar Anómalias</button>
               <button class="m-btn" onclick="exportGlobalHolidayMap()">📥 Emitir Mapa</button>
             </div>
-          </div>`;
+          </div>
+        `;
       }
       loadGlobalHolidayData();
     }
@@ -3128,7 +3282,8 @@
                   Não
                 </button>
               </td>
-            </tr>`;
+            </tr>
+          `;
         });
         html += `</tbody></table></div>`;
         content.innerHTML = html;
@@ -3266,7 +3421,8 @@
             <div class="p-footer">
               <button class="p-btn" onclick="exportPrioritiesMap()">📥 Emitir Mapa</button>
             </div>
-          </div>`;
+          </div>
+        `;
       }
       loadPriorityData();
     }
@@ -3778,10 +3934,20 @@
           .s-container {max-height: 580px; overflow: auto; border: 1px solid #cbd5e1; border-radius: 8px; position: relative; -ms-overflow-style: none; scrollbar-width: none;}
           .s-container::-webkit-scrollbar {display: none;}
           .s-table {width: 100%; border-collapse: separate; border-spacing: 0; font-size: 11px; table-layout: fixed;}
-          .s-table th {position: sticky; top: 0; z-index: 10; background: #f8fafc; border-bottom: 2px solid #94a3b8; border-right: 1px solid #cbd5e1; padding: 8px 2px; text-align: center;}
-          .s-name-col {position: sticky !important; left: 0; z-index: 20 !important; background: #f1f5f9 !important; border-right: 2px solid #cbd5e1 !important; text-align: left !important;
+          .s-table thead tr:first-child th {position: sticky; top: 0; z-index: 10; background: #f8fafc; border-bottom: 2px solid #94a3b8; border-right: 1px solid #cbd5e1; padding: 6px 2px; text-align: center;}
+          .s-table thead tr:nth-child(2) th {position: sticky; top: 30px; z-index: 10; background: #f8fafc; border-bottom: 2px solid #94a3b8; border-right: 1px solid #cbd5e1; padding: 4px 2px; text-align: center;}
+          .s-name-col {position: sticky !important; left: 0; z-index: 20 !important; background: #f1f5f9 !important; border-right: 1px solid #cbd5e1 !important; text-align: left !important; 
                        padding-left: 12px !important; font-weight: 700; width: 180px; min-width: 180px;}
-          .s-table thead th.s-name-col {z-index: 30 !important; top: 0;}
+          .s-table thead tr:first-child th.s-name-col {z-index: 30 !important; top: 0;}
+          .s-table thead tr:nth-child(2) th.s-name-col {z-index: 30 !important; top: 30px;}
+          .s-sub-col-1 {position: sticky !important; left: 180px; z-index: 20 !important; background: #f1f5f9 !important; border-right: 1px solid #cbd5e1 !important; text-align: center !important; 
+                        width: 70px; min-width: 70px;}
+          .s-sub-col-2 {position: sticky !important; left: 250px; z-index: 20 !important; background: #f1f5f9 !important; border-right: 1px solid #cbd5e1 !important; text-align: center !important; 
+                        width: 70px; min-width: 70px;}
+          .s-table thead tr:first-child th.s-sub-col-1 {z-index: 30 !important; top: 0;}
+          .s-table thead tr:first-child th.s-sub-col-2 {z-index: 30 !important; top: 0;}
+          .s-table thead tr:nth-child(2) th.s-sub-col-1 {z-index: 30 !important; top: 30px;}
+          .s-table thead tr:nth-child(2) th.s-sub-col-2 {z-index: 30 !important; top: 30px;}
           .s-table td {border-bottom: 1px solid #cbd5e1; border-right: 1px solid #cbd5e1; padding: 6px 4px; text-align: center; vertical-align: middle !important;}
           .s-row:hover td {background-color: #f8fafc !important;}
           .s-card-base {background: #fee2e2; color: #991b1b; border: 1px solid currentColor; border-radius: 4px; font-weight: 700; font-size: 9px; padding: 3px; line-height: 1.2;}
@@ -3825,14 +3991,18 @@
             <table class="s-table">
               <thead>
                 <tr>
-                  <th class="s-name-col">FUNCIONÁRIO</th>
-                  <th>SUB. TURNO</th>
-                  <th>BAIXA MÉDICA</th>
-                  <th>FÉRIAS</th>
-                  <th>LIC. PARENTAL</th>
-                  <th>LIC. NOJO</th>
-                  <th>FALTAS JUST.</th>
-                  <th>FALTAS INJUST.</th>
+                  <th class="s-name-col" rowspan="2">FUNCIONÁRIO</th>
+                  <th colspan="2">SUB. TURNO</th>
+                  <th rowspan="2">BAIXA MÉDICA</th>
+                  <th rowspan="2">FÉRIAS</th>
+                  <th rowspan="2">LIC. PARENTAL</th>
+                  <th rowspan="2">LIC. NOJO</th>
+                  <th rowspan="2">FALTAS JUST.</th>
+                  <th rowspan="2">FALTAS INJUST.</th>
+                </tr>
+                <tr>
+                  <th>Mês Atual</th>
+                  <th>Mês Anterior</th>
                 </tr>
               </thead>
               <tbody id="salary-table-body">
@@ -3844,12 +4014,22 @@
             <button class="s-btn" style="background:#059669;" onclick="exportSalaryMapXlsx()">📊 Exportar Excel</button>
             <button class="s-btn" onclick="exportSalaryMapPDF(event)">📥 Emitir Mapa</button>
           </div>
-        </div>`;
+        </div>
+      `;
       setTimeout(() => {
         const monthSelect = document.getElementById("salary-month-filter");
         monthSelect.value = defaultMonth;
         loadSalaryData();
       }, 0);
+    }
+    function fixStickyHeaders() {
+      const firstRow = document.querySelector("#salary-processing-map .s-table thead tr:first-child");
+      if (!firstRow) return;
+      const firstRowHeight = firstRow.getBoundingClientRect().height;
+      const secondRowThs = document.querySelectorAll("#salary-processing-map .s-table thead tr:nth-child(2) th");
+      secondRowThs.forEach(th => {
+        th.style.top = `${firstRowHeight}px`;
+      });
     }
     async function loadSalaryData() {
       const monthFilter = parseInt(document.getElementById("salary-month-filter").value);
@@ -3867,7 +4047,7 @@
       tableBody.innerHTML =
         `<tr><td colspan="8" style="padding:40px; text-align:center;">⌛ A carregar dados de ${monthName}...</td></tr>`;
       try {
-        const [empRes, eligRes, shiftRes, prevShiftRes, nextShiftRes] = await Promise.all([
+        const [empRes, eligRes, shiftRes, prevShiftRes, nextShiftRes, prevEligRes] = await Promise.all([
           fetch(`${SUPABASE_URL}/rest/v1/reg_employees?corp_oper_nr=eq.${corpOperNr}&or=(exit_date.is.null,exit_date.gte.${firstDayOfMonth},team.in.(COM,SEC))`, {
             headers: getSupabaseHeaders()
           }),
@@ -3882,6 +4062,9 @@
           }),
           fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${nextYear}&month=eq.${nextMonth}&day=lt.6`, {
             headers: getSupabaseHeaders()
+          }),
+          fetch(`${SUPABASE_URL}/rest/v1/reg_eligibility?corp_oper_nr=eq.${corpOperNr}&year=eq.${prevYear}&month=eq.${String(prevMonth).padStart(2, '0')}`, {
+            headers: getSupabaseHeaders()
           })
         ]);
         let employees = await empRes.json();
@@ -3890,6 +4073,7 @@
         const prevShifts = await prevShiftRes.json();
         const prevShiftsFrom20 = prevShifts.filter(s => parseInt(s.day) >= 20);
         const nextShifts = await nextShiftRes.json();
+        const prevEligibility = await prevEligRes.json();
         employees.sort((a, b) => parseInt(a.n_int) - parseInt(b.n_int));
         let html = "";
         employees.forEach(emp => {
@@ -3903,8 +4087,17 @@
             parseInt(reg.month) === monthFilter
           );
           const subShiftDisplay = hasSubsidy
-            ? `<span class="s-status-badge s-status-yes">SIM</span>`
-            : `<span class="s-status-badge s-status-no">NÃO</span>`;
+            ? `<span class="s-status-badge s-status-yes">COM DIREITO</span>`
+            : `<span class="s-status-badge s-status-no">SEM DIREITO</span>`;
+          const prevEligRecords = prevEligibility.filter(reg => String(reg.n_int).padStart(3, '0') === n_int_formatted && parseInt(reg.month) === prevMonth);
+          let prevSubShiftDisplay;
+          if (prevEligRecords.length === 0) {
+            prevSubShiftDisplay = `<span class="s-status-badge s-status-no">SEM DIREITO</span>`;
+          } else if (prevEligRecords.some(reg => parseInt(reg.day) <= 20)) {
+            prevSubShiftDisplay = `<span class="s-status-badge s-status-yes">PAGO</span>`;
+          } else {
+            prevSubShiftDisplay = `<span class="s-status-badge" style="color:#d97706; background:#fffbeb; border-color:#fcd34d;">PENDENTE</span>`;
+          }
           const formatPeriod = (code, classeCss) => {
             const allDays = empShifts
             .filter(s => s.shift === code)
@@ -4144,6 +4337,7 @@
             <tr class="s-row">
               <td class="s-name-col">${emp.abv_name}</td>
               <td style="text-align:center;">${subShiftDisplay}</td>
+              <td style="text-align:center;">${prevSubShiftDisplay}</td>
               <td>${formatPeriod('BX', 's-val-sickleave')}</td>
               <td>${vacationInfo}</td>
               <td>${formatPeriod('LP', 's-val-parental')}</td>
@@ -4153,8 +4347,8 @@
             </tr>
           `;
         });
-        tableBody.innerHTML =
-          html || '<tr><td colspan="8" style="text-align:center;">Nenhum funcionário encontrado.</td></tr>';
+        tableBody.innerHTML = html || '<tr><td colspan="8" style="text-align:center;">Nenhum funcionário encontrado.</td></tr>';
+        fixStickyHeaders();
       } catch (e) {
         console.error(e);
         tableBody.innerHTML =
@@ -4177,7 +4371,7 @@
         const employees = [];
         rows.forEach(row => {
           const cells = row.querySelectorAll("td");
-          if (cells.length < 8) return;
+          if (cells.length < 9) return;
           const extractCards = (cell) => {
             const cards = cell.querySelectorAll(".s-card-base");
             if (cards.length === 0) return "-";
@@ -4188,15 +4382,18 @@
             return badge ? badge.innerText.trim() : "-";
           };
           employees.push({
-            name: cells[0].innerText.trim(),
-            subShift: extractBadge(cells[1]),
-            casualties: extractCards(cells[2]),
-            vacations: extractCards(cells[3]),
-            parental: extractCards(cells[4]),
-            disgust: extractCards(cells[5]),
-            justified: extractCards(cells[6]),
-            unjustified: extractCards(cells[7])
-          });
+    name: cells[0].innerText.trim(),
+
+    subShiftCurrent: extractBadge(cells[1]),
+    subShiftPrevious: extractBadge(cells[2]),
+
+    casualties: extractCards(cells[3]),
+    vacations: extractCards(cells[4]),
+    parental: extractCards(cells[5]),
+    disgust: extractCards(cells[6]),
+    justified: extractCards(cells[7]),
+    unjustified: extractCards(cells[8])
+});
         });
         showLoadingPopup(`A gerar mapa salarial em formato PDF para ${monthName} de ${year}...`);
         const response = await fetch("https://cb360-online.vercel.app/api/employees_convert_and_send", {
@@ -4245,7 +4442,7 @@
         const employees = [];
         rows.forEach(row => {
           const cells = row.querySelectorAll("td");
-          if (cells.length < 8) return;
+          if (cells.length < 9) return;
           const extractCards = (cell) => {
             const cards = cell.querySelectorAll(".s-card-base");
             if (cards.length === 0) return "-";
@@ -4257,8 +4454,19 @@
             const badge = cell.querySelector(".s-status-badge");
             return badge ? badge.innerText.trim() : "-";
           };
-          employees.push({name: cells[0].innerText.trim(), subShift: extractBadge(cells[1]), casualties: extractCards(cells[2]), vacations: extractCards(cells[3]),
-                          parental: extractCards(cells[4]), disgust: extractCards(cells[5]), justified: extractCards(cells[6]), unjustified: extractCards(cells[7])});});
+          employees.push({
+  name: cells[0].innerText.trim(),
+
+  subShiftCurrent: extractBadge(cells[1]),
+  subShiftPrevious: extractBadge(cells[2]),
+
+  casualties: extractCards(cells[3]),
+  vacations: extractCards(cells[4]),
+  parental: extractCards(cells[5]),
+  disgust: extractCards(cells[6]),
+  justified: extractCards(cells[7]),
+  unjustified: extractCards(cells[8])
+});});
         showLoadingPopup(`A gerar mapa salarial em formato EXCEL para ${monthName} de ${year}...`);
         const response = await fetch("https://cb360-online.vercel.app/api/employees_convert_and_send", {
           method: "POST",

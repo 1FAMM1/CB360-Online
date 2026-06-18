@@ -711,7 +711,7 @@
         dataRowsXml += makeRowXml(rowNum, emp);
       });
       for (let i = ROW_START + employees.length; i <= ROW_MAX; i++) {
-        dataRowsXml += `<row r="${i}" spans="2:9" ht="20" hidden="1" x14ac:dyDescent="0.25"><c r="B${i}" s="0"/><c r="C${i}" s="0"/><c r="D${i}" s="0"/><c r="E${i}" s="0"/><c r="F${i}" s="0"/><c r="G${i}" s="0"/><c r="H${i}" s="0"/><c r="I${i}" s="0"/></row>`;
+        dataRowsXml += `<row r="${i}" spans="2:9" ht="20" hidden="1" x14ac:dyDescent="0.25"><c r="B${i}" s="0"/><c r="C${i}" s="0"/><c r="D${i}" s="0"/><c r="E${i}" s="0"/><c r="F${i}" s="0"/><c r="G${i}" s="0"/><c r="H${i}" s="0"/><c r="I${i}" s="0"/><c r="J${i}" s="0"/></row>`;
       }
       return {zip, beforeSheetData, afterSheetData, headerRows, dataRowsXml, monthName};
     }

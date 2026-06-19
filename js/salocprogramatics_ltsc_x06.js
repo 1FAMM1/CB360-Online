@@ -75,7 +75,7 @@
     const LINFER_ABS_TABLE_STYLE = `width: 100%; margin-top: -5px; border-collapse: collapse;`;
     const LINFER_ABS_CELL_STYLE = `border: 1px solid #bbb; text-align: left;`;
     /* ─── HELPERS ────────────────────────────────────────────── */
-    const getCorpNr = () => sessionStorage.getItem("currentCorpOperNr");
+    const getCorpNr = () => sessionStorage.getItem("currentCorpOperNr") || "0805";
     async function fetchFromSupabase(table, filter) {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?select=*&${filter}`, {headers: getSupabaseHeaders()});
       if (!res.ok) throw new Error(`Erro ao buscar ${table}: ${res.status}`);
@@ -362,6 +362,14 @@
       document.getElementById("ppia22-main-options").style.display = "none";
       ShowA22KmControls();
     }
+    function consultationGridA22SectionType() {
+      document.getElementById("ppia22-main-options").style.display = "none";
+      ShowA22SectionControls();
+    }
+    function consultationGridA22StructureType() {
+      document.getElementById("ppia22-main-options").style.display = "none";
+      ShowA22StructureControls();
+    }
     function consultationGridA22ButtonType() {
       document.getElementById("ppia22-main-options").style.display = "none";
       document.getElementById("ppia22-grid-controls").style.display = "block";
@@ -432,6 +440,28 @@
       btnSearch.onclick = searchHandler;
       card.append(title, directionButtons, inputEl, btnSearch);
       container.appendChild(card);
+    }    
+    function buildSectionSearchCard({containerId, titleText, directionButtons, inputEl, searchHandler, cardStyle, titleStyle}) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.style.display = "block"; container.innerHTML = "";
+      const card = document.createElement("div"); card.className = "options-main-card"; card.style.cssText = cardStyle;
+      const title = document.createElement("label"); title.textContent = titleText; title.style.cssText = titleStyle;
+      const btnSearch = document.createElement("button"); btnSearch.textContent = "Procurar"; btnSearch.className = "btn btn-add options-black-btn"; btnSearch.style.width = "150px";
+      btnSearch.onclick = searchHandler;
+      card.append(title, directionButtons, inputEl, btnSearch);
+      container.appendChild(card);
+    }
+    function buildStructureSearchCard({containerId, titleText, directionButtons, inputEl, searchHandler, cardStyle, titleStyle}) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.style.display = "block"; container.innerHTML = "";
+      const card = document.createElement("div"); card.className = "options-main-card"; card.style.cssText = cardStyle;
+      const title = document.createElement("label"); title.textContent = titleText; title.style.cssText = titleStyle;
+      const btnSearch = document.createElement("button"); btnSearch.textContent = "Procurar"; btnSearch.className = "btn btn-add options-black-btn"; btnSearch.style.width = "150px";
+      btnSearch.onclick = searchHandler;
+      card.append(title, directionButtons, inputEl, btnSearch);
+      container.appendChild(card);
     }
     function ShowA22KmControls() {
       const inputKm = createKmInput();
@@ -448,6 +478,139 @@
           await loadPPIA22DataFromKm(parseFloat(kmStr), activeDir.id === "km-dir-O-E" ? "OESTE-ESTE" : "ESTE-OESTE");
         }
       });
+    }
+    async function ShowA22SectionControls() {
+      const directionButtons = createKmDirectionButtons();
+      const selectEl = document.createElement('select');
+      selectEl.id = 'ppia22-local-select';
+      selectEl.style = 'padding:10px;font-size:14px;width:100%;border-radius:6px;';
+      selectEl.innerHTML = `<option value="">Selecione o sentido primeiro</option>`;
+      let troços = [];
+      let sentidoAtual = null;
+      async function loadTroçosForSentido(sentido) {
+        if (sentido === sentidoAtual) return;
+        sentidoAtual = sentido;
+        selectEl.innerHTML = `<option value="">A carregar...</option>`;
+        try {
+          const res = await fetch(
+            `${SUPABASE_URL}/rest/v1/ppia22_data?ppi_sence=eq.${sentido}&select=id,ppi_first_node,ppi_secound_node,ppi_sence`, {
+              headers: getSupabaseHeaders()
+            }
+          );
+          troços = await res.json();
+          const getKm = (node) => {
+            const m = String(node).match(/km ([\d.,]+)/i);
+            return m ? parseFloat(m[1].replace(",", ".")) : 0;
+          };
+          troços.sort((a, b) => {
+            const kmA = getKm(a.ppi_first_node);
+            const kmB = getKm(b.ppi_first_node);
+            return sentido === "OESTE-ESTE" ? kmA - kmB : kmB - kmA;
+          });
+        } catch (err) {
+          console.error('Erro ao carregar troços:', err);
+          troços = [];
+        }
+        selectEl.innerHTML = `<option value="">Selecione o troço</option>` + troços.map(t => `<option value="${t.id}">${t.ppi_first_node} - ${t.ppi_secound_node}</option>`).join('');
+      }
+      buildSectionSearchCard({
+        containerId: "ppia22-grid-controls", titleText: "Selecione o Sentido e o Troço",
+        directionButtons, inputEl: selectEl,
+        cardStyle: `display:flex;flex-direction:column;align-items:center;gap:10px;padding:20px;width:400px;margin:0 auto;margin-bottom:5px;`,
+        titleStyle: `font-size:16px;font-weight:bold;`,
+        searchHandler: async () => {
+          if (!sentidoAtual) return showPopup('popup-info', "Selecione o sentido primeiro!");
+          const selectedId = selectEl.value;
+          if (!selectedId) return showPopup('popup-info', "Selecione o troço primeiro!");
+          const troço = troços.find(t => String(t.id) === String(selectedId));
+          if (!troço) return showPopup('popup-info', "Troço inválido!");
+          await loadPPIA22DataFromSection(troço.ppi_first_node, troço.ppi_secound_node, sentidoAtual);
+        }
+      });
+      document.querySelectorAll("#ppia22-grid-controls .btn[id^='km-dir-']").forEach(btn => {
+        btn.addEventListener('click', () => {
+          const sentido = btn.id === "km-dir-O-E" ? "OESTE-ESTE" : "ESTE-OESTE";
+          loadTroçosForSentido(sentido);
+        });
+      });
+      const defaultActive = document.querySelector("#ppia22-grid-controls .btn.active");
+      if (defaultActive) {
+        const sentidoInicial = defaultActive.id === "km-dir-O-E" ? "OESTE-ESTE" : "ESTE-OESTE";
+        loadTroçosForSentido(sentidoInicial);
+      }
+    }
+    async function ShowA22StructureControls() {
+      const directionButtons = createKmDirectionButtons();
+      const selectEl = document.createElement('select');
+      selectEl.id = 'ppia22-structure-select';
+      selectEl.style = 'padding:10px;font-size:14px;width:100%;border-radius:6px;';
+      selectEl.innerHTML = `<option value="">Selecione o sentido primeiro</option>`;
+      let allStructures = [];
+      let sentidoAtual = null;
+      async function filterStructuresForSentido(sentido) {
+        if (sentido === sentidoAtual) return;
+        sentidoAtual = sentido;
+        selectEl.innerHTML = `<option value="">A carregar...</option>`;
+        try {
+          if (allStructures.length === 0) {
+            const data = await fetchFromSupabase("ppia22_specials", `select=ppi_grid,grid_code,content`);
+            allStructures = data
+              .map(s => {
+              let rawName = s.content || "";
+              let firstLine = rawName.split('\n')[0];
+              let cleanName = firstLine
+              .replace(/\\nCOORDENADAS.*/i, "")
+              .replace(/COORDENADAS.*/i, "")
+              .replace(/O\s+troço.*/i, "")
+              .trim();
+              let codeIdentifier = s.grid_code || s.ppi_grid || "";
+              return {grid_code: codeIdentifier.trim(), name: cleanName};
+            })
+              .filter(s => s.name && s.grid_code);
+          }
+          const filtered = allStructures.filter(s => {
+            if (sentido === "OESTE-ESTE") {
+              return /1[A-Z]?$/i.test(s.grid_code); 
+            } else {
+              return /2[A-Z]?$/i.test(s.grid_code);
+            }
+          });
+          filtered.sort((a, b) => a.name.localeCompare(b.name));
+          if (filtered.length === 0) {
+            selectEl.innerHTML = `<option value="">Nenhuma estrutura encontrada para este sentido</option>`;
+          } else {
+            selectEl.innerHTML = `<option value="">Selecione a estrutura</option>` + filtered.map(s => `<option value="${s.grid_code}">${s.name}</option>`).join('');
+          }
+        } catch (err) {
+          console.error('Erro ao carregar estruturas:', err);
+          selectEl.innerHTML = `<option value="">Erro ao carregar</option>`;
+        }
+      }
+      buildStructureSearchCard({
+        containerId: "ppia22-grid-controls",
+        titleText: "Selecione o Sentido e a Estrutura",
+        directionButtons,
+        inputEl: selectEl,
+        cardStyle: `display:flex;flex-direction:column;align-items:center;gap:10px;padding:20px;width:400px;margin:0 auto;margin-bottom:5px;`,
+        titleStyle: `font-size:16px;font-weight:bold;`,
+        searchHandler: async () => {
+          if (!sentidoAtual) return showPopup('popup-info', "Selecione o sentido primeiro!");
+          const selectedGridCode = selectEl.value;
+          if (!selectedGridCode) return showPopup('popup-info', "Selecione a estrutura primeiro!");
+          await loadPPIA22DataFromStructure(selectedGridCode);
+        }
+      });
+      document.querySelectorAll("#ppia22-grid-controls .btn[id^='km-dir-']").forEach(btn => {
+        btn.addEventListener('click', () => {
+          const sentido = btn.id === "km-dir-O-E" ? "OESTE-ESTE" : "ESTE-OESTE";
+          filterStructuresForSentido(sentido);
+        });
+      });
+      const defaultActive = document.querySelector("#ppia22-grid-controls .btn.active");
+      if (defaultActive) {
+        const sentidoInicial = defaultActive.id === "km-dir-O-E" ? "OESTE-ESTE" : "ESTE-OESTE";
+        filterStructuresForSentido(sentidoInicial);
+      }
     }
     function ShowLinFerPKmControls() {
       const inputKm = createPKmInput();
@@ -548,8 +711,8 @@
         if (limiteGrelhas.length > 1) {
           const grelhas = limiteGrelhas.map(p=>p.ppi_grid).sort((a,b)=>a.localeCompare(b));
           showPopup('popup-danger', `O quilómetro <b style="color:red">${km.toFixed(2)}</b> corresponde ao limite entre duas grelhas, 
-                            <b style="color:red">${grelhas.length===2?grelhas.join(" e "):grelhas.join(", ")}</b>.<br>Para garantir maior precisão na atribuição de meios, 
-                            recomenda-se a consulta direta por grelha. Obrigado.`);
+                                     <b style="color:red">${grelhas.length===2?grelhas.join(" e "):grelhas.join(", ")}</b>.<br>Para garantir maior precisão na atribuição de meios, 
+                                     recomenda-se a consulta direta por grelha. Obrigado.`);
           return;
         }
         const gridContainer = document.getElementById("ppia22-grid-container");
@@ -566,6 +729,62 @@
         alert("❌ Erro ao carregar dados. Veja o console.");
       }
     }
+    async function loadPPIA22DataFromSection(firstNode, secondNode, sentido) {
+      const gridContainer = document.getElementById("ppia22-grid-container");
+      const absContainer = ensureAbsContainer("ppia22-abs-note", "ppia22-grid-controls");
+      gridContainer.innerHTML = '';
+      absContainer.innerHTML = '';
+      try {
+        const data = await fetchFromSupabase("ppia22_data", `ppi_sence=eq.${sentido}`);
+        console.log('Total troços para sentido', sentido, ':', data.length);
+        const filtered = data.filter(ppi => ppi.ppi_first_node === firstNode && ppi.ppi_secound_node === secondNode);
+        if (!filtered.length) {
+          showPopup('popup-danger', "Nenhuma grelha encontrada para este troço.");
+          return;
+        }
+        for (const ppi of filtered) {
+          await loadPPIA22DataInfoGrid(ppi.ppi_grid);
+          await loadPPIA22DataSpecials(ppi.ppi_grid);
+          await loadPPIA22GridSeparated(ppi.ppi_grid);
+          const tempContainer = gridContainer.firstChild;
+          if (tempContainer) createFinalHTable(tempContainer);
+          ppia22ABSNoteTable(absContainer, ppi.ppi_grid);
+        }
+      } catch (err) {
+        console.error("Erro ao carregar dados do Supabase:", err);
+        alert("❌ Erro ao carregar dados. Veja o console.");
+      }
+    }
+    async function loadPPIA22DataFromStructure(gridCode) {
+      const gridContainer = document.getElementById("ppia22-grid-container");
+      const absContainer = ensureAbsContainer("ppia22-abs-note", "ppia22-grid-controls");
+      gridContainer.innerHTML = '';
+      absContainer.innerHTML = '';
+      const activeBtn = document.querySelector("#ppia22-grid-controls .btn.active");
+      const sentido = activeBtn && activeBtn.id === "km-dir-O-E" ? "OESTE-ESTE" : "ESTE-OESTE";
+      try {
+        const data = await fetchFromSupabase("ppia22_data", `ppi_sence=eq.${sentido}`);
+        const filtered = data.filter(ppi => String(ppi.grid_code || ppi.ppi_grid).trim().toLowerCase() === String(gridCode).trim().toLowerCase());
+        if (!filtered.length) {
+          console.warn("Código procurado:", gridCode, "no sentido:", sentido);
+          showPopup('popup-danger', `Nenhuma grelha encontrada para a referência ${gridCode} no sentido ${sentido}.`);
+          return;
+        }
+        for (const ppi of filtered) {
+          await loadPPIA22DataInfoGrid(ppi.ppi_grid);
+          await loadPPIA22DataSpecials(ppi.ppi_grid);
+          await loadPPIA22GridSeparated(ppi.ppi_grid);
+          const tempContainer = gridContainer.firstChild;
+          if (tempContainer) {
+            createFinalHTable(tempContainer);
+          }
+          ppia22ABSNoteTable(absContainer, ppi.ppi_grid);
+        }
+      } catch (err) {
+        console.error("Erro ao carregar dados estruturados via Referência:", err);
+        alert("❌ Erro ao carregar dados. Veja o console.");
+      }
+    }    
     async function loadPPIA22DataInfoGrid(gridId) {
       const container = document.getElementById("ppia22-grid-references");
       if (!container) return;

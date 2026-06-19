@@ -1741,9 +1741,12 @@
           <div class="major-row" style="margin: 3px 0 0 0; display: flex; justify-content: center;">
             <div class="options-main-card" id="ppilinfer-main-options" style="display: flex; flex-direction: column; align-items: center;">
               <label style="margin-bottom: 10px; font-size: 14px; font-weight: bold;">Selecione uma Opção</label>
-              <div class="action-buttons" id="ppilinfer-options" style="gap: 5px;">
-                <button class="btn btn-add options-btn" style="height: 35px;" onclick="consultationGridLinFerKmType()">Cosulta por PKm</button>
-                <button class="btn btn-add options-btn" style="height: 35px;" onclick="consultationGridLinFerButtonType()">Consulta por Grelha</button>
+              <div class="action-buttons" id="ppilinfer-options" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%; max-width: 400px;">
+                <button id="ppi_linfer_by_pkm" class="btn btn-add options-btn" style="height: 35px;" onclick="consultationGridLinFerKmType()">Cosulta por PKm</button>
+                <button id="ppi_linfer_by_section" class="btn btn-add options-btn" style="height: 35px; width: 100%;" onclick="consultationGridLinFerSectionType()">Consulta por Troço</button>
+                <button id="ppi_linfer_by_structure" class="btn btn-add options-btn" style="height: 35px; width: 100%; opacity: 0.6; cursor: not-allowed;" title="Não exitem Pontos de Referência para este PPI." 
+                        onclick="consultationGridLinFerStructureType()" disabled>Consulta por Referência</button>
+                <button id="ppi_linfer_by_grid" class="btn btn-add options-btn" style="height: 35px;" onclick="consultationGridLinFerButtonType()">Consulta por Grelha</button>
               </div>
             </div>
           </div>

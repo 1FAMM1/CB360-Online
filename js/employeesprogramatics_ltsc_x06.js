@@ -2719,10 +2719,11 @@
       const availableDays = parseInt(availableDaysEl.textContent);
       const periods = [];
       let totalDaysRequested = 0;
-      for (let i = 1; i <= 3; i++) {
+      const totalPeriodCards = document.querySelectorAll("#holiday-cards-wrapper .holiday-period-card").length;
+      for (let i = 1; i <= totalPeriodCards; i++) {
         const startInput = document.getElementById(`holiday-start-${i}`);
         const endInput = document.getElementById(`holiday-end-${i}`);
-        if (startInput.value && endInput.value) {
+        if (startInput && endInput && startInput.value && endInput.value) {
           const start = new Date(startInput.value.replace(/-/g, '\/'));
           const end = new Date(endInput.value.replace(/-/g, '\/'));
           const days = calculateWorkingDaysInPeriod(start, end, year);
@@ -2770,10 +2771,11 @@
       const year = parseInt(yearSelect.value);
       const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const allFERecords = [];
-      for (let i = 1; i <= 3; i++) {
+      const totalPeriodCards = document.querySelectorAll("#holiday-cards-wrapper .holiday-period-card").length;
+      for (let i = 1; i <= totalPeriodCards; i++) {
         const startInput = document.getElementById(`holiday-start-${i}`);
         const endInput = document.getElementById(`holiday-end-${i}`);
-        if (startInput.value && endInput.value) {
+        if (startInput && endInput && startInput.value && endInput.value) {
           const start = new Date(startInput.value.replace(/-/g, '\/'));
           const end = new Date(endInput.value.replace(/-/g, '\/'));
           if (start.getFullYear() !== year || end.getFullYear() !== year) {

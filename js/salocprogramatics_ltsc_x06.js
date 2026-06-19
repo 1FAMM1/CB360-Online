@@ -430,6 +430,15 @@
         "Pkm-dir-", LINFER_DIRECTION_BUTTON_STYLE, LINFER_DIRECTION_TOP_STYLE, LINFER_DIRECTION_BOT_STYLE, "#ppilinfer-grid-controls");
       return dirRow;
     }
+    function createSectionDirectionButtons() {
+      const dirRow = document.createElement("div");
+      dirRow.style.cssText = LINFER_ROW_STYLE; 
+      dirRow.style.gap = "10px";
+      createDirectionButtons(
+        dirRow, [{id: "T-L", line1: "TROÇO", line2: "Tunes → Lagos"}, {id: "T-V", line1: "TROÇO", line2: "Tunes → VRSA"}],
+        "Section-dir-", LINFER_DIRECTION_BUTTON_STYLE, LINFER_DIRECTION_TOP_STYLE, LINFER_DIRECTION_BOT_STYLE, "#ppilinfer-grid-controls");
+      return dirRow;
+    }
     function buildKmSearchCard({containerId, titleText, directionButtons, inputEl, searchHandler, cardStyle, titleStyle}) {
       const container = document.getElementById(containerId);
       if (!container) return;
@@ -625,6 +634,61 @@
           if (!kmStr || isNaN(parseFloat(kmStr))) return showPopup('popup-info', "Introduza um ponto quilométrico válido!");
           await loadPPILinFerDataFromKm(parseFloat(kmStr), activeDir.id === "Pkm-dir-T-L" ? "TUNES-LAGOS" : "TUNES-VRSA");
         }
+      });
+    }
+    async function ShowLinFerSectionControls() {
+      const directionButtons = createSectionDirectionButtons();
+      const selectEl = document.createElement('select');
+      selectEl.id = 'ppilinfer-section-select';
+      selectEl.style = 'padding:10px;font-size:14px;width:100%;border-radius:6px;';
+      selectEl.innerHTML = `<option value="">Selecione o troço primeiro</option>`;
+      let sentidoAtual = null;      
+      async function loadSelectOptionsForSentido(sentidoBotao) {
+        sentidoAtual = sentidoBotao;
+        selectEl.innerHTML = `<option value="">A carregar opções...</option>`;
+        try {
+          const data = await fetchFromSupabase("ppilinfer_data", "select=ppi_sence");
+          const allRows = data || [];
+          const termoProcura = sentidoBotao.replace("-", "").toUpperCase();
+          const filteredRows = allRows.filter(item => {
+            if (!item.ppi_sence) return false;
+            const senceBD = String(item.ppi_sence).replace("-", "").toUpperCase();
+            return senceBD.includes(termoProcura);
+          });
+          const uniqueOptions = [...new Set(filteredRows.map(item => item.ppi_sence.trim()))];
+          uniqueOptions.sort();
+          if (uniqueOptions.length === 0) {
+            selectEl.innerHTML = `<option value="">Nenhum troço encontrado para esta direção</option>`;
+          } else {
+            selectEl.innerHTML = `<option value="">Selecione o Troço</option>` + uniqueOptions.map(opt => `<option value="${opt}">${opt}</option>`).join('');
+          }
+        } catch (err) {
+          console.error('Erro ao conectar à tabela ppilinfer_data:', err);
+          selectEl.innerHTML = `<option value="">Erro ao carregar dados</option>`;
+        }
+      }
+      buildSectionSearchCard({
+        containerId: "ppilinfer-grid-controls",
+        titleText: "Selecione o Troço da Linha Férrea",
+        directionButtons,
+        inputEl: selectEl,
+        cardStyle: LINFER_CARD_STYLE,
+        titleStyle: LINFER_TITLE_LABEL_STYLE,
+        searchHandler: async () => {
+          const activeDir = document.querySelector("#ppilinfer-grid-controls .btn.active");
+          if (!activeDir) return showPopup('popup-info', "Selecione a direção primeiro!");
+          const selectedSection = selectEl.value;
+          if (!selectedSection) return showPopup('popup-info', "Selecione o troço no menu!");
+          await loadPPILinFerDataFromSection(selectedSection);
+        }
+      });
+      document.querySelectorAll("#ppilinfer-grid-controls .btn[id^='Section-dir-']").forEach(btn => {
+        btn.addEventListener('click', async () => {
+          document.querySelectorAll("#ppilinfer-grid-controls .btn[id^='Section-dir-']").forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const sentidoStr = btn.id === "Section-dir-T-L" ? "TUNES-LAGOS" : "TUNES-VRSA";
+          await loadSelectOptionsForSentido(sentidoStr);
+        });
       });
     }
     /* ─── A22 GRID BUTTONS ───────────────────────────────────── */
@@ -1101,6 +1165,10 @@
       document.getElementById("ppilinfer-main-options").style.display="none";
       ShowLinFerPKmControls();
     }
+    function consultationGridLinFerSectionType() {
+      document.getElementById("ppilinfer-main-options").style.display="none";
+      ShowLinFerSectionControls();
+    }
     function consultationGridLinFerButtonType() {
       document.getElementById("ppilinfer-main-options").style.display="none";
       document.getElementById("ppilinfer-grid-controls").style.display="block";
@@ -1158,8 +1226,8 @@
         if(limiteGrelhas.length>1){
           const grelhas=limiteGrelhas.map(p=>p.grid_id).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
           showPopup('popup-danger', `O Ponto Quilométrico <b style="color:red">${km.toFixed(3)}</b> corresponde ao limite entre duas grelhas 
-                            <b style="color:red">${grelhas.length===2?grelhas.join(" e "):grelhas.join(", ")}</b>.<br>Para garantir maior precisão na atribuição de meios, 
-                            recomenda-se a consulta direta por grelha. Obrigado.`);
+                                     <b style="color:red">${grelhas.length===2?grelhas.join(" e "):grelhas.join(", ")}</b>.<br>Para garantir maior precisão na atribuição de meios, 
+                                     recomenda-se a consulta direta por grelha. Obrigado.`);
           return;
         }
         const gridContainer=document.getElementById("ppilinfer-grid-container");
@@ -1171,6 +1239,36 @@
         }
       } catch(err){
         console.error("Erro ao carregar dados:",err);alert("❌ Erro ao carregar dados. Veja o console.");
+      }
+    }
+    async function loadPPILinFerDataFromSection(sectionStr) {
+      const gridContainer = document.getElementById("ppilinfer-grid-container");
+      const specialsContainer = document.getElementById("ppilinfer-specials-container");
+      if (!gridContainer) return;
+      try {
+        ["ppilinfer-grid-container", "ppilinfer-grid-references", "ppilinfer-specials-container", "ppilinfer-abs-note"]
+          .forEach(id => {const el = document.getElementById(id); if (el) el.innerHTML = "";});
+        gridContainer.innerHTML = '<div style="text-align:center; padding:20px;">A carregar dados do troço...</div>';
+        const data = await fetchFromSupabase("ppilinfer_data", `ppi_sence=eq.${encodeURIComponent(sectionStr)}`);
+        if (!data || data.length === 0) {
+          gridContainer.innerHTML = '<div class="alert alert-warning">Nenhum dado encontrado para o troço selecionado.</div>';
+          return;
+        }
+        gridContainer.innerHTML = '';
+        for (const ppi of data) {
+          const gridId = ppi.grid_id;
+          await loadPPILinFerDataInfoGrid(gridId);
+          await loadPPILinFerDataSpecials(gridId);
+          await loadPPILinFerGridSeparated(gridId);
+          const tempContainer = gridContainer.firstChild;
+          if (tempContainer) {
+            createFinalHTable(tempContainer);
+          }
+          ppiLinFerABSNoteTable(ensureAbsContainer("ppilinfer-abs-note", "ppilinfer-grid-controls"), gridId);
+        }
+      } catch (err) {
+        console.error("Erro ao carregar dados do troço ferroviário:", err);
+        gridContainer.innerHTML = '<div class="alert alert-danger">Erro ao processar a pesquisa.</div>';
       }
     }
     /* ─── LINFER CELL HELPERS ────────────────────────────────── */

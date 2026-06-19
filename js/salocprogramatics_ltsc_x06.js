@@ -2539,13 +2539,19 @@
       tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#aaa; padding:12px;">A carregar...</td></tr>`;
       rightCol.style.display = 'block';
       try {
-        let dataNormal = [], dataEcin = [], dataOfope = [], dataPiquete = [];
-        const urlNormal = `${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&day=eq.${day}&month=eq.${month}&year=eq.${year}&shift=eq.${shift}&select=n_int,abv_name`;
-        const resNormal = await fetch(urlNormal, {headers: getSupabaseHeaders()});
-        dataNormal = await resNormal.json();
+        let dataNormal = [], dataEip = [], dataEcin = [], dataOfope = [], dataPiquete = [];
         if (shift === 'D') {
+          const urlNormal = `${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&day=eq.${day}&month=eq.${month}&year=eq.${year}&or=(shift.in.(D,M,HA),shift.like.EP*)&select=n_int,abv_name,shift,function`;
+          const resNormal = await fetch(urlNormal, {headers: getSupabaseHeaders()});
+          const allD = await resNormal.json();
+          dataNormal = allD.filter(r => !String(r.function || '').toUpperCase().startsWith('EP'));
+          dataEip = allD.filter(r => String(r.function || '').toUpperCase().startsWith('EP'));
           const urlEcin = `${SUPABASE_URL}/rest/v1/reg_serv?corp_oper_nr=eq.${corpOperNr}&day=eq.${day}&month=eq.${month}&year=eq.${year}&value=in.(ED,ET)&select=n_int,abv_name`;
           dataEcin = await (await fetch(urlEcin, {headers: getSupabaseHeaders()})).json();
+        } else {
+          const urlNormal = `${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&day=eq.${day}&month=eq.${month}&year=eq.${year}&shift=eq.${shift}&select=n_int,abv_name`;
+          const resNormal = await fetch(urlNormal, {headers: getSupabaseHeaders()});
+          dataNormal = await resNormal.json();
         }
         if (shift === 'N') {
           const urlOfope = `${SUPABASE_URL}/rest/v1/reg_serv?corp_oper_nr=eq.${corpOperNr}&day=eq.${day}&month=eq.${month}&year=eq.${year}&value=eq.N&select=n_int,abv_name`;
@@ -2555,18 +2561,26 @@
           const urlEcin = `${SUPABASE_URL}/rest/v1/reg_serv?corp_oper_nr=eq.${corpOperNr}&day=eq.${day}&month=eq.${month}&year=eq.${year}&value=in.(EN,ET)&select=n_int,abv_name`;
           dataEcin = await (await fetch(urlEcin, {headers: getSupabaseHeaders()})).json();
         }
-        const sortFn = (a, b) => Number(a.n_int) - Number(b.n_int);
-        dataNormal.sort(sortFn); dataEcin.sort(sortFn); dataOfope.sort(sortFn); dataPiquete.sort(sortFn);
-        if (dataNormal.length === 0 && dataEcin.length === 0 && dataOfope.length === 0 && dataPiquete.length === 0) {
+        if (dataNormal.length === 0 && dataEip.length === 0 && dataEcin.length === 0 && dataOfope.length === 0 && dataPiquete.length === 0) {
           tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#aaa; padding:12px;">Sem dados</td></tr>`;
           return;
         }
-        const allNInts = [...dataNormal, ...dataEcin, ...dataOfope, ...dataPiquete].map(r => String(r.n_int).trim().padStart(3, '0'));
+        const allNInts = [...dataNormal, ...dataEip, ...dataEcin, ...dataOfope, ...dataPiquete].map(r => String(r.n_int).trim().padStart(3, '0'));
         const uniqueNInts = [...new Set(allNInts)];
         const resElems = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?n_int=in.(${uniqueNInts.join(',')})&select=n_int,patent`, {headers: getSupabaseHeaders()});
         const elems = await resElems.json();
         const patenteMap = {};
         elems.forEach(e => { patenteMap[String(e.n_int || '').trim().padStart(3, '0')] = e.patent || ''; });
+        const sortFn = (a, b) => {
+          const patentA = patenteMap[String(a.n_int).trim().padStart(3, '0')] || '';
+          const patentB = patenteMap[String(b.n_int).trim().padStart(3, '0')] || '';
+          const isChefeA = patentA.toLowerCase().includes('chefe');
+          const isChefeB = patentB.toLowerCase().includes('chefe');
+          if (isChefeA && !isChefeB) return -1;
+          if (!isChefeA && isChefeB) return 1;
+          return Number(a.n_int) - Number(b.n_int);
+        };
+        dataNormal.sort(sortFn); dataEip.sort(sortFn); dataEcin.sort(sortFn); dataOfope.sort(sortFn); dataPiquete.sort(sortFn);
         const sectionHeader = (title) => `
           <tr>
             <td colspan="3" class="plandir-card-title black-variant" style="height: 30px; font-size: 11px; padding: 0; border: none; text-align: center; display: table-cell; border-top: 1px solid #fff;">
@@ -2577,12 +2591,13 @@
         let htmlContent = sectionHeader('PROFISSIONAIS');
         htmlContent += dataNormal.map(r => renderRow(r, patenteMap)).join('');
         if (shift === 'D') {
-          if (dataEcin.length > 0) { htmlContent += sectionHeader('ECIN'); htmlContent += dataEcin.map(r => renderRow(r, patenteMap)).join(''); }
+          if (dataEip.length > 0) {htmlContent += sectionHeader('EQUIPA DE INTERVENÇÃO PERMANENTE'); htmlContent += dataEip.map(r => renderRow(r, patenteMap)).join('');}
+          if (dataEcin.length > 0) {htmlContent += sectionHeader('ECIN'); htmlContent += dataEcin.map(r => renderRow(r, patenteMap)).join('');}
         }
         if (shift === 'N') {
-          if (dataOfope.length > 0) { htmlContent += sectionHeader('OFOPE'); htmlContent += dataOfope.map(r => renderRow(r, patenteMap)).join(''); }
-          if (dataPiquete.length > 0) { htmlContent += sectionHeader('PIQUETE'); htmlContent += dataPiquete.map(r => renderRow(r, patenteMap)).join(''); }
-          if (dataEcin.length > 0) { htmlContent += sectionHeader('ECIN'); htmlContent += dataEcin.map(r => renderRow(r, patenteMap)).join(''); }
+          if (dataOfope.length > 0) {htmlContent += sectionHeader('OFOPE'); htmlContent += dataOfope.map(r => renderRow(r, patenteMap)).join('');}
+          if (dataPiquete.length > 0) {htmlContent += sectionHeader('PIQUETE'); htmlContent += dataPiquete.map(r => renderRow(r, patenteMap)).join('');}
+          if (dataEcin.length > 0) {htmlContent += sectionHeader('ECIN'); htmlContent += dataEcin.map(r => renderRow(r, patenteMap)).join('');}
         }
         tbody.innerHTML = htmlContent;
         updateStatusDots();

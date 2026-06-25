@@ -1317,7 +1317,7 @@
       if (!container) return;
       container.innerHTML = "";
       const ALERT_OPTIONS = ["","Monitorização","Nível I - Moderado","Nível II - Elevado","Nível III - Muito Elevado","Nível IV - Extremo"];
-      const RESTAURANT_OPTIONS = ["","O Cristina","O Sol"];
+      const RESTAURANT_OPTIONS = ["","O Cristina","O Sol","Café Bento"];
       const daysInMonth = new Date(year, month, 0).getDate();
       const holidays = getPortugalHolidays(year);
       const title = document.createElement("div");

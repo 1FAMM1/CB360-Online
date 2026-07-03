@@ -226,6 +226,13 @@
     }
     /* ─── SIDEBAR SUB-SUBMENU HANDLER (DECIR) ───────────────── */
     const PAGE_CONFIGS = {
+      "decir-main-options": {init: loadDecirMainOptions},
+      "decir-desp-demage": {tableId: "table-container-dec-desp-demage", optionsId: "decir-desp-demage-options", monthsId: "months-container-dec-desp-demage",
+                            generic: {containerId: "months-container-dec-desp-demage", tableContainerId: "table-container-dec-desp-demage", yearSelectId: "year-dec-desp-demage", optionsContainerId: "decir-desp-demage-options",
+                            monthNames: DECIR_MONTH_NAMES, blockedMonths: [], loadDataFunc: async (y, m) => m, createTableFunc: (cId, y, m, d) => createDecirDespDemageTable(cId, y, m + 4)}},
+      "decir-desp-meals": {tableId: "table-container-dec-desp-meals", optionsId: "decir-desp-meals-options", monthsId: "months-container-dec-desp-meals",
+                           generic: {containerId: "months-container-dec-desp-meals", tableContainerId: "table-container-dec-desp-meals", yearSelectId: "year-dec-desp-meals", optionsContainerId: "decir-desp-meals-options",
+                           monthNames: DECIR_MONTH_NAMES, blockedMonths: [], loadDataFunc: async (y, m) => m, createTableFunc: (cId, y, m, d) => createDecirDespMealsTable(cId, y, m + 4)}},
       "decir-reg": {tableId: "table-container-dec-reg", optionsId: "decir-reg-options", monthsId: "months-container-dec-reg",
                     generic: {containerId: "months-container-dec-reg", tableContainerId: "table-container-dec-reg", yearSelectId: "year-dec-reg", optionsContainerId: "decir-reg-options",
                               monthNames: DECIR_MONTH_NAMES, blockedMonths:[], loadDataFunc: async (y, m) => loadDecirRegData(y, m + 4), createTableFunc: (cId, y, m, d) => createDecirRegTable(cId, y, m + 4, d), 
@@ -249,7 +256,7 @@
                          generic: {containerId: "months-container-dec-lepp", tableContainerId: "table-container-dec-lepp", yearSelectId: "year-dec-lepp", optionsContainerId: "decir-lepp-options",
                          monthNames: DECIR_MONTH_NAMES, blockedMonths: [], loadDataFunc: async (y, m) => m, createTableFunc: (cId, y, m, d) => createLeppTable(cId, y, m + 4, d)}},
       "decir-reg-signa": {init: openDecirSignaWithMode},
-      "decir-dashboard": {init: createDecirDashboard} 
+      "decir-dashboard": {init: createDecirDashboard}      
     };
     /* ─── LOADERS (DECIR) ────────────────────────────────────── */
     async function loadDecirConfigValues() {
@@ -419,6 +426,473 @@
       }
       window.loadDecirByMonth = loadDecirByMonth;
     })();
+    /* ─── TABELA: DESPESAS DANOS (DECIR) - PROVISÓRIA ────────── */
+    function createDecirDespDemageTable(containerId, year, month) {
+      const container = document.getElementById(containerId) || $(containerId);
+      if (!container) return;
+      container.innerHTML = "";
+      const wrapper = document.createElement("div");
+      Object.assign(wrapper.style, {display: "flex", alignItems: "center", justifyContent: "center", minHeight: "200px", borderRadius: "8px", border: "1px dashed #131a69",
+                                    background: "#f5f6fa", margin: "16px 0"});
+      const msg = document.createElement("div");
+      Object.assign(msg.style, {textAlign: "center", color: "#131a69", fontFamily: "Segoe UI, sans-serif"});
+      msg.innerHTML = `
+        <div style="font-size: 40px; margin-bottom: 12px;">🚧</div>
+        <div style="font-size: 16px; font-weight: 700; letter-spacing: 0.5px;">ESTA FUNCIONALIDADE ESTARÁ DISPONÍVEL BREVEMENTE</div>
+        <div style="font-size: 12px; margin-top: 8px; color: #555;">REGISTO DE DESPESAS COM DANOS DECIR - ${MONTH_NAMES_UPPER[month-1]} ${year}</div>
+      `;
+      wrapper.appendChild(msg);
+      container.appendChild(wrapper);
+      const options = document.getElementById("decir-desp-demage-options");
+      if (options) options.style.display = "none";
+    }
+    /* ─── LOAD DESPESAS REFEIÇÕES (DECIR) ───────────────────── */
+    async function loadDecirDespMeals() {
+      const month_btn = document.querySelector("#months-container-dec-desp-meals .btn.active");
+      if (!month_btn) return;
+      const monthIdx = Array.from(document.querySelectorAll("#months-container-dec-desp-meals .btn")).indexOf(month_btn) + 1;
+      const month = String(monthIdx + 4).padStart(2, "0");
+      const year = document.getElementById("year-dec-desp-meals")?.value || String(new Date().getFullYear());
+      const corpOperNr = getCorpId();
+      const isDayLocked = (day) => {
+        const m = parseInt(month, 10);
+        const d = parseInt(day, 10);
+        if (m === 5  && d >= 1  && d <= 14) return true;
+        if (m === 10 && d >= 16 && d <= 31) return true;
+        return false;
+      };
+      try {
+        const CI_TYPES = ["VFCI", "VRCI", "VUCI", "VECI", "VLCI"];
+        const [mealsData, leppDataN, leppDataD, leppDiscountData] = await Promise.all([
+          supabaseFetch(`decir_reg_meals?corp_oper_nr=eq.${corpOperNr}&month=eq.${month}&year=eq.${year}`),
+          supabaseFetch(`decir_reg_lepp?corp_oper_nr=eq.${corpOperNr}&month=eq.${month}&year=eq.${year}&shift=eq.N`),
+          supabaseFetch(`decir_reg_lepp?corp_oper_nr=eq.${corpOperNr}&month=eq.${month}&year=eq.${year}&shift=eq.D`),
+          supabaseFetch(`decir_main_options?corp_oper_nr=eq.${corpOperNr}&type=eq.lepp&active=eq.true`)
+        ]);
+        const leppDiscountMap = {};
+        (leppDiscountData || []).forEach(l => { leppDiscountMap[l.name] = l.discount_meals; });
+        const hasDDiscountByDay = {};
+        (leppDataD || []).forEach(item => {
+          const d = String(parseInt(item.day, 10));
+          if (isDayLocked(d)) return;
+          const vehicles = [
+            {type: item.vehicle_01, lepp: item.vehicle_01_lepp},
+            {type: item.vehicle_02, lepp: item.vehicle_02_lepp},
+            {type: item.vehicle_03, lepp: item.vehicle_03_lepp},
+          ];
+          vehicles.forEach(v => {
+            if (!v.type || !v.lepp) return;
+            const isCI = CI_TYPES.some(t => v.type.startsWith(t));
+            const isDiscountTrue = leppDiscountMap[v.lepp] === true;
+            if (isCI && isDiscountTrue) hasDDiscountByDay[d] = true;
+          });
+        });
+        const extrasByDay = {};
+        (leppDataN || []).forEach(item => {
+          const d = String(parseInt(item.day, 10));
+          if (isDayLocked(d)) return;
+          const vehicles = [
+            {type: item.vehicle_01, lepp: item.vehicle_01_lepp},
+            {type: item.vehicle_02, lepp: item.vehicle_02_lepp},
+            {type: item.vehicle_03, lepp: item.vehicle_03_lepp},
+          ];
+          vehicles.forEach(v => {
+            if (!v.type || !v.lepp) return;
+            const isCI = CI_TYPES.some(t => v.type.startsWith(t));
+            const isDiscountFalse = leppDiscountMap[v.lepp] === false;
+            if (isCI && isDiscountFalse) {
+              extrasByDay[d] = (extrasByDay[d] || 0) + 5;
+            }
+          });
+        });
+        const tbody = document.querySelector("#table-container-dec-desp-meals table tbody");
+        if (!tbody) return;
+        const rows = Array.from(tbody.querySelectorAll("tr:not(:last-child)"));
+        const ALERT_COLORS = {"Monitorização": {bg: "#a5d6a7", color: "#1b5e20"}, "Nível I - Moderado": {bg: "#90caf9", color: "#0d47a1"}, "Nível II - Elevado": {bg: "#fff176", color: "#f57f17"},
+                              "Nível III - Muito Elevado": {bg: "#ffb74d", color: "#bf360c"}, "Nível IV - Extremo": {bg: "#ef9a9a", color: "#b71c1c"},};
+        const totals = {peq_almoco: 0, almoco: 0, lanche: 0, jantar: 0, reforco: 0};
+        rows.forEach((tr, idx) => {
+          if (isDayLocked(idx + 1)) return;
+          const tds = Array.from(tr.querySelectorAll("td"));
+          if (tds[3]) tds[3].textContent = "0";
+          if (tds[4]) tds[4].textContent = "0";
+          if (tds[5]) tds[5].textContent = "0";
+          if (tds[6]) tds[6].textContent = "0";
+          if (tds[7]) tds[7].textContent = "0";
+          if (tds[8]) { tds[8].textContent = "0"; tds[8].style.color = "#333"; }
+        });
+        (mealsData || []).forEach(item => {
+          const day = parseInt(item.day, 10);
+          if (isDayLocked(day)) return;
+          const tr = rows[day - 1];
+          if (!tr) return;
+          const tds = Array.from(tr.querySelectorAll("td"));
+          const efet = parseInt(item.meal_efet) || 0;
+          const alert = item.alert_state || "";
+          const d = String(day);
+          const hasDiscount = hasDDiscountByDay[d] === true;
+          const extras = hasDiscount ? (extrasByDay[d] || 0) : 0;
+          if (tds[2] && alert) {
+            tds[2].textContent = alert;
+            const c = ALERT_COLORS[alert];
+            if (c) { tds[2].style.background = c.bg; tds[2].style.color = c.color; tds[2].style.fontWeight = "bold"; }
+          }
+          let peq = 0, alm = 0, lan = 0, jan = 0, ref = 0;
+          if (alert === "Nível I - Moderado") {
+            peq = efet;
+            alm = efet;
+            lan = efet;
+            jan = efet;
+            ref = efet * 2;
+          } else if (alert === "Nível II - Elevado") {
+            if (hasDiscount) {
+              peq = efet + extras;
+              alm = efet;
+              lan = efet;
+              jan = efet + extras;
+              ref = (efet * 2) + (extras * 2);
+            } else {
+              peq = efet;
+              alm = efet;
+              lan = efet;
+              jan = efet;
+              ref = efet * 2;
+            }
+          }
+          const total = peq + alm + lan + jan + ref;
+          if (tds[3]) tds[3].textContent = peq;
+          if (tds[4]) tds[4].textContent = alm;
+          if (tds[5]) tds[5].textContent = lan;
+          if (tds[6]) tds[6].textContent = jan;
+          if (tds[7]) tds[7].textContent = ref;
+          if (tds[8]) { tds[8].textContent = total; tds[8].style.color = total > 0 ? "#131a69" : "#333"; }
+          totals.peq_almoco += peq;
+          totals.almoco += alm;
+          totals.lanche += lan;
+          totals.jantar += jan;
+          totals.reforco += ref;
+        });
+        const trTotals = tbody.querySelector("tr:last-child");
+        if (trTotals) {
+          const tds = Array.from(trTotals.querySelectorAll("td"));
+          const grandTotal = Object.values(totals).reduce((a, b) => a + b, 0);
+          if (tds[1]) tds[1].textContent = totals.peq_almoco;
+          if (tds[2]) tds[2].textContent = totals.almoco;
+          if (tds[3]) tds[3].textContent = totals.lanche;
+          if (tds[4]) tds[4].textContent = totals.jantar;
+          if (tds[5]) tds[5].textContent = totals.reforco;
+          if (tds[6]) tds[6].textContent = grandTotal;
+        }
+      } catch(err) {
+        console.error("Erro ao carregar despesas refeições:", err);
+        showPopup('popup-danger', "Erro ao carregar despesas de refeições.");
+      }
+    }
+    /* ─── TABELA: DESPESAS REFEIÇÕES (DECIR) ─────────────────── */
+    async function createDecirDespMealsTable(containerId, year, month) {
+      const container = document.getElementById(containerId) || $(containerId);
+      if (!container) return;
+      container.innerHTML = "";
+      const daysInMonth = new Date(year, month, 0).getDate();
+      const holidays = getPortugalHolidays(year);
+      const WEEKDAYS_PT = ["DOM","SEG","TER","QUA","QUI","SEX","SÁB"];
+      const isDayLocked = (day, month) => {
+        const m = parseInt(month, 10);
+        const d = parseInt(day, 10);
+        if (m === 5  && d >= 1  && d <= 14) return true;
+        if (m === 10 && d >= 16 && d <= 31) return true;
+        return false;
+      };
+      const title = document.createElement("div");
+      title.textContent = `REGISTO DE DESPESAS COM REFEIÇÕES DECIR - ${MONTH_NAMES_UPPER[month-1]} ${year}`;
+      Object.assign(title.style, {textAlign: "center", fontWeight: "bold", fontSize: "15px", fontFamily: "Segoe UI, sans-serif", color: "#131a69", marginBottom: "10px", marginTop: "10px", letterSpacing: "0.5px"});
+      container.appendChild(title);
+      const wrapper = document.createElement("div");
+      wrapper.id = "decir-desp-meals-wrapper";
+      Object.assign(wrapper.style, {overflowX: "auto", overflowY: "auto", width: "100%", maxHeight: "500px", marginTop: "0px", borderRadius: "8px", border: "1px solid #ddd", boxShadow: "0 2px 8px rgba(0,0,0,0.08)"});
+      const style = document.createElement("style");
+      style.textContent = `
+        #decir-desp-meals-wrapper::-webkit-scrollbar {height: 6px; width: 0px;}
+        #decir-desp-meals-wrapper::-webkit-scrollbar:vertical {display: none;}
+        #decir-desp-meals-wrapper::-webkit-scrollbar-thumb:horizontal {background: #131a69; border-radius: 10px;}
+        #decir-desp-meals-wrapper::-webkit-scrollbar-track:horizontal {background: #f0f0f0; border-radius: 10px;}
+      `;
+      document.head.appendChild(style);
+      const table = document.createElement("table");
+      Object.assign(table.style, {width: "100%", minWidth: "1000px", borderCollapse: "separate", borderSpacing: "0", fontFamily: "Segoe UI, sans-serif", fontSize: "13px"});
+      const thead = document.createElement("thead");
+      const trh = document.createElement("tr");
+      const headers = [{label: "Dia", width: "45px", colSpan: 1}, {label: "Dia Sem.", width: "55px", colSpan: 1}, {label: "Estado de Alerta", width: "180px", colSpan: 1}, {label: "Peq. Almoços", width: "130px", colSpan: 1},
+                       {label: "Almoços", width: "130px", colSpan: 1}, {label: "Lanches", width: "130px", colSpan: 1}, {label: "Jantares", width: "130px", colSpan: 1}, {label: "Reforços", width: "130px", colSpan: 1},
+                       {label: "Total", width: "130px", colSpan: 1},];
+      headers.forEach((h, i) => {
+        const th = document.createElement("th");
+        th.textContent = h.label;
+        Object.assign(th.style, {borderBottom: "1px solid #ddd", borderLeft: "1px solid #ddd", background: "#131a69", color: "#fff", textAlign: "center", padding: "8px 4px", fontWeight: "bold",
+                                 position: "sticky", top: "0", zIndex: "2", width: h.width, minWidth: h.width, whiteSpace: "nowrap"});
+        if (i === 0) th.style.borderTopLeftRadius = "8px";
+        if (i === headers.length - 1) th.style.borderTopRightRadius = "8px";
+        trh.appendChild(th);
+      });
+      thead.appendChild(trh);
+      table.appendChild(thead);
+      const tbody = document.createElement("tbody");
+      const getDayBg = (d) => {
+        const date = new Date(year, month - 1, d);
+        const holiday = holidays.find(h => h.date.getDate() === d && h.date.getMonth() === month - 1);
+        const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+        if (holiday) return {bg: holiday.optional ? "#2ecc71" : "#ffcccc", color: "#000", title: holiday.name};
+        if (isWeekend) return {bg: WEEKEND_COLOR, color: "#000", title: ""};
+        return {bg: "", color: "", title: ""};
+      };
+      const MEAL_COLS = ["peq_almoco", "almoco", "lanche", "jantar", "reforco"];
+      for (let d = 1; d <= daysInMonth; d++) {
+        const tr = document.createElement("tr");
+        const isLast = d === daysInMonth;
+        const dayStyle = getDayBg(d);
+        const date = new Date(year, month - 1, d);
+        const weekday = WEEKDAYS_PT[date.getDay()];
+        const locked = isDayLocked(d, month);
+        tr.style.background = locked ? "#e8e8e8" : (dayStyle.bg || (d % 2 === 0 ? "#f5f6fa" : "#fff"));
+        const makeTd = (isFirst, isLastCol) => {
+          const td = document.createElement("td");
+          Object.assign(td.style, {borderBottom: "1px solid #ddd", borderLeft: "1px solid #ddd", padding: "3px 4px", height: "28px", verticalAlign: "middle", textAlign: "center", fontSize: "11px",
+                                   background: locked ? "#e0e0e0" : (dayStyle.bg || ""), color: locked ? "#999" : (dayStyle.color || ""),
+                                   opacity: locked ? "0.7" : "1", borderBottomLeftRadius: isLast && isFirst ? "8px" : "", borderBottomRightRadius: isLast && isLastCol ? "8px" : ""});
+          if (dayStyle.title) td.title = dayStyle.title;
+          return td;
+        };
+        const tdDay = makeTd(true, false);
+        if (locked) {
+          tdDay.textContent = String(d).padStart(2, "0") + " 🔒";
+          tdDay.style.fontSize = "10px";
+        } else {
+          tdDay.textContent = String(d).padStart(2, "0");
+        }
+        tdDay.style.fontWeight = "bold";
+        tr.appendChild(tdDay);
+        const tdWek = makeTd(false, false);
+        tdWek.textContent = weekday;
+        tdWek.style.fontWeight = "bold";
+        tr.appendChild(tdWek);
+        const tdAlert = makeTd(false, false);
+        tdAlert.dataset.col = "alert";
+        tr.appendChild(tdAlert);
+        MEAL_COLS.forEach(col => {
+          const td = makeTd(false, false);
+          td.dataset.col = col;
+          td.textContent = locked ? "" : "0";
+          td.style.fontWeight = "bold";
+          td.style.fontSize = "12px";
+          if (locked) td.style.pointerEvents = "none";
+          tr.appendChild(td);
+        });
+        const tdTotal = makeTd(false, true);
+        tdTotal.style.fontWeight = "bold";
+        tdTotal.style.fontSize = "12px";
+        tdTotal.style.color = locked ? "#999" : "#131a69";
+        tdTotal.dataset.col = "total";
+        tdTotal.textContent = locked ? "" : "0";
+        tr.appendChild(tdTotal);
+        tbody.appendChild(tr);
+      }
+      const trTotals = document.createElement("tr");
+      trTotals.style.background = "#f1f5f9";
+      trTotals.style.fontWeight = "bold";
+      const tdTotalLabel = document.createElement("td");
+      tdTotalLabel.colSpan = 3;
+      tdTotalLabel.textContent = "TOTAIS";
+      Object.assign(tdTotalLabel.style, {borderBottom: "1px solid #ddd", borderLeft: "1px solid #ddd", borderTop: "2px solid #131a69", padding: "6px 8px", textAlign: "center",
+                                         fontSize: "12px", color: "#131a69", fontWeight: "bold", borderBottomLeftRadius: "8px"});
+      trTotals.appendChild(tdTotalLabel);
+      MEAL_COLS.forEach(col => {
+        const td = document.createElement("td");
+        td.dataset.totalCol = col;
+        td.textContent = "0";
+        Object.assign(td.style, {borderBottom: "1px solid #ddd", borderLeft: "1px solid #ddd", borderTop: "2px solid #131a69", padding: "6px 4px", textAlign: "center", fontSize: "12px", color: "#131a69", fontWeight: "bold"});
+        trTotals.appendChild(td);
+      });
+      const tdGrandTotal = document.createElement("td");
+      tdGrandTotal.dataset.totalCol = "grand";
+      tdGrandTotal.textContent = "0";
+      Object.assign(tdGrandTotal.style, {borderBottom: "1px solid #ddd", borderLeft: "1px solid #ddd", borderTop: "2px solid #131a69", padding: "6px 4px", textAlign: "center",
+                                         fontSize: "12px", color: "#131a69", fontWeight: "bold", borderBottomRightRadius: "8px"});
+      trTotals.appendChild(tdGrandTotal);
+      tbody.appendChild(trTotals);
+      table.appendChild(tbody);
+      wrapper.appendChild(table);
+      container.appendChild(wrapper);
+      const options = document.getElementById("decir-desp-meals-options");
+      if (options) options.style.display = "flex";
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          loadDecirDespMeals();
+        });
+      });
+    }
+    /* ─── CONFIGURAÇÕES OPCIONAIS DECIR (decir_main_options) ─── */
+    let editingOptionId = null;
+    document.getElementById("optionType")?.addEventListener("change", () => {
+      const type = document.getElementById("optionType").value;
+      const discountWrapper = document.getElementById("optionDiscountWrapper");
+      if (discountWrapper) discountWrapper.style.display = type === "lepp" ? "flex" : "none";
+    });
+    /* ─── LOAD: lista de opções ──────────────────────────────── */
+    async function loadDecirMainOptions() {
+      const corpOperNr = getCorpId();
+      const tableContainer = document.getElementById("decir-main-options-table-container");
+      if (!tableContainer) return;
+      const styleId = "dash-main-options-style";
+      if (!document.getElementById(styleId)) {
+        const s = document.createElement("style"); s.id = styleId;
+        s.textContent = `
+          #decir-main-options-wrapper {overflow-x: auto; overflow-y: auto; width: 100%; max-height: 500px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 8px rgba(0,0,0,0.08);}
+          #decir-main-options-wrapper::-webkit-scrollbar {height: 6px; width: 0px;}
+          #decir-main-options-wrapper::-webkit-scrollbar-thumb:horizontal {background: #131a69; border-radius: 10px;}
+          #decir-main-options-wrapper::-webkit-scrollbar-track:horizontal {background: #f0f0f0; border-radius: 10px;}
+          .main-options-table {width: 100%; min-width: 600px; border-collapse: separate; border-spacing: 0; font-family: 'Segoe UI', sans-serif; font-size: 13px;}
+          .main-options-table th {border-bottom: 1px solid #ddd; border-left: 1px solid #ddd; background: #131a69; color: #fff; text-align: center; padding: 8px 4px; font-weight: bold; position: sticky; top: 0; z-index: 2; white-space: nowrap;}
+          .main-options-table th:first-child {border-top-left-radius: 8px;}
+          .main-options-table th:last-child {border-top-right-radius: 8px;}
+          .main-options-table td {border-bottom: 1px solid #ddd; border-left: 1px solid #ddd; padding: 6px 8px; height: 28px; vertical-align: middle; text-align: center; font-size: 12px; color: #333;}
+          .main-options-table tr:nth-child(even) td {background: #f5f6fa;}
+          .main-options-table tr:hover td {background: #eef0ff;}
+          .main-options-table tr:last-child td:first-child {border-bottom-left-radius: 8px;}
+          .main-options-table tr:last-child td:last-child {border-bottom-right-radius: 8px;}
+          .main-options-action-btn {border: none; background: transparent; cursor: pointer; font-size: 14px; padding: 2px 6px;}
+        `;
+        document.head.appendChild(s);
+      }
+      try {
+        const data = await supabaseFetch(`decir_main_options?corp_oper_nr=eq.${corpOperNr}&order=type,sort_order`);
+        tableContainer.innerHTML = "";
+        const wrapper = document.createElement("div");
+        wrapper.id = "decir-main-options-wrapper";
+        const table = document.createElement("table");
+        table.className = "main-options-table";
+        const thead = document.createElement("thead");
+        const trh = document.createElement("tr");
+        ["Tipo", "Nome", "Estado", "Desconto Refeições", "Ações"].forEach(label => {
+          const th = document.createElement("th"); th.textContent = label; trh.appendChild(th);
+        });
+        thead.appendChild(trh); table.appendChild(thead);
+        const tbody = document.createElement("tbody");
+        const TYPE_LABELS = {restaurant: "Restaurante", lepp: "LEPP", other: "Outro"};
+        (data || []).forEach(item => {
+          const tr = document.createElement("tr");
+          const tdType = document.createElement("td"); tdType.textContent = TYPE_LABELS[item.type] || item.type; tr.appendChild(tdType);
+          const tdName = document.createElement("td"); tdName.textContent = item.name; tdName.style.textAlign = "left"; tdName.style.paddingLeft = "10px"; tdName.style.fontWeight = "600"; tr.appendChild(tdName);
+          const tdStatus = document.createElement("td");
+          tdStatus.innerHTML = item.active ? '<span style="color:#1b5e20; font-weight:bold;">ATIVO</span>' : '<span style="color:#b71c1c; font-weight:bold;">INATIVO</span>';
+          tr.appendChild(tdStatus);
+          const tdDiscount = document.createElement("td"); tdDiscount.textContent = item.type === "lepp" ? (item.discount_meals ? "SIM" : "NÃO") : "—"; tr.appendChild(tdDiscount);
+          const tdActions = document.createElement("td");
+          const editBtn = document.createElement("button"); editBtn.textContent = "✏️"; editBtn.title = "Editar"; editBtn.className = "main-options-action-btn";
+          editBtn.addEventListener("click", () => editDecirMainOption(item));
+          const deleteBtn = document.createElement("button"); deleteBtn.textContent = "🗑️"; deleteBtn.title = "Eliminar"; deleteBtn.className = "main-options-action-btn";
+          deleteBtn.addEventListener("click", () => deleteDecirMainOption(item.id));
+          tdActions.appendChild(editBtn); tdActions.appendChild(deleteBtn); tr.appendChild(tdActions);
+          tbody.appendChild(tr);
+        });
+        table.appendChild(tbody); wrapper.appendChild(table); tableContainer.appendChild(wrapper);
+      } catch (err) {
+        console.error("Erro ao carregar opções:", err);
+        showPopup('popup-danger', "Erro ao carregar configurações.");
+      }
+    }
+    /* ─── EDITAR: preenche o formulário ──────────────────────── */
+    function editDecirMainOption(item) {
+      editingOptionId = item.id;
+      document.getElementById("optionType").value = item.type;
+      document.getElementById("optionName").value = item.name;
+      document.getElementById("optionStatus").value = String(item.active);
+      const discountWrapper = document.getElementById("optionDiscountWrapper");
+      if (item.type === "lepp") {
+        discountWrapper.style.display = "flex";
+        document.getElementById("optionDiscount").value = String(!!item.discount_meals);
+      } else {
+        discountWrapper.style.display = "none";
+      }
+      const saveBtn = document.getElementById("save-main-option-btn");
+      if (saveBtn) saveBtn.textContent = "💾 Atualizar";
+    }
+    /* ─── GUARDAR (criar ou atualizar) ───────────────────────── */
+    async function saveDecirMainOption() {
+      const corpOperNr = getCorpId();
+      const type = document.getElementById("optionType")?.value;
+      const name = document.getElementById("optionName")?.value.trim();
+      const active = document.getElementById("optionStatus")?.value;
+      const discount = document.getElementById("optionDiscount")?.value;
+      if (!type || !name || !active) return showPopup('popup-danger', "Preenche Tipo, Nome e Estado.");
+      const btn = document.getElementById("save-main-option-btn");
+      if (btn) { btn.disabled = true; btn.textContent = "A gravar..."; }
+      try {
+        let nextSortOrder = 1;
+        if (!editingOptionId) {
+          const existing = await supabaseFetch(`decir_main_options?corp_oper_nr=eq.${corpOperNr}&type=eq.${type}&order=sort_order.desc&limit=1&select=sort_order`);
+          const maxOrder = existing?.[0]?.sort_order || 0;
+          nextSortOrder = maxOrder + 1;
+        }
+        const payload = {
+          corp_oper_nr: corpOperNr,
+          type,
+          name,
+          active: active === "true",
+          discount_meals: type === "lepp" ? (discount === "true") : false,
+          ...(editingOptionId ? {} : {sort_order: nextSortOrder})
+        };
+        let r;
+        if (editingOptionId) {
+          r = await fetch(`${SUPABASE_URL}/rest/v1/decir_main_options?id=eq.${editingOptionId}`, {
+            method: "PATCH",
+            headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
+            body: JSON.stringify(payload)
+          });
+        } else {
+          r = await fetch(`${SUPABASE_URL}/rest/v1/decir_main_options`, {
+            method: "POST",
+            headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
+            body: JSON.stringify(payload)
+          });
+        }
+        if (!r.ok) throw new Error(await r.text() || "Erro desconhecido ao gravar");
+        showPopup('popup-success', editingOptionId ? "Atualizado com sucesso!" : "Adicionado com sucesso!");
+        resetDecirMainOptionForm();
+        await loadDecirMainOptions();
+      } catch (err) {
+        console.error(err);
+        showPopup('popup-danger', "❌ Erro ao gravar: " + err.message);
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = editingOptionId ? "💾 Atualizar" : "💾 Guardar"; }
+      }
+    }
+    /* ─── ELIMINAR ────────────────────────────────────────────── */
+    async function deleteDecirMainOption(id) {
+      if (!confirm("Tens a certeza que queres eliminar esta opção?")) return;
+      try {
+        const r = await fetch(`${SUPABASE_URL}/rest/v1/decir_main_options?id=eq.${id}`, {
+          method: "DELETE", headers: getSupabaseHeaders()
+        });
+        if (!r.ok) throw new Error("Erro ao eliminar");
+        showPopup('popup-success', "Eliminado com sucesso!");
+        await loadDecirMainOptions();
+      } catch (err) {
+        console.error(err);
+        showPopup('popup-danger', "❌ Erro ao eliminar: " + err.message);
+      }
+    }
+    /* ─── RESET: limpa o formulário ──────────────────────────── */
+    function resetDecirMainOptionForm() {
+      editingOptionId = null;
+      document.getElementById("optionType").value = "";
+      document.getElementById("optionName").value = "";
+      document.getElementById("optionStatus").value = "";
+      document.getElementById("optionDiscount").value = "";
+      document.getElementById("optionDiscountWrapper").style.display = "none";
+      const saveBtn = document.getElementById("save-main-option-btn");
+      if (saveBtn) saveBtn.textContent = "💾 Guardar";
+    }
+    document.getElementById("save-main-option-btn")?.addEventListener("click", saveDecirMainOption);
     /* ─── TABELA: VISUALIZAÇÃO ESCALAS DECIR ─────────────────── */
     /* ─── HEADERS DE DIA (DECIR) ─────────────────────────────── */   
     function createDecirTableStructure(wrapper) {
@@ -1409,12 +1883,13 @@
       const year = document.getElementById("year-dec-ref")?.value || String(new Date().getFullYear());
       const corpOperNr = getCorpId();
       try {
-        const [data, regServ, leppData] = await Promise.all([
+        const [data, regServ, leppData, leppDiscountData] = await Promise.all([
           supabaseFetch(`decir_reg_meals?corp_oper_nr=eq.${corpOperNr}&month=eq.${month}&year=eq.${year}`),
           supabaseFetch(`reg_serv?corp_oper_nr=eq.${corpOperNr}&month=eq.${month}&year=eq.${year}&value=in.(ED,ET)`),
-          supabaseFetch(`decir_reg_lepp?corp_oper_nr=eq.${corpOperNr}&month=eq.${month}&year=eq.${year}&shift=eq.D`)
+          supabaseFetch(`decir_reg_lepp?corp_oper_nr=eq.${corpOperNr}&month=eq.${month}&year=eq.${year}&shift=eq.D`),
+          supabaseFetch(`decir_main_options?corp_oper_nr=eq.${corpOperNr}&type=eq.lepp&discount_meals=eq.true&active=eq.true`)
         ]);
-        const LEPP_DISCOUNT = ["LEPP BARRANCO DO VELHO", "LEPP CACHOPO", "LEPP VAQUEIROS"];
+        const LEPP_DISCOUNT = (leppDiscountData || []).map(l => l.name);
         const prevByDay = {};
         (regServ || []).forEach(item => {
           const d = String(parseInt(item.day, 10));
@@ -1477,12 +1952,14 @@
       }
     }
     /* ─── TABELA: REFEIÇÕES (DECIR) ──────────────────────────── */
-    function createDecirMealTable(containerId, year, month, data) {
+    async function createDecirMealTable(containerId, year, month, data) {
       const container = document.getElementById(containerId) || $(containerId);
       if (!container) return;
       container.innerHTML = "";
       const ALERT_OPTIONS = ["","Monitorização","Nível I - Moderado","Nível II - Elevado","Nível III - Muito Elevado","Nível IV - Extremo"];
-      const RESTAURANT_OPTIONS = ["","O Cristina","O Sol","Café Bento"];
+      const corpOperNr = getCorpId();
+      const restData = await supabaseFetch(`decir_main_options?corp_oper_nr=eq.${corpOperNr}&type=eq.restaurant&active=eq.true&order=sort_order`);
+      const RESTAURANT_OPTIONS = ["", ...((restData || []).map(r => r.name))];
       const daysInMonth = new Date(year, month, 0).getDate();
       const holidays = getPortugalHolidays(year);
       const title = document.createElement("div");
@@ -1734,8 +2211,8 @@
     let leppVehicles = [];
     async function initLeppVehicles() {
       try {
-        const ALLOWED_TYPES = ["VFCI", "VTTF", "VTTU", "VTTP", "VCOT"];
-        const TYPE_ORDER = ["VCOT", "VFCI", "VTTF", "VTTU", "VTTP"];
+        const ALLOWED_TYPES = ["VFCI", "VRCI", "VECI", "VTTF", "VTTU", "VALE", "VTTP", "VCOT"];
+        const TYPE_ORDER = ["VCOT", "VFCI", "VRCI", "VECI", "VTTF", "VTTU", "VALE", "VTTP"];
         const vData = await supabaseFetch(`vehicle_status?corp_oper_nr=eq.${getCorpId()}&select=vehicle`);
         leppVehicles = (vData || [])
           .filter(v => v.vehicle && ALLOWED_TYPES.some(t => v.vehicle.startsWith(t)))
@@ -1805,11 +2282,15 @@
         }
       }
       const vehicles = leppVehicles || [];
-      const LEPP_OPTIONS = ["", "VEÍCULO INOP", "LEPP GORJÕES", "LEPP BARRANCO DO VELHO", "LEPP CACHOPO", "LEPP VAQUEIROS"];
-      const LEPP_COLORS = {"VEÍCULO INOP": {bg: "#b0bec5", color: "#263238"},"LEPP GORJÕES": {bg: "linear-gradient(135deg, #a5d6a7, #90caf9, #fff176)", color: "#000"}, 
-                           "LEPP BARRANCO DO VELHO": {bg: "linear-gradient(135deg, #fff176, #ffb74d)", color: "#000"}, "LEPP CACHOPO": {bg: "#ef9a9a", color: "#b71c1c"}, 
-                           "LEPP VAQUEIROS": {bg: "#ef9a9a", color: "#b71c1c"}
-                          };
+      const corpOperNr = getCorpId();
+      const leppOptData = await supabaseFetch(`decir_main_options?corp_oper_nr=eq.${corpOperNr}&type=eq.lepp&active=eq.true&order=sort_order`);
+      const LEPP_OPTIONS = ["", ...((leppOptData || []).map(l => l.name))];
+      const DEFAULT_LEPP_PALETTE = [{bg: "linear-gradient(135deg, #a5d6a7, #90caf9, #fff176)", color: "#000"}, {bg: "linear-gradient(135deg, #fff176, #ffb74d)", color: "#000"}, {bg: "#ef9a9a", color: "#b71c1c"},
+                                    {bg: "#ef9a9a", color: "#b71c1c"}, {bg: "#f3e8ff", color: "#7c3aed"}, {bg: "#fef9c3", color: "#a16207"},];
+      const LEPP_COLORS = {"VEÍCULO INOP": {bg: "#b0bec5", color: "#263238"}};
+      (leppOptData || []).forEach((l, i) => {
+        LEPP_COLORS[l.name] = DEFAULT_LEPP_PALETTE[i % DEFAULT_LEPP_PALETTE.length];
+      });
       const isDayLocked = (day, month) => {
         const m = parseInt(month, 10);
         const d = parseInt(day, 10);
@@ -1861,8 +2342,7 @@
         }
         trh1.appendChild(th);
       });
-      thead.appendChild(trh1);
-      
+      thead.appendChild(trh1);      
       const trh2 = document.createElement("tr");
       const subHeaders = [{label: "Viatura", width: "130px"}, {label: "LEPP", width: "200px" }, {label: "Kms", width: "100px"}, 
                           {label: "Viatura", width: "130px"}, {label: "LEPP", width: "200px"}, {label: "Kms", width: "100px"},
@@ -3223,8 +3703,15 @@
     async function createDecirLeppStatsCard(wrapper, year) {
       const corp = getCorpId();
       const MONTHS = [{name: "MAIO", num: "05"}, {name: "JUNHO", num: "06"}, {name: "JULHO", num: "07"}, {name: "AGOSTO", num: "08"}, {name: "SETEMBRO", num: "09"}, {name: "OUTUBRO", num: "10"}];
-      const LEPPS = [{key: "LEPP GORJÕES", label: "LEPP Gorjões", color: "#16a34a", bg: "#dcfce7"}, {key: "LEPP BARRANCO DO VELHO", label: "LEPP Barranco do Velho", color: "#2563eb", bg: "#dbeafe"},
-                     {key: "LEPP CACHOPO", label: "LEPP Cachopo", color: "#dc2626", bg: "#fee2e2"}, {key: "LEPP VAQUEIROS", label: "LEPP Vaqueiros", color: "#b91c1c", bg: "#fecaca"},];
+      const PALETTE = [{color: "#16a34a", bg: "#dcfce7"}, {color: "#2563eb", bg: "#dbeafe"}, {color: "#dc2626", bg: "#fee2e2"}, {color: "#b91c1c", bg: "#fecaca"}, {color: "#a855f7", bg: "#f3e8ff"}, {color: "#eab308", bg: "#fef9c3"},];
+      const leppData = await supabaseFetch(`decir_main_options?corp_oper_nr=eq.${corp}&type=eq.lepp&active=eq.true&name=neq.VEÍCULO INOP&order=sort_order`);
+      const LEPPS = (leppData || []).map((l, i) => ({
+        key: l.name,
+        label: l.name.replace("LEPP ", "LEPP ").replace(/^LEPP /, "LEPP "),
+        color: PALETTE[i % PALETTE.length].color,
+        bg: PALETTE[i % PALETTE.length].bg
+      }));
+      if (!LEPPS.length) return;
       const data = await supabaseFetch(`decir_reg_lepp?corp_oper_nr=eq.${corp}&year=eq.${year}&month=in.(05,06,07,08,09,10)` + `&select=month,vehicle_01_lepp,vehicle_02_lepp,vehicle_03_lepp`);
       const stats = {};
       MONTHS.forEach(m => {
@@ -3348,8 +3835,15 @@
     async function updateDecirLeppStatsCard(year) {
       const corp = getCorpId();
       const MONTHS = [{name: "MAIO", num: "05"}, {name: "JUNHO", num: "06"}, {name: "JULHO", num: "07"}, {name: "AGOSTO", num: "08"}, {name: "SETEMBRO", num: "09"}, {name: "OUTUBRO", num: "10"}];
-      const LEPPS = [{key: "LEPP GORJÕES", label: "LEPP Gorjões", color: "#16a34a", bg: "#dcfce7"}, {key: "LEPP BARRANCO DO VELHO", label: "LEPP Barranco do Velho", color: "#2563eb", bg: "#dbeafe"},
-                     {key: "LEPP CACHOPO", label: "LEPP Cachopo", color: "#dc2626", bg: "#fee2e2"}, {key: "LEPP VAQUEIROS", label: "LEPP Vaqueiros", color: "#b91c1c", bg: "#fecaca"},];
+      const PALETTE = [{color: "#16a34a", bg: "#dcfce7"}, {color: "#2563eb", bg: "#dbeafe"}, {color: "#dc2626", bg: "#fee2e2"}, {color: "#b91c1c", bg: "#fecaca"}, {color: "#a855f7", bg: "#f3e8ff"}, {color: "#eab308", bg: "#fef9c3"},];
+      const leppData = await supabaseFetch(`decir_main_options?corp_oper_nr=eq.${corp}&type=eq.lepp&active=eq.true&name=neq.VEÍCULO INOP&order=sort_order`);
+      const LEPPS = (leppData || []).map((l, i) => ({
+        key: l.name,
+        label: l.name,
+        color: PALETTE[i % PALETTE.length].color,
+        bg: PALETTE[i % PALETTE.length].bg
+      }));
+      if (!LEPPS.length) return;
       const data = await supabaseFetch(`decir_reg_lepp?corp_oper_nr=eq.${corp}&year=eq.${year}&month=in.(05,06,07,08,09,10)` + `&select=month,vehicle_01_lepp,vehicle_02_lepp,vehicle_03_lepp`);
       const stats = {};
       MONTHS.forEach(m => {
@@ -3378,6 +3872,7 @@
           const tds = rows[i]?.querySelectorAll("td:not(.lepp-month-cell)");
           if (!tds) return;
           LEPPS.forEach((l, j) => {
+            if (!tds[j]) return;
             const val = stats[m.num][l.key] || 0;
             tds[j].textContent = val;
             tds[j].style.background = val > 0 ? l.bg : "";
@@ -3388,7 +3883,7 @@
         const totalRow = tbody.querySelector(".lepp-total-row");
         if (totalRow) {
           const totalTds = totalRow.querySelectorAll("td:not(.lepp-month-cell)");
-          LEPPS.forEach((l, j) => { totalTds[j].textContent = totals[l.key]; totalTds[j].style.color = l.color; });
+          LEPPS.forEach((l, j) => { if (totalTds[j]) { totalTds[j].textContent = totals[l.key]; totalTds[j].style.color = l.color; } });
         }
         const allRows = tbody.querySelectorAll("tr");
         const grandRow = allRows[allRows.length - 2];
@@ -3403,12 +3898,20 @@
       }
       const canvas = document.querySelector("[id^='lepp-chart-']");
       if (canvas && canvas._chartInstance) {
-        canvas._chartInstance.data.datasets.forEach((ds, i) => {
-          ds.data = MONTHS.map(m => stats[m.num][LEPPS[i].key] || 0);
-        });
+        canvas._chartInstance.data.datasets = LEPPS.map(l => ({
+          label: l.label,
+          data: MONTHS.map(m => stats[m.num][l.key] || 0),
+          borderColor: l.color,
+          backgroundColor: l.color + "33",
+          tension: 0.4,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          fill: false,
+          borderWidth: 2
+        }));
         canvas._chartInstance.update();
       }
-    }
+    } 
     /* ─── CARD: OCORRÊNCIAS (DECIR) ─────────────────────────── */    
     async function createDecirOcorrStatsCard(wrapper, year) {
       const corp = getCorpId();
@@ -3494,7 +3997,7 @@
                                                    options: {responsive: true, maintainAspectRatio: false, 
                                                    plugins: {legend: {position: "bottom", labels: {font: {size: 14}, boxWidth: 16}},
                                                    title: {display: true, text: `Ativações`, font: {size: 14}, color: "#131a69"}},
-                                                   scales: {y: {beginAtZero: true, ticks: {stepSize: 1, font: {size: 10}}, grid: {color: "#ccc"}},
+                                                   scales: {y: {beginAtZero: true, ticks: {font: {size: 10}}, grid: {color: "#ccc"}},
                                                             x: {ticks: {font: {size: 10}}, grid: {display: false}}}}});}}
     async function updateDecirOcorrStatsCard(year) {
       const corp = getCorpId();
@@ -3548,7 +4051,15 @@
     async function createDecirMealsStatsCard(wrapper, year) {
       const corp = getCorpId();
       const MONTHS = [{name: "MAIO", num: "05"}, {name: "JUNHO", num: "06"}, {name: "JULHO", num: "07"}, {name: "AGOSTO", num: "08"}, {name: "SETEMBRO", num: "09"}, {name: "OUTUBRO", num: "10"}];
-      const RESTAURANTS = [{key: "O Cristina", label: 'Restaurante "O Cristina"', color: "#3b82f6", bg: "#dbeafe"},{key: "O Sol", label: 'Restaurante "O Sol"', color: "#22c55e", bg: "#dcfce7"}];
+      const PALETTE = [{color: "#3b82f6", bg: "#dbeafe"}, {color: "#22c55e", bg: "#dcfce7"}, {color: "#f97316", bg: "#ffedd5"}, {color: "#a855f7", bg: "#f3e8ff"}, {color: "#ef4444", bg: "#fee2e2"}, {color: "#eab308", bg: "#fef9c3"},];
+      const restData = await supabaseFetch(`decir_main_options?corp_oper_nr=eq.${corp}&type=eq.restaurant&active=eq.true&order=sort_order`);
+      const RESTAURANTS = (restData || []).map((r, i) => ({
+        key: r.name,
+        label: r.name,
+        color: PALETTE[i % PALETTE.length].color,
+        bg: PALETTE[i % PALETTE.length].bg
+      }));
+      if (!RESTAURANTS.length) return;
       const data = await supabaseFetch(`decir_reg_meals?corp_oper_nr=eq.${corp}&year=eq.${year}&month=in.(05,06,07,08,09,10)&select=month,restaurant,meal_efet`);
       const stats = {};
       MONTHS.forEach(m => {stats[m.num] = {}; RESTAURANTS.forEach(r => {stats[m.num][r.key] = 0;});});
@@ -3585,7 +4096,7 @@
       const thead = document.createElement("thead");
       const trh1 = document.createElement("tr");
       const thMonth = document.createElement("th"); thMonth.textContent = "Mês"; thMonth.rowSpan = 2; thMonth.style.background = "#0f1660"; trh1.appendChild(thMonth);
-      const thRest = document.createElement("th"); thRest.textContent = "Refeições Servidas por Restaurante"; thRest.colSpan = 2; thRest.style.background = "#1e2a80"; trh1.appendChild(thRest);
+      const thRest = document.createElement("th"); thRest.textContent = "Refeições Servidas por Restaurante"; thRest.colSpan = RESTAURANTS.length; thRest.style.background = "#1e2a80"; trh1.appendChild(thRest);
       thead.appendChild(trh1);
       const trh2 = document.createElement("tr");
       RESTAURANTS.forEach(r => {const th = document.createElement("th"); th.textContent = r.label; th.style.background = r.color; th.style.color = "#fff"; trh2.appendChild(th);});
@@ -3602,13 +4113,13 @@
       RESTAURANTS.forEach(r => {const td = document.createElement("td"); td.textContent = totals[r.key]; td.style.color = r.color; trTotal.appendChild(td);});
       tbody.appendChild(trTotal);
       const trGrand = document.createElement("tr");
-      const tdGrand = document.createElement("td"); tdGrand.colSpan = 3; tdGrand.style.cssText = "background: #dbeafe; color: #1d4ed8; text-align: center; padding: 6px; font-weight: 700;";
+      const tdGrand = document.createElement("td"); tdGrand.colSpan = RESTAURANTS.length + 1; tdGrand.style.cssText = "background: #dbeafe; color: #1d4ed8; text-align: center; padding: 6px; font-weight: 700;";
                                                     tdGrand.textContent = `${grandTotal} Refeições`; trGrand.appendChild(tdGrand); tbody.appendChild(trGrand);
       const trPct = document.createElement("tr");
-      RESTAURANTS.forEach(r => {const td = document.createElement("td"); td.style.cssText = `background: ${r.bg}; color: ${r.color}; text-align: center; padding :6px; font-weight: 700;`;
-                                                                         td.textContent = `% ${r.label.replace('Restaurante "','').replace('"','')}: ${pcts[r.key]}%`; trPct.appendChild(td);});
       const tdPctLabel = document.createElement("td"); tdPctLabel.style.cssText = "background: #f1f5f9; color: #131a69; text-align: left; padding: 6px; padding-left: 10px; font-weight: 700;"; 
-                                                       tdPctLabel.textContent = "% por Rest."; trPct.insertBefore(tdPctLabel, trPct.firstChild);
+                                                       tdPctLabel.textContent = "% por Rest."; trPct.appendChild(tdPctLabel);
+      RESTAURANTS.forEach(r => {const td = document.createElement("td"); td.style.cssText = `background: ${r.bg}; color: ${r.color}; text-align: center; padding: 6px; font-weight: 700;`;
+                                                                         td.textContent = `% ${r.label}: ${pcts[r.key]}%`; trPct.appendChild(td);});
       tbody.appendChild(trPct); table.appendChild(tbody); tableWrap.appendChild(table); layout.appendChild(tableWrap);
       const chartWrap = document.createElement("div"); chartWrap.className = "meals-chart-wrap";
       const canvas = document.createElement("canvas"); canvas.id = `meals-chart-${Date.now()}`;
@@ -3620,14 +4131,23 @@
                                                    plugins: {legend: {position: "bottom", labels: {font: {size: 14}, boxWidth: 16}},
                                                    title: {display: true, text: `Refeições Servidas`, font: {size: 14}, color: "#131a69"}},
                                                    scales: {y: {beginAtZero: true, ticks: {font: {size: 10}}, grid: {color: "#ccc"}},
-                                                            x: {ticks: {font: {size: 10}}, grid: {display: false}}}}});}}
+                                                            x: {ticks: {font: {size: 10}}, grid: {display: false}}}}});}
+    }
     async function updateDecirMealsStatsCard(year) {
       const corp = getCorpId();
       const MONTHS = [{name: "MAIO", num: "05"}, {name: "JUNHO", num: "06"}, {name: "JULHO", num: "07"}, {name: "AGOSTO", num: "08"}, {name: "SETEMBRO", num: "09"}, {name: "OUTUBRO", num: "10"}];
-      const RESTAURANTS = [{key: "O Cristina", label: 'Restaurante "O Cristina"', color: "#3b82f6", bg: "#dbeafe"}, {key: "O Sol", label: 'Restaurante "O Sol"', color: "#22c55e", bg: "#dcfce7"}];
+      const PALETTE = [{color: "#3b82f6", bg: "#dbeafe"}, {color: "#22c55e", bg: "#dcfce7"}, {color: "#f97316", bg: "#ffedd5"}, {color: "#a855f7", bg: "#f3e8ff"}, {color: "#ef4444", bg: "#fee2e2"}, {color: "#eab308", bg: "#fef9c3"},];
+      const restData = await supabaseFetch(`decir_main_options?corp_oper_nr=eq.${corp}&type=eq.restaurant&active=eq.true&order=sort_order`);
+      const RESTAURANTS = (restData || []).map((r, i) => ({
+        key: r.name,
+        label: r.name,
+        color: PALETTE[i % PALETTE.length].color,
+        bg: PALETTE[i % PALETTE.length].bg
+      }));
+      if (!RESTAURANTS.length) return;
       const data = await supabaseFetch(`decir_reg_meals?corp_oper_nr=eq.${corp}&year=eq.${year}&month=in.(05,06,07,08,09,10)&select=month,restaurant,meal_efet`);
       const stats = {};
-      MONTHS.forEach(m => {stats[m.num] = {}; RESTAURANTS.forEach(r => { stats[m.num][r.key] = 0; });});
+      MONTHS.forEach(m => {stats[m.num] = {}; RESTAURANTS.forEach(r => {stats[m.num][r.key] = 0;});});
       data.forEach(item => {if (stats[item.month] && item.restaurant && stats[item.month][item.restaurant] !== undefined) stats[item.month][item.restaurant] += parseInt(item.meal_efet) || 0;});
       const totals = {};
       RESTAURANTS.forEach(r => {totals[r.key] = MONTHS.reduce((sum, m) => sum + (stats[m.num][r.key] || 0), 0);});
@@ -3636,11 +4156,12 @@
       RESTAURANTS.forEach(r => {pcts[r.key] = grandTotal > 0 ? (totals[r.key] / grandTotal * 100).toFixed(2) : "0.00";});
       const tbody = document.querySelector(".meals-table tbody");
       if (tbody) {
-        const rows = tbody.querySelectorAll("tr:not(.meals-total-row)");
+        const rows = Array.from(tbody.querySelectorAll("tr"));
         MONTHS.forEach((m, i) => {
           const tds = rows[i]?.querySelectorAll("td:not(.meals-month-cell)");
           if (!tds) return;
           RESTAURANTS.forEach((r, j) => {
+            if (!tds[j]) return;
             const val = stats[m.num][r.key] || 0;
             tds[j].textContent = val;
             tds[j].style.background = val > 0 ? r.bg : "";
@@ -3651,24 +4172,30 @@
         const totalRow = tbody.querySelector(".meals-total-row");
         if (totalRow) {
           const totalTds = totalRow.querySelectorAll("td:not(.meals-month-cell)");
-          RESTAURANTS.forEach((r, j) => {totalTds[j].textContent = totals[r.key]; totalTds[j].style.color = r.color;});
+          RESTAURANTS.forEach((r, j) => {if (totalTds[j]) {totalTds[j].textContent = totals[r.key]; totalTds[j].style.color = r.color;}});
         }
-        const allRows = tbody.querySelectorAll("tr");
+        const allRows = Array.from(tbody.querySelectorAll("tr"));
         const grandRow = allRows[allRows.length - 2];
         const pctRow = allRows[allRows.length - 1];
         if (grandRow) grandRow.querySelector("td").textContent = `${grandTotal} Refeições`;
         if (pctRow) {
           const pctTds = pctRow.querySelectorAll("td:not(:first-child)");
-          RESTAURANTS.forEach((r, j) => {
-            if (pctTds[j]) pctTds[j].textContent = `% ${r.label.replace('Restaurante "','').replace('"','')}: ${pcts[r.key]}%`;
-          });
+          RESTAURANTS.forEach((r, j) => {if (pctTds[j]) pctTds[j].textContent = `% ${r.label}: ${pcts[r.key]}%`;});
         }
       }
       const canvas = document.querySelector("[id^='meals-chart-']");
       if (canvas && canvas._chartInstance) {
-        canvas._chartInstance.data.datasets.forEach((ds, i) => {
-          ds.data = MONTHS.map(m => stats[m.num][RESTAURANTS[i].key] || 0);
-        });
+        canvas._chartInstance.data.datasets = RESTAURANTS.map(r => ({
+          label: r.label,
+          data: MONTHS.map(m => stats[m.num][r.key] || 0),
+          borderColor: r.color,
+          backgroundColor: r.color + "33",
+          tension: 0.4,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          fill: false,
+          borderWidth: 2
+        }));
         canvas._chartInstance.update();
       }
     }

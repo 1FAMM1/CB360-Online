@@ -21,6 +21,7 @@
     const TEMPLATE_SIGNA_ECIN_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/signa_decir_ecin_template.xlsx";
     const TEMPLATE_SIGNA_ECINELAC_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/signa_decir_ecinelac_template.xlsx";
     const TEMPLATE_SIGNA_BRIGADE_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/signa_decir_brigade_template.xlsx";
+    const TEMPLATE_LEVELIV_1LEPP_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/level_iv_1_lepp_template.xlsx";
     const CLIENT_ID = process.env.ADOBE_CLIENT_ID;
     const CLIENT_SECRET = process.env.ADOBE_CLIENT_SECRET;
     export const config = {
@@ -373,6 +374,57 @@
           }
           sheet.pageSetup = {orientation: "portrait", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
                              margins: {left:0.5, right:0.5, top:0.75, bottom:0.75, header:0.3, footer:0.3}};}
+        // ---------- LEPP LEVEL IV ----------
+else if (data.type === 'lepp') {
+  const { levelSnapshot, leppName, blocks } = data;
+  const templateBuffer = await downloadTemplate(TEMPLATE_LEVELIV_1LEPP_URL);
+  await workbook.xlsx.load(templateBuffer);
+  sheet = workbook.worksheets[0];
+
+  sheet.getCell("F9").value = levelSnapshot || "";
+  sheet.getCell("F11").value = leppName || "";
+
+  const BLOCK_LAYOUT = [
+    { vehRow: 13, dateRow: 14, tableStart: 15 },
+    { vehRow: 21, dateRow: 22, tableStart: 23 },
+    { vehRow: 29, dateRow: 30, tableStart: 31 }
+  ];
+
+  BLOCK_LAYOUT.forEach((layout, idx) => {
+    const block = blocks?.[idx];
+    if (!block) {
+      for (let r = layout.vehRow; r <= layout.tableStart + 4; r++) sheet.getRow(r).hidden = true;
+      return;
+    }
+    sheet.getCell(`B${layout.vehRow}`).value = `Veículo Alocado: ${block.vehicleAllocated || ""} | Veículo Rendição: ${block.vehicleRelief || ""}`;
+    sheet.getCell(`B${layout.dateRow}`).value = `De: ${block.t1From || ""} a: ${block.t1To || ""}`;
+    sheet.getCell(`H${layout.dateRow}`).value = `De: ${block.t2From || ""} a: ${block.t2To || ""}`;
+
+    const turno1 = block.turno1 || [];
+    const turno2 = block.turno2 || [];
+    const rowsUsed = Math.max(turno1.length, turno2.length);
+
+    for (let i = 0; i < 5; i++) {
+      const row = layout.tableStart + i;
+      const m1 = turno1[i];
+      const m2 = turno2[i];
+      if (m1) {
+        sheet.getCell(`B${row}`).value = m1.ni || "";
+        sheet.getCell(`C${row}`).value = m1.pat || "";
+        sheet.getCell(`D${row}`).value = m1.nome || "";
+      }
+      if (m2) {
+        sheet.getCell(`H${row}`).value = m2.ni || "";
+        sheet.getCell(`I${row}`).value = m2.pat || "";
+        sheet.getCell(`J${row}`).value = m2.nome || "";
+      }
+      if (i >= rowsUsed) sheet.getRow(row).hidden = true;
+    }
+  });
+
+  sheet.pageSetup = {orientation: "portrait", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
+                     margins: {left: 0.5, right: 0.5, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3}};
+}  
         // ---------- SAVE AND DOWNLOAD ----------
         const safeFileName = data.fileName || "decir";
         if (format === "pdf") {

@@ -3374,19 +3374,21 @@
     INOP CREPC
     ======================================= */
     async function _getCREPCEmailCommonData(corpOperNr) {
-      let logoUrl = "";
+      let logoUrl = "", corpAddress = "", corpCp = "", corpLocalitie = "", corpPhoneMobile = "", corpPhoneLandline = "";
       try {
         const corpRes = await fetch(
-          `${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${corpOperNr}&select=logo_url`, {
+          `${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${corpOperNr}&select=logo_url,corp_address,corp_cp,corp_localitie,corp_phone_mobile,corp_phone_landline`, {
             headers: getSupabaseHeaders()
           }
         );
         const corpData = await corpRes.json();
-        if (corpData.length) logoUrl = corpData[0].logo_url || "";
+        if (corpData.length) {logoUrl = corpData[0].logo_url || ""; corpAddress = corpData[0].corp_address || ""; corpCp = corpData[0].corp_cp || ""; corpLocalitie = corpData[0].corp_localitie || "";
+                              corpPhoneMobile = corpData[0].corp_phone_mobile || ""; corpPhoneLandline = corpData[0].corp_phone_landline || "";
+                             }
       } catch (err) {
         console.error("Erro ao carregar logo:", err);
       }
-      return {logoUrl};
+      return {logoUrl, corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline};
     }
     function preselectCorpInSitopCB() {
       const current = sessionStorage.getItem("currentCorpOperNr");
@@ -3558,11 +3560,17 @@
       const recordId = sitopContainer.getAttribute("data-record-id");
       const isUpdate = !!recordId;
       const isOperational = !!gdh_op;
-      const {logoUrl} = await _getCREPCEmailCommonData(corpOperNr);
-      const data = {cb_type, vehicle, registration, gdh_inop, gdh_op, failure_type, failure_description, failure_noc, ppi_part, ppi_a2, ppi_a22, ppi_airport, ppi_linfer, ppi_airfield, ppi_subs, optel, corp_oper_nr: corpOperNr, logoUrl};
-      const supabaseData = { ...data };
+      const {logoUrl, corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline} = await _getCREPCEmailCommonData(corpOperNr);
+      const data = {cb_type, vehicle, registration, gdh_inop, gdh_op, failure_type, failure_description, failure_noc, ppi_part, ppi_a2, ppi_a22, ppi_airport, ppi_linfer, ppi_airfield, ppi_subs, optel,
+                    corp_oper_nr: corpOperNr, logoUrl, corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline};
+      const supabaseData = {...data};
       delete supabaseData.cb_type;
       delete supabaseData.logoUrl;
+      delete supabaseData.corpAddress;
+      delete supabaseData.corpCp;
+      delete supabaseData.corpLocalitie;
+      delete supabaseData.corpPhoneMobile;
+      delete supabaseData.corpPhoneLandline;
       try {
         if (!isUpdate && !isOperational) {
           const checkUrl = `${SUPABASE_URL}/rest/v1/sitop_vehicles?select=vehicle&vehicle=eq.${encodeURIComponent(vehicle)}&gdh_op=is.null&corp_oper_nr=eq.${encodeURIComponent(corpOperNr)}`;

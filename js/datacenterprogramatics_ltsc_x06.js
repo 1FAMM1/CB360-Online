@@ -399,9 +399,9 @@
       {label: "Gestão DECIR", children: [
         {label: "Configurações DECIR", children: [{label: "Atualização de Valores"}, {label: "Restaurantes e LEPPs"}]},
         {label: "Ver Escalas"},
-        {label: "Gestão Financeira", children: [{label: "Registo por Elemento"}, {label: "Núcleo Financeiro"}, {label: "Relatórios ANEPC"}]},
+        {label: "Gestão Financeira", children: [{label: "Registo por Elemento"}, {label: "Núcleo Financeiro"}, {label: "Relatórios ANEPC"}, {label: "Auditoria de Logs"}]},
         {label: "Gestão Despesas", children: [{label: "Despesas Danos"}, {label: "Despesas Refeições"}]},
-        {label: "Registos Complementares", children: [{label: "Controlo de Ocorrências"}, {label: "Assinaturas Diárias"}, {label: "Refeições Diárias"}, {label: "Pré Posicionamentos"}]},
+        {label: "Registos Complementares", children: [{label: "Controlo de Ocorrências"}, {label: "Assinaturas Diárias"}, {label: "Refeições Diárias"}, {label: "Pré Posicionamentos"}, {label: "EPE DECIR IV"}]},
         {label: "DashBoard DECIR"}
       ]},
       {label: "Gestão Operacional", children: [

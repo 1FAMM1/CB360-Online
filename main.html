@@ -69,6 +69,7 @@
           <button class="sidebar-sub-submenu-button" data-page="decir-reg" data-access="Registo por Elemento">Registo por Elemento</button>
           <button class="sidebar-sub-submenu-button" data-page="decir-pag" data-access="Núcleo Financeiro">Núcleo Financeiro</button>
           <button class="sidebar-sub-submenu-button" data-page="decir-anepc" data-access="Relatórios ANEPC">Relatórios ANEPC</button>
+          <button class="sidebar-sub-submenu-button" data-page="decir-audit" data-access="Auditoria de Logs">Auditoria de Logs</button>
        </div>
        <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-decir" data-access="Gestão Despesas">Gestão Despesas</button>
         <div class="sub-submenu">          
@@ -81,6 +82,7 @@
           <button class="sidebar-sub-submenu-button" data-page="decir-reg-signa" data-access="Assinaturas Diárias">Assinaturas Diárias</button>
           <button class="sidebar-sub-submenu-button" data-page="decir-reg-ref" data-access="Refeições Diárias">Refeições Diárias</button>
           <button class="sidebar-sub-submenu-button" data-page="decir-reg-lepp" data-access="Pré Posicionamentos">Pré-Posicionamentos</button>
+          <button class="sidebar-sub-submenu-button" data-page="decir-reg-leveliv" data-access="EPE DECIR IV">EPE DECIR Níveis III e IV</button>
        </div>        
         <button class="sidebar-submenu-button" data-page="decir-dashboard" data-access="DashBoard DECIR">Dados Estatísticos</button>
       </div>
@@ -1008,6 +1010,26 @@
           </div>
         </div>
       </div>
+      <div id="decir-audit" class="page">
+        <div class="major-card major-last-card">
+          <div class="major-card-header header-black">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
+              <path d="M12 8v4l3 3"></path>
+              <path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5"></path>
+            </svg>
+            AUDITORIA DE LOGS
+          </div>          
+          <div class="major-card-body" style="font-family: 'Segoe UI', sans-serif;">            
+            <div id="table-container-audit-logs"></div>
+          </div>          
+          <div class="major-card-footer">
+            <div class="action-buttons" id="decir-audit-options">
+              <button class="btn btn-success" id="emit-audit-dec-btn">📊 Excel</button>
+              <button class="btn btn-danger" id="emit-audit-pdf-btn">📄 PDF</button>
+            </div>
+          </div>
+        </div>
+      </div>
       <div id="decir-desp-demage" class="page">
         <div class="major-card major-last-card">
           <div class="major-card-header header-black">
@@ -1139,7 +1161,28 @@
             </div>
           </div>
         </div>
-      </div>      
+      </div>
+      <div id="decir-reg-leveliv" class="page">
+        <div class="major-card major-last-card">
+          <div class="major-card-header header-black">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.9; vertical-align: middle;">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+              <circle cx="12" cy="10" r="3"></circle>
+            </svg>
+            DISTRIBUIÇÃO LOCAIS ESTRATÉGICOS DE PRÉ-POSICIONAMENTO DECIR NÍVEL IV
+          </div>
+          <div class="major-card-body" style="font-family: 'Segoe UI', sans-serif;">
+            <div id="table-container-dec-leveliv" style="margin-top: 16px;"></div>
+          </div>
+          <div class="major-card-footer">
+            <div class="action-buttons" id="decir-leveliv-options" style="display:none;">
+              <button class="btn btn-add" id="save-lepp-btn" onclick="saveLeppLevelIV()">💾 Guardar</button>
+              <button class="btn btn-success" id="emit-leveliv-dec-btn">📊 Excel</button>
+              <button class="btn btn-danger" id="emit-leveliv-pdf-btn">📄 PDF</button>
+            </div>
+          </div>
+        </div>
+      </div>
       <div id="decir-dashboard" class="page">
         <div class="major-card major-last-card">
           <div class="major-card-header header-black">

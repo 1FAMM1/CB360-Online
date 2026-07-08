@@ -376,11 +376,12 @@
                              margins: {left:0.5, right:0.5, top:0.75, bottom:0.75, header:0.3, footer:0.3}};}
         // ---------- LEPP LEVEL IV ----------
 else if (data.type === 'lepp') {
-  const { levelSnapshot, blocks } = data;
+  const { levelSnapshot, leppName, blocks } = data;
   const templateBuffer = await downloadTemplate(TEMPLATE_LEVELIV_1LEPP_URL);
   await workbook.xlsx.load(templateBuffer);
   sheet = workbook.worksheets[0];
   sheet.getCell("F9").value = levelSnapshot || "";
+  sheet.getCell("F11").value = leppName || "";
   const BLOCK_LAYOUT = [
     { vehRow: 13, dateRow: 14, tableStart: 15 },
     { vehRow: 21, dateRow: 22, tableStart: 23 },
@@ -392,7 +393,7 @@ else if (data.type === 'lepp') {
       for (let r = layout.vehRow; r <= layout.tableStart + 4; r++) sheet.getRow(r).hidden = true;
       return;
     }
-    sheet.getCell(`B${layout.vehRow}`).value = `LEPP: ${block.leppName || ""} | Veículo Alocado: ${block.vehicleAllocated || ""} | Veículo Rendição: ${block.vehicleRelief || ""}`;
+    sheet.getCell(`B${layout.vehRow}`).value = `Veículo Alocado: ${block.vehicleAllocated || ""} | Veículo Rendição: ${block.vehicleRelief || ""}`;
     sheet.getCell(`B${layout.dateRow}`).value = `De: ${block.t1From || ""} a: ${block.t1To || ""}`;
     sheet.getCell(`H${layout.dateRow}`).value = `De: ${block.t2From || ""} a: ${block.t2To || ""}`;
     const turno1 = block.turno1 || [];

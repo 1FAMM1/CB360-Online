@@ -2091,17 +2091,17 @@
     async function _getMOAEmailCommonData(corpOperNr) {
       try {
         const corpRes = await fetch(
-          `${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${corpOperNr}&select=logo_url,cb_name`,
-          { headers: getSupabaseHeaders() }
+          `${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${corpOperNr}&select=logo_url,cb_name,corp_address,corp_cp,corp_localitie,corp_phone_mobile,corp_phone_landline`, {
+            headers: getSupabaseHeaders()
+          }
         );
         const corpData = await corpRes.json();
-        return {
-          logoUrl: corpData[0]?.logo_url || "",
-          cbName: corpData[0]?.cb_name || ""
-        };
+        return {logoUrl: corpData[0]?.logo_url || "", cbName: corpData[0]?.cb_name || "", corpAddress: corpData[0]?.corp_address || "", corpCp: corpData[0]?.corp_cp || "",
+                corpLocalitie: corpData[0]?.corp_localitie || "", corpPhoneMobile: corpData[0]?.corp_phone_mobile || "", corpPhoneLandline: corpData[0]?.corp_phone_landline || ""
+               };
       } catch (err) {
         console.error("Erro ao carregar dados da corporação:", err);
-        return { logoUrl: "", cbName: "" };
+        return {logoUrl: "", cbName: "", corpAddress: "", corpCp: "", corpLocalitie: "", corpPhoneMobile: "", corpPhoneLandline: ""};
       }
     }
     /* ================ SELECT UTILITIES =============== */
@@ -2243,8 +2243,13 @@
       });
       data.corp_oper_nr = corpOperNr;
       try {
-        const { logoUrl, cbName } = await _getMOAEmailCommonData(corpOperNr);
+        const {logoUrl, cbName, corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline} = await _getMOAEmailCommonData(corpOperNr);
         data.logoUrl = logoUrl;
+        data.corpAddress = corpAddress;
+        data.corpCp = corpCp;
+        data.corpLocalitie = corpLocalitie;
+        data.corpPhoneMobile = corpPhoneMobile;
+        data.corpPhoneLandline = corpPhoneLandline;
         if (cbName) data.moa_cb = cbName;
         const recipients = await fetchMOARecipients(corpOperNr);
         await sendMOAEmail(data, recipients, corpOperNr);

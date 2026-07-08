@@ -241,22 +241,24 @@
                     extra: ["table-container-dec-coda33","decir-coda33-options","decir-payment-totals"],
                     generic: {containerId: "months-container-dec-pag", tableContainerId: "table-container-dec-pag", yearSelectId: "year-dec-pag", optionsContainerId: "decir-pag-options",
                     monthNames: [...DECIR_MONTH_NAMES, "Cod.A33"], includeExtraButton: true, extraButtonFunc: handleCodA33Button,
-                    loadDataFunc: async (y, m) => ({elems: await loadDecirPayElements(y, m + 4), turnos: await loadShiftsByNI(y, m + 4)}), 
+                    loadDataFunc: async (y, m) => ({elems: await loadDecirPayElements(y, m + 4), turnos: await loadShiftsByNI(y, m + 4)}),
                     createTableFunc: (cId, y, m, d) => createDecirPayTable(cId, y, m + 4, d.elems, d.turnos),
                     totalContainerId: "decir-payment-totals", blockedMonths: []}},
-      "decir-anepc": {tableId: "table-container-dec-anepc", optionsId: "decir-anepc-options", monthsId: "months-container-dec-anepc",
+                    "decir-anepc": {tableId: "table-container-dec-anepc", optionsId: "decir-anepc-options", monthsId: "months-container-dec-anepc",
                       generic: {containerId: "months-container-dec-anepc", tableContainerId: "table-container-dec-anepc", yearSelectId: "year-dec-anepc", optionsContainerId: "decir-anepc-options",
                       monthNames: DECIR_MONTH_NAMES, blockedMonths: [], loadDataFunc: async (y, m) => ({elems: await loadDecirANEPCElements(y, m + 4), turnos: await loadShiftsByNI(y, m + 4)}),
                       createTableFunc: (cId, y, m, d) => createDecirAnepcTable(cId, y, m + 4, d.elems, d.turnos)}},
-      "decir-reg-ocorr": {init: createDecirOccurrencesTable},
+      "decir-audit": {init: loadAuditLogs},
+      "decir-reg-ocorr": {init: createDecirOccurrencesTable},                
       "decir-reg-ref": {tableId: "table-container-dec-ref", optionsId: "decir-ref-options", monthsId: "months-container-dec-ref",
                         generic: {containerId: "months-container-dec-ref", tableContainerId: "table-container-dec-ref", yearSelectId: "year-dec-ref", optionsContainerId: "decir-ref-options",
                         monthNames: DECIR_MONTH_NAMES, blockedMonths: [], loadDataFunc: async (y, m) => m, createTableFunc: (cId, y, m, d) => createDecirMealTable(cId, y, m + 4, d)}},
       "decir-reg-lepp": {tableId: "table-container-dec-lepp", optionsId: "decir-lepp-options", monthsId: "months-container-dec-lepp",
                          generic: {containerId: "months-container-dec-lepp", tableContainerId: "table-container-dec-lepp", yearSelectId: "year-dec-lepp", optionsContainerId: "decir-lepp-options",
                          monthNames: DECIR_MONTH_NAMES, blockedMonths: [], loadDataFunc: async (y, m) => m, createTableFunc: (cId, y, m, d) => createLeppTable(cId, y, m + 4, d)}},
+      "decir-reg-leveliv": {init: () => loadDecirLevelIVEntry("table-container-dec-leveliv")},
       "decir-reg-signa": {init: openDecirSignaWithMode},
-      "decir-dashboard": {init: createDecirDashboard}      
+      "decir-dashboard": {init: createDecirDashboard}
     };
     /* ─── LOADERS (DECIR) ────────────────────────────────────── */
     async function loadDecirConfigValues() {
@@ -1402,54 +1404,90 @@
         console.error(err); showPopup('popup-danger', "❌ Erro ao apagar: "+err.message);
       }
     }
-    /* ─── GUARDAR REGISTO (DECIR) ────────────────────────────── */
-    async function saveDecirFull() {
+/* ─── GUARDAR REGISTO (DECIR) ────────────────────────────── */
+async function saveDecirFull() {
       const table = document.querySelector("#table-container-dec-reg table tbody");
       if (!table) return showPopup('popup-danger', "Nenhuma tabela aberta.");
-      const corpOperNr = getCorpId();
+      const corpOperNr = getCorpId() ? String(getCorpId()).trim().padStart(4, "0") : null;
       const year = parseInt($("year-dec-reg")?.value, 10);
       const monthBtn = document.querySelector("#months-container-dec-reg .btn.active");
       if (!monthBtn) return showPopup('popup-danger', "Nenhum mês selecionado.");
       const month = Array.from(document.querySelectorAll("#months-container-dec-reg .btn")).indexOf(monthBtn) + 1 + 4;
       const btn = $("save-dec-btn");
-      if (btn) {btn.disabled=true; btn.textContent="A gravar...";}
+      if (btn) {btn.disabled = true; btn.textContent = "A gravar...";}  
       try {
-        let last_n_int=null, last_abv_name=null;
-        const payload = [];
+        let last_n_int = null, last_abv_name = null;
+        const payload = [];    
         Array.from(table.querySelectorAll("tr")).forEach(row => {
           const cells = Array.from(row.querySelectorAll("td"));
-          let n_int = parseInt((cells[0]?.textContent||"").trim(),10);
+          let n_int = parseInt((cells[0]?.textContent || "").trim(), 10);
           if (isNaN(n_int)) n_int = last_n_int;
-          let nameRaw = (cells[1]?.textContent||"").trim();
-          if (nameRaw==="X") nameRaw="";
+          let nameRaw = (cells[1]?.textContent || "").trim();
+          if (nameRaw === "X") nameRaw = "";
           const abv_name = nameRaw || last_abv_name;
-          if (!n_int||!abv_name) return;
-          last_n_int=n_int; if(nameRaw) last_abv_name=nameRaw;
-          const turnoCell = cells.find(td=>["D","N"].includes((td.textContent||"").trim()));
+          if (!n_int || !abv_name) return;
+          last_n_int = n_int; if (nameRaw) last_abv_name = nameRaw;
+          const turnoCell = cells.find(td => ["D", "N"].includes((td.textContent || "").trim()));
           if (!turnoCell) return;
           const turno = turnoCell.textContent.trim();
-          cells.filter(td=>td.isContentEditable).forEach((cell,idx) => {
-            if (cell.textContent.trim().toUpperCase()==="X")
-              payload.push({n_int, abv_name, year, month, day:idx+1, turno, corp_oper_nr:corpOperNr});
+          cells.filter(td => td.isContentEditable).forEach((cell, idx) => {
+            if (cell.textContent.trim().toUpperCase() === "X")
+              payload.push({n_int, abv_name, year, month, day: idx + 1, turno, corp_oper_nr: corpOperNr});
           });
         });
         await fetch(`${SUPABASE_URL}/rest/v1/decir_reg_pag?year=eq.${year}&month=eq.${month}&corp_oper_nr=eq.${corpOperNr}`, {
-          method:"DELETE", headers:getSupabaseHeaders()
-        }).then(r => {if(!r.ok) throw new Error("Erro ao limpar registos antigos");});
-        if (payload.length>0) {
+          method: "DELETE", 
+          headers: getSupabaseHeaders()
+        }).then(r => { if (!r.ok) throw new Error("Erro ao limpar registos antigos"); });
+        if (payload.length > 0) {
           const r = await fetch(`${SUPABASE_URL}/rest/v1/decir_reg_pag`, {
-            method:"POST",
-            headers:{...getSupabaseHeaders(),"Content-Type":"application/json","Prefer":"return=minimal"},
-            body:JSON.stringify(payload)
+            method: "POST",
+            headers: { ...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
+            body: JSON.stringify(payload)
           });
-          if (!r.ok) throw new Error(await r.text()||"Erro desconhecido ao gravar");
+          if (!r.ok) throw new Error(await r.text() || "Erro desconhecido ao gravar");
+        }
+        try {
+          const loggedNInt = sessionStorage.getItem("currentNInt") || "205";
+          if (loggedNInt) {
+            let userAbvName = "";
+            const userResponse = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${parseInt(loggedNInt, 10)}&select=abv_name`, {
+              method: "GET",
+              headers: getSupabaseHeaders()
+            });
+            if (userResponse.ok) {
+              const userData = await userResponse.json();
+              if (userData && userData.length > 0) {
+                userAbvName = userData[0].abv_name;
+              }
+            } else {
+              console.warn("Não foi possível consultar o abv_name na tabela reg_elems");
+            }
+            const logResponse = await fetch(`${SUPABASE_URL}/rest/v1/reg_logs`, {
+              method: "POST",
+              headers: {
+                ...getSupabaseHeaders(),
+                "Content-Type": "application/json",
+                "Prefer": "return=representation"
+              },
+              body: JSON.stringify({n_int: parseInt(loggedNInt, 10), abv_name: userAbvName || null, efect: `Alterou os Registos para Pagamentos DECIR do Mês ${month}/${year}`, corp_oper_nr: corpOperNr})
+            });
+            if (!logResponse.ok) {
+              console.error("Erro do Supabase ao gravar log:", await logResponse.text());
+            }
+          } else {
+            console.warn("Aviso: 'currentNInt' não foi encontrado no sessionStorage.");
+          }
+        } catch (logErr) {
+          console.error("Falha ao processar bloco de log:", logErr);
         }
         showPopup('popup-success', "Registo DECIR gravado com sucesso!");
-      } catch(err) {
+      } catch (err) {
         console.error(err);
-        showPopup('popup-danger', "Erro ao gravar: "+err.message);
+        showPopup('popup-danger', "Erro ao gravar: " + err.message);
+      } finally {
+        if (btn) {btn.disabled = false; btn.textContent = "Guardar";}
       }
-      finally {if(btn) {btn.disabled=false; btn.textContent="Guardar";}}
     }
     /* ─── TABELA: COD A33 (DECIR) ────────────────────────────── */
     function createDecirCodA33Table(containerId, year, elements, turnosPorMes) {
@@ -1618,6 +1656,96 @@
       if (typeof updateAnepcTotals==='function') updateAnepcTotals();
     }
     window.createDecirAnepcTable = createDecirAnepcTable;
+    /* ─── CARREGAR AUDITORIA DE LOGS (DESIGN PERSONALIZADO) ─── */
+    async function loadAuditLogs() {
+      const container = document.getElementById("table-container-audit-logs");
+      if (!container) return;
+      container.innerHTML = "";
+      const loading = document.createElement("div");
+      loading.textContent = "A carregar registos de auditoria...";
+      Object.assign(loading.style, {textAlign: "center", padding: "20px", fontFamily: "Segoe UI, sans-serif", opacity: "0.7"});
+      container.appendChild(loading);
+      try {
+        const url = `${SUPABASE_URL}/rest/v1/reg_logs?select=*&order=created_at.desc`;
+        const response = await fetch(url, {
+          method: "GET",
+          headers: {...getSupabaseHeaders(), "Range": "0-500", "Prefer": "count=exact"}
+        });
+        if (!response.ok) throw new Error(await response.text() || "Erro ao obter dados do Supabase");
+        const logs = await response.json();
+        container.innerHTML = "";
+        if (!logs || logs.length === 0) {
+          const empty = document.createElement("div");
+          empty.textContent = "Nenhum registo de auditoria encontrado.";
+          Object.assign(empty.style, {textAlign: "center", padding: "20px", fontFamily: "Segoe UI, sans-serif", opacity: "0.7"});
+          container.appendChild(empty);
+          return;
+        }
+        const title = document.createElement("div");
+        title.textContent = "HISTÓRICO GERAL DE AUDITORIA DE LOGS";
+        Object.assign(title.style, {textAlign: "center", fontWeight: "bold", fontSize: "15px", fontFamily: "Segoe UI, sans-serif", color: "#131a69", marginBottom: "10px", marginTop: "10px", letterSpacing: "0.5px"});
+        container.appendChild(title);
+        const wrapper = document.createElement("div");
+        wrapper.id = "decir-audit-logs-wrapper";
+        Object.assign(wrapper.style, {overflowX: "auto", overflowY: "auto", width: "100%", maxHeight: "500px", marginTop: "0px", borderRadius: "8px", border: "1px solid #ddd", boxShadow: "0 2px 8px rgba(0,0,0,0.08)"});
+        const style = document.createElement("style");
+        style.textContent = `
+          #decir-audit-logs-wrapper::-webkit-scrollbar {height: 6px; width: 6px;}
+          #decir-audit-logs-wrapper::-webkit-scrollbar-thumb {background: #131a69; border-radius: 10px;}
+          #decir-audit-logs-wrapper::-webkit-scrollbar-track {background: #f0f0f0; border-radius: 10px;}
+        `;
+        document.head.appendChild(style);
+        const table = document.createElement("table");
+        Object.assign(table.style, {width: "100%", minWidth: "900px", borderCollapse: "separate", borderSpacing: "0", fontFamily: "Segoe UI, sans-serif", fontSize: "13px"});
+        const thead = document.createElement("thead");
+        const trh = document.createElement("tr");
+        const headers = [{label: "NI", width: "80px"}, {label: "Nome", width: "220px"}, {label: "Alteração", width: "400px"}, {label: "Data de Alteração", width: "200px"}];
+        headers.forEach((h, i) => {
+          const th = document.createElement("th");
+          th.textContent = h.label;
+          Object.assign(th.style, {borderBottom: "1px solid #ddd", borderLeft: "1px solid #ddd", background: "#131a69", color: "#fff", textAlign: "center", padding: "10px 6px", fontWeight: "bold", position: "sticky", top: "0",
+                        zIndex: "2", width: h.width, minWidth: h.width, whiteSpace: "nowrap"});
+          if (i === 0) th.style.borderTopLeftRadius = "8px";
+          if (i === headers.length - 1) th.style.borderTopRightRadius = "8px";
+          trh.appendChild(th);
+        });
+        thead.appendChild(trh);
+        table.appendChild(thead);
+        const tbody = document.createElement("tbody");
+        logs.forEach((log, index) => {
+          const tr = document.createElement("tr");
+          const isLastRow = index === logs.length - 1;
+          tr.style.background = index % 2 === 0 ? "#f5f6fa" : "#fff";
+          const localDate = log.created_at 
+            ? new Date(log.created_at).toLocaleString('pt-PT', {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit'}) : '─';
+          const createCell = (text, textAlign, isBold, isFirstCol, isLastCol) => {
+            const td = document.createElement("td");
+            td.textContent = text || '─';
+            Object.assign(td.style, {borderBottom: "1px solid #ddd", borderLeft: "1px solid #ddd", padding: "8px 10px", verticalAlign: "middle", textAlign: textAlign, fontSize: "12px", color: isBold ? "#131a69" : "#333", 
+                          fontWeight: isBold ? "bold" : "normal", borderBottomLeftRadius: isLastRow && isFirstCol ? "8px" : "", borderBottomRightRadius: isLastRow && isLastCol ? "8px" : ""});
+            return td;
+          };
+          tr.appendChild(createCell(log.n_int, "center", true, true, false));
+          tr.appendChild(createCell(log.abv_name, "left", false, false, false));
+          tr.appendChild(createCell(log.efect, "left", false, false, false));
+          tr.appendChild(createCell(localDate, "center", false, false, true));
+          tbody.appendChild(tr);
+        });
+        table.appendChild(tbody);
+        wrapper.appendChild(table);
+        container.appendChild(wrapper);
+        const options = document.getElementById("decir-audit-options");
+        if (options) options.style.display = "flex";    
+      } catch (err) {
+        console.error("Erro na função loadAuditLogs:", err);
+        container.innerHTML = `
+          <div style="text-align:center; padding:20px; color:#dc3545; fontFamily: 'Segoe UI', sans-serif;">
+            <strong>Erro ao carregar auditoria:</strong><br>
+            <span style="font-size:0.9em; opacity:0.8;">${err.message}</span>
+          </div>
+        `;
+      }
+    }
     /* ─── LOAD OCORRÊNCIAS (DECIR) ────────────────────────── */
     async function loadDecirOccurrences() {
       const year = document.getElementById("year-dec-ocorr")?.value || String(new Date().getFullYear());
@@ -2211,8 +2339,8 @@
     let leppVehicles = [];
     async function initLeppVehicles() {
       try {
-        const ALLOWED_TYPES = ["VFCI", "VRCI", "VECI", "VTTF", "VTTU", "VALE", "VTTP", "VCOT"];
-        const TYPE_ORDER = ["VCOT", "VFCI", "VRCI", "VECI", "VTTF", "VTTU", "VALE", "VTTP"];
+        const ALLOWED_TYPES = ["VFCI", "VRCI", "VECI", "VTTF", "VTTU", "VALE", "VTTP", "VCOT", "ABTM", "VDTD", "VOPE"];
+        const TYPE_ORDER = ["VCOT", "VFCI", "VRCI", "VECI", "VTTF", "VTTU", "VALE", "VTTP", "ABTM", "VDTD", "VOPE"];
         const vData = await supabaseFetch(`vehicle_status?corp_oper_nr=eq.${getCorpId()}&select=vehicle`);
         leppVehicles = (vData || [])
           .filter(v => v.vehicle && ALLOWED_TYPES.some(t => v.vehicle.startsWith(t)))
@@ -3468,6 +3596,53 @@
         }).filter(r => r !== null);
         return {...data, fileName:`REFEICOES_DECIR_${monthName}_${year}`, monthName, year, rows};
       }
+      /* ───────── LEPP (DECIR Nível IV) ───────── */
+      if (type === 'lepp') {
+        const cardsContainer = window._decirLevelIVCardsContainer;
+        if (!cardsContainer) throw new Error("Nenhum planeamento ativo.");
+        const allCards = cardsContainer.querySelectorAll(".lepps-card");
+        if (!allCards.length) throw new Error("Nenhuma LEPP configurada.");
+        const levelSnapshot = document.querySelector(".level-card .level-selector-group select")?.value || "";
+        const extractMembers = (trRows, shiftOffset) => {
+          const members = [];
+          trRows.forEach(tr => {
+            const cells = tr.querySelectorAll("td");
+            const base = shiftOffset * 4;
+            const ni = cells[base]?.textContent.trim() || "";
+            const pat = cells[base + 1]?.textContent.trim() || "";
+            const nome = cells[base + 3]?.textContent.trim() || "";
+            if (ni) members.push({ ni, pat, nome });
+          });
+          return members;
+        };
+        const flatBlocks = [];
+        allCards.forEach(cardEl => {
+          const leppSelEl = cardEl.querySelector(".lepps-selector-group.lepp-inline select");
+          const leppName = leppSelEl?.options[leppSelEl.selectedIndex]?.textContent || "";
+          const vehicleRelief = cardEl.querySelector(".sel-rend")?.value || "";
+          cardEl.querySelectorAll(".lepps-table-block").forEach(block => {
+            const table = block.querySelector(".lepps-table");
+            if (!table) return;
+            const inputs = table.querySelectorAll(".lepps-date-input");
+            const trRows = table.querySelectorAll("tbody tr");
+            flatBlocks.push({
+              leppName,
+              vehicleAllocated: block.querySelector(".sel-alocado")?.value || "",
+              vehicleRelief,
+              t1From: inputs[0]?.value || "",
+              t1To: inputs[1]?.value || "",
+              t2From: inputs[2]?.value || "",
+              t2To: inputs[3]?.value || "",
+              turno1: extractMembers(trRows, 0),
+              turno2: extractMembers(trRows, 1)
+            });
+          });
+        });
+        const blocks = [flatBlocks[0] || null, flatBlocks[1] || null, flatBlocks[2] || null];
+        const leppName = flatBlocks[0]?.leppName || "LEPP";
+        const safeName = leppName.replace(/\s+/g, "_");
+        return {...data, fileName: `LEPP_DECIR_${safeName}`, levelSnapshot, leppName, blocks};
+      }
       throw new Error("Tipo não suportado.");
     }
     /* ───────── FUNÇÃO PRINCIPAL ───────── */
@@ -3511,8 +3686,8 @@
       }
     }
     /* ─── EVENT LISTENERS (DECIR) ────────────────────────────── */
-    ["emit-pag-dec-btn","emit-reg-dec-btn","emit-coda33-dec-btn","emit-anepc-dec-btn","emit-ocorr-dec-btn","emit-ref-dec-btn"].forEach((id,i) => {
-      $(id)?.addEventListener("click", () => generateDECIRFiles(['pag','reg','code_a33','anepc','ocorr','ref'][i]));
+    ["emit-pag-dec-btn","emit-reg-dec-btn","emit-coda33-dec-btn","emit-anepc-dec-btn","emit-ocorr-dec-btn","emit-ref-dec-btn","emit-leveliv-dec-btn"].forEach((id,i) => {
+      $(id)?.addEventListener("click", () => generateDECIRFiles(['pag','reg','code_a33','anepc','ocorr','ref','lepp'][i]));
     });
     $("emit-reg-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('reg', 'pdf'));
     $("delete-dec-btn")?.addEventListener("click", clearDecirTable);
@@ -3524,6 +3699,7 @@
     $("emit-ocorr-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('ocorr', 'pdf'));
     $("save-ref-btn")?.addEventListener("click", saveDecirMeals);
     $("emit-ref-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('ref', 'pdf'));
+    $("emit-leveliv-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('lepp', 'pdf'));
     $("save-lepp-btn")?.addEventListener("click", saveLeppData);
     document.querySelectorAll(".sidebar-submenu-button, .sidebar-sub-submenu-button").forEach(btn => {
       btn.addEventListener("click", (e) => {
@@ -4535,4 +4711,1423 @@
         loadAll(parseInt(yearSelect.value));
       });
       await loadAll(currentYear);
+    }
+    /* ════════════════════════════════════════════════════════════════
+    Ponto de entrada — chamar ao clicar no botão do sidebar
+    data-page="decir-reg-leveliv"
+    ════════════════════════════════════════════════════════════════ */
+    async function loadDecirLevelIVEntry(containerId) {
+      weatherLocationOverride = null;
+      const styleId = "leveliv-hidden-style";
+      if (!document.getElementById(styleId)) {
+        const s = document.createElement("style"); s.id = styleId;
+        s.textContent = `.leveliv-hidden { display: none !important; }`;
+        document.head.appendChild(s);
+      }
+      const container = document.getElementById(containerId) || $(containerId);
+      if (!container) return;
+      container.innerHTML = "";
+      const corpOperNr = getCorpId();
+      function resetFooterState() {
+        const footerOptions = document.getElementById("decir-leveliv-options");
+        if (footerOptions) {
+          footerOptions.style.display = "none";
+          const parentFooter = footerOptions.parentElement;
+          if (parentFooter) {
+            const existingBadge = parentFooter.querySelector(".lepps-mode-badge");
+            if (existingBadge) existingBadge.remove();
+          }
+        }
+      }
+      resetFooterState();
+      let currentEpe = null;
+      try {
+        const formattedCorpId = String(corpOperNr).padStart(4, '0');
+        const epeData = await supabaseFetch(`epe_status?corp_oper_nr=eq.${formattedCorpId}&epe_type=eq.epe-decir&limit=1`);        
+        const EPE_MAP = {"MONITORIZAÇÃO": "Monitorização", "NÍVEL I": "Nível I - Moderado", "NÍVEL II": "Nível II - Elevado", "NÍVEL III": "Nível III - Muito Elevado", "NÍVEL IV": "Nível IV - Extremo"};        
+        if (epeData && epeData.length > 0) {
+          currentEpe = EPE_MAP[epeData[0].epe?.toUpperCase().trim()] || null;
+        }
+      } catch (e) {
+        console.error("Erro ao buscar epe_status no ponto de entrada:", e);
+      }
+      const levelCard = createLevelCard(currentEpe);
+      levelCard.style.marginBottom = "5px";
+      const leppButtonsCard = await createLeppButtonsCard(corpOperNr);
+      leppButtonsCard.id = "top-lepp-buttons-card";      
+      const weatherRow = renderWeatherCards();
+      if (weatherRow) {
+        weatherRow.id = "top-weather-row";
+        weatherRow.style.marginBottom = "16px";
+      }
+      container.appendChild(levelCard);
+      container.appendChild(leppButtonsCard);
+      if (weatherRow) {
+        container.appendChild(weatherRow);
+      }
+      const dynamicZone = document.createElement("div");
+      dynamicZone.id = "leveliv-dynamic-zone";
+      container.appendChild(dynamicZone);
+      async function renderTableInDynamicZone(prefillRows = null) {
+        const topLepps = document.getElementById("top-lepp-buttons-card");
+        const topWeather = document.getElementById("top-weather-row");
+        if (topLepps) topLepps.classList.add("leveliv-hidden");
+        if (topWeather) topWeather.classList.add("leveliv-hidden");
+        dynamicZone.innerHTML = "";
+        const backBtnContainer = document.createElement("div");
+        backBtnContainer.style.marginBottom = "12px";
+        backBtnContainer.innerHTML = `
+          <button class="btn btn-sm btn-outline-secondary" id="btn-back-to-months">
+            <i class="fas fa-arrow-left me-1"></i> Voltar aos Meses
+          </button>
+        `;
+        dynamicZone.appendChild(backBtnContainer);
+        backBtnContainer.querySelector("#btn-back-to-months").addEventListener("click", async () => {
+          resetFooterState();
+          if (topLepps) topLepps.classList.remove("leveliv-hidden");
+          if (topWeather) topWeather.classList.remove("leveliv-hidden");
+          await showFreshMonthsCard();
+        });
+        await createDecirLevelIVTable("leveliv-dynamic-zone", prefillRows);
+      }
+      async function showFreshMonthsCard() {
+        dynamicZone.innerHTML = "";
+        const monthsCard = await createLevelIVMonthsCard(
+          corpOperNr,
+          () => renderTableInDynamicZone(null),
+          async (dateStr) => {
+            let rows = [];
+            try {
+              const formattedCorpId = String(corpOperNr).padStart(4, '0');
+              rows = await supabaseFetch(`decir_lepp_leveliv?corp_oper_nr=eq.${formattedCorpId}&operation_date=eq.${dateStr}&order=card_order`);
+            } catch (e) {
+              console.error("Erro ao carregar planeamento do dia:", e);
+              alert("Erro ao carregar o planeamento deste dia.");
+              return;
+            }
+            if (!rows || !rows.length) {
+              alert("Não foram encontrados dados para este dia.");
+              return;
+            }
+            await renderTableInDynamicZone(rows);
+          }
+        );
+        dynamicZone.appendChild(monthsCard);
+      }
+      await showFreshMonthsCard();
+    }
+    /* ════════════════════════════════════════════════════════════════
+    LEVEL CARD MODULE
+    ════════════════════════════════════════════════════════════════ */
+    function ensureLevelCardStyles() {
+      const styleId = "level-card-style";
+      if (document.getElementById(styleId)) return;
+      const s = document.createElement("style");
+      s.id = styleId;
+      s.textContent = `
+        .level-card {border: 1px solid #d9e1ec; border-radius: 14px; margin-bottom: 5px; margin-top: -10px; overflow: hidden; background: #fff; font-family: 'Segoe UI', sans-serif; box-shadow: 0 2px 10px rgba(0,0,0,.06); transition: all .25s ease;}
+        .level-card:hover {box-shadow: 0 6px 18px rgba(0,0,0,.10);}
+        .level-card-header {background: #f8f9fc; padding: 14px 18px; display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap;}
+        .level-selector-group {display: flex; flex-direction: column; gap: 5px; min-width: 200px; flex: 1;}
+        .level-selector-group label {font-size: 14px; font-weight: 700; color: #5b6472; letter-spacing: .2px;}
+        .level-selector-group select {border: 1px solid #d7dde8; border-radius: 8px; padding: 6px 10px; font-size: 12px; color: #333; background: #fff; transition: all .2s ease; width: 220px; max-width: 220px;}
+        .level-selector-group select:focus {outline: none; border-color: #131a69; box-shadow: 0 0 0 3px rgba(19,26,105,.12);}
+      `;
+      document.head.appendChild(s);
+    }
+    function createLevelCard(initialLevel = null) {
+      ensureLevelCardStyles();
+      const LEVEL_OPTIONS = ["", "Monitorização", "Nível I - Moderado", "Nível II - Elevado", "Nível III - Muito Elevado", "Nível IV - Extremo"];
+      const levelContainer = document.createElement("div");
+      levelContainer.className = "level-card";
+      const levelHeader = document.createElement("div");
+      levelHeader.className = "level-card-header";
+      const levelGrp = document.createElement("div");
+      levelGrp.className = "level-selector-group";
+      const levelLbl = document.createElement("label");
+      levelLbl.textContent = "Nível de Alerta Atual";
+      const levelSel = document.createElement("select");
+      const flameSVG = `
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="margin-left:4px;">
+          <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+        </svg>
+      `;
+      const alertIcon = document.createElement("div");
+      alertIcon.style.cssText = "margin-left:auto; display:flex; flex-direction:column; align-items:flex-end; gap:2px;";
+      const flamesDiv = document.createElement("div");
+      const pirLabel = document.createElement("div");
+      pirLabel.style.cssText = "font-size:15px; font-weight:600; line-height:1; text-align:right; white-space:nowrap;";
+      alertIcon.appendChild(flamesDiv);
+      alertIcon.appendChild(pirLabel);
+      LEVEL_OPTIONS.forEach(n => {
+        const o = document.createElement("option");
+        o.value = n; o.textContent = n || "— Selecionar —";
+        levelSel.appendChild(o);
+      });
+      levelSel.addEventListener("change", () => {
+        switch (levelSel.value) {
+          case "Monitorização":
+            levelHeader.style.background = "#2e7d32"; levelHeader.style.color = "#fff"; levelLbl.style.color = "#fff";
+            flamesDiv.innerHTML = ""; pirLabel.textContent = ""; break;
+          case "Nível I - Moderado":
+            levelHeader.style.background = "#1565c0"; levelHeader.style.color = "#fff"; levelLbl.style.color = "#fff";
+            flamesDiv.innerHTML = flameSVG; pirLabel.textContent = "P.I.R. - 1"; break;
+          case "Nível II - Elevado":
+            levelHeader.style.background = "#fbc02d"; levelHeader.style.color = "#000"; levelLbl.style.color = "#000";
+            flamesDiv.innerHTML = flameSVG.repeat(2); pirLabel.textContent = "P.I.R. - 2"; break;
+          case "Nível III - Muito Elevado":
+            levelHeader.style.background = "#ef6c00"; levelHeader.style.color = "#fff"; levelLbl.style.color = "#fff";
+            flamesDiv.innerHTML = flameSVG.repeat(3); pirLabel.textContent = "P.I.R. - 3"; break;
+          case "Nível IV - Extremo":
+            levelHeader.style.background = "#c62828"; levelHeader.style.color = "#fff"; levelLbl.style.color = "#fff";
+            flamesDiv.innerHTML = flameSVG.repeat(4); pirLabel.textContent = "P.I.R. - 4"; break;
+          default:
+            levelHeader.style.background = ""; levelHeader.style.color = ""; levelLbl.style.color = "";
+            flamesDiv.innerHTML = ""; pirLabel.textContent = "";
+        }
+      });
+      levelGrp.appendChild(levelLbl);
+      levelGrp.appendChild(levelSel);
+      levelHeader.appendChild(levelGrp);
+      levelHeader.appendChild(alertIcon);
+      levelContainer.appendChild(levelHeader);
+      if (initialLevel) {
+        levelSel.value = initialLevel;
+        levelSel.dispatchEvent(new Event("change"));
+      }
+      return levelContainer;
+    }
+    /* ════════════════════════════════════════════════════════════════
+    LEPP BUTTONS CARD MODULE
+    ════════════════════════════════════════════════════════════════ */
+    function ensureLeppButtonsCardStyles() {
+      const styleId = "lepp-buttons-card-style";
+      if (document.getElementById(styleId)) return;
+      const s = document.createElement("style");
+      s.id = styleId;
+      s.textContent = `
+        .lepp-buttons-card {border: 1px solid #c5cde0; border-radius: 14px; margin-bottom: 5px; overflow: hidden; background: #eef1f7; font-family: 'Segoe UI', sans-serif; box-shadow: 0 2px 10px rgba(0,0,0,.06); transition: all .25s ease; display: none;}
+        .lepp-buttons-card:hover {box-shadow: 0 6px 18px rgba(0,0,0,.10);}
+        .lepp-buttons-card-header {background: #eef1f7; padding: 14px 18px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;}
+        .lepp-buttons-card-title {font-size: 14px; font-weight: 700; color: #5b6472; letter-spacing: .2px; margin-right: 8px; white-space: nowrap;}
+        .lepp-toggle-btn {border: 1px solid #d7dde8; border-radius: 8px; padding: 8px 16px; font-size: 12px; font-weight: 600; color: #131a69; background: #fff; cursor: pointer; transition: all .2s ease;}
+        .lepp-toggle-btn:hover {background: #eef0ff; color: #131a69; border-color: #131a69;}
+        .lepp-toggle-btn.active {background: #131a69; color: #fff; border-color: #131a69;}
+        .lepp-toggle-btn.active:hover {background: #131a69; color: #fff; border-color: #131a69;}
+      `;
+      document.head.appendChild(s);
+    }
+    async function createLeppButtonsCard(corp_oper_nr) {
+      ensureLeppButtonsCardStyles();
+      const card = document.createElement("div");
+      card.className = "lepp-buttons-card";
+      try {
+        const data = await supabaseFetch(`decir_main_options?corp_oper_nr=eq.${corp_oper_nr}&type=eq.lepp&is_on=eq.true&order=sort_order&select=name,lat,long`);
+        const activeLepps = data || [];
+        if (activeLepps.length === 0) {
+          card.style.display = "none";
+          return card;
+        }
+        const header = document.createElement("div");
+        header.className = "lepp-buttons-card-header";
+        const title = document.createElement("div");
+        title.className = "lepp-buttons-card-title";
+        title.textContent = "LEPPs Ativos";
+        header.appendChild(title);
+        activeLepps.forEach(l => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "lepp-toggle-btn";
+          btn.textContent = l.name;
+          btn.addEventListener("click", () => {
+            const isActive = btn.classList.contains("active");
+            header.querySelectorAll(".lepp-toggle-btn").forEach(b => b.classList.remove("active"));
+            if (isActive) {
+              clearWeatherLocation();
+              return;
+            }
+            if (l.lat && l.long && l.lat !== "NULL" && l.long !== "NULL") {
+              setWeatherLocation(
+                parseFloat(l.lat),
+                parseFloat(l.long),
+                l.name
+              );
+              btn.classList.add("active");
+            } else {
+              console.warn(`LEPP "${l.name}" não tem coordenadas válidas.`);
+            }
+          });
+          header.appendChild(btn);
+        });
+        card.appendChild(header);
+        card.style.display = "block";
+      } catch (e) {
+        console.error("Erro ao buscar LEPPs ativos:", e);
+        card.style.display = "none";
+      }
+      return card;
+    }
+    /* ════════════════════════════════════════════════════════════════
+    WEATHER CARDS MODULE
+    ════════════════════════════════════════════════════════════════ */
+    function ensureWeatherCardStyles() {
+      const styleId = "weather-card-style";
+      if (document.getElementById(styleId)) return;
+      const s = document.createElement("style");
+      s.id = styleId;
+      s.textContent = `
+        .weather-card {margin-bottom: 10px; border: 1px solid #d9e1ec; border-radius: 14px; overflow: hidden; background: #fff; font-family: 'Segoe UI', sans-serif; box-shadow: 0 2px 10px rgba(0,0,0,.06); transition: all .25s ease; flex: 1; min-width: 180px; display: flex; flex-direction: column;}
+        .weather-card:hover {box-shadow: 0 6px 18px rgba(0,0,0,.10);}
+        .weather-card-header {display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; background:#131a69; color:#fff; padding:10px 0 8px;}
+      `;
+      document.head.appendChild(s);
+    }
+    const WEATHER_SHORT_DAYS = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SAB"];
+    let weatherLocationOverride = null;
+    let weatherUpdaters = [];
+    function setWeatherLocation(lat, long, name) {
+      weatherLocationOverride = { lat, long, name };
+      weatherUpdaters.forEach(fn => fn());
+    }
+    function clearWeatherLocation() {
+      weatherLocationOverride = null;
+      weatherUpdaters.forEach(fn => fn());
+    }
+    async function fetchCityAndPlace(corp_oper_nr) {
+      if (weatherLocationOverride) {
+        return {
+          city: weatherLocationOverride.name,
+          place: { latitude: weatherLocationOverride.lat, longitude: weatherLocationOverride.long }
+        };
+      }
+      const corpRes = await fetch(`${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${corp_oper_nr}&select=corp_localitie`, {headers: getSupabaseHeaders()});
+      const corpData = await corpRes.json();
+      const city = corpData?.[0]?.corp_localitie?.trim() || "Localização";
+      const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=pt`);
+      const geoData = await geoRes.json();
+      const place = geoData?.results?.[0] || null;
+      return { city, place };
+    }
+    function makeStatBox(label, valueHtml, color, bg, fontSize = "11px") {
+      return `
+        <div style="display:flex; flex-direction:column; align-items:center; gap:3px; flex:1; background:#f8f9fc; border-radius:8px; padding:5px 2px;">
+          <div style="font-size:10px; font-weight:700; opacity:0.6; background:#eceff3; border-radius:5px; padding:2px 6px; width:100%; text-align:center; box-sizing:border-box;">${label}</div>
+          <div style="font-size:${fontSize}; color:${color}; font-weight:700; background:${bg}; border-radius:5px; padding:2px 6px; width:100%; text-align:center; box-sizing:border-box;">${valueHtml}</div>
+        </div>`;
+    }
+    function setCardCity(card, footerClass, city) {
+      card.querySelector(`.${footerClass}-city`).textContent = (city || "").replace(/^LEPP\s+/i, "");
+    }
+    function renderForecastRow(container, forecastArray, rowBuilders) {
+      container.innerHTML = "";
+      container.style.cssText = "display:flex; justify-content:space-between; gap:4px; padding:6px 4px;";
+      forecastArray.forEach(day => {
+        const dayName = WEATHER_SHORT_DAYS[new Date(day.date).getDay()];
+        const dayCard = document.createElement("div");
+        dayCard.style.cssText = "display:flex; flex-direction:column; align-items:center; gap:3px; flex:1; background:#f8f9fc; border-radius:8px; padding:5px 2px;";
+        let rowsHtml = `<div style="font-size:10px; font-weight:700; opacity:0.6; background:#eceff3; border-radius:5px; padding:2px 6px; width:100%; text-align:center; box-sizing:border-box;">${dayName}</div>`;
+        rowBuilders.forEach(rb => {
+          const value = rb.value(day);
+          const color = typeof rb.color === "function" ? rb.color(day) : rb.color;
+          const bg = typeof rb.bg === "function" ? rb.bg(day) : rb.bg;
+          rowsHtml += `<div style="font-size:11px; color:${color}; font-weight:600; background:${bg}; border-radius:5px; padding:2px 6px; width:100%; text-align:center; box-sizing:border-box;">${value}</div>`;
+        });
+        dayCard.innerHTML = rowsHtml;
+        container.appendChild(dayCard);
+      });
+    }
+    function buildWeatherCardShell({ icon, title, headerColor, topHtml, footerColor, footerClass }) {
+      ensureWeatherCardStyles();
+      const card = document.createElement("div");
+      card.className = "weather-card";
+      card.innerHTML = `
+        <div class="weather-card-header" style="background:${headerColor};">
+          <div>${icon}</div>
+          <div style="font-weight:600; font-size:15px; line-height:1;">${title}</div>
+        </div>
+        ${topHtml}
+        <div class="${footerClass}-forecast"></div>
+        <div class="${footerClass}-city" style="margin-top:auto; text-align:center; background:${footerColor}; color:#fff; font-weight:600; font-size:13px; opacity:0.6; padding:8px 0; border-top:1px solid #eef1f5;">A obter...</div>
+      `;
+      return card;
+    }
+    /* ═══ TEMPERATURE ═══ */
+    async function fetchTempData(corp_oper_nr) {
+      try {
+        const { city, place } = await fetchCityAndPlace(corp_oper_nr);
+        if (!place) return { city, current: "--", min: "--", max: "--", forecast: [] };
+        const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&daily=temperature_2m_max,temperature_2m_min&current=temperature_2m&timezone=auto&forecast_days=5`);
+        const w = await weatherRes.json();
+        const forecast = (w?.daily?.time || []).map((date, i) => ({date, max: w.daily.temperature_2m_max[i], min: w.daily.temperature_2m_min[i]}));
+        return {city, current: w?.current?.temperature_2m ?? "--", min: w?.daily?.temperature_2m_min?.[0] ?? "--", max: w?.daily?.temperature_2m_max?.[0] ?? "--", forecast};
+      } catch (e) { console.error("fetchTempData:", e); return { city: "Localização", current: "--", min: "--", max: "--", forecast: [] }; }
+    }
+    function createTempCard() {
+      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
+      if (!corp_oper_nr) { console.error("corp_oper_nr não encontrado"); return document.createElement("div"); }
+      const icon = `<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 14.76V5a2 2 0 0 0-4 0v9.76a4 4 0 1 0 4 0z"/><line x1="12" y1="5" x2="12" y2="14"/></svg>`;
+      const topHtml = `<div style="text-align:center; padding:10px 10px 6px;"><div style="font-weight:600; font-size:13px; opacity:0.7; margin-bottom:2px;">ATUAL</div><div class="temp-current" style="font-size:20px; color:red; font-weight:600;">-- °C</div><div style="display:flex; justify-content:center; gap:6px; margin-top:8px;">${makeStatBox("MAX", `<span class="temp-max">--</span>°C`, "red", "#fde8e8")}${makeStatBox("MIN", `<span class="temp-min">--</span>°C`, "#1565c0", "#e3edfb")}</div></div>`;
+      const tempCard = buildWeatherCardShell({ icon, title: "Temperatura", headerColor: "#8b0000", topHtml, footerColor: "#8b0000", footerClass: "temp" });
+      async function update() {
+        const t = await fetchTempData(corp_oper_nr);
+        setCardCity(tempCard, "temp", t.city);
+        tempCard.querySelector(".temp-current").textContent = `${t.current} °C`;
+        tempCard.querySelector(".temp-min").textContent = t.min;
+        tempCard.querySelector(".temp-max").textContent = t.max;
+        renderForecastRow(tempCard.querySelector(".temp-forecast"), t.forecast, [{value: d => `${Math.round(d.max)}°`, color: "red", bg: "#fde8e8"}, {value: d => `${Math.round(d.min)}°`, color: "#1565c0", bg: "#e3edfb"}]);
+      }
+      weatherUpdaters.push(update);
+      update(); setInterval(update, 10 * 60 * 1000);
+      return tempCard;
+    }
+    /* ═══ WIND ═══ */
+    function degreesToDirection(deg) {
+      if (deg === null || deg === undefined || deg === "--") return "--";
+      const directions = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSO","SO","OSO","O","ONO","NO","NNO"];
+      const directions_inter = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
+      return directions[Math.round(deg / 22.5) % 16];
+    }
+    async function fetchWindData(corp_oper_nr) {
+      try {
+        const { city, place } = await fetchCityAndPlace(corp_oper_nr);
+        if (!place) return { city, speed: "--", gust: "--", direction: "--", forecast: [] };
+        const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&current=wind_speed_10m,wind_direction_10m,wind_gusts_10m&daily=wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant&timezone=auto&forecast_days=5`);
+        const w = await weatherRes.json();
+        const forecast = (w?.daily?.time || []).map((date, i) => ({date, speed: w.daily.wind_speed_10m_max[i], gust: w.daily.wind_gusts_10m_max[i], direction: w.daily.wind_direction_10m_dominant[i]}));
+        return {city, speed: w?.current?.wind_speed_10m ?? "--", gust: w?.current?.wind_gusts_10m ?? "--", direction: w?.current?.wind_direction_10m ?? "--", forecast};
+      } catch (e) { console.error("fetchWindData:", e); return { city: "Localização", speed: "--", gust: "--", direction: "--", forecast: [] }; }
+    }
+    function createWindCard() {
+      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
+      if (!corp_oper_nr) { console.error("corp_oper_nr não encontrado"); return document.createElement("div"); }
+      const icon = `
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9.59 4.59A2 2 0 1 1 11 8H2"/><path d="M17.59 9.59A2 2 0 1 1 19 13H2"/><path d="M12.59 18.59A2 2 0 1 0 14 22H2"/>
+        </svg>
+      `;
+      const topHtml = `
+        <div style="text-align:center; padding:10px 10px 6px;">
+          <div style="font-weight:600; font-size:13px; opacity:0.7; margin-bottom:2px;">ATUAL</div>
+          <div class="wind-speed" style="font-size:20px; color:#0f4c81; font-weight:600;">-- km/h</div>
+          <div style="display:flex; justify-content:center; gap:6px; margin-top:8px;">${makeStatBox("DIREÇÃO", `<span class="wind-dir">--</span>`, "#333", "#e9ecf1")}${makeStatBox("RAJADAS", `<span class="wind-gust">--</span> km/h`, "#0f4c81", "#e3edfb")}</div>
+        </div>
+      `;
+      const windCard = buildWeatherCardShell({ icon, title: "Vento", headerColor: "#0f4c81", topHtml, footerColor: "#0f4c81", footerClass: "wind" });
+      async function update() {
+        const w = await fetchWindData(corp_oper_nr);
+        setCardCity(windCard, "wind", w.city);
+        windCard.querySelector(".wind-speed").textContent = `${w.speed} km/h`;
+        windCard.querySelector(".wind-dir").textContent = degreesToDirection(w.direction);
+        windCard.querySelector(".wind-gust").textContent = w.gust;
+        renderForecastRow(windCard.querySelector(".wind-forecast"), w.forecast, [{value: d => `${Math.round(d.gust)} km/h`, color: "#0f4c81", bg: "#e3edfb"}, {value: d => degreesToDirection(d.direction), color: "#333", bg: "#e9ecf1"}]);
+      }
+      weatherUpdaters.push(update);
+      update(); setInterval(update, 10 * 60 * 1000);
+      return windCard;
+    }
+    /* ═══ HUMIDITY ═══ */
+    async function fetchHumidityData(corp_oper_nr) {
+      try {
+        const { city, place } = await fetchCityAndPlace(corp_oper_nr);
+        if (!place) return { city, current: "--", max: "--", min: "--", forecast: [] };
+        const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&daily=relative_humidity_2m_mean,relative_humidity_2m_max,relative_humidity_2m_min&current=relative_humidity_2m&timezone=auto&forecast_days=5`);
+        const w = await weatherRes.json();
+        const forecast = (w?.daily?.time || []).map((date, i) => ({date, max: w.daily.relative_humidity_2m_max[i], min: w.daily.relative_humidity_2m_min[i]}));
+        return {city, current: w?.current?.relative_humidity_2m ?? "--", max: w?.daily?.relative_humidity_2m_max?.[0] ?? "--", min: w?.daily?.relative_humidity_2m_min?.[0] ?? "--", forecast};
+      } catch (e) { console.error("fetchHumidityData:", e); return { city: "Localização", current: "--", max: "--", min: "--", forecast: [] }; }
+    }
+    function createHumidityCard() {
+      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
+      if (!corp_oper_nr) { console.error("corp_oper_nr não encontrado"); return document.createElement("div"); }
+      const icon = `<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.32 0z"/></svg>`;
+      const topHtml = `
+        <div style="text-align:center; padding:10px 10px 6px;">
+          <div style="font-weight:600; font-size:13px; opacity:0.7; margin-bottom:2px;">ATUAL</div>
+          <div class="hum-current" style="font-size:20px; color:#0a6e6e; font-weight:600;">-- %</div>
+          <div style="display:flex; justify-content:center; gap:6px; margin-top:8px;">${makeStatBox("MAX", `<span class="hum-max">--</span>%`, "#0a6e6e", "#e0f2f1")}${makeStatBox("MIN", `<span class="hum-min">--</span>%`, "#0a6e6e", "#e0f2f1")}</div>
+        </div>
+      `;
+      const humCard = buildWeatherCardShell({ icon, title: "Humidade", headerColor: "#0a6e6e", topHtml, footerColor: "#0a6e6e", footerClass: "hum" });
+      async function update() {
+        const h = await fetchHumidityData(corp_oper_nr);
+        setCardCity(humCard, "hum", h.city);
+        humCard.querySelector(".hum-current").textContent = `${h.current} %`;
+        humCard.querySelector(".hum-max").textContent = h.max;
+        humCard.querySelector(".hum-min").textContent = h.min;
+        renderForecastRow(humCard.querySelector(".hum-forecast"), h.forecast, [{value: d => `${Math.round(d.max)}%`, color: "#0a6e6e", bg: "#e0f2f1"}, {value: d => `${Math.round(d.min)}%`, color: "#0a6e6e", bg: "#e0f2f1"}]);
+      }
+      weatherUpdaters.push(update);
+      update(); setInterval(update, 10 * 60 * 1000);
+      return humCard;
+    }
+    /* ═══ UV LEVEL ═══ */
+    function getUVLevel(uv) {
+      if (uv === "--" || uv === null || uv === undefined) return { label: "--", color: "#999" };
+      if (uv < 3) return { label: "Baixo", color: "#2e7d32" };
+      if (uv < 6) return { label: "Moderado", color: "#f9a825" };
+      if (uv < 8) return { label: "Alto", color: "#ef6c00" };
+      if (uv < 11) return { label: "Muito Alto", color: "#c62828" };
+      return { label: "Extremo", color: "#6a1b9a" };
+    }
+    async function fetchUVData(corp_oper_nr) {
+      try {
+        const { city, place } = await fetchCityAndPlace(corp_oper_nr);
+        if (!place) return { city, current: "--", forecast: [] };
+        const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&daily=uv_index_max&timezone=auto&forecast_days=5`);
+        const w = await weatherRes.json();
+        const forecast = (w?.daily?.time || []).map((date, i) => ({ date, uv: w.daily.uv_index_max[i] }));
+        return { city, current: w?.daily?.uv_index_max?.[0] ?? "--", forecast };
+      } catch (e) { console.error("fetchUVData:", e); return { city: "Localização", current: "--", forecast: [] }; }
+    }
+    function createUVCard() {
+      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
+      if (!corp_oper_nr) { console.error("corp_oper_nr não encontrado"); return document.createElement("div"); }
+      const icon = `
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/>
+          <line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/>
+          <line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+      `;
+      const topHtml = `
+        <div style="text-align:center; padding:10px 10px 6px;">
+          <div style="font-weight:600; font-size:13px; opacity:0.7; margin-bottom:2px;">MÁXIMO HOJE</div>
+          <div class="uv-current" style="font-size:20px; color:#ef6c00; font-weight:600;">--</div>
+          <div class="uv-level" style="font-size:12px; font-weight:700; margin-top:6px; border-radius:5px; padding:3px 10px; display:inline-block;">--</div>
+        </div>
+      `;
+      const uvCard = buildWeatherCardShell({ icon, title: "Índice UV", headerColor: "#ef6c00", topHtml, footerColor: "#ef6c00", footerClass: "uv" });
+      async function update() {
+        const u = await fetchUVData(corp_oper_nr);
+        setCardCity(uvCard, "uv", u.city);
+        uvCard.querySelector(".uv-current").textContent = u.current;
+        const level = getUVLevel(u.current);
+        const levelEl = uvCard.querySelector(".uv-level");
+        levelEl.textContent = level.label; levelEl.style.background = level.color + "22"; levelEl.style.color = level.color;
+        renderForecastRow(uvCard.querySelector(".uv-forecast"), u.forecast, [{value: d => `${Math.round(d.uv)}`, color: d => getUVLevel(d.uv).color, bg: d => getUVLevel(d.uv).color + "22"}]);
+      }
+      weatherUpdaters.push(update);
+      update(); setInterval(update, 10 * 60 * 1000);
+      return uvCard;
+    }
+    /* ═══ INSTABILITY ═══ */
+    function getCapeLevel(cape) {
+      if (cape === "--" || cape === null || cape === undefined) return { label: "--", color: "#999" };
+      if (cape < 300) return { label: "Fraca", color: "#2e7d32" };
+      if (cape < 1000) return { label: "Moderada", color: "#f9a825" };
+      if (cape < 2500) return { label: "Forte", color: "#ef6c00" };
+      return { label: "Extrema", color: "#c62828" };
+    }
+    async function fetchCapeData(corp_oper_nr) {
+      try {
+        const { city, place } = await fetchCityAndPlace(corp_oper_nr);
+        if (!place) return { city, current: "--", max: "--", min: "--", forecast: [] };
+        const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&hourly=cape&current=cape&timezone=auto&forecast_days=5`);
+        const w = await weatherRes.json();
+        const times = w?.hourly?.time || [];
+        const capes = w?.hourly?.cape || [];
+        const byDay = {};
+        times.forEach((t, i) => { const day = t.split("T")[0]; if (!byDay[day]) byDay[day] = []; byDay[day].push(capes[i]); });
+        const forecast = Object.keys(byDay).slice(0, 5).map(date => ({date, max: Math.max(...byDay[date]), min: Math.min(...byDay[date])}));
+        return {city, current: w?.current?.cape ?? "--", max: forecast[0]?.max ?? "--", min: forecast[0]?.min ?? "--", forecast};
+      } catch (e) { console.error("fetchCapeData:", e); return { city: "Localização", current: "--", max: "--", min: "--", forecast: [] }; }
+    }
+    function createCapeCard() {
+      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
+      if (!corp_oper_nr) { console.error("corp_oper_nr não encontrado"); return document.createElement("div"); }
+      const icon = `
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 16.9A5 5 0 0 0 18 7h-1.26a8 8 0 1 0-11.62 9"/><polyline points="13 11 9 17 15 17 11 23"/>
+        </svg>
+      `;
+      const topHtml = `
+        <div style="text-align:center; padding:10px 10px 6px;">
+          <div style="font-weight:600; font-size:13px; opacity:0.7; margin-bottom:2px;">ATUAL (CAPE)</div>
+          <div class="cape-current" style="font-size:20px; color:#6a1b9a; font-weight:600;">--</div>
+          <div class="cape-level" style="font-size:12px; font-weight:700; margin-top:6px; border-radius:5px; padding:3px 10px; display:inline-block;">--</div>
+          <div style="display:flex; justify-content:center; gap:6px; margin-top:8px;">${makeStatBox("MAX", `<span class="cape-max">--</span>`, "#6a1b9a", "#f3e5f5")}${makeStatBox("MIN", `<span class="cape-min">--</span>`, "#6a1b9a", "#f3e5f5")}</div>
+        </div>
+      `;
+      const capeCard = buildWeatherCardShell({ icon, title: "Instabilidade", headerColor: "#6a1b9a", topHtml, footerColor: "#6a1b9a", footerClass: "cape" });
+      async function update() {
+        const c = await fetchCapeData(corp_oper_nr);
+        setCardCity(capeCard, "cape", c.city);
+        capeCard.querySelector(".cape-current").textContent = c.current;
+        capeCard.querySelector(".cape-max").textContent = c.max;
+        capeCard.querySelector(".cape-min").textContent = c.min;
+        const level = getCapeLevel(c.current);
+        const levelEl = capeCard.querySelector(".cape-level");
+        levelEl.textContent = level.label; levelEl.style.background = level.color + "22"; levelEl.style.color = level.color;
+        renderForecastRow(capeCard.querySelector(".cape-forecast"), c.forecast, [{value: d => `${Math.round(d.max)}`, color: "#6a1b9a", bg: "#f3e5f5"}, {value: d => `${Math.round(d.min)}`, color: "#6a1b9a", bg: "#f3e5f5"}]);
+      }
+      weatherUpdaters.push(update);
+      update(); setInterval(update, 10 * 60 * 1000);
+      return capeCard;
+    }
+    /* ═══ SUN SETDOWN ═══ */
+    async function fetchSunData(corp_oper_nr) {
+      try {
+        const { city, place } = await fetchCityAndPlace(corp_oper_nr);
+        if (!place) return { city, sunrise: "--", sunset: "--", forecast: [] };
+        const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&daily=sunrise,sunset&timezone=auto&forecast_days=5`);
+        const w = await weatherRes.json();
+        const formatTime = (iso) => iso ? iso.split("T")[1] : "--";
+        const forecast = (w?.daily?.time || []).map((date, i) => ({date, sunrise: formatTime(w.daily.sunrise[i]), sunset: formatTime(w.daily.sunset[i])}));
+        return { city, sunrise: forecast[0]?.sunrise ?? "--", sunset: forecast[0]?.sunset ?? "--", forecast };
+      } catch (e) { console.error("fetchSunData:", e); return { city: "Localização", sunrise: "--", sunset: "--", forecast: [] }; }
+    }
+    function createSunCard() {
+      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
+      if (!corp_oper_nr) { console.error("corp_oper_nr não encontrado"); return document.createElement("div"); }
+      const icon = `
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="M2 12h2"/>
+          <path d="M20 12h2"/><path d="m19.07 4.93-1.41 1.41"/><path d="M15.947 12.65a4 4 0 0 0-5.925-4.128"/>
+          <path d="M13 22H4a2 2 0 0 1-1.087-3.687L8 15h4l4.522 3.313A2 2 0 0 1 15.522 22Z"/>
+        </svg>
+      `;
+      const topHtml = `
+        <div style="text-align:center; padding:10px 10px 6px;">
+          <div style="font-weight:600; font-size:13px; opacity:0.7; margin-bottom:2px;">HOJE</div>
+          <div style="display:flex; justify-content:center; gap:6px; margin-top:8px;">${makeStatBox("NASCER", `<span class="sun-rise">--</span>`, "#b8860b", "#fdf3d9", "14px")}${makeStatBox("PÔR", `<span class="sun-set">--</span>`, "#8b4513", "#fde8d9", "14px")}</div>
+        </div>
+      `;
+      const sunCard = buildWeatherCardShell({ icon, title: "Nascer/Pôr do Sol", headerColor: "#b8860b", topHtml, footerColor: "#b8860b", footerClass: "sun" });
+      let requestId = 0;
+      async function update() {
+        const myRequestId = ++requestId;
+        try {
+          const s = await fetchSunData(corp_oper_nr);
+          if (myRequestId !== requestId) return;
+          setCardCity(sunCard, "sun", s.city);
+          sunCard.querySelector(".sun-rise").textContent = s.sunrise;
+          sunCard.querySelector(".sun-set").textContent = s.sunset;
+          renderForecastRow(sunCard.querySelector(".sun-forecast"), s.forecast, [{value: d => d.sunrise, color: "#b8860b", bg: "#fdf3d9"}, {value: d => d.sunset, color: "#8b4513", bg: "#fde8d9"}]);
+        } catch (e) {
+          if (myRequestId !== requestId) return;
+          console.error("Erro update Sun:", e);
+          setCardCity(sunCard, "sun", "Localização");
+          sunCard.querySelector(".sun-rise").textContent = "--";
+          sunCard.querySelector(".sun-set").textContent = "--";
+        }
+      }
+      weatherUpdaters.push(update);
+      update(); setInterval(update, 10 * 60 * 1000);
+      return sunCard;
+    }
+    /* ═══ SINGLE CALL FUNCTION ═══ */
+    function renderWeatherCards() {
+      weatherUpdaters = [];
+      const wrapper = document.createElement("div");
+      wrapper.style.cssText = "display:flex; flex-direction:column; gap:5px; margin-bottom:0px;";
+      const cards = [createTempCard(), createWindCard(), createHumidityCard(), createUVCard(), createCapeCard(), createSunCard()];
+      for (let i = 0; i < cards.length; i += 3) {
+        const row = document.createElement("div");
+        row.style.cssText = "display:flex; gap:12px; flex-wrap:wrap;";
+        cards.slice(i, i + 3).forEach(card => row.appendChild(card));
+        wrapper.appendChild(row);
+      }
+      return wrapper;
+    }
+    /* ════════════════════════════════════════════════════════════════
+    MODE SELECT CARD (1/2/3 LEPP)
+    ════════════════════════════════════════════════════════════════ */
+    function ensureModeSelectCardStyles() {
+      const styleId = "mode-select-card-style";
+      if (document.getElementById(styleId)) return;
+      const s = document.createElement("style");
+      s.id = styleId;
+      s.textContent = `
+        .mode-select-card {border: 1px solid #8a96b8; border-radius: 14px; margin-bottom: 5px; overflow: hidden; background: #eef1f7; font-family: 'Segoe UI', sans-serif; box-shadow: 0 2px 10px rgba(0,0,0,.06); transition: all .25s ease;}
+        .mode-select-card:hover {box-shadow: 0 6px 18px rgba(0,0,0,.10);}
+        .mode-select-card-header {background: #131a69; color: #fff; padding: 14px 18px; display: flex; align-items: center; gap: 10px;}
+        .mode-select-card-title {font-size: 15px; font-weight: 600; line-height: 1;}
+        .mode-select-card-body {padding: 16px 18px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;}
+      `;
+      document.head.appendChild(s);
+    }
+    function createModeSelectCardShell() {
+      ensureModeSelectCardStyles();
+      const card = document.createElement("div");
+      card.className = "mode-select-card";
+      const icon = `
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;">
+          <path d="M10 17h4V5H2v12h3"/>
+          <path d="M14 9h4l4 4v4h-2"/>
+          <circle cx="7" cy="17" r="2"/>
+          <circle cx="17" cy="17" r="2"/>
+        </svg>
+      `;
+      card.innerHTML = `
+        <div class="mode-select-card-header">
+          <div style="display:flex; align-items:center;">${icon}</div>
+          <div class="mode-select-card-title">Número de LEPPs Ativas para Distribuição</div>
+        </div>
+        <div class="mode-select-card-body"></div>
+      `;
+      return card;
+    }
+    /* ════════════════════════════════════════════════════════════════
+    LEPPs TABLE MODULE
+    ════════════════════════════════════════════════════════════════ */
+    function getLevelBadgeStyle(level) {
+      if (!level) return {bg: "#999", color: "#fff"};
+      const l = level.toUpperCase();
+      if (l.includes("IV")) return {bg: "#c62828", color: "#fff"};
+      if (l.includes("III")) return {bg: "#ef6c00", color: "#fff"};
+      if (l.includes("II")) return {bg: "#fbc02d", color: "#000"};
+      if (l.includes("I")) return {bg: "#1565c0", color: "#fff"};
+      if (l.includes("MONITOR")) return {bg: "#2e7d32", color: "#fff"};
+      return { bg: "#999", color: "#fff" };
+    }
+    async function createDecirLevelIVTable(containerId, prefillRows = null) {
+      const container = document.getElementById(containerId) || $(containerId);
+      if (!container) return;
+      container.innerHTML = "";
+      const corpOperNr = getCorpId();
+      if (!leppVehicles || leppVehicles.length === 0) {
+        if (typeof initLeppVehicles === "function") {
+          await initLeppVehicles();
+        }
+      }
+      const vehicles = leppVehicles || [];
+      const MODE_TABLE_SIZES = {"1_ecin": [5], "1_ecin_1_elac": [5, 2], "brigada": [5, 5, 2]};
+      const MODE_LABELS = {"1_ecin": "1 ECIN", "1_ecin_1_elac": "1 ECIN e 1 ELAC", "brigada": "BRIGADA"};
+      const MODE_MAX_LEPP = {"1_ecin": 1, "1_ecin_1_elac": 2};      
+      function distributeTables(sizesArray, numCards) {
+        const result = [];
+        for (let i = 0; i < numCards - 1; i++) {
+          result.push(sizesArray[i] !== undefined ? [sizesArray[i]] : []);
+        }
+        result.push(sizesArray.slice(numCards - 1));
+        return result;
+      }      
+      const styleId = "lepps-style";
+      if (!document.getElementById(styleId)) {
+        const s = document.createElement("style"); s.id = styleId;
+        s.textContent = `
+          .lepps-card {border: 1px solid #a8b4cc; border-radius: 14px; margin-bottom: 16px; overflow: hidden; background: #fff; font-family: 'Segoe UI', sans-serif; box-shadow: 0 2px 10px rgba(0,0,0,.06); transition: all .25s ease;}
+          .lepps-card:hover {box-shadow: 0 6px 18px rgba(0,0,0,.10);}
+          .lepps-card-header {background: #f8f9fc; padding: 14px 18px; display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;}
+          .lepps-level-badge{display:none; align-self:center; font-size:12px; font-weight:700; padding:6px 12px; border-radius:8px; white-space:nowrap;}
+          .lepps-vehicles {display: flex; gap: 16px; padding: 5px 0px; background: #fff; border-top: 1px solid #eef1f5; border-bottom: 1px solid #eef1f5; align-items: flex-end; flex-wrap: wrap;}
+          .lepps-selector-group {display: flex; flex-direction: column; gap: 5px; min-width: 200px;}
+          .lepps-selector-group label {font-size: 14px; font-weight: 600; color: #5b6472; letter-spacing: .2px;}      
+          .lepps-vehicles .lepps-selector-group label {font-size: 14px;}      
+          .lepps-selector-group select {border: 1px solid #d7dde8; border-radius: 8px; padding: 6px 10px; font-size: 12px; color: #333; background: #fff; transition: all .2s ease;}
+          .lepps-selector-group select:focus {outline: none; border-color: #131a69; box-shadow: 0 0 0 3px rgba(19,26,105,.12);}
+          .lepps-selector-group.lepp-inline {flex-direction: row; align-items: center; gap: 8px;}
+          .lepps-card-body-layout {display: flex; gap: 16px; padding: 14px 18px;}
+          .lepps-table-wrap {flex: 1; min-width: 0;}
+          .lepps-mini-map-wrap {width: 400px; min-width: 350px; min-height: 215px; border: 1px solid #d9e1ec; border-radius: 10px; overflow: hidden; background: #e5e8ec; position: relative; z-index: 0; isolation: isolate;}
+          .mini-leaflet-map {width: 100%; height: 100%;}      
+          .lepps-table {width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 12px;}
+          .lepps-table th {background: #b8c2d1; color: #333; text-align: center; padding: 7px 8px; border: 1px solid #cfd5df; font-weight: 600; pointer-events: auto;}
+          .lepps-table th.lepps-sub-th {background: #d3dae4; font-size: 11px;}
+          .lepps-table td {padding: 4px 6px; border: 1px solid #d7dde8; text-align: center; height: 26px; background: #eceff3; color: #333;}
+          .lepps-table td.lepps-ni-cell {background: #fff; outline: none; cursor: text; transition: .2s;}
+          .lepps-table td.lepps-ni-cell:focus {background: #eef3ff;}
+          .lepps-table td.lepps-func-cell {background: #dde2ea; color: #555; font-size: 11px; font-style: italic; font-weight: 600;}
+          .lepps-date-input {border: 1px solid #c8d0db; border-radius: 6px; background: #fff; font-size: 11px; width: 150px; text-align: center; color: #333; font-family: 'Segoe UI', sans-serif; font-weight: 600; outline: none; padding: 5px; transition: .2s;}
+          .lepps-date-input:focus {border-color: #131a69; box-shadow: 0 0 0 3px rgba(19,26,105,.12);}
+          .lepps-date-input::placeholder {color: #999; font-weight: normal;}
+          .lepps-date-input.lepps-date-invalid {border-color: #d13c3c; background: #fff5f5; box-shadow: 0 0 0 3px rgba(209,60,60,.12);}
+          .btn-add[disabled] {opacity: .4; cursor: not-allowed; pointer-events: none;}
+          .lepps-mode-badge {display: flex; align-items: center; gap: 8px; font-family: 'Segoe UI', sans-serif; font-size: 13px; color: #333;}
+          .lepps-mode-badge .mode-tag {background: #131a69; color: #fff; padding: 4px 12px; border-radius: 999px; font-weight: 600; font-size: 12px;}
+          .lepps-add-card-btn {margin-left: auto; width: 32px; height: 32px; border-radius: 50%; border: 1px solid #d7dde8; background: #fff; color: #131a69; font-size: 18px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .2s ease;}
+          .lepps-add-card-btn:hover {background: #131a69; color: #fff; transform: scale(1.08);}      
+          @media (max-width: 768px) {
+            .lepps-card-body-layout {flex-direction: column;}
+            .lepps-mini-map-wrap {width: 100%; min-width: 0; height: 200px;}
+          }
+        `;
+        document.head.appendChild(s);
+      }      
+      let currentMode = null;
+      let leppFullData = [];
+      let leppOptions = [];
+      try {
+        const [modeData, leppData] = await Promise.all([
+          supabaseFetch(`decir_mode?corp_oper_nr=eq.${corpOperNr}&limit=1`),
+          supabaseFetch(`decir_main_options?corp_oper_nr=eq.${corpOperNr}&type=eq.lepp&active=eq.true&order=sort_order`)
+        ]);
+        currentMode = modeData?.[0]?.mode || null;
+        leppFullData = leppData || [];
+        leppOptions = leppFullData;
+      } catch(e) {
+        console.error("Erro ao buscar mode/LEPPs:", e);
+      }      
+      const FUNC_LABELS = (rows) => {
+        const labels = ["CE", "MP", "1º", "2º", "3º"];
+        return Array.from({length: rows}, (_, i) => labels[i] || "");
+      };      
+      const VALID_MONTHS = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
+      function isValidOperationalTimestamp(value) {
+        if (!value) return true;
+        const txt = value.trim().toUpperCase();
+        const m = txt.match(/^(\d{2})(\d{2})(\d{2})([A-Z]{3})(\d{2})$/);
+        if (!m) return false;
+        const day = Number(m[1]), hour = Number(m[2]), minute = Number(m[3]), month = m[4];
+        if (day < 1 || day > 31) return false;
+        if (hour > 23) return false;
+        if (minute > 59) return false;
+        if (!VALID_MONTHS.includes(month)) return false;
+        return true;
+      }      
+      function validateDateInput(input) {
+        const ok = isValidOperationalTimestamp(input.value);
+        input.classList.toggle("lepps-date-invalid", !ok);
+        input.title = ok ? "" : "Formato inválido. Use DDHHMMMÊSAA, ex: 060800JUN26";
+      }      
+      const makeTable = (rows) => {
+        const table = document.createElement("table");
+        table.className = "lepps-table";
+        const thead = document.createElement("thead");
+        const trh1 = document.createElement("tr");
+        [1, 2].forEach(() => {
+          const th = document.createElement("th");
+          th.colSpan = 4; th.style.whiteSpace = "nowrap";
+          const spanDe = document.createElement("span");
+          spanDe.textContent = "De:"; spanDe.style.cssText = "font-size:12px; font-weight:700; margin-right:4px;";
+          const inputDe = document.createElement("input");
+          inputDe.type = "text"; inputDe.className = "lepps-date-input"; inputDe.placeholder = "010800JAN24"; inputDe.maxLength = 11;
+          inputDe.addEventListener("input", () => {
+            const pos = inputDe.selectionStart;
+            inputDe.value = inputDe.value.toUpperCase();
+            inputDe.setSelectionRange(pos, pos);
+          });
+          inputDe.addEventListener("blur", () => validateDateInput(inputDe));
+          const spanAte = document.createElement("span");
+          spanAte.textContent = "Até:"; spanAte.style.cssText = "font-size:12px; font-weight:700; margin-left:8px; margin-right:4px;";
+          const inputAte = document.createElement("input");
+          inputAte.type = "text"; inputAte.className = "lepps-date-input"; inputAte.placeholder = "012000JAN24"; inputAte.maxLength = 11;
+          inputAte.addEventListener("input", () => {
+            const pos = inputAte.selectionStart;
+            inputAte.value = inputAte.value.toUpperCase();
+            inputAte.setSelectionRange(pos, pos);
+          });
+          inputAte.addEventListener("blur", () => validateDateInput(inputAte));
+          th.appendChild(spanDe); th.appendChild(inputDe); th.appendChild(spanAte); th.appendChild(inputAte);
+          trh1.appendChild(th);
+        });
+        thead.appendChild(trh1);
+        const trh2 = document.createElement("tr");
+        [1, 2].forEach(() => {
+          [{label: "N° Int.", width: "60px"}, {label: "Patente", width: "60px"}, {label: "Função", width: "60px"}, {label: "Nome", width: "300px"}].forEach(h => {
+            const th = document.createElement("th");
+            th.className = "lepps-sub-th"; th.textContent = h.label; th.style.width = h.width; th.style.minWidth = h.width;
+            trh2.appendChild(th);
+          });
+        });
+        thead.appendChild(trh2);
+        table.appendChild(thead);
+        const tbody = document.createElement("tbody");
+        const funcLabels = FUNC_LABELS(rows);
+        for (let r = 0; r < rows; r++) {
+          const tr = document.createElement("tr");
+          [1, 2].forEach(() => {
+            const tdNI = document.createElement("td");
+            tdNI.className = "lepps-ni-cell"; tdNI.contentEditable = true;
+            tdNI.style.cssText = "width:60px; min-width:60px; max-width:60px;";
+            const tdPatente = document.createElement("td");
+            const tdFunc = document.createElement("td");
+            tdFunc.className = "lepps-func-cell"; tdFunc.textContent = funcLabels[r];
+            const tdNome = document.createElement("td");
+            tdNome.style.textAlign = "left";
+            tdNI.addEventListener("keydown", e => {
+              if (/^\d$/.test(e.key) && tdNI.textContent.replace(/\D/g,"").length >= 3) e.preventDefault();
+              else if (!/^\d$/.test(e.key) && !["Backspace","Delete","Tab"].includes(e.key)) e.preventDefault();
+            });
+            tdNI.addEventListener("input", async () => {
+              const ni = tdNI.textContent.trim();
+              if (ni.length === 3) {
+                try {
+                  const result = await supabaseFetch(`reg_elems?select=patent_abv,abv_name&n_int=eq.${ni}&corp_oper_nr=eq.${corpOperNr}&limit=1`);
+                  if (result?.length) {tdPatente.textContent = result[0].patent_abv || ""; tdNome.textContent = result[0].abv_name || "";}
+                  else {tdPatente.textContent = ""; tdNome.textContent = "";}
+                } catch {tdPatente.textContent = ""; tdNome.textContent = "";}
+              } else {tdPatente.textContent = ""; tdNome.textContent = "";}
+            });
+            tr.appendChild(tdNI); tr.appendChild(tdPatente); tr.appendChild(tdFunc); tr.appendChild(tdNome);
+          });
+          tbody.appendChild(tr);
+        }
+        table.appendChild(tbody);
+        return table;
+      };      
+      const makeCard = (tableSizes, opts = {}) => {
+        const { showAddButton = true } = opts;
+        const cardMapId = "map_" + Math.random().toString(36).substr(2, 9);
+        let localMapInstance = null;
+        let localMarker = null;
+        const quartelSede = leppFullData.find(l => l.name?.toUpperCase().trim() === "QUARTEL SEDE");
+        const defaultCoords = (quartelSede && quartelSede.lat && quartelSede.long && quartelSede.lat !== "NULL" && quartelSede.long !== "NULL")
+          ? [parseFloat(quartelSede.lat), parseFloat(quartelSede.long)]
+          : [39.5, -8.0];
+        const card = document.createElement("div");
+        card.className = "lepps-card";
+        card.dataset.leppId = "";        
+        const makeVehGrp = (label, cls) => {
+          const grp = document.createElement("div"); grp.className = "lepps-selector-group lepp-inline";
+          const lbl = document.createElement("label"); lbl.textContent = label;
+          const sel = document.createElement("select"); sel.className = cls;
+          const emptyOpt = document.createElement("option");
+          emptyOpt.value = ""; emptyOpt.textContent = "— Selecionar —"; sel.appendChild(emptyOpt);
+          vehicles.forEach(v => {const o = document.createElement("option"); o.value = v; o.textContent = v; sel.appendChild(o);});
+          grp.appendChild(lbl); grp.appendChild(sel);
+          return grp;
+        };        
+        const header = document.createElement("div");
+        header.className = "lepps-card-header";
+        const leppGrp = document.createElement("div");
+        leppGrp.className = "lepps-selector-group lepp-inline";
+        const leppLbl = document.createElement("label");
+        leppLbl.textContent = "Local Estratégico de Pré-Posicionamento:";
+        const leppSel = document.createElement("select");
+        const emptyLepp = document.createElement("option");
+        emptyLepp.value = ""; emptyLepp.textContent = "— Selecionar —";
+        leppSel.appendChild(emptyLepp);
+        leppOptions.forEach(l => {const o = document.createElement("option"); o.value = l.id; o.textContent = l.name; leppSel.appendChild(o);});
+        leppGrp.appendChild(leppLbl); leppGrp.appendChild(leppSel);
+        header.appendChild(leppGrp);
+        header.appendChild(makeVehGrp("Veículo para Rendição:", "sel-rend"));        
+        if (showAddButton) {
+          const addCardBtn = document.createElement("button");
+          addCardBtn.type = "button"; addCardBtn.className = "lepps-add-card-btn";
+          addCardBtn.textContent = "+"; addCardBtn.title = "Adicionar novo card igual";
+          addCardBtn.addEventListener("click", () => {
+            const totalCards = cardsContainer.querySelectorAll(".lepps-card").length;
+            const newCard = makeCard(tableSizes, {showAddButton: totalCards < 2});
+            card.insertAdjacentElement("afterend", newCard);
+          });
+          header.appendChild(addCardBtn);
+        }
+        card.appendChild(header);        
+        const bodyLayout = document.createElement("div");
+        bodyLayout.className = "lepps-card-body-layout";
+        const tableWrap = document.createElement("div");
+        tableWrap.className = "lepps-table-wrap";
+        (tableSizes || []).forEach(size => {
+          const block = document.createElement("div");
+          block.className = "lepps-table-block";
+          const vehicles_div = document.createElement("div");
+          vehicles_div.className = "lepps-vehicles";
+          const levelBadge = document.createElement("div");
+          levelBadge.className = "lepps-level-badge";
+          levelBadge.style.display = "none";
+          vehicles_div.appendChild(levelBadge);
+          vehicles_div.appendChild(makeVehGrp("Veículo Alocado:", "sel-alocado"));
+          block.appendChild(vehicles_div);
+          block.appendChild(makeTable(size));
+          tableWrap.appendChild(block);
+        });      
+        const miniMapWrap = document.createElement("div");
+        miniMapWrap.className = "lepps-mini-map-wrap";
+        miniMapWrap.innerHTML = `<div id="${cardMapId}" class="mini-leaflet-map"></div>`;
+        bodyLayout.appendChild(tableWrap);
+        bodyLayout.appendChild(miniMapWrap);
+        card.appendChild(bodyLayout);        
+        function showQuartelSedeFallbackMarker() {
+          if (quartelSede && quartelSede.lat && quartelSede.long && quartelSede.lat !== "NULL" && quartelSede.long !== "NULL") {
+            localMarker = L.marker(defaultCoords)
+              .addTo(localMapInstance)
+              .bindPopup(`<b>${quartelSede.name}</b>`)
+              .openPopup();
+          }
+        }
+        function moveMapToLepp(selectedId) {
+          if (localMarker && localMapInstance) {
+            localMapInstance.removeLayer(localMarker);
+            localMarker = null;
+          }
+          if (!localMapInstance) return;
+          const match = leppFullData.find(l => Number(l.id) === selectedId);
+          if (!match) {
+            localMapInstance.setView(defaultCoords, 19);
+            showQuartelSedeFallbackMarker();
+            console.warn(`LEPP com id ${selectedId} não foi encontrada (pode estar inativa).`);
+            return;
+          }
+          if (match.lat && match.long && match.lat !== "NULL" && match.long !== "NULL") {
+            const lat = parseFloat(match.lat);
+            const lng = parseFloat(match.long);
+            localMarker = L.marker([lat, lng])
+              .addTo(localMapInstance)
+              .bindPopup(`<b>${match.name}</b>`)
+              .openPopup();
+            localMapInstance.setView([lat, lng], 19, {animate: true, duration: 1});
+          } else {
+            localMapInstance.setView(defaultCoords, 19);
+            showQuartelSedeFallbackMarker();
+            console.warn(`A LEPP "${match.name}" está registada mas não possui coordenadas válidas (lat/long).`);
+          }
+        }
+        leppSel.addEventListener("change", () => {
+          const selectedId = Number(leppSel.value);
+          card.dataset.leppId = selectedId || "";
+          moveMapToLepp(selectedId);
+        });        
+        setTimeout(() => {
+          if (typeof L !== 'undefined' && document.getElementById(cardMapId)) {
+            localMapInstance = L.map(cardMapId, {
+              zoomControl: false,
+              attributionControl: false
+            }).setView(defaultCoords, 19);
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}').addTo(localMapInstance);
+            L.control.zoom({ position: 'topright' }).addTo(localMapInstance);
+            localMapInstance.invalidateSize();
+            const preselectedId = Number(leppSel.value);
+            if (preselectedId) {
+              moveMapToLepp(preselectedId);
+              setTimeout(() => {
+                if (localMapInstance) {
+                  localMapInstance.invalidateSize();
+                  moveMapToLepp(preselectedId);
+                }
+              }, 275);
+            } else {
+              showQuartelSedeFallbackMarker();
+            }
+          }
+        }, 50);
+        return card;
+      };
+      const modeBadge = document.createElement("div");
+      modeBadge.className = "lepps-mode-badge";
+      const modeLabel = MODE_LABELS[currentMode] || (currentMode || "Não definido");
+      modeBadge.innerHTML = `<span>Modo ativo:</span><span class="mode-tag">${modeLabel}</span>`;      
+      const footerOptionsInit = document.getElementById("decir-leveliv-options");
+      const footerInit = footerOptionsInit?.parentElement;
+      if (footerInit) {
+        const existingBadge = footerInit.querySelector(".lepps-mode-badge");
+        if (existingBadge) existingBadge.remove();        
+        footerInit.style.display = "flex";
+        footerInit.style.justifyContent = "space-between";
+        footerInit.style.alignItems = "center";
+        footerInit.insertBefore(modeBadge, footerOptionsInit);
+      }      
+      const modeSizes = MODE_TABLE_SIZES[currentMode] || [5];
+      const modeSelectCard = createModeSelectCardShell();
+      const btnWrapper = modeSelectCard.querySelector(".mode-select-card-body");
+      const cardsContainer = document.createElement("div");
+      window._decirLevelIVCardsContainer = cardsContainer;
+      window._decirLevelIVCurrentMode = currentMode;      
+      [1, 2, 3].forEach(n => {
+        const btn = document.createElement("button");
+        btn.textContent = n === 1 ? "1 LEPP" : `${n} LEPPs`;
+        btn.className = "btn btn-add"; btn.style.minWidth = "120px";
+        const maxLepp = MODE_MAX_LEPP[currentMode];
+        if (maxLepp && n > maxLepp) {btn.disabled = true; btn.title = "Não disponível para este modo";}
+        btn.addEventListener("click", () => {
+          const isActive = btn.classList.contains("active");
+          btnWrapper.querySelectorAll(".btn-add").forEach(b => b.classList.remove("active"));          
+          if (isActive) {
+            cardsContainer.innerHTML = "";
+            return;
+          }
+          btn.classList.add("active");
+          cardsContainer.innerHTML = "";
+          const distribution = distributeTables(modeSizes, n);
+          for (let i = 0; i < n; i++) {
+            cardsContainer.appendChild(makeCard(distribution[i], {showAddButton: i < 2}));
+          }
+        });
+        btnWrapper.appendChild(btn);
+      });      
+      container.appendChild(modeSelectCard);
+      container.appendChild(cardsContainer);      
+      if (prefillRows && prefillRows.length) {
+        function formatTimestampToOperational(ts) {
+          if (!ts) return "";
+          const m = String(ts).match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+          if (!m) return "";
+          const [, year, month, day, hour, minute] = m;
+          const monthNames = {"01":"JAN","02":"FEV","03":"MAR","04":"ABR","05":"MAI","06":"JUN","07":"JUL","08":"AGO","09":"SET","10":"OUT","11":"NOV","12":"DEZ"};
+          return `${day}${hour}${minute}${monthNames[month] || ""}${year.slice(2)}`;
+        }
+        function computeBlockSize(row) {
+          const positions = [[row.t1_ce, row.t2_ce], [row.t1_mp, row.t2_mp], [row.t1_1, row.t2_1], [row.t1_2, row.t2_2], [row.t1_3, row.t2_3]];
+          let lastFilled = -1;
+          positions.forEach(([a, b], idx) => {
+            if ((a && a !== "") || (b && b !== "")) lastFilled = idx;
+          });
+          return lastFilled >= 0 ? lastFilled + 1 : 5;
+        }
+        function shiftHasData(row, prefix) {
+          return [`${prefix}_ce`, `${prefix}_mp`, `${prefix}_1`, `${prefix}_2`, `${prefix}_3`]
+            .some(field => row[field] != null && row[field] !== "");
+        }
+        function hideShiftColumns(block, shiftIndex) {
+          const table = block.querySelector(".lepps-table");
+          if (!table) return;
+          table.querySelectorAll("tbody tr").forEach(tr => {
+            for (let i = shiftIndex * 4; i < shiftIndex * 4 + 4; i++) {
+              if (tr.children[i]) tr.children[i].style.display = "none";
+            }
+          });
+        }
+        function populateCardFromRows(cardEl, groupRows) {
+          const firstRow = groupRows[0];
+          cardEl.dataset.leppId = firstRow.lepp_id || "";
+          const leppSelEl = cardEl.querySelector(".lepps-selector-group.lepp-inline select");
+          if (leppSelEl && firstRow.lepp_id) {
+            leppSelEl.value = firstRow.lepp_id;
+            leppSelEl.dispatchEvent(new Event("change"));
+          }
+          const rendSel = cardEl.querySelector(".sel-rend");
+          if (rendSel) rendSel.value = firstRow.vehicle_relief || "";
+          const blocks = cardEl.querySelectorAll(".lepps-table-block");
+          blocks.forEach((block, i) => {
+            const row = groupRows[i];
+            if (!row) return;
+            const alocSel = block.querySelector(".sel-alocado");
+            if (alocSel) alocSel.value = row.vehicle_allocated || "";
+            const levelBadge = block.querySelector(".lepps-level-badge");
+            if (levelBadge) {
+              if (row.level_snapshot) {
+                const style = getLevelBadgeStyle(row.level_snapshot);
+                levelBadge.textContent = row.level_snapshot;
+                levelBadge.style.background = style.bg;
+                levelBadge.style.color = style.color;
+                levelBadge.style.display = "inline-flex";
+              } else {
+                levelBadge.style.display = "none";
+              }
+            }
+            const inputs = block.querySelectorAll(".lepps-date-input");
+            const setDateInput = (input, value) => {
+              if (!input) return;
+              input.value = formatTimestampToOperational(value);
+              validateDateInput(input);
+            };
+            setDateInput(inputs[0], row.t1_from); setDateInput(inputs[1], row.t1_to);
+            setDateInput(inputs[2], row.t2_from); setDateInput(inputs[3], row.t2_to);
+            const trRows = block.querySelectorAll("tbody tr");
+            const fillNI = (rowPos, shiftOffset, value) => {
+              if (!trRows[rowPos] || value == null || value === "") return;
+              const cellIndex = shiftOffset * 4;
+              const tdNI = trRows[rowPos].querySelectorAll("td")[cellIndex];
+              if (tdNI) {
+                tdNI.textContent = value;
+                tdNI.dispatchEvent(new Event("input"));
+              }
+            };
+            fillNI(0, 0, row.t1_ce); fillNI(1, 0, row.t1_mp); fillNI(2, 0, row.t1_1); fillNI(3, 0, row.t1_2); fillNI(4, 0, row.t1_3);
+            fillNI(0, 1, row.t2_ce); fillNI(1, 1, row.t2_mp); fillNI(2, 1, row.t2_1); fillNI(3, 1, row.t2_2); fillNI(4, 1, row.t2_3);
+            if (!shiftHasData(row, "t1")) hideShiftColumns(block, 0);
+            if (!shiftHasData(row, "t2")) hideShiftColumns(block, 1);
+          });
+        }        
+        const layoutMode = prefillRows[0].mode_snapshot || currentMode;
+        const layoutSizes = MODE_TABLE_SIZES[layoutMode] || [5];
+        const sortedRows = [...prefillRows].sort((a, b) => (a.card_order || 0) - (b.card_order || 0));
+        const groups = [];
+        const groupIndexByLepp = new Map();
+        sortedRows.forEach(row => {
+          const key = row.lepp_id ?? `no-lepp-${groups.length}`;
+          if (!groupIndexByLepp.has(key)) {
+            groupIndexByLepp.set(key, groups.length);
+            groups.push([]);
+          }
+          groups[groupIndexByLepp.get(key)].push(row);
+        });
+        const numCards = groups.length;
+        cardsContainer.innerHTML = "";
+        groups.forEach((groupRows, i) => {
+          const tableSizesForCard = groupRows.map(row => computeBlockSize(row));
+          const cardEl = makeCard(tableSizesForCard, {showAddButton: i < 2});
+          cardsContainer.appendChild(cardEl);
+          populateCardFromRows(cardEl, groupRows);
+        });
+        const matchingBtn = Array.from(btnWrapper.querySelectorAll(".btn-add"))[numCards - 1];
+        if (matchingBtn) matchingBtn.classList.add("active");
+      }
+      const options = document.getElementById("decir-leveliv-options");
+      if (options) options.style.display = "flex";
+    }
+    function getOperationDate() {
+      const input = document.querySelector(".lepps-date-input");
+      if (!input || !input.value) return null;
+      const txt = input.value.trim().toUpperCase();
+      const m = txt.match(/^(\d{2})(\d{4})([A-Z]{3})(\d{2})$/);
+      if (!m) return null;      
+      const months = {JAN: "01", FEV: "02", MAR: "03", ABR: "04", MAI: "05", JUN: "06", JUL: "07", AGO: "08", SET: "09", OUT: "10", NOV: "11", DEZ: "12"};
+      const formattedMonth = months[m[3]];
+      if (!formattedMonth) return null;      
+      return `20${m[4]}-${formattedMonth}-${m[1]}`;
+    }
+    function parseOperationalTimestamp(value) {
+      if (!value) return null;
+      const txt = value.trim().toUpperCase();
+      const m = txt.match(/^(\d{2})(\d{4})([A-Z]{3})(\d{2})$/);
+      if (!m) return null;      
+      const months = {JAN: "01", FEV: "02", MAR: "03", ABR: "04", MAI: "05", JUN: "06", JUL: "07", AGO: "08", SET: "09", OUT: "10", NOV: "11", DEZ: "12"};
+      const year = `20${m[4]}`;
+      const month = months[m[3]];
+      const day = m[1];
+      const hourMinute = `${m[2].slice(0, 2)}:${m[2].slice(2, 4)}:00`;      
+      return `${year}-${month}-${day} ${hourMinute}`;
+    }
+    async function saveLeppLevelIV() {
+      const corp_oper_nr = String(getCorpId()).padStart(4, '0');
+      const operation_date = getOperationDate();
+      const levelSnapshot = document.querySelector(".level-card .level-selector-group select")?.value || null;
+      if (!operation_date) {
+        alert("Preencha a data 'De:' do primeiro turno com um formato válido (ex: 060800JUN26).");
+        return;
+      }
+      if (!window._decirLevelIVCardsContainer) {
+        alert("Nenhum planeamento ativo para gravar.");
+        return;
+      }
+      try {
+        await fetch(`${SUPABASE_URL}/rest/v1/decir_lepp_leveliv?corp_oper_nr=eq.${corp_oper_nr}&operation_date=eq.${operation_date}`, {
+          method: "DELETE",
+          headers: getSupabaseHeaders()
+        });
+        const rows = [];
+        let orderCounter = 0;
+        function getNI(rowsList, rowPos, shiftOffset) {
+          if (!rowsList[rowPos]) return null;
+          const cellIndex = shiftOffset * 4;
+          const text = rowsList[rowPos].querySelectorAll("td")[cellIndex]?.textContent.trim();
+          if (!text) return null;
+          return /^\d+$/.test(text) ? text.padStart(3, '0') : text;
+        }
+        const cards = window._decirLevelIVCardsContainer.querySelectorAll(".lepps-card");
+        cards.forEach((cardEl) => {
+          const leppId = Number(cardEl.dataset.leppId) || null;
+          const vehicleRelief = cardEl.querySelector(".sel-rend")?.value || null;
+          const blocks = cardEl.querySelectorAll(".lepps-table-block");      
+          blocks.forEach((block) => {
+            orderCounter++;
+            const table = block.querySelector(".lepps-table");
+            if (!table) return;
+            const inputs = table.querySelectorAll(".lepps-date-input") || [];
+            const trRows = table.querySelectorAll("tbody tr") || [];
+            rows.push({corp_oper_nr, operation_date, card_order: orderCounter, lepp_id: leppId, vehicle_allocated: block.querySelector(".sel-alocado")?.value || null,
+                       vehicle_relief: vehicleRelief, mode_snapshot: window._decirLevelIVCurrentMode || null, level_snapshot: levelSnapshot,
+                       t1_from: parseOperationalTimestamp(inputs[0]?.value), t1_to: parseOperationalTimestamp(inputs[1]?.value), t1_ce: getNI(trRows, 0, 0), t1_mp: getNI(trRows, 1, 0),
+                       t1_1: getNI(trRows, 2, 0), t1_2: getNI(trRows, 3, 0), t1_3: getNI(trRows, 4, 0),
+                       t2_from: parseOperationalTimestamp(inputs[2]?.value), t2_to: parseOperationalTimestamp(inputs[3]?.value), t2_ce: getNI(trRows, 0, 1), t2_mp: getNI(trRows, 1, 1),
+                       t2_1: getNI(trRows, 2, 1), t2_2: getNI(trRows, 3, 1), t2_3: getNI(trRows, 4, 1)
+                      });});});
+        if (rows.length) {
+          const response = await fetch(`${SUPABASE_URL}/rest/v1/decir_lepp_leveliv`, {
+            method: "POST",
+            headers: getSupabaseHeaders(),
+            body: JSON.stringify(rows)
+          });
+          if (!response.ok) {
+            throw new Error(await response.text());
+          }
+        }
+        alert("Planeamento gravado com sucesso.");
+      } catch (err) {
+        console.error("Erro na gravação Level IV:", err);
+        alert("Erro ao gravar o planeamento.");
+      }
+    }
+    /* ════════════════════════════════════════════════════════════════
+    LEPPs LOAD MODULE — Card de Meses + Modal de Calendário
+    ════════════════════════════════════════════════════════════════ */
+    const LEVELIV_MONTH_LABELS = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+    const LEVELIV_WEEKDAY_LABELS = ["SEG", "TER", "QUA", "QUI", "SEX", "SÁB", "DOM"];
+    async function createLevelIVMonthsCard(corpOperNr, onNewPlan, onDaySelected) {
+      const styleId = "leveliv-months-style";
+      if (!document.getElementById(styleId)) {
+        const s = document.createElement("style");
+        s.id = styleId;
+        s.textContent = `
+          .leveliv-months-card{border:1px solid #a8b4cc; border-radius:14px; margin-bottom:16px; margin-top:-20px; overflow:hidden; background:#fff; font-family:'Segoe UI',sans-serif; box-shadow:0 2px 10px rgba(0,0,0,.06);}
+          .leveliv-months-header{background:#131a69; color:#fff; padding:12px 18px; font-size:14px; font-weight:700; display:flex; align-items:center; justify-content:space-between;}
+          .leveliv-months-body{padding:16px 18px; display:flex; gap:12px; flex-wrap:wrap;}
+          .leveliv-month-btn{border:1px solid #d7dde8; border-radius:10px; background:#f8f9fc; color:#131a69; font-weight:600; font-size:13px; padding:10px 16px; cursor:pointer; transition:.2s; display:flex; flex-direction:column; align-items:center; gap:2px; min-width:110px;}
+          .leveliv-month-btn:hover{background:#131a69; color:#fff; transform:translateY(-2px); box-shadow:0 4px 10px rgba(19,26,105,.25);}
+          .leveliv-month-count{font-size:11px; font-weight:400; opacity:.75;}
+          .leveliv-new-plan-btn{border:none; border-radius:10px; background:#1f8f4d; color:#fff; font-weight:700; font-size:13px; padding:10px 18px; cursor:pointer; transition:.2s;}
+          .leveliv-new-plan-btn:hover{background:#17703c;}
+          .leveliv-empty-msg{padding:16px 18px; color:#777; font-size:13px; font-style:italic;}
+          .leveliv-year-selector{display:flex; align-items:center; gap:8px; padding:14px 18px 0 18px;}
+          .leveliv-year-selector label{font-size:12px; font-weight:700; color:#131a69; text-transform:uppercase; letter-spacing:.4px;}
+          .leveliv-year-selector select{border:1px solid #d7dde8; border-radius:8px; background:#f8f9fc; color:#131a69; font-weight:600; font-size:13px; padding:6px 10px; cursor:pointer;}
+          .leveliv-year-empty-msg{padding:12px 18px 4px 18px; color:#777; font-size:13px; font-style:italic;}
+          .leveliv-modal-overlay{position:fixed; inset:0; background:rgba(10,14,30,.55); display:flex; justify-content:center; align-items:center; z-index:2000; backdrop-filter:blur(2px);}
+          .leveliv-modal-box{width:420px; max-width:94vw; background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 18px 45px rgba(0,0,0,.35); animation:levelivModalIn .18s ease;}
+          @keyframes levelivModalIn{from{opacity:0; transform:translateY(12px);}to{opacity:1; transform:none;}}
+          .leveliv-modal-header{background:#7a0c16; color:#fff; padding:18px 20px; text-align:center; display:flex; justify-content:center; align-items:center;}
+          .leveliv-modal-header-left{display:flex; flex-direction:column; align-items:center; width:100%;}
+          .leveliv-modal-subtitle{font-size:11px; opacity:.75; text-transform:uppercase; letter-spacing:.6px; margin-bottom:4px;}
+          .leveliv-modal-title{font-size:20px; font-weight:700; color:#fff;}
+          .leveliv-modal-close{width:34px; height:34px; border:none; border-radius:50%; background:rgba(255,255,255,.15); color:#fff; font-size:20px; cursor:pointer; transition:.2s;}
+          .leveliv-modal-close:hover{background:#d13c3c;}
+          .leveliv-modal-body{padding:20px 20px 20px;}
+          .leveliv-calendar-weekdays{display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-top:4px; margin-bottom:16px;}
+          .leveliv-calendar-weekdays span{text-align:center; font-size:11px; font-weight:700; color:#666; letter-spacing:.3px;}
+          .leveliv-calendar-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:6px;}
+          .leveliv-calendar-day{min-height:38px; display:flex; align-items:center; justify-content:center; border-radius:8px; font-size:13px; color:#b8b8b8; transition:.2s;}
+          .leveliv-calendar-day.has-data{background:#7a0c16; color:#fff; font-weight:700; cursor:pointer;}
+          .leveliv-calendar-day.has-data:hover{background:#9e1220; transform:scale(1.06); box-shadow:0 3px 8px rgba(19,26,105,.30);}
+          .leveliv-calendar-day.empty-cell{visibility:hidden;}
+          .leveliv-modal-footer{border-top:1px solid #ececec; background:#fafafa; padding:14px 20px; display:flex; justify-content:space-between; align-items:center;}
+          .leveliv-footer-info{font-size:13px; color:#666;}
+          .leveliv-footer-close{border:none; background:#7a0c16; color:#fff; padding:8px 18px; border-radius:8px; cursor:pointer; font-weight:600;}
+          .leveliv-footer-close:hover{background:#9e1220;}
+        `;
+        document.head.appendChild(s);
+      }
+      const card = document.createElement("div");
+      card.className = "leveliv-months-card";
+      const header = document.createElement("div");
+      header.className = "leveliv-months-header";
+      header.innerHTML = `<span>Planeamentos EPE DECIR Níveis III e IV</span>`;
+      const newPlanBtn = document.createElement("button");
+      newPlanBtn.type = "button"; newPlanBtn.className = "leveliv-new-plan-btn";
+      newPlanBtn.textContent = "+ Novo Planeamento";
+      newPlanBtn.addEventListener("click", () => onNewPlan?.());
+      header.appendChild(newPlanBtn);
+      card.appendChild(header);
+      const yearSelector = document.createElement("div");
+      yearSelector.className = "leveliv-year-selector";
+      const yearLabel = document.createElement("label");
+      yearLabel.textContent = "Ano:";
+      yearLabel.htmlFor = "leveliv-year-select";
+      const yearSelect = document.createElement("select");
+      yearSelect.id = "leveliv-year-select";
+      for (let y = 2026; y <= 2036; y++) {
+        const opt = document.createElement("option");
+        opt.value = String(y);
+        opt.textContent = String(y);
+        yearSelect.appendChild(opt);
+      }
+      yearSelector.appendChild(yearLabel);
+      yearSelector.appendChild(yearSelect);
+      const body = document.createElement("div");
+      body.className = "leveliv-months-body";
+      let dates = [];
+      try {
+        const data = await supabaseFetch(`decir_lepp_leveliv?select=operation_date&corp_oper_nr=eq.${corpOperNr}&order=operation_date.desc`);
+        dates = (data || []).map(r => r.operation_date);
+      } catch (e) {
+        console.error("Erro ao buscar datas de EPE DECIR Nível IV:", e);
+      }
+      if (!dates.length) {
+        const emptyMsg = document.createElement("div");
+        emptyMsg.className = "leveliv-empty-msg";
+        emptyMsg.textContent = "Ainda não existem planeamentos registados.";
+        card.appendChild(emptyMsg);
+        return card;
+      }
+      const monthMap = new Map();
+      dates.forEach(d => {
+        const key = d.slice(0, 7);
+        if (!monthMap.has(key)) monthMap.set(key, new Set());
+        monthMap.get(key).add(d);
+      });
+      function renderMonthsForYear(selectedYear) {
+        body.innerHTML = "";
+        const keysOfYear = Array.from(monthMap.keys())
+          .filter(k => k.startsWith(String(selectedYear)))
+          .sort().reverse();
+        if (!keysOfYear.length) {
+          const yearEmptyMsg = document.createElement("div");
+          yearEmptyMsg.className = "leveliv-year-empty-msg";
+          yearEmptyMsg.textContent = `Sem planeamentos registados em ${selectedYear}.`;
+          body.appendChild(yearEmptyMsg);
+          return;
+        }
+        keysOfYear.forEach(key => {
+          const [year, month] = key.split("-");
+          const monthLabel = LEVELIV_MONTH_LABELS[Number(month) - 1];
+          const daysSet = monthMap.get(key);
+          const btn = document.createElement("button");
+          btn.type = "button"; btn.className = "leveliv-month-btn";
+          btn.innerHTML = `<span>${monthLabel} ${year}</span><span class="leveliv-month-count">${daysSet.size} dia${daysSet.size !== 1 ? "s" : ""} registados</span>`;
+          btn.addEventListener("click", () => {
+            openLevelIVCalendarModal(Number(year), Number(month), daysSet, onDaySelected);
+          });
+          body.appendChild(btn);
+        });
+      }
+      const yearsWithData = Array.from(new Set(Array.from(monthMap.keys()).map(k => k.slice(0, 4)))).sort();
+      const mostRecentYearWithData = yearsWithData[yearsWithData.length - 1];
+      const defaultYear = (mostRecentYearWithData && Number(mostRecentYearWithData) >= 2026 && Number(mostRecentYearWithData) <= 2036)
+        ? mostRecentYearWithData
+        : String(new Date().getFullYear());
+      yearSelect.value = defaultYear;
+      yearSelect.addEventListener("change", () => renderMonthsForYear(yearSelect.value));
+      card.appendChild(yearSelector);
+      card.appendChild(body);
+      renderMonthsForYear(yearSelect.value);
+      return card;
+    }
+    function openLevelIVCalendarModal(year, month, daysSet, onDaySelected) {
+      const overlay = document.createElement("div");
+      overlay.className = "leveliv-modal-overlay";
+      const box = document.createElement("div");
+      box.className = "leveliv-modal-box";
+      overlay.appendChild(box);
+      const modalHeader = document.createElement("div");
+      modalHeader.className = "leveliv-modal-header";
+      const left = document.createElement("div");
+      left.className = "leveliv-modal-header-left";
+      const title = document.createElement("div");
+      title.className = "leveliv-modal-title";
+      title.textContent = `${LEVELIV_MONTH_LABELS[month - 1]} ${year}`;
+      left.appendChild(title);
+      modalHeader.appendChild(left);
+      box.appendChild(modalHeader);
+      const body = document.createElement("div");
+      body.className = "leveliv-modal-body";
+      box.appendChild(body);
+      const weekdaysRow = document.createElement("div");
+      weekdaysRow.className = "leveliv-calendar-weekdays";
+      LEVELIV_WEEKDAY_LABELS.forEach(w => {
+        const span = document.createElement("span");
+        span.textContent = w;
+        weekdaysRow.appendChild(span);
+      });
+      body.appendChild(weekdaysRow);
+      const grid = document.createElement("div");
+      grid.className = "leveliv-calendar-grid";
+      body.appendChild(grid);
+      const firstOfMonth = new Date(year, month - 1, 1);
+      const totalDays = new Date(year, month, 0).getDate();
+      const leadingBlanks = (firstOfMonth.getDay() + 6) % 7;
+      for (let i = 0; i < leadingBlanks; i++) {
+        const blank = document.createElement("div");
+        blank.className = "leveliv-calendar-day empty-cell";
+        grid.appendChild(blank);
+      }
+      for (let day = 1; day <= totalDays; day++) {
+        const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const cell = document.createElement("div");
+        cell.className = "leveliv-calendar-day";
+        cell.textContent = day;
+        if (daysSet.has(dateStr)) {
+          cell.classList.add("has-data");
+          cell.title = "Clique para carregar este planeamento";
+          cell.addEventListener("click", () => {
+            overlay.remove();
+            onDaySelected?.(dateStr);
+          });
+        }
+        grid.appendChild(cell);
+      }
+      const footer = document.createElement("div");
+      footer.className = "leveliv-modal-footer";
+      const info = document.createElement("div");
+      info.className = "leveliv-footer-info";
+      info.textContent = `${daysSet.size} dia${daysSet.size !== 1 ? "s" : ""} registado${daysSet.size !== 1 ? "s" : ""}`;
+      const btnClose = document.createElement("button");
+      btnClose.className = "leveliv-footer-close";
+      btnClose.textContent = "Fechar";
+      btnClose.onclick = () => overlay.remove();
+      footer.appendChild(info);
+      footer.appendChild(btnClose);
+      box.appendChild(footer);
+      document.body.appendChild(overlay);
     }

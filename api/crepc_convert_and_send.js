@@ -20,12 +20,10 @@
                       };
     export const config = {api: {bodyParser: {sizeLimit: "10mb"}},};
     // Template HTML partilhado
-    function buildEmailTemplate({title, subtitle, logoUrl, emailBody, corpName, corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline}) {
+    function buildEmailTemplate({title, subtitle, logoUrl, emailBody, corpName, corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail}) {
       const addressLine = [corpAddress, [corpCp, corpLocalitie].filter(Boolean).join(" "), "Portugal"].filter(Boolean).join(" | ");  
-      const phoneLine = [
-        corpPhoneMobile ? `Telem.: ${corpPhoneMobile}` : "",
-        corpPhoneLandline ? `Telef: ${corpPhoneLandline}` : ""
-      ].filter(Boolean).join(" | ");
+      const phoneLine = [corpPhoneMobile ? `Telem.: ${corpPhoneMobile}` : "", corpPhoneLandline ? `Telef: ${corpPhoneLandline}` : ""].filter(Boolean).join(" | ");
+      const emailLine = corpEmail ? `Email: ${corpEmail}` : "";
       return `
         <!DOCTYPE html>
         <html>
@@ -61,7 +59,8 @@
                 <div class="signature-corp">${corpName || ""}</div>
                 <div class="signature-contacts">
                   ${addressLine}<br>
-                  ${phoneLine}
+                  ${phoneLine}<br>
+                  ${emailLine}
                 </div>
               </div>
               <div class="eco-note">
@@ -197,7 +196,8 @@
       const transporter = nodemailer.createTransport({service: "gmail", auth: {user: GMAIL_EMAIL, pass: GMAIL_APP_PASSWORD}});
       const corpName = data.moa_cb || data.moa_device_type || "";
       const htmlEmail = buildEmailTemplate({title: corpName, subtitle: "Medidas Operacionais de Antecipação", logoUrl: data.logoUrl || "", emailBody: emailBody || `<p>Segue em anexo a MOA.</p>`, corpName,
-                                            corpAddress: data.corpAddress || "", corpCp: data.corpCp || "", corpLocalitie: data.corpLocalitie || "", corpPhoneMobile: data.corpPhoneMobile || "", corpPhoneLandline: data.corpPhoneLandline || "",});
+                                      corpAddress: data.corpAddress || "", corpCp: data.corpCp || "", corpLocalitie: data.corpLocalitie || "", corpPhoneMobile: data.corpPhoneMobile || "", corpPhoneLandline: data.corpPhoneLandline || "",
+                                      corpEmail: data.corpEmail || "",});
       await transporter.sendMail({from: `"SALOC ${data.corp_oper_nr || "Corporacao"}" <${GMAIL_EMAIL}>`, to: recipients.join(", "), cc: ccRecipients && ccRecipients.length  > 0 ? ccRecipients.join(", ")  : "",
                                   bcc: bccRecipients && bccRecipients.length > 0 ? bccRecipients.join(", ") : "", subject: emailSubject || `MOA - ${data.moa_cb || data.moa_device_type || ""}`,
                                   html: htmlEmail, text: "Segue em anexo a MOA.", attachments: [{filename: `${fileName}.pdf`, content: pdfBuffer, contentType: "application/pdf"}],
@@ -242,7 +242,7 @@
       const corpName = data.cb_type?.includes(" - ") ? data.cb_type.split(" - ").slice(1).join(" - ") : data.cb_type || "";
       const htmlEmail = buildEmailTemplate({title: corpName, subtitle: `Situação Operacional de Veiculos - ${prefix} ${data.vehicle}`, logoUrl: data.logoUrl || "", 
                                             emailBody: emailBody || `<p>Segue em anexo o documento de Situação operacional do veiculo ${data.vehicle || ""}.</p>`, corpName, corpAddress: data.corpAddress || "",
-                                            corpCp: data.corpCp || "", corpLocalitie: data.corpLocalitie || "", corpPhoneMobile: data.corpPhoneMobile || "", corpPhoneLandline: data.corpPhoneLandline || "",
+                                            corpCp: data.corpCp || "", corpLocalitie: data.corpLocalitie || "", corpPhoneMobile: data.corpPhoneMobile || "", corpPhoneLandline: data.corpPhoneLandline || "", corpEmail: data.corpEmail || "",
                                            });
       await transporter.sendMail({from: `"SALOC ${data.corp_oper_nr || "Corporacao"}" <${GMAIL_EMAIL}>`, to: recipients.join(", "), cc: ccRecipients && ccRecipients.length  > 0 ? ccRecipients.join(", ")  : '',
                                   bcc: bccRecipients && bccRecipients.length > 0 ? bccRecipients.join(", ") : '', subject: emailSubject || `Situação Operacional - ${prefix} ${data.vehicle}_${data.corp_oper_nr || "Corporacao"}`, html: htmlEmail, text: 'Segue em anexo o documento de Situação operacional de veiculos.', attachments: [{filename: `${fileName}.pdf`, content: pdfBuffer, contentType: 'application/pdf'}],});

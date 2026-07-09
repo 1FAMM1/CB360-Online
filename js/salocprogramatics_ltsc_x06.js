@@ -2218,7 +2218,7 @@
     /* ================= EPE STATUS UPSERT ================= */
     function extractEpeLevel(epeType) {
       if (!epeType) return "";
-      return epeType.split(" - ")[0].trim();
+      return epeType.split(" - ")[0].trim().toUpperCase();
     }
     async function updateEpeStatus(corpOperNr, epeLevel, startDate, endDate) {
       const epeType = "epe-decir";

@@ -2172,7 +2172,7 @@
       const categories = ["crepcmoa_mail_to", "crepcmoa_mail_cc", "crepcmoa_mail_bcc"];
       const url = `${SUPABASE_URL}/rest/v1/mails_config?category=in.(${categories.join(",")})&corp_oper_nr=eq.${corpOperNr}&select=category,value`;
       try {
-        const resp = await fetch(url, { headers: getSupabaseHeaders() });
+        const resp = await fetch(url, {headers: getSupabaseHeaders()});
         if (!resp.ok) throw new Error("Falha ao buscar e-mails da MOA.");
         const data = await resp.json();
         const recipients = { to: [], cc: [], bcc: [] };
@@ -2215,6 +2215,40 @@
       });
       return result.json();
     }
+    /* ================= EPE STATUS UPSERT ================= */
+    async function updateEpeStatus(corpOperNr, epeLevel, startDate, endDate) {
+      const epeType = "epe-decir";
+      try {
+        const checkRes = await fetch(
+          `${SUPABASE_URL}/rest/v1/epe_status?corp_oper_nr=eq.${corpOperNr}&epe_type=eq.${epeType}&select=id`, {
+            headers: getSupabaseHeaders()
+          }
+        );
+        if (!checkRes.ok) throw new Error(`Erro ao verificar epe_status (${checkRes.status})`);
+        const existing = await checkRes.json();
+        if (existing.length > 0) {
+          const patchRes = await fetch(
+            `${SUPABASE_URL}/rest/v1/epe_status?corp_oper_nr=eq.${corpOperNr}&epe_type=eq.${epeType}`, {
+              method: "PATCH",
+              headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
+              body: JSON.stringify({epe: epeLevel, start_date: startDate, end_date: endDate})
+            }
+          );
+          if (!patchRes.ok) throw new Error(`Erro ao atualizar epe_status (${patchRes.status})`);
+        } else {
+          const postRes = await fetch(
+            `${SUPABASE_URL}/rest/v1/epe_status`, {
+              method: "POST",
+              headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
+              body: JSON.stringify({corp_oper_nr: corpOperNr, epe_type: epeType, epe: epeLevel, start_date: startDate, end_date: endDate})
+            }
+          );
+          if (!postRes.ok) throw new Error(`Erro ao inserir epe_status (${postRes.status})`);
+        }
+      } catch (err) {
+        console.error("Erro em updateEpeStatus:", err);
+      }
+    }
     /* ================= MAIN FUNCTION ================= */
     async function emitMOAGlobal() {
       const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
@@ -2253,6 +2287,7 @@
         if (cbName) data.moa_cb = cbName;
         const recipients = await fetchMOARecipients(corpOperNr);
         await sendMOAEmail(data, recipients, corpOperNr);
+        await updateEpeStatus(corpOperNr, data.moa_epe_type, data.moa_gdh_init, data.moa_gdh_end);
         if (typeof showPopup === "function")
           showPopup('popup-success', `A MOA do dispositivo ${data.moa_device_type} foi enviada!`);
         window.hideMOAContainer();

@@ -208,18 +208,37 @@
       const btn = $('btnSaveConfig');
       const amal = $('amal_value').value.replace(',','.');
       const anepc = $('anepc_value').value.replace(',','.');
+      const corpOperNr = getCorpId();
       btn.disabled = true;
       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A guardar...';
       try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/decir_values_config?corp_oper_nr=eq.${getCorpId()}`, {
-          method: 'PATCH',
-          headers: {...getSupabaseHeaders(), 'Content-Type':'application/json', 'Prefer':'return=minimal'},
-          body: JSON.stringify({amal_value:parseFloat(amal), anepc_value:parseFloat(anepc), updated_at:new Date().toISOString()})
+        const checkRes = await fetch(`${SUPABASE_URL}/rest/v1/decir_values_config?corp_oper_nr=eq.${corpOperNr}&select=corp_oper_nr`, {
+          headers: getSupabaseHeaders()
         });
+        if (!checkRes.ok) throw new Error(`Erro ao verificar configuração (${checkRes.status})`);
+        const existing = await checkRes.json();
+        const payload = {amal_value: parseFloat(amal), anepc_value: parseFloat(anepc), updated_at: new Date().toISOString()};
+        let res;
+        if (existing.length > 0) {
+          res = await fetch(`${SUPABASE_URL}/rest/v1/decir_values_config?corp_oper_nr=eq.${corpOperNr}`, {
+            method: 'PATCH',
+            headers: {...getSupabaseHeaders(), 'Content-Type':'application/json', 'Prefer':'return=minimal'},
+            body: JSON.stringify(payload)
+          });
+        } else {
+          res = await fetch(`${SUPABASE_URL}/rest/v1/decir_values_config`, {
+            method: 'POST',
+            headers: {...getSupabaseHeaders(), 'Content-Type':'application/json', 'Prefer':'return=minimal'},
+            body: JSON.stringify({...payload, corp_oper_nr: corpOperNr})
+          });
+        }
         if (res.ok) { 
           showPopup('popup-success', "Valores atualizados com sucesso!"); closeConfigModal();
+        } else {
+          throw new Error(`Erro ao gravar (${res.status})`);
         }
-      } catch {
+      } catch (err) {
+        console.error(err);
         showPopup('popup-danger', "Erro ao ligar ao servidor.");
       }
       finally {btn.disabled = false; btn.innerText = "Gravar Alterações";}

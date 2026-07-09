@@ -2216,6 +2216,10 @@
       return result.json();
     }
     /* ================= EPE STATUS UPSERT ================= */
+    function extractEpeLevel(epeType) {
+      if (!epeType) return "";
+      return epeType.split(" - ")[0].trim();
+    }
     async function updateEpeStatus(corpOperNr, epeLevel, startDate, endDate) {
       const epeType = "epe-decir";
       try {
@@ -2288,7 +2292,7 @@
         if (cbName) data.moa_cb = cbName;
         const recipients = await fetchMOARecipients(corpOperNr);
         await sendMOAEmail(data, recipients, corpOperNr);
-        await updateEpeStatus(corpOperNr, data.moa_epe_type, data.moa_gdh_init, data.moa_gdh_end);
+        await updateEpeStatus(corpOperNr, extractEpeLevel(data.moa_epe_type), data.moa_gdh_init, data.moa_gdh_end);
         if (typeof showPopup === "function")
           showPopup('popup-success', `A MOA do dispositivo ${data.moa_device_type} foi enviada!`);
         window.hideMOAContainer();

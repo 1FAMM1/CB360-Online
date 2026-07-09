@@ -1073,57 +1073,68 @@
       }
     }
     /* ========= EMAIL VALIDATION ========= */
-    function validateEmails(emailString) {
-      if (!emailString) return true;
-      const emails = emailString.split(",").map(e => e.trim());
-      const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      return emails.every(email => regex.test(email));
-    }    
-    /* ============ SAVE SITOP ============ */
-    async function saveSitopMails() {
-      const currentCorpNr = sessionStorage.getItem("currentCorpOperNr");
-      if (!currentCorpNr) return;
-      const rows = [{category: "crepcsitop_mail_to",  value: document.getElementById("config_sitop_mail_to").value},
-                    {category: "crepcsitop_mail_cc",  value: document.getElementById("config_sitop_mail_cc").value},
-                    {category: "crepcsitop_mail_bcc", value: document.getElementById("config_sitop_mail_bcc").value}];
-      for (const row of rows) {
-        await fetch(
-          `${SUPABASE_URL}/rest/v1/mails_config?corp_oper_nr=eq.${currentCorpNr}&category=eq.${row.category}`, {
-            method: "PATCH",
-            headers: { ...getSupabaseHeaders(), "Prefer": "return=minimal" },
-            body: JSON.stringify({ value: row.value })
-          }
-        );
+function validateEmails(emailString) {
+  if (!emailString) return true;
+  const emails = emailString.split(",").map(e => e.trim());
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emails.every(email => regex.test(email));
+}
+/* ===== UPSERT HELPER (shared logic inline, no DRY sharing across other functions) ===== */
+async function saveMailConfigRow(corpOperNr, category, value) {
+  const checkUrl = `${SUPABASE_URL}/rest/v1/mails_config?corp_oper_nr=eq.${corpOperNr}&category=eq.${category}&select=id`;
+  const checkRes = await fetch(checkUrl, { headers: getSupabaseHeaders() });
+  const existing = await checkRes.json();
+  if (existing.length > 0) {
+    await fetch(
+      `${SUPABASE_URL}/rest/v1/mails_config?corp_oper_nr=eq.${corpOperNr}&category=eq.${category}`, {
+        method: "PATCH",
+        headers: { ...getSupabaseHeaders(), "Prefer": "return=minimal" },
+        body: JSON.stringify({ value })
       }
-      showPopup('popup-success', "Emails para envio de Situações Operacionais de Veículos, atualizados com sucesso.");
-    }
-    /* ============= SAVE MOA ============= */
-    async function saveMoaMails() {
-      const currentCorpNr = sessionStorage.getItem("currentCorpOperNr");
-      if (!currentCorpNr) return;
-      const rows = [{category: "crepcmoa_mail_to",  value: document.getElementById("config_moa_mail_to").value},
-                    {category: "crepcmoa_mail_cc",  value: document.getElementById("config_moa_mail_cc").value},
-                    {category: "crepcmoa_mail_bcc", value: document.getElementById("config_moa_mail_bcc").value}];
-      for (const row of rows) {
-        await fetch(
-          `${SUPABASE_URL}/rest/v1/mails_config?corp_oper_nr=eq.${currentCorpNr}&category=eq.${row.category}`, {
-            method: "PATCH",
-            headers: { ...getSupabaseHeaders(), "Prefer": "return=minimal" },
-            body: JSON.stringify({ value: row.value })
-          }
-        );
+    );
+  } else {
+    await fetch(
+      `${SUPABASE_URL}/rest/v1/mails_config`, {
+        method: "POST",
+        headers: { ...getSupabaseHeaders(), "Prefer": "return=minimal" },
+        body: JSON.stringify({ corp_oper_nr: corpOperNr, category, value })
       }
-      showPopup('popup-success', "Emails para envio de Medidas Operacionais de Anticipação, atualizados com sucesso.");
-    }
-    /* ========= EVENT LISTENERS ========== */
-    document.getElementById("config_sitop_mail_save").addEventListener("click", saveSitopMails);
-    document.getElementById("config_moa_mail_save").addEventListener("click", saveMoaMails);
-    const btnLoadMails = document.querySelector("button[onclick*=\"showPanelCard('mails')\"]");
-    if (btnLoadMails) {
-      btnLoadMails.addEventListener("click", () => {
-        showPanelCard("mails");
-        loadMailsConfig();
-      });
-    } else {
-      console.warn("Botão Emails Config não encontrado!");
-    }
+    );
+  }
+}
+/* ============ SAVE SITOP ============ */
+async function saveSitopMails() {
+  const currentCorpNr = sessionStorage.getItem("currentCorpOperNr");
+  if (!currentCorpNr) return;
+  const rows = [{category: "crepcsitop_mail_to",  value: document.getElementById("config_sitop_mail_to").value},
+                {category: "crepcsitop_mail_cc",  value: document.getElementById("config_sitop_mail_cc").value},
+                {category: "crepcsitop_mail_bcc", value: document.getElementById("config_sitop_mail_bcc").value}];
+  for (const row of rows) {
+    await saveMailConfigRow(currentCorpNr, row.category, row.value);
+  }
+  showPopup('popup-success', "Emails para envio de Situações Operacionais de Veículos, atualizados com sucesso.");
+}
+/* ============= SAVE MOA ============= */
+async function saveMoaMails() {
+  const currentCorpNr = sessionStorage.getItem("currentCorpOperNr");
+  if (!currentCorpNr) return;
+  const rows = [{category: "crepcmoa_mail_to",  value: document.getElementById("config_moa_mail_to").value},
+                {category: "crepcmoa_mail_cc",  value: document.getElementById("config_moa_mail_cc").value},
+                {category: "crepcmoa_mail_bcc", value: document.getElementById("config_moa_mail_bcc").value}];
+  for (const row of rows) {
+    await saveMailConfigRow(currentCorpNr, row.category, row.value);
+  }
+  showPopup('popup-success', "Emails para envio de Medidas Operacionais de Anticipação, atualizados com sucesso.");
+}
+/* ========= EVENT LISTENERS ========== */
+document.getElementById("config_sitop_mail_save").addEventListener("click", saveSitopMails);
+document.getElementById("config_moa_mail_save").addEventListener("click", saveMoaMails);
+const btnLoadMails = document.querySelector("button[onclick*=\"showPanelCard('mails')\"]");
+if (btnLoadMails) {
+  btnLoadMails.addEventListener("click", () => {
+    showPanelCard("mails");
+    loadMailsConfig();
+  });
+} else {
+  console.warn("Botão Emails Config não encontrado!");
+}

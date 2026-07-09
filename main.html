@@ -4497,25 +4497,25 @@
                 </div>
                 <div class="options-main-card" style="flex: 1; max-width: 100%; height: 275px; overflow-y: auto; overflow-x: hidden; padding: 20px;">
                   <div class="major-field">
-                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
                       <label style="font-size: 13px;">Nome da Associação:</label>
-                      <input type="text" id="assoc-nome" style="flex: 1; padding: 4px; border: 1px solid #ccc; border-radius: 3px;">
+                      <input type="text" id="assoc-name" style="flex: 1; padding: 4px; border: 1px solid #ccc; border-radius: 3px;">
                     </div>
                   </div>
                   <div class="major-field">
-                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
                       <label style="font-size: 13px;">Nome do CB:</label>
-                      <input type="text" id="cb-nome" style="flex: 1; padding: 4px; border: 1px solid #ccc; border-radius: 3px;">
+                      <input type="text" id="cb-name" style="flex: 1; padding: 4px; border: 1px solid #ccc; border-radius: 3px;">
                     </div>
                   </div>
                   <div class="major-field">
-                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
                       <label style="font-size: 13px;">Morada do CB:</label>
-                      <input type="text" id="assoc-morada" style="flex: 1; padding: 4px; border: 1px solid #ccc; border-radius: 3px;">
+                      <input type="text" id="assoc-address" style="flex: 1; padding: 4px; border: 1px solid #ccc; border-radius: 3px;">
                     </div>
                   </div>
                   <div class="major-field">
-                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
                       <label style="font-size: 13px;">Localidade:</label>
                       <input type="text" id="assoc-localidade" style="width: 280px; padding: 4px; border: 1px solid #ccc; border-radius: 3px;">
                       <label style="font-size: 13px;">Código-Postal:</label>
@@ -4527,7 +4527,7 @@
                     </div>
                   </div>
                   <div class="major-field">
-                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
                       <label style="font-size: 13px;">Distrito:</label>
                       <select id="district_select_corp" style="width: 175px; padding: 4px; border: 1px solid #ccc; border-radius: 3px;"></select>
                       <label style="font-size: 13px;;">Concelho:</label>
@@ -4537,13 +4537,29 @@
                     </div>
                   </div>
                   <div class="major-field">
-                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
                       <label style="font-size: 13px;">NIF:</label>
                       <input type="text" id="assoc-nif" maxlength="9" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '');"
                              style="width: 150px; text-align: center; padding: 4px; border: 1px solid #ccc; border-radius: 3px;" placeholder="999999999">
                       <label style="font-size: 13px;">Núm. Operacional:</label>
-                      <input type="text" id="assoc-operacional" maxlength="4" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '');"
+                      <input type="text" id="assoc-operational-nr" maxlength="4" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '');"
                              style="width: 100px; text-align: center; padding: 4px; border: 1px solid #ccc; border-radius: 3px;" placeholder="0000">
+                    </div>
+                  </div>
+                  <div class="major-field">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: -5px;">                      
+                      <label style="font-size: 13px;">Telemovél:</label>
+                      <input type="text" id="assoc-mobile-phone" maxlength="16" inputmode="tel" 
+                             oninput="this.value = this.value.replace(/[^0-9+\s]/g, '');"
+                             style="width: 150px; text-align: center; padding: 4px; border: 1px solid #ccc; border-radius: 3px;" 
+                             placeholder="+351 900 000 000">                      
+                      <label style="font-size: 13px;">Telefone:</label>
+                      <input type="text" id="assoc-landline-phone" maxlength="16" inputmode="tel" 
+                             oninput="this.value = this.value.replace(/[^0-9+\s]/g, '');"
+                             style="width: 150px; text-align: center; padding: 4px; border: 1px solid #ccc; border-radius: 3px;" 
+                             placeholder="+351 289 000 000">                      
+                      <label style="font-size: 13px;">E-Mail:</label>
+                      <input type="text" id="assoc-email" style="flex: 1; padding: 4px; border: 1px solid #ccc; border-radius: 3px;">                      
                     </div>
                   </div>
                 </div>               

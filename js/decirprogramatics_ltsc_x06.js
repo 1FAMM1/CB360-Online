@@ -212,26 +212,17 @@
       btn.disabled = true;
       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A guardar...';
       try {
-        const checkRes = await fetch(`${SUPABASE_URL}/rest/v1/decir_values_config?corp_oper_nr=eq.${corpOperNr}&select=corp_oper_nr`, {
-          headers: getSupabaseHeaders()
+        const payload = {corp_oper_nr: corpOperNr, amal_value: parseFloat(amal), anepc_value: parseFloat(anepc), updated_at: new Date().toISOString()};
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/decir_values_config?on_conflict=corp_oper_nr`, {
+          method: 'POST',
+          headers: {
+            ...getSupabaseHeaders(),
+            'Content-Type': 'application/json',
+            'Prefer': 'resolution=merge-duplicates,return=minimal'
+          },
+          body: JSON.stringify(payload)
         });
-        if (!checkRes.ok) throw new Error(`Erro ao verificar configuração (${checkRes.status})`);
-        const existing = await checkRes.json();
-        const payload = {amal_value: parseFloat(amal), anepc_value: parseFloat(anepc), updated_at: new Date().toISOString()};
-        let res;
-        if (existing.length > 0) {
-          res = await fetch(`${SUPABASE_URL}/rest/v1/decir_values_config?corp_oper_nr=eq.${corpOperNr}`, {
-            method: 'PATCH',
-            headers: {...getSupabaseHeaders(), 'Content-Type':'application/json', 'Prefer':'return=minimal'},
-            body: JSON.stringify(payload)
-          });
-        } else {
-          res = await fetch(`${SUPABASE_URL}/rest/v1/decir_values_config`, {
-            method: 'POST',
-            headers: {...getSupabaseHeaders(), 'Content-Type':'application/json', 'Prefer':'return=minimal'},
-            body: JSON.stringify({...payload, corp_oper_nr: corpOperNr})
-          });
-        }
+
         if (res.ok) { 
           showPopup('popup-success', "Valores atualizados com sucesso!"); closeConfigModal();
         } else {

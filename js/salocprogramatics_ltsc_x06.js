@@ -2091,17 +2091,17 @@
     async function _getMOAEmailCommonData(corpOperNr) {
       try {
         const corpRes = await fetch(
-          `${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${corpOperNr}&select=logo_url,cb_name,corp_address,corp_cp,corp_localitie,corp_phone_mobile,corp_phone_landline`, {
+          `${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${corpOperNr}&select=logo_url,cb_name,corp_address,corp_cp,corp_localitie,corp_phone_mobile,corp_phone_landline,corp_email`, {
             headers: getSupabaseHeaders()
           }
         );
         const corpData = await corpRes.json();
-        return {logoUrl: corpData[0]?.logo_url || "", cbName: corpData[0]?.cb_name || "", corpAddress: corpData[0]?.corp_address || "", corpCp: corpData[0]?.corp_cp || "",
-                corpLocalitie: corpData[0]?.corp_localitie || "", corpPhoneMobile: corpData[0]?.corp_phone_mobile || "", corpPhoneLandline: corpData[0]?.corp_phone_landline || ""
+        return {logoUrl: corpData[0]?.logo_url || "", cbName: corpData[0]?.cb_name || "", corpAddress: corpData[0]?.corp_address || "", corpCp: corpData[0]?.corp_cp || "", corpLocalitie: corpData[0]?.corp_localitie || "", 
+                corpPhoneMobile: corpData[0]?.corp_phone_mobile || "", corpPhoneLandline: corpData[0]?.corp_phone_landline || "", corpEmail: corpData[0]?.corp_email || ""
                };
       } catch (err) {
         console.error("Erro ao carregar dados da corporação:", err);
-        return {logoUrl: "", cbName: "", corpAddress: "", corpCp: "", corpLocalitie: "", corpPhoneMobile: "", corpPhoneLandline: ""};
+        return {logoUrl: "", cbName: "", corpAddress: "", corpCp: "", corpLocalitie: "", corpPhoneMobile: "", corpPhoneLandline: "", corpEmail: ""};
       }
     }
     /* ================ SELECT UTILITIES =============== */
@@ -2277,13 +2277,14 @@
       });
       data.corp_oper_nr = corpOperNr;
       try {
-        const {logoUrl, cbName, corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline} = await _getMOAEmailCommonData(corpOperNr);
+        const {logoUrl, cbName, corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail} = await _getMOAEmailCommonData(corpOperNr);
         data.logoUrl = logoUrl;
         data.corpAddress = corpAddress;
         data.corpCp = corpCp;
         data.corpLocalitie = corpLocalitie;
         data.corpPhoneMobile = corpPhoneMobile;
         data.corpPhoneLandline = corpPhoneLandline;
+        data.corpEmail = corpEmail;
         if (cbName) data.moa_cb = cbName;
         const recipients = await fetchMOARecipients(corpOperNr);
         await sendMOAEmail(data, recipients, corpOperNr);
@@ -3409,21 +3410,21 @@
     INOP CREPC
     ======================================= */
     async function _getCREPCEmailCommonData(corpOperNr) {
-      let logoUrl = "", corpAddress = "", corpCp = "", corpLocalitie = "", corpPhoneMobile = "", corpPhoneLandline = "";
+      let logoUrl = "", corpAddress = "", corpCp = "", corpLocalitie = "", corpPhoneMobile = "", corpPhoneLandline = "", corpEmail = "";
       try {
         const corpRes = await fetch(
-          `${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${corpOperNr}&select=logo_url,corp_address,corp_cp,corp_localitie,corp_phone_mobile,corp_phone_landline`, {
+          `${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${corpOperNr}&select=logo_url,corp_address,corp_cp,corp_localitie,corp_phone_mobile,corp_phone_landline,corp_email`, {
             headers: getSupabaseHeaders()
           }
         );
         const corpData = await corpRes.json();
         if (corpData.length) {logoUrl = corpData[0].logo_url || ""; corpAddress = corpData[0].corp_address || ""; corpCp = corpData[0].corp_cp || ""; corpLocalitie = corpData[0].corp_localitie || "";
-                              corpPhoneMobile = corpData[0].corp_phone_mobile || ""; corpPhoneLandline = corpData[0].corp_phone_landline || "";
+                              corpPhoneMobile = corpData[0].corp_phone_mobile || ""; corpPhoneLandline = corpData[0].corp_phone_landline || ""; corpEmail = corpData[0].corp_email || "";
                              }
       } catch (err) {
         console.error("Erro ao carregar logo:", err);
       }
-      return {logoUrl, corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline};
+      return {logoUrl, corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail};
     }
     function preselectCorpInSitopCB() {
       const current = sessionStorage.getItem("currentCorpOperNr");
@@ -3595,9 +3596,9 @@
       const recordId = sitopContainer.getAttribute("data-record-id");
       const isUpdate = !!recordId;
       const isOperational = !!gdh_op;
-      const {logoUrl, corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline} = await _getCREPCEmailCommonData(corpOperNr);
+      const {logoUrl, corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail} = await _getCREPCEmailCommonData(corpOperNr);
       const data = {cb_type, vehicle, registration, gdh_inop, gdh_op, failure_type, failure_description, failure_noc, ppi_part, ppi_a2, ppi_a22, ppi_airport, ppi_linfer, ppi_airfield, ppi_subs, optel,
-                    corp_oper_nr: corpOperNr, logoUrl, corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline};
+                    corp_oper_nr: corpOperNr, logoUrl, corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail};
       const supabaseData = {...data};
       delete supabaseData.cb_type;
       delete supabaseData.logoUrl;
@@ -3606,6 +3607,7 @@
       delete supabaseData.corpLocalitie;
       delete supabaseData.corpPhoneMobile;
       delete supabaseData.corpPhoneLandline;
+      delete supabaseData.corpEmail;
       try {
         if (!isUpdate && !isOperational) {
           const checkUrl = `${SUPABASE_URL}/rest/v1/sitop_vehicles?select=vehicle&vehicle=eq.${encodeURIComponent(vehicle)}&gdh_op=is.null&corp_oper_nr=eq.${encodeURIComponent(corpOperNr)}`;

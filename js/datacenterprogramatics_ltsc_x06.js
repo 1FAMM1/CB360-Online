@@ -82,7 +82,7 @@
         const currentCorpNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
         if (!currentCorpNr) return;
         const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${encodeURIComponent(currentCorpNr)}&select=*`,{
+          `${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${encodeURIComponent(currentCorpNr)}&select=*`, {
             headers: getSupabaseHeaders()
           }
         );
@@ -90,15 +90,18 @@
         const data = await response.json();
         if (!data.length) return;
         const corporation = data[0];
-        document.getElementById("assoc-nome").value = corporation.corporation || "";
-        document.getElementById("cb-nome").value = corporation.cb_name || "";
-        document.getElementById("assoc-morada").value = corporation.corp_address || "";
+        document.getElementById("assoc-name").value = corporation.corporation || "";
+        document.getElementById("cb-name").value = corporation.cb_name || "";
+        document.getElementById("assoc-address").value = corporation.corp_address || "";
         document.getElementById("assoc-localidade").value = corporation.corp_localitie || "";
         document.getElementById("assoc-nif").value = corporation.corp_fiscal_nr || "";
-        document.getElementById("assoc-operacional").value = corporation.corp_oper_nr || "";
+        document.getElementById("assoc-operational-nr").value = corporation.corp_oper_nr || "";
         const {cp1, cp2} = splitPostalCode(corporation.corp_cp);
         document.getElementById("assoc-cp1").value = cp1;
         document.getElementById("assoc-cp2").value = cp2;
+        document.getElementById("assoc-mobile-phone").value = corporation.corp_phone_mobile || "";
+        document.getElementById("assoc-landline-phone").value = corporation.corp_phone_landline || "";
+        document.getElementById("assoc-email").value = corporation.corp_email || "";
         await loadHierarchicalSelects(corporation);
       } catch (error) {
         console.error("❌ Erro ao carregar dados da corporação:", error);
@@ -139,10 +142,12 @@
           saveButton.textContent = "A SALVAR...";
         }
         const currentCorpNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
-        const corporationData = {corporation: document.getElementById("assoc-nome")?.value?.trim() || null, cb_name: document.getElementById("cb-nome")?.value?.trim() || null, 
-                                 corp_address: document.getElementById("assoc-morada")?.value?.trim() || null, corp_localitie: document.getElementById("assoc-localidade")?.value?.trim() || null, 
+        const corporationData = {corporation: document.getElementById("assoc-name")?.value?.trim() || null, cb_name: document.getElementById("cb-name")?.value?.trim() || null, 
+                                 corp_address: document.getElementById("assoc-address")?.value?.trim() || null, corp_localitie: document.getElementById("assoc-localidade")?.value?.trim() || null, 
                                  corp_cp: getCombinedPostalCode(), corp_district: getSelectedDistrictName(), corp_council: getSelectedCouncilName(), corp_parish: document.getElementById("parish_select_corp")?.value?.trim() || null,
-                                 corp_fiscal_nr: document.getElementById("assoc-nif")?.value?.trim() || null, corp_oper_nr: currentCorpNr || document.getElementById("assoc-operacional")?.value?.trim() || null
+                                 corp_fiscal_nr: document.getElementById("assoc-nif")?.value?.trim() || null, corp_oper_nr: currentCorpNr || document.getElementById("assoc-operational-nr")?.value?.trim() || null,
+                                 corp_phone_mobile: document.getElementById("assoc-mobile-phone")?.value?.trim() || null, corp_phone_landline: document.getElementById("assoc-landline-phone")?.value?.trim() || null,
+                                 corp_email: document.getElementById("assoc-email")?.value?.trim() || null
                                 };
         const validation = validateCorporationData(corporationData);
         if (!validation.isValid) throw new Error(validation.message);

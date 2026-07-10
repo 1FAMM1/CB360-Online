@@ -4712,8 +4712,9 @@ async function saveDecirFull() {
           await createDecirPodiumCard(year);
         } else {
           await updateDecirAlertStatsCard(year);
-          await updateDecirMealsStatsCard(year);
+          await updateDecirLeppStatsCard(year);
           await updateDecirOcorrStatsCard(year);
+          await updateDecirMealsStatsCard(year);          
           await updateDecirPodiumCard(year);
         }
       }

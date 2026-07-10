@@ -4290,9 +4290,9 @@
       if (!tbody) return;
       tbody.style.opacity = "0.5";
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
         const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/equipment_request?corp_opr_nr=eq.${corpOperNr}&order=created_at.desc`, {
+          `${SUPABASE_URL}/rest/v1/equipment_request?corp_oper_nr=eq.${corpOperNr}&order=created_at.desc`, {
             headers: getSupabaseHeaders()
           }
         );
@@ -4334,9 +4334,9 @@
     /* ===== EDIT EQUIPMENT REQUEST ===== */
     async function equipmentRequestEdit(id) {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
         const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/equipment_request?id=eq.${id}&corp_opr_nr=eq.${corpOperNr}&select=*`, {
+          `${SUPABASE_URL}/rest/v1/equipment_request?id=eq.${id}&corp_oper_nr=eq.${corpOperNr}&select=*`, {
             headers: getSupabaseHeaders()
           }
         );
@@ -4372,9 +4372,9 @@
     async function equipmentRequestDelete(id) {
       if (!confirm("Tem a certeza que pretende eliminar esta requisição?")) return;
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
         const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/equipment_request?id=eq.${id}&corp_opr_nr=eq.${corpOperNr}`, {
+          `${SUPABASE_URL}/rest/v1/equipment_request?id=eq.${id}&corp_oper_nr=eq.${corpOperNr}`, {
             method: "DELETE",
             headers: getSupabaseHeaders()
           }
@@ -4390,7 +4390,7 @@
     /* ===== SAVE EQUIPMENT REQUEST ===== */
     let equipmentRequestEditId = null;
     async function equipmentRequestSave() {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const requesting_name = document.getElementById("requesting_name").value.trim();
       const cc = document.getElementById("requesting_cc").value.trim();
       const cc_secur = document.getElementById("requesting_cc_secur").value.trim();
@@ -4419,7 +4419,7 @@
         let response;
         if (equipmentRequestEditId !== null) {
           response = await fetch(
-            `${SUPABASE_URL}/rest/v1/equipment_request?id=eq.${equipmentRequestEditId}&corp_opr_nr=eq.${corpOperNr}`, {
+            `${SUPABASE_URL}/rest/v1/equipment_request?id=eq.${equipmentRequestEditId}&corp_oper_nr=eq.${corpOperNr}`, {
               method: "PATCH",
               headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
               body: JSON.stringify(payload)
@@ -4436,7 +4436,7 @@
           response = await fetch(`${SUPABASE_URL}/rest/v1/equipment_request`, {
             method: "POST",
             headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
-            body: JSON.stringify({...payload, corp_opr_nr: corpOperNr})
+            body: JSON.stringify({...payload, corp_oper_nr: corpOperNr})
           });
           if (!response.ok) throw new Error("Erro ao guardar: " + await response.text());
           showPopup("popup-success", "Requisição gravada com sucesso!");

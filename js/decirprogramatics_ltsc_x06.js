@@ -1668,6 +1668,7 @@ async function saveDecirFull() {
     window.createDecirAnepcTable = createDecirAnepcTable;
     /* ─── CARREGAR AUDITORIA DE LOGS (DESIGN PERSONALIZADO) ─── */
     async function loadAuditLogs() {
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const container = document.getElementById("table-container-audit-logs");
       if (!container) return;
       container.innerHTML = "";
@@ -1676,7 +1677,7 @@ async function saveDecirFull() {
       Object.assign(loading.style, {textAlign: "center", padding: "20px", fontFamily: "Segoe UI, sans-serif", opacity: "0.7"});
       container.appendChild(loading);
       try {
-        const url = `${SUPABASE_URL}/rest/v1/reg_logs?select=*&order=created_at.desc`;
+        const url = `${SUPABASE_URL}/rest/v1/reg_logs?select=*&corp_oper_nr=eq.${corpOperNr}&order=created_at.desc`;
         const response = await fetch(url, {
           method: "GET",
           headers: {...getSupabaseHeaders(), "Range": "0-500", "Prefer": "count=exact"}

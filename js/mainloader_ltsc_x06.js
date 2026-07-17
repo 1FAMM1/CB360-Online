@@ -255,6 +255,18 @@
           if (pageId === "volunteer-services-consulting") {
             if (typeof initializeFilters === "function") initializeFilters();
           }
+          if (document.getElementById("panel-sendMails")) {
+            loadMailAddresses("ro");
+          }
+          if (pageId === "page-gescorp-redund") {
+            if (document.getElementById('gescorp-incident-wrapper')) {
+              closeGescorpIncident();
+            } else if (typeof searchGescorpIncidents === "function") {
+              const tbody = document.getElementById('gescorp-table-body');
+              if (tbody) tbody.innerHTML = `<tr>...A carregar...</tr>`;
+              searchGescorpIncidents();    
+            }
+          }
         });
       }
       function closeSubmenuRecursive(menu) {
@@ -356,8 +368,8 @@
           const page = document.getElementById("page-utilities");
           if (page) {
             const interval = setInterval(() => {
-              if (clickWhenExists(".panel-sidebar-menu-button[onclick*=\"showPanelCard('epe')\"]", page, () => {
-                if (typeof loadVehiclesFromAPI === "function") loadVehiclesFromAPI();
+              if (clickWhenExists(".panel-sidebar-menu-button[onclick*=\"showPanelCardUtilities('epe')\"]", page, () => {
+              if (typeof loadVehiclesFromsessionStorage === "function") loadVehiclesFromsessionStorage();
                 if (typeof loadInfosFromSupabase === "function") loadInfosFromSupabase();
                 if (typeof loadRoutesFromSupabase === "function") loadRoutesFromSupabase();
                 if (typeof loadCMAsFromSupabase === "function") loadCMAsFromSupabase();
@@ -374,7 +386,7 @@
           const page = document.getElementById("page-data");
           if (page) {
             const interval = setInterval(() => {
-              if (clickWhenExists(".panel-sidebar-menu-button[onclick*=\"showPanelCard('assoc')\"]", page)) {
+              if (clickWhenExists(".panel-sidebar-menu-button[onclick*=\"showPanelCardDataCenter('assoc')\"]", page)) {
                 clearInterval(interval);
               }
             }, 50);

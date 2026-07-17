@@ -1,19 +1,23 @@
     /* =======================================
     DATA CENTER
     ======================================= */
-    function showPanelCard(panelId) {
+    function showPanelCardDataCenter(panelId) {
       document.querySelectorAll(".panel-card").forEach(el => el.classList.remove("active"));
       document.getElementById(`panel-${panelId}`).classList.add("active");
       document.querySelectorAll(".panel-sidebar-menu-button").forEach(btn => btn.classList.remove("active"));
-      const activeBtn = document.querySelector(`.panel-sidebar-menu-button[onclick="showPanelCard('${panelId}')"]`);
+      const activeBtn = document.querySelector(`.panel-sidebar-menu-button[onclick="showPanelCardDataCenter('${panelId}')"]`);
       if (activeBtn) activeBtn.classList.add("active");
       if (panelId === "assoc") {
         loadCorporationData();
       }
       if (panelId === "elems") {
+        loadElementsTable();
         resetElementsTable();
         const search = document.getElementById("win_search_element");
         if (search) search.value = "";
+      }
+      if (panelId === "veícs") {
+        loadVehiclesTable();
       }
       const list = document.getElementById("elements-list");
       const edit = document.getElementById("elements-edit");

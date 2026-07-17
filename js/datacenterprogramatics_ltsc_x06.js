@@ -62,7 +62,7 @@
     /* ================= CHECK EXISTING ================= */
     async function checkExistingCorporation() {
       try {
-        const currentCorpNr = sessionStorage.getItem("currentUserCorpNr") || "0805";
+        const currentCorpNr = sessionStorage.getItem("currentUserCorpNr");
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/corporation_data?select=id&corp_oper_nr=eq.${currentCorpNr}&limit=1`, {
             headers: getSupabaseHeaders()
@@ -79,7 +79,7 @@
     /* ================= LOAD CORPORATION DATA ================= */
     async function loadCorporationData() {
       try {
-        const currentCorpNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const currentCorpNr = sessionStorage.getItem("currentCorpOperNr");
         if (!currentCorpNr) return;
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${encodeURIComponent(currentCorpNr)}&select=*`, {
@@ -110,7 +110,7 @@
     /* ================= LOAD LOGO ================= */
     async function loadCorporationLogo() {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         if (!corpOperNr) return;
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/corporation_data?select=logo_url&corp_oper_nr=eq.${corpOperNr}&limit=1`, {
@@ -141,7 +141,7 @@
           saveButton.disabled = true;
           saveButton.textContent = "A SALVAR...";
         }
-        const currentCorpNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const currentCorpNr = sessionStorage.getItem("currentCorpOperNr");
         const corporationData = {corporation: document.getElementById("assoc-name")?.value?.trim() || null, cb_name: document.getElementById("cb-name")?.value?.trim() || null, 
                                  corp_address: document.getElementById("assoc-address")?.value?.trim() || null, corp_localitie: document.getElementById("assoc-localidade")?.value?.trim() || null, 
                                  corp_cp: getCombinedPostalCode(), corp_district: getSelectedDistrictName(), corp_council: getSelectedCouncilName(), corp_parish: document.getElementById("parish_select_corp")?.value?.trim() || null,
@@ -333,7 +333,7 @@
         const logoHeaderImg = document.querySelector(".cb-logo img");
         if (logoImg) logoImg.src = localPreviewUrl;
         if (logoHeaderImg) logoHeaderImg.src = localPreviewUrl;
-        const corpOperNr = (sessionStorage.getItem("currentCorpOperNr") || "0805").trim();
+        const corpOperNr = (sessionStorage.getItem("currentCorpOperNr")).trim();
         console.log("1. A apagar ficheiro antigo...");
         await deleteCorpLogo(originalCorpLogo);
         console.log("2. A fazer upload novo...");
@@ -895,7 +895,7 @@
     /* ================= LOAD VEHICLES TABLE ================= */
     async function loadVehiclesTable() {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         if (!corpOperNr) throw new Error("Corporação não definida");
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/vehicle_status?select=*&corp_oper_nr=eq.${encodeURIComponent(corpOperNr)}`, {
@@ -966,7 +966,7 @@
     document.querySelector("#new-veíc-save-update").addEventListener("click", async () => {
       const vehicleName = document.getElementById("new-veíc-name").value.trim();
       const vehicleRegistration = document.getElementById("new-veíc-registration").value.trim();
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
       if (!vehicleName || !vehicleRegistration) {
         showPopup('popup-danger', "Nome e matrícula são obrigatórios!");
         return;

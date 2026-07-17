@@ -2,7 +2,7 @@
     DIGITAL PANEL CONSOLE GROUP
     ======================================= */
     /* ========== SIDEBAR BUTTON CONTROL AND NAVIGATION ========== */
-    function showPanelCard(cardId) {
+    function showPanelCardUtilities(cardId) {
       const allCards = document.querySelectorAll('.panel-card');
       allCards.forEach(card => {
         card.classList.remove('active');
@@ -13,6 +13,9 @@
       });
       document.getElementById('panel-' + cardId).classList.add('active');
       event.target.classList.add('active');
+      if (cardId === "analytics") {
+        if (typeof loadElemsButtons === "function") loadElemsButtons();
+      }
     }
     /* =======================================
     SPECIAL READINESS STATES

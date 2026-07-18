@@ -1,5 +1,5 @@
       /* ================= LOGIN ================= */
-const LOGIN_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/dynamic-task`;
+const LOGIN_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/auth-login`;
 
 async function loginUser(user, pass) {
   try {

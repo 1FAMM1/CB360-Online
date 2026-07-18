@@ -4,8 +4,8 @@
     const SUPABASE_URL = 'https://rjkbodfqsvckvnhjwmhg.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqa2JvZGZxc3Zja3ZuaGp3bWhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgxNjM3NjQsImV4cCI6MjA2MzczOTc2NH0.jX5OPZkz1JSSwrahCoFzqGYw8tYkgE8isbn12uP43-0';
     function getSupabaseHeaders(options = {}) {
-      const corp = sessionStorage.getItem("currentCorpOperNr") || "0805"; 
-      const nint = sessionStorage.getItem("currentNInt")  || "205";
+      const corp = sessionStorage.getItem("currentCorpOperNr"); 
+      const nint = sessionStorage.getItem("currentNInt");
       const token = sessionStorage.getItem("authToken");
       const headers = {        
         'apikey': SUPABASE_ANON_KEY,
@@ -19,3 +19,25 @@
       }
       return headers;
     }
+    /* =======================================
+    AUTOLOGOUT AUTOMÁTICO
+    ======================================= */
+    function checkSessionExpiration() {
+      const token = sessionStorage.getItem("authToken");
+      if (!token) return;
+      try {
+        const payloadBase64 = token.split('.')[1];
+        const payload = JSON.parse(atob(payloadBase64));
+        const exp = payload.exp;
+        const now = Math.floor(Date.now() / 1000);
+        if (now >= exp) {
+          console.log("Sessão expirada pelo relógio interno.");
+          sessionStorage.clear();
+          window.location.href = "index.html";
+        }
+      } catch (e) {
+        console.error("Erro ao validar token:", e);
+      }
+    }
+    checkSessionExpiration();
+    setInterval(checkSessionExpiration, 60000);

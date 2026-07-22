@@ -1073,11 +1073,16 @@
       });
       return tr;
     }
+    let cachedPpiaeroMeans = null;
+    async function fetchPpiaeroMeansCached() {
+      if (!cachedPpiaeroMeans) cachedPpiaeroMeans = await fetchJSON(`${SUPABASE_URL}/rest/v1/ppiaero_means?select=*`);
+      return cachedPpiaeroMeans;
+    }
     async function loadPPIAeroGridSeparated(gridId) {
       const container=document.getElementById("ppiaero-grid-container"); if(!container) return;
       const tempContainer=document.createElement("div"); tempContainer.style.display="none";
       try {
-        const [references,means]=await Promise.all([fetchJSON(`${SUPABASE_URL}/rest/v1/ppiaero_references?select=*&grid_code=eq.${gridId}`),fetchJSON(`${SUPABASE_URL}/rest/v1/ppiaero_means?select=*`)]);
+        const [references,means]=await Promise.all([fetchJSON(`${SUPABASE_URL}/rest/v1/ppiaero_references?select=*&grid_code=eq.${gridId}`),fetchPpiaeroMeansCached()]);
         const table=document.createElement("table"); table.classList.add("table-elements");
         Object.assign(table.style,{tableLayout:"fixed",width:"100%",margin:"10px 0 5px 0"});
         table.appendChild(createColGroup(AERO_B1_COL_STYLE));
@@ -1106,7 +1111,7 @@
       const container=document.getElementById("ppiaero-grid-container"); if(!container) return;
       const tempContainer=document.createElement("div"); tempContainer.style.display="none";
       try {
-        const [references,means]=await Promise.all([fetchJSON(`${SUPABASE_URL}/rest/v1/ppiaero_references?select=*&grid_code=eq.${gridId}`),fetchJSON(`${SUPABASE_URL}/rest/v1/ppiaero_means?select=*`)]);
+        const [references,means]=await Promise.all([fetchJSON(`${SUPABASE_URL}/rest/v1/ppiaero_references?select=*&grid_code=eq.${gridId}`),fetchPpiaeroMeansCached()]);
         const table=document.createElement("table"); table.classList.add("table-elements"); Object.assign(table.style,AERO_B1_TABLE_STYLE);
         table.appendChild(createColGroup(AERO_B1_COL_STYLE));
         const thead=document.createElement("thead");
@@ -3009,7 +3014,7 @@
           if (header && headerContainer) headerContainer.appendChild(header); // ← ALTERADO
           container.insertAdjacentHTML('beforeend', tableConfig.map(cfg => createTable(cfg.rows, cfg.special, cfg.title)).join(''));
           try {
-            const res2 = await fetch(`${SUPABASE_URL}/rest/v1/fomio_teams?select=*`, {method: 'GET', headers: getSupabaseHeaders()});
+            const res2 = await fetch(`${SUPABASE_URL}/rest/v1/fomio_teams?select=*&corp_oper_nr=eq.${corpOperNr}`, {method: 'GET', headers: getSupabaseHeaders()});
             const allMembers = await res2.json();
             if (allMembers && allMembers.length > 0) {
               const teamNameMap = {"ofope": "OFOPE", "chefe_servico": "CHEFE DE SERVIÇO", "optel": "OPTEL", "equipa_01": "EQUIPA 01", "equipa_02": "EQUIPA 02", "logistica": "LOGÍSTICA",

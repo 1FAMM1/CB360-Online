@@ -471,10 +471,10 @@
     AVAILABILITY OF ELEMENTS
     ======================================= */
     async function fetchElemsFromSupabase() {
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       if (!currentCorpOperNr) return [];
       const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/reg_elems?select=*`, {
+        `${SUPABASE_URL}/rest/v1/reg_elems?select=*&corp_oper_nr=eq.${currentCorpOperNr}`, {
           method: "GET",
           headers: getSupabaseHeaders()
         }
@@ -482,10 +482,9 @@
       if (!response.ok) throw new Error(`Erro Supabase: ${response.status}`);
       let data = await response.json();
       return data.filter(elem => {
-        const matchesCorp = elem.corp_oper_nr == currentCorpOperNr;
         const val = parseInt(elem.n_int, 10);
         const isExcluded = (val >= 900 && val <= 999) || (val >= 9000 && val <= 9999);
-        return matchesCorp && !isExcluded;
+        return !isExcluded;
       });
     }
     async function loadElemsButtons() {

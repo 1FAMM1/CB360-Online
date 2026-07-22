@@ -681,17 +681,20 @@
       });
     }
     /* ============= DISTRICTS ============ */
+    let cachedDistricts = null;
     async function fetchDistrictsFromSupabase() {
+      if (cachedDistricts) return cachedDistricts;
       try {
         const resp = await fetch(`${SUPABASE_URL}/rest/v1/districts_select?select=id,district`, {
           headers: getSupabaseHeaders()
         });
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const districts = await resp.json();
-        return districts.map(d => ({
+        cachedDistricts = districts.map(d => ({
           id: d.id,
           name: d.district
         }));
+        return cachedDistricts;
       } catch (e) {
         console.error("Erro ao buscar distritos:", e);
         return fallbackDistricts || [];
@@ -725,18 +728,22 @@
       });
     }
     /* ============= COUNCILS ============= */
+    const cachedCouncilsByDistrict = {};
     async function fetchCouncilsByDistrict(districtId) {
       if (!districtId) return [];
+      if (cachedCouncilsByDistrict[districtId]) return cachedCouncilsByDistrict[districtId];
       try {
         const resp = await fetch(`${SUPABASE_URL}/rest/v1/councils_select?select=id,council&district_id=eq.${districtId}`, {
           headers: getSupabaseHeaders()
         });
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const councils = await resp.json();
-        return councils.map(c => ({
+        const mapped = councils.map(c => ({
           id: c.id,
           name: c.council
         }));
+        cachedCouncilsByDistrict[districtId] = mapped;
+        return mapped;
       } catch (e) {
         console.error("Erro ao buscar concelhos:", e);
         return fallbackCouncils[districtId] || [];

@@ -60,19 +60,19 @@
         searchCb360Incidents();
       }
     });
-
     (function initCb360GlobalButtonHover() {
+      const SCOPE_SELECTOR = '#page-cb360-redund';
       const EXCLUDE_SELECTOR = ['.cb360-edit-btn', '.cb360-delete-btn', '.goc-vehicle-toggle', '.goc-vehicle-remove', '.goc-firefighter-toggle', '.goc-firefighter-remove', '.goc-victim-toggle',
                                 '.goc-victim-remove', '.goc-posit-edit', '.goc-posit-remove', '.goc-summary-arrival-save'].join(', ');
       document.addEventListener('mouseover', (e) => {
         const btn = e.target.closest('button');
-        if (!btn || btn.matches(EXCLUDE_SELECTOR) || btn.disabled) return;
+        if (!btn || !btn.closest(SCOPE_SELECTOR) || btn.matches(EXCLUDE_SELECTOR) || btn.disabled) return;
         btn.style.filter = 'brightness(0.8)';
         btn.style.transition = 'filter 0.15s';
       });
       document.addEventListener('mouseout', (e) => {
         const btn = e.target.closest('button');
-        if (!btn || btn.matches(EXCLUDE_SELECTOR)) return;
+        if (!btn || !btn.closest(SCOPE_SELECTOR) || btn.matches(EXCLUDE_SELECTOR)) return;
         btn.style.filter = '';
       });
     })();

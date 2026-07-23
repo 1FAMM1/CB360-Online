@@ -798,21 +798,42 @@
         return fallbackParishes[councilId] || [];
       }
     }
-    async function populateParishesByCouncil(councilId, triggerSelectId) {
+    async function populateParishesByCouncil(councilId, triggerSelectId, targetParish = null) {
       const parishSelectId = triggerSelectId.replace('council', 'parish');
       const parishSelect = document.getElementById(parishSelectId);
-      if (!parishSelect) return;
+      if (!parishSelect) return;  
       const parishes = (await fetchParishesByCouncil(councilId))
         .sort((a, b) => a.localeCompare(b, 'pt', {
-          sensitivity: 'base'
-        }));
+        sensitivity: 'base'
+      }));    
       parishSelect.innerHTML = '';
+      const defaultOption = document.createElement('option');
+      defaultOption.value = '';
+      defaultOption.textContent = '';
+      parishSelect.appendChild(defaultOption);
       parishes.forEach(p => {
         const option = document.createElement('option');
         option.value = p;
         option.textContent = p;
         parishSelect.appendChild(option);
       });
+      if (targetParish) {
+        const normalize = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+        const cleanTarget = normalize(targetParish);    
+        const found = [...parishSelect.options].find(o => {
+          if (!o.value) return false;
+          const optText = normalize(o.text);
+          return optText === cleanTarget || optText.includes(cleanTarget) || cleanTarget.includes(optText);
+        });    
+        if (found) {
+          parishSelect.value = found.value;
+          parishSelect.dispatchEvent(new Event('change'));
+        } else {
+          parishSelect.value = '';
+          parishSelect.dispatchEvent(new Event('change'));
+          console.warn("Freguesia do Nominatim não encontrada na base de dados oficial. Campo deixado em branco para evitar erros:", targetParish);
+        }
+      }
     }
     function setupHierarchicalSelects() {
       document.querySelectorAll('[id*="district_select"]').forEach(districtSelect => {

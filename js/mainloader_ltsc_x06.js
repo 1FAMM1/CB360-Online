@@ -258,13 +258,13 @@
           if (document.getElementById("panel-sendMails")) {
             loadMailAddresses("ro");
           }
-          if (pageId === "page-gescorp-redund") {
-            if (document.getElementById('gescorp-incident-wrapper')) {
-              closeGescorpIncident();
-            } else if (typeof searchGescorpIncidents === "function") {
-              const tbody = document.getElementById('gescorp-table-body');
+          if (pageId === "page-cb360-redund") {
+            if (document.getElementById('cb360-incident-wrapper')) {
+              closeCb360Incident();
+            } else if (typeof setDateFilter === "function") {
+              const tbody = document.getElementById('cb360-table-body');
               if (tbody) tbody.innerHTML = `<tr>...A carregar...</tr>`;
-              searchGescorpIncidents();    
+              setDateFilter('day');
             }
           }
         });

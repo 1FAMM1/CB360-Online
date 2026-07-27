@@ -960,19 +960,26 @@
     }
     /* ============== SAVE UNAVAILABILITY TO DATABASE ============== */
     async function saveUnavailabilityToSupabase(data) {
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       try {
         const insertResp = await fetch(`${SUPABASE_URL}/rest/v1/vehicle_unavailability`, {
           method: 'POST',
           headers: getSupabaseHeaders({returnRepresentation: true}),
-          body: JSON.stringify({vehicle: data.vehicle, start_unavailability_date: data.startDate, start_unavailability_hour: data.startHour, unavailability_motive: data.motive,
-                                status: "Em Aberto", corp_oper_nr: currentCorpOperNr})
+          body: JSON.stringify({vehicle: data.vehicle, start_unavailability_date: data.startDate, start_unavailability_hour: data.startHour, unavailability_motive: data.motive, status: "Em Aberto", corp_oper_nr: currentCorpOperNr})
         });
+    
         if (!insertResp.ok) {
           console.error("❌ Erro ao gravar no Supabase:", await insertResp.text());
           return null;
-        }
-        return await insertResp.json();
+        }    
+        const savedData = await insertResp.json();
+        const activeRecord = savedData[0] || savedData;
+        await fetch(`${SUPABASE_URL}/rest/v1/vehicle_unavailability_history`, {
+          method: 'POST',
+          headers: getSupabaseHeaders({returnRepresentation: false}),
+          body: JSON.stringify({id: activeRecord.id, vehicle: data.vehicle, start_date: data.startDate, end_date: null, start_hour: data.startHour, end_hour: null, total_time: null, motive: data.motive, corp_oper_nr: currentCorpOperNr})
+        });
+        return activeRecord;
       } catch (e) {
         console.error("❌ Erro inesperado ao gravar no Supabase:", e);
         return null;
@@ -980,7 +987,7 @@
     }
     /* ============== LOAD ACTIVE UNAVAILABILITIES ============== */
     async function loadActiveUnavailability() {
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const tbody = document.getElementById('active-unavailability-tbody');
       if (!tbody) return;
       try {
@@ -1039,26 +1046,26 @@
       const motive = document.getElementById('end_reason_unavailability')?.value;
       const endDate = document.getElementById('end_unavailability_date')?.value;
       const endHour = document.getElementById('end_unavailability_hour')?.value;
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       try {
         const query = `vehicle=eq.${encodeURIComponent(vehicle)}&unavailability_motive=eq.${encodeURIComponent(motive)}&status=eq.Em%20Aberto&corp_oper_nr=eq.${currentCorpOperNr}`;
         const resp = await fetch(`${SUPABASE_URL}/rest/v1/vehicle_unavailability?${query}`, {
           headers: getSupabaseHeaders()
         });
-        const data = await resp.json();
+        const data = await resp.json();    
         if (!data.length) {
           showPopup('popup-danger', "Não foi encontrada nenhuma indisponibilidade em aberto para este veículo.");
           return '';
-        }
+        }    
         const record = data[0];
         const startDateTime = new Date(`${record.start_unavailability_date}T${record.start_unavailability_hour}`);
         const endDateTime = new Date(`${endDate}T${endHour}`);
-        const diffMs = endDateTime - startDateTime;
+        const diffMs = endDateTime - startDateTime;    
         const hours = Math.floor(diffMs / (1000 * 60 * 60));
         const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-        const timeUnavailable = `${padNumber(hours)}h${padNumber(minutes)}m`;
+        const timeUnavailable = `${padNumber(hours)}h${padNumber(minutes)}m`;    
         const gdhEnd = formatWSMSGDH(endDate, endHour);
-        let displayName = vehicle === "ABSC-02" ? "INEM-Reserva" : ["ABSC-01", "ABSC-03"].includes(vehicle) ? "INEM" : vehicle;
+        let displayName = vehicle === "ABSC-02" ? "INEM-Reserva" : ["ABSC-01", "ABSC-03"].includes(vehicle) ? "INEM" : vehicle;    
         let message = '';
         if (motive === "Pausa para Alimentação") {
           message = `*🚨INFORMAÇÃO🚨*\n\n*${displayName}:*\nFim de: ${motive}, ${gdhEnd}.\nTempo Indisponível: ${timeUnavailable}.`;
@@ -1066,15 +1073,20 @@
           message = `*🚨INFORMAÇÃO🚨*\n\n*${displayName}:*\nFim de Retenção por: ${motive}, ${gdhEnd}.\nTempo Indisponível: ${timeUnavailable}.`;
         } else {
           message = `*🚨INFORMAÇÃO🚨*\n\n*${displayName}:*\nFim de Inoperacionalidade por: ${motive}, ${gdhEnd}.\nTempo Indisponível: ${timeUnavailable}.`;
-        }
+        }    
         const optelFooter = await getOptelSignature();
-        message += optelFooter;
+        message += optelFooter;    
         const out = document.getElementById('wsms_output');
-        if (out) out.value = message;
+        if (out) out.value = message;    
         if (navigator.clipboard?.writeText) {
           await navigator.clipboard.writeText(message).catch(() => {});
-        }
+        }    
         showPopup('popup-success', "Mensagem criada e copiada! Pode colar no WhatsApp.", true);
+        await fetch(`${SUPABASE_URL}/rest/v1/vehicle_unavailability_history?id=eq.${record.id}`, {
+          method: 'PATCH',
+          headers: getSupabaseHeaders(),
+          body: JSON.stringify({end_date: endDate, end_hour: endHour, total_time: timeUnavailable})
+        });
         await fetch(`${SUPABASE_URL}/rest/v1/vehicle_unavailability?id=eq.${record.id}`, {
           method: 'DELETE',
           headers: getSupabaseHeaders()
@@ -1086,6 +1098,308 @@
         console.error("Erro ao gerar fim de indisponibilidade:", e);
         showPopup('popup-danger', "Erro ao gerar mensagem de fim de indisponibilidade.");
         return '';
+      }
+    }
+    function openVehicleUnavailabilityMonthSelectModal() {
+      let modalOverlay = document.getElementById('cb360-modal-overlay');
+      if (!modalOverlay) {
+        modalOverlay = document.createElement('div');
+        modalOverlay.id = 'cb360-modal-overlay';
+        modalOverlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); display:flex; justify-content:center; align-items:center; z-index:9999;';
+        document.body.appendChild(modalOverlay);
+      }
+      const months = [{id: 1, name: "Janeiro"}, {id: 2, name: "Fevereiro"}, {id: 3, name: "Março"}, {id: 4, name: "Abril"}, {id: 5, name: "Maio" }, {id: 6, name: "Junho"},
+                      {id: 7, name: "Julho"}, {id: 8, name: "Agosto"}, {id: 9, name: "Setembro"}, {id: 10, name: "Outubro"}, {id: 11, name: "Novembro"}, {id: 12, name: "Dezembro"}
+                     ];
+      const btnStyle = 'background:#f0f0f0; border:1px solid #ccc; border-radius:4px; padding:12px 10px; font-size:12.5px; font-weight:600; color:#333; cursor:pointer; text-align:center; transition:filter 0.15s;';
+      let buttonsHtml = '';
+      months.forEach(m => {
+        buttonsHtml += `
+          <button class="goc-month-btn" data-month="${m.id}" data-name="${m.name}" style="${btnStyle}">
+            <i class="fa-regular fa-calendar-days" style="color:#2b6ecb; display:block; font-size:16px; margin-bottom:4px;"></i>
+            ${m.name}
+          </button>
+        `;
+      });
+      modalOverlay.innerHTML = `
+        <div style="background:#fff; border:1px solid #ccc; border-radius:6px; width:420px; box-shadow:0 4px 15px rgba(0,0,0,0.2); overflow:hidden;">
+          <div style="background:#d9534f; color:#fff; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600;">
+            <span><i class="fa-solid fa-calendar"></i> Selecionar Mês</span>
+            <div style="display:flex; gap:8px; cursor:pointer;">
+              <span id="cb360-close-modal" style="font-weight:bold;">✕</span>
+            </div>
+          </div>
+          <div style="padding:20px; display:flex; flex-direction:column; gap:5px; background:#fff;">
+            <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;">
+              ${buttonsHtml}
+            </div>
+          </div>
+          <div style="background:#e5e5e5; padding:10px 20px; border-top:1px solid #ccc; display:flex; justify-content:flex-end; gap:10px;">
+            <button id="cb360-cancel-month" style="background:#f0ad4e; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-solid fa-power-off"></i>&nbsp;&nbsp;Fechar</button>
+          </div>
+        </div>
+      `;
+      const closeModal = () => modalOverlay.remove();
+      document.getElementById('cb360-close-modal').onclick = closeModal;
+      document.getElementById('cb360-cancel-month').onclick = closeModal;
+      modalOverlay.querySelectorAll('.goc-month-btn').forEach(btn => {
+        btn.addEventListener('mouseenter', () => {
+          btn.style.background = '#f0f6ff';
+          btn.style.borderColor = '#2b6ecb';
+          btn.style.color = '#2b6ecb';
+        });
+        btn.addEventListener('mouseleave', () => {
+          btn.style.background = '#f0f0f0';
+          btn.style.borderColor = '#ccc';
+          btn.style.color = '#333';
+        });
+        btn.onclick = () => {
+          const monthId = btn.dataset.month;
+          const monthName = btn.dataset.name;
+          closeModal();
+          openVehicleUnavailabilityReportModal(monthId, monthName);
+        };
+      });
+    }
+    function openVehicleUnavailabilityReportModal(monthId, monthName) {
+      let modalOverlay = document.getElementById('cb360-modal-overlay');
+      if (!modalOverlay) {
+        modalOverlay = document.createElement('div');
+        modalOverlay.id = 'cb360-modal-overlay';
+        modalOverlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); display:flex; justify-content:center; align-items:center; z-index:9999;';
+        document.body.appendChild(modalOverlay);
+      }
+      let styleTag = document.getElementById('cb360-dynamic-focus-style');
+      if (!styleTag) {
+        styleTag = document.createElement('style');
+        styleTag.id = 'cb360-dynamic-focus-style';
+        styleTag.innerHTML = `
+          #cb360-report-content ~ * select:focus, 
+          #cb360-filter-month:focus, 
+          #cb360-filter-type:focus {border-color: #d9534f !important; outline: none !important; box-shadow: 0 0 5px rgba(217, 83, 79, 0.4) !important;}
+        `;
+        document.head.appendChild(styleTag);
+      }
+      const months = [{id: 1, name: "Janeiro"}, {id: 2, name: "Fevereiro"}, {id: 3, name: "Março"}, {id: 4, name: "Abril"}, {id: 5, name: "Maio"}, {id: 6, name: "Junho"},
+                      {id: 7, name: "Julho"}, {id: 8, name: "Agosto"}, {id: 9, name: "Setembro"}, {id: 10, name: "Outubro"}, {id: 11, name: "Novembro"}, {id: 12, name: "Dezembro"}
+                     ];
+      let monthOptions = '';
+      months.forEach(m => {
+        monthOptions += `<option value="${m.id}" ${m.id == monthId ? 'selected' : ''}>${m.name}</option>`;
+      });
+      const typesUnavailability = ["Pausa para Alimentação", "Falta de Macas", "Aguarda Triagem", "Avaria", "Falta de Tripulação", "Outro", "Limpeza"];
+      let typeOptions = '<option value="">Todos os tipos</option>';
+      typesUnavailability.forEach(t => {
+        typeOptions += `<option value="${t}">${t}</option>`;
+      });
+      modalOverlay.innerHTML = `
+        <div style="background:#fff; border:1px solid #ccc; border-radius:6px; width:750px; max-width:90%; box-shadow:0 4px 15px rgba(0,0,0,0.2); overflow:hidden;">
+          <div style="background:#d9534f; color:#fff; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600;">
+            <span><i class="fa-solid fa-file-lines"></i> Relatório de Indisponibilidades</span>
+            <div style="display:flex; gap:8px; cursor:pointer;">
+              <span id="cb360-close-report-modal" style="font-weight:bold;">✕</span>
+            </div>
+          </div>
+          <div style="background:#f9f2f2; padding:12px 20px; border-bottom:1px solid #ebccd1; display:flex; gap:15px; align-items:center; font-size:12px;">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <label for="cb360-filter-month" style="font-weight:600; color:#a94442;">Mês:</label>
+              <select id="cb360-filter-month" style="padding:5px 8px; border:1px solid #ebccd1; border-radius:4px; font-size:12px; background:#fff; transition: all 0.2s;">
+                 ${monthOptions}
+              </select>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <label for="cb360-filter-type" style="font-weight:600; color:#a94442;">Tipo:</label>
+              <select id="cb360-filter-type" style="padding:5px 8px; border:1px solid #ebccd1; border-radius:4px; font-size:12px; background:#fff; transition: all 0.2s;">
+                ${typeOptions}
+              </select>
+            </div>
+          </div>
+          <div style="padding:20px; background:#fff; min-height:200px; max-height:380px; overflow-y:auto;" id="cb360-report-content">
+            <div style="text-align:center; color:#666; padding:40px 0;">
+              <i class="fa-solid fa-spinner fa-spin" style="font-size:24px; color:#2b6ecb; margin-bottom:10px;"></i>
+              <p>A carregar dados...</p>
+            </div>
+          </div>
+          <div style="background:#e5e5e5; padding:10px 20px; border-top:1px solid #ccc; display:flex; justify-content:space-between; align-items:center;">
+            <button id="cb360-back-month" style="background:#2b6ecb; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-solid fa-arrow-left"></i>&nbsp;&nbsp;Voltar</button>
+            <div style="display:flex; gap:10px;">
+              <button id="cb360-print-report" style="background:#2b6ecb; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-solid fa-print"></i>&nbsp;&nbsp;Imprimir</button>
+              <button id="cb360-close-report" style="background:#f0ad4e; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-solid fa-power-off"></i>&nbsp;&nbsp;Fechar</button>
+            </div>
+          </div>
+        </div>
+      `;
+      const closeModal = () => modalOverlay.remove();
+      document.getElementById('cb360-close-report-modal').onclick = closeModal;
+      document.getElementById('cb360-close-report').onclick = closeModal;
+      document.getElementById('cb360-back-month').onclick = () => openVehicleUnavailabilityMonthSelectModal();
+      const handleFilterChange = () => {
+        const selectedMonth = document.getElementById('cb360-filter-month').value;
+        const selectedType = document.getElementById('cb360-filter-type').value;
+        const selectedMonthName = months.find(m => m.id == selectedMonth)?.name || monthName;
+        loadReportDataForMonth(selectedMonth, selectedMonthName, selectedType);
+      };
+      document.getElementById('cb360-filter-month').onchange = handleFilterChange;
+      document.getElementById('cb360-filter-type').onchange = handleFilterChange;
+      document.getElementById('cb360-print-report').onclick = async () => {
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      let logoUrl = "";
+      try {
+        const respLogo = await fetch(`${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${currentCorpOperNr}&select=logo_url`, {
+          headers: getSupabaseHeaders()
+        });
+        const logoData = await respLogo.json();
+        if (Array.isArray(logoData) && logoData.length > 0) {
+          logoUrl = logoData[0].logo_url || "";
+        }
+      } catch (err) {
+        console.error("Erro ao buscar logo da corporação:", err);
+      }
+      const currentSelectedMonthName = months.find(m => m.id == document.getElementById('cb360-filter-month').value)?.name || monthName;
+      const content = document.getElementById('cb360-report-content').innerHTML;
+      const printWindow = window.open('', '_blank', 'height=600,width=800');
+      if (!printWindow) {
+        alert("Por favor, permita os pop-ups para conseguir imprimir o relatório.");
+        return;
+      }
+      printWindow.document.open();
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Relatório de Indisponibilidades - ${currentSelectedMonthName}</title>
+            <style>
+              @page {size: auto; margin: 10mm;}
+              body {font-family: sans-serif; padding: 10px; margin: 0; color: #333; } 
+              .header {display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #d9534f; padding-bottom: 10px; margin-bottom: 20px; } 
+              .logo {max-height: 60px;} 
+              table {width: 100%; border-collapse: collapse; font-size: 12px;} 
+              th, td {border: 1px solid #ddd; padding: 8px; } 
+              th {background-color: #f0f0f0; text-align: center !important;}
+              td {text-align: left;}
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              ${logoUrl ? `<img src="${logoUrl}" alt="Logo Corporação" class="logo">` : '<div></div>'}
+              <h2 style="margin: 0; color: #333; font-size: 18px; text-align: right;">Relatório de Indisponibilidades - ${currentSelectedMonthName}</h2>
+            </div>
+            ${content}
+          </body>
+          </html>
+        `);
+        printWindow.document.close();    
+        printWindow.focus();
+        setTimeout(() => {
+          printWindow.print();
+          printWindow.close();
+        }, 600);
+      };
+      loadReportDataForMonth(monthId, monthName, "");
+    }
+    async function loadReportDataForMonth(monthId, monthName, filterType = "") {
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const contentDiv = document.getElementById('cb360-report-content');  
+      try {
+        const currentYear = new Date().getFullYear();
+        const paddedMonth = String(monthId).padStart(2, '0');    
+        const firstDay = `${currentYear}-${paddedMonth}-01`;
+        const lastDayObj = new Date(currentYear, monthId, 0);
+        const lastDay = `${currentYear}-${paddedMonth}-${String(lastDayObj.getDate()).padStart(2, '0')}`;
+        let query = `corp_oper_nr=eq.${currentCorpOperNr}&start_date=gte.${firstDay}&start_date=lte.${lastDay}&order=start_date.desc`;
+        if (filterType) {
+          query += `&motive=eq.${encodeURIComponent(filterType)}`;
+        }    
+        const resp = await fetch(`${SUPABASE_URL}/rest/v1/vehicle_unavailability_history?${query}`, {
+          headers: getSupabaseHeaders()
+        });    
+        const records = await resp.json();
+        if (!resp.ok || !Array.isArray(records)) {
+          console.error("Erro na resposta do Supabase:", records);
+          contentDiv.innerHTML = `<div style="text-align:center; color:#d9534f; padding:30px 0;">Erro ao carregar dados: ${records.message || 'Resposta inválida do servidor.'}</div>`;
+          return;
+        }
+        if (records.length === 0) {
+          contentDiv.innerHTML = `<div style="text-align:center; color:#666; padding:30px 0;">Nenhum registo encontrado para os filtros selecionados.</div>`;
+          return;
+        }
+        let totalMinutes = 0;
+        records.forEach(r => {
+          const t = (r.total_time || '').toLowerCase();
+          const hoursMatch = t.match(/(\d+)\s*(?:h|hora|horas)/);
+          const minutesMatch = t.match(/(\d+)\s*(?:m|min|minuto|minutos)/);      
+          let hours = 0;
+          let minutes = 0;
+          if (hoursMatch) {
+            hours = parseInt(hoursMatch[1], 10) || 0;
+          }
+          if (minutesMatch) {
+            minutes = parseInt(minutesMatch[1], 10) || 0;
+          }
+          if (!hoursMatch && !minutesMatch && t.includes(':')) {
+            const parts = t.split(':');
+            if (parts.length === 2) {
+              hours = parseInt(parts[0], 10) || 0;
+              minutes = parseInt(parts[1], 10) || 0;
+            }
+          }
+          totalMinutes += (hours * 60) + minutes;
+        });
+        const totalHoursSum = Math.floor(totalMinutes / 60);
+        const totalMinsRem = totalMinutes % 60;
+        const formattedTotalSum = `${String(totalHoursSum).padStart(2, '0')}h${String(totalMinsRem).padStart(2, '0')}m`;
+        let tableHtml = `
+          <table style="width:100%; border-collapse:collapse; font-size:12px; color:#333; table-layout: fixed;">
+            <colgroup>
+              <col style="width: 12%;">
+              <col style="width: 18%;">
+              <col style="width: 18%;">
+              <col style="width: 15%;">
+              <col style="width: 37%;">
+            </colgroup>
+            <thead>
+              <tr style="background:#f0f0f0; border-bottom:2px solid #ccc;">
+                <th style="padding:8px; border:1px solid #ddd; text-align:center;">Veículo</th>
+                <th style="padding:8px; border:1px solid #ddd; text-align:center;">Início</th>
+                <th style="padding:8px; border:1px solid #ddd; text-align:center;">Fim</th>
+                <th style="padding:8px; border:1px solid #ddd; text-align:center;">Tempo Total</th>
+                <th style="padding:8px; border:1px solid #ddd; text-align:center;">Motivo</th>
+              </tr>
+            </thead>
+            <tbody>
+          `;
+          records.forEach(r => {
+            const formatDateToBr = (dateStr) => {
+              if (!dateStr) return '';
+              const parts = dateStr.split('-');
+              if (parts.length === 3) {
+                return `${parts[2]}/${parts[1]}/${parts[0]}`;
+              }
+              return dateStr;
+            };
+            const formattedStartDate = formatDateToBr(r.start_date);
+            const formattedEndDate = formatDateToBr(r.end_date);
+            tableHtml += `
+              <tr style="border-bottom:1px solid #ddd;">
+                <td style="padding:8px; border:1px solid #ddd; font-weight:600; color:#2b6ecb; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${r.vehicle || '-'}</td>
+                <td style="padding:8px; border:1px solid #ddd; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${formattedStartDate} ${r.start_hour || ''}</td>
+                <td style="padding:8px; border:1px solid #ddd; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${formattedEndDate !== '-' ? formattedEndDate : '-'} ${r.end_hour || ''}</td>
+                <td style="padding:8px; border:1px solid #ddd; font-weight:600; text-align:right; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${r.total_time || 'Em aberto'}</td>
+                <td style="padding:8px; border:1px solid #ddd; text-align:left; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${r.motive || '-'}</td>
+              </tr>
+            `;});
+            tableHtml += `
+              <tr style="background:#f9f9f9; border-top:2px solid #ccc;">
+                <td colspan="3" style="padding:8px; border:1px solid #ddd; text-align:right; font-weight:bold;">TOTAL:</td>
+                <td style="padding:8px; border:1px solid #ddd; font-weight:bold; text-align:right; color:#d9534f;">${formattedTotalSum}</td>
+                <td style="padding:8px; border:1px solid #ddd;"></td>
+              </tr>
+            </tbody>
+          </table>
+        `;    
+        contentDiv.innerHTML = tableHtml;    
+      } catch (e) {
+        console.error("Erro de rede ao carregar relatório:", e);
+        contentDiv.innerHTML = `<div style="text-align:center; color:#d9534f; padding:30px 0;">Erro ao conectar com o servidor.</div>`;
       }
     }
     /* ============== INITIALIZE ============== */

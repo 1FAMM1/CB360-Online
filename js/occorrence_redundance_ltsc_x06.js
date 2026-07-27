@@ -34,7 +34,9 @@
     let cb360CountriesCache = null;
     let cb360VehicleRegistrations = {};
     let cb360TimelineEvents = [];
-    const CB360_VICTIM_CATEGORIES = ['Bombeiro', 'APC', 'Civil'];
+    let cb360ClassOcorrReportMap = {};
+    let cb360ClassOcorrReportMapLoaded = false
+    const CB360_VICTIM_CATEGORIES = ['Bombeiro', 'APC', 'Cívil'];
     const CB360_VICTIM_SEVERITIES = ['Leve', 'Grave', 'Morto', 'Assistido'];
     const STATUS_COLORS = {"": "#FFF", "Alerta": "#FFE0B2", "Análise": "#FFE0B2", "Despacho": "#FFE0B2", "Despacho 1º Alerta": "#FFE0B2", "Chegada ao TO": "#FFE0B2", "Em Curso": "#FFCDD2", "Recusada": "#FFCDD2", 
                            "Em Resolução": "#BBDEFB", "Vigilância": "#BBDEFB", "Conclusão": "#C8E6C9", "Encerrada": "#C8E6C9", "Falso Alarme": "#C8E6C9", "Falso Alerta": "#C8E6C9", "Anulada": "#C8E6C9"};
@@ -50,8 +52,8 @@
         ? { ...baseHeaders, ...init.headers }
         : baseHeaders;
       return fetch(url, { ...init, headers });
-    }
-     // ==============================================================================
+    }    
+    // ==============================================================================
     // == 1. EVENTOS GLOBAIS                                                      ==
     // ==============================================================================
     document.addEventListener('keydown', function(event) {
@@ -109,6 +111,9 @@
       }
       if (tab === 'timeline' && !document.getElementById('goc-timeline-list')) {
         renderCb360TimelineTab();
+      }
+      if (tab === 'sms' && !document.getElementById('sms-sub-content')) {
+        renderCb360SmsTab();
       }
     }
     // ==============================================================================
@@ -244,6 +249,30 @@
         counts[key].victimDetails.push({patientName: row.patient_name || 'Sem nome'});
       });
     }
+    const externalFirefightersUrl = `${SUPABASE_URL}/rest/v1/cb360_report_means_firefighters?internal_number=in.(${list})&select=internal_number,num_firefighters`;
+    const externalFirefightersResponse = await supaFetch(externalFirefightersUrl, { method: 'GET' });
+    if (externalFirefightersResponse.ok) {
+      const externalFirefightersData = await externalFirefightersResponse.json();
+      externalFirefightersData.forEach(row => {
+        const key = row.internal_number;
+        if (!counts[key]) counts[key] = {vehicles: 0, crew: 0, victims: 0, vehicleDetails: [], crewDetails: [], firstArrival: null, lastReturn: null};
+        counts[key].vehicles += 1;
+        counts[key].crew += Number(row.num_firefighters) || 0;
+      });
+    }
+    const externalMeansUrl = `${SUPABASE_URL}/rest/v1/cb360_report_means?internal_number=in.(${list})&select=internal_number,type,quantity,num_operational`;
+    const externalMeansResponse = await supaFetch(externalMeansUrl, { method: 'GET' });
+    if (externalMeansResponse.ok) {
+      const externalMeansData = await externalMeansResponse.json();
+      externalMeansData.forEach(row => {
+        const key = row.internal_number;
+        if (!counts[key]) counts[key] = {vehicles: 0, crew: 0, victims: 0, vehicleDetails: [], crewDetails: [], firstArrival: null, lastReturn: null};
+        counts[key].crew += Number(row.num_operational) || 0;
+        if (row.type === 'civil_protection' || row.type === 'other_means') {
+          counts[key].vehicles += Number(row.quantity) || 0;
+        }
+      });
+    }
     return counts;
       } catch (err) {
         console.error('Erro fetchCb360ResourceCounts:', err);
@@ -261,13 +290,30 @@
         if (filters.species) url += `&classification=like.${filters.species}*`;
         if (filters.alertSource) url += `&caller=eq.${filters.alertSource}`;
         if (filters.risk) url += `&risk=eq.${filters.risk}`;
-        if (filters.state) url += `&status=eq.${(filters.state)}`;
+        if (filters.state) url += `&status=eq.${encodeURIComponent(filters.state)}`;
         if (filters.aap) {
           const isOutside = filters.aap === 'Fora' ? 'true' : 'false';
           url += `&outside_area=eq.${isOutside}`;
         }
-        const response = await supaFetch(url, { method: 'GET' });
-        return response.ok ? await response.json() : [];
+        const [response, reportsMap] = await Promise.all([
+          supaFetch(url, { method: 'GET' }),
+          fetchCb360ReportsMap()
+        ]);
+        let data = response.ok ? await response.json() : [];
+        data.forEach(item => {
+          item.report = reportsMap[item.internal_number] || null;
+        });
+        if (filters.report) {
+          data = data.filter(item => {
+            if (!cb360ClassOcorrReportMap[item.classification]) return false;
+            const color = getCb360ReportStatusColor(item.report);
+            if (filters.report === 'Por Fazer' && color === 'red') return true;
+            if (filters.report === 'Por Finalizar' && color === 'orange') return true;
+            if (filters.report === 'Finalizado' && color === 'green') return true;
+            return false;
+          });
+        }
+        return data;
       } catch (err) {
         console.error('Erro fetchCb360Incidents:', err);
         return [];
@@ -387,6 +433,12 @@
             </div>
           </div>
         </div>
+        <div style="display:none; align-items:center; gap:15px; font-size:12px; margin: 4px 0 10px 0; font-weight:600; color:#555;">
+          <span>Legenda Relatório:</span>
+          <span style="display:flex; align-items:center; gap:4px;"><span style="width:10px; height:10px; background:red; display:inline-block; border-radius:50%;"></span> Por Fazer</span>
+          <span style="display:flex; align-items:center; gap:4px;"><span style="width:10px; height:10px; background:orange; display:inline-block; border-radius:50%;"></span> Por Finalizar</span>
+          <span style="display:flex; align-items:center; gap:4px;"><span style="width:10px; height:10px; background:green; display:inline-block; border-radius:50%;"></span> Finalizado</span>
+        </div>
         <div style="position:absolute; right:100px; margin-top: 40px; transform:translateY(-50%);">
           <button id="cb360-btn-search" title="Pesquisar" style="background:transparent; color:#17a2b8; border:none; width:38px; height:38px; border-radius:6px; font-size:30px; cursor:pointer; display:flex; align-items:center; justify-content:center;"><i class="fa fa-search"></i></button>
         </div>
@@ -394,25 +446,25 @@
           <table id="cb360-tabela-ocorrencias" style="width:100%; border-collapse:separate; border-spacing:0; font-size:12px; text-align:center; margin-bottom:0;">
             <thead>
               <tr>
-                <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:8px; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; width:90px;">N° Interno</th>
-                <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:8px; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; width:90px;">N° SADO</th>
-                <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:8px; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; width:90px;">N° CODU</th>
-                <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:8px; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; width:100px;">Data Alerta</th>
-                <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:8px; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; width:60px;">H. Saída</th>
-                <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:8px; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; width:250px;">Nome Alerta/Pedido</th>
-                <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:8px; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4;">Morada</th>
-                <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:8px; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; width:60px;">Cód. Serviço</th>
-                <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:8px; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; width:130px;">Estado</th>
-                <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:8px; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; width:60px; font-size:16px;"><i class="fa-solid fa-truck"></i></th>
-                <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:8px; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; width:60px; font-size:16px;"><i class="fa-solid fa-helmet-safety"></i></th>
-                <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:8px; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; width:60px; font-size:16px;"><i class="fa-solid fa-kit-medical"></i></th>
-                <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:8px; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; width:50px;"><i class="fa fa-file-text fa-lg igreen"></i></th>
-                <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:8px; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; width:50px;"></th>
-                <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:8px; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; width:35px;"></th>
-                <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:8px; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; width:35px;"></th>
-                <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:8px; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; width:35px;"></th>
-                <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:8px; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; width:50px;"></th>
-                <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:8px; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; width:50px;"></th>
+                <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:4px; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; width:90px;">N° Interno</th>
+                <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:4px; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; width:90px;">N° SADO</th>
+                <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:4px; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; width:90px;">N° CODU</th>
+                <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:4px; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; width:100px;">Data Alerta</th>
+                <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:4px; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; width:60px;">H. Saída</th>
+                <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:4px; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; width:250px;">Nome Alerta/Pedido</th>
+                <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:4px; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4;">Morada</th>
+                <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:4px; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; width:60px;">Cód. Serviço</th>
+                <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:4px; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; width:130px;">Estado</th>
+                <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:4px; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; width:60px; font-size:16px;"><i class="fa-solid fa-truck" style="font-size:16px; vertical-align: middle;"></i></th>
+                <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:4px; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; width:60px; font-size:16px;"><i class="fa-solid fa-helmet-safety" style="font-size:16px; vertical-align: middle;"></i></th>
+                <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:4px; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; width:60px; font-size:16px;"><i class="fa-solid fa-kit-medical" style="font-size:16px; vertical-align: middle;"></i></th>
+                <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:4px; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; width:50px;"><i class="fa fa-file-text fa-lg igreen" style="font-size:16px; vertical-align: middle;"></i></th>
+                <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:4px; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; width:50px;"></th>
+                <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:4px; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; width:35px;"></th>
+                <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:4px; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; width:35px;"></th>
+                <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:4px; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; width:35px;"></th>
+                <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:4px; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; width:50px;"></th>
+                <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:4px; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; width:50px;"></th>
               </tr>
             </thead>
             <tbody id="cb360-table-body"></tbody>
@@ -541,27 +593,81 @@
         nextBtn.style.cursor = safePage >= totalPages ? 'not-allowed' : 'pointer';
       }
     }
-    // ---- RENDER: renderCb360Lines() ----
+    async function fetchCb360ReportsMap() {
+      try {
+        const response = await supaFetch(`${SUPABASE_URL}/rest/v1/cb360_incident_reports?select=*`);
+        if (!response.ok) return {};
+        const reports = await response.json();
+        const map = {};
+        reports.forEach(rep => {
+          map[rep.internal_number] = rep;
+        });
+        return map;
+      } catch (err) {
+        console.error('Erro ao carregar mapa de relatórios:', err);
+        return {};
+      }
+    }
+    function getCb360ReportStatusColor(report) {
+      if (!report) return 'red';
+      const hasContent = Boolean(
+        (report.description && report.description.trim() !== '') ||
+        (report.developed_work && report.developed_work.trim() !== '')
+      );
+      const isFinalized = report.finalized_bomb_resp === true;
+      if (!hasContent && !isFinalized) {
+        return 'red';
+      } else if (hasContent && !isFinalized) {
+        return 'orange';
+      } else if (hasContent && isFinalized) {
+        return 'green';
+      }
+      return isFinalized ? 'green' : 'red';
+    }
+    // ---- RENDER: renderCb360Lines ----
     function renderCb360Lines(incidents, resourceCounts = {}) {      
       const tbody = document.getElementById('cb360-table-body');
-      const cellPadding = '2px 4px';
-      tbody.innerHTML = incidents.length ? incidents.map(oc => {
-        let formattedDate = "";
-        if (oc.alert_date) {
-          const [year, month, day] = oc.alert_date.split('-');
-          formattedDate = `${day}-${month}-${year}`;
-        }
-        const alertHour = oc.alert_time ? oc.alert_time.substring(0, 5) : "--:--";
-        const exitHour = oc.exit_time ? oc.exit_time.substring(0, 5) : "--:--";
-        const counts = resourceCounts[oc.internal_number] || {vehicles: 0, crew: 0, victims: 0};
-        const statusColor = STATUS_COLORS[oc.status] || "#f0f0f0";
-        const isClosedRow = ['Encerrada', 'Falso Alarme', 'Falso Alerta', 'Anulada', 'Recusada'].includes(oc.status);
-        const bl = 'border-left:0px solid #c4c4c4;';
-        const br = 'border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4;';
-        return `          
-          <tr>
-            <td style="padding:6px; ${bl} ${br} text-align:center;">
-              <a href="#" class="cb360-internal-link" data-id="${oc.id ?? ''}" style="color:#2b6ecb; text-decoration:none; font-size: 12px; font-weight: 700;">${oc.internal_number || ''}</a>
+      const cellPadding = '2px 4px; vertical-align: middle;';
+      const cb360ReportsMap = cb360Pagination.reportsMap || {};  
+      tbody.innerHTML = incidents.length ? '' : `
+        <tr>
+          <td colspan="19" style="padding:20px; border:1px solid #c4c4c4; text-align:center; color:#888;">
+            Sem registos para apresentar.
+          </td>
+        </tr>
+      `;
+      if (incidents.length) {
+        incidents.forEach(oc => {
+          let formattedDate = "";
+          if (oc.alert_date) {
+            const [year, month, day] = oc.alert_date.split('-');
+            formattedDate = `${day}-${month}-${year}`;
+          }
+          const alertHour = oc.alert_time ? oc.alert_time.substring(0, 5) : "--:--";
+          const exitHour = oc.exit_time ? oc.exit_time.substring(0, 5) : "--:--";
+          const counts = resourceCounts[oc.internal_number] || {vehicles: 0, crew: 0, victims: 0};
+          const expensesList = counts.expenses || [];
+          const hasVehicleRegistration = expensesList.some(exp => exp.vehicle_registration && exp.vehicle_registration.trim() !== '');
+          const statusColor = STATUS_COLORS[oc.status] || "#f0f0f0";
+          const isClosedRow = ['Encerrada', 'Falso Alarme', 'Falso Alerta', 'Anulada', 'Recusada'].includes(oc.status);
+          const reportData = cb360ReportsMap[oc.internal_number] || null;
+          const reportStatusColor = getCb360ReportStatusColor(reportData);      
+          const bl = 'border-left:0px solid #c4c4c4;';
+          const br = 'border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4;';
+          const tr = document.createElement('tr');
+          tr.style.cssText = 'cursor: pointer; transition: background 0.1s;';
+          tr.dataset.id = oc.id ?? '';
+          tr.onmouseover = () => tr.style.background = '#f5f5f5';
+          tr.onmouseout = () => tr.style.background = 'transparent';
+          tr.addEventListener('click', (e) => {
+            if (e.target.closest('.cb360-delete-btn')) return;
+            const id = tr.dataset.id;
+            const incident = incidents.find(o => o.id == id);
+            openCb360Incidents('editar', incident);
+          });
+          tr.innerHTML = `          
+            <td style="padding:6px; ${bl} ${br} text-align:center; vertical-align: middle;">
+              <span class="cb360-internal-link" style="color:#2b6ecb; text-decoration:none; font-size: 12px; font-weight: 700;">${oc.internal_number || ''}</span>
             </td>
             <td style="${cellPadding}; ${br} text-align:center; font-size: 12px; font-weight: 500;">${oc.sado_number || ''}</td>
             <td style="${cellPadding}; ${br} text-align:center; font-size: 12px; font-weight: 500;">${oc.codu || ''}</td>
@@ -570,30 +676,33 @@
             <td style="${cellPadding}; padding-left: 10px; ${br} color:#2b6ecb; text-align:left; font-size: 12px; font-weight: 700;">${oc.caller || ''}</td>
             <td style="${cellPadding}; ${br} text-align:center; font-size: 12px; font-weight: 500;">${oc.address || ''}</td>
             <td style="${cellPadding}; ${br} text-align:center; font-size: 12px; font-weight: 500;">${oc.classification || ''}</td>            
-            <td style="${cellPadding}; ${br} background:${statusColor}; text-align:center; font-size:11px; font-weight:600;">${oc.status || ''}</td>
-            <td class="cb360-vehicle-cell" data-internal="${oc.internal_number || ''}" style="${cellPadding}; ${br} text-align:center; font-size: 12px; font-weight: 500; cursor:${counts.vehicles ? 'pointer' : 'default'};">${counts.vehicles} <i class="fa-solid fa-truck"style="font-size:14px;"></i></td>
-            <td class="cb360-crew-cell" data-internal="${oc.internal_number || ''}" style="${cellPadding}; ${br} text-align:center; font-size: 12px; font-weight: 500; cursor:${counts.crew ? 'pointer' : 'default'};">${counts.crew} <i class="fa-solid fa-helmet-safety"style="font-size:14px;"></i></td>
-            <td class="cb360-victim-cell" data-internal="${oc.internal_number || ''}" style="${cellPadding}; ${br} text-align:center; font-size: 12px; font-weight: 500; cursor:${counts.victims ? 'pointer' : 'default'};">${counts.victims} <i class="fa-solid fa-kit-medical" style="font-size:14px;"></i></td>
-            <td style="${cellPadding}; ${br} text-align:center; font-size: 12px; font-weight: 500;"><i class="fa-regular fa-file" style="font-size: 16px; font-weight: 700; color: red;"></i></td>
-            <td class="cb360-duration-cell" data-internal="${oc.internal_number || ''}" style="${cellPadding}; ${br} text-align:center; font-size: 16px; font-weight: 700; cursor:${isClosedRow ? 'pointer' : 'default'};">${isClosedRow ? '<i class="fa-solid fa-circle-info"></i>' : ''}</td>
+            <td style="${cellPadding}; ${br} background:${statusColor}; text-align:center; font-size:11px; font-weight:600;">${oc.status || ''}</td>            
+            <td class="cb360-vehicle-cell" data-internal="${oc.internal_number || ''}" style="${cellPadding}; ${br} text-align:center; vertical-align:middle; font-size: 15px; font-weight: 600; cursor:${counts.vehicles ? 'pointer' : 'default'};">
+              <div style="display: inline-flex; align-items: center; vertical-align:middle; justify-content: center; gap: 4px;">${counts.vehicles} <i class="fa-solid fa-truck" style="font-size:15px; vertical-align:middle; color: ${hasVehicleRegistration ? '#d9534f' : 'inherit'};"></i></div>
+            </td>
+            <td class="cb360-crew-cell" data-internal="${oc.internal_number || ''}" style="${cellPadding}; ${br} text-align:center; vertical-align:middle; font-size: 15px; font-weight: 600; cursor:${counts.crew ? 'pointer' : 'default'};">
+              <div style="display: inline-flex; align-items: center; justify-content: center; gap: 4px;vertical-align:middle; ">${counts.crew} <i class="fa-solid fa-helmet-safety" style="font-size:15px; vertical-align:middle;"></i></div>
+            </td>
+            <td class="cb360-victim-cell" data-internal="${oc.internal_number || ''}" style="${cellPadding}; ${br} text-align:center; vertical-align:middle; font-size: 15px; font-weight: 600; cursor:${counts.victims ? 'pointer' : 'default'};">
+              <div style="display: inline-flex; align-items: center; vertical-align:middle; justify-content: center; gap: 4px;">${counts.victims} <i class="fa-solid fa-kit-medical" style="font-size:15px; vertical-align:middle;"></i></div>
+            </td>
+            <td style="${cellPadding}; ${br} text-align:center; font-size: 12px; font-weight: 500;">
+              ${cb360ClassOcorrReportMap[oc.classification] ? `<i class="fa-regular fa-file" style="font-size: 16px; font-weight: 700; color: ${reportStatusColor}; vertical-align:middle;"></i>` : ''}
+            </td>
+            <td class="cb360-duration-cell" data-internal="${oc.internal_number || ''}" style="${cellPadding}; ${br} text-align:center; font-size: 16px; font-weight: 700; cursor:${isClosedRow ? 'pointer' : 'default'};">${isClosedRow ? '<i class="fa-solid fa-circle-info" style="font-size: 16px; font-weight: 700; vertical-align:middle;"></i>' : ''}</td>
             <td style="${cellPadding}; ${br} text-align:center; font-size: 12px; font-weight: 700;"></td>
             <td style="${cellPadding}; ${br} text-align:center; font-size: 12px; font-weight: 700;"></td>
             <td style="${cellPadding}; ${br} text-align:center; font-size: 12px; font-weight: 700;"></td>
             <td style="${cellPadding}; ${br} text-align:center;">
-              <button class="cb360-edit-btn" data-id="${oc.id ?? ''}" style="background:transparent; border:none; color:#2b6ecb; cursor:pointer; font-size:14px;"><i class="fa-solid fa-pencil"></i></button>
+              <span class="cb360-edit-btn" style="color:#2b6ecb; font-size:14px;"><i class="fa-solid fa-pencil"></i></span>
             </td>
             <td style="${cellPadding}; ${br} text-align:center;">
               <button class="cb360-delete-btn" data-id="${oc.id ?? ''}" data-internal="${oc.internal_number || ''}" style="background:transparent; border:none; color:#d9534f; cursor:pointer; font-size:14px;"><i class="fa-solid fa-trash"></i></button>
             </td>
-          </tr>
-        `;
-        }).join('') : `
-        <tr>
-          <td colspan="19" style="padding:20px; border:1px solid #c4c4c4; text-align:center; color:#888;">
-            Sem registos para apresentar.
-          </td>
-        </tr>
-      `;
+          `;
+          tbody.appendChild(tr);
+        });
+      }
       document.querySelectorAll('.cb360-vehicle-cell').forEach(cell => {
         const details = (resourceCounts[cell.dataset.internal]?.vehicleDetails) || [];
         if (!details.length) return;
@@ -622,16 +731,9 @@
         cell.addEventListener('mouseenter', () => showCb360LineTooltip(cell, details, formatCb360DurationTooltipLine));
         cell.addEventListener('mouseleave', hideCb360LineTooltip);
       });
-      document.querySelectorAll('.cb360-internal-link, .cb360-edit-btn').forEach(el => {
-        el.addEventListener('click', (e) => {
-          e.preventDefault();
-          const id = el.dataset.id;
-          const incident = incidents.find(o => o.id == id);
-          openCb360Incidents('editar', incident);
-        });
-      });
       document.querySelectorAll('.cb360-delete-btn').forEach(btn => {
-        btn.addEventListener('click', async () => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation(); // Evita que clique no botão dispare o evento da linha
           const id = btn.dataset.id;
           const internalNumber = btn.dataset.internal;
           const confirmMsg = `Tem a certeza que pretende eliminar a ocorrência "${internalNumber}"? Esta ação remove também todas as viaturas, bombeiros e vítimas associados e não pode ser revertida.`;
@@ -641,16 +743,50 @@
         });
       });
     }
-    // ---- SEARCH: searchCb360Incidents() ----
+    // ---- SEARCH: searchCb360Incidents ----
     async function searchCb360Incidents() {
-      const filters = {search: document.getElementById('cb360-input-search').value.trim(),  periodFrom: document.getElementById('cb360-input-period-from').value, periodTo: document.getElementById('cb360-input-period-to').value, 
+      await ensureCb360ClassOcorrReportMap();
+      const filters = {search: document.getElementById('cb360-input-search').value.trim(),   periodFrom: document.getElementById('cb360-input-period-from').value, periodTo: document.getElementById('cb360-input-period-to').value, 
                        species: document.getElementById('cb360-input-species').value, alertSource: document.getElementById('cb360-input-alert-source').value, risk: document.getElementById('cb360-select-risk').value,
                        state: document.getElementById('cb360-select-state').value, aap: document.getElementById('cb360-input-aap').value, report: document.getElementById('cb360-input-report').value
                       };
       const incidents = await fetchCb360Incidents(filters);
       const resourceCounts = await fetchCb360ResourceCounts(incidents.map(oc => oc.internal_number));
+      const internalNumbers = incidents.map(oc => oc.internal_number).filter(Boolean);
+      const [allExpensesResults, reportsMap] = await Promise.all([
+        Promise.all(incidents.map(async oc => {
+          const expenses = await fetchCb360ReportExpenses(oc.internal_number);
+          return { internalNumber: oc.internal_number, expenses };
+        })),
+        (async () => {
+          if (internalNumbers.length === 0) return {};
+          try {
+            const numbersQuery = internalNumbers.join(',');
+            const response = await supaFetch(`${SUPABASE_URL}/rest/v1/cb360_incident_reports?internal_number=in.(${numbersQuery})`);
+            if (!response.ok) return {};
+            const data = await response.json();
+            const map = {};
+            data.forEach(rep => { map[rep.internal_number] = rep; });
+            return map;
+          } catch (err) {
+            console.error('Erro ao carregar relatórios para a tabela:', err);
+            return {};
+          }
+        })()
+      ]);
+      const expensesMap = {};
+      allExpensesResults.forEach(res => {
+        expensesMap[res.internalNumber] = res.expenses;
+      });
+      incidents.forEach(oc => {
+        if (!resourceCounts[oc.internal_number]) {
+          resourceCounts[oc.internal_number] = { vehicles: 0, crew: 0, victims: 0 };
+        }
+        resourceCounts[oc.internal_number].expenses = expensesMap[oc.internal_number] || [];
+      });
       cb360Pagination.fullData = incidents;
       cb360Pagination.resourceCounts = resourceCounts;
+      cb360Pagination.reportsMap = reportsMap;
       cb360Pagination.currentPage = 1;
       renderCb360Page();
     }
@@ -989,12 +1125,17 @@
               Fita do Tempo
               <span class="goc-tab-arrow" style="display:block; position:absolute; right:0px; top:50%; transform:translateY(-50%); width:0; height:0; border-top:10px solid transparent; border-bottom:10px solid transparent; border-right:11px solid #999;"></span>
               </div>
-              <div class="goc-tab" data-tab="sms" style="position:relative; padding:11px 18px; cursor:pointer; border:1px solid #d6d6d6; border-left:3px solid transparent; background:#f7f7f7; margin:3px 6px; border-radius:4px;">
-              SMS&nbsp&nbsp<span style="color:#f0ad4e;"><i class="fa-solid fa-triangle-exclamation" style="font-size:18px;"></i></span>
-              <span class="goc-tab-arrow" style="display:block; position:absolute; right:0px; top:50%; transform:translateY(-50%); width:0; height:0; border-top:10px solid transparent; border-bottom:10px solid transparent; border-right:11px solid #999;"></span>
+              <div class="goc-tab" data-tab="sms" style="position:relative; padding:11px 18px; cursor:pointer; border:1px solid #d6d6d6; border-left:3px solid transparent; background:#f7f7f7; margin:3px 6px; border-radius:4px;">SMS&nbsp&nbsp
+                <span style="color:#d9534f;">
+                  <style>
+                    @keyframes inlineGlowZoomRed {0%, 100% {transform: scale(1); text-shadow: 0 0 2px rgba(217, 83, 79, 0.4);} 50% {transform: scale(1.25); text-shadow: 0 0 10px rgba(217, 83, 79, 0.9), 0 0 20px rgba(217, 83, 79, 0.6);}}
+                  </style>
+                  <i class="fa-solid fa-triangle-exclamation" style="font-size:18px; vertical-align:middle; display:inline-block; animation: inlineGlowZoomRed 1.5s infinite ease-in-out;"></i>
+                </span>
+                <span class="goc-tab-arrow" style="display:block; position:absolute; right:0px; top:50%; transform:translateY(-50%); width:0; height:0; border-top:10px solid transparent; border-bottom:10px solid transparent; border-right:11px solid #999;"></span>
               </div>
               <div style="padding:14px;">
-                <button id="goc-btn-reforco-sms" style="width:100%; background:#f0ad4e; color:#fff; border:none; padding:8px; border-radius:5px; font-size:12px; cursor:pointer;"><i class="fa-solid fa-comment-sms"></i> Reforço Meios SMS</button>
+                <button id="goc-btn-reforco-sms" disabled style="width:100%; background:#d3d3d3; color:#777; border:none; padding:8px; border-radius:5px; font-size:13px; cursor:not-allowed;" title="Esta opção encontra-se desativada."><i class="fa-solid fa-comment-sms" style="font-size:15px; vertical-align: middle;"></i> Reforço Meios SMS</button>
               </div>
             </div>
             <div style="flex:1; padding:12px 16px; overflow-y:auto;">
@@ -1016,7 +1157,7 @@
                 <div style="display:grid; grid-template-columns: 0.9fr 1.7fr 0.9fr 0.9fr; gap:10px; margin-bottom:4px;">
                   ${field('Fonte Alerta', `<select id="goc-alert-source" class="goc-input goc-input-flex"><option value=""></option></select>`, '90px')}
                   <div class="goc-row">
-                    <label class="goc-label" style="width:80px;">Contactante</label>
+                  <label class="goc-label" id="goc-label-contact" style="width:80px;">Contactante</label>
                     <input type="text" id="goc-contact" class="goc-input goc-input-flex">
                     <button id="goc-btn-search-contact" style="background:transparent; border:none; color:#2b6ecb; cursor:pointer; font-size:14px;"><i class="fa-solid fa-magnifying-glass"></i></button>
                   </div>
@@ -1032,7 +1173,7 @@
                 </div>
                 <div style="display:grid; grid-template-columns: 1.1fr 1.6fr 0.9fr; gap:10px; margin-bottom:4px;">
                   <div class="goc-row">
-                    <label class="goc-label" style="width:90px;">Classificação</label>
+                  <label class="goc-label" id="goc-label-classification" style="width:90px;">Classificação</label>
                     <div style="position:relative; flex:1;">
                       <input type="text" id="goc-classification-input" placeholder="Pesquisar..." autocomplete="off" class="goc-input goc-input-full" readonly style="cursor:pointer; padding-right:24px;"><i id="goc-classification-chevron" class="fa fa-chevron-down" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); font-size:10px; color:#000; pointer-events:none; transition:transform 0.15s;"></i>
                         <div id="goc-classification-dropdown" style="display:none; flex-direction:column; position:absolute; top:100%; left:0; right:0; z-index:50; background:#fff; border:1px solid #ccc; border-top:none; border-radius:0 0 4px 4px; max-height:220px; box-shadow:0 4px 8px rgba(0,0,0,0.12);">
@@ -1046,7 +1187,7 @@
                 </div>
                 <div style="display:grid; grid-template-columns: 1.2fr 1.1fr 1fr; gap:10px; margin-bottom:12px;">
                   <div class="goc-row">
-                    <label class="goc-label" style="width:90px;">B. Resp. Rel.</label>
+                  <label class="goc-label" id="goc-label-bresp" style="width:90px;">B. Resp. Rel.</label>
                     <div style="position:relative; flex:1;">
                       <input type="text" id="goc-bresp-input" placeholder="Pesquisar..." autocomplete="off" class="goc-input goc-input-full" readonly style="cursor:pointer; padding-right:24px;"><i id="goc-bresp-chevron" class="fa fa-chevron-down" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); font-size:10px; color:#000; pointer-events:none; transition:transform 0.15s;"></i>
                         <div id="goc-bresp-dropdown" style="display:none; flex-direction:column; position:absolute; top:100%; left:0; right:0; z-index:50; background:#fff; border:1px solid #ccc; border-top:none; border-radius:0 0 4px 4px; max-height:220px; box-shadow:0 4px 8px rgba(0,0,0,0.12);">
@@ -1072,7 +1213,7 @@
                 <div style="display:flex; gap:14px; flex-wrap:wrap; border-top:1px solid #eee; padding-top:10px;">
                   <div style="flex:1; min-width:240px; display:flex; flex-direction:column; gap:6px;">
                     <div class="goc-row" style="position:relative;">
-                      <label class="goc-label" style="width:100px;">Morada</label>
+                    <label class="goc-label" id="goc-label-address" style="width:100px;">Morada</label>
                       <input type="text" id="goc-address" class="goc-input goc-input-flex" autocomplete="off"><span style="color:#2b6ecb;"><i class="fa-solid fa-globe"></i></span>
                       <div id="goc-address-suggestions" style="display:none; position:absolute; top:100%; left:100px; right:20px; z-index:400; background:#fff; border:1px solid #ccc; border-radius:4px; box-shadow:0 4px 10px rgba(0,0,0,0.15); max-height:220px; overflow-y:auto; font-size:12px;"></div>
                     </div>
@@ -1173,18 +1314,36 @@
           </div>
         </div>
         <div class="major-card-footer">
-          <div style="display:flex; justify-content:flex-end; align-items:center; gap:5px; flex-wrap:wrap; width:100%;">
-            <button id="goc-btn-add-posit" style="display:none; background:#2b6ecb; color:#fff; border:none; padding:9px 14px; border-radius:5px; cursor:pointer; font-size:12.5px; font-weight:600;"><i class="fa fa-tags fa-lg"></i>&nbsp;&nbsp;Adicionar POSIT</button>
-            <button id="goc-btn-print-export" style="display:none; background:#2b6ecb; color:#fff; border:none; padding:9px 14px; border-radius:5px; cursor:pointer; font-size:12.5px; font-weight:600;"><i class="fa fa-download fa-lg"></i>&nbsp;&nbsp;Imprimir / Exportar</button>
-            <div style="position:relative; display:inline-block;">
-              <button id="goc-btn-reports" style="display:none; background:#2b6ecb; color:#fff; border:none; padding:9px 14px; border-radius:5px; cursor:pointer; font-size:12.5px; font-weight:600;"><i class="fa fa-clipboard fa-lg"></i>&nbsp;&nbsp;Relatórios <span id="goc-reports-arrow">▾</span></button>
+          <div style="display: flex; justify-content: flex-end; align-items: center; gap: 5px; flex-wrap: wrap; width: 100%;">
+            <button id="goc-btn-add-posit" style="display: none; align-items: center; justify-content: center; box-sizing: border-box; height: 32px; background: #2b6ecb; color: #fff; border: none; padding: 0 14px; border-radius: 5px; cursor: pointer; font-size: 12.5px; font-weight: 600;">
+              <i class="fa fa-tags fa-lg" style="font-size: 14px;"></i>&nbsp;&nbsp;Adicionar POSIT
+            </button>
+            <button id="goc-btn-print-export" style="display: none; align-items: center; justify-content: center; box-sizing: border-box; height: 32px; background: #2b6ecb; color: #fff; border: none; padding: 0 14px; border-radius: 5px; cursor: pointer; font-size: 12.5px; font-weight: 600;">
+              <i class="fa fa-download fa-lg" style="font-size: 14px;"></i>&nbsp;&nbsp;Imprimir / Exportar
+            </button>
+            <div style="position: relative; display: inline-flex; align-items: center; height: 35px;">
+              <button id="goc-btn-reports" style="display: none; align-items: center; justify-content: center; box-sizing: border-box; height: 32px; background: #2b6ecb; color: #fff; border: none; padding: 0 14px; border-radius: 5px; cursor: pointer; font-size: 12.5px; font-weight: 600;">
+                <i class="fa fa-clipboard fa-lg" style="font-size: 14px;"></i>&nbsp;&nbsp;Relatórios&nbsp;<span id="goc-reports-arrow">▾</span>
+              </button>
             </div>
-            <button id="goc-btn-docs" style="display:none; background:#2b6ecb; color:#fff; border:none; padding:9px 14px; border-radius:5px; cursor:pointer; font-size:12.5px; font-weight:600;"><i class="fa fa-folder-open fa-lg"></i>&nbsp;&nbsp;Docs</button>
-            <button id="goc-btn-alerts" style="background:#d9534f; color:#fff; border:none; padding:8px 9px; border-radius:5px; cursor:pointer; font-size:14px; font-weight:600; margin-right:auto;"><i class="fa fa-bullhorn fa-lg"></i></button>
-            <button id="goc-btn-decline" style="display:none; background:#d9534f; color:#fff; border:none; padding:9px 14px; border-radius:5px; cursor:pointer; font-size:12.5px; font-weight:600;"><i class="fa fa-ban fa-lg"></i>&nbsp;&nbsp;Recusa</button>
-            <button id="goc-btn-save-sado" style="display: none; background: #5cb85c; color: #fff; border: none; padding: 9px 16px; border-radius: 5px; font-weight: 600; cursor: pointer; font-size: 12.5px;"><i class="fa fa-cloud-upload fa-lg"></i>&nbsp;&nbsp;Guardar e Enviar SADO</button>
-            <button id="goc-btn-save" style="background:#5cb85c; color:#fff; border:none; padding:9px 16px; border-radius:5px; font-weight:600; cursor:pointer; font-size:12.5px;"><i class="fa-regular fa-floppy-disk"></i>&nbsp;&nbsp;Guardar</button>
-            <button id="goc-btn-close" style="background:#f0ad4e; color:#fff; border:none; padding:9px 16px; border-radius:5px; font-weight:600; cursor:pointer; font-size:12.5px;"><i class="fa fa-power-off fa-lgf"></i>&nbsp;&nbsp;Fechar</button>
+            <button id="goc-btn-docs" style="display: none; align-items: center; justify-content: center; box-sizing: border-box; height: 32px; background: #2b6ecb; color: #fff; border: none; padding: 0 14px; border-radius: 5px; cursor: pointer; font-size: 12.5px; font-weight: 600;">
+              <i class="fa fa-folder-open fa-lg" style="font-size: 14px;"></i>&nbsp;&nbsp;Docs
+            </button>
+            <button id="goc-btn-alerts" style="display: flex; align-items: center; justify-content: center; box-sizing: border-box; height: 32px; width: 35px; background: #d9534f; color: #fff; border: none; padding: 0 25px; border-radius: 5px; cursor: pointer; font-weight: 600; margin-right: auto;">
+              <i class="fa fa-bullhorn fa-lg" style="font-size: 16px;"></i>
+            </button>
+            <button id="goc-btn-decline" style="display: none; align-items: center; justify-content: center; box-sizing: border-box; height: 32px; background: #d9534f; color: #fff; border: none; padding: 0 14px; border-radius: 5px; cursor: pointer; font-size: 12.5px; font-weight: 600;">
+              <i class="fa fa-ban fa-lg" style="font-size: 14px;"></i>&nbsp;&nbsp;Recusa
+            </button>
+            <button id="goc-btn-save-sado" style="display: none; align-items: center; justify-content: center; box-sizing: border-box; height: 32px; background: #5cb85c; color: #fff; border: none; padding: 0 16px; border-radius: 5px; font-weight: 600; cursor: pointer; font-size: 12.5px;">
+              <i class="fa fa-cloud-upload fa-lg" style="font-size: 14px;"></i>&nbsp;&nbsp;Guardar e Enviar SADO
+            </button>
+            <button id="goc-btn-save" style="display: flex; align-items: center; justify-content: center; box-sizing: border-box; height: 32px; background: #5cb85c; color: #fff; border: none; padding: 0 16px; border-radius: 5px; font-weight: 600; cursor: pointer; font-size: 12.5px;">
+              <i class="fa-regular fa-floppy-disk" style="font-size: 14px;"></i>&nbsp;&nbsp;Guardar
+            </button>
+            <button id="goc-btn-close" style="display: flex; align-items: center; justify-content: center; box-sizing: border-box; height: 32px; background: #f0ad4e; color: #fff; border: none; padding: 0 16px; border-radius: 5px; font-weight: 600; cursor: pointer; font-size: 12.5px;">
+              <i class="fa fa-power-off fa-lgf" style="font-size: 14px;"></i>&nbsp;&nbsp;Fechar
+            </button>
           </div>
         </div>
       `;
@@ -1229,7 +1388,7 @@
       document.getElementById('goc-btn-x').addEventListener('click', closeCb360Incident);
       document.getElementById('goc-btn-close').addEventListener('click', closeCb360Incident);
       document.getElementById('goc-btn-min').addEventListener('click', () => {
-        const corpo = document.getElementById('goc-corpo');
+        const corpo = document.getElementById('goc-body');
         corpo.style.display = (corpo.style.display === 'none') ? 'flex' : 'none';
       });
       document.getElementById('goc-btn-max').addEventListener('click', () => {
@@ -1252,19 +1411,22 @@
         dropdown.id = 'goc-reports-dropdown';
         dropdown.style.cssText = `position:fixed; left:${rect.left}px; bottom:${window.innerHeight - rect.top + 6}px; background:#fff; border:1px solid #ccc; border-radius:6px; box-shadow:0 4px 12px rgba(0,0,0,0.18); min-width:170px; overflow:hidden; z-index:9999;`;
         dropdown.innerHTML = `
-          <button class="goc-reports-option" data-report="relatorio" style="display:flex; align-items:center; gap:8px; width:100%; background:transparent; border:none; padding:10px 14px; text-align:left; cursor:pointer; font-size:12.5px; color:#333;"><i class="fa-regular fa-file-lines" style="color:#2b6ecb;"></i> Relatório</button>
-          <button class="goc-reports-option" data-report="anexo-g2" style="display:flex; align-items:center; gap:8px; width:100%; background:transparent; border:none; padding:10px 14px; text-align:left; cursor:pointer; font-size:12.5px; color:#333; border-top:1px solid #eee;"><i class="fa-regular fa-file-lines" style="color:#2b6ecb;"></i> Anexo G2</button>
+          <button class="goc-reports-option" data-report="relatorio" style="display:flex; align-items:center; gap:8px; width:100%; background:transparent; border:none; padding:10px 14px; text-align:left; cursor:pointer; font-size:12.5px; color:#333;"><i class="fa-solid fa-paste"></i> Relatório</button>
+          <button class="goc-reports-option" data-report="anexo-g2" style="display:flex; align-items:center; gap:8px; width:100%; background:transparent; border:none; padding:10px 14px; text-align:left; cursor:pointer; font-size:12.5px; color:#333; border-top:1px solid #eee;"><i class="fa-solid fa-paste"></i> Anexo G2</button>
         `;
         document.body.appendChild(dropdown);
         if (arrow) arrow.textContent = '▴';
         dropdown.querySelectorAll('.goc-reports-option').forEach(opt => {
-          opt.addEventListener('mouseenter', () => { opt.style.background = '#f0f6ff'; });
-          opt.addEventListener('mouseleave', () => { opt.style.background = 'transparent'; });
+          opt.addEventListener('mouseenter', () => {opt.style.background = '#f0f6ff';});
+          opt.addEventListener('mouseleave', () => {opt.style.background = 'transparent';});
           opt.addEventListener('click', () => {
             dropdown.remove();
             if (arrow) arrow.textContent = '▾';
-            console.log('Relatório selecionado:', opt.dataset.report);
-            // TODO: abrir o modal correspondente (Relatório / Anexo G2)
+            if (opt.dataset.report === 'relatorio') {
+              openCb360ReportModal(cb360CurrentIncident?.internal_number);
+            } else if (opt.dataset.report === 'anexo-g2') {
+              showPopup('popup-danger', 'Anexo G2 ainda não está disponível.');
+            }
           });
         });
         const closeOnClickOutside = (ev) => {
@@ -1614,6 +1776,30 @@
         console.error('Erro fetchCb360ClassOcorrList:', err);
         return [];
       }
+    }
+    // FETCH: fetchCb360ClassOcorrReportMap()
+    async function fetchCb360ClassOcorrReportMap() {
+      try {
+        const url = `${SUPABASE_URL}/rest/v1/class_occorr?select=class_occorr,has_report`;
+        const response = await supaFetch(url, {method: 'GET'});
+        if (!response.ok) {
+          console.error('Erro ao obter has_report de class_occorr:', response.status);
+          return {};
+        }
+        const data = await response.json();
+        const map = {};
+        data.forEach(d => { map[d.class_occorr] = !!d.has_report; });
+        return map;
+      } catch (err) {
+        console.error('Erro fetchCb360ClassOcorrReportMap:', err);
+        return {};
+      }
+    }
+    // HELPER: ensureCb360ClassOcorrReportMap() — carrega o mapa só uma vez e mantém em cache
+    async function ensureCb360ClassOcorrReportMap() {
+      if (cb360ClassOcorrReportMapLoaded) return;
+      cb360ClassOcorrReportMap = await fetchCb360ClassOcorrReportMap();
+      cb360ClassOcorrReportMapLoaded = true;
     }
     // RENDER: renderCb360ClassOcorrList()
     function renderCb360ClassOcorrList(list, listContainer, mainInput, searchInput, dropdown, chevron) {
@@ -2185,9 +2371,9 @@
           if (parishSel && oc.parish) {
             parishSel.value = oc.parish;
           }
-        }, 150);
-      }, 150);
-    }
+        }, 75);
+      }, 75);
+    } 
     // Fora da Área — INITIALIZE: initializeOutOfBoundsCombobox()
     function initializeOutOfBoundsCombobox(list, selectedId = null) {
       cb360OutOfBoundsData = list || [];
@@ -2456,40 +2642,36 @@
       const majorCard = document.querySelector('#page-cb360-redund .major-card');
       if (majorCard) majorCard.style.display = 'none';
       await renderCb360OccorrenceForm();
-      const wrapper = document.getElementById('cb360-incident-wrapper');
-      const listBResp = await fetchCb360BRespList();
-      const classificationList = await fetchCb360ClassOcorrList();
-      const corporationsList = await fetchCb360OutOfBoundsList();
-      const entityInvoiceList = await fetchCb360EntityInvoiceList();
-      let dispatchedResources = [];
       let internalNr = null;
+      let dispatchedResources = [];
+      const promises = [
+        fetchCb360BRespList(),
+        fetchCb360ClassOcorrList(),
+        fetchCb360OutOfBoundsList(),
+        fetchCb360EntityInvoiceList()
+      ];
       if (mode === 'novo') {
-        internalNr = await generateInternalNr();
+        promises.push(generateInternalNr());
       } else {
-        dispatchedResources = await fetchDispatchData(incident.internal_number);
-        cb360ResourcesVictims = await fetchCb360Victims(incident.internal_number);
+        promises.push(fetchDispatchData(incident.internal_number));
+        promises.push(fetchCb360Victims(incident.internal_number));
       }
-      wrapper.style.display = 'block';
-      applyCb360IncidentMode(mode);
+      const results = await Promise.all(promises);
+      const listBResp = results[0];
+      const classificationList = results[1];
+      const corporationsList = results[2];
+      const entityInvoiceList = results[3];
       if (mode === 'novo') {
-        const today = new Date();
-        document.getElementById('goc-alert-date').value = today.toISOString().split('T')[0];
-        document.getElementById('goc-alert-hour').value = today.toTimeString().slice(0, 5);
-        document.getElementById('goc-internal-nr').value = internalNr;
-        clearCb360Fields();
-        cb360ResourcesVehicles = [];
-        cb360ResourcesFirefighters = [];
-        cb360ResourcesVictims = [];
-        cb360PendingClosed = false;
-        await refreshCb360VehicleRegistrations();
-        renderCb360ResourcesTab();
-        renderCb360VictimsTab();
+        internalNr = results[4];
       } else {
-        fillCb360Fields(incident);
+        dispatchedResources = results[4];
+        cb360ResourcesVictims = results[5];
+      }
+      if (mode === 'editar') {
         cb360ResourcesVehicles = dispatchedResources.map(mean => ({
           id: String(mean.id), vehicle: mean.vehicle || '', crew: mean.cb360_dispatch_crew?.length || 0, departureDateCB: mean.cb_departure_date || '', departureTimeCB: mean.cb_departure_time || '',
           arrivalDateScene: mean.scene_arrival_date || '', arrivalTimeScene: mean.scene_arrival_time || '', departureDateScene: mean.scene_departure_date || '', departureTimeScene: mean.scene_departure_time || '',
-          arrivalDateCB: mean.cb_arrival_date || '', arrivalTimeCB: mean.cb_arrival_time || '',kmStart: mean.km_start || '', kmEnd: mean.km_end || '', radio_issi_siresp: mean.radio_issi_siresp || '', pumpHours: mean.pump_hours ?? '', 
+          arrivalDateCB: mean.cb_arrival_date || '', arrivalTimeCB: mean.cb_arrival_time || '', kmStart: mean.km_start || '', kmEnd: mean.km_end || '', radio_issi_siresp: mean.radio_issi_siresp || '', pumpHours: mean.pump_hours ?? '', 
           pumpMinutes: mean.pump_minutes ?? '', editing: false
         }));
         cb360ResourcesFirefighters = dispatchedResources.flatMap(mean => {
@@ -2501,12 +2683,27 @@
             departureDate: crew.departure_date || '', departureTime: crew.departure_time || '', returnDate: crew.return_date || '', returnTime: crew.return_time || '', radio_assigned: crew.radio_assigned || '', editing: false
           }));
         });
+      }
+      if (mode === 'novo') {
+        const today = new Date();
+        document.getElementById('goc-alert-date').value = today.toISOString().split('T')[0];
+        document.getElementById('goc-alert-hour').value = today.toTimeString().slice(0, 5);
+        document.getElementById('goc-internal-nr').value = internalNr;
+        clearCb360Fields();
+        cb360ResourcesVehicles = [];
+        cb360ResourcesFirefighters = [];
+        cb360ResourcesVictims = [];
+        cb360PendingClosed = false;
+      } else {
+        fillCb360Fields(incident);
         cb360PendingClosed = !!incident.is_closed;
         applyCb360CloseButtonState(cb360PendingClosed);
         applyCb360FieldsLockState(cb360PendingClosed);
-        await refreshCb360VehicleRegistrations();
-        renderCb360ResourcesTab();
-        renderCb360VictimsTab();
+      }
+      await refreshCb360VehicleRegistrations();
+      renderCb360ResourcesTab();
+      renderCb360VictimsTab();
+      if (mode === 'editar') {
         document.getElementById('goc-summary-duration').textContent = calculateCb360Duration(incident, cb360ResourcesVehicles);
         const isClosed = ['Encerrada', 'Falso Alarme', 'Falso Alerta', 'Anulada', 'Recusada'].includes(incident.status);
         const durationColor = isClosed ? '#2e7d32' : '#8b0000';
@@ -2517,18 +2714,18 @@
       initializeComboboxClassification(classificationList, mode === 'editar' ? incident?.classification : null);
       initializeOutOfBoundsCombobox(corporationsList, mode === 'editar' ? incident?.outside_area_corp : null);
       initializeEntityInvoiceCombobox(entityInvoiceList, mode === 'editar' ? incident?.billing_entity : null);
+      applyCb360IncidentMode(mode);
+      const wrapper = document.getElementById('cb360-incident-wrapper');
+      wrapper.style.display = 'block';
       if (mode === 'editar') {
-        setTimeout(() => applyLocationCb360Edit(incident), 400);
+        applyLocationCb360Edit(incident);
       }
-      setTimeout(() => initializeMap(mode === 'editar' ? incident : null), 100);
-      setTimeout(() => {
-        const gocBody = document.getElementById('goc-body');
-        if (gocBody) {
-          gocBody.style.height = gocBody.scrollHeight + 'px';
-        }
-      }, 50);
+      initializeMap(mode === 'editar' ? incident : null);
+      const gocBody = document.getElementById('goc-body');
+      if (gocBody) {
+        gocBody.style.height = gocBody.scrollHeight + 'px';
+      }
     }
-    // APPLY: applyCb360CloseButtonState()
     function applyCb360CloseButtonState(isClosed) {
       const btn = document.getElementById('goc-btn-close-incident');
       if (!btn) return;
@@ -2539,7 +2736,7 @@
     }
     // APPLY: applyCb360FieldsLockState()
     function applyCb360FieldsLockState(isClosed) {
-      const body = document.getElementById('goc-corpo');
+      const body = document.getElementById('goc-body');
       if (body) {
         body.querySelectorAll('input, select, textarea').forEach(el => {
           el.disabled = isClosed;
@@ -2633,6 +2830,8 @@
       document.getElementById('goc-count-victims').textContent = oc.victim_count ?? 0;
       document.getElementById('goc-count-people').textContent = oc.people_count ?? 0;
       document.getElementById('goc-count-aerial-means').textContent = oc.air_means_count ?? 0;
+      ['goc-count-vehicles', 'goc-staff-count', 'goc-count-victims', 'goc-count-people', 'goc-count-aerial-means']
+        .forEach(updateCb360SummaryIconColor);
       document.getElementById('goc-summary-date').innerHTML = `${formatDatePT(oc.alert_date)}&nbsp;&nbsp;${formatTimePT(oc.alert_time)}`;      
       document.getElementById('goc-tab-count-vehicles').textContent = oc.total_means_count ? `(${oc.total_means_count})` : '';
       document.getElementById('goc-tab-count-victims').textContent =  oc.victim_count ? `(${oc.victim_count})` : '';
@@ -2655,6 +2854,23 @@
     /* ===== SAVE FORM ===== */
     // SAVE: saveCb360Incident()    
     async function saveCb360Incident({sendSado} = {}) {
+      const requiredFields = [
+        {valid: !!cb360SelectedRating?.id, labelId: 'goc-label-classification', name: 'Classificação'},
+        {valid: !!cb360BRespSelected?.id, labelId: 'goc-label-bresp', name: 'Bombeiro Responsável'},
+        {valid: !!document.getElementById('goc-contact')?.value.trim(), labelId: 'goc-label-contact', name: 'Contactante'},
+        {valid: !!document.getElementById('goc-address')?.value.trim(), labelId: 'goc-label-address', name: 'Morada'}
+      ];
+      const missingRequired = [];
+      requiredFields.forEach(f => {
+        const labelEl = document.getElementById(f.labelId);
+        if (labelEl) labelEl.style.color = f.valid ? '' : '#d9534f';
+        if (!f.valid) missingRequired.push(f.name);
+      });
+      if (missingRequired.length > 0) {
+        const list = missingRequired.map(f => `</li><li style="list-style:none;">• ${f}`).join('');
+        showPopup('popup-danger', `<strong>PREENCHA OS CAMPOS OBRIGATÓRIOS:</strong><br><br>${list}`);
+        return;
+      }
       if (cb360PendingClosed) {
         if (!validateVehiclesForClosure()) {
           showPopup('popup-danger', 'Não é possível fechar a ocorrência: existem veículos com dados de despacho incompletos (Chegada ao TO, Saída do TO, Chegada ao CB).');
@@ -2718,7 +2934,6 @@
             const dateVal = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
             const timeVal = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
             const dateTimeStr = `${dateVal} ${timeVal}`;
-
             let authorName = currentUser;
             const patent = typeof getPatentByFullName === 'function' ? await getPatentByFullName(currentUser) : null;
             if (patent) {
@@ -2913,7 +3128,7 @@
                   <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:6px 8px; width:100px; border-top:1px solid #c4c4c4; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; text-align:center;" colspan="2">Chegada ao C.B.</th>
                   <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:6px 8px; width:100px; border-top:1px solid #c4c4c4; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; text-align:center;" colspan="2">Kms</th>
                   <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:6px 8px; border-top:1px solid #c4c4c4; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4;" colspan="2">
-                ${isClosed ? '' : `<button id="goc-btn-add-vehicles" style="background:#2b6ecb; color:#fff; border:none; width:20px; height:20px; border-radius:50%; cursor:pointer; font-size:12px; line-height:1;">+</button>`}
+                    ${isClosed ? '' : `<button id="goc-btn-add-vehicles" style="background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); border-radius: 3px; padding: 2px 8px; font-size: 12px; cursor: pointer; color: rgb(43, 110, 203); font-weight: 600; transition: filter 0.15s;">+ Novo</button>`}
                   </th>
                 </tr>
                 <tr style="background:#f7f7f7; color:#555; font-size:10px; text-align:center;">
@@ -2959,7 +3174,7 @@
                 <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:6px 8px; width:150px; border-top:1px solid #c4c4c4; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; text-align:center;">Data Regr.</th>
                 <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:6px 8px; width:150px; border-top:1px solid #c4c4c4; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; text-align:center;">Hora Regr.</th>
                 <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:6px 8px; border-top:1px solid #c4c4c4; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4; text-align:center;" colspan="2">
-              ${isClosed ? '' : `<button id="goc-btn-add-firefighters" style="background:#2b6ecb; color:#fff; border:none; width:20px; height:20px; border-radius:50%; cursor:pointer; font-size:12px; line-height:1;">+</button>`}
+                  ${isClosed ? '' : `<button id="goc-btn-add-firefighters" style="background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); border-radius: 3px; padding: 2px 8px; font-size: 12px; cursor: pointer; color: rgb(43, 110, 203); font-weight: 600; transition: filter 0.15s;">+ Novo</button>`}
                 </th>
               </tr>
             </thead>
@@ -3623,15 +3838,123 @@
       return formatDuration(diffMs);
     }
     // HELPER: updateMediaCounter()
-    function updateMediaCounter() {
-      const totalVehicles = cb360ResourcesVehicles.length;
-      const totalFirefighters = cb360ResourcesFirefighters.length;
+    async function updateMediaCounter() {
+      const totalVehiclesInternal = cb360ResourcesVehicles.length;
+      const totalFirefightersInternal = cb360ResourcesFirefighters.length;
       const badge = document.getElementById('goc-tab-count-vehicles');
       const summaryVehicles = document.getElementById('goc-count-vehicles');
       const summaryStaff = document.getElementById('goc-staff-count');
-      if (badge) badge.textContent = totalVehicles ? `(${totalVehicles})` : '';
-      if (summaryVehicles) summaryVehicles.textContent = totalVehicles;
-      if (summaryStaff) summaryStaff.textContent = totalFirefighters;
+      const summaryPeople = document.getElementById('goc-count-people');
+      const summaryAerial = document.getElementById('goc-count-aerial-means');
+      if (badge) badge.textContent = totalVehiclesInternal ? `(${totalVehiclesInternal})` : '';
+      const internalNumber = cb360CurrentIncident?.internal_number || document.getElementById('goc-internal-nr')?.value;
+      let totalVehicles = totalVehiclesInternal;
+      let totalFirefighters = totalFirefightersInternal;
+      let totalAerial = 0;
+      let entitiesSet = new Set();
+      if (internalNumber) {
+        const [firefightersExternal, meansExternal] = await Promise.all([
+        fetchCb360ReportMeansFirefighters(internalNumber),
+        fetchCb360ReportMeans(internalNumber)
+        ]);
+        let extVehicles = firefightersExternal.length;
+        let extPeople = firefightersExternal.reduce((sum, r) => sum + (Number(r.num_firefighters) || 0), 0);
+        firefightersExternal.forEach(item => {
+          if (item.name) entitiesSet.add(item.name.trim().toLowerCase());
+        });
+        meansExternal.forEach(item => {
+          if (item.entity) entitiesSet.add(item.entity.trim().toLowerCase());
+          extPeople += Number(item.num_operational) || 0;
+          if (item.type === 'civil_protection') {
+            extVehicles += Number(item.quantity) || 0;
+          } else if (item.type === 'aircraft') {
+            totalAerial += 1;
+          } else if (item.type === 'other_means') {
+            extVehicles += Number(item.quantity) || 0;
+          }
+        });
+        totalVehicles += extVehicles;
+        totalFirefighters += extPeople;
+      }
+      setupCb360SummaryTooltip(summaryVehicles, totalVehicles, `${totalVehicles} Veículo${totalVehicles === 1 ? '' : 's'} (${totalVehiclesInternal} Interno${totalVehiclesInternal === 1 ? '' : 's'})`);
+      setupCb360SummaryTooltip(summaryStaff, totalFirefighters, `${totalFirefighters} Bombeiro${totalFirefighters === 1 ? '' : 's'} (${totalFirefightersInternal} Interno${totalFirefightersInternal === 1 ? '' : 's'})`);
+      setupCb360SummaryTooltip(summaryPeople, entitiesSet.size, `${entitiesSet.size} Entidade${entitiesSet.size === 1 ? '' : 's'} Externa${entitiesSet.size === 1 ? '' : 's'}`);
+      setupCb360SummaryTooltip(summaryAerial, totalAerial, `${totalAerial} Meio${totalAerial === 1 ? '' : 's'} Aéreo${totalAerial === 1 ? '' : 's'}`);
+      updateCb360SummaryIconColor('goc-count-vehicles');
+      updateCb360SummaryIconColor('goc-staff-count');
+      updateCb360SummaryIconColor('goc-count-people');
+      updateCb360SummaryIconColor('goc-count-aerial-means');
+    }
+    // Estado do tooltip do resumo (evita balões acumulados ao passar o rato rápido)
+    let cb360SummaryTooltipEl = null;
+    let cb360SummaryTooltipHideTimeout = null;
+    // HELPER: showCb360SummaryTooltip() — tooltip azul preenchido, com efeito fade + slide
+    function showCb360SummaryTooltip(anchorEl, text) {
+      // Cancela qualquer remoção pendente e remove já o anterior (sem esperar pelo fade)
+      if (cb360SummaryTooltipHideTimeout) {
+        clearTimeout(cb360SummaryTooltipHideTimeout);
+        cb360SummaryTooltipHideTimeout = null;
+      }
+      if (cb360SummaryTooltipEl) {
+        cb360SummaryTooltipEl.remove();
+        cb360SummaryTooltipEl = null;
+      }
+      const tooltip = document.createElement('div');
+      tooltip.style.cssText = 'position:fixed; z-index:500; background:#2b6ecb; color:#fff; border-radius:6px; padding:10px 12px; font-size:13px; font-weight:600; box-shadow:0 4px 6px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.15); pointer-events:none; white-space:nowrap; opacity:0; transform:translateY(6px); transition:opacity 0.15s ease, transform 0.15s ease;';
+      tooltip.textContent = text;
+      document.body.appendChild(tooltip);
+      cb360SummaryTooltipEl = tooltip;
+      const rect = anchorEl.getBoundingClientRect();
+      const tooltipRect = tooltip.getBoundingClientRect();
+      let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+      left = Math.max(6, Math.min(left, window.innerWidth - tooltipRect.width - 6));
+      tooltip.style.left = `${left}px`;
+      tooltip.style.top = `${rect.top - tooltipRect.height - 8}px`;
+      const anchorCenter = rect.left + (rect.width / 2);
+      let arrowLeft = anchorCenter - left - 6;
+      arrowLeft = Math.max(6, Math.min(arrowLeft, tooltipRect.width - 12));
+      const arrow = document.createElement('div');
+      arrow.style.cssText = `position:absolute; left:${arrowLeft}px; bottom:-6px; width:0; height:0; border-left:6px solid transparent; border-right:6px solid transparent; border-top:6px solid #2b6ecb;`;
+      tooltip.appendChild(arrow);
+      requestAnimationFrame(() => {
+        tooltip.style.opacity = '1';
+        tooltip.style.transform = 'translateY(0)';
+      });
+    }
+    // HELPER: hideCb360SummaryTooltip() — remove com fade + slide de saída
+    function hideCb360SummaryTooltip() {
+      if (!cb360SummaryTooltipEl) return;
+      const toRemove = cb360SummaryTooltipEl;
+      cb360SummaryTooltipEl = null;
+      toRemove.style.opacity = '0';
+      toRemove.style.transform = 'translateY(6px)';
+      cb360SummaryTooltipHideTimeout = setTimeout(() => {
+        toRemove.remove();
+        cb360SummaryTooltipHideTimeout = null;
+      }, 150);
+    }
+    // HELPER: setupCb360SummaryTooltip() — associa o tooltip azul a um span de contador
+    function setupCb360SummaryTooltip(spanEl, value, text) {
+      if (!spanEl) return;
+      spanEl.textContent = value;
+      const wrapper = spanEl.closest('div');
+      if (!wrapper) return;
+      wrapper.removeEventListener('mouseenter', wrapper._cb360TooltipEnter);
+      wrapper.removeEventListener('mouseleave', hideCb360SummaryTooltip);
+      wrapper._cb360TooltipEnter = () => showCb360SummaryTooltip(wrapper, text);
+      wrapper.style.cursor = 'default';
+      wrapper.addEventListener('mouseenter', wrapper._cb360TooltipEnter);
+      wrapper.addEventListener('mouseleave', hideCb360SummaryTooltip);
+    }
+    // HELPER: updateCb360SummaryIconColor()
+    // Colore o ícone a verde quando o contador > 0, cinza quando é 0.
+    function updateCb360SummaryIconColor(countSpanId) {
+      const span = document.getElementById(countSpanId);
+      if (!span) return;
+      const icon = span.previousElementSibling;
+      if (!icon) return;
+      const value = parseInt(span.textContent, 10) || 0;
+      icon.style.color = value > 0 ? '#28a745' : '#666';
     }
     // FETCH: fetchDispatchData()
     async function fetchDispatchData(internal_number) {
@@ -3780,8 +4103,7 @@
       }      
       document.getElementById('goc-dispatch-btn-x').addEventListener('click', closeCb360DispatchModal);
       document.getElementById('goc-desp-btn-fechar').addEventListener('click', closeCb360DispatchModal);
-      document.getElementById('goc-desp-btn-guardar').addEventListener('click', saveCb360Dispatch);
-      overlay.addEventListener('click', (e) => {if (e.target === overlay) closeCb360DispatchModal();});
+      document.getElementById('goc-desp-btn-guardar').addEventListener('click', saveCb360Dispatch);      
       setTimeout(() => {
         overlay.style.display = 'flex';
       }, 10);
@@ -4090,8 +4412,7 @@
       });
       document.getElementById('goc-ff-btn-x').addEventListener('click', closeCb360InsertFirefighterModal);
       document.getElementById('goc-ff-btn-fechar').addEventListener('click', closeCb360InsertFirefighterModal);
-      document.getElementById('goc-ff-btn-guardar').addEventListener('click', saveCb360InsertedFirefighters);
-      overlay.addEventListener('click', (e) => {if (e.target === overlay) closeCb360InsertFirefighterModal();});
+      document.getElementById('goc-ff-btn-guardar').addEventListener('click', saveCb360InsertedFirefighters);      
       setTimeout(() => {
         overlay.style.display = 'flex';
       }, 10);
@@ -4277,7 +4598,6 @@
       document.getElementById('goc-edit-ff-btn-x').addEventListener('click', closeCb360EditFirefighterModal);
       document.getElementById('goc-edit-ff-btn-fechar').addEventListener('click', closeCb360EditFirefighterModal);
       document.getElementById('goc-edit-ff-btn-guardar').addEventListener('click', () => saveCb360EditFirefighter(firefighter));
-      overlay.addEventListener('click', (e) => {if (e.target === overlay) closeCb360EditFirefighterModal();});
       setTimeout(() => {
         overlay.style.display = 'flex';
       }, 10);
@@ -4331,50 +4651,45 @@
       }
     }
     // ---- 6.5 LOCALIZAR VIATURAS (modal simples, sem lógica por agora) ----
-async function openCb360LocateVehiclesModal() {
-  const page = document.getElementById('page-cb360-redund');
-  if (!page || document.getElementById('goc-locate-vehicles-overlay')) return;
-  const overlay = document.createElement('div');
-  overlay.id = 'goc-locate-vehicles-overlay';
-  overlay.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(0,0,0,0.35); z-index:200; align-items:center; justify-content:center;';
-  overlay.innerHTML = `
-    <div style="background:#fff; width:780px; height:620px; border-radius:8px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 8px 24px rgba(0,0,0,0.25); font-family:sans-serif;">
-      <div style="display:flex; align-items:center; justify-content:space-between; background:#2b6ecb; color:#fff; padding:10px 16px; border-radius:8px 8px 0 0;">
-        <div style="font-weight:600; font-size:14px;"><i class="fa-solid fa-truck"></i>&nbsp;&nbsp;Localizar Viaturas</div>
-        <button class="goc-close-btn" style="background:transparent; border:none; color:#fff; cursor:pointer; font-size:16px;">✕</button>
-      </div>
-      <div id="goc-locate-vehicles-map" style="width:100%; height:380px; background:#f9f9f9; position:relative;"></div>
-      <div style="flex:1; overflow-y:auto; padding:16px; color:#777; font-size:13px;">
-        A ocorrência não tem as coordenadas registadas
-      </div>
-      <div style="display:flex; justify-content:flex-end; gap:10px; padding:15px 20px; border-top:1px solid #eee; background:#fafafa; border-radius:0 0 8px 8px;">
-        <button class="goc-close-btn" style="background:#f0ad4e; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-solid fa-power-off"></i>&nbsp;&nbsp;Fechar</button>
-      </div>
-    </div>
-  `;
-  page.appendChild(overlay);
-  const closeModal = () => {
-    if (window.cb360LocateVehiclesMap) {
-      window.cb360LocateVehiclesMap.remove();
-      window.cb360LocateVehiclesMap = null;
+    async function openCb360LocateVehiclesModal() {
+      const page = document.getElementById('page-cb360-redund');
+      if (!page || document.getElementById('goc-locate-vehicles-overlay')) return;
+      const overlay = document.createElement('div');
+      overlay.id = 'goc-locate-vehicles-overlay';
+      overlay.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(0,0,0,0.35); z-index:200; align-items:center; justify-content:center;';
+      overlay.innerHTML = `
+        <div style="background:#fff; width:780px; height:620px; border-radius:8px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 8px 24px rgba(0,0,0,0.25); font-family:sans-serif;">
+          <div style="display:flex; align-items:center; justify-content:space-between; background:#2b6ecb; color:#fff; padding:10px 16px; border-radius:8px 8px 0 0;">
+            <div style="font-weight:600; font-size:14px;"><i class="fa-solid fa-truck"></i>&nbsp;&nbsp;Localizar Viaturas</div>
+              <button class="goc-close-btn" style="background:transparent; border:none; color:#fff; cursor:pointer; font-size:16px;">✕</button>
+            </div>
+            <div id="goc-locate-vehicles-map" style="width:100%; height:450px; background:#f9f9f9; position:relative;"></div>
+            <div style="flex:1; overflow-y:auto; padding:16px; color:#777; font-size:13px;">Não foi possível receber coordenadas para esta ocorrência!</div>
+            <div style="display:flex; justify-content:flex-end; gap:10px; padding:15px 20px; border-top:1px solid #eee; background:#fafafa; border-radius:0 0 8px 8px;">
+              <button class="goc-close-btn" style="background:#f0ad4e; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-solid fa-power-off"></i>&nbsp;&nbsp;Fechar</button>
+            </div>
+        </div>
+      `;
+      page.appendChild(overlay);
+      const closeModal = () => {
+        if (window.cb360LocateVehiclesMap) {
+          window.cb360LocateVehiclesMap.remove();
+          window.cb360LocateVehiclesMap = null;
+        }
+        overlay.remove();
+      };
+      overlay.querySelectorAll('.goc-close-btn').forEach(btn => btn.addEventListener('click', closeModal));
+      setTimeout(() => {
+        overlay.style.display = 'flex';
+        window.cb360LocateVehiclesMap = L.map('goc-locate-vehicles-map').setView([39.5, -8.0], 7);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(window.cb360LocateVehiclesMap);
+        setTimeout(() => {
+          if (window.cb360LocateVehiclesMap) window.cb360LocateVehiclesMap.invalidateSize();
+        }, 50);
+      }, 10);
     }
-    overlay.remove();
-  };
-  overlay.querySelectorAll('.goc-close-btn').forEach(btn => btn.addEventListener('click', closeModal));
-  overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
-  setTimeout(() => {
-    overlay.style.display = 'flex';
-    window.cb360LocateVehiclesMap = L.map('goc-locate-vehicles-map').setView([39.5, -8.0], 7);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(window.cb360LocateVehiclesMap);
-    setTimeout(() => {
-      if (window.cb360LocateVehiclesMap) window.cb360LocateVehiclesMap.invalidateSize();
-    }, 50);
-  }, 10);
-}
-
-
     async function getRoadRouteWithGeometry(lat1, lon1, lat2, lon2) {
       try {
         const url = `https://router.project-osrm.org/route/v1/driving/${lon1},${lat1};${lon2},${lat2}?overview=full&geometries=geojson`;
@@ -4391,6 +4706,17 @@ async function openCb360LocateVehiclesModal() {
         console.warn('Erro ao obter rota detalhada:', error);
       }
       return null;
+    }
+    // Função auxiliar: converte minutos totais em "Xh Ymin" (ou só "Ymin" se < 60)
+    // Aceita tanto um número (ex: 394) como um texto (ex: "394 mins", "1 min", "-- ")
+    function formatMinutesToHM(value) {
+      if (value === undefined || value === null || value === '--') return value ?? '--';
+      const mins = typeof value === 'number' ? Math.round(value) : parseInt(String(value).replace(/[^\d]/g, ''), 10);
+      if (isNaN(mins)) return value; // fallback: devolve o valor original se não conseguir extrair um número
+      if (mins < 60) return `${mins} min`;
+      const h = Math.floor(mins / 60);
+      const m = mins % 60;
+      return m === 0 ? `${h}h` : `${h}h ${m}min`;
     }
     async function openCb360LocateIncidentModal(internalNumber) {
       document.querySelectorAll('#goc-locate-modal').forEach(el => el.remove());
@@ -4438,10 +4764,10 @@ async function openCb360LocateVehiclesModal() {
         </div>
       `;
       document.body.appendChild(modal);
-      const closeModal = () => { modal.remove(); };
+      const closeModal = () => {modal.remove();};
       modal.querySelectorAll('.goc-close-btn').forEach(btn => btn.addEventListener('click', closeModal));
       try {
-        const incResponse = await supaFetch(`${SUPABASE_URL}/rest/v1/cb360_incidents?internal_number=eq.${internalNumber}`, { method: 'GET' });
+        const incResponse = await supaFetch(`${SUPABASE_URL}/rest/v1/cb360_incidents?internal_number=eq.${internalNumber}`, {method: 'GET'});
         if (!incResponse.ok) throw new Error('Erro na ocorrência');
         const incData = await incResponse.json();
         if (!incData || incData.length === 0) throw new Error('Ocorrência não encontrada.');
@@ -4484,7 +4810,8 @@ async function openCb360LocateVehiclesModal() {
           if (Array.isArray(vehicles) && vehicles.length > 0) {
             vehicles.forEach((veh, index) => {
               const vehicleCode = veh.vehicle;
-              const timeVal = veh.estimated_time !== undefined && veh.estimated_time !== null ? veh.estimated_time : calculatedTimeText;
+              const timeValRaw = veh.estimated_time !== undefined && veh.estimated_time !== null ? veh.estimated_time : calculatedTimeText;
+              const timeVal = formatMinutesToHM(timeValRaw);
               const tr = document.createElement('tr');
               tr.style.borderBottom = '1px solid #eee';
               tr.innerHTML = `
@@ -4503,7 +4830,7 @@ async function openCb360LocateVehiclesModal() {
               <td style="padding:6px 8px; text-align:center; font-weight:600; color:#2b6ecb; border-right:1px solid #ccc; border-bottom:1px solid #ccc;">ABSC-01</td>
               <td style="padding:6px 8px; text-align:left; padding-left:10px; border-right:1px solid #ccc; border-bottom:1px solid #ccc;">${descriptionText}</td>
               <td style="padding:6px 8px; text-align:center; border-right:1px solid #ccc; border-bottom:1px solid #ccc;">${calculatedDistanceText}</td>
-              <td style="padding:6px 8px; text-align:center; border-right:1px solid #ccc; border-bottom:1px solid #ccc;">${calculatedTimeText}</td>
+              <td style="padding:6px 8px; text-align:center; border-right:1px solid #ccc; border-bottom:1px solid #ccc;">${formatMinutesToHM(calculatedTimeText)}</td>
             `;
             tbody.appendChild(tr);
           }
@@ -4593,7 +4920,7 @@ async function openCb360LocateVehiclesModal() {
         <style>.goc-summary-input:focus {outline: none !important; border: 1px solid #2b6ecb !important; box-shadow: 0 0 4px rgba(43, 110, 203, 0.3) !important;}</style>
         <div style="margin-bottom:16px;">
           <div style="font-weight:600; font-size:13px; color:#2b6ecb; margin-bottom:8px;">Resumo de Vítimas: <i class="fa-solid fa-circle-info" style="color:#5bc0de; font-size:12px;"></i></div>
-          <div style="display:flex; gap:20px; align-items:flex-start; flex-wrap:wrap;">
+          <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
             <div style="border:1px solid #ddd; border-radius:4px; padding:10px 14px;">
               <div style="display:grid; grid-template-columns: 90px repeat(4, 72px); gap:8px; align-items:center;">
                 <div></div>
@@ -4744,7 +5071,9 @@ async function openCb360LocateVehiclesModal() {
       const badgeVictims = document.getElementById('goc-tab-count-victims');
       const summaryVictims = document.getElementById('goc-count-victims');
       if (badgeVictims) badgeVictims.textContent = cb360ResourcesVictims.length ? `(${cb360ResourcesVictims.length})` : '';
-      if (summaryVictims) summaryVictims.textContent = cb360ResourcesVictims.length;
+      const total = cb360ResourcesVictims.length;
+      setupCb360SummaryTooltip(summaryVictims, total, `${total} Vítima${total === 1 ? '' : 's'}`);
+      updateCb360SummaryIconColor('goc-count-victims');
     }
     // FETCH: fetchCb360Victims()
     async function fetchCb360Victims(internal_number) {
@@ -5102,12 +5431,11 @@ async function openCb360LocateVehiclesModal() {
       document.getElementById('goc-victim-btn-save').addEventListener('click', () => saveCb360Victim(victim, {
         outboundVehicleCombo, outboundDriverCombo, returnVehicleCombo, returnDriverCombo, routeCombo, rescueBodyCombo
       }));
-      overlay.addEventListener('click', (e) => {if (e.target === overlay) closeCb360VictimModal();});
       setTimeout(() => {
         overlay.style.display = 'flex';
       }, 10);
     }
-    function createCb360SearchCombobox({ mainInputId, dropdownId, searchInputId, listId, chevronId, list, selectedValue = null }) {
+    function createCb360SearchCombobox({ mainInputId, dropdownId, searchInputId, listId, chevronId, list, selectedValue = null, onSelect = null }) {
       let data = list || [];
       let selected = selectedValue ? (data.find(i => i.id == selectedValue) || null) : null;
       let activeIndex = -1;
@@ -5141,6 +5469,7 @@ async function openCb360LocateVehiclesModal() {
             mainInput.value = '';
             dropdown.style.display = 'none';
             if (chevron) chevron.style.transform = 'translateY(-50%) rotate(0deg)';
+            if (onSelect) onSelect(null);
           });
           listContainer.appendChild(blankLine);
         }
@@ -5179,6 +5508,7 @@ async function openCb360LocateVehiclesModal() {
             mainInput.value = item.label;
             dropdown.style.display = 'none';
             if (chevron) chevron.style.transform = 'translateY(-50%) rotate(0deg)';
+            if (onSelect) onSelect(item);
           });
           listContainer.appendChild(line);
         });
@@ -5222,6 +5552,7 @@ async function openCb360LocateVehiclesModal() {
             selected = chosen;
             mainInput.value = chosen.label;
             setDropdownOpen(false);
+            if (onSelect) onSelect(chosen);
           }
         } else if (e.key === 'Escape') {
           setDropdownOpen(false);
@@ -5600,12 +5931,12 @@ async function openCb360LocateVehiclesModal() {
         </div>
         <div id="goc-summary-subtab-meios-aereos" class="goc-summary-subtab-content" style="display:none;">
           <div style="border: 1px solid #ddd; border-radius: 4px; padding: 12px 16px; display: flex; gap: 5px; flex-wrap: nowrap; overflow-x: auto;">
-            <div style="width: 140px; flex-shrink: 0;"><label style="font-size: 11.5px; font-weight: 600; display: block; margin-bottom: 4px;">Aviões Bombard. Ligeiros</label><input type="text" id="goc-summary-air-light-tankers" readonly style="${inputStyle} text-align: center; background: #f5f5f5;"></div>
-            <div style="width: 140px; flex-shrink: 0;"><label style="font-size: 11.5px; font-weight: 600; display: block; margin-bottom: 4px;">Aviões Bombard. Pesados</label><input type="text" id="goc-summary-air-heavy-tankers" readonly style="${inputStyle} text-align: center; background: #f5f5f5;"></div>
+            <div style="width: 140px; flex-shrink: 0;"><label style="font-size: 11.5px; font-weight: 600; display: block; margin-bottom: 4px;">Aviões Anfibio Ligeiros</label><input type="text" id="goc-summary-air-light-tankers" readonly style="${inputStyle} text-align: center; background: #f5f5f5;"></div>
+            <div style="width: 140px; flex-shrink: 0;"><label style="font-size: 11.5px; font-weight: 600; display: block; margin-bottom: 4px;">Aviões Anfibio Médios</label><input type="text" id="goc-summary-air-heavy-tankers" readonly style="${inputStyle} text-align: center; background: #f5f5f5;"></div>
+            <div style="width: 140px; flex-shrink: 0;"><label style="font-size: 11.5px; font-weight: 600; display: block; margin-bottom: 4px;">Helis Bombard. Ligeiros</label><input type="text" id="goc-summary-heli-light" readonly style="${inputStyle} text-align: center; background: #f5f5f5;"></div>
             <div style="width: 140px; flex-shrink: 0;"><label style="font-size: 11.5px; font-weight: 600; display: block; margin-bottom: 4px;">Helis Bombard. Médios</label><input type="text" id="goc-summary-heli-medium" readonly style="${inputStyle} text-align: center; background: #f5f5f5;"></div>
             <div style="width: 140px; flex-shrink: 0;"><label style="font-size: 11.5px; font-weight: 600; display: block; margin-bottom: 4px;">Helis Bombard. Pesados</label><input type="text" id="goc-summary-heli-heavy" readonly style="${inputStyle} text-align: center; background: #f5f5f5;"></div>
-            <div style="width: 140px; flex-shrink: 0;"><label style="font-size: 11.5px; font-weight: 600; display: block; margin-bottom: 4px;">Helis Coordenação</label><input type="text" id="goc-summary-heli-coord" readonly style="${inputStyle} text-align: center; background: #f5f5f5;"></div>
-            <div style="width: 140px; flex-shrink: 0;"><label style="font-size: 11.5px; font-weight: 600; display: block; margin-bottom: 4px;">Helis Ligeiros</label><input type="text" id="goc-summary-heli-light" readonly style="${inputStyle} text-align: center; background: #f5f5f5;"></div>
+            <div style="width: 140px; flex-shrink: 0;"><label style="font-size: 11.5px; font-weight: 600; display: block; margin-bottom: 4px;">Helis Coordenação</label><input type="text" id="goc-summary-heli-coord" readonly style="${inputStyle} text-align: center; background: #f5f5f5;"></div>            
             <div style="width: 140px; flex-shrink: 0;"><label style="font-size: 11.5px; font-weight: 600; display: block; margin-bottom: 4px;">Total Meios Aéreos</label><input type="text" id="goc-summary-total-air" readonly style="${inputStyle} text-align: center; background: #f5f5f5;"></div>
           </div>
         </div>
@@ -5613,7 +5944,7 @@ async function openCb360LocateVehiclesModal() {
           <div style="display: flex; flex-direction: column; gap: 5px;">
             <div style="border: 1px solid #ddd; border-radius: 4px; padding: 12px 16px; background: #fff;">
               <div style="font-weight: 600; color: #2b6ecb; font-size: 13px; margin-bottom: 8px;">Danos Causados</div>
-              <textarea id="goc-summary-damages" rows="4" style="width: 100%; min-height: 100px; border: 1px solid #ccc; border-radius: 4px; padding: 8px; font-size: 12px; resize: vertical;"></textarea>
+              <textarea id="goc-summary-damages" rows="4" readonly style="width: 100%; min-height: 100px; background: #f5f5f5; border: 1px solid #ccc; border-radius: 4px; padding: 8px; font-size: 12px; resize: vertical;"></textarea>
             </div>
             <div style="border: 1px solid #ddd; border-radius: 4px; padding: 12px 16px; background: #fff;">
               <div style="font-weight: 600; color: #2b6ecb; font-size: 13px; margin-bottom: 8px;">Incêndios Rurais</div>
@@ -5623,9 +5954,9 @@ async function openCb360LocateVehiclesModal() {
               <div style="font-weight: 600; color: #2b6ecb; font-size: 13px; margin-bottom: 8px;">Desalojados</div>
               <div style="display: flex; align-items: center; gap: 8px;">
                 <label style="font-size: 12px; font-weight: 600;">Qt.</label>
-                <input type="text" id="goc-summary-displaced-qty" style="${inputStyle} width: 100px; text-align: center;">
+                <input type="text" id="goc-summary-displaced-qty" readonly style="${inputStyle} background: #f5f5f5; width: 100px; text-align: center;">
                 <label style="font-size: 12px; font-weight: 600;">Desc.</label>
-                <input type="text" id="goc-summary-displaced-desc" style="${inputStyle} flex: 1;">
+                <input type="text" id="goc-summary-displaced-desc" readonly style="${inputStyle} background: #f5f5f5; flex: 1;">
               </div>
             </div>
           </div>
@@ -5656,13 +5987,16 @@ async function openCb360LocateVehiclesModal() {
         const row = document.createElement('div');
         row.style.cssText = 'display:flex; align-items:center; gap:8px;';
         row.innerHTML = `
-          <input type="text" class="goc-summary-rural-fire-name" style="${inputStyle} flex:1;"><input type="text" class="goc-summary-rural-fire-area" style="${inputStyle} width:100px; text-align:center;">
+          <input type="text" class="goc-summary-rural-fire-name" readonly style="${inputStyle} background: #f5f5f5; flex:1;"><input type="text" class="goc-summary-rural-fire-area" readonly style="${inputStyle} background: #f5f5f5; width:100px; text-align:center;">
           <span style="font-size:12px;">ha</span>`;
         ruralFiresContainer.appendChild(row);
       }
       renderCb360SummaryResumoTables();
       renderCb360SummaryArrivalTable();
-      renderCb360SummaryMeiosEnvolvidos();
+      renderCb360SummaryInvolvedMeans();
+      renderCb360SummaryAerealMeans();
+      renderCb360SummaryExternalMeans();
+      renderCb360SummaryEffectsTab();
       ['goc-summary-ext-men', 'goc-summary-ext-vehicles', 'goc-summary-ext-entities'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.addEventListener('input', updateCb360SummaryTotalMeios);
@@ -5839,8 +6173,8 @@ async function openCb360LocateVehiclesModal() {
         return false;
       }
     }
-    // RENDER: renderCb360SummaryMeiosEnvolvidos() — preenche os campos automáticos da sub-tab "Meios Envolvidos"
-    function renderCb360SummaryMeiosEnvolvidos() {
+    // RENDER: renderCb360SummaryInvolvedMeans() — preenche os campos automáticos da sub-tab "Meios Envolvidos"
+    function renderCb360SummaryInvolvedMeans() {
       const totalMenInt = cb360ResourcesFirefighters.length;
       const totalVehiclesInt = cb360ResourcesVehicles.length;
       const menIntEl = document.getElementById('goc-summary-int-men');
@@ -5866,6 +6200,111 @@ async function openCb360LocateVehiclesModal() {
       if (totalVehiclesEl) totalVehiclesEl.value = vehiclesInt + vehiclesExt;
       if (totalCorpsEl) totalCorpsEl.value = corpsInt + entitiesExt;
     }
+    // FETCH: fetchCb360SummaryMeans() — busca os meios aéreos da ocorrência (tipo 'aircraft')
+    async function fetchCb360SummaryMeans(internalNumber) {
+      try {
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const url = `${SUPABASE_URL}/rest/v1/cb360_report_means?internal_number=eq.${internalNumber}&corp_oper_nr=eq.${currentCorpOperNr}&type=eq.aircraft&select=entity,kind`;
+        const response = await supaFetch(url, { method: 'GET' });
+        return response.ok ? await response.json() : [];
+      } catch (err) {
+        console.error('Erro fetchCb360SummaryMeans:', err);
+        return [];
+      }
+    }
+    // RENDER: renderCb360SummaryAerealMeans() — agrega por tipo, somando as entidades com o mesmo "kind"
+    async function renderCb360SummaryAerealMeans() {
+      const internalNumber = cb360CurrentIncident?.internal_number;
+      if (!internalNumber) return;
+      const items = await fetchCb360SummaryMeans(internalNumber);
+      const countByKind = (kind) => items.filter(m => m.kind === kind).length;
+      const setVal = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.value = val || '';
+      };
+      const lightTankers = countByKind('Avião Anfíbio Ligeiro');
+      const mediumTankers = countByKind('Avião Anfíbio Médio');
+      const heliLight = countByKind('Helicóptero Bombardeiro Ligeiro');
+      const heliMedium = countByKind('Helicóptero Bombardeiro Médio');
+      const heliHeavy = countByKind('Helicóptero Bombardeiro Pesado');
+      const heliCoord = countByKind('Helicóptero de Coordenação');
+      setVal('goc-summary-air-light-tankers', lightTankers);
+      setVal('goc-summary-air-heavy-tankers', mediumTankers);
+      setVal('goc-summary-heli-light', heliLight);
+      setVal('goc-summary-heli-medium', heliMedium);
+      setVal('goc-summary-heli-heavy', heliHeavy);
+      setVal('goc-summary-heli-coord', heliCoord);
+      setVal('goc-summary-total-air', lightTankers + mediumTankers + heliLight + heliMedium + heliHeavy + heliCoord);
+    }
+    // RENDER: renderCb360SummaryExternalMeans() — soma Entidades/Veículos/Operacionais externos, agregando por entidade distinta
+    async function renderCb360SummaryExternalMeans() {
+      const internalNumber = cb360CurrentIncident?.internal_number;
+      if (!internalNumber) return;
+      const [firefightersExternal, meansExternal] = await Promise.all([
+      fetchCb360ReportMeansFirefighters(internalNumber),
+      fetchCb360ReportMeans(internalNumber)
+      ]);
+      const entitiesSet = new Set();
+      let totalVehicles = 0;
+      let totalOperational = 0;
+      firefightersExternal.forEach(item => {
+        if (item.name) entitiesSet.add(item.name.trim().toLowerCase());
+        totalVehicles += 1;
+        totalOperational += Number(item.num_firefighters) || 0;
+      });
+      meansExternal.forEach(item => {
+        if (item.entity) entitiesSet.add(item.entity.trim().toLowerCase());
+        totalOperational += Number(item.num_operational) || 0;
+        if (item.type === 'civil_protection') {
+          totalVehicles += Number(item.quantity) || 0;
+        } else if (item.type === 'aircraft') {
+          totalVehicles += 1;
+        } else if (item.type === 'other_means') {
+          totalVehicles += Number(item.quantity) || 0;
+        }
+      });
+      const setVal = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.value = val || 0;
+      };
+      setVal('goc-summary-ext-men', totalOperational);
+      setVal('goc-summary-ext-vehicles', totalVehicles);
+      setVal('goc-summary-ext-entities', entitiesSet.size);
+      updateCb360SummaryTotalMeios();
+    }
+    // FETCH: fetchCb360IncidentReportRow() — busca a linha de cb360_incident_reports para o internal_number atual
+    async function fetchCb360IncidentReportRow(internalNumber) {
+      try {
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const url = `${SUPABASE_URL}/rest/v1/cb360_incident_reports?internal_number=eq.${internalNumber}&corp_oper_nr=eq.${currentCorpOperNr}&select=*`;
+        const response = await supaFetch(url, { method: 'GET' });
+        const data = await response.json();
+        return data?.[0] || null;
+      } catch (err) {
+        console.error('Erro fetchCb360IncidentReportRow:', err);
+        return null;
+      }
+    }
+    // RENDER: renderCb360SummaryEffectsTab() — preenche "Efeitos do Sinistro" na tab Resumo da Ocorrência
+    async function renderCb360SummaryEffectsTab() {
+      const internalNumber = cb360CurrentIncident?.internal_number;
+      if (!internalNumber) return;
+      const row = await fetchCb360IncidentReportRow(internalNumber);
+      if (!row) return;
+      const damagesEl = document.getElementById('goc-summary-damages');
+      if (damagesEl) damagesEl.value = row.damages_caused || '';
+      const nameInputs = document.querySelectorAll('.goc-summary-rural-fire-name');
+      const areaInputs = document.querySelectorAll('.goc-summary-rural-fire-area');
+      for (let i = 0; i < 5; i++) {
+        const num = i + 1;
+        if (nameInputs[i]) nameInputs[i].value = row[`rural_fire_${num}`] || '';
+        if (areaInputs[i]) areaInputs[i].value = row[`rural_fire_${num}_val`] || '';
+      }
+      const qtyEl = document.getElementById('goc-summary-displaced-qty');
+      const descEl = document.getElementById('goc-summary-displaced-desc');
+      if (qtyEl) qtyEl.value = row.displaced_qty || '';
+      if (descEl) descEl.value = row.displaced_desc || '';
+    }
     // ==============================================================================
     // == 10. FITA DO TEMPO (POSITs — cards numa timeline vertical)              ==
     // ==============================================================================    
@@ -5890,37 +6329,40 @@ async function openCb360LocateVehiclesModal() {
       }
     }
     // RENDER (shell da tab): renderCb360TimelineTab()
-async function renderCb360TimelineTab() {
-  const container = document.getElementById('goc-tab-content-timeline');
-  if (!container) return;
-  container.innerHTML = `
-    <style>
-      #goc-tab-content-timeline input:focus, #goc-tab-content-timeline select:focus, #goc-tab-content-timeline textarea:focus {outline: none !important; border: 1px solid #d9534f !important; box-shadow: 0 0 4px rgba(217, 83, 79, 0.3) !important; transition: border-color 0.2s, box-shadow 0.2s;}
-      .goc-posit-edit:hover i, .goc-posit-remove:hover i {filter: brightness(0.8);}
-      #goc-timeline-wrap::-webkit-scrollbar {width: 8px;}
-      #goc-timeline-wrap::-webkit-scrollbar-track {background: #f0f0f0; border-radius: 10px;}
-      #goc-timeline-wrap::-webkit-scrollbar-thumb {background: linear-gradient(180deg, #b0b0b0, #888); border-radius: 10px;}
-    </style>
-    <div style="display:flex; align-items:center; gap:16px; margin-bottom:16px; flex-shrink:0;">
-      <button id="goc-btn-add-posit-timeline" style="background:#2b6ecb; color:#fff; border:none; padding:9px 18px; border-radius:5px; font-weight:600; cursor:pointer; font-size:12.5px; display:flex; align-items:center; gap:8px;"><i class="fa fa-tags"></i> Adicionar POSIT</button>
-      <label style="font-size:12.5px; font-weight:600;">Tipo Comunicação</label>
-      <select id="goc-timeline-comm-type" style="height:30px; padding:0 8px; border:1px solid #ccc; border-radius:4px; font-size:12px; width:180px;">
-        <option value=""></option>
-        <option value="Comunicação">Comunicação</option>
-        <option value="POSIT">POSIT</option>
-      </select>
-    </div>
-    <div id="goc-timeline-wrap" style="max-height:500px; overflow-y:auto; padding-right:6px; margin-top:20px;">
-      <div id="goc-timeline-list" style="position:relative; padding-left:0px;"></div>
-    </div>
-  `;      
-  await loadCb360TimelineEvents();
-  renderCb360TimelineList();      
-  document.getElementById('goc-btn-add-posit-timeline').addEventListener('click', () => openCb360PositModal(null));
-  document.getElementById('goc-timeline-comm-type').addEventListener('change', () => {
-    renderCb360TimelineList();
-  });
-}
+    async function renderCb360TimelineTab() {
+      const container = document.getElementById('goc-tab-content-timeline');
+      if (!container) return;
+      container.innerHTML = `
+        <style>
+          #goc-tab-content-timeline input:focus, #goc-tab-content-timeline select:focus, #goc-tab-content-timeline textarea:focus {outline: none !important; border: 1px solid #d9534f !important; box-shadow: 0 0 4px rgba(217, 83, 79, 0.3) !important; transition: border-color 0.2s, box-shadow 0.2s;}
+          .goc-posit-edit:hover i, .goc-posit-remove:hover i {filter: brightness(0.8);}
+          #goc-timeline-wrap::-webkit-scrollbar {width: 8px;}
+          #goc-timeline-wrap::-webkit-scrollbar-track {background: #f0f0f0; border-radius: 10px;}
+          #goc-timeline-wrap::-webkit-scrollbar-thumb {background: linear-gradient(180deg, #b0b0b0, #888); border-radius: 10px;}
+        </style>
+        <div style="display:flex; align-items:center; gap:16px; margin-bottom:16px; flex-shrink:0;">
+          <button id="goc-btn-add-posit-timeline" style="background:#2b6ecb; color:#fff; border:none; padding:9px 18px; border-radius:5px; font-weight:600; cursor:pointer; font-size:12.5px; display:flex; align-items:center; gap:8px;"><i class="fa fa-tags"></i> Adicionar POSIT</button>
+          <label style="font-size:12.5px; font-weight:600;">Tipo Comunicação</label>
+          <select id="goc-timeline-comm-type" style="height:30px; padding:0 8px; border:1px solid #ccc; border-radius:4px; font-size:12px; width:180px;">
+            <option value=""></option><option value="Comunicação">Comunicação</option><option value="POSIT">POSIT</option>
+          </select>
+        </div>
+        <div id="goc-timeline-wrap" style="max-height:500px; overflow-y:auto; padding-right:6px; margin-top:20px;">
+          <div id="goc-timeline-list" style="position:relative; padding-left:0px;"></div>
+        </div>
+      `;      
+      await loadCb360TimelineEvents();
+      renderCb360TimelineList();
+      document.getElementById('goc-btn-add-posit-timeline').addEventListener('click', () => openCb360PositModal(null));
+      document.getElementById('goc-timeline-comm-type').addEventListener('change', () => {
+        renderCb360TimelineList();
+      });
+      const isClosed = !!cb360CurrentIncident?.is_closed;
+      const addPositBtn = document.getElementById('goc-btn-add-posit-timeline');
+      addPositBtn.disabled = isClosed;
+      addPositBtn.style.opacity = isClosed ? '0.5' : '';
+      addPositBtn.style.cursor = isClosed ? 'not-allowed' : 'pointer';
+    }
     function formatCb360TimelineDateTime(dateTimeStr) {
       if (!dateTimeStr) return '';
       const d = new Date(dateTimeStr.replace(' ', 'T'));
@@ -5928,7 +6370,7 @@ async function renderCb360TimelineTab() {
       const pad = n => String(n).padStart(2, '0');
       return `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
     }
-    // RENDER: renderCb360TimelineList()
+    // ---- RENDER: renderCb360TimelineList() ----
     function renderCb360TimelineList() {
       const list = document.getElementById('goc-timeline-list');
       if (!list) return;
@@ -5966,16 +6408,16 @@ async function renderCb360TimelineTab() {
                     <span style="font-weight:600; color:#d9534f; font-size:14px;">${ev.personName || 'Operador'}</span>
                   </div>
                   ${isClosed ? '' : `
-                    <div style="display:flex; gap:6px;">
-                      <button class="goc-posit-edit" data-id="${ev.id}" style="background:transparent; border:none; color:#2b6ecb; cursor:pointer; font-size:13px;"><i class="fa-solid fa-pencil"></i></button>
-                      <button class="goc-posit-remove" data-id="${ev.id}" style="background:transparent; border:none; color:#d9534f; cursor:pointer; font-size:13px;"><i class="fa-solid fa-trash"></i></button>
+                    <div style="display:flex; gap:20px; margin-right:25px;">
+                      <button class="goc-posit-edit" data-id="${ev.id}" style="background:transparent; border:none; color:#2b6ecb; cursor:pointer; font-size:18px;"><i class="fa-solid fa-pencil"></i></button>
+                      <button class="goc-posit-remove" data-id="${ev.id}" style="background:transparent; border:none; color:#d9534f; cursor:pointer; font-size:18px;"><i class="fa-solid fa-trash"></i></button>
                     </div>
                   `}
                 </div>
                 <div style="font-size:12.5px; color:#333; display:flex; flex-direction:column; gap:4px; line-height:1.4;">
                   ${ev.fromVal ? `<div><strong style="color:#222;">De:</strong> ${ev.fromVal}</div>` : ''}
                   ${ev.toVal ? `<div><strong style="color:#222;">Para:</strong> ${ev.toVal}</div>` : ''}
-                  <div style="margin-top:2px;">${ev.infoVal || ''}</div>
+                  <div style="margin-top:2px; word-break:break-word; overflow-wrap:break-word; max-width:100%;">${ev.infoVal || ''}</div>
                 </div>
               </div>
             </div>
@@ -6142,4 +6584,3441 @@ async function renderCb360TimelineTab() {
     function closeCb360PositModal() {
       const overlay = document.getElementById('goc-posit-modal-overlay');
       if (overlay) overlay.remove();
+    }
+    // ==============================================================================
+    // == 11. SMS               ==
+    // ==============================================================================
+
+
+    // ==============================================================================
+    // == 12. MÓDULO: RELATÓRIO DA OCORRÊNCIA (cb360_incident_reports)                ==
+    // ==============================================================================
+    let cb360ReportCurrentInternalNumber = null;
+    let cb360ReportCurrentRow = null;
+    let cb360ReportOutOfBoundsList = [];
+    let cb360ReportHeaderInfo = null;
+    let cb360ReportVictimsData = [];
+    let cb360ReportVehiclesData = [];    
+    let cb360ReportCommandData = [];
+    let cb360ReportMealsData = [];
+    let cb360ReportFirefightersData = [];
+    let cb360ReportMeansData = [];
+    let cb360ReportUsedMaterialData = [];
+    let cb360ReportMeansFirefightersData = [];
+    let cb360ReportMeiosCurrentSubType = 'bombeiros';
+    let cb360ReportParticipantsData = [];
+    let cb360ReportExpensesData = [];
+    let cb360ReportDamagesCurrentSubType = 'trabalho-perdido';
+    // ---- OPEN: openCb360ReportModal() ----
+    async function openCb360ReportModal(internalNumber) {
+      const page = document.getElementById('page-cb360-redund');
+      if (!page || document.getElementById('goc-report-modal-overlay')) return;
+      cb360ReportCurrentInternalNumber = internalNumber;      
+      const headerInfo = await fetchCb360ReportHeaderInfo(internalNumber);
+      cb360ReportHeaderInfo = headerInfo;
+      await loadCb360ReportRow(internalNumber);
+      cb360ReportFormState = { ...(cb360ReportCurrentRow || {}) };
+      cb360ReportVictimsData = await fetchCb360Victims(internalNumber);
+      const dispatchedResources = await fetchDispatchData(internalNumber);
+      cb360ReportVehiclesData = dispatchedResources.map(mean => ({
+        id: String(mean.id), vehicle: mean.vehicle || '', pumpHours: mean.pump_hours ?? '', pumpMinutes: mean.pump_minutes ?? '',
+        arrivalDateScene: mean.scene_arrival_date || '', arrivalTimeScene: mean.scene_arrival_time || '',
+        departureDateScene: mean.scene_departure_date || '', departureTimeScene: mean.scene_departure_time || '',
+        arrivalDateCB: mean.cb_arrival_date || '', arrivalTimeCB: mean.cb_arrival_time || ''
+      }));
+      cb360ReportFirefightersData = dispatchedResources.flatMap(mean => {
+        const crewList = mean.cb360_dispatch_crew || [];
+        const minorNInt = crewList.length
+          ? crewList.reduce((minor, actual) => String(actual.n_int) < String(minor) ? actual.n_int : minor, crewList[0].n_int) : null;
+        return crewList.map(crew => ({vehicle: mean.vehicle || '', code: crew.n_int || '', confirmed: crew.n_int === minorNInt}));
+      });      
+      if (!cb360ReportOutOfBoundsList.length) {
+        cb360ReportOutOfBoundsList = await fetchCb360OutOfBoundsList();
+      }
+      cb360ReportCommandData = await fetchCb360ReportCommand(internalNumber);
+      cb360ReportMealsData = await fetchCb360ReportMeals(internalNumber);
+      cb360ReportMeansFirefightersData = await fetchCb360ReportMeansFirefighters(internalNumber);
+      cb360ReportMeansData = await fetchCb360ReportMeans(internalNumber); 
+      cb360ReportUsedMaterialData = await fetchCb360ReportUsedMaterial(internalNumber);
+      cb360ReportParticipantsData = await fetchCb360ReportParticipants(internalNumber);
+      cb360ReportExpensesData = await fetchCb360ReportExpenses(internalNumber)
+      renderCb360ReportModal(headerInfo);
+    }
+    // ---- FETCH: fetchCb360ReportHeaderInfo() ----
+    async function fetchCb360ReportHeaderInfo(internalNumber) {
+      try {
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const url = `${SUPABASE_URL}/rest/v1/cb360_incidents?internal_number=eq.${internalNumber}&corp_oper_nr=eq.${currentCorpOperNr}&select=internal_number,alert_date,alert_time,classification,outside_area,outside_area_corp`;
+        const response = await supaFetch(url, { method: 'GET' });
+        const data = await response.json();
+        const oc = data?.[0];
+        if (!oc) return {id: internalNumber, dateLabel: '', serviceLabel: '', outsideArea: false, outsideAreaCorp: null};
+        const dateFormatted = oc.alert_date ? oc.alert_date.split('-').reverse().join('-') : '';
+        let serviceLabel = '';
+        if (oc.classification) {
+          const classUrl = `${SUPABASE_URL}/rest/v1/class_occorr?class_occorr=eq.${oc.classification}&select=class_occorr,occorr_descr`;
+          const classResponse = await supaFetch(classUrl, {method: 'GET'});
+          const classData = await classResponse.json();
+          if (classData?.[0]) {
+            serviceLabel = `${classData[0].class_occorr} - ${classData[0].occorr_descr}`;
+          }
+        }
+        return {
+          id: oc.internal_number,
+          dateLabel: `${dateFormatted} ${oc.alert_time || ''}`.trim(),
+          serviceLabel,
+          outsideArea: !!oc.outside_area,
+          outsideAreaCorp: oc.outside_area_corp || null
+        };
+      } catch (err) {
+        console.error('Erro fetchCb360ReportHeaderInfo:', err);
+        return {id: internalNumber, dateLabel: '', serviceLabel: '', outsideArea: false, outsideAreaCorp: null};
+      }
+    }    
+    // ---- FETCH: loadCb360ReportRow() ----
+    async function loadCb360ReportRow(internalNumber) {
+      try {
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const url = `${SUPABASE_URL}/rest/v1/cb360_incident_reports?internal_number=eq.${internalNumber}&corp_oper_nr=eq.${currentCorpOperNr}&select=*`;
+        const response = await supaFetch(url, {method: 'GET'});
+        const data = await response.json();
+        cb360ReportCurrentRow = data?.[0] || null;
+      } catch (err) {
+        console.error('Erro loadCb360ReportRow:', err);
+        cb360ReportCurrentRow = null;
+      }
+    }
+    // ---- RENDER: renderCb360ReportModal() ----
+    function renderCb360ReportModal(headerInfo) {
+      const page = document.getElementById('page-cb360-redund');
+      const overlay = document.createElement('div');
+      overlay.id = 'goc-report-modal-overlay';
+      overlay.style.cssText = 'display:flex; position:fixed; inset:0; background:rgba(0,0,0,0.35); z-index:200; align-items:center; justify-content:center;';
+      overlay.innerHTML = `
+        <style>
+          #goc-report-window .rel-tab-bar {display:flex; flex-wrap:wrap; background:#f4f4f4; border-bottom:1px solid #ddd;}
+          #goc-report-window .rel-tab-btn {flex:1; min-width:110px; text-align:center; background:transparent; border:none; border-bottom:3px solid transparent; padding:10px 16px; font-size:12.5px; font-weight:600; color:#555; cursor:pointer; transition:all 0.15s ease; white-space:nowrap;}
+          #goc-report-window .rel-tab-btn:hover {color:#2b6ecb;}
+          #goc-report-window .rel-tab-btn.active {background:#fff; border-bottom:3px solid #2b6ecb; color:#2b6ecb;}
+          #goc-report-window .rel-side-btn {display:flex; align-items:center; gap:8px; padding:10px 12px; font-size:12px; font-weight:600; color:#333; cursor:pointer; border-bottom:1px solid #e0e0e0;}
+          #goc-report-window .rel-side-btn:hover {background:#eef3fa;}
+          #goc-report-window .rel-side-btn.active {background:#2b6ecb; color:#fff;}
+          #goc-report-window .rel-label {font-size:12px; font-weight:600; color:#2b6ecb;}
+          #goc-report-window .rel-box {border:1px solid #5bc0de; border-radius:4px; padding:8px; min-height:90px; font-size:12px;}
+          #goc-report-window table.rel-table {width:100%; border-collapse:collapse; font-size:12px;}
+          #goc-report-window table.rel-table th {background:#d9d9d9; padding:7px; text-align:left; font-weight:700;}
+          #goc-report-window table.rel-table td {padding:6px 7px; border-bottom:1px solid #eee;}
+          #goc-report-window input:focus, #goc-report-window select:focus, #goc-report-window textarea:focus {outline:none !important; border:1px solid #d9534f !important; box-shadow:0 0 4px rgba(217, 83, 79, 0.3) !important;}
+        </style>
+        <div id="goc-report-window" style="background:#fff; width:1200px; max-width:95vw; height:700px; max-height:90vh; display:flex; flex-direction:column; overflow:hidden; border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,0.25);">
+          <div style="display:flex; align-items:center; justify-content:space-between; background:#2b6ecb; color:#fff; padding:10px 16px; border-radius:8px 8px 0 0;">
+            <div style="font-weight:600; font-size:14px;"><i class="fa-regular fa-file-lines"></i> Relatório da Ocorrência</div>
+            <button id="rel-btn-x" style="background:transparent; border:none; color:#fff; cursor:pointer; font-size:14px;">✕</button>
+          </div>
+          <div style="padding:25px 20px; border-bottom:1px solid #eee;">
+            <div style="display:flex; gap:20px; font-size:12.5px; font-weight:600; color:#555; flex-wrap:wrap;">
+              <div>ID: <span style="color:#2b6ecb;">${headerInfo.id || ''}</span></div>
+              <div>Data: <span style="color:#2b6ecb;">${headerInfo.dateLabel || ''}</span></div>
+              <div>Serviço: <span style="color:#2b6ecb;">${headerInfo.serviceLabel || ''}</span></div>
+            </div>
+          </div>
+          <div id="rel-tab-bar" class="rel-tab-bar">
+            <button class="rel-tab-btn active" data-tab="geral">Geral</button>
+            <button class="rel-tab-btn" data-tab="efeitos">Efeitos do Sinistro</button>
+            <button class="rel-tab-btn" data-tab="comando">Comando</button>
+            <button class="rel-tab-btn" data-tab="refeicoes">Refeições Fornecidas</button>
+            <button class="rel-tab-btn" data-tab="meios">Outros Meios</button>
+            <button class="rel-tab-btn" data-tab="intervenientes">Intervenientes</button>
+            <button class="rel-tab-btn" data-tab="danos">Danos / Despesas</button>
+          </div>
+          <div id="rel-tab-content" style="padding:16px 20px; min-height:360px; flex:1; overflow-y:auto;"></div>
+          <div style="display:flex; justify-content:flex-end; gap:10px; padding:15px 20px; border-top:1px solid #eee; background:#fafafa; border-radius:0 0 8px 8px;">
+            <button id="rel-btn-print" style="background:#2b6ecb; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-solid fa-print"></i>&nbsp;&nbsp;Imprimir</button>
+            <button id="rel-btn-save" style="background:#5cb85c; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-regular fa-floppy-disk"></i>&nbsp;&nbsp;Guardar</button>
+            <button id="rel-btn-close" style="background:#f0ad4e; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-solid fa-power-off"></i>&nbsp;&nbsp;Fechar</button>
+          </div>
+        </div>
+      `;
+      page.appendChild(overlay);
+      overlay.querySelectorAll('.rel-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchCb360ReportTab(btn.dataset.tab));
+      });
+      document.getElementById('rel-btn-x').addEventListener('click', closeCb360ReportModal);
+      document.getElementById('rel-btn-close').addEventListener('click', closeCb360ReportModal);
+      document.getElementById('rel-btn-save').addEventListener('click', saveCb360Report);
+      document.getElementById('rel-btn-print').addEventListener('click', () => window.print());      
+      switchCb360ReportTab('geral');
+    }
+    // ---- CLOSE: closeCb360ReportModal() ----
+    function closeCb360ReportModal() {
+      const overlay = document.getElementById('goc-report-modal-overlay');
+      if (overlay) overlay.remove();
+      cb360ReportCurrentInternalNumber = null;
+      cb360ReportCurrentRow = null;
+    }
+    // ---- SWITCH: switchCb360ReportTab() ----
+    function switchCb360ReportTab(tab) {
+      captureCb360ReportCurrentTab();
+      document.querySelectorAll('#rel-tab-bar .rel-tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tab);
+      });
+      const content = document.getElementById('rel-tab-content');
+      if (tab === 'geral') {
+        renderCb360ReportGeneralTab(content);
+      } else if (tab === 'efeitos') {
+        renderCb360ReportEfectsTab(content);
+      } else if (tab === 'comando') {
+        renderCb360ReportComandTab(content);
+      } else if (tab === 'refeicoes') {
+        renderCb360ReportMealsTab(content);
+      } else if (tab === 'meios') {
+        renderCb360ReportOtherMeansTab(content);
+      } else if (tab === 'intervenientes') {
+        renderCb360ReportParticipantsTab(content)
+      } else if (tab === 'danos') {
+        renderCb360ReportDamagesTab(content);
+      } else {
+        content.innerHTML = `<p style="color:#999; text-align:center; padding:40px 0;">Tab "${tab}" ainda por construir — fazemos a seguir.</p>`;
+      }
+    }
+    // Captura tudo o que estiver atualmente montado, seja qual for a tab visível
+    function captureCb360ReportCurrentTab() {
+      captureCb360ReportGeneralTab();
+      captureCb360ReportEffectsTab();
+      captureCb360ReportDamagesTab();
+    }
+    // ---- ESTADO PARTILHADO ENTRE TABS DO RELATÓRIO ----
+    let cb360ReportFormState = {};
+    // Chamado sempre que se sai da tab "Geral" (ou antes de gravar)
+    function captureCb360ReportGeneralTab() {
+      const outsideAreaEl = document.getElementById('rel-outside-area');
+      if (!outsideAreaEl) return;
+      cb360ReportFormState.outside_area = outsideAreaEl.checked;
+      cb360ReportFormState.outside_area_corp = outsideAreaEl.checked
+        ? (document.getElementById('rel-outside-area-corp')?.value || null)
+        : null;
+      cb360ReportFormState.annex_i = document.getElementById('rel-annex-i').checked;
+      cb360ReportFormState.annex_ii = document.getElementById('rel-annex-ii').checked;
+      cb360ReportFormState.annex_other = document.getElementById('rel-annex-other').checked;
+      cb360ReportFormState.cmdt_visto_date = document.getElementById('rel-cmdt-visto-date').value || null;
+      cb360ReportFormState.finalized_bomb_resp = document.getElementById('rel-finalized-bomb-resp').checked;
+      cb360ReportFormState.csrepc = document.getElementById('rel-csrepc').value || null;
+      cb360ReportFormState.description = document.getElementById('rel-description').value || null;
+      cb360ReportFormState.developed_work = document.getElementById('developed_work').value || null;
+      cb360ReportFormState.lost_work_text = document.getElementById('lost_work_text').value || null;
+      cb360ReportFormState.material_damage_text = document.getElementById('material_damage_text').value || null;
+    }
+    // ==============================================================================
+    // == INCIDENT GENERAL TAB ==
+    // ==============================================================================
+    // ---- RENDER: renderCb360ReportGeneralTab() ----
+    function renderCb360ReportGeneralTab(content) {
+      const row = { ...(cb360ReportCurrentRow || {}), ...cb360ReportFormState };
+      const defaultOutsideArea = row.outside_area !== undefined ? !!row.outside_area : !!cb360ReportHeaderInfo?.outsideArea;
+      const defaultOutsideAreaCorp = row.outside_area_corp !== undefined ? row.outside_area_corp : cb360ReportHeaderInfo?.outsideAreaCorp;
+      const today = new Date().toISOString().split('T')[0];
+      const inputStyle = 'width:100%; height:25px; padding:4px 8px; border:1px solid #5bc0de; border-radius:4px; font-size:12px; box-sizing:border-box;';
+      const textareaStyle = 'width:100%; height:auto; min-height:150px; padding:6px; border:1px solid #5bc0de; border-radius:4px; font-size:12px; box-sizing:border-box; resize:vertical; outline:none;';
+      const labelStyle = 'font-size:12px; font-weight:600; color:#333; flex-shrink:0;';
+      content.innerHTML = `
+        <div style="display:grid; grid-template-columns: 1fr 1fr; grid-auto-rows: auto; column-gap:24px; row-gap:18px;">
+          <div style="grid-column:1 / span 2; grid-row:1; display:grid; grid-template-columns: 1fr 1fr; column-gap:24px;">
+            <div style="grid-column:1;">
+              <div style="display:flex; gap:125px; border:1px solid #ccc; border-radius:4px; padding:12px; flex-wrap:nowrap;">
+                <div style="flex:1; min-width:0;">
+                  <div style="${labelStyle} color:#2b6ecb;">Área de Ocorrência:</div>
+                  <label style="${labelStyle} display:flex; align-items:center; gap:6px; margin:8px 0;">
+                    <input type="checkbox" id="rel-outside-area" style="width:16px; height:16px; cursor:pointer !important;" ${defaultOutsideArea ? 'checked' : ''}> Fora da área de intervenção.
+                  </label>
+                  <select id="rel-outside-area-corp" style="${inputStyle} width: 300px;" ${defaultOutsideArea ? '' : 'disabled'}>
+                    <option value="">Selecione o corpo...</option>
+                  </select>
+                </div>
+                <div style="flex:1; min-width:0;">
+                  <div style="${labelStyle} color:#2b6ecb;">Anexo ao Relatório de Operações:</div>
+                  <label style="${labelStyle} display:flex; align-items:center; gap:6px; margin:8px 0;"><input type="checkbox" id="rel-annex-i" style="width:16px; height:16px; cursor:pointer !important;" ${row.annex_i ? 'checked' : ''}> Anexo I (Desp. Extraordinárias)</label>
+                  <label style="${labelStyle} display:flex; align-items:center; gap:6px; margin:8px 0;"><input type="checkbox" id="rel-annex-ii" style="width:16px; height:16px; cursor:pointer !important;" ${row.annex_ii ? 'checked' : ''}> Anexo II (D. Estorno)</label>
+                  <label style="${labelStyle} display:flex; align-items:center; gap:6px; margin:8px 0;"><input type="checkbox" id="rel-annex-other" style="width:16px; height:16px; cursor:pointer !important;" ${row.annex_other ? 'checked' : ''}> Outro</label>
+                </div>
+              </div>
+            </div>
+            <div style="grid-column:2; display:flex; flex-direction:column; gap:5px;">
+              <div style="display:flex; gap:10px; align-items:center;">
+                <label style="${labelStyle} width:100px; flex-shrink:0;">Data Visto Cmdt</label>
+                <input type="date" id="rel-cmdt-visto-date" style="${inputStyle}; width:125px;" value="${row.cmdt_visto_date || today}">
+              </div>              
+              <div style="display:flex; gap:10px; align-items:center;">
+                <label style="${labelStyle} width:100px; flex-shrink:0;">CSREPC</label>
+                <input type="text" id="rel-csrepc" style="${inputStyle}; width:200px;" value="${row.csrepc || ''}">
+              </div>
+              <label style="${labelStyle} display:flex; align-items:center; gap:5px; margin-top: 45px;">
+                <input type="checkbox" id="rel-finalized-bomb-resp" style="width:16px; height:16px; cursor:pointer !important;" ${row.finalized_bomb_resp ? 'checked' : ''}> Finalizado Bomb. Resp. Rel.
+              </label>
+            </div>
+          </div>          
+          <div style="grid-column:1; grid-row:2; display:flex; gap:10px; align-items:center;">
+            <div style="width:110px; flex-shrink:0;">
+              <div style="${labelStyle}">Trabalho Perdido</div>
+              <div style="font-size:11px; color:#2b6ecb; font-weight:600; margin-top:4px;">Total: <span id="rel-trabalho-perdido-total">${cb360ReportExpensesData.filter(e => e.type === 'trabalho_perdido').reduce((acc, e) => acc + (Number(e.amount) || 0), 0).toLocaleString('pt-PT', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</span></div>
+            </div>
+            <textarea id="lost_work_text" style="${textareaStyle}; flex:1;">${row.lost_work_text || ''}</textarea>
+          </div>        
+          <div style="grid-column:2; grid-row:2; display:flex; gap:10px; align-items:center;">
+            <label style="${labelStyle} width:100px; flex-shrink:0;">Descrição</label>
+            <textarea id="rel-description" style="${textareaStyle}; flex:1;">${row.description || ''}</textarea>
+          </div>          
+          <div style="grid-column:1; grid-row:3; display:flex; gap:10px; align-items:center;">
+            <div style="width:110px; flex-shrink:0;">
+              <div style="${labelStyle}">Danos Materiais</div>
+              <div style="font-size:11px; color:#2b6ecb; font-weight:600; margin-top:4px;">Total: <span id="rel-danos-materiais-total">${cb360ReportExpensesData.filter(e => e.type === 'danos_viaturas' || e.type === 'danos_equipamento').reduce((acc, e) => acc + (Number(e.amount) || 0), 0).toLocaleString('pt-PT', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</span></div>
+            </div>
+            <textarea id="material_damage_text" style="${textareaStyle}; flex:1;">${row.material_damage_text || ''}</textarea>
+          </div>       
+          <div style="grid-column:2; grid-row:3; display:flex; gap:10px; align-items:center;">
+            <label style="${labelStyle} width:100px; flex-shrink:0;">Trabalho Desenvolvido</label>
+            <textarea id="developed_work" style="${textareaStyle}; flex:1;">${row.developed_work || ''}</textarea>
+          </div>
+        </div>
+      `;
+      content.querySelectorAll('textarea').forEach(textarea => {
+        textarea.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.stopPropagation();
+          }
+        });
+      });
+      const corpSelect = document.getElementById('rel-outside-area-corp');
+      cb360ReportOutOfBoundsList.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.label;
+        if (defaultOutsideAreaCorp && String(defaultOutsideAreaCorp) === String(c.id)) opt.selected = true;
+        corpSelect.appendChild(opt);
+      });
+      document.getElementById('rel-outside-area').addEventListener('change', (e) => {
+        corpSelect.disabled = !e.target.checked;
+        if (!e.target.checked) corpSelect.value = '';
+      });
+    }
+    // Chamado sempre que se sai da tab "Efeitos do Sinistro" (ou antes de gravar)
+    function captureCb360ReportEffectsTab() {
+      const damagesEl = document.getElementById('rel-danos-causados');
+      if (!damagesEl) return;
+      cb360ReportFormState.damages_caused = damagesEl.value || null;
+      for (let i = 1; i <= 5; i++) {
+        cb360ReportFormState[`rural_fire_${i}`] = document.getElementById(`rel-inc-rural-${i}`)?.value || null;
+        const valEl = document.getElementById(`rel-inc-rural-${i}-val`);
+        cb360ReportFormState[`rural_fire_${i}_val`] = valEl?.value ? parseFloat(valEl.value) : null;
+      }
+      cb360ReportFormState.displaced_qty = parseInt(document.getElementById('rel-displaced-qt')?.value, 10) || null;
+      cb360ReportFormState.displaced_desc = document.getElementById('rel-desalojados-desc')?.value || null;
+    }
+    // ==============================================================================
+    // == INCIDENT EFECTS TAB ==
+    // ==============================================================================
+    // ---- HELPER: computeCb360ReportVictimsSummary() ----
+    function computeCb360ReportVictimsSummary() {
+      const catMap = {Bombeiro: 'b', APC: 'apc', Civil: 'civi'};
+      const sevMap = {Leve: 'leves', Grave: 'graves', Morto: 'mortos', Assistido: 'assistidos'};
+      const summary = {};
+      CB360_VICTIM_CATEGORIES.forEach(cat => {
+        CB360_VICTIM_SEVERITIES.forEach(sev => {
+          const key = `vit_${catMap[cat]}_${sevMap[sev]}`;
+          summary[key] = cb360ReportVictimsData.filter(v => v.category === cat && v.severity === sev).length;
+        });
+      });
+      summary.vit_sem_trauma = cb360ReportVictimsData.filter(v => v.no_trauma).length;
+      return summary;
+    }
+    // ---- RENDER: renderCb360ReportEfectsTab() ----
+    function renderCb360ReportEfectsTab(content) {
+      const row = { ...(cb360ReportCurrentRow || {}), ...cb360ReportFormState };
+      const victimsDefaults = computeCb360ReportVictimsSummary();
+      const vv = (field) => (row[field] !== undefined && row[field] !== null) ? row[field] : (victimsDefaults[field] || '');
+      const inputStyle = 'width:100%; height:25px; padding:4px 8px; border:1px solid #5bc0de; border-radius:4px; font-size:12px; box-sizing:border-box;';
+      const smallInputStyle = 'width:70px; height:25px; padding:4px 6px; border:1px solid #5bc0de; border-radius:4px; font-size:12px; text-align:center; box-sizing:border-box;';
+      const labelStyle = 'font-size:12px; font-weight:600; color:#333; flex-shrink:0;';
+      const boxStyle = 'border:1px solid #ccc; border-radius:4px; padding:12px; background:#fff;';
+      const textareaStyle = 'width:100%; height:auto; min-height:90px; padding:6px; border:1px solid #5bc0de; border-radius:4px; font-size:12px; box-sizing:border-box; resize:vertical; outline:none;';
+      content.innerHTML = `
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div style="${boxStyle}">
+            <div style="${labelStyle} color:#2b6ecb; text-align:center; margin-bottom:8px;">Danos Causados</div>
+            <textarea id="rel-danos-causados" style="${textareaStyle}">${row.damages_caused || ''}</textarea>
+          </div>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <div style="${boxStyle}">
+              <div style="${labelStyle} color:#2b6ecb; text-align:center; margin-bottom:10px;">Vítimas</div>
+              <div style="display:grid; grid-template-columns: 80px repeat(4, 1fr); gap:6px; align-items:center; justify-items:center; text-align:center; font-size:11px; font-weight:600; color:#555; margin-bottom:6px;">
+                <div></div>
+                <div>Leves</div>
+                <div>Graves</div>
+                <div>Mortos</div>
+                <div>Assistidos</div>
+              </div>
+              <div style="display:grid; grid-template-columns: 80px repeat(4, 1fr); gap:6px; align-items:center; justify-items:center; margin-bottom:6px;">
+                <div style="${labelStyle} font-size:11px; justify-self:start;">Bombeiros</div>
+                <input type="text" min="0" id="rel-vit-b-leves" readonly style="${smallInputStyle} background:#f5f5f5;" value="${vv('vit_b_leves')}">
+                <input type="text" min="0" id="rel-vit-b-graves" readonly style="${smallInputStyle} background:#f5f5f5;" value="${vv('vit_b_graves')}">
+                <input type="text" min="0" id="rel-vit-b-mortos" readonly style="${smallInputStyle} background:#f5f5f5;" value="${vv('vit_b_mortos')}">
+                <input type="text" min="0" id="rel-vit-b-assistidos" readonly style="${smallInputStyle} background:#f5f5f5;" value="${vv('vit_b_assistidos')}">
+              </div>
+              <div style="display:grid; grid-template-columns: 80px repeat(4, 1fr); gap:6px; align-items:center; justify-items:center; margin-bottom:6px;">
+                <div style="${labelStyle} font-size:11px; justify-self:start;">APC</div>
+                <input type="text" min="0" id="rel-vit-apc-leves" readonly style="${smallInputStyle} background:#f5f5f5;" value="${vv('vit_apc_leves')}">
+                <input type="text" min="0" id="rel-vit-apc-graves" readonly style="${smallInputStyle} background:#f5f5f5;" value="${vv('vit_apc_graves')}">
+                <input type="text" min="0" id="rel-vit-apc-mortos" readonly style="${smallInputStyle} background:#f5f5f5;" value="${vv('vit_apc_mortos')}">
+                <input type="text" min="0" id="rel-vit-apc-assistidos" readonly style="${smallInputStyle} background:#f5f5f5;" value="${vv('vit_apc_assistidos')}">
+              </div>
+              <div style="display:grid; grid-template-columns: 80px repeat(4, 1fr); gap:6px; align-items:center; justify-items:center; margin-bottom:6px;">
+                <div style="${labelStyle} font-size:11px; justify-self:start;">Civis</div>
+                <input type="text" min="0" id="rel-vit-civi-leves" readonly style="${smallInputStyle} background:#f5f5f5;" value="${vv('vit_civi_leves')}">
+                <input type="text" min="0" id="rel-vit-civi-graves" readonly style="${smallInputStyle} background:#f5f5f5;" value="${vv('vit_civi_graves')}">
+                <input type="text" min="0" id="rel-vit-civi-mortos" readonly style="${smallInputStyle} background:#f5f5f5;" value="${vv('vit_civi_mortos')}">
+                <input type="text" min="0" id="rel-vit-civi-assistidos" readonly style="${smallInputStyle} background:#f5f5f5;" value="${vv('vit_civi_assistidos')}">
+              </div>
+              <div style="display:flex; gap:25px; align-items:center; border-top:1px solid #eee; padding-top:30px;">
+                <label style="${labelStyle} font-size:11px; width:80px;">Sem Trauma</label>
+                <input type="text" min="0" id="rel-vit-sem-trauma" readonly style="${smallInputStyle} background:#f5f5f5;" value="${vv('vit_sem_trauma')}">
+              </div>
+            </div>
+            <div style="${boxStyle}; display:flex; flex-direction:column;">
+              <div style="${labelStyle} color:#2b6ecb; text-align:center; margin-bottom:0px;">Incêndios Rurais</div>
+              <div style="display:flex; gap:8px; align-items:center; text-align:center; font-size:11px; font-weight:600; color:#555; margin-bottom:6px; visibility:hidden;">
+                <input type="text" style="${inputStyle} flex:1;" disabled>
+                <input type="text" style="${inputStyle} width:75px;" disabled>
+                <span style="width:25px;">ha</span>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:6px;">
+                <div style="display:flex; gap:8px; align-items:center;">
+                  <input type="text" id="rel-inc-rural-1" style="${inputStyle} flex:1;" value="${row.rural_fire_1 || ''}">                 
+                  <input type="text" min="0" step="any" id="rel-inc-rural-1-val" style="${inputStyle} text-align:right; width:75px;" value="${row.rural_fire_1_val || ''}">
+                  <span style="${labelStyle} width:25px;">ha</span>
+                </div>
+                <div style="display:flex; gap:8px; align-items:center;">
+                  <input type="text" id="rel-inc-rural-2" style="${inputStyle} flex:1;" value="${row.rural_fire_2 || ''}">                 
+                  <input type="text" min="0" step="any" id="rel-inc-rural-2-val" style="${inputStyle} text-align:right; width:75px;" value="${row.rural_fire_2_val || ''}">
+                  <span style="${labelStyle} width:25px;">ha</span>
+                </div>
+                <div style="display:flex; gap:8px; align-items:center;">
+                  <input type="text" id="rel-inc-rural-3" style="${inputStyle} flex:1;" value="${row.rural_fire_3 || ''}">                 
+                  <input type="text" min="0" step="any" id="rel-inc-rural-3-val" style="${inputStyle} text-align:right; width:75px;" value="${row.rural_fire_3_val || ''}">
+                  <span style="${labelStyle} width:25px;">ha</span>
+                </div>
+                <div style="display:flex; gap:8px; align-items:center;">
+                  <input type="text" id="rel-inc-rural-4" style="${inputStyle} flex:1;" value="${row.rural_fire_4 || ''}">
+                  <input type="text" min="0" step="any" id="rel-inc-rural-4-val" style="${inputStyle} text-align:right; width:75px;" value="${row.rural_fire_4_val || ''}">
+                  <span style="${labelStyle} width:25px;">ha</span>
+                </div>
+                <div style="display:flex; gap:8px; align-items:center;">
+                  <input type="text" id="rel-inc-rural-5" style="${inputStyle} flex:1;" value="${row.rural_fire_5 || ''}">
+                  <input type="text" min="0" step="any" id="rel-inc-rural-5-val" style="${inputStyle} text-align:right; width:75px;" value="${row.rural_fire_5_val || ''}">
+                  <span style="${labelStyle} width:25px;">ha</span>
+                </div>                 
+              </div>
+            </div>
+          </div>
+          <div style="${boxStyle}">
+            <div style="${labelStyle} color:#2b6ecb; text-align:center; margin-bottom:8px;">Desalojados</div>
+            <div style="display:flex; gap:10px; align-items:center;">
+              <label style="${labelStyle} font-size:11px;">Qtd.</label>
+              <input type="text" min="0" id="rel-displaced-qt" style="width:100px; height:25px; padding:4px; border:1px solid #5bc0de; border-radius:4px; font-size:12px; text-align:center;" value="${row.displaced_qty || ''}">
+              <label style="${labelStyle} font-size:11px;">Descrição</label>
+              <input type="text" id="rel-desalojados-desc" style="${inputStyle} flex:1;" value="${row.displaced_desc || ''}">
+            </div>
+          </div>
+        </div>
+      `;
+      content.querySelectorAll('textarea').forEach(textarea => {
+        textarea.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.stopPropagation();
+          }
+        });
+      });
+    }
+    // ==============================================================================
+    // == INCIDENT COMMAND TAB ==
+    // ============================================================================== 
+    // ---- FETCH: fetchCb360ReportCommand() ----
+    async function fetchCb360ReportCommand(internalNumber) {
+      try {
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const url = `${SUPABASE_URL}/rest/v1/cb360_report_command?internal_number=eq.${internalNumber}&corp_oper_nr=eq.${currentCorpOperNr}&select=*&order=id.asc`;
+        const response = await supaFetch(url, { method: 'GET' });
+        return response.ok ? await response.json() : [];
+      } catch (err) {
+        console.error('Erro fetchCb360ReportCommand:', err);
+        return [];
+      }
+    }
+    // ---- RENDER: renderCb360ReportComandTab() ----
+    function renderCb360ReportComandTab(content) {
+      const boxStyle = 'border:1px solid #ccc; border-radius:4px; padding:12px; background:#fff; margin-bottom:15px;';
+      const tableStyle = 'width:100%; border-collapse:collapse; font-size:11px; color:#333;';
+      const thCenterStyle = 'background:#e0e0e0; color:#333; font-weight:600; padding:6px 8px; border:1px solid #ccc; text-align:center;';
+      const btnNewStyle = 'background:#f0f0f0; border:1px solid #ccc; border-radius:3px; padding:2px 8px; font-size:11px; cursor:pointer; color:#2b6ecb; font-weight:600;';
+      content.innerHTML = `
+        <div style="display:flex; flex-direction:column; gap:0px;">
+          <div style="${boxStyle}">
+            <div style="font-size:12px; font-weight:600; color:#333; text-align:center; background:#e0e0e0; padding:6px; border:1px solid #ccc; border-bottom:none;">COMANDANTE DE OPERAÇÕES DE SOCORRO (COS)</div>
+            <table style="${tableStyle}">
+              <thead>
+                <tr>
+                  <th style="${thCenterStyle} width:50px;">Num.</th>
+                  <th style="${thCenterStyle} width:250px;">Categoria/Função</th>
+                  <th style="${thCenterStyle}">Nome</th>
+                  <th style="${thCenterStyle} width:300px;">Entidade</th>
+                  <th style="${thCenterStyle} width:75px;"><button style="${btnNewStyle}" onclick="openCb360CosModal()">+ Novo</button></th>
+                </tr>
+              </thead>
+              <tbody id="cb360-cos-tbody"></tbody>
+            </table>
+          </div>
+          <div style="${boxStyle}">
+            <div style="font-size:12px; font-weight:600; color:#333; text-align:center; background:#e0e0e0; padding:6px; border:1px solid #ccc; border-bottom:none;">Entidades Presentes no Posto de Comando Operacional (PCO)</div>
+            <table style="${tableStyle}">
+              <thead>
+                <tr>
+                  <th style="${thCenterStyle} width:250px;">Função</th>
+                  <th style="${thCenterStyle}">Nome</th>
+                  <th style="${thCenterStyle} width:75px;"><button style="${btnNewStyle}" onclick="openCb360PcoModal()">+ Novo</button></th>
+                </tr>
+              </thead>
+              <tbody id="cb360-pco-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      `;
+      renderCb360CommandRows();
+    }
+    // ---- RENDER: renderCb360CommandRows() — desenha as linhas de COS/PCO a partir de cb360ReportCommandData ----
+    function renderCb360CommandRows() {
+      const cosBody = document.getElementById('cb360-cos-tbody');
+      const pcoBody = document.getElementById('cb360-pco-tbody');
+      if (!cosBody || !pcoBody) return;
+      const cosItems = cb360ReportCommandData.filter(c => c.type === 'cos');
+      const pcoItems = cb360ReportCommandData.filter(c => c.type === 'pco');
+      cosBody.innerHTML = cosItems.length ? '' : `<tr id="cb360-cos-empty"><td colspan="5" style="padding:20px; text-align:center; color:#2b6ecb; font-size:12px; font-weight:600; border:1px solid #ccc;">Sem nenhum COS!</td></tr>`;
+      cosItems.forEach(item => cosBody.appendChild(buildCb360CosRow(item)));
+      pcoBody.innerHTML = pcoItems.length ? '' : `<tr id="cb360-pco-empty"><td colspan="3" style="padding:20px; text-align:center; color:#2b6ecb; font-size:12px; font-weight:600; border:1px solid #ccc;">Sem nenhuma Entidade Presente no PCO!</td></tr>`;
+      pcoItems.forEach(item => pcoBody.appendChild(buildCb360PcoRow(item)));
+    }
+    // ==============================================================================
+    // == COS ==
+    // ==============================================================================  
+    function buildCb360CosRow(data) {
+      const tr = document.createElement('tr');
+      tr.dataset.id = data.id;
+      tr.innerHTML = `
+        <td style="padding:5px 8px; border:1px solid #ccc; text-align:center; font-size:12.5px;">${data.num || ''}</td>
+        <td style="padding:5px 8px; border:1px solid #ccc; text-align:left; font-size:12.5px;">${data.role || ''}</td>
+        <td style="padding:5px 8px; border:1px solid #ccc; text-align:left; font-size:12.5px;">${data.name || ''}</td>
+        <td style="padding:5px 8px; border:1px solid #ccc; text-align:left; font-size:12.5px;">${data.entity || ''}</td>
+        <td style="padding:5px 8px; border:1px solid #ccc; text-align:center; font-size:12.5px;">
+          <i class="fa-solid fa-pen" style="color:#2b6ecb; cursor:pointer; margin-right:10px;" title="Editar" onclick="openCb360CosModal(${data.id})"></i>
+          <i class="fa-solid fa-trash-can" style="color:#d9534f; cursor:pointer;" title="Eliminar" onclick="deleteCb360CommandItem(${data.id}, 'cos')"></i>
+        </td>
+      `;
+      return tr;
+    }
+    function getCb360NextCosNum() {
+      const tbody = document.getElementById('cb360-cos-tbody');
+      if (!tbody) return 1;
+      const rows = tbody.querySelectorAll('tr:not(#cb360-cos-empty)');
+      let maxNum = 0;
+      rows.forEach(r => {
+        const n = parseInt(r.dataset.num, 10);
+        if (!isNaN(n) && n > maxNum) maxNum = n;
+      });
+      return maxNum + 1;
+    }
+    function checkCb360CosEmpty() {
+      const tbody = document.getElementById('cb360-cos-tbody');
+      if (!tbody) return;
+      const rows = tbody.querySelectorAll('tr:not(#cb360-cos-empty)');
+      if (rows.length === 0 && !document.getElementById('cb360-cos-empty')) {
+        const tr = document.createElement('tr');
+        tr.id = 'cb360-cos-empty';
+        tr.innerHTML = `
+          <td colspan="5" style="padding:20px; text-align:center; color:#2b6ecb; font-size:12px; font-weight:600; border:1px solid #ccc;">
+            Sem nenhum COS!
+          </td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+    function openCb360CosModal(id = null) {
+      let modalOverlay = document.getElementById('cb360-modal-overlay');
+      if (!modalOverlay) {
+        modalOverlay = document.createElement('div');
+        modalOverlay.id = 'cb360-modal-overlay';
+        modalOverlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); display:flex; justify-content:center; align-items:center; z-index:9999;';
+        document.body.appendChild(modalOverlay);
+      }
+      const isEdit = !!id;
+      const rowData = isEdit ? cb360ReportCommandData.find(c => c.id === id) : null;
+      const inputStyle = 'width:100%; height:25px; padding:4px 8px; border:1px solid #ccc; border-radius:4px; font-size:12px; box-sizing:border-box; outline:none; transition:border-color 0.2s, box-shadow 0.2s;';
+      const labelStyle = 'font-size:12px; font-weight:600; color:#333; text-align:left; padding-left:5px;';
+      const nextNum = cb360ReportCommandData.filter(c => c.type === 'cos').reduce((max, c) => Math.max(max, c.num || 0), 0) + 1;
+      const numValue = isEdit ? (rowData?.num ?? '') : nextNum;
+      const categoriaValue = isEdit ? (rowData?.role ?? '') : '';
+      const nomeValue = isEdit ? (rowData?.name ?? '') : '';
+      const entidadeValue = isEdit ? (rowData?.entity ?? '') : '';
+      modalOverlay.innerHTML = `
+        <div style="background:#fff; border:1px solid #ccc; border-radius:6px; width:450px; box-shadow:0 4px 15px rgba(0,0,0,0.2); overflow:hidden;">          
+          <div style="background:#d9534f; color:#fff; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600;">
+            <span><i class="fa-solid ${isEdit ? 'fa-pen' : 'fa-plus'}"></i> ${isEdit ? 'Editar Ficha de COS' : 'Nova Ficha de COS'}</span>
+            <div style="display:flex; gap:8px; cursor:pointer;">
+              <span id="cb360-close-modal" style="font-weight:bold;">✕</span>
+            </div>
+          </div>
+          <div style="padding:20px; display:flex; flex-direction:column; gap:5px;">
+            <div style="display:grid; grid-template-columns: 110px 1fr; gap:5px; align-items:center;">
+              <label style="${labelStyle}">Número</label>
+              <input type="text" id="modal-cos-num" class="cb360-modal-input" style="width:70px; height:25px; padding:4px 8px; border:1px solid #ccc; border-radius:4px; font-size:12px; box-sizing:border-box; outline:none; transition:border-color 0.2s, box-shadow 0.2s;" value="${numValue}">
+            </div>
+            <div style="display:grid; grid-template-columns: 110px 1fr; gap:5px; align-items:center;">
+              <label style="${labelStyle}">Categoria/Função</label>
+              <input type="text" id="modal-cos-category" class="cb360-modal-input" style="${inputStyle}" value="${categoriaValue}">
+            </div>
+            <div style="display:grid; grid-template-columns: 110px 1fr; gap:5px; align-items:center;">
+              <label style="${labelStyle}">Nome</label>
+              <input type="text" id="modal-cos-name" class="cb360-modal-input" style="${inputStyle}" value="${nomeValue}">
+            </div>
+            <div style="display:grid; grid-template-columns: 110px 1fr; gap:5px; align-items:center;">
+              <label style="${labelStyle}">Entidade</label>
+              <input type="text" id="modal-cos-entity" class="cb360-modal-input" style="${inputStyle}" value="${entidadeValue}">
+            </div>
+          </div>
+          <div style="background:#e5e5e5; padding:10px 20px; border-top:1px solid #ccc; display:flex; justify-content:flex-end; gap:10px;">
+            <button id="cb360-save-cos" style="background:#5cb85c; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-regular fa-floppy-disk"></i>&nbsp;&nbsp;Guardar</button>
+            <button id="cb360-cancel-cos" style="background:#f0ad4e; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-solid fa-power-off"></i>&nbsp;&nbsp;Fechar</button>
+          </div>
+        </div>
+      `;
+      const inputs = modalOverlay.querySelectorAll('.cb360-modal-input');
+      inputs.forEach(input => {
+        input.addEventListener('focus', () => {
+          input.style.borderColor = '#d9534f';
+          input.style.boxShadow = '0 0 5px rgba(217, 83, 79, 0.4)';
+        });
+        input.addEventListener('blur', () => {
+          input.style.borderColor = '#ccc';
+          input.style.boxShadow = 'none';
+        });
+      });
+      const closeModal = () => modalOverlay.remove();
+      document.getElementById('cb360-close-modal').onclick = closeModal;
+      document.getElementById('cb360-cancel-cos').onclick = closeModal;
+      document.getElementById('cb360-save-cos').onclick = async () => {
+        const payload = {
+          internal_number: cb360ReportCurrentInternalNumber,
+          corp_oper_nr: sessionStorage.getItem("currentCorpOperNr") || "0805",
+          type: 'cos',
+          num: parseInt(document.getElementById('modal-cos-num').value, 10) || null,
+          role: document.getElementById('modal-cos-category').value || null,
+          name: document.getElementById('modal-cos-name').value || null,
+          entity: document.getElementById('modal-cos-entity').value || null
+        };
+        const ok = await saveCb360CommandItem(payload, isEdit ? id : null);
+        if (ok) closeModal();
+      };
+    }
+    // ==============================================================================
+    // == PCO ==
+    // ==============================================================================
+    function buildCb360PcoRow(data) {
+      const tr = document.createElement('tr');
+      tr.dataset.id = data.id;
+      tr.innerHTML = `
+        <td style="padding:5px 8px; border:1px solid #ccc; text-align:left; font-size:12.5px;">${data.role || ''}</td>
+        <td style="padding:5px 8px; border:1px solid #ccc; text-align:left; font-size:12.5px;">${data.name || ''}</td>
+        <td style="padding:5px 8px; border:1px solid #ccc; text-align:center; font-size:12.5px;">
+          <i class="fa-solid fa-pen" style="color:#2b6ecb; cursor:pointer; margin-right:10px;" title="Editar" onclick="openCb360PcoModal(${data.id})"></i>
+          <i class="fa-solid fa-trash-can" style="color:#d9534f; cursor:pointer;" title="Eliminar" onclick="deleteCb360CommandItem(${data.id}, 'pco')"></i>
+        </td>
+      `;
+      return tr;
+    }
+    function checkCb360PcoEmpty() {
+      const tbody = document.getElementById('cb360-pco-tbody');
+      if (!tbody) return;
+      const rows = tbody.querySelectorAll('tr:not(#cb360-pco-empty)');
+      if (rows.length === 0 && !document.getElementById('cb360-pco-empty')) {
+        const tr = document.createElement('tr');
+        tr.id = 'cb360-pco-empty';
+        tr.innerHTML = `
+          <td colspan="3" style="padding:20px; text-align:center; color:#2b6ecb; font-size:12px; font-weight:600; border:1px solid #ccc;">
+            Sem nenhuma Entidade Presente no PCO!
+          </td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+    // ---- OPEN: PCO Modal ----
+    function openCb360PcoModal(id = null) {
+      let modalOverlay = document.getElementById('cb360-modal-overlay');
+      if (!modalOverlay) {
+        modalOverlay = document.createElement('div');
+        modalOverlay.id = 'cb360-modal-overlay';
+        modalOverlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); display:flex; justify-content:center; align-items:center; z-index:9999;';
+        document.body.appendChild(modalOverlay);
+      }
+      const isEdit = !!id;
+      const rowData = isEdit ? cb360ReportCommandData.find(c => c.id === id) : null;
+      const inputStyle = 'width:100%; height:25px; padding:4px 8px; border:1px solid #ccc; border-radius:4px; font-size:12px; box-sizing:border-box; outline:none; transition:border-color 0.2s, box-shadow 0.2s;';
+      const labelStyle = 'font-size:12px; font-weight:600; color:#333; text-align:left; padding-left:5px;';
+      const funcaoValue = isEdit ? (rowData?.role ?? '') : '';
+      const nomeValue = isEdit ? (rowData?.name ?? '') : '';
+      modalOverlay.innerHTML = `
+        <div style="background:#fff; border:1px solid #ccc; border-radius:6px; width:450px; box-shadow:0 4px 15px rgba(0,0,0,0.2); overflow:hidden;">          
+          <div style="background:#d9534f; color:#fff; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600;">
+            <span><i class="fa-solid ${isEdit ? 'fa-pen' : 'fa-plus'}"></i> ${isEdit ? 'Editar Ficha de Entidade Presente no PCO' : 'Nova Ficha de Entidade Presente no PCO'}</span>
+            <div style="display:flex; gap:8px; cursor:pointer;">
+              <span id="cb360-close-modal" style="font-weight:bold;">✕</span>
+            </div>
+          </div>
+          <div style="padding:20px; display:flex; flex-direction:column; gap:5px;">
+            <div style="display:grid; grid-template-columns: 60px 1fr; gap:5px; align-items:center;">
+              <label style="${labelStyle}">Função</label>
+              <input type="text" id="modal-pco-function" class="cb360-modal-input" style="${inputStyle}" value="${funcaoValue}">
+            </div>
+            <div style="display:grid; grid-template-columns: 60px 1fr; gap:5px; align-items:center;">
+              <label style="${labelStyle}">Nome</label>
+              <input type="text" id="modal-pco-nome" class="cb360-modal-input" style="${inputStyle}" value="${nomeValue}">
+            </div>
+          </div>
+          <div style="background:#e5e5e5; padding:10px 20px; border-top:1px solid #ccc; display:flex; justify-content:flex-end; gap:10px;">
+            <button id="cb360-save-pco" style="background:#5cb85c; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-regular fa-floppy-disk"></i>&nbsp;&nbsp;Guardar</button>
+            <button id="cb360-cancel-pco" style="background:#f0ad4e; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-solid fa-power-off"></i>&nbsp;&nbsp;Fechar</button>
+          </div>
+        </div>
+      `;
+      const inputs = modalOverlay.querySelectorAll('.cb360-modal-input');
+      inputs.forEach(input => {
+        input.addEventListener('focus', () => {
+          input.style.borderColor = '#d9534f';
+          input.style.boxShadow = '0 0 5px rgba(217, 83, 79, 0.4)';
+        });
+        input.addEventListener('blur', () => {
+          input.style.borderColor = '#ccc';
+          input.style.boxShadow = 'none';
+        });
+      });
+      const closeModal = () => modalOverlay.remove();
+      document.getElementById('cb360-close-modal').onclick = closeModal;
+      document.getElementById('cb360-cancel-pco').onclick = closeModal;
+      document.getElementById('cb360-save-pco').onclick = async () => {
+        const payload = {
+          internal_number: cb360ReportCurrentInternalNumber,
+          corp_oper_nr: sessionStorage.getItem("currentCorpOperNr") || "0805",
+          type: 'pco',
+          role: document.getElementById('modal-pco-function').value || null,
+          name: document.getElementById('modal-pco-name').value || null
+        };
+        const ok = await saveCb360CommandItem(payload, isEdit ? id : null);
+        if (ok) closeModal();
+      };
+    }
+    // ==============================================================================
+    // == SAVE, EDIT AND DELETE COS AND PCO ==
+    // ==============================================================================
+    async function saveCb360CommandItem(payload, existingId) {
+      try {
+        let response;
+        if (existingId) {
+          response = await supaFetch(`${SUPABASE_URL}/rest/v1/cb360_report_command?id=eq.${existingId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+            body: JSON.stringify(payload)
+          });
+        } else {
+          response = await supaFetch(`${SUPABASE_URL}/rest/v1/cb360_report_command`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+            body: JSON.stringify(payload)
+          });
+        }
+        if (!response.ok) {
+          console.error('Erro ao gravar item de comando:', await response.text());
+          showPopup('popup-danger', 'Erro ao gravar.');
+          return false;
+        }
+        const data = await response.json();
+        const saved = Array.isArray(data) ? data[0] : data;
+        if (existingId) {
+          const idx = cb360ReportCommandData.findIndex(c => c.id === existingId);
+          if (idx !== -1) cb360ReportCommandData[idx] = saved;
+        } else {
+          cb360ReportCommandData.push(saved);
+        }
+        renderCb360CommandRows();
+        showPopup('popup-success', 'Guardado com sucesso!');
+        return true;
+      } catch (err) {
+        console.error('Erro saveCb360CommandItem:', err);
+        showPopup('popup-danger', 'Erro de rede ao gravar.');
+        return false;
+      }
+    }
+    async function deleteCb360CommandItem(id, type) {
+      const label = type === 'cos' ? 'este COS' : 'esta Entidade';
+      if (!confirm(`Tem a certeza que pretende eliminar ${label}?`)) return;
+      try {
+        const response = await supaFetch(`${SUPABASE_URL}/rest/v1/cb360_report_command?id=eq.${id}`, { method: 'DELETE' });
+        if (!response.ok) {
+          console.error('Erro ao eliminar item de comando:', await response.text());
+          showPopup('popup-danger', 'Erro ao eliminar.');
+          return;
+        }
+        cb360ReportCommandData = cb360ReportCommandData.filter(c => c.id !== id);
+        renderCb360CommandRows();
+        showPopup('popup-success', 'Eliminado com sucesso.');
+      } catch (err) {
+        console.error('Erro deleteCb360CommandItem:', err);
+        showPopup('popup-danger', 'Erro de rede ao eliminar.');
+      }
+    }
+    // ==============================================================================
+    // == INCIDENT MEALS PROVIDED TAB ==
+    // ==============================================================================
+    // FETCH: fetchCb360ReportMeals()
+    async function fetchCb360ReportMeals(internalNumber) {
+      try {
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const url = `${SUPABASE_URL}/rest/v1/cb360_report_meals?internal_number=eq.${internalNumber}&corp_oper_nr=eq.${currentCorpOperNr}&select=*&order=id.asc`;
+        const response = await supaFetch(url, { method: 'GET' });
+        return response.ok ? await response.json() : [];
+      } catch (err) {
+        console.error('Erro fetchCb360ReportMeals:', err);
+        return [];
+      }
+    }
+    // ---- RENDER: renderCb360ReportMealsTab() — shell da tab (SUBSTITUI a função atual) ----
+    function renderCb360ReportMealsTab(content) {
+      const boxStyle = 'border:1px solid #ccc; border-radius:4px; padding:12px; background:#fff; margin-bottom:15px;';
+      const tableStyle = 'width:100%; border-collapse:collapse; font-size:11px; color:#333;';
+      const thCenterStyle = 'background:#e0e0e0; color:#333; font-weight:600; padding:6px 8px; border:1px solid #ccc; text-align:center;';
+      const btnNewStyle = 'background:#f0f0f0; border:1px solid #ccc; border-radius:3px; padding:2px 8px; font-size:11px; cursor:pointer; color:#2b6ecb; font-weight:600;';
+      const tfCellStyle = 'padding:6px 8px; border:1px solid #ccc; text-align:center; font-weight:700; color:#2b6ecb; background:#f0f6ff;';
+      content.innerHTML = `
+        <div style="display:flex; flex-direction:column; gap:0px;">
+          <div style="${boxStyle}">
+            <table id="cb360-meals-table" style="${tableStyle}">
+              <thead>
+                <tr>
+                  <th style="${thCenterStyle} width:100px;">Dia</th>
+                  <th style="${thCenterStyle}">Pequenos Almoços</th>
+                  <th style="${thCenterStyle}">Almoços</th>
+                  <th style="${thCenterStyle}">Lanches</th>
+                  <th style="${thCenterStyle}">Jantares</th>
+                  <th style="${thCenterStyle}">Reforços</th>
+                  <th style="${thCenterStyle}">TOTAL</th>
+                  <th style="${thCenterStyle} width:75px;"><button style="${btnNewStyle}" onclick="addCb360MealsRow()">+ Novo</button></th>
+                </tr>
+              </thead>
+              <tbody id="cb360-meals-tbody"></tbody>
+              <tfoot>
+                <tr>
+                  <td style="${tfCellStyle}">Totais</td>
+                  <td style="${tfCellStyle}" id="cb360-meals-total-breakfasts">0</td>
+                  <td style="${tfCellStyle}" id="cb360-meals-total-lunches">0</td>
+                  <td style="${tfCellStyle}" id="cb360-meals-total-snacks">0</td>
+                  <td style="${tfCellStyle}" id="cb360-meals-total-dinners">0</td>
+                  <td style="${tfCellStyle}" id="cb360-meals-total-extras">0</td>
+                  <td style="${tfCellStyle}" id="cb360-meals-total-general">0</td>
+                  <td style="${tfCellStyle}"></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      `;
+      renderCb360MealsRows();
+    }
+    // ---- HELPER: updateCb360MealsGlobalTotals() — soma todas as linhas guardadas e mostra no tfoot ----
+    function updateCb360MealsGlobalTotals() {
+      const sums = cb360ReportMealsData.reduce((acc, m) => {
+        acc.breakfasts += Number(m.breakfasts) || 0;
+        acc.lunches += Number(m.lunches) || 0;
+        acc.snacks += Number(m.snacks) || 0;
+        acc.dinners += Number(m.dinners) || 0;
+        acc.extras += Number(m.extras) || 0;
+        acc.total += Number(m.total) || 0;
+        return acc;
+      }, {breakfasts: 0, lunches: 0, snacks: 0, dinners: 0, extras: 0, total: 0});
+      const setText = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+      };
+      setText('cb360-meals-total-breakfasts', sums.breakfasts);
+      setText('cb360-meals-total-lunches', sums.lunches);
+      setText('cb360-meals-total-snacks', sums.snacks);
+      setText('cb360-meals-total-dinners', sums.dinners);
+      setText('cb360-meals-total-extras', sums.extras);
+      setText('cb360-meals-total-general', sums.total);
+    }
+    // ---- RENDER: renderCb360MealsRows() — desenha as linhas guardadas a partir de cb360ReportMealsData ----
+    function renderCb360MealsRows() {
+      const tbody = document.getElementById('cb360-meals-tbody');
+      if (!tbody) return;
+      tbody.innerHTML = cb360ReportMealsData.length ? '' : `<tr id="cb360-meals-empty"><td colspan="8" style="padding:20px; text-align:center; color:#2b6ecb; font-size:12px; font-weight:600; border:1px solid #ccc;">Sem Refeições inseridas!</td></tr>`;
+      cb360ReportMealsData.forEach(item => tbody.appendChild(buildCb360MealRow(item)));
+      updateCb360MealsGlobalTotals();
+    } 
+    // ---- ADD: addCb360MealsRow() — insere linha NOVA editável diretamente na tabela ----
+    function addCb360MealsRow() {
+      const tbody = document.getElementById('cb360-meals-tbody');
+      const emptyRow = document.getElementById('cb360-meals-empty');
+      if (emptyRow) emptyRow.remove();
+      const tr = buildCb360MealEditableRow(null);
+      tbody.appendChild(tr);
+    }
+    // ---- BUILD: buildCb360MealRow() — linha em modo leitura (com lápis/lixo) ----
+    function buildCb360MealRow(data) {
+      const tr = document.createElement('tr');
+      tr.dataset.id = data.id;
+      tr.innerHTML = `
+        <td style="padding:6px; border:1px solid #ccc; text-align:center;">${data.day_label || ''}</td>
+        <td style="padding:6px; border:1px solid #ccc; text-align:center;">${data.breakfasts ?? 0}</td>
+        <td style="padding:6px; border:1px solid #ccc; text-align:center;">${data.lunches ?? 0}</td>
+        <td style="padding:6px; border:1px solid #ccc; text-align:center;">${data.snacks ?? 0}</td>
+        <td style="padding:6px; border:1px solid #ccc; text-align:center;">${data.dinners ?? 0}</td>
+        <td style="padding:6px; border:1px solid #ccc; text-align:center;">${data.extras ?? 0}</td>
+        <td style="padding:6px; border:1px solid #ccc; text-align:center; font-weight:600; background:#f9f9f9;">${data.total ?? 0}</td>
+        <td style="padding:6px; border:1px solid #ccc; text-align:center; white-space:nowrap;">
+          <i class="fa-solid fa-pen" style="font-size:13px; color:#2b6ecb; cursor:pointer; margin-right:10px;" title="Editar" onclick="editCb360MealsRow(${data.id})"></i>
+          <i class="fa-solid fa-trash-can" style="font-size:13px; color:#d9534f; cursor:pointer;" title="Eliminar" onclick="deleteCb360MealItem(${data.id})"></i>
+        </td>
+      `;
+      return tr;
+    } 
+    // ---- EDIT: editCb360MealsRow() — troca uma linha existente para modo editável ----
+    function editCb360MealsRow(id) {
+      const existing = cb360ReportMealsData.find(m => m.id === id);
+      if (!existing) return;
+      const tbody = document.getElementById('cb360-meals-tbody');
+      const oldRow = tbody.querySelector(`tr[data-id="${id}"]`);
+      const newRow = buildCb360MealEditableRow(existing);
+      if (oldRow) oldRow.replaceWith(newRow);
+    } 
+    // ---- BUILD: buildCb360MealEditableRow() — linha com inputs + guardar (💾) ----
+    function buildCb360MealEditableRow(data) {
+      const isEdit = !!data;
+      const inputStyle = 'width:100%; height:25px; padding:2px 4px; border:1px solid #ccc; border-radius:3px; font-size:11px; text-align:center; box-sizing:border-box; outline:none;';
+      const inputTotalStyle = 'width:100%; height:25px; padding:2px 4px; border:1px solid #ccc; border-radius:3px; font-size:11px; text-align:center; box-sizing:border-box; background:#f9f9f9; font-weight:600;';
+      const tdStyle = 'padding:6px; border:1px solid #ccc; text-align:center;';
+      const tr = document.createElement('tr');
+      if (isEdit) tr.dataset.id = data.id;
+      tr.innerHTML = `
+        <td style="${tdStyle}"><input type="text" class="meal-day" style="${inputStyle}" placeholder="Ex: 1" value="${isEdit ? (data.day_label || '') : ''}"></td>
+        <td style="${tdStyle}"><input type="number" min="0" value="${isEdit ? (data.breakfasts ?? 0) : 0}" class="meal-qty" style="${inputStyle}"></td>
+        <td style="${tdStyle}"><input type="number" min="0" value="${isEdit ? (data.lunches ?? 0) : 0}" class="meal-qty" style="${inputStyle}"></td>
+        <td style="${tdStyle}"><input type="number" min="0" value="${isEdit ? (data.snacks ?? 0) : 0}" class="meal-qty" style="${inputStyle}"></td>
+        <td style="${tdStyle}"><input type="number" min="0" value="${isEdit ? (data.dinners ?? 0) : 0}" class="meal-qty" style="${inputStyle}"></td>
+        <td style="${tdStyle}"><input type="number" min="0" value="${isEdit ? (data.extras ?? 0) : 0}" class="meal-qty" style="${inputStyle}"></td>
+        <td style="${tdStyle}"><input type="text" value="${isEdit ? (data.total ?? 0) : 0}" readonly class="meal-total" style="${inputTotalStyle}"></td>
+        <td style="${tdStyle}"><button class="meal-save-btn" style="background:transparent; border:none; color:#2b6ecb; cursor:pointer; font-size:13px;"><i class="fa-regular fa-floppy-disk" style="font-size:17px;"></i></button></td>
+      `;
+      const qtyInputs = tr.querySelectorAll('.meal-qty');
+      const totalInput = tr.querySelector('.meal-total');
+      const recalcTotal = () => {
+        let sum = 0;
+        qtyInputs.forEach(qi => { sum += Number(qi.value) || 0; });
+        totalInput.value = sum;
+      };
+      qtyInputs.forEach(qi => qi.addEventListener('input', recalcTotal));
+      tr.querySelector('.meal-save-btn').addEventListener('click', async () => {
+        const dayInput = tr.querySelector('.meal-day');
+        const [breakfasts, lunches, snacks, dinners, extras] = Array.from(qtyInputs).map(i => Number(i.value) || 0);
+        const payload = {internal_number: cb360ReportCurrentInternalNumber, corp_oper_nr: sessionStorage.getItem("currentCorpOperNr") || "0805", day_label: dayInput.value || null,
+                         breakfasts, lunches, snacks, dinners, extras, total: Number(totalInput.value) || 0};
+        await saveCb360MealItem(payload, isEdit ? data.id : null);
+      });
+      return tr;
+    } 
+    // ---- SAVE: saveCb360MealItem() ----
+    async function saveCb360MealItem(payload, existingId) {
+      try {
+        let response;
+        if (existingId) {
+          response = await supaFetch(`${SUPABASE_URL}/rest/v1/cb360_report_meals?id=eq.${existingId}`, {
+            method: 'PATCH',
+            headers: {'Content-Type': 'application/json', 'Prefer': 'return=representation'},
+            body: JSON.stringify(payload)
+          });
+        } else {
+          response = await supaFetch(`${SUPABASE_URL}/rest/v1/cb360_report_meals`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'Prefer': 'return=representation'},
+            body: JSON.stringify(payload)
+          });
+        }
+        if (!response.ok) {
+          console.error('Erro ao gravar refeição:', await response.text());
+          showPopup('popup-danger', 'Erro ao gravar.');
+          return false;
+        }
+        const data = await response.json();
+        const saved = Array.isArray(data) ? data[0] : data;
+        if (existingId) {
+          const idx = cb360ReportMealsData.findIndex(m => m.id === existingId);
+          if (idx !== -1) cb360ReportMealsData[idx] = saved;
+        } else {
+          cb360ReportMealsData.push(saved);
+        }
+        renderCb360MealsRows();
+        showPopup('popup-success', 'Guardado com sucesso!');
+        return true;
+      } catch (err) {
+        console.error('Erro saveCb360MealItem:', err);
+        showPopup('popup-danger', 'Erro de rede ao gravar.');
+        return false;
+      }
+    } 
+    // ---- DELETE: deleteCb360MealItem() ----
+    async function deleteCb360MealItem(id) {
+      if (!confirm('Tem a certeza que pretende eliminar esta refeição?')) return;
+      try {
+        const response = await supaFetch(`${SUPABASE_URL}/rest/v1/cb360_report_meals?id=eq.${id}`, { method: 'DELETE' });
+        if (!response.ok) {
+          console.error('Erro ao eliminar refeição:', await response.text());
+          showPopup('popup-danger', 'Erro ao eliminar.');
+          return;
+        }
+        cb360ReportMealsData = cb360ReportMealsData.filter(m => m.id !== id);
+        renderCb360MealsRows();
+        showPopup('popup-success', 'Eliminado com sucesso.');
+      } catch (err) {
+        console.error('Erro deleteCb360MealItem:', err);
+        showPopup('popup-danger', 'Erro de rede ao eliminar.');
+      }
+    }    
+    // ==============================================================================
+    // == INCIDENT OTHER MEANS TAB ==
+    // ==============================================================================
+    // ---- RENDER: renderCb360ReportOtherMeansTab() ----
+    function renderCb360ReportOtherMeansTab(content) {
+      const containerStyle = 'display:flex; gap:15px; align-items:flex-start;';
+      const sidebarStyle = 'width:200px; background:#f0f0f0; border:1px solid #ccc; border-radius:4px; overflow:hidden; display:flex; flex-direction:column;';
+      const mainContentStyle = 'flex:1; background:#fff; border:1px solid #ccc; border-radius:4px; padding:12px; min-height:300px;';      
+      const itemStyle = (active) => `
+        padding:10px 12px; font-size:11px; font-weight:600; color:${active ? '#fff' : '#333'}; 
+        background:${active ? '#6c757d' : 'transparent'}; border-bottom:1px solid #e0e0e0; 
+        cursor:pointer; display:flex; align-items:center; gap:8px; text-decoration:none;
+      `;
+      content.innerHTML = `
+        <div style="${containerStyle}">
+          <div style="${sidebarStyle}">
+            <div class="meios-sub-tab" data-sub="bombeiros" style="${itemStyle(true)}"><i class="fa-solid fa-fire-extinguisher"></i> Corpos de Bombeiros</div>
+            <div class="meios-sub-tab" data-sub="protecao" style="${itemStyle(false)}"><i class="fa-solid fa-user-secret"></i> Agentes de Proteção Civil</div>
+            <div class="meios-sub-tab" data-sub="aereos" style="${itemStyle(false)}"><i class="fa-solid fa-helicopter"></i> Meios Aéreos</div>
+            <div class="meios-sub-tab" data-sub="recursos" style="${itemStyle(false)}"><i class="fa-solid fa-suitcase"></i> Recursos Técnicos</div>
+            <div class="meios-sub-tab" data-sub="outros" style="${itemStyle(false)}"><i class="fa-solid fa-truck"></i> Outros Meios</div>
+            <div class="meios-sub-tab" data-sub="horas" style="${itemStyle(false)}"><i class="fa-solid fa-gauge"></i> Tempos de Bomba</div>
+            <div class="meios-sub-tab" data-sub="material" style="${itemStyle(false)}"><i class="fa-solid fa-bars"></i> Material Utilizado</div>
+          </div>
+          <div id="meios-sub-content" style="${mainContentStyle}">
+            <!-- Renderiza por defeito o primeiro submenu -->
+          </div>
+        </div>
+      `;
+      // Eventos de clique para os submenus da sidebar
+      const subTabs = content.querySelectorAll('.meios-sub-tab');
+      subTabs.forEach(tab => {
+        tab.onclick = () => {
+          subTabs.forEach(t => {
+            t.style.background = 'transparent';
+            t.style.color = '#333';
+          });
+          tab.style.background = '#6c757d';
+          tab.style.color = '#fff';
+          const subType = tab.dataset.sub;
+          cb360ReportMeiosCurrentSubType = subType;
+          renderCb360OtherMeansSubContent(subType, document.getElementById('meios-sub-content'));          
+        };
+      });
+      cb360ReportMeiosCurrentSubType = 'bombeiros';
+      renderCb360OtherMeansSubContent('bombeiros', document.getElementById('meios-sub-content'));
+    }
+    // ---- RENDER: Atualização do renderCb360OtherMeansSubContent para Material Utilizado ----
+    function renderCb360OtherMeansSubContent(subType, container) {
+      const tableStyle = 'width:100%; border-collapse:collapse; font-size:11px; color:#333;';
+      const thStyle = 'background:#e0e0e0; color:#333; font-weight:600; padding:6px 6px; border:1px solid #ccc; text-align:center;';
+      const thRightStyle = 'background:#e0e0e0; color:#333; font-weight:600; padding:6px 6px; border:1px solid #ccc; text-align:center;';
+      const btnNewStyle = 'background:#f0f0f0; border:1px solid #ccc; border-radius:3px; padding:2px 8px; font-size:11px; cursor:pointer; color:#2b6ecb; font-weight:600;';
+      const inputStyle = 'width:50px; height:20px; padding:2px 4px; border:1px solid #ccc; border-radius:3px; font-size:11px; text-align:center; outline:none;';
+      const tfCellStyle = 'padding:6px 8px; border:1px solid #ccc; text-align:center; font-weight:700; color:#2b6ecb; background:#f0f6ff;';
+      if (subType === 'bombeiros') {
+        const rowsHtml = cb360ReportMeansFirefightersData.length ? cb360ReportMeansFirefightersData.map(item => `
+          <tr>
+            <td style="padding:6px; border:1px solid #ccc; text-align:left;">${item.name || ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center;">${item.num_firefighters || ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center;">${item.vehicle_id || ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center;">${item.vehicle_registration || ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center;">${item.diesel_liters || ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center;">${item.petrol_liters || ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center;">${item.mix_liters || ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center;">${item.adblue_liters || ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:left;" title="${item.observations || ''}">${item.observations || ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center; white-space:nowrap;">
+              <i class="fa-solid fa-pen" style="font-size:13px; color:#2b6ecb; cursor:pointer; margin-right:10px;" onclick="openCb360OtherCbsModal(${item.id})"></i>
+              <i class="fa-solid fa-trash-can" style="font-size:13px; color:#d9534f; cursor:pointer;" onclick="deleteCb360MeansFirefighter(${item.id})"></i>
+            </td>
+          </tr>`).join('') : `<tr id="cb360-bombeiros-empty"><td colspan="10" style="padding:25px; text-align:center; color:#2b6ecb; font-size:12px; font-weight:600; border:1px solid #ccc;">Sem nenhuma corporação interveniente!</td></tr>
+        `;
+        const totalBombeiros = cb360ReportMeansFirefightersData.reduce((acc, m) => {
+          acc.num += Number(m.num_firefighters) || 0;
+          acc.diesel += Number(m.diesel_liters) || 0;
+          acc.petrol += Number(m.petrol_liters) || 0;
+          acc.mix += Number(m.mix_liters) || 0;
+          acc.adblue += Number(m.adblue_liters) || 0;
+          return acc;
+        }, {num: 0, diesel: 0, petrol: 0, mix: 0, adblue: 0});
+        container.innerHTML = `
+          <table style="${tableStyle}">
+            <thead>
+              <tr>
+                <th style="${thStyle} width: 200px;">Nome</th>
+                <th style="${thStyle} width:40px;">Nº. Bomb.</th>
+                <th style="${thStyle} width:70px;">ID Veículo</th>
+                <th style="${thStyle} width:70px;">Matricula</th>
+                <th style="${thStyle} width:45px;">Gasóleo</th>
+                <th style="${thStyle} width:45px;">Gasolina</th>
+                <th style="${thStyle} width:45px;">Mistura</th>
+                <th style="${thStyle} width:45px;">AdBlue</th>
+                <th style="${thStyle}">Observações</th>
+                <th style="${thRightStyle} width:75px;"><button style="${btnNewStyle}" onclick="openCb360OtherCbsModal()">+ Novo</button></th>
+              </tr>
+            </thead>
+            <tbody id="cb360-bombeiros-tbody">${rowsHtml}</tbody>
+              <tfoot>
+                <tr>
+                  <td style="padding:6px 10px; border-left:1px solid #ccc; border-bottom:1px solid #ccc; text-align:right; font-weight:600; font-size:12px; background:#fafafa;">TOTAIS:</td>
+                  <td style="padding:5px 4px; border-bottom:1px solid #ccc; text-align:center; background:#fafafa;">
+                    <input type="text" readonly style="width:60px; height:22px; text-align:center; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:12px;" value="${totalBombeiros.num}">
+                  </td>
+                  <td style="padding:5px 4px; border-bottom:1px solid #ccc; text-align:center; background:#fafafa;" colspan="2">
+                    <input type="text" readonly style="width:100%; height:22px; text-align:center; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:12px;" value="${cb360ReportMeansFirefightersData.length}">
+                  </td>
+                  <td style="padding:5px 4px; border-bottom:1px solid #ccc; text-align:center; background:#fafafa;">
+                    <input type="text" readonly style="width:60px; height:22px; text-align:center; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:12px;" value="${totalBombeiros.diesel}">
+                  </td>
+                  <td style="padding:5px 4px; border-bottom:1px solid #ccc; text-align:center; background:#fafafa;">
+                    <input type="text" readonly style="width:60px; height:22px; text-align:center; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:12px;" value="${totalBombeiros.petrol}">
+                  </td>
+                  <td style="padding:5px 4px; border-bottom:1px solid #ccc; text-align:center; background:#fafafa;">
+                  <input type="text" readonly style="width:60px; height:22px; text-align:center; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:12px;" value="${totalBombeiros.mix}">
+                </td>
+                <td style="padding:5px 4px; border-bottom:1px solid #ccc; text-align:center; background:#fafafa;">
+                  <input type="text" readonly style="width:60px; height:22px; text-align:center; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:12px;" value="${totalBombeiros.adblue}">
+                </td>
+                <td style="padding:5px 8px; border-bottom:1px solid #ccc; background:#fafafa;"></td>
+                <td style="padding:5px 8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; background:#fafafa;"></td>
+              </tr>
+            </tfoot>
+          </table>
+        `;
+      } else if (subType === 'protecao') {
+        const items = cb360ReportMeansData.filter(m => m.type === 'civil_protection');
+        const rowsHtml = items.length ? items.map(m => `
+          <tr>
+            <td style="padding:6px; border:1px solid #ccc; text-align:left;">${m.entity || ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center;">${m.quantity ?? ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center;">${m.num_operational ?? ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center; white-space:nowrap;">
+              <i class="fa-solid fa-pen" style="font-size:13px; color:#2b6ecb; cursor:pointer; margin-right:10px;" onclick="openCb360ProtectionModal(${m.id})"></i>
+              <i class="fa-solid fa-trash-can" style="font-size:13px; color:#d9534f; cursor:pointer;" onclick="deleteCb360MeansItem(${m.id}, 'protecao')"></i>
+            </td>
+          </tr>`).join('') : `<tr><td colspan="4" style="padding:25px; text-align:center; color:#2b6ecb; font-size:12px; font-weight:600; border:1px solid #ccc;">Sem nenhum Agente de Proteção Civil inserido!</td></tr>`;        
+          const totalProtecao = items.reduce((acc, m) => {
+          acc.vehicles += Number(m.quantity) || 0;
+          acc.operational += Number(m.num_operational) || 0;
+          return acc;
+        }, {vehicles: 0, operational: 0});
+        container.innerHTML = `
+          <table style="${tableStyle}">
+            <thead>
+              <tr>
+                <th style="${thStyle}">Entidade</th>
+                <th style="${thStyle} width:100px;">Nº. Veículos</th>
+                <th style="${thStyle} width:100px;">Nº. Operacionais</th>
+                <th style="${thRightStyle} width:75px;"><button style="${btnNewStyle}" onclick="openCb360ProtectionModal()">+ Novo</button></th>
+              </tr>
+            </thead>
+            <tbody>${rowsHtml}</tbody>
+            <tfoot>
+              <tr>
+                <td style="padding:6px 10px; border-left:1px solid #ccc; border-bottom:1px solid #ccc; text-align:right; font-weight:600; font-size:12px; background:#fafafa;">TOTAIS:</td>
+                <td style="padding:5px 4px; border-bottom:1px solid #ccc; text-align:center; background:#fafafa;">
+                  <input type="text" readonly style="width:100%; height:22px; text-align:center; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:12px;" value="${totalProtecao.vehicles}">
+                </td>
+                <td style="padding:5px 4px; border-bottom:1px solid #ccc; text-align:center; background:#fafafa;">
+                  <input type="text" readonly style="width:100%; height:22px; text-align:center; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:12px;" value="${totalProtecao.operational}">
+                </td>
+                <td style="padding:5px 8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; background:#fafafa;"></td>
+              </tr>
+            </tfoot>
+          </table>
+        `;
+      } else if (subType === 'aereos') {
+        const items = cb360ReportMeansData.filter(m => m.type === 'aircraft');
+        const rowsHtml = items.length ? items.map(m => `
+          <tr>
+            <td style="padding:6px; border:1px solid #ccc; text-align:left;">${m.entity || ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:left;">${m.kind || ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center;">${m.num_operational ?? ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center; white-space:nowrap;">
+              <i class="fa-solid fa-pen" style="font-size:13px; color:#2b6ecb; cursor:pointer; margin-right:10px;" onclick="openCb360AircraftModal(${m.id})"></i>
+              <i class="fa-solid fa-trash-can" style="font-size:13px; color:#d9534f; cursor:pointer;" onclick="deleteCb360MeansItem(${m.id}, 'aereos')"></i>
+            </td>
+          </tr>`).join('') : `<tr><td colspan="4" style="padding:25px; text-align:center; color:#2b6ecb; font-size:12px; font-weight:600; border:1px solid #ccc;">Sem nenhum Meio Aéreo inserido!</td></tr>
+        `;        
+        const totalAereos = items.reduce((acc, m) => acc + (Number(m.num_operational) || 0), 0);
+        container.innerHTML = `
+          <table style="${tableStyle}">
+            <thead>
+              <tr>
+                <th style="${thStyle}">Entidade</th>
+                <th style="${thStyle} width:250px;">Tipo</th>
+                <th style="${thStyle} width:100px;">Nº. Operacionais</th>
+                <th style="${thRightStyle} width:75px;"><button style="${btnNewStyle}" onclick="openCb360AircraftModal()">+ Novo</button></th>
+              </tr>
+            </thead>
+            <tbody>${rowsHtml}</tbody>
+            <tfoot>
+              <tr>
+                <td style="padding:6px 10px; border-left:1px solid #ccc; border-bottom:1px solid #ccc; text-align:right; font-weight:600; font-size:12px; background:#fafafa;" colspan="2">TOTAL:</td>
+                <td style="padding:5px 4px; border-bottom:1px solid #ccc; text-align:center; background:#fafafa;">
+                  <input type="text" readonly style="width:100%; height:22px; text-align:center; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:12px;" value="${totalAereos}">
+                </td>
+                <td style="padding:5px 8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; background:#fafafa;"></td>
+              </tr>
+            </tfoot>
+          </table>
+        `;
+      } else if (subType === 'recursos') {
+        const items = cb360ReportMeansData.filter(m => m.type === 'technical_resource');
+        const rowsHtml = items.length ? items.map(m => `
+          <tr>
+            <td style="padding:6px; border:1px solid #ccc; text-align:left;">${m.entity || ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:left;">${m.kind || ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center;">${m.num_operational ?? ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center; white-space:nowrap;">
+              <i class="fa-solid fa-pen" style="font-size:13px; color:#2b6ecb; cursor:pointer; margin-right:10px;" onclick="openCb360TechnicalRecourcesModal(${m.id})"></i>
+              <i class="fa-solid fa-trash-can" style="font-size:13px; color:#d9534f; cursor:pointer;" onclick="deleteCb360MeansItem(${m.id}, 'recursos')"></i>
+            </td>
+          </tr>`).join('') : `<tr><td colspan="4" style="padding:25px; text-align:center; color:#2b6ecb; font-size:12px; font-weight:600; border:1px solid #ccc;">Sem nenhum Recurso Técnico inserido!</td></tr>
+        `;
+        const totalRecursos = items.reduce((acc, m) => acc + (Number(m.num_operational) || 0), 0);
+        container.innerHTML = `
+          <table style="${tableStyle}">
+            <thead>
+              <tr>
+                <th style="${thStyle}">Entidade</th>
+                <th style="${thStyle} width:250px;">Tipo</th>
+                <th style="${thStyle} width:100px;">Nº. Operacionais</th>
+                <th style="${thRightStyle} width:75px;"><button style="${btnNewStyle}" onclick="openCb360TechnicalRecourcesModal()">+ Novo</button></th>
+              </tr>
+            </thead>
+            <tbody>${rowsHtml}</tbody>
+            <tfoot>
+              <tr>
+                <td style="padding:6px 10px; border-left:1px solid #ccc; border-bottom:1px solid #ccc; text-align:right; font-weight:600; font-size:12px; background:#fafafa;" colspan="2">TOTAL:</td>
+                <td style="padding:5px 4px; border-bottom:1px solid #ccc; text-align:center; background:#fafafa;">
+                  <input type="text" readonly style="width:100%; height:22px; text-align:center; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:12px;" value="${totalRecursos}">
+                </td>
+                <td style="padding:5px 8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; background:#fafafa;"></td>
+              </tr>
+            </tfoot>
+          </table>
+        `;
+      } else if (subType === 'outros') {
+        const items = cb360ReportMeansData.filter(m => m.type === 'other_means');
+        const rowsHtml = items.length ? items.map(m => `
+          <tr>
+            <td style="padding:6px; border:1px solid #ccc; text-align:left;">${m.kind || ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center;">${m.quantity ?? ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center;">${m.num_operational ?? ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center; white-space:nowrap;">
+              <i class="fa-solid fa-pen" style="font-size:13px; color:#2b6ecb; cursor:pointer; margin-right:10px;" onclick="openCb360OtherMeansModal(${m.id})"></i>
+              <i class="fa-solid fa-trash-can" style="font-size:13px; color:#d9534f; cursor:pointer;" onclick="deleteCb360MeansItem(${m.id}, 'outros')"></i>
+            </td>
+          </tr>`).join('') : `<tr><td colspan="4" style="padding:25px; text-align:center; color:#2b6ecb; font-size:12px; font-weight:600; border:1px solid #ccc;">Sem Outros Meios inseridos!</td></tr>`;
+          const totalOutros = items.reduce((acc, m) => {
+          acc.quantity += Number(m.quantity) || 0;
+          acc.operational += Number(m.num_operational) || 0;
+          return acc;
+        }, {quantity: 0, operational: 0});
+        container.innerHTML = `
+          <table style="${tableStyle}">
+            <thead>
+              <tr>
+                <th style="${thStyle}">Tipo</th>
+                <th style="${thStyle} width:100px;">Quantidade</th>
+                <th style="${thStyle} width:100px;">Nº. Operacionais</th>
+                <th style="${thRightStyle} width:75px;"><button style="${btnNewStyle}" onclick="openCb360OtherMeansModal()">+ Novo</button></th>
+              </tr>
+            </thead>
+            <tbody>${rowsHtml}</tbody>
+            <tfoot>
+              <tr>
+                <td style="padding:6px 10px; border-left:1px solid #ccc; border-bottom:1px solid #ccc; text-align:right; font-weight:600; font-size:12px; background:#fafafa;">TOTAIS:</td>
+                <td style="padding:5px 4px; border-bottom:1px solid #ccc; text-align:center; background:#fafafa;">
+                  <input type="text" readonly style="width:100%; height:22px; text-align:center; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:12px;" value="${totalOutros.quantity}">
+                </td>
+                <td style="padding:5px 4px; border-bottom:1px solid #ccc; text-align:center; background:#fafafa;">
+                  <input type="text" readonly style="width:100%; height:22px; text-align:center; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:12px;" value="${totalOutros.operational}">
+                </td>
+                <td style="padding:5px 8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; background:#fafafa;"></td>
+              </tr>
+            </tfoot>
+          </table>
+        `;
+      } else if (subType === 'horas') {
+        const formatDateTime = (date, time) => {
+          if (!date && !time) return '';
+          return `${formatDatePT(date)}<br>${formatTimePT(time)}`;
+        };
+        const rowsHtml = cb360ReportVehiclesData.length ? cb360ReportVehiclesData.map(v => {
+          const chefe = cb360ReportFirefightersData.find(b => b.vehicle === v.vehicle && b.confirmed);
+          return `
+            <tr data-vehicle-id="${v.id}">
+              <td style="padding:6px; border:1px solid #ccc; text-align:center; font-weight:600;">${v.vehicle || ''}</td>
+              <td style="padding:6px; border:1px solid #ccc; text-align:center;">${chefe?.code || ''}</td>
+              <td style="padding:6px; border:1px solid #ccc; text-align:center;">${formatDateTime(v.arrivalDateScene, v.arrivalTimeScene)}</td>
+              <td style="padding:6px; border:1px solid #ccc; text-align:center;">${formatDateTime(v.departureDateScene, v.departureTimeScene)}</td>
+              <td style="padding:6px; border:1px solid #ccc; text-align:center;">${formatDateTime(v.arrivalDateCB, v.arrivalTimeCB)}</td>
+              <td style="padding:6px; border:1px solid #ccc; text-align:center;"><input type="text" class="rel-pump-hours" data-id="${v.id}" value="${padCb360PumpValue(v.pumpHours)}" oninput="updateCb360ReportPumpHoursTotal()" style="${inputStyle}"></td>
+              <td style="padding:6px; border:1px solid #ccc; text-align:center;"><input type="text" class="rel-pump-minutes" data-id="${v.id}" value="${padCb360PumpValue(v.pumpMinutes)}" oninput="updateCb360ReportPumpHoursTotal()" style="${inputStyle}"></td>
+              <td style="padding:6px; border:1px solid #ccc; text-align:center;">
+                <button type="button" class="rel-pump-save" data-id="${v.id}" style="background:transparent; border:none; color:#2b6ecb; cursor:pointer; font-size:13px; padding:0;"><i class="fa-regular fa-floppy-disk" style="font-size:17px;"></i></button>
+              </td>              
+            </tr>`;
+          }).join('') : `<tr><td colspan="8" style="padding:20px; text-align:center; color:#2b6ecb; font-size:12px; font-weight:600; border:1px solid #ccc;">Nenhuma viatura associada.</td></tr>`;
+          container.innerHTML = `
+          <div style="display:flex; flex-direction:column; height:100%; justify-content:space-between;">
+            <table style="${tableStyle}">
+              <thead>
+                <tr>
+                  <th style="${thStyle} width:90px;">Viatura</th>
+                  <th style="${thStyle} width:80px;">Chefe Viatura</th>
+                  <th style="${thStyle} width:120px;">Chegada ao T.O.</th>
+                  <th style="${thStyle} width:120px;">Saída ao T.O.</th>
+                  <th style="${thStyle} width:120px;">Chegada ao C.B.</th>
+                  <th style="${thStyle} width:60px;">Horas</th>
+                  <th style="${thStyle} width:60px;">Minutos</th>
+                  <th style="${thRightStyle} width:40px;"></th>
+                </tr>
+              </thead>
+              <tbody id="cb360-pump-hours-tbody">${rowsHtml}</tbody>
+            </table>            
+            <div style="display:flex; justify-content:flex-end; align-items:center; padding:8px 0; font-size:11px; font-weight:600; color:#333; gap:8px;">
+              <span>Total:</span>
+              <input type="text" id="cb360-pump-hours-total" readonly style="width:200px; text-align:center; height:20px; padding:2px 4px; border:1px solid #ccc; border-radius:3px; background:#f9f9f9; outline:none;" value="">
+            </div>
+          </div>
+        `;
+        container.querySelectorAll('.rel-pump-save').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const id = btn.dataset.id;
+            const row = btn.closest('tr');
+            const hoursInput = row.querySelector('.rel-pump-hours');
+            const minutesInput = row.querySelector('.rel-pump-minutes');
+            const item = cb360ReportVehiclesData.find(v => v.id === id);
+            if (!item) return;
+            const ok = await saveCb360VehiclePumpTime(id, hoursInput.value, minutesInput.value);
+            if (ok) {
+              item.pumpHours = hoursInput.value;
+              item.pumpMinutes = minutesInput.value;
+              updateCb360ReportPumpHoursTotal();
+            }
+          });
+        });
+        updateCb360ReportPumpHoursTotal();
+      } else if (subType === 'material') {
+        const rowsHtml = cb360ReportUsedMaterialData.length ? cb360ReportUsedMaterialData.map(item => `
+          <tr>
+            <td style="padding:6px 10px; border:1px solid #ccc; font-size:12px;">${item.material || ''}</td>
+            <td style="padding:6px 10px; border:1px solid #ccc; text-align:center; font-size:12px; width:120px;">${item.quantity || 0}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center; white-space:nowrap;">
+              <i class="fa-solid fa-pen" style="font-size:13px; color:#2b6ecb; cursor:pointer; margin-right:10px;" onclick="openCb360UsedMaterialModal(${item.id})"></i>              
+              <i class="fa-solid fa-trash-can" style="font-size:13px; color:#d9534f; cursor:pointer;" onclick="deleteCb360MeansItem(${item.id}, 'recursos')"></i>
+            </td>
+          </tr>
+        `).join('') : `
+          <tr>
+            <td colspan="3" style="padding:25px; text-align:center; color:#2b6ecb; font-size:12px; font-weight:600; border:1px solid #ccc;">
+              Sem Material Utilizado registado!
+            </td>
+          </tr>
+        `;
+        const totalMaterial = cb360ReportUsedMaterialData.reduce((acc, item) => acc + (Number(item.quantity) || 0), 0);
+        container.innerHTML = `
+          <table style="${tableStyle}">
+            <thead>
+              <tr>
+                <th style="${thStyle}">Material</th>
+                <th style="${thStyle} width:120px; text-align:center;">Quantidade</th>
+                <th style="${thRightStyle} width:75px;"><button style="${btnNewStyle}" onclick="openCb360UsedMaterialModal()">+ Novo</button></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td style="padding:6px 10px; border-left:1px solid #ccc; border-bottom:1px solid #ccc; text-align:right; font-weight:600; font-size:12px; background:#fafafa;">TOTAL:</td>
+                <td style="padding:5px 4px; border-bottom:1px solid #ccc; text-align:center; background:#fafafa;">
+                  <input type="text" readonly style="width:100%; height:22px; text-align:center; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:12px;" value="${totalMaterial}">
+                </td>
+                <td style="padding:5px 8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; background:#fafafa;"></td>
+              </tr>
+            </tfoot>
+          </table>
+        `;
+        container.querySelectorAll('.rel-mat-delete').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const id = btn.dataset.id;
+            if (confirm('Tem a certeza que pretende eliminar este registo de material?')) {
+              const success = await deleteCb360ReportUsedMaterial(id);
+              if (success) {
+                cb360ReportUsedMaterialData = cb360ReportUsedMaterialData.filter(m => String(m.id) !== String(id));
+                renderCb360OtherMeansSubContent('material', document.getElementById('meios-sub-content'));
+              }
+            }
+          });
+        });
+      } else {
+        container.innerHTML = `<div style="padding:40px; text-align:center; color:#666; font-size:12px;">Submenu "${subType}" pronto a configurar.</div>`;
+      }
+    }
+    // ---- FETCH: fetchCb360ReportMeansFirefighters() ----
+    async function fetchCb360ReportMeansFirefighters(internalNumber) {
+      try {
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const url = `${SUPABASE_URL}/rest/v1/cb360_report_means_firefighters?internal_number=eq.${internalNumber}&corp_oper_nr=eq.${currentCorpOperNr}&select=*&order=id.asc`;
+        const response = await supaFetch(url, { method: 'GET' });
+        return response.ok ? await response.json() : [];
+      } catch (err) {
+        console.error('Erro fetchCb360ReportMeansFirefighters:', err);
+        return [];
+      }
+    }
+    // ---- FUNCTION: openCb360OtherCbsModal() ----
+    async function openCb360OtherCbsModal(id = null) {
+      let modalOverlay = document.getElementById('cb360-modal-overlay');
+      if (!modalOverlay) {
+        modalOverlay = document.createElement('div');
+        modalOverlay.id = 'cb360-modal-overlay';
+        modalOverlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); display:flex; justify-content:center; align-items:center; z-index:9999;';
+        document.body.appendChild(modalOverlay);
+      }
+      const isEdit = !!id;
+      const item = isEdit ? cb360ReportMeansFirefightersData.find(i => i.id === id) : null;
+      const inputStyle = 'width:100%; height:25px; padding:4px 8px; border:1px solid #ccc; border-radius:4px; font-size:12px; box-sizing:border-box; outline:none; transition:border-color 0.2s, box-shadow 0.2s;';
+      const labelStyle = 'font-size:12px; font-weight:600; color:#333; text-align:left; white-space:nowrap; width:80px; flex-shrink:0;';
+      const unitStyle = 'font-size:11px; color:#333; white-space:nowrap;';      
+      const rowGrid = 'display:flex; gap:20px; align-items:center; width:100%;';
+      const fieldGroup = 'display:flex; align-items:center; gap:10px; flex:1; min-width:0;';
+      const fieldLabel = 'font-size:12px; font-weight:600; color:#333; text-align:left; white-space:nowrap; width:80px; flex-shrink:0;';      
+      const textareaStyle = 'width:100%; height:auto; min-height:75px; padding:6px 8px; border:1px solid #ccc; border-radius:4px; font-size:12px; box-sizing:border-box; outline:none; resize:vertical; transition:border-color 0.2s, box-shadow 0.2s;';
+      // Helper para gerar o markup de um combobox pesquisável, no mesmo padrão dos restantes do ficheiro
+      const searchComboField = (mainId) => `
+        <div style="position:relative; flex:1;">
+          <input type="text" id="${mainId}-input" placeholder="Pesquisar..." autocomplete="off" class="cb360-modal-input" readonly style="${inputStyle} cursor:pointer; padding-right:24px;"><i id="${mainId}-chevron" class="fa fa-chevron-down" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); font-size:10px; color:#000; pointer-events:none; transition:transform 0.15s;"></i>
+          <div id="${mainId}-dropdown" style="display:none; flex-direction:column; position:absolute; top:100%; left:0; right:0; z-index:50; background:#fff; border:1px solid #ccc; border-top:none; border-radius:0 0 4px 4px; max-height:220px; box-shadow:0 4px 8px rgba(0,0,0,0.12);">
+            <input type="text" id="${mainId}-search" placeholder="Pesquisar..." autocomplete="off" class="cb360-modal-input" style="margin:6px; padding:6px 8px; border:1px solid #2b6ecb; border-radius:4px; font-size:12.5px; outline:none;">
+            <div id="${mainId}-list" style="overflow-y:auto; max-height:160px;"></div>
+          </div>
+        </div>
+      `;
+      modalOverlay.innerHTML = `
+        <div style="background:#fff; border:1px solid #ccc; border-radius:6px; width:560px; box-shadow:0 4px 15px rgba(0,0,0,0.2); overflow:hidden;">
+          <div style="background:#d9534f; color:#fff; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600;">
+            <span><i class="fa-solid ${isEdit ? 'fa-pen' : 'fa-plus'}"></i> ${isEdit ? 'Editar' : 'Nova'} Ficha de Corpo de Bombeiros Interveniente</span>
+            <div style="display:flex; gap:8px; cursor:pointer;">
+              <span id="cb360-close-modal" style="font-weight:bold;">✕</span>
+            </div>
+          </div>
+          <div style="padding:15px 20px; display:flex; flex-direction:column; gap:5px; background:#fff;">
+            <div style="background:#f0f0f0; border:1px solid #e0e0e0; border-radius:4px; padding:10px; display:flex; flex-direction:column; gap:5px; margin-bottom:5px;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <label style="${labelStyle} width:110px;">Corpos Bombeiros</label>
+                ${searchComboField('modal-cb-lista')}
+              </div>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <label style="${labelStyle} width:50px;">Veículos</label>
+                ${searchComboField('modal-cb-viaturas')}
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <label style="${labelStyle}">Nome</label>
+              <input type="text" id="modal-cb-nome" class="cb360-modal-input" style="${inputStyle} flex:1;" value="${item?.name || ''}">
+            </div>
+            <div style="${rowGrid}">
+              <div style="${fieldGroup}">
+                <label style="${fieldLabel}">ID Veículo</label>
+                <input type="text" id="modal-cb-idviatura" class="cb360-modal-input" style="${inputStyle} text-align:center;" value="${item?.vehicle_id || ''}">
+              </div>
+              <div style="${fieldGroup}">
+                <label style="${fieldLabel}">Matricula</label>
+                <input type="text" id="modal-cb-matricula" class="cb360-modal-input" style="${inputStyle} text-align:center;" value="${item?.vehicle_registration || ''}">
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <label style="${labelStyle}">Nº Bombeiros</label>
+              <input type="text" id="modal-cb-numbomb" class="cb360-modal-input" style="${inputStyle} text-align:center; max-width:70px;" value="${item?.num_firefighters || ''}">
+            </div>
+            <div style="${rowGrid}">
+              <div style="${fieldGroup}">
+                <label style="${fieldLabel}">Gasóleo</label>
+                <input type="text" id="modal-cb-gasoleo" class="cb360-modal-input" style="${inputStyle} text-align:right;" value="${item?.diesel_liters || ''}">
+                <span style="${unitStyle}">€ | l</span>
+              </div>
+              <div style="${fieldGroup}">
+                <label style="${fieldLabel}">Gasolina</label>
+                <input type="text" id="modal-cb-gasolina" class="cb360-modal-input" style="${inputStyle} text-align:right;" value="${item?.petrol_liters || ''}">
+                <span style="${unitStyle}">€ | l</span>
+              </div>
+            </div>
+            <div style="${rowGrid}">
+              <div style="${fieldGroup}">
+                <label style="${fieldLabel}">Mistura</label>
+                <input type="text" id="modal-cb-mistura" class="cb360-modal-input" style="${inputStyle} text-align:right;" value="${item?.mix_liters || ''}">
+                <span style="${unitStyle}">€ | l</span>
+              </div>
+              <div style="${fieldGroup}">
+                <label style="${fieldLabel}">AdBlue</label>
+                <input type="text" id="modal-cb-adblue" class="cb360-modal-input" style="${inputStyle} text-align:right;" value="${item?.adblue_liters || ''}">
+                <span style="${unitStyle}">€ | l</span>
+              </div>
+            </div>
+            <div style="display:flex; align-items:flex-start; gap:10px;">
+              <label style="${labelStyle} padding-top:4px;">Observações</label>
+              <textarea id="modal-cb-obs" class="cb360-modal-input" style="${textareaStyle}">${item?.observations || ''}</textarea>
+            </div>
+          </div>
+          <div style="background:#e5e5e5; padding:10px 20px; border-top:1px solid #ccc; display:flex; justify-content:flex-end; gap:10px;">
+            <button id="cb360-save-cb" style="background:#5cb85c; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-regular fa-floppy-disk"></i>&nbsp;&nbsp;Guardar</button>
+            <button id="cb360-cancel-cb" style="background:#f0ad4e; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-solid fa-power-off"></i>&nbsp;&nbsp;Fechar</button>
+          </div>
+        </div>
+      `;
+      const inputNomeEl = document.getElementById('modal-cb-nome');
+      // Combobox de "Corpos Bombeiros" — ao selecionar, preenche automaticamente o campo "Nome" (mesmo comportamento do select anterior)
+      const cbsList = await fetchCb360OutOfBoundsList();
+      const corpCombo = createCb360SearchCombobox({
+        mainInputId: 'modal-cb-lista-input', dropdownId: 'modal-cb-lista-dropdown', searchInputId: 'modal-cb-lista-search', listId: 'modal-cb-lista-list', chevronId: 'modal-cb-lista-chevron',
+        list: cbsList, selectedValue: item?.corp_code ?? null,
+        onSelect: (chosen) => {
+          if (chosen && chosen.label) {
+            const parts = chosen.label.split(' - ');
+            inputNomeEl.value = parts.length > 1 ? parts.slice(1).join(' - ').trim() : chosen.label;
+          } else {
+            inputNomeEl.value = '';
+          }
+        }
+      });
+      // Combobox de "Veículos" — segue o mesmo padrão pesquisável; lista vazia por agora, tal como o campo original
+      const vehicleCombo = createCb360SearchCombobox({
+        mainInputId: 'modal-cb-viaturas-input', dropdownId: 'modal-cb-viaturas-dropdown', searchInputId: 'modal-cb-viaturas-search', listId: 'modal-cb-viaturas-list', chevronId: 'modal-cb-viaturas-chevron',
+        list: [], selectedValue: null
+      });
+      const inputs = modalOverlay.querySelectorAll('.cb360-modal-input');
+      inputs.forEach(input => {
+        input.addEventListener('focus', () => {
+          input.style.borderColor = '#d9534f';
+          input.style.boxShadow = '0 0 5px rgba(217, 83, 79, 0.4)';
+        });
+        input.addEventListener('blur', () => {
+          input.style.borderColor = '#ccc';
+          input.style.boxShadow = 'none';
+        });
+      });
+      modalOverlay.querySelectorAll('textarea').forEach(textarea => {
+        textarea.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.stopPropagation();
+          }
+        });
+      });
+      const closeModal = () => modalOverlay.remove();
+      document.getElementById('cb360-close-modal').onclick = closeModal;
+      document.getElementById('cb360-cancel-cb').onclick = closeModal;      
+      document.getElementById('cb360-save-cb').onclick = async () => {
+        const payload = {internal_number: cb360ReportCurrentInternalNumber, corp_oper_nr: sessionStorage.getItem("currentCorpOperNr") || "0805", corp_code: corpCombo?.getSelected()?.id ?? null,
+                         name: document.getElementById('modal-cb-nome').value || null, vehicle_id: document.getElementById('modal-cb-idviatura').value || null, vehicle_registration: document.getElementById('modal-cb-matricula').value || null,
+                         num_firefighters: parseInt(document.getElementById('modal-cb-numbomb').value, 10) || null, diesel_liters: parseFloat(document.getElementById('modal-cb-gasoleo').value) || null,
+                         petrol_liters: parseFloat(document.getElementById('modal-cb-gasolina').value) || null, mix_liters: parseFloat(document.getElementById('modal-cb-mistura').value) || null,
+                         adblue_liters: parseFloat(document.getElementById('modal-cb-adblue').value) || null, observations: document.getElementById('modal-cb-obs').value || null
+                        };
+        const ok = await saveCb360MeansFirefighter(payload, isEdit ? id : null);
+        if (ok) closeModal();
+      };
+    }
+    // ---- SAVE: saveCb360MeansFirefighter() ----
+    async function saveCb360MeansFirefighter(payload, existingId) {
+      try {
+        const url = existingId
+          ? `${SUPABASE_URL}/rest/v1/cb360_report_means_firefighters?id=eq.${existingId}`
+          : `${SUPABASE_URL}/rest/v1/cb360_report_means_firefighters`;
+        const response = await supaFetch(url, {
+          method: existingId ? 'PATCH' : 'POST',
+          headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) {
+          console.error('Erro ao gravar corpo de bombeiros:', await response.text());
+          showPopup('popup-danger', 'Erro ao gravar.');
+          return false;
+        }
+        const data = await response.json();
+        const saved = Array.isArray(data) ? data[0] : data;
+        if (existingId) {
+          const idx = cb360ReportMeansFirefightersData.findIndex(i => i.id === existingId);
+          if (idx !== -1) cb360ReportMeansFirefightersData[idx] = saved;
+        } else {
+          cb360ReportMeansFirefightersData.push(saved);
+        }
+        renderCb360OtherMeansSubContent('bombeiros', document.getElementById('meios-sub-content'));
+        showPopup('popup-success', 'Guardado com sucesso!');
+        return true;
+      } catch (err) {
+        console.error('Erro saveCb360MeansFirefighter:', err);
+        showPopup('popup-danger', 'Erro de rede ao gravar.');
+        return false;
+      }
+    }
+    // ---- DELETE: deleteCb360MeansFirefighter() ----
+    async function deleteCb360MeansFirefighter(id) {
+      if (!confirm('Tem a certeza que pretende eliminar este registo?')) return;
+      try {
+        const response = await supaFetch(`${SUPABASE_URL}/rest/v1/cb360_report_means_firefighters?id=eq.${id}`, { method: 'DELETE' });
+        if (!response.ok) {
+          console.error('Erro ao eliminar corpo de bombeiros:', await response.text());
+          showPopup('popup-danger', 'Erro ao eliminar.');
+          return;
+        }
+        cb360ReportMeansFirefightersData = cb360ReportMeansFirefightersData.filter(i => i.id !== id);
+        renderCb360OtherMeansSubContent('bombeiros', document.getElementById('meios-sub-content'));
+        showPopup('popup-success', 'Eliminado com sucesso.');
+      } catch (err) {
+        console.error('Erro deleteCb360MeansFirefighter:', err);
+        showPopup('popup-danger', 'Erro de rede ao eliminar.');
+      }
+    }
+    // ---- FETCH: fetchCb360ReportMeans() ----
+    async function fetchCb360ReportMeans(internalNumber) {
+      try {
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const url = `${SUPABASE_URL}/rest/v1/cb360_report_means?internal_number=eq.${internalNumber}&corp_oper_nr=eq.${currentCorpOperNr}&select=*&order=id.asc`;
+        const response = await supaFetch(url, { method: 'GET' });
+        return response.ok ? await response.json() : [];
+      } catch (err) {
+        console.error('Erro fetchCb360ReportMeans:', err);
+        return [];
+      }
+    }
+    // ---- FUNCTION: openCb360ProtectionModal() ----
+    function openCb360ProtectionModal(id = null) {
+      let modalOverlay = document.getElementById('cb360-modal-overlay');
+      if (!modalOverlay) {
+        modalOverlay = document.createElement('div');
+        modalOverlay.id = 'cb360-modal-overlay';
+        modalOverlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); display:flex; justify-content:center; align-items:center; z-index:9999;';
+        document.body.appendChild(modalOverlay);
+      }
+      const isEdit = !!id;
+      const item = isEdit ? cb360ReportMeansData.find(i => i.id === id) : null;
+      const inputStyle = 'width:100%; height:25px; padding:4px 8px; border:1px solid #ccc; border-radius:4px; font-size:12px; box-sizing:border-box; outline:none; transition:border-color 0.2s, box-shadow 0.2s;';
+      const labelStyle = 'font-size:12px; font-weight:600; color:#333; text-align:left; padding-left:5px;';
+      modalOverlay.innerHTML = `
+        <div style="background:#fff; border:1px solid #ccc; border-radius:6px; width:480px; box-shadow:0 4px 15px rgba(0,0,0,0.2); overflow:hidden;">
+          <div style="background:#d9534f; color:#fff; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600;">
+            <span><i class="fa-solid ${isEdit ? 'fa-pen' : 'fa-plus'}"></i> ${isEdit ? 'Editar' : 'Nova'} Ficha de Outros Agentes de Proteção Civil</span>
+            <div style="display:flex; gap:8px; cursor:pointer;">
+              <span id="cb360-close-modal" style="font-weight:bold;">✕</span>
+            </div>
+          </div>
+          <div style="padding:20px; display:flex; flex-direction:column; gap:5px; background:#fff;">
+            <div style="display:grid; grid-template-columns: 100px 1fr; gap:10px; align-items:center;">
+              <label style="${labelStyle}">Entidade</label>
+              <input type="text" id="modal-pc-nome" class="cb360-modal-input" style="${inputStyle}" value="${item?.entity || ''}">
+            </div>
+            <div style="display:grid; grid-template-columns: 100px 1fr 110px 1fr; gap:10px; align-items:center;">
+              <label style="${labelStyle}">Nº Veículos</label>
+              <input type="text" id="modal-pc-veiculos" class="cb360-modal-input" style="${inputStyle} text-align:center;" value="${item?.quantity ?? ''}">
+              <label style="${labelStyle} text-align:right;">Nº Operacionais</label>
+              <input type="text" id="modal-pc-operacionais" class="cb360-modal-input" style="${inputStyle} text-align:center;" value="${item?.num_operational ?? ''}">
+            </div>
+          </div>
+          <div style="background:#e5e5e5; padding:10px 20px; border-top:1px solid #ccc; display:flex; justify-content:flex-end; gap:10px;">
+            <button id="cb360-save-pc" style="background:#5cb85c; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-regular fa-floppy-disk"></i>&nbsp;&nbsp;Guardar</button>
+            <button id="cb360-cancel-pc" style="background:#f0ad4e; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-solid fa-power-off"></i>&nbsp;&nbsp;Fechar</button>
+          </div>
+        </div>
+      `;
+      const inputs = modalOverlay.querySelectorAll('.cb360-modal-input');
+      inputs.forEach(input => {
+        input.addEventListener('focus', () => {
+          input.style.borderColor = '#d9534f';
+          input.style.boxShadow = '0 0 5px rgba(217, 83, 79, 0.4)';
+        });
+        input.addEventListener('blur', () => {
+          input.style.borderColor = '#ccc';
+          input.style.boxShadow = 'none';
+        });
+      });
+      const closeModal = () => modalOverlay.remove();
+      document.getElementById('cb360-close-modal').onclick = closeModal;
+      document.getElementById('cb360-cancel-pc').onclick = closeModal;
+      document.getElementById('cb360-save-pc').onclick = async () => {
+        const payload = {
+          internal_number: cb360ReportCurrentInternalNumber,
+          corp_oper_nr: sessionStorage.getItem("currentCorpOperNr") || "0805",
+          type: 'civil_protection',
+          entity: document.getElementById('modal-pc-nome').value || null,
+          quantity: parseInt(document.getElementById('modal-pc-veiculos').value, 10) || null,
+          num_operational: parseInt(document.getElementById('modal-pc-operacionais').value, 10) || null
+        };
+        const ok = await saveCb360MeansItem(payload, isEdit ? id : null);
+        if (ok) closeModal();
+      };
+    }
+    // ---- FUNCTION: openCb360AircraftModal() ----
+    function openCb360AircraftModal(id = null) {
+      let modalOverlay = document.getElementById('cb360-modal-overlay');
+      if (!modalOverlay) {
+        modalOverlay = document.createElement('div');
+        modalOverlay.id = 'cb360-modal-overlay';
+        modalOverlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); display:flex; justify-content:center; align-items:center; z-index:9999;';
+        document.body.appendChild(modalOverlay);
+      }      
+      const isEdit = !!id;
+      const item = isEdit ? cb360ReportMeansData.find(i => i.id === id) : null;
+      const inputStyle = 'width:100%; height:25px; padding:4px 8px; border:1px solid #ccc; border-radius:4px; font-size:12px; box-sizing:border-box; outline:none; transition:border-color 0.2s, box-shadow 0.2s;';
+      const selectStyle = 'width:100%; height:25px; padding:2px 6px; border:1px solid #ccc; border-radius:4px; font-size:12px; box-sizing:border-box; outline:none; background:#fff; transition:border-color 0.2s, box-shadow 0.2s;';
+      const labelStyle = 'font-size:12px; font-weight:600; color:#333; text-align:left; padding-left:5px;';      
+      modalOverlay.innerHTML = `
+        <div style="background:#fff; border:1px solid #ccc; border-radius:6px; width:480px; box-shadow:0 4px 15px rgba(0,0,0,0.2); overflow:hidden;">
+          <div style="background:#d9534f; color:#fff; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600;">
+            <span><i class="fa-solid ${isEdit ? 'fa-pen' : 'fa-plus'}"></i> ${isEdit ? 'Editar' : 'Nova'} Ficha de Meios Aéreos</span>
+            <div style="display:flex; gap:8px; cursor:pointer;">
+              <span id="cb360-close-modal" style="font-weight:bold;">✕</span>
+            </div>
+          </div>          
+          <div style="padding:20px; display:flex; flex-direction:column; gap:5px; background:#fff;">
+            <div style="display:grid; grid-template-columns: 100px 1fr; gap:10px; align-items:center;">
+              <label style="${labelStyle}">Entidade</label>
+              <input type="text" id="modal-ma-entidade" class="cb360-modal-input" style="${inputStyle}" value="${item?.entity || ''}">
+            </div>
+            <div style="display:grid; grid-template-columns: 100px 1fr; gap:10px; align-items:center;">
+              <label style="${labelStyle}">Tipo</label>
+              <select id="modal-ma-tipo" class="cb360-modal-input" style="${selectStyle}">
+                <option value=""></option>
+                <option value="Helicóptero Bombardeiro Ligeiro" ${item?.kind === 'Helicóptero Bombardeiro Ligeiro' ? 'selected' : ''}>Helicóptero Bombardeiro Ligeiro</option>
+                <option value="Helicóptero Bombardeiro Médio" ${item?.kind === 'Helicóptero Bombardeiro Médio' ? 'selected' : ''}>Helicóptero Bombardeiro Médio</option>
+                <option value="Helicóptero Bombardeiro Pesado" ${item?.kind === 'Helicóptero Bombardeiro Pesado' ? 'selected' : ''}>Helicóptero Bombardeiro Pesado</option>
+                <option value="Avião Anfíbio Ligeiro" ${item?.kind === 'Avião Anfíbio Ligeiro' ? 'selected' : ''}>Avião Anfíbio Ligeiro</option>
+                <option value="Avião Anfíbio Médio" ${item?.kind === 'Avião Anfíbio Médio' ? 'selected' : ''}>Avião Anfíbio Médio</option>
+              </select>
+            </div>
+            <div style="display:grid; grid-template-columns: 100px 80px 1fr; gap:10px; align-items:center;">
+              <label style="${labelStyle}">Nº Operacionais</label>
+              <input type="text" id="modal-ma-operacionais" class="cb360-modal-input" style="${inputStyle} text-align:center;" value="${item?.num_operational ?? ''}">
+              <div></div>
+            </div>
+          </div>          
+          <div style="background:#e5e5e5; padding:10px 20px; border-top:1px solid #ccc; display:flex; justify-content:flex-end; gap:10px;">
+            <button id="cb360-save-ma" style="background:#5cb85c; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-regular fa-floppy-disk"></i>&nbsp;&nbsp;Guardar</button>
+            <button id="cb360-cancel-ma" style="background:#f0ad4e; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-solid fa-power-off"></i>&nbsp;&nbsp;Fechar</button>
+          </div>          
+        </div>
+      `;      
+      const inputs = modalOverlay.querySelectorAll('.cb360-modal-input');
+      inputs.forEach(input => {
+        input.addEventListener('focus', () => {
+          input.style.borderColor = '#d9534f';
+          input.style.boxShadow = '0 0 5px rgba(217, 83, 79, 0.4)';
+        });
+        input.addEventListener('blur', () => {
+          input.style.borderColor = '#ccc';
+          input.style.boxShadow = 'none';
+        });
+      });      
+      const closeModal = () => modalOverlay.remove();
+      document.getElementById('cb360-close-modal').onclick = closeModal;
+      document.getElementById('cb360-cancel-ma').onclick = closeModal;
+      document.getElementById('cb360-save-ma').onclick = async () => {
+        const payload = {
+          internal_number: cb360ReportCurrentInternalNumber,
+          corp_oper_nr: sessionStorage.getItem("currentCorpOperNr") || "0805",
+          type: 'aircraft',
+          entity: document.getElementById('modal-ma-entidade').value || null,
+          kind: document.getElementById('modal-ma-tipo').value || null,
+          num_operational: parseInt(document.getElementById('modal-ma-operacionais').value, 10) || null
+        };        
+        const ok = await saveCb360MeansItem(payload, isEdit ? id : null);
+        if (ok) closeModal();
+      };
+    }
+    // ---- FUNCTION: openCb360TechnicalRecourcesModal() ----
+    function openCb360TechnicalRecourcesModal(id = null) {
+      let modalOverlay = document.getElementById('cb360-modal-overlay');
+      if (!modalOverlay) {
+        modalOverlay = document.createElement('div');
+        modalOverlay.id = 'cb360-modal-overlay';
+        modalOverlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); display:flex; justify-content:center; align-items:center; z-index:9999;';
+        document.body.appendChild(modalOverlay);
+      }      
+      const isEdit = !!id;
+      const item = isEdit ? cb360ReportMeansData.find(i => i.id === id) : null;
+      const inputStyle = 'width:100%; height:25px; padding:4px 8px; border:1px solid #ccc; border-radius:4px; font-size:12px; box-sizing:border-box; outline:none; transition:border-color 0.2s, box-shadow 0.2s;';
+      const labelStyle = 'font-size:12px; font-weight:600; color:#333; text-align:left; padding-left:5px;';      
+      modalOverlay.innerHTML = `
+        <div style="background:#fff; border:1px solid #ccc; border-radius:6px; width:480px; box-shadow:0 4px 15px rgba(0,0,0,0.2); overflow:hidden;">
+          <div style="background:#d9534f; color:#fff; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600;">
+            <span><i class="fa-solid ${isEdit ? 'fa-pen' : 'fa-plus'}"></i> ${isEdit ? 'Editar' : 'Nova'} Ficha de Recurso Técnico</span>
+            <div style="display:flex; gap:8px; cursor:pointer;">
+              <span id="cb360-close-modal" style="font-weight:bold;">✕</span>
+            </div>
+          </div>
+          <div style="padding:20px; display:flex; flex-direction:column; gap:5px; background:#fff;">
+            <div style="display:grid; grid-template-columns: 100px 1fr; gap:10px; align-items:center;">
+              <label style="${labelStyle}">Entidade</label>
+              <input type="text" id="modal-rt-entidade" class="cb360-modal-input" style="${inputStyle}" value="${item?.entity || ''}">
+            </div>
+            <div style="display:grid; grid-template-columns: 100px 1fr; gap:10px; align-items:center;">
+              <label style="${labelStyle}">Tipo</label>
+              <input type="text" id="modal-rt-tipo" class="cb360-modal-input" style="${inputStyle}" value="${item?.kind || ''}">
+            </div>
+            <div style="display:grid; grid-template-columns: 100px 80px 1fr; gap:10px; align-items:center;">
+              <label style="${labelStyle}">Nº Operacionais</label>
+              <input type="text" id="modal-rt-operacionais" class="cb360-modal-input" style="${inputStyle} text-align:center;" value="${item?.num_operational ?? ''}">
+              <div></div>
+            </div>
+          </div>
+          <div style="background:#e5e5e5; padding:10px 20px; border-top:1px solid #ccc; display:flex; justify-content:flex-end; gap:10px;">
+            <button id="cb360-save-rt" style="background:#5cb85c; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-regular fa-floppy-disk"></i>&nbsp;&nbsp;Guardar</button>
+            <button id="cb360-cancel-rt" style="background:#f0ad4e; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-solid fa-power-off"></i>&nbsp;&nbsp;Fechar</button>
+          </div>
+        </div>
+      `;
+      const inputs = modalOverlay.querySelectorAll('.cb360-modal-input');
+      inputs.forEach(input => {
+        input.addEventListener('focus', () => {
+          input.style.borderColor = '#d9534f';
+          input.style.boxShadow = '0 0 5px rgba(217, 83, 79, 0.4)';
+        });
+        input.addEventListener('blur', () => {
+          input.style.borderColor = '#ccc';
+          input.style.boxShadow = 'none';
+        });
+      });
+      const closeModal = () => modalOverlay.remove();
+      document.getElementById('cb360-close-modal').onclick = closeModal;
+      document.getElementById('cb360-cancel-rt').onclick = closeModal;
+      document.getElementById('cb360-save-rt').onclick = async () => {
+        const payload = {
+          internal_number: cb360ReportCurrentInternalNumber,
+          corp_oper_nr: sessionStorage.getItem("currentCorpOperNr") || "0805",
+          type: 'technical_resource',
+          entity: document.getElementById('modal-rt-entidade').value || null,
+          kind: document.getElementById('modal-rt-tipo').value || null,
+          num_operational: parseInt(document.getElementById('modal-rt-operacionais').value, 10) || null
+        };        
+        const ok = await saveCb360MeansItem(payload, isEdit ? id : null);
+        if (ok) closeModal();
+      };
+    }
+    // ---- FUNCTION: openCb360OtherMeansModal() ----
+    function openCb360OtherMeansModal(id = null) {
+      let modalOverlay = document.getElementById('cb360-modal-overlay');
+      if (!modalOverlay) {
+        modalOverlay = document.createElement('div');
+        modalOverlay.id = 'cb360-modal-overlay';
+        modalOverlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); display:flex; justify-content:center; align-items:center; z-index:9999;';
+        document.body.appendChild(modalOverlay);
+      }      
+      const isEdit = !!id;
+      const item = isEdit ? cb360ReportMeansData.find(i => i.id === id) : null;
+      const inputStyle = 'width:100%; height:25px; padding:4px 8px; border:1px solid #ccc; border-radius:4px; font-size:12px; box-sizing:border-box; outline:none; transition:border-color 0.2s, box-shadow 0.2s;';
+      const labelStyle = 'font-size:12px; font-weight:600; color:#333; text-align:left; padding-left:5px;';      
+      modalOverlay.innerHTML = `
+        <div style="background:#fff; border:1px solid #ccc; border-radius:6px; width:480px; box-shadow:0 4px 15px rgba(0,0,0,0.2); overflow:hidden;">
+          <div style="background:#d9534f; color:#fff; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600;">
+            <span><i class="fa-solid ${isEdit ? 'fa-pen' : 'fa-plus'}"></i> ${isEdit ? 'Editar' : 'Nova'} Ficha de Outros Meios</span>
+            <div style="display:flex; gap:8px; cursor:pointer;">
+              <span id="cb360-close-modal" style="font-weight:bold;">✕</span>
+            </div>
+          </div>
+          <div style="padding:20px; display:flex; flex-direction:column; gap:5px; background:#fff;">
+            <div style="display:grid; grid-template-columns: 100px 1fr; gap:10px; align-items:center;">
+              <label style="${labelStyle}">Tipo</label>
+              <input type="text" id="modal-om-tipo" class="cb360-modal-input" style="${inputStyle}" value="${item?.kind || ''}">
+            </div>
+            <div style="display:grid; grid-template-columns: 100px 80px 1fr; gap:10px; align-items:center;">
+              <label style="${labelStyle}">Quantidade</label>
+              <input type="text" id="modal-om-quantidade" class="cb360-modal-input" style="${inputStyle} text-align:center;" value="${item?.quantity ?? ''}">
+              <div></div>
+            </div>
+            <div style="display:grid; grid-template-columns: 100px 80px 1fr; gap:10px; align-items:center;">
+              <label style="${labelStyle}">Nº Operacionais</label>
+              <input type="text" id="modal-om-operacionais" class="cb360-modal-input" style="${inputStyle} text-align:center;" value="${item?.num_operational ?? ''}">
+              <div></div>
+            </div>
+          </div>
+          <div style="background:#e5e5e5; padding:10px 20px; border-top:1px solid #ccc; display:flex; justify-content:flex-end; gap:10px;">
+            <button id="cb360-save-om" style="background:#5cb85c; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-regular fa-floppy-disk"></i>&nbsp;&nbsp;Guardar</button>
+            <button id="cb360-cancel-om" style="background:#f0ad4e; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-solid fa-power-off"></i>&nbsp;&nbsp;Fechar</button>
+          </div>
+        </div>
+      `;      
+      const inputs = modalOverlay.querySelectorAll('.cb360-modal-input');
+      inputs.forEach(input => {
+        input.addEventListener('focus', () => {
+          input.style.borderColor = '#d9534f';
+          input.style.boxShadow = '0 0 5px rgba(217, 83, 79, 0.4)';
+        });
+        input.addEventListener('blur', () => {
+          input.style.borderColor = '#ccc';
+          input.style.boxShadow = 'none';
+        });
+      });      
+      const closeModal = () => modalOverlay.remove();
+      document.getElementById('cb360-close-modal').onclick = closeModal;
+      document.getElementById('cb360-cancel-om').onclick = closeModal;
+      document.getElementById('cb360-save-om').onclick = async () => {
+        const payload = {
+          internal_number: cb360ReportCurrentInternalNumber,
+          corp_oper_nr: sessionStorage.getItem("currentCorpOperNr") || "0805",
+          type: 'other_means',
+          kind: document.getElementById('modal-om-tipo').value || null,
+          quantity: parseInt(document.getElementById('modal-om-quantidade').value, 10) || null,
+          num_operational: parseInt(document.getElementById('modal-om-operacionais').value, 10) || null
+        };        
+        const ok = await saveCb360MeansItem(payload, isEdit ? id : null);
+        if (ok) closeModal();
+      };
+    }
+    // ---- SAVE: saveCb360MeansItem() ----
+    async function saveCb360MeansItem(payload, existingId) {
+      try {
+        const url = existingId
+          ? `${SUPABASE_URL}/rest/v1/cb360_report_means?id=eq.${existingId}`
+          : `${SUPABASE_URL}/rest/v1/cb360_report_means`;
+        const response = await supaFetch(url, {
+          method: existingId ? 'PATCH' : 'POST',
+          headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) {
+          console.error('Erro ao gravar meio:', await response.text());
+          showPopup('popup-danger', 'Erro ao gravar.');
+          return false;
+        }
+        const data = await response.json();
+        const saved = Array.isArray(data) ? data[0] : data;
+        if (existingId) {
+          const idx = cb360ReportMeansData.findIndex(i => i.id === existingId);
+          if (idx !== -1) cb360ReportMeansData[idx] = saved;
+        } else {
+          cb360ReportMeansData.push(saved);
+        }
+        renderCb360OtherMeansSubContent(cb360ReportMeiosCurrentSubType, document.getElementById('meios-sub-content'));
+        showPopup('popup-success', 'Guardado com sucesso!');
+        return true;
+      } catch (err) {
+        console.error('Erro saveCb360MeansItem:', err);
+        showPopup('popup-danger', 'Erro de rede ao gravar.');
+        return false;
+      }
+    }
+    // ---- DELETE: deleteCb360MeansItem() ----
+    async function deleteCb360MeansItem(id) {
+      if (!confirm('Tem a certeza que pretende eliminar este registo?')) return;
+      try {
+        const response = await supaFetch(`${SUPABASE_URL}/rest/v1/cb360_report_means?id=eq.${id}`, { method: 'DELETE' });
+        if (!response.ok) {
+          console.error('Erro ao eliminar meio:', await response.text());
+          showPopup('popup-danger', 'Erro ao eliminar.');
+          return;
+        }
+        cb360ReportMeansData = cb360ReportMeansData.filter(i => i.id !== id);
+        renderCb360OtherMeansSubContent(cb360ReportMeiosCurrentSubType, document.getElementById('meios-sub-content'));
+        showPopup('popup-success', 'Eliminado com sucesso.');
+      } catch (err) {
+        console.error('Erro deleteCb360MeansItem:', err);
+        showPopup('popup-danger', 'Erro de rede ao eliminar.');
+      }
+    }
+    // ---- HELPER: updateCb360ReportPumpHoursTotal() ----
+    function updateCb360ReportPumpHoursTotal() {
+      let totalMinutes = 0;
+      const hourInputs = document.querySelectorAll('.rel-pump-hours');
+      const minInputs = document.querySelectorAll('.rel-pump-minutes');      
+      hourInputs.forEach((input, index) => {
+        const h = parseFloat(input.value) || 0;
+        const m = parseFloat(minInputs[index]?.value) || 0;
+        totalMinutes += (h * 60) + m;
+      });
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = Math.round(totalMinutes % 60);      
+      const totalInput = document.getElementById('cb360-pump-hours-total');
+      if (totalInput) {
+        const horaLabel = hours === 1 ? 'hora' : 'horas';
+        const minutoLabel = minutes === 1 ? 'minuto' : 'minutos';
+        totalInput.value = totalMinutes > 0 ? `${hours} ${horaLabel} e ${minutes} ${minutoLabel}` : '';
+      }
+    }
+    // ---- FETCH: fetchCb360ReportUsedMaterial() ----
+    async function fetchCb360ReportUsedMaterial(internalNumber) {
+      try {
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const url = `${SUPABASE_URL}/rest/v1/cb360_report_used_material?internal_number=eq.${internalNumber}&corp_oper_nr=eq.${currentCorpOperNr}&select=*&order=id.asc`;
+        const response = await supaFetch(url, { method: 'GET' });
+        return response.ok ? await response.json() : [];
+      } catch (err) {
+        console.error('Erro fetchCb360ReportUsedMaterial:', err);
+        return [];
+      }
+    }
+    // ---- FUNCTION: openCb360UsedMaterialModal() ----
+    function openCb360UsedMaterialModal(itemId = null) {
+      const existingItem = itemId ? cb360ReportUsedMaterialData.find(m => String(m.id) === String(itemId)) : null;
+      let modalOverlay = document.getElementById('cb360-modal-overlay');
+      if (!modalOverlay) {
+        modalOverlay = document.createElement('div');
+        modalOverlay.id = 'cb360-modal-overlay';
+        modalOverlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); display:flex; justify-content:center; align-items:center; z-index:9999;';
+        document.body.appendChild(modalOverlay);
+      }
+      const inputStyle = 'width:100%; height:25px; padding:4px 8px; border:1px solid #ccc; border-radius:4px; font-size:12px; box-sizing:border-box; outline:none; transition:border-color 0.2s, box-shadow 0.2s;';
+      const labelStyle = 'font-size:12px; font-weight:600; color:#333; text-align:left; padding-left:5px;';      
+      const modalTitle = existingItem ? 'Editar Ficha de Material Utilizado' : 'Nova Ficha de Material Utilizado';
+      const iconClass = existingItem ? 'fa-solid fa-pen' : 'fa-solid fa-plus';
+      modalOverlay.innerHTML = `
+        <div style="background:#fff; border:1px solid #ccc; border-radius:6px; width:480px; box-shadow:0 4px 15px rgba(0,0,0,0.2); overflow:hidden;">
+          <div style="background:#d9534f; color:#fff; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600;">
+            <span><i class="${iconClass}"></i> ${modalTitle}</span>
+            <div style="display:flex; gap:8px; cursor:pointer;">
+              <span id="cb360-close-modal" style="font-weight:bold;">✕</span>
+            </div>
+          </div>
+          <div style="padding:20px; display:flex; flex-direction:column; gap:5px; background:#fff;">
+            <div style="display:grid; grid-template-columns: 100px 1fr; gap:10px; align-items:center;">
+              <label style="${labelStyle}">Material</label>
+              <input type="text" id="modal-mat-nome" class="cb360-modal-input" style="${inputStyle}" value="${existingItem ? (existingItem.material || '') : ''}">
+            </div>
+            <div style="display:grid; grid-template-columns: 100px 80px 1fr; gap:10px; align-items:center;">
+              <label style="${labelStyle}">Quantidade</label>
+              <input type="text" id="modal-mat-quantidade" class="cb360-modal-input" style="${inputStyle} text-align:center;" value="${existingItem ? (existingItem.quantity ?? '') : ''}">
+              <div></div>
+            </div>
+          </div>
+          <div style="background:#e5e5e5; padding:10px 20px; border-top:1px solid #ccc; display:flex; justify-content:flex-end; gap:10px;">
+            <button id="cb360-save-mat" style="background:#5cb85c; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-regular fa-floppy-disk"></i>&nbsp;&nbsp;Guardar</button>
+            <button id="cb360-cancel-mat" style="background:#f0ad4e; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-solid fa-power-off"></i>&nbsp;&nbsp;Fechar</button>
+          </div>
+        </div>
+      `;
+      const inputs = modalOverlay.querySelectorAll('.cb360-modal-input');
+      inputs.forEach(input => {
+        input.addEventListener('focus', () => {
+          input.style.borderColor = '#d9534f';
+          input.style.boxShadow = '0 0 5px rgba(217, 83, 79, 0.4)';
+        });
+        input.addEventListener('blur', () => {
+          input.style.borderColor = '#ccc';
+          input.style.boxShadow = 'none';
+        });
+      });
+      const closeModal = () => modalOverlay.remove();
+      document.getElementById('cb360-close-modal').onclick = closeModal;
+      document.getElementById('cb360-cancel-mat').onclick = closeModal;      
+      document.getElementById('cb360-save-mat').onclick = async () => {
+        const materialVal = document.getElementById('modal-mat-nome').value.trim();
+        const quantityVal = document.getElementById('modal-mat-quantidade').value.trim();
+        if (!materialVal) {
+          showPopup('popup-danger', 'Por favor, insira o material.');
+          return;
+        }
+        const payload = {
+          internal_number: cb360ReportCurrentInternalNumber,
+          corp_oper_nr: sessionStorage.getItem("currentCorpOperNr") || "0805",
+          material: materialVal,
+          quantity: parseInt(quantityVal, 10) || 0
+        };
+        const saved = await saveCb360ReportUsedMaterial(payload, existingItem ? existingItem.id : null);
+        if (saved) {
+          if (existingItem) {
+            const index = cb360ReportUsedMaterialData.findIndex(m => String(m.id) === String(existingItem.id));
+            if (index !== -1) {
+              cb360ReportUsedMaterialData[index] = saved;
+            }
+          } else {
+            cb360ReportUsedMaterialData.push(saved);
+          }
+
+          closeModal();
+          renderCb360OtherMeansSubContent('material', document.getElementById('meios-sub-content'));
+          showPopup('popup-success', 'Guardado com sucesso!');
+        }
+      };
+    }
+    // ---- SAVE / UPDATE: saveCb360ReportUsedMaterial() ----
+    async function saveCb360ReportUsedMaterial(payload, id = null) {
+      try {
+        const isUpdate = !!id;
+        const url = isUpdate 
+          ? `${SUPABASE_URL}/rest/v1/cb360_report_used_material?id=eq.${id}`
+          : `${SUPABASE_URL}/rest/v1/cb360_report_used_material`;
+
+        const response = await supaFetch(url, {
+          method: isUpdate ? 'PATCH' : 'POST',
+          headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) {
+          console.error('Erro ao gravar material:', await response.text());
+          showPopup('popup-danger', 'Erro ao gravar material.');
+          return null;
+        }
+        const data = await response.json();
+        return Array.isArray(data) ? data[0] : data;
+      } catch (err) {
+        console.error('Erro saveCb360ReportUsedMaterial:', err);
+        showPopup('popup-danger', 'Erro de rede ao gravar material.');
+        return null;
+      }
+    }
+    // ---- DELETE: deleteCb360ReportUsedMaterial() ----
+    async function deleteCb360ReportUsedMaterial(id) {
+      try {
+        const url = `${SUPABASE_URL}/rest/v1/cb360_report_used_material?id=eq.${id}`;
+        const response = await supaFetch(url, { method: 'DELETE' });
+        if (!response.ok) {
+          console.error('Erro ao apagar material:', await response.text());
+          showPopup('popup-danger', 'Erro ao apagar material.');
+          return false;
+        }
+        return true;
+      } catch (err) {
+        console.error('Erro deleteCb360ReportUsedMaterial:', err);
+        showPopup('popup-danger', 'Erro de rede ao apagar material.');
+        return false;
+      }
+    }
+    // ==============================================================================
+    // == INCIDENT PARTICIPANTS TAB ==
+    // ==============================================================================
+    // ---- FETCH: fetchCb360ReportParticipants() ----
+    async function fetchCb360ReportParticipants(internalNumber) {
+      try {
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const url = `${SUPABASE_URL}/rest/v1/cb360_report_participants?internal_number=eq.${internalNumber}&corp_oper_nr=eq.${currentCorpOperNr}&select=*&order=id.asc`;
+        const response = await supaFetch(url, { method: 'GET' });
+        return response.ok ? await response.json() : [];
+      } catch (err) {
+        console.error('Erro fetchCb360ReportParticipants:', err);
+        return [];
+      }
+    }    
+    // ---- RENDER: renderCb360ReportParticipantsTab() ----
+    function renderCb360ReportParticipantsTab(content) {
+      const boxStyle = 'border:1px solid #ccc; border-radius:4px; padding:12px; background:#fff;';
+      const tableStyle = 'width:100%; border-collapse:collapse; font-size:11px; color:#333;';
+      const thCenterStyle = 'background:#e0e0e0; color:#333; font-weight:600; padding:6px 8px; border:1px solid #ccc; text-align:center;';
+      const btnNewStyle = 'background:#f0f0f0; border:1px solid #ccc; border-radius:3px; padding:2px 8px; font-size:11px; cursor:pointer; color:#2b6ecb; font-weight:600;';
+      content.innerHTML = `
+        <div style="${boxStyle}">
+          <table style="${tableStyle}">
+            <thead>
+              <tr>
+                <th style="${thCenterStyle}">Participante</th>
+                <th style="${thCenterStyle}">Nome</th>
+                <th style="${thCenterStyle}">Descrição</th>
+                <th style="${thCenterStyle} width:150px;">Telefone</th>
+                <th style="${thCenterStyle} width:75px;"><button style="${btnNewStyle}" onclick="openCb360ParticipantModal()">+ Novo</button></th>
+              </tr>
+            </thead>
+            <tbody id="cb360-participants-tbody"></tbody>
+          </table>
+        </div>
+      `;
+      renderCb360ParticipantsRows();
+    }
+    // ---- RENDER: renderCb360ParticipantsRows() ----
+    function renderCb360ParticipantsRows() {
+      const tbody = document.getElementById('cb360-participants-tbody');
+      if (!tbody) return;
+      tbody.innerHTML = cb360ReportParticipantsData.length ? cb360ReportParticipantsData.map(item => `
+        <tr>
+          <td style="padding:6px; border:1px solid #ccc; text-align:left;">${item.participant || ''}</td>
+          <td style="padding:6px; border:1px solid #ccc; text-align:left;">${item.name || ''}</td>
+          <td style="padding:6px; border:1px solid #ccc; text-align:left;">${item.description || ''}</td>
+          <td style="padding:6px; border:1px solid #ccc; text-align:center;">${item.phone || ''}</td>
+          <td style="padding:6px; border:1px solid #ccc; text-align:center; white-space:nowrap;">
+            <i class="fa-solid fa-pen" style="font-size:13px; color:#2b6ecb; cursor:pointer; margin-right:10px;" onclick="openCb360ParticipantModal(${item.id})"></i>
+            <i class="fa-solid fa-trash-can" style="font-size:13px; color:#d9534f; cursor:pointer;" onclick="deleteCb360Participant(${item.id})"></i>
+          </td>
+        </tr>`).join('') : `<tr><td colspan="5" style="padding:20px; text-align:center; color:#2b6ecb; font-size:12px; font-weight:600; border:1px solid #ccc;">Sem nenhum interveniente!</td></tr>
+      `;
+    }
+    // ---- FUNCTION: openCb360ParticipantModal() ----
+    function openCb360ParticipantModal(id = null) {
+      let modalOverlay = document.getElementById('cb360-modal-overlay');
+      if (!modalOverlay) {
+        modalOverlay = document.createElement('div');
+        modalOverlay.id = 'cb360-modal-overlay';
+        modalOverlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); display:flex; justify-content:center; align-items:center; z-index:9999;';
+        document.body.appendChild(modalOverlay);
+      }
+      const isEdit = !!id;
+      const item = isEdit ? cb360ReportParticipantsData.find(i => i.id === id) : null;
+      const inputStyle = 'width:100%; height:25px; padding:4px 8px; border:1px solid #ccc; border-radius:4px; font-size:12px; box-sizing:border-box; outline:none; transition:border-color 0.2s, box-shadow 0.2s;';
+      const selectStyle = 'width:100%; height:25px; padding:2px 6px; border:1px solid #ccc; border-radius:4px; font-size:12px; box-sizing:border-box; outline:none; background:#fff; transition:border-color 0.2s, box-shadow 0.2s;';
+      const labelStyle = 'font-size:12px; font-weight:600; color:#333; text-align:left; padding-left:5px;';
+      const textareaStyle = 'width:100%; height:auto; min-height:75px; padding:6px 8px; border:1px solid #ccc; border-radius:4px; font-size:12px; box-sizing:border-box; outline:none; resize:vertical; transition:border-color 0.2s, box-shadow 0.2s;';
+      const options = ['Proprietário', 'Arrendatário', 'Testemunha', 'Outra'];
+      modalOverlay.innerHTML = `
+        <div style="background:#fff; border:1px solid #ccc; border-radius:6px; width:480px; box-shadow:0 4px 15px rgba(0,0,0,0.2); overflow:hidden;">
+          <div style="background:#d9534f; color:#fff; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600;">
+            <span><i class="fa-solid ${isEdit ? 'fa-pen' : 'fa-plus'}"></i> ${isEdit ? 'Editar' : 'Nova'} Ficha de Interveniente</span>
+            <div style="display:flex; gap:8px; cursor:pointer;">
+              <span id="cb360-close-modal" style="font-weight:bold;">✕</span>
+            </div>
+          </div>
+          <div style="padding:20px; display:flex; flex-direction:column; gap:5px; background:#fff;">
+            <div style="display:grid; grid-template-columns: 100px 1fr; gap:10px; align-items:center;">
+              <label style="${labelStyle}">Participante</label>
+              <select id="modal-int-participante" class="cb360-modal-input" style="${selectStyle} width:150px;">
+                <option value=""></option>
+                ${options.map(opt => `<option value="${opt}" ${item?.participant === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+              </select>
+            </div>
+            <div style="display:grid; grid-template-columns: 100px 1fr; gap:10px; align-items:center;">
+              <label style="${labelStyle}">Nome</label>
+              <input type="text" id="modal-int-nome" class="cb360-modal-input" style="${inputStyle}" value="${item?.name || ''}">
+            </div>
+            <div style="display:grid; grid-template-columns: 100px 1fr; gap:10px; align-items:flex-start;">
+              <label style="${labelStyle} padding-top:4px;">Descrição</label>
+              <textarea id="modal-int-descricao" class="cb360-modal-input" style="${textareaStyle}">${item?.description || ''}</textarea>
+            </div>
+            <div style="display:grid; grid-template-columns: 100px 1fr; gap:10px; align-items:center;">
+              <label style="${labelStyle}">Morada</label>
+              <input type="text" id="modal-int-morada" class="cb360-modal-input" style="${inputStyle}" value="${item?.address || ''}">
+            </div>
+            <div style="display:grid; grid-template-columns: 100px 1fr; gap:10px; align-items:center;">
+              <label style="${labelStyle}">Telefone</label>
+              <input type="text" id="modal-int-telefone" class="cb360-modal-input" style="${inputStyle} width:150px;" value="${item?.phone || ''}">
+            </div>
+          </div>
+          <div style="background:#e5e5e5; padding:10px 20px; border-top:1px solid #ccc; display:flex; justify-content:flex-end; gap:10px;">
+            <button id="cb360-save-int" style="background:#5cb85c; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-regular fa-floppy-disk"></i>&nbsp;&nbsp;Guardar</button>
+            <button id="cb360-cancel-int" style="background:#f0ad4e; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-solid fa-power-off"></i>&nbsp;&nbsp;Fechar</button>
+          </div>
+        </div>
+      `;
+      const inputs = modalOverlay.querySelectorAll('.cb360-modal-input');
+      inputs.forEach(input => {
+        input.addEventListener('focus', () => {
+          input.style.borderColor = '#d9534f';
+          input.style.boxShadow = '0 0 5px rgba(217, 83, 79, 0.4)';
+        });
+        input.addEventListener('blur', () => {
+          input.style.borderColor = '#ccc';
+          input.style.boxShadow = 'none';
+        });
+      });
+      modalOverlay.querySelectorAll('textarea').forEach(textarea => {
+        textarea.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.stopPropagation();
+          }
+        });
+      });
+      const closeModal = () => modalOverlay.remove();
+      document.getElementById('cb360-close-modal').onclick = closeModal;
+      document.getElementById('cb360-cancel-int').onclick = closeModal;
+      document.getElementById('cb360-save-int').onclick = async () => {
+        const payload = {internal_number: cb360ReportCurrentInternalNumber, corp_oper_nr: sessionStorage.getItem("currentCorpOperNr") || "0805", participant: document.getElementById('modal-int-participante').value || null,
+                         name: document.getElementById('modal-int-nome').value || null, description: document.getElementById('modal-int-descricao').value || null, address: document.getElementById('modal-int-morada').value || null,
+                         phone: document.getElementById('modal-int-telefone').value || null
+                        };
+        const ok = await saveCb360Participant(payload, isEdit ? id : null);
+        if (ok) closeModal();
+      };
+    }
+    // ---- SAVE: saveCb360Participant() ----
+    async function saveCb360Participant(payload, existingId) {
+      try {
+        const url = existingId
+          ? `${SUPABASE_URL}/rest/v1/cb360_report_participants?id=eq.${existingId}`
+          : `${SUPABASE_URL}/rest/v1/cb360_report_participants`;
+        const response = await supaFetch(url, {
+          method: existingId ? 'PATCH' : 'POST',
+          headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) {
+          console.error('Erro ao gravar interveniente:', await response.text());
+          showPopup('popup-danger', 'Erro ao gravar.');
+          return false;
+        }
+        const data = await response.json();
+        const saved = Array.isArray(data) ? data[0] : data;
+        if (existingId) {
+          const idx = cb360ReportParticipantsData.findIndex(i => i.id === existingId);
+          if (idx !== -1) cb360ReportParticipantsData[idx] = saved;
+        } else {
+          cb360ReportParticipantsData.push(saved);
+        }
+        renderCb360ParticipantsRows();
+        showPopup('popup-success', 'Guardado com sucesso!');
+        return true;
+      } catch (err) {
+        console.error('Erro saveCb360Participant:', err);
+        showPopup('popup-danger', 'Erro de rede ao gravar.');
+        return false;
+      }
+    }
+    // ---- DELETE: deleteCb360Participant() ----
+    async function deleteCb360Participant(id) {
+      if (!confirm('Tem a certeza que pretende eliminar este interveniente?')) return;
+      try {
+        const response = await supaFetch(`${SUPABASE_URL}/rest/v1/cb360_report_participants?id=eq.${id}`, { method: 'DELETE' });
+        if (!response.ok) {
+          console.error('Erro ao eliminar interveniente:', await response.text());
+          showPopup('popup-danger', 'Erro ao eliminar.');
+          return;
+        }
+        cb360ReportParticipantsData = cb360ReportParticipantsData.filter(i => i.id !== id);
+        renderCb360ParticipantsRows();
+        showPopup('popup-success', 'Eliminado com sucesso.');
+      } catch (err) {
+        console.error('Erro deleteCb360Participant:', err);
+        showPopup('popup-danger', 'Erro de rede ao eliminar.');
+      }
+    }
+    // ==============================================================================
+    // == INCIDENT DEMAGE AND EXPENSES TAB ==
+    // ==============================================================================
+    // ---- RENDER: fetchCb360ReportExpenses() ----
+    async function fetchCb360ReportExpenses(internalNumber) {
+      try {
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const url = `${SUPABASE_URL}/rest/v1/cb360_report_expenses?internal_number=eq.${internalNumber}&corp_oper_nr=eq.${currentCorpOperNr}&select=*&order=id.asc`;
+        const response = await supaFetch(url, { method: 'GET' });
+        return response.ok ? await response.json() : [];
+      } catch (err) {
+        console.error('Erro fetchCb360ReportExpenses:', err);
+        return [];
+      }
+    }
+    // Chamado sempre que se sai da sub-tab de Danos/Despesas atual (ou antes de gravar)
+    function captureCb360ReportDamagesTab() { 
+      const obsEl = document.getElementById('damages-lost-work-obs');
+      if (obsEl) cb360ReportFormState.lost_work_obs = obsEl.value || null;
+      const dvDescEl = document.getElementById('damages-vehicles-damage-description');
+      if (dvDescEl) cb360ReportFormState.vehicle_damage_description = dvDescEl.value || null;
+      const dvConsEl = document.getElementById('damages-vehicle-damage-consequence');
+      if (dvConsEl) cb360ReportFormState.vehicle_damage_consequence = dvConsEl.value || null;
+      const deDescEl = document.getElementById('damages-equipment-damage-description');
+      if (deDescEl) cb360ReportFormState.equipment_damage_description = deDescEl.value || null;
+      const deConsEl = document.getElementById('damages-equipment-damage-consequence');
+      if (deConsEl) cb360ReportFormState.equipment_damage_consequence = deConsEl.value || null;
+    }
+    // ---- RENDER: renderCb360ReportDamagesTab() ----
+    function renderCb360ReportDamagesTab(content) {
+      const containerStyle = 'display:flex; gap:15px; align-items:flex-start;';
+      const sidebarStyle = 'width:200px; background:#f0f0f0; border:1px solid #ccc; border-radius:4px; overflow:hidden; display:flex; flex-direction:column;';
+      const mainContentStyle = 'flex:1; background:#fff; border:1px solid #ccc; border-radius:4px; padding:12px; min-height:300px;';
+      const itemStyle = (active) => `
+        padding:10px 12px; font-size:11px; font-weight:600; color:${active ? '#fff' : '#333'};
+        background:${active ? '#6c757d' : 'transparent'}; border-bottom:1px solid #e0e0e0;
+        cursor:pointer; display:flex; align-items:center; gap:8px; text-decoration:none;
+      `;
+      content.innerHTML = `
+        <div style="${containerStyle}">
+          <div style="${sidebarStyle}">
+            <div class="damages-sub-tab" data-sub="trabalho-perdido" style="${itemStyle(true)}"><i class="fa-solid fa-money-bill-wave"></i> Trabalho Perdido</div>
+            <div class="damages-sub-tab" data-sub="alimentacao" style="${itemStyle(false)}"><i class="fa-solid fa-utensils"></i> Alimentação</div>
+            <div class="damages-sub-tab" data-sub="danos-viaturas" style="${itemStyle(false)}"><i class="fa-solid fa-car-burst"></i> Danos Viaturas</div>
+            <div class="damages-sub-tab" data-sub="danos-equipamento" style="${itemStyle(false)}"><i class="fa-solid fa-toolbox"></i> Danos em Equipamento</div>
+          </div>
+          <div id="damages-sub-content" style="${mainContentStyle}"></div>
+        </div>
+      `;
+      const subTabs = content.querySelectorAll('.damages-sub-tab');
+      subTabs.forEach(tab => {
+        tab.onclick = () => {
+          captureCb360ReportDamagesTab();
+          subTabs.forEach(t => {
+            t.style.background = 'transparent';
+            t.style.color = '#333';
+          });
+          tab.style.background = '#6c757d';
+          tab.style.color = '#fff';
+          const subType = tab.dataset.sub;
+          cb360ReportDamagesCurrentSubType = subType;
+          renderCb360DamagesSubContent(subType, document.getElementById('damages-sub-content'));
+        };
+      });
+      cb360ReportDamagesCurrentSubType = 'trabalho-perdido';
+      renderCb360DamagesSubContent('trabalho-perdido', document.getElementById('damages-sub-content'));
+    }
+    // ---- RENDER: renderCb360DamagesSubContent() ----
+    function renderCb360DamagesSubContent(subType, container) {
+      const damagesRow = { ...(cb360ReportCurrentRow || {}), ...cb360ReportFormState };
+      const tableStyle = 'width:100%; border-collapse:collapse; font-size:11px; color:#333;';
+      const thStyle = 'background:#e0e0e0; color:#333; font-weight:600; padding:6px 6px; border:1px solid #ccc; text-align:center;';
+      const thRightStyle = 'background:#e0e0e0; color:#333; font-weight:600; padding:6px 6px; border:1px solid #ccc; text-align:center;';
+      const btnNewStyle = 'background:#f0f0f0; border:1px solid #ccc; border-radius:3px; padding:2px 8px; font-size:11px; cursor:pointer; color:#2b6ecb; font-weight:600;';
+      const textareaStyle = 'width:100%; height:auto; min-height:80px; padding:6px; border:1px solid #5bc0de; border-radius:4px; font-size:12px; box-sizing:border-box; resize:vertical;';
+      const labelStyle = 'font-size:12px; font-weight:600; color:#333; margin-bottom:4px; display:block;';
+      if (subType === 'trabalho-perdido') {
+        const items = cb360ReportExpensesData.filter(e => e.type === 'trabalho_perdido');
+        const rowsHtml = items.length ? items.map(e => `
+          <tr>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center;">${formatDatePT(e.expense_date) || ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:left;">${e.entity || ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center;">${e.doc_number || ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center;">${e.amount ? Number(e.amount).toLocaleString('pt-PT', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €' : ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center; white-space:nowrap;">
+              <i class="fa-solid fa-pen" style="font-size:13px; color:#2b6ecb; cursor:pointer; margin-right:10px;" onclick="openCb360ExpenseModal('trabalho_perdido', ${e.id})"></i>
+              <i class="fa-solid fa-trash-can" style="font-size:13px; color:#d9534f; cursor:pointer;" onclick="deleteCb360ExpenseItem(${e.id}, 'trabalho-perdido')"></i>
+            </td>
+          </tr>`).join('') : `<tr><td colspan="5" style="padding:25px; text-align:center; color:#2b6ecb; font-size:12px; font-weight:600; border:1px solid #ccc;">Sem nenhuma despesa!</td></tr>
+        `;
+        const total = items.reduce((acc, e) => acc + (Number(e.amount) || 0), 0);
+        container.innerHTML = `
+          <table style="${tableStyle}">
+            <thead>
+              <tr>
+                <th style="${thStyle} width:100px;">Data</th>
+                <th style="${thStyle}">Entidade</th>
+                <th style="${thStyle} width:110px;">Nº Documento</th>
+                <th style="${thStyle} width:110px;">Valor</th>
+                <th style="${thRightStyle} width:75px;"><button style="${btnNewStyle}" onclick="openCb360ExpenseModal('trabalho_perdido')">+ Novo</button></th>
+              </tr>
+            </thead>
+            <tbody>${rowsHtml}</tbody>
+            <tfoot>
+              <tr>
+                <td style="padding:6px 10px; border-left:1px solid #ccc; border-bottom:1px solid #ccc; text-align:right; font-weight:600; font-size:12px; background:#fafafa;" colspan="3">Total:</td>
+                
+                <td style="padding:5px 8px; border-bottom:1px solid #ccc; text-align:center; background:#fafafa;">
+                  <input type="text" readonly style="width:100%; height:22px; text-align:center; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:12px;" value="${total.toLocaleString('pt-PT', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €">
+                </td>
+                <td style="padding:5px 8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; background:#fafafa;"></td>
+              </tr>
+            </tfoot>
+          </table>
+          <div style="margin-top:14px;">
+            <label style="${labelStyle}">Observações</label>
+            <textarea id="damages-lost-work-obs" style="${textareaStyle}">${damagesRow.lost_work_obs || ''}</textarea>
+          </div>
+        `;
+      } else if (subType === 'alimentacao') {
+        const items = cb360ReportExpensesData.filter(e => e.type === 'alimentacao');
+        const rowsHtml = items.length ? items.map(e => `
+          <tr>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center;">${formatDatePT(e.expense_date) || ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:left;">${e.entity || ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center;">${e.invoice_number || ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center;">${e.receipt_number || ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center;">${e.declaration || ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center;">${e.amount ? Number(e.amount).toLocaleString('pt-PT', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €' : ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center; white-space:nowrap;">
+              <i class="fa-solid fa-pen" style="font-size:13px; color:#2b6ecb; cursor:pointer; margin-right:10px;" onclick="openCb360ExpenseModal('alimentacao', ${e.id})"></i>
+              <i class="fa-solid fa-trash-can" style="font-size:13px; color:#d9534f; cursor:pointer;" onclick="deleteCb360ExpenseItem(${e.id}, 'alimentacao')"></i>
+            </td>
+          </tr>`).join('') : `<tr><td colspan="7" style="padding:25px; text-align:center; color:#2b6ecb; font-size:12px; font-weight:600; border:1px solid #ccc;">Sem nenhuma despesa!</td></tr>
+        `;
+        const total = items.reduce((acc, e) => acc + (Number(e.amount) || 0), 0);
+        container.innerHTML = `
+          <table style="${tableStyle}">
+            <thead>
+              <tr>
+                <th style="${thStyle} width:100px;">Data</th>
+                <th style="${thStyle}">Entidade</th>
+                <th style="${thStyle} width:110px;">Nº Fatura</th>
+                <th style="${thStyle} width:110px;">Nº Recibo</th>
+                <th style="${thStyle} width:110px;">Declaração</th>
+                <th style="${thStyle} width:110px;">Valor</th>
+                <th style="${thRightStyle} width:75px;"><button style="${btnNewStyle}" onclick="openCb360ExpenseModal('alimentacao')">+ Novo</button></th>
+              </tr>
+            </thead>
+            <tbody>${rowsHtml}</tbody>
+            <tfoot>
+              <tr>
+                <td style="padding:6px 10px; border-left:1px solid #ccc; border-bottom:1px solid #ccc; text-align:right; font-weight:600; font-size:12px; background:#fafafa;" colspan="4">Total:</td>
+                <td style="padding:5px 8px; border-bottom:1px solid #ccc; background:#fafafa;"></td>
+                <td style="padding:5px 8px; border-bottom:1px solid #ccc; text-align:center; background:#fafafa;">
+                  <input type="text" readonly style="width:100%; height:22px; text-align:center; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:12px;" value="${total.toLocaleString('pt-PT', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €">
+                </td>
+                <td style="padding:5px 8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; background:#fafafa;"></td>
+              </tr>
+            </tfoot>
+          </table>
+        `;
+      } else if (subType === 'danos-viaturas') {
+        const items = cb360ReportExpensesData.filter(e => e.type === 'danos_viaturas');
+        const rowsHtml = items.length ? items.map(e => `
+          <tr>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center;">${cb360VehicleLabel(e.vehicle_registration) || ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:left;">${e.entity || ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center;">${e.doc_number || ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center;">${e.budget_number || ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center;">${e.invoice_number || ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center;">${e.amount ? Number(e.amount).toLocaleString('pt-PT', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €' : ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center; white-space:nowrap;">
+              <i class="fa-solid fa-pen" style="font-size:13px; color:#2b6ecb; cursor:pointer; margin-right:10px;" onclick="openCb360ExpenseModal('danos_viaturas', ${e.id})"></i>
+              <i class="fa-solid fa-trash-can" style="font-size:13px; color:#d9534f; cursor:pointer;" onclick="deleteCb360ExpenseItem(${e.id}, 'danos-viaturas')"></i>
+            </td>
+          </tr>`).join('') : `<tr><td colspan="7" style="padding:25px; text-align:center; color:#2b6ecb; font-size:12px; font-weight:600; border:1px solid #ccc;">Sem nenhuma despesa!</td></tr>
+        `;
+        const total = items.reduce((acc, e) => acc + (Number(e.amount) || 0), 0);
+        container.innerHTML = `
+          <table style="${tableStyle}">
+            <thead>
+              <tr>
+                <th style="${thStyle} width:130px;">Matrícula</th>
+                <th style="${thStyle}">Entidade</th>
+                <th style="${thStyle} width:110px;">Nº Documento</th>
+                <th style="${thStyle} width:110px;">Nº Orçamento</th>
+                <th style="${thStyle} width:110px;">Nº Fatura</th>
+                <th style="${thStyle} width:110px;">Valor</th>
+                <th style="${thRightStyle} width:75px;"><button style="${btnNewStyle}" onclick="openCb360ExpenseModal('danos_viaturas')">+ Novo</button></th>
+              </tr>
+            </thead>
+            <tbody>${rowsHtml}</tbody>
+            <tfoot>
+              <tr>
+                <td style="padding:6px 0px; border-left:1px solid #ccc; border-bottom:1px solid #ccc; text-align:right; font-weight:600; font-size:12px; background:#fafafa;" colspan="5">Total:</td>
+                <td style="padding:5px 4px; border-bottom:1px solid #ccc; text-align:center; background:#fafafa;">
+                  <input type="text" readonly style="width:100%; height:22px; text-align:center; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:12px;" value="${total.toLocaleString('pt-PT', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €">
+                </td>
+                <td style="padding:5px 8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; background:#fafafa;"></td>
+              </tr>
+            </tfoot>
+          </table>
+          <div style="display:flex; gap:14px; margin-top:14px;">
+            <div style="flex:1;">
+              <label style="${labelStyle}">Descrição Incidente</label>
+              <textarea id="damages-vehicles-damage-description" style="${textareaStyle}">${damagesRow.vehicle_damage_description || ''}</textarea>
+            </div>
+            <div style="flex:1;">
+              <label style="${labelStyle}">Consequência Incidente</label>
+              <textarea id="damages-vehicle-damage-consequence" style="${textareaStyle}">${damagesRow.vehicle_damage_consequence || ''}</textarea>
+            </div>
+          </div>
+        `;
+      } else if (subType === 'danos-equipamento') {
+        const items = cb360ReportExpensesData.filter(e => e.type === 'danos_equipamento');
+        const rowsHtml = items.length ? items.map(e => `
+          <tr>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center;">${cb360VehicleLabel(e.vehicle_registration) || ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:left;">${e.expense_kind || ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:left;">${e.entity || ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center;">${e.invoice_number || ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center;">${e.amount ? Number(e.amount).toLocaleString('pt-PT', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €' : ''}</td>
+            <td style="padding:6px; border:1px solid #ccc; text-align:center; white-space:nowrap;">
+              <i class="fa-solid fa-pen" style="font-size:13px; color:#2b6ecb; cursor:pointer; margin-right:10px;" onclick="openCb360ExpenseModal('danos_equipamento', ${e.id})"></i>
+              <i class="fa-solid fa-trash-can" style="font-size:13px; color:#d9534f; cursor:pointer;" onclick="deleteCb360ExpenseItem(${e.id}, 'danos-equipamento')"></i>
+            </td>
+          </tr>`).join('') : `<tr><td colspan="6" style="padding:25px; text-align:center; color:#2b6ecb; font-size:12px; font-weight:600; border:1px solid #ccc;">Sem nenhuma despesa!</td></tr>
+        `;
+        const total = items.reduce((acc, e) => acc + (Number(e.amount) || 0), 0);
+        container.innerHTML = `
+          <table style="${tableStyle}">
+            <thead>
+              <tr>
+                <th style="${thStyle} width:130px;">Matrícula</th>
+                <th style="${thStyle} width:250px;">Tipo Despesa</th>
+                <th style="${thStyle}">Entidade</th>
+                <th style="${thStyle} width:110px;">Nº Fatura</th>
+                <th style="${thStyle} width:110px;">Valor</th>
+                <th style="${thRightStyle} width:75px;"><button style="${btnNewStyle}" onclick="openCb360ExpenseModal('danos_equipamento')">+ Novo</button></th>
+              </tr>
+            </thead>
+            <tbody>${rowsHtml}</tbody>
+            <tfoot>
+              <tr>
+                <td style="padding:6px 10px; border-left:1px solid #ccc; border-bottom:1px solid #ccc; text-align:right; font-weight:600; font-size:12px; background:#fafafa;" colspan="3">Total:</td>
+                <td style="padding:5px 8px; border-bottom:1px solid #ccc; background:#fafafa;"></td>
+                <td style="padding:5px 8px; border-bottom:1px solid #ccc; text-align:center; background:#fafafa;">
+                  <input type="text" readonly style="width:100%; height:22px; text-align:center; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:12px;" value="${total.toLocaleString('pt-PT', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €">
+                </td>
+                <td style="padding:5px 8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; background:#fafafa;"></td>
+              </tr>
+            </tfoot>
+          </table>
+          <div style="display:flex; gap:14px; margin-top:14px;">
+            <div style="flex:1;">
+              <label style="${labelStyle}">Descrição Incidente</label>
+              <textarea id="damages-equipment-damage-description" style="${textareaStyle}">${damagesRow.equipment_damage_description || ''}</textarea>
+            </div>
+            <div style="flex:1;">
+              <label style="${labelStyle}">Consequência Incidente</label>
+              <textarea id="damages-equipment-damage-consequence" style="${textareaStyle}">${damagesRow.equipment_damage_consequence || ''}</textarea>
+            </div>
+          </div>
+        `;
+      }
+    }
+    // ---- FUNCTION: openCb360ExpenseModal() — modal genérico, comporta-se conforme o expenseType ----
+    function openCb360ExpenseModal(expenseType, id = null) {
+      if (expenseType === 'trabalho_perdido') {
+        openCb360LostWorkModal(id);
+      } else if (expenseType === 'alimentacao') {
+        openCb360MealsExpenseModal(id);
+      } else if (expenseType === 'danos_viaturas') {
+        openCb360VehicleDamageModal(id);
+      } else if (expenseType === 'danos_equipamento') {
+        openCb360EquipmentDamageModal(id);
+      }
+    }
+    // ---- FUNCTION: openCb360LostWorkModal() — Trabalho Perdido ----
+    function openCb360LostWorkModal(id = null) {
+      let modalOverlay = document.getElementById('cb360-modal-overlay');
+      if (!modalOverlay) {
+        modalOverlay = document.createElement('div');
+        modalOverlay.id = 'cb360-modal-overlay';
+        modalOverlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); display:flex; justify-content:center; align-items:center; z-index:9999;';
+        document.body.appendChild(modalOverlay);
+      }
+      const isEdit = !!id;
+      const item = isEdit ? cb360ReportExpensesData.find(e => e.id === id) : null;
+      const inputStyle = 'width:100%; height:25px; padding:4px 8px; border:1px solid #ccc; border-radius:4px; font-size:12px; box-sizing:border-box; outline:none; transition:border-color 0.2s, box-shadow 0.2s;';
+      const labelStyle = 'font-size:12px; font-weight:600; color:#333; text-align:left; padding-left:5px;';
+      const textareaStyle = 'width:100%; height:auto; min-height:75px; padding:6px 8px; border:1px solid #ccc; border-radius:4px; font-size:12px; box-sizing:border-box; outline:none; resize:vertical; transition:border-color 0.2s, box-shadow 0.2s;';
+      const now = new Date();
+      const today = toLocalISODate(now);
+      const nowTime = now.toTimeString().slice(0, 5);
+      modalOverlay.innerHTML = `
+        <div style="background:#fff; border:1px solid #ccc; border-radius:6px; width:480px; box-shadow:0 4px 15px rgba(0,0,0,0.2); overflow:hidden;">
+          <div style="background:#d9534f; color:#fff; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600;">
+            <span><i class="fa-solid ${isEdit ? 'fa-pen' : 'fa-plus'}"></i> ${isEdit ? 'Editar' : 'Nova'} Ficha de Trabalho Perdido</span>
+            <div style="display:flex; gap:8px; cursor:pointer;">
+              <span id="cb360-close-modal" style="font-weight:bold;">✕</span>
+            </div>
+          </div>
+          <div style="padding:20px; display:flex; flex-direction:column; gap:5px; background:#fff;">
+            <div style="display:grid; grid-template-columns: 70px 1fr 60px 1fr; gap:10px; align-items:center;">
+              <label style="${labelStyle}">Data</label>
+              <input type="date" id="modal-lw-data" class="cb360-modal-input" style="${inputStyle}" value="${item?.expense_date || today}">
+              <label style="${labelStyle}">Hora</label>
+              <input type="time" id="modal-lw-hora" class="cb360-modal-input" style="${inputStyle}" value="${item?.expense_time || nowTime}">
+            </div>
+            <div style="display:grid; grid-template-columns: 70px 1fr 60px 1fr; gap:10px; align-items:center;">
+              <label style="${labelStyle}">Data Fim</label>
+              <input type="date" id="modal-lw-data-fim" class="cb360-modal-input" style="${inputStyle}" value="${item?.expense_date_end || ''}">
+              <label style="${labelStyle}">Hora Fim</label>
+              <input type="time" id="modal-lw-hora-fim" class="cb360-modal-input" style="${inputStyle}" value="${item?.expense_time_end || ''}">
+            </div>
+            <div style="display:grid; grid-template-columns: 70px 1fr; gap:10px; align-items:center;">
+              <label style="${labelStyle}">Entidade</label>
+              <input type="text" id="modal-lw-entidade" class="cb360-modal-input" style="${inputStyle}" value="${item?.entity || ''}">
+            </div>
+            <div style="display:grid; grid-template-columns: 70px 1fr 60px 1fr; gap:10px; align-items:center;">
+              <label style="${labelStyle}">Nº Doc.</label>
+              <input type="text" id="modal-lw-doc" class="cb360-modal-input" style="${inputStyle}" value="${item?.doc_number || ''}">
+              <label style="${labelStyle}">Valor</label>
+              <input type="text" id="modal-lw-valor" class="cb360-modal-input" style="${inputStyle}" value="${item?.amount ?? ''}">
+            </div>
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              <label style="${labelStyle}">Justificação</label>
+              <textarea id="modal-lw-justificacao" class="cb360-modal-input" style="${textareaStyle}">${item?.justification || ''}</textarea>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              <label style="${labelStyle}">Descrição</label>
+              <textarea id="modal-lw-descricao" class="cb360-modal-input" style="${textareaStyle}">${item?.description || ''}</textarea>
+            </div>
+          </div>
+          <div style="background:#e5e5e5; padding:10px 20px; border-top:1px solid #ccc; display:flex; justify-content:flex-end; gap:10px;">
+            <button id="cb360-save-lw" style="background:#5cb85c; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-regular fa-floppy-disk"></i>&nbsp;&nbsp;Guardar</button>
+            <button id="cb360-cancel-lw" style="background:#f0ad4e; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-solid fa-power-off"></i>&nbsp;&nbsp;Fechar</button>
+          </div>
+        </div>
+      `;
+      const inputs = modalOverlay.querySelectorAll('.cb360-modal-input');
+      inputs.forEach(input => {
+        input.addEventListener('focus', () => {
+          input.style.borderColor = '#d9534f';
+          input.style.boxShadow = '0 0 5px rgba(217, 83, 79, 0.4)';
+        });
+        input.addEventListener('blur', () => {
+          input.style.borderColor = '#ccc';
+          input.style.boxShadow = 'none';
+        });
+      });
+      modalOverlay.querySelectorAll('textarea').forEach(textarea => {
+        textarea.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.stopPropagation();
+          }
+        });
+      });
+      const closeModal = () => modalOverlay.remove();
+      document.getElementById('cb360-close-modal').onclick = closeModal;
+      document.getElementById('cb360-cancel-lw').onclick = closeModal;
+      document.getElementById('cb360-save-lw').onclick = async () => {
+        const payload = {internal_number: cb360ReportCurrentInternalNumber, corp_oper_nr: sessionStorage.getItem("currentCorpOperNr") || "0805", type: 'trabalho_perdido', expense_date: document.getElementById('modal-lw-data').value || null,
+                         expense_time: document.getElementById('modal-lw-hora').value || null, expense_date_end: document.getElementById('modal-lw-data-fim').value || null, expense_time_end: document.getElementById('modal-lw-hora-fim').value || null,
+                         entity: document.getElementById('modal-lw-entidade').value || null, doc_number: document.getElementById('modal-lw-doc').value || null, amount: parseFloat(document.getElementById('modal-lw-valor').value) || null,
+                         justification: document.getElementById('modal-lw-justificacao').value || null, description: document.getElementById('modal-lw-descricao').value || null
+                        };
+        const ok = await saveCb360ExpenseItem(payload, isEdit ? id : null);
+        if (ok) closeModal();
+      };
+    }
+    // ---- FUNCTION: openCb360MealsExpenseModal() — Alimentação ----
+    function openCb360MealsExpenseModal(id = null) {
+      let modalOverlay = document.getElementById('cb360-modal-overlay');
+      if (!modalOverlay) {
+        modalOverlay = document.createElement('div');
+        modalOverlay.id = 'cb360-modal-overlay';
+        modalOverlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); display:flex; justify-content:center; align-items:center; z-index:9999;';
+        document.body.appendChild(modalOverlay);
+      }
+      const isEdit = !!id;
+      const item = isEdit ? cb360ReportExpensesData.find(e => e.id === id) : null;
+      const inputStyle = 'width:100%; height:25px; padding:4px 8px; border:1px solid #ccc; border-radius:4px; font-size:12px; box-sizing:border-box; outline:none; transition:border-color 0.2s, box-shadow 0.2s;';
+      const labelStyle = 'font-size:12px; font-weight:600; color:#333; text-align:left; padding-left:5px;';
+      const textareaStyle = 'width:100%; height:auto; min-height:75px; padding:6px 8px; border:1px solid #ccc; border-radius:4px; font-size:12px; box-sizing:border-box; outline:none; resize:vertical; transition:border-color 0.2s, box-shadow 0.2s;';
+      const now = new Date();
+      const today = toLocalISODate(now);
+      const nowTime = now.toTimeString().slice(0, 5);
+      modalOverlay.innerHTML = `
+        <div style="background:#fff; border:1px solid #ccc; border-radius:6px; width:480px; box-shadow:0 4px 15px rgba(0,0,0,0.2); overflow:hidden;">
+          <div style="background:#d9534f; color:#fff; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600;">
+            <span><i class="fa-solid ${isEdit ? 'fa-pen' : 'fa-plus'}"></i> ${isEdit ? 'Editar' : 'Nova'} Ficha de Alimentação</span>
+          <div style="display:flex; gap:8px; cursor:pointer;">
+            <span id="cb360-close-modal" style="font-weight:bold;">✕</span>
+          </div>
+        </div>
+        <div style="padding:20px; display:flex; flex-direction:column; gap:5px; background:#fff;">
+          <div style="display:grid; grid-template-columns: 70px 1fr 60px 1fr; gap:10px; align-items:center;">
+            <label style="${labelStyle}">Data</label>
+            <input type="date" id="modal-meal-data" class="cb360-modal-input" style="${inputStyle}" value="${item?.expense_date || today}">
+            <label style="${labelStyle}">Hora</label>
+            <input type="time" id="modal-meal-hora" class="cb360-modal-input" style="${inputStyle}" value="${item?.expense_time || nowTime}">
+          </div>
+          <div style="display:grid; grid-template-columns: 70px 1fr; gap:10px; align-items:center;">
+            <label style="${labelStyle}">Entidade</label>
+            <input type="text" id="modal-meal-entidade" class="cb360-modal-input" style="${inputStyle}" value="${item?.entity || ''}">
+          </div>
+          <div style="display:grid; grid-template-columns: 70px 1fr 60px 1fr; gap:10px; align-items:center;">
+            <label style="${labelStyle}">Nº Fat.</label>
+            <input type="text" id="modal-meal-fat" class="cb360-modal-input" style="${inputStyle}" value="${item?.invoice_number || ''}">
+            <label style="${labelStyle}">Nº Rec.</label>
+            <input type="text" id="modal-meal-rec" class="cb360-modal-input" style="${inputStyle}" value="${item?.receipt_number || ''}">
+          </div>
+          <div style="display:grid; grid-template-columns: 70px 1fr 60px 1fr; gap:10px; align-items:center;">
+            <label style="${labelStyle}">Decl.</label>
+            <input type="text" id="modal-meal-decl" class="cb360-modal-input" style="${inputStyle}" value="${item?.declaration || ''}">
+            <label style="${labelStyle}">Valor</label>
+            <input type="text" id="modal-meal-valor" class="cb360-modal-input" style="${inputStyle}" value="${item?.amount ?? ''}">
+          </div>
+          <div style="display:flex; flex-direction:column; gap:4px;">
+            <label style="${labelStyle}">Descrição</label>
+            <textarea id="modal-meal-descricao" class="cb360-modal-input" style="${textareaStyle}">${item?.description || ''}</textarea>
+          </div>
+        </div>
+        <div style="background:#e5e5e5; padding:10px 20px; border-top:1px solid #ccc; display:flex; justify-content:flex-end; gap:10px;">
+          <button id="cb360-save-meal" style="background:#5cb85c; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-regular fa-floppy-disk"></i>&nbsp;&nbsp;Guardar</button>
+          <button id="cb360-cancel-meal" style="background:#f0ad4e; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-solid fa-power-off"></i>&nbsp;&nbsp;Fechar</button>
+        </div>
+      </div>
+    `;
+    const inputs = modalOverlay.querySelectorAll('.cb360-modal-input');
+      inputs.forEach(input => {
+        input.addEventListener('focus', () => {
+          input.style.borderColor = '#d9534f';
+          input.style.boxShadow = '0 0 5px rgba(217, 83, 79, 0.4)';
+        });
+        input.addEventListener('blur', () => {
+          input.style.borderColor = '#ccc';
+          input.style.boxShadow = 'none';
+        });
+      });
+      modalOverlay.querySelectorAll('textarea').forEach(textarea => {
+        textarea.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.stopPropagation();
+          }
+        });
+      });
+      const closeModal = () => modalOverlay.remove();
+      document.getElementById('cb360-close-modal').onclick = closeModal;
+      document.getElementById('cb360-cancel-meal').onclick = closeModal;
+      document.getElementById('cb360-save-meal').onclick = async () => {
+        const payload = {internal_number: cb360ReportCurrentInternalNumber, corp_oper_nr: sessionStorage.getItem("currentCorpOperNr") || "0805", type: 'alimentacao', expense_date: document.getElementById('modal-meal-data').value || null,
+                         expense_time: document.getElementById('modal-meal-hora').value || null, entity: document.getElementById('modal-meal-entidade').value || null, invoice_number: document.getElementById('modal-meal-fat').value || null,
+                         receipt_number: document.getElementById('modal-meal-rec').value || null, declaration: document.getElementById('modal-meal-decl').value || null, amount: parseFloat(document.getElementById('modal-meal-valor').value) || null,
+                         description: document.getElementById('modal-meal-descricao').value || null
+                        };
+        const ok = await saveCb360ExpenseItem(payload, isEdit ? id : null);
+        if (ok) closeModal();
+      };
+    }
+    // ---- FUNCTION: openCb360VehicleDamageModal() — Danos Viaturas ----
+    function openCb360VehicleDamageModal(id = null) {
+      let modalOverlay = document.getElementById('cb360-modal-overlay');
+      if (!modalOverlay) {
+        modalOverlay = document.createElement('div');
+        modalOverlay.id = 'cb360-modal-overlay';
+        modalOverlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); display:flex; justify-content:center; align-items:center; z-index:9999;';
+        document.body.appendChild(modalOverlay);
+      }
+      const isEdit = !!id;
+      const item = isEdit ? cb360ReportExpensesData.find(e => e.id === id) : null;
+      const inputStyle = 'width:100%; height:25px; padding:4px 8px; border:1px solid #ccc; border-radius:4px; font-size:12px; box-sizing:border-box; outline:none; transition:border-color 0.2s, box-shadow 0.2s;';
+      const selectStyle = 'width:100%; height:25px; padding:2px 6px; border:1px solid #ccc; border-radius:4px; font-size:12px; box-sizing:border-box; outline:none; background:#fff; transition:border-color 0.2s, box-shadow 0.2s;';
+      const labelStyle = 'font-size:12px; font-weight:600; color:#333; text-align:left; padding-left:5px;';
+      const textareaStyle = 'width:100%; height:auto; min-height:75px; padding:6px 8px; border:1px solid #ccc; border-radius:4px; font-size:12px; box-sizing:border-box; outline:none; resize:vertical; transition:border-color 0.2s, box-shadow 0.2s;';
+      const now = new Date();
+      const today = toLocalISODate(now);
+      const nowTime = now.toTimeString().slice(0, 5);
+      modalOverlay.innerHTML = `
+        <div style="background:#fff; border:1px solid #ccc; border-radius:6px; width:480px; box-shadow:0 4px 15px rgba(0,0,0,0.2); overflow:hidden;">
+          <div style="background:#d9534f; color:#fff; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600;">
+            <span><i class="fa-solid ${isEdit ? 'fa-pen' : 'fa-plus'}"></i> ${isEdit ? 'Editar' : 'Nova'} Ficha de Danos em Viaturas</span>
+            <div style="display:flex; gap:8px; cursor:pointer;">
+              <span id="cb360-close-modal" style="font-weight:bold;">✕</span>
+            </div>
+          </div>
+          <div style="padding:20px; display:flex; flex-direction:column; gap:5px; background:#fff;">
+            <div style="display:grid; grid-template-columns: 70px 1fr; gap:10px; align-items:center;">
+              <label style="${labelStyle}">Veículo</label>
+              <select id="modal-vd-veiculo" class="cb360-modal-input" style="${selectStyle}">
+                <option value=""></option>
+              </select>
+            </div>
+            <div style="display:grid; grid-template-columns: 70px 1fr 60px 1fr; gap:10px; align-items:center;">
+              <label style="${labelStyle}">Data</label>
+              <input type="date" id="modal-vd-data" class="cb360-modal-input" style="${inputStyle}" value="${item?.expense_date || today}">
+              <label style="${labelStyle}">Hora</label>
+              <input type="time" id="modal-vd-hora" class="cb360-modal-input" style="${inputStyle}" value="${item?.expense_time || nowTime}">
+            </div>
+            <div style="display:grid; grid-template-columns: 70px 1fr; gap:10px; align-items:center;">
+              <label style="${labelStyle}">Entidade</label>
+              <input type="text" id="modal-vd-entidade" class="cb360-modal-input" style="${inputStyle}" value="${item?.entity || ''}">
+            </div>
+            <div style="display:grid; grid-template-columns: 70px 1fr 60px 1fr; gap:10px; align-items:center;">
+              <label style="${labelStyle}">Nº Doc.</label>
+              <input type="text" id="modal-vd-doc" class="cb360-modal-input" style="${inputStyle}" value="${item?.doc_number || ''}">
+              <label style="${labelStyle}">Nº Orç.</label>
+              <input type="text" id="modal-vd-orc" class="cb360-modal-input" style="${inputStyle}" value="${item?.budget_number || ''}">
+            </div>
+            <div style="display:grid; grid-template-columns: 70px 1fr 60px 1fr; gap:10px; align-items:center;">
+              <label style="${labelStyle}">Nº Fat.</label>
+              <input type="text" id="modal-vd-fat" class="cb360-modal-input" style="${inputStyle}" value="${item?.invoice_number || ''}">
+              <label style="${labelStyle}">Valor</label>
+              <input type="text" id="modal-vd-valor" class="cb360-modal-input" style="${inputStyle}" value="${item?.amount ?? ''}">
+            </div>
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              <label style="${labelStyle}">Descrição</label>
+              <textarea id="modal-vd-descricao" class="cb360-modal-input" style="${textareaStyle}">${item?.description || ''}</textarea>
+            </div>
+          </div>
+          <div style="background:#e5e5e5; padding:10px 20px; border-top:1px solid #ccc; display:flex; justify-content:flex-end; gap:10px;">
+            <button id="cb360-save-vd" style="background:#5cb85c; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-regular fa-floppy-disk"></i>&nbsp;&nbsp;Guardar</button>
+            <button id="cb360-cancel-vd" style="background:#f0ad4e; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-solid fa-power-off"></i>&nbsp;&nbsp;Fechar</button>
+          </div>
+        </div>
+      `;
+      const vehicleSelect = document.getElementById('modal-vd-veiculo');
+      cb360ReportVehiclesData.forEach((v, idx) => {
+        const opt = document.createElement('option');
+        opt.value = v.vehicle;
+        opt.textContent = `#${idx + 1} - ${cb360VehicleLabel(v.vehicle)}`;
+        vehicleSelect.appendChild(opt);
+      });
+      if (item?.vehicle_registration) vehicleSelect.value = item.vehicle_registration;
+      const inputs = modalOverlay.querySelectorAll('.cb360-modal-input');
+      inputs.forEach(input => {
+        input.addEventListener('focus', () => {
+          input.style.borderColor = '#d9534f';
+          input.style.boxShadow = '0 0 5px rgba(217, 83, 79, 0.4)';
+        });
+        input.addEventListener('blur', () => {
+          input.style.borderColor = '#ccc';
+          input.style.boxShadow = 'none';
+        });
+      });
+      modalOverlay.querySelectorAll('textarea').forEach(textarea => {
+        textarea.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.stopPropagation();
+          }
+        });
+      });
+      const closeModal = () => modalOverlay.remove();
+      document.getElementById('cb360-close-modal').onclick = closeModal;
+      document.getElementById('cb360-cancel-vd').onclick = closeModal;
+      document.getElementById('cb360-save-vd').onclick = async () => {
+        const payload = {internal_number: cb360ReportCurrentInternalNumber, corp_oper_nr: sessionStorage.getItem("currentCorpOperNr") || "0805", type: 'danos_viaturas', vehicle_registration: document.getElementById('modal-vd-veiculo').value || null,
+                         expense_date: document.getElementById('modal-vd-data').value || null, expense_time: document.getElementById('modal-vd-hora').value || null, entity: document.getElementById('modal-vd-entidade').value || null,
+                         doc_number: document.getElementById('modal-vd-doc').value || null, budget_number: document.getElementById('modal-vd-orc').value || null, invoice_number: document.getElementById('modal-vd-fat').value || null,
+                         amount: parseFloat(document.getElementById('modal-vd-valor').value) || null, description: document.getElementById('modal-vd-descricao').value || null
+                        };
+        const ok = await saveCb360ExpenseItem(payload, isEdit ? id : null);
+        if (ok) closeModal();
+      };
+    }
+    // ---- FUNCTION: openCb360EquipmentDamageModal() — Danos em Equipamento ----
+    function openCb360EquipmentDamageModal(id = null) {
+      let modalOverlay = document.getElementById('cb360-modal-overlay');
+      if (!modalOverlay) {
+        modalOverlay = document.createElement('div');
+        modalOverlay.id = 'cb360-modal-overlay';
+        modalOverlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); display:flex; justify-content:center; align-items:center; z-index:9999;';
+        document.body.appendChild(modalOverlay);
+      }
+      const isEdit = !!id;
+      const item = isEdit ? cb360ReportExpensesData.find(e => e.id === id) : null;
+      const inputStyle = 'width:100%; height:25px; padding:4px 8px; border:1px solid #ccc; border-radius:4px; font-size:12px; box-sizing:border-box; outline:none; transition:border-color 0.2s, box-shadow 0.2s;';
+      const selectStyle = 'width:100%; height:25px; padding:2px 6px; border:1px solid #ccc; border-radius:4px; font-size:12px; box-sizing:border-box; outline:none; background:#fff; transition:border-color 0.2s, box-shadow 0.2s;';
+      const labelStyle = 'width:120px; font-size:12px; font-weight:600; color:#333; text-align:left; padding-left:5px;';
+      const textareaStyle = 'width:100%; height:auto; min-height:75px; padding:6px 8px; border:1px solid #ccc; border-radius:4px; font-size:12px; box-sizing:border-box; outline:none; resize:vertical; transition:border-color 0.2s, box-shadow 0.2s;';
+      const now = new Date();
+      const today = toLocalISODate(now);
+      const nowTime = now.toTimeString().slice(0, 5);
+      modalOverlay.innerHTML = `
+        <div style="background:#fff; border:1px solid #ccc; border-radius:6px; width:480px; box-shadow:0 4px 15px rgba(0,0,0,0.2); overflow:hidden;">
+          <div style="background:#d9534f; color:#fff; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600;">
+            <span><i class="fa-solid ${isEdit ? 'fa-pen' : 'fa-plus'}"></i> ${isEdit ? 'Editar' : 'Nova'} Ficha de Danos em Equipamentos</span>
+            <div style="display:flex; gap:8px; cursor:pointer;">
+              <span id="cb360-close-modal" style="font-weight:bold;">✕</span>
+            </div>
+          </div>
+          <div style="padding:20px; display:flex; flex-direction:column; gap:5px; background:#fff;">
+            <div style="display:grid; grid-template-columns: 70px 1fr; gap:10px; align-items:center;">
+              <label style="${labelStyle}">Veículo</label>
+              <select id="modal-ed-veiculo" class="cb360-modal-input" style="${selectStyle}">
+                <option value=""></option>
+              </select>
+            </div>
+            <div style="display:grid; grid-template-columns: 70px 1fr 60px 1fr; gap:10px; align-items:center;">
+              <label style="${labelStyle}">Data</label>
+              <input type="date" id="modal-ed-data" class="cb360-modal-input" style="${inputStyle}" value="${item?.expense_date || today}">
+              <label style="${labelStyle}">Hora</label>
+              <input type="time" id="modal-ed-hora" class="cb360-modal-input" style="${inputStyle}" value="${item?.expense_time || nowTime}">
+            </div>
+            <div style="display:grid; grid-template-columns: 70px 1fr; gap:10px; align-items:center;">
+              <label style="${labelStyle}">Tipo Despesa</label>
+              <input type="text" id="modal-ed-tipo" class="cb360-modal-input" style="${inputStyle}" value="${item?.expense_kind || ''}">
+            </div>
+            <div style="display:grid; grid-template-columns: 70px 1fr; gap:10px; align-items:center;">
+              <label style="${labelStyle}">Entidade</label>
+              <input type="text" id="modal-ed-entidade" class="cb360-modal-input" style="${inputStyle}" value="${item?.entity || ''}">
+            </div>
+            <div style="display:grid; grid-template-columns: 70px 1fr 80px 1fr; gap:10px; align-items:center;">
+              <label style="${labelStyle}">Nº Fat.</label>
+              <input type="text" id="modal-ed-fat" class="cb360-modal-input" style="${inputStyle}" value="${item?.invoice_number || ''}">
+              <label style="${labelStyle}">Quantidade</label>
+              <input type="text" id="modal-ed-qtd" class="cb360-modal-input" style="${inputStyle}" value="${item?.quantity ?? ''}">
+            </div>
+            <div style="display:grid; grid-template-columns: 70px 1fr; gap:10px; align-items:center;">
+              <label style="${labelStyle}">Valor</label>
+              <input type="text" id="modal-ed-valor" class="cb360-modal-input" style="${inputStyle} max-width:150px;" value="${item?.amount ?? ''}">
+            </div>
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              <label style="${labelStyle}">Descrição</label>
+              <textarea id="modal-ed-descricao" class="cb360-modal-input" style="${textareaStyle}">${item?.description || ''}</textarea>
+            </div>
+          </div>
+          <div style="background:#e5e5e5; padding:10px 20px; border-top:1px solid #ccc; display:flex; justify-content:flex-end; gap:10px;">
+            <button id="cb360-save-ed" style="background:#5cb85c; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-regular fa-floppy-disk"></i>&nbsp;&nbsp;Guardar</button>
+            <button id="cb360-cancel-ed" style="background:#f0ad4e; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-solid fa-power-off"></i>&nbsp;&nbsp;Fechar</button>
+          </div>
+        </div>
+      `;
+      const vehicleSelect = document.getElementById('modal-ed-veiculo');
+      cb360ReportVehiclesData.forEach((v, idx) => {
+        const opt = document.createElement('option');
+        opt.value = v.vehicle;
+        opt.textContent = `#${idx + 1} - ${cb360VehicleLabel(v.vehicle)}`;
+        vehicleSelect.appendChild(opt);
+      });
+      if (item?.vehicle_registration) vehicleSelect.value = item.vehicle_registration;
+      const inputs = modalOverlay.querySelectorAll('.cb360-modal-input');
+      inputs.forEach(input => {
+        input.addEventListener('focus', () => {
+          input.style.borderColor = '#d9534f';
+          input.style.boxShadow = '0 0 5px rgba(217, 83, 79, 0.4)';
+        });
+        input.addEventListener('blur', () => {
+          input.style.borderColor = '#ccc';
+          input.style.boxShadow = 'none';
+        });
+      });
+      modalOverlay.querySelectorAll('textarea').forEach(textarea => {
+        textarea.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.stopPropagation();
+          }
+        });
+      });
+      const closeModal = () => modalOverlay.remove();
+      document.getElementById('cb360-close-modal').onclick = closeModal;
+      document.getElementById('cb360-cancel-ed').onclick = closeModal;
+      document.getElementById('cb360-save-ed').onclick = async () => {
+        const payload = {internal_number: cb360ReportCurrentInternalNumber, corp_oper_nr: sessionStorage.getItem("currentCorpOperNr") || "0805", type: 'danos_equipamento', vehicle_registration: document.getElementById('modal-ed-veiculo').value || null,
+                         expense_date: document.getElementById('modal-ed-data').value || null, expense_time: document.getElementById('modal-ed-hora').value || null, expense_kind: document.getElementById('modal-ed-tipo').value || null,
+                         entity: document.getElementById('modal-ed-entidade').value || null, invoice_number: document.getElementById('modal-ed-fat').value || null, quantity: parseFloat(document.getElementById('modal-ed-qtd').value) || null,
+                         amount: parseFloat(document.getElementById('modal-ed-valor').value) || null, description: document.getElementById('modal-ed-descricao').value || null
+                        };
+        const ok = await saveCb360ExpenseItem(payload, isEdit ? id : null);
+        if (ok) closeModal();
+      };
+    }
+    // ---- SAVE: saveCb360ExpenseItem() ----
+    async function saveCb360ExpenseItem(payload, existingId) {
+      try {
+        const url = existingId
+          ? `${SUPABASE_URL}/rest/v1/cb360_report_expenses?id=eq.${existingId}`
+          : `${SUPABASE_URL}/rest/v1/cb360_report_expenses`;
+        const response = await supaFetch(url, {
+          method: existingId ? 'PATCH' : 'POST',
+          headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) {
+          console.error('Erro ao gravar despesa:', await response.text());
+          showPopup('popup-danger', 'Erro ao gravar.');
+          return false;
+        }
+        const data = await response.json();
+        const saved = Array.isArray(data) ? data[0] : data;
+        if (existingId) {
+          const idx = cb360ReportExpensesData.findIndex(e => e.id === existingId);
+          if (idx !== -1) cb360ReportExpensesData[idx] = saved;
+        } else {
+          cb360ReportExpensesData.push(saved);
+        }
+        renderCb360DamagesSubContent(cb360ReportDamagesCurrentSubType, document.getElementById('damages-sub-content'));
+        showPopup('popup-success', 'Guardado com sucesso!');
+        return true;
+      } catch (err) {
+        console.error('Erro saveCb360ExpenseItem:', err);
+        showPopup('popup-danger', 'Erro de rede ao gravar.');
+        return false;
+      }
+    }
+    // ---- DELETE: deleteCb360ExpenseItem() ----
+    async function deleteCb360ExpenseItem(id) {
+      if (!confirm('Tem a certeza que pretende eliminar esta despesa?')) return;
+      try {
+        const response = await supaFetch(`${SUPABASE_URL}/rest/v1/cb360_report_expenses?id=eq.${id}`, { method: 'DELETE' });
+        if (!response.ok) {
+          console.error('Erro ao eliminar despesa:', await response.text());
+          showPopup('popup-danger', 'Erro ao eliminar.');
+          return;
+        }
+        cb360ReportExpensesData = cb360ReportExpensesData.filter(e => e.id !== id);
+        renderCb360DamagesSubContent(cb360ReportDamagesCurrentSubType, document.getElementById('damages-sub-content'));
+        showPopup('popup-success', 'Eliminado com sucesso.');
+      } catch (err) {
+        console.error('Erro deleteCb360ExpenseItem:', err);
+        showPopup('popup-danger', 'Erro de rede ao eliminar.');
+      }
+    }
+    // ==============================================================================
+    // == INCIDENT SAVE BUTTON ==
+    // ==============================================================================
+     // ---- SAVE: saveCb360Report() ----
+     async function saveCb360Report() {
+      if (!cb360ReportCurrentInternalNumber) return;
+      captureCb360ReportCurrentTab();
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const payload = {
+        internal_number: cb360ReportCurrentInternalNumber,
+        corp_oper_nr: currentCorpOperNr,
+        ...cb360ReportFormState
+      };
+      try {
+        const isNew = !cb360ReportCurrentRow;
+        let url = `${SUPABASE_URL}/rest/v1/cb360_incident_reports`;
+        let method = 'POST';
+        if (!isNew) {
+          url += `?internal_number=eq.${cb360ReportCurrentInternalNumber}&corp_oper_nr=eq.${currentCorpOperNr}`;
+          method = 'PATCH';
+        }
+        const response = await supaFetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) {
+          console.error('Erro ao gravar relatório:', await response.text());
+          showPopup('popup-danger', 'Erro ao gravar o relatório.');
+          return;
+        }
+        const data = await response.json();
+        cb360ReportCurrentRow = Array.isArray(data) ? data[0] : data;
+        cb360ReportFormState = { ...cb360ReportCurrentRow };
+        showPopup('popup-success', 'Relatório guardado com sucesso!');
+      } catch (err) {
+        console.error('Erro saveCb360Report:', err);
+        showPopup('popup-danger', 'Erro de rede ao gravar o relatório.');
+      }
+    }
+
+
+
+
+
+
+// ==============================================================================
+    // == 11. SMS (Enviadas / Recebidas / Agendadas)                               ==
+    // ==============================================================================
+    let cb360SmsCurrentSubType = 'enviadas';
+    // ---- RENDER: renderCb360SmsTab() ----
+    function renderCb360SmsTab() {
+      const container = document.getElementById('goc-tab-content-sms');
+      if (!container) return;
+      const wrapperStyle = 'display:flex; gap:10px; align-items:flex-start; width:100%;';
+      const leftColumnStyle = 'width:200px; min-width:200px; display:flex; flex-direction:column; gap:5px;';
+      const sidebarStyle = 'background:#f0f0f0; border:1px solid #ccc; border-radius:4px; overflow:hidden; display:flex; flex-direction:column;';
+      const mainContentStyle = 'flex:1; background:#fff; border:1px solid #ccc; border-radius:4px; min-height:550px; overflow:hidden;';
+      const itemStyle = (active) => `padding:10px 12px; font-size:11px; font-weight:600; color:${active ? '#fff' : '#333'}; background:${active ? '#6c757d' : 'transparent'}; border-bottom:1px solid #e0e0e0; 
+                                     cursor:pointer; display:flex; align-items:center; gap:8px; text-decoration:none;`;
+      container.innerHTML = `
+        <div style="${wrapperStyle}">
+          <div style="${leftColumnStyle}">
+            <button id="goc-btn-sms-update" style=" width:150px; background:#5bc0de; color:#fff; border:none; padding:8px 10px; border-radius:5px; font-weight:600; cursor:pointer; font-size:12.5px; display:flex; align-items:center; justify-content:center; gap:5px;"><i class="fa-solid fa-comment" style="font-size:14px; vertical-align: middle;"></i>Sms Atualização</button>
+            <div style="${sidebarStyle}">
+              <div class="sms-sub-tab" data-sub="enviadas" style="${itemStyle(true)}"><i class="fa-solid fa-inbox"></i> Enviadas</div>
+              <div class="sms-sub-tab" data-sub="recebidas" style="${itemStyle(false)}"><i class="fa-solid fa-download"></i> Recebidas</div>
+              <div class="sms-sub-tab" data-sub="agendadas" style="${itemStyle(false)}"><i class="fa-solid fa-upload"></i> Agendadas</div>
+            </div>
+          </div>
+          <div id="sms-sub-content" style="${mainContentStyle}">
+            <!-- O conteúdo será injetado dinamicamente aqui via JavaScript -->
+          </div>
+        </div>
+      `;
+      const btnUpdate = document.getElementById('goc-btn-sms-update');
+      if (btnUpdate) {
+        btnUpdate.addEventListener('click', () => {
+          openCb360SmsUpdateModal();
+        });
+      }
+      const subTabs = container.querySelectorAll('.sms-sub-tab');
+      subTabs.forEach(tab => {
+        tab.onclick = () => {
+          subTabs.forEach(t => {
+            t.style.background = 'transparent';
+            t.style.color = '#333';
+          });
+          tab.style.background = '#6c757d';
+          tab.style.color = '#fff';
+          const subType = tab.dataset.sub;
+          cb360SmsCurrentSubType = subType;
+          renderCb360SmsSubContent(
+            subType,
+            document.getElementById('sms-sub-content')
+          );
+        };
+      });
+      cb360SmsCurrentSubType = 'enviadas';
+      renderCb360SmsSubContent(
+        'enviadas',
+        document.getElementById('sms-sub-content')
+      );
+    }
+    // ---- RENDER: renderCb360SmsSubContent() ----
+    function renderCb360SmsSubContent(subType, container) {
+      const today = toLocalISODate(new Date());
+      const inputStyle = 'height:25px; padding:0 8px; border:1px solid #ccc; border-radius:4px; font-size:12px; box-sizing:border-box;';
+      const isAgendadas = subType === 'agendadas';
+      container.innerHTML = `
+        <div style="display:flex; align-items:center; gap:10px; padding:12px 16px; border-bottom:1px solid #eee; flex-wrap:nowrap; width:100%; box-sizing:border-box;">
+          <button id="sms-btn-refresh" style="margin-right:175px; background:#5cb85c; color:#fff; border:none; padding:7px 14px; border-radius:5px; font-weight:600; cursor:pointer; font-size:12px; display:flex; align-items:center; gap:6px; white-space:nowrap; flex-shrink:0;"><i class="fa-solid fa-rotate"></i> Atualizar</button>
+          <div style="display:flex; align-items:center; gap:6px; white-space:nowrap; flex-shrink:0;">
+            <label style="font-size:12px; font-weight:600;">De:</label>
+            <input type="date" id="sms-filter-from" style="${inputStyle}" value="${today}">
+          </div>
+          <div style="display:flex; align-items:center; gap:6px; white-space:nowrap; flex-shrink:0;">
+            <label style="font-size:12px; font-weight:600;">Até:</label>
+            <input type="date" id="sms-filter-to" style="${inputStyle} margin-right:175px;" value="${isAgendadas ? '' : today}">
+          </div>
+          <div style="flex:1; display:flex; align-items:center; gap:6px; min-width:0;">
+            <input type="text" id="sms-filter-search" placeholder="" style="${inputStyle} width:100%;">
+            <i class="fa-solid fa-magnifying-glass" style="color:#2b6ecb; cursor:pointer; flex-shrink:0;"></i>
+          </div>
+        </div>
+        <div id="sms-list-content" style="padding:16px; width:100%; box-sizing:border-box;">
+          <p style="color:#2b6ecb; font-weight:600; margin:0;">Sem registos!</p>
+        </div>
+      `;
+      document.getElementById('sms-btn-refresh').addEventListener('click', () => {
+        loadCb360SmsList(subType, container);
+      });
+      loadCb360SmsList(subType, container);
+    }
+    // ---- LOAD (placeholder por agora): loadCb360SmsList() ----
+    async function loadCb360SmsList(subType, container) {
+      const listContent = document.getElementById('sms-list-content');
+      if (!listContent) return;
+      if (subType === 'enviadas') {
+        await renderCb360SmsSentList(listContent);
+      } else if (subType === 'recebidas') {
+        listContent.innerHTML = `<p style="color:#2b6ecb; font-weight:600; margin:0;">Sem registos!</p>`;
+      } else if (subType === 'agendadas') {
+        listContent.innerHTML = `<p style="color:#2b6ecb; font-weight:600; margin:0;">Sem registos!</p>`;
+      }
+    }
+    // ---- FETCH: fetchCb360SmsSent() ----
+    async function fetchCb360SmsSent(internalNumber, dateFrom, dateTo) {
+      try {
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        let url = `${SUPABASE_URL}/rest/v1/cb360_sms_log?internal_number=eq.${internalNumber}&corp_oper_nr=eq.${currentCorpOperNr}&type=eq.sent&select=*&order=sent_at.desc`;
+        if (dateFrom) url += `&sent_at=gte.${dateFrom}`;
+        if (dateTo) url += `&sent_at=lte.${dateTo}T23:59:59`;
+        const response = await supaFetch(url, { method: 'GET' });
+        return response.ok ? await response.json() : [];
+      } catch (err) {
+        console.error('Erro fetchCb360SmsSent:', err);
+        return [];
+      }
+    }
+    // ---- RENDER: renderCb360SmsSentList() ----
+    async function renderCb360SmsSentList(container) {
+      const internalNumber = cb360CurrentIncident?.internal_number;
+      const dateFrom = document.getElementById('sms-filter-from')?.value || '';
+      const dateTo = document.getElementById('sms-filter-to')?.value || '';
+      if (!internalNumber) {
+        container.innerHTML = `<p style="color:#2b6ecb; font-weight:600; margin:0;">Sem registos!</p>`;
+        return;
+      }
+      const items = await fetchCb360SmsSent(internalNumber, dateFrom, dateTo);
+      if (!items.length) {
+        container.innerHTML = `<p style="color:#2b6ecb; font-weight:600; margin:0;">Sem registos!</p>`;
+        return;
+      }
+      const tableStyle = 'width:100%; border-collapse:collapse; font-size:12px; color:#333;';
+      const thStyle = 'background:#e0e0e0; color:#333; font-weight:600; padding:8px 10px; text-align:left; border-bottom:2px solid #ccc;';
+      container.innerHTML = `
+        <table style="${tableStyle}">
+          <thead>
+            <tr>
+              <th style="${thStyle} width:70px;">Id</th>
+              <th style="${thStyle}">Mensagem</th>
+              <th style="${thStyle} width:160px;">Destinatário</th>
+              <th style="${thStyle} width:130px;">Número</th>
+              <th style="${thStyle} width:150px;">Envio</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${items.map(item => `
+              <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:8px 10px; color:#2b6ecb; font-weight:600;">${item.id}</td>
+                <td style="padding:8px 10px; color:#2b6ecb;">
+                  <i class="fa-regular fa-square-check" style="color:#5cb85c; margin-right:4px;"></i>
+                  <i class="fa-solid fa-comment-sms" style="color:#5bc0de; margin-right:6px;"></i>
+                  ${item.message ? (item.message.length > 40 ? item.message.substring(0, 40) + '...' : item.message) : ''}
+                </td>
+                <td style="padding:8px 10px;">${item.recipient_name || ''}</td>
+                <td style="padding:8px 10px; color:#2b6ecb; font-weight:600;">${item.recipient_number || ''}</td>
+                <td style="padding:8px 10px; color:#2b6ecb; font-weight:600;">${formatTimeStampPT(item.sent_at)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+    // ---- RENDER: openCb360SmsUpdateModal() ----
+    function openCb360SmsUpdateModal() {
+      const existingModal = document.getElementById('goc-sms-modal-overlay');
+      if (existingModal) existingModal.remove();
+      const today = toLocalISODate(new Date());
+      let timeOptionsHtml = '';
+      for (let h = 0; h < 24; h++) {
+        for (let m = 0; m < 60; m += 30) {
+          const hourStr = String(h).padStart(2, '0');
+          const minStr = String(m).padStart(2, '0');
+          const timeVal = `${hourStr}:${minStr}`;
+          const isSelected = (timeVal === '09:30') ? 'selected' : '';
+          timeOptionsHtml += `<option value="${timeVal}" ${isSelected}>${timeVal}</option>`;
+        }
+      }
+      const overlay = document.createElement('div');
+      overlay.id = 'goc-sms-modal-overlay';
+      overlay.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 9999; display: flex; align-items: center; justify-content: center; font-family: sans-serif;`;
+      overlay.innerHTML = `
+        <div style="background: #eceef2; width: 560px; border-radius: 6px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); overflow: hidden; border: 1px solid #b0b0b0;">
+          <div style="background: #3c8dbc; color: #fff; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: bold;">
+            <div style="display: flex; align-items: center; gap: 8px;"><i class="fa-solid fa-comment" style="color: #fff;"></i> Nova Mensagem</div>
+            <div style="display: flex; gap: 6px;">
+              <button id="goc-sms-modal-close-top" style="background: transparent; border: none; color: #fff; cursor: pointer; font-size: 14px;"><i class="fa-solid fa-window-minimize"></i></button>
+              <button id="goc-sms-modal-close-x" style="background: transparent; border: none; color: #fff; cursor: pointer; font-size: 14px;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+          </div>
+          <div style="padding: 14px; background: #eceef2;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; font-size: 12px;">
+              <div>
+                <div style="color: #333;">Limite Total: <b>Ilimitado!</b></div>
+                <div style="color: #333;">Créditos usados: <b>0</b></div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px; background: #fff; padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px;">
+                <i class="fa-regular fa-calendar" style="color: #337ab7;"></i>
+                <input type="date" id="goc-sms-agendar-date" class="cb360-modal-input" style="height: 23px; border: 1px solid #ccc; padding: 2px 4px; font-size: 11px; border-radius: 3px; outline: none; box-sizing: border-box; transition: border-color 0.2s, box-shadow 0.2s;" value="${today}">
+                <select id="goc-sms-agendar-time" class="cb360-modal-input" style="height: 23px; border: 1px solid #ccc; padding: 2px 4px; font-size: 11px; border-radius: 3px; outline: none; background: #fff; box-sizing: border-box; transition: border-color 0.2s, box-shadow 0.2s;">
+                  ${timeOptionsHtml}
+                </select>
+                <label style="display: flex; align-items: center; gap: 4px; margin-left: 4px;">
+                  <input type="checkbox" id="goc-sms-check-agendar" style="cursor: pointer !important; width: 16px; height: 16px;"> Agendar Envio
+                </label>
+              </div>
+            </div>
+            <div style="background: #fff; border: 1px solid #ccc; border-radius: 4px; padding: 12px;">
+              <div style="display: inline-block; background: #e0e0e0; border: 1px solid #ccc; border-bottom: none; padding: 6px 16px; font-size: 12px; font-weight: bold; border-top-left-radius: 4px; border-top-right-radius: 4px; margin-bottom: -1px; position: relative; z-index: 1;"> Enviar SMS</div>
+              <div style="border: 1px solid #ccc; padding: 12px; border-radius: 4px; background: #fdfdfd;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                  <label style="font-size: 12px; font-weight: bold; width: 110px; text-align: left;">Num. Destinatários</label>
+                  <div style="flex: 1; display: flex; align-items: center; gap: 4px;">
+                    <textarea id="goc-sms-destinatarios" class="cb360-modal-input" style="width: 100%; height: 50px; font-size: 11px; border: 1px solid #ccc; border-radius: 3px; padding: 4px; resize: vertical; outline: none; transition: border-color 0.2s, box-shadow 0.2s;">912345678</textarea>
+                    <i class="fa-solid fa-magnifying-glass" style="color: #337ab7; cursor: pointer; font-size: 14px; padding: 4px;"></i>
+                  </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                  <label style="font-size: 12px; font-weight: bold; width: 110px; text-align: left;">Template</label>
+                  <select id="goc-sms-template" class="cb360-modal-input" style="flex: 1; height: 26px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; padding: 0 4px; outline: none; background: #fff; transition: border-color 0.2s, box-shadow 0.2s;">
+                    <option value="OCORCOM" selected>OCORCOM</option>
+                    <option value="CUSTOM">Personalizado</option>
+                  </select>
+                </div>
+                <div style="display: flex; align-items: flex-start; gap: 8px; margin-bottom: 4px;">
+                  <label style="font-size: 12px; font-weight: bold; width: 110px; text-align: left; padding-top: 6px;">Mensagem</label>
+                  <div style="flex: 1;">
+                    <textarea id="goc-sms-text-msg" class="cb360-modal-input" style="width: 100%; height: 80px; font-size: 12px; border: 1px solid #ccc; border-radius: 3px; padding: 6px; box-sizing: border-box; resize: vertical; outline: none; transition: border-color 0.2s, box-shadow 0.2s;">Ocorrencia em curso, por favor verifique os detalhes no sistema.</textarea>
+                    <div style="text-align: right; font-size: 11px; color: #333; margin-top: 2px;">
+                      <span id="goc-sms-char-count">0</span><br>
+                      <b id="goc-sms-credit-text">Mensagem Simples (1 crédito)</b>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
+              <div style="font-size: 11px;">
+                <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                  <input type="checkbox" id="goc-sms-resposta" style="cursor: pointer !important; width: 16px; height: 16px;"> Com número de devolução de Resposta
+                </label>
+                <span style="color: #666; margin-left: 18px; font-size: 10px;">(usa 20 carateres no corpo da mensagem)</span>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <button id="goc-sms-btn-enviar" style="background: #5cb85c; color: #fff; border: none; padding: 6px 14px; border-radius: 4px; font-weight: bold; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                  <i class="fa-solid fa-paper-plane"></i> Enviar
+                </button>
+                <button id="goc-sms-btn-fechar" style="background: #f0ad4e; color: #fff; border: none; padding: 6px 14px; border-radius: 4px; font-weight: bold; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                  <i class="fa-solid fa-power-off"></i> Fechar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+      const inputs = overlay.querySelectorAll('.cb360-modal-input');
+      inputs.forEach(input => {
+        input.addEventListener('focus', () => {
+          input.style.borderColor = '#3c8dbc';
+          input.style.boxShadow = '0 0 5px rgba(60, 141, 188, 0.4)';
+        });
+        input.addEventListener('blur', () => {
+          input.style.borderColor = '#ccc';
+          input.style.boxShadow = 'none';
+        });
+      });
+      overlay.querySelectorAll('textarea').forEach(textarea => {
+        textarea.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.stopPropagation();
+          }
+        });
+      });
+      const closeModal = () => overlay.remove();
+      document.getElementById('goc-sms-modal-close-x').onclick = closeModal;
+      document.getElementById('goc-sms-modal-close-top').onclick = closeModal;
+      document.getElementById('goc-sms-btn-fechar').onclick = closeModal;
+      const textareaMsg = document.getElementById('goc-sms-text-msg');
+      const charCountSpan = document.getElementById('goc-sms-char-count');
+      const creditText = document.getElementById('goc-sms-credit-text');
+      const updateCharAndCredits = () => {
+        const len = textareaMsg.value.length;
+        charCountSpan.textContent = len;
+        const credits = Math.max(1, Math.ceil(len / 160));
+        creditText.textContent = `Mensagem Simples (${credits} crédito${credits > 1 ? 's' : ''})`;
+      };
+      textareaMsg.oninput = updateCharAndCredits;
+      updateCharAndCredits();
+      document.getElementById('goc-sms-btn-enviar').onclick = () => {
+        const msgVal = textareaMsg.value;
+        const destVal = document.getElementById('goc-sms-destinatarios').value || '912345678';
+        closeModal();
+        cb360SmsCurrentSubType = 'enviadas';
+        const subTabs = document.querySelectorAll('.sms-sub-tab');
+        subTabs.forEach(t => {
+          if (t.dataset.sub === 'enviadas') {
+            t.style.background = '#6c757d';
+            t.style.color = '#fff';
+          } else {
+            t.style.background = 'transparent';
+            t.style.color = '#333';
+          }
+        });
+        const listContent = document.getElementById('sms-list-content');
+        if (listContent) {
+          const tableStyle = 'width:100%; border-collapse:collapse; font-size:12px; color:#333;';
+          const thStyle = 'background:#e0e0e0; color:#333; font-weight:600; padding:8px 10px; text-align:left; border-bottom:2px solid #ccc;';
+          const fakeItem = {id: Math.floor(Math.random() * 900) + 100, message: msgVal, recipient_name: 'Teste Fictício', recipient_number: destVal, sent_at: new Date().toISOString()};
+          const formattedDate = typeof formatTimeStampPT === 'function' ? formatTimeStampPT(fakeItem.sent_at) : fakeItem.sent_at;
+          const truncatedMsg = fakeItem.message.length > 40 ? fakeItem.message.substring(0, 40) + '...' : fakeItem.message;
+          const newRowHtml = `
+            <tr style="border-bottom:1px solid #eee;">
+              <td style="padding:8px 10px; color:#2b6ecb; font-weight:600;">${fakeItem.id}</td>
+              <td style="padding:8px 10px; color:#2b6ecb;">
+                <i class="fa-regular fa-square-check" style="color:#5cb85c; margin-right:4px;"></i>
+                <i class="fa-solid fa-comment-sms" style="color:#5bc0de; margin-right:6px;"></i>
+                  ${truncatedMsg}
+              </td>
+              <td style="padding:8px 10px;">${fakeItem.recipient_name}</td>
+              <td style="padding:8px 10px; color:#2b6ecb; font-weight:600;">${fakeItem.recipient_number}</td>
+              <td style="padding:8px 10px; color:#2b6ecb; font-weight:600;">${formattedDate}</td>
+            </tr>
+          `;
+          const existingTable = listContent.querySelector('table');
+          if (existingTable) {
+            const tbody = existingTable.querySelector('tbody');
+            if (tbody) {
+              tbody.insertAdjacentHTML('afterbegin', newRowHtml);
+            } else {
+              existingTable.insertAdjacentHTML('beforeend', newRowHtml);
+            }
+          } else {
+            listContent.innerHTML = `
+              <table style="${tableStyle}">
+                <thead>
+                  <tr>
+                    <th style="${thStyle} width:70px;">Id</th>
+                    <th style="${thStyle}">Mensagem</th>
+                    <th style="${thStyle} width:160px;">Destinatário</th>
+                    <th style="${thStyle} width:130px;">Número</th>
+                    <th style="${thStyle} width:150px;">Envio</th>
+                  </tr>
+                </thead>
+                <tbody>${newRowHtml}</tbody>
+              </table>
+            `;
+          }
+        }
+      };
     }

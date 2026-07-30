@@ -358,12 +358,12 @@
             const elacTeam = elac[0] || {day: [], night: []};
 
             // ECIN 1 (Presenças) -> Dia começa em 12 | Noite começa em 22
-            fillTeam(12, equipaA.day); 
-            fillTeam(22, equipaA.night);
+            fillTeam(14, equipaA.day); 
+            fillTeam(23, equipaA.night);
             
             // ECIN 2 (Presenças) -> Dia começa em 30 | Noite começa em 39 (ou respetivas linhas do teu template)
-            fillTeam(30, equipaB.day); 
-            fillTeam(39, equipaB.night);
+            fillTeam(32, equipaB.day); 
+            fillTeam(41, equipaB.night);
 
             // ELAC (Presenças)
             fillTeam(120, elacTeam.day); 

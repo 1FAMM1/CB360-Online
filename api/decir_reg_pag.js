@@ -369,7 +369,7 @@
             
             fillTeamFull(175, elacTeam.day); 
             fillTeamFull(181, elacTeam.night);
-          }
+          
           
           
           

@@ -66,6 +66,7 @@
         <button class="sidebar-submenu-button  sub-submenu-toggle" data-page="page-decir" data-access="Configurações DECIR">Configurações</button>
         <div class="sub-submenu">
           <button class="sidebar-sub-submenu-button " data-page="page-decir" data-access="Atualização de Valores">Atualização de Valores</button>
+          <button class="sidebar-sub-submenu-button" data-page="page-decir" data-access="Configuração de Equipas">Configuração de Equipas</button>
           <button class="sidebar-submenu-button" data-page="decir-main-options" data-access="Restaurantes e LEPPs">Restaurantes e LEPPs</button>          
         </div>
         <button class="sidebar-submenu-button" data-page="decir-sca-view" data-access="Ver Escalas">Consulta de Escalas</button>
@@ -818,35 +819,92 @@
         </div>
       </div>
       <!-- PROGRAM MODULES -->
+      <!-- PROGRAM MODULES -->
       <!-- DECIR 360 -->
-      <div id="modalConfigDecir" class="decir-modal-custom">
+      <!-- DECIR VALUES CONFIG -->
+      <div id="modalConfigDecirValues" class="decir-modal-custom">
         <div class="decir-modal-content">
           <div class="decir-modal-header">
-            <h3><i class="fas fa-cog"></i>Configuração de Valores DECIR</h3>
+            <h3><i class="fas fa-cog"></i> Configuração de Valores DECIR</h3>
             <button class="decir-close-btn" onclick="closeConfigModal()">✕</button>
           </div>
-          <!-- BODY -->
           <div class="decir-modal-body">
-            <div class="decir-form-group">
-              <label for="amal_value">Valor Diário AMAL</label>
-              <div class="decir-input-wrapper">
-                <input type="number" id="amal_value" step="0.01" placeholder="0.00">
+            <div class="decir-row" style="display: flex; gap: 15px;">
+              <div class="decir-form-group" style="flex: 1;">
+                <label for="amal_value">Valor Diário AMAL (12H)</label>
+                <div class="decir-input-wrapper">
+                  <input type="number" id="amal_value" step="0.01" placeholder="0.00">
+                </div>
+              </div>
+              <div class="decir-form-group" style="flex: 1;">
+                <label for="anepc_value">Valor Diário ANEPC (12H)</label>
+                <div class="decir-input-wrapper">
+                  <input type="number" id="anepc_value" step="0.01" placeholder="0.00">
+                </div>
               </div>
             </div>
-            <div class="decir-form-group">
-              <label for="anepc_value">Valor Diário ANEPC</label>
-              <div class="decir-input-wrapper">
-                <input type="number" id="anepc_value" step="0.01" placeholder="0.00">
+            <div class="decir-row" style="display: flex; gap: 15px; margin-top: 15px;">
+              <div class="decir-form-group" style="flex: 1;">
+                <label for="opat_value">Valor Diário OPAT (24H)</label>
+                <div class="decir-input-wrapper">
+                  <input type="number" id="opat_value" step="0.01" placeholder="0.00">
+                </div>
               </div>
-            </div>
+              <div class="decir-form-group" style="flex: 1;">
+                <label for="sbas_value">Valor Diário SBAS (24H)</label>
+                <div class="decir-input-wrapper">
+                  <input type="number" id="sbas_value" step="0.01" placeholder="0.00">
+                </div>
+              </div>
+            </div>      
           </div>
-          <!-- FOOTER -->
           <div class="decir-modal-footer">
             <button type="button" class="decir-btn decir-btn-secondary" onclick="closeConfigModal()">Cancelar</button>
             <button type="button" id="btnSaveConfig" class="decir-btn decir-btn-primary" onclick="updateDecirValues()">💾 Gravar Alterações</button>
           </div>
         </div>
       </div>
+      <!-- DECIR TEAMS CONFIG -->
+      <style>
+        .decir-input-clean {width: 100%; padding: 11px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 14px; font-weight: 500; color: #1e293b; transition: all 0.15s ease; background-color: #fff;}
+        .decir-input-clean:focus {border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); outline: none;}
+      </style>      
+      <!-- Estrutura do Modal atualizada com a classe de input limpa -->
+      <div id="modalConfigDecirTeams" class="decir-modal-custom">
+        <div class="decir-modal-content">
+          <div class="decir-modal-header">
+            <h3><i class="fas fa-cog"></i> Configuração de Equipas</h3>
+            <button class="decir-close-btn" onclick="closeConfigDecirTeamsModal()">✕</button>
+          </div>
+          <div class="decir-modal-body">
+            <div class="decir-row" style="display: flex; gap: 15px;">
+              <div class="decir-form-group" style="flex: 1;">
+                <label for="ecin_value">Equipas ECIN</label>
+                <input type="number" id="ecin_value" step="1" min="0" placeholder="0" class="decir-input-clean">
+              </div>
+              <div class="decir-form-group" style="flex: 1;">
+                <label for="elac_value">Equipas ELAC</label>
+                <input type="number" id="elac_value" step="1" min="0" placeholder="0" class="decir-input-clean">
+              </div>
+            </div>
+            <div class="decir-row" style="display: flex; gap: 15px; margin-top: 15px;">
+              <div class="decir-form-group" style="flex: 1;">
+                <label for="opat_equipas_value">OPATS</label>
+                <input type="number" id="opat_equipas_value" step="1" min="0" placeholder="0" class="decir-input-clean">
+              </div>
+              <div class="decir-form-group" style="flex: 1;">
+                <label for="sbas_equipas_value">SBAS</label>
+                <input type="number" id="sbas_equipas_value" step="1" min="0" placeholder="0" class="decir-input-clean">
+              </div>
+            </div>      
+          </div>
+          <div class="decir-modal-footer">
+            <button type="button" class="decir-btn decir-btn-secondary" onclick="closeConfigDecirTeamsModal()">Cancelar</button>
+            <button type="button" id="btnSaveConfigEquipas" class="decir-btn decir-btn-primary" onclick="updateEquipasValues()">💾 Gravar Alterações</button>
+          </div>
+        </div>
+      </div>
+      <!-- DECIR MAIN OPTIONS -->
       <div id="decir-main-options" class="page">
         <div class="major-card major-last-card">
           <div class="major-card-header header-black">

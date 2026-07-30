@@ -340,7 +340,7 @@
             [7, 60, 113, 167].forEach(row => sheet.getCell(`B${row}`).value = title);
             [9, 62, 115, 169].forEach(row => sheet.getCell(`B${row}`).value = period);
             // ── data em TODAS as 4 páginas (ECIN abrev., ECIN nome completo, ELAC abrev., ELAC nome completo) ──
-            [11, 20, 29, 38, 64, 73, 82, 91, 117, 171].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted);
+            [11, 20, 29, 38, 64, 73, 82, 91, 117, 123, 171, 177].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted);
             [11, 29, 64, 82, 117, 171].forEach(row => sheet.getCell(`F${row}`).value = dayShift);
             [20, 38, 73, 91, 123, 177].forEach(row => sheet.getCell(`F${row}`).value = nightShift);
 

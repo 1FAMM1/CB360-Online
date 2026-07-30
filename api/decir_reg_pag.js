@@ -338,43 +338,46 @@
             const period = `Período: ${dateFormatted}`;
             
             // Títulos e Períodos gerais
-            [7, 60, 113, 167].forEach(row => sheet.getCell(`B${row}`).value = title);
-            [9, 62, 115, 169].forEach(row => sheet.getCell(`B${row}`).value = period);
+            [6, 59, 112, 166].forEach(row => sheet.getCell(`B${row}`).value = title);
+            [8, 61, 114, 168].forEach(row => sheet.getCell(`B${row}`).value = period);
             
-            // --- REGISTO DE PRESENÇAS ---
-            // Datas para cada secção de Turno
-            [11, 64, 117, 171].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted);
-            [20, 73].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted);
-            [29, 82].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted);
-            [38, 91].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted);
-            [123, 177].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted);
+            // --- REGISTO DE PRESENÇAS (Datas e Turnos) ---
+            // Datas (Coluna B) nas linhas corretas
+            [11, 20, 29, 38].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted);
             
-            // Turnos de Dia (F)
-            [11, 29, 64, 82, 117, 171].forEach(row => sheet.getCell(`F${row}`).value = dayShift);
-            // Turnos de Noite (F)
-            [20, 38, 73, 91, 123, 177].forEach(row => sheet.getCell(`F${row}`).value = nightShift);
+            // Turnos de Dia (Coluna F)
+            [11, 29].forEach(row => sheet.getCell(`F${row}`).value = dayShift);
+            
+            // Turnos de Noite (Coluna F)
+            [20, 38].forEach(row => sheet.getCell(`F${row}`).value = nightShift);
 
             const equipaA = ecin[0] || {day: [], night: []}; // ECIN 01
             const equipaB = ecin[1] || {day: [], night: []}; // ECIN 02
             const elacTeam = elac[0] || {day: [], night: []}; // ELAC
 
             // --- REGISTO DE PRESENÇAS (fillTeam) ---
-            fillTeam(14, equipaA.day);   // ECIN 01 - Dia
-            fillTeam(23, equipaA.night); // ECIN 01 - Noite
-            fillTeam(32, equipaB.day);   // ECIN 02 - Dia
-            fillTeam(41, equipaB.night); // ECIN 02 - Noite
+            // ECIN 01 - Dia (Linhas 14 a 18)
+            fillTeam(14, equipaA.day);   
+            // ECIN 01 - Noite (Linhas 23 a 27)
+            fillTeam(23, equipaA.night); 
+            // ECIN 02 - Dia (Linhas 32 a 36)
+            fillTeam(32, equipaB.day);   
+            // ECIN 02 - Noite (Linhas 41 a 45)
+            fillTeam(41, equipaB.night); 
 
+            // ELAC (Presenças)
             fillTeam(118, elacTeam.day); 
             fillTeam(124, elacTeam.night);
 
             // --- ESCALA DE SERVIÇO (fillTeamFull) ---
-            fillTeamFull(65, equipaA.day);   // ECIN 01 - Dia (Escala)
-            fillTeamFull(74, equipaA.night); // ECIN 01 - Noite (Escala)
-            fillTeamFull(83, equipaB.day);   // ECIN 02 - Dia (Escala)
-            fillTeamFull(92, equipaB.night); // ECIN 02 - Noite (Escala)
+            fillTeamFull(65, equipaA.day);   
+            fillTeamFull(74, equipaA.night); 
+            fillTeamFull(83, equipaB.day);   
+            fillTeamFull(92, equipaB.night); 
             
             fillTeamFull(172, elacTeam.day); 
             fillTeamFull(178, elacTeam.night);
+          
 
           
 

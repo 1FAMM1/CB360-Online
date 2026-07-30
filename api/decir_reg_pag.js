@@ -334,17 +334,18 @@
           };
 
           if (mode === "2_ecin_1_elac") {
-            // ── Layout sincronizado com o modo "brigada" para 2 ECIN e 1 ELAC ──
             const dateFormatted = formatDate(date);
             const period = `Período: ${dateFormatted}`;
             
+            // Títulos e Períodos
             [7, 60, 113, 167].forEach(row => sheet.getCell(`B${row}`).value = title);
             [9, 62, 115, 169].forEach(row => sheet.getCell(`B${row}`).value = period);
             
-            // Datas nas células respetivas (idêntico ao layout da brigada)
+            // Datas dos Turnos (Dia e Noite para ECIN 1, ECIN 2 e ELAC)
             [11, 20, 64, 73, 117, 123, 171, 177].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted);
-            [29, 38, 82, 91].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted); // Adicionado para cobrir o segundo bloco igual à brigada
+            [29, 38, 82, 91].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted);
             
+            // Turnos (Dia vs Noite)
             [11, 29, 64, 82, 117, 171].forEach(row => sheet.getCell(`F${row}`).value = dayShift);
             [20, 38, 73, 91, 123, 177].forEach(row => sheet.getCell(`F${row}`).value = nightShift);
 
@@ -352,20 +353,32 @@
             const equipaB = ecin[1] || {day: [], night: []};
             const elacTeam = elac[0] || {day: [], night: []};
 
-            // ECIN A e B (Mesmas linhas da brigada)
-            fillTeam(14, equipaA.day); fillTeam(23, equipaA.night); 
-            fillTeam(32, equipaB.day); fillTeam(41, equipaB.night);
-
-            // ELAC - Distribuído pelas linhas correspondentes aos dois blocos (idêntico à brigada)
-            fillTeam(120, elacTeam.day); fillTeam(126, elacTeam.night); 
-            fillTeam(132, elacTeam.day); fillTeam(138, elacTeam.night);
-
-            // Tabelas completas (FillTeamFull) espelhadas exatamente com a brigada
-            fillTeamFull(67, equipaA.day); fillTeamFull(76, equipaA.night); 
-            fillTeamFull(85, equipaB.day); fillTeamFull(94, equipaB.night);
+            // --- REGISTO DE PRESENÇAS ---
+            // ECIN 1 (Dia: linha 14 | Noite: linha 23)
+            fillTeam(14, equipaA.day); 
+            fillTeam(23, equipaA.night);
             
-            fillTeamFull(174, elacTeam.day); fillTeamFull(180, elacTeam.night); 
-            fillTeamFull(187, elacTeam.day); fillTeamFull(193, elacTeam.night);
+            // ECIN 2 (Dia: linha 32 | Noite: linha 41)
+            fillTeam(32, equipaB.day); 
+            fillTeam(41, equipaB.night);
+
+            // ELAC (Dia: linha 120 | Noite: linha 126)
+            fillTeam(120, elacTeam.day); 
+            fillTeam(126, elacTeam.night);
+
+            // --- ESCALA DE SERVIÇO ---
+            // ECIN 1 Completa (Dia: linha 67 | Noite: linha 76)
+            fillTeamFull(67, equipaA.day); 
+            fillTeamFull(76, equipaA.night);
+            
+            // ECIN 2 Completa (Dia: linha 85 | Noite: linha 94)
+            fillTeamFull(85, equipaB.day); 
+            fillTeamFull(94, equipaB.night);
+            
+            // ELAC Completa (Dia: linha 174 | Noite: linha 180)
+            fillTeamFull(174, elacTeam.day); 
+            fillTeamFull(180, elacTeam.night);
+
           } else if (mode === "brigada") {
             // ── Caminho antigo (2 datas reais), mantido intacto para compatibilidade ──
             const period = `Período: ${formatDate(date1)}  a  ${formatDate(date2)}`;

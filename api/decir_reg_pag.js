@@ -371,12 +371,12 @@
 
             // --- ESCALA DE SERVIÇO (FillTeamFull) ---
             // ECIN 1 Escala Completa -> Dia começa em 65 | Noite começa em 74
-            fillTeamFull(65, equipaA.day); 
-            fillTeamFull(74, equipaA.night);
+            fillTeamFull(67, equipaA.day); 
+            fillTeamFull(76, equipaA.night);
             
             // ECIN 2 Escala Completa -> Dia começa em 83 | Noite começa em 92
-            fillTeamFull(83, equipaB.day); 
-            fillTeamFull(92, equipaB.night);
+            fillTeamFull(85, equipaB.day); 
+            fillTeamFull(94, equipaB.night);
             
             // ELAC Escala Completa
             fillTeamFull(174, elacTeam.day); 

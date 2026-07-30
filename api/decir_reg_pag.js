@@ -346,10 +346,10 @@
             [11, 29].forEach(row => sheet.getCell(`F${row}`).value = dayShift);
             [20, 38].forEach(row => sheet.getCell(`F${row}`).value = nightShift);
 
-            // Extração correta do array enviado pelo frontend
-            const equipaA = ecin[0] || {day: [], night: []}; // ECIN 01
-            const equipaB = ecin[1] || {day: [], night: []}; // ECIN 02
-            const elacTeam = elac[0] || {day: [], night: []}; // ELAC
+            // Extração segura e isolada (protege caso venha em array ou objeto)
+            const equipaA = (Array.isArray(ecin) ? ecin.find(e => e.team === 1) : null) || ecin[0] || {day: [], night: []};
+            const equipaB = (Array.isArray(ecin) ? ecin.find(e => e.team === 2) : null) || ecin[1] || {day: [], night: []};
+            const elacTeam = (Array.isArray(elac) ? elac.find(e => e.team === 1) : null) || elac[0] || {day: [], night: []};
 
             // --- REGISTO DE PRESENÇAS (fillTeam) - EXATAMENTE IGUAL À BRIGADA ---
             fillTeam(14, equipaA.day);   
@@ -369,6 +369,7 @@
             
             fillTeamFull(175, elacTeam.day); 
             fillTeamFull(181, elacTeam.night);
+          }
           
           
           

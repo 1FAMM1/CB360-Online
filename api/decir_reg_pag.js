@@ -344,9 +344,9 @@
             // --- REGISTO DE PRESENÇAS ---
             // Datas para cada secção de Turno
             [11, 64, 117, 171].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted);
-            [18, 71].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted);
-            [27, 80].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted);
-            [36, 89].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted);
+            [20, 73].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted);
+            [29, 82].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted);
+            [38, 91].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted);
             [123, 177].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted);
             
             // Turnos de Dia (F)

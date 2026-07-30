@@ -360,8 +360,8 @@
             fillTeam(41, equipaB.night); 
 
             // ELAC (Presenças)
-            fillTeam(118, elacTeam.day); 
-            fillTeam(124, elacTeam.night);
+            fillTeam(120, elacTeam.day); 
+            fillTeam(126, elacTeam.night);
 
             // --- ESCALA DE SERVIÇO (fillTeamFull) ---
             fillTeamFull(65, equipaA.day);   

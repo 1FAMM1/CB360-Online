@@ -188,51 +188,136 @@
       mainWrapper.append(yearContainer, monthsWrapper);
       container.appendChild(mainWrapper);
     }
-    /* ─── SIDEBAR BUTTON — MODAL CONFIG ─────────────────────── */
-    async function openConfigDecirModal() {
-      $('modalConfigDecir').classList.add('show');
+    /* ─── SIDEBAR BUTTON — MODAL VALUES CONFIG ─────────────────────── */
+    async function openConfigDecirValuesModal() {
+      $('modalConfigDecirValues').classList.add('show');
       try {
         const data = await supabaseFetch(`decir_values_config?corp_oper_nr=eq.${getCorpId()}`);
         if (data?.length) {
-          $('amal_value').value = data[0].amal_value;
-          $('anepc_value').value = data[0].anepc_value;
+          $('amal_value').value = data[0].amal_value ?? '';
+          $('anepc_value').value = data[0].anepc_value ?? '';
+          $('opat_value').value = data[0].opat_value ?? '';
+          $('sbas_value').value = data[0].sbas_value ?? '';
         }
       } catch (err) {
         console.error("Erro ao carregar dados:", err);
       }
     }
     function closeConfigModal() { 
-      $('modalConfigDecir').classList.remove('show');
+      $('modalConfigDecirValues').classList.remove('show');
     }
     async function updateDecirValues() {
       const btn = $('btnSaveConfig');
       const amal = $('amal_value').value.replace(',','.');
       const anepc = $('anepc_value').value.replace(',','.');
+      const opat = $('opat_value').value.replace(',','.');
+      const sbas = $('sbas_value').value.replace(',','.');
       const corpOperNr = getCorpId();
       btn.disabled = true;
       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A guardar...';
       try {
-        const payload = {corp_oper_nr: corpOperNr, amal_value: parseFloat(amal), anepc_value: parseFloat(anepc), updated_at: new Date().toISOString()};
+        const payload = {corp_oper_nr: corpOperNr, amal_value: amal ? parseFloat(amal) : 0, anepc_value: anepc ? parseFloat(anepc) : 0, opat_value: opat ? parseFloat(opat) : 0, sbas_value: sbas ? parseFloat(sbas) : 0, updated_at: new Date().toISOString()};
         const res = await fetch(`${SUPABASE_URL}/rest/v1/decir_values_config?on_conflict=corp_oper_nr`, {
           method: 'POST',
-          headers: {
-            ...getSupabaseHeaders(),
-            'Content-Type': 'application/json',
-            'Prefer': 'resolution=merge-duplicates,return=minimal'
-          },
+          headers: {...getSupabaseHeaders(), 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal'},
           body: JSON.stringify(payload)
         });
-
         if (res.ok) { 
-          showPopup('popup-success', "Valores atualizados com sucesso!"); closeConfigModal();
+          showPopup('popup-success', "Valores atualizados com sucesso!"); 
+          closeConfigModal();
         } else {
           throw new Error(`Erro ao gravar (${res.status})`);
         }
       } catch (err) {
         console.error(err);
         showPopup('popup-danger', "Erro ao ligar ao servidor.");
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "💾 Gravar Alterações";
       }
-      finally {btn.disabled = false; btn.innerText = "Gravar Alterações";}
+    }
+    /* ─── SIDEBAR BUTTON — MODAL TEANS CONFIG ─────────────────────── */
+    async function openConfigDecirTeamsModal() {
+      const modal = document.getElementById('modalConfigDecirTeams');
+      if (!modal) return;
+      modal.classList.add('show');
+      document.getElementById('ecin_value').value = '';
+      document.getElementById('elac_value').value = '';
+      document.getElementById('opat_equipas_value').value = '';
+      document.getElementById('sbas_equipas_value').value = '';
+      const corp = getCorpId();
+      try {
+        const data = await supabaseFetch(`decir_mode?corp_oper_nr=eq.${corp}&select=mode,opat_qtd,sbas_qtd`);
+        if (data?.length) {
+          const row = data[0];
+          if (row.mode) {
+            const ecinMatch = row.mode.match(/(\d+)_ecin/);
+            const elacMatch = row.mode.match(/(\d+)_elac/);
+            if (ecinMatch) document.getElementById('ecin_value').value = ecinMatch[1];
+            if (elacMatch) document.getElementById('elac_value').value = elacMatch[1];
+          }
+          if (row.opat_qtd != null) document.getElementById('opat_equipas_value').value = row.opat_qtd;
+          if (row.sbas_qtd != null) document.getElementById('sbas_equipas_value').value = row.sbas_qtd;
+        }
+      } catch (err) {
+        console.error("Erro ao carregar configuração de equipas DECIR:", err);
+      }
+    }
+    function closeConfigDecirTeamsModal() {
+      const modal = document.getElementById('modalConfigDecirTeams');
+      if (modal) {
+        modal.classList.remove('show');
+      }
+    }
+    async function updateEquipasValues() {
+      const ecinQty = parseInt(document.getElementById('ecin_value').value, 10) || 0;
+      const elacQty = parseInt(document.getElementById('elac_value').value, 10) || 0;
+      const opatRaw = document.getElementById('opat_equipas_value').value;
+      const sbasRaw = document.getElementById('sbas_equipas_value').value;
+      const opatQty = opatRaw !== '' && parseInt(opatRaw, 10) > 0 ? parseInt(opatRaw, 10) : null;
+      const sbasQty = sbasRaw !== '' && parseInt(sbasRaw, 10) > 0 ? parseInt(sbasRaw, 10) : null;      
+      if (ecinQty === 0 && elacQty === 0 && opatQty === null && sbasQty === null) {
+        showPopup('popup-danger', "Indica pelo menos uma quantidade para uma das equipas.");
+        return;
+      }
+      let mode = null;
+      if (ecinQty > 0 && elacQty > 0) {
+        mode = `${ecinQty}_ecin_${elacQty}_elac`;
+      } else if (ecinQty > 0) {
+        mode = `${ecinQty}_ecin`;
+      } else if (elacQty > 0) {
+        mode = `${elacQty}_elac`;
+      }
+      const corp = getCorpId();
+      const btn = document.getElementById('btnSaveConfigEquipas');
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = "⏳ A gravar...";
+      try {
+        const payload = {corp_oper_nr: corp, mode: mode, opat_qtd: opatQty, sbas_qtd: sbasQty};
+        
+        await fetch(`${SUPABASE_URL}/rest/v1/decir_mode?corp_oper_nr=eq.${corp}`, {
+          method: "DELETE",
+          headers: getSupabaseHeaders()
+        });
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/decir_mode`, {
+          method: "POST",
+          headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          showPopup('popup-success', "Configuração de equipas atualizada com sucesso!");
+          closeConfigDecirTeamsModal();
+        } else {
+          throw new Error(`Erro ao gravar (${res.status})`);
+        }
+      } catch (err) {
+        console.error("Erro ao guardar configuração de equipas DECIR:", err);
+        showPopup('popup-danger', "Erro ao ligar ao servidor.");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
     }
     /* ─── SIDEBAR SUB-SUBMENU HANDLER (DECIR) ───────────────── */
     const PAGE_CONFIGS = {
@@ -2674,29 +2759,19 @@ async function saveDecirFull() {
       }
     }
     /* ─── FUNÇÕES GLOBAIS SIGNA (DECIR) ─────────────────────── */
-    function signaCheckETPlaced(container, nint, day) {
-      let hasDay = false, hasNight = false;
+    function signaCheckETPlaced(container, nint) {
+      let hasDay = false;
+      let hasNight = false;
       container.querySelectorAll(".signa-drop-zone.filled").forEach(z => {
-        if (parseInt(z.dataset.nint, 10) === nint && z.dataset.valueType === "ET" && z.dataset.day === day) {
+        if (
+          parseInt(z.dataset.nint, 10) === nint &&
+          z.dataset.valueType === "ET"
+        ) {
           if (z.dataset.shift === "day") hasDay = true;
           if (z.dataset.shift === "night") hasNight = true;
         }
       });
       return hasDay && hasNight;
-    }
-    function signaFillZone(zone, data) {
-      const tr = zone.closest("tr");
-      if (!tr) return;
-      zone.textContent = String(data.nint).padStart(3,"0");
-      zone.className = "signa-drop-zone filled" + (data.mp ? " mp-fill" : "");
-      zone.dataset.nint = data.nint;
-      zone.dataset.valueType = data.valueType;
-      zone.dataset.day = data.day;
-      zone.dataset.fullname = data.full_name || "";
-      zone.draggable = true;
-      tr.querySelector(".field-nfile").value = data.n_file || "";
-      tr.querySelector(".field-patent").value = data.patent || "";
-      tr.querySelector(".field-abvname").value = data.abv_name || "";
     }
     function signaClearRow(zone) {
       const tr = zone.closest("tr");
@@ -2724,6 +2799,8 @@ async function saveDecirFull() {
               section: zone.dataset.section};
     }
     function signaBuildTurnoBlock(title, subTitle, positions, shift, turnoDay, section, makePositionRowFn) {
+      console.log(subTitle);
+      console.trace(subTitle);
       const block = document.createElement("div");
       block.className = "signa-shift-block";
       const header = document.createElement("div");
@@ -2731,7 +2808,7 @@ async function saveDecirFull() {
       header.textContent = title;
       const sub = document.createElement("div");
       sub.className = "signa-shift-subheader";
-      sub.textContent = subTitle;
+      sub.innerHTML = subTitle;
       block.append(header, sub);
       const table = document.createElement("table");
       table.className = "signa-inner-table";
@@ -2759,54 +2836,41 @@ async function saveDecirFull() {
         console.error("Erro ao ler decir_mode:", err);
       }
       if (mode) return createDecirSignaTable(mode);
-      showDecirModeModal(async (chosen) => {
-        try {
-          await fetch(`${SUPABASE_URL}/rest/v1/decir_mode?corp_oper_nr=eq.${corp}`, {
-            method: "DELETE", headers: getSupabaseHeaders()
-          });
-          await fetch(`${SUPABASE_URL}/rest/v1/decir_mode`, {
-            method: "POST",
-            headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
-            body: JSON.stringify({corp_oper_nr: corp, mode: chosen})
-          });
-        } catch(err) {
-          console.error("Erro ao guardar decir_mode:", err);
-        }
-        createDecirSignaTable(chosen);
-      });
-    }
-    function showDecirModeModal(onConfirm) {
-      document.getElementById("decir-mode-modal")?.remove();
-      const overlay = document.createElement("div");
-      overlay.id = "decir-mode-modal";
-      overlay.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;`;
-      overlay.innerHTML = `
-        <div style="background:#fff;border-radius:8px;padding:28px 32px;min-width:360px;box-shadow:0 8px 32px rgba(0,0,0,0.25);text-align:center;">
-          <div style="font-size:15px;font-weight:bold;color:#131a69;margin-bottom:6px;">CONFIGURAÇÃO DE ASSINATURAS</div>
-          <div style="font-size:12px;color:#666;margin-bottom:20px;">Selecione o modo de operação.</div>
-          <div style="display:flex;flex-direction:column;gap:10px;">
-            <button data-mode="1_ecin" style="padding:12px;background:#131a69;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:bold;cursor:pointer;">🚒 1 ECIN</button>
-            <button data-mode="1_ecin_1_elac" style="padding:12px;background:#1e6f2e;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:bold;cursor:pointer;">🚒🚑 1 ECIN e 1 ELAC</button>
-            <button data-mode="brigada" style="padding:12px;background:#7b1fa2;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:bold;cursor:pointer;">🚒🚒🚑 BRIGADA (2 ECIN's e 1 ELAC)</button>
+      const container = document.querySelector("#decir-reg-signa .major-card-body");
+      if (container) {
+        container.innerHTML = `
+          <div style="padding:20px;text-align:center;color:#666;font-size:13px;">
+            Ainda não há configuração de equipas. Configura primeiro em "Configuração de Equipas".
           </div>
-        </div>`;
-      overlay.querySelectorAll("button[data-mode]").forEach(btn => {
-        btn.addEventListener("click", () => { overlay.remove(); onConfirm(btn.dataset.mode); });
-      });
-      document.body.appendChild(overlay);
+        `;
+      }
     }
-    function createDecirSignaTable(mode = "1_ecin_1_elac") {
+    function createDecirSignaTable(mode = "1_ecin") {
       const container = document.querySelector("#decir-reg-signa .major-card-body");
       if (!container) return;
+      container.dataset.mode = mode;
+      const ecinMatch = mode.match(/(\d+)_ecin/);
+      const elacMatch = mode.match(/(\d+)_elac/);
+      const ecinCount = ecinMatch ? parseInt(ecinMatch[1], 10) : 0;
+      const elacCount = elacMatch ? parseInt(elacMatch[1], 10) : 0;
+      const isMultiTeam = (ecinCount > 1 || elacCount > 1);
       container.innerHTML = "";
       const style = document.createElement("style");
       style.textContent = `
-        .signa-wrapper {display: flex; gap: 16px; font-family: 'Segoe UI', sans-serif;}
+        .signa-wrapper {display: flex; gap: 10px; font-family: 'Segoe UI', sans-serif;}
         .signa-tables {flex: 1; min-width: 0;}
         .signa-sidebar {width: 500px; flex-shrink: 0; margin-top: 12px;}
-        .signa-date-row {display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;}
+        .signa-wrapper {display: flex; gap: 10px; margin-top:15px; font-family: 'Segoe UI', sans-serif;}
+        .signa-tables-wrapper {flex: 1; min-width: 0; max-height: 630px; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; scrollbar-color: #cbd5e1 #f1f5f9;}
+        .signa-tables-wrapper::-webkit-scrollbar {width: 6px;}
+        .signa-tables-wrapper::-webkit-scrollbar-track {background: #f1f5f9; border-radius: 4px;}
+        .signa-tables-wrapper::-webkit-scrollbar-thumb {background-color: #cbd5e1; border-radius: 4px;}
+        .signa-tables-wrapper::-webkit-scrollbar-thumb:hover {background-color: #94a3b8;}
+        .signa-tables {flex: 1; min-width: 0;}
+        .signa-date-row {display: flex; align-items: center; gap: 12px; margin-bottom: 0px; flex-wrap: wrap;}
         .signa-date-row label {font-weight: bold; font-size: 13px;}
-        .signa-date-row input[type="date"] {padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; cursor: pointer;}
+        .signa-date-row input[type="date"] {padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; cursor: pointer; transition: border-color .2s ease, box-shadow .2s ease;}
+        .signa-date-row input[type="date"]:focus {outline: none; border-color: #c62828; box-shadow: 0 0 0 2px rgba(198, 40, 40, 0.15);}
         .signa-load-btn {padding: 7px 16px; background: #131a69; color: #fff; border: none; border-radius: 4px; font-weight: bold; font-size: 13px; cursor: pointer;}
         .signa-load-btn:hover {background: #1e2a80;}
         .signa-format-btn {padding: 7px 16px; background: #2e7d32; color: #fff; border: none; border-radius: 4px; font-weight: bold; font-size: 13px; cursor: pointer;}
@@ -2823,8 +2887,7 @@ async function saveDecirFull() {
         .signa-inner-table tbody td {padding: 2px 4px; border: 1px solid #ccc; text-align: center; font-size: 11px; height: 26px; vertical-align: middle;}
         .signa-pos-label {font-weight: bold; color: #555; background: #f5f5f5; white-space: nowrap; width: 32px;}
         .signa-drop-cell {min-width: 40px; width: 40px;}
-        .signa-drop-zone {min-height: 22px; border: 1px dashed #ccc; border-radius: 2px; padding: 1px 4px; background: #fafafa; display: flex; align-items: center; justify-content: center; 
-                          font-size: 10px; color: #aaa; transition: background 0.15s; cursor: default;}
+        .signa-drop-zone {min-height: 22px; border: 1px dashed #ccc; border-radius: 2px; padding: 1px 4px; background: #fafafa; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #aaa; transition: background 0.15s; cursor: default;}
         .signa-drop-zone.drag-over {background: #e8f0ff; border-color: #131a69; border-style: solid;}
         .signa-drop-zone.drag-invalid {background: #ffeeee; border-color: #c62828; border-style: solid;}
         .signa-drop-zone.filled { background: #eef4ff; border-color: #3a4fb0; border-style: solid; color: #222; font-weight: bold; font-size: 11px; cursor: grab;}
@@ -2834,8 +2897,12 @@ async function saveDecirFull() {
         .signa-clear-btn:hover {color: #c62828;}
         .signa-sidebar-title {background: #333; color: #fff; font-weight: bold; font-size: 12px; padding: 6px 10px; border-radius: 4px 4px 0 0;}
         .signa-sidebar-day-title {font-size: 11px; font-weight: bold; padding: 5px 8px; background: #131a69; color: #fff; border-bottom: 1px solid #0a0f40;}
-        .signa-sidebar-group-title {font-size: 10px; font-weight: bold; padding: 3px 8px; background: #f0f0f0; color: #555; border-bottom: 1px solid #ddd;}
-        .signa-sidebar-list {border: 1px solid #ddd; border-top: none; border-radius: 0 0 4px 4px; height: calc(100% - 35px); overflow-y: auto;}
+        .signa-sidebar-group-title {font-size: 10px; font-weight: bold; padding: 3px 8px; background: #f0f0f0; color: #555; border-bottom: 1px solid #ddd;}        
+        .signa-sidebar-list {border: 1px solid #ddd; border-top: none; border-radius: 0 0 4px 4px; height: calc(100% - 35px); max-height: 550px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #cbd5e1 #f1f5f9;}
+        .signa-sidebar-list::-webkit-scrollbar {width: 6px;}
+        .signa-sidebar-list::-webkit-scrollbar-track {background: #f1f5f9; border-radius: 0 0 4px 0;}
+        .signa-sidebar-list::-webkit-scrollbar-thumb {background-color: #cbd5e1; border-radius: 4px;}
+        .signa-sidebar-list::-webkit-scrollbar-thumb:hover {background-color: #94a3b8;}
         .signa-sidebar-item {display: flex; align-items: center; gap: 4px; padding: 4px 8px; border-bottom: 1px solid #f5f5f5; cursor: grab; background: #fff; user-select: none; font-size: 11px;}
         .signa-sidebar-item:hover {background: #f0f4ff;}
         .signa-sidebar-item.dragging {opacity: 0.4;}
@@ -2849,54 +2916,39 @@ async function saveDecirFull() {
       document.head.appendChild(style);
       const dateRow = document.createElement("div");
       dateRow.className = "signa-date-row";
-      const lbl1 = document.createElement("label"); lbl1.textContent = "Dia 1:";
+      const lbl1 = document.createElement("label");
       const inp1 = document.createElement("input"); inp1.type = "date"; inp1.id = "signa-date1";
-      const lbl2 = document.createElement("label"); lbl2.textContent = "Dia 2:";
-      const inp2 = document.createElement("input"); inp2.type = "date"; inp2.id = "signa-date2";
+      let lbl2 = null, inp2 = null;
+      if (!isMultiTeam) {
+        lbl1.textContent = "Dia 1:";
+        lbl2 = document.createElement("label"); lbl2.textContent = "Dia 2:";
+        inp2 = document.createElement("input"); inp2.type = "date"; inp2.id = "signa-date2";
+      } else {
+        lbl1.textContent = "Dia:";
+      }
       const loadBtn = document.createElement("button");
       loadBtn.className = "signa-load-btn"; loadBtn.textContent = "⟳ Carregar Elementos";
       const formatBtn = document.createElement("button");
       formatBtn.className = "signa-format-btn"; formatBtn.textContent = "⚡ Formatar Equipas";
-      if (mode === "brigada") {
-        inp2.disabled = true;
-        inp2.style.opacity = "0.5";
-        inp2.style.cursor = "not-allowed";
-        inp1.addEventListener("input", () => { inp2.value = inp1.value; });
-        inp1.addEventListener("change", () => { inp2.value = inp1.value; });
-      }
-      dateRow.append(lbl1, inp1, lbl2, inp2, loadBtn, formatBtn);
+      if (!isMultiTeam) dateRow.append(lbl1, inp1, lbl2, inp2, loadBtn, formatBtn);
+      else dateRow.append(lbl1, inp1, loadBtn, formatBtn);
       const modeSpacer = document.createElement("div");
       modeSpacer.style.cssText = "flex:1;";
       const modeLabel = document.createElement("span");
-      const modeNames = {"1_ecin": "1 ECIN", "1_ecin_1_elac": "1 ECIN e 1 ELAC", "brigada": "BRIGADA"};
+      const modeLabelParts = [];
+      if (ecinCount > 0) modeLabelParts.push(`${ecinCount} ECIN`);
+      if (elacCount > 0) modeLabelParts.push(`${elacCount} ELAC`);
       modeLabel.style.cssText = "font-size:12px;color:#555;font-weight:bold;";
-      modeLabel.innerHTML = `Modo de Operação: <span class="mode-highlight">${modeNames[mode] || mode}</span>`;
-      const modeBtn = document.createElement("button");
-      modeBtn.textContent = "✏️ Modificar";
-      modeBtn.style.cssText = "padding:7px 16px;background:#b71c1c;color:#fff;border:none;border-radius:4px;font-weight:bold;font-size:13px;cursor:pointer;";
-      modeBtn.addEventListener("click", async () => {
-        showDecirModeModal(async (chosen) => {
-          try {
-            await fetch(`${SUPABASE_URL}/rest/v1/decir_mode?corp_oper_nr=eq.${getCorpId()}`, {
-              method: "DELETE", headers: getSupabaseHeaders()
-            });
-            await fetch(`${SUPABASE_URL}/rest/v1/decir_mode`, {
-              method: "POST",
-              headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
-              body: JSON.stringify({corp_oper_nr: getCorpId(), mode: chosen})
-            });
-          } catch(err) {
-            console.error("Erro ao guardar decir_mode:", err);
-          }
-          createDecirSignaTable(chosen);
-        });
-      });
-      dateRow.append(modeSpacer, modeLabel, modeBtn);
+      modeLabel.innerHTML = `Modo de Operação: <span class="mode-highlight">${modeLabelParts.join(" e ") || mode}</span>`;
+      dateRow.append(modeSpacer, modeLabel);
       container.appendChild(dateRow);
       const wrapper = document.createElement("div");
       wrapper.className = "signa-wrapper";
       const tablesDiv = document.createElement("div");
       tablesDiv.className = "signa-tables";
+      const tablesWrapper = document.createElement("div");
+      tablesWrapper.className = "signa-tables-wrapper";
+      tablesWrapper.appendChild(tablesDiv);
       const sidebarDiv = document.createElement("div");
       sidebarDiv.className = "signa-sidebar";
       const sidebarTitle = document.createElement("div");
@@ -2906,34 +2958,62 @@ async function saveDecirFull() {
       const sidebarList = document.createElement("div");
       sidebarList.className = "signa-sidebar-list";
       sidebarList.id = "signa-sidebar-list";
-      sidebarList.innerHTML = `<div style="padding: 12px; font-size: 11px; color: #999; text-align: center;">Selecione as datas e clique em Carregar</div>`;
+      sidebarList.innerHTML = `<div style="padding: 12px; font-size: 11px; color: #999; text-align: center;">Selecione ${isMultiTeam ? "a data" : "as datas"} e clique em Carregar</div>`;
       sidebarDiv.append(sidebarTitle, sidebarList);
-      wrapper.append(tablesDiv, sidebarDiv);
+      wrapper.append(tablesWrapper, sidebarDiv);
       container.appendChild(wrapper);
       let dragData = null;
+      function signaFillZone(zone, data) {
+        const tr = zone.closest("tr");
+        if (!tr) return;
+        zone.textContent = String(data.nint).padStart(3, "0");
+        zone.className = "signa-drop-zone filled" + (data.mp ? " mp-fill" : "");
+        zone.dataset.nint = data.nint;
+        zone.dataset.valueType = data.valueType;
+        zone.dataset.sourceDay = data.day || "";
+        zone.dataset.fullname = data.full_name || "";
+        zone.draggable = true;
+        tr.querySelector(".field-nfile").value = data.n_file || "";
+        tr.querySelector(".field-patent").value = data.patent || "";
+        tr.querySelector(".field-abvname").value = data.abv_name || "";
+      }
       function updateSidebarItem(nint, valueType, day) {
         sidebarList.querySelectorAll(".signa-sidebar-item").forEach(item => {
-          if (parseInt(item.dataset.nint, 10) === nint && item.dataset.valueType === valueType && item.dataset.day === day) {
-            setTimeout(() => {
-              if (valueType === "ET") {
-                if (signaCheckETPlaced(container, nint, day)) item.classList.add("used");
-                else item.classList.remove("used");
-              } else {
-                item.classList.add("used");
-              }
-            }, 0);
-          }
-        });
-      }
-      function restoreSidebarItem(nint, valueType, day) {
-        sidebarList.querySelectorAll(".signa-sidebar-item").forEach(item => {
-          if (parseInt(item.dataset.nint, 10) === nint && item.dataset.valueType === valueType && item.dataset.day === day) {
-            setTimeout(() => {
-              if (valueType === "ET") {
-                if (!signaCheckETPlaced(container, nint, day)) item.classList.remove("used");
-              } else {
-                const stillPlaced = container.querySelector(`.signa-drop-zone.filled[data-nint="${nint}"][data-day="${day}"]`);
-                if (!stillPlaced) item.classList.remove("used");
+          if (
+            parseInt(item.dataset.nint, 10) === nint &&
+            item.dataset.valueType === valueType &&
+            (isMultiTeam || item.dataset.day === day)
+          ) {
+          setTimeout(() => {
+            if (valueType === "ET") {
+              if (signaCheckETPlaced(container, nint))
+              item.classList.add("used");
+              else
+              item.classList.remove("used");
+            } else {
+              item.classList.add("used");
+            }
+          }, 0);
+        }
+      });
+    }
+    function restoreSidebarItem(nint, valueType, day) {
+      sidebarList.querySelectorAll(".signa-sidebar-item").forEach(item => {
+        if (
+          parseInt(item.dataset.nint, 10) === nint &&
+          item.dataset.valueType === valueType &&
+          (isMultiTeam || item.dataset.day === day)
+        ) {
+          setTimeout(() => {
+            if (valueType === "ET") {
+              if (!signaCheckETPlaced(container, nint))
+              item.classList.remove("used");
+            } else {
+              const stillPlaced = isMultiTeam
+                ? container.querySelector(`.signa-drop-zone.filled[data-nint="${nint}"]`)
+                : container.querySelector(`.signa-drop-zone.filled[data-nint="${nint}"][data-day="${day}"]`);
+                if (!stillPlaced)
+                item.classList.remove("used");
               }
             }, 0);
           }
@@ -2955,12 +3035,27 @@ async function saveDecirFull() {
         zone.dataset.day = turnoDay;
         zone.dataset.section = section;
         zone.dataset.valueType = "";
-        zone.draggable = false;
+        zone.draggable = true;
+        zone.addEventListener("dragstart", e => {
+          if (!zone.classList.contains("filled")) {
+            e.preventDefault();
+            return;
+          }
+          const data = signaGetZoneData(zone);
+          if (!data) {
+            e.preventDefault();
+            return;
+          }
+          dragData = { ...data, sourceZone: zone };
+          zone.classList.add("dragging");
+          e.dataTransfer.effectAllowed = "move";
+        });
+        zone.addEventListener("dragend", () => zone.classList.remove("dragging"));
         zone.addEventListener("dragover", e => {
           e.preventDefault();
           if (!dragData) return;
           const shiftOk = dragData.valueType === "ED" ? shift === "day" : dragData.valueType === "EN" ? shift === "night" : true;
-          const dayOk = dragData.day === turnoDay;
+          const dayOk = isMultiTeam ? true : dragData.day === turnoDay;
           zone.classList.remove("drag-over", "drag-invalid");
           zone.classList.add(shiftOk && dayOk ? "drag-over" : "drag-invalid");
         });
@@ -2970,7 +3065,7 @@ async function saveDecirFull() {
           zone.classList.remove("drag-over", "drag-invalid");
           if (!dragData) return;
           const shiftOk = dragData.valueType === "ED" ? shift === "day" : dragData.valueType === "EN" ? shift === "night" : true;
-          const dayOk = dragData.day === turnoDay;
+          const dayOk = isMultiTeam ? true : dragData.day === turnoDay;
           if (!shiftOk || !dayOk) {
             const msg = !dayOk ? `⛔ Elemento do Dia ${dragData.day} não pode ser colocado no Dia ${turnoDay}!`
                                : `⛔ Elemento ${dragData.valueType} não pode ser colocado neste turno!`;
@@ -2984,7 +3079,7 @@ async function saveDecirFull() {
               const srcShift = dragData.sourceZone.dataset.shift;
               const srcDay = dragData.sourceZone.dataset.day;
               const swapShiftOk = destExisting.valueType === "ED" ? srcShift === "day" : destExisting.valueType === "EN" ? srcShift === "night" : true;
-              const swapDayOk = destExisting.day === srcDay;
+              const swapDayOk = isMultiTeam ? true : destExisting.day === srcDay;
               if (swapShiftOk && swapDayOk) {
                 signaFillZone(dragData.sourceZone, destExisting);
                 updateSidebarItem(destExisting.nint, destExisting.valueType, destExisting.day);
@@ -2995,18 +3090,11 @@ async function saveDecirFull() {
             } else {
               signaClearRow(dragData.sourceZone);
             }
-            restoreSidebarItem(dragData.nint, dragData.valueType, dragData.day);
           }
+          if (destExisting) restoreSidebarItem(destExisting.nint, destExisting.valueType, destExisting.day);
           signaFillZone(zone, dragData);
           updateSidebarItem(dragData.nint, dragData.valueType, dragData.day);
           dragData = null;
-        });
-        zone.addEventListener("dragstart", e => {
-          if (!zone.dataset.nint) {e.preventDefault(); return;}
-          const data = signaGetZoneData(zone);
-          if (!data) {e.preventDefault(); return;}
-          dragData = {...data, sourceZone: zone};
-          e.dataTransfer.effectAllowed = "move";
         });
         tdDrop.appendChild(zone);
         tr.appendChild(tdDrop);
@@ -3037,75 +3125,86 @@ async function saveDecirFull() {
       }
       function buildSignaTables() {
         tablesDiv.innerHTML = "";
+        const DayIcon = `<i class="fa-solid fa-sun"></i> 08:00 → 20:00`;
+        const NightIcon = `<i class="fa-solid fa-moon"></i> 20:00 → 08:00`;
         const date1 = inp1.value ? new Date(inp1.value).toLocaleDateString("pt-PT") : "";
-        const date2 = inp2.value ? new Date(inp2.value).toLocaleDateString("pt-PT") : "";
-        // ── ECIN ──
-        const ecinTitle = document.createElement("div");
-        ecinTitle.className = "signa-section-title";
-        ecinTitle.textContent = "ECIN";
-        ecinTitle.style.textAlign = "center";
-        tablesDiv.appendChild(ecinTitle);
-        if (mode === "brigada") {
-          // ── Equipa 01 ──
-          const eq1Title = document.createElement("div");
-          eq1Title.className = "signa-section-title";
-          eq1Title.textContent = "EQUIPA 01";
-          eq1Title.style.cssText = "text-align:center;background:#1e6f2e;margin-top:4px;";
-          tablesDiv.appendChild(eq1Title);
-          const eq1Grid = document.createElement("div");
-          eq1Grid.className = "signa-shift-grid";
-          eq1Grid.append(
-            signaBuildTurnoBlock(`${date1} | DIA`, `☀️ 08:00 → 20:00`, ["CE","MO","Elem.1","Elem.2","Elem.3"], "day", "1", "ecin", makePositionRow),
-            signaBuildTurnoBlock(`${date1} | NOITE`, `🌙 20:00 → 08:00`, ["CE","MO","Elem.1","Elem.2","Elem.3"], "night", "1", "ecin", makePositionRow)
-          );
-          tablesDiv.appendChild(eq1Grid);
-          // ── Equipa 02 ──
-          const eq2Title = document.createElement("div");
-          eq2Title.className = "signa-section-title";
-          eq2Title.textContent = "EQUIPA 02";
-          eq2Title.style.cssText = "text-align:center;background:#1e6f2e;margin-top:4px;";
-          tablesDiv.appendChild(eq2Title);
-          const eq2Grid = document.createElement("div");
-          eq2Grid.className = "signa-shift-grid";
-          eq2Grid.append(
-            signaBuildTurnoBlock(`${date1} | DIA`, `☀️ 08:00 → 20:00`, ["CE","MO","Elem.1","Elem.2","Elem.3"], "day", "2", "ecin", makePositionRow),
-            signaBuildTurnoBlock(`${date1} | NOITE`, `🌙 20:00 → 08:00`, ["CE","MO","Elem.1","Elem.2","Elem.3"], "night", "2", "ecin", makePositionRow)
-          );
-          tablesDiv.appendChild(eq2Grid);
-        } else {
-          const ecinGrid = document.createElement("div");
-          ecinGrid.className = "signa-shift-grid";
-          ecinGrid.append(
-            signaBuildTurnoBlock(`${date1} | DIA`, `☀️ 08:00 → 20:00`, ["CE","MO","Elem.1","Elem.2","Elem.3"], "day", "1", "ecin", makePositionRow),
-            signaBuildTurnoBlock(`${date1} | NOITE`, `🌙 20:00 → 08:00`, ["CE","MO","Elem.1","Elem.2","Elem.3"], "night", "1", "ecin", makePositionRow),
-            signaBuildTurnoBlock(`${date2} | DIA`, `☀️ 08:00 → 20:00`, ["CE","MO","Elem.1","Elem.2","Elem.3"], "day", "2", "ecin", makePositionRow),
-            signaBuildTurnoBlock(`${date2} | NOITE`, `🌙 20:00 → 08:00`, ["CE","MO","Elem.1","Elem.2","Elem.3"], "night", "2", "ecin", makePositionRow)
-          );
-          tablesDiv.appendChild(ecinGrid);
+        const date2 = (!isMultiTeam && inp2.value) ? new Date(inp2.value).toLocaleDateString("pt-PT") : "";
+        if (!isMultiTeam) {
+          if (ecinCount > 0) {
+            const ecinTitle = document.createElement("div");
+            ecinTitle.className = "signa-section-title";
+            ecinTitle.textContent = "ECIN";
+            ecinTitle.style.textAlign = "center";
+            tablesDiv.appendChild(ecinTitle);
+            const ecinGrid = document.createElement("div");            
+            ecinGrid.className = "signa-shift-grid";
+            ecinGrid.append(
+              signaBuildTurnoBlock(`${date1} | DIA`, DayIcon, ["CE","MO","Elem.1","Elem.2","Elem.3"], "day", "1", "ecin", makePositionRow),
+              signaBuildTurnoBlock(`${date1} | NOITE`, NightIcon, ["CE","MO","Elem.1","Elem.2","Elem.3"], "night", "1", "ecin", makePositionRow),
+              signaBuildTurnoBlock(`${date2} | DIA`, DayIcon, ["CE","MO","Elem.1","Elem.2","Elem.3"], "day", "2", "ecin", makePositionRow),
+              signaBuildTurnoBlock(`${date2} | NOITE`, NightIcon, ["CE","MO","Elem.1","Elem.2","Elem.3"], "night", "2", "ecin", makePositionRow)
+            );
+            tablesDiv.appendChild(ecinGrid);
+          }
+          if (elacCount > 0) {
+            const elacTitle = document.createElement("div");
+            elacTitle.className = "signa-section-title";
+            elacTitle.textContent = "ELAC";
+            elacTitle.style.textAlign = "center";
+            tablesDiv.appendChild(elacTitle);
+            const elacGrid = document.createElement("div");
+            elacGrid.className = "signa-shift-grid";
+            elacGrid.append(
+              signaBuildTurnoBlock(`${date1} | DIA`, DayIcon, ["CE","MO"], "day", "1", "elac", makePositionRow),
+              signaBuildTurnoBlock(`${date1} | NOITE`, NightIcon, ["CE","MO"], "night", "1", "elac", makePositionRow),
+              signaBuildTurnoBlock(`${date2} | DIA`, DayIcon, ["CE","MO"], "day", "2", "elac", makePositionRow),
+              signaBuildTurnoBlock(`${date2} | NOITE`, NightIcon, ["CE","MO"], "night", "2", "elac", makePositionRow)
+            );
+            tablesDiv.appendChild(elacGrid);
+          }
+          return;
         }
-        // ── ELAC (só modos 1_ecin_1_elac e brigada) ──
-        if (mode === "1_ecin_1_elac" || mode === "brigada") {
+        if (ecinCount > 0) {
+          const ecinTitle = document.createElement("div");
+          ecinTitle.className = "signa-section-title";
+          ecinTitle.textContent = "ECIN";
+          ecinTitle.style.textAlign = "center";
+          tablesDiv.appendChild(ecinTitle);
+          for (let team = 1; team <= ecinCount; team++) {
+            const eqTitle = document.createElement("div");
+            eqTitle.className = "signa-section-title";
+            eqTitle.textContent = `EQUIPA ${String(team).padStart(2,"0")}`;
+            eqTitle.style.cssText = "text-align:center;background:#1e6f2e;margin-top:4px;";
+            tablesDiv.appendChild(eqTitle);
+            const eqGrid = document.createElement("div");
+            eqGrid.className = "signa-shift-grid";
+            eqGrid.append(
+              signaBuildTurnoBlock(`${date1} | DIA`, DayIcon, ["CE","MO","Elem.1","Elem.2","Elem.3"], "day", String(team), "ecin", makePositionRow),
+              signaBuildTurnoBlock(`${date1} | NOITE`, NightIcon, ["CE","MO","Elem.1","Elem.2","Elem.3"], "night", String(team), "ecin", makePositionRow)
+            );
+            tablesDiv.appendChild(eqGrid);
+          }
+        }
+        if (elacCount > 0) {
           const elacTitle = document.createElement("div");
           elacTitle.className = "signa-section-title";
           elacTitle.textContent = "ELAC";
           elacTitle.style.textAlign = "center";
           tablesDiv.appendChild(elacTitle);
-          const elacGrid = document.createElement("div");
-          elacGrid.className = "signa-shift-grid";
-          if (mode === "brigada") {
-            elacGrid.append(
-              signaBuildTurnoBlock(`${date1} | DIA`, `☀️ 08:00 → 20:00`, ["CE","MO"], "day", "1", "elac", makePositionRow),
-              signaBuildTurnoBlock(`${date1} | NOITE`, `🌙 20:00 → 08:00`, ["CE","MO"], "night", "1", "elac", makePositionRow)
+          for (let team = 1; team <= elacCount; team++) {
+            const eqTitle = document.createElement("div");
+            eqTitle.className = "signa-section-title";
+            eqTitle.textContent = `EQUIPA ${String(team).padStart(2,"0")}`;
+            eqTitle.style.cssText = "text-align:center;background:#1e6f2e;margin-top:4px;";
+            tablesDiv.appendChild(eqTitle);
+            const eqGrid = document.createElement("div");
+            eqGrid.className = "signa-shift-grid";
+            eqGrid.append(
+              signaBuildTurnoBlock(`${date1} | DIA`, `<i class="fa-solid fa-sun"></i> 08:00 → 20:00`, ["CE","MO"], "day", String(team), "elac", makePositionRow),
+              signaBuildTurnoBlock(`${date1} | NOITE`, `🌙 20:00 → 08:00`, ["CE","MO"], "night", String(team), "elac", makePositionRow)
             );
-          } else {
-            elacGrid.append(
-              signaBuildTurnoBlock(`${date1} | DIA`, `☀️ 08:00 → 20:00`, ["CE","MO"], "day", "1", "elac", makePositionRow),
-              signaBuildTurnoBlock(`${date1} | NOITE`, `🌙 20:00 → 08:00`, ["CE","MO"], "night", "1", "elac", makePositionRow),
-              signaBuildTurnoBlock(`${date2} | DIA`, `☀️ 08:00 → 20:00`, ["CE","MO"], "day", "2", "elac", makePositionRow),
-              signaBuildTurnoBlock(`${date2} | NOITE`, `🌙 20:00 → 08:00`, ["CE","MO"], "night", "2", "elac", makePositionRow)
-            );
+            tablesDiv.appendChild(eqGrid);
           }
-          tablesDiv.appendChild(elacGrid);
         }
       }
       buildSignaTables();
@@ -3135,25 +3234,12 @@ async function saveDecirFull() {
         item.addEventListener("dragend", () => item.classList.remove("dragging"));
         return item;
       }
-      // ── Formatar Equipas ──
-      formatBtn.addEventListener("click", () => {
-        const sidebarItems = sidebarList.querySelectorAll(".signa-sidebar-item");
-        if (!sidebarItems.length) return showPopup('popup-danger', "Carregue os elementos primeiro.");
-        const getAllForShift = (day, shift) => {
-          const items = [];
-          sidebarList.querySelectorAll(".signa-sidebar-item").forEach(item => {
-            if (item.dataset.day !== day) return;
-            const vt = item.dataset.valueType;
-            if (vt === "ED" && shift !== "day") return;
-            if (vt === "EN" && shift !== "night") return;
-            items.push({nint: parseInt(item.dataset.nint, 10), n_file: item.dataset.nfile || "", patent: item.querySelector(".signa-cat").textContent.trim(),
-                        abv_name: item.querySelector(".signa-name").textContent.trim(), full_name: item.dataset.fullname || "", mp: item.dataset.mp === "1", valueType: vt, day: day});});
-          return items.sort((a,b) => a.nint - b.nint);
-        };
-        const distributeToZones = (items, day, shift, section) => {
-          if (!items.length) return;
+      const assignElementsToZones = (items, day, shift, section, isDirectAssignment = false) => {
+        if (!items || !items.length) return;
+        let assigned = items;
+        if (!isDirectAssignment) {
           const mpItems = items.filter(i => i.mp);
-          let ceIdx = 0, moIdx = -1;
+          let ceIdx = 0, moIdx = -1;          
           if (mpItems.length === 1 && items[0].nint === mpItems[0].nint) {
             moIdx = 0; ceIdx = items.length > 1 ? 1 : -1;
           } else if (mpItems.length > 0) {
@@ -3163,98 +3249,67 @@ async function saveDecirFull() {
           } else {
             ceIdx = 0; moIdx = items.length > 1 ? 1 : -1;
           }
-          const assigned = [];
-          const used = new Set();
-          if (ceIdx >= 0 && items[ceIdx]) {assigned.push(items[ceIdx]); used.add(ceIdx);}
-          else assigned.push(null);
-          if (moIdx >= 0 && moIdx !== ceIdx && items[moIdx]) {assigned.push(items[moIdx]); used.add(moIdx);}
-          else assigned.push(null);
-          items.forEach((item, idx) => {if (!used.has(idx)) assigned.push(item);});
-          const zones = Array.from(container.querySelectorAll(
-            `.signa-drop-zone[data-day="${day}"][data-shift="${shift}"][data-section="${section}"]`
-          ));
-          zones.forEach((zone, i) => {
-            if (!assigned[i]) return;
-            if (zone.dataset.nint) signaClearRow(zone);
-            signaFillZone(zone, assigned[i]);
-            updateSidebarItem(assigned[i].nint, assigned[i].valueType, assigned[i].day);
-          });
-        };
-        // ── Modo BRIGADA — tratado fora do forEach ──
-        if (mode === "brigada") {
-          ["day","night"].forEach(shift => {
-            const all = getAllForShift("1", shift);
-            if (!all.length) return;
-            if (all.length < 8) {
-              showPopup('popup-danger', `⛔ Elementos insuficientes para modo Brigada (mínimo 8, disponíveis ${all.length}).`);
-              return;
-            }
-            let ecinACount, ecinBCount, elacCount;
-            if (all.length >= 12) {ecinACount = 5; ecinBCount = 5; elacCount = 2;}
-            else if (all.length === 11) {ecinACount = 5; ecinBCount = 5; elacCount = 1;}
-            else if (all.length === 10) {ecinACount = 5; ecinBCount = 4; elacCount = 1;}
-            else if (all.length === 9) {ecinACount = 4; ecinBCount = 4; elacCount = 1;}
-            else {ecinACount = 4; ecinBCount = 4; elacCount = 0;}
-            const mpCopy = [...all.filter(i => i.mp)];
-            const nonMpCopy = [...all.filter(i => !i.mp)];
-            const elacItems = [];
-            if (elacCount === 2) {
-              elacItems.push(mpCopy.pop());
-              if (nonMpCopy.length > 0) elacItems.unshift(nonMpCopy.pop());
-              else elacItems.unshift(mpCopy.pop());
-            }
-            const remaining = [...nonMpCopy, ...mpCopy].sort((a,b) => a.nint - b.nint);
-            const ecinBMP = remaining.find(i => i.mp);
-            const remainingAfterBMP = remaining.filter(i => i !== ecinBMP);
-            const ecinBItems = ecinBMP ? [ecinBMP, ...remainingAfterBMP.splice(0, ecinBCount - 1)] : remainingAfterBMP.splice(0, ecinBCount);
-            const ecinAItems = remainingAfterBMP.slice(0, ecinACount);
-            distributeToZones(ecinAItems, "1", shift, "ecin");
-            distributeToZones(ecinBItems, "2", shift, "ecin");
-            if (elacCount > 0) {
-              const elacZones = Array.from(container.querySelectorAll(
-                `.signa-drop-zone[data-day="1"][data-shift="${shift}"][data-section="elac"]`
-              ));
-              if (elacCount === 1) {              
-                const mpEl = mpCopy.pop();
-                if (mpEl && elacZones[1]) {
-                  if (elacZones[1].dataset.nint) signaClearRow(elacZones[1]);
-                  signaFillZone(elacZones[1], mpEl);
-                  updateSidebarItem(mpEl.nint, mpEl.valueType, mpEl.day);
-                }
-              } else {
-                elacZones.forEach((zone, i) => {
-                  if (!elacItems[i]) return;
-                  if (zone.dataset.nint) signaClearRow(zone);
-                  signaFillZone(zone, elacItems[i]);
-                  updateSidebarItem(elacItems[i].nint, elacItems[i].valueType, elacItems[i].day);
-                });
-              }
-            }
-          });
+          const resolvedAssigned = [];
+          const used = new Set();          
+          if (ceIdx >= 0 && items[ceIdx]) { resolvedAssigned.push(items[ceIdx]); used.add(ceIdx); }
+          else resolvedAssigned.push(null);          
+          if (moIdx >= 0 && moIdx !== ceIdx && items[moIdx]) { resolvedAssigned.push(items[moIdx]); used.add(moIdx); }
+          else resolvedAssigned.push(null);          
+          items.forEach((item, idx) => { if (!used.has(idx)) resolvedAssigned.push(item); });
+          assigned = resolvedAssigned;
         }
-        // ── Modos 1_ecin e 1_ecin_1_elac ──
-        ["1","2"].forEach(day => {
-          ["day","night"].forEach(shift => {
-            const all = getAllForShift(day, shift);
-            if (!all.length) return;
-            const mpItems = all.filter(i => i.mp);
-            const nonMpItems = all.filter(i => !i.mp);
-            if (mode === "1_ecin") {
-              distributeToZones(all, day, shift, "ecin");
-              return;
-            }
-            if (mode === "1_ecin_1_elac") {
-              if (all.length <= 4 || mpItems.length < 1) {
-                distributeToZones(all, day, shift, "ecin");
+        const zones = Array.from(container.querySelectorAll(
+          `.signa-drop-zone[data-day="${day}"][data-shift="${shift}"][data-section="${section}"]`
+        ));        
+        zones.forEach((zone, i) => {
+          if (!assigned[i]) return;
+          if (zone.dataset.nint) signaClearRow(zone);
+          signaFillZone(zone, assigned[i]);
+          updateSidebarItem(assigned[i].nint, assigned[i].valueType, assigned[i].day);
+        });
+      };
+      // ── Formatar Equipas ──
+      formatBtn.addEventListener("click", () => {
+        const sidebarItems = sidebarList.querySelectorAll(".signa-sidebar-item");
+        if (!sidebarItems.length) return showPopup('popup-danger', "Carregue os elementos primeiro.");
+        if (!isMultiTeam) {
+          const getAllForShift = (day, shift) => {
+            const items = [];
+            sidebarList.querySelectorAll(".signa-sidebar-item").forEach(item => {
+              if (item.dataset.day !== day) return;
+              const vt = item.dataset.valueType;
+              if (vt === "ED" && shift !== "day") return;
+              if (vt === "EN" && shift !== "night") return;
+              items.push({nint: parseInt(item.dataset.nint, 10), n_file: item.dataset.nfile || "", patent: item.querySelector(".signa-cat").textContent.trim(),
+                          abv_name: item.querySelector(".signa-name").textContent.trim(), full_name: item.dataset.fullname || "", mp: item.dataset.mp === "1", valueType: vt, day: day});});
+            return items.sort((a,b) => a.nint - b.nint);
+          };
+          ["1","2"].forEach(day => {
+            ["day","night"].forEach(shift => {
+              const all = getAllForShift(day, shift);
+              if (!all.length) return;
+              const mpItems = all.filter(i => i.mp);
+              const nonMpItems = all.filter(i => !i.mp);
+              if (elacCount === 0 || all.length <= 4 || mpItems.length < 1) {
+                assignElementsToZones(all, day, shift, "ecin", false);
                 return;
               }
-              const elacMP = mpItems[mpItems.length - 1];
+              let elacMP = null;
               let elacCE = null;
-              if (all.length >= 7) {
-                elacCE = nonMpItems.length > 0 ? nonMpItems[nonMpItems.length - 1] : mpItems.length >= 2 ? mpItems[mpItems.length - 2] : null;
+              if (all.length >= 5) {
+                elacMP = mpItems[mpItems.length - 1];
               }
-              const elacNints = new Set([elacMP?.nint, elacCE?.nint].filter(Boolean));
-              const ecinItems = all.filter(i => !elacNints.has(i.nint)).slice(0, 5);
+              if (all.length >= 7) {
+                elacCE = nonMpItems.length > 0
+                  ? nonMpItems[nonMpItems.length - 1]
+                  : (mpItems.length >= 2 ? mpItems[mpItems.length - 2] : null);
+            }
+            const elacNints = new Set(
+              [elacMP?.nint, elacCE?.nint].filter(Boolean)
+              );
+              const ecinItems = all
+                .filter(i => !elacNints.has(i.nint))
+                .slice(0, 5);
               const elacAssigned = [elacCE || null, elacMP || null];
               const elacZones = Array.from(container.querySelectorAll(
                 `.signa-drop-zone[data-day="${day}"][data-shift="${shift}"][data-section="elac"]`
@@ -3263,29 +3318,158 @@ async function saveDecirFull() {
                 if (!elacAssigned[i]) return;
                 if (zone.dataset.nint) signaClearRow(zone);
                 signaFillZone(zone, elacAssigned[i]);
-                updateSidebarItem(elacAssigned[i].nint, elacAssigned[i].valueType, elacAssigned[i].day);
+                updateSidebarItem(
+                  elacAssigned[i].nint,
+                  elacAssigned[i].valueType,
+                  elacAssigned[i].day
+                );
               });
-              distributeToZones(ecinItems, day, shift, "ecin");
-              return;
+              assignElementsToZones(ecinItems, day, shift, "ecin", false);
+            });
+          });
+          return;
+        }
+        const getAllForShift = (shift) => {
+          const items = [];
+          sidebarList.querySelectorAll(".signa-sidebar-item").forEach(item => {
+            const vt = item.dataset.valueType;
+            if (vt === "ED" && shift !== "day") return;
+            if (vt === "EN" && shift !== "night") return;
+            items.push({nint: parseInt(item.dataset.nint, 10), n_file: item.dataset.nfile || "", patent: item.querySelector(".signa-cat").textContent.trim(),
+                        abv_name: item.querySelector(".signa-name").textContent.trim(), full_name: item.dataset.fullname || "", mp: item.dataset.mp === "1", valueType: vt, day: item.dataset.day});});
+          return items.sort((a,b) => a.nint - b.nint);
+        };
+        ["day","night"].forEach(shift => {
+          const pool = getAllForShift(shift);
+          if (!pool.length) return;
+          const remaining = [...pool];
+          const ecinChunks = Array.from({length: ecinCount}, () => []);
+          const elacAssigned = Array.from({length: elacCount}, () => [null, null]);
+          for (let t = 0; t < elacCount; t++) {
+            let mpIdx = -1;
+            for (let i = remaining.length - 1; i >= 0; i--) {
+              if (remaining[i].mp) { mpIdx = i; break; }
             }
+            if (mpIdx >= 0) elacAssigned[t][1] = remaining.splice(mpIdx, 1)[0];
+          }
+          for (let t = 0; t < ecinCount; t++) {
+            for (let i = 0; i < 4 && remaining.length; i++) {
+              ecinChunks[t].push(remaining.shift());
+            }
+          }
+          for (let t = 0; t < elacCount; t++) {
+            if (!elacAssigned[t][1] && remaining.length) {
+              elacAssigned[t][1] = remaining.shift();
+            }
+          }
+          for (let t = 0; t < ecinCount; t++) {
+            if (remaining.length) ecinChunks[t].push(remaining.shift());
+          }
+          for (let t = 0; t < elacCount; t++) {
+            if (remaining.length) elacAssigned[t][0] = remaining.shift();
+          }
+          ecinChunks.forEach((chunk, i) => {
+            if (chunk.length) assignElementsToZones(chunk, String(i + 1), shift, "ecin", false);
+          });
+          elacAssigned.forEach((assigned, i) => {
+            if (assigned[0] || assigned[1]) assignElementsToZones(assigned, String(i + 1), shift, "elac", true);
           });
         });
       });
       // ── Carregar elementos ──
       loadBtn.addEventListener("click", async () => {
-        const date1 = inp1.value;
-        const date2 = inp2.value;
-        buildSignaTables();
-        if (!date1 || !date2) return showPopup('popup-danger', "Selecione as duas datas.");
-        const [y1,m1,d1] = date1.split("-");
-        const [y2,m2,d2] = date2.split("-");
         const corp = getCorpId();
-        const isSameDay = date1 === date2;
+        if (!isMultiTeam) {
+          // ── Caminho antigo: 2 datas ──
+          const date1 = inp1.value;
+          const date2 = inp2.value;
+          buildSignaTables();
+          if (!date1 || !date2) return showPopup('popup-danger', "Selecione as duas datas.");
+          const [y1,m1,d1] = date1.split("-");
+          const [y2,m2,d2] = date2.split("-");
+          const isSameDay = date1 === date2;
+          sidebarList.innerHTML = `<div style="padding:12px;font-size:11px;color:#999;text-align:center;">A carregar...</div>`;
+          try {
+            const data1 = await supabaseFetch(`reg_serv?corp_oper_nr=eq.${corp}&year=eq.${y1}&month=eq.${m1}&day=eq.${d1}&value=in.(ED,EN,ET)&select=n_int,value`);
+            const data2 = isSameDay ? data1 : await supabaseFetch(`reg_serv?corp_oper_nr=eq.${corp}&year=eq.${y2}&month=eq.${m2}&day=eq.${d2}&value=in.(ED,EN,ET)&select=n_int,value`);
+            const allNInts = [...new Set([...data1, ...data2].map(i => String(i.n_int).padStart(3,"0")))];
+            if (!allNInts.length) {
+              sidebarList.innerHTML = `<div style="padding:12px;font-size:11px;color:#999;text-align:center;">Nenhum elemento encontrado.</div>`;
+              return;
+            }
+            const formatDatePt = (dateStr) => {
+              if (!dateStr) return "";
+              const [y, m, d] = dateStr.split("-");
+              return `${d}/${m}/${y}`;
+            };
+            const elemsData = await supabaseFetch(`reg_elems?n_int=in.(${allNInts.join(",")})&corp_oper_nr=eq.${corp}&select=n_int,abv_name,patent,n_file,MP,full_name`);
+            const elemsMap = Object.fromEntries(elemsData.map(e => [String(e.n_int).padStart(3,"0"), e]));
+            sidebarList.innerHTML = "";
+            const day1Title = document.createElement("div");
+            day1Title.className = "signa-sidebar-day-title";            
+            day1Title.textContent = `📅 Dia: 1 — ${formatDatePt(date1)}`;
+            sidebarList.appendChild(day1Title);
+            const day1Groups = {
+              "ED (Turno Dia)": data1.filter(i => i.value === "ED").map(i => ({elem: elemsMap[String(i.n_int).padStart(3,"0")], vt: "ED"})).filter(i => i.elem),
+              "EN (Turno Noite)": data1.filter(i => i.value === "EN").map(i => ({elem: elemsMap[String(i.n_int).padStart(3,"0")], vt: "EN"})).filter(i => i.elem),
+              "ET (Dia + Noite)": data1.filter(i => i.value === "ET").map(i => ({elem: elemsMap[String(i.n_int).padStart(3,"0")], vt: "ET"})).filter(i => i.elem),
+            };
+            Object.entries(day1Groups).forEach(([groupName, items]) => {
+              if (!items.length) return;
+              const grpTitle = document.createElement("div");
+              grpTitle.className = "signa-sidebar-group-title";
+              grpTitle.textContent = groupName;
+              sidebarList.appendChild(grpTitle);
+              items.sort((a,b) => parseInt(a.elem.n_int,10) - parseInt(b.elem.n_int,10))
+                .forEach(({elem, vt}) => sidebarList.appendChild(makeSidebarItem(elem, vt, "1")));
+            });
+            if (!isSameDay) {
+              const day2Title = document.createElement("div");
+              day2Title.className = "signa-sidebar-day-title";
+              day2Title.textContent = `📅 Dia: 2 — ${formatDatePt(date2)}`;
+              sidebarList.appendChild(day2Title);
+              const day2Groups = {
+                "ED (Turno Dia)":   data2.filter(i => i.value === "ED").map(i => ({elem: elemsMap[String(i.n_int).padStart(3,"0")], vt: "ED"})).filter(i => i.elem),
+                "EN (Turno Noite)": data2.filter(i => i.value === "EN").map(i => ({elem: elemsMap[String(i.n_int).padStart(3,"0")], vt: "EN"})).filter(i => i.elem),
+                "ET (Dia + Noite)": data2.filter(i => i.value === "ET").map(i => ({elem: elemsMap[String(i.n_int).padStart(3,"0")], vt: "ET"})).filter(i => i.elem),
+              };
+              Object.entries(day2Groups).forEach(([groupName, items]) => {
+                if (!items.length) return;
+                const grpTitle = document.createElement("div");
+                grpTitle.className = "signa-sidebar-group-title";
+                grpTitle.textContent = groupName;
+                sidebarList.appendChild(grpTitle);
+                items.sort((a,b) => parseInt(a.elem.n_int,10) - parseInt(b.elem.n_int,10))
+                  .forEach(({elem, vt}) => sidebarList.appendChild(makeSidebarItem(elem, vt, "2")));
+              });
+            }
+            setTimeout(() => {
+              container.querySelectorAll(".signa-drop-zone.filled").forEach(zone => {
+                const nint = parseInt(zone.dataset.nint, 10);
+                const vt = zone.dataset.valueType;
+                const dy = zone.dataset.day;
+                sidebarList.querySelectorAll(".signa-sidebar-item").forEach(item => {
+                  if (parseInt(item.dataset.nint, 10) === nint && item.dataset.valueType === vt && item.dataset.day === dy) {
+                    if (vt === "ET") {if (signaCheckETPlaced(container, nint, dy)) item.classList.add("used");}
+                    else item.classList.add("used");
+                  }
+                });
+              });
+            }, 50);
+          } catch(err) {
+            console.error(err);
+            sidebarList.innerHTML = `<div style="padding:12px;font-size:11px;color:#c62828;text-align:center;">Erro ao carregar elementos.</div>`;
+          }
+          return;
+        }
+        const date1 = inp1.value;
+        buildSignaTables();
+        if (!date1) return showPopup('popup-danger', "Selecione a data.");
+        const [y1,m1,d1] = date1.split("-");
         sidebarList.innerHTML = `<div style="padding:12px;font-size:11px;color:#999;text-align:center;">A carregar...</div>`;
         try {
           const data1 = await supabaseFetch(`reg_serv?corp_oper_nr=eq.${corp}&year=eq.${y1}&month=eq.${m1}&day=eq.${d1}&value=in.(ED,EN,ET)&select=n_int,value`);
-          const data2 = isSameDay ? data1 : await supabaseFetch(`reg_serv?corp_oper_nr=eq.${corp}&year=eq.${y2}&month=eq.${m2}&day=eq.${d2}&value=in.(ED,EN,ET)&select=n_int,value`);
-          const allNInts = [...new Set([...data1, ...data2].map(i => String(i.n_int).padStart(3,"0")))];
+          const allNInts = [...new Set(data1.map(i => String(i.n_int).padStart(3,"0")))];
           if (!allNInts.length) {
             sidebarList.innerHTML = `<div style="padding:12px;font-size:11px;color:#999;text-align:center;">Nenhum elemento encontrado.</div>`;
             return;
@@ -3293,16 +3477,16 @@ async function saveDecirFull() {
           const elemsData = await supabaseFetch(`reg_elems?n_int=in.(${allNInts.join(",")})&corp_oper_nr=eq.${corp}&select=n_int,abv_name,patent,n_file,MP,full_name`);
           const elemsMap = Object.fromEntries(elemsData.map(e => [String(e.n_int).padStart(3,"0"), e]));
           sidebarList.innerHTML = "";
-          const day1Title = document.createElement("div");
-          day1Title.className = "signa-sidebar-day-title";
-          day1Title.textContent = `📅 Dia 1 — ${inp1.value}`;
-          sidebarList.appendChild(day1Title);
-          const day1Groups = {
+          const dayTitle = document.createElement("div");
+          dayTitle.className = "signa-sidebar-day-title";
+          dayTitle.textContent = `📅 ${inp1.value}`;
+          sidebarList.appendChild(dayTitle);
+          const groups = {
             "ED (Turno Dia)": data1.filter(i => i.value === "ED").map(i => ({elem: elemsMap[String(i.n_int).padStart(3,"0")], vt: "ED"})).filter(i => i.elem),
             "EN (Turno Noite)": data1.filter(i => i.value === "EN").map(i => ({elem: elemsMap[String(i.n_int).padStart(3,"0")], vt: "EN"})).filter(i => i.elem),
             "ET (Dia + Noite)": data1.filter(i => i.value === "ET").map(i => ({elem: elemsMap[String(i.n_int).padStart(3,"0")], vt: "ET"})).filter(i => i.elem),
           };
-          Object.entries(day1Groups).forEach(([groupName, items]) => {
+          Object.entries(groups).forEach(([groupName, items]) => {
             if (!items.length) return;
             const grpTitle = document.createElement("div");
             grpTitle.className = "signa-sidebar-group-title";
@@ -3311,34 +3495,13 @@ async function saveDecirFull() {
             items.sort((a,b) => parseInt(a.elem.n_int,10) - parseInt(b.elem.n_int,10))
               .forEach(({elem, vt}) => sidebarList.appendChild(makeSidebarItem(elem, vt, "1")));
           });
-          if (!isSameDay) {
-            const day2Title = document.createElement("div");
-            day2Title.className = "signa-sidebar-day-title";
-            day2Title.textContent = `📅 Dia 2 — ${inp2.value}`;
-            sidebarList.appendChild(day2Title);
-            const day2Groups = {
-              "ED (Turno Dia)":   data2.filter(i => i.value === "ED").map(i => ({elem: elemsMap[String(i.n_int).padStart(3,"0")], vt: "ED"})).filter(i => i.elem),
-              "EN (Turno Noite)": data2.filter(i => i.value === "EN").map(i => ({elem: elemsMap[String(i.n_int).padStart(3,"0")], vt: "EN"})).filter(i => i.elem),
-              "ET (Dia + Noite)": data2.filter(i => i.value === "ET").map(i => ({elem: elemsMap[String(i.n_int).padStart(3,"0")], vt: "ET"})).filter(i => i.elem),
-            };
-            Object.entries(day2Groups).forEach(([groupName, items]) => {
-              if (!items.length) return;
-              const grpTitle = document.createElement("div");
-              grpTitle.className = "signa-sidebar-group-title";
-              grpTitle.textContent = groupName;
-              sidebarList.appendChild(grpTitle);
-              items.sort((a,b) => parseInt(a.elem.n_int,10) - parseInt(b.elem.n_int,10))
-                .forEach(({elem, vt}) => sidebarList.appendChild(makeSidebarItem(elem, vt, "2")));
-            });
-          }
           setTimeout(() => {
             container.querySelectorAll(".signa-drop-zone.filled").forEach(zone => {
               const nint = parseInt(zone.dataset.nint, 10);
               const vt = zone.dataset.valueType;
-              const dy = zone.dataset.day;
               sidebarList.querySelectorAll(".signa-sidebar-item").forEach(item => {
-                if (parseInt(item.dataset.nint, 10) === nint && item.dataset.valueType === vt && item.dataset.day === dy) {
-                  if (vt === "ET") {if (signaCheckETPlaced(container, nint, dy)) item.classList.add("used");}
+                if (parseInt(item.dataset.nint, 10) === nint && item.dataset.valueType === vt) {
+                  if (vt === "ET") {if (signaCheckETPlaced(container, nint, null)) item.classList.add("used");}
                   else item.classList.add("used");
                 }
               });
@@ -3351,68 +3514,73 @@ async function saveDecirFull() {
       });
       const options = document.getElementById("decir-signa-options");
       if (options) options.style.display = "flex";
-    }
+    }    
     const emitSigna = async (format) => {
+      const container = document.querySelector("#decir-reg-signa .major-card-body");
+      const mode = container?.dataset.mode || "1_ecin_1_elac";
+      const ecinMatch = mode.match(/(\d+)_ecin/);
+      const elacMatch = mode.match(/(\d+)_elac/);
+      const ecinCount = ecinMatch ? parseInt(ecinMatch[1], 10) : 0;
+      const elacCount = elacMatch ? parseInt(elacMatch[1], 10) : 0;  
+      const isMultiTeam = (ecinCount > 1 || elacCount > 1 || mode === "2_ecin_1_elac");
       const inp1 = document.getElementById("signa-date1");
       const inp2 = document.getElementById("signa-date2");
-      if (!inp1?.value || !inp2?.value) {
-        return showPopup('popup-danger', "Selecione as duas datas.");
+      if (!inp1?.value || (!isMultiTeam && !inp2?.value)) {
+        return showPopup('popup-danger', isMultiTeam ? "Selecione a data." : "Selecione as duas datas.");
       }
-      const modeText = document.querySelector("#decir-reg-signa .mode-highlight")?.textContent;
-      const mode = modeText === "1 ECIN" ? "1_ecin"
-                 : modeText === "BRIGADA" ? "brigada"
-                 : "1_ecin_1_elac";
-      const isBrigade = mode === "brigada";
       const formatDateForName = (dateStr) => {
         const [y, m, d] = dateStr.split("-");
         const months = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
         return {day: parseInt(d), month: months[parseInt(m) - 1], year: y};
-      };
+      };  
       const d1 = formatDateForName(inp1.value);
-      const d2 = formatDateForName(inp2.value);
-      const fileName = isBrigade
+      const d2 = (!isMultiTeam && inp2?.value) ? formatDateForName(inp2.value) : null;
+      const fileName = isMultiTeam
         ? `ASSINATURAS_DECIR_${d1.day}_${d1.month}_${d1.year}`
-        : `ASSINATURAS_DECIR_${d1.day}_a_${d2.day}_${d2.month}_${d2.year}`; 
-      const getTeamData = (day, shift, section) => {
-        const container = document.querySelector("#decir-reg-signa .major-card-body");
-        return Array.from(container.querySelectorAll(
-          `.signa-drop-zone[data-day="${day}"][data-shift="${shift}"][data-section="${section}"]`
-        )).map(zone => {
-          const tr = zone.closest("tr");
-          return {nint:  zone.dataset.nint || "", n_file: tr?.querySelector(".field-nfile")?.value || "", patent: tr?.querySelector(".field-patent")?.value || "",
-                  abv_name: tr?.querySelector(".field-abvname")?.value || "", full_name: zone.dataset.fullname || ""};});};
-      const getTeamDataBrigada = (shift, team) => {
-        const container = document.querySelector("#decir-reg-signa .major-card-body");
-        const allZones = Array.from(container.querySelectorAll(
-          `.signa-drop-zone[data-day="1"][data-shift="${shift}"][data-section="ecin"]`
-        ));
-        const zones = team === "A" ? allZones.slice(0, 5) : allZones.slice(5, 10);
-        return zones.map(zone => {
-          const tr = zone.closest("tr");
-          return {nint: zone.dataset.nint || "", n_file: tr?.querySelector(".field-nfile")?.value || "", patent:   tr?.querySelector(".field-patent")?.value || "",
-                  abv_name: tr?.querySelector(".field-abvname")?.value || "", full_name: zone.dataset.fullname || ""};});};
+        : `ASSINATURAS_DECIR_${d1.day}_a_${d2.day}_${d2.month}_${d2.year}`;
+      const getTeamData = (teamIndex, shift, section) => {
+      const selector = `.signa-drop-zone[data-day="${teamIndex}"][data-shift="${shift}"][data-section="${section}"]`;
+      const zones = Array.from(container.querySelectorAll(selector));
+      return zones.map(zone => {
+        const tr = zone.closest("tr");
+        return {nint: zone.dataset.nint || "", n_file: tr?.querySelector(".field-nfile")?.value || "", patent: tr?.querySelector(".field-patent")?.value || "", 
+                abv_name: tr?.querySelector(".field-abvname")?.value || "", full_name: zone.dataset.fullname || ""};
+        });
+      };
       showLoadingPopup("A gerar ficheiro de assinaturas...");
       try {
-        const payload = {type: "signa", date1: inp1.value, date2: inp2.value, year: inp1.value.split("-")[0], fileName, format, mode,
-                         ecin: {day1: {day: isBrigade ? getTeamDataBrigada("day", "A") : getTeamData("1","day","ecin"),
-                                       night: isBrigade ? getTeamDataBrigada("night", "A") : getTeamData("1","night","ecin")},
-                                day2: {day: isBrigade ? getTeamDataBrigada("day", "B") : getTeamData("2","day","ecin"),
-                                       night: isBrigade ? getTeamDataBrigada("night", "B") : getTeamData("2","night","ecin")}},
-                         elac: {day1: {day: getTeamData("1","day","elac"),
-                                       night: getTeamData("1","night","elac")},
-                                day2: {day: getTeamData("2","day","elac"),   
-                                       night: getTeamData("2","night","elac")}}};
-        const res = await fetch("https://cb360-online.vercel.app/api/decir_reg_pag", {
-          method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify(payload)
-        });
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.details || err.error);
-        }
+        let payload;
+        if (isMultiTeam) {
+          payload = {type: "signa", date: inp1.value, year: inp1.value.split("-")[0], fileName, format, mode, 
+                     ecin: Array.from({length: ecinCount}, (_, i) => ({team: i + 1, day: getTeamData(i + 1, "day", "ecin"), night: getTeamData(i + 1, "night", "ecin")})),
+                     elac: Array.from({length: elacCount}, (_, i) => ({team: i + 1, day: getTeamData(i + 1, "day", "elac"), night: getTeamData(i + 1, "night", "elac")}))
+                    };
+        } else {
+          payload = {type: "signa", date1: inp1.value, date2: inp2.value, year: inp1.value.split("-")[0], fileName, format, mode,
+                     ecin: {day1: {day: getTeamData(1, "day", "ecin"), night: getTeamData(1, "night", "ecin")}, day2: {day: getTeamData(2, "day", "ecin"), night: getTeamData(2, "night", "ecin")}},
+                     elac: {day1: {day: getTeamData(1, "day", "elac"), night: getTeamData(1, "night", "elac")}, day2: {day: getTeamData(2, "day", "elac"), night: getTeamData(2, "night", "elac")}
+                    }
+                  };
+    }
+    const res = await fetch("https://cb360-online.vercel.app/api/decir_reg_pag", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(payload)
+    });    
+    if (!res.ok) {
+      const contentType = res.headers.get("content-type");
+      let errorMessage = `Erro do servidor (${res.status})`;      
+      if (contentType && contentType.includes("application/json")) {
+        const err = await res.json();
+        errorMessage = err.details || err.error || errorMessage;
+      } else {
+        const textErr = await res.text();
+            if (textErr) errorMessage = textErr;
+          }
+          throw new Error(errorMessage);
+        }    
         const blob = await res.blob();
-        hideLoadingPopup();
+        hideLoadingPopup();    
         if (format === "pdf") {
           const blobUrl = URL.createObjectURL(blob);
           openDecirPdfModal(blobUrl, fileName);
@@ -3728,7 +3896,12 @@ async function saveDecirFull() {
         }
         if (btn.getAttribute("data-access") === "Atualização de Valores") {
           e.preventDefault(); e.stopPropagation();
-          openConfigDecirModal();
+          openConfigDecirValuesModal();
+          return;
+        }
+        if (btn.getAttribute("data-access") === "Configuração de Equipas") {
+          e.preventDefault(); e.stopPropagation();
+          openConfigDecirTeamsModal();
           return;
         }
         const cfg = PAGE_CONFIGS[btn.dataset.page];
@@ -5005,6 +5178,7 @@ async function saveDecirFull() {
       weatherLocationOverride = null;
       weatherUpdaters.forEach(fn => fn());
     }
+    const cachedCityAndPlaceByCorp = {};
     async function fetchCityAndPlace(corp_oper_nr) {
       if (weatherLocationOverride) {
         return {
@@ -5012,13 +5186,16 @@ async function saveDecirFull() {
           place: { latitude: weatherLocationOverride.lat, longitude: weatherLocationOverride.long }
         };
       }
+      if (cachedCityAndPlaceByCorp[corp_oper_nr]) return cachedCityAndPlaceByCorp[corp_oper_nr];
       const corpRes = await fetch(`${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${corp_oper_nr}&select=corp_localitie`, {headers: getSupabaseHeaders()});
       const corpData = await corpRes.json();
       const city = corpData?.[0]?.corp_localitie?.trim() || "Localização";
       const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=pt`);
       const geoData = await geoRes.json();
       const place = geoData?.results?.[0] || null;
-      return { city, place };
+      const result = { city, place };
+      cachedCityAndPlaceByCorp[corp_oper_nr] = result;
+      return result;
     }
     function makeStatBox(label, valueHtml, color, bg, fontSize = "11px") {
       return `

@@ -338,13 +338,13 @@
             const period = `Período: ${dateFormatted}`;
             
             // Títulos e Períodos gerais
-            [6, 59, 112, 166].forEach(row => sheet.getCell(`B${row}`).value = title);
-            [8, 61, 114, 168].forEach(row => sheet.getCell(`B${row}`).value = period);
+            [7, 60, 113, 167].forEach(row => sheet.getCell(`B${row}`).value = title);
+            [9, 62, 115, 169].forEach(row => sheet.getCell(`B${row}`).value = period);
             
             // --- REGISTO DE PRESENÇAS (Datas e Turnos) ---
-            [11, 19, 28, 37].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted);
-            [11, 28].forEach(row => sheet.getCell(`F${row}`).value = dayShift);
-            [19, 37].forEach(row => sheet.getCell(`F${row}`).value = nightShift);
+            [11, 20, 29, 38].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted);
+            [11, 29].forEach(row => sheet.getCell(`F${row}`).value = dayShift);
+            [20, 38].forEach(row => sheet.getCell(`F${row}`).value = nightShift);
 
             const equipaA = ecin[0] || {day: [], night: []}; // ECIN 01
             const equipaB = ecin[1] || {day: [], night: []}; // ECIN 02

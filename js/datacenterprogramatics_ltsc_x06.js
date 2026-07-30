@@ -406,7 +406,7 @@
     const ACCESS_OPTIONS = [
       {label: "Menu Principal"},
       {label: "Gestão DECIR", children: [
-        {label: "Configurações DECIR", children: [{label: "Atualização de Valores"}, {label: "Restaurantes e LEPPs"}]},
+        {label: "Configurações DECIR", children: [{label: "Atualização de Valores"}, {label: "Configuração de Equipas"}, {label: "Restaurantes e LEPPs"}]},
         {label: "Ver Escalas"},
         {label: "Gestão Financeira", children: [{label: "Registo por Elemento"}, {label: "Núcleo Financeiro"}, {label: "Relatórios ANEPC"}, {label: "Auditoria de Logs"}]},
         {label: "Gestão Despesas", children: [{label: "Despesas Danos"}, {label: "Despesas Refeições"}]},
@@ -431,6 +431,7 @@
         {label: "Registos Recusas/INOPS", children: [{label: "Recusas de Serviços"}, {label: "Inoperacionalidades INEM"}, {label: "Relatórios Mensais"}, {label: "DashBoard"}]},
         {label: "Documentação Importante", children: [{label: "CREPC Algarve"}, {label: "Planeamento Diário"}, {label: "Sitop de Veículos"}]},
         {label: "Diversos"},
+        {label: "Ocorrências (Redundância)"},
         {label: "Consola de Alarmes"}
       ]},
       {label: "Comunicação WSMS", children: [

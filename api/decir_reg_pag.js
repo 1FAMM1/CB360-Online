@@ -333,39 +333,41 @@
             });
           };
 
-          if (mode === "2_ecin_1_elac") {
+         if (mode === "2_ecin_1_elac") {
             const dateFormatted = formatDate(date);
             const period = `Período: ${dateFormatted}`;
             
-            // Títulos e Períodos gerais (idênticos à brigada)
             [7, 60, 113, 167].forEach(row => sheet.getCell(`B${row}`).value = title);
             [9, 62, 115, 169].forEach(row => sheet.getCell(`B${row}`).value = period);
             
-            // --- REGISTO DE PRESENÇAS (Datas e Turnos) ---
             [11, 20, 29, 38].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted);
             [11, 29].forEach(row => sheet.getCell(`F${row}`).value = dayShift);
             [20, 38].forEach(row => sheet.getCell(`F${row}`).value = nightShift);
 
-            // Extração segura e isolada (protege caso venha em array ou objeto)
+            // Garante que se a equipa 2 não existir, fica com arrays estritamente vazios []
             const equipaA = (Array.isArray(ecin) ? ecin.find(e => e.team === 1) : null) || ecin[0] || {day: [], night: []};
             const equipaB = (Array.isArray(ecin) ? ecin.find(e => e.team === 2) : null) || ecin[1] || {day: [], night: []};
+            
+            // Força arrays vazios se a equipa 2 estiver desativada/vazia
+            const safeEquipaBDay = Array.isArray(equipaB.day) ? equipaB.day : [];
+            const safeEquipaBNight = Array.isArray(equipaB.night) ? equipaB.night : [];
+
             const elacTeam = (Array.isArray(elac) ? elac.find(e => e.team === 1) : null) || elac[0] || {day: [], night: []};
 
-            // --- REGISTO DE PRESENÇAS (fillTeam) - EXATAMENTE IGUAL À BRIGADA ---
+            // --- REGISTO DE PRESENÇAS ---
             fillTeam(14, equipaA.day);   
             fillTeam(23, equipaA.night); 
-            fillTeam(32, equipaB.day);   
-            fillTeam(41, equipaB.night); 
+            fillTeam(32, safeEquipaBDay);   // Limpa se vazio
+            fillTeam(41, safeEquipaBNight); // Limpa se vazio
 
-            // ELAC (Presenças)
             fillTeam(120, elacTeam.day); 
             fillTeam(126, elacTeam.night);
 
-            // --- ESCALA DE SERVIÇO (fillTeamFull) - EXATAMENTE IGUAL À BRIGADA ---
+            // --- ESCALA DE SERVIÇO ---
             fillTeamFull(67, equipaA.day);   
             fillTeamFull(76, equipaA.night); 
-            fillTeamFull(85, equipaB.day);   
-            fillTeamFull(94, equipaB.night); 
+            fillTeamFull(85, safeEquipaBDay);   // Limpa se vazio na escala completa
+            fillTeamFull(94, safeEquipaBNight); // Limpa se vazio na escala completa
             
             fillTeamFull(175, elacTeam.day); 
             fillTeamFull(181, elacTeam.night);
@@ -373,62 +375,6 @@
           
           
           
-        
-          
-          
-
-          
-
-          } else if (mode === "brigada") {
-            // ── Caminho antigo (2 datas reais), mantido intacto para compatibilidade ──
-            const period = `Período: ${formatDate(date1)}  a  ${formatDate(date2)}`;
-            const date1Formatted = formatDate(date1);
-            const date2Formatted = formatDate(date2);
-            [7, 60, 113, 167].forEach(row => sheet.getCell(`B${row}`).value = title);
-            [9, 62, 115, 169].forEach(row => sheet.getCell(`B${row}`).value = period);
-            [11, 20, 64, 73, 117, 123, 171, 177].forEach(row => sheet.getCell(`B${row}`).value = date1Formatted);
-            [29, 38, 82, 91].forEach(row => sheet.getCell(`B${row}`).value = date2Formatted);
-            [11, 29, 64, 82, 117, 171].forEach(row => sheet.getCell(`F${row}`).value = dayShift);
-            [20, 38, 73, 91, 123, 177].forEach(row => sheet.getCell(`F${row}`).value = nightShift);
-            const ecinA_day = ecin?.day1?.day?.slice(0,5) || [];
-            const ecinA_night = ecin?.day1?.night?.slice(0,5) || [];
-            const ecinB_day = ecin?.day2?.day?.slice(0,5) || [];
-            const ecinB_night = ecin?.day2?.night?.slice(0,5) || [];
-            const elac_day1 = elac?.day1?.day || [];
-            const elac_night1 = elac?.day1?.night || [];
-            const elac_day2 = elac?.day2?.day || [];
-            const elac_night2 = elac?.day2?.night || [];
-            fillTeam(14, ecinA_day); fillTeam(23, ecinA_night); fillTeam(32, ecinB_day); fillTeam(41, ecinB_night);
-            fillTeam(120, elac_day1); fillTeam(126, elac_night1); fillTeam(132, elac_day2); fillTeam(138, elac_night2);
-            fillTeamFull(67, ecinA_day); fillTeamFull(76, ecinA_night); fillTeamFull(85, ecinB_day); fillTeamFull(94, ecinB_night);
-            fillTeamFull(174, elac_day1); fillTeamFull(180, elac_night1); fillTeamFull(187, elac_day2); fillTeamFull(193, elac_night2);
-          } else if (mode === "1_ecin") {
-            [7, 60].forEach(row => sheet.getCell(`B${row}`).value = title);
-            [9, 62].forEach(row => sheet.getCell(`B${row}`).value = period);
-            [11, 20, 64, 73].forEach(row => sheet.getCell(`B${row}`).value = date1Formatted);
-            [29, 38, 82, 91].forEach(row => sheet.getCell(`B${row}`).value = date2Formatted);
-            [11, 29, 64, 82].forEach(row => sheet.getCell(`F${row}`).value = dayShift);
-            [20, 38, 73, 91].forEach(row => sheet.getCell(`F${row}`).value = nightShift);
-            fillTeam(14, ecin?.day1?.day); fillTeam(23, ecin?.day1?.night);
-            fillTeam(32, ecin?.day2?.day); fillTeam(41, ecin?.day2?.night);
-            fillTeamFull(67, ecin?.day1?.day); fillTeamFull(76, ecin?.day1?.night);
-            fillTeamFull(85, ecin?.day2?.day); fillTeamFull(94, ecin?.day2?.night);
-          } else {
-            [7, 60, 113, 168].forEach(row => sheet.getCell(`B${row}`).value = title);
-            [9, 62, 115, 170].forEach(row => sheet.getCell(`B${row}`).value = period);
-            [11, 20, 64, 73, 117, 123, 172, 178].forEach(row => sheet.getCell(`B${row}`).value = date1Formatted);
-            [29, 38, 82, 91, 129, 135, 184, 190].forEach(row => sheet.getCell(`B${row}`).value = date2Formatted);
-            [11, 29, 64, 82, 117, 129, 172, 184].forEach(row => sheet.getCell(`F${row}`).value = dayShift);
-            [20, 38, 73, 91, 123, 135, 178, 190].forEach(row => sheet.getCell(`F${row}`).value = nightShift);
-            fillTeam(14, ecin?.day1?.day); fillTeam(23, ecin?.day1?.night);
-            fillTeam(32, ecin?.day2?.day); fillTeam(41, ecin?.day2?.night);
-            fillTeam(120, elac?.day1?.day); fillTeam(126, elac?.day1?.night);
-            fillTeam(132, elac?.day2?.day); fillTeam(138, elac?.day2?.night);
-            fillTeamFull(67, ecin?.day1?.day); fillTeamFull(76, ecin?.day1?.night);
-            fillTeamFull(85, ecin?.day2?.day); fillTeamFull(94, ecin?.day2?.night);
-            fillTeamFull(175, elac?.day1?.day); fillTeamFull(181, elac?.day1?.night);
-            fillTeamFull(187, elac?.day2?.day); fillTeamFull(193, elac?.day2?.night);
-          }
           sheet.pageSetup = {orientation: "portrait", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
                              margins: {left:0.5, right:0.5, top:0.75, bottom:0.75, header:0.3, footer:0.3}};}
         // ---------- LEPP LEVEL IV ----------

@@ -342,46 +342,40 @@
             [9, 62, 115, 169].forEach(row => sheet.getCell(`B${row}`).value = period);
             
             // --- REGISTO DE PRESENÇAS ---
+            // Datas para cada secção de Turno
             [11, 64, 117, 171].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted);
-            [20, 73, 123, 177].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted);
-            [29, 82].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted);
-            [38, 91].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted);
+            [18, 71].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted);
+            [27, 80].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted);
+            [36, 89].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted);
+            [123, 177].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted);
             
             // Turnos de Dia (F)
-            [11, 29, 64, 82, 117, 171].forEach(row => sheet.getCell(`F${row}`).value = dayShift);
+            [11, 27, 64, 80, 117, 171].forEach(row => sheet.getCell(`F${row}`).value = dayShift);
             // Turnos de Noite (F)
-            [20, 38, 73, 91, 123, 177].forEach(row => sheet.getCell(`F${row}`).value = nightShift);
+            [18, 36, 71, 89, 123, 177].forEach(row => sheet.getCell(`F${row}`).value = nightShift);
 
-            const equipaA = ecin[0] || {day: [], night: []};
-            const equipaB = ecin[1] || {day: [], night: []};
-            const elacTeam = elac[0] || {day: [], night: []};
+            const equipaA = ecin[0] || {day: [], night: []}; // ECIN 01
+            const equipaB = ecin[1] || {day: [], night: []}; // ECIN 02
+            const elacTeam = elac[0] || {day: [], night: []}; // ELAC
 
             // --- REGISTO DE PRESENÇAS (fillTeam) ---
-            // ECIN 1 (Presenças) -> O cabeçalho acaba na linha 11, logo os dados começam na 12
-            fillTeam(12, equipaA.day); 
-            // O turno da noite começa na linha 20, logo os dados começam na 21 ou 22 (conforme o teu template)
-            fillTeam(22, equipaA.night);
-            
-            // ECIN 2 (Presenças) -> Segundo bloco de dia e noite
-            fillTeam(30, equipaB.day); 
-            fillTeam(39, equipaB.night);
+            fillTeam(12, equipaA.day);   // ECIN 01 - Dia
+            fillTeam(21, equipaA.night); // ECIN 01 - Noite
+            fillTeam(30, equipaB.day);   // ECIN 02 - Dia
+            fillTeam(39, equipaB.night); // ECIN 02 - Noite
 
-            // ELAC (Presenças)
             fillTeam(118, elacTeam.day); 
             fillTeam(124, elacTeam.night);
 
             // --- ESCALA DE SERVIÇO (fillTeamFull) ---
-            // ECIN 1 Escala Completa (Bloco superior da escala)
-            fillTeamFull(65, equipaA.day); 
-            fillTeamFull(74, equipaA.night);
+            fillTeamFull(65, equipaA.day);   // ECIN 01 - Dia (Escala)
+            fillTeamFull(74, equipaA.night); // ECIN 01 - Noite (Escala)
+            fillTeamFull(83, equipaB.day);   // ECIN 02 - Dia (Escala)
+            fillTeamFull(92, equipaB.night); // ECIN 02 - Noite (Escala)
             
-            // ECIN 2 Escala Completa (Bloco inferior da escala)
-            fillTeamFull(83, equipaB.day); 
-            fillTeamFull(92, equipaB.night);
-            
-            // ELAC Escala Completa
             fillTeamFull(172, elacTeam.day); 
             fillTeamFull(178, elacTeam.night);
+
           
 
           } else if (mode === "brigada") {

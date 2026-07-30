@@ -366,7 +366,6 @@
             
             fillTeamFull(174, elacTeam.day); fillTeamFull(180, elacTeam.night); 
             fillTeamFull(187, elacTeam.day); fillTeamFull(193, elacTeam.night);
-          }
           } else if (mode === "brigada") {
             // ── Caminho antigo (2 datas reais), mantido intacto para compatibilidade ──
             const period = `Período: ${formatDate(date1)}  a  ${formatDate(date2)}`;

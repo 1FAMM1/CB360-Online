@@ -351,13 +351,11 @@
             const elacTeam = elac[0] || {day: [], night: []}; // ELAC
 
             // --- REGISTO DE PRESENÇAS (fillTeam) ---
-            // ECIN 01 - Dia (Linhas 14 a 18) | Noite (Linhas 23 a 27)
-            fillTeam(14, equipaA.day);   
-            fillTeam(23, equipaA.night); 
+            fillTeam(14, equipaA.day);   // ECIN 01 - Dia (Linhas 14 a 18)
+            fillTeam(23, equipaA.night); // ECIN 01 - Noite (Linhas 23 a 27)
             
-            // ECIN 02 - Dia (Linhas 31 a 35) | Noite (Linhas 40 a 44)
-            fillTeam(32, equipaB.day);   
-            fillTeam(41, equipaB.night); 
+            fillTeam(32, equipaB.day);   // ECIN 02 - Dia (Linhas 32 a 36)
+            fillTeam(41, equipaB.night); // ECIN 02 - Noite (Linhas 41 a 45)
 
             // ELAC (Presenças)
             fillTeam(120, elacTeam.day); 
@@ -371,6 +369,7 @@
             
             fillTeamFull(172, elacTeam.day); 
             fillTeamFull(178, elacTeam.night);
+        
           
           
 

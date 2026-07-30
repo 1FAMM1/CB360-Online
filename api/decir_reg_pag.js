@@ -337,45 +337,48 @@
             const dateFormatted = formatDate(date);
             const period = `Período: ${dateFormatted}`;
             
-            // Títulos e Períodos
+            // Títulos e Períodos gerais
             [7, 60, 113, 167].forEach(row => sheet.getCell(`B${row}`).value = title);
             [9, 62, 115, 169].forEach(row => sheet.getCell(`B${row}`).value = period);
             
-            // Datas dos Turnos (Dia e Noite para ECIN 1, ECIN 2 e ELAC)
-            [11, 20, 64, 73, 117, 123, 171, 177].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted);
-            [29, 38, 82, 91].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted);
+            // --- REGISTO DE PRESENÇAS ---
+            // Datas (B11 e B20 para ECIN 1; B29 e B38 para ECIN 2)
+            [11, 64, 117, 171].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted);
+            [20, 73, 123, 177].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted);
+            [29, 82].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted);
+            [38, 91].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted);
             
-            // Turnos (Dia vs Noite)
+            // Turnos de Dia (F)
             [11, 29, 64, 82, 117, 171].forEach(row => sheet.getCell(`F${row}`).value = dayShift);
+            // Turnos de Noite (F) - Atualizado para incluir a linha 20 e 38
             [20, 38, 73, 91, 123, 177].forEach(row => sheet.getCell(`F${row}`).value = nightShift);
 
             const equipaA = ecin[0] || {day: [], night: []};
             const equipaB = ecin[1] || {day: [], night: []};
             const elacTeam = elac[0] || {day: [], night: []};
 
-            // --- REGISTO DE PRESENÇAS ---
-            // ECIN 1 (Dia: linha 14 | Noite: linha 23)
-            fillTeam(14, equipaA.day); 
-            fillTeam(23, equipaA.night);
+            // ECIN 1 (Presenças) -> Dia começa em 12 | Noite começa em 22
+            fillTeam(12, equipaA.day); 
+            fillTeam(22, equipaA.night);
             
-            // ECIN 2 (Dia: linha 32 | Noite: linha 41)
-            fillTeam(32, equipaB.day); 
-            fillTeam(41, equipaB.night);
+            // ECIN 2 (Presenças) -> Dia começa em 30 | Noite começa em 39 (ou respetivas linhas do teu template)
+            fillTeam(30, equipaB.day); 
+            fillTeam(39, equipaB.night);
 
-            // ELAC (Dia: linha 120 | Noite: linha 126)
+            // ELAC (Presenças)
             fillTeam(120, elacTeam.day); 
             fillTeam(126, elacTeam.night);
 
-            // --- ESCALA DE SERVIÇO ---
-            // ECIN 1 Completa (Dia: linha 67 | Noite: linha 76)
-            fillTeamFull(67, equipaA.day); 
-            fillTeamFull(76, equipaA.night);
+            // --- ESCALA DE SERVIÇO (FillTeamFull) ---
+            // ECIN 1 Escala Completa -> Dia começa em 65 | Noite começa em 74
+            fillTeamFull(65, equipaA.day); 
+            fillTeamFull(74, equipaA.night);
             
-            // ECIN 2 Completa (Dia: linha 85 | Noite: linha 94)
-            fillTeamFull(85, equipaB.day); 
-            fillTeamFull(94, equipaB.night);
+            // ECIN 2 Escala Completa -> Dia começa em 83 | Noite começa em 92
+            fillTeamFull(83, equipaB.day); 
+            fillTeamFull(92, equipaB.night);
             
-            // ELAC Completa (Dia: linha 174 | Noite: linha 180)
+            // ELAC Escala Completa
             fillTeamFull(174, elacTeam.day); 
             fillTeamFull(180, elacTeam.night);
 

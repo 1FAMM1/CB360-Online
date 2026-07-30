@@ -36,6 +36,8 @@
     let cb360TimelineEvents = [];
     let cb360ClassOcorrReportMap = {};
     let cb360ClassOcorrReportMapLoaded = false
+    let cb360ClassOcorrDescMap = {}; 
+    let cb360ClassOcorrDescMapLoaded = false;
     const CB360_VICTIM_CATEGORIES = ['Bombeiro', 'APC', 'Cívil'];
     const CB360_VICTIM_SEVERITIES = ['Leve', 'Grave', 'Morto', 'Assistido'];
     const STATUS_COLORS = {"": "#FFF", "Alerta": "#FFE0B2", "Análise": "#FFE0B2", "Despacho": "#FFE0B2", "Despacho 1º Alerta": "#FFE0B2", "Chegada ao TO": "#FFE0B2", "Em Curso": "#FFCDD2", "Recusada": "#FFCDD2", 
@@ -142,33 +144,65 @@
     function formatCb360DurationTooltipLine(detail) {
       return `${detail.label}: ${detail.time}`;
     }
-    function showCb360LineTooltip(anchorEl, details, formatter) {
+    function formatCb360ReportTooltipLine(d) {
+      return `<strong>${d.label}:</strong> ${d.value}`;
+    }
+    function showCb360LineTooltip(anchorEl, details, formatter, options = {}) {
       if (!details || !details.length) return;
       hideCb360LineTooltip();
       const tooltip = document.createElement('div');
       tooltip.id = 'cb360-line-tooltip';
-      tooltip.style.cssText = 'position:fixed; z-index:500; background:#fff; border:1px solid #2b6ecb; border-radius:6px; padding:6px 10px; font-size:10px; font-weight:700; color:#333; box-shadow:0 2px 8px rgba(0,0,0,0.18); pointer-events:none; white-space:nowrap;';
-      tooltip.innerHTML = details.map(d => formatter(d)).join('<br>');
+      const wrapStyle = options.wrap
+        ? 'white-space:normal; max-width:320px; text-align:left; line-height:1.3;'
+        : 'white-space:nowrap;';
+      tooltip.style.cssText = `position:fixed; z-index:500; background:#2b6ecb; color:#fff; border-radius:6px; padding:10px 12px; font-size:13px; font-weight:600; box-shadow:0 4px 6px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.15); pointer-events:none; ${wrapStyle} opacity:0; transform:translateY(6px); transition:opacity 0.15s ease, transform 0.15s ease;`;
+      const separator = options.wrap ? '<br><br>' : '<br>';
+      tooltip.innerHTML = details.map(d => formatter(d)).join(separator);
+      document.body.appendChild(tooltip);    
+      const rect = anchorEl.getBoundingClientRect();
+      const tooltipRect = tooltip.getBoundingClientRect();
+      let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+      left = Math.max(6, Math.min(left, window.innerWidth - tooltipRect.width - 6));    
+      tooltip.style.left = `${left}px`;
+      tooltip.style.top = `${rect.top - tooltipRect.height - 0}px`;    
+      const anchorCenter = rect.left + (rect.width / 2);
+      let arrowLeft = anchorCenter - left - 9;
+      arrowLeft = Math.max(6, Math.min(arrowLeft, tooltipRect.width - 24));
+      const arrow = document.createElement('div');
+      arrow.style.cssText = `position:absolute; left:${arrowLeft}px; bottom:-8px; width:0; height:0; border-left:9px solid transparent; border-right:9px solid transparent; border-top:9px solid #2b6ecb;`;    
+      tooltip.appendChild(arrow);
+      requestAnimationFrame(() => {
+        tooltip.style.opacity = '1';
+        tooltip.style.transform = 'translateY(0)';
+      });
+    }
+    function hideCb360LineTooltip() {
+      const existing = document.getElementById('cb360-line-tooltip');
+      if (existing) existing.remove();
+    }
+    function showCb360InfoTooltip(anchorEl, text) {
+      hideCb360LineTooltip();  
+      const tooltip = document.createElement('div');
+      tooltip.id = 'cb360-line-tooltip';
+      tooltip.style.cssText = 'position:fixed; z-index:500; background:#2b6ecb; color:#fff; border-radius:6px; padding:10px 12px; font-size:13px; font-weight:600; box-shadow:0 4px 6px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.15); pointer-events:none; white-space:nowrap; opacity:0; transform:translateY(6px); transition:opacity 0.15s ease, transform 0.15s ease;';
+      tooltip.textContent = text;
       document.body.appendChild(tooltip);
       const rect = anchorEl.getBoundingClientRect();
       const tooltipRect = tooltip.getBoundingClientRect();
       let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
       left = Math.max(6, Math.min(left, window.innerWidth - tooltipRect.width - 6));
       tooltip.style.left = `${left}px`;
-      tooltip.style.top = `${rect.top - tooltipRect.height - -4}px`;
+      tooltip.style.top = `${rect.top - tooltipRect.height - 10}px`;
       const anchorCenter = rect.left + (rect.width / 2);
-      let arrowLeft = anchorCenter - left - 7;
-      arrowLeft = Math.max(6, Math.min(arrowLeft, tooltipRect.width - 20));
-      const arrowOuter = document.createElement('div');
-      arrowOuter.style.cssText = `position:absolute; left:${arrowLeft}px; bottom:-7px; width:0; height:0; border-left:7px solid transparent; border-right:7px solid transparent; border-top:7px solid #2b6ecb;`;
-      const arrowInner = document.createElement('div');
-      arrowInner.style.cssText = `position:absolute; left:${arrowLeft + 1}px; bottom:-5.5px; width:0; height:0; border-left:6px solid transparent; border-right:6px solid transparent; border-top:6px solid #fff;`;
-      tooltip.appendChild(arrowOuter);
-      tooltip.appendChild(arrowInner);
-    }
-    function hideCb360LineTooltip() {
-      const existing = document.getElementById('cb360-line-tooltip');
-      if (existing) existing.remove();
+      let arrowLeft = anchorCenter - left - 9;
+      arrowLeft = Math.max(6, Math.min(arrowLeft, tooltipRect.width - 24));
+      const arrow = document.createElement('div');
+      arrow.style.cssText = `position:absolute; left:${arrowLeft}px; bottom:-8px; width:0; height:0; border-left:9px solid transparent; border-right:9px solid transparent; border-top:9px solid #2b6ecb;`;
+      tooltip.appendChild(arrow);
+      requestAnimationFrame(() => {
+        tooltip.style.opacity = '1';
+        tooltip.style.transform = 'translateY(0)';
+      });
     }
     // ---- FETCH: fetchCb360ResourceCounts() ----
     async function fetchCb360ResourceCounts(internalNumbers) {
@@ -176,7 +210,7 @@
       try {
         const list = internalNumbers.filter(Boolean).join(',');
         if (!list) return {};
-        const url = `${SUPABASE_URL}/rest/v1/cb360_dispatch_vehicles?internal_number=in.(${list})&select=internal_number,vehicle,km_start,km_end,scene_arrival_time,cb_arrival_time,cb360_dispatch_crew(id,n_int)`;
+        const url = `${SUPABASE_URL}/rest/v1/cb360_dispatch_vehicles?internal_number=in.(${list})&select=internal_number,vehicle,km_start,km_end,cb_departure_time,scene_arrival_time,cb_arrival_date,cb_arrival_time,cb360_dispatch_crew(id,n_int)`;
         const response = await supaFetch(url, { method: 'GET' });
         const counts = {};
         const vehicleCodes = new Set();
@@ -185,16 +219,20 @@
           const data = await response.json();
           data.forEach(row => {
             const key = row.internal_number;
-            if (!counts[key]) counts[key] = {vehicles: 0, crew: 0, victims: 0, vehicleDetails: [], crewDetails: [], firstArrival: null, lastReturn: null};
+            if (!counts[key]) counts[key] = {vehicles: 0, crew: 0, victims: 0, vehicleDetails: [], crewDetails: [], firstDeparture: null, firstArrival: null, lastReturn: null, lastReturnDate: null};
             counts[key].vehicles += 1;
             counts[key].crew += (row.cb360_dispatch_crew?.length || 0);
             counts[key].vehicleDetails.push({vehicle: row.vehicle || '', kmStart: row.km_start, kmEnd: row.km_end});
             if (row.vehicle) vehicleCodes.add(row.vehicle);
+            if (row.cb_departure_time && (!counts[key].firstDeparture || row.cb_departure_time < counts[key].firstDeparture)) {
+              counts[key].firstDeparture = row.cb_departure_time;
+            }
             if (row.scene_arrival_time && (!counts[key].firstArrival || row.scene_arrival_time < counts[key].firstArrival)) {
               counts[key].firstArrival = row.scene_arrival_time;
             }
             if (row.cb_arrival_time && (!counts[key].lastReturn || row.cb_arrival_time > counts[key].lastReturn)) {
               counts[key].lastReturn = row.cb_arrival_time;
+              counts[key].lastReturnDate = row.cb_arrival_date || null;
             }
             (row.cb360_dispatch_crew || []).forEach(c => {
               if (c.n_int) { counts[key].crewDetails.push({nInt: c.n_int}); crewCodes.add(c.n_int); }
@@ -210,70 +248,70 @@
             const vehicleInfoMap = {};
             vehiclesData.forEach(v => { vehicleInfoMap[v.vehicle] = v; });
             Object.values(counts).forEach(entry => {
-            entry.vehicleDetails.forEach(detail => {
-            const info = vehicleInfoMap[detail.vehicle];
-            detail.registration = info?.vehicle_registration || '';
-            detail.brand = info?.vehicle_brand || '';
-            detail.model = info?.vehicle_model || '';
-          });
-        });
-      }
-    }
-    if (crewCodes.size) {
-      const crewCodesList = Array.from(crewCodes).join(',');
-      const crewInfoUrl = `${SUPABASE_URL}/rest/v1/reg_elems?n_int=in.(${crewCodesList})&select=n_int,n_file,full_name,patent_abv`;
-      const crewInfoResponse = await supaFetch(crewInfoUrl, { method: 'GET' });
-      if (crewInfoResponse.ok) {
-        const crewInfoData = await crewInfoResponse.json();
-        const crewInfoMap = {};
-        crewInfoData.forEach(c => { crewInfoMap[c.n_int] = c; });
-        Object.values(counts).forEach(entry => {
-          entry.crewDetails.forEach(detail => {
-            const info = crewInfoMap[detail.nInt];
-            detail.nFile = info?.n_file || '';
-            detail.fullName = info?.full_name || '';
-            detail.patentAbv = info?.patent_abv || '';
-          });
-        });
-      }
-    }
-    const victimsUrl = `${SUPABASE_URL}/rest/v1/cb360_victims?internal_number=in.(${list})&select=internal_number,patient_name`;
-    const victimsResponse = await supaFetch(victimsUrl, { method: 'GET' });
-    if (victimsResponse.ok) {
-      const victimsData = await victimsResponse.json();
-      victimsData.forEach(row => {
-        const key = row.internal_number;
-        if (!counts[key]) counts[key] = {vehicles: 0, crew: 0, victims: 0, vehicleDetails: [], crewDetails: [], victimDetails: [], firstArrival: null, lastReturn: null};
-        counts[key].victims += 1;
-        if (!counts[key].victimDetails) counts[key].victimDetails = [];
-        counts[key].victimDetails.push({patientName: row.patient_name || 'Sem nome'});
-      });
-    }
-    const externalFirefightersUrl = `${SUPABASE_URL}/rest/v1/cb360_report_means_firefighters?internal_number=in.(${list})&select=internal_number,num_firefighters`;
-    const externalFirefightersResponse = await supaFetch(externalFirefightersUrl, { method: 'GET' });
-    if (externalFirefightersResponse.ok) {
-      const externalFirefightersData = await externalFirefightersResponse.json();
-      externalFirefightersData.forEach(row => {
-        const key = row.internal_number;
-        if (!counts[key]) counts[key] = {vehicles: 0, crew: 0, victims: 0, vehicleDetails: [], crewDetails: [], firstArrival: null, lastReturn: null};
-        counts[key].vehicles += 1;
-        counts[key].crew += Number(row.num_firefighters) || 0;
-      });
-    }
-    const externalMeansUrl = `${SUPABASE_URL}/rest/v1/cb360_report_means?internal_number=in.(${list})&select=internal_number,type,quantity,num_operational`;
-    const externalMeansResponse = await supaFetch(externalMeansUrl, { method: 'GET' });
-    if (externalMeansResponse.ok) {
-      const externalMeansData = await externalMeansResponse.json();
-      externalMeansData.forEach(row => {
-        const key = row.internal_number;
-        if (!counts[key]) counts[key] = {vehicles: 0, crew: 0, victims: 0, vehicleDetails: [], crewDetails: [], firstArrival: null, lastReturn: null};
-        counts[key].crew += Number(row.num_operational) || 0;
-        if (row.type === 'civil_protection' || row.type === 'other_means') {
-          counts[key].vehicles += Number(row.quantity) || 0;
+              entry.vehicleDetails.forEach(detail => {
+                const info = vehicleInfoMap[detail.vehicle];
+                detail.registration = info?.vehicle_registration || '';
+                detail.brand = info?.vehicle_brand || '';
+                detail.model = info?.vehicle_model || '';
+              });
+            });
+          }
         }
-      });
-    }
-    return counts;
+        if (crewCodes.size) {
+          const crewCodesList = Array.from(crewCodes).join(',');
+          const crewInfoUrl = `${SUPABASE_URL}/rest/v1/reg_elems?n_int=in.(${crewCodesList})&select=n_int,n_file,full_name,patent_abv`;
+          const crewInfoResponse = await supaFetch(crewInfoUrl, { method: 'GET' });
+          if (crewInfoResponse.ok) {
+            const crewInfoData = await crewInfoResponse.json();
+            const crewInfoMap = {};
+            crewInfoData.forEach(c => { crewInfoMap[c.n_int] = c; });
+            Object.values(counts).forEach(entry => {
+              entry.crewDetails.forEach(detail => {
+                const info = crewInfoMap[detail.nInt];
+                detail.nFile = info?.n_file || '';
+                detail.fullName = info?.full_name || '';
+                detail.patentAbv = info?.patent_abv || '';
+              });
+            });
+          }
+        }
+        const victimsUrl = `${SUPABASE_URL}/rest/v1/cb360_victims?internal_number=in.(${list})&select=internal_number,patient_name`;
+        const victimsResponse = await supaFetch(victimsUrl, { method: 'GET' });
+        if (victimsResponse.ok) {
+          const victimsData = await victimsResponse.json();
+          victimsData.forEach(row => {
+            const key = row.internal_number;
+            if (!counts[key]) counts[key] = {vehicles: 0, crew: 0, victims: 0, vehicleDetails: [], crewDetails: [], victimDetails: [], firstArrival: null, lastReturn: null, lastReturnDate: null};
+            counts[key].victims += 1;
+            if (!counts[key].victimDetails) counts[key].victimDetails = [];
+            counts[key].victimDetails.push({patientName: row.patient_name || 'Sem nome'});
+          });
+        }
+        const externalFirefightersUrl = `${SUPABASE_URL}/rest/v1/cb360_report_means_firefighters?internal_number=in.(${list})&select=internal_number,num_firefighters`;
+        const externalFirefightersResponse = await supaFetch(externalFirefightersUrl, { method: 'GET' });
+        if (externalFirefightersResponse.ok) {
+          const externalFirefightersData = await externalFirefightersResponse.json();
+          externalFirefightersData.forEach(row => {
+            const key = row.internal_number;
+            if (!counts[key]) counts[key] = {vehicles: 0, crew: 0, victims: 0, vehicleDetails: [], crewDetails: [], firstArrival: null, lastReturn: null, lastReturnDate: null};
+            counts[key].vehicles += 1;
+            counts[key].crew += Number(row.num_firefighters) || 0;
+          });
+        }
+        const externalMeansUrl = `${SUPABASE_URL}/rest/v1/cb360_report_means?internal_number=in.(${list})&select=internal_number,type,quantity,num_operational`;
+        const externalMeansResponse = await supaFetch(externalMeansUrl, { method: 'GET' });
+        if (externalMeansResponse.ok) {
+          const externalMeansData = await externalMeansResponse.json();
+          externalMeansData.forEach(row => {
+            const key = row.internal_number;
+            if (!counts[key]) counts[key] = {vehicles: 0, crew: 0, victims: 0, vehicleDetails: [], crewDetails: [], firstArrival: null, lastReturn: null, lastReturnDate: null};
+            counts[key].crew += Number(row.num_operational) || 0;
+            if (row.type === 'civil_protection' || row.type === 'other_means') {
+              counts[key].vehicles += Number(row.quantity) || 0;
+            }
+          });
+        }
+        return counts;
       } catch (err) {
         console.error('Erro fetchCb360ResourceCounts:', err);
         return {};
@@ -519,6 +557,10 @@
       document.getElementById('cb360-btn-ocorrence-list').addEventListener('click', () => {
         openCb360ActiveIncidentsMapModal();
       });
+      document.getElementById('cb360-btn-ocorrence-list').addEventListener('click', () => {
+        openCb360ActiveIncidentsMapModal();
+      });
+      document.getElementById('cb360-register-export').addEventListener('click', exportCb360IncidentsToExcel);
       document.querySelectorAll('.cb360-period-toggle').forEach(btn => {
         btn.addEventListener('click', () => {
           document.querySelectorAll('.cb360-period-toggle').forEach(b => {
@@ -628,7 +670,7 @@
     function renderCb360Lines(incidents, resourceCounts = {}) {      
       const tbody = document.getElementById('cb360-table-body');
       const cellPadding = '2px 4px; vertical-align: middle;';
-      const cb360ReportsMap = cb360Pagination.reportsMap || {};  
+      const cb360ReportsMap = cb360Pagination.reportsMap || {};
       tbody.innerHTML = incidents.length ? '' : `
         <tr>
           <td colspan="19" style="padding:20px; border:1px solid #c4c4c4; text-align:center; color:#888;">
@@ -644,12 +686,14 @@
             formattedDate = `${day}-${month}-${year}`;
           }
           const alertHour = oc.alert_time ? oc.alert_time.substring(0, 5) : "--:--";
-          const exitHour = oc.exit_time ? oc.exit_time.substring(0, 5) : "--:--";
           const counts = resourceCounts[oc.internal_number] || {vehicles: 0, crew: 0, victims: 0};
+          const exitHour = counts.firstDeparture ? counts.firstDeparture.substring(0, 5) : "--:--";
           const expensesList = counts.expenses || [];
           const hasVehicleRegistration = expensesList.some(exp => exp.vehicle_registration && exp.vehicle_registration.trim() !== '');
           const statusColor = STATUS_COLORS[oc.status] || "#f0f0f0";
-          const isClosedRow = ['Encerrada', 'Falso Alarme', 'Falso Alerta', 'Anulada', 'Recusada'].includes(oc.status);
+          const isStatusClosed = ['Encerrada', 'Falso Alarme', 'Falso Alerta', 'Anulada', 'Recusada'].includes(oc.status);
+          const hasDurationData = counts.firstArrival || counts.lastReturn || counts.vehicles > 0;
+          const isClosedRow = isStatusClosed && hasDurationData;
           const reportData = cb360ReportsMap[oc.internal_number] || null;
           const reportStatusColor = getCb360ReportStatusColor(reportData);      
           const bl = 'border-left:0px solid #c4c4c4;';
@@ -686,7 +730,7 @@
             <td class="cb360-victim-cell" data-internal="${oc.internal_number || ''}" style="${cellPadding}; ${br} text-align:center; vertical-align:middle; font-size: 15px; font-weight: 600; cursor:${counts.victims ? 'pointer' : 'default'};">
               <div style="display: inline-flex; align-items: center; vertical-align:middle; justify-content: center; gap: 4px;">${counts.victims} <i class="fa-solid fa-kit-medical" style="font-size:15px; vertical-align:middle;"></i></div>
             </td>
-            <td style="${cellPadding}; ${br} text-align:center; font-size: 12px; font-weight: 500;">
+            <td class="cb360-report-cell" data-internal="${oc.internal_number || ''}" style="${cellPadding}; ${br} text-align:center; font-size: 12px; font-weight: 500; cursor:${reportData ? 'pointer' : 'default'};">
               ${cb360ClassOcorrReportMap[oc.classification] ? `<i class="fa-regular fa-file" style="font-size: 16px; font-weight: 700; color: ${reportStatusColor}; vertical-align:middle;"></i>` : ''}
             </td>
             <td class="cb360-duration-cell" data-internal="${oc.internal_number || ''}" style="${cellPadding}; ${br} text-align:center; font-size: 16px; font-weight: 700; cursor:${isClosedRow ? 'pointer' : 'default'};">${isClosedRow ? '<i class="fa-solid fa-circle-info" style="font-size: 16px; font-weight: 700; vertical-align:middle;"></i>' : ''}</td>
@@ -722,8 +766,13 @@
         cell.addEventListener('mouseleave', hideCb360LineTooltip);
       });
       document.querySelectorAll('.cb360-duration-cell').forEach(cell => {
-        const info = resourceCounts[cell.dataset.internal];
-        if (!info || (!info.firstArrival && !info.lastReturn)) return;
+        const internalNum = cell.dataset.internal;
+        const oc = incidents.find(o => o.internal_number === internalNum);
+        const info = resourceCounts[internalNum];
+        const isStatusClosed = oc && ['Encerrada', 'Falso Alarme', 'Falso Alerta', 'Anulada', 'Recusada'].includes(oc.status);
+        const hasDurationData = info && (info.firstArrival || info.lastReturn || info.vehicles > 0);
+        const isClosedRow = isStatusClosed && hasDurationData;        
+        if (!isClosedRow) return;
         const details = [
           {label: 'Hora Chegada', time: info.firstArrival ? info.firstArrival.substring(0, 5) : '--:--'},
           {label: 'Hora Regresso', time: info.lastReturn ? info.lastReturn.substring(0, 5) : '--:--'}
@@ -731,9 +780,20 @@
         cell.addEventListener('mouseenter', () => showCb360LineTooltip(cell, details, formatCb360DurationTooltipLine));
         cell.addEventListener('mouseleave', hideCb360LineTooltip);
       });
+      document.querySelectorAll('.cb360-report-cell').forEach(cell => {
+        const internalNumber = cell.dataset.internal;
+        const oc = incidents.find(o => o.internal_number === internalNumber);
+        const reportData = cb360ReportsMap[internalNumber] || null;
+        if (!oc || !reportData) return;    
+        const respLabel = cb360Pagination.respMap?.[oc.resp_member_id] || '-';
+        const classDesc = cb360ClassOcorrDescMap[oc.classification] || '-';
+        const details = [{label: 'Resp. Rel.', value: respLabel}, {label: 'Descrição', value: classDesc}, {label: 'Trabalho Desenvolvido', value: reportData.developed_work || '-'}];
+        cell.addEventListener('mouseenter', () => showCb360LineTooltip(cell, details, formatCb360ReportTooltipLine, {wrap: true}));
+        cell.addEventListener('mouseleave', hideCb360LineTooltip);
+      });
       document.querySelectorAll('.cb360-delete-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
-          e.stopPropagation(); // Evita que clique no botão dispare o evento da linha
+          e.stopPropagation();
           const id = btn.dataset.id;
           const internalNumber = btn.dataset.internal;
           const confirmMsg = `Tem a certeza que pretende eliminar a ocorrência "${internalNumber}"? Esta ação remove também todas as viaturas, bombeiros e vítimas associados e não pode ser revertida.`;
@@ -746,6 +806,7 @@
     // ---- SEARCH: searchCb360Incidents ----
     async function searchCb360Incidents() {
       await ensureCb360ClassOcorrReportMap();
+      await ensureCb360ClassOcorrDescMap();
       const filters = {search: document.getElementById('cb360-input-search').value.trim(),   periodFrom: document.getElementById('cb360-input-period-from').value, periodTo: document.getElementById('cb360-input-period-to').value, 
                        species: document.getElementById('cb360-input-species').value, alertSource: document.getElementById('cb360-input-alert-source').value, risk: document.getElementById('cb360-select-risk').value,
                        state: document.getElementById('cb360-select-state').value, aap: document.getElementById('cb360-input-aap').value, report: document.getElementById('cb360-input-report').value
@@ -753,26 +814,42 @@
       const incidents = await fetchCb360Incidents(filters);
       const resourceCounts = await fetchCb360ResourceCounts(incidents.map(oc => oc.internal_number));
       const internalNumbers = incidents.map(oc => oc.internal_number).filter(Boolean);
-      const [allExpensesResults, reportsMap] = await Promise.all([
-        Promise.all(incidents.map(async oc => {
-          const expenses = await fetchCb360ReportExpenses(oc.internal_number);
-          return { internalNumber: oc.internal_number, expenses };
-        })),
-        (async () => {
-          if (internalNumbers.length === 0) return {};
-          try {
-            const numbersQuery = internalNumbers.join(',');
-            const response = await supaFetch(`${SUPABASE_URL}/rest/v1/cb360_incident_reports?internal_number=in.(${numbersQuery})`);
-            if (!response.ok) return {};
-            const data = await response.json();
-            const map = {};
-            data.forEach(rep => { map[rep.internal_number] = rep; });
-            return map;
-          } catch (err) {
-            console.error('Erro ao carregar relatórios para a tabela:', err);
-            return {};
-          }
-        })()
+      const respMemberIds = [...new Set(incidents.map(oc => oc.resp_member_id).filter(Boolean))];
+      const [allExpensesResults, reportsMap, respMap] = await Promise.all([
+      Promise.all(incidents.map(async oc => {
+        const expenses = await fetchCb360ReportExpenses(oc.internal_number);
+        return { internalNumber: oc.internal_number, expenses };
+      })),
+      (async () => {
+        if (internalNumbers.length === 0) return {};
+        try {
+          const numbersQuery = internalNumbers.join(',');
+          const response = await supaFetch(`${SUPABASE_URL}/rest/v1/cb360_incident_reports?internal_number=in.(${numbersQuery})`);
+          if (!response.ok) return {};
+          const data = await response.json();
+          const map = {};
+          data.forEach(rep => { map[rep.internal_number] = rep; });
+          return map;
+        } catch (err) {
+          console.error('Erro ao carregar relatórios para a tabela:', err);
+          return {};
+        }
+      })(),
+      (async () => {
+        if (respMemberIds.length === 0) return {};
+        try {
+          const idsQuery = respMemberIds.join(',');
+          const response = await supaFetch(`${SUPABASE_URL}/rest/v1/reg_elems?n_int=in.(${idsQuery})&select=n_int,full_name,patent_abv`);
+          if (!response.ok) return {};
+          const data = await response.json();
+          const map = {};
+          data.forEach(r => { map[r.n_int] = `${r.n_int} - ${r.full_name || ''} - ${r.patent_abv || ''}`; });
+          return map;
+        } catch (err) {
+          console.error('Erro ao carregar responsáveis de relatório:', err);
+          return {};
+        }
+      })()
       ]);
       const expensesMap = {};
       allExpensesResults.forEach(res => {
@@ -787,6 +864,7 @@
       cb360Pagination.fullData = incidents;
       cb360Pagination.resourceCounts = resourceCounts;
       cb360Pagination.reportsMap = reportsMap;
+      cb360Pagination.respMap = respMap;
       cb360Pagination.currentPage = 1;
       renderCb360Page();
     }
@@ -856,9 +934,19 @@
         applyCb360YearFilter();
       }
     }
-    // ---- DELETE: deleteCb360Ocorrencia() ----
+    // ---- DELETE: deleteCb360Occorrence ----
     async function deleteCb360Occorrence(id, internalNumber, btn) {
       try {
+        const reportTables = ['cb360_incident_reports', 'cb360_report_command', 'cb360_report_expenses', 'cb360_report_meals', 'cb360_report_means', 'cb360_report_means_firefighters', 'cb360_report_participants', 'cb360_report_used_material'];
+        for (const tableName of reportTables) {
+          const resp = await supaFetch(`${SUPABASE_URL}/rest/v1/${tableName}?internal_number=eq.${internalNumber}`, { method: "DELETE" });
+          if (!resp.ok) {
+            console.error(`Erro ao apagar registos de ${tableName}:`, await resp.text());
+            showPopup('popup-danger', `Erro ao apagar dados associados (${tableName}). A ocorrência não foi removida.`);
+            if (btn) btn.disabled = false;
+            return;
+          }
+        }
         const victimsDeleteResp = await supaFetch(`${SUPABASE_URL}/rest/v1/cb360_victims?internal_number=eq.${internalNumber}`, { method: "DELETE" });
         if (!victimsDeleteResp.ok) {
           console.error('Erro ao apagar vítimas associadas:', await victimsDeleteResp.text());
@@ -913,14 +1001,13 @@
         modal.innerHTML = `
           <div style="background:#fff; width:80%; height:80%; border-radius:6px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.3);">
             <div style="background:#2b6ecb; color:#fff; padding:12px 16px; display:flex; align-items:center; justify-content:space-between; font-weight:600;">
-              <span>Ocorrências em Curso - Mapa Geral</span>
+              <span>Ocorrências - Mapa Geral</span>
               <button id="goc-close-map-modal" style="background:transparent; border:none; color:#fff; font-size:18px; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div id="goc-modal-map-container" style="flex:1; width:100%;"></div>
           </div>
         `;
         document.body.appendChild(modal);
-
         document.getElementById('goc-close-map-modal').addEventListener('click', () => {
           modal.style.display = 'none';
         });
@@ -935,10 +1022,17 @@
         window.cb360ModalMap.invalidateSize();
       }
       try {
-        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
-        const response = await supaFetch(`${SUPABASE_URL}/rest/v1/cb360_incidents?corp_oper_nr=eq.${currentCorpOperNr}&is_closed=eq.false`, { method: 'GET' });
-        if (!response.ok) throw new Error('Erro ao carregar ocorrências ativas');
-        const activeIncidents = await response.json();
+        const incidentsForMap = cb360Pagination.fullData || [];
+        const resourceCounts = cb360Pagination.resourceCounts || {};
+        const classIds = [...new Set(incidentsForMap.map(inc => inc.classification).filter(Boolean))];
+        let classMap = {};
+        if (classIds.length) {
+          const resp = await supaFetch(`${SUPABASE_URL}/rest/v1/class_occorr?class_occorr=in.(${classIds.join(',')})&select=class_occorr,occorr_descr`);
+          if (resp.ok) {
+            const data = await resp.json();
+            data.forEach(c => { classMap[c.class_occorr] = c.occorr_descr; });
+          }
+        }
         if (window.cb360MarkerClusterGroup) {
           window.cb360ModalMap.removeLayer(window.cb360MarkerClusterGroup);
         }
@@ -962,19 +1056,29 @@
               </div>
             </div>
             <style>
-              @keyframes pin-pulse-wave {
-                0% { transform: scale(1); opacity: 0.8; }
-                70% { transform: scale(1.45); opacity: 0; }
-                100% { transform: scale(1); opacity: 0; }
-              }
+              @keyframes pin-pulse-wave {0% {transform: scale(1); opacity: 0.8;} 70% {transform: scale(1.45); opacity: 0;} 100% {transform: scale(1); opacity: 0;}}
             </style>
           `,
           iconSize: [32, 42],
           iconAnchor: [16, 42],
           popupAnchor: [0, -40]
         });
+        const closedPinIcon = L.divIcon({
+          className: 'custom-exact-closed-pin',
+          html: `
+            <div style="position: relative; width: 32px; height: 42px;">
+              <svg viewBox="0 0 384 512" style="width: 100%; height: 100%; fill: #2e7d32; filter: drop-shadow(0px 3px 4px rgba(0,0,0,0.35));">
+                <path d="M172.268 501.67C26.97 291.03 0 269.41 0 192 0 85.96 85.96 0 192 0s192 85.96 192 192c0 77.41-26.97 99.03-172.268 309.67-9.535 13.774-29.93 13.773-39.464 0z"/>
+              </svg>
+              <i class="fa-solid fa-check" style="position: absolute; top: 10px; left: 50%; transform: translateX(-50%); color: white; font-size: 14px;"></i>
+            </div>
+          `,
+          iconSize: [32, 42],
+          iconAnchor: [16, 42],
+          popupAnchor: [0, -40]
+        });
         const seenCoords = {};
-        activeIncidents.forEach(inc => {
+        incidentsForMap.forEach(inc => {
           if (inc.coord_x && inc.coord_y) {
             let lat = parseFloat(inc.coord_x);
             let lng = parseFloat(inc.coord_y);
@@ -986,14 +1090,34 @@
             } else {
               seenCoords[coordKey] = 1;
             }
-            const markerText = `<b>Ocorrência:</b> ${inc.internal_number}<br><b>Estado:</b> ${inc.status}<br><b>Morada:</b> ${inc.address || ''}`;            
-            const marker = L.marker([lat, lng], { icon: pulsePinIcon }).bindPopup(markerText);
+            const counts = resourceCounts[inc.internal_number] || { vehicles: 0, crew: 0, victims: 0 };
+            const classText = classMap[inc.classification] || inc.classification || '';
+            const dataInicio = (inc.alert_date && inc.alert_time)
+              ? `${formatDatePT(inc.alert_date)} ${formatTimePT(inc.alert_time)}`
+              : '';
+            const dataFim = (counts.lastReturnDate && counts.lastReturn)
+              ? `${formatDatePT(counts.lastReturnDate)} ${formatTimePT(counts.lastReturn)}`
+              : '';
+            const markerText = `
+              <b>Nº Ocorrência:</b> ${inc.internal_number}<br>
+              <b>Estado:</b> ${inc.status || ''}<br>
+              <b>Local:</b> ${inc.address || ''}<br>
+              <b>Classificação:</b> ${classText}<br>
+              <b>Data de Início:</b> ${dataInicio}<br>
+              ${dataFim ? `<b>Data de Fim:</b> ${dataFim}<br>` : ''}
+              <div style="margin-top:6px; display:flex; gap:12px; align-items:center;">
+                <span>${counts.vehicles} <i class="fa-solid fa-truck" style="color:#666;"></i></span>
+                <span>${counts.crew} <i class="fa-solid fa-helmet-safety" style="color:#666;"></i></span>
+                <span>${counts.victims} <i class="fa-solid fa-kit-medical" style="color:#666;"></i></span>
+              </div>
+            `;
+            const icon = inc.is_closed ? closedPinIcon : pulsePinIcon;
+            const marker = L.marker([lat, lng], { icon }).bindPopup(markerText);
             window.cb360MarkerClusterGroup.addLayer(marker);
           }
         });
         window.cb360ModalMap.addLayer(window.cb360MarkerClusterGroup);
         window.cb360ModalMap.invalidateSize();
-
         if (window.cb360MarkerClusterGroup.getLayers().length > 0) {
           window.cb360ModalMap.fitBounds(window.cb360MarkerClusterGroup.getBounds().pad(0.1));
         }
@@ -1801,6 +1925,31 @@
       cb360ClassOcorrReportMap = await fetchCb360ClassOcorrReportMap();
       cb360ClassOcorrReportMapLoaded = true;
     }
+
+    // FETCH: fetchCb360ClassOcorrDescMap()
+    async function fetchCb360ClassOcorrDescMap() {
+      try {
+        const url = `${SUPABASE_URL}/rest/v1/class_occorr?select=class_occorr,occorr_descr`;
+        const response = await supaFetch(url, {method: 'GET'});
+        if (!response.ok) {
+          console.error('Erro ao obter occorr_descr de class_occorr:', response.status);
+          return {};
+        }
+        const data = await response.json();
+        const map = {};
+        data.forEach(d => { map[d.class_occorr] = d.occorr_descr || ''; });
+        return map;
+      } catch (err) {
+        console.error('Erro fetchCb360ClassOcorrDescMap:', err);
+        return {};
+      }
+    }
+    // HELPER: ensureCb360ClassOcorrDescMap() — carrega o mapa de descrições só uma vez e mantém em cache
+    async function ensureCb360ClassOcorrDescMap() {
+      if (cb360ClassOcorrDescMapLoaded) return;
+      cb360ClassOcorrDescMap = await fetchCb360ClassOcorrDescMap();
+      cb360ClassOcorrDescMapLoaded = true;
+    }
     // RENDER: renderCb360ClassOcorrList()
     function renderCb360ClassOcorrList(list, listContainer, mainInput, searchInput, dropdown, chevron) {
       listContainer.innerHTML = '';
@@ -1932,6 +2081,27 @@
           setDropdownOpen(false);
         }
       });
+    }
+    function enforceCb360BRespFromCrew() {
+      if (!cb360ResourcesFirefighters || !cb360ResourcesFirefighters.length) return;
+      const minorCode = cb360ResourcesFirefighters.reduce((minor, actual) => {
+        if (!actual.code) return minor;
+        const codeNum = Number(actual.code);
+        if (isNaN(codeNum)) return minor;
+        return (minor === null || codeNum < minor) ? codeNum : minor;
+      }, null);
+      if (minorCode === null) return;
+      const currentIdNum = cb360BRespSelected?.id ? Number(cb360BRespSelected.id) : null;
+      if (currentIdNum !== null && !isNaN(currentIdNum) && currentIdNum <= minorCode) {
+        return;
+      }
+      const candidate = cb360BRespData.find(i => Number(i.id) === minorCode);
+      if (!candidate) return;
+      cb360BRespSelected = candidate;
+      const mainInput = document.getElementById('goc-bresp-input');
+      if (mainInput) mainInput.value = candidate.label;
+      const labelEl = document.getElementById('goc-label-bresp');
+      if (labelEl) labelEl.style.color = '';
     }
     // B. Resp. Rel. — FETCH: fetchCb360BRespList()
     async function fetchCb360BRespList() {
@@ -2371,8 +2541,8 @@
           if (parishSel && oc.parish) {
             parishSel.value = oc.parish;
           }
-        }, 75);
-      }, 75);
+        }, 125);
+      }, 125);
     } 
     // Fora da Área — INITIALIZE: initializeOutOfBoundsCombobox()
     function initializeOutOfBoundsCombobox(list, selectedId = null) {
@@ -2513,37 +2683,64 @@
       if (activeEl) activeEl.scrollIntoView({block: 'nearest'});
     }
     // Mapa/Coordenadas — INITIALIZE: initializeMap()
-    function initializeMap(inccident = null) {
+    async function initializeMap(inccident = null) {
       const container = document.getElementById('goc-map');
       if (!container || typeof L === 'undefined') {
         console.error('Leaflet não carregado ou container inexistente.');
         return;
       }
-      const lat = parseFloat(inccident?.coord_x) || 37.014151;
-      const lng = parseFloat(inccident?.coord_y) || -7.935543;      
-      cb360LeafletMap = L.map('goc-map').setView([lat, lng], inccident ? 16 : 15);      
+      let lat = parseFloat(inccident?.coord_x);
+      let lng = parseFloat(inccident?.coord_y);
+      if (isNaN(lat) || isNaN(lng)) {
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        try {
+          const resp = await supaFetch(`${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${currentCorpOperNr}&select=default_lat,default_lng`);
+          const data = resp.ok ? await resp.json() : [];
+          lat = parseFloat(data[0]?.default_lat);
+          lng = parseFloat(data[0]?.default_lng);
+        } catch (err) {
+          console.error('Erro ao obter coordenadas por defeito da corporação:', err);
+          lat = 37.014151;
+          lng = -7.935543;
+        }
+      }
+      cb360LeafletMap = L.map('goc-map').setView([lat, lng], inccident ? 18 : 16);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors',
         maxZoom: 20
       }).addTo(cb360LeafletMap);
-      cb360LeafletMarker = L.marker([lat, lng], { draggable: true }).addTo(cb360LeafletMap);
-      cb360LeafletMarker.on('dragend', () => {
-        updateCoordinateDisplay();
-      });
-      cb360LeafletMap.on('click', (e) => {
-        cb360LeafletMarker.setLatLng(e.latlng);
-        updateCoordinateDisplay();
-      });
+      cb360LeafletMarker = L.marker([lat, lng], {draggable: false}).addTo(cb360LeafletMap);
       setTimeout(() => {
         if (cb360LeafletMap) cb360LeafletMap.invalidateSize();
-      }, 275);
+      }, 275);  
       updateCoordinateDisplay();
     }
-    // Mapa/Coordenadas — UPDATE: updateCb360Map()
+    function parseCb360Coordinate(value) {
+      if (!value) return NaN;
+      const system = document.getElementById('goc-coord-system').value;
+      if (system === 'Decimais') {
+        return parseFloat(value);
+      }
+      const dirMatch = value.match(/[NSEWnsew]/);
+      const dir = dirMatch ? dirMatch[0].toUpperCase() : null;
+      const nums = value.match(/[\d.]+/g);
+      if (!nums || !nums.length) return NaN;
+      const deg = parseFloat(nums[0]) || 0;
+      const min = parseFloat(nums[1]) || 0;
+      let decimal;
+      if (system === 'SIRESP') {
+        decimal = deg + (min / 60);
+      } else {
+        const sec = parseFloat(nums[2]) || 0;
+        decimal = deg + (min / 60) + (sec / 3600);
+      }
+      if (dir === 'S' || dir === 'W') decimal = -decimal;
+      return decimal;
+    }
     function updateCb360Map() {
       if (!cb360LeafletMap || !cb360LeafletMarker) return;
-      const lat = parseFloat(document.getElementById('goc-coord-x').value);
-      const lng = parseFloat(document.getElementById('goc-coord-y').value);
+      const lat = parseCb360Coordinate(document.getElementById('goc-coord-x').value);
+      const lng = parseCb360Coordinate(document.getElementById('goc-coord-y').value);
       if (isNaN(lat) || isNaN(lng)) {
         console.warn('Coordenadas inválidas.');
         return;
@@ -2700,7 +2897,7 @@
         applyCb360CloseButtonState(cb360PendingClosed);
         applyCb360FieldsLockState(cb360PendingClosed);
       }
-      await refreshCb360VehicleRegistrations();
+      await refreshCb360VehicleRegistrations();      
       renderCb360ResourcesTab();
       renderCb360VictimsTab();
       if (mode === 'editar') {
@@ -2854,6 +3051,7 @@
     /* ===== SAVE FORM ===== */
     // SAVE: saveCb360Incident()    
     async function saveCb360Incident({sendSado} = {}) {
+      enforceCb360BRespFromCrew();
       const requiredFields = [
         {valid: !!cb360SelectedRating?.id, labelId: 'goc-label-classification', name: 'Classificação'},
         {valid: !!cb360BRespSelected?.id, labelId: 'goc-label-bresp', name: 'Bombeiro Responsável'},
@@ -2909,7 +3107,6 @@
           payload.internal_number = getVal('goc-internal-nr');
           payload.sms_option = document.querySelector('input[name="goc-sms"]:checked')?.value;
         }
-        console.log(payload);
         const response = await supaFetch(url, { method: isNew ? 'POST' : 'PATCH',
           headers: { 'Prefer': 'return=representation' },
           body: JSON.stringify(payload) });
@@ -2944,7 +3141,8 @@
             const formattedDateAlert = alertDate ? alertDate.split('-').reverse().join('-') : '';
             const classificationText = cb360SelectedRating ? `${cb360SelectedRating.id} - ${cb360SelectedRating.name || ''}` : (payload.classification || '');
             const localityText = getVal('goc-address-city') || getVal('goc-address') || '';
-            const timelineInfo = `Nr. Ocorrência: ${savedIncident.internal_number} Estado: ${payload.status} Início: ${alertTime} ${formattedDateAlert} Classificação: ${classificationText} Local: ${localityText}`;
+            const descriptionText = payload.description || '';
+            const timelineInfo = `<span style="margin-right:20px;"><strong>Nr. Ocorrência:</strong> ${savedIncident.internal_number}</span>` + `<span style="margin-right:20px;"><strong>Estado:</strong> ${payload.status}</span>` + `<span style="margin-right:20px;"><strong>Início:</strong> ${alertTime} ${formattedDateAlert}</span>` + `<span style="margin-right:20px;"><strong>Classificação:</strong> ${classificationText} ${descriptionText}</span>` + `<span><strong>Local:</strong> ${localityText}</span>`;
             const timelinePayload = {internal_number: savedIncident.internal_number, date_val: dateVal, time_val: timeVal, date_time: dateTimeStr, type_val: 'Comunicação', from_val: '', to_val: '', info_val: timelineInfo, person_name: authorName};
             const timelineHeaders = getSupabaseHeaders();
             timelineHeaders['Content-Type'] = 'application/json';
@@ -3051,9 +3249,11 @@
         showPopup('popup-success', wasClosing
           ? 'Ocorrência encerrada com sucesso!'
           : (isNew ? 'Ocorrência gerada com sucesso!' : 'Ocorrência atualizada com sucesso!'));
-        setTimeout(() => {
-          closeCb360Incident();
-        }, 0);
+        if (wasClosing) {
+          setTimeout(() => {
+            closeCb360Incident();
+          }, 0);
+        }
       } catch (err) {
         console.error('Falha ao guardar CB360:', err);
         alert('Erro ao guardar a ocorrência.');
@@ -3080,7 +3280,18 @@
       if (majorCard) majorCard.style.display = 'block';
       if (typeof setDateFilter === "function") {
         const tbody = document.getElementById('cb360-table-body');
-        if (tbody) tbody.innerHTML = `<tr><td colspan="19" style="padding:20px; text-align:center; color:#888;">A carregar...</td></tr>`;
+        if (tbody) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="19" style="padding: 40px; text-align: center; color: #555; font-size: 13px; font-weight: 500; border: 1px solid #c4c4c4;">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 12px;">
+                  <span style="display: inline-block; width: 22px; height: 22px; border: 3px solid rgba(43, 110, 203, 0.2); border-radius: 50%; border-top-color: #2b6ecb; animation: cb360-spin 0.8s ease-in-out infinite;"></span>
+                  <span>A carregar...</span>
+                </div>
+              </td>
+            </tr>
+          `;
+        }
         setDateFilter('day');
       } else {
         searchCb360Incidents();
@@ -3114,7 +3325,7 @@
               <span id="goc-btn-pin" style="color:#5bc0de; cursor:pointer; margin-top:5px;" title="Fixar"><i class="fa-solid fa-thumbtack" style="font-size:18px; color:#666;"></i></span>
             </div>
           </div>
-          <div id="goc-vehicles-wrap" style="overflow-x:auto; overflow-y:auto; max-height:255px; border:1px solid #eee; border-radius:4px;">
+          <div id="goc-vehicles-wrap" style="overflow-x:auto; overflow-y:auto; max-height:250px; overscroll-behavior:contain; position:relative; border:1px solid #c4c4c4; border-radius:4px; box-shadow:0 1px 4px rgba(0,0,0,0.12);">
             <table style="width:100%; border-collapse:separate; border-spacing:0; font-size:12px;">
               <thead>
                 <tr style="background:linear-gradient(#f4f4f4,#e5e5e5); color:#333; font-weight:600; text-align:center;">
@@ -3158,7 +3369,7 @@
             <span id="goc-firefighters-arrow" style="font-size:16px;">▾</span> Bombeiros:
           </span>
         </div>
-        <div id="goc-firefighters-wrap" style="overflow-x:auto; overflow-y:auto; max-height:237px; border:1px solid #eee; border-radius:4px; max-height:233px; ">
+        <div id="goc-firefighters-wrap" style="overflow-x:auto; overflow-y:auto; max-height:250px; overscroll-behavior:contain; position:relative; border:1px solid #c4c4c4; border-radius:4px; box-shadow:0 1px 4px rgba(0,0,0,0.12);">
           <table style="width:100%; border-collapse:separate; border-spacing:0; font-size:12px; ">
             <thead>
               <tr style="background:linear-gradient(#f4f4f4,#e5e5e5); color:#333; font-weight:600; text-align:center;">
@@ -3800,9 +4011,28 @@
         });
       });
       tbody.querySelectorAll('.goc-firefighter-remove').forEach(btn => {
-        btn.addEventListener('click', () => {
-          cb360ResourcesFirefighters = cb360ResourcesFirefighters.filter(b => b.id !== btn.dataset.id);
-          renderCb360FirefightersTable();
+        btn.addEventListener('click', async () => {
+          const firefighterId = btn.dataset.id;
+          const item = cb360ResourcesFirefighters.find(b => b.id === firefighterId);
+          const confirmMsg = `Tem a certeza que pretende remover o bombeiro "${item?.code || ''}" desta viatura? Esta ação não pode ser revertida.`;
+          if (!confirm(confirmMsg)) return;
+          btn.disabled = true;
+          try {
+            const deleteResp = await supaFetch(`${SUPABASE_URL}/rest/v1/cb360_dispatch_crew?id=eq.${firefighterId}`, { method: "DELETE" });
+            if (!deleteResp.ok) {
+              console.error('Erro ao apagar bombeiro:', await deleteResp.text());
+              showPopup('popup-danger', `Erro ao apagar o bombeiro.`);
+              btn.disabled = false;
+              return;
+            }
+            cb360ResourcesFirefighters = cb360ResourcesFirefighters.filter(b => b.id !== firefighterId);
+            enforceCb360BRespFromCrew();
+            renderCb360FirefightersTable();
+          } catch (err) {
+            console.error('Erro crítico ao eliminar bombeiro:', err);
+            showPopup('popup-danger', `Erro de rede ao eliminar o bombeiro.`);
+            btn.disabled = false;
+          }
         });
       });
       updateMediaCounter();
@@ -4135,7 +4365,6 @@
       const overlay = document.getElementById('goc-modal-dispatch-overlay');
       if (overlay) overlay.remove();
     }
-    // SAVE: saveCb360Dispatch()
     async function saveCb360Dispatch() {
       const modalWindow = document.getElementById('goc-dispatch-window');
       if (!modalWindow) {
@@ -4150,15 +4379,14 @@
       const horaSTO = getVal('#horaSTO');
       const horaCCB = getVal('#horaCCB');
       if (horaCCB && (!horaCTO || !horaSTO)) {
-        showPopup('popup-danger', 'Ainda existem meios sem hora de saída do TO.'
-        );
+        showPopup('popup-danger', 'Ainda existem meios sem hora de saída do TO.');
         return;
       }
-      const vehicleData = {
-        corp_oper_nr: sessionStorage.getItem("currentCorpOperNr") || "0805", internal_number: document.getElementById('goc-internal-nr')?.value, vehicle: cb360VehicleSelected?.id || null,
-        inem_report_number: getVal('#goc-inem-verbete'), inem_unit: getVal('#goc-inem-unidade'), cb_departure_date: getVal('#dataSCB'), cb_departure_time: getVal('#horaSCB'), scene_arrival_date: getVal('#dataCTO'), 
-        scene_arrival_time: horaCTO, scene_departure_date: horaSTO ? getVal('#dataSTO') : null, scene_departure_time: horaSTO, cb_arrival_date: horaCCB ? getVal('#dataCCB') : null, cb_arrival_time: horaCCB, km_start: getVal('#goc-km-start'), km_end: getVal('#goc-km-end')
-      };
+      const vehicleData = {corp_oper_nr: sessionStorage.getItem("currentCorpOperNr") || "0805", internal_number: document.getElementById('goc-internal-nr')?.value, vehicle: cb360VehicleSelected?.id || null,  
+                           inem_report_number: getVal('#goc-inem-verbete'), inem_unit: getVal('#goc-inem-unidade'), cb_departure_date: getVal('#dataSCB'), cb_departure_time: getVal('#horaSCB'), scene_arrival_date: getVal('#dataCTO'),
+                           scene_arrival_time: horaCTO, scene_departure_date: horaSTO ? getVal('#dataSTO') : null, scene_departure_time: horaSTO, cb_arrival_date: horaCCB ? getVal('#dataCCB') : null, cb_arrival_time: horaCCB,
+                           km_start: getVal('#goc-km-start'), km_end: getVal('#goc-km-end')
+                          };
       if (!vehicleData.vehicle) {
         showPopup('popup-danger', `Selecione uma viatura antes de gravar.`);
         return;
@@ -4166,132 +4394,178 @@
       if (!vehicleData.cb_departure_date || !vehicleData.cb_departure_time) {
         showPopup('popup-danger', `Preencha a Data e Hora de Saída do C.B.`);
         return;
-      }      
-      const cronologia = [
+      }
+      const timeline = [
         {label: 'Saída do CB', date: vehicleData.cb_departure_date, time: vehicleData.cb_departure_time},
         {label: 'Chegada ao TO', date: vehicleData.scene_arrival_date, time: vehicleData.scene_arrival_time},
         {label: 'Saída do TO', date: vehicleData.scene_departure_date, time: vehicleData.scene_departure_time},
         {label: 'Chegada ao CB', date: vehicleData.cb_arrival_date, time: vehicleData.cb_arrival_time}
       ].filter(p => p.date && p.time)
-       .map(p => ({label: p.label, ts: new Date(`${p.date}T${p.time}`)}));
-      for (let i = 1; i < cronologia.length; i++) {
-        if (cronologia[i].ts < cronologia[i - 1].ts) {
-          showPopup('popup-danger', `A hora de ${cronologia[i].label} não pode ser anterior à hora de ${cronologia[i - 1].label}.`);
+       .map(p => ({
+        label: p.label,
+        ts: new Date(`${p.date}T${p.time}`)
+      }));
+      for (let i = 1; i < timeline.length; i++) {
+        if (timeline[i].ts < timeline[i - 1].ts) {
+          showPopup('popup-danger', `A hora de ${timeline[i].label} não pode ser anterior à hora de ${timeline[i - 1].label}.`);
           return;
         }
       }
       const checkedFirefighters = modalWindow.querySelectorAll('#goc-firefighters-dropdown input:checked');
       if (checkedFirefighters.length === 0) {
         showPopup('popup-danger', `Selecione pelo menos 1 bombeiro para a guarnição.`);
-        return;
-      }
-      const checkedIds = Array.from(checkedFirefighters).map(cb => String(cb.value));
-      const conflitosMesmaOcorrencia = cb360ResourcesFirefighters.filter(b =>
-        checkedIds.includes(String(b.code)) && b.vehicle !== vehicleData.vehicle
-      );
-      if (conflitosMesmaOcorrencia.length > 0) {
-        const lista = conflitosMesmaOcorrencia.map(b => `${b.code} (${b.vehicle})`).join(', ');
-        showPopup('popup-danger', `Bombeiro(s) já associado(s) a outra viatura nesta ocorrência: ${lista}`);
-        return;
-      }
-      try {
-        const openIncidentsUrl = `${SUPABASE_URL}/rest/v1/cb360_incidents?corp_oper_nr=eq.${vehicleData.corp_oper_nr}&is_closed=eq.false&internal_number=neq.${vehicleData.internal_number}&select=internal_number`;
-        const openIncidentsResp = await supaFetch(openIncidentsUrl, { method: 'GET' });
-        const openIncidents = openIncidentsResp.ok ? await openIncidentsResp.json() : [];
-        const openInternalNumbers = openIncidents.map(o => o.internal_number).filter(Boolean);
-        if (openInternalNumbers.length > 0) {
-          const crewOtherUrl = `${SUPABASE_URL}/rest/v1/cb360_dispatch_crew?n_int=in.(${checkedIds.join(',')})&internal_number=in.(${openInternalNumbers.join(',')})&corp_oper_nr=eq.${vehicleData.corp_oper_nr}&select=n_int,internal_number`;
-          const crewOtherResp = await supaFetch(crewOtherUrl, { method: 'GET' });
-          const crewOther = crewOtherResp.ok ? await crewOtherResp.json() : [];
-          if (crewOther.length > 0) {
-            const lista = crewOther.map(c => `${c.n_int} (Ocorr. ${c.internal_number})`).join(', ');
-            showPopup('popup-danger', `Bombeiro(s) já associado(s) a outra ocorrência em aberto: ${lista}`);
-            return;
+          return;
+        }
+        const checkedIds = Array.from(checkedFirefighters).map(cb => String(cb.value));
+        const currentEditingVehicleId = cb360VehicleUnderDevelopment?.vehicle || vehicleData.vehicle;
+        const conflitosMesmaOcorrencia = cb360ResourcesFirefighters.filter(b =>
+          checkedIds.includes(String(b.code)) && b.vehicle !== currentEditingVehicleId
+        );
+        if (conflitosMesmaOcorrencia.length > 0) {
+          const lista = conflitosMesmaOcorrencia.map(b => `${b.code} (${b.vehicle})`).join(', ');
+          showPopup('popup-danger', `Bombeiro(s) já associado(s) a outra viatura nesta ocorrência: ${lista}`);
+          return;
+        }
+        try {
+          const openIncidentsUrl = `${SUPABASE_URL}/rest/v1/cb360_incidents?corp_oper_nr=eq.${vehicleData.corp_oper_nr}&is_closed=eq.false&internal_number=neq.${vehicleData.internal_number}&select=internal_number`;
+          const openIncidentsResp = await supaFetch(openIncidentsUrl, {
+            method: 'GET'
+          });
+          const openIncidents = openIncidentsResp.ok ? await openIncidentsResp.json() : [];
+          const openInternalNumbers = openIncidents.map(o => o.internal_number).filter(Boolean);
+          if (openInternalNumbers.length > 0) {
+            const crewOtherUrl = `${SUPABASE_URL}/rest/v1/cb360_dispatch_crew?n_int=in.(${checkedIds.join(',')})&internal_number=in.(${openInternalNumbers.join(',')})&corp_oper_nr=eq.${vehicleData.corp_oper_nr}&select=n_int,internal_number`;
+            const crewOtherResp = await supaFetch(crewOtherUrl, {
+              method: 'GET'
+            });
+            const crewOther = crewOtherResp.ok ? await crewOtherResp.json() : [];
+            if (crewOther.length > 0) {
+              const lista = crewOther.map(c => `${c.n_int} (Ocorr. ${c.internal_number})`).join(', ');
+              showPopup('popup-danger', `Bombeiro(s) já associado(s) a outra ocorrência em aberto: ${lista}`);
+              return;
+            }
           }
+        } catch (err) {
+          console.error('Erro ao validar disponibilidade de bombeiros:', err);
+          showPopup('popup-danger', `Erro ao validar disponibilidade dos bombeiros. Tenta novamente.`);
+          return;
         }
-      } catch (err) {
-        console.error('Erro ao validar disponibilidade de bombeiros:', err);
-        showPopup('popup-danger', `Erro ao validar disponibilidade dos bombeiros. Tenta novamente.`);
-        return;
-      }
-      try {
-        let response;
-        if (cb360VehicleUnderDevelopment) {
-          const url = `${SUPABASE_URL}/rest/v1/cb360_dispatch_vehicles?id=eq.${cb360VehicleUnderDevelopment.id}`;
-          response = await supaFetch(url, { method: "PATCH",
-            headers: { "Content-Type": "application/json", "Prefer": "return=representation" },
-            body: JSON.stringify(vehicleData) });
-        } else {
-          response = await supaFetch(`${SUPABASE_URL}/rest/v1/cb360_dispatch_vehicles`, { method: "POST",
-            headers: { "Content-Type": "application/json", "Prefer": "return=representation" },
-            body: JSON.stringify(vehicleData) });
-        }
-        const data = await response.json();
-        if (!response.ok) throw new Error("Erro ao gravar veículo: " + JSON.stringify(data));
-        const dispatchVehicleId = data[0].id;
-        const existingCrewResp = await supaFetch(`${SUPABASE_URL}/rest/v1/cb360_dispatch_crew?dispatch_vehicle_id=eq.${dispatchVehicleId}`);
-        const existingCrew = existingCrewResp.ok ? await existingCrewResp.json() : [];
-        const existingIds = new Set(existingCrew.map(c => String(c.n_int)));
-        const checkedSet = new Set(checkedIds);
-        const idsToRemove = [...existingIds].filter(id => !checkedSet.has(id));
-        const idsToAdd = checkedIds.filter(id => !existingIds.has(id));
-        if (idsToRemove.length > 0) {
-          await supaFetch(`${SUPABASE_URL}/rest/v1/cb360_dispatch_crew?dispatch_vehicle_id=eq.${dispatchVehicleId}&n_int=in.(${idsToRemove.join(',')})`, { method: "DELETE" });
-        }
-        if (idsToAdd.length > 0) {
-          const newRegistrations = idsToAdd.map(n_int => {
-            const existente = cb360ResourcesFirefighters.find(b => b.code === n_int);
-            return {corp_oper_nr: vehicleData.corp_oper_nr, dispatch_vehicle_id: dispatchVehicleId, internal_number: vehicleData.internal_number, n_int, role: existente?.role || null,
-                    specialty: existente?.specialty || null, departure_date: vehicleData.cb_departure_date, departure_time: vehicleData.cb_departure_time,
-                    return_date: vehicleData.cb_arrival_date || null, return_time: vehicleData.cb_arrival_time || null
-                   };
-          });
-          const crewResponse = await supaFetch(`${SUPABASE_URL}/rest/v1/cb360_dispatch_crew`, { method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newRegistrations) });
-          if (!crewResponse.ok) console.error("Erro ao gravar equipa.");
-        }
-        const idsToUpdate = checkedIds.filter(id => existingIds.has(id));
-        if (idsToUpdate.length > 0) {
-          const updateResponse = await supaFetch(`${SUPABASE_URL}/rest/v1/cb360_dispatch_crew?dispatch_vehicle_id=eq.${dispatchVehicleId}&n_int=in.(${idsToUpdate.join(',')})`, { method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                departure_date: vehicleData.cb_departure_date,
-                departure_time: vehicleData.cb_departure_time,
-                return_date: vehicleData.cb_arrival_date || null,
-                return_time: vehicleData.cb_arrival_time || null
-              }) });
-          if (!updateResponse.ok) console.error("Erro ao atualizar bombeiros existentes.");
-        }
-        showPopup('popup-success', `Despacho gravado com sucesso!`);
-        const refreshResponse = await supaFetch(`${SUPABASE_URL}/rest/v1/cb360_dispatch_vehicles?corp_oper_nr=eq.${vehicleData.corp_oper_nr}&internal_number=eq.${vehicleData.internal_number}&select=*,cb360_dispatch_crew(*)&order=id.asc&cb360_dispatch_crew.order=id.asc`);
-        if (refreshResponse.ok) {
-          const freshData = await refreshResponse.json();
-          cb360ResourcesVehicles = freshData.map(mean => ({
-            id: String(mean.id), vehicle: mean.vehicle || '', crew: mean.cb360_dispatch_crew?.length || 0, departureDateCB: mean.cb_departure_date || '', departureTimeCB: mean.cb_departure_time || '',
-            arrivalDateScene: mean.scene_arrival_date || '', arrivalTimeScene: mean.scene_arrival_time || '', departureDateScene: mean.scene_departure_date || '', departureTimeScene: mean.scene_departure_time || '',
-            arrivalDateCB: mean.cb_arrival_date || '', arrivalTimeCB: mean.cb_arrival_time || '', kmStart: mean.km_start || '', kmEnd: mean.km_end || '', radio_issi_siresp: mean.radio_issi_siresp || '',
-          }));
-          cb360ResourcesFirefighters = freshData.flatMap(mean => {
-            const crewList = mean.cb360_dispatch_crew || [];
-            const minorNInt = crewList.length
-              ? crewList.reduce((minor, actual) => String(actual.n_int) < String(minor) ? actual.n_int : minor, crewList[0].n_int) : null;
-            return crewList.map(crew => ({
-              id: String(crew.id), code: String(crew.n_int), vehicle: mean.vehicle || '', role: crew.role || '', specialty: crew.specialty || '', departureDate: crew.departure_date || '',
-              departureTime: crew.departure_time || '', returnDate: crew.return_date || '', returnTime: crew.return_time || '', confirmed: crew.n_int === minorNInt, radio_assigned: crew.radio_assigned || '', editing: false
+        try {
+          let response;
+          const isUpdate = !!cb360VehicleUnderDevelopment?.id;
+          if (isUpdate) {
+            const url = `${SUPABASE_URL}/rest/v1/cb360_dispatch_vehicles?id=eq.${cb360VehicleUnderDevelopment.id}`;
+            response = await supaFetch(url, {
+              method: "PATCH",
+              headers: {
+                "Content-Type": "application/json",
+                "Prefer": "return=representation"
+              },
+              body: JSON.stringify(vehicleData)
+            });
+          } else {
+            response = await supaFetch(`${SUPABASE_URL}/rest/v1/cb360_dispatch_vehicles`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Prefer": "return=representation"
+              },
+              body: JSON.stringify(vehicleData)
+            });
+          }
+          const data = await response.json();
+          if (!response.ok) throw new Error("Erro ao gravar veículo: " + JSON.stringify(data));
+          const dispatchVehicleId = data[0].id;
+          const existingCrewResp = await supaFetch(`${SUPABASE_URL}/rest/v1/cb360_dispatch_crew?dispatch_vehicle_id=eq.${dispatchVehicleId}`);
+          const existingCrew = existingCrewResp.ok ? await existingCrewResp.json() : [];
+          const existingIds = new Set(existingCrew.map(c => String(c.n_int)));
+          const checkedSet = new Set(checkedIds);
+          const idsToRemove = [...existingIds].filter(id => !checkedSet.has(id));
+          const idsToAdd = checkedIds.filter(id => !existingIds.has(id));
+          const idsToUpdate = checkedIds.filter(id => existingIds.has(id));
+          const crewPromises = [];
+          if (idsToRemove.length > 0) {
+            crewPromises.push(
+              supaFetch(`${SUPABASE_URL}/rest/v1/cb360_dispatch_crew?dispatch_vehicle_id=eq.${dispatchVehicleId}&n_int=in.(${idsToRemove.join(',')})`, {
+                method: "DELETE"
+              })
+            );
+          }
+          if (idsToAdd.length > 0) {
+            const newRegistrations = idsToAdd.map(n_int => {
+              const existente = cb360ResourcesFirefighters.find(b => String(b.code) === String(n_int));
+              return {corp_oper_nr: vehicleData.corp_oper_nr, dispatch_vehicle_id: dispatchVehicleId, internal_number: vehicleData.internal_number, n_int, role: existente?.role || null, specialty: existente?.specialty || null,
+                      departure_date: vehicleData.cb_departure_date, departure_time: vehicleData.cb_departure_time, return_date: vehicleData.cb_arrival_date || null, return_time: vehicleData.cb_arrival_time || null};
+            });
+            crewPromises.push(
+              supaFetch(`${SUPABASE_URL}/rest/v1/cb360_dispatch_crew`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json"
+                },
+                body: JSON.stringify(newRegistrations)
+              })
+            );
+          }
+          if (idsToUpdate.length > 0) {
+            crewPromises.push(
+              supaFetch(`${SUPABASE_URL}/rest/v1/cb360_dispatch_crew?dispatch_vehicle_id=eq.${dispatchVehicleId}&n_int=in.(${idsToUpdate.join(',')})`, {
+                method: "PATCH",
+                headers: {
+                  "Content-Type": "application/json"
+                },
+                body: JSON.stringify({departure_date: vehicleData.cb_departure_date, departure_time: vehicleData.cb_departure_time, return_date: vehicleData.cb_arrival_date || null, return_time: vehicleData.cb_arrival_time || null})
+              })
+            );
+          }
+          await Promise.all(crewPromises);
+          showPopup('popup-success', `Despacho gravado com sucesso!`);
+          const refreshResponse = await supaFetch(`${SUPABASE_URL}/rest/v1/cb360_dispatch_vehicles?corp_oper_nr=eq.${vehicleData.corp_oper_nr}&internal_number=eq.${vehicleData.internal_number}&select=*,cb360_dispatch_crew(*)&order=id.asc&cb360_dispatch_crew.order=id.asc`);
+          if (refreshResponse.ok) {
+            const freshData = await refreshResponse.json();
+            cb360ResourcesVehicles = freshData.map(mean => ({
+              id: String(mean.id), vehicle: mean.vehicle || '', crew: mean.cb360_dispatch_crew?.length || 0, departureDateCB: mean.cb_departure_date || '', departureTimeCB: mean.cb_departure_time || '', 
+              arrivalDateScene: mean.scene_arrival_date || '', arrivalTimeScene: mean.scene_arrival_time || '',  departureDateScene: mean.scene_departure_date || '', departureTimeScene: mean.scene_departure_time || '',
+              arrivalDateCB: mean.cb_arrival_date || '', arrivalTimeCB: mean.cb_arrival_time || '', kmStart: mean.km_start || '', kmEnd: mean.km_end || '', radio_issi_siresp: mean.radio_issi_siresp || ''
             }));
-          });
-          await refreshCb360VehicleRegistrations();
+            cb360ResourcesFirefighters = freshData.flatMap(mean => {
+              const crewList = mean.cb360_dispatch_crew || [];
+              const minorNInt = crewList.length ?
+                crewList.reduce((minor, actual) => String(actual.n_int) < String(minor) ? actual.n_int : minor, crewList[0].n_int) :
+                null;
+              return crewList.map(crew => ({
+                id: String(crew.id), code: String(crew.n_int), vehicle: mean.vehicle || '', role: crew.role || '', specialty: crew.specialty || '', departureDate: crew.departure_date || '', departureTime: crew.departure_time || '',
+                returnDate: crew.return_date || '', returnTime: crew.return_time || '', confirmed: crew.n_int === minorNInt, radio_assigned: crew.radio_assigned || '', editing: false
+              }));
+            });
+            await refreshCb360VehicleRegistrations();
+          }
+          enforceCb360BRespFromCrew();
+          if (cb360BRespSelected?.id && vehicleData.internal_number) {
+            try {
+              const patchUrl = `${SUPABASE_URL}/rest/v1/cb360_incidents?internal_number=eq.${vehicleData.internal_number}&corp_oper_nr=eq.${vehicleData.corp_oper_nr}`;
+              await supaFetch(patchUrl, {
+                method: 'PATCH',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  resp_member_id: cb360BRespSelected.id
+                })
+              });
+            } catch (patchErr) {
+              console.error('Erro ao sincronizar resp_member_id na ocorrência:', patchErr);
+            }
+          }
+          cb360VehicleUnderDevelopment = null;
+          renderCb360VehiclesTable();
+          renderCb360FirefightersTable();
+          closeCb360DispatchModal();
+        } catch (err) {
+          console.error("Erro crítico:", err);
+          showPopup('popup-danger', `Ocorreu um erro ao gravar. Verifica a consola.`);
         }
-        cb360VehicleUnderDevelopment = null;
-        renderCb360VehiclesTable();
-        renderCb360FirefightersTable();
-        closeCb360DispatchModal();
-      } catch (err) {
-        console.error("Erro crítico:", err);
-        showPopup('popup-danger', `Ocorreu um erro ao gravar. Verifica a consola.`);
       }
-    }
     // ---- 6.4 INSERIR / EDITAR BOMBEIRO INDIVIDUAL (modais à parte do Despacho) ----
     // OPEN: openCb360InsertFirefighterModal()
     async function openCb360InsertFirefighterModal() {
@@ -4479,6 +4753,20 @@
           }));
         });
         await refreshCb360VehicleRegistrations();
+        enforceCb360BRespFromCrew();
+        if (cb360BRespSelected?.id && internalNumber) {
+          try {
+            const patchUrl = `${SUPABASE_URL}/rest/v1/cb360_incidents?internal_number=eq.${internalNumber}&corp_oper_nr=eq.${currentCorpOperNr}`;
+            
+            await supaFetch(patchUrl, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ resp_member_id: cb360BRespSelected.id })
+            });
+          } catch (patchErr) {
+            console.error('Erro ao sincronizar resp_member_id na ocorrência:', patchErr);
+          }
+        }
         renderCb360VehiclesTable();
         renderCb360FirefightersTable();
         closeCb360InsertFirefighterModal();
@@ -4642,6 +4930,20 @@
           }));
         });
         await refreshCb360VehicleRegistrations();
+        enforceCb360BRespFromCrew();
+        if (cb360BRespSelected?.id && internalNumber) {
+          try {
+            const patchUrl = `${SUPABASE_URL}/rest/v1/cb360_incidents?internal_number=eq.${internalNumber}&corp_oper_nr=eq.${currentCorpOperNr}`;
+            
+            await supaFetch(patchUrl, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ resp_member_id: cb360BRespSelected.id })
+            });
+          } catch (patchErr) {
+            console.error('Erro ao sincronizar resp_member_id na ocorrência:', patchErr);
+          }
+        }
         renderCb360VehiclesTable();
         renderCb360FirefightersTable();
         closeCb360EditFirefighterModal();
@@ -4752,7 +5054,7 @@
                   <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:6px 8px; width:15%; border-top:1px solid #c4c4c4; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4;">Tempo Estimado</th>
                 </tr>
               </thead>
-              <tbody id="goc-vehicles-table-body">
+              <tbody id="goc-locate-vehicles-table-body">
                 <tr><td colspan="5" style="padding:12px; text-align:center; color:#777;">A carregar dados...</td></tr>
               </tbody>
             </table>
@@ -4779,7 +5081,7 @@
         }
         const locNumberElem = modal.querySelector('#goc-loc-number');
         const locServiceElem = modal.querySelector('#goc-loc-service');
-        const tbody = modal.querySelector('#goc-vehicles-table-body');
+        const tbody = modal.querySelector('#goc-locate-vehicles-table-body');
         const mapContainer = modal.querySelector('#goc-locate-map-container');
         if (locNumberElem) locNumberElem.innerText = inc.internal_number || '--';
         if (locServiceElem) {
@@ -4893,20 +5195,12 @@
         }, 250);
       } catch (err) {
         console.error('ERRO:', err);
-        const tbody = modal.querySelector('#goc-vehicles-table-body');
+        const tbody = modal.querySelector('#goc-locate-vehicles-table-body');
         if (tbody) {
           tbody.innerHTML = `<tr><td colspan="5" style="padding:12px; text-align:center; color:#d9534f;">Erro ao carregar dados.</td></tr>`;
         }
       }
-    }
-    function calculateDistanceKm(lat1, lon1, lat2, lon2) {
-      const R = 6371;
-      const dLat = (lat2 - lat1) * (Math.PI / 180);
-      const dLon = (lon2 - lon1) * (Math.PI / 180);
-      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *  Math.sin(dLon / 2) * Math.sin(dLon / 2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      return R * c;
-    }
+    }    
     // ==============================================================================
     // == 7. VÍTIMAS                                                              ==
     // ==============================================================================
@@ -4919,7 +5213,7 @@
       container.innerHTML = `
         <style>.goc-summary-input:focus {outline: none !important; border: 1px solid #2b6ecb !important; box-shadow: 0 0 4px rgba(43, 110, 203, 0.3) !important;}</style>
         <div style="margin-bottom:16px;">
-          <div style="font-weight:600; font-size:13px; color:#2b6ecb; margin-bottom:8px;">Resumo de Vítimas: <i class="fa-solid fa-circle-info" style="color:#5bc0de; font-size:12px;"></i></div>
+          <div style="font-weight:600; font-size:13px; color:#2b6ecb; margin-bottom:8px;">Resumo de Vítimas: <i id="goc-victims-summary-info" class="fa-solid fa-circle-info" style="color:#2b6ecb; font-size:14px; cursor:pointer;"></i></div>
           <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
             <div style="border:1px solid #ddd; border-radius:4px; padding:10px 14px;">
               <div style="display:grid; grid-template-columns: 90px repeat(4, 72px); gap:8px; align-items:center;">
@@ -4943,46 +5237,46 @@
             </div>
           </div>
           <div>
-          <div style="font-weight:600; font-size:13px; color:#2b6ecb; margin-bottom:6px;">Detalhe de Vítimas:</div>
-          <div id="goc-victims-wrap" style="overflow-x:auto; overflow-y:auto; max-height:320px; border:1px solid #eee; border-radius:4px;">
-            <table style="width:100%; table-layout:fixed; border-collapse:separate; border-spacing:0; font-size:12px;">
-              <colgroup>
-                <col style="width:26px;">
-                <col style="width:34px;">
-                <col style="width:120px;">
-                <col style="width:auto;">
-                <col style="width:90px;">
-                <col style="width:90px;">
-                <col style="width:120px;">
-                <col style="width:120px;">
-                <col style="width:auto;">
-                <col style="width:60px;">
-                <col style="width:60px;">
-              </colgroup>
-              <thead>
-                <tr style="background:linear-gradient(#f4f4f4,#e5e5e5); color:#333; font-weight:600; text-align:center;">
-                  <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:6px 8px; border-top:1px solid #c4c4c4; border-left:1px solid #c4c4c4; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4;">▸</th>
-                  <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:6px 8px; border-top:1px solid #c4c4c4; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4;">#</th>
-                  <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:6px 8px; border-top:1px solid #c4c4c4; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4;">Viatura</th>
-                  <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:6px 8px; border-top:1px solid #c4c4c4; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4;">Doente</th>
-                  <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:6px 8px; border-top:1px solid #c4c4c4; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4;">Sexo</th>
-                  <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:6px 8px; border-top:1px solid #c4c4c4; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4;">Idade</th>
-                  <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:6px 8px; border-top:1px solid #c4c4c4; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4;">Tipo</th>
-                  <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:6px 8px; border-top:1px solid #c4c4c4; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4;">Gravidade</th>
-                  <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:6px 8px; border-top:1px solid #c4c4c4; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4;">Destino</th>
-                  <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:6px 8px; border-top:1px solid #c4c4c4; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4;" colspan="2">
-                    <div style="display:flex; justify-content:center; align-items:center; gap:20px;">
-                      ${isClosed ? '' : `<button id="goc-btn-add-victim" style="background:none; border:none; cursor:pointer; font-size:15px; line-height:1;"><i class="fa fa-medkit fa-lg" style="color:#333;"></i></button>`}
-                      ${isClosed ? '' : `<button id="goc-btn-clock" style="background:none; border:none; cursor:pointer; font-size:14px; line-height:1;"><i class="fa-regular fa-clock" style="font-size:16px;"></i></button>`}
-                    </div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody id="goc-victims-table-body"></tbody>
-            </table>
+            <div style="font-weight:600; font-size:13px; color:#2b6ecb; margin-bottom:6px;">Detalhe de Vítimas:</div>
+            <div id="goc-victims-wrap" style="overflow-x:auto; overflow-y:auto; max-height:320px; border:1px solid #eee; border-radius:4px;">
+              <table style="width:100%; table-layout:fixed; border-collapse:separate; border-spacing:0; font-size:12px;">
+                <colgroup>
+                  <col style="width:26px;">
+                  <col style="width:34px;">
+                  <col style="width:120px;">
+                  <col style="width:auto;">
+                  <col style="width:90px;">
+                  <col style="width:90px;">
+                  <col style="width:120px;">
+                  <col style="width:120px;">
+                  <col style="width:auto;">
+                  <col style="width:60px;">
+                  <col style="width:60px;">
+                </colgroup>
+                <thead>
+                  <tr style="background:linear-gradient(#f4f4f4,#e5e5e5); color:#333; font-weight:600; text-align:center;">
+                    <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:6px 8px; border-top:1px solid #c4c4c4; border-left:1px solid #c4c4c4; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4;">▸</th>
+                    <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:6px 8px; border-top:1px solid #c4c4c4; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4;">#</th>
+                    <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:6px 8px; border-top:1px solid #c4c4c4; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4;">Viatura</th>
+                    <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:6px 8px; border-top:1px solid #c4c4c4; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4;">Doente</th>
+                    <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:6px 8px; border-top:1px solid #c4c4c4; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4;">Sexo</th>
+                    <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:6px 8px; border-top:1px solid #c4c4c4; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4;">Idade</th>
+                    <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:6px 8px; border-top:1px solid #c4c4c4; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4;">Tipo</th>
+                    <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:6px 8px; border-top:1px solid #c4c4c4; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4;">Gravidade</th>
+                    <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:6px 8px; border-top:1px solid #c4c4c4; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4;">Destino</th>
+                    <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:6px 8px; border-top:1px solid #c4c4c4; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4;" colspan="2">
+                      <div style="display:flex; justify-content:center; align-items:center; gap:20px;">
+                        ${isClosed ? '' : `<button id="goc-btn-add-victim" style="background:none; border:none; cursor:pointer; font-size:15px; line-height:1;"><i class="fa fa-medkit fa-lg" style="color:#333;"></i></button>`}
+                        ${isClosed ? '' : `<button id="goc-btn-clock" style="background:none; border:none; cursor:pointer; font-size:14px; line-height:1;"><i class="fa-regular fa-clock" style="font-size:16px;"></i></button>`}
+                      </div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody id="goc-victims-table-body"></tbody>
+              </table>
+            </div>
           </div>
-        </div>
-      `;      
+        `;
       renderCb360VictimsTable();
       const btnAddVictim = document.getElementById('goc-btn-add-victim');
       if (btnAddVictim) {
@@ -4996,6 +5290,13 @@
         btnAddVictim.addEventListener('click', () => {
           openCb360VictimModal(null);
         });
+      }
+      const victimsInfoIcon = document.getElementById('goc-victims-summary-info');
+      if (victimsInfoIcon) {
+        victimsInfoIcon.addEventListener('mouseenter', () => {
+          showCb360InfoTooltip(victimsInfoIcon, 'Contador utilizado para comunicação de vítimas com o SADO, e preenchimento do Relatório de Ocorrência.');
+        });
+        victimsInfoIcon.addEventListener('mouseleave', hideCb360LineTooltip);
       }
     }
     // ===== RENDER PAGES ===== //
@@ -5642,7 +5943,7 @@
           #goc-tab-content-communications input:focus, #goc-tab-content-communications select:focus, #goc-tab-content-communications textarea:focus {outline: none !important; border: 1px solid #d9534f !important; box-shadow: 0 0 4px rgba(217, 83, 79, 0.3) !important; transition: border-color 0.2s, box-shadow 0.2s;}
         </style>
         <div style="display:flex; gap:6px; margin-bottom:14px;">
-          <button id="goc-comm-tab-channels" class="goc-comm-subtab" data-subtab="channels" style="padding:8px 16px; border:1px solid #ccc; border-radius:5px; background:#2b6ecb; color:#fff; font-weight:600; font-size:12.5px; cursor:pointer;"><i class="fa fa-podcast"></i> Canais de Comunicação</button>
+           <button id="goc-comm-tab-channels" class="goc-comm-subtab" data-subtab="channels" style="padding:8px 16px; border:1px solid #ccc; border-radius:5px; background:#2b6ecb; color:#fff; font-weight:600; font-size:12.5px; cursor:pointer;"><i class="fa fa-podcast"></i> Canais de Comunicação</button>
           <button id="goc-comm-tab-calls" class="goc-comm-subtab" data-subtab="calls" style="padding:8px 16px; border:1px solid #ccc; border-radius:5px; background:#fff; color:#333; font-weight:600; font-size:12.5px; cursor:pointer;"><i class="fa fa-phone"></i> Central de Chamadas</button>
         </div>
         <div id="goc-comm-subtab-channels" class="goc-comm-subtab-content">
@@ -5670,7 +5971,7 @@
                 <table style="width:100%; border-collapse:separate; border-spacing:0; font-size:12px;">
                   <thead>
                     <tr style="background:linear-gradient(#f4f4f4,#e5e5e5); color:#333; font-weight:600; text-align:center;">
-                      <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:6px 8px; width:35%; border-top:1px solid #c4c4c4; border-left:1px solid #c4c4c4; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4;">Viaturas</th>
+                      <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:6px 8px; width:35%; border-top:1px solid #c4c4c4; border-left:1px solid #c4c4c4; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4;">Veículos</th>
                       <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:6px 8px; border-top:1px solid #c4c4c4; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4;">ISSI SIRESP</th>
                     </tr>
                   </thead>
@@ -5685,7 +5986,7 @@
                   <thead>
                     <tr style="background:linear-gradient(#f4f4f4,#e5e5e5); color:#333; font-weight:600; text-align:center;">
                       <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:6px 8px; border-top:1px solid #c4c4c4; border-left:1px solid #c4c4c4; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4;">Bombeiros</th>
-                      <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:6px 8px; border-top:1px solid #c4c4c4; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4;">Rádios Existentes</th>
+                      <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:6px 8px; border-top:1px solid #c4c4c4; border-left:1px solid #c4c4c4; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4;">Rádios Existentes</th>
                       <th style="position:sticky; top:0; z-index:2; background:#dcdcdc; padding:6px 8px; border-top:1px solid #c4c4c4; border-right:1px solid #c4c4c4; border-bottom:1px solid #c4c4c4;">Rádio Utilizado</th>
                     </tr>
                   </thead>
@@ -5696,7 +5997,7 @@
           </div>
         </div>
         <div id="goc-comm-subtab-calls" class="goc-comm-subtab-content" style="display:none;">
-          <div style="font-weight:600; font-size:13px; color:#2b6ecb; margin-bottom:8px;">Central de Chamadas: <i class="fa-solid fa-circle-info" style="color:#5bc0de; font-size:12px;"></i></div>
+          <div style="font-weight:600; font-size:13px; color:#2b6ecb; margin-bottom:8px;">Central de Chamadas: <i id="goc-comm-calls-info" class="fa-solid fa-circle-info" style="color:#2b6ecb; font-size:14px; cursor:pointer;"></i></div>
           <textarea id="goc-comm-calls-text" class="goc-input" style="width:100%; min-height:340px; height:auto; padding:10px; resize:vertical;"></textarea>
         </div>
       `;
@@ -5713,6 +6014,13 @@
       const callsTextarea = document.getElementById('goc-comm-calls-text');
       if (callsTextarea) callsTextarea.value = cb360CurrentIncident?.comm_calls_text || '';
       callsTextarea?.addEventListener('change', () => saveCb360CommField('comm_calls_text', callsTextarea.value));
+      const callsInfoIcon = document.getElementById('goc-comm-calls-info');
+      if (callsInfoIcon) {
+        callsInfoIcon.addEventListener('mouseenter', () => {
+          showCb360InfoTooltip(callsInfoIcon, 'Requer central de chamadas PBX configurada no CB360.');
+        });
+        callsInfoIcon.addEventListener('mouseleave', hideCb360LineTooltip);
+      }
     }
     // SWITCH: switchCb360CommSubTab()
     function switchCb360CommSubTab(subtab) {
@@ -6586,10 +6894,352 @@
       if (overlay) overlay.remove();
     }
     // ==============================================================================
-    // == 11. SMS               ==
+    // == 11. SMS (Enviadas / Recebidas / Agendadas)                               ==
     // ==============================================================================
-
-
+    let cb360SmsCurrentSubType = 'enviadas';
+    // ---- RENDER: renderCb360SmsTab() ----
+    function renderCb360SmsTab() {
+      const container = document.getElementById('goc-tab-content-sms');
+      if (!container) return;
+      const wrapperStyle = 'display:flex; gap:10px; align-items:flex-start; width:100%;';
+      const leftColumnStyle = 'width:200px; min-width:200px; display:flex; flex-direction:column; gap:5px;';
+      const sidebarStyle = 'background:#f0f0f0; border:1px solid #ccc; border-radius:4px; overflow:hidden; display:flex; flex-direction:column;';
+      const mainContentStyle = 'flex:1; background:#fff; border:1px solid #ccc; border-radius:4px; min-height:550px; overflow:hidden;';
+      const itemStyle = (active) => `padding:10px 12px; font-size:11px; font-weight:600; color:${active ? '#fff' : '#333'}; background:${active ? '#6c757d' : 'transparent'}; border-bottom:1px solid #e0e0e0; 
+                                     cursor:pointer; display:flex; align-items:center; gap:8px; text-decoration:none;`;
+      container.innerHTML = `
+        <div style="${wrapperStyle}">
+          <div style="${leftColumnStyle}">
+            <button id="goc-btn-sms-update" style=" width:150px; background:#5bc0de; color:#fff; border:none; padding:8px 10px; border-radius:5px; font-weight:600; cursor:pointer; font-size:12.5px; display:flex; align-items:center; justify-content:center; gap:5px;"><i class="fa-solid fa-comment" style="font-size:14px; vertical-align: middle;"></i>Sms Atualização</button>
+            <div style="${sidebarStyle}">
+              <div class="sms-sub-tab" data-sub="enviadas" style="${itemStyle(true)}"><i class="fa-solid fa-inbox"></i> Enviadas</div>
+              <div class="sms-sub-tab" data-sub="recebidas" style="${itemStyle(false)}"><i class="fa-solid fa-download"></i> Recebidas</div>
+              <div class="sms-sub-tab" data-sub="agendadas" style="${itemStyle(false)}"><i class="fa-solid fa-upload"></i> Agendadas</div>
+            </div>
+          </div>
+          <div id="sms-sub-content" style="${mainContentStyle}">
+            <!-- O conteúdo será injetado dinamicamente aqui via JavaScript -->
+          </div>
+        </div>
+      `;
+      const btnUpdate = document.getElementById('goc-btn-sms-update');
+      if (btnUpdate) {
+        btnUpdate.addEventListener('click', () => {
+          openCb360SmsUpdateModal();
+        });
+      }
+      const subTabs = container.querySelectorAll('.sms-sub-tab');
+      subTabs.forEach(tab => {
+        tab.onclick = () => {
+          subTabs.forEach(t => {
+            t.style.background = 'transparent';
+            t.style.color = '#333';
+          });
+          tab.style.background = '#6c757d';
+          tab.style.color = '#fff';
+          const subType = tab.dataset.sub;
+          cb360SmsCurrentSubType = subType;
+          renderCb360SmsSubContent(
+            subType,
+            document.getElementById('sms-sub-content')
+          );
+        };
+      });
+      cb360SmsCurrentSubType = 'enviadas';
+      renderCb360SmsSubContent(
+        'enviadas',
+        document.getElementById('sms-sub-content')
+      );
+    }
+    // ---- RENDER: renderCb360SmsSubContent() ----
+    function renderCb360SmsSubContent(subType, container) {
+      const today = toLocalISODate(new Date());
+      const inputStyle = 'height:25px; padding:0 8px; border:1px solid #ccc; border-radius:4px; font-size:12px; box-sizing:border-box;';
+      const isAgendadas = subType === 'agendadas';
+      container.innerHTML = `
+        <div style="display:flex; align-items:center; gap:10px; padding:12px 16px; border-bottom:1px solid #eee; flex-wrap:nowrap; width:100%; box-sizing:border-box;">
+          <button id="sms-btn-refresh" style="margin-right:175px; background:#5cb85c; color:#fff; border:none; padding:7px 14px; border-radius:5px; font-weight:600; cursor:pointer; font-size:12px; display:flex; align-items:center; gap:6px; white-space:nowrap; flex-shrink:0;"><i class="fa-solid fa-rotate"></i> Atualizar</button>
+          <div style="display:flex; align-items:center; gap:6px; white-space:nowrap; flex-shrink:0;">
+            <label style="font-size:12px; font-weight:600;">De:</label>
+            <input type="date" id="sms-filter-from" style="${inputStyle}" value="${today}">
+          </div>
+          <div style="display:flex; align-items:center; gap:6px; white-space:nowrap; flex-shrink:0;">
+            <label style="font-size:12px; font-weight:600;">Até:</label>
+            <input type="date" id="sms-filter-to" style="${inputStyle} margin-right:175px;" value="${isAgendadas ? '' : today}">
+          </div>
+          <div style="flex:1; display:flex; align-items:center; gap:6px; min-width:0;">
+            <input type="text" id="sms-filter-search" placeholder="" style="${inputStyle} width:100%;">
+            <i class="fa-solid fa-magnifying-glass" style="color:#2b6ecb; cursor:pointer; flex-shrink:0;"></i>
+          </div>
+        </div>
+        <div id="sms-list-content" style="padding:16px; width:100%; box-sizing:border-box;">
+          <p style="color:#2b6ecb; font-weight:600; margin:0;">Sem registos!</p>
+        </div>
+      `;
+      document.getElementById('sms-btn-refresh').addEventListener('click', () => {
+        loadCb360SmsList(subType, container);
+      });
+      loadCb360SmsList(subType, container);
+    }
+    // ---- LOAD (placeholder por agora): loadCb360SmsList() ----
+    async function loadCb360SmsList(subType, container) {
+      const listContent = document.getElementById('sms-list-content');
+      if (!listContent) return;
+      if (subType === 'enviadas') {
+        await renderCb360SmsSentList(listContent);
+      } else if (subType === 'recebidas') {
+        listContent.innerHTML = `<p style="color:#2b6ecb; font-weight:600; margin:0;">Sem registos!</p>`;
+      } else if (subType === 'agendadas') {
+        listContent.innerHTML = `<p style="color:#2b6ecb; font-weight:600; margin:0;">Sem registos!</p>`;
+      }
+    }
+    // ---- FETCH: fetchCb360SmsSent() ----
+    async function fetchCb360SmsSent(internalNumber, dateFrom, dateTo) {
+      try {
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        let url = `${SUPABASE_URL}/rest/v1/cb360_sms_log?internal_number=eq.${internalNumber}&corp_oper_nr=eq.${currentCorpOperNr}&type=eq.sent&select=*&order=sent_at.desc`;
+        if (dateFrom) url += `&sent_at=gte.${dateFrom}`;
+        if (dateTo) url += `&sent_at=lte.${dateTo}T23:59:59`;
+        const response = await supaFetch(url, { method: 'GET' });
+        return response.ok ? await response.json() : [];
+      } catch (err) {
+        console.error('Erro fetchCb360SmsSent:', err);
+        return [];
+      }
+    }
+    // ---- RENDER: renderCb360SmsSentList() ----
+    async function renderCb360SmsSentList(container) {
+      const internalNumber = cb360CurrentIncident?.internal_number;
+      const dateFrom = document.getElementById('sms-filter-from')?.value || '';
+      const dateTo = document.getElementById('sms-filter-to')?.value || '';
+      if (!internalNumber) {
+        container.innerHTML = `<p style="color:#2b6ecb; font-weight:600; margin:0;">Sem registos!</p>`;
+        return;
+      }
+      const items = await fetchCb360SmsSent(internalNumber, dateFrom, dateTo);
+      if (!items.length) {
+        container.innerHTML = `<p style="color:#2b6ecb; font-weight:600; margin:0;">Sem registos!</p>`;
+        return;
+      }
+      const tableStyle = 'width:100%; border-collapse:collapse; font-size:12px; color:#333;';
+      const thStyle = 'background:#e0e0e0; color:#333; font-weight:600; padding:8px 10px; text-align:left; border-bottom:2px solid #ccc;';
+      container.innerHTML = `
+        <table style="${tableStyle}">
+          <thead>
+            <tr>
+              <th style="${thStyle} width:70px;">Id</th>
+              <th style="${thStyle}">Mensagem</th>
+              <th style="${thStyle} width:160px;">Destinatário</th>
+              <th style="${thStyle} width:130px;">Número</th>
+              <th style="${thStyle} width:150px;">Envio</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${items.map(item => `
+              <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:8px 10px; color:#2b6ecb; font-weight:600;">${item.id}</td>
+                <td style="padding:8px 10px; color:#2b6ecb;">
+                  <i class="fa-regular fa-square-check" style="color:#5cb85c; margin-right:4px;"></i>
+                  <i class="fa-solid fa-comment-sms" style="color:#5bc0de; margin-right:6px;"></i>
+                  ${item.message ? (item.message.length > 40 ? item.message.substring(0, 40) + '...' : item.message) : ''}
+                </td>
+                <td style="padding:8px 10px;">${item.recipient_name || ''}</td>
+                <td style="padding:8px 10px; color:#2b6ecb; font-weight:600;">${item.recipient_number || ''}</td>
+                <td style="padding:8px 10px; color:#2b6ecb; font-weight:600;">${formatTimeStampPT(item.sent_at)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+    // ---- RENDER: openCb360SmsUpdateModal() ----
+    function openCb360SmsUpdateModal() {
+      const existingModal = document.getElementById('goc-sms-modal-overlay');
+      if (existingModal) existingModal.remove();
+      const today = toLocalISODate(new Date());
+      let timeOptionsHtml = '';
+      for (let h = 0; h < 24; h++) {
+        for (let m = 0; m < 60; m += 30) {
+          const hourStr = String(h).padStart(2, '0');
+          const minStr = String(m).padStart(2, '0');
+          const timeVal = `${hourStr}:${minStr}`;
+          const isSelected = (timeVal === '09:30') ? 'selected' : '';
+          timeOptionsHtml += `<option value="${timeVal}" ${isSelected}>${timeVal}</option>`;
+        }
+      }
+      const overlay = document.createElement('div');
+      overlay.id = 'goc-sms-modal-overlay';
+      overlay.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 9999; display: flex; align-items: center; justify-content: center; font-family: sans-serif;`;
+      overlay.innerHTML = `
+        <div style="background: #eceef2; width: 560px; border-radius: 6px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); overflow: hidden; border: 1px solid #b0b0b0;">
+          <div style="background: #3c8dbc; color: #fff; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: bold;">
+            <div style="display: flex; align-items: center; gap: 8px;"><i class="fa-solid fa-comment" style="color: #fff;"></i> Nova Mensagem</div>
+            <div style="display: flex; gap: 6px;">
+              <button id="goc-sms-modal-close-top" style="background: transparent; border: none; color: #fff; cursor: pointer; font-size: 14px;"><i class="fa-solid fa-window-minimize"></i></button>
+              <button id="goc-sms-modal-close-x" style="background: transparent; border: none; color: #fff; cursor: pointer; font-size: 14px;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+          </div>
+          <div style="padding: 14px; background: #eceef2;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; font-size: 12px;">
+              <div>
+                <div style="color: #333;">Limite Total: <b>Ilimitado!</b></div>
+                <div style="color: #333;">Créditos usados: <b>0</b></div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px; background: #fff; padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px;">
+                <i class="fa-regular fa-calendar" style="color: #337ab7;"></i>
+                <input type="date" id="goc-sms-agendar-date" class="cb360-modal-input" style="height: 23px; border: 1px solid #ccc; padding: 2px 4px; font-size: 11px; border-radius: 3px; outline: none; box-sizing: border-box; transition: border-color 0.2s, box-shadow 0.2s;" value="${today}">
+                <select id="goc-sms-agendar-time" class="cb360-modal-input" style="height: 23px; border: 1px solid #ccc; padding: 2px 4px; font-size: 11px; border-radius: 3px; outline: none; background: #fff; box-sizing: border-box; transition: border-color 0.2s, box-shadow 0.2s;">
+                  ${timeOptionsHtml}
+                </select>
+                <label style="display: flex; align-items: center; gap: 4px; margin-left: 4px;">
+                  <input type="checkbox" id="goc-sms-check-agendar" style="cursor: pointer !important; width: 16px; height: 16px;"> Agendar Envio
+                </label>
+              </div>
+            </div>
+            <div style="background: #fff; border: 1px solid #ccc; border-radius: 4px; padding: 12px;">
+              <div style="display: inline-block; background: #e0e0e0; border: 1px solid #ccc; border-bottom: none; padding: 6px 16px; font-size: 12px; font-weight: bold; border-top-left-radius: 4px; border-top-right-radius: 4px; margin-bottom: -1px; position: relative; z-index: 1;"> Enviar SMS</div>
+              <div style="border: 1px solid #ccc; padding: 12px; border-radius: 4px; background: #fdfdfd;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                  <label style="font-size: 12px; font-weight: bold; width: 110px; text-align: left;">Num. Destinatários</label>
+                  <div style="flex: 1; display: flex; align-items: center; gap: 4px;">
+                    <textarea id="goc-sms-destinatarios" class="cb360-modal-input" style="width: 100%; height: 50px; font-size: 11px; border: 1px solid #ccc; border-radius: 3px; padding: 4px; resize: vertical; outline: none; transition: border-color 0.2s, box-shadow 0.2s;">912345678</textarea>
+                    <i class="fa-solid fa-magnifying-glass" style="color: #337ab7; cursor: pointer; font-size: 14px; padding: 4px;"></i>
+                  </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                  <label style="font-size: 12px; font-weight: bold; width: 110px; text-align: left;">Template</label>
+                  <select id="goc-sms-template" class="cb360-modal-input" style="flex: 1; height: 26px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; padding: 0 4px; outline: none; background: #fff; transition: border-color 0.2s, box-shadow 0.2s;">
+                    <option value="OCORCOM" selected>OCORCOM</option>
+                    <option value="CUSTOM">Personalizado</option>
+                  </select>
+                </div>
+                <div style="display: flex; align-items: flex-start; gap: 8px; margin-bottom: 4px;">
+                  <label style="font-size: 12px; font-weight: bold; width: 110px; text-align: left; padding-top: 6px;">Mensagem</label>
+                  <div style="flex: 1;">
+                    <textarea id="goc-sms-text-msg" class="cb360-modal-input" style="width: 100%; height: 80px; font-size: 12px; border: 1px solid #ccc; border-radius: 3px; padding: 6px; box-sizing: border-box; resize: vertical; outline: none; transition: border-color 0.2s, box-shadow 0.2s;">Ocorrencia em curso, por favor verifique os detalhes no sistema.</textarea>
+                    <div style="text-align: right; font-size: 11px; color: #333; margin-top: 2px;">
+                      <span id="goc-sms-char-count">0</span><br>
+                      <b id="goc-sms-credit-text">Mensagem Simples (1 crédito)</b>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
+              <div style="font-size: 11px;">
+                <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                  <input type="checkbox" id="goc-sms-resposta" style="cursor: pointer !important; width: 16px; height: 16px;"> Com número de devolução de Resposta
+                </label>
+                <span style="color: #666; margin-left: 18px; font-size: 10px;">(usa 20 carateres no corpo da mensagem)</span>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <button id="goc-sms-btn-enviar" style="background: #5cb85c; color: #fff; border: none; padding: 6px 14px; border-radius: 4px; font-weight: bold; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                  <i class="fa-solid fa-paper-plane"></i> Enviar
+                </button>
+                <button id="goc-sms-btn-fechar" style="background: #f0ad4e; color: #fff; border: none; padding: 6px 14px; border-radius: 4px; font-weight: bold; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                  <i class="fa-solid fa-power-off"></i> Fechar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+      const inputs = overlay.querySelectorAll('.cb360-modal-input');
+      inputs.forEach(input => {
+        input.addEventListener('focus', () => {
+          input.style.borderColor = '#3c8dbc';
+          input.style.boxShadow = '0 0 5px rgba(60, 141, 188, 0.4)';
+        });
+        input.addEventListener('blur', () => {
+          input.style.borderColor = '#ccc';
+          input.style.boxShadow = 'none';
+        });
+      });
+      overlay.querySelectorAll('textarea').forEach(textarea => {
+        textarea.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.stopPropagation();
+          }
+        });
+      });
+      const closeModal = () => overlay.remove();
+      document.getElementById('goc-sms-modal-close-x').onclick = closeModal;
+      document.getElementById('goc-sms-modal-close-top').onclick = closeModal;
+      document.getElementById('goc-sms-btn-fechar').onclick = closeModal;
+      const textareaMsg = document.getElementById('goc-sms-text-msg');
+      const charCountSpan = document.getElementById('goc-sms-char-count');
+      const creditText = document.getElementById('goc-sms-credit-text');
+      const updateCharAndCredits = () => {
+        const len = textareaMsg.value.length;
+        charCountSpan.textContent = len;
+        const credits = Math.max(1, Math.ceil(len / 160));
+        creditText.textContent = `Mensagem Simples (${credits} crédito${credits > 1 ? 's' : ''})`;
+      };
+      textareaMsg.oninput = updateCharAndCredits;
+      updateCharAndCredits();
+      document.getElementById('goc-sms-btn-enviar').onclick = () => {
+        const msgVal = textareaMsg.value;
+        const destVal = document.getElementById('goc-sms-destinatarios').value || '912345678';
+        closeModal();
+        cb360SmsCurrentSubType = 'enviadas';
+        const subTabs = document.querySelectorAll('.sms-sub-tab');
+        subTabs.forEach(t => {
+          if (t.dataset.sub === 'enviadas') {
+            t.style.background = '#6c757d';
+            t.style.color = '#fff';
+          } else {
+            t.style.background = 'transparent';
+            t.style.color = '#333';
+          }
+        });
+        const listContent = document.getElementById('sms-list-content');
+        if (listContent) {
+          const tableStyle = 'width:100%; border-collapse:collapse; font-size:12px; color:#333;';
+          const thStyle = 'background:#e0e0e0; color:#333; font-weight:600; padding:8px 10px; text-align:left; border-bottom:2px solid #ccc;';
+          const fakeItem = {id: Math.floor(Math.random() * 900) + 100, message: msgVal, recipient_name: 'Teste Fictício', recipient_number: destVal, sent_at: new Date().toISOString()};
+          const formattedDate = typeof formatTimeStampPT === 'function' ? formatTimeStampPT(fakeItem.sent_at) : fakeItem.sent_at;
+          const truncatedMsg = fakeItem.message.length > 40 ? fakeItem.message.substring(0, 40) + '...' : fakeItem.message;
+          const newRowHtml = `
+            <tr style="border-bottom:1px solid #eee;">
+              <td style="padding:8px 10px; color:#2b6ecb; font-weight:600;">${fakeItem.id}</td>
+              <td style="padding:8px 10px; color:#2b6ecb;">
+                <i class="fa-regular fa-square-check" style="color:#5cb85c; margin-right:4px;"></i>
+                <i class="fa-solid fa-comment-sms" style="color:#5bc0de; margin-right:6px;"></i>
+                  ${truncatedMsg}
+              </td>
+              <td style="padding:8px 10px;">${fakeItem.recipient_name}</td>
+              <td style="padding:8px 10px; color:#2b6ecb; font-weight:600;">${fakeItem.recipient_number}</td>
+              <td style="padding:8px 10px; color:#2b6ecb; font-weight:600;">${formattedDate}</td>
+            </tr>
+          `;
+          const existingTable = listContent.querySelector('table');
+          if (existingTable) {
+            const tbody = existingTable.querySelector('tbody');
+            if (tbody) {
+              tbody.insertAdjacentHTML('afterbegin', newRowHtml);
+            } else {
+              existingTable.insertAdjacentHTML('beforeend', newRowHtml);
+            }
+          } else {
+            listContent.innerHTML = `
+              <table style="${tableStyle}">
+                <thead>
+                  <tr>
+                    <th style="${thStyle} width:70px;">Id</th>
+                    <th style="${thStyle}">Mensagem</th>
+                    <th style="${thStyle} width:160px;">Destinatário</th>
+                    <th style="${thStyle} width:130px;">Número</th>
+                    <th style="${thStyle} width:150px;">Envio</th>
+                  </tr>
+                </thead>
+                <tbody>${newRowHtml}</tbody>
+              </table>
+            `;
+          }
+        }
+      };
+    }
     // ==============================================================================
     // == 12. MÓDULO: RELATÓRIO DA OCORRÊNCIA (cb360_incident_reports)                ==
     // ==============================================================================
@@ -6609,17 +7259,34 @@
     let cb360ReportParticipantsData = [];
     let cb360ReportExpensesData = [];
     let cb360ReportDamagesCurrentSubType = 'trabalho-perdido';
+    let cb360ReportActiveTab = 'geral';
     // ---- OPEN: openCb360ReportModal() ----
     async function openCb360ReportModal(internalNumber) {
       const page = document.getElementById('page-cb360-redund');
       if (!page || document.getElementById('goc-report-modal-overlay')) return;
-      cb360ReportCurrentInternalNumber = internalNumber;      
-      const headerInfo = await fetchCb360ReportHeaderInfo(internalNumber);
+      cb360ReportCurrentInternalNumber = internalNumber;
+      cb360ReportActiveTab = 'geral';
+      const [
+        headerInfo, , victimsData, dispatchedResources, outOfBoundsList,
+        commandData, mealsData, meansFirefightersData, meansData, usedMaterialData, participantsData, expensesData
+      ] = await Promise.all([
+        fetchCb360ReportHeaderInfo(internalNumber),
+        loadCb360ReportRow(internalNumber),
+        fetchCb360Victims(internalNumber),
+        fetchDispatchData(internalNumber),
+        cb360ReportOutOfBoundsList.length ? Promise.resolve(cb360ReportOutOfBoundsList) : fetchCb360OutOfBoundsList(),
+        fetchCb360ReportCommand(internalNumber),
+        fetchCb360ReportMeals(internalNumber),
+        fetchCb360ReportMeansFirefighters(internalNumber),
+        fetchCb360ReportMeans(internalNumber),
+        fetchCb360ReportUsedMaterial(internalNumber),
+        fetchCb360ReportParticipants(internalNumber),
+        fetchCb360ReportExpenses(internalNumber)
+      ]);
       cb360ReportHeaderInfo = headerInfo;
-      await loadCb360ReportRow(internalNumber);
       cb360ReportFormState = { ...(cb360ReportCurrentRow || {}) };
-      cb360ReportVictimsData = await fetchCb360Victims(internalNumber);
-      const dispatchedResources = await fetchDispatchData(internalNumber);
+      await applyCb360ReportCsrepcDefault();
+      cb360ReportVictimsData = victimsData;
       cb360ReportVehiclesData = dispatchedResources.map(mean => ({
         id: String(mean.id), vehicle: mean.vehicle || '', pumpHours: mean.pump_hours ?? '', pumpMinutes: mean.pump_minutes ?? '',
         arrivalDateScene: mean.scene_arrival_date || '', arrivalTimeScene: mean.scene_arrival_time || '',
@@ -6631,17 +7298,15 @@
         const minorNInt = crewList.length
           ? crewList.reduce((minor, actual) => String(actual.n_int) < String(minor) ? actual.n_int : minor, crewList[0].n_int) : null;
         return crewList.map(crew => ({vehicle: mean.vehicle || '', code: crew.n_int || '', confirmed: crew.n_int === minorNInt}));
-      });      
-      if (!cb360ReportOutOfBoundsList.length) {
-        cb360ReportOutOfBoundsList = await fetchCb360OutOfBoundsList();
-      }
-      cb360ReportCommandData = await fetchCb360ReportCommand(internalNumber);
-      cb360ReportMealsData = await fetchCb360ReportMeals(internalNumber);
-      cb360ReportMeansFirefightersData = await fetchCb360ReportMeansFirefighters(internalNumber);
-      cb360ReportMeansData = await fetchCb360ReportMeans(internalNumber); 
-      cb360ReportUsedMaterialData = await fetchCb360ReportUsedMaterial(internalNumber);
-      cb360ReportParticipantsData = await fetchCb360ReportParticipants(internalNumber);
-      cb360ReportExpensesData = await fetchCb360ReportExpenses(internalNumber)
+      });
+      cb360ReportOutOfBoundsList = outOfBoundsList;
+      cb360ReportCommandData = commandData;
+      cb360ReportMealsData = mealsData;
+      cb360ReportMeansFirefightersData = meansFirefightersData;
+      cb360ReportMeansData = meansData;
+      cb360ReportUsedMaterialData = usedMaterialData;
+      cb360ReportParticipantsData = participantsData;
+      cb360ReportExpensesData = expensesData;
       renderCb360ReportModal(headerInfo);
     }
     // ---- FETCH: fetchCb360ReportHeaderInfo() ----
@@ -6674,7 +7339,24 @@
         console.error('Erro fetchCb360ReportHeaderInfo:', err);
         return {id: internalNumber, dateLabel: '', serviceLabel: '', outsideArea: false, outsideAreaCorp: null};
       }
-    }    
+    }
+    // ---- HELPER: applyCb360ReportCsrepcDefault() — se csrepc estiver vazio, vai buscar o valor default a national_corporations ----
+    async function applyCb360ReportCsrepcDefault() {
+      if (cb360ReportFormState.csrepc) return;
+      try {
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const url = `${SUPABASE_URL}/rest/v1/national_corporations?oper_nr=eq.${currentCorpOperNr}&select=csrepc_assigned`;
+        const response = await supaFetch(url, { method: 'GET' });
+        if (!response.ok) return;
+        const data = await response.json();
+        const defaultCsrepc = data?.[0]?.csrepc_assigned || null;
+        if (defaultCsrepc) {
+          cb360ReportFormState.csrepc = defaultCsrepc;
+        }
+      } catch (err) {
+        console.error('Erro applyCb360ReportCsrepcDefault:', err);
+      }
+    }
     // ---- FETCH: loadCb360ReportRow() ----
     async function loadCb360ReportRow(internalNumber) {
       try {
@@ -6688,9 +7370,10 @@
         cb360ReportCurrentRow = null;
       }
     }
-    // ---- RENDER: renderCb360ReportModal() ----
     function renderCb360ReportModal(headerInfo) {
       const page = document.getElementById('page-cb360-redund');
+      const existingOverlay = document.getElementById('goc-report-modal-overlay');
+      if (existingOverlay) existingOverlay.remove();
       const overlay = document.createElement('div');
       overlay.id = 'goc-report-modal-overlay';
       overlay.style.cssText = 'display:flex; position:fixed; inset:0; background:rgba(0,0,0,0.35); z-index:200; align-items:center; justify-content:center;';
@@ -6747,7 +7430,7 @@
       document.getElementById('rel-btn-close').addEventListener('click', closeCb360ReportModal);
       document.getElementById('rel-btn-save').addEventListener('click', saveCb360Report);
       document.getElementById('rel-btn-print').addEventListener('click', () => window.print());      
-      switchCb360ReportTab('geral');
+      switchCb360ReportTab(cb360ReportActiveTab || 'geral');
     }
     // ---- CLOSE: closeCb360ReportModal() ----
     function closeCb360ReportModal() {
@@ -6758,6 +7441,7 @@
     }
     // ---- SWITCH: switchCb360ReportTab() ----
     function switchCb360ReportTab(tab) {
+      cb360ReportActiveTab = tab;
       captureCb360ReportCurrentTab();
       document.querySelectorAll('#rel-tab-bar .rel-tab-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.tab === tab);
@@ -7121,33 +7805,7 @@
         </td>
       `;
       return tr;
-    }
-    function getCb360NextCosNum() {
-      const tbody = document.getElementById('cb360-cos-tbody');
-      if (!tbody) return 1;
-      const rows = tbody.querySelectorAll('tr:not(#cb360-cos-empty)');
-      let maxNum = 0;
-      rows.forEach(r => {
-        const n = parseInt(r.dataset.num, 10);
-        if (!isNaN(n) && n > maxNum) maxNum = n;
-      });
-      return maxNum + 1;
-    }
-    function checkCb360CosEmpty() {
-      const tbody = document.getElementById('cb360-cos-tbody');
-      if (!tbody) return;
-      const rows = tbody.querySelectorAll('tr:not(#cb360-cos-empty)');
-      if (rows.length === 0 && !document.getElementById('cb360-cos-empty')) {
-        const tr = document.createElement('tr');
-        tr.id = 'cb360-cos-empty';
-        tr.innerHTML = `
-          <td colspan="5" style="padding:20px; text-align:center; color:#2b6ecb; font-size:12px; font-weight:600; border:1px solid #ccc;">
-            Sem nenhum COS!
-          </td>
-        `;
-        tbody.appendChild(tr);
-      }
-    }
+    }    
     function openCb360CosModal(id = null) {
       let modalOverlay = document.getElementById('cb360-modal-overlay');
       if (!modalOverlay) {
@@ -7240,22 +7898,7 @@
         </td>
       `;
       return tr;
-    }
-    function checkCb360PcoEmpty() {
-      const tbody = document.getElementById('cb360-pco-tbody');
-      if (!tbody) return;
-      const rows = tbody.querySelectorAll('tr:not(#cb360-pco-empty)');
-      if (rows.length === 0 && !document.getElementById('cb360-pco-empty')) {
-        const tr = document.createElement('tr');
-        tr.id = 'cb360-pco-empty';
-        tr.innerHTML = `
-          <td colspan="3" style="padding:20px; text-align:center; color:#2b6ecb; font-size:12px; font-weight:600; border:1px solid #ccc;">
-            Sem nenhuma Entidade Presente no PCO!
-          </td>
-        `;
-        tbody.appendChild(tr);
-      }
-    }
+    }    
     // ---- OPEN: PCO Modal ----
     function openCb360PcoModal(id = null) {
       let modalOverlay = document.getElementById('cb360-modal-overlay');
@@ -7286,7 +7929,7 @@
             </div>
             <div style="display:grid; grid-template-columns: 60px 1fr; gap:5px; align-items:center;">
               <label style="${labelStyle}">Nome</label>
-              <input type="text" id="modal-pco-nome" class="cb360-modal-input" style="${inputStyle}" value="${nomeValue}">
+              <input type="text" id="modal-pco-name" class="cb360-modal-input" style="${inputStyle}" value="${nomeValue}">
             </div>
           </div>
           <div style="background:#e5e5e5; padding:10px 20px; border-top:1px solid #ccc; display:flex; justify-content:flex-end; gap:10px;">
@@ -8946,7 +9589,7 @@
           <div style="${sidebarStyle}">
             <div class="damages-sub-tab" data-sub="trabalho-perdido" style="${itemStyle(true)}"><i class="fa-solid fa-money-bill-wave"></i> Trabalho Perdido</div>
             <div class="damages-sub-tab" data-sub="alimentacao" style="${itemStyle(false)}"><i class="fa-solid fa-utensils"></i> Alimentação</div>
-            <div class="damages-sub-tab" data-sub="danos-viaturas" style="${itemStyle(false)}"><i class="fa-solid fa-car-burst"></i> Danos Viaturas</div>
+            <div class="damages-sub-tab" data-sub="danos-viaturas" style="${itemStyle(false)}"><i class="fa-solid fa-car-burst"></i> Danos em Veículos</div>
             <div class="damages-sub-tab" data-sub="danos-equipamento" style="${itemStyle(false)}"><i class="fa-solid fa-toolbox"></i> Danos em Equipamento</div>
           </div>
           <div id="damages-sub-content" style="${mainContentStyle}"></div>
@@ -9008,9 +9651,8 @@
             <tbody>${rowsHtml}</tbody>
             <tfoot>
               <tr>
-                <td style="padding:6px 10px; border-left:1px solid #ccc; border-bottom:1px solid #ccc; text-align:right; font-weight:600; font-size:12px; background:#fafafa;" colspan="3">Total:</td>
-                
-                <td style="padding:5px 8px; border-bottom:1px solid #ccc; text-align:center; background:#fafafa;">
+                <td style="padding:6px 10px; border-left:1px solid #ccc; border-bottom:1px solid #ccc; text-align:right; font-weight:600; font-size:12px; background:#fafafa;" colspan="3">TOTAL:</td>                
+                <td style="padding:5px 4px; border-bottom:1px solid #ccc; text-align:center; background:#fafafa;">
                   <input type="text" readonly style="width:100%; height:22px; text-align:center; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:12px;" value="${total.toLocaleString('pt-PT', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €">
                 </td>
                 <td style="padding:5px 8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; background:#fafafa;"></td>
@@ -9054,10 +9696,10 @@
             </thead>
             <tbody>${rowsHtml}</tbody>
             <tfoot>
-              <tr>
-                <td style="padding:6px 10px; border-left:1px solid #ccc; border-bottom:1px solid #ccc; text-align:right; font-weight:600; font-size:12px; background:#fafafa;" colspan="4">Total:</td>
+              <tr>                
                 <td style="padding:5px 8px; border-bottom:1px solid #ccc; background:#fafafa;"></td>
-                <td style="padding:5px 8px; border-bottom:1px solid #ccc; text-align:center; background:#fafafa;">
+                <td style="padding:6px 10px; border-left:1px solid #ccc; border-bottom:1px solid #ccc; text-align:right; font-weight:600; font-size:12px; background:#fafafa;" colspan="4">TOTAL:</td>
+                <td style="padding:5px 4px; border-bottom:1px solid #ccc; text-align:center; background:#fafafa;">
                   <input type="text" readonly style="width:100%; height:22px; text-align:center; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:12px;" value="${total.toLocaleString('pt-PT', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €">
                 </td>
                 <td style="padding:5px 8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; background:#fafafa;"></td>
@@ -9098,7 +9740,7 @@
             <tbody>${rowsHtml}</tbody>
             <tfoot>
               <tr>
-                <td style="padding:6px 0px; border-left:1px solid #ccc; border-bottom:1px solid #ccc; text-align:right; font-weight:600; font-size:12px; background:#fafafa;" colspan="5">Total:</td>
+                <td style="padding:6px 10px; border-left:1px solid #ccc; border-bottom:1px solid #ccc; text-align:right; font-weight:600; font-size:12px; background:#fafafa;" colspan="5">TOTAL:</td>
                 <td style="padding:5px 4px; border-bottom:1px solid #ccc; text-align:center; background:#fafafa;">
                   <input type="text" readonly style="width:100%; height:22px; text-align:center; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:12px;" value="${total.toLocaleString('pt-PT', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €">
                 </td>
@@ -9148,9 +9790,9 @@
             <tbody>${rowsHtml}</tbody>
             <tfoot>
               <tr>
-                <td style="padding:6px 10px; border-left:1px solid #ccc; border-bottom:1px solid #ccc; text-align:right; font-weight:600; font-size:12px; background:#fafafa;" colspan="3">Total:</td>
                 <td style="padding:5px 8px; border-bottom:1px solid #ccc; background:#fafafa;"></td>
-                <td style="padding:5px 8px; border-bottom:1px solid #ccc; text-align:center; background:#fafafa;">
+                <td style="padding:6px 10px; border-left:1px solid #ccc; border-bottom:1px solid #ccc; text-align:right; font-weight:600; font-size:12px; background:#fafafa;" colspan="3">TOTAL:</td>
+                <td style="padding:5px 4px; border-bottom:1px solid #ccc; text-align:center; background:#fafafa;">
                   <input type="text" readonly style="width:100%; height:22px; text-align:center; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:12px;" value="${total.toLocaleString('pt-PT', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €">
                 </td>
                 <td style="padding:5px 8px; border-right:1px solid #ccc; border-bottom:1px solid #ccc; background:#fafafa;"></td>
@@ -9471,6 +10113,20 @@
         if (ok) closeModal();
       };
     }
+    // ---- HELPER: Tooltip próprio para a Ficha de Danos ----
+    function showEdTooltip(targetEl, text) {
+      hideEdTooltip();
+      const rect = targetEl.getBoundingClientRect();
+      const tooltip = document.createElement('div');
+      tooltip.id = 'cb360-ed-tooltip';
+      tooltip.innerText = text;
+      Object.assign(tooltip.style, {position: 'fixed', top: `${rect.top - 32}px`, left: `${rect.left + (rect.width / 2)}px`, transform: 'translateX(-50%)', background: '#333', color: '#fff', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', whiteSpace: 'nowrap', zIndex: '10000', pointerEvents: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.2)'});
+      document.body.appendChild(tooltip);
+    }
+    function hideEdTooltip() {
+      const el = document.getElementById('cb360-ed-tooltip');
+      if (el) el.remove();
+    }
     // ---- FUNCTION: openCb360EquipmentDamageModal() — Danos em Equipamento ----
     function openCb360EquipmentDamageModal(id = null) {
       let modalOverlay = document.getElementById('cb360-modal-overlay');
@@ -9500,9 +10156,12 @@
           <div style="padding:20px; display:flex; flex-direction:column; gap:5px; background:#fff;">
             <div style="display:grid; grid-template-columns: 70px 1fr; gap:10px; align-items:center;">
               <label style="${labelStyle}">Veículo</label>
-              <select id="modal-ed-veiculo" class="cb360-modal-input" style="${selectStyle}">
-                <option value=""></option>
-              </select>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <select id="modal-ed-veiculo" class="cb360-modal-input" style="${selectStyle}">
+                  <option value=""></option>
+                </select>
+                <i id="modal-ed-veiculo-info" class="fa-solid fa-circle-info" style="color:#2b6ecb; font-size:14px; cursor:pointer;"></i>
+              </div>
             </div>
             <div style="display:grid; grid-template-columns: 70px 1fr 60px 1fr; gap:10px; align-items:center;">
               <label style="${labelStyle}">Data</label>
@@ -9547,6 +10206,13 @@
         vehicleSelect.appendChild(opt);
       });
       if (item?.vehicle_registration) vehicleSelect.value = item.vehicle_registration;
+      const infoIcon = document.getElementById('modal-ed-veiculo-info');
+      if (infoIcon) {
+        infoIcon.addEventListener('mouseenter', () => {
+          showEdTooltip(infoIcon, 'Caso o equipamento danificado não pertença a nenhum dos veículos listados, deixe o campo em branco.');
+        });
+        infoIcon.addEventListener('mouseleave', hideEdTooltip);
+      }
       const inputs = modalOverlay.querySelectorAll('.cb360-modal-input');
       inputs.forEach(input => {
         input.addEventListener('focus', () => {
@@ -9560,19 +10226,22 @@
       });
       modalOverlay.querySelectorAll('textarea').forEach(textarea => {
         textarea.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter') {
-            e.stopPropagation();
-          }
+          if (e.key === 'Enter') e.stopPropagation();
         });
       });
-      const closeModal = () => modalOverlay.remove();
+      const closeModal = () => {
+        hideEdTooltip();
+        modalOverlay.remove();
+      };
       document.getElementById('cb360-close-modal').onclick = closeModal;
       document.getElementById('cb360-cancel-ed').onclick = closeModal;
       document.getElementById('cb360-save-ed').onclick = async () => {
-        const payload = {internal_number: cb360ReportCurrentInternalNumber, corp_oper_nr: sessionStorage.getItem("currentCorpOperNr") || "0805", type: 'danos_equipamento', vehicle_registration: document.getElementById('modal-ed-veiculo').value || null,
-                         expense_date: document.getElementById('modal-ed-data').value || null, expense_time: document.getElementById('modal-ed-hora').value || null, expense_kind: document.getElementById('modal-ed-tipo').value || null,
-                         entity: document.getElementById('modal-ed-entidade').value || null, invoice_number: document.getElementById('modal-ed-fat').value || null, quantity: parseFloat(document.getElementById('modal-ed-qtd').value) || null,
-                         amount: parseFloat(document.getElementById('modal-ed-valor').value) || null, description: document.getElementById('modal-ed-descricao').value || null
+        const payload = {internal_number: cb360ReportCurrentInternalNumber, corp_oper_nr: sessionStorage.getItem("currentCorpOperNr") || "0805", type: 'danos_equipamento',
+                         vehicle_registration: document.getElementById('modal-ed-veiculo').value || null, expense_date: document.getElementById('modal-ed-data').value || null, 
+                         expense_time: document.getElementById('modal-ed-hora').value || null, expense_kind: document.getElementById('modal-ed-tipo').value || null,
+                         entity: document.getElementById('modal-ed-entidade').value || null, invoice_number: document.getElementById('modal-ed-fat').value || null,
+                         quantity: parseFloat(document.getElementById('modal-ed-qtd').value) || null, amount: parseFloat(document.getElementById('modal-ed-valor').value) || null,
+                         description: document.getElementById('modal-ed-descricao').value || null
                         };
         const ok = await saveCb360ExpenseItem(payload, isEdit ? id : null);
         if (ok) closeModal();
@@ -9632,6 +10301,81 @@
     // ==============================================================================
     // == INCIDENT SAVE BUTTON ==
     // ==============================================================================
+    // ---- REFRESH: refreshCb360ReportModal() — recarrega tudo do servidor e reconstrói o modal, mantendo o separador ativo ----
+    async function refreshCb360ReportModal() {
+      const internalNumber = cb360ReportCurrentInternalNumber;
+      if (!internalNumber) return;
+      const headerInfo = await fetchCb360ReportHeaderInfo(internalNumber);
+      cb360ReportHeaderInfo = headerInfo;
+      await loadCb360ReportRow(internalNumber);
+      cb360ReportFormState = { ...(cb360ReportCurrentRow || {}) };
+      await applyCb360ReportCsrepcDefault();
+      cb360ReportVictimsData = await fetchCb360Victims(internalNumber);
+      const dispatchedResources = await fetchDispatchData(internalNumber);
+      cb360ReportVehiclesData = dispatchedResources.map(mean => ({
+        id: String(mean.id), vehicle: mean.vehicle || '', pumpHours: mean.pump_hours ?? '', pumpMinutes: mean.pump_minutes ?? '',
+        arrivalDateScene: mean.scene_arrival_date || '', arrivalTimeScene: mean.scene_arrival_time || '',
+        departureDateScene: mean.scene_departure_date || '', departureTimeScene: mean.scene_departure_time || '',
+        arrivalDateCB: mean.cb_arrival_date || '', arrivalTimeCB: mean.cb_arrival_time || ''
+      }));
+      cb360ReportFirefightersData = dispatchedResources.flatMap(mean => {
+        const crewList = mean.cb360_dispatch_crew || [];
+        const minorNInt = crewList.length
+          ? crewList.reduce((minor, actual) => String(actual.n_int) < String(minor) ? actual.n_int : minor, crewList[0].n_int) : null;
+        return crewList.map(crew => ({vehicle: mean.vehicle || '', code: crew.n_int || '', confirmed: crew.n_int === minorNInt}));
+      });
+      if (!cb360ReportOutOfBoundsList.length) {
+        cb360ReportOutOfBoundsList = await fetchCb360OutOfBoundsList();
+      }
+      cb360ReportCommandData = await fetchCb360ReportCommand(internalNumber);
+      cb360ReportMealsData = await fetchCb360ReportMeals(internalNumber);
+      cb360ReportMeansFirefightersData = await fetchCb360ReportMeansFirefighters(internalNumber);
+      cb360ReportMeansData = await fetchCb360ReportMeans(internalNumber);
+      cb360ReportUsedMaterialData = await fetchCb360ReportUsedMaterial(internalNumber);
+      cb360ReportParticipantsData = await fetchCb360ReportParticipants(internalNumber);
+      cb360ReportExpensesData = await fetchCb360ReportExpenses(internalNumber);
+      renderCb360ReportModal(headerInfo);
+    }
+    // ---- RELOAD: reloadCb360CurrentIncident() — atualiza Caracterização/cabeçalho/sidebar/Meios/Vítimas sem reconstruir nada (sem piscar) ----
+    async function reloadCb360CurrentIncident() {
+      if (!cb360CurrentIncident) return;
+      const internalNumber = cb360CurrentIncident.internal_number;
+      if (!internalNumber) return;
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      try {
+        const url = `${SUPABASE_URL}/rest/v1/cb360_incidents?internal_number=eq.${internalNumber}&corp_oper_nr=eq.${currentCorpOperNr}&select=*`;
+        const response = await supaFetch(url, { method: 'GET' });
+        if (response.ok) {
+          const data = await response.json();
+          const freshRow = data?.[0];
+          if (freshRow && document.getElementById('goc-internal-nr')) {
+            cb360CurrentIncident = freshRow;
+            fillCb360Fields(freshRow);
+          }
+        }
+      } catch (err) {
+        console.error('Erro ao atualizar dados da ocorrência:', err);
+      }
+      const dispatchedResources = await fetchDispatchData(internalNumber);
+      cb360ResourcesVehicles = dispatchedResources.map(mean => ({
+        id: String(mean.id), vehicle: mean.vehicle || '', crew: mean.cb360_dispatch_crew?.length || 0, departureDateCB: mean.cb_departure_date || '', departureTimeCB: mean.cb_departure_time || '',
+        arrivalDateScene: mean.scene_arrival_date || '', arrivalTimeScene: mean.scene_arrival_time || '', departureDateScene: mean.scene_departure_date || '', departureTimeScene: mean.scene_departure_time || '',
+        arrivalDateCB: mean.cb_arrival_date || '', arrivalTimeCB: mean.cb_arrival_time || '', kmStart: mean.km_start || '', kmEnd: mean.km_end || '', radio_issi_siresp: mean.radio_issi_siresp || '', pumpHours: mean.pump_hours ?? '',
+        pumpMinutes: mean.pump_minutes ?? '', editing: false
+      }));
+      cb360ResourcesFirefighters = dispatchedResources.flatMap(mean => {
+        const crewList = mean.cb360_dispatch_crew || [];
+        const minorNInt = crewList.length
+          ? crewList.reduce((minor, actual) => String(actual.n_int) < String(minor) ? actual.n_int : minor, crewList[0].n_int) : null;
+        return crewList.map(crew => ({
+          id: String(crew.id), vehicle: mean.vehicle || '', confirmed: crew.n_int === minorNInt, code: crew.n_int || '', role: crew.role || '', specialty: crew.specialty || '',
+          departureDate: crew.departure_date || '', departureTime: crew.departure_time || '', returnDate: crew.return_date || '', returnTime: crew.return_time || '', radio_assigned: crew.radio_assigned || '', editing: false
+        }));
+      });
+      cb360ResourcesVictims = await fetchCb360Victims(internalNumber);
+      if (document.getElementById('goc-vehicles-table-body')) renderCb360ResourcesTab();
+      if (document.getElementById('goc-victims-table-body')) renderCb360VictimsTab();
+    }
      // ---- SAVE: saveCb360Report() ----
      async function saveCb360Report() {
       if (!cb360ReportCurrentInternalNumber) return;
@@ -9664,6 +10408,13 @@
         cb360ReportCurrentRow = Array.isArray(data) ? data[0] : data;
         cb360ReportFormState = { ...cb360ReportCurrentRow };
         showPopup('popup-success', 'Relatório guardado com sucesso!');
+        await refreshCb360ReportModal();
+        if (typeof searchCb360Incidents === 'function') {
+          searchCb360Incidents();
+        }
+        if (typeof reloadCb360CurrentIncident === 'function') {
+          reloadCb360CurrentIncident();
+        }
       } catch (err) {
         console.error('Erro saveCb360Report:', err);
         showPopup('popup-danger', 'Erro de rede ao gravar o relatório.');
@@ -9673,352 +10424,76 @@
 
 
 
-
-
-// ==============================================================================
-    // == 11. SMS (Enviadas / Recebidas / Agendadas)                               ==
-    // ==============================================================================
-    let cb360SmsCurrentSubType = 'enviadas';
-    // ---- RENDER: renderCb360SmsTab() ----
-    function renderCb360SmsTab() {
-      const container = document.getElementById('goc-tab-content-sms');
-      if (!container) return;
-      const wrapperStyle = 'display:flex; gap:10px; align-items:flex-start; width:100%;';
-      const leftColumnStyle = 'width:200px; min-width:200px; display:flex; flex-direction:column; gap:5px;';
-      const sidebarStyle = 'background:#f0f0f0; border:1px solid #ccc; border-radius:4px; overflow:hidden; display:flex; flex-direction:column;';
-      const mainContentStyle = 'flex:1; background:#fff; border:1px solid #ccc; border-radius:4px; min-height:550px; overflow:hidden;';
-      const itemStyle = (active) => `padding:10px 12px; font-size:11px; font-weight:600; color:${active ? '#fff' : '#333'}; background:${active ? '#6c757d' : 'transparent'}; border-bottom:1px solid #e0e0e0; 
-                                     cursor:pointer; display:flex; align-items:center; gap:8px; text-decoration:none;`;
-      container.innerHTML = `
-        <div style="${wrapperStyle}">
-          <div style="${leftColumnStyle}">
-            <button id="goc-btn-sms-update" style=" width:150px; background:#5bc0de; color:#fff; border:none; padding:8px 10px; border-radius:5px; font-weight:600; cursor:pointer; font-size:12.5px; display:flex; align-items:center; justify-content:center; gap:5px;"><i class="fa-solid fa-comment" style="font-size:14px; vertical-align: middle;"></i>Sms Atualização</button>
-            <div style="${sidebarStyle}">
-              <div class="sms-sub-tab" data-sub="enviadas" style="${itemStyle(true)}"><i class="fa-solid fa-inbox"></i> Enviadas</div>
-              <div class="sms-sub-tab" data-sub="recebidas" style="${itemStyle(false)}"><i class="fa-solid fa-download"></i> Recebidas</div>
-              <div class="sms-sub-tab" data-sub="agendadas" style="${itemStyle(false)}"><i class="fa-solid fa-upload"></i> Agendadas</div>
-            </div>
-          </div>
-          <div id="sms-sub-content" style="${mainContentStyle}">
-            <!-- O conteúdo será injetado dinamicamente aqui via JavaScript -->
-          </div>
-        </div>
-      `;
-      const btnUpdate = document.getElementById('goc-btn-sms-update');
-      if (btnUpdate) {
-        btnUpdate.addEventListener('click', () => {
-          openCb360SmsUpdateModal();
-        });
+    // ---- EXPORT: exportCb360IncidentsToExcel() — exporta as ocorrências atualmente filtradas para .xlsx via vw_cb360_incidents_summary ----
+    async function exportCb360IncidentsToExcel() {
+      const btn = document.getElementById('cb360-register-export');
+      const internalNumbers = (cb360Pagination.fullData || []).map(o => o.internal_number).filter(Boolean);
+      if (!internalNumbers.length) {
+        showPopup('popup-danger', 'Não há ocorrências para exportar.');
+        return;
       }
-      const subTabs = container.querySelectorAll('.sms-sub-tab');
-      subTabs.forEach(tab => {
-        tab.onclick = () => {
-          subTabs.forEach(t => {
-            t.style.background = 'transparent';
-            t.style.color = '#333';
-          });
-          tab.style.background = '#6c757d';
-          tab.style.color = '#fff';
-          const subType = tab.dataset.sub;
-          cb360SmsCurrentSubType = subType;
-          renderCb360SmsSubContent(
-            subType,
-            document.getElementById('sms-sub-content')
-          );
-        };
-      });
-      cb360SmsCurrentSubType = 'enviadas';
-      renderCb360SmsSubContent(
-        'enviadas',
-        document.getElementById('sms-sub-content')
-      );
-    }
-    // ---- RENDER: renderCb360SmsSubContent() ----
-    function renderCb360SmsSubContent(subType, container) {
-      const today = toLocalISODate(new Date());
-      const inputStyle = 'height:25px; padding:0 8px; border:1px solid #ccc; border-radius:4px; font-size:12px; box-sizing:border-box;';
-      const isAgendadas = subType === 'agendadas';
-      container.innerHTML = `
-        <div style="display:flex; align-items:center; gap:10px; padding:12px 16px; border-bottom:1px solid #eee; flex-wrap:nowrap; width:100%; box-sizing:border-box;">
-          <button id="sms-btn-refresh" style="margin-right:175px; background:#5cb85c; color:#fff; border:none; padding:7px 14px; border-radius:5px; font-weight:600; cursor:pointer; font-size:12px; display:flex; align-items:center; gap:6px; white-space:nowrap; flex-shrink:0;"><i class="fa-solid fa-rotate"></i> Atualizar</button>
-          <div style="display:flex; align-items:center; gap:6px; white-space:nowrap; flex-shrink:0;">
-            <label style="font-size:12px; font-weight:600;">De:</label>
-            <input type="date" id="sms-filter-from" style="${inputStyle}" value="${today}">
-          </div>
-          <div style="display:flex; align-items:center; gap:6px; white-space:nowrap; flex-shrink:0;">
-            <label style="font-size:12px; font-weight:600;">Até:</label>
-            <input type="date" id="sms-filter-to" style="${inputStyle} margin-right:175px;" value="${isAgendadas ? '' : today}">
-          </div>
-          <div style="flex:1; display:flex; align-items:center; gap:6px; min-width:0;">
-            <input type="text" id="sms-filter-search" placeholder="" style="${inputStyle} width:100%;">
-            <i class="fa-solid fa-magnifying-glass" style="color:#2b6ecb; cursor:pointer; flex-shrink:0;"></i>
-          </div>
-        </div>
-        <div id="sms-list-content" style="padding:16px; width:100%; box-sizing:border-box;">
-          <p style="color:#2b6ecb; font-weight:600; margin:0;">Sem registos!</p>
-        </div>
-      `;
-      document.getElementById('sms-btn-refresh').addEventListener('click', () => {
-        loadCb360SmsList(subType, container);
-      });
-      loadCb360SmsList(subType, container);
-    }
-    // ---- LOAD (placeholder por agora): loadCb360SmsList() ----
-    async function loadCb360SmsList(subType, container) {
-      const listContent = document.getElementById('sms-list-content');
-      if (!listContent) return;
-      if (subType === 'enviadas') {
-        await renderCb360SmsSentList(listContent);
-      } else if (subType === 'recebidas') {
-        listContent.innerHTML = `<p style="color:#2b6ecb; font-weight:600; margin:0;">Sem registos!</p>`;
-      } else if (subType === 'agendadas') {
-        listContent.innerHTML = `<p style="color:#2b6ecb; font-weight:600; margin:0;">Sem registos!</p>`;
+      const originalHtml = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.style.pointerEvents = 'none';
+        btn.innerHTML = `<span>A exportar...</span><i class="fa-solid fa-spinner fa-spin" style="font-size:18px; color:#217346;"></i>`;
       }
-    }
-    // ---- FETCH: fetchCb360SmsSent() ----
-    async function fetchCb360SmsSent(internalNumber, dateFrom, dateTo) {
       try {
-        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
-        let url = `${SUPABASE_URL}/rest/v1/cb360_sms_log?internal_number=eq.${internalNumber}&corp_oper_nr=eq.${currentCorpOperNr}&type=eq.sent&select=*&order=sent_at.desc`;
-        if (dateFrom) url += `&sent_at=gte.${dateFrom}`;
-        if (dateTo) url += `&sent_at=lte.${dateTo}T23:59:59`;
-        const response = await supaFetch(url, { method: 'GET' });
-        return response.ok ? await response.json() : [];
+        const columns = [
+          'Id', 'Número', 'Número SADO', 'Número CODU', 'Data Alerta', 'Hora Alerta', 'Hora Saída',
+          'H. Cheg. Local', 'H. Saída Local', 'Hora Reg.',
+          'Código Terceiro', 'Nome Contactante', 'Contacto', 'Morada', 'Num Andar', 'Localidade', 'Distrito', 'Concelho', 'Freguesia',
+          'Área Intervenção', 'CB Área Intervenção',
+          'Coordenadas Lat. (Decimais)', 'Coordenadas Lon. (Decimais)', 'Coordenadas Lat. (WGS84)', 'Coordenadas Lon. (WGS84)', 'Coordenadas Lat. (SIRESP)', 'Coordenadas Lon. (SIRESP)',
+          'Código Classificação', 'Descrição', 'Bombeiro Responsável do Relatório',
+          'Nº Viaturas', 'Descrição Viaturas', 'Nº Verbete Inem',
+          'Nº Bombeiros', 'Descrição Bombeiros', 'Nº Doentes', 'Descrição Doentes',
+          'Kms Percorridos', 'Duração Intervenção', 'Evento Associado', 'Estado',
+          'Vítimas Bombeiros Leves', 'Vítimas Bombeiros Graves', 'Vítimas Bombeiros Mortos', 'Vítimas Bombeiros Assistidos',
+          'Vítimas Civis Leves', 'Vítimas Civis Graves', 'Vítimas Civis Mortos', 'Vítimas Civis Assistidos',
+          'Vítimas APC Leves', 'Vítimas APC Graves', 'Vítimas APC Mortos', 'Vítimas APC Assistidos',
+          'Observações'
+        ];
+        // Fetch em lotes de 100 para não ultrapassar limites de URL do PostgREST
+        const chunkSize = 100;
+        let rows = [];
+        for (let i = 0; i < internalNumbers.length; i += chunkSize) {
+          const chunk = internalNumbers.slice(i, i + chunkSize).join(',');
+          const url = `${SUPABASE_URL}/rest/v1/vw_cb360_incidents_summary?internal_number=in.(${chunk})&select=*`;
+          const response = await supaFetch(url, { method: 'GET' });
+          if (!response.ok) throw new Error('Erro ao obter dados da view');
+          const data = await response.json();
+          rows = rows.concat(data);
+        }
+        rows.sort((a, b) => String(a['Número'] || '').localeCompare(String(b['Número'] || '')));
+        rows.forEach(r => { delete r.internal_number; });
+        rows.forEach(r => {
+          const lat = parseFloat(r['Coordenadas Lat. (Decimais)']);
+          const lon = parseFloat(r['Coordenadas Lon. (Decimais)']);
+          if (!isNaN(lat) && !isNaN(lon)) {
+            r['Coordenadas Lat. (WGS84)'] = decimalToDMS(lat, true);
+            r['Coordenadas Lon. (WGS84)'] = decimalToDMS(lon, false);
+            r['Coordenadas Lat. (SIRESP)'] = decimalToSIRESP(lat, true);
+            r['Coordenadas Lon. (SIRESP)'] = decimalToSIRESP(lon, false);
+          }
+        });
+
+        const worksheet = XLSX.utils.json_to_sheet(rows, { header: columns });
+        worksheet['!cols'] = columns.map(c => ({ wch: Math.min(Math.max(c.length + 4, 12), 35) }));
+        worksheet['!freeze'] = { xSplit: 0, ySplit: 1 };
+
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Ocorrências');
+
+        const dateStamp = new Date().toISOString().slice(0, 10);
+        XLSX.writeFile(workbook, `Listagem_de_Ocorrencias_${dateStamp}.xlsx`);
+        showPopup('popup-success', 'Exportação concluída com sucesso!');
       } catch (err) {
-        console.error('Erro fetchCb360SmsSent:', err);
-        return [];
-      }
-    }
-    // ---- RENDER: renderCb360SmsSentList() ----
-    async function renderCb360SmsSentList(container) {
-      const internalNumber = cb360CurrentIncident?.internal_number;
-      const dateFrom = document.getElementById('sms-filter-from')?.value || '';
-      const dateTo = document.getElementById('sms-filter-to')?.value || '';
-      if (!internalNumber) {
-        container.innerHTML = `<p style="color:#2b6ecb; font-weight:600; margin:0;">Sem registos!</p>`;
-        return;
-      }
-      const items = await fetchCb360SmsSent(internalNumber, dateFrom, dateTo);
-      if (!items.length) {
-        container.innerHTML = `<p style="color:#2b6ecb; font-weight:600; margin:0;">Sem registos!</p>`;
-        return;
-      }
-      const tableStyle = 'width:100%; border-collapse:collapse; font-size:12px; color:#333;';
-      const thStyle = 'background:#e0e0e0; color:#333; font-weight:600; padding:8px 10px; text-align:left; border-bottom:2px solid #ccc;';
-      container.innerHTML = `
-        <table style="${tableStyle}">
-          <thead>
-            <tr>
-              <th style="${thStyle} width:70px;">Id</th>
-              <th style="${thStyle}">Mensagem</th>
-              <th style="${thStyle} width:160px;">Destinatário</th>
-              <th style="${thStyle} width:130px;">Número</th>
-              <th style="${thStyle} width:150px;">Envio</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${items.map(item => `
-              <tr style="border-bottom:1px solid #eee;">
-                <td style="padding:8px 10px; color:#2b6ecb; font-weight:600;">${item.id}</td>
-                <td style="padding:8px 10px; color:#2b6ecb;">
-                  <i class="fa-regular fa-square-check" style="color:#5cb85c; margin-right:4px;"></i>
-                  <i class="fa-solid fa-comment-sms" style="color:#5bc0de; margin-right:6px;"></i>
-                  ${item.message ? (item.message.length > 40 ? item.message.substring(0, 40) + '...' : item.message) : ''}
-                </td>
-                <td style="padding:8px 10px;">${item.recipient_name || ''}</td>
-                <td style="padding:8px 10px; color:#2b6ecb; font-weight:600;">${item.recipient_number || ''}</td>
-                <td style="padding:8px 10px; color:#2b6ecb; font-weight:600;">${formatTimeStampPT(item.sent_at)}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      `;
-    }
-    // ---- RENDER: openCb360SmsUpdateModal() ----
-    function openCb360SmsUpdateModal() {
-      const existingModal = document.getElementById('goc-sms-modal-overlay');
-      if (existingModal) existingModal.remove();
-      const today = toLocalISODate(new Date());
-      let timeOptionsHtml = '';
-      for (let h = 0; h < 24; h++) {
-        for (let m = 0; m < 60; m += 30) {
-          const hourStr = String(h).padStart(2, '0');
-          const minStr = String(m).padStart(2, '0');
-          const timeVal = `${hourStr}:${minStr}`;
-          const isSelected = (timeVal === '09:30') ? 'selected' : '';
-          timeOptionsHtml += `<option value="${timeVal}" ${isSelected}>${timeVal}</option>`;
+        console.error('Erro exportCb360IncidentsToExcel:', err);
+        showPopup('popup-danger', 'Erro ao exportar as ocorrências.');
+      } finally {
+        if (btn) {
+          btn.style.pointerEvents = '';
+          btn.innerHTML = originalHtml;
         }
       }
-      const overlay = document.createElement('div');
-      overlay.id = 'goc-sms-modal-overlay';
-      overlay.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 9999; display: flex; align-items: center; justify-content: center; font-family: sans-serif;`;
-      overlay.innerHTML = `
-        <div style="background: #eceef2; width: 560px; border-radius: 6px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); overflow: hidden; border: 1px solid #b0b0b0;">
-          <div style="background: #3c8dbc; color: #fff; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: bold;">
-            <div style="display: flex; align-items: center; gap: 8px;"><i class="fa-solid fa-comment" style="color: #fff;"></i> Nova Mensagem</div>
-            <div style="display: flex; gap: 6px;">
-              <button id="goc-sms-modal-close-top" style="background: transparent; border: none; color: #fff; cursor: pointer; font-size: 14px;"><i class="fa-solid fa-window-minimize"></i></button>
-              <button id="goc-sms-modal-close-x" style="background: transparent; border: none; color: #fff; cursor: pointer; font-size: 14px;"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-          </div>
-          <div style="padding: 14px; background: #eceef2;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; font-size: 12px;">
-              <div>
-                <div style="color: #333;">Limite Total: <b>Ilimitado!</b></div>
-                <div style="color: #333;">Créditos usados: <b>0</b></div>
-              </div>
-              <div style="display: flex; align-items: center; gap: 6px; background: #fff; padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px;">
-                <i class="fa-regular fa-calendar" style="color: #337ab7;"></i>
-                <input type="date" id="goc-sms-agendar-date" class="cb360-modal-input" style="height: 23px; border: 1px solid #ccc; padding: 2px 4px; font-size: 11px; border-radius: 3px; outline: none; box-sizing: border-box; transition: border-color 0.2s, box-shadow 0.2s;" value="${today}">
-                <select id="goc-sms-agendar-time" class="cb360-modal-input" style="height: 23px; border: 1px solid #ccc; padding: 2px 4px; font-size: 11px; border-radius: 3px; outline: none; background: #fff; box-sizing: border-box; transition: border-color 0.2s, box-shadow 0.2s;">
-                  ${timeOptionsHtml}
-                </select>
-                <label style="display: flex; align-items: center; gap: 4px; margin-left: 4px;">
-                  <input type="checkbox" id="goc-sms-check-agendar" style="cursor: pointer !important; width: 16px; height: 16px;"> Agendar Envio
-                </label>
-              </div>
-            </div>
-            <div style="background: #fff; border: 1px solid #ccc; border-radius: 4px; padding: 12px;">
-              <div style="display: inline-block; background: #e0e0e0; border: 1px solid #ccc; border-bottom: none; padding: 6px 16px; font-size: 12px; font-weight: bold; border-top-left-radius: 4px; border-top-right-radius: 4px; margin-bottom: -1px; position: relative; z-index: 1;"> Enviar SMS</div>
-              <div style="border: 1px solid #ccc; padding: 12px; border-radius: 4px; background: #fdfdfd;">
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-                  <label style="font-size: 12px; font-weight: bold; width: 110px; text-align: left;">Num. Destinatários</label>
-                  <div style="flex: 1; display: flex; align-items: center; gap: 4px;">
-                    <textarea id="goc-sms-destinatarios" class="cb360-modal-input" style="width: 100%; height: 50px; font-size: 11px; border: 1px solid #ccc; border-radius: 3px; padding: 4px; resize: vertical; outline: none; transition: border-color 0.2s, box-shadow 0.2s;">912345678</textarea>
-                    <i class="fa-solid fa-magnifying-glass" style="color: #337ab7; cursor: pointer; font-size: 14px; padding: 4px;"></i>
-                  </div>
-                </div>
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-                  <label style="font-size: 12px; font-weight: bold; width: 110px; text-align: left;">Template</label>
-                  <select id="goc-sms-template" class="cb360-modal-input" style="flex: 1; height: 26px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; padding: 0 4px; outline: none; background: #fff; transition: border-color 0.2s, box-shadow 0.2s;">
-                    <option value="OCORCOM" selected>OCORCOM</option>
-                    <option value="CUSTOM">Personalizado</option>
-                  </select>
-                </div>
-                <div style="display: flex; align-items: flex-start; gap: 8px; margin-bottom: 4px;">
-                  <label style="font-size: 12px; font-weight: bold; width: 110px; text-align: left; padding-top: 6px;">Mensagem</label>
-                  <div style="flex: 1;">
-                    <textarea id="goc-sms-text-msg" class="cb360-modal-input" style="width: 100%; height: 80px; font-size: 12px; border: 1px solid #ccc; border-radius: 3px; padding: 6px; box-sizing: border-box; resize: vertical; outline: none; transition: border-color 0.2s, box-shadow 0.2s;">Ocorrencia em curso, por favor verifique os detalhes no sistema.</textarea>
-                    <div style="text-align: right; font-size: 11px; color: #333; margin-top: 2px;">
-                      <span id="goc-sms-char-count">0</span><br>
-                      <b id="goc-sms-credit-text">Mensagem Simples (1 crédito)</b>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
-              <div style="font-size: 11px;">
-                <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                  <input type="checkbox" id="goc-sms-resposta" style="cursor: pointer !important; width: 16px; height: 16px;"> Com número de devolução de Resposta
-                </label>
-                <span style="color: #666; margin-left: 18px; font-size: 10px;">(usa 20 carateres no corpo da mensagem)</span>
-              </div>
-              <div style="display: flex; gap: 8px;">
-                <button id="goc-sms-btn-enviar" style="background: #5cb85c; color: #fff; border: none; padding: 6px 14px; border-radius: 4px; font-weight: bold; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                  <i class="fa-solid fa-paper-plane"></i> Enviar
-                </button>
-                <button id="goc-sms-btn-fechar" style="background: #f0ad4e; color: #fff; border: none; padding: 6px 14px; border-radius: 4px; font-weight: bold; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                  <i class="fa-solid fa-power-off"></i> Fechar
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(overlay);
-      const inputs = overlay.querySelectorAll('.cb360-modal-input');
-      inputs.forEach(input => {
-        input.addEventListener('focus', () => {
-          input.style.borderColor = '#3c8dbc';
-          input.style.boxShadow = '0 0 5px rgba(60, 141, 188, 0.4)';
-        });
-        input.addEventListener('blur', () => {
-          input.style.borderColor = '#ccc';
-          input.style.boxShadow = 'none';
-        });
-      });
-      overlay.querySelectorAll('textarea').forEach(textarea => {
-        textarea.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter') {
-            e.stopPropagation();
-          }
-        });
-      });
-      const closeModal = () => overlay.remove();
-      document.getElementById('goc-sms-modal-close-x').onclick = closeModal;
-      document.getElementById('goc-sms-modal-close-top').onclick = closeModal;
-      document.getElementById('goc-sms-btn-fechar').onclick = closeModal;
-      const textareaMsg = document.getElementById('goc-sms-text-msg');
-      const charCountSpan = document.getElementById('goc-sms-char-count');
-      const creditText = document.getElementById('goc-sms-credit-text');
-      const updateCharAndCredits = () => {
-        const len = textareaMsg.value.length;
-        charCountSpan.textContent = len;
-        const credits = Math.max(1, Math.ceil(len / 160));
-        creditText.textContent = `Mensagem Simples (${credits} crédito${credits > 1 ? 's' : ''})`;
-      };
-      textareaMsg.oninput = updateCharAndCredits;
-      updateCharAndCredits();
-      document.getElementById('goc-sms-btn-enviar').onclick = () => {
-        const msgVal = textareaMsg.value;
-        const destVal = document.getElementById('goc-sms-destinatarios').value || '912345678';
-        closeModal();
-        cb360SmsCurrentSubType = 'enviadas';
-        const subTabs = document.querySelectorAll('.sms-sub-tab');
-        subTabs.forEach(t => {
-          if (t.dataset.sub === 'enviadas') {
-            t.style.background = '#6c757d';
-            t.style.color = '#fff';
-          } else {
-            t.style.background = 'transparent';
-            t.style.color = '#333';
-          }
-        });
-        const listContent = document.getElementById('sms-list-content');
-        if (listContent) {
-          const tableStyle = 'width:100%; border-collapse:collapse; font-size:12px; color:#333;';
-          const thStyle = 'background:#e0e0e0; color:#333; font-weight:600; padding:8px 10px; text-align:left; border-bottom:2px solid #ccc;';
-          const fakeItem = {id: Math.floor(Math.random() * 900) + 100, message: msgVal, recipient_name: 'Teste Fictício', recipient_number: destVal, sent_at: new Date().toISOString()};
-          const formattedDate = typeof formatTimeStampPT === 'function' ? formatTimeStampPT(fakeItem.sent_at) : fakeItem.sent_at;
-          const truncatedMsg = fakeItem.message.length > 40 ? fakeItem.message.substring(0, 40) + '...' : fakeItem.message;
-          const newRowHtml = `
-            <tr style="border-bottom:1px solid #eee;">
-              <td style="padding:8px 10px; color:#2b6ecb; font-weight:600;">${fakeItem.id}</td>
-              <td style="padding:8px 10px; color:#2b6ecb;">
-                <i class="fa-regular fa-square-check" style="color:#5cb85c; margin-right:4px;"></i>
-                <i class="fa-solid fa-comment-sms" style="color:#5bc0de; margin-right:6px;"></i>
-                  ${truncatedMsg}
-              </td>
-              <td style="padding:8px 10px;">${fakeItem.recipient_name}</td>
-              <td style="padding:8px 10px; color:#2b6ecb; font-weight:600;">${fakeItem.recipient_number}</td>
-              <td style="padding:8px 10px; color:#2b6ecb; font-weight:600;">${formattedDate}</td>
-            </tr>
-          `;
-          const existingTable = listContent.querySelector('table');
-          if (existingTable) {
-            const tbody = existingTable.querySelector('tbody');
-            if (tbody) {
-              tbody.insertAdjacentHTML('afterbegin', newRowHtml);
-            } else {
-              existingTable.insertAdjacentHTML('beforeend', newRowHtml);
-            }
-          } else {
-            listContent.innerHTML = `
-              <table style="${tableStyle}">
-                <thead>
-                  <tr>
-                    <th style="${thStyle} width:70px;">Id</th>
-                    <th style="${thStyle}">Mensagem</th>
-                    <th style="${thStyle} width:160px;">Destinatário</th>
-                    <th style="${thStyle} width:130px;">Número</th>
-                    <th style="${thStyle} width:150px;">Envio</th>
-                  </tr>
-                </thead>
-                <tbody>${newRowHtml}</tbody>
-              </table>
-            `;
-          }
-        }
-      };
     }

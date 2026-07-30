@@ -344,9 +344,15 @@
             [11, 29].forEach(row => sheet.getCell(`F${row}`).value = dayShift);
             [20, 38].forEach(row => sheet.getCell(`F${row}`).value = nightShift);
 
+             console.log("ECIN RECEBIDO:");
+console.log(JSON.stringify(ecin, null, 2));
+
             // Garante que se a equipa 2 não existir, fica com arrays estritamente vazios []
             const equipaA = (Array.isArray(ecin) ? ecin.find(e => e.team === 1) : null) || ecin[0] || {day: [], night: []};
             const equipaB = (Array.isArray(ecin) ? ecin.find(e => e.team === 2) : null) || ecin[1] || {day: [], night: []};
+
+             console.log("Equipa A:", equipaA.day.length, equipaA.night.length);
+console.log("Equipa B:", equipaB.day.length, equipaB.night.length);
             
             // Força arrays vazios se a equipa 2 estiver desativada/vazia
             const safeEquipaBDay = Array.isArray(equipaB.day) ? equipaB.day : [];

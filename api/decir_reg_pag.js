@@ -350,9 +350,9 @@
             [123, 177].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted);
             
             // Turnos de Dia (F)
-            [11, 27, 64, 80, 117, 171].forEach(row => sheet.getCell(`F${row}`).value = dayShift);
+            [11, 29, 64, 82, 117, 171].forEach(row => sheet.getCell(`F${row}`).value = dayShift);
             // Turnos de Noite (F)
-            [18, 36, 71, 89, 123, 177].forEach(row => sheet.getCell(`F${row}`).value = nightShift);
+            [20, 38, 73, 91, 123, 177].forEach(row => sheet.getCell(`F${row}`).value = nightShift);
 
             const equipaA = ecin[0] || {day: [], night: []}; // ECIN 01
             const equipaB = ecin[1] || {day: [], night: []}; // ECIN 02

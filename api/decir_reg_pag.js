@@ -361,8 +361,8 @@
             fillTeamFull(76, equipaA.night);
             fillTeamFull(85, safeEquipaBDay);
             fillTeamFull(94, safeEquipaBNight);
-            fillTeamFull(175, elacTeam.day);
-            fillTeamFull(181, elacTeam.night);
+            fillTeamFull(174, elacTeam.day);
+            fillTeamFull(180, elacTeam.night);
           } else if (mode === "1_ecin") {
             const date1Formatted = formatDate(date1);
             const date2Formatted = formatDate(date2);

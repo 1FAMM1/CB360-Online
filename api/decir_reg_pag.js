@@ -295,18 +295,24 @@
                              margins: {left: 0.5, right: 0.5, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3}};}
         // ---------- SIGNA ----------
         else if (data.type === 'signa') {
-          const { date1, date2, year, ecin, elac, mode } = data;
-          if (!date1 || !date2 || !year) return res.status(400).json({error: "Dados incompletos para signa"});
-          const templateUrl = mode === "1_ecin" ? TEMPLATE_SIGNA_ECIN_URL : mode === "brigada" ? TEMPLATE_SIGNA_BRIGADE_URL : TEMPLATE_SIGNA_ECINELAC_URL;
+          const { date1, date2, date, year, ecin, elac, mode } = data;
+          const isMultiTeam = Array.isArray(ecin);
+
+          if (!year) return res.status(400).json({error: "Dados incompletos para signa"});
+          if (!isMultiTeam && (!date1 || !date2)) return res.status(400).json({error: "Dados incompletos para signa"});
+          if (isMultiTeam && !date) return res.status(400).json({error: "Dados incompletos para signa"});
+
+          const templateUrl = mode === "1_ecin" ? TEMPLATE_SIGNA_ECIN_URL
+                             : (mode === "brigada" || mode === "2_ecin_1_elac") ? TEMPLATE_SIGNA_BRIGADE_URL
+                             : TEMPLATE_SIGNA_ECINELAC_URL;
           const templateBuffer = await downloadTemplate(templateUrl);
           await workbook.xlsx.load(templateBuffer);
           sheet = workbook.worksheets[0];
+
           const title = `Dispositivo Especial Combate Incêndios Rurais (DECIR ${year})`;
-          const period = `Período: ${formatDate(date1)}  a  ${formatDate(date2)}`;
-          const date1Formatted = formatDate(date1);
-          const date2Formatted = formatDate(date2);
           const dayShift   = "Turno: 08:00 Horas às 20:00 Horas";
           const nightShift = "Turno: 20:00 Horas às 08:00 Horas";
+
           const fillTeam = (startRow, members) => {
             if (!Array.isArray(members)) return;
             members.forEach((member, idx) => {
@@ -326,7 +332,33 @@
               if (fullName) sheet.getCell(`F${row}`).value = fullName;
             });
           };
-          if (mode === "brigada") {
+
+          if (mode === "2_ecin_1_elac") {
+            // ── Mesmo template/layout do antigo "brigada", agora alimentado pelo payload novo (array + 1 data) ──
+            const dateFormatted = formatDate(date);
+            const period = `Período: ${dateFormatted}`;
+            [7, 60, 113, 167].forEach(row => sheet.getCell(`B${row}`).value = title);
+            [9, 62, 115, 169].forEach(row => sheet.getCell(`B${row}`).value = period);
+            [11, 20, 29, 38, 64, 73, 82, 91, 117, 123, 171, 177].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted);
+            [11, 29, 64, 82, 117, 171].forEach(row => sheet.getCell(`F${row}`).value = dayShift);
+            [20, 38, 73, 91, 123, 177].forEach(row => sheet.getCell(`F${row}`).value = nightShift);
+
+            const equipaA = ecin[0] || {day: [], night: []};
+            const equipaB = ecin[1] || {day: [], night: []};
+            const elacTeam = elac[0] || {day: [], night: []};
+
+            fillTeam(14, equipaA.day); fillTeam(23, equipaA.night);
+            fillTeam(32, equipaB.day); fillTeam(41, equipaB.night);
+            fillTeam(120, elacTeam.day); fillTeam(126, elacTeam.night);
+
+            fillTeamFull(67, equipaA.day); fillTeamFull(76, equipaA.night);
+            fillTeamFull(85, equipaB.day); fillTeamFull(94, equipaB.night);
+            fillTeamFull(174, elacTeam.day); fillTeamFull(180, elacTeam.night);
+          } else if (mode === "brigada") {
+            // ── Caminho antigo (2 datas reais), mantido intacto para compatibilidade ──
+            const period = `Período: ${formatDate(date1)}  a  ${formatDate(date2)}`;
+            const date1Formatted = formatDate(date1);
+            const date2Formatted = formatDate(date2);
             [7, 60, 113, 167].forEach(row => sheet.getCell(`B${row}`).value = title);
             [9, 62, 115, 169].forEach(row => sheet.getCell(`B${row}`).value = period);
             [11, 20, 64, 73, 117, 123, 171, 177].forEach(row => sheet.getCell(`B${row}`).value = date1Formatted);

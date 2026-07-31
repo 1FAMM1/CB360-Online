@@ -90,7 +90,7 @@
         const workbook = new ExcelJS.Workbook();
         let sheet;
         // ---------- DAILY REGISTER ----------
-        if (data.type === 'reg') {
+        if (data.type === 'reg_decir') {
           const requiredFields = ['monthName','year','daysInMonth','weekdays','fixedRows','normalRows'];
           if (!requiredFields.every(f => f in data)) return res.status(400).json({error: "Dados incompletos para registo diário"});
           const templateBuffer = await downloadTemplate(TEMPLATE_REG_URL);
@@ -150,7 +150,7 @@
                              margins: {left: 0.3, right: 0.3, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3}};}
 
          // ---------- SBA / OPAT (mesmo template e células do 'reg') ----------
-        else if (data.type === 'sba_opat') {
+        else if (data.type === 'reg_sba_opat') {
           const requiredFields = ['monthName','year','daysInMonth','weekdays','fixedRows','normalRows'];
           if (!requiredFields.every(f => f in data)) return res.status(400).json({error: "Dados incompletos para registo SBA/OPAT"});
           const templateBuffer = await downloadTemplate(TEMPLATE_REG_URL);
@@ -209,7 +209,7 @@
           sheet.pageSetup = {orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
                              margins: {left: 0.3, right: 0.3, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3}};}   
         // ---------- PAYMENTS ----------
-        else if (data.type === 'pag') {
+        else if (data.type === 'pag_decir') {
           if (!Array.isArray(data.rows)) return res.status(400).json({error: "Rows inválidas para pagamentos"});
           const templateBuffer = await downloadTemplate(TEMPLATE_PAG_URL);
           await workbook.xlsx.load(templateBuffer);
@@ -234,7 +234,7 @@
           sheet.pageSetup = {orientation: "portrait", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
                              margins: {left: 0.5, right: 0.5, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3}};}
         // ---------- CODE A33 ----------
-        else if (data.type === 'code_a33') {
+        else if (data.type === 'code_a33_decir') {
           if (!Array.isArray(data.rows)) return res.status(400).json({error: "Rows inválidas para code_a33"});
           const templateBuffer = await downloadTemplate(TEMPLATE_CODE_A33_URL);
           await workbook.xlsx.load(templateBuffer);
@@ -260,7 +260,7 @@
           sheet.pageSetup = {orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
                              margins: {left: 0.3, right: 0.3, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3}};}
         // ---------- ANEPC ----------
-        else if (data.type === "anepc") {
+        else if (data.type === "anepc_decir") {
           const buffer = await downloadTemplate(TEMPLATE_ANEPC_URL);
           await workbook.xlsx.load(buffer);
           sheet = workbook.worksheets[0];

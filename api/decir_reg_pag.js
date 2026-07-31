@@ -148,6 +148,66 @@
           }
           sheet.pageSetup = {orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
                              margins: {left: 0.3, right: 0.3, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3}};}
+
+         // ---------- SBA / OPAT (mesmo template e células do 'reg') ----------
+        else if (data.type === 'sba_opat') {
+          const requiredFields = ['monthName','year','daysInMonth','weekdays','fixedRows','normalRows'];
+          if (!requiredFields.every(f => f in data)) return res.status(400).json({error: "Dados incompletos para registo SBA/OPAT"});
+          const templateBuffer = await downloadTemplate(TEMPLATE_REG_URL);
+          await workbook.xlsx.load(templateBuffer);
+          sheet = workbook.worksheets[0];
+          sheet.getCell("B7").value = `Registo Diário de Elementos SBA \\ OPAT - ${data.monthName} ${data.year}`;
+          const rowWeekdays = sheet.getRow(9);
+          const rowNumbers = sheet.getRow(10);
+          for (let d = 1; d <= data.daysInMonth; d++) {
+            const col = 6 + (d - 1);
+            rowWeekdays.getCell(col).value = data.weekdays[d - 1] || '';
+            rowNumbers.getCell(col).value = d;
+          }
+          rowWeekdays.commit();
+          rowNumbers.commit();
+          if (Array.isArray(data.holidayDays)) {
+            const rowHolidays = sheet.getRow(8);
+            data.holidayDays.forEach(day => {rowHolidays.getCell(6 + (day - 1)).value = 'FR';});
+            rowHolidays.commit();
+          }
+          const allPersons = {};
+          (data.fixedRows || []).forEach(p => allPersons[p.ni] = {...p, days: p.days});
+          (data.normalRows || []).forEach(p => {
+            if (!allPersons[p.ni]) allPersons[p.ni] = { ...p, days: {} };
+            Object.keys(p.days).forEach(d => {
+              if (!allPersons[p.ni].days[d]) allPersons[p.ni].days[d] = {};
+              allPersons[p.ni].days[d].N = p.days[d].N || '';
+            });
+          });
+          let currentRow = 11;
+          Object.values(allPersons).forEach(person => {
+            const rowD = sheet.getRow(currentRow);
+            rowD.getCell(2).value = String(person.ni).padStart(3,"0");
+            rowD.getCell(3).value = person.nome;
+            for (let d = 1; d <= data.daysInMonth; d++) rowD.getCell(6 + (d - 1)).value = person.days[d]?.D || '';
+            rowD.getCell(38).value = person.sbas || '';
+            rowD.getCell(39).value = person.opat || '';
+            rowD.getCell(40).value = person.global || '';
+            rowD.commit();
+            const rowN = sheet.getRow(currentRow + 1);
+            rowN.getCell(3).value = person.nome;
+            for (let d = 1; d <= data.daysInMonth; d++) rowN.getCell(6 + (d - 1)).value = person.days[d]?.N || '';
+            rowN.commit();
+            currentRow += 2;
+          });
+          for (let r = 11; r <= 214; r++) {
+            const cellAL = sheet.getRow(r).getCell(38);
+            const cellAM = sheet.getRow(r).getCell(39);
+            const cellAN = sheet.getRow(r).getCell(40);
+            if (!cellAL.value || !cellAM.value || !cellAN.value || Number(cellAL.value)===0 || Number(cellAM.value)===0 || Number(cellAN.value)===0) sheet.getRow(r).hidden = true;
+          }
+          for (let c = 6; c <= 36; c++) {
+            const cell = sheet.getRow(10).getCell(c);
+            if (!cell.value || cell.value.toString().trim() === '') sheet.getColumn(c).hidden = true;
+          }
+          sheet.pageSetup = {orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
+                             margins: {left: 0.3, right: 0.3, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3}};}   
         // ---------- PAYMENTS ----------
         else if (data.type === 'pag') {
           if (!Array.isArray(data.rows)) return res.status(400).json({error: "Rows inválidas para pagamentos"});

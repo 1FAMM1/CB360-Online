@@ -269,7 +269,7 @@
         modal.classList.remove('show');
       }
     }
-    async function updateEquipasValues() {
+    async function updateDecirTeamsValues() {
       const ecinQty = parseInt(document.getElementById('ecin_value').value, 10) || 0;
       const elacQty = parseInt(document.getElementById('elac_value').value, 10) || 0;
       const opatRaw = document.getElementById('opat_equipas_value').value;
@@ -375,23 +375,11 @@
         const data = await supabaseFetch(`reg_elems?select=n_int,abv_name,patent_abv,MP,elem_state,inactive_from&corp_oper_nr=eq.${getCorpId()}`);
         return data
           .filter(item => {
-          const n = parseInt(item.n_int, 10);
-          if (n <= 8) return false;
-          if (n >= 400 && n < 700) return false;
-          if (n >= 800) return false;
           if (!item.inactive_from && item.elem_state) return true;
           if (!item.inactive_from) return false;
           return new Date(item.inactive_from) > firstOfMonth;
         })
-          .sort((a, b) => {
-          const n1 = parseInt(a.n_int, 10);
-          const n2 = parseInt(b.n_int, 10);
-          const isDecir1 = n1 >= 700 && n1 < 800;
-          const isDecir2 = n2 >= 700 && n2 < 800;
-          if (isDecir1 && !isDecir2) return -1;
-          if (!isDecir1 && isDecir2) return 1;
-          return n1 - n2;
-        });
+          .sort((a, b) => parseInt(a.n_int, 10) - parseInt(b.n_int, 10));
       } catch {
         showPopup('popup-danger', "Erro ao carregar dados dos elementos.");
         return [];
@@ -403,23 +391,11 @@
         const data = await supabaseFetch(`reg_elems?select=${select},elem_state,inactive_from&corp_oper_nr=eq.${getCorpId()}`);
         return data
           .filter(item => {
-          const n = parseInt(item.n_int, 10);
-          if (n <= 8) return false;
-          if (n >= 400 && n < 700) return false;
-          if (n >= 800) return false;
           if (!item.inactive_from && item.elem_state) return true;
           if (!item.inactive_from) return false;
           return new Date(item.inactive_from) > firstOfMonth;
         })
-          .sort((a, b) => {
-          const n1 = parseInt(a.n_int, 10);
-          const n2 = parseInt(b.n_int, 10);
-          const isDecir1 = n1 >= 700 && n1 < 800;
-          const isDecir2 = n2 >= 700 && n2 < 800;
-          if (isDecir1 && !isDecir2) return -1;
-          if (!isDecir1 && isDecir2) return 1;
-          return n1 - n2;
-        });
+          .sort((a, b) => parseInt(a.n_int, 10) - parseInt(b.n_int, 10));
       } catch {
         showPopup('popup-danger', "Erro ao carregar lista de elementos.");
         return [];
@@ -486,7 +462,7 @@
           let marked = false;
           for (let d = 1; d <= 31; d++) {
             const cell = cells[turnoIndex + d];
-            if (cell && map[`${n_int}_${turno}_${d}`]) {cell.textContent = "X"; marked = true;}
+            if (cell && map[`${n_int}_${turno}_${d}`]) {cell.textContent = "X"; cell.refreshMark?.(); marked = true;}
           }
           if (marked) rowsToUpdate.add(row);
         });
@@ -1135,6 +1111,20 @@
     async function createDecirRegTable(containerId, year, month, data) {
       const container = $(containerId);
       if (!container) return;
+      if (!document.getElementById("decir-reg-hover-style")) {
+        const hoverStyle = document.createElement("style");
+        hoverStyle.id = "decir-reg-hover-style";
+        hoverStyle.textContent = `
+          .dec-reg-month-table tbody tr.dec-reg-active-elem td {
+            filter: brightness(0.75);
+          }
+          .dec-reg-month-table td[contenteditable="true"]:focus {
+            outline: 2px solid #5b8def;
+            outline-offset: -2px;
+          }
+        `;
+        document.head.appendChild(hoverStyle);
+      }
       container.innerHTML = "";
       const daysInMonth = new Date(year, month, 0).getDate();
       container.appendChild(makeTitle(`REGISTO DECIR - ${MONTH_NAMES_UPPER[month-1]} ${year}`));
@@ -1178,6 +1168,10 @@
       const tbody = document.createElement("tbody");
       table.appendChild(tbody);
       wrapper.appendChild(table);
+      const highlightElementRows = nInt => {
+        tbody.querySelectorAll("tr.dec-reg-active-elem").forEach(tr => tr.classList.remove("dec-reg-active-elem"));
+        tbody.querySelectorAll(`tr[data-nint="${nInt}"]`).forEach(tr => tr.classList.add("dec-reg-active-elem"));
+      };
       const holidays = getPortugalHolidays(year);
       updateDECIRDayHeaders(table, year, month, daysInMonth, holidays);
       const getRows = () => Array.from(tbody.querySelectorAll("tr"));
@@ -1215,16 +1209,26 @@
         td.className = `day-cell-${dayNum}`;
         td.contentEditable = true;
         td.style.cssText = COMMON_TD_STYLE;
-        if (trRef.querySelector("td")?.textContent.trim()==="N") td.style.borderBottom = "2px solid #ccc";
+        if (trRef.querySelector("td")?.textContent.trim()==="N") td.style.borderBottom = "2px solid #aaa";
         const date = new Date(year, month - 1, dayNum);
         const holiday = holidays.find(h => h.date.getDate() === dayNum && h.date.getMonth() === month - 1);
         const isWeekend = date.getDay() === 0 || date.getDay() === 6;
         const setDayCellBg = () => {
-          if (holiday) {td.style.background = holiday.optional ? "#2ecc71" : "#ffcccc"; td.style.color = holiday.optional ? "#fff" : "#000";}
-          else if (isWeekend) {td.style.background = WEEKEND_COLOR; td.style.color = "#000";}
-          else {td.style.background = ""; td.style.color = "";}
+          const isMarked = td.textContent.trim().toUpperCase() === "X";
+          td.style.fontWeight = isMarked ? "bold" : "normal";
+          if (isMarked) {
+            td.style.background = holiday ? (holiday.optional ? "#1e7d34" : "#c94040") : isWeekend ? "#8a9aa8" : "#c8c8c8";
+            td.style.color = "#000";
+          } else if (holiday) {
+            td.style.background = holiday.optional ? "#2ecc71" : "#ffcccc"; td.style.color = holiday.optional ? "#fff" : "#000";
+          } else if (isWeekend) {
+            td.style.background = WEEKEND_COLOR; td.style.color = "#000";
+          } else {
+            td.style.background = "#ddd"; td.style.color = "";
+          }
         };
         setDayCellBg();
+        td.refreshMark = setDayCellBg;
         td.addEventListener("input", () => {
           let v = td.textContent.toUpperCase().trim();
           v = v.length>1 ? v[0] : v;
@@ -1246,7 +1250,10 @@
             if (next) focusCell(next);
           }
         });
-        td.addEventListener("focus", () => focusCell(td));
+        td.addEventListener("focus", () => {
+          focusCell(td);
+          highlightElementRows(trRef.dataset.nint);
+        });
         return td;
       };
       /* rows */
@@ -1259,28 +1266,28 @@
             [String(nInt).padStart(3,"0"), item.abv_name||"", item.patent_abv||""].forEach(txt => {
               const td = document.createElement("td");
               td.textContent = txt;
-              td.style.cssText = COMMON_TD_STYLE + "border-bottom:2px solid #ccc;";
+              td.style.cssText = COMMON_TD_STYLE + "border-bottom:2px solid #aaa; background:#fff;";
               td.rowSpan = 2;
               tr.appendChild(td);
             });
           }
           const tdTurno = document.createElement("td");
           tdTurno.textContent = turno;
-          tdTurno.style.cssText = COMMON_TD_STYLE + `font-weight: bold; text-align: center; ${turno==="N"?"border-bottom: 2px solid #ccc;" : ""}`;
+          tdTurno.style.cssText = COMMON_TD_STYLE + `font-weight: bold; text-align: center; background:#fff; ${turno==="N"?"border-bottom: 2px solid #aaa;" : ""}`;
           tr.appendChild(tdTurno);
           for (let d=1; d<=daysInMonth; d++) tr.appendChild(createDayCell(d, tr));
           const tdTotal = document.createElement("td");
           tdTotal.className = "total-cell";
           tdTotal.textContent = "0";
-          tdTotal.style.cssText = COMMON_TDTOTAL_STYLE + (turno==="N"?"border-bottom:2px solid #ccc;":"");
+          tdTotal.style.cssText = COMMON_TDTOTAL_STYLE + "background:#fff;" + (turno==="N"?"border-bottom:2px solid #aaa;":"");
           tdTotal.style.setProperty("font-weight","bold","important");
-          if (turno==="N") tdTotal.style.setProperty("border-bottom","2px solid #ccc","important");
+          if (turno==="N") tdTotal.style.setProperty("border-bottom","2px solid #aaa","important");
           tr.appendChild(tdTotal);
           if (tIdx===0) {
             [["0.00"],["0.00"],["0.00"]].forEach(([txt]) => {
               const td = document.createElement("td");
               td.rowSpan = 2; td.textContent = txt;
-              td.style.cssText = COMMON_TDTOTAL_STYLE + "text-align:center;border-bottom:2px solid #ccc;";
+              td.style.cssText = COMMON_TDTOTAL_STYLE + "text-align:center;border-bottom:2px solid #aaa; background:#fff;";
               tr.appendChild(td);
             });
           }
@@ -2897,7 +2904,10 @@ async function saveDecirFull() {
         .signa-clear-btn:hover {color: #c62828;}
         .signa-sidebar-title {background: #333; color: #fff; font-weight: bold; font-size: 12px; padding: 6px 10px; border-radius: 4px 4px 0 0;}
         .signa-sidebar-day-title {font-size: 11px; font-weight: bold; padding: 5px 8px; background: #131a69; color: #fff; border-bottom: 1px solid #0a0f40;}
-        .signa-sidebar-group-title {font-size: 10px; font-weight: bold; padding: 3px 8px; background: #f0f0f0; color: #555; border-bottom: 1px solid #ddd;}        
+        .signa-sidebar-group-title {font-size: 10px; font-weight: bold; padding: 3px 8px; background: #f0f0f0; color: #555; border-bottom: 1px solid #ddd;}
+        .signa-sidebar-group-title.group-ed {background: rgba(251, 192, 45, 0.55); color: #4a3800;}
+        .signa-sidebar-group-title.group-en {background: rgba(13, 44, 84, 0.75); color: #fff;}
+        .signa-sidebar-group-title.group-et {background: rgba(27, 94, 32, 0.75); color: #fff;}
         .signa-sidebar-list {border: 1px solid #ddd; border-top: none; border-radius: 0 0 4px 4px; height: calc(100% - 35px); max-height: 550px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #cbd5e1 #f1f5f9;}
         .signa-sidebar-list::-webkit-scrollbar {width: 6px;}
         .signa-sidebar-list::-webkit-scrollbar-track {background: #f1f5f9; border-radius: 0 0 4px 0;}
@@ -3377,10 +3387,60 @@ async function saveDecirFull() {
         });
       });
       // ── Carregar elementos ──
+      // ── Funções partilhadas de renderização da sidebar (usadas nos 2 modos de carregamento) ──
+      function renderDayGroups(dataForDay, elemsMap, dayKey, dayTitleText) {
+        if (dayTitleText) {
+          const dayTitle = document.createElement("div");
+          dayTitle.className = "signa-sidebar-day-title";
+          dayTitle.textContent = dayTitleText;
+          sidebarList.appendChild(dayTitle);
+        }
+        const groups = [
+          {label: "ED (Turno Dia)", cls: "group-ed", vt: "ED"},
+          {label: "EN (Turno Noite)", cls: "group-en", vt: "EN"},
+          {label: "ET (Dia + Noite)", cls: "group-et", vt: "ET"},
+        ];
+        groups.forEach(({label, cls, vt}) => {
+          const items = dataForDay.filter(i => i.value === vt)
+            .map(i => ({elem: elemsMap[String(i.n_int).padStart(3,"0")], vt}))
+            .filter(i => i.elem);
+          if (!items.length) return;
+          const grpTitle = document.createElement("div");
+          grpTitle.className = `signa-sidebar-group-title ${cls}`;
+          grpTitle.textContent = label;
+          sidebarList.appendChild(grpTitle);
+          items.sort((a,b) => parseInt(a.elem.n_int,10) - parseInt(b.elem.n_int,10))
+            .forEach(({elem, vt}) => sidebarList.appendChild(makeSidebarItem(elem, vt, dayKey)));
+        });
+      }
+      function markAlreadyFilledAsUsed(checkDay) {
+        container.querySelectorAll(".signa-drop-zone.filled").forEach(zone => {
+          const nint = parseInt(zone.dataset.nint, 10);
+          const vt = zone.dataset.valueType;
+          const dy = zone.dataset.day;
+          sidebarList.querySelectorAll(".signa-sidebar-item").forEach(item => {
+            const nintMatches = parseInt(item.dataset.nint, 10) === nint;
+            const vtMatches = item.dataset.valueType === vt;
+            const dayMatches = checkDay ? item.dataset.day === dy : true;
+            if (nintMatches && vtMatches && dayMatches) {
+              if (vt === "ET") {
+                if (signaCheckETPlaced(container, nint, checkDay ? dy : null)) item.classList.add("used");
+              } else {
+                item.classList.add("used");
+              }
+            }
+          });
+        });
+      }
+      // ── Carregar elementos ──
+      function formatDatePT(dateStr) {
+        if (!dateStr) return "";
+        const [y, m, d] = dateStr.split("-");
+        return `${d}/${m}/${y}`;
+      }
       loadBtn.addEventListener("click", async () => {
         const corp = getCorpId();
         if (!isMultiTeam) {
-          // ── Caminho antigo: 2 datas ──
           const date1 = inp1.value;
           const date2 = inp2.value;
           buildSignaTables();
@@ -3397,65 +3457,12 @@ async function saveDecirFull() {
               sidebarList.innerHTML = `<div style="padding:12px;font-size:11px;color:#999;text-align:center;">Nenhum elemento encontrado.</div>`;
               return;
             }
-            const formatDatePt = (dateStr) => {
-              if (!dateStr) return "";
-              const [y, m, d] = dateStr.split("-");
-              return `${d}/${m}/${y}`;
-            };
             const elemsData = await supabaseFetch(`reg_elems?n_int=in.(${allNInts.join(",")})&corp_oper_nr=eq.${corp}&select=n_int,abv_name,patent,n_file,MP,full_name`);
             const elemsMap = Object.fromEntries(elemsData.map(e => [String(e.n_int).padStart(3,"0"), e]));
             sidebarList.innerHTML = "";
-            const day1Title = document.createElement("div");
-            day1Title.className = "signa-sidebar-day-title";            
-            day1Title.textContent = `📅 Dia: 1 — ${formatDatePt(date1)}`;
-            sidebarList.appendChild(day1Title);
-            const day1Groups = {
-              "ED (Turno Dia)": data1.filter(i => i.value === "ED").map(i => ({elem: elemsMap[String(i.n_int).padStart(3,"0")], vt: "ED"})).filter(i => i.elem),
-              "EN (Turno Noite)": data1.filter(i => i.value === "EN").map(i => ({elem: elemsMap[String(i.n_int).padStart(3,"0")], vt: "EN"})).filter(i => i.elem),
-              "ET (Dia + Noite)": data1.filter(i => i.value === "ET").map(i => ({elem: elemsMap[String(i.n_int).padStart(3,"0")], vt: "ET"})).filter(i => i.elem),
-            };
-            Object.entries(day1Groups).forEach(([groupName, items]) => {
-              if (!items.length) return;
-              const grpTitle = document.createElement("div");
-              grpTitle.className = "signa-sidebar-group-title";
-              grpTitle.textContent = groupName;
-              sidebarList.appendChild(grpTitle);
-              items.sort((a,b) => parseInt(a.elem.n_int,10) - parseInt(b.elem.n_int,10))
-                .forEach(({elem, vt}) => sidebarList.appendChild(makeSidebarItem(elem, vt, "1")));
-            });
-            if (!isSameDay) {
-              const day2Title = document.createElement("div");
-              day2Title.className = "signa-sidebar-day-title";
-              day2Title.textContent = `📅 Dia: 2 — ${formatDatePt(date2)}`;
-              sidebarList.appendChild(day2Title);
-              const day2Groups = {
-                "ED (Turno Dia)":   data2.filter(i => i.value === "ED").map(i => ({elem: elemsMap[String(i.n_int).padStart(3,"0")], vt: "ED"})).filter(i => i.elem),
-                "EN (Turno Noite)": data2.filter(i => i.value === "EN").map(i => ({elem: elemsMap[String(i.n_int).padStart(3,"0")], vt: "EN"})).filter(i => i.elem),
-                "ET (Dia + Noite)": data2.filter(i => i.value === "ET").map(i => ({elem: elemsMap[String(i.n_int).padStart(3,"0")], vt: "ET"})).filter(i => i.elem),
-              };
-              Object.entries(day2Groups).forEach(([groupName, items]) => {
-                if (!items.length) return;
-                const grpTitle = document.createElement("div");
-                grpTitle.className = "signa-sidebar-group-title";
-                grpTitle.textContent = groupName;
-                sidebarList.appendChild(grpTitle);
-                items.sort((a,b) => parseInt(a.elem.n_int,10) - parseInt(b.elem.n_int,10))
-                  .forEach(({elem, vt}) => sidebarList.appendChild(makeSidebarItem(elem, vt, "2")));
-              });
-            }
-            setTimeout(() => {
-              container.querySelectorAll(".signa-drop-zone.filled").forEach(zone => {
-                const nint = parseInt(zone.dataset.nint, 10);
-                const vt = zone.dataset.valueType;
-                const dy = zone.dataset.day;
-                sidebarList.querySelectorAll(".signa-sidebar-item").forEach(item => {
-                  if (parseInt(item.dataset.nint, 10) === nint && item.dataset.valueType === vt && item.dataset.day === dy) {
-                    if (vt === "ET") {if (signaCheckETPlaced(container, nint, dy)) item.classList.add("used");}
-                    else item.classList.add("used");
-                  }
-                });
-              });
-            }, 50);
+            renderDayGroups(data1, elemsMap, "1", `📅 Dia: 1 — ${formatDatePT(inp1.value)}`);
+            if (!isSameDay) renderDayGroups(data2, elemsMap, "2", `📅 Dia: 2 — ${formatDatePT(inp2.value)}`);
+            setTimeout(() => markAlreadyFilledAsUsed(true), 50);
           } catch(err) {
             console.error(err);
             sidebarList.innerHTML = `<div style="padding:12px;font-size:11px;color:#c62828;text-align:center;">Erro ao carregar elementos.</div>`;
@@ -3477,36 +3484,8 @@ async function saveDecirFull() {
           const elemsData = await supabaseFetch(`reg_elems?n_int=in.(${allNInts.join(",")})&corp_oper_nr=eq.${corp}&select=n_int,abv_name,patent,n_file,MP,full_name`);
           const elemsMap = Object.fromEntries(elemsData.map(e => [String(e.n_int).padStart(3,"0"), e]));
           sidebarList.innerHTML = "";
-          const dayTitle = document.createElement("div");
-          dayTitle.className = "signa-sidebar-day-title";
-          dayTitle.textContent = `📅 ${inp1.value}`;
-          sidebarList.appendChild(dayTitle);
-          const groups = {
-            "ED (Turno Dia)": data1.filter(i => i.value === "ED").map(i => ({elem: elemsMap[String(i.n_int).padStart(3,"0")], vt: "ED"})).filter(i => i.elem),
-            "EN (Turno Noite)": data1.filter(i => i.value === "EN").map(i => ({elem: elemsMap[String(i.n_int).padStart(3,"0")], vt: "EN"})).filter(i => i.elem),
-            "ET (Dia + Noite)": data1.filter(i => i.value === "ET").map(i => ({elem: elemsMap[String(i.n_int).padStart(3,"0")], vt: "ET"})).filter(i => i.elem),
-          };
-          Object.entries(groups).forEach(([groupName, items]) => {
-            if (!items.length) return;
-            const grpTitle = document.createElement("div");
-            grpTitle.className = "signa-sidebar-group-title";
-            grpTitle.textContent = groupName;
-            sidebarList.appendChild(grpTitle);
-            items.sort((a,b) => parseInt(a.elem.n_int,10) - parseInt(b.elem.n_int,10))
-              .forEach(({elem, vt}) => sidebarList.appendChild(makeSidebarItem(elem, vt, "1")));
-          });
-          setTimeout(() => {
-            container.querySelectorAll(".signa-drop-zone.filled").forEach(zone => {
-              const nint = parseInt(zone.dataset.nint, 10);
-              const vt = zone.dataset.valueType;
-              sidebarList.querySelectorAll(".signa-sidebar-item").forEach(item => {
-                if (parseInt(item.dataset.nint, 10) === nint && item.dataset.valueType === vt) {
-                  if (vt === "ET") {if (signaCheckETPlaced(container, nint, null)) item.classList.add("used");}
-                  else item.classList.add("used");
-                }
-              });
-            });
-          }, 50);
+          renderDayGroups(data1, elemsMap, "1", `📅 ${formatDatePT(inp1.value)}`);
+          setTimeout(() => markAlreadyFilledAsUsed(false), 50);
         } catch(err) {
           console.error(err);
           sidebarList.innerHTML = `<div style="padding:12px;font-size:11px;color:#c62828;text-align:center;">Erro ao carregar elementos.</div>`;
@@ -3514,7 +3493,7 @@ async function saveDecirFull() {
       });
       const options = document.getElementById("decir-signa-options");
       if (options) options.style.display = "flex";
-    }    
+    }
     const emitSigna = async (format) => {
       const container = document.querySelector("#decir-reg-signa .major-card-body");
       const mode = container?.dataset.mode || "1_ecin_1_elac";

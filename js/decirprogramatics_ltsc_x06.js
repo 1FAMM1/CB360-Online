@@ -435,11 +435,11 @@
     (function() {
       async function loadDecirSavedData(year, month) {
         try {
-          const url = `${window.SUPABASE_URL||SUPABASE_URL}/rest/v1/decir_reg_pag?select=n_int,day,turno&year=eq.${year}&month=eq.${month}&corp_oper_nr=eq.${getCorpId()}`;
+          const url = `${window.SUPABASE_URL||SUPABASE_URL}/rest/v1/decir_reg_pag_ecin?select=n_int,day,shift&year=eq.${year}&month=eq.${month}&corp_oper_nr=eq.${getCorpId()}`;
           const res = await fetch(url, {headers: window.getSupabaseHeaders ? window.getSupabaseHeaders() : getSupabaseHeaders()});
           if (!res.ok) return {};
           const data = await res.json();
-          return data.reduce((map,item) => {map[`${item.n_int}_${item.turno}_${item.day}`]="X"; return map;}, {});
+          return data.reduce((map,item) => {map[`${item.n_int}_${item.shift}_${item.day}`]="X"; return map;}, {});
         } catch {
           return {};
         }
@@ -1127,7 +1127,7 @@
       }
       container.innerHTML = "";
       const daysInMonth = new Date(year, month, 0).getDate();
-      container.appendChild(makeTitle(`REGISTO DECIR - ${MONTH_NAMES_UPPER[month-1]} ${year}`));
+      container.appendChild(makeTitle(`REGISTO TURNOS ECIN POR ELEMENTO - ${MONTH_NAMES_UPPER[month-1]} ${year}`));
       const wrapper = decirMakeWrapper(container);
       const table = document.createElement("table");
       table.className = "dec-reg-month-table";
@@ -1496,7 +1496,7 @@
       const confirmed = await showPopupConfirm(`Tem certeza que quer limpar os dados de ${monthBtn.textContent.trim()} de ${year}?`);
       if (!confirmed) return;
       try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/decir_reg_pag?year=eq.${year}&month=eq.${month}`, {method:"DELETE", headers:getSupabaseHeaders()});
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/decir_reg_pag_ecin?year=eq.${year}&month=eq.${month}`, {method:"DELETE", headers:getSupabaseHeaders()});
         if (!res.ok) throw new Error(await res.text()||"Erro ao apagar dados");
         showPopup('popup-success', `Dados de ${monthBtn.textContent.trim()} de ${year} apagados com sucesso!`);
         const data = await loadDecirRegData();
@@ -1506,8 +1506,8 @@
         console.error(err); showPopup('popup-danger', "❌ Erro ao apagar: "+err.message);
       }
     }
-/* ─── GUARDAR REGISTO (DECIR) ────────────────────────────── */
-async function saveDecirFull() {
+    /* ─── GUARDAR REGISTO (DECIR) ────────────────────────────── */
+    async function saveDecirFull() {
       const table = document.querySelector("#table-container-dec-reg table tbody");
       if (!table) return showPopup('popup-danger', "Nenhuma tabela aberta.");
       const corpOperNr = getCorpId() ? String(getCorpId()).trim().padStart(4, "0") : null;
@@ -1528,27 +1528,27 @@ async function saveDecirFull() {
           if (nameRaw === "X") nameRaw = "";
           const abv_name = nameRaw || last_abv_name;
           if (!n_int || !abv_name) return;
-          last_n_int = n_int; if (nameRaw) last_abv_name = nameRaw;
+          last_n_int = n_int; if (nameRaw) last_abv_name = nameRaw;          
           const turnoCell = cells.find(td => ["D", "N"].includes((td.textContent || "").trim()));
           if (!turnoCell) return;
-          const turno = turnoCell.textContent.trim();
+          const shift = turnoCell.textContent.trim();          
           cells.filter(td => td.isContentEditable).forEach((cell, idx) => {
             if (cell.textContent.trim().toUpperCase() === "X")
-              payload.push({n_int, abv_name, year, month, day: idx + 1, turno, corp_oper_nr: corpOperNr});
+              payload.push({n_int, abv_name, year, month, day: idx + 1, shift, corp_oper_nr: corpOperNr});
           });
-        });
-        await fetch(`${SUPABASE_URL}/rest/v1/decir_reg_pag?year=eq.${year}&month=eq.${month}&corp_oper_nr=eq.${corpOperNr}`, {
+        });        
+        await fetch(`${SUPABASE_URL}/rest/v1/decir_reg_pag_ecin?year=eq.${year}&month=eq.${month}&corp_oper_nr=eq.${corpOperNr}`, {
           method: "DELETE", 
           headers: getSupabaseHeaders()
-        }).then(r => { if (!r.ok) throw new Error("Erro ao limpar registos antigos"); });
+        }).then(r => { if (!r.ok) throw new Error("Erro ao limpar registos antigos"); });        
         if (payload.length > 0) {
-          const r = await fetch(`${SUPABASE_URL}/rest/v1/decir_reg_pag`, {
+          const r = await fetch(`${SUPABASE_URL}/rest/v1/decir_reg_pag_ecin`, {
             method: "POST",
             headers: { ...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
             body: JSON.stringify(payload)
           });
           if (!r.ok) throw new Error(await r.text() || "Erro desconhecido ao gravar");
-        }
+        }        
         try {
           const loggedNInt = sessionStorage.getItem("currentNInt") || "205";
           if (loggedNInt) {

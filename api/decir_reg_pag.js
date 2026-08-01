@@ -96,7 +96,7 @@
           const templateBuffer = await downloadTemplate(TEMPLATE_REG_URL);
           await workbook.xlsx.load(templateBuffer);
           sheet = workbook.worksheets[0];
-          sheet.getCell("B7").value = `Registo Diário de Elementos - ${data.monthName} ${data.year}`;
+          sheet.getCell("B7").value = `Registo Diário de Elementos DECIR - ${data.monthName} ${data.year}`;
           const rowWeekdays = sheet.getRow(9);
           const rowNumbers = sheet.getRow(10);
           for (let d = 1; d <= data.daysInMonth; d++) {

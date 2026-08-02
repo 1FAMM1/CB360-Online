@@ -19,8 +19,7 @@
     const TEMPLATE_REG_SBAOPAT_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/sbaopat_reg_template.xlsx";
     const TEMPLATE_PAG_SBAOPAT_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/sbaopat_pag_template.xlsx";
     const TEMPLATE_CODE_A33_SBAOPAT_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/coda33_sbaopat_template.xlsx";
-
-
+    const TEMPLATE_ANEPC_A33_SBAOPAT_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/anepc_sbaopat_template.xlsx";
     const TEMPLATE_OCORR_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/reg_ocorr_decir.xlsx";
     const TEMPLATE_REF_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/reg_ref_decir.xlsx";
     const TEMPLATE_SIGNA_ECIN_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/signa_decir_ecin_template.xlsx";
@@ -94,7 +93,7 @@
         const format = data.format || "xlsx";
         const workbook = new ExcelJS.Workbook();
         let sheet;
-        // ---------- DAILY REGISTER ----------
+        // ---------- DAILY REGISTER ECINS ----------
         if (data.type === 'reg_decir') {
           const requiredFields = ['monthName','year','daysInMonth','weekdays','fixedRows','normalRows'];
           if (!requiredFields.every(f => f in data)) return res.status(400).json({error: "Dados incompletos para registo diário"});
@@ -153,8 +152,7 @@
           }
           sheet.pageSetup = {orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
                              margins: {left: 0.3, right: 0.3, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3}};}
-
-         // ---------- SBA / OPAT (mesmo template e células do 'reg') ----------
+        // ---------- DAILY REGISTER SBAS & OPATS ----------
         else if (data.type === 'reg_sba_opat') {
           const requiredFields = ['monthName','year','daysInMonth','weekdays','fixedRows','normalRows'];
           if (!requiredFields.every(f => f in data)) return res.status(400).json({error: "Dados incompletos para registo SBA/OPAT"});
@@ -213,7 +211,7 @@
           }
           sheet.pageSetup = {orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
                              margins: {left: 0.3, right: 0.3, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3}};}   
-        // ---------- PAYMENTS ----------
+        // ---------- PAYMENTS ECINS ----------
         else if (data.type === 'pag_decir') {
           if (!Array.isArray(data.rows)) return res.status(400).json({error: "Rows inválidas para pagamentos"});
           const templateBuffer = await downloadTemplate(TEMPLATE_PAG_URL);
@@ -240,38 +238,34 @@
                              margins: {left: 0.5, right: 0.5, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3}};}
 
 
-        // ---------- PAYMENTS SBA/OPAT ----------
-else if (data.type === 'pag_sba_opat') {
-  if (!Array.isArray(data.rows)) return res.status(400).json({error: "Rows inválidas para pagamentos SBA/OPAT"});
-  const templateBuffer = await downloadTemplate(TEMPLATE_PAG_SBAOPAT_URL);
-  await workbook.xlsx.load(templateBuffer);
-  sheet = workbook.worksheets[0];
-  sheet.getCell("B7").value = `PAGAMENTOS SBA/OPAT - ${data.monthName} ${data.year}`;
-  data.rows.forEach((row, idx) => {
-    const r = sheet.getRow(10 + idx);
-    r.getCell(2).value = String(row.ni).padStart(3,'0');
-    r.getCell(3).value = row.nome || '';
-    r.getCell(4).value = row.nif || '';
-    r.getCell(5).value = row.nib || '';
-    r.getCell(6).value = row.qtdSbas || 0;
-    r.getCell(7).value = row.qtdOpat || 0;
-    r.getCell(8).value = row.valor || 0;
-    r.commit();
-  });
-  for (let r = 10; r <= 118; r++) {
-    const row = sheet.getRow(r);
-    const qtdS = Number(row.getCell(6).value) || 0;
-    const qtdO = Number(row.getCell(7).value) || 0;
-    const val = Number(row.getCell(8).value) || 0;
-    if (qtdS === 0 && qtdO === 0 && val === 0) row.hidden = true;
-  }
-  sheet.pageSetup = {orientation: "portrait", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
-                     margins: {left: 0.5, right: 0.5, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3}};}    
-        
-    
-    
-    
-        // ---------- CODE A33 ----------
+        // ---------- PAYMENTS SBAS & OPATS ----------
+        else if (data.type === 'pag_sba_opat') {
+          if (!Array.isArray(data.rows)) return res.status(400).json({error: "Rows inválidas para pagamentos SBA/OPAT"});
+          const templateBuffer = await downloadTemplate(TEMPLATE_PAG_SBAOPAT_URL);
+          await workbook.xlsx.load(templateBuffer);
+          sheet = workbook.worksheets[0];
+          sheet.getCell("B7").value = `PAGAMENTOS SBA/OPAT - ${data.monthName} ${data.year}`;
+          data.rows.forEach((row, idx) => {
+            const r = sheet.getRow(10 + idx);
+            r.getCell(2).value = String(row.ni).padStart(3,'0');
+            r.getCell(3).value = row.nome || '';
+            r.getCell(4).value = row.nif || '';
+            r.getCell(5).value = row.nib || '';
+            r.getCell(6).value = row.qtdSbas || 0;
+            r.getCell(7).value = row.qtdOpat || 0;
+            r.getCell(8).value = row.valor || 0;
+            r.commit();
+          });
+          for (let r = 10; r <= 118; r++) {
+            const row = sheet.getRow(r);
+            const qtdS = Number(row.getCell(6).value) || 0;
+            const qtdO = Number(row.getCell(7).value) || 0;
+            const val = Number(row.getCell(8).value) || 0;
+            if (qtdS === 0 && qtdO === 0 && val === 0) row.hidden = true;
+          }
+          sheet.pageSetup = {orientation: "portrait", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
+                             margins: {left: 0.5, right: 0.5, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3}};}
+        // ---------- CODE A33 ECINS ----------
         else if (data.type === 'code_a33_decir') {
           if (!Array.isArray(data.rows)) return res.status(400).json({error: "Rows inválidas para code_a33"});
           const templateBuffer = await downloadTemplate(TEMPLATE_CODE_A33_URL);
@@ -297,40 +291,33 @@ else if (data.type === 'pag_sba_opat') {
           }
           sheet.pageSetup = {orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
                              margins: {left: 0.3, right: 0.3, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3}};}
-
-
-
-        // ---------- CODE A33 SBA/OPAT ----------
-else if (data.type === 'code_a33_sba_opat') {
-  if (!Array.isArray(data.rows)) return res.status(400).json({error: "Rows inválidas para code_a33 SBA/OPAT"});
-  const templateBuffer = await downloadTemplate(TEMPLATE_CODE_A33_SBAOPAT_URL);
-  await workbook.xlsx.load(templateBuffer);
-  sheet = workbook.worksheets[0];
-  sheet.getCell("B7").value = `Cod.A33 SBA/OPAT - ${data.year}`;
-  sheet.getCell("D3").value = `Pagamentos SBA/OPAT_${data.year} Cód.A33`;
-  let currentRow = 11;
-  for (const person of data.rows) {
-    const row = sheet.getRow(currentRow);
-    row.getCell("B").value = String(person.ni).padStart(3,'0');
-    row.getCell("C").value = person.nome || '';
-    row.getCell("G").value = person.nif || '';
-    const monthsMap = {ABRIL:"J",MAIO:"L",JUNHO:"N",JULHO:"P",AGOSTO:"R",SETEMBRO:"T",OUTUBRO:"V"};
-    Object.entries(monthsMap).forEach(([month, col]) => {row.getCell(col).value = Number(person[month]) || 0;});
-    row.commit();
-    currentRow++;
-  }
-  for (let r = 11; r <= 112; r++) {
-    const row = sheet.getRow(r);
-    const allZero = ["J","L","N","P","R","T","V"].every(col => (Number(row.getCell(col).value) || 0) === 0);
-    if (allZero) row.hidden = true;
-  }
-  sheet.pageSetup = {orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
-                     margins: {left: 0.3, right: 0.3, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3}};}    
-
-            
-            
-            
-        // ---------- ANEPC ----------
+        // ---------- CODE A33 SBAS & OPATS ----------
+        else if (data.type === 'code_a33_sba_opat') {
+          if (!Array.isArray(data.rows)) return res.status(400).json({error: "Rows inválidas para code_a33 SBA/OPAT"});
+          const templateBuffer = await downloadTemplate(TEMPLATE_CODE_A33_SBAOPAT_URL);
+          await workbook.xlsx.load(templateBuffer);
+          sheet = workbook.worksheets[0];
+          sheet.getCell("B7").value = `Cod.A33 SBA/OPAT - ${data.year}`;
+          sheet.getCell("D3").value = `Pagamentos SBA/OPAT_${data.year} Cód.A33`;
+          let currentRow = 11;
+          for (const person of data.rows) {
+            const row = sheet.getRow(currentRow);
+            row.getCell("B").value = String(person.ni).padStart(3,'0');
+            row.getCell("C").value = person.nome || '';
+            row.getCell("G").value = person.nif || '';
+            const monthsMap = {ABRIL:"J",MAIO:"L",JUNHO:"N",JULHO:"P",AGOSTO:"R",SETEMBRO:"T",OUTUBRO:"V"};
+            Object.entries(monthsMap).forEach(([month, col]) => {row.getCell(col).value = Number(person[month]) || 0;});
+            row.commit();
+            currentRow++;
+          }
+          for (let r = 11; r <= 112; r++) {
+            const row = sheet.getRow(r);
+            const allZero = ["J","L","N","P","R","T","V"].every(col => (Number(row.getCell(col).value) || 0) === 0);
+            if (allZero) row.hidden = true;
+          }
+          sheet.pageSetup = {orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
+                             margins: {left: 0.3, right: 0.3, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3}};} 
+        // ---------- ANEPC ECINS ----------
         else if (data.type === "anepc_decir") {
           const buffer = await downloadTemplate(TEMPLATE_ANEPC_URL);
           await workbook.xlsx.load(buffer);
@@ -363,40 +350,39 @@ else if (data.type === 'code_a33_sba_opat') {
           }
           sheet.pageSetup = {orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight:1, horizontalCentered: true,
                              margins: {left: 0.1, right: 0.1, top: 0.3, bottom: 0.3, header: 0.3, footer: 0.3}};}
-
-        // ---------- ANEPC SBA/OPAT ----------
-else if (data.type === "anepc_sba_opat") {
-  const buffer = await downloadTemplate(TEMPLATE_ANEPC_URL);
-  await workbook.xlsx.load(buffer);
-  sheet = workbook.worksheets[0];
-  const year = Number(data.year);
-  const mIdx = monthNameToIndex(data.monthName);
-  let firstDay = 1, lastDay = new Date(year, mIdx, 0).getDate();
-  if (mIdx === 5) firstDay = 15;
-  if (mIdx === 10) lastDay = 15;
-  const mm = String(mIdx).padStart(2,'0');
-  const periodStr = `Período: ${String(firstDay).padStart(2,'0')} / ${mm} / ${year}  a  ${String(lastDay).padStart(2,'0')} / ${mm} / ${year}`;
-  sheet.getCell("B7").value = `Dispositivo Especial Combate Incêndios Rurais SBA/OPAT (DECIR ${year}) ${periodStr}`;
-  let row = 10;
-  data.rows.forEach(r => {
-    const line = sheet.getRow(row);
-    line.getCell("B").value = r.niFile;
-    line.getCell("C").value = r.funcao;
-    line.getCell("D").value = r.nome;
-    line.getCell("F").value = r.qtdTurnos;
-    line.getCell("H").value = r.valor;
-    line.commit();
-    row++;
-  });
-  for (let r = 10; r <= 110; r++) {
-    const line = sheet.getRow(r);
-    const empty = (!line.getCell("B").value || line.getCell("B").value === "") && (!line.getCell("C").value || line.getCell("C").value === "") && (!line.getCell("D").value || line.getCell("D").value === "");
-    const qtd = Number(line.getCell("F").value) || 0;
-    const val = Number(line.getCell("H").value) || 0;
-    if (empty || (qtd === 0 && val === 0)) line.hidden = true;
-  }
-  sheet.pageSetup = {orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight:1, horizontalCentered: true,
-                     margins: {left: 0.1, right: 0.1, top: 0.3, bottom: 0.3, header: 0.3, footer: 0.3}};}    
+        // ---------- ANEPC SBAS & OPATS ----------
+        else if (data.type === "anepc_sba_opat") {
+          const buffer = await downloadTemplate(TEMPLATE_ANEPC_A33_SBAOPAT_URL);
+          await workbook.xlsx.load(buffer);
+          sheet = workbook.worksheets[0];
+          const year = Number(data.year);
+          const mIdx = monthNameToIndex(data.monthName);
+          let firstDay = 1, lastDay = new Date(year, mIdx, 0).getDate();
+          if (mIdx === 5) firstDay = 15;
+          if (mIdx === 10) lastDay = 15;
+          const mm = String(mIdx).padStart(2,'0');
+          const periodStr = `Período: ${String(firstDay).padStart(2,'0')} / ${mm} / ${year}  a  ${String(lastDay).padStart(2,'0')} / ${mm} / ${year}`;
+          sheet.getCell("B7").value = `Dispositivo Especial Combate Incêndios Rurais SBA/OPAT (DECIR ${year}) ${periodStr}`;
+          let row = 10;
+          data.rows.forEach(r => {
+            const line = sheet.getRow(row);
+            line.getCell("B").value = r.niFile;
+            line.getCell("C").value = r.funcao;
+            line.getCell("D").value = r.nome;
+            line.getCell("F").value = r.qtdTurnos;
+            line.getCell("H").value = r.valor;
+            line.commit();
+            row++;
+          });
+          for (let r = 10; r <= 110; r++) {
+            const line = sheet.getRow(r);
+            const empty = (!line.getCell("B").value || line.getCell("B").value === "") && (!line.getCell("C").value || line.getCell("C").value === "") && (!line.getCell("D").value || line.getCell("D").value === "");
+            const qtd = Number(line.getCell("F").value) || 0;
+            const val = Number(line.getCell("H").value) || 0;
+            if (empty || (qtd === 0 && val === 0)) line.hidden = true;
+          }
+          sheet.pageSetup = {orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight:1, horizontalCentered: true,
+                             margins: {left: 0.1, right: 0.1, top: 0.3, bottom: 0.3, header: 0.3, footer: 0.3}};}    
         // ---------- OCORRÊNCIAS ----------
         else if (data.type === 'ocorr') {
           if (!Array.isArray(data.rows)) return res.status(400).json({error: "Rows inválidas para ocorrências"});
@@ -462,22 +448,18 @@ else if (data.type === "anepc_sba_opat") {
         else if (data.type === 'signa') {
           const { date1, date2, date, year, ecin, elac, mode } = data;
           const isMultiTeam = Array.isArray(ecin);
-
           if (!year) return res.status(400).json({error: "Dados incompletos para signa"});
           if (!isMultiTeam && (!date1 || !date2)) return res.status(400).json({error: "Dados incompletos para signa"});
           if (isMultiTeam && !date) return res.status(400).json({error: "Dados incompletos para signa"});
-
           const templateUrl = mode === "1_ecin" ? TEMPLATE_SIGNA_ECIN_URL
                              : mode === "2_ecin_1_elac" ? TEMPLATE_SIGNA_BRIGADE_URL
                              : TEMPLATE_SIGNA_ECINELAC_URL;
           const templateBuffer = await downloadTemplate(templateUrl);
           await workbook.xlsx.load(templateBuffer);
           sheet = workbook.worksheets[0];
-
           const title = `Dispositivo Especial Combate Incêndios Rurais (DECIR ${year})`;
           const dayShift   = "Turno: 08:00 Horas às 20:00 Horas";
           const nightShift = "Turno: 20:00 Horas às 08:00 Horas";
-
           const fillTeam = (startRow, members) => {
             if (!Array.isArray(members)) return;
             members.forEach((member, idx) => {
@@ -497,31 +479,25 @@ else if (data.type === "anepc_sba_opat") {
               if (fullName) sheet.getCell(`F${row}`).value = fullName;
             });
           };
-
           if (mode === "2_ecin_1_elac") {
             const dateFormatted = formatDate(date);
             const period = `Período: ${dateFormatted}`;
-
             [7, 60, 113, 167].forEach(row => sheet.getCell(`B${row}`).value = title);
             [9, 62, 115, 169].forEach(row => sheet.getCell(`B${row}`).value = period);
-            // ── data em TODAS as 4 páginas (ECIN abrev., ECIN nome completo, ELAC abrev., ELAC nome completo) ──
             [11, 20, 29, 38, 64, 73, 82, 91, 117, 123, 171, 177].forEach(row => sheet.getCell(`B${row}`).value = dateFormatted);
             [11, 29, 64, 82, 117, 171].forEach(row => sheet.getCell(`F${row}`).value = dayShift);
             [20, 38, 73, 91, 123, 177].forEach(row => sheet.getCell(`F${row}`).value = nightShift);
-
             const equipaA = ecin.find(e => e.team === 1) || {day: [], night: []};
             const equipaB = ecin.find(e => e.team === 2) || {day: [], night: []};
             const elacTeam = elac.find(e => e.team === 1) || {day: [], night: []};
             const safeEquipaBDay = Array.isArray(equipaB.day) ? equipaB.day : [];
             const safeEquipaBNight = Array.isArray(equipaB.night) ? equipaB.night : [];
-
             fillTeam(14, equipaA.day);
             fillTeam(23, equipaA.night);
             fillTeam(32, safeEquipaBDay);
             fillTeam(41, safeEquipaBNight);
             fillTeam(120, elacTeam.day);
             fillTeam(126, elacTeam.night);
-
             fillTeamFull(67, equipaA.day);
             fillTeamFull(76, equipaA.night);
             fillTeamFull(85, safeEquipaBDay);
@@ -565,50 +541,46 @@ else if (data.type === "anepc_sba_opat") {
                              margins: {left:0.5, right:0.5, top:0.75, bottom:0.75, header:0.3, footer:0.3}};
         }
         // ---------- LEPP LEVEL IV ----------
-else if (data.type === 'lepp') {
-  const { levelSnapshot, leppName, blocks } = data;
-  const templateBuffer = await downloadTemplate(TEMPLATE_LEVELIV_1LEPP_URL);
-  await workbook.xlsx.load(templateBuffer);
-  sheet = workbook.worksheets[0];
-  sheet.getCell("F9").value = levelSnapshot || "";
-  sheet.getCell("F11").value = leppName || "";
-  const BLOCK_LAYOUT = [
-    { vehRow: 13, dateRow: 14, tableStart: 15 },
-    { vehRow: 21, dateRow: 22, tableStart: 23 },
-    { vehRow: 29, dateRow: 30, tableStart: 31 }
-  ];
-  BLOCK_LAYOUT.forEach((layout, idx) => {
-    const block = blocks?.[idx];
-    if (!block) {
-      for (let r = layout.vehRow; r <= layout.tableStart + 4; r++) sheet.getRow(r).hidden = true;
-      return;
-    }
-    sheet.getCell(`B${layout.vehRow}`).value = `Veículo Alocado: ${block.vehicleAllocated || ""} | Veículo Rendição: ${block.vehicleRelief || ""}`;
-    sheet.getCell(`B${layout.dateRow}`).value = `De: ${block.t1From || ""} a: ${block.t1To || ""}`;
-    sheet.getCell(`H${layout.dateRow}`).value = `De: ${block.t2From || ""} a: ${block.t2To || ""}`;
-    const turno1 = block.turno1 || [];
-    const turno2 = block.turno2 || [];
-    const rowsUsed = Math.max(turno1.length, turno2.length);
-    for (let i = 0; i < 5; i++) {
-      const row = layout.tableStart + i;
-      const m1 = turno1[i];
-      const m2 = turno2[i];
-      if (m1) {
-        sheet.getCell(`B${row}`).value = m1.ni || "";
-        sheet.getCell(`C${row}`).value = m1.pat || "";
-        sheet.getCell(`D${row}`).value = m1.nome || "";
-      }
-      if (m2) {
-        sheet.getCell(`H${row}`).value = m2.ni || "";
-        sheet.getCell(`I${row}`).value = m2.pat || "";
-        sheet.getCell(`J${row}`).value = m2.nome || "";
-      }
-      if (i >= rowsUsed) sheet.getRow(row).hidden = true;
-    }
-  });
-  sheet.pageSetup = {orientation: "portrait", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
-                     margins: {left: 0.5, right: 0.5, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3}};
-}
+        else if (data.type === 'lepp') {
+          const { levelSnapshot, leppName, blocks } = data;
+          const templateBuffer = await downloadTemplate(TEMPLATE_LEVELIV_1LEPP_URL);
+          await workbook.xlsx.load(templateBuffer);
+          sheet = workbook.worksheets[0];
+          sheet.getCell("F9").value = levelSnapshot || "";
+          sheet.getCell("F11").value = leppName || "";
+          const BLOCK_LAYOUT = [{vehRow: 13, dateRow: 14, tableStart: 15}, {vehRow: 21, dateRow: 22, tableStart: 23}, {vehRow: 29, dateRow: 30, tableStart: 31}];
+          BLOCK_LAYOUT.forEach((layout, idx) => {
+            const block = blocks?.[idx];
+            if (!block) {
+              for (let r = layout.vehRow; r <= layout.tableStart + 4; r++) sheet.getRow(r).hidden = true;
+              return;
+            }
+            sheet.getCell(`B${layout.vehRow}`).value = `Veículo Alocado: ${block.vehicleAllocated || ""} | Veículo Rendição: ${block.vehicleRelief || ""}`;
+            sheet.getCell(`B${layout.dateRow}`).value = `De: ${block.t1From || ""} a: ${block.t1To || ""}`;
+            sheet.getCell(`H${layout.dateRow}`).value = `De: ${block.t2From || ""} a: ${block.t2To || ""}`;
+            const turno1 = block.turno1 || [];
+            const turno2 = block.turno2 || [];
+            const rowsUsed = Math.max(turno1.length, turno2.length);
+            for (let i = 0; i < 5; i++) {
+              const row = layout.tableStart + i;
+              const m1 = turno1[i];
+              const m2 = turno2[i];
+              if (m1) {
+                sheet.getCell(`B${row}`).value = m1.ni || "";
+                sheet.getCell(`C${row}`).value = m1.pat || "";
+                sheet.getCell(`D${row}`).value = m1.nome || "";
+              }
+              if (m2) {
+                sheet.getCell(`H${row}`).value = m2.ni || "";
+                sheet.getCell(`I${row}`).value = m2.pat || "";
+                sheet.getCell(`J${row}`).value = m2.nome || "";
+              }
+              if (i >= rowsUsed) sheet.getRow(row).hidden = true;
+            }
+          });
+          sheet.pageSetup = {orientation: "portrait", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
+                             margins: {left: 0.5, right: 0.5, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3}};
+        }
         // ---------- SAVE AND DOWNLOAD ----------
         const safeFileName = data.fileName || "decir";
         if (format === "pdf") {

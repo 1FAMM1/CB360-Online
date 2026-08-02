@@ -63,19 +63,24 @@
         <span class="fa fa-eur" style="display: inline-flex; align-items: center; justify-content: center; background: #ddd; color: #444; width: 24px; height: 20px; border-radius: 4px; 
                                        font-size: 12px; font-weight: 800; margin-right: 5px; position: relative; top: -2px; letter-spacing: 0.5px; vertical-align: middle;"></span> Gestão DECIR</button>
       <div class="submenu">
-        <button class="sidebar-submenu-button  sub-submenu-toggle" data-page="page-decir" data-access="Configurações DECIR">Configurações</button>
+        <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-decir" data-access="Configurações DECIR">Configurações</button>
         <div class="sub-submenu">
           <button class="sidebar-sub-submenu-button " data-page="page-decir" data-access="Atualização de Valores">Atualização de Valores</button>
-          <button class="sidebar-sub-submenu-button" data-page="page-decir" data-access="Configuração de Equipas">Configuração de Equipas</button>
+          <button class="sidebar-sub-submenu-button" data-page="page-decir" data-access="Configuração de Equipas">Configuração de Equipas</button>  
           <button class="sidebar-submenu-button" data-page="decir-main-options" data-access="Restaurantes e LEPPs">Restaurantes e LEPPs</button>          
         </div>
         <button class="sidebar-submenu-button" data-page="decir-sca-view" data-access="Ver Escalas">Consulta de Escalas</button>
-        <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-decir" data-access="Gestão Financeira">Controlo Financeiro</button>
+        <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-decir" data-access="Gestão Financeira ECINs">Controlo Financeiro ECINs</button>
         <div class="sub-submenu">          
-          <button class="sidebar-sub-submenu-button" data-page="decir-reg" data-access="Registo por Elemento">Registo por Elemento</button>
-          <button class="sidebar-sub-submenu-button" data-page="decir-pag" data-access="Núcleo Financeiro">Núcleo Financeiro</button>
-          <button class="sidebar-sub-submenu-button" data-page="decir-anepc" data-access="Relatórios ANEPC">Relatórios ANEPC</button>
-          <button class="sidebar-sub-submenu-button" data-page="decir-audit" data-access="Auditoria de Logs">Auditoria de Logs</button>
+          <button class="sidebar-sub-submenu-button" data-page="decir-reg-ecins" data-access="Registo por Elemento ECINs">Registo por Elemento</button>
+          <button class="sidebar-sub-submenu-button" data-page="decir-pag-ecins" data-access="Núcleo Financeiro ECINs">Núcleo Financeiro</button>
+          <button class="sidebar-sub-submenu-button" data-page="decir-anepc-ecins" data-access="Relatórios ANEPC ECINs">Relatórios ANEPC</button>          
+       </div>
+       <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-decir" data-access="Gestão Financeira SBAs e OPATs">Controlo Financeiro OPATs e SBAs</button>
+       <div class="sub-submenu">
+        <button class="sidebar-sub-submenu-button " data-page="decir-reg-sbaopat" data-access="Registo por Elemento  SBAs e OPATs">Resgisto por Elemento</button>
+        <button class="sidebar-sub-submenu-button" data-page="decir-pag-sbaopat" data-access="Núcleo Financeiro SBAs e OPATs">Núcleo Financeiro</button>
+        <button class="sidebar-sub-submenu-button" data-page="decir-anepc-sbaopat" data-access="Relatórios ANEPC SBAs e OPATs">Relatórios ANEPC</button>         
        </div>
        <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-decir" data-access="Gestão Despesas">Gestão Despesas</button>
         <div class="sub-submenu">          
@@ -89,7 +94,8 @@
           <button class="sidebar-sub-submenu-button" data-page="decir-reg-ref" data-access="Refeições Diárias">Refeições Diárias</button>
           <button class="sidebar-sub-submenu-button" data-page="decir-reg-lepp" data-access="Pré Posicionamentos">Pré-Posicionamentos</button>
           <button class="sidebar-sub-submenu-button" data-page="decir-reg-leveliv" data-access="EPE DECIR IV">EPE DECIR Níveis III e IV</button>
-       </div>        
+       </div>
+         <button class="sidebar-submenu-button" data-page="decir-audit" data-access="Auditoria de Logs">Auditoria de Logs</button>
         <button class="sidebar-submenu-button" data-page="decir-dashboard" data-access="DashBoard DECIR">Dados Estatísticos</button>
       </div>
       <!-- ======================= FOMIO 360 ======================= -->
@@ -819,7 +825,6 @@
         </div>
       </div>
       <!-- PROGRAM MODULES -->
-      <!-- PROGRAM MODULES -->
       <!-- DECIR 360 -->
       <!-- DECIR VALUES CONFIG -->
       <div id="modalConfigDecirValues" class="decir-modal-custom">
@@ -866,7 +871,7 @@
       </div>
       <!-- DECIR TEAMS CONFIG -->
       <style>
-        .decir-input-clean {width: 100%; padding: 11px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 14px; font-weight: 500; color: #1e293b; transition: all 0.15s ease; background-color: #fff;}
+        .decir-input-clean {width: 100%; padding: 11px 12px; border: 1.5px solid #d1d1dc; border-radius: 8px; font-size: 14px; font-weight: 500; color: #1e293b; transition: all 0.15s ease; background-color: #fff;}
         .decir-input-clean:focus {border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); outline: none;}
       </style>      
       <!-- Estrutura do Modal atualizada com a classe de input limpa -->
@@ -900,7 +905,7 @@
           </div>
           <div class="decir-modal-footer">
             <button type="button" class="decir-btn decir-btn-secondary" onclick="closeConfigDecirTeamsModal()">Cancelar</button>
-            <button type="button" id="btnSaveConfigEquipas" class="decir-btn decir-btn-primary" onclick="updateEquipasValues()">💾 Gravar Alterações</button>
+            <button type="button" id="btnSaveConfigEquipas" class="decir-btn decir-btn-primary" onclick="updateDecirTeamsValues()">💾 Gravar Alterações</button>
           </div>
         </div>
       </div>
@@ -979,7 +984,7 @@
           </div>
         </div>
       </div>
-      <div id="decir-reg" class="page">
+      <div id="decir-reg-ecins" class="page">
         <div class="major-card major-last-card">
           <div class="major-card-header header-black">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
@@ -989,7 +994,7 @@
               <path d="M9 18h6"></path>
               <path d="M12 10h3"></path>
             </svg>
-            REGISTO DE TURNOS POR ELEMENTO
+            REGISTO DE TURNOS DE ECIN POR ELEMENTO
           </div>
           <div class="major-card-body" style="font-family: 'Segoe UI', sans-serif;">
             <div class="global-field-horizontal" style="display:none;">
@@ -1011,8 +1016,8 @@
           </div>
         </div>
       </div>
-      <div id="decir-pag" class="page">
-        <div class="major-card major-last-card">
+      <div id="decir-pag-ecins" class="page">
+        <div class="major-card">
           <div class="major-card-header header-black">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -1020,7 +1025,7 @@
               <line x1="12" y1="18" x2="12" y2="12"></line>
               <line x1="9" y1="15" x2="15" y2="15"></line>
             </svg>
-            RELATÓRIOS PARA PAGAMENTOS MENSAIS
+            RELATÓRIOS PARA PAGAMENTOS MENSAIS ECINs
           </div>
           <div class="major-card-body" style="font-family: 'Segoe UI', sans-serif;">
             <div class="global-field-horizontal" style="display:none;">
@@ -1045,7 +1050,7 @@
           </div>
         </div>
       </div>
-      <div id="decir-anepc" class="page">
+      <div id="decir-anepc-ecins" class="page">
         <div class="major-card major-last-card">
           <div class="major-card-header header-black">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
@@ -1054,7 +1059,7 @@
               <line x1="12" y1="18" x2="12" y2="12"></line>
               <line x1="9" y1="15" x2="15" y2="15"></line>
             </svg>
-            RELATÓRIOS MENSAIS ANEPC
+            RELATÓRIOS MENSAIS ANEPC ECINs
           </div>
           <div class="major-card-body" style="font-family: 'Segoe UI', sans-serif;">
             <div class="global-field-horizontal" style="display:none;">
@@ -1090,6 +1095,101 @@
             <div class="action-buttons" id="decir-audit-options">
               <button class="btn btn-success" id="emit-audit-dec-btn">📊 Excel</button>
               <button class="btn btn-danger" id="emit-audit-pdf-btn">📄 PDF</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="decir-reg-sbaopat" class="page">
+        <div class="major-card major-last-card">
+          <div class="major-card-header header-black">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
+              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+              <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+              <path d="M9 14h6"></path>
+              <path d="M9 18h6"></path>
+              <path d="M12 10h3"></path>
+            </svg>
+            REGISTO DE TURNOS DE SBA E OPAT POR ELEMENTO
+          </div>
+          <div class="major-card-body" style="font-family: 'Segoe UI', sans-serif;">
+            <div class="global-field-horizontal" style="display:none;">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Valor Amal</label>
+              <input type="text" id="amal-value-reg" style="width: 75px;">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Valor Anepc</label>
+              <input type="text" id="anepc-value-reg" style="width: 75px;">
+            </div>
+            <div id="months-container-sbaopat-reg" style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 0 0 0 0;"></div>
+            <div id="table-container-sbaopat-reg"></div>
+          </div>
+          <div class="major-card-footer">
+            <div class="action-buttons" id="decir-reg-sbaopat-options">
+              <button class="btn btn-clean" id="delete-sbaopat-btn">🧹 Limpar</button>
+              <button class="btn btn-add" id="save-sbaopat-btn">💾 Guardar</button>
+              <button class="btn btn-success" id="emit-reg-sbaopat-btn">📊 Excel</button>
+              <button class="btn btn-danger" id="emit-reg-sbaopat-pdf-btn">📄 PDF</button>     
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="decir-pag-sbaopat" class="page">
+        <div class="major-card major-last-card">
+          <div class="major-card-header header-black">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="12" y1="18" x2="12" y2="12"></line>
+              <line x1="9" y1="15" x2="15" y2="15"></line>
+            </svg>
+            RELATÓRIOS PARA PAGAMENTOS MENSAIS OPATs e SBAs
+          </div>
+          <div class="major-card-body" style="font-family: 'Segoe UI', sans-serif;">
+            <div class="global-field-horizontal" style="display:none;">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Valor SBAS</label>
+              <input type="text" id="sbas-value-pag" style="width: 75px;">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Valor OPAT</label>
+              <input type="text" id="opat-value-pag" style="width: 75px;">
+            </div>
+            <div id="months-container-sbaopat-pag" style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 0 0 0 0;"></div>
+            <div id="table-container-sbaopat-pag"></div>
+            <div id="table-container-sbaopat-coda33"></div>
+          </div>
+          <div class="major-card-footer">
+            <div class="action-buttons" id="sbaopat-pag-options">
+              <button class="btn btn-success" id="emit-pag-sbaopat-btn">📊 Excel</button>
+              <button class="btn btn-danger" id="emit-pag-sbaopat-pdf-btn">📄 PDF</button>
+            </div>
+            <div class="action-buttons" id="sbaopat-coda33-options">
+              <button class="btn btn-success" id="emit-coda33-sbaopat-btn">📊 Excel</button>
+              <button class="btn btn-danger" id="emit-coda33-sbaopat-pdf-btn">📄 PDF</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="decir-anepc-sbaopat" class="page">
+        <div class="major-card major-last-card">
+          <div class="major-card-header header-black">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="12" y1="18" x2="12" y2="12"></line>
+              <line x1="9" y1="15" x2="15" y2="15"></line>
+            </svg>
+            RELATÓRIOS MENSAIS ANEPC - SBAs E OPATs
+          </div>
+          <div class="major-card-body" style="font-family: 'Segoe UI', sans-serif;">
+            <div class="global-field-horizontal" style="display:none;">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Valor Amal</label>
+              <input type="text" id="amal-value-anepc" style="width: 75px;">
+              <label style="font-size: 12px; font-weight: bold; color: #444;">Valor Anepc</label>
+              <input type="text" id="anepc-value-anepc" style="width: 75px;">
+            </div>
+            <div id="months-container-sbaopat-anepc" style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 0 0 0 0;"></div>
+            <div id="table-container-sbaopat-anepc"></div>
+          </div>          
+          <div class="major-card-footer">
+            <div class="action-buttons" id="decir-anepc-sbaopat-options">
+              <button class="btn btn-success" id="emit-anepc-sbaopat-btn">📊 Excel</button>
+              <button class="btn btn-danger" id="emit-anepc-sbaopat-pdf-btn">📄 PDF</button>
             </div>
           </div>
         </div>
@@ -1220,8 +1320,8 @@
           <div class="major-card-footer">
             <div class="action-buttons" id="decir-lepp-options" style="display:none;">
               <button class="btn btn-add" id="save-lepp-btn">💾 Guardar</button>
-              <!-- <button class="btn btn-success" id="emit-lepp-dec-btn">📊 Excel</button> -->
-              <!-- <button class="btn btn-danger" id="emit-lepp-pdf-btn">📄 PDF</button> -->
+              <button class="btn btn-success" id="emit-lepp-dec-btn">📊 Excel</button>
+              <button class="btn btn-danger" id="emit-lepp-pdf-btn">📄 PDF</button>
             </div>
           </div>
         </div>

@@ -12,10 +12,13 @@
     import https from 'https';
     import {ServicePrincipalCredentials, PDFServices, MimeType, CreatePDFResult, CreatePDFJob,}
     from "@adobe/pdfservices-node-sdk";
+    const TEMPLATE_REG_ECINS_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/decir_reg_template.xlsx";
     const TEMPLATE_PAG_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/decir_pag_template.xlsx";
-    const TEMPLATE_REG_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/decir_reg_template.xlsx";
     const TEMPLATE_CODE_A33_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/cod_a33_template.xlsx";
     const TEMPLATE_ANEPC_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/anepc_template.xlsx";
+    const TEMPLATE_REG_SBAOPAT_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/sabopat_reg_template.xlsx";
+
+
     const TEMPLATE_OCORR_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/reg_ocorr_decir.xlsx";
     const TEMPLATE_REF_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/reg_ref_decir.xlsx";
     const TEMPLATE_SIGNA_ECIN_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/signa_decir_ecin_template.xlsx";
@@ -93,7 +96,7 @@
         if (data.type === 'reg_decir') {
           const requiredFields = ['monthName','year','daysInMonth','weekdays','fixedRows','normalRows'];
           if (!requiredFields.every(f => f in data)) return res.status(400).json({error: "Dados incompletos para registo diário"});
-          const templateBuffer = await downloadTemplate(TEMPLATE_REG_URL);
+          const templateBuffer = await downloadTemplate(TEMPLATE_REG_ECINS_URL);
           await workbook.xlsx.load(templateBuffer);
           sheet = workbook.worksheets[0];
           sheet.getCell("B7").value = `Registo Diário de Elementos DECIR - ${data.monthName} ${data.year}`;
@@ -153,7 +156,7 @@
         else if (data.type === 'reg_sba_opat') {
           const requiredFields = ['monthName','year','daysInMonth','weekdays','fixedRows','normalRows'];
           if (!requiredFields.every(f => f in data)) return res.status(400).json({error: "Dados incompletos para registo SBA/OPAT"});
-          const templateBuffer = await downloadTemplate(TEMPLATE_REG_URL);
+          const templateBuffer = await downloadTemplate(TEMPLATE_REG_SBAOPAT_URL);
           await workbook.xlsx.load(templateBuffer);
           sheet = workbook.worksheets[0];
           sheet.getCell("B7").value = `Registo Diário de Elementos SBA \\ OPAT - ${data.monthName} ${data.year}`;

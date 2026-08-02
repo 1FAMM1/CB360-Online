@@ -17,6 +17,7 @@
     const TEMPLATE_CODE_A33_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/cod_a33_template.xlsx";
     const TEMPLATE_ANEPC_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/anepc_template.xlsx";
     const TEMPLATE_REG_SBAOPAT_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/sbaopat_reg_template.xlsx";
+    const TEMPLATE_PAG_SBAOPAT_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/sbaopat_pag_template.xlsx";
 
 
     const TEMPLATE_OCORR_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/reg_ocorr_decir.xlsx";
@@ -236,6 +237,35 @@
           }
           sheet.pageSetup = {orientation: "portrait", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
                              margins: {left: 0.5, right: 0.5, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3}};}
+
+
+        // ---------- PAYMENTS SBA/OPAT ----------
+else if (data.type === 'pag_sba_opat') {
+  if (!Array.isArray(data.rows)) return res.status(400).json({error: "Rows inválidas para pagamentos SBA/OPAT"});
+  const templateBuffer = await downloadTemplate(TEMPLATE_PAG_SBAOPAT_URL);
+  await workbook.xlsx.load(templateBuffer);
+  sheet = workbook.worksheets[0];
+  sheet.getCell("B7").value = `PAGAMENTOS SBA/OPAT - ${data.monthName} ${data.year}`;
+  data.rows.forEach((row, idx) => {
+    const r = sheet.getRow(10 + idx);
+    r.getCell(2).value = String(row.ni).padStart(3,'0');
+    r.getCell(3).value = row.nome || '';
+    r.getCell(4).value = row.nif || '';
+    r.getCell(5).value = row.nib || '';
+    r.getCell(6).value = row.qtdSbas || 0;
+    r.getCell(7).value = row.qtdOpat || 0;
+    r.getCell(8).value = row.valor || 0;
+    r.commit();
+  });
+  for (let r = 10; r <= 118; r++) {
+    const row = sheet.getRow(r);
+    const qtdS = Number(row.getCell(6).value) || 0;
+    const qtdO = Number(row.getCell(7).value) || 0;
+    const val = Number(row.getCell(8).value) || 0;
+    if (qtdS === 0 && qtdO === 0 && val === 0) row.hidden = true;
+  }
+  sheet.pageSetup = {orientation: "portrait", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
+                     margins: {left: 0.5, right: 0.5, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3}};}    
         // ---------- CODE A33 ----------
         else if (data.type === 'code_a33_decir') {
           if (!Array.isArray(data.rows)) return res.status(400).json({error: "Rows inválidas para code_a33"});

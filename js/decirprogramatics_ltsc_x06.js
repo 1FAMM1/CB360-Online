@@ -109,11 +109,8 @@
     }
     /* ─── BOTÕES GENÉRICOS DE MÊS (DECIR) ───────────────────── */
     function createDecirButtonsGeneric({
-      containerId, tableContainerId, yearSelectId, optionsContainerId,
-      blockedMonths = BLOCKED_MONTHS_DEFAULT,
-      monthNames = MONTH_NAMES_PT,
-      loadDataFunc, createTableFunc, loadByMonthFunc = null,
-      includeExtraButton = false, extraButtonFunc = null, totalContainerId = null
+      containerId, tableContainerId, yearSelectId, optionsContainerId, blockedMonths = BLOCKED_MONTHS_DEFAULT, monthNames = MONTH_NAMES_PT, loadDataFunc, createTableFunc, loadByMonthFunc = null,
+      includeExtraButton = false, extraButtonFunc = null, totalContainerId = null, codA33TableId = "table-container-dec-coda33", codA33OptionsId = "decir-coda33-options"
     }) {
       const container = $(containerId);
       if (!container) return;
@@ -146,18 +143,18 @@
         Object.assign(btn.style, {fontSize:"14px",fontWeight:"bold",width:"110px",height:"40px",borderRadius:"4px",margin:"2px"});
         btn.addEventListener("click", async () => {
           const tableContainer = $(tableContainerId);
-          const tableCodA33 = $("table-container-dec-coda33");
+          const tableCodA33 = $(codA33TableId);
           const optionsContainer = $(optionsContainerId);
-          const optionsCodA33 = $("decir-coda33-options");
+          const optionsCodA33 = $(codA33OptionsId);
           const totalContainer = totalContainerId ? $(totalContainerId) : null;
           const isExtra = includeExtraButton && idx === monthNames.length - 1;
           const isActive = btn.classList.contains("active");
-          if (tableCodA33) tableCodA33.innerHTML = "";
-          if (optionsContainer) optionsContainer.style.display = "none";
-          if (optionsCodA33) optionsCodA33.style.display = "none";
-          if (totalContainer) totalContainer.style.display = "none";
           if (isActive) {
+            if (tableCodA33) tableCodA33.innerHTML = "";
+            if (optionsCodA33) optionsCodA33.style.display = "none";
             if (tableContainer) tableContainer.innerHTML = "";
+            if (optionsContainer) optionsContainer.style.display = "none";
+            if (totalContainer) totalContainer.style.display = "none";
             btn.classList.remove("active");
             return;
           }
@@ -165,23 +162,30 @@
           btn.classList.add("active");
           if (isExtra) {
             if (extraButtonFunc) await extraButtonFunc();
-            if (tableContainer) tableContainer.innerHTML = "";
+            if (tableContainer) tableContainer.style.display = "none";
             if (optionsContainer) optionsContainer.style.display = "none";
             if (optionsCodA33) optionsCodA33.style.display = "flex";
             if (totalContainer) totalContainer.style.display = "none";
             return;
           }
           if (blockedMonths.includes(idx)) {
+            if (tableCodA33) tableCodA33.innerHTML = "";
+            if (optionsCodA33) optionsCodA33.style.display = "none";
             if (tableContainer) tableContainer.innerHTML = "";
+            if (optionsContainer) optionsContainer.style.display = "none";
+            if (totalContainer) totalContainer.style.display = "none";
             setTimeout(() => showPopup('popup-danger', `Durante o mês de ${month}, não existe DECIR. Salvo prolongamento ou antecipação declarados pela ANEPC.`), 10);
             return;
           }
           const yearVal = parseInt(yearSelect.value, 10);
           const data = await loadDataFunc(yearVal, idx + 1);
           await createTableFunc(tableContainerId, yearVal, idx + 1, data);
-          if (loadByMonthFunc) await loadByMonthFunc(yearVal, idx + 1);
+          if (tableCodA33) tableCodA33.innerHTML = "";
+          if (optionsCodA33) optionsCodA33.style.display = "none";
+          if (tableContainer) tableContainer.style.display = "";
           if (optionsContainer) optionsContainer.style.display = "flex";
           if (totalContainer) totalContainer.style.display = "flex";
+          if (loadByMonthFunc) await loadByMonthFunc(yearVal, idx + 1);
         });
         monthsWrapper.appendChild(btn);
       });
@@ -328,21 +332,43 @@
       "decir-desp-meals": {tableId: "table-container-dec-desp-meals", optionsId: "decir-desp-meals-options", monthsId: "months-container-dec-desp-meals",
                            generic: {containerId: "months-container-dec-desp-meals", tableContainerId: "table-container-dec-desp-meals", yearSelectId: "year-dec-desp-meals", optionsContainerId: "decir-desp-meals-options",
                            monthNames: DECIR_MONTH_NAMES, blockedMonths: [], loadDataFunc: async (y, m) => m, createTableFunc: (cId, y, m, d) => createDecirDespMealsTable(cId, y, m + 4)}},
-      "decir-reg": {tableId: "table-container-dec-reg", optionsId: "decir-reg-options", monthsId: "months-container-dec-reg",
-                    generic: {containerId: "months-container-dec-reg", tableContainerId: "table-container-dec-reg", yearSelectId: "year-dec-reg", optionsContainerId: "decir-reg-options",
-                              monthNames: DECIR_MONTH_NAMES, blockedMonths:[], loadDataFunc: async (y, m) => loadDecirRegData(y, m + 4), createTableFunc: (cId, y, m, d) => createDecirRegTable(cId, y, m + 4, d), 
-                              loadByMonthFunc: async (y, m) => window.loadDecirByMonth?.(y, m + 4)}},
-      "decir-pag": {tableId: "table-container-dec-pag", optionsId: "decir-pag-options", monthsId: "months-container-dec-pag",
-                    extra: ["table-container-dec-coda33","decir-coda33-options","decir-payment-totals"],
-                    generic: {containerId: "months-container-dec-pag", tableContainerId: "table-container-dec-pag", yearSelectId: "year-dec-pag", optionsContainerId: "decir-pag-options",
-                    monthNames: [...DECIR_MONTH_NAMES, "Cod.A33"], includeExtraButton: true, extraButtonFunc: handleCodA33Button,
-                    loadDataFunc: async (y, m) => ({elems: await loadDecirPayElements(y, m + 4), turnos: await loadShiftsByNI(y, m + 4)}),
-                    createTableFunc: (cId, y, m, d) => createDecirPayTable(cId, y, m + 4, d.elems, d.turnos),
-                    totalContainerId: "decir-payment-totals", blockedMonths: []}},
-                    "decir-anepc": {tableId: "table-container-dec-anepc", optionsId: "decir-anepc-options", monthsId: "months-container-dec-anepc",
-                      generic: {containerId: "months-container-dec-anepc", tableContainerId: "table-container-dec-anepc", yearSelectId: "year-dec-anepc", optionsContainerId: "decir-anepc-options",
-                      monthNames: DECIR_MONTH_NAMES, blockedMonths: [], loadDataFunc: async (y, m) => ({elems: await loadDecirANEPCElements(y, m + 4), turnos: await loadShiftsByNI(y, m + 4)}),
-                      createTableFunc: (cId, y, m, d) => createDecirAnepcTable(cId, y, m + 4, d.elems, d.turnos)}},
+      "decir-reg-ecins": {tableId: "table-container-dec-reg", optionsId: "decir-reg-options", monthsId: "months-container-dec-reg",
+                          generic: {containerId: "months-container-dec-reg", tableContainerId: "table-container-dec-reg", yearSelectId: "year-dec-reg", optionsContainerId: "decir-reg-options",
+                          monthNames: DECIR_MONTH_NAMES, blockedMonths:[], loadDataFunc: async (y, m) => loadDecirRegData(y, m + 4), createTableFunc: (cId, y, m, d) => createDecirRegTable(cId, y, m + 4, d), 
+                          loadByMonthFunc: async (y, m) => window.loadDecirByMonth?.(y, m + 4)}},
+      "decir-pag-ecins": {tableId: "table-container-dec-pag", optionsId: "decir-pag-options", monthsId: "months-container-dec-pag",
+                          extra: ["table-container-dec-coda33","decir-coda33-options","decir-payment-totals"],
+                          generic: {containerId: "months-container-dec-pag", tableContainerId: "table-container-dec-pag", yearSelectId: "year-dec-pag", optionsContainerId: "decir-pag-options",
+                          monthNames: [...DECIR_MONTH_NAMES, "Cod.A33"], includeExtraButton: true, extraButtonFunc: handleDecirCodA33Button, loadDataFunc: async (y, m) => ({elems: await loadDecirPayElements(y, m + 4), 
+                          turnos: await loadDecirShiftsByNI(y, m + 4)}),
+                          createTableFunc: (cId, y, m, d) => createDecirPayTable(cId, y, m + 4, d.elems, d.turnos), totalContainerId: "decir-payment-totals", blockedMonths: []}},
+      "decir-anepc-ecins": {tableId: "table-container-dec-anepc", optionsId: "decir-anepc-options", monthsId: "months-container-dec-anepc",
+                            generic: {containerId: "months-container-dec-anepc", tableContainerId: "table-container-dec-anepc", yearSelectId: "year-dec-anepc", optionsContainerId: "decir-anepc-options",
+                            monthNames: DECIR_MONTH_NAMES, blockedMonths: [], loadDataFunc: async (y, m) => ({elems: await loadDecirANEPCElements(y, m + 4), turnos: await loadDecirShiftsByNI(y, m + 4)}),
+                            createTableFunc: (cId, y, m, d) => createDecirAnepcTable(cId, y, m + 4, d.elems, d.turnos)}},
+
+
+
+
+      "decir-reg-sbaopat": {tableId: "table-container-sbaopat-reg", optionsId: "decir-reg-sbaopat-options", monthsId: "months-container-sbaopat-reg",
+                            generic: {containerId: "months-container-sbaopat-reg", tableContainerId: "table-container-sbaopat-reg", yearSelectId: "year-sbaopat-reg", optionsContainerId: "decir-reg-sbaopat-options",
+                            monthNames: DECIR_MONTH_NAMES, blockedMonths:[], loadDataFunc: async (y, m) => loadDecirRegData(y, m + 4), createTableFunc: (cId, y, m, d) => createSbaOpatRegTable(cId, y, m + 4, d), 
+                            loadByMonthFunc: async (y, m) => window.loadSbaOpatByMonth?.(y, m + 4)}},
+      "decir-pag-sbaopat": {tableId: "table-container-sbaopat-pag", optionsId: "sbaopat-pag-options", monthsId: "months-container-sbaopat-pag",
+                            extra: ["table-container-sbaopat-coda33", "sbaopat-coda33-options", "sbaopat-payment-totals"],
+                            generic: {containerId: "months-container-sbaopat-pag", tableContainerId: "table-container-sbaopat-pag", yearSelectId: "year-sbaopat-pag", optionsContainerId: "sbaopat-pag-options",
+                            monthNames: [...DECIR_MONTH_NAMES, "Cod.A33"], includeExtraButton: true, extraButtonFunc: handleSbaOpatCodA33Button, codA33TableId: "table-container-sbaopat-coda33", codA33OptionsId: "sbaopat-coda33-options",  
+                            loadDataFunc: async (y, m) => ({elems: await loadSbaOpatPayElements(y, m + 4), turnosSbas: await loadSbaOpatShiftsByNI(y, m + 4, "sba"), turnosOpat: await loadSbaOpatShiftsByNI(y, m + 4, "opat")}),
+                            createTableFunc: (cId, y, m, d) => createSbaOpatPayTable(cId, y, m + 4, d.elems, d.turnosSbas, d.turnosOpat), totalContainerId: "sbaopat-payment-totals", blockedMonths: []}},
+      "decir-anepc-sbaopat": {tableId: "table-container-sbaopat-anepc", optionsId: "decir-anepc-sbaopat-options", monthsId: "months-container-sbaopat-anepc",
+                              generic: {containerId: "months-container-sbaopat-anepc", tableContainerId: "table-container-sbaopat-anepc", yearSelectId: "year-sbaopat-anepc", optionsContainerId: "decir-anepc-sbaopat-options",
+                              monthNames: DECIR_MONTH_NAMES, blockedMonths: [], loadDataFunc: async (y, m) => ({elems: await loadSbaOpatANEPCElements(y, m + 4), turnosSbas: await loadSbaOpatShiftsByNI(y, m + 4, "sba"), turnosOpat: await loadSbaOpatShiftsByNI(y, m + 4, "opat")}),
+                              createTableFunc: (cId, y, m, d) => createSbaOpatAnepcTable(cId, y, m + 4, d.elems, d.turnosSbas, d.turnosOpat)}},
+
+
+
+
+
       "decir-audit": {init: loadAuditLogs},
       "decir-reg-ocorr": {init: createDecirOccurrencesTable},                
       "decir-reg-ref": {tableId: "table-container-dec-ref", optionsId: "decir-ref-options", monthsId: "months-container-dec-ref",
@@ -356,15 +382,26 @@
       "decir-dashboard": {init: createDecirDashboard}
     };
     /* ─── LOADERS (DECIR) ────────────────────────────────────── */
-    async function loadDecirConfigValues() {
+    let SBAS_RATE = 0;
+    let OPAT_RATE = 0;
+    async function loadDecirSbaOpatConfigValues() {
       try {
-        const data = await supabaseFetch("decir_values_config?select=amal_value,anepc_value&limit=1");
+        const data = await supabaseFetch("decir_values_config?select=amal_value,anepc_value,sbas_value,opat_value&limit=1");
         if (!data.length) return;
         const fmt = v => v.toLocaleString('pt-PT',{minimumFractionDigits:2,maximumFractionDigits:2});
         const [fA, fN] = [fmt(data[0].amal_value), fmt(data[0].anepc_value)];
         ["amal-value-reg","anepc-value-reg","amal-value-pag","anepc-value-pag","amal-value-anepc","anepc-value-anepc"]
           .forEach((id,i) => {const el=$(id); if(el) el.value = i%2===0 ? fA : fN;});
-        updateAllValues();
+        SBAS_RATE = parseFloat(data[0].sbas_value) || 0;
+        OPAT_RATE = parseFloat(data[0].opat_value) || 0;
+        const [fS, fO] = [fmt(SBAS_RATE), fmt(OPAT_RATE)];
+        ["sbas-value-reg","opat-value-reg","sbas-value-pag","opat-value-pag"]
+          .forEach((id,i) => {const el=$(id); if(el) el.value = i%2===0 ? fS : fO;});
+        updateAllDecirValues();
+        const tbodySO = document.querySelector("#table-container-sbaopat-reg table tbody");
+        if (tbodySO && typeof updateAllValuesSbaOpat === "function") {
+          updateAllValuesSbaOpat(tbodySO);
+        }
       } catch {
         showPopup('popup-danger', "Erro ao carregar valores de configuração.");
       }
@@ -372,14 +409,16 @@
     async function loadDecirRegData(year, month) {
       try {
         const firstOfMonth = new Date(year, month - 1, 1);
-        const data = await supabaseFetch(`reg_elems?select=n_int,abv_name,patent_abv,MP,elem_state,inactive_from&corp_oper_nr=eq.${getCorpId()}`);
+        const data = await supabaseFetch(`reg_elems?select=n_int,abv_name,patent_abv,MP,elem_state,inactive_from,type_quad&corp_oper_nr=eq.${getCorpId()}`);
         return data
-          .filter(item => {
+        .filter(item => {
+          const excludedTypes = ["QHR", "QRES", "QEA", "QEST"];
+          if (!item.type_quad || excludedTypes.includes(item.type_quad)) return false;
           if (!item.inactive_from && item.elem_state) return true;
           if (!item.inactive_from) return false;
           return new Date(item.inactive_from) > firstOfMonth;
         })
-          .sort((a, b) => parseInt(a.n_int, 10) - parseInt(b.n_int, 10));
+        .sort((a, b) => parseInt(a.n_int, 10) - parseInt(b.n_int, 10));
       } catch {
         showPopup('popup-danger', "Erro ao carregar dados dos elementos.");
         return [];
@@ -388,14 +427,16 @@
     async function loadDecirElements(select, year, month) {
       try {
         const firstOfMonth = new Date(year, month - 1, 1);
-        const data = await supabaseFetch(`reg_elems?select=${select},elem_state,inactive_from&corp_oper_nr=eq.${getCorpId()}`);
+        const data = await supabaseFetch(`reg_elems?select=${select},elem_state,inactive_from,type_quad&corp_oper_nr=eq.${getCorpId()}`);
         return data
-          .filter(item => {
+        .filter(item => {
+          const excludedTypes = ["QHR", "QRES", "QEA", "QEST"];
+          if (!item.type_quad || excludedTypes.includes(item.type_quad)) return false;
           if (!item.inactive_from && item.elem_state) return true;
           if (!item.inactive_from) return false;
           return new Date(item.inactive_from) > firstOfMonth;
         })
-          .sort((a, b) => parseInt(a.n_int, 10) - parseInt(b.n_int, 10));
+        .sort((a, b) => parseInt(a.n_int, 10) - parseInt(b.n_int, 10));
       } catch {
         showPopup('popup-danger', "Erro ao carregar lista de elementos.");
         return [];
@@ -404,12 +445,31 @@
     const loadDecirPayElements = (y, m) => loadDecirElements("n_int,full_name,nif,nib", y, m);
     const loadDecirCodA33Elements = (y, m) => loadDecirElements("n_int,full_name,nif", y, m);
     const loadDecirANEPCElements = (y, m) => loadDecirElements("n_int,n_file,patent,full_name", y, m);
-    async function loadShiftsByNI(year, month) {
+    const loadSbaOpatPayElements = (y, m) => loadDecirElements("n_int,full_name,nif,nib", y, m);
+    const loadSbaOpatCodA33Elements = (y, m) => loadDecirElements("n_int,full_name,nif", y, m);
+    const loadSbaOpatANEPCElements = (y, m) => loadDecirElements("n_int,n_file,patent,full_name", y, m);
+
+    async function loadDecirShiftsByNI(year, month) {
       try {
-        const data = await supabaseFetch(`decir_reg_pag?select=n_int,turno,day&year=eq.${year}&month=eq.${month}`);
-        return data.reduce((map,item) => {
-          const ni = parseInt(item.n_int,10);
-          map[ni] = (map[ni]||0) + 1;
+        const data = await supabaseFetch(`decir_reg_pag_ecin?select=n_int,shift,day&year=eq.${year}&month=eq.${month}`);
+        return data.reduce((map, item) => {
+          const ni = parseInt(item.n_int, 10);
+          map[ni] = (map[ni] || 0) + 1;
+          return map;
+        }, {});
+      } catch {
+        return {};
+      }
+    }
+    async function loadSbaOpatShiftsByNI(year, month, type) {
+      try {
+        const corp = getCorpId();
+        const data = await supabaseFetch(
+          `decir_reg_pag_opatsba?select=n_int,shift,day,type&year=eq.${year}&month=eq.${month}&type=eq.${type}&corp_oper_nr=eq.${corp}`
+        );
+        return data.reduce((map, item) => {
+          const ni = parseInt(item.n_int, 10);
+          map[ni] = (map[ni] || 0) + 1;
           return map;
         }, {});
       } catch {
@@ -431,74 +491,87 @@
         return {};
       }
     }
-    /* ─── SAVED DATA LOADER DECIR (IIFE) ─────────────────────── */
-    (function() {
-      async function loadDecirSavedData(year, month) {
-        try {
-          const url = `${window.SUPABASE_URL||SUPABASE_URL}/rest/v1/decir_reg_pag_ecin?select=n_int,day,shift&year=eq.${year}&month=eq.${month}&corp_oper_nr=eq.${getCorpId()}`;
-          const res = await fetch(url, {headers: window.getSupabaseHeaders ? window.getSupabaseHeaders() : getSupabaseHeaders()});
-          if (!res.ok) return {};
-          const data = await res.json();
-          return data.reduce((map,item) => {map[`${item.n_int}_${item.shift}_${item.day}`]="X"; return map;}, {});
-        } catch {
-          return {};
-        }
-      }
-      function applyDecirMapToTable(map) {
-        const rows = document.querySelectorAll("#table-container-dec-reg table tbody tr");
-        if (!rows.length) return;
-        let last_n_int = null;
-        const rowsToUpdate = new Set();
+    /* ═══════════════════════════════════════════════════════════════
+    MOTOR GENÉRICO DE CARREGAMENTO DE DADOS (DECIR / SBA / OPAT)
+    ═══════════════════════════════════════════════════════════════ */
+    async function genericDataLoader({
+      tableName, containerSelector, buildCharMap, updateTotalsFn, year, month
+    }) {
+      try {
+        const corpId = typeof getCorpId === "function" ? getCorpId() : "";
+        const url = `${window.SUPABASE_URL || SUPABASE_URL}/rest/v1/${tableName}?select=*&year=eq.${year}&month=eq.${month}&corp_oper_nr=eq.${corpId}`;
+        const res = await fetch(url, {
+          headers: window.getSupabaseHeaders ? window.getSupabaseHeaders() : getSupabaseHeaders()
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data.length) return;
+        const map = buildCharMap(data);
+        const container = document.querySelector(containerSelector);
+        if (!container) return;
+        const tbody = container.querySelector("table tbody");
+        if (!tbody) return;
+        const rows = Array.from(tbody.querySelectorAll("tr:not(.total-elements-row)"));
+        let current_n_int = null;
         rows.forEach(row => {
           const cells = Array.from(row.querySelectorAll("td"));
-          if (cells.length < 4) return;
-          const turnoCell = cells.find(td => ["D","N"].includes(td.textContent.trim().toUpperCase()));
+          if (!cells.length) return;
+          const parsedNint = parseInt(cells[0].textContent.trim(), 10);
+          if (!isNaN(parsedNint) && parsedNint > 0) current_n_int = parsedNint;
+          if (!current_n_int) return;
+          const turnoCell = cells.find(td => ["D", "N"].includes(td.textContent.trim().toUpperCase()));
           if (!turnoCell) return;
           const turno = turnoCell.textContent.trim().toUpperCase();
           const turnoIndex = cells.indexOf(turnoCell);
-          let n_int = turnoIndex === 0 ? last_n_int : parseInt(cells[0].textContent.trim(),10);
-          if (!isNaN(n_int) && turnoIndex !== 0) last_n_int = n_int;
-          if (!n_int || isNaN(n_int)) return;
-          let marked = false;
-          for (let d = 1; d <= 31; d++) {
-            const cell = cells[turnoIndex + d];
-            if (cell && map[`${n_int}_${turno}_${d}`]) {cell.textContent = "X"; cell.refreshMark?.(); marked = true;}
-          }
-          if (marked) rowsToUpdate.add(row);
-        });
-        rowsToUpdate.forEach(row => {
-          const count = Array.from(row.querySelectorAll("td[contenteditable='true']")).filter(td=>td.textContent.trim().toUpperCase()==="X").length;
+          const dayCells = cells.slice(turnoIndex + 1).filter(td => td.getAttribute("contenteditable") === "true" || td.classList.contains("day-cell"));
+          dayCells.forEach((cell, idx) => {
+            const dayNumber = idx + 1;
+            const char = map[`${current_n_int}_${turno}_${dayNumber}`];
+            if (char) {
+              cell.textContent = char;
+              cell.refreshMark?.();
+            }
+          });
           const tc = row.querySelector("td.total-cell");
-          if (tc) tc.textContent = String(count);
+          if (tc) tc.textContent = String(dayCells.filter(td => td.textContent.trim() !== "").length);
         });
-        const tbody = document.querySelector("#table-container-dec-reg table tbody");
-        if (!tbody) return;
-        const totalRow = tbody.querySelector("tr.total-elements-row");
-        if (!totalRow) return;
-        const firstRow = tbody.querySelector("tr:not(.total-elements-row)");
-        if (!firstRow) return;
-        const daysInMonth = firstRow.querySelectorAll("td[contenteditable='true']").length;
-        for (let d = 1; d <= daysInMonth; d++) {
-          const count = Array.from(tbody.querySelectorAll(`.day-cell-${d}`)).filter(td=>td.textContent.trim().toUpperCase()==="X").length;
-          const cell = totalRow.querySelector(`.total-day-${d}`);
-          if (cell) cell.textContent = count;
+        if (typeof window[updateTotalsFn] === "function") {
+          window[updateTotalsFn](tbody);
         }
-        window.updateAllValues?.();
-        updateDailyTotals?.();
-      }
-      async function loadDecirByMonth(year, month) {
-        try {
-          await new Promise(r => setTimeout(r, 0));
-          const tbody = document.querySelector("#table-container-dec-reg table tbody");
-          if (!tbody) return;
-          const map = await loadDecirSavedData(year, month);
-          if (Object.keys(map).length) applyDecirMapToTable(map);
-        } catch(err) {
-          console.error("Erro ao carregar DECIR:", err);
+        if (typeof window.updateDailyTotals === "function") {
+          window.updateDailyTotals();
         }
+      } catch (err) {
+        console.error(err);
       }
-      window.loadDecirByMonth = loadDecirByMonth;
-    })();
+    }
+    /* ─── IMPLEMENTAÇÃO DE CARREGAMENTO PARA DECIR E SBA/OPAT ─── */
+    window.loadDecirByMonth = function(year, month) {
+      genericDataLoader({
+        tableName: "decir_reg_pag_ecin",
+        containerSelector: "#table-container-dec-reg",
+        updateTotalsFn: "updateAllDecirValues",
+        year, month,
+        buildCharMap: (data) => data.reduce((map, item) => {
+          map[`${item.n_int}_${item.shift}_${item.day}`] = "X";
+          return map;
+        }, {})
+      });
+    };
+    window.loadSbaOpatByMonth = function(year, month) {
+      genericDataLoader({
+        tableName: "decir_reg_pag_opatsba",
+        containerSelector: "#table-container-sbaopat-reg",
+        updateTotalsFn: "updateAllValuesSbaOpat",
+        year, month,
+        buildCharMap: (data) => data.reduce((map, item) => {
+          const typeVal = (item.type || "").toLowerCase();
+          const char = (typeVal === "sba" || typeVal === "sbas" || typeVal === "s") ? "S" : "O";
+          map[`${item.n_int}_${item.shift}_${item.day}`] = char;
+          return map;
+        }, {})
+      });
+    };
     /* ─── TABELA: DESPESAS DANOS (DECIR) - PROVISÓRIA ────────── */
     function createDecirDespDemageTable(containerId, year, month) {
       const container = document.getElementById(containerId) || $(containerId);
@@ -1106,19 +1179,20 @@
           }
         } else { h.style.display="none"; n.style.display="none"; }
       }
-    }
-    /* ─── TABELA: REGISTOS (DECIR) ───────────────────────────── */    
-    async function createDecirRegTable(containerId, year, month, data) {
+    } 
+    /* ─── FUNÇÃO BASE GENÉRICA PARA TABELAS DE REGISTO DE TURNOS ──────────────── */
+    async function createShiftRegTable(options) {
+      const {containerId, year, month, data, titleText, allowedChars, onUpdateValues, valueHeaders = ["Valor<br>AMAL", "Valor<br>ANEPC", "Valor<br>GLOBAL"], tableClass = "dec-reg-month-table", styleId = "dec-reg-hover-style"} = options;
       const container = $(containerId);
       if (!container) return;
-      if (!document.getElementById("decir-reg-hover-style")) {
+      if (!document.getElementById(styleId)) {
         const hoverStyle = document.createElement("style");
-        hoverStyle.id = "decir-reg-hover-style";
+        hoverStyle.id = styleId;
         hoverStyle.textContent = `
-          .dec-reg-month-table tbody tr.dec-reg-active-elem td {
+          .${tableClass} tbody tr.dec-reg-active-elem td {
             filter: brightness(0.75);
           }
-          .dec-reg-month-table td[contenteditable="true"]:focus {
+          .${tableClass} td[contenteditable="true"]:focus {
             outline: 2px solid #5b8def;
             outline-offset: -2px;
           }
@@ -1127,18 +1201,18 @@
       }
       container.innerHTML = "";
       const daysInMonth = new Date(year, month, 0).getDate();
-      container.appendChild(makeTitle(`REGISTO TURNOS ECIN POR ELEMENTO - ${MONTH_NAMES_UPPER[month-1]} ${year}`));
+      container.appendChild(makeTitle(titleText));
       const wrapper = decirMakeWrapper(container);
       const table = document.createElement("table");
-      table.className = "dec-reg-month-table";
-      Object.assign(table.style, {width:"100%", borderCollapse:"separated"});
-      /* thead */
+      table.className = tableClass;
+      Object.assign(table.style, { width: "100%", borderCollapse: "separate" });
+      /* ─── Cabeçalho (thead) ─── */
       const thead = document.createElement("thead");
       const trTop = document.createElement("tr");
-      ["NI","Nome","Catg.","Turno"].forEach((h,i) => {
+      ["NI", "Nome", "Catg.", "Turno"].forEach((h, i) => {
         const th = makeTh(h, "border-bottom:2px solid #ccc;");
         th.rowSpan = 2;
-        th.style.width = i===0?"40px":i===1?"140px":"40px";
+        th.style.width = i === 0 ? "40px" : i === 1 ? "140px" : "40px";
         trTop.appendChild(th);
       });
       for (let d = 1; d <= 31; d++) {
@@ -1147,10 +1221,9 @@
         th.style.cssText = COMMON_TH_STYLE;
         trTop.appendChild(th);
       }
-      [["TOTAL<br>Turnos", "60px", "#131a69"], ["Valor<br>AMAL", "120px", null], ["Valor<br>ANEPC", "120px", null], ["Valor<br>GLOBAL", "120px", null]]
-        .forEach(([txt,w,bg]) => {
-        const th = makeTh(txt, `width:${w}; text-align: center; vertical-align: middle; border-bottom: 2px solid #ccc; ${bg?`background: ${bg}; color: #fff` : ""}`, {});
-        th.style.cssText = COMMON_THTOTAL_STYLE + `width: ${w}; text-align: center; vertical-align: middle; border-bottom: 2px solid #ccc; ${bg?`background: ${bg}; color : #fff`:""}`;
+      [["TOTAL<br>Turnos", "60px", "#131a69"], [valueHeaders[0], "120px", null], [valueHeaders[1], "120px", null], [valueHeaders[2], "120px", null]].forEach(([txt, w, bg]) => {
+        const th = makeTh(txt, `width:${w}; text-align: center; vertical-align: middle; border-bottom: 2px solid #ccc; ${bg ? `background: ${bg}; color: #fff` : ""}`, {});
+        th.style.cssText = COMMON_THTOTAL_STYLE + `width: ${w}; text-align: center; vertical-align: middle; border-bottom: 2px solid #ccc; ${bg ? `background: ${bg}; color: #fff` : ""}`;
         th.rowSpan = 2;
         trTop.appendChild(th);
       });
@@ -1174,7 +1247,7 @@
       };
       const holidays = getPortugalHolidays(year);
       updateDECIRDayHeaders(table, year, month, daysInMonth, holidays);
-      const getRows = () => Array.from(tbody.querySelectorAll("tr"));
+      const getRows = () => Array.from(tbody.querySelectorAll("tr:not(.total-elements-row)"));
       const getEditable = row => Array.from(row.querySelectorAll("td[contenteditable='true']"));
       const focusCell = td => {
         if (!td) return;
@@ -1185,11 +1258,14 @@
         sel.removeAllRanges();
         sel.addRange(range);
       };
+      const isValidChar = val => allowedChars.map(c => c.toUpperCase()).includes(val.trim().toUpperCase());
       const updateRowTotal = tr => {
-        const count = getEditable(tr).filter(td=>td.textContent.trim().toUpperCase()==="X").length;
+        const count = getEditable(tr).filter(td => isValidChar(td.textContent)).length;
         const tc = tr.querySelector("td.total-cell");
         if (tc) tc.textContent = String(count);
-        updateAllValues();
+        if (typeof onUpdateValues === "function") {
+          onUpdateValues(tbody);
+        }
         updateDailyTotals();
       };
       const navigate = (td, dir) => {
@@ -1198,54 +1274,68 @@
         const rowIdx = rows.indexOf(tr);
         const cells = getEditable(tr);
         const idx = cells.indexOf(td);
-        if (dir==="right") return idx<cells.length-1 ? cells[idx+1] : (rows[rowIdx+1] ? getEditable(rows[rowIdx+1])[0] : null);
-        if (dir==="left") return idx>0 ? cells[idx-1] : null;
-        if (dir==="down") {const nr=rows[rowIdx+1]; return nr ? getEditable(nr)[Math.min(idx,getEditable(nr).length-1)] : null;}
-        if (dir==="up") {const pr=rows[rowIdx-1]; return pr ? getEditable(pr)[Math.min(idx,getEditable(pr).length-1)] : null;}
+        if (dir === "right") return idx < cells.length - 1 ? cells[idx + 1] : (rows[rowIdx + 1] ? getEditable(rows[rowIdx + 1])[0] : null);
+        if (dir === "left") return idx > 0 ? cells[idx - 1] : null;
+        if (dir === "down") { const nr = rows[rowIdx + 1]; return nr ? getEditable(nr)[Math.min(idx, getEditable(nr).length - 1)] : null; }
+        if (dir === "up") { const pr = rows[rowIdx - 1]; return pr ? getEditable(pr)[Math.min(idx, getEditable(pr).length - 1)] : null; }
         return null;
       };
       const createDayCell = (dayNum, trRef) => {
-            const td = document.createElement("td");
+        const td = document.createElement("td");
         td.className = `day-cell-${dayNum}`;
+        if (dayNum > daysInMonth) {
+          td.contentEditable = false;
+          td.style.cssText = COMMON_TD_STYLE + "background: #e0e0e0; cursor: not-allowed;";
+          if (trRef.querySelector("td")?.textContent.trim() === "N") td.style.borderBottom = "2px solid #aaa;";
+          return td;
+        }
         td.contentEditable = true;
         td.style.cssText = COMMON_TD_STYLE;
-        if (trRef.querySelector("td")?.textContent.trim()==="N") td.style.borderBottom = "2px solid #aaa";
+        if (trRef.querySelector("td")?.textContent.trim() === "N") td.style.borderBottom = "2px solid #aaa";
         const date = new Date(year, month - 1, dayNum);
         const holiday = holidays.find(h => h.date.getDate() === dayNum && h.date.getMonth() === month - 1);
         const isWeekend = date.getDay() === 0 || date.getDay() === 6;
         const setDayCellBg = () => {
-          const isMarked = td.textContent.trim().toUpperCase() === "X";
+          const isMarked = isValidChar(td.textContent);
           td.style.fontWeight = isMarked ? "bold" : "normal";
           if (isMarked) {
             td.style.background = holiday ? (holiday.optional ? "#1e7d34" : "#c94040") : isWeekend ? "#8a9aa8" : "#c8c8c8";
             td.style.color = "#000";
           } else if (holiday) {
-            td.style.background = holiday.optional ? "#2ecc71" : "#ffcccc"; td.style.color = holiday.optional ? "#fff" : "#000";
+            td.style.background = holiday.optional ? "#2ecc71" : "#ffcccc";
+            td.style.color = holiday.optional ? "#fff" : "#000";
           } else if (isWeekend) {
-            td.style.background = WEEKEND_COLOR; td.style.color = "#000";
+            td.style.background = WEEKEND_COLOR;
+            td.style.color = "#000";
           } else {
-            td.style.background = "#ddd"; td.style.color = "";
+            td.style.background = "#ddd";
+            td.style.color = "";
           }
         };
         setDayCellBg();
         td.refreshMark = setDayCellBg;
         td.addEventListener("input", () => {
-          let v = td.textContent.toUpperCase().trim();
-          v = v.length>1 ? v[0] : v;
-          td.textContent = v==="X" ? "X" : "";
+          let raw = td.textContent.trim().toUpperCase();
+          let char = raw.length > 0 ? raw[0] : "";
+          td.textContent = isValidChar(char) ? char : "";
           setDayCellBg();
           updateRowTotal(trRef);
-          if (v==="X") {const next=navigate(td,"right"); if(next) setTimeout(()=>focusCell(next),0);}
+          if (isValidChar(td.textContent)) {
+            const next = navigate(td, "right");
+            if (next) setTimeout(() => focusCell(next), 0);
+          }
         });
         td.addEventListener("paste", ev => {
           ev.preventDefault();
-          const char = (ev.clipboardData||window.clipboardData).getData("text").toUpperCase().trim()[0]==="X"?"X":"";
-          document.execCommand("insertText",false,char);
+          const rawText = (ev.clipboardData || window.clipboardData).getData("text").toUpperCase().trim();
+          const firstChar = rawText[0] || "";
+          const char = isValidChar(firstChar) ? firstChar : "";
+          document.execCommand("insertText", false, char);
         });
         td.addEventListener("keydown", ev => {
-          if (["ArrowRight","ArrowLeft","ArrowUp","ArrowDown","Enter"].includes(ev.key)) {
+          if (["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown", "Enter"].includes(ev.key)) {
             ev.preventDefault();
-            const dir = ev.key==="ArrowRight"||ev.key==="Enter" ? "right" : ev.key==="ArrowLeft" ? "left" : ev.key==="ArrowUp" ? "up" : "down";
+            const dir = (ev.key === "ArrowRight" || ev.key === "Enter") ? "right" : ev.key === "ArrowLeft" ? "left" : ev.key === "ArrowUp" ? "up" : "down";
             const next = navigate(td, dir);
             if (next) focusCell(next);
           }
@@ -1256,14 +1346,14 @@
         });
         return td;
       };
-      /* rows */
+      /* ─── Linhas da Tabela ─── */
       data.forEach(item => {
-        const nInt = parseInt(item.n_int,10);
-        ["D","N"].forEach((turno, tIdx) => {
+        const nInt = parseInt(item.n_int, 10);
+        ["D", "N"].forEach((turno, tIdx) => {
           const tr = document.createElement("tr");
           tr.setAttribute("data-nint", nInt);
-          if (tIdx===0) {
-            [String(nInt).padStart(3,"0"), item.abv_name||"", item.patent_abv||""].forEach(txt => {
+          if (tIdx === 0) {
+            [String(nInt).padStart(3, "0"), item.abv_name || "", item.patent_abv || ""].forEach(txt => {
               const td = document.createElement("td");
               td.textContent = txt;
               td.style.cssText = COMMON_TD_STYLE + "border-bottom:2px solid #aaa; background:#fff;";
@@ -1273,20 +1363,22 @@
           }
           const tdTurno = document.createElement("td");
           tdTurno.textContent = turno;
-          tdTurno.style.cssText = COMMON_TD_STYLE + `font-weight: bold; text-align: center; background:#fff; ${turno==="N"?"border-bottom: 2px solid #aaa;" : ""}`;
+          tdTurno.style.cssText = COMMON_TD_STYLE + `font-weight: bold; text-align: center; background:#fff; ${turno === "N" ? "border-bottom: 2px solid #aaa;" : ""}`;
           tr.appendChild(tdTurno);
-          for (let d=1; d<=daysInMonth; d++) tr.appendChild(createDayCell(d, tr));
+          for (let d = 1; d <= daysInMonth; d++) tr.appendChild(createDayCell(d, tr));
           const tdTotal = document.createElement("td");
           tdTotal.className = "total-cell";
           tdTotal.textContent = "0";
-          tdTotal.style.cssText = COMMON_TDTOTAL_STYLE + "background:#fff;" + (turno==="N"?"border-bottom:2px solid #aaa;":"");
-          tdTotal.style.setProperty("font-weight","bold","important");
-          if (turno==="N") tdTotal.style.setProperty("border-bottom","2px solid #aaa","important");
+          tdTotal.style.cssText = COMMON_TDTOTAL_STYLE + "background:#fff;" + (turno === "N" ? "border-bottom:2px solid #aaa;" : "");
+          tdTotal.style.setProperty("font-weight", "bold", "important");
+          if (turno === "N") tdTotal.style.setProperty("border-bottom", "2px solid #aaa", "important");
           tr.appendChild(tdTotal);
-          if (tIdx===0) {
-            [["0.00"],["0.00"],["0.00"]].forEach(([txt]) => {
+          if (tIdx === 0) {
+            ["val-col-1", "val-col-2", "val-col-global"].forEach(cls => {
               const td = document.createElement("td");
-              td.rowSpan = 2; td.textContent = txt;
+              td.className = cls;
+              td.rowSpan = 2;
+              td.textContent = "0.00 €";
               td.style.cssText = COMMON_TDTOTAL_STYLE + "text-align:center;border-bottom:2px solid #aaa; background:#fff;";
               tr.appendChild(td);
             });
@@ -1294,7 +1386,7 @@
           tbody.appendChild(tr);
         });
       });
-      /* daily totals row */
+      /* ─── Linha de Totais Diários ─── */
       const updateDailyTotals = () => {
         let totalRow = tbody.querySelector("tr.total-elements-row");
         if (!totalRow) {
@@ -1306,10 +1398,11 @@
           tdTitle.style.cssText = "font-weight: bold; text-align: center; padding: 2px 4px; border: 1px solid #ccc; border-top: 0; border-left: 0; background: #f7c277;";
           tdTitle.textContent = "Total diário de elementos:";
           totalRow.appendChild(tdTitle);
-          for (let d=1; d<=daysInMonth; d++) {
+          for (let d = 1; d <= daysInMonth; d++) {
             const td = document.createElement("td");
             td.className = `total-day-${d}`;
             td.style.cssText = "font-weight: bold; text-align: center; padding: 2px 4px; border: 1px solid #ccc; border-top: 0; border-left: 0; height: 18px; line-height: 16px;";
+            if (d > daysInMonth) td.style.background = "#e0e0e0";
             totalRow.appendChild(td);
           }
           const tdGeral = document.createElement("td");
@@ -1319,87 +1412,188 @@
           tbody.appendChild(totalRow);
         }
         let totalGeral = 0;
-        for (let d=1; d<=daysInMonth; d++) {
-          const count = Array.from(tbody.querySelectorAll(`.day-cell-${d}`)).filter(td=>td.textContent.trim().toUpperCase()==="X").length;
-          totalRow.querySelector(`.total-day-${d}`).textContent = count;
+        for (let d = 1; d <= daysInMonth; d++) {
+          if (d <= daysInMonth) {
+            const count = Array.from(tbody.querySelectorAll(`.day-cell-${d}`)).filter(td => isValidChar(td.textContent)).length;
+            totalRow.querySelector(`.total-day-${d}`).textContent = count;
+          } else {
+            totalRow.querySelector(`.total-day-${d}`).textContent = "-";
+          }
         }
-        tbody.querySelectorAll("tr:not(.total-elements-row) .total-cell").forEach(tc => {totalGeral += parseInt(tc.textContent,10)||0;});
+        tbody.querySelectorAll("tr:not(.total-elements-row) .total-cell").forEach(tc => {
+          totalGeral += parseInt(tc.textContent, 10) || 0;
+        });
         totalRow.querySelector(".total-general").textContent = totalGeral;
       };
       updateDailyTotals();
-      updateAllValues();
       window.updateDailyTotals = updateDailyTotals;
+      if (typeof onUpdateValues === "function") {
+        onUpdateValues(tbody);
+      }
       const firstEditable = tbody.querySelector("td[contenteditable='true']");
       if (firstEditable) firstEditable.focus();
     }
-    /* ─── TABELA: PAGAMENTOS (DECIR) ─────────────────────────── */
-    function createDecirPayTable(containerId, year, month, elements, turnosPorNI) {
+    /* ─── INICIALIZADORES DAS TABELAS ──────────────────────────── */
+    async function createDecirRegTable(containerId, year, month, data) {
+      return createShiftRegTable({containerId, year, month, data, titleText: `REGISTO TURNOS DE ECIN POR ELEMENTO - ${MONTH_NAMES_UPPER[month - 1]} ${year}`, allowedChars: ["X"], 
+                                  onUpdateValues: updateAllDecirValues, valueHeaders: ["Valor<br>AMAL", "Valor<br>ANEPC", "Valor<br>GLOBAL"]});
+                                }
+    async function createSbaOpatRegTable (containerId, year, month, data) {
+      return createShiftRegTable({containerId, year, month, data, titleText: `REGISTO DE TURNOS DE SBA E OPAT - ${MONTH_NAMES_UPPER[month - 1]} ${year}`, allowedChars: ["S", "O"],
+                                  onUpdateValues: updateAllValuesSbaOpat, valueHeaders: ["Valor<br>SBAS", "Valor<br>OPAT", "Valor<br>GLOBAL"]});
+                                }
+    /* ═══════════════════════════════════════════════════════════════
+       MOTOR GENÉRICO DE CRIAÇÃO DE TABELA DE PAGAMENTOS
+    ═══════════════════════════════════════════════════════════════ */
+    function genericCreatePayTable({
+      containerId, year, month, titlePrefix, elements, columns, calculateRowTotal, inputIdsToWatch, optionsContainerId, totalContainerId = "decir-payment-totals", cardBodySelector = "#decir-pag-ecins .major-card-body", tableHeight = null
+    }) {
       const container = $(containerId);
       if (!container) return;
       container.innerHTML = "";
-      container.appendChild(makeTitle(`RELATÓRIO PAGAMENTOS DECIR - ${MONTH_NAMES_UPPER[month-1]} ${year}`));
+      container.appendChild(makeTitle(`${titlePrefix} - ${MONTH_NAMES_UPPER[month - 1]} ${year}`));
       const wrapper = decirMakeWrapper(container);
+      if (tableHeight) {
+        wrapper.style.maxHeight = tableHeight;
+        wrapper.style.overflowY = "auto";
+      }
       const table = document.createElement("table");
       table.className = "pag-table";
-      Object.assign(table.style, {width:"100%", borderCollapse:"separated", fontFamily:"Segoe UI, sans-serif"});
+      Object.assign(table.style, { width: "100%", borderCollapse: "separate", fontFamily: "Segoe UI, sans-serif" });
       const thead = document.createElement("thead");
-      const trh   = document.createElement("tr");
-      const headers = ["NI","Nome","NIF","NIB","Qtd. Turnos","Valor a Receber (€)"];
-      const widths  = ["40px","175px","120px","175px","100px","120px"];
-      headers.forEach((h,i) => {
+      const trh = document.createElement("tr");
+      const baseHeaders = ["NI", "Nome", "NIF", "NIB"];
+      const baseWidths = ["40px", "175px", "120px", "175px"];
+      const allHeaders = [...baseHeaders, ...columns.map(c => c.header), "Valor a Receber (€)"];
+      const allWidths = [...baseWidths, ...columns.map(c => c.width), "120px"];
+      allHeaders.forEach((h, i) => {
         const th = makeTh(h, "height:40px;line-height:40px;");
-        th.style.width = widths[i];
+        th.style.width = allWidths[i];
         trh.appendChild(th);
       });
       thead.appendChild(trh);
       table.appendChild(thead);
       const tbody = document.createElement("tbody");
       const rowsCount = elements.length > 0 ? elements.length : 10;
-      for (let i=0; i<rowsCount; i++) {
+      for (let i = 0; i < rowsCount; i++) {
         const elem = elements[i] || {};
         const tr = document.createElement("tr");
-        const niKey = parseInt(elem.n_int,10);
-        const qtdTurnos = turnosPorNI?.[niKey] || 0;
-        tr.appendChild(makeTd(elem.n_int ? String(elem.n_int).padStart(3,'0') : ""));
-        tr.appendChild(makeTd(elem.full_name||"", "text-align:center;padding:6px 8px;"));
-        tr.appendChild(makeTd(elem.nif||"", "text-align:center;padding:6px 8px;"));
-        tr.appendChild(makeTd(elem.nib||"", "text-align:center;padding:6px 8px;"));
-        const tdTurnos = makeTd(String(qtdTurnos), "text-align:center;font-weight:bold;padding:6px 8px;");
-        tr.appendChild(tdTurnos);
+        const niKey = parseInt(elem.n_int, 10);
+        tr.appendChild(makeTd(elem.n_int ? String(elem.n_int).padStart(3, '0') : ""));
+        tr.appendChild(makeTd(elem.full_name || "", "text-align:center;padding:6px 8px;"));
+        tr.appendChild(makeTd(elem.nif || "", "text-align:center;padding:6px 8px;"));
+        tr.appendChild(makeTd(elem.nib || "", "text-align:center;padding:6px 8px;"));
+        const columnValues = columns.map(col => {
+          const qty = col.getQty(niKey);
+          tr.appendChild(makeTd(String(qty), "text-align:center;font-weight:bold;padding:6px 8px;"));
+          return qty;
+        });
         const tdValor = document.createElement("td");
         tdValor.style.cssText = COMMON_TDTOTAL_STYLE + "text-align:right;font-weight:bold;padding:6px 8px;";
         const updateValor = () => {
-          const total = (parseVal("amal-value-pag") + parseVal("anepc-value-pag")) * qtdTurnos;
+          const total = calculateRowTotal(...columnValues);
           tdValor.textContent = formatCurrency(total);
         };
         updateValor();
-        ["amal-value-pag","anepc-value-pag"].forEach(id => {const el=$(id); if(el) el.addEventListener("input", updateValor);});
+        inputIdsToWatch.forEach(id => {
+          const el = $(id);
+          if (el) el.addEventListener("input", updateValor);
+        });
         tr.appendChild(tdValor);
         tbody.appendChild(tr);
       }
       table.appendChild(tbody);
       wrapper.appendChild(table);
-      $("decir-pag-options") && ($("decir-pag-options").style.display="flex");
-      updateDECIRTotalPaymentsByMonth();
+      if (optionsContainerId && $(optionsContainerId)) {
+        $(optionsContainerId).style.display = "flex";
+      }
+      if (typeof updateDECIRTotalPaymentsByMonth === "function") {
+        updateDECIRTotalPaymentsByMonth(containerId, totalContainerId, cardBodySelector);
+      }
+    }
+    /* ─── IMPLEMENTAÇÃO: PAGAMENTOS DECIR ───────────────────────── */
+    function createDecirPayTable(containerId, year, month, elements, turnosPorNI) {
+      genericCreatePayTable({
+        containerId, year, month, titlePrefix: "RELATÓRIO PARA PAGAMENTOS DE ECINS", elements,
+        columns: [{header: "Qtd. Turnos", width: "100px", getQty: (ni) => turnosPorNI?.[ni] || 0}],
+        calculateRowTotal: (qtdTurnos) => {
+          return (parseVal("amal-value-pag") + parseVal("anepc-value-pag")) * qtdTurnos;
+        },
+        inputIdsToWatch: ["amal-value-pag", "anepc-value-pag"],
+        optionsContainerId: "decir-pag-options",
+        totalContainerId: "decir-payment-totals",
+        cardBodySelector: "#decir-pag-ecins .major-card-body",
+        tableHeight: "420px"
+      });
+    }
+    /* ─── IMPLEMENTAÇÃO: PAGAMENTOS SBAS / OPAT ─────────────────── */
+    function createSbaOpatPayTable(containerId, year, month, elements, turnosSbasPorNI, turnosOpatPorNI) {
+      genericCreatePayTable({
+        containerId, year, month, titlePrefix: "RELATÓRIO PARA PARAPAGAMENTOS DE SBAs E OPATs", elements,
+        columns: [{header: "Qtd. SBAS", width: "90px", getQty: (ni) => turnosSbasPorNI?.[ni] || 0}, {header: "Qtd. OPAT", width: "90px", getQty: (ni) => turnosOpatPorNI?.[ni] || 0}],
+        calculateRowTotal: (qtdSbas, qtdOpat) => {
+          return (parseVal("sbas-value-pag") * qtdSbas) + (parseVal("opat-value-pag") * qtdOpat);
+        },
+        inputIdsToWatch: ["sbas-value-pag", "opat-value-pag"],
+        optionsContainerId: "sbaopat-pag-options",
+        totalContainerId: "sbaopat-payment-totals",
+        cardBodySelector: "#decir-pag-sbaopat .major-card-body",
+        tableHeight: "420px"
+      });
     }
     /* ─── CÁLCULOS REGISTOS (DECIR) ──────────────────────────── */
-    function updateAllValues() {
+    function updateAllDecirValues() {
       const amalCents  = Math.round(parseVal("amal-value-reg") * 100);
       const anepcCents = Math.round(parseVal("anepc-value-reg") * 100);
       const tbody = document.querySelector("table.month-table tbody, table.dec-reg-month-table tbody");
       if (!tbody) return;
-      const rows = Array.from(tbody.querySelectorAll("tr"));
-      for (let i=0; i<rows.length; i+=2) {
-        const [trD, trN] = [rows[i], rows[i+1]];
+      const rows = Array.from(tbody.querySelectorAll("tr:not(.total-elements-row)"));
+      for (let i = 0; i < rows.length; i += 2) {
+        const [trD, trN] = [rows[i], rows[i + 1]];
         if (!trN) continue;
-        const sum = (Number(trD.querySelector("td.total-cell")?.textContent)||0) + (Number(trN.querySelector("td.total-cell")?.textContent)||0);
+        const sum = (Number(trD.querySelector("td.total-cell")?.textContent) || 0) + (Number(trN.querySelector("td.total-cell")?.textContent) || 0);
         const tds = Array.from(trD.querySelectorAll("td"));
         const [amalCell, anepcCell, globalCell] = tds.slice(-3);
-        if (amalCell) amalCell.textContent = formatCurrency((sum * amalCents)  / 100);
-        if (anepcCell) anepcCell.textContent = formatCurrency((sum * anepcCents) / 100);
-        if (globalCell) globalCell.textContent = formatCurrency((sum * (amalCents + anepcCents)) / 100);
+        const fmt = val => typeof formatCurrency === "function" ? formatCurrency(val) : val.toFixed(2) + " €";
+        if (amalCell) amalCell.textContent = fmt((sum * amalCents) / 100);
+        if (anepcCell) anepcCell.textContent = fmt((sum * anepcCents) / 100);
+        if (globalCell) globalCell.textContent = fmt((sum * (amalCents + anepcCents)) / 100);
       }
-      setTimeout(updateGeneralTotals, 0);
+      if (typeof updateGeneralTotals === "function") {
+        setTimeout(updateGeneralTotals, 0);
+      }
+    }
+    /* ─── CÁLCULOS REGISTOS (SBAS / OPAT) ──────────────────────────── */
+    function updateAllValuesSbaOpat(tbodyParam) {
+      const tbody = tbodyParam;
+      if (!tbody) return;
+      const sbasCents = Math.round((SBAS_RATE || 0) * 100);
+      const opatCents = Math.round((OPAT_RATE || 0) * 100);
+      const rows = Array.from(tbody.querySelectorAll("tr:not(.total-elements-row)"));
+      for (let i = 0; i < rows.length; i += 2) {
+        const trD = rows[i];
+        const trN = rows[i + 1];
+        if (!trN) continue;    const editablesD = Array.from(trD.querySelectorAll("td[contenteditable='true']"));
+        const editablesN = Array.from(trN.querySelectorAll("td[contenteditable='true']"));
+        const allEditables = [...editablesD, ...editablesN];
+        let countS = 0;
+        let countO = 0;
+        allEditables.forEach(td => {
+          const char = td.textContent.trim().toUpperCase();
+          if (char === "S") countS++;
+          if (char === "O") countO++;
+        });
+        const valorSBAS = (countS * sbasCents) / 100;
+        const valorOPAT = (countO * opatCents) / 100;
+        const valorGlobal = valorSBAS + valorOPAT;
+        const c1 = trD.querySelector(".val-col-1");
+        const c2 = trD.querySelector(".val-col-2");
+        const cG = trD.querySelector(".val-col-global");
+        const fmt = val => typeof formatCurrency === "function" ? formatCurrency(val) : val.toFixed(2) + " €";
+        if (c1) c1.textContent = fmt(valorSBAS);
+        if (c2) c2.textContent = fmt(valorOPAT);
+        if (cG) cG.textContent = fmt(valorGlobal);
+      }
     }
     function updateGeneralTotals() {
       const tbody = document.querySelector("table.month-table tbody, table.dec-reg-month-table tbody");
@@ -1438,178 +1632,269 @@
         </table>
       `;
     }
-    function updateDECIRTotalPaymentsByMonth() {
-      const table = document.querySelector("table.pag-table");
+    /* ─── TOTAL A PAGAR (rodapé do card) ────────────────────────── */
+    function updateDECIRTotalPaymentsByMonth(tableContainerId, totalContainerId = "decir-payment-totals", cardBodySelector = "#decir-pag-ecins .major-card-body") {
+      const table = tableContainerId
+        ? document.querySelector(`#${tableContainerId} table.pag-table`)
+        : document.querySelector("table.pag-table");
       if (!table) return;
       const grandTotalCents = Array.from(table.querySelectorAll("tbody tr")).reduce((acc, tr) => {
         const tds = Array.from(tr.querySelectorAll("td"));
-        const last = tds[tds.length-1];
+        const last = tds[tds.length - 1];
         if (!last) return acc;
-        return acc + Math.round((parseCurrency(last.textContent))*100);
+        return acc + Math.round((parseCurrency(last.textContent)) * 100);
       }, 0);
-      let tc = $("decir-payment-totals");
-      const cardBody = document.querySelector("#decir-pag .major-card-body");
+      let tc = $(totalContainerId);
+      const cardBody = document.querySelector(cardBodySelector);
       if (!cardBody) return;
       if (!tc) {
         tc = document.createElement("div");
-        tc.id = "decir-payment-totals";
-        Object.assign(tc.style, {margin:"5px 0 0 0", width:"100%", display:"none"});
+        tc.id = totalContainerId;
+        Object.assign(tc.style, { margin: "5px 0 0 0", width: "100%", display: "none" });
         cardBody.appendChild(tc);
       }
       tc.innerHTML = `
         <div style="display: flex; justify-content: flex-end; font-size: 16px; font-weight: bold;">
-          <div style="padding: 8px 10px; border: 1px solid #ccc; border-right: 0; background: #f7f7f7; width: 163px; text-align: right; border-top-left-radius: 5px;
-                      border-bottom-left-radius:5px;">TOTAL A PAGAR:</div>
-          <div style="padding: 8px 10px; border: 1px solid #ccc; background: #e0f7e0; color: #006400; width: 203px; text-align: right; border-top-right-radius: 5px;
-                      border-bottom-right-radius: 5px;">${formatCurrency(grandTotalCents/100)}</div>
+          <div style="padding: 8px 10px; border: 1px solid #ccc; border-right: 0; background: #f7f7f7; width: 163px; text-align: right; border-top-left-radius: 5px; border-bottom-left-radius:5px;">TOTAL A PAGAR:</div>
+          <div style="padding: 8px 10px; border: 1px solid #ccc; background: #e0f7e0; color: #006400; width: 203px; text-align: right; border-top-right-radius: 5px; border-bottom-right-radius: 5px;">${formatCurrency(grandTotalCents / 100)}</div>
         </div>
       `;
       tc.style.display = "flex";
       tc.style.justifyContent = "flex-end";
     }
-    /* ─── LIMPAR TABELA (DECIR) ──────────────────────────────── */
+    /* ─── MODAL DE CONFIRMAÇÃO (UTILITÁRIO COMPARTILHADO) ──────────── */
     function showPopupConfirm(message) {
       return new Promise(resolve => {
         const modal = $("popup-confirm-modal");
+        if (!modal) return resolve(false);
         $("popup-confirm-message").textContent = message;
         modal.classList.add("show");
         const okBtn = $("popup-confirm-ok-btn");
         const cancelBtn = $("popup-confirm-cancel-btn");
         const cleanup = (result) => {
           modal.classList.remove("show");
-          okBtn.removeEventListener("click", onOk);
-          cancelBtn.removeEventListener("click", onCancel);
+          okBtn?.removeEventListener("click", onOk);
+          cancelBtn?.removeEventListener("click", onCancel);
           resolve(result);
         };
         const onOk = () => cleanup(true);
         const onCancel = () => cleanup(false);
-        okBtn.addEventListener("click", onOk);
-        cancelBtn.addEventListener("click", onCancel);
+        okBtn?.addEventListener("click", onOk);
+        cancelBtn?.addEventListener("click", onCancel);
       });
     }
-    async function clearDecirTable() {
-      if (!$("table-container-dec-reg")) return;
-      const monthBtn = document.querySelector("#months-container-dec-reg .btn.active");
+    /* ═══════════════════════════════════════════════════════════════
+    MOTOR GENÉRICO DE LIMPEZA DE TABELA (DECIR / SBA / OPAT)
+    ═══════════════════════════════════════════════════════════════ */
+    async function genericClearTable({
+      tableContainerId, monthsContainerSelector, yearInputId, tableName, reloadDataFn
+    }) {
+      if (!$(tableContainerId)) return;
+      const monthBtn = document.querySelector(`${monthsContainerSelector} .btn.active`);
       if (!monthBtn) return showPopup('popup-danger', "Nenhum mês selecionado.");
-      const month = Array.from(document.querySelectorAll("#months-container-dec-reg .btn")).indexOf(monthBtn) + 1 + 4;
-      const year  = parseInt($("year-dec-reg").value, 10);
-      const confirmed = await showPopupConfirm(`Tem certeza que quer limpar os dados de ${monthBtn.textContent.trim()} de ${year}?`);
+      const month = Array.from(document.querySelectorAll(`${monthsContainerSelector} .btn`)).indexOf(monthBtn) + 1 + 4;
+      const yearInput = $(yearInputId);
+      const year = yearInput ? parseInt(yearInput.value, 10) : new Date().getFullYear();
+      const monthName = monthBtn.textContent.trim();
+      const confirmed = await showPopupConfirm(`Tem certeza que quer limpar os dados de ${monthName} de ${year}?`);
       if (!confirmed) return;
       try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/decir_reg_pag_ecin?year=eq.${year}&month=eq.${month}`, {method:"DELETE", headers:getSupabaseHeaders()});
-        if (!res.ok) throw new Error(await res.text()||"Erro ao apagar dados");
-        showPopup('popup-success', `Dados de ${monthBtn.textContent.trim()} de ${year} apagados com sucesso!`);
-        const data = await loadDecirRegData();
-        await createDecirRegTable("table-container-dec-reg", year, month, data);
-        await window.loadDecirByMonth?.(year, month);
-      } catch(err) {
-        console.error(err); showPopup('popup-danger', "❌ Erro ao apagar: "+err.message);
+        const corpId = typeof getCorpId === "function" ? getCorpId() : "";
+        const corpParam = corpId ? `&corp_oper_nr=eq.${corpId}` : "";
+        const supabaseUrl = window.SUPABASE_URL || SUPABASE_URL;
+        const headers = window.getSupabaseHeaders ? window.getSupabaseHeaders() : getSupabaseHeaders();
+        const res = await fetch(`${supabaseUrl}/rest/v1/${tableName}?year=eq.${year}&month=eq.${month}${corpParam}`, {
+          method: "DELETE",
+          headers: headers
+        });
+        if (!res.ok) throw new Error(await res.text() || "Erro ao apagar dados");
+        showPopup('popup-success', `Dados de ${monthName} de ${year} apagados com sucesso!`);
+        if (typeof reloadDataFn === "function") {
+          await reloadDataFn(year, month);
+        }
+      } catch (err) {
+        console.error(`Erro ao apagar tabela ${tableName}:`, err);
+        showPopup('popup-danger', "❌ Erro ao apagar: " + err.message);
       }
     }
-    /* ─── GUARDAR REGISTO (DECIR) ────────────────────────────── */
-    async function saveDecirFull() {
-      const table = document.querySelector("#table-container-dec-reg table tbody");
+    /* ─── IMPLEMENTAÇÕES ESPECÍFICAS DE LIMPEZA ────────────────────── */
+    window.clearDecirTable = async function() {
+      await genericClearTable({
+        tableContainerId: "table-container-dec-reg",
+        monthsContainerSelector: "#months-container-dec-reg",
+        yearInputId: "year-dec-reg",
+        tableName: "decir_reg_pag_ecin",
+        reloadDataFn: async (year, month) => {
+          const container = document.querySelector("#table-container-dec-reg");
+          if (!container) return;
+          container.querySelectorAll("td[contenteditable='true'], td.day-cell").forEach(cell => {
+            cell.textContent = "";
+            cell.refreshMark?.();
+          });
+          const tbody = container.querySelector("table tbody");
+          if (tbody && typeof window.updateAllDecirValues === "function") {
+            window.updateAllDecirValues(tbody);
+          }
+        }
+      });
+    };
+    window.clearSbaOpatTable = async function() {
+      await genericClearTable({
+        tableContainerId: "table-container-sbaopat-reg",
+        monthsContainerSelector: "#months-container-sbaopat-reg",
+        yearInputId: "year-sbaopat-reg",
+        tableName: "decir_reg_pag_opatsba",
+        reloadDataFn: async (year, month) => {
+          const container = document.querySelector("#table-container-sbaopat-reg");
+          if (!container) return;
+          container.querySelectorAll("td[contenteditable='true'], td.day-cell").forEach(cell => {
+            cell.textContent = "";
+            cell.refreshMark?.();
+          });
+          const tbody = container.querySelector("table tbody");
+          if (tbody && typeof window.updateAllValuesSbaOpat === "function") {
+            window.updateAllValuesSbaOpat(tbody);
+          }
+        }
+      });
+    };    
+    /* ═══════════════════════════════════════════════════════════════
+    MOTOR GENÉRICO DE GRAVAÇÃO (DECIR / SBA / OPAT)
+    ═══════════════════════════════════════════════════════════════ */
+    async function genericSaveData({
+      tableContainerSelector, yearInputId, monthsContainerSelector, saveBtnId, tableName, logDescription, successMessage, parseCellData
+    }) {
+      const table = document.querySelector(`${tableContainerSelector} table tbody`);
       if (!table) return showPopup('popup-danger', "Nenhuma tabela aberta.");
-      const corpOperNr = getCorpId() ? String(getCorpId()).trim().padStart(4, "0") : null;
-      const year = parseInt($("year-dec-reg")?.value, 10);
-      const monthBtn = document.querySelector("#months-container-dec-reg .btn.active");
+      const corpOperNr = typeof getCorpId === "function" && getCorpId() ? String(getCorpId()).trim().padStart(4, "0") : null;
+      const year = parseInt($(yearInputId)?.value, 10);
+      const monthBtn = document.querySelector(`${monthsContainerSelector} .btn.active`);
       if (!monthBtn) return showPopup('popup-danger', "Nenhum mês selecionado.");
-      const month = Array.from(document.querySelectorAll("#months-container-dec-reg .btn")).indexOf(monthBtn) + 1 + 4;
-      const btn = $("save-dec-btn");
-      if (btn) {btn.disabled = true; btn.textContent = "A gravar...";}  
+      const month = Array.from(document.querySelectorAll(`${monthsContainerSelector} .btn`)).indexOf(monthBtn) + 1 + 4;
+      const btn = $(saveBtnId);
+      if (btn) { btn.disabled = true; btn.textContent = "A gravar..."; }
       try {
         let last_n_int = null, last_abv_name = null;
-        const payload = [];    
-        Array.from(table.querySelectorAll("tr")).forEach(row => {
+        const payload = [];
+        Array.from(table.querySelectorAll("tr:not(.total-elements-row)")).forEach(row => {
           const cells = Array.from(row.querySelectorAll("td"));
           let n_int = parseInt((cells[0]?.textContent || "").trim(), 10);
           if (isNaN(n_int)) n_int = last_n_int;
           let nameRaw = (cells[1]?.textContent || "").trim();
-          if (nameRaw === "X") nameRaw = "";
+          if (["X", "S", "O"].includes(nameRaw.toUpperCase())) nameRaw = "";
           const abv_name = nameRaw || last_abv_name;
           if (!n_int || !abv_name) return;
-          last_n_int = n_int; if (nameRaw) last_abv_name = nameRaw;          
-          const turnoCell = cells.find(td => ["D", "N"].includes((td.textContent || "").trim()));
+          last_n_int = n_int; 
+          if (nameRaw) last_abv_name = nameRaw;
+          const turnoCell = cells.find(td => ["D", "N"].includes((td.textContent || "").trim().toUpperCase()));
           if (!turnoCell) return;
-          const shift = turnoCell.textContent.trim();          
+          const shift = turnoCell.textContent.trim().toUpperCase();
           cells.filter(td => td.isContentEditable).forEach((cell, idx) => {
-            if (cell.textContent.trim().toUpperCase() === "X")
-              payload.push({n_int, abv_name, year, month, day: idx + 1, shift, corp_oper_nr: corpOperNr});
+            const val = cell.textContent.trim().toUpperCase();
+            const parsed = parseCellData(val);
+            if (parsed) {
+              payload.push({n_int, abv_name, year, month, day: idx + 1, shift, corp_oper_nr: corpOperNr, ...parsed});
+            }
           });
-        });        
-        await fetch(`${SUPABASE_URL}/rest/v1/decir_reg_pag_ecin?year=eq.${year}&month=eq.${month}&corp_oper_nr=eq.${corpOperNr}`, {
-          method: "DELETE", 
-          headers: getSupabaseHeaders()
-        }).then(r => { if (!r.ok) throw new Error("Erro ao limpar registos antigos"); });        
+        });
+        const supabaseUrl = window.SUPABASE_URL || SUPABASE_URL;
+        const headers = window.getSupabaseHeaders ? window.getSupabaseHeaders() : getSupabaseHeaders();
+        const deleteRes = await fetch(`${supabaseUrl}/rest/v1/${tableName}?year=eq.${year}&month=eq.${month}&corp_oper_nr=eq.${corpOperNr}`, {
+          method: "DELETE",
+          headers: headers
+        });
+        if (!deleteRes.ok) throw new Error("Erro ao limpar registos antigos");
         if (payload.length > 0) {
-          const r = await fetch(`${SUPABASE_URL}/rest/v1/decir_reg_pag_ecin`, {
+          const insertRes = await fetch(`${supabaseUrl}/rest/v1/${tableName}`, {
             method: "POST",
-            headers: { ...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
+            headers: { ...headers, "Content-Type": "application/json", "Prefer": "return=minimal" },
             body: JSON.stringify(payload)
           });
-          if (!r.ok) throw new Error(await r.text() || "Erro desconhecido ao gravar");
-        }        
+          if (!insertRes.ok) throw new Error(await insertRes.text() || "Erro desconhecido ao gravar");
+        }
         try {
-          const loggedNInt = sessionStorage.getItem("currentNInt") || "205";
-          if (loggedNInt) {
+          const loggedNIntRaw = sessionStorage.getItem("currentNInt") || "205";
+          const loggedNIntPadded = String(loggedNIntRaw).trim().padStart(3, "0");
+          const loggedNIntNumeric = parseInt(loggedNIntRaw, 10);
+          if (loggedNIntRaw) {
             let userAbvName = "";
-            const userResponse = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${parseInt(loggedNInt, 10)}&select=abv_name`, {
+            const userResponse = await fetch(`${supabaseUrl}/rest/v1/reg_elems?n_int=eq.${loggedNIntPadded}&corp_oper_nr=eq.${corpOperNr}&select=abv_name`, {
               method: "GET",
-              headers: getSupabaseHeaders()
+              headers: headers
             });
             if (userResponse.ok) {
               const userData = await userResponse.json();
-              if (userData && userData.length > 0) {
-                userAbvName = userData[0].abv_name;
-              }
-            } else {
-              console.warn("Não foi possível consultar o abv_name na tabela reg_elems");
+              if (userData && userData.length > 0) userAbvName = userData[0].abv_name;
             }
-            const logResponse = await fetch(`${SUPABASE_URL}/rest/v1/reg_logs`, {
+            await fetch(`${supabaseUrl}/rest/v1/reg_logs`, {
               method: "POST",
-              headers: {
-                ...getSupabaseHeaders(),
-                "Content-Type": "application/json",
-                "Prefer": "return=representation"
-              },
-              body: JSON.stringify({n_int: parseInt(loggedNInt, 10), abv_name: userAbvName || null, efect: `Alterou os Registos para Pagamentos DECIR do Mês ${month}/${year}`, corp_oper_nr: corpOperNr})
+              headers: { ...headers, "Content-Type": "application/json", "Prefer": "return=representation" },
+              body: JSON.stringify({n_int: loggedNIntNumeric, abv_name: userAbvName || null, efect: `${logDescription} do Mês ${month}/${year}`, corp_oper_nr: corpOperNr})
             });
-            if (!logResponse.ok) {
-              console.error("Erro do Supabase ao gravar log:", await logResponse.text());
-            }
-          } else {
-            console.warn("Aviso: 'currentNInt' não foi encontrado no sessionStorage.");
           }
         } catch (logErr) {
           console.error("Falha ao processar bloco de log:", logErr);
         }
-        showPopup('popup-success', "Registo DECIR gravado com sucesso!");
+        showPopup('popup-success', successMessage);
       } catch (err) {
         console.error(err);
         showPopup('popup-danger', "Erro ao gravar: " + err.message);
       } finally {
-        if (btn) {btn.disabled = false; btn.textContent = "Guardar";}
+        if (btn) { btn.disabled = false; btn.textContent = "Guardar"; }
       }
     }
-    /* ─── TABELA: COD A33 (DECIR) ────────────────────────────── */
-    function createDecirCodA33Table(containerId, year, elements, turnosPorMes) {
+    /* ─── IMPLEMENTAÇÕES ESPECÍFICAS (DECIR E SBA/OPAT) ──────────── */
+    window.saveDecirFull = function() {
+      return genericSaveData({tableContainerSelector: "#table-container-dec-reg", yearInputId: "year-dec-reg", monthsContainerSelector: "#months-container-dec-reg", saveBtnId: "save-dec-btn",
+                          tableName: "decir_reg_pag_ecin",
+        logDescription: "Alterou os Registos para Pagamentos DECIR",
+        successMessage: "Registo DECIR gravado com sucesso!",
+        parseCellData: (val) => val === "X" ? {} : null
+      });
+    };
+    window.saveSbaOpatFull = function() {
+      return genericSaveData({
+        tableContainerSelector: "#table-container-sbaopat-reg",
+        yearInputId: "year-sbaopat-reg",
+        monthsContainerSelector: "#months-container-sbaopat-reg",
+        saveBtnId: "save-sbaopat-btn",
+        tableName: "decir_reg_pag_opatsba",
+        logDescription: "Alterou os Registos para Pagamentos SBA/OPAT",
+        successMessage: "Registo SBA/OPAT gravado com sucesso!",
+        parseCellData: (val) => {
+          if (val === "S") return { type: "sba" };
+          if (val === "O") return { type: "opat" };
+          return null;
+        }
+      });
+    };
+    /* ═══════════════════════════════════════════════════════════════
+    MOTOR GENÉRICO: TABELA COD.A33
+    ═══════════════════════════════════════════════════════════════ */
+    function genericCreateCodA33Table({
+      containerId, year, titleText, elements, months = [4, 5, 6, 7, 8, 9, 10], monthLabels = ["ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO"],
+      getQtyForMonth, getValueForMonth, inputIdsToWatch, onAfterUpdate, tableClass = "coda33-table", tableHeight = null
+    }) {
       const container = $(containerId);
       if (!container) return;
       container.innerHTML = "";
-      container.appendChild(makeTitle(`RELATÓRIO ANUAL DECIR ${year} - Cod.A33`));
+      container.appendChild(makeTitle(titleText));
       const wrapper = decirMakeWrapper(container);
+      if (tableHeight) {
+        wrapper.style.maxHeight = tableHeight;
+        wrapper.style.overflowY = "auto";
+      }
       const table = document.createElement("table");
-      table.className = "coda33-table";
-      Object.assign(table.style, {width:"100%", borderCollapse:"separate", fontFamily:"Segoe UI, sans-serif"});
+      table.className = tableClass;
+      Object.assign(table.style, { width: "100%", borderCollapse: "separate", fontFamily: "Segoe UI, sans-serif" });
       const thead = document.createElement("thead");
-      const trh   = document.createElement("tr");
-      [["NI","40px"],["Nome","175px"],["NIF","120px"]].forEach(([h,w]) => {
+      const trh = document.createElement("tr");
+      [["NI", "40px"], ["Nome", "175px"], ["NIF", "120px"]].forEach(([h, w]) => {
         const th = makeTh(h, "height:40px;line-height:40px;");
         th.style.width = w;
         trh.appendChild(th);
       });
-      const CODA33_MONTHS = ["ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO"];
-      CODA33_MONTHS.forEach(m => {
+      monthLabels.forEach(m => {
         const thS = makeTh(`Turnos ${m}`, "width:90px;display:none;");
         const thV = makeTh(m, "width:100px;height:40px;line-height:40px;");
         trh.appendChild(thS); trh.appendChild(thV);
@@ -1621,78 +1906,123 @@
       thead.appendChild(trh);
       table.appendChild(thead);
       const tbody = document.createElement("tbody");
-      const amalI = parseVal("amal-value-pag");
-      const anepcI = parseVal("anepc-value-pag");
       const rowsCount = elements.length > 0 ? elements.length : 10;
-      for (let i=0; i<rowsCount; i++) {
-        const elem = elements[i] || {};
-        const tr   = document.createElement("tr");
-        const niKey = parseInt(elem.n_int,10);
-        tr.appendChild(makeTd(elem.n_int ? String(elem.n_int).padStart(3,'0') : ""));
-        tr.appendChild(makeTd(elem.full_name||"", "text-align:center;padding:6px 8px;"));
-        tr.appendChild(makeTd(elem.nif||"", "text-align:center;padding:6px 8px;"));
-        let totalForRow = 0;
-        const tdTotalContributor = document.createElement("td");
-        tdTotalContributor.className = "total-contributor";
-        tdTotalContributor.style.cssText = COMMON_TD_STYLE + "font-weight:bold;padding:6px 8px;text-align:right;";
-        for (let m=4; m<=10; m++) {
-          const qtd = turnosPorMes?.[m]?.[niKey] || 0;
-          const tdT = makeTd(String(qtd), "text-align:center;font-weight:bold;padding:6px 8px;");
-          tdT.style.display = "none";
-          const val = (amalI + anepcI) * qtd;
-          const tdV = document.createElement("td");
-          tdV.style.cssText = COMMON_TD_STYLE + "font-weight:bold;padding:6px 8px;text-align:right;";
-          tdV.className = `valor-mes-${m}`;
-          tdV.textContent = formatCurrency(val);
-          tdV.setAttribute("data-value", val);
-          totalForRow += val;
-          tr.appendChild(tdT); tr.appendChild(tdV);
+      const renderRows = () => {
+        tbody.innerHTML = "";
+        for (let i = 0; i < rowsCount; i++) {
+          const elem = elements[i] || {};
+          const tr = document.createElement("tr");
+          const niKey = parseInt(elem.n_int, 10);
+          tr.appendChild(makeTd(elem.n_int ? String(elem.n_int).padStart(3, '0') : ""));
+          tr.appendChild(makeTd(elem.full_name || "", "text-align:center;padding:6px 8px;"));
+          tr.appendChild(makeTd(elem.nif || "", "text-align:center;padding:6px 8px;"));
+          let totalForRow = 0;
+          months.forEach(m => {
+            const qtd = getQtyForMonth(m, niKey);
+            const tdT = makeTd(String(qtd), "text-align:center;font-weight:bold;padding:6px 8px;");
+            tdT.style.display = "none";
+            const val = getValueForMonth(m, niKey);
+            const tdV = document.createElement("td");
+            tdV.style.cssText = COMMON_TD_STYLE + "font-weight:bold;padding:6px 8px;text-align:right;";
+            tdV.className = `valor-mes-${m}`;
+            tdV.textContent = formatCurrency(val);
+            tdV.setAttribute("data-value", val);
+            totalForRow += val;
+            tr.appendChild(tdT);
+            tr.appendChild(tdV);
+          });
+          const tdTotalContributor = document.createElement("td");
+          tdTotalContributor.className = "total-contributor";
+          tdTotalContributor.style.cssText = COMMON_TD_STYLE + "font-weight:bold;padding:6px 8px;text-align:right;";
+          tdTotalContributor.textContent = formatCurrency(totalForRow);
+          tr.appendChild(tdTotalContributor);
+          tbody.appendChild(tr);
         }
-        tdTotalContributor.textContent = formatCurrency(totalForRow);
-        tr.appendChild(tdTotalContributor);
-        tbody.appendChild(tr);
-      }
+      };
+      renderRows();
       table.appendChild(tbody);
       wrapper.appendChild(table);
-      ["amal-value-pag","anepc-value-pag"].forEach(id => {const el=$(id); if(el) el.addEventListener("input", updateAllValues);});
-      if (typeof updateDECIRTotalPaymentsByMonth==='function') updateDECIRTotalPaymentsByMonth();
+      inputIdsToWatch.forEach(id => {
+        const el = $(id);
+        if (el) el.addEventListener("input", () => { renderRows(); if (typeof onAfterUpdate === "function") onAfterUpdate(); });
+      });
+      if (typeof onAfterUpdate === "function") onAfterUpdate();
     }
-    function updateDECIRTotalCodA33() {
-      const table = document.querySelector("#table-container-dec-coda33 table");
+    /* ─── IMPLEMENTAÇÃO: COD.A33 DECIR ──────────────────────────── */
+    function createDecirCodA33Table(containerId, year, elements, turnosPorMes) {
+      genericCreateCodA33Table({
+        containerId, year, titleText: `RELATÓRIO ANUAL DECIR(ECINS) ${year} - Cod.A33`, elements,
+        getQtyForMonth: (m, ni) => turnosPorMes?.[m]?.[ni] || 0,
+        getValueForMonth: (m, ni) => {
+          const qtd = turnosPorMes?.[m]?.[ni] || 0;
+          return (parseVal("amal-value-pag") + parseVal("anepc-value-pag")) * qtd;
+        },
+        inputIdsToWatch: ["amal-value-pag", "anepc-value-pag"],
+        tableHeight: "469px",
+        onAfterUpdate: () => {
+          if (typeof updateDECIRTotalPaymentsByMonth === "function") updateDECIRTotalPaymentsByMonth();
+          updateDECIRTotalCodA33("table-container-dec-coda33");
+        }
+      });
+    }
+    /* ─── IMPLEMENTAÇÃO: COD.A33 SBAS/OPAT ──────────────────────── */
+    function createSbaOpatCodA33Table(containerId, year, elements, turnosSbasPorMes, turnosOpatPorMes) {
+      genericCreateCodA33Table({
+        containerId, year, titleText: `RELATÓRIO ANUAL DECIR(SBAs E OPATs) ${year} - Cod.A33`, elements,
+        getQtyForMonth: (m, ni) => (turnosSbasPorMes?.[m]?.[ni] || 0) + (turnosOpatPorMes?.[m]?.[ni] || 0),
+        getValueForMonth: (m, ni) => {
+          const qtdSbas = turnosSbasPorMes?.[m]?.[ni] || 0;
+          const qtdOpat = turnosOpatPorMes?.[m]?.[ni] || 0;
+          return (parseVal("sbas-value-pag") * qtdSbas) + (parseVal("opat-value-pag") * qtdOpat);
+        },
+        inputIdsToWatch: ["sbas-value-pag", "opat-value-pag"],
+        tableHeight: "469px",
+        onAfterUpdate: () => {
+          if (typeof updateDECIRTotalPaymentsByMonth === "function") {
+            updateDECIRTotalPaymentsByMonth("table-container-sbaopat-pag", "sbaopat-payment-totals", "#decir-pag-sbaopat .major-card-body");
+          }
+          updateDECIRTotalCodA33("table-container-sbaopat-coda33");
+        }
+      });
+    }
+    /* ─── TOTAIS RODAPÉ COD.A33 (generalizada) ──────────────────── */
+    function updateDECIRTotalCodA33(tableContainerId) {
+      const table = document.querySelector(`#${tableContainerId} table`);
       if (!table) return;
       const tbody = table.querySelector("tbody");
       if (!tbody) return;
       tbody.querySelector(".total-coda33")?.remove();
-      const CODA33_MONTHS = ["ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO"];
+      const monthCols = Array.from(table.querySelectorAll("thead th")).filter(th => th.style.display !== "none" && !th.innerHTML.includes("Total") && !["NI","Nome","NIF"].includes(th.textContent.trim()));
       const headerCells = Array.from(table.querySelector("thead tr").children);
-      const monthIndices = CODA33_MONTHS.map(name => headerCells.findIndex(th => th.textContent.trim().toUpperCase()===name));
+      const monthIndices = monthCols.map(th => headerCells.indexOf(th));
       const monthSums = monthIndices.map(() => 0);
       Array.from(tbody.querySelectorAll("tr")).forEach(tr => {
         const tds = Array.from(tr.querySelectorAll("td"));
-        monthIndices.forEach((idx,i) => {if(idx>=0&&tds[idx]) monthSums[i] += Math.round(parseCurrency(tds[idx].textContent)*100);});
+        monthIndices.forEach((idx, i) => { if (idx >= 0 && tds[idx]) monthSums[i] += Math.round(parseCurrency(tds[idx].textContent) * 100); });
       });
-      const grandTotal = monthSums.reduce((a,b)=>a+b,0);
+      const grandTotal = monthSums.reduce((a, b) => a + b, 0);
       const totalRow = document.createElement("tr");
       totalRow.className = "total-coda33";
-      Object.assign(totalRow.style, {fontWeight:"bold", backgroundColor:"#e0f7e0"});
+      Object.assign(totalRow.style, { fontWeight: "bold", backgroundColor: "#e0f7e0" });
       const tdFixed = document.createElement("td");
       tdFixed.textContent = "Somatórios:";
       tdFixed.colSpan = 3;
-      Object.assign(tdFixed.style, {textAlign:"right", backgroundColor:"#f7f7f7"});
+      Object.assign(tdFixed.style, { textAlign: "right", backgroundColor: "#f7f7f7" });
       totalRow.appendChild(tdFixed);
       monthSums.forEach(sum => {
         const td = document.createElement("td");
-        td.textContent = formatCurrency(sum/100);
+        td.textContent = formatCurrency(sum / 100);
         td.style.textAlign = "right";
         totalRow.appendChild(td);
       });
       const tdTotal = document.createElement("td");
-      tdTotal.textContent = formatCurrency(grandTotal/100);
-      Object.assign(tdTotal.style, {textAlign:"right", backgroundColor:"#c0ffc0"});
+      tdTotal.textContent = formatCurrency(grandTotal / 100);
+      Object.assign(tdTotal.style, { textAlign: "right", backgroundColor: "#c0ffc0" });
       totalRow.appendChild(tdTotal);
       tbody.appendChild(totalRow);
     }
-    async function handleCodA33Button() {
+    /* ─── HANDLERS BOTÃO COD.A33 ────────────────────────────────── */
+    async function handleDecirCodA33Button() {
       const tableContainer = $("table-container-dec-coda33");
       const emitBtn = $("emit-coda33-dec-btn");
       if (emitBtn) emitBtn.style.display = "block";
@@ -1702,8 +2032,8 @@
         const elements = await loadDecirCodA33Elements(year, 1);
         const months = [4, 5, 6, 7, 8, 9, 10];
         const turnosPorMes = {};
-        const allShifts = await Promise.all(months.map(m => loadShiftsByNI(year, m)));
-        allShifts.forEach((t, i) => {turnosPorMes[months[i]] = t;});
+        const allShifts = await Promise.all(months.map(m => loadDecirShiftsByNI(year, m)));
+        allShifts.forEach((t, i) => { turnosPorMes[months[i]] = t; });
         if (!elements.length) {
           tableContainer.innerHTML = "<p>Nenhum elemento encontrado.</p>";
           return;
@@ -1713,12 +2043,38 @@
         console.error("Erro no COD.A33:", err);
       }
     }
-    /* ─── TABELA: ANEPC (DECIR) ──────────────────────────────── */
-    function createDecirAnepcTable(containerId, year, month, elements, turnosPorNI) {
+    async function handleSbaOpatCodA33Button() {
+      const tableContainer = $("table-container-sbaopat-coda33");
+      const emitBtn = $("emit-coda33-sbaopat-btn");
+      if (emitBtn) emitBtn.style.display = "block";
+      if (tableContainer) tableContainer.style.display = "block";
+      const year = parseInt($("year-sbaopat-pag")?.value || new Date().getFullYear(), 10);
+      try {
+        const elements = await loadSbaOpatCodA33Elements(year, 1);
+        const months = [4, 5, 6, 7, 8, 9, 10];
+        const turnosSbasPorMes = {};
+        const turnosOpatPorMes = {};
+        const allSbas = await Promise.all(months.map(m => loadSbaOpatShiftsByNI(year, m, "sba")));
+        const allOpat = await Promise.all(months.map(m => loadSbaOpatShiftsByNI(year, m, "opat")));
+        allSbas.forEach((t, i) => { turnosSbasPorMes[months[i]] = t; });
+        allOpat.forEach((t, i) => { turnosOpatPorMes[months[i]] = t; });
+        if (!elements.length) {
+          tableContainer.innerHTML = "<p>Nenhum elemento encontrado.</p>";
+          return;
+        }
+        createSbaOpatCodA33Table("table-container-sbaopat-coda33", year, elements, turnosSbasPorMes, turnosOpatPorMes);
+      } catch (err) {
+        console.error("Erro no COD.A33 SBA/OPAT:", err);
+      }
+    }
+    /* ═══════════════════════════════════════════════════════════════
+    MOTOR GENÉRICO: TABELA ANEPC
+    ═══════════════════════════════════════════════════════════════ */
+    function genericCreateAnepcTable({ containerId, year, month, titleText, elements, getQtyForNI, valueInputId, calcValue, optionsContainerId }) {
       const container = $(containerId);
       if (!container) return;
       container.innerHTML = "";
-      container.appendChild(makeTitle(`RELATÓRIO ANEPC DECIR - ${MONTH_NAMES_UPPER[month-1]} ${year}`));
+      container.appendChild(makeTitle(titleText));
       const wrapper = decirMakeWrapper(container);
       const table = document.createElement("table");
       table.className = "anepc-table";
@@ -1726,7 +2082,7 @@
       const thead = document.createElement("thead");
       const trh = document.createElement("tr");
       [["Nº Mecanográfico","120px"],["Função","100px"],["Nome","200px"],["Qtd. Turnos","100px"],["Valor ANEPC (€)","140px"]]
-        .forEach(([h,w]) => {
+      .forEach(([h,w]) => {
         const th = makeTh(h, "height:40px;line-height:40px;");
         th.style.width = w;
         trh.appendChild(th);
@@ -1735,32 +2091,60 @@
       table.appendChild(thead);
       const tbody = document.createElement("tbody");
       const rowsCount = elements.length > 0 ? elements.length : 10;
+      const valueUpdaters = [];
       for (let i=0; i<rowsCount; i++) {
         const elem = elements[i] || {};
-        const tr   = document.createElement("tr");
+        const tr = document.createElement("tr");
         const niKey = parseInt(elem.n_int,10);
-        const qtyShifts = turnosPorNI?.[niKey] || 0;
+        const qtyShifts = getQtyForNI(niKey);
         tr.appendChild(makeTd(elem.n_file ? String(elem.n_file) : "", "text-align:center;"));
         tr.appendChild(makeTd(elem.patent||"", "text-align:center;padding:6px 8px;"));
         tr.appendChild(makeTd(elem.full_name||"", "text-align:center;padding:6px 8px;"));
         tr.appendChild(makeTd(String(qtyShifts), "text-align:center;font-weight:bold;padding:6px 8px;"));
         const tdValue = document.createElement("td");
         tdValue.style.cssText = COMMON_TDTOTAL_STYLE + "text-align:right;font-weight:bold;padding:6px 8px;";
-        const updateValor = () => {tdValue.textContent = formatCurrency(parseVal("anepc-value-anepc") * qtyShifts);};
-        updateValor();
-        const inp = $("anepc-value-anepc"); if(inp) inp.addEventListener("input", updateValor);
-        tr.appendChild(tdValue);
-        tbody.appendChild(tr);
+        const updateValor = typeof calcValue === "function"
+          ? () => {
+            const v = calcValue(niKey);
+            tdValue.textContent = v === null ? "—" : formatCurrency(v);
+          }
+          : () => { tdValue.textContent = formatCurrency(parseVal(valueInputId) * qtyShifts); };
+          updateValor();
+          valueUpdaters.push(updateValor);
+          tr.appendChild(tdValue);
+          tbody.appendChild(tr);
+        }
+        table.appendChild(tbody);
+        wrapper.appendChild(table);
+        if (!calcValue && valueInputId) {
+          const inp = $(valueInputId);
+        if (inp) inp.addEventListener("input", () => valueUpdaters.forEach(fn => fn()));
       }
-      table.appendChild(tbody);
-      wrapper.appendChild(table);
-      const optAnepc = $("decir-anepc-options"); if(optAnepc) optAnepc.style.display="flex";
+      const opt = $(optionsContainerId); if(opt) opt.style.display="flex";
       if (typeof updateAnepcTotals==='function') updateAnepcTotals();
     }
+    function createDecirAnepcTable(containerId, year, month, elements, turnosPorNI) {
+      genericCreateAnepcTable({containerId, year, month, titleText: `RELATÓRIO ANEPC ENINs - ${MONTH_NAMES_UPPER[month-1]} ${year}`, elements, getQtyForNI: (ni) => turnosPorNI?.[ni] || 0, 
+                               valueInputId: "anepc-value-anepc", optionsContainerId: "decir-anepc-options"});
+    }
     window.createDecirAnepcTable = createDecirAnepcTable;
+    function createSbaOpatAnepcTable(containerId, year, month, elements, turnosSbasPorNI, turnosOpatPorNI) {
+      genericCreateAnepcTable({containerId, year, month, titleText: `RELATÓRIO ANEPC SBAs E OPATs - ${MONTH_NAMES_UPPER[month-1]} ${year}`, elements, getQtyForNI: (ni) => (turnosSbasPorNI?.[ni] || 0) + (turnosOpatPorNI?.[ni] || 0),
+      calcValue: (ni) => {
+        if (SBAS_RATE === 0 && OPAT_RATE === 0) return null;
+        return (turnosSbasPorNI?.[ni] || 0) * SBAS_RATE + (turnosOpatPorNI?.[ni] || 0) * OPAT_RATE;
+      },
+      optionsContainerId: "decir-anepc-sbaopat-options"  
+      });
+    }
+    window.createSbaOpatAnepcTable = createSbaOpatAnepcTable;
     /* ─── CARREGAR AUDITORIA DE LOGS (DESIGN PERSONALIZADO) ─── */
     async function loadAuditLogs() {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = typeof getCorpId === "function" && getCorpId() ? String(getCorpId()).trim().padStart(4, "0") : null;
+      if (!corpOperNr) {
+        console.error("loadAuditLogs: corp_oper_nr não disponível.");
+        return;
+      }
       const container = document.getElementById("table-container-audit-logs");
       if (!container) return;
       container.innerHTML = "";
@@ -1821,6 +2205,7 @@
           tr.style.background = index % 2 === 0 ? "#f5f6fa" : "#fff";
           const localDate = log.created_at 
             ? new Date(log.created_at).toLocaleString('pt-PT', {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit'}) : '─';
+          const niFormatted = log.n_int != null ? String(log.n_int).padStart(3, "0") : "─";
           const createCell = (text, textAlign, isBold, isFirstCol, isLastCol) => {
             const td = document.createElement("td");
             td.textContent = text || '─';
@@ -1828,7 +2213,7 @@
                           fontWeight: isBold ? "bold" : "normal", borderBottomLeftRadius: isLastRow && isFirstCol ? "8px" : "", borderBottomRightRadius: isLastRow && isLastCol ? "8px" : ""});
             return td;
           };
-          tr.appendChild(createCell(log.n_int, "center", true, true, false));
+          tr.appendChild(createCell(niFormatted, "center", true, true, false));
           tr.appendChild(createCell(log.abv_name, "left", false, false, false));
           tr.appendChild(createCell(log.efect, "left", false, false, false));
           tr.appendChild(createCell(localDate, "center", false, false, true));
@@ -3604,7 +3989,7 @@
     function buildDECIRPayload(type, format) {
       let data = { type, format };
       /* ───────── REG ───────── */
-      if (type === 'reg') {
+      if (type === 'reg_decir') {
         const table = document.querySelector("#table-container-dec-reg table tbody");
         if (!table) throw new Error("Tabela de registo diário não encontrada.");
         const monthSelect = document.querySelector("#months-container-dec-reg .btn.active");
@@ -3662,8 +4047,68 @@
           fixedRows, normalRows
         };
       }
+      /* ───────── SBA / OPAT ───────── */
+      if (type === 'reg_sba_opat') {
+        const table = document.querySelector("#table-container-sbaopat-reg table tbody");
+        if (!table) throw new Error("Tabela de registo SBA/OPAT não encontrada.");
+        const monthSelect = document.querySelector("#months-container-sbaopat-reg .btn.active");
+        const yearInput = $("year-sbaopat-reg");
+        if (!monthSelect || !yearInput) throw new Error("Selecione mês e ano.");
+        const monthIdx = Array.from(document.querySelectorAll("#months-container-sbaopat-reg .btn"))
+        .indexOf(monthSelect) + 1 + 4;
+        const monthName = monthSelect.textContent.trim();
+        const year = parseInt(yearInput.value, 10);
+        const daysInMonth = new Date(year, monthIdx, 0).getDate();
+        const weekdays = [], holidayDays = [];
+        for (let d = 1; d <= daysInMonth; d++) {
+          const date = new Date(year, monthIdx - 1, d);
+          weekdays.push(['DOM','SEG','TER','QUA','QUI','SEX','SÁB'][date.getDay()]);
+          if (date.getDay() === 0 || date.getDay() === 6) holidayDays.push(d);
+        }
+        const parseValue = txt => parseFloat(txt.trim().replace(/\s/g,'').replace(/\./g,'').replace(',','.')) || 0;
+        const fixedRows = [], normalRows = [];
+        let lastNI=null, lastNome=null, lastSbas=null, lastOpat=null, lastGlobal=null;
+        Array.from(table.querySelectorAll("tr"))
+          .filter(tr => !tr.classList.contains("total-elements-row"))
+          .forEach(row => {
+          const cells = Array.from(row.querySelectorAll("td"));
+          if (!cells.length) return;
+          let nInt, nome, turno, startIdx;
+          if (cells[0].rowSpan === 2) {
+            nInt = parseInt(cells[0].textContent.trim(),10);
+            nome = cells[1].textContent.trim();
+            turno = cells[3]?.textContent.trim() || 'D';
+            startIdx = 4;
+            lastNI=nInt; lastNome=nome;
+            lastSbas=parseValue(cells[cells.length-3].textContent);
+            lastOpat=parseValue(cells[cells.length-2].textContent);
+            lastGlobal=parseValue(cells[cells.length-1].textContent);
+          } else {
+            nInt=lastNI; nome=lastNome;
+            turno=cells[0].textContent.trim();
+            startIdx=1;
+          }
+          const daysData={};
+          for (let d=0; d<daysInMonth; d++) {
+            const cell=cells[startIdx+d];
+            daysData[d+1]={D:'',N:''};
+            const mark = cell ? cell.textContent.trim().toUpperCase() : '';
+            if (mark === 'S' || mark === 'O') {
+              daysData[d+1][turno]=mark;
+            }
+          }
+          const rowObj={ni:nInt,nome,days:daysData,sbas:lastSbas,opat:lastOpat,global:lastGlobal};
+          turno==='D' ? fixedRows.push(rowObj) : normalRows.push(rowObj);
+        });
+        return {
+          ...data,
+          fileName:`REGISTOS_SBA_OPAT_${monthName}_${year}`,
+          monthName, year, daysInMonth, weekdays, holidayDays,
+          fixedRows, normalRows
+        };
+      }
       /* ───────── PAG ───────── */
-      if (type === 'pag') {
+      if (type === 'pag_decir') {
         const table = document.querySelector("#table-container-dec-pag table tbody");
         if (!table) throw new Error("Tabela de pagamentos não encontrada.");
         const monthSelect = document.querySelector("#months-container-dec-pag .btn.active");
@@ -3677,8 +4122,23 @@
                   qtdTurnos: parseInt(cells[4]?.textContent.trim()||0,10), valor: parseCurrency(cells[5]?.textContent)};});
         return {...data, fileName:`PAGAMENTOS_DECIR_${monthName}_${year}`, monthName, year, rows};
       }
+      /* ───────── PAG SBA/OPAT ───────── */
+      if (type === 'pag_sba_opat') {
+        const table = document.querySelector("#table-container-sbaopat-pag table tbody");
+        if (!table) throw new Error("Tabela de pagamentos SBA/OPAT não encontrada.");
+        const monthSelect = document.querySelector("#months-container-sbaopat-pag .btn.active");
+        const yearInput = $("year-sbaopat-pag");
+        if (!monthSelect || !yearInput) throw new Error("Selecione mês e ano.");
+        const monthName = monthSelect.textContent.trim();
+        const year = parseInt(yearInput.value,10);
+        const rows = Array.from(table.querySelectorAll("tr")).map(tr => {
+          const cells = tr.querySelectorAll("td");
+          return {ni: parseInt(cells[0].textContent.trim(),10), nome: cells[1]?.textContent.trim()||"", nif: cells[2]?.textContent.trim()||"", nib: cells[3]?.textContent.trim()||"",
+                  qtdSbas: parseInt(cells[4]?.textContent.trim()||0,10), qtdOpat: parseInt(cells[5]?.textContent.trim()||0,10), valor: parseCurrency(cells[6]?.textContent)};});
+        return {...data, fileName:`PAGAMENTOS_SBAOPAT_${monthName}_${year}`, monthName, year, rows};
+      }
       /* ───────── CODE A33 ───────── */
-      if (type === 'code_a33') {
+      if (type === 'code_a33_decir') {
         const table = document.querySelector("#table-container-dec-coda33 tbody");
         if (!table) throw new Error("Tabela Cod.A33 não encontrada.");
         const yearInput = $("year-dec-pag");
@@ -3692,8 +4152,23 @@
         }).filter(r => r.ni>0 && (r.ABRIL||r.MAIO||r.JUNHO||r.JULHO||r.AGOSTO||r.SETEMBRO||r.OUTUBRO));
         return {...data, fileName:`CODA33_DECIR_${year}`, year, rows};
       }
+      /* ───────── CODE A33 SBA/OPAT ───────── */
+      if (type === 'code_a33_sba_opat') {
+        const table = document.querySelector("#table-container-sbaopat-coda33 tbody");
+        if (!table) throw new Error("Tabela Cod.A33 SBA/OPAT não encontrada.");
+        const yearInput = $("year-sbaopat-pag");
+        if (!yearInput) throw new Error("Selecione ano.");
+        const year = parseInt(yearInput.value,10);
+        const rows = Array.from(table.querySelectorAll("tr")).map(tr => {
+          const cells = tr.querySelectorAll("td");
+          return {ni: parseInt(cells[0]?.textContent.trim(),10)||0, nome: cells[1]?.textContent.trim()||'', nif: cells[2]?.textContent.trim()||'', ABRIL: parseCurrency(cells[4]?.textContent),
+                  MAIO: parseCurrency(cells[6]?.textContent), JUNHO: parseCurrency(cells[8]?.textContent), JULHO: parseCurrency(cells[10]?.textContent), AGOSTO: parseCurrency(cells[12]?.textContent),
+                  SETEMBRO: parseCurrency(cells[14]?.textContent), OUTUBRO: parseCurrency(cells[16]?.textContent)};
+        }).filter(r => r.ni>0 && (r.ABRIL||r.MAIO||r.JUNHO||r.JULHO||r.AGOSTO||r.SETEMBRO||r.OUTUBRO));
+        return {...data, fileName:`CODA33_SBAOPAT_${year}`, year, rows};
+      }
       /* ───────── ANEPC ───────── */
-      if (type === 'anepc') {
+      if (type === 'anepc_decir') {
         const table = document.querySelector(".anepc-table tbody");
         if (!table) throw new Error("Tabela ANEPC não encontrada.");
         const monthSelect = document.querySelector("#months-container-dec-anepc .btn.active");
@@ -3707,6 +4182,22 @@
                   valor:parseCurrency(cells[4]?.textContent)};
         }).filter(r => r && (r.qtdTurnos>0||r.valor>0));
         return {...data, fileName:`RELATORIO_ANEPC_${monthName}_${year}`, monthName, year, rows};
+      }
+      /* ───────── ANEPC SBA/OPAT ───────── */
+      if (type === 'anepc_sba_opat') {
+        const table = document.querySelector("#table-container-sbaopat-anepc .anepc-table tbody");
+        if (!table) throw new Error("Tabela ANEPC SBA/OPAT não encontrada.");
+        const monthSelect = document.querySelector("#months-container-sbaopat-anepc .btn.active");
+        const yearInput = $("year-sbaopat-anepc");
+        const monthName = monthSelect ? monthSelect.textContent.trim() : 'MÊS';
+        const year = yearInput ? parseInt(yearInput.value,10) : new Date().getFullYear();
+        const rows = Array.from(table.querySelectorAll("tr")).map(tr => {
+          const cells = tr.querySelectorAll("td");
+          if (cells.length<5) return null;
+          return {niFile:cells[0]?.textContent.trim()||'', funcao:cells[1]?.textContent.trim()||'', nome:cells[2]?.textContent.trim()||'', qtdTurnos:parseInt(cells[3]?.textContent.trim()||0,10),
+          valor:parseCurrency(cells[4]?.textContent)};
+        }).filter(r => r && (r.qtdTurnos>0||r.valor>0));
+        return {...data, fileName:`RELATORIO_ANEPC_SBAOPAT_${monthName}_${year}`, monthName, year, rows};
       }
       /* ───────── OCORR ───────── */
       if (type === 'ocorr') {
@@ -3844,15 +4335,21 @@
       }
     }
     /* ─── EVENT LISTENERS (DECIR) ────────────────────────────── */
-    ["emit-pag-dec-btn","emit-reg-dec-btn","emit-coda33-dec-btn","emit-anepc-dec-btn","emit-ocorr-dec-btn","emit-ref-dec-btn","emit-leveliv-dec-btn"].forEach((id,i) => {
-      $(id)?.addEventListener("click", () => generateDECIRFiles(['pag','reg','code_a33','anepc','ocorr','ref','lepp'][i]));
+    ["emit-pag-dec-btn","emit-reg-dec-btn","emit-coda33-dec-btn","emit-anepc-dec-btn","emit-ocorr-dec-btn","emit-ref-dec-btn","emit-leveliv-dec-btn","emit-reg-sbaopat-btn","emit-pag-sbaopat-btn","emit-coda33-sbaopat-btn","emit-anepc-sbaopat-btn"].forEach((id,i) => {
+      $(id)?.addEventListener("click", () => generateDECIRFiles(['pag_decir','reg_decir','code_a33_decir','anepc_decir','ocorr','ref','lepp','reg_sba_opat','pag_sba_opat','code_a33_sba_opat',"anepc_sba_opat"][i]));
     });
-    $("emit-reg-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('reg', 'pdf'));
+    $("emit-reg-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('reg_decir', 'pdf'));
     $("delete-dec-btn")?.addEventListener("click", clearDecirTable);
-    $("save-dec-btn")?.addEventListener("click", saveDecirFull);
-    $("emit-pag-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('pag', 'pdf'));
-    $("emit-coda33-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('code_a33', 'pdf'));
-    $("emit-anepc-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('anepc', 'pdf'));
+    $("save-dec-btn")?.addEventListener("click", saveDecirFull); 
+    $("emit-reg-sbaopat-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('reg_sba_opat', 'pdf'));
+    $("delete-sbaopat-btn")?.addEventListener("click", clearSbaOpatTable);
+    $("save-sbaopat-btn")?.addEventListener("click", saveSbaOpatFull);
+    $("emit-pag-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('pag_decir', 'pdf'));
+    $("emit-coda33-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('code_a33_decir', 'pdf'));
+    $("emit-anepc-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('anepc_decir', 'pdf'));
+    $("emit-pag-sbaopat-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('pag_sba_opat', 'pdf'));
+    $("emit-coda33-sbaopat-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('code_a33_sba_opat', 'pdf'));
+    $("emit-anepc-sbaopat-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('anepc_sba_opat', 'pdf'));
     $("save-ocorr-btn")?.addEventListener("click", saveDecirOccurrences);
     $("emit-ocorr-pdf-btn")?.addEventListener("click", () => generateDECIRFiles('ocorr', 'pdf'));
     $("save-ref-btn")?.addEventListener("click", saveDecirMeals);
@@ -3897,7 +4394,7 @@
         });
         document.querySelectorAll(`#${cfg.monthsId} .btn`).forEach(b => b.classList.remove("active"));
         createDecirButtonsGeneric(cfg.generic);
-        loadDecirConfigValues();
+        loadDecirSbaOpatConfigValues();
       });
     });
     /* ─── CARD: ESTADOS DE ALERTA (DECIR) ───────────────────── */
@@ -4633,7 +5130,7 @@
       try {
         const corp = getCorpId();
         const shifts = await supabaseFetch(
-          `decir_reg_pag?corp_oper_nr=eq.${corp}&year=eq.${year}&select=n_int,turno`
+          `decir_reg_pag_ecin?corp_oper_nr=eq.${corp}&year=eq.${year}&select=n_int,shift`
         );
         if (!shifts.length) {
           podiumGrid.innerHTML = `<div class="dash-empty">Sem dados para ${year}</div>`;

@@ -408,9 +408,11 @@
       {label: "Gestão DECIR", children: [
         {label: "Configurações DECIR", children: [{label: "Atualização de Valores"}, {label: "Configuração de Equipas"}, {label: "Restaurantes e LEPPs"}]},
         {label: "Ver Escalas"},
-        {label: "Gestão Financeira", children: [{label: "Registo por Elemento"}, {label: "Núcleo Financeiro"}, {label: "Relatórios ANEPC"}, {label: "Auditoria de Logs"}]},
+        {label: "Gestão Financeira ECINs", children: [{label: "Registo por Elemento ECINs"}, {label: "Núcleo Financeiro ECINs"}, {label: "Relatórios ANEPC ECINs"}]},
+        {label: "Gestão Financeira SBAs e OPATs", children: [{label: "Registo por Elemento SBAs e OPATs"}, {label: "Núcleo Financeiro SBAs e OPATs"}, {label: "Relatórios ANEPC SBAs e OPATs"}]},
         {label: "Gestão Despesas", children: [{label: "Despesas Danos"}, {label: "Despesas Refeições"}]},
         {label: "Registos Complementares", children: [{label: "Controlo de Ocorrências"}, {label: "Assinaturas Diárias"}, {label: "Refeições Diárias"}, {label: "Pré Posicionamentos"}, {label: "EPE DECIR IV"}]},
+        {label: "Auditoria de Logs"},
         {label: "DashBoard DECIR"}
       ]},
       {label: "Gestão Operacional", children: [

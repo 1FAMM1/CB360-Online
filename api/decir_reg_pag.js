@@ -363,6 +363,40 @@ else if (data.type === 'code_a33_sba_opat') {
           }
           sheet.pageSetup = {orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight:1, horizontalCentered: true,
                              margins: {left: 0.1, right: 0.1, top: 0.3, bottom: 0.3, header: 0.3, footer: 0.3}};}
+
+        // ---------- ANEPC SBA/OPAT ----------
+else if (data.type === "anepc_sba_opat") {
+  const buffer = await downloadTemplate(TEMPLATE_ANEPC_URL);
+  await workbook.xlsx.load(buffer);
+  sheet = workbook.worksheets[0];
+  const year = Number(data.year);
+  const mIdx = monthNameToIndex(data.monthName);
+  let firstDay = 1, lastDay = new Date(year, mIdx, 0).getDate();
+  if (mIdx === 5) firstDay = 15;
+  if (mIdx === 10) lastDay = 15;
+  const mm = String(mIdx).padStart(2,'0');
+  const periodStr = `Período: ${String(firstDay).padStart(2,'0')} / ${mm} / ${year}  a  ${String(lastDay).padStart(2,'0')} / ${mm} / ${year}`;
+  sheet.getCell("B7").value = `Dispositivo Especial Combate Incêndios Rurais SBA/OPAT (DECIR ${year}) ${periodStr}`;
+  let row = 10;
+  data.rows.forEach(r => {
+    const line = sheet.getRow(row);
+    line.getCell("B").value = r.niFile;
+    line.getCell("C").value = r.funcao;
+    line.getCell("D").value = r.nome;
+    line.getCell("F").value = r.qtdTurnos;
+    line.getCell("H").value = r.valor;
+    line.commit();
+    row++;
+  });
+  for (let r = 10; r <= 110; r++) {
+    const line = sheet.getRow(r);
+    const empty = (!line.getCell("B").value || line.getCell("B").value === "") && (!line.getCell("C").value || line.getCell("C").value === "") && (!line.getCell("D").value || line.getCell("D").value === "");
+    const qtd = Number(line.getCell("F").value) || 0;
+    const val = Number(line.getCell("H").value) || 0;
+    if (empty || (qtd === 0 && val === 0)) line.hidden = true;
+  }
+  sheet.pageSetup = {orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight:1, horizontalCentered: true,
+                     margins: {left: 0.1, right: 0.1, top: 0.3, bottom: 0.3, header: 0.3, footer: 0.3}};}    
         // ---------- OCORRÊNCIAS ----------
         else if (data.type === 'ocorr') {
           if (!Array.isArray(data.rows)) return res.status(400).json({error: "Rows inválidas para ocorrências"});

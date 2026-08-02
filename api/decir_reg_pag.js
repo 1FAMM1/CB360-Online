@@ -18,6 +18,7 @@
     const TEMPLATE_ANEPC_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/anepc_template.xlsx";
     const TEMPLATE_REG_SBAOPAT_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/sbaopat_reg_template.xlsx";
     const TEMPLATE_PAG_SBAOPAT_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/sbaopat_pag_template.xlsx";
+    const TEMPLATE_CODE_A33_SBAOPAT_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/coda33_sbaopat_template.xlsx";
 
 
     const TEMPLATE_OCORR_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/reg_ocorr_decir.xlsx";
@@ -266,6 +267,10 @@ else if (data.type === 'pag_sba_opat') {
   }
   sheet.pageSetup = {orientation: "portrait", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
                      margins: {left: 0.5, right: 0.5, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3}};}    
+        
+    
+    
+    
         // ---------- CODE A33 ----------
         else if (data.type === 'code_a33_decir') {
           if (!Array.isArray(data.rows)) return res.status(400).json({error: "Rows inválidas para code_a33"});
@@ -292,6 +297,39 @@ else if (data.type === 'pag_sba_opat') {
           }
           sheet.pageSetup = {orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
                              margins: {left: 0.3, right: 0.3, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3}};}
+
+
+
+        // ---------- CODE A33 SBA/OPAT ----------
+else if (data.type === 'code_a33_sba_opat') {
+  if (!Array.isArray(data.rows)) return res.status(400).json({error: "Rows inválidas para code_a33 SBA/OPAT"});
+  const templateBuffer = await downloadTemplate(TEMPLATE_CODE_A33_SBAOPAT_URL);
+  await workbook.xlsx.load(templateBuffer);
+  sheet = workbook.worksheets[0];
+  sheet.getCell("B7").value = `Cod.A33 SBA/OPAT - ${data.year}`;
+  sheet.getCell("D3").value = `Pagamentos SBA/OPAT_${data.year} Cód.A33`;
+  let currentRow = 11;
+  for (const person of data.rows) {
+    const row = sheet.getRow(currentRow);
+    row.getCell("B").value = String(person.ni).padStart(3,'0');
+    row.getCell("C").value = person.nome || '';
+    row.getCell("G").value = person.nif || '';
+    const monthsMap = {ABRIL:"J",MAIO:"L",JUNHO:"N",JULHO:"P",AGOSTO:"R",SETEMBRO:"T",OUTUBRO:"V"};
+    Object.entries(monthsMap).forEach(([month, col]) => {row.getCell(col).value = Number(person[month]) || 0;});
+    row.commit();
+    currentRow++;
+  }
+  for (let r = 11; r <= 112; r++) {
+    const row = sheet.getRow(r);
+    const allZero = ["J","L","N","P","R","T","V"].every(col => (Number(row.getCell(col).value) || 0) === 0);
+    if (allZero) row.hidden = true;
+  }
+  sheet.pageSetup = {orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
+                     margins: {left: 0.3, right: 0.3, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3}};}    
+
+            
+            
+            
         // ---------- ANEPC ----------
         else if (data.type === "anepc_decir") {
           const buffer = await downloadTemplate(TEMPLATE_ANEPC_URL);

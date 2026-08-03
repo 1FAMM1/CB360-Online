@@ -338,14 +338,9 @@
         if (logoImg) logoImg.src = localPreviewUrl;
         if (logoHeaderImg) logoHeaderImg.src = localPreviewUrl;
         const corpOperNr = (sessionStorage.getItem("currentCorpOperNr")).trim();
-        console.log("1. A apagar ficheiro antigo...");
         await deleteCorpLogo(originalCorpLogo);
-        console.log("2. A fazer upload novo...");
         const upload = await uploadCorpLogo(tempCorpLogoFile, corpOperNr);
-        console.log("3. Upload OK:", upload.url);
-        console.log("4. A atualizar DB...");
         await updateLogoInDB(corpOperNr, upload.url);
-        console.log("5. DB OK");
         const cacheBusterUrl = `${upload.url}?t=${Date.now()}`;
         if (logoImg) logoImg.src = cacheBusterUrl;
         if (logoHeaderImg) logoHeaderImg.src = cacheBusterUrl;

@@ -31,7 +31,6 @@
         const exp = payload.exp;
         const now = Math.floor(Date.now() / 1000);
         if (now >= exp) {
-          console.log("Sessão expirada pelo relógio interno.");
           sessionStorage.clear();
           window.location.href = "index.html";
         }

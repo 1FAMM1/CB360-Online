@@ -1307,7 +1307,6 @@
     document.addEventListener('click', async function(e) {
       const btn = e.target.closest('.sidebar-sub-submenu-button');
       if (btn && btn.getAttribute('data-page') === 'page-event-disp') {
-        console.log("A carregar eventos para consulta...");
         await loadEvents();
       }
     });
@@ -1421,7 +1420,6 @@
                 headers : {'Content-Type': 'application/json'},
                 body : JSON.stringify({recipient_nint: 'geral', corp_nr: corp_oper_nr, sender_name: 'CB360 Online', message_text: `📢 Novo evento: "${eventName}". Inscrições abertas!`, sender_nint: '0'})
               });
-              console.log('Push notifications enviadas com sucesso!');
             } catch (errPush) {
               console.error('Erro ao enviar push notifications:', errPush);
             }
@@ -1673,7 +1671,6 @@
             headers : { 'Content-Type': 'application/json' },
             body : JSON.stringify({recipient_nint: userNInt, corp_nr: corp_oper_nr, sender_name: 'CB360 Online', message_text: msgNotif, sender_nint: '0'})
           });
-          console.log(`Push notification enviada para ${userNInt}`);
         } catch (errPush) {
           console.error('Erro ao enviar push notification:', errPush);
         }
@@ -1697,7 +1694,6 @@
         }
         const safeId = evName.replace(/\W/g, '');
         await refreshTableOnly(evName, safeId);
-        console.log(`Estado atualizado: ${userNInt} -> ${newState}`);
       } catch (e) {
         console.error("Erro crítico no updateState:", e);
         showPopup('popup-danger', "Ocorreu um erro ao processar o estado ou a notificação.");
@@ -1730,7 +1726,6 @@
      document.addEventListener('click', async function(e) {
       const btn = e.target.closest('.sidebar-sub-submenu-button');
       if (btn && btn.getAttribute('data-page') === 'page-vacations-request') {
-        console.log("A carregar eventos para consulta...");
         await loadVacationsAdmin();
       }
     });
@@ -1942,7 +1937,6 @@
               }
             }
           }
-          console.log("Fluxo concluído: Base de dados atualizada e notificação enviada.");
         } else {
           throw new Error("Falha ao atualizar o estado no servidor.");
         }

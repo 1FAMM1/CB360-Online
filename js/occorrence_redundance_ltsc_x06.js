@@ -10420,10 +10420,6 @@
         showPopup('popup-danger', 'Erro de rede ao gravar o relatório.');
       }
     }
-
-
-
-
     // ---- EXPORT: exportCb360IncidentsToExcel() — exporta as ocorrências atualmente filtradas para .xlsx via vw_cb360_incidents_summary ----
     async function exportCb360IncidentsToExcel() {
       const btn = document.getElementById('cb360-register-export');
@@ -10453,7 +10449,6 @@
           'Vítimas APC Leves', 'Vítimas APC Graves', 'Vítimas APC Mortos', 'Vítimas APC Assistidos',
           'Observações'
         ];
-        // Fetch em lotes de 100 para não ultrapassar limites de URL do PostgREST
         const chunkSize = 100;
         let rows = [];
         for (let i = 0; i < internalNumbers.length; i += chunkSize) {
@@ -10476,14 +10471,11 @@
             r['Coordenadas Lon. (SIRESP)'] = decimalToSIRESP(lon, false);
           }
         });
-
         const worksheet = XLSX.utils.json_to_sheet(rows, { header: columns });
         worksheet['!cols'] = columns.map(c => ({ wch: Math.min(Math.max(c.length + 4, 12), 35) }));
         worksheet['!freeze'] = { xSplit: 0, ySplit: 1 };
-
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, 'Ocorrências');
-
         const dateStamp = new Date().toISOString().slice(0, 10);
         XLSX.writeFile(workbook, `Listagem_de_Ocorrencias_${dateStamp}.xlsx`);
         showPopup('popup-success', 'Exportação concluída com sucesso!');

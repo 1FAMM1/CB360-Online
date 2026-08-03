@@ -3191,7 +3191,6 @@
               section: zone.dataset.section};
     }
     function signaBuildTurnoBlock(title, subTitle, positions, shift, turnoDay, section, makePositionRowFn) {
-      console.log(subTitle);
       console.trace(subTitle);
       const block = document.createElement("div");
       block.className = "signa-shift-block";

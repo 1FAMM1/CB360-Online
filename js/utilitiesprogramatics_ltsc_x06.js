@@ -740,11 +740,7 @@
           const n = String(i).padStart(2, '0');
           const mainInput = document.getElementById(`nohosp-${n}`);
           if (!mainInput) continue;
-          const hospitalValue = mainInput.value.trim();
-          if (hospitalValue === "") {
-            console.log(`[NOHOSP] Linha ${n} vazia, a saltar...`);
-            continue; 
-          }
+          const hospitalValue = mainInput.value.trim();          
           const clean = (id) => {
             const el = document.getElementById(id);
             if (!el) return null;

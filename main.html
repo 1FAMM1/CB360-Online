@@ -4611,10 +4611,8 @@
                 <div class="major-row" style="margin-top: 10px;">
                   <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px; width: 100%;">
                     <label for="notification-to">NOTIFICAÇÃO</label>
-                    <textarea id="notification-message" placeholder="Escreva a sua notificação..."  
-                              style="flex: 1; min-height: 80px; padding: 8px 10px; border-radius: 8px; border: 1px solid #ddd; font-size: 13px; font-family: 'Segoe UI', sans-serif; 
-                                     resize: vertical; box-sizing: border-box; outline: none; transition: border-color .15s; text-transform: uppercase;"
-                              onfocus="this.style.borderColor='#7b0000'" onblur="this.style.borderColor='#ddd'"></textarea>
+                    <textarea id="notification-message" placeholder="Escreva a sua notificação..." style="flex: 1; min-height: 200px; padding: 8px 10px; border-radius: 8px; border: 1px solid #ddd; font-size: 13px; font-family: 'Segoe UI', sans-serif; resize: vertical; box-sizing: border-box; outline: none; transition: border-color .15s;"
+                    onfocus="this.style.borderColor='#7b0000'" onblur="this.style.borderColor='#ddd'" onkeydown="if(event.key === 'Enter') event.stopPropagation();"></textarea>
                   </div>
                 </div>
                 <div class="major-row" style="margin-top: 20px;">

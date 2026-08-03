@@ -503,7 +503,6 @@
         let elems = await fetchElemsFromSupabase();
         elems = sortElems(elems);
         createElemButtons(elems);
-        console.log("✅ Registos carregados e botões criados:", elems);
       } catch (error) {
         console.error("❌ Erro ao carregar elementos:", error);
       }

@@ -138,7 +138,7 @@
           return;
       }
       const audio = new Audio(`https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/sounds/${soundFolder}/${fileName}`);
-      audio.play().then(() => console.log(`▶️ A tocar: ${fileName}`)).catch(err => console.error("Erro ao tocar áudio:", err));
+      audio.play().catch(() => {});
     }
     function createAudioButton(type, gridId, level, occurrenceType = null, customTitle = null) {
       const btn = document.createElement("button");
@@ -800,7 +800,6 @@
       absContainer.innerHTML = '';
       try {
         const data = await fetchFromSupabase("ppia22_data", `ppi_sence=eq.${sentido}`);
-        console.log('Total troços para sentido', sentido, ':', data.length);
         const filtered = data.filter(ppi => ppi.ppi_first_node === firstNode && ppi.ppi_secound_node === secondNode);
         if (!filtered.length) {
           showPopup('popup-danger', "Nenhuma grelha encontrada para este troço.");
@@ -1994,7 +1993,6 @@
           const matchMonth = targetMonth === "ALL" || d.getMonth() === parseInt(targetMonth);
           return matchYear && matchMonth;
         });
-        console.log(`📊 RECUSAS: Total brutas = ${rawRefusals.length} | Filtradas (${targetYear}-${targetMonth}) = ${refusalsData.length}`);
         document.getElementById("sum-refusals-total").textContent = `🤒 ${refusalsData.length}`;    
       } catch (e) {
         console.error("❌ Erro ao atualizar cards resumo:", e);
@@ -2521,7 +2519,7 @@
           headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
           body: JSON.stringify(eligibilityRecords)
         });
-        if (res.ok) console.log(`✅ Registo concluído: ${eligibilityRecords.length} operacionais elegíveis.`);
+        if (res.ok)
         return res.ok;
       } catch (err) {
         console.error("❌ Erro em saveEligibility:", err);
@@ -3398,7 +3396,6 @@
             });
           }
         }
-        console.log(`✅ Draft guardado (Turno ${shift})`);
       } catch (err) {
         console.error('❌ Erro ao guardar draft:', err);
       }
@@ -3449,7 +3446,6 @@
         const optionText = clean(option.textContent);
         if (optionText.startsWith(clean(current))) {
           option.selected = true;
-          console.log("✔ Selecionado:", option.textContent);
           return;
         }
       }

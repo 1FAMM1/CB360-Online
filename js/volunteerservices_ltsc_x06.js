@@ -586,7 +586,6 @@
         btnEnviar.onmouseover = () => btnEnviar.style.backgroundColor = "#218838";
         btnEnviar.onmouseout = () => btnEnviar.style.backgroundColor = "#28a745";
         btnEnviar.onclick = () => {
-          console.log("Enviando dados para validação pelo utilizador comum...");
           if(typeof confirmValidation === 'function') {
             confirmValidation(null, null, btnEnviar);
           }

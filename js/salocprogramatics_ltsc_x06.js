@@ -2368,21 +2368,23 @@
     DAILY PLANNING
     ======================================= */
     async function _getPLANDIREmailCommonData(corpOperNr) {
+      let logoUrl = "", cbName = "", corpAddress = "", corpCp = "", corpLocalitie = "", corpPhoneMobile = "", corpPhoneLandline = "", corpEmail = "";
       try {
         const corpRes = await fetch(
-          `${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${corpOperNr}&select=logo_url,cb_name`, {
+          `${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${corpOperNr}&select=logo_url,cb_name,corp_address,corp_cp,corp_localitie,corp_phone_mobile,corp_phone_landline,corp_email`, {
             headers: getSupabaseHeaders()
           }
         );
         const corpData = await corpRes.json();
-        return {
-          logoUrl: corpData[0]?.logo_url || "",
-          cbName: corpData[0]?.cb_name || ""
-        };
+        if (corpData.length) {
+          logoUrl = corpData[0].logo_url || ""; cbName = corpData[0].cb_name || ""; corpAddress = corpData[0].corp_address || ""; corpCp = corpData[0].corp_cp || "";
+          corpLocalitie = corpData[0].corp_localitie || ""; corpPhoneMobile = corpData[0].corp_phone_mobile || ""; corpPhoneLandline = corpData[0].corp_phone_landline || "";
+          corpEmail = corpData[0].corp_email || "";
+        }
       } catch (err) {
         console.error("Erro ao carregar dados da corporação:", err);
-        return {logoUrl: "", cbName: ""};
       }
+      return {logoUrl, cbName, corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail};
     }
     const tableConfig = [{rows: 1, special: false, title: "OFOPE"}, {rows: 1, special: false, title: "CHEFE DE SERVIÇO"}, {rows: 1, special: false, title: "OPTEL"},
                      {rows: 5, special: true, title: "EQUIPA 01"}, {rows: 5, special: false, title: "EQUIPA 02"}, {rows: 2, special: false, title: "LOGÍSTICA"},
@@ -2518,8 +2520,7 @@
           method: "POST",
           headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
           body: JSON.stringify(eligibilityRecords)
-        });
-        if (res.ok)
+        });        
         return res.ok;
       } catch (err) {
         console.error("❌ Erro em saveEligibility:", err);
@@ -2834,7 +2835,7 @@
                            "INEM": "inem", "INEM - Reserva": "inem_reserva", "SERVIÇO GERAL": "servico_geral"};
       showPopup('popup-success', `Planeamento gerado com sucesso. O mesmo está a ser enviado para as entidades.`);
       try {
-        const { logoUrl, cbName } = await _getPLANDIREmailCommonData(corpOperNr);
+        const { logoUrl, cbName, corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail } = await _getPLANDIREmailCommonData(corpOperNr);
         for (let table of tables) {
           const team_name = teamNameMap[table.title];
           if (!team_name) continue;
@@ -2874,7 +2875,8 @@
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({shift, date, tables, recipients: RECIPIENTS, ccRecipients: CC_RECIPIENTS, bccRecipients: BCC_RECIPIENTS, emailBody: emailBodyHTML,
-                                logoUrl: logoUrl, corpName: cbName, corpOperNr: corpOperNr, lastUpdated})
+                                logoUrl: logoUrl, corpName: cbName, corpOperNr: corpOperNr, lastUpdated,
+                                corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail})
         });
         const result = await response.json();
         if (!response.ok) {

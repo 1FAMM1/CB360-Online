@@ -20,7 +20,10 @@
       api: {bodyParser: {sizeLimit: '10mb',},},
     };
     // Template HTML partilhado
-    function buildEmailTemplate({title, subtitle, logoUrl, emailBody, corpName}) {
+    function buildEmailTemplate({title, subtitle, logoUrl, emailBody, corpName, corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail}) {
+      const addressLine = [corpAddress, [corpCp, corpLocalitie].filter(Boolean).join(" "), "Portugal"].filter(Boolean).join(" | ");
+      const phoneLine = [corpPhoneMobile ? `Telem.: ${corpPhoneMobile}` : "", corpPhoneLandline ? `Telef: ${corpPhoneLandline}` : ""].filter(Boolean).join(" | ");
+      const emailLine = corpEmail ? `Email: ${corpEmail}` : "";
       return `
         <!DOCTYPE html>
         <html>
@@ -55,8 +58,9 @@
               <div class="signature-section">
                 <div class="signature-corp">${corpName || ""}</div>
                 <div class="signature-contacts">
-                  Rua Comandante Francisco Manuel, 7 a 13 | 8000-250 Faro | Portugal<br>
-                  Telem.: +351 917 629 626 | Telef: +351 289 803 066
+                  ${addressLine}<br>
+                  ${phoneLine}<br>
+                  ${emailLine}
                 </div>
               </div>
               <div class="eco-note">
@@ -119,7 +123,8 @@
       res.setHeader("Access-Control-Allow-Headers", "Content-Type");
       if (req.method === "OPTIONS") return res.status(200).end();
       try {
-        const {shift, date, tables, recipients, ccRecipients, bccRecipients, emailBody, logoUrl, corpName, corpOperNr, lastUpdated} = req.body || {};
+        const {shift, date, tables, recipients, ccRecipients, bccRecipients, emailBody, logoUrl, corpName, corpOperNr, lastUpdated,
+               corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail} = req.body || {};
         if (!shift || !date || !tables || !recipients || recipients.length === 0) {
           return res.status(400).json({
             error: "Faltam dados essenciais ou a lista de destinatários principais está vazia.",
@@ -171,7 +176,13 @@
           subtitle: `Planeamento Diário - Turno ${shift} | ${formattedDate}`,
           logoUrl: logoUrl || "",
           emailBody: emailBody || "",
-          corpName: corpName || ""
+          corpName: corpName || "",
+          corpAddress: corpAddress || "",
+          corpCp: corpCp || "",
+          corpLocalitie: corpLocalitie || "",
+          corpPhoneMobile: corpPhoneMobile || "",
+          corpPhoneLandline: corpPhoneLandline || "",
+          corpEmail: corpEmail || ""
         });
         await transporter.sendMail({
           from: `"SALOC ${corpOperNr || 'Corporacao'}" <${GMAIL_EMAIL}>`,

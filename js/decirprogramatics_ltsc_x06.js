@@ -346,10 +346,6 @@
                             generic: {containerId: "months-container-dec-anepc", tableContainerId: "table-container-dec-anepc", yearSelectId: "year-dec-anepc", optionsContainerId: "decir-anepc-options",
                             monthNames: DECIR_MONTH_NAMES, blockedMonths: [], loadDataFunc: async (y, m) => ({elems: await loadDecirANEPCElements(y, m + 4), turnos: await loadDecirShiftsByNI(y, m + 4)}),
                             createTableFunc: (cId, y, m, d) => createDecirAnepcTable(cId, y, m + 4, d.elems, d.turnos)}},
-
-
-
-
       "decir-reg-sbaopat": {tableId: "table-container-sbaopat-reg", optionsId: "decir-reg-sbaopat-options", monthsId: "months-container-sbaopat-reg",
                             generic: {containerId: "months-container-sbaopat-reg", tableContainerId: "table-container-sbaopat-reg", yearSelectId: "year-sbaopat-reg", optionsContainerId: "decir-reg-sbaopat-options",
                             monthNames: DECIR_MONTH_NAMES, blockedMonths:[], loadDataFunc: async (y, m) => loadDecirRegData(y, m + 4), createTableFunc: (cId, y, m, d) => createSbaOpatRegTable(cId, y, m + 4, d), 
@@ -364,11 +360,6 @@
                               generic: {containerId: "months-container-sbaopat-anepc", tableContainerId: "table-container-sbaopat-anepc", yearSelectId: "year-sbaopat-anepc", optionsContainerId: "decir-anepc-sbaopat-options",
                               monthNames: DECIR_MONTH_NAMES, blockedMonths: [], loadDataFunc: async (y, m) => ({elems: await loadSbaOpatANEPCElements(y, m + 4), turnosSbas: await loadSbaOpatShiftsByNI(y, m + 4, "sba"), turnosOpat: await loadSbaOpatShiftsByNI(y, m + 4, "opat")}),
                               createTableFunc: (cId, y, m, d) => createSbaOpatAnepcTable(cId, y, m + 4, d.elems, d.turnosSbas, d.turnosOpat)}},
-
-
-
-
-
       "decir-audit": {init: loadAuditLogs},
       "decir-reg-ocorr": {init: createDecirOccurrencesTable},                
       "decir-reg-ref": {tableId: "table-container-dec-ref", optionsId: "decir-ref-options", monthsId: "months-container-dec-ref",

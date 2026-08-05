@@ -1466,6 +1466,7 @@
       table.appendChild(thead);
       const tbody = document.createElement("tbody");
       const rowsCount = elements.length > 0 ? elements.length : 10;
+      const rowUpdaters = [];
       for (let i = 0; i < rowsCount; i++) {
         const elem = elements[i] || {};
         const tr = document.createElement("tr");
@@ -1484,17 +1485,19 @@
         const updateValor = () => {
           const total = calculateRowTotal(...columnValues);
           tdValor.textContent = formatCurrency(total);
+          tr.style.display = total > 0 ? "" : "none";
         };
         updateValor();
-        inputIdsToWatch.forEach(id => {
-          const el = $(id);
-          if (el) el.addEventListener("input", updateValor);
-        });
+        rowUpdaters.push(updateValor);
         tr.appendChild(tdValor);
         tbody.appendChild(tr);
       }
       table.appendChild(tbody);
       wrapper.appendChild(table);
+      inputIdsToWatch.forEach(id => {
+        const el = $(id);
+        if (el) el.addEventListener("input", () => rowUpdaters.forEach(fn => fn()));
+      });
       if (optionsContainerId && $(optionsContainerId)) {
         $(optionsContainerId).style.display = "flex";
       }
@@ -1927,6 +1930,7 @@
           tdTotalContributor.style.cssText = COMMON_TD_STYLE + "font-weight:bold;padding:6px 8px;text-align:right;";
           tdTotalContributor.textContent = formatCurrency(totalForRow);
           tr.appendChild(tdTotalContributor);
+          tr.style.display = totalForRow > 0 ? "" : "none";
           tbody.appendChild(tr);
         }
       };
@@ -2314,7 +2318,7 @@
       yearContainer.append(yearLabel, yearSelect);
       container.appendChild(yearContainer);
       const wrapper = document.createElement("div");
-      Object.assign(wrapper.style, {overflowX: "auto", overflowY: "auto", width: "100%", maxHeight: "500px", marginTop: "0px",
+      Object.assign(wrapper.style, {overflowX: "auto", overflowY: "auto", width: "100%", maxHeight: "600px", marginTop: "0px",
                                     borderRadius: "8px", border: "1px solid #ddd", boxShadow: "0 2px 8px rgba(0,0,0,0.08)"});
       const table = document.createElement("table");
       Object.assign(table.style, {width: "100%", borderCollapse: "separate", borderSpacing: "0", fontFamily: "Segoe UI, sans-serif", fontSize: "13px"});

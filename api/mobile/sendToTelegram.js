@@ -5,8 +5,12 @@ import fetch from 'node-fetch';
 import { createClient } from '@supabase/supabase-js';
 
 const upload = multer();
+
 const SUPABASE_URL = 'https://rjkbodfqsvckvnhjwmhg.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqa2JvZGZxc3Zja3ZuaGp3bWhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgxNjM3NjQsImV4cCI6MjA2MzczOTc2NH0.jX5OPZkz1JSSwrahCoFzqGYw8tYkgE8isbn12uP43-0';
+// Service Role Key — ignora RLS. Nunca expor no frontend, só aqui no backend.
+// Definir no Vercel em: Project Settings > Environment Variables > SUPABASE_SERVICE_ROLE_KEY
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
 const TOKEN = '8596696700:AAGpN0uh_XPAjDkajIR-Wpey8_EkWFPjbPI';
 
 const apiRoute = nextConnect({
@@ -40,9 +44,12 @@ apiRoute.post(async (req, res) => {
   if (!corp_oper_nr) return res.status(400).json({ success: false, error: 'corp_oper_nr é obrigatório' });
   if (!message && files.length === 0) return res.status(400).json({ success: false, error: 'Mensagem ou fotos vazias' });
 
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    global: { headers: { 'x-my-corpo': corp_oper_nr } }
-  });
+  if (!SUPABASE_SERVICE_ROLE_KEY) {
+    return res.status(500).json({ success: false, error: 'SUPABASE_SERVICE_ROLE_KEY não configurada no servidor' });
+  }
+
+  // Cliente com Service Role: acesso direto, sem restrições de RLS.
+  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
   try {
     const { data, error } = await supabase
@@ -51,7 +58,9 @@ apiRoute.post(async (req, res) => {
       .eq('corp_oper_nr', corp_oper_nr)
       .single();
 
-    if (error || !data?.chat_id) return res.status(404).json({ success: false, error: 'Chat ID não encontrado para a corporação' });
+    if (error || !data?.chat_id) {
+      return res.status(404).json({ success: false, error: 'Chat ID não encontrado para a corporação' });
+    }
 
     const CHAT_ID = data.chat_id;
 
@@ -63,16 +72,20 @@ apiRoute.post(async (req, res) => {
         caption: index === 0 && message ? message : undefined,
         parse_mode: index === 0 && message ? 'HTML' : undefined,
       }));
+
       formData.append('chat_id', CHAT_ID);
       formData.append('media', JSON.stringify(media));
+
       files.slice(0, 10).forEach((file, index) => {
         formData.append(`file${index}`, Buffer.from(file.buffer), { filename: file.originalname });
       });
+
       const telegramRes = await fetch(`https://api.telegram.org/bot${TOKEN}/sendMediaGroup`, {
         method: 'POST',
         body: formData,
         headers: formData.getHeaders(),
       });
+
       if (!telegramRes.ok) {
         const text = await telegramRes.text();
         return res.status(500).json({ success: false, error: text });
@@ -83,6 +96,7 @@ apiRoute.post(async (req, res) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ chat_id: CHAT_ID, text: message, parse_mode: 'HTML' }),
       });
+
       if (!telegramRes.ok) {
         const text = await telegramRes.text();
         return res.status(500).json({ success: false, error: text });
@@ -98,5 +112,7 @@ apiRoute.post(async (req, res) => {
 export const config = {
   api: { bodyParser: false },
 };
+
+export default apiRoute;
 
 export default apiRoute;

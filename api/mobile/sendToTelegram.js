@@ -114,5 +114,3 @@ export const config = {
 };
 
 export default apiRoute;
-
-export default apiRoute;

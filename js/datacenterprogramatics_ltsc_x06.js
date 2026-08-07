@@ -428,7 +428,7 @@
         {label: "Registos Recusas/INOPS", children: [{label: "Recusas de Serviços"}, {label: "Inoperacionalidades INEM"}, {label: "Relatórios Mensais"}, {label: "DashBoard"}]},
         {label: "Documentação Importante", children: [{label: "CREPC Algarve"}, {label: "Planeamento Diário"}, {label: "Sitop de Veículos"}]},
         {label: "Diversos"},
-        {label: "Ocorrências (Redundância)"},
+        {label: "Redundância Ocorrências"},
         {label: "Consola de Alarmes"}
       ]},
       {label: "Comunicação WSMS", children: [
@@ -1136,7 +1136,7 @@
     document.getElementById("config_sitop_mail_save")?.addEventListener("click", saveSitopMails);
     document.getElementById("config_moa_mail_save")?.addEventListener("click", saveMoaMails);
     document.addEventListener("click", (e) => {
-      const btn = e.target.closest("button[onclick*=\"showPanelCard('mails')\"]");
+      const btn = e.target.closest("button[onclick*=\"showPanelCardDataCenter('mails')\"]");
       if (btn) {
         loadMailsConfig();
       }

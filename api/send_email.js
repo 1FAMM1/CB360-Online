@@ -9,8 +9,8 @@
  * com o template visual padrão da corporação.
  *************************************************************************/
 import nodemailer from "nodemailer";
-const GMAIL_EMAIL = process.env.GMAIL_EMAIL;
-const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
+const GMAIL_EMAIL = process.env.GMAIL_MOBILE_EMAIL;
+const GMAIL_APP_PASSWORD = process.env.GMAIL_MOBILE_APP_PASSWORD;
 export const config = {api: {bodyParser: {sizeLimit: "5mb"}}};
 /* ======================= TEMPLATE HTML PARTILHADO ======================= */
 function buildEmailTemplate({title, subtitle, logoUrl, emailBody, corpName, corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail,}) {

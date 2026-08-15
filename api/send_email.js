@@ -9,26 +9,11 @@
  * com o template visual padrão da corporação.
  *************************************************************************/
 import nodemailer from "nodemailer";
-
 const GMAIL_EMAIL = process.env.GMAIL_EMAIL;
 const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
-
-export const config = { api: { bodyParser: { sizeLimit: "5mb" } } };
-
+export const config = {api: {bodyParser: {sizeLimit: "5mb"}}};
 /* ======================= TEMPLATE HTML PARTILHADO ======================= */
-function buildEmailTemplate({
-  title,
-  subtitle,
-  logoUrl,
-  emailBody,
-  corpName,
-  corpAddress,
-  corpCp,
-  corpLocalitie,
-  corpPhoneMobile,
-  corpPhoneLandline,
-  corpEmail,
-}) {
+function buildEmailTemplate({title, subtitle, logoUrl, emailBody, corpName, corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail,}) {
   const addressLine = [corpAddress, [corpCp, corpLocalitie].filter(Boolean).join(" "), "Portugal"]
     .filter(Boolean)
     .join(" | ");
@@ -39,7 +24,6 @@ function buildEmailTemplate({
     .filter(Boolean)
     .join(" | ");
   const emailLine = corpEmail ? `Email: ${corpEmail}` : "";
-
   return `
     <!DOCTYPE html>
     <html>
@@ -88,69 +72,32 @@ function buildEmailTemplate({
           </div>
         </div>
         <div class="email-footer">
-          &copy; 2023 - ${new Date().getFullYear()} CB360 Online - Todos os direitos reservados.
+          &copy; 2023 - ${new Date().getFullYear()} CB360 Mobile - Todos os direitos reservados.
         </div>
       </div>
     </body>
     </html>
   `;
 }
-
 /* ============================ HANDLER PRINCIPAL =========================== */
-/*
-  Payload esperado (POST):
-  {
-    recipients:    ["a@x.pt"],       // obrigatório, pelo menos 1
-    ccRecipients:  ["b@x.pt"],       // opcional
-    bccRecipients: ["c@x.pt"],       // opcional
-    emailSubject:  "Assunto",        // obrigatório
-    emailBody:     "<p>Texto...</p>",// obrigatório (HTML permitido)
-    title:         "Título no cabeçalho do template",
-    subtitle:      "Subtítulo no cabeçalho do template",
-    corp_oper_nr:  "0805",
-    logoUrl, corpName, corpAddress, corpCp, corpLocalitie,
-    corpPhoneMobile, corpPhoneLandline, corpEmail
-  }
-*/
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Método não permitido. Use POST." });
-
   try {
-    const {
-      recipients,
-      ccRecipients,
-      bccRecipients,
-      emailSubject,
-      emailBody,
-      title,
-      subtitle,
-      corp_oper_nr,
-      logoUrl,
-      corpName,
-      corpAddress,
-      corpCp,
-      corpLocalitie,
-      corpPhoneMobile,
-      corpPhoneLandline,
-      corpEmail,
-    } = req.body || {};
-
+    const {recipients, ccRecipients, bccRecipients,  emailSubject, emailBody, title, subtitle, corp_oper_nr, logoUrl, corpName, corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail,} = req.body || {};
     if (!recipients || recipients.length === 0) {
       return res.status(400).json({ error: "A lista de destinatários principais está vazia." });
     }
     if (!emailSubject || !emailBody) {
       return res.status(400).json({ error: "Faltam campos obrigatórios: emailSubject e/ou emailBody." });
     }
-
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: { user: GMAIL_EMAIL, pass: GMAIL_APP_PASSWORD },
     });
-
     const htmlEmail = buildEmailTemplate({
       title: title || corpName || "",
       subtitle: subtitle || "",
@@ -164,17 +111,15 @@ export default async function handler(req, res) {
       corpPhoneLandline: corpPhoneLandline || "",
       corpEmail: corpEmail || "",
     });
-
     await transporter.sendMail({
-      from: `"CB360 ${corp_oper_nr || "Corporacao"}" <${GMAIL_EMAIL}>`,
+      from: `"CB360 Mobile ${corp_oper_nr || "Corporacao"}" <${GMAIL_EMAIL}>`,
       to: recipients.join(", "),
       cc: ccRecipients && ccRecipients.length > 0 ? ccRecipients.join(", ") : "",
       bcc: bccRecipients && bccRecipients.length > 0 ? bccRecipients.join(", ") : "",
       subject: emailSubject,
       html: htmlEmail,
-      text: emailBody.replace(/<[^>]*>/g, ""), // fallback em texto simples
+      text: emailBody.replace(/<[^>]*>/g, ""),
     });
-
     return res.status(200).json({
       success: true,
       message: `E-mail enviado com sucesso para ${recipients.length} destinatario(s).`,

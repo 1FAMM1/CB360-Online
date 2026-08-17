@@ -2811,7 +2811,7 @@
       return optelTable.rows[0].nome || "";
     }
     async function emitPlanning(shift, date, baixar = false) {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       if (!corpOperNr) {
         showPopup('popup-danger', "Erro: Sessão expirada. Por favor, faça login novamente.");
         return;
@@ -2878,27 +2878,11 @@
                                 logoUrl: logoUrl, corpName: cbName, corpOperNr: corpOperNr, lastUpdated,
                                 corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail})
         });
-
-        // Lê a resposta como texto primeiro; só depois tenta interpretar como JSON.
-        // Isto evita o SyntaxError quando a Vercel devolve uma página de erro (504, 502, etc.)
-        const rawText = await response.text();
-        let result = null;
-        try {
-          result = rawText ? JSON.parse(rawText) : null;
-        } catch (parseErr) {
-          result = null;
-        }
-
+        const result = await response.json();
         if (!response.ok) {
-          if (response.status === 504) {
-            showPopup('popup-danger', 'ERRO! O servidor demorou demasiado tempo a gerar e enviar o planeamento (timeout). O envio pode não ter sido concluído — verifique antes de tentar novamente.');
-          } else {
-            const details = result?.details || result?.error || rawText.slice(0, 200) || 'Verificar consola.';
-            showPopup('popup-danger', `ERRO! O planeamento não foi enviado. Detalhes: ${details}`);
-          }
+          showPopup('popup-danger', `ERRO! O planeamento não foi enviado. Detalhes: ${result.details || 'Verificar consola.'}`);
           return;
         }
-
         showPopup('popup-success', `Planeamento do dia ${day}/${month}/${year} (Turno ${shift}) emitido e enviado com sucesso!`);
         await fetch(`${SUPABASE_URL}/rest/v1/fomio_draft?corp_oper_nr=eq.${corpOperNr}&shift=eq.${shift}`, {
           method: "DELETE",

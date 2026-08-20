@@ -1033,8 +1033,8 @@
       loadVehiclesTable();
     });
     /* =======================================
-    EMAIL's FUNCTIONS
-    ======================================= */
+    EMAIL's FUNCTIONS
+    ======================================= */
     /* ========== LOAD DE EMAILS ========== */
     async function loadMailsConfig() {
       const currentCorpNr = sessionStorage.getItem("currentCorpOperNr");
@@ -1048,9 +1048,18 @@
         );
         const rows = await resp.json();
         if (!Array.isArray(rows)) return;
-        document.getElementById("config_sitop_mail_to").value = rows.find(r => r.category === "crepcsitop_mail_to")?.value || "";
-        document.getElementById("config_sitop_mail_cc").value = rows.find(r => r.category === "crepcsitop_mail_cc")?.value || "";
-        document.getElementById("config_sitop_mail_bcc").value = rows.find(r => r.category === "crepcsitop_mail_bcc")?.value || "";
+        document.getElementById("config_plandir_emit_to").value = rows.find(r => r.category === "plandir_emit_mail_to")?.value || "";
+        document.getElementById("config_plandir_emit_cc").value = rows.find(r => r.category === "plandir_emit_mail_cc")?.value || "";
+        document.getElementById("config_plandir_emit_bcc").value = rows.find(r => r.category === "plandir_emit_mail_bcc")?.value || "";
+        document.getElementById("config_pointjustif_mail_to").value = rows.find(r => r.category === "pointjustif_mail_to")?.value || "";
+        document.getElementById("config_pointjustif_mail_cc").value = rows.find(r => r.category === "pointjustif_mail_cc")?.value || "";
+        document.getElementById("config_pointjustif_mail_bcc").value = rows.find(r => r.category === "pointjustif_mail_bcc")?.value || "";
+        document.getElementById("config_solfardam_mail_to").value = rows.find(r => r.category === "solfardam_mail_to")?.value || "";
+        document.getElementById("config_solfardam_mail_cc").value = rows.find(r => r.category === "solfardam_mail_cc")?.value || "";
+        document.getElementById("config_solfardam_mail_bcc").value = rows.find(r => r.category === "solfardam_mail_bcc")?.value || "";
+        document.getElementById("config_sitop_veiculos_mail_to").value = rows.find(r => r.category === "crepcsitop_mail_to")?.value || "";
+        document.getElementById("config_sitop_veiculos_mail_cc").value = rows.find(r => r.category === "crepcsitop_mail_cc")?.value || "";
+        document.getElementById("config_sitop_veiculos_mail_bcc").value = rows.find(r => r.category === "crepcsitop_mail_bcc")?.value || "";
         document.getElementById("config_moa_mail_to").value = rows.find(r => r.category === "crepcmoa_mail_to")?.value || "";
         document.getElementById("config_moa_mail_cc").value = rows.find(r => r.category === "crepcmoa_mail_cc")?.value || "";
         document.getElementById("config_moa_mail_bcc").value = rows.find(r => r.category === "crepcmoa_mail_bcc")?.value || "";
@@ -1086,7 +1095,7 @@
       const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       return emails.every(email => regex.test(email));
     }
-    /* ===== UPSERT HELPER (shared logic inline, no DRY sharing across other functions) ===== */
+    /* ===== UPSERT HELPER ===== */
     async function saveMailConfigRow(corpOperNr, category, value) {
       const checkUrl = `${SUPABASE_URL}/rest/v1/mails_config?corp_oper_nr=eq.${corpOperNr}&category=eq.${category}&select=id`;
       const checkRes = await fetch(checkUrl, {headers: getSupabaseHeaders()});
@@ -1109,31 +1118,61 @@
         );
       }
     }
-    /* ============ SAVE SITOP ============ */
-    async function saveSitopMails() {
+    /* ============ SAVE PLANOS DIÁRIOS (EMISSÃO) ============ */
+    async function savePlandirEmitMails() {
       const currentCorpNr = sessionStorage.getItem("currentCorpOperNr");
       if (!currentCorpNr) return;
-      const rows = [{category: "crepcsitop_mail_to",  value: document.getElementById("config_sitop_mail_to").value},
-                    {category: "crepcsitop_mail_cc",  value: document.getElementById("config_sitop_mail_cc").value},
-                    {category: "crepcsitop_mail_bcc", value: document.getElementById("config_sitop_mail_bcc").value}];
+      const rows = [{category: "plandir_emit_mail_to",  value: document.getElementById("config_plandir_emit_to").value}, {category: "plandir_emit_mail_cc",  value: document.getElementById("config_plandir_emit_cc").value}, {category: "plandir_emit_mail_bcc", value: document.getElementById("config_plandir_emit_bcc").value}];
       for (const row of rows) {
         await saveMailConfigRow(currentCorpNr, row.category, row.value);
       }
-      showPopup('popup-success', "Emails para envio de Situações Operacionais de Veículos, atualizados com sucesso.");
+      showPopup('popup-success', "Emails para emissão de Planeamentos Diários atualizados com sucesso.");
     }
-    /* ============= SAVE MOA ============= */
+    /* ============ SAVE JUSTIFICAÇÃO DE PONTO ============ */
+    async function savePointJustifMails() {
+      const currentCorpNr = sessionStorage.getItem("currentCorpOperNr");
+      if (!currentCorpNr) return;
+      const rows = [{category: "pointjustif_mail_to",  value: document.getElementById("config_pointjustif_mail_to").value}, {category: "pointjustif_mail_cc",  value: document.getElementById("config_pointjustif_mail_cc").value}, {category: "pointjustif_mail_bcc", value: document.getElementById("config_pointjustif_mail_bcc").value}];
+      for (const row of rows) {
+        await saveMailConfigRow(currentCorpNr, row.category, row.value);
+      }
+      showPopup('popup-success', "Emails para justificação de picagens de ponto atualizados com sucesso.");
+    }
+    /* ============ SAVE SOLICITAÇÃO DE FARDAMENTO ============ */
+    async function saveSolFardamMails() {
+      const currentCorpNr = sessionStorage.getItem("currentCorpOperNr");
+      if (!currentCorpNr) return;
+      const rows = [{category: "solfardam_mail_to",  value: document.getElementById("config_solfardam_mail_to").value}, {category: "solfardam_mail_cc",  value: document.getElementById("config_solfardam_mail_cc").value}, {category: "solfardam_mail_bcc", value: document.getElementById("config_solfardam_mail_bcc").value}];
+      for (const row of rows) {
+        await saveMailConfigRow(currentCorpNr, row.category, row.value);
+      }
+      showPopup('popup-success', "Emails para solicitação de fardamento atualizados com sucesso.");
+    }
+    /* ============ SAVE SITOP VEÍCULOS ============ */
+    async function saveSitopVeiculosMails() {
+      const currentCorpNr = sessionStorage.getItem("currentCorpOperNr");
+      if (!currentCorpNr) return;
+      const rows = [{category: "crepcsitop_mail_to",  value: document.getElementById("config_sitop_veiculos_mail_to").value}, {category: "crepcsitop_mail_cc",  value: document.getElementById("config_sitop_veiculos_mail_cc").value}, {category: "crepcsitop_mail_bcc", value: document.getElementById("config_sitop_veiculos_mail_bcc").value}];
+      for (const row of rows) {
+        await saveMailConfigRow(currentCorpNr, row.category, row.value);
+      }
+      showPopup('popup-success', "Emails para envio de Situações Operacionais de Veículos atualizados com sucesso.");
+    }
+    /* ============= SAVE MOA ============== */
     async function saveMoaMails() {
       const currentCorpNr = sessionStorage.getItem("currentCorpOperNr");
       if (!currentCorpNr) return;
-      const rows = [{category: "crepcmoa_mail_to",  value: document.getElementById("config_moa_mail_to").value},
-                    {category: "crepcmoa_mail_cc",  value: document.getElementById("config_moa_mail_cc").value},
-                    {category: "crepcmoa_mail_bcc", value: document.getElementById("config_moa_mail_bcc").value}];
+      const rows = [{category: "crepcmoa_mail_to",  value: document.getElementById("config_moa_mail_to").value}, {category: "crepcmoa_mail_cc",  value: document.getElementById("config_moa_mail_cc").value}, {category: "crepcmoa_mail_bcc", value: document.getElementById("config_moa_mail_bcc").value}];
       for (const row of rows) {
         await saveMailConfigRow(currentCorpNr, row.category, row.value);
       }
-      showPopup('popup-success', "Emails para envio de Medidas Operacionais de Anticipação, atualizados com sucesso.");
+      showPopup('popup-success', "Emails para envio de Medidas Operacionais de Antecipação atualizados com sucesso.");
     }
-    document.getElementById("config_sitop_mail_save")?.addEventListener("click", saveSitopMails);
+    /* ========== EVENT LISTENERS ========== */
+    document.getElementById("config_plandir_emit_mail_save")?.addEventListener("click", savePlandirEmitMails);
+    document.getElementById("config_pointjustif_mail_save")?.addEventListener("click", savePointJustifMails);
+    document.getElementById("config_solfardam_mail_save")?.addEventListener("click", saveSolFardamMails);
+    document.getElementById("config_sitop_veiculos_mail_save")?.addEventListener("click", saveSitopVeiculosMails);
     document.getElementById("config_moa_mail_save")?.addEventListener("click", saveMoaMails);
     document.addEventListener("click", (e) => {
       const btn = e.target.closest("button[onclick*=\"showPanelCardDataCenter('mails')\"]");

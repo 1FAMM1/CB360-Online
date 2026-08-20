@@ -5044,50 +5044,153 @@
               <h3>CONFIGURAÇÃO DE EMAILS</h3>
               <p>Configuração de emails para envio das Situações Operacionais de Veículos e Medidas Operacionais de Antecipação.</p>
               <p style="color: red; font-weight: bold; font-style: italic; font-size: 12px;">Os emails inseridsos, deverão ser separados apenas por uma virgula como indicado em exemplo na textbox.</p>
-              <div class="major-card" style="margin-bottom: 10px;">
-                <div class="major-card-header header-black">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.9;">
-                    <rect x="3" y="5" width="18" height="14" rx="2"></rect>
-                    <path d="M3 7l9 6 9-6"></path>
-                  </svg>
-                  <span>CONFIGURAÇÃO DE EMAILS PARA SITUAÇÃO OPRACIONAL DE VEÍCULOS (CREPC).</span>
-                </div>
-                <div class="major-card-body">
-                  <div class="major-field">
-                    <div style="display: flex; align-items: center; margin-bottom: 3px; white-space: nowrap; gap: 5px;">
-                      <label style="width: 80px;">Emails Para:</label>
-                      <input type="text" id="config_sitop_mail_to" placeholder="exemplo@mail.com,exemplo2@mail.com" style="width: 100%;">
+              <div class="emails-config-container" style="max-height: 450px; overflow-y: auto; padding-right: 5px; border: 1px solid #eee; border-radius: 8px; background: #fafafa; padding: 10px;">
+                <div class="major-card" style="margin-bottom: 10px;">
+                  <div class="major-card-header header-black">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.9;">
+                      <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+                      <path d="M3 7l9 6 9-6"></path>
+                    </svg>
+                    <span>CONFIGURAÇÃO DE EMAILS PARA EMISSÃO DE PLANEAMENTOS DIÁRIOS.</span>
+                  </div>
+                  <div class="major-card-body">
+                    <div class="major-field">
+                      <div style="display: flex; align-items: center; margin-bottom: 3px; white-space: nowrap; gap: 5px;">
+                        <label style="width: 80px;">Emails Para:</label>
+                        <input type="text" id="config_plandir_emit_to" placeholder="exemplo@mail.com,exemplo2@mail.com" style="width: 100%;">
+                      </div>
+                    </div>
+                    <div class="major-field">
+                      <div style="display: flex; align-items: center; margin-bottom: 3px; white-space: nowrap; gap: 5px;">
+                        <label style="width: 190px;">Emails com Conhecimento:</label>
+                        <input type="text" id="config_plandir_emit_cc" placeholder="exemplo@mail.com,exemplo2@mail.com" style="width: 100%;">
+                      </div>
+                    </div>
+                    <div class="major-field">
+                      <div style="display: flex; align-items: center; margin-bottom: 3px; white-space: nowrap; gap: 5px;">
+                        <label style="width: 240px;">Emails com Conhecimento (BCC):</label>
+                        <input type="text" id="config_plandir_emit_bcc" placeholder="exemplo@mail.com,exemplo2@mail.com" style="width: 100%;">
+                      </div>        
                     </div>
                   </div>
-                  <div class="major-field">
-                    <div style="display: flex; align-items: center; margin-bottom: 3px; white-space: nowrap; gap: 5px;">
-                      <label style="width: 190px;">Emails com Conhecimento:</label>
-                      <input type="text" id="config_sitop_mail_cc" placeholder="exemplo@mail.com,exemplo2@mail.com" style="width: 100%;">
+                  <div class="major-card-footer">
+                    <div class="action-buttons" id="config_plandir_emit_mail">
+                      <button class="btn btn-add" id="config_plandir_emit_mail_save">ADICIONAR</button>
                     </div>
                   </div>
-                  <div class="major-field">
-                    <div style="display: flex; align-items: center; margin-bottom: 3px; white-space: nowrap; gap: 5px;">
-                      <label style="width: 240px;">Emails com Conhecimento (BCC):</label>
-                      <input type="text" id="config_sitop_mail_bcc" placeholder="exemplo@mail.com,exemplo2@mail.com" style="width: 100%;">
-                  </div>                 
                 </div>
-              </div>
-              <div class="major-card-footer">
-                <div class="action-buttons" id="config_sitop_mail">
-                  <button class="btn btn-add" id="config_sitop_mail_save">ADICIONAR</button>
+                <div class="major-card" style="margin-bottom: 10px;">
+                  <div class="major-card-header header-black">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.9;">
+                      <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+                      <path d="M3 7l9 6 9-6"></path>
+                    </svg>
+                    <span>CONFIGURAÇÃO DE EMAILS PARA JUSTIFICAÇÃO DE PICAGENS DE PONTO.</span>
+                  </div>
+                  <div class="major-card-body">
+                    <div class="major-field">
+                      <div style="display: flex; align-items: center; margin-bottom: 3px; white-space: nowrap; gap: 5px;">
+                        <label style="width: 80px;">Emails Para:</label>
+                        <input type="text" id="config_pointjustif_mail_to" placeholder="exemplo@mail.com,exemplo2@mail.com" style="width: 100%;">
+                      </div>
+                    </div>
+                    <div class="major-field">
+                      <div style="display: flex; align-items: center; margin-bottom: 3px; white-space: nowrap; gap: 5px;">
+                        <label style="width: 190px;">Emails com Conhecimento:</label>
+                        <input type="text" id="config_pointjustif_mail_cc" placeholder="exemplo@mail.com,exemplo2@mail.com" style="width: 100%;">
+                      </div>
+                    </div>
+                    <div class="major-field">
+                      <div style="display: flex; align-items: center; margin-bottom: 3px; white-space: nowrap; gap: 5px;">
+                        <label style="width: 240px;">Emails com Conhecimento (BCC):</label>
+                        <input type="text" id="config_pointjustif_mail_bcc" placeholder="exemplo@mail.com,exemplo2@mail.com" style="width: 100%;">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="major-card-footer">
+                    <div class="action-buttons" id="config_pointjustif_mail">
+                      <button class="btn btn-add" id="config_pointjustif_mail_save">ADICIONAR</button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div class="major-card">
-              <div class="major-card-header header-black">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.9;">
-                  <rect x="3" y="5" width="18" height="14" rx="2"></rect>
-                  <path d="M3 7l9 6 9-6"></path>
-                </svg>
-                <span>CONFIGURAÇÃO DE EMAILS PARA MEDIDAS OPERACIONAIS DE ANTECIPAÇÃO (CREPC).</span>
-              </div>
-              <div class="major-card-body">
-                <div class="major-field">
+                <div class="major-card" style="margin-bottom: 10px;">
+                  <div class="major-card-header header-black">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.9;">
+                      <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+                      <path d="M3 7l9 6 9-6"></path>
+                    </svg>
+                    <span>CONFIGURAÇÃO DE EMAILS PARA SOLICITAÇÃO DE FARDAMENTO.</span>
+                  </div>
+                  <div class="major-card-body">
+                    <div class="major-field">
+                      <div style="display: flex; align-items: center; margin-bottom: 3px; white-space: nowrap; gap: 5px;">
+                        <label style="width: 80px;">Emails Para:</label>
+                        <input type="text" id="config_solfardam_mail_to" placeholder="exemplo@mail.com,exemplo2@mail.com" style="width: 100%;">
+                      </div>
+                    </div>
+                    <div class="major-field">
+                      <div style="display: flex; align-items: center; margin-bottom: 3px; white-space: nowrap; gap: 5px;">
+                        <label style="width: 190px;">Emails com Conhecimento:</label>
+                        <input type="text" id="config_solfardam_mail_cc" placeholder="exemplo@mail.com,exemplo2@mail.com" style="width: 100%;">
+                      </div>
+                    </div>
+                    <div class="major-field">
+                      <div style="display: flex; align-items: center; margin-bottom: 3px; white-space: nowrap; gap: 5px;">
+                        <label style="width: 240px;">Emails com Conhecimento (BCC):</label>
+                        <input type="text" id="config_solfardam_mail_bcc" placeholder="exemplo@mail.com,exemplo2@mail.com" style="width: 100%;">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="major-card-footer">
+                    <div class="action-buttons" id="config_solfardam_mail">
+                      <button class="btn btn-add" id="config_solfardam_mail_save">ADICIONAR</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="major-card" style="margin-bottom: 10px;">
+                  <div class="major-card-header header-black">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.9;">
+                      <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+                      <path d="M3 7l9 6 9-6"></path>
+                    </svg>
+                    <span>CONFIGURAÇÃO DE EMAILS PARA SITUAÇÃO OPERACIONAL DE VEÍCULOS (CREPC).</span>
+                  </div>
+                  <div class="major-card-body">
+                    <div class="major-field">
+                      <div style="display: flex; align-items: center; margin-bottom: 3px; white-space: nowrap; gap: 5px;">
+                        <label style="width: 80px;">Emails Para:</label>
+                        <input type="text" id="config_sitop_veiculos_mail_to" placeholder="exemplo@mail.com,exemplo2@mail.com" style="width: 100%;">
+                      </div>
+                    </div>
+                    <div class="major-field">
+                      <div style="display: flex; align-items: center; margin-bottom: 3px; white-space: nowrap; gap: 5px;">
+                        <label style="width: 190px;">Emails com Conhecimento:</label>
+                        <input type="text" id="config_sitop_veiculos_mail_cc" placeholder="exemplo@mail.com,exemplo2@mail.com" style="width: 100%;">
+                      </div>
+                    </div>
+                    <div class="major-field">
+                      <div style="display: flex; align-items: center; margin-bottom: 3px; white-space: nowrap; gap: 5px;">
+                        <label style="width: 240px;">Emails com Conhecimento (BCC):</label>
+                        <input type="text" id="config_sitop_veiculos_mail_bcc" placeholder="exemplo@mail.com,exemplo2@mail.com" style="width: 100%;">
+                      </div>        
+                    </div>
+                  </div>
+                  <div class="major-card-footer">
+                    <div class="action-buttons" id="config_sitop_veiculos_mail">
+                      <button class="btn btn-add" id="config_sitop_veiculos_mail_save">ADICIONAR</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="major-card" style="margin-bottom: 0;">
+                  <div class="major-card-header header-black">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.9;">
+                      <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+                      <path d="M3 7l9 6 9-6"></path>
+                    </svg>
+                    <span>CONFIGURAÇÃO DE EMAILS PARA MEDIDAS OPERACIONAIS DE ANTECIPAÇÃO (CREPC).</span>
+                  </div>
+                  <div class="major-card-body">
+                    <div class="major-field">
                       <div style="display: flex; align-items: center; margin-bottom: 3px; white-space: nowrap; gap: 5px;">
                         <label style="width: 80px;">Emails Para:</label>
                         <input type="text" id="config_moa_mail_to" placeholder="exemplo@mail.com,exemplo2@mail.com" style="width: 100%;">
@@ -5106,19 +5209,20 @@
                       </div>
                     </div>
                   </div>
-                <div class="major-card-footer">
-                  <div class="action-buttons" id="config_moa_mail">
-                    <button class="btn btn-add" id="config_moa_mail_save">ADICIONAR</button>
+                  <div class="major-card-footer">
+                    <div class="action-buttons" id="config_moa_mail">
+                      <button class="btn btn-add" id="config_moa_mail_save">ADICIONAR</button>
+                    </div>
                   </div>
                 </div>
-              </div>              
+              </div>
             </div>
           </div>
         </div>
         <div class="major-card-footer"></div>
       </div>
     </div>
-  </main>  
+  </main>
   <footer class="status-bar">
     <div class="system-info">
       <span class="left-info">© 2023 -&nbsp;<span id="footer-year"></span>&nbsp;| Fábio Martins | Sistemas de Informação</span>

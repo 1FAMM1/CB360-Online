@@ -1,6 +1,49 @@
     /* =========================
     FASE 01 - SCALES
     ========================= */
+    async function propagateAccumulatedForward(corpOperNr, startYear, startMonth) {
+      let curYear = startYear, curMonth = startMonth;
+      const today = new Date();
+      const limitYear = today.getFullYear(), limitMonth = today.getMonth() + 1;
+      while (true) {
+        let nextMonth = curMonth + 1, nextYear = curYear;
+        if (nextMonth > 12) { nextMonth = 1; nextYear++; }
+        if (nextYear > limitYear || (nextYear === limitYear && nextMonth > limitMonth)) break;
+        const existsRes = await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul?corp_oper_nr=eq.${corpOperNr}&year=eq.${nextYear}&month=eq.${nextMonth}&limit=1`, {headers: getSupabaseHeaders()});
+        const existsData = existsRes.ok ? await existsRes.json() : [];
+        if (existsData.length === 0) break;
+        const [curAcumRes, nextExtraRes, existingNextRes] = await Promise.all([
+          fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul?corp_oper_nr=eq.${corpOperNr}&year=eq.${curYear}&month=eq.${curMonth}`, {headers: getSupabaseHeaders()}),
+          fetch(`${SUPABASE_URL}/rest/v1/reg_employees_extra_hours?corp_oper_nr=eq.${corpOperNr}&year=eq.${nextYear}&month=eq.${nextMonth}`, {headers: getSupabaseHeaders()}),
+          fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul?corp_oper_nr=eq.${corpOperNr}&year=eq.${nextYear}&month=eq.${nextMonth}`, {headers: getSupabaseHeaders()})
+        ]);
+        const baseMap = {};
+        (curAcumRes.ok ? await curAcumRes.json() : []).forEach(r => { baseMap[r.n_int] = r.total_accumulated || 0; });
+        const extraMap = {};
+        (nextExtraRes.ok ? await nextExtraRes.json() : []).forEach(r => { extraMap[r.n_int] = (extraMap[r.n_int] || 0) + parseFloat(r.qtd_hours || 0); });
+        const existingNextData = existingNextRes.ok ? await existingNextRes.json() : [];
+        const { workingHours: nextWorkingHours } = calculateWorkingHours(nextYear, nextMonth);
+        const isJan = nextMonth === 1;
+        const newPayload = existingNextData.map(rec => {
+          const nInt = rec.n_int;
+          const totalMonthly = rec.monthly_total || 0;
+          const extraHours = extraMap[nInt] || 0;
+          const base = isJan ? 0 : (baseMap[nInt] || 0);
+          const diff = totalMonthly - nextWorkingHours + extraHours;
+          const totalAccumulated = isJan ? diff : base + diff;
+          return {n_int: nInt, abv_name: rec.abv_name, year: nextYear, month: nextMonth, monthly_total: totalMonthly, total_accumulated: totalAccumulated, corp_oper_nr: corpOperNr};
+        });
+        if (newPayload.length > 0) {
+          await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul?corp_oper_nr=eq.${corpOperNr}&year=eq.${nextYear}&month=eq.${nextMonth}`, {method: "DELETE", headers: getSupabaseHeaders()});
+          await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul`, {
+            method: "POST",
+            headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
+            body: JSON.stringify(newPayload)
+          });
+        }
+        curYear = nextYear; curMonth = nextMonth;
+      }
+    }
     const SCALE_STATE = {currentYear: null, currentMonth: null, daysInMonth: null, holidayMap: null};
     function createEmployeeMonthButtons({
       monthsContainerId,
@@ -1338,7 +1381,12 @@
                                   custom_bg_color: customBg, custom_text_color: customColor});
           });
           const totalMonthly = calculateProfessionalsRowTotal(row);
-          const totalAccumulated = parseFloat(row.cells[row.cells.length - 1].textContent.trim().replace(",", ".")) || 0;
+          const totalAcumCell = row.cells[row.cells.length - 1];
+          const baseAcum = parseFloat(totalAcumCell.dataset.base || 0);
+          const extraAcum = parseFloat(totalAcumCell.dataset.extraHours || 0);
+          const isJanAcum = totalAcumCell.dataset.isJanuary === "1";
+          const diffAcum = totalMonthly - calculateWorkingHours(year, month).workingHours + extraAcum;
+          const totalAccumulated = isJanAcum ? diffAcum : baseAcum + diffAcum;
           accumulatedPayload.push({n_int: nInt, abv_name: abvName, year, month, monthly_total: totalMonthly, total_accumulated: totalAccumulated, corp_oper_nr: corpOperNr});
         });
         const del1 = await fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}&function=not.in.(COM,SEC)`, {
@@ -1367,6 +1415,7 @@
             headers:{...getSupabaseHeaders(),"Content-Type":"application/json","Prefer":"return=minimal"}, body:JSON.stringify(accumulatedPayload)});
           if (!ins2.ok) console.warn("⚠️ Erro ao guardar acumulados:", await ins2.text());
         }
+        await propagateAccumulatedForward(corpOperNr, year, month);
         showPopup('popup-success', `Escala de ${monthBtn.textContent} ${year} guardada com sucesso!`);
       } catch (err) {
         console.error("Erro ao guardar escala:", err); showPopup('popup-danger', "❌ Erro ao guardar: " + err.message);
@@ -1445,11 +1494,14 @@
     =============================== */
     function maskTimeExtraHours(event) {
       const cell = event.target;
-      let value = cell.textContent.replace(/\D/g, "");
-      if (value.length > 4) value = value.slice(0, 4);
-      if (value.length > 2) {
-        value = value.slice(0, 2) + ":" + value.slice(2);
+      const raw = cell.textContent;
+      const isNegative = raw.trim().startsWith("-");
+      let digits = raw.replace(/\D/g, "");
+      if (digits.length > 4) digits = digits.slice(0, 4);
+      if (digits.length > 2) {
+        digits = digits.slice(0, 2) + ":" + digits.slice(2);
       }
+      const value = isNegative ? "-" + digits : digits;
       if (cell.textContent !== value) {
         cell.textContent = value;
         const selection = window.getSelection();
@@ -1460,27 +1512,27 @@
         selection.addRange(range);
       }
     }
-    /* == EMPLOYEES EXTRA HOURS MONTH BUTTONS == */    
     function decimalHoursToMinutes(hours) {
-      if (!hours || hours <= 0) return 0;
+      if (!hours) return 0;
       return Math.round(hours * 60);
     }
     function minutesToHHMM(minutes) {
-      if (!minutes || minutes <= 0) return "";
-      const h = Math.floor(minutes / 60);
-      const m = minutes % 60;
-      return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+      if (!minutes) return "";
+      const isNegative = minutes < 0;
+      const absMinutes = Math.abs(minutes);
+      const h = Math.floor(absMinutes / 60);
+      const m = absMinutes % 60;
+      return `${isNegative ? "-" : ""}${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
     }
     function isValidHHMM(value) {
-      return /^\d{1,2}:\d{2}$/.test(value);
+      return /^-?\d{1,2}:\d{2}$/.test(value);
     }
     /* ================================ CREATE AND SAVE EXTRA HOURS =============================== */    
     async function createExtraHoursTable(containerId, year, month, data) {
       const container = document.getElementById(containerId);
       if (!container) return;
       const rowsData = data?.employees || [];
-      container.innerHTML = "";
-      
+      container.innerHTML = "";      
       const WEEKDAY_NAMES = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
       const daysInMonth = new Date(year, month, 0).getDate();
       const holidayMap = getHolidayMapForMonth(year, month);
@@ -1589,8 +1641,10 @@
             if (raw === "" || !isValidHHMM(raw)) {
               td.textContent = "";
             } else {
-              const [h, m] = raw.split(":").map(Number);
-              td.textContent = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+              const isNegative = raw.startsWith("-");
+              const cleanRaw = isNegative ? raw.slice(1) : raw;
+              const [h, m] = cleanRaw.split(":").map(Number);
+              td.textContent = `${isNegative ? "-" : ""}${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
             }
             updateExtraHoursTotals(tr);
           });
@@ -1639,16 +1693,23 @@
       let totalMinutes = 0;
       cells.forEach(cell => {
         const value = (cell.textContent || "").trim();
-        if (/^\d{1,2}:\d{2}$/.test(value)) {
-          const [h, m] = value.split(":").map(Number);
-          totalMinutes += h * 60 + m;
+        if (/^-?\d{1,2}:\d{2}$/.test(value)) {
+          const isNegative = value.startsWith("-");
+          const cleanValue = isNegative ? value.slice(1) : value;
+          const [h, m] = cleanValue.split(":").map(Number);
+          const minutes = h * 60 + m;
+          totalMinutes += isNegative ? -minutes : minutes;
         }
       });
       const totalMonthCell = row.querySelector(".total-monthly-extra-cell");
       if (totalMonthCell) {
-        const h = Math.floor(totalMinutes / 60);
-        const m = totalMinutes % 60;
-        totalMonthCell.textContent = totalMinutes > 0 ? (m > 0 ? `${h}h${String(m).padStart(2, "0")}m` : `${h}h`) : "0h";
+        const isNegative = totalMinutes < 0;
+        const absMinutes = Math.abs(totalMinutes);
+        const h = Math.floor(absMinutes / 60);
+        const m = absMinutes % 60;
+        totalMonthCell.textContent = totalMinutes !== 0
+          ? `${isNegative ? "-" : ""}${m > 0 ? `${h}h${String(m).padStart(2, "0")}m` : `${h}h`}`
+          : "0h";
       }
     }
     async function saveExtraHours() {
@@ -1681,10 +1742,13 @@
           cells.forEach((cell, idx) => {
             const value = cell.textContent.trim();
             if (value && isValidHHMM(value)) {
-              const [h, m] = value.split(":").map(Number);
+              const isNegative = value.startsWith("-");
+              const cleanValue = isNegative ? value.slice(1) : value;
+              const [h, m] = cleanValue.split(":").map(Number);
               const totalMinutes = h * 60 + m;
-              if (totalMinutes > 0) {
-                dailyRecords.push({n_int, abv_name, year, month, day: idx + 1, qtd_hours: parseFloat((totalMinutes / 60).toFixed(2)), corp_oper_nr: corpOperNr});
+              if (totalMinutes !== 0) {
+                const qtdHours = parseFloat((totalMinutes / 60).toFixed(2));
+                dailyRecords.push({n_int, abv_name, year, month, day: idx + 1, qtd_hours: isNegative ? -qtdHours : qtdHours, corp_oper_nr: corpOperNr});
               }
             }
           });
@@ -1704,8 +1768,8 @@
           let prevMonth = month - 1;
           let prevYear = year;
           if (prevMonth === 0) { prevMonth = 12; prevYear--; }
-          const [shiftsRes, acumPrevRes] = await Promise.all([
-            fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`, {
+          const [monthlyExistingRes, acumPrevRes] = await Promise.all([
+            fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`, {
               headers: getSupabaseHeaders()
             }),
             month > 1
@@ -1714,43 +1778,33 @@
             })
             : Promise.resolve(null)
           ]);
-          const allShifts = shiftsRes.ok ? await shiftsRes.json() : [];
+          const monthlyExistingData = monthlyExistingRes.ok ? await monthlyExistingRes.json() : [];
+          const monthlyMap = {};
+          const abvNameMap = {};
+          monthlyExistingData.forEach(r => {
+            monthlyMap[r.n_int] = r.monthly_total || 0;
+            abvNameMap[r.n_int] = r.abv_name;
+          });
           const acumPrevData = (acumPrevRes && acumPrevRes.ok) ? await acumPrevRes.json() : [];
           const acumPrevMap = {};
           acumPrevData.forEach(r => {acumPrevMap[r.n_int] = r.total_accumulated || 0;});
           const newExtraMap = {};
           dailyRecords.forEach(r => {
             newExtraMap[r.n_int] = (newExtraMap[r.n_int] || 0) + r.qtd_hours;
+            if (!abvNameMap[r.n_int]) abvNameMap[r.n_int] = r.abv_name;
           });
           const {workingHours: mandatoryCargo} = calculateWorkingHours(year, month);
-          const holidayMap = getHolidayMapForMonth(year, month);
-          const daysInMonth = new Date(year, month, 0).getDate();
           const isJanuary = (month === 1);
-          const shiftsByEmp = {};
-          allShifts.forEach(s => {
-            if (!shiftsByEmp[s.n_int]) shiftsByEmp[s.n_int] = {abv_name: s.abv_name, shifts: {}};
-            shiftsByEmp[s.n_int].shifts[s.day] = s.shift;
-          });
-          const newAccumulatedPayload = Object.entries(shiftsByEmp).map(([nIntStr, empData]) => {
+          const allNInts = new Set([...Object.keys(monthlyMap), ...Object.keys(newExtraMap)]);
+          const newAccumulatedPayload = Array.from(allNInts).map(nIntStr => {
             const nInt = parseInt(nIntStr, 10);
-            let totalMonthly = 0;
-            for (let d = 1; d <= daysInMonth; d++) {
-              const shift = (empData.shifts[d] || "").trim().toUpperCase();
-              if (!shift || shift === " ") {
-                const date = atNoonLocal(year, month - 1, d);
-                const dow = date.getDay();
-                const isHoliday = holidayMap?.has(d) && !holidayMap.get(d).optional;
-                if (dow !== 0 && dow !== 6 && !isHoliday) totalMonthly += 8;
-              } else {
-                totalMonthly += (SHIFT_VALUES[shift] !== undefined ? SHIFT_VALUES[shift] : 0);
-              }
-            }
+            const totalMonthly = monthlyMap[nInt] || 0;
             const extraHours = newExtraMap[nInt] || 0;
             const accumulatedBase = isJanuary ? 0 : (acumPrevMap[nInt] || 0);
             const totalAccumulated = isJanuary
             ? (totalMonthly - mandatoryCargo + extraHours)
             : (accumulatedBase + totalMonthly - mandatoryCargo + extraHours);
-            return { n_int: nInt, abv_name: empData.abv_name, year, month, monthly_total: totalMonthly, total_accumulated: totalAccumulated, corp_oper_nr: corpOperNr };
+            return {n_int: nInt, abv_name: abvNameMap[nInt] || "", year, month, monthly_total: totalMonthly, total_accumulated: totalAccumulated, corp_oper_nr: corpOperNr};
           });
           if (newAccumulatedPayload.length > 0) {
             await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`, {
@@ -1763,6 +1817,7 @@
               body: JSON.stringify(newAccumulatedPayload)
             });
           }
+          await propagateAccumulatedForward(corpOperNr, year, month);
         } catch (acumErr) {
           console.warn("⚠️ Horas extra guardadas, mas erro ao atualizar acumulados:", acumErr);
         }

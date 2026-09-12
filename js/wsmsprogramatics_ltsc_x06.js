@@ -1549,18 +1549,15 @@
       }
       updateTypeSelection();
     });
-    optInem.addEventListener('click', (e) => {
-      if (e.target !== inem) {
-        inem.checked = !inem.checked;
-        inem.dispatchEvent(new Event('change'));
-      }
-    });
-    optReserv.addEventListener('click', (e) => {
-      if (e.target !== reserv) {
-        reserv.checked = !reserv.checked;
-        reserv.dispatchEvent(new Event('change'));
-      }
-    });
+    function handleEmsCardClick(e, checkbox) {
+      if (e.target === checkbox) return;
+      const label = e.target.closest('label');
+      if (label && (label.htmlFor === checkbox.id || label.contains(checkbox))) return;
+      checkbox.checked = !checkbox.checked;
+      checkbox.dispatchEvent(new Event('change'));
+    }
+    optInem.addEventListener('click', (e) => handleEmsCardClick(e, inem));
+    optReserv.addEventListener('click', (e) => handleEmsCardClick(e, reserv));
     document.getElementById("popup-inem-type-ok-btn")?.addEventListener("click", () => {
       const selected = document.querySelector('input[name="popup-inem-type"]:checked');
       if (!selected) {

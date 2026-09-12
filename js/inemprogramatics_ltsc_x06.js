@@ -329,21 +329,17 @@
       document.getElementById('inem-edit-modal')?.remove();
       const overlay = document.createElement('div');
       overlay.id = 'inem-edit-modal';
-      Object.assign(overlay.style, {position: 'fixed', inset: '0', background: 'rgba(10,8,8,0.78)', zIndex: '10000',  display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                                    backdropFilter: 'blur(4px)'});
+      Object.assign(overlay.style, {position: 'fixed', inset: '0', background: 'rgba(10,8,8,0.78)', zIndex: '10000',  display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)'});
       const box = document.createElement('div');
-      Object.assign(box.style, {background: '#fff', borderRadius: '12px', width: '420px', boxShadow: '0 28px 72px rgba(0,0,0,0.45)', display: 'flex', flexDirection: 'column', overflow: 'hidden', 
-                                fontFamily: "'Segoe UI', sans-serif"});
+      Object.assign(box.style, {background: '#fff', borderRadius: '12px', width: '420px', boxShadow: '0 28px 72px rgba(0,0,0,0.45)', display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: "'Segoe UI', sans-serif"});
       const header = document.createElement('div');
-      Object.assign(header.style, {background: 'linear-gradient(135deg, #5a0000 0%, #7b0000 45%, #9a0f0f 100%)', padding: '12px 16px', display: 'flex', alignItems: 'center', 
-                                   justifyContent: 'space-between'});
+      Object.assign(header.style, {background: 'linear-gradient(135deg, #5a0000 0%, #7b0000 45%, #9a0f0f 100%)', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between'});
       const headerTitle = document.createElement('div');
       Object.assign(headerTitle.style, {color: '#fff', fontWeight: '700', fontSize: '13px'});
       headerTitle.textContent = `✏️ Editar Verbete - Nr. CODU: ${item.nr_codu}`;
       const btnClose = document.createElement('button');
       btnClose.innerHTML = '✕';
-      Object.assign(btnClose.style, {border: '1px solid rgba(255,80,80,0.22)', background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.8)', width: '28px', height: '28px', 
-                                     borderRadius: '7px', cursor: 'pointer', fontSize: '14px'});
+      Object.assign(btnClose.style, {border: '1px solid rgba(255,80,80,0.22)', background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.8)', width: '28px', height: '28px', borderRadius: '7px', cursor: 'pointer', fontSize: '14px'});
       btnClose.onclick = () => overlay.remove();
       header.append(headerTitle, btnClose);
       const body = document.createElement('div');
@@ -365,10 +361,10 @@
           input.type = type;
           input.value = item[key] || '';
         }
-        Object.assign(input.style, {padding: '7px 10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '13px', outline: 'none', transition: 'border-color .15s', color: '#1a1a1a', 
-                                    background: '#fff', width: '100%', boxSizing: 'border-box'});
+        Object.assign(input.style, {padding: '7px 10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '13px', outline: 'none', transition: 'border-color .15s', color: '#1a1a1a', background: '#fff', width: '100%', 
+                                    boxSizing: 'border-box'});
         input.onfocus = () => input.style.borderColor = '#7b0000';
-        input.onblur  = () => input.style.borderColor = '#ddd';
+        input.onblur = () => input.style.borderColor = '#ddd';
         inputs[key] = input;
         return input;
       }
@@ -381,6 +377,27 @@
         group.append(lbl, makeInput(key, type, options));
         return group;
       }
+      /* ── Tipo de Serviço (ITeams / Verbete) ── */
+      const serviceTypeGroup = document.createElement('div');
+      Object.assign(serviceTypeGroup.style, {display: 'flex', flexDirection: 'column', gap: '4px'});
+      const serviceTypeLbl = document.createElement('label');
+      serviceTypeLbl.textContent = 'Tipo de Documento';
+      Object.assign(serviceTypeLbl.style, {fontSize: '11.5px', fontWeight: '600', color: '#555', textTransform: 'uppercase', letterSpacing: '.4px'});
+      const serviceTypeSelect = document.createElement('select');
+      ['', 'ITeams', 'Verbete'].forEach(opt => {
+        const option = document.createElement('option');
+        option.value = opt;
+        option.textContent = opt;
+        if ((item.service_type === 'ITeams' ? 'ITeams' : 'Verbete') === opt) option.selected = true;
+        serviceTypeSelect.appendChild(option);
+      });
+      Object.assign(serviceTypeSelect.style, {padding: '7px 10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '13px', outline: 'none', transition: 'border-color .15s',
+                                               color: '#1a1a1a', background: '#fff', width: '100%', boxSizing: 'border-box', maxWidth: '150px'});
+      serviceTypeSelect.onfocus = () => serviceTypeSelect.style.borderColor = '#7b0000';
+      serviceTypeSelect.onblur  = () => serviceTypeSelect.style.borderColor = '#ddd';
+      inputs['service_type'] = serviceTypeSelect;
+      serviceTypeGroup.append(serviceTypeLbl, serviceTypeSelect);
+      body.appendChild(serviceTypeGroup);
       const row1 = document.createElement('div');
       Object.assign(row1.style, {display: 'flex', gap: '10px'});
       const coduField = makeField('nr_codu', 'Nr. CODU', 'text');
@@ -468,7 +485,7 @@
                                     fontWeight: '600', cursor: 'pointer'});
       btnSave.onclick = async () => {
         const updated = {};
-        const FIELDS = [{key: 'nr_codu'}, {key: 'alert_date'}, {key: 'alert_hour'}, {key: 'victim_type'}, {key: 'victim_address'}, {key: 'victim_location'}, {key: 'victim_age_type'}, {key: 'victim_age_unit'}];
+        const FIELDS = [{key: 'service_type'}, {key: 'nr_codu'}, {key: 'alert_date'}, {key: 'alert_hour'}, {key: 'victim_type'}, {key: 'victim_address'}, {key: 'victim_location'}, {key: 'victim_age_type'}, {key: 'victim_age_unit'}];
         FIELDS.forEach(f => {
           updated[f.key] = inputs[f.key].value.trim() || null;
         });
@@ -489,7 +506,7 @@
         }
       };
       footer.append(btnCancel, btnSave);
-      box.append(header, body, footer);
+        box.append(header, body, footer);
       overlay.appendChild(box);
       //overlay.addEventListener('click', e => {if (e.target === overlay) overlay.remove();});
       document.body.appendChild(overlay);

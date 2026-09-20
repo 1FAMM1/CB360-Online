@@ -282,6 +282,18 @@ async function handleG2(req, res) {
     sheet.getCell(`BN${row}`).value = data[`leader${i}_phone`] || '';
   }
 
+  // EQUIPA (linhas 29 a 38)
+  for (let i = 1; i <= 10; i++) {
+    const row = 28 + i; // 29 a 38
+    sheet.getCell(`E${row}`).value   = data[`crew${i}_mec_number`] || '';
+    sheet.getCell(`N${row}`).value   = data[`crew${i}_category`] || '';
+    sheet.getCell(`Y${row}`).value   = data[`crew${i}_name`] || '';
+    sheet.getCell(`AV${row}`).value  = data[`crew${i}_status`] || '';
+    sheet.getCell(`BB${row}`).value  = data[`crew${i}_network`] || '';
+    sheet.getCell(`BK${row}`).value  = data[`crew${i}_gdh_departure`] || '';
+    sheet.getCell(`BR${row}`).value  = data[`crew${i}_gdh_arrival`] || '';
+  }
+
   sheet.pageSetup = {
     orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 1,
     horizontalCentered: true, verticalCentered: false,

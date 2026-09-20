@@ -17,6 +17,7 @@
     const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
     const TEMPLATES = {moa: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/moa_template.xlsx",
                        sitop: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/sitop_template.xlsx",
+                       g2: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/anxG2_template.xlsx",
                       };
     export const config = {api: {bodyParser: {sizeLimit: "10mb"}},};
     // Template HTML partilhado
@@ -249,6 +250,69 @@
       return res.status(200).json({success: true, message: `PDF gerado e enviado com sucesso para ${recipients.length} destinatario(s).`
                                   });
     }
+    // Handler G2
+async function handleG2(req, res) {
+  const {data, recipients, ccRecipients, bccRecipients, emailBody, emailSubject} = req.body || {};
+  if (!data || !recipients || recipients.length === 0) {
+    return res.status(400).json({error: "Faltam dados essenciais ou a lista de destinatarios principais esta vazia."});
+  }
+  const templateBuffer = await downloadTemplate(TEMPLATES.g2);
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(templateBuffer);
+  const sheet = workbook.worksheets[0];
+
+  // INTERVENÇÃO
+  sheet.getCell("B10").value  = data.gdh_activation || '';
+  sheet.getCell("AM10").value = data.intervention_location || '';
+
+  // VIATURA
+  sheet.getCell("B15").value  = data.cb_type || '';
+  sheet.getCell("V15").value  = data.vehicle || '';
+  sheet.getCell("AG15").value = data.vehicle_issi || '';
+  sheet.getCell("AR15").value = data.gdh_station_departure || '';
+  sheet.getCell("BC15").value = data.gdh_assembly_point || '';
+  sheet.getCell("BN15").value = data.gdh_incident_site || '';
+
+  // CHEFE DE EQUIPA (linhas 20 a 23)
+  const leaderRows = {1: 20, 2: 21, 3: 22, 4: 23};
+  for (const [i, row] of Object.entries(leaderRows)) {
+    sheet.getCell(`E${row}`).value  = data[`leader${i}_category`] || '';
+    sheet.getCell(`X${row}`).value  = data[`leader${i}_name`] || '';
+    sheet.getCell(`BC${row}`).value = data[`leader${i}_issi`] || '';
+    sheet.getCell(`BN${row}`).value = data[`leader${i}_phone`] || '';
+  }
+
+  sheet.pageSetup = {
+    orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 1,
+    horizontalCentered: true, verticalCentered: false,
+    margins: {left: 0.5, right: 0.5, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3},
+  };
+
+  const fileName = `AnexoG2_${data.vehicle || "Viatura"}_${data.corp_oper_nr}`;
+  const xlsxBuffer = await workbook.xlsx.writeBuffer();
+  const pdfBuffer  = await convertXLSXToPDF(xlsxBuffer, fileName);
+
+  const transporter = nodemailer.createTransport({service: "gmail", auth: {user: GMAIL_EMAIL, pass: GMAIL_APP_PASSWORD}});
+  const corpName = data.cb_type?.includes(" - ") ? data.cb_type.split(" - ").slice(1).join(" - ") : data.cb_type || "";
+  const htmlEmail = buildEmailTemplate({
+    title: corpName, subtitle: "Lista Nominal de Meios (Anexo G2)", logoUrl: data.logoUrl || "",
+    emailBody: emailBody || `<p>Segue em anexo a Lista Nominal de Meios do veículo ${data.vehicle || ""}.</p>`,
+    corpName, corpAddress: data.corpAddress || "", corpCp: data.corpCp || "", corpLocalitie: data.corpLocalitie || "",
+    corpPhoneMobile: data.corpPhoneMobile || "", corpPhoneLandline: data.corpPhoneLandline || "", corpEmail: data.corpEmail || "",
+  });
+
+  await transporter.sendMail({
+    from: `"SALOC ${data.corp_oper_nr || "Corporacao"}" <${GMAIL_EMAIL}>`,
+    to: recipients.join(", "),
+    cc: ccRecipients && ccRecipients.length > 0 ? ccRecipients.join(", ") : "",
+    bcc: bccRecipients && bccRecipients.length > 0 ? bccRecipients.join(", ") : "",
+    subject: emailSubject || `Lista Nominal de Meios - Veículo ${data.vehicle || ""}_${data.corp_oper_nr || "Corporacao"}`,
+    html: htmlEmail, text: "Segue em anexo a Lista Nominal de Meios.",
+    attachments: [{filename: `${fileName}.pdf`, content: pdfBuffer, contentType: "application/pdf"}],
+  });
+
+  return res.status(200).json({success: true, message: `Anexo G2 gerado e enviado com sucesso para ${recipients.length} destinatario(s).`});
+}
     // Handler principal
     export default async function handler(req, res) {
       res.setHeader("Access-Control-Allow-Origin", "*");
@@ -257,11 +321,12 @@
       if (req.method === "OPTIONS") return res.status(200).end();
       try {
         const {mode} = req.body || {};
-        if (!mode || !["moa", "sitop"].includes(mode)) {
-          return res.status(400).json({error: "Modo invalido. Use 'moa' ou 'sitop'."});
-        }
-        if (mode === "moa") return await handleMOA(req, res);
-        if (mode === "sitop") return await handleSITOP(req, res);
+if (!mode || !["moa", "sitop", "g2"].includes(mode)) {
+  return res.status(400).json({error: "Modo invalido. Use 'moa', 'sitop' ou 'g2'."});
+}
+if (mode === "moa") return await handleMOA(req, res);
+if (mode === "sitop") return await handleSITOP(req, res);
+if (mode === "g2") return await handleG2(req, res);
       } catch (err) {
         console.error("Erro no processo:", err);
         return res.status(500).json({

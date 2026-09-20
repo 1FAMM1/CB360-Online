@@ -294,6 +294,13 @@ async function handleG2(req, res) {
     sheet.getCell(`BR${row}`).value  = data[`crew${i}_gdh_arrival`] || '';
   }
 
+  // DATA DE EMISSÃO
+  const MONTH_NAMES_PT_FULL = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+  const now = new Date();
+  sheet.getCell("AF47").value = now.getDate();
+  sheet.getCell("AJ47").value = MONTH_NAMES_PT_FULL[now.getMonth()];
+  sheet.getCell("AT47").value = now.getFullYear();
+
   sheet.pageSetup = {
     orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 1,
     horizontalCentered: true, verticalCentered: false,

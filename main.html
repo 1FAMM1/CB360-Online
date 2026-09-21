@@ -2715,6 +2715,221 @@
               </div>                
             </div>
           </div>
+          <!-- G2 (CREPC SUB SUB-MODULE) -->
+          <div id="g2-container" style="margin: 20px 0 0 0; display: none;">
+            <div class="major-card major-last-card" style="margin:0 0 0 0;">
+              <div class="major-card-header header-black" style="display: flex; justify-content: center;">LISTA NOMINAL DE MEIOS DO CB (ANEXO G2)</div>
+              <div class="major-card-body">
+                <div class="major-row" style="margin: 0; display: flex; justify-content: center;">
+                  <div class="options-main-card" style="display: flex; flex-direction: column; align-items: center;">
+                    <label style="margin-bottom: 10px; font-size: 14px; font-weight: bold;">Selecione uma Opção</label>
+                    <div class="action-buttons" id="g2-action-buttons" style="gap: 5px;">
+                      <button class="btn btn-add options-btn oldg2" style="height: 35px;">EM CURSO</button>
+                      <button class="btn btn-add options-btn" style="height: 35px;" id="NewG2Btn">NOVO</button>
+                    </div>
+                  </div>
+                </div>
+                <!-- MISSÕES EM CURSO -->
+                <div id="g2TableContainer" style="display: none; margin-top: 20px;">
+                  <h3>Missões em Curso</h3>
+                  <div class="table-container">
+                    <table id="g2Table">
+                      <thead>
+                        <tr>
+                          <th style="width: 90px;">Nº Sequencial</th>
+                          <th style="width: 100px;">Viatura</th>
+                          <th style="width: 120px;">GDH Acionamento</th>
+                          <th style="width: 350px;">Local de Intervenção</th>
+                          <th style="width: 150px;">Ação</th>
+                        </tr>
+                      </thead>
+                      <tbody></tbody>
+                    </table>
+                  </div>
+                </div>
+                <!-- FORMULÁRIO -->
+                <div id="g2_form_container" style="display: none; margin-top: 20px;">
+                  <div class="major-card major-last-card" style="margin-bottom: 0px;">
+                    <div class="major-card-header header-black" style="display: flex; justify-content: center;">INSERÇÃO DE NOVA LISTA NOMINAL DE MEIOS</div>
+                    <div class="major-card-body">
+                      <div class="major-row" style="margin-top: 5px;">              
+                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                          <label style="font-size: 13px;">Nº Sequencial:</label>
+                          <input type="text" id="g2_seq_number" style="width: 150px; text-align: center; font-size: 14px;">
+                        </div>
+                      </div>
+                      <!-- INTERVENÇÃO (50/50) -->
+                      <div class="table-container" style="margin-top: 10px;">
+                        <table id="g2InterventionTable" style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+                          <thead>
+                            <tr>
+                              <th colspan="2" style="background-color: #721c24; color: #ffffff; text-align: center; padding: 8px 10px; font-weight: bold; font-size: 13px; border: 0;">INTERVENÇÃO</th>
+                            </tr>
+                            <tr>
+                              <th style="width:50%; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">GDH Acionamento</th>
+                              <th style="width:50%; border-top: 1px solid #ccc; padding: 6px;">Local de Intervenção (Concelho/Sub-Região)</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td style="padding: 4px; white-space: nowrap; text-align: center;">
+                                <input type="date" id="g2_gdh_activation_date" style="font-size: 12px; width: 105px; height: 24px; padding: 0 4px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; outline: none; transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;" onfocus="this.style.borderColor='#80bdff'; this.style.boxShadow='0 0 5px rgba(0, 123, 255, 0.25)';" onblur="this.style.borderColor='#ccc'; this.style.boxShadow='none';">
+                                <input type="time" id="g2_gdh_activation_hour" style="font-size: 12px; width: 75px; height: 24px; padding: 0 4px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; outline: none; transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;" onfocus="this.style.borderColor='#80bdff'; this.style.boxShadow='0 0 5px rgba(0, 123, 255, 0.25)';" onblur="this.style.borderColor='#ccc'; this.style.boxShadow='none';">
+                                <input type="text" id="g2_gdh_activation" style="display: none;" readonly tabindex="-1">
+                              </td>
+                              <td style="padding: 4px;">
+                                <input type="text" id="g2_intervention_location" style="font-size: 12px; width: 100%; height: 24px; padding: 0 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; outline: none; transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;" onfocus="this.style.borderColor='#80bdff'; this.style.boxShadow='0 0 5px rgba(0, 123, 255, 0.25)';" onblur="this.style.borderColor='#ccc'; this.style.boxShadow='none';">
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <!-- VEÍCULO (6 colunas com COLGROUP para forçar as larguras) -->
+                      <div class="table-container" style="margin-top: 10px; width: 100%;">
+                        <table id="g2VehicleTable" style="width: 100% !important; border-collapse: collapse; table-layout: fixed !important;">
+                          <colgroup>
+                            <col style="width: 30% !important;">
+                            <col style="width: 8% !important;">
+                            <col style="width: 14% !important;">
+                            <col style="width: 16% !important;">
+                            <col style="width: 16% !important;">
+                            <col style="width: 16% !important;">
+                          </colgroup>
+                          <thead>
+                            <tr>
+                              <th colspan="6" style="background-color: #721c24; color: #ffffff; text-align: center; padding: 8px 10px; font-weight: bold; font-size: 13px; border: 0;">VEÍCULOS</th>
+                            </tr>
+                            <tr>
+                              <th style="border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">Corpo de Bombeiros</th>
+                              <th style="border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">Meios</th>
+                              <th style="border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">ISSI SIRESP (móvel)</th>
+                              <th style="border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">GDH Saída Quartel</th>
+                              <th style="border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">GDH Local Concentração</th>
+                              <th style="border-top: 1px solid #ccc; padding: 6px;">GDH no TO</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td style="padding: 4px;">
+                                <select id="g2_cb" style="font-size: 12px; width: 100%; height: 24px; padding: 0 4px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; outline: none;" onfocus="this.style.borderColor='#80bdff';" onblur="this.style.borderColor='#ccc';">
+                                  <option>0801 - Companhia Sapadores de Faro</option>
+                                  <option>0802 - Corpo de Bombeiros de Lagos</option>
+                                  <option>0803 - Companhia Sapadores de Tavira</option>
+                                  <option>0804 - Corpo de Bombeiros de Vila Real de Sto. António e Castro Marim</option>
+                                  <option>0805 - Corpo de Bombeiros de Faro - Cruz Lusa</option>
+                                  <option>0806 - Corpo de Bombeiros de de Silves</option>
+                                  <option>0807 - Corpo de Bombeiros de Portimão</option>
+                                  <option>0808 - Corpo de Bombeiros Municipais de Loulé</option>
+                                  <option>0809 - Corpo de Bombeiros de São Brás de Alportel</option>
+                                  <option>0810 - Corpo de Bombeiros Municipais de Olhão</option>
+                                  <option>0811 - Corpo de Bombeiros de Monchique</option>
+                                  <option>0812 - Corpo de Bombeiros de Aljezur</option>
+                                  <option>0813 - Corpo de Bombeiros de São Bartolomeu de Messines</option>
+                                  <option>0814 - Corpo de Bombeiros de Albufeira</option>
+                                  <option>0815 - Corpo de Bombeiros de Lagoa</option>
+                                  <option>0816 - Corpo de Bombeiros de Vila do Bispo</option>
+                                  <option>0817 - Corpo de Bombeiros de Alcoutim</option>
+                                </select>
+                              </td>
+                              <td style="padding: 4px;">
+                                <select id="g2_vehicle" style="font-size: 12px; text-align-last: center; width: 100%; height: 24px; padding: 0 2px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; outline: none;" onfocus="this.style.borderColor='#80bdff';" onblur="this.style.borderColor='#ccc';"></select>
+                              </td>
+                              <td style="padding: 4px;">
+                                <input type="text" id="g2_vehicle_issi" style="font-size: 12px; width: 100%; height: 24px; padding: 0 4px; box-sizing: border-box; text-align: center; border: 1px solid #ccc; border-radius: 4px; outline: none;" onfocus="this.style.borderColor='#80bdff';" onblur="this.style.borderColor='#ccc';">
+                              </td>                  
+                              <!-- GDH SAÍDA -->
+                              <td style="padding: 4px;">
+                                <div style="display: flex; gap: 3px;">
+                                  <input type="date" id="g2_gdh_station_departure_date" style="font-size: 12px; width: 58%; height: 24px; padding: 0 2px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; outline: none;">
+                                  <input type="time" id="g2_gdh_station_departure_hour" style="font-size: 12px; width: 42%; height: 24px; padding: 0 2px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; outline: none;">
+                                </div>
+                                <input type="text" id="g2_gdh_station_departure" style="display: none;" readonly tabindex="-1">
+                              </td>                    
+                              <!-- GDH CONCENTRAÇÃO -->
+                              <td style="padding: 4px;">
+                                <div style="display: flex; gap: 3px;">
+                                  <input type="date" id="g2_gdh_assembly_point_date" style="font-size: 12px; width: 58%; height: 24px; padding: 0 2px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; outline: none;">
+                                  <input type="time" id="g2_gdh_assembly_point_hour" style="font-size: 12px; width: 42%; height: 24px; padding: 0 2px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; outline: none;">
+                                </div>
+                                <input type="text" id="g2_gdh_assembly_point" style="display: none;" readonly tabindex="-1">
+                              </td>                    
+                              <!-- GDH TO -->
+                              <td style="padding: 4px;">
+                                <div style="display: flex; gap: 3px;">
+                                  <input type="date" id="g2_gdh_incident_site_date" style="font-size: 12px; width: 58%; height: 24px; padding: 0 2px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; outline: none;">
+                                  <input type="time" id="g2_gdh_incident_site_hour" style="font-size: 12px; width: 42%; height: 24px; padding: 0 2px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; outline: none;">
+                                </div>
+                                <input type="text" id="g2_gdh_incident_site" style="display: none;" readonly tabindex="-1">
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <!-- CHEFE DE EQUIPA (linhas geradas por JS) -->
+                      <div class="table-container" style="margin-top: 10px; ">
+                        <table id="g2LeadersTable" style="width: 100%; border-collapse: collapse;">
+                          <thead>
+                            <tr>
+                              <th colspan="6" style="background-color: #721c24; color: #ffffff; text-align: center; padding: 8px 10px; font-weight: bold; font-size: 13px; border: 0; position: relative;">
+                                CHEFE DE EQUIPA
+                                <button id="addG2LeaderBtn" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background-color: #28a745; color: white; border: none; border-radius: 4px; width: 24px; height: 24px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;">+</button>
+                              </th>
+                            </tr>
+                            <tr>
+                              <th style="width:30px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">ID</th>
+                              <th style="width:40px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">Nº Int.</th>
+                              <th style="width:150px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">Categoria</th>
+                              <th style="width:250px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">Nome</th>
+                              <th style="width:160px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">ISSI SIRESP (móvel)</th>
+                              <th style="width:160px; border-top: 1px solid #ccc; padding: 6px;">Telefone</th>
+                            </tr>
+                          </thead>
+                          <tbody></tbody>
+                        </table>
+                      </div>
+                      <!-- EQUIPA (linhas geradas por JS) -->
+                      <div class="table-container" style="margin-top: 10px;">
+                        <table id="g2CrewTable" style="width: 100%; border-collapse: collapse;">
+                          <thead>
+                            <tr>
+                              <th colspan="9" style="background-color: #721c24; color: #ffffff; text-align: center; padding: 8px 10px; font-weight: bold; font-size: 13px; border: 0; position: relative;">
+                                EQUIPA (INCLUIR O CHEFE DE EQUIPA)
+                                <button id="addG2CrewBtn" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background-color: #28a745; color: white; border: none; border-radius: 4px; width: 24px; height: 24px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;">+</button>
+                              </th>
+                            </tr>
+                            <tr>
+                              <th style="width:40px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">ID</th>
+                              <th style="width:50px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">Nº Int.</th>
+                              <th style="width:110px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">Nº Mec.</th>
+                              <th style="width:150px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">Categoria</th>
+                              <th style="width:200px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">Nome</th>
+                              <th style="width:50px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">SitDisp<br>(E/N/S/G)</th>
+                              <th style="width:100px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">Rede (ID)</th>
+                              <th style="width:180px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">GDH Saída</th>
+                              <th style="width:180px; border-top: 1px solid #ccc; padding: 6px;">GDH Chegada</th>
+                            </tr>
+                          </thead>
+                          <tbody></tbody>
+                        </table>
+                      </div>
+                      <p style="font-size: 15px; color: #666; margin-top: 10px; text-align: center;">SitDisp = Situação no Dispositivo | E = Escalado | N = Não Escalado | S = Substituído | G = Gruata</p>
+                      <div class="major-row" style="display: flex; align-items: center; margin: 15px 0 0 0;">
+                        <div class="major-field" style="display: flex; flex-direction: row; align-items: center; gap: 3px;">
+                          <label style="font-size: 13px;">OPTEL:</label>
+                          <input type="text" id="g2_optel_nint" style="width: 60px; height: 25px !important; box-sizing: border-box; padding: 0; text-align: center; border: 1px solid #ccc;">
+                          <input type="text" id="g2_optel_patent" readonly tabindex="-1" style="width: 75px; height: 25px !important; box-sizing: border-box; padding: 0; text-align: center; border: 1px solid #ccc; background-color: #e9ecef; cursor: not-allowed;">
+                          <input type="text" id="g2_optel_name" readonly tabindex="-1" style="width: 150px; height: 25px !important; box-sizing: border-box; padding: 0; border: 1px solid #ccc; background-color: #e9ecef; cursor: not-allowed;">
+                        </div>
+                      </div>  
+                    </div>
+                    <div class="major-card-footer" style="display: flex; flex-wrap: wrap; justify-content: flex-end;">
+                      <button class="btn btn-danger" id="g2SaveBtn" style="font-size: 12px;">Salvar</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>          
+          </div>  
         </div>
         <div class="major-card-footer"></div>
       </div>

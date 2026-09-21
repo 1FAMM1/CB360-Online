@@ -2344,6 +2344,18 @@
         NewMOABtn.onclick = () => {
           const isActive = NewMOABtn.classList.toggle("active");
           if (isActive) {
+            const NewAnxG2Btn = document.getElementById("NewAnxG2Btn");
+            if (NewAnxG2Btn && NewAnxG2Btn.classList.contains("active")) {
+              NewAnxG2Btn.classList.remove("active");
+              if (typeof window.hideG2Container === "function") window.hideG2Container();
+              if (typeof toggleG2FormContainer === "function") toggleG2FormContainer(true);
+              const g2TableContainerEl = document.getElementById("g2TableContainer");
+              if (g2TableContainerEl) g2TableContainerEl.style.display = "none";
+              const g2NewBtnEl = document.getElementById("NewG2Btn");
+              const g2OldBtnEl = document.querySelector(".oldg2");
+              if (g2NewBtnEl) g2NewBtnEl.classList.remove("active");
+              if (g2OldBtnEl) g2OldBtnEl.classList.remove("active");
+            }
             window.showMOAContainer();
             document.querySelectorAll("#moa-container input, #moa-container select").forEach(el => {
               if (el.tagName === "SELECT") el.selectedIndex = 0;
@@ -2352,7 +2364,7 @@
             });
             setupMOASelects(moaContainer);
             updateMOAGDH();
-          } else { window.hideMOAContainer(); }
+          } else {window.hideMOAContainer();}
         };
       }
       if (saveMOABtn) {
@@ -2362,6 +2374,740 @@
       const crepcAlgBtn = document.querySelector('[data-page="page-crepcalg"]');
       if (crepcAlgBtn) {
         crepcAlgBtn.addEventListener('click', () => { window.hideMOAContainer(); });
+      }
+    });
+    /* =======================================
+    LISTA NOMINAL DE MEIOS - ANEXO G2
+    ======================================= */
+    const G2_LEADER_COUNT = 4;
+    const G2_CREW_COUNT = 10;
+    const G2_LEADER_FIELDS = ["id", "category", "name", "issi", "phone"];
+    const G2_CREW_TEXT_FIELDS = ["id", "mec", "category", "name", "status", "network"];
+    const G2_SIMPLE_FIELDS = ["seq_number", "intervention_location", "vehicle", "vehicle_issi"];
+    const G2_MONTHS  = ["JAN","FEV","MAR","ABR","MAI","JUN","JUL","AGO","SET","OUT","NOV","DEZ"];
+    const G2_LOOKUP_DEBOUNCE_MS = 150;
+    const G2_GDH_FIELDS = [{base: "g2_gdh_activation", key: "gdh_activation"}, {base: "g2_gdh_station_departure", key: "gdh_station_departure"}, {base: "g2_gdh_assembly_point", key: "gdh_assembly_point"},
+                           {base: "g2_gdh_incident_site", key: "gdh_incident_site"}];
+    for (let i = 1; i <= G2_CREW_COUNT; i++) {
+      G2_GDH_FIELDS.push(
+        {base: `g2_crew${i}_departure`, key: `crew${i}_gdh_departure`},
+        {base: `g2_crew${i}_arrival`, key: `crew${i}_gdh_arrival`}
+      );
+    }
+    const G2_REG_ELEMS_MAP = {
+      leader: {category: "patent", name: "full_name"},
+      crew: {category: "patent", name: "full_name", mec: "n_file"}
+    };
+    /* ============ GERAÇÃO DAS LINHAS (INLINE) ============ */
+    const G2_TRANSITION = 'transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;';
+    const G2_INPUT_STYLE = `font-size: 12px; width: 100%; height: 22px; padding: 0 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; outline: none; ${G2_TRANSITION}`;
+    const G2_DT_STYLE = `font-size: 11px; height: 22px; padding: 0 4px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; outline: none; ${G2_TRANSITION}`;
+    const G2_FOCUS = `onfocus="this.style.borderColor='#80bdff'; this.style.boxShadow='0 0 5px rgba(0, 123, 255, 0.25)';" onblur="this.style.borderColor='#ccc'; this.style.boxShadow='none';"`;
+    const G2_TD_NUM = 'text-align: center; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 4px;';
+    const G2_TD = 'padding: 4px;';
+    const G2_TD_GDH = 'padding: 4px; white-space: nowrap;';
+    function g2Text(id, center = false, readOnly = false) {
+      const alignStyle = center ? ' text-align: center;' : '';
+      const readOnlyStyle = readOnly ? ' background-color: #e9ecef; cursor: not-allowed;' : '';
+      const readOnlyAttr = readOnly ? ' readonly tabindex="-1"' : '';
+      return `<input type="text" id="${id}" style="${G2_INPUT_STYLE}${alignStyle}${readOnlyStyle}" ${readOnlyAttr} ${G2_FOCUS}>`;
+    }
+    function g2Select(id) {
+      return `
+        <select id="${id}" style="${G2_INPUT_STYLE} text-align-last: center;" ${G2_FOCUS}>
+          <option value=""></option>
+          <option value="E">E</option>
+          <option value="N">N</option>
+          <option value="S">S</option>
+          <option value="G">G</option>
+        </select>
+      `;
+    }
+    function g2Hidden(id) {
+      return `<input type="text" id="${id}" style="display: none;" readonly tabindex="-1">`;
+    }
+    function g2DateTime(prefix) {
+      return `
+        <input type="date" id="${prefix}_date" style="${G2_DT_STYLE} width: 105px;" ${G2_FOCUS}>
+        <input type="time" id="${prefix}_hour" style="${G2_DT_STYLE} width: 75px;" ${G2_FOCUS}>`;
+    }
+    function buildG2Leaders(rows = G2_LEADER_COUNT) {
+      const tbody = document.querySelector('#g2LeadersTable tbody');
+      if (!tbody) return;
+      let html = '';
+      for (let i = 1; i <= rows; i++) {
+        const p = `g2_leader${i}`;
+        html += `
+          <tr>
+            <td style="${G2_TD_NUM}">${i}</td>
+            <td style="${G2_TD}">${g2Text(`${p}_id`, true)}</td>
+            <td style="${G2_TD}">${g2Text(`${p}_category`, false, true)}</td>
+            <td style="${G2_TD}">${g2Text(`${p}_name`, false, true)}</td>
+            <td style="${G2_TD}">${g2Text(`${p}_issi`, true)}</td>
+            <td style="${G2_TD}">${g2Text(`${p}_phone`, true)}</td>
+          </tr>
+        `;
+      }
+      tbody.innerHTML = html;
+    }
+    function buildG2Crew(rows = G2_CREW_COUNT) {
+      const tbody = document.querySelector('#g2CrewTable tbody');
+      if (!tbody) return;
+      let html = '';
+      for (let i = 1; i <= rows; i++) {
+        const p = `g2_crew${i}`;
+        html += `
+          <tr>
+            <td style="${G2_TD_NUM}">${i}</td>
+            <td style="${G2_TD}">${g2Text(`${p}_id`, true)}</td>
+            <td style="${G2_TD}">${g2Text(`${p}_mec`, true, true)}</td>
+            <td style="${G2_TD}">${g2Text(`${p}_category`, true, true)}</td>
+            <td style="${G2_TD}">${g2Text(`${p}_name`, false, true)}</td>
+            <td style="${G2_TD}">${g2Select(`${p}_status`)}</td>
+            <td style="${G2_TD}">${g2Text(`${p}_network`, true)}</td>
+            <td style="${G2_TD_GDH}">${g2DateTime(`${p}_departure`)}${g2Hidden(`${p}_gdh_departure`)}</td>
+            <td style="${G2_TD_GDH}">${g2DateTime(`${p}_arrival`)}${g2Hidden(`${p}_gdh_arrival`)}</td>
+          </tr>
+        `;
+      }
+      tbody.innerHTML = html;
+    }
+    /* ================= GDH ================= */
+    function formatG2GDH(date = new Date()) {
+      const p = n => String(n).padStart(2, "0");
+      return `${p(date.getDate())}${p(date.getHours())}${p(date.getMinutes())}${G2_MONTHS[date.getMonth()]}${String(date.getFullYear()).slice(-2)}`;
+    }
+    function parseG2GDH(gdh) {
+      const m = /^(\d{2})(\d{2})(\d{2})([A-Z]{3})(\d{2})$/.exec(gdh || "");
+      if (!m) return null;
+      const mo = G2_MONTHS.indexOf(m[4]);
+      if (mo < 0) return null;
+      return {date: `20${m[5]}-${String(mo + 1).padStart(2, "0")}-${m[1]}`, time: `${m[2]}:${m[3]}`};
+    }
+    function buildG2DateFromInputs(dateStr, timeStr) {
+      if (!dateStr || !timeStr) return null;
+      const [y, m, d] = dateStr.split("-").map(Number);
+      const [hh, mm] = timeStr.split(":").map(Number);
+      return new Date(y, m - 1, d, hh, mm);
+    }
+    function g2HiddenId(base) {
+      return base.replace(/^(g2_crew\d+)_(departure|arrival)$/, "$1_gdh_$2");
+    }
+    function updateG2Gdh(base) {
+      const dateEl = document.getElementById(`${base}_date`);
+      const hourEl = document.getElementById(`${base}_hour`);
+      const hiddenEl = document.getElementById(g2HiddenId(base));
+      if (!dateEl || !hourEl || !hiddenEl) return;
+      const dt = buildG2DateFromInputs(dateEl.value, hourEl.value);
+      hiddenEl.value = dt ? formatG2GDH(dt) : "";
+    }
+    function setG2Gdh(base, gdh) {
+      const set = (id, v) => {const el = document.getElementById(id); if (el) el.value = v;};
+      const parsed = parseG2GDH(gdh);
+      set(g2HiddenId(base), gdh || "");
+      set(`${base}_date`, parsed?.date || "");
+      set(`${base}_hour`, parsed?.time || "");
+    }
+    function setNowInDateHour(base) {
+      const now = new Date();
+      const p = n => String(n).padStart(2, "0");
+      document.getElementById(`${base}_date`).value = `${now.getFullYear()}-${p(now.getMonth() + 1)}-${p(now.getDate())}`;
+      document.getElementById(`${base}_hour`).value = `${p(now.getHours())}:${p(now.getMinutes())}`;
+      updateG2Gdh(base);
+    }
+    /* ======= CHEFE DE EQUIPA / EQUIPA: dados via reg_elems ======= */
+    async function fetchG2RegElem(nInt, corpOperNr) {
+      const url = `${SUPABASE_URL}/rest/v1/reg_elems`
+        + `?select=patent,full_name,n_file`
+        + `&n_int=eq.${encodeURIComponent(nInt)}`
+        + `&corp_oper_nr=eq.${encodeURIComponent(corpOperNr)}`
+        + `&limit=1`;
+      const res = await fetch(url, {headers: getSupabaseHeaders()});
+      if (!res.ok) throw new Error("Erro ao buscar dados do elemento");
+      const data = await res.json();
+      return data[0] || null;
+    }
+    async function fillG2FromRegElems(idInput) {
+      const m = /^g2_(leader|crew)(\d+)_id$/.exec(idInput.id);
+      if (!m) return;
+      const [, type, row] = m;
+      const map = G2_REG_ELEMS_MAP[type];
+      const setFields = record => {
+        for (const [field, column] of Object.entries(map)) {
+          const el = document.getElementById(`g2_${type}${row}_${field}`);
+          if (el) el.value = record?.[column] ?? "";
+        }
+      };
+      const nInt = idInput.value.trim();
+      if (!nInt) {setFields(null); return;}
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      if (!corpOperNr) return;
+      try {
+        const record = await fetchG2RegElem(nInt, corpOperNr);
+        if (idInput.value.trim() !== nInt) return;
+        setFields(record);
+      } catch (err) {
+        console.error("Erro ao carregar dados do elemento:", err);
+        setFields(null);
+      }
+    }
+    async function fetchG2Optel(nInt, corpOperNr) {
+  const url = `${SUPABASE_URL}/rest/v1/reg_elems`
+    + `?select=patent_abv,abv_name`
+    + `&n_int=eq.${encodeURIComponent(nInt)}`
+    + `&corp_oper_nr=eq.${encodeURIComponent(corpOperNr)}`
+    + `&limit=1`;
+  const res = await fetch(url, {headers: getSupabaseHeaders()});
+  if (!res.ok) throw new Error("Erro ao buscar dados do OPTEL");
+  const data = await res.json();
+  return data[0] || null;
+}
+
+async function fillG2Optel(nIntInput) {
+  const patentEl = document.getElementById("g2_optel_patent");
+  const nameEl = document.getElementById("g2_optel_name");
+  const setFields = record => {
+    if (patentEl) patentEl.value = record?.patent_abv ?? "";
+    if (nameEl) nameEl.value = record?.abv_name ?? "";
+  };
+  const nInt = nIntInput.value.trim();
+  if (!nInt) {setFields(null); return;}
+  const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+  if (!corpOperNr) return;
+  try {
+    const record = await fetchG2Optel(nInt, corpOperNr);
+    if (nIntInput.value.trim() !== nInt) return; // o utilizador já mudou o valor
+    setFields(record);
+  } catch (err) {
+    console.error("Erro ao carregar dados do OPTEL:", err);
+    setFields(null);
+  }
+}
+    /* =========== UTILITY FUNCTIONS AND UI ============ */
+    const g2Esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    function preselectCorpInG2CB() {
+      const current = sessionStorage.getItem("currentCorpOperNr");
+      if (!current) return;
+      const select = document.getElementById("g2_cb");
+      if (!select) return;
+      const clean = str => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+      for (const option of select.options) {
+        if (clean(option.textContent).startsWith(clean(current))) {
+          option.selected = true;
+          return;
+        }
+      }
+    }
+    function clearG2Form() {
+      document.querySelectorAll("#g2_form_container input, #g2_form_container textarea").forEach(el => el.value = "");
+      document.querySelectorAll("#g2_form_container select").forEach(sel => sel.selectedIndex = 0);
+      buildG2Leaders();
+      buildG2Crew();
+      const g2FormContainer = document.getElementById("g2_form_container");
+      const g2SaveBtn = document.getElementById("g2SaveBtn");
+      if (g2FormContainer) {
+        g2FormContainer.removeAttribute("data-record-id");
+        g2FormContainer.removeAttribute("data-closing");
+      }
+      if (g2SaveBtn) {
+        g2SaveBtn.textContent = "Emitir Lista Nominal de Meios";
+        g2SaveBtn.classList.remove("btn-success");
+        g2SaveBtn.classList.add("btn-danger");
+        g2SaveBtn.style.width = "22%";
+      }
+    }
+    function toggleG2FormContainer(forceClose = false) {
+      const g2FormContainer = document.getElementById("g2_form_container");
+      const g2TableContainer = document.getElementById("g2TableContainer");
+      if (!g2FormContainer) return;
+      const isVisible = g2FormContainer.style.display === "block";
+      g2FormContainer.style.transition = "opacity 0.25s ease";
+      if (isVisible || forceClose) {
+        g2FormContainer.style.opacity = "0";
+        setTimeout(() => {
+          g2FormContainer.style.display = "none";
+          clearG2Form();
+        }, 250);
+      } else {
+        if (g2TableContainer) g2TableContainer.style.display = "none";
+        g2FormContainer.style.display = "block";
+        g2FormContainer.style.opacity = "0";
+        setTimeout(() => g2FormContainer.style.opacity = "1", 10);
+        clearG2Form();
+      }
+    }
+    function collectG2FormData() {
+      const val = id => document.getElementById(id).value.trim();
+      const data = {};
+      G2_SIMPLE_FIELDS.forEach(f => data[f] = val(`g2_${f}`));
+      G2_GDH_FIELDS.forEach(({ base, key }) => data[key] = val(g2HiddenId(base)));
+      for (let i = 1; i <= G2_LEADER_COUNT; i++) {
+        G2_LEADER_FIELDS.forEach(f => data[`leader${i}_${f}`] = val(`g2_leader${i}_${f}`));
+      }
+      for (let i = 1; i <= G2_CREW_COUNT; i++) {
+        G2_CREW_TEXT_FIELDS.forEach(f => {
+          const column = f === "mec" ? "mec_number" : f;
+          data[`crew${i}_${column}`] = val(`g2_crew${i}_${f}`);
+        });
+      }
+      return data;
+    }
+    function populateG2Form(record) {
+      const set = (id, v) => {const el = document.getElementById(id); if (el) el.value = v || "";};
+      G2_SIMPLE_FIELDS.forEach(f => set(`g2_${f}`, record[f]));
+      G2_GDH_FIELDS.forEach(({ base, key }) => setG2Gdh(base, record[key]));
+      for (let i = 1; i <= G2_LEADER_COUNT; i++) {
+        G2_LEADER_FIELDS.forEach(f => set(`g2_leader${i}_${f}`, record[`leader${i}_${f}`]));
+      }
+      for (let i = 1; i <= G2_CREW_COUNT; i++) {
+        G2_CREW_TEXT_FIELDS.forEach(f => {
+          const column = f === "mec" ? "mec_number" : f;
+          set(`g2_crew${i}_${f}`, record[`crew${i}_${column}`]);
+        });
+      }
+    }
+    function openG2MissionRecord(record, closing) {
+      const g2FormContainer = document.getElementById("g2_form_container");
+      const g2TableContainer = document.getElementById("g2TableContainer");
+      const NewG2Btn = document.getElementById("NewG2Btn");
+      const oldG2Btn = document.querySelector(".oldg2");
+      const g2SaveBtn = document.getElementById("g2SaveBtn");
+      g2TableContainer.style.display = "none";
+      if (oldG2Btn) oldG2Btn.classList.remove("active");
+      g2FormContainer.style.display = "block";
+      g2FormContainer.style.opacity = "0";
+      setTimeout(() => g2FormContainer.style.opacity = "1", 10);
+      const header = g2FormContainer.querySelector(".major-card-header");
+      if (header) header.textContent = closing ? "FINALIZAR MISSÃO" : "EDITAR LISTA NOMINAL DE MEIOS";
+      populateG2Form(record);
+      preselectCorpInG2CB();
+      if (NewG2Btn) NewG2Btn.classList.add("active");
+      g2FormContainer.setAttribute("data-record-id", record.id);
+      g2FormContainer.setAttribute("data-closing", closing ? "true" : "false");
+      g2SaveBtn.textContent = closing ? "Finalizar Missão" : "Atualizar";
+      g2SaveBtn.classList.remove("btn-danger", "btn-success");
+      g2SaveBtn.classList.add(closing ? "btn-success" : "btn-add");
+      g2SaveBtn.style.width = "22%";
+    }
+    async function fetchG2RecipientsFromSupabase(corpOperNr) {
+      const categories = ['g2_mail_to', 'g2_mail_cc', 'g2_mail_bcc'];
+      const url = `${SUPABASE_URL}/rest/v1/mails_config` + `?category=in.(${categories.join(',')})` + `&corp_oper_nr=eq.${corpOperNr}` + `&select=category,value`;
+      try {
+        const response = await fetch(url, { headers: getSupabaseHeaders() });
+        if (!response.ok) throw new Error("Falha ao conectar ao Supabase.");
+        const data = await response.json();
+        const recipients = { to: [], cc: [], bcc: [] };
+        data.forEach(row => {
+          const emails = row.value?.split(",")
+            .map(e => e.trim())
+            .filter(e => e) || [];
+          if (row.category.endsWith("_to")) recipients.to = emails;
+          if (row.category.endsWith("_cc")) recipients.cc = emails;
+          if (row.category.endsWith("_bcc")) recipients.bcc = emails;
+        });
+        if (recipients.to.length === 0) recipients.to = [""];
+        return recipients;
+      } catch (err) {
+        console.error("Erro ao buscar e-mails:", err);
+        return { to: ["central0805.ahbfaro@gmail.com"], cc: [], bcc: [] };
+      }
+    }
+    /* ================= EMISSION LOGIC ================ */
+    async function emitG2() {
+      const g2FormContainer = document.getElementById("g2_form_container");
+      const g2SaveBtn = document.getElementById("g2SaveBtn");
+      const NewG2Btn = document.getElementById("NewG2Btn");
+      const oldG2Btn = document.querySelector(".oldg2");
+      const cb_type = document.getElementById("g2_cb")?.value.trim() || "";
+      const formData = collectG2FormData();
+      const optelPatent = document.getElementById("g2_optel_patent")?.value.trim() || "";
+const optelName = document.getElementById("g2_optel_name")?.value.trim() || "";
+const optelLine = [optelPatent, optelName].filter(Boolean).map(g2Esc).join(" ");
+      const greeting = getGreeting();
+      if (!formData.vehicle || !formData.gdh_activation) {
+        showPopup('popup-danger', "Por favor preencha os campos obrigatórios: Veículo e GDH Acionamento.");
+        return;
+      }
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      if (!corpOperNr) {
+        showPopup('popup-danger', "Erro: O número da corporação não foi encontrado. Por favor, faça login novamente.");
+        return;
+      }
+      const recordId = g2FormContainer.getAttribute("data-record-id");
+      const isUpdate = !!recordId;
+      const isClosing = g2FormContainer.getAttribute("data-closing") === "true";
+      g2SaveBtn.disabled = true;
+      showPopup('popup-success', `Lista Nominal de Meios ${isUpdate ? "atualizada" : "criada"} com sucesso. Por favor aguarde uns segundos, receberá uma nova notificação após o envio para as entidades estar concluído!`);
+      const supabaseData = { ...formData, corp_oper_nr: corpOperNr, mission_status: !isClosing };
+      let insertedId = null;
+      try {
+        const supabaseUrl = isUpdate ? `${SUPABASE_URL}/rest/v1/g2_resource_list?id=eq.${recordId}` : `${SUPABASE_URL}/rest/v1/g2_resource_list`;
+        const method = isUpdate ? "PATCH" : "POST";
+        const response = await fetch(supabaseUrl, {
+          method,
+          headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=representation"},
+          body: JSON.stringify(supabaseData)
+        });
+        if (!response.ok) throw new Error("Erro ao enviar dados ao Supabase.");
+        const savedRows = await response.json();
+        if (!isUpdate) insertedId = savedRows?.[0]?.id ?? null;
+        // ===== ENVIO DO ANEXO G2 =====
+        const {to, cc, bcc} = await fetchG2RecipientsFromSupabase(corpOperNr);
+        const {logoUrl, cbName, corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail} = await _getMOAEmailCommonData(corpOperNr);
+        const corpName = cb_type.includes(" - ") ? cb_type.split(" - ").slice(1).join(" - ") : cb_type;
+        const article = corpName.includes("Companhia") ? "da" : "do";
+        const emailBodyHTML = `${greeting}<br>
+        Encarrega-me o Sr. Comandante ${await getCommanderName(corpOperNr)} de remeter em anexo a Vossas Exª.s a Lista Nominal de Meios ${article} <strong>${corpName}</strong>, acionados para a ocorrência <strong>${formData.seq_number || ""}</strong>, em <strong>${formData.intervention_location || ""}</strong>.<br>
+        Com os melhores cumprimentos,<br>
+        OPTEL:
+        ${optelLine ? `${optelLine}<br>` : ""}
+        <span style="font-family: 'Arial'; font-size: 10px; color: gray;">
+          Este email foi processado automaticamente por: CB360 Online
+        </span>`;
+        const emailRes = await fetch('https://cb360-online.vercel.app/api/crepc_convert_and_send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            mode: "g2",
+            data: {...formData, cb_type, corp_oper_nr: corpOperNr, logoUrl, corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail},
+            recipients: to,
+            ccRecipients: cc,
+            bccRecipients: bcc,
+            emailSubject: `Lista Nominal de Meios - Veículo ${formData.vehicle}_${corpOperNr}`,
+            emailBody: emailBodyHTML
+          })
+        });
+        if (!emailRes.ok) {
+          let details = "";
+          try { const errJson = await emailRes.json(); details = errJson.details || errJson.error || ""; } catch (_) {}
+          throw new Error(`EMAIL_FAILED::${details || "sem detalhes (provável timeout de 60s na Vercel)"}`);
+        }
+        showPopup('popup-success', `A Lista Nominal de Meios do veículo ${formData.vehicle} foi enviada para as entidades.`);
+        toggleG2FormContainer(true);
+        if (NewG2Btn) NewG2Btn.classList.remove("active");
+        if (oldG2Btn) oldG2Btn.classList.remove("active");
+      } catch (err) {
+        console.error(err);
+        const isEmailFailure = err.message?.startsWith("EMAIL_FAILED::");
+        if (isEmailFailure) {
+          try {
+            if (!isUpdate) {
+              if (insertedId) {
+                await fetch(`${SUPABASE_URL}/rest/v1/g2_resource_list?id=eq.${insertedId}`, {
+                  method: "DELETE",
+                  headers: getSupabaseHeaders()
+                });
+              }
+            } else if (isClosing) {
+              await fetch(`${SUPABASE_URL}/rest/v1/g2_resource_list?id=eq.${recordId}`, {
+                method: "PATCH",
+                headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
+                body: JSON.stringify({mission_status: true})
+              });
+            }
+          } catch (rollbackErr) {
+            console.error("Falha ao reverter estado após erro de envio:", rollbackErr);
+          }
+          showPopup('popup-danger', `Não foi possível gerar ou enviar o documento (possível lentidão de um serviço externo). O registo foi revertido — por favor tente novamente dentro de alguns minutos.`);
+        } else {
+          showPopup('popup-danger', `Erro: ${err.message}`);
+        }
+      } finally {
+        g2SaveBtn.disabled = false;
+      }
+    }
+    async function populateG2VehicleSelect() {
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      if (!corpOperNr) {
+        console.warn("corpOperNr não encontrado");
+        return;
+      }
+      const select = document.getElementById("g2_vehicle");
+      if (!select) {
+        console.warn("select g2_vehicle não encontrado");
+        return;
+      }
+      const G2_VEHICLE_PREFIX_ORDER = ["VCOT", "VFCI", "VTTF", "VTTU", "VTTP", "ABSC", "ABTM", "VDTD", "VOPE", "ARTL"];
+      const g2VehicleSortKey = vehicle => {
+        const prefix = G2_VEHICLE_PREFIX_ORDER.find(p => vehicle.toUpperCase().startsWith(p));
+        const prefixIndex = prefix ? G2_VEHICLE_PREFIX_ORDER.indexOf(prefix) : G2_VEHICLE_PREFIX_ORDER.length;
+        return [prefixIndex, vehicle];
+      };
+      try {
+        const url = `${SUPABASE_URL}/rest/v1/vehicle_status?select=vehicle&corp_oper_nr=eq.${corpOperNr}`;
+        const res = await fetch(url, {headers: getSupabaseHeaders()});
+        if (!res.ok) {
+          const errorText = await res.text();
+          throw new Error(`HTTP ${res.status}: ${errorText}`);
+        }
+        const data = await res.json();
+        const vehicles = [...new Set(data.map(row => row.vehicle).filter(v => v))]
+        .sort((a, b) => {
+          const [aIdx, aVal] = g2VehicleSortKey(a);
+          const [bIdx, bVal] = g2VehicleSortKey(b);
+          return aIdx !== bIdx ? aIdx - bIdx : aVal.localeCompare(bVal, "pt", { numeric: true });
+        });
+        select.innerHTML = '<option value=""></option>';
+        vehicles.forEach(vehicle => {
+          const option = document.createElement("option");
+          option.value = vehicle;
+          option.textContent = vehicle;
+          select.appendChild(option);
+        });
+      } catch (err) {
+        console.error("Erro ao carregar veículos:", err);
+      }
+    }
+    function setCurrentDateTimeToInput(inputElement) {
+      const now = new Date();
+      const p = n => String(n).padStart(2, "0");
+      if (inputElement.type === "date") {
+        inputElement.value = `${now.getFullYear()}-${p(now.getMonth() + 1)}-${p(now.getDate())}`;
+      } else if (inputElement.type === "time") {
+        inputElement.value = `${p(now.getHours())}:${p(now.getMinutes())}`;
+      }
+      const base = inputElement.id.replace(/_date$|_hour$/, "");
+      updateG2Gdh(base);
+    }
+    function addG2LeaderRow() {
+      const tbody = document.querySelector('#g2LeadersTable tbody');
+      if (!tbody) return;
+      const currentRows = tbody.querySelectorAll('tr').length;
+      const newRowNum = currentRows + 1;
+      const p = `g2_leader${newRowNum}`;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="${G2_TD_NUM}">${newRowNum}</td>
+        <td style="${G2_TD}">${g2Text(`${p}_id`, true)}</td>
+        <td style="${G2_TD}">${g2Text(`${p}_category`, false, true)}</td>
+        <td style="${G2_TD}">${g2Text(`${p}_name`, false, true)}</td>
+        <td style="${G2_TD}">${g2Text(`${p}_issi`, true)}</td>
+        <td style="${G2_TD}">${g2Text(`${p}_phone`, true)}</td>
+      `;
+      tbody.appendChild(tr);
+    }
+    function addG2CrewRow() {
+      const tbody = document.querySelector('#g2CrewTable tbody');
+      if (!tbody) return;
+      const currentRows = tbody.querySelectorAll('tr').length;
+      const newRowNum = currentRows + 1;
+      const p = `g2_crew${newRowNum}`;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="${G2_TD_NUM}">${newRowNum}</td>
+        <td style="${G2_TD}">${g2Text(`${p}_id`, true)}</td>
+        <td style="${G2_TD}">${g2Text(`${p}_mec`, true, true)}</td>
+        <td style="${G2_TD}">${g2Text(`${p}_category`, true, true)}</td>
+        <td style="${G2_TD}">${g2Text(`${p}_name`, false, true)}</td>
+        <td style="${G2_TD}">${g2Select(`${p}_status`)}</td>
+        <td style="${G2_TD}">${g2Text(`${p}_network`, true)}</td>
+        <td style="${G2_TD_GDH}">${g2DateTime(`${p}_departure`)}${g2Hidden(`${p}_gdh_departure`)}</td>
+        <td style="${G2_TD_GDH}">${g2DateTime(`${p}_arrival`)}${g2Hidden(`${p}_gdh_arrival`)}</td>
+      `;
+      tbody.appendChild(tr);
+      const idInput = tr.querySelector(`#${p}_id`);
+      if (idInput) {
+        idInput.addEventListener('input', e => {
+          if (!/^g2_(leader|crew)\d+_id$/.test(e.target.id)) return;
+          clearTimeout(g2IdTimers.get(e.target));
+          g2IdTimers.set(e.target, setTimeout(() => fillG2FromRegElems(e.target), G2_LOOKUP_DEBOUNCE_MS));
+        });
+      }
+    }
+    /* ================ INITIALIZE MODULE ================ */
+    document.addEventListener("DOMContentLoaded", () => {
+      buildG2Leaders();
+      buildG2Crew();
+      populateG2VehicleSelect();
+      const addG2LeaderBtn = document.getElementById("addG2LeaderBtn");
+      const addG2CrewBtn = document.getElementById("addG2CrewBtn");
+      if (addG2LeaderBtn) {
+        addG2LeaderBtn.addEventListener('click', addG2LeaderRow);
+      }
+      if (addG2CrewBtn) {
+        addG2CrewBtn.addEventListener('click', addG2CrewRow);
+      }
+      const gdhMappings = [{headerText: "GDH Saída Quartel", dateId: "g2_gdh_station_departure_date", hourId: "g2_gdh_station_departure_hour"}, {headerText: "GDH Local Concentração", dateId: "g2_gdh_assembly_point_date", hourId: "g2_gdh_assembly_point_hour"},
+                           {headerText: "GDH no TO", dateId: "g2_gdh_incident_site_date", hourId: "g2_gdh_incident_site_hour"}];
+      const vehicleTableHeaders = document.querySelectorAll("#g2VehicleTable thead th");
+      vehicleTableHeaders.forEach(th => {
+        const mapping = gdhMappings.find(m => th.textContent.trim() === m.headerText);
+        if (mapping) {
+          th.style.cursor = "pointer";
+          th.addEventListener('click', () => {
+            const now = new Date();
+            const p = n => String(n).padStart(2, "0");
+            const dateEl = document.getElementById(mapping.dateId);
+            const hourEl = document.getElementById(mapping.hourId);
+            if (dateEl) dateEl.value = `${now.getFullYear()}-${p(now.getMonth() + 1)}-${p(now.getDate())}`;
+            if (hourEl) hourEl.value = `${p(now.getHours())}:${p(now.getMinutes())}`;
+            const base = mapping.dateId.replace(/_date$/, "");
+            updateG2Gdh(base);
+          });
+        }
+      });
+      const crewGdhMappings = [{headerText: "GDH Saída", prefix: "departure"}, {headerText: "GDH Chegada", prefix: "arrival"}];
+      const crewTableHeaders = document.querySelectorAll("#g2CrewTable thead th");
+      crewTableHeaders.forEach(th => {
+        const mapping = crewGdhMappings.find(m => th.textContent.trim() === m.headerText);
+        if (!mapping) return;
+        th.style.cursor = "pointer";
+        th.addEventListener('click', () => {
+          const now = new Date();
+          const p = n => String(n).padStart(2, "0");
+          const dateStr = `${now.getFullYear()}-${p(now.getMonth() + 1)}-${p(now.getDate())}`;
+          const hourStr = `${p(now.getHours())}:${p(now.getMinutes())}`;
+          document.querySelectorAll('#g2CrewTable tbody tr').forEach(tr => {
+            const idInput = tr.querySelector('input[id$="_id"]');
+            if (!idInput) return;
+            const m = /^g2_crew(\d+)_id$/.exec(idInput.id);
+            if (!m) return;
+            const rowNum = m[1];
+            const nameInput = document.getElementById(`g2_crew${rowNum}_name`);
+            if (!nameInput || !nameInput.value.trim()) return;
+            const base = `g2_crew${rowNum}_${mapping.prefix}`;
+            const dateEl = document.getElementById(`${base}_date`);
+            const hourEl = document.getElementById(`${base}_hour`);
+            if (dateEl) dateEl.value = dateStr;
+            if (hourEl) hourEl.value = hourStr;
+            updateG2Gdh(base);
+          });
+        });
+      });
+      const NewAnxG2Btn = document.getElementById("NewAnxG2Btn");
+      const g2Container = document.getElementById("g2-container");
+      if (!NewAnxG2Btn || !g2Container) return;
+      const NewG2Btn = document.getElementById("NewG2Btn");
+      const oldG2Btn = document.querySelector(".oldg2");
+      const g2SaveBtn = document.getElementById("g2SaveBtn");
+      const g2FormContainer = document.getElementById("g2_form_container");
+      const g2TableContainer = document.getElementById("g2TableContainer");
+      const g2TableBody = document.querySelector("#g2Table tbody");
+      const actionButtonsContainer = document.getElementById("docs-crepc");
+      g2Container.style.transition = "opacity 0.25s ease";
+      g2Container.style.opacity = "0";
+      g2Container.style.setProperty("display", "none", "important");
+      g2FormContainer.addEventListener("change", e => {
+        const m = /^(.+)_(?:date|hour)$/.exec(e.target.id);
+        if (m) updateG2Gdh(m[1]);
+      });
+      const g2IdTimers = new Map();
+g2FormContainer.addEventListener("input", e => {
+  const id = e.target.id;
+  const isRow = /^g2_(leader|crew)\d+_id$/.test(id);
+  const isOptel = id === "g2_optel_nint";
+  if (!isRow && !isOptel) return;
+  clearTimeout(g2IdTimers.get(e.target));
+  g2IdTimers.set(e.target, setTimeout(
+    () => isOptel ? fillG2Optel(e.target) : fillG2FromRegElems(e.target),
+    G2_LOOKUP_DEBOUNCE_MS
+  ));
+});
+      window.hideG2Container = function () {
+        g2Container.style.opacity = "0";
+        setTimeout(() => {
+          g2Container.style.setProperty("display", "none", "important");
+          if (actionButtonsContainer) actionButtonsContainer.style.display = "flex";
+        }, 250);
+        NewAnxG2Btn.classList.remove("active");
+      };
+      window.showG2Container = function () {
+        g2Container.style.opacity = "0";
+        g2Container.style.removeProperty("display");
+        g2Container.style.display = "block";
+        g2Container.style.width = "100%";
+        setTimeout(() => { g2Container.style.opacity = "1"; }, 10);
+      };
+      NewAnxG2Btn.onclick = () => {
+        const isActive = NewAnxG2Btn.classList.toggle("active");
+        if (isActive) {
+          const NewMOABtn = document.getElementById("NewMOABtn");
+          if (NewMOABtn && NewMOABtn.classList.contains("active")) {
+            NewMOABtn.classList.remove("active");
+            if (typeof window.hideMOAContainer === "function") window.hideMOAContainer();
+          }
+          window.showG2Container();
+        } else {
+          window.hideG2Container();
+          toggleG2FormContainer(true);
+          g2TableContainer.style.display = "none";
+          if (NewG2Btn) NewG2Btn.classList.remove("active");
+          if (oldG2Btn) oldG2Btn.classList.remove("active");
+        }
+      };
+      if (NewG2Btn) {
+        NewG2Btn.addEventListener("click", () => {
+          const isActive = NewG2Btn.classList.toggle("active");
+          if (oldG2Btn) oldG2Btn.classList.remove("active");
+          if (isActive) {
+            toggleG2FormContainer(false);
+            g2TableContainer.style.display = "none";
+            const header = document.querySelector("#g2_form_container .major-card-header");
+            if (header) header.textContent = "INSERÇÃO DE NOVA LISTA NOMINAL DE MEIOS";
+            preselectCorpInG2CB();
+            setNowInDateHour("g2_gdh_activation");
+          } else {
+            toggleG2FormContainer(true);
+          }
+        });
+      }
+      if (g2SaveBtn) {
+        g2SaveBtn.addEventListener("click", emitG2);
+      }
+      if (oldG2Btn) {
+        oldG2Btn.addEventListener("click", async () => {
+          const isActive = oldG2Btn.classList.toggle("active");
+          if (NewG2Btn) NewG2Btn.classList.remove("active");
+          if (!isActive) {
+            g2TableContainer.style.display = "none";
+            return;
+          }
+          g2FormContainer.style.display = "none";
+          g2TableBody.innerHTML = "<tr><td colspan='5' style='text-align:center;'>Carregando...</td></tr>";
+          try {
+            const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+            const res = await fetch(
+              `${SUPABASE_URL}/rest/v1/g2_resource_list?select=*&mission_status=eq.true&corp_oper_nr=eq.${corpOperNr}`,
+              {headers: getSupabaseHeaders()}
+            );
+            if (!res.ok) throw new Error("Erro ao buscar missões em curso");
+            const data = await res.json();
+            g2TableBody.innerHTML = "";
+            if (data.length === 0) {
+              g2TableBody.innerHTML = `<tr><td colspan="5" style="text-align:center;">Não foram encontradas missões em curso.</td></tr>`;
+            } else {
+              data.forEach(item => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                  <td style="text-align:center;">${g2Esc(item.seq_number)}</td>
+                  <td style="text-align:center;">${g2Esc(item.vehicle)}</td>
+                  <td style="text-align:center;">${g2Esc(item.gdh_activation)}</td>
+                  <td>${g2Esc(item.intervention_location)}</td>
+                  <td style="text-align:center;">
+                    <button class="btn btn-add g2-edit-btn" style="height:30px; padding:5px 10px; margin-right:5px;">Editar</button>
+                    <button class="btn btn-success g2-finalize-btn" style="height:30px; padding:5px 10px;">Finalizar</button>
+                  </td>
+                `;
+                tr.querySelector(".g2-edit-btn").addEventListener("click", () => openG2MissionRecord(item, false));
+                tr.querySelector(".g2-finalize-btn").addEventListener("click", () => openG2MissionRecord(item, true));
+                g2TableBody.appendChild(tr);
+              });
+            }
+            g2TableContainer.style.display = "block";
+          } catch (err) {
+            console.error(err);
+            showPopup('popup-danger', "Erro ao carregar missões em curso: " + err.message);
+          }
+        });
+      }
+      /* ================== RESET PAGE =================== */
+      const crepcAlgBtn = document.querySelector('[data-page="page-crepcalg"]');
+      if (crepcAlgBtn) {
+        crepcAlgBtn.addEventListener('click', () => {
+          window.hideG2Container();
+          toggleG2FormContainer(true);
+          g2TableContainer.style.display = 'none';
+        });
       }
     });
     /* =======================================

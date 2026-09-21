@@ -302,10 +302,10 @@ async function handleG2(req, res) {
   sheet.getCell("AT47").value = now.getFullYear();
 
   sheet.pageSetup = {
-    orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 1,
-    horizontalCentered: true, verticalCentered: false,
-    margins: {left: 0.5, right: 0.5, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3},
-  };
+  orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 1,
+  horizontalCentered: true, verticalCentered: false,
+  margins: {left: 0.25, right: 0.25, top: 0.25, bottom: 0.25, header: 0.1, footer: 0.1},
+};
 
   const fileName = `AnexoG2_${data.vehicle || "Viatura"}_${data.corp_oper_nr}`;
   const xlsxBuffer = await workbook.xlsx.writeBuffer();

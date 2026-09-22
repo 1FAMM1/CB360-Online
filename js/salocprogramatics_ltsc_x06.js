@@ -2552,37 +2552,36 @@
       }
     }
     async function fetchG2Optel(nInt, corpOperNr) {
-  const url = `${SUPABASE_URL}/rest/v1/reg_elems`
-    + `?select=patent_abv,abv_name`
-    + `&n_int=eq.${encodeURIComponent(nInt)}`
-    + `&corp_oper_nr=eq.${encodeURIComponent(corpOperNr)}`
-    + `&limit=1`;
-  const res = await fetch(url, {headers: getSupabaseHeaders()});
-  if (!res.ok) throw new Error("Erro ao buscar dados do OPTEL");
-  const data = await res.json();
-  return data[0] || null;
-}
-
-async function fillG2Optel(nIntInput) {
-  const patentEl = document.getElementById("g2_optel_patent");
-  const nameEl = document.getElementById("g2_optel_name");
-  const setFields = record => {
-    if (patentEl) patentEl.value = record?.patent_abv ?? "";
-    if (nameEl) nameEl.value = record?.abv_name ?? "";
-  };
-  const nInt = nIntInput.value.trim();
-  if (!nInt) {setFields(null); return;}
-  const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
-  if (!corpOperNr) return;
-  try {
-    const record = await fetchG2Optel(nInt, corpOperNr);
-    if (nIntInput.value.trim() !== nInt) return; // o utilizador já mudou o valor
-    setFields(record);
-  } catch (err) {
-    console.error("Erro ao carregar dados do OPTEL:", err);
-    setFields(null);
-  }
-}
+      const url = `${SUPABASE_URL}/rest/v1/reg_elems`
+        + `?select=patent_abv,abv_name`
+        + `&n_int=eq.${encodeURIComponent(nInt)}`
+        + `&corp_oper_nr=eq.${encodeURIComponent(corpOperNr)}`
+        + `&limit=1`;
+      const res = await fetch(url, {headers: getSupabaseHeaders()});
+      if (!res.ok) throw new Error("Erro ao buscar dados do OPTEL");
+      const data = await res.json();
+      return data[0] || null;
+    }
+    async function fillG2Optel(nIntInput) {
+      const patentEl = document.getElementById("g2_optel_patent");
+      const nameEl = document.getElementById("g2_optel_name");
+      const setFields = record => {
+        if (patentEl) patentEl.value = record?.patent_abv ?? "";
+        if (nameEl) nameEl.value = record?.abv_name ?? "";
+      };
+      const nInt = nIntInput.value.trim();
+      if (!nInt) {setFields(null); return;}
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      if (!corpOperNr) return;
+      try {
+        const record = await fetchG2Optel(nInt, corpOperNr);
+        if (nIntInput.value.trim() !== nInt) return; // o utilizador já mudou o valor
+        setFields(record);
+      } catch (err) {
+        console.error("Erro ao carregar dados do OPTEL:", err);
+        setFields(null);
+      }
+    }
     /* =========== UTILITY FUNCTIONS AND UI ============ */
     const g2Esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
     function preselectCorpInG2CB() {
@@ -2709,7 +2708,7 @@ async function fillG2Optel(nIntInput) {
         return recipients;
       } catch (err) {
         console.error("Erro ao buscar e-mails:", err);
-        return { to: ["central0805.ahbfaro@gmail.com"], cc: [], bcc: [] };
+        return {to: ["central0805.ahbfaro@gmail.com"], cc: [], bcc: []};
       }
     }
     /* ================= EMISSION LOGIC ================ */
@@ -2721,8 +2720,8 @@ async function fillG2Optel(nIntInput) {
       const cb_type = document.getElementById("g2_cb")?.value.trim() || "";
       const formData = collectG2FormData();
       const optelPatent = document.getElementById("g2_optel_patent")?.value.trim() || "";
-const optelName = document.getElementById("g2_optel_name")?.value.trim() || "";
-const optelLine = [optelPatent, optelName].filter(Boolean).map(g2Esc).join(" ");
+      const optelName = document.getElementById("g2_optel_name")?.value.trim() || "";
+      const optelLine = [optelPatent, optelName].filter(Boolean).map(g2Esc).join(" ");
       const greeting = getGreeting();
       if (!formData.vehicle || !formData.gdh_activation) {
         showPopup('popup-danger', "Por favor preencha os campos obrigatórios: Veículo e GDH Acionamento.");
@@ -2992,17 +2991,17 @@ const optelLine = [optelPatent, optelName].filter(Boolean).map(g2Esc).join(" ");
         if (m) updateG2Gdh(m[1]);
       });
       const g2IdTimers = new Map();
-g2FormContainer.addEventListener("input", e => {
-  const id = e.target.id;
-  const isRow = /^g2_(leader|crew)\d+_id$/.test(id);
-  const isOptel = id === "g2_optel_nint";
-  if (!isRow && !isOptel) return;
-  clearTimeout(g2IdTimers.get(e.target));
-  g2IdTimers.set(e.target, setTimeout(
-    () => isOptel ? fillG2Optel(e.target) : fillG2FromRegElems(e.target),
-    G2_LOOKUP_DEBOUNCE_MS
-  ));
-});
+      g2FormContainer.addEventListener("input", e => {
+        const id = e.target.id;
+        const isRow = /^g2_(leader|crew)\d+_id$/.test(id);
+        const isOptel = id === "g2_optel_nint";
+        if (!isRow && !isOptel) return;
+        clearTimeout(g2IdTimers.get(e.target));
+        g2IdTimers.set(e.target, setTimeout(
+          () => isOptel ? fillG2Optel(e.target) : fillG2FromRegElems(e.target),
+          G2_LOOKUP_DEBOUNCE_MS
+        ));
+      });
       window.hideG2Container = function () {
         g2Container.style.opacity = "0";
         setTimeout(() => {
@@ -3135,6 +3134,7 @@ g2FormContainer.addEventListener("input", e => {
     const tableConfig = [{rows: 1, special: false, title: "OFOPE"}, {rows: 1, special: false, title: "CHEFE DE SERVIÇO"}, {rows: 1, special: false, title: "OPTEL"},
                      {rows: 5, special: true, title: "EQUIPA 01"}, {rows: 5, special: false, title: "EQUIPA 02"}, {rows: 2, special: false, title: "LOGÍSTICA"},
                      {rows: 3, special: false, title: "INEM"}, {rows: 3, special: false, title: "INEM - Reserva"}, {rows: 10, special: false, title: "SERVIÇO GERAL"}];
+    const DECIR_MODE_TEAMS = {"1_ecin": ["EQUIPA 01"], "1_ecin_1_elac": ["EQUIPA 01", "LOGÍSTICA"], "2_ecin_1_elac": ["EQUIPA 01", "EQUIPA 02", "LOGÍSTICA"]};
     function createInputCell({type = 'text', readonly = false, className = '', tabindex = 0}) {
       return `<td><input type="${type}" class="${className}" ${readonly ? 'readonly' : ''} tabindex="${tabindex}"></td>`;
     }
@@ -3271,6 +3271,61 @@ g2FormContainer.addEventListener("input", e => {
       } catch (err) {
         console.error("❌ Erro em saveEligibility:", err);
         return false;
+      }
+    }
+    async function fetchDecirMode(corpOperNr) {
+      try {
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/decir_mode?corp_oper_nr=eq.${encodeURIComponent(String(corpOperNr))}&select=mode`,
+          {headers: getSupabaseHeaders()}
+        );
+        if (!res.ok) return null;
+        const data = await res.json();
+        return data[0]?.mode || null;
+      } catch (err) {
+        console.error('Erro ao buscar decir_mode:', err);
+        return null;
+      }
+    }
+    async function saveDecirEcin(tables, shift, corpOperNr, day, month, year) {
+      const mode = await fetchDecirMode(corpOperNr);
+      if (!mode) return { ok: false, reason: 'sem mode definido em decir_mode' };
+      const teamTitles = DECIR_MODE_TEAMS[mode];
+      if (!teamTitles) {
+        return { ok: false, reason: `mode "${mode}" não reconhecido` };
+      }
+      const records = [];
+      for (const table of tables) {
+        if (!teamTitles.includes(table.title)) continue;
+        for (const row of table.rows) {
+          const nInt = row.n_int?.trim();
+          if (!nInt) continue;
+          records.push({n_int: String(nInt), abv_name: row.nome || '', year: String(year), month: String(month), day: String(day), shift: String(shift), corp_oper_nr: String(corpOperNr)});
+        }
+      }
+      try {
+        const delUrl = `${SUPABASE_URL}/rest/v1/decir_reg_pag_ecin`
+          + `?corp_oper_nr=eq.${encodeURIComponent(String(corpOperNr))}`
+          + `&day=eq.${encodeURIComponent(String(day))}`
+          + `&month=eq.${encodeURIComponent(String(month))}`
+          + `&year=eq.${encodeURIComponent(String(year))}`
+          + `&shift=eq.${encodeURIComponent(String(shift))}`;
+        await fetch(delUrl, {method: "DELETE", headers: getSupabaseHeaders()});
+        if (records.length === 0) return {ok: true, mode, teamTitles, count: 0};
+        const insUrl = `${SUPABASE_URL}/rest/v1/decir_reg_pag_ecin`;
+        const res = await fetch(insUrl, {
+          method: "POST",
+          headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
+          body: JSON.stringify(records)
+        });
+        if (!res.ok) {
+          const t = await res.text();
+          throw new Error(`Erro a gravar decir_reg_pag_ecin (${res.status}): ${t}`);
+        }
+        return { ok: true, mode, teamTitles, count: records.length };
+      } catch (err) {
+        console.error('❌ Erro em saveDecirEcin:', err);
+        return { ok: false, reason: err.message };
       }
     }
     function createTable(rows, isSpecial, title) {
@@ -3470,11 +3525,14 @@ g2FormContainer.addEventListener("input", e => {
       draftBtn.textContent = '💾 GUARDAR RASCUNHO';
       btnStyle(draftBtn);
       draftBtn.addEventListener('click', async () => {
-        if (draftBtn.disabled) return;
+        if (draftBtn.disabled || emitBtn.disabled) return;
         draftBtn.disabled = true;
+        emitBtn.disabled = true;
         draftBtn.textContent = 'A GUARDAR...';
         draftBtn.style.opacity = '0.6';
         draftBtn.style.cursor = 'not-allowed';
+        emitBtn.style.opacity = '0.6';
+        emitBtn.style.cursor = 'not-allowed';
         try {
           let shift = document.querySelector('.options-btn.active')?.dataset.shift;
           if (!shift || shift === 'LAST') {
@@ -3488,9 +3546,12 @@ g2FormContainer.addEventListener("input", e => {
           showPopup('popup-success', 'Rascunho guardado com sucesso!');
         } finally {
           draftBtn.disabled = false;
+          emitBtn.disabled = false;
           draftBtn.textContent = '💾 GUARDAR RASCUNHO';
           draftBtn.style.opacity = '1';
           draftBtn.style.cursor = 'pointer';
+          emitBtn.style.opacity = '1';
+          emitBtn.style.cursor = 'pointer';
         }
       });
       const emitBtn = document.createElement('button');
@@ -3499,14 +3560,17 @@ g2FormContainer.addEventListener("input", e => {
       emitBtn.textContent = '📤 EMITIR PLANEAMENTO';
       btnStyle(emitBtn);
       emitBtn.addEventListener('click', async () => {
-        if (emitBtn.disabled) return;
+        if (emitBtn.disabled || draftBtn.disabled) return;
         emitBtn.disabled = true;
+        draftBtn.disabled = true;
         emitBtn.textContent = 'A EMITIR PLANEAMENTO...';
         emitBtn.style.opacity = '0.6';
         emitBtn.style.cursor = 'not-allowed';
+        draftBtn.style.opacity = '0.6';
+        draftBtn.style.cursor = 'not-allowed';
         try {
           let shift = document.querySelector('.options-btn.active').dataset.shift;
-          const date = new Date().toISOString().slice(0, 10);
+          let date = new Date().toISOString().slice(0, 10);
           if (shift === "LAST") {
             let storedShift = sessionStorage.getItem("originalShift") || localStorage.getItem("originalShift");
             if (storedShift) {
@@ -3515,13 +3579,18 @@ g2FormContainer.addEventListener("input", e => {
               showPopup('popup-danger', "Não foi possível determinar o turno original.");
               return;
             }
+            const storedDate = sessionStorage.getItem("originalDate") || localStorage.getItem("originalDate");
+            if (storedDate) date = storedDate;
           }
           await emitPlanning(shift, date);
         } finally {
           emitBtn.disabled = false;
+          draftBtn.disabled = false;
           emitBtn.textContent = '📤 EMITIR PLANEAMENTO';
           emitBtn.style.opacity = '1';
           emitBtn.style.cursor = 'pointer';
+          draftBtn.style.opacity = '1';
+          draftBtn.style.cursor = 'pointer';
         }
       });
       btnWrapper.appendChild(draftBtn);
@@ -3606,6 +3675,8 @@ g2FormContainer.addEventListener("input", e => {
         if (!attendanceSaved) console.warn('⚠️ Aviso: Falha ao gravar dados de assiduidade na tabela reg_assid.');
         const eligibilitySaved = await saveEligibility(tables, day, month, year, corpOperNr);
         if (!eligibilitySaved) console.warn('⚠️ Aviso: Falha ao gravar dados na tabela reg_eligibility.');
+        const decirResult = await saveDecirEcin(tables, shift, corpOperNr, day, month, year);
+        if (!decirResult.ok) console.warn(`⚠️ Aviso: DECIR não gravado — ${decirResult.reason}`);
         const fileDisplayName = `Planeamento Diário ${formattedDate} Turno ${shift}`;
         const greeting = getGreeting();
         const signature = getEmailSignature();
@@ -3753,6 +3824,11 @@ g2FormContainer.addEventListener("input", e => {
               originalShift = shiftLetter;
               sessionStorage.setItem("originalShift", shiftLetter);
               localStorage.setItem("originalShift", shiftLetter);
+              const monthNamesShort = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
+              const monthNum = String(monthNamesShort.indexOf(month) + 1).padStart(2, '0');
+              const originalDate = `${year}-${monthNum}-${day}`;
+              sessionStorage.setItem("originalDate", originalDate);
+              localStorage.setItem("originalDate", originalDate);
             }
             formattedHeader = headerText;
           }
@@ -3984,26 +4060,27 @@ g2FormContainer.addEventListener("input", e => {
                   const nIntSwap = document.getElementById('service-swap-nint')?.value?.trim();
                   const nameSwap = document.getElementById('service-swap-name')?.value?.trim();
                   const swapInfo = nIntSwap ? `${nIntSwap} ${nameSwap}` : '';
+                  let secaoSwap = '';
+                  let currentSection = '';
+                  const sideTbody = document.getElementById('plandir-side-tbody');
+                  const nIntSwapFormatted = nIntSwap?.padStart(3, '0');
+                  if (sideTbody && nIntSwapFormatted) {
+                    sideTbody.querySelectorAll('tr').forEach(tr => {
+                      const sectionCell = tr.querySelector('td.plandir-card-title');
+                      if (sectionCell) currentSection = sectionCell.textContent.trim();
+                      if (tr.getAttribute('data-side-nint') === nIntSwapFormatted) secaoSwap = currentSection;
+                    });
+                  }
+                  let prefix;
                   if (shift === 'D') {
-                    if (obsInput) obsInput.value = `Profissional | Troca de Serviço | ${swapInfo}`;
+                    prefix = secaoSwap === 'ECIN' ? 'ECIN' : 'Profissional';
                   } else {
-                    let secaoSwap = '';
-                    let currentSection = '';
-                    const sideTbody = document.getElementById('plandir-side-tbody');
-                    const nIntSwapFormatted = nIntSwap?.padStart(3, '0');
-                    if (sideTbody && nIntSwapFormatted) {
-                      sideTbody.querySelectorAll('tr').forEach(tr => {
-                        const sectionCell = tr.querySelector('td.plandir-card-title');
-                        if (sectionCell) currentSection = sectionCell.textContent.trim();
-                        if (tr.getAttribute('data-side-nint') === nIntSwapFormatted) secaoSwap = currentSection;
-                      });
-                    }
-                    let prefix = 'Piquete';
+                    prefix = 'Piquete';
                     if (secaoSwap === 'PROFISSIONAIS') prefix = 'Profissional';
                     else if (secaoSwap === 'ECIN') prefix = 'ECIN';
                     else if (secaoSwap === 'PIQUETE') prefix = 'Piquete';
-                    if (obsInput) obsInput.value = `${prefix} | Troca de Serviço | ${swapInfo}`;
                   }
+                  if (obsInput) obsInput.value = `${prefix} | Troca de Serviço | ${swapInfo}`;
                 } else if (selected.value === 'Outro') {
                   const otherText = document.getElementById('service-other-text')?.value?.trim();
                   if (obsInput) obsInput.value = otherText || '';
@@ -4139,7 +4216,7 @@ g2FormContainer.addEventListener("input", e => {
             await fetch(`${SUPABASE_URL}/rest/v1/fomio_draft`, {
               method: "POST",
               headers: getSupabaseHeaders(),
-              body: JSON.stringify(nonEmptyRows.map(r => ({team_name, shift, n_int: r.n_int || '', patente: r.patente || '', abv_name: r.nome || '', h_entrance: r.entrada || '',
+              body: JSON.stringify(nonEmptyRows.map(r => ({team_name, shift, n_int: r.n_int || '', patente: r.patente || '', abv_name: r.nome || '', h_entrance: r.entrada || '', 
                                                            h_exit: r.saida || '', MP: !!r.MP, TAS: !!r.TAS, observ: r.obs || '', corp_oper_nr: corpOperNr})))
             });
           }
@@ -4160,6 +4237,7 @@ g2FormContainer.addEventListener("input", e => {
         return null;
       }
     }
+    /* =======================================
     /* =======================================
     INOP CREPC
     ======================================= */
@@ -4212,20 +4290,31 @@ g2FormContainer.addEventListener("input", e => {
     const sitopVeicSelect = document.getElementById("sitop_veíc");
     const sitopVeicRegInput = document.getElementById("sitop_veíc_registration");
     const sitopGdhInopInput = document.getElementById("sitop_gdh_inop");
+    const sitopVeicDateInput = document.getElementById("sitop_veíc_date");
+    const sitopVeicHourInput = document.getElementById("sitop_veíc_hour");
     const yesCheckbox = document.getElementById("ppi_yes");
     const noCheckbox = document.getElementById("ppi_no");
     const subsYesCheckbox = document.getElementById("ppi_subs_yes");
     const subsNoCheckbox = document.getElementById("ppi_subs_no");
     /* =========== UTILITY FUNCTIONS AND UI ============ */
-    function formatSITOPGDH() {
-      const now = new Date();
-      const day = String(now.getDate()).padStart(2, "0");
-      const hour = String(now.getHours()).padStart(2, "0");
-      const minutes = String(now.getMinutes()).padStart(2, "0");
+    function formatSITOPGDH(date = new Date()) {
+      const day = String(date.getDate()).padStart(2, "0");
+      const hour = String(date.getHours()).padStart(2, "0");
+      const minutes = String(date.getMinutes()).padStart(2, "0");
       const monthNames = ["JAN","FEV","MAR","ABR","MAI","JUN","JUL","AGO","SET","OUT","NOV","DEZ"];
-      const month = monthNames[now.getMonth()];
-      const year = String(now.getFullYear()).slice(-2);
+      const month = monthNames[date.getMonth()];
+      const year = String(date.getFullYear()).slice(-2);
       return `${day}${hour}${minutes}${month}${year}`;
+    }
+    function buildDateFromInputs(dateStr, timeStr) {
+      if (!dateStr || !timeStr) return null;
+      const [y, m, d] = dateStr.split("-").map(Number);
+      const [hh, mm] = timeStr.split(":").map(Number);
+      return new Date(y, m - 1, d, hh, mm);
+    }
+    function updateSitopGdhInop() {
+      const dt = buildDateFromInputs(sitopVeicDateInput.value, sitopVeicHourInput.value);
+      sitopGdhInopInput.value = dt ? formatSITOPGDH(dt) : "";
     }
     function clearSitopForm() {
       document.querySelectorAll("#sitop_container input, #sitop_container textarea").forEach(el => el.value = "");
@@ -4273,7 +4362,10 @@ g2FormContainer.addEventListener("input", e => {
       document.getElementById("sitop_veíc").value = record.vehicle || "";
       document.getElementById("sitop_veíc_registration").value = record.registration || "";
       document.getElementById("sitop_gdh_inop").value = record.gdh_inop || "";
-      document.getElementById("sitop_gdh_op").value = formatSITOPGDH();
+      const nowValidate = new Date();
+      sitopVeicDateInput.value = nowValidate.toISOString().slice(0, 10);
+      sitopVeicHourInput.value = String(nowValidate.getHours()).padStart(2,"0") + ":" + String(nowValidate.getMinutes()).padStart(2,"0");
+      document.getElementById("sitop_gdh_op").value = formatSITOPGDH(nowValidate);
       document.getElementById("sitop_type_failure").value = record.failure_type || "";
       document.getElementById("sitop_failure_description").value = record.failure_description || "";
       document.getElementById("sitop_failure_noc").value = record.failure_noc || "";
@@ -4361,6 +4453,7 @@ g2FormContainer.addEventListener("input", e => {
       delete supabaseData.corpPhoneMobile;
       delete supabaseData.corpPhoneLandline;
       delete supabaseData.corpEmail;
+      let insertedId = null;
       try {
         if (!isUpdate && !isOperational) {
           const checkUrl = `${SUPABASE_URL}/rest/v1/sitop_vehicles?select=vehicle&vehicle=eq.${encodeURIComponent(vehicle)}&gdh_op=is.null&corp_oper_nr=eq.${encodeURIComponent(corpOperNr)}`;
@@ -4377,13 +4470,15 @@ g2FormContainer.addEventListener("input", e => {
         const method = isUpdate ? "PATCH" : "POST";
         const response = await fetch(supabaseUrl, {
           method,
-          headers: { ...getSupabaseHeaders(), "Content-Type": "application/json" },
+          headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=representation"},
           body: JSON.stringify(supabaseData)
         });
         if (!response.ok) throw new Error("Erro ao enviar dados ao Supabase.");
+        const savedRows = await response.json();
+        if (!isUpdate) insertedId = savedRows?.[0]?.id ?? null;
         const statusRes = await fetch(`${SUPABASE_URL}/rest/v1/vehicle_status?vehicle=eq.${encodeURIComponent(vehicle)}`, {
           method: "PATCH",
-          headers: { ...getSupabaseHeaders(), "Content-Type": "application/json" },
+          headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
           body: JSON.stringify({ is_inop: !isOperational })
         });
         if (!statusRes.ok) console.warn("⚠️ Erro ao atualizar status do veículo.");
@@ -4398,14 +4493,18 @@ g2FormContainer.addEventListener("input", e => {
         Com os melhores cumprimentos,<br>
         OPTEL<br>${optel}<br>
         <span style="font-family: 'Arial'; font-size: 10px; color: gray;">
-        Este email foi processado automaticamente por: CB360 Online
+          Este email foi processado automaticamente por: CB360 Online
         </span>`;
         const emailRes = await fetch('https://cb360-online.vercel.app/api/crepc_convert_and_send', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({mode: "sitop", data, recipients: to, ccRecipients: cc, bccRecipients: bcc, emailSubject: `Situação Operacional do Veículo ${vehicle}_${corpOperNr}`, emailBody: emailBodyHTML})
         });
-        if (!emailRes.ok) throw new Error("Erro ao enviar email via Vercel.");
+        if (!emailRes.ok) {
+          let details = "";
+          try {const errJson = await emailRes.json(); details = errJson.details || errJson.error || "";} catch (_) {}
+          throw new Error(`EMAIL_FAILED::${details || "sem detalhes (provável timeout de 60s na Vercel)"}`);
+        }
         showPopup('popup-success', `A situação operacional do veículo ${vehicle} foi enviada para as entidades.`);
         if (isOperational && isUpdate) {
           await fetch(`${SUPABASE_URL}/rest/v1/sitop_vehicles?id=eq.${recordId}`, {
@@ -4418,12 +4517,43 @@ g2FormContainer.addEventListener("input", e => {
         if (oldInopBtn) oldInopBtn.classList.remove("active");
       } catch (err) {
         console.error(err);
-        showPopup('popup-danger', `Erro: ${err.message}`);
+        const isEmailFailure = err.message?.startsWith("EMAIL_FAILED::");
+        if (isEmailFailure) {
+          try {
+            const targetId = isUpdate ? recordId : insertedId;
+            if (targetId) {
+              if (!isUpdate) {
+                await fetch(`${SUPABASE_URL}/rest/v1/sitop_vehicles?id=eq.${targetId}`, {
+                  method: "DELETE",
+                  headers: getSupabaseHeaders()
+                });
+              } else if (isOperational) {
+                await fetch(`${SUPABASE_URL}/rest/v1/sitop_vehicles?id=eq.${targetId}`, {
+                  method: "PATCH",
+                  headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
+                  body: JSON.stringify({ gdh_op: null })
+                });
+              }
+            }
+            await fetch(`${SUPABASE_URL}/rest/v1/vehicle_status?vehicle=eq.${encodeURIComponent(vehicle)}`, {
+              method: "PATCH",
+              headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
+              body: JSON.stringify({ is_inop: isOperational })
+            });
+          } catch (rollbackErr) {
+            console.error("Falha ao reverter estado após erro de envio:", rollbackErr);
+          }
+          showPopup('popup-danger', `Não foi possível gerar ou enviar o documento (possível lentidão de um serviço externo). O registo foi revertido — por favor tente novamente dentro de alguns minutos.`);
+        } else {
+          showPopup('popup-danger', `Erro: ${err.message}`);
+        }
       } finally {
         saveBtn.disabled = false;
       }
     }
     /* ================ EVENT LISTENERS ================ */
+    sitopVeicDateInput.addEventListener("change", updateSitopGdhInop);
+    sitopVeicHourInput.addEventListener("change", updateSitopGdhInop);
     NewInopBtn.addEventListener("click", () => {
       preselectCorpInSitopCB();
       const isActive = NewInopBtn.classList.toggle("active");
@@ -4432,16 +4562,20 @@ g2FormContainer.addEventListener("input", e => {
         toggleSitopContainer(false);
         inopsTableContainer.style.display = "none";
         document.querySelector("#sitop_container .major-card-header").textContent = "INSERÇÃO DE NOVA INOPERACIONALIDADE";
-        preselectCorpInSitopCB() ;
+        preselectCorpInSitopCB();
+        const now = new Date();
+        sitopVeicDateInput.value = now.toISOString().slice(0, 10);
+        sitopVeicHourInput.value = String(now.getHours()).padStart(2,"0") + ":" + String(now.getMinutes()).padStart(2,"0");
+        updateSitopGdhInop();
       } else {
         toggleSitopContainer(true);
       }
     });
     saveBtn.addEventListener("click", async () => await emitSitop());
-    if (oldInopBtn) {  
-      oldInopBtn.addEventListener("click", async () => {    
+    if (oldInopBtn) {
+      oldInopBtn.addEventListener("click", async () => {
         const isActive = oldInopBtn.classList.toggle("active");
-        NewInopBtn.classList.remove("active");    
+        NewInopBtn.classList.remove("active");
         if (!isActive) {
           inopsTableContainer.style.display = "none";
           return;
@@ -4450,11 +4584,11 @@ g2FormContainer.addEventListener("input", e => {
         inopsTableBody.innerHTML =
           "<tr><td colspan='5' style='text-align:center;'>Carregando...</td></tr>";
         try {
-            const corpOperNr = sessionStorage.getItem("currentCorpOperNr");            
-            const res = await fetch(
-              `${SUPABASE_URL}/rest/v1/sitop_vehicles?select=*&gdh_op=is.null&corp_oper_nr=eq.${corpOperNr}`,
-              { headers: getSupabaseHeaders() }
-            );
+            const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+            const res = await fetch(
+              `${SUPABASE_URL}/rest/v1/sitop_vehicles?select=*&gdh_op=is.null&corp_oper_nr=eq.${corpOperNr}`,
+              { headers: getSupabaseHeaders() }
+            );
           if (!res.ok) throw new Error("Erro ao buscar inoperacionalidades");
           const data = await res.json();
           inopsTableBody.innerHTML = "";
@@ -4478,7 +4612,7 @@ g2FormContainer.addEventListener("input", e => {
             document.querySelectorAll(".validate-btn").forEach(btn =>
               btn.addEventListener("click", handleValidateOperationality)
             );
-          }    
+          }
           inopsTableContainer.style.display = "block";
         } catch (err) {
           console.error(err);
@@ -4492,7 +4626,7 @@ g2FormContainer.addEventListener("input", e => {
     subsNoCheckbox.addEventListener("change", () => { if (subsNoCheckbox.checked) subsYesCheckbox.checked = false; });
     sitopVeicSelect.addEventListener("change", async () => {
       const selectedVehicle = sitopVeicSelect.value;
-      sitopGdhInopInput.value = formatSITOPGDH();
+      updateSitopGdhInop();
       if (!selectedVehicle) return sitopVeicRegInput.value = "";
       try {
         const res = await fetch(

@@ -4552,7 +4552,6 @@
       }
     }
     /* ================ EVENT LISTENERS ================ */
-    sitopVeicDateInput.addEventListener("change", updateSitopGdhInop);
     sitopVeicHourInput.addEventListener("change", updateSitopGdhInop);
     NewInopBtn.addEventListener("click", () => {
       preselectCorpInSitopCB();

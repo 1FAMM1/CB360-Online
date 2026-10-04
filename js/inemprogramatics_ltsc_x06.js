@@ -1,12 +1,29 @@
     /* ================================
     INSERÇÃO VERBETES INEM
     ================================ */
+    function _inemEnsureFontAwesome() {
+      if (document.getElementById("inem-fa-css")) return;
+      const jaExiste = [...document.querySelectorAll('link[rel="stylesheet"]')].some(l => /font-?awesome/i.test(l.href));
+      if (jaExiste) return;
+      const link = document.createElement("link");
+      link.id = "inem-fa-css";
+      link.rel = "stylesheet";
+      link.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css";
+      document.head.appendChild(link);
+    }
+    function setInemStatus(td, exists) {
+      td.innerHTML = exists
+        ? '<i class="fa-solid fa-circle-check" style="color:#27ae60"></i>'
+        : '<i class="fa-solid fa-circle-xmark" style="color:#c0392b"></i>';
+      td.style.fontSize = "17px";
+      td.title = exists ? "Ficheiro disponível" : "Ficheiro não encontrado";
+    }
     /* ─── LOAD ──────────────────────────────────────────── */
     async function loadInemEntries() {
       const dateFrom = document.getElementById("inem-date-from")?.value;
       const dateTo = document.getElementById("inem-date-to")?.value;
-      const codu = document.getElementById("inem-filter-codu")?.value.trim();      
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const codu = document.getElementById("inem-filter-codu")?.value.trim();
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const nInt = sessionStorage.getItem("currentNInt");
       const isReadOnly = parseInt(nInt) === 9000;
       const tbody = document.querySelector("#inem-entries table tbody");
@@ -62,7 +79,7 @@
             if (key === "nr_codu") {
               td.textContent = item.nr_codu || "";
             } else if (key === "alerta") {
-              let alerta = "";              
+              let alerta = "";
               if (item.alert_date) {
                 const [y, m, d] = item.alert_date.split("-");
                 alerta = `${d}/${m}/${y}`;
@@ -99,10 +116,10 @@
               btnDown.className = "btn-inem-download";
               btnView.className = "btn-inem-view";
               btnDel.className = "btn-inem-delete";
-              btnUp.innerHTML = "&#8679;";
-              btnDown.innerHTML = "&#8681;";
-              btnView.innerHTML = "&#128269;";
-              btnDel.innerHTML = "&#128465;";
+              btnUp.innerHTML = '<i class="fa-solid fa-upload"></i>';
+              btnDown.innerHTML = '<i class="fa-solid fa-download"></i>';
+              btnView.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i>';
+              btnDel.innerHTML = '<i class="fa-solid fa-trash"></i>';
               btnUp.title = "Upload";
               btnDown.title = "Download";
               btnView.title = "Visualizar";
@@ -133,18 +150,13 @@
               td.appendChild(gap);
             } else if (key === "pdfstatus") {
               td.classList.add("inem-pdf-status-td");
-              if (item.nr_codu) {
-                const exists = existsMap.get(item.nr_codu);
-                td.textContent = exists ? "✅" : "❌";
-                td.style.fontSize = "17px";
-                td.title = exists ? "Ficheiro disponível" : "Ficheiro não encontrado";
-              }
+              if (item.nr_codu) setInemStatus(td, existsMap.get(item.nr_codu));
             } else if (key === "edit") {
               td.style.userSelect = "none";
               const btnEdit = document.createElement("button");
-              btnEdit.innerHTML = "✏️";
+              btnEdit.innerHTML = '<i class="fa-solid fa-pen"></i>';
               btnEdit.title = "Editar";
-              Object.assign(btnEdit.style, {border: "none", background: "transparent", cursor: "pointer", fontSize: "14px", padding: "0", lineHeight: "1"});
+              Object.assign(btnEdit.style, {border: "none", background: "transparent", cursor: "pointer", fontSize: "14px", padding: "0", lineHeight: "1", color: "#131a69"});
               btnEdit.addEventListener("click", () => inemEditEntry(item));
               td.appendChild(btnEdit);
             }
@@ -184,6 +196,7 @@
     }
     /* ─── CRIAR TABELA DE DADOS ─────────────────────────────── */
     function createInemEntriesTable() {
+      _inemEnsureFontAwesome();
       const container = document.querySelector("#inem-entries .major-card-body");
       if (!container) return;
       container.innerHTML = "";
@@ -195,7 +208,7 @@
         style.id = "inem-entries-style";
         style.textContent = `
           #inem-entries .major-card-body > div::-webkit-scrollbar {display: none;}
-          .btn-inem-upload, .btn-inem-download, 
+          .btn-inem-upload, .btn-inem-download,
           .btn-inem-view, .btn-inem-delete {border: none; border-radius: 4px; width: 24px; height: 22px; cursor: pointer; font-size: 12px; display: inline-flex; align-items: center;
                                             justify-content: center; padding: 0; transition: opacity .15s;}
           .btn-inem-upload {background: #c0392b; color: #fff;}
@@ -206,7 +219,7 @@
           .inem-pdf-status-td {font-size: 18px;}
         `;
         document.head.appendChild(style);
-      }      
+      }
       const filterWrapper = document.createElement("div");
       Object.assign(filterWrapper.style, {display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px", fontFamily: "Segoe UI, sans-serif", gap: "10px"});
       function makeLabel(text) {
@@ -252,7 +265,7 @@
       const datesGroup = document.createElement("div");
       Object.assign(datesGroup.style, {display: "flex", alignItems: "center", gap: "8px", flex: "1", justifyContent: "center"});
       const btnPesquisar = document.createElement("button");
-      btnPesquisar.textContent = "Pesquisar";
+      btnPesquisar.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> Pesquisar';
       Object.assign(btnPesquisar.style, {padding: "5px 16px", borderRadius: "4px", border: "none", background: "#131a69", color: "#fff", fontWeight: "bold", cursor: "pointer", fontSize: "13px"});
       btnPesquisar.addEventListener("click", loadInemEntries);
       datesGroup.append(makeLabel("De:"), makeDate("inem-date-from"), makeLabel("Até:"), makeDate("inem-date-to"), btnPesquisar);
@@ -298,18 +311,16 @@
       Object.assign(btnsRight.style, {display: "flex", gap: "8px"});
       const btnEmitirXlsx = document.createElement("button");
       btnEmitirXlsx.id = "btn-inem-emitir-xlsx";
-      btnEmitirXlsx.textContent = "📊 Exportar Excel";
-      Object.assign(btnEmitirXlsx.style, {background: "#059669", color: "#fff", border: "none", padding: "10px 18px", borderRadius: "6px", cursor: "pointer", fontWeight: "600",
-                                          fontSize: "12px", transition: "0.2s"});
+      btnEmitirXlsx.innerHTML = '<i class="fa-solid fa-file-excel"></i> Exportar Excel';
+      Object.assign(btnEmitirXlsx.style, {background: "#059669", color: "#fff", border: "none", padding: "10px 18px", borderRadius: "6px", cursor: "pointer", fontWeight: "600", fontSize: "12px", transition: "0.2s"});
       btnEmitirXlsx.style.display = "none";
       btnEmitirXlsx.addEventListener("mouseenter", () => {if (!btnEmitirXlsx.disabled) btnEmitirXlsx.style.opacity = "0.9";});
       btnEmitirXlsx.addEventListener("mouseleave", () => {if (!btnEmitirXlsx.disabled) btnEmitirXlsx.style.opacity = "1";});
       btnEmitirXlsx.addEventListener("click", () => exportInemEntriesXlsx());
       const btnEmitir = document.createElement("button");
       btnEmitir.id = "btn-inem-emitir";
-      btnEmitir.textContent = "📥 Emitir Mapa";
-      Object.assign(btnEmitir.style, {background: "#1e293b", color: "#fff", border: "none", padding: "10px 18px", borderRadius: "6px", cursor: "pointer", fontWeight: "600", 
-                                      fontSize: "12px", transition: "0.2s"});
+      btnEmitir.innerHTML = '<i class="fa-solid fa-file-pdf"></i> Emitir Mapa';
+      Object.assign(btnEmitir.style, {background: "#1e293b", color: "#fff", border: "none", padding: "10px 18px", borderRadius: "6px", cursor: "pointer", fontWeight: "600", fontSize: "12px", transition: "0.2s"});
       btnEmitir.style.display = "none";
       btnEmitir.addEventListener("mouseenter", () => btnEmitir.style.background = "#334155");
       btnEmitir.addEventListener("mouseleave", () => btnEmitir.style.background = "#1e293b");
@@ -326,6 +337,7 @@
     }
     /* ─── EDITAR ────────────────────────────────────────── */
     function inemEditEntry(item) {
+      _inemEnsureFontAwesome();
       document.getElementById('inem-edit-modal')?.remove();
       const overlay = document.createElement('div');
       overlay.id = 'inem-edit-modal';
@@ -336,9 +348,9 @@
       Object.assign(header.style, {background: 'linear-gradient(135deg, #5a0000 0%, #7b0000 45%, #9a0f0f 100%)', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between'});
       const headerTitle = document.createElement('div');
       Object.assign(headerTitle.style, {color: '#fff', fontWeight: '700', fontSize: '13px'});
-      headerTitle.textContent = `✏️ Editar Verbete - Nr. CODU: ${item.nr_codu}`;
+      headerTitle.innerHTML = `<i class="fa-solid fa-pen"></i> Editar Verbete - Nr. CODU: ${item.nr_codu}`;
       const btnClose = document.createElement('button');
-      btnClose.innerHTML = '✕';
+      btnClose.innerHTML = '<i class="fa-solid fa-xmark"></i>';
       Object.assign(btnClose.style, {border: '1px solid rgba(255,80,80,0.22)', background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.8)', width: '28px', height: '28px', borderRadius: '7px', cursor: 'pointer', fontSize: '14px'});
       btnClose.onclick = () => overlay.remove();
       header.append(headerTitle, btnClose);
@@ -361,8 +373,7 @@
           input.type = type;
           input.value = item[key] || '';
         }
-        Object.assign(input.style, {padding: '7px 10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '13px', outline: 'none', transition: 'border-color .15s', color: '#1a1a1a', background: '#fff', width: '100%', 
-                                    boxSizing: 'border-box'});
+        Object.assign(input.style, {padding: '7px 10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '13px', outline: 'none', transition: 'border-color .15s', color: '#1a1a1a', background: '#fff', width: '100%', boxSizing: 'border-box'});
         input.onfocus = () => input.style.borderColor = '#7b0000';
         input.onblur = () => input.style.borderColor = '#ddd';
         inputs[key] = input;
@@ -377,7 +388,6 @@
         group.append(lbl, makeInput(key, type, options));
         return group;
       }
-      /* ── Tipo de Serviço (ITeams / Verbete) ── */
       const serviceTypeGroup = document.createElement('div');
       Object.assign(serviceTypeGroup.style, {display: 'flex', flexDirection: 'column', gap: '4px'});
       const serviceTypeLbl = document.createElement('label');
@@ -391,8 +401,7 @@
         if ((item.service_type === 'ITeams' ? 'ITeams' : 'Verbete') === opt) option.selected = true;
         serviceTypeSelect.appendChild(option);
       });
-      Object.assign(serviceTypeSelect.style, {padding: '7px 10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '13px', outline: 'none', transition: 'border-color .15s',
-                                               color: '#1a1a1a', background: '#fff', width: '100%', boxSizing: 'border-box', maxWidth: '150px'});
+      Object.assign(serviceTypeSelect.style, {padding: '7px 10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '13px', outline: 'none', transition: 'border-color .15s', color: '#1a1a1a', background: '#fff', width: '100%', boxSizing: 'border-box', maxWidth: '150px'});
       serviceTypeSelect.onfocus = () => serviceTypeSelect.style.borderColor = '#7b0000';
       serviceTypeSelect.onblur  = () => serviceTypeSelect.style.borderColor = '#ddd';
       inputs['service_type'] = serviceTypeSelect;
@@ -430,15 +439,14 @@
       const tasNintInput = document.createElement('input');
       tasNintInput.type = 'text';
       tasNintInput.placeholder = 'N.º Int.';
-      Object.assign(tasNintInput.style, {padding: '7px 10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '13px', outline: 'none', transition: 'border-color .15s', 
-                                         color: '#1a1a1a', background: '#fff', width: '100%', boxSizing: 'border-box'});
+      Object.assign(tasNintInput.style, {padding: '7px 10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '13px', outline: 'none', transition: 'border-color .15s', color: '#1a1a1a', background: '#fff', width: '100%', boxSizing: 'border-box'});
       tasNintInput.onfocus = () => tasNintInput.style.borderColor = '#7b0000';
       tasNintInput.onblur  = () => tasNintInput.style.borderColor = '#ddd';
       tasNintGroup.append(tasNintLbl, tasNintInput);
       const tasNameGroup = document.createElement('div');
       Object.assign(tasNameGroup.style, {display: 'flex', flexDirection: 'column', gap: '4px', flex: '2'});
       const tasNameLbl = document.createElement('label');
-      tasNameLbl.textContent = ' '; 
+      tasNameLbl.textContent = ' ';
       Object.assign(tasNameLbl.style, {fontSize: '11.5px', fontWeight: '600', color: '#555', textTransform: 'uppercase', letterSpacing: '.4px'});
       const tasNameInput = document.createElement('input');
       tasNameInput.type = 'text';
@@ -446,8 +454,7 @@
       tasNameInput.value = item.tas || '';
       tasNameInput.readOnly = true;
       tasNameInput.disabled = true;
-      Object.assign(tasNameInput.style, {padding: '7px 10px', borderRadius: '6px', border: '1px solid #eee', fontSize: '13px', outline: 'none', color: '#666', background: '#f5f5f5', 
-                                         width: '100%', boxSizing: 'border-box', cursor: 'not-allowed'});
+      Object.assign(tasNameInput.style, {padding: '7px 10px', borderRadius: '6px', border: '1px solid #eee', fontSize: '13px', outline: 'none', color: '#666', background: '#f5f5f5', width: '100%', boxSizing: 'border-box', cursor: 'not-allowed'});
       tasNameGroup.append(tasNameLbl, tasNameInput);
       if (item.tas) {
         fetch(`${SUPABASE_URL}/rest/v1/reg_elems?abv_name=eq.${encodeURIComponent(item.tas)}&select=n_int`, {
@@ -480,9 +487,8 @@
       Object.assign(btnCancel.style, {padding: '7px 16px', borderRadius: '6px', border: '1px solid #ddd', background: '#fff', color: '#555', fontSize: '13px', fontWeight: '600', cursor: 'pointer'});
       btnCancel.onclick = () => overlay.remove();
       const btnSave = document.createElement('button');
-      btnSave.textContent = '💾 Guardar';
-      Object.assign(btnSave.style, {padding: '7px 16px', borderRadius: '6px', border: 'none', background: 'linear-gradient(135deg, #7b0000, #9a0f0f)', color: '#fff', fontSize: '13px', 
-                                    fontWeight: '600', cursor: 'pointer'});
+      btnSave.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar';
+      Object.assign(btnSave.style, {padding: '7px 16px', borderRadius: '6px', border: 'none', background: 'linear-gradient(135deg, #7b0000, #9a0f0f)', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer'});
       btnSave.onclick = async () => {
         const updated = {};
         const FIELDS = [{key: 'service_type'}, {key: 'nr_codu'}, {key: 'alert_date'}, {key: 'alert_hour'}, {key: 'victim_type'}, {key: 'victim_address'}, {key: 'victim_location'}, {key: 'victim_age_type'}, {key: 'victim_age_unit'}];
@@ -506,7 +512,7 @@
         }
       };
       footer.append(btnCancel, btnSave);
-        box.append(header, body, footer);
+      box.append(header, body, footer);
       overlay.appendChild(box);
       //overlay.addEventListener('click', e => {if (e.target === overlay) overlay.remove();});
       document.body.appendChild(overlay);
@@ -536,11 +542,7 @@
             const btnUp = tr.querySelector(".btn-inem-upload");
             if (btnUp?.dataset.nr === nrCodu) {
               const statusTd = tr.querySelector(".inem-pdf-status-td");
-              if (statusTd) {
-                statusTd.textContent = "✅";
-                statusTd.style.fontSize = "17px";
-                statusTd.title = "Verbete disponível";
-              }
+              if (statusTd) setInemStatus(statusTd, true);
             }
           });
         } catch(err) {
@@ -604,11 +606,12 @@
       .inem-sep {width: 1px; height: 28px; background: rgba(255,255,255,0.18); flex-shrink: 0;}
       .inem-title-main {color: #fff; font-weight: 700; font-size: 13px; font-family: 'Segoe UI', sans-serif; letter-spacing: .1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
       .inem-title-sub {color: rgba(255,255,255,0.42); font-size: 10.5px; font-family: 'Segoe UI', sans-serif; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
-      .inem-badge {background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.18); border-radius: 5px; padding: 2px 7px; font-size: 10px; font-weight: 700; 
+      .inem-badge {background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.18); border-radius: 5px; padding: 2px 7px; font-size: 10px; font-weight: 700;
                    font-family: 'Segoe UI', sans-serif; color: rgba(255,255,255,0.85); letter-spacing: .7px; text-transform: uppercase; flex-shrink: 0;}
-      .inem-footer-info {color: rgba(255,255,255,0.38); font-size: 10.5px; font-family: 'Segoe UI', sans-serif; letter-spacing: .2px; position: relative; z-index: 1;}      
+      .inem-footer-info {color: rgba(255,255,255,0.38); font-size: 10.5px; font-family: 'Segoe UI', sans-serif; letter-spacing: .2px; position: relative; z-index: 1;}
     `;
     function _inemInjectStyles() {
+      _inemEnsureFontAwesome();
       if (document.getElementById('inem-modal-style')) return;
       const style = document.createElement('style');
       style.id = 'inem-modal-style';
@@ -666,16 +669,17 @@
       let isFs = false;
       const btnFs = document.createElement('button');
       btnFs.className = 'inem-btn';
-      btnFs.innerHTML = '⛶';
+      btnFs.innerHTML = '<i class="fa-solid fa-expand"></i>';
       btnFs.title = 'Ecrã inteiro';
       btnFs.onclick = () => {
         isFs = !isFs;
-        Object.assign(box.style, {width: isFs ? '100vw' : '82vw', height: isFs ? '100vh' : '90vh', borderRadius: isFs ? '0' : '14px',});
-        btnFs.innerHTML = isFs ? '⊡' : '⛶';
+        Object.assign(box.style, {width: isFs ? '100vw' : '82vw', height: isFs ? '100vh' : '90vh', borderRadius: isFs ? '0' : '14px'});
+        btnFs.innerHTML = isFs ? '<i class="fa-solid fa-compress"></i>' : '<i class="fa-solid fa-expand"></i>';
+        btnFs.title = isFs ? 'Sair de ecrã inteiro' : 'Ecrã inteiro';
       };
       const btnClose = document.createElement('button');
       btnClose.className = 'inem-btn inem-close-btn';
-      btnClose.innerHTML = '✕';
+      btnClose.innerHTML = '<i class="fa-solid fa-xmark"></i>';
       btnClose.title = 'Fechar';
       btnClose.style.fontSize = '15px';
       btnClose.onclick = () => _inemCloseModal(overlay, box);
@@ -697,8 +701,8 @@
       function showNotFound() {
         loadingEl.innerHTML = '';
         const icon = document.createElement('div');
-        icon.textContent = '📄';
-        Object.assign(icon.style, {fontSize: '48px', opacity: '0.4'});
+        icon.innerHTML = '<i class="fa-regular fa-file"></i>';
+        Object.assign(icon.style, {fontSize: '48px', opacity: '0.4', color: '#6b7280'});
         const msg = document.createElement('div');
         msg.textContent = 'Verbete Indisponível.';
         Object.assign(msg.style, {color: '#6b7280', fontSize: '15px', fontWeight: '600', fontFamily: "'Segoe UI', sans-serif"});
@@ -748,7 +752,7 @@
       if (ext === 'html') {
         const btnPrint = document.createElement('button');
         btnPrint.className = 'inem-print-btn';
-        btnPrint.innerHTML = '🖨️ Imprimir';
+        btnPrint.innerHTML = '<i class="fa-solid fa-print"></i> Imprimir';
         btnPrint.title = 'Imprimir verbete';
         btnPrint.style.position = 'relative';
         btnPrint.style.zIndex = '1';
@@ -768,11 +772,10 @@
       _inemInjectStyles();
       const overlay = document.createElement('div');
       overlay.id = 'inem-pdf-modal';
-      Object.assign(overlay.style, {position: 'fixed', inset: '0', background: 'rgba(10,8,8,0.78)', zIndex: '9999', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)',});
+      Object.assign(overlay.style, {position: 'fixed', inset: '0', background: 'rgba(10,8,8,0.78)', zIndex: '9999', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)'});
       const box = document.createElement('div');
       box.className = 'inem-box';
-      Object.assign(box.style, {background: '#f8f8f8', borderRadius: '14px', width: '82vw', height: '90vh', display: 'flex', flexDirection: 'column', 
-                                boxShadow: '0 28px 72px rgba(0,0,0,0.45), 0 2px 8px rgba(0,0,0,0.18)', overflow: 'hidden',});
+      Object.assign(box.style, {background: '#f8f8f8', borderRadius: '14px', width: '82vw', height: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 28px 72px rgba(0,0,0,0.45), 0 2px 8px rgba(0,0,0,0.18)', overflow: 'hidden'});
       const {header, btnClose} = _inemBuildHeader(nrCodu, serviceType, ext, box, overlay);
       const {content, iframe} = _inemBuildContent(url, ext);
       const footer = _inemBuildFooter(ext, iframe);
@@ -788,22 +791,21 @@
     /* ─── ELIMINAR ──────────────────────────────────────── */
     async function inemDeletePdf(nrCodu, serviceType) {
       if (!nrCodu) return;
+      _inemEnsureFontAwesome();
       const ext = serviceType === "ITeams" ? "html" : "pdf";
       const fileName = `ocr_${nrCodu}.${ext}`;
       const confirmed = await new Promise(resolve => {
         document.getElementById('inem-confirm-modal')?.remove();
         const overlay = document.createElement('div');
         overlay.id = 'inem-confirm-modal';
-        Object.assign(overlay.style, {position: 'fixed', inset: '0', background: 'rgba(10,8,8,0.78)', zIndex: '10001', display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                                      backdropFilter: 'blur(4px)'});
+        Object.assign(overlay.style, {position: 'fixed', inset: '0', background: 'rgba(10,8,8,0.78)', zIndex: '10001', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)'});
         const box = document.createElement('div');
-        Object.assign(box.style, {background: '#fff', borderRadius: '12px', width: '360px', boxShadow: '0 28px 72px rgba(0,0,0,0.45)', display: 'flex', flexDirection: 'column', overflow: 'hidden', 
-                                  fontFamily: "'Segoe UI', sans-serif"});
+        Object.assign(box.style, {background: '#fff', borderRadius: '12px', width: '360px', boxShadow: '0 28px 72px rgba(0,0,0,0.45)', display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: "'Segoe UI', sans-serif"});
         const header = document.createElement('div');
         Object.assign(header.style, {background: 'linear-gradient(135deg, #5a0000 0%, #7b0000 45%, #9a0f0f 100%)', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '8px'});
         const headerTitle = document.createElement('div');
         Object.assign(headerTitle.style, {color: '#fff', fontWeight: '700', fontSize: '13px'});
-        headerTitle.textContent = '🗑️ Eliminar Verbete';
+        headerTitle.innerHTML = '<i class="fa-solid fa-trash"></i> Eliminar Verbete';
         header.appendChild(headerTitle);
         const body = document.createElement('div');
         Object.assign(body.style, {padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px'});
@@ -820,12 +822,11 @@
         btnCancel.textContent = 'Cancelar';
         Object.assign(btnCancel.style, {padding: '7px 16px', borderRadius: '6px', border: '1px solid #ddd', background: '#fff', color: '#555', fontSize: '13px', fontWeight: '600', cursor: 'pointer'});
         const btnConfirm = document.createElement('button');
-        btnConfirm.textContent = '🗑️ Eliminar';
-        Object.assign(btnConfirm.style, {padding: '7px 16px', borderRadius: '6px', border: 'none', background: 'linear-gradient(135deg, #7b0000, #9a0f0f)', color: '#fff', fontSize: '13px', 
-                                         fontWeight: '600', cursor: 'pointer'});
+        btnConfirm.innerHTML = '<i class="fa-solid fa-trash"></i> Eliminar';
+        Object.assign(btnConfirm.style, {padding: '7px 16px', borderRadius: '6px', border: 'none', background: 'linear-gradient(135deg, #7b0000, #9a0f0f)', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer'});
         btnCancel.onclick  = () => {overlay.remove(); resolve(false);};
         btnConfirm.onclick = () => {overlay.remove(); resolve(true);};
-        //overlay.addEventListener('click', e => { if (e.target === overlay) {overlay.remove(); resolve(false);}});
+        overlay.addEventListener('click', e => { if (e.target === overlay) {overlay.remove(); resolve(false);}});
         footer.append(btnCancel, btnConfirm);
         box.append(header, body, footer);
         overlay.appendChild(box);
@@ -843,11 +844,7 @@
           const btnDel = tr.querySelector(".btn-inem-delete");
           if (btnDel?.dataset.nr === nrCodu) {
             const statusTd = tr.querySelector(".inem-pdf-status-td");
-            if (statusTd) {
-              statusTd.textContent = "❌";
-              statusTd.style.fontSize = "17px";
-              statusTd.title = "Ficheiro não encontrado";
-            }
+            if (statusTd) setInemStatus(statusTd, false);
           }
         });
       } catch(err) {
@@ -860,10 +857,10 @@
       const rows = _buildInemExportRows();
       if (!rows.length) return showPopupWarning("Sem dados para exportar.");
       const btnXlsx = document.getElementById("btn-inem-emitir-xlsx");
-      const originalText = btnXlsx.textContent;
-      btnXlsx.textContent = "⏳ A Exportar...";
+      const originalHtml = btnXlsx.innerHTML;
+      btnXlsx.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> A Exportar...';
       btnXlsx.disabled = true;
-      showLoadingPopup("🔄 A iniciar exportação XLSX...");
+      showLoadingPopup("A iniciar exportação XLSX...");
       try {
         const res = await fetch("https://cb360-online.vercel.app/api/inem-entries", {
           method: "POST",
@@ -871,7 +868,7 @@
           body: JSON.stringify({rows, format: "xlsx", dateFrom: document.getElementById("inem-date-from")?.value, dateTo: document.getElementById("inem-date-to")?.value})
         });
         if (!res.ok) throw new Error(await res.text());
-        updateLoadingPopup("💾 A gerar ficheiro XLSX...");
+        updateLoadingPopup("A gerar ficheiro XLSX...");
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
         const dateFrom = document.getElementById("inem-date-from")?.value || "";
@@ -883,15 +880,15 @@
         a.download = `inem_entries_${sufix}.xlsx`;
         a.click();
         URL.revokeObjectURL(url);
-        updateLoadingPopup("✅ Exportação concluída!");
-        showPopup('popup-info', `Mapa serviços INEM\Reserva gerado com sucesso.`);
+        updateLoadingPopup("Exportação concluída!");
+        showPopup('popup-info', `Mapa serviços INEM/Reserva gerado com sucesso.`);
       } catch (err) {
         console.error("Erro ao exportar XLSX:", err);
         showPopup('popup-danger', "Erro ao exportar XLSX.");
-        updateLoadingPopup("❌ Erro durante a exportação.");
+        updateLoadingPopup("Erro durante a exportação.");
       } finally {
         hideLoadingPopup();
-        btnXlsx.textContent = originalText;
+        btnXlsx.innerHTML = originalHtml;
         btnXlsx.disabled = false;
       }
     }
@@ -900,10 +897,10 @@
       const rows = _buildInemExportRows();
       if (!rows.length) return showPopupWarning("Sem dados para exportar.");
       const btnPdf = document.getElementById("btn-inem-emitir");
-      const originalText = btnPdf.textContent;
-      btnPdf.textContent = "⏳ A Gerar Mapa...";
+      const originalHtml = btnPdf.innerHTML;
+      btnPdf.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> A Gerar Mapa...';
       btnPdf.disabled = true;
-      showLoadingPopup("🔄 A iniciar exportação PDF...");
+      showLoadingPopup("A iniciar exportação PDF...");
       try {
         const res = await fetch("https://cb360-online.vercel.app/api/inem-entries", {
           method: "POST",
@@ -911,7 +908,7 @@
           body: JSON.stringify({rows, format: "pdf", dateFrom: document.getElementById("inem-date-from")?.value, dateTo: document.getElementById("inem-date-to")?.value})
         });
         if (!res.ok) throw new Error(await res.text());
-        updateLoadingPopup("💾 A gerar ficheiro PDF...");
+        updateLoadingPopup("A gerar ficheiro PDF...");
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
         const dateFrom = document.getElementById("inem-date-from")?.value || "";
@@ -923,15 +920,15 @@
         a.download = `inem_entries_${sufix}.pdf`;
         a.click();
         URL.revokeObjectURL(url);
-        updateLoadingPopup("✅ Exportação concluída!");
-        showPopup('popup-info', `Mapa serviços INEM\Reserva gerado com sucesso.`);
+        updateLoadingPopup("Exportação concluída!");
+        showPopup('popup-info', `Mapa serviços INEM/Reserva gerado com sucesso.`);
       } catch (err) {
         console.error("Erro ao exportar PDF:", err);
         showPopup('popup-danger', "Erro ao exportar PDF.");
-        updateLoadingPopup("❌ Erro durante a exportação.");
+        updateLoadingPopup("Erro durante a exportação.");
       } finally {
         hideLoadingPopup();
-        btnPdf.textContent = originalText;
+        btnPdf.innerHTML = originalHtml;
         btnPdf.disabled = false;
       }
     }

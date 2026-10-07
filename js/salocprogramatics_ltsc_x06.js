@@ -3288,11 +3288,20 @@
       }
     }
     async function saveDecirEcin(tables, shift, corpOperNr, day, month, year) {
+      const planDate = new Date(Number(year), Number(month) - 1, Number(day));
+      const DECIR_END_1   = new Date(2026, 9, 15);
+      const DECIR_START_2 = new Date(2027, 4, 14);
+      if (planDate > DECIR_END_1 && planDate < DECIR_START_2) {
+        return { ok: true, skipped: true, count: 0 };
+      }
+      if (planDate >= DECIR_START_2 && shift !== 'N') {
+        return { ok: true, skipped: true, count: 0 };
+      }
       const mode = await fetchDecirMode(corpOperNr);
-      if (!mode) return { ok: false, reason: 'sem mode definido em decir_mode' };
+      if (!mode) return {ok: false, reason: 'sem mode definido em decir_mode'};
       const teamTitles = DECIR_MODE_TEAMS[mode];
       if (!teamTitles) {
-        return { ok: false, reason: `mode "${mode}" não reconhecido` };
+        return {ok: false, reason: `mode "${mode}" não reconhecido`};
       }
       const records = [];
       for (const table of tables) {
@@ -3322,10 +3331,10 @@
           const t = await res.text();
           throw new Error(`Erro a gravar decir_reg_pag_ecin (${res.status}): ${t}`);
         }
-        return { ok: true, mode, teamTitles, count: records.length };
+        return {ok: true, mode, teamTitles, count: records.length};
       } catch (err) {
         console.error('❌ Erro em saveDecirEcin:', err);
-        return { ok: false, reason: err.message };
+        return {ok: false, reason: err.message};
       }
     }
     function createTable(rows, isSpecial, title) {

@@ -53,61 +53,69 @@
       loadDataFunc,
       createTableFunc
     }) {
-      const container = document.getElementById(monthsContainerId);
-      if (!container) return;
-      container.innerHTML = "";
-      const mainWrapper = document.createElement("div");
-      Object.assign(mainWrapper.style, {display: "flex", flexDirection: "column", alignItems: "center", gap: "10px",});
-      const yearContainer = document.createElement("div");
-      Object.assign(yearContainer.style, {display: "flex", alignItems: "center", gap: "8px"});
-      const yearLabel = document.createElement("label");
-      yearLabel.textContent = "Ano:";
-      yearLabel.style.fontWeight = "bold";
-      const yearSelect = document.createElement("select");
-      yearSelect.id = yearSelectId;
-      Object.assign(yearSelect.style, {padding: "6px 10px", borderRadius: "4px", border: "1px solid #ccc", cursor: "pointer"});
-      const targetYear = new Date().getFullYear();
-      for (let y = 2026; y <= 2036; y++) {
-        const opt = document.createElement("option");
-        opt.value = y;
-        opt.textContent = y;
-        if (y === targetYear) opt.selected = true;
-        yearSelect.appendChild(opt);
-      }
-      yearSelect.value = targetYear;
-      yearContainer.append(yearLabel, yearSelect);
-      const monthsWrapper = document.createElement("div");
-      Object.assign(monthsWrapper.style, {display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "4px", maxWidth: "800px"});
-      const monthNames = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho", "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-      monthNames.forEach((month, idx) => {
-        const btn = document.createElement("button");
-        btn.textContent = month;
-        btn.className = "btn btn-add";
-        Object.assign(btn.style, {fontSize: "14px", fontWeight: "bold", width: "110px", height: "40px", borderRadius: "4px", margin: "2px"});
-        btn.addEventListener("click", async () => {
-          const tableContainer = document.getElementById(tableContainerId);
-          const optionsContainer = document.getElementById(optionsContainerId);
-          const isActive = btn.classList.contains("active");
-          if (isActive) {
-            if (tableContainer) tableContainer.innerHTML = "";
-            if (optionsContainer) optionsContainer.style.display = "none";
-            btn.classList.remove("active");
-            return;
-          }
-          monthsWrapper
-            .querySelectorAll(".btn")
-            .forEach(b => b.classList.remove("active"));
-          btn.classList.add("active");
-          const yearVal = parseInt(yearSelect.value, 10);
-          const monthNum = idx + 1;
-          const data = await loadDataFunc(yearVal, monthNum);
-          await createTableFunc(tableContainerId, yearVal, monthNum, data);
-          if (optionsContainer) optionsContainer.style.display = "flex";
-        });
-        monthsWrapper.appendChild(btn);
+    const container = document.getElementById(monthsContainerId);
+    if (!container) return;
+    container.innerHTML = "";
+    const mainWrapper = document.createElement("div");
+    Object.assign(mainWrapper.style, {display: "flex", flexDirection: "column", alignItems: "center", gap: "10px",});
+    const yearContainer = document.createElement("div");
+    Object.assign(yearContainer.style, {display: "flex", alignItems: "center", gap: "8px"});
+    const yearLabel = document.createElement("label");
+    yearLabel.textContent = "Ano:";
+    yearLabel.style.fontWeight = "bold";
+    const yearSelect = document.createElement("select");
+    yearSelect.id = yearSelectId;
+    Object.assign(yearSelect.style, {padding: "6px 10px", borderRadius: "4px", border: "1px solid #ccc", cursor: "pointer"});
+    const targetYear = new Date().getFullYear();
+    for (let y = 2026; y <= 2036; y++) {
+      const opt = document.createElement("option");
+      opt.value = y;
+      opt.textContent = y;
+      if (y === targetYear) opt.selected = true;
+      yearSelect.appendChild(opt);
+    }
+    yearSelect.value = targetYear;
+    yearContainer.append(yearLabel, yearSelect);
+    const monthsWrapper = document.createElement("div");
+    Object.assign(monthsWrapper.style, {display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "4px", maxWidth: "800px"});
+    const monthNames = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho", "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+    monthNames.forEach((month, idx) => {
+      const btn = document.createElement("button");
+      btn.textContent = month;
+      btn.className = "btn btn-add";
+      Object.assign(btn.style, {fontSize: "14px", fontWeight: "bold", width: "110px", height: "40px", borderRadius: "4px", margin: "2px"});
+      btn.addEventListener("click", async () => {
+        const tableContainer = document.getElementById(tableContainerId);
+        const optionsContainer = document.getElementById(optionsContainerId);
+        const isActive = btn.classList.contains("active");
+        if (isActive) {
+          if (tableContainer) tableContainer.innerHTML = "";
+          if (optionsContainer) optionsContainer.style.display = "none";
+          btn.classList.remove("active");
+          return;
+        }
+        monthsWrapper
+          .querySelectorAll(".btn")
+          .forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        const yearVal = parseInt(yearSelect.value, 10);
+        const monthNum = idx + 1;
+        const data = await loadDataFunc(yearVal, monthNum);
+        await createTableFunc(tableContainerId, yearVal, monthNum, data);
+        if (optionsContainer) optionsContainer.style.display = "flex";
       });
-      mainWrapper.append(yearContainer, monthsWrapper);
-      container.appendChild(mainWrapper);
+      monthsWrapper.appendChild(btn);
+    });
+    yearSelect.addEventListener("change", async () => {
+      const activeBtn = monthsWrapper.querySelector(".btn.active");
+      if (!activeBtn) return;
+      const monthNum = Array.from(monthsWrapper.querySelectorAll(".btn")).indexOf(activeBtn) + 1;
+      const yearVal = parseInt(yearSelect.value, 10);
+      const data = await loadDataFunc(yearVal, monthNum);
+      await createTableFunc(tableContainerId, yearVal, monthNum, data);
+    });
+    mainWrapper.append(yearContainer, monthsWrapper);
+    container.appendChild(mainWrapper);
       setTimeout(() => {
         yearSelect.value = targetYear;
       }, 0);
@@ -515,12 +523,9 @@
       __driverMenuCell = null;
     }    
     function _getActiveYearMonth() {
-      const yearSelect = document.getElementById("year-employees");
       const monthBtn = document.querySelector("#months-container-scales-employees .btn.active");
-      if (!yearSelect || !monthBtn) return null;
-      const year = parseInt(yearSelect.value, 10);
-      const month = Array.from(document.querySelectorAll("#months-container-scales-employees .btn")).indexOf(monthBtn) + 1;
-      return {year, month, monthBtn};
+      if (!monthBtn || !__currentYear || !__currentMonth) return null;
+      return {year: __currentYear, month: __currentMonth, monthBtn};
     }
     function _collectEmployeeData(rows, daysInMonth, includeNInt = false) {
       return rows.map(row => {
@@ -1376,10 +1381,8 @@
             const customBg = (cell.dataset.customBg && cell.dataset.customBg !== "undefined") ? cell.dataset.customBg : null;
             const customColor = (cell.dataset.customColor && cell.dataset.customColor !== "undefined") ? cell.dataset.customColor : null;
             if (shift || customBg || customColor)
-              shiftsPayload.push({n_int: nInt, abv_name: abvName, day: idx + 1, month, year, shift: shift || " ", team, function: func, position,
-                                  corp_oper_nr: corpOperNr, is_driver: cell.dataset.driver === "1", is_other: cell.dataset.other === "1",
-                                  custom_bg_color: customBg, custom_text_color: customColor});
-          });
+              shiftsPayload.push({n_int: nInt, abv_name: abvName, day: idx + 1, month, year, shift: shift || " ", team, function: func, position, corp_oper_nr: corpOperNr, is_driver: cell.dataset.driver === "1", is_other: cell.dataset.other === "1",
+                                  custom_bg_color: customBg, custom_text_color: customColor});});
           const totalMonthly = calculateProfessionalsRowTotal(row);
           const totalAcumCell = row.cells[row.cells.length - 1];
           const baseAcum = parseFloat(totalAcumCell.dataset.base || 0);
@@ -1532,7 +1535,7 @@
       const container = document.getElementById(containerId);
       if (!container) return;
       const rowsData = data?.employees || [];
-      container.innerHTML = "";      
+      container.innerHTML = "";  
       const WEEKDAY_NAMES = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
       const daysInMonth = new Date(year, month, 0).getDate();
       const holidayMap = getHolidayMapForMonth(year, month);
@@ -1545,7 +1548,9 @@
       wrapper.style.overflowY = "auto";
       const table = document.createElement("table");
       table.className = "employees-table extra-hours-table";
-      Object.assign(table.style, { width: "100%", borderCollapse: "separate" });
+      table.dataset.year = year;
+      table.dataset.month = month;
+      Object.assign(table.style, {width: "100%", borderCollapse: "separate"});
       const thead = document.createElement("thead");
       function getDayStyle(d, extraCss = "") {
         const date = new Date(year, month - 1, d, 12, 0, 0);
@@ -1555,7 +1560,7 @@
         if (holiday) bg = holiday.optional ? "#d6ecff" : "#f7c6c7";
         else if (dow === 0 || dow === 6) bg = "#f9e0b0";
         return bg
-          ? COMMON_EMP_TH_STYLE + `background: ${bg}; color: #000; ${extraCss}`
+        ? COMMON_EMP_TH_STYLE + `background: ${bg}; color: #000; ${extraCss}`
         : COMMON_EMP_TH_STYLE + extraCss;
       }
       const trWeek = document.createElement("tr");
@@ -1718,14 +1723,13 @@
         showPopup('popup-danger', "Nenhuma tabela aberta.");
         return;
       }
-      const yearSelect = document.getElementById("year-extra-hour-employees");
-      const monthBtn = document.querySelector("#months-container-extra-hour-employees .btn.active");
-      if (!monthBtn || !yearSelect) {
+      const table = tbody.closest("table");
+      const year = parseInt(table?.dataset.year, 10);
+      const month = parseInt(table?.dataset.month, 10);
+      if (!year || !month) {
         showPopup('popup-danger', "Selecione mês e ano primeiro.");
         return;
       }
-      const year = parseInt(yearSelect.value, 10);
-      const month = Array.from(document.querySelectorAll("#months-container-extra-hour-employees .btn")).indexOf(monthBtn) + 1;
       const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const saveExtraHoursBtn = document.getElementById("employees-extra-save-btn");
       if (saveExtraHoursBtn) {
@@ -1753,30 +1757,32 @@
             }
           });
         });
-        await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_extra_hours?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`, {
+        const delRes = await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_extra_hours?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`, {
           method: "DELETE",
           headers: getSupabaseHeaders()
         });
+        if (!delRes.ok) throw new Error("Erro ao limpar horas extra antigas");
         if (dailyRecords.length > 0) {
-          await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_extra_hours`, {
+          const insRes = await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_extra_hours`, {
             method: "POST",
             headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
             body: JSON.stringify(dailyRecords)
           });
+          if (!insRes.ok) throw new Error("Erro ao guardar horas extra: " + await insRes.text());
         }
         try {
           let prevMonth = month - 1;
           let prevYear = year;
-          if (prevMonth === 0) { prevMonth = 12; prevYear--; }
+          if (prevMonth === 0) {prevMonth = 12; prevYear--;}
           const [monthlyExistingRes, acumPrevRes] = await Promise.all([
-            fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`, {
-              headers: getSupabaseHeaders()
-            }),
-            month > 1
-            ? fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul?corp_oper_nr=eq.${corpOperNr}&year=eq.${prevYear}&month=eq.${prevMonth}`, {
-              headers: getSupabaseHeaders()
-            })
-            : Promise.resolve(null)
+          fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`, {
+            headers: getSupabaseHeaders()
+          }),
+          month > 1
+          ? fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul?corp_oper_nr=eq.${corpOperNr}&year=eq.${prevYear}&month=eq.${prevMonth}`, {
+            headers: getSupabaseHeaders()
+          })
+          : Promise.resolve(null)
           ]);
           const monthlyExistingData = monthlyExistingRes.ok ? await monthlyExistingRes.json() : [];
           const monthlyMap = {};
@@ -1813,7 +1819,7 @@
             });
             await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul`, {
               method: "POST",
-              headers: { ...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
+              headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
               body: JSON.stringify(newAccumulatedPayload)
             });
           }

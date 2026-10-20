@@ -4028,6 +4028,15 @@
           .s-footer {display: flex; justify-content: flex-end; margin-top: 15px; gap: 10px;}
           .s-btn {background: #1e293b; color: #fff; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; transition: 0.2s;}
           .s-btn:hover {opacity: 0.9;}
+          .s-modal-overlay {position: fixed; inset: 0; background: rgba(15,23,42,0.55); display: flex; align-items: center; justify-content: center; z-index: 9999;}
+          .s-modal {background: #fff; border-radius: 10px; padding: 22px; width: 360px; max-width: calc(100vw - 32px); box-shadow: 0 10px 30px rgba(0,0,0,0.25); font-family: 'Inter', sans-serif; color: #1e293b;}
+          .s-modal h3 {margin: 0 0 4px; font-size: 15px; font-weight: 800;}
+          .s-modal p {margin: 0 0 16px; font-size: 12px; color: #64748b;}
+          .s-modal-option {display: block; width: 100%; text-align: left; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; cursor: pointer; transition: 0.15s;}
+          .s-modal-option:hover {border-color: #1e293b; background: #f1f5f9;}
+          .s-modal-option strong {display: block; font-size: 13px;}
+          .s-modal-option span {font-size: 11px; color: #64748b;}
+          .s-modal-cancel {background: none; border: none; color: #64748b; font-size: 12px; cursor: pointer; float: right; margin-top: 4px;}
         `;
         document.head.appendChild(s);
       }
@@ -4074,7 +4083,7 @@
             </table>
           </div>
           <div class="s-footer">
-            <button class="s-btn" style="background:#059669;" onclick="exportSalaryMapXlsx()">📊 Exportar Excel</button>
+            <button class="s-btn" style="background:#059669;" onclick="exportSalaryMapXlsx(event)">📊 Exportar Excel</button>
             <button class="s-btn" onclick="exportSalaryMapPDF(event)">📥 Emitir Mapa</button>
           </div>
         </div>
@@ -4418,70 +4427,121 @@
           `<tr><td colspan="8" style="color:red;text-align:center;">Erro ao carregar dados: ${e.message}</td></tr>`;
       }
     }
-    async function exportSalaryMapPDF(event) {
+    /* ---------- EMISSÃO DE MAPAS (PDF / EXCEL) ---------- */
+    function chooseSalaryMapType(formatLabel) {
+      return new Promise(resolve => {
+        const overlay = document.createElement("div");
+        overlay.className = "s-modal-overlay";
+        overlay.innerHTML = `
+          <div class="s-modal">
+            <h3>Emitir Mapa (${formatLabel})</h3>
+            <p>Selecione o tipo de mapa a emitir:</p>
+            <button class="s-modal-option" data-type="full">
+              <strong>📋 Mapa Integral</strong>
+              <span>Subsídios de turno, baixas, férias, licenças e faltas</span>
+            </button>
+            <button class="s-modal-option" data-type="summary">
+              <strong>📄 Mapa Resumido</strong>
+              <span>Apenas funcionários com direito a subsídio de turno</span>
+            </button>
+            <button class="s-modal-cancel">Cancelar</button>
+          </div>
+        `;
+        const close = (value) => {
+          document.removeEventListener("keydown", onKey);
+          overlay.remove();
+          resolve(value);
+        };
+        const onKey = (e) => { if (e.key === "Escape") close(null); };
+        overlay.addEventListener("click", (e) => {
+          if (e.target === overlay) return close(null);
+          const opt = e.target.closest(".s-modal-option");
+          if (opt) return close(opt.dataset.type);
+          if (e.target.closest(".s-modal-cancel")) close(null);
+        });
+        document.addEventListener("keydown", onKey);
+        document.body.appendChild(overlay);
+      });
+    }
+    function collectSalaryMapRows(mapType) {
+      const extractCards = (cell) => {
+        const cards = cell.querySelectorAll(".s-card-base");
+        if (cards.length === 0) return "-";
+        return Array.from(cards).map(c => c.innerText.trim().replace(/[\n\r\t]+/g, " ")).join("\n");
+      };
+      const extractBadge = (cell) => {
+        const badge = cell.querySelector(".s-status-badge");
+        return badge ? badge.innerText.trim() : "-";
+      };
+      const employees = [];
+      document.querySelectorAll("#salary-table-body tr").forEach(row => {
+        const cells = row.querySelectorAll("td");
+        if (cells.length < 9) return;
+        const subShiftCurrent = extractBadge(cells[1]);
+        const subShiftPrevious = extractBadge(cells[2]);
+        if (mapType === "summary" && subShiftCurrent === "SEM DIREITO" && subShiftPrevious === "SEM DIREITO") return;
+        employees.push({
+          name: cells[0].innerText.trim(),
+          subShiftCurrent,
+          subShiftPrevious,
+          casualties: extractCards(cells[3]),
+          vacations: extractCards(cells[4]),
+          parental: extractCards(cells[5]),
+          disgust: extractCards(cells[6]),
+          justified: extractCards(cells[7]),
+          unjustified: extractCards(cells[8])
+        });
+      });
+      return employees;
+    }
+    async function exportSalaryMap(event, format) {
+      const isPdf = format === "pdf";
       const btn = event?.target;
+      const mapType = await chooseSalaryMapType(isPdf ? "PDF" : "Excel");
+      if (!mapType) return;
       const originalText = btn ? btn.innerText : "";
       if (btn) {
         btn.disabled = true;
-        btn.innerText = "⌛ A Gerar Mapa...";
+        btn.innerText = isPdf ? "⌛ A Gerar Mapa..." : "⌛ A Exportar...";
       }
       try {
         const year = parseInt(document.getElementById("salary-year-filter").value);
         const monthValue = parseInt(document.getElementById("salary-month-filter").value);
         const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
         const monthName = monthNames[monthValue - 1];
-        const rows = document.querySelectorAll("#salary-table-body tr");
-        const employees = [];
-        rows.forEach(row => {
-          const cells = row.querySelectorAll("td");
-          if (cells.length < 9) return;
-          const extractCards = (cell) => {
-            const cards = cell.querySelectorAll(".s-card-base");
-            if (cards.length === 0) return "-";
-            return Array.from(cards).map(c => c.innerText.trim().replace(/[\n\r\t]+/g, " ")).join("\n");
-          };
-          const extractBadge = (cell) => {
-            const badge = cell.querySelector(".s-status-badge");
-            return badge ? badge.innerText.trim() : "-";
-          };
-          employees.push({
-    name: cells[0].innerText.trim(),
-
-    subShiftCurrent: extractBadge(cells[1]),
-    subShiftPrevious: extractBadge(cells[2]),
-
-    casualties: extractCards(cells[3]),
-    vacations: extractCards(cells[4]),
-    parental: extractCards(cells[5]),
-    disgust: extractCards(cells[6]),
-    justified: extractCards(cells[7]),
-    unjustified: extractCards(cells[8])
-});
-        });
-        showLoadingPopup(`A gerar mapa salarial em formato PDF para ${monthName} de ${year}...`);
+        const employees = collectSalaryMapRows(mapType);
+        const isSummary = mapType === "summary";
+        const typeLabel = isSummary ? "resumido" : "integral";
+        showLoadingPopup(`A gerar mapa salarial ${typeLabel} em formato ${isPdf ? "PDF" : "EXCEL"} para ${monthName} de ${year}...`);
         const response = await fetch("https://cb360-online.vercel.app/api/employees_convert_and_send", {
           method: "POST",
           headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({mode: "salary_map", year, month: monthValue, employees})
+          body: JSON.stringify({
+            mode: isPdf ? "salary_map" : "salary_map_xlsx",
+            mapType,
+            year,
+            month: monthValue,
+            employees
+          })
         });
         if (!response.ok) throw new Error("Erro na resposta da API");
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `Mapa_Salarial_${monthName}_${year}.pdf`;
+        a.download = `Mapa_Salarial${isSummary ? "_Resumido" : ""}_${monthName}_${year}.${isPdf ? "pdf" : "xlsx"}`;
         document.body.appendChild(a);
         a.click();
         a.remove();
         window.URL.revokeObjectURL(url);
         setTimeout(() => {
           hideLoadingPopup();
-          showPopup('popup-info', `Mapa salarial para ${monthName} de ${year} gerado com sucesso.`);
+          showPopup('popup-info', `Mapa salarial ${typeLabel} para ${monthName} de ${year} gerado com sucesso.`);
         }, 400);
       } catch (error) {
         hideLoadingPopup();
         console.error("Erro ao gerar mapa salarial:", error);
-        showPopup('popup-danger', "❌ Erro ao gerar mapa salarial.");
+        showPopup('popup-danger', `❌ Erro ao gerar ${isPdf ? "mapa salarial" : "Excel"}.`);
       } finally {
         if (btn) {
           btn.disabled = false;
@@ -4489,78 +4549,8 @@
         }
       }
     }
-    async function exportSalaryMapXlsx(event) {
-      const btn = event?.target;
-      const originalText = btn ? btn.innerText : "";
-      if (btn) {
-        btn.disabled = true;
-        btn.innerText = "⌛ A Exportar...";
-      }
-      try {
-        const year = parseInt(document.getElementById("salary-year-filter").value);
-        const monthValue = parseInt(document.getElementById("salary-month-filter").value);
-        const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-        const monthName = monthNames[monthValue - 1];
-        const rows = document.querySelectorAll("#salary-table-body tr");
-        const employees = [];
-        rows.forEach(row => {
-          const cells = row.querySelectorAll("td");
-          if (cells.length < 9) return;
-          const extractCards = (cell) => {
-            const cards = cell.querySelectorAll(".s-card-base");
-            if (cards.length === 0) return "-";
-            return Array.from(cards)
-              .map(c => c.innerText.trim().replace(/[\n\r\t]+/g, " "))
-              .join("\n");
-          };
-          const extractBadge = (cell) => {
-            const badge = cell.querySelector(".s-status-badge");
-            return badge ? badge.innerText.trim() : "-";
-          };
-          employees.push({
-  name: cells[0].innerText.trim(),
-
-  subShiftCurrent: extractBadge(cells[1]),
-  subShiftPrevious: extractBadge(cells[2]),
-
-  casualties: extractCards(cells[3]),
-  vacations: extractCards(cells[4]),
-  parental: extractCards(cells[5]),
-  disgust: extractCards(cells[6]),
-  justified: extractCards(cells[7]),
-  unjustified: extractCards(cells[8])
-});});
-        showLoadingPopup(`A gerar mapa salarial em formato EXCEL para ${monthName} de ${year}...`);
-        const response = await fetch("https://cb360-online.vercel.app/api/employees_convert_and_send", {
-          method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({mode: "salary_map_xlsx", year, month: monthValue, employees})
-        });
-        if (!response.ok) throw new Error("Erro na resposta da API");
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `Mapa_Salarial_${monthName}_${year}.xlsx`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        window.URL.revokeObjectURL(url);
-        setTimeout(() => {
-          hideLoadingPopup();
-          showPopup('popup-info', `Mapa salarial para ${monthName} de ${year} gerado com sucesso.`);
-        }, 400);
-      } catch (error) {
-        hideLoadingPopup();
-        console.error("Erro ao gerar Excel:", error);
-        showPopup('popup-danger', "❌ Erro ao gerar Excel.");
-      } finally {
-        if (btn) {
-          btn.disabled = false;
-          btn.innerText = originalText;
-        }
-      }
-    }
+    function exportSalaryMapPDF(event) { return exportSalaryMap(event, "pdf"); }
+    function exportSalaryMapXlsx(event) { return exportSalaryMap(event, "xlsx"); }
     document.querySelectorAll(".sidebar-sub-submenu-button").forEach((btn) => {
       btn.addEventListener("click", () => {
         const access = btn.dataset.access;

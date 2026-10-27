@@ -4479,7 +4479,7 @@
         if (cells.length < 9) return;
         const subShiftCurrent = extractBadge(cells[1]);
         const subShiftPrevious = extractBadge(cells[2]);
-        if (mapType === "summary" && subShiftCurrent === "SEM DIREITO" && subShiftPrevious === "SEM DIREITO") return;
+        if (mapType === "summary" && subShiftCurrent === "SEM DIREITO") return;
         employees.push({
           name: cells[0].innerText.trim(),
           subShiftCurrent,

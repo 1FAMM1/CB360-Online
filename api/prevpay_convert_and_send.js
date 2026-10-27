@@ -102,11 +102,22 @@
       if (extra > 0) sheet.duplicateRow(DETAILED_LAST_ROW, extra, true);
       const lastSlotRow = DETAILED_LAST_ROW + extra;
       const totalRow = DETAILED_TOTAL_ROW + extra;
+      // Coluna Tipo (C) tinha espaço a mais e Local (D) a menos: redistribui a largura
+      sheet.getColumn('C').width = 23;
+      sheet.getColumn('D').width = 32;
+      const LOCAL_CHARS_PER_LINE = 34;   // caracteres que cabem numa linha da coluna D
+      const BASE_ROW_HEIGHT = 17.25;
       rows.forEach((item, idx) => {
         const rowNum = DETAILED_FIRST_ROW + idx;
         sheet.getCell(`B${rowNum}`).value = formatDate(item.service_date);
         sheet.getCell(`C${rowNum}`).value = item.service_type || '';
-        sheet.getCell(`D${rowNum}`).value = item.service_local || '';
+        const local = item.service_local || '';
+        const localCell = sheet.getCell(`D${rowNum}`);
+        localCell.value = local;
+        localCell.alignment = {...(localCell.alignment || {}), horizontal: 'center', vertical: 'middle', wrapText: true};
+        // Texto longo: aumenta a altura da linha para caber em 2 ou mais linhas
+        const lines = Math.max(1, Math.ceil(local.length / LOCAL_CHARS_PER_LINE));
+        if (lines > 1) sheet.getRow(rowNum).height = BASE_ROW_HEIGHT * lines * 0.85;
         sheet.getCell(`E${rowNum}`).value = parseVal(item.service_type_global_value);
         sheet.getCell(`F${rowNum}`).value = parseVal(item.prev_value_hour);
         sheet.getCell(`G${rowNum}`).value = parseVal(item.prev_total_hours);

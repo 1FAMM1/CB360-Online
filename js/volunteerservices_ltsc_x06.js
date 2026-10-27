@@ -332,7 +332,7 @@
             <col style="width: 55px;">  <col style="width: 45px;">  <col style="width: 40px;">
             <col style="width: 50px;">  <col style="width: 40px;">  <col style="width: 50px;">
             <col style="width: 40px;">  <col style="width: 50px;">  <col style="width: 110px;">
-            <col style="width: 70px;">
+            <col style="width: 70px;">  <col style="width: 60px;">
           </colgroup>
           <thead>
             <tr>
@@ -342,6 +342,7 @@
               <th colspan="4" style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Transporte de Doentes</th>
               <th rowspan="3" style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Elemento</th>
               <th rowspan="3" style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Valor Global<br>a Receber</th>
+              <th rowspan="3" style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Ações</th>
             </tr>
             <tr>
               <th colspan="2" style="position:sticky; top:27px; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:4px;">Doentes Extra</th>
@@ -364,9 +365,9 @@
         </table>
       </div>
     `;
-    function formatDate(dataISO) {
+    function vsFormatDate(dataISO) {
       if (!dataISO) return '';
-      const [year, month, day] = dataISO.split('-');
+      const [year, month, day] = String(dataISO).slice(0, 10).split('-');
       return `${day}/${month}/${year}`;
     }
     async function getUniqueServiceTypes() {
@@ -392,12 +393,19 @@
       const monthEl = document.getElementById('vsConsMonth');
       const typeEl = document.getElementById('vsConsType');
       const elementEl = document.getElementById('vsConsElement');
+      const localEl = document.getElementById('vsConsLocal');
       if (!container || !yearEl || !monthEl || !typeEl) return;
+      // Liga os botões Editar/Eliminar uma única vez (event delegation)
+      if (!container.dataset.actionsBound) {
+        container.addEventListener('click', onVsTableActionClick);
+        container.dataset.actionsBound = '1';
+      }
       const type = typeEl.value;
       const selectedYear = yearEl.value;
       const selectedMonth = monthEl.value;
       const selectedElement = elementEl ? elementEl.value : 'todos';
-      const corpOperNr = sessionStorage.getItem('currentCorpOperNr');
+      const selectedLocal = localEl ? localEl.value : 'todos';
+      const corpOperNr = sessionStorage.getItem('currentCorpOperNr') || "0805";
       document.getElementById('vsReportSelect').value = '';
       const pdfBtn = document.getElementById('vsPDFReport');
       const excelBtn = document.getElementById('vsEXCELReport');
@@ -425,8 +433,9 @@
       }
       let typeFilter = (type !== "todos") ? `&service_type=eq.${encodeURIComponent(type)}` : "";
       let elementFilter = (selectedElement !== "todos") ? `&n_int=eq.${encodeURIComponent(selectedElement)}` : "";
+      let localFilter = (selectedLocal !== "todos") ? `&service_local=eq.${encodeURIComponent(selectedLocal)}` : "";
       try {
-        const url = `${SUPABASE_URL}/rest/v1/reg_volunteer_services?corp_oper_nr=eq.${corpOperNr}${dateFilter}${typeFilter}${elementFilter}&order=service_date.asc`;
+        const url = `${SUPABASE_URL}/rest/v1/reg_volunteer_services?corp_oper_nr=eq.${corpOperNr}${dateFilter}${typeFilter}${elementFilter}${localFilter}&order=service_date.asc`;
         const response = await fetch(url, {
           method: 'GET',
           headers: getSupabaseHeaders()
@@ -437,44 +446,283 @@
         tableBody.style.opacity = "1";
         tableBody.innerHTML = '';
         if (data.length === 0) {
-          tableBody.innerHTML = '<tr><td colspan="13" style="padding: 20px; font-size: 13px; text-align: center;">Nenhum registo encontrado para este período ou tipo.</td></tr>';
+          tableBody.innerHTML = '<tr><td colspan="14" style="padding: 20px; font-size: 13px; text-align: center;">Nenhum registo encontrado para este período ou tipo.</td></tr>';
           updateSummary(0, 0);
           return;
         }
         setButtonsState(false);
         tableBody.innerHTML = data.map(item => {
           const tdStyle = `border-bottom: 1px solid #ccc; padding: 6px; font-size: 12px;`;
+          const actBtnStyle = `padding: 3px 7px; font-size: 12px; line-height: 1; margin: 0 2px;`;
           return `
             <tr>
-              <td style="${tdStyle}">${formatDate(item.service_date)}</td>
+              <td style="${tdStyle}">${vsFormatDate(item.service_date)}</td>
               <td style="${tdStyle} border-left: 1px solid #ccc; text-align: center;">${item.service_type || ''}</td>
               <td style="${tdStyle} border-left: 1px solid #ccc; text-align: center;">${item.service_local || ''}</td>
-              <td style="${tdStyle} border-left: 1px solid #ccc; text-align: right;">${item.service_type_global_value || '0,00'} €</td>
-              <td style="${tdStyle} border-left: 1px solid #ccc; text-align: right;">${item.prev_value_hour || '-'} €</td>
+              <td style="${tdStyle} border-left: 1px solid #ccc; text-align: right;">${vsFmtEur(item.service_type_global_value, '0,00')}</td>
+              <td style="${tdStyle} border-left: 1px solid #ccc; text-align: right;">${vsFmtEur(item.prev_value_hour)}</td>
               <td style="${tdStyle} border-left: 1px solid #ccc; text-align: center;">${item.prev_total_hours || ''}</td>
-              <td style="${tdStyle} border-left: 1px solid #ccc; text-align: right;">${item.prev_global_value || '-'} €</td>
+              <td style="${tdStyle} border-left: 1px solid #ccc; text-align: right;">${vsFmtEur(item.prev_global_value)}</td>
               <td style="${tdStyle} border-left: 1px solid #ccc; text-align: center;">${item.service_sicks || ''}</td>
-              <td style="${tdStyle} border-left: 1px solid #ccc; text-align: right;">${item.service_sicks_value || '-'} €</td>
+              <td style="${tdStyle} border-left: 1px solid #ccc; text-align: right;">${vsFmtEur(item.service_sicks_value)}</td>
               <td style="${tdStyle} border-left: 1px solid #ccc; text-align: center;">${item.service_whait_hours || ''}</td>
-              <td style="${tdStyle} border-left: 1px solid #ccc; text-align: right;">${item.service_whait_hours_value || '-'} €</td>
+              <td style="${tdStyle} border-left: 1px solid #ccc; text-align: right;">${vsFmtEur(item.service_whait_hours_value)}</td>
               <td style="${tdStyle} border-left: 1px solid #ccc; text-align: center;">${item.abv_name || ''}</td>
-              <td style="${tdStyle} border-left: 1px solid #ccc; text-align: right; font-weight: bold; font-size: 13px;">${item.global_value || '0,00'} €</td>
+              <td style="${tdStyle} border-left: 1px solid #ccc; text-align: right; font-weight: bold; font-size: 13px;">${vsFmtEur(item.global_value, '0,00')}</td>
+              <td style="${tdStyle} border-left: 1px solid #ccc; text-align: center; white-space: nowrap;">
+                <button class="btn btn-add vs-btn-edit" data-id="${item.id}" title="Editar" style="${actBtnStyle}"><i class="fa-solid fa-pen-to-square"></i></button>
+                <button class="btn btn-danger vs-btn-delete" data-id="${item.id}" title="Eliminar" style="${actBtnStyle}"><i class="fa-solid fa-trash"></i></button>
+              </td>
             </tr>
           `;
         }).join('');
-        const total = data.reduce((sum, item) => sum + (parseFloat(item.global_value) || 0), 0);
+        const total = data.reduce((sum, item) => sum + vsToNum(item.global_value), 0);
         updateSummary(total, data.length);
       } catch (err) {
         tableBody.style.opacity = "1";
         console.error('Erro:', err);
-        tableBody.innerHTML = '<tr><td colspan="13" style="padding: 20px; color: red; text-align: center;">Erro ao carregar dados. Verifique a consola.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="14" style="padding: 20px; color: red; text-align: center;">Erro ao carregar dados. Verifique a consola.</td></tr>';
       }
     }
+
+    /* =========== AÇÕES: EDITAR / ELIMINAR ============ */
+    function onVsTableActionClick(e) {
+      const editBtn = e.target.closest('.vs-btn-edit');
+      const delBtn = e.target.closest('.vs-btn-delete');
+      if (editBtn) openVsEditModal(editBtn.dataset.id);
+      if (delBtn) deleteVolunteerService(delBtn.dataset.id);
+    }
+    function vsToNum(v) {
+      if (v === null || v === undefined || v === '') return 0;
+      return parseFloat(String(v).replace(',', '.')) || 0;
+    }
+    function vsFmtEur(v, empty = '-') {
+      const n = vsToNum(v);
+      if (!n) return `${empty} €`;
+      return `${n.toFixed(2).replace('.', ',')} €`;
+    }
+    function ensureVsEditModal() {
+      const existingModal = document.getElementById('vsEditModal');
+      if (existingModal) {
+        if (document.getElementById('vsEditLocal')) return; // já é o modal novo
+        existingModal.remove();                            // modal antigo no HTML: remove
+      }
+      const inp = `width: 100%; padding: 4px; border: 1px solid #ccc; border-radius: 4px; height: 30px; box-sizing: border-box; font-size: 12px;`;
+      const ro  = `${inp} background: #f1f1f1; font-weight: bold;`;
+      const lbl = `display: block; margin: 0 0 4px 0; font-weight: bold; font-size: 12px; white-space: nowrap;`;
+      const sec = `grid-column: 1 / -1; margin-top: 6px; padding: 4px 8px; background-color: #2b6ca3; color: white; font-weight: bold; font-size: 11px; border-radius: 3px;`;
+      const modal = document.createElement('div');
+      modal.id = 'vsEditModal';
+      modal.style.cssText = 'display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); align-items: center; justify-content: center; z-index: 9999;';
+      modal.innerHTML = `
+        <div class="major-card" style="width: 640px; max-width: 95vw; max-height: 90vh; overflow-y: auto; margin: 0;">
+          <div class="major-card-header header-red" style="display: flex; align-items: center; justify-content: space-between;">
+            <span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+              </svg>
+              EDITAR SERVIÇO
+            </span>
+            <span id="vsEditClose" title="Fechar" style="cursor: pointer; font-size: 18px; line-height: 1; padding: 0 4px;"><i class="fa-solid fa-xmark"></i></span>
+          </div>
+          <div class="major-card-body">
+            <input type="hidden" id="vsEditId">
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px 12px;">
+              <div style="grid-column: 1 / -1;">
+                <label style="${lbl}">Elemento</label>
+                <input type="text" id="vsEditElement" readonly style="${ro}">
+              </div>
+              <div>
+                <label for="vsEditDate" style="${lbl}">Data do Serviço</label>
+                <input type="date" id="vsEditDate" style="${inp}">
+              </div>
+              <div>
+                <label for="vsEditType" style="${lbl}">Tipo de Serviço</label>
+                <select id="vsEditType" style="${inp}"></select>
+              </div>
+              <div>
+                <label for="vsEditLocal" style="${lbl}">Local do Serviço</label>
+                <input type="text" id="vsEditLocal" style="${inp}">
+              </div>
+              <div>
+                <label for="vsEditServiceValue" style="${lbl}">Valor do Serviço (€)</label>
+                <input type="number" step="0.01" min="0" id="vsEditServiceValue" class="vs-recalc" style="${inp}">
+              </div>
+
+              <div style="${sec}">PREVENÇÕES</div>
+              <div>
+                <label for="vsEditPrevValueHour" style="${lbl}">Valor/Hora (€)</label>
+                <input type="number" step="0.01" min="0" id="vsEditPrevValueHour" class="vs-recalc" style="${inp}">
+              </div>
+              <div>
+                <label for="vsEditPrevHours" style="${lbl}">Qtd. Horas</label>
+                <input type="number" step="0.5" min="0" id="vsEditPrevHours" class="vs-recalc" style="${inp}">
+              </div>
+              <div>
+                <label style="${lbl}">Total (€)</label>
+                <input type="text" id="vsEditPrevTotal" readonly style="${ro}">
+              </div>
+
+              <div style="${sec}">TRANSPORTE DE DOENTES</div>
+              <div>
+                <label for="vsEditSicks" style="${lbl}">Doentes Extra - Qtd.</label>
+                <input type="number" step="1" min="0" id="vsEditSicks" style="${inp}">
+              </div>
+              <div style="grid-column: span 2;">
+                <label for="vsEditSicksValue" style="${lbl}">Doentes Extra - Valor (€)</label>
+                <input type="number" step="0.01" min="0" id="vsEditSicksValue" class="vs-recalc" style="${inp}">
+              </div>
+              <div>
+                <label for="vsEditWaitHours" style="${lbl}">Horas Espera - Qtd.</label>
+                <input type="number" step="0.5" min="0" id="vsEditWaitHours" style="${inp}">
+              </div>
+              <div style="grid-column: span 2;">
+                <label for="vsEditWaitValue" style="${lbl}">Horas Espera - Valor (€)</label>
+                <input type="number" step="0.01" min="0" id="vsEditWaitValue" class="vs-recalc" style="${inp}">
+              </div>
+
+              <div style="grid-column: 1 / -1; display: flex; justify-content: flex-end; margin-top: 6px;">
+                <div style="border: 1px solid #aaa; border-radius: 4px; overflow: hidden; display: flex; height: 28px; align-items: center;">
+                  <div style="padding: 0 12px; background-color: #2b6ca3; color: white; font-weight: bold; font-size: 12px; border-right: 1px solid #aaa; line-height: 28px;">
+                    Valor Global a Receber
+                  </div>
+                  <div id="vsEditGlobal" style="padding: 0 15px; background-color: white; color: darkred; font-weight: bold; font-size: 14px; min-width: 100px; text-align: right; line-height: 28px;">
+                    0.00 €
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="major-card-footer" style="display: flex; justify-content: flex-end; gap: 5px;">
+            <button id="vsEditCancel" class="btn btn-danger"><i class="fa-solid fa-ban" style="margin-right: 5px;"></i>Cancelar</button>
+            <button id="vsEditSave" class="btn btn-success"><i class="fa-solid fa-floppy-disk" style="margin-right: 5px;"></i>Gravar</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      document.getElementById('vsEditClose').onclick = closeVsEditModal;
+      document.getElementById('vsEditCancel').onclick = closeVsEditModal;
+      document.getElementById('vsEditSave').onclick = saveVsEdit;
+      document.addEventListener('keydown', e => { if (e.key === 'Escape') closeVsEditModal(); });
+      modal.querySelectorAll('.vs-recalc').forEach(el => el.addEventListener('input', recalcVsEdit));
+    }
+    function recalcVsEdit() {
+      const val = id => vsToNum(document.getElementById(id).value);
+      const prevTotal = val('vsEditPrevValueHour') * val('vsEditPrevHours');
+      const global = val('vsEditServiceValue') + prevTotal + val('vsEditSicksValue') + val('vsEditWaitValue');
+      document.getElementById('vsEditPrevTotal').value = prevTotal.toFixed(2);
+      document.getElementById('vsEditGlobal').textContent = `${global.toFixed(2).replace('.', ',')} €`;
+      return { prevTotal, global };
+    }
+    async function openVsEditModal(id) {
+      const item = currentVolunteerData.find(r => String(r.id) === String(id));
+      if (!item) {
+        showPopup('popup-danger', "Registo não encontrado. Atualize a tabela.");
+        return;
+      }
+      ensureVsEditModal();
+      const typeSel = document.getElementById('vsEditType');
+      const types = await getUniqueServiceTypes();
+      if (item.service_type && !types.includes(item.service_type)) types.push(item.service_type);
+      typeSel.innerHTML = types.map(t => `<option value="${t}">${t}</option>`).join('');
+      const set = (elId, v) => document.getElementById(elId).value = (v ?? '');
+      set('vsEditId', item.id);
+      set('vsEditElement', `${item.n_int || ''} - ${item.abv_name || ''}`);
+      set('vsEditDate', item.service_date);
+      set('vsEditType', item.service_type);
+      set('vsEditLocal', item.service_local);
+      set('vsEditServiceValue', item.service_type_global_value);
+      set('vsEditPrevValueHour', item.prev_value_hour);
+      set('vsEditPrevHours', item.prev_total_hours);
+      set('vsEditSicks', item.service_sicks);
+      set('vsEditSicksValue', item.service_sicks_value);
+      set('vsEditWaitHours', item.service_whait_hours);
+      set('vsEditWaitValue', item.service_whait_hours_value);
+      recalcVsEdit();
+      document.getElementById('vsEditModal').style.display = 'flex';
+    }
+    function closeVsEditModal() {
+      const modal = document.getElementById('vsEditModal');
+      if (modal) modal.style.display = 'none';
+    }
+    async function saveVsEdit() {
+      const id = document.getElementById('vsEditId').value;
+      const date = document.getElementById('vsEditDate').value;
+      const type = document.getElementById('vsEditType').value;
+      if (!date || !type) {
+        showPopup('popup-danger', "Preencha a data e o tipo de serviço.");
+        return;
+      }
+      const numOrNull = elId => {
+        const v = document.getElementById(elId).value;
+        return v === '' ? null : vsToNum(v);
+      };
+      const money = elId => {
+        const v = document.getElementById(elId).value;
+        return v === '' ? null : vsToNum(v).toFixed(2);
+      };
+      const { prevTotal, global } = recalcVsEdit();
+      const payload = {
+        service_date: date,
+        service_type: type,
+        service_local: document.getElementById('vsEditLocal').value.trim(),
+        service_type_global_value: money('vsEditServiceValue'),
+        prev_value_hour: money('vsEditPrevValueHour'),
+        prev_total_hours: numOrNull('vsEditPrevHours'),
+        prev_global_value: prevTotal ? prevTotal.toFixed(2) : null,
+        service_sicks: numOrNull('vsEditSicks'),
+        service_sicks_value: money('vsEditSicksValue'),
+        service_whait_hours: numOrNull('vsEditWaitHours'),
+        service_whait_hours_value: money('vsEditWaitValue'),
+        global_value: global.toFixed(2)
+      };
+      const btn = document.getElementById('vsEditSave');
+      btn.disabled = true;
+      btn.style.opacity = '0.5';
+      try {
+        const url = `${SUPABASE_URL}/rest/v1/reg_volunteer_services?id=eq.${encodeURIComponent(id)}`;
+        const response = await fetch(url, {
+          method: 'PATCH',
+          headers: { ...getSupabaseHeaders(), 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) throw new Error(await response.text());
+        closeVsEditModal();
+        showPopup('popup-success', "Serviço atualizado com sucesso!");
+        loadVolunteerServicesTable();
+      } catch (err) {
+        console.error("Erro ao gravar serviço:", err);
+        showPopup('popup-danger', "Erro ao gravar: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+      }
+    }
+    async function deleteVolunteerService(id) {
+      const item = currentVolunteerData.find(r => String(r.id) === String(id));
+      const desc = item ? `\n\n${vsFormatDate(item.service_date)} | ${item.service_type || ''} | ${item.abv_name || ''}` : '';
+      if (!confirm(`Tem a certeza que pretende eliminar este serviço?${desc}`)) return;
+      try {
+        const url = `${SUPABASE_URL}/rest/v1/reg_volunteer_services?id=eq.${encodeURIComponent(id)}`;
+        const response = await fetch(url, {
+          method: 'DELETE',
+          headers: { ...getSupabaseHeaders(), 'Prefer': 'return=minimal' }
+        });
+        if (!response.ok) throw new Error(await response.text());
+        showPopup('popup-success', "Serviço eliminado.");
+        loadVolunteerServicesTable();
+      } catch (err) {
+        console.error("Erro ao eliminar serviço:", err);
+        showPopup('popup-danger', "Erro ao eliminar: " + err.message);
+      }
+    }
+
     async function updateSummary(total, count) {
       const summaryContainer = document.getElementById('services-summary-container');
       if (!summaryContainer) return;
       const displayCount = count || 0;
-      const displayTotal = typeof total === 'number' ? total.toFixed(2) : '0.00';
+      const displayTotal = typeof total === 'number' ? total.toFixed(2).replace('.', ',') : '0,00';
       summaryContainer.style.display = "flex";
       summaryContainer.style.flexDirection = "column";
       summaryContainer.innerHTML = `
@@ -539,8 +787,8 @@
       const directSendContainer = document.getElementById('direct-send-container');
       const btnEnviar = document.getElementById('btnEnviarVoluntario');
       try {
-        const nInt = sessionStorage.getItem("currentNInt");
-        const corpNr = sessionStorage.getItem("currentCorpOperNr");
+        const nInt = sessionStorage.getItem("currentNInt") || "205";
+        const corpNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
         const url = `${SUPABASE_URL}/rest/v1/reg_elems?select=patent&n_int=eq.${nInt}&corp_oper_nr=eq.${corpNr}&limit=1`;
         const response = await fetch(url, {
           method: 'GET',
@@ -606,7 +854,7 @@
       btn.disabled = true;
       btn.style.opacity = '0.5';
       btn.style.cursor = 'not-allowed';
-      const corpNr = sessionStorage.getItem("currentCorpOperNr");
+      const corpNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const greeting = getGreeting();
       const commanderName = await getCommanderName(corpNr);
       const senderName = sessionStorage.getItem("currentUserName") || "Elemento do Corpo Ativo";
@@ -675,6 +923,7 @@
       const monthSelect = document.getElementById('vsConsMonth');
       const typeSelect = document.getElementById('vsConsType');
       const elementSelect = document.getElementById('vsConsElement');
+      const localSelect = document.getElementById('vsConsLocal');
       if (!yearSelect || !monthSelect) return;
       const now = new Date();
       const currentYear = now.getFullYear();
@@ -693,20 +942,21 @@
       async function refreshDynamicFilters() {
         const year = yearSelect.value;
         const month = monthSelect.value;
-        const corpNr = sessionStorage.getItem("currentCorpOperNr");
+        const corpNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
         if (typeSelect) typeSelect.innerHTML = '<option value="todos">A carregar...</option>';
         if (elementSelect) elementSelect.innerHTML = '<option value="todos">A carregar...</option>';
-        let nextMonth = parseInt(month) + 1;
-        let nextYear = parseInt(year);
-        if (nextMonth > 12) {nextMonth = 1; nextYear++;}
-        const startDate = `${year}-${month}-01`;
-        const endDate = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
-        let dateFilter = `service_date=gte.${startDate}&service_date=lt.${endDate}`;
+        if (localSelect) localSelect.innerHTML = '<option value="todos">A carregar...</option>';
+        let dateFilter;
         if (month === 'todos') {
-          dateFilter = `service_date=gte.${year}-01-01&service_date=lt.${nextYear}-01-01`;
+          dateFilter = `service_date=gte.${year}-01-01&service_date=lt.${parseInt(year) + 1}-01-01`;
+        } else {
+          let nextMonth = parseInt(month) + 1;
+          let nextYear = parseInt(year);
+          if (nextMonth > 12) {nextMonth = 1; nextYear++;}
+          dateFilter = `service_date=gte.${year}-${month}-01&service_date=lt.${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
         }
         try {
-          const url = `${SUPABASE_URL}/rest/v1/reg_volunteer_services?select=n_int,abv_name,service_type&corp_oper_nr=eq.${corpNr}&${dateFilter}&order=n_int.asc`;
+          const url = `${SUPABASE_URL}/rest/v1/reg_volunteer_services?select=n_int,abv_name,service_type,service_local&corp_oper_nr=eq.${corpNr}&${dateFilter}&order=n_int.asc`;
           const response = await fetch(url, {
             method: 'GET',
             headers: getSupabaseHeaders()
@@ -719,16 +969,22 @@
           if (!data || data.length === 0) {
             if (elementSelect) elementSelect.innerHTML = '<option value="todos">Sem elementos (período vazio)</option>';
             if (typeSelect) typeSelect.innerHTML = '<option value="todos">Sem serviços (período vazio)</option>';
+            if (localSelect) localSelect.innerHTML = '<option value="todos">Sem locais (período vazio)</option>';
             return;
           }
           const uniqueElements = [...new Map(data.map(e => [e.n_int, e])).values()];
           elementSelect.innerHTML = '<option value="todos">Todos os Elementos</option>' + uniqueElements.map(e => `<option value="${e.n_int}">${e.n_int} - ${e.abv_name}</option>`).join('');
           const uniqueTypes = [...new Set(data.map(e => e.service_type))].filter(Boolean).sort();
           typeSelect.innerHTML = '<option value="todos">Todos os Tipos</option>' + uniqueTypes.map(t => `<option value="${t}">${t}</option>`).join('');
+          if (localSelect) {
+            const uniqueLocals = [...new Set(data.map(e => (e.service_local || '').trim()))].filter(Boolean).sort((a, b) => a.localeCompare(b, 'pt'));
+            localSelect.innerHTML = '<option value="todos">Todos os Locais</option>' + uniqueLocals.map(l => `<option value="${l.replace(/"/g, '&quot;')}">${l}</option>`).join('');
+          }
         } catch (err) {
           console.error("ERRO CRÍTICO FILTROS:", err);
           if (elementSelect) elementSelect.innerHTML = '<option value="todos">Erro de Conexão</option>';
           if (typeSelect) typeSelect.innerHTML = '<option value="todos">Erro de Conexão</option>';
+          if (localSelect) localSelect.innerHTML = '<option value="todos">Erro de Conexão</option>';
         }
       }
       const onMasterChange = async () => {
@@ -739,6 +995,7 @@
       monthSelect.onchange = onMasterChange;
       if (typeSelect) typeSelect.onchange = loadVolunteerServicesTable;
       if (elementSelect) elementSelect.onchange = loadVolunteerServicesTable;
+      if (localSelect) localSelect.onchange = loadVolunteerServicesTable;
       await refreshDynamicFilters();
       loadVolunteerServicesTable();
     }

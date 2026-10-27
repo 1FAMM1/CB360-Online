@@ -1107,7 +1107,7 @@
       }
       const originalText = btn.innerHTML;
       btn.disabled = true;
-      btn.innerHTML = '⏳ A processar...';
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="margin-right: 5px;"></i>A processar...';
       try {
         let response;
         if (currentEditingValueId) {
@@ -1138,6 +1138,7 @@
       } catch (err) {
         console.error('Erro:', err);
         showPopup('popup-danger', 'Erro ao processar o pedido.');
+        btn.innerHTML = originalText;
       } finally {
         btn.disabled = false;
       }
@@ -1156,7 +1157,7 @@
         document.getElementById('vsOValue').value = item.value || '';
       }
       const btn = document.getElementById('services-values-save-button');
-      btn.innerHTML = '✏️ Atualizar';
+      btn.innerHTML = '<i class="fa-solid fa-pen-to-square" style="margin-right: 5px;"></i>Atualizar';
       btn.classList.remove('btn-add');
       btn.classList.add('btn-danger');
       window.scrollTo({top: 0, behavior: 'smooth'});
@@ -1220,8 +1221,8 @@
               <td style="${tdStyle} border-left:1px solid #ccc; text-align:right;">${item.extra_sick ? item.extra_sick + ' €' : '-'}</td>
               <td style="${tdStyle} border-left:1px solid #ccc; text-align:right;">${item.extra_hour ? item.extra_hour + ' €' : '-'}</td>
               <td style="${tdStyle} border-left:1px solid #ccc;">
-                <button onclick="editServiceValue('${itemData}')" class="btn btn-add" style="padding: 2px 8px; font-size: 14px;" title="Editar">✏️</button>
-                <button onclick="deleteServiceValue(${item.id})" class="btn btn-danger" style="padding: 2px 8px; font-size:14px; margin-left:5px;" title="Eliminar">🗑️</button>
+                <button onclick="editServiceValue('${itemData}')" class="btn btn-add" style="padding: 3px 7px; font-size: 12px; line-height: 1;" title="Editar"><i class="fa-solid fa-pen-to-square"></i></button>
+                <button onclick="deleteServiceValue(${item.id})" class="btn btn-danger" style="padding: 3px 7px; font-size: 12px; line-height: 1; margin-left: 5px;" title="Eliminar"><i class="fa-solid fa-trash"></i></button>
               </td>
             </tr>
           `;
@@ -1253,7 +1254,7 @@
       });
       const btn = document.getElementById('services-values-save-button');
       if (btn) {
-        btn.innerHTML = '💾 Guardar';
+        btn.innerHTML = '<i class="fa-solid fa-floppy-disk" style="margin-right: 5px;"></i>Guardar';
         btn.classList.remove('btn-danger');
         btn.classList.add('btn-add'); 
       }

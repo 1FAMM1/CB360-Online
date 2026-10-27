@@ -89,11 +89,21 @@
       sheet.getCell('B38').value = `${now.getDate()} de ${MONTH_NAMES[now.getMonth()]} de ${now.getFullYear()}`;
       sheet.pageSetup = {orientation: "portrait", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
                          margins: {left: 0.3, right: 0.7, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3}};}
+    // Template detalhado: linhas de dados 10 a 66 (57 linhas) e "Sumatório" na linha 68
+    const DETAILED_FIRST_ROW = 10;
+    const DETAILED_LAST_ROW = 66;
+    const DETAILED_TOTAL_ROW = 68;
     function fillDetailed(sheet, rows, year, month, globalTotal) {
-      const monthName = MONTH_NAMES[parseInt(month)] || month;
+      const monthName = month === 'todos' ? 'Anual' : (MONTH_NAMES[parseInt(month)] || month);
       sheet.getCell('B5').value = `${monthName} ${year}`;
+      // Se houver mais serviços do que linhas no template, insere linhas com o mesmo formato
+      const capacity = DETAILED_LAST_ROW - DETAILED_FIRST_ROW + 1;
+      const extra = Math.max(0, rows.length - capacity);
+      if (extra > 0) sheet.duplicateRow(DETAILED_LAST_ROW, extra, true);
+      const lastSlotRow = DETAILED_LAST_ROW + extra;
+      const totalRow = DETAILED_TOTAL_ROW + extra;
       rows.forEach((item, idx) => {
-        const rowNum = 10 + idx;
+        const rowNum = DETAILED_FIRST_ROW + idx;
         sheet.getCell(`B${rowNum}`).value = formatDate(item.service_date);
         sheet.getCell(`C${rowNum}`).value = item.service_type || '';
         sheet.getCell(`D${rowNum}`).value = item.service_local || '';
@@ -108,13 +118,15 @@
         sheet.getCell(`M${rowNum}`).value = item.abv_name || '';
         sheet.getCell(`N${rowNum}`).value = parseVal(item.global_value);
       });
-      sheet.getCell('N68').value = parseFloat(globalTotal) || 0;
-      const lastDataRow = 10 + rows.length - 1;
-      for (let r = lastDataRow + 1; r <= 44; r++) {
+      sheet.getCell(`N${totalRow}`).value = parseVal(globalTotal) || 0;
+      // Esconde as linhas vazias que sobram
+      for (let r = DETAILED_FIRST_ROW + rows.length; r <= lastSlotRow; r++) {
         sheet.getRow(r).hidden = true;
       }
+      // printTitlesRow repete o cabeçalho da tabela (linhas 7 a 9) em todas as páginas
       sheet.pageSetup = {orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
-                         margins: {left: 0.3, right: 0.3, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3}};}
+                         margins: {left: 0.3, right: 0.3, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3},
+                         printTitlesRow: '7:9'};}
     export default async function handler(req, res) {
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');

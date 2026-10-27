@@ -857,7 +857,20 @@
       const corpNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const greeting = getGreeting();
       const commanderName = await getCommanderName(corpNr);
-      const senderName = sessionStorage.getItem("currentUserName") || "Elemento do Corpo Ativo";
+      const MONTHS_PT = ['', 'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+      const now = new Date();
+      const reportYear = document.getElementById('vsConsYear')?.value || now.getFullYear();
+      const reportMonthValue = document.getElementById('vsConsMonth')?.value || String(now.getMonth() + 1).padStart(2, '0');
+      const periodText = reportMonthValue === 'todos'
+        ? `no ano de ${reportYear}`
+        : `no mês de ${MONTHS_PT[parseInt(reportMonthValue)]} de ${reportYear}`;
+      let optelName = '';
+      try {
+        optelName = getOptelName();
+      } catch (e) {
+        console.warn("Não foi possível obter o OPTEL:", e);
+      }
+      if (!optelName) optelName = sessionStorage.getItem("currentUserName") || "";
       const emailValidated = {
         to: "secretaria.ahbfaro@gmail.com",
         cc: "comando0805.ahbfaro@gmail.com",
@@ -868,7 +881,7 @@
                O Comandante,<br>
                ${commanderName}`};
       const emailNotValidated = {
-        to: "mcavaco.ahbfaro@gmail.com",
+        to: "central0805.ahbfaro@gmail.com",
         cc: "comando0805.ahbfaro@gmail.com",
         subject: "Inconsistências - Serviços Remunerados - Voluntariado",
         body: `${greeting}<br><br>
@@ -881,9 +894,11 @@
         cc: "comando0805.ahbfaro@gmail.com",
         subject: "Novo Mapa de Serviços para Validação - Voluntariado",
         body: `${greeting}<br><br>
-               O elemento <b>${senderName}</b> submeteu um novo mapa de serviços remunerados (Voluntariado) para validação.<br><br>
-               Aceda ao CB360 Online para validar os dados.<br><br>
-               Com os melhores cumprimentos.`};
+               Venho através do presente remeter para validação o relatório de serviços de voluntariado efetuados ${periodText}.<br><br>
+               Por favor aceda ao CB360 Online para validar os dados.<br><br>
+               Com os melhores cumprimentos,<br><br>
+               O OPTEL,<br>
+               ${optelName}`};
       let emailData;
       if (isDirectSend) {
         emailData = EmailForVerification;
@@ -891,7 +906,6 @@
         emailData = selected === "SIM" ? emailValidated : emailNotValidated;
       }
       try {
-        const originalText = btn.textContent;
         btn.textContent = "A enviar...";
         const response = await fetch("https://cb360-online.vercel.app/api/prevpay_convert_and_send", {
           method: "POST",
@@ -901,7 +915,7 @@
         const result = await response.json();
         if (response.ok) {
           showPopup('popup-success', isDirectSend ? "Enviado para o Comando com sucesso!" : "Email de validação enviado!");
-          if(isDirectSend) btn.textContent = "ENVIADO";
+          if (isDirectSend) btn.textContent = "ENVIADO";
         } else {
           throw new Error(result.error);
         }

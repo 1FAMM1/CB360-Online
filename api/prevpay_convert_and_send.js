@@ -9,10 +9,13 @@
     import fs from 'fs';
     import os from 'os';
     import https from 'https';
+    import nodemailer from "nodemailer";
     import {ServicePrincipalCredentials, PDFServices, MimeType, CreatePDFResult, CreatePDFJob}
     from "@adobe/pdfservices-node-sdk";
     const CLIENT_ID = process.env.ADOBE_CLIENT_ID;
     const CLIENT_SECRET = process.env.ADOBE_CLIENT_SECRET;
+    const GMAIL_EMAIL = process.env.GMAIL_EMAIL;
+    const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
     const TEMPLATE_SIMPLIFIED = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/prevpay_simplified_template.xlsx";
     const TEMPLATE_DETAILED = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/prevpay_detailed_template.xlsx";
     export const config = {
@@ -103,7 +106,7 @@
       const lastSlotRow = DETAILED_LAST_ROW + extra;
       const totalRow = DETAILED_TOTAL_ROW + extra;
       // Coluna Tipo (C) tinha espaço a mais e Local (D) a menos: redistribui a largura
-      sheet.getColumn('C').width = 23;
+      sheet.getColumn('C').width = 25;
       sheet.getColumn('D').width = 32;
       const LOCAL_CHARS_PER_LINE = 34;   // caracteres que cabem numa linha da coluna D
       const BASE_ROW_HEIGHT = 17.25;
@@ -138,12 +141,37 @@
       sheet.pageSetup = {orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
                          margins: {left: 0.3, right: 0.3, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3},
                          printTitlesRow: '7:9'};}
+    async function handleSendEmail(req, res) {
+      const {to, cc, subject, body} = req.body || {};
+      if (!to || !subject || !body) {
+        return res.status(400).json({error: "Faltam dados essenciais (to, subject, body)."});
+      }
+      try {
+        const transporter = nodemailer.createTransport({
+          service: "gmail",
+          auth: {user: GMAIL_EMAIL, pass: GMAIL_APP_PASSWORD}
+        });
+        await transporter.sendMail({
+          from: `CB360 Online <${GMAIL_EMAIL}>`,
+          to,
+          cc,
+          subject,
+          html: body
+        });
+        return res.status(200).json({success: true, message: "Email enviado com sucesso."});
+      } catch (error) {
+        console.error("Erro no envio de email:", error);
+        return res.status(500).json({error: "Falha ao enviar e-mail", details: error.message});
+      }
+    }
     export default async function handler(req, res) {
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
       res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
       if (req.method === 'OPTIONS') return res.status(200).end();
       if (req.method !== 'POST') return res.status(405).json({error: 'Método não permitido'});
+      // Envio de emails de validação (action: 'send-email'); tudo o resto é geração de relatório
+      if ((req.body || {}).action === 'send-email') return handleSendEmail(req, res);
       const tempDir = os.tmpdir();
       let outputFile = null;
       try {

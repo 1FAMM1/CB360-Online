@@ -154,8 +154,10 @@
     const DRIVER_TEXT = "#000000";
     const OTHER_BG = "#800080";
     const OTHER_TEXT = "#ffffff";
-    const OPTEL_BG = "#008080";   // célula marcada como OPTEL (elemento a cobrir a Central)
+    const OPTEL_BG = "#5D4037";   // célula marcada como OPTEL (elemento a cobrir a Central)
     const OPTEL_TEXT = "#ffffff";
+    const EIP_BG = "#E65100";     // célula marcada como EIP (elemento a reforçar a EIP)
+    const EIP_TEXT = "#ffffff";
     let __currentYear = null;
     let __currentMonth = null;
     let __currentDaysInMonth = null;
@@ -250,6 +252,10 @@
       if (td.dataset.optel !== "1") return;
       td.style.backgroundColor = OPTEL_BG; td.style.color = OPTEL_TEXT; td.style.fontWeight = "bold";
     }
+    function applyEipStyle(td) {
+      if (td.dataset.eip !== "1") return;
+      td.style.backgroundColor = EIP_BG; td.style.color = EIP_TEXT; td.style.fontWeight = "bold";
+    }
     function applyOtherStyle(td) {
       if (td.dataset.other !== "1") return;
       td.style.backgroundColor = OTHER_BG; td.style.color = OTHER_TEXT; td.style.fontWeight = "bold";
@@ -337,12 +343,12 @@
       const legendDiv = document.createElement("div");
       legendDiv.style.cssText = `margin-top: 5px; padding: 12px; background: #f0f8ff; border: 1px solid #4682b4; border-radius: 5px; font-family: 'Segoe UI', sans-serif;
                                  display: inline-block; width: fit-content; margin-left: 5px;vertical-align:top; height:150px;`;
-      const shifts = [ {code: "", desc: "Condutor INEM", special: "driver"}, {code: "", desc: "Outro", special: "other"}, {code: "", desc: "OPTEL", special: "optel"}, {code: "M", desc: "08:00 - 16:00"}, {code: "D", desc: "08:00 - 20:00"}, 
+      const shifts = [ {code: "", desc: "Condutor INEM", special: "driver"}, {code: "", desc: "Outro", special: "other"}, {code: "", desc: "OPTEL", special: "optel"}, {code: "", desc: "EIP", special: "eip"}, {code: "M", desc: "08:00 - 16:00"}, {code: "D", desc: "08:00 - 20:00"}, 
                       {code: "N", desc: "20:00 - 08:00"}, {code: "FO", desc: "Folga"}, {code: "FE", desc: "Férias"}, {code: "FOR", desc: "Formação"}, {code: "BX", desc: "Baixa"},
                       {code: "FI", desc: "Falta Injustificada"}, {code: "FJ", desc: "Falta Justificada"}, {code: "LP", desc: "Lic. Parental"}, {code: "LN", desc: "Lic. Nojo"},
                       {code: "LC", desc: "Lic. Casamento"}, {code: "DP", desc: "Dispensa"}, {code: "HA", desc: "Amamentação"}];
       const itemHTML = (shift) => {        
-        const codeBg = shift.special === "driver" ? DRIVER_BG : shift.special === "other" ? OTHER_BG : shift.special === "optel" ? OPTEL_BG : (SHIFT_COLORS[shift.code]?.bg || "#FFFFFF");
+        const codeBg = shift.special === "driver" ? DRIVER_BG : shift.special === "other" ? OTHER_BG : shift.special === "optel" ? OPTEL_BG : shift.special === "eip" ? EIP_BG : (SHIFT_COLORS[shift.code]?.bg || "#FFFFFF");
         const codeColor = shift.special === "driver" ? DRIVER_TEXT : (SHIFT_COLORS[shift.code]?.color || "#000000");
         return `<div style="display:flex;align-items:stretch;background:#f5f5f5;border:1px solid #ccc;border-radius:4px;overflow:hidden;width:140px;">
           <div style="background:${codeBg};color:${codeColor};font-weight:bold;font-size:14px;padding:1px 0;width:30px;text-align:center;display:flex;align-items:center;
@@ -351,7 +357,7 @@
         </div>`;
       };
       let html = `<div style="font-weight:bold;font-size:14px;color:#1e3a8a;margin-bottom:10px;text-align:center;">LEGENDA DE TURNOS</div><div style="display:flex;flex-direction:column;gap:6px;">`;
-      [[0,7],[7,14],[14,17]].forEach(([from, to]) => {
+      [[0,7],[7,14],[14,18]].forEach(([from, to]) => {
         html += `<div style="display:flex;gap:6px;">${shifts.slice(from, to).map(itemHTML).join("")}</div>`;
       });
       html += `</div>`;
@@ -453,6 +459,7 @@
             if (__driverMenuCell.dataset.driver === "1") applyDriverStyle(__driverMenuCell);
             if (__driverMenuCell.dataset.other === "1") applyOtherStyle(__driverMenuCell);
             if (__driverMenuCell.dataset.optel === "1") applyOptelStyle(__driverMenuCell);
+            if (__driverMenuCell.dataset.eip === "1") applyEipStyle(__driverMenuCell);
           } else {
             __driverMenuCell.dataset.customBg = colors.bg; __driverMenuCell.dataset.customColor = colors.color;
             __driverMenuCell.style.backgroundColor = colors.bg; __driverMenuCell.style.color = colors.color; __driverMenuCell.style.fontWeight = "bold";
@@ -497,14 +504,14 @@
         if (!__driverMenuCell) return;
         const isDriver = __driverMenuCell.dataset.driver === "1";
         if (isDriver) { __driverMenuCell.dataset.driver = "0"; applyCellColor(__driverMenuCell, (__driverMenuCell.textContent || "").trim().toUpperCase()); }
-        else {__driverMenuCell.dataset.driver = "1"; __driverMenuCell.dataset.other = "0"; __driverMenuCell.dataset.optel = "0"; applyDriverStyle(__driverMenuCell);}
+        else {__driverMenuCell.dataset.driver = "1"; __driverMenuCell.dataset.other = "0"; __driverMenuCell.dataset.optel = "0"; __driverMenuCell.dataset.eip = "0"; applyDriverStyle(__driverMenuCell);}
         hideDriverMenu();
       });
       const btnOther = makeMenuBtn("Outra Necessidade", (btn) => {
         if (!__driverMenuCell) return;
         const isOther = __driverMenuCell.dataset.other === "1";
         if (isOther) { __driverMenuCell.dataset.other = "0"; applyCellColor(__driverMenuCell, (__driverMenuCell.textContent || "").trim().toUpperCase()); }
-        else {__driverMenuCell.dataset.other = "1"; __driverMenuCell.dataset.driver = "0"; __driverMenuCell.dataset.optel = "0"; __driverMenuCell.style.backgroundColor = "#800080"; __driverMenuCell.style.color = "#ffffff"; 
+        else {__driverMenuCell.dataset.other = "1"; __driverMenuCell.dataset.driver = "0"; __driverMenuCell.dataset.optel = "0"; __driverMenuCell.dataset.eip = "0"; __driverMenuCell.style.backgroundColor = "#800080"; __driverMenuCell.style.color = "#ffffff"; 
               __driverMenuCell.style.fontWeight = "bold";}
         hideDriverMenu();
       });
@@ -512,17 +519,26 @@
         if (!__driverMenuCell) return;
         const isOptel = __driverMenuCell.dataset.optel === "1";
         if (isOptel) { __driverMenuCell.dataset.optel = "0"; applyCellColor(__driverMenuCell, (__driverMenuCell.textContent || "").trim().toUpperCase()); }
-        else {__driverMenuCell.dataset.optel = "1"; __driverMenuCell.dataset.driver = "0"; __driverMenuCell.dataset.other = "0"; applyOptelStyle(__driverMenuCell);}
+        else {__driverMenuCell.dataset.optel = "1"; __driverMenuCell.dataset.driver = "0"; __driverMenuCell.dataset.other = "0"; __driverMenuCell.dataset.eip = "0"; applyOptelStyle(__driverMenuCell);}
+        hideDriverMenu();
+      });
+      const btnEip = makeMenuBtn("EIP", (btn) => {
+        if (!__driverMenuCell) return;
+        const isEip = __driverMenuCell.dataset.eip === "1";
+        if (isEip) { __driverMenuCell.dataset.eip = "0"; applyCellColor(__driverMenuCell, (__driverMenuCell.textContent || "").trim().toUpperCase()); }
+        else {__driverMenuCell.dataset.eip = "1"; __driverMenuCell.dataset.driver = "0"; __driverMenuCell.dataset.other = "0"; __driverMenuCell.dataset.optel = "0"; applyEipStyle(__driverMenuCell);}
         hideDriverMenu();
       });
       menu.appendChild(btnDriver);
       menu.appendChild(btnOther);
       menu.appendChild(btnOptel);
+      menu.appendChild(btnEip);
       document.body.appendChild(menu);
       __driverMenu = menu;
       __driverMenu._btnDriver = btnDriver;
       __driverMenu._btnOther = btnOther;
       __driverMenu._btnOptel = btnOptel;
+      __driverMenu._btnEip = btnEip;
       document.addEventListener("click", hideDriverMenu);
       document.addEventListener("scroll", hideDriverMenu, true);
     }
@@ -534,9 +550,12 @@
       if (isInem) __driverMenu._btnDriver.textContent = cell.dataset.driver === "1" ? "Remover Motorista INEM" : "Motorista INEM";
       __driverMenu._btnOther.textContent = cell.dataset.other === "1" ? "Remover Outra Necessidade" : "Outra Necessidade";
       // OPTEL: para qualquer elemento que não seja já da equipa OPC
-      const isOPC = getOrderKey(cell.closest("tr")?.querySelector("td:nth-child(4)")?.textContent || "") === "OPC";
-      __driverMenu._btnOptel.style.display = isOPC ? "none" : "block";
+      const rowKey = getOrderKey(cell.closest("tr")?.querySelector("td:nth-child(4)")?.textContent || "");
+      __driverMenu._btnOptel.style.display = rowKey === "OPC" ? "none" : "block";
       __driverMenu._btnOptel.textContent = cell.dataset.optel === "1" ? "Remover OPTEL" : "OPTEL";
+      // EIP: para qualquer elemento que não seja já das equipas EP1/EP2
+      __driverMenu._btnEip.style.display = (rowKey === "EP1" || rowKey === "EP2") ? "none" : "block";
+      __driverMenu._btnEip.textContent = cell.dataset.eip === "1" ? "Remover EIP" : "EIP";
       __driverMenu.style.left = x + "px"; __driverMenu.style.top = y + "px"; __driverMenu.style.display = "flex";
     }
     function hideDriverMenu() {
@@ -579,7 +598,7 @@
         const data = await response.json();
         const shifts = {}, employeeData = {};
         data.forEach(item => {
-          shifts[`${item.n_int}_${item.day}`] = {shift: item.shift, is_driver: !!item.is_driver, is_other: !!item.is_other, is_optel: !!item.is_optel,
+          shifts[`${item.n_int}_${item.day}`] = {shift: item.shift, is_driver: !!item.is_driver, is_other: !!item.is_other, is_optel: !!item.is_optel, is_eip: !!item.is_eip,
                                                  custom_bg_color: item.custom_bg_color || null, custom_text_color: item.custom_text_color || null};
           if (!(item.n_int in employeeData)) employeeData[item.n_int] = {position: item.position, team: item.team, function: item.function};
         });
@@ -649,10 +668,11 @@
           } else {
             applyCellColor(cell, shiftVal);
           }
-          if (rec.is_driver) {cell.dataset.driver = "1"; cell.dataset.other = "0"; cell.dataset.optel = "0"; applyDriverStyle(cell);}
-          else if (rec.is_other) {cell.dataset.other = "1"; cell.dataset.driver = "0"; cell.dataset.optel = "0"; applyOtherStyle(cell);}
-          else if (rec.is_optel) {cell.dataset.optel = "1"; cell.dataset.driver = "0"; cell.dataset.other = "0"; applyOptelStyle(cell);}
-          else {cell.dataset.driver = "0"; cell.dataset.other = "0"; cell.dataset.optel = "0";}
+          cell.dataset.driver = "0"; cell.dataset.other = "0"; cell.dataset.optel = "0"; cell.dataset.eip = "0";
+          if (rec.is_driver) {cell.dataset.driver = "1"; applyDriverStyle(cell);}
+          else if (rec.is_other) {cell.dataset.other = "1"; applyOtherStyle(cell);}
+          else if (rec.is_optel) {cell.dataset.optel = "1"; applyOptelStyle(cell);}
+          else if (rec.is_eip) {cell.dataset.eip = "1"; applyEipStyle(cell);}
         });
       });
     }
@@ -755,12 +775,12 @@
             const tc = tShifts[i];
             if (!tc) return;
             const tmp = {text: tc.textContent, bg: tc.style.backgroundColor, color: tc.style.color, fontWeight: tc.style.fontWeight, driver: tc.dataset.driver, 
-                         other: tc.dataset.other, optel: tc.dataset.optel, customBg: tc.dataset.customBg, customColor: tc.dataset.customColor};
+                         other: tc.dataset.other, optel: tc.dataset.optel, eip: tc.dataset.eip, customBg: tc.dataset.customBg, customColor: tc.dataset.customColor};
             tc.textContent = cell.textContent; tc.style.backgroundColor = cell.style.backgroundColor; tc.style.color = cell.style.color;
-            tc.style.fontWeight = cell.style.fontWeight; tc.dataset.driver = cell.dataset.driver; tc.dataset.other = cell.dataset.other; tc.dataset.optel = cell.dataset.optel;
+            tc.style.fontWeight = cell.style.fontWeight; tc.dataset.driver = cell.dataset.driver; tc.dataset.other = cell.dataset.other; tc.dataset.optel = cell.dataset.optel; tc.dataset.eip = cell.dataset.eip;
             tc.dataset.customBg = cell.dataset.customBg; tc.dataset.customColor = cell.dataset.customColor;
             cell.textContent = tmp.text; cell.style.backgroundColor = tmp.bg; cell.style.color = tmp.color; cell.style.fontWeight = tmp.fontWeight;
-            cell.dataset.driver = tmp.driver; cell.dataset.other = tmp.other; cell.dataset.optel = tmp.optel; cell.dataset.customBg = tmp.customBg; cell.dataset.customColor = tmp.customColor;
+            cell.dataset.driver = tmp.driver; cell.dataset.other = tmp.other; cell.dataset.optel = tmp.optel; cell.dataset.eip = tmp.eip; cell.dataset.customBg = tmp.customBg; cell.dataset.customColor = tmp.customColor;
           });
           const dAcum = globalDraggedRow.querySelector(".total-accumulated-cell");
           const tAcum = row.querySelector(".total-accumulated-cell");
@@ -822,7 +842,7 @@
         }
         applyCellColor(this, value);
         applyBaseDayColor(this, __currentYear, __currentMonth, d, __currentHolidayMap);
-        applyDriverStyle(this); applyOptelStyle(this); updateRowTotal(tr);
+        applyDriverStyle(this); applyOptelStyle(this); applyEipStyle(this); updateRowTotal(tr);
         applyWeekendSpecialColors(tbody, __currentYear, __currentMonth);
       });
       td.addEventListener("keydown", ev => {
@@ -1162,7 +1182,7 @@
             if (td.firstChild) { const nr = document.createRange(); nr.setStart(td.firstChild, Math.min(pos, td.textContent.length)); nr.collapse(true); sel.removeAllRanges(); sel.addRange(nr); }
           }
           applyCellColor(td, value); applyBaseDayColor(td, year, month, dayNum, holidayMap);
-          applyDriverStyle(td); applyOptelStyle(td); updateRowTotal(rowRef); applyWeekendSpecialColors(tbody, year, month);
+          applyDriverStyle(td); applyOptelStyle(td); applyEipStyle(td); updateRowTotal(rowRef); applyWeekendSpecialColors(tbody, year, month);
         });
         td.addEventListener("paste", ev => { ev.preventDefault(); document.execCommand("insertText", false, (ev.clipboardData || window.clipboardData).getData("text").trim().toUpperCase()); });
         td.addEventListener("keydown", ev => {
@@ -1259,7 +1279,11 @@
       }
       if (_bxHidden) toggleBXRows(true);
     }
-    let __lastINEMIssues = []; // faltas INEM da última análise (usadas na mensagem de WhatsApp)
+    // Faltas da última análise (usadas nas mensagens de pedido para o WhatsApp)
+    let __lastINEMIssues = [];
+    let __lastEIPIssues = [];
+    let __lastOPTELIssues = [];
+    let __activeAnalyzeTab = "inem"; // separador aberto no popup (o botão Solicitar usa este)
     async function analyzeINEMSchedule() {
       const tbody = document.querySelector("table.employees-table tbody");
       if (!tbody) {
@@ -1287,6 +1311,8 @@
       const issuesEIP = [];
       const issuesOPTEL = [];
       __lastINEMIssues = [];
+      __lastEIPIssues = [];
+      __lastOPTELIssues = [];
       const MIN_D = 2, MIN_N = 2, MIN_EIP = 4;
       const MIN_OPTEL_D = 1, MIN_OPTEL_N = 1;
       const red = (txt) => `<span style="color:#ff4d4d;font-weight:bold;">${txt}</span>`;
@@ -1308,6 +1334,7 @@
             if (val === "N") optelN++;
             return;
           }
+          if (cell.dataset.eip === "1") return; // marcado como EIP: está na EIP, não conta para o INEM
           const isEQ = team.startsWith("EQ");
           const isTDNU = team.startsWith("TDNU");
           if (!isEQ && !isTDNU) return;
@@ -1323,12 +1350,18 @@
           issuesINEM.push(`Dia ${d}: ${styleN} ${red(MIN_N - countN)} OP(s)`);
           __lastINEMIssues.push({day: d, shift: "N", missing: MIN_N - countN});
         }
-        if (optelD < MIN_OPTEL_D) issuesOPTEL.push(`Dia ${d}: ${styleD} ${red(MIN_OPTEL_D - optelD)} OPTEL`);
-        if (optelN < MIN_OPTEL_N) issuesOPTEL.push(`Dia ${d}: ${styleN} ${red(MIN_OPTEL_N - optelN)} OPTEL`);
+        if (optelD < MIN_OPTEL_D) {
+          issuesOPTEL.push(`Dia ${d}: ${styleD} ${red(MIN_OPTEL_D - optelD)} OPTEL`);
+          __lastOPTELIssues.push({day: d, shift: "D", missing: MIN_OPTEL_D - optelD});
+        }
+        if (optelN < MIN_OPTEL_N) {
+          issuesOPTEL.push(`Dia ${d}: ${styleN} ${red(MIN_OPTEL_N - optelN)} OPTEL`);
+          __lastOPTELIssues.push({day: d, shift: "N", missing: MIN_OPTEL_N - optelN});
+        }
 
         // ---- Verificação EIP (só turno D) ----
-        let tdnuMPOutra = 0;
-        let inemOutra = 0, inemOutraMP = 0; // INEM em D com "Outra Necessidade"
+        // Contam: EP1/EP2 em turno D + elementos de outras equipas marcados como EIP nesse dia
+        let eipMarked = 0, eipMarkedMP = 0;
         const eip = {EP1: {total: 0, mp: 0}, EP2: {total: 0, mp: 0}};
         rows.forEach(row => {
           const cell = row.querySelector(`.day-cell-${d}`);
@@ -1337,17 +1370,10 @@
           const nInt = parseInt(row.getAttribute("data-nint"), 10);
           const isMP = mpSet.has(nInt);
           const key = getOrderKey(row.querySelector("td:nth-child(4)")?.textContent || "");
-          // MP de TDNU com "Outra Necessidade": conta seja qual for o valor da célula
-          if (key === "TDNU") {
-            if (isMP && cell.dataset.other === "1") tdnuMPOutra++;
-            return;
-          }
-          // INEM em turno D com "Outra Necessidade": conta como elemento da EIP
-          if (key.startsWith("EQ")) {
-            if (val === "D" && cell.dataset.other === "1") {
-              inemOutra++;
-              if (isMP) inemOutraMP++;
-            }
+          // Marcado como EIP (botão direito): conta como elemento da EIP nesse dia
+          if (cell.dataset.eip === "1") {
+            eipMarked++;
+            if (isMP) eipMarkedMP++;
             return;
           }
           // EIP: só conta quem está em turno D
@@ -1355,19 +1381,19 @@
           eip[key].total++;
           if (isMP) eip[key].mp++;
         });
-        // Se ninguém das EIP está em D, a EIP está de descanso: não verifica
+        // Se ninguém das EIP está em D e ninguém foi marcado como EIP, a EIP está de descanso: não verifica
         const maxTotal = Math.max(eip.EP1.total, eip.EP2.total);
-        if (maxTotal === 0) continue;
+        if (maxTotal === 0 && eipMarked === 0) continue;
         // EIP de serviço = a que tem mais elementos em D (empate: indica as duas)
-        const label = eip.EP1.total > eip.EP2.total ? "EIP 01"
+        const label = maxTotal === 0 ? "EIP"
+                    : eip.EP1.total > eip.EP2.total ? "EIP 01"
                     : eip.EP2.total > eip.EP1.total ? "EIP 02" : "EIP 01/02";
-        // Soma das duas EIP + elementos do INEM com "Outra Necessidade"
-        let total = eip.EP1.total + eip.EP2.total + inemOutra;
-        let mp = eip.EP1.mp + eip.EP2.mp + inemOutraMP;
-        // MP de TDNU com "Outra Necessidade" cobre a falta de MP e conta como elemento
-        if (mp === 0 && tdnuMPOutra > 0) { mp = 1; total++; tdnuMPOutra--; }
+        const total = eip.EP1.total + eip.EP2.total + eipMarked;
+        const mp = eip.EP1.mp + eip.EP2.mp + eipMarkedMP;
         if (mp === 0) issuesEIP.push(`Dia ${d}: ${styleD} ${label} sem ${red("MP")}`);
         if (total < MIN_EIP) issuesEIP.push(`Dia ${d}: ${styleD} ${label} faltam ${red(MIN_EIP - total)} elemento(s)`);
+        if (mp === 0 || total < MIN_EIP)
+          __lastEIPIssues.push({day: d, noMP: mp === 0, missing: Math.max(0, MIN_EIP - total)});
       }
       if (issuesINEM.length === 0 && issuesEIP.length === 0 && issuesOPTEL.length === 0) {
         showPopup('popup-success', "Dotação mínima INEM, EIP e OPTEL assegurada para todos os dias.");
@@ -1378,13 +1404,11 @@
       const body = popup.querySelector('.popup-body');
       const sections = [
         {key: "inem", label: "INEM", icon: "fa-truck-medical", issues: issuesINEM, ok: "Dotação INEM assegurada.",
-         rule: `Dotação mínima: ${MIN_D} elementos no Turno D e ${MIN_N} no Turno N por dia.`,
-         note: "INEM: equipas EQ01–EQ10 + elementos TDNU marcados como Motorista INEM."},
+         rule: `Dotação mínima: ${MIN_D} elementos no Turno D e ${MIN_N} no Turno N por dia.`},
         {key: "eip", label: "EIP", icon: "fa-fire", issues: issuesEIP, ok: "Dotação EIP assegurada.",
-         rule: `Mínimo 1 MP + 3 elementos no Turno D (contam as duas EIP e os INEM em D com "Outra Necessidade").`},
+         rule: `Mínimo 1 MP + 3 elementos no Turno D.`},
         {key: "optel", label: "OPTEL", icon: "fa-headset", issues: issuesOPTEL, ok: "Dotação OPTEL assegurada.",
-         rule: `Dotação mínima: ${MIN_OPTEL_D} OPTEL no Turno D e ${MIN_OPTEL_N} no Turno N por dia.`,
-         note: "OPTEL: equipa OPC + elementos marcados como OPTEL (botão direito na célula)."}
+         rule: `Dotação mínima: ${MIN_OPTEL_D} OPTEL no Turno D e ${MIN_OPTEL_N} no Turno N por dia.`}
       ];
       const tabBtn = (s) => {
         const badge = s.issues.length
@@ -1397,17 +1421,21 @@
                 </button>`;
       };
       const panel = (s) => `
-        <div class="analyze-panel" data-panel="${s.key}" style="display:none;">
+        <div class="analyze-panel" data-panel="${s.key}" style="display:none; flex-direction:column; height:280px;">
           <small>${s.rule}</small>
-          <div class="analyze-list" style="max-height:220px; overflow-y:auto; margin:8px 0; font-weight:bold;">
+          <div class="analyze-list" style="flex:1; min-height:0; overflow-y:auto; margin:8px 0; padding:8px 10px; font-weight:bold; font-size:12px; line-height:1.6;
+                                           background:#f3f4f6; border:1px solid #e5e7eb; border-radius:4px;">
             ${s.issues.length ? s.issues.join("<br>") : `<span style="color:#059669;"><i class="fa-solid fa-circle-check" style="margin-right:4px;"></i>${s.ok}</span>`}
           </div>
-          ${s.note ? `<small><i class="fa-solid fa-circle-info" style="margin-right:4px;"></i>${s.note}</small>` : ""}
         </div>`;
+      // Tamanho fixo: o popup não cresce nem encolhe ao trocar de separador
       body.innerHTML = `
-        <div style="display:flex; gap:6px; margin-bottom:10px;">${sections.map(tabBtn).join("")}</div>
-        ${sections.map(panel).join("")}`;
+        <div style="width:480px; max-width:100%;">
+          <div style="display:flex; gap:6px; margin-bottom:10px;">${sections.map(tabBtn).join("")}</div>
+          ${sections.map(panel).join("")}
+        </div>`;
       const activate = (key) => {
+        __activeAnalyzeTab = key;
         body.querySelectorAll(".analyze-tab").forEach(b => {
           const on = b.dataset.tab === key;
           b.style.background = on ? "#2b6ca3" : "#f8fafc";
@@ -1415,7 +1443,7 @@
           b.style.borderColor = on ? "#2b6ca3" : "#cbd5e1";
         });
         body.querySelectorAll(".analyze-panel").forEach(p => {
-          p.style.display = p.dataset.panel === key ? "block" : "none";
+          p.style.display = p.dataset.panel === key ? "flex" : "none";
         });
       };
       body.querySelectorAll(".analyze-tab").forEach(b => b.addEventListener("click", () => activate(b.dataset.tab)));
@@ -1423,16 +1451,32 @@
       activate((sections.find(s => s.issues.length) || sections[0]).key);
       popup.classList.add('show');
     }
-    function requestINEMElements() {
-      if (!__lastINEMIssues.length) {
-        showPopup('popup-info', "Não há turnos INEM por preencher.");
+    // Gera a mensagem de pedido de disponibilidades (INEM, EIP ou OPTEL) e copia-a para o WhatsApp
+    function requestElements(type = "inem") {
+      const nameMonth = MONTH_NAMES[__currentMonth - 1];
+      let title, lines;
+      if (type === "eip") {
+        title = "Turnos EIP por Preencher";
+        lines = __lastEIPIssues.map(i => {
+          const parts = [];
+          if (i.missing > 0) parts.push(`*${i.missing}* elemento(s)`);
+          if (i.noMP) parts.push(`sem *MP*`);
+          return `Dia ${i.day}: Turno D ${parts.join(" - ")}`;
+        });
+      } else if (type === "optel") {
+        title = "Turnos OPTEL por Preencher";
+        lines = __lastOPTELIssues.map(i => `Dia ${i.day}: Turno ${i.shift} *${i.missing}* OPTEL`);
+      } else {
+        title = "Turnos INEM por Preencher";
+        lines = __lastINEMIssues.map(i => `Dia ${i.day}: Turno ${i.shift} *${i.missing}* OP(s)`);
+      }
+      if (!lines.length) {
+        showPopup('popup-info', `Não há ${title.toLowerCase()}.`);
         return;
       }
-      const nameMonth = MONTH_NAMES[__currentMonth - 1];
-      const finalLines = __lastINEMIssues.map(i => `Dia ${i.day}: Turno ${i.shift} *${i.missing}* OP(s)`);
       let message = `*🚨INFORMAÇÃO🚨*\n\n`;
-      message += `*Turnos INEM por Preencher - ${nameMonth} ${__currentYear}*\n\n`;
-      message += `${finalLines.join('\n')}\n\n`;
+      message += `*${title} - ${nameMonth} ${__currentYear}*\n\n`;
+      message += `${lines.join('\n')}\n\n`;
       message += `As disponibilidades devem ser remetidas para comando0805.ahbfaro@gmail.com.\n`;
       message += `Obrigado pela vossa colaboração!`;
       navigator.clipboard.writeText(message).then(() => {
@@ -1442,6 +1486,8 @@
         showPopup('popup-danger', 'Erro ao copiar.');
       });
     }
+    // Botão "Solicitar" do popup: copia o pedido do separador que está aberto
+    function requestINEMElements() { requestElements(__activeAnalyzeTab || "inem"); }
     async function cleanEmployeeScales({ autoSave = false } = {}) {
       const tbody = document.querySelector("table.employees-table tbody");
       if (!tbody) {showPopup('popup-danger', "Nenhuma tabela aberta."); return;}
@@ -1453,7 +1499,7 @@
       const holidayMap = getHolidayMapForMonth(year, month);
       Array.from(tbody.querySelectorAll("tr.data-row")).forEach(row => {
         Array.from(row.querySelectorAll("td[contenteditable='true']")).slice(0, daysInMonth).forEach((cell, idx) => {
-          cell.textContent = ""; delete cell.dataset.driver; delete cell.dataset.other; delete cell.dataset.optel;
+          cell.textContent = ""; delete cell.dataset.driver; delete cell.dataset.other; delete cell.dataset.optel; delete cell.dataset.eip;
           cell.style.color = ""; cell.style.fontWeight = ""; cell.style.backgroundColor = ""; cell.title = "";
           applyBaseDayColor(cell, year, month, idx + 1, holidayMap);
         });
@@ -1494,7 +1540,7 @@
             const customBg = (cell.dataset.customBg && cell.dataset.customBg !== "undefined") ? cell.dataset.customBg : null;
             const customColor = (cell.dataset.customColor && cell.dataset.customColor !== "undefined") ? cell.dataset.customColor : null;
             if (shift || customBg || customColor)
-              shiftsPayload.push({n_int: nInt, abv_name: abvName, day: idx + 1, month, year, shift: shift || " ", team, function: func, position, corp_oper_nr: corpOperNr, is_driver: cell.dataset.driver === "1", is_other: cell.dataset.other === "1", is_optel: cell.dataset.optel === "1",
+              shiftsPayload.push({n_int: nInt, abv_name: abvName, day: idx + 1, month, year, shift: shift || " ", team, function: func, position, corp_oper_nr: corpOperNr, is_driver: cell.dataset.driver === "1", is_other: cell.dataset.other === "1", is_optel: cell.dataset.optel === "1", is_eip: cell.dataset.eip === "1",
                                   custom_bg_color: customBg, custom_text_color: customColor});});
           const totalMonthly = calculateProfessionalsRowTotal(row);
           const totalAcumCell = row.cells[row.cells.length - 1];

@@ -4073,7 +4073,7 @@
                 </tr>
               </thead>
               <tbody id="salary-table-body">
-                <tr><td colspan="8" style="padding:40px; text-align:center;">⌛ A carregar dados de Janeiro...</td></tr>
+                <tr><td colspan="8" style="padding:40px; text-align:center;"><i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i>A carregar dados...</td></tr>
               </tbody>
             </table>
           </div>
@@ -4112,7 +4112,7 @@
       const monthName = document.getElementById("salary-month-filter")
         .options[document.getElementById("salary-month-filter").selectedIndex].text;
       tableBody.innerHTML =
-        `<tr><td colspan="8" style="padding:40px; text-align:center;">⌛ A carregar dados de ${monthName}...</td></tr>`;
+        `<tr><td colspan="8" style="padding:40px; text-align:center;"><i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i>A carregar dados de ${monthName}...</td></tr>`;
       try {
         const [empRes, eligRes, shiftRes, prevShiftRes, nextShiftRes, prevEligRes] = await Promise.all([
           fetch(`${SUPABASE_URL}/rest/v1/reg_employees?corp_oper_nr=eq.${corpOperNr}&or=(exit_date.is.null,exit_date.gte.${firstDayOfMonth},team.in.(COM,SEC))`, {
@@ -4516,13 +4516,13 @@
     }
     async function exportSalaryMap(event, format) {
       const isPdf = format === "pdf";
-      const btn = event?.target;
+      const btn = event?.target?.closest("button"); // o clique pode cair no ícone <i>
       const mapType = await chooseSalaryMapType(isPdf ? "PDF" : "Excel");
       if (!mapType) return;
-      const originalText = btn ? btn.innerText : "";
+      const originalHTML = btn ? btn.innerHTML : ""; // innerHTML guarda também o ícone
       if (btn) {
         btn.disabled = true;
-        btn.innerText = isPdf ? "⌛ A Gerar Mapa..." : "⌛ A Exportar...";
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i>${isPdf ? "A Gerar Mapa..." : "A Exportar..."}`;
       }
       try {
         const year = parseInt(document.getElementById("salary-year-filter").value);
@@ -4561,11 +4561,11 @@
       } catch (error) {
         hideLoadingPopup();
         console.error("Erro ao gerar mapa salarial:", error);
-        showPopup('popup-danger', `❌ Erro ao gerar ${isPdf ? "mapa salarial" : "Excel"}.`);
+        showPopup('popup-danger', `Erro ao gerar ${isPdf ? "mapa salarial" : "Excel"}.`);
       } finally {
         if (btn) {
           btn.disabled = false;
-          btn.innerText = originalText;
+          btn.innerHTML = originalHTML;
         }
       }
     }

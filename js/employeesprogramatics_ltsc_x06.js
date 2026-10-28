@@ -154,9 +154,9 @@
     const DRIVER_TEXT = "#000000";
     const OTHER_BG = "#800080";
     const OTHER_TEXT = "#ffffff";
-    const OPTEL_BG = "#5D4037";   // célula marcada como OPTEL (elemento a cobrir a Central)
+    const OPTEL_BG = "#5D4037";
     const OPTEL_TEXT = "#ffffff";
-    const EIP_BG = "#E65100";     // célula marcada como EIP (elemento a reforçar a EIP)
+    const EIP_BG = "#E65100";
     const EIP_TEXT = "#ffffff";
     let __currentYear = null;
     let __currentMonth = null;
@@ -325,8 +325,7 @@
     function displayWorkingHoursInfo(container, year, month) {
       const info = calculateWorkingHours(year, month);
       const infoDiv = document.createElement("div");
-      infoDiv.style.cssText = `margin-top:5px;padding:12px;background:#f0f8ff;border:1px solid #4682b4;border-radius:5px;font-family:'Segoe UI',sans-serif;
-                               display:inline-block;width:315px;height:150px;`;
+      infoDiv.style.cssText = `margin-top:5px;padding:12px;background:#f0f8ff;border:1px solid #4682b4;border-radius:5px;font-family:'Segoe UI',sans-serif; display:inline-block;width:315px;height:150px;`;
       const holidaysHTML = info.holidaysInMonth.length > 0
         ? `<div><strong style="color:#1e3a8a;"><i class="fa-solid fa-champagne-glasses" style="margin-right:4px;"></i>Feriados:</strong><span style="color:#6b7280;"> ${info.holidaysInMonth.map(h => `Dia: ${h.day}`).join(", ")}</span></div>`
         : "";
@@ -341,7 +340,8 @@
     }
     function displayShiftsLegend(container) {
       const legendDiv = document.createElement("div");
-      legendDiv.style.cssText = `margin-top: 5px; padding: 12px; background: #f0f8ff; border: 1px solid #4682b4; border-radius: 5px; font-family: 'Segoe UI', sans-serif; display: inline-block; width: fit-content; margin-left: 5px;vertical-align:top; height:150px;`;
+      legendDiv.style.cssText = `margin-top: 5px; padding: 12px; background: #f0f8ff; border: 1px solid #4682b4; border-radius: 5px; font-family: 'Segoe UI', sans-serif;
+                                 display: inline-block; width: fit-content; margin-left: 5px;vertical-align:top; height:150px;`;
       const shifts = [ {code: "", desc: "Condutor INEM", special: "driver"}, {code: "", desc: "Outro", special: "other"}, {code: "", desc: "OPTEL", special: "optel"}, {code: "", desc: "EIP", special: "eip"}, {code: "M", desc: "08:00 - 16:00"}, {code: "D", desc: "08:00 - 20:00"}, 
                       {code: "N", desc: "20:00 - 08:00"}, {code: "FO", desc: "Folga"}, {code: "FE", desc: "Férias"}, {code: "FOR", desc: "Formação"}, {code: "BX", desc: "Baixa"},
                       {code: "FI", desc: "Falta Injustificada"}, {code: "FJ", desc: "Falta Justificada"}, {code: "LP", desc: "Lic. Parental"}, {code: "LN", desc: "Lic. Nojo"},
@@ -1423,8 +1423,11 @@
                     : eip.EP2.total > eip.EP1.total ? "EIP 02" : "EIP 01/02";
         const total = eip.EP1.total + eip.EP2.total + eipMarked;
         const mp = eip.EP1.mp + eip.EP2.mp + eipMarkedMP;
-        if (mp === 0) issuesEIP.push(`Dia ${d}: ${styleD} ${label} sem ${red("MP")}`);
-        if (total < MIN_EIP) issuesEIP.push(`Dia ${d}: ${styleD} ${label} faltam ${red(MIN_EIP - total)} elemento(s)`);
+        if (mp === 0) issuesEIP.push(`Dia ${d}: ${styleD} ${label} sem ${red("Motorista de Pesados.")}`);
+        if (total < MIN_EIP) {
+          const missing = MIN_EIP - total;
+          issuesEIP.push(`Dia ${d}: ${styleD} ${label} ${missing === 1 ? "falta" : "faltam"} ${red(missing)} ${missing === 1 ? "elemento" : "elemento(s)"}`);
+        }
         if (mp === 0 || total < MIN_EIP)
           __lastEIPIssues.push({day: d, noMP: mp === 0, missing: Math.max(0, MIN_EIP - total)});
       }
@@ -1448,11 +1451,11 @@
       }
       const sections = [
         {key: "inem", label: "INEM", icon: "fa-truck-medical", issues: issuesINEM, ok: "Dotação INEM assegurada.",
-         rule: `Dotação mínima: ${MIN_D} elementos no Turno D e ${MIN_N} no Turno N por dia.`},
+         rule: `Dotação mínima: <b>${MIN_D}</b> elementos no Turno D e <b>${MIN_N}</b> no Turno N por dia.`},
         {key: "eip", label: "EIP", icon: "fa-fire", issues: issuesEIP, ok: "Dotação EIP assegurada.",
-         rule: `Mínimo 1 MP + 3 elementos no Turno D.`},
+         rule: `Dotação mínima: <b>1</b> Motorista de Pesados e <b>3</b> Elementos.`},
         {key: "optel", label: "OPTEL", icon: "fa-headset", issues: issuesOPTEL, ok: "Dotação OPTEL assegurada.",
-         rule: `Dotação mínima: ${MIN_OPTEL_D} OPTEL no Turno D e ${MIN_OPTEL_N} no Turno N por dia.`}
+         rule: `Dotação mínima: <b>${MIN_OPTEL_D}</b> OPTEL no Turno D e <b>${MIN_OPTEL_N}</b> OPTEL no Turno N.`}
       ];
       const tabBtn = (s) => {
         const badge = s.issues.length
@@ -1465,7 +1468,7 @@
       };
       const panel = (s) => `
         <div class="analyze-panel" data-panel="${s.key}" style="display:none; flex-direction:column; height:280px;">
-          <small>${s.rule}</small>
+          <div style="font-size:12px; color:#475569; font-weight:600;">${s.rule}</div>
           <div class="analyze-list" style="flex:1; min-height:0; overflow-y:auto; margin:8px 0; padding:8px 10px; font-weight:bold; font-size:12px; line-height:1.6; background:#f3f4f6; border:1px solid #e5e7eb; border-radius:4px; scrollbar-width:thin; scrollbar-color:#b0b7c3 transparent;">
             ${s.issues.length ? s.issues.join("<br>") : `<span style="color:#059669;"><i class="fa-solid fa-circle-check" style="margin-right:4px;"></i>${s.ok}</span>`}
           </div>
@@ -1476,8 +1479,10 @@
           ${sections.map(panel).join("")}
         </div>`;
       const requestBtn = popup.querySelector('[onclick*="requestINEMElements"]');
+      const titleEl = popup.querySelector('[class*="title"]') || popup.querySelector('h1, h2, h3, h4');
       const activate = (key) => {
         __activeAnalyzeTab = key;
+        if (titleEl) titleEl.textContent = `Turnos ${sections.find(s => s.key === key)?.label || ""} por Preencher`;
         if (requestBtn) {
           const hasIssues = sections.find(s => s.key === key)?.issues.length > 0;
           requestBtn.disabled = !hasIssues;
@@ -1506,7 +1511,7 @@
         title = "Turnos EIP por Preencher";
         lines = __lastEIPIssues.map(i => {
           const parts = [];
-          if (i.missing > 0) parts.push(`*${i.missing}* elemento(s)`);
+          if (i.missing > 0) parts.push(`*${i.missing}* ${i.missing === 1 ? "elemento" : "elemento(s)"}`);
           if (i.noMP) parts.push(`sem *MP*`);
           return `Dia ${i.day}: Turno D ${parts.join(" - ")}`;
         });

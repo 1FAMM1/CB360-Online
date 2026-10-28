@@ -2382,10 +2382,10 @@
         return card;
       };
       const initialPrevYear = parseInt(yearSelect.value) - 1;
-      infoSection.appendChild(createInfoCard("holiday-remaining-prev-days", `Dias Remanescentes (${initialPrevYear})`, "⏮️", "#9c27b0", "holiday-remaining-prev-days-label"));      
-      infoSection.appendChild(createInfoCard("holiday-total-days", "Total de Férias", "📅", "#2196f3"));
-      infoSection.appendChild(createInfoCard("holiday-used-days", "Dias Usados", "✅", "#ff9800"));
-      infoSection.appendChild(createInfoCard("holiday-available-days", "Dias Disponíveis", "🎯", "#00c853"));      
+      infoSection.appendChild(createInfoCard("holiday-remaining-prev-days", `Dias Remanescentes (${initialPrevYear})`, '<i class="fa-solid fa-clock-rotate-left"></i>', "#9c27b0", "holiday-remaining-prev-days-label"));
+      infoSection.appendChild(createInfoCard("holiday-total-days", "Total de Férias", '<i class="fa-solid fa-calendar-days"></i>', "#2196f3"));
+      infoSection.appendChild(createInfoCard("holiday-used-days", "Dias Usados", '<i class="fa-solid fa-circle-check"></i>', "#ff9800"));
+      infoSection.appendChild(createInfoCard("holiday-available-days", "Dias Disponíveis", '<i class="fa-solid fa-bullseye"></i>', "#00c853"));
       const periodsSection = document.createElement("div");
       periodsSection.id = "holiday-periods-section";
       periodsSection.style.cssText = `display: none; flex-direction: column; gap: 5px; margin-top: 10px;`;      
@@ -2402,7 +2402,7 @@
       }
       const addPeriodBtn = document.createElement("button");
       addPeriodBtn.id = "holiday-add-period-btn";
-      addPeriodBtn.textContent = "➕ Adicionar Período";
+      addPeriodBtn.innerHTML = '<i class="fa-solid fa-plus" style="margin-right: 6px;"></i>Adicionar Período';
       addPeriodBtn.className = "btn btn-info";
       addPeriodBtn.style.cssText = "padding: 10px 20px; font-size: 13px; font-weight: bold; cursor: pointer; background-color: #2196f3; color: white; border: none; border-radius: 4px;";
       periodsTitle.appendChild(addPeriodBtn);
@@ -2420,7 +2420,7 @@
             addPeriodBtn.disabled = true;
             addPeriodBtn.style.backgroundColor = "#ccc";
             addPeriodBtn.style.cursor = "not-allowed";
-            addPeriodBtn.textContent = "❌ Limite Máximo de 6 Períodos Atingido";
+            addPeriodBtn.innerHTML = '<i class="fa-solid fa-ban" style="margin-right: 6px; color: #dc3545;"></i>Limite Máximo de 6 Períodos Atingido';
           }
         }
       });      
@@ -2428,17 +2428,17 @@
       actionsDiv.style.cssText = `display: flex; gap: 10px; margin-top: 10px; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);`;      
       const previewBtn = document.createElement("button");
       previewBtn.id = "holiday-preview-btn";
-      previewBtn.textContent = "👁️ Pré-visualizar";
+      previewBtn.innerHTML = '<i class="fa-solid fa-eye" style="margin-right: 6px;"></i>Pré-visualizar';
       previewBtn.className = "btn btn-clean";
       previewBtn.style.cssText = `flex: 1; padding: 12px; font-size: 14px; font-weight: bold; cursor: pointer;`;      
       const saveBtn = document.createElement("button");
       saveBtn.id = "holiday-save-btn";
-      saveBtn.textContent = "💾 Gravar Férias";
+      saveBtn.innerHTML = '<i class="fa-solid fa-floppy-disk" style="margin-right: 6px;"></i>Gravar Férias';
       saveBtn.className = "btn btn-add";
       saveBtn.style.cssText = `flex: 1; padding: 12px; font-size: 14px; font-weight: bold; cursor: pointer;`;      
       const pdfBtn = document.createElement("button");
       pdfBtn.id = "holiday-pdf-btn";
-      pdfBtn.textContent = "📄 Gerar Formulário (PDF)";
+      pdfBtn.innerHTML = '<i class="fa-solid fa-file-pdf" style="margin-right: 6px;"></i>Gerar Formulário (PDF)';
       pdfBtn.className = "btn btn-info";
       pdfBtn.style.cssText = `flex: 1; padding: 12px; font-size: 14px; font-weight: bold; cursor: pointer; background-color: #455a64; color: white; border: none; border-radius: 4px;`;      
       actionsDiv.append(previewBtn, saveBtn, pdfBtn);
@@ -2477,7 +2477,7 @@
             addPeriodBtn.disabled = false;
             addPeriodBtn.style.backgroundColor = "#2196f3";
             addPeriodBtn.style.cursor = "pointer";
-            addPeriodBtn.textContent = "➕ Adicionar Período";
+            addPeriodBtn.innerHTML = '<i class="fa-solid fa-plus" style="margin-right: 6px;"></i>Adicionar Período';
           }
         }
       });
@@ -2504,7 +2504,7 @@
       title.style.cssText = `font-size: 16px; font-weight: bold; color: #2196f3; margin-bottom: 15px;`;
       card.append(title);
       const removeBtn = document.createElement("button");
-      removeBtn.textContent = "❌";
+      removeBtn.innerHTML = '<i class="fa-solid fa-xmark" style="font-size: 16px; font-weight: bold; color: #dc3545;"></i>';
       removeBtn.title = "Remover este período";
       removeBtn.style.cssText = `position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 14px; cursor: pointer; padding: 5px; line-height: 1;`;
       if (periodNumber <= 3) {
@@ -2541,7 +2541,7 @@
           addPeriodBtn.disabled = false;
           addPeriodBtn.style.backgroundColor = "#2196f3";
           addPeriodBtn.style.cursor = "pointer";
-          addPeriodBtn.textContent = "➕ Adicionar Período";
+          addPeriodBtn.innerHTML = '<i class="fa-solid fa-plus" style="margin-right: 6px;"></i>Adicionar Período';
         }
       });
       card.append(removeBtn);
@@ -2596,7 +2596,7 @@
         const prevYear = year - 1;
         const remainingLabelEl = document.getElementById("holiday-remaining-prev-days-label");
         if (remainingLabelEl) {
-          remainingLabelEl.textContent = `⏮️ Dias Remanescentes (${prevYear})`;
+          remainingLabelEl.innerHTML = `<i class="fa-solid fa-clock-rotate-left" style="margin-right: 6px;"></i>Dias Remanescentes (${prevYear})`;
         }
         const employeeResponse = await fetch(`${SUPABASE_URL}/rest/v1/reg_employees?corp_oper_nr=eq.${corpOperNr}&n_int=eq.${nInt}`, {
           headers: getSupabaseHeaders()
@@ -2700,12 +2700,12 @@
               addPeriodBtn.disabled = true;
               addPeriodBtn.style.backgroundColor = "#ccc";
               addPeriodBtn.style.cursor = "not-allowed";
-              addPeriodBtn.textContent = "❌ Limite Máximo de 6 Períodos Atingido";
+              addPeriodBtn.innerHTML = '<i class="fa-solid fa-ban" style="margin-right: 6px;"></i>Limite Máximo de 6 Períodos Atingido';
             } else {
               addPeriodBtn.disabled = false;
               addPeriodBtn.style.backgroundColor = "#2196f3";
               addPeriodBtn.style.cursor = "pointer";
-              addPeriodBtn.textContent = "➕ Adicionar Período";
+              addPeriodBtn.innerHTML = '<i class="fa-solid fa-plus" style="margin-right: 6px;"></i>Adicionar Período';
             }
           }
           for (let i = 1; i <= totalToShow; i++) {

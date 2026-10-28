@@ -1426,7 +1426,7 @@
         if (mp === 0) issuesEIP.push(`Dia ${d}: ${styleD} ${label} sem ${red("Motorista de Pesados.")}`);
         if (total < MIN_EIP) {
           const missing = MIN_EIP - total;
-          issuesEIP.push(`Dia ${d}: ${styleD} ${label} ${missing === 1 ? "falta" : "faltam"} ${red(missing)} ${missing === 1 ? "elemento" : "elemento(s)"}`);
+          issuesEIP.push(`Dia ${d}: ${styleD} ${label} ${missing === 1 ? "falta" : "faltam"} ${red(missing)} ${missing === 1 ? "elemento" : "elementos"}`);
         }
         if (mp === 0 || total < MIN_EIP)
           __lastEIPIssues.push({day: d, noMP: mp === 0, missing: Math.max(0, MIN_EIP - total)});
@@ -1511,7 +1511,7 @@
         title = "Turnos EIP por Preencher";
         lines = __lastEIPIssues.map(i => {
           const parts = [];
-          if (i.missing > 0) parts.push(`*${i.missing}* ${i.missing === 1 ? "elemento" : "elemento(s)"}`);
+          if (i.missing > 0) parts.push(`*${i.missing}* ${i.missing === 1 ? "elemento" : "elementos"}`);
           if (i.noMP) parts.push(`sem *MP*`);
           return `Dia ${i.day}: Turno D ${parts.join(" - ")}`;
         });

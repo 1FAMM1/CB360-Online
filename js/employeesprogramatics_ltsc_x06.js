@@ -154,9 +154,9 @@
     const DRIVER_TEXT = "#000000";
     const OTHER_BG = "#800080";
     const OTHER_TEXT = "#ffffff";
-    const OPTEL_BG = "#5D4037";
+    const OPTEL_BG = "#5D4037";   // célula marcada como OPTEL (elemento a cobrir a Central)
     const OPTEL_TEXT = "#ffffff";
-    const EIP_BG = "#E65100";
+    const EIP_BG = "#E65100";     // célula marcada como EIP (elemento a reforçar a EIP)
     const EIP_TEXT = "#ffffff";
     let __currentYear = null;
     let __currentMonth = null;
@@ -341,8 +341,7 @@
     }
     function displayShiftsLegend(container) {
       const legendDiv = document.createElement("div");
-      legendDiv.style.cssText = `margin-top: 5px; padding: 12px; background: #f0f8ff; border: 1px solid #4682b4; border-radius: 5px; font-family: 'Segoe UI', sans-serif;
-                                 display: inline-block; width: fit-content; margin-left: 5px;vertical-align:top; height:150px;`;
+      legendDiv.style.cssText = `margin-top: 5px; padding: 12px; background: #f0f8ff; border: 1px solid #4682b4; border-radius: 5px; font-family: 'Segoe UI', sans-serif; display: inline-block; width: fit-content; margin-left: 5px;vertical-align:top; height:150px;`;
       const shifts = [ {code: "", desc: "Condutor INEM", special: "driver"}, {code: "", desc: "Outro", special: "other"}, {code: "", desc: "OPTEL", special: "optel"}, {code: "", desc: "EIP", special: "eip"}, {code: "M", desc: "08:00 - 16:00"}, {code: "D", desc: "08:00 - 20:00"}, 
                       {code: "N", desc: "20:00 - 08:00"}, {code: "FO", desc: "Folga"}, {code: "FE", desc: "Férias"}, {code: "FOR", desc: "Formação"}, {code: "BX", desc: "Baixa"},
                       {code: "FI", desc: "Falta Injustificada"}, {code: "FJ", desc: "Falta Justificada"}, {code: "LP", desc: "Lic. Parental"}, {code: "LN", desc: "Lic. Nojo"},
@@ -351,8 +350,7 @@
         const codeBg = shift.special === "driver" ? DRIVER_BG : shift.special === "other" ? OTHER_BG : shift.special === "optel" ? OPTEL_BG : shift.special === "eip" ? EIP_BG : (SHIFT_COLORS[shift.code]?.bg || "#FFFFFF");
         const codeColor = shift.special === "driver" ? DRIVER_TEXT : (SHIFT_COLORS[shift.code]?.color || "#000000");
         return `<div style="display:flex;align-items:stretch;background:#f5f5f5;border:1px solid #ccc;border-radius:4px;overflow:hidden;width:140px;">
-          <div style="background:${codeBg};color:${codeColor};font-weight:bold;font-size:14px;padding:1px 0;width:30px;text-align:center;display:flex;align-items:center;
-                      justify-content:center;">${shift.special === "driver" ? "&nbsp;" : shift.code}</div>
+          <div style="background:${codeBg};color:${codeColor};font-weight:bold;font-size:14px;padding:1px 0;width:30px;text-align:center;display:flex;align-items:center; justify-content:center;">${shift.special === "driver" ? "&nbsp;" : shift.code}</div>
           <div style="font-size:12px;color:#000;flex:1;text-align:center;padding:1px 8px;display:flex;align-items:center;justify-content:center;">${shift.desc}</div>
         </div>`;
       };
@@ -430,26 +428,48 @@
     function ensureDriverMenu() {
       if (__driverMenu) return;
       const menu = document.createElement("div");
-      menu.style.cssText = `position:fixed;z-index:99999;display:none;background:#fff;border:1px solid #ccc;border-radius:8px;box-shadow:0 8px 20px rgba(0,0,0,0.2); font-family:'Segoe UI',sans-serif;padding:8px;flex-direction:column;gap:6px;min-width:280px;`;
+      menu.style.cssText = `position:fixed;z-index:99999;display:none;flex-direction:column;width:300px;background:#fff;border:1px solid #e2e8f0;border-radius:10px; box-shadow:0 12px 32px rgba(15,23,42,0.22);font-family:'Segoe UI',sans-serif;overflow:hidden;`;
       menu.addEventListener("mousedown", e => e.stopPropagation());
       menu.addEventListener("click", e => e.stopPropagation());
+      menu.addEventListener("contextmenu", e => e.preventDefault());
+      const header = document.createElement("div");
+      header.style.cssText = "background:#2b6ca3;color:#fff;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;";
+      header.innerHTML = `
+        <div style="min-width:0;">
+          <div class="dm-name" style="font-size:13px;font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+          <div class="dm-day" style="font-size:11px;opacity:0.85;"></div>
+        </div>
+        <span class="dm-close" title="Fechar" style="cursor:pointer;font-size:15px;line-height:1;opacity:0.85;"><i class="fa-solid fa-xmark"></i></span>`;
+      header.querySelector(".dm-close").addEventListener("click", hideDriverMenu);
+      menu.appendChild(header);
+      const content = document.createElement("div");
+      content.style.cssText = "padding:10px 12px 12px;display:flex;flex-direction:column;gap:10px;";
+      menu.appendChild(content);
+      const sectionTitle = (icon, text) => {
+        const t = document.createElement("div");
+        t.style.cssText = "font-size:10px;font-weight:bold;color:#64748b;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px;";
+        t.innerHTML = `<i class="fa-solid ${icon}" style="margin-right:5px;"></i>${text}`;
+        return t;
+      };
+      const hoverLift = (btn) => {
+        btn.addEventListener("mouseenter", () => { btn.style.transform = "translateY(-1px)"; btn.style.boxShadow = "0 3px 8px rgba(15,23,42,0.18)"; });
+        btn.addEventListener("mouseleave", () => { btn.style.transform = ""; btn.style.boxShadow = ""; });
+      };
       const bgSection = document.createElement("div");
-      bgSection.innerHTML = `<div style="font-size:11px;font-weight:bold;color:#666;margin-bottom:4px;padding:0 4px;"><i class="fa-solid fa-palette" style="margin-right:4px;"></i>COR DE FUNDO:</div>`;
+      bgSection.appendChild(sectionTitle("fa-palette", "Cor de fundo"));
       const bgGrid = document.createElement("div");
-      bgGrid.style.cssText = "display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:4px;";
+      bgGrid.style.cssText = "display:grid;grid-template-columns:repeat(5,1fr);gap:5px;";
       const shiftsList = [{code:"M",desc:"Manhã"},{code:"D",desc:"Dia"},{code:"N",desc:"Noite"},{code:"FR",desc:"Feriado"},{code:"FO",desc:"Folga"},
-                          {code:"FE",desc:"Férias"},{code:"FOR",desc:"Formação"},{code:"BX",desc:"Baixa"},{code:"DP",desc:"Dispensa"},
-                          {code:"DRIVER",desc:"Motorista",bg:DRIVER_BG,color:DRIVER_TEXT},{code:"OTHER",desc:"Outro Tipo",bg:OTHER_BG,color:OTHER_TEXT},
-                          {code:"HA",desc:"Amamentação"},{code:"RESET",desc:"Limpar Cor",bg:"#ffffff",color:"#000000"}];
+                          {code:"FE",desc:"Férias"},{code:"FOR",desc:"Formação"},{code:"BX",desc:"Baixa"},{code:"DP",desc:"Dispensa"},{code:"HA",desc:"Amamentação"},
+                          {code:"DRIVER",label:"MOT",desc:"Motorista",bg:DRIVER_BG,color:DRIVER_TEXT},{code:"OTHER",label:"OUT",desc:"Outro Tipo",bg:OTHER_BG,color:OTHER_TEXT},
+                          {code:"RESET",desc:"Limpar Cor",bg:"#ffffff",color:"#64748b"}];
       shiftsList.forEach(shift => {
         const colors = SHIFT_COLORS[shift.code] || {bg: shift.bg || "#ffffff", color: shift.color || "#000000"};
         const btn = document.createElement("button");
         btn.type = "button"; btn.title = shift.desc;
-        btn.innerHTML = shift.code === "RESET" ? '<i class="fa-solid fa-xmark"></i>' : "";
-        btn.style.cssText = `border:1px solid #ddd;background:${colors.bg};color:${colors.color};padding:6px 4px;cursor:pointer;font-size:11px;font-weight:bold;border-radius:4px;
-                             transition:transform 0.1s;min-height:32px;min-width:32px;`;
-        btn.addEventListener("mouseover", () => btn.style.transform = "scale(1.1)");
-        btn.addEventListener("mouseout", () => btn.style.transform = "scale(1)");
+        btn.innerHTML = shift.code === "RESET" ? '<i class="fa-solid fa-eraser"></i>' : (shift.label || shift.code);
+        btn.style.cssText = `border:1px solid ${shift.code === "RESET" ? "#cbd5e1" : "rgba(0,0,0,0.12)"};background:${colors.bg};color:${colors.color};height:30px;cursor:pointer; font-size:10px;font-weight:bold;border-radius:6px;transition:transform 0.1s, box-shadow 0.1s;`;
+        hoverLift(btn);
         btn.addEventListener("click", () => {
           if (!__driverMenuCell) return;
           if (shift.code === "RESET") {
@@ -468,15 +488,17 @@
         bgGrid.appendChild(btn);
       });
       bgSection.appendChild(bgGrid);
-      menu.appendChild(bgSection);
+      content.appendChild(bgSection);
       const textSection = document.createElement("div");
-      textSection.innerHTML = `<div style="font-size:11px;font-weight:bold;color:#666;margin:4px 0 4px 4px;"><i class="fa-solid fa-pen" style="margin-right:4px;"></i>COR DE LETRA:</div>`;
+      textSection.appendChild(sectionTitle("fa-pen", "Cor de letra"));
       const textGrid = document.createElement("div");
-      textGrid.style.cssText = "display:flex;gap:4px;padding:4px;";
-      [{label:"Preto",color:"#000000",bg:"#000",tc:"#fff"},{label:"Branco",color:"#FFFFFF",bg:"#fff",tc:"#000"},{label:"Vermelho",color:"#FF0000",bg:"#fff",tc:"#FF0000"}].forEach(item => {
+      textGrid.style.cssText = "display:grid;grid-template-columns:repeat(3,1fr);gap:5px;";
+      [{label:"Preto",color:"#000000"},{label:"Branco",color:"#FFFFFF"},{label:"Vermelho",color:"#FF0000"}].forEach(item => {
         const btn = document.createElement("button");
-        btn.type = "button"; btn.textContent = item.label;
-        btn.style.cssText = `border:1px solid #ddd;background:${item.bg};color:${item.tc};padding:6px 12px;cursor:pointer;font-size:11px;font-weight:bold;border-radius:4px;flex:1;`;
+        btn.type = "button";
+        btn.innerHTML = `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${item.color};border:1px solid #94a3b8;margin-right:6px;vertical-align:-1px;"></span>${item.label}`;
+        btn.style.cssText = `border:1px solid #e2e8f0;background:#f8fafc;color:#1e293b;height:30px;cursor:pointer;font-size:11px;font-weight:600;border-radius:6px; transition:transform 0.1s, box-shadow 0.1s;`;
+        hoverLift(btn);
         btn.addEventListener("click", () => {
           if (!__driverMenuCell) return;
           __driverMenuCell.dataset.customColor = item.color; __driverMenuCell.style.color = item.color;
@@ -485,53 +507,67 @@
         textGrid.appendChild(btn);
       });
       textSection.appendChild(textGrid);
-      menu.appendChild(textSection);
-      const sep = document.createElement("div");
-      sep.style.cssText = "height:1px;background:#ddd;margin:4px 0;";
-      menu.appendChild(sep);
-      const makeMenuBtn = (label, handler) => {
+      content.appendChild(textSection);
+      const markSection = document.createElement("div");
+      markSection.style.cssText = "border-top:1px solid #e2e8f0;padding-top:10px;";
+      markSection.appendChild(sectionTitle("fa-tag", "Marcações"));
+      const markGrid = document.createElement("div");
+      markGrid.style.cssText = "display:grid;grid-template-columns:repeat(2,1fr);gap:6px;";
+      const tint = (hex, a) => {
+        const n = parseInt(hex.replace("#", ""), 16);
+        return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+      };
+      const makeMarkBtn = (label, icon, color, handler) => {
         const btn = document.createElement("button");
         btn.type = "button";
-        btn.style.cssText = `border:none;background:#f0f0f0;padding:8px 12px;cursor:pointer;width:100%;text-align:left;display:block;border-radius:4px;font-size:12px;`;
-        btn.addEventListener("mouseover", () => btn.style.background = "#e0e0e0");
-        btn.addEventListener("mouseout", () => btn.style.background = "#f0f0f0");
+        btn.innerHTML = `
+          <span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;background:${color};color:#fff;font-size:11px;flex-shrink:0;">
+            <i class="fa-solid ${icon}"></i>
+          </span>
+          <span style="flex:1;text-align:left;line-height:1.15;">${label}</span>
+          <i class="fa-solid fa-check dm-check" style="color:${color};display:none;"></i>`;
+        btn.style.cssText = `display:flex;align-items:center;gap:7px;border:1px solid #e2e8f0;background:#f8fafc;color:#1e293b;padding:6px 8px;cursor:pointer; font-size:11px;font-weight:600;border-radius:6px;min-height:38px;transition:transform 0.1s, box-shadow 0.1s;`;
+        hoverLift(btn);
         btn.addEventListener("click", e => { e.stopPropagation(); handler(btn); });
-        btn.textContent = label;
+        btn._setActive = (active) => {
+          btn.style.borderColor = active ? color : "#e2e8f0";
+          btn.style.background = active ? tint(color, 0.12) : "#f8fafc";
+          btn.querySelector(".dm-check").style.display = active ? "inline-block" : "none";
+          btn.title = active ? `Remover ${label}` : label;
+        };
         return btn;
       };
-      const btnDriver = makeMenuBtn("Motorista INEM", (btn) => {
+      const btnDriver = makeMarkBtn("Motorista INEM", "fa-truck-medical", DRIVER_BG, (btn) => {
         if (!__driverMenuCell) return;
         const isDriver = __driverMenuCell.dataset.driver === "1";
         if (isDriver) { __driverMenuCell.dataset.driver = "0"; applyCellColor(__driverMenuCell, (__driverMenuCell.textContent || "").trim().toUpperCase()); }
         else {__driverMenuCell.dataset.driver = "1"; __driverMenuCell.dataset.other = "0"; __driverMenuCell.dataset.optel = "0"; __driverMenuCell.dataset.eip = "0"; applyDriverStyle(__driverMenuCell);}
         hideDriverMenu();
       });
-      const btnOther = makeMenuBtn("Outra Necessidade", (btn) => {
+      const btnOther = makeMarkBtn("Outra Necessidade", "fa-shuffle", OTHER_BG, (btn) => {
         if (!__driverMenuCell) return;
         const isOther = __driverMenuCell.dataset.other === "1";
         if (isOther) { __driverMenuCell.dataset.other = "0"; applyCellColor(__driverMenuCell, (__driverMenuCell.textContent || "").trim().toUpperCase()); }
-        else {__driverMenuCell.dataset.other = "1"; __driverMenuCell.dataset.driver = "0"; __driverMenuCell.dataset.optel = "0"; __driverMenuCell.dataset.eip = "0"; __driverMenuCell.style.backgroundColor = "#800080"; __driverMenuCell.style.color = "#ffffff"; 
-              __driverMenuCell.style.fontWeight = "bold";}
+        else {__driverMenuCell.dataset.other = "1"; __driverMenuCell.dataset.driver = "0"; __driverMenuCell.dataset.optel = "0"; __driverMenuCell.dataset.eip = "0"; applyOtherStyle(__driverMenuCell);}
         hideDriverMenu();
       });
-      const btnOptel = makeMenuBtn("OPTEL", (btn) => {
+      const btnOptel = makeMarkBtn("OPTEL", "fa-headset", OPTEL_BG, (btn) => {
         if (!__driverMenuCell) return;
         const isOptel = __driverMenuCell.dataset.optel === "1";
         if (isOptel) { __driverMenuCell.dataset.optel = "0"; applyCellColor(__driverMenuCell, (__driverMenuCell.textContent || "").trim().toUpperCase()); }
         else {__driverMenuCell.dataset.optel = "1"; __driverMenuCell.dataset.driver = "0"; __driverMenuCell.dataset.other = "0"; __driverMenuCell.dataset.eip = "0"; applyOptelStyle(__driverMenuCell);}
         hideDriverMenu();
       });
-      const btnEip = makeMenuBtn("EIP", (btn) => {
+      const btnEip = makeMarkBtn("EIP", "fa-fire", EIP_BG, (btn) => {
         if (!__driverMenuCell) return;
         const isEip = __driverMenuCell.dataset.eip === "1";
         if (isEip) { __driverMenuCell.dataset.eip = "0"; applyCellColor(__driverMenuCell, (__driverMenuCell.textContent || "").trim().toUpperCase()); }
         else {__driverMenuCell.dataset.eip = "1"; __driverMenuCell.dataset.driver = "0"; __driverMenuCell.dataset.other = "0"; __driverMenuCell.dataset.optel = "0"; applyEipStyle(__driverMenuCell);}
         hideDriverMenu();
       });
-      menu.appendChild(btnDriver);
-      menu.appendChild(btnOther);
-      menu.appendChild(btnOptel);
-      menu.appendChild(btnEip);
+      [btnDriver, btnOther, btnOptel, btnEip].forEach(b => markGrid.appendChild(b));
+      markSection.appendChild(markGrid);
+      content.appendChild(markSection);
       document.body.appendChild(menu);
       __driverMenu = menu;
       __driverMenu._btnDriver = btnDriver;
@@ -540,20 +576,31 @@
       __driverMenu._btnEip = btnEip;
       document.addEventListener("click", hideDriverMenu);
       document.addEventListener("scroll", hideDriverMenu, true);
+      document.addEventListener("keydown", e => { if (e.key === "Escape") hideDriverMenu(); });
     }
     function showDriverMenu(x, y, cell) {
       ensureDriverMenu();
       __driverMenuCell = cell;
-      const isInem = isINEMRow(cell.closest("tr"));
-      __driverMenu._btnDriver.style.display = isInem ? "block" : "none";
-      if (isInem) __driverMenu._btnDriver.textContent = cell.dataset.driver === "1" ? "Remover Motorista INEM" : "Motorista INEM";
-      __driverMenu._btnOther.textContent = cell.dataset.other === "1" ? "Remover Outra Necessidade" : "Outra Necessidade";
-      const rowKey = getOrderKey(cell.closest("tr")?.querySelector("td:nth-child(4)")?.textContent || "");
-      __driverMenu._btnOptel.style.display = rowKey === "OPC" ? "none" : "block";
-      __driverMenu._btnOptel.textContent = cell.dataset.optel === "1" ? "Remover OPTEL" : "OPTEL";
-      __driverMenu._btnEip.style.display = (rowKey === "EP1" || rowKey === "EP2") ? "none" : "block";
-      __driverMenu._btnEip.textContent = cell.dataset.eip === "1" ? "Remover EIP" : "EIP";
-      __driverMenu.style.left = x + "px"; __driverMenu.style.top = y + "px"; __driverMenu.style.display = "flex";
+      const row = cell.closest("tr");
+      const dayMatch = (cell.className || "").match(/day-cell-(\d+)/);
+      const day = dayMatch ? parseInt(dayMatch[1], 10) : null;
+      __driverMenu.querySelector(".dm-name").textContent = row?.querySelector("td:nth-child(2)")?.textContent.trim() || "Célula";
+      __driverMenu.querySelector(".dm-day").textContent = day && __currentMonth
+        ? `Dia ${day} de ${MONTH_NAMES[__currentMonth - 1].charAt(0) + MONTH_NAMES[__currentMonth - 1].slice(1).toLowerCase()} ${__currentYear}` : "";
+      const isInem = isINEMRow(row);
+      const rowKey = getOrderKey(row?.querySelector("td:nth-child(4)")?.textContent || "");
+      __driverMenu._btnDriver.style.display = isInem ? "flex" : "none";
+      __driverMenu._btnOptel.style.display = rowKey === "OPC" ? "none" : "flex";
+      __driverMenu._btnEip.style.display = (rowKey === "EP1" || rowKey === "EP2") ? "none" : "flex";
+      __driverMenu._btnDriver._setActive(cell.dataset.driver === "1");
+      __driverMenu._btnOther._setActive(cell.dataset.other === "1");
+      __driverMenu._btnOptel._setActive(cell.dataset.optel === "1");
+      __driverMenu._btnEip._setActive(cell.dataset.eip === "1");
+      __driverMenu.style.display = "flex";
+      const w = __driverMenu.offsetWidth, h = __driverMenu.offsetHeight;
+      const left = Math.max(8, Math.min(x, window.innerWidth - w - 8));
+      const top = (y + h > window.innerHeight - 8) ? Math.max(8, y - h) : y;
+      __driverMenu.style.left = left + "px"; __driverMenu.style.top = top + "px";
     }
     function hideDriverMenu() {
       if (__driverMenu) __driverMenu.style.display = "none";
@@ -1412,16 +1459,14 @@
           ? `<span style="background:#dc3545; color:#fff; border-radius:10px; padding:1px 7px; font-size:10px; margin-left:6px;">${s.issues.length}</span>`
           : `<i class="fa-solid fa-check" style="color:#10b981; margin-left:6px;"></i>`;
         return `<button type="button" class="analyze-tab" data-tab="${s.key}"
-                  style="flex:1; display:flex; align-items:center; justify-content:center; padding:6px 10px; border:1px solid #cbd5e1; border-radius:4px;
-                         background:#f8fafc; color:#1e293b; font-weight:bold; font-size:12px; cursor:pointer;">
+                  style="flex:1; display:flex; align-items:center; justify-content:center; padding:6px 10px; border:1px solid #cbd5e1; border-radius:4px; background:#f8fafc; color:#1e293b; font-weight:bold; font-size:12px; cursor:pointer;">
                   <i class="fa-solid ${s.icon}" style="margin-right:6px;"></i>${s.label}${badge}
                 </button>`;
       };
       const panel = (s) => `
         <div class="analyze-panel" data-panel="${s.key}" style="display:none; flex-direction:column; height:280px;">
           <small>${s.rule}</small>
-          <div class="analyze-list" style="flex:1; min-height:0; overflow-y:auto; margin:8px 0; padding:8px 10px; font-weight:bold; font-size:12px; line-height:1.6;
-                                           background:#f3f4f6; border:1px solid #e5e7eb; border-radius:4px; scrollbar-width:thin; scrollbar-color:#b0b7c3 transparent;">
+          <div class="analyze-list" style="flex:1; min-height:0; overflow-y:auto; margin:8px 0; padding:8px 10px; font-weight:bold; font-size:12px; line-height:1.6; background:#f3f4f6; border:1px solid #e5e7eb; border-radius:4px; scrollbar-width:thin; scrollbar-color:#b0b7c3 transparent;">
             ${s.issues.length ? s.issues.join("<br>") : `<span style="color:#059669;"><i class="fa-solid fa-circle-check" style="margin-right:4px;"></i>${s.ok}</span>`}
           </div>
         </div>`;

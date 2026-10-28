@@ -154,9 +154,9 @@
     const DRIVER_TEXT = "#000000";
     const OTHER_BG = "#800080";
     const OTHER_TEXT = "#ffffff";
-    const OPTEL_BG = "#5D4037";   // célula marcada como OPTEL (elemento a cobrir a Central)
+    const OPTEL_BG = "#5D4037";
     const OPTEL_TEXT = "#ffffff";
-    const EIP_BG = "#E65100";     // célula marcada como EIP (elemento a reforçar a EIP)
+    const EIP_BG = "#E65100";
     const EIP_TEXT = "#ffffff";
     let __currentYear = null;
     let __currentMonth = null;
@@ -328,13 +328,13 @@
       infoDiv.style.cssText = `margin-top:5px;padding:12px;background:#f0f8ff;border:1px solid #4682b4;border-radius:5px;font-family:'Segoe UI',sans-serif;
                                display:inline-block;width:315px;height:150px;`;
       const holidaysHTML = info.holidaysInMonth.length > 0
-        ? `<div><strong style="color:#1e3a8a;">🎉 Feriados:</strong><span style="color:#6b7280;"> ${info.holidaysInMonth.map(h => `Dia: ${h.day}`).join(", ")}</span></div>`
+        ? `<div><strong style="color:#1e3a8a;"><i class="fa-solid fa-champagne-glasses" style="margin-right:4px;"></i>Feriados:</strong><span style="color:#6b7280;"> ${info.holidaysInMonth.map(h => `Dia: ${h.day}`).join(", ")}</span></div>`
         : "";
       infoDiv.innerHTML = `
         <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start;">
-          <div><strong style="color:#1e3a8a;">📌 Mês:</strong><span style="font-size:16px;font-weight:bold;color:#111827;"> ${MONTH_NAMES[month-1]} ${year}</span></div>
-          <div><strong style="color:#1e3a8a;">📅 Dias Úteis:</strong><span style="font-size:16px;font-weight:bold;color:#059669;"> ${info.workingDays}</span></div>
-          <div><strong style="color:#1e3a8a;">⏰ Carga Mensal:</strong><span style="font-size:16px;font-weight:bold;color:#dc2626;"> ${info.workingHours}h</span></div>
+          <div><strong style="color:#1e3a8a;"><i class="fa-solid fa-thumbtack" style="margin-right:4px;"></i>Mês:</strong><span style="font-size:16px;font-weight:bold;color:#111827;"> ${MONTH_NAMES[month-1]} ${year}</span></div>
+          <div><strong style="color:#1e3a8a;"><i class="fa-solid fa-calendar-days" style="margin-right:4px;"></i>Dias Úteis:</strong><span style="font-size:16px;font-weight:bold;color:#059669;"> ${info.workingDays}</span></div>
+          <div><strong style="color:#1e3a8a;"><i class="fa-solid fa-clock" style="margin-right:4px;"></i>Carga Mensal:</strong><span style="font-size:16px;font-weight:bold;color:#dc2626;"> ${info.workingHours}h</span></div>
           ${holidaysHTML}
         </div>`;
       container.appendChild(infoDiv);
@@ -430,12 +430,11 @@
     function ensureDriverMenu() {
       if (__driverMenu) return;
       const menu = document.createElement("div");
-      menu.style.cssText = `position:fixed;z-index:99999;display:none;background:#fff;border:1px solid #ccc;border-radius:8px;box-shadow:0 8px 20px rgba(0,0,0,0.2);
-                            font-family:'Segoe UI',sans-serif;padding:8px;flex-direction:column;gap:6px;min-width:280px;`;
+      menu.style.cssText = `position:fixed;z-index:99999;display:none;background:#fff;border:1px solid #ccc;border-radius:8px;box-shadow:0 8px 20px rgba(0,0,0,0.2); font-family:'Segoe UI',sans-serif;padding:8px;flex-direction:column;gap:6px;min-width:280px;`;
       menu.addEventListener("mousedown", e => e.stopPropagation());
       menu.addEventListener("click", e => e.stopPropagation());
       const bgSection = document.createElement("div");
-      bgSection.innerHTML = `<div style="font-size:11px;font-weight:bold;color:#666;margin-bottom:4px;padding:0 4px;">🎨 COR DE FUNDO:</div>`;
+      bgSection.innerHTML = `<div style="font-size:11px;font-weight:bold;color:#666;margin-bottom:4px;padding:0 4px;"><i class="fa-solid fa-palette" style="margin-right:4px;"></i>COR DE FUNDO:</div>`;
       const bgGrid = document.createElement("div");
       bgGrid.style.cssText = "display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:4px;";
       const shiftsList = [{code:"M",desc:"Manhã"},{code:"D",desc:"Dia"},{code:"N",desc:"Noite"},{code:"FR",desc:"Feriado"},{code:"FO",desc:"Folga"},
@@ -446,7 +445,7 @@
         const colors = SHIFT_COLORS[shift.code] || {bg: shift.bg || "#ffffff", color: shift.color || "#000000"};
         const btn = document.createElement("button");
         btn.type = "button"; btn.title = shift.desc;
-        btn.textContent = shift.code === "RESET" ? "✖" : "";
+        btn.innerHTML = shift.code === "RESET" ? '<i class="fa-solid fa-xmark"></i>' : "";
         btn.style.cssText = `border:1px solid #ddd;background:${colors.bg};color:${colors.color};padding:6px 4px;cursor:pointer;font-size:11px;font-weight:bold;border-radius:4px;
                              transition:transform 0.1s;min-height:32px;min-width:32px;`;
         btn.addEventListener("mouseover", () => btn.style.transform = "scale(1.1)");
@@ -471,7 +470,7 @@
       bgSection.appendChild(bgGrid);
       menu.appendChild(bgSection);
       const textSection = document.createElement("div");
-      textSection.innerHTML = `<div style="font-size:11px;font-weight:bold;color:#666;margin:4px 0 4px 4px;">🖍️ COR DE LETRA:</div>`;
+      textSection.innerHTML = `<div style="font-size:11px;font-weight:bold;color:#666;margin:4px 0 4px 4px;"><i class="fa-solid fa-pen" style="margin-right:4px;"></i>COR DE LETRA:</div>`;
       const textGrid = document.createElement("div");
       textGrid.style.cssText = "display:flex;gap:4px;padding:4px;";
       [{label:"Preto",color:"#000000",bg:"#000",tc:"#fff"},{label:"Branco",color:"#FFFFFF",bg:"#fff",tc:"#000"},{label:"Vermelho",color:"#FF0000",bg:"#fff",tc:"#FF0000"}].forEach(item => {
@@ -549,11 +548,9 @@
       __driverMenu._btnDriver.style.display = isInem ? "block" : "none";
       if (isInem) __driverMenu._btnDriver.textContent = cell.dataset.driver === "1" ? "Remover Motorista INEM" : "Motorista INEM";
       __driverMenu._btnOther.textContent = cell.dataset.other === "1" ? "Remover Outra Necessidade" : "Outra Necessidade";
-      // OPTEL: para qualquer elemento que não seja já da equipa OPC
       const rowKey = getOrderKey(cell.closest("tr")?.querySelector("td:nth-child(4)")?.textContent || "");
       __driverMenu._btnOptel.style.display = rowKey === "OPC" ? "none" : "block";
       __driverMenu._btnOptel.textContent = cell.dataset.optel === "1" ? "Remover OPTEL" : "OPTEL";
-      // EIP: para qualquer elemento que não seja já das equipas EP1/EP2
       __driverMenu._btnEip.style.display = (rowKey === "EP1" || rowKey === "EP2") ? "none" : "block";
       __driverMenu._btnEip.textContent = cell.dataset.eip === "1" ? "Remover EIP" : "EIP";
       __driverMenu.style.left = x + "px"; __driverMenu.style.top = y + "px"; __driverMenu.style.display = "flex";
@@ -1279,11 +1276,10 @@
       }
       if (_bxHidden) toggleBXRows(true);
     }
-    // Faltas da última análise (usadas nas mensagens de pedido para o WhatsApp)
     let __lastINEMIssues = [];
     let __lastEIPIssues = [];
     let __lastOPTELIssues = [];
-    let __activeAnalyzeTab = "inem"; // separador aberto no popup (o botão Solicitar usa este)
+    let __activeAnalyzeTab = "inem";
     async function analyzeINEMSchedule() {
       const tbody = document.querySelector("table.employees-table tbody");
       if (!tbody) {
@@ -1294,7 +1290,6 @@
         showPopup('popup-danger', "Seleciona mês e ano primeiro.");
         return;
       }
-      // n_int de quem é MP (reg_elems.MP = true)
       const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const mpSet = new Set();
       try {
@@ -1320,7 +1315,6 @@
       const styleN = `<span style="color:#4A90E2;font-weight:bold;">Turno N</span>`;
       const rows = tbody.querySelectorAll("tr.data-row");
       for (let d = 1; d <= daysInMonth; d++) {
-        // ---- Verificação INEM (D e N) e OPTEL (D e N) ----
         let countD = 0, countN = 0;
         let optelD = 0, optelN = 0;
         rows.forEach(row => {
@@ -1328,13 +1322,12 @@
           if (!cell) return;
           const val = cell.textContent.trim().toUpperCase();
           const team = normalizeTeam(row.querySelector("td:nth-child(4)")?.textContent || "");
-          // OPTEL: equipa OPC + qualquer elemento marcado como OPTEL (não conta para o INEM)
           if (team.startsWith("OPC") || cell.dataset.optel === "1") {
             if (val === "D") optelD++;
             if (val === "N") optelN++;
             return;
           }
-          if (cell.dataset.eip === "1") return; // marcado como EIP: está na EIP, não conta para o INEM
+          if (cell.dataset.eip === "1") return;
           const isEQ = team.startsWith("EQ");
           const isTDNU = team.startsWith("TDNU");
           if (!isEQ && !isTDNU) return;
@@ -1358,33 +1351,26 @@
           issuesOPTEL.push(`Dia ${d}: ${styleN} ${red(MIN_OPTEL_N - optelN)} OPTEL`);
           __lastOPTELIssues.push({day: d, shift: "N", missing: MIN_OPTEL_N - optelN});
         }
-
-        // ---- Verificação EIP (só turno D) ----
-        // Contam: EP1/EP2 em turno D + elementos de outras equipas marcados como EIP nesse dia
         let eipMarked = 0, eipMarkedMP = 0;
         const eip = {EP1: {total: 0, mp: 0}, EP2: {total: 0, mp: 0}};
         rows.forEach(row => {
           const cell = row.querySelector(`.day-cell-${d}`);
-          if (!cell || cell.dataset.optel === "1") return; // marcado como OPTEL: está na Central, não conta para a EIP
+          if (!cell || cell.dataset.optel === "1") return;
           const val = cell.textContent.trim().toUpperCase();
           const nInt = parseInt(row.getAttribute("data-nint"), 10);
           const isMP = mpSet.has(nInt);
           const key = getOrderKey(row.querySelector("td:nth-child(4)")?.textContent || "");
-          // Marcado como EIP (botão direito): conta como elemento da EIP nesse dia
           if (cell.dataset.eip === "1") {
             eipMarked++;
             if (isMP) eipMarkedMP++;
             return;
           }
-          // EIP: só conta quem está em turno D
           if (val !== "D" || !eip[key]) return;
           eip[key].total++;
           if (isMP) eip[key].mp++;
         });
-        // Se ninguém das EIP está em D e ninguém foi marcado como EIP, a EIP está de descanso: não verifica
         const maxTotal = Math.max(eip.EP1.total, eip.EP2.total);
         if (maxTotal === 0 && eipMarked === 0) continue;
-        // EIP de serviço = a que tem mais elementos em D (empate: indica as duas)
         const label = maxTotal === 0 ? "EIP"
                     : eip.EP1.total > eip.EP2.total ? "EIP 01"
                     : eip.EP2.total > eip.EP1.total ? "EIP 02" : "EIP 01/02";
@@ -1402,6 +1388,17 @@
       const popup = document.getElementById('popup-analyze-inem');
       if (!popup) return;
       const body = popup.querySelector('.popup-body');
+      if (!document.getElementById('analyze-list-scroll-style')) {
+        const st = document.createElement('style');
+        st.id = 'analyze-list-scroll-style';
+        st.innerHTML = `
+          .analyze-list::-webkit-scrollbar {width: 6px;}
+          .analyze-list::-webkit-scrollbar-track {background: transparent;}
+          .analyze-list::-webkit-scrollbar-thumb {background: #b0b7c3; border-radius: 3px;}
+          .analyze-list::-webkit-scrollbar-thumb:hover {background: #8a93a3;}
+        `;
+        document.head.appendChild(st);
+      }
       const sections = [
         {key: "inem", label: "INEM", icon: "fa-truck-medical", issues: issuesINEM, ok: "Dotação INEM assegurada.",
          rule: `Dotação mínima: ${MIN_D} elementos no Turno D e ${MIN_N} no Turno N por dia.`},
@@ -1424,18 +1421,25 @@
         <div class="analyze-panel" data-panel="${s.key}" style="display:none; flex-direction:column; height:280px;">
           <small>${s.rule}</small>
           <div class="analyze-list" style="flex:1; min-height:0; overflow-y:auto; margin:8px 0; padding:8px 10px; font-weight:bold; font-size:12px; line-height:1.6;
-                                           background:#f3f4f6; border:1px solid #e5e7eb; border-radius:4px;">
+                                           background:#f3f4f6; border:1px solid #e5e7eb; border-radius:4px; scrollbar-width:thin; scrollbar-color:#b0b7c3 transparent;">
             ${s.issues.length ? s.issues.join("<br>") : `<span style="color:#059669;"><i class="fa-solid fa-circle-check" style="margin-right:4px;"></i>${s.ok}</span>`}
           </div>
         </div>`;
-      // Tamanho fixo: o popup não cresce nem encolhe ao trocar de separador
       body.innerHTML = `
         <div style="width:480px; max-width:100%;">
           <div style="display:flex; gap:6px; margin-bottom:10px;">${sections.map(tabBtn).join("")}</div>
           ${sections.map(panel).join("")}
         </div>`;
+      const requestBtn = popup.querySelector('[onclick*="requestINEMElements"]');
       const activate = (key) => {
         __activeAnalyzeTab = key;
+        if (requestBtn) {
+          const hasIssues = sections.find(s => s.key === key)?.issues.length > 0;
+          requestBtn.disabled = !hasIssues;
+          requestBtn.style.opacity = hasIssues ? "1" : "0.5";
+          requestBtn.style.cursor = hasIssues ? "pointer" : "not-allowed";
+          requestBtn.title = hasIssues ? "" : "Dotação assegurada: não há turnos por preencher.";
+        }
         body.querySelectorAll(".analyze-tab").forEach(b => {
           const on = b.dataset.tab === key;
           b.style.background = on ? "#2b6ca3" : "#f8fafc";
@@ -1447,11 +1451,9 @@
         });
       };
       body.querySelectorAll(".analyze-tab").forEach(b => b.addEventListener("click", () => activate(b.dataset.tab)));
-      // Abre no primeiro separador que tem faltas
       activate((sections.find(s => s.issues.length) || sections[0]).key);
       popup.classList.add('show');
     }
-    // Gera a mensagem de pedido de disponibilidades (INEM, EIP ou OPTEL) e copia-a para o WhatsApp
     function requestElements(type = "inem") {
       const nameMonth = MONTH_NAMES[__currentMonth - 1];
       let title, lines;
@@ -1486,7 +1488,6 @@
         showPopup('popup-danger', 'Erro ao copiar.');
       });
     }
-    // Botão "Solicitar" do popup: copia o pedido do separador que está aberto
     function requestINEMElements() { requestElements(__activeAnalyzeTab || "inem"); }
     async function cleanEmployeeScales({ autoSave = false } = {}) {
       const tbody = document.querySelector("table.employees-table tbody");
@@ -1524,7 +1525,7 @@
       const {year, month, monthBtn} = ym;
       const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const saveBtn = document.getElementById("employees-save-btn");
-      if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = "A guardar..."; }
+      if (saveBtn) { saveBtn.disabled = true; saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i>A guardar...'; }
       try {
         const rows = Array.from(tbody.querySelectorAll("tr.data-row"));
         const shiftsPayload = [], employeesUpdate = [], accumulatedPayload = [];
@@ -1566,23 +1567,23 @@
           fetch(`${SUPABASE_URL}/rest/v1/reg_employees?n_int=eq.${emp.n_int}&corp_oper_nr=eq.${emp.corp_oper_nr}`, {
           method:"PATCH", 
           headers:{...getSupabaseHeaders(),"Content-Type":"application/json","Prefer":"return=minimal"}, body:JSON.stringify({abv_name:emp.abv_name, function:emp.function, team:emp.team})})
-          .then(r => { if (!r.ok) console.warn(`⚠️ Erro ao atualizar employee ${emp.n_int}`); })
-          .catch(err => console.warn(`⚠️ Erro ao atualizar employee ${emp.n_int}:`, err))
+          .then(r => { if (!r.ok) console.warn(`Erro ao atualizar employee ${emp.n_int}`); })
+          .catch(err => console.warn(`Erro ao atualizar employee ${emp.n_int}:`, err))
         ));
         const del2 = await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`, {method:"DELETE", headers:getSupabaseHeaders()});
-        if (!del2.ok) console.warn("⚠️ Erro ao limpar acumulados antigos");
+        if (!del2.ok) console.warn("Erro ao limpar acumulados antigos");
         if (accumulatedPayload.length > 0) {
           const ins2 = await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul`, {
             method:"POST", 
             headers:{...getSupabaseHeaders(),"Content-Type":"application/json","Prefer":"return=minimal"}, body:JSON.stringify(accumulatedPayload)});
-          if (!ins2.ok) console.warn("⚠️ Erro ao guardar acumulados:", await ins2.text());
+          if (!ins2.ok) console.warn("Erro ao guardar acumulados:", await ins2.text());
         }
         await propagateAccumulatedForward(corpOperNr, year, month);
         showPopup('popup-success', `Escala de ${monthBtn.textContent} ${year} guardada com sucesso!`);
       } catch (err) {
-        console.error("Erro ao guardar escala:", err); showPopup('popup-danger', "❌ Erro ao guardar: " + err.message);
+        console.error("Erro ao guardar escala:", err); showPopup('popup-danger', "Erro ao guardar: " + err.message);
       } finally {
-        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = "💾 Guardar"; }
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = '<i class="fa-solid fa-floppy-disk" style="margin-right: 6px;"></i>Guardar'; }
       }
     }
     async function emitEmployeesScale(format = "xlsx") {
@@ -1592,14 +1593,14 @@
       if (!ym) { console.error("Erro: ano/mês não selecionados."); return; }
       const {year, month} = ym;
       try {
-        showLoadingPopup("🔄 A preparar escala...");
+        showLoadingPopup("A preparar escala...");
         const rows = Array.from(tbody.querySelectorAll("tr.data-row"))
           .filter(row => row.style.display !== "none");    
         if (!rows.length) { console.error("Erro: nenhuma linha encontrada."); return; }
         const daysInMonth = new Date(year, month, 0).getDate();
         const employees = _collectEmployeeData(rows, daysInMonth, true);
         const {workingHours} = calculateWorkingHours(year, month);
-        updateLoadingPopup(`📊 A gerar escala em ${format === "pdf" ? "PDF" : "Excel"}...`);
+        updateLoadingPopup(`A gerar escala em ${format === "pdf" ? "PDF" : "Excel"}...`);
         const response = await fetch("https://cb360-online.vercel.app/api/employees_convert_and_send", {
           method:"POST", headers:{"Content-Type":"application/json"},
           body:JSON.stringify({mode:"monthly_scales", year, month, employees, workingHours, format})
@@ -1611,7 +1612,7 @@
         a.download = `Escala_Funcionários_${monthNames[month - 1]}_${year}.${format === "pdf" ? "pdf" : "xlsx"}`;
         a.click(); URL.revokeObjectURL(url);
         hideLoadingPopup(); showPopup('popup-info', `Escala gerada com sucesso, em formato ${format === "pdf" ? "PDF" : "Excel"}!`);
-      } catch (err) {hideLoadingPopup(); console.error("Erro ao gerar folha:", err); showPopup('popup-danger', `❌ Erro: ${err.message}`);}
+      } catch (err) {hideLoadingPopup(); console.error("Erro ao gerar folha:", err); showPopup('popup-danger', `Erro: ${err.message}`);}
     }
     async function emitStitchSheets() {
       const tbody = document.querySelector("table.employees-table tbody");
@@ -1624,13 +1625,13 @@
         const daysInMonth = new Date(year, month, 0).getDate();
         const employees = _collectEmployeeData(Array.from(tbody.querySelectorAll("tr.data-row")), daysInMonth).filter(emp => emp.abv_name);
         if (!employees.length) {showPopup('popup-danger',"Nenhum funcionário encontrado."); return; }
-        showLoadingPopup(`🔄 A iniciar geração de ${employees.length} folhas...`);
+        showLoadingPopup(`A iniciar geração de ${employees.length} folhas...`);
         const workingHours = calculateWorkingHours(year, month).workingHours;
         const {PDFDocument} = PDFLib;
         const mergedPdf = await PDFDocument.create();
         for (let i = 0; i < employees.length; i++) {
           const emp = employees[i];
-          updateLoadingPopup(`📄 A processar [${i + 1}/${employees.length}]: ${emp.abv_name}`, Math.round(((i + 1) / employees.length) * 100));
+          updateLoadingPopup(`A processar [${i + 1}/${employees.length}]: ${emp.abv_name}`, Math.round(((i + 1) / employees.length) * 100));
           const response = await fetch("https://cb360-online.vercel.app/api/employees_convert_and_send", {
             method:"POST", headers:{"Content-Type":"application/json"},
             body:JSON.stringify({mode:"point_sheet", year, month, employee: emp, workingHours})
@@ -1639,12 +1640,12 @@
           const donor = await PDFDocument.load(await response.arrayBuffer());
           (await mergedPdf.copyPages(donor, donor.getPageIndices())).forEach(p => mergedPdf.addPage(p));
         }
-        updateLoadingPopup("💾 A gerar ficheiro final...");
+        updateLoadingPopup("A gerar ficheiro final...");
         const url = URL.createObjectURL(new Blob([await mergedPdf.save()], {type:"application/pdf"}));
         const a = document.createElement("a"); a.href = url; a.download = `Folhas_Ponto_${MONTH_NAMES[month - 1]}_${year}.pdf`;
         document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
         hideLoadingPopup(); showPopup('popup-success',"Todas as folhas foram geradas com sucesso!");
-      } catch (err) { hideLoadingPopup(); console.error("❌ Erro completo:", err); showPopup('popup-danger',"Erro: " + err.message); }
+      } catch (err) { hideLoadingPopup(); console.error("Erro completo:", err); showPopup('popup-danger',"Erro: " + err.message); }
     }
     document.getElementById("employees-clean-btn")?.addEventListener("click", cleanEmployeeScales);
     document.getElementById("employees-save-btn")?.addEventListener("click", saveEmployeeScales);

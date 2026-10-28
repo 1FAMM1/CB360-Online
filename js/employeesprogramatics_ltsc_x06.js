@@ -4032,15 +4032,6 @@
           .s-footer {display: flex; justify-content: flex-end; margin-top: 15px; gap: 10px;}
           .s-btn {background: #1e293b; color: #fff; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; transition: 0.2s;}
           .s-btn:hover {opacity: 0.9;}
-          .s-modal-overlay {position: fixed; inset: 0; background: rgba(15,23,42,0.55); display: flex; align-items: center; justify-content: center; z-index: 9999;}
-          .s-modal {background: #fff; border-radius: 10px; padding: 22px; width: 360px; max-width: calc(100vw - 32px); box-shadow: 0 10px 30px rgba(0,0,0,0.25); font-family: 'Inter', sans-serif; color: #1e293b;}
-          .s-modal h3 {margin: 0 0 4px; font-size: 15px; font-weight: 800;}
-          .s-modal p {margin: 0 0 16px; font-size: 12px; color: #64748b;}
-          .s-modal-option {display: block; width: 100%; text-align: left; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; cursor: pointer; transition: 0.15s;}
-          .s-modal-option:hover {border-color: #1e293b; background: #f1f5f9;}
-          .s-modal-option strong {display: block; font-size: 13px;}
-          .s-modal-option span {font-size: 11px; color: #64748b;}
-          .s-modal-cancel {background: none; border: none; color: #64748b; font-size: 12px; cursor: pointer; float: right; margin-top: 4px;}
         `;
         document.head.appendChild(s);
       }
@@ -4434,21 +4425,41 @@
     /* ---------- EMISSÃO DE MAPAS (PDF / EXCEL) ---------- */
     function chooseSalaryMapType(formatLabel) {
       return new Promise(resolve => {
+        const isPdf = formatLabel === "PDF";
+        const opt = `display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px;
+                     padding: 10px 12px; margin-bottom: 8px; cursor: pointer; transition: 0.15s; font-family: inherit;`;
+        const ico = `font-size: 20px; color: #2b6ca3; width: 24px; text-align: center;`;
         const overlay = document.createElement("div");
-        overlay.className = "s-modal-overlay";
+        overlay.style.cssText = "position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; z-index: 9999;";
         overlay.innerHTML = `
-          <div class="s-modal">
-            <h3>Emitir Mapa (${formatLabel})</h3>
-            <p>Selecione o tipo de mapa a emitir:</p>
-            <button class="s-modal-option" data-type="full">
-              <strong>📋 Mapa Integral</strong>
-              <span>Subsídios de turno, baixas, férias, licenças e faltas</span>
-            </button>
-            <button class="s-modal-option" data-type="summary">
-              <strong>📄 Mapa Resumido</strong>
-              <span>Apenas funcionários com direito a subsídio de turno</span>
-            </button>
-            <button class="s-modal-cancel">Cancelar</button>
+          <div class="major-card" style="width: 420px; max-width: 95vw; max-height: 90vh; overflow-y: auto; margin: 0;">
+            <div class="major-card-header header-red" style="display: flex; align-items: center; justify-content: space-between;">
+              <span>
+                <i class="fa-solid ${isPdf ? "fa-file-pdf" : "fa-file-excel"}" style="margin-right: 6px;"></i>
+                EMITIR MAPA (${formatLabel})
+              </span>
+              <span class="sm-close" title="Fechar" style="cursor: pointer; font-size: 18px; line-height: 1; padding: 0 4px;"><i class="fa-solid fa-xmark"></i></span>
+            </div>
+            <div class="major-card-body">
+              <div style="font-weight: bold; font-size: 13px; margin-bottom: 10px;">Selecione o tipo de mapa a emitir:</div>
+              <button type="button" class="sm-option" data-type="full" style="${opt}">
+                <i class="fa-solid fa-table-list" style="${ico}"></i>
+                <span>
+                  <strong style="display: block; font-size: 13px; color: #1e293b;">Mapa Integral</strong>
+                  <span style="font-size: 11px; color: #64748b;">Subsídios de turno, baixas, férias, licenças e faltas</span>
+                </span>
+              </button>
+              <button type="button" class="sm-option" data-type="summary" style="${opt} margin-bottom: 0;">
+                <i class="fa-solid fa-file-lines" style="${ico}"></i>
+                <span>
+                  <strong style="display: block; font-size: 13px; color: #1e293b;">Mapa Resumido</strong>
+                  <span style="font-size: 11px; color: #64748b;">Apenas funcionários com direito a subsídio de turno</span>
+                </span>
+              </button>
+            </div>
+            <div class="major-card-footer" style="display: flex; justify-content: flex-end; gap: 5px;">
+              <button type="button" class="btn btn-danger sm-cancel"><i class="fa-solid fa-ban" style="margin-right: 5px;"></i>Cancelar</button>
+            </div>
           </div>
         `;
         const close = (value) => {
@@ -4457,11 +4468,16 @@
           resolve(value);
         };
         const onKey = (e) => { if (e.key === "Escape") close(null); };
+        // Realce ao passar o rato nas opções
+        overlay.querySelectorAll(".sm-option").forEach(b => {
+          b.addEventListener("mouseenter", () => { b.style.borderColor = "#2b6ca3"; b.style.background = "#eef4fa"; });
+          b.addEventListener("mouseleave", () => { b.style.borderColor = "#cbd5e1"; b.style.background = "#f8fafc"; });
+        });
+        // Clicar fora do modal não o fecha: só o ✕, o Cancelar ou o ESC
         overlay.addEventListener("click", (e) => {
-          if (e.target === overlay) return close(null);
-          const opt = e.target.closest(".s-modal-option");
+          const opt = e.target.closest(".sm-option");
           if (opt) return close(opt.dataset.type);
-          if (e.target.closest(".s-modal-cancel")) close(null);
+          if (e.target.closest(".sm-cancel") || e.target.closest(".sm-close")) close(null);
         });
         document.addEventListener("keydown", onKey);
         document.body.appendChild(overlay);

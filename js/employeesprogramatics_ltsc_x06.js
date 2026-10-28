@@ -1052,7 +1052,9 @@
     document.getElementById("employees-toggle-bx-btn")?.addEventListener("click", async function () {
       _bxHidden = !_bxHidden;
       toggleBXRows(_bxHidden);
-      this.textContent = _bxHidden ? "👁️ Mostrar Baixas" : "🚫 Ocultar Baixas";
+      this.innerHTML = _bxHidden
+        ? '<i class="fa-solid fa-eye" style="margin-right: 6px;"></i>Mostrar Baixas'
+        : '<i class="fa-solid fa-eye-slash" style="margin-right: 6px;"></i>Ocultar Baixas';
       this.classList.toggle("active", _bxHidden);
       await saveBXPreference(__currentYear, __currentMonth, _bxHidden);
     });
@@ -1228,7 +1230,9 @@
       _bxHidden = await loadBXPreference(year, month);
       const btnBX = document.getElementById("employees-toggle-bx-btn");
       if (btnBX) {
-        btnBX.textContent = _bxHidden ? "👁️ Mostrar Baixas" : "🚫 Ocultar Baixas";
+        btnBX.innerHTML = _bxHidden
+          ? '<i class="fa-solid fa-eye" style="margin-right: 6px;"></i>Mostrar Baixas'
+          : '<i class="fa-solid fa-eye-slash" style="margin-right: 6px;"></i>Ocultar Baixas';
         btnBX.classList.toggle("active", _bxHidden);
       }
       if (_bxHidden) toggleBXRows(true);
@@ -3692,8 +3696,8 @@
               </table>
             </div>
             <div class="e-footer">
-              <button class="e-btn e-btn-info" onclick="createConsultationEligibility()">🔍 Consulta Detalhada</button>
-              <button class="e-btn" onclick="exportShiftEligibility()">📥 Emitir Mapa</button>
+              <button class="e-btn e-btn-info" onclick="createConsultationEligibility()"><i class="fa-solid fa-magnifying-glass" style="margin-right: 6px;"></i>Consulta Detalhada</button>
+              <button class="e-btn" onclick="exportShiftEligibility()"><i class="fa-solid fa-file-pdf" style="margin-right: 6px;"></i>Emitir Mapa</button>
             </div>
           </div>`;
       }
@@ -4083,8 +4087,8 @@
             </table>
           </div>
           <div class="s-footer">
-            <button class="s-btn" style="background:#059669;" onclick="exportSalaryMapXlsx(event)">📊 Exportar Excel</button>
-            <button class="s-btn" onclick="exportSalaryMapPDF(event)">📥 Emitir Mapa</button>
+            <button class="s-btn" style="background:#059669;" onclick="exportSalaryMapXlsx(event)"><i class="fa-solid fa-file-excel" style="margin-right: 6px;"></i>Exportar Excel</button>
+            <button class="s-btn" onclick="exportSalaryMapPDF(event)"><i class="fa-solid fa-file-pdf" style="margin-right: 6px;"></i>Emitir Mapa</button>
           </div>
         </div>
       `;

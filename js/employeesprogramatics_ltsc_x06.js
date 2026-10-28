@@ -3066,8 +3066,8 @@
               </table>
             </div>
             <div class="m-footer">
-              <button class="m-btn-secondary" onclick="consultDiscrepancies()">🔍 Consultar Anómalias</button>
-              <button class="m-btn" onclick="exportGlobalHolidayMap()">📥 Emitir Mapa</button>
+              <button class="m-btn-secondary" onclick="consultDiscrepancies()"><i class="fa-solid fa-magnifying-glass" style="margin-right: 6px;"></i>Consultar Anomalias</button>
+              <button class="m-btn" onclick="exportGlobalHolidayMap()"><i class="fa-solid fa-file-pdf" style="margin-right: 6px;"></i>Emitir Mapa</button>
             </div>
           </div>
         `;
@@ -3486,7 +3486,7 @@
               </table>
             </div>
             <div class="p-footer">
-              <button class="p-btn" onclick="exportPrioritiesMap()">📥 Emitir Mapa</button>
+              <button class="p-btn" onclick="exportPrioritiesMap()"><i class="fa-solid fa-file-pdf" style="margin-right: 6px;"></i>Emitir Mapa</button>
             </div>
           </div>
         `;
@@ -4633,7 +4633,7 @@
               </table>
             </div>
             <div class="a-footer">
-              <button class="a-btn" onclick="exportAnnualMap(event)">📥 Emitir Mapa</button>
+              <button class="a-btn" onclick="exportAnnualMap(event)"><i class="fa-solid fa-file-pdf" style="margin-right: 6px;"></i>Emitir Mapa</button>
             </div>
           </div>`;
       }

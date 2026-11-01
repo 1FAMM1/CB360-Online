@@ -397,6 +397,8 @@
     /* =======================================
     FIREFIGHTER LISTING
     ======================================= */
+    sessionStorage.setItem("currentUserRole", "admin");
+    sessionStorage.setItem("currentCorpOperNr", "0805");
     let currentEditId = null;
     const ACCESS_OPTIONS = [
       {label: "Menu Principal"},
@@ -580,6 +582,7 @@
         const el = document.getElementById(id);
         if (el) el.value = "";
       });
+      removePhoto();
       toggleStateDateVisibility();
     }
     function mapPatentToAbv() {
@@ -611,19 +614,33 @@
       currentEditId = row.id;
       document.getElementById("elements-list").style.display = "none";
       document.getElementById("elements-edit").style.display = "block";
-      document.querySelector("#elements-edit h3").textContent = "Editar: " + (row.abv_name || "");
+      document.querySelector("#elements-edit h3").textContent = "Editar: " + (row.abv_name || "");      
       const fields = ["n_int", "n_file", "patent", "patent_abv", "abv_name", "full_name", "section", "nif", "niss", "nib"];
       fields.forEach(f => {
         const el = document.getElementById("win_" + f);
         if (el) el.value = row[f] ?? "";
       });
+      const photoPreview = document.getElementById("win_photo_preview");
+      if (photoPreview) {
+        if (row.photo_url) {
+          photoPreview.innerHTML = `<img src="${row.photo_url}" style="width: 100%; height: 100%; object-fit: cover;">`;
+          photoPreview.dataset.photoUrl = row.photo_url;
+        } else {
+          photoPreview.innerHTML = `
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="1.5">
+              <circle cx="12" cy="8" r="4"/>
+              <path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>
+            </svg>`;
+          photoPreview.dataset.photoUrl = "";
+        }
+      }
       if (document.getElementById("win_ML")) document.getElementById("win_ML").value = String(row.ML);
       if (document.getElementById("win_MP")) document.getElementById("win_MP").value = String(row.MP);      
       if (document.getElementById("win_TAS")) document.getElementById("win_TAS").value = String(row.TAS);
       document.getElementById("win_quad").value = row.type_quad || "";
       document.getElementById("win_phone").value = row.phone || "";
       document.getElementById("win_mobile").value = row.mobile_phone || "";
-      document.getElementById("win_mail").value = row.email || "";
+      document.getElementById("win_mail").value = row.email || "";      
       if (document.getElementById("win_state")) {
         document.getElementById("win_state").value = row.elem_state ? "Ativo" : "Inativo";
       }
@@ -632,20 +649,20 @@
       }
       if (document.getElementById("win_ofope")) {
         document.getElementById("win_ofope").value = row.is_ofope ? "Sim" : "Não";
-      }
-      toggleStateDateVisibility();
+      }      
+      toggleStateDateVisibility();      
       const roleMap = {admin: "Administrador", subadmin: "Sub-Administrador", user: "Utilizador"};
-      if (document.getElementById("win_type")) document.getElementById("win_type").value = roleMap[row.user_role] || "";
+      if (document.getElementById("win_type")) document.getElementById("win_type").value = roleMap[row.user_role] || "";      
       generateAccessCheckboxes();
       const userAccesses = row.acess ? row.acess.split(",").map(a => a.trim()) : [];
       setTimeout(() => {
         document.querySelectorAll(".access-checkbox").forEach(cb => {
           cb.checked = userAccesses.includes(cb.value);
         });
-      }, 100);
+      }, 100);      
       const login = await loadUserLogin(row.full_name, row.corp_oper_nr);
       document.getElementById("win_user_name_main").value = login?.username || "";
-      document.getElementById("win_password_main").value = login?.password || "";
+      document.getElementById("win_password_main").value = login?.password || "";      
       resetToFirstTab();
       window.scrollTo({top: 0, behavior: 'smooth'});
     }
@@ -657,62 +674,87 @@
         return;
       }
       const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
-      const payloadReg = {n_int: document.getElementById("win_n_int").value, n_file: document.getElementById("win_n_file").value, patent: document.getElementById("win_patent").value,
-                          patent_abv: document.getElementById("win_patent_abv").value, abv_name: document.getElementById("win_abv_name").value, full_name: document.getElementById("win_full_name").value,
-                          ML: document.getElementById("win_ML").value === "true", MP: document.getElementById("win_MP").value === "true", TAS: document.getElementById("win_TAS").value === "true", 
-                          section: document.getElementById("win_section").value, type_quad: document.getElementById("win_quad").value, phone: document.getElementById("win_phone").value, 
-                          mobile_phone: document.getElementById("win_mobile").value, email: document.getElementById("win_mail").value, nif: document.getElementById("win_nif").value, 
+      let photoUrl = document.getElementById("win_photo_preview")?.dataset.photoUrl || "";
+      const photoInput = document.getElementById("win_photo_input");
+      if (photoInput && photoInput.files && photoInput.files[0]) {
+        const file = photoInput.files[0];
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${corpOperNr}_${nInt}.${fileExt}`;
+        const filePath = `${fileName}`;
+        const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/cb_logos/${filePath}`, {
+          method: "POST",
+          headers: {
+            ...getSupabaseHeaders(),
+            "x-upsert": "true"
+          },
+          body: file
+        });
+        if (!uploadRes.ok) {
+          throw new Error("Erro ao fazer upload da foto.");
+        }
+        const publicUrlRes = await fetch(`${SUPABASE_URL}/storage/v1/object/public/cb_logos/${filePath}`);
+        if (publicUrlRes.ok) {
+          photoUrl = `${SUPABASE_URL}/storage/v1/object/public/cb_logos/${filePath}`;
+        }
+      }
+      const payloadReg = {n_int: nInt, n_file: document.getElementById("win_n_file").value, patent: document.getElementById("win_patent").value, patent_abv: document.getElementById("win_patent_abv").value,
+                          abv_name: document.getElementById("win_abv_name").value, full_name: fullName, photo_url: photoUrl, ML: document.getElementById("win_ML").value === "true", MP: document.getElementById("win_MP").value === "true", 
+                          TAS: document.getElementById("win_TAS").value === "true", section: document.getElementById("win_section").value, type_quad: document.getElementById("win_quad").value, 
+                          phone: document.getElementById("win_phone").value, mobile_phone: document.getElementById("win_mobile").value, email: document.getElementById("win_mail").value, nif: document.getElementById("win_nif").value, 
                           is_ofope: document.getElementById("win_ofope").value === "Sim", nib: document.getElementById("win_nib").value, elem_state: document.getElementById("win_state").value === "Ativo", 
                           inactive_from: document.getElementById("win_state").value === "Inativo" ? document.getElementById("win_state_from").value : null,
-                          acess: Array.from(document.querySelectorAll('.access-checkbox:checked')).map(cb => cb.value).join(", "), 
-                          user_role: mapUserRole(), corp_oper_nr: corpOperNr,last_updated: new Date().toISOString()};
+                          acess: Array.from(document.querySelectorAll('.access-checkbox:checked')).map(cb => cb.value).join(", "), corp_oper_nr: corpOperNr, last_updated: new Date().toISOString()
+                        };
       if (!payloadReg.user_role) {
         showPopup('popup-danger', "⚠️ Selecione o tipo de utilizador (Administrador / Sub-Administrador / Utilizador).");
         return;
       }
-      const payloadUsers = {username: document.getElementById("win_user_name_main").value, password: document.getElementById("win_password_main").value,
-                            n_int: payloadReg.n_int, full_name: payloadReg.full_name, patent: payloadReg.patent, corp_oper_nr: corpOperNr};
       try {
         const url = currentEditId
           ? `${SUPABASE_URL}/rest/v1/reg_elems?id=eq.${currentEditId}`
-          : `${SUPABASE_URL}/rest/v1/reg_elems`;
+          : `${SUPABASE_URL}/rest/v1/reg_elems`;          
         const resReg = await fetch(url, {
           method: currentEditId ? "PATCH" : "POST",
           headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=representation"},
           body: JSON.stringify(payloadReg)
         });
         if (!resReg.ok) throw new Error("Erro ao gravar reg_elems");
-        const checkUser = await fetch(`${SUPABASE_URL}/rest/v1/users?username=eq.${payloadUsers.username}`, {
-          headers: getSupabaseHeaders()
-        });
-        if (!checkUser.ok) throw new Error("Erro ao verificar user");
-        const usersFound = await checkUser.json();
-        if (usersFound && usersFound.length > 0) {
-          const userSameCorp = usersFound.find(u => u.corp_oper_nr === corpOperNr);
-          if (!userSameCorp) {
-            showPopup('popup-danger', "⚠️ Já existe um utilizador com estas credenciais em outra corporação.\nPor favor introduza outras credenciais.");
-            document.getElementById("win_user_name_main").value = "";
-            document.getElementById("win_password_main").value = "";
-            return;
-          }
-          await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${userSameCorp.id}`, {
-            method: "PATCH",
-            headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
-            body: JSON.stringify(payloadUsers)
+        const usernameVal = document.getElementById("win_user_name_main").value.trim();
+        const passwordVal = document.getElementById("win_password_main").value.trim();
+        if (usernameVal && passwordVal) {
+          const payloadUsers = {username: usernameVal, password: passwordVal, n_int: payloadReg.n_int, full_name: payloadReg.full_name, patent: payloadReg.patent, corp_oper_nr: corpOperNr};
+          const checkUser = await fetch(`${SUPABASE_URL}/rest/v1/users?username=eq.${usernameVal}`, {
+            headers: getSupabaseHeaders()
           });
-        } else {
-          await fetch(`${SUPABASE_URL}/rest/v1/users`, {
-            method: "POST",
-            headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
-            body: JSON.stringify(payloadUsers)
-          });
+          if (!checkUser.ok) throw new Error("Erro ao verificar user");
+            const usersFound = await checkUser.json();
+            if (usersFound && usersFound.length > 0) {
+              const userSameCorp = usersFound.find(u => u.corp_oper_nr === corpOperNr);
+              if (!userSameCorp) {
+                showPopup('popup-danger', "⚠️ Já existe um utilizador com estas credenciais em outra corporação.\nPor favor introduza outras credenciais.");
+                document.getElementById("win_user_name_main").value = "";
+                document.getElementById("win_password_main").value = "";
+                return;
+              }
+              await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${userSameCorp.id}`, {
+                method: "PATCH",
+                headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
+                body: JSON.stringify(payloadUsers)
+              });
+            } else {
+              await fetch(`${SUPABASE_URL}/rest/v1/users`, {
+                method: "POST",
+                headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
+                body: JSON.stringify(payloadUsers)
+              });
+            }
         }
         showPopup('popup-success', currentEditId ? "✅ Elemento editado com sucesso!" : "✅ Elemento adicionado com sucesso!");
         toggleElementsView();
         loadElementsTable();        
       } catch (err) {
         console.error(err);
-        showPopup('popup-danger', "Erro ao gravar registro.");
+        showPopup('popup-danger', "Erro ao gravar registo.");
       }
     }
     async function deleteRecord(id, name, corp) {
@@ -891,6 +933,33 @@
         row.style.display = hasVisible || filterText === "" ? "" : "none";
       });
     });
+    function handlePhotoUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const photoPreview = document.getElementById("win_photo_preview");
+          if (photoPreview) {
+            photoPreview.innerHTML = `<img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover; display: block;">`;
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+    function removePhoto() {
+      const photoPreview = document.getElementById("win_photo_preview");
+      const photoInput = document.getElementById("win_photo_input");
+      if (photoPreview) {
+        photoPreview.innerHTML = `
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="1.5">
+            <circle cx="12" cy="8" r="4"/>
+            <path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>
+          </svg>
+        `;
+        photoPreview.dataset.photoUrl = "";
+      }
+      if (photoInput) photoInput.value = "";
+    }
     /* =======================================
     VEHICLE LISTING
     ======================================= */

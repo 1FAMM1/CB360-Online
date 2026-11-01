@@ -395,10 +395,8 @@
       }
     }
     /* =======================================
-    FIREFIGHTER LISTING
-    ======================================= */
-    sessionStorage.setItem("currentUserRole", "admin");
-    sessionStorage.setItem("currentCorpOperNr", "0805");
+    FIREFIGHTER LISTING
+    ======================================= */
     let currentEditId = null;
     const ACCESS_OPTIONS = [
       {label: "Menu Principal"},
@@ -673,43 +671,45 @@
         showPopup('popup-danger', "O Nº Interno e o Nome Completo são obrigatórios.");
         return;
       }
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
-      let photoUrl = document.getElementById("win_photo_preview")?.dataset.photoUrl || "";
-      const photoInput = document.getElementById("win_photo_input");
-      if (photoInput && photoInput.files && photoInput.files[0]) {
-        const file = photoInput.files[0];
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${corpOperNr}_${nInt}.${fileExt}`;
-        const filePath = `${fileName}`;
-        const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/cb_logos/${filePath}`, {
-          method: "POST",
-          headers: {
-            ...getSupabaseHeaders(),
-            "x-upsert": "true"
-          },
-          body: file
-        });
-        if (!uploadRes.ok) {
-          throw new Error("Erro ao fazer upload da foto.");
-        }
-        const publicUrlRes = await fetch(`${SUPABASE_URL}/storage/v1/object/public/cb_logos/${filePath}`);
-        if (publicUrlRes.ok) {
-          photoUrl = `${SUPABASE_URL}/storage/v1/object/public/cb_logos/${filePath}`;
-        }
-      }
-      const payloadReg = {n_int: nInt, n_file: document.getElementById("win_n_file").value, patent: document.getElementById("win_patent").value, patent_abv: document.getElementById("win_patent_abv").value,
-                          abv_name: document.getElementById("win_abv_name").value, full_name: fullName, photo_url: photoUrl, ML: document.getElementById("win_ML").value === "true", MP: document.getElementById("win_MP").value === "true", 
-                          TAS: document.getElementById("win_TAS").value === "true", section: document.getElementById("win_section").value, type_quad: document.getElementById("win_quad").value, 
-                          phone: document.getElementById("win_phone").value, mobile_phone: document.getElementById("win_mobile").value, email: document.getElementById("win_mail").value, nif: document.getElementById("win_nif").value, 
-                          is_ofope: document.getElementById("win_ofope").value === "Sim", nib: document.getElementById("win_nib").value, elem_state: document.getElementById("win_state").value === "Ativo", 
-                          inactive_from: document.getElementById("win_state").value === "Inativo" ? document.getElementById("win_state_from").value : null,
-                          acess: Array.from(document.querySelectorAll('.access-checkbox:checked')).map(cb => cb.value).join(", "), corp_oper_nr: corpOperNr, last_updated: new Date().toISOString()
-                        };
-      if (!payloadReg.user_role) {
+      const typeVal = document.getElementById("win_type").value;
+      if (!typeVal) {
         showPopup('popup-danger', "⚠️ Selecione o tipo de utilizador (Administrador / Sub-Administrador / Utilizador).");
         return;
       }
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       try {
+        let photoUrl = document.getElementById("win_photo_preview")?.dataset.photoUrl || "";
+        const photoInput = document.getElementById("win_photo_input");
+        if (photoInput && photoInput.files && photoInput.files[0]) {
+          const file = photoInput.files[0];
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${corpOperNr}_${nInt}.${fileExt}`;
+          const filePath = `${fileName}`;
+          const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/cb_logos/${filePath}`, {
+            method: "POST",
+            headers: {
+              ...getSupabaseHeaders(),
+              "x-upsert": "true"
+            },
+            body: file
+          });
+          if (!uploadRes.ok) {
+            throw new Error("Erro ao fazer upload da foto.");
+          }
+          const publicUrlRes = await fetch(`${SUPABASE_URL}/storage/v1/object/public/cb_logos/${filePath}`);
+          if (publicUrlRes.ok) {
+            photoUrl = `${SUPABASE_URL}/storage/v1/object/public/cb_logos/${filePath}`;
+          }
+        }
+        const payloadReg = {n_int: nInt, n_file: document.getElementById("win_n_file").value, patent: document.getElementById("win_patent").value, patent_abv: document.getElementById("win_patent_abv").value,
+                            abv_name: (document.getElementById("win_abv_name")?.value || "").trim() || buildAbvName(fullName), full_name: fullName, photo_url: photoUrl, ML: document.getElementById("win_ML").value === "true", MP: document.getElementById("win_MP").value === "true", 
+                            TAS: document.getElementById("win_TAS").value === "true", section: document.getElementById("win_section").value, type_quad: document.getElementById("win_quad").value, 
+                            phone: document.getElementById("win_phone").value, mobile_phone: document.getElementById("win_mobile").value, email: document.getElementById("win_mail").value, nif: document.getElementById("win_nif").value, 
+                            is_ofope: document.getElementById("win_ofope").value === "Sim", nib: document.getElementById("win_nib").value, elem_state: document.getElementById("win_state").value === "Ativo", 
+                            inactive_from: document.getElementById("win_state").value === "Inativo" ? document.getElementById("win_state_from").value : null,
+                            acess: Array.from(document.querySelectorAll('.access-checkbox:checked')).map(cb => cb.value).join(", "), corp_oper_nr: corpOperNr, last_updated: new Date().toISOString(),
+                            user_role: mapUserRole()
+                          };
         const url = currentEditId
           ? `${SUPABASE_URL}/rest/v1/reg_elems?id=eq.${currentEditId}`
           : `${SUPABASE_URL}/rest/v1/reg_elems`;          
@@ -723,38 +723,38 @@
         const passwordVal = document.getElementById("win_password_main").value.trim();
         if (usernameVal && passwordVal) {
           const payloadUsers = {username: usernameVal, password: passwordVal, n_int: payloadReg.n_int, full_name: payloadReg.full_name, patent: payloadReg.patent, corp_oper_nr: corpOperNr};
-          const checkUser = await fetch(`${SUPABASE_URL}/rest/v1/users?username=eq.${usernameVal}`, {
+          const checkUser = await fetch(`${SUPABASE_URL}/rest/v1/users?username=eq.${encodeURIComponent(usernameVal)}`, {
             headers: getSupabaseHeaders()
           });
           if (!checkUser.ok) throw new Error("Erro ao verificar user");
-            const usersFound = await checkUser.json();
-            if (usersFound && usersFound.length > 0) {
-              const userSameCorp = usersFound.find(u => u.corp_oper_nr === corpOperNr);
-              if (!userSameCorp) {
-                showPopup('popup-danger', "⚠️ Já existe um utilizador com estas credenciais em outra corporação.\nPor favor introduza outras credenciais.");
-                document.getElementById("win_user_name_main").value = "";
-                document.getElementById("win_password_main").value = "";
-                return;
-              }
-              await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${userSameCorp.id}`, {
-                method: "PATCH",
-                headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
-                body: JSON.stringify(payloadUsers)
-              });
-            } else {
-              await fetch(`${SUPABASE_URL}/rest/v1/users`, {
-                method: "POST",
-                headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
-                body: JSON.stringify(payloadUsers)
-              });
+          const usersFound = await checkUser.json();
+          if (usersFound && usersFound.length > 0) {
+            const userSameCorp = usersFound.find(u => u.corp_oper_nr === corpOperNr);
+            if (!userSameCorp) {
+              showPopup('popup-danger', "⚠️ Já existe um utilizador com estas credenciais em outra corporação.\nPor favor introduza outras credenciais.");
+              document.getElementById("win_user_name_main").value = "";
+              document.getElementById("win_password_main").value = "";
+              return;
             }
+            await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${userSameCorp.id}`, {
+              method: "PATCH",
+              headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
+              body: JSON.stringify(payloadUsers)
+            });
+          } else {
+            await fetch(`${SUPABASE_URL}/rest/v1/users`, {
+              method: "POST",
+              headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
+              body: JSON.stringify(payloadUsers)
+            });
+          }
         }
         showPopup('popup-success', currentEditId ? "✅ Elemento editado com sucesso!" : "✅ Elemento adicionado com sucesso!");
         toggleElementsView();
         loadElementsTable();        
       } catch (err) {
         console.error(err);
-        showPopup('popup-danger', "Erro ao gravar registo.");
+        showPopup('popup-danger', "Erro ao gravar registo: " + (err.message || err));
       }
     }
     async function deleteRecord(id, name, corp) {
@@ -884,6 +884,12 @@
       });
       return wrapper;
     }
+    function buildAbvName(fullName) {
+      const parts = (fullName || "").trim().split(/\s+/).filter(Boolean);
+      if (parts.length === 0) return "";
+      if (parts.length === 1) return parts[0];
+      return `${parts[0]} ${parts[parts.length - 1]}`;
+    }
     function mapUserRole() {
       const val = document.getElementById("win_type").value;
       return val === "Administrador" ? "admin" : (val === "Sub-Administrador" ? "subadmin" : "user");
@@ -895,15 +901,15 @@
       const data = await res.json();
       return data[0] || null;
     }
-    document.addEventListener("DOMContentLoaded", () => {      
-      initTabs();
-      loadElementsTable();
-    });
     document.addEventListener("DOMContentLoaded", () => {
       initTabs();
       loadElementsTable();
       document.getElementById("elems-saveBtn").addEventListener("click", saveElement);
       document.getElementById("win_state").addEventListener("change", toggleStateDateVisibility);
+      document.getElementById("win_full_name")?.addEventListener("input", function () {
+        const abvEl = document.getElementById("win_abv_name");
+        if (abvEl) abvEl.value = buildAbvName(this.value);
+      });
     });
     document.getElementById("win_search_element")?.addEventListener("input", function() {
       const filterText = this.value.toLowerCase().trim();

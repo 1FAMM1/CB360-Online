@@ -41,8 +41,7 @@
         el.value = '';
       });
     }
-    const typeChangeClearFields = ['vsLocal', 'vsValue', 'vsQtdSick', 'vsSickValue', 'vsWaitHrs', 'vsWaitHrsValue', 'vsPrevValueHour',
-                                   'vsQtdPrevHours', 'vsPrevValue', 'vsElementValue', 'vsElementNInt', 'vsElementName'];
+    const typeChangeClearFields = ['vsLocal', 'vsValue', 'vsQtdSick', 'vsSickValue', 'vsWaitHrs', 'vsWaitHrsValue', 'vsPrevValueHour', 'vsQtdPrevHours', 'vsPrevValue', 'vsElementValue', 'vsElementNInt', 'vsElementName'];
     function handleVsTypeChange() {
       clearFields(typeChangeClearFields);
       const typeValue = document.getElementById('vsType').value;
@@ -212,6 +211,44 @@
         }
       } catch (err) {console.error('Erro de rede:', err);}
     }
+    let vsLoggedUserNameCache = null;
+    async function getVsLoggedUserName() {
+      if (vsLoggedUserNameCache) return vsLoggedUserNameCache;
+      const nInt = sessionStorage.getItem('currentNInt');
+      const corpNr = sessionStorage.getItem('currentCorpOperNr');
+      // 1) Procura em reg_elems pelo n_int + corp_oper_nr da sessão
+      if (nInt && corpNr) {
+        try {
+          const url = `${SUPABASE_URL}/rest/v1/reg_elems?select=abv_name&n_int=eq.${encodeURIComponent(nInt)}&corp_oper_nr=eq.${encodeURIComponent(corpNr)}&limit=1`;
+          const response = await fetch(url, {method: 'GET', headers: getSupabaseHeaders()});
+          if (response.ok) {
+            const data = await response.json();
+            if (data[0]?.abv_name) vsLoggedUserNameCache = data[0].abv_name;
+            else console.warn('[updated_by] reg_elems sem resultado para', nInt, corpNr);
+          } else {
+            console.warn('[updated_by] reg_elems respondeu', response.status, await response.text());
+          }
+        } catch (err) {
+          console.warn('[updated_by] Erro ao consultar reg_elems:', err);
+        }
+      }
+      // 2) Assinatura do OPTEL (mesma função usada noutros módulos)
+      if (!vsLoggedUserNameCache && typeof getOptelSignature === 'function') {
+        try {
+          const sig = await getOptelSignature();
+          if (sig) vsLoggedUserNameCache = String(sig).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+        } catch (e) {
+          console.warn('Erro ao obter assinatura do OPTEL:', e);
+        }
+      }
+      // 3) Último recurso: nome completo guardado na sessão
+      if (!vsLoggedUserNameCache) {
+        vsLoggedUserNameCache = sessionStorage.getItem('currentUserDisplay')
+                             || sessionStorage.getItem('currentUserName')
+                             || null;
+      }
+      return vsLoggedUserNameCache;
+    }
     function debounce(fn, delay) {
       let timeout;
       return (...args) => {
@@ -247,7 +284,9 @@
                        service_whait_hours: document.getElementById('vsWaitHrs').value || null, service_whait_hours_value: document.getElementById('vsWaitHrsValue').value || null,
                        prev_value_hour: document.getElementById('vsPrevValueHour').value || null, prev_total_hours: document.getElementById('vsQtdPrevHours').value || null,
                        prev_global_value: document.getElementById('vsPrevValue').value || null, n_int: nInt, abv_name: abvName, global_value: globalValue,
-                       corp_oper_nr: sessionStorage.getItem('currentCorpOperNr')};
+                       corp_oper_nr: sessionStorage.getItem('currentCorpOperNr'),
+                       updated_at: new Date().toISOString(),
+                       updated_by: await getVsLoggedUserName()};
       const btn = document.getElementById('services-save-button');
       const originalText = btn.innerHTML;
       btn.disabled = true;
@@ -280,8 +319,8 @@
       }
     }
     function clearVolunteerForm() {
-      const ids = ['vsDate', 'vsType', 'vsLocal', 'vsValue', 'vsQtdSick', 'vsSickValue', 'vsWaitHrs', 'vsWaitHrsValue',
-                   'vsPrevValueHour', 'vsQtdPrevHours', 'vsPrevValue', 'vsElementNInt', 'vsElementName', 'vsElementValue'];
+      const ids = ['vsDate', 'vsType', 'vsLocal', 'vsValue', 'vsQtdSick', 'vsSickValue', 'vsWaitHrs', 'vsWaitHrsValue', 'vsPrevValueHour',
+                   'vsQtdPrevHours', 'vsPrevValue', 'vsElementNInt', 'vsElementName', 'vsElementValue'];
       ids.forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
@@ -369,6 +408,16 @@
       if (!dataISO) return '';
       const [year, month, day] = String(dataISO).slice(0, 10).split('-');
       return `${day}/${month}/${year}`;
+    }
+    function vsFormatDateTime(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      if (isNaN(d)) return '';
+      return d.toLocaleString('pt-PT', {
+        timeZone: 'Europe/Lisbon',
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      }).replace(',', '');
     }
     async function getUniqueServiceTypes() {
       const url = `${SUPABASE_URL}/rest/v1/reg_volunteer_services_values?select=type`;
@@ -477,7 +526,11 @@
           `;
         }).join('');
         const total = data.reduce((sum, item) => sum + vsToNum(item.global_value), 0);
-        updateSummary(total, data.length);
+        const lastItem = data.reduce((last, item) => {
+          if (!item.updated_at) return last;
+          return (!last || new Date(item.updated_at) > new Date(last.updated_at)) ? item : last;
+        }, null);
+        updateSummary(total, data.length, lastItem?.updated_at || null, lastItem?.updated_by || null);
       } catch (err) {
         tableBody.style.opacity = "1";
         console.error('Erro:', err);
@@ -675,7 +728,9 @@
         service_sicks_value: money('vsEditSicksValue'),
         service_whait_hours: numOrNull('vsEditWaitHours'),
         service_whait_hours_value: money('vsEditWaitValue'),
-        global_value: global.toFixed(2)
+        global_value: global.toFixed(2),
+        updated_at: new Date().toISOString(),
+        updated_by: await getVsLoggedUserName()
       };
       const btn = document.getElementById('vsEditSave');
       btn.disabled = true;
@@ -718,7 +773,7 @@
       }
     }
 
-    async function updateSummary(total, count) {
+    async function updateSummary(total, count, lastUpdate = null, lastUpdateBy = null) {
       const summaryContainer = document.getElementById('services-summary-container');
       if (!summaryContainer) return;
       const displayCount = count || 0;
@@ -779,6 +834,12 @@
             ENVIAR PARA VALIDAÇÃO
           </button>
         </div>
+        ${lastUpdate ? `
+          <div style="align-self: flex-end; margin-top: 6px; font-size: 11px; color: #555; font-family: sans-serif;">
+            <i class="fa-solid fa-clock-rotate-left" style="margin-right: 4px;"></i>
+            Última atualização: <b>${vsFormatDateTime(lastUpdate)}</b>${lastUpdateBy ? ` - <b style="color: #c00;">${lastUpdateBy}</b>` : ''}
+          </div>
+        ` : ''}
       `;
       const cbV = document.getElementById('vsValidado');
       const cbN = document.getElementById('vsNaoValidado');
@@ -1014,78 +1075,90 @@
       loadVolunteerServicesTable();
     }
     /* ============= EMISSÃO DE RELATÓRIOS ============== */
+    function setVsReportButtonsState(disabled) {
+      ['vsPDFReport', 'vsEXCELReport'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) {
+          btn.disabled = disabled;
+          btn.style.opacity = disabled ? '0.5' : '1';
+          btn.style.cursor = disabled ? 'not-allowed' : 'pointer';
+        }
+      });
+    }
     async function generateVolunteerReport(format) {
       const EXTENDED_MONTHS = ['', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
       const year = document.getElementById('vsConsYear').value;
       const monthValue = document.getElementById('vsConsMonth').value;
       const reportType = document.getElementById('vsReportSelect').value;
-      if (!reportType || reportType.trim() === "") return;
-      const monthName = EXTENDED_MONTHS[parseInt(monthValue)] || 'Mes';
-      const typesToGenerate = reportType === 'Ambos' ? ['Simplificado', 'Detalhado'] : [reportType];
-      for (const type of typesToGenerate) {
-        let rows;
-        if (type === 'Detalhado') {
-          rows = [...currentVolunteerData];
-        } else {
-          const grouped = {};
-          currentVolunteerData.forEach(item => {
-            const key = item.abv_name;
-            if (!grouped[key]) {
-              grouped[key] = {n_int: item.n_int, abv_name: item.abv_name, total: 0};
-            }
-            grouped[key].total += parseFloat(item.global_value) || 0;
-          });
-          rows = Object.values(grouped);
-        }
-        rows.sort((a, b) => (parseInt(a.n_int) || 0) - (parseInt(b.n_int) || 0));
-        const globalTotal = currentVolunteerData.reduce((sum, item) => sum + (parseFloat(item.global_value) || 0), 0);
-        const tipoFicheiro = format === 'pdf' ? 'PDF' : 'EXCEL';
-        showLoadingPopup(`A gerar relatório ${type} em ${tipoFicheiro}...`);
-        try {
-          const response = await fetch('https://cb360-online.vercel.app/api/prevpay_convert_and_send', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({action: 'generate-report', rows, year, month: monthValue, format, globalTotal, reportType: type})
-          });
-          if (!response.ok) throw new Error(`Falha na API`);
-          const blob = await response.blob();
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          const reportSuffix = type.toLowerCase();
-          const extension = format === 'pdf' ? 'pdf' : 'xlsx';
-          a.download = `pagamento_${reportSuffix}_${monthName}_${year}.${extension}`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-          if (reportType === 'Ambos' && type === 'Simplificado') {
-            await new Promise(resolve => setTimeout(resolve, 1500));
-          }
-        } catch (e) {
-          console.error("Erro:", e);
-          showPopup('popup-danger', `Erro ao gerar ${type}: ` + e.message);
-          break;
-        }
+      if (!reportType || reportType.trim() === "") {
+        showPopup('popup-danger', 'Selecione o Tipo de Relatório.');
+        return;
       }
-      hideLoadingPopup();
-      document.getElementById('vsReportSelect').value = '';
-      const pdfBtn = document.getElementById('vsPDFReport');
-      const excelBtn = document.getElementById('vsEXCELReport');
-      [pdfBtn, excelBtn].forEach(btn => {
-        if (btn) {
-          btn.disabled = true;
-          btn.style.opacity = '0.5';
-          btn.style.cursor = 'not-allowed';
+      if (!currentVolunteerData || currentVolunteerData.length === 0) {
+        showPopup('popup-danger', 'Não existem serviços para emitir.');
+        return;
+      }
+      const monthName = monthValue === 'todos' ? 'Anual' : (EXTENDED_MONTHS[parseInt(monthValue)] || 'Mes');
+      const typesToGenerate = reportType === 'Ambos' ? ['Simplificado', 'Detalhado'] : [reportType];
+      const globalTotal = currentVolunteerData.reduce((sum, item) => sum + vsToNum(item.global_value), 0);
+      setVsReportButtonsState(true); // bloqueia só durante a geração
+      try {
+        for (const type of typesToGenerate) {
+          let rows;
+          if (type === 'Detalhado') {
+            rows = [...currentVolunteerData];
+          } else {
+            const grouped = {};
+            currentVolunteerData.forEach(item => {
+              const key = item.n_int;
+              if (!grouped[key]) {
+                grouped[key] = {n_int: item.n_int, abv_name: item.abv_name, total: 0};
+              }
+              grouped[key].total += vsToNum(item.global_value);
+            });
+            rows = Object.values(grouped);
+          }
+          rows.sort((a, b) => (parseInt(a.n_int) || 0) - (parseInt(b.n_int) || 0));
+          const tipoFicheiro = format === 'pdf' ? 'PDF' : 'EXCEL';
+          showLoadingPopup(`A gerar relatório ${type} em ${tipoFicheiro}...`);
+          try {
+            const response = await fetch('https://cb360-online.vercel.app/api/prevpay_convert_and_send', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({action: 'generate-report', rows, year, month: monthValue, format, globalTotal, reportType: type})
+            });
+            if (!response.ok) throw new Error(`Falha na API`);
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const reportSuffix = type.toLowerCase();
+            const extension = format === 'pdf' ? 'pdf' : 'xlsx';
+            a.download = `pagamento_${reportSuffix}_${monthName}_${year}.${extension}`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            if (reportType === 'Ambos' && type === 'Simplificado') {
+              await new Promise(resolve => setTimeout(resolve, 1500));
+            }
+          } catch (e) {
+            console.error("Erro:", e);
+            showPopup('popup-danger', `Erro ao gerar ${type}: ` + e.message);
+            break;
+          }
         }
-      });
+      } finally {
+        hideLoadingPopup();
+        setVsReportButtonsState(!currentVolunteerData || currentVolunteerData.length === 0);
+      }
     }
     document.getElementById('vsPDFReport').addEventListener('click', async function () {
       await generateVolunteerReport('pdf');
     });
     document.getElementById('vsEXCELReport').addEventListener('click', async function () {
       await generateVolunteerReport('excel');
-    }); 
+    });
     /* ====== CONFIGURAÇÃO DE VALORES ===== */
     let currentEditingValueId = null;
     async function saveVolunteerServiceValue() {

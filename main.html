@@ -4928,11 +4928,9 @@
                       <label style="font-size: 13px;">Localidade:</label>
                       <input type="text" id="assoc-localidade" style="width: 280px; padding: 4px; border: 1px solid #ccc; border-radius: 3px;">
                       <label style="font-size: 13px;">Código-Postal:</label>
-                      <input type="text" id="assoc-cp1" maxlength="4" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '');"
-                             style="width: 65px; text-align: center; padding: 4px; border: 1px solid #ccc; border-radius: 3px;" placeholder="0000">
+                      <input type="text" id="assoc-cp1" maxlength="4" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '');" style="width: 65px; text-align: center; padding: 4px; border: 1px solid #ccc; border-radius: 3px;" placeholder="0000">
                       <span>-</span>
-                      <input type="text" id="assoc-cp2" maxlength="3" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '');"
-                             style="width: 50px; text-align: center; padding: 4px; border: 1px solid #ccc; border-radius: 3px;" placeholder="000">
+                      <input type="text" id="assoc-cp2" maxlength="3" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '');" style="width: 50px; text-align: center; padding: 4px; border: 1px solid #ccc; border-radius: 3px;" placeholder="000">
                     </div>
                   </div>
                   <div class="major-field">
@@ -4948,25 +4946,17 @@
                   <div class="major-field">
                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
                       <label style="font-size: 13px;">NIF:</label>
-                      <input type="text" id="assoc-nif" maxlength="9" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '');"
-                             style="width: 150px; text-align: center; padding: 4px; border: 1px solid #ccc; border-radius: 3px;" placeholder="999999999">
+                      <input type="text" id="assoc-nif" maxlength="9" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '');" style="width: 150px; text-align: center; padding: 4px; border: 1px solid #ccc; border-radius: 3px;" placeholder="999999999">
                       <label style="font-size: 13px;">Núm. Operacional:</label>
-                      <input type="text" id="assoc-operational-nr" maxlength="4" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '');"
-                             style="width: 100px; text-align: center; padding: 4px; border: 1px solid #ccc; border-radius: 3px;" placeholder="0000">
+                      <input type="text" id="assoc-operational-nr" maxlength="4" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '');" style="width: 100px; text-align: center; padding: 4px; border: 1px solid #ccc; border-radius: 3px;" placeholder="0000">
                     </div>
                   </div>
                   <div class="major-field">
                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: -5px;">                      
                       <label style="font-size: 13px;">Telemovél:</label>
-                      <input type="text" id="assoc-mobile-phone" maxlength="16" inputmode="tel" 
-                             oninput="this.value = this.value.replace(/[^0-9+\s]/g, '');"
-                             style="width: 150px; text-align: center; padding: 4px; border: 1px solid #ccc; border-radius: 3px;" 
-                             placeholder="+351 900 000 000">                      
+                      <input type="text" id="assoc-mobile-phone" maxlength="16" inputmode="tel" oninput="this.value = this.value.replace(/[^0-9+\s]/g, '');" style="width: 150px; text-align: center; padding: 4px; border: 1px solid #ccc; border-radius: 3px;"  placeholder="+351 900 000 000">                      
                       <label style="font-size: 13px;">Telefone:</label>
-                      <input type="text" id="assoc-landline-phone" maxlength="16" inputmode="tel" 
-                             oninput="this.value = this.value.replace(/[^0-9+\s]/g, '');"
-                             style="width: 150px; text-align: center; padding: 4px; border: 1px solid #ccc; border-radius: 3px;" 
-                             placeholder="+351 289 000 000">                      
+                      <input type="text" id="assoc-landline-phone" maxlength="16" inputmode="tel" oninput="this.value = this.value.replace(/[^0-9+\s]/g, '');" style="width: 150px; text-align: center; padding: 4px; border: 1px solid #ccc; border-radius: 3px;" placeholder="+351 289 000 000">                      
                       <label style="font-size: 13px;">E-Mail:</label>
                       <input type="text" id="assoc-email" style="flex: 1; padding: 4px; border: 1px solid #ccc; border-radius: 3px;">                      
                     </div>
@@ -5022,142 +5012,368 @@
                 </div>
                 <div style="padding: 20px;">
                   <div class="tab-content" id="mainData">
-                    <div class="major-field">
-                      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
-                        <label>Estado:</label>
-                        <select id="win_state" style="width:100px;">
-                          <option>&nbsp;</option>
-                          <option>Ativo</option>
-                          <option>Inativo</option>
-                        </select>
-                        <label style="display: none;">Desde:</label>                        
-                        <input type="date" id="win_state_from" style="width:150px; display: none;">                        
-                      </div>
-                    </div>
-                    <div class="major-field">
-                      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">                        
-                        <label>Tipo:</label>
-                        <select id="win_type" style="width:150px;">
-                          <option>&nbsp;</option>
-                          <option>Administrador</option>
-                          <option>Sub-Administrador</option>
-                          <option>Utilizador</option>
-                        </select>
-                        <label>OFOPE:</label>
-                        <select id="win_ofope" style="width:150px;">
-                          <option>&nbsp;</option>
-                          <option>Sim</option>
-                          <option>Não</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div class="major-field">
-                      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
-                        <label>Nº Interno:</label>
-                        <input type="text" id="win_n_int" style="width:80px; text-align:center;">
-                        <label>Nº Mec:</label>
-                        <input type="text" id="win_n_file" style="width:120px; text-align:center;">
-                      </div>
-                    </div>
-                    <div class="major-field">
-                      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
-                        <label>Patente:</label>
-                        <select id="win_patent" style="width:150px;"></select>
-                        <input type="text" id="win_patent_abv" readonly tabindex="-1" style="width:75px; text-align:center;">
-                        <label>Secção:</label>
-                        <select id="win_section" style="width:110px;">
-                          <option>&nbsp;</option>
-                          <option>1ª Secção</option>
-                          <option>2ª Secção</option>
-                          <option>3ª Secção</option>
-                          <option>4ª Secção</option>
-                        </select>
-                        <label>Quadro:</label>
-                        <select id="win_quad" style="width:110px;">
-                          <option>&nbsp;</option>
-                          <option>QCOM</option>
-                          <option>QATIV</option>
-                          <option>QEST</option>
-                          <option>QEA</option>
-                          <option>QHR</option>
-                          <option>QRES</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div class="major-field">
-                      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
-                        <label>Nome Abreviado:</label>
-                        <input type="text" id="win_abv_name" style="flex:1">
-                      </div>
-                    </div>
-                    <div class="major-field">
-                      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
-                        <label>Nome Completo:</label>
-                        <input type="text" id="win_full_name" style="flex:1">
-                      </div>
-                    </div>
-                    <div class="major-field">
-                      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
-                        <label>Motorista Ligeiros:</label>
-                        <select id="win_ML" style="width: 75px;">
-                          <option value="true">Sim</option>
-                          <option value="false">Não</option>
-                        </select>
-                        <label>Motorista Pesados:</label>
-                        <select id="win_MP" style="width: 75px;">
-                          <option value="true">Sim</option>
-                          <option value="false">Não</option>
-                        </select>
-                        <label>Tripulante TAS:</label>
-                        <select id="win_TAS" style="width: 75px;">
-                          <option value="true">Sim</option>
-                          <option value="false">Não</option>
-                        </select>
+                    <div style="display: flex; gap: 20px; align-items: flex-start;">
+                      <div style="display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;">
+                        <div id="win_photo_preview" style="width: 130px; height: 130px; border: 2px dashed #ccc; border-radius: 6px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #fafafa;">
+                          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="1.5">
+                            <circle cx="12" cy="8" r="4"/>
+                            <path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>
+                          </svg>
+                        </div>
+                        <input type="file" id="win_photo_input" accept="image/*" style="display:none;" onchange="handlePhotoUpload(event)">
+                        <button type="button" class="btn btn-add" style="width: 130px; padding: 6px 0;" onclick="document.getElementById('win_photo_input').click()">📷 Escolher</button>
+                        <button type="button" class="btn" style="width: 130px; padding: 6px 0; background:#eee; color:#555;" onclick="removePhoto()">🗑️ Remover</button>
+                      </div> 
+                      <div style="flex: 1; display: flex; flex-direction: column; gap: 0;">
+                        <div class="major-field">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 75px; flex-shrink: 0;">Estado:</label>
+                            <select id="win_state" style="width:100px;">
+                              <option>&nbsp;</option>
+                              <option>Ativo</option>
+                              <option>Inativo</option>
+                            </select>
+                            <label style="display: none;">Desde:</label>
+                            <input type="date" id="win_state_from" style="width:150px; display: none;">                         
+                            <label style="width: 30px; flex-shrink: 0;">Tipo:</label>
+                            <select id="win_type" style="width:150px;">
+                              <option>&nbsp;</option>
+                              <option>Administrador</option>
+                              <option>Sub-Administrador</option>
+                              <option>Utilizador</option>
+                            </select>
+                            <label style="width: 40px; flex-shrink: 0;">OFOPE:</label>
+                            <select id="win_ofope" style="width:150px;">
+                              <option>&nbsp;</option>
+                              <option>Sim</option>
+                              <option>Não</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div class="major-field">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 75px; flex-shrink: 0;">Nº Interno:</label>
+                            <input type="text" id="win_n_int" style="width:60px; text-align:center;">
+                            <label style="width: 125px; flex-shrink: 0;">Nº Mecanográfico:</label>
+                            <input type="text" id="win_n_file" style="width:120px; text-align:center;">
+                          </div>
+                        </div>
+                        <div class="major-field">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 75px; flex-shrink: 0;">Patente:</label>
+                            <select id="win_patent" style="width:150px;"></select>
+                            <input type="text" id="win_patent_abv" readonly tabindex="-1" style="width:75px; text-align:center;">
+                            <label style="width: 50px; flex-shrink: 0;">Secção:</label>
+                            <select id="win_section" style="width:110px;">
+                              <option>&nbsp;</option>
+                              <option>1ª Secção</option>
+                              <option>2ª Secção</option>
+                              <option>3ª Secção</option>
+                              <option>4ª Secção</option>
+                            </select>
+                            <label style="width: 60px; flex-shrink: 0;">Quadro:</label>
+                            <select id="win_quad" style="width:110px;">
+                              <option>&nbsp;</option>
+                              <option>QCOM</option>
+                              <option>QATIV</option>
+                              <option>QEST</option>
+                              <option>QEA</option>
+                              <option>QHR</option>
+                              <option>QRES</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div class="major-field">
+                          <div style="display: none; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 100px; flex-shrink: 0;">Nome Abreviado:</label>
+                            <input type="text" id="win_abv_name" style="flex:1">
+                          </div>
+                        </div>
+                        <div class="major-field">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 75px; flex-shrink: 0;">Nome:</label>
+                            <input type="text" id="win_full_name" style="flex:1">
+                          </div>
+                        </div>
+                        <div class="major-field">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 75px; flex-shrink: 0;">M. Ligeiros:</label>
+                            <select id="win_ML" style="width: 75px;">
+                              <option value="true">Sim</option>
+                              <option value="false">Não</option>
+                            </select>
+                            <label>M. Pesados:</label>
+                            <select id="win_MP" style="width: 75px;">
+                              <option value="true">Sim</option>
+                              <option value="false">Não</option>
+                            </select>
+                            <label>TAS:</label>
+                            <select id="win_TAS" style="width: 75px;">
+                              <option value="true">Sim</option>
+                              <option value="false">Não</option>
+                            </select>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
                   <div class="tab-content" id="otherData" style="display:none;">
-                    <div class="major-field">
-                      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
-                        <label>Morada:</label>
-                        <input type="text" id="win_adress" style="flex:1;">                                              
+
+                    <!-- ===== TRÊS COLUNAS: DADOS PESSOAIS / CONTACTOS ===== -->
+                    <div style="display: flex; gap: 25px; align-items: flex-start; margin-bottom: 25px;">
+                  
+                      <!-- Coluna 1 -->
+                      <div style="flex: 1; display: flex; flex-direction: column; gap: 0;">
+                        <div class="major-field">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 100px; flex-shrink: 0;">Morada:</label>
+                            <input type="text" id="win_adress" style="flex:1;">
+                          </div>
+                        </div>
+                        <div class="major-field">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 100px; flex-shrink: 0;">Localidade:</label>
+                            <input type="text" id="win_localitie" style="flex:1;">
+                          </div>
+                        </div>
+                        <div class="major-field">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 100px; flex-shrink: 0;">Código Postal:</label>
+                            <input type="text" id="win_cpcode01" style="width:70px; text-align:center;">
+                            <label>-</label>
+                            <input type="text" id="win_cpcode02" style="width:50px; text-align:center;">
+                          </div>
+                        </div>
+                        <div class="major-field">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 100px; flex-shrink: 0;">D. Nascimento:</label>
+                            <input type="date" id="win_birth_date" style="width:150px;">
+                            <input type="text" id="win_age" style="width:100px;" disabled>
+                          </div>
+                        </div>
+                        <div class="major-field">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 100px; flex-shrink: 0;">Naturalidade:</label>
+                            <input type="text" id="win_birthplace" style="flex:1;">
+                          </div>
+                        </div>
+                        <div class="major-field">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 100px; flex-shrink: 0;">NIF:</label>
+                            <input type="text" id="win_nif" style="flex:1;">
+                          </div>
+                        </div>
+                        <div class="major-field">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 100px; flex-shrink: 0;">NIB:</label>
+                            <input type="text" id="win_nib" style="flex:1;">
+                          </div>
+                        </div>
                       </div>
+                  
+                      <!-- Coluna 2 -->
+                      <div style="flex: 1; display: flex; flex-direction: column; gap: 0;">
+                        <div class="major-field">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 100px; flex-shrink: 0;">Nome Pai:</label>
+                            <input type="text" id="win_father_name" style="flex:1;">
+                          </div>
+                        </div>
+                        <div class="major-field">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 100px; flex-shrink: 0;">Nome Mãe:</label>
+                            <input type="text" id="win_mother_name" style="flex:1;">
+                          </div>
+                        </div>
+                        <div class="major-field">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 100px; flex-shrink: 0;">Profissão:</label>
+                            <input type="text" id="win_profession" style="flex:1;">
+                          </div>
+                        </div>
+                        <div class="major-field">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 100px; flex-shrink: 0;">Habilitações:</label>
+                            <input type="text" id="win_education" style="flex:1;">
+                          </div>
+                        </div>
+                        <div class="major-field">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 100px; flex-shrink: 0;">Estado Cívil:</label>
+                            <select id="win_civil_state" style="flex:1;">
+                              <option>&nbsp;</option>
+                              <option>Solteiro</option>
+                              <option>Casado</option>
+                              <option>União de Facto</option>
+                              <option>Divorciado</option>
+                              <option>Viúvo</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div class="major-field">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 100px; flex-shrink: 0;">Grupo Sang.:</label>
+                            <select id="win_blood_type" style="width:80px;">
+                              <option>&nbsp;</option>
+                              <option>A+</option><option>A-</option>
+                              <option>B+</option><option>B-</option>
+                              <option>AB+</option><option>AB-</option>
+                              <option>O+</option><option>O-</option>
+                            </select>
+                            <label>Nº Utente:</label>
+                            <input type="text" id="win_health_nr" style="flex:1;">
+                          </div>
+                        </div>
+                        <div class="major-field">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 100px;">Nº TAT:</label>
+                            <input type="text" id="win_tat_nr" style="flex:1; width: 110px;">
+                            <label style="width: 50px;">Nº TAS:</label>
+                            <input type="text" id="win_tas_nr" style="flex:1; width: 110px;">
+                          </div>
+                        </div>
+                        
+                      </div>
+                  
+                      <!-- Coluna 3 -->
+                      <div style="flex: 1; display: flex; flex-direction: column; gap: 0;">
+                        <div class="major-field">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 90px; flex-shrink: 0;">NISS:</label>
+                            <input type="text" id="win_niss" style="flex:1;">
+                          </div>
+                        </div>
+                        <div class="major-field">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 90px; flex-shrink: 0;">Telefone:</label>
+                            <input type="text" id="win_phone" style="flex:1;">
+                          </div>
+                        </div>
+                        <div class="major-field">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 90px; flex-shrink: 0;">Telemóvel 1:</label>
+                            <input type="text" id="win_mobile" style="flex:1;">
+                          </div>
+                        </div>
+                        <div class="major-field">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 90px; flex-shrink: 0;">Telemóvel 2:</label>
+                            <input type="text" id="win_mobile2" style="flex:1;">
+                          </div>
+                        </div>
+                        <div class="major-field">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 90px; flex-shrink: 0;">T. Emprego:</label>
+                            <input type="text" id="win_work_phone" style="flex:1;">
+                          </div>
+                        </div>
+                        <div class="major-field">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 90px; flex-shrink: 0;">Email:</label>
+                            <input type="text" id="win_mail" style="flex:1;">
+                          </div>
+                        </div>
+                        <div class="major-field">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 90px; flex-shrink: 0;">C. Emerg.:</label>
+                            <input type="text" id="win_emergency_contact" style="flex:1;">
+                          </div>
+                        </div>                    
+                      </div>
+                  
                     </div>
-                    <div class="major-field">
-                      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
-                        <label>códiogo-Postal:</label>
-                        <input type="text" id="win_cpcode01" style="flex:1; max-width: 100px; text-align: center;">
-                        <label>-</label>
-                        <input type="text" id="win_cpcode02" style="flex:1; max-width: 50px; text-align: center;">
-                        <label>Localidade:</label>
-                        <input type="text" id="win_localitie" style="flex:1; max-width: 400px;">                      
+                  
+                    <!-- ===== BLOCOS AGRUPADOS ===== -->
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                  
+                      <div style="flex: 1; min-width: 190px; border: 1px solid #ddd; border-radius: 6px; padding: 12px 15px;">
+                        <div style="font-size:14px; font-weight:bold; color:#a70c0c; margin-bottom:10px;">BI / CC</div>
+                        <div class="major-field">
+                          <label style="display:block; font-size:12px; margin-bottom:2px;">Número</label>
+                          <input type="text" id="win_bicc_number" style="width:100%;">
+                        </div>
+                        <div class="major-field">
+                          <label style="display:block; font-size:12px; margin-bottom:2px;">Arquivo</label>
+                          <input type="text" id="win_bicc_archive" style="width:100%;">
+                        </div>
+                        <div class="major-field">
+                          <label style="display:block; font-size:12px; margin-bottom:2px;">D. Emissão</label>
+                          <input type="date" id="win_bicc_issue" style="width:100%;">
+                        </div>
+                        <div class="major-field">
+                          <label style="display:block; font-size:12px; margin-bottom:2px;">Validade</label>
+                          <input type="date" id="win_bicc_validate" style="width:100%;">
+                        </div>
                       </div>
-                    </div>
-                    <div class="major-field">
-                      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
-                        <label>TELEFONE:</label>
-                        <input type="text" id="win_phone" style="flex:1; max-width: 150px;">
-                        <label>TELEMÓVEL:</label>
-                        <input type="text" id="win_mobile" style="flex:1; max-width: 150px;">
-                        <label>E-MAIL:</label>
-                        <input type="text" id="win_mail" style="flex:1;">
+                  
+                      <div style="flex: 1; min-width: 190px; border: 1px solid #ddd; border-radius: 6px; padding: 12px 15px;">
+                        <div style="font-size:14px; font-weight:bold; color:#a70c0c; margin-bottom:10px;">Carta Condução</div>
+                        <div class="major-field">
+                          <label style="display:block; font-size:12px; margin-bottom:2px;">Tipo</label>
+                          <input type="text" id="win_license_type" style="width:100%;">
+                        </div>
+                        <div class="major-field">
+                          <label style="display:block; font-size:12px; margin-bottom:2px;">Número</label>
+                          <input type="text" id="win_license_number" style="width:100%;">
+                        </div>
+                        <div class="major-field">
+                          <label style="display:block; font-size:12px; margin-bottom:2px;">Entidade</label>
+                          <input type="text" id="win_license_entity" style="width:100%;">
+                        </div>
+                        <div class="major-field">
+                          <label style="display:block; font-size:12px; margin-bottom:2px;">D. Emissão</label>
+                          <input type="date" id="win_license_issue" style="width:100%;">
+                        </div>
+                        <div class="major-field">
+                          <label style="display:block; font-size:12px; margin-bottom:2px;">Validade</label>
+                          <input type="date" id="win_license_validate" style="width:100%;">
+                        </div>
                       </div>
-                    </div>
-                    <div class="major-field">
-                      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
-                        <label>NIF:</label>
-                        <input type="text" id="win_nif" style="flex:1;">
-                        <label>NISS:</label>
-                        <input type="text" id="win_niss" style="flex:1;">
+                  
+                      <div style="flex: 1; min-width: 190px; border: 1px solid #ddd; border-radius: 6px; padding: 12px 15px;">
+                        <div style="font-size:14px; font-weight:bold; color:#a70c0c; margin-bottom:10px;">Serviço Militar</div>
+                        <div class="major-field">
+                          <label style="display:block; font-size:12px; margin-bottom:2px;">Número</label>
+                          <input type="text" id="win_military_number" style="width:100%;">
+                        </div>
+                        <div class="major-field">
+                          <label style="display:block; font-size:12px; margin-bottom:2px;">Unidade</label>
+                          <input type="text" id="win_military_unit" style="width:100%;">
+                        </div>
+                        <div class="major-field">
+                          <label style="display:block; font-size:12px; margin-bottom:2px;">Ano Entrada</label>
+                          <input type="text" id="win_military_year" style="width:100%;">
+                        </div>
+                        <div class="major-field">
+                          <label style="display:block; font-size:12px; margin-bottom:2px;">Graduação</label>
+                          <input type="text" id="win_military_rank" style="width:100%;">
+                        </div>
                       </div>
-                    </div>
-                    <div class="major-field">
-                      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
-                        <label style="width:50px;">IBAN:</label>
-                        <input type="text" id="win_nib" style="flex:1">
+                  
+                      <div style="flex: 1; min-width: 190px; border: 1px solid #ddd; border-radius: 6px; padding: 12px 15px;">
+                        <div style="font-size:14px; font-weight:bold; color:#a70c0c; margin-bottom:10px;">Aeroporto</div>
+                        <div class="major-field">
+                          <label style="display:block; font-size:12px; margin-bottom:2px;">Nº Cartão Acesso</label>
+                          <input type="text" id="win_airport_card" style="width:100%;">
+                        </div>
+                        <div class="major-field">
+                          <label style="display:block; font-size:12px; margin-bottom:2px;">C.A. Validade</label>
+                          <input type="date" id="win_airport_card_validate" style="width:100%;">
+                        </div>
+                        <div class="major-field">
+                          <label style="display:block; font-size:12px; margin-bottom:2px;">Nº C.C.Aeroporto</label>
+                          <input type="text" id="win_airport_cc" style="width:100%;">
+                        </div>
+                        <div class="major-field">
+                          <label style="display:block; font-size:12px; margin-bottom:2px;">C.C. Validade</label>
+                          <input type="date" id="win_airport_cc_validate" style="width:100%;">
+                        </div>
                       </div>
+                  
                     </div>
                   </div>
+
+
                   <div class="tab-content" id="appCredencials" style="display:none;">
                     <div style="margin-bottom:15px; font-size:15px; color:#777;">Acessos CB360 Online</div>
                     <div class="major-field">

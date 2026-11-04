@@ -11,7 +11,7 @@ const SUPABASE_URL = 'https://rjkbodfqsvckvnhjwmhg.supabase.co';
 // Definir no Vercel em: Project Settings > Environment Variables > SUPABASE_SERVICE_ROLE_KEY
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-const TOKEN = '8596696700:AAGpN0uh_XPAjDkajIR-Wpey8_EkWFPjbPI';
+const TOKEN = '9118518352:AAHtCx0bZroPjTgYse8xrHY2o5oMWCmPe6s';
 
 const apiRoute = nextConnect({
   onError(error, req, res) {

@@ -725,48 +725,51 @@
         showPopup('popup-danger', "Erro ao carregar despesas de refeições.");
       }
     }
-    /* ─── TABELA: DESPESAS REFEIÇÕES (DECIR) ─────────────────── */
-    async function createDecirDespMealsTable(containerId, year, month) {
+    /* ─── TABELA: REFEIÇÕES (DECIR) ──────────────────────────── */
+    async function createDecirMealTable(containerId, year, month, data) {
       const container = document.getElementById(containerId) || $(containerId);
       if (!container) return;
       container.innerHTML = "";
+      const ALERT_OPTIONS = ["","Monitorização","Nível I - Moderado","Nível II - Elevado","Nível III - Muito Elevado","Nível IV - Extremo"];
+      const corpOperNr = getCorpId();
+      const restData = await supabaseFetch(`decir_main_options?corp_oper_nr=eq.${corpOperNr}&type=eq.restaurant&active=eq.true&order=sort_order`);
+      const RESTAURANT_OPTIONS = ["", ...((restData || []).map(r => r.name))];
       const daysInMonth = new Date(year, month, 0).getDate();
       const holidays = getPortugalHolidays(year);
-      const WEEKDAYS_PT = ["DOM","SEG","TER","QUA","QUI","SEX","SÁB"];
-      const isDayLocked = (day, month) => {
-        const m = parseInt(month, 10);
-        const d = parseInt(day, 10);
-        if (m === 5  && d >= 1  && d <= 14) return true;
-        if (m === 10 && d >= 16 && d <= 31) return true;
-        return false;
-      };
       const title = document.createElement("div");
-      title.textContent = `REGISTO DE DESPESAS COM REFEIÇÕES DECIR - ${MONTH_NAMES_UPPER[month-1]} ${year}`;
+      title.textContent = `REGISTO DE REFEIÇÕES DECIR - ${MONTH_NAMES_UPPER[month-1]} ${year}`;
       Object.assign(title.style, {textAlign: "center", fontWeight: "bold", fontSize: "15px", fontFamily: "Segoe UI, sans-serif", color: "#131a69", marginBottom: "10px", marginTop: "10px", letterSpacing: "0.5px"});
       container.appendChild(title);
       const wrapper = document.createElement("div");
-      wrapper.id = "decir-desp-meals-wrapper";
+      wrapper.id = "decir-ref-wrapper";
       Object.assign(wrapper.style, {overflowX: "auto", overflowY: "auto", width: "100%", maxHeight: "500px", marginTop: "0px", borderRadius: "8px", border: "1px solid #ddd", boxShadow: "0 2px 8px rgba(0,0,0,0.08)"});
-      const style = document.createElement("style");
-      style.textContent = `
-        #decir-desp-meals-wrapper::-webkit-scrollbar {height: 6px; width: 0px;}
-        #decir-desp-meals-wrapper::-webkit-scrollbar:vertical {display: none;}
-        #decir-desp-meals-wrapper::-webkit-scrollbar-thumb:horizontal {background: #131a69; border-radius: 10px;}
-        #decir-desp-meals-wrapper::-webkit-scrollbar-track:horizontal {background: #f0f0f0; border-radius: 10px;}
-      `;
-      document.head.appendChild(style);
+      if (!document.getElementById("ref-meals-style")) {
+        const style = document.createElement("style");
+        style.id = "ref-meals-style";
+        style.textContent = `
+          #decir-ref-wrapper::-webkit-scrollbar {height: 6px; width: 0px;}
+          #decir-ref-wrapper::-webkit-scrollbar:vertical {display: none;}
+          #decir-ref-wrapper::-webkit-scrollbar-thumb:horizontal {background: #131a69; border-radius: 10px;}
+          #decir-ref-wrapper::-webkit-scrollbar-track:horizontal {background: #f0f0f0; border-radius: 10px;}
+          .ref-select {width: 100%; border: none; background: transparent; cursor: pointer; font-size: 11px; text-align: center; outline: none; appearance: none; -webkit-appearance: none; color: #333; padding: 0;}
+          .ref-select:focus {background: #eef0ff;}
+          .ref-select option {background: #fff; color: #333;}
+        `;
+        document.head.appendChild(style);
+      }
       const table = document.createElement("table");
-      Object.assign(table.style, {width: "100%", minWidth: "1000px", borderCollapse: "separate", borderSpacing: "0", fontFamily: "Segoe UI, sans-serif", fontSize: "13px"});
+      Object.assign(table.style, {width: "100%", minWidth: "900px", borderCollapse: "separate", borderSpacing: "0", fontFamily: "Segoe UI, sans-serif", fontSize: "13px"});
       const thead = document.createElement("thead");
       const trh = document.createElement("tr");
-      const headers = [{label: "Dia", width: "45px", colSpan: 1}, {label: "Dia Sem.", width: "55px", colSpan: 1}, {label: "Estado de Alerta", width: "180px", colSpan: 1}, {label: "Peq. Almoços", width: "130px", colSpan: 1},
-                       {label: "Almoços", width: "130px", colSpan: 1}, {label: "Lanches", width: "130px", colSpan: 1}, {label: "Jantares", width: "130px", colSpan: 1}, {label: "Reforços", width: "130px", colSpan: 1},
-                       {label: "Total", width: "130px", colSpan: 1},];
+      const headers = [{label: "Dia", width: "45px", colSpan: 2}, {label: "Estado de Alerta", width: "190px", colSpan: 1}, {label: "Restaurante", width: "190px", colSpan: 1},
+                       {label: "Ref. Previstas", width: "120px", colSpan: 1}, {label: "Ref. Efetivas", width: "120px", colSpan: 1}, {label: "Desvio", width: "120px", colSpan: 1},
+                       {label: "Responsável", width: "220px", colSpan: 2}];
       headers.forEach((h, i) => {
         const th = document.createElement("th");
         th.textContent = h.label;
-        Object.assign(th.style, {borderBottom: "1px solid #ddd", borderLeft: "1px solid #ddd", background: "#131a69", color: "#fff", textAlign: "center", padding: "8px 4px", fontWeight: "bold",
-                                 position: "sticky", top: "0", zIndex: "2", width: h.width, minWidth: h.width, whiteSpace: "nowrap"});
+        if (h.colSpan > 1) th.colSpan = h.colSpan;
+        Object.assign(th.style, {borderBottom: "1px solid #ddd", borderLeft: "1px solid #ddd", background: "#131a69", color: "#fff", textAlign: "center", padding: "8px 4px", fontWeight: "bold", 
+                                 position: "sticky", top: "0", zIndex: "2", width: h.width, whiteSpace: "nowrap"});
         if (i === 0) th.style.borderTopLeftRadius = "8px";
         if (i === headers.length - 1) th.style.borderTopRightRadius = "8px";
         trh.appendChild(th);
@@ -778,92 +781,152 @@
         const date = new Date(year, month - 1, d);
         const holiday = holidays.find(h => h.date.getDate() === d && h.date.getMonth() === month - 1);
         const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-        if (holiday) return {bg: holiday.optional ? "#2ecc71" : "#ffcccc", color: "#000", title: holiday.name};
-        if (isWeekend) return {bg: WEEKEND_COLOR, color: "#000", title: ""};
-        return {bg: "", color: "", title: ""};
+        if (holiday) return {bg: holiday.optional ? "#2ecc71" : "#ffcccc", color:"#000", title:holiday.name};
+        if (isWeekend) return {bg: WEEKEND_COLOR, color:"#000", title:""};
+        return {bg:"", color:"", title:""};
       };
-      const MEAL_COLS = ["peq_almoco", "almoco", "lanche", "jantar", "reforco"];
+      const WEEKDAYS_PT = ["DOM","SEG","TER","QUA","QUI","SEX","SÁB"];
+      const allEditableCells = [];
+      const navigateCell = (currentTd, dir) => {
+        const idx = allEditableCells.indexOf(currentTd);
+        if (idx === -1) return;
+        if (dir === "right" || dir === "down") {
+          const next = allEditableCells[idx + 1];
+          if (next) next.focus();
+        } else if (dir === "left" || dir === "up") {
+          const prev = allEditableCells[idx - 1];
+          if (prev) prev.focus();
+        }
+      };
       for (let d = 1; d <= daysInMonth; d++) {
         const tr = document.createElement("tr");
         const isLast = d === daysInMonth;
         const dayStyle = getDayBg(d);
         const date = new Date(year, month - 1, d);
         const weekday = WEEKDAYS_PT[date.getDay()];
-        const locked = isDayLocked(d, month);
-        tr.style.background = locked ? "#e8e8e8" : (dayStyle.bg || (d % 2 === 0 ? "#f5f6fa" : "#fff"));
-        const makeTd = (isFirst, isLastCol) => {
+        tr.style.background = dayStyle.bg || (d % 2 === 0 ? "#f5f6fa" : "#fff");
+        const makeTdBase = (isFirst, isLast_col) => {
           const td = document.createElement("td");
-          Object.assign(td.style, {borderBottom: "1px solid #ddd", borderLeft: "1px solid #ddd", padding: "3px 4px", height: "28px", verticalAlign: "middle", textAlign: "center", fontSize: "11px",
-                                   background: locked ? "#e0e0e0" : (dayStyle.bg || ""), color: locked ? "#999" : (dayStyle.color || ""),
-                                   opacity: locked ? "0.7" : "1", borderBottomLeftRadius: isLast && isFirst ? "8px" : "", borderBottomRightRadius: isLast && isLastCol ? "8px" : ""});
+          Object.assign(td.style, {borderBottom:"1px solid #ddd", borderLeft:"1px solid #ddd", padding:"3px 4px", height:"28px", verticalAlign:"middle", textAlign:"center", fontSize:"11px", 
+                                   background:dayStyle.bg || "", color:dayStyle.color || "", borderBottomLeftRadius: isLast && isFirst ? "8px" : "", borderBottomRightRadius: isLast && isLast_col ? "8px" : ""});
           if (dayStyle.title) td.title = dayStyle.title;
           return td;
         };
-        const tdDay = makeTd(true, false);
-        if (locked) {
-          tdDay.textContent = String(d).padStart(2, "0") + " 🔒";
-          tdDay.style.fontSize = "10px";
-        } else {
-          tdDay.textContent = String(d).padStart(2, "0");
-        }
+        const tdDay = makeTdBase(true, false);
+        tdDay.textContent = String(d).padStart(2,"0");
         tdDay.style.fontWeight = "bold";
+        tdDay.style.width = "80px";
         tr.appendChild(tdDay);
-        const tdWek = makeTd(false, false);
+        const tdWek = makeTdBase(false, false);
         tdWek.textContent = weekday;
         tdWek.style.fontWeight = "bold";
+        tdWek.style.width = "100px";
         tr.appendChild(tdWek);
-        const tdAlert = makeTd(false, false);
-        tdAlert.dataset.col = "alert";
-        tr.appendChild(tdAlert);
-        MEAL_COLS.forEach(col => {
-          const td = makeTd(false, false);
-          td.dataset.col = col;
-          td.textContent = locked ? "" : "0";
-          td.style.fontWeight = "bold";
-          td.style.fontSize = "12px";
-          if (locked) td.style.pointerEvents = "none";
-          tr.appendChild(td);
+        const tdAlert = makeTdBase(false, false);
+        const selAlert = document.createElement("select");
+        selAlert.className = "ref-select";
+        ALERT_OPTIONS.forEach(opt => {
+          const o = document.createElement("option");
+          o.value = opt; o.textContent = opt || "—";
+          selAlert.appendChild(o);
         });
-        const tdTotal = makeTd(false, true);
-        tdTotal.style.fontWeight = "bold";
-        tdTotal.style.fontSize = "12px";
-        tdTotal.style.color = locked ? "#999" : "#131a69";
-        tdTotal.dataset.col = "total";
-        tdTotal.textContent = locked ? "" : "0";
-        tr.appendChild(tdTotal);
+        selAlert.addEventListener("change", () => {
+          const colors = {"Monitorização": {bg: "#a5d6a7", color: "#1b5e20"}, "Nível I - Moderado": {bg: "#90caf9", color: "#0d47a1"}, "Nível II - Elevado": {bg: "#fff176", color: "#f57f17"},
+                          "Nível III - Muito Elevado": {bg: "#ffb74d", color: "#bf360c"}, "Nível IV - Extremo": {bg: "#ef9a9a", color: "#b71c1c"}};
+          const c = colors[selAlert.value];
+          tdAlert.style.background = c ? c.bg : (dayStyle.bg || "");
+          selAlert.style.color = c ? c.color : "#333";
+          selAlert.style.fontWeight = selAlert.value ? "bold" : "normal";
+        });
+        tdAlert.appendChild(selAlert);
+        tr.appendChild(tdAlert);
+        const tdRest = makeTdBase(false, false);
+        const selRest = document.createElement("select");
+        selRest.className = "ref-select";
+        RESTAURANT_OPTIONS.forEach(opt => {
+          const o = document.createElement("option");
+          o.value = opt; o.textContent = opt || "—";
+          selRest.appendChild(o);
+        });
+        tdRest.appendChild(selRest);
+        tr.appendChild(tdRest);
+        const tdPrev = makeTdBase(false, false);
+        tr.appendChild(tdPrev);
+        const tdEfet = makeTdBase(false, false);
+        tdEfet.contentEditable = true;
+        tdEfet.style.outline = "none";
+        tdEfet.style.cursor = "text";
+        tdEfet.addEventListener("focus", () => tdEfet.style.background = "#eef0ff");
+        tdEfet.addEventListener("blur", () => {tdEfet.style.background = dayStyle.bg || ""; updateDeviation();});
+        tdEfet.addEventListener("keydown", e => {
+          if (["ArrowRight","ArrowDown","Enter"].includes(e.key)) {e.preventDefault(); navigateCell(tdEfet, "right");}
+          else if (["ArrowLeft","ArrowUp"].includes(e.key)) {e.preventDefault(); navigateCell(tdEfet, "left");}
+          else if (!/^\d$/.test(e.key) && !["Backspace","Delete","Tab"].includes(e.key)) e.preventDefault();
+        });
+        tdEfet.addEventListener("input", updateDeviation);
+        tr.appendChild(tdEfet);
+        allEditableCells.push(tdEfet);
+        const tdDeviation = makeTdBase(false, false);
+        tdDeviation.style.fontWeight = "bold";
+        function updateDeviation() {
+          const prev = parseInt(tdPrev.textContent.trim()) || 0;
+          const efet = parseInt(tdEfet.textContent.trim()) || 0;
+          const desvio = efet - prev;
+          const hasPrev = tdPrev.textContent.trim() !== "";
+          const hasEfet = tdEfet.textContent.trim() !== "";
+          if (!hasPrev && !hasEfet) {
+            tdDeviation.textContent = "";
+            tdDeviation.style.color = "#333";
+          } else {
+            tdDeviation.textContent = desvio > 0 ? `+${desvio}` : String(desvio);
+            tdDeviation.style.color = desvio < 0 ? "#c62828" : desvio > 0 ? "#006400" : "#333";
+          }
+        }
+        tr.appendChild(tdDeviation);
+        const tdResp = makeTdBase(false, true);
+        tdResp.style.textAlign = "left";
+        tdResp.style.paddingLeft = "6px";
+        const tdNI = makeTdBase(false, false);
+        tdNI.contentEditable = true;
+        tdNI.style.outline = "none";
+        tdNI.style.cursor = "text";
+        tdNI.style.width = "80px";
+        tdNI.style.minWidth = "80px";
+        tdNI.style.maxWidth = "80px";
+        tdNI.addEventListener("focus", () => tdNI.style.background = "#eef0ff");
+        tdNI.addEventListener("blur", () => tdNI.style.background = dayStyle.bg || "");
+        tdNI.addEventListener("keydown", e => {
+          if (["ArrowRight","ArrowDown","Enter"].includes(e.key)) {e.preventDefault(); navigateCell(tdNI, "right");}
+          else if (["ArrowLeft","ArrowUp"].includes(e.key)) {e.preventDefault(); navigateCell(tdNI, "left");}
+          else if (/^\d$/.test(e.key) && tdNI.textContent.replace(/\D/g,"").length >= 3) e.preventDefault();
+          else if (!/^\d$/.test(e.key) && !["Backspace","Delete","Tab"].includes(e.key)) e.preventDefault();
+        });
+        tdNI.addEventListener("input", async () => {
+          const ni = tdNI.textContent.trim();
+          if (ni.length === 3) {
+            try {
+              const result = await supabaseFetch(`reg_elems?select=patent_abv,abv_name&n_int=eq.${ni}&corp_oper_nr=eq.${getCorpId()}&limit=1`);
+              tdResp.textContent = result?.length ? `${result[0].patent_abv || ""} ${result[0].abv_name || ""}`.trim() : "";
+            } catch {
+              tdResp.textContent = "";
+            }
+          } else {
+            tdResp.textContent = "";
+          }
+        });
+        tr.appendChild(tdNI);
+        allEditableCells.push(tdNI);
+        tr.appendChild(tdResp);
         tbody.appendChild(tr);
       }
-      const trTotals = document.createElement("tr");
-      trTotals.style.background = "#f1f5f9";
-      trTotals.style.fontWeight = "bold";
-      const tdTotalLabel = document.createElement("td");
-      tdTotalLabel.colSpan = 3;
-      tdTotalLabel.textContent = "TOTAIS";
-      Object.assign(tdTotalLabel.style, {borderBottom: "1px solid #ddd", borderLeft: "1px solid #ddd", borderTop: "2px solid #131a69", padding: "6px 8px", textAlign: "center",
-                                         fontSize: "12px", color: "#131a69", fontWeight: "bold", borderBottomLeftRadius: "8px"});
-      trTotals.appendChild(tdTotalLabel);
-      MEAL_COLS.forEach(col => {
-        const td = document.createElement("td");
-        td.dataset.totalCol = col;
-        td.textContent = "0";
-        Object.assign(td.style, {borderBottom: "1px solid #ddd", borderLeft: "1px solid #ddd", borderTop: "2px solid #131a69", padding: "6px 4px", textAlign: "center", fontSize: "12px", color: "#131a69", fontWeight: "bold"});
-        trTotals.appendChild(td);
-      });
-      const tdGrandTotal = document.createElement("td");
-      tdGrandTotal.dataset.totalCol = "grand";
-      tdGrandTotal.textContent = "0";
-      Object.assign(tdGrandTotal.style, {borderBottom: "1px solid #ddd", borderLeft: "1px solid #ddd", borderTop: "2px solid #131a69", padding: "6px 4px", textAlign: "center",
-                                         fontSize: "12px", color: "#131a69", fontWeight: "bold", borderBottomRightRadius: "8px"});
-      trTotals.appendChild(tdGrandTotal);
-      tbody.appendChild(trTotals);
       table.appendChild(tbody);
       wrapper.appendChild(table);
       container.appendChild(wrapper);
-      const options = document.getElementById("decir-desp-meals-options");
+      const options = document.getElementById("decir-ref-options");
       if (options) options.style.display = "flex";
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          loadDecirDespMeals();
+          loadDecirMeals();
         });
       });
     }
@@ -1036,7 +1099,7 @@
       const table = document.createElement("table");
       table.className = "decir-month-table";
       table.style.width = "100%";
-      table.style.borderCollapse = "separated";
+      table.style.borderCollapse = "separate";
       const thead = document.createElement("thead");
       const trWeekdays = document.createElement("tr");
       ["NI","Nome","Catg."].forEach((h,i) => {
@@ -1523,7 +1586,7 @@
     /* ─── IMPLEMENTAÇÃO: PAGAMENTOS SBAS / OPAT ─────────────────── */
     function createSbaOpatPayTable(containerId, year, month, elements, turnosSbasPorNI, turnosOpatPorNI) {
       genericCreatePayTable({
-        containerId, year, month, titlePrefix: "RELATÓRIO PARA PARA PAGAMENTOS DE SBAs E OPATs", elements,
+        containerId, year, month, titlePrefix: "RELATÓRIO PARA PAGAMENTOS DE SBAs E OPATs", elements,
         columns: [{header: "Qtd. SBAS", width: "90px", getQty: (ni) => turnosSbasPorNI?.[ni] || 0}, {header: "Qtd. OPAT", width: "90px", getQty: (ni) => turnosOpatPorNI?.[ni] || 0}],
         calculateRowTotal: (qtdSbas, qtdOpat) => {
           return (parseVal("sbas-value-pag") * qtdSbas) + (parseVal("opat-value-pag") * qtdOpat);
@@ -1536,10 +1599,10 @@
       });
     }
     /* ─── CÁLCULOS REGISTOS (DECIR) ──────────────────────────── */
-    function updateAllDecirValues() {
+    function updateAllDecirValues(tbodyParam) {
       const amalCents  = Math.round(parseVal("amal-value-reg") * 100);
       const anepcCents = Math.round(parseVal("anepc-value-reg") * 100);
-      const tbody = document.querySelector("table.month-table tbody, table.dec-reg-month-table tbody");
+      const tbody = tbodyParam || document.querySelector("#table-container-dec-reg table tbody");
       if (!tbody) return;
       const rows = Array.from(tbody.querySelectorAll("tr:not(.total-elements-row)"));
       for (let i = 0; i < rows.length; i += 2) {
@@ -1554,7 +1617,7 @@
         if (globalCell) globalCell.textContent = fmt((sum * (amalCents + anepcCents)) / 100);
       }
       if (typeof updateGeneralTotals === "function") {
-        setTimeout(updateGeneralTotals, 0);
+        setTimeout(() => updateGeneralTotals(tbody), 0);
       }
     }
     /* ─── CÁLCULOS REGISTOS (SBAS / OPAT) ──────────────────────────── */
@@ -1567,7 +1630,8 @@
       for (let i = 0; i < rows.length; i += 2) {
         const trD = rows[i];
         const trN = rows[i + 1];
-        if (!trN) continue;    const editablesD = Array.from(trD.querySelectorAll("td[contenteditable='true']"));
+        if (!trN) continue;
+        const editablesD = Array.from(trD.querySelectorAll("td[contenteditable='true']"));
         const editablesN = Array.from(trN.querySelectorAll("td[contenteditable='true']"));
         const allEditables = [...editablesD, ...editablesN];
         let countS = 0;
@@ -1589,8 +1653,8 @@
         if (cG) cG.textContent = fmt(valorGlobal);
       }
     }
-    function updateGeneralTotals() {
-      const tbody = document.querySelector("table.month-table tbody, table.dec-reg-month-table tbody");
+    function updateGeneralTotals(tbodyParam) {
+      const tbody = tbodyParam || document.querySelector("#table-container-dec-reg table tbody");
       if (!tbody) return;
       let [amal, anepc, global] = [0,0,0];
       const toCents = cell => {
@@ -1755,7 +1819,7 @@
           }
         }
       });
-    };
+    }; 
     /* ═══════════════════════════════════════════════════════════════
     MOTOR GENÉRICO DE GRAVAÇÃO (DECIR / SBA / OPAT)
     ═══════════════════════════════════════════════════════════════ */
@@ -2167,13 +2231,16 @@
         const wrapper = document.createElement("div");
         wrapper.id = "decir-audit-logs-wrapper";
         Object.assign(wrapper.style, {overflowX: "auto", overflowY: "auto", width: "100%", maxHeight: "500px", marginTop: "0px", borderRadius: "8px", border: "1px solid #ddd", boxShadow: "0 2px 8px rgba(0,0,0,0.08)"});
-        const style = document.createElement("style");
-        style.textContent = `
-          #decir-audit-logs-wrapper::-webkit-scrollbar {height: 6px; width: 6px;}
-          #decir-audit-logs-wrapper::-webkit-scrollbar-thumb {background: #131a69; border-radius: 10px;}
-          #decir-audit-logs-wrapper::-webkit-scrollbar-track {background: #f0f0f0; border-radius: 10px;}
-        `;
-        document.head.appendChild(style);
+        if (!document.getElementById("audit-logs-style")) {
+          const style = document.createElement("style");
+          style.id = "audit-logs-style";
+          style.textContent = `
+            #decir-audit-logs-wrapper::-webkit-scrollbar {height: 6px; width: 6px;}
+            #decir-audit-logs-wrapper::-webkit-scrollbar-thumb {background: #131a69; border-radius: 10px;}
+            #decir-audit-logs-wrapper::-webkit-scrollbar-track {background: #f0f0f0; border-radius: 10px;}
+          `;
+          document.head.appendChild(style);
+        }
         const table = document.createElement("table");
         Object.assign(table.style, {width: "100%", minWidth: "900px", borderCollapse: "separate", borderSpacing: "0", fontFamily: "Segoe UI, sans-serif", fontSize: "13px"});
         const thead = document.createElement("thead");
@@ -2265,15 +2332,18 @@
       container.innerHTML = "";
       const OCORR_MONTHS = ["Maio","Junho","Julho","Agosto","Setembro","Outubro"];
       const NUM_ROWS = 30;
-      const style = document.createElement("style");
-      style.textContent = `#decir-reg-ocorr .major-card-body > div::-webkit-scrollbar {height: 6px; width: 0px;}
-        #decir-reg-ocorr .major-card-body > div::-webkit-scrollbar-thumb {background: #131a69; border-radius: 10px;}
-        .ocorr-select {width: 100%; border: none; background: transparent; cursor: pointer; font-size: 11px; text-align: center; outline: none; appearance: none;
-        -webkit-appearance: none; color: #333; padding: 0;}
-        .ocorr-select:focus {background: #eef0ff;}
-        .ocorr-select option {background: #fff; color: #333;}
-      `;
-      document.head.appendChild(style);
+      if (!document.getElementById("ocorr-style")) {
+        const style = document.createElement("style");
+        style.id = "ocorr-style";
+        style.textContent = `
+          #decir-reg-ocorr .major-card-body > div::-webkit-scrollbar {height: 6px; width: 0px;}
+          #decir-reg-ocorr .major-card-body > div::-webkit-scrollbar-thumb {background: #131a69; border-radius: 10px;}
+          .ocorr-select {width: 100%; border: none; background: transparent; cursor: pointer; font-size: 11px; text-align: center; outline: none; appearance: none; -webkit-appearance: none; color: #333; padding: 0;}
+          .ocorr-select:focus {background: #eef0ff;}
+          .ocorr-select option {background: #fff; color: #333;}
+        `;
+        document.head.appendChild(style);
+      }
       const title = document.createElement("div");
       title.textContent = "REGISTO DE OCORRÊNCIAS DECIR";
       Object.assign(title.style, {textAlign: "center", fontWeight: "bold", fontSize: "15px", fontFamily: "Segoe UI, sans-serif", color: "#131a69", marginBottom: "10px", letterSpacing: "0.5px"});
@@ -2463,17 +2533,12 @@
             payload.push({corp_oper_nr: corpOperNr, occurrence, day, month, year: yr, acting, row_index: rowIdx});
           });
         });
-        await fetch(`${SUPABASE_URL}/rest/v1/decir_reg_ocorr?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}`, {
-          method: "DELETE", headers: getSupabaseHeaders()
-        }).then(r => {if (!r.ok) throw new Error("Erro ao limpar registos antigos");});
-        if (payload.length > 0) {
-          const r = await fetch(`${SUPABASE_URL}/rest/v1/decir_reg_ocorr`, {
-            method: "POST",
-            headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
-            body: JSON.stringify(payload)
-          });
-          if (!r.ok) throw new Error(await r.text() || "Erro desconhecido ao gravar");
-        }
+        const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/decir_replace_month`, {
+          method: "POST",
+          headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
+          body: JSON.stringify({p_table: "decir_reg_ocorr", p_corp: corpOperNr, p_year: String(year), p_month: null, p_rows: payload})
+        });
+        if (!r.ok) throw new Error(await r.text() || "Erro ao gravar");
         showPopup('popup-success', "Ocorrências gravadas com sucesso!");
       } catch(err) {
         console.error(err);
@@ -2559,48 +2624,51 @@
         showPopup('popup-danger', "Erro ao carregar refeições.");
       }
     }
-    /* ─── TABELA: REFEIÇÕES (DECIR) ──────────────────────────── */
-    async function createDecirMealTable(containerId, year, month, data) {
+        /* ─── TABELA: DESPESAS REFEIÇÕES (DECIR) ─────────────────── */
+    async function createDecirDespMealsTable(containerId, year, month) {
       const container = document.getElementById(containerId) || $(containerId);
       if (!container) return;
       container.innerHTML = "";
-      const ALERT_OPTIONS = ["","Monitorização","Nível I - Moderado","Nível II - Elevado","Nível III - Muito Elevado","Nível IV - Extremo"];
-      const corpOperNr = getCorpId();
-      const restData = await supabaseFetch(`decir_main_options?corp_oper_nr=eq.${corpOperNr}&type=eq.restaurant&active=eq.true&order=sort_order`);
-      const RESTAURANT_OPTIONS = ["", ...((restData || []).map(r => r.name))];
       const daysInMonth = new Date(year, month, 0).getDate();
       const holidays = getPortugalHolidays(year);
+      const WEEKDAYS_PT = ["DOM","SEG","TER","QUA","QUI","SEX","SÁB"];
+      const isDayLocked = (day, month) => {
+        const m = parseInt(month, 10);
+        const d = parseInt(day, 10);
+        if (m === 5  && d >= 1  && d <= 14) return true;
+        if (m === 10 && d >= 16 && d <= 31) return true;
+        return false;
+      };
       const title = document.createElement("div");
-      title.textContent = `REGISTO DE REFEIÇÕES DECIR - ${MONTH_NAMES_UPPER[month-1]} ${year}`;
+      title.textContent = `REGISTO DE DESPESAS COM REFEIÇÕES DECIR - ${MONTH_NAMES_UPPER[month-1]} ${year}`;
       Object.assign(title.style, {textAlign: "center", fontWeight: "bold", fontSize: "15px", fontFamily: "Segoe UI, sans-serif", color: "#131a69", marginBottom: "10px", marginTop: "10px", letterSpacing: "0.5px"});
       container.appendChild(title);
       const wrapper = document.createElement("div");
-      wrapper.id = "decir-ref-wrapper";
+      wrapper.id = "decir-desp-meals-wrapper";
       Object.assign(wrapper.style, {overflowX: "auto", overflowY: "auto", width: "100%", maxHeight: "500px", marginTop: "0px", borderRadius: "8px", border: "1px solid #ddd", boxShadow: "0 2px 8px rgba(0,0,0,0.08)"});
-      const style = document.createElement("style");
-      style.textContent = `
-        #decir-ref-wrapper::-webkit-scrollbar {height: 6px; width: 0px;}
-        #decir-ref-wrapper::-webkit-scrollbar:vertical {display: none;}
-        #decir-ref-wrapper::-webkit-scrollbar-thumb:horizontal {background: #131a69; border-radius: 10px;}
-        #decir-ref-wrapper::-webkit-scrollbar-track:horizontal {background: #f0f0f0; border-radius: 10px;}
-        .ref-select {width: 100%; border: none; background: transparent; cursor: pointer; font-size: 11px; text-align: center; outline: none; appearance: none; -webkit-appearance: none; color: #333; padding: 0;}
-        .ref-select:focus {background: #eef0ff;}
-        .ref-select option {background: #fff; color: #333;}
-      `;
-      document.head.appendChild(style);
+      if (!document.getElementById("desp-meals-style")) {
+        const style = document.createElement("style");
+        style.id = "desp-meals-style";
+        style.textContent = `
+          #decir-desp-meals-wrapper::-webkit-scrollbar {height: 6px; width: 0px;}
+          #decir-desp-meals-wrapper::-webkit-scrollbar:vertical {display: none;}
+          #decir-desp-meals-wrapper::-webkit-scrollbar-thumb:horizontal {background: #131a69; border-radius: 10px;}
+          #decir-desp-meals-wrapper::-webkit-scrollbar-track:horizontal {background: #f0f0f0; border-radius: 10px;}
+        `;
+        document.head.appendChild(style);
+      }
       const table = document.createElement("table");
-      Object.assign(table.style, {width: "100%", minWidth: "900px", borderCollapse: "separate", borderSpacing: "0", fontFamily: "Segoe UI, sans-serif", fontSize: "13px"});
+      Object.assign(table.style, {width: "100%", minWidth: "1000px", borderCollapse: "separate", borderSpacing: "0", fontFamily: "Segoe UI, sans-serif", fontSize: "13px"});
       const thead = document.createElement("thead");
       const trh = document.createElement("tr");
-      const headers = [{label: "Dia", width: "45px", colSpan: 2}, {label: "Estado de Alerta", width: "190px", colSpan: 1}, {label: "Restaurante", width: "190px", colSpan: 1},
-                       {label: "Ref. Previstas", width: "120px", colSpan: 1}, {label: "Ref. Efetivas", width: "120px", colSpan: 1}, {label: "Desvio", width: "120px", colSpan: 1},
-                       {label: "Responsável", width: "220px", colSpan: 2}];
+      const headers = [{label: "Dia", width: "45px", colSpan: 1}, {label: "Dia Sem.", width: "55px", colSpan: 1}, {label: "Estado de Alerta", width: "180px", colSpan: 1}, {label: "Peq. Almoços", width: "130px", colSpan: 1},
+                       {label: "Almoços", width: "130px", colSpan: 1}, {label: "Lanches", width: "130px", colSpan: 1}, {label: "Jantares", width: "130px", colSpan: 1}, {label: "Reforços", width: "130px", colSpan: 1},
+                       {label: "Total", width: "130px", colSpan: 1},];
       headers.forEach((h, i) => {
         const th = document.createElement("th");
         th.textContent = h.label;
-        if (h.colSpan > 1) th.colSpan = h.colSpan;
-        Object.assign(th.style, {borderBottom: "1px solid #ddd", borderLeft: "1px solid #ddd", background: "#131a69", color: "#fff", textAlign: "center", padding: "8px 4px", fontWeight: "bold", 
-                                 position: "sticky", top: "0", zIndex: "2", width: h.width, whiteSpace: "nowrap"});
+        Object.assign(th.style, {borderBottom: "1px solid #ddd", borderLeft: "1px solid #ddd", background: "#131a69", color: "#fff", textAlign: "center", padding: "8px 4px", fontWeight: "bold",
+                                 position: "sticky", top: "0", zIndex: "2", width: h.width, minWidth: h.width, whiteSpace: "nowrap"});
         if (i === 0) th.style.borderTopLeftRadius = "8px";
         if (i === headers.length - 1) th.style.borderTopRightRadius = "8px";
         trh.appendChild(th);
@@ -2612,163 +2680,92 @@
         const date = new Date(year, month - 1, d);
         const holiday = holidays.find(h => h.date.getDate() === d && h.date.getMonth() === month - 1);
         const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-        if (holiday) return {bg: holiday.optional ? "#2ecc71" : "#ffcccc", color:"#000", title:holiday.name};
-        if (isWeekend) return {bg: WEEKEND_COLOR, color:"#000", title:""};
-        return {bg:"", color:"", title:""};
+        if (holiday) return {bg: holiday.optional ? "#2ecc71" : "#ffcccc", color: "#000", title: holiday.name};
+        if (isWeekend) return {bg: WEEKEND_COLOR, color: "#000", title: ""};
+        return {bg: "", color: "", title: ""};
       };
-      const WEEKDAYS_PT = ["DOM","SEG","TER","QUA","QUI","SEX","SÁB"];
-      const allEditableCells = [];
-      const navigateCell = (currentTd, dir) => {
-        const idx = allEditableCells.indexOf(currentTd);
-        if (idx === -1) return;
-        if (dir === "right" || dir === "down") {
-          const next = allEditableCells[idx + 1];
-          if (next) next.focus();
-        } else if (dir === "left" || dir === "up") {
-          const prev = allEditableCells[idx - 1];
-          if (prev) prev.focus();
-        }
-      };
+      const MEAL_COLS = ["peq_almoco", "almoco", "lanche", "jantar", "reforco"];
       for (let d = 1; d <= daysInMonth; d++) {
         const tr = document.createElement("tr");
         const isLast = d === daysInMonth;
         const dayStyle = getDayBg(d);
         const date = new Date(year, month - 1, d);
         const weekday = WEEKDAYS_PT[date.getDay()];
-        tr.style.background = dayStyle.bg || (d % 2 === 0 ? "#f5f6fa" : "#fff");
-        const makeTdBase = (isFirst, isLast_col) => {
+        const locked = isDayLocked(d, month);
+        tr.style.background = locked ? "#e8e8e8" : (dayStyle.bg || (d % 2 === 0 ? "#f5f6fa" : "#fff"));
+        const makeTd = (isFirst, isLastCol) => {
           const td = document.createElement("td");
-          Object.assign(td.style, {borderBottom:"1px solid #ddd", borderLeft:"1px solid #ddd", padding:"3px 4px", height:"28px", verticalAlign:"middle", textAlign:"center", fontSize:"11px", 
-                                   background:dayStyle.bg || "", color:dayStyle.color || "", borderBottomLeftRadius: isLast && isFirst ? "8px" : "", borderBottomRightRadius: isLast && isLast_col ? "8px" : ""});
+          Object.assign(td.style, {borderBottom: "1px solid #ddd", borderLeft: "1px solid #ddd", padding: "3px 4px", height: "28px", verticalAlign: "middle", textAlign: "center", fontSize: "11px",
+                                   background: locked ? "#e0e0e0" : (dayStyle.bg || ""), color: locked ? "#999" : (dayStyle.color || ""),
+                                   opacity: locked ? "0.7" : "1", borderBottomLeftRadius: isLast && isFirst ? "8px" : "", borderBottomRightRadius: isLast && isLastCol ? "8px" : ""});
           if (dayStyle.title) td.title = dayStyle.title;
           return td;
         };
-        const tdDay = makeTdBase(true, false);
-        tdDay.textContent = String(d).padStart(2,"0");
+        const tdDay = makeTd(true, false);
+        if (locked) {
+          tdDay.textContent = String(d).padStart(2, "0") + " 🔒";
+          tdDay.style.fontSize = "10px";
+        } else {
+          tdDay.textContent = String(d).padStart(2, "0");
+        }
         tdDay.style.fontWeight = "bold";
-        tdDay.style.width = "80px";
         tr.appendChild(tdDay);
-        const tdWek = makeTdBase(false, false);
+        const tdWek = makeTd(false, false);
         tdWek.textContent = weekday;
         tdWek.style.fontWeight = "bold";
-        tdWek.style.width = "100px";
         tr.appendChild(tdWek);
-        const tdAlert = makeTdBase(false, false);
-        const selAlert = document.createElement("select");
-        selAlert.className = "ref-select";
-        ALERT_OPTIONS.forEach(opt => {
-          const o = document.createElement("option");
-          o.value = opt; o.textContent = opt || "—";
-          selAlert.appendChild(o);
-        });
-        selAlert.addEventListener("change", () => {
-          const colors = {"Monitorização": {bg: "#a5d6a7", color: "#1b5e20"}, "Nível I - Moderado": {bg: "#90caf9", color: "#0d47a1"}, "Nível II - Elevado": {bg: "#fff176", color: "#f57f17"},
-                          "Nível III - Muito Elevado": {bg: "#ffb74d", color: "#bf360c"}, "Nível IV - Extremo": {bg: "#ef9a9a", color: "#b71c1c"}};
-          const c = colors[selAlert.value];
-          tdAlert.style.background = c ? c.bg : (dayStyle.bg || "");
-          selAlert.style.color = c ? c.color : "#333";
-          selAlert.style.fontWeight = selAlert.value ? "bold" : "normal";
-        });
-        tdAlert.appendChild(selAlert);
+        const tdAlert = makeTd(false, false);
+        tdAlert.dataset.col = "alert";
         tr.appendChild(tdAlert);
-        const tdRest = makeTdBase(false, false);
-        const selRest = document.createElement("select");
-        selRest.className = "ref-select";
-        RESTAURANT_OPTIONS.forEach(opt => {
-          const o = document.createElement("option");
-          o.value = opt; o.textContent = opt || "—";
-          selRest.appendChild(o);
+        MEAL_COLS.forEach(col => {
+          const td = makeTd(false, false);
+          td.dataset.col = col;
+          td.textContent = locked ? "" : "0";
+          td.style.fontWeight = "bold";
+          td.style.fontSize = "12px";
+          if (locked) td.style.pointerEvents = "none";
+          tr.appendChild(td);
         });
-        tdRest.appendChild(selRest);
-        tr.appendChild(tdRest);
-        const tdPrev = makeTdBase(false, false);
-        tdPrev.style.outline = "none";
-        tdPrev.style.cursor = "text";
-        tdPrev.addEventListener("focus", () => tdPrev.style.background = "#eef0ff");
-        tdPrev.addEventListener("blur", () => {tdPrev.style.background = dayStyle.bg || ""; updateDeviation();});
-        tdPrev.addEventListener("keydown", e => {
-          if (["ArrowRight","ArrowDown","Enter"].includes(e.key)) {e.preventDefault(); navigateCell(tdPrev, "right");}
-          else if (["ArrowLeft","ArrowUp"].includes(e.key)) {e.preventDefault(); navigateCell(tdPrev, "left");}
-          else if (!/^\d$/.test(e.key) && !["Backspace","Delete","Tab"].includes(e.key)) e.preventDefault();
-        });
-        tdPrev.addEventListener("input", updateDeviation);
-        tr.appendChild(tdPrev);
-        allEditableCells.push(tdPrev);
-        const tdEfet = makeTdBase(false, false);
-        tdEfet.contentEditable = true;
-        tdEfet.style.outline = "none";
-        tdEfet.style.cursor = "text";
-        tdEfet.addEventListener("focus", () => tdEfet.style.background = "#eef0ff");
-        tdEfet.addEventListener("blur", () => {tdEfet.style.background = dayStyle.bg || ""; updateDeviation();});
-        tdEfet.addEventListener("keydown", e => {
-          if (["ArrowRight","ArrowDown","Enter"].includes(e.key)) {e.preventDefault(); navigateCell(tdEfet, "right");}
-          else if (["ArrowLeft","ArrowUp"].includes(e.key)) {e.preventDefault(); navigateCell(tdEfet, "left");}
-          else if (!/^\d$/.test(e.key) && !["Backspace","Delete","Tab"].includes(e.key)) e.preventDefault();
-        });
-        tdEfet.addEventListener("input", updateDeviation);
-        tr.appendChild(tdEfet);
-        allEditableCells.push(tdEfet);
-        const tdDeviation = makeTdBase(false, false);
-        tdDeviation.style.fontWeight = "bold";
-        function updateDeviation() {
-          const prev = parseInt(tdPrev.textContent.trim()) || 0;
-          const efet = parseInt(tdEfet.textContent.trim()) || 0;
-          const desvio = efet - prev;
-          const hasPrev = tdPrev.textContent.trim() !== "";
-          const hasEfet = tdEfet.textContent.trim() !== "";
-          if (!hasPrev && !hasEfet) {
-            tdDeviation.textContent = "";
-            tdDeviation.style.color = "#333";
-          } else {
-            tdDeviation.textContent = desvio > 0 ? `+${desvio}` : String(desvio);
-            tdDeviation.style.color = desvio < 0 ? "#c62828" : desvio > 0 ? "#006400" : "#333";
-          }
-        }
-        tr.appendChild(tdDeviation);
-        const tdResp = makeTdBase(false, true);
-        tdResp.style.textAlign = "left";
-        tdResp.style.paddingLeft = "6px";
-        const tdNI = makeTdBase(false, false);
-        tdNI.contentEditable = true;
-        tdNI.style.outline = "none";
-        tdNI.style.cursor = "text";
-        tdNI.style.width = "80px";
-        tdNI.style.minWidth = "80px";
-        tdNI.style.maxWidth = "80px";
-        tdNI.addEventListener("focus", () => tdNI.style.background = "#eef0ff");
-        tdNI.addEventListener("blur", () => tdNI.style.background = dayStyle.bg || "");
-        tdNI.addEventListener("keydown", e => {
-          if (["ArrowRight","ArrowDown","Enter"].includes(e.key)) {e.preventDefault(); navigateCell(tdNI, "right");}
-          else if (["ArrowLeft","ArrowUp"].includes(e.key)) {e.preventDefault(); navigateCell(tdNI, "left");}
-          else if (/^\d$/.test(e.key) && tdNI.textContent.replace(/\D/g,"").length >= 3) e.preventDefault();
-          else if (!/^\d$/.test(e.key) && !["Backspace","Delete","Tab"].includes(e.key)) e.preventDefault();
-        });
-        tdNI.addEventListener("input", async () => {
-          const ni = tdNI.textContent.trim();
-          if (ni.length === 3) {
-            try {
-              const result = await supabaseFetch(`reg_elems?select=patent_abv,abv_name&n_int=eq.${ni}&corp_oper_nr=eq.${getCorpId()}&limit=1`);
-              tdResp.textContent = result?.length ? `${result[0].patent_abv || ""} ${result[0].abv_name || ""}`.trim() : "";
-            } catch {
-              tdResp.textContent = "";
-            }
-          } else {
-            tdResp.textContent = "";
-          }
-        });
-        tr.appendChild(tdNI);
-        allEditableCells.push(tdNI);
-        tr.appendChild(tdResp);
+        const tdTotal = makeTd(false, true);
+        tdTotal.style.fontWeight = "bold";
+        tdTotal.style.fontSize = "12px";
+        tdTotal.style.color = locked ? "#999" : "#131a69";
+        tdTotal.dataset.col = "total";
+        tdTotal.textContent = locked ? "" : "0";
+        tr.appendChild(tdTotal);
         tbody.appendChild(tr);
       }
+      const trTotals = document.createElement("tr");
+      trTotals.style.background = "#f1f5f9";
+      trTotals.style.fontWeight = "bold";
+      const tdTotalLabel = document.createElement("td");
+      tdTotalLabel.colSpan = 3;
+      tdTotalLabel.textContent = "TOTAIS";
+      Object.assign(tdTotalLabel.style, {borderBottom: "1px solid #ddd", borderLeft: "1px solid #ddd", borderTop: "2px solid #131a69", padding: "6px 8px", textAlign: "center",
+                                         fontSize: "12px", color: "#131a69", fontWeight: "bold", borderBottomLeftRadius: "8px"});
+      trTotals.appendChild(tdTotalLabel);
+      MEAL_COLS.forEach(col => {
+        const td = document.createElement("td");
+        td.dataset.totalCol = col;
+        td.textContent = "0";
+        Object.assign(td.style, {borderBottom: "1px solid #ddd", borderLeft: "1px solid #ddd", borderTop: "2px solid #131a69", padding: "6px 4px", textAlign: "center", fontSize: "12px", color: "#131a69", fontWeight: "bold"});
+        trTotals.appendChild(td);
+      });
+      const tdGrandTotal = document.createElement("td");
+      tdGrandTotal.dataset.totalCol = "grand";
+      tdGrandTotal.textContent = "0";
+      Object.assign(tdGrandTotal.style, {borderBottom: "1px solid #ddd", borderLeft: "1px solid #ddd", borderTop: "2px solid #131a69", padding: "6px 4px", textAlign: "center",
+                                         fontSize: "12px", color: "#131a69", fontWeight: "bold", borderBottomRightRadius: "8px"});
+      trTotals.appendChild(tdGrandTotal);
+      tbody.appendChild(trTotals);
       table.appendChild(tbody);
       wrapper.appendChild(table);
       container.appendChild(wrapper);
-      const options = document.getElementById("decir-ref-options");
+      const options = document.getElementById("decir-desp-meals-options");
       if (options) options.style.display = "flex";
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          loadDecirMeals();
+          loadDecirDespMeals();
         });
       });
     }
@@ -2796,17 +2793,12 @@
           if (!alert_state && !restaurant && !meal_efet && !ni_resp) return;
           payload.push({corp_oper_nr: corpOperNr, day, month, year, alert_state, restaurant, meal_efet, ni_resp});
         });
-        await fetch(`${SUPABASE_URL}/rest/v1/decir_reg_meals?corp_oper_nr=eq.${corpOperNr}&month=eq.${month}&year=eq.${year}`, {
-          method: "DELETE", headers: getSupabaseHeaders()
-        }).then(r => {if (!r.ok) throw new Error("Erro ao limpar registos antigos");});
-        if (payload.length > 0) {
-          const r = await fetch(`${SUPABASE_URL}/rest/v1/decir_reg_meals`, {
-            method: "POST",
-            headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
-            body: JSON.stringify(payload)
-          });
-          if (!r.ok) throw new Error(await r.text() || "Erro desconhecido ao gravar");
-        }
+        const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/decir_replace_month`, {
+          method: "POST",
+          headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
+          body: JSON.stringify({p_table: "decir_reg_meals", p_corp: corpOperNr, p_year: String(year), p_month: String(month), p_rows: payload})
+        });
+        if (!r.ok) throw new Error(await r.text() || "Erro ao gravar");
         showPopup('popup-success', "Refeições gravadas com sucesso!");
       } catch(err) {
         console.error(err);
@@ -2879,8 +2871,8 @@
         showPopup('popup-danger', "Erro ao carregar dados LEPP.");
       }
     }
-    /* ─── TABELA: LEPP ───────────────────────────────────────── */
-    async function createLeppTable(containerId, year, month) {
+        /* ─── TABELA: LEPP ───────────────────────────────────────── */
+        async function createLeppTable(containerId, year, month) {
       const container = document.getElementById(containerId) || $(containerId);
       if (!container) return;
       container.innerHTML = "";
@@ -2916,21 +2908,23 @@
       const wrapper = document.createElement("div");
       wrapper.id = "decir-lepp-wrapper";
       Object.assign(wrapper.style, {overflowX: "auto", overflowY: "auto", width: "100%", maxHeight: "500px", borderRadius: "8px", border: "1px solid #ddd", boxShadow: "0 2px 8px rgba(0,0,0,0.08)"});
-      
-      const style = document.createElement("style");
-      style.textContent = `
-        #decir-lepp-wrapper::-webkit-scrollbar {height: 6px; width: 0px;}
-        #decir-lepp-wrapper::-webkit-scrollbar-thumb:horizontal {background: #131a69; border-radius: 10px;}
-        #decir-lepp-wrapper::-webkit-scrollbar-track:horizontal {background: #f0f0f0; border-radius: 10px;}    
-        .lepp-select {width: 100%; border: none; background: transparent; cursor: pointer; font-size: 11px; text-align: center; outline: none; appearance: none; -webkit-appearance: none; color: #333; padding: 0;}
-        .lepp-select:focus {background: #eef0ff;}
-        .lepp-select option {background: #fff; color: #333;}
-        .lepp-select:disabled {cursor: not-allowed; color: #999;}
-        #decir-lepp-wrapper table {border-collapse: separate !important; border-spacing: 0 !important; table-layout: auto !important;}    
-        #decir-lepp-wrapper table thead tr:nth-child(1) th {position: sticky; top: 0; z-index: 3; height: 32px; box-sizing: border-box; box-shadow: inset 0 -1px 0 #4a5aa0, inset 1px 0 0 #4a5aa0;}
-        #decir-lepp-wrapper table thead tr:nth-child(2) th {position: sticky; top: 32px; z-index: 2; height: 28px; box-sizing: border-box; box-shadow: inset 0 -1px 0 #4a5aa0, inset 1px 0 0 #4a5aa0;}
-      `;
-      document.head.appendChild(style);
+      if (!document.getElementById("lepp-reg-style")) {
+        const style = document.createElement("style");
+        style.id = "lepp-reg-style";
+        style.textContent = `
+          #decir-lepp-wrapper::-webkit-scrollbar {height: 6px; width: 0px;}
+          #decir-lepp-wrapper::-webkit-scrollbar-thumb:horizontal {background: #131a69; border-radius: 10px;}
+          #decir-lepp-wrapper::-webkit-scrollbar-track:horizontal {background: #f0f0f0; border-radius: 10px;}    
+          .lepp-select {width: 100%; border: none; background: transparent; cursor: pointer; font-size: 11px; text-align: center; outline: none; appearance: none; -webkit-appearance: none; color: #333; padding: 0;}
+          .lepp-select:focus {background: #eef0ff;}
+          .lepp-select option {background: #fff; color: #333;}
+          .lepp-select:disabled {cursor: not-allowed; color: #999;}
+          #decir-lepp-wrapper table {border-collapse: separate !important; border-spacing: 0 !important; table-layout: auto !important;}    
+          #decir-lepp-wrapper table thead tr:nth-child(1) th {position: sticky; top: 0; z-index: 3; height: 32px; box-sizing: border-box; box-shadow: inset 0 -1px 0 #4a5aa0, inset 1px 0 0 #4a5aa0;}
+          #decir-lepp-wrapper table thead tr:nth-child(2) th {position: sticky; top: 32px; z-index: 2; height: 28px; box-sizing: border-box; box-shadow: inset 0 -1px 0 #4a5aa0, inset 1px 0 0 #4a5aa0;}
+        `;
+        document.head.appendChild(style);
+      }
       const table = document.createElement("table");
       Object.assign(table.style, {width: "100%", minWidth: "1100px", borderCollapse: "separate", fontFamily: "Segoe UI, sans-serif", fontSize: "12px"});
       const thead = document.createElement("thead");
@@ -3123,17 +3117,12 @@
           if (!vehicle_01 && !vehicle_01_lepp && !vehicle_01_kms && !vehicle_02 && !vehicle_02_lepp && !vehicle_02_kms && !vehicle_03 && !vehicle_03_lepp && !vehicle_03_kms) return;
           payload.push({corp_oper_nr: corpOperNr, day, month, year, shift, vehicle_01, vehicle_01_lepp, vehicle_01_kms, vehicle_02, vehicle_02_lepp, vehicle_02_kms, vehicle_03, vehicle_03_lepp, vehicle_03_kms});
         });
-        await fetch(`${SUPABASE_URL}/rest/v1/decir_reg_lepp?corp_oper_nr=eq.${corpOperNr}&month=eq.${month}&year=eq.${year}`, {
-          method: "DELETE", headers: getSupabaseHeaders()
-        }).then(r => {if (!r.ok) throw new Error("Erro ao limpar registos antigos");});
-        if (payload.length > 0) {
-          const r = await fetch(`${SUPABASE_URL}/rest/v1/decir_reg_lepp`, {
-            method: "POST",
-            headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
-            body: JSON.stringify(payload)
-          });
-          if (!r.ok) throw new Error(await r.text() || "Erro desconhecido ao gravar");
-        }
+        const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/decir_replace_month`, {
+          method: "POST",
+          headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
+          body: JSON.stringify({p_table: "decir_reg_lepp", p_corp: corpOperNr, p_year: String(year), p_month: String(month), p_rows: payload})
+        });
+        if (!r.ok) throw new Error(await r.text() || "Erro ao gravar");
         showPopup('popup-success', "LEPP gravado com sucesso!");
       } catch (err) {
         console.error(err);
@@ -3183,7 +3172,6 @@
               section: zone.dataset.section};
     }
     function signaBuildTurnoBlock(title, subTitle, positions, shift, turnoDay, section, makePositionRowFn) {
-      console.trace(subTitle);
       const block = document.createElement("div");
       block.className = "signa-shift-block";
       const header = document.createElement("div");
@@ -3238,68 +3226,71 @@
       const elacCount = elacMatch ? parseInt(elacMatch[1], 10) : 0;
       const isMultiTeam = (ecinCount > 1 || elacCount > 1);
       container.innerHTML = "";
-      const style = document.createElement("style");
-      style.textContent = `
-        .signa-wrapper {display: flex; gap: 10px; font-family: 'Segoe UI', sans-serif;}
-        .signa-tables {flex: 1; min-width: 0;}
-        .signa-sidebar {width: 500px; flex-shrink: 0; margin-top: 12px;}
-        .signa-wrapper {display: flex; gap: 10px; margin-top:15px; font-family: 'Segoe UI', sans-serif;}
-        .signa-tables-wrapper {flex: 1; min-width: 0; max-height: 630px; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; scrollbar-color: #cbd5e1 #f1f5f9;}
-        .signa-tables-wrapper::-webkit-scrollbar {width: 6px;}
-        .signa-tables-wrapper::-webkit-scrollbar-track {background: #f1f5f9; border-radius: 4px;}
-        .signa-tables-wrapper::-webkit-scrollbar-thumb {background-color: #cbd5e1; border-radius: 4px;}
-        .signa-tables-wrapper::-webkit-scrollbar-thumb:hover {background-color: #94a3b8;}
-        .signa-tables {flex: 1; min-width: 0;}
-        .signa-date-row {display: flex; align-items: center; gap: 12px; margin-bottom: 0px; flex-wrap: wrap;}
-        .signa-date-row label {font-weight: bold; font-size: 13px;}
-        .signa-date-row input[type="date"] {padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; cursor: pointer; transition: border-color .2s ease, box-shadow .2s ease;}
-        .signa-date-row input[type="date"]:focus {outline: none; border-color: #c62828; box-shadow: 0 0 0 2px rgba(198, 40, 40, 0.15);}
-        .signa-load-btn {padding: 7px 16px; background: #131a69; color: #fff; border: none; border-radius: 4px; font-weight: bold; font-size: 13px; cursor: pointer;}
-        .signa-load-btn:hover {background: #1e2a80;}
-        .signa-format-btn {padding: 7px 16px; background: #2e7d32; color: #fff; border: none; border-radius: 4px; font-weight: bold; font-size: 13px; cursor: pointer;}
-        .signa-format-btn:hover {background: #1b5e20;}
-        .signa-section-title {background: #131a69; color: #fff; font-weight: bold; font-size: 13px; padding: 6px 10px; border-radius: 4px 4px 0 0; margin-top: 12px;}
-        .signa-shift-grid {display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 4px;}
-        .signa-shift-block {border: 1px solid #ddd; border-radius: 0 0 4px 4px; overflow: hidden;}
-        .signa-shift-header {background: #1e2a80; color: #fff; font-size: 11px; font-weight: bold; padding: 4px 8px; text-align: center;}
-        .signa-shift-subheader {background: #f0f0f0; font-size: 10px; font-weight: bold; padding: 2px 6px; color: #333; border-bottom: 1px solid #ddd; text-align: center;}
-        .signa-inner-table {width: 100%; border-collapse: collapse; font-size: 11px;}
-        .signa-inner-table thead th {background: #2a3580; color: #fff; padding: 3px 5px; text-align: center; font-size: 10px; font-weight: bold; border: 1px solid #3a4fb0; white-space: nowrap;}
-        .signa-inner-table tbody tr {border-bottom: 1px solid #eee;}
-        .signa-inner-table tbody tr:hover {background: #f8f9ff;}
-        .signa-inner-table tbody td {padding: 2px 4px; border: 1px solid #ccc; text-align: center; font-size: 11px; height: 26px; vertical-align: middle;}
-        .signa-pos-label {font-weight: bold; color: #555; background: #f5f5f5; white-space: nowrap; width: 32px;}
-        .signa-drop-cell {min-width: 40px; width: 40px;}
-        .signa-drop-zone {min-height: 22px; border: 1px dashed #ccc; border-radius: 2px; padding: 1px 4px; background: #fafafa; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #aaa; transition: background 0.15s; cursor: default;}
-        .signa-drop-zone.drag-over {background: #e8f0ff; border-color: #131a69; border-style: solid;}
-        .signa-drop-zone.drag-invalid {background: #ffeeee; border-color: #c62828; border-style: solid;}
-        .signa-drop-zone.filled { background: #eef4ff; border-color: #3a4fb0; border-style: solid; color: #222; font-weight: bold; font-size: 11px; cursor: grab;}
-        .signa-drop-zone.mp-fill {background: #fff9e6; border-color: #f0a500; border-style: solid;}
-        .signa-auto-field {background: transparent; border: none; font-size: 11px; color: #333; width: 100%; text-align: center; outline: none;}
-        .signa-clear-btn {color: #ccc; cursor: pointer; font-size: 11px; padding: 0 2px; flex-shrink: 0;}
-        .signa-clear-btn:hover {color: #c62828;}
-        .signa-sidebar-title {background: #333; color: #fff; font-weight: bold; font-size: 12px; padding: 6px 10px; border-radius: 4px 4px 0 0;}
-        .signa-sidebar-day-title {font-size: 11px; font-weight: bold; padding: 5px 8px; background: #131a69; color: #fff; border-bottom: 1px solid #0a0f40;}
-        .signa-sidebar-group-title {font-size: 10px; font-weight: bold; padding: 3px 8px; background: #f0f0f0; color: #555; border-bottom: 1px solid #ddd;}
-        .signa-sidebar-group-title.group-ed {background: rgba(251, 192, 45, 0.55); color: #4a3800;}
-        .signa-sidebar-group-title.group-en {background: rgba(13, 44, 84, 0.75); color: #fff;}
-        .signa-sidebar-group-title.group-et {background: rgba(27, 94, 32, 0.75); color: #fff;}
-        .signa-sidebar-list {border: 1px solid #ddd; border-top: none; border-radius: 0 0 4px 4px; height: calc(100% - 35px); max-height: 550px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #cbd5e1 #f1f5f9;}
-        .signa-sidebar-list::-webkit-scrollbar {width: 6px;}
-        .signa-sidebar-list::-webkit-scrollbar-track {background: #f1f5f9; border-radius: 0 0 4px 0;}
-        .signa-sidebar-list::-webkit-scrollbar-thumb {background-color: #cbd5e1; border-radius: 4px;}
-        .signa-sidebar-list::-webkit-scrollbar-thumb:hover {background-color: #94a3b8;}
-        .signa-sidebar-item {display: flex; align-items: center; gap: 4px; padding: 4px 8px; border-bottom: 1px solid #f5f5f5; cursor: grab; background: #fff; user-select: none; font-size: 11px;}
-        .signa-sidebar-item:hover {background: #f0f4ff;}
-        .signa-sidebar-item.dragging {opacity: 0.4;}
-        .signa-sidebar-item.used {opacity: 0.3; pointer-events: none; text-decoration: line-through;}
-        .signa-ni {color: #888; min-width: 26px; font-size: 10px;}
-        .signa-cat {color: #555; min-width: 28px; font-size: 10px;}
-        .signa-name {font-weight: bold; color: #222; flex: 1;}
-        .signa-mp-badge {font-size: 9px; background: #f0a500; color: #fff; border-radius: 2px; padding: 1px 3px; font-weight: bold; flex-shrink: 0;}
-        .mode-highlight {color: #c62828; font-weight: bold; font-size: 15px;}
-      `;
-      document.head.appendChild(style);
+      if (!document.getElementById("signa-style")) {
+        const style = document.createElement("style");
+        style.id = "signa-style";
+        style.textContent = `
+          .signa-wrapper {display: flex; gap: 10px; font-family: 'Segoe UI', sans-serif;}
+          .signa-tables {flex: 1; min-width: 0;}
+          .signa-sidebar {width: 500px; flex-shrink: 0; margin-top: 12px;}
+          .signa-wrapper {display: flex; gap: 10px; margin-top:15px; font-family: 'Segoe UI', sans-serif;}
+          .signa-tables-wrapper {flex: 1; min-width: 0; max-height: 630px; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; scrollbar-color: #cbd5e1 #f1f5f9;}
+          .signa-tables-wrapper::-webkit-scrollbar {width: 6px;}
+          .signa-tables-wrapper::-webkit-scrollbar-track {background: #f1f5f9; border-radius: 4px;}
+          .signa-tables-wrapper::-webkit-scrollbar-thumb {background-color: #cbd5e1; border-radius: 4px;}
+          .signa-tables-wrapper::-webkit-scrollbar-thumb:hover {background-color: #94a3b8;}
+          .signa-tables {flex: 1; min-width: 0;}
+          .signa-date-row {display: flex; align-items: center; gap: 12px; margin-bottom: 0px; flex-wrap: wrap;}
+          .signa-date-row label {font-weight: bold; font-size: 13px;}
+          .signa-date-row input[type="date"] {padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; cursor: pointer; transition: border-color .2s ease, box-shadow .2s ease;}
+          .signa-date-row input[type="date"]:focus {outline: none; border-color: #c62828; box-shadow: 0 0 0 2px rgba(198, 40, 40, 0.15);}
+          .signa-load-btn {padding: 7px 16px; background: #131a69; color: #fff; border: none; border-radius: 4px; font-weight: bold; font-size: 13px; cursor: pointer;}
+          .signa-load-btn:hover {background: #1e2a80;}
+          .signa-format-btn {padding: 7px 16px; background: #2e7d32; color: #fff; border: none; border-radius: 4px; font-weight: bold; font-size: 13px; cursor: pointer;}
+          .signa-format-btn:hover {background: #1b5e20;}
+          .signa-section-title {background: #131a69; color: #fff; font-weight: bold; font-size: 13px; padding: 6px 10px; border-radius: 4px 4px 0 0; margin-top: 12px;}
+          .signa-shift-grid {display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 4px;}
+          .signa-shift-block {border: 1px solid #ddd; border-radius: 0 0 4px 4px; overflow: hidden;}
+          .signa-shift-header {background: #1e2a80; color: #fff; font-size: 11px; font-weight: bold; padding: 4px 8px; text-align: center;}
+          .signa-shift-subheader {background: #f0f0f0; font-size: 10px; font-weight: bold; padding: 2px 6px; color: #333; border-bottom: 1px solid #ddd; text-align: center;}
+          .signa-inner-table {width: 100%; border-collapse: collapse; font-size: 11px;}
+          .signa-inner-table thead th {background: #2a3580; color: #fff; padding: 3px 5px; text-align: center; font-size: 10px; font-weight: bold; border: 1px solid #3a4fb0; white-space: nowrap;}
+          .signa-inner-table tbody tr {border-bottom: 1px solid #eee;}
+          .signa-inner-table tbody tr:hover {background: #f8f9ff;}
+          .signa-inner-table tbody td {padding: 2px 4px; border: 1px solid #ccc; text-align: center; font-size: 11px; height: 26px; vertical-align: middle;}
+          .signa-pos-label {font-weight: bold; color: #555; background: #f5f5f5; white-space: nowrap; width: 32px;}
+          .signa-drop-cell {min-width: 40px; width: 40px;}
+          .signa-drop-zone {min-height: 22px; border: 1px dashed #ccc; border-radius: 2px; padding: 1px 4px; background: #fafafa; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #aaa; transition: background 0.15s; cursor: default;}
+          .signa-drop-zone.drag-over {background: #e8f0ff; border-color: #131a69; border-style: solid;}
+          .signa-drop-zone.drag-invalid {background: #ffeeee; border-color: #c62828; border-style: solid;}
+          .signa-drop-zone.filled { background: #eef4ff; border-color: #3a4fb0; border-style: solid; color: #222; font-weight: bold; font-size: 11px; cursor: grab;}
+          .signa-drop-zone.mp-fill {background: #fff9e6; border-color: #f0a500; border-style: solid;}
+          .signa-auto-field {background: transparent; border: none; font-size: 11px; color: #333; width: 100%; text-align: center; outline: none;}
+          .signa-clear-btn {color: #ccc; cursor: pointer; font-size: 11px; padding: 0 2px; flex-shrink: 0;}
+          .signa-clear-btn:hover {color: #c62828;}
+          .signa-sidebar-title {background: #333; color: #fff; font-weight: bold; font-size: 12px; padding: 6px 10px; border-radius: 4px 4px 0 0;}
+          .signa-sidebar-day-title {font-size: 11px; font-weight: bold; padding: 5px 8px; background: #131a69; color: #fff; border-bottom: 1px solid #0a0f40;}
+          .signa-sidebar-group-title {font-size: 10px; font-weight: bold; padding: 3px 8px; background: #f0f0f0; color: #555; border-bottom: 1px solid #ddd;}
+          .signa-sidebar-group-title.group-ed {background: rgba(251, 192, 45, 0.55); color: #4a3800;}
+          .signa-sidebar-group-title.group-en {background: rgba(13, 44, 84, 0.75); color: #fff;}
+          .signa-sidebar-group-title.group-et {background: rgba(27, 94, 32, 0.75); color: #fff;}
+          .signa-sidebar-list {border: 1px solid #ddd; border-top: none; border-radius: 0 0 4px 4px; height: calc(100% - 35px); max-height: 550px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #cbd5e1 #f1f5f9;}
+          .signa-sidebar-list::-webkit-scrollbar {width: 6px;}
+          .signa-sidebar-list::-webkit-scrollbar-track {background: #f1f5f9; border-radius: 0 0 4px 0;}
+          .signa-sidebar-list::-webkit-scrollbar-thumb {background-color: #cbd5e1; border-radius: 4px;}
+          .signa-sidebar-list::-webkit-scrollbar-thumb:hover {background-color: #94a3b8;}
+          .signa-sidebar-item {display: flex; align-items: center; gap: 4px; padding: 4px 8px; border-bottom: 1px solid #f5f5f5; cursor: grab; background: #fff; user-select: none; font-size: 11px;}
+          .signa-sidebar-item:hover {background: #f0f4ff;}
+          .signa-sidebar-item.dragging {opacity: 0.4;}
+          .signa-sidebar-item.used {opacity: 0.3; pointer-events: none; text-decoration: line-through;}
+          .signa-ni {color: #888; min-width: 26px; font-size: 10px;}
+          .signa-cat {color: #555; min-width: 28px; font-size: 10px;}
+          .signa-name {font-weight: bold; color: #222; flex: 1;}
+          .signa-mp-badge {font-size: 9px; background: #f0a500; color: #fff; border-radius: 2px; padding: 1px 3px; font-weight: bold; flex-shrink: 0;}
+          .mode-highlight {color: #c62828; font-weight: bold; font-size: 15px;}
+        `;
+        document.head.appendChild(style);
+      }
       const dateRow = document.createElement("div");
       dateRow.className = "signa-date-row";
       const lbl1 = document.createElement("label");
@@ -3762,7 +3753,6 @@
           });
         });
       });
-      // ── Carregar elementos ──
       // ── Funções partilhadas de renderização da sidebar (usadas nos 2 modos de carregamento) ──
       function renderDayGroups(dataForDay, elemsMap, dayKey, dayTitleText) {
         if (dayTitleText) {
@@ -3992,10 +3982,12 @@
         const year = parseInt(yearInput.value, 10);
         const daysInMonth = new Date(year, monthIdx, 0).getDate();
         const weekdays = [], holidayDays = [];
+        const holidays = getPortugalHolidays(year);
         for (let d = 1; d <= daysInMonth; d++) {
           const date = new Date(year, monthIdx - 1, d);
           weekdays.push(['DOM','SEG','TER','QUA','QUI','SEX','SÁB'][date.getDay()]);
-          if (date.getDay() === 0 || date.getDay() === 6) holidayDays.push(d);
+          const isHoliday = holidays.some(h => h.date.getDate() === d && h.date.getMonth() === monthIdx - 1);
+          if (date.getDay() === 0 || date.getDay() === 6 || isHoliday) holidayDays.push(d);
         }
         const parseValue = txt => parseFloat(txt.trim().replace(/\s/g,'').replace(/\./g,'').replace(',','.')) || 0;
         const fixedRows = [], normalRows = [];
@@ -4051,10 +4043,12 @@
         const year = parseInt(yearInput.value, 10);
         const daysInMonth = new Date(year, monthIdx, 0).getDate();
         const weekdays = [], holidayDays = [];
+        const holidays = getPortugalHolidays(year);
         for (let d = 1; d <= daysInMonth; d++) {
           const date = new Date(year, monthIdx - 1, d);
           weekdays.push(['DOM','SEG','TER','QUA','QUI','SEX','SÁB'][date.getDay()]);
-          if (date.getDay() === 0 || date.getDay() === 6) holidayDays.push(d);
+          const isHoliday = holidays.some(h => h.date.getDate() === d && h.date.getMonth() === monthIdx - 1);
+          if (date.getDay() === 0 || date.getDay() === 6 || isHoliday) holidayDays.push(d);
         }
         const parseValue = txt => parseFloat(txt.trim().replace(/\s/g,'').replace(/\./g,'').replace(',','.')) || 0;
         const fixedRows = [], normalRows = [];
@@ -4160,7 +4154,7 @@
       }
       /* ───────── ANEPC ───────── */
       if (type === 'anepc_decir') {
-                const table = document.querySelector("#table-container-dec-anepc .anepc-table tbody");
+        const table = document.querySelector("#table-container-dec-anepc .anepc-table tbody");
         if (!table) throw new Error("Tabela ANEPC não encontrada.");
         const monthSelect = document.querySelector("#months-container-dec-anepc .btn.active");
         const yearInput = $("year-dec-anepc");
@@ -4301,8 +4295,15 @@
           body: JSON.stringify(data)
         });
         if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.details || err.error);
+          const contentType = res.headers.get("content-type") || "";
+          let errorMessage = `Erro do servidor (${res.status})`;
+          if (contentType.includes("application/json")) {
+            const err = await res.json();
+            errorMessage = err.details || err.error || errorMessage;
+          } else if (res.status === 504) {
+            errorMessage = "O servidor demorou demasiado tempo a responder. Tente novamente.";
+          }
+          throw new Error(errorMessage);
         }
         const blob = await res.blob();
         hideLoadingPopup();
@@ -5051,68 +5052,71 @@
         c.style.display = "";
         requestAnimationFrame(() => requestAnimationFrame(() => { c.style.transition = "opacity 1s ease"; c.style.opacity = "1"; }));
       });
-      const style = document.createElement("style");
-      style.textContent = `
-        .podium-section-title {font-size: 20px; font-weight: 700; color: #131a69; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 8px;}
-        .podium-grid {display: flex; gap: 16px; align-items: flex-end; justify-content: center; flex-wrap: wrap; margin-bottom: 40px;}
-        .podium-card {backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); background: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.9); border-radius: 20px; 
-                      box-shadow: 0 8px 32px rgba(99,102,241,0.1),0 2px 8px rgba(0,0,0,0.06); padding: 24px 20px 20px; text-align: center; width: 200px; position: relative; opacity: 0; pointer-events: none;}
-        .podium-card.revealed {opacity: 1; pointer-events: all;}
-        .podium-card.rank-1 {width: 250px; background: linear-gradient(135deg, rgba(251,191,36,0.38), rgba(253,224,71,0.22) 50%, rgba(245,158,11,0.30)); border: 1px solid rgba(251,191,36,0.55);
-                             box-shadow: 0 6px 24px rgba(251,191,36,0.30), 0 1px 4px rgba(0,0,0,0.04); order: 2;}
-        .podium-card.rank-2 {width: 220px; background: linear-gradient(135deg, rgba(156,163,175,0.2), rgba(209,213,219,0.1)); border-color: rgba(156,163,175,0.15); 
-                             box-shadow: 0 4px 16px rgba(156,163,175,0.05), 0 1px 4px rgba(0,0,0,0.02); order: 1;}
-        .podium-card.rank-3 {background: linear-gradient(135deg, rgba(180,83,9,0.15), rgba(217,119,6,0.08)); border-color: rgba(180,83,9,0.15); 
-                             box-shadow: 0 4px 16px rgba(180,83,9,0.05), 0 1px 4px rgba(0,0,0,0.02); order: 3;}
-        .podium-card.rank-3.revealed {animation: podiumReveal 0.7s cubic-bezier(0.34,1.56,0.64,1) forwards;}
-        .podium-card.rank-2.revealed {animation: podiumReveal 0.7s cubic-bezier(0.34,1.56,0.64,1) forwards;}
-        .podium-card.rank-1.revealed {animation: podiumReveal 0.8s cubic-bezier(0.34,1.56,0.64,1) forwards;}
-        .podium-card.rank-1.winner {animation: podiumPulse 1s ease-in-out infinite, podiumWave 3s ease-in-out 1s infinite;}
-        .podium-badge {position: absolute; top: -14px; left: 50%; transform: translateX(-50%); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; 
-                       justify-content: center; font-size: 15px; font-weight: 900; border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.12);}
-        .rank-1 .podium-badge {background: linear-gradient(135deg,#f59e0b,#fbbf24); color: #fff;}
-        .rank-2 .podium-badge {background: linear-gradient(135deg,#9ca3af,#d1d5db); color: #fff;}
-        .rank-3 .podium-badge {background: linear-gradient(135deg,#b45309,#d97706); color: #fff;}
-        .podium-photo {width: 80px; height: 80px; border-radius: 50%; object-fit:cover; margin: 8px auto 12px; display: block; border: 3px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.12);}
-        .rank-1 .podium-photo {width:120px; height:120px; border-color:#fbbf24; }
-        .podium-photo-placeholder {width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg,#e0e7ff,#c7d2fe); margin: 8px auto 12px; display: flex; align-items: center; 
-                                   justify-content:center; font-size: 28px; border: 3px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.12);}
-        .rank-1 .podium-photo-placeholder {width: 96px; height: 96px; border-color: #fbbf24;}
-        .podium-name {font-size: 14px; font-weight: 600; color: #1e1b4b; margin-bottom: 4px; line-height: 1.3;}
-        .podium-ni {font-size: 13px; color :#6366f1; font-weight: 500; margin-bottom: 12px;}
-        .podium-stats {display: flex; gap: 8px; justify-content: center;}
-        .podium-stat-label {font-size:11px; font-weight: 750; color: #888; text-transform: uppercase; letter-spacing: 0.4px; margin-top: 2px;}
-        .podium-stat {background: rgba(99,102,241,0.08); border-radius: 10px; padding: 6px 10px; flex: 1;}
-        .rank-1 .podium-stat {background: rgba(251,191,36,0.12);}
-        .podium-stat-value {font-size: 18px; font-weight: 700; color:#131a69; line-height:1;}
-        .rank-1 .podium-stat-value {color: #b45309;}
-        .podium-card.rank-4to10 {background: linear-gradient(135deg, #f0f4ff, #e8eeff); border-radius: 16px; border: 1px solid rgba(0,0,0,0.10); box-shadow: 0 2px 8px rgba(0,0,0,0.09); padding: 16px; 
-                                 text-align: center; position: relative; opacity: 0; pointer-events: none; transition: all 0.3s ease;}
-        .podium-card.rank-4to10.revealed {opacity: 1; transform: translateY(0);}
-        .podium-card.rank-4to10 .podium-name {font-size: 13px; font-weight: 600; color: #1e1b4b; margin-bottom: 4px;}
-        .podium-card.rank-4to10 .podium-ni {font-size: 12px; color: #6366f1; margin-bottom: 8px;}
-        .podium-card.rank-4to10 .podium-stats {font-size: 12px; display: flex; justify-content: space-between; margin-top: 8px;}
-        .podium-card.rank-4to10 .podium-stat-label {font-size: 11px; color: #888; font-weight: 750}
-        .podium-card.rank-4to10 .podium-stat-value {font-weight: 700; color: #131a69;}        
-        .dash-loading, .dash-empty {text-align: center; padding: 48px; color: #9ca3af; font-size: 14px;}
-        .podium-reveal-btn {display: block; margin: 16px auto 24px; padding: 12px 32px; background: linear-gradient(135deg, #131a69, #6366f1); color: #fff; border: none; border-radius: 50px; 
-                            font-weight: 700; cursor: pointer; box-shadow: 0 4px 20px rgba(99,102,241,0.3); transition: transform 0.2s, box-shadow 0.2s; letter-spacing: 0.5px;}
-        .podium-reveal-btn:hover {transform: translateY(-2px); box-shadow: 0 8px 28px rgba(99,102,241,0.4);}
-        .podium-reveal-btn:disabled {opacity: 0.6; cursor: not-allowed; transform: none;}
-        .podium-confetti {position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999;}
-        .podium-medal {position: absolute; top: -5px; right: -10px; font-size: 40px; line-height: 1; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.25)); transform: rotate(12deg);}
-        .rank-1 .podium-medal {font-size: 60px;}
-        .rank-2 .podium-medal {font-size: 50px;}
-        .podium-card.revealed .podium-medal {animation: medalSwing 0.8s ease-out both;}
-        .rank-4to10 .podium-medal {font-size: 15px; top: 5px; right: 5px; transform: none;}
-        .podium-card.rank-4to10.revealed .podium-medal {animation: medalPop 0.6s ease-out 0.3s both;}
-        @keyframes podiumReveal {0% {opacity: 0; transform: scale(0.3) translateY(40px);} 60% {opacity:1; transform: scale(1.08) translateY(-8px);} 80% {transform: scale(0.96) translateY(2px);} 100% {opacity:1; transform:scale(1) translateY(0);}}
-        @keyframes podiumWave {0% {transform: translateY(0);} 25% {transform: translateY(-15px);} 50% {transform: translateY(0);} 75% {transform: translateY(-10px);} 100% {transform: translateY(0);}}
-        @keyframes podiumPulse {0%,100%{transform:scale(1);} 50%{transform:scale(1.05);}}
-        @keyframes medalSwing {0% {transform: rotate(12deg) scale(0);} 40% {transform: rotate(-15deg) scale(1.3);} 70% {transform: rotate(20deg) scale(1);} 100% {transform: rotate(12deg) scale(1);}}
-        @keyframes medalPop {0% {transform: scale(0);} 60% {transform: scale(1.25);} 100% {transform: scale(1);}}
-      `;
-      document.head.appendChild(style);
+      if (!document.getElementById("podium-style")) {
+        const style = document.createElement("style");
+        style.id = "podium-style";
+        style.textContent = `
+          .podium-section-title {font-size: 20px; font-weight: 700; color: #131a69; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 8px;}
+          .podium-grid {display: flex; gap: 16px; align-items: flex-end; justify-content: center; flex-wrap: wrap; margin-bottom: 40px;}
+          .podium-card {backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); background: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.9); border-radius: 20px; 
+                        box-shadow: 0 8px 32px rgba(99,102,241,0.1),0 2px 8px rgba(0,0,0,0.06); padding: 24px 20px 20px; text-align: center; width: 200px; position: relative; opacity: 0; pointer-events: none;}
+          .podium-card.revealed {opacity: 1; pointer-events: all;}
+          .podium-card.rank-1 {width: 250px; background: linear-gradient(135deg, rgba(251,191,36,0.38), rgba(253,224,71,0.22) 50%, rgba(245,158,11,0.30)); border: 1px solid rgba(251,191,36,0.55);
+                               box-shadow: 0 6px 24px rgba(251,191,36,0.30), 0 1px 4px rgba(0,0,0,0.04); order: 2;}
+          .podium-card.rank-2 {width: 220px; background: linear-gradient(135deg, rgba(156,163,175,0.2), rgba(209,213,219,0.1)); border-color: rgba(156,163,175,0.15); 
+                               box-shadow: 0 4px 16px rgba(156,163,175,0.05), 0 1px 4px rgba(0,0,0,0.02); order: 1;}
+          .podium-card.rank-3 {background: linear-gradient(135deg, rgba(180,83,9,0.15), rgba(217,119,6,0.08)); border-color: rgba(180,83,9,0.15); 
+                               box-shadow: 0 4px 16px rgba(180,83,9,0.05), 0 1px 4px rgba(0,0,0,0.02); order: 3;}
+          .podium-card.rank-3.revealed {animation: podiumReveal 0.7s cubic-bezier(0.34,1.56,0.64,1) forwards;}
+          .podium-card.rank-2.revealed {animation: podiumReveal 0.7s cubic-bezier(0.34,1.56,0.64,1) forwards;}
+          .podium-card.rank-1.revealed {animation: podiumReveal 0.8s cubic-bezier(0.34,1.56,0.64,1) forwards;}
+          .podium-card.rank-1.winner {animation: podiumPulse 1s ease-in-out infinite, podiumWave 3s ease-in-out 1s infinite;}
+          .podium-badge {position: absolute; top: -14px; left: 50%; transform: translateX(-50%); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; 
+                         justify-content: center; font-size: 15px; font-weight: 900; border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.12);}
+          .rank-1 .podium-badge {background: linear-gradient(135deg,#f59e0b,#fbbf24); color: #fff;}
+          .rank-2 .podium-badge {background: linear-gradient(135deg,#9ca3af,#d1d5db); color: #fff;}
+          .rank-3 .podium-badge {background: linear-gradient(135deg,#b45309,#d97706); color: #fff;}
+          .podium-photo {width: 80px; height: 80px; border-radius: 50%; object-fit:cover; margin: 8px auto 12px; display: block; border: 3px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.12);}
+          .rank-1 .podium-photo {width:120px; height:120px; border-color:#fbbf24; }
+          .podium-photo-placeholder {width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg,#e0e7ff,#c7d2fe); margin: 8px auto 12px; display: flex; align-items: center; 
+                                     justify-content:center; font-size: 28px; border: 3px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.12);}
+          .rank-1 .podium-photo-placeholder {width: 96px; height: 96px; border-color: #fbbf24;}
+          .podium-name {font-size: 14px; font-weight: 600; color: #1e1b4b; margin-bottom: 4px; line-height: 1.3;}
+          .podium-ni {font-size: 13px; color :#6366f1; font-weight: 500; margin-bottom: 12px;}
+          .podium-stats {display: flex; gap: 8px; justify-content: center;}
+          .podium-stat-label {font-size:11px; font-weight: 750; color: #888; text-transform: uppercase; letter-spacing: 0.4px; margin-top: 2px;}
+          .podium-stat {background: rgba(99,102,241,0.08); border-radius: 10px; padding: 6px 10px; flex: 1;}
+          .rank-1 .podium-stat {background: rgba(251,191,36,0.12);}
+          .podium-stat-value {font-size: 18px; font-weight: 700; color:#131a69; line-height:1;}
+          .rank-1 .podium-stat-value {color: #b45309;}
+          .podium-card.rank-4to10 {background: linear-gradient(135deg, #f0f4ff, #e8eeff); border-radius: 16px; border: 1px solid rgba(0,0,0,0.10); box-shadow: 0 2px 8px rgba(0,0,0,0.09); padding: 16px; 
+                                   text-align: center; position: relative; opacity: 0; pointer-events: none; transition: all 0.3s ease;}
+          .podium-card.rank-4to10.revealed {opacity: 1; transform: translateY(0);}
+          .podium-card.rank-4to10 .podium-name {font-size: 13px; font-weight: 600; color: #1e1b4b; margin-bottom: 4px;}
+          .podium-card.rank-4to10 .podium-ni {font-size: 12px; color: #6366f1; margin-bottom: 8px;}
+          .podium-card.rank-4to10 .podium-stats {font-size: 12px; display: flex; justify-content: space-between; margin-top: 8px;}
+          .podium-card.rank-4to10 .podium-stat-label {font-size: 11px; color: #888; font-weight: 750}
+          .podium-card.rank-4to10 .podium-stat-value {font-weight: 700; color: #131a69;}        
+          .dash-loading, .dash-empty {text-align: center; padding: 48px; color: #9ca3af; font-size: 14px;}
+          .podium-reveal-btn {display: block; margin: 16px auto 24px; padding: 12px 32px; background: linear-gradient(135deg, #131a69, #6366f1); color: #fff; border: none; border-radius: 50px; 
+                              font-weight: 700; cursor: pointer; box-shadow: 0 4px 20px rgba(99,102,241,0.3); transition: transform 0.2s, box-shadow 0.2s; letter-spacing: 0.5px;}
+          .podium-reveal-btn:hover {transform: translateY(-2px); box-shadow: 0 8px 28px rgba(99,102,241,0.4);}
+          .podium-reveal-btn:disabled {opacity: 0.6; cursor: not-allowed; transform: none;}
+          .podium-confetti {position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999;}
+          .podium-medal {position: absolute; top: -5px; right: -10px; font-size: 40px; line-height: 1; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.25)); transform: rotate(12deg);}
+          .rank-1 .podium-medal {font-size: 60px;}
+          .rank-2 .podium-medal {font-size: 50px;}
+          .podium-card.revealed .podium-medal {animation: medalSwing 0.8s ease-out both;}
+          .rank-4to10 .podium-medal {font-size: 15px; top: 5px; right: 5px; transform: none;}
+          .podium-card.rank-4to10.revealed .podium-medal {animation: medalPop 0.6s ease-out 0.3s both;}
+          @keyframes podiumReveal {0% {opacity: 0; transform: scale(0.3) translateY(40px);} 60% {opacity:1; transform: scale(1.08) translateY(-8px);} 80% {transform: scale(0.96) translateY(2px);} 100% {opacity:1; transform:scale(1) translateY(0);}}
+          @keyframes podiumWave {0% {transform: translateY(0);} 25% {transform: translateY(-15px);} 50% {transform: translateY(0);} 75% {transform: translateY(-10px);} 100% {transform: translateY(0);}}
+          @keyframes podiumPulse {0%,100%{transform:scale(1);} 50%{transform:scale(1.05);}}
+          @keyframes medalSwing {0% {transform: rotate(12deg) scale(0);} 40% {transform: rotate(-15deg) scale(1.3);} 70% {transform: rotate(20deg) scale(1);} 100% {transform: rotate(12deg) scale(1);}}
+          @keyframes medalPop {0% {transform: scale(0);} 60% {transform: scale(1.25);} 100% {transform: scale(1);}}
+        `;
+        document.head.appendChild(style);
+      }
       const podiumSection = document.createElement("div");
       const podiumTitle = document.createElement("div");
       podiumTitle.className = "podium-section-title";
@@ -5777,6 +5781,7 @@
     const WEATHER_SHORT_DAYS = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SAB"];
     let weatherLocationOverride = null;
     let weatherUpdaters = [];
+    let weatherIntervals = [];
     function setWeatherLocation(lat, long, name) {
       weatherLocationOverride = { lat, long, name };
       weatherUpdaters.forEach(fn => fn());
@@ -5873,7 +5878,7 @@
         renderForecastRow(tempCard.querySelector(".temp-forecast"), t.forecast, [{value: d => `${Math.round(d.max)}°`, color: "red", bg: "#fde8e8"}, {value: d => `${Math.round(d.min)}°`, color: "#1565c0", bg: "#e3edfb"}]);
       }
       weatherUpdaters.push(update);
-      update(); setInterval(update, 10 * 60 * 1000);
+      update(); weatherIntervals.push(setInterval(update, 10 * 60 * 1000));
       return tempCard;
     }
     /* ═══ WIND ═══ */
@@ -5917,7 +5922,7 @@
         renderForecastRow(windCard.querySelector(".wind-forecast"), w.forecast, [{value: d => `${Math.round(d.gust)} km/h`, color: "#0f4c81", bg: "#e3edfb"}, {value: d => degreesToDirection(d.direction), color: "#333", bg: "#e9ecf1"}]);
       }
       weatherUpdaters.push(update);
-      update(); setInterval(update, 10 * 60 * 1000);
+      update(); weatherIntervals.push(setInterval(update, 10 * 60 * 1000));
       return windCard;
     }
     /* ═══ HUMIDITY ═══ */
@@ -5952,7 +5957,7 @@
         renderForecastRow(humCard.querySelector(".hum-forecast"), h.forecast, [{value: d => `${Math.round(d.max)}%`, color: "#0a6e6e", bg: "#e0f2f1"}, {value: d => `${Math.round(d.min)}%`, color: "#0a6e6e", bg: "#e0f2f1"}]);
       }
       weatherUpdaters.push(update);
-      update(); setInterval(update, 10 * 60 * 1000);
+      update(); weatherIntervals.push(setInterval(update, 10 * 60 * 1000));
       return humCard;
     }
     /* ═══ UV LEVEL ═══ */
@@ -6004,7 +6009,7 @@
         renderForecastRow(uvCard.querySelector(".uv-forecast"), u.forecast, [{value: d => `${Math.round(d.uv)}`, color: d => getUVLevel(d.uv).color, bg: d => getUVLevel(d.uv).color + "22"}]);
       }
       weatherUpdaters.push(update);
-      update(); setInterval(update, 10 * 60 * 1000);
+      update(); weatherIntervals.push(setInterval(update, 10 * 60 * 1000));
       return uvCard;
     }
     /* ═══ INSTABILITY ═══ */
@@ -6058,7 +6063,7 @@
         renderForecastRow(capeCard.querySelector(".cape-forecast"), c.forecast, [{value: d => `${Math.round(d.max)}`, color: "#6a1b9a", bg: "#f3e5f5"}, {value: d => `${Math.round(d.min)}`, color: "#6a1b9a", bg: "#f3e5f5"}]);
       }
       weatherUpdaters.push(update);
-      update(); setInterval(update, 10 * 60 * 1000);
+      update(); weatherIntervals.push(setInterval(update, 10 * 60 * 1000));
       return capeCard;
     }
     /* ═══ SUN SETDOWN ═══ */
@@ -6109,12 +6114,14 @@
         }
       }
       weatherUpdaters.push(update);
-      update(); setInterval(update, 10 * 60 * 1000);
+      update(); weatherIntervals.push(setInterval(update, 10 * 60 * 1000));
       return sunCard;
     }
     /* ═══ SINGLE CALL FUNCTION ═══ */
     function renderWeatherCards() {
       weatherUpdaters = [];
+      weatherIntervals.forEach(clearInterval);
+      weatherIntervals = [];
       const wrapper = document.createElement("div");
       wrapper.style.cssText = "display:flex; flex-direction:column; gap:5px; margin-bottom:0px;";
       const cards = [createTempCard(), createWindCard(), createHumidityCard(), createUVCard(), createCapeCard(), createSunCard()];

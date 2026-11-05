@@ -1089,14 +1089,12 @@
           const totalAccumulated = parseFloat(row.cells[row.cells.length - 1].textContent.trim().replace(",", ".")) || 0;
           accumulatedPayload.push({n_int: nInt, abv_name: abvName, year, month, monthly_total: totalMonthly, total_accumulated: totalAccumulated, corp_oper_nr: corpOperNr});
         });
-        const del1 = await fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}&function=not.in.(COM,SEC)`, {method:"DELETE", headers:getSupabaseHeaders()});
-        if (!del1.ok) throw new Error("Erro ao limpar shifts antigos");
-        if (shiftsPayload.length > 0) {
-          const ins1 = await fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts`, {
-            method:"POST", 
-            headers:{...getSupabaseHeaders(),"Content-Type":"application/json","Prefer":"return=minimal"}, body:JSON.stringify(shiftsPayload)});
-          if (!ins1.ok) throw new Error("Erro ao guardar shifts: " + await ins1.text());
-        }
+        const rpc1 = await fetch(`${SUPABASE_URL}/rest/v1/rpc/replace_month_rows`, {
+          method: "POST",
+          headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
+          body: JSON.stringify({p_table: "reg_employee_shifts", p_corp: String(corpOperNr), p_year: String(year), p_month: String(month), p_rows: shiftsPayload, p_keep_functions: ["COM", "SEC"]})
+        });
+        if (!rpc1.ok) throw new Error("Erro ao guardar shifts: " + await rpc1.text());
         await Promise.all(employeesUpdate.map(emp =>
           fetch(`${SUPABASE_URL}/rest/v1/reg_employees?n_int=eq.${emp.n_int}&corp_oper_nr=eq.${emp.corp_oper_nr}`, {
           method:"PATCH", 
@@ -1104,13 +1102,15 @@
           .then(r => { if (!r.ok) console.warn(`⚠️ Erro ao atualizar employee ${emp.n_int}`); })
           .catch(err => console.warn(`⚠️ Erro ao atualizar employee ${emp.n_int}:`, err))
         ));
-        const del2 = await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`, {method:"DELETE", headers:getSupabaseHeaders()});
-        if (!del2.ok) console.warn("⚠️ Erro ao limpar acumulados antigos");
-        if (accumulatedPayload.length > 0) {
-          const ins2 = await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul`, {
-            method:"POST", 
-            headers:{...getSupabaseHeaders(),"Content-Type":"application/json","Prefer":"return=minimal"}, body:JSON.stringify(accumulatedPayload)});
-          if (!ins2.ok) console.warn("⚠️ Erro ao guardar acumulados:", await ins2.text());
+        const rpc2 = await fetch(`${SUPABASE_URL}/rest/v1/rpc/replace_month_rows`, {
+          method: "POST",
+          headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
+          body: JSON.stringify({p_table: "reg_employees_acumul", p_corp: String(corpOperNr), p_year: String(year), p_month: String(month), p_rows: accumulatedPayload})
+        });
+        if (!rpc2.ok) {
+          console.warn("⚠️ Erro ao guardar acumulados:", await rpc2.text());
+          showPopup('popup-danger', `Escala de ${monthBtn.textContent} ${year} guardada, mas o banco de horas NÃO foi atualizado. Volte a gravar.`);
+          return;
         }
         showPopup('popup-success', `Escala de ${monthBtn.textContent} ${year} guardada com sucesso!`);
       } catch (err) {
@@ -1433,17 +1433,13 @@
             }
           });
         });
-        await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_extra_hours?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`, {
-          method: "DELETE",
-          headers: getSupabaseHeaders()
+        const rpcExtra = await fetch(`${SUPABASE_URL}/rest/v1/rpc/replace_month_rows`, {
+          method: "POST",
+          headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
+          body: JSON.stringify({p_table: "reg_employees_extra_hours", p_corp: String(corpOperNr), p_year: String(year), p_month: String(month), p_rows: dailyRecords})
         });
-        if (dailyRecords.length > 0) {
-          await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_extra_hours`, {
-            method: "POST",
-            headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
-            body: JSON.stringify(dailyRecords)
-          });
-        }
+        if (!rpcExtra.ok) throw new Error("Erro ao guardar horas extra: " + await rpcExtra.text());
+        let acumOk = true;
         try {
           let prevMonth = month - 1;
           let prevYear = year;
@@ -1497,20 +1493,22 @@
             return { n_int: nInt, abv_name: empData.abv_name, year, month, monthly_total: totalMonthly, total_accumulated: totalAccumulated, corp_oper_nr: corpOperNr };
           });
           if (newAccumulatedPayload.length > 0) {
-            await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`, {
-              method: "DELETE",
-              headers: getSupabaseHeaders()
-            });
-            await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul`, {
+            const rpcAcum = await fetch(`${SUPABASE_URL}/rest/v1/rpc/replace_month_rows`, {
               method: "POST",
-              headers: { ...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
-              body: JSON.stringify(newAccumulatedPayload)
+              headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
+              body: JSON.stringify({p_table: "reg_employees_acumul", p_corp: String(corpOperNr), p_year: String(year), p_month: String(month), p_rows: newAccumulatedPayload})
             });
+            if (!rpcAcum.ok) throw new Error(await rpcAcum.text());
           }
         } catch (acumErr) {
+          acumOk = false;
           console.warn("⚠️ Horas extra guardadas, mas erro ao atualizar acumulados:", acumErr);
         }
-        showPopup('popup-success', `Dados atualizados com sucesso!`);
+        if (!acumOk) {
+          showPopup('popup-danger', "Horas extra guardadas, mas o banco de horas NÃO foi atualizado. Volte a gravar.");
+        } else {
+          showPopup('popup-success', `Dados atualizados com sucesso!`);
+        }
       } catch (error) {
         console.error(error);
         showPopup('popup-danger', "Erro ao atualizar dados.");

@@ -94,7 +94,7 @@
         try {
           const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
           const response = await fetch(
-            `${SUPABASE_URL}/rest/v1/corporation_data?select=corporation,logo_url,corp_oper_nr,allowed_modules&corp_oper_nr=eq.${corpOperNr}`, { 
+            `${SUPABASE_URL}/rest/v1/corporation_data?select=corporation,logo_url,corp_oper_nr,allowed_modules,municipal_holiday,municipal_holiday_name&corp_oper_nr=eq.${corpOperNr}`, { 
               headers: getSupabaseHeaders() 
             }
           );
@@ -109,6 +109,8 @@
             if (nrEl) nrEl.textContent = corp.corp_oper_nr;    
             const allowedModulesString = corp.allowed_modules || "";
             sessionStorage.setItem("allowedModules", allowedModulesString);
+            sessionStorage.setItem("municipalHoliday", corp.municipal_holiday || "");
+            sessionStorage.setItem("municipalHolidayName", corp.municipal_holiday_name || "Feriado Municipal");
             return allowedModulesString.split(",").filter(m => m.trim());
           }
           return [];

@@ -38,7 +38,7 @@
       `;
       vehicleContainer.appendChild(card);
       const dateInput = card.querySelector('input[type="date"]');
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toLocaleDateString('sv-SE');
       dateInput.value = today;
       const select = card.querySelector("select");
       await populateSingleVehicleSelect(select);
@@ -120,7 +120,7 @@
         </div>
       `;
       vehiclesContainer.appendChild(card);
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toLocaleDateString('sv-SE');
       card.querySelectorAll('input[type="date"]').forEach(input => input.value = today);
       const select = card.querySelector("select");
       await populateSingleVehicleSelect(select);

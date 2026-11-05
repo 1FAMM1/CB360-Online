@@ -2386,6 +2386,7 @@
         if (!confirmExcess) return;
       }
       try {
+        let conflictDays = [];
         const monthsInvolved = [...new Set(allFERecords.map(r => r.month))].join(',');
         const conflictsResponse = await fetch(
           `${SUPABASE_URL}/rest/v1/reg_employee_shifts?n_int=eq.${nInt}&year=eq.${year}&month=in.(${monthsInvolved})&shift=neq.FE&corp_oper_nr=eq.${corpOperNr}`, {
@@ -2402,34 +2403,15 @@
             .join(', ');
             const message = `⚠️ ATENÇÃO: Existem turnos marcados nos seguintes dias:\n\n${conflictDaysText}\n\nAs férias irão SUBSTITUIR estes turnos.\n\nDeseja continuar?`;
             if (!confirm(message)) return;
-            const orConditions = conflicts
-            .map(c => `and(month.eq.${c.month},day.eq.${c.day})`)
-            .join(',');
-            await fetch(
-              `${SUPABASE_URL}/rest/v1/reg_employee_shifts?n_int=eq.${nInt}&year=eq.${year}&corp_oper_nr=eq.${corpOperNr}&shift=neq.FE&or=(${orConditions})`, {
-                method: "DELETE", headers: getSupabaseHeaders()
-              }
-            );
+            conflictDays = conflicts.map(c => ({month: c.month, day: c.day}));
           }
         }
-        const deleteOldFEResponse = await fetch(
-          `${SUPABASE_URL}/rest/v1/reg_employee_shifts?n_int=eq.${nInt}&year=eq.${year}&shift=eq.FE&corp_oper_nr=eq.${corpOperNr}`, {
-            method: "DELETE", headers: getSupabaseHeaders()
-          }
-        );
-        if (!deleteOldFEResponse.ok) throw new Error("Erro ao limpar registos de férias antigos");
-        if (allFERecords.length > 0) {
-          const saveResponse = await fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts`, {
-            method: "POST",
-            headers: {
-          ...getSupabaseHeaders(),
-              "Content-Type": "application/json",
-              "Prefer": "return=minimal"
-            },
-            body: JSON.stringify(allFERecords)
-          });
-          if (!saveResponse.ok) throw new Error("Erro ao gravar novas férias");
-        }
+        const saveResponse = await fetch(`${SUPABASE_URL}/rest/v1/rpc/replace_employee_vacations`, {
+          method: "POST",
+          headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
+          body: JSON.stringify({p_corp: String(corpOperNr), p_nint: String(nInt), p_year: String(year), p_rows: allFERecords, p_conflicts: conflictDays})
+        });
+        if (!saveResponse.ok) throw new Error("Erro ao gravar férias: " + await saveResponse.text());
         if (typeof showPopup === "function")
           showPopup('popup-success', `Férias atualizadas com sucesso: ${allFERecords.length} dias.`);
         loadHolidayData(nInt, year);

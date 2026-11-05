@@ -415,10 +415,28 @@
         return [];
       }
     }
-    async function loadDecirElements(select, year, month) {
+        async function loadDecirElements(select, year, month) {
       try {
         const firstOfMonth = new Date(year, month - 1, 1);
-        const data = await supabaseFetch(`reg_elems?select=${select},elem_state,inactive_from,type_quad&corp_oper_nr=eq.${getCorpId()}`);
+        const privCols = ["nif", "nib", "niss"];
+        const cols = select.split(",").map(c => c.trim()).filter(Boolean);
+        const wantedPriv = cols.filter(c => privCols.includes(c));
+        const baseCols = cols.filter(c => !privCols.includes(c));
+        if (!baseCols.includes("id")) baseCols.push("id");
+        const data = await supabaseFetch(`reg_elems?select=${baseCols.join(",")},elem_state,inactive_from,type_quad&corp_oper_nr=eq.${getCorpId()}`);
+        if (wantedPriv.length) {
+          let privMap = new Map();
+          try {
+            const priv = await supabaseFetch(`reg_elems_private?corp_oper_nr=eq.${getCorpId()}&select=elem_id,${wantedPriv.join(",")}`);
+            privMap = new Map((priv || []).map(p => [p.elem_id, p]));
+          } catch (e) {
+            console.warn("Sem acesso a NIF/NIB:", e);
+          }
+          data.forEach(d => {
+            const p = privMap.get(d.id) || {};
+            wantedPriv.forEach(c => { d[c] = p[c] ?? ""; });
+          });
+        }
         return data
         .filter(item => {
           const excludedTypes = ["QHR", "QRES", "QEA", "QEST"];

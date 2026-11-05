@@ -1,6 +1,48 @@
     /* =========================
     FASE 01 - SCALES
     ========================= */
+    async function propagateAccumulatedForward(corpOperNr, startYear, startMonth) {
+      let curYear = startYear, curMonth = startMonth;
+      const today = new Date();
+      const limitYear = today.getFullYear(), limitMonth = today.getMonth() + 1;
+      while (true) {
+        let nextMonth = curMonth + 1, nextYear = curYear;
+        if (nextMonth > 12) { nextMonth = 1; nextYear++; }
+        if (nextYear > limitYear || (nextYear === limitYear && nextMonth > limitMonth)) break;
+        const existsRes = await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul?corp_oper_nr=eq.${corpOperNr}&year=eq.${nextYear}&month=eq.${nextMonth}&limit=1`, {headers: getSupabaseHeaders()});
+        const existsData = existsRes.ok ? await existsRes.json() : [];
+        if (existsData.length === 0) break;
+        const [curAcumRes, nextExtraRes, existingNextRes] = await Promise.all([
+          fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul?corp_oper_nr=eq.${corpOperNr}&year=eq.${curYear}&month=eq.${curMonth}`, {headers: getSupabaseHeaders()}),
+          fetch(`${SUPABASE_URL}/rest/v1/reg_employees_extra_hours?corp_oper_nr=eq.${corpOperNr}&year=eq.${nextYear}&month=eq.${nextMonth}`, {headers: getSupabaseHeaders()}),
+          fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul?corp_oper_nr=eq.${corpOperNr}&year=eq.${nextYear}&month=eq.${nextMonth}`, {headers: getSupabaseHeaders()})
+        ]);
+        const baseMap = {};
+        (curAcumRes.ok ? await curAcumRes.json() : []).forEach(r => { baseMap[r.n_int] = r.total_accumulated || 0; });
+        const extraMap = {};
+        (nextExtraRes.ok ? await nextExtraRes.json() : []).forEach(r => { extraMap[r.n_int] = (extraMap[r.n_int] || 0) + parseFloat(r.qtd_hours || 0); });
+        const existingNextData = existingNextRes.ok ? await existingNextRes.json() : [];
+        const { workingHours: nextWorkingHours } = calculateWorkingHours(nextYear, nextMonth);
+        const isJan = nextMonth === 1;
+        const newPayload = existingNextData.map(rec => {
+          const nInt = rec.n_int;
+          const totalMonthly = rec.monthly_total || 0;
+          const extraHours = extraMap[nInt] || 0;
+          const base = isJan ? 0 : (baseMap[nInt] || 0);
+          const diff = totalMonthly - nextWorkingHours + extraHours;
+          const totalAccumulated = isJan ? diff : base + diff;
+          return {n_int: nInt, abv_name: rec.abv_name, year: nextYear, month: nextMonth, monthly_total: totalMonthly, total_accumulated: totalAccumulated, corp_oper_nr: corpOperNr};
+        });
+        if (newPayload.length > 0) {
+          await fetch(`${SUPABASE_URL}/rest/v1/rpc/replace_month_rows`, {
+          method: "POST",
+          headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
+          body: JSON.stringify({p_table: "reg_employees_acumul", p_corp: String(corpOperNr), p_year: String(nextYear), p_month: String(nextMonth), p_rows: newPayload})
+        });
+        }
+        curYear = nextYear; curMonth = nextMonth;
+      }
+    }
     const SCALE_STATE = {currentYear: null, currentMonth: null, daysInMonth: null, holidayMap: null};
     function createEmployeeMonthButtons({
       monthsContainerId,
@@ -10,61 +52,69 @@
       loadDataFunc,
       createTableFunc
     }) {
-      const container = document.getElementById(monthsContainerId);
-      if (!container) return;
-      container.innerHTML = "";
-      const mainWrapper = document.createElement("div");
-      Object.assign(mainWrapper.style, {display: "flex", flexDirection: "column", alignItems: "center", gap: "12px"});
-      const yearContainer = document.createElement("div");
-      Object.assign(yearContainer.style, {display: "flex", alignItems: "center", gap: "8px"});
-      const yearLabel = document.createElement("label");
-      yearLabel.textContent = "Ano:";
-      yearLabel.style.fontWeight = "bold";
-      const yearSelect = document.createElement("select");
-      yearSelect.id = yearSelectId;
-      Object.assign(yearSelect.style, {padding: "6px 10px", borderRadius: "4px", border: "1px solid #ccc", cursor: "pointer"});
-      const targetYear = new Date().getFullYear();
-      for (let y = 2026; y <= 2036; y++) {
-        const opt = document.createElement("option");
-        opt.value = y;
-        opt.textContent = y;
-        if (y === targetYear) opt.selected = true;
-        yearSelect.appendChild(opt);
-      }
-      yearSelect.value = targetYear;
-      yearContainer.append(yearLabel, yearSelect);
-      const monthsWrapper = document.createElement("div");
-      Object.assign(monthsWrapper.style, {display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "4px", maxWidth: "800px"});
-      const monthNames = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho", "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-      monthNames.forEach((month, idx) => {
-        const btn = document.createElement("button");
-        btn.textContent = month;
-        btn.className = "btn btn-add";
-        Object.assign(btn.style, {fontSize: "14px", fontWeight: "bold", width: "110px", height: "40px", borderRadius: "4px", margin: "2px"});
-        btn.addEventListener("click", async () => {
-          const tableContainer = document.getElementById(tableContainerId);
-          const optionsContainer = document.getElementById(optionsContainerId);
-          const isActive = btn.classList.contains("active");
-          if (isActive) {
-            if (tableContainer) tableContainer.innerHTML = "";
-            if (optionsContainer) optionsContainer.style.display = "none";
-            btn.classList.remove("active");
-            return;
-          }
-          monthsWrapper
-            .querySelectorAll(".btn")
-            .forEach(b => b.classList.remove("active"));
-          btn.classList.add("active");
-          const yearVal = parseInt(yearSelect.value, 10);
-          const monthNum = idx + 1;
-          const data = await loadDataFunc(yearVal, monthNum);
-          await createTableFunc(tableContainerId, yearVal, monthNum, data);
-          if (optionsContainer) optionsContainer.style.display = "flex";
-        });
-        monthsWrapper.appendChild(btn);
+    const container = document.getElementById(monthsContainerId);
+    if (!container) return;
+    container.innerHTML = "";
+    const mainWrapper = document.createElement("div");
+    Object.assign(mainWrapper.style, {display: "flex", flexDirection: "column", alignItems: "center", gap: "10px",});
+    const yearContainer = document.createElement("div");
+    Object.assign(yearContainer.style, {display: "flex", alignItems: "center", gap: "8px"});
+    const yearLabel = document.createElement("label");
+    yearLabel.textContent = "Ano:";
+    yearLabel.style.fontWeight = "bold";
+    const yearSelect = document.createElement("select");
+    yearSelect.id = yearSelectId;
+    Object.assign(yearSelect.style, {padding: "6px 10px", borderRadius: "4px", border: "1px solid #ccc", cursor: "pointer"});
+    const targetYear = new Date().getFullYear();
+    for (let y = 2026; y <= 2036; y++) {
+      const opt = document.createElement("option");
+      opt.value = y;
+      opt.textContent = y;
+      if (y === targetYear) opt.selected = true;
+      yearSelect.appendChild(opt);
+    }
+    yearSelect.value = targetYear;
+    yearContainer.append(yearLabel, yearSelect);
+    const monthsWrapper = document.createElement("div");
+    Object.assign(monthsWrapper.style, {display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "4px", maxWidth: "800px"});
+    const monthNames = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho", "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+    monthNames.forEach((month, idx) => {
+      const btn = document.createElement("button");
+      btn.textContent = month;
+      btn.className = "btn btn-add";
+      Object.assign(btn.style, {fontSize: "14px", fontWeight: "bold", width: "110px", height: "40px", borderRadius: "4px", margin: "2px"});
+      btn.addEventListener("click", async () => {
+        const tableContainer = document.getElementById(tableContainerId);
+        const optionsContainer = document.getElementById(optionsContainerId);
+        const isActive = btn.classList.contains("active");
+        if (isActive) {
+          if (tableContainer) tableContainer.innerHTML = "";
+          if (optionsContainer) optionsContainer.style.display = "none";
+          btn.classList.remove("active");
+          return;
+        }
+        monthsWrapper
+          .querySelectorAll(".btn")
+          .forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        const yearVal = parseInt(yearSelect.value, 10);
+        const monthNum = idx + 1;
+        const data = await loadDataFunc(yearVal, monthNum);
+        await createTableFunc(tableContainerId, yearVal, monthNum, data);
+        if (optionsContainer) optionsContainer.style.display = "flex";
       });
-      mainWrapper.append(yearContainer, monthsWrapper);
-      container.appendChild(mainWrapper);
+      monthsWrapper.appendChild(btn);
+    });
+    yearSelect.addEventListener("change", async () => {
+      const activeBtn = monthsWrapper.querySelector(".btn.active");
+      if (!activeBtn) return;
+      const monthNum = Array.from(monthsWrapper.querySelectorAll(".btn")).indexOf(activeBtn) + 1;
+      const yearVal = parseInt(yearSelect.value, 10);
+      const data = await loadDataFunc(yearVal, monthNum);
+      await createTableFunc(tableContainerId, yearVal, monthNum, data);
+    });
+    mainWrapper.append(yearContainer, monthsWrapper);
+    container.appendChild(mainWrapper);
       setTimeout(() => {
         yearSelect.value = targetYear;
       }, 0);
@@ -91,11 +141,11 @@
     const COMMON_EMP_TH_STYLE = "border: 1px solid #ccc; border-top: 0px solid #ccc; border-left: 0px solid #ccc; width: 35px; padding: 2px; font-size: 11px; text-align: center; background: #f0f0f0;";
     const COMMON_EMP_TD_STYLE = "border: 1px solid #ccc; border-top: 0px solid #ccc; border-left: 0px solid #ccc; padding: 4px; text-align: center; font-size: 13px; width: 35px;";
     const TEAM_ORDER = ["EQ01", "EQ02", "EQ03", "EQ04", "EQ05", "EQ06", "EQ07", "EQ08", "EQ09", "EQ10","TDNU", "OPC", "EP1", "EP2"];
-    const SHIFT_VALUES = {"D": 12, "N": 12, "FE": 8, "M": 8, "BX": 8, "FOR": 8, "FO": 0, "LC": 8, "LP": 8, "DP": 0, "LN": 8, "FI": 8, "FJ": 8};
+    const SHIFT_VALUES = {"D": 12, "N": 12, "FE": 8, "M": 8, "BX": 8, "FOR": 8, "FO": 0, "LC": 8, "LP": 8, "DP": 0, "LN": 8, "FI": 8, "FJ": 8, "HA": 8};
     const SHIFT_COLORS = {"D": {bg: "#FFFF00", color: "#000000"}, "N": {bg: "#00008B", color: "#FFFFFF"}, "M": {bg: "#D3D3D3", color: "#000000"}, "FR": {bg: "#FFA500", color: "#000000"},
                           "FO": {bg: "#92D050", color: "#000000"}, "FE": {bg: "#00B0F0", color: "#000000"}, "BX": {bg: "#FF0000", color: "#FFFFFF"}, "LC": {bg: "#FF0000", color: "#FFFFFF"},
                           "LN": {bg: "#FF0000", color: "#FFFFFF"}, "LP": {bg: "#FF0000", color: "#FFFFFF"}, "FI": {bg: "#FF0000", color: "#FFFFFF"}, "FJ": {bg: "#FF0000", color: "#FFFFFF"},
-                          "FOR": {bg: "#808080", color: "#FFFFFF"}, "DP": {bg: "#000000", color: "#FFFFFF"}};
+                          "FOR": {bg: "#808080", color: "#FFFFFF"}, "DP": {bg: "#000000", color: "#FFFFFF"}, "HA": {bg: "#FFB6C1", color: "#000000"}};
     const WEEKEND_EMPLOYEES_COLOR = "#f9e0b0";
     const HOLIDAY_COLOR = "#f7c6c7";
     const HOLIDAY_OPTIONAL_COLOR = "#d6ecff";
@@ -103,6 +153,10 @@
     const DRIVER_TEXT = "#000000";
     const OTHER_BG = "#800080";
     const OTHER_TEXT = "#ffffff";
+    const OPTEL_BG = "#5D4037";
+    const OPTEL_TEXT = "#ffffff";
+    const EIP_BG = "#E65100";
+    const EIP_TEXT = "#ffffff";
     let __currentYear = null;
     let __currentMonth = null;
     let __currentDaysInMonth = null;
@@ -114,6 +168,7 @@
     let __driverMenu = null;
     let __driverMenuCell = null;
     let globalDraggedRow = null;
+    let _bxHidden = false;
     function toLocalYMD(date) {
       return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
     }
@@ -173,7 +228,10 @@
     }
     function applyBaseDayColor(td, year, month, dayNum, holidayMap) {
       const val = (td.textContent || "").trim().toUpperCase();
-      if (SHIFT_VALUES[val] !== undefined || SHIFT_COLORS[val] || td.dataset.customBg || td.dataset.customColor) return;
+      if (SHIFT_VALUES[val] !== undefined || SHIFT_COLORS[val] || td.dataset.customBg || td.dataset.customColor) {
+        td.style.fontWeight = "bold";
+        return;
+      }
       td.style.color = ""; td.style.fontWeight = "";
       const holiday = holidayMap?.get(dayNum);
       if (holiday) {
@@ -188,6 +246,14 @@
     function applyDriverStyle(td) {
       if (td.dataset.driver !== "1") return;
       td.style.backgroundColor = DRIVER_BG; td.style.color = DRIVER_TEXT; td.style.fontWeight = "bold";
+    }
+    function applyOptelStyle(td) {
+      if (td.dataset.optel !== "1") return;
+      td.style.backgroundColor = OPTEL_BG; td.style.color = OPTEL_TEXT; td.style.fontWeight = "bold";
+    }
+    function applyEipStyle(td) {
+      if (td.dataset.eip !== "1") return;
+      td.style.backgroundColor = EIP_BG; td.style.color = EIP_TEXT; td.style.fontWeight = "bold";
     }
     function applyOtherStyle(td) {
       if (td.dataset.other !== "1") return;
@@ -257,18 +323,16 @@
     }
     function displayWorkingHoursInfo(container, year, month) {
       const info = calculateWorkingHours(year, month);
-      
       const infoDiv = document.createElement("div");
-      infoDiv.style.cssText = `margin-top:5px;padding:12px;background:#f0f8ff;border:1px solid #4682b4;border-radius:5px;font-family:'Segoe UI',sans-serif;
-                               display:inline-block;width:315px;height:150px;`;
+      infoDiv.style.cssText = `margin-top:5px;padding:12px;background:#f0f8ff;border:1px solid #4682b4;border-radius:5px;font-family:'Segoe UI',sans-serif; display:inline-block;width:315px;height:150px;`;
       const holidaysHTML = info.holidaysInMonth.length > 0
-        ? `<div><strong style="color:#1e3a8a;">🎉 Feriados:</strong><span style="color:#6b7280;"> ${info.holidaysInMonth.map(h => `Dia: ${h.day}`).join(", ")}</span></div>`
+        ? `<div><strong style="color:#1e3a8a;"><i class="fa-solid fa-champagne-glasses" style="margin-right:4px;"></i>Feriados:</strong><span style="color:#6b7280;"> ${info.holidaysInMonth.map(h => `Dia: ${h.day}`).join(", ")}</span></div>`
         : "";
       infoDiv.innerHTML = `
         <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start;">
-          <div><strong style="color:#1e3a8a;">📌 Mês:</strong><span style="font-size:16px;font-weight:bold;color:#111827;"> ${MONTH_NAMES[month-1]} ${year}</span></div>
-          <div><strong style="color:#1e3a8a;">📅 Dias Úteis:</strong><span style="font-size:16px;font-weight:bold;color:#059669;"> ${info.workingDays}</span></div>
-          <div><strong style="color:#1e3a8a;">⏰ Carga Mensal:</strong><span style="font-size:16px;font-weight:bold;color:#dc2626;"> ${info.workingHours}h</span></div>
+          <div><strong style="color:#1e3a8a;"><i class="fa-solid fa-thumbtack" style="margin-right:4px;"></i>Mês:</strong><span style="font-size:16px;font-weight:bold;color:#111827;"> ${MONTH_NAMES[month-1]} ${year}</span></div>
+          <div><strong style="color:#1e3a8a;"><i class="fa-solid fa-calendar-days" style="margin-right:4px;"></i>Dias Úteis:</strong><span style="font-size:16px;font-weight:bold;color:#059669;"> ${info.workingDays}</span></div>
+          <div><strong style="color:#1e3a8a;"><i class="fa-solid fa-clock" style="margin-right:4px;"></i>Carga Mensal:</strong><span style="font-size:16px;font-weight:bold;color:#dc2626;"> ${info.workingHours}h</span></div>
           ${holidaysHTML}
         </div>`;
       container.appendChild(infoDiv);
@@ -277,21 +341,20 @@
       const legendDiv = document.createElement("div");
       legendDiv.style.cssText = `margin-top: 5px; padding: 12px; background: #f0f8ff; border: 1px solid #4682b4; border-radius: 5px; font-family: 'Segoe UI', sans-serif;
                                  display: inline-block; width: fit-content; margin-left: 5px;vertical-align:top; height:150px;`;
-      const shifts = [{code: "M", desc: "08:00 - 15:00"}, {code: "D", desc: "08:00 - 20:00"}, {code: "N", desc: "20:00 - 08:00"}, {code: "", desc: "Condutor INEM", special: "driver"},
-                      {code: "", desc: "Outro", special: "other"}, {code: "FO", desc: "Folga"}, {code: "FE", desc: "Férias"}, {code: "FOR", desc: "Formação"}, {code: "BX", desc: "Baixa"},
-                      {code: "FI", desc: "Falta Injustificada"}, {code: "FJ", desc: "Falta Justificada"}, {code: "LP", desc: "Lic. Paternidade"}, {code: "LN", desc: "Lic. Nojo"},
-                      {code: "LC", desc: "Lic. Casamento"}, {code: "DP", desc: "Dispensa"}];
+      const shifts = [ {code: "", desc: "Condutor INEM", special: "driver"}, {code: "", desc: "Outro", special: "other"}, {code: "", desc: "OPTEL", special: "optel"}, {code: "", desc: "EIP", special: "eip"}, {code: "M", desc: "08:00 - 16:00"}, {code: "D", desc: "08:00 - 20:00"}, 
+                      {code: "N", desc: "20:00 - 08:00"}, {code: "FO", desc: "Folga"}, {code: "FE", desc: "Férias"}, {code: "FOR", desc: "Formação"}, {code: "BX", desc: "Baixa"},
+                      {code: "FI", desc: "Falta Injustificada"}, {code: "FJ", desc: "Falta Justificada"}, {code: "LP", desc: "Lic. Parental"}, {code: "LN", desc: "Lic. Nojo"},
+                      {code: "LC", desc: "Lic. Casamento"}, {code: "DP", desc: "Dispensa"}, {code: "HA", desc: "Amamentação"}];
       const itemHTML = (shift) => {        
-        const codeBg = shift.special === "driver" ? DRIVER_BG : shift.special === "other" ? OTHER_BG : (SHIFT_COLORS[shift.code]?.bg || "#FFFFFF");
+        const codeBg = shift.special === "driver" ? DRIVER_BG : shift.special === "other" ? OTHER_BG : shift.special === "optel" ? OPTEL_BG : shift.special === "eip" ? EIP_BG : (SHIFT_COLORS[shift.code]?.bg || "#FFFFFF");
         const codeColor = shift.special === "driver" ? DRIVER_TEXT : (SHIFT_COLORS[shift.code]?.color || "#000000");
         return `<div style="display:flex;align-items:stretch;background:#f5f5f5;border:1px solid #ccc;border-radius:4px;overflow:hidden;width:140px;">
-          <div style="background:${codeBg};color:${codeColor};font-weight:bold;font-size:14px;padding:1px 0;width:30px;text-align:center;display:flex;align-items:center;
-                      justify-content:center;">${shift.special === "driver" ? "&nbsp;" : shift.code}</div>
+          <div style="background:${codeBg};color:${codeColor};font-weight:bold;font-size:14px;padding:1px 0;width:30px;text-align:center;display:flex;align-items:center; justify-content:center;">${shift.special === "driver" ? "&nbsp;" : shift.code}</div>
           <div style="font-size:12px;color:#000;flex:1;text-align:center;padding:1px 8px;display:flex;align-items:center;justify-content:center;">${shift.desc}</div>
         </div>`;
       };
       let html = `<div style="font-weight:bold;font-size:14px;color:#1e3a8a;margin-bottom:10px;text-align:center;">LEGENDA DE TURNOS</div><div style="display:flex;flex-direction:column;gap:6px;">`;
-      [[0,5],[5,10],[10,15]].forEach(([from, to]) => {
+      [[0,7],[7,14],[14,18]].forEach(([from, to]) => {
         html += `<div style="display:flex;gap:6px;">${shifts.slice(from, to).map(itemHTML).join("")}</div>`;
       });
       html += `</div>`;
@@ -364,33 +427,57 @@
     function ensureDriverMenu() {
       if (__driverMenu) return;
       const menu = document.createElement("div");
-      menu.style.cssText = `position:fixed;z-index:99999;display:none;background:#fff;border:1px solid #ccc;border-radius:8px;box-shadow:0 8px 20px rgba(0,0,0,0.2);
-                            font-family:'Segoe UI',sans-serif;padding:8px;flex-direction:column;gap:6px;min-width:280px;`;
+      menu.style.cssText = `position:fixed;z-index:99999;display:none;flex-direction:column;width:300px;background:#fff;border:1px solid #e2e8f0;border-radius:10px; box-shadow:0 12px 32px rgba(15,23,42,0.22);font-family:'Segoe UI',sans-serif;overflow:hidden;`;
       menu.addEventListener("mousedown", e => e.stopPropagation());
       menu.addEventListener("click", e => e.stopPropagation());
+      menu.addEventListener("contextmenu", e => e.preventDefault());
+      const header = document.createElement("div");
+      header.style.cssText = "background:#2b6ca3;color:#fff;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;";
+      header.innerHTML = `
+        <div style="min-width:0;">
+          <div class="dm-name" style="font-size:13px;font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+          <div class="dm-day" style="font-size:11px;opacity:0.85;"></div>
+        </div>
+        <span class="dm-close" title="Fechar" style="cursor:pointer;font-size:15px;line-height:1;opacity:0.85;"><i class="fa-solid fa-xmark"></i></span>`;
+      header.querySelector(".dm-close").addEventListener("click", hideDriverMenu);
+      menu.appendChild(header);
+      const content = document.createElement("div");
+      content.style.cssText = "padding:10px 12px 12px;display:flex;flex-direction:column;gap:10px;";
+      menu.appendChild(content);
+      const sectionTitle = (icon, text) => {
+        const t = document.createElement("div");
+        t.style.cssText = "font-size:10px;font-weight:bold;color:#64748b;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px;";
+        t.innerHTML = `<i class="fa-solid ${icon}" style="margin-right:5px;"></i>${text}`;
+        return t;
+      };
+      const hoverLift = (btn) => {
+        btn.addEventListener("mouseenter", () => { btn.style.transform = "translateY(-1px)"; btn.style.boxShadow = "0 3px 8px rgba(15,23,42,0.18)"; });
+        btn.addEventListener("mouseleave", () => { btn.style.transform = ""; btn.style.boxShadow = ""; });
+      };
       const bgSection = document.createElement("div");
-      bgSection.innerHTML = `<div style="font-size:11px;font-weight:bold;color:#666;margin-bottom:4px;padding:0 4px;">🎨 COR DE FUNDO:</div>`;
+      bgSection.appendChild(sectionTitle("fa-palette", "Cor de fundo"));
       const bgGrid = document.createElement("div");
-      bgGrid.style.cssText = "display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:4px;";
+      bgGrid.style.cssText = "display:grid;grid-template-columns:repeat(5,1fr);gap:5px;";
       const shiftsList = [{code:"M",desc:"Manhã"},{code:"D",desc:"Dia"},{code:"N",desc:"Noite"},{code:"FR",desc:"Feriado"},{code:"FO",desc:"Folga"},
-                          {code:"FE",desc:"Férias"},{code:"FOR",desc:"Formação"},{code:"BX",desc:"Baixa"},{code:"DP",desc:"Dispensa"},
-                          {code:"DRIVER",desc:"Motorista",bg:DRIVER_BG,color:DRIVER_TEXT},{code:"OTHER",desc:"Outro Tipo",bg:OTHER_BG,color:OTHER_TEXT},
-                          {code:"RESET",desc:"Limpar Cor",bg:"#ffffff",color:"#000000"}];
+                          {code:"FE",desc:"Férias"},{code:"FOR",desc:"Formação"},{code:"BX",desc:"Baixa"},{code:"DP",desc:"Dispensa"},{code:"HA",desc:"Amamentação"},
+                          {code:"DRIVER",label:"MOT",desc:"Motorista",bg:DRIVER_BG,color:DRIVER_TEXT},{code:"OTHER",label:"OUT",desc:"Outro Tipo",bg:OTHER_BG,color:OTHER_TEXT},
+                          {code:"RESET",desc:"Limpar Cor",bg:"#ffffff",color:"#64748b"}];
       shiftsList.forEach(shift => {
         const colors = SHIFT_COLORS[shift.code] || {bg: shift.bg || "#ffffff", color: shift.color || "#000000"};
         const btn = document.createElement("button");
         btn.type = "button"; btn.title = shift.desc;
-        btn.textContent = shift.code === "RESET" ? "✖" : "";
-        btn.style.cssText = `border:1px solid #ddd;background:${colors.bg};color:${colors.color};padding:6px 4px;cursor:pointer;font-size:11px;font-weight:bold;border-radius:4px;
-                             transition:transform 0.1s;min-height:32px;min-width:32px;`;
-        btn.addEventListener("mouseover", () => btn.style.transform = "scale(1.1)");
-        btn.addEventListener("mouseout", () => btn.style.transform = "scale(1)");
+        btn.innerHTML = shift.code === "RESET" ? '<i class="fa-solid fa-eraser"></i>' : (shift.label || shift.code);
+        btn.style.cssText = `border:1px solid ${shift.code === "RESET" ? "#cbd5e1" : "rgba(0,0,0,0.12)"};background:${colors.bg};color:${colors.color};height:30px;cursor:pointer; font-size:10px;font-weight:bold;border-radius:6px;transition:transform 0.1s, box-shadow 0.1s;`;
+        hoverLift(btn);
         btn.addEventListener("click", () => {
           if (!__driverMenuCell) return;
           if (shift.code === "RESET") {
             delete __driverMenuCell.dataset.customBg; delete __driverMenuCell.dataset.customColor;
             applyCellColor(__driverMenuCell, __driverMenuCell.textContent.trim().toUpperCase());
             if (__driverMenuCell.dataset.driver === "1") applyDriverStyle(__driverMenuCell);
+            if (__driverMenuCell.dataset.other === "1") applyOtherStyle(__driverMenuCell);
+            if (__driverMenuCell.dataset.optel === "1") applyOptelStyle(__driverMenuCell);
+            if (__driverMenuCell.dataset.eip === "1") applyEipStyle(__driverMenuCell);
           } else {
             __driverMenuCell.dataset.customBg = colors.bg; __driverMenuCell.dataset.customColor = colors.color;
             __driverMenuCell.style.backgroundColor = colors.bg; __driverMenuCell.style.color = colors.color; __driverMenuCell.style.fontWeight = "bold";
@@ -400,15 +487,17 @@
         bgGrid.appendChild(btn);
       });
       bgSection.appendChild(bgGrid);
-      menu.appendChild(bgSection);
+      content.appendChild(bgSection);
       const textSection = document.createElement("div");
-      textSection.innerHTML = `<div style="font-size:11px;font-weight:bold;color:#666;margin:4px 0 4px 4px;">🖍️ COR DE LETRA:</div>`;
+      textSection.appendChild(sectionTitle("fa-pen", "Cor de letra"));
       const textGrid = document.createElement("div");
-      textGrid.style.cssText = "display:flex;gap:4px;padding:4px;";
-      [{label:"Preto",color:"#000000",bg:"#000",tc:"#fff"},{label:"Branco",color:"#FFFFFF",bg:"#fff",tc:"#000"},{label:"Vermelho",color:"#FF0000",bg:"#fff",tc:"#FF0000"}].forEach(item => {
+      textGrid.style.cssText = "display:grid;grid-template-columns:repeat(3,1fr);gap:5px;";
+      [{label:"Preto",color:"#000000"},{label:"Branco",color:"#FFFFFF"},{label:"Vermelho",color:"#FF0000"}].forEach(item => {
         const btn = document.createElement("button");
-        btn.type = "button"; btn.textContent = item.label;
-        btn.style.cssText = `border:1px solid #ddd;background:${item.bg};color:${item.tc};padding:6px 12px;cursor:pointer;font-size:11px;font-weight:bold;border-radius:4px;flex:1;`;
+        btn.type = "button";
+        btn.innerHTML = `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${item.color};border:1px solid #94a3b8;margin-right:6px;vertical-align:-1px;"></span>${item.label}`;
+        btn.style.cssText = `border:1px solid #e2e8f0;background:#f8fafc;color:#1e293b;height:30px;cursor:pointer;font-size:11px;font-weight:600;border-radius:6px; transition:transform 0.1s, box-shadow 0.1s;`;
+        hoverLift(btn);
         btn.addEventListener("click", () => {
           if (!__driverMenuCell) return;
           __driverMenuCell.dataset.customColor = item.color; __driverMenuCell.style.color = item.color;
@@ -417,64 +506,109 @@
         textGrid.appendChild(btn);
       });
       textSection.appendChild(textGrid);
-      menu.appendChild(textSection);
-      const sep = document.createElement("div");
-      sep.style.cssText = "height:1px;background:#ddd;margin:4px 0;";
-      menu.appendChild(sep);
-      const makeMenuBtn = (label, handler) => {
+      content.appendChild(textSection);
+      const markSection = document.createElement("div");
+      markSection.style.cssText = "border-top:1px solid #e2e8f0;padding-top:10px;";
+      markSection.appendChild(sectionTitle("fa-tag", "Marcações"));
+      const markGrid = document.createElement("div");
+      markGrid.style.cssText = "display:grid;grid-template-columns:repeat(2,1fr);gap:6px;";
+      const tint = (hex, a) => {
+        const n = parseInt(hex.replace("#", ""), 16);
+        return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+      };
+      const makeMarkBtn = (label, icon, color, handler) => {
         const btn = document.createElement("button");
         btn.type = "button";
-        btn.style.cssText = `border:none;background:#f0f0f0;padding:8px 12px;cursor:pointer;width:100%;text-align:left;display:block;border-radius:4px;font-size:12px;`;
-        btn.addEventListener("mouseover", () => btn.style.background = "#e0e0e0");
-        btn.addEventListener("mouseout", () => btn.style.background = "#f0f0f0");
+        btn.innerHTML = `
+          <span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;background:${color};color:#fff;font-size:11px;flex-shrink:0;">
+            <i class="fa-solid ${icon}"></i>
+          </span>
+          <span style="flex:1;text-align:left;line-height:1.15;">${label}</span>
+          <i class="fa-solid fa-check dm-check" style="color:${color};display:none;"></i>`;
+        btn.style.cssText = `display:flex;align-items:center;gap:7px;border:1px solid #e2e8f0;background:#f8fafc;color:#1e293b;padding:6px 8px;cursor:pointer; font-size:11px;font-weight:600;border-radius:6px;min-height:38px;transition:transform 0.1s, box-shadow 0.1s;`;
+        hoverLift(btn);
         btn.addEventListener("click", e => { e.stopPropagation(); handler(btn); });
-        btn.textContent = label;
+        btn._setActive = (active) => {
+          btn.style.borderColor = active ? color : "#e2e8f0";
+          btn.style.background = active ? tint(color, 0.12) : "#f8fafc";
+          btn.querySelector(".dm-check").style.display = active ? "inline-block" : "none";
+          btn.title = active ? `Remover ${label}` : label;
+        };
         return btn;
       };
-      const btnDriver = makeMenuBtn("Motorista INEM", (btn) => {
+      const btnDriver = makeMarkBtn("Motorista INEM", "fa-truck-medical", DRIVER_BG, (btn) => {
         if (!__driverMenuCell) return;
         const isDriver = __driverMenuCell.dataset.driver === "1";
         if (isDriver) { __driverMenuCell.dataset.driver = "0"; applyCellColor(__driverMenuCell, (__driverMenuCell.textContent || "").trim().toUpperCase()); }
-        else {__driverMenuCell.dataset.driver = "1"; __driverMenuCell.dataset.other = "0"; applyDriverStyle(__driverMenuCell);}
+        else {__driverMenuCell.dataset.driver = "1"; __driverMenuCell.dataset.other = "0"; __driverMenuCell.dataset.optel = "0"; __driverMenuCell.dataset.eip = "0"; applyDriverStyle(__driverMenuCell);}
         hideDriverMenu();
       });
-      const btnOther = makeMenuBtn("Outra Necessidade", (btn) => {
+      const btnOther = makeMarkBtn("Outra Necessidade", "fa-shuffle", OTHER_BG, (btn) => {
         if (!__driverMenuCell) return;
         const isOther = __driverMenuCell.dataset.other === "1";
         if (isOther) { __driverMenuCell.dataset.other = "0"; applyCellColor(__driverMenuCell, (__driverMenuCell.textContent || "").trim().toUpperCase()); }
-        else {__driverMenuCell.dataset.other = "1"; __driverMenuCell.dataset.driver = "0"; __driverMenuCell.style.backgroundColor = "#800080"; __driverMenuCell.style.color = "#ffffff"; 
-              __driverMenuCell.style.fontWeight = "bold";}
+        else {__driverMenuCell.dataset.other = "1"; __driverMenuCell.dataset.driver = "0"; __driverMenuCell.dataset.optel = "0"; __driverMenuCell.dataset.eip = "0"; applyOtherStyle(__driverMenuCell);}
         hideDriverMenu();
       });
-      menu.appendChild(btnDriver);
-      menu.appendChild(btnOther);
+      const btnOptel = makeMarkBtn("OPTEL", "fa-headset", OPTEL_BG, (btn) => {
+        if (!__driverMenuCell) return;
+        const isOptel = __driverMenuCell.dataset.optel === "1";
+        if (isOptel) { __driverMenuCell.dataset.optel = "0"; applyCellColor(__driverMenuCell, (__driverMenuCell.textContent || "").trim().toUpperCase()); }
+        else {__driverMenuCell.dataset.optel = "1"; __driverMenuCell.dataset.driver = "0"; __driverMenuCell.dataset.other = "0"; __driverMenuCell.dataset.eip = "0"; applyOptelStyle(__driverMenuCell);}
+        hideDriverMenu();
+      });
+      const btnEip = makeMarkBtn("EIP", "fa-fire", EIP_BG, (btn) => {
+        if (!__driverMenuCell) return;
+        const isEip = __driverMenuCell.dataset.eip === "1";
+        if (isEip) { __driverMenuCell.dataset.eip = "0"; applyCellColor(__driverMenuCell, (__driverMenuCell.textContent || "").trim().toUpperCase()); }
+        else {__driverMenuCell.dataset.eip = "1"; __driverMenuCell.dataset.driver = "0"; __driverMenuCell.dataset.other = "0"; __driverMenuCell.dataset.optel = "0"; applyEipStyle(__driverMenuCell);}
+        hideDriverMenu();
+      });
+      [btnDriver, btnOther, btnOptel, btnEip].forEach(b => markGrid.appendChild(b));
+      markSection.appendChild(markGrid);
+      content.appendChild(markSection);
       document.body.appendChild(menu);
       __driverMenu = menu;
       __driverMenu._btnDriver = btnDriver;
       __driverMenu._btnOther = btnOther;
+      __driverMenu._btnOptel = btnOptel;
+      __driverMenu._btnEip = btnEip;
       document.addEventListener("click", hideDriverMenu);
       document.addEventListener("scroll", hideDriverMenu, true);
+      document.addEventListener("keydown", e => { if (e.key === "Escape") hideDriverMenu(); });
     }
     function showDriverMenu(x, y, cell) {
       ensureDriverMenu();
       __driverMenuCell = cell;
-      const isInem = isINEMRow(cell.closest("tr"));
-      __driverMenu._btnDriver.style.display = isInem ? "block" : "none";
-      if (isInem) __driverMenu._btnDriver.textContent = cell.dataset.driver === "1" ? "Remover Motorista INEM" : "Motorista INEM";
-      __driverMenu._btnOther.textContent = cell.dataset.other === "1" ? "Remover Outra Necessidade" : "Outra Necessidade";
-      __driverMenu.style.left = x + "px"; __driverMenu.style.top = y + "px"; __driverMenu.style.display = "flex";
+      const row = cell.closest("tr");
+      const dayMatch = (cell.className || "").match(/day-cell-(\d+)/);
+      const day = dayMatch ? parseInt(dayMatch[1], 10) : null;
+      __driverMenu.querySelector(".dm-name").textContent = row?.querySelector("td:nth-child(2)")?.textContent.trim() || "Célula";
+      __driverMenu.querySelector(".dm-day").textContent = day && __currentMonth
+        ? `Dia ${day} de ${MONTH_NAMES[__currentMonth - 1].charAt(0) + MONTH_NAMES[__currentMonth - 1].slice(1).toLowerCase()} ${__currentYear}` : "";
+      const isInem = isINEMRow(row);
+      const rowKey = getOrderKey(row?.querySelector("td:nth-child(4)")?.textContent || "");
+      __driverMenu._btnDriver.style.display = isInem ? "flex" : "none";
+      __driverMenu._btnOptel.style.display = rowKey === "OPC" ? "none" : "flex";
+      __driverMenu._btnEip.style.display = (rowKey === "EP1" || rowKey === "EP2") ? "none" : "flex";
+      __driverMenu._btnDriver._setActive(cell.dataset.driver === "1");
+      __driverMenu._btnOther._setActive(cell.dataset.other === "1");
+      __driverMenu._btnOptel._setActive(cell.dataset.optel === "1");
+      __driverMenu._btnEip._setActive(cell.dataset.eip === "1");
+      __driverMenu.style.display = "flex";
+      const w = __driverMenu.offsetWidth, h = __driverMenu.offsetHeight;
+      const left = Math.max(8, Math.min(x, window.innerWidth - w - 8));
+      const top = (y + h > window.innerHeight - 8) ? Math.max(8, y - h) : y;
+      __driverMenu.style.left = left + "px"; __driverMenu.style.top = top + "px";
     }
     function hideDriverMenu() {
       if (__driverMenu) __driverMenu.style.display = "none";
       __driverMenuCell = null;
     }    
     function _getActiveYearMonth() {
-      const yearSelect = document.getElementById("year-employees");
       const monthBtn = document.querySelector("#months-container-scales-employees .btn.active");
-      if (!yearSelect || !monthBtn) return null;
-      const year = parseInt(yearSelect.value, 10);
-      const month = Array.from(document.querySelectorAll("#months-container-scales-employees .btn")).indexOf(monthBtn) + 1;
-      return {year, month, monthBtn};
+      if (!monthBtn || !__currentYear || !__currentMonth) return null;
+      return {year: __currentYear, month: __currentMonth, monthBtn};
     }
     function _collectEmployeeData(rows, daysInMonth, includeNInt = false) {
       return rows.map(row => {
@@ -507,7 +641,7 @@
         const data = await response.json();
         const shifts = {}, employeeData = {};
         data.forEach(item => {
-          shifts[`${item.n_int}_${item.day}`] = {shift: item.shift, is_driver: !!item.is_driver, is_other: !!item.is_other,
+          shifts[`${item.n_int}_${item.day}`] = {shift: item.shift, is_driver: !!item.is_driver, is_other: !!item.is_other, is_optel: !!item.is_optel, is_eip: !!item.is_eip,
                                                  custom_bg_color: item.custom_bg_color || null, custom_text_color: item.custom_text_color || null};
           if (!(item.n_int in employeeData)) employeeData[item.n_int] = {position: item.position, team: item.team, function: item.function};
         });
@@ -548,11 +682,18 @@
         data.sort((a, b) => {
           const ka = getOrderKey(a.team), kb = getOrderKey(b.team);
           const ia = idx(ka), ib = idx(kb);
-          return ia !== ib ? ia - ib : parseInt(a.n_int, 10) - parseInt(b.n_int, 10);
+          if (ia !== ib) return ia - ib;
+          const na = parseInt(a.n_int, 10);
+          const nb = parseInt(b.n_int, 10);
+          const is700a = na >= 700 && na < 800;
+          const is700b = nb >= 700 && nb < 800;
+          if (is700a && !is700b) return -1;
+          if (!is700a && is700b) return 1;
+          return na - nb;
         });
         data._shifts = shifts;
         return data;
-      } catch (err) {console.error(err); showPopupWarning && showPopupWarning("Erro ao carregar profissionais."); return [];}
+      } catch (err) {console.error(err); showPopup && showPopup('popup-danger', "Erro ao carregar profissionais."); return [];}
     }
     function applyShiftsToTable(shifts) {
       document.querySelectorAll("tr.data-row").forEach(row => {
@@ -562,63 +703,142 @@
           if (!rec) return;
           const shiftVal = (rec.shift || "").toUpperCase();
           cell.textContent = shiftVal;
-          if (!rec.custom_bg_color && !rec.custom_text_color) applyCellColor(cell, shiftVal);
-          if (rec.custom_bg_color) { cell.dataset.customBg = rec.custom_bg_color; cell.style.backgroundColor = rec.custom_bg_color; }
-          if (rec.custom_text_color) { cell.dataset.customColor = rec.custom_text_color; cell.style.color = rec.custom_text_color; }
-          if (rec.is_driver) { cell.dataset.driver = "1"; cell.dataset.other = "0"; applyDriverStyle(cell); }
-          else if (rec.is_other) { cell.dataset.other = "1"; cell.dataset.driver = "0"; applyOtherStyle(cell); }
-          else { cell.dataset.driver = "0"; cell.dataset.other = "0"; }
-        });
-      });
-    }
-    function enableRowDragAndDrop(tbody) {
-      tbody.querySelectorAll("tr.data-row").forEach(row => {
-        row.draggable = true; row.style.cursor = "move";
-        row.addEventListener("dragstart", e => { globalDraggedRow = row; row.style.opacity = "0.5"; e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", ""); });
-        row.addEventListener("dragend", () => { row.style.opacity = "1"; document.querySelectorAll("tr.data-row").forEach(r => r.style.backgroundColor = ""); globalDraggedRow = null; });
-        row.addEventListener("dragover", e => { e.preventDefault(); if (globalDraggedRow && globalDraggedRow !== row) row.style.backgroundColor = "#e3f2fd"; });
-        row.addEventListener("dragleave", () => { row.style.backgroundColor = ""; });
-        row.addEventListener("drop", e => {
-          e.preventDefault();
-          if (!globalDraggedRow || globalDraggedRow === row) return;
-          const dNint = globalDraggedRow.getAttribute("data-nint"), tNint = row.getAttribute("data-nint");
-          [[0,""], [1,""], [2,""]].forEach(([ci]) => {
-            const tmp = globalDraggedRow.cells[ci].textContent;
-            globalDraggedRow.cells[ci].textContent = row.cells[ci].textContent;
-            row.cells[ci].textContent = tmp;
-          });
-          globalDraggedRow.setAttribute("data-nint", tNint); row.setAttribute("data-nint", dNint);
-          const dShifts = Array.from(globalDraggedRow.querySelectorAll("td[contenteditable='true']"));
-          const tShifts = Array.from(row.querySelectorAll("td[contenteditable='true']"));
-          dShifts.forEach((cell, i) => {
-            const tc = tShifts[i];
-            const [tt, tbg, tc2, tw, td2] = [tc.textContent, tc.style.backgroundColor, tc.style.color, tc.style.fontWeight, tc.dataset.driver];
-            tc.textContent = cell.textContent; tc.style.backgroundColor = cell.style.backgroundColor; tc.style.color = cell.style.color; 
-            tc.style.fontWeight = cell.style.fontWeight; tc.dataset.driver = cell.dataset.driver;
-            cell.textContent = tt; cell.style.backgroundColor = tbg; cell.style.color = tc2; cell.style.fontWeight = tw; cell.dataset.driver = td2;
-          });
-          updateRowTotal(globalDraggedRow); updateRowTotal(row);
-          row.style.backgroundColor = ""; globalDraggedRow = null;
+          if (!rec.custom_bg_color && !rec.custom_text_color) {
+            applyCellColor(cell, shiftVal);
+          } else if (shiftVal) {
+            if (rec.custom_bg_color) {cell.dataset.customBg = rec.custom_bg_color; cell.style.backgroundColor = rec.custom_bg_color;}
+            if (rec.custom_text_color) {cell.dataset.customColor = rec.custom_text_color; cell.style.color = rec.custom_text_color;}
+          } else {
+            applyCellColor(cell, shiftVal);
+          }
+          cell.dataset.driver = "0"; cell.dataset.other = "0"; cell.dataset.optel = "0"; cell.dataset.eip = "0";
+          if (rec.is_driver) {cell.dataset.driver = "1"; applyDriverStyle(cell);}
+          else if (rec.is_other) {cell.dataset.other = "1"; applyOtherStyle(cell);}
+          else if (rec.is_optel) {cell.dataset.optel = "1"; applyOptelStyle(cell);}
+          else if (rec.is_eip) {cell.dataset.eip = "1"; applyEipStyle(cell);}
         });
       });
     }
     function getNextTeamNumber(teamPrefix) {
       const tbody = document.querySelector("table.employees-table tbody");
       if (!tbody) return teamPrefix === "EQ" ? "EQ05" : `${teamPrefix}02`;
-      const existingTeams = Array.from(tbody.querySelectorAll("tr.data-row")).map(r => r.querySelector("td:nth-child(4)")?.textContent.trim()).filter(Boolean);
+      const existingTeams = Array.from(tbody.querySelectorAll("tr.data-row"))
+      .map(r => r.querySelector("td:nth-child(4)")?.textContent.trim())
+      .filter(Boolean);
       if (teamPrefix === "EQ") {
         const teamCount = {};
-        existingTeams.forEach(t => { if (/^EQ\d+$/.test(t)) teamCount[t] = (teamCount[t] || 0) + 1; });
+        existingTeams.forEach(t => { 
+          if (/^EQ\d+$/.test(t)) teamCount[t] = (teamCount[t] || 0) + 1; 
+        });
         const incomplete = Object.keys(teamCount).sort().find(t => teamCount[t] < 2);
         if (incomplete) return incomplete;
         let max = 4;
-        Object.keys(teamCount).forEach(t => { const m = t.match(/^EQ(\d+)$/); if (m) max = Math.max(max, parseInt(m[1], 10)); });
+        Object.keys(teamCount).forEach(t => { 
+          const m = t.match(/^EQ(\d+)$/); 
+          if (m) max = Math.max(max, parseInt(m[1], 10)); 
+        });
         return `EQ${String(max + 1).padStart(2, "0")}`;
       } else {
         let max = 1;
-        existingTeams.filter(t => t.startsWith(teamPrefix)).forEach(t => { const m = t.match(/\d+$/); if (m) max = Math.max(max, parseInt(m[0], 10)); });
+        existingTeams
+          .filter(t => t.startsWith(teamPrefix))
+          .forEach(t => { 
+          const m = t.match(/\d+$/); 
+          if (m) max = Math.max(max, parseInt(m[0], 10)); 
+        });
         return `${teamPrefix}${String(max + 1).padStart(2, "0")}`;
       }
+    }
+    function renumberEQTeams(tbody) {
+      const rows = Array.from(tbody.querySelectorAll("tr.data-row"));
+      const eqRows = rows.filter(r => {
+        const team = normalizeTeam(r.querySelector("td:nth-child(4)")?.textContent || "");
+        return team.startsWith("EQ");
+      });
+      let teamNum = 1;
+      let countInTeam = 0;
+      eqRows.forEach(row => {
+        const td = row.querySelector("td:nth-child(4)");
+        if (!td) return;
+        if (countInTeam === 2) {teamNum++; countInTeam = 0;}
+        td.textContent = `EQ${String(teamNum).padStart(2, "0")}`;
+        countInTeam++;
+      });
+      const tdnuRows = rows.filter(r => {
+        const team = normalizeTeam(r.querySelector("td:nth-child(4)")?.textContent || "");
+        return team.startsWith("TDNU");
+      });
+      tdnuRows.forEach((row, idx) => {
+        const td = row.querySelector("td:nth-child(4)");
+        if (td) td.textContent = `TDNU${String(idx + 1).padStart(2, "0")}`;
+      });
+      const opcRows = rows.filter(r => {
+        const team = normalizeTeam(r.querySelector("td:nth-child(4)")?.textContent || "");
+        return team.startsWith("OPC");
+      });
+      opcRows.forEach((row, idx) => {
+        const td = row.querySelector("td:nth-child(4)");
+        if (td) td.textContent = `OPC${String(idx + 1).padStart(2, "0")}`;
+      });
+    }
+    function enableRowDragAndDrop(tbody) {
+      tbody.querySelectorAll("tr.data-row").forEach(row => {
+        row.draggable = true;
+        row.style.cursor = "move";
+        row.addEventListener("dragstart", e => {
+          globalDraggedRow = row;
+          row.style.opacity = "0.5";
+          e.dataTransfer.effectAllowed = "move";
+          e.dataTransfer.setData("text/plain", "");
+        });
+        row.addEventListener("dragend", () => {
+          row.style.opacity = "1";
+          globalDraggedRow = null;
+        });
+        row.addEventListener("dragover", e => {
+          e.preventDefault();
+        });
+        row.addEventListener("drop", e => {
+          e.preventDefault();
+          if (!globalDraggedRow || globalDraggedRow === row) return;
+          for (let i = 0; i < 3; i++) {
+            const tmp = globalDraggedRow.cells[i].textContent;
+            globalDraggedRow.cells[i].textContent = row.cells[i].textContent;
+            row.cells[i].textContent = tmp;
+          }
+          const tmpNint = globalDraggedRow.getAttribute("data-nint");
+          globalDraggedRow.setAttribute("data-nint", row.getAttribute("data-nint"));
+          row.setAttribute("data-nint", tmpNint);
+          const tmpEntry = globalDraggedRow.dataset.entryDate;
+          globalDraggedRow.dataset.entryDate = row.dataset.entryDate;
+          row.dataset.entryDate = tmpEntry;
+          const dShifts = Array.from(globalDraggedRow.querySelectorAll("td[contenteditable='true']"));
+          const tShifts = Array.from(row.querySelectorAll("td[contenteditable='true']"));
+          dShifts.forEach((cell, i) => {
+            const tc = tShifts[i];
+            if (!tc) return;
+            const tmp = {text: tc.textContent, bg: tc.style.backgroundColor, color: tc.style.color, fontWeight: tc.style.fontWeight, driver: tc.dataset.driver, 
+                         other: tc.dataset.other, optel: tc.dataset.optel, eip: tc.dataset.eip, customBg: tc.dataset.customBg, customColor: tc.dataset.customColor};
+            tc.textContent = cell.textContent; tc.style.backgroundColor = cell.style.backgroundColor; tc.style.color = cell.style.color;
+            tc.style.fontWeight = cell.style.fontWeight; tc.dataset.driver = cell.dataset.driver; tc.dataset.other = cell.dataset.other; tc.dataset.optel = cell.dataset.optel; tc.dataset.eip = cell.dataset.eip;
+            tc.dataset.customBg = cell.dataset.customBg; tc.dataset.customColor = cell.dataset.customColor;
+            cell.textContent = tmp.text; cell.style.backgroundColor = tmp.bg; cell.style.color = tmp.color; cell.style.fontWeight = tmp.fontWeight;
+            cell.dataset.driver = tmp.driver; cell.dataset.other = tmp.other; cell.dataset.optel = tmp.optel; cell.dataset.eip = tmp.eip; cell.dataset.customBg = tmp.customBg; cell.dataset.customColor = tmp.customColor;
+          });
+          const dAcum = globalDraggedRow.querySelector(".total-accumulated-cell");
+          const tAcum = row.querySelector(".total-accumulated-cell");
+          if (dAcum && tAcum) {
+            const tmp = {text: tAcum.textContent, base: tAcum.dataset.base, extra: tAcum.dataset.extraHours, isJan: tAcum.dataset.isJanuary};
+            tAcum.textContent = dAcum.textContent; tAcum.dataset.base = dAcum.dataset.base; tAcum.dataset.extraHours = dAcum.dataset.extraHours;
+            tAcum.dataset.isJanuary = dAcum.dataset.isJanuary; dAcum.textContent = tmp.text; dAcum.dataset.base = tmp.base;  dAcum.dataset.extraHours = tmp.extra;
+            dAcum.dataset.isJanuary = tmp.isJan;
+          }
+          renumberEQTeams(tbody);
+          updateRowTotal(globalDraggedRow);
+          updateRowTotal(row);
+          globalDraggedRow = null;
+        });
+      });
     }
     function addTeamRows(teamCode, count) {
       const tbody = document.querySelector("table.employees-table tbody");
@@ -665,7 +885,7 @@
         }
         applyCellColor(this, value);
         applyBaseDayColor(this, __currentYear, __currentMonth, d, __currentHolidayMap);
-        applyDriverStyle(this); updateRowTotal(tr);
+        applyDriverStyle(this); applyOptelStyle(this); applyEipStyle(this); updateRowTotal(tr);
         applyWeekendSpecialColors(tbody, __currentYear, __currentMonth);
       });
       td.addEventListener("keydown", ev => {
@@ -730,7 +950,7 @@
           const value = cell.textContent.trim().toUpperCase();
           if ((value && SHIFT_COLORS[value]) || cell.dataset.customBg || cell.dataset.customColor) continue;
           const holiday = holidayMap?.get(d);
-          if (holiday) { cell.style.backgroundColor = holiday.optional ? HOLIDAY_OPTIONAL_COLOR : HOLIDAY_COLOR; continue; }
+          if (holiday) {cell.style.backgroundColor = holiday.optional ? HOLIDAY_OPTIONAL_COLOR : HOLIDAY_COLOR; continue;}
           const dow = atNoonLocal(year, month - 1, d).getDay();
           cell.style.backgroundColor = (dow === 6 || dow === 0) ? (WEEKEND_EMPLOYEES_COLOR || "#f9e0b0") : "";
         }
@@ -751,7 +971,7 @@
             const cv = cell.textContent.trim().toUpperCase();
             if (!cv || !SHIFT_COLORS[cv]) {
               cell.style.backgroundColor = corPintar;
-              if (shiftLast === "BX") { cell.style.color = "#FFFFFF"; cell.style.fontWeight = "bold"; }
+              if (shiftLast === "BX") {cell.style.color = "#FFFFFF"; cell.style.fontWeight = "bold";}
             }
           }
         }
@@ -860,6 +1080,69 @@
         } else { h.style.display="none"; n.style.display="none"; }
       }
     }
+    async function loadBXPreference(year, month) {
+      try {
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/reg_employees_bx?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`,
+          {headers: getSupabaseHeaders()}
+        );
+        if (!response.ok) return false;
+        const data = await response.json();
+        return data.length > 0 ? data[0].bx_rows_hidden : false;
+      } catch (err) {
+        console.error("Erro ao carregar preferência BX:", err);
+        return false;
+      }
+    }
+    async function saveBXPreference(year, month, hidden) {
+      try {
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        await fetch(
+          `${SUPABASE_URL}/rest/v1/reg_employees_bx?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`,
+          {method: "DELETE", headers: getSupabaseHeaders()}
+        );
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/reg_employees_bx`,
+          {
+            method: "POST",
+            headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
+            body: JSON.stringify({corp_oper_nr: corpOperNr, year, month, bx_rows_hidden: hidden})
+          }
+        );
+        if (!response.ok) console.warn("Erro ao guardar preferência BX:", await response.text());
+      } catch (err) {
+        console.error("Erro ao guardar preferência BX:", err);
+      }
+    }
+    function toggleBXRows(hide = true) {
+      const tbody = document.querySelector("table.employees-table tbody");
+      if (!tbody) return;
+      const year = __currentYear, month = __currentMonth, daysInMonth = __currentDaysInMonth;
+      const holidayMap = __currentHolidayMap;
+      Array.from(tbody.querySelectorAll("tr.data-row")).forEach(row => {
+        const cells = Array.from(row.querySelectorAll("td[contenteditable='true']")).slice(0, daysInMonth);
+        const workDayCells = cells.filter((_, idx) => {
+          const dayNum = idx + 1;
+          const dow = atNoonLocal(year, month - 1, dayNum).getDay();
+          const holiday = holidayMap?.get(dayNum);
+          const isMandatoryHoliday = holiday && !holiday.optional;
+          return dow !== 0 && dow !== 6 && !isMandatoryHoliday;
+        });
+        if (workDayCells.length === 0) return;
+        const allBX = workDayCells.every(cell => cell.textContent.trim().toUpperCase() === "BX");
+        row.style.display = (hide && allBX) ? "none" : "";
+      });
+    }
+    document.getElementById("employees-toggle-bx-btn")?.addEventListener("click", async function () {
+      _bxHidden = !_bxHidden;
+      toggleBXRows(_bxHidden);
+      this.innerHTML = _bxHidden
+        ? '<i class="fa-solid fa-eye" style="margin-right: 6px;"></i>Mostrar Baixas'
+        : '<i class="fa-solid fa-eye-slash" style="margin-right: 6px;"></i>Ocultar Baixas';
+      this.classList.toggle("active", _bxHidden);
+      await saveBXPreference(__currentYear, __currentMonth, _bxHidden);
+    });
     async function createEmployeeScalesTable(containerId, year, month, data) {
       const container = document.getElementById(containerId);
       if (!container) return;
@@ -942,7 +1225,7 @@
             if (td.firstChild) { const nr = document.createRange(); nr.setStart(td.firstChild, Math.min(pos, td.textContent.length)); nr.collapse(true); sel.removeAllRanges(); sel.addRange(nr); }
           }
           applyCellColor(td, value); applyBaseDayColor(td, year, month, dayNum, holidayMap);
-          applyDriverStyle(td); updateRowTotal(rowRef); applyWeekendSpecialColors(tbody, year, month);
+          applyDriverStyle(td); applyOptelStyle(td); applyEipStyle(td); updateRowTotal(rowRef); applyWeekendSpecialColors(tbody, year, month);
         });
         td.addEventListener("paste", ev => { ev.preventDefault(); document.execCommand("insertText", false, (ev.clipboardData || window.clipboardData).getData("text").trim().toUpperCase()); });
         td.addEventListener("keydown", ev => {
@@ -966,15 +1249,15 @@
         const span = document.createElement("span"); span.textContent = groupTitle; span.style.cssText = "flex:1;text-align:center;";
         flex.appendChild(span);
         const groupConfigs = {
-          "INEM": {prefix: "EQ", successMsg: "✅ Equipa INEM Adicionada.", addLogic: (prefix) => {
+          "INEM": {prefix: "EQ", successMsg: "Equipa INEM Adicionada.", addLogic: (prefix) => {
             const tb = document.querySelector("table.employees-table tbody");
             const rs = Array.from(tb.querySelectorAll("tr.data-row"));
             const nextTeam = getNextTeamNumber(prefix);
             const existingCount = rs.filter(r => r.querySelector("td:nth-child(4)")?.textContent.trim() === nextTeam).length;
             addTeamRows(nextTeam, existingCount >= 1 ? 1 : 2);
           }},
-          "SERVIÇO GERAL - TDNU": {prefix: "TDNU", successMsg: "✅ Elemento Adicionado a Serviço Geral.", addLogic: (prefix) => addTeamRows(getNextTeamNumber(prefix), 1)},
-          "CENTRAL DE TELECOMUNICAÇÕES": {prefix: "OPC", successMsg: "✅ Elemento Adicionado a Central de Telecomunicações.", addLogic: (prefix) => addTeamRows(getNextTeamNumber(prefix), 1)}
+          "SERVIÇO GERAL - TDNU": {prefix: "TDNU", successMsg: "Elemento Adicionado a Serviço Geral.", addLogic: (prefix) => addTeamRows(getNextTeamNumber(prefix), 1)},
+          "CENTRAL DE TELECOMUNICAÇÕES": {prefix: "OPC", successMsg: "Elemento Adicionado a Central de Telecomunicações.", addLogic: (prefix) => addTeamRows(getNextTeamNumber(prefix), 1)}
         };
         const cfg = groupConfigs[t] || groupConfigs[Object.keys(groupConfigs).find(k => t.includes(k))];
         if (cfg) {
@@ -1029,7 +1312,232 @@
       const temp = document.createElement("div"); temp.style.cssText = infoHost.style.cssText;
       displayWorkingHoursInfo(temp, year, month); displayShiftsLegend(temp, year, month);
       infoHost.replaceChildren(...temp.childNodes);
+      _bxHidden = await loadBXPreference(year, month);
+      const btnBX = document.getElementById("employees-toggle-bx-btn");
+      if (btnBX) {
+        btnBX.innerHTML = _bxHidden
+          ? '<i class="fa-solid fa-eye" style="margin-right: 6px;"></i>Mostrar Baixas'
+          : '<i class="fa-solid fa-eye-slash" style="margin-right: 6px;"></i>Ocultar Baixas';
+        btnBX.classList.toggle("active", _bxHidden);
+      }
+      if (_bxHidden) toggleBXRows(true);
     }
+    let __lastINEMIssues = [];
+    let __lastEIPIssues = [];
+    let __lastOPTELIssues = [];
+    let __activeAnalyzeTab = "inem";
+    async function analyzeINEMSchedule() {
+      const tbody = document.querySelector("table.employees-table tbody");
+      if (!tbody) {
+        showPopup('popup-danger', "Nenhuma tabela aberta.");
+        return;
+      }
+      if (!__currentYear || !__currentMonth) {
+        showPopup('popup-danger', "Seleciona mês e ano primeiro.");
+        return;
+      }
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const mpSet = new Set();
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?select=n_int&corp_oper_nr=eq.${corpOperNr}&MP=eq.true`, {headers: getSupabaseHeaders()});
+        if (!res.ok) throw new Error(await res.text());
+        (await res.json()).forEach(r => mpSet.add(parseInt(r.n_int, 10)));
+      } catch (err) {
+        console.error("Erro ao carregar MP:", err);
+        showPopup('popup-danger', "Erro ao carregar os MP.");
+        return;
+      }
+      const daysInMonth = __currentDaysInMonth;
+      const issuesINEM = [];
+      const issuesEIP = [];
+      const issuesOPTEL = [];
+      __lastINEMIssues = [];
+      __lastEIPIssues = [];
+      __lastOPTELIssues = [];
+      const MIN_D = 2, MIN_N = 2, MIN_EIP = 4;
+      const MIN_OPTEL_D = 1, MIN_OPTEL_N = 1;
+      const red = (txt) => `<span style="color:#ff4d4d;font-weight:bold;">${txt}</span>`;
+      const styleD = `<span style="color:#DAA520;font-weight:bold;">Turno D</span>`;
+      const styleN = `<span style="color:#4A90E2;font-weight:bold;">Turno N</span>`;
+      const rows = tbody.querySelectorAll("tr.data-row");
+      for (let d = 1; d <= daysInMonth; d++) {
+        let countD = 0, countN = 0;
+        let optelD = 0, optelN = 0;
+        rows.forEach(row => {
+          const cell = row.querySelector(`.day-cell-${d}`);
+          if (!cell) return;
+          const val = cell.textContent.trim().toUpperCase();
+          const team = normalizeTeam(row.querySelector("td:nth-child(4)")?.textContent || "");
+          if (team.startsWith("OPC") || cell.dataset.optel === "1") {
+            if (val === "D") optelD++;
+            if (val === "N") optelN++;
+            return;
+          }
+          if (cell.dataset.eip === "1") return;
+          const isEQ = team.startsWith("EQ");
+          const isTDNU = team.startsWith("TDNU");
+          if (!isEQ && !isTDNU) return;
+          if (isTDNU && cell.dataset.driver !== "1") return;
+          if (val === "D") countD++;
+          if (val === "N") countN++;
+        });
+        if (countD < MIN_D) {
+          issuesINEM.push(`Dia ${d}: ${styleD} ${red(MIN_D - countD)} OP(s)`);
+          __lastINEMIssues.push({day: d, shift: "D", missing: MIN_D - countD});
+        }
+        if (countN < MIN_N) {
+          issuesINEM.push(`Dia ${d}: ${styleN} ${red(MIN_N - countN)} OP(s)`);
+          __lastINEMIssues.push({day: d, shift: "N", missing: MIN_N - countN});
+        }
+        if (optelD < MIN_OPTEL_D) {
+          issuesOPTEL.push(`Dia ${d}: ${styleD} ${red(MIN_OPTEL_D - optelD)} OPTEL`);
+          __lastOPTELIssues.push({day: d, shift: "D", missing: MIN_OPTEL_D - optelD});
+        }
+        if (optelN < MIN_OPTEL_N) {
+          issuesOPTEL.push(`Dia ${d}: ${styleN} ${red(MIN_OPTEL_N - optelN)} OPTEL`);
+          __lastOPTELIssues.push({day: d, shift: "N", missing: MIN_OPTEL_N - optelN});
+        }
+        let eipMarked = 0, eipMarkedMP = 0;
+        const eip = {EP1: {total: 0, mp: 0}, EP2: {total: 0, mp: 0}};
+        rows.forEach(row => {
+          const cell = row.querySelector(`.day-cell-${d}`);
+          if (!cell || cell.dataset.optel === "1") return;
+          const val = cell.textContent.trim().toUpperCase();
+          const nInt = parseInt(row.getAttribute("data-nint"), 10);
+          const isMP = mpSet.has(nInt);
+          const key = getOrderKey(row.querySelector("td:nth-child(4)")?.textContent || "");
+          if (cell.dataset.eip === "1") {
+            eipMarked++;
+            if (isMP) eipMarkedMP++;
+            return;
+          }
+          if (val !== "D" || !eip[key]) return;
+          eip[key].total++;
+          if (isMP) eip[key].mp++;
+        });
+        const maxTotal = Math.max(eip.EP1.total, eip.EP2.total);
+        if (maxTotal === 0 && eipMarked === 0) continue;
+        const label = maxTotal === 0 ? "EIP"
+                    : eip.EP1.total > eip.EP2.total ? "EIP 01"
+                    : eip.EP2.total > eip.EP1.total ? "EIP 02" : "EIP 01/02";
+        const total = eip.EP1.total + eip.EP2.total + eipMarked;
+        const mp = eip.EP1.mp + eip.EP2.mp + eipMarkedMP;
+        if (mp === 0) issuesEIP.push(`Dia ${d}: ${styleD} ${label} sem ${red("Motorista de Pesados.")}`);
+        if (total < MIN_EIP) {
+          const missing = MIN_EIP - total;
+          issuesEIP.push(`Dia ${d}: ${styleD} ${label} ${missing === 1 ? "falta" : "faltam"} ${red(missing)} ${missing === 1 ? "elemento" : "elementos"}`);
+        }
+        if (mp === 0 || total < MIN_EIP)
+          __lastEIPIssues.push({day: d, noMP: mp === 0, missing: Math.max(0, MIN_EIP - total)});
+      }
+      if (issuesINEM.length === 0 && issuesEIP.length === 0 && issuesOPTEL.length === 0) {
+        showPopup('popup-success', "Dotação mínima INEM, EIP e OPTEL assegurada para todos os dias.");
+        return;
+      }
+      const popup = document.getElementById('popup-analyze-inem');
+      if (!popup) return;
+      const body = popup.querySelector('.popup-body');
+      if (!document.getElementById('analyze-list-scroll-style')) {
+        const st = document.createElement('style');
+        st.id = 'analyze-list-scroll-style';
+        st.innerHTML = `
+          .analyze-list::-webkit-scrollbar {width: 6px;}
+          .analyze-list::-webkit-scrollbar-track {background: transparent;}
+          .analyze-list::-webkit-scrollbar-thumb {background: #b0b7c3; border-radius: 3px;}
+          .analyze-list::-webkit-scrollbar-thumb:hover {background: #8a93a3;}
+        `;
+        document.head.appendChild(st);
+      }
+      const sections = [
+        {key: "inem", label: "INEM", icon: "fa-truck-medical", issues: issuesINEM, ok: "Dotação INEM assegurada.",
+         rule: `Dotação mínima: <b>${MIN_D}</b> elementos no Turno D e <b>${MIN_N}</b> no Turno N por dia.`},
+        {key: "eip", label: "EIP", icon: "fa-fire", issues: issuesEIP, ok: "Dotação EIP assegurada.",
+         rule: `Dotação mínima: <b>1</b> Motorista de Pesados e <b>3</b> Elementos.`},
+        {key: "optel", label: "OPTEL", icon: "fa-headset", issues: issuesOPTEL, ok: "Dotação OPTEL assegurada.",
+         rule: `Dotação mínima: <b>${MIN_OPTEL_D}</b> OPTEL no Turno D e <b>${MIN_OPTEL_N}</b> OPTEL no Turno N.`}
+      ];
+      const tabBtn = (s) => {
+        const badge = s.issues.length
+          ? `<span style="background:#dc3545; color:#fff; border-radius:10px; padding:1px 7px; font-size:10px; margin-left:6px;">${s.issues.length}</span>`
+          : `<i class="fa-solid fa-check" style="color:#10b981; margin-left:6px;"></i>`;
+        return `<button type="button" class="analyze-tab" data-tab="${s.key}"
+                  style="flex:1; display:flex; align-items:center; justify-content:center; padding:6px 10px; border:1px solid #cbd5e1; border-radius:4px; background:#f8fafc; color:#1e293b; font-weight:bold; font-size:12px; cursor:pointer;">
+                  <i class="fa-solid ${s.icon}" style="margin-right:6px;"></i>${s.label}${badge}
+                </button>`;
+      };
+      const panel = (s) => `
+        <div class="analyze-panel" data-panel="${s.key}" style="display:none; flex-direction:column; height:280px;">
+          <div style="font-size:12px; color:#475569; font-weight:600;">${s.rule}</div>
+          <div class="analyze-list" style="flex:1; min-height:0; overflow-y:auto; margin:8px 0; padding:8px 10px; font-weight:bold; font-size:12px; line-height:1.6; background:#f3f4f6; border:1px solid #e5e7eb; border-radius:4px; scrollbar-width:thin; scrollbar-color:#b0b7c3 transparent;">
+            ${s.issues.length ? s.issues.join("<br>") : `<span style="color:#059669;"><i class="fa-solid fa-circle-check" style="margin-right:4px;"></i>${s.ok}</span>`}
+          </div>
+        </div>`;
+      body.innerHTML = `
+        <div style="width:480px; max-width:100%;">
+          <div style="display:flex; gap:6px; margin-bottom:10px;">${sections.map(tabBtn).join("")}</div>
+          ${sections.map(panel).join("")}
+        </div>`;
+      const requestBtn = popup.querySelector('[onclick*="requestINEMElements"]');
+      const titleEl = popup.querySelector('[class*="title"]') || popup.querySelector('h1, h2, h3, h4');
+      const activate = (key) => {
+        __activeAnalyzeTab = key;
+        if (titleEl) titleEl.textContent = `Turnos ${sections.find(s => s.key === key)?.label || ""} por Preencher`;
+        if (requestBtn) {
+          const hasIssues = sections.find(s => s.key === key)?.issues.length > 0;
+          requestBtn.disabled = !hasIssues;
+          requestBtn.style.opacity = hasIssues ? "1" : "0.5";
+          requestBtn.style.cursor = hasIssues ? "pointer" : "not-allowed";
+          requestBtn.title = hasIssues ? "" : "Dotação assegurada: não há turnos por preencher.";
+        }
+        body.querySelectorAll(".analyze-tab").forEach(b => {
+          const on = b.dataset.tab === key;
+          b.style.background = on ? "#2b6ca3" : "#f8fafc";
+          b.style.color = on ? "#ffffff" : "#1e293b";
+          b.style.borderColor = on ? "#2b6ca3" : "#cbd5e1";
+        });
+        body.querySelectorAll(".analyze-panel").forEach(p => {
+          p.style.display = p.dataset.panel === key ? "flex" : "none";
+        });
+      };
+      body.querySelectorAll(".analyze-tab").forEach(b => b.addEventListener("click", () => activate(b.dataset.tab)));
+      activate((sections.find(s => s.issues.length) || sections[0]).key);
+      popup.classList.add('show');
+    }
+    function requestElements(type = "inem") {
+      const nameMonth = MONTH_NAMES[__currentMonth - 1];
+      let title, lines;
+      if (type === "eip") {
+        title = "Turnos EIP por Preencher";
+        lines = __lastEIPIssues.map(i => {
+          const parts = [];
+          if (i.missing > 0) parts.push(`*${i.missing}* ${i.missing === 1 ? "elemento" : "elementos"}`);
+          if (i.noMP) parts.push(`sem *Motorista de Pesados*`);
+          return `Dia ${i.day}: Turno D ${parts.join(" - ")}`;
+        });
+      } else if (type === "optel") {
+        title = "Turnos OPTEL por Preencher";
+        lines = __lastOPTELIssues.map(i => `Dia ${i.day}: Turno ${i.shift} *${i.missing}* OPTEL`);
+      } else {
+        title = "Turnos INEM por Preencher";
+        lines = __lastINEMIssues.map(i => `Dia ${i.day}: Turno ${i.shift} *${i.missing}* OP(s)`);
+      }
+      if (!lines.length) {
+        showPopup('popup-info', `Não há ${title.toLowerCase()}.`);
+        return;
+      }
+      let message = `*🚨INFORMAÇÃO🚨*\n\n`;
+      message += `*${title} - ${nameMonth} ${__currentYear}*\n\n`;
+      message += `${lines.join('\n')}\n\n`;
+      message += `As disponibilidades devem ser remetidas para comando0805.ahbfaro@gmail.com.\n`;
+      message += `Obrigado pela vossa colaboração!`;
+      navigator.clipboard.writeText(message).then(() => {
+        closePopup('popup-analyze-inem');
+        showPopup('popup-success', "Mensagem criada e copiada! Pode colar no WhatsApp.");
+      }).catch(() => {
+        showPopup('popup-danger', 'Erro ao copiar.');
+      });
+    }
+    function requestINEMElements() { requestElements(__activeAnalyzeTab || "inem"); }
     async function cleanEmployeeScales({ autoSave = false } = {}) {
       const tbody = document.querySelector("table.employees-table tbody");
       if (!tbody) {showPopup('popup-danger', "Nenhuma tabela aberta."); return;}
@@ -1041,7 +1549,7 @@
       const holidayMap = getHolidayMapForMonth(year, month);
       Array.from(tbody.querySelectorAll("tr.data-row")).forEach(row => {
         Array.from(row.querySelectorAll("td[contenteditable='true']")).slice(0, daysInMonth).forEach((cell, idx) => {
-          cell.textContent = ""; delete cell.dataset.driver;
+          cell.textContent = ""; delete cell.dataset.driver; delete cell.dataset.other; delete cell.dataset.optel; delete cell.dataset.eip;
           cell.style.color = ""; cell.style.fontWeight = ""; cell.style.backgroundColor = ""; cell.title = "";
           applyBaseDayColor(cell, year, month, idx + 1, holidayMap);
         });
@@ -1066,7 +1574,7 @@
       const {year, month, monthBtn} = ym;
       const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const saveBtn = document.getElementById("employees-save-btn");
-      if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = "A guardar..."; }
+      if (saveBtn) { saveBtn.disabled = true; saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i>A guardar...'; }
       try {
         const rows = Array.from(tbody.querySelectorAll("tr.data-row"));
         const shiftsPayload = [], employeesUpdate = [], accumulatedPayload = [];
@@ -1079,14 +1587,18 @@
           employeesUpdate.push({n_int: nInt, abv_name: abvName, function: func, team, corp_oper_nr: corpOperNr});
           row.querySelectorAll("td[contenteditable='true']").forEach((cell, idx) => {
             const shift = cell.textContent.trim().toUpperCase();
-            const customBg = cell.dataset.customBg || null, customColor = cell.dataset.customColor || null;
+            const customBg = (cell.dataset.customBg && cell.dataset.customBg !== "undefined") ? cell.dataset.customBg : null;
+            const customColor = (cell.dataset.customColor && cell.dataset.customColor !== "undefined") ? cell.dataset.customColor : null;
             if (shift || customBg || customColor)
-              shiftsPayload.push({n_int: nInt, abv_name: abvName, day: idx + 1, month, year, shift: shift || " ", team, function: func, position,
-                                  corp_oper_nr: corpOperNr, is_driver: cell.dataset.driver === "1", is_other: cell.dataset.other === "1",
-                                  custom_bg_color: customBg, custom_text_color: customColor});
-          });
+              shiftsPayload.push({n_int: nInt, abv_name: abvName, day: idx + 1, month, year, shift: shift || " ", team, function: func, position, corp_oper_nr: corpOperNr, is_driver: cell.dataset.driver === "1", is_other: cell.dataset.other === "1", is_optel: cell.dataset.optel === "1", is_eip: cell.dataset.eip === "1",
+                                  custom_bg_color: customBg, custom_text_color: customColor});});
           const totalMonthly = calculateProfessionalsRowTotal(row);
-          const totalAccumulated = parseFloat(row.cells[row.cells.length - 1].textContent.trim().replace(",", ".")) || 0;
+          const totalAcumCell = row.cells[row.cells.length - 1];
+          const baseAcum = parseFloat(totalAcumCell.dataset.base || 0);
+          const extraAcum = parseFloat(totalAcumCell.dataset.extraHours || 0);
+          const isJanAcum = totalAcumCell.dataset.isJanuary === "1";
+          const diffAcum = totalMonthly - calculateWorkingHours(year, month).workingHours + extraAcum;
+          const totalAccumulated = isJanAcum ? diffAcum : baseAcum + diffAcum;
           accumulatedPayload.push({n_int: nInt, abv_name: abvName, year, month, monthly_total: totalMonthly, total_accumulated: totalAccumulated, corp_oper_nr: corpOperNr});
         });
         const rpc1 = await fetch(`${SUPABASE_URL}/rest/v1/rpc/replace_month_rows`, {
@@ -1099,8 +1611,8 @@
           fetch(`${SUPABASE_URL}/rest/v1/reg_employees?n_int=eq.${emp.n_int}&corp_oper_nr=eq.${emp.corp_oper_nr}`, {
           method:"PATCH", 
           headers:{...getSupabaseHeaders(),"Content-Type":"application/json","Prefer":"return=minimal"}, body:JSON.stringify({abv_name:emp.abv_name, function:emp.function, team:emp.team})})
-          .then(r => { if (!r.ok) console.warn(`⚠️ Erro ao atualizar employee ${emp.n_int}`); })
-          .catch(err => console.warn(`⚠️ Erro ao atualizar employee ${emp.n_int}:`, err))
+          .then(r => { if (!r.ok) console.warn(`Erro ao atualizar employee ${emp.n_int}`); })
+          .catch(err => console.warn(`Erro ao atualizar employee ${emp.n_int}:`, err))
         ));
         const rpc2 = await fetch(`${SUPABASE_URL}/rest/v1/rpc/replace_month_rows`, {
           method: "POST",
@@ -1112,11 +1624,12 @@
           showPopup('popup-danger', `Escala de ${monthBtn.textContent} ${year} guardada, mas o banco de horas NÃO foi atualizado. Volte a gravar.`);
           return;
         }
+        await propagateAccumulatedForward(corpOperNr, year, month);
         showPopup('popup-success', `Escala de ${monthBtn.textContent} ${year} guardada com sucesso!`);
       } catch (err) {
-        console.error("Erro ao guardar escala:", err); showPopup('popup-danger', "❌ Erro ao guardar: " + err.message);
+        console.error("Erro ao guardar escala:", err); showPopup('popup-danger', "Erro ao guardar: " + err.message);
       } finally {
-        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = "Guardar"; }
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = '<i class="fa-solid fa-floppy-disk" style="margin-right: 6px;"></i>Guardar'; }
       }
     }
     async function emitEmployeesScale(format = "xlsx") {
@@ -1126,13 +1639,14 @@
       if (!ym) { console.error("Erro: ano/mês não selecionados."); return; }
       const {year, month} = ym;
       try {
-        showLoadingPopup("🔄 A preparar escala...");
-        const rows = Array.from(tbody.querySelectorAll("tr.data-row"));
+        showLoadingPopup("A preparar escala...");
+        const rows = Array.from(tbody.querySelectorAll("tr.data-row"))
+          .filter(row => row.style.display !== "none");    
         if (!rows.length) { console.error("Erro: nenhuma linha encontrada."); return; }
         const daysInMonth = new Date(year, month, 0).getDate();
         const employees = _collectEmployeeData(rows, daysInMonth, true);
         const {workingHours} = calculateWorkingHours(year, month);
-        updateLoadingPopup(`📊 A gerar escala em ${format === "pdf" ? "PDF" : "Excel"}...`);
+        updateLoadingPopup(`A gerar escala em ${format === "pdf" ? "PDF" : "Excel"}...`);
         const response = await fetch("https://cb360-online.vercel.app/api/employees_convert_and_send", {
           method:"POST", headers:{"Content-Type":"application/json"},
           body:JSON.stringify({mode:"monthly_scales", year, month, employees, workingHours, format})
@@ -1144,7 +1658,7 @@
         a.download = `Escala_Funcionários_${monthNames[month - 1]}_${year}.${format === "pdf" ? "pdf" : "xlsx"}`;
         a.click(); URL.revokeObjectURL(url);
         hideLoadingPopup(); showPopup('popup-info', `Escala gerada com sucesso, em formato ${format === "pdf" ? "PDF" : "Excel"}!`);
-      } catch (err) {hideLoadingPopup(); console.error("Erro ao gerar folha:", err); showPopup('popup-danger', `❌ Erro: ${err.message}`);}
+      } catch (err) {hideLoadingPopup(); console.error("Erro ao gerar folha:", err); showPopup('popup-danger', `Erro: ${err.message}`);}
     }
     async function emitStitchSheets() {
       const tbody = document.querySelector("table.employees-table tbody");
@@ -1157,13 +1671,13 @@
         const daysInMonth = new Date(year, month, 0).getDate();
         const employees = _collectEmployeeData(Array.from(tbody.querySelectorAll("tr.data-row")), daysInMonth).filter(emp => emp.abv_name);
         if (!employees.length) {showPopup('popup-danger',"Nenhum funcionário encontrado."); return; }
-        showLoadingPopup(`🔄 A iniciar geração de ${employees.length} folhas...`);
+        showLoadingPopup(`A iniciar geração de ${employees.length} folhas...`);
         const workingHours = calculateWorkingHours(year, month).workingHours;
         const {PDFDocument} = PDFLib;
         const mergedPdf = await PDFDocument.create();
         for (let i = 0; i < employees.length; i++) {
           const emp = employees[i];
-          updateLoadingPopup(`📄 A processar [${i + 1}/${employees.length}]: ${emp.abv_name}`, Math.round(((i + 1) / employees.length) * 100));
+          updateLoadingPopup(`A processar [${i + 1}/${employees.length}]: ${emp.abv_name}`, Math.round(((i + 1) / employees.length) * 100));
           const response = await fetch("https://cb360-online.vercel.app/api/employees_convert_and_send", {
             method:"POST", headers:{"Content-Type":"application/json"},
             body:JSON.stringify({mode:"point_sheet", year, month, employee: emp, workingHours})
@@ -1172,12 +1686,12 @@
           const donor = await PDFDocument.load(await response.arrayBuffer());
           (await mergedPdf.copyPages(donor, donor.getPageIndices())).forEach(p => mergedPdf.addPage(p));
         }
-        updateLoadingPopup("💾 A gerar ficheiro final...");
+        updateLoadingPopup("A gerar ficheiro final...");
         const url = URL.createObjectURL(new Blob([await mergedPdf.save()], {type:"application/pdf"}));
         const a = document.createElement("a"); a.href = url; a.download = `Folhas_Ponto_${MONTH_NAMES[month - 1]}_${year}.pdf`;
         document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
         hideLoadingPopup(); showPopup('popup-success',"Todas as folhas foram geradas com sucesso!");
-      } catch (err) { hideLoadingPopup(); console.error("❌ Erro completo:", err); showPopup('popup-danger',"Erro: " + err.message); }
+      } catch (err) { hideLoadingPopup(); console.error("Erro completo:", err); showPopup('popup-danger',"Erro: " + err.message); }
     }
     document.getElementById("employees-clean-btn")?.addEventListener("click", cleanEmployeeScales);
     document.getElementById("employees-save-btn")?.addEventListener("click", saveEmployeeScales);
@@ -1189,11 +1703,14 @@
     =============================== */
     function maskTimeExtraHours(event) {
       const cell = event.target;
-      let value = cell.textContent.replace(/\D/g, "");
-      if (value.length > 4) value = value.slice(0, 4);
-      if (value.length > 2) {
-        value = value.slice(0, 2) + ":" + value.slice(2);
+      const raw = cell.textContent;
+      const isNegative = raw.trim().startsWith("-");
+      let digits = raw.replace(/\D/g, "");
+      if (digits.length > 4) digits = digits.slice(0, 4);
+      if (digits.length > 2) {
+        digits = digits.slice(0, 2) + ":" + digits.slice(2);
       }
+      const value = isNegative ? "-" + digits : digits;
       if (cell.textContent !== value) {
         cell.textContent = value;
         const selection = window.getSelection();
@@ -1204,27 +1721,27 @@
         selection.addRange(range);
       }
     }
-    /* == EMPLOYEES EXTRA HOURS MONTH BUTTONS == */    
     function decimalHoursToMinutes(hours) {
-      if (!hours || hours <= 0) return 0;
+      if (!hours) return 0;
       return Math.round(hours * 60);
     }
     function minutesToHHMM(minutes) {
-      if (!minutes || minutes <= 0) return "";
-      const h = Math.floor(minutes / 60);
-      const m = minutes % 60;
-      return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+      if (!minutes) return "";
+      const isNegative = minutes < 0;
+      const absMinutes = Math.abs(minutes);
+      const h = Math.floor(absMinutes / 60);
+      const m = absMinutes % 60;
+      return `${isNegative ? "-" : ""}${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
     }
     function isValidHHMM(value) {
-      return /^\d{1,2}:\d{2}$/.test(value);
+      return /^-?\d{1,2}:\d{2}$/.test(value);
     }
     /* ================================ CREATE AND SAVE EXTRA HOURS =============================== */    
     async function createExtraHoursTable(containerId, year, month, data) {
       const container = document.getElementById(containerId);
       if (!container) return;
       const rowsData = data?.employees || [];
-      container.innerHTML = "";
-      
+      container.innerHTML = "";  
       const WEEKDAY_NAMES = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
       const daysInMonth = new Date(year, month, 0).getDate();
       const holidayMap = getHolidayMapForMonth(year, month);
@@ -1237,7 +1754,9 @@
       wrapper.style.overflowY = "auto";
       const table = document.createElement("table");
       table.className = "employees-table extra-hours-table";
-      Object.assign(table.style, { width: "100%", borderCollapse: "separate" });
+      table.dataset.year = year;
+      table.dataset.month = month;
+      Object.assign(table.style, {width: "100%", borderCollapse: "separate"});
       const thead = document.createElement("thead");
       function getDayStyle(d, extraCss = "") {
         const date = new Date(year, month - 1, d, 12, 0, 0);
@@ -1247,7 +1766,7 @@
         if (holiday) bg = holiday.optional ? "#d6ecff" : "#f7c6c7";
         else if (dow === 0 || dow === 6) bg = "#f9e0b0";
         return bg
-          ? COMMON_EMP_TH_STYLE + `background: ${bg}; color: #000; ${extraCss}`
+        ? COMMON_EMP_TH_STYLE + `background: ${bg}; color: #000; ${extraCss}`
         : COMMON_EMP_TH_STYLE + extraCss;
       }
       const trWeek = document.createElement("tr");
@@ -1333,8 +1852,10 @@
             if (raw === "" || !isValidHHMM(raw)) {
               td.textContent = "";
             } else {
-              const [h, m] = raw.split(":").map(Number);
-              td.textContent = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+              const isNegative = raw.startsWith("-");
+              const cleanRaw = isNegative ? raw.slice(1) : raw;
+              const [h, m] = cleanRaw.split(":").map(Number);
+              td.textContent = `${isNegative ? "-" : ""}${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
             }
             updateExtraHoursTotals(tr);
           });
@@ -1383,16 +1904,23 @@
       let totalMinutes = 0;
       cells.forEach(cell => {
         const value = (cell.textContent || "").trim();
-        if (/^\d{1,2}:\d{2}$/.test(value)) {
-          const [h, m] = value.split(":").map(Number);
-          totalMinutes += h * 60 + m;
+        if (/^-?\d{1,2}:\d{2}$/.test(value)) {
+          const isNegative = value.startsWith("-");
+          const cleanValue = isNegative ? value.slice(1) : value;
+          const [h, m] = cleanValue.split(":").map(Number);
+          const minutes = h * 60 + m;
+          totalMinutes += isNegative ? -minutes : minutes;
         }
       });
       const totalMonthCell = row.querySelector(".total-monthly-extra-cell");
       if (totalMonthCell) {
-        const h = Math.floor(totalMinutes / 60);
-        const m = totalMinutes % 60;
-        totalMonthCell.textContent = totalMinutes > 0 ? (m > 0 ? `${h}h${String(m).padStart(2, "0")}m` : `${h}h`) : "0h";
+        const isNegative = totalMinutes < 0;
+        const absMinutes = Math.abs(totalMinutes);
+        const h = Math.floor(absMinutes / 60);
+        const m = absMinutes % 60;
+        totalMonthCell.textContent = totalMinutes !== 0
+          ? `${isNegative ? "-" : ""}${m > 0 ? `${h}h${String(m).padStart(2, "0")}m` : `${h}h`}`
+          : "0h";
       }
     }
     async function saveExtraHours() {
@@ -1401,14 +1929,13 @@
         showPopup('popup-danger', "Nenhuma tabela aberta.");
         return;
       }
-      const yearSelect = document.getElementById("year-extra-hour-employees");
-      const monthBtn = document.querySelector("#months-container-extra-hour-employees .btn.active");
-      if (!monthBtn || !yearSelect) {
+      const table = tbody.closest("table");
+      const year = parseInt(table?.dataset.year, 10);
+      const month = parseInt(table?.dataset.month, 10);
+      if (!year || !month) {
         showPopup('popup-danger', "Selecione mês e ano primeiro.");
         return;
       }
-      const year = parseInt(yearSelect.value, 10);
-      const month = Array.from(document.querySelectorAll("#months-container-extra-hour-employees .btn")).indexOf(monthBtn) + 1;
       const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const saveExtraHoursBtn = document.getElementById("employees-extra-save-btn");
       if (saveExtraHoursBtn) {
@@ -1425,10 +1952,13 @@
           cells.forEach((cell, idx) => {
             const value = cell.textContent.trim();
             if (value && isValidHHMM(value)) {
-              const [h, m] = value.split(":").map(Number);
+              const isNegative = value.startsWith("-");
+              const cleanValue = isNegative ? value.slice(1) : value;
+              const [h, m] = cleanValue.split(":").map(Number);
               const totalMinutes = h * 60 + m;
-              if (totalMinutes > 0) {
-                dailyRecords.push({n_int, abv_name, year, month, day: idx + 1, qtd_hours: parseFloat((totalMinutes / 60).toFixed(2)), corp_oper_nr: corpOperNr});
+              if (totalMinutes !== 0) {
+                const qtdHours = parseFloat((totalMinutes / 60).toFixed(2));
+                dailyRecords.push({n_int, abv_name, year, month, day: idx + 1, qtd_hours: isNegative ? -qtdHours : qtdHours, corp_oper_nr: corpOperNr});
               }
             }
           });
@@ -1443,63 +1973,54 @@
         try {
           let prevMonth = month - 1;
           let prevYear = year;
-          if (prevMonth === 0) { prevMonth = 12; prevYear--; }
-          const [shiftsRes, acumPrevRes] = await Promise.all([
-            fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`, {
-              headers: getSupabaseHeaders()
-            }),
-            month > 1
-            ? fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul?corp_oper_nr=eq.${corpOperNr}&year=eq.${prevYear}&month=eq.${prevMonth}`, {
-              headers: getSupabaseHeaders()
-            })
-            : Promise.resolve(null)
+          if (prevMonth === 0) {prevMonth = 12; prevYear--;}
+          const [monthlyExistingRes, acumPrevRes] = await Promise.all([
+          fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`, {
+            headers: getSupabaseHeaders()
+          }),
+          month > 1
+          ? fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul?corp_oper_nr=eq.${corpOperNr}&year=eq.${prevYear}&month=eq.${prevMonth}`, {
+            headers: getSupabaseHeaders()
+          })
+          : Promise.resolve(null)
           ]);
-          const allShifts = shiftsRes.ok ? await shiftsRes.json() : [];
+          const monthlyExistingData = monthlyExistingRes.ok ? await monthlyExistingRes.json() : [];
+          const monthlyMap = {};
+          const abvNameMap = {};
+          monthlyExistingData.forEach(r => {
+            monthlyMap[r.n_int] = r.monthly_total || 0;
+            abvNameMap[r.n_int] = r.abv_name;
+          });
           const acumPrevData = (acumPrevRes && acumPrevRes.ok) ? await acumPrevRes.json() : [];
           const acumPrevMap = {};
           acumPrevData.forEach(r => {acumPrevMap[r.n_int] = r.total_accumulated || 0;});
           const newExtraMap = {};
           dailyRecords.forEach(r => {
             newExtraMap[r.n_int] = (newExtraMap[r.n_int] || 0) + r.qtd_hours;
+            if (!abvNameMap[r.n_int]) abvNameMap[r.n_int] = r.abv_name;
           });
           const {workingHours: mandatoryCargo} = calculateWorkingHours(year, month);
-          const holidayMap = getHolidayMapForMonth(year, month);
-          const daysInMonth = new Date(year, month, 0).getDate();
           const isJanuary = (month === 1);
-          const shiftsByEmp = {};
-          allShifts.forEach(s => {
-            if (!shiftsByEmp[s.n_int]) shiftsByEmp[s.n_int] = {abv_name: s.abv_name, shifts: {}};
-            shiftsByEmp[s.n_int].shifts[s.day] = s.shift;
-          });
-          const newAccumulatedPayload = Object.entries(shiftsByEmp).map(([nIntStr, empData]) => {
+          const allNInts = new Set([...Object.keys(monthlyMap), ...Object.keys(newExtraMap)]);
+          const newAccumulatedPayload = Array.from(allNInts).map(nIntStr => {
             const nInt = parseInt(nIntStr, 10);
-            let totalMonthly = 0;
-            for (let d = 1; d <= daysInMonth; d++) {
-              const shift = (empData.shifts[d] || "").trim().toUpperCase();
-              if (!shift || shift === " ") {
-                const date = atNoonLocal(year, month - 1, d);
-                const dow = date.getDay();
-                const isHoliday = holidayMap?.has(d) && !holidayMap.get(d).optional;
-                if (dow !== 0 && dow !== 6 && !isHoliday) totalMonthly += 8;
-              } else {
-                totalMonthly += (SHIFT_VALUES[shift] !== undefined ? SHIFT_VALUES[shift] : 0);
-              }
-            }
+            const totalMonthly = monthlyMap[nInt] || 0;
             const extraHours = newExtraMap[nInt] || 0;
             const accumulatedBase = isJanuary ? 0 : (acumPrevMap[nInt] || 0);
             const totalAccumulated = isJanuary
             ? (totalMonthly - mandatoryCargo + extraHours)
             : (accumulatedBase + totalMonthly - mandatoryCargo + extraHours);
-            return { n_int: nInt, abv_name: empData.abv_name, year, month, monthly_total: totalMonthly, total_accumulated: totalAccumulated, corp_oper_nr: corpOperNr };
+            return {n_int: nInt, abv_name: abvNameMap[nInt] || "", year, month, monthly_total: totalMonthly, total_accumulated: totalAccumulated, corp_oper_nr: corpOperNr};
           });
           if (newAccumulatedPayload.length > 0) {
             const rpcAcum = await fetch(`${SUPABASE_URL}/rest/v1/rpc/replace_month_rows`, {
-              method: "POST",
-              headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
-              body: JSON.stringify({p_table: "reg_employees_acumul", p_corp: String(corpOperNr), p_year: String(year), p_month: String(month), p_rows: newAccumulatedPayload})
-            });
+          method: "POST",
+          headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
+          body: JSON.stringify({p_table: "reg_employees_acumul", p_corp: String(corpOperNr), p_year: String(year), p_month: String(month), p_rows: newAccumulatedPayload})
+        });
             if (!rpcAcum.ok) throw new Error(await rpcAcum.text());
           }
+          await propagateAccumulatedForward(corpOperNr, year, month);
         } catch (acumErr) {
           acumOk = false;
           console.warn("⚠️ Horas extra guardadas, mas erro ao atualizar acumulados:", acumErr);
@@ -1515,7 +2036,7 @@
       } finally {
         if (saveExtraHoursBtn) {
           saveExtraHoursBtn.disabled = false;
-          saveExtraHoursBtn.textContent = "Guardar";
+          saveExtraHoursBtn.textContent = "💾 Guardar";
         }
       }
     }
@@ -1555,7 +2076,7 @@
     FASE 03 - GENERAL DATA
     ================================ */
     function createEmployeePersonalGraphic() {
-      const cardBody = document.querySelector("#individual-records .card-body");
+      const cardBody = document.querySelector("#individual-records .major-card-body");
       if (!cardBody) return;
       cardBody.innerHTML = "";
       const mainWrapper = document.createElement("div");
@@ -1635,7 +2156,7 @@
         });
       } catch (error) {
         console.error("Error loading employees:", error);
-        showPopupWarning && showPopup('popup-danger', "Error loading employees list");
+        showPopup && showPopup('popup-danger', "Error loading employees list");
       }
     }
     async function loadPersonalGraphicData(nInt, year) {
@@ -1745,7 +2266,7 @@
         createPersonalGraphicChart(chartContainer, monthsData);
       } catch (error) {
         console.error("Error loading personal graphic data:", error);
-        showPopupWarning && showPopup('popup-danger', "Error loading data");
+        showPopup && showPopup('popup-danger', "Error loading data");
       }
     }
     function calculateWorkingHoursIndividual(startDate, endDate, year) {
@@ -1951,6 +2472,32 @@
     FASE 04 - EMPLOYEE HOLIDAY MANAGEMENT
     =============================== */
     /* ================================ CREATE EMPLOYEE VACATIONS MANAGER =============================== */
+    let employeesForHolidays = [];
+    async function loadEmployeesForHolidays() {
+      try {
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/reg_employees?select=n_int,abv_name,team,function&corp_oper_nr=eq.${corpOperNr}&order=n_int`, {
+            headers: getSupabaseHeaders()
+          }
+        );
+        if (!response.ok) throw new Error("Erro ao carregar funcionários");
+        const employees = await response.json();
+        employeesForHolidays = employees;
+        const select = document.getElementById("holiday-employee-select");
+        if (!select) return;        
+        select.innerHTML = '<option value="">-- Selecionar --</option>';
+        employees.forEach(emp => {
+          const option = document.createElement("option");
+          option.value = emp.n_int;
+          option.textContent = emp.abv_name;
+          select.appendChild(option);
+        });
+      } catch (error) {
+        console.error("Error loading employees:", error);
+        if (typeof showPopup === "function") showPopup('popup-danger', "Erro ao carregar funcionários");
+      }
+    }
     function getEasterDateForHolidays(year) {
       const a = year % 19;
       const b = Math.floor(year / 100);
@@ -1987,28 +2534,28 @@
       return holidays;
     }
     function createHolidayManagement() {
-      const cardBody = document.querySelector("#vacation-scheduling .card-body");
+      const cardBody = document.querySelector("#vacation-scheduling .major-card-body");
       if (!cardBody) return;
-      cardBody.innerHTML = "";
+      cardBody.innerHTML = "";      
       const mainWrapper = document.createElement("div");
-      mainWrapper.style.cssText = `display: flex; flex-direction: column; margin-top: -20px; gap: 5px; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;`;
+      mainWrapper.style.cssText = `display: flex; flex-direction: column; margin-top: -20px; gap: 5px; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;`;      
       const titleSection = document.createElement("div");
       titleSection.style.cssText = `display: flex; align-items: center; margin-bottom: 10px; gap: 8px; font-size: 16px; font-weight: 800; color: #1e293b;`;
-      titleSection.innerHTML = `<span style="background: #1e293b; color: #fff; padding: 2px 7px; border-radius: 4px; font-size: 10px;">RH</span> MARCAÇÃO DE FÉRIAS`;
+      titleSection.innerHTML = `<span style="background: #1e293b; color: #fff; padding: 2px 7px; border-radius: 4px; font-size: 10px;">RH</span> MARCAÇÃO DE FÉRIAS`;      
       const selectorSection = document.createElement("div");
-      selectorSection.style.cssText = `display: flex; align-items: center; gap: 15px; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);`;
+      selectorSection.style.cssText = `display: flex; align-items: center; gap: 15px; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);`;      
       const label = document.createElement("label");
       label.textContent = "Selecionar Funcionário:";
-      label.style.cssText = "font-weight: bold; font-size: 14px;";
+      label.style.cssText = "font-weight: bold; font-size: 14px;";      
       const select = document.createElement("select");
       select.id = "holiday-employee-select";
-      select.style.cssText = `padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; min-width: 250px; cursor: pointer;`;
+      select.style.cssText = `padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; min-width: 250px; cursor: pointer;`;      
       const yearLabel = document.createElement("label");
       yearLabel.textContent = "Ano:";
-      yearLabel.style.cssText = "font-weight: bold; font-size: 14px; margin-left: 20px;";
+      yearLabel.style.cssText = "font-weight: bold; font-size: 14px; margin-left: 20px;";      
       const yearSelect = document.createElement("select");
       yearSelect.id = "holiday-year-select";
-      yearSelect.style.cssText = `padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; cursor: pointer;`;
+      yearSelect.style.cssText = `padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; cursor: pointer;`;      
       const currentYear = new Date().getFullYear();
       for (let y = 2026; y <= 2036; y++) {
         const opt = document.createElement("option");
@@ -2017,67 +2564,92 @@
         if (y === currentYear) opt.selected = true;
         yearSelect.appendChild(opt);
       }
-      selectorSection.append(label, select, yearLabel, yearSelect);
+      selectorSection.append(label, select, yearLabel, yearSelect);      
       const infoSection = document.createElement("div");
       infoSection.id = "holiday-info-section";
-      infoSection.style.cssText = `display: none; grid-template-columns: repeat(3, 1fr); gap: 15px; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);`;
-      const createInfoCard = (id, label, icon, color) => {
+      infoSection.style.cssText = `display: none; grid-template-columns: repeat(4, 1fr); gap: 15px; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);`;      
+      const createInfoCard = (id, label, icon, color, labelId = "") => {
         const card = document.createElement("div");
         card.style.cssText = `background: linear-gradient(135deg, ${color}22 0%, ${color}11 100%); border: 2px solid ${color}; border-radius: 8px; padding: 15px; text-align: center;`;
         card.innerHTML = `
-          <div style="color: ${color}; font-size: 12px; font-weight: 600; margin-bottom: 8px;">
+          <div ${labelId ? `id="${labelId}"` : ""} style="color: ${color} !important; font-size: 12px; font-weight: 600; margin-bottom: 8px;">
             ${icon} ${label}
           </div>
-          <div id="${id}" style="color: #333; font-size: 24px; font-weight: bold;">
-            ---
-          </div>
+          <div id="${id}" style="color: #333; font-size: 24px; font-weight: bold;">---</div>
         `;
         return card;
       };
-      infoSection.appendChild(createInfoCard("holiday-total-days", "Total de Férias", "📅", "#2196f3"));
-      infoSection.appendChild(createInfoCard("holiday-used-days", "Dias Usados", "✅", "#ff9800"));
-      infoSection.appendChild(createInfoCard("holiday-available-days", "Dias Disponíveis", "🎯", "#00c853"));
+      const initialPrevYear = parseInt(yearSelect.value) - 1;
+      infoSection.appendChild(createInfoCard("holiday-remaining-prev-days", `Dias Remanescentes (${initialPrevYear})`, '<i class="fa-solid fa-clock-rotate-left"></i>', "#9c27b0", "holiday-remaining-prev-days-label"));
+      infoSection.appendChild(createInfoCard("holiday-total-days", "Total de Férias", '<i class="fa-solid fa-calendar-days"></i>', "#2196f3"));
+      infoSection.appendChild(createInfoCard("holiday-used-days", "Dias Usados", '<i class="fa-solid fa-circle-check"></i>', "#ff9800"));
+      infoSection.appendChild(createInfoCard("holiday-available-days", "Dias Disponíveis", '<i class="fa-solid fa-bullseye"></i>', "#00c853"));
       const periodsSection = document.createElement("div");
       periodsSection.id = "holiday-periods-section";
-      periodsSection.style.cssText = `display: none; flex-direction: column; gap: 5px; margin-top: 10px;`;
+      periodsSection.style.cssText = `display: none; flex-direction: column; gap: 5px; margin-top: 10px;`;      
       const periodsTitle = document.createElement("h3");
-      periodsTitle.textContent = "Marcar Períodos de Férias";
-      periodsTitle.style.cssText = `margin: 0; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); font-size: 18px; color: #333;`;
+      periodsTitle.style.cssText = `margin: 0; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); font-size: 18px; color: #333; display: flex; justify-content: space-between; align-items: center;`;
+      periodsTitle.innerHTML = `<span>Marcar Períodos de Férias</span>`;      
       const cardsWrapper = document.createElement("div");
-      cardsWrapper.style.cssText = `display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px;`;
+      cardsWrapper.id = "holiday-cards-wrapper";
+      cardsWrapper.style.cssText = `display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 5px;`;      
       periodsSection.appendChild(periodsTitle);
-      periodsSection.appendChild(cardsWrapper);
+      periodsSection.appendChild(cardsWrapper);      
       for (let i = 1; i <= 3; i++) {
-        const periodCard = createPeriodCard(i);
-        cardsWrapper.appendChild(periodCard);
+        cardsWrapper.appendChild(createPeriodCard(i));
       }
+      const addPeriodBtn = document.createElement("button");
+      addPeriodBtn.id = "holiday-add-period-btn";
+      addPeriodBtn.innerHTML = '<i class="fa-solid fa-plus" style="margin-right: 6px;"></i>Adicionar Período';
+      addPeriodBtn.className = "btn btn-info";
+      addPeriodBtn.style.cssText = "padding: 10px 20px; font-size: 13px; font-weight: bold; cursor: pointer; background-color: #2196f3; color: white; border: none; border-radius: 4px;";
+      periodsTitle.appendChild(addPeriodBtn);
+      addPeriodBtn.addEventListener("click", () => {
+        const currentCards = cardsWrapper.querySelectorAll(".holiday-period-card").length;
+        if (currentCards < 6) {
+          const nextIndex = currentCards + 1;
+          const newCard = createPeriodCard(nextIndex);
+          cardsWrapper.appendChild(newCard);          
+          const start = document.getElementById(`holiday-start-${nextIndex}`);
+          const end = document.getElementById(`holiday-end-${nextIndex}`);
+          if (start) start.value = "";
+          if (end) end.value = "";
+          if (nextIndex === 6) {
+            addPeriodBtn.disabled = true;
+            addPeriodBtn.style.backgroundColor = "#ccc";
+            addPeriodBtn.style.cursor = "not-allowed";
+            addPeriodBtn.innerHTML = '<i class="fa-solid fa-ban" style="margin-right: 6px; color: #dc3545;"></i>Limite Máximo de 6 Períodos Atingido';
+          }
+        }
+      });      
       const actionsDiv = document.createElement("div");
-      actionsDiv.style.cssText = `display: flex; gap: 10px; margin-top: 10px; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);`;
+      actionsDiv.style.cssText = `display: flex; gap: 10px; margin-top: 10px; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);`;      
       const previewBtn = document.createElement("button");
       previewBtn.id = "holiday-preview-btn";
-      previewBtn.textContent = "👁️ Pré-visualizar";
-      previewBtn.className = "btn btn-secondary";
-      previewBtn.style.cssText = `flex: 1; padding: 12px; font-size: 14px; font-weight: bold; cursor: pointer;`;
+      previewBtn.innerHTML = '<i class="fa-solid fa-eye" style="margin-right: 6px;"></i>Pré-visualizar';
+      previewBtn.className = "btn btn-clean";
+      previewBtn.style.cssText = `flex: 1; padding: 12px; font-size: 14px; font-weight: bold; cursor: pointer;`;      
       const saveBtn = document.createElement("button");
       saveBtn.id = "holiday-save-btn";
-      saveBtn.textContent = "💾 Gravar Férias";
+      saveBtn.innerHTML = '<i class="fa-solid fa-floppy-disk" style="margin-right: 6px;"></i>Gravar Férias';
       saveBtn.className = "btn btn-add";
-      saveBtn.style.cssText = `flex: 1; padding: 12px; font-size: 14px; font-weight: bold; cursor: pointer;`;
+      saveBtn.style.cssText = `flex: 1; padding: 12px; font-size: 14px; font-weight: bold; cursor: pointer;`;      
       const pdfBtn = document.createElement("button");
       pdfBtn.id = "holiday-pdf-btn";
-      pdfBtn.textContent = "📄 Gerar Formulário (PDF)";
+      pdfBtn.innerHTML = '<i class="fa-solid fa-file-pdf" style="margin-right: 6px;"></i>Gerar Formulário (PDF)';
       pdfBtn.className = "btn btn-info";
-      pdfBtn.style.cssText = `flex: 1; padding: 12px; font-size: 14px; font-weight: bold; cursor: pointer; background-color: #455a64; color: white; border: none; border-radius: 4px;`;
+      pdfBtn.style.cssText = `flex: 1; padding: 12px; font-size: 14px; font-weight: bold; cursor: pointer; background-color: #455a64; color: white; border: none; border-radius: 4px;`;      
       actionsDiv.append(previewBtn, saveBtn, pdfBtn);
-      periodsSection.appendChild(actionsDiv);
+      periodsSection.appendChild(actionsDiv);      
       const previewSection = document.createElement("div");
       previewSection.id = "holiday-preview-section";
       previewSection.style.cssText = `display: none; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);`;
-      periodsSection.appendChild(previewSection);
+      periodsSection.appendChild(previewSection);      
       mainWrapper.append(titleSection, selectorSection, infoSection, periodsSection);
-      cardBody.appendChild(mainWrapper);
+      cardBody.appendChild(mainWrapper);      
       setTimeout(() => {
-        for (let i = 1; i <= 3; i++) {
+        const currentCards = cardsWrapper.querySelectorAll(".holiday-period-card").length;
+        for (let i = 1; i <= currentCards; i++) {
           const start = document.getElementById(`holiday-start-${i}`);
           const end = document.getElementById(`holiday-end-${i}`);
           if (start) start.value = "";
@@ -2088,9 +2660,30 @@
       select.addEventListener("change", () => {
         if (select.value && yearSelect.value) {
           loadHolidayData(select.value, parseInt(yearSelect.value));
+        } else {
+          const wrapper = document.getElementById("holiday-cards-wrapper");
+          if (wrapper) {
+            wrapper.innerHTML = "";
+            for (let i = 1; i <= 3; i++) {
+              wrapper.appendChild(createPeriodCard(i));
+            }
+          }
+          document.getElementById("holiday-info-section").style.display = "none";
+          document.getElementById("holiday-periods-section").style.display = "none";
+          const addPeriodBtn = document.getElementById("holiday-add-period-btn");
+          if (addPeriodBtn) {
+            addPeriodBtn.disabled = false;
+            addPeriodBtn.style.backgroundColor = "#2196f3";
+            addPeriodBtn.style.cursor = "pointer";
+            addPeriodBtn.innerHTML = '<i class="fa-solid fa-plus" style="margin-right: 6px;"></i>Adicionar Período';
+          }
         }
       });
       yearSelect.addEventListener("change", () => {
+        const remainingLabelEl = document.getElementById("holiday-remaining-prev-days-label");
+        if (remainingLabelEl) {
+          remainingLabelEl.textContent = `⏮️ Dias Remanescentes (${parseInt(yearSelect.value) - 1})`;
+        }
         if (select.value && yearSelect.value) {
           loadHolidayData(select.value, parseInt(yearSelect.value));
         }
@@ -2102,51 +2695,76 @@
     function createPeriodCard(periodNumber) {
       const card = document.createElement("div");
       card.className = "holiday-period-card";
-      card.style.cssText = `padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid #2196f3;`;
+      card.style.cssText = `padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid #2196f3; position: relative;`;
       const title = document.createElement("div");
+      title.className = "holiday-card-title";
       title.textContent = `Período ${periodNumber}`;
       title.style.cssText = `font-size: 16px; font-weight: bold; color: #2196f3; margin-bottom: 15px;`;
+      card.append(title);
+      const removeBtn = document.createElement("button");
+      removeBtn.innerHTML = '<i class="fa-solid fa-xmark" style="font-size: 16px; font-weight: bold; color: #dc3545;"></i>';
+      removeBtn.title = "Remover este período";
+      removeBtn.style.cssText = `position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 14px; cursor: pointer; padding: 5px; line-height: 1;`;
+      if (periodNumber <= 3) {
+        removeBtn.style.display = "none";
+      }
+      removeBtn.addEventListener("click", () => {
+        const wrapper = document.getElementById("holiday-cards-wrapper");
+        if (!wrapper) return;
+        card.remove();
+        const allCards = wrapper.querySelectorAll(".holiday-period-card");
+        allCards.forEach((currentCard, index) => {
+          const newIndex = index + 1;
+          const titleEl = currentCard.querySelector(".holiday-card-title");
+          if (titleEl) titleEl.textContent = `Período ${newIndex}`;
+          const startInputEl = currentCard.querySelector("input[id^='holiday-start-']");
+          if (startInputEl) {
+            startInputEl.id = `holiday-start-${newIndex}`;
+          }
+          const endInputEl = currentCard.querySelector("input[id^='holiday-end-']");
+          if (endInputEl) {
+            endInputEl.id = `holiday-end-${newIndex}`;
+          }
+          const daysDisplayEl = currentCard.querySelector("[id^='holiday-days-']");
+          if (daysDisplayEl) {
+            daysDisplayEl.id = `holiday-days-${newIndex}`;
+          }
+          const cardRemoveBtn = currentCard.querySelector("button");
+          if (cardRemoveBtn) {
+            cardRemoveBtn.style.display = newIndex <= 3 ? "none" : "block";
+          }
+        });
+        const addPeriodBtn = document.getElementById("holiday-add-period-btn");
+        if (addPeriodBtn) {
+          addPeriodBtn.disabled = false;
+          addPeriodBtn.style.backgroundColor = "#2196f3";
+          addPeriodBtn.style.cursor = "pointer";
+          addPeriodBtn.innerHTML = '<i class="fa-solid fa-plus" style="margin-right: 6px;"></i>Adicionar Período';
+        }
+      });
+      card.append(removeBtn);
       const fieldsContainer = document.createElement("div");
-      fieldsContainer.style.cssText = `display: grid; grid-template-columns: 1fr 1fr auto; gap: 15px; align-items: end;`;
+      fieldsContainer.style.cssText = `display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; align-items: end;`;
       const startGroup = document.createElement("div");
       startGroup.innerHTML = `
-        <label style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 13px;">
-          Data Início
-        </label>
-        <input
-          type="date"
-          id="holiday-start-${periodNumber}"
-          style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;"
-        />
+        <label style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 13px;">Data Início</label>
+        <input type="date" id="holiday-start-${periodNumber}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;"/>
       `;
       const endGroup = document.createElement("div");
       endGroup.innerHTML = `
-        <label style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 13px;">
-          Data Fim
-        </label>
-        <input
-          type="date"
-          id="holiday-end-${periodNumber}"
-          style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;"
-        />
+        <label style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 13px;">Data</label>
+        <input type="date" id="holiday-end-${periodNumber}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;"/>
       `;
       const daysInfo = document.createElement("div");
       daysInfo.innerHTML = `
-        <label style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 13px;">
-          Dias Úteis
-        </label>
-        <div
-          id="holiday-days-${periodNumber}"
-          style="padding: 8px 12px; background: #f0f0f0; border-radius: 4px; font-weight: bold; text-align: center; min-width: 80px;"
-        >
-          ---
-        </div>
+        <label style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 13px;">Dias Úteis</label>
+        <div id="holiday-days-${periodNumber}" style="padding: 8px 12px; background: #f0f0f0; border-radius: 4px; font-weight: bold; text-align: center; min-width: 80px;">---</div>
       `;
       fieldsContainer.append(startGroup, endGroup, daysInfo);
-      card.append(title, fieldsContainer);
-      const startInput = card.querySelector(`#holiday-start-${periodNumber}`);
-      const endInput = card.querySelector(`#holiday-end-${periodNumber}`);
-      const daysDisplay = card.querySelector(`#holiday-days-${periodNumber}`);
+      card.append(fieldsContainer);
+      const startInput = card.querySelector(`input[id^='holiday-start-']`);
+      const endInput = card.querySelector(`input[id^='holiday-end-']`);
+      const daysDisplay = card.querySelector(`div[id^='holiday-days-']`);
       const updateDays = () => {
         if (startInput.value && endInput.value) {
           const start = new Date(startInput.value.replace(/-/g, '\/'));
@@ -2170,47 +2788,79 @@
       endInput.addEventListener("change", updateDays);
       return card;
     }
-    let employeesForHolidays = [];
-    async function loadEmployeesForHolidays() {
-      try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
-        const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/reg_employees?select=n_int,abv_name,team,function&corp_oper_nr=eq.${corpOperNr}&order=n_int`, {
-            headers: getSupabaseHeaders()
-          }
-        );
-        if (!response.ok) throw new Error("Erro ao carregar funcionários");
-        const employees = await response.json();
-        employeesForHolidays = employees;
-        const select = document.getElementById("holiday-employee-select");
-        if (!select) return;
-        select.innerHTML = '<option value="">-- Selecionar --</option>';
-        employees.forEach(emp => {
-          const option = document.createElement("option");
-          option.value = emp.n_int;
-          option.textContent = emp.abv_name;
-          select.appendChild(option);
-        });
-      } catch (error) {
-        console.error("Error loading employees:", error);
-        showPopupWarning && showPopup('popup-danger', "Erro ao carregar funcionários");
-      }
-    }
     async function loadHolidayData(nInt, year) {
       try {
         const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
-        const shiftsResponse = await fetch(
-          `${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&n_int=eq.${nInt}&shift=eq.FE&order=month.asc,day.asc`, {
-            headers: getSupabaseHeaders()
+        const prevYear = year - 1;
+        const remainingLabelEl = document.getElementById("holiday-remaining-prev-days-label");
+        if (remainingLabelEl) {
+          remainingLabelEl.innerHTML = `<i class="fa-solid fa-clock-rotate-left" style="margin-right: 6px;"></i>Dias Remanescentes (${prevYear})`;
+        }
+        const employeeResponse = await fetch(`${SUPABASE_URL}/rest/v1/reg_employees?corp_oper_nr=eq.${corpOperNr}&n_int=eq.${nInt}`, {
+          headers: getSupabaseHeaders()
+        });
+        if (!employeeResponse.ok) throw new Error("Erro ao obter dados do funcionário");
+        const employeeData = await employeeResponse.json();
+        let totalBaseDays = 22; 
+        let entryYear = null;
+        let entryMonth = null;
+        let entryDay = null;
+        if (employeeData && employeeData.length > 0 && employeeData[0].entry_date) {
+          const parts = employeeData[0].entry_date.split('-');
+          entryYear = parseInt(parts[0], 10);
+          entryMonth = parseInt(parts[1], 10);
+          entryDay = parseInt(parts[2], 10);
+          if (entryYear === year) {
+            let completedMonths = 12 - entryMonth + 1;
+            if (entryDay > 11 && completedMonths > 0) {
+              completedMonths--;
+            }
+            totalBaseDays = Math.min(completedMonths * 2, 20);
+            if (totalBaseDays < 0) totalBaseDays = 0; 
           }
-        );
-        if (!shiftsResponse.ok) throw new Error("Erro ao carregar dados do servidor");
-        const shifts = await shiftsResponse.json();
+        }
+        let remainingPrevYearDays = 0;
+        if (prevYear > 2025) {
+          const [shiftsResponse, prevShiftsResponse] = await Promise.all([
+            fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&n_int=eq.${nInt}&shift=eq.FE&order=month.asc,day.asc`, {
+              headers: getSupabaseHeaders()
+            }),
+            fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${prevYear}&n_int=eq.${nInt}&shift=eq.FE`, {
+              headers: getSupabaseHeaders()
+            })
+          ]);
+          if (!shiftsResponse.ok || !prevShiftsResponse.ok) throw new Error("Erro ao carregar dados do servidor");
+          const shifts = await shiftsResponse.json();
+          const prevShifts = await prevShiftsResponse.json();
+          const prevUsedDays = prevShifts.length;
+          let prevYearBase = 22;
+          if (entryYear && entryYear === prevYear) {
+            let compMonths = 12 - entryMonth + 1;
+            if (entryDay > 11 && compMonths > 0) {
+              compMonths--;
+            }
+            prevYearBase = Math.min(compMonths * 2, 20);
+          }
+          remainingPrevYearDays = Math.max(prevYearBase - prevUsedDays, 0);
+          window.currentLoadedShifts = shifts; 
+        } else {
+          const shiftsResponse = await fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&n_int=eq.${nInt}&shift=eq.FE&order=month.asc,day.asc`, {
+            headers: getSupabaseHeaders()
+          });
+          if (!shiftsResponse.ok) throw new Error("Erro ao carregar dados do servidor");
+          window.currentLoadedShifts = await shiftsResponse.json();
+        }
+        const shifts = window.currentLoadedShifts;
+        const prevDaysEl = document.getElementById("holiday-remaining-prev-days");
+        if (prevDaysEl) {
+          prevDaysEl.textContent = remainingPrevYearDays;
+          prevDaysEl.style.color = remainingPrevYearDays > 0 ? "#9c27b0" : "#333";
+        }
+        const totalHolidaysWithRemaining = totalBaseDays + remainingPrevYearDays; 
         const usedDays = shifts.length;
-        const totalDays = 22;
-        const availableDays = totalDays - usedDays;
-        document.getElementById("holiday-total-days").textContent = totalDays;
-        document.getElementById("holiday-used-days").textContent = usedDays;
+        const availableDays = totalHolidaysWithRemaining - usedDays;
+        document.getElementById("holiday-total-days").textContent = totalHolidaysWithRemaining;
+        document.getElementById("holiday-used-days").textContent = usedDays;        
         const availEl = document.getElementById("holiday-available-days");
         if (availEl) {
           availEl.textContent = availableDays;
@@ -2235,22 +2885,44 @@
         }
         document.getElementById("holiday-info-section").style.display = "grid";
         document.getElementById("holiday-periods-section").style.display = "flex";
-        for (let i = 1; i <= 3; i++) {
-          const startInput = document.getElementById(`holiday-start-${i}`);
-          const endInput = document.getElementById(`holiday-end-${i}`);
-          const daysDisplay = document.getElementById(`holiday-days-${i}`);
-          const p = periods[i - 1];
-          if (p) {
-            startInput.value = p.start.toLocaleDateString('sv-SE');
-            endInput.value = p.end.toLocaleDateString('sv-SE');
-            const workingDays = calculateWorkingDaysInPeriod(p.start, p.end, year);
-            daysDisplay.textContent = `${workingDays} dias`;
-            daysDisplay.style.color = "#2196f3";
-          } else {
-            startInput.value = "";
-            endInput.value = "";
-            daysDisplay.textContent = "---";
-            daysDisplay.style.color = "#333";
+        const wrapper = document.getElementById("holiday-cards-wrapper");
+        if (wrapper) {
+          wrapper.innerHTML = "";
+          const totalToShow = Math.min(Math.max(periods.length, 3), 6);
+          for (let i = 1; i <= totalToShow; i++) {
+            wrapper.appendChild(createPeriodCard(i));
+          }
+          const addPeriodBtn = document.getElementById("holiday-add-period-btn");
+          if (addPeriodBtn) {
+            if (totalToShow >= 6) {
+              addPeriodBtn.disabled = true;
+              addPeriodBtn.style.backgroundColor = "#ccc";
+              addPeriodBtn.style.cursor = "not-allowed";
+              addPeriodBtn.innerHTML = '<i class="fa-solid fa-ban" style="margin-right: 6px;"></i>Limite Máximo de 6 Períodos Atingido';
+            } else {
+              addPeriodBtn.disabled = false;
+              addPeriodBtn.style.backgroundColor = "#2196f3";
+              addPeriodBtn.style.cursor = "pointer";
+              addPeriodBtn.innerHTML = '<i class="fa-solid fa-plus" style="margin-right: 6px;"></i>Adicionar Período';
+            }
+          }
+          for (let i = 1; i <= totalToShow; i++) {
+            const startInput = document.getElementById(`holiday-start-${i}`);
+            const endInput = document.getElementById(`holiday-end-${i}`);
+            const daysDisplay = document.getElementById(`holiday-days-${i}`);
+            const p = periods[i - 1];
+            if (p) {
+              startInput.value = p.start.toLocaleDateString('sv-SE');
+              endInput.value = p.end.toLocaleDateString('sv-SE');
+              const workingDays = calculateWorkingDaysInPeriod(p.start, p.end, year);
+              daysDisplay.textContent = `${workingDays} dias`;
+              daysDisplay.style.color = "#2196f3";
+            } else {
+              startInput.value = "";
+              endInput.value = "";
+              daysDisplay.textContent = "---";
+              daysDisplay.style.color = "#333";
+            }
           }
         }
         const previewSection = document.getElementById("holiday-preview-section");
@@ -2303,17 +2975,18 @@
       const yearSelect = document.getElementById("holiday-year-select");
       const availableDaysEl = document.getElementById("holiday-available-days");
       if (!select.value) {
-        showPopupWarning && showPopup('popup-danger', "Selecione um funcionário");
+        showPopup && showPopup('popup-danger', "Selecione um funcionário");
         return;
       }
       const year = parseInt(yearSelect.value);
       const availableDays = parseInt(availableDaysEl.textContent);
       const periods = [];
       let totalDaysRequested = 0;
-      for (let i = 1; i <= 3; i++) {
+      const totalPeriodCards = document.querySelectorAll("#holiday-cards-wrapper .holiday-period-card").length;
+      for (let i = 1; i <= totalPeriodCards; i++) {
         const startInput = document.getElementById(`holiday-start-${i}`);
         const endInput = document.getElementById(`holiday-end-${i}`);
-        if (startInput.value && endInput.value) {
+        if (startInput && endInput && startInput.value && endInput.value) {
           const start = new Date(startInput.value.replace(/-/g, '\/'));
           const end = new Date(endInput.value.replace(/-/g, '\/'));
           const days = calculateWorkingDaysInPeriod(start, end, year);
@@ -2322,11 +2995,11 @@
         }
       }
       if (periods.length === 0) {
-        showPopupWarning && showPopup('popup-danger', "Adicione pelo menos um período");
+        showPopup && showPopup('popup-danger', "Adicione pelo menos um período");
         return;
       }
       if (totalDaysRequested > availableDays) {
-        showPopupWarning && showPopup('popup-danger', `Dias solicitados (${totalDaysRequested}) excedem dias disponíveis (${availableDays})`
+        showPopup && showPopup('popup-danger', `Dias marcados (${totalDaysRequested}), dias disponíveis (${availableDays}).`
         );
         return;
       }
@@ -2354,21 +3027,22 @@
       const select = document.getElementById("holiday-employee-select");
       const yearSelect = document.getElementById("holiday-year-select");
       if (!select.value) {
-        if (typeof showPopupWarning === "function") showPopup('popup-danger', "Selecione um funcionário");
+        if (typeof showPopup === "function") showPopup('popup-danger', "Selecione um funcionário");
         return;
       }
       const nInt = parseInt(select.value);
       const year = parseInt(yearSelect.value);
       const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const allFERecords = [];
-      for (let i = 1; i <= 3; i++) {
+      const totalPeriodCards = document.querySelectorAll("#holiday-cards-wrapper .holiday-period-card").length;
+      for (let i = 1; i <= totalPeriodCards; i++) {
         const startInput = document.getElementById(`holiday-start-${i}`);
         const endInput = document.getElementById(`holiday-end-${i}`);
-        if (startInput.value && endInput.value) {
+        if (startInput && endInput && startInput.value && endInput.value) {
           const start = new Date(startInput.value.replace(/-/g, '\/'));
           const end = new Date(endInput.value.replace(/-/g, '\/'));
           if (start.getFullYear() !== year || end.getFullYear() !== year) {
-            if (typeof showPopupWarning === "function")
+            if (typeof showPopup === "function")
               showPopup('popup-danger', `Erro no Período ${i}: As datas devem pertencer ao ano ${year}`);
             return;
           }
@@ -2376,11 +3050,13 @@
           allFERecords.push(...feRecords);
         }
       }
-      if (allFERecords.length > 22) {
+      const totalDaysEl = document.getElementById("holiday-total-days");
+      const allowedTotalDays = totalDaysEl ? parseInt(totalDaysEl.textContent, 10) : 22;
+      if (allFERecords.length > allowedTotalDays) {
         const excess = allFERecords.length;
         const confirmExcess = confirm(
           `⚠️ ATENÇÃO: O plano selecionado tem ${excess} dias úteis.\n\n` +
-          `O limite padrão anual é de 22 dias. Isto inclui dias transferidos do ano anterior?\n\n` +
+          `O limite calculado para este cenário é de ${allowedTotalDays} dias (incluindo proporcional de entrada ou remanescentes).\n\n` +
           `Clique em 'OK' para gravar ${excess} dias ou 'Cancelar' para rever.`
         );
         if (!confirmExcess) return;
@@ -2508,7 +3184,7 @@
     }
     /* MAPA DE FÉRIAS */
     async function createGlobalHolidayMap() {
-      const cardBody = document.querySelector("#vacation-scheduling-map .card-body");
+      const cardBody = document.querySelector("#vacation-scheduling-map .major-card-body");
       if (!cardBody) return;
       if (!document.getElementById("map-core-css")) {
         const s = document.createElement("style");
@@ -2517,7 +3193,7 @@
           .m-wrapper {font-family: 'Inter', sans-serif; color: #1e293b;}
           .m-title {font-size: 16px; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;}
           .m-badge-rh {background: #1e293b; color: #fff; padding: 2px 7px; border-radius: 4px; font-size: 10px;}
-          .m-container {max-height: 500px; overflow: auto; border: 1px solid #cbd5e1; border-radius: 6px; position: relative; scrollbar-width: none; -ms-overflow-style: none;}
+          .m-container {max-height: 580px; overflow: auto; border: 1px solid #cbd5e1; border-radius: 6px; position: relative; scrollbar-width: none; -ms-overflow-style: none;}
           .m-container::-webkit-scrollbar { display: none; }
           .m-table {width: 100%; border-collapse: separate; border-spacing: 0; font-size: 10.5px; table-layout: fixed;}
           .m-table th {position: sticky; top: 0; z-index: 10; background: #f8fafc; border-bottom: 2px solid #94a3b8; border-right: 1px solid #cbd5e1; padding: 8px 2px; text-align: center;}
@@ -2570,10 +3246,11 @@
               </table>
             </div>
             <div class="m-footer">
-              <button class="m-btn-secondary" onclick="consultDiscrepancies()">🔍 Consultar Anómalias</button>
-              <button class="m-btn" onclick="exportGlobalHolidayMap()">📥 Emitir Mapa</button>
+              <button class="m-btn-secondary" onclick="consultDiscrepancies()"><i class="fa-solid fa-magnifying-glass" style="margin-right: 6px;"></i>Consultar Anomalias</button>
+              <button class="m-btn" onclick="exportGlobalHolidayMap()"><i class="fa-solid fa-file-pdf" style="margin-right: 6px;"></i>Emitir Mapa</button>
             </div>
-          </div>`;
+          </div>
+        `;
       }
       loadGlobalHolidayData();
     }
@@ -2781,7 +3458,7 @@
         if (withDiscrepancies.length === 0) {
           content.innerHTML = `
             <div style="padding:40px;background:#f0fdf4;color:#166534;border-radius:8px;text-align:center;font-size:16px;">
-              ✅ <strong>Excelente!</strong><br>
+              <strong>Excelente!</strong><br>
               Todos os ${employees.length} funcionários ativos têm exatamente 22 dias marcados.
             </div>`;
           return;
@@ -2790,7 +3467,7 @@
           <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
             <div style="background:#f0fdf4;padding:15px;border-radius:8px;text-align:center;border:2px solid #bbf7d0;">
               <div style="font-size:28px;font-weight:800;color:#166534;">${ok}</div>
-              <div style="font-size:11px;color:#166534;margin-top:5px;">✅ COMPLETOS</div>
+              <div style="font-size:11px;color:#166534;margin-top:5px;">COMPLETOS</div>
             </div>
             <div style="background:#fef2f2;padding:15px;border-radius:8px;text-align:center;border:2px solid #fecaca;">
               <div style="font-size:28px;font-weight:800;color:#ef4444;">${missing}</div>
@@ -2852,7 +3529,8 @@
                   Não
                 </button>
               </td>
-            </tr>`;
+            </tr>
+          `;
         });
         html += `</tbody></table></div>`;
         content.innerHTML = html;
@@ -2915,14 +3593,14 @@
     }
     /* PRIORIDADE FÉRIAS */
     async function createPriorityMap() {
-      const cardBody = document.querySelector("#priority-scheduling-map .card-body");
+      const cardBody = document.querySelector("#priority-scheduling-map .major-card-body");
       if (!cardBody) return;
       if (!document.getElementById("priority-core-css")) {
         const s = document.createElement("style");
         s.id = "priority-core-css";
         s.innerHTML = `
           .p-wrapper {font-family: 'Inter', sans-serif; color: #1e293b;}
-          .p-container {max-height: 500px; overflow: auto; border: 1px solid #cbd5e1; border-radius: 6px; position: relative; scrollbar-width: none;}
+          .p-container {max-height: 580px; overflow: auto; border: 1px solid #cbd5e1; border-radius: 6px; position: relative; scrollbar-width: none;}
           .p-container::-webkit-scrollbar {display: none;}
           .p-table {width: 100%; border-collapse: separate; border-spacing: 0; font-size: 10px; table-layout: fixed;}
           .p-table thead tr:first-child th {position: sticky; top: 0; z-index: 100; background: #f8fafc; border-bottom: 1px solid #cbd5e1; border-right: 1px solid #cbd5e1; height: 35px;}
@@ -2988,9 +3666,10 @@
               </table>
             </div>
             <div class="p-footer">
-              <button class="p-btn" onclick="exportPrioritiesMap()">📥 Emitir Mapa</button>
+              <button class="p-btn" onclick="exportPrioritiesMap()"><i class="fa-solid fa-file-pdf" style="margin-right: 6px;"></i>Emitir Mapa</button>
             </div>
-          </div>`;
+          </div>
+        `;
       }
       loadPriorityData();
     }
@@ -3139,7 +3818,7 @@
     FASE 05 - SHIFT ALLOWANCE MANAGEMENT
     =============================== */
     async function createEmployeeShiftAllowance() {
-      const cardBody = document.querySelector("#eligibility-subs-shift .card-body");
+      const cardBody = document.querySelector("#eligibility-subs-shift .major-card-body");
       if (!cardBody) return;
       if (!document.getElementById("eligibility-core-css")) {
         const s = document.createElement("style");
@@ -3148,7 +3827,7 @@
           .e-wrapper {font-family: 'Inter', sans-serif; color: #1e293b;}
           .e-title {font-size: 16px; font-weight: 800; margin: 0; display: flex; align-items: center; gap: 8px;}
           .e-badge-rh {background: #1e293b; color: #fff; padding: 2px 7px; border-radius: 4px; font-size: 10px;}
-          .e-container {max-height: 500px; overflow: auto; border: 1px solid #cbd5e1; border-radius: 6px; position: relative; scrollbar-width: none;}
+          .e-container {max-height: 580px; overflow: auto; border: 1px solid #cbd5e1; border-radius: 6px; position: relative; scrollbar-width: none;}
           .e-container::-webkit-scrollbar {display: none;}
           .e-table {width: 100%; border-collapse: separate; border-spacing: 0; font-size: 10.5px; table-layout: fixed;}
           .e-table th {position: sticky; top: 0; z-index: 10; background: #f8fafc; border-bottom: 2px solid #94a3b8; border-right: 1px solid #cbd5e1; padding: 8px 2px; text-align: center;}
@@ -3197,8 +3876,8 @@
               </table>
             </div>
             <div class="e-footer">
-              <button class="e-btn e-btn-info" onclick="createConsultationEligibility()">🔍 Consulta Detalhada</button>
-              <button class="e-btn" onclick="exportShiftEligibility()">📥 Emitir Mapa</button>
+              <button class="e-btn e-btn-info" onclick="createConsultationEligibility()"><i class="fa-solid fa-magnifying-glass" style="margin-right: 6px;"></i>Consulta Detalhada</button>
+              <button class="e-btn" onclick="exportShiftEligibility()"><i class="fa-solid fa-file-pdf" style="margin-right: 6px;"></i>Emitir Mapa</button>
             </div>
           </div>`;
       }
@@ -3489,7 +4168,7 @@
     FASE 06 - SALARY PROCESSING MAP
     =============================== */
     async function createSalaryProcessingMap() {
-      const cardBody = document.querySelector("#salary-processing-map .card-body");
+      const cardBody = document.querySelector("#salary-processing-map .major-card-body");
       if (!cardBody) return;
       if (!document.getElementById("salary-core-css")) {
         const s = document.createElement("style");
@@ -3499,16 +4178,27 @@
           .s-header-flex {display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;}
           .s-title {font-size: 16px; font-weight: 800; margin: 0; display: flex; align-items: center; gap: 8px;}
           .s-badge-rh {background: #1e293b; color: #fff; padding: 2px 7px; border-radius: 4px; font-size: 10px;}
-          .s-container {max-height: 500px; overflow: auto; border: 1px solid #cbd5e1; border-radius: 8px; position: relative; -ms-overflow-style: none; scrollbar-width: none;}
+          .s-container {max-height: 580px; overflow: auto; border: 1px solid #cbd5e1; border-radius: 8px; position: relative; -ms-overflow-style: none; scrollbar-width: none;}
           .s-container::-webkit-scrollbar {display: none;}
           .s-table {width: 100%; border-collapse: separate; border-spacing: 0; font-size: 11px; table-layout: fixed;}
-          .s-table th {position: sticky; top: 0; z-index: 10; background: #f8fafc; border-bottom: 2px solid #94a3b8; border-right: 1px solid #cbd5e1; padding: 8px 2px; text-align: center;}
-          .s-name-col {position: sticky !important; left: 0; z-index: 20 !important; background: #f1f5f9 !important; border-right: 2px solid #cbd5e1 !important; text-align: left !important;
+          .s-table thead tr:first-child th {position: sticky; top: 0; z-index: 10; background: #f8fafc; border-bottom: 2px solid #94a3b8; border-right: 1px solid #cbd5e1; padding: 6px 2px; text-align: center;}
+          .s-table thead tr:nth-child(2) th {position: sticky; top: 30px; z-index: 10; background: #f8fafc; border-bottom: 2px solid #94a3b8; border-right: 1px solid #cbd5e1; padding: 4px 2px; text-align: center;}
+          .s-name-col {position: sticky !important; left: 0; z-index: 20 !important; background: #f1f5f9 !important; border-right: 1px solid #cbd5e1 !important; text-align: left !important; 
                        padding-left: 12px !important; font-weight: 700; width: 180px; min-width: 180px;}
-          .s-table thead th.s-name-col {z-index: 30 !important; top: 0;}
+          .s-table thead tr:first-child th.s-name-col {z-index: 30 !important; top: 0;}
+          .s-table thead tr:nth-child(2) th.s-name-col {z-index: 30 !important; top: 30px;}
+          .s-sub-col-1 {position: sticky !important; left: 180px; z-index: 20 !important; background: #f1f5f9 !important; border-right: 1px solid #cbd5e1 !important; text-align: center !important; 
+                        width: 70px; min-width: 70px;}
+          .s-sub-col-2 {position: sticky !important; left: 250px; z-index: 20 !important; background: #f1f5f9 !important; border-right: 1px solid #cbd5e1 !important; text-align: center !important; 
+                        width: 70px; min-width: 70px;}
+          .s-table thead tr:first-child th.s-sub-col-1 {z-index: 30 !important; top: 0;}
+          .s-table thead tr:first-child th.s-sub-col-2 {z-index: 30 !important; top: 0;}
+          .s-table thead tr:nth-child(2) th.s-sub-col-1 {z-index: 30 !important; top: 30px;}
+          .s-table thead tr:nth-child(2) th.s-sub-col-2 {z-index: 30 !important; top: 30px;}
           .s-table td {border-bottom: 1px solid #cbd5e1; border-right: 1px solid #cbd5e1; padding: 6px 4px; text-align: center; vertical-align: middle !important;}
           .s-row:hover td {background-color: #f8fafc !important;}
           .s-card-base {background: #fee2e2; color: #991b1b; border: 1px solid currentColor; border-radius: 4px; font-weight: 700; font-size: 9px; padding: 3px; line-height: 1.2;}
+          .s-card-base:not(:last-child) {margin-bottom: 4px;}
           .s-val-sickleave {color: #dc2626; background: #fef2f2;}
           .s-val-vacation {color: #2563eb; background: #eff6ff;}
           .s-val-parental {color: #7c3aed; background: #f5f3ff;}
@@ -3526,14 +4216,13 @@
         document.head.appendChild(s);
       }
       const defaultYear = new Date().getFullYear();
-        const defaultPriorityYear = defaultYear + 1;
-        let yearOptions = "";
-        for (let y = 2026; y <= 2036; y++) {
-          yearOptions += `<option value="${y}" ${y === defaultYear ? 'selected' : ''}>${y}</option>`;
-        }
+      let yearOptions = "";
+      for (let y = 2026; y <= 2036; y++) {
+        yearOptions += `<option value="${y}" ${y === defaultYear ? 'selected' : ''}>${y}</option>`;
+      }
       const months = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
       const defaultMonth = new Date().getMonth() + 1;
-      let monthOptions = months.map((m, i) => `<option value="${i + 1}">${m}</option>`).join('');;
+      let monthOptions = months.map((m, i) => `<option value="${i + 1}">${m}</option>`).join('');
       cardBody.innerHTML = `
         <div class="s-wrapper">
           <div class="s-header-flex">
@@ -3549,31 +4238,45 @@
             <table class="s-table">
               <thead>
                 <tr>
-                  <th class="s-name-col">FUNCIONÁRIO</th>
-                  <th>SUB. TURNO</th>
-                  <th>BAIXA MÉDICA</th>
-                  <th>FÉRIAS</th>
-                  <th>LIC. PARENTAL</th>
-                  <th>LIC. NOJO</th>
-                  <th>FALTAS JUST.</th>
-                  <th>FALTAS INJUST.</th>
+                  <th class="s-name-col" rowspan="2">FUNCIONÁRIO</th>
+                  <th colspan="2">SUB. TURNO</th>
+                  <th rowspan="2">BAIXA MÉDICA</th>
+                  <th rowspan="2">FÉRIAS</th>
+                  <th rowspan="2">LIC. PARENTAL</th>
+                  <th rowspan="2">LIC. NOJO</th>
+                  <th rowspan="2">FALTAS JUST.</th>
+                  <th rowspan="2">FALTAS INJUST.</th>
+                </tr>
+                <tr>
+                  <th>Mês Atual</th>
+                  <th>Mês Anterior</th>
                 </tr>
               </thead>
               <tbody id="salary-table-body">
-                <tr><td colspan="8" style="padding:40px; text-align:center;">⌛ A carregar dados de Janeiro...</td></tr>
+                <tr><td colspan="8" style="padding:40px; text-align:center;"><i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i>A carregar dados...</td></tr>
               </tbody>
             </table>
           </div>
           <div class="s-footer">
-            <button class="s-btn" style="background:#059669;" onclick="exportSalaryMapXlsx()">📊 Exportar Excel</button>
-            <button class="s-btn" onclick="exportSalaryMapPDF(event)">📥 Emitir Mapa</button>
+            <button class="s-btn" style="background:#059669;" onclick="exportSalaryMapXlsx(event)"><i class="fa-solid fa-file-excel" style="margin-right: 6px;"></i>Exportar Excel</button>
+            <button class="s-btn" onclick="exportSalaryMapPDF(event)"><i class="fa-solid fa-file-pdf" style="margin-right: 6px;"></i>Emitir Mapa</button>
           </div>
-        </div>`;
+        </div>
+      `;
       setTimeout(() => {
         const monthSelect = document.getElementById("salary-month-filter");
         monthSelect.value = defaultMonth;
         loadSalaryData();
       }, 0);
+    }
+    function fixStickyHeaders() {
+      const firstRow = document.querySelector("#salary-processing-map .s-table thead tr:first-child");
+      if (!firstRow) return;
+      const firstRowHeight = firstRow.getBoundingClientRect().height;
+      const secondRowThs = document.querySelectorAll("#salary-processing-map .s-table thead tr:nth-child(2) th");
+      secondRowThs.forEach(th => {
+        th.style.top = `${firstRowHeight}px`;
+      });
     }
     async function loadSalaryData() {
       const monthFilter = parseInt(document.getElementById("salary-month-filter").value);
@@ -3586,11 +4289,12 @@
       const prevYear = monthFilter === 1 ? year - 1 : year;
       const nextMonth = monthFilter === 12 ? 1 : monthFilter + 1;
       const nextYear = monthFilter === 12 ? year + 1 : year;
-      const monthName = document.getElementById("salary-month-filter").options[document.getElementById("salary-month-filter").selectedIndex].text;
-      const defaultMonth = new Date().getMonth() + 1;
-      tableBody.innerHTML = `<tr><td colspan="8" style="padding:40px; text-align:center;">⌛ A carregar dados de ${monthName}...</td></tr>`;
+      const monthName = document.getElementById("salary-month-filter")
+        .options[document.getElementById("salary-month-filter").selectedIndex].text;
+      tableBody.innerHTML =
+        `<tr><td colspan="8" style="padding:40px; text-align:center;"><i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i>A carregar dados de ${monthName}...</td></tr>`;
       try {
-        const [empRes, eligRes, shiftRes, prevShiftRes, nextShiftRes] = await Promise.all([
+        const [empRes, eligRes, shiftRes, prevShiftRes, nextShiftRes, prevEligRes] = await Promise.all([
           fetch(`${SUPABASE_URL}/rest/v1/reg_employees?corp_oper_nr=eq.${corpOperNr}&or=(exit_date.is.null,exit_date.gte.${firstDayOfMonth},team.in.(COM,SEC))`, {
             headers: getSupabaseHeaders()
           }),
@@ -3600,10 +4304,13 @@
           fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${monthFilter}`, {
             headers: getSupabaseHeaders()
           }),
-          fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${prevYear}&month=eq.${prevMonth}&day=gt.25`, {
+          fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${prevYear}&month=eq.${prevMonth}`, {
             headers: getSupabaseHeaders()
           }),
           fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${nextYear}&month=eq.${nextMonth}&day=lt.6`, {
+            headers: getSupabaseHeaders()
+          }),
+          fetch(`${SUPABASE_URL}/rest/v1/reg_eligibility?corp_oper_nr=eq.${corpOperNr}&year=eq.${prevYear}&month=eq.${String(prevMonth).padStart(2, '0')}`, {
             headers: getSupabaseHeaders()
           })
         ]);
@@ -3611,55 +4318,136 @@
         const allEligibility = await eligRes.json();
         const shifts = await shiftRes.json();
         const prevShifts = await prevShiftRes.json();
+        const prevShiftsFrom20 = prevShifts.filter(s => parseInt(s.day) >= 20);
         const nextShifts = await nextShiftRes.json();
+        const prevEligibility = await prevEligRes.json();
         employees.sort((a, b) => parseInt(a.n_int) - parseInt(b.n_int));
         let html = "";
         employees.forEach(emp => {
           const n_int_formatted = String(emp.n_int).padStart(3, '0');
           const empShifts = shifts.filter(s => String(s.n_int).padStart(3, '0') === n_int_formatted);
           const empPrevShifts = prevShifts.filter(s => String(s.n_int).padStart(3, '0') === n_int_formatted);
+          const empPrevShiftsFrom20 = prevShiftsFrom20.filter(s => String(s.n_int).padStart(3, '0') === n_int_formatted);
           const empNextShifts = nextShifts.filter(s => String(s.n_int).padStart(3, '0') === n_int_formatted);
-          const hasSubsidy = allEligibility.some(reg => String(reg.n_int).padStart(3, '0') === n_int_formatted && parseInt(reg.month) === monthFilter);
+          const hasSubsidy = allEligibility.some(reg =>
+            String(reg.n_int).padStart(3, '0') === n_int_formatted &&
+            parseInt(reg.month) === monthFilter
+          );
           const subShiftDisplay = hasSubsidy
-            ? `<span class="s-status-badge s-status-yes">SIM</span>`
-            : `<span class="s-status-badge s-status-no">NÃO</span>`;
+            ? `<span class="s-status-badge s-status-yes">COM DIREITO</span>`
+            : `<span class="s-status-badge s-status-no">SEM DIREITO</span>`;
+          const prevEligRecords = prevEligibility.filter(reg => String(reg.n_int).padStart(3, '0') === n_int_formatted && parseInt(reg.month) === prevMonth);
+          let prevSubShiftDisplay;
+          if (prevEligRecords.length === 0) {
+            prevSubShiftDisplay = `<span class="s-status-badge s-status-no">SEM DIREITO</span>`;
+          } else if (prevEligRecords.some(reg => parseInt(reg.day) <= 20)) {
+            prevSubShiftDisplay = `<span class="s-status-badge s-status-yes">PAGO</span>`;
+          } else {
+            prevSubShiftDisplay = `<span class="s-status-badge" style="color:#d97706; background:#fffbeb; border-color:#fcd34d;">PENDENTE</span>`;
+          }
           const formatPeriod = (code, classeCss) => {
-            const days = empShifts.filter(s => s.shift === code).map(s => parseInt(s.day)).sort((a, b) => a - b);
-            if (days.length === 0) return "-";
-            let periods = [], current = [days[0]];
-            for (let i = 1; i < days.length; i++) {
-              if (days[i] - days[i - 1] <= 4) current.push(days[i]);
-              else {periods.push(current); current = [days[i]];}
+            const allDays = empShifts
+            .filter(s => s.shift === code)
+            .map(s => parseInt(s.day))
+            .sort((a, b) => a - b);
+            const monthNames = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+            const nextMonthName = monthNames[monthFilter % 12];
+            const prevMonthName = monthNames[prevMonth - 1];
+            const GAP_LIMIT = 4;
+            const holidayMap = getHolidayMapForMonth(year, monthFilter);
+            const allPrevDays = empPrevShifts
+            .filter(s => s.shift === code)
+            .map(s => parseInt(s.day))
+            .sort((a, b) => a - b);
+            const prevTransitDays = allPrevDays.filter(d => d >= 20);
+            const parts = [];
+            const firstCurrDay = allDays.length > 0 ? allDays[0] : null;
+            const lastTransitDay = prevTransitDays.length > 0 ? prevTransitDays[prevTransitDays.length - 1] : null;
+            const prevDaysBelow20 = allPrevDays.filter(d => d < 20);
+            const lastPrevBelow20 = prevDaysBelow20.length > 0 ? prevDaysBelow20[prevDaysBelow20.length - 1] : null;
+            const transitIsPartOfLargerPeriod = prevTransitDays.length > 0 && lastPrevBelow20 !== null && (prevTransitDays[0] - lastPrevBelow20) <= 4;
+            const hasContinuity = transitIsPartOfLargerPeriod && lastTransitDay !== null && firstCurrDay !== null && (() => {
+              const diff = Math.round((new Date(year, monthFilter - 1, firstCurrDay) - new Date(prevYear, prevMonth - 1, lastTransitDay)) / 86400000);
+              return diff <= 4;
+            })();
+            if (prevTransitDays.length > 0 && !hasContinuity && !transitIsPartOfLargerPeriod) {
+              const pStart = prevTransitDays[0];
+              const lastDayPrevMonth = new Date(prevYear, prevMonth, 0).getDate();
+              const pEnd = prevTransitDays[prevTransitDays.length - 1];
+              const pEndFinal = (lastDayPrevMonth - pEnd) <= 2 ? lastDayPrevMonth : pEnd;
+              const totalDias = (pEndFinal - pStart) + 1;
+              const label = pStart === pEndFinal
+                ? `${String(pStart).padStart(2,'0')}`
+                : `${String(pStart).padStart(2,'0')} a ${String(pEndFinal).padStart(2,'0')}`;
+              parts.push(`
+                <div class="s-card-base ${classeCss}" style="opacity:1; background-color: #A30000; color: #FFFFFF;">
+                  Ref. ${prevMonthName}: ${label}
+                  (${totalDias} Dia${totalDias > 1 ? "s" : ""})
+                </div>
+              `);
+            }
+            if (allDays.length === 0) {
+              return parts.length > 0 ? parts.join("") : "-";
+            }
+            let periods = [], current = [allDays[0]];
+            for (let i = 1; i < allDays.length; i++) {
+              const gap = allDays[i] - allDays[i - 1];
+              const intermediateDays = Array.from({ length: gap - 1 }, (_, k) => allDays[i - 1] + 1 + k);
+              const hasWorkInGap = intermediateDays.some(d => {
+                const dow = new Date(year, monthFilter - 1, d).getDay();
+                const isWeekend = dow === 0 || dow === 6;
+                const isHoliday = holidayMap.has(d);
+                if (isWeekend || isHoliday) return false;
+                return empShifts.some(s => parseInt(s.day) === d && s.shift !== code);
+              });
+              if (gap <= GAP_LIMIT && !hasWorkInGap) {
+                current.push(allDays[i]);
+              } else {
+                periods.push(current);
+                current = [allDays[i]];
+              }
             }
             periods.push(current);
-            return periods.map((period, index) => {
-              let pStart = period[0], pEnd = period[period.length - 1];
-              if (index === 0) {
-                const codePrev = empPrevShifts.filter(s => s.shift === code).sort((a,b) => b.day - a.day);
-                if (codePrev.length > 0) {
-                  const diff = Math.round((new Date(year, monthFilter-1, pStart) - new Date(prevYear, prevMonth-1, codePrev[0].day)) / 86400000);
-                  if (diff === 1) pStart = 1;
-                  else if (diff <= 3) {
-                    const dw = new Date(year, monthFilter-1, 1).getDay();
-                    if ((pStart === 2 && (dw === 0 || dw === 1)) || (pStart === 3 && dw === 0)) pStart = 1;
-                  }
-                }
-              }
+            periods.forEach((period, index) => {
+              let pStart = period[0];
+              let pEnd = period[period.length - 1];
+              if (index === 0 && hasContinuity) {pStart = 1;}
               if (index === periods.length - 1) {
-                const codeNext = empNextShifts.filter(s => s.shift === code).sort((a,b) => a.day - b.day);
+                const codeNext = empNextShifts
+                .filter(s => s.shift === code)
+                .sort((a, b) => a.day - b.day);
                 if (codeNext.length > 0) {
-                  const diff = Math.round((new Date(nextYear, nextMonth-1, codeNext[0].day) - new Date(year, monthFilter-1, pEnd)) / 86400000);
-                  if (diff === 1) pEnd = lastDayMonth;
-                  else if (diff <= 3) {
-                    const dwLast = new Date(year, monthFilter-1, lastDayMonth).getDay();
-                    if (pEnd >= lastDayMonth - 2 && (dwLast === 5 || dwLast === 6)) pEnd = lastDayMonth;
-                  }
+                  const diff = Math.round((new Date(nextYear, nextMonth - 1, codeNext[0].day) - new Date(year, monthFilter - 1, pEnd)) / 86400000);
+                  if (diff <= 4) pEnd = lastDayMonth;
                 }
               }
-              return `<div class="s-card-base ${classeCss}">${String(pStart).padStart(2,'0')} a ${String(pEnd).padStart(2,'0')} (${(pEnd-pStart)+1} Dias)</div>`;
-            }).join("");
+              const isFrom20Only = pStart >= 20;
+              if (isFrom20Only) {
+                  parts.push(`
+                  <div class="s-card-base ${classeCss}" style="opacity:0.85;">
+                    ${String(pStart).padStart(2,'0')} a ${String(pEnd).padStart(2,'0')}
+                    (${(pEnd - pStart) + 1} Dias)
+                    <small style="font-weight:400; font-size:11px; color:red;"> → Transita para processamento de <strong>${nextMonthName}</strong></small>
+                  </div>
+                `);
+              } else {
+                const totalDias = (pEnd - pStart) + 1;
+                const label = totalDias === 1
+                  ? `${String(pStart).padStart(2,'0')} (1 Dia)`
+                  : `${String(pStart).padStart(2,'0')} a ${String(pEnd).padStart(2,'0')} (${totalDias} Dias)`;
+                parts.push(`
+                  <div class="s-card-base ${classeCss}">
+                    ${label}
+                  </div>
+                `);
+              }
+            });
+            return parts.join("") || "-";
           };
-          const vacationDays = empShifts.filter(s => s.shift === 'FE').map(s => parseInt(s.day)).sort((a, b) => a - b);
+          const vacationDays = empShifts
+            .filter(s => s.shift === 'FE')
+            .map(s => parseInt(s.day))
+            .sort((a, b) => a - b);
           let vacationInfo = "-";
           if (vacationDays.length > 0) {
             let vPeriods = [], vCurrent = [vacationDays[0]];
@@ -3670,161 +4458,302 @@
             vPeriods.push(vCurrent);
             vacationInfo = vPeriods.map(p => {
               const useful = p.filter(d => {
-                const dw = new Date(year, monthFilter-1, d).getDay();
+                const dw = new Date(year, monthFilter - 1, d).getDay();
                 return dw !== 0 && dw !== 6;
               }).length;
-              return `<div class="s-card-base s-val-vacation">${String(p[0]).padStart(2,'0')} a ${String(p[p.length-1]).padStart(2,'0')} (${useful} Úteis)</div>`;
+              const label = p.length === 1
+                ? `${String(p[0]).padStart(2,'0')} (${useful} Dia Útil)`
+                : `${String(p[0]).padStart(2,'0')} a ${String(p[p.length-1]).padStart(2,'0')} (${useful} Dias Úteis)`;
+              return `<div class="s-card-base s-val-vacation">${label}</div>`;
             }).join("");
           }
+          const getPrevWorkDay = (day, usedDays = []) => {
+            let d = day - 1;
+            const holidayMap = getHolidayMapForMonth(year, monthFilter);
+            while (d >= 1) {
+              const date = new Date(year, monthFilter - 1, d);
+              const dow = date.getDay();
+              if (dow !== 0 && dow !== 6 && !holidayMap.has(d) && !usedDays.includes(d)) return d;
+              d--;
+            }
+            return day;
+          };
           const formatAbsence = (code, classeCss) => {
-          const days = empShifts.filter(s => s.shift === code).map(s => parseInt(s.day)).sort((a, b) => a - b);
-          if (days.length === 0) return "-";
-          let text = days.length === 1 ? `Dia: ${String(days[0]).padStart(2, '0')}` : `${days.join(", ")} (${days.length} Dias)`;
-          return `<div class="s-card-base ${classeCss}">${text}</div>`;
-        };
-        html += `
-          <tr class="s-row">
-            <td class="s-name-col">${emp.abv_name}</td>
-            <td style="text-align:center;">${subShiftDisplay}</td>
-            <td>${formatPeriod('BX', 's-val-sickleave')}</td>
-            <td>${vacationInfo}</td>
-            <td>${formatPeriod('LP', 's-val-parental')}</td>
-            <td>${formatPeriod('LN', 's-val-disgust')}</td>
-            <td>${formatAbsence('FJ', 's-val-f-just')}</td>
-            <td>${formatAbsence('FI', 's-val-f-unjust')}</td>
-          </tr>
-        `;
+            const allDays = empShifts
+              .filter(s => s.shift === code)
+              .map(s => parseInt(s.day))
+              .sort((a, b) => a - b);
+            const days = allDays.filter(d => d < 20);
+            const daysFrom20 = allDays.filter(d => d >= 20);
+            const prevDays = empPrevShiftsFrom20
+              .filter(s => s.shift === code && parseInt(s.day) > 20)
+              .map(s => parseInt(s.day))
+              .sort((a, b) => a - b);
+            const parts = [];
+            const monthNames = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+            const nextMonthIndex = monthFilter % 12;
+            const nextMonthName = monthNames[nextMonthIndex];
+            if (prevDays.length > 0) {
+              const monthSelect = document.getElementById("salary-month-filter");
+              const prevMonthIndex = parseInt(monthSelect.value) - 2;
+              const prevMonthName = monthNames[prevMonthIndex < 0 ? 11 : prevMonthIndex];
+              const prevHolidayMap = getHolidayMapForMonth(prevYear, prevMonth);
+              const usedPrevDays = [];
+              const processedPrevDays = prevDays.map(d => {
+                const dow = new Date(prevYear, prevMonth - 1, d).getDay();
+                const isWeekend = dow === 0 || dow === 6;
+                const isHoliday = prevHolidayMap.has(d);
+                if (isWeekend || isHoliday) {
+                  let pd = d - 1;
+                  while (pd >= 1) {
+                    const date = new Date(prevYear, prevMonth - 1, pd);
+                    const pdow = date.getDay();
+                    if (pdow !== 0 && pdow !== 6 && !prevHolidayMap.has(pd) && !usedPrevDays.includes(pd)) break;
+                    pd--;
+                  }
+                  usedPrevDays.push(pd);
+                  return { display: pd, moved: true };
+                }
+                usedPrevDays.push(d);
+                return { display: d, moved: false };
+              });
+              processedPrevDays.sort((a, b) => a.display - b.display);
+              const hasMoved = processedPrevDays.some(d => d.moved);
+              const text = processedPrevDays.map(d => String(d.display).padStart(2, "0")).join(", ");
+              const suffix = hasMoved ? ` <small style="font-weight:400;"></small>` : "";
+              parts.push(`
+                <div class="s-card-base ${classeCss}" style="opacity:1;">
+                  Ref. ${prevMonthName}: ${text}
+                  (${prevDays.length} Dia${prevDays.length > 1 ? "s" : ""})
+                  ${suffix}
+                </div>
+              `);
+            }
+            if (days.length > 0) {
+              const holidayMap = getHolidayMapForMonth(year, monthFilter);
+              const usedDays = [];
+              const processedDays = [];
+              days.forEach(d => {
+                const dow = new Date(year, monthFilter - 1, d).getDay();
+                const isWeekend = dow === 0 || dow === 6;
+                const isHoliday = holidayMap.has(d);
+                if (isWeekend || isHoliday) {
+                  const prevWorkDay = getPrevWorkDay(d, usedDays);
+                  usedDays.push(prevWorkDay);
+                  processedDays.push({ original: d, display: prevWorkDay, moved: true });
+                } else {
+                  usedDays.push(d);
+                  processedDays.push({ original: d, display: d, moved: false });
+                }
+              });
+              processedDays.sort((a, b) => a.display - b.display);
+              const text = processedDays.map(d => String(d.display).padStart(2, "0")).join(", ");
+              const count = days.length;
+              parts.push(`<div class="s-card-base ${classeCss}">${text} (${count} Dia${count > 1 ? "s" : ""})</div>`);
+            }
+            if (daysFrom20.length > 0) {
+              const holidayMap = getHolidayMapForMonth(year, monthFilter);
+              const usedDays = [];
+              const processedDays = [];
+              daysFrom20.forEach(d => {
+                const dow = new Date(year, monthFilter - 1, d).getDay();
+                const isWeekend = dow === 0 || dow === 6;
+                const isHoliday = holidayMap.has(d);
+                if (isWeekend || isHoliday) {
+                  const prevWorkDay = getPrevWorkDay(d, usedDays);
+                  usedDays.push(prevWorkDay);
+                  processedDays.push({ original: d, display: prevWorkDay, moved: true });
+                } else {
+                  usedDays.push(d);
+                  processedDays.push({ original: d, display: d, moved: false });
+                }
+              });
+              processedDays.sort((a, b) => a.display - b.display);
+              const text = processedDays.map(d => String(d.display).padStart(2, "0")).join(", ");
+              const count = daysFrom20.length;
+              parts.push(`
+                <div class="s-card-base ${classeCss}" style="opacity:0.85;">
+                  ${text} (${count} Dia${count > 1 ? "s" : ""})                  
+                  <small style="font-weight:400; font-size:11px; color:red;"> → Transita para processamento de <strong>${nextMonthName}</strong></small>
+                </div>
+              `);
+            }
+            return parts.length > 0 ? parts.join("") : "-";
+          };
+          html += `
+            <tr class="s-row">
+              <td class="s-name-col">${emp.abv_name}</td>
+              <td style="text-align:center;">${subShiftDisplay}</td>
+              <td style="text-align:center;">${prevSubShiftDisplay}</td>
+              <td>${formatPeriod('BX', 's-val-sickleave')}</td>
+              <td>${vacationInfo}</td>
+              <td>${formatPeriod('LP', 's-val-parental')}</td>
+              <td>${formatPeriod('LN', 's-val-disgust')}</td>
+              <td>${formatAbsence('FJ', 's-val-f-just')}</td>
+              <td>${formatAbsence('FI', 's-val-f-unjust')}</td>
+            </tr>
+          `;
         });
         tableBody.innerHTML = html || '<tr><td colspan="8" style="text-align:center;">Nenhum funcionário encontrado.</td></tr>';
+        fixStickyHeaders();
       } catch (e) {
         console.error(e);
-        tableBody.innerHTML = `<tr><td colspan="8" style="color:red;text-align:center;">Erro ao carregar dados: ${e.message}</td></tr>`;
+        tableBody.innerHTML =
+          `<tr><td colspan="8" style="color:red;text-align:center;">Erro ao carregar dados: ${e.message}</td></tr>`;
       }
     }
-    async function exportSalaryMapPDF(event) {
-      const btn = event?.target;
-      const originalText = btn ? btn.innerText : "";
+    /* ---------- EMISSÃO DE MAPAS (PDF / EXCEL) ---------- */
+    function chooseSalaryMapType(formatLabel) {
+      return new Promise(resolve => {
+        const isPdf = formatLabel === "PDF";
+        const opt = `display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px;
+                     padding: 10px 12px; margin-bottom: 8px; cursor: pointer; transition: 0.15s; font-family: inherit;`;
+        const ico = `font-size: 20px; color: #2b6ca3; width: 24px; text-align: center;`;
+        const overlay = document.createElement("div");
+        overlay.style.cssText = "position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; z-index: 9999;";
+        overlay.innerHTML = `
+          <div class="major-card" style="width: 420px; max-width: 95vw; max-height: 90vh; overflow-y: auto; margin: 0;">
+            <div class="major-card-header header-red" style="display: flex; align-items: center; justify-content: space-between;">
+              <span>
+                <i class="fa-solid ${isPdf ? "fa-file-pdf" : "fa-file-excel"}" style="margin-right: 6px;"></i>
+                EMITIR MAPA (${formatLabel})
+              </span>
+              <span class="sm-close" title="Fechar" style="cursor: pointer; font-size: 18px; line-height: 1; padding: 0 4px;"><i class="fa-solid fa-xmark"></i></span>
+            </div>
+            <div class="major-card-body">
+              <div style="font-weight: bold; font-size: 13px; margin-bottom: 10px;">Selecione o tipo de mapa a emitir:</div>
+              <button type="button" class="sm-option" data-type="full" style="${opt}">
+                <i class="fa-solid fa-table-list" style="${ico}"></i>
+                <span>
+                  <strong style="display: block; font-size: 13px; color: #1e293b;">Mapa Integral</strong>
+                  <span style="font-size: 11px; color: #64748b;">Subsídios de turno, baixas, férias, licenças e faltas</span>
+                </span>
+              </button>
+              <button type="button" class="sm-option" data-type="summary" style="${opt} margin-bottom: 0;">
+                <i class="fa-solid fa-file-lines" style="${ico}"></i>
+                <span>
+                  <strong style="display: block; font-size: 13px; color: #1e293b;">Mapa Resumido</strong>
+                  <span style="font-size: 11px; color: #64748b;">Apenas funcionários com direito a subsídio de turno</span>
+                </span>
+              </button>
+            </div>
+            <div class="major-card-footer" style="display: flex; justify-content: flex-end; gap: 5px;">
+              <button type="button" class="btn btn-danger sm-cancel"><i class="fa-solid fa-ban" style="margin-right: 5px;"></i>Cancelar</button>
+            </div>
+          </div>
+        `;
+        const close = (value) => {
+          document.removeEventListener("keydown", onKey);
+          overlay.remove();
+          resolve(value);
+        };
+        const onKey = (e) => { if (e.key === "Escape") close(null); };
+        // Realce ao passar o rato nas opções
+        overlay.querySelectorAll(".sm-option").forEach(b => {
+          b.addEventListener("mouseenter", () => { b.style.borderColor = "#2b6ca3"; b.style.background = "#eef4fa"; });
+          b.addEventListener("mouseleave", () => { b.style.borderColor = "#cbd5e1"; b.style.background = "#f8fafc"; });
+        });
+        // Clicar fora do modal não o fecha: só o ✕, o Cancelar ou o ESC
+        overlay.addEventListener("click", (e) => {
+          const opt = e.target.closest(".sm-option");
+          if (opt) return close(opt.dataset.type);
+          if (e.target.closest(".sm-cancel") || e.target.closest(".sm-close")) close(null);
+        });
+        document.addEventListener("keydown", onKey);
+        document.body.appendChild(overlay);
+      });
+    }
+    function collectSalaryMapRows(mapType) {
+      const extractCards = (cell) => {
+        const cards = cell.querySelectorAll(".s-card-base");
+        if (cards.length === 0) return "-";
+        return Array.from(cards).map(c => c.innerText.trim().replace(/[\n\r\t]+/g, " ")).join("\n");
+      };
+      const extractBadge = (cell) => {
+        const badge = cell.querySelector(".s-status-badge");
+        return badge ? badge.innerText.trim() : "-";
+      };
+      const employees = [];
+      document.querySelectorAll("#salary-table-body tr").forEach(row => {
+        const cells = row.querySelectorAll("td");
+        if (cells.length < 9) return;
+        const subShiftCurrent = extractBadge(cells[1]);
+        const subShiftPrevious = extractBadge(cells[2]);
+        if (mapType === "summary" && subShiftCurrent === "SEM DIREITO") return;
+        employees.push({
+          name: cells[0].innerText.trim(),
+          subShiftCurrent,
+          subShiftPrevious,
+          casualties: extractCards(cells[3]),
+          vacations: extractCards(cells[4]),
+          parental: extractCards(cells[5]),
+          disgust: extractCards(cells[6]),
+          justified: extractCards(cells[7]),
+          unjustified: extractCards(cells[8])
+        });
+      });
+      return employees;
+    }
+    async function exportSalaryMap(event, format) {
+      const isPdf = format === "pdf";
+      const btn = event?.target?.closest("button"); // o clique pode cair no ícone <i>
+      const mapType = await chooseSalaryMapType(isPdf ? "PDF" : "Excel");
+      if (!mapType) return;
+      const originalHTML = btn ? btn.innerHTML : ""; // innerHTML guarda também o ícone
       if (btn) {
         btn.disabled = true;
-        btn.innerText = "⌛ A Gerar Mapa...";
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i>${isPdf ? "A Gerar Mapa..." : "A Exportar..."}`;
       }
       try {
         const year = parseInt(document.getElementById("salary-year-filter").value);
         const monthValue = parseInt(document.getElementById("salary-month-filter").value);
         const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
         const monthName = monthNames[monthValue - 1];
-        const rows = document.querySelectorAll("#salary-table-body tr");
-        const employees = [];
-        rows.forEach(row => {
-          const cells = row.querySelectorAll("td");
-          if (cells.length < 8) return;
-          const extractCards = (cell) => {
-            const cards = cell.querySelectorAll(".s-card-base");
-            if (cards.length === 0) return "-";
-            return Array.from(cards).map(c => c.innerText.trim().replace(/[\n\r\t]+/g, " ")).join("\n");
-          };
-          const extractBadge = (cell) => {
-            const badge = cell.querySelector(".s-status-badge");
-            return badge ? badge.innerText.trim() : "-";
-          };
-          employees.push({name: cells[0].innerText.trim(), subShift: extractBadge(cells[1]), casualties: extractCards(cells[2]), vacations: extractCards(cells[3]), parental: extractCards(cells[4]),
-                          disgust: extractCards(cells[5]), justified: extractCards(cells[6]), unjustified: extractCards(cells[7])});});
-        showLoadingPopup(`A gerar mapa salarial em formato PDF para ${monthName} de ${year}...`);
+        const employees = collectSalaryMapRows(mapType);
+        const isSummary = mapType === "summary";
+        const typeLabel = isSummary ? "resumido" : "integral";
+        showLoadingPopup(`A gerar mapa salarial ${typeLabel} em formato ${isPdf ? "PDF" : "EXCEL"} para ${monthName} de ${year}...`);
         const response = await fetch("https://cb360-online.vercel.app/api/employees_convert_and_send", {
           method: "POST",
           headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({mode: "salary_map", year, month: monthValue, employees})
+          body: JSON.stringify({
+            mode: isPdf ? "salary_map" : "salary_map_xlsx",
+            mapType,
+            year,
+            month: monthValue,
+            employees
+          })
         });
         if (!response.ok) throw new Error("Erro na resposta da API");
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `Mapa_Salarial_${monthName}_${year}.pdf`;
+        a.download = `Mapa_Salarial${isSummary ? "_Resumido" : ""}_${monthName}_${year}.${isPdf ? "pdf" : "xlsx"}`;
         document.body.appendChild(a);
         a.click();
         a.remove();
         window.URL.revokeObjectURL(url);
         setTimeout(() => {
           hideLoadingPopup();
-          showPopup('popup-info', `Mapa salarial para ${monthName} de ${year} gerado com sucesso.`);
+          showPopup('popup-info', `Mapa salarial ${typeLabel} para ${monthName} de ${year} gerado com sucesso.`);
         }, 400);
       } catch (error) {
         hideLoadingPopup();
         console.error("Erro ao gerar mapa salarial:", error);
-        showPopup('popup-danger', "❌ Erro ao gerar mapa salarial.");
+        showPopup('popup-danger', `Erro ao gerar ${isPdf ? "mapa salarial" : "Excel"}.`);
       } finally {
         if (btn) {
           btn.disabled = false;
-          btn.innerText = originalText;
+          btn.innerHTML = originalHTML;
         }
       }
     }
-    async function exportSalaryMapXlsx(event) {
-      const btn = event?.target;
-      const originalText = btn ? btn.innerText : "";
-      if (btn) {
-        btn.disabled = true;
-        btn.innerText = "⌛ A Exportar...";
-      }
-      try {
-        const year = parseInt(document.getElementById("salary-year-filter").value);
-        const monthValue = parseInt(document.getElementById("salary-month-filter").value);
-        const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-        const monthName = monthNames[monthValue - 1];
-        const rows = document.querySelectorAll("#salary-table-body tr");
-        const employees = [];
-        rows.forEach(row => {
-          const cells = row.querySelectorAll("td");
-          if (cells.length < 8) return;
-          const extractCards = (cell) => {
-            const cards = cell.querySelectorAll(".s-card-base");
-            if (cards.length === 0) return "-";
-            return Array.from(cards)
-              .map(c => c.innerText.trim().replace(/[\n\r\t]+/g, " "))
-              .join("\n");
-          };
-          const extractBadge = (cell) => {
-            const badge = cell.querySelector(".s-status-badge");
-            return badge ? badge.innerText.trim() : "-";
-          };
-          employees.push({name: cells[0].innerText.trim(), subShift: extractBadge(cells[1]), casualties: extractCards(cells[2]), vacations: extractCards(cells[3]), parental: extractCards(cells[4]),
-                          disgust: extractCards(cells[5]), justified: extractCards(cells[6]), unjustified: extractCards(cells[7])});});
-        showLoadingPopup(`A gerar mapa salarial em formato EXCEL para ${monthName} de ${year}...`);
-        const response = await fetch("https://cb360-online.vercel.app/api/employees_convert_and_send", {
-          method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({mode: "salary_map_xlsx", year, month: monthValue, employees})
-        });
-        if (!response.ok) throw new Error("Erro na resposta da API");
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `Mapa_Salarial_${monthName}_${year}.xlsx`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        window.URL.revokeObjectURL(url);
-        setTimeout(() => {
-          hideLoadingPopup();
-          showPopup('popup-info', `Mapa salarial para ${monthName} de ${year} gerado com sucesso.`);
-        }, 400);
-      } catch (error) {
-        hideLoadingPopup();
-        console.error("Erro ao gerar Excel:", error);
-        showPopup('popup-danger', "❌ Erro ao gerar Excel.");
-      } finally {
-        if (btn) {
-          btn.disabled = false;
-          btn.innerText = originalText;
-        }
-      }
-    }
+    function exportSalaryMapPDF(event) { return exportSalaryMap(event, "pdf"); }
+    function exportSalaryMapXlsx(event) { return exportSalaryMap(event, "xlsx"); }
     document.querySelectorAll(".sidebar-sub-submenu-button").forEach((btn) => {
       btn.addEventListener("click", () => {
         const access = btn.dataset.access;
-        const pageId = btn.dataset.page;
         if (access === "Processamento Salarial") {
           createSalaryProcessingMap();
         }
@@ -3834,7 +4763,7 @@
     FASE 07 - ANNUAL FRAMEWORK EIPs
     =============================== */
     async function createEIPAnnualShiftMap() {
-      const cardBody = document.querySelector("#annual-eip-shift-map .card-body");
+      const cardBody = document.querySelector("#annual-eip-shift-map .major-card-body");
       if (!cardBody) return;
       if (!document.getElementById("annual-core-css")) {
         const s = document.createElement("style");
@@ -3843,7 +4772,7 @@
           .a-wrapper {font-family: 'Inter', sans-serif; color: #1e293b;}
           .a-title {font-size: 16px; font-weight: 800; margin: 0; display: flex; align-items: center; gap: 8px;}
           .a-badge-rh {background: #1e293b; color: #fff; padding: 2px 7px; border-radius: 4px; font-size: 10px;}
-          .a-container {max-height: 500px; overflow: auto; border: 1px solid #cbd5e1; border-radius: 8px; position: relative; scrollbar-width: none; -ms-overflow-style: none;}
+          .a-container {max-height: 580px; overflow: auto; border: 1px solid #cbd5e1; border-radius: 8px; position: relative; scrollbar-width: none; -ms-overflow-style: none;}
           .a-container::-webkit-scrollbar {display: none;}
           .a-table {width: 100%; border-collapse: separate; border-spacing: 0; font-size: 10.5px; table-layout: fixed;}
           .a-table thead tr.a-month-header th {position: sticky; top: 0; z-index: 10; background: #1e293b; color: #fff; font-size: 11px; font-weight: 800; text-align: center;
@@ -3900,7 +4829,7 @@
               </table>
             </div>
             <div class="a-footer">
-              <button class="a-btn" onclick="exportAnnualMap(event)">📥 Emitir Mapa</button>
+              <button class="a-btn" onclick="exportAnnualMap(event)"><i class="fa-solid fa-file-pdf" style="margin-right: 6px;"></i>Emitir Mapa</button>
             </div>
           </div>`;
       }
@@ -4150,7 +5079,7 @@
     FASE 08 - EMPLOYEE REGISTRATIONS
     =============================== */
     async function createEmployeeRegistration() {
-      const cardBody = document.querySelector("#employee-registration .card-body");
+      const cardBody = document.querySelector("#employee-registration .major-card-body");
       if (!cardBody) return;
       if (!document.getElementById("reg-core-css")) {
         const s = document.createElement("style");
@@ -4429,36 +5358,68 @@
       renderRegTable(filtered);
     }
     function editEmployee(nInt) {
-      const emp = (window._regAllEmployees || []).find(e => e.n_int == nInt);
-      if (!emp) return;
-      __regEditingNInt = nInt;
-      const nIntField = document.getElementById("reg-n-int");
-      nIntField.value = String(emp.n_int).padStart(3, "0");
-      nIntField.disabled = true;
-      document.getElementById("reg-name").value = emp.abv_name || "";
-      const FUNCTION_REVERSE = {"COM": "Comando", "CRD": "Coordenador", "SEC": "Secretariado"};
-      document.getElementById("reg-function").value = FUNCTION_REVERSE[emp.function] || emp.function || "";
-      const TEAM_REVERSE = {"COM": "Comando", "CRD": "Coordenação", "SEC": "Secretariado"};
-      document.getElementById("reg-team").value = TEAM_REVERSE[emp.team] || emp.team || "";
-      document.getElementById("reg-entry-date").value = emp.entry_date ? emp.entry_date.split("T")[0] : "";
-      document.getElementById("reg-exit-date").value = emp.exit_date ? emp.exit_date.split("T")[0] : "";
-      document.getElementById("reg-save-btn").textContent = "💾 Atualizar";
-      const title = document.getElementById("reg-form-title");
-      if (title) title.textContent = `Editar — ${emp.abv_name}`;
-      const formHeader = document.querySelector(".reg-form-header");
-      if (formHeader) formHeader.style.background = "#7f1d1d";
-      const container = document.querySelector("#employee-registration .card-body");
-      if (container) {
-        container.scrollTop = 0;
-        container.scrollIntoView({behavior: "smooth", block: "start"});
-      }
-      const formCard = document.querySelector(".reg-form-card");
-      if (formCard) {
-        const yOffset = -140;
-        const y = formCard.getBoundingClientRect().top + window.pageYOffset + yOffset;
-        window.scrollTo({top: y, behavior: "smooth"});
-      }
-    }
+  const emp = (window._regAllEmployees || []).find(e => e.n_int == nInt);
+  if (!emp) return;
+  __regEditingNInt = nInt;
+  const nIntField = document.getElementById("reg-n-int");
+  nIntField.value = String(emp.n_int).padStart(3, "0");
+  nIntField.disabled = true;
+  document.getElementById("reg-name").value = emp.abv_name || "";
+  let funcDisplay = emp.function || "";
+  if (funcDisplay === "COM") funcDisplay = "Comando";
+  else if (funcDisplay === "CRD") funcDisplay = "Coordenador";
+  else if (funcDisplay === "SEC") funcDisplay = "Secretariado";
+  else if (/^EP\d+\d{2}$/.test(funcDisplay)) funcDisplay = "EIP";
+  document.getElementById("reg-function").value = funcDisplay;
+  let teamDisplay = emp.team || "";
+  if (teamDisplay === "COM") teamDisplay = "Comando";
+  else if (teamDisplay === "CRD") teamDisplay = "Coordenação";
+  else if (teamDisplay === "SEC") teamDisplay = "Secretariado";
+  else if (/^OPC\d+$/.test(teamDisplay)) teamDisplay = "SALOC";
+  else if (/^EQ\d+$/.test(teamDisplay)) teamDisplay = "INEM";
+  else if (/^TDNU\d+$/.test(teamDisplay)) teamDisplay = "TDNU";
+  else if (/^EIP\d+$/.test(teamDisplay)) teamDisplay = teamDisplay;
+  document.getElementById("reg-team").value = teamDisplay;
+  document.getElementById("reg-entry-date").value = emp.entry_date ? emp.entry_date.split("T")[0] : "";
+  document.getElementById("reg-exit-date").value = emp.exit_date ? emp.exit_date.split("T")[0] : "";
+  document.getElementById("reg-save-btn").textContent = "💾 Atualizar";
+
+  // --- ANTIGUIDADE ---
+  function calcAntiguidade(entryDateStr) {
+    if (!entryDateStr) return null;
+    const entry = new Date(entryDateStr.split("T")[0]);
+    const today = new Date();
+    let years = today.getFullYear() - entry.getFullYear();
+    let months = today.getMonth() - entry.getMonth();
+    if (months < 0) { years--; months += 12; }
+    const parts = [];
+    if (years > 0) parts.push(`${years} ano${years !== 1 ? "s" : ""}`);
+    if (months > 0) parts.push(`${months} ${months !== 1 ? "meses" : "mês"}`);
+    if (parts.length === 0) parts.push("< 1 mês");
+    return parts.join(" e ");
+  }
+
+  const title = document.getElementById("reg-form-title");
+  if (title) {
+    const ant = calcAntiguidade(emp.entry_date);
+    title.innerHTML = `Editar — ${emp.abv_name}${ant ? `<span style="font-weight:400; opacity:0.65; font-size:13px; margin-left:10px;">⏱ ${ant} DE ANTIGUIDADE.</span>` : ""}`;
+  }
+  // -------------------
+
+  const formHeader = document.querySelector(".reg-form-header");
+  if (formHeader) formHeader.style.background = "#7f1d1d";
+  const container = document.querySelector("#employee-registration .major-card-body");
+  if (container) {
+    container.scrollTop = 0;
+    container.scrollIntoView({behavior: "smooth", block: "start"});
+  }
+  const formCard = document.querySelector(".reg-form-card");
+  if (formCard) {
+    const yOffset = -140;
+    const y = formCard.getBoundingClientRect().top + window.pageYOffset + yOffset;
+    window.scrollTo({top: y, behavior: "smooth"});
+  }
+}
     async function saveEmployee() {
       const nInt = document.getElementById("reg-n-int").value.trim();
       const name = document.getElementById("reg-name").value.trim();
@@ -4466,9 +5427,13 @@
       const teamRaw = document.getElementById("reg-team").value;
       const entryDate = document.getElementById("reg-entry-date").value;
       const exitDate = document.getElementById("reg-exit-date").value;
-      if (!nInt || !name) {showPopup('popup-danger', "Nº Interno e Nome são obrigatórios."); return;}
+      if (!nInt || !name) {
+        showPopup('popup-danger', "Nº Interno e Nome são obrigatórios.");
+        return;
+      }
       if (entryDate && exitDate && new Date(exitDate) < new Date(entryDate)) {
-        showPopup('popup-danger',"A Data de Saída não pode ser anterior à Data de Entrada."); return;
+        showPopup('popup-danger', "A Data de Saída não pode ser anterior à Data de Entrada.");
+        return;
       }
       const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
       const saveBtn = document.getElementById("reg-save-btn");
@@ -4476,8 +5441,9 @@
       saveBtn.textContent = "A guardar...";
       try {
         const allRes = await fetch(
-          `${SUPABASE_URL}/rest/v1/reg_employees?corp_oper_nr=eq.${corpOperNr}&select=function,team,n_int`,
-          { headers: getSupabaseHeaders() }
+          `${SUPABASE_URL}/rest/v1/reg_employees?corp_oper_nr=eq.${corpOperNr}&select=function,team,n_int,exit_date`, {
+            headers: getSupabaseHeaders()
+          }
         );
         const allEmps = await allRes.json();
         if (!__regEditingNInt) {
@@ -4489,44 +5455,86 @@
           }
         }
         let func = funcRaw;
-        const FUNCTION_MAP = {"Comando":"COM","Coordenador":"CRD","Secretariado":"SEC","TAS":"TAS","TAT":"TAT","OPTEL":"OPTEL"};
-        if (FUNCTION_MAP[funcRaw]) func = FUNCTION_MAP[funcRaw];
-        else if (funcRaw === "EIP") {
-          const eipMatch = teamRaw.match(/^EIP0?(\d+)$/);
-          if (eipMatch) {
-            const prefix = `EP${eipMatch[1]}`;
-            const existing = allEmps.map(e => e.function || "").filter(f => f.startsWith(prefix))
-              .map(f => parseInt(f.replace(prefix, ""), 10)).filter(n => !isNaN(n));
-            func = `${prefix}${String((existing.length > 0 ? Math.max(...existing) : 0) + 1).padStart(2,"0")}`;
+        let team = teamRaw;
+        if (__regEditingNInt) {
+          const empAtual = allEmps.find(e => e.n_int == __regEditingNInt);
+          const FUNCTION_MAP = {"Comando": "COM", "Coordenador": "CRD", "Secretariado": "SEC", "TAS": "TAS", "TAT": "TAT", "OPTEL": "OPTEL"};
+          if (FUNCTION_MAP[funcRaw]) {
+            func = FUNCTION_MAP[funcRaw];
+          } else if (funcRaw === "EIP") {
+            func = empAtual?.function || funcRaw;
+          }
+          const TEAM_MAP = {"Comando": "COM", "Coordenação": "CRD", "Secretariado": "SEC"};
+          if (TEAM_MAP[teamRaw]) {
+            team = TEAM_MAP[teamRaw];
+          } else if (teamRaw === "SALOC") {
+            team = /^OPC\d+$/.test(empAtual?.team) ? empAtual.team : teamRaw;
+          } else if (teamRaw === "INEM") {
+            team = /^EQ\d+$/.test(empAtual?.team) ? empAtual.team : teamRaw;
+          } else if (teamRaw === "TDNU") {
+            team = /^TDNU\d+$/.test(empAtual?.team) ? empAtual.team : teamRaw;
+          } else if (/^EIP\d+$/.test(teamRaw)) {
+            team = teamRaw;
+          }
+        } else {
+          const FUNCTION_MAP = {"Comando": "COM", "Coordenador": "CRD", "Secretariado": "SEC", "TAS": "TAS", "TAT": "TAT", "OPTEL": "OPTEL"};
+          if (FUNCTION_MAP[funcRaw]) {
+            func = FUNCTION_MAP[funcRaw];
+          } else if (funcRaw === "EIP") {
+            const eipMatch = teamRaw.match(/^EIP0?(\d+)$/);
+            if (eipMatch) {
+              const prefix = `EP${eipMatch[1]}`;
+              const eipEmps = allEmps.filter(e => (e.function || "").startsWith(prefix));
+              const ativos = eipEmps.filter(e => !e.exit_date);
+              if (ativos.length >= 5) {
+                showPopup('popup-danger', `A equipa ${teamRaw} já tem 5 elementos ativos.`);
+                saveBtn.disabled = false;
+                saveBtn.textContent = "💾 Guardar";
+                return;
+              }
+              const vagos = eipEmps
+              .filter(e => e.exit_date)
+              .map(e => parseInt((e.function || "").replace(prefix, ""), 10))
+              .filter(n => !isNaN(n))
+              .sort((a, b) => a - b);
+              if (vagos.length > 0) {
+                func = `${prefix}${String(vagos[0]).padStart(2, "0")}`;
+              } else {
+                const todos = eipEmps
+                .map(e => parseInt((e.function || "").replace(prefix, ""), 10))
+                .filter(n => !isNaN(n));
+                func = `${prefix}${String((todos.length > 0 ? Math.max(...todos) : 0) + 1).padStart(2, "0")}`;
+              }
+            }
+          }
+          const TEAM_MAP = {"Comando": "COM", "Coordenação": "CRD", "Secretariado": "SEC"};
+          if (TEAM_MAP[teamRaw]) {
+            team = TEAM_MAP[teamRaw];
+          } else if (teamRaw === "INEM") {
+            const existing = allEmps.map(e => e.team || "").filter(t => /^EQ\d+$/.test(t)).map(t => parseInt(t.replace("EQ", ""), 10)).filter(n => !isNaN(n));
+            team = `EQ${String((existing.length > 0 ? Math.max(...existing) : 0) + 1).padStart(2, "0")}`;
+          } else if (teamRaw === "TDNU") {
+            const existing = allEmps.map(e => e.team || "").filter(t => /^TDNU\d+$/.test(t)).map(t => parseInt(t.replace("TDNU", ""), 10)).filter(n => !isNaN(n));
+            team = `TDNU${String((existing.length > 0 ? Math.max(...existing) : 0) + 1).padStart(2, "0")}`;
+          } else if (teamRaw === "SALOC") {
+            const existing = allEmps.map(e => e.team || "").filter(t => /^OPC\d+$/.test(t)).map(t => parseInt(t.replace("OPC", ""), 10)).filter(n => !isNaN(n));
+            team = `OPC${String((existing.length > 0 ? Math.max(...existing) : 0) + 1).padStart(2, "0")}`;
+          } else if (/^EIP\d+$/.test(teamRaw)) {
+            team = teamRaw;
           }
         }
-        let team = teamRaw;
-        const TEAM_MAP = {"Comando":"COM","Coordenação":"CRD","Secretariado":"SEC"};
-        if (TEAM_MAP[teamRaw]) team = TEAM_MAP[teamRaw];
-        else if (teamRaw === "INEM") {
-          const existing = allEmps.map(e => e.team||"").filter(t => /^EQ\d+$/.test(t)).map(t => parseInt(t.replace("EQ",""),10)).filter(n => !isNaN(n));
-          team = `EQ${String((existing.length > 0 ? Math.max(...existing) : 0) + 1).padStart(2,"0")}`;
-        } else if (teamRaw === "TDNU") {
-          const existing = allEmps.map(e => e.team||"").filter(t => /^TDNU\d+$/.test(t)).map(t => parseInt(t.replace("TDNU",""),10)).filter(n => !isNaN(n));
-          team = `TDNU${String((existing.length > 0 ? Math.max(...existing) : 0) + 1).padStart(2,"0")}`;
-        } else if (teamRaw === "SALOC") {
-          const existing = allEmps.map(e => e.team||"").filter(t => /^OPC\d+$/.test(t)).map(t => parseInt(t.replace("OPC",""),10)).filter(n => !isNaN(n));
-          team = `OPC${String((existing.length > 0 ? Math.max(...existing) : 0) + 1).padStart(2,"0")}`;
-        } else if (/^EIP\d+$/.test(teamRaw)) {
-          team = teamRaw;
-        }
-        const payload = {n_int: parseInt(nInt,10), abv_name: name, function: func||null, team: team||null, entry_date: entryDate||null, exit_date: exitDate||null, corp_oper_nr: corpOperNr};
+        const payload = {n_int: parseInt(nInt, 10), abv_name: name, function: func || null, team: team || null, entry_date: entryDate || null, exit_date: exitDate || null, corp_oper_nr: corpOperNr};
         let res;
         if (__regEditingNInt) {
           res = await fetch(`${SUPABASE_URL}/rest/v1/reg_employees?n_int=eq.${__regEditingNInt}&corp_oper_nr=eq.${corpOperNr}`, {
             method: "PATCH",
-            headers: {...getSupabaseHeaders(), "Content-Type":"application/json","Prefer":"return=minimal"},
+            headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
             body: JSON.stringify(payload)
           });
         } else {
           res = await fetch(`${SUPABASE_URL}/rest/v1/reg_employees`, {
             method: "POST",
-            headers: {...getSupabaseHeaders(), "Content-Type":"application/json","Prefer":"return=minimal"},
+            headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
             body: JSON.stringify(payload)
           });
         }
@@ -4553,7 +5561,7 @@
     FASE 09 - DASHBOARD
     =============================== */
     async function createRHDashboard() {
-      const cardBody = document.querySelector("#dashboard-rh .card-body");
+      const cardBody = document.querySelector("#dashboard-rh .major-card-body");
       if (!cardBody) {
         console.error("❌ Card body não encontrado!");
         return;

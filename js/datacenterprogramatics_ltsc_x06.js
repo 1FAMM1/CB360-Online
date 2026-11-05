@@ -305,6 +305,11 @@
         await loadCorporationData();
       }, 500);
     });
+    function storageHeaders(extra = {}) {
+      const h = {...getSupabaseHeaders(), ...extra};
+      if (!extra["Content-Type"]) delete h["Content-Type"];
+      return h;
+    }
     async function uploadCorpLogo(file, corpOperNr) {
       const fileExt = file.name.split(".").pop();
       const timestamp = Date.now();
@@ -314,7 +319,7 @@
       const response = await fetch(
         `${SUPABASE_URL}/storage/v1/object/cb_logos/${fileName}`, {
           method: "POST",
-          headers: {Authorization: `Bearer ${SUPABASE_ANON_KEY}`},
+          headers: storageHeaders(),
           body: formData
         }
       );
@@ -338,9 +343,9 @@
         if (logoImg) logoImg.src = localPreviewUrl;
         if (logoHeaderImg) logoHeaderImg.src = localPreviewUrl;
         const corpOperNr = (sessionStorage.getItem("currentCorpOperNr")).trim();
-        await deleteCorpLogo(originalCorpLogo);
         const upload = await uploadCorpLogo(tempCorpLogoFile, corpOperNr);
         await updateLogoInDB(corpOperNr, upload.url);
+        await deleteCorpLogo(originalCorpLogo);
         const cacheBusterUrl = `${upload.url}?t=${Date.now()}`;
         if (logoImg) logoImg.src = cacheBusterUrl;
         if (logoHeaderImg) logoHeaderImg.src = cacheBusterUrl;
@@ -352,7 +357,7 @@
       } catch (error) {
         console.error("SAVE LOGO ERROR:", error);
         showPopup("popup-danger", error.message || "Erro ao guardar logo");
-        loadCorporationHeader();
+        if (typeof loadCorporationHeader === "function") loadCorporationHeader();
       }
     }
     async function removeCorpLogo() {
@@ -411,7 +416,7 @@
         await fetch(
           `${SUPABASE_URL}/storage/v1/object/cb_logos/${fileName}`, {
             method: "DELETE",
-            headers: {Authorization: `Bearer ${SUPABASE_ANON_KEY}`}
+            headers: storageHeaders()
           }
         );
       } catch (e) {
@@ -639,10 +644,21 @@
       document.getElementById("elements-list").style.display = "none";
       document.getElementById("elements-edit").style.display = "block";
       document.querySelector("#elements-edit h3").textContent = "Editar: " + (row.abv_name || "");      
-      const fields = ["n_int", "n_file", "patent", "patent_abv", "abv_name", "full_name", "section", "nif", "niss", "nib"];
+      const fields = ["n_int", "n_file", "patent", "patent_abv", "abv_name", "full_name", "section"];
       fields.forEach(f => {
         const el = document.getElementById("win_" + f);
         if (el) el.value = row[f] ?? "";
+      });
+      ["nif", "niss", "nib"].forEach(f => {
+        const el = document.getElementById("win_" + f);
+        if (el) el.value = "";
+      });
+      loadElemPrivate(row.id).then(priv => {
+        if (!priv || currentEditId !== row.id) return;
+        ["nif", "niss", "nib"].forEach(f => {
+          const el = document.getElementById("win_" + f);
+          if (el) el.value = priv[f] ?? "";
+        });
       });
       const photoPreview = document.getElementById("win_photo_preview");
       if (photoPreview) {
@@ -766,7 +782,7 @@
           const filePath = `${corpOperNr}_${nInt}.${fileExt}`;
           const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/cb_logos/${filePath}`, {
             method: "POST",
-            headers: {...getSupabaseHeaders(), "x-upsert": "true"},
+            headers: storageHeaders({"x-upsert": "true", "Content-Type": file.type || "application/octet-stream"}),
             body: file
           });
           if (!uploadRes.ok) throw new Error("Erro ao fazer upload da foto.");
@@ -776,8 +792,8 @@
         const payloadReg = {n_int: nInt, n_file: document.getElementById("win_n_file").value, patent: document.getElementById("win_patent").value, patent_abv: document.getElementById("win_patent_abv").value,
                             abv_name: (document.getElementById("win_abv_name")?.value || "").trim() || buildAbvName(fullName), full_name: fullName, photo_url: photoUrl, ML: document.getElementById("win_ML").value === "true", MP: document.getElementById("win_MP").value === "true", 
                             TAS: document.getElementById("win_TAS").value === "true", section: document.getElementById("win_section").value, type_quad: document.getElementById("win_quad").value, 
-                            phone: document.getElementById("win_phone").value, mobile_phone: document.getElementById("win_mobile").value, email: document.getElementById("win_mail").value, nif: document.getElementById("win_nif").value, 
-                            is_ofope: document.getElementById("win_ofope").value === "Sim", nib: document.getElementById("win_nib").value, elem_state: document.getElementById("win_state").value === "Ativo", 
+                            phone: document.getElementById("win_phone").value, mobile_phone: document.getElementById("win_mobile").value, email: document.getElementById("win_mail").value, 
+                            is_ofope: document.getElementById("win_ofope").value === "Sim", elem_state: document.getElementById("win_state").value === "Ativo", 
                             inactive_from: document.getElementById("win_state").value === "Inativo" ? document.getElementById("win_state_from").value : null,
                             acess: Array.from(document.querySelectorAll('.access-checkbox:checked')).map(cb => cb.value).join(", "), corp_oper_nr: corpOperNr, last_updated: new Date().toISOString(),
                             user_role: mapUserRole()
@@ -790,7 +806,30 @@
           headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=representation"},
           body: JSON.stringify(payloadReg)
         });
-        if (!resReg.ok) throw new Error("Erro ao gravar reg_elems: " + await resReg.text());
+        if (!resReg.ok) {
+          const errTxt = await resReg.text();
+          let errMsg = errTxt;
+          try { errMsg = JSON.parse(errTxt).message || errTxt; } catch (e) {}
+          throw new Error(errMsg);
+        }
+        const savedReg = await resReg.json().catch(() => []);
+        const elemId = currentEditId || savedReg?.[0]?.id;
+        /* ---------- dados sensíveis (NIF / NISS / NIB) ---------- */
+        if (elemId) {
+          const resPriv = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems_private?on_conflict=elem_id`, {
+            method: "POST",
+            headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "resolution=merge-duplicates"},
+            body: JSON.stringify({
+              elem_id: elemId,
+              corp_oper_nr: corpOperNr,
+              nif: document.getElementById("win_nif")?.value.trim() || null,
+              niss: document.getElementById("win_niss")?.value.trim() || null,
+              nib: document.getElementById("win_nib")?.value.trim() || null,
+              updated_at: new Date().toISOString()
+            })
+          });
+          if (!resPriv.ok) throw new Error("Elemento gravado, mas falhou NIF/NISS/NIB: " + await resPriv.text());
+        }
         /* ---------- users (Online) ---------- */
         if (usernameVal) {
           const payloadUsers = {username: usernameVal, n_int: nInt, full_name: fullName, patent: payloadReg.patent, corp_oper_nr: corpOperNr};
@@ -970,6 +1009,15 @@
     }
     async function loadUserLogin(name, corp) {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/users?full_name=eq.${encodeURIComponent(name)}&corp_oper_nr=eq.${corp}&select=id,username,validate`, {
+        headers: getSupabaseHeaders()
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data[0] || null;
+    }
+    async function loadElemPrivate(elemId) {
+      if (!elemId) return null;
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems_private?elem_id=eq.${elemId}&select=nif,niss,nib`, {
         headers: getSupabaseHeaders()
       });
       if (!res.ok) return null;

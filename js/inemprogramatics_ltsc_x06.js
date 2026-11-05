@@ -328,7 +328,7 @@
       btnsRight.append(btnEmitirXlsx, btnEmitir);
       footer.appendChild(btnsRight);
       container.appendChild(footer);
-      const today = new Date().toISOString().split("T")[0];
+      const today = new Date().toLocaleDateString('sv-SE');
       const dateFrom = document.getElementById("inem-date-from");
       const dateTo = document.getElementById("inem-date-to");
       if (dateFrom) dateFrom.value = today;

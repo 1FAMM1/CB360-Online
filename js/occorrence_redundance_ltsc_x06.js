@@ -10476,7 +10476,7 @@
         worksheet['!freeze'] = { xSplit: 0, ySplit: 1 };
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, 'Ocorrências');
-        const dateStamp = new Date().toISOString().slice(0, 10);
+        const dateStamp = new Date().toLocaleDateString('sv-SE');
         XLSX.writeFile(workbook, `Listagem_de_Ocorrencias_${dateStamp}.xlsx`);
         showPopup('popup-success', 'Exportação concluída com sucesso!');
       } catch (err) {

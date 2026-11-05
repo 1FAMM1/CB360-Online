@@ -1,4 +1,4 @@
-   // ==============================================================================
+    // ==============================================================================
     // == 0. VARIÁVEIS GLOBAIS / CONSTANTES                                       ==
     // ==============================================================================
     let cb360Pagination = {fullData: [], resourceCounts: {}, currentPage: 1, pageSize: 25};
@@ -1589,7 +1589,7 @@
     // ---- 5.1 IDENTIFICAÇÃO (Núm. Interno, Estado) ----
     // generateInternalNr()
     async function generateInternalNr() {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const year = new Date().getFullYear();
       try {
         const response = await supaFetch(`${SUPABASE_URL}/rest/v1/cb360_incidents?corp_oper_nr=eq.${corpOperNr}&order=internal_number.desc&limit=1`);
@@ -1717,7 +1717,7 @@
         const chkEntidades = overlay.querySelector('#cb360-chk-entidades').checked;
         tableBody.innerHTML = `<tr><td colspan="5" style="padding:12px; text-align:center; color:#777; border-left:1px solid #ccc; border-right:1px solid #ccc; border-bottom:1px solid #ccc;">A pesquisar...</td></tr>`;
         try {
-          const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+          const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
           if (!currentCorpOperNr) {
             tableBody.innerHTML = `<tr><td colspan="5" style="padding:12px; text-align:center; color:#d9534f; border-left:1px solid #ccc; border-right:1px solid #ccc; border-bottom:1px solid #ccc;">Erro: Operador ativo não definido.</td></tr>`;
             return;
@@ -2106,7 +2106,7 @@
     // B. Resp. Rel. — FETCH: fetchCb360BRespList()
     async function fetchCb360BRespList() {
       try {
-        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
         if (!currentCorpOperNr) return [];
         const url = `${SUPABASE_URL}/rest/v1/reg_elems?select=n_int,full_name,patent_abv&corp_oper_nr=eq.${currentCorpOperNr}&elem_state=eq.true&type_quad=not.is.null&type_quad=neq.&order=n_int.asc`;
         const response = await supaFetch(url, { method: 'GET' });
@@ -2262,7 +2262,7 @@
     // Ent. Faturar — FETCH: fetchCb360EntityInvoiceList()
     async function fetchCb360EntityInvoiceList() {
       try {
-        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
         if (!currentCorpOperNr) {
           console.error("Erro: Operador ativo não definido.");
           return [];
@@ -2692,7 +2692,7 @@
       let lat = parseFloat(inccident?.coord_x);
       let lng = parseFloat(inccident?.coord_y);
       if (isNaN(lat) || isNaN(lng)) {
-        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
         try {
           const resp = await supaFetch(`${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${currentCorpOperNr}&select=default_lat,default_lng`);
           const data = resp.ok ? await resp.json() : [];
@@ -2801,7 +2801,7 @@
     // FETCH: getPatentByFullName()
     async function getPatentByFullName(fullName) {
       if (!fullName) return '';
-      const corpNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpNr = sessionStorage.getItem("currentCorpOperNr");
       try {
         const resp = await supaFetch(`${SUPABASE_URL}/rest/v1/reg_elems?select=patent&full_name=eq.${encodeURIComponent(fullName)}&corp_oper_nr=eq.${corpNr}&limit=1`);
         const data = await resp.json();
@@ -3079,7 +3079,7 @@
           return;
         }
       }
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const currentUser = sessionStorage.getItem("currentUserDisplay") || sessionStorage.getItem("currentUserName") || "FMartins";
       const getVal = (id) => document.getElementById(id)?.value || null;
       const pos = cb360LeafletMarker.getLatLng();
@@ -3705,7 +3705,7 @@
       const searchInput = document.getElementById('goc-firefighters-search');
       const chevron = document.getElementById('goc-firefighters-chevron');
       if (!listContainer || !mainInput || !dropdown || !searchInput) return;
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const currentInternalNr = document.getElementById('goc-internal-nr')?.value;
       let busyMap = {};      
       try {
@@ -3809,7 +3809,7 @@
       const searchInput = document.getElementById('goc-ff-firefighters-search');
       const chevron = document.getElementById('goc-ff-firefighters-chevron');
       if (!listContainer || !mainInput || !dropdown || !searchInput) return;
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const currentInternalNr = document.getElementById('goc-internal-nr')?.value;
       let busyMap = {};
       try {
@@ -3926,7 +3926,7 @@
     // FETCH: fetchCb360FirefightersList()
     async function fetchCb360FirefightersList() {
       try {
-        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
         if (!currentCorpOperNr) return [];
         const url = `${SUPABASE_URL}/rest/v1/reg_elems?select=n_int,full_name,patent_abv&corp_oper_nr=eq.${currentCorpOperNr}&elem_state=eq.true&type_quad=not.is.null&type_quad=neq.&order=n_int.asc`;
         const response = await supaFetch(url, { method: 'GET' });
@@ -4313,7 +4313,7 @@
       await initializeNewVehicleFirefightersComboBox(firefightersList);
       if (vehicle && vehicle.id) {
         try {
-          const crewUrl = `${SUPABASE_URL}/rest/v1/cb360_dispatch_crew` + `?dispatch_vehicle_id=eq.${vehicle.id}` + `&corp_oper_nr=eq.${sessionStorage.getItem("currentCorpOperNr") || "0805"}`;
+          const crewUrl = `${SUPABASE_URL}/rest/v1/cb360_dispatch_crew` + `?dispatch_vehicle_id=eq.${vehicle.id}` + `&corp_oper_nr=eq.${sessionStorage.getItem("currentCorpOperNr")}`;
           const crewResponse = await supaFetch(crewUrl, { method: "GET" });
           if (crewResponse.ok) {
             const associatedFirefighters = await crewResponse.json();
@@ -4382,7 +4382,7 @@
         showPopup('popup-danger', 'Ainda existem meios sem hora de saída do TO.');
         return;
       }
-      const vehicleData = {corp_oper_nr: sessionStorage.getItem("currentCorpOperNr") || "0805", internal_number: document.getElementById('goc-internal-nr')?.value, vehicle: cb360VehicleSelected?.id || null,  
+      const vehicleData = {corp_oper_nr: sessionStorage.getItem("currentCorpOperNr"), internal_number: document.getElementById('goc-internal-nr')?.value, vehicle: cb360VehicleSelected?.id || null,  
                            inem_report_number: getVal('#goc-inem-verbete'), inem_unit: getVal('#goc-inem-unidade'), cb_departure_date: getVal('#dataSCB'), cb_departure_time: getVal('#horaSCB'), scene_arrival_date: getVal('#dataCTO'),
                            scene_arrival_time: horaCTO, scene_departure_date: horaSTO ? getVal('#dataSTO') : null, scene_departure_time: horaSTO, cb_arrival_date: horaCCB ? getVal('#dataCCB') : null, cb_arrival_time: horaCCB,
                            km_start: getVal('#goc-km-start'), km_end: getVal('#goc-km-end')
@@ -4518,7 +4518,15 @@
               })
             );
           }
-          await Promise.all(crewPromises);
+          const crewResponses = await Promise.all(crewPromises);
+          for (const r of crewResponses) {
+            if (!r.ok) {
+              const t = await r.text().catch(() => "");
+              let msg = t;
+              try { msg = JSON.parse(t).message || t; } catch (e) {}
+              throw new Error("Veículo gravado, mas falhou a guarnição: " + (msg || r.status));
+            }
+          }
           showPopup('popup-success', `Despacho gravado com sucesso!`);
           const refreshResponse = await supaFetch(`${SUPABASE_URL}/rest/v1/cb360_dispatch_vehicles?corp_oper_nr=eq.${vehicleData.corp_oper_nr}&internal_number=eq.${vehicleData.internal_number}&select=*,cb360_dispatch_crew(*)&order=id.asc&cb360_dispatch_crew.order=id.asc`);
           if (refreshResponse.ok) {
@@ -4544,7 +4552,7 @@
           if (cb360BRespSelected?.id && vehicleData.internal_number) {
             try {
               const patchUrl = `${SUPABASE_URL}/rest/v1/cb360_incidents?internal_number=eq.${vehicleData.internal_number}&corp_oper_nr=eq.${vehicleData.corp_oper_nr}`;
-              await supaFetch(patchUrl, {
+              const syncRes = await supaFetch(patchUrl, {
                 method: 'PATCH',
                 headers: {
                   'Content-Type': 'application/json'
@@ -4553,6 +4561,7 @@
                   resp_member_id: cb360BRespSelected.id
                 })
               });
+              if (!syncRes.ok) console.error('Erro ao sincronizar resp_member_id:', syncRes.status, await syncRes.text());
             } catch (patchErr) {
               console.error('Erro ao sincronizar resp_member_id na ocorrência:', patchErr);
             }
@@ -4670,7 +4679,7 @@
         }
         try {
           const crewUrl = `${SUPABASE_URL}/rest/v1/cb360_dispatch_crew?dispatch_vehicle_id=eq.${selectedVehicleId}` +
-            `&corp_oper_nr=eq.${sessionStorage.getItem("currentCorpOperNr") || "0805"}`;
+            `&corp_oper_nr=eq.${sessionStorage.getItem("currentCorpOperNr")}`;
           const crewResponse = await supaFetch(crewUrl, { method: 'GET' });
           if (crewResponse.ok) {
             const associatedFirefighters = await crewResponse.json();
@@ -4704,7 +4713,7 @@
         showPopup('popup-danger', "Selecione uma viatura.");
         return;
       }
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const internalNumber = document.getElementById('goc-internal-nr')?.value;
       const departureDate = document.getElementById('goc-ff-departure-date').value || null;
       const departureTime = document.getElementById('goc-ff-departure-time').value || null;
@@ -4758,11 +4767,12 @@
           try {
             const patchUrl = `${SUPABASE_URL}/rest/v1/cb360_incidents?internal_number=eq.${internalNumber}&corp_oper_nr=eq.${currentCorpOperNr}`;
             
-            await supaFetch(patchUrl, {
+            const syncRes = await supaFetch(patchUrl, {
               method: 'PATCH',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ resp_member_id: cb360BRespSelected.id })
             });
+            if (!syncRes.ok) console.error('Erro ao sincronizar resp_member_id:', syncRes.status, await syncRes.text());
           } catch (patchErr) {
             console.error('Erro ao sincronizar resp_member_id na ocorrência:', patchErr);
           }
@@ -4897,7 +4907,7 @@
     }
     // SAVE: saveCb360EditFirefighter()
     async function saveCb360EditFirefighter(firefighter) {
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const departureTimeVal = document.getElementById('goc-edit-ff-departure-time').value || null;
       const returnTimeVal = document.getElementById('goc-edit-ff-return-time').value || null;
       const payload = {corp_oper_nr: currentCorpOperNr, n_int: document.getElementById('goc-edit-ff-firefighter-select').value || null, role: document.getElementById('goc-edit-ff-role-desc').value || null,
@@ -4935,11 +4945,12 @@
           try {
             const patchUrl = `${SUPABASE_URL}/rest/v1/cb360_incidents?internal_number=eq.${internalNumber}&corp_oper_nr=eq.${currentCorpOperNr}`;
             
-            await supaFetch(patchUrl, {
+            const syncRes = await supaFetch(patchUrl, {
               method: 'PATCH',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ resp_member_id: cb360BRespSelected.id })
             });
+            if (!syncRes.ok) console.error('Erro ao sincronizar resp_member_id:', syncRes.status, await syncRes.text());
           } catch (patchErr) {
             console.error('Erro ao sincronizar resp_member_id na ocorrência:', patchErr);
           }
@@ -5379,7 +5390,7 @@
     // FETCH: fetchCb360Victims()
     async function fetchCb360Victims(internal_number) {
       try {
-        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const url = `${SUPABASE_URL}/rest/v1/cb360_victims?internal_number=eq.${internal_number}&corp_oper_nr=eq.${currentCorpOperNr}&order=id.asc`;
         const response = await supaFetch(url, { cache: 'no-store' });
         if (!response.ok) {
@@ -5886,7 +5897,7 @@
       const { outboundVehicleCombo, outboundDriverCombo, returnVehicleCombo, returnDriverCombo, routeCombo, rescueBodyCombo } = combos;
       const getVal = (id) => document.getElementById(id)?.value || null;
       const internalNumber = cb360CurrentIncident?.internal_number ?? document.getElementById('goc-internal-nr')?.value;
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const outboundVehicle = outboundVehicleCombo?.getSelected()?.id ?? null;
       const outboundDriver = outboundDriverCombo?.getSelected()?.id ?? null;
       const returnVehicle = returnVehicleCombo?.getSelected()?.id ?? null;
@@ -6074,7 +6085,7 @@
     async function saveCb360CommField(field, value) {
       const internalNumber = cb360CurrentIncident?.internal_number;
       if (!internalNumber) return;
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
       try {
         const response = await supaFetch(`${SUPABASE_URL}/rest/v1/cb360_incidents?internal_number=eq.${internalNumber}&corp_oper_nr=eq.${currentCorpOperNr}`, { method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
@@ -6511,7 +6522,7 @@
     // FETCH: fetchCb360SummaryMeans() — busca os meios aéreos da ocorrência (tipo 'aircraft')
     async function fetchCb360SummaryMeans(internalNumber) {
       try {
-        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const url = `${SUPABASE_URL}/rest/v1/cb360_report_means?internal_number=eq.${internalNumber}&corp_oper_nr=eq.${currentCorpOperNr}&type=eq.aircraft&select=entity,kind`;
         const response = await supaFetch(url, { method: 'GET' });
         return response.ok ? await response.json() : [];
@@ -6583,7 +6594,7 @@
     // FETCH: fetchCb360IncidentReportRow() — busca a linha de cb360_incident_reports para o internal_number atual
     async function fetchCb360IncidentReportRow(internalNumber) {
       try {
-        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const url = `${SUPABASE_URL}/rest/v1/cb360_incident_reports?internal_number=eq.${internalNumber}&corp_oper_nr=eq.${currentCorpOperNr}&select=*`;
         const response = await supaFetch(url, { method: 'GET' });
         const data = await response.json();
@@ -6996,7 +7007,7 @@
     // ---- FETCH: fetchCb360SmsSent() ----
     async function fetchCb360SmsSent(internalNumber, dateFrom, dateTo) {
       try {
-        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
         let url = `${SUPABASE_URL}/rest/v1/cb360_sms_log?internal_number=eq.${internalNumber}&corp_oper_nr=eq.${currentCorpOperNr}&type=eq.sent&select=*&order=sent_at.desc`;
         if (dateFrom) url += `&sent_at=gte.${dateFrom}`;
         if (dateTo) url += `&sent_at=lte.${dateTo}T23:59:59`;
@@ -7312,7 +7323,7 @@
     // ---- FETCH: fetchCb360ReportHeaderInfo() ----
     async function fetchCb360ReportHeaderInfo(internalNumber) {
       try {
-        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const url = `${SUPABASE_URL}/rest/v1/cb360_incidents?internal_number=eq.${internalNumber}&corp_oper_nr=eq.${currentCorpOperNr}&select=internal_number,alert_date,alert_time,classification,outside_area,outside_area_corp`;
         const response = await supaFetch(url, { method: 'GET' });
         const data = await response.json();
@@ -7344,7 +7355,7 @@
     async function applyCb360ReportCsrepcDefault() {
       if (cb360ReportFormState.csrepc) return;
       try {
-        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const url = `${SUPABASE_URL}/rest/v1/national_corporations?oper_nr=eq.${currentCorpOperNr}&select=csrepc_assigned`;
         const response = await supaFetch(url, { method: 'GET' });
         if (!response.ok) return;
@@ -7360,7 +7371,7 @@
     // ---- FETCH: loadCb360ReportRow() ----
     async function loadCb360ReportRow(internalNumber) {
       try {
-        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const url = `${SUPABASE_URL}/rest/v1/cb360_incident_reports?internal_number=eq.${internalNumber}&corp_oper_nr=eq.${currentCorpOperNr}&select=*`;
         const response = await supaFetch(url, {method: 'GET'});
         const data = await response.json();
@@ -7727,7 +7738,7 @@
     // ---- FETCH: fetchCb360ReportCommand() ----
     async function fetchCb360ReportCommand(internalNumber) {
       try {
-        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const url = `${SUPABASE_URL}/rest/v1/cb360_report_command?internal_number=eq.${internalNumber}&corp_oper_nr=eq.${currentCorpOperNr}&select=*&order=id.asc`;
         const response = await supaFetch(url, { method: 'GET' });
         return response.ok ? await response.json() : [];
@@ -7872,7 +7883,7 @@
       document.getElementById('cb360-save-cos').onclick = async () => {
         const payload = {
           internal_number: cb360ReportCurrentInternalNumber,
-          corp_oper_nr: sessionStorage.getItem("currentCorpOperNr") || "0805",
+          corp_oper_nr: sessionStorage.getItem("currentCorpOperNr"),
           type: 'cos',
           num: parseInt(document.getElementById('modal-cos-num').value, 10) || null,
           role: document.getElementById('modal-cos-category').value || null,
@@ -7955,7 +7966,7 @@
       document.getElementById('cb360-save-pco').onclick = async () => {
         const payload = {
           internal_number: cb360ReportCurrentInternalNumber,
-          corp_oper_nr: sessionStorage.getItem("currentCorpOperNr") || "0805",
+          corp_oper_nr: sessionStorage.getItem("currentCorpOperNr"),
           type: 'pco',
           role: document.getElementById('modal-pco-function').value || null,
           name: document.getElementById('modal-pco-name').value || null
@@ -8029,7 +8040,7 @@
     // FETCH: fetchCb360ReportMeals()
     async function fetchCb360ReportMeals(internalNumber) {
       try {
-        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const url = `${SUPABASE_URL}/rest/v1/cb360_report_meals?internal_number=eq.${internalNumber}&corp_oper_nr=eq.${currentCorpOperNr}&select=*&order=id.asc`;
         const response = await supaFetch(url, { method: 'GET' });
         return response.ok ? await response.json() : [];
@@ -8175,7 +8186,7 @@
       tr.querySelector('.meal-save-btn').addEventListener('click', async () => {
         const dayInput = tr.querySelector('.meal-day');
         const [breakfasts, lunches, snacks, dinners, extras] = Array.from(qtyInputs).map(i => Number(i.value) || 0);
-        const payload = {internal_number: cb360ReportCurrentInternalNumber, corp_oper_nr: sessionStorage.getItem("currentCorpOperNr") || "0805", day_label: dayInput.value || null,
+        const payload = {internal_number: cb360ReportCurrentInternalNumber, corp_oper_nr: sessionStorage.getItem("currentCorpOperNr"), day_label: dayInput.value || null,
                          breakfasts, lunches, snacks, dinners, extras, total: Number(totalInput.value) || 0};
         await saveCb360MealItem(payload, isEdit ? data.id : null);
       });
@@ -8640,7 +8651,7 @@
     // ---- FETCH: fetchCb360ReportMeansFirefighters() ----
     async function fetchCb360ReportMeansFirefighters(internalNumber) {
       try {
-        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const url = `${SUPABASE_URL}/rest/v1/cb360_report_means_firefighters?internal_number=eq.${internalNumber}&corp_oper_nr=eq.${currentCorpOperNr}&select=*&order=id.asc`;
         const response = await supaFetch(url, { method: 'GET' });
         return response.ok ? await response.json() : [];
@@ -8791,7 +8802,7 @@
       document.getElementById('cb360-close-modal').onclick = closeModal;
       document.getElementById('cb360-cancel-cb').onclick = closeModal;      
       document.getElementById('cb360-save-cb').onclick = async () => {
-        const payload = {internal_number: cb360ReportCurrentInternalNumber, corp_oper_nr: sessionStorage.getItem("currentCorpOperNr") || "0805", corp_code: corpCombo?.getSelected()?.id ?? null,
+        const payload = {internal_number: cb360ReportCurrentInternalNumber, corp_oper_nr: sessionStorage.getItem("currentCorpOperNr"), corp_code: corpCombo?.getSelected()?.id ?? null,
                          name: document.getElementById('modal-cb-nome').value || null, vehicle_id: document.getElementById('modal-cb-idviatura').value || null, vehicle_registration: document.getElementById('modal-cb-matricula').value || null,
                          num_firefighters: parseInt(document.getElementById('modal-cb-numbomb').value, 10) || null, diesel_liters: parseFloat(document.getElementById('modal-cb-gasoleo').value) || null,
                          petrol_liters: parseFloat(document.getElementById('modal-cb-gasolina').value) || null, mix_liters: parseFloat(document.getElementById('modal-cb-mistura').value) || null,
@@ -8855,7 +8866,7 @@
     // ---- FETCH: fetchCb360ReportMeans() ----
     async function fetchCb360ReportMeans(internalNumber) {
       try {
-        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const url = `${SUPABASE_URL}/rest/v1/cb360_report_means?internal_number=eq.${internalNumber}&corp_oper_nr=eq.${currentCorpOperNr}&select=*&order=id.asc`;
         const response = await supaFetch(url, { method: 'GET' });
         return response.ok ? await response.json() : [];
@@ -8920,7 +8931,7 @@
       document.getElementById('cb360-save-pc').onclick = async () => {
         const payload = {
           internal_number: cb360ReportCurrentInternalNumber,
-          corp_oper_nr: sessionStorage.getItem("currentCorpOperNr") || "0805",
+          corp_oper_nr: sessionStorage.getItem("currentCorpOperNr"),
           type: 'civil_protection',
           entity: document.getElementById('modal-pc-nome').value || null,
           quantity: parseInt(document.getElementById('modal-pc-veiculos').value, 10) || null,
@@ -8997,7 +9008,7 @@
       document.getElementById('cb360-save-ma').onclick = async () => {
         const payload = {
           internal_number: cb360ReportCurrentInternalNumber,
-          corp_oper_nr: sessionStorage.getItem("currentCorpOperNr") || "0805",
+          corp_oper_nr: sessionStorage.getItem("currentCorpOperNr"),
           type: 'aircraft',
           entity: document.getElementById('modal-ma-entidade').value || null,
           kind: document.getElementById('modal-ma-tipo').value || null,
@@ -9066,7 +9077,7 @@
       document.getElementById('cb360-save-rt').onclick = async () => {
         const payload = {
           internal_number: cb360ReportCurrentInternalNumber,
-          corp_oper_nr: sessionStorage.getItem("currentCorpOperNr") || "0805",
+          corp_oper_nr: sessionStorage.getItem("currentCorpOperNr"),
           type: 'technical_resource',
           entity: document.getElementById('modal-rt-entidade').value || null,
           kind: document.getElementById('modal-rt-tipo').value || null,
@@ -9136,7 +9147,7 @@
       document.getElementById('cb360-save-om').onclick = async () => {
         const payload = {
           internal_number: cb360ReportCurrentInternalNumber,
-          corp_oper_nr: sessionStorage.getItem("currentCorpOperNr") || "0805",
+          corp_oper_nr: sessionStorage.getItem("currentCorpOperNr"),
           type: 'other_means',
           kind: document.getElementById('modal-om-tipo').value || null,
           quantity: parseInt(document.getElementById('modal-om-quantidade').value, 10) || null,
@@ -9219,7 +9230,7 @@
     // ---- FETCH: fetchCb360ReportUsedMaterial() ----
     async function fetchCb360ReportUsedMaterial(internalNumber) {
       try {
-        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const url = `${SUPABASE_URL}/rest/v1/cb360_report_used_material?internal_number=eq.${internalNumber}&corp_oper_nr=eq.${currentCorpOperNr}&select=*&order=id.asc`;
         const response = await supaFetch(url, { method: 'GET' });
         return response.ok ? await response.json() : [];
@@ -9290,7 +9301,7 @@
         }
         const payload = {
           internal_number: cb360ReportCurrentInternalNumber,
-          corp_oper_nr: sessionStorage.getItem("currentCorpOperNr") || "0805",
+          corp_oper_nr: sessionStorage.getItem("currentCorpOperNr"),
           material: materialVal,
           quantity: parseInt(quantityVal, 10) || 0
         };
@@ -9360,7 +9371,7 @@
     // ---- FETCH: fetchCb360ReportParticipants() ----
     async function fetchCb360ReportParticipants(internalNumber) {
       try {
-        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const url = `${SUPABASE_URL}/rest/v1/cb360_report_participants?internal_number=eq.${internalNumber}&corp_oper_nr=eq.${currentCorpOperNr}&select=*&order=id.asc`;
         const response = await supaFetch(url, { method: 'GET' });
         return response.ok ? await response.json() : [];
@@ -9487,7 +9498,7 @@
       document.getElementById('cb360-close-modal').onclick = closeModal;
       document.getElementById('cb360-cancel-int').onclick = closeModal;
       document.getElementById('cb360-save-int').onclick = async () => {
-        const payload = {internal_number: cb360ReportCurrentInternalNumber, corp_oper_nr: sessionStorage.getItem("currentCorpOperNr") || "0805", participant: document.getElementById('modal-int-participante').value || null,
+        const payload = {internal_number: cb360ReportCurrentInternalNumber, corp_oper_nr: sessionStorage.getItem("currentCorpOperNr"), participant: document.getElementById('modal-int-participante').value || null,
                          name: document.getElementById('modal-int-nome').value || null, description: document.getElementById('modal-int-descricao').value || null, address: document.getElementById('modal-int-morada').value || null,
                          phone: document.getElementById('modal-int-telefone').value || null
                         };
@@ -9552,7 +9563,7 @@
     // ---- RENDER: fetchCb360ReportExpenses() ----
     async function fetchCb360ReportExpenses(internalNumber) {
       try {
-        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const url = `${SUPABASE_URL}/rest/v1/cb360_report_expenses?internal_number=eq.${internalNumber}&corp_oper_nr=eq.${currentCorpOperNr}&select=*&order=id.asc`;
         const response = await supaFetch(url, { method: 'GET' });
         return response.ok ? await response.json() : [];
@@ -9909,7 +9920,7 @@
       document.getElementById('cb360-close-modal').onclick = closeModal;
       document.getElementById('cb360-cancel-lw').onclick = closeModal;
       document.getElementById('cb360-save-lw').onclick = async () => {
-        const payload = {internal_number: cb360ReportCurrentInternalNumber, corp_oper_nr: sessionStorage.getItem("currentCorpOperNr") || "0805", type: 'trabalho_perdido', expense_date: document.getElementById('modal-lw-data').value || null,
+        const payload = {internal_number: cb360ReportCurrentInternalNumber, corp_oper_nr: sessionStorage.getItem("currentCorpOperNr"), type: 'trabalho_perdido', expense_date: document.getElementById('modal-lw-data').value || null,
                          expense_time: document.getElementById('modal-lw-hora').value || null, expense_date_end: document.getElementById('modal-lw-data-fim').value || null, expense_time_end: document.getElementById('modal-lw-hora-fim').value || null,
                          entity: document.getElementById('modal-lw-entidade').value || null, doc_number: document.getElementById('modal-lw-doc').value || null, amount: parseFloat(document.getElementById('modal-lw-valor').value) || null,
                          justification: document.getElementById('modal-lw-justificacao').value || null, description: document.getElementById('modal-lw-descricao').value || null
@@ -9999,7 +10010,7 @@
       document.getElementById('cb360-close-modal').onclick = closeModal;
       document.getElementById('cb360-cancel-meal').onclick = closeModal;
       document.getElementById('cb360-save-meal').onclick = async () => {
-        const payload = {internal_number: cb360ReportCurrentInternalNumber, corp_oper_nr: sessionStorage.getItem("currentCorpOperNr") || "0805", type: 'alimentacao', expense_date: document.getElementById('modal-meal-data').value || null,
+        const payload = {internal_number: cb360ReportCurrentInternalNumber, corp_oper_nr: sessionStorage.getItem("currentCorpOperNr"), type: 'alimentacao', expense_date: document.getElementById('modal-meal-data').value || null,
                          expense_time: document.getElementById('modal-meal-hora').value || null, entity: document.getElementById('modal-meal-entidade').value || null, invoice_number: document.getElementById('modal-meal-fat').value || null,
                          receipt_number: document.getElementById('modal-meal-rec').value || null, declaration: document.getElementById('modal-meal-decl').value || null, amount: parseFloat(document.getElementById('modal-meal-valor').value) || null,
                          description: document.getElementById('modal-meal-descricao').value || null
@@ -10104,7 +10115,7 @@
       document.getElementById('cb360-close-modal').onclick = closeModal;
       document.getElementById('cb360-cancel-vd').onclick = closeModal;
       document.getElementById('cb360-save-vd').onclick = async () => {
-        const payload = {internal_number: cb360ReportCurrentInternalNumber, corp_oper_nr: sessionStorage.getItem("currentCorpOperNr") || "0805", type: 'danos_viaturas', vehicle_registration: document.getElementById('modal-vd-veiculo').value || null,
+        const payload = {internal_number: cb360ReportCurrentInternalNumber, corp_oper_nr: sessionStorage.getItem("currentCorpOperNr"), type: 'danos_viaturas', vehicle_registration: document.getElementById('modal-vd-veiculo').value || null,
                          expense_date: document.getElementById('modal-vd-data').value || null, expense_time: document.getElementById('modal-vd-hora').value || null, entity: document.getElementById('modal-vd-entidade').value || null,
                          doc_number: document.getElementById('modal-vd-doc').value || null, budget_number: document.getElementById('modal-vd-orc').value || null, invoice_number: document.getElementById('modal-vd-fat').value || null,
                          amount: parseFloat(document.getElementById('modal-vd-valor').value) || null, description: document.getElementById('modal-vd-descricao').value || null
@@ -10236,7 +10247,7 @@
       document.getElementById('cb360-close-modal').onclick = closeModal;
       document.getElementById('cb360-cancel-ed').onclick = closeModal;
       document.getElementById('cb360-save-ed').onclick = async () => {
-        const payload = {internal_number: cb360ReportCurrentInternalNumber, corp_oper_nr: sessionStorage.getItem("currentCorpOperNr") || "0805", type: 'danos_equipamento',
+        const payload = {internal_number: cb360ReportCurrentInternalNumber, corp_oper_nr: sessionStorage.getItem("currentCorpOperNr"), type: 'danos_equipamento',
                          vehicle_registration: document.getElementById('modal-ed-veiculo').value || null, expense_date: document.getElementById('modal-ed-data').value || null, 
                          expense_time: document.getElementById('modal-ed-hora').value || null, expense_kind: document.getElementById('modal-ed-tipo').value || null,
                          entity: document.getElementById('modal-ed-entidade').value || null, invoice_number: document.getElementById('modal-ed-fat').value || null,
@@ -10341,7 +10352,7 @@
       if (!cb360CurrentIncident) return;
       const internalNumber = cb360CurrentIncident.internal_number;
       if (!internalNumber) return;
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
       try {
         const url = `${SUPABASE_URL}/rest/v1/cb360_incidents?internal_number=eq.${internalNumber}&corp_oper_nr=eq.${currentCorpOperNr}&select=*`;
         const response = await supaFetch(url, { method: 'GET' });
@@ -10380,7 +10391,7 @@
      async function saveCb360Report() {
       if (!cb360ReportCurrentInternalNumber) return;
       captureCb360ReportCurrentTab();
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const payload = {
         internal_number: cb360ReportCurrentInternalNumber,
         corp_oper_nr: currentCorpOperNr,

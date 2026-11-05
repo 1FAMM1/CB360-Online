@@ -2883,7 +2883,7 @@
       }
       if (mode === 'novo') {
         const today = new Date();
-        document.getElementById('goc-alert-date').value = today.toISOString().split('T')[0];
+        document.getElementById('goc-alert-date').value = today.toLocaleDateString('sv-SE');
         document.getElementById('goc-alert-hour').value = today.toTimeString().slice(0, 5);
         document.getElementById('goc-internal-nr').value = internalNr;
         clearCb360Fields();
@@ -4213,7 +4213,7 @@
       const labelStyle = 'width: 100px; font-size:12px; font-weight:600; color:#333; flex-shrink:0;';
       window.fillDate = (id) => {
         const el = document.getElementById(id);
-        if (el) el.value = new Date().toISOString().split('T')[0];
+        if (el) el.value = new Date().toLocaleDateString('sv-SE');
       };
       window.fillTime = (id) => {
         const el = document.getElementById(id);
@@ -4345,7 +4345,7 @@
       const overlay = document.getElementById('goc-modal-dispatch-overlay');
       if (overlay) overlay.style.display = 'flex';
       if (!vehicle) {
-        const today = new Date().toISOString().split('T')[0];
+        const today = new Date().toLocaleDateString('sv-SE');
         const now = new Date().toTimeString().slice(0, 5);
         const dateSCB = document.getElementById('dataSCB');
         const hourSCB = document.getElementById('horaSCB');
@@ -4578,7 +4578,7 @@
       const labelStyle = 'font-size:12px; font-weight:600; color:#333; white-space:nowrap; cursor:pointer; flex-shrink:0;';
       window.fillDate = (id) => {
         const el = document.getElementById(id);
-        if (el) el.value = new Date().toISOString().split('T')[0];
+        if (el) el.value = new Date().toLocaleDateString('sv-SE');
       };
       window.fillTime = (id) => {
         const el = document.getElementById(id);
@@ -4652,7 +4652,7 @@
         opt.textContent = `#${idx + 1} - ${cb360VehicleLabel(v.vehicle)}`;
         vehicleSelect.appendChild(opt);
       });
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toLocaleDateString('sv-SE');
       const now = new Date().toTimeString().slice(0, 5);
       document.getElementById('goc-ff-departure-date').value = today;
       document.getElementById('goc-ff-departure-time').value = now;
@@ -4786,7 +4786,7 @@
       const labelStyle = 'width:100px; font-size:12px; font-weight:600; color:#333; flex-shrink:0;';
       window.fillDate = (id) => {
         const el = document.getElementById(id);
-        if (el) el.value = new Date().toISOString().split('T')[0];
+        if (el) el.value = new Date().toLocaleDateString('sv-SE');
       };
       window.fillTime = (id) => {
         const el = document.getElementById(id);
@@ -7500,7 +7500,7 @@
       const row = { ...(cb360ReportCurrentRow || {}), ...cb360ReportFormState };
       const defaultOutsideArea = row.outside_area !== undefined ? !!row.outside_area : !!cb360ReportHeaderInfo?.outsideArea;
       const defaultOutsideAreaCorp = row.outside_area_corp !== undefined ? row.outside_area_corp : cb360ReportHeaderInfo?.outsideAreaCorp;
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toLocaleDateString('sv-SE');
       const inputStyle = 'width:100%; height:25px; padding:4px 8px; border:1px solid #5bc0de; border-radius:4px; font-size:12px; box-sizing:border-box;';
       const textareaStyle = 'width:100%; height:auto; min-height:150px; padding:6px; border:1px solid #5bc0de; border-radius:4px; font-size:12px; box-sizing:border-box; resize:vertical; outline:none;';
       const labelStyle = 'font-size:12px; font-weight:600; color:#333; flex-shrink:0;';

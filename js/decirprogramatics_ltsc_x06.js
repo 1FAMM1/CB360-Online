@@ -5030,6 +5030,20 @@
       }
     }
     /* ─── CARD: PODIUM (DECIR) ──────────────────────────────── */
+    async function fetchAllRows(query, pageSize = 1000) {
+      const all = [];
+      for (let from = 0; ; from += pageSize) {
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/${query}&order=n_int,month,day,shift&limit=${pageSize}&offset=${from}`,
+          {headers: getSupabaseHeaders()}
+        );
+        if (!res.ok) throw new Error(await res.text());
+        const page = await res.json();
+        all.push(...page);
+        if (page.length < pageSize) break;
+      }
+      return all;
+    }
     async function createDecirPodiumCard(year) {
       const container = document.getElementById("decir-podium-container");
       if (!container) return;
@@ -5123,8 +5137,8 @@
       container.appendChild(thankYouWrapper);
       try {
         const corp = getCorpId();
-        const shifts = await supabaseFetch(
-          `decir_reg_pag_ecin?corp_oper_nr=eq.${corp}&year=eq.${year}&select=n_int,shift`
+        const shifts = await fetchAllRows(
+          `decir_reg_pag_ecin?corp_oper_nr=eq.${corp}&year=eq.${year}&select=n_int,month,day,shift`
         );
         if (!shifts.length) {
           podiumGrid.innerHTML = `<div class="dash-empty">Sem dados para ${year}</div>`;

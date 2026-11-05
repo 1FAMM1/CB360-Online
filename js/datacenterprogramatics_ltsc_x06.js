@@ -690,6 +690,8 @@
       ]);
       document.getElementById("win_user_name_main").value = login?.username || "";
       document.getElementById("win_password_main").value = "";
+      const validMain = document.getElementById("win_validate_main");
+      if (validMain) validMain.value = login?.validate ? String(login.validate).slice(0, 10) : "";
       document.getElementById("win_user_name_mobile").value = mobileLogin?.username || "";
       document.getElementById("win_password_mobile").value = "";
       const validMob = document.getElementById("win_validate_mobile");
@@ -715,6 +717,7 @@
       const mobUserVal = document.getElementById("win_user_name_mobile").value.trim();
       const mobPassVal = document.getElementById("win_password_mobile").value.trim();
       const mobValidVal = document.getElementById("win_validate_mobile")?.value || null;
+      const mainValidVal = document.getElementById("win_validate_main")?.value || null;
       try {
         /* ---------- validações das credenciais ANTES de gravar ---------- */
         let existingUser = null;
@@ -791,6 +794,7 @@
         /* ---------- users (Online) ---------- */
         if (usernameVal) {
           const payloadUsers = {username: usernameVal, n_int: nInt, full_name: fullName, patent: payloadReg.patent, corp_oper_nr: corpOperNr};
+          payloadUsers.validate = mainValidVal;
           if (passwordVal) payloadUsers.password = passwordVal;
           const resUser = await fetch(existingUser ? `${SUPABASE_URL}/rest/v1/users?id=eq.${existingUser.id}` : `${SUPABASE_URL}/rest/v1/users`, {
             method: existingUser ? "PATCH" : "POST",
@@ -965,7 +969,7 @@
       return val === "Administrador" ? "admin" : (val === "Sub-Administrador" ? "subadmin" : "user");
     }
     async function loadUserLogin(name, corp) {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/users?full_name=eq.${encodeURIComponent(name)}&corp_oper_nr=eq.${corp}&select=id,username`, {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/users?full_name=eq.${encodeURIComponent(name)}&corp_oper_nr=eq.${corp}&select=id,username,validate`, {
         headers: getSupabaseHeaders()
       });
       if (!res.ok) return null;

@@ -987,7 +987,7 @@
     }
     /* ============== LOAD ACTIVE UNAVAILABILITIES ============== */
     async function loadActiveUnavailability() {
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const tbody = document.getElementById('active-unavailability-tbody');
       if (!tbody) return;
       try {
@@ -1021,7 +1021,7 @@
           tr.querySelector('.finalize-btn').addEventListener('click', () => {
             document.getElementById('end_vehicle_unavailable').value = item.vehicle;
             document.getElementById('end_reason_unavailability').value = item.unavailability_motive;
-            const hoje = new Date().toISOString().split('T')[0];
+            const hoje = new Date().toLocaleDateString('sv-SE');
             document.getElementById('end_unavailability_date').value = hoje;
             document.getElementById('end_unavailability_hour').value = "";
             document.getElementById('availability-card').style.display = 'block';

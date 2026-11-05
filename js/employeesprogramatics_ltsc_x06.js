@@ -34,12 +34,11 @@
           return {n_int: nInt, abv_name: rec.abv_name, year: nextYear, month: nextMonth, monthly_total: totalMonthly, total_accumulated: totalAccumulated, corp_oper_nr: corpOperNr};
         });
         if (newPayload.length > 0) {
-          await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul?corp_oper_nr=eq.${corpOperNr}&year=eq.${nextYear}&month=eq.${nextMonth}`, {method: "DELETE", headers: getSupabaseHeaders()});
-          await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul`, {
-            method: "POST",
-            headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
-            body: JSON.stringify(newPayload)
-          });
+          await fetch(`${SUPABASE_URL}/rest/v1/rpc/replace_month_rows`, {
+          method: "POST",
+          headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
+          body: JSON.stringify({p_table: "reg_employees_acumul", p_corp: String(corpOperNr), p_year: String(nextYear), p_month: String(nextMonth), p_rows: newPayload})
+        });
         }
         curYear = nextYear; curMonth = nextMonth;
       }
@@ -182,12 +181,8 @@
     }
     function getPortugalHolidays(year) {
       const fixed = [{month: 1, day: 1, name: "Ano Novo"}, {month: 4, day: 25, name: "Dia da Liberdade"}, {month: 5, day: 1, name: "Dia do Trabalhador"}, {month: 6, day: 10, name: "Dia de Portugal"},
-                     {month: 8, day: 15, name: "Assunção de Nossa Senhora"}, {month: 10, day: 5, name: "Implantação da República"},
+                     {month: 8, day: 15, name: "Assunção de Nossa Senhora"}, {month: 9, day: 7, name: "Dia da Cidade de Faro"}, {month: 10, day: 5, name: "Implantação da República"},
                      {month: 11, day: 1, name: "Todos os Santos"}, {month: 12, day: 1, name: "Restauração da Independência"}, {month: 12, day: 8, name: "Imaculada Conceição"}, {month: 12, day: 25, name: "Natal"}];
-      const mh = (sessionStorage.getItem("municipalHoliday") || "").split("-").map(Number);
-      if (mh.length === 2 && mh[0] && mh[1]) {
-        fixed.push({month: mh[0], day: mh[1], name: sessionStorage.getItem("municipalHolidayName") || "Feriado Municipal"});
-      }
       const a = year % 19, b = Math.floor(year / 100), c = year % 100, d = Math.floor(b / 4), e = b % 4;
       const f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3);
       const h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4;
@@ -1516,7 +1511,7 @@
         lines = __lastEIPIssues.map(i => {
           const parts = [];
           if (i.missing > 0) parts.push(`*${i.missing}* ${i.missing === 1 ? "elemento" : "elementos"}`);
-          if (i.noMP) parts.push(`sem *MP*`);
+          if (i.noMP) parts.push(`sem *Motorista de Pesados*`);
           return `Dia ${i.day}: Turno D ${parts.join(" - ")}`;
         });
       } else if (type === "optel") {
@@ -1606,17 +1601,12 @@
           const totalAccumulated = isJanAcum ? diffAcum : baseAcum + diffAcum;
           accumulatedPayload.push({n_int: nInt, abv_name: abvName, year, month, monthly_total: totalMonthly, total_accumulated: totalAccumulated, corp_oper_nr: corpOperNr});
         });
-        const del1 = await fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}&function=not.in.(COM,SEC)`, {
-          method:"DELETE", 
-          headers:getSupabaseHeaders()
+        const rpc1 = await fetch(`${SUPABASE_URL}/rest/v1/rpc/replace_month_rows`, {
+          method: "POST",
+          headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
+          body: JSON.stringify({p_table: "reg_employee_shifts", p_corp: String(corpOperNr), p_year: String(year), p_month: String(month), p_rows: shiftsPayload, p_keep_functions: ["COM", "SEC"]})
         });
-        if (!del1.ok) throw new Error("Erro ao limpar shifts antigos");
-        if (shiftsPayload.length > 0) {
-          const ins1 = await fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts`, {
-            method:"POST", 
-            headers:{...getSupabaseHeaders(),"Content-Type":"application/json","Prefer":"return=minimal"}, body:JSON.stringify(shiftsPayload)});
-          if (!ins1.ok) throw new Error("Erro ao guardar shifts: " + await ins1.text());
-        }
+        if (!rpc1.ok) throw new Error("Erro ao guardar shifts: " + await rpc1.text());
         await Promise.all(employeesUpdate.map(emp =>
           fetch(`${SUPABASE_URL}/rest/v1/reg_employees?n_int=eq.${emp.n_int}&corp_oper_nr=eq.${emp.corp_oper_nr}`, {
           method:"PATCH", 
@@ -1624,13 +1614,15 @@
           .then(r => { if (!r.ok) console.warn(`Erro ao atualizar employee ${emp.n_int}`); })
           .catch(err => console.warn(`Erro ao atualizar employee ${emp.n_int}:`, err))
         ));
-        const del2 = await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`, {method:"DELETE", headers:getSupabaseHeaders()});
-        if (!del2.ok) console.warn("Erro ao limpar acumulados antigos");
-        if (accumulatedPayload.length > 0) {
-          const ins2 = await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul`, {
-            method:"POST", 
-            headers:{...getSupabaseHeaders(),"Content-Type":"application/json","Prefer":"return=minimal"}, body:JSON.stringify(accumulatedPayload)});
-          if (!ins2.ok) console.warn("Erro ao guardar acumulados:", await ins2.text());
+        const rpc2 = await fetch(`${SUPABASE_URL}/rest/v1/rpc/replace_month_rows`, {
+          method: "POST",
+          headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
+          body: JSON.stringify({p_table: "reg_employees_acumul", p_corp: String(corpOperNr), p_year: String(year), p_month: String(month), p_rows: accumulatedPayload})
+        });
+        if (!rpc2.ok) {
+          console.warn("⚠️ Erro ao guardar acumulados:", await rpc2.text());
+          showPopup('popup-danger', `Escala de ${monthBtn.textContent} ${year} guardada, mas o banco de horas NÃO foi atualizado. Volte a gravar.`);
+          return;
         }
         await propagateAccumulatedForward(corpOperNr, year, month);
         showPopup('popup-success', `Escala de ${monthBtn.textContent} ${year} guardada com sucesso!`);
@@ -1971,19 +1963,13 @@
             }
           });
         });
-        const delRes = await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_extra_hours?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`, {
-          method: "DELETE",
-          headers: getSupabaseHeaders()
+        const rpcExtra = await fetch(`${SUPABASE_URL}/rest/v1/rpc/replace_month_rows`, {
+          method: "POST",
+          headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
+          body: JSON.stringify({p_table: "reg_employees_extra_hours", p_corp: String(corpOperNr), p_year: String(year), p_month: String(month), p_rows: dailyRecords})
         });
-        if (!delRes.ok) throw new Error("Erro ao limpar horas extra antigas");
-        if (dailyRecords.length > 0) {
-          const insRes = await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_extra_hours`, {
-            method: "POST",
-            headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
-            body: JSON.stringify(dailyRecords)
-          });
-          if (!insRes.ok) throw new Error("Erro ao guardar horas extra: " + await insRes.text());
-        }
+        if (!rpcExtra.ok) throw new Error("Erro ao guardar horas extra: " + await rpcExtra.text());
+        let acumOk = true;
         try {
           let prevMonth = month - 1;
           let prevYear = year;
@@ -2027,21 +2013,23 @@
             return {n_int: nInt, abv_name: abvNameMap[nInt] || "", year, month, monthly_total: totalMonthly, total_accumulated: totalAccumulated, corp_oper_nr: corpOperNr};
           });
           if (newAccumulatedPayload.length > 0) {
-            await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`, {
-              method: "DELETE",
-              headers: getSupabaseHeaders()
-            });
-            await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul`, {
-              method: "POST",
-              headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
-              body: JSON.stringify(newAccumulatedPayload)
-            });
+            const rpcAcum = await fetch(`${SUPABASE_URL}/rest/v1/rpc/replace_month_rows`, {
+          method: "POST",
+          headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
+          body: JSON.stringify({p_table: "reg_employees_acumul", p_corp: String(corpOperNr), p_year: String(year), p_month: String(month), p_rows: newAccumulatedPayload})
+        });
+            if (!rpcAcum.ok) throw new Error(await rpcAcum.text());
           }
           await propagateAccumulatedForward(corpOperNr, year, month);
         } catch (acumErr) {
+          acumOk = false;
           console.warn("⚠️ Horas extra guardadas, mas erro ao atualizar acumulados:", acumErr);
         }
-        showPopup('popup-success', `Dados atualizados com sucesso!`);
+        if (!acumOk) {
+          showPopup('popup-danger', "Horas extra guardadas, mas o banco de horas NÃO foi atualizado. Volte a gravar.");
+        } else {
+          showPopup('popup-success', `Dados atualizados com sucesso!`);
+        }
       } catch (error) {
         console.error(error);
         showPopup('popup-danger', "Erro ao atualizar dados.");
@@ -2530,13 +2518,9 @@
     function getPortugalHolidaysForVacations(year) {
       const holidays = [];
       const fixedHolidays = [{month: 1, day: 1, name: "Ano Novo"}, {month: 4, day: 25, name: "Dia da Liberdade"}, {month: 5, day: 1, name: "Dia do Trabalhador"},
-                             {month: 6, day: 10, name: "Dia de Portugal"}, {month: 8, day: 15, name: "Assunção de Nossa Senhora"},
+                             {month: 6, day: 10, name: "Dia de Portugal"}, {month: 8, day: 15, name: "Assunção de Nossa Senhora"}, {month: 9, day: 7, name: "Dia do Município (Faro)"},
                              {month: 10, day: 5, name: "Implantação da República"}, {month: 11, day: 1, name: "Dia de Todos os Santos"}, {month: 12, day: 1, name: "Restauração da Independência"},
                              {month: 12, day: 8, name: "Imaculada Conceição"}, {month: 12, day: 25, name: "Natal"}];
-      const mh = (sessionStorage.getItem("municipalHoliday") || "").split("-").map(Number);
-      if (mh.length === 2 && mh[0] && mh[1]) {
-        fixedHolidays.push({month: mh[0], day: mh[1], name: sessionStorage.getItem("municipalHolidayName") || "Feriado Municipal"});
-      }
       fixedHolidays.forEach(h => {
         holidays.push({ month: h.month, day: h.day, name: h.name, optional: false });
       });
@@ -3078,6 +3062,7 @@
         if (!confirmExcess) return;
       }
       try {
+        let conflictDays = [];
         const monthsInvolved = [...new Set(allFERecords.map(r => r.month))].join(',');
         const conflictsResponse = await fetch(
           `${SUPABASE_URL}/rest/v1/reg_employee_shifts?n_int=eq.${nInt}&year=eq.${year}&month=in.(${monthsInvolved})&shift=neq.FE&corp_oper_nr=eq.${corpOperNr}`, {
@@ -3094,34 +3079,15 @@
             .join(', ');
             const message = `⚠️ ATENÇÃO: Existem turnos marcados nos seguintes dias:\n\n${conflictDaysText}\n\nAs férias irão SUBSTITUIR estes turnos.\n\nDeseja continuar?`;
             if (!confirm(message)) return;
-            const orConditions = conflicts
-            .map(c => `and(month.eq.${c.month},day.eq.${c.day})`)
-            .join(',');
-            await fetch(
-              `${SUPABASE_URL}/rest/v1/reg_employee_shifts?n_int=eq.${nInt}&year=eq.${year}&corp_oper_nr=eq.${corpOperNr}&shift=neq.FE&or=(${orConditions})`, {
-                method: "DELETE", headers: getSupabaseHeaders()
-              }
-            );
+            conflictDays = conflicts.map(c => ({month: c.month, day: c.day}));
           }
         }
-        const deleteOldFEResponse = await fetch(
-          `${SUPABASE_URL}/rest/v1/reg_employee_shifts?n_int=eq.${nInt}&year=eq.${year}&shift=eq.FE&corp_oper_nr=eq.${corpOperNr}`, {
-            method: "DELETE", headers: getSupabaseHeaders()
-          }
-        );
-        if (!deleteOldFEResponse.ok) throw new Error("Erro ao limpar registos de férias antigos");
-        if (allFERecords.length > 0) {
-          const saveResponse = await fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts`, {
-            method: "POST",
-            headers: {
-          ...getSupabaseHeaders(),
-              "Content-Type": "application/json",
-              "Prefer": "return=minimal"
-            },
-            body: JSON.stringify(allFERecords)
-          });
-          if (!saveResponse.ok) throw new Error("Erro ao gravar novas férias");
-        }
+        const saveResponse = await fetch(`${SUPABASE_URL}/rest/v1/rpc/replace_employee_vacations`, {
+          method: "POST",
+          headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
+          body: JSON.stringify({p_corp: String(corpOperNr), p_nint: String(nInt), p_year: String(year), p_rows: allFERecords, p_conflicts: conflictDays})
+        });
+        if (!saveResponse.ok) throw new Error("Erro ao gravar férias: " + await saveResponse.text());
         if (typeof showPopup === "function")
           showPopup('popup-success', `Férias atualizadas com sucesso: ${allFERecords.length} dias.`);
         loadHolidayData(nInt, year);
@@ -5392,47 +5358,68 @@
       renderRegTable(filtered);
     }
     function editEmployee(nInt) {
-      const emp = (window._regAllEmployees || []).find(e => e.n_int == nInt);
-      if (!emp) return;
-      __regEditingNInt = nInt;
-      const nIntField = document.getElementById("reg-n-int");
-      nIntField.value = String(emp.n_int).padStart(3, "0");
-      nIntField.disabled = true;
-      document.getElementById("reg-name").value = emp.abv_name || "";
-      let funcDisplay = emp.function || "";
-      if (funcDisplay === "COM") funcDisplay = "Comando";
-      else if (funcDisplay === "CRD") funcDisplay = "Coordenador";
-      else if (funcDisplay === "SEC") funcDisplay = "Secretariado";
-      else if (/^EP\d+\d{2}$/.test(funcDisplay)) funcDisplay = "EIP";
-      document.getElementById("reg-function").value = funcDisplay;
-      let teamDisplay = emp.team || "";
-      if (teamDisplay === "COM") teamDisplay = "Comando";
-      else if (teamDisplay === "CRD") teamDisplay = "Coordenação";
-      else if (teamDisplay === "SEC") teamDisplay = "Secretariado";
-      else if (/^OPC\d+$/.test(teamDisplay)) teamDisplay = "SALOC";
-      else if (/^EQ\d+$/.test(teamDisplay)) teamDisplay = "INEM";
-      else if (/^TDNU\d+$/.test(teamDisplay)) teamDisplay = "TDNU";
-      else if (/^EIP\d+$/.test(teamDisplay)) teamDisplay = teamDisplay;
-      document.getElementById("reg-team").value = teamDisplay;
-      document.getElementById("reg-entry-date").value = emp.entry_date ? emp.entry_date.split("T")[0] : "";
-      document.getElementById("reg-exit-date").value = emp.exit_date ? emp.exit_date.split("T")[0] : "";
-      document.getElementById("reg-save-btn").textContent = "💾 Atualizar";
-      const title = document.getElementById("reg-form-title");
-      if (title) title.textContent = `Editar — ${emp.abv_name}`;
-      const formHeader = document.querySelector(".reg-form-header");
-      if (formHeader) formHeader.style.background = "#7f1d1d";
-      const container = document.querySelector("#employee-registration .major-card-body");
-      if (container) {
-        container.scrollTop = 0;
-        container.scrollIntoView({behavior: "smooth", block: "start"});
-      }
-      const formCard = document.querySelector(".reg-form-card");
-      if (formCard) {
-        const yOffset = -140;
-        const y = formCard.getBoundingClientRect().top + window.pageYOffset + yOffset;
-        window.scrollTo({top: y, behavior: "smooth"});
-      }
-    }
+  const emp = (window._regAllEmployees || []).find(e => e.n_int == nInt);
+  if (!emp) return;
+  __regEditingNInt = nInt;
+  const nIntField = document.getElementById("reg-n-int");
+  nIntField.value = String(emp.n_int).padStart(3, "0");
+  nIntField.disabled = true;
+  document.getElementById("reg-name").value = emp.abv_name || "";
+  let funcDisplay = emp.function || "";
+  if (funcDisplay === "COM") funcDisplay = "Comando";
+  else if (funcDisplay === "CRD") funcDisplay = "Coordenador";
+  else if (funcDisplay === "SEC") funcDisplay = "Secretariado";
+  else if (/^EP\d+\d{2}$/.test(funcDisplay)) funcDisplay = "EIP";
+  document.getElementById("reg-function").value = funcDisplay;
+  let teamDisplay = emp.team || "";
+  if (teamDisplay === "COM") teamDisplay = "Comando";
+  else if (teamDisplay === "CRD") teamDisplay = "Coordenação";
+  else if (teamDisplay === "SEC") teamDisplay = "Secretariado";
+  else if (/^OPC\d+$/.test(teamDisplay)) teamDisplay = "SALOC";
+  else if (/^EQ\d+$/.test(teamDisplay)) teamDisplay = "INEM";
+  else if (/^TDNU\d+$/.test(teamDisplay)) teamDisplay = "TDNU";
+  else if (/^EIP\d+$/.test(teamDisplay)) teamDisplay = teamDisplay;
+  document.getElementById("reg-team").value = teamDisplay;
+  document.getElementById("reg-entry-date").value = emp.entry_date ? emp.entry_date.split("T")[0] : "";
+  document.getElementById("reg-exit-date").value = emp.exit_date ? emp.exit_date.split("T")[0] : "";
+  document.getElementById("reg-save-btn").textContent = "💾 Atualizar";
+
+  // --- ANTIGUIDADE ---
+  function calcAntiguidade(entryDateStr) {
+    if (!entryDateStr) return null;
+    const entry = new Date(entryDateStr.split("T")[0]);
+    const today = new Date();
+    let years = today.getFullYear() - entry.getFullYear();
+    let months = today.getMonth() - entry.getMonth();
+    if (months < 0) { years--; months += 12; }
+    const parts = [];
+    if (years > 0) parts.push(`${years} ano${years !== 1 ? "s" : ""}`);
+    if (months > 0) parts.push(`${months} ${months !== 1 ? "meses" : "mês"}`);
+    if (parts.length === 0) parts.push("< 1 mês");
+    return parts.join(" e ");
+  }
+
+  const title = document.getElementById("reg-form-title");
+  if (title) {
+    const ant = calcAntiguidade(emp.entry_date);
+    title.innerHTML = `Editar — ${emp.abv_name}${ant ? `<span style="font-weight:400; opacity:0.65; font-size:13px; margin-left:10px;">⏱ ${ant} DE ANTIGUIDADE.</span>` : ""}`;
+  }
+  // -------------------
+
+  const formHeader = document.querySelector(".reg-form-header");
+  if (formHeader) formHeader.style.background = "#7f1d1d";
+  const container = document.querySelector("#employee-registration .major-card-body");
+  if (container) {
+    container.scrollTop = 0;
+    container.scrollIntoView({behavior: "smooth", block: "start"});
+  }
+  const formCard = document.querySelector(".reg-form-card");
+  if (formCard) {
+    const yOffset = -140;
+    const y = formCard.getBoundingClientRect().top + window.pageYOffset + yOffset;
+    window.scrollTo({top: y, behavior: "smooth"});
+  }
+}
     async function saveEmployee() {
       const nInt = document.getElementById("reg-n-int").value.trim();
       const name = document.getElementById("reg-name").value.trim();

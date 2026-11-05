@@ -1347,7 +1347,7 @@
       updateCounter();
     }
     /* ============ CLEAR FORM ============ */
-    function clearForm() {
+    function clearEventsForm() {
       document.querySelectorAll('.admin-container input').forEach(i => i.value = '');
       document.getElementById('eventType').value = '';
       document.getElementById('shiftsList').innerHTML = '';
@@ -1361,7 +1361,7 @@
       const endDate = document.getElementById('eventEndDate').value;
       const operational = parseInt(document.getElementById('operational').value);
       const valueHour = parseFloat(document.getElementById('valueHour').value);
-      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
+      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr') || "0805";
       if (!eventName || !eventType || !location || !startDate || !endDate || isNaN(operational) || isNaN(valueHour)) {
         showPopup('popup-danger', "Preencha todos os campos corretamente!"); 
         return;
@@ -1391,7 +1391,7 @@
           method : 'POST',
           headers,
           body : JSON.stringify({event: eventName, event_type: eventType, corp_oper_nr, date_start: startDate, date_end: endDate, value: valueHour, location, is_ended: false})
-        });      
+        });       
         if (!respEvent.ok) throw new Error("Erro ao criar cabeçalho do evento");        
 
         await Promise.all(shifts.map(shift => fetch(`${SUPABASE_URL}/rest/v1/event_shifts`, {
@@ -1429,7 +1429,7 @@
           console.error("Erro ao notificar elementos:", errNotif);
         }
         showPopup('popup-success', "Evento criado e operacionais notificados com sucesso!");
-        clearForm();
+        clearEventsForm();
         if (typeof loadEvents === "function") loadEvents();
       } catch(e) { 
         console.error("Erro no submitEvent:", e);
@@ -1448,7 +1448,7 @@
       if (state === 'Em Aprovação') return 'bg-pendente';
       return 'bg-default';
     }
-    function badgeStyle(cssClass) {
+    function badgeEventsStyle(cssClass) {
       const map = {'bg-aprovado' : 'background:#2e7d32;', 'bg-rejeitado': 'background:#e53935;', 'bg-pendente' : 'background:#7f0000;', 'bg-default' : 'background:#6c757d;'};
       return (map[cssClass] || map['bg-default']) +
         'padding:3px 8px;border-radius:10px;color:#fff;font-weight:bold;font-size:10px;display:inline-block;min-width:80px;text-align:center;';
@@ -1456,7 +1456,7 @@
     /* ========== LOADING EVENT =========== */    
     async function loadEvents() {
       const tbody = document.querySelector('#eventTable tbody');
-      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
+      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr') || "0805";
       if (!tbody) {console.warn("loadEvents: #eventTable tbody não encontrado"); return;}
       tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 12px; font-size: 13px; color: #666;">A carregar...</td></tr>';
       try {
@@ -1503,7 +1503,7 @@
     }
     /* ======= BUILD DISP TABLE ======= */
     async function buildDispTable(eventName) {
-      const corp_oper_nr  = sessionStorage.getItem('currentCorpOperNr');
+      const corp_oper_nr  = sessionStorage.getItem('currentCorpOperNr') || "0805";
       const encodedName   = encodeURIComponent(eventName);
       try {
         const [rShifts, rDisp] = await Promise.all([
@@ -1565,7 +1565,7 @@
               <td style="${tdStyle}">${formatDateDisplay(d.event_shift_date)}</td>
               <td style="${tdStyle}">${d.event_shift}<br><small style="color: #666;">Vagas: ${act}/${nec}</small></td>
               <td style="${tdStyle}">
-                <span style="${badgeStyle(statusCls)}" data-state="${d.shift_state}">${statusText}</span>
+                <span style="${badgeEventsStyle(statusCls)}" data-state="${d.shift_state}">${statusText}</span>
               </td>
               <td style="${tdStyle}">
                 <div style="display:flex;gap:4px;justify-content:center;">
@@ -1632,7 +1632,7 @@
       const row = document.getElementById(`disp-row-${id}`);
       const badge = row.querySelector('[data-state]');
       const oldState = badge.dataset.state;
-      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
+      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr') || "0805";
       const userNInt = row.cells[0].innerText;
       if (oldState === newState) return;
       try {
@@ -1702,7 +1702,7 @@
     }
     /* =========== DELETE EVENT =========== */
     async function deleteFullEvent(eventName) {
-      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
+      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr') || "0805";
       const confirmation = confirm(`Deseja eliminar o evento "${eventName}"?`);
       if (!confirmation) return;
 

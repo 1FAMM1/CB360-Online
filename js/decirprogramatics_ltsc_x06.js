@@ -5364,83 +5364,83 @@
       };
       animate();
     }
-    /* ─── CHAMAS ─────────────────────────────────────────────── */
-function launchFlames(targetEl, bleed = 32) {
-  targetEl.querySelector(".podium-flames")?.remove();
-  targetEl.style.position = "relative";
-  const canvas = document.createElement("canvas");
-  canvas.className = "podium-flames";
-  canvas.style.cssText = `position:absolute; top:-${bleed}px; left:-${bleed}px; width:calc(100% + ${bleed * 2}px); height:calc(100% + ${bleed * 2}px); pointer-events:none; z-index:0; border-radius:16px;`;
-  targetEl.prepend(canvas);
-  canvas.style.opacity = "0";
-  canvas.style.transition = "opacity 1.5s ease";
-  requestAnimationFrame(() => requestAnimationFrame(() => canvas.style.opacity = "1"));
-  Array.from(targetEl.children).forEach(ch => {
-    if (ch === canvas) return;
-    if (!ch.style.position) ch.style.position = "relative";
-    ch.style.zIndex = "1";
-  });
-  const ctx = canvas.getContext("2d");
-  const tongues = Array.from({length: 45}, () => ({phase: Math.random() * Math.PI * 2, speed: 0.04 + Math.random() * 0.05, h: 0.55 + Math.random() * 0.45}));
-  const embers = [];
-  let t = 0;
-  const resize = () => {
-    const w = targetEl.offsetWidth + bleed * 2;
-    const h = targetEl.offsetHeight + bleed * 2;
-    if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
-  };
-  const drawLayer = (baseH, cBottom, cTop, offset) => {
-    const W = canvas.width, H = canvas.height;
-    const n = tongues.length, step = W / (n - 1);
-    ctx.beginPath();
-    ctx.moveTo(0, H);
-    tongues.forEach((tg, i) => {
-      const tipH = baseH * tg.h * (0.65 + 0.35 * Math.sin(t * tg.speed + tg.phase + offset));
-      const tipX = i * step + Math.sin(t * tg.speed * 1.3 + tg.phase) * step * 0.25;
-      if (i === 0) ctx.lineTo(tipX, H - tipH);
-      else ctx.quadraticCurveTo((i - 0.5) * step, H - baseH * 0.15, tipX, H - tipH);
-    });
-    ctx.lineTo(W, H);
-    ctx.closePath();
-    const g = ctx.createLinearGradient(0, H, 0, H - baseH);
-    g.addColorStop(0, cBottom);
-    g.addColorStop(1, cTop);
-    ctx.fillStyle = g;
-    ctx.fill();
-  };
-  const animate = () => {
-    if (!canvas.isConnected) return;
-    requestAnimationFrame(animate);
-    if (canvas.offsetParent === null) return;
-    resize();
-    t++;
-    const W = canvas.width, H = canvas.height;
-    ctx.clearRect(0, 0, W, H);
-    drawLayer(320, "rgba(183,28,28,0.85)", "rgba(183,28,28,0)", 0);
-    drawLayer(260, "rgba(245,124,0,0.9)", "rgba(245,124,0,0)", 1.5);
-    drawLayer(195, "rgba(255,213,79,0.95)", "rgba(255,213,79,0)", 3);
-    for (let i = 0; i < 6; i++) {
-      embers.push({x: Math.random() * W, y: H - Math.random() * 120, vx: (Math.random() - 0.5) * 0.8, vy: -(Math.random() * 2.2 + 1), r: Math.random() * 3 + 2, life: 0, max: Math.random() * 150 + 100});
+    /* ─── FLAMES ─────────────────────────────────────────────── */
+    function launchFlames(targetEl, bleed = 32) {
+      targetEl.querySelector(".podium-flames")?.remove();
+      targetEl.style.position = "relative";
+      const canvas = document.createElement("canvas");
+      canvas.className = "podium-flames";
+      canvas.style.cssText = `position:absolute; top:-${bleed}px; left:-${bleed}px; width:calc(100% + ${bleed * 2}px); height:calc(100% + ${bleed * 2}px); pointer-events:none; z-index:0; border-radius:16px;`;
+      targetEl.prepend(canvas);
+      canvas.style.opacity = "0";
+      canvas.style.transition = "opacity 1.5s ease";
+      requestAnimationFrame(() => requestAnimationFrame(() => canvas.style.opacity = "1"));
+      Array.from(targetEl.children).forEach(ch => {
+        if (ch === canvas) return;
+        if (!ch.style.position) ch.style.position = "relative";
+        ch.style.zIndex = "1";
+      });
+      const ctx = canvas.getContext("2d");
+      const tongues = Array.from({length: 45}, () => ({phase: Math.random() * Math.PI * 2, speed: 0.04 + Math.random() * 0.05, h: 0.55 + Math.random() * 0.45}));
+      const embers = [];
+      let t = 0;
+      const resize = () => {
+        const w = targetEl.offsetWidth + bleed * 2;
+        const h = targetEl.offsetHeight + bleed * 2;
+        if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+      };
+      const drawLayer = (baseH, cBottom, cTop, offset) => {
+        const W = canvas.width, H = canvas.height;
+        const n = tongues.length, step = W / (n - 1);
+        ctx.beginPath();
+        ctx.moveTo(0, H);
+        tongues.forEach((tg, i) => {
+          const tipH = baseH * tg.h * (0.65 + 0.35 * Math.sin(t * tg.speed + tg.phase + offset));
+          const tipX = i * step + Math.sin(t * tg.speed * 1.3 + tg.phase) * step * 0.25;
+          if (i === 0) ctx.lineTo(tipX, H - tipH);
+          else ctx.quadraticCurveTo((i - 0.5) * step, H - baseH * 0.15, tipX, H - tipH);
+        });
+        ctx.lineTo(W, H);
+        ctx.closePath();
+        const g = ctx.createLinearGradient(0, H, 0, H - baseH);
+        g.addColorStop(0, cBottom);
+        g.addColorStop(1, cTop);
+        ctx.fillStyle = g;
+        ctx.fill();
+      };
+      const animate = () => {
+        if (!canvas.isConnected) return;
+        requestAnimationFrame(animate);
+        if (canvas.offsetParent === null) return;
+        resize();
+        t++;
+        const W = canvas.width, H = canvas.height;
+        ctx.clearRect(0, 0, W, H);
+        drawLayer(320, "rgba(183,28,28,0.85)", "rgba(183,28,28,0)", 0);
+        drawLayer(260, "rgba(245,124,0,0.9)", "rgba(245,124,0,0)", 1.5);
+        drawLayer(195, "rgba(255,213,79,0.95)", "rgba(255,213,79,0)", 3);
+        for (let i = 0; i < 6; i++) {
+          embers.push({x: Math.random() * W, y: H - Math.random() * 120, vx: (Math.random() - 0.5) * 0.8, vy: -(Math.random() * 2.2 + 1), r: Math.random() * 3 + 2, life: 0, max: Math.random() * 150 + 100});
+        }
+        ctx.save();
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = "rgba(255,140,0,0.9)";
+        for (let i = embers.length - 1; i >= 0; i--) {
+          const e = embers[i];
+          e.life++;
+          e.x += e.vx + Math.sin((e.life + e.x) * 0.04) * 0.6;
+          e.y += e.vy;
+          const k = e.life / e.max;
+          if (k >= 1 || e.y < 0) { embers.splice(i, 1); continue; }
+          ctx.fillStyle = `rgba(255,${Math.floor(220 - 140 * k)},40,${1 - k})`;
+          ctx.beginPath();
+          ctx.arc(e.x, e.y, e.r * (1 - k * 0.5), 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      };
+      requestAnimationFrame(animate);
     }
-    ctx.save();
-    ctx.shadowBlur = 12;
-    ctx.shadowColor = "rgba(255,140,0,0.9)";
-    for (let i = embers.length - 1; i >= 0; i--) {
-      const e = embers[i];
-      e.life++;
-      e.x += e.vx + Math.sin((e.life + e.x) * 0.04) * 0.6;
-      e.y += e.vy;
-      const k = e.life / e.max;
-      if (k >= 1 || e.y < 0) { embers.splice(i, 1); continue; }
-      ctx.fillStyle = `rgba(255,${Math.floor(220 - 140 * k)},40,${1 - k})`;
-      ctx.beginPath();
-      ctx.arc(e.x, e.y, e.r * (1 - k * 0.5), 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.restore();
-  };
-  requestAnimationFrame(animate);
-}
     /* ─── DASHBOARD DECIR ────────────────────────────────────── */
     async function createDecirDashboard() {
       const container = document.querySelector("#decir-dashboard .major-card-body");

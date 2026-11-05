@@ -355,6 +355,30 @@
         loadCorporationHeader();
       }
     }
+    async function removeCorpLogo() {
+      if (!originalCorpLogo) {
+        showPopup("popup-danger", "Não existe nenhum logo guardado para remover.");
+        return;
+      }
+      if (!confirm("Tem a certeza que pretende remover o logo da corporação?")) return;
+      try {
+        const corpOperNr = (sessionStorage.getItem("currentCorpOperNr") || "").trim();
+        await deleteCorpLogo(originalCorpLogo);
+        await updateLogoInDB(corpOperNr, null);
+        originalCorpLogo = null;
+        tempCorpLogoFile = null;
+        const input = document.getElementById("corp-logo-input");
+        if (input) input.value = "";
+        const logoImg = document.querySelector(".data-logo");
+        const logoHeaderImg = document.querySelector(".cb-logo img");
+        if (logoImg) logoImg.src = "";
+        if (logoHeaderImg) logoHeaderImg.src = "";
+        showPopup("popup-success", "Logo removido com sucesso!");
+      } catch (error) {
+        console.error("REMOVE LOGO ERROR:", error);
+        showPopup("popup-danger", error.message || "Erro ao remover logo");
+      }
+    }
     async function updateLogoInDB(corpOperNr, logoUrl) {
       const findRes = await fetch(
         `${SUPABASE_URL}/rest/v1/corporation_data?select=id&corp_oper_nr=eq.${corpOperNr}`, {

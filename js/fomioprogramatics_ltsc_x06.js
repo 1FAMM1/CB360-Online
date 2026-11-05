@@ -823,6 +823,16 @@
         return map;
       }, {});
     }
+    async function opsCheckResponses(responses, label) {
+      for (const r of [].concat(responses)) {
+        if (r && !r.ok) {
+          const t = await r.text().catch(() => "");
+          let msg = t;
+          try { msg = JSON.parse(t).message || t; } catch (e) {}
+          throw new Error(`${label}: ${msg || r.status}`);
+        }
+      }
+    }
     async function saveChanges({toInsert, toUpdate, toDelete, section, year, month}) {
       const corp = getCorpId();
       const requests = [];
@@ -839,7 +849,10 @@
       toDelete.forEach(item => requests.push(fetch(`${SUPABASE_URL}/rest/v1/reg_serv?${makeFilter(item)}`, {
         method:"DELETE", headers:getSupabaseHeaders()
       })));
-      if (requests.length > 0) await Promise.all(requests);
+      if (requests.length > 0) {
+        const responses = await Promise.all(requests);
+        await opsCheckResponses(responses, "Erro ao gravar escala");
+      }
     }
     function diffTableChanges(table, savedMap) {
       const toInsert=[], toUpdate=[], toDelete=[];
@@ -1180,17 +1193,15 @@
           const savedMap = await fetchSavedData(currentSection, selectedYear, monthIndex);
           const changes = currentSection === "Emissão Escala" ? diffFixedRowsChanges(table, savedMap) : diffTableChanges(table, savedMap);
           await saveChanges({...changes, section:currentSection, year:selectedYear, month:monthIndex});
-          if (currentSection === "Emissão Escala") {
-            table.querySelectorAll("tr.fixed-row td[data-original-val]").forEach(td => {
-              td.textContent = td.getAttribute('data-original-val');
-              td.removeAttribute('data-original-val');
-            });
-          }
           showPopup('popup-success', "Escala gravada com sucesso!");
         } catch (err) {
           console.error(err); 
           showPopup('popup-danger', "Erro ao salvar a tabela: " + err.message);
         } finally {
+          table.querySelectorAll("tr.fixed-row td[data-original-val]").forEach(td => {
+            td.textContent = td.getAttribute('data-original-val');
+            td.removeAttribute('data-original-val');
+          });
           saveBtn.disabled = false;
           saveBtn.textContent = "💾 GUARDAR";
         }
@@ -1294,13 +1305,13 @@
         const response = await fetch('https://cb360-online.vercel.app/api/scales_convert', {
           method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
         });
-        if (response.ok) {
-          const url = URL.createObjectURL(await response.blob());
-          const a = document.createElement("a"); a.href=url; a.download=`${fileName}.pdf`;
-          document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-        }
+        if (!response.ok) throw new Error(`Erro ao gerar o PDF da escala (${response.status}).`);
+        const url = URL.createObjectURL(await response.blob());
+        const a = document.createElement("a"); a.href=url; a.download=`${fileName}.pdf`;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
       } catch (error) {
-        console.error("Erro PDF:", error);      
+        console.error("Erro PDF:", error);
+        throw error;
       }
     }
     /* =======================================
@@ -1394,11 +1405,12 @@
         });       
         if (!respEvent.ok) throw new Error("Erro ao criar cabeçalho do evento");        
 
-        await Promise.all(shifts.map(shift => fetch(`${SUPABASE_URL}/rest/v1/event_shifts`, {
+        const shiftResponses = await Promise.all(shifts.map(shift => fetch(`${SUPABASE_URL}/rest/v1/event_shifts`, {
           method : 'POST',
           headers,
           body : JSON.stringify({event: eventName, event_shift_date: shift.event_shift_date, event_shift: shift.event_shift, nec_oper: shift.nec_oper, act_oper: 0, corp_oper_nr})
         })));
+        await opsCheckResponses(shiftResponses, "Evento criado, mas falharam os turnos");
         try {
           const respUsers  = await fetch(
             `${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${corp_oper_nr}&elem_state=eq.true&select=n_int`, {
@@ -1709,16 +1721,17 @@
       try {
         const headers = getSupabaseHeaders();
         const filter = `event=eq.${encodeURIComponent(eventName)}&corp_oper_nr=eq.${corp_oper_nr}`;        
-        await Promise.all([
+        const delResponses = await Promise.all([
           fetch(`${SUPABASE_URL}/rest/v1/event_list?${filter}`, {method: 'DELETE', headers}),
           fetch(`${SUPABASE_URL}/rest/v1/event_shifts?${filter}`, {method: 'DELETE', headers}),
           fetch(`${SUPABASE_URL}/rest/v1/event_disp?${filter}`, {method: 'DELETE', headers})
-        ]);        
+        ]);
+        await opsCheckResponses(delResponses, "Erro ao eliminar evento");
         showPopup('popup-success', "Eliminado com sucesso.");
         loadEvents();
       } catch (e) {
         console.error(e);
-        showPopup('popup-danger', "Erro ao eliminar evento.");
+        showPopup('popup-danger', e.message || "Erro ao eliminar evento.");
       }
     }
     /* =======================================
@@ -1943,7 +1956,7 @@
         }
       } catch (err) {
         console.error("Erro no fluxo updateVacatState:", err);
-        showPopup('popup-danger', "Erro ao processar alteração.");
+        showPopup('popup-danger', "Erro ao processar alteração: " + (err.message || err));
       }
     }
     /* ========== SAVE VACATIONS ========== */
@@ -1952,8 +1965,9 @@
       const respElem = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${request.n_int}&corp_oper_nr=eq.${corp_oper_nr}`, {
         headers: getSupabaseHeaders()
       });
+      if (!respElem.ok) throw new Error("Erro ao ler o elemento.");
       const [elem] = await respElem.json();
-      if (!elem) return;    
+      if (!elem) throw new Error("Elemento não encontrado.");
       const listaDias = request.day.split(',').map(d => d.trim());    
       const promises = listaDias.map(dia => fetch(`${SUPABASE_URL}/rest/v1/reg_serv`, {
           method: 'POST',
@@ -1961,20 +1975,18 @@
           body: JSON.stringify({n_int: request.n_int, section: elem.section, abv_name: elem.abv_name, year: request.year, month: request.month, day: parseInt(dia), value: "FE", corp_oper_nr: corp_oper_nr})
         })
       );
-      await Promise.all(promises);
+      const responses = await Promise.all(promises);
+      await opsCheckResponses(responses, "Erro ao gravar os dias de férias na escala");
     }    
     /* ========= DELETE VACATIONS ========= */
     async function deleteDaysOnVacation(request) {
       const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
       const query = `n_int=eq.${request.n_int}&year=eq.${request.year}&month=eq.${request.month}&value=eq.FE&corp_oper_nr=eq.${corp_oper_nr}`;      
-      try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/reg_serv?${query}`, {
-          method: 'DELETE',
-          headers: getSupabaseHeaders()
-        });       
-      } catch (err) {
-        console.error("Erro ao apagar dias de férias:", err);
-      }
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/reg_serv?${query}`, {
+        method: 'DELETE',
+        headers: getSupabaseHeaders()
+      });
+      await opsCheckResponses(res, "Erro ao apagar os dias de férias da escala");
     }
     function formatDaysGrouped(daysString) {
       const days = daysString.split(',').map(Number).sort((a, b) => a - b);

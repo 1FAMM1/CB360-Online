@@ -569,10 +569,12 @@
               <td style="text-align:center">${row.full_name ?? ""}</td>
               <td style="text-align:center; color: ${row.elem_state ? 'green' : 'red'}">${row.elem_state ? 'ATIVO' : 'INATIVO'}</td>
               <td style="text-align:center">
-                <button class="btn-action" onclick='openEditCard(${JSON.stringify(row)})'>✏️</button>
-                <button class="btn-delete" onclick="deleteRecord('${row.id}', '${row.full_name}', '${row.corp_oper_nr}')">🗑️</button>
+                <button class="btn-action">✏️</button>
+                <button class="btn-delete">🗑️</button>
               </td>
             `;
+            tr.querySelector(".btn-action").addEventListener("click", () => openEditCard(row));
+            tr.querySelector(".btn-delete").addEventListener("click", () => deleteRecord(row));
             tbody.appendChild(tr);
             quadroRows.push(tr);
           });
@@ -599,7 +601,7 @@
     }
     function clearEditForm() {
       const ids = ["win_state", "win_state_from", "win_type", "win_ofope", "win_n_int", "win_n_file", "win_patent", "win_patent_abv", "win_section", "win_quad", "win_abv_name", "win_full_name", "win_MP", 
-                   "win_ML", "win_TAS", "win_nif", "win_niss", "win_nib", "win_phone", "win_mobile", "win_mail", "win_user_name_main", "win_password_main", "win_user_name_mobile", "win_password_mobile"];
+                   "win_ML", "win_TAS", "win_nif", "win_niss", "win_nib", "win_phone", "win_mobile", "win_mail", "win_user_name_main", "win_password_main", "win_user_name_mobile", "win_password_mobile", "win_validate_main", "win_validate_mobile"];
       ids.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = "";
@@ -682,9 +684,16 @@
           cb.checked = userAccesses.includes(cb.value);
         });
       }, 100);      
-      const login = await loadUserLogin(row.full_name, row.corp_oper_nr);
+      const [login, mobileLogin] = await Promise.all([
+        loadUserLogin(row.full_name, row.corp_oper_nr),
+        loadMobileLogin(row.n_int, row.corp_oper_nr)
+      ]);
       document.getElementById("win_user_name_main").value = login?.username || "";
-      document.getElementById("win_password_main").value = login?.password || "";      
+      document.getElementById("win_password_main").value = "";
+      document.getElementById("win_user_name_mobile").value = mobileLogin?.username || "";
+      document.getElementById("win_password_mobile").value = "";
+      const validMob = document.getElementById("win_validate_mobile");
+      if (validMob) validMob.value = mobileLogin?.validate ? String(mobileLogin.validate).slice(0, 10) : "";
       resetToFirstTab();
       window.scrollTo({top: 0, behavior: 'smooth'});
     }
@@ -701,30 +710,66 @@
         return;
       }
       const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const usernameVal = document.getElementById("win_user_name_main").value.trim();
+      const passwordVal = document.getElementById("win_password_main").value.trim();
+      const mobUserVal = document.getElementById("win_user_name_mobile").value.trim();
+      const mobPassVal = document.getElementById("win_password_mobile").value.trim();
+      const mobValidVal = document.getElementById("win_validate_mobile")?.value || null;
       try {
+        /* ---------- validações das credenciais ANTES de gravar ---------- */
+        let existingUser = null;
+        if (usernameVal) {
+          const checkUser = await fetch(`${SUPABASE_URL}/rest/v1/users?username=eq.${encodeURIComponent(usernameVal)}&select=id,corp_oper_nr,full_name`, {
+            headers: getSupabaseHeaders()
+          });
+          if (!checkUser.ok) throw new Error("Erro ao verificar utilizador Online");
+          const found = await checkUser.json();
+          const other = found.find(u => u.corp_oper_nr !== corpOperNr || u.full_name !== fullName);
+          if (other) {
+            showPopup('popup-danger', "⚠️ O username Online já está a ser usado por outro utilizador.\nPor favor introduza outro.");
+            return;
+          }
+          existingUser = found[0] || await loadUserLogin(fullName, corpOperNr);
+          if (!existingUser && !passwordVal) {
+            showPopup('popup-danger', "⚠️ Para criar o acesso Online tem de definir uma password.");
+            return;
+          }
+        }
+        let existingMobile = null;
+        if (mobUserVal) {
+          const checkMob = await fetch(`${SUPABASE_URL}/rest/v1/users_mobile?username=eq.${encodeURIComponent(mobUserVal)}&select=id,corp_oper_nr,nint_corp`, {
+            headers: getSupabaseHeaders()
+          });
+          if (!checkMob.ok) throw new Error("Erro ao verificar utilizador Mobile");
+          const foundMob = await checkMob.json();
+          const variants = nintVariants(nInt);
+          const otherMob = foundMob.find(u => u.corp_oper_nr !== corpOperNr || !variants.includes(String(u.nint_corp)));
+          if (otherMob) {
+            showPopup('popup-danger', "⚠️ O username Mobile já está a ser usado por outro utilizador.\nPor favor introduza outro.");
+            return;
+          }
+          existingMobile = foundMob[0] || await loadMobileLogin(nInt, corpOperNr);
+          if (!existingMobile && !mobPassVal) {
+            showPopup('popup-danger', "⚠️ Para criar o acesso Mobile tem de definir uma password.");
+            return;
+          }
+        }
+        /* ---------- foto ---------- */
         let photoUrl = document.getElementById("win_photo_preview")?.dataset.photoUrl || "";
         const photoInput = document.getElementById("win_photo_input");
         if (photoInput && photoInput.files && photoInput.files[0]) {
           const file = photoInput.files[0];
           const fileExt = file.name.split('.').pop();
-          const fileName = `${corpOperNr}_${nInt}.${fileExt}`;
-          const filePath = `${fileName}`;
+          const filePath = `${corpOperNr}_${nInt}.${fileExt}`;
           const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/cb_logos/${filePath}`, {
             method: "POST",
-            headers: {
-              ...getSupabaseHeaders(),
-              "x-upsert": "true"
-            },
+            headers: {...getSupabaseHeaders(), "x-upsert": "true"},
             body: file
           });
-          if (!uploadRes.ok) {
-            throw new Error("Erro ao fazer upload da foto.");
-          }
-          const publicUrlRes = await fetch(`${SUPABASE_URL}/storage/v1/object/public/cb_logos/${filePath}`);
-          if (publicUrlRes.ok) {
-            photoUrl = `${SUPABASE_URL}/storage/v1/object/public/cb_logos/${filePath}`;
-          }
+          if (!uploadRes.ok) throw new Error("Erro ao fazer upload da foto.");
+          photoUrl = `${SUPABASE_URL}/storage/v1/object/public/cb_logos/${filePath}`;
         }
+        /* ---------- reg_elems ---------- */
         const payloadReg = {n_int: nInt, n_file: document.getElementById("win_n_file").value, patent: document.getElementById("win_patent").value, patent_abv: document.getElementById("win_patent_abv").value,
                             abv_name: (document.getElementById("win_abv_name")?.value || "").trim() || buildAbvName(fullName), full_name: fullName, photo_url: photoUrl, ML: document.getElementById("win_ML").value === "true", MP: document.getElementById("win_MP").value === "true", 
                             TAS: document.getElementById("win_TAS").value === "true", section: document.getElementById("win_section").value, type_quad: document.getElementById("win_quad").value, 
@@ -742,37 +787,31 @@
           headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=representation"},
           body: JSON.stringify(payloadReg)
         });
-        if (!resReg.ok) throw new Error("Erro ao gravar reg_elems");
-        const usernameVal = document.getElementById("win_user_name_main").value.trim();
-        const passwordVal = document.getElementById("win_password_main").value.trim();
-        if (usernameVal && passwordVal) {
-          const payloadUsers = {username: usernameVal, password: passwordVal, n_int: payloadReg.n_int, full_name: payloadReg.full_name, patent: payloadReg.patent, corp_oper_nr: corpOperNr};
-          const checkUser = await fetch(`${SUPABASE_URL}/rest/v1/users?username=eq.${encodeURIComponent(usernameVal)}`, {
-            headers: getSupabaseHeaders()
+        if (!resReg.ok) throw new Error("Erro ao gravar reg_elems: " + await resReg.text());
+        /* ---------- users (Online) ---------- */
+        if (usernameVal) {
+          const payloadUsers = {username: usernameVal, n_int: nInt, full_name: fullName, patent: payloadReg.patent, corp_oper_nr: corpOperNr};
+          if (passwordVal) payloadUsers.password = passwordVal;
+          const resUser = await fetch(existingUser ? `${SUPABASE_URL}/rest/v1/users?id=eq.${existingUser.id}` : `${SUPABASE_URL}/rest/v1/users`, {
+            method: existingUser ? "PATCH" : "POST",
+            headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
+            body: JSON.stringify(payloadUsers)
           });
-          if (!checkUser.ok) throw new Error("Erro ao verificar user");
-          const usersFound = await checkUser.json();
-          if (usersFound && usersFound.length > 0) {
-            const userSameCorp = usersFound.find(u => u.corp_oper_nr === corpOperNr);
-            if (!userSameCorp) {
-              showPopup('popup-danger', "⚠️ Já existe um utilizador com estas credenciais em outra corporação.\nPor favor introduza outras credenciais.");
-              document.getElementById("win_user_name_main").value = "";
-              document.getElementById("win_password_main").value = "";
-              return;
-            }
-            await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${userSameCorp.id}`, {
-              method: "PATCH",
-              headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
-              body: JSON.stringify(payloadUsers)
-            });
-          } else {
-            await fetch(`${SUPABASE_URL}/rest/v1/users`, {
-              method: "POST",
-              headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
-              body: JSON.stringify(payloadUsers)
-            });
-          }
+          if (!resUser.ok) throw new Error("Elemento gravado, mas falhou o acesso Online: " + await resUser.text());
         }
+        /* ---------- users_mobile (Mobile) ---------- */
+        if (mobUserVal) {
+          const payloadMob = {username: mobUserVal, corp_oper_nr: corpOperNr, nint_corp: String(parseInt(nInt, 10)).padStart(3, "0"), validate: mobValidVal};
+          if (mobPassVal) payloadMob.password = mobPassVal;
+          const resMob = await fetch(existingMobile ? `${SUPABASE_URL}/rest/v1/users_mobile?id=eq.${existingMobile.id}` : `${SUPABASE_URL}/rest/v1/users_mobile`, {
+            method: existingMobile ? "PATCH" : "POST",
+            headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
+            body: JSON.stringify(payloadMob)
+          });
+          if (!resMob.ok) throw new Error("Elemento gravado, mas falhou o acesso Mobile: " + await resMob.text());
+        }
+        document.getElementById("win_password_main").value = "";
+        document.getElementById("win_password_mobile").value = "";
         showPopup('popup-success', currentEditId ? "✅ Elemento editado com sucesso!" : "✅ Elemento adicionado com sucesso!");
         toggleElementsView();
         loadElementsTable();        
@@ -781,17 +820,24 @@
         showPopup('popup-danger', "Erro ao gravar registo: " + (err.message || err));
       }
     }
-    async function deleteRecord(id, name, corp) {
-      if (!confirm(`Deseja remover ${name}?`)) return;
+    async function deleteRecord(row) {
+      if (!confirm(`Deseja remover ${row.full_name}?`)) return;
       try {
-        await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?id=eq.${id}`, { method: "DELETE", headers: getSupabaseHeaders() });
-        await fetch(`${SUPABASE_URL}/rest/v1/users?full_name=eq.${encodeURIComponent(name)}&corp_oper_nr=eq.${corp}`, {
+        const resDel = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?id=eq.${row.id}`, {method: "DELETE", headers: getSupabaseHeaders()});
+        if (!resDel.ok) throw new Error(await resDel.text());
+        await fetch(`${SUPABASE_URL}/rest/v1/users?full_name=eq.${encodeURIComponent(row.full_name)}&corp_oper_nr=eq.${row.corp_oper_nr}`, {
+          method: "DELETE",
+          headers: getSupabaseHeaders()
+        });
+        const list = nintVariants(row.n_int).map(v => `"${v}"`).join(",");
+        await fetch(`${SUPABASE_URL}/rest/v1/users_mobile?corp_oper_nr=eq.${row.corp_oper_nr}&nint_corp=in.(${list})`, {
           method: "DELETE",
           headers: getSupabaseHeaders()
         });
         loadElementsTable();
       } catch (e) {
-        alert("Erro ao eliminar");
+        console.error(e);
+        showPopup('popup-danger', "Erro ao eliminar elemento.");
       }
     }
     function generateAccessCheckboxes() {
@@ -919,9 +965,26 @@
       return val === "Administrador" ? "admin" : (val === "Sub-Administrador" ? "subadmin" : "user");
     }
     async function loadUserLogin(name, corp) {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/users?full_name=eq.${encodeURIComponent(name)}&corp_oper_nr=eq.${corp}`, {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/users?full_name=eq.${encodeURIComponent(name)}&corp_oper_nr=eq.${corp}&select=id,username`, {
         headers: getSupabaseHeaders()
       });
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data[0] || null;
+    }
+    function nintVariants(nInt) {
+      const raw = String(nInt ?? "").trim();
+      const num = String(parseInt(raw, 10));
+      return [...new Set([raw, num, num.padStart(3, "0")])].filter(v => v && v !== "NaN");
+    }
+    async function loadMobileLogin(nInt, corp) {
+      const variants = nintVariants(nInt);
+      if (!variants.length) return null;
+      const list = variants.map(v => `"${v}"`).join(",");
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/users_mobile?corp_oper_nr=eq.${corp}&nint_corp=in.(${list})&select=id,username,validate`, {
+        headers: getSupabaseHeaders()
+      });
+      if (!res.ok) return null;
       const data = await res.json();
       return data[0] || null;
     }
@@ -934,6 +997,8 @@
         const abvEl = document.getElementById("win_abv_name");
         if (abvEl) abvEl.value = buildAbvName(this.value);
       });
+      ["win_password_main", "win_password_mobile"].forEach(id => document.getElementById(id)?.setAttribute("autocomplete", "new-password"));
+      ["win_user_name_main", "win_user_name_mobile"].forEach(id => document.getElementById(id)?.setAttribute("autocomplete", "off"));
     });
     document.getElementById("win_search_element")?.addEventListener("input", function() {
       const filterText = this.value.toLowerCase().trim();

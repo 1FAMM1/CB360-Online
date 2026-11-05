@@ -1386,13 +1386,12 @@
         if (existingEvents.length > 0) { 
           showPopup('popup-danger', `O evento "${eventName}" já existe na sua corporação!`);
           return;
-        }        
-
+        }
         const respEvent = await fetch(`${SUPABASE_URL}/rest/v1/event_list`, {
           method : 'POST',
           headers,
-          body : JSON.stringify({event: eventName, event_type: eventType, corp_oper_nr, date_start: startDate, date_end: endDate, value: valueHour, location})
-        });        
+          body : JSON.stringify({event: eventName, event_type: eventType, corp_oper_nr, date_start: startDate, date_end: endDate, value: valueHour, location, is_ended: false})
+        });      
         if (!respEvent.ok) throw new Error("Erro ao criar cabeçalho do evento");        
 
         await Promise.all(shifts.map(shift => fetch(`${SUPABASE_URL}/rest/v1/event_shifts`, {

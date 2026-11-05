@@ -5048,6 +5048,12 @@
       const container = document.getElementById("decir-podium-container");
       if (!container) return;
       container.innerHTML = "";
+      document.querySelectorAll(".alert-card, .lepp-card, .ocorr-stats-card, .meals-card, .dash-header").forEach(c => {
+        if (c.style.display !== "none") return;
+        c.style.opacity = "0";
+        c.style.display = "";
+        requestAnimationFrame(() => requestAnimationFrame(() => { c.style.transition = "opacity 1s ease"; c.style.opacity = "1"; }));
+      });
       const style = document.createElement("style");
       style.textContent = `
         .podium-section-title {font-size: 20px; font-weight: 700; color: #131a69; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 8px;}
@@ -5055,8 +5061,8 @@
         .podium-card {backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); background: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.9); border-radius: 20px; 
                       box-shadow: 0 8px 32px rgba(99,102,241,0.1),0 2px 8px rgba(0,0,0,0.06); padding: 24px 20px 20px; text-align: center; width: 200px; position: relative; opacity: 0; pointer-events: none;}
         .podium-card.revealed {opacity: 1; pointer-events: all;}
-        .podium-card.rank-1 {width: 250px; background: linear-gradient(135deg, rgba(251,191,36,0.15), rgba(245,158,11,0.08)); border-color: rgba(251,191,36,0.15); 
-                             box-shadow: 0 4px 16px rgba(251,191,36,0.05), 0 1px 4px rgba(0,0,0,0.02); order: 2;}
+        .podium-card.rank-1 {width: 250px; background: linear-gradient(135deg, rgba(251,191,36,0.38), rgba(253,224,71,0.22) 50%, rgba(245,158,11,0.30)); border: 1px solid rgba(251,191,36,0.55);
+                             box-shadow: 0 6px 24px rgba(251,191,36,0.30), 0 1px 4px rgba(0,0,0,0.04); order: 2;}
         .podium-card.rank-2 {width: 220px; background: linear-gradient(135deg, rgba(156,163,175,0.2), rgba(209,213,219,0.1)); border-color: rgba(156,163,175,0.15); 
                              box-shadow: 0 4px 16px rgba(156,163,175,0.05), 0 1px 4px rgba(0,0,0,0.02); order: 1;}
         .podium-card.rank-3 {background: linear-gradient(135deg, rgba(180,83,9,0.15), rgba(217,119,6,0.08)); border-color: rgba(180,83,9,0.15); 
@@ -5097,9 +5103,17 @@
         .podium-reveal-btn:hover {transform: translateY(-2px); box-shadow: 0 8px 28px rgba(99,102,241,0.4);}
         .podium-reveal-btn:disabled {opacity: 0.6; cursor: not-allowed; transform: none;}
         .podium-confetti {position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999;}
-        @keyframes podiumReveal {0% {opacity: 0; transform: scale(0.3) translateY(40px);} 60% {opacity:1; transform: scale(1.08) translateY(-8px);} 80% {transform: scale(0.96) translateY(2px);} 100% {opacity:1;                                              transform:scale(1) translateY(0);}}
+        .podium-medal {position: absolute; top: -5px; right: -10px; font-size: 40px; line-height: 1; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.25)); transform: rotate(12deg);}
+        .rank-1 .podium-medal {font-size: 60px;}
+        .rank-2 .podium-medal {font-size: 50px;}
+        .podium-card.revealed .podium-medal {animation: medalSwing 0.8s ease-out both;}
+        .rank-4to10 .podium-medal {font-size: 15px; top: 5px; right: 5px; transform: none;}
+        .podium-card.rank-4to10.revealed .podium-medal {animation: medalPop 0.6s ease-out 0.3s both;}
+        @keyframes podiumReveal {0% {opacity: 0; transform: scale(0.3) translateY(40px);} 60% {opacity:1; transform: scale(1.08) translateY(-8px);} 80% {transform: scale(0.96) translateY(2px);} 100% {opacity:1; transform:scale(1) translateY(0);}}
         @keyframes podiumWave {0% {transform: translateY(0);} 25% {transform: translateY(-15px);} 50% {transform: translateY(0);} 75% {transform: translateY(-10px);} 100% {transform: translateY(0);}}
-        @keyframes podiumPulse {0%,100%{transform:scale(1);} 50%{transform:scale(1.05);}}      
+        @keyframes podiumPulse {0%,100%{transform:scale(1);} 50%{transform:scale(1.05);}}
+        @keyframes medalSwing {0% {transform: rotate(12deg) scale(0);} 40% {transform: rotate(-15deg) scale(1.3);} 70% {transform: rotate(20deg) scale(1);} 100% {transform: rotate(12deg) scale(1);}}
+        @keyframes medalPop {0% {transform: scale(0);} 60% {transform: scale(1.25);} 100% {transform: scale(1);}}
       `;
       document.head.appendChild(style);
       const podiumSection = document.createElement("div");
@@ -5122,7 +5136,8 @@
       const thankYouMsg = document.createElement("div");
       thankYouMsg.style.fontSize = "18px";
       thankYouMsg.style.fontWeight = "800";
-      thankYouMsg.style.color = "#444";
+      thankYouMsg.style.color = "#131a69";
+      thankYouMsg.style.textShadow = "0 0 8px rgba(255,255,255,0.8)";
       thankYouMsg.style.textTransform = "uppercase";
       thankYouMsg.style.opacity = "0";
       thankYouMsg.style.transform = "translateY(20px)";
@@ -5150,9 +5165,9 @@
           countMap[ni] = (countMap[ni] || 0) + 1;
         });
         const top10 = Object.entries(countMap)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 10)
-        .map(([ni, count]) => ({ni: parseInt(ni), count}));
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 10)
+          .map(([ni, count]) => ({ni: parseInt(ni), count}));
         const nints = top10.map(t => String(t.ni).padStart(3, "0"));
         const elems = await supabaseFetch(
           `reg_elems?n_int=in.(${nints.join(",")})&corp_oper_nr=eq.${corp}&select=n_int,abv_name,photo_url`
@@ -5176,7 +5191,10 @@
             photoEl.className = "podium-photo";
             photoEl.src = elem.photo_url;
             photoEl.onerror = () => {
-              photoEl.replaceWith(document.createElement("div"));
+              const ph = document.createElement("div");
+              ph.className = "podium-photo-placeholder";
+              ph.textContent = "👤";
+              photoEl.replaceWith(ph);
             };
           } else {
             photoEl.className = "podium-photo-placeholder";
@@ -5184,8 +5202,7 @@
           }
           const name = document.createElement("div");
           name.className = "podium-name";
-          name.textContent =
-            elem.abv_name || `Nº ${String(item.ni).padStart(3, "0")}`;
+          name.textContent = elem.abv_name || `Nº ${String(item.ni).padStart(3, "0")}`;
           const ni = document.createElement("div");
           ni.className = "podium-ni";
           ni.textContent = `Nº ${String(item.ni).padStart(3, "0")}`;
@@ -5201,7 +5218,10 @@
               <div class="podium-stat-label">Horas</div>
             </div>
           `;
-          card.append(badge, photoEl, name, ni, stats);
+          const medal = document.createElement("div");
+          medal.className = "podium-medal";
+          medal.textContent = ["🥇", "🥈", "🥉"][idx];
+          card.append(badge, medal, photoEl, name, ni, stats);
           podiumGrid.appendChild(card);
         });
         top10.slice(3).forEach((item, idx) => {
@@ -5215,8 +5235,7 @@
           badge.textContent = rank;
           const name = document.createElement("div");
           name.className = "podium-name";
-          name.textContent =
-            elem.abv_name || `Nº ${String(item.ni).padStart(3, "0")}`;
+          name.textContent = elem.abv_name || `Nº ${String(item.ni).padStart(3, "0")}`;
           const ni = document.createElement("div");
           ni.className = "podium-ni";
           ni.textContent = `Nº ${String(item.ni).padStart(3, "0")}`;
@@ -5232,7 +5251,10 @@
               <div class="podium-stat-label">Horas</div>
             </div>
           `;
-          card.append(badge, name, ni, stats);
+          const medal = document.createElement("div");
+          medal.className = "podium-medal";
+          medal.textContent = "🎖️";
+          card.append(badge, medal, name, ni, stats);
           lowerPodiumSection.appendChild(card);
           card.style.opacity = 0;
           card.style.pointerEvents = "none";
@@ -5240,7 +5262,18 @@
         thankYouMsg.textContent = `🎉 OBRIGADO PELA VOSSA COLABORAÇÃO!!! ATÉ AO DECIR ${parseInt(year) + 1}`;
         revealBtn.onclick = async () => {
           revealBtn.disabled = true;
-          revealBtn.textContent = "🎭 A revelar...";
+          revealBtn.style.transition = "opacity 0.5s ease, transform 0.5s ease";
+          revealBtn.style.opacity = "0";
+          revealBtn.style.transform = "translateY(-10px)";
+          setTimeout(() => revealBtn.style.visibility = "hidden", 500);
+          const otherCards = document.querySelectorAll(".alert-card, .lepp-card, .ocorr-stats-card, .meals-card, .dash-header");
+          podiumTitle.style.transition = "font-size 0.6s ease";
+          podiumTitle.style.fontSize = "38px";
+          otherCards.forEach(c => { c.style.transition = "opacity 0.5s ease"; c.style.opacity = "0"; });
+          await new Promise(r => setTimeout(r, 500));
+          otherCards.forEach(c => c.style.display = "none");
+          container.scrollIntoView({behavior: "smooth", block: "start"});
+          await new Promise(r => setTimeout(r, 600));
           const cards = {
             3: podiumGrid.querySelector(".rank-3"),
             2: podiumGrid.querySelector(".rank-2"),
@@ -5267,14 +5300,30 @@
             c.classList.add("revealed");
             c.style.opacity = 1;
             c.style.pointerEvents = "all";
-            if (i === lowerCards.length - 1) {
-              setTimeout(() => {
-                thankYouMsg.style.opacity = "1";
-                thankYouMsg.style.transform = "translateY(0)";
-              }, 1000);
-            }
           }
-          revealBtn.textContent = "Pódio Revelado!";
+          await new Promise(r => setTimeout(r, 1000));
+          thankYouMsg.style.opacity = "1";
+          thankYouMsg.style.transform = "translateY(0)";
+          await new Promise(r => setTimeout(r, 1500));
+          launchFlames(container);
+          await new Promise(r => setTimeout(r, 25000));
+          if (!container.isConnected) return;
+          container.style.transition = "opacity 1.5s ease, filter 1.5s ease";
+          container.style.opacity = "0";
+          container.style.filter = "blur(8px)";
+          await new Promise(r => setTimeout(r, 1500));
+          await createDecirPodiumCard(year);
+          let scrollParent = container.parentElement;
+          while (scrollParent) {
+            const oy = getComputedStyle(scrollParent).overflowY;
+            if (/(auto|scroll)/.test(oy) && scrollParent.scrollHeight > scrollParent.clientHeight) {
+              scrollParent.scrollTo({top: 0, behavior: "smooth"});
+            }
+            scrollParent = scrollParent.parentElement;
+          }
+          window.scrollTo({top: 0, behavior: "smooth"});
+          container.style.filter = "";
+          requestAnimationFrame(() => requestAnimationFrame(() => container.style.opacity = "1"));
         };
       } catch (err) {
         console.error(err);
@@ -5315,6 +5364,83 @@
       };
       animate();
     }
+    /* ─── CHAMAS ─────────────────────────────────────────────── */
+function launchFlames(targetEl, bleed = 32) {
+  targetEl.querySelector(".podium-flames")?.remove();
+  targetEl.style.position = "relative";
+  const canvas = document.createElement("canvas");
+  canvas.className = "podium-flames";
+  canvas.style.cssText = `position:absolute; top:-${bleed}px; left:-${bleed}px; width:calc(100% + ${bleed * 2}px); height:calc(100% + ${bleed * 2}px); pointer-events:none; z-index:0; border-radius:16px;`;
+  targetEl.prepend(canvas);
+  canvas.style.opacity = "0";
+  canvas.style.transition = "opacity 1.5s ease";
+  requestAnimationFrame(() => requestAnimationFrame(() => canvas.style.opacity = "1"));
+  Array.from(targetEl.children).forEach(ch => {
+    if (ch === canvas) return;
+    if (!ch.style.position) ch.style.position = "relative";
+    ch.style.zIndex = "1";
+  });
+  const ctx = canvas.getContext("2d");
+  const tongues = Array.from({length: 45}, () => ({phase: Math.random() * Math.PI * 2, speed: 0.04 + Math.random() * 0.05, h: 0.55 + Math.random() * 0.45}));
+  const embers = [];
+  let t = 0;
+  const resize = () => {
+    const w = targetEl.offsetWidth + bleed * 2;
+    const h = targetEl.offsetHeight + bleed * 2;
+    if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+  };
+  const drawLayer = (baseH, cBottom, cTop, offset) => {
+    const W = canvas.width, H = canvas.height;
+    const n = tongues.length, step = W / (n - 1);
+    ctx.beginPath();
+    ctx.moveTo(0, H);
+    tongues.forEach((tg, i) => {
+      const tipH = baseH * tg.h * (0.65 + 0.35 * Math.sin(t * tg.speed + tg.phase + offset));
+      const tipX = i * step + Math.sin(t * tg.speed * 1.3 + tg.phase) * step * 0.25;
+      if (i === 0) ctx.lineTo(tipX, H - tipH);
+      else ctx.quadraticCurveTo((i - 0.5) * step, H - baseH * 0.15, tipX, H - tipH);
+    });
+    ctx.lineTo(W, H);
+    ctx.closePath();
+    const g = ctx.createLinearGradient(0, H, 0, H - baseH);
+    g.addColorStop(0, cBottom);
+    g.addColorStop(1, cTop);
+    ctx.fillStyle = g;
+    ctx.fill();
+  };
+  const animate = () => {
+    if (!canvas.isConnected) return;
+    requestAnimationFrame(animate);
+    if (canvas.offsetParent === null) return;
+    resize();
+    t++;
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+    drawLayer(320, "rgba(183,28,28,0.85)", "rgba(183,28,28,0)", 0);
+    drawLayer(260, "rgba(245,124,0,0.9)", "rgba(245,124,0,0)", 1.5);
+    drawLayer(195, "rgba(255,213,79,0.95)", "rgba(255,213,79,0)", 3);
+    for (let i = 0; i < 6; i++) {
+      embers.push({x: Math.random() * W, y: H - Math.random() * 120, vx: (Math.random() - 0.5) * 0.8, vy: -(Math.random() * 2.2 + 1), r: Math.random() * 3 + 2, life: 0, max: Math.random() * 150 + 100});
+    }
+    ctx.save();
+    ctx.shadowBlur = 12;
+    ctx.shadowColor = "rgba(255,140,0,0.9)";
+    for (let i = embers.length - 1; i >= 0; i--) {
+      const e = embers[i];
+      e.life++;
+      e.x += e.vx + Math.sin((e.life + e.x) * 0.04) * 0.6;
+      e.y += e.vy;
+      const k = e.life / e.max;
+      if (k >= 1 || e.y < 0) { embers.splice(i, 1); continue; }
+      ctx.fillStyle = `rgba(255,${Math.floor(220 - 140 * k)},40,${1 - k})`;
+      ctx.beginPath();
+      ctx.arc(e.x, e.y, e.r * (1 - k * 0.5), 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  };
+  requestAnimationFrame(animate);
+}
     /* ─── DASHBOARD DECIR ────────────────────────────────────── */
     async function createDecirDashboard() {
       const container = document.querySelector("#decir-dashboard .major-card-body");

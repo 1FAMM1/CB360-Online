@@ -457,8 +457,8 @@
     async function loadSbaOpatShiftsByNI(year, month, type) {
       try {
         const corp = getCorpId();
-        const data = await supabaseFetch(
-          `decir_reg_pag_opatsba?select=n_int,shift,day,type&year=eq.${year}&month=eq.${month}&type=eq.${type}&corp_oper_nr=eq.${corp}`
+        const data = await fetchAllRows(
+          `decir_reg_pag_opatsba?select=n_int,month,day,shift,type&year=eq.${year}&month=eq.${month}&type=eq.${type}&corp_oper_nr=eq.${corp}`
         );
         return data.reduce((map, item) => {
           const ni = parseInt(item.n_int, 10);
@@ -472,8 +472,9 @@
     async function loadDecirViewSavedData(year, month) {
       try {
         const corp = getCorpId();
-        const data = await supabaseFetch(
-          `reg_serv?select=n_int,day,value&corp_oper_nr=eq.${corp}&year=eq.${year}&month=eq.${month}&section=eq.DECIR`
+        const data = await fetchAllRows(
+          `reg_serv?select=n_int,day,value&corp_oper_nr=eq.${corp}&year=eq.${year}&month=eq.${month}&section=eq.DECIR`,
+          "n_int,day,value"
         );
         return data.reduce((map, item) => {
           map[`${String(item.n_int).padStart(3,'0')}_${item.day}`] = item.value;
@@ -492,12 +493,9 @@
     }) {
       try {
         const corpId = typeof getCorpId === "function" ? getCorpId() : "";
-        const url = `${window.SUPABASE_URL || SUPABASE_URL}/rest/v1/${tableName}?select=*&year=eq.${year}&month=eq.${month}&corp_oper_nr=eq.${corpId}`;
-        const res = await fetch(url, {
-          headers: window.getSupabaseHeaders ? window.getSupabaseHeaders() : getSupabaseHeaders()
-        });
-        if (!res.ok) return;
-        const data = await res.json();
+        const data = await fetchAllRows(
+          `${tableName}?select=*&year=eq.${year}&month=eq.${month}&corp_oper_nr=eq.${corpId}`
+        );
         if (!data.length) return;
         const map = buildCharMap(data);
         const container = document.querySelector(containerSelector);
@@ -5032,11 +5030,11 @@
       }
     }
     /* ─── CARD: PODIUM (DECIR) ──────────────────────────────── */
-    async function fetchAllRows(query, pageSize = 1000) {
+    async function fetchAllRows(query, order = "n_int,month,day,shift", pageSize = 1000) {
       const all = [];
       for (let from = 0; ; from += pageSize) {
         const res = await fetch(
-          `${SUPABASE_URL}/rest/v1/${query}&order=n_int,month,day,shift&limit=${pageSize}&offset=${from}`,
+          `${SUPABASE_URL}/rest/v1/${query}&order=${order}&limit=${pageSize}&offset=${from}`,
           {headers: getSupabaseHeaders()}
         );
         if (!res.ok) throw new Error(await res.text());

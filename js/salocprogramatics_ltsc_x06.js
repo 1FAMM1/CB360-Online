@@ -3579,7 +3579,7 @@
         draftBtn.style.cursor = 'not-allowed';
         try {
           let shift = document.querySelector('.options-btn.active').dataset.shift;
-          let date = new Date().toISOString().slice(0, 10);
+          let date = new Date().toLocaleDateString('sv-SE');
           if (shift === "LAST") {
             let storedShift = sessionStorage.getItem("originalShift") || localStorage.getItem("originalShift");
             if (storedShift) {
@@ -4372,7 +4372,7 @@
       document.getElementById("sitop_veíc_registration").value = record.registration || "";
       document.getElementById("sitop_gdh_inop").value = record.gdh_inop || "";
       const nowValidate = new Date();
-      sitopVeicDateInput.value = nowValidate.toISOString().slice(0, 10);
+      sitopVeicDateInput.value = nowValidate.toLocaleDateString('sv-SE');
       sitopVeicHourInput.value = String(nowValidate.getHours()).padStart(2,"0") + ":" + String(nowValidate.getMinutes()).padStart(2,"0");
       document.getElementById("sitop_gdh_op").value = formatSITOPGDH(nowValidate);
       document.getElementById("sitop_type_failure").value = record.failure_type || "";
@@ -4572,7 +4572,7 @@
         document.querySelector("#sitop_container .major-card-header").textContent = "INSERÇÃO DE NOVA INOPERACIONALIDADE";
         preselectCorpInSitopCB();
         const now = new Date();
-        sitopVeicDateInput.value = now.toISOString().slice(0, 10);
+        sitopVeicDateInput.value = now.toLocaleDateString('sv-SE');
         sitopVeicHourInput.value = String(now.getHours()).padStart(2,"0") + ":" + String(now.getMinutes()).padStart(2,"0");
         updateSitopGdhInop();
       } else {

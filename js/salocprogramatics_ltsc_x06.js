@@ -75,7 +75,16 @@
     const LINFER_ABS_TABLE_STYLE = `width: 100%; margin-top: -5px; border-collapse: collapse;`;
     const LINFER_ABS_CELL_STYLE = `border: 1px solid #bbb; text-align: left;`;
     /* ─── HELPERS ────────────────────────────────────────────── */
-    const getCorpNr = () => sessionStorage.getItem("currentCorpOperNr") || "0805";
+    const getCorpNr = () => sessionStorage.getItem("currentCorpOperNr");
+    async function salocCheckRes(res, label) {
+      if (res && !res.ok) {
+        const t = await res.text().catch(() => "");
+        let msg = t;
+        try { msg = JSON.parse(t).message || t; } catch (e) {}
+        throw new Error(`${label}: ${msg || res.status}`);
+      }
+      return res;
+    }
     async function fetchFromSupabase(table, filter) {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?select=*&${filter}`, {headers: getSupabaseHeaders()});
       if (!res.ok) throw new Error(`Erro ao buscar ${table}: ${res.status}`);
@@ -2258,7 +2267,7 @@
     }
     /* ================= MAIN FUNCTION ================= */
     async function emitMOAGlobal() {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       if (!corpOperNr) {showPopup('popup-danger', "Erro: O número da corporação não foi encontrado."); return;}
       const moa_device_type = document.getElementById("moa_device_type")?.value.trim();
       const moa_cb = document.getElementById("moa_cb")?.value.trim();
@@ -3637,7 +3646,7 @@
       return optelTable.rows[0].nome || "";
     }
     async function emitPlanning(shift, date, baixar = false) {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       if (!corpOperNr) {
         showPopup('popup-danger', "Erro: Sessão expirada. Por favor, faça login novamente.");
         return;
@@ -3662,32 +3671,36 @@
       showPopup('popup-success', `Planeamento gerado com sucesso. O mesmo está a ser enviado para as entidades.`);
       try {
         const { logoUrl, cbName, corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail } = await _getPLANDIREmailCommonData(corpOperNr);
+        const saveWarnings = [];
         for (let table of tables) {
           const team_name = teamNameMap[table.title];
           if (!team_name) continue;
           const nonEmptyRows = table.rows.filter(r => r.n_int || r.patente || r.nome || r.entrada || r.saida || r.MP || r.TAS || r.obs);
-          await fetch(`${SUPABASE_URL}/rest/v1/fomio_teams?team_name=eq.${encodeURIComponent(team_name)}&corp_oper_nr=eq.${corpOperNr}`, {method: "DELETE", headers: getSupabaseHeaders()});
+          const delTeam = await fetch(`${SUPABASE_URL}/rest/v1/fomio_teams?team_name=eq.${encodeURIComponent(team_name)}&corp_oper_nr=eq.${corpOperNr}`, {method: "DELETE", headers: getSupabaseHeaders()});
+          if (!delTeam.ok) { saveWarnings.push(`FOMIO (${table.title})`); continue; }
           if (nonEmptyRows.length > 0) {
-            await fetch(`${SUPABASE_URL}/rest/v1/fomio_teams`, {
+            const insTeam = await fetch(`${SUPABASE_URL}/rest/v1/fomio_teams`, {
               method: "POST",
               headers: getSupabaseHeaders(),
               body: JSON.stringify(nonEmptyRows.map(r => ({team_name, n_int: r.n_int || '', patente: r.patente || '', nome: r.nome || '', h_entrance: r.entrada || '', h_exit: r.saida || '',
                                                            MP: !!r.MP, TAS: !!r.TAS, observ: r.obs || '', corp_oper_nr: corpOperNr})))
             });
+            if (!insTeam.ok) saveWarnings.push(`FOMIO (${table.title})`);
           }
         }
-        await fetch(`${SUPABASE_URL}/rest/v1/fomio_date?corp_oper_nr=eq.${corpOperNr}`, {method: "DELETE", headers: getSupabaseHeaders()});
-        await fetch(`${SUPABASE_URL}/rest/v1/fomio_date`, {
+        const delDate = await fetch(`${SUPABASE_URL}/rest/v1/fomio_date?corp_oper_nr=eq.${corpOperNr}`, {method: "DELETE", headers: getSupabaseHeaders()});
+        const insDate = delDate.ok ? await fetch(`${SUPABASE_URL}/rest/v1/fomio_date`, {
           method: "POST",
           headers: getSupabaseHeaders(),
           body: JSON.stringify([{header_text: `Dia: ${day} ${monthName} ${year} | Turno ${shift} | ${shiftHours}`, corp_oper_nr: corpOperNr}])
-        });
+        }) : null;
+        if (!delDate.ok || !insDate?.ok) saveWarnings.push("FOMIO (data)");
         const attendanceSaved = await saveAttendance(tables, shift, corpOperNr, day, month, year);
-        if (!attendanceSaved) console.warn('⚠️ Aviso: Falha ao gravar dados de assiduidade na tabela reg_assid.');
+        if (!attendanceSaved) { console.warn('⚠️ Aviso: Falha ao gravar dados de assiduidade na tabela reg_assid.'); saveWarnings.push("Assiduidade"); }
         const eligibilitySaved = await saveEligibility(tables, day, month, year, corpOperNr);
-        if (!eligibilitySaved) console.warn('⚠️ Aviso: Falha ao gravar dados na tabela reg_eligibility.');
+        if (!eligibilitySaved) { console.warn('⚠️ Aviso: Falha ao gravar dados na tabela reg_eligibility.'); saveWarnings.push("Elegibilidade"); }
         const decirResult = await saveDecirEcin(tables, shift, corpOperNr, day, month, year);
-        if (!decirResult.ok) console.warn(`⚠️ Aviso: DECIR não gravado — ${decirResult.reason}`);
+        if (!decirResult.ok) { console.warn(`⚠️ Aviso: DECIR não gravado — ${decirResult.reason}`); saveWarnings.push(`DECIR (${decirResult.reason})`); }
         const fileDisplayName = `Planeamento Diário ${formattedDate} Turno ${shift}`;
         const greeting = getGreeting();
         const signature = getEmailSignature();
@@ -3711,7 +3724,11 @@
           showPopup('popup-danger', `ERRO! O planeamento não foi enviado. Detalhes: ${result.details || 'Verificar consola.'}`);
           return;
         }
-        showPopup('popup-success', `Planeamento do dia ${day}/${month}/${year} (Turno ${shift}) emitido e enviado com sucesso!`);
+        if (saveWarnings.length) {
+          showPopup('popup-danger', `Planeamento do dia ${day}/${month}/${year} (Turno ${shift}) enviado, mas NÃO foi gravado em: ${saveWarnings.join(", ")}. Volte a emitir ou contacte o administrador.`);
+        } else {
+          showPopup('popup-success', `Planeamento do dia ${day}/${month}/${year} (Turno ${shift}) emitido e enviado com sucesso!`);
+        }
         await fetch(`${SUPABASE_URL}/rest/v1/fomio_draft?corp_oper_nr=eq.${corpOperNr}&shift=eq.${shift}`, {
           method: "DELETE",
           headers: getSupabaseHeaders()
@@ -3725,7 +3742,7 @@
       const tbody = document.getElementById('plandir-side-tbody');
       const rightCol = document.getElementById('plandir-right-col');
       if (!tbody || !rightCol) return;
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       if (!corpOperNr) return;
       const now = new Date();
       const day = String(now.getDate()).padStart(2, '0');
@@ -3820,7 +3837,7 @@
         localStorage.setItem("originalShift", shift);
       }
       let header;
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       if (shift === 'LAST') {
         try {
           const res = await fetch(`${SUPABASE_URL}/rest/v1/fomio_date?select=header_text&limit=1`, {method: 'GET', headers: getSupabaseHeaders()});
@@ -4209,7 +4226,7 @@
     }
     blockShiftButtons();    
     async function saveDraft(shift) {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       if (!corpOperNr || !shift || shift === 'LAST') return;
       const tables = collectTableData();
       const teamNameMap = {"OFOPE": "ofope", "CHEFE DE SERVIÇO": "chefe_servico", "OPTEL": "optel", "EQUIPA 01": "equipa_01", "EQUIPA 02": "equipa_02", "LOGÍSTICA": "logistica",
@@ -5183,7 +5200,7 @@
       if (!tbody) return;
       tbody.style.opacity = "0.5";
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/equipment_request?corp_oper_nr=eq.${corpOperNr}&order=created_at.desc`, {
             headers: getSupabaseHeaders()
@@ -5892,8 +5909,8 @@
       const messageText = messageTextarea.value.trim();
       if (!messageText) return;
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
-        const nInt = sessionStorage.getItem("currentNInt") || "205";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+        const nInt = sessionStorage.getItem("currentNInt");
         const res = await fetch(
           `${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${corpOperNr}&n_int=eq.${nInt}&select=abv_name,patent_abv`, {
             headers: getSupabaseHeaders()
@@ -6551,19 +6568,19 @@
         let eventId;
         if (existing.length > 0) {
           eventId = existing[0].id;
-          await fetch(
+          await salocCheckRes(await fetch(
             `${SUPABASE_URL}/rest/v1/attendance_events?id=eq.${eventId}`, {
               method: "PATCH",
               headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
               body: JSON.stringify({updated_at: new Date().toISOString()})
             }
-          );
-          await fetch(
+          ), "Erro ao atualizar o evento");
+          await salocCheckRes(await fetch(
             `${SUPABASE_URL}/rest/v1/attendance_records?event_id=eq.${eventId}`, {
               method: "DELETE",
               headers: getSupabaseHeaders()
             }
-          );
+          ), "Erro ao limpar a lista anterior");
         } else {
           const insertResp = await fetch(
             `${SUPABASE_URL}/rest/v1/attendance_events`, {
@@ -6572,6 +6589,7 @@
               body: JSON.stringify({corp_oper_nr: corpOperNr, event_name: eventName})
             }
           );
+          await salocCheckRes(insertResp, "Erro ao criar o evento");
           const inserted = await insertResp.json();
           eventId = inserted[0].id;
         }
@@ -6585,13 +6603,13 @@
           records.push({event_id: eventId, n_int, attends: radioYes?.checked ? "sim" : radioNo?.checked ? "nao" : null, motive: tr.querySelector('.att-motive')?.value.trim() || null});
         });
         if (records.length > 0) {
-          await fetch(
+          await salocCheckRes(await fetch(
             `${SUPABASE_URL}/rest/v1/attendance_records`, {
               method: "POST",
               headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
               body: JSON.stringify(records)
             }
-          );
+          ), "Erro ao gravar as comparências");
         }
         showPopup('popup-success', "Lista de comparências guardada com sucesso!");
         await loadRecentAttendanceEvents();
@@ -6693,12 +6711,12 @@
           return;
         }
         const eventId = existing[0].id;
-        await fetch(
+        await salocCheckRes(await fetch(
           `${SUPABASE_URL}/rest/v1/attendance_events?id=eq.${eventId}`, {
             method: "DELETE",
             headers: getSupabaseHeaders()
           }
-        );
+        ), "Erro ao eliminar o evento");
         document.getElementById("attendance-event-name").value = "";
         const tbody = document.getElementById("attendance-list-tbody");
         if (tbody) {

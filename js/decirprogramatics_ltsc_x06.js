@@ -377,9 +377,9 @@
     let OPAT_RATE = 0;
     async function loadDecirSbaOpatConfigValues() {
       try {
-        const data = await supabaseFetch("decir_values_config?select=amal_value,anepc_value,sbas_value,opat_value&limit=1");
+        const data = await supabaseFetch(`decir_values_config?select=amal_value,anepc_value,sbas_value,opat_value&corp_oper_nr=eq.${getCorpId()}&limit=1`);
         if (!data.length) return;
-        const fmt = v => v.toLocaleString('pt-PT',{minimumFractionDigits:2,maximumFractionDigits:2});
+        const fmt = v => (Number(v) || 0).toLocaleString('pt-PT',{minimumFractionDigits:2,maximumFractionDigits:2});
         const [fA, fN] = [fmt(data[0].amal_value), fmt(data[0].anepc_value)];
         ["amal-value-reg","anepc-value-reg","amal-value-pag","anepc-value-pag","amal-value-anepc","anepc-value-anepc"]
           .forEach((id,i) => {const el=$(id); if(el) el.value = i%2===0 ? fA : fN;});
@@ -1523,7 +1523,7 @@
     /* ─── IMPLEMENTAÇÃO: PAGAMENTOS SBAS / OPAT ─────────────────── */
     function createSbaOpatPayTable(containerId, year, month, elements, turnosSbasPorNI, turnosOpatPorNI) {
       genericCreatePayTable({
-        containerId, year, month, titlePrefix: "RELATÓRIO PARA PARAPAGAMENTOS DE SBAs E OPATs", elements,
+        containerId, year, month, titlePrefix: "RELATÓRIO PARA PARA PAGAMENTOS DE SBAs E OPATs", elements,
         columns: [{header: "Qtd. SBAS", width: "90px", getQty: (ni) => turnosSbasPorNI?.[ni] || 0}, {header: "Qtd. OPAT", width: "90px", getQty: (ni) => turnosOpatPorNI?.[ni] || 0}],
         calculateRowTotal: (qtdSbas, qtdOpat) => {
           return (parseVal("sbas-value-pag") * qtdSbas) + (parseVal("opat-value-pag") * qtdOpat);
@@ -1725,6 +1725,8 @@
             cell.textContent = "";
             cell.refreshMark?.();
           });
+          container.querySelectorAll("td.total-cell").forEach(tc => tc.textContent = "0");
+          window.updateDailyTotals?.();
           const tbody = container.querySelector("table tbody");
           if (tbody && typeof window.updateAllDecirValues === "function") {
             window.updateAllDecirValues(tbody);
@@ -1745,13 +1747,15 @@
             cell.textContent = "";
             cell.refreshMark?.();
           });
+          container.querySelectorAll("td.total-cell").forEach(tc => tc.textContent = "0");
+          window.updateDailyTotals?.();
           const tbody = container.querySelector("table tbody");
           if (tbody && typeof window.updateAllValuesSbaOpat === "function") {
             window.updateAllValuesSbaOpat(tbody);
           }
         }
       });
-    };    
+    };
     /* ═══════════════════════════════════════════════════════════════
     MOTOR GENÉRICO DE GRAVAÇÃO (DECIR / SBA / OPAT)
     ═══════════════════════════════════════════════════════════════ */
@@ -1793,21 +1797,14 @@
         });
         const supabaseUrl = window.SUPABASE_URL || SUPABASE_URL;
         const headers = window.getSupabaseHeaders ? window.getSupabaseHeaders() : getSupabaseHeaders();
-        const deleteRes = await fetch(`${supabaseUrl}/rest/v1/${tableName}?year=eq.${year}&month=eq.${month}&corp_oper_nr=eq.${corpOperNr}`, {
-          method: "DELETE",
-          headers: headers
+        const rpcRes = await fetch(`${supabaseUrl}/rest/v1/rpc/decir_replace_month`, {
+          method: "POST",
+          headers: { ...headers, "Content-Type": "application/json" },
+          body: JSON.stringify({p_table: tableName, p_corp: corpOperNr, p_year: String(year), p_month: String(month), p_rows: payload})
         });
-        if (!deleteRes.ok) throw new Error("Erro ao limpar registos antigos");
-        if (payload.length > 0) {
-          const insertRes = await fetch(`${supabaseUrl}/rest/v1/${tableName}`, {
-            method: "POST",
-            headers: { ...headers, "Content-Type": "application/json", "Prefer": "return=minimal" },
-            body: JSON.stringify(payload)
-          });
-          if (!insertRes.ok) throw new Error(await insertRes.text() || "Erro desconhecido ao gravar");
-        }
+        if (!rpcRes.ok) throw new Error(await rpcRes.text() || "Erro ao gravar");
         try {
-          const loggedNIntRaw = sessionStorage.getItem("currentNInt") || "205";
+          const loggedNIntRaw = sessionStorage.getItem("currentNInt");
           const loggedNIntPadded = String(loggedNIntRaw).trim().padStart(3, "0");
           const loggedNIntNumeric = parseInt(loggedNIntRaw, 10);
           if (loggedNIntRaw) {
@@ -2073,7 +2070,7 @@
       const wrapper = decirMakeWrapper(container);
       const table = document.createElement("table");
       table.className = "anepc-table";
-      Object.assign(table.style, {width:"100%", borderCollapse:"separated", fontFamily:"Segoe UI, sans-serif"});
+      Object.assign(table.style, {width:"100%", borderCollapse:"separate", fontFamily:"Segoe UI, sans-serif"});
       const thead = document.createElement("thead");
       const trh = document.createElement("tr");
       [["Nº Mecanográfico","120px"],["Função","100px"],["Nome","200px"],["Qtd. Turnos","100px"],["Valor ANEPC (€)","140px"]]
@@ -2119,7 +2116,7 @@
       if (typeof updateAnepcTotals==='function') updateAnepcTotals();
     }
     function createDecirAnepcTable(containerId, year, month, elements, turnosPorNI) {
-      genericCreateAnepcTable({containerId, year, month, titleText: `RELATÓRIO ANEPC ENINs - ${MONTH_NAMES_UPPER[month-1]} ${year}`, elements, getQtyForNI: (ni) => turnosPorNI?.[ni] || 0, 
+      genericCreateAnepcTable({containerId, year, month, titleText: `RELATÓRIO ANEPC ECINs - ${MONTH_NAMES_UPPER[month-1]} ${year}`, elements, getQtyForNI: (ni) => turnosPorNI?.[ni] || 0, 
                                valueInputId: "anepc-value-anepc", optionsContainerId: "decir-anepc-options"});
     }
     window.createDecirAnepcTable = createDecirAnepcTable;
@@ -2986,7 +2983,7 @@
         const td = document.createElement("td");
         Object.assign(td.style, {borderBottom: "1px solid #ddd", borderLeft: "1px solid #ddd",  padding: "3px 4px", height: "26px", verticalAlign: "middle", textAlign: "center", fontSize: "11px",
                                  width: targetWidth, minWidth: targetWidth, maxWidth: targetWidth, background: locked ? "#e0e0e0" : (dayStyle.bg || ""), color: locked ? "#999" : (dayStyle.color || ""), 
-                                 orderBottomRightRadius: isLastRow && isLastCol ? "8px" : "",
+                                 borderBottomRightRadius: isLastRow && isLastCol ? "8px" : "",
                                  cursor: locked ? "not-allowed" : "text", opacity: locked ? "0.6" : "1"});
         if (!locked) {
           td.contentEditable = true;
@@ -4163,7 +4160,7 @@
       }
       /* ───────── ANEPC ───────── */
       if (type === 'anepc_decir') {
-        const table = document.querySelector(".anepc-table tbody");
+                const table = document.querySelector("#table-container-dec-anepc .anepc-table tbody");
         if (!table) throw new Error("Tabela ANEPC não encontrada.");
         const monthSelect = document.querySelector("#months-container-dec-anepc .btn.active");
         const yearInput = $("year-dec-anepc");
@@ -5883,7 +5880,6 @@
     function degreesToDirection(deg) {
       if (deg === null || deg === undefined || deg === "--") return "--";
       const directions = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSO","SO","OSO","O","ONO","NO","NNO"];
-      const directions_inter = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
       return directions[Math.round(deg / 22.5) % 16];
     }
     async function fetchWindData(corp_oper_nr) {

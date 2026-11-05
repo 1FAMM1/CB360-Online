@@ -1,6 +1,15 @@
     /* =======================================
     DIGITAL PANEL CONSOLE GROUP
     ======================================= */
+    async function utilCheckRes(res, label) {
+      if (res && !res.ok) {
+        const t = await res.text().catch(() => "");
+        let msg = t;
+        try { msg = JSON.parse(t).message || t; } catch (e) {}
+        throw new Error(`${label}: ${msg || res.status}`);
+      }
+      return res;
+    }
     /* ========== SIDEBAR BUTTON CONTROL AND NAVIGATION ========== */
     function showPanelCardUtilities(cardId) {
       const allCards = document.querySelectorAll('.panel-card');
@@ -60,8 +69,14 @@
         button.dataset.active = 'true';
         const epe_type = containerId;
         const epe_value = button.textContent.trim();
-        this.saveToSupabase(epe_type, epe_value);
-        showPopup('popup-success', `Estado do <b>${epe_type.toUpperCase()}</b>, atualizado para <b>${epe_value}</b>.`);
+        this.saveToSupabase(epe_type, epe_value).then(ok => {
+          if (ok) {
+            showPopup('popup-success', `Estado do <b>${epe_type.toUpperCase()}</b>, atualizado para <b>${epe_value}</b>.`);
+          } else {
+            showPopup('popup-danger', `Não foi possível gravar o estado do <b>${epe_type.toUpperCase()}</b>.`);
+            this.loadFromSupabase();
+          }
+        });
       }
       async loadFromSupabase() {
       try {
@@ -113,9 +128,17 @@
           });
           if (!resp.ok) {
             console.error('❌ Erro RLS ao atualizar EPE:', resp.status);
+            return false;
           }
+          const rows = await resp.json().catch(() => []);
+          if (!Array.isArray(rows) || rows.length === 0) {
+            console.error('❌ EPE: nenhuma linha atualizada para', epe_type);
+            return false;
+          }
+          return true;
         } catch (e) {
           console.error('❌ Erro na requisição EPE:', e);
+          return false;
         }
       }      
     }
@@ -415,6 +438,7 @@
         showPopup('popup-success', `A informação ${n} foi atualizada com sucesso.`, false);
       } catch (e) {
         console.error("❌ Erro ao salvar info:", e);
+        showPopup('popup-danger', `Erro ao gravar a informação ${n}.`);
       }
     }
     async function clearInfoGroupFields(n) {
@@ -440,6 +464,7 @@
         showPopup('popup-success', `A informação ${n} foi limpa com sucesso.`);
       } catch (e) {
         console.error("❌ Erro ao limpar info:", e);
+        showPopup('popup-danger', `Erro ao limpar a informação ${n}.`);
       }
     }
     /* =======================================
@@ -528,25 +553,24 @@
               headers: { ...headers, "Prefer": "return=representation" },
               body: JSON.stringify(payloadInsert)
             });
-            if (resCreate.ok) {
-              const created = await resCreate.json();
-              nameInput.dataset.rowId = created[0].id;
-            }
+            await utilCheckRes(resCreate, `Erro ao criar a via ${n}`);
+            const created = await resCreate.json();
+            nameInput.dataset.rowId = created[0].id;
           } 
           else {
             const payloadUpdate = {street_name: streetName, cut_motive: cutMotive, cut_until: cutUntil, corp_oper_nr: currentCorpOperNr};
-            await fetch(`${SUPABASE_URL}/rest/v1/street_cut?id=eq.${rowId}`, {
+            await utilCheckRes(await fetch(`${SUPABASE_URL}/rest/v1/street_cut?id=eq.${rowId}`, {
               method: "PATCH",
               headers: headers,
               body: JSON.stringify(payloadUpdate)
-            });
+            }), `Erro ao atualizar a via ${n}`);
           }
         }
         showPopup('popup-success', "Cortes/Interrompimento de Vias atualizados com sucesso!");
         loadRoutesFromSupabase(total);
       } catch (error) {
         console.error("❌ [ROUTES] Erro ao gravar:", error);
-        showPopup('popup-danger', "Erro ao gravar Cortes/Interrompimento de Vias.");
+        showPopup('popup-danger', "Erro ao gravar Cortes/Interrompimento de Vias. " + (error.message || ""));
       }
     }
     document.addEventListener("DOMContentLoaded", () => loadRoutesFromSupabase());
@@ -588,7 +612,7 @@
     async function loadCMAsFromSupabase() {
       try {
         if (typeof createCmaInputs === "function") createCmaInputs();
-        const currentCorpOperNr = sessionStorage.getItem('currentCorpOperNr') || "0805";
+        const currentCorpOperNr = sessionStorage.getItem('currentCorpOperNr');
         if (!currentCorpOperNr) {
           console.error("❌ Erro: currentCorpOperNr não encontrado!");
           return;
@@ -644,7 +668,7 @@
     }
     async function saveCMAsGroupFields() {
       try {
-        const currentCorpOperNr = sessionStorage.getItem('currentCorpOperNr') || "0805";
+        const currentCorpOperNr = sessionStorage.getItem('currentCorpOperNr');
         if (!currentCorpOperNr) {
           showPopup('popup-danger', "Erro: Sessão expirada. Faça login novamente.");
           return;
@@ -759,24 +783,24 @@
             if (dataCheck && dataCheck.length > 0) rowId = dataCheck[0].id;
           }
           if (!rowId) {
-            await fetch(`${SUPABASE_URL}/rest/v1/hospital_restrictions`, {
+            await utilCheckRes(await fetch(`${SUPABASE_URL}/rest/v1/hospital_restrictions`, {
               method: "POST",
               headers: {...headers, "Prefer": "return=representation"},
               body: JSON.stringify([payload])
-            });
+            }), `Erro ao criar a linha ${n}`);
           } else {
-            await fetch(`${SUPABASE_URL}/rest/v1/hospital_restrictions?id=eq.${rowId}`, {
+            await utilCheckRes(await fetch(`${SUPABASE_URL}/rest/v1/hospital_restrictions?id=eq.${rowId}`, {
               method: "PATCH",
               headers: headers,
               body: JSON.stringify(payload)
-            });
+            }), `Erro ao atualizar a linha ${n}`);
           }
         }
         showPopup('popup-success', "Constrangimentos hospitalares atualizados com sucesso.");
         loadNoHospFromSupabase(total);
       } catch (error) {
         console.error("❌ [NOHOSP] Erro ao gravar:", error);
-        showPopup('popup-danger', "Erro ao gravar constrangimentos hospitalares.");
+        showPopup('popup-danger', "Erro ao gravar constrangimentos hospitalares. " + (error.message || ""));
       }
     }
     /* =======================================

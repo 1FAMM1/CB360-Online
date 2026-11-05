@@ -439,10 +439,12 @@
     const loadSbaOpatPayElements = (y, m) => loadDecirElements("n_int,full_name,nif,nib", y, m);
     const loadSbaOpatCodA33Elements = (y, m) => loadDecirElements("n_int,full_name,nif", y, m);
     const loadSbaOpatANEPCElements = (y, m) => loadDecirElements("n_int,n_file,patent,full_name", y, m);
-
     async function loadDecirShiftsByNI(year, month) {
       try {
-        const data = await supabaseFetch(`decir_reg_pag_ecin?select=n_int,shift,day&year=eq.${year}&month=eq.${month}`);
+        const corp = getCorpId();
+        const data = await fetchAllRows(
+          `decir_reg_pag_ecin?select=n_int,month,day,shift&corp_oper_nr=eq.${corp}&year=eq.${year}&month=eq.${month}`
+        );
         return data.reduce((map, item) => {
           const ni = parseInt(item.n_int, 10);
           map[ni] = (map[ni] || 0) + 1;

@@ -3287,14 +3287,15 @@
         return null;
       }
     }
-    async function saveDecirEcin(tables, shift, corpOperNr, day, month, year) {
-      const planDate = new Date(Number(year), Number(month) - 1, Number(day));
-      const DECIR_END_1   = new Date(2026, 9, 15);
-      const DECIR_START_2 = new Date(2027, 4, 14);
-      if (planDate > DECIR_END_1 && planDate < DECIR_START_2) {
+        async function saveDecirEcin(tables, shift, corpOperNr, day, month, year) {
+      const planDate = new Date(Number(year), Number(month) - 1, Number(day), 12);
+      const y = planDate.getFullYear();
+      const decirStart = new Date(y, 4, 14, 12);   // 14 de maio (só turno N)
+      const decirEnd   = new Date(y, 9, 15, 12);   // 15 de outubro (inclusive)
+      if (planDate < decirStart || planDate > decirEnd) {
         return { ok: true, skipped: true, count: 0 };
       }
-      if (planDate >= DECIR_START_2 && shift !== 'N') {
+      if (planDate.getTime() === decirStart.getTime() && shift !== 'N') {
         return { ok: true, skipped: true, count: 0 };
       }
       const mode = await fetchDecirMode(corpOperNr);
@@ -3319,7 +3320,8 @@
           + `&month=eq.${encodeURIComponent(String(month))}`
           + `&year=eq.${encodeURIComponent(String(year))}`
           + `&shift=eq.${encodeURIComponent(String(shift))}`;
-        await fetch(delUrl, {method: "DELETE", headers: getSupabaseHeaders()});
+        const delRes = await fetch(delUrl, {method: "DELETE", headers: getSupabaseHeaders()});
+        if (!delRes.ok) throw new Error(`Erro a limpar decir_reg_pag_ecin (${delRes.status}): ${await delRes.text()}`);
         if (records.length === 0) return {ok: true, mode, teamTitles, count: 0};
         const insUrl = `${SUPABASE_URL}/rest/v1/decir_reg_pag_ecin`;
         const res = await fetch(insUrl, {

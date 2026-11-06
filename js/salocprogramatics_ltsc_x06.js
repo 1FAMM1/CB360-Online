@@ -6125,7 +6125,7 @@
           const response = await fetch("https://cb360-online.vercel.app/api/various_convert_and_send", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({type: "email", data: {to: bulk.to, subject, message, corpOperNr, corpName, logoUrl, senderName, isBulk: true, cc: [...bulk.cc, ...emails], bcc: bulk.bcc, attachment}})
+            body: JSON.stringify({type: "email", data: {to: bulk.to, subject, message, corpOperNr, corpName, logoUrl, senderName, isBulk: true, cc: bulk.cc, bcc: [...bulk.bcc, ...emails], attachment}})
           });
           if (!response.ok) throw new Error(await response.text());
           const result = await response.json();
@@ -6204,7 +6204,7 @@
           const response = await fetch("https://cb360-online.vercel.app/api/various_convert_and_send", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({type: "email", data: {to: bulk.to, subject, message, corpOperNr, corpName, logoUrl, senderName, isBulk: true, cc: [...bulk.cc, ...emails], bcc: bulk.bcc, attachment}})
+            body: JSON.stringify({type: "email", data: {to: bulk.to, subject, message, corpOperNr, corpName, logoUrl, senderName, isBulk: true, cc: bulk.cc, bcc: [...bulk.bcc, ...emails], attachment}})
           });
           if (!response.ok) throw new Error(await response.text());
           const result = await response.json();

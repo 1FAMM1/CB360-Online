@@ -699,31 +699,44 @@
         return fallbackDistricts || [];
       }
     }
-    async function populateAllDistrictSelects(defaultDistrictId = 8) {
+    let cachedCorpDistrictId;
+    async function getCorpDefaultDistrictId(districts) {
+      if (cachedCorpDistrictId !== undefined) return cachedCorpDistrictId;
+      cachedCorpDistrictId = null;
+      try {
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+        const resp = await fetch(`${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${corpOperNr}&select=corp_district&limit=1`, {headers: getSupabaseHeaders()});
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const name = (await resp.json())[0]?.corp_district || "";
+        const norm = (t) => String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+        cachedCorpDistrictId = districts.find(d => norm(d.name) === norm(name))?.id ?? null;
+      } catch (e) {
+        console.warn("Não foi possível obter o distrito da corporação:", e);
+      }
+      return cachedCorpDistrictId;
+    }
+    async function populateAllDistrictSelects(defaultDistrictId = null) {
       const districtSelects = document.querySelectorAll('[id*="district_select"]');
       if (districtSelects.length === 0) {
         return console.warn("Nenhum select de distritos encontrado");
       }
       const districts = await fetchDistrictsFromSupabase();
+      if (defaultDistrictId === null) defaultDistrictId = await getCorpDefaultDistrictId(districts);
       const defaultDistrict = districts.find(d => d.id === defaultDistrictId);
-      if (!defaultDistrict) {
-        return console.warn(`⚠ Distrito com ID ${defaultDistrictId} não encontrado`);
-      }
       const otherDistricts = districts
         .filter(d => d.id !== defaultDistrictId)
-        .sort((a, b) => a.name.localeCompare(b.name, 'pt', {
-          sensitivity: 'base'
-        }));
-      const orderedDistricts = [defaultDistrict, ...otherDistricts];
-      districtSelects.forEach((sel, index) => {
-        sel.innerHTML = '';
+        .sort((a, b) => a.name.localeCompare(b.name, 'pt', {sensitivity: 'base'}));
+      // Com distrito da corporação: aparece em 1.º e fica escolhido. Sem ele: lista alfabética com opção vazia.
+      const orderedDistricts = defaultDistrict ? [defaultDistrict, ...otherDistricts] : otherDistricts;
+      districtSelects.forEach(sel => {
+        sel.innerHTML = defaultDistrict ? '' : '<option value=""></option>';
         orderedDistricts.forEach(d => {
           const option = document.createElement('option');
           option.value = String(d.id);
           option.textContent = d.name;
           sel.appendChild(option);
         });
-        sel.value = String(defaultDistrictId);
+        sel.value = defaultDistrict ? String(defaultDistrict.id) : "";
       });
     }
     /* ============= COUNCILS ============= */
@@ -857,8 +870,7 @@
       });
     }
     document.addEventListener('DOMContentLoaded', async () => {
-      const defaultDistrictId = 8;
-      await populateAllDistrictSelects(defaultDistrictId);
+      await populateAllDistrictSelects();
       setupHierarchicalSelects();
       const districtSelects = document.querySelectorAll('[id*="district_select"]');
       for (const select of districtSelects) {
@@ -889,7 +901,7 @@
         });
       });
       districtSelects.forEach(async (select) => {
-        await populateAllDistrictSelects(8);
+        await populateAllDistrictSelects();
         await populateCouncilSelectByDistrict(select.value, select.id);
       });
     }

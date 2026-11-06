@@ -970,7 +970,7 @@
     }
     /* ============== SAVE UNAVAILABILITY TO DATABASE ============== */
     async function saveUnavailabilityToSupabase(data) {
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
       try {
         const insertResp = await fetch(`${SUPABASE_URL}/rest/v1/vehicle_unavailability`, {
           method: 'POST',
@@ -1060,7 +1060,7 @@
       const motive = document.getElementById('end_reason_unavailability')?.value;
       const endDate = document.getElementById('end_unavailability_date')?.value;
       const endHour = document.getElementById('end_unavailability_hour')?.value;
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
       try {
         const query = `vehicle=eq.${encodeURIComponent(vehicle)}&unavailability_motive=eq.${encodeURIComponent(motive)}&status=eq.Em%20Aberto&corp_oper_nr=eq.${currentCorpOperNr}`;
         const resp = await fetch(`${SUPABASE_URL}/rest/v1/vehicle_unavailability?${query}`, {
@@ -1266,7 +1266,7 @@
       document.getElementById('cb360-filter-month').onchange = handleFilterChange;
       document.getElementById('cb360-filter-type').onchange = handleFilterChange;
       document.getElementById('cb360-print-report').onclick = async () => {
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
       let logoUrl = "";
       try {
         const respLogo = await fetch(`${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${currentCorpOperNr}&select=logo_url`, {
@@ -1321,7 +1321,7 @@
       loadReportDataForMonth(monthId, monthName, "");
     }
     async function loadReportDataForMonth(monthId, monthName, filterType = "") {
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const contentDiv = document.getElementById('cb360-report-content');  
       try {
         const currentYear = new Date().getFullYear();
@@ -1680,11 +1680,28 @@
     /* =======================================
     WEATHER WARNINGS
     ======================================= */
+    // Área de avisos do IPMA da corporação (Centro de Dados → Corporação → Área de Avisos IPMA)
+    let wsmsIpmaArea = null;
+    async function getIpmaArea() {
+      if (wsmsIpmaArea) return wsmsIpmaArea;
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${corpOperNr}&select=ipma_area&limit=1`, {headers: getSupabaseHeaders()});
+      if (!res.ok) throw new Error(await res.text());
+      const rows = await res.json();
+      wsmsIpmaArea = rows?.[0]?.ipma_area || null;
+      return wsmsIpmaArea;
+    }
     async function fetchIPMAWarnings() {
       try {
+        const area = await getIpmaArea();
+        if (!area) {
+          console.warn("Área de avisos IPMA não configurada (Centro de Dados → Corporação).");
+          return [];
+        }
         const response = await fetch("https://api.ipma.pt/open-data/forecast/warnings/warnings_www.json");
+        if (!response.ok) throw new Error(`IPMA HTTP ${response.status}`);
         const data = await response.json();
-        return data.filter(a => a.idAreaAviso === "FAR" && a.awarenessLevelID !== "green");
+        return data.filter(a => a.idAreaAviso === area && a.awarenessLevelID !== "green");
       } catch (err) {
         console.error("Erro ao buscar avisos IPMA:", err);
         return [];

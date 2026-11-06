@@ -1,4 +1,4 @@
-import ExcelJS from "exceljs";
+    import ExcelJS from "exceljs";
     import fetch from "node-fetch";
     import fs from "fs";
     import os from "os";
@@ -483,10 +483,10 @@ import ExcelJS from "exceljs";
                 <div class="email-header">
                   ${logoUrl ? `<img src="${logoUrl}" alt="Logótipo" class="brand-logo" height="100" style="height: 100px; max-height: 100px;" />` : ""}
                   <h2>${corpName}</h2>
-                  <p>Mensagem Enviada via CB360 Online</p>
+                  <p>${isRO ? "Relatórios de Ocorrência" : "Mensagem Enviada via CB360 Online"}</p>
                 </div>
                 <div class="email-body">
-                  <div class="message-box">${message}</div>
+                  <div class="message-box">${message}${isRO ? `<div style="margin-top:12px; font-size:11px; color:#94a3b8; font-style:italic; white-space:normal;">RO's conferidos, corrigidos e compilados automaticamente por CB360 Online by Grupo CB 360</div>` : ""}</div>
                   ${isRO ? "" : `<div style="margin-top:10px; margin-bottom:10px; font-size:14px; color:#1e293b;">
                     Com os melhores cumprimentos,
                   </div>`}

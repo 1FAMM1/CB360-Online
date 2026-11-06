@@ -4853,11 +4853,63 @@
                 <button class="btn btn-success" onclick="sendNotification()">ENVIAR</button>
               </div>
             </div>
+            <div id="panel-sendMails" class="panel-card">
+              <h3>ENVIO DE EMAILS</h3>
+              <p>Envio interno de notificações: Utilizador para Utilizador, ou Utilizador para Geral.</p>             
+              <div class="options-main-card" style="background:#fff; border:1px solid #e0e0e0; border-radius:12px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,0.06);">
+                <div style="padding:10px 16px; display:flex; gap:6px; border-bottom:1px solid #eee; flex-wrap:wrap; align-items:center;">
+                  <span style="font-size:11px; font-weight:600; color:#999; text-transform:uppercase; letter-spacing:0.06em; margin-right:4px;">Tipo</span>
+                  <button type="button" onclick="selectMailType(this,'ro')" id="mail-type-ro" style="display:inline-flex; align-items:center; background:#7b000012; border:1px solid #7b000055; border-radius:8px; padding:4px 12px; font-size:12px; color:#7b0000; font-weight:500; cursor:pointer; font-family:inherit;">RO's</button>
+                  <!-- <button type="button" onclick="selectMailType(this,'moa')" id="mail-type-moa" style="display:inline-flex; align-items:center; background:transparent; border:1px solid #ddd; border-radius:8px; padding:4px 12px; font-size:12px; color:#666; cursor:pointer; font-family:inherit;">MOA's</button> -->
+                  <button type="button" onclick="selectMailType(this,'outro')" id="mail-type-outro" style="display:inline-flex; align-items:center; background:transparent; border:1px solid #ddd; border-radius:8px; padding:4px 12px; font-size:12px; color:#666; cursor:pointer; font-family:inherit;">Outro</button>
+                  <input type="hidden" id="mail-type" value="ro">
+                </div>
+                <div style="font-size:10px; font-weight:600; color:#aaa; text-transform:uppercase; letter-spacing:0.08em; padding:6px 16px; background:#fafafa; border-bottom:1px solid #eee; border-top:1px solid #eee;">Destinatários</div>
+                <div class="major-row" style="display:flex; align-items:center; border-bottom:1px solid #eee; padding:0 16px; min-height:44px; gap:10px;">
+                  <label for="mail-to" style="font-size:11px; font-weight:600; color:#999; text-transform:uppercase; letter-spacing:0.06em; min-width:36px; margin:0;">Para</label>
+                  <input type="text" id="mail-to" placeholder="nome@empresa.pt, ..." style="border:none; background:transparent; font-size:13px; flex:1; color:#222; font-family:inherit; outline:none; padding:0;">
+                </div>
+                <div class="major-row" style="display:flex; align-items:center; border-bottom:1px solid #eee; padding:0 16px; min-height:44px; gap:10px;">
+                  <label for="mail-cc" style="font-size:11px; font-weight:600; color:#999; text-transform:uppercase; letter-spacing:0.06em; min-width:36px; margin:0;">CC</label>
+                  <input type="text" id="mail-cc" placeholder="Opcional" style="border:none; background:transparent; font-size:13px; flex:1; color:#222; font-family:inherit; outline:none; padding:0;">
+                </div>
+                <div class="major-row" style="display:flex; align-items:center; border-bottom:1px solid #eee; padding:0 16px; min-height:44px; gap:10px;">
+                  <label for="mail-bcc" style="font-size:11px; font-weight:600; color:#999; text-transform:uppercase; letter-spacing:0.06em; min-width:36px; margin:0;">BCC</label>
+                  <input type="text" id="mail-bcc" placeholder="Opcional" style="border:none; background:transparent; font-size:13px; flex:1; color:#222; font-family:inherit; outline:none; padding:0;">
+                </div>
+                <div class="major-row" style="display:flex; align-items:center; border-bottom:1px solid #eee; padding:0 16px; min-height:44px; gap:10px;">
+                  <label for="mail-subject" style="font-size:11px; font-weight:600; color:#999; text-transform:uppercase; letter-spacing:0.06em; min-width:36px; margin:0;">Assunto</label>
+                  <input type="text" id="mail-subject" placeholder="Assunto do email" style="border:none; background:transparent; font-size:13px; flex:1; color:#222; font-family:inherit; outline:none; padding:0;">
+                </div>
+                <div style="font-size:10px; font-weight:600; color:#aaa; text-transform:uppercase; letter-spacing:0.08em; padding:6px 16px; background:#fafafa; border-bottom:1px solid #eee; border-top:1px solid #eee;">Mensagem</div>
+                <div class="major-row" style="padding:12px 16px;">
+                  <label for="mail-message" style="font-size:11px; font-weight:600; color:#999; text-transform:uppercase; letter-spacing:0.06em; display:block; margin-bottom:8px;">Corpo</label>
+                  <textarea id="mail-message" placeholder="Escreva o corpo do seu email..." style="width:100%; min-height: 160px; border:1px solid #ddd; border-radius:8px; background:#fafafa;font-size:13px; font-family:'Segoe UI',sans-serif; color:#222;resize:vertical; padding:10px 12px; 
+                                                                                                   box-sizing:border-box; outline:none; transition:border-color .15s;" 
+                                                                                                    onfocus="this.style.borderColor='#7b0000'; this.style.background='#fff';" onblur="this.style.borderColor='#ddd'; this.style.background='#fafafa';"></textarea>
+                </div>
+                <div class="major-row" style="padding:12px 16px; border-top:1px solid #eee;">
+                  <label style="font-size:11px; font-weight:600; color:#999; text-transform:uppercase; letter-spacing:0.06em; display:block; margin-bottom:8px;">Anexos</label>
+                  <div style="display:flex; align-items:center; gap:10px;">
+                    <button type="button" onclick="document.getElementById('mail-attachments').click()" class="btn btn-add"
+                      style="font-size:12px; padding:4px 12px;">+ Adicionar Ficheiro</button>
+                    <input type="file" id="mail-attachments" multiple style="display:none;" onchange="updateAttachmentsList()">
+                    <span id="mail-attachments-count" style="font-size:12px; color:#666;">Nenhum ficheiro selecionado</span>
+                  </div>
+                  <div id="mail-attachments-list" style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;"></div>
+                </div>
+              </div>
+              <div id="sendMails" style="margin:5px 0 0 0;">
+                <div class="action-buttons" style="margin: 15px 0 0 0;">
+                  <button class="btn btn-success" onclick="sendMail(this)">ENVIAR</button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         <div class="major-card-footer"></div>
       </div>
-    </div>
+    </div> 
     <!-- DATA MANAGEMENT MODULE -->
     <div id="page-data" class="page">
       <div class="major-card major-last-card">

@@ -444,7 +444,8 @@ import ExcelJS from "exceljs";
         }
         // ===== EMAIL =====
         if (type === "email") {
-          const {to, subject, message, corpOperNr, corpName, logoUrl, senderName, isBulk, cc, bcc, attachment, attachments, attachmentUrls} = data;
+          const {to, subject, message, corpOperNr, corpName, logoUrl, senderName, isBulk, cc, bcc, attachment, attachments, attachmentUrls, mailType} = data;
+          const isRO = mailType === "ro";
           const toList = (v) => (Array.isArray(v) ? v : String(v || "").split(","))
             .map(e => String(e).trim()).filter(Boolean);
           const uniq = (arr) => [...new Map(arr.map(e => [e.toLowerCase(), e])).values()];
@@ -486,11 +487,11 @@ import ExcelJS from "exceljs";
                 </div>
                 <div class="email-body">
                   <div class="message-box">${message}</div>
-                  <div style="margin-top:10px; margin-bottom:10px; font-size:14px; color:#1e293b;">
+                  ${isRO ? "" : `<div style="margin-top:10px; margin-bottom:10px; font-size:14px; color:#1e293b;">
                     Com os melhores cumprimentos,
-                  </div>
+                  </div>`}
                   <div class="signature-section">
-                    <div class="signature-user">${senderName}</div>
+                    ${isRO ? "" : `<div class="signature-user">${senderName}</div>`}
                     <div class="signature-corp">${corpName}</div>
                     <div class="signature-contacts">
                       Rua Comandante Francisco Manuel, 7 a 13 | 8000-250 Faro | Portugal<br>

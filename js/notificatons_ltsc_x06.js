@@ -458,17 +458,36 @@
         showPopup("popup-danger", "Erro ao carregar emails: " + err.message);
       }
     }
+    /* ===== Anexos acumulados: cada seleção junta-se às anteriores; ✕ remove um ficheiro ===== */
+    let mailSelectedFiles = [];
     function updateAttachmentsList() {
       const input = document.getElementById("mail-attachments");
+      Array.from(input?.files || []).forEach(f => {
+        const dup = mailSelectedFiles.some(x => x.name === f.name && x.size === f.size && x.lastModified === f.lastModified);
+        if (!dup) mailSelectedFiles.push(f);
+      });
+      if (input) input.value = "";
+      renderMailAttachments();
+    }
+    function renderMailAttachments() {
       const list = document.getElementById("mail-attachments-list");
       const count = document.getElementById("mail-attachments-count");
-      const files = Array.from(input.files);
-      count.textContent = files.length > 0 ? `${files.length} ficheiro(s)` : "Nenhum ficheiro selecionado";
+      const totalMb = mailSelectedFiles.reduce((t, f) => t + f.size, 0) / 1048576;
+      if (count) count.textContent = mailSelectedFiles.length ? `${mailSelectedFiles.length} ficheiro(s) · ${totalMb.toFixed(1)} MB` : "Nenhum ficheiro selecionado";
+      if (!list) return;
       list.innerHTML = "";
-      files.forEach(file => {
+      mailSelectedFiles.forEach((file, idx) => {
         const tag = document.createElement("span");
-        tag.style.cssText = "background: #e8f0fe; color: #1d4ed8; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;";
-        tag.textContent = file.name;
+        tag.style.cssText = "background: #e8f0fe; color: #1d4ed8; padding: 3px 6px 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;";
+        const name = document.createElement("span");
+        name.textContent = file.name;
+        const del = document.createElement("button");
+        del.type = "button";
+        del.textContent = "✕";
+        del.title = "Remover anexo";
+        del.style.cssText = "border: none; background: transparent; color: #1d4ed8; cursor: pointer; font-size: 11px; font-weight: 700; padding: 0 2px; line-height: 1;";
+        del.onclick = () => { mailSelectedFiles.splice(idx, 1); renderMailAttachments(); };
+        tag.append(name, del);
         list.appendChild(tag);
       });
     }
@@ -479,6 +498,7 @@
       });
       const attach = document.getElementById('mail-attachments');
       if (attach) attach.value = '';
+      mailSelectedFiles = [];
       const count = document.getElementById('mail-attachments-count');
       if (count) count.textContent = 'Nenhum ficheiro selecionado';
       const list = document.getElementById('mail-attachments-list');
@@ -564,7 +584,7 @@
       let uploadedPaths = [];
       try {
         const [{corpOperNr, corpName, logoUrl, senderName}, corpContacts] = await Promise.all([_getEmailCommonData(), mailGetCorpContacts()]);
-        const files = Array.from(document.getElementById("mail-attachments")?.files || []);
+        const files = [...mailSelectedFiles];
         const totalMb = files.reduce((t, f) => t + f.size, 0) / 1048576;
         if (totalMb > 20) throw new Error(`Os anexos somam ${totalMb.toFixed(1)} MB. O limite é 20 MB.`);
         if (files.length) loading(`A carregar ${files.length} anexo(s)...`);

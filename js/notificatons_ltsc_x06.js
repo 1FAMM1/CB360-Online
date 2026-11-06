@@ -243,3 +243,332 @@
         showPopup('popup-danger', "Erro ao enviar notificação.");
       }
     }
+    /* =======================================
+    MAILER
+    ======================================= */
+    /* ===== RO: dia de início, dia de fim, mês e ano ===== */
+    const MAIL_RO_MONTHS = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+    function mailRoValues() {
+      const ini = parseInt(document.getElementById("mail-ro-ini")?.value, 10);
+      const fim = parseInt(document.getElementById("mail-ro-fim")?.value, 10);
+      const month = parseInt(document.getElementById("mail-ro-month")?.value, 10);
+      const year = parseInt(document.getElementById("mail-ro-year")?.value, 10);
+      return {ini, fim, month, year};
+    }
+    function mailRoPeriodText() {
+      const {ini, fim, month, year} = mailRoValues();
+      const d1 = Number.isInteger(ini) ? ini : "__";
+      const d2 = Number.isInteger(fim) ? fim : "__";
+      return `${d1} a ${d2} de ${MAIL_RO_MONTHS[month] || "____"} de ${year || "____"}`;
+    }
+    function mailRoFieldStyle(el, ok) {
+      el.style.borderColor = ok ? "#16a34a" : "#d00000";
+      el.style.background = ok ? "#f0fdf4" : "#fff5f5";
+      el.style.color = ok ? "#1e293b" : "#d00000";
+    }
+    function mailRoRefreshStyles() {
+      const {ini, fim, month, year} = mailRoValues();
+      const last = new Date(year, month + 1, 0).getDate();
+      const iniOk = Number.isInteger(ini) && ini >= 1 && ini <= last;
+      const fimOk = Number.isInteger(fim) && fim >= 1 && fim <= last && (!iniOk || fim >= ini);
+      mailRoFieldStyle(document.getElementById("mail-ro-ini"), iniOk);
+      mailRoFieldStyle(document.getElementById("mail-ro-fim"), fimOk);
+    }
+    function mailBuildRoSubjectBox() {
+      let box = document.getElementById("mail-subject-ro");
+      if (box) return box;
+      const subject = document.getElementById("mail-subject");
+      if (!subject) return null;
+      box = document.createElement("div");
+      box.id = "mail-subject-ro";
+      Object.assign(box.style, {display: "none", flex: "1", alignItems: "center", gap: "6px", flexWrap: "wrap", fontSize: "13px", color: "#222"});
+      const baseStyle = {padding: "3px 6px", border: "1px solid #d00000", borderRadius: "5px", fontWeight: "700", fontSize: "12.5px", textAlign: "center",
+                         outline: "none", background: "#fff5f5", color: "#d00000", fontFamily: "inherit"};
+      const fixWidth = (el, w) => {
+        ["width", "min-width", "max-width"].forEach(k => el.style.setProperty(k, w, "important"));
+        el.style.setProperty("flex", `0 0 ${w}`, "important");
+      };
+      const mkDay = (id, ph) => {
+        const i = document.createElement("input");
+        i.type = "number";
+        i.id = id;
+        i.min = "1";
+        i.max = "31";
+        i.placeholder = ph;
+        Object.assign(i.style, baseStyle);
+        fixWidth(i, "64px");
+        i.addEventListener("input", mailApplyRo);
+        return i;
+      };
+      const mkSelect = (id, options, w) => {
+        const sel = document.createElement("select");
+        sel.id = id;
+        options.forEach(([v, t]) => {
+          const o = document.createElement("option");
+          o.value = v;
+          o.textContent = t;
+          sel.appendChild(o);
+        });
+        Object.assign(sel.style, baseStyle, {border: "1px solid #ccc", background: "#fff", color: "#1e293b", cursor: "pointer",
+                                             fontWeight: "normal", textAlign: "left", textAlignLast: "left"});
+        fixWidth(sel, w);
+        sel.addEventListener("change", mailApplyRo);
+        return sel;
+      };
+      const thisYear = new Date().getFullYear();
+      const ini = mkDay("mail-ro-ini", "Dia");
+      const fim = mkDay("mail-ro-fim", "Dia");
+      const month = mkSelect("mail-ro-month", MAIL_RO_MONTHS.map((m, i) => [i, m]), "120px");
+      const year = mkSelect("mail-ro-year", [thisYear, thisYear - 1].map(y => [y, y]), "80px");
+      const txt = (t) => { const s = document.createElement("span"); s.textContent = t; return s; };
+      const suffix = txt("");
+      suffix.id = "mail-subject-ro-suffix";
+      box.append(txt("RO's de"), ini, txt("a"), fim, txt("de"), month, txt("de"), year, suffix);
+      subject.insertAdjacentElement("afterend", box);
+      return box;
+    }
+    function mailSetRoMode(on, corpNr) {
+      const subject = document.getElementById("mail-subject");
+      const box = mailBuildRoSubjectBox();
+      if (!subject || !box) return;
+      subject.style.display = on ? "none" : "";
+      box.style.display = on ? "flex" : "none";
+      if (on) {
+        const now = new Date();
+        document.getElementById("mail-subject-ro-suffix").textContent = `_${corpNr}`;
+        box.dataset.corp = corpNr;
+        document.getElementById("mail-ro-ini").value = "";
+        document.getElementById("mail-ro-fim").value = "";
+        document.getElementById("mail-ro-month").value = String(now.getMonth());
+        document.getElementById("mail-ro-year").value = String(now.getFullYear());
+        mailApplyRo();
+      }
+    }
+    function mailApplyRo() {
+      const box = document.getElementById("mail-subject-ro");
+      if (!box || box.style.display === "none") return;
+      const period = mailRoPeriodText();
+      document.getElementById("mail-subject").value = `RO's de ${period}_${box.dataset.corp || ""}`;
+      const msg = document.getElementById("mail-message");
+      if (msg) msg.value = msg.value.replace(/(Relatórios de Ocorrência de ).*?( do )/, `$1${period}$2`);
+      mailRoRefreshStyles();
+    }
+    function mailValidateRo() {
+      const box = document.getElementById("mail-subject-ro");
+      if (!box || box.style.display === "none") return true;
+      const {ini, fim, month, year} = mailRoValues();
+      const last = new Date(year, month + 1, 0).getDate();
+      const iniEl = document.getElementById("mail-ro-ini");
+      const fimEl = document.getElementById("mail-ro-fim");
+      if (!Number.isInteger(ini) || ini < 1 || ini > last) { showPopup('popup-danger', `Dia de início inválido (1 a ${last}).`); iniEl.focus(); return false; }
+      if (!Number.isInteger(fim) || fim < 1 || fim > last) { showPopup('popup-danger', `Dia de fim inválido (1 a ${last}).`); fimEl.focus(); return false; }
+      if (fim < ini) { showPopup('popup-danger', "O dia de fim é anterior ao dia de início."); fimEl.focus(); return false; }
+      return true;
+    }
+    function selectMailType(btn, value) {
+      ['ro', 'outro'].forEach(function(t) {
+        var b = document.getElementById('mail-type-' + t);
+        if (t === value) {
+          b.style.background = '#7b000012';
+          b.style.border = '1px solid #7b000055';
+          b.style.color = '#7b0000';
+          b.style.fontWeight = '500';
+        } else {
+          b.style.background = 'transparent';
+          b.style.border = '1px solid #ddd';
+          b.style.color = '#666';
+          b.style.fontWeight = 'normal';
+        }
+      });
+      document.getElementById('mail-type').value = value;
+      loadMailAddresses(value);
+    }
+    async function loadMailAddresses(type) {
+      const currentCorpNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      document.getElementById("mail-to").value = "";
+      document.getElementById("mail-cc").value = "";
+      document.getElementById("mail-bcc").value = "";
+      document.getElementById("mail-subject").value = "";
+      mailSetRoMode(false);
+      if (!type || type === "outro" || !currentCorpNr) {
+        document.getElementById("mail-message").value = "";
+        return;
+      }
+      const prefix = "ro_crepc";
+      try {
+        const resp = await fetch(
+          `${SUPABASE_URL}/rest/v1/mails_config?corp_oper_nr=eq.${currentCorpNr}&category=in.(${prefix}_mail_to,${prefix}_mail_cc,${prefix}_mail_bcc)`, {
+            headers: getSupabaseHeaders()
+          }
+        );
+        const rows = await resp.json();
+        if (!Array.isArray(rows)) return;
+        document.getElementById("mail-to").value = rows.find(r => r.category === `${prefix}_mail_to`)?.value  || "";
+        document.getElementById("mail-cc").value = rows.find(r => r.category === `${prefix}_mail_cc`)?.value  || "";
+        document.getElementById("mail-bcc").value = rows.find(r => r.category === `${prefix}_mail_bcc`)?.value || "";
+        if (type === "ro") {
+          const commanderName = await getCommanderName(currentCorpNr);
+          const greeting = getGreeting();
+          let cbName = "";
+          try {
+            const corpRes = await fetch(
+              `${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${currentCorpNr}&select=cb_name`, {
+                headers: getSupabaseHeaders()
+              }
+            );
+            const corpData = await corpRes.json();
+            cbName = corpData[0]?.cb_name || "";
+          } catch(e) {
+            console.error(e);
+          }
+          let optelInfo = "";
+          try {
+            const nInt = sessionStorage.getItem("currentNInt") || "205";
+            const optelRes = await fetch(
+              `${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${nInt}&corp_oper_nr=eq.${currentCorpNr}&select=patent_abv,abv_name`, {
+                headers: getSupabaseHeaders()
+              }
+            );
+            const optelData = await optelRes.json();
+            const patent = optelData[0]?.patent_abv || "";
+            const name = optelData[0]?.abv_name || "";
+            optelInfo = `${patent} ${name}`.trim();
+          } catch(e) {
+            console.error(e);
+          }
+          document.getElementById("mail-message").value =
+            `${greeting}\n\nEncarrega-me o Sr. Comandante ${commanderName} de remeter em anexo a Vossas Exª.s os Relatórios de Ocorrência de __ a __ de ____ do ${cbName}.\n\nCom os melhores cumprimentos,\n\nOPTEL\n${optelInfo}`;
+          mailSetRoMode(true, currentCorpNr);
+          document.getElementById("mail-ro-ini")?.focus();
+        } else {
+          document.getElementById("mail-message").value = "";
+        }
+      } catch (err) {
+        console.error(err);
+        showPopup("popup-danger", "Erro ao carregar emails: " + err.message);
+      }
+    }
+    function updateAttachmentsList() {
+      const input = document.getElementById("mail-attachments");
+      const list = document.getElementById("mail-attachments-list");
+      const count = document.getElementById("mail-attachments-count");
+      const files = Array.from(input.files);
+      count.textContent = files.length > 0 ? `${files.length} ficheiro(s)` : "Nenhum ficheiro selecionado";
+      list.innerHTML = "";
+      files.forEach(file => {
+        const tag = document.createElement("span");
+        tag.style.cssText = "background: #e8f0fe; color: #1d4ed8; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;";
+        tag.textContent = file.name;
+        list.appendChild(tag);
+      });
+    }
+    function clearMailForm() {
+      ['mail-to', 'mail-cc', 'mail-bcc', 'mail-subject', 'mail-message'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      const attach = document.getElementById('mail-attachments');
+      if (attach) attach.value = '';
+      const count = document.getElementById('mail-attachments-count');
+      if (count) count.textContent = 'Nenhum ficheiro selecionado';
+      const list = document.getElementById('mail-attachments-list');
+      if (list) list.innerHTML = '';
+      mailSetRoMode(false);
+    }
+    /* ===== Anexos via Supabase Storage (evita o limite de 4,5 MB da Vercel) ===== */
+    const MAIL_ATTACH_BUCKET = "mail-attachments";
+    function mailStorageHeaders(extra = {}) {
+      const h = {...getSupabaseHeaders(), ...extra};
+      if (!extra["Content-Type"]) delete h["Content-Type"];
+      return h;
+    }
+    function mailSafeName(name) {
+      return name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9._-]/g, "_");
+    }
+    async function mailUploadAttachments(files, corpOperNr) {
+      const batch = `${corpOperNr}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      const result = [];
+      try {
+        for (const file of files) {
+          const path = `${batch}/${mailSafeName(file.name)}`;
+          const up = await fetch(`${SUPABASE_URL}/storage/v1/object/${MAIL_ATTACH_BUCKET}/${path}`, {
+            method: "POST",
+            headers: mailStorageHeaders({"Content-Type": file.type || "application/octet-stream"}),
+            body: file
+          });
+          if (!up.ok) throw new Error(`Falha ao carregar o anexo ${file.name}: ${await up.text()}`);
+          result.push({path, filename: file.name});
+          const sign = await fetch(`${SUPABASE_URL}/storage/v1/object/sign/${MAIL_ATTACH_BUCKET}/${path}`, {
+            method: "POST",
+            headers: mailStorageHeaders({"Content-Type": "application/json"}),
+            body: JSON.stringify({expiresIn: 600})
+          });
+          if (!sign.ok) throw new Error(`Falha ao preparar o anexo ${file.name}: ${await sign.text()}`);
+          const {signedURL} = await sign.json();
+          result[result.length - 1].url = `${SUPABASE_URL}/storage/v1${signedURL}`;
+        }
+        return result;
+      } catch (err) {
+        mailDeleteAttachments(result.map(r => r.path));
+        throw err;
+      }
+    }
+    function mailDeleteAttachments(paths) {
+      if (!paths || !paths.length) return;
+      fetch(`${SUPABASE_URL}/storage/v1/object/${MAIL_ATTACH_BUCKET}`, {
+        method: "DELETE",
+        headers: mailStorageHeaders({"Content-Type": "application/json"}),
+        body: JSON.stringify({prefixes: paths})
+      }).catch(e => console.warn("Não foi possível apagar os anexos temporários:", e));
+    }
+    async function sendMail(btn) {
+      const to = document.getElementById("mail-to").value.trim();
+      const cc = document.getElementById("mail-cc").value.trim();
+      const bcc = document.getElementById("mail-bcc").value.trim();
+      const subject = document.getElementById("mail-subject").value.trim();
+      const message = document.getElementById("mail-message").value.trim();
+      if (!to || !subject || !message) {
+        showPopup('popup-danger', "Preencha o destinatário, o assunto e a mensagem.");
+        return;
+      }
+      if (!mailValidateRo()) return;
+      const loading = (t) => { if (typeof updateLoadingPopup === "function") updateLoadingPopup(t); };
+      const stopLoading = () => { if (typeof hideLoadingPopup === "function") hideLoadingPopup(); };
+      if (btn) btn.disabled = true;
+      if (typeof showLoadingPopup === "function") showLoadingPopup("A preparar o email...");
+      let uploadedPaths = [];
+      try {
+        const {corpOperNr, corpName, logoUrl, senderName} = await _getEmailCommonData();
+        const files = Array.from(document.getElementById("mail-attachments")?.files || []);
+        const totalMb = files.reduce((t, f) => t + f.size, 0) / 1048576;
+        if (totalMb > 20) throw new Error(`Os anexos somam ${totalMb.toFixed(1)} MB. O limite é 20 MB.`);
+        if (files.length) loading(`A carregar ${files.length} anexo(s)...`);
+        const uploaded = await mailUploadAttachments(files, sessionStorage.getItem("currentCorpOperNr"));
+        uploadedPaths = uploaded.map(u => u.path);
+        const attachmentUrls = uploaded.map(u => ({filename: u.filename, url: u.url}));
+        loading("A enviar o email...");
+        const response = await fetch("https://cb360-online.vercel.app/api/various_convert_and_send", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({type: "email", data: {to, cc, bcc, subject, message, corpOperNr, corpName, logoUrl, senderName, attachmentUrls,
+                                                      mailType: document.getElementById("mail-type")?.value || ""}})
+        });
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText.trim().startsWith("<") ? `Erro do Vercel (${response.status}).` : errorText || "Falha na resposta do servidor.");
+        }
+        const result = await response.json();
+        if (!result.success) throw new Error(result.error || "Erro desconhecido no servidor.");
+        stopLoading();
+        showPopup('popup-success', "Email enviado com sucesso!");
+        clearMailForm();
+      } catch (err) {
+        console.error("Erro ao enviar email:", err);
+        stopLoading();
+        showPopup('popup-danger', `Falha no envio: ${err.message}`);
+      } finally {
+        mailDeleteAttachments(uploadedPaths);
+        stopLoading();
+        if (btn) btn.disabled = false;
+      }
+    }

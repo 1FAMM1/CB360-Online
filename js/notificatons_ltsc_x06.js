@@ -267,8 +267,8 @@
     }
     function mailRoPeriodText() {
       const {ini, fim, month, year} = mailRoValues();
-      const d1 = Number.isInteger(ini) ? ini : "__";
-      const d2 = Number.isInteger(fim) ? fim : "__";
+      const d1 = Number.isInteger(ini) ? String(ini).padStart(2, "0") : "__";
+      const d2 = Number.isInteger(fim) ? String(fim).padStart(2, "0") : "__";
       return `${d1} a ${d2} de ${MAIL_RO_MONTHS[month] || "____"} de ${year || "____"}`;
     }
     function mailRoFieldStyle(el, ok) {
@@ -300,14 +300,16 @@
       };
       const mkDay = (id, ph) => {
         const i = document.createElement("input");
-        i.type = "number";
+        i.type = "text";
+        i.inputMode = "numeric";
+        i.maxLength = 2;
         i.id = id;
-        i.min = "1";
-        i.max = "31";
         i.placeholder = ph;
         Object.assign(i.style, baseStyle);
         fixWidth(i, "64px");
-        i.addEventListener("input", mailApplyRo);
+        i.addEventListener("input", () => { i.value = i.value.replace(/\D/g, ""); mailApplyRo(); });
+        // Ao sair do campo, 1 a 9 passa a 01 a 09
+        i.addEventListener("blur", () => { const n = parseInt(i.value, 10); if (Number.isInteger(n) && n >= 1 && n <= 9) i.value = String(n).padStart(2, "0"); });
         return i;
       };
       const mkSelect = (id, options, w) => {

@@ -179,10 +179,18 @@
       d.setDate(d.getDate() + days);
       return d;
     }
+    /* ===== Feriado municipal da corporação (Centro de Dados → corporation_data.municipal_holiday "MM-DD") ===== */
+    function rhMunicipalHoliday() {
+      const [m, d] = (sessionStorage.getItem("municipalHoliday") || "").split("-").map(Number);
+      if (!m || !d) return null;
+      return {month: m, day: d, name: sessionStorage.getItem("municipalHolidayName") || "Feriado Municipal"};
+    }
     function getPortugalHolidays(year) {
       const fixed = [{month: 1, day: 1, name: "Ano Novo"}, {month: 4, day: 25, name: "Dia da Liberdade"}, {month: 5, day: 1, name: "Dia do Trabalhador"}, {month: 6, day: 10, name: "Dia de Portugal"},
-                     {month: 8, day: 15, name: "Assunção de Nossa Senhora"}, {month: 9, day: 7, name: "Dia da Cidade de Faro"}, {month: 10, day: 5, name: "Implantação da República"},
+                     {month: 8, day: 15, name: "Assunção de Nossa Senhora"}, {month: 10, day: 5, name: "Implantação da República"},
                      {month: 11, day: 1, name: "Todos os Santos"}, {month: 12, day: 1, name: "Restauração da Independência"}, {month: 12, day: 8, name: "Imaculada Conceição"}, {month: 12, day: 25, name: "Natal"}];
+      const mun = rhMunicipalHoliday();
+      if (mun) fixed.push(mun);
       const a = year % 19, b = Math.floor(year / 100), c = year % 100, d = Math.floor(b / 4), e = b % 4;
       const f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3);
       const h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4;
@@ -2311,7 +2319,9 @@
       goodFriday.setDate(easter.getDate() - 2);
       const corpusChristi = new Date(easter);
       corpusChristi.setDate(easter.getDate() + 60);
-      const fixedHolidays = ["01-01", "04-25", "05-01", "06-10", "08-15", "09-07", "10-05","11-01", "12-01", "12-08", "12-25"];
+      const fixedHolidays = ["01-01", "04-25", "05-01", "06-10", "08-15", "10-05","11-01", "12-01", "12-08", "12-25"];
+      const munHol = rhMunicipalHoliday();
+      if (munHol) fixedHolidays.push(`${String(munHol.month).padStart(2, "0")}-${String(munHol.day).padStart(2, "0")}`);
       function formatMD(date) {
         return String(date.getMonth() + 1).padStart(2, '0') + "-" + String(date.getDate()).padStart(2, '0');
       }
@@ -2537,9 +2547,11 @@
     function getPortugalHolidaysForVacations(year) {
       const holidays = [];
       const fixedHolidays = [{month: 1, day: 1, name: "Ano Novo"}, {month: 4, day: 25, name: "Dia da Liberdade"}, {month: 5, day: 1, name: "Dia do Trabalhador"},
-                             {month: 6, day: 10, name: "Dia de Portugal"}, {month: 8, day: 15, name: "Assunção de Nossa Senhora"}, {month: 9, day: 7, name: "Dia do Município (Faro)"},
+                             {month: 6, day: 10, name: "Dia de Portugal"}, {month: 8, day: 15, name: "Assunção de Nossa Senhora"},
                              {month: 10, day: 5, name: "Implantação da República"}, {month: 11, day: 1, name: "Dia de Todos os Santos"}, {month: 12, day: 1, name: "Restauração da Independência"},
                              {month: 12, day: 8, name: "Imaculada Conceição"}, {month: 12, day: 25, name: "Natal"}];
+      const munVac = rhMunicipalHoliday();
+      if (munVac) fixedHolidays.push(munVac);
       fixedHolidays.forEach(h => {
         holidays.push({ month: h.month, day: h.day, name: h.name, optional: false });
       });

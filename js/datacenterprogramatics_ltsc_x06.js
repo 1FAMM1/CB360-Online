@@ -345,7 +345,7 @@
         const corpOperNr = (sessionStorage.getItem("currentCorpOperNr")).trim();
         const upload = await uploadCorpLogo(tempCorpLogoFile, corpOperNr);
         await updateLogoInDB(corpOperNr, upload.url);
-        await deleteCorpLogo(originalCorpLogo);
+        // O logo antigo NÃO é apagado: os emails já enviados continuam a apontar para ele.
         const cacheBusterUrl = `${upload.url}?t=${Date.now()}`;
         if (logoImg) logoImg.src = cacheBusterUrl;
         if (logoHeaderImg) logoHeaderImg.src = cacheBusterUrl;
@@ -866,21 +866,24 @@
     async function deleteRecord(row) {
       if (!confirm(`Deseja remover ${row.full_name}?`)) return;
       try {
-        const resDel = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?id=eq.${row.id}`, {method: "DELETE", headers: getSupabaseHeaders()});
-        if (!resDel.ok) throw new Error(await resDel.text());
-        await fetch(`${SUPABASE_URL}/rest/v1/users?full_name=eq.${encodeURIComponent(row.full_name)}&corp_oper_nr=eq.${row.corp_oper_nr}`, {
+        const resUsers = await fetch(`${SUPABASE_URL}/rest/v1/users?full_name=eq.${encodeURIComponent(row.full_name)}&corp_oper_nr=eq.${row.corp_oper_nr}`, {
           method: "DELETE",
           headers: getSupabaseHeaders()
         });
+        if (!resUsers.ok) throw new Error("Falhou a remoção do acesso Online: " + await resUsers.text());
         const list = nintVariants(row.n_int).map(v => `"${v}"`).join(",");
-        await fetch(`${SUPABASE_URL}/rest/v1/users_mobile?corp_oper_nr=eq.${row.corp_oper_nr}&nint_corp=in.(${list})`, {
+        const resMob = await fetch(`${SUPABASE_URL}/rest/v1/users_mobile?corp_oper_nr=eq.${row.corp_oper_nr}&nint_corp=in.(${list})`, {
           method: "DELETE",
           headers: getSupabaseHeaders()
         });
+        if (!resMob.ok) throw new Error("Falhou a remoção do acesso Mobile: " + await resMob.text());
+        const resDel = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?id=eq.${row.id}`, {method: "DELETE", headers: getSupabaseHeaders()});
+        if (!resDel.ok) throw new Error("Falhou a remoção do elemento: " + await resDel.text());
+        showPopup('popup-success', `${row.full_name} removido com sucesso.`);
         loadElementsTable();
       } catch (e) {
         console.error(e);
-        showPopup('popup-danger', "Erro ao eliminar elemento.");
+        showPopup('popup-danger', "Erro ao eliminar elemento: " + (e.message || e));
       }
     }
     function generateAccessCheckboxes() {
@@ -1315,9 +1318,11 @@
     async function saveMailConfigRow(corpOperNr, category, value) {
       const checkUrl = `${SUPABASE_URL}/rest/v1/mails_config?corp_oper_nr=eq.${corpOperNr}&category=eq.${category}&select=id`;
       const checkRes = await fetch(checkUrl, {headers: getSupabaseHeaders()});
+      if (!checkRes.ok) throw new Error(`Erro ao ler ${category}: ` + await checkRes.text());
       const existing = await checkRes.json();
+      let res;
       if (existing.length > 0) {
-        await fetch(
+        res = await fetch(
           `${SUPABASE_URL}/rest/v1/mails_config?corp_oper_nr=eq.${corpOperNr}&category=eq.${category}`, {
             method: "PATCH",
             headers: {...getSupabaseHeaders(), "Prefer": "return=minimal"},
@@ -1325,7 +1330,7 @@
           }
         );
       } else {
-        await fetch(
+        res = await fetch(
           `${SUPABASE_URL}/rest/v1/mails_config`, {
             method: "POST",
             headers: {...getSupabaseHeaders(), "Prefer": "return=minimal"},
@@ -1333,56 +1338,55 @@
           }
         );
       }
+      if (!res.ok) {
+        const t = await res.text();
+        let msg = t;
+        try { msg = JSON.parse(t).message || t; } catch (e) {}
+        throw new Error(`Erro ao gravar ${category}: ${msg}`);
+      }
+    }
+    async function saveMailRowsGroup(rows, successMsg) {
+      const currentCorpNr = sessionStorage.getItem("currentCorpOperNr");
+      if (!currentCorpNr) return;
+      const invalid = rows.filter(r => !validateEmails(r.value));
+      if (invalid.length) {
+        showPopup('popup-danger', "Há emails com formato inválido. Separe vários emails por vírgula.");
+        return;
+      }
+      try {
+        for (const row of rows) {
+          await saveMailConfigRow(currentCorpNr, row.category, (row.value || "").trim());
+        }
+        showPopup('popup-success', successMsg);
+      } catch (err) {
+        console.error(err);
+        showPopup('popup-danger', err.message || "Erro ao gravar os emails.");
+      }
     }
     /* ============ SAVE PLANOS DIÁRIOS (EMISSÃO) ============ */
     async function savePlandirEmitMails() {
-      const currentCorpNr = sessionStorage.getItem("currentCorpOperNr");
-      if (!currentCorpNr) return;
       const rows = [{category: "plandir_emit_mail_to",  value: document.getElementById("config_plandir_emit_to").value}, {category: "plandir_emit_mail_cc",  value: document.getElementById("config_plandir_emit_cc").value}, {category: "plandir_emit_mail_bcc", value: document.getElementById("config_plandir_emit_bcc").value}];
-      for (const row of rows) {
-        await saveMailConfigRow(currentCorpNr, row.category, row.value);
-      }
-      showPopup('popup-success', "Emails para emissão de Planeamentos Diários atualizados com sucesso.");
+      await saveMailRowsGroup(rows, "Emails para emissão de Planeamentos Diários atualizados com sucesso.");
     }
     /* ============ SAVE JUSTIFICAÇÃO DE PONTO ============ */
     async function savePointJustifMails() {
-      const currentCorpNr = sessionStorage.getItem("currentCorpOperNr");
-      if (!currentCorpNr) return;
       const rows = [{category: "pointjustif_mail_to",  value: document.getElementById("config_pointjustif_mail_to").value}, {category: "pointjustif_mail_cc",  value: document.getElementById("config_pointjustif_mail_cc").value}, {category: "pointjustif_mail_bcc", value: document.getElementById("config_pointjustif_mail_bcc").value}];
-      for (const row of rows) {
-        await saveMailConfigRow(currentCorpNr, row.category, row.value);
-      }
-      showPopup('popup-success', "Emails para justificação de picagens de ponto atualizados com sucesso.");
+      await saveMailRowsGroup(rows, "Emails para justificação de picagens de ponto atualizados com sucesso.");
     }
     /* ============ SAVE SOLICITAÇÃO DE FARDAMENTO ============ */
     async function saveSolFardamMails() {
-      const currentCorpNr = sessionStorage.getItem("currentCorpOperNr");
-      if (!currentCorpNr) return;
       const rows = [{category: "solfardam_mail_to",  value: document.getElementById("config_solfardam_mail_to").value}, {category: "solfardam_mail_cc",  value: document.getElementById("config_solfardam_mail_cc").value}, {category: "solfardam_mail_bcc", value: document.getElementById("config_solfardam_mail_bcc").value}];
-      for (const row of rows) {
-        await saveMailConfigRow(currentCorpNr, row.category, row.value);
-      }
-      showPopup('popup-success', "Emails para solicitação de fardamento atualizados com sucesso.");
+      await saveMailRowsGroup(rows, "Emails para solicitação de fardamento atualizados com sucesso.");
     }
     /* ============ SAVE SITOP VEÍCULOS ============ */
     async function saveSitopVeiculosMails() {
-      const currentCorpNr = sessionStorage.getItem("currentCorpOperNr");
-      if (!currentCorpNr) return;
       const rows = [{category: "crepcsitop_mail_to",  value: document.getElementById("config_sitop_veiculos_mail_to").value}, {category: "crepcsitop_mail_cc",  value: document.getElementById("config_sitop_veiculos_mail_cc").value}, {category: "crepcsitop_mail_bcc", value: document.getElementById("config_sitop_veiculos_mail_bcc").value}];
-      for (const row of rows) {
-        await saveMailConfigRow(currentCorpNr, row.category, row.value);
-      }
-      showPopup('popup-success', "Emails para envio de Situações Operacionais de Veículos atualizados com sucesso.");
+      await saveMailRowsGroup(rows, "Emails para envio de Situações Operacionais de Veículos atualizados com sucesso.");
     }
     /* ============= SAVE MOA ============== */
     async function saveMoaMails() {
-      const currentCorpNr = sessionStorage.getItem("currentCorpOperNr");
-      if (!currentCorpNr) return;
       const rows = [{category: "crepcmoa_mail_to",  value: document.getElementById("config_moa_mail_to").value}, {category: "crepcmoa_mail_cc",  value: document.getElementById("config_moa_mail_cc").value}, {category: "crepcmoa_mail_bcc", value: document.getElementById("config_moa_mail_bcc").value}];
-      for (const row of rows) {
-        await saveMailConfigRow(currentCorpNr, row.category, row.value);
-      }
-      showPopup('popup-success', "Emails para envio de Medidas Operacionais de Antecipação atualizados com sucesso.");
+      await saveMailRowsGroup(rows, "Emails para envio de Medidas Operacionais de Antecipação atualizados com sucesso.");
     }
     /* ========== EVENT LISTENERS ========== */
     document.getElementById("config_plandir_emit_mail_save")?.addEventListener("click", savePlandirEmitMails);

@@ -1,10 +1,19 @@
+    /*************************************************************************
+    * * 🟦 CB360 ONLINE - API ENGINE
+    * 🚀 Desenvolvido por: [Fábio Martins / Sistemas de Informação]
+    * 📅 Ano: 2023 - 2026
+    * * Descrição: Handler principal para geração de emails
+    * com integração ExcelJS, Adobe PDF Services e Mailer.
+    * *************************************************************************/
     import ExcelJS from "exceljs";
     import fetch from "node-fetch";
     import fs from "fs";
     import os from "os";
     import path from "path";
     import nodemailer from "nodemailer";
-    import {ServicePrincipalCredentials, PDFServices, MimeType, CreatePDFJob, CreatePDFResult} from "@adobe/pdfservices-node-sdk";
+    import {ServicePrincipalCredentials, PDFServices, MimeType, CreatePDFJob, CreatePDFResult, ClientConfig, Region} from "@adobe/pdfservices-node-sdk";
+    // Região da Adobe: "EU" (por defeito) ou "US". Para voltar aos EUA sem mexer no código: variável ADOBE_REGION=US na Vercel.
+    const ADOBE_CLIENT_CONFIG = new ClientConfig({region: (process.env.ADOBE_REGION || "EU").toUpperCase() === "US" ? Region.US : Region.EU});
     export const config = {api: {bodyParser: {sizeLimit: "10mb"}}};
     const CLIENT_ID = process.env.ADOBE_CLIENT_ID;
     const CLIENT_SECRET = process.env.ADOBE_CLIENT_SECRET;
@@ -20,6 +29,17 @@
     const ALWAYS_TO = ["comando0805.ahbfaro@gmail.com", "central0805.ahbfaro@gmail.com"];
     const ALWAYS_TO_ATTENDANCE2 = ["comandante.faroahb@gmail.com", "comando0805.ahbfaro@gmail.com", "central0805.ahbfaro@gmail.com"];
     const ALWAYS_TO_ATTENDANCE = ["fmartins.ahbfaro@gmail.com"];
+    // ===== CONTACTOS DA CORPORAÇÃO (assinatura dos emails) =====
+    // Vêm da corporation_data da corporação com sessão iniciada. Se não vierem, mantém os de Faro como antes.
+    function corpContactsHtml(d = {}) {
+      const {corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail} = d;
+      if (![corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail].some(Boolean)) {
+        return "Rua Comandante Francisco Manuel, 7 a 13 | 8000-250 Faro | Portugal<br>Telem.: +351 917 629 626 | Telef: +351 289 803 066";
+      }
+      return [[corpAddress, [corpCp, corpLocalitie].filter(Boolean).join(" "), "Portugal"].filter(Boolean).join(" | "),
+              [corpPhoneMobile ? `Telem.: ${corpPhoneMobile}` : "", corpPhoneLandline ? `Telef: ${corpPhoneLandline}` : ""].filter(Boolean).join(" | "),
+              corpEmail ? `Email: ${corpEmail}` : ""].filter(Boolean).join("<br>");
+    }
     // ===== CELL ALIGNMENT HELPERS =====
     const fitCell = (cell) => {
       cell.alignment = {vertical: "middle", horizontal: "left", wrapText: true};
@@ -39,7 +59,7 @@
       try {
         await workbook.xlsx.writeFile(inputFilePath);
         const credentials = new ServicePrincipalCredentials({clientId: CLIENT_ID, clientSecret: CLIENT_SECRET});
-        const pdfServices = new PDFServices({credentials});
+        const pdfServices = new PDFServices({credentials, clientConfig: ADOBE_CLIENT_CONFIG});
         const inputAsset = await pdfServices.upload({readStream: fs.createReadStream(inputFilePath), mimeType: MimeType.XLSX});
         const job = new CreatePDFJob({inputAsset});
         const pollingURL = await pdfServices.submit({job});
@@ -409,8 +429,7 @@
                     <div class="signature-user">${senderName}</div>
                     <div class="signature-corp">${corpName}</div>
                     <div class="signature-contacts">
-                      Rua Comandante Francisco Manuel, 7 a 13 | 8000-250 Faro | Portugal<br>
-                      Telem.: +351 917 629 626 | Telef: +351 289 803 066
+                      ${corpContactsHtml(data)}
                     </div>
                   </div>
                   <div class="eco-note">
@@ -447,7 +466,9 @@
         }
         // ===== EMAIL =====
         if (type === "email") {
-          const {to, subject, message, corpOperNr, corpName, logoUrl, senderName, isBulk, cc, bcc, attachment, attachments, attachmentUrls, mailType} = data;
+          const {to, subject, message, corpOperNr, corpName, logoUrl, senderName, isBulk, cc, bcc, attachment, attachments, attachmentUrls, mailType,
+                 corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail} = data;
+          const contactsHtml = corpContactsHtml(data);
           const isRO = mailType === "ro";
           const toList = (v) => (Array.isArray(v) ? v : String(v || "").split(","))
             .map(e => String(e).trim()).filter(Boolean);
@@ -497,8 +518,7 @@
                     ${isRO ? "" : `<div class="signature-user">${senderName}</div>`}
                     <div class="signature-corp">${corpName}</div>
                     <div class="signature-contacts">
-                      Rua Comandante Francisco Manuel, 7 a 13 | 8000-250 Faro | Portugal<br>
-                      Telem.: +351 917 629 626 | Telef: +351 289 803 066
+                      ${contactsHtml}
                     </div>
                   </div>
                   <div class="eco-note">
@@ -526,7 +546,8 @@
             mailOptions.cc = cc;
           } else {
             mailOptions.to = toList(to);
-            mailOptions.cc = uniq([...toList(cc), "central0805.ahbfaro@gmail.com"]);
+            // Cópia sempre para o email da corporação (Centro de Dados → Corporação → E-mail)
+            mailOptions.cc = uniq([...toList(cc), corpEmail || "central0805.ahbfaro@gmail.com"]);
           }
           const bccList = toList(bcc);
           if (bccList.length) mailOptions.bcc = bccList;

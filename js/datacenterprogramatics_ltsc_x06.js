@@ -1282,6 +1282,16 @@
         document.getElementById("config_moa_mail_to").value = rows.find(r => r.category === "crepcmoa_mail_to")?.value || "";
         document.getElementById("config_moa_mail_cc").value = rows.find(r => r.category === "crepcmoa_mail_cc")?.value || "";
         document.getElementById("config_moa_mail_bcc").value = rows.find(r => r.category === "crepcmoa_mail_bcc")?.value || "";
+        const roTo = document.getElementById("config_ro_crepc_mail_to");
+        const roCc = document.getElementById("config_ro_crepc_mail_cc");
+        const roBcc = document.getElementById("config_ro_crepc_mail_bcc");
+        if (roTo) roTo.value = rows.find(r => r.category === "ro_crepc_mail_to")?.value || "";
+        if (roCc) roCc.value = rows.find(r => r.category === "ro_crepc_mail_cc")?.value || "";
+        if (roBcc) roBcc.value = rows.find(r => r.category === "ro_crepc_mail_bcc")?.value || "";
+        MAIL_EXTRA_GROUPS.forEach(g => g.fields.forEach(f => {
+          const el = document.getElementById(`config_${g.prefix}_mail_${f}`);
+          if (el) el.value = rows.find(r => r.category === `${g.prefix}_mail_${f}`)?.value || "";
+        }));
       } catch (err) {
         console.error(err);
         showPopup('popup-danger', "Erro ao carregar emails: " + err.message);
@@ -1388,12 +1398,33 @@
       const rows = [{category: "crepcmoa_mail_to",  value: document.getElementById("config_moa_mail_to").value}, {category: "crepcmoa_mail_cc",  value: document.getElementById("config_moa_mail_cc").value}, {category: "crepcmoa_mail_bcc", value: document.getElementById("config_moa_mail_bcc").value}];
       await saveMailRowsGroup(rows, "Emails para envio de Medidas Operacionais de Antecipação atualizados com sucesso.");
     }
+    /* ======= SAVE RELATÓRIOS DE OCORRÊNCIA (CREPC) ======= */
+    async function saveRoCrepcMails() {
+      const rows = [{category: "ro_crepc_mail_to",  value: document.getElementById("config_ro_crepc_mail_to").value}, {category: "ro_crepc_mail_cc",  value: document.getElementById("config_ro_crepc_mail_cc").value}, {category: "ro_crepc_mail_bcc", value: document.getElementById("config_ro_crepc_mail_bcc").value}];
+      await saveMailRowsGroup(rows, "Emails para envio de Relatórios de Ocorrência atualizados com sucesso.");
+    }
+    /* ======= NOVOS GRUPOS (antes estavam fixos no código com os emails de Faro) ======= */
+    const MAIL_EXTRA_GROUPS = [
+      {prefix: "bulk",           fields: ["to", "cc", "bcc"], msg: "Emails dos envios em massa atualizados com sucesso."},
+      {prefix: "attendance",     fields: ["to", "cc", "bcc"], msg: "Emails da Lista de Comparências atualizados com sucesso."},
+      {prefix: "volunt_verify",  fields: ["to", "cc", "bcc"], msg: "Emails de envio para validação (Voluntariado) atualizados com sucesso."},
+      {prefix: "volunt_valid",   fields: ["to", "cc", "bcc"], msg: "Emails de serviços validados (Voluntariado) atualizados com sucesso."},
+      {prefix: "volunt_invalid", fields: ["to", "cc", "bcc"], msg: "Emails de serviços com inconsistências (Voluntariado) atualizados com sucesso."},
+      {prefix: "decir_disp",     fields: ["to", "cc"],        msg: "Emails das disponibilidades DECIR atualizados com sucesso."}
+    ];
+    MAIL_EXTRA_GROUPS.forEach(g => {
+      document.getElementById(`config_${g.prefix}_mail_save`)?.addEventListener("click", async () => {
+        const rows = g.fields.map(f => ({category: `${g.prefix}_mail_${f}`, value: document.getElementById(`config_${g.prefix}_mail_${f}`)?.value || ""}));
+        await saveMailRowsGroup(rows, g.msg);
+      });
+    });
     /* ========== EVENT LISTENERS ========== */
     document.getElementById("config_plandir_emit_mail_save")?.addEventListener("click", savePlandirEmitMails);
     document.getElementById("config_pointjustif_mail_save")?.addEventListener("click", savePointJustifMails);
     document.getElementById("config_solfardam_mail_save")?.addEventListener("click", saveSolFardamMails);
     document.getElementById("config_sitop_veiculos_mail_save")?.addEventListener("click", saveSitopVeiculosMails);
     document.getElementById("config_moa_mail_save")?.addEventListener("click", saveMoaMails);
+    document.getElementById("config_ro_crepc_mail_save")?.addEventListener("click", saveRoCrepcMails);
     document.addEventListener("click", (e) => {
       const btn = e.target.closest("button[onclick*=\"showPanelCardDataCenter('mails')\"]");
       if (btn) {

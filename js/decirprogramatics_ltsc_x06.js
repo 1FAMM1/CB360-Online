@@ -5061,6 +5061,20 @@
       }
       return all;
     }
+    async function decirLoadPhoto(imgEl, photoUrl) {
+      if (!imgEl || !photoUrl) return;
+      if (/^https?:\/\//i.test(photoUrl)) { imgEl.src = photoUrl; return; }
+      try {
+        const h = {...getSupabaseHeaders()}; delete h["Content-Type"];
+        const res = await fetch(`${SUPABASE_URL}/storage/v1/object/authenticated/elem-photos/${photoUrl}`, {headers: h});
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const url = URL.createObjectURL(await res.blob());
+        imgEl.onload = () => URL.revokeObjectURL(url);
+        imgEl.src = url;
+      } catch (e) {
+        if (typeof imgEl.onerror === "function") imgEl.onerror();
+      }
+    }
     async function createDecirPodiumCard(year) {
       const container = document.getElementById("decir-podium-container");
       if (!container) return;
@@ -5209,7 +5223,7 @@
             : document.createElement("div");
           if (elem.photo_url) {
             photoEl.className = "podium-photo";
-            photoEl.src = elem.photo_url;
+            decirLoadPhoto(photoEl, elem.photo_url);
             photoEl.onerror = () => {
               const ph = document.createElement("div");
               ph.className = "podium-photo-placeholder";

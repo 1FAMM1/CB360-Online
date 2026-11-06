@@ -5723,7 +5723,7 @@
     async function _getEmailCommonData() {
       const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const nInt = sessionStorage.getItem("currentNInt");
-      let corpName = "Corpo de Bombeiros de Faro";
+      let corpName = "";
       let logoUrl = "";
       let senderName = "Utilizador";
       try {

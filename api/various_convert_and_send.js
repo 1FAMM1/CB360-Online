@@ -12,7 +12,6 @@
     import path from "path";
     import nodemailer from "nodemailer";
     import {ServicePrincipalCredentials, PDFServices, MimeType, CreatePDFJob, CreatePDFResult, ClientConfig, Region} from "@adobe/pdfservices-node-sdk";
-    // Região da Adobe: "EU" (por defeito) ou "US". Para voltar aos EUA sem mexer no código: variável ADOBE_REGION=US na Vercel.
     const ADOBE_CLIENT_CONFIG = new ClientConfig({region: (process.env.ADOBE_REGION || "EU").toUpperCase() === "US" ? Region.US : Region.EU});
     export const config = {api: {bodyParser: {sizeLimit: "10mb"}}};
     const CLIENT_ID = process.env.ADOBE_CLIENT_ID;
@@ -26,16 +25,11 @@
                        contact_list: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/contact_list_template.xlsx",
                        attendance_list: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/attendance_list_template.xlsx",
                       };
-    const ALWAYS_TO = ["comando0805.ahbfaro@gmail.com", "central0805.ahbfaro@gmail.com"];
-    const ALWAYS_TO_ATTENDANCE2 = ["comandante.faroahb@gmail.com", "comando0805.ahbfaro@gmail.com", "central0805.ahbfaro@gmail.com"];
-    const ALWAYS_TO_ATTENDANCE = ["fmartins.ahbfaro@gmail.com"];
+    const mailList = (v) => (Array.isArray(v) ? v : String(v || "").split(",")).map(e => String(e).trim()).filter(Boolean);
     // ===== CONTACTOS DA CORPORAÇÃO (assinatura dos emails) =====
-    // Vêm da corporation_data da corporação com sessão iniciada. Se não vierem, mantém os de Faro como antes.
+    // Vêm da corporation_data da corporação com sessão iniciada. Se não vierem, a linha fica vazia.
     function corpContactsHtml(d = {}) {
       const {corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail} = d;
-      if (![corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail].some(Boolean)) {
-        return "Rua Comandante Francisco Manuel, 7 a 13 | 8000-250 Faro | Portugal<br>Telem.: +351 917 629 626 | Telef: +351 289 803 066";
-      }
       return [[corpAddress, [corpCp, corpLocalitie].filter(Boolean).join(" "), "Portugal"].filter(Boolean).join(" | "),
               [corpPhoneMobile ? `Telem.: ${corpPhoneMobile}` : "", corpPhoneLandline ? `Telef: ${corpPhoneLandline}` : ""].filter(Boolean).join(" | "),
               corpEmail ? `Email: ${corpEmail}` : ""].filter(Boolean).join("<br>");
@@ -447,15 +441,24 @@
             </body>
             </html>
           `;
+          const attTo = mailList(data.attendanceTo);
           try {
-            await transporter.sendMail({
-              from: `"CB360 Online" <${process.env.GMAIL_EMAIL}>`,
-              to: ALWAYS_TO_ATTENDANCE,
-              subject: `Lista de Comparências - ${eventName}`,
-              html: htmlAttendanceTemplate,
-              attachments: [{filename: fileName, content: Buffer.from(finalPdf), contentType: "application/pdf"}],
-            });
-            console.log("✅ Email de comparências enviado com sucesso para:", ALWAYS_TO_ATTENDANCE);
+            if (!attTo.length) {
+              console.warn("⚠️ Lista de Comparências sem destinatários configurados (attendance_mail_to). Email não enviado.");
+            } else {
+              const attCc = mailList(data.attendanceCc);
+              const attBcc = mailList(data.attendanceBcc);
+              await transporter.sendMail({
+                from: `"CB360 Online" <${process.env.GMAIL_EMAIL}>`,
+                to: attTo,
+                ...(attCc.length ? {cc: attCc} : {}),
+                ...(attBcc.length ? {bcc: attBcc} : {}),
+                subject: `Lista de Comparências - ${eventName}`,
+                html: htmlAttendanceTemplate,
+                attachments: [{filename: fileName, content: Buffer.from(finalPdf), contentType: "application/pdf"}],
+              });
+              console.log("✅ Email de comparências enviado com sucesso para:", attTo);
+            }
           } catch (emailErr) {
             console.error("❌ Erro ao enviar email:", emailErr);
           }
@@ -541,14 +544,15 @@
             subject: subject,
             html: htmlTemplate,
           };
-          if (isBulk && Array.isArray(cc)) {
-            mailOptions.to = ALWAYS_TO;
-            mailOptions.cc = cc;
+          mailOptions.to = toList(to);
+          if (!mailOptions.to.length) return res.status(400).json({success: false, error: "Sem destinatário. Configure em Centro de Dados → Emails Config."});
+          if (isBulk) {
+            mailOptions.cc = uniq(toList(cc));
           } else {
-            mailOptions.to = toList(to);
             // Cópia sempre para o email da corporação (Centro de Dados → Corporação → E-mail)
-            mailOptions.cc = uniq([...toList(cc), corpEmail || "central0805.ahbfaro@gmail.com"]);
+            mailOptions.cc = uniq([...toList(cc), ...(corpEmail ? [corpEmail] : [])]);
           }
+          if (!mailOptions.cc.length) delete mailOptions.cc;
           const bccList = toList(bcc);
           if (bccList.length) mailOptions.bcc = bccList;
           const files = Array.isArray(attachments) && attachments.length ? attachments : (attachment ? [attachment] : []);

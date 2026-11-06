@@ -848,7 +848,7 @@
       const directSendContainer = document.getElementById('direct-send-container');
       const btnEnviar = document.getElementById('btnEnviarVoluntario');
       try {
-        const nInt = sessionStorage.getItem("currentNInt") || "205";
+        const nInt = sessionStorage.getItem("currentNInt");
         const corpNr = sessionStorage.getItem("currentCorpOperNr");
         const url = `${SUPABASE_URL}/rest/v1/reg_elems?select=patent&n_int=eq.${nInt}&corp_oper_nr=eq.${corpNr}&limit=1`;
         const response = await fetch(url, {

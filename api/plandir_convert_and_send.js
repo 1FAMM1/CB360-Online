@@ -12,9 +12,7 @@
     import path from 'path';
     import {ServicePrincipalCredentials, PDFServices, MimeType, CreatePDFResult, CreatePDFJob, ClientConfig, Region}
     from "@adobe/pdfservices-node-sdk";
-    // Região da Adobe: "EU" (por defeito) ou "US". Para voltar aos EUA sem mexer no código: variável ADOBE_REGION=US na Vercel.
     const ADOBE_CLIENT_CONFIG = new ClientConfig({region: (process.env.ADOBE_REGION || "EU").toUpperCase() === "US" ? Region.US : Region.EU});
-    // Template em cache enquanto a função estiver "acordada"
     let PLANDIR_TEMPLATE_CACHE = null;
     const CLIENT_ID = process.env.ADOBE_CLIENT_ID;
     const CLIENT_SECRET = process.env.ADOBE_CLIENT_SECRET;
@@ -23,7 +21,6 @@
     export const config = {
       api: {bodyParser: {sizeLimit: '10mb',},},
     };
-    // Template HTML partilhado
     function buildEmailTemplate({title, subtitle, logoUrl, emailBody, corpName, corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail}) {
       const addressLine = [corpAddress, [corpCp, corpLocalitie].filter(Boolean).join(" "), "Portugal"].filter(Boolean).join(" | ");
       const phoneLine = [corpPhoneMobile ? `Telem.: ${corpPhoneMobile}` : "", corpPhoneLandline ? `Telef: ${corpPhoneLandline}` : ""].filter(Boolean).join(" | ");

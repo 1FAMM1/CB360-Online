@@ -179,10 +179,18 @@
       d.setDate(d.getDate() + days);
       return d;
     }
+    /* ===== Feriado municipal da corporação (Centro de Dados → corporation_data.municipal_holiday "MM-DD") ===== */
+    function rhMunicipalHoliday() {
+      const [m, d] = (sessionStorage.getItem("municipalHoliday") || "").split("-").map(Number);
+      if (!m || !d) return null;
+      return {month: m, day: d, name: sessionStorage.getItem("municipalHolidayName") || "Feriado Municipal"};
+    }
     function getPortugalHolidays(year) {
       const fixed = [{month: 1, day: 1, name: "Ano Novo"}, {month: 4, day: 25, name: "Dia da Liberdade"}, {month: 5, day: 1, name: "Dia do Trabalhador"}, {month: 6, day: 10, name: "Dia de Portugal"},
-                     {month: 8, day: 15, name: "Assunção de Nossa Senhora"}, {month: 9, day: 7, name: "Dia da Cidade de Faro"}, {month: 10, day: 5, name: "Implantação da República"},
+                     {month: 8, day: 15, name: "Assunção de Nossa Senhora"}, {month: 10, day: 5, name: "Implantação da República"},
                      {month: 11, day: 1, name: "Todos os Santos"}, {month: 12, day: 1, name: "Restauração da Independência"}, {month: 12, day: 8, name: "Imaculada Conceição"}, {month: 12, day: 25, name: "Natal"}];
+      const mun = rhMunicipalHoliday();
+      if (mun) fixed.push(mun);
       const a = year % 19, b = Math.floor(year / 100), c = year % 100, d = Math.floor(b / 4), e = b % 4;
       const f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3);
       const h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4;
@@ -635,7 +643,7 @@
     }
     async function loadScalesShifts(year, month) {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const response = await fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`, {headers: getSupabaseHeaders()});
         if (!response.ok) { console.warn("Nenhum shift salvo ou erro ao carregar"); return {shifts: {}, employeeData: {}}; }
         const data = await response.json();
@@ -650,7 +658,7 @@
     }
     async function loadScalesEmployees(year, month) {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const monthStart = `${year}-${String(month).padStart(2, "0")}-01`;
         const lastDay = new Date(year, month, 0).getDate();
         const monthEnd = `${year}-${String(month).padStart(2, "0")}-${lastDay}`;
@@ -919,7 +927,7 @@
       removedCount > 0 ? showPopup('popup-success', `${removedCount} Elemento(s) Removido(s).`) : showPopup('popup-danger', "Nenhuma linha vazia encontrada");
     }
     async function loadWeekendAdjacentData(year, month) {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       __prevMonthShiftsCache = {}; __nextMonthShiftsCache = {}; __lastFridayPrevCache = null; __firstMondayNextCache = null;
       let prevMonth = month - 1, prevYear = year;
       if (prevMonth === 0) { prevMonth = 12; prevYear--; }
@@ -1082,7 +1090,7 @@
     }
     async function loadBXPreference(year, month) {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/reg_employees_bx?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`,
           {headers: getSupabaseHeaders()}
@@ -1097,7 +1105,7 @@
     }
     async function saveBXPreference(year, month, hidden) {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         await fetch(
           `${SUPABASE_URL}/rest/v1/reg_employees_bx?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`,
           {method: "DELETE", headers: getSupabaseHeaders()}
@@ -1336,7 +1344,7 @@
         showPopup('popup-danger', "Seleciona mês e ano primeiro.");
         return;
       }
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const mpSet = new Set();
       try {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?select=n_int&corp_oper_nr=eq.${corpOperNr}&MP=eq.true`, {headers: getSupabaseHeaders()});
@@ -1436,6 +1444,7 @@
       }
       const popup = document.getElementById('popup-analyze-inem');
       if (!popup) return;
+      rhGetDispMails(); // pré-carrega os emails para a cópia ser imediata
       const body = popup.querySelector('.popup-body');
       if (!document.getElementById('analyze-list-scroll-style')) {
         const st = document.createElement('style');
@@ -1503,7 +1512,24 @@
       activate((sections.find(s => s.issues.length) || sections[0]).key);
       popup.classList.add('show');
     }
-    function requestElements(type = "inem") {
+    /* ===== Emails das disponibilidades das escalas (Emails Config. → rh_disp_mail_*) ===== */
+    let rhDispMailsCache = null;
+    async function rhGetDispMails() {
+      if (rhDispMailsCache) return rhDispMailsCache;
+      try {
+        const corpNr = sessionStorage.getItem("currentCorpOperNr");
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/mails_config?corp_oper_nr=eq.${corpNr}&category=in.(rh_disp_mail_to,rh_disp_mail_cc)&select=category,value`, {headers: getSupabaseHeaders()});
+        if (!res.ok) throw new Error(await res.text());
+        const rows = await res.json();
+        const val = (cat) => String(rows.find(r => r.category === cat)?.value || "").split(",").map(e => e.trim()).filter(Boolean).join(", ");
+        rhDispMailsCache = {to: val("rh_disp_mail_to"), cc: val("rh_disp_mail_cc")};
+        return rhDispMailsCache;
+      } catch (err) {
+        console.warn("Não foi possível obter os emails das disponibilidades:", err);
+        return {to: "", cc: ""};
+      }
+    }
+    async function requestElements(type = "inem") {
       const nameMonth = MONTH_NAMES[__currentMonth - 1];
       let title, lines;
       if (type === "eip") {
@@ -1528,7 +1554,8 @@
       let message = `*🚨INFORMAÇÃO🚨*\n\n`;
       message += `*${title} - ${nameMonth} ${__currentYear}*\n\n`;
       message += `${lines.join('\n')}\n\n`;
-      message += `As disponibilidades devem ser remetidas para comando0805.ahbfaro@gmail.com.\n`;
+      const dispMails = await rhGetDispMails();
+      if (dispMails.to) message += `As disponibilidades devem ser remetidas para ${dispMails.to}${dispMails.cc ? ` com conhecimento de ${dispMails.cc}` : ""}.\n`;
       message += `Obrigado pela vossa colaboração!`;
       navigator.clipboard.writeText(message).then(() => {
         closePopup('popup-analyze-inem');
@@ -1572,7 +1599,7 @@
       const ym = _getActiveYearMonth();
       if (!ym) {showPopup('popup-danger', "Seleciona mês e ano primeiro."); return;}
       const {year, month, monthBtn} = ym;
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const saveBtn = document.getElementById("employees-save-btn");
       if (saveBtn) { saveBtn.disabled = true; saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i>A guardar...'; }
       try {
@@ -1649,7 +1676,7 @@
         updateLoadingPopup(`A gerar escala em ${format === "pdf" ? "PDF" : "Excel"}...`);
         const response = await fetch("https://cb360-online.vercel.app/api/employees_convert_and_send", {
           method:"POST", headers:{"Content-Type":"application/json"},
-          body:JSON.stringify({mode:"monthly_scales", year, month, employees, workingHours, format})
+          body:JSON.stringify({mode:"monthly_scales", year, month, employees, workingHours, format, municipalHoliday: sessionStorage.getItem("municipalHoliday") || "", municipalHolidayName: sessionStorage.getItem("municipalHolidayName") || ""})
         });
         if (!response.ok) throw new Error(`Erro API: ${response.status} ${await response.text().catch(() => "")}`);
         const url = URL.createObjectURL(await response.blob());
@@ -1680,7 +1707,7 @@
           updateLoadingPopup(`A processar [${i + 1}/${employees.length}]: ${emp.abv_name}`, Math.round(((i + 1) / employees.length) * 100));
           const response = await fetch("https://cb360-online.vercel.app/api/employees_convert_and_send", {
             method:"POST", headers:{"Content-Type":"application/json"},
-            body:JSON.stringify({mode:"point_sheet", year, month, employee: emp, workingHours})
+            body:JSON.stringify({mode:"point_sheet", year, month, employee: emp, workingHours, municipalHoliday: sessionStorage.getItem("municipalHoliday") || "", municipalHolidayName: sessionStorage.getItem("municipalHolidayName") || ""})
           });
           if (!response.ok) { const err = await response.json(); throw new Error(`Erro no funcionário ${emp.abv_name}: ${err.error || "Falha na API"}`); }
           const donor = await PDFDocument.load(await response.arrayBuffer());
@@ -1936,7 +1963,7 @@
         showPopup('popup-danger', "Selecione mês e ano primeiro.");
         return;
       }
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const saveExtraHoursBtn = document.getElementById("employees-extra-save-btn");
       if (saveExtraHoursBtn) {
         saveExtraHoursBtn.disabled = true;
@@ -2042,7 +2069,7 @@
     }
     async function loadExtraHours(year, month) {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const monthStart = `${year}-${String(month).padStart(2, "0")}-01`;
         const lastDay = new Date(year, month, 0).getDate();
         const monthEnd = `${year}-${String(month).padStart(2, "0")}-${lastDay}`;
@@ -2137,7 +2164,7 @@
     }
     async function loadEmployeesForGraphic() {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/reg_employees?select=n_int,abv_name&corp_oper_nr=eq.${corpOperNr}&order=n_int`, {
             headers: getSupabaseHeaders()
@@ -2167,7 +2194,7 @@
         if (!contentWrapper.dataset.loaded) {
           contentWrapper.innerHTML = "A Carregar...";
         }
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const [employeeRes, accumulatedRes, shiftsRes, extraHoursRes] = await Promise.all([
           fetch(
             `${SUPABASE_URL}/rest/v1/reg_employees?select=n_int,abv_name&corp_oper_nr=eq.${corpOperNr}&n_int=eq.${nInt}`, {
@@ -2292,7 +2319,9 @@
       goodFriday.setDate(easter.getDate() - 2);
       const corpusChristi = new Date(easter);
       corpusChristi.setDate(easter.getDate() + 60);
-      const fixedHolidays = ["01-01", "04-25", "05-01", "06-10", "08-15", "09-07", "10-05","11-01", "12-01", "12-08", "12-25"];
+      const fixedHolidays = ["01-01", "04-25", "05-01", "06-10", "08-15", "10-05","11-01", "12-01", "12-08", "12-25"];
+      const munHol = rhMunicipalHoliday();
+      if (munHol) fixedHolidays.push(`${String(munHol.month).padStart(2, "0")}-${String(munHol.day).padStart(2, "0")}`);
       function formatMD(date) {
         return String(date.getMonth() + 1).padStart(2, '0') + "-" + String(date.getDate()).padStart(2, '0');
       }
@@ -2475,7 +2504,7 @@
     let employeesForHolidays = [];
     async function loadEmployeesForHolidays() {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/reg_employees?select=n_int,abv_name,team,function&corp_oper_nr=eq.${corpOperNr}&order=n_int`, {
             headers: getSupabaseHeaders()
@@ -2518,9 +2547,11 @@
     function getPortugalHolidaysForVacations(year) {
       const holidays = [];
       const fixedHolidays = [{month: 1, day: 1, name: "Ano Novo"}, {month: 4, day: 25, name: "Dia da Liberdade"}, {month: 5, day: 1, name: "Dia do Trabalhador"},
-                             {month: 6, day: 10, name: "Dia de Portugal"}, {month: 8, day: 15, name: "Assunção de Nossa Senhora"}, {month: 9, day: 7, name: "Dia do Município (Faro)"},
+                             {month: 6, day: 10, name: "Dia de Portugal"}, {month: 8, day: 15, name: "Assunção de Nossa Senhora"},
                              {month: 10, day: 5, name: "Implantação da República"}, {month: 11, day: 1, name: "Dia de Todos os Santos"}, {month: 12, day: 1, name: "Restauração da Independência"},
                              {month: 12, day: 8, name: "Imaculada Conceição"}, {month: 12, day: 25, name: "Natal"}];
+      const munVac = rhMunicipalHoliday();
+      if (munVac) fixedHolidays.push(munVac);
       fixedHolidays.forEach(h => {
         holidays.push({ month: h.month, day: h.day, name: h.name, optional: false });
       });
@@ -2790,7 +2821,7 @@
     }
     async function loadHolidayData(nInt, year) {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const prevYear = year - 1;
         const remainingLabelEl = document.getElementById("holiday-remaining-prev-days-label");
         if (remainingLabelEl) {
@@ -3032,7 +3063,7 @@
       }
       const nInt = parseInt(select.value);
       const year = parseInt(yearSelect.value);
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const allFERecords = [];
       const totalPeriodCards = document.querySelectorAll("#holiday-cards-wrapper .holiday-period-card").length;
       for (let i = 1; i <= totalPeriodCards; i++) {
@@ -3257,7 +3288,7 @@
     async function loadGlobalHolidayData() {
       const filterElem = document.getElementById("global-year-filter");
       const year = filterElem ? parseInt(filterElem.value) : new Date().getFullYear();
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const tableBody = document.getElementById("holiday-table-body");
       const titleElem = document.getElementById("holiday-map-title");
       if (titleElem) titleElem.innerHTML = `<span class="m-badge-rh">RH</span> MAPA DE FÉRIAS ${year}`;
@@ -3333,7 +3364,7 @@
     }
     async function exportGlobalHolidayMap() {
       const year = parseInt(document.getElementById("holiday-year-select")?.value || new Date().getFullYear());
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const btn = document.querySelector(".m-btn");
       const originalText = btn.innerHTML;
       showLoadingPopup(`A gerar mapa global de férias para ${year}.`);
@@ -3401,7 +3432,7 @@
     }
     async function consultDiscrepancies() {
       const year = parseInt(document.getElementById("global-year-filter")?.value || new Date().getFullYear());
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const DAYS_RIGHT = 22;
       let modal = document.getElementById("discrepancy-modal");
       if (!modal) {
@@ -3677,7 +3708,7 @@
       const filterElem = document.getElementById("priority-year-filter");
       const selectedYear = filterElem ? parseInt(filterElem.value) : new Date().getFullYear();
       const priorityYear = selectedYear + 1;
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const tableBody = document.getElementById("priority-table-body");
       const titleElem = document.getElementById("priority-map-title");
       if (titleElem) titleElem.innerHTML = `<span class="p-badge-rh">RH</span> PRIORIDADE DE MARCAÇÃO DE FÉRIAS ${priorityYear}`;
@@ -3732,7 +3763,7 @@
     async function exportPrioritiesMap(event) {
       const selectedYear = parseInt(document.getElementById("holiday-year-select")?.value || new Date().getFullYear());
       const priorityYear = selectedYear + 1;
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const btn = event?.target;
       const originalText = btn ? btn.innerText : "";
       if (btn) {
@@ -3886,7 +3917,7 @@
     async function loadEligibilityData() {
       const filterElem = document.getElementById("eligibility-year-filter");
       const year = filterElem ? parseInt(filterElem.value) : new Date().getFullYear();
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const tableBody = document.getElementById("eligibility-table-body");
       tableBody.innerHTML = `<tr><td colspan="13" style="padding:40px; text-align:center;">⌛ A carregar dados de ${year}...</td></tr>`;
       try {
@@ -3928,7 +3959,7 @@
     async function createConsultationEligibility() {
       const filterElem = document.getElementById("eligibility-year-filter");
       const year = filterElem ? parseInt(filterElem.value) : new Date().getFullYear();
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       let modal = document.getElementById("eligibility-modal");
       if (!modal) {
         modal = document.createElement("div");
@@ -4035,7 +4066,7 @@
     async function exportShiftEligibility(event) {
       const filterElem = document.getElementById("eligibility-year-filter");
       const year = filterElem ? parseInt(filterElem.value) : new Date().getFullYear();
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const btn = event?.target;
       const originalText = btn ? btn.innerText : "";
       if (btn) {
@@ -4281,7 +4312,7 @@
     async function loadSalaryData() {
       const monthFilter = parseInt(document.getElementById("salary-month-filter").value);
       const year = parseInt(document.getElementById("salary-year-filter").value);
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const tableBody = document.getElementById("salary-table-body");
       const firstDayOfMonth = `${year}-${String(monthFilter).padStart(2, '0')}-01`;
       const lastDayMonth = new Date(year, monthFilter, 0).getDate();
@@ -4838,7 +4869,7 @@
     async function loadEIPData() {
       const filterElem = document.getElementById("annual-year-filter");
       const year = filterElem ? parseInt(filterElem.value) : new Date().getFullYear();
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const tableBody = document.getElementById("annual-table-body");
       const titleElem = document.getElementById("annual-map-title");
       if (titleElem) titleElem.innerHTML = `<span class="a-badge-rh">RH</span> ENQUADRAMENTO ANUAL (EIPs) - ${year}`;
@@ -4935,7 +4966,7 @@
         const response = await fetch("https://cb360-online.vercel.app/api/employees_convert_and_send", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({mode: "eip_annual_map", year: data.year, days: data.days, format: "pdf"})
+          body: JSON.stringify({mode: "eip_annual_map", year: data.year, days: data.days, format: "pdf", municipalHoliday: sessionStorage.getItem("municipalHoliday") || "", municipalHolidayName: sessionStorage.getItem("municipalHolidayName") || ""})
         });
         if (!response.ok) throw new Error("Erro na resposta da API");
         const blob = await response.blob();
@@ -4963,7 +4994,7 @@
       }
     }
     async function checkAndSeedEIPYear(year) {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const checkRes = await fetch(
         `${SUPABASE_URL}/rest/v1/reg_eip_anual?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&limit=1`,
         { headers: getSupabaseHeaders() }
@@ -5289,7 +5320,7 @@
       if (!tbody) return;
       tbody.innerHTML = `<tr><td colspan="6" class="reg-empty">⌛ A carregar...</td></tr>`;
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const res = await fetch(
           `${SUPABASE_URL}/rest/v1/reg_employees?corp_oper_nr=eq.${corpOperNr}&order=n_int.asc`, {
             headers: getSupabaseHeaders()
@@ -5435,7 +5466,7 @@
         showPopup('popup-danger', "A Data de Saída não pode ser anterior à Data de Entrada.");
         return;
       }
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const saveBtn = document.getElementById("reg-save-btn");
       saveBtn.disabled = true;
       saveBtn.textContent = "A guardar...";
@@ -5749,7 +5780,7 @@
     let _dashChartTeam = null;
     let _dashChartVac = null;
     async function loadDashboardData() {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const filterMonth = document.getElementById("dash-filter-month");
       const filterYear = document.getElementById("dash-filter-year");
       const selectedMonth = filterMonth ? parseInt(filterMonth.value) : new Date().getMonth() + 1;

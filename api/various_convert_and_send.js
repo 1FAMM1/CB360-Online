@@ -1,4 +1,4 @@
-    import ExcelJS from "exceljs";
+import ExcelJS from "exceljs";
     import fetch from "node-fetch";
     import fs from "fs";
     import os from "os";
@@ -444,7 +444,10 @@
         }
         // ===== EMAIL =====
         if (type === "email") {
-          const {to, subject, message, corpOperNr, corpName, logoUrl, senderName, isBulk, cc, attachment} = data;
+          const {to, subject, message, corpOperNr, corpName, logoUrl, senderName, isBulk, cc, bcc, attachment, attachments, attachmentUrls} = data;
+          const toList = (v) => (Array.isArray(v) ? v : String(v || "").split(","))
+            .map(e => String(e).trim()).filter(Boolean);
+          const uniq = (arr) => [...new Map(arr.map(e => [e.toLowerCase(), e])).values()];
           if (!to || !subject || !message) return res.status(400).json({success: false, error: "Campos obrigatórios em falta"});
           const senderDisplayName = `CB360 Online - ${corpOperNr || "Corporação"}`;
           const transporter = nodemailer.createTransport({
@@ -518,16 +521,28 @@
             mailOptions.to = ALWAYS_TO;
             mailOptions.cc = cc;
           } else {
-            mailOptions.to = to;
-            mailOptions.cc = "central0805.ahbfaro@gmail.com";
+            mailOptions.to = toList(to);
+            mailOptions.cc = uniq([...toList(cc), "central0805.ahbfaro@gmail.com"]);
           }
-          if (attachment) {
-            mailOptions.attachments = [{
-              filename: attachment.filename,
-              content: attachment.content,
-              encoding: "base64",
-            }];
+          const bccList = toList(bcc);
+          if (bccList.length) mailOptions.bcc = bccList;
+          const files = Array.isArray(attachments) && attachments.length ? attachments : (attachment ? [attachment] : []);
+          const mailAttachments = files
+            .filter(f => f && f.filename && f.content)
+            .map(f => ({filename: f.filename, content: f.content, encoding: "base64"}));
+          // Anexos grandes: o browser carrega-os para o Supabase Storage e envia só links temporários
+          if (Array.isArray(attachmentUrls)) {
+            for (const f of attachmentUrls) {
+              if (!f?.url || !f?.filename) continue;
+              if (!/^https:\/\/[a-z0-9]+\.supabase\.co\/storage\/v1\/object\/sign\//.test(f.url)) {
+                return res.status(400).json({success: false, error: "Endereço de anexo inválido."});
+              }
+              const fileRes = await fetch(f.url);
+              if (!fileRes.ok) return res.status(400).json({success: false, error: `Não foi possível obter o anexo ${f.filename}.`});
+              mailAttachments.push({filename: f.filename, content: Buffer.from(await fileRes.arrayBuffer())});
+            }
           }
+          if (mailAttachments.length) mailOptions.attachments = mailAttachments;
           await transporter.sendMail(mailOptions);
           return res.status(200).json({success: true, message: "Processado com sucesso!"});
         }

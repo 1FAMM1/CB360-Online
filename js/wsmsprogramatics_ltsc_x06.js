@@ -475,6 +475,22 @@
       return message;
     }
     /* ========== CREATION OF NEW GLOBAL EVENT MESSAGE ========== */
+    /* ===== Concelho da corporação (Centro de Dados → Corporação), usado na mensagem "Ativação para … em <concelho>" ===== */
+    let wsmsCorpCouncilCache = null;
+    async function wsmsGetCorpCouncil() {
+      if (wsmsCorpCouncilCache !== null) return wsmsCorpCouncilCache;
+      try {
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${corpOperNr}&select=corp_council,corp_localitie&limit=1`, {headers: getSupabaseHeaders()});
+        if (!res.ok) throw new Error(await res.text());
+        const d = (await res.json())[0] || {};
+        wsmsCorpCouncilCache = d.corp_council || d.corp_localitie || "";
+      } catch (err) {
+        console.warn("Não foi possível obter o concelho da corporação:", err);
+        return "";
+      }
+      return wsmsCorpCouncilCache;
+    }
     async function generateWSMSMessage() {
       if (!validateRequiredFields()) return '';
       await new Promise(resolve => {
@@ -519,7 +535,7 @@
       const vehicleText = vehicles.length ? `Saída de ${vehicles.join(', ')}` : '';
       const vehicleSufix = vehicleText ? `, ${vehicleText}` : '';
       if (alertType === 'Ocorrência') {
-        message = `*🚨🚨INFORMAÇÃO🚨🚨*\n\n*\\\\${alertSource}, HI: ${alertTime}, Ativação para ${descrOccorr} em Faro\\${localitie}\\${localOccorr}${vehicleSufix}* `;
+        message = `*🚨🚨INFORMAÇÃO🚨🚨*\n\n*\\\\${alertSource}, HI: ${alertTime}, Ativação para ${descrOccorr} em ${await wsmsGetCorpCouncil()}\\${localitie}\\${localOccorr}${vehicleSufix}* `;
       } else if (alertType === 'Plano Prévio de Intervenção') {
         if (ppiType === 'PPI Aeroporto Gago Coutinho') {
           if (alertLevel.toUpperCase() === 'AMARELO') {
@@ -1707,6 +1723,14 @@
         return [];
       }
     }
+    const WSMS_IPMA_AREA_NAMES = {AVR: "Aveiro", BJA: "Beja", BRG: "Braga", BGC: "Bragança", CBO: "Castelo Branco", CBR: "Coimbra", EVR: "Évora", FAR: "Algarve (Faro)",
+                                  GDA: "Guarda", LRA: "Leiria", LSB: "Lisboa", PTG: "Portalegre", PTO: "Porto", STM: "Santarém", STB: "Setúbal", VCT: "Viana do Castelo",
+                                  VRL: "Vila Real", VIS: "Viseu", MCN: "Madeira - Costa Norte", MCS: "Madeira - Costa Sul", MRM: "Madeira - Regiões Montanhosas",
+                                  MPS: "Madeira - Porto Santo", AOC: "Açores - Grupo Ocidental", ACE: "Açores - Grupo Central", AOR: "Açores - Grupo Oriental"};
+    function wsmsIpmaZoneName(code = wsmsIpmaArea) {
+      if (!code) return "Área IPMA não configurada";
+      return WSMS_IPMA_AREA_NAMES[code] || code;
+    }
     function createIPMAAlertCard(alert) {
       const card = document.createElement("div");    
       const levelClass = { yellow: "ipma-yellow", orange: "ipma-orange", red: "ipma-red" }[alert.awarenessLevelID];
@@ -1716,7 +1740,7 @@
       card.innerHTML = `
         <div>
           <div class="ipma-title">${alert.awarenessTypeName}</div>
-          <div>Zona: <b>Algarve (Faro)</b></div>
+          <div>Zona: <b>${wsmsIpmaZoneName(alert.idAreaAviso)}</b></div>
           <div class="ipma-time"><b>Início:</b> ${new Date(alert.startTime).toLocaleString("pt-PT")}</div>
           <div class="ipma-time"><b>Fim:</b> ${new Date(alert.endTime).toLocaleString("pt-PT")}</div>
           ${alert.text ? `<div style="margin-top:6px">${alert.text}</div>` : ""}
@@ -1739,8 +1763,8 @@
         card.innerHTML = `
           <div>
             <div class="ipma-title">Sem avisos meteorológicos</div>
-            <div>Zona: <b>Algarve (Faro)</b></div>
-            <div class="ipma-time">Não existem avisos meteorológicos para o Algarve.</div>
+            <div>Zona: <b>${wsmsIpmaZoneName()}</b></div>
+            <div class="ipma-time">Não existem avisos meteorológicos para esta zona.</div>
           </div>
         `;
         container.appendChild(card);
@@ -1762,8 +1786,8 @@
         card.innerHTML = `
           <div>
             <div class="ipma-title">Sem avisos meteorológicos</div>
-            <div>Zona: <b>Algarve (Faro)</b></div>
-            <div class="ipma-time">Não existem avisos meteorológicos para o Algarve.</div>
+            <div>Zona: <b>${wsmsIpmaZoneName()}</b></div>
+            <div class="ipma-time">Não existem avisos meteorológicos para esta zona.</div>
           </div>
         `;
         container.appendChild(card);

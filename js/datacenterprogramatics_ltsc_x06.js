@@ -327,6 +327,23 @@
         await loadCorporationData();
       }, 500);
     });
+    /* ===== Fotos dos elementos: bucket privado "elem-photos" (pasta por corporação) =====
+       photo_url pode ser o link antigo (http..., bucket público cb_logos) ou o caminho novo "0805/0805_205.jpg". */
+    const ELEM_PHOTO_BUCKET = "elem-photos";
+    async function dcLoadPhoto(imgEl, photoUrl) {
+      if (!imgEl || !photoUrl) return;
+      if (/^https?:\/\//i.test(photoUrl)) { imgEl.src = photoUrl; return; }
+      try {
+        const res = await fetch(`${SUPABASE_URL}/storage/v1/object/authenticated/${ELEM_PHOTO_BUCKET}/${photoUrl}`, {headers: storageHeaders()});
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const url = URL.createObjectURL(await res.blob());
+        imgEl.onload = () => URL.revokeObjectURL(url);
+        imgEl.src = url;
+      } catch (e) {
+        console.warn("Não foi possível carregar a foto:", e);
+        imgEl.style.visibility = "hidden";
+      }
+    }
     function storageHeaders(extra = {}) {
       const h = {...getSupabaseHeaders(), ...extra};
       if (!extra["Content-Type"]) delete h["Content-Type"];
@@ -685,7 +702,8 @@
       const photoPreview = document.getElementById("win_photo_preview");
       if (photoPreview) {
         if (row.photo_url) {
-          photoPreview.innerHTML = `<img src="${row.photo_url}" style="width: 100%; height: 100%; object-fit: cover;">`;
+          photoPreview.innerHTML = `<img style="width: 100%; height: 100%; object-fit: cover;">`;
+          dcLoadPhoto(photoPreview.querySelector("img"), row.photo_url);
           photoPreview.dataset.photoUrl = row.photo_url;
         } else {
           photoPreview.innerHTML = `
@@ -802,13 +820,13 @@
           const file = photoInput.files[0];
           const fileExt = file.name.split('.').pop();
           const filePath = `${corpOperNr}_${nInt}.${fileExt}`;
-          const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/cb_logos/${filePath}`, {
+          const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/${ELEM_PHOTO_BUCKET}/${corpOperNr}/${filePath}`, {
             method: "POST",
             headers: storageHeaders({"x-upsert": "true", "Content-Type": file.type || "application/octet-stream"}),
             body: file
           });
           if (!uploadRes.ok) throw new Error("Erro ao fazer upload da foto.");
-          photoUrl = `${SUPABASE_URL}/storage/v1/object/public/cb_logos/${filePath}`;
+          photoUrl = `${corpOperNr}/${filePath}`;
         }
         /* ---------- reg_elems ---------- */
         const payloadReg = {n_int: nInt, n_file: document.getElementById("win_n_file").value, patent: document.getElementById("win_patent").value, patent_abv: document.getElementById("win_patent_abv").value,

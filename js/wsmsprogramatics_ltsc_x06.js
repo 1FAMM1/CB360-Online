@@ -598,6 +598,11 @@
                 })
               }
             );
+            if (!updateResp.ok) {
+              console.error("Erro ao atualizar ocorrência:", updateResp.status, await updateResp.text());
+              showPopup('popup-danger', "❌ Erro ao atualizar a ocorrência no controlo de ocorrências.");
+              return null;
+            }
             return await safeJson(updateResp);
           }
         }
@@ -608,6 +613,11 @@
             body: JSON.stringify({start_date: formattedDate, occorrence: data.descrOccorr, local: data.localOccorr, localitie: data.localitie, vehicles: vehiclesCount, elements: totalElements,
                                   status: "Em Curso", corp_oper_nr: currentCorpOperNr})
           });
+        if (!insertResp.ok) {
+          console.error("Erro ao gravar ocorrência:", insertResp.status, await insertResp.text());
+          showPopup('popup-danger', "❌ Erro ao gravar a ocorrência no controlo de ocorrências.");
+          return null;
+        }
         return await safeJson(insertResp);
       } catch (e) {
         console.error("Erro ao gravar ocorrência:", e);
@@ -974,11 +984,15 @@
         }    
         const savedData = await insertResp.json();
         const activeRecord = savedData[0] || savedData;
-        await fetch(`${SUPABASE_URL}/rest/v1/vehicle_unavailability_history`, {
+        const histResp = await fetch(`${SUPABASE_URL}/rest/v1/vehicle_unavailability_history`, {
           method: 'POST',
           headers: getSupabaseHeaders({returnRepresentation: false}),
           body: JSON.stringify({id: activeRecord.id, vehicle: data.vehicle, start_date: data.startDate, end_date: null, start_hour: data.startHour, end_hour: null, total_time: null, motive: data.motive, corp_oper_nr: currentCorpOperNr})
         });
+        if (!histResp.ok) {
+          console.error("❌ Erro ao gravar histórico:", await histResp.text());
+          showPopup('popup-danger', "Indisponibilidade registada, mas falhou o registo no histórico.");
+        }
         return activeRecord;
       } catch (e) {
         console.error("❌ Erro inesperado ao gravar no Supabase:", e);
@@ -1082,15 +1096,25 @@
           await navigator.clipboard.writeText(message).catch(() => {});
         }    
         showPopup('popup-success', "Mensagem criada e copiada! Pode colar no WhatsApp.", true);
-        await fetch(`${SUPABASE_URL}/rest/v1/vehicle_unavailability_history?id=eq.${record.id}`, {
+        const histResp = await fetch(`${SUPABASE_URL}/rest/v1/vehicle_unavailability_history?id=eq.${record.id}`, {
           method: 'PATCH',
           headers: getSupabaseHeaders(),
           body: JSON.stringify({end_date: endDate, end_hour: endHour, total_time: timeUnavailable})
         });
-        await fetch(`${SUPABASE_URL}/rest/v1/vehicle_unavailability?id=eq.${record.id}`, {
+        if (!histResp.ok) {
+          console.error("Erro ao fechar histórico:", await histResp.text());
+          showPopup('popup-danger', "Mensagem criada, mas falhou o fecho no histórico. Volte a tentar.");
+          return message;
+        }
+        const delResp = await fetch(`${SUPABASE_URL}/rest/v1/vehicle_unavailability?id=eq.${record.id}`, {
           method: 'DELETE',
           headers: getSupabaseHeaders()
         });
+        if (!delResp.ok) {
+          console.error("Erro ao fechar indisponibilidade:", await delResp.text());
+          showPopup('popup-danger', "Mensagem criada, mas a indisponibilidade continua em aberto. Volte a tentar.");
+          return message;
+        }
         document.getElementById('availability-card').style.display = 'none';
         loadActiveUnavailability();
         return message;
@@ -1636,11 +1660,15 @@
         showPopup('popup-success', "Mensagem criada e copiada!");
         const record = {corp_oper_nr: corpOperNr, nr_codu: nrCODU || null, alert_date: alertDate, alert_hour: hourAlert || null, victim_type: victimType || null, victim_age_type: age || null,
                         victim_age_unit: ageType || null, victim_address: address || null, victim_location: locality || null, service_type: serviceType || null, tas: tasName || null};
-        await fetch(`${SUPABASE_URL}/rest/v1/inem_entries`, {
+        const inemResp = await fetch(`${SUPABASE_URL}/rest/v1/inem_entries`, {
           method: "POST",
           headers: {...getSupabaseHeaders(), "Prefer": "return=minimal"},
           body: JSON.stringify(record)
         });
+        if (!inemResp.ok) {
+          console.error("Erro ao gravar inem_entries:", await inemResp.text());
+          showPopup('popup-danger', "Mensagem copiada, mas o registo NÃO foi gravado nos Verbetes INEM.");
+        }
       } catch (err) {
         console.error(err);
         showPopup('popup-danger', "Erro ao copiar ou guardar registo.");

@@ -52,15 +52,12 @@
         }
       }
       /* ====================== SINCRONIZAÇÃO SIDEBAR ====================== */
-      function updateSidebarAccess(allowedModules) {
+      function updateSidebarAccess(allowedModules, userAccesses = []) {
         const sidebarButtons = document.querySelectorAll(".sidebar-menu-button, .sidebar-submenu-button, .sidebar-sub-submenu-button");
         sidebarButtons.forEach(btn => {
           const access = btn.dataset.access;
-          if (access && allowedModules.includes(access)) {
-            btn.style.display = "block";
-          } else {
-            btn.style.display = "none";
-          }
+          const visible = access && allowedModules.includes(access) && userAccesses.includes(access);
+          btn.style.display = visible ? "block" : "none";
         });
       }
       /* ===================== BLOQUEIA SIDEBAR COMPLETAMENTE ===================== */
@@ -209,7 +206,7 @@
       const accessResult = await loadUserAccessesSafe(currentFullName, currentCorpOperNr);
       const userHasAccess = isValid && applyAccessesSafe(accessResult);
       if (userHasAccess) {
-        updateSidebarAccess(allowedModules);
+        updateSidebarAccess(allowedModules, accessResult.acess);
       } else {
         blockAllSidebar();
       }

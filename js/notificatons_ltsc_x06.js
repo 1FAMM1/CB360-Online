@@ -24,7 +24,7 @@
         const data = await res.json();
         const unread = data.filter(n => {
           if (n.n_int_to) return !n.readed;
-          const readed = n.business_notifications_read?.some(r => r.n_int === nInt);
+          const readed = n.business_notifications_read?.some(r => String(r.n_int) === String(nInt));
           return !readed;
         });
         setNotifCount(unread.length);
@@ -72,10 +72,11 @@
             headers: getSupabaseHeaders()
           }
         );
+        if (!res.ok) throw new Error(await res.text());
         const data = await res.json();
         const unread = data.filter(n => {
           if (n.n_int_to) return !n.readed;
-          const jaLeu = n.business_notifications_read?.some(r => r.n_int === nInt);
+          const jaLeu = n.business_notifications_read?.some(r => String(r.n_int) === String(nInt));
           return !jaLeu;
         });
         if (!unread.length) {
@@ -109,6 +110,10 @@
         dropdown.style.opacity = "1";
       } catch(err) {
         console.error("Erro ao carregar notificações:", err);
+        const errEl = document.createElement("div");
+        Object.assign(errEl.style, {padding: "20px", textAlign: "center", color: "#c0392b", fontSize: "13px"});
+        errEl.textContent = "Erro ao carregar notificações.";
+        dropdown.appendChild(errEl);
         dropdown.style.opacity = "1";
       }
     }
@@ -174,19 +179,21 @@
       btnReply.addEventListener("click", () => {textarea.style.display = "block"; btnReply.style.display = "none"; btnOk.style.display = "none"; btnSend.style.display = ""; btnCancell.style.display = ""; textarea.focus();});
       btnCancell.addEventListener("click", () => {textarea.style.display = "none"; textarea.value = ""; btnReply.style.display = ""; btnOk.style.display = ""; btnSend.style.display = "none"; btnCancell.style.display = "none";});  
       async function markAsRead() {
+        let res;
         if (!notif.n_int_to) {
-          await fetch(`${SUPABASE_URL}/rest/v1/business_notifications_read`, {
+          res = await fetch(`${SUPABASE_URL}/rest/v1/business_notifications_read`, {
             method: "POST",
             headers: {...getSupabaseHeaders(), "Prefer": "return=minimal"},
             body: JSON.stringify({notification_id: notif.id, n_int: nInt, corp_oper_nr: corpNr})
           });
         } else {
-          await fetch(`${SUPABASE_URL}/rest/v1/business_notifications?id=eq.${notif.id}`, {
+          res = await fetch(`${SUPABASE_URL}/rest/v1/business_notifications?id=eq.${notif.id}`, {
             method: "PATCH",
             headers: {...getSupabaseHeaders(), "Prefer": "return=minimal"},
             body: JSON.stringify({readed: true})
           });
         }
+        if (!res.ok) throw new Error("Não foi possível marcar como lida: " + await res.text());
       }  
       btnOk.addEventListener("click", async () => {
         try {
@@ -195,22 +202,25 @@
           await loadNotifications();
         } catch(err) {
           console.error("Erro ao marcar como lida:", err);
+          showPopup('popup-danger', "Erro ao marcar a notificação como lida.");
         }
       });  
       btnSend.addEventListener("click", async () => {
         const resposta = textarea.value.trim();
         if (!resposta) { textarea.style.borderColor = "#e74c3c"; return; }
         try {
-          await fetch(`${SUPABASE_URL}/rest/v1/business_notifications`, {
+          const resReply = await fetch(`${SUPABASE_URL}/rest/v1/business_notifications`, {
             method: "POST",
             headers: {...getSupabaseHeaders(), "Prefer": "return=minimal"},
             body: JSON.stringify({n_int_from: nInt, n_int_to: notif.n_int_from, message: resposta, readed: false, corp_oper_nr: corpNr})
           });
+          if (!resReply.ok) throw new Error(await resReply.text());
           await markAsRead();
           overlay.remove();
           await loadNotifications();
         } catch(err) {
           console.error("Erro ao enviar resposta:", err);
+          showPopup('popup-danger', "Erro ao enviar a resposta. A notificação continua por ler.");
         }
       });
       if (notif.n_int_from) footer.append(btnReply);
@@ -384,7 +394,7 @@
       loadMailAddresses(value);
     }
     async function loadMailAddresses(type) {
-      const currentCorpNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const currentCorpNr = sessionStorage.getItem("currentCorpOperNr");
       document.getElementById("mail-to").value = "";
       document.getElementById("mail-cc").value = "";
       document.getElementById("mail-bcc").value = "";
@@ -423,7 +433,7 @@
           }
           let optelInfo = "";
           try {
-            const nInt = sessionStorage.getItem("currentNInt") || "205";
+            const nInt = sessionStorage.getItem("currentNInt");
             const optelRes = await fetch(
               `${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${nInt}&corp_oper_nr=eq.${currentCorpNr}&select=patent_abv,abv_name`, {
                 headers: getSupabaseHeaders()
@@ -487,17 +497,17 @@
     }
     async function mailUploadAttachments(files, corpOperNr) {
       const batch = `${corpOperNr}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-      const result = [];
+      const done = [];
       try {
-        for (const file of files) {
-          const path = `${batch}/${mailSafeName(file.name)}`;
+        const results = await Promise.all(files.map(async (file, idx) => {
+          const path = `${batch}/${idx}_${mailSafeName(file.name)}`;
           const up = await fetch(`${SUPABASE_URL}/storage/v1/object/${MAIL_ATTACH_BUCKET}/${path}`, {
             method: "POST",
             headers: mailStorageHeaders({"Content-Type": file.type || "application/octet-stream"}),
             body: file
           });
           if (!up.ok) throw new Error(`Falha ao carregar o anexo ${file.name}: ${await up.text()}`);
-          result.push({path, filename: file.name});
+          done.push(path);
           const sign = await fetch(`${SUPABASE_URL}/storage/v1/object/sign/${MAIL_ATTACH_BUCKET}/${path}`, {
             method: "POST",
             headers: mailStorageHeaders({"Content-Type": "application/json"}),
@@ -505,11 +515,11 @@
           });
           if (!sign.ok) throw new Error(`Falha ao preparar o anexo ${file.name}: ${await sign.text()}`);
           const {signedURL} = await sign.json();
-          result[result.length - 1].url = `${SUPABASE_URL}/storage/v1${signedURL}`;
-        }
-        return result;
+          return {path, filename: file.name, url: `${SUPABASE_URL}/storage/v1${signedURL}`};
+        }));
+        return results;
       } catch (err) {
-        mailDeleteAttachments(result.map(r => r.path));
+        mailDeleteAttachments(done);
         throw err;
       }
     }
@@ -520,6 +530,21 @@
         headers: mailStorageHeaders({"Content-Type": "application/json"}),
         body: JSON.stringify({prefixes: paths})
       }).catch(e => console.warn("Não foi possível apagar os anexos temporários:", e));
+    }
+    async function mailGetCorpContacts() {
+      const corp = sessionStorage.getItem("currentCorpOperNr");
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${corp}&select=corp_address,corp_cp,corp_localitie,corp_phone_mobile,corp_phone_landline,corp_email`, {
+          headers: getSupabaseHeaders()
+        });
+        if (!res.ok) return {};
+        const d = (await res.json())[0] || {};
+        return {corpAddress: d.corp_address || "", corpCp: d.corp_cp || "", corpLocalitie: d.corp_localitie || "",
+                corpPhoneMobile: d.corp_phone_mobile || "", corpPhoneLandline: d.corp_phone_landline || "", corpEmail: d.corp_email || ""};
+      } catch (e) {
+        console.warn("Erro ao carregar contactos da corporação:", e);
+        return {};
+      }
     }
     async function sendMail(btn) {
       const to = document.getElementById("mail-to").value.trim();
@@ -538,7 +563,7 @@
       if (typeof showLoadingPopup === "function") showLoadingPopup("A preparar o email...");
       let uploadedPaths = [];
       try {
-        const {corpOperNr, corpName, logoUrl, senderName} = await _getEmailCommonData();
+        const [{corpOperNr, corpName, logoUrl, senderName}, corpContacts] = await Promise.all([_getEmailCommonData(), mailGetCorpContacts()]);
         const files = Array.from(document.getElementById("mail-attachments")?.files || []);
         const totalMb = files.reduce((t, f) => t + f.size, 0) / 1048576;
         if (totalMb > 20) throw new Error(`Os anexos somam ${totalMb.toFixed(1)} MB. O limite é 20 MB.`);
@@ -550,7 +575,7 @@
         const response = await fetch("https://cb360-online.vercel.app/api/various_convert_and_send", {
           method: "POST",
           headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({type: "email", data: {to, cc, bcc, subject, message, corpOperNr, corpName, logoUrl, senderName, attachmentUrls,
+          body: JSON.stringify({type: "email", data: {to, cc, bcc, subject, message, corpOperNr, corpName, logoUrl, senderName, attachmentUrls, ...corpContacts,
                                                       mailType: document.getElementById("mail-type")?.value || ""}})
         });
         if (!response.ok) {

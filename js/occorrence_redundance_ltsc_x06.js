@@ -3080,7 +3080,7 @@
         }
       }
       const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
-      const currentUser = sessionStorage.getItem("currentUserDisplay") || sessionStorage.getItem("currentUserName") || "";
+      const currentUser = sessionStorage.getItem("currentUserDisplay") || sessionStorage.getItem("currentUserName") || "FMartins";
       const getVal = (id) => document.getElementById(id)?.value || null;
       const pos = cb360LeafletMarker.getLatLng();
       const newStatus = cb360PendingClosed ? 'Encerrada' : getVal('goc-state');
@@ -5031,6 +5031,24 @@
       const m = mins % 60;
       return m === 0 ? `${h}h` : `${h}h ${m}min`;
     }
+    /* ===== Coordenadas do quartel da corporação (corporation_data.default_lat/default_lng) ===== */
+    let cb360CorpBaseCoordsCache = null;
+    async function cb360GetCorpBaseCoords() {
+      if (cb360CorpBaseCoordsCache) return cb360CorpBaseCoordsCache;
+      try {
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${corpOperNr}&select=default_lat,default_lng&limit=1`, {headers: getSupabaseHeaders()});
+        if (!res.ok) throw new Error(await res.text());
+        const d = (await res.json())[0] || {};
+        const lat = parseFloat(d.default_lat), lng = parseFloat(d.default_lng);
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+        cb360CorpBaseCoordsCache = {lat, lng};
+        return cb360CorpBaseCoordsCache;
+      } catch (err) {
+        console.warn("Não foi possível obter as coordenadas da corporação:", err);
+        return null;
+      }
+    }
     async function openCb360LocateIncidentModal(internalNumber) {
       document.querySelectorAll('#goc-locate-modal').forEach(el => el.remove());
       const modal = document.createElement('div');
@@ -5104,9 +5122,10 @@
         let calculatedDistanceText = '--';
         let calculatedTimeText = '--';
         let routeCoordinates = null;
-        if (inc.coord_x && inc.coord_y) {
-          const baseLat = 37.014151;
-          const baseLon = -7.935543;
+        const corpBase = await cb360GetCorpBaseCoords();
+        if (inc.coord_x && inc.coord_y && corpBase) {
+          const baseLat = corpBase.lat;
+          const baseLon = corpBase.lng;
           const occLat = parseFloat(inc.coord_x);
           const occLon = parseFloat(inc.coord_y);
           const routeInfo = await getRoadRouteWithGeometry(baseLat, baseLon, occLat, occLon);

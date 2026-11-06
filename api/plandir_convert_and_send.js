@@ -10,8 +10,12 @@
     import fs from 'fs';
     import os from 'os';
     import path from 'path';
-    import {ServicePrincipalCredentials, PDFServices, MimeType, CreatePDFResult, CreatePDFJob,}
+    import {ServicePrincipalCredentials, PDFServices, MimeType, CreatePDFResult, CreatePDFJob, ClientConfig, Region}
     from "@adobe/pdfservices-node-sdk";
+    // Região da Adobe: "EU" (por defeito) ou "US". Para voltar aos EUA sem mexer no código: variável ADOBE_REGION=US na Vercel.
+    const ADOBE_CLIENT_CONFIG = new ClientConfig({region: (process.env.ADOBE_REGION || "EU").toUpperCase() === "US" ? Region.US : Region.EU});
+    // Template em cache enquanto a função estiver "acordada"
+    let PLANDIR_TEMPLATE_CACHE = null;
     const CLIENT_ID = process.env.ADOBE_CLIENT_ID;
     const CLIENT_SECRET = process.env.ADOBE_CLIENT_SECRET;
     const GMAIL_EMAIL = process.env.GMAIL_EMAIL;
@@ -88,7 +92,7 @@
       let pdfBuffer = null;
       try {
         const credentials = new ServicePrincipalCredentials({clientId: CLIENT_ID, clientSecret: CLIENT_SECRET});
-        const pdfServices = new PDFServices({credentials});
+        const pdfServices = new PDFServices({credentials, clientConfig: ADOBE_CLIENT_CONFIG});
         const inputAsset = await pdfServices.upload({
           readStream: fs.createReadStream(inputFilePath),
           mimeType: MimeType.XLSX
@@ -131,8 +135,12 @@
             details: "Certifique-se que todos os dados do planeamento e destinatários 'TO' foram enviados."
           });
         }
-        const response = await fetch("https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/planeamento_template.xlsx");
-        const baseBuffer = Buffer.from(await response.arrayBuffer());
+        if (!PLANDIR_TEMPLATE_CACHE) {
+          const response = await fetch("https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/planeamento_template.xlsx");
+          if (!response.ok) throw new Error(`Não foi possível obter o template (${response.status}).`);
+          PLANDIR_TEMPLATE_CACHE = Buffer.from(await response.arrayBuffer());
+        }
+        const baseBuffer = PLANDIR_TEMPLATE_CACHE;
         const workbook = new ExcelJS.Workbook();
         await workbook.xlsx.load(baseBuffer);
         const sheet = workbook.getWorksheet(1);

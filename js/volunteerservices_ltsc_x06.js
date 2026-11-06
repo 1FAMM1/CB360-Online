@@ -454,7 +454,7 @@
       const selectedMonth = monthEl.value;
       const selectedElement = elementEl ? elementEl.value : 'todos';
       const selectedLocal = localEl ? localEl.value : 'todos';
-      const corpOperNr = sessionStorage.getItem('currentCorpOperNr') || "0805";
+      const corpOperNr = sessionStorage.getItem('currentCorpOperNr');
       document.getElementById('vsReportSelect').value = '';
       const pdfBtn = document.getElementById('vsPDFReport');
       const excelBtn = document.getElementById('vsEXCELReport');
@@ -849,7 +849,7 @@
       const btnEnviar = document.getElementById('btnEnviarVoluntario');
       try {
         const nInt = sessionStorage.getItem("currentNInt") || "205";
-        const corpNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpNr = sessionStorage.getItem("currentCorpOperNr");
         const url = `${SUPABASE_URL}/rest/v1/reg_elems?select=patent&n_int=eq.${nInt}&corp_oper_nr=eq.${corpNr}&limit=1`;
         const response = await fetch(url, {
           method: 'GET',
@@ -915,7 +915,7 @@
       btn.disabled = true;
       btn.style.opacity = '0.5';
       btn.style.cursor = 'not-allowed';
-      const corpNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpNr = sessionStorage.getItem("currentCorpOperNr");
       const greeting = getGreeting();
       const commanderName = await getCommanderName(corpNr);
       const MONTHS_PT = ['', 'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
@@ -1017,7 +1017,7 @@
       async function refreshDynamicFilters() {
         const year = yearSelect.value;
         const month = monthSelect.value;
-        const corpNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpNr = sessionStorage.getItem("currentCorpOperNr");
         if (typeSelect) typeSelect.innerHTML = '<option value="todos">A carregar...</option>';
         if (elementSelect) elementSelect.innerHTML = '<option value="todos">A carregar...</option>';
         if (localSelect) localSelect.innerHTML = '<option value="todos">A carregar...</option>';

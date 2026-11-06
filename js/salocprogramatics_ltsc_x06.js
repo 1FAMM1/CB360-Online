@@ -3618,26 +3618,21 @@
       container.appendChild(btnWrapper);
     }
     async function fetchRecipientsFromSupabase() {
-      const categories = ['plandir_mail_to', 'plandir_mail_cc', 'plandir_mail_bcc'];
-      const filterQuery = `category=in.(${categories.join(',')})&select=category,value`;
-      const url = `${SUPABASE_URL}/rest/v1/static_options?${filterQuery}`;
-      try {
-        const response = await fetch(url, {method: 'GET', headers: getSupabaseHeaders()});
-        if (!response.ok) throw new Error('Falha ao conectar ou autenticar com o Supabase.');
-        const data = await response.json();
-        let recipients = {to: [], cc: [], bcc: []};
-        for (const row of data) {
-          const emails = row.value ? String(row.value).split(',').map(e => e.trim()).filter(e => e) : [];
-          if (row.category === 'plandir_mail_to') recipients.to = emails;
-          else if (row.category === 'plandir_mail_cc') recipients.cc = emails;
-          else if (row.category === 'plandir_mail_bcc') recipients.bcc = emails;
-        }
-        if (recipients.to.length === 0) recipients.to = ["fmartins.ahbfaro@gmail.com"];
-        return recipients;
-      } catch (err) {
-        console.error('Erro de rede ou Supabase desconhecido:', err);
-        return {to: ["fmartins.ahbfaro@gmail.com"], cc: [], bcc: []};
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const categories = ['plandir_emit_mail_to', 'plandir_emit_mail_cc', 'plandir_emit_mail_bcc'];
+      const url = `${SUPABASE_URL}/rest/v1/mails_config?corp_oper_nr=eq.${corpOperNr}&category=in.(${categories.join(',')})&select=category,value`;
+      const response = await fetch(url, {method: 'GET', headers: getSupabaseHeaders()});
+      if (!response.ok) throw new Error('Não foi possível obter os destinatários do Planeamento (Emails Config.).');
+      const data = await response.json();
+      const recipients = {to: [], cc: [], bcc: []};
+      for (const row of data) {
+        const emails = row.value ? String(row.value).split(',').map(e => e.trim()).filter(e => e) : [];
+        if (row.category === 'plandir_emit_mail_to') recipients.to = emails;
+        else if (row.category === 'plandir_emit_mail_cc') recipients.cc = emails;
+        else if (row.category === 'plandir_emit_mail_bcc') recipients.bcc = emails;
       }
+      if (recipients.to.length === 0) throw new Error('Configure os destinatários do Planeamento em Centro de Dados → Emails Config.');
+      return recipients;
     }
     function getOptelName() {
       const tables = collectTableData();

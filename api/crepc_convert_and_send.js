@@ -9,10 +9,12 @@
     import nodemailer from "nodemailer";
     import fs from "fs";
     import https from "https";
-    import {ServicePrincipalCredentials, PDFServices, MimeType, CreatePDFResult, CreatePDFJob,}
+    import {ServicePrincipalCredentials, PDFServices, MimeType, CreatePDFResult, CreatePDFJob, ClientConfig, Region}
     from "@adobe/pdfservices-node-sdk";
     const CLIENT_ID = process.env.ADOBE_CLIENT_ID;
     const CLIENT_SECRET = process.env.ADOBE_CLIENT_SECRET;
+    // Adobe na região EU (proteção de dados). Para voltar aos EUA: variável ADOBE_REGION=US na Vercel.
+    const ADOBE_CLIENT_CONFIG = new ClientConfig({region: (process.env.ADOBE_REGION || "EU").toUpperCase() === "US" ? Region.US : Region.EU});
     const GMAIL_EMAIL = process.env.GMAIL_EMAIL;
     const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
     const TEMPLATES = {moa: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/moa_template.xlsx",
@@ -99,7 +101,7 @@
       fs.writeFileSync(inputFilePath, xlsxBuffer);
       try {
         const credentials = new ServicePrincipalCredentials({clientId: CLIENT_ID, clientSecret: CLIENT_SECRET});
-        const pdfServices = new PDFServices({credentials});
+        const pdfServices = new PDFServices({credentials, clientConfig: ADOBE_CLIENT_CONFIG});
         const inputAsset = await pdfServices.upload({readStream: fs.createReadStream(inputFilePath), mimeType: MimeType.XLSX});
         const job = new CreatePDFJob({inputAsset});
         const pollingURL = await pdfServices.submit({job});

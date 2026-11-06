@@ -931,7 +931,7 @@
         return [];
       }
     }
-    async function populateGlobalSelects() {
+        async function populateGlobalSelects() {
       const globalFields = [{id: 'alert_type', category: 'alert_type'}, {id: 'alert_source', category: 'alert_source'}, {id: 'channel_maneuver', category: 'channel_maneuver'},
                             {id: 'ppi_type', category: 'ppi_type'}, {id: 'solicitation_type', category: 'solicitation_type'}, {id: 'solicitation_motive', category: 'solicitation_motive'},
                             {id: 'solicitation_shift', category: 'solicitation_shift'}, {id: 'new_reason_unavailability', category: 'reason_unavailability'}, {id: 'new_unavailability_local', category: 'local_unavailability'},
@@ -939,22 +939,31 @@
                             {id: 'cma_type_04', category: 'cma_type'}, {id: 'cma_type_05', category: 'cma_type'}, {id: 'cma_type_06', category: 'cma_type'}, {id: 'win_patent', category: 'patent_choice'},
                             {id: 'service_refusal_type', category: 'refusal_type'}, {id: 'service_refusal_motive', category: 'refusal_motive'}, {id: 'reason_for_ineinop', category: 'refusal_motive'},
                             {id: 'refusals_year_filter', category: 'refusal_year_filter'}, {id: 'ineinop_year_filter', category: 'refusal_year_filter'}, {id: 'refusal_month_filter', category: 'refusal_month_filter'},
-                            {id: 'refusal_year_filter', category: 'refusal_year_filter'},{id: 'sitop_type_failure', category: 'sitop_failure_type'},
-                            <!---- MOA FIELDS ---->
+                            {id: 'refusal_year_filter', category: 'refusal_year_filter'}, {id: 'sitop_type_failure', category: 'sitop_failure_type'},
                             {id: 'moa_cb', category: 'moa_cb_choose'}, {id: 'moa_device_type', category: 'moa_device'}, {id: 'moa_epe_type', category: 'moa_epe_state'},
                             {id: 'moa_eco_sit', category: 'moa_situation'}, {id: 'moa_oco_sit', category: 'moa_situation'}, {id: 'moa_era_sit', category: 'moa_situation'},
                             {id: 'moa_eob_sit', category: 'moa_situation'}, {id: 'moa_mef_sit', category: 'moa_mef_val'},
-                            {id: 'moa_eco_pront', category: 'moa_pertime'}, {id: 'moa_ned_pront', category: 'moa_formnot'}, {id: 'moa_oco_pront', category: 'moa_pertime'}, 
+                            {id: 'moa_eco_pront', category: 'moa_pertime'}, {id: 'moa_ned_pront', category: 'moa_formnot'}, {id: 'moa_oco_pront', category: 'moa_pertime'},
                             {id: 'moa_era_pront', category: 'moa_pertime'}, {id: 'moa_eob_pront', category: 'moa_pertime'}, {id: 'moa_rsc_pront', category: 'moa_optref'}];
-      for (let field of globalFields) {
+      const categories = [...new Set(globalFields.map(f => f.category))];
+      let byCategory = {};
+      try {
+        const resp = await fetch(`${SUPABASE_URL}/rest/v1/static_options?select=category,value&category=in.(${categories.join(',')})&order=id`, {
+          headers: getSupabaseHeaders()
+        });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        (await resp.json()).forEach(r => {
+          if (!r.value) return;
+          (byCategory[r.category] ||= []).push(r.value);
+        });
+      } catch (e) {
+        console.error("Erro ao buscar opções globais:", e);
+      }
+      for (const field of globalFields) {
         const select = document.getElementById(field.id);
-        if (!select) {
-          console.warn(`Select com id "${field.id}" não encontrado.`);
-          continue;
-        }
+        if (!select) continue;
         select.innerHTML = '<option value=""></option>';
-        const options = await fetchGlobalOptions(field.category);
-        options.forEach(opt => {
+        (byCategory[field.category] || []).forEach(opt => {
           const optionEl = document.createElement('option');
           optionEl.value = opt;
           optionEl.textContent = opt;

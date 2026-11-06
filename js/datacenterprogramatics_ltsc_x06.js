@@ -1432,7 +1432,8 @@
       {prefix: "volunt_verify",  fields: ["to", "cc", "bcc"], msg: "Emails de envio para validação (Voluntariado) atualizados com sucesso."},
       {prefix: "volunt_valid",   fields: ["to", "cc", "bcc"], msg: "Emails de serviços validados (Voluntariado) atualizados com sucesso."},
       {prefix: "volunt_invalid", fields: ["to", "cc", "bcc"], msg: "Emails de serviços com inconsistências (Voluntariado) atualizados com sucesso."},
-      {prefix: "decir_disp",     fields: ["to", "cc"],        msg: "Emails das disponibilidades DECIR atualizados com sucesso."}
+      {prefix: "decir_disp",     fields: ["to", "cc"],        msg: "Emails das disponibilidades DECIR atualizados com sucesso."},
+      {prefix: "rh_disp",        fields: ["to", "cc"],        msg: "Emails das disponibilidades das escalas (INEM/EIP/OPTEL) atualizados com sucesso."}
     ];
     MAIL_EXTRA_GROUPS.forEach(g => {
       document.getElementById(`config_${g.prefix}_mail_save`)?.addEventListener("click", async () => {

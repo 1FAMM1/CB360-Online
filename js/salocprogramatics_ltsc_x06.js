@@ -756,6 +756,7 @@
       td.innerHTML = `${main||""}<span style="${A22_NODE_KM_STYLE}">(${km||""}</span>`; return td;
     }
     /* ─── A22 LOAD DATA ──────────────────────────────────────── */
+    // Carrega tudo em paralelo e mostra os blocos TODOS DE UMA VEZ no fim
     async function loadPPIA22All(gridId) {
       const ids = ["ppia22-grid-references", "ppia22-grid-container", "ppia22-specials-container", "ppia22-abs-note"];
       const els = ids.map(id => document.getElementById(id)).filter(Boolean);
@@ -826,9 +827,7 @@
           return;
         }
         for (const ppi of filtered) {
-          await loadPPIA22DataInfoGrid(ppi.ppi_grid);
-          await loadPPIA22DataSpecials(ppi.ppi_grid);
-          await loadPPIA22GridSeparated(ppi.ppi_grid);
+          await loadPPIA22All(ppi.ppi_grid);
           const tempContainer = gridContainer.firstChild;
           if (tempContainer) createFinalHTable(tempContainer);
           ppia22ABSNoteTable(absContainer, ppi.ppi_grid);
@@ -854,9 +853,7 @@
           return;
         }
         for (const ppi of filtered) {
-          await loadPPIA22DataInfoGrid(ppi.ppi_grid);
-          await loadPPIA22DataSpecials(ppi.ppi_grid);
-          await loadPPIA22GridSeparated(ppi.ppi_grid);
+          await loadPPIA22All(ppi.ppi_grid);
           const tempContainer = gridContainer.firstChild;
           if (tempContainer) {
             createFinalHTable(tempContainer);
@@ -1220,6 +1217,7 @@
       "ABCDEFGHIJKLMNOP".split("").forEach(letter=>rowButtons.appendChild(createLinFerGridButtons(letter,specialButtons)));
       container.appendChild(rowButtons);
     }
+    // Carrega tudo em paralelo e mostra os blocos TODOS DE UMA VEZ no fim
     async function loadPPILinFerAll(gridId) {
       const ids = ["ppilinfer-grid-references", "ppilinfer-specials-container", "ppilinfer-grid-container", "ppilinfer-abs-note"];
       const els = ids.map(id => document.getElementById(id)).filter(Boolean);
@@ -6142,12 +6140,13 @@
         }
         btn.disabled = true; btn.style.background = "#64748b"; btn.style.cursor = "not-allowed"; btn.innerHTML = `<span>⏳ A enviar...</span>`;
         try {
-          const [{corpOperNr, corpName, logoUrl, senderName}, bulk] = await Promise.all([_getEmailCommonData(), salocGetBulkRecipients()]);
+          const [{corpOperNr, corpName, logoUrl, senderName}, bulk, corpContacts] = await Promise.all([_getEmailCommonData(), salocGetBulkRecipients(), _getPLANDIREmailCommonData(sessionStorage.getItem("currentCorpOperNr"))]);
           const attachment = await _readAttachment();
           const response = await fetch("https://cb360-online.vercel.app/api/various_convert_and_send", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({type: "email", data: {to: bulk.to, subject, message, corpOperNr, corpName, logoUrl, senderName, isBulk: true, cc: bulk.cc, bcc: [...bulk.bcc, ...emails], attachment}})
+            body: JSON.stringify({type: "email", data: {to: bulk.to, subject, message, corpOperNr, corpName, logoUrl, senderName, isBulk: true, cc: bulk.cc, bcc: [...bulk.bcc, ...emails], attachment,
+                                                        corpAddress: corpContacts.corpAddress, corpCp: corpContacts.corpCp, corpLocalitie: corpContacts.corpLocalitie, corpPhoneMobile: corpContacts.corpPhoneMobile, corpPhoneLandline: corpContacts.corpPhoneLandline, corpEmail: corpContacts.corpEmail}})
           });
           if (!response.ok) throw new Error(await response.text());
           const result = await response.json();
@@ -6221,12 +6220,13 @@
         }
         btn.disabled = true; btn.style.background = "#64748b"; btn.style.cursor = "not-allowed"; btn.innerHTML = `<span>⏳ A enviar...</span>`;
         try {
-          const [{corpOperNr, corpName, logoUrl, senderName}, bulk] = await Promise.all([_getEmailCommonData(), salocGetBulkRecipients()]);
+          const [{corpOperNr, corpName, logoUrl, senderName}, bulk, corpContacts] = await Promise.all([_getEmailCommonData(), salocGetBulkRecipients(), _getPLANDIREmailCommonData(sessionStorage.getItem("currentCorpOperNr"))]);
           const attachment = await _readAttachment();
           const response = await fetch("https://cb360-online.vercel.app/api/various_convert_and_send", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({type: "email", data: {to: bulk.to, subject, message, corpOperNr, corpName, logoUrl, senderName, isBulk: true, cc: bulk.cc, bcc: [...bulk.bcc, ...emails], attachment}})
+            body: JSON.stringify({type: "email", data: {to: bulk.to, subject, message, corpOperNr, corpName, logoUrl, senderName, isBulk: true, cc: bulk.cc, bcc: [...bulk.bcc, ...emails], attachment,
+                                                        corpAddress: corpContacts.corpAddress, corpCp: corpContacts.corpCp, corpLocalitie: corpContacts.corpLocalitie, corpPhoneMobile: corpContacts.corpPhoneMobile, corpPhoneLandline: corpContacts.corpPhoneLandline, corpEmail: corpContacts.corpEmail}})
           });
           if (!response.ok) throw new Error(await response.text());
           const result = await response.json();

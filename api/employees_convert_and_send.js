@@ -1,16 +1,25 @@
+    /*************************************************************************
+    * * 🟦 CB360 ONLINE - API ENGINE
+    * 🚀 Desenvolvido por: [Fábio Martins / Sistemas de Informação]
+    * 📅 Ano: 2023 - 2026
+    * * Descrição: Handler principal para geração de escalas de funcionários
+    * com integração ExcelJS, Adobe PDF Services e Mailer.
+    * *************************************************************************/
     import ExcelJS from "exceljs";
     import fetch from "node-fetch";
     import fs from "fs";
     import os from "os";
     import path from "path";
     import AdmZip from "adm-zip";
-    import {ServicePrincipalCredentials, PDFServices, MimeType, CreatePDFJob, CreatePDFResult, SDKError, ServiceUsageError, ServiceApiError,}
+    import {ServicePrincipalCredentials, PDFServices, MimeType, CreatePDFJob, CreatePDFResult, SDKError, ServiceUsageError, ServiceApiError, ClientConfig, Region}
     from "@adobe/pdfservices-node-sdk";
     export const config = {
       api: {bodyParser: {sizeLimit: "10mb"}},
     };
     const CLIENT_ID = process.env.ADOBE_CLIENT_ID;
     const CLIENT_SECRET = process.env.ADOBE_CLIENT_SECRET;
+    // Adobe na região EU (proteção de dados). Para voltar aos EUA: variável ADOBE_REGION=US na Vercel.
+    const ADOBE_CLIENT_CONFIG = new ClientConfig({region: (process.env.ADOBE_REGION || "EU").toUpperCase() === "US" ? Region.US : Region.EU});
     const TEMPLATES = {
       monthly_scales: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/employees_template.xlsx",
       point_sheet: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/stitch_marker_template.xlsx",
@@ -80,11 +89,18 @@
       d.setDate(d.getDate() + days);
       return d;
     }
-    function getPortugalHolidays(y) {
+    // Feriado municipal da corporação: vem do frontend ("MM-DD" + nome). Sem ele, não há feriado municipal.
+    function parseMunicipalHoliday(body = {}) {
+      const [m, d] = String(body.municipalHoliday || "").split("-").map(Number);
+      if (!m || !d) return null;
+      return {month: m, day: d, name: body.municipalHolidayName || "Feriado Municipal"};
+    }
+    function getPortugalHolidays(y, municipal = null) {
       const fixed = [{month: 1, day: 1, name: "Ano Novo"}, {month: 4, day: 25, name: "Dia da Liberdade"}, {month: 5,  day: 1, name: "Dia do Trabalhador"},
-                     {month: 6, day: 10, name: "Dia de Portugal"}, {month: 8, day: 15, name: "Assunção de Nossa Senhora"}, {month: 9, day: 7, name: "Dia da Cidade de Faro"},
+                     {month: 6, day: 10, name: "Dia de Portugal"}, {month: 8, day: 15, name: "Assunção de Nossa Senhora"},
                      {month: 10, day: 5, name: "Implantação da República"}, {month: 11, day: 1, name: "Todos os Santos"}, {month: 12, day: 1, name: "Restauração da Independência"},
                      {month: 12, day: 8, name: "Imaculada Conceição"}, {month: 12, day: 25, name: "Natal"},];
+      if (municipal) fixed.push(municipal);
       const a = y % 19;
       const b = Math.floor(y / 100);
       const c = y % 100;
@@ -105,9 +121,9 @@
       const fixedDates = fixed.map((x) => ({date: atNoonLocal(y, x.month - 1, x.day), name: x.name, optional: false,}));
       return [...fixedDates, ...mobile];
     }
-    function getHolidayMapForMonth(y, mo) {
+    function getHolidayMapForMonth(y, mo, municipal = null) {
       const map = new Map();
-      getPortugalHolidays(y).forEach((h) => {
+      getPortugalHolidays(y, municipal).forEach((h) => {
         const dt = h.date;
         if (dt.getFullYear() === y && dt.getMonth() === mo - 1) {
           map.set(dt.getDate(), {name: h.name, optional: !!h.optional});
@@ -157,7 +173,7 @@ function makeRowXml(rowNum, emp) {
       try {
         await workbook.xlsx.writeFile(inputFilePath);
         const credentials = new ServicePrincipalCredentials({clientId: CLIENT_ID, clientSecret: CLIENT_SECRET});
-        const pdfServices = new PDFServices({credentials});
+        const pdfServices = new PDFServices({credentials, clientConfig: ADOBE_CLIENT_CONFIG});
         const inputAsset = await pdfServices.upload({readStream: fs.createReadStream(inputFilePath), mimeType: MimeType.XLSX});
         const job = new CreatePDFJob({inputAsset});
         const pollingURL = await pdfServices.submit({job});
@@ -188,7 +204,7 @@ function makeRowXml(rowNum, emp) {
       try {
         fs.writeFileSync(inputFilePath, xlsxBuffer);
         const credentials = new ServicePrincipalCredentials({clientId: CLIENT_ID, clientSecret: CLIENT_SECRET});
-        const pdfServices = new PDFServices({credentials});
+        const pdfServices = new PDFServices({credentials, clientConfig: ADOBE_CLIENT_CONFIG});
         const inputAsset = await pdfServices.upload({readStream: fs.createReadStream(inputFilePath), mimeType: MimeType.XLSX});
         const job = new CreatePDFJob({inputAsset});
         const pollingURL = await pdfServices.submit({job});
@@ -270,7 +286,7 @@ function makeRowXml(rowNum, emp) {
       worksheet.getCell("B7").value = `${MONTH_NAMES[month - 1]} ${year}`;
       worksheet.getCell("B65").value = `${workingHours} Horas`;
       const daysInMonth = new Date(year, month, 0).getDate();
-      const holidayMap  = getHolidayMapForMonth(year, month);
+      const holidayMap  = getHolidayMapForMonth(year, month, parseMunicipalHoliday(req.body));
       for (let d = 1; d <= 31; d++) {
         const colIndex = DAY_START_COL + (d - 1);
         const cellWeek = worksheet.getCell(10, colIndex);
@@ -400,7 +416,7 @@ function makeRowXml(rowNum, emp) {
       await workbook.xlsx.load(await templateResponse.arrayBuffer());
       const worksheet = workbook.worksheets[0];
       const daysInMonth = new Date(year, month, 0).getDate();
-      const holidays = getHolidayMapForMonth(year, month);
+      const holidays = getHolidayMapForMonth(year, month, parseMunicipalHoliday(req.body));
       worksheet.getCell("D8").value  = employee.abv_name || "";
       worksheet.getCell("J8").value  = employee.function  || "";
       worksheet.getCell("L46").value = workingHours;
@@ -759,7 +775,7 @@ function makeRowXml(rowNum, emp) {
       }
       const eipMap = {};
       days.forEach((r) => {eipMap[`${r.month}-${r.day}`] = r.team;});
-      const allHolidays = getPortugalHolidays(year);
+      const allHolidays = getPortugalHolidays(year, parseMunicipalHoliday(req.body));
       const holidaySet = new Set(allHolidays.filter((h) => !h.optional).map((h) => `${h.date.getMonth() + 1}-${h.date.getDate()}`));
       const holidayOptSet = new Set(allHolidays.filter((h) =>  h.optional).map((h) => `${h.date.getMonth() + 1}-${h.date.getDate()}`));
       const templateResponse = await fetch(TEMPLATES.eip_annual_map);

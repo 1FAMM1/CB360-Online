@@ -1899,11 +1899,12 @@
               const userData = await userResponse.json();
               if (userData && userData.length > 0) userAbvName = userData[0].abv_name;
             }
-            await fetch(`${supabaseUrl}/rest/v1/reg_logs`, {
+            const logRes = await fetch(`${supabaseUrl}/rest/v1/reg_logs`, {
               method: "POST",
               headers: { ...headers, "Content-Type": "application/json", "Prefer": "return=representation" },
               body: JSON.stringify({n_int: loggedNIntNumeric, abv_name: userAbvName || null, efect: `${logDescription} do Mês ${month}/${year}`, corp_oper_nr: corpOperNr})
             });
+            if (!logRes.ok) console.error("Falha ao gravar log:", logRes.status, await logRes.text());
           }
         } catch (logErr) {
           console.error("Falha ao processar bloco de log:", logErr);
@@ -6703,11 +6704,19 @@
         alert("Nenhum planeamento ativo para gravar.");
         return;
       }
+      const levelIvFilter = `corp_oper_nr=eq.${corp_oper_nr}&operation_date=eq.${operation_date}`;
+      let levelIvBackup = [];
+      let levelIvDeleted = false;
       try {
-        await fetch(`${SUPABASE_URL}/rest/v1/decir_lepp_leveliv?corp_oper_nr=eq.${corp_oper_nr}&operation_date=eq.${operation_date}`, {
+        const backupRes = await fetch(`${SUPABASE_URL}/rest/v1/decir_lepp_leveliv?${levelIvFilter}&select=*`, {headers: getSupabaseHeaders()});
+        if (!backupRes.ok) throw new Error("Erro ao ler o planeamento existente: " + await backupRes.text());
+        levelIvBackup = (await backupRes.json()).map(({id, ...rest}) => rest);
+        const delRes = await fetch(`${SUPABASE_URL}/rest/v1/decir_lepp_leveliv?${levelIvFilter}`, {
           method: "DELETE",
           headers: getSupabaseHeaders()
         });
+        if (!delRes.ok) throw new Error("Erro ao substituir o planeamento: " + await delRes.text());
+        levelIvDeleted = true;
         const rows = [];
         let orderCounter = 0;
         function getNI(rowsList, rowPos, shiftOffset) {
@@ -6748,7 +6757,19 @@
         alert("Planeamento gravado com sucesso.");
       } catch (err) {
         console.error("Erro na gravação Level IV:", err);
-        alert("Erro ao gravar o planeamento.");
+        if (levelIvDeleted && levelIvBackup.length) {
+          try {
+            const restoreRes = await fetch(`${SUPABASE_URL}/rest/v1/decir_lepp_leveliv`, {
+              method: "POST",
+              headers: getSupabaseHeaders(),
+              body: JSON.stringify(levelIvBackup)
+            });
+            if (!restoreRes.ok) console.error("Falha ao repor o planeamento anterior:", await restoreRes.text());
+          } catch (restoreErr) {
+            console.error("Falha ao repor o planeamento anterior:", restoreErr);
+          }
+        }
+        alert("Erro ao gravar o planeamento. O planeamento anterior foi mantido.\n\n" + (err.message || ""));
       }
     }
     /* ════════════════════════════════════════════════════════════════

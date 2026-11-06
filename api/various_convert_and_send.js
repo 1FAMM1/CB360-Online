@@ -65,9 +65,12 @@
       if (req.method !== "POST") return res.status(405).json({success: false, error: "Método não permitido"});
       try {
         const {type, data} = req.body;
-        // ===== PDF HANDLERS =====
-        const {PDFDocument} = await import("pdf-lib");
-        const mergedPdf = await PDFDocument.create();
+        // ===== PDF HANDLERS ===== (só carrega o pdf-lib quando é preciso; o envio de email não o usa)
+        let PDFDocument = null, mergedPdf = null;
+        if (type !== "email") {
+          ({PDFDocument} = await import("pdf-lib"));
+          mergedPdf = await PDFDocument.create();
+        }
         // ===== HEMODIÁLISES =====
         if (["saloc", "veiculos", "veículos", "ambos", "global"].includes(type)) {
           const sqx = data.filter(u => (u.utent_shift_days || "").toUpperCase() === "SQX");
@@ -533,15 +536,16 @@
             .map(f => ({filename: f.filename, content: f.content, encoding: "base64"}));
           // Anexos grandes: o browser carrega-os para o Supabase Storage e envia só links temporários
           if (Array.isArray(attachmentUrls)) {
-            for (const f of attachmentUrls) {
-              if (!f?.url || !f?.filename) continue;
-              if (!/^https:\/\/[a-z0-9]+\.supabase\.co\/storage\/v1\/object\/sign\//.test(f.url)) {
-                return res.status(400).json({success: false, error: "Endereço de anexo inválido."});
-              }
-              const fileRes = await fetch(f.url);
-              if (!fileRes.ok) return res.status(400).json({success: false, error: `Não foi possível obter o anexo ${f.filename}.`});
-              mailAttachments.push({filename: f.filename, content: Buffer.from(await fileRes.arrayBuffer())});
+            const valid = attachmentUrls.filter(f => f?.url && f?.filename);
+            if (valid.some(f => !/^https:\/\/[a-z0-9]+\.supabase\.co\/storage\/v1\/object\/sign\//.test(f.url))) {
+              return res.status(400).json({success: false, error: "Endereço de anexo inválido."});
             }
+            const fetched = await Promise.all(valid.map(async f => {
+              const fileRes = await fetch(f.url);
+              if (!fileRes.ok) throw new Error(`Não foi possível obter o anexo ${f.filename}.`);
+              return {filename: f.filename, content: Buffer.from(await fileRes.arrayBuffer())};
+            }));
+            mailAttachments.push(...fetched);
           }
           if (mailAttachments.length) mailOptions.attachments = mailAttachments;
           await transporter.sendMail(mailOptions);

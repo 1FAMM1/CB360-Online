@@ -756,10 +756,23 @@
       td.innerHTML = `${main||""}<span style="${A22_NODE_KM_STYLE}">(${km||""}</span>`; return td;
     }
     /* ─── A22 LOAD DATA ──────────────────────────────────────── */
+    async function loadPPIA22All(gridId) {
+      const ids = ["ppia22-grid-references", "ppia22-grid-container", "ppia22-specials-container", "ppia22-abs-note"];
+      const els = ids.map(id => document.getElementById(id)).filter(Boolean);
+      els.forEach(el => { el.style.transition = "none"; el.style.opacity = "0"; });
+      try {
+        await Promise.all([loadPPIA22DataInfoGrid(gridId), loadPPIA22DataSpecials(gridId), loadPPIA22GridSeparated(gridId)]);
+      } finally {
+        requestAnimationFrame(() => {
+          document.querySelectorAll(ids.map(id => "#" + id).join(",")).forEach(el => {
+            el.style.transition = "opacity .15s ease";
+            el.style.opacity = "1";
+          });
+        });
+      }
+    }
     async function loadPPIA22DataFromButton(buttonId) {
-      await loadPPIA22DataInfoGrid(buttonId);
-      await loadPPIA22DataSpecials(buttonId);
-      await loadPPIA22GridSeparated(buttonId);
+      await loadPPIA22All(buttonId);
       const tempContainer = document.getElementById("ppia22-grid-container")?.firstChild;
       if (tempContainer) createFinalHTable(tempContainer);
       ppia22ABSNoteTable(ensureAbsContainer("ppia22-abs-note","ppia22-grid-controls"), buttonId);
@@ -865,8 +878,8 @@
       loading.style.display = "block";
       try {
         const corpNr = getCorpNr();
-        const data  = await fetchFromSupabase("ppia22_data", `ppi_grid=eq.${gridId}`);
-        const refs  = await fetchFromSupabase("ppia22_references", `grid_code=eq.${gridId}`);
+        const [data, refs] = await Promise.all([fetchFromSupabase("ppia22_data", `ppi_grid=eq.${gridId}`),
+                                                fetchFromSupabase("ppia22_references", `grid_code=eq.${gridId}`)]);
         const refIds = refs.map(r => r.id);
         const means = refIds.length ? await fetchFromSupabase("ppia22_means", `reference_id=in.(${refIds.join(",")})`) : [];
         createOrUpdateInterventionNotice(container, corpNr && means.some(m => typeof m.means==="string" && m.means.includes(corpNr)));
@@ -1209,10 +1222,23 @@
       "ABCDEFGHIJKLMNOP".split("").forEach(letter=>rowButtons.appendChild(createLinFerGridButtons(letter,specialButtons)));
       container.appendChild(rowButtons);
     }
+    async function loadPPILinFerAll(gridId) {
+      const ids = ["ppilinfer-grid-references", "ppilinfer-specials-container", "ppilinfer-grid-container", "ppilinfer-abs-note"];
+      const els = ids.map(id => document.getElementById(id)).filter(Boolean);
+      els.forEach(el => { el.style.transition = "none"; el.style.opacity = "0"; });
+      try {
+        await Promise.all([loadPPILinFerDataInfoGrid(gridId), loadPPILinFerDataSpecials(gridId), loadPPILinFerGridSeparated(gridId)]);
+      } finally {
+        requestAnimationFrame(() => {
+          document.querySelectorAll(ids.map(id => "#" + id).join(",")).forEach(el => {
+            el.style.transition = "opacity .15s ease";
+            el.style.opacity = "1";
+          });
+        });
+      }
+    }
     async function loadPPILinFerDataFromButton(buttonId) {
-      await loadPPILinFerDataInfoGrid(buttonId);
-      await loadPPILinFerDataSpecials(buttonId);
-      await loadPPILinFerGridSeparated(buttonId);
+      await loadPPILinFerAll(buttonId);
       const tempContainer=document.getElementById("ppilinfer-grid-container")?.firstChild;
       if(tempContainer) createFinalHTable(tempContainer);
       ppiLinFerABSNoteTable(ensureAbsContainer("ppilinfer-abs-note","ppilinfer-grid-controls"), buttonId);
@@ -1246,7 +1272,7 @@
         const gridContainer=document.getElementById("ppilinfer-grid-container");
         for(const ppi of filtered){
           const gridId=ppi.grid_id;
-          await loadPPILinFerDataInfoGrid(gridId); await loadPPILinFerDataSpecials(gridId); await loadPPILinFerGridSeparated(gridId);
+          await loadPPILinFerAll(gridId);
           const tempContainer=gridContainer.firstChild; if(tempContainer) createFinalHTable(tempContainer);
           ppiLinFerABSNoteTable(ensureAbsContainer("ppilinfer-abs-note","ppilinfer-grid-controls"), gridId);
         }
@@ -1270,9 +1296,7 @@
         gridContainer.innerHTML = '';
         for (const ppi of data) {
           const gridId = ppi.grid_id;
-          await loadPPILinFerDataInfoGrid(gridId);
-          await loadPPILinFerDataSpecials(gridId);
-          await loadPPILinFerGridSeparated(gridId);
+          await loadPPILinFerAll(gridId);
           const tempContainer = gridContainer.firstChild;
           if (tempContainer) {
             createFinalHTable(tempContainer);
@@ -1306,8 +1330,8 @@
       const loading=container.querySelector(".loading-mark"); loading.style.display="block";
       try {
         const corpNr=getCorpNr();
-        const data=await fetchFromSupabase("ppilinfer_data",`grid_id=eq.${gridId}`);
-        const refs=await fetchFromSupabase("ppilinfer_references",`grid_code=eq.${gridId}`);
+        const [data, refs] = await Promise.all([fetchFromSupabase("ppilinfer_data",`grid_id=eq.${gridId}`),
+                                                fetchFromSupabase("ppilinfer_references",`grid_code=eq.${gridId}`)]);
         const means=refs.length?await fetchFromSupabase("ppilinfer_means",`reference_id=in.(${refs.map(r=>r.id).join(",")})`):[]; 
         createOrUpdateInterventionNotice(container,corpNr&&means.some(m=>typeof m.means==="string"&&m.means.includes(corpNr)));
         if(!data.length) return renderNoData(container);

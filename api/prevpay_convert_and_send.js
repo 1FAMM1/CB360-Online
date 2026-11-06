@@ -142,7 +142,7 @@
                          margins: {left: 0.3, right: 0.3, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3},
                          printTitlesRow: '7:9'};}
     async function handleSendEmail(req, res) {
-      const {to, cc, subject, body} = req.body || {};
+      const {to, cc, bcc, subject, body} = req.body || {};
       if (!to || !subject || !body) {
         return res.status(400).json({error: "Faltam dados essenciais (to, subject, body)."});
       }
@@ -154,7 +154,8 @@
         await transporter.sendMail({
           from: `CB360 Online <${GMAIL_EMAIL}>`,
           to,
-          cc,
+          ...(cc ? {cc} : {}),
+          ...(bcc ? {bcc} : {}),
           subject,
           html: body
         });

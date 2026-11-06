@@ -2717,7 +2717,7 @@
         return recipients;
       } catch (err) {
         console.error("Erro ao buscar e-mails:", err);
-        return {to: ["central0805.ahbfaro@gmail.com"], cc: [], bcc: []};
+        throw new Error("Não foi possível obter os destinatários (Centro de Dados → Emails Config.).");
       }
     }
     /* ================= EMISSION LOGIC ================ */
@@ -4447,7 +4447,7 @@
         return recipients;
       } catch (err) {
         console.error("Erro ao buscar e-mails:", err);
-        return {to: ["central0805.ahbfaro@gmail.com"], cc: [], bcc: []};
+        throw new Error("Não foi possível obter os destinatários (Centro de Dados → Emails Config.).");
       }
     }
     /* ================= EMISSION LOGIC ================ */
@@ -5692,6 +5692,18 @@
     });
     /* ===== CONTACT LIST INIT ===== */
     /* ===== COMMON DATA ===== */
+    /* ===== Destinatários dos envios em massa (Centro de Dados → Emails Config. → bulk_mail_*) ===== */
+    async function salocGetBulkRecipients() {
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const cats = ["bulk_mail_to", "bulk_mail_cc", "bulk_mail_bcc"];
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/mails_config?corp_oper_nr=eq.${corpOperNr}&category=in.(${cats.join(",")})&select=category,value`, {headers: getSupabaseHeaders()});
+      if (!res.ok) throw new Error("Não foi possível obter os destinatários dos envios em massa.");
+      const rows = await res.json();
+      const list = (cat) => String(rows.find(r => r.category === cat)?.value || "").split(",").map(e => e.trim()).filter(Boolean);
+      const out = {to: list("bulk_mail_to"), cc: list("bulk_mail_cc"), bcc: list("bulk_mail_bcc")};
+      if (!out.to.length) throw new Error("Configure o destinatário dos envios em massa em Centro de Dados → Emails Config.");
+      return out;
+    }
     async function _getEmailCommonData() {
       const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const nInt = sessionStorage.getItem("currentNInt");
@@ -6092,12 +6104,12 @@
         }
         btn.disabled = true; btn.style.background = "#64748b"; btn.style.cursor = "not-allowed"; btn.innerHTML = `<span>⏳ A enviar...</span>`;
         try {
-          const {corpOperNr, corpName, logoUrl, senderName} = await _getEmailCommonData();
+          const [{corpOperNr, corpName, logoUrl, senderName}, bulk] = await Promise.all([_getEmailCommonData(), salocGetBulkRecipients()]);
           const attachment = await _readAttachment();
           const response = await fetch("https://cb360-online.vercel.app/api/various_convert_and_send", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({type: "email", data: {to: "comando0805.ahbfaro@gmail.com", subject, message, corpOperNr, corpName, logoUrl, senderName, isBulk: true, cc: emails, attachment}})
+            body: JSON.stringify({type: "email", data: {to: bulk.to, subject, message, corpOperNr, corpName, logoUrl, senderName, isBulk: true, cc: [...bulk.cc, ...emails], bcc: bulk.bcc, attachment}})
           });
           if (!response.ok) throw new Error(await response.text());
           const result = await response.json();
@@ -6171,12 +6183,12 @@
         }
         btn.disabled = true; btn.style.background = "#64748b"; btn.style.cursor = "not-allowed"; btn.innerHTML = `<span>⏳ A enviar...</span>`;
         try {
-          const {corpOperNr, corpName, logoUrl, senderName} = await _getEmailCommonData();
+          const [{corpOperNr, corpName, logoUrl, senderName}, bulk] = await Promise.all([_getEmailCommonData(), salocGetBulkRecipients()]);
           const attachment = await _readAttachment();
           const response = await fetch("https://cb360-online.vercel.app/api/various_convert_and_send", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({type: "email", data: {to: "comando0805.ahbfaro@gmail.com", subject, message, corpOperNr, corpName, logoUrl, senderName, isBulk: true, cc: emails, attachment}})
+            body: JSON.stringify({type: "email", data: {to: bulk.to, subject, message, corpOperNr, corpName, logoUrl, senderName, isBulk: true, cc: [...bulk.cc, ...emails], bcc: bulk.bcc, attachment}})
           });
           if (!response.ok) throw new Error(await response.text());
           const result = await response.json();

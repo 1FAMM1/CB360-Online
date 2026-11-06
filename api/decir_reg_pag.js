@@ -10,7 +10,7 @@
     import os from 'os';
     import path from 'path';
     import https from 'https';
-    import {ServicePrincipalCredentials, PDFServices, MimeType, CreatePDFResult, CreatePDFJob,}
+    import {ServicePrincipalCredentials, PDFServices, MimeType, CreatePDFResult, CreatePDFJob, ClientConfig, Region}
     from "@adobe/pdfservices-node-sdk";
     const TEMPLATE_REG_ECINS_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/decir_reg_template.xlsx";
     const TEMPLATE_PAG_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/decir_pag_template.xlsx";
@@ -28,6 +28,8 @@
     const TEMPLATE_LEVELIV_1LEPP_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/level_iv_1_lepp_template.xlsx";
     const CLIENT_ID = process.env.ADOBE_CLIENT_ID;
     const CLIENT_SECRET = process.env.ADOBE_CLIENT_SECRET;
+    // Adobe na região EU (proteção de dados). Para voltar aos EUA: variável ADOBE_REGION=US na Vercel.
+    const ADOBE_CLIENT_CONFIG = new ClientConfig({region: (process.env.ADOBE_REGION || "EU").toUpperCase() === "US" ? Region.US : Region.EU});
     export const config = {
       api: { bodyParser: {sizeLimit: '10mb'}}
     };
@@ -58,7 +60,7 @@
       fs.writeFileSync(inputFilePath, xlsxBuffer);
       try {
         const credentials = new ServicePrincipalCredentials({clientId: CLIENT_ID, clientSecret: CLIENT_SECRET});
-        const pdfServices = new PDFServices({credentials});
+        const pdfServices = new PDFServices({credentials, clientConfig: ADOBE_CLIENT_CONFIG});
         const inputAsset = await pdfServices.upload({readStream: fs.createReadStream(inputFilePath), mimeType: MimeType.XLSX,});
         const job = new CreatePDFJob({inputAsset});
         const pollingURL = await pdfServices.submit({job});

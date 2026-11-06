@@ -3618,6 +3618,7 @@
       container.appendChild(btnWrapper);
     }
     async function fetchRecipientsFromSupabase() {
+      // Centro de Dados → Emails Config. → Emissão de Planeamentos Diários (por corporação)
       const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const categories = ['plandir_emit_mail_to', 'plandir_emit_mail_cc', 'plandir_emit_mail_bcc'];
       const url = `${SUPABASE_URL}/rest/v1/mails_config?corp_oper_nr=eq.${corpOperNr}&category=in.(${categories.join(',')})&select=category,value`;
@@ -5704,6 +5705,21 @@
       if (!out.to.length) throw new Error("Configure o destinatário dos envios em massa em Centro de Dados → Emails Config.");
       return out;
     }
+    /* ===== Destinatários da Lista de Comparências (Centro de Dados → Emails Config. → attendance_mail_*) ===== */
+    async function salocGetAttendanceRecipients() {
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
+      const cats = ["attendance_mail_to", "attendance_mail_cc", "attendance_mail_bcc"];
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/mails_config?corp_oper_nr=eq.${corpOperNr}&category=in.(${cats.join(",")})&select=category,value`, {headers: getSupabaseHeaders()});
+        if (!res.ok) throw new Error(await res.text());
+        const rows = await res.json();
+        const list = (cat) => String(rows.find(r => r.category === cat)?.value || "").split(",").map(e => e.trim()).filter(Boolean);
+        return {to: list(cats[0]), cc: list(cats[1]), bcc: list(cats[2])};
+      } catch (err) {
+        console.warn("Não foi possível obter os destinatários da Lista de Comparências:", err);
+        return {to: [], cc: [], bcc: []};
+      }
+    }
     async function _getEmailCommonData() {
       const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const nInt = sessionStorage.getItem("currentNInt");
@@ -6485,9 +6501,10 @@
       }
       try {
         showLoadingPopup("🔄 A preparar listagem...");
-        const [{corpName, logoUrl, senderName}, corpContacts] = await Promise.all([
+        const [{corpName, logoUrl, senderName}, corpContacts, attRecipients] = await Promise.all([
           _getEmailCommonData(),
-          _getPLANDIREmailCommonData(sessionStorage.getItem("currentCorpOperNr"))
+          _getPLANDIREmailCommonData(sessionStorage.getItem("currentCorpOperNr")),
+          salocGetAttendanceRecipients()
         ]);
         const {corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail} = corpContacts;
         const quadDef = [{code: "QCOM", title: "QUADRO DE COMANDO"}, {code: "QATIV", title: "QUADRO ATIVO"}, {code: "QEST", title: "QUADRO DE ESTAGIÁRIOS"},
@@ -6513,7 +6530,8 @@
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({type: "attendance_list", data: {corpName, logoUrl, senderName, eventName, quad,
-                                                                corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail}}),
+                                                                corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail,
+                                                                attendanceTo: attRecipients.to, attendanceCc: attRecipients.cc, attendanceBcc: attRecipients.bcc}}),
         });
         if (!response.ok) throw new Error(await response.text());
         const blob = await response.blob();

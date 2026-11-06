@@ -10,10 +10,11 @@
     import os from 'os';
     import path from 'path';
     import https from 'https';
-    import {ServicePrincipalCredentials, PDFServices, MimeType, CreatePDFJob, CreatePDFResult, SDKError, ServiceUsageError, ServiceApiError}
+    import {ServicePrincipalCredentials, PDFServices, MimeType, CreatePDFJob, CreatePDFResult, SDKError, ServiceUsageError, ServiceApiError, ClientConfig, Region}
     from "@adobe/pdfservices-node-sdk";
     const CLIENT_ID = process.env.ADOBE_CLIENT_ID;
     const CLIENT_SECRET = process.env.ADOBE_CLIENT_SECRET;
+    const ADOBE_CLIENT_CONFIG = new ClientConfig({region: (process.env.ADOBE_REGION || "EU").toUpperCase() === "US" ? Region.US : Region.EU});
     const TEMPLATE_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/fomio_template.xlsx";
     export const config = {api: {bodyParser: {sizeLimit: '10mb'}}};
     async function downloadTemplate(url) {
@@ -121,7 +122,7 @@
         outputFilePath = path.join(tempDir, `${data.fileName}_${Date.now()}.pdf`);
         await workbook.xlsx.writeFile(inputFilePath);
         const credentials = new ServicePrincipalCredentials({clientId: CLIENT_ID, clientSecret: CLIENT_SECRET});
-        const pdfServices = new PDFServices({credentials});
+        const pdfServices = new PDFServices({credentials, clientConfig: ADOBE_CLIENT_CONFIG});
         const inputAsset = await pdfServices.upload({readStream: fs.createReadStream(inputFilePath), mimeType: MimeType.XLSX});
         const job = new CreatePDFJob({inputAsset});
         const pollingURL = await pdfServices.submit({job});

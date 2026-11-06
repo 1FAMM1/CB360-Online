@@ -1726,7 +1726,7 @@
       yearSelect.addEventListener('change', loadRecinoReports);
     }
     async function loadRecinoReports() {
-      const corpOperNr = sessionStorage.getItem('currentCorpOperNr') || '0805';
+      const corpOperNr = sessionStorage.getItem('currentCorpOperNr');
       const monthSelect = document.getElementById('refusal_month_filter');
       const yearSelect = document.getElementById('refusal_year_filter');
       if (!monthSelect || !yearSelect) return;
@@ -3651,58 +3651,33 @@
         showPopup('popup-danger', "Erro: Sessão expirada. Por favor, faça login novamente.");
         return;
       }
-      const loading = (t) => { if (typeof updateLoadingPopup === "function") updateLoadingPopup(t); };
-      const stopLoading = () => { if (typeof hideLoadingPopup === "function") hideLoadingPopup(); };
-      if (typeof showLoadingPopup === "function") showLoadingPopup("A preparar o planeamento...");
+      const tables = collectTableData();
+      const optelName = getOptelName();
+      const [year, month, day] = date.split('-');
+      const monthNames = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
+      const monthName = monthNames[parseInt(month, 10) - 1] || month;
+      const formattedDate = `${year}${month}${day}`;
+      const shiftHours = (shift === 'D') ? '08:00-20:00' : '20:00-08:00';
+      const { to, cc, bcc } = await fetchRecipientsFromSupabase();
+      const RECIPIENTS = to;
+      const CC_RECIPIENTS = cc;
+      const BCC_RECIPIENTS = bcc;
+      if (RECIPIENTS.length === 0) {
+        showPopup('popup-danger', "Erro: Defina pelo menos um destinatário.");
+        return;
+      }
+      const teamNameMap = {"OFOPE": "ofope", "CHEFE DE SERVIÇO": "chefe_servico", "OPTEL": "optel", "EQUIPA 01": "equipa_01", "EQUIPA 02": "equipa_02", "LOGÍSTICA": "logistica",
+                           "INEM": "inem", "INEM - Reserva": "inem_reserva", "SERVIÇO GERAL": "servico_geral"};
+      showPopup('popup-success', `Planeamento gerado com sucesso. O mesmo está a ser enviado para as entidades.`);
       try {
-        const tables = collectTableData();
-        const optelName = getOptelName();
-        const [year, month, day] = date.split('-');
-        const monthNames = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
-        const monthName = monthNames[parseInt(month, 10) - 1] || month;
-        const formattedDate = `${year}${month}${day}`;
-        const shiftHours = (shift === 'D') ? '08:00-20:00' : '20:00-08:00';
-        const [{to, cc, bcc}, common] = await Promise.all([fetchRecipientsFromSupabase(), _getPLANDIREmailCommonData(corpOperNr)]);
-        if (to.length === 0) {
-          stopLoading();
-          showPopup('popup-danger', "Erro: Defina pelo menos um destinatário.");
-          return;
-        }
-        const {logoUrl, cbName, corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail} = common;
-        const teamNameMap = {"OFOPE": "ofope", "CHEFE DE SERVIÇO": "chefe_servico", "OPTEL": "optel", "EQUIPA 01": "equipa_01", "EQUIPA 02": "equipa_02", "LOGÍSTICA": "logistica",
-                             "INEM": "inem", "INEM - Reserva": "inem_reserva", "SERVIÇO GERAL": "servico_geral"};
-        /* ---------- 1) PDF + envio: arranca já (não depende das gravações) ---------- */
-        const fileDisplayName = `Planeamento Diário ${formattedDate} Turno ${shift}`;
-        const greeting = getGreeting();
-        const emailBodyHTML = `
-          ${greeting}<br>
-          Remeto em anexo a Vossas Exª.s o  ${fileDisplayName}<br>
-          Com os melhores cumprimentos,<br>
-          OPTEL<br>${optelName}`;
-        const now = new Date();
-        const pad = (n) => String(n).padStart(2, '0');
-        const lastUpdated = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-        const sendPromise = (async () => {
-          const response = await fetch("https://cb360-online.vercel.app/api/plandir_convert_and_send", {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({shift, date, tables, recipients: to, ccRecipients: cc, bccRecipients: bcc, emailBody: emailBodyHTML,
-                                  logoUrl: logoUrl, corpName: cbName, corpOperNr: corpOperNr, lastUpdated,
-                                  corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail})
-          });
-          let result = {};
-          try { result = await response.json(); } catch (e) {}
-          return {ok: response.ok, details: result.details || result.error || ""};
-        })().catch(err => ({ok: false, details: err.message}));
-        /* ---------- 2) Gravações na base de dados (em paralelo) ---------- */
-        loading("A gravar na base de dados...");
+        const { logoUrl, cbName, corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail } = await _getPLANDIREmailCommonData(corpOperNr);
         const saveWarnings = [];
-        const saveFomioTeams = Promise.all(tables.map(async table => {
+        for (let table of tables) {
           const team_name = teamNameMap[table.title];
-          if (!team_name) return;
+          if (!team_name) continue;
           const nonEmptyRows = table.rows.filter(r => r.n_int || r.patente || r.nome || r.entrada || r.saida || r.MP || r.TAS || r.obs);
           const delTeam = await fetch(`${SUPABASE_URL}/rest/v1/fomio_teams?team_name=eq.${encodeURIComponent(team_name)}&corp_oper_nr=eq.${corpOperNr}`, {method: "DELETE", headers: getSupabaseHeaders()});
-          if (!delTeam.ok) { saveWarnings.push(`FOMIO (${table.title})`); return; }
+          if (!delTeam.ok) { saveWarnings.push(`FOMIO (${table.title})`); continue; }
           if (nonEmptyRows.length > 0) {
             const insTeam = await fetch(`${SUPABASE_URL}/rest/v1/fomio_teams`, {
               method: "POST",
@@ -3712,33 +3687,41 @@
             });
             if (!insTeam.ok) saveWarnings.push(`FOMIO (${table.title})`);
           }
-        })).catch(() => saveWarnings.push("FOMIO"));
-        const saveFomioDate = (async () => {
-          const delDate = await fetch(`${SUPABASE_URL}/rest/v1/fomio_date?corp_oper_nr=eq.${corpOperNr}`, {method: "DELETE", headers: getSupabaseHeaders()});
-          const insDate = delDate.ok ? await fetch(`${SUPABASE_URL}/rest/v1/fomio_date`, {
-            method: "POST",
-            headers: getSupabaseHeaders(),
-            body: JSON.stringify([{header_text: `Dia: ${day} ${monthName} ${year} | Turno ${shift} | ${shiftHours}`, corp_oper_nr: corpOperNr}])
-          }) : null;
-          if (!delDate.ok || !insDate?.ok) saveWarnings.push("FOMIO (data)");
-        })().catch(() => saveWarnings.push("FOMIO (data)"));
-        const saveAtt = saveAttendance(tables, shift, corpOperNr, day, month, year)
-          .then(ok => { if (!ok) { console.warn('⚠️ Aviso: Falha ao gravar dados de assiduidade na tabela reg_assid.'); saveWarnings.push("Assiduidade"); } })
-          .catch(() => saveWarnings.push("Assiduidade"));
-        const saveElig = saveEligibility(tables, day, month, year, corpOperNr)
-          .then(ok => { if (!ok) { console.warn('⚠️ Aviso: Falha ao gravar dados na tabela reg_eligibility.'); saveWarnings.push("Elegibilidade"); } })
-          .catch(() => saveWarnings.push("Elegibilidade"));
-        const saveDecir = saveDecirEcin(tables, shift, corpOperNr, day, month, year)
-          .then(r => { if (!r.ok) { console.warn(`⚠️ Aviso: DECIR não gravado — ${r.reason}`); saveWarnings.push(`DECIR (${r.reason})`); } })
-          .catch(err => saveWarnings.push(`DECIR (${err.message})`));
-        await Promise.all([saveFomioTeams, saveFomioDate, saveAtt, saveElig, saveDecir]);
-        /* ---------- 3) Esperar pelo envio ---------- */
-        loading("A gerar o PDF e a enviar...");
-        const sent = await sendPromise;
-        stopLoading();
-        if (!sent.ok) {
-          showPopup('popup-danger', `ERRO! O planeamento não foi enviado. Detalhes: ${sent.details || 'Verificar consola.'}` +
-                                    (saveWarnings.length ? ` Também falhou a gravação em: ${saveWarnings.join(", ")}.` : ""));
+        }
+        const delDate = await fetch(`${SUPABASE_URL}/rest/v1/fomio_date?corp_oper_nr=eq.${corpOperNr}`, {method: "DELETE", headers: getSupabaseHeaders()});
+        const insDate = delDate.ok ? await fetch(`${SUPABASE_URL}/rest/v1/fomio_date`, {
+          method: "POST",
+          headers: getSupabaseHeaders(),
+          body: JSON.stringify([{header_text: `Dia: ${day} ${monthName} ${year} | Turno ${shift} | ${shiftHours}`, corp_oper_nr: corpOperNr}])
+        }) : null;
+        if (!delDate.ok || !insDate?.ok) saveWarnings.push("FOMIO (data)");
+        const attendanceSaved = await saveAttendance(tables, shift, corpOperNr, day, month, year);
+        if (!attendanceSaved) { console.warn('⚠️ Aviso: Falha ao gravar dados de assiduidade na tabela reg_assid.'); saveWarnings.push("Assiduidade"); }
+        const eligibilitySaved = await saveEligibility(tables, day, month, year, corpOperNr);
+        if (!eligibilitySaved) { console.warn('⚠️ Aviso: Falha ao gravar dados na tabela reg_eligibility.'); saveWarnings.push("Elegibilidade"); }
+        const decirResult = await saveDecirEcin(tables, shift, corpOperNr, day, month, year);
+        if (!decirResult.ok) { console.warn(`⚠️ Aviso: DECIR não gravado — ${decirResult.reason}`); saveWarnings.push(`DECIR (${decirResult.reason})`); }
+        const fileDisplayName = `Planeamento Diário ${formattedDate} Turno ${shift}`;
+        const greeting = getGreeting();
+        const signature = getEmailSignature();
+        const emailBodyHTML = `
+          ${greeting}<br>
+          Remeto em anexo a Vossas Exª.s o  ${fileDisplayName}<br>
+          Com os melhores cumprimentos,<br>
+          OPTEL<br>${optelName}`;
+        const now = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        const lastUpdated = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+        const response = await fetch("https://cb360-online.vercel.app/api/plandir_convert_and_send", {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({shift, date, tables, recipients: RECIPIENTS, ccRecipients: CC_RECIPIENTS, bccRecipients: BCC_RECIPIENTS, emailBody: emailBodyHTML,
+                                logoUrl: logoUrl, corpName: cbName, corpOperNr: corpOperNr, lastUpdated,
+                                corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail})
+        });
+        const result = await response.json();
+        if (!response.ok) {
+          showPopup('popup-danger', `ERRO! O planeamento não foi enviado. Detalhes: ${result.details || 'Verificar consola.'}`);
           return;
         }
         if (saveWarnings.length) {
@@ -3752,7 +3735,6 @@
         });
       } catch (err) {
         console.error('Erro no processo de emissão:', err);
-        stopLoading();
         showPopup('popup-danger', 'Erro ao processar o planeamento. Por favor, tente novamente.');
       }
     }
@@ -5262,7 +5244,7 @@
     /* ===== EDIT EQUIPMENT REQUEST ===== */
     async function equipmentRequestEdit(id) {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/equipment_request?id=eq.${id}&corp_oper_nr=eq.${corpOperNr}&select=*`, {
             headers: getSupabaseHeaders()
@@ -5300,7 +5282,7 @@
     async function equipmentRequestDelete(id) {
       if (!confirm("Tem a certeza que pretende eliminar esta requisição?")) return;
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/equipment_request?id=eq.${id}&corp_oper_nr=eq.${corpOperNr}`, {
             method: "DELETE",
@@ -5318,7 +5300,7 @@
     /* ===== SAVE EQUIPMENT REQUEST ===== */
     let equipmentRequestEditId = null;
     async function equipmentRequestSave() {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const requesting_name = document.getElementById("requesting_name").value.trim();
       const cc = document.getElementById("requesting_cc").value.trim();
       const cc_secur = document.getElementById("requesting_cc_secur").value.trim();
@@ -6478,7 +6460,11 @@
       }
       try {
         showLoadingPopup("🔄 A preparar listagem...");
-        const {corpName, logoUrl, senderName} = await _getEmailCommonData();
+        const [{corpName, logoUrl, senderName}, corpContacts] = await Promise.all([
+          _getEmailCommonData(),
+          _getPLANDIREmailCommonData(sessionStorage.getItem("currentCorpOperNr"))
+        ]);
+        const {corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail} = corpContacts;
         const quadDef = [{code: "QCOM", title: "QUADRO DE COMANDO"}, {code: "QATIV", title: "QUADRO ATIVO"}, {code: "QEST", title: "QUADRO DE ESTAGIÁRIOS"},
                          {code: "QEA", title: "QUADRO DE ESPECIALISTAS E AUXILIARES"}, {code: "QRES", title: "QUADRO DE RESERVA"}, {code: "QHR", title: "QUADRO DE HONRA"}];
         const rows = tbody.querySelectorAll("tr:not(.quadro-header-row)");
@@ -6501,7 +6487,8 @@
         const response = await fetch("https://cb360-online.vercel.app/api/various_convert_and_send", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({type: "attendance_list", data: {corpName, logoUrl, senderName, eventName, quad}}),
+          body: JSON.stringify({type: "attendance_list", data: {corpName, logoUrl, senderName, eventName, quad,
+                                                                corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail}}),
         });
         if (!response.ok) throw new Error(await response.text());
         const blob = await response.blob();
@@ -6785,7 +6772,7 @@
       if (!tbody) return;
       tbody.style.opacity = "0.5";
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/phonebook?corp_oper_nr=eq.${corpOperNr}&order=name.asc`, {
             headers: getSupabaseHeaders()
@@ -6837,7 +6824,7 @@
     /* ===== PHONEBOOK EDIT (CLICK NO LÁPIS) ===== */
     async function phonebookEdit(id) {
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/phonebook?id=eq.${id}&corp_oper_nr=eq.${corpOperNr}&select=*`, {
             headers: getSupabaseHeaders()
@@ -6875,7 +6862,7 @@
     async function phonebookDelete(id) {
       if (!confirm("Tem a certeza que pretende eliminar este contacto?")) return;
       try {
-        const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+        const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/phonebook?id=eq.${id}&corp_oper_nr=eq.${corpOperNr}`, {
             method: "DELETE",
@@ -6903,7 +6890,7 @@
     }
     /* ===== PHONEBOOK SAVE / UPDATE (AÇÃO DO BOTÃO GRAVAR) ===== */
     async function phonebookSave() {
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr") || "0805";
+      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const name = document.getElementById("phonebook-name").value.trim();
       if (!name) {
         showPopup("popup-danger", "Preencha pelo menos o Nome / Designação.");

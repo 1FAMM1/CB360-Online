@@ -3080,7 +3080,7 @@
         }
       }
       const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
-      const currentUser = sessionStorage.getItem("currentUserDisplay") || sessionStorage.getItem("currentUserName") || "FMartins";
+      const currentUser = sessionStorage.getItem("currentUserDisplay") || sessionStorage.getItem("currentUserName") || "";
       const getVal = (id) => document.getElementById(id)?.value || null;
       const pos = cb360LeafletMarker.getLatLng();
       const newStatus = cb360PendingClosed ? 'Encerrada' : getVal('goc-state');

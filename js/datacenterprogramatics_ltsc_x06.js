@@ -106,10 +106,31 @@
         document.getElementById("assoc-mobile-phone").value = corporation.corp_phone_mobile || "";
         document.getElementById("assoc-landline-phone").value = corporation.corp_phone_landline || "";
         document.getElementById("assoc-email").value = corporation.corp_email || "";
+        fillIpmaAreaSelect(corporation.ipma_area || ipmaAreaFromDistrict(corporation.corp_district));
         await loadHierarchicalSelects(corporation);
       } catch (error) {
         console.error("❌ Erro ao carregar dados da corporação:", error);
       }
+    }
+    /* ================= ÁREA DE AVISOS IPMA ================= */
+    const IPMA_AREAS = [
+      ["AVR", "Aveiro"], ["BJA", "Beja"], ["BRG", "Braga"], ["BGC", "Bragança"], ["CBO", "Castelo Branco"], ["CBR", "Coimbra"],
+      ["EVR", "Évora"], ["FAR", "Faro"], ["GDA", "Guarda"], ["LRA", "Leiria"], ["LSB", "Lisboa"], ["PTG", "Portalegre"],
+      ["PTO", "Porto"], ["STM", "Santarém"], ["STB", "Setúbal"], ["VCT", "Viana do Castelo"], ["VRL", "Vila Real"], ["VIS", "Viseu"],
+      ["MCN", "Madeira - Costa Norte"], ["MCS", "Madeira - Costa Sul"], ["MRM", "Madeira - Regiões Montanhosas"], ["MPS", "Madeira - Porto Santo"],
+      ["AOC", "Açores - Grupo Ocidental"], ["ACE", "Açores - Grupo Central"], ["AOR", "Açores - Grupo Oriental"]
+    ];
+    function ipmaAreaFromDistrict(district) {
+      const norm = (t) => String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+      return IPMA_AREAS.find(([, name]) => norm(name) === norm(district))?.[0] || "";
+    }
+    function fillIpmaAreaSelect(value) {
+      const sel = document.getElementById("assoc-ipma-area");
+      if (!sel) return;
+      if (sel.options.length <= 1) {
+        sel.innerHTML = `<option value="">Selecione...</option>` + IPMA_AREAS.map(([c, n]) => `<option value="${c}">${n} (${c})</option>`).join("");
+      }
+      sel.value = value || "";
     }
     /* ================= LOAD LOGO ================= */
     async function loadCorporationLogo() {
@@ -151,7 +172,8 @@
                                  corp_cp: getCombinedPostalCode(), corp_district: getSelectedDistrictName(), corp_council: getSelectedCouncilName(), corp_parish: document.getElementById("parish_select_corp")?.value?.trim() || null,
                                  corp_fiscal_nr: document.getElementById("assoc-nif")?.value?.trim() || null, corp_oper_nr: currentCorpNr || document.getElementById("assoc-operational-nr")?.value?.trim() || null,
                                  corp_phone_mobile: document.getElementById("assoc-mobile-phone")?.value?.trim() || null, corp_phone_landline: document.getElementById("assoc-landline-phone")?.value?.trim() || null,
-                                 corp_email: document.getElementById("assoc-email")?.value?.trim() || null
+                                 corp_email: document.getElementById("assoc-email")?.value?.trim() || null,
+                                 ...(document.getElementById("assoc-ipma-area") ? {ipma_area: document.getElementById("assoc-ipma-area").value || null} : {})
                                 };
         const validation = validateCorporationData(corporationData);
         if (!validation.isValid) throw new Error(validation.message);

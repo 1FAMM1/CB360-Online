@@ -1112,10 +1112,28 @@
               <li><small>ℹ️ A análise verifica as dotações mínimas por turno (Dia/Noite) de acordo com o modo DECIR configurado. Separando Motoristas de Pesados e Bombeiros.</small></li>
             </ul>`;
           popupDecir.classList.add('show');
+          opsGetDecirDispMails(); // pré-carrega para a cópia ser imediata
         }
       }
     }
-    function requestDecirElements() {
+    /* ===== Emails para onde se enviam as disponibilidades DECIR (Emails Config. → decir_disp_mail_*) ===== */
+    let opsDecirDispMailsCache = null;
+    async function opsGetDecirDispMails() {
+      if (opsDecirDispMailsCache) return opsDecirDispMailsCache;
+      try {
+        const corpNr = sessionStorage.getItem("currentCorpOperNr");
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/mails_config?corp_oper_nr=eq.${corpNr}&category=in.(decir_disp_mail_to,decir_disp_mail_cc)&select=category,value`, {headers: getSupabaseHeaders()});
+        if (!res.ok) throw new Error(await res.text());
+        const rows = await res.json();
+        const val = (cat) => String(rows.find(r => r.category === cat)?.value || "").split(",").map(e => e.trim()).filter(Boolean).join(", ");
+        opsDecirDispMailsCache = {to: val("decir_disp_mail_to"), cc: val("decir_disp_mail_cc")};
+        return opsDecirDispMailsCache;
+      } catch (err) {
+        console.warn("Não foi possível obter os emails das disponibilidades DECIR:", err);
+        return {to: "", cc: ""};
+      }
+    }
+    async function requestDecirElements() {
       const selectedYear = parseInt($("year-selector")?.value, 10);
       const monthIndex = getActiveMonthIndex();
       const nameMonth = MONTH_NAMES_PT[monthIndex - 1];
@@ -1156,7 +1174,8 @@
       let message = `*🚨INFORMAÇÃO🚨*\n\n`;
       message += `*Turnos DECIR por Preencher - ${nameMonth} ${selectedYear}*\n\n`;
       message += `${finalLines.join('\n')}\n\n`;
-      message += `As disponibilidades devem ser remetidas para adjunto.faroahb@gmail.com com conhecimento de comando0805.ahbfaro@gmail.com.\n`;
+      const dispMails = await opsGetDecirDispMails();
+      if (dispMails.to) message += `As disponibilidades devem ser remetidas para ${dispMails.to}${dispMails.cc ? ` com conhecimento de ${dispMails.cc}` : ""}.\n`;
       message += `Obrigado pela vossa colaboração!`;
       navigator.clipboard.writeText(message).then(() => {
         closePopup('popup-analyze-decir');

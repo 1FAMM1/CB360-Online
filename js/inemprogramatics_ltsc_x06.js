@@ -11,6 +11,20 @@
       link.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css";
       document.head.appendChild(link);
     }
+    const INEM_BUCKET = "inem-verbetes";
+    function inemStorageHeaders(extra = {}) {
+      const h = {...getSupabaseHeaders(), ...extra};
+      if (!extra["Content-Type"]) delete h["Content-Type"];
+      return h;
+    }
+    function inemFileUrl(fileName) {
+      return `${SUPABASE_URL}/storage/v1/object/authenticated/${INEM_BUCKET}/${encodeURIComponent(fileName)}`;
+    }
+    async function inemFetchFile(fileName) {
+      const res = await fetch(inemFileUrl(fileName), {headers: inemStorageHeaders()});
+      if (!res.ok) throw new Error(`Ficheiro indisponível (${res.status})`);
+      return res;
+    }
     function setInemStatus(td, exists) {
       td.innerHTML = exists
         ? '<i class="fa-solid fa-circle-check" style="color:#27ae60"></i>'
@@ -58,9 +72,8 @@
             data.map(async item => {
               if (!item.nr_codu) return [item.nr_codu, false];
               const ext = item.service_type === "ITeams" ? "html" : "pdf";
-              const url = `${SUPABASE_URL}/storage/v1/object/public/inem-verbetes/ocr_${item.nr_codu}.${ext}`;
               try {
-                const res = await fetch(url, {method: "HEAD"});
+                const res = await fetch(inemFileUrl(`ocr_${item.nr_codu}.${ext}`), {method: "HEAD", headers: inemStorageHeaders()});
                 return [item.nr_codu, res.ok];
               } catch {
                 return [item.nr_codu, false];
@@ -531,9 +544,9 @@
         if (!file) return;
         const fileName = `ocr_${nrCodu}.${ext}`;
         try {
-          const res = await fetch(`${SUPABASE_URL}/storage/v1/object/inem-verbetes/${fileName}`, {
+          const res = await fetch(`${SUPABASE_URL}/storage/v1/object/${INEM_BUCKET}/${encodeURIComponent(fileName)}`, {
             method: "POST",
-            headers: {"Authorization": `Bearer ${SUPABASE_ANON_KEY}`, "Content-Type": mime, "x-upsert": "true"},
+            headers: inemStorageHeaders({"Content-Type": mime, "x-upsert": "true"}),
             body: file
           });
           if (!res.ok) throw new Error(await res.text());
@@ -557,10 +570,8 @@
       if (!nrCodu) return;
       const ext = serviceType === "ITeams" ? "html" : "pdf";
       const fileName = `ocr_${nrCodu}.${ext}`;
-      const url = `${SUPABASE_URL}/storage/v1/object/public/inem-verbetes/${fileName}`;
       try {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error();
+        const res = await inemFetchFile(fileName);
         const blob = await res.blob();
         const blobUrl = URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -619,6 +630,8 @@
       document.head.appendChild(style);
     }
     function _inemCloseModal(overlay, box) {
+      const fr = overlay.querySelector('iframe');
+      if (fr?.dataset.blobUrl) URL.revokeObjectURL(fr.dataset.blobUrl);
       box.style.animation = 'inemSlideUp .18s ease reverse forwards';
       overlay.style.animation = 'inemFadeIn .18s ease reverse forwards';
       setTimeout(() => overlay.remove(), 180);
@@ -687,7 +700,7 @@
       header.append(left, toolbar);
       return { header, btnClose };
     }
-    function _inemBuildContent(url, ext) {
+    function _inemBuildContent(fileName, ext) {
       const content = document.createElement('div');
       Object.assign(content.style, {flex: '1', position: 'relative', overflow: 'hidden', background: '#fff'});
       const loadingEl = document.createElement('div');
@@ -718,8 +731,8 @@
         iframe.style.opacity = '1';
       };
       if (ext === 'html') {
-        fetch(url)
-          .then(r => {if (!r.ok) throw new Error(); return r.arrayBuffer();})
+        inemFetchFile(fileName)
+          .then(r => r.arrayBuffer())
           .then(buf => new TextDecoder('windows-1252').decode(buf))
           .then(html => {
           iframe.onload = revealIframe;
@@ -731,11 +744,13 @@
         })
           .catch(() => showNotFound());
       } else {
-        fetch(url, {method: 'HEAD'})
-          .then(r => {if (!r.ok) throw new Error();})
-          .then(() => {
-          iframe.src = url;
+        inemFetchFile(fileName)
+          .then(r => r.blob())
+          .then(blob => {
+          const blobUrl = URL.createObjectURL(new Blob([blob], {type: 'application/pdf'}));
+          iframe.dataset.blobUrl = blobUrl;
           iframe.onload = revealIframe;
+          iframe.src = blobUrl;
         })
           .catch(() => showNotFound());
       }
@@ -767,7 +782,6 @@
       if (!nrCodu) return;
       const ext = serviceType === 'ITeams' ? 'html' : 'pdf';
       const fileName = `ocr_${nrCodu}.${ext}`;
-      const url = `${SUPABASE_URL}/storage/v1/object/public/inem-verbetes/${fileName}`;
       document.getElementById('inem-pdf-modal')?.remove();
       _inemInjectStyles();
       const overlay = document.createElement('div');
@@ -777,7 +791,7 @@
       box.className = 'inem-box';
       Object.assign(box.style, {background: '#f8f8f8', borderRadius: '14px', width: '82vw', height: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 28px 72px rgba(0,0,0,0.45), 0 2px 8px rgba(0,0,0,0.18)', overflow: 'hidden'});
       const {header, btnClose} = _inemBuildHeader(nrCodu, serviceType, ext, box, overlay);
-      const {content, iframe} = _inemBuildContent(url, ext);
+      const {content, iframe} = _inemBuildContent(fileName, ext);
       const footer = _inemBuildFooter(ext, iframe);
       box.append(header, content, footer);
       overlay.appendChild(box);
@@ -834,9 +848,9 @@
       });
       if (!confirmed) return;
       try {
-        const res = await fetch(`${SUPABASE_URL}/storage/v1/object/inem-verbetes/${fileName}`, {
+        const res = await fetch(`${SUPABASE_URL}/storage/v1/object/${INEM_BUCKET}/${encodeURIComponent(fileName)}`, {
           method: "DELETE",
-          headers: {"Authorization": `Bearer ${SUPABASE_ANON_KEY}`}
+          headers: inemStorageHeaders()
         });
         if (!res.ok) throw new Error(await res.text());
         showPopup('popup-success', "Verbete eliminado com sucesso.");

@@ -32,6 +32,24 @@
       td.style.fontSize = "17px";
       td.title = exists ? "Ficheiro disponível" : "Ficheiro não encontrado";
     }
+    /* ─── UTILIZADOR iTeams (só carrega e edita; não vê, não descarrega, não apaga, não exporta) ─── */
+    // Identificado pelo abv_name "iTeams" no reg_elems, igual em todas as corporações.
+    let inemRestrictedCache = null;
+    async function inemIsRestrictedUser(corpOperNr, nInt) {
+      const key = `${corpOperNr}_${nInt}`;
+      if (inemRestrictedCache?.key === key) return inemRestrictedCache.value;
+      let value = false;
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${corpOperNr}&n_int=eq.${nInt}&select=abv_name&limit=1`, {headers: getSupabaseHeaders()});
+        if (!res.ok) throw new Error(await res.text());
+        const rows = await res.json();
+        value = String(rows?.[0]?.abv_name || "").trim().toLowerCase() === "iteams";
+      } catch (err) {
+        console.warn("Não foi possível verificar o tipo de utilizador INEM:", err);
+      }
+      inemRestrictedCache = {key, value};
+      return value;
+    }
     /* ─── LOAD ──────────────────────────────────────────── */
     async function loadInemEntries() {
       const dateFrom = document.getElementById("inem-date-from")?.value;
@@ -39,7 +57,7 @@
       const codu = document.getElementById("inem-filter-codu")?.value.trim();
       const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const nInt = sessionStorage.getItem("currentNInt");
-      const isReadOnly = parseInt(nInt) === 9000;
+      const isReadOnly = await inemIsRestrictedUser(corpOperNr, nInt);
       const tbody = document.querySelector("#inem-entries table tbody");
       const btnEmitirXlsx = document.getElementById("btn-inem-emitir-xlsx");
       const btnEmitir = document.getElementById("btn-inem-emitir");

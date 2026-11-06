@@ -901,6 +901,19 @@
         };
       }
     }
+    /* ===== Destinatários (Centro de Dados → Emails Config.): volunt_verify / volunt_valid / volunt_invalid ===== */
+    async function vsGetMailRecipients(corpNr, prefix) {
+      const cats = [`${prefix}_mail_to`, `${prefix}_mail_cc`, `${prefix}_mail_bcc`];
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/mails_config?corp_oper_nr=eq.${corpNr}&category=in.(${cats.join(",")})&select=category,value`, {headers: getSupabaseHeaders()});
+      if (!res.ok) throw new Error("Não foi possível obter os destinatários (Emails Config.).");
+      const rows = await res.json();
+      const val = (cat) => String(rows.find(r => r.category === cat)?.value || "").split(",").map(e => e.trim()).filter(Boolean).join(", ");
+      const out = {to: val(cats[0]), cc: val(cats[1]), bcc: val(cats[2])};
+      if (!out.to) throw new Error("Configure os destinatários em Centro de Dados → Emails Config. → Voluntariado.");
+      if (!out.cc) delete out.cc;
+      if (!out.bcc) delete out.bcc;
+      return out;
+    }
     async function confirmValidation(cbV, cbN, btn) {
       const isDirectSend = !cbV || !cbN;
       const selected = isDirectSend ? "SEND" : (cbV.checked ? "SIM" : cbN.checked ? "NÃO" : null);
@@ -933,8 +946,7 @@
       }
       if (!optelName) optelName = sessionStorage.getItem("currentUserName") || "";
       const emailValidated = {
-        to: "secretaria.ahbfaro@gmail.com",
-        cc: "comando0805.ahbfaro@gmail.com",
+        cat: "volunt_valid",
         subject: "Validação de Serviços Remunerados - Voluntariado",
         body: `${greeting}<br><br>
                Foi validado o formulário de serviços remunerados efetuados por elementos em regime de voluntariado.<br><br>Proceda à sua impressão em CB360 Online.<br><br>
@@ -942,8 +954,7 @@
                O Comandante,<br>
                ${commanderName}`};
       const emailNotValidated = {
-        to: "central0805.ahbfaro@gmail.com",
-        cc: "comando0805.ahbfaro@gmail.com",
+        cat: "volunt_invalid",
         subject: "Inconsistências - Serviços Remunerados - Voluntariado",
         body: `${greeting}<br><br>
                O formulário de serviços remunerados efetuados por elementos em regime de voluntariado contém inconsistências.<br><br>Proceda à sua correção.<br><br>
@@ -951,8 +962,7 @@
                O Comandante,<br>
                ${commanderName}`};
       const EmailForVerification = {
-        to: "comandante.faroahb@gmail.com",
-        cc: "comando0805.ahbfaro@gmail.com",
+        cat: "volunt_verify",
         subject: "Novo Mapa de Serviços para Validação - Voluntariado",
         body: `${greeting}<br><br>
                Venho através do presente remeter para validação o relatório de serviços de voluntariado efetuados ${periodText}.<br><br>
@@ -968,10 +978,12 @@
       }
       try {
         btn.textContent = "A enviar...";
+        const {cat, ...mailContent} = emailData;
+        const recipients = await vsGetMailRecipients(corpNr, cat);
         const response = await fetch("https://cb360-online.vercel.app/api/prevpay_convert_and_send", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({action: "send-email", ...emailData})
+          body: JSON.stringify({action: "send-email", ...recipients, ...mailContent})
         });
         const result = await response.json();
         if (response.ok) {

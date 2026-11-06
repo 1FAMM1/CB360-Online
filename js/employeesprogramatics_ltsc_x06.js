@@ -1676,7 +1676,7 @@
         updateLoadingPopup(`A gerar escala em ${format === "pdf" ? "PDF" : "Excel"}...`);
         const response = await fetch("https://cb360-online.vercel.app/api/employees_convert_and_send", {
           method:"POST", headers:{"Content-Type":"application/json"},
-          body:JSON.stringify({mode:"monthly_scales", year, month, employees, workingHours, format})
+          body:JSON.stringify({mode:"monthly_scales", year, month, employees, workingHours, format, municipalHoliday: sessionStorage.getItem("municipalHoliday") || "", municipalHolidayName: sessionStorage.getItem("municipalHolidayName") || ""})
         });
         if (!response.ok) throw new Error(`Erro API: ${response.status} ${await response.text().catch(() => "")}`);
         const url = URL.createObjectURL(await response.blob());
@@ -1707,7 +1707,7 @@
           updateLoadingPopup(`A processar [${i + 1}/${employees.length}]: ${emp.abv_name}`, Math.round(((i + 1) / employees.length) * 100));
           const response = await fetch("https://cb360-online.vercel.app/api/employees_convert_and_send", {
             method:"POST", headers:{"Content-Type":"application/json"},
-            body:JSON.stringify({mode:"point_sheet", year, month, employee: emp, workingHours})
+            body:JSON.stringify({mode:"point_sheet", year, month, employee: emp, workingHours, municipalHoliday: sessionStorage.getItem("municipalHoliday") || "", municipalHolidayName: sessionStorage.getItem("municipalHolidayName") || ""})
           });
           if (!response.ok) { const err = await response.json(); throw new Error(`Erro no funcionário ${emp.abv_name}: ${err.error || "Falha na API"}`); }
           const donor = await PDFDocument.load(await response.arrayBuffer());
@@ -4966,7 +4966,7 @@
         const response = await fetch("https://cb360-online.vercel.app/api/employees_convert_and_send", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({mode: "eip_annual_map", year: data.year, days: data.days, format: "pdf"})
+          body: JSON.stringify({mode: "eip_annual_map", year: data.year, days: data.days, format: "pdf", municipalHoliday: sessionStorage.getItem("municipalHoliday") || "", municipalHolidayName: sessionStorage.getItem("municipalHolidayName") || ""})
         });
         if (!response.ok) throw new Error("Erro na resposta da API");
         const blob = await response.blob();

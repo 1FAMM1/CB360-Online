@@ -803,9 +803,7 @@
         }
         const gridContainer = document.getElementById("ppia22-grid-container");
         for (const ppi of filtered) {
-          await loadPPIA22DataInfoGrid(ppi.ppi_grid);
-          await loadPPIA22DataSpecials(ppi.ppi_grid);
-          await loadPPIA22GridSeparated(ppi.ppi_grid);
+          await loadPPIA22All(ppi.ppi_grid);
           const tempContainer = gridContainer.firstChild;
           if (tempContainer) createFinalHTable(tempContainer);
           ppia22ABSNoteTable(ensureAbsContainer("ppia22-abs-note","ppia22-grid-controls"), ppi.ppi_grid);

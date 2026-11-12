@@ -212,7 +212,8 @@
               <select id="cb_select"></select>
             </div>
 
-            <div class="sub-title">Novo utilizador do CB360 Online</div>
+            <div class="sub-title">Novo administrador da corporação</div>
+            <p class="muted" style="margin:0 0 8px;">Cria a ficha do elemento como <b>admin</b>, com os acessos da corporação, e o login do CB360 Online. Os restantes elementos e acessos são geridos depois pelo admin, no Online.</p>
             <div class="form-row">
               <label>Nome Completo:</label>
               <input type="text" id="new-user-name" style="width: 400px;" maxlength="200">
@@ -230,18 +231,11 @@
               <input type="password" id="pass-online" style="width: 200px;" maxlength="128" autocomplete="new-password">
             </div>
             <div class="form-row">
-              <label>Perfil:</label>
-              <select id="new-user-role">
-                <option value="">(manter o da ficha)</option>
-                <option value="user">user</option>
-                <option value="subadmin">subadmin</option>
-                <option value="admin">admin</option>
-              </select>
-              <label>Validade:</label>
+              <label>Validade do acesso:</label>
               <input type="date" id="new-user-validate">
             </div>
             <div class="form-actions">
-              <button class="btn btn-success" id="btnAddUser" type="button" style="margin:15px 0 0 0;">ADICIONAR</button>
+              <button class="btn btn-success" id="btnAddUser" type="button" style="margin:15px 0 0 0;">CRIAR ADMINISTRADOR</button>
             </div>
 
             <div class="sub-title">Utilizadores da corporação</div>
@@ -797,17 +791,14 @@
         patent: $('new-user-patent').value,
         username: $('user-online').value.trim(),
         password: $('pass-online').value,
-        user_role: $('new-user-role').value,
         validate: $('new-user-validate').value
       };
       if (!body.full_name.trim()) throw new Error('Indique o nome completo.');
       if (!body.n_int) throw new Error('Indique o número interno.');
       if (body.password.length < 8) throw new Error('A password deve ter pelo menos 8 caracteres.');
       const res = await api('create_user', body);
-      toast(`Utilizador ${body.username} criado.`);
-      if (res && res.warning) toast(res.warning, 'warn');
+      toast(`Administrador ${body.username} criado${res && res.ficha_existente ? ' (ficha existente atualizada para admin)' : ''}.`);
       ['new-user-name', 'new-user-nint', 'new-user-patent', 'user-online', 'pass-online', 'new-user-validate'].forEach(id => $(id).value = '');
-      $('new-user-role').value = '';
       loadUsers();
     }));
 

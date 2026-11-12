@@ -744,7 +744,7 @@
         });
       }, 100);      
       const [login, mobileLogin] = await Promise.all([
-      loadUserLogin(row.full_name, row.corp_oper_nr),
+      loadUserLogin(row.n_int, row.corp_oper_nr),
         loadMobileLogin(row.n_int, row.corp_oper_nr)
       ]);
       document.getElementById("win_user_name_main").value = login?.username || "";
@@ -789,17 +789,17 @@
         /* ---------- validações das credenciais ANTES de gravar ---------- */
         let existingUser = null;
         if (usernameVal) {
-          const checkUser = await fetch(`${SUPABASE_URL}/rest/v1/users?username=eq.${encodeURIComponent(usernameVal)}&select=id,corp_oper_nr,full_name`, {
+          const checkUser = await fetch(`${SUPABASE_URL}/rest/v1/users?username=eq.${encodeURIComponent(usernameVal)}&select=id,corp_oper_nr,full_name,n_int`, {
             headers: getSupabaseHeaders()
           });
           if (!checkUser.ok) throw new Error("Erro ao verificar utilizador Online");
           const found = await checkUser.json();
-          const other = found.find(u => u.corp_oper_nr !== corpOperNr || u.full_name !== fullName);
+          const other = found.find(u => u.corp_oper_nr !== corpOperNr || !nintVariants(nInt).includes(String(u.n_int)));
           if (other) {
             showPopup('popup-danger', "⚠️ O username Online já está a ser usado por outro utilizador.\nPor favor introduza outro.");
             return;
           }
-          existingUser = found[0] || await loadUserLogin(fullName, corpOperNr);
+          existingUser = found[0] || await loadUserLogin(nInt, corpOperNr);
           if (!existingUser && !passwordVal) {
             showPopup('popup-danger', "⚠️ Para criar o acesso Online tem de definir uma password.");
             return;
@@ -917,7 +917,7 @@
     async function deleteRecord(row) {
       if (!confirm(`Deseja remover ${row.full_name}?`)) return;
       try {
-        const resUsers = await fetch(`${SUPABASE_URL}/rest/v1/users?full_name=eq.${encodeURIComponent(row.full_name)}&corp_oper_nr=eq.${row.corp_oper_nr}`, {
+        const resUsers = await fetch(`${SUPABASE_URL}/rest/v1/users?n_int=in.(${nintVariants(row.n_int).map(v => `"${v}"`).join(",")})&corp_oper_nr=eq.${row.corp_oper_nr}`, {
           method: "DELETE",
           headers: getSupabaseHeaders()
         });
@@ -1061,8 +1061,9 @@
       const val = document.getElementById("win_type").value;
       return val === "Administrador" ? "admin" : (val === "Sub-Administrador" ? "subadmin" : "user");
     }
-    async function loadUserLogin(name, corp) {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/users?full_name=eq.${encodeURIComponent(name)}&corp_oper_nr=eq.${corp}&select=id,username,validate`, {
+    async function loadUserLogin(nInt, corp) {
+      const list = nintVariants(nInt).map(v => `"${v}"`).join(",");
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/users?n_int=in.(${list})&corp_oper_nr=eq.${corp}&select=id,username,validate`, {
         headers: getSupabaseHeaders()
       });
       if (!res.ok) return null;
@@ -1456,13 +1457,13 @@
     }
     /* ======= NOVOS GRUPOS (antes estavam fixos no código com os emails de Faro) ======= */
     const MAIL_EXTRA_GROUPS = [
-      {prefix: "bulk", fields: ["to", "cc", "bcc"], msg: "Emails dos envios em massa atualizados com sucesso."},
-      {prefix: "attendance", fields: ["to", "cc", "bcc"], msg: "Emails da Lista de Comparências atualizados com sucesso."},
-      {prefix: "volunt_verify", fields: ["to", "cc", "bcc"], msg: "Emails de envio para validação (Voluntariado) atualizados com sucesso."},
-      {prefix: "volunt_valid", fields: ["to", "cc", "bcc"], msg: "Emails de serviços validados (Voluntariado) atualizados com sucesso."},
+      {prefix: "bulk",           fields: ["to", "cc", "bcc"], msg: "Emails dos envios em massa atualizados com sucesso."},
+      {prefix: "attendance",     fields: ["to", "cc", "bcc"], msg: "Emails da Lista de Comparências atualizados com sucesso."},
+      {prefix: "volunt_verify",  fields: ["to", "cc", "bcc"], msg: "Emails de envio para validação (Voluntariado) atualizados com sucesso."},
+      {prefix: "volunt_valid",   fields: ["to", "cc", "bcc"], msg: "Emails de serviços validados (Voluntariado) atualizados com sucesso."},
       {prefix: "volunt_invalid", fields: ["to", "cc", "bcc"], msg: "Emails de serviços com inconsistências (Voluntariado) atualizados com sucesso."},
-      {prefix: "decir_disp", fields: ["to", "cc"], msg: "Emails das disponibilidades DECIR atualizados com sucesso."},
-      {prefix: "rh_disp", fields: ["to", "cc"], msg: "Emails das disponibilidades das escalas (INEM/EIP/OPTEL) atualizados com sucesso."}
+      {prefix: "decir_disp",     fields: ["to", "cc"],        msg: "Emails das disponibilidades DECIR atualizados com sucesso."},
+      {prefix: "rh_disp",        fields: ["to", "cc"],        msg: "Emails das disponibilidades das escalas (INEM/EIP/OPTEL) atualizados com sucesso."}
     ];
     MAIL_EXTRA_GROUPS.forEach(g => {
       document.getElementById(`config_${g.prefix}_mail_save`)?.addEventListener("click", async () => {

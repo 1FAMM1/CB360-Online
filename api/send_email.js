@@ -19,10 +19,10 @@ const EMAIL_RE = /^[^\s@<>"',;]+@[^\s@<>"',;]+\.[^\s@<>"',;]+$/;
 async function whoami(token) {
   if (!token) return null;
   try {
-    const r = await fetch(`${process.env.SUPABASE_URL}/rest/v1/rpc/cb360_whoami`, {
+    const r = await fetch(`${process.env.SUPABASE_URL || "https://rjkbodfqsvckvnhjwmhg.supabase.co"}/rest/v1/rpc/cb360_whoami`, {
       method: "POST",
       headers: {
-        apikey: process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY,
+        apikey: process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY,
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },

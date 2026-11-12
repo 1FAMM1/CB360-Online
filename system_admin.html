@@ -9,7 +9,7 @@
     /* complementos desta página (o resto vem do adm_11x.css) */
     .adm-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 14px; }
     .adm-table th, .adm-table td { padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: left; vertical-align: middle; }
-    .adm-table th { background: #f3f3f3; }
+    .adm-table th { background: #2c3e50; color: #fff !important; font-weight: 600; }
     .adm-table input[type="text"] { width: 100%; box-sizing: border-box; }
     .adm-table img { height: 32px; max-width: 60px; object-fit: contain; }
     .btn-sm { padding: 4px 8px; font-size: 12px; margin: 0 2px; cursor: pointer; }
@@ -17,7 +17,10 @@
     .btn-plain { background: #eee; border: 1px solid #ccc; border-radius: 4px; }
     .muted { color: #777; font-size: 12px; }
     .sub-title { margin: 22px 0 6px; font-size: 15px; font-weight: 600; }
-    #admDialog { border: 0; border-radius: 10px; padding: 18px 20px; min-width: 320px; box-shadow: 0 10px 40px rgba(0,0,0,.35); }
+    #admDialog { position: fixed; inset: 0; margin: auto; height: fit-content; max-height: 90vh; max-width: 92vw; overflow: auto;
+                 border: 0; border-radius: 10px; padding: 18px 20px; min-width: 320px; box-shadow: 0 10px 40px rgba(0,0,0,.35); }
+    #adm-toasts { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10000; display: flex; flex-direction: column; align-items: center; pointer-events: none; }
+    .adm-toast { margin-top: 8px; padding: 10px 18px; border-radius: 8px; color: #fff; font-size: 14px; box-shadow: 0 6px 18px rgba(0,0,0,.3); max-width: 600px; }
     #admDialog::backdrop { background: rgba(0,0,0,.45); }
     #admDialog h3 { margin: 0 0 12px; }
     #admDialog .form-row { margin-bottom: 8px; }
@@ -208,6 +211,7 @@
     2025 © Fábio Martins | Sistemas de Informação
   </footer>
   <div id="toast-container" class="toast-container"></div>
+  <div id="adm-toasts"></div>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <script src="js/initconfig_ltsc_x06.js"></script>
   <script>
@@ -254,12 +258,11 @@
 
     /* ---------- toast ---------- */
     function toast(msg, type = 'success') {
-      const c = $('toast-container');
+      const c = $('adm-toasts');
       const t = document.createElement('div');
-      t.className = `toast toast-${type}`;
-      t.textContent = msg;
-      t.style.cssText = 'margin-top:8px;padding:10px 14px;border-radius:6px;color:#fff;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,.25);' +
-        `background:${type === 'error' ? '#b71c1c' : type === 'warn' ? '#e65100' : '#2e7d32'}`;
+      t.className = 'adm-toast';
+      t.textContent = (type === 'error' ? '✕ ' : type === 'warn' ? '⚠ ' : '✓ ') + msg;
+      t.style.background = type === 'error' ? '#b71c1c' : type === 'warn' ? '#e65100' : '#2e7d32';
       c.appendChild(t);
       setTimeout(() => t.remove(), type === 'error' || type === 'warn' ? 6000 : 3500);
     }

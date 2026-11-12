@@ -1,4 +1,4 @@
-    /*************************************************************************
+        /*************************************************************************
     * * 🟦 CB360 ONLINE - API ENGINE
     * 🚀 Desenvolvido por: [Fábio Martins / Sistemas de Informação]
     * 📅 Ano: 2023 - 2026
@@ -10,6 +10,7 @@
     import os from 'os';
     import path from 'path';
     import https from 'https';
+    import { requireOnline } from './_cb360auth.js';
     import {ServicePrincipalCredentials, PDFServices, MimeType, CreatePDFJob, CreatePDFResult, SDKError, ServiceUsageError, ServiceApiError, ClientConfig, Region}
     from "@adobe/pdfservices-node-sdk";
     const CLIENT_ID = process.env.ADOBE_CLIENT_ID;
@@ -30,15 +31,23 @@
     export default async function handler(req, res) {
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
       if (req.method === 'OPTIONS') return res.status(200).end();
       if (req.method !== 'POST') return res.status(405).json({error: 'Método não permitido'});
+      /* só o CB360 Online (token com user_role) */
+      const claims = await requireOnline(req, res); if (!claims) return;
       if (!CLIENT_ID || !CLIENT_SECRET) return res.status(500).json({error: "Erro: Chaves da Adobe não configuradas."});
       const tempDir = os.tmpdir();
       let inputFilePath = null;
       let outputFilePath = null;
       try {
-        const data = req.body;
+        const data = req.body || {};
+        const days = parseInt(data.daysInMonth, 10);
+        if (!(days >= 28 && days <= 31) || !Array.isArray(data.weekdays)) return res.status(400).json({error: 'Dados incompletos.'});
+        data.daysInMonth = days;
+        /* nome do ficheiro sem caminhos nem caracteres especiais (vai para /tmp e para o cabeçalho) */
+        data.fileName = String(data.fileName || 'escala').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^A-Za-z0-9._-]/g, '_').replace(/^\.+/, '').slice(0, 100) || 'escala';
         const templateBuffer = await downloadTemplate(TEMPLATE_URL);
         const workbook = new ExcelJS.Workbook();
         await workbook.xlsx.load(templateBuffer);
@@ -145,9 +154,10 @@
           if (inputFilePath && fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
           if (outputFilePath && fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
         } catch {}
+        console.error('scales_convert:', error);
         if (error instanceof SDKError || error instanceof ServiceUsageError || error instanceof ServiceApiError) {
-          return res.status(500).json({error: "Erro no serviço Adobe PDF Services", details: error.message});
+          return res.status(500).json({error: "Erro no serviço Adobe PDF Services"});
         }
-        return res.status(500).json({error: "Erro interno ao converter para PDF", details: error.message});
+        return res.status(500).json({error: "Erro interno ao converter para PDF"});
       }
     }

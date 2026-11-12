@@ -17,22 +17,58 @@
     .btn-plain { background: #eee; border: 1px solid #ccc; border-radius: 4px; }
     .muted { color: #777; font-size: 12px; }
     .sub-title { margin: 22px 0 6px; font-size: 15px; font-weight: 600; }
-    #admDialog { position: fixed; inset: 0; margin: auto; height: fit-content; max-height: 90vh; max-width: 92vw; overflow: auto;
-                 border: 0; border-radius: 10px; padding: 18px 20px; min-width: 320px; box-shadow: 0 10px 40px rgba(0,0,0,.35); }
+    /* ---------- scrollbars finas ---------- */
+    * { scrollbar-width: thin; scrollbar-color: #a7b1bc transparent; }
+    *::-webkit-scrollbar { width: 6px; height: 6px; }
+    *::-webkit-scrollbar-track { background: transparent; }
+    *::-webkit-scrollbar-thumb { background: #a7b1bc; border-radius: 6px; }
+    *::-webkit-scrollbar-thumb:hover { background: #7d8a97; }
+
+    /* ---------- mensagens ---------- */
     #adm-toasts { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10000; display: flex; flex-direction: column; align-items: center; pointer-events: none; }
     .adm-toast { margin-top: 8px; padding: 10px 18px; border-radius: 8px; color: #fff; font-size: 14px; box-shadow: 0 6px 18px rgba(0,0,0,.3); max-width: 600px; }
-    #admDialog::backdrop { background: rgba(0,0,0,.45); }
-    #admDialog h3 { margin: 0 0 12px; }
-    #admDialog .form-row { margin-bottom: 8px; }
-    #admDialog .dlg-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
-    .mod-tree { max-height: 60vh; overflow-y: auto; min-width: 420px; padding: 4px 8px; border: 1px solid #ddd; border-radius: 6px; }
-    .mod-tree label { display: flex; align-items: center; gap: 6px; padding: 3px 0; font-size: 14px; cursor: pointer; }
-    .mod-tree .mod-children { margin-left: 22px; }
+
+    /* ---------- janelas (diálogos) ---------- */
+    #admDialog { position: fixed; inset: 0; margin: auto; height: fit-content; max-height: 88vh; max-width: 92vw; min-width: 380px;
+                 padding: 0; border: 0; border-radius: 12px; overflow: hidden; background: #fff; color: #2c3e50;
+                 box-shadow: 0 24px 60px rgba(0,0,0,.35), 0 4px 12px rgba(0,0,0,.15); font-family: inherit; }
+    #admDialog[open] { animation: admPop .18s ease-out; }
+    @keyframes admPop { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
+    #admDialog::backdrop { background: rgba(20, 28, 38, .55); backdrop-filter: blur(2px); }
+    #admDialog form { display: flex; flex-direction: column; max-height: 88vh; margin: 0; }
+    #admDialog h3 { margin: 0; padding: 14px 20px; background: #2c3e50; color: #fff; font-size: 16px; font-weight: 600; letter-spacing: .2px; }
+    #admDialogBody { padding: 16px 20px 6px; overflow-y: auto; }
+    #admDialogBody p { margin: 0 0 10px; line-height: 1.45; }
+    #admDialog .form-row { display: grid; grid-template-columns: 130px 1fr; align-items: center; gap: 10px; margin-bottom: 10px; }
+    #admDialog .form-row label { font-size: 13px; color: #55606b; margin: 0; }
+    #admDialog .form-row input, #admDialog .form-row select { width: 100%; box-sizing: border-box; padding: 8px 10px; font-size: 14px;
+                 border: 1px solid #cfd6dd; border-radius: 6px; background: #fff; color: #2c3e50; outline: none; }
+    #admDialog .form-row input:focus, #admDialog .form-row select:focus { border-color: #2c3e50; box-shadow: 0 0 0 3px rgba(44,62,80,.12); }
+    #admDialog .dlg-actions { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 20px; margin: 0; border-top: 1px solid #e6eaee; background: #f7f9fa; }
+    #admDialog .dlg-actions button { margin: 0; padding: 8px 16px; font-size: 13px; font-weight: 600; border-radius: 6px; cursor: pointer; }
+    #admDialog .dlg-actions button[value="cancel"] { background: #fff; color: #55606b; border: 1px solid #cfd6dd; }
+    #admDialog .dlg-actions button[value="cancel"]:hover { background: #eef1f4; }
+    #admDialog .dlg-actions #admDialogOk { background: #28a745; color: #fff; border: 1px solid #28a745; }
+    #admDialog .dlg-actions #admDialogOk:hover { background: #218838; }
+    #admDialog.danger .dlg-actions #admDialogOk { background: #b71c1c; border-color: #b71c1c; }
+
+    /* ---------- árvore dos módulos ---------- */
+    .mod-tree { max-height: 55vh; overflow-y: auto; min-width: 440px; padding: 6px 10px; border: 1px solid #e1e6ea; border-radius: 8px; background: #fbfcfd; }
+    .mod-tree label { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 14px; cursor: pointer; }
+    .mod-tree .mod-children { margin-left: 22px; border-left: 1px dashed #d5dce2; padding-left: 8px; }
+    .mod-tree > .mod-node { padding: 2px 0; }
+    .mod-tree > .mod-node + .mod-node { border-top: 1px solid #eef1f4; }
     .mod-tree > .mod-node > label { font-weight: 600; }
-    .mod-tools { display: flex; gap: 8px; margin-bottom: 8px; }
-    /* Gestão de Utilizadores: o cartão ocupa a altura disponível do ecrã */
+    .mod-tools { display: flex; gap: 8px; margin-bottom: 10px; }
+
+    /* ---------- Gestão de Utilizadores: o scroll é só na tabela ---------- */
     #user-management .card-layout { height: auto !important; max-height: none !important; }
-    #user-management .info-card { width: 100%; box-sizing: border-box; height: calc(100vh - 210px) !important; max-height: none !important; overflow-y: auto; }
+    #user-management .info-card { width: 100%; box-sizing: border-box; height: calc(100vh - 210px) !important; max-height: none !important;
+                 overflow: hidden !important; display: flex; flex-direction: column; }
+    #user-management .info-card > * { flex-shrink: 0; }
+    #user-management .info-card > .users-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; border: 1px solid #e1e6ea; border-radius: 6px; }
+    .users-scroll .adm-table { margin-top: 0; }
+    .users-scroll thead th { position: sticky; top: 0; z-index: 1; }
   </style>
 </head>
 <body>
@@ -176,12 +212,14 @@
             </div>
 
             <div class="sub-title">Utilizadores da corporação</div>
+            <div class="users-scroll">
             <table id="usersTable" class="adm-table">
               <thead>
                 <tr><th>Nº</th><th>Nome</th><th>Username</th><th>Posto</th><th>Perfil</th><th>Validade</th><th>Ações</th></tr>
               </thead>
               <tbody></tbody>
             </table>
+            </div>
           </div>
         </div>
       </section>
@@ -632,9 +670,11 @@
     }
 
     async function deleteUser(u) {
+      $('admDialog').classList.add('danger');
       const v = await dialog('Apagar utilizador', [
         { text: `Apagar o acesso ao CB360 Online de ${u.full_name || u.username} (${u.username})? A ficha do elemento não é apagada.` }
       ], 'Apagar');
+      $('admDialog').classList.remove('danger');
       if (!v) return;
       await run(null, async () => {
         await api('delete_user', { id: u.id });

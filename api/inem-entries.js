@@ -10,6 +10,7 @@
     import os from 'os';
     import path from 'path';
     import https from 'https';
+    import { requireOnline } from './_cb360auth.js';
     import {ServicePrincipalCredentials, PDFServices, MimeType, CreatePDFResult, CreatePDFJob, ClientConfig, Region}
     from "@adobe/pdfservices-node-sdk";
     const CLIENT_ID = process.env.ADOBE_CLIENT_ID;
@@ -60,14 +61,17 @@
     export default async function handler(req, res) {
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
       if (req.method === 'OPTIONS') return res.status(200).end();
       if (req.method !== 'POST') return res.status(405).json({error: 'Método não permitido'});
+      /* só o CB360 Online (token com user_role): dados de vítimas (moradas, idades) */
+      const claims = await requireOnline(req, res); if (!claims) return;
       const tempDir = os.tmpdir();
       let outputFile = null;
       try {
         const {rows, format} = req.body;
         if (!Array.isArray(rows)) return res.status(400).json({error: "Rows inválidas"});
+        if (rows.length > 300) return res.status(400).json({error: "Demasiadas linhas (máx. 300)."});
         const templateBuffer = await downloadTemplate(TEMPLATE_INEM_URL);
         const workbook = new ExcelJS.Workbook();
         await workbook.xlsx.load(templateBuffer);
@@ -130,6 +134,7 @@
         }
       } catch (e) {
         try {if (outputFile) fs.unlinkSync(outputFile);} catch {}
-        return res.status(500).json({error: "Erro interno", details: e.message});
+        console.error("inem-entries:", e);
+        return res.status(500).json({error: "Erro interno"});
       }
     }

@@ -854,8 +854,7 @@
           if (nrInput)   nrInput.value   = report.report_nr ?? '';
           if (dateInput) {
             if (report.report_date) {
-              const d = new Date(report.report_date);
-              dateInput.value = !isNaN(d) ? d.toISOString().split('T')[0] : '';
+              dateInput.value = report.report_date ? String(report.report_date).slice(0, 10) : '';
             } else {
               dateInput.value = '';
             }
@@ -998,15 +997,11 @@
               console.error("Erro ao inserir user_notifications:", rawN);
             }    
             for (const nint of uniqueNints) {
-              try {
-                await fetch("https://cb-360-app.vercel.app/api/sendPush", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({recipient_nint: nint.toString(), corp_nr: corp_oper_nr, sender_name: "CB360 Online", message_text: msgNotif, sender_nint: "0"})
-                });
-              } catch (errPush) {
-                console.error("Erro ao enviar push (nint=" + nint + "):", errPush);
-              }
+              fetch("https://cb-360-app.vercel.app/api/sendPush", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({recipient_nint: nint.toString(), tipo: 'aviso', pagina: 'MissReport', sender_name: "CB360 Online", message_text: msgNotif})
+              }).catch(errPush => console.error("Erro ao enviar push (nint=" + nint + "):", errPush));
             }
           }
         } catch (errNotif) {

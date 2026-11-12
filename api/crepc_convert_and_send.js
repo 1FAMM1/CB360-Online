@@ -9,6 +9,7 @@
     import nodemailer from "nodemailer";
     import fs from "fs";
     import https from "https";
+    import { requireOnline } from "./_cb360auth.js";
     import {ServicePrincipalCredentials, PDFServices, MimeType, CreatePDFResult, CreatePDFJob, ClientConfig, Region}
     from "@adobe/pdfservices-node-sdk";
     const CLIENT_ID = process.env.ADOBE_CLIENT_ID;
@@ -21,8 +22,25 @@
                        g2: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/anxG2_template.xlsx",
                       };
     export const config = {api: {bodyParser: {sizeLimit: "10mb"}},};
+    /* ===== Segurança: destinatários válidos e em número limitado; texto simples escapado ===== */
+    const MAX_RECIPIENTS = 50;
+    const EMAIL_RE = /^[^\s@<>"',;]+@[^\s@<>"',;]+\.[^\s@<>"',;]+$/;
+    const cleanList = (v) => (Array.isArray(v) ? v : String(v || "").split(",")).map(e => String(e || "").trim()).filter(Boolean);
+    function checkRecipients(body) {
+      const to = cleanList(body.recipients), cc = cleanList(body.ccRecipients), bcc = cleanList(body.bccRecipients);
+      const all = [...to, ...cc, ...bcc];
+      if (!to.length) return {error: "A lista de destinatarios principais esta vazia."};
+      if (all.length > MAX_RECIPIENTS) return {error: `Demasiados destinatarios (max. ${MAX_RECIPIENTS}).`};
+      if (!all.every(e => EMAIL_RE.test(e))) return {error: "Ha enderecos de e-mail invalidos."};
+      return {to, cc, bcc};
+    }
+    const esc = (v) => String(v ?? "").replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+    const safeSubject = (v) => String(v || "").replace(/[\r\n]+/g, " ").slice(0, 250);
     // Template HTML partilhado
     function buildEmailTemplate({title, subtitle, logoUrl, emailBody, corpName, corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail}) {
+      [title, subtitle, corpName, corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail] =
+        [title, subtitle, corpName, corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail].map(esc);
+      logoUrl = /^https:\/\/[^\s"'<>]+$/.test(String(logoUrl || "")) ? logoUrl : "";
       const addressLine = [corpAddress, [corpCp, corpLocalitie].filter(Boolean).join(" "), "Portugal"].filter(Boolean).join(" | ");  
       const phoneLine = [corpPhoneMobile ? `Telem.: ${corpPhoneMobile}` : "", corpPhoneLandline ? `Telef: ${corpPhoneLandline}` : ""].filter(Boolean).join(" | ");
       const emailLine = corpEmail ? `Email: ${corpEmail}` : "";
@@ -125,10 +143,12 @@
     }
     // Handler MOA
     async function handleMOA(req, res) {
-      const {data, recipients, ccRecipients, bccRecipients, emailBody, emailSubject} = req.body || {};
-      if (!data || !recipients || recipients.length === 0) {
-        return res.status(400).json({error: "Faltam dados essenciais ou a lista de destinatarios principais esta vazia."});
-      }
+      const {data, emailBody, emailSubject} = req.body || {};
+      if (!data) return res.status(400).json({error: "Faltam dados essenciais."});
+      const rc = checkRecipients(req.body || {});
+      if (rc.error) return res.status(400).json({error: rc.error});
+      const {to: recipients, cc: ccRecipients, bcc: bccRecipients} = rc;
+      data.corp_oper_nr = req.cb360.corp_oper_nr;   /* a corporação vem do token */
       const templateBuffer = await downloadTemplate(TEMPLATES.moa);
       const workbook = new ExcelJS.Workbook();
       await workbook.xlsx.load(templateBuffer);
@@ -201,17 +221,19 @@
                                       corpAddress: data.corpAddress || "", corpCp: data.corpCp || "", corpLocalitie: data.corpLocalitie || "", corpPhoneMobile: data.corpPhoneMobile || "", corpPhoneLandline: data.corpPhoneLandline || "",
                                       corpEmail: data.corpEmail || "",});
       await transporter.sendMail({from: `"SALOC ${data.corp_oper_nr || "Corporacao"}" <${GMAIL_EMAIL}>`, to: recipients.join(", "), cc: ccRecipients && ccRecipients.length  > 0 ? ccRecipients.join(", ")  : "",
-                                  bcc: bccRecipients && bccRecipients.length > 0 ? bccRecipients.join(", ") : "", subject: emailSubject || `MOA - ${data.moa_cb || data.moa_device_type || ""}`,
+                                  bcc: bccRecipients && bccRecipients.length > 0 ? bccRecipients.join(", ") : "", subject: safeSubject(emailSubject || `MOA - ${data.moa_cb || data.moa_device_type || ""}`),
                                   html: htmlEmail, text: "Segue em anexo a MOA.", attachments: [{filename: `${fileName}.pdf`, content: pdfBuffer, contentType: "application/pdf"}],
                                  });
       return res.status(200).json({success: true, message: `MOA gerada e enviada com sucesso para ${recipients.length} destinatario(s).`});
     }
     // Handler SITOP
     async function handleSITOP(req, res) {
-      const {data, recipients, ccRecipients, bccRecipients, emailBody, emailSubject} = req.body || {};
-      if (!data || !recipients || recipients.length === 0) {
-        return res.status(400).json({error: "Faltam dados essenciais ou a lista de destinatarios principais esta vazia."});
-      }
+      const {data, emailBody, emailSubject} = req.body || {};
+      if (!data) return res.status(400).json({error: "Faltam dados essenciais."});
+      const rc = checkRecipients(req.body || {});
+      if (rc.error) return res.status(400).json({error: rc.error});
+      const {to: recipients, cc: ccRecipients, bcc: bccRecipients} = rc;
+      data.corp_oper_nr = req.cb360.corp_oper_nr;   /* a corporação vem do token */
       const templateBuffer = await downloadTemplate(TEMPLATES.sitop);
       const workbook = new ExcelJS.Workbook();
       await workbook.xlsx.load(templateBuffer);
@@ -247,16 +269,18 @@
                                             corpCp: data.corpCp || "", corpLocalitie: data.corpLocalitie || "", corpPhoneMobile: data.corpPhoneMobile || "", corpPhoneLandline: data.corpPhoneLandline || "", corpEmail: data.corpEmail || "",
                                            });
       await transporter.sendMail({from: `"SALOC ${data.corp_oper_nr || "Corporacao"}" <${GMAIL_EMAIL}>`, to: recipients.join(", "), cc: ccRecipients && ccRecipients.length  > 0 ? ccRecipients.join(", ")  : '',
-                                  bcc: bccRecipients && bccRecipients.length > 0 ? bccRecipients.join(", ") : '', subject: emailSubject || `Situação Operacional - ${prefix} ${data.vehicle}_${data.corp_oper_nr || "Corporacao"}`, html: htmlEmail, text: 'Segue em anexo o documento de Situação operacional de veiculos.', attachments: [{filename: `${fileName}.pdf`, content: pdfBuffer, contentType: 'application/pdf'}],});
+                                  bcc: bccRecipients && bccRecipients.length > 0 ? bccRecipients.join(", ") : '', subject: safeSubject(emailSubject || `Situação Operacional - ${prefix} ${data.vehicle}_${data.corp_oper_nr || "Corporacao"}`), html: htmlEmail, text: 'Segue em anexo o documento de Situação operacional de veiculos.', attachments: [{filename: `${fileName}.pdf`, content: pdfBuffer, contentType: 'application/pdf'}],});
       return res.status(200).json({success: true, message: `PDF gerado e enviado com sucesso para ${recipients.length} destinatario(s).`
                                   });
     }
     // Handler G2
     async function handleG2(req, res) {
-      const {data, recipients, ccRecipients, bccRecipients, emailBody, emailSubject} = req.body || {};
-      if (!data || !recipients || recipients.length === 0) {
-        return res.status(400).json({error: "Faltam dados essenciais ou a lista de destinatarios principais esta vazia."});
-      }
+      const {data, emailBody, emailSubject} = req.body || {};
+      if (!data) return res.status(400).json({error: "Faltam dados essenciais."});
+      const rc = checkRecipients(req.body || {});
+      if (rc.error) return res.status(400).json({error: rc.error});
+      const {to: recipients, cc: ccRecipients, bcc: bccRecipients} = rc;
+      data.corp_oper_nr = req.cb360.corp_oper_nr;   /* a corporação vem do token */
       const templateBuffer = await downloadTemplate(TEMPLATES.g2);
       const workbook = new ExcelJS.Workbook();
       await workbook.xlsx.load(templateBuffer);
@@ -309,7 +333,7 @@
         to: recipients.join(", "),
         cc: ccRecipients && ccRecipients.length > 0 ? ccRecipients.join(", ") : "",
         bcc: bccRecipients && bccRecipients.length > 0 ? bccRecipients.join(", ") : "",
-        subject: emailSubject || `Lista Nominal de Meios - Veículo ${data.vehicle || ""}_${data.corp_oper_nr || "Corporacao"}`,
+        subject: safeSubject(emailSubject || `Lista Nominal de Meios - Veículo ${data.vehicle || ""}_${data.corp_oper_nr || "Corporacao"}`),
         html: htmlEmail, text: "Segue em anexo a Lista Nominal de Meios.",
         attachments: [{filename: `${fileName}.pdf`, content: pdfBuffer, contentType: "application/pdf"}],
       });
@@ -319,8 +343,12 @@
     export default async function handler(req, res) {
       res.setHeader("Access-Control-Allow-Origin", "*");
       res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
       if (req.method === "OPTIONS") return res.status(200).end();
+      if (req.method !== "POST") return res.status(405).json({error: "Metodo nao permitido."});
+      /* só o CB360 Online (token com user_role) */
+      const claims = await requireOnline(req, res); if (!claims) return;
+      req.cb360 = claims;
       try {
         const {mode} = req.body || {};
         if (!mode || !["moa", "sitop", "g2"].includes(mode)) {
@@ -331,10 +359,6 @@
       if (mode === "g2") return await handleG2(req, res);
       } catch (err) {
         console.error("Erro no processo:", err);
-        return res.status(500).json({
-          error: "Erro no processo de geracao e envio",
-          details: err.message,
-          stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
-        });
+        return res.status(500).json({error: "Erro no processo de geracao e envio"});
       }
     }

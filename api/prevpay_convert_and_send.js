@@ -10,6 +10,7 @@
     import os from 'os';
     import https from 'https';
     import nodemailer from "nodemailer";
+    import { requireOnline } from './_cb360auth.js';
     import {ServicePrincipalCredentials, PDFServices, MimeType, CreatePDFResult, CreatePDFJob, ClientConfig, Region}
     from "@adobe/pdfservices-node-sdk";
     const CLIENT_ID = process.env.ADOBE_CLIENT_ID;
@@ -22,6 +23,10 @@
     export const config = {
       api: {bodyParser: {sizeLimit: '10mb'}}
     };
+    /* ===== Segurança: destinatários válidos e em número limitado ===== */
+    const MAX_RECIPIENTS = 50;
+    const EMAIL_RE = /^[^\s@<>"',;]+@[^\s@<>"',;]+\.[^\s@<>"',;]+$/;
+    const cleanList = (v) => (Array.isArray(v) ? v : String(v || "").split(",")).map(e => String(e || "").trim()).filter(Boolean);
     async function downloadTemplate(url) {
       return new Promise((resolve, reject) => {
         https.get(url, res => {
@@ -143,9 +148,14 @@
                          margins: {left: 0.3, right: 0.3, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3},
                          printTitlesRow: '7:9'};}
     async function handleSendEmail(req, res) {
-      const {to, cc, bcc, subject, body} = req.body || {};
-      if (!to || !subject || !body) {
+      const {subject, body} = req.body || {};
+      const to = cleanList(req.body?.to), cc = cleanList(req.body?.cc), bcc = cleanList(req.body?.bcc);
+      if (!to.length || !subject || !body) {
         return res.status(400).json({error: "Faltam dados essenciais (to, subject, body)."});
+      }
+      const all = [...to, ...cc, ...bcc];
+      if (all.length > MAX_RECIPIENTS || !all.every(e => EMAIL_RE.test(e))) {
+        return res.status(400).json({error: `Endereços inválidos ou mais de ${MAX_RECIPIENTS} destinatários.`});
       }
       try {
         const transporter = nodemailer.createTransport({
@@ -155,23 +165,25 @@
         await transporter.sendMail({
           from: `CB360 Online <${GMAIL_EMAIL}>`,
           to,
-          ...(cc ? {cc} : {}),
-          ...(bcc ? {bcc} : {}),
-          subject,
-          html: body
+          ...(cc.length ? {cc} : {}),
+          ...(bcc.length ? {bcc} : {}),
+          subject: String(subject).replace(/[\r\n]+/g, " ").slice(0, 250),
+          html: String(body)
         });
         return res.status(200).json({success: true, message: "Email enviado com sucesso."});
       } catch (error) {
         console.error("Erro no envio de email:", error);
-        return res.status(500).json({error: "Falha ao enviar e-mail", details: error.message});
+        return res.status(500).json({error: "Falha ao enviar e-mail"});
       }
     }
     export default async function handler(req, res) {
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
       if (req.method === 'OPTIONS') return res.status(200).end();
       if (req.method !== 'POST') return res.status(405).json({error: 'Método não permitido'});
+      /* só o CB360 Online (token com user_role): pagamentos e envio de emails */
+      const claims = await requireOnline(req, res); if (!claims) return;
       // Envio de emails de validação (action: 'send-email'); tudo o resto é geração de relatório
       if ((req.body || {}).action === 'send-email') return handleSendEmail(req, res);
       const tempDir = os.tmpdir();
@@ -179,6 +191,11 @@
       try {
         const {rows, year, month, format, globalTotal, reportType} = req.body;
         if (!Array.isArray(rows)) return res.status(400).json({error: 'Rows inválidas'});
+        if (rows.length > 2000) return res.status(400).json({error: 'Demasiadas linhas.'});
+        /* ano / mês vão para o nome do ficheiro: só valores válidos */
+        if (!/^\d{4}$/.test(String(year)) || !(String(month) === 'todos' || (parseInt(month, 10) >= 1 && parseInt(month, 10) <= 12))) {
+          return res.status(400).json({error: 'Ano ou mês inválidos.'});
+        }
         const isDetailed = reportType === 'Detalhado';
         const templateUrl = isDetailed ? TEMPLATE_DETAILED : TEMPLATE_SIMPLIFIED;
         const templateBuffer = await downloadTemplate(templateUrl);
@@ -209,6 +226,7 @@
         }
       } catch (e) {
         try { if (outputFile) fs.unlinkSync(outputFile); } catch {}
-        return res.status(500).json({error: 'Erro interno', details: e.message});
+        console.error('prevpay_convert_and_send:', e);
+        return res.status(500).json({error: 'Erro interno'});
       }
     }

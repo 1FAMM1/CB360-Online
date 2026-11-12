@@ -61,6 +61,11 @@
     .mod-tree > .mod-node > label { font-weight: 600; }
     .mod-tools { display: flex; gap: 8px; margin-bottom: 10px; }
 
+    /* ---------- formulário da corporação ---------- */
+    .corp-form .form-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+    .corp-form .form-row label { white-space: nowrap; margin: 0; }
+    .corp-form .form-row .grow { flex: 1 1 160px; min-width: 120px; }
+    .corp-form select { padding: 3px 4px; }
     /* ---------- Gestão de Utilizadores: o scroll é só na tabela ---------- */
     #user-management .card-layout { height: auto !important; max-height: none !important; }
     #user-management .info-card { width: 100%; box-sizing: border-box; height: calc(100vh - 210px) !important; max-height: none !important;
@@ -89,7 +94,7 @@
 
       <!-- ===================== ADICIONAR CORPORAÇÃO ===================== -->
       <section id="add-corporation" class="content-section active">
-        <h2>Adicionar Corporação</h2>
+        <h2 id="corpFormTitle">Adicionar Corporação</h2>
         <div class="corporation-card">
           <h3>DADOS DA CORPORAÇÃO</h3>
           <p>Dados Gerais do Corpo de Bombeiros.</p>
@@ -106,40 +111,68 @@
                 </div>
               </div>
             </div>
-            <div class="info-card">
+            <div class="info-card corp-form">
               <div class="form-row">
-                <label>Nome do CB:</label>
-                <input type="text" id="assoc-name" maxlength="200">
+                <label>Nome da Associação:</label>
+                <input type="text" id="assoc-name" class="grow" maxlength="200">
               </div>
               <div class="form-row">
-                <label>Morada do CB:</label>
-                <input type="text" id="assoc-address" maxlength="200">
+                <label>Nome do CB:</label>
+                <input type="text" id="assoc-cbname" class="grow" maxlength="200" placeholder="Nome curto (se vazio, usa o nome da associação)">
+              </div>
+              <div class="form-row">
+                <label>Morada:</label>
+                <input type="text" id="assoc-address" class="grow" maxlength="200">
               </div>
               <div class="form-row">
                 <label>Localidade:</label>
-                <input type="text" id="assoc-locality" style="width: 372px;" maxlength="200">
+                <input type="text" id="assoc-locality" class="grow" maxlength="200">
                 <label>Código-Postal:</label>
-                <input type="text" id="assoc-cp1" style="max-width: 80px; text-align: center;" maxlength="4" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 4)">
+                <input type="text" id="assoc-cp1" style="width: 70px; text-align: center;" maxlength="4" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 4)">
                 <span>-</span>
-                <input type="text" id="assoc-cp2" style="max-width: 60px; text-align: center;" maxlength="3" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 3)">
+                <input type="text" id="assoc-cp2" style="width: 55px; text-align: center;" maxlength="3" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 3)">
               </div>
               <div class="form-row">
                 <label>Distrito:</label>
-                <input type="text" id="assoc-district" style="width: 200px;" maxlength="100">
+                <select id="district_select_corp" class="grow"></select>
                 <label>Concelho:</label>
-                <input type="text" id="assoc-council" style="width: 300px;" maxlength="100">
+                <select id="council_select_corp" class="grow"></select>
               </div>
               <div class="form-row">
                 <label>Freguesia:</label>
-                <input type="text" id="assoc-parish" style="width: 400px;" maxlength="150">
+                <select id="parish_select_corp" class="grow"></select>
+                <label>Zona IPMA:</label>
+                <select id="assoc-ipma" style="width: 230px;"></select>
+              </div>
+              <div class="form-row">
+                <label>Telemóvel:</label>
+                <input type="text" id="assoc-mobile" style="width: 140px;" maxlength="20" inputmode="tel">
+                <label>Telefone:</label>
+                <input type="text" id="assoc-landline" style="width: 140px;" maxlength="20" inputmode="tel">
+                <label>Email:</label>
+                <input type="email" id="assoc-email" class="grow" maxlength="120">
               </div>
               <div class="form-row">
                 <label>NIF:</label>
-                <input type="text" id="assoc-nif" style="width: 150px; text-align: center;" maxlength="9" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 9)">
+                <input type="text" id="assoc-nif" style="width: 120px; text-align: center;" maxlength="9" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 9)">
                 <label>Núm. Operacional:</label>
-                <input type="text" id="assoc-operacional" style="width: 100px; text-align: center;" maxlength="4" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 4)">
+                <input type="text" id="assoc-operacional" style="width: 80px; text-align: center;" maxlength="4" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 4)">
               </div>
-              <div class="form-actions">
+              <div class="form-row">
+                <label>Feriado Municipal:</label>
+                <select id="assoc-hol-day" style="width: 70px;"></select>
+                <select id="assoc-hol-month" style="width: 120px;"></select>
+                <input type="text" id="assoc-hol-name" class="grow" maxlength="100" placeholder="Nome do feriado (ex.: Dia da Cidade)">
+              </div>
+              <div class="form-row">
+                <label>Latitude:</label>
+                <input type="text" id="assoc-lat" style="width: 130px;" maxlength="20" inputmode="decimal" placeholder="37.0194">
+                <label>Longitude:</label>
+                <input type="text" id="assoc-lng" style="width: 130px;" maxlength="20" inputmode="decimal" placeholder="-7.9304">
+                <span class="muted">Coordenadas do quartel (para os mapas).</span>
+              </div>
+              <div class="form-actions" style="display:flex; justify-content:flex-end; gap:8px;">
+                <button class="btn-sm btn-plain" id="btnCancelEdit" type="button" style="margin:15px 0 0 0; padding:8px 14px; display:none;">CANCELAR</button>
                 <button class="btn btn-success" id="btnAddCorp" type="button" style="margin:15px 0 0 0;">ADICIONAR</button>
               </div>
             </div>
@@ -372,19 +405,22 @@
     }
 
     /* ---------- navegação lateral ---------- */
+    function showSection(id, keepForm) {
+      document.querySelectorAll('.sidebar-item').forEach(i => i.classList.toggle('active', i.dataset.section === id));
+      document.querySelectorAll('.content-section').forEach(s => s.classList.toggle('active', s.id === id));
+      if (id === 'access-management') loadCorps();
+      if (id === 'user-management') loadCorpSelect();
+      if (id === 'add-corporation' && !keepForm && editingCorp) resetCorpForm();
+    }
     document.querySelectorAll('.sidebar-item').forEach(item => {
-      item.addEventListener('click', () => {
-        document.querySelectorAll('.sidebar-item').forEach(i => i.classList.toggle('active', i === item));
-        document.querySelectorAll('.content-section').forEach(s => s.classList.toggle('active', s.id === item.dataset.section));
-        if (item.dataset.section === 'access-management') loadCorps();
-        if (item.dataset.section === 'user-management') loadCorpSelect();
-      });
+      item.addEventListener('click', () => showSection(item.dataset.section));
     });
 
     /* =====================================================================
        ADICIONAR CORPORAÇÃO
        ===================================================================== */
     let newLogo = null;
+    let editingCorp = null;          // null = adicionar; '0805' = a editar essa corporação
     const DEFAULT_LOGO = $('corp-logo').src;
     $('add-logo-btn').addEventListener('click', () => $('logoWarningModal').style.display = 'block');
     $('modalConfirmBtn').addEventListener('click', () => { $('logoWarningModal').style.display = 'none'; $('logo-input').click(); });
@@ -396,31 +432,168 @@
       e.target.value = '';
     });
 
-    $('btnAddCorp').addEventListener('click', (e) => run(e.currentTarget, async () => {
+    /* ---------- listas fixas: IPMA e feriado ---------- */
+    const IPMA_AREAS = [
+      ["AVR", "Aveiro"], ["BJA", "Beja"], ["BRG", "Braga"], ["BGC", "Bragança"], ["CBO", "Castelo Branco"], ["CBR", "Coimbra"],
+      ["EVR", "Évora"], ["FAR", "Faro"], ["GDA", "Guarda"], ["LRA", "Leiria"], ["LSB", "Lisboa"], ["PTG", "Portalegre"],
+      ["PTO", "Porto"], ["STM", "Santarém"], ["STB", "Setúbal"], ["VCT", "Viana do Castelo"], ["VRL", "Vila Real"], ["VIS", "Viseu"],
+      ["MCN", "Madeira - Costa Norte"], ["MCS", "Madeira - Costa Sul"], ["MRM", "Madeira - Regiões Montanhosas"], ["MPS", "Madeira - Porto Santo"],
+      ["AOC", "Açores - Grupo Ocidental"], ["ACE", "Açores - Grupo Central"], ["AOR", "Açores - Grupo Oriental"]
+    ];
+    const norm = (t) => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+    $('assoc-ipma').replaceChildren(el('option', { value: '' }, '—'), ...IPMA_AREAS.map(([c, n]) => el('option', { value: c }, `${n} (${c})`)));
+    const MONTHS = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    $('assoc-hol-day').replaceChildren(el('option', { value: '' }, 'Dia'),
+      ...Array.from({ length: 31 }, (_, i) => { const d = String(i + 1).padStart(2, '0'); return el('option', { value: d }, d); }));
+    $('assoc-hol-month').replaceChildren(el('option', { value: '' }, 'Mês'),
+      ...MONTHS.map((m, i) => el('option', { value: String(i + 1).padStart(2, '0') }, m)));
+
+    /* ---------- distrito -> concelho -> freguesia ---------- */
+    let districts = [];
+    const selOpt = (value, text) => el('option', { value }, text);
+    async function loadDistricts() {
+      if (!districts.length) districts = await api('geo_districts');
+      $('district_select_corp').replaceChildren(selOpt('', ''), ...districts.map(d => selOpt(String(d.id), d.district)));
+    }
+    async function loadCouncils(districtId) {
+      $('council_select_corp').replaceChildren(selOpt('', ''));
+      $('parish_select_corp').replaceChildren(selOpt('', ''));
+      if (!districtId) return [];
+      const list = await api('geo_councils', { district_id: Number(districtId) });
+      $('council_select_corp').append(...list.map(c => selOpt(String(c.id), c.council)));
+      return list;
+    }
+    async function loadParishes(councilId) {
+      $('parish_select_corp').replaceChildren(selOpt('', ''));
+      if (!councilId) return;
+      const list = await api('geo_parishes', { council_id: Number(councilId) });
+      $('parish_select_corp').append(...list.map(p => selOpt(p, p)));
+    }
+    const selText = (id) => { const o = $(id).selectedOptions[0]; return o && o.value ? o.textContent : ''; };
+    $('district_select_corp').addEventListener('change', () => run(null, async () => {
+      await loadCouncils($('district_select_corp').value);
+      // zona IPMA sugerida pelo distrito (só se ainda estiver vazia)
+      if (!$('assoc-ipma').value) {
+        const code = (IPMA_AREAS.find(([, n]) => norm(n) === norm(selText('district_select_corp'))) || [])[0];
+        if (code) $('assoc-ipma').value = code;
+      }
+    }));
+    $('council_select_corp').addEventListener('change', () => run(null, () => loadParishes($('council_select_corp').value)));
+    async function setGeo(district, council, parish) {
+      await loadDistricts();
+      const d = districts.find(x => norm(x.district) === norm(district));
+      $('district_select_corp').value = d ? String(d.id) : '';
+      const councils = d ? await loadCouncils(d.id) : (await loadCouncils(''), []);
+      const c = councils.find(x => norm(x.council) === norm(council));
+      $('council_select_corp').value = c ? String(c.id) : '';
+      if (c) await loadParishes(c.id); else await loadParishes('');
+      if (parish) {
+        const o = [...$('parish_select_corp').options].find(o => o.value && norm(o.value) === norm(parish));
+        if (o) $('parish_select_corp').value = o.value;
+      }
+    }
+
+    /* ---------- formulário: limpar / preencher / ler ---------- */
+    const TEXT_IDS = ['assoc-name', 'assoc-cbname', 'assoc-address', 'assoc-locality', 'assoc-cp1', 'assoc-cp2', 'assoc-mobile',
+                      'assoc-landline', 'assoc-email', 'assoc-nif', 'assoc-operacional', 'assoc-hol-name', 'assoc-lat', 'assoc-lng'];
+    function setFormMode(corp) {
+      editingCorp = corp;
+      $('corpFormTitle').textContent = corp ? `Editar Corporação ${corp}` : 'Adicionar Corporação';
+      $('btnAddCorp').textContent = corp ? 'GUARDAR ALTERAÇÕES' : 'ADICIONAR';
+      $('btnCancelEdit').style.display = corp ? '' : 'none';
+      $('assoc-operacional').readOnly = !!corp;
+      $('assoc-operacional').style.background = corp ? '#eee' : '';
+    }
+    async function resetCorpForm() {
+      TEXT_IDS.forEach(id => $(id).value = '');
+      ['assoc-ipma', 'assoc-hol-day', 'assoc-hol-month'].forEach(id => $(id).value = '');
+      newLogo = null;
+      $('corp-logo').src = DEFAULT_LOGO;
+      setFormMode(null);
+      await setGeo('', '', '');
+    }
+    async function fillCorpForm(c) {
+      $('assoc-name').value = c.corporation || '';
+      $('assoc-cbname').value = c.cb_name && c.cb_name !== c.corporation ? c.cb_name : '';
+      $('assoc-address').value = c.corp_address || '';
+      $('assoc-locality').value = c.corp_localitie || '';
+      const [cp1 = '', cp2 = ''] = String(c.corp_cp || '').split('-');
+      $('assoc-cp1').value = cp1; $('assoc-cp2').value = cp2;
+      $('assoc-mobile').value = c.corp_phone_mobile || '';
+      $('assoc-landline').value = c.corp_phone_landline || '';
+      $('assoc-email').value = c.corp_email || '';
+      $('assoc-nif').value = c.corp_fiscal_nr || '';
+      $('assoc-operacional').value = c.corp_oper_nr || '';
+      const [hm = '', hd = ''] = String(c.municipal_holiday || '').split('-');
+      $('assoc-hol-month').value = hm; $('assoc-hol-day').value = hd;
+      $('assoc-hol-name').value = c.municipal_holiday ? (c.municipal_holiday_name || '') : '';
+      $('assoc-lat').value = c.default_lat ?? '';
+      $('assoc-lng').value = c.default_lng ?? '';
+      $('assoc-ipma').value = c.ipma_area || '';
+      newLogo = null;
+      $('corp-logo').src = c.logo_url || DEFAULT_LOGO;
+      await setGeo(c.corp_district, c.corp_council, c.corp_parish);
+    }
+    function readCorpForm() {
       const cp1 = $('assoc-cp1').value, cp2 = $('assoc-cp2').value;
       if ((cp1 || cp2) && !(cp1.length === 4 && cp2.length === 3)) throw new Error('Código-postal incompleto.');
+      const hd = $('assoc-hol-day').value, hm = $('assoc-hol-month').value;
+      if (!!hd !== !!hm) throw new Error('Feriado municipal: escolha o dia e o mês.');
       const body = {
         corporation: $('assoc-name').value,
+        cb_name: $('assoc-cbname').value,
         corp_address: $('assoc-address').value,
         corp_localitie: $('assoc-locality').value,
         corp_cp: cp1 ? `${cp1}-${cp2}` : '',
-        corp_district: $('assoc-district').value,
-        corp_council: $('assoc-council').value,
-        corp_parish: $('assoc-parish').value,
+        corp_district: selText('district_select_corp'),
+        corp_council: selText('council_select_corp'),
+        corp_parish: $('parish_select_corp').value,
+        corp_phone_mobile: $('assoc-mobile').value.trim(),
+        corp_phone_landline: $('assoc-landline').value.trim(),
+        corp_email: $('assoc-email').value.trim(),
         corp_fiscal_nr: $('assoc-nif').value,
         corp_oper_nr: $('assoc-operacional').value,
+        municipal_holiday: hd ? `${hm}-${hd}` : '',
+        municipal_holiday_name: $('assoc-hol-name').value,
+        default_lat: $('assoc-lat').value.trim(),
+        default_lng: $('assoc-lng').value.trim(),
+        ipma_area: $('assoc-ipma').value,
         logo: newLogo
       };
-      if (!body.corporation.trim()) throw new Error('Indique o nome do CB.');
+      if (!body.corporation.trim()) throw new Error('Indique o nome da associação.');
       if (!/^\d{4}$/.test(body.corp_oper_nr)) throw new Error('O número operacional tem 4 dígitos.');
-      await api('create_corp', body);
-      toast(`Corporação ${body.corp_oper_nr} criada.`);
-      ['assoc-name', 'assoc-address', 'assoc-locality', 'assoc-cp1', 'assoc-cp2', 'assoc-district',
-       'assoc-council', 'assoc-parish', 'assoc-nif', 'assoc-operacional'].forEach(id => $(id).value = '');
-      newLogo = null;
-      $('corp-logo').src = DEFAULT_LOGO;
-      corpsCache = null;
+      return body;
+    }
+
+    $('btnAddCorp').addEventListener('click', (e) => run(e.currentTarget, async () => {
+      const body = readCorpForm();
+      if (editingCorp) {
+        await api('update_corp', body);
+        toast(`Corporação ${editingCorp} atualizada.`);
+        corpsCache = null;
+        await resetCorpForm();
+        showSection('access-management');
+      } else {
+        await api('create_corp', body);
+        toast(`Corporação ${body.corp_oper_nr} criada.`);
+        corpsCache = null;
+        await resetCorpForm();
+      }
     }));
+    $('btnCancelEdit').addEventListener('click', () => run(null, async () => { await resetCorpForm(); showSection('access-management'); }));
+
+    async function openCorpEdit(corp) {
+      await run(null, async () => {
+        const c = await api('get_corp', { corp_oper_nr: corp });
+        showSection('add-corporation', true);
+        setFormMode(corp);
+        await fillCorpForm(c);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
+
+    // arranque: listas de distritos
+    run(null, loadDistricts);
 
     /* =====================================================================
        GESTÃO DE ACESSOS (por corporação)
@@ -553,13 +726,14 @@
             corpsCache = null;
           }) }, 'Guardar');
           const logoBtn = el('button', { className: 'btn-sm btn-plain', type: 'button', onclick: () => { logoTargetCorp = c.corp_oper_nr; $('logo-change-input').click(); } }, 'Logo');
+          const editBtn = el('button', { className: 'btn-sm btn-plain', type: 'button', onclick: () => openCorpEdit(c.corp_oper_nr) }, 'Editar');
           tb.append(el('tr', {},
             el('td', {}, c.logo_url ? el('img', { src: c.logo_url, alt: '' }) : ''),
             el('td', {}, c.corp_oper_nr || ''),
             el('td', {}, c.corporation || c.cb_name || ''),
             el('td', {}, decir), el('td', {}, sba), el('td', {}, opat),
             el('td', {}, modsBtn),
-            el('td', {}, save, logoBtn)
+            el('td', { style: 'white-space:nowrap;' }, save, editBtn, logoBtn)
           ));
         }
         if (!tb.children.length) tb.append(el('tr', {}, el('td', { colSpan: 8, className: 'muted' }, 'Sem corporações.')));

@@ -12,8 +12,41 @@ import nodemailer from "nodemailer";
 const GMAIL_EMAIL = process.env.GMAIL_MOBILE_EMAIL;
 const GMAIL_APP_PASSWORD = process.env.GMAIL_MOBILE_APP_PASSWORD;
 export const config = {api: {bodyParser: {sizeLimit: "5mb"}}};
+/* ======================= SEGURANÇA ======================= */
+const MAX_RECIPIENTS = 15;                       /* to + cc + bcc */
+const EMAIL_RE = /^[^\s@<>"',;]+@[^\s@<>"',;]+\.[^\s@<>"',;]+$/;
+/* Valida o token do utilizador no Supabase (assinatura, validade, token revogado) */
+async function whoami(token) {
+  if (!token) return null;
+  try {
+    const r = await fetch(`${process.env.SUPABASE_URL}/rest/v1/rpc/cb360_whoami`, {
+      method: "POST",
+      headers: {
+        apikey: process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY,
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: "{}",
+    });
+    if (!r.ok) return null;
+    const c = await r.json();
+    return c && c.role === "authenticated" && c.corp_oper_nr ? c : null;
+  } catch {
+    return null;
+  }
+}
+/* Texto simples dentro do HTML (títulos, nome e contactos da corporação) */
+function esc(v) {
+  return String(v ?? "").replace(/[&<>"']/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+}
+function cleanList(v) {
+  return (Array.isArray(v) ? v : []).map((e) => String(e || "").trim()).filter(Boolean);
+}
 /* ======================= TEMPLATE HTML PARTILHADO ======================= */
 function buildEmailTemplate({title, subtitle, logoUrl, emailBody, corpName, corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail,}) {
+  [title, subtitle, corpName, corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail] =
+    [title, subtitle, corpName, corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail].map(esc);
+  logoUrl = /^https:\/\/[^\s"'<>]+$/.test(String(logoUrl || "")) ? logoUrl : "";
   const addressLine = [corpAddress, [corpCp, corpLocalitie].filter(Boolean).join(" "), "Portugal"]
     .filter(Boolean)
     .join(" | ");
@@ -83,16 +116,35 @@ function buildEmailTemplate({title, subtitle, logoUrl, emailBody, corpName, corp
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Método não permitido. Use POST." });
+  /* 1) só com sessão iniciada (Online ou Mobile) */
+  const token = String(req.headers.authorization || "").replace(/^Bearer\s+/i, "");
+  const claims = await whoami(token);
+  if (!claims) return res.status(401).json({ error: "Sessão inválida" });
+  const corp_oper_nr = String(claims.corp_oper_nr);
   try {
-    const {recipients, ccRecipients, bccRecipients,  emailSubject, emailBody, title, subtitle, corp_oper_nr, logoUrl, corpName, corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail,} = req.body || {};
-    if (!recipients || recipients.length === 0) {
+    const {emailSubject, emailBody, title, subtitle, logoUrl, corpName, corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail,} = req.body || {};
+    /* 2) destinatários válidos e em número limitado */
+    const recipients = cleanList(req.body?.recipients);
+    const ccRecipients = cleanList(req.body?.ccRecipients);
+    const bccRecipients = cleanList(req.body?.bccRecipients);
+    if (recipients.length === 0) {
       return res.status(400).json({ error: "A lista de destinatários principais está vazia." });
+    }
+    const all = [...recipients, ...ccRecipients, ...bccRecipients];
+    if (all.length > MAX_RECIPIENTS) {
+      return res.status(400).json({ error: `Demasiados destinatários (máx. ${MAX_RECIPIENTS}).` });
+    }
+    if (!all.every((e) => EMAIL_RE.test(e))) {
+      return res.status(400).json({ error: "Há endereços de e-mail inválidos." });
     }
     if (!emailSubject || !emailBody) {
       return res.status(400).json({ error: "Faltam campos obrigatórios: emailSubject e/ou emailBody." });
+    }
+    if (String(emailSubject).length > 200 || String(emailBody).length > 20000) {
+      return res.status(400).json({ error: "Assunto ou mensagem demasiado longos." });
     }
     const transporter = nodemailer.createTransport({
       service: "gmail",
@@ -112,13 +164,13 @@ export default async function handler(req, res) {
       corpEmail: corpEmail || "",
     });
     await transporter.sendMail({
-      from: `"CB360 Mobile ${corp_oper_nr || "Corporacao"}" <${GMAIL_EMAIL}>`,
+      from: `"CB360 Mobile ${corp_oper_nr}" <${GMAIL_EMAIL}>`,
       to: recipients.join(", "),
       cc: ccRecipients && ccRecipients.length > 0 ? ccRecipients.join(", ") : "",
       bcc: bccRecipients && bccRecipients.length > 0 ? bccRecipients.join(", ") : "",
-      subject: emailSubject,
+      subject: String(emailSubject).replace(/[\r\n]+/g, " "),
       html: htmlEmail,
-      text: emailBody.replace(/<[^>]*>/g, ""),
+      text: String(emailBody).replace(/<[^>]*>/g, ""),
     });
     return res.status(200).json({
       success: true,
@@ -126,10 +178,6 @@ export default async function handler(req, res) {
     });
   } catch (err) {
     console.error("Erro no envio de email:", err);
-    return res.status(500).json({
-      error: "Erro no envio de email",
-      details: err.message,
-      stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
-    });
+    return res.status(500).json({ error: "Erro no envio de email" });
   }
 }

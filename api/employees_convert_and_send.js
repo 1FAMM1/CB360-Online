@@ -11,6 +11,7 @@
     import os from "os";
     import path from "path";
     import AdmZip from "adm-zip";
+    import { requireOnline } from "./_cb360auth.js";
     import {ServicePrincipalCredentials, PDFServices, MimeType, CreatePDFJob, CreatePDFResult, SDKError, ServiceUsageError, ServiceApiError, ClientConfig, Region}
     from "@adobe/pdfservices-node-sdk";
     export const config = {
@@ -231,9 +232,22 @@ function makeRowXml(rowNum, emp) {
     export default async function handler(req, res) {
       res.setHeader("Access-Control-Allow-Origin",  "*");
       res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
       if (req.method === "OPTIONS") return res.status(200).end();
       if (req.method !== "POST") return res.status(405).json({error: "Método não permitido"});
+      /* só o CB360 Online (token com user_role): dados de RH e salariais */
+      const claims = await requireOnline(req, res); if (!claims) return;
+      /* ano / mês vão para nomes de ficheiro e cabeçalhos: só números válidos */
+      const b = req.body || {};
+      for (const k of ["year", "priorityYear"]) {
+        if (b[k] !== undefined && !/^\d{4}$/.test(String(b[k]))) return res.status(400).json({error: "Ano inválido."});
+        if (b[k] !== undefined) b[k] = parseInt(b[k], 10);
+      }
+      if (b.month !== undefined && b.month !== "all" && b.month !== "") {
+        const m = parseInt(b.month, 10);
+        if (!(m >= 1 && m <= 12)) return res.status(400).json({error: "Mês inválido."});
+        b.month = m;
+      }
       const VALID_MODES = ["monthly_scales", "point_sheet", "shift_allowance", "detailed_shift_allowance", "vacation_form", "vacation_map", "vacation_anomalies",
                            "vacation_priority", "salary_map", "salary_map_xlsx", "eip_annual_map",];
       try {
@@ -253,10 +267,11 @@ function makeRowXml(rowNum, emp) {
         if (mode === "salary_map_xlsx") return await handleSalaryMapXlsx(req, res);
         if (mode === "eip_annual_map") return await handleEIPAnnualMap(req, res);
       } catch (error) {
+        console.error("employees_convert_and_send:", error);
         if (error instanceof SDKError || error instanceof ServiceUsageError || error instanceof ServiceApiError) {
-          return res.status(500).json({error: "Erro no serviço Adobe", details: error.message});
+          return res.status(500).json({error: "Erro no serviço Adobe"});
         }
-        return res.status(500).json({error: "Erro ao processar", details: error?.message || String(error)});
+        return res.status(500).json({error: "Erro ao processar"});
       }
     }
     // ─── Handlers ────────────────────────────────────────────────────────────────

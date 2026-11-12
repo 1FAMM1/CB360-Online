@@ -30,6 +30,9 @@
     .mod-tree .mod-children { margin-left: 22px; }
     .mod-tree > .mod-node > label { font-weight: 600; }
     .mod-tools { display: flex; gap: 8px; margin-bottom: 8px; }
+    /* Gestão de Utilizadores: o cartão ocupa a altura disponível do ecrã */
+    #user-management .card-layout { height: auto !important; max-height: none !important; }
+    #user-management .info-card { width: 100%; box-sizing: border-box; height: calc(100vh - 210px) !important; max-height: none !important; overflow-y: auto; }
   </style>
 </head>
 <body>

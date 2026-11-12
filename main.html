@@ -26,6 +26,27 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
   <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script>
+(function () {
+  var F0 = window.fetch;
+  var AUTH_API = /^https:\/\/(cb360-online|cb-360-app)\.vercel\.app\/api\//;
+  window.fetch = function (input, init) {
+    try {
+      var url = typeof input === 'string' ? input : ((input && input.url) || '');
+      if (AUTH_API.test(url)) {
+        var tk = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
+        if (tk) {
+          init = Object.assign({}, init);
+          var h = new Headers(init.headers || {});
+          if (!h.has('Authorization')) h.set('Authorization', 'Bearer ' + tk);
+          init.headers = h;
+        }
+      }
+    } catch (_) {}
+    return F0.call(this, input, init);
+  };
+})();
+</script>
 </head>
 <body>
   <div class="container">

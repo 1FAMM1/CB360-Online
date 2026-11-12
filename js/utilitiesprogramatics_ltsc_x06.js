@@ -709,6 +709,10 @@
     /* =======================================
     NO HOSPITAL
     ======================================= */    
+    function noHospSig(r) {
+      return [r.hospital, r.service, r.start_date, r.start_time, r.end_date, r.end_time, r.next_hospital]
+        .map(v => (v == null ? "" : String(v).slice(0, v && /^\d{2}:\d{2}/.test(String(v)) ? 5 : undefined))).join("|");
+    }
     async function loadNoHospFromSupabase(total = 12) {
       createNoHospInputs(total);
       const currentCorpOperNr = sessionStorage.getItem('currentCorpOperNr');
@@ -744,6 +748,8 @@
             fields.toDate.value = row.end_date || "";
             fields.toTime.value = row.end_time || "";
             fields.nextHosp.value = row.next_hospital || "";
+            // assinatura do que está gravado, para saber depois o que mudou
+            fields.nohosp.dataset.orig = noHospSig(row);
           }
         });
       } catch (e) {
@@ -760,11 +766,15 @@
       try {
         const headers = getSupabaseHeaders();
         headers['x-my-corpo'] = currentCorpOperNr;
+        const novos = [];   // hospitais com constrangimento novo ou alterado (para o push)
         for (let i = 1; i <= total; i++) {
           const n = String(i).padStart(2, '0');
           const mainInput = document.getElementById(`nohosp-${n}`);
           if (!mainInput) continue;
-          const hospitalValue = mainInput.value.trim();          
+          const hospitalValue = mainInput.value.trim();
+          if (hospitalValue === "") {
+            continue; 
+          }
           const clean = (id) => {
             const el = document.getElementById(id);
             if (!el) return null;
@@ -782,25 +792,36 @@
             const dataCheck = await resCheck.json();
             if (dataCheck && dataCheck.length > 0) rowId = dataCheck[0].id;
           }
-          if (!rowId) {
-            await utilCheckRes(await fetch(`${SUPABASE_URL}/rest/v1/hospital_restrictions`, {
-              method: "POST",
-              headers: {...headers, "Prefer": "return=representation"},
-              body: JSON.stringify([payload])
-            }), `Erro ao criar a linha ${n}`);
-          } else {
-            await utilCheckRes(await fetch(`${SUPABASE_URL}/rest/v1/hospital_restrictions?id=eq.${rowId}`, {
-              method: "PATCH",
-              headers: headers,
-              body: JSON.stringify(payload)
-            }), `Erro ao atualizar a linha ${n}`);
-          }
+          const changed = !rowId || mainInput.dataset.orig !== noHospSig(payload);
+          if (!changed) continue;   // nada mudou nesta linha: não grava nem avisa
+          const res = !rowId
+            ? await fetch(`${SUPABASE_URL}/rest/v1/hospital_restrictions`, {
+                method: "POST",
+                headers: {...headers, "Prefer": "return=representation"},
+                body: JSON.stringify([payload])
+              })
+            : await fetch(`${SUPABASE_URL}/rest/v1/hospital_restrictions?id=eq.${rowId}`, {
+                method: "PATCH",
+                headers: headers,
+                body: JSON.stringify(payload)
+              });
+          if (!res.ok) throw new Error(await res.text());
+          novos.push(payload.service ? `${hospitalValue} (${payload.service})` : hospitalValue);
+        }
+        /* push geral para a Mobile (abre a página dos constrangimentos); não espera pelo envio */
+        if (novos.length) {
+          fetch('https://cb-360-app.vercel.app/api/sendPush', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({recipient_nint: 'geral', tipo: 'aviso', pagina: 'NoHospital', sender_name: 'CB360 Online',
+                                  message_text: `🏥 Constrangimento hospitalar: ${novos.join(', ')}`})
+          }).catch(e => console.error('Erro Push:', e));
         }
         showPopup('popup-success', "Constrangimentos hospitalares atualizados com sucesso.");
         loadNoHospFromSupabase(total);
       } catch (error) {
         console.error("❌ [NOHOSP] Erro ao gravar:", error);
-        showPopup('popup-danger', "Erro ao gravar constrangimentos hospitalares. " + (error.message || ""));
+        showPopup('popup-danger', "Erro ao gravar constrangimentos hospitalares.");
       }
     }
     /* =======================================

@@ -5,13 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gestão de Acessos</title>
   <link rel="stylesheet" href="css/Adm/adm_11x.css">
+  <style>
+    /* complementos desta página (o resto vem do adm_11x.css) */
+    .adm-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 14px; }
+    .adm-table th, .adm-table td { padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: left; vertical-align: middle; }
+    .adm-table th { background: #f3f3f3; }
+    .adm-table input[type="text"] { width: 100%; box-sizing: border-box; }
+    .adm-table img { height: 32px; max-width: 60px; object-fit: contain; }
+    .btn-sm { padding: 4px 8px; font-size: 12px; margin: 0 2px; cursor: pointer; }
+    .btn-danger { background: #b71c1c; color: #fff; border: 0; border-radius: 4px; }
+    .btn-plain { background: #eee; border: 1px solid #ccc; border-radius: 4px; }
+    .muted { color: #777; font-size: 12px; }
+    .sub-title { margin: 22px 0 6px; font-size: 15px; font-weight: 600; }
+    #admDialog { border: 0; border-radius: 10px; padding: 18px 20px; min-width: 320px; box-shadow: 0 10px 40px rgba(0,0,0,.35); }
+    #admDialog::backdrop { background: rgba(0,0,0,.45); }
+    #admDialog h3 { margin: 0 0 12px; }
+    #admDialog .form-row { margin-bottom: 8px; }
+    #admDialog .dlg-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+  </style>
 </head>
 <body>
   <header>
     <h1>🔥 CB 360 Online - Administração</h1>
     <div class="header-right">
       <div class="header-badge-360">Grupo CB360</div>
-      <button id="logoutBtn" class="header-logout-btn fa fa-power-off"></button>
+      <button id="logoutBtn" class="header-logout-btn fa fa-power-off" title="Terminar sessão"></button>
     </div>
   </header>
   <div class="main-layout">
@@ -21,6 +39,8 @@
       <div class="sidebar-item" data-section="access-management">🔐 Gestão de Acessos</div>
     </aside>
     <main class="content">
+
+      <!-- ===================== ADICIONAR CORPORAÇÃO ===================== -->
       <section id="add-corporation" class="content-section active">
         <h2>Adicionar Corporação</h2>
         <div class="corporation-card">
@@ -31,26 +51,26 @@
               <div class="card-header">LOGO</div>
               <div class="card-content">
                 <div class="logo-preview">
-                  <img src="https://rjkbodfqsvckvnhjwmhg.supabase.co/storage/v1/object/public/cb_logos/logo_cb_360.png" id="corp-logo">
+                  <img src="https://rjkbodfqsvckvnhjwmhg.supabase.co/storage/v1/object/public/cb_logos/logo_cb_360.png" id="corp-logo" alt="Logo">
                 </div>
                 <div class="logo-buttons">
-                  <button class="btn btn-success" id="add-logo-btn" style:"margin:25px 0 0 0;">ADICIONAR LOGO</button>
-                  <input type="file" id="logo-input" accept="image/*" style="display: none;">
+                  <button class="btn btn-success" id="add-logo-btn" type="button" style="margin:25px 0 0 0;">ADICIONAR LOGO</button>
+                  <input type="file" id="logo-input" accept="image/png,image/jpeg,image/webp" style="display: none;">
                 </div>
               </div>
             </div>
             <div class="info-card">
               <div class="form-row">
                 <label>Nome do CB:</label>
-                <input type="text" id="assoc-name">
+                <input type="text" id="assoc-name" maxlength="200">
               </div>
               <div class="form-row">
                 <label>Morada do CB:</label>
-                <input type="text" id="assoc-address">
+                <input type="text" id="assoc-address" maxlength="200">
               </div>
               <div class="form-row">
                 <label>Localidade:</label>
-                <input type="text" id="assoc-locality" style="width: 372px;">
+                <input type="text" id="assoc-locality" style="width: 372px;" maxlength="200">
                 <label>Código-Postal:</label>
                 <input type="text" id="assoc-cp1" style="max-width: 80px; text-align: center;" maxlength="4" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 4)">
                 <span>-</span>
@@ -58,13 +78,13 @@
               </div>
               <div class="form-row">
                 <label>Distrito:</label>
-                <select id="district_select_corp" style="width: 200px;"></select>
+                <input type="text" id="assoc-district" style="width: 200px;" maxlength="100">
                 <label>Concelho:</label>
-                <select id="council_select_corp" style="width: 300px;"></select>
+                <input type="text" id="assoc-council" style="width: 300px;" maxlength="100">
               </div>
               <div class="form-row">
                 <label>Freguesia:</label>
-                <select id="parish_select_corp" style="width: 400px;"></select>
+                <input type="text" id="assoc-parish" style="width: 400px;" maxlength="150">
               </div>
               <div class="form-row">
                 <label>NIF:</label>
@@ -73,25 +93,36 @@
                 <input type="text" id="assoc-operacional" style="width: 100px; text-align: center;" maxlength="4" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 4)">
               </div>
               <div class="form-actions">
-                <button class="btn btn-success" style="margin:15px 0 0 0;" onclick="saveCorporationDataWithLogo()">ADICIONAR</button>
+                <button class="btn btn-success" id="btnAddCorp" type="button" style="margin:15px 0 0 0;">ADICIONAR</button>
               </div>
             </div>
           </div>
         </div>
       </section>
+
+      <!-- ===================== GESTÃO DE ACESSOS ===================== -->
       <section id="access-management" class="content-section">
         <h2>Gestão de Acessos por Corporação</h2>
-        <table id="corpTable">
+        <p class="muted">Módulos de cada corporação. "Módulos permitidos" é o valor da coluna allowed_modules.</p>
+        <table id="corpTable" class="adm-table">
           <thead>
             <tr>
+              <th>Logo</th>
               <th>Nr. Oper.</th>
               <th>Corporação</th>
+              <th>DECIR</th>
+              <th>SBA</th>
+              <th>OPAT</th>
+              <th style="min-width:220px;">Módulos permitidos</th>
               <th>Ações</th>
             </tr>
           </thead>
           <tbody></tbody>
         </table>
+        <input type="file" id="logo-change-input" accept="image/png,image/jpeg,image/webp" style="display:none;">
       </section>
+
+      <!-- ===================== GESTÃO DE UTILIZADORES ===================== -->
       <section id="user-management" class="content-section">
         <h2>Gestão de Utilizadores</h2>
         <div class="card-layout" style="margin: 15px 0 0 0;">
@@ -100,49 +131,412 @@
               <label>Selecione o Corpo de Bombeiros:</label>
               <select id="cb_select"></select>
             </div>
+
+            <div class="sub-title">Novo utilizador do CB360 Online</div>
             <div class="form-row">
               <label>Nome Completo:</label>
-              <input type="text" id="new-user-name" style="width: 400px;">
+              <input type="text" id="new-user-name" style="width: 400px;" maxlength="200">
+            </div>
+            <div class="form-row">
+              <label>Nº Interno:</label>
+              <input type="text" id="new-user-nint" style="width: 90px; text-align:center;" maxlength="10" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+              <label>Posto:</label>
+              <input type="text" id="new-user-patent" style="width: 180px;" maxlength="60">
             </div>
             <div class="form-row">
               <label>Username App Online:</label>
-              <input type="text" id="user-online" style="width: 200px;">
-              <label>Username App Mobile:</label>
-              <input type="text" id="user-mobile" placeholder="A App Mobile ''Brevemente''." style="width: 200px;" disabled>
+              <input type="text" id="user-online" style="width: 200px;" maxlength="60" autocomplete="off">
+              <label>Password App Online:</label>
+              <input type="password" id="pass-online" style="width: 200px;" maxlength="128" autocomplete="new-password">
             </div>
             <div class="form-row">
-              <label>Password App Online:</label>
-              <input type="password" id="pass-online" style="width: 200px;">
-              <label>Password App Mobile:</label>
-              <input type="password" id="pass-mobile" placeholder="A App Mobile ''Brevemente''." style="width: 200px;" disabled>
+              <label>Perfil:</label>
+              <select id="new-user-role">
+                <option value="">(manter o da ficha)</option>
+                <option value="user">user</option>
+                <option value="subadmin">subadmin</option>
+                <option value="admin">admin</option>
+              </select>
+              <label>Validade:</label>
+              <input type="date" id="new-user-validate">
             </div>
             <div class="form-actions">
-              <button class="btn btn-success" style="margin:15px 0 0 0;" onclick="saveUserData()">ADICIONAR</button>
+              <button class="btn btn-success" id="btnAddUser" type="button" style="margin:15px 0 0 0;">ADICIONAR</button>
             </div>
+
+            <div class="sub-title">Utilizadores da corporação</div>
+            <table id="usersTable" class="adm-table">
+              <thead>
+                <tr><th>Nº</th><th>Nome</th><th>Username</th><th>Posto</th><th>Perfil</th><th>Validade</th><th>Ações</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
           </div>
         </div>
       </section>
     </main>
   </div>
+
   <div id="logoWarningModal" class="modal">
     <div class="modal-content">
-      <div class="modal-header">
-        ⚠️ Aviso de Upload do Logo ⚠️
-      </div>
+      <div class="modal-header">⚠️ Aviso de Upload do Logo ⚠️</div>
       <div class="modal-body">
-        <p>Para a melhor qualidade e transparência na visualização do seu logotipo, recomendamos o formato <strong>PNG</strong>.</p>
+        <p>Para a melhor qualidade e transparência na visualização do seu logotipo, recomendamos o formato <strong>PNG</strong> (máx. 1 MB).</p>
         <p>Por favor, certifique-se de que o ficheiro escolhido tem um fundo transparente se necessário.</p>
-        <button id="modalConfirmBtn" class="confirm-btn">OK</button>
+        <button id="modalConfirmBtn" class="confirm-btn" type="button">OK</button>
       </div>
     </div>
   </div>
+
+  <dialog id="admDialog">
+    <form method="dialog" id="admDialogForm">
+      <h3 id="admDialogTitle"></h3>
+      <div id="admDialogBody"></div>
+      <div class="dlg-actions">
+        <button value="cancel" class="btn-sm btn-plain" type="submit">Cancelar</button>
+        <button value="ok" id="admDialogOk" class="btn btn-success btn-sm" type="submit">Confirmar</button>
+      </div>
+    </form>
+  </dialog>
+
   <footer>
     2025 © Fábio Martins | Sistemas de Informação
   </footer>
   <div id="toast-container" class="toast-container"></div>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <script src="js/mainparogramatics/initcfg_ltsc_x07.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script></script>
+  <script>
+  (function () {
+    'use strict';
+    /* =====================================================================
+       SYSTEM ADMIN — tudo passa pela Edge Function admin-api.
+       A página não escreve nada diretamente no Supabase; a função confirma
+       que o token é do utilizador mestre (0000) antes de fazer seja o que for.
+       ===================================================================== */
+    const ADMIN_API = `${SUPABASE_URL}/functions/v1/admin-api`;
+    const $ = (id) => document.getElementById(id);
+
+    /* ---------- sessão: só o mestre ---------- */
+    function tokenPayload() {
+      try {
+        const tk = sessionStorage.getItem('authToken');
+        const p = JSON.parse(atob(tk.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+        return { tk, p };
+      } catch (e) { return null; }
+    }
+    function goLogin() { sessionStorage.clear(); location.replace('index.html'); }
+    const sess = tokenPayload();
+    if (!sess || String(sess.p.corp_oper_nr) !== '0000' || !sess.p.exp || sess.p.exp * 1000 <= Date.now()) {
+      goLogin();
+      return;
+    }
+    $('logoutBtn').addEventListener('click', goLogin);
+
+    /* ---------- chamada à função ---------- */
+    async function api(action, body = {}) {
+      const tk = sessionStorage.getItem('authToken');
+      const r = await fetch(ADMIN_API, {
+        method: 'POST',
+        headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${tk}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, ...body })
+      });
+      let j = {};
+      try { j = await r.json(); } catch (e) {}
+      if (r.status === 401) { toast('Sessão expirada. Entre novamente.', 'error'); setTimeout(goLogin, 1500); throw new Error('401'); }
+      if (!r.ok || j.error) throw new Error(j.error || `Erro ${r.status}`);
+      return j.data;
+    }
+
+    /* ---------- toast ---------- */
+    function toast(msg, type = 'success') {
+      const c = $('toast-container');
+      const t = document.createElement('div');
+      t.className = `toast toast-${type}`;
+      t.textContent = msg;
+      t.style.cssText = 'margin-top:8px;padding:10px 14px;border-radius:6px;color:#fff;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,.25);' +
+        `background:${type === 'error' ? '#b71c1c' : type === 'warn' ? '#e65100' : '#2e7d32'}`;
+      c.appendChild(t);
+      setTimeout(() => t.remove(), type === 'error' || type === 'warn' ? 6000 : 3500);
+    }
+    async function run(btn, fn) {
+      if (btn) btn.disabled = true;
+      try { return await fn(); }
+      catch (e) { if (e.message !== '401') toast(e.message, 'error'); }
+      finally { if (btn) btn.disabled = false; }
+    }
+
+    /* ---------- elementos ---------- */
+    function el(tag, props = {}, ...children) {
+      const e = document.createElement(tag);
+      for (const [k, v] of Object.entries(props)) {
+        if (k === 'style') e.style.cssText = v;
+        else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+        else if (k in e) e[k] = v;
+        else e.setAttribute(k, v);
+      }
+      for (const ch of children) e.append(ch instanceof Node ? ch : document.createTextNode(ch ?? ''));
+      return e;
+    }
+
+    /* ---------- diálogo simples ---------- */
+    function dialog(title, fields, okText = 'Confirmar') {
+      return new Promise((resolve) => {
+        const d = $('admDialog');
+        $('admDialogTitle').textContent = title;
+        $('admDialogOk').textContent = okText;
+        const body = $('admDialogBody');
+        body.replaceChildren();
+        const inputs = {};
+        for (const f of fields) {
+          if (f.text) { body.append(el('p', {}, f.text)); continue; }
+          let inp;
+          if (f.type === 'select') {
+            inp = el('select', {}, ...f.options.map(o => el('option', { value: o[0], selected: o[0] === (f.value ?? '') }, o[1])));
+          } else {
+            inp = el('input', { type: f.type || 'text', value: f.value ?? '', maxLength: f.max || 200, autocomplete: 'off' });
+          }
+          inputs[f.name] = inp;
+          body.append(el('div', { className: 'form-row' }, el('label', {}, f.label), inp));
+        }
+        d.onclose = () => {
+          if (d.returnValue !== 'ok') return resolve(null);
+          const out = {};
+          for (const k in inputs) out[k] = inputs[k].value;
+          resolve(out);
+        };
+        d.returnValue = '';
+        d.showModal();
+      });
+    }
+
+    /* ---------- logo: ficheiro -> dataURL ---------- */
+    function readLogo(file) {
+      return new Promise((resolve, reject) => {
+        if (!file) return resolve(null);
+        if (!/^image\/(png|jpeg|webp)$/.test(file.type)) return reject(new Error('Logo: só PNG, JPG ou WEBP.'));
+        if (file.size > 1024 * 1024) return reject(new Error('Logo demasiado grande (máx. 1 MB).'));
+        const fr = new FileReader();
+        fr.onload = () => resolve(fr.result);
+        fr.onerror = () => reject(new Error('Não foi possível ler o logo.'));
+        fr.readAsDataURL(file);
+      });
+    }
+
+    /* ---------- navegação lateral ---------- */
+    document.querySelectorAll('.sidebar-item').forEach(item => {
+      item.addEventListener('click', () => {
+        document.querySelectorAll('.sidebar-item').forEach(i => i.classList.toggle('active', i === item));
+        document.querySelectorAll('.content-section').forEach(s => s.classList.toggle('active', s.id === item.dataset.section));
+        if (item.dataset.section === 'access-management') loadCorps();
+        if (item.dataset.section === 'user-management') loadCorpSelect();
+      });
+    });
+
+    /* =====================================================================
+       ADICIONAR CORPORAÇÃO
+       ===================================================================== */
+    let newLogo = null;
+    const DEFAULT_LOGO = $('corp-logo').src;
+    $('add-logo-btn').addEventListener('click', () => $('logoWarningModal').style.display = 'block');
+    $('modalConfirmBtn').addEventListener('click', () => { $('logoWarningModal').style.display = 'none'; $('logo-input').click(); });
+    $('logo-input').addEventListener('change', async (e) => {
+      try {
+        newLogo = await readLogo(e.target.files[0]);
+        if (newLogo) $('corp-logo').src = newLogo;
+      } catch (err) { toast(err.message, 'error'); }
+      e.target.value = '';
+    });
+
+    $('btnAddCorp').addEventListener('click', (e) => run(e.currentTarget, async () => {
+      const cp1 = $('assoc-cp1').value, cp2 = $('assoc-cp2').value;
+      if ((cp1 || cp2) && !(cp1.length === 4 && cp2.length === 3)) throw new Error('Código-postal incompleto.');
+      const body = {
+        corporation: $('assoc-name').value,
+        corp_address: $('assoc-address').value,
+        corp_localitie: $('assoc-locality').value,
+        corp_cp: cp1 ? `${cp1}-${cp2}` : '',
+        corp_district: $('assoc-district').value,
+        corp_council: $('assoc-council').value,
+        corp_parish: $('assoc-parish').value,
+        corp_fiscal_nr: $('assoc-nif').value,
+        corp_oper_nr: $('assoc-operacional').value,
+        logo: newLogo
+      };
+      if (!body.corporation.trim()) throw new Error('Indique o nome do CB.');
+      if (!/^\d{4}$/.test(body.corp_oper_nr)) throw new Error('O número operacional tem 4 dígitos.');
+      await api('create_corp', body);
+      toast(`Corporação ${body.corp_oper_nr} criada.`);
+      ['assoc-name', 'assoc-address', 'assoc-locality', 'assoc-cp1', 'assoc-cp2', 'assoc-district',
+       'assoc-council', 'assoc-parish', 'assoc-nif', 'assoc-operacional'].forEach(id => $(id).value = '');
+      newLogo = null;
+      $('corp-logo').src = DEFAULT_LOGO;
+      corpsCache = null;
+    }));
+
+    /* =====================================================================
+       GESTÃO DE ACESSOS (por corporação)
+       ===================================================================== */
+    let corpsCache = null;
+    async function getCorps(force) {
+      if (!corpsCache || force) corpsCache = await api('list_corps');
+      return corpsCache;
+    }
+    let logoTargetCorp = null;
+    $('logo-change-input').addEventListener('change', (e) => run(null, async () => {
+      const file = e.target.files[0];
+      e.target.value = '';
+      if (!file || !logoTargetCorp) return;
+      const logo = await readLogo(file);
+      await api('set_logo', { corp_oper_nr: logoTargetCorp, logo });
+      toast(`Logo da corporação ${logoTargetCorp} atualizado.`);
+      loadCorps(true);
+    }));
+
+    async function loadCorps(force) {
+      const tb = $('corpTable').querySelector('tbody');
+      tb.replaceChildren(el('tr', {}, el('td', { colSpan: 8, className: 'muted' }, 'A carregar…')));
+      await run(null, async () => {
+        const corps = await getCorps(force);
+        tb.replaceChildren();
+        for (const c of corps) {
+          if (c.corp_oper_nr === '0000') continue;
+          const chk = (v) => el('input', { type: 'checkbox', checked: !!v });
+          const decir = chk(c.has_decir), sba = chk(c.has_sba), opat = chk(c.has_opat);
+          const mods = el('input', { type: 'text', value: c.allowed_modules || '', maxLength: 2000 });
+          const save = el('button', { className: 'btn btn-success btn-sm', type: 'button', onclick: (ev) => run(ev.currentTarget, async () => {
+            await api('update_access', { corp_oper_nr: c.corp_oper_nr, has_decir: decir.checked, has_sba: sba.checked, has_opat: opat.checked, allowed_modules: mods.value });
+            toast(`Acessos da corporação ${c.corp_oper_nr} guardados.`);
+            corpsCache = null;
+          }) }, 'Guardar');
+          const logoBtn = el('button', { className: 'btn-sm btn-plain', type: 'button', onclick: () => { logoTargetCorp = c.corp_oper_nr; $('logo-change-input').click(); } }, 'Logo');
+          tb.append(el('tr', {},
+            el('td', {}, c.logo_url ? el('img', { src: c.logo_url, alt: '' }) : ''),
+            el('td', {}, c.corp_oper_nr || ''),
+            el('td', {}, c.corporation || c.cb_name || ''),
+            el('td', {}, decir), el('td', {}, sba), el('td', {}, opat),
+            el('td', {}, mods),
+            el('td', {}, save, logoBtn)
+          ));
+        }
+        if (!tb.children.length) tb.append(el('tr', {}, el('td', { colSpan: 8, className: 'muted' }, 'Sem corporações.')));
+      });
+    }
+
+    /* =====================================================================
+       GESTÃO DE UTILIZADORES
+       ===================================================================== */
+    async function loadCorpSelect() {
+      const sel = $('cb_select');
+      const prev = sel.value;
+      await run(null, async () => {
+        const corps = await getCorps();
+        sel.replaceChildren(el('option', { value: '' }, '— escolher —'),
+          ...corps.filter(c => c.corp_oper_nr && c.corp_oper_nr !== '0000')
+                 .map(c => el('option', { value: c.corp_oper_nr }, `${c.corp_oper_nr} — ${c.corporation || c.cb_name || ''}`)));
+        if (prev) sel.value = prev;
+      });
+      loadUsers();
+    }
+    $('cb_select').addEventListener('change', loadUsers);
+
+    const ROLE_OPTS = [['', '(sem alteração)'], ['user', 'user'], ['subadmin', 'subadmin'], ['admin', 'admin']];
+
+    async function loadUsers() {
+      const corp = $('cb_select').value;
+      const tb = $('usersTable').querySelector('tbody');
+      if (!corp) { tb.replaceChildren(el('tr', {}, el('td', { colSpan: 7, className: 'muted' }, 'Escolha uma corporação.'))); return; }
+      tb.replaceChildren(el('tr', {}, el('td', { colSpan: 7, className: 'muted' }, 'A carregar…')));
+      await run(null, async () => {
+        const users = await api('list_users', { corp_oper_nr: corp });
+        tb.replaceChildren();
+        for (const u of users) {
+          const vd = u.validate ? new Date(u.validate + 'T00:00:00') : null;
+          const expired = vd && vd < new Date(new Date().toDateString());
+          tb.append(el('tr', {},
+            el('td', {}, u.n_int || ''),
+            el('td', {}, u.full_name || ''),
+            el('td', {}, u.username || ''),
+            el('td', {}, u.patent || ''),
+            el('td', {}, u.user_role === null ? el('span', { className: 'muted', title: 'Sem ficha nos elementos' }, '—') : (u.user_role || 'user')),
+            el('td', { style: expired ? 'color:#b71c1c;font-weight:600;' : '' }, vd ? vd.toLocaleDateString('pt-PT') + (expired ? ' (expirada)' : '') : 'sem limite'),
+            el('td', {},
+              el('button', { className: 'btn-sm btn-plain', type: 'button', onclick: () => editUser(u) }, 'Editar'),
+              el('button', { className: 'btn-sm btn-plain', type: 'button', onclick: () => resetPass(u) }, 'Repor password'),
+              el('button', { className: 'btn-sm btn-danger', type: 'button', onclick: () => deleteUser(u) }, 'Apagar'))
+          ));
+        }
+        if (!users.length) tb.append(el('tr', {}, el('td', { colSpan: 7, className: 'muted' }, 'Sem utilizadores.')));
+      });
+    }
+
+    $('btnAddUser').addEventListener('click', (e) => run(e.currentTarget, async () => {
+      const corp = $('cb_select').value;
+      if (!corp) throw new Error('Escolha a corporação.');
+      const body = {
+        corp_oper_nr: corp,
+        full_name: $('new-user-name').value,
+        n_int: $('new-user-nint').value,
+        patent: $('new-user-patent').value,
+        username: $('user-online').value.trim(),
+        password: $('pass-online').value,
+        user_role: $('new-user-role').value,
+        validate: $('new-user-validate').value
+      };
+      if (!body.full_name.trim()) throw new Error('Indique o nome completo.');
+      if (!body.n_int) throw new Error('Indique o número interno.');
+      if (body.password.length < 8) throw new Error('A password deve ter pelo menos 8 caracteres.');
+      const res = await api('create_user', body);
+      toast(`Utilizador ${body.username} criado.`);
+      if (res && res.warning) toast(res.warning, 'warn');
+      ['new-user-name', 'new-user-nint', 'new-user-patent', 'user-online', 'pass-online', 'new-user-validate'].forEach(id => $(id).value = '');
+      $('new-user-role').value = '';
+      loadUsers();
+    }));
+
+    async function editUser(u) {
+      const v = await dialog(`Editar ${u.username}`, [
+        { name: 'full_name', label: 'Nome completo:', value: u.full_name || '' },
+        { name: 'patent', label: 'Posto:', value: u.patent || '', max: 60 },
+        { name: 'validate', label: 'Validade:', type: 'date', value: u.validate || '' },
+        { name: 'user_role', label: 'Perfil:', type: 'select', options: ROLE_OPTS, value: '' }
+      ], 'Guardar');
+      if (!v) return;
+      await run(null, async () => {
+        const body = { id: u.id, full_name: v.full_name, patent: v.patent, validate: v.validate };
+        if (v.user_role) body.user_role = v.user_role;
+        const res = await api('update_user', body);
+        toast('Utilizador atualizado.');
+        if (res && res.warning) toast(res.warning, 'warn');
+        loadUsers();
+      });
+    }
+
+    async function resetPass(u) {
+      const v = await dialog(`Repor password de ${u.username}`, [
+        { name: 'p1', label: 'Nova password:', type: 'password', max: 128 },
+        { name: 'p2', label: 'Repetir:', type: 'password', max: 128 }
+      ], 'Repor');
+      if (!v) return;
+      if (v.p1 !== v.p2) return toast('As passwords não coincidem.', 'error');
+      if (v.p1.length < 8) return toast('A password deve ter pelo menos 8 caracteres.', 'error');
+      await run(null, async () => {
+        await api('reset_password', { id: u.id, password: v.p1 });
+        toast(`Password de ${u.username} reposta.`);
+      });
+    }
+
+    async function deleteUser(u) {
+      const v = await dialog('Apagar utilizador', [
+        { text: `Apagar o acesso ao CB360 Online de ${u.full_name || u.username} (${u.username})? A ficha do elemento não é apagada.` }
+      ], 'Apagar');
+      if (!v) return;
+      await run(null, async () => {
+        await api('delete_user', { id: u.id });
+        toast(`Utilizador ${u.username} apagado.`);
+        loadUsers();
+      });
+    }
+  })();
+  </script>
 </body>
 </html>

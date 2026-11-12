@@ -10,6 +10,7 @@
     import fs from 'fs';
     import os from 'os';
     import path from 'path';
+    import { requireOnline } from './_cb360auth.js';
     import {ServicePrincipalCredentials, PDFServices, MimeType, CreatePDFResult, CreatePDFJob, ClientConfig, Region}
     from "@adobe/pdfservices-node-sdk";
     const ADOBE_CLIENT_CONFIG = new ClientConfig({region: (process.env.ADOBE_REGION || "EU").toUpperCase() === "US" ? Region.US : Region.EU});
@@ -21,7 +22,15 @@
     export const config = {
       api: {bodyParser: {sizeLimit: '10mb',},},
     };
+    /* ===== Segurança: destinatários válidos e em número limitado; texto simples escapado ===== */
+    const MAX_RECIPIENTS = 50;
+    const EMAIL_RE = /^[^\s@<>"',;]+@[^\s@<>"',;]+\.[^\s@<>"',;]+$/;
+    const cleanList = (v) => (Array.isArray(v) ? v : String(v || "").split(",")).map(e => String(e || "").trim()).filter(Boolean);
+    const esc = (v) => String(v ?? "").replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
     function buildEmailTemplate({title, subtitle, logoUrl, emailBody, corpName, corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail}) {
+      [title, subtitle, corpName, corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail] =
+        [title, subtitle, corpName, corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail].map(esc);
+      logoUrl = /^https:\/\/[^\s"'<>]+$/.test(String(logoUrl || "")) ? logoUrl : "";
       const addressLine = [corpAddress, [corpCp, corpLocalitie].filter(Boolean).join(" "), "Portugal"].filter(Boolean).join(" | ");
       const phoneLine = [corpPhoneMobile ? `Telem.: ${corpPhoneMobile}` : "", corpPhoneLandline ? `Telef: ${corpPhoneLandline}` : ""].filter(Boolean).join(" | ");
       const emailLine = corpEmail ? `Email: ${corpEmail}` : "";
@@ -121,16 +130,26 @@
     export default async function handler(req, res) {
       res.setHeader("Access-Control-Allow-Origin", "*");
       res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
       if (req.method === "OPTIONS") return res.status(200).end();
+      if (req.method !== "POST") return res.status(405).json({error: "Método não permitido."});
+      /* só o CB360 Online (token com user_role) */
+      const claims = await requireOnline(req, res); if (!claims) return;
       try {
-        const {shift, date, tables, recipients, ccRecipients, bccRecipients, emailBody, logoUrl, corpName, corpOperNr, lastUpdated,
+        const {shift, date, tables, emailBody, logoUrl, corpName, lastUpdated,
                corpAddress, corpCp, corpLocalitie, corpPhoneMobile, corpPhoneLandline, corpEmail} = req.body || {};
-        if (!shift || !date || !tables || !recipients || recipients.length === 0) {
-          return res.status(400).json({
-            error: "Faltam dados essenciais ou a lista de destinatários principais está vazia.",
-            details: "Certifique-se que todos os dados do planeamento e destinatários 'TO' foram enviados."
-          });
+        const corpOperNr = claims.corp_oper_nr;   /* a corporação vem do token */
+        const recipients = cleanList(req.body?.recipients), ccRecipients = cleanList(req.body?.ccRecipients), bccRecipients = cleanList(req.body?.bccRecipients);
+        if (!shift || !date || !Array.isArray(tables) || recipients.length === 0) {
+          return res.status(400).json({error: "Faltam dados essenciais ou a lista de destinatários principais está vazia."});
+        }
+        /* turno e data vão para o nome do ficheiro e para o assunto: só valores válidos */
+        if (!["D", "N"].includes(String(shift)) || !/^\d{4}-\d{2}-\d{2}$/.test(String(date))) {
+          return res.status(400).json({error: "Turno ou data inválidos."});
+        }
+        const allRecipients = [...recipients, ...ccRecipients, ...bccRecipients];
+        if (allRecipients.length > MAX_RECIPIENTS || !allRecipients.every(e => EMAIL_RE.test(e))) {
+          return res.status(400).json({error: `Endereços inválidos ou mais de ${MAX_RECIPIENTS} destinatários.`});
         }
         if (!PLANDIR_TEMPLATE_CACHE) {
           const response = await fetch("https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/planeamento_template.xlsx");
@@ -205,10 +224,6 @@
         });
       } catch (err) {
         console.error("Erro no processo de conversão/envio:", err);
-        return res.status(500).json({
-          error: "Erro no processo de geração e envio de email",
-          details: err.message,
-          stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
-        });
+        return res.status(500).json({error: "Erro no processo de geração e envio de email"});
       }
     }

@@ -22,6 +22,11 @@
     #admDialog h3 { margin: 0 0 12px; }
     #admDialog .form-row { margin-bottom: 8px; }
     #admDialog .dlg-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+    .mod-tree { max-height: 60vh; overflow-y: auto; min-width: 420px; padding: 4px 8px; border: 1px solid #ddd; border-radius: 6px; }
+    .mod-tree label { display: flex; align-items: center; gap: 6px; padding: 3px 0; font-size: 14px; cursor: pointer; }
+    .mod-tree .mod-children { margin-left: 22px; }
+    .mod-tree > .mod-node > label { font-weight: 600; }
+    .mod-tools { display: flex; gap: 8px; margin-bottom: 8px; }
   </style>
 </head>
 <body>
@@ -103,7 +108,7 @@
       <!-- ===================== GESTÃO DE ACESSOS ===================== -->
       <section id="access-management" class="content-section">
         <h2>Gestão de Acessos por Corporação</h2>
-        <p class="muted">Módulos de cada corporação. "Módulos permitidos" é o valor da coluna allowed_modules.</p>
+        <p class="muted">Módulos de cada corporação. Altere os módulos em "Módulos" e depois carregue em "Guardar".</p>
         <table id="corpTable" class="adm-table">
           <thead>
             <tr>
@@ -113,7 +118,7 @@
               <th>DECIR</th>
               <th>SBA</th>
               <th>OPAT</th>
-              <th style="min-width:220px;">Módulos permitidos</th>
+              <th>Módulos permitidos</th>
               <th>Ações</th>
             </tr>
           </thead>
@@ -392,6 +397,94 @@
       loadCorps(true);
     }));
 
+    /* ---------- módulos (mesma lista do Online; gravados como texto separado por vírgulas) ---------- */
+    const ACCESS_OPTIONS = [
+      {label: "Menu Principal"},
+      {label: "Gestão DECIR", children: [
+        {label: "Configurações DECIR", children: [{label: "Atualização de Valores"}, {label: "Configuração de Equipas"}, {label: "Restaurantes e LEPPs"}]},
+        {label: "Ver Escalas"},
+        {label: "Gestão Financeira ECINs", children: [{label: "Registo por Elemento ECINs"}, {label: "Núcleo Financeiro ECINs"}, {label: "Relatórios ANEPC ECINs"}]},
+        {label: "Gestão Financeira SBAs e OPATs", children: [{label: "Registo por Elemento SBAs e OPATs"}, {label: "Núcleo Financeiro SBAs e OPATs"}, {label: "Relatórios ANEPC SBAs e OPATs"}]},
+        {label: "Gestão Despesas", children: [{label: "Despesas Danos"}, {label: "Despesas Refeições"}]},
+        {label: "Registos Complementares", children: [{label: "Controlo de Ocorrências"}, {label: "Assinaturas Diárias"}, {label: "Refeições Diárias"}, {label: "Pré Posicionamentos"}, {label: "EPE DECIR IV"}]},
+        {label: "Auditoria de Logs"},
+        {label: "DashBoard DECIR"}
+      ]},
+      {label: "Gestão Operacional", children: [
+        {label: "Escalas", children: [{label: "DECIR"}, {label: "1ª Secção"}, {label: "2ª Secção"}, {label: "3ª Secção"}, {label: "4ª Secção"}, {label: "Emissão Escala"}, {label: "Consultar Escalas"}]},
+        {label: "Eventos", children: [{label: "Criação de Eventos"}, {label: "Consulta Disponibilidades"}]},
+        {label: "Pedidos de Férias", children: [{label: "Consultar Pedidos"}]},
+        {label: "Serviços de Voluntariado", children: [{label: "Registo de Serviços"}, {label: "Consulta de Serviços"}, {label: "Configuração de Valores"}]}
+      ]},
+      {label: "Recursos Humanos", children: [
+        {label: "Escalas Mensais"}, {label: "Controlo de Horas Extras"}, {label: "Registos Individuais"},
+        {label: "Gestão de Férias", children: [{label: "Marcação de Férias"}, {label: "Mapa de Férias"}, {label: "Mapa de Prioridade"}]},
+        {label: "Utilitários RH", children: [{label: "Subsidio de Turno"}, {label: "Processamento Salarial"}, {label: "Enquadramento EIPs"}, {label: "DashBoard RH"}]},
+        {label: "Cadastro de Funcionários"}
+      ]},
+      {label: "Verbetes INEM"},
+      {label: "SALOC", children: [
+        {label: "Planos Prévios de Intervenção", children: [{label: "PPI A2"}, {label: "PPI A22"}, {label: "PPI Aeroporto de Faro"}, {label: "PPI Linha Férrea"}, {label: "PPI Aérodromo de Portimão"}]},
+        {label: "Registos Recusas/INOPS", children: [{label: "Recusas de Serviços"}, {label: "Inoperacionalidades INEM"}, {label: "Relatórios Mensais"}, {label: "DashBoard"}]},
+        {label: "Documentação Importante", children: [{label: "CREPC Algarve"}, {label: "Planeamento Diário"}, {label: "Sitop de Veículos"}]},
+        {label: "Diversos"},
+        {label: "Redundância Ocorrências"},
+        {label: "Consola de Alarmes"}
+      ]},
+      {label: "Comunicação WSMS", children: [
+        {label: "Ocorrências em Curso"}, {label: "Inserir/Alterar Ocorrência"}, {label: "Encerrar Ocorrência"}, {label: "Solicitar Disponibilidades"},
+        {label: "Indisponibilidade Veículos"}, {label: "Info. Grelha Município"}, {label: "Serviços EMS"}, {label: "Avisos METEO"}
+      ]},
+      {label: "Utilitários"},
+      {label: "Data Center"}
+    ];
+    const ALL_LABELS = [];
+    (function walk(list) { list.forEach(o => { ALL_LABELS.push(o.label); if (o.children) walk(o.children); }); })(ACCESS_OPTIONS);
+    const parseMods = (txt) => String(txt || '').split(',').map(x => x.trim()).filter(Boolean);
+    const joinMods = (arr) => arr.join(',');
+
+    /* abre a árvore de checkboxes; devolve a nova lista (array) ou null se cancelar */
+    function modulesDialog(corpLabel, current) {
+      return new Promise((resolve) => {
+        const d = $('admDialog');
+        $('admDialogTitle').textContent = `Módulos — ${corpLabel}`;
+        $('admDialogOk').textContent = 'Aplicar';
+        const body = $('admDialogBody');
+        body.replaceChildren();
+        const cur = new Set(current);
+        const boxes = [];
+        function node(opt, parentBox) {
+          const cb = el('input', { type: 'checkbox', checked: cur.has(opt.label) });
+          cb._parent = parentBox; cb._kids = []; cb._label = opt.label;
+          if (parentBox) parentBox._kids.push(cb);
+          boxes.push(cb);
+          const wrap = el('div', { className: 'mod-node' }, el('label', {}, cb, opt.label));
+          if (opt.children) wrap.append(el('div', { className: 'mod-children' }, ...opt.children.map(ch => node(ch, cb))));
+          cb.addEventListener('change', () => {
+            // marcar/desmarcar um grupo aplica-se a tudo o que está dentro
+            (function down(b) { b._kids.forEach(k => { k.checked = cb.checked; down(k); }); })(cb);
+            // marcar um item marca também os grupos acima dele
+            if (cb.checked) for (let p = cb._parent; p; p = p._parent) p.checked = true;
+          });
+          return wrap;
+        }
+        const tree = el('div', { className: 'mod-tree' }, ...ACCESS_OPTIONS.map(o => node(o, null)));
+        const tools = el('div', { className: 'mod-tools' },
+          el('button', { type: 'button', className: 'btn-sm btn-plain', onclick: () => boxes.forEach(b => b.checked = true) }, 'Marcar todos'),
+          el('button', { type: 'button', className: 'btn-sm btn-plain', onclick: () => boxes.forEach(b => b.checked = false) }, 'Desmarcar todos'));
+        body.append(tools, tree);
+        // valores antigos que já não existem na lista: mantêm-se, para não se perderem
+        const extra = current.filter(x => !ALL_LABELS.includes(x));
+        if (extra.length) body.append(el('p', { className: 'muted', style: 'margin-top:8px;' }, `Mantidos (fora da lista): ${extra.join(', ')}`));
+        d.onclose = () => {
+          if (d.returnValue !== 'ok') return resolve(null);
+          resolve([...boxes.filter(b => b.checked).map(b => b._label), ...extra]);
+        };
+        d.returnValue = '';
+        d.showModal();
+      });
+    }
+
     async function loadCorps(force) {
       const tb = $('corpTable').querySelector('tbody');
       tb.replaceChildren(el('tr', {}, el('td', { colSpan: 8, className: 'muted' }, 'A carregar…')));
@@ -402,9 +495,16 @@
           if (c.corp_oper_nr === '0000') continue;
           const chk = (v) => el('input', { type: 'checkbox', checked: !!v });
           const decir = chk(c.has_decir), sba = chk(c.has_sba), opat = chk(c.has_opat);
-          const mods = el('input', { type: 'text', value: c.allowed_modules || '', maxLength: 2000 });
+          let mods = parseMods(c.allowed_modules);
+          const modsBtn = el('button', { className: 'btn-sm btn-plain', type: 'button' });
+          const modsInfo = () => { modsBtn.textContent = `Módulos (${mods.length})`; modsBtn.title = mods.join(', '); };
+          modsInfo();
+          modsBtn.addEventListener('click', async () => {
+            const r = await modulesDialog(`${c.corp_oper_nr} ${c.corporation || ''}`, mods);
+            if (r) { mods = r; modsInfo(); toast('Módulos alterados — carregue em "Guardar".', 'warn'); }
+          });
           const save = el('button', { className: 'btn btn-success btn-sm', type: 'button', onclick: (ev) => run(ev.currentTarget, async () => {
-            await api('update_access', { corp_oper_nr: c.corp_oper_nr, has_decir: decir.checked, has_sba: sba.checked, has_opat: opat.checked, allowed_modules: mods.value });
+            await api('update_access', { corp_oper_nr: c.corp_oper_nr, has_decir: decir.checked, has_sba: sba.checked, has_opat: opat.checked, allowed_modules: joinMods(mods) });
             toast(`Acessos da corporação ${c.corp_oper_nr} guardados.`);
             corpsCache = null;
           }) }, 'Guardar');
@@ -414,7 +514,7 @@
             el('td', {}, c.corp_oper_nr || ''),
             el('td', {}, c.corporation || c.cb_name || ''),
             el('td', {}, decir), el('td', {}, sba), el('td', {}, opat),
-            el('td', {}, mods),
+            el('td', {}, modsBtn),
             el('td', {}, save, logoBtn)
           ));
         }

@@ -27,7 +27,7 @@
           }
           const userReg = dataReg[0];
           const officialName = userReg.full_name;
-          const urlUsers = `${SUPABASE_URL}/rest/v1/users?full_name=eq.${encodeURIComponent(officialName)}&corp_oper_nr=eq.${corpNr}&select=validate`;
+          const urlUsers = `${SUPABASE_URL}/rest/v1/users?n_int=eq.${encodeURIComponent(nInt)}&corp_oper_nr=eq.${corpNr}&select=validate`;;
           const respUsers = await fetch(urlUsers, {headers});
           const dataUsers = await respUsers.json();
           if (dataUsers && dataUsers.length > 0) {
@@ -117,13 +117,13 @@
         }
       }
       /* ========== USER ACCESSES =========== */
-      async function loadUserAccessesSafe(fullName, corpOperNr) {
-        if (!fullName || !corpOperNr) {
+      async function loadUserAccessesSafe(nInt, corpOperNr) {
+        if (!nInt || !corpOperNr) {
           return {acess: [], corpOperNr};
         }    
         const corpOperNrString = String(corpOperNr).trim();    
         try {
-          const url = `${SUPABASE_URL}/rest/v1/reg_elems?select=acess,section,corp_oper_nr&full_name=eq.${encodeURIComponent(fullName)}&corp_oper_nr=eq.${corpOperNrString}`;
+          const url = `${SUPABASE_URL}/rest/v1/reg_elems?select=acess,section,corp_oper_nr&n_int=eq.${encodeURIComponent(nInt)}&corp_oper_nr=eq.${corpOperNrString}`;
           const response = await fetch(url, { headers: getSupabaseHeaders() });
           if (!response.ok) throw new Error("Erro ao buscar dados do usuário");
           const data = await response.json();
@@ -132,7 +132,7 @@
             return recordCorpNr === corpOperNrString;
           });    
           if (!correctRecords.length) {
-            console.warn(`❌ Nenhum acesso encontrado para ${fullName} na corporação ${corpOperNrString}`);
+            console.warn(`❌ Nenhum acesso encontrado para o nº ${nInt} na corporação ${corpOperNrString}`);
             return { acess: [], corpOperNr: corpOperNrString };
           }
           const firstRecord = correctRecords[0];
@@ -203,7 +203,7 @@
       const currentFullName = sessionStorage.getItem("currentUserDisplay");
       const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const isValid = await checkUserValidity(currentFullName);
-      const accessResult = await loadUserAccessesSafe(currentFullName, currentCorpOperNr);
+      const accessResult = await loadUserAccessesSafe(sessionStorage.getItem("currentNInt"), currentCorpOperNr);
       const userHasAccess = isValid && applyAccessesSafe(accessResult);
       if (userHasAccess) {
         updateSidebarAccess(allowedModules, accessResult.acess);

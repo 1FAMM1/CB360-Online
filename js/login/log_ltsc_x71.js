@@ -44,7 +44,7 @@ async function loginUser(user, pass) {
     const corp = data.corp_oper_nr;
 
     setTimeout(() => {
-      if (userRole === "admin" && corp === "0000") {
+      if (corp === "0000") {
         window.location.href = "system_admin.html";
       } else {
         window.location.href = "main.html";

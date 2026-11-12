@@ -1,8 +1,8 @@
     /* Notificações push (sendPush): o servidor exige o token da sessão */
-function cb360PushHeaders() {
-  const tk = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
-  return {'Content-Type': 'application/json', 'Authorization': `Bearer ${tk}`};
-}
+    function cb360PushHeaders() {
+      const tk = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
+      return {'Content-Type': 'application/json', 'Authorization': `Bearer ${tk}`};
+    }
     /* =======================================
     FOMIO
     ======================================= */
@@ -1269,7 +1269,7 @@ function cb360PushHeaders() {
             fetch('https://cb-360-app.vercel.app/api/sendPush', {
               method: 'POST',
               headers: cb360PushHeaders(),
-              body: JSON.stringify({recipient_nint: 'geral', tipo: 'aviso', sender_name: 'CB360 Online', message_text: msgNotif})
+              body: JSON.stringify({recipient_nint: 'geral', tipo: 'aviso', pagina: 'ScalesView', sender_name: 'CB360 Online', message_text: msgNotif})
             }).catch(err => console.error('Erro Push:', err));
           }
         } catch (errNotif) {
@@ -1455,7 +1455,7 @@ function cb360PushHeaders() {
               await fetch('https://cb-360-app.vercel.app/api/sendPush', {
                 method : 'POST',
                 headers: cb360PushHeaders(),
-                body : JSON.stringify({recipient_nint: 'geral', tipo: 'aviso', sender_name: 'CB360 Online', message_text: `📢 Novo evento: "${eventName}". Inscrições abertas!`})
+                body : JSON.stringify({recipient_nint: 'geral', tipo: 'aviso', pagina: 'Events', sender_name: 'CB360 Online', message_text: `📢 Novo evento: "${eventName}". Inscrições abertas!`})
               });
             } catch (errPush) {
               console.error('Erro ao enviar push notifications:', errPush);
@@ -1706,7 +1706,7 @@ function cb360PushHeaders() {
           await fetch('https://cb-360-app.vercel.app/api/sendPush', {
             method : 'POST',
             headers: cb360PushHeaders(),
-            body : JSON.stringify({recipient_nint: userNInt, tipo: 'aviso', sender_name: 'CB360 Online', message_text: msgNotif})
+            body : JSON.stringify({recipient_nint: userNInt, tipo: 'aviso', pagina: 'Events', sender_name: 'CB360 Online', message_text: msgNotif})
           });
         } catch (errPush) {
           console.error('Erro ao enviar push notification:', errPush);
@@ -1954,7 +1954,7 @@ function cb360PushHeaders() {
             await fetch('https://cb-360-app.vercel.app/api/sendPush', {
               method: 'POST',
               headers: cb360PushHeaders(),
-              body: JSON.stringify({recipient_nint: Number(request.n_int), tipo: 'aviso', sender_name: "Gestão de Férias", message_text: msgNotif})
+              body: JSON.stringify({recipient_nint: Number(request.n_int), tipo: 'aviso', pagina: 'SolVacat', sender_name: "Gestão de Férias", message_text: msgNotif})
             });
           } catch (e) {
             console.error("Erro no Push de férias:", e);

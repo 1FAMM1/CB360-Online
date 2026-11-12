@@ -2245,15 +2245,27 @@
                               emailSubject: `MOA para o ${data.moa_device_type} de ${data.moa_gdh_init} a ${data.moa_gdh_end}_${corpOperNr}`,
                               emailBody: emailBodyHTML})
       });
-      return result.json();
+      const out = await result.json().catch(() => ({}));
+      if (!result.ok || out.success === false || out.error) {
+        throw new Error(out.error || `Falha no envio do email (${result.status})`);
+      }
+      return out;
     }
     /* ================= EPE STATUS UPSERT ================= */
     function extractEpeLevel(epeType) {
       if (!epeType) return "";
       return epeType.split(" - ")[0].trim().toUpperCase();
     }
-    async function updateEpeStatus(corpOperNr, epeLevel, startDate, endDate) {
-      const epeType = "epe-decir";
+    /* Dispositivo escolhido na MOA -> linha da epe_status que muda */
+    const MOA_EPE_TYPES = {DIOPS: "epe-diops", DECIR: "epe-decir", NRBQ: "epe-nrbq"};   /* DIRACAERO: não tem EPE na epe_status */
+    function moaEpeType(data) {
+      return MOA_EPE_TYPES[String(data.moa_device_type || "").trim().toUpperCase()] || null;
+    }
+    async function updateEpeStatus(corpOperNr, epeType, epeLevel, startDate, endDate) {
+      if (!epeType || !epeLevel) {
+        console.warn("MOA: tipo/nível de EPE não identificado — epe_status não foi alterado.");
+        return false;
+      }
       try {
         const checkRes = await fetch(
           `${SUPABASE_URL}/rest/v1/epe_status?corp_oper_nr=eq.${corpOperNr}&epe_type=eq.${epeType}&select=id`, {
@@ -2281,8 +2293,10 @@
           );
           if (!postRes.ok) throw new Error(`Erro ao inserir epe_status (${postRes.status})`);
         }
+        return true;
       } catch (err) {
         console.error("Erro em updateEpeStatus:", err);
+        return false;
       }
     }
     /* ================= MAIN FUNCTION ================= */
@@ -2293,7 +2307,7 @@
       const moa_cb = document.getElementById("moa_cb")?.value.trim();
       if (!moa_device_type || !moa_cb) {showPopup('popup-danger', "Preencha: Tipo de Dispositivo e CB."); return;}
       if (typeof showPopup === "function")
-        showPopup('popup-success', `MOA do dispositivo ${moa_device_type} criada. Aguarde o envio.`);
+        showPopup('popup-info', `A enviar a MOA do dispositivo ${moa_device_type}. Aguarde...`);
       const btn = document.getElementById("saveMOABtn");
       if (btn) btn.disabled = true;
       const data = {};
@@ -2323,10 +2337,12 @@
         data.corpEmail = corpEmail;
         if (cbName) data.moa_cb = cbName;
         const recipients = await fetchMOARecipients(corpOperNr);
-        await sendMOAEmail(data, recipients, corpOperNr);
-        await updateEpeStatus(corpOperNr, extractEpeLevel(data.moa_epe_type), data.moa_gdh_init, data.moa_gdh_end);
+        await sendMOAEmail(data, recipients, corpOperNr);   /* se o email falhar, pára aqui e o EPE não muda */
+        const epeOk = await updateEpeStatus(corpOperNr, moaEpeType(data), extractEpeLevel(data.moa_epe_type), data.moa_gdh_init, data.moa_gdh_end);
         if (typeof showPopup === "function")
-          showPopup('popup-success', `A MOA do dispositivo ${data.moa_device_type} foi enviada!`);
+          showPopup(epeOk ? 'popup-success' : 'popup-warning',
+            epeOk ? `A MOA do dispositivo ${data.moa_device_type} foi enviada!`
+                  : `A MOA foi enviada, mas o estado do EPE não foi atualizado (dispositivo sem EPE associado).`);
         window.hideMOAContainer();
         const btnNew = document.getElementById("NewMOABtn");
         if (btnNew) btnNew.classList.remove("active");

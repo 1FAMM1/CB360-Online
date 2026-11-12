@@ -491,7 +491,7 @@
       }
       return wsmsCorpCouncilCache;
     }
-    async function generateWSMSMessage() {
+        async function generateWSMSMessage() {
       if (!validateRequiredFields()) return '';
       await new Promise(resolve => {
         const interval = setInterval(() => {
@@ -559,6 +559,15 @@
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(message).catch(() => {});
       }
+      /* push geral para a Mobile: abre "Ocorrências em Curso"; não espera pelo envio */
+      const pushText = alertType === 'Plano Prévio de Intervenção'
+        ? `🚨 Ativação do ${ppiType}${alertLevel ? ` (${alertLevel})` : ''}${ppiGrid ? ` · Grelha ${ppiGrid}` : ''}`
+        : `🚨 ${descrOccorr || 'Nova ocorrência'}${localitie || localOccorr ? ` · ${[localitie, localOccorr].filter(Boolean).join(', ')}` : ''}${vehicles.length ? ` · ${vehicles.map(v => v.split('|')[0]).join(', ')}` : ''}`;
+      fetch('https://cb-360-app.vercel.app/api/sendPush', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({recipient_nint: 'geral', tipo: 'aviso', pagina: 'OnGoingOcr', sender_name: 'CB360 Online', message_text: pushText.slice(0, 180)})
+      }).catch(e => console.error('Erro Push:', e));
       showPopup('popup-success', "Mensagem criada e copiada! Pode colar no WhatsApp.", false);
       loadActiveOccurrences();
       return message;

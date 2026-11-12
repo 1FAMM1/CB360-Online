@@ -1593,6 +1593,20 @@
       if (table) { paintWeekendHeaders(table, year, month, daysInMonth); paintHolidaysOnTable(tbody, table, year, month, daysInMonth, holidayMap); }
       showPopup('popup-success', "Turnos Removidos. Escala Reíniciada.");
     }
+    /* ===== Estado da escala do mês (reg_employee_scales_status) =====
+       Gravar -> is_validated = false (cria a linha do mês se ainda não existir)
+       PDF    -> is_validated = true, com data/hora e quem validou */
+    async function setEmployeeScaleStatus(corpOperNr, year, month, validated) {
+      const row = {corp_oper_nr: String(corpOperNr), year: Number(year), month: Number(month), is_validated: !!validated,
+                   validated_at: validated ? new Date().toISOString() : null,
+                   validated_by: validated ? (sessionStorage.getItem("currentUserDisplay") || sessionStorage.getItem("currentUserName") || null) : null};
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/reg_employee_scales_status?on_conflict=corp_oper_nr,year,month`, {
+        method: "POST",
+        headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "resolution=merge-duplicates,return=minimal"},
+        body: JSON.stringify(row)
+      });
+      if (!res.ok) throw new Error(`Estado da escala não atualizado (${res.status}): ${await res.text()}`);
+    }
     async function saveEmployeeScales() {
       const tbody = document.querySelector("table.employees-table tbody");
       if (!tbody) {showPopup('popup-danger', "Nenhuma tabela aberta."); return;}
@@ -1652,6 +1666,13 @@
           return;
         }
         await propagateAccumulatedForward(corpOperNr, year, month);
+        try {
+          await setEmployeeScaleStatus(corpOperNr, year, month, false);
+        } catch (errStatus) {
+          console.warn(errStatus);
+          showPopup('popup-danger', `Escala de ${monthBtn.textContent} ${year} guardada, mas o estado (por validar) não foi atualizado.`);
+          return;
+        }
         showPopup('popup-success', `Escala de ${monthBtn.textContent} ${year} guardada com sucesso!`);
       } catch (err) {
         console.error("Erro ao guardar escala:", err); showPopup('popup-danger', "Erro ao guardar: " + err.message);
@@ -1684,6 +1705,15 @@
         const monthNames = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
         a.download = `Escala_Funcionários_${monthNames[month - 1]}_${year}.${format === "pdf" ? "pdf" : "xlsx"}`;
         a.click(); URL.revokeObjectURL(url);
+        if (format === "pdf") {
+          try {
+            await setEmployeeScaleStatus(sessionStorage.getItem("currentCorpOperNr"), year, month, true);
+          } catch (errStatus) {
+            console.warn(errStatus);
+            hideLoadingPopup(); showPopup('popup-danger', "PDF gerado, mas a escala não ficou marcada como validada. Tente novamente.");
+            return;
+          }
+        }
         hideLoadingPopup(); showPopup('popup-info', `Escala gerada com sucesso, em formato ${format === "pdf" ? "PDF" : "Excel"}!`);
       } catch (err) {hideLoadingPopup(); console.error("Erro ao gerar folha:", err); showPopup('popup-danger', `Erro: ${err.message}`);}
     }

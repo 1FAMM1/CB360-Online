@@ -25,6 +25,29 @@
                        contact_list: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/contact_list_template.xlsx",
                        attendance_list: "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/attendance_list_template.xlsx",
                       };
+    /* ===== SEGURANÇA: só com sessão iniciada ===== */
+    const SB_URL = process.env.SUPABASE_URL || "https://rjkbodfqsvckvnhjwmhg.supabase.co";
+    async function whoami(token) {
+      if (!token) return null;
+      try {
+        const r = await fetch(`${SB_URL}/rest/v1/rpc/cb360_whoami`, {
+          method: "POST",
+          headers: {apikey: process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY,
+                    Authorization: `Bearer ${token}`, "Content-Type": "application/json"},
+          body: "{}",
+        });
+        if (!r.ok) return null;
+        const c = await r.json();
+        return c && c.role === "authenticated" && c.corp_oper_nr ? c : null;
+      } catch {
+        return null;
+      }
+    }
+    const MAX_RECIPIENTS = 200;   /* to + cc + bcc (o envio em massa usa cc) */
+    const EMAIL_RE = /^[^\s@<>"',;]+@[^\s@<>"',;]+\.[^\s@<>"',;]+$/;
+    function badRecipients(list) {
+      return list.length > MAX_RECIPIENTS || !list.every(e => EMAIL_RE.test(e));
+    }
     const mailList = (v) => (Array.isArray(v) ? v : String(v || "").split(",")).map(e => String(e).trim()).filter(Boolean);
     // ===== CONTACTOS DA CORPORAÇÃO (assinatura dos emails) =====
     // Vêm da corporation_data da corporação com sessão iniciada. Se não vierem, a linha fica vazia.
@@ -77,6 +100,8 @@
       res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
       if (req.method === "OPTIONS") return res.status(200).end();
       if (req.method !== "POST") return res.status(405).json({success: false, error: "Método não permitido"});
+      const claims = await whoami(String(req.headers.authorization || "").replace(/^Bearer\s+/i, ""));
+      if (!claims) return res.status(401).json({success: false, error: "Sessão inválida"});
       try {
         const {type, data} = req.body;
         // ===== PDF HANDLERS ===== (só carrega o pdf-lib quando é preciso; o envio de email não o usa)
@@ -443,7 +468,9 @@
           `;
           const attTo = mailList(data.attendanceTo);
           try {
-            if (!attTo.length) {
+            if (badRecipients([...attTo, ...mailList(data.attendanceCc), ...mailList(data.attendanceBcc)])) {
+              console.warn("⚠️ Lista de Comparências: destinatários inválidos ou em excesso. Email não enviado.");
+            } else if (!attTo.length) {
               console.warn("⚠️ Lista de Comparências sem destinatários configurados (attendance_mail_to). Email não enviado.");
             } else {
               const attCc = mailList(data.attendanceCc);
@@ -477,7 +504,7 @@
             .map(e => String(e).trim()).filter(Boolean);
           const uniq = (arr) => [...new Map(arr.map(e => [e.toLowerCase(), e])).values()];
           if (!to || !subject || !message) return res.status(400).json({success: false, error: "Campos obrigatórios em falta"});
-          const senderDisplayName = `CB360 Online - ${corpOperNr || "Corporação"}`;
+          const senderDisplayName = `CB360 Online - ${claims.corp_oper_nr}`;
           const transporter = nodemailer.createTransport({
             service: "gmail",
             auth: {user: process.env.GMAIL_EMAIL, pass: process.env.GMAIL_APP_PASSWORD},
@@ -546,6 +573,10 @@
           };
           mailOptions.to = toList(to);
           if (!mailOptions.to.length) return res.status(400).json({success: false, error: "Sem destinatário. Configure em Centro de Dados → Emails Config."});
+          if (badRecipients([...mailOptions.to, ...toList(cc), ...toList(bcc), ...(corpEmail ? [corpEmail] : [])])) {
+            return res.status(400).json({success: false, error: `Endereços inválidos ou mais de ${MAX_RECIPIENTS} destinatários.`});
+          }
+          mailOptions.subject = String(subject).replace(/[\r\n]+/g, " ").slice(0, 250);
           if (isBulk) {
             mailOptions.cc = uniq(toList(cc));
           } else {

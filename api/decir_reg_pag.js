@@ -10,6 +10,7 @@
     import os from 'os';
     import path from 'path';
     import https from 'https';
+    import { requireOnline } from './_cb360auth.js';
     import {ServicePrincipalCredentials, PDFServices, MimeType, CreatePDFResult, CreatePDFJob, ClientConfig, Region}
     from "@adobe/pdfservices-node-sdk";
     const TEMPLATE_REG_ECINS_URL = "https://raw.githubusercontent.com/1FAMM1/CB360-Online/main/templates/decir_reg_template.xlsx";
@@ -84,15 +85,19 @@
     export default async function handler(req, res) {
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
       if (req.method === 'OPTIONS') return res.status(200).end();
       if (req.method !== 'POST') return res.status(405).json({error: 'Método não permitido'});
+      /* só o CB360 Online (token com user_role): pagamentos têm NIF/NIB */
+      const claims = await requireOnline(req, res); if (!claims) return;
       const tempDir = os.tmpdir();
       let outputFile = null;
       try {
         const data = req.body;
         if (!data || !data.type) return res.status(400).json({error: "Tipo não especificado"});
         const format = data.format || "xlsx";
+        const TYPES = ['reg_decir','reg_sba_opat','pag_decir','pag_sba_opat','code_a33_decir','code_a33_sba_opat','anepc_decir','anepc_sba_opat','ocorr','ref','signa','lepp'];
+        if (!TYPES.includes(data.type)) return res.status(400).json({error: "Tipo inválido"});
         const workbook = new ExcelJS.Workbook();
         let sheet;
         // ---------- DAILY REGISTER ECINS ----------
@@ -584,7 +589,9 @@
                              margins: {left: 0.5, right: 0.5, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3}};
         }
         // ---------- SAVE AND DOWNLOAD ----------
-        const safeFileName = data.fileName || "decir";
+        /* nome do ficheiro sem caminhos nem caracteres especiais (vai para /tmp e para o cabeçalho) */
+        const safeFileName = String(data.fileName || "decir").normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+          .replace(/[^A-Za-z0-9._-]/g, "_").replace(/^\.+/, "").slice(0, 100) || "decir";
         if (format === "pdf") {
           const xlsxBuffer = await workbook.xlsx.writeBuffer();
           const pdfBuffer = await convertXLSXToPDF(xlsxBuffer, safeFileName);
@@ -602,6 +609,7 @@
         }
       } catch (e) {
         try { if (outputFile) fs.unlinkSync(outputFile); } catch {}
-        return res.status(500).json({error: "Erro interno", details: e.message});
+        console.error("decir_reg_pag:", e);
+        return res.status(500).json({error: "Erro interno"});
       }
     }

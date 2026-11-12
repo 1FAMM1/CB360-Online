@@ -758,6 +758,14 @@
       resetToFirstTab();
       window.scrollTo({top: 0, behavior: 'smooth'});
     }
+    /* mensagem simples quando a base de dados recusa mexer em acessos (não é admin) */
+    async function accessErrorMsg(res, prefixo) {
+      const t = await res.text().catch(() => "");
+      if (res.status === 403 || t.includes("42501") || t.includes("Só um administrador")) {
+        return `${prefixo}: só um administrador pode criar, alterar ou apagar credenciais de acesso.`;
+      }
+      return `${prefixo}: ${t}`;
+    }
     async function saveElement() {
       const nInt = document.getElementById("win_n_int").value.trim();
       const fullName = document.getElementById("win_full_name").value.trim();
@@ -883,7 +891,7 @@
             headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
             body: JSON.stringify(payloadUsers)
           });
-          if (!resUser.ok) throw new Error("Elemento gravado, mas falhou o acesso Online: " + await resUser.text());
+          if (!resUser.ok) throw new Error(await accessErrorMsg(resUser, "Elemento gravado, mas o acesso Online não foi alterado"));
         }
         /* ---------- users_mobile (Mobile) ---------- */
         if (mobUserVal) {
@@ -894,7 +902,7 @@
             headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
             body: JSON.stringify(payloadMob)
           });
-          if (!resMob.ok) throw new Error("Elemento gravado, mas falhou o acesso Mobile: " + await resMob.text());
+          if (!resMob.ok) throw new Error(await accessErrorMsg(resMob, "Elemento gravado, mas o acesso Mobile não foi alterado"));
         }
         document.getElementById("win_password_main").value = "";
         document.getElementById("win_password_mobile").value = "";
@@ -913,13 +921,13 @@
           method: "DELETE",
           headers: getSupabaseHeaders()
         });
-        if (!resUsers.ok) throw new Error("Falhou a remoção do acesso Online: " + await resUsers.text());
+        if (!resUsers.ok) throw new Error(await accessErrorMsg(resUsers, "O elemento não foi removido"));
         const list = nintVariants(row.n_int).map(v => `"${v}"`).join(",");
         const resMob = await fetch(`${SUPABASE_URL}/rest/v1/users_mobile?corp_oper_nr=eq.${row.corp_oper_nr}&nint_corp=in.(${list})`, {
           method: "DELETE",
           headers: getSupabaseHeaders()
         });
-        if (!resMob.ok) throw new Error("Falhou a remoção do acesso Mobile: " + await resMob.text());
+        if (!resMob.ok) throw new Error(await accessErrorMsg(resMob, "O elemento não foi removido"));
         const resDel = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?id=eq.${row.id}`, {method: "DELETE", headers: getSupabaseHeaders()});
         if (!resDel.ok) throw new Error("Falhou a remoção do elemento: " + await resDel.text());
         showPopup('popup-success', `${row.full_name} removido com sucesso.`);
@@ -1448,13 +1456,13 @@
     }
     /* ======= NOVOS GRUPOS (antes estavam fixos no código com os emails de Faro) ======= */
     const MAIL_EXTRA_GROUPS = [
-      {prefix: "bulk",           fields: ["to", "cc", "bcc"], msg: "Emails dos envios em massa atualizados com sucesso."},
-      {prefix: "attendance",     fields: ["to", "cc", "bcc"], msg: "Emails da Lista de Comparências atualizados com sucesso."},
-      {prefix: "volunt_verify",  fields: ["to", "cc", "bcc"], msg: "Emails de envio para validação (Voluntariado) atualizados com sucesso."},
-      {prefix: "volunt_valid",   fields: ["to", "cc", "bcc"], msg: "Emails de serviços validados (Voluntariado) atualizados com sucesso."},
+      {prefix: "bulk", fields: ["to", "cc", "bcc"], msg: "Emails dos envios em massa atualizados com sucesso."},
+      {prefix: "attendance", fields: ["to", "cc", "bcc"], msg: "Emails da Lista de Comparências atualizados com sucesso."},
+      {prefix: "volunt_verify", fields: ["to", "cc", "bcc"], msg: "Emails de envio para validação (Voluntariado) atualizados com sucesso."},
+      {prefix: "volunt_valid", fields: ["to", "cc", "bcc"], msg: "Emails de serviços validados (Voluntariado) atualizados com sucesso."},
       {prefix: "volunt_invalid", fields: ["to", "cc", "bcc"], msg: "Emails de serviços com inconsistências (Voluntariado) atualizados com sucesso."},
-      {prefix: "decir_disp",     fields: ["to", "cc"],        msg: "Emails das disponibilidades DECIR atualizados com sucesso."},
-      {prefix: "rh_disp",        fields: ["to", "cc"],        msg: "Emails das disponibilidades das escalas (INEM/EIP/OPTEL) atualizados com sucesso."}
+      {prefix: "decir_disp", fields: ["to", "cc"], msg: "Emails das disponibilidades DECIR atualizados com sucesso."},
+      {prefix: "rh_disp", fields: ["to", "cc"], msg: "Emails das disponibilidades das escalas (INEM/EIP/OPTEL) atualizados com sucesso."}
     ];
     MAIL_EXTRA_GROUPS.forEach(g => {
       document.getElementById(`config_${g.prefix}_mail_save`)?.addEventListener("click", async () => {

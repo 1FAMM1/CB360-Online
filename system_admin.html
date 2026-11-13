@@ -74,6 +74,22 @@
     #user-management .info-card > .users-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; border: 1px solid #e1e6ea; border-radius: 6px; }
     .users-scroll .adm-table { margin-top: 0; }
     .users-scroll thead th { position: sticky; top: 0; z-index: 1; }
+    /* ---------- Freguesias ---------- */
+    .pm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; margin-top: 12px; }
+    .pm-box { background: #fff; border: 1px solid #e1e6ea; border-radius: 8px; padding: 12px 14px; }
+    .pm-box h4 { margin: 0 0 10px; font-size: 14px; color: #2c3e50; }
+    .pm-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+    .pm-row label { min-width: 70px; font-size: 13px; color: #55606b; }
+    .pm-row select, .pm-row input[type="text"] { flex: 1 1 200px; padding: 7px 9px; border: 1px solid #cfd6dd; border-radius: 6px; font-size: 14px; }
+    #pm-list { height: calc(100vh - 330px); min-height: 220px; overflow-y: auto; border: 1px solid #e1e6ea; border-radius: 6px; }
+    .pm-item { padding: 7px 10px; font-size: 14px; cursor: pointer; border-bottom: 1px solid #f0f2f4; display: flex; justify-content: space-between; gap: 8px; }
+    .pm-item:hover { background: #f3f6f9; }
+    .pm-item.sel { background: #2c3e50; color: #fff; }
+    .pm-item.off { color: #9aa3ab; font-style: italic; }
+    .pm-item.sel.off { color: #d7dde2; }
+    .pm-tag { font-size: 11px; font-style: normal; opacity: .8; white-space: nowrap; }
+    .pm-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+    .pm-actions button { padding: 8px 14px; font-size: 13px; font-weight: 600; border-radius: 6px; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -89,6 +105,7 @@
       <div class="sidebar-item active" data-section="add-corporation">➕ Adicionar Corporação</div>
       <div class="sidebar-item" data-section="user-management">👥 Gestão de Utilizadores</div>
       <div class="sidebar-item" data-section="access-management">🔐 Gestão de Acessos</div>
+      <div class="sidebar-item" data-section="parish-management">🗺️ Freguesias</div>
     </aside>
     <main class="content">
 
@@ -250,6 +267,32 @@
           </div>
         </div>
       </section>
+
+      <!-- ===================== FREGUESIAS ===================== -->
+      <section id="parish-management" class="content-section">
+        <h2>Freguesias</h2>
+        <p class="muted">Lista comum a todas as corporações. Desativar retira a freguesia das listas de escolha, mas os registos antigos mantêm o nome.</p>
+        <div class="pm-grid">
+          <div class="pm-box">
+            <h4>Escolher</h4>
+            <div class="pm-row"><label>Distrito:</label><select id="pm-district"></select></div>
+            <div class="pm-row"><label>Concelho:</label><select id="pm-council"></select></div>
+            <div class="pm-row"><label>Procurar:</label><input type="text" id="pm-search" placeholder="Filtrar freguesias…" autocomplete="off"></div>
+            <div id="pm-list"></div>
+            <p class="muted" id="pm-count" style="margin:6px 0 0;"></p>
+          </div>
+          <div class="pm-box">
+            <h4 id="pm-edit-title">Freguesia</h4>
+            <div class="pm-row"><label>Nome:</label><input type="text" id="pm-name" maxlength="150" autocomplete="off" placeholder="Escolha uma freguesia na lista ou carregue em Nova"></div>
+            <p class="muted" id="pm-state" style="margin:0 0 8px;"></p>
+            <div class="pm-actions">
+              <button type="button" id="pm-save" class="btn btn-success">Gravar</button>
+              <button type="button" id="pm-new" class="btn-plain">Nova freguesia</button>
+              <button type="button" id="pm-toggle" class="btn-danger" style="display:none;">Desativar</button>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
   </div>
 
@@ -404,6 +447,7 @@
       document.querySelectorAll('.content-section').forEach(s => s.classList.toggle('active', s.id === id));
       if (id === 'access-management') loadCorps();
       if (id === 'user-management') loadCorpSelect();
+      if (id === 'parish-management') pmInit();
       if (id === 'add-corporation' && !keepForm && editingCorp) resetCorpForm();
     }
     document.querySelectorAll('.sidebar-item').forEach(item => {
@@ -847,6 +891,84 @@
         loadUsers();
       });
     }
+
+    /* =====================================================================
+       FREGUESIAS (tabela comum a todas as corporações; grava pela admin-api)
+       ===================================================================== */
+    let pmParishes = [], pmSel = null, pmReady = false;
+    async function pmInit() {
+      if (pmReady) return;
+      await run(null, async () => {
+        if (!districts.length) districts = await api('geo_districts');
+        $('pm-district').replaceChildren(selOpt('', '— distrito —'), ...districts.map(d => selOpt(String(d.id), d.district)));
+        $('pm-council').replaceChildren(selOpt('', '— concelho —'));
+        pmReady = true;
+        pmRender();
+      });
+    }
+    function pmCouncil() { return Number($('pm-council').value) || null; }
+    function pmSelect(p) {
+      pmSel = p;
+      $('pm-name').value = p ? p.parish : '';
+      $('pm-edit-title').textContent = p ? 'Editar freguesia' : 'Nova freguesia';
+      $('pm-state').textContent = p ? (p.active ? 'Ativa — aparece nas listas de escolha.' : 'Desativada — não aparece nas listas de escolha.') : (pmCouncil() ? `Será criada no concelho ${selText('pm-council')}.` : 'Escolha primeiro o distrito e o concelho.');
+      $('pm-toggle').style.display = p ? '' : 'none';
+      $('pm-toggle').textContent = p && !p.active ? 'Reativar' : 'Desativar';
+      $('pm-toggle').className = p && !p.active ? 'btn btn-success' : 'btn-danger';
+      pmRender();
+    }
+    function pmRender() {
+      const box = $('pm-list');
+      const q = norm($('pm-search').value);
+      const list = pmParishes.filter(p => !q || norm(p.parish).includes(q));
+      box.replaceChildren(...list.map(p => el('div', {
+        className: 'pm-item' + (p.active ? '' : ' off') + (pmSel && pmSel.id === p.id ? ' sel' : ''),
+        onclick: () => pmSelect(p)
+      }, el('span', {}, p.parish), p.active ? '' : el('span', { className: 'pm-tag' }, 'desativada'))));
+      if (!pmCouncil()) box.replaceChildren(el('div', { className: 'muted', style: 'padding:10px;' }, 'Escolha o distrito e o concelho.'));
+      else if (!list.length) box.append(el('div', { className: 'muted', style: 'padding:10px;' }, q ? 'Nenhuma freguesia com esse nome.' : 'Sem freguesias neste concelho.'));
+      const off = pmParishes.filter(p => !p.active).length;
+      $('pm-count').textContent = pmCouncil() ? `${pmParishes.length} freguesias${off ? ` (${off} desativadas)` : ''}` : '';
+    }
+    async function pmLoadParishes(keepId) {
+      const cid = pmCouncil();
+      pmParishes = cid ? await api('parishes_admin', { council_id: cid }) : [];
+      pmSelect(keepId ? (pmParishes.find(p => p.id === keepId) || null) : null);
+    }
+    $('pm-district').addEventListener('change', () => run(null, async () => {
+      const did = Number($('pm-district').value);
+      $('pm-council').replaceChildren(selOpt('', '— concelho —'));
+      if (did) {
+        const list = await api('geo_councils', { district_id: did });
+        $('pm-council').append(...list.map(c => selOpt(String(c.id), c.council)));
+      }
+      pmParishes = []; $('pm-search').value = ''; pmSelect(null);
+    }));
+    $('pm-council').addEventListener('change', () => run(null, async () => { $('pm-search').value = ''; await pmLoadParishes(); }));
+    $('pm-search').addEventListener('input', pmRender);
+    $('pm-new').addEventListener('click', () => { pmSelect(null); $('pm-name').focus(); });
+    $('pm-save').addEventListener('click', (e) => run(e.currentTarget, async () => {
+      const name = $('pm-name').value.trim().replace(/\s+/g, ' ');
+      if (!pmCouncil()) throw new Error('Escolha o distrito e o concelho.');
+      if (name.length < 2) throw new Error('Indique o nome da freguesia.');
+      if (pmSel && name === pmSel.parish) { toast('Sem alterações.', 'warn'); return; }
+      const res = await api('parish_save', pmSel ? { id: pmSel.id, parish: name } : { council_id: pmCouncil(), parish: name });
+      toast(pmSel ? `Freguesia renomeada para "${name}".` : `Freguesia "${name}" criada.`);
+      await pmLoadParishes(res && res.id);
+    }));
+    $('pm-toggle').addEventListener('click', (e) => run(e.currentTarget, async () => {
+      if (!pmSel) return;
+      const activate = !pmSel.active;
+      if (!activate) {
+        $('admDialog').classList.add('danger');
+        const ok = await dialog('Desativar freguesia', [{ text: `Desativar "${pmSel.parish}"? Deixa de aparecer nas listas de escolha do Online e da Mobile. Os registos antigos mantêm o nome. Pode reativar quando quiser.` }], 'Desativar');
+        $('admDialog').classList.remove('danger');
+        if (!ok) return;
+      }
+      await api('parish_set_active', { id: pmSel.id, active: activate });
+      toast(activate ? `"${pmSel.parish}" reativada.` : `"${pmSel.parish}" desativada.`);
+      await pmLoadParishes(pmSel.id);
+    }));
   })();
   </script>
 </body>

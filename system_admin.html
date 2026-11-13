@@ -653,49 +653,29 @@
     }));
 
     /* ---------- módulos (mesma lista do Online; gravados como texto separado por vírgulas) ---------- */
-    const ACCESS_OPTIONS = [
-      {label: "Menu Principal"},
-      {label: "Gestão DECIR", children: [
-        {label: "Configurações DECIR", children: [{label: "Atualização de Valores"}, {label: "Configuração de Equipas"}, {label: "Restaurantes e LEPPs"}]},
-        {label: "Ver Escalas"},
-        {label: "Gestão Financeira ECINs", children: [{label: "Registo por Elemento ECINs"}, {label: "Núcleo Financeiro ECINs"}, {label: "Relatórios ANEPC ECINs"}]},
-        {label: "Gestão Financeira SBAs e OPATs", children: [{label: "Registo por Elemento SBAs e OPATs"}, {label: "Núcleo Financeiro SBAs e OPATs"}, {label: "Relatórios ANEPC SBAs e OPATs"}]},
-        {label: "Gestão Despesas", children: [{label: "Despesas Danos"}, {label: "Despesas Refeições"}]},
-        {label: "Registos Complementares", children: [{label: "Controlo de Ocorrências"}, {label: "Assinaturas Diárias"}, {label: "Refeições Diárias"}, {label: "Pré Posicionamentos"}, {label: "EPE DECIR IV"}]},
-        {label: "Auditoria de Logs"},
-        {label: "DashBoard DECIR"}
-      ]},
-      {label: "Gestão Operacional", children: [
-        {label: "Escalas", children: [{label: "DECIR"}, {label: "1ª Secção"}, {label: "2ª Secção"}, {label: "3ª Secção"}, {label: "4ª Secção"}, {label: "Emissão Escala"}, {label: "Consultar Escalas"}]},
-        {label: "Eventos", children: [{label: "Criação de Eventos"}, {label: "Consulta Disponibilidades"}]},
-        {label: "Pedidos de Férias", children: [{label: "Consultar Pedidos"}]},
-        {label: "Pedidos de Fardamento", children: [{label: "Gestão de Pedidos Fardamento"}, {label: "Artigos de Fardamento"}]},
-        {label: "Serviços de Voluntariado", children: [{label: "Registo de Serviços"}, {label: "Consulta de Serviços"}, {label: "Configuração de Valores"}]}
-      ]},
-      {label: "Recursos Humanos", children: [
-        {label: "Escalas Mensais"}, {label: "Controlo de Horas Extras"}, {label: "Registos Individuais"},
-        {label: "Gestão de Férias", children: [{label: "Marcação de Férias"}, {label: "Mapa de Férias"}, {label: "Mapa de Prioridade"}]},
-        {label: "Utilitários RH", children: [{label: "Subsidio de Turno"}, {label: "Processamento Salarial"}, {label: "Enquadramento EIPs"}, {label: "DashBoard RH"}]},
-        {label: "Cadastro de Funcionários"}
-      ]},
-      {label: "Verbetes INEM"},
-      {label: "SALOC", children: [
-        {label: "Planos Prévios de Intervenção", children: [{label: "PPI A2"}, {label: "PPI A22"}, {label: "PPI Aeroporto de Faro"}, {label: "PPI Linha Férrea"}, {label: "PPI Aérodromo de Portimão"}]},
-        {label: "Registos Recusas/INOPS", children: [{label: "Recusas de Serviços"}, {label: "Inoperacionalidades INEM"}, {label: "Relatórios Mensais"}, {label: "DashBoard"}]},
-        {label: "Documentação Importante", children: [{label: "CREPC Algarve"}, {label: "Planeamento Diário"}, {label: "Sitop de Veículos"}]},
-        {label: "Diversos"},
-        {label: "Redundância Ocorrências"},
-        {label: "Consola de Alarmes"}
-      ]},
-      {label: "Comunicação WSMS", children: [
-        {label: "Ocorrências em Curso"}, {label: "Inserir/Alterar Ocorrência"}, {label: "Encerrar Ocorrência"}, {label: "Solicitar Disponibilidades"},
-        {label: "Indisponibilidade Veículos"}, {label: "Info. Grelha Município"}, {label: "Serviços EMS"}, {label: "Avisos METEO"}
-      ]},
-      {label: "Utilitários"},
-      {label: "Data Center"}
-    ];
-    const ALL_LABELS = [];
-    (function walk(list) { list.forEach(o => { ALL_LABELS.push(o.label); if (o.children) walk(o.children); }); })(ACCESS_OPTIONS);
+    /* árvore de módulos: vem da tabela cb360_modules (a mesma do Data Center do Online) */
+    let ACCESS_OPTIONS = [];
+    let ALL_LABELS = [];
+    async function loadAccessOptions() {
+      if (ACCESS_OPTIONS.length) return;
+      const tk = sessionStorage.getItem('authToken');
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/cb360_modules?select=label,parent,sort_order&active=is.true&order=sort_order.asc,label.asc`, {
+        headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${tk}` }
+      });
+      if (!r.ok) throw new Error('Não foi possível carregar a lista de módulos.');
+      ACCESS_OPTIONS = await (async () => {
+        const rows = await r.json();
+        const byParent = {};
+        rows.forEach(x => { const k = x.parent || ''; (byParent[k] = byParent[k] || []).push(x); });
+        const build = (p) => (byParent[p] || []).map(x => {
+          const kids = build(x.label);
+          return kids.length ? {label: x.label, children: kids} : {label: x.label};
+        });
+        return build('');
+      })();
+      ALL_LABELS = [];
+      (function walk(list) { list.forEach(o => { ALL_LABELS.push(o.label); if (o.children) walk(o.children); }); })(ACCESS_OPTIONS);
+    }
     const parseMods = (txt) => String(txt || '').split(',').map(x => x.trim()).filter(Boolean);
     const joinMods = (arr) => arr.join(',');
 
@@ -756,6 +736,7 @@
           const modsInfo = () => { modsBtn.textContent = `Módulos (${mods.length})`; modsBtn.title = mods.join(', '); };
           modsInfo();
           modsBtn.addEventListener('click', async () => {
+            try { await loadAccessOptions(); } catch (e) { toast(e.message, 'error'); return; }
             const r = await modulesDialog(`${c.corp_oper_nr} ${c.corporation || ''}`, mods);
             if (r) { mods = r; modsInfo(); toast('Módulos alterados — carregue em "Guardar".', 'warn'); }
           });

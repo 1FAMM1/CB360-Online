@@ -1,8 +1,3 @@
-    /* Notificações push (sendPush): o servidor exige o token da sessão */
-    function cb360PushHeaders() {
-      const tk = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
-      return {'Content-Type': 'application/json', 'Authorization': `Bearer ${tk}`};
-    }
     /* =======================================
     FOMIO
     ======================================= */

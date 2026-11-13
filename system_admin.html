@@ -88,6 +88,9 @@
     .pm-item.off { color: #9aa3ab; font-style: italic; }
     .pm-item.sel.off { color: #d7dde2; }
     .pm-tag { font-size: 11px; font-style: normal; opacity: .8; white-space: nowrap; }
+    #mm-list { height: calc(100vh - 330px); min-height: 200px; overflow-y: auto; border: 1px solid #e1e6ea; border-radius: 6px; }
+    #mm-list .pm-item.top { font-weight: 700; }
+    .mm-warn { background: #fff8e1; border: 1px solid #f3d27a; border-radius: 6px; padding: 8px 10px; font-size: 12.5px; color: #6b5300; margin-top: 10px; }
     .pm-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
     .pm-actions button { padding: 8px 14px; font-size: 13px; font-weight: 600; border-radius: 6px; cursor: pointer; }
   </style>
@@ -106,6 +109,7 @@
       <div class="sidebar-item" data-section="user-management">👥 Gestão de Utilizadores</div>
       <div class="sidebar-item" data-section="access-management">🔐 Gestão de Acessos</div>
       <div class="sidebar-item" data-section="parish-management">🗺️ Freguesias</div>
+      <div class="sidebar-item" data-section="modules-management">🧩 Árvore de Acessos</div>
     </aside>
     <main class="content">
 
@@ -293,6 +297,37 @@
           </div>
         </div>
       </section>
+      <!-- ===================== ÁRVORE DE ACESSOS ===================== -->
+      <section id="modules-management" class="content-section">
+        <h2>Árvore de Acessos</h2>
+        <p class="muted" style="margin:0;">Os módulos que aparecem nas caixas de "Módulos" (corporações) e nos acessos de cada elemento (Data Center do Online).</p>
+        <div class="pm-grid">
+          <div class="pm-box">
+            <div class="pm-row"><label>Procurar:</label><input type="text" id="mm-search" placeholder="Filtrar módulos…" autocomplete="off"></div>
+            <div id="mm-list"></div>
+            <p class="muted" id="mm-count" style="margin:6px 0 0;"></p>
+          </div>
+          <div class="pm-box">
+            <h4 id="mm-edit-title">Módulo</h4>
+            <div class="pm-row"><label>Nome:</label><input type="text" id="mm-name" maxlength="80" autocomplete="off" placeholder="Igual ao data-access do main.html"></div>
+            <div class="pm-row"><label>Dentro de:</label><select id="mm-parent"></select></div>
+            <div class="pm-row"><label>Ordem:</label><input type="text" id="mm-order" inputmode="numeric" style="flex:0 0 90px;"></div>
+            <p class="muted" id="mm-state" style="margin:0 0 8px;"></p>
+            <div class="pm-actions">
+              <button type="button" id="mm-save" class="btn btn-success">Gravar</button>
+              <button type="button" id="mm-new-child" class="btn-plain">Novo sub-item</button>
+              <button type="button" id="mm-new-top" class="btn-plain">Novo no topo</button>
+              <button type="button" id="mm-toggle" class="btn-danger" style="display:none;">Desativar</button>
+              <button type="button" id="mm-delete" class="btn-danger" style="display:none;">Apagar</button>
+            </div>
+            <div class="mm-warn">
+              O nome tem de ser <b>exatamente igual</b> ao <code>data-access</code> do botão no <code>main.html</code>.
+              Um módulo novo só aparece no menu do Online depois de existir lá o botão e a página.
+              Ao renomear, os acessos já gravados nas corporações e nos elementos são corrigidos automaticamente — mas tem de mudar também o <code>data-access</code> no <code>main.html</code>.
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
   </div>
 
@@ -448,6 +483,7 @@
       if (id === 'access-management') loadCorps();
       if (id === 'user-management') loadCorpSelect();
       if (id === 'parish-management') pmInit();
+      if (id === 'modules-management') mmInit();
       if (id === 'add-corporation' && !keepForm && editingCorp) resetCorpForm();
     }
     document.querySelectorAll('.sidebar-item').forEach(item => {
@@ -950,6 +986,112 @@
       await api('parish_set_active', { id: pmSel.id, active: activate });
       toast(activate ? `"${pmSel.parish}" reativada.` : `"${pmSel.parish}" desativada.`);
       await pmLoadParishes(pmSel.id);
+    }));
+
+    /* =====================================================================
+       ÁRVORE DE ACESSOS (tabela cb360_modules; grava pela admin-api)
+       ===================================================================== */
+    let mmList = [], mmSel = null, mmNewParent = null;
+    async function mmInit() { await run(null, () => mmLoad(mmSel && mmSel.label)); }
+    async function mmLoad(keepLabel) {
+      mmList = await api('modules_admin');
+      ACCESS_OPTIONS = [];   // o botão "Módulos" volta a ler a árvore atualizada
+      mmSelect(keepLabel ? (mmList.find(m => m.label === keepLabel) || null) : null);
+    }
+    const mmKids = (label) => mmList.filter(m => (m.parent || null) === label);
+    function mmFlat() {
+      const out = [];
+      (function walk(parent, depth) {
+        mmKids(parent).forEach(m => { out.push({ m, depth }); walk(m.label, depth + 1); });
+      })(null, 0);
+      return out;
+    }
+    function mmDescendants(label) {
+      const set = new Set([label]);
+      (function walk(l) { mmKids(l).forEach(k => { set.add(k.label); walk(k.label); }); })(label);
+      return set;
+    }
+    function mmNextOrder(parent) {
+      return mmKids(parent).reduce((mx, m) => Math.max(mx, m.sort_order || 0), 0) + 10;
+    }
+    function mmSelect(m, newParent) {
+      mmSel = m;
+      mmNewParent = m ? null : (newParent ?? null);
+      const banned = m ? mmDescendants(m.label) : new Set();
+      $('mm-parent').replaceChildren(selOpt('', '— topo do menu —'),
+        ...mmFlat().filter(x => !banned.has(x.m.label)).map(x => selOpt(x.m.label, '\u00a0\u00a0'.repeat(x.depth) + x.m.label)));
+      $('mm-name').value = m ? m.label : '';
+      $('mm-parent').value = m ? (m.parent || '') : (mmNewParent || '');
+      $('mm-order').value = m ? (m.sort_order ?? 0) : mmNextOrder(mmNewParent);
+      $('mm-edit-title').textContent = m ? 'Editar módulo' : (mmNewParent ? `Novo sub-item de "${mmNewParent}"` : 'Novo módulo no topo');
+      const kids = m ? mmKids(m.label).length : 0;
+      $('mm-state').textContent = m ? (m.active ? 'Ativo — aparece nas caixas de acessos.' : 'Desativado — não aparece nas caixas de acessos.') + (kids ? ` Tem ${kids} sub-itens.` : '') : '';
+      $('mm-toggle').style.display = m ? '' : 'none';
+      $('mm-toggle').textContent = m && !m.active ? 'Reativar' : 'Desativar';
+      $('mm-toggle').className = m && !m.active ? 'btn btn-success' : 'btn-danger';
+      $('mm-delete').style.display = m && !kids ? '' : 'none';
+      $('mm-new-child').style.display = m ? '' : 'none';
+      mmRender();
+    }
+    function mmRender() {
+      const q = norm($('mm-search').value);
+      const rows = mmFlat().filter(x => !q || norm(x.m.label).includes(q));
+      $('mm-list').replaceChildren(...rows.map(({ m, depth }) => el('div', {
+        className: 'pm-item' + (depth === 0 ? ' top' : '') + (m.active ? '' : ' off') + (mmSel && mmSel.label === m.label ? ' sel' : ''),
+        style: `padding-left:${10 + (q ? 0 : depth * 18)}px;`,
+        onclick: () => mmSelect(m)
+      }, el('span', {}, (depth && !q ? '└ ' : '') + m.label), m.active ? '' : el('span', { className: 'pm-tag' }, 'desativado'))));
+      if (!rows.length) $('mm-list').append(el('div', { className: 'muted', style: 'padding:10px;' }, q ? 'Nenhum módulo com esse nome.' : 'Sem módulos.'));
+      const off = mmList.filter(m => !m.active).length;
+      $('mm-count').textContent = `${mmList.length} módulos${off ? ` (${off} desativados)` : ''}`;
+    }
+    $('mm-search').addEventListener('input', mmRender);
+    $('mm-new-top').addEventListener('click', () => { mmSelect(null, null); $('mm-name').focus(); });
+    $('mm-new-child').addEventListener('click', () => { if (mmSel) { mmSelect(null, mmSel.label); $('mm-name').focus(); } });
+    $('mm-save').addEventListener('click', (e) => run(e.currentTarget, async () => {
+      const name = $('mm-name').value.trim().replace(/\s+/g, ' ');
+      const parent = $('mm-parent').value || null;
+      const order = parseInt($('mm-order').value, 10);
+      if (name.length < 2) throw new Error('Indique o nome do módulo.');
+      if (name.includes(',')) throw new Error('O nome não pode ter vírgulas.');
+      if (!Number.isInteger(order)) throw new Error('A ordem tem de ser um número.');
+      if (mmSel && name === mmSel.label && parent === (mmSel.parent || null) && order === (mmSel.sort_order ?? 0)) { toast('Sem alterações.', 'warn'); return; }
+      if (mmSel && name !== mmSel.label) {
+        const ok = await dialog('Renomear módulo', [
+          { text: `"${mmSel.label}" passa a "${name}".` },
+          { text: 'Os acessos já gravados nas corporações e nos elementos são corrigidos automaticamente.' },
+          { text: `Tem também de mudar o data-access no main.html para "${name}", senão o botão deixa de aparecer no menu.` }
+        ], 'Renomear');
+        if (!ok) return;
+      }
+      const res = await api('module_save', { old_label: mmSel ? mmSel.label : null, label: name, parent, sort_order: order });
+      const c = res && res.corrigidos;
+      toast(mmSel ? `Módulo "${name}" gravado${c ? ` (corrigidos: ${c.corporacoes} corporações, ${c.elementos} elementos)` : ''}.` : `Módulo "${name}" criado.`);
+      await mmLoad(name);
+    }));
+    $('mm-toggle').addEventListener('click', (e) => run(e.currentTarget, async () => {
+      if (!mmSel) return;
+      const activate = !mmSel.active;
+      if (!activate) {
+        $('admDialog').classList.add('danger');
+        const ok = await dialog('Desativar módulo', [{ text: `Desativar "${mmSel.label}"? Deixa de aparecer nas caixas de acessos (e os sub-itens com ele). Os acessos já gravados mantêm-se, mas um elemento gravado no Data Center enquanto estiver desativado perde-o.` }], 'Desativar');
+        $('admDialog').classList.remove('danger');
+        if (!ok) return;
+      }
+      await api('module_set_active', { label: mmSel.label, active: activate });
+      toast(activate ? `"${mmSel.label}" reativado.` : `"${mmSel.label}" desativado.`);
+      await mmLoad(mmSel.label);
+    }));
+    $('mm-delete').addEventListener('click', (e) => run(e.currentTarget, async () => {
+      if (!mmSel) return;
+      $('admDialog').classList.add('danger');
+      const ok = await dialog('Apagar módulo', [{ text: `Apagar "${mmSel.label}"? É retirado da árvore e dos acessos de todas as corporações e elementos. Não dá para desfazer.` }], 'Apagar');
+      $('admDialog').classList.remove('danger');
+      if (!ok) return;
+      const res = await api('module_delete', { label: mmSel.label });
+      const c = res && res.corrigidos;
+      toast(`"${mmSel.label}" apagado${c ? ` (retirado de ${c.corporacoes} corporações e ${c.elementos} elementos)` : ''}.`);
+      await mmLoad(null);
     }));
   })();
   </script>

@@ -5282,11 +5282,7 @@
                     </div>
                   </div>
                   <div class="tab-content" id="otherData" style="display:none;">
-
-                    <!-- ===== TRÊS COLUNAS: DADOS PESSOAIS / CONTACTOS ===== -->
                     <div style="display: flex; gap: 25px; align-items: flex-start; margin-bottom: 25px;">
-                  
-                      <!-- Coluna 1 -->
                       <div style="flex: 1; display: flex; flex-direction: column; gap: 0;">
                         <div class="major-field">
                           <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
@@ -5334,8 +5330,6 @@
                           </div>
                         </div>
                       </div>
-                  
-                      <!-- Coluna 2 -->
                       <div style="flex: 1; display: flex; flex-direction: column; gap: 0;">
                         <div class="major-field">
                           <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
@@ -5395,11 +5389,8 @@
                             <label style="width: 50px;">Nº TAS:</label>
                             <input type="text" id="win_tas_nr" style="flex:1; width: 110px;">
                           </div>
-                        </div>
-                        
+                        </div>                        
                       </div>
-                  
-                      <!-- Coluna 3 -->
                       <div style="flex: 1; display: flex; flex-direction: column; gap: 0;">
                         <div class="major-field">
                           <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
@@ -5443,101 +5434,125 @@
                             <input type="text" id="win_emergency_contact" style="flex:1;">
                           </div>
                         </div>                    
-                      </div>
-                  
+                      </div>                  
                     </div>
-                  
-                    <!-- ===== BLOCOS AGRUPADOS ===== -->
                     <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                  
-                      <div style="flex: 1; min-width: 190px; border: 1px solid #ddd; border-radius: 6px; padding: 12px 15px;">
+                      <div style="flex: 1; min-width: 240px; border: 1px solid #ddd; border-radius: 6px; padding: 12px 15px;">
                         <div style="font-size:14px; font-weight:bold; color:#a70c0c; margin-bottom:10px;">BI / CC</div>
                         <div class="major-field">
-                          <label style="display:block; font-size:12px; margin-bottom:2px;">Número</label>
-                          <input type="text" id="win_bicc_number" style="width:100%;">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 85px; flex-shrink: 0;">Número:</label>
+                            <input type="text" id="win_bicc_number" style="flex:1; min-width:0;">
+                          </div>
                         </div>
                         <div class="major-field">
-                          <label style="display:block; font-size:12px; margin-bottom:2px;">Arquivo</label>
-                          <input type="text" id="win_bicc_archive" style="width:100%;">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 85px; flex-shrink: 0;">Arquivo:</label>
+                            <input type="text" id="win_bicc_archive" style="flex:1; min-width:0;">
+                          </div>
                         </div>
                         <div class="major-field">
-                          <label style="display:block; font-size:12px; margin-bottom:2px;">D. Emissão</label>
-                          <input type="date" id="win_bicc_issue" style="width:100%;">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 85px; flex-shrink: 0;">D. Emissão:</label>
+                            <input type="date" id="win_bicc_issue" style="flex:1; min-width:0;">
+                          </div>
                         </div>
                         <div class="major-field">
-                          <label style="display:block; font-size:12px; margin-bottom:2px;">Validade</label>
-                          <input type="date" id="win_bicc_validate" style="width:100%;">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 85px; flex-shrink: 0;">Validade:</label>
+                            <input type="date" id="win_bicc_validate" style="flex:1; min-width:0;">
+                          </div>
                         </div>
                       </div>
-                  
-                      <div style="flex: 1; min-width: 190px; border: 1px solid #ddd; border-radius: 6px; padding: 12px 15px;">
+                      <div style="flex: 1; min-width: 240px; border: 1px solid #ddd; border-radius: 6px; padding: 12px 15px;">
                         <div style="font-size:14px; font-weight:bold; color:#a70c0c; margin-bottom:10px;">Carta Condução</div>
                         <div class="major-field">
-                          <label style="display:block; font-size:12px; margin-bottom:2px;">Tipo</label>
-                          <input type="text" id="win_license_type" style="width:100%;">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 85px; flex-shrink: 0;">Tipo:</label>
+                            <input type="text" id="win_license_type" style="flex:1; min-width:0;">
+                          </div>
                         </div>
                         <div class="major-field">
-                          <label style="display:block; font-size:12px; margin-bottom:2px;">Número</label>
-                          <input type="text" id="win_license_number" style="width:100%;">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 85px; flex-shrink: 0;">Número:</label>
+                            <input type="text" id="win_license_number" style="flex:1; min-width:0;">
+                          </div>
                         </div>
                         <div class="major-field">
-                          <label style="display:block; font-size:12px; margin-bottom:2px;">Entidade</label>
-                          <input type="text" id="win_license_entity" style="width:100%;">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 85px; flex-shrink: 0;">Entidade:</label>
+                            <input type="text" id="win_license_entity" style="flex:1; min-width:0;">
+                          </div>
                         </div>
                         <div class="major-field">
-                          <label style="display:block; font-size:12px; margin-bottom:2px;">D. Emissão</label>
-                          <input type="date" id="win_license_issue" style="width:100%;">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 85px; flex-shrink: 0;">D. Emissão:</label>
+                            <input type="date" id="win_license_issue" style="flex:1; min-width:0;">
+                          </div>
                         </div>
                         <div class="major-field">
-                          <label style="display:block; font-size:12px; margin-bottom:2px;">Validade</label>
-                          <input type="date" id="win_license_validate" style="width:100%;">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 85px; flex-shrink: 0;">Validade:</label>
+                            <input type="date" id="win_license_validate" style="flex:1; min-width:0;">
+                          </div>
                         </div>
                       </div>
-                  
-                      <div style="flex: 1; min-width: 190px; border: 1px solid #ddd; border-radius: 6px; padding: 12px 15px;">
+                      <div style="flex: 1; min-width: 240px; border: 1px solid #ddd; border-radius: 6px; padding: 12px 15px;">
                         <div style="font-size:14px; font-weight:bold; color:#a70c0c; margin-bottom:10px;">Serviço Militar</div>
                         <div class="major-field">
-                          <label style="display:block; font-size:12px; margin-bottom:2px;">Número</label>
-                          <input type="text" id="win_military_number" style="width:100%;">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 85px; flex-shrink: 0;">Número:</label>
+                            <input type="text" id="win_military_number" style="flex:1; min-width:0;">
+                          </div>
                         </div>
                         <div class="major-field">
-                          <label style="display:block; font-size:12px; margin-bottom:2px;">Unidade</label>
-                          <input type="text" id="win_military_unit" style="width:100%;">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 85px; flex-shrink: 0;">Unidade:</label>
+                            <input type="text" id="win_military_unit" style="flex:1; min-width:0;">
+                          </div>
                         </div>
                         <div class="major-field">
-                          <label style="display:block; font-size:12px; margin-bottom:2px;">Ano Entrada</label>
-                          <input type="text" id="win_military_year" style="width:100%;">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 85px; flex-shrink: 0;">Ano Entrada:</label>
+                            <input type="text" id="win_military_year" style="flex:1; min-width:0;">
+                          </div>
                         </div>
                         <div class="major-field">
-                          <label style="display:block; font-size:12px; margin-bottom:2px;">Graduação</label>
-                          <input type="text" id="win_military_rank" style="width:100%;">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 85px; flex-shrink: 0;">Graduação:</label>
+                            <input type="text" id="win_military_rank" style="flex:1; min-width:0;">
+                          </div>
                         </div>
                       </div>
-                  
-                      <div style="flex: 1; min-width: 190px; border: 1px solid #ddd; border-radius: 6px; padding: 12px 15px;">
+                      <div style="flex: 1; min-width: 240px; border: 1px solid #ddd; border-radius: 6px; padding: 12px 15px;">
                         <div style="font-size:14px; font-weight:bold; color:#a70c0c; margin-bottom:10px;">Aeroporto</div>
                         <div class="major-field">
-                          <label style="display:block; font-size:12px; margin-bottom:2px;">Nº Cartão Acesso</label>
-                          <input type="text" id="win_airport_card" style="width:100%;">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 85px; flex-shrink: 0;">Nº Cartão:</label>
+                            <input type="text" id="win_airport_card" style="flex:1; min-width:0;">
+                          </div>
                         </div>
                         <div class="major-field">
-                          <label style="display:block; font-size:12px; margin-bottom:2px;">C.A. Validade</label>
-                          <input type="date" id="win_airport_card_validate" style="width:100%;">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 85px; flex-shrink: 0;">Validade:</label>
+                            <input type="date" id="win_airport_card_validate" style="flex:1; min-width:0;">
+                          </div>
                         </div>
                         <div class="major-field">
-                          <label style="display:block; font-size:12px; margin-bottom:2px;">Nº C.C.Aeroporto</label>
-                          <input type="text" id="win_airport_cc" style="width:100%;">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 85px; flex-shrink: 0;">Nº C.C.:</label>
+                            <input type="text" id="win_airport_cc" style="flex:1; min-width:0;">
+                          </div>
                         </div>
                         <div class="major-field">
-                          <label style="display:block; font-size:12px; margin-bottom:2px;">C.C. Validade</label>
-                          <input type="date" id="win_airport_cc_validate" style="width:100%;">
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 3px;">
+                            <label style="width: 85px; flex-shrink: 0;">C.C. Validade:</label>
+                            <input type="date" id="win_airport_cc_validate" style="flex:1; min-width:0;">
+                          </div>
                         </div>
                       </div>
-                  
                     </div>
                   </div>
-
-
                   <div class="tab-content" id="appCredencials" style="display:none;">
                     <div style="margin-bottom:15px; font-size:15px; color:#777;">Acessos CB360 Online</div>
                     <div class="major-field">

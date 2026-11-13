@@ -300,7 +300,11 @@
       <!-- ===================== ÁRVORE DE ACESSOS ===================== -->
       <section id="modules-management" class="content-section">
         <h2>Árvore de Acessos</h2>
-        <p class="muted" style="margin:0;">Os módulos que aparecem nas caixas de "Módulos" (corporações) e nos acessos de cada elemento (Data Center do Online).</p>
+        <p class="muted" style="margin:0;">Os módulos que aparecem nas caixas de acessos: "Módulos" das corporações (só Online) e "Acessos App's" de cada elemento no Data Center.</p>
+        <div class="pm-actions" style="margin:10px 0 0;">
+          <button type="button" id="mm-app-online" class="btn btn-success">💻 Online</button>
+          <button type="button" id="mm-app-mobile" class="btn-plain">📱 Mobile</button>
+        </div>
         <div class="pm-grid">
           <div class="pm-box">
             <div class="pm-row"><label>Procurar:</label><input type="text" id="mm-search" placeholder="Filtrar módulos…" autocomplete="off"></div>
@@ -311,7 +315,7 @@
             <h4 id="mm-edit-title">Módulo</h4>
             <div class="pm-row"><label>Código:</label><input type="text" id="mm-code" maxlength="80" autocomplete="off" placeholder="data-access do botão no main.html"></div>
             <div class="pm-row"><label>Nome:</label><input type="text" id="mm-name" maxlength="80" autocomplete="off" placeholder="Nome que aparece (vazio = o código)"></div>
-            <div class="pm-row"><label>Dentro de:</label><select id="mm-parent"></select></div>
+            <div class="pm-row" id="mm-parent-row"><label>Dentro de:</label><select id="mm-parent"></select></div>
             <div class="pm-row"><label>Ordem:</label><input type="text" id="mm-order" inputmode="numeric" style="flex:0 0 90px;"></div>
             <p class="muted" id="mm-state" style="margin:0 0 8px;"></p>
             <div class="pm-actions">
@@ -321,11 +325,7 @@
               <button type="button" id="mm-toggle" class="btn-danger" style="display:none;">Desativar</button>
               <button type="button" id="mm-delete" class="btn-danger" style="display:none;">Apagar</button>
             </div>
-            <div class="mm-warn">
-              O <b>código</b> é o <code>data-access</code> do botão no <code>main.html</code> e é o que fica gravado nos acessos: escolhe-se ao criar e depois <b>não muda</b>.
-              O <b>nome</b> é só o texto que aparece nas caixas de acessos — pode mudar à vontade.
-              Um módulo novo só aparece no menu do Online depois de existir lá o botão e a página.
-            </div>
+            <div class="mm-warn" id="mm-warn"></div>
           </div>
         </div>
       </section>
@@ -994,11 +994,29 @@
     /* =====================================================================
        ÁRVORE DE ACESSOS (tabela cb360_modules; grava pela admin-api)
        ===================================================================== */
-    let mmList = [], mmSel = null, mmNewParent = null;
+    let mmList = [], mmSel = null, mmNewParent = null, mmApp = 'online';
+    const MM_WARN = {
+      online: 'O <b>código</b> é o <code>data-access</code> do botão no <code>main.html</code> e é o que fica gravado nos acessos: escolhe-se ao criar e depois <b>não muda</b>. O <b>nome</b> é só o texto que aparece nas caixas de acessos — pode mudar à vontade. Um módulo novo só aparece no menu do Online depois de existir lá o botão e a página.',
+      mobile: 'O <b>código</b> é o <code>data-module</code> do botão na grelha da <code>MainPage</code> da Mobile: escolhe-se ao criar e depois <b>não muda</b>. O <b>nome</b> é só o texto que aparece no Data Center. Na Mobile, quem tiver a caixa desmarcada vê o botão com cadeado 🔒.'
+    };
+    function mmSetApp(app) {
+      mmApp = app;
+      $('mm-app-online').className = app === 'online' ? 'btn btn-success' : 'btn-plain';
+      $('mm-app-mobile').className = app === 'mobile' ? 'btn btn-success' : 'btn-plain';
+      $('mm-parent-row').style.display = app === 'mobile' ? 'none' : '';
+      $('mm-new-top').textContent = app === 'mobile' ? 'Novo módulo' : 'Novo no topo';
+      $('mm-warn').innerHTML = MM_WARN[app];
+      $('mm-search').value = '';
+      mmSel = null;
+      mmInit();
+    }
+    $('mm-app-online').addEventListener('click', () => mmApp !== 'online' && mmSetApp('online'));
+    $('mm-app-mobile').addEventListener('click', () => mmApp !== 'mobile' && mmSetApp('mobile'));
+    $('mm-warn').innerHTML = MM_WARN.online;
     async function mmInit() { await run(null, () => mmLoad(mmSel && mmSel.label)); }
     async function mmLoad(keepLabel) {
-      mmList = await api('modules_admin');
-      ACCESS_OPTIONS = [];   // o botão "Módulos" volta a ler a árvore atualizada
+      mmList = await api('modules_admin', { app: mmApp });
+      if (mmApp === 'online') ACCESS_OPTIONS = [];   // o botão "Módulos" volta a ler a árvore atualizada
       mmSelect(keepLabel ? (mmList.find(m => m.label === keepLabel) || null) : null);
     }
     const mmKids = (label) => mmList.filter(m => (m.parent || null) === label);
@@ -1025,6 +1043,7 @@
         ...mmFlat().filter(x => !banned.has(x.m.label)).map(x => selOpt(x.m.label, '\u00a0\u00a0'.repeat(x.depth) + (x.m.display_name || x.m.label))));
       $('mm-code').value = m ? m.label : '';
       $('mm-code').disabled = !!m;
+      $('mm-code').placeholder = mmApp === 'mobile' ? 'data-module do botão na MainPage' : 'data-access do botão no main.html';
       $('mm-name').value = m ? (m.display_name || '') : '';
       $('mm-parent').value = m ? (m.parent || '') : (mmNewParent || '');
       $('mm-order').value = m ? (m.sort_order ?? 0) : mmNextOrder(mmNewParent);
@@ -1036,7 +1055,7 @@
       $('mm-toggle').textContent = m && !m.active ? 'Reativar' : 'Desativar';
       $('mm-toggle').className = m && !m.active ? 'btn btn-success' : 'btn-danger';
       $('mm-delete').style.display = m && !kids ? '' : 'none';
-      $('mm-new-child').style.display = m ? '' : 'none';
+      $('mm-new-child').style.display = m && mmApp === 'online' ? '' : 'none';
       mmRender();
     }
     function mmRender() {
@@ -1057,16 +1076,16 @@
     $('mm-save').addEventListener('click', (e) => run(e.currentTarget, async () => {
       const code = $('mm-code').value.trim().replace(/\s+/g, ' ');
       const name = $('mm-name').value.trim().replace(/\s+/g, ' ');
-      const parent = $('mm-parent').value || null;
+      const parent = mmApp === 'online' ? ($('mm-parent').value || null) : null;
       const order = parseInt($('mm-order').value, 10);
-      if (!mmSel && code.length < 2) throw new Error('Indique o código (o data-access do botão no main.html).');
+      if (!mmSel && code.length < 2) throw new Error(mmApp === 'mobile' ? 'Indique o código (o data-module do botão na MainPage).' : 'Indique o código (o data-access do botão no main.html).');
       if (!mmSel && code.includes(',')) throw new Error('O código não pode ter vírgulas.');
       if (!Number.isInteger(order)) throw new Error('A ordem tem de ser um número.');
       const display = name && name !== (mmSel ? mmSel.label : code) ? name : null;
       if (mmSel && display === (mmSel.display_name || null) && parent === (mmSel.parent || null) && order === (mmSel.sort_order ?? 0)) { toast('Sem alterações.', 'warn'); return; }
       const res = await api('module_save', mmSel
-        ? { old_label: mmSel.label, display_name: display, parent, sort_order: order }
-        : { label: code, display_name: display, parent, sort_order: order });
+        ? { app: mmApp, old_label: mmSel.label, display_name: display, parent, sort_order: order }
+        : { app: mmApp, label: code, display_name: display, parent, sort_order: order });
       toast(mmSel ? `Módulo "${display || mmSel.label}" gravado.` : `Módulo "${display || code}" criado.`);
       await mmLoad(res && res.label);
     }));
@@ -1075,11 +1094,11 @@
       const activate = !mmSel.active;
       if (!activate) {
         $('admDialog').classList.add('danger');
-        const ok = await dialog('Desativar módulo', [{ text: `Desativar "${mmSel.display_name || mmSel.label}"? Deixa de aparecer nas caixas de acessos (e os sub-itens com ele). Os acessos já gravados mantêm-se, mas um elemento gravado no Data Center enquanto estiver desativado perde-o.` }], 'Desativar');
+        const ok = await dialog('Desativar módulo', [{ text: `Desativar "${mmSel.display_name || mmSel.label}"? ${mmApp === 'mobile' ? 'Deixa de aparecer no Data Center; os bloqueios já gravados mantêm-se.' : 'Deixa de aparecer nas caixas de acessos (e os sub-itens com ele). Os acessos já gravados mantêm-se, mas um elemento gravado no Data Center enquanto estiver desativado perde-o.'}` }], 'Desativar');
         $('admDialog').classList.remove('danger');
         if (!ok) return;
       }
-      await api('module_set_active', { label: mmSel.label, active: activate });
+      await api('module_set_active', { app: mmApp, label: mmSel.label, active: activate });
       toast(activate ? `"${mmSel.label}" reativado.` : `"${mmSel.label}" desativado.`);
       await mmLoad(mmSel.label);
     }));
@@ -1089,7 +1108,7 @@
       const ok = await dialog('Apagar módulo', [{ text: `Apagar "${mmSel.display_name || mmSel.label}"? É retirado da árvore e dos acessos de todas as corporações e elementos. Não dá para desfazer.` }], 'Apagar');
       $('admDialog').classList.remove('danger');
       if (!ok) return;
-      const res = await api('module_delete', { label: mmSel.label });
+      const res = await api('module_delete', { app: mmApp, label: mmSel.label });
       const c = res && res.corrigidos;
       toast(`"${mmSel.label}" apagado${c ? ` (retirado de ${c.corporacoes} corporações e ${c.elementos} elementos)` : ''}.`);
       await mmLoad(null);

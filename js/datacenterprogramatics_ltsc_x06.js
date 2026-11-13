@@ -466,47 +466,22 @@
     FIREFIGHTER LISTING
     ======================================= */
     let currentEditId = null;
-    const ACCESS_OPTIONS = [
-      {label: "Menu Principal"},
-      {label: "Gestão DECIR", children: [
-        {label: "Configurações DECIR", children: [{label: "Atualização de Valores"}, {label: "Configuração de Equipas"}, {label: "Restaurantes e LEPPs"}]},
-        {label: "Ver Escalas"},
-        {label: "Gestão Financeira ECINs", children: [{label: "Registo por Elemento ECINs"}, {label: "Núcleo Financeiro ECINs"}, {label: "Relatórios ANEPC ECINs"}]},
-        {label: "Gestão Financeira SBAs e OPATs", children: [{label: "Registo por Elemento SBAs e OPATs"}, {label: "Núcleo Financeiro SBAs e OPATs"}, {label: "Relatórios ANEPC SBAs e OPATs"}]},
-        {label: "Gestão Despesas", children: [{label: "Despesas Danos"}, {label: "Despesas Refeições"}]},
-        {label: "Registos Complementares", children: [{label: "Controlo de Ocorrências"}, {label: "Assinaturas Diárias"}, {label: "Refeições Diárias"}, {label: "Pré Posicionamentos"}, {label: "EPE DECIR IV"}]},
-        {label: "Auditoria de Logs"},
-        {label: "DashBoard DECIR"}
-      ]},
-      {label: "Gestão Operacional", children: [
-        {label: "Escalas", children: [{label: "DECIR"}, {label: "1ª Secção"}, {label: "2ª Secção"}, {label: "3ª Secção"}, {label: "4ª Secção"}, {label: "Emissão Escala"}, {label: "Consultar Escalas"}]},
-        {label: "Eventos", children: [{label: "Criação de Eventos"}, {label: "Consulta Disponibilidades"}]},
-        {label: "Pedidos de Férias", children: [{label: "Consultar Pedidos"}]},
-        {label: "Pedidos de Fardamento", children: [{label: "Gestão de Pedidos Fardamento"}, {label: "Artigos de Fardamento"}]},
-        {label: "Serviços de Voluntariado", children: [{label: "Registo de Serviços"}, {label: "Consulta de Serviços"}, {label: "Configuração de Valores"}]}
-      ]},
-      {label: "Recursos Humanos", children: [
-        {label: "Escalas Mensais"}, {label: "Controlo de Horas Extras"}, {label: "Registos Individuais"},
-        {label: "Gestão de Férias", children: [{label: "Marcação de Férias"}, {label: "Mapa de Férias"}, {label: "Mapa de Prioridade"}]},
-        {label: "Utilitários RH", children: [{label: "Subsidio de Turno"}, {label: "Processamento Salarial"}, {label: "Enquadramento EIPs"}, {label: "DashBoard RH"}]},
-        {label: "Cadastro de Funcionários"}
-      ]},
-      {label: "Verbetes INEM"},
-      {label: "SALOC", children: [
-        {label: "Planos Prévios de Intervenção", children: [{label: "PPI A2"}, {label: "PPI A22"}, {label: "PPI Aeroporto de Faro"}, {label: "PPI Linha Férrea"}, {label: "PPI Aérodromo de Portimão"}]},
-        {label: "Registos Recusas/INOPS", children: [{label: "Recusas de Serviços"}, {label: "Inoperacionalidades INEM"}, {label: "Relatórios Mensais"}, {label: "DashBoard"}]},
-        {label: "Documentação Importante", children: [{label: "CREPC Algarve"}, {label: "Planeamento Diário"}, {label: "Sitop de Veículos"}]},
-        {label: "Diversos"},
-        {label: "Redundância Ocorrências"},
-        {label: "Consola de Alarmes"}
-      ]},
-      {label: "Comunicação WSMS", children: [
-        {label: "Ocorrências em Curso"}, {label: "Inserir/Alterar Ocorrência"}, {label: "Encerrar Ocorrência"}, {label: "Solicitar Disponibilidades"},
-        {label: "Indisponibilidade Veículos"}, {label: "Info. Grelha Município"}, {label: "Serviços EMS"}, {label: "Avisos METEO"}
-      ]},
-      {label: "Utilitários"},
-      {label: "Data Center"}
-    ];
+    /* árvore de acessos: vem da tabela cb360_modules (a mesma do system_admin) */
+    let ACCESS_OPTIONS = [];
+    async function loadAccessOptions() {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/cb360_modules?select=label,parent,sort_order&active=is.true&order=sort_order.asc,label.asc`, {
+        headers: getSupabaseHeaders()
+      });
+      if (!r.ok) throw new Error(await r.text());
+      const rows = await r.json();
+      const byParent = {};
+      rows.forEach(x => { const k = x.parent || ''; (byParent[k] = byParent[k] || []).push(x); });
+      const build = (p) => (byParent[p] || []).map(x => {
+        const kids = build(x.label);
+        return kids.length ? {label: x.label, children: kids} : {label: x.label};
+      });
+      return build('');
+    }
     function resetElementsTable() {
       const tbody = document.querySelector("#elements-container tbody");
       if (!tbody) return;
@@ -737,7 +712,7 @@
       toggleStateDateVisibility();      
       const roleMap = {admin: "Administrador", subadmin: "Sub-Administrador", user: "Utilizador"};
       if (document.getElementById("win_type")) document.getElementById("win_type").value = roleMap[row.user_role] || "";      
-      generateAccessCheckboxes();
+      await generateAccessCheckboxes();
       const userAccesses = row.acess ? row.acess.split(",").map(a => a.trim()) : [];
       setTimeout(() => {
         document.querySelectorAll(".access-checkbox").forEach(cb => {
@@ -847,7 +822,7 @@
                             section: document.getElementById("win_section").value, type_quad: document.getElementById("win_quad").value,  phone: document.getElementById("win_phone").value, 
                             mobile_phone: document.getElementById("win_mobile").value, email: document.getElementById("win_mail").value,  is_ofope: document.getElementById("win_ofope").value === "Sim", 
                             elem_state: document.getElementById("win_state").value === "Ativo", inactive_from: document.getElementById("win_state").value === "Inativo" ? document.getElementById("win_state_from").value : null, link_type: document.getElementById("link_type")?.value || null,
-                            acess: Array.from(document.querySelectorAll('.access-checkbox:checked')).map(cb => cb.value).join(", "), corp_oper_nr: corpOperNr, last_updated: new Date().toISOString(),
+                            acess: document.querySelector('.access-checkbox') ? Array.from(document.querySelectorAll('.access-checkbox:checked')).map(cb => cb.value).join(", ") : undefined, corp_oper_nr: corpOperNr, last_updated: new Date().toISOString(),
                             user_role: mapUserRole()
                           };
         const url = currentEditId
@@ -938,10 +913,21 @@
         showPopup('popup-danger', "Erro ao eliminar elemento: " + (e.message || e));
       }
     }
-    function generateAccessCheckboxes() {
+    async function generateAccessCheckboxes() {
       const container = document.getElementById("access-container");
       if (!container) return;
       container.innerHTML = '';
+      if (!ACCESS_OPTIONS.length) {
+        try {
+          ACCESS_OPTIONS = await loadAccessOptions();
+        } catch (e) {
+          console.error("Erro ao carregar a árvore de acessos:", e);
+        }
+      }
+      if (!ACCESS_OPTIONS.length) {
+        container.innerHTML = '<p style="color:#c62828; font-size:13px;">Não foi possível carregar a lista de acessos. Os acessos deste elemento não serão alterados ao gravar.</p>';
+        return;
+      }
       ACCESS_OPTIONS.forEach(option => container.appendChild(createCheckbox(option, 0)));
     }
     function createCheckbox(option, level) {

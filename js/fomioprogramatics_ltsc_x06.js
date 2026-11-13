@@ -1630,7 +1630,7 @@
       .evb-bar.full span {background: linear-gradient(90deg, #42a5f5, #1565c0);}
       .evb-ev-foot {display: flex; justify-content: space-between; font-size: 11px; color: #6c757d; margin-top: 3px;}
       .evb-pend {position: absolute; top: -7px; right: -7px; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px; background: #f39c12; color: #fff; font-size: 11.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(243,156,18,.45);}
-      .evb-detail {background: #fff; border: 1px solid #e9ecef; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.05); height:580px;}
+      .evb-detail {background: #fff; border: 1px solid #e9ecef; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.05); height:550px;}
       .evb-dhead {padding: 14px 16px; border-bottom: 1px solid #e9ecef; background: #fafbfc; display: flex; align-items: flex-start; gap: 12px; flex-wrap: wrap;}
       .evb-dhead h4 {margin: 0; font-size: 16px; color: #2c3e50;}
       .evb-dinfo {display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: #6c757d; margin-top: 5px;}

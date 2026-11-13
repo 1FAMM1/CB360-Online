@@ -482,6 +482,7 @@
         {label: "Escalas", children: [{label: "DECIR"}, {label: "1ª Secção"}, {label: "2ª Secção"}, {label: "3ª Secção"}, {label: "4ª Secção"}, {label: "Emissão Escala"}, {label: "Consultar Escalas"}]},
         {label: "Eventos", children: [{label: "Criação de Eventos"}, {label: "Consulta Disponibilidades"}]},
         {label: "Pedidos de Férias", children: [{label: "Consultar Pedidos"}]},
+        {label: "Pedidos de Fardamento", children: [{label: "Gestão de Pedidos Fardamento"}, {label: "Artigos de Fardamento"}]},
         {label: "Serviços de Voluntariado", children: [{label: "Registo de Serviços"}, {label: "Consulta de Serviços"}, {label: "Configuração de Valores"}]}
       ]},
       {label: "Recursos Humanos", children: [

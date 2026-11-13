@@ -1287,8 +1287,11 @@
        Cada página cria o seu painel com createVacBoard({...}); aprovar/recusar continua
        a ser feito pelas funções que já existem (updateVacatState / rhvUpdateState).
        ===================================================================== */
-    (function vbInjectCss() {
-      if (document.getElementById('vb-css')) return;
+       (function vbInjectCss() {
+      /* se houver outra cópia antiga do painel carregada antes, substitui o estilo dela */
+      const old = document.getElementById('vb-css');
+      if (old && old.dataset.v === '2') return;
+      if (old) old.remove();
       const css = `
       .vb {font-size: 13px; color: #2c3e50;}
       .vb-toolbar {display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 14px;}
@@ -1316,14 +1319,21 @@
       .vb-month .vb-mbar {display: flex; height: 5px; border-radius: 3px; overflow: hidden; margin-top: 7px; background: #f1f3f5;}
       .vb-month .vb-mbar span {display: block; height: 100%;}
       .vb-month .vb-pend {position: absolute; top: -7px; right: -7px; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px; background: #f39c12; color: #fff; font-size: 11.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(243,156,18,.45);}
-      .vb-panel {background: #fff; border: 1px solid #e9ecef; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.05);}
+      .vb-panel {background: #fff; border: 1px solid #e9ecef; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.05); height: 385px; display: flex; flex-direction: column;}
       .vb-panel-head {display: flex; align-items: center; flex-wrap: wrap; gap: 10px; padding: 12px 16px; border-bottom: 1px solid #e9ecef; background: #fafbfc;}
       .vb-panel-head h4 {margin: 0; font-size: 15px; color: #2c3e50;}
       .vb-panel-head .vb-sub {font-size: 12px; color: #6c757d;}
       .vb-legend {margin-left: auto; display: flex; flex-wrap: wrap; gap: 10px; font-size: 11px; color: #6c757d;}
       .vb-legend span {display: inline-flex; align-items: center; gap: 5px;}
       .vb-legend i {width: 12px; height: 12px; border-radius: 3px; display: inline-block;}
-      .vb-scroll {overflow-x: auto;}
+      .vb-panel-head {flex-shrink: 0;}
+      .vb-scroll {overflow: auto; position: relative; isolation: isolate; flex: 1; min-height: 0; scrollbar-width: thin; scrollbar-color: #cfd4da transparent;}
+      .vb-scroll::-webkit-scrollbar {width: 6px; height: 6px;}
+      .vb-scroll::-webkit-scrollbar-track {background: transparent;}
+      .vb-scroll::-webkit-scrollbar-thumb {background: #cfd4da; border-radius: 10px;}
+      .vb-scroll::-webkit-scrollbar-thumb:hover {background: #adb5bd;}
+      .vb-total td {position: sticky; bottom: 0; z-index: 1;}
+      .vb-total .vb-who {z-index: 2;}
       .vb-grid {border-collapse: separate; border-spacing: 0; width: 100%; box-sizing: border-box;}
       .vb-grid th, .vb-grid td {border-bottom: 1px solid #f1f3f5; padding: 0;}
       .vb-grid thead th {position: sticky; top: 0; background: #fff; font-size: 10px; color: #6c757d; font-weight: 700; text-transform: uppercase; z-index: 1;}
@@ -1338,6 +1348,11 @@
       .vb-grid thead .vb-day b {display: block; font-size: 11px; color: #2c3e50;}
       .vb-day.we {background: rgba(240, 200, 120, .22);}
       .vb-day.hol {background: rgba(247, 198, 199, .55);}
+      /* cabeçalho e linha "Por dia" ficam fixos: fundo opaco para as marcas não se verem por baixo */
+      .vb-grid thead .vb-day.we, .vb-total .vb-day.we {background: #fcf3e1;}
+      .vb-grid thead .vb-day.hol, .vb-total .vb-day.hol {background: #fbe0e0;}
+      .vb-grid thead th {box-shadow: 0 1px 0 #e9ecef;}
+      .vb-total td {box-shadow: 0 -1px 0 #e9ecef;}
       .vb-cell {display: block; margin: 0 auto; width: 18px; height: 18px; border-radius: 5px;}
       .vb-cell.p {background: linear-gradient(135deg, #ffb74d, #ef6c00);}
       .vb-cell.a {background: linear-gradient(135deg, #66bb6a, #2e7d32);}
@@ -1363,6 +1378,7 @@
       `;
       const st = document.createElement('style');
       st.id = 'vb-css';
+      st.dataset.v = '2';
       st.textContent = css;
       document.head.appendChild(st);
     })();

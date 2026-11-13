@@ -1389,7 +1389,7 @@
           <div class="major-card-footer"></div>
         </div>
       </div>
-      <!-- SCALE CREATION MODULE -->
+    <!-- SCALE CREATION MODULE -->
       <div id="page-scales" class="page">
         <div class="major-card major-last-card">
           <div class="major-card-header header-red" id="scales-card-header">
@@ -1556,35 +1556,19 @@
       <div class="major-card last-card">
         <div class="major-card-header header-red">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-            <line x1="16" y1="2" x2="16" y2="6"></line>
-            <line x1="8" y1="2" x2="8" y2="6"></line>
-            <line x1="3" y1="10" x2="21" y2="10"></line>
-            <path d="M9 16l2 2 4-4"></path>
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line><path d="M9 16l2 2 4-4"></path>
           </svg>
           GESTÃO DE FÉRIAS VOLUNTARIADO
-          </div>
-          <div class="major-card-body admin-container-vacat">
-            <div class="table-responsive-event">
-              <table id="vacationsMainTable" style="width: 100%; border-collapse: collapse; background-color: #ffffff;">
-                <thead>
-                  <tr>
-                    <th style="background:#f1f3f5; padding:12px 5px; border:1px solid #dee2e6; text-align:center; font-size:11px; text-transform:uppercase; color:#495057; font-weight: 700;">Ano / Mês</th>
-                    <th style="background:#f1f3f5; padding:12px 5px; border:1px solid #dee2e6; text-align:center; font-size:11px; text-transform:uppercase; color:#495057; font-weight: 700;">Total</th>
-                    <th style="background:#f1f3f5; padding:12px 5px; border:1px solid #dee2e6; text-align:center; font-size:11px; text-transform:uppercase; color:#495057; font-weight: 700;">Pendentes</th>
-                    <th style="background:#f1f3f5; padding:12px 5px; border:1px solid #dee2e6; text-align:center; font-size:11px; text-transform:uppercase; color:#495057; font-weight: 700; width:150px;">Ações</th>
-                  </tr>
-                </thead>
-                <tbody id="vacationsSummaryBody"></tbody>
-              </table>
-            </div>
-          </div>
-          <div class="major-card-footer">
-          <span style="font-size: 11px; color: #fff;">* Expanda o mês para gerir as aprovações.</span>
+        </div>
+        <div class="major-card-body">
+          <div id="vacBoardGO"></div>
+        </div>
+        <div class="major-card-footer">
+          <span style="font-size: 11px; color: #fff;">* Clique num mês para ver os pedidos. Os dias aprovados ficam como FE na escala do voluntariado.</span>
         </div>
       </div>
     </div>
-    <!-- colar no main.html: logo a seguir ao </div> da página "page-vacations-request" (VACATIONS CREATION MODULE) -->
     <!-- UNIFORM ORDERS -->
     <div id="page-uniform-orders" class="page" style="display:none;">
       <div class="major-card last-card">
@@ -1924,7 +1908,7 @@
             <button id="employees-clean-btn" class="btn btn-clean"><i class="fa-solid fa-broom" style="margin-right: 6px;"></i>Limpar</button>
             <button id="employees-save-btn" class="btn btn-add"><i class="fa-solid fa-floppy-disk" style="margin-right: 6px;"></i>Guardar</button>
             <button id="employees-emit-xlsx-btn" class="btn btn-success"><i class="fa-solid fa-file-excel" style="margin-right: 6px;"></i>EXCEL</button>
-            <button id="employees-emit-pdf-btn" class="btn btn-danger"><i class="fa-solid fa-file-pdf" style="margin-right: 6px;"></i>PDF</button>               
+            <button id="employees-emit-pdf-btn" class="btn btn-danger"><i class="fa-solid fa-file-pdf" style="margin-right: 6px;"></i>PDF</button>           
             <!--<button id="employees-emit-stitch-marker-btn" class="btn btn-success" style="background: #666;">Folhas de Ponto</button>-->
           </div>
         </div>
@@ -2015,37 +1999,20 @@
         <div class="major-card-footer"></div>
       </div>
     </div>
-    <!-- colar no main.html: logo a seguir ao </div> da página "page-vacations-request" -->
-    <!-- PEDIDOS DE FÉRIAS PROFISSIONAIS (RH) -->
     <div id="page-vacations-request-rh" class="page" style="display:none;">
       <div class="major-card last-card">
         <div class="major-card-header header-red">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-            <line x1="16" y1="2" x2="16" y2="6"></line>
-            <line x1="8" y1="2" x2="8" y2="6"></line>
-            <line x1="3" y1="10" x2="21" y2="10"></line>
-            <path d="M9 16l2 2 4-4"></path>
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line><path d="M9 16l2 2 4-4"></path>
           </svg>
           PEDIDOS DE FÉRIAS PROFISSIONAIS
-          </div>
-          <div class="major-card-body admin-container-vacat">
-            <div class="table-responsive-event">
-              <table id="rhvMainTable" style="width: 100%; border-collapse: collapse; background-color: #ffffff;">
-                <thead>
-                  <tr>
-                    <th style="background:#f1f3f5; padding:12px 5px; border:1px solid #dee2e6; text-align:center; font-size:11px; text-transform:uppercase; color:#495057; font-weight: 700;">Ano / Mês</th>
-                    <th style="background:#f1f3f5; padding:12px 5px; border:1px solid #dee2e6; text-align:center; font-size:11px; text-transform:uppercase; color:#495057; font-weight: 700;">Total</th>
-                    <th style="background:#f1f3f5; padding:12px 5px; border:1px solid #dee2e6; text-align:center; font-size:11px; text-transform:uppercase; color:#495057; font-weight: 700;">Pendentes</th>
-                    <th style="background:#f1f3f5; padding:12px 5px; border:1px solid #dee2e6; text-align:center; font-size:11px; text-transform:uppercase; color:#495057; font-weight: 700; width:150px;">Ações</th>
-                  </tr>
-                </thead>
-                <tbody id="rhvSummaryBody"></tbody>
-              </table>
-            </div>
-          </div>
-          <div class="major-card-footer">
-          <span style="font-size: 11px; color: #fff;">* Expanda o mês para gerir as aprovações.</span>
+        </div>
+        <div class="major-card-body">
+          <div id="rhvBoard"></div>
+        </div>
+        <div class="major-card-footer">
+          <span style="font-size: 11px; color: #fff;">* Clique num mês para ver os pedidos. Os dias aprovados vão para a escala dos funcionários.</span>
         </div>
       </div>
     </div>

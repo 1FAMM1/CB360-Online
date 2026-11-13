@@ -146,6 +146,11 @@
         <div class="sub-submenu">
           <button class="sidebar-sub-submenu-button" data-page="page-vacations-request" data-access="Consultar Pedidos">Consultar Pedidos</button>
         </div>
+        <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-fomio" data-access="Pedidos de Fardamento">Pedidos de Fardamento</button>
+        <div class="sub-submenu">
+          <button class="sidebar-sub-submenu-button" data-page="page-uniform-orders" data-access="Gestão de Pedidos Fardamento">Consultar Pedidos</button>
+          <button class="sidebar-sub-submenu-button" data-page="page-uniform-items" data-access="Artigos de Fardamento">Artigos</button>
+        </div>
         <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-fomio" data-access="Serviços de Voluntariado">Serviços Remunerados</button>
         <div class="sub-submenu">
           <button class="sidebar-sub-submenu-button" data-page="volunteer-services-register" data-access="Registo de Serviços">Registo de Serviços</button>
@@ -1577,7 +1582,84 @@
           <span style="font-size: 11px; color: #fff;">* Expanda o mês para gerir as aprovações.</span>
         </div>
       </div>
-    </div>    
+    </div>
+    <!-- colar no main.html: logo a seguir ao </div> da página "page-vacations-request" (VACATIONS CREATION MODULE) -->
+    <!-- UNIFORM ORDERS -->
+    <div id="page-uniform-orders" class="page" style="display:none;">
+      <div class="major-card last-card">
+        <div class="major-card-header header-red">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
+            <path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"></path>
+          </svg>
+          PEDIDOS DE FARDAMENTO
+        </div>
+        <div class="major-card-body">
+          <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:12px;">
+            <label for="unifStateFilter" style="font-size:12px; font-weight:600; color:#495057;">Estado:</label>
+            <select id="unifStateFilter" onchange="unifRenderOrders()" style="height:30px; padding:0 8px; font-size:12px; border:1px solid #ced4da; border-radius:4px;">
+              <option value="pendentes">Por tratar (Em Aprovação + Aprovado)</option>
+              <option value="Em Aprovação">Em Aprovação</option>
+              <option value="Aprovado">Aprovado</option>
+              <option value="Entregue">Entregue</option>
+              <option value="Rejeitado">Rejeitado</option>
+              <option value="todos">Todos</option>
+            </select>
+            <input type="text" id="unifSearch" placeholder="Procurar nº ou nome..." oninput="unifRenderOrders()"
+                   style="height:30px; padding:0 8px; font-size:12px; border:1px solid #ced4da; border-radius:4px; width:200px;">
+          </div>
+          <div class="table-responsive-event" style="max-height: calc(100vh - 330px); overflow-y:auto;">
+            <table style="width:100%; border-collapse:collapse; background:#fff;">
+              <thead style="position:sticky; top:0; z-index:1;">
+                <tr>
+                  <th style="background:#f1f3f5; padding:10px 5px; border:1px solid #dee2e6; font-size:11px; text-transform:uppercase; color:#495057; width:120px;">Data</th>
+                  <th style="background:#f1f3f5; padding:10px 5px; border:1px solid #dee2e6; font-size:11px; text-transform:uppercase; color:#495057; width:60px;">Nº Int</th>
+                  <th style="background:#f1f3f5; padding:10px 5px; border:1px solid #dee2e6; font-size:11px; text-transform:uppercase; color:#495057;">Nome</th>
+                  <th style="background:#f1f3f5; padding:10px 5px; border:1px solid #dee2e6; font-size:11px; text-transform:uppercase; color:#495057;">Artigos</th>
+                  <th style="background:#f1f3f5; padding:10px 5px; border:1px solid #dee2e6; font-size:11px; text-transform:uppercase; color:#495057; width:110px;">Estado</th>
+                  <th style="background:#f1f3f5; padding:10px 5px; border:1px solid #dee2e6; font-size:11px; text-transform:uppercase; color:#495057; width:110px;">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="unifOrdersBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="major-card-footer">
+          <span style="font-size: 11px; color: #fff;">* ✓ Aprovar · ✕ Rejeitar · 📦 Marcar como entregue. O elemento recebe uma notificação na Mobile.</span>
+        </div>
+      </div>
+    </div>
+    <!-- UNIFORM ITEMS -->
+    <div id="page-uniform-items" class="page" style="display:none;">
+      <div class="major-card last-card">
+        <div class="major-card-header header-red">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
+            <line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line>
+            <line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line>
+          </svg>
+          ARTIGOS DE FARDAMENTO
+        </div>
+        <div class="major-card-body">
+          <div class="table-responsive-event" style="max-height: calc(100vh - 290px); overflow-y:auto;">
+            <table style="width:100%; border-collapse:collapse; background:#fff;">
+              <thead style="position:sticky; top:0; z-index:1;">
+                <tr>
+                  <th style="background:#f1f3f5; padding:10px 5px; border:1px solid #dee2e6; font-size:11px; text-transform:uppercase; color:#495057; width:70px;">Ordem</th>
+                  <th style="background:#f1f3f5; padding:10px 5px; border:1px solid #dee2e6; font-size:11px; text-transform:uppercase; color:#495057;">Artigo</th>
+                  <th style="background:#f1f3f5; padding:10px 5px; border:1px solid #dee2e6; font-size:11px; text-transform:uppercase; color:#495057; width:150px;">Tamanho</th>
+                  <th style="background:#f1f3f5; padding:10px 5px; border:1px solid #dee2e6; font-size:11px; text-transform:uppercase; color:#495057; width:180px;">Marca</th>
+                  <th style="background:#f1f3f5; padding:10px 5px; border:1px solid #dee2e6; font-size:11px; text-transform:uppercase; color:#495057; width:60px;">Ativo</th>
+                  <th style="background:#f1f3f5; padding:10px 5px; border:1px solid #dee2e6; font-size:11px; text-transform:uppercase; color:#495057; width:90px;">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="unifItemsBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="major-card-footer">
+          <span style="font-size: 11px; color: #fff;">* A primeira linha cria um artigo novo. Os artigos desativados deixam de aparecer na Mobile; os pedidos antigos não mudam.</span>
+        </div>
+      </div>
+    </div>
     <!-- VOLUNTEER SERVICES -->
     <!-- VOLUNTEER SERVICES REGISTER -->
     <div id="volunteer-services-register" class="page" style="display:none;">

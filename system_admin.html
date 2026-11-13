@@ -309,7 +309,8 @@
           </div>
           <div class="pm-box">
             <h4 id="mm-edit-title">Módulo</h4>
-            <div class="pm-row"><label>Nome:</label><input type="text" id="mm-name" maxlength="80" autocomplete="off" placeholder="Igual ao data-access do main.html"></div>
+            <div class="pm-row"><label>Código:</label><input type="text" id="mm-code" maxlength="80" autocomplete="off" placeholder="data-access do botão no main.html"></div>
+            <div class="pm-row"><label>Nome:</label><input type="text" id="mm-name" maxlength="80" autocomplete="off" placeholder="Nome que aparece (vazio = o código)"></div>
             <div class="pm-row"><label>Dentro de:</label><select id="mm-parent"></select></div>
             <div class="pm-row"><label>Ordem:</label><input type="text" id="mm-order" inputmode="numeric" style="flex:0 0 90px;"></div>
             <p class="muted" id="mm-state" style="margin:0 0 8px;"></p>
@@ -321,9 +322,9 @@
               <button type="button" id="mm-delete" class="btn-danger" style="display:none;">Apagar</button>
             </div>
             <div class="mm-warn">
-              O nome tem de ser <b>exatamente igual</b> ao <code>data-access</code> do botão no <code>main.html</code>.
+              O <b>código</b> é o <code>data-access</code> do botão no <code>main.html</code> e é o que fica gravado nos acessos: escolhe-se ao criar e depois <b>não muda</b>.
+              O <b>nome</b> é só o texto que aparece nas caixas de acessos — pode mudar à vontade.
               Um módulo novo só aparece no menu do Online depois de existir lá o botão e a página.
-              Ao renomear, os acessos já gravados nas corporações e nos elementos são corrigidos automaticamente — mas tem de mudar também o <code>data-access</code> no <code>main.html</code>.
             </div>
           </div>
         </div>
@@ -695,7 +696,7 @@
     async function loadAccessOptions() {
       if (ACCESS_OPTIONS.length) return;
       const tk = sessionStorage.getItem('authToken');
-      const r = await fetch(`${SUPABASE_URL}/rest/v1/cb360_modules?select=label,parent,sort_order&active=is.true&order=sort_order.asc,label.asc`, {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/cb360_modules?select=label,display_name,parent,sort_order&active=is.true&order=sort_order.asc,label.asc`, {
         headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${tk}` }
       });
       if (!r.ok) throw new Error('Não foi possível carregar a lista de módulos.');
@@ -705,7 +706,9 @@
         rows.forEach(x => { const k = x.parent || ''; (byParent[k] = byParent[k] || []).push(x); });
         const build = (p) => (byParent[p] || []).map(x => {
           const kids = build(x.label);
-          return kids.length ? {label: x.label, children: kids} : {label: x.label};
+          const o = {label: x.label, text: x.display_name || x.label};
+          if (kids.length) o.children = kids;
+          return o;
         });
         return build('');
       })();
@@ -730,7 +733,7 @@
           cb._parent = parentBox; cb._kids = []; cb._label = opt.label;
           if (parentBox) parentBox._kids.push(cb);
           boxes.push(cb);
-          const wrap = el('div', { className: 'mod-node' }, el('label', {}, cb, opt.label));
+          const wrap = el('div', { className: 'mod-node' }, el('label', { title: opt.label }, cb, opt.text || opt.label));
           if (opt.children) wrap.append(el('div', { className: 'mod-children' }, ...opt.children.map(ch => node(ch, cb))));
           cb.addEventListener('change', () => {
             // marcar/desmarcar um grupo aplica-se a tudo o que está dentro
@@ -1019,11 +1022,14 @@
       mmNewParent = m ? null : (newParent ?? null);
       const banned = m ? mmDescendants(m.label) : new Set();
       $('mm-parent').replaceChildren(selOpt('', '— topo do menu —'),
-        ...mmFlat().filter(x => !banned.has(x.m.label)).map(x => selOpt(x.m.label, '\u00a0\u00a0'.repeat(x.depth) + x.m.label)));
-      $('mm-name').value = m ? m.label : '';
+        ...mmFlat().filter(x => !banned.has(x.m.label)).map(x => selOpt(x.m.label, '\u00a0\u00a0'.repeat(x.depth) + (x.m.display_name || x.m.label))));
+      $('mm-code').value = m ? m.label : '';
+      $('mm-code').disabled = !!m;
+      $('mm-name').value = m ? (m.display_name || '') : '';
       $('mm-parent').value = m ? (m.parent || '') : (mmNewParent || '');
       $('mm-order').value = m ? (m.sort_order ?? 0) : mmNextOrder(mmNewParent);
-      $('mm-edit-title').textContent = m ? 'Editar módulo' : (mmNewParent ? `Novo sub-item de "${mmNewParent}"` : 'Novo módulo no topo');
+      const pName = (l) => { const p = mmList.find(x => x.label === l); return p ? (p.display_name || p.label) : l; };
+      $('mm-edit-title').textContent = m ? 'Editar módulo' : (mmNewParent ? `Novo sub-item de "${pName(mmNewParent)}"` : 'Novo módulo no topo');
       const kids = m ? mmKids(m.label).length : 0;
       $('mm-state').textContent = m ? (m.active ? 'Ativo — aparece nas caixas de acessos.' : 'Desativado — não aparece nas caixas de acessos.') + (kids ? ` Tem ${kids} sub-itens.` : '') : '';
       $('mm-toggle').style.display = m ? '' : 'none';
@@ -1035,46 +1041,41 @@
     }
     function mmRender() {
       const q = norm($('mm-search').value);
-      const rows = mmFlat().filter(x => !q || norm(x.m.label).includes(q));
+      const rows = mmFlat().filter(x => !q || norm(x.m.label).includes(q) || norm(x.m.display_name).includes(q));
       $('mm-list').replaceChildren(...rows.map(({ m, depth }) => el('div', {
         className: 'pm-item' + (depth === 0 ? ' top' : '') + (m.active ? '' : ' off') + (mmSel && mmSel.label === m.label ? ' sel' : ''),
         style: `padding-left:${10 + (q ? 0 : depth * 18)}px;`,
         onclick: () => mmSelect(m)
-      }, el('span', {}, (depth && !q ? '└ ' : '') + m.label), m.active ? '' : el('span', { className: 'pm-tag' }, 'desativado'))));
+      }, el('span', { title: m.label }, (depth && !q ? '└ ' : '') + (m.display_name || m.label)), m.active ? '' : el('span', { className: 'pm-tag' }, 'desativado'))));
       if (!rows.length) $('mm-list').append(el('div', { className: 'muted', style: 'padding:10px;' }, q ? 'Nenhum módulo com esse nome.' : 'Sem módulos.'));
       const off = mmList.filter(m => !m.active).length;
       $('mm-count').textContent = `${mmList.length} módulos${off ? ` (${off} desativados)` : ''}`;
     }
     $('mm-search').addEventListener('input', mmRender);
-    $('mm-new-top').addEventListener('click', () => { mmSelect(null, null); $('mm-name').focus(); });
-    $('mm-new-child').addEventListener('click', () => { if (mmSel) { mmSelect(null, mmSel.label); $('mm-name').focus(); } });
+    $('mm-new-top').addEventListener('click', () => { mmSelect(null, null); $('mm-code').focus(); });
+    $('mm-new-child').addEventListener('click', () => { if (mmSel) { mmSelect(null, mmSel.label); $('mm-code').focus(); } });
     $('mm-save').addEventListener('click', (e) => run(e.currentTarget, async () => {
+      const code = $('mm-code').value.trim().replace(/\s+/g, ' ');
       const name = $('mm-name').value.trim().replace(/\s+/g, ' ');
       const parent = $('mm-parent').value || null;
       const order = parseInt($('mm-order').value, 10);
-      if (name.length < 2) throw new Error('Indique o nome do módulo.');
-      if (name.includes(',')) throw new Error('O nome não pode ter vírgulas.');
+      if (!mmSel && code.length < 2) throw new Error('Indique o código (o data-access do botão no main.html).');
+      if (!mmSel && code.includes(',')) throw new Error('O código não pode ter vírgulas.');
       if (!Number.isInteger(order)) throw new Error('A ordem tem de ser um número.');
-      if (mmSel && name === mmSel.label && parent === (mmSel.parent || null) && order === (mmSel.sort_order ?? 0)) { toast('Sem alterações.', 'warn'); return; }
-      if (mmSel && name !== mmSel.label) {
-        const ok = await dialog('Renomear módulo', [
-          { text: `"${mmSel.label}" passa a "${name}".` },
-          { text: 'Os acessos já gravados nas corporações e nos elementos são corrigidos automaticamente.' },
-          { text: `Tem também de mudar o data-access no main.html para "${name}", senão o botão deixa de aparecer no menu.` }
-        ], 'Renomear');
-        if (!ok) return;
-      }
-      const res = await api('module_save', { old_label: mmSel ? mmSel.label : null, label: name, parent, sort_order: order });
-      const c = res && res.corrigidos;
-      toast(mmSel ? `Módulo "${name}" gravado${c ? ` (corrigidos: ${c.corporacoes} corporações, ${c.elementos} elementos)` : ''}.` : `Módulo "${name}" criado.`);
-      await mmLoad(name);
+      const display = name && name !== (mmSel ? mmSel.label : code) ? name : null;
+      if (mmSel && display === (mmSel.display_name || null) && parent === (mmSel.parent || null) && order === (mmSel.sort_order ?? 0)) { toast('Sem alterações.', 'warn'); return; }
+      const res = await api('module_save', mmSel
+        ? { old_label: mmSel.label, display_name: display, parent, sort_order: order }
+        : { label: code, display_name: display, parent, sort_order: order });
+      toast(mmSel ? `Módulo "${display || mmSel.label}" gravado.` : `Módulo "${display || code}" criado.`);
+      await mmLoad(res && res.label);
     }));
     $('mm-toggle').addEventListener('click', (e) => run(e.currentTarget, async () => {
       if (!mmSel) return;
       const activate = !mmSel.active;
       if (!activate) {
         $('admDialog').classList.add('danger');
-        const ok = await dialog('Desativar módulo', [{ text: `Desativar "${mmSel.label}"? Deixa de aparecer nas caixas de acessos (e os sub-itens com ele). Os acessos já gravados mantêm-se, mas um elemento gravado no Data Center enquanto estiver desativado perde-o.` }], 'Desativar');
+        const ok = await dialog('Desativar módulo', [{ text: `Desativar "${mmSel.display_name || mmSel.label}"? Deixa de aparecer nas caixas de acessos (e os sub-itens com ele). Os acessos já gravados mantêm-se, mas um elemento gravado no Data Center enquanto estiver desativado perde-o.` }], 'Desativar');
         $('admDialog').classList.remove('danger');
         if (!ok) return;
       }
@@ -1085,7 +1086,7 @@
     $('mm-delete').addEventListener('click', (e) => run(e.currentTarget, async () => {
       if (!mmSel) return;
       $('admDialog').classList.add('danger');
-      const ok = await dialog('Apagar módulo', [{ text: `Apagar "${mmSel.label}"? É retirado da árvore e dos acessos de todas as corporações e elementos. Não dá para desfazer.` }], 'Apagar');
+      const ok = await dialog('Apagar módulo', [{ text: `Apagar "${mmSel.display_name || mmSel.label}"? É retirado da árvore e dos acessos de todas as corporações e elementos. Não dá para desfazer.` }], 'Apagar');
       $('admDialog').classList.remove('danger');
       if (!ok) return;
       const res = await api('module_delete', { label: mmSel.label });

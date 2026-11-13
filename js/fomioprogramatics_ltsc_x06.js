@@ -1376,7 +1376,7 @@
       .evc-add {margin-top: 10px; width: 100%; height: 38px; border: 1.5px dashed #c62828; background: #fff; color: #c62828; border-radius: 10px; font-weight: 700; font-size: 12.5px; cursor: pointer;}
       .evc-add:hover {background: #fdf1f1;}
       .evc-side {position: sticky; top: 10px;}
-      .evc-summary {border-top: 4px solid #c62828; margin-bottom: -8px;}
+      .evc-summary {border-top: 4px solid #c62828;}
       .evc-sum-name {font-size: 16px; font-weight: 700; color: #2c3e50; word-break: break-word;}
       .evc-sum-type {display: inline-block; margin: 6px 0 10px; font-size: 10.5px; font-weight: 700; letter-spacing: .4px; padding: 3px 9px; border-radius: 999px; background: #eef2f7; color: #45556a;}
       .evc-sum-row {display: flex; justify-content: space-between; gap: 10px; font-size: 12px; color: #6c757d; padding: 6px 0; border-top: 1px solid #f1f3f5;}

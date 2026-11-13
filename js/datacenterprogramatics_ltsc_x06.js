@@ -654,6 +654,7 @@
       currentEditId = null;
       document.querySelector("#elements-edit h3").textContent = "Adicionar elemento";
       generateAccessCheckboxes();
+      generateMobileAccessCheckboxes(null);
       window.scrollTo({top: 0, behavior: "smooth"});
     }
     async function openEditCard(row) {
@@ -714,7 +715,7 @@
       toggleStateDateVisibility();      
       const roleMap = {admin: "Administrador", subadmin: "Sub-Administrador", user: "Utilizador"};
       if (document.getElementById("win_type")) document.getElementById("win_type").value = roleMap[row.user_role] || "";      
-      await generateAccessCheckboxes();
+      await Promise.all([generateAccessCheckboxes(), generateMobileAccessCheckboxes(row.n_int)]);
       const userAccesses = row.acess ? row.acess.split(",").map(a => a.trim()) : [];
       setTimeout(() => {
         document.querySelectorAll(".access-checkbox").forEach(cb => {
@@ -882,6 +883,8 @@
           });
           if (!resMob.ok) throw new Error(await accessErrorMsg(resMob, "Elemento gravado, mas o acesso Mobile não foi alterado"));
         }
+        /* ---------- acessos da Mobile ---------- */
+        await saveMobileAccesses(nInt, corpOperNr);
         document.getElementById("win_password_main").value = "";
         document.getElementById("win_password_mobile").value = "";
         showPopup('popup-success', currentEditId ? "✅ Elemento editado com sucesso!" : "✅ Elemento adicionado com sucesso!");
@@ -914,6 +917,78 @@
         console.error(e);
         showPopup('popup-danger', "Erro ao eliminar elemento: " + (e.message || e));
       }
+    }
+    /* ===================== ACESSOS DA MOBILE =====================
+       cb360_mobile_modules = botões da grelha da MainPage (data-module)
+       user_accesses: can_access=false -> botão com cadeado na Mobile (sem linha = tem acesso) */
+    let MOBILE_MODULES = [];
+    let mobileAccessNint = null;      // formato do n_int usado nas linhas deste elemento
+    async function generateMobileAccessCheckboxes(nInt) {
+      const container = document.getElementById("mobile-access-container");
+      if (!container) return;
+      container.innerHTML = '';
+      container.dataset.ready = '';
+      try {
+        if (!MOBILE_MODULES.length) {
+          const r = await fetch(`${SUPABASE_URL}/rest/v1/cb360_mobile_modules?select=label,display_name&active=is.true&order=sort_order.asc,label.asc`, {headers: getSupabaseHeaders()});
+          if (!r.ok) throw new Error(await r.text());
+          MOBILE_MODULES = await r.json();
+        }
+        let locked = new Set();
+        mobileAccessNint = null;
+        if (nInt) {
+          const corp = sessionStorage.getItem("currentCorpOperNr");
+          const r2 = await fetch(`${SUPABASE_URL}/rest/v1/user_accesses?select=n_int,module_key,can_access&corp_oper_nr=eq.${corp}&n_int=in.(${nintVariants(nInt).map(v => `"${v}"`).join(",")})`, {headers: getSupabaseHeaders()});
+          if (!r2.ok) throw new Error(await r2.text());
+          const rows = await r2.json();
+          if (rows.length) mobileAccessNint = rows[0].n_int;
+          locked = new Set(rows.filter(x => x.can_access === false).map(x => x.module_key));
+        }
+        if (!MOBILE_MODULES.length) {
+          container.innerHTML = '<p style="color:#666; font-size:13px;">Sem módulos da Mobile configurados.</p>';
+          return;
+        }
+        MOBILE_MODULES.forEach(m => {
+          const wrap = document.createElement("label");
+          wrap.style.cssText = "display:flex; align-items:center; gap:8px; margin:3px 0; cursor:pointer;";
+          const cb = document.createElement("input");
+          cb.type = "checkbox";
+          cb.className = "mobile-access-checkbox";
+          cb.value = m.label;
+          cb.checked = !locked.has(m.label);
+          cb.style.cssText = "width:18px; height:18px; cursor:pointer;";
+          const txt = document.createElement("span");
+          txt.textContent = m.display_name || m.label;
+          wrap.append(cb, txt);
+          container.appendChild(wrap);
+        });
+        container.dataset.ready = '1';
+      } catch (e) {
+        console.error("Erro ao carregar acessos da Mobile:", e);
+        container.innerHTML = '<p style="color:#c62828; font-size:13px;">Não foi possível carregar os acessos da Mobile. Não serão alterados ao gravar.</p>';
+      }
+    }
+    async function saveMobileAccesses(nInt, corpOperNr) {
+      const container = document.getElementById("mobile-access-container");
+      if (!container || container.dataset.ready !== '1') return;   // não carregou: não mexe
+      const nintKey = mobileAccessNint || String(parseInt(nInt, 10)).padStart(3, "0");
+      const rows = Array.from(document.querySelectorAll('.mobile-access-checkbox')).map(cb => ({
+        corp_oper_nr: corpOperNr, n_int: nintKey, module_key: cb.value, can_access: cb.checked
+      }));
+      if (!rows.length) return;
+      /* apaga linhas do mesmo elemento gravadas com outro formato de n_int (005 / 5 / …) */
+      const others = nintVariants(nInt).filter(v => v !== nintKey);
+      if (others.length) {
+        await fetch(`${SUPABASE_URL}/rest/v1/user_accesses?corp_oper_nr=eq.${corpOperNr}&n_int=in.(${others.map(v => `"${v}"`).join(",")})`, {
+          method: "DELETE", headers: getSupabaseHeaders()
+        });
+      }
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/user_accesses?on_conflict=corp_oper_nr,n_int,module_key`, {
+        method: "POST",
+        headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "resolution=merge-duplicates"},
+        body: JSON.stringify(rows)
+      });
+      if (!res.ok) throw new Error(await accessErrorMsg(res, "Elemento gravado, mas os acessos da Mobile não foram alterados"));
     }
     async function generateAccessCheckboxes() {
       const container = document.getElementById("access-container");

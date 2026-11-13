@@ -1347,46 +1347,135 @@
         await loadEvents();
       }
     });
+    /* ============ CRIAR EVENTO: estilo do formulário ============ */
+    (function evcInjectCss() {
+      if (document.getElementById('evc-css')) return;
+      const css = `
+      .evc {display: grid; grid-template-columns: 1fr 320px; gap: 14px; align-items: start;}
+      .evc-col {display: flex; flex-direction: column; gap: 14px; min-width: 0;}
+      .evc-card {background: #fff; border: 1px solid #e9ecef; border-radius: 12px; padding: 14px 16px 16px; box-shadow: 0 1px 3px rgba(0,0,0,.05);}
+      .evc-title {margin: 0 0 12px; font-size: 13px; font-weight: 700; color: #2c3e50; display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: .4px;}
+      .evc-title > span {width: 22px; height: 22px; border-radius: 50%; background: #c62828; color: #fff; font-size: 12px; display: inline-flex; align-items: center; justify-content: center;}
+      .evc-title small {font-size: 11px; color: #1565c0; font-weight: 700; text-transform: none; letter-spacing: 0; margin-left: auto;}
+      .evc-grid {display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px 12px;}
+      .evc-span2 {grid-column: span 2;} .evc-span3 {grid-column: span 3;}
+      .evc-f {display: flex; flex-direction: column; gap: 5px; font-size: 11.5px; font-weight: 600; color: #6c757d;}
+      .evc-f input, .evc-f select, .evc-quick input, .evc-shift input {height: 36px; border: 1px solid #dee2e6; border-radius: 8px; padding: 0 10px; font-size: 13px; color: #2c3e50; background: #fff; box-sizing: border-box; width: 100%; font-family: inherit;}
+      .evc-f input:focus, .evc-f select:focus, .evc-quick input:focus, .evc-shift input:focus {outline: none; border-color: #c62828; box-shadow: 0 0 0 3px rgba(198,40,40,.12);}
+      .evc-quick {display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 12px; background: #f8f9fa; border: 1px dashed #dee2e6; border-radius: 10px; font-size: 12px; color: #6c757d; margin-bottom: 12px;}
+      .evc-quick input {width: 130px; height: 32px;}
+      .evc-btn-soft {height: 32px; border: 0; border-radius: 8px; padding: 0 14px; background: #2c3e50; color: #fff; font-weight: 700; font-size: 12px; cursor: pointer;}
+      .evc-btn-soft:hover {background: #1f2d3a;}
+      .evc-shifts {display: flex; flex-direction: column; gap: 8px; max-height: 340px; overflow-y: auto;}
+      .evc-shift {display: grid; grid-template-columns: 28px 1.4fr 1fr 1fr 32px; gap: 8px; align-items: center; padding: 8px 10px; border: 1px solid #e9ecef; border-radius: 10px; background: #fff;}
+      .evc-shift .evc-n {width: 24px; height: 24px; border-radius: 50%; background: #eef2f7; color: #45556a; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center;}
+      .evc-shift input {height: 32px;}
+      .evc-shift .evc-del {width: 30px; height: 30px; border: 1px solid #f1c0c0; background: #fff5f5; color: #c62828; border-radius: 8px; cursor: pointer; font-size: 12px;}
+      .evc-shift .evc-del:hover {background: #ffe9e9;}
+      .evc-empty {padding: 16px; text-align: center; font-size: 12.5px; color: #9aa3ab; border: 1px dashed #e1e5e9; border-radius: 10px;}
+      .evc-add {margin-top: 10px; width: 100%; height: 38px; border: 1.5px dashed #c62828; background: #fff; color: #c62828; border-radius: 10px; font-weight: 700; font-size: 12.5px; cursor: pointer;}
+      .evc-add:hover {background: #fdf1f1;}
+      .evc-side {position: sticky; top: 10px;}
+      .evc-summary {border-top: 4px solid #c62828;}
+      .evc-sum-name {font-size: 16px; font-weight: 700; color: #2c3e50; word-break: break-word;}
+      .evc-sum-type {display: inline-block; margin: 6px 0 10px; font-size: 10.5px; font-weight: 700; letter-spacing: .4px; padding: 3px 9px; border-radius: 999px; background: #eef2f7; color: #45556a;}
+      .evc-sum-row {display: flex; justify-content: space-between; gap: 10px; font-size: 12px; color: #6c757d; padding: 6px 0; border-top: 1px solid #f1f3f5;}
+      .evc-sum-row b {color: #2c3e50; text-align: right;}
+      .evc-sum-kpis {display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 10px 0;}
+      .evc-sum-kpis div {background: #f8f9fa; border-radius: 8px; padding: 8px 4px; text-align: center;}
+      .evc-sum-kpis b {display: block; font-size: 18px; color: #2c3e50;}
+      .evc-sum-kpis small {font-size: 10px; color: #6c757d; text-transform: uppercase; letter-spacing: .3px;}
+      .evc-sum-cost {display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #e8f5e9; border-radius: 8px; font-size: 12px; color: #2e7d32; font-weight: 600;}
+      .evc-sum-cost b {font-size: 17px;}
+      .evc-hint {margin: 10px 0 0; font-size: 11px; color: #8a949e; line-height: 1.4;}
+      @media (max-width: 1100px) {.evc {grid-template-columns: 1fr;} .evc-side {position: static;}}
+      `;
+      const st = document.createElement('style');
+      st.id = 'evc-css';
+      st.textContent = css;
+      document.head.appendChild(st);
+    })();
     /* ============ ADD SHIFT ============= */
-    function addShift() {
+    function addShift(date = '', start = '', end = '') {
       const container = document.getElementById('shiftsList');
+      container.querySelector('.evc-empty')?.remove();
       const div = document.createElement('div');
-      div.className = 'events-shift-item';
-      div.style.cssText = 'display: flex; align-items: center; gap: 5px; margin-bottom: 3px; background: transparent; padding: 0px;';
+      div.className = 'events-shift-item evc-shift';
       div.innerHTML = `
-        <div class="major-field">
-          <label>Data:</label>
-          <input type="date" class="shift-date">
-        </div>
-        <div class="major-field">
-          <label>Início:</label>
-          <input type="time" class="shift-start-time">
-        </div>
-        <div class="major-field">
-          <label>Fim:</label>
-          <input type="time" class="shift-end-time">
-        </div>
-        <button type="button" onclick="removeShift(this)" style="background:#fff5f5;border:1px solid #ffcccc;color:red;width:22px;height:22px;cursor:pointer;border-radius:3px;font-size:10px;">✕</button>
+        <span class="evc-n"></span>
+        <input type="date" class="shift-date" value="${date}" title="Data" onchange="evcUpdateSummary()">
+        <input type="time" class="shift-start-time" value="${start}" title="Início" onchange="evcUpdateSummary()">
+        <input type="time" class="shift-end-time" value="${end}" title="Fim" onchange="evcUpdateSummary()">
+        <button type="button" class="evc-del" onclick="removeShift(this)" title="Remover turno">✕</button>
       `;
       container.appendChild(div);
       container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
       updateCounter();
     }
     function updateCounter() {
-      const totalShifs = document.querySelectorAll('.events-shift-item').length;
-      document.getElementById('turno-count').innerText = `(${totalShifs} Inseridos)`;
+      const items = document.querySelectorAll('.events-shift-item');
+      items.forEach((it, i) => { const n = it.querySelector('.evc-n'); if (n) n.textContent = i + 1; });
+      const cnt = document.getElementById('turno-count');
+      if (cnt) cnt.innerText = `(${items.length} Inseridos)`;
+      const list = document.getElementById('shiftsList');
+      if (list && !items.length && !list.querySelector('.evc-empty')) list.innerHTML = '<div class="evc-empty">Ainda não há turnos. Gere um por dia ou adicione à mão.</div>';
+      evcUpdateSummary();
     }
     /* =========== REMOVE SHIFT =========== */
     function removeShift(btn) {
-      btn.parentElement.remove();
+      btn.closest('.events-shift-item').remove();
       updateCounter();
+    }
+    /* ===== GERAR UM TURNO POR DIA (do início ao fim do evento) ===== */
+    function evcGenerateShifts() {
+      const s = document.getElementById('eventStartDate').value, e = document.getElementById('eventEndDate').value || s;
+      const hs = document.getElementById('evcQuickStart').value, he = document.getElementById('evcQuickEnd').value;
+      if (!s) return showPopup('popup-danger', 'Indique primeiro a data de início do evento.');
+      if (!hs || !he) return showPopup('popup-danger', 'Indique a hora de início e de fim dos turnos.');
+      if (e < s) return showPopup('popup-danger', 'A data de fim é anterior à data de início.');
+      const d = new Date(s + 'T12:00:00'), end = new Date(e + 'T12:00:00');
+      let n = 0;
+      while (d <= end && n < 62) {
+        const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        addShift(iso, hs, he);
+        d.setDate(d.getDate() + 1); n++;
+      }
+    }
+    /* ============ RESUMO (lado direito) ============ */
+    function evcUpdateSummary() {
+      const $ = id => document.getElementById(id);
+      if (!$('evcSumName')) return;
+      const fmt = v => v ? v.split('-').reverse().join('/') : '';
+      const name = $('eventName').value.trim(), type = $('eventType').value, loc = $('eventLocation').value.trim();
+      const s = $('eventStartDate').value, e = $('eventEndDate').value;
+      const ops = parseInt($('operational').value) || 0, vh = parseFloat($('valueHour').value) || 0;
+      let shifts = 0, hours = 0;
+      document.querySelectorAll('.events-shift-item').forEach(it => {
+        const a = it.querySelector('.shift-start-time').value, b = it.querySelector('.shift-end-time').value;
+        if (!it.querySelector('.shift-date').value || !a || !b) return;
+        shifts++;
+        const [ah, am] = a.split(':').map(Number), [bh, bm] = b.split(':').map(Number);
+        let m = (bh * 60 + bm) - (ah * 60 + am);
+        if (m <= 0) m += 24 * 60;                 /* turno que passa a meia-noite */
+        hours += m / 60;
+      });
+      $('evcSumName').textContent = name || 'Evento sem nome';
+      $('evcSumType').textContent = type || '—';
+      $('evcSumLoc').textContent = loc || '—';
+      $('evcSumDates').textContent = s ? (e && e !== s ? `${fmt(s)} → ${fmt(e)}` : fmt(s)) : '—';
+      $('evcSumShifts').textContent = shifts;
+      $('evcSumSlots').textContent = shifts * ops;
+      $('evcSumHours').textContent = (Math.round(hours * 10) / 10).toString().replace('.', ',') + 'h';
+      $('evcSumCost').textContent = (hours * ops * vh).toLocaleString('pt-PT', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
     }
     /* ============ CLEAR FORM ============ */
     function clearEventsForm() {
-      document.querySelectorAll('.admin-container input').forEach(i => i.value = '');
+      document.querySelectorAll('#page-events .evc-f input').forEach(i => i.value = '');
       document.getElementById('eventType').value = '';
       document.getElementById('shiftsList').innerHTML = '';
+      updateCounter();
     }
+    document.addEventListener('DOMContentLoaded', () => { if (document.getElementById('shiftsList')) updateCounter(); });
     /* =========== SUBMIT EVENT =========== */
     async function submitEvent() {
       const eventName = document.getElementById('eventName').value.trim();
@@ -1489,252 +1578,11 @@
       return (map[cssClass] || map['bg-default']) +
         'padding:3px 8px;border-radius:10px;color:#fff;font-weight:bold;font-size:10px;display:inline-block;min-width:80px;text-align:center;';
     }
-    /* ========== LOADING EVENT =========== */    
+    /* ========== LOADING EVENT ===========
+       painel novo (createEventsBoard, mais abaixo neste ficheiro) */
     async function loadEvents() {
-      const tbody = document.querySelector('#eventTable tbody');
-      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
-      if (!tbody) {console.warn("loadEvents: #eventTable tbody não encontrado"); return;}
-      tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 12px; font-size: 13px; color: #666;">A carregar...</td></tr>';
-      try {
-        const resp   = await fetch(
-          `${SUPABASE_URL}/rest/v1/event_list?corp_oper_nr=eq.${corp_oper_nr}&order=date_start.desc`, {
-            headers: getSupabaseHeaders()
-          }
-        );
-        const eventos = await resp.json();
-        tbody.innerHTML = '';
-        if (eventos.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 12px; font-size: 13px; color: #888;">Sem eventos registados.</td></tr>';
-          return;
-        }
-        eventos.forEach(ev => {
-          const safeId = ev.event.replace(/\W/g, '');
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td style="padding: 6px 5px; border: 1px solid #dee2e6; text-align: center; font-size: 12px;"><b>${ev.event}</b></td>
-            <td style="padding: 6px 5px; border: 1px solid #dee2e6; text-align: center; font-size: 12px;">${ev.location || '---'}</td>
-            <td style="padding: 6px 5px; border: 1px solid #dee2e6; text-align: center; font-size: 12px;">${formatDateDisplay(ev.date_start)}</td>
-            <td style="padding: 6px 5px; border: 1px solid #dee2e6; text-align: center; font-size: 12px;">${formatDateDisplay(ev.date_end)}</td>
-            <td style="padding: 6px 5px; border: 1px solid #dee2e6; text-align: center; font-size: 12px;">
-              <button id="btn-v-${safeId}"
-                onclick="toggleDisp('${ev.event.replace(/'/g,"\\'")}', this)"
-                style="display: inline-flex; align-items: center; justify-content: center; height: 26px; padding: 0 12px; font-size: 11px; border-radius: 4px; border:none; cursor: pointer; 
-                       font-weight: 600; background: #1976d2; color: #fff;">Ver</button>
-              <button onclick="deleteFullEvent('${ev.event.replace(/'/g,"\\'")}')"
-                      style="display: inline-flex; align-items: center; justify-content: center; height: 26px; padding: 0 12px; font-size: 11px; border-radius: 4px; border: none; cursor:pointer;
-                             font-weight: 600; background: #ce1212; color: #fff;">🗑️</button>
-            </td>
-          `;
-          tbody.appendChild(tr);
-          const trExp = document.createElement('tr');
-          trExp.id = `row-expand-${safeId}`;
-          trExp.style.display = 'none';
-          trExp.innerHTML = `<td colspan="5" id="container-${safeId}" style="padding: 15px; background: #f9f9f9; border: 1px solid #dee2e6;"></td>`;
-          tbody.appendChild(trExp);
-        });
-      } catch(e) { 
-        console.error(e);
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:12px;color:red;font-size:13px;">Erro ao carregar dados.</td></tr>'; 
-      }
-    }
-    /* ======= BUILD DISP TABLE ======= */
-    async function buildDispTable(eventName) {
-      const corp_oper_nr  = sessionStorage.getItem('currentCorpOperNr');
-      const encodedName   = encodeURIComponent(eventName);
-      try {
-        const [rShifts, rDisp] = await Promise.all([
-          fetch(`${SUPABASE_URL}/rest/v1/event_shifts?event=eq.${encodedName}&corp_oper_nr=eq.${corp_oper_nr}&order=event_shift_date.asc,event_shift.asc`, {
-            headers: getSupabaseHeaders()
-          }),
-          fetch(`${SUPABASE_URL}/rest/v1/event_disp?event=eq.${encodedName}&corp_oper_nr=eq.${corp_oper_nr}&order=event_shift_date.asc,event_shift.asc`,   {
-            headers: getSupabaseHeaders()
-          })
-        ]);
-        const shifts = await rShifts.json();
-        const disps  = await rDisp.json();
-        if (disps.length === 0) {
-          return "<div style='padding:10px;color:#666;font-size:13px;'>Sem disponibilidades registadas para este evento.</div>";
-        }
-        const nInts  = disps.map(d => d.n_int);
-        const rElems = await fetch(
-          `${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${corp_oper_nr}&n_int=in.(${nInts.join(',')})&select=n_int,full_name,patent`, {
-            headers: getSupabaseHeaders()
-          }
-        );
-        const elems   = await rElems.json();
-        const elemMap = {};
-        elems.forEach(e => {elemMap[e.n_int] = {full_name: e.full_name, patent: e.patent };});
-        const thStyle = 'background: #f1f3f5; padding: 8px 5px; border: 1px solid #dee2e6; text-align: center; font-size: 11px; text-transform: uppercase; color: #495057;';
-        const tdStyle = 'padding:6px 5px;border:1px solid #dee2e6;text-align:center;font-size:12px;color:#333;';
-        let html = `
-          <div style="overflow-x:auto;">
-            <table style="width:100%;border-collapse:collapse;background:#fff;">
-              <thead>
-                <tr>
-                  <th style="${thStyle}">Nº Int</th>
-                  <th style="${thStyle}">Patente</th>
-                  <th style="${thStyle}">Nome</th>
-                  <th style="${thStyle}">Data</th>
-                  <th style="${thStyle}">Turno</th>
-                  <th style="${thStyle}">Estado</th>
-                  <th style="${thStyle}">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-        `;
-        disps.forEach(d => {
-          const sInfo = shifts.find(s => s.event_shift_date === d.event_shift_date && s.event_shift === d.event_shift);
-          const act = sInfo ? parseInt(sInfo.act_oper || 0) : 0;
-          const nec = sInfo ? parseInt(sInfo.nec_oper || 0) : 0;
-          const isFull = act >= nec;
-          const canAction = !isFull || d.shift_state === 'Aprovado';
-          const rowBg = (isFull && d.shift_state !== 'Aprovado') ? 'background:#f8f9fa;color:#adb5bd;' : '';
-          const statusCls = (isFull && d.shift_state !== 'Aprovado') ? 'bg-default' : getEventsStatusClass(d.shift_state);
-          const statusText = (isFull && d.shift_state !== 'Aprovado') ? 'Turno Cheio'  : d.shift_state;
-          const elemData = elemMap[d.n_int] || {};
-          const safeEvent = d.event.replace(/'/g, "\\'");
-          html += `
-            <tr id="disp-row-${d.id}" style="${rowBg}">
-              <td style="${tdStyle}">${d.n_int}</td>
-              <td style="${tdStyle}">${elemData.patent || '---'}</td>
-              <td style="${tdStyle}">${elemData.full_name || d.n_int}</td>
-              <td style="${tdStyle}">${formatDateDisplay(d.event_shift_date)}</td>
-              <td style="${tdStyle}">${d.event_shift}<br><small style="color: #666;">Vagas: ${act}/${nec}</small></td>
-              <td style="${tdStyle}">
-                <span style="${badgeEventsStyle(statusCls)}" data-state="${d.shift_state}">${statusText}</span>
-              </td>
-              <td style="${tdStyle}">
-                <div style="display:flex;gap:4px;justify-content:center;">
-                  ${canAction ? `
-                    <button title="Aprovar"
-                      onclick="updateState(${d.id},'Aprovado','${safeEvent}','${d.event_shift_date}','${d.event_shift}')"
-                      style="padding: 4px 8px; border: none; border-radius: 3px; cursor: pointer; font-size: 10px; font-weight: bold; background: #2e7d32; color: #fff;">✓</button>
-                    <button title="Rejeitar"
-                      onclick="updateState(${d.id},'Não Aprovado','${safeEvent}','${d.event_shift_date}','${d.event_shift}')"
-                      style="padding: 4px 8px; border: none; border-radius: 3px; cursor: pointer; font-size: 10px; font-weight: bold; background: #e53935; color: #fff;">✕</button>
-                  ` : '<small style="color:#999;">Esgotado</small>'}
-                </div>
-              </td>
-            </tr>
-          `;
-        });
-        html += `</tbody></table></div>`;
-        return html;    
-      } catch (e) {
-        console.error("Erro em buildDispTable:", e);
-        return "<div style='color:red;padding:10px;'>Erro ao processar tabela de detalhes.</div>";
-      }
-    }
-    /* ========== TOGGLE DISPLAY ========== */
-    async function toggleDisp(eventName, btn) {
-      const safeId    = eventName.replace(/\W/g, '');
-      const container = document.getElementById(`container-${safeId}`);
-      const trParent  = document.getElementById(`row-expand-${safeId}`);
-      if (trParent.style.display !== 'table-row') {
-        document.querySelectorAll('[id^="row-expand-"]').forEach(el => el.style.display = 'none');
-        document.querySelectorAll('[id^="btn-v-"]').forEach(b => {
-          b.textContent = 'Ver';
-          b.style.background = '#1976d2';
-        });
-      }
-      if (trParent.style.display === 'table-row') {
-        trParent.style.display = 'none';
-        btn.textContent = 'Ver';
-        btn.style.background = '#1976d2';
-        return;
-      }
-      btn.textContent = 'Fechar';
-      btn.style.background = '#6c757d';
-      trParent.style.display = 'table-row';
-      container.innerHTML = "<em style='font-size: 13px; color: #666;'>A carregar...</em>";
-      try {
-        container.innerHTML = await buildDispTable(eventName);
-      } catch(e) {
-        console.error(e);
-        container.innerHTML = "<span style='color: red; font-size: 13px;'>Erro ao carregar detalhes.</span>";
-      }
-    }
-    /* ========== REFRESH TABLE =========== */
-    async function refreshTableOnly(eventName, safeId) {
-      const container = document.getElementById(`container-${safeId}`);
-      try {
-        container.innerHTML = await buildDispTable(eventName);
-      } catch(e) { 
-        console.error(e);
-      }
-    }
-    /* =========== UPDATE STATE =========== */
-    async function updateState(id, newState, evName, sDate, sTime) {
-      const row = document.getElementById(`disp-row-${id}`);
-      const badge = row.querySelector('[data-state]');
-      const oldState = badge.dataset.state;
-      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
-      const userNInt = row.cells[0].innerText;
-      if (oldState === newState) return;
-      try {
-        if (newState === 'Aprovado') {
-          const r = await fetch(
-            `${SUPABASE_URL}/rest/v1/event_shifts?event=eq.${encodeURIComponent(evName)}&event_shift_date=eq.${sDate}&event_shift=eq.${sTime}&corp_oper_nr=eq.${corp_oper_nr}`, {
-              headers: getSupabaseHeaders()
-            }
-          );
-          const s = await r.json();
-          if (s.length > 0) {
-            const currentAct = parseInt(s[0].act_oper) || 0;
-            const currentNec = parseInt(s[0].nec_oper) || 0;
-            if (currentAct >= currentNec) {
-              showPopup('popup-danger', "Atenção: Este turno já atingiu o limite de vagas!");
-              return;
-            }
-          }
-        }
-        const rUp = await fetch(`${SUPABASE_URL}/rest/v1/event_disp?id=eq.${id}`, {
-          method : 'PATCH',
-          headers : getSupabaseHeaders(),
-          body : JSON.stringify({ shift_state: newState })
-        });
-        if (!rUp.ok) throw new Error("Erro ao atualizar o estado da disponibilidade");
-        const msgNotif = newState === 'Aprovado' 
-          ? `✅ A tua disponibilidade para o evento "${evName}" (${formatDateDisplay(sDate)}) foi APROVADA.`
-          : `❌ A tua disponibilidade para o evento "${evName}" (${formatDateDisplay(sDate)}) não foi aprovada.`;
-        await fetch(`${SUPABASE_URL}/rest/v1/user_notifications`, {
-          method : 'POST',
-          headers : getSupabaseHeaders(),
-          body : JSON.stringify({n_int: userNInt, corp_oper_nr, title: "Eventos", message: msgNotif, is_read: false, created_at: new Date().toISOString()})
-        });
-        try {
-          fetch('https://cb-360-app.vercel.app/api/sendPush', {
-            method : 'POST',
-            headers: cb360PushHeaders(),
-            body : JSON.stringify({recipient_nint: userNInt, tipo: 'aviso', pagina: 'Events', sender_name: 'CB360 Online', message_text: msgNotif})
-          }).catch(e => console.error('Erro Push:', e));   /* não espera pelo envio */
-        } catch (errPush) {
-          console.error('Erro ao enviar push notification:', errPush);
-        }
-        let inc = 0;
-        if (newState === 'Aprovado'  && oldState !== 'Aprovado') inc =  1;
-        else if (newState !== 'Aprovado' && oldState === 'Aprovado') inc = -1;
-        if (inc !== 0) {
-          const rGet = await fetch(
-            `${SUPABASE_URL}/rest/v1/event_shifts?event=eq.${encodeURIComponent(evName)}&event_shift_date=eq.${sDate}&event_shift=eq.${sTime}&corp_oper_nr=eq.${corp_oper_nr}`,
-            { headers: getSupabaseHeaders() }
-          );
-          const cur = await rGet.json();
-          if (cur.length > 0) {
-            const newActOper = Math.max(0, (parseInt(cur[0].act_oper) || 0) + inc);
-            await fetch(`${SUPABASE_URL}/rest/v1/event_shifts?id=eq.${cur[0].id}`, {
-              method : 'PATCH',
-              headers : getSupabaseHeaders(),
-              body : JSON.stringify({act_oper: newActOper})
-            });
-          }
-        }
-        const safeId = evName.replace(/\W/g, '');
-        await refreshTableOnly(evName, safeId);
-      } catch (e) {
-        console.error("Erro crítico no updateState:", e);
-        showPopup('popup-danger', "Ocorreu um erro ao processar o estado ou a notificação.");
-      }
+      window.evBoardPanel = window.evBoardPanel || createEventsBoard({root: 'evBoard'});
+      await window.evBoardPanel.load();
     }
     /* =========== DELETE EVENT =========== */
     async function deleteFullEvent(eventName) {
@@ -1757,6 +1605,282 @@
         console.error(e);
         showPopup('popup-danger', e.message || "Erro ao eliminar evento.");
       }
+    }
+    /* =====================================================================
+       CONSULTA DE DISPONIBILIDADES (layout novo)
+       Eventos em cartões à esquerda; à direita o evento escolhido com os turnos,
+       as vagas (aprovados / necessários) e quem se disponibilizou, com ✓ / ✕.
+       Usa o estilo base do painel de férias (classes vb-*, que estão no mainconfig).
+       ===================================================================== */
+    (function evbInjectCss() {
+      if (document.getElementById('evb-css')) return;
+      const css = `
+      .evb-layout {display: grid; grid-template-columns: 340px 1fr; gap: 14px; align-items: start;}
+      .evb-list {display: flex; flex-direction: column; gap: 9px; max-height: calc(100vh - 360px); overflow-y: auto; overflow-x: hidden; padding: 9px 10px 4px 2px;}
+      .evb-ev {position: relative; background: #fff; border: 1px solid #e9ecef; border-radius: 10px; padding: 8px 12px 7px; cursor: pointer; transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease; border-left: 4px solid var(--c, #adb5bd);}
+      .evb-ev:hover {transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,.08);}
+      .evb-ev.sel {border-color: #c62828; border-left-color: #c62828; box-shadow: 0 0 0 2px rgba(198,40,40,.18);}
+      .evb-ev.ended {opacity: .6;}
+      .evb-ev-top {display: flex; align-items: center; gap: 8px;}
+      .evb-ev-name {font-weight: 700; font-size: 13px; color: #2c3e50; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
+      .evb-type {font-size: 10px; font-weight: 700; letter-spacing: .4px; padding: 2px 8px; border-radius: 999px; background: #eef2f7; color: #45556a; white-space: nowrap;}
+      .evb-ev-meta {font-size: 11.5px; color: #6c757d; margin-top: 3px; display: flex; flex-wrap: wrap; gap: 2px 10px;}
+      .evb-bar {height: 5px; border-radius: 3px; background: #f1f3f5; overflow: hidden; margin-top: 6px;}
+      .evb-bar span {display: block; height: 100%; background: linear-gradient(90deg, #66bb6a, #2e7d32); border-radius: 3px;}
+      .evb-bar.full span {background: linear-gradient(90deg, #42a5f5, #1565c0);}
+      .evb-ev-foot {display: flex; justify-content: space-between; font-size: 11px; color: #6c757d; margin-top: 3px;}
+      .evb-pend {position: absolute; top: -7px; right: -7px; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px; background: #f39c12; color: #fff; font-size: 11.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(243,156,18,.45);}
+      .evb-detail {background: #fff; border: 1px solid #e9ecef; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.05); height:580px;}
+      .evb-dhead {padding: 14px 16px; border-bottom: 1px solid #e9ecef; background: #fafbfc; display: flex; align-items: flex-start; gap: 12px; flex-wrap: wrap;}
+      .evb-dhead h4 {margin: 0; font-size: 16px; color: #2c3e50;}
+      .evb-dinfo {display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: #6c757d; margin-top: 5px;}
+      .evb-dinfo b {color: #2c3e50;}
+      .evb-dact {margin-left: auto; display: flex; gap: 8px; align-items: center;}
+      .evb-del {border: 1px solid #f1c0c0; background: #fff5f5; color: #c62828; border-radius: 8px; height: 32px; padding: 0 12px; font-size: 12px; font-weight: 700; cursor: pointer;}
+      .evb-del:hover {background: #ffe9e9;}
+      .evb-days {padding: 10px 16px 14px; display: flex; flex-direction: column; gap: 12px; max-height: calc(100vh - 480px); overflow-y: auto;}
+      .evb-day-title {font-size: 12px; font-weight: 700; color: #8b0000; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;}
+      .evb-day-title::after {content: ""; flex: 1; height: 1px; background: #f1f3f5;}
+      .evb-shifts {display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 10px; align-items: start;}
+      .evb-shift {border: 1px solid #e9ecef; border-radius: 10px; overflow: hidden; background: #fff;}
+      .evb-shift-head {display: flex; align-items: center; gap: 10px; padding: 6px 12px; background: #f8f9fa; border-bottom: 1px solid #f1f3f5;}
+      .evb-time {font-weight: 700; font-size: 13px; color: #2c3e50;}
+      .evb-vagas {margin-left: auto; font-size: 11.5px; font-weight: 700; padding: 3px 9px; border-radius: 999px; background: #e8f5e9; color: #2e7d32; white-space: nowrap;}
+      .evb-vagas.low {background: #fff3e0; color: #e65100;}
+      .evb-vagas.full {background: #e3f2fd; color: #1565c0;}
+      .evb-shift .evb-bar {margin: 0; border-radius: 0; height: 4px;}
+      .evb-people {padding: 2px 0;}
+      .evb-person {display: flex; align-items: center; gap: 8px; padding: 4px 12px;}
+      .evb-person + .evb-person {border-top: 1px solid #f6f7f8;}
+      .evb-days, .evb-list {scrollbar-width: thin; scrollbar-color: #cfd4da transparent;}
+      .evb-days::-webkit-scrollbar, .evb-list::-webkit-scrollbar {width: 5px;}
+      .evb-days::-webkit-scrollbar-track, .evb-list::-webkit-scrollbar-track {background: transparent;}
+      .evb-days::-webkit-scrollbar-thumb, .evb-list::-webkit-scrollbar-thumb {background: #cfd4da; border-radius: 10px;}
+      .evb-days::-webkit-scrollbar-thumb:hover, .evb-list::-webkit-scrollbar-thumb:hover {background: #adb5bd;}
+      .evb-avatar {width: 26px; height: 26px; border-radius: 50%; background: #eef2f7; color: #45556a; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0;}
+      .evb-pname {flex: 1; min-width: 0;}
+      .evb-pname b {display: block; font-size: 12.5px; color: #2c3e50; line-height: 1.2;}
+      .evb-pname small {display: block; font-size: 10.5px; line-height: 1.2; color: #8a949e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+      .evb-person.dim {opacity: .5;}
+      .evb-person .vb-state {font-size: 10.5px; padding: 2px 8px; flex-shrink: 0;}
+      .evb-person .vb-btn {flex-shrink: 0;}
+      .evb-person .vb-btn {width: 25px; height: 25px; font-size: 12.5px;}
+      .evb-person .vb-btn + .vb-btn {margin-left: 4px;}
+      .evb-none {padding: 10px 12px; font-size: 12px; color: #9aa3ab; font-style: italic;}
+      .evb-empty {padding: 40px 20px; text-align: center; color: #8a949e;}
+      @media (max-width: 1100px) {.evb-layout {grid-template-columns: 1fr;} .evb-list {max-height: none;}}
+      `;
+      const st = document.createElement('style');
+      st.id = 'evb-css';
+      st.textContent = css;
+      document.head.appendChild(st);
+    })();
+
+    function createEventsBoard(cfg) {
+      /* cfg: {root} */
+      const S = {events: [], shifts: [], disps: [], elems: {}, sel: null, filter: 'next', q: '', loaded: false};
+      const ST = {'Em Aprovação': 'p', 'Aprovado': 'a', 'Não Aprovado': 'r'};
+      const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      const corp = () => sessionStorage.getItem('currentCorpOperNr');
+      const root = () => document.getElementById(cfg.root);
+      const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+      const fmt = d => { if (!d) return '—'; const [y, m, dd] = String(d).slice(0, 10).split('-'); return `${dd}/${m}/${y}`; };
+      const WD = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+      const fmtDay = d => { const [y, m, dd] = String(d).slice(0, 10).split('-').map(Number); return `${WD[new Date(y, m - 1, dd).getDay()]}, ${String(dd).padStart(2, '0')}/${String(m).padStart(2, '0')}`; };
+      const initials = n => String(n || '?').split(/\s+/).filter(Boolean).map(w => w[0]).filter((_, i, a) => i === 0 || i === a.length - 1).join('').toUpperCase();
+      const typeColor = t => ({'PREVENÇÃO': '#c62828', 'TRANSPORTE': '#1565c0', 'OUTRO': '#6d4c41'}[String(t || '').toUpperCase()] || '#607d8b');
+      function phase(ev) {
+        const t = today(), s = String(ev.date_start || '').slice(0, 10), e = String(ev.date_end || ev.date_start || '').slice(0, 10);
+        if (ev.is_ended === true || (e && e < t)) return 'ended';
+        if (s && s <= t) return 'now';
+        return 'next';
+      }
+      const shiftsOf = name => S.shifts.filter(s => s.event === name);
+      const dispsOf = name => S.disps.filter(d => d.event === name);
+      const shiftKey = (date, time) => `${String(date).slice(0, 10)}|${time}`;
+      function eventStats(name) {
+        const sh = shiftsOf(name);
+        const nec = sh.reduce((t, s) => t + (parseInt(s.nec_oper) || 0), 0);
+        const act = sh.reduce((t, s) => t + Math.min(parseInt(s.act_oper) || 0, parseInt(s.nec_oper) || 0), 0);
+        const pend = dispsOf(name).filter(d => ST[d.shift_state] === 'p').length;
+        return {nec, act, pend, shifts: sh.length};
+      }
+
+      async function load() {
+        const el = root(); if (!el) return;
+        if (!S.loaded) el.innerHTML = '<div class="vb-loading">A carregar eventos...</div>';
+        const c = corp(), h = {headers: getSupabaseHeaders()};
+        try {
+          const [rE, rS, rD] = await Promise.all([
+            fetch(`${SUPABASE_URL}/rest/v1/event_list?corp_oper_nr=eq.${c}&order=date_start.desc`, h),
+            fetch(`${SUPABASE_URL}/rest/v1/event_shifts?corp_oper_nr=eq.${c}&order=event_shift_date.asc,event_shift.asc`, h),
+            fetch(`${SUPABASE_URL}/rest/v1/event_disp?corp_oper_nr=eq.${c}&order=event_shift_date.asc,event_shift.asc`, h)
+          ]);
+          if (!rE.ok || !rS.ok || !rD.ok) throw new Error('Erro ao ler eventos');
+          [S.events, S.shifts, S.disps] = await Promise.all([rE.json(), rS.json(), rD.json()]);
+          const missing = [...new Set(S.disps.map(d => d.n_int))].filter(n => !S.elems[n]);
+          if (missing.length) {
+            const rEl = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?select=n_int,full_name,abv_name,patent&corp_oper_nr=eq.${c}&n_int=in.(${missing.join(',')})`, h);
+            if (rEl.ok) (await rEl.json()).forEach(e => { S.elems[e.n_int] = e; S.elems[String(parseInt(e.n_int, 10))] = e; });
+          }
+          if (!S.sel || !S.events.some(e => e.event === S.sel)) {
+            const vis = visibleEvents();
+            const first = vis.find(e => eventStats(e.event).pend) || vis[0] || S.events[0];
+            S.sel = first ? first.event : null;
+          }
+          S.loaded = true;
+          render();
+        } catch (e) {
+          console.error('Painel de eventos:', e);
+          el.innerHTML = '<div class="vb-empty" style="color:#c62828;">Erro ao carregar os eventos.</div>';
+        }
+      }
+      function visibleEvents() {
+        const q = S.q.trim().toLowerCase();
+        let list = S.events.filter(e => (S.filter === 'all' || phase(e) === S.filter || (S.filter === 'next' && phase(e) === 'now')) &&
+          (!q || String(e.event).toLowerCase().includes(q) || String(e.location || '').toLowerCase().includes(q)));
+        if (S.filter === 'next') list = list.slice().sort((a, b) => String(a.date_start).localeCompare(String(b.date_start)));
+        return list;
+      }
+      function render() {
+        const el = root(); if (!el) return;
+        const active = S.events.filter(e => phase(e) !== 'ended').map(e => e.event);
+        const pend = S.disps.filter(d => active.includes(d.event) && ST[d.shift_state] === 'p').length;
+        const open = S.shifts.filter(s => active.includes(s.event) && (parseInt(s.act_oper) || 0) < (parseInt(s.nec_oper) || 0)).length;
+        const appr = S.disps.filter(d => active.includes(d.event) && ST[d.shift_state] === 'a').length;
+        const kpi = (c, ico, n, label) => `<div class="vb-kpi" style="--c:${c}"><div class="vb-kpi-ico">${ico}</div><div><b>${n}</b><small>${label}</small></div></div>`;
+        const chip = (k, label) => `<button type="button" class="vb-chip ${S.filter === k ? 'on' : ''}" data-f="${k}">${label}</button>`;
+        const list = visibleEvents();
+        el.innerHTML = `
+          <div class="vb">
+            <div class="vb-toolbar">
+              <div class="vb-chips">${chip('next', 'Próximos e a decorrer')}${chip('ended', 'Terminados')}${chip('all', 'Todos')}</div>
+              <input type="text" class="vb-search" placeholder="Procurar evento ou local…" value="${esc(S.q)}">
+            </div>
+            <div class="vb-kpis">
+              ${kpi('#c62828', '📣', active.length, 'Eventos ativos')}
+              ${kpi('#ef6c00', '⏳', pend, 'Disponibilidades por tratar')}
+              ${kpi('#1565c0', '🧩', open, 'Turnos com vagas')}
+              ${kpi('#2e7d32', '✓', appr, 'Operacionais aprovados')}
+            </div>
+            <div class="evb-layout">
+              <div class="evb-list">${list.length ? list.map(evCard).join('') : '<div class="evb-empty">Sem eventos para mostrar.</div>'}</div>
+              <div class="evb-detail">${detail()}</div>
+            </div>
+          </div>`;
+        el.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { S.filter = b.dataset.f; const v = visibleEvents(); if (!v.some(e => e.event === S.sel)) S.sel = v[0] ? v[0].event : S.sel; render(); });
+        el.querySelectorAll('.evb-ev').forEach(b => b.onclick = () => { S.sel = b.dataset.ev; render(); });
+        const search = el.querySelector('.vb-search');
+        search.oninput = () => { S.q = search.value; const pos = search.selectionStart; render(); const s2 = root().querySelector('.vb-search'); s2.focus(); s2.setSelectionRange(pos, pos); };
+        el.querySelectorAll('.vb-btn[data-id]').forEach(b => b.onclick = () => setState(Number(b.dataset.id), b.dataset.s, b));
+        const del = el.querySelector('.evb-del');
+        if (del) del.onclick = () => typeof deleteFullEvent === 'function' && deleteFullEvent(S.sel);
+      }
+      function evCard(ev) {
+        const st = eventStats(ev.event), ph = phase(ev), pct = st.nec ? Math.round(st.act / st.nec * 100) : 0;
+        const dates = String(ev.date_start).slice(0, 10) === String(ev.date_end).slice(0, 10) || !ev.date_end ? fmt(ev.date_start) : `${fmt(ev.date_start)} → ${fmt(ev.date_end)}`;
+        return `<div class="evb-ev ${S.sel === ev.event ? 'sel' : ''} ${ph === 'ended' ? 'ended' : ''}" data-ev="${esc(ev.event)}" style="--c:${typeColor(ev.event_type)}">
+          ${st.pend ? `<span class="evb-pend" title="${st.pend} por tratar">${st.pend}</span>` : ''}
+          <div class="evb-ev-top"><span class="evb-ev-name" title="${esc(ev.event)}">${esc(ev.event)}</span><span class="evb-type">${esc(ev.event_type || '—')}</span></div>
+          <div class="evb-ev-meta"><span>📅 ${dates}</span>${ev.location ? `<span>📍 ${esc(ev.location)}</span>` : ''}${ph === 'now' ? '<span style="color:#2e7d32;font-weight:700;">● A decorrer</span>' : ''}</div>
+          <div class="evb-bar ${st.nec && st.act >= st.nec ? 'full' : ''}"><span style="width:${pct}%"></span></div>
+          <div class="evb-ev-foot"><span>${st.shifts} turno${st.shifts === 1 ? '' : 's'}</span><span>${st.act}/${st.nec} vagas preenchidas</span></div>
+        </div>`;
+      }
+      function detail() {
+        const ev = S.events.find(e => e.event === S.sel);
+        if (!ev) return '<div class="evb-empty">Escolha um evento.</div>';
+        const st = eventStats(ev.event);
+        const sh = shiftsOf(ev.event), ds = dispsOf(ev.event);
+        const byDay = {};
+        sh.forEach(s => { const d = String(s.event_shift_date).slice(0, 10); (byDay[d] = byDay[d] || []).push(s); });
+        ds.forEach(d => { const k = String(d.event_shift_date).slice(0, 10); if (!byDay[k]) byDay[k] = []; if (!byDay[k].some(s => s.event_shift === d.event_shift)) byDay[k].push({event_shift_date: k, event_shift: d.event_shift, nec_oper: 0, act_oper: 0, _orphan: true}); });
+        const days = Object.keys(byDay).sort();
+        const head = `<div class="evb-dhead">
+            <div>
+              <h4>${esc(ev.event)}</h4>
+              <div class="evb-dinfo">
+                <span>Tipo: <b>${esc(ev.event_type || '—')}</b></span>
+                <span>Local: <b>${esc(ev.location || '—')}</b></span>
+                <span>Datas: <b>${fmt(ev.date_start)}${ev.date_end && String(ev.date_end).slice(0, 10) !== String(ev.date_start).slice(0, 10) ? ' → ' + fmt(ev.date_end) : ''}</b></span>
+                ${ev.value != null ? `<span>Valor/hora: <b>${Number(ev.value).toFixed(2)} €</b></span>` : ''}
+                <span>Vagas: <b>${st.act}/${st.nec}</b></span>
+              </div>
+            </div>
+            <div class="evb-dact"><button type="button" class="evb-del" title="Eliminar o evento, os turnos e as disponibilidades">🗑️ Eliminar evento</button></div>
+          </div>`;
+        if (!days.length) return head + '<div class="evb-empty">Este evento ainda não tem turnos.</div>';
+        return head + `<div class="evb-days">${days.map(d => `
+            <div>
+              <div class="evb-day-title">${fmtDay(d)}</div>
+              <div class="evb-shifts">${byDay[d].sort((a, b) => String(a.event_shift).localeCompare(String(b.event_shift))).map(s => shiftCard(ev.event, d, s)).join('')}</div>
+            </div>`).join('')}</div>`;
+      }
+      function shiftCard(name, day, s) {
+        const act = parseInt(s.act_oper) || 0, nec = parseInt(s.nec_oper) || 0, full = nec > 0 && act >= nec;
+        const people = S.disps.filter(d => d.event === name && String(d.event_shift_date).slice(0, 10) === day && d.event_shift === s.event_shift)
+          .sort((a, b) => ['a', 'p', 'r'].indexOf(ST[a.shift_state] || 'p') - ['a', 'p', 'r'].indexOf(ST[b.shift_state] || 'p'));
+        const vcls = full ? 'full' : (nec && act / nec < .5 ? 'low' : '');
+        return `<div class="evb-shift">
+          <div class="evb-shift-head"><span class="evb-time">🕒 ${esc(s.event_shift)}</span><span class="evb-vagas ${vcls}">${full ? 'Completo' : 'Vagas'} ${act}/${nec}</span></div>
+          <div class="evb-bar ${full ? 'full' : ''}"><span style="width:${nec ? Math.min(100, act / nec * 100) : 0}%"></span></div>
+          <div class="evb-people">${people.length ? people.map(d => {
+            const k = ST[d.shift_state] || 'p', e = S.elems[d.n_int] || S.elems[String(parseInt(d.n_int, 10))] || {};
+            const blocked = full && k !== 'a';
+            const label = blocked ? 'Turno cheio' : (k === 'p' ? 'Em aprovação' : k === 'a' ? 'Aprovado' : 'Não aprovado');
+            return `<div class="evb-person ${blocked ? 'dim' : ''}">
+              <span class="evb-avatar">${esc(initials(e.full_name || d.n_int))}</span>
+              <span class="evb-pname"><b>${esc(e.full_name || 'Nº ' + d.n_int)}</b><small>Nº ${esc(d.n_int)}${e.patent ? ' · ' + esc(e.patent) : ''}</small></span>
+              <span class="vb-state ${blocked ? '' : k}" ${blocked ? 'style="background:#f1f3f5;color:#6c757d;"' : ''}>${label}</span>
+              <button type="button" class="vb-btn ok" data-id="${d.id}" data-s="Aprovado" title="Aprovar" ${k === 'a' || blocked ? 'disabled' : ''}>✓</button>
+              <button type="button" class="vb-btn no" data-id="${d.id}" data-s="Não Aprovado" title="Não aprovar" ${k === 'r' ? 'disabled' : ''}>✕</button>
+            </div>`;
+          }).join('') : '<div class="evb-none">Ninguém se disponibilizou ainda.</div>'}</div>
+        </div>`;
+      }
+      /* mesma lógica da versão anterior: vagas, estado, notificação, push e contagem de aprovados no turno */
+      async function setState(id, newState, btn) {
+        const d = S.disps.find(x => Number(x.id) === id);
+        if (!d || d.shift_state === newState) return;
+        const c = corp(), oldState = d.shift_state;
+        const shiftUrl = `${SUPABASE_URL}/rest/v1/event_shifts?event=eq.${encodeURIComponent(d.event)}&event_shift_date=eq.${String(d.event_shift_date).slice(0, 10)}&event_shift=eq.${encodeURIComponent(d.event_shift)}&corp_oper_nr=eq.${c}`;
+        root().querySelectorAll(`.vb-btn[data-id="${id}"]`).forEach(b => b.classList.add('busy'));
+        try {
+          if (newState === 'Aprovado') {
+            const r = await fetch(shiftUrl, {headers: getSupabaseHeaders()});
+            const s = await r.json();
+            if (s.length && (parseInt(s[0].act_oper) || 0) >= (parseInt(s[0].nec_oper) || 0)) {
+              showPopup('popup-danger', 'Atenção: este turno já atingiu o limite de vagas!');
+              return;
+            }
+          }
+          const rUp = await fetch(`${SUPABASE_URL}/rest/v1/event_disp?id=eq.${id}`, {method: 'PATCH', headers: getSupabaseHeaders(), body: JSON.stringify({shift_state: newState})});
+          if (!rUp.ok) throw new Error('Erro ao atualizar o estado da disponibilidade');
+          const inc = newState === 'Aprovado' && oldState !== 'Aprovado' ? 1 : (newState !== 'Aprovado' && oldState === 'Aprovado' ? -1 : 0);
+          if (inc) {
+            const rGet = await fetch(shiftUrl, {headers: getSupabaseHeaders()});
+            const cur = await rGet.json();
+            if (cur.length) {
+              await fetch(`${SUPABASE_URL}/rest/v1/event_shifts?id=eq.${cur[0].id}`, {method: 'PATCH', headers: getSupabaseHeaders(), body: JSON.stringify({act_oper: Math.max(0, (parseInt(cur[0].act_oper) || 0) + inc)})});
+            }
+          }
+          const msg = newState === 'Aprovado'
+            ? `✅ A tua disponibilidade para o evento "${d.event}" (${fmt(d.event_shift_date)}) foi APROVADA.`
+            : `❌ A tua disponibilidade para o evento "${d.event}" (${fmt(d.event_shift_date)}) não foi aprovada.`;
+          fetch(`${SUPABASE_URL}/rest/v1/user_notifications`, {method: 'POST', headers: getSupabaseHeaders(),
+            body: JSON.stringify({n_int: d.n_int, corp_oper_nr: c, title: 'Eventos', message: msg, is_read: false, created_at: new Date().toISOString()})}).catch(e => console.error('Erro notificação:', e));
+          try {
+            fetch('https://cb-360-app.vercel.app/api/sendPush', {method: 'POST', headers: cb360PushHeaders(),
+              body: JSON.stringify({recipient_nint: d.n_int, tipo: 'aviso', pagina: 'Events', sender_name: 'CB360 Online', message_text: msg})}).catch(e => console.error('Erro Push:', e));
+          } catch (e) { console.error('Erro ao enviar push:', e); }
+        } catch (e) {
+          console.error('Erro ao mudar o estado:', e);
+          showPopup('popup-danger', 'Ocorreu um erro ao processar o estado ou a notificação.');
+        } finally {
+          await load();
+        }
+      }
+      return {load, select(name) { S.sel = name; }};
     }
     /* =======================================
     VACATIONS

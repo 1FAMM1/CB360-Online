@@ -3878,162 +3878,19 @@
     /* =======================================
     VACATIONS
     ======================================= */
-     document.addEventListener('click', async function(e) {
+    /* abre o painel novo (createVacBoard, no mainconfig) ao entrar na página */
+    document.addEventListener('click', async function(e) {
       const btn = e.target.closest('.sidebar-sub-submenu-button');
       if (btn && btn.getAttribute('data-page') === 'page-vacations-request-rh') {
-        await rhvLoadAdmin();
+        window.rhvBoardPanel = window.rhvBoardPanel || createVacBoard({
+          root: 'rhvBoard',
+          type: 'Profissional',
+          badgeId: id => `rhv-badge-${id}`,
+          setState: (id, state, year, month) => rhvUpdateState(id, state, year, month)
+        });
+        await window.rhvBoardPanel.load();
       }
     });
-    /* === LOAD VACATIONS SOLICITATIONS === */    
-    async function rhvLoadAdmin() {
-      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
-      const tbody = document.getElementById('rhvSummaryBody');
-      if (!tbody) return;
-      tbody.innerHTML = '<tr><td colspan="4">A carregar pedidos...</td></tr>';
-       try {
-         const res = await fetch(`${SUPABASE_URL}/rest/v1/ped_vacat?corp_oper_nr=eq.${corp_oper_nr}&vacation_type=eq.Profissional&order=year.desc,month.desc`, {
-           headers: getSupabaseHeaders()
-         });
-         const allData = await res.json();
-         if (!allData || allData.length === 0) {
-           tbody.innerHTML = '<tr><td colspan="4">Não existem pedidos de férias registados.</td></tr>';
-           return;
-         }
-         const summary = {};
-         allData.forEach(item => {
-           const key = `${item.year}-${item.month}`;
-           if (!summary[key]) {
-             summary[key] = { year: item.year, month: item.month, total: 0, pending: 0 };
-           }
-           summary[key].total++;
-           if (item.state === 'Em Aprovação') summary[key].pending++;
-         });
-         const monthNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-         let html = '';
-         Object.values(summary).forEach((s, index) => {
-           const rowId = `rhv-details-${index}`;
-           const counterId = `rhv-pending-${s.year}-${s.month}`;
-           html += `
-             <tr>
-               <td style="padding: 6px 5px; border: 1px solid #dee2e6; text-align: center; font-size: 12px;"><b>${monthNames[s.month - 1]} ${s.year}</b></td>
-               <td style="padding: 6px 5px; border: 1px solid #dee2e6; text-align: center; font-size: 12px;">${s.total}</td>
-               <td style="padding: 6px 5px; border: 1px solid #dee2e6; text-align: center; font-size: 12px;">
-                 <span id="${counterId}" style="color: ${s.pending > 0 ? '#e67e22' : '#27ae60'}; font-weight: bold;">${s.pending}</span>
-               </td>
-               <td style="padding: 6px 5px; border: 1px solid #dee2e6; text-align: center; font-size: 12px;">
-                  <button class="view-btn rhv-view-btn" style="display: inline-flex; align-items: center; justify-content: center; height: 26px; padding: 0 12px; font-size: 11px; border-radius: 4px; border: none; cursor:pointer;
-                                                  font-weight: 600; background: #ce1212; color: #fff;" onclick="rhvToggleDetails('${rowId}', ${s.month}, ${s.year})">Ver</button>
-               </td>
-             </tr>
-             <tr id="${rowId}" class="rhv-expandable" style="display: none;">
-               <td colspan="4" id="rhv-content-${rowId}" style="padding:15px; background:#f0f0f0"></td>
-             </tr>
-           `;
-         });
-         tbody.innerHTML = html;
-       } catch (err) {
-         console.error(err);
-         tbody.innerHTML = '<tr><td colspan="4" style="color:red;">Erro ao carregar dados.</td></tr>';
-       }
-    }
-    /* ========== TOGGLE DISPLAY ========== */
-    async function rhvToggleDetails(rowId, month, year) {
-      const trParent = document.getElementById(rowId);
-      const container = document.getElementById(`rhv-content-${rowId}`);
-      const btn = event.target;
-      if (trParent.style.display !== 'table-row') {
-        document.querySelectorAll('.rhv-expandable').forEach(el => el.style.display = 'none');
-        document.querySelectorAll('.rhv-view-btn').forEach(b => {
-          b.textContent = "Ver";
-          b.classList.remove('close-btn');
-        });
-        trParent.style.display = 'table-row';
-        btn.textContent = "Fechar";
-        btn.classList.add('close-btn');
-        container.innerHTML = "<em>A carregar...</em>";
-        container.innerHTML = await rhvBuildTable(month, year);
-      } else {
-        trParent.style.display = 'none';
-        btn.textContent = "Ver";
-        btn.classList.remove('close-btn');
-      }
-    }    
-    /* ====== BUILD VACATIONS TABLE ======= */
-    async function rhvBuildTable(month, year) {
-      const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
-      try {
-        const rVacat = await fetch(
-          `${SUPABASE_URL}/rest/v1/ped_vacat?month=eq.${month}&year=eq.${year}&corp_oper_nr=eq.${corp_oper_nr}&vacation_type=eq.Profissional&order=n_int.asc`, {
-            headers: getSupabaseHeaders()
-          }
-        );
-        const vacations = await rVacat.json();
-        if (!vacations.length) {
-          return "<div style='padding: 10px; color: #666; font-size: 13px;'>Sem pedidos para este período.</div>";
-        }
-        const nInts = [...new Set(vacations.map(v => v.n_int))];
-        const rElems = await fetch(
-          `${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${corp_oper_nr}&n_int=in.(${nInts.join(',')})&select=n_int,full_name,patent`, {
-            headers: getSupabaseHeaders()
-          }
-        );
-        const elems = await rElems.json();
-        const elemMap = {};
-        elems.forEach(e => {
-          elemMap[e.n_int] = e;
-        });
-        const thStyle = 'background: #f1f3f5; padding: 8px 5px; border: 1px solid #dee2e6; text-align: center; font-size: 11px; text-transform: uppercase; color: #495057;';
-        const tdStyle = 'padding: 6px 5px; border: 1px solid #dee2e6; text-align: center; font-size: 12px; color: #333;';
-        let html = `
-          <div style="overflow-x:auto;">
-            <table style="width:100%;border-collapse:collapse;background:#fff;">
-              <thead>
-                <tr>
-                  <th style="${thStyle}">Nº Int</th>
-                  <th style="${thStyle}">Patente</th>
-                  <th style="${thStyle}">Nome</th>
-                  <th style="${thStyle}">Dias</th>
-                  <th style="${thStyle}">Estado</th>
-                  <th style="${thStyle}">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-            `;
-        vacations.forEach(v => {
-          const elem = elemMap[v.n_int] || { full_name: v.n_int, patent: '---' };
-          const statusCls = getVacatiosStatusClass(v.state);
-          const statusText = v.state;
-          html += `
-            <tr id="rhv-row-${v.id}">
-              <td style="${tdStyle}">${v.n_int}</td>
-              <td style="${tdStyle}">${elem.patent}</td>
-              <td style="${tdStyle}">${elem.full_name}</td>
-              <td style="${tdStyle}"><strong>${formatDaysGrouped(v.day)}</strong></td>
-              <td style="${tdStyle}">
-                <span id="rhv-badge-${v.id}" style="${badgeStyle(statusCls)}">${statusText}</span>
-              </td>
-              <td style="${tdStyle}">
-                <div style="display:flex;gap:4px;justify-content:center;">
-                  <button title="Aprovar"
-                    onclick="rhvUpdateState(${v.id}, 'Aprovadas', ${year}, ${month})"
-                    style="padding: 4px 8px; border: none; border-radius: 3px; cursor: pointer; font-size: 10px; font-weight: bold; background: #2e7d32; color: #fff;">✓</button>
-    
-                  <button title="Rejeitar"
-                    onclick="rhvUpdateState(${v.id}, 'Recusadas', ${year}, ${month})"
-                    style="padding: 4px 8px; border: none; border-radius: 3px; cursor: pointer; font-size: 10px; font-weight: bold; background: #e53935; color: #fff;">✕</button>
-                </div>
-              </td>
-            </tr>
-          `;
-        });
-        html += `</tbody></table></div>`;
-        return html;
-      } catch (e) {
-        console.error(e);
-        return "<div style='color:red;padding:10px;'>Erro ao processar tabela.</div>";
-      }
-    }
-    /* ====== UPDATE VACATIONS STATE ====== */
     async function rhvUpdateState(id, newState, year, month) {
       try {
         const badge = document.getElementById(`rhv-badge-${id}`);
@@ -4043,13 +3900,27 @@
           headers: getSupabaseHeaders()
         });
         const [request] = await respPed.json();
+        if (newState === 'Aprovadas') {
+          const decision = await rhvCheckTeamLimit(request);     /* 'ok' | 'mark' | 'reject' | 'cancel' */
+          if (decision === 'cancel') return;
+          if (decision === 'reject') {
+            newState = 'Recusadas';
+            if (oldState === newState) return;
+          }
+        }
+        if (newState === 'Aprovadas' && !(await rhvConfirmConflicts(request))) return;
         const res = await fetch(`${SUPABASE_URL}/rest/v1/ped_vacat?id=eq.${id}`, {
           method: 'PATCH',
           headers: getSupabaseHeaders(),
           body: JSON.stringify({ state: newState })
         });
         if (res.ok) {
-          /* profissionais: por agora só muda o estado (sem escrever "FE" na escala do voluntariado) */
+          /* profissionais: os dias aprovados vão para a escala dos funcionários (reg_employee_shifts, turno FE) */
+          if (newState === 'Aprovadas') {
+            await rhvRecordShifts(request);
+          } else if (oldState === 'Aprovadas' && newState !== 'Aprovadas') {
+            await rhvDeleteShifts(request);
+          }
           const RHV_MONTH_NAMES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
           const monthName = RHV_MONTH_NAMES[parseInt(month) - 1] || month;
           const msgNotif = newState === 'Aprovadas'
@@ -4094,6 +3965,135 @@
         console.error("Erro no fluxo rhvUpdateState:", err);
         showPopup('popup-danger', "Erro ao processar alteração: " + (err.message || err));
       }
+    }
+    /* ===== ESCALA DOS FUNCIONÁRIOS (reg_employee_shifts) ===== */
+    function rhvDays(request) {
+      return String(request.day || '').split(',').map(d => parseInt(d.trim(), 10)).filter(d => !isNaN(d));
+    }
+    function rhvNintVariants(n) {
+      const num = String(parseInt(n, 10));
+      return [...new Set([String(n).trim(), num, num.padStart(3, '0')])].filter(v => v && v !== 'NaN');
+    }
+    /* avisa se já há turnos nesses dias (as férias substituem-nos, como na Marcação de Férias) */
+    async function rhvConfirmConflicts(request) {
+      const corp = sessionStorage.getItem('currentCorpOperNr');
+      const days = rhvDays(request);
+      if (!days.length) return true;
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?select=day,shift&corp_oper_nr=eq.${corp}&n_int=in.(${rhvNintVariants(request.n_int).map(v => `"${v}"`).join(',')})&year=eq.${request.year}&month=eq.${request.month}&day=in.(${days.join(',')})&shift=neq.FE`, {
+        headers: getSupabaseHeaders()
+      });
+      if (!r.ok) throw new Error("Erro ao verificar a escala dos funcionários.");
+      const conflicts = await r.json();
+      if (!conflicts.length) return true;
+      const txt = conflicts.sort((a, b) => a.day - b.day).map(c => `${c.day}/${request.month} (${c.shift})`).join(', ');
+      return confirm(`⚠️ ATENÇÃO: Existem turnos marcados nos seguintes dias:\n\n${txt}\n\nAs férias irão SUBSTITUIR estes turnos.\n\nDeseja continuar?`);
+    }
+    async function rhvRecordShifts(request) {
+      const corp = sessionStorage.getItem('currentCorpOperNr');
+      const days = rhvDays(request);
+      if (!days.length) return;
+      const rEmp = await fetch(`${SUPABASE_URL}/rest/v1/reg_employees?select=n_int,abv_name,team,function&corp_oper_nr=eq.${corp}&n_int=in.(${rhvNintVariants(request.n_int).map(v => `"${v}"`).join(',')})`, {
+        headers: getSupabaseHeaders()
+      });
+      if (!rEmp.ok) throw new Error("Erro ao ler o funcionário.");
+      const [emp] = await rEmp.json();
+      if (!emp) throw new Error("Funcionário não encontrado no Cadastro de Funcionários.");
+      /* tira o que houver nesses dias (outros turnos ou FE repetido) e grava FE */
+      const resDel = await fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corp}&n_int=in.(${rhvNintVariants(request.n_int).map(v => `"${v}"`).join(',')})&year=eq.${request.year}&month=eq.${request.month}&day=in.(${days.join(',')})`, {
+        method: 'DELETE',
+        headers: getSupabaseHeaders()
+      });
+      if (!resDel.ok) throw new Error("Erro ao limpar os dias na escala dos funcionários: " + await resDel.text());
+      const rows = days.map(day => ({n_int: emp.n_int, abv_name: emp.abv_name, team: emp.team, function: emp.function, year: request.year, month: request.month, day, shift: "FE", corp_oper_nr: corp}));
+      const resIns = await fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts`, {
+        method: 'POST',
+        headers: {...getSupabaseHeaders(), "Content-Type": "application/json"},
+        body: JSON.stringify(rows)
+      });
+      if (!resIns.ok) throw new Error("Erro ao gravar as férias na escala dos funcionários: " + await resIns.text());
+    }
+    async function rhvDeleteShifts(request) {
+      const corp = sessionStorage.getItem('currentCorpOperNr');
+      const days = rhvDays(request);
+      if (!days.length) return;
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?corp_oper_nr=eq.${corp}&n_int=in.(${rhvNintVariants(request.n_int).map(v => `"${v}"`).join(',')})&year=eq.${request.year}&month=eq.${request.month}&day=in.(${days.join(',')})&shift=eq.FE`, {
+        method: 'DELETE',
+        headers: getSupabaseHeaders()
+      });
+      if (!res.ok) throw new Error("Erro ao retirar as férias da escala dos funcionários: " + await res.text());
+    }
+    /* ===== LIMITE: no máximo 2 de férias ao mesmo tempo por tipo de equipa ===== */
+    /* tipo de equipa pelo início do código da equipa (Eq.): OPC01 -> OPTEL, TDNU03 -> TDNU, EIP01 -> EIP, EQ02 -> EQ */
+    const RHV_TEAM_TYPES = [['TDNU', 'TDNU'], ['OPTEL', 'OPTEL'], ['OPC', 'OPTEL'], ['EIP', 'EIP'], ['EQ', 'EQ']];
+    /* quantos podem estar de férias ao mesmo tempo, por tipo de equipa (contando já com quem está) */
+    const RHV_MAX_SAME_TIME = {EQ: 2, EIP: 2, TDNU: 1, OPTEL: 1};
+    function rhvTeamType(team) {
+      const t = String(team || '').toUpperCase().replace(/[^A-Z]/g, '');
+      const hit = RHV_TEAM_TYPES.find(([prefix]) => t.startsWith(prefix));
+      return hit ? hit[1] : null;
+    }
+    async function rhvCheckTeamLimit(request) {
+      const corp = sessionStorage.getItem('currentCorpOperNr');
+      const days = rhvDays(request);
+      if (!days.length) return 'ok';
+      const mine = rhvNintVariants(request.n_int);
+      const rEmp = await fetch(`${SUPABASE_URL}/rest/v1/reg_employees?select=team&corp_oper_nr=eq.${corp}&n_int=in.(${mine.map(v => `"${v}"`).join(',')})`, {
+        headers: getSupabaseHeaders()
+      });
+      if (!rEmp.ok) throw new Error("Erro ao ler a equipa do funcionário.");
+      const [emp] = await rEmp.json();
+      const type = rhvTeamType(emp && emp.team);
+      if (!type) return 'ok';                      /* sem tipo de equipa conhecido: não há limite a verificar */
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?select=n_int,abv_name,team,day&corp_oper_nr=eq.${corp}&year=eq.${request.year}&month=eq.${request.month}&day=in.(${days.join(',')})&shift=eq.FE`, {
+        headers: getSupabaseHeaders()
+      });
+      if (!r.ok) throw new Error("Erro ao verificar as férias da equipa.");
+      const rows = (await r.json()).filter(x => !mine.includes(String(x.n_int)) && rhvTeamType(x.team) === type);
+      const byDay = {};
+      rows.forEach(x => {
+        byDay[x.day] = byDay[x.day] || new Map();
+        byDay[x.day].set(String(x.n_int), x.abv_name || `Nº ${x.n_int}`);
+      });
+      const full = Object.keys(byDay).map(Number).filter(d => byDay[d].size >= RHV_MAX_SAME_TIME[type]).sort((a, b) => a - b);
+      if (!full.length) return 'ok';
+      return rhvTeamLimitPopup(request, type, full, byDay);
+    }
+    /* popup de consulta: mostra quem já está de férias nesses dias; o RH decide */
+    function rhvTeamLimitPopup(request, type, days, byDay) {
+      return new Promise(resolve => {
+        document.getElementById('rhvLimitOverlay')?.remove();
+        const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        const mm = String(request.month).padStart(2, '0');
+        const rows = days.map(d => `
+          <tr>
+            <td style="padding:6px 10px; border-bottom:1px solid #eee; font-weight:700; white-space:nowrap;">${String(d).padStart(2, '0')}/${mm}</td>
+            <td style="padding:6px 10px; border-bottom:1px solid #eee;">${[...byDay[d].values()].map(esc).join(', ')}</td>
+          </tr>`).join('');
+        const ov = document.createElement('div');
+        ov.id = 'rhvLimitOverlay';
+        ov.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:10000; display:flex; align-items:center; justify-content:center; padding:20px;';
+        ov.innerHTML = `
+          <div style="background:#fff; border-radius:10px; width:100%; max-width:520px; max-height:85vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 20px 50px rgba(0,0,0,.35); font-family:inherit;">
+            <div style="background:linear-gradient(to right,#8b0000,#c62828); color:#fff; padding:14px 18px; font-size:15px; font-weight:700;">⚠️ Limite de férias em ${esc(type)}</div>
+            <div style="padding:14px 18px; overflow-y:auto; font-size:13.5px; color:#333;">
+              <p style="margin:0 0 10px;">Nestes dias já ${RHV_MAX_SAME_TIME[type] === 1 ? 'está <b>1</b> elemento' : `estão <b>${RHV_MAX_SAME_TIME[type]}</b> elementos`} de <b>${esc(type)}</b> de férias (máximo ${RHV_MAX_SAME_TIME[type]}):</p>
+              <table style="width:100%; border-collapse:collapse; font-size:13px;">${rows}</table>
+              <p style="margin:12px 0 0; color:#666; font-size:12.5px;"><b>Marcar</b> aprova e grava na escala mesmo assim. <b>Rejeitar</b> recusa o pedido.</p>
+            </div>
+            <div style="display:flex; gap:8px; justify-content:flex-end; padding:12px 18px; border-top:1px solid #eee; background:#f7f7f7;">
+              <button type="button" data-r="cancel" style="padding:8px 16px; border:1px solid #ccc; background:#fff; border-radius:5px; cursor:pointer; font-weight:600;">Cancelar</button>
+              <button type="button" data-r="reject" style="padding:8px 16px; border:0; background:#e53935; color:#fff; border-radius:5px; cursor:pointer; font-weight:700;">Rejeitar</button>
+              <button type="button" data-r="mark" style="padding:8px 16px; border:0; background:#2e7d32; color:#fff; border-radius:5px; cursor:pointer; font-weight:700;">Marcar</button>
+            </div>
+          </div>`;
+        const close = r => { ov.remove(); resolve(r); };
+        ov.addEventListener('click', e => {
+          const b = e.target.closest('button[data-r]');
+          if (b) close(b.dataset.r);
+          else if (e.target === ov) close('cancel');
+        });
+        document.body.appendChild(ov);
+      });
     }
     /* ================================
     FASE 05 - SHIFT ALLOWANCE MANAGEMENT

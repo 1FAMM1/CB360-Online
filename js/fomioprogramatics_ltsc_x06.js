@@ -1385,7 +1385,7 @@
       .evc-sum-kpis div {background: #f8f9fa; border-radius: 8px; padding: 8px 4px; text-align: center;}
       .evc-sum-kpis b {display: block; font-size: 18px; color: #2c3e50;}
       .evc-sum-kpis small {font-size: 10px; color: #6c757d; text-transform: uppercase; letter-spacing: .3px;}
-      .evc-sum-cost {display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #e8f5e9; border-radius: 8px; font-size: 12px; color: #2e7d32; font-weight: 600;}
+      .evc-sum-cost {display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #e8f5e9; border-radius: 8px; font-size: 12px; color: #2e7d32; font-weight: 600; margin-bottom: -8px;}
       .evc-sum-cost b {font-size: 17px;}
       .evc-hint {margin: 10px 0 0; font-size: 11px; color: #8a949e; line-height: 1.4;}
       @media (max-width: 1100px) {.evc {grid-template-columns: 1fr;} .evc-side {position: static;}}

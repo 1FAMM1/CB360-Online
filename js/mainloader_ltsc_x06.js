@@ -1280,3 +1280,248 @@
         setTimeout(() => el.remove(), duration);
       });
     }
+    /* =====================================================================
+       PAINEL DE FÉRIAS (layout novo) — usado pela Gestão Operacional (Voluntariado)
+       e pelos Recursos Humanos (Profissional). Colar UMA vez no js (antes das secções
+       VACATIONS e PEDIDOS DE FÉRIAS PROFISSIONAIS).
+       Cada página cria o seu painel com createVacBoard({...}); aprovar/recusar continua
+       a ser feito pelas funções que já existem (updateVacatState / rhvUpdateState).
+       ===================================================================== */
+    (function vbInjectCss() {
+      if (document.getElementById('vb-css')) return;
+      const css = `
+      .vb {font-size: 13px; color: #2c3e50;}
+      .vb-toolbar {display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 14px;}
+      .vb-year {display: inline-flex; align-items: center; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden; background: #fff;}
+      .vb-year button {border: 0; background: #fff; width: 30px; height: 32px; cursor: pointer; font-size: 16px; color: #8b0000;}
+      .vb-year button:hover {background: #f8eaea;}
+      .vb-year span {min-width: 54px; text-align: center; font-weight: 700; font-size: 14px;}
+      .vb-chips {display: inline-flex; gap: 6px; flex-wrap: wrap;}
+      .vb-chip {border: 1px solid #dee2e6; background: #fff; border-radius: 999px; padding: 6px 12px; font-size: 12px; font-weight: 600; color: #495057; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;}
+      .vb-chip i {width: 8px; height: 8px; border-radius: 50%; display: inline-block;}
+      .vb-chip.on {background: #2c3e50; color: #fff; border-color: #2c3e50;}
+      .vb-search {margin-left: auto; height: 32px; border: 1px solid #dee2e6; border-radius: 8px; padding: 0 10px; font-size: 12.5px; min-width: 220px;}
+      .vb-kpis {display: grid; grid-template-columns: repeat(4, minmax(140px, 1fr)); gap: 10px; margin-bottom: 14px;}
+      .vb-kpi {background: #fff; border: 1px solid #e9ecef; border-radius: 10px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.05); border-left: 4px solid var(--c);}
+      .vb-kpi-ico {width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--c) 14%, #fff); color: var(--c); font-size: 17px; flex-shrink: 0;}
+      .vb-kpi b {display: block; font-size: 22px; line-height: 1.1; color: #1f2d3a;}
+      .vb-kpi small {font-size: 11px; color: #6c757d; text-transform: uppercase; letter-spacing: .4px; font-weight: 600;}
+      .vb-months {display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 16px;}
+      .vb-month {position: relative; background: #fff; border: 1px solid #e9ecef; border-radius: 10px; padding: 10px 10px 9px; cursor: pointer; text-align: left; transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;}
+      .vb-month:hover {transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,.08);}
+      .vb-month.empty {opacity: .5;}
+      .vb-month.sel {border-color: #c62828; box-shadow: 0 0 0 2px rgba(198,40,40,.18);}
+      .vb-month .vb-mname {font-weight: 700; font-size: 13px; color: #2c3e50;}
+      .vb-month .vb-mcount {font-size: 11px; color: #6c757d; margin-top: 2px;}
+      .vb-month .vb-mbar {display: flex; height: 5px; border-radius: 3px; overflow: hidden; margin-top: 7px; background: #f1f3f5;}
+      .vb-month .vb-mbar span {display: block; height: 100%;}
+      .vb-month .vb-pend {position: absolute; top: -7px; right: -7px; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px; background: #f39c12; color: #fff; font-size: 11.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(243,156,18,.45);}
+      .vb-panel {background: #fff; border: 1px solid #e9ecef; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.05);}
+      .vb-panel-head {display: flex; align-items: center; flex-wrap: wrap; gap: 10px; padding: 12px 16px; border-bottom: 1px solid #e9ecef; background: #fafbfc;}
+      .vb-panel-head h4 {margin: 0; font-size: 15px; color: #2c3e50;}
+      .vb-panel-head .vb-sub {font-size: 12px; color: #6c757d;}
+      .vb-legend {margin-left: auto; display: flex; flex-wrap: wrap; gap: 10px; font-size: 11px; color: #6c757d;}
+      .vb-legend span {display: inline-flex; align-items: center; gap: 5px;}
+      .vb-legend i {width: 12px; height: 12px; border-radius: 3px; display: inline-block;}
+      .vb-scroll {overflow-x: auto;}
+      .vb-grid {border-collapse: separate; border-spacing: 0; width: 100%;}
+      .vb-grid th, .vb-grid td {border-bottom: 1px solid #f1f3f5; padding: 0;}
+      .vb-grid thead th {position: sticky; top: 0; background: #fff; font-size: 10px; color: #6c757d; font-weight: 700; text-transform: uppercase; z-index: 1;}
+      .vb-grid .vb-who {text-align: left; padding: 7px 10px 7px 16px; min-width: 190px; max-width: 230px; position: sticky; left: 0; background: #fff; z-index: 2; box-shadow: 1px 0 0 #f1f3f5;}
+      .vb-grid thead .vb-who {z-index: 3;}
+      .vb-who .vb-name {font-weight: 700; font-size: 12.5px; color: #2c3e50; white-space: nowrap;}
+      .vb-who .vb-meta {font-size: 11px; color: #8a949e; white-space: nowrap;}
+      .vb-who .vb-days {font-size: 11.5px; font-weight: 700; color: #2c3e50; margin-top: 2px; white-space: nowrap;}
+      .vb-who .vb-days small {font-weight: 500; color: #8a949e;}
+      .vb-day {width: 22px; min-width: 22px; text-align: center; height: 34px;}
+      .vb-grid thead .vb-day {height: 38px; line-height: 1.15;}
+      .vb-grid thead .vb-day b {display: block; font-size: 11px; color: #2c3e50;}
+      .vb-day.we {background: rgba(240, 200, 120, .22);}
+      .vb-day.hol {background: rgba(247, 198, 199, .55);}
+      .vb-cell {display: block; margin: 0 auto; width: 18px; height: 18px; border-radius: 5px;}
+      .vb-cell.p {background: linear-gradient(135deg, #ffb74d, #ef6c00);}
+      .vb-cell.a {background: linear-gradient(135deg, #66bb6a, #2e7d32);}
+      .vb-cell.r {background: repeating-linear-gradient(45deg, #ef9a9a 0 3px, #e53935 3px 6px); opacity: .75;}
+      .vb-state {display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap;}
+      .vb-state.p {background: #fff3e0; color: #e65100;}
+      .vb-state.a {background: #e8f5e9; color: #2e7d32;}
+      .vb-state.r {background: #ffebee; color: #c62828;}
+      .vb-act {padding: 6px 16px 6px 6px; white-space: nowrap; text-align: right; width: 76px;}
+      .vb-btn {border: 0; border-radius: 6px; width: 30px; height: 28px; padding: 0; font-size: 14px; font-weight: 700; cursor: pointer; color: #fff; display: inline-flex; align-items: center; justify-content: center;}
+      .vb-btn.ok {background: #2e7d32;} .vb-btn.ok:hover {background: #1b5e20;}
+      .vb-btn.no {background: #e53935;} .vb-btn.no:hover {background: #b71c1c;}
+      .vb-btn:disabled {opacity: .35; cursor: default;}
+      .vb-btn.busy {opacity: .6; pointer-events: none;}
+      .vb-total td {background: #fafbfc; border-top: 2px solid #e9ecef;}
+      .vb-total .vb-who {background: #fafbfc; font-size: 11px; font-weight: 700; color: #6c757d; text-transform: uppercase;}
+      .vb-tot {font-size: 11px; font-weight: 700; color: #6c757d;}
+      .vb-tot.hot {display: inline-block; min-width: 18px; border-radius: 4px; background: #c62828; color: #fff;}
+      .vb-empty {padding: 30px; text-align: center; color: #8a949e;}
+      .vb-loading {padding: 30px; text-align: center; color: #8a949e;}
+      @media (max-width: 1100px) {.vb-months {grid-template-columns: repeat(4, 1fr);} .vb-kpis {grid-template-columns: repeat(2, 1fr);}}
+      `;
+      const st = document.createElement('style');
+      st.id = 'vb-css';
+      st.textContent = css;
+      document.head.appendChild(st);
+    })();
+
+    function createVacBoard(cfg) {
+      /* cfg: {root, type: 'Voluntariado'|'Profissional', badgeId: id => 'badge-'+id, setState: (id, state, year, month) => Promise,
+               overlapLimit: n => número máximo por dia (opcional, só para destacar na linha "Por dia") } */
+      const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+      const WD = ['D','S','T','Q','Q','S','S'];
+      const ST = {'Em Aprovação': 'p', 'Aprovadas': 'a', 'Recusadas': 'r'};
+      const ST_LABEL = {p: 'Em aprovação', a: 'Aprovadas', r: 'Recusadas'};
+      const now = new Date();
+      const S = {year: now.getFullYear(), month: null, filter: 'all', q: '', rows: [], elems: {}, loaded: false};
+      const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      const days = r => String(r.day || '').split(',').map(d => parseInt(d, 10)).filter(d => !isNaN(d)).sort((a, b) => a - b);
+      const stKey = r => ST[r.state] || 'p';
+      function groupDays(list) {
+        const out = []; let s = null, e = null;
+        list.forEach(d => { if (s === null) { s = e = d; } else if (d === e + 1) { e = d; } else { out.push(s === e ? `${s}` : `${s}–${e}`); s = e = d; } });
+        if (s !== null) out.push(s === e ? `${s}` : `${s}–${e}`);
+        return out.join(', ');
+      }
+      function holidays(year, month) {
+        const fixed = [[1,1,'Ano Novo'],[4,25,'Dia da Liberdade'],[5,1,'Dia do Trabalhador'],[6,10,'Dia de Portugal'],[8,15,'Assunção de N. Senhora'],[10,5,'Implantação da República'],
+                       [11,1,'Todos os Santos'],[12,1,'Restauração da Independência'],[12,8,'Imaculada Conceição'],[12,25,'Natal']];
+        const list = fixed.map(([m, d, n]) => ({date: new Date(year, m - 1, d, 12), name: n}));
+        const [mm, dd] = (sessionStorage.getItem('municipalHoliday') || '').split('-').map(Number);
+        if (mm && dd) list.push({date: new Date(year, mm - 1, dd, 12), name: sessionStorage.getItem('municipalHolidayName') || 'Feriado Municipal'});
+        const a = year % 19, b = Math.floor(year / 100), c = year % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3);
+        const h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451);
+        const easter = new Date(year, Math.floor((h + l - 7 * m + 114) / 31) - 1, ((h + l - 7 * m + 114) % 31) + 1, 12);
+        const plus = n => { const x = new Date(easter); x.setDate(x.getDate() + n); return x; };
+        list.push({date: plus(-47), name: 'Carnaval (facultativo)'}, {date: plus(-2), name: 'Sexta-feira Santa'}, {date: easter, name: 'Páscoa'}, {date: plus(60), name: 'Corpo de Deus'});
+        const map = new Map();
+        list.forEach(x => { if (x.date.getMonth() === month - 1) map.set(x.date.getDate(), x.name); });
+        return map;
+      }
+      const root = () => document.getElementById(cfg.root);
+
+      async function load() {
+        const el = root(); if (!el) return;
+        if (!S.loaded) el.innerHTML = '<div class="vb-loading">A carregar pedidos...</div>';
+        const corp = sessionStorage.getItem('currentCorpOperNr');
+        try {
+          const r = await fetch(`${SUPABASE_URL}/rest/v1/ped_vacat?select=id,n_int,year,month,day,state&corp_oper_nr=eq.${corp}&vacation_type=eq.${encodeURIComponent(cfg.type)}&year=eq.${S.year}&order=month.asc,n_int.asc`, {headers: getSupabaseHeaders()});
+          if (!r.ok) throw new Error(await r.text());
+          S.rows = await r.json();
+          const missing = [...new Set(S.rows.map(x => x.n_int))].filter(n => !S.elems[n]);
+          if (missing.length) {
+            const re = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?select=n_int,full_name,abv_name,patent&corp_oper_nr=eq.${corp}&n_int=in.(${missing.join(',')})`, {headers: getSupabaseHeaders()});
+            if (re.ok) (await re.json()).forEach(e => { S.elems[e.n_int] = e; });
+          }
+          if (S.month === null) {
+            const pend = S.rows.find(x => stKey(x) === 'p');
+            S.month = pend ? pend.month : (S.year === now.getFullYear() ? now.getMonth() + 1 : 1);
+          }
+          S.loaded = true;
+          render();
+        } catch (e) {
+          console.error('Painel de férias:', e);
+          el.innerHTML = '<div class="vb-empty" style="color:#c62828;">Erro ao carregar os pedidos.</div>';
+        }
+      }
+      function visibleRows(list) {
+        const q = S.q.trim().toLowerCase();
+        return list.filter(x => (S.filter === 'all' || stKey(x) === S.filter) &&
+          (!q || String(x.n_int).includes(q) || String(S.elems[x.n_int]?.full_name || '').toLowerCase().includes(q)));
+      }
+      function render() {
+        const el = root(); if (!el) return;
+        const all = S.rows;
+        const cnt = k => all.filter(x => stKey(x) === k).length;
+        const totalDays = all.filter(x => stKey(x) !== 'r').reduce((s, x) => s + days(x).length, 0);
+        const byMonth = m => all.filter(x => x.month === m);
+        const kpi = (c, ico, n, label) => `<div class="vb-kpi" style="--c:${c}"><div class="vb-kpi-ico">${ico}</div><div><b>${n}</b><small>${label}</small></div></div>`;
+        const chip = (k, label, color) => `<button type="button" class="vb-chip ${S.filter === k ? 'on' : ''}" data-f="${k}">${color ? `<i style="background:${color}"></i>` : ''}${label}</button>`;
+        el.innerHTML = `
+          <div class="vb">
+            <div class="vb-toolbar">
+              <div class="vb-year"><button type="button" data-y="-1" title="Ano anterior">‹</button><span>${S.year}</span><button type="button" data-y="1" title="Ano seguinte">›</button></div>
+              <div class="vb-chips">${chip('all', 'Todos')}${chip('p', 'Em aprovação', '#ef6c00')}${chip('a', 'Aprovadas', '#2e7d32')}${chip('r', 'Recusadas', '#e53935')}</div>
+              <input type="text" class="vb-search" placeholder="Procurar nº ou nome…" value="${esc(S.q)}">
+            </div>
+            <div class="vb-kpis">
+              ${kpi('#ef6c00', '⏳', cnt('p'), 'Em aprovação')}
+              ${kpi('#2e7d32', '✓', cnt('a'), 'Aprovadas')}
+              ${kpi('#e53935', '✕', cnt('r'), 'Recusadas')}
+              ${kpi('#1565c0', '📅', totalDays, `Dias pedidos em ${S.year}`)}
+            </div>
+            <div class="vb-months">
+              ${MONTHS.map((n, i) => {
+                const m = i + 1, list = byMonth(m), p = list.filter(x => stKey(x) === 'p').length;
+                const a = list.filter(x => stKey(x) === 'a').length, r = list.filter(x => stKey(x) === 'r').length, t = list.length || 1;
+                return `<div class="vb-month ${list.length ? '' : 'empty'} ${S.month === m ? 'sel' : ''}" data-m="${m}">
+                  ${p ? `<span class="vb-pend" title="${p} por tratar">${p}</span>` : ''}
+                  <div class="vb-mname">${n}</div>
+                  <div class="vb-mcount">${list.length ? `${list.length} pedido${list.length > 1 ? 's' : ''}` : 'Sem pedidos'}</div>
+                  <div class="vb-mbar">${list.length ? `<span style="width:${a / t * 100}%;background:#2e7d32"></span><span style="width:${p / t * 100}%;background:#ef6c00"></span><span style="width:${r / t * 100}%;background:#e53935"></span>` : ''}</div>
+                </div>`;
+              }).join('')}
+            </div>
+            <div class="vb-panel">${panel()}</div>
+          </div>`;
+        el.querySelectorAll('[data-y]').forEach(b => b.onclick = () => { S.year += Number(b.dataset.y); S.month = null; S.loaded = false; load(); });
+        el.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { S.filter = b.dataset.f; render(); });
+        el.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { S.month = Number(b.dataset.m); render(); });
+        const search = el.querySelector('.vb-search');
+        search.oninput = () => { S.q = search.value; const p = el.querySelector('.vb-panel'); p.innerHTML = panel(); bindPanel(); };
+        bindPanel();
+      }
+      function panel() {
+        const m = S.month, y = S.year;
+        const list = visibleRows(S.rows.filter(x => x.month === m));
+        const nDays = new Date(y, m, 0).getDate();
+        const hol = holidays(y, m);
+        const cols = Array.from({length: nDays}, (_, i) => i + 1);
+        const cls = d => { const wd = new Date(y, m - 1, d).getDay(); return hol.has(d) ? 'hol' : (wd === 0 || wd === 6 ? 'we' : ''); };
+        const head = `<div class="vb-panel-head">
+            <h4>${MONTHS[m - 1]} ${y}</h4>
+            <span class="vb-sub">${list.length} pedido${list.length === 1 ? '' : 's'}${S.filter !== 'all' ? ` · ${ST_LABEL[S.filter].toLowerCase()}` : ''}</span>
+            <div class="vb-legend">
+              <span><i style="background:linear-gradient(135deg,#ffb74d,#ef6c00)"></i>Em aprovação</span>
+              <span><i style="background:linear-gradient(135deg,#66bb6a,#2e7d32)"></i>Aprovada</span>
+              <span><i style="background:repeating-linear-gradient(45deg,#ef9a9a 0 3px,#e53935 3px 6px)"></i>Recusada</span>
+              <span><i style="background:rgba(240,200,120,.5)"></i>Fim de semana</span>
+              <span><i style="background:rgba(247,198,199,.9)"></i>Feriado</span>
+            </div>
+          </div>`;
+        if (!list.length) return head + `<div class="vb-empty">Sem pedidos ${S.filter !== 'all' || S.q ? 'com estes filtros ' : ''}em ${MONTHS[m - 1].toLowerCase()}.</div>`;
+        const perDay = {};
+        list.filter(x => stKey(x) !== 'r').forEach(x => days(x).forEach(d => { perDay[d] = (perDay[d] || 0) + 1; }));
+        const limit = cfg.overlapLimit || 0;
+        const thead = `<tr><th class="vb-who">Elemento</th>${cols.map(d => `<th class="vb-day ${cls(d)}" title="${esc(hol.get(d) || '')}"><b>${d}</b>${WD[new Date(y, m - 1, d).getDay()]}</th>`).join('')}<th style="padding:0 8px;">Estado</th><th class="vb-act">Ações</th></tr>`;
+        const body = list.map(x => {
+          const e = S.elems[x.n_int] || {}, k = stKey(x), ds = new Set(days(x));
+          return `<tr>
+            <td class="vb-who"><div class="vb-name">${esc(e.full_name || 'Nº ' + x.n_int)}</div><div class="vb-meta">Nº ${esc(x.n_int)}${e.patent ? ' · ' + esc(e.patent) : ''}</div>
+              <div class="vb-days">${groupDays([...ds])} <small>· ${ds.size} dia${ds.size === 1 ? '' : 's'}</small></div></td>
+            ${cols.map(d => `<td class="vb-day ${cls(d)}">${ds.has(d) ? `<span class="vb-cell ${k}" title="${d}/${m} · ${ST_LABEL[k]}"></span>` : ''}</td>`).join('')}
+            <td style="padding:0 8px; text-align:center;"><span class="vb-state ${k}" id="${cfg.badgeId(x.id)}">${esc(x.state)}</span></td>
+            <td class="vb-act">
+              <button type="button" class="vb-btn ok" data-id="${x.id}" data-s="Aprovadas" title="Aprovar" ${k === 'a' ? 'disabled' : ''}>✓</button>
+              <button type="button" class="vb-btn no" data-id="${x.id}" data-s="Recusadas" title="Recusar" ${k === 'r' ? 'disabled' : ''}>✕</button>
+            </td>
+          </tr>`;
+        }).join('');
+        const total = `<tr class="vb-total"><td class="vb-who">Por dia</td>${cols.map(d => {
+            const n = perDay[d] || 0;
+            return `<td class="vb-day ${cls(d)}">${n ? `<span class="vb-tot ${limit && n > limit ? 'hot' : ''}" title="${n} de férias neste dia">${n}</span>` : ''}</td>`;
+          }).join('')}<td colspan="2"></td></tr>`;
+        return head + `<div class="vb-scroll"><table class="vb-grid"><thead>${thead}</thead><tbody>${body}${total}</tbody></table></div>`;
+      }
+      function bindPanel() {
+        const el = root(); if (!el) return;
+        el.querySelectorAll('.vb-btn[data-id]').forEach(b => b.onclick = async () => {
+          const id = Number(b.dataset.id), row = S.rows.find(x => x.id === id);
+          if (!row) return;
+          el.querySelectorAll(`.vb-btn[data-id="${id}"]`).forEach(x => x.classList.add('busy'));
+          try { await cfg.setState(id, b.dataset.s, row.year, row.month); } finally { await load(); }
+        });
+      }
+      return {load, reset() { S.loaded = false; S.month = null; }};
+    }

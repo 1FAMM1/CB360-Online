@@ -1774,7 +1774,7 @@
       if (!tbody) return;
       tbody.innerHTML = '<tr><td colspan="4">A carregar pedidos...</td></tr>';
        try {
-         const res = await fetch(`${SUPABASE_URL}/rest/v1/ped_vacat?corp_oper_nr=eq.${corp_oper_nr}&order=year.desc,month.desc`, {
+         const res = await fetch(`${SUPABASE_URL}/rest/v1/ped_vacat?corp_oper_nr=eq.${corp_oper_nr}&vacation_type=eq.Voluntariado&order=year.desc,month.desc`, {
            headers: getSupabaseHeaders()
          });
          const allData = await res.json();

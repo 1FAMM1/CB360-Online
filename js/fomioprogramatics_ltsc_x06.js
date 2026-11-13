@@ -1846,7 +1846,7 @@
       const corp_oper_nr = sessionStorage.getItem('currentCorpOperNr');
       try {
         const rVacat = await fetch(
-          `${SUPABASE_URL}/rest/v1/ped_vacat?month=eq.${month}&year=eq.${year}&corp_oper_nr=eq.${corp_oper_nr}&order=n_int.asc`, {
+          `${SUPABASE_URL}/rest/v1/ped_vacat?month=eq.${month}&year=eq.${year}&corp_oper_nr=eq.${corp_oper_nr}&vacation_type=eq.Voluntariado&order=n_int.asc`, {
             headers: getSupabaseHeaders()
           }
         );

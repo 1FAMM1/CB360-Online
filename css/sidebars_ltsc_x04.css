@@ -27,6 +27,7 @@
     @keyframes fadeSlide {from {opacity: 0; transform: translateX(-6px);} to {opacity: 1; transform: translateX(0);}}
     .sidebar-menu-button.active::before, .sidebar-submenu-button.active::before, 
     .sidebar-sub-submenu-button.active::before {opacity: 1; background: linear-gradient(120deg, transparent, rgba(255,255,255,0.14), transparent);}
+    .sidebar-group-title {font-size: 12px; font-weight: 700; letter-spacing: 1.2px; color: rgba(255,255,255,0.45); text-transform: uppercase; margin: 15px 0 8px 12px; padding-bottom: 3px; border-bottom: 1px solid rgba(255,255,255,0.10); user-select: none; pointer-events: none;}
     /* =============== PANEL SIDEBAR ================ */
     .panel-sidebar {width: 240px; background: #0f1216; backdrop-filter: blur(15px); display: flex; flex-direction: column; padding: 12px 8px; border-right: 1px solid rgba(220, 53, 69, 0.15); 
                     box-shadow: 10px 0 30px rgba(0,0,0,0.5);}

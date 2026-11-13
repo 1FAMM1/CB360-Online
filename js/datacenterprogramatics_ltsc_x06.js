@@ -469,7 +469,7 @@
     /* árvore de acessos: vem da tabela cb360_modules (a mesma do system_admin) */
     let ACCESS_OPTIONS = [];
     async function loadAccessOptions() {
-      const r = await fetch(`${SUPABASE_URL}/rest/v1/cb360_modules?select=label,parent,sort_order&active=is.true&order=sort_order.asc,label.asc`, {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/cb360_modules?select=label,display_name,parent,sort_order&active=is.true&order=sort_order.asc,label.asc`, {
         headers: getSupabaseHeaders()
       });
       if (!r.ok) throw new Error(await r.text());
@@ -478,7 +478,9 @@
       rows.forEach(x => { const k = x.parent || ''; (byParent[k] = byParent[k] || []).push(x); });
       const build = (p) => (byParent[p] || []).map(x => {
         const kids = build(x.label);
-        return kids.length ? {label: x.label, children: kids} : {label: x.label};
+        const o = {label: x.label, text: x.display_name || x.label};
+        if (kids.length) o.children = kids;
+        return o;
       });
       return build('');
     }
@@ -954,7 +956,7 @@
       cb.setAttribute("style", `width: 18px !important; height: 18px !important; cursor: pointer !important; outline: none !important; box-shadow: none !important; appearance: none; -webkit-appearance: checkbox;`);
       const labelText = document.createElement("span");
       labelText.className = "label-text";
-      labelText.textContent = option.label;
+      labelText.textContent = option.text || option.label;
       labelText.style.fontSize = "14px";
       labelText.style.color = "#444";
       labelText.style.transition = "color 0.2s, font-weight 0.2s";

@@ -1408,14 +1408,15 @@
         try {
           const r = await fetch(`${SUPABASE_URL}/rest/v1/ped_vacat?select=id,n_int,year,month,day,state&corp_oper_nr=eq.${corp}&vacation_type=eq.${encodeURIComponent(cfg.type)}&year=eq.${S.year}&order=month.asc,n_int.asc`, {headers: getSupabaseHeaders()});
           if (!r.ok) throw new Error(await r.text());
-          S.rows = await r.json();
+          /* a tabela pode guardar mês/ano/id como texto: normaliza para número */
+          S.rows = (await r.json()).map(x => ({...x, id: Number(x.id), year: Number(x.year), month: Number(x.month)}));
           const missing = [...new Set(S.rows.map(x => x.n_int))].filter(n => !S.elems[n]);
           if (missing.length) {
             const re = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?select=n_int,full_name,abv_name,patent&corp_oper_nr=eq.${corp}&n_int=in.(${missing.join(',')})`, {headers: getSupabaseHeaders()});
-            if (re.ok) (await re.json()).forEach(e => { S.elems[e.n_int] = e; });
+            if (re.ok) (await re.json()).forEach(e => { S.elems[e.n_int] = e; S.elems[String(parseInt(e.n_int, 10))] = e; });
           }
           if (S.month === null) {
-            const pend = S.rows.find(x => stKey(x) === 'p');
+            const pend = S.rows.find(x => stKey(x) === 'p') || S.rows[0];
             S.month = pend ? pend.month : (S.year === now.getFullYear() ? now.getMonth() + 1 : 1);
           }
           S.loaded = true;
@@ -1496,7 +1497,7 @@
         const limit = cfg.overlapLimit || 0;
         const thead = `<tr><th class="vb-who">Elemento</th>${cols.map(d => `<th class="vb-day ${cls(d)}" title="${esc(hol.get(d) || '')}"><b>${d}</b>${WD[new Date(y, m - 1, d).getDay()]}</th>`).join('')}<th style="padding:0 8px;">Estado</th><th class="vb-act">Ações</th></tr>`;
         const body = list.map(x => {
-          const e = S.elems[x.n_int] || {}, k = stKey(x), ds = new Set(days(x));
+          const e = S.elems[x.n_int] || S.elems[String(parseInt(x.n_int, 10))] || {}, k = stKey(x), ds = new Set(days(x));
           return `<tr>
             <td class="vb-who"><div class="vb-name">${esc(e.full_name || 'Nº ' + x.n_int)}</div><div class="vb-meta">Nº ${esc(x.n_int)}${e.patent ? ' · ' + esc(e.patent) : ''}</div>
               <div class="vb-days">${groupDays([...ds])} <small>· ${ds.size} dia${ds.size === 1 ? '' : 's'}</small></div></td>

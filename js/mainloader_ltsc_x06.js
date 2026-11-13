@@ -1324,16 +1324,16 @@
       .vb-legend span {display: inline-flex; align-items: center; gap: 5px;}
       .vb-legend i {width: 12px; height: 12px; border-radius: 3px; display: inline-block;}
       .vb-scroll {overflow-x: auto;}
-      .vb-grid {border-collapse: separate; border-spacing: 0; width: 100%;}
+      .vb-grid {border-collapse: separate; border-spacing: 0; width: 100%; box-sizing: border-box;}
       .vb-grid th, .vb-grid td {border-bottom: 1px solid #f1f3f5; padding: 0;}
       .vb-grid thead th {position: sticky; top: 0; background: #fff; font-size: 10px; color: #6c757d; font-weight: 700; text-transform: uppercase; z-index: 1;}
-      .vb-grid .vb-who {text-align: left; padding: 7px 10px 7px 16px; min-width: 190px; max-width: 230px; position: sticky; left: 0; background: #fff; z-index: 2; box-shadow: 1px 0 0 #f1f3f5;}
+      .vb-grid .vb-who {text-align: left; padding: 7px 14px 7px 16px; width: 1%; min-width: 190px; position: sticky; left: 0; background: #fff; z-index: 2; box-shadow: 1px 0 0 #f1f3f5;}
       .vb-grid thead .vb-who {z-index: 3;}
       .vb-who .vb-name {font-weight: 700; font-size: 12.5px; color: #2c3e50; white-space: nowrap;}
       .vb-who .vb-meta {font-size: 11px; color: #8a949e; white-space: nowrap;}
       .vb-who .vb-days {font-size: 11.5px; font-weight: 700; color: #2c3e50; margin-top: 2px; white-space: nowrap;}
       .vb-who .vb-days small {font-weight: 500; color: #8a949e;}
-      .vb-day {width: 22px; min-width: 22px; text-align: center; height: 34px;}
+      .vb-day {min-width: 22px; text-align: center; height: 34px;}
       .vb-grid thead .vb-day {height: 38px; line-height: 1.15;}
       .vb-grid thead .vb-day b {display: block; font-size: 11px; color: #2c3e50;}
       .vb-day.we {background: rgba(240, 200, 120, .22);}
@@ -1346,7 +1346,8 @@
       .vb-state.p {background: #fff3e0; color: #e65100;}
       .vb-state.a {background: #e8f5e9; color: #2e7d32;}
       .vb-state.r {background: #ffebee; color: #c62828;}
-      .vb-act {padding: 6px 16px 6px 6px; white-space: nowrap; text-align: right; width: 76px;}
+      .vb-grid .vb-act {padding: 6px 14px; white-space: nowrap; text-align: center; width: 1%; min-width: 100px; box-sizing: border-box;}
+      .vb-act .vb-btn + .vb-btn {margin-left: 6px;}
       .vb-btn {border: 0; border-radius: 6px; width: 30px; height: 28px; padding: 0; font-size: 14px; font-weight: 700; cursor: pointer; color: #fff; display: inline-flex; align-items: center; justify-content: center;}
       .vb-btn.ok {background: #2e7d32;} .vb-btn.ok:hover {background: #1b5e20;}
       .vb-btn.no {background: #e53935;} .vb-btn.no:hover {background: #b71c1c;}
@@ -1495,14 +1496,14 @@
         const perDay = {};
         list.filter(x => stKey(x) !== 'r').forEach(x => days(x).forEach(d => { perDay[d] = (perDay[d] || 0) + 1; }));
         const limit = cfg.overlapLimit || 0;
-        const thead = `<tr><th class="vb-who">Elemento</th>${cols.map(d => `<th class="vb-day ${cls(d)}" title="${esc(hol.get(d) || '')}"><b>${d}</b>${WD[new Date(y, m - 1, d).getDay()]}</th>`).join('')}<th style="padding:0 8px;">Estado</th><th class="vb-act">Ações</th></tr>`;
+        const thead = `<tr><th class="vb-who">Elemento</th>${cols.map(d => `<th class="vb-day ${cls(d)}" title="${esc(hol.get(d) || '')}"><b>${d}</b>${WD[new Date(y, m - 1, d).getDay()]}</th>`).join('')}<th style="padding:0 10px; width:1%;">Estado</th><th class="vb-act">Ações</th></tr>`;
         const body = list.map(x => {
           const e = S.elems[x.n_int] || S.elems[String(parseInt(x.n_int, 10))] || {}, k = stKey(x), ds = new Set(days(x));
           return `<tr>
             <td class="vb-who"><div class="vb-name">${esc(e.full_name || 'Nº ' + x.n_int)}</div><div class="vb-meta">Nº ${esc(x.n_int)}${e.patent ? ' · ' + esc(e.patent) : ''}</div>
               <div class="vb-days">${groupDays([...ds])} <small>· ${ds.size} dia${ds.size === 1 ? '' : 's'}</small></div></td>
             ${cols.map(d => `<td class="vb-day ${cls(d)}">${ds.has(d) ? `<span class="vb-cell ${k}" title="${d}/${m} · ${ST_LABEL[k]}"></span>` : ''}</td>`).join('')}
-            <td style="padding:0 8px; text-align:center;"><span class="vb-state ${k}" id="${cfg.badgeId(x.id)}">${esc(x.state)}</span></td>
+            <td style="padding:0 10px; text-align:center; width:1%;"><span class="vb-state ${k}" id="${cfg.badgeId(x.id)}">${esc(x.state)}</span></td>
             <td class="vb-act">
               <button type="button" class="vb-btn ok" data-id="${x.id}" data-s="Aprovadas" title="Aprovar" ${k === 'a' ? 'disabled' : ''}>✓</button>
               <button type="button" class="vb-btn no" data-id="${x.id}" data-s="Recusadas" title="Recusar" ${k === 'r' ? 'disabled' : ''}>✕</button>

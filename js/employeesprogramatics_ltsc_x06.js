@@ -4052,22 +4052,60 @@
       const byDay = {};
       rows.forEach(x => {
         byDay[x.day] = byDay[x.day] || new Map();
-        byDay[x.day].set(String(x.n_int), x.abv_name || `Nº ${x.n_int}`);
+        byDay[x.day].set(String(x.n_int), x.abv_name || '');
       });
       const full = Object.keys(byDay).map(Number).filter(d => byDay[d].size >= RHV_MAX_SAME_TIME[type]).sort((a, b) => a - b);
       if (!full.length) return 'ok';
       return rhvTeamLimitPopup(request, type, full, byDay);
+    }
+    /* feriados do mês (fixos, móveis pela Páscoa e municipal da corporação); o Carnaval é facultativo e conta como dia útil */
+    function rhvHolidayDays(year, month) {
+      const list = [[1, 1], [4, 25], [5, 1], [6, 10], [8, 15], [10, 5], [11, 1], [12, 1], [12, 8], [12, 25]].map(([m, d]) => new Date(year, m - 1, d, 12));
+      const [mm, dd] = (sessionStorage.getItem('municipalHoliday') || '').split('-').map(Number);
+      if (mm && dd) list.push(new Date(year, mm - 1, dd, 12));
+      const a = year % 19, b = Math.floor(year / 100), c = year % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3);
+      const h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451);
+      const easter = new Date(year, Math.floor((h + l - 7 * m + 114) / 31) - 1, ((h + l - 7 * m + 114) % 31) + 1, 12);
+      const plus = n => { const x = new Date(easter); x.setDate(x.getDate() + n); return x; };
+      list.push(plus(-2), easter, plus(60));
+      return new Set(list.filter(x => x.getMonth() === month - 1).map(x => x.getDate()));
+    }
+    /* [10,11,12,13,14,17,18,20,21] -> "10 a 21" (se 15, 16 e 19 forem fim de semana / feriado) */
+    function rhvPeriods(dayList, year, month) {
+      const hol = rhvHolidayDays(year, month);
+      const off = d => { const wd = new Date(year, month - 1, d).getDay(); return wd === 0 || wd === 6 || hol.has(d); };
+      const ds = [...new Set(dayList.map(Number))].sort((x, y) => x - y);
+      const out = [];
+      let s = null, e = null;
+      ds.forEach(d => {
+        if (s === null) { s = e = d; return; }
+        let gapOff = true;
+        for (let x = e + 1; x < d; x++) if (!off(x)) { gapOff = false; break; }
+        if (gapOff) e = d; else { out.push([s, e]); s = e = d; }
+      });
+      if (s !== null) out.push([s, e]);
+      const p2 = n => String(n).padStart(2, '0');
+      return out.map(([a, b]) => a === b ? p2(a) : `${p2(a)} a ${p2(b)}`).join(', ');
     }
     /* popup de consulta: mostra quem já está de férias nesses dias; o RH decide */
     function rhvTeamLimitPopup(request, type, days, byDay) {
       return new Promise(resolve => {
         document.getElementById('rhvLimitOverlay')?.remove();
         const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-        const mm = String(request.month).padStart(2, '0');
-        const rows = days.map(d => `
+        const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+        const year = Number(request.year), month = Number(request.month);
+        /* uma linha por elemento, com os dias em períodos (fins de semana e feriados no meio não partem o período) */
+        const people = new Map();
+        days.forEach(d => byDay[d].forEach((name, n) => {
+          if (!people.has(n)) people.set(n, {name, days: []});
+          people.get(n).days.push(d);
+        }));
+        const rows = [...people.entries()]
+          .sort((a, b) => Math.min(...a[1].days) - Math.min(...b[1].days) || Number(a[0]) - Number(b[0]))
+          .map(([n, p]) => `
           <tr>
-            <td style="padding:6px 10px; border-bottom:1px solid #eee; font-weight:700; white-space:nowrap;">${String(d).padStart(2, '0')}/${mm}</td>
-            <td style="padding:6px 10px; border-bottom:1px solid #eee;">${[...byDay[d].values()].map(esc).join(', ')}</td>
+            <td style="padding:7px 10px; border-bottom:1px solid #eee; white-space:nowrap;"><b>${esc(n)}</b>${p.name ? ' - ' + esc(p.name) : ''}</td>
+            <td style="padding:7px 10px; border-bottom:1px solid #eee; text-align:right; font-weight:700; color:#8b0000; white-space:nowrap;">${rhvPeriods(p.days, year, month)}</td>
           </tr>`).join('');
         const ov = document.createElement('div');
         ov.id = 'rhvLimitOverlay';
@@ -4076,7 +4114,7 @@
           <div style="background:#fff; border-radius:10px; width:100%; max-width:520px; max-height:85vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 20px 50px rgba(0,0,0,.35); font-family:inherit;">
             <div style="background:linear-gradient(to right,#8b0000,#c62828); color:#fff; padding:14px 18px; font-size:15px; font-weight:700;">⚠️ Limite de férias em ${esc(type)}</div>
             <div style="padding:14px 18px; overflow-y:auto; font-size:13.5px; color:#333;">
-              <p style="margin:0 0 10px;">Nestes dias já ${RHV_MAX_SAME_TIME[type] === 1 ? 'está <b>1</b> elemento' : `estão <b>${RHV_MAX_SAME_TIME[type]}</b> elementos`} de <b>${esc(type)}</b> de férias (máximo ${RHV_MAX_SAME_TIME[type]}):</p>
+              <p style="margin:0 0 10px;">Em ${MESES[month - 1]} já ${RHV_MAX_SAME_TIME[type] === 1 ? 'está <b>1</b> elemento' : `estão <b>${RHV_MAX_SAME_TIME[type]}</b> elementos`} de <b>${esc(type)}</b> de férias nos mesmos dias (máximo ${RHV_MAX_SAME_TIME[type]}):</p>
               <table style="width:100%; border-collapse:collapse; font-size:13px;">${rows}</table>
               <p style="margin:12px 0 0; color:#666; font-size:12.5px;"><b>Marcar</b> aprova e grava na escala mesmo assim. <b>Rejeitar</b> recusa o pedido.</p>
             </div>

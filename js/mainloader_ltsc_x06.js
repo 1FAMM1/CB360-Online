@@ -1281,14 +1281,13 @@
       });
     }
     /* =====================================================================
-       PAINEL DE FÉRIAS (layout novo) — usado pela Gestão Operacional (Voluntariado)
-       e pelos Recursos Humanos (Profissional). Colar UMA vez no js (antes das secções
-       VACATIONS e PEDIDOS DE FÉRIAS PROFISSIONAIS).
-       Cada página cria o seu painel com createVacBoard({...}); aprovar/recusar continua
-       a ser feito pelas funções que já existem (updateVacatState / rhvUpdateState).
-       ===================================================================== */
-       (function vbInjectCss() {
-      /* se houver outra cópia antiga do painel carregada antes, substitui o estilo dela */
+    PAINEL DE FÉRIAS (layout novo) — usado pela Gestão Operacional (Voluntariado)
+    e pelos Recursos Humanos (Profissional). Colar UMA vez no js (antes das secções
+    VACATIONS e PEDIDOS DE FÉRIAS PROFISSIONAIS).
+    Cada página cria o seu painel com createVacBoard({...}); aprovar/recusar continua
+    a ser feito pelas funções que já existem (updateVacatState / rhvUpdateState).
+    ===================================================================== */
+    (function vbInjectCss() {
       const old = document.getElementById('vb-css');
       if (old && old.dataset.v === '2') return;
       if (old) old.remove();
@@ -1348,7 +1347,6 @@
       .vb-grid thead .vb-day b {display: block; font-size: 11px; color: #2c3e50;}
       .vb-day.we {background: rgba(240, 200, 120, .22);}
       .vb-day.hol {background: rgba(247, 198, 199, .55);}
-      /* cabeçalho e linha "Por dia" ficam fixos: fundo opaco para as marcas não se verem por baixo */
       .vb-grid thead .vb-day.we, .vb-total .vb-day.we {background: #fcf3e1;}
       .vb-grid thead .vb-day.hol, .vb-total .vb-day.hol {background: #fbe0e0;}
       .vb-grid thead th {box-shadow: 0 1px 0 #e9ecef;}
@@ -1382,10 +1380,7 @@
       st.textContent = css;
       document.head.appendChild(st);
     })();
-
     function createVacBoard(cfg) {
-      /* cfg: {root, type: 'Voluntariado'|'Profissional', badgeId: id => 'badge-'+id, setState: (id, state, year, month) => Promise,
-               overlapLimit: n => número máximo por dia (opcional, só para destacar na linha "Por dia") } */
       const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
       const WD = ['D','S','T','Q','Q','S','S'];
       const ST = {'Em Aprovação': 'p', 'Aprovadas': 'a', 'Recusadas': 'r'};
@@ -1417,7 +1412,6 @@
         return map;
       }
       const root = () => document.getElementById(cfg.root);
-
       async function load() {
         const el = root(); if (!el) return;
         if (!S.loaded) el.innerHTML = '<div class="vb-loading">A carregar pedidos...</div>';
@@ -1425,7 +1419,6 @@
         try {
           const r = await fetch(`${SUPABASE_URL}/rest/v1/ped_vacat?select=id,n_int,year,month,day,state&corp_oper_nr=eq.${corp}&vacation_type=eq.${encodeURIComponent(cfg.type)}&year=eq.${S.year}&order=month.asc,n_int.asc`, {headers: getSupabaseHeaders()});
           if (!r.ok) throw new Error(await r.text());
-          /* a tabela pode guardar mês/ano/id como texto: normaliza para número */
           S.rows = (await r.json()).map(x => ({...x, id: Number(x.id), year: Number(x.year), month: Number(x.month)}));
           const missing = [...new Set(S.rows.map(x => x.n_int))].filter(n => !S.elems[n]);
           if (missing.length) {
@@ -1532,13 +1525,33 @@
           }).join('')}<td colspan="2"></td></tr>`;
         return head + `<div class="vb-scroll"><table class="vb-grid"><thead>${thead}</thead><tbody>${body}${total}</tbody></table></div>`;
       }
+      function vbSaveScroll(el) {
+        const list = [];
+        const inner = el.querySelector('.vb-scroll');
+        if (inner) list.push({sel: '.vb-scroll', top: inner.scrollTop, left: inner.scrollLeft});
+        for (let p = el.parentElement; p; p = p.parentElement) {
+          if (p.scrollTop || p.scrollLeft) list.push({node: p, top: p.scrollTop, left: p.scrollLeft});
+        }
+        list.push({win: true, top: window.scrollY, left: window.scrollX});
+        return list;
+      }
+      function vbRestoreScroll(el, list) {
+        const apply = () => list.forEach(x => {
+          if (x.win) { window.scrollTo(x.left, x.top); return; }
+          const n = x.sel ? el.querySelector(x.sel) : x.node;
+          if (n) { n.scrollTop = x.top; n.scrollLeft = x.left; }
+        });
+        apply();
+        requestAnimationFrame(apply);
+      }
       function bindPanel() {
         const el = root(); if (!el) return;
         el.querySelectorAll('.vb-btn[data-id]').forEach(b => b.onclick = async () => {
           const id = Number(b.dataset.id), row = S.rows.find(x => x.id === id);
           if (!row) return;
           el.querySelectorAll(`.vb-btn[data-id="${id}"]`).forEach(x => x.classList.add('busy'));
-          try { await cfg.setState(id, b.dataset.s, row.year, row.month); } finally { await load(); }
+          const keep = vbSaveScroll(el);
+          try { await cfg.setState(id, b.dataset.s, row.year, row.month); } finally { await load(); vbRestoreScroll(el, keep); }
         });
       }
       return {load, reset() { S.loaded = false; S.month = null; }};

@@ -1366,6 +1366,10 @@
       .vb-btn.no {background: #e53935;} .vb-btn.no:hover {background: #b71c1c;}
       .vb-btn:disabled {opacity: .35; cursor: default;}
       .vb-btn.busy {opacity: .6; pointer-events: none;}
+      .vb-grid tr.vb-saving td {opacity: .55; transition: opacity .15s;}
+      .vb-grid tr.vb-saving td.vb-act {opacity: 1;}
+      .vb-spin {display: inline-block; width: 18px; height: 18px; border: 2.5px solid #e0e0e0; border-top-color: #c62828; border-radius: 50%; animation: vbspin .7s linear infinite; vertical-align: middle;}
+      @keyframes vbspin {to {transform: rotate(360deg);}}
       .vb-total td {background: #fafbfc; border-top: 2px solid #e9ecef;}
       .vb-total .vb-who {background: #fafbfc; font-size: 11px; font-weight: 700; color: #6c757d; text-transform: uppercase;}
       .vb-tot {font-size: 11px; font-weight: 700; color: #6c757d;}
@@ -1443,6 +1447,9 @@
       }
       function render() {
         const el = root(); if (!el) return;
+        const keepR = el.querySelector('.vb') ? vbSaveScroll(el) : null;
+        const sameMonth = S._key === `${S.year}-${S.month}`;
+        S._key = `${S.year}-${S.month}`;
         const all = S.rows;
         const cnt = k => all.filter(x => stKey(x) === k).length;
         const totalDays = all.filter(x => stKey(x) !== 'r').reduce((s, x) => s + days(x).length, 0);
@@ -1482,6 +1489,7 @@
         const search = el.querySelector('.vb-search');
         search.oninput = () => { S.q = search.value; const p = el.querySelector('.vb-panel'); p.innerHTML = panel(); bindPanel(); };
         bindPanel();
+        if (keepR) vbRestoreScroll(el, sameMonth ? keepR : keepR.filter(x => !x.sel));
       }
       function panel() {
         const m = S.month, y = S.year;
@@ -1549,9 +1557,16 @@
         el.querySelectorAll('.vb-btn[data-id]').forEach(b => b.onclick = async () => {
           const id = Number(b.dataset.id), row = S.rows.find(x => x.id === id);
           if (!row) return;
-          el.querySelectorAll(`.vb-btn[data-id="${id}"]`).forEach(x => x.classList.add('busy'));
-          const keep = vbSaveScroll(el);
-          try { await cfg.setState(id, b.dataset.s, row.year, row.month); } finally { await load(); vbRestoreScroll(el, keep); }
+          const tr = b.closest('tr');
+          if (tr) { tr.classList.add('vb-saving'); const act = tr.querySelector('.vb-act'); if (act) act.innerHTML = '<span class="vb-spin"></span>'; }
+          try { await cfg.setState(id, b.dataset.s, row.year, row.month); }
+          finally {
+            const badge = document.getElementById(cfg.badgeId(id));
+            const txt = badge ? badge.textContent.trim() : '';
+            if (ST[txt]) row.state = txt;
+            render();
+            load();
+          }
         });
       }
       return {load, reset() { S.loaded = false; S.month = null; }};

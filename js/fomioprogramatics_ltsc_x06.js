@@ -1616,7 +1616,7 @@
       if (document.getElementById('evb-css')) return;
       const css = `
       .evb-layout {display: grid; grid-template-columns: 340px 1fr; gap: 14px; align-items: start;}
-      .evb-list {display: flex; flex-direction: column; gap: 9px; max-height: calc(100vh - 360px); overflow-y: auto; overflow-x: hidden; padding: 9px 10px 4px 2px;}
+      .evb-list {display: flex; flex-direction: column; gap: 9px; max-height: calc(100vh - 370px); overflow-y: auto; overflow-x: hidden; padding: 9px 10px 4px 2px;}
       .evb-ev {position: relative; background: #fff; border: 1px solid #e9ecef; border-radius: 10px; padding: 8px 12px 7px; cursor: pointer; transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease; border-left: 4px solid var(--c, #adb5bd);}
       .evb-ev:hover {transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,.08);}
       .evb-ev.sel {border-color: #c62828; border-left-color: #c62828; box-shadow: 0 0 0 2px rgba(198,40,40,.18);}
@@ -1630,7 +1630,7 @@
       .evb-bar.full span {background: linear-gradient(90deg, #42a5f5, #1565c0);}
       .evb-ev-foot {display: flex; justify-content: space-between; font-size: 11px; color: #6c757d; margin-top: 3px;}
       .evb-pend {position: absolute; top: -7px; right: -7px; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px; background: #f39c12; color: #fff; font-size: 11.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(243,156,18,.45);}
-      .evb-detail {background: #fff; border: 1px solid #e9ecef; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.05); height:550px;}
+      .evb-detail {background: #fff; border: 1px solid #e9ecef; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.05); height:550px }
       .evb-dhead {padding: 14px 16px; border-bottom: 1px solid #e9ecef; background: #fafbfc; display: flex; align-items: flex-start; gap: 12px; flex-wrap: wrap;}
       .evb-dhead h4 {margin: 0; font-size: 16px; color: #2c3e50;}
       .evb-dinfo {display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: #6c757d; margin-top: 5px;}
@@ -1638,10 +1638,10 @@
       .evb-dact {margin-left: auto; display: flex; gap: 8px; align-items: center;}
       .evb-del {border: 1px solid #f1c0c0; background: #fff5f5; color: #c62828; border-radius: 8px; height: 32px; padding: 0 12px; font-size: 12px; font-weight: 700; cursor: pointer;}
       .evb-del:hover {background: #ffe9e9;}
-      .evb-days {padding: 10px 16px 14px; display: flex; flex-direction: column; gap: 12px; max-height: calc(100vh - 480px); overflow-y: auto;}
+      .evb-days {padding: 10px 16px 14px; display: flex; flex-direction: column; gap: 12px; max-height: calc(100vh - 460px); overflow-y: auto;}
       .evb-day-title {font-size: 12px; font-weight: 700; color: #8b0000; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;}
       .evb-day-title::after {content: ""; flex: 1; height: 1px; background: #f1f3f5;}
-      .evb-shifts {display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 10px; align-items: start;}
+      .evb-shifts {display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 10px; align-items: start; }
       .evb-shift {border: 1px solid #e9ecef; border-radius: 10px; overflow: hidden; background: #fff;}
       .evb-shift-head {display: flex; align-items: center; gap: 10px; padding: 6px 12px; background: #f8f9fa; border-bottom: 1px solid #f1f3f5;}
       .evb-time {font-weight: 700; font-size: 13px; color: #2c3e50;}

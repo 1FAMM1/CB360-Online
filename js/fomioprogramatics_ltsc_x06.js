@@ -1366,7 +1366,7 @@
       .evc-quick input {width: 130px; height: 32px;}
       .evc-btn-soft {height: 32px; border: 0; border-radius: 8px; padding: 0 14px; background: #2c3e50; color: #fff; font-weight: 700; font-size: 12px; cursor: pointer;}
       .evc-btn-soft:hover {background: #1f2d3a;}
-      .evc-shifts {display: flex; flex-direction: column; gap: 8px; max-height: 340px; overflow-y: auto;}
+      .evc-shifts {display: flex; flex-direction: column; gap: 8px; max-height: 130px; overflow-y: auto;}
       .evc-shift {display: grid; grid-template-columns: 28px 1.4fr 1fr 1fr 32px; gap: 8px; align-items: center; padding: 8px 10px; border: 1px solid #e9ecef; border-radius: 10px; background: #fff;}
       .evc-shift .evc-n {width: 24px; height: 24px; border-radius: 50%; background: #eef2f7; color: #45556a; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center;}
       .evc-shift input {height: 32px;}

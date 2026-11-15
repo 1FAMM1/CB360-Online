@@ -148,6 +148,7 @@
           <button class="sidebar-sub-submenu-button" data-page="volunteer-services-values" data-access="Configuração de Valores">Configuração de Valores</button>          
         </div>
         <button class="sidebar-submenu-button" data-page="page-comunicados" data-access="Comunicados">Comunicados</button>
+        <button class="sidebar-submenu-button" data-page="page-veic-status" data-access="Estados dos Veículos">Estados dos Veículos</button> 
         <div class="sidebar-group-title">PEDIDOS À CORPORAÇÃO</div>
         <button class="sidebar-submenu-button sub-submenu-toggle" data-page="page-fomio" data-access="Pedidos de Férias">Pedidos de Férias</button>
         <div class="sub-submenu">
@@ -1851,6 +1852,36 @@
           <button id="services-values-save-button" class="btn btn-add"><i class="fa-solid fa-floppy-disk" style="margin-right: 5px;"></i>GUARDAR</button>
         </div>
       </div>      
+    </div>
+    <!-- COMUNICATES -->
+    <div id="page-comunicados" class="page">
+      <div class="major-card major-last-card">
+        <div class="major-card-header header-red" style="display: flex; align-items: center; gap: 10px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;">
+            <path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1z"/>
+            <path d="M15.5 8.5a5 5 0 0 1 0 7"/>
+            <path d="M18.5 5.5a9 9 0 0 1 0 13"/>
+          </svg>
+          COMUNICADOS
+        </div>
+        <div class="major-card-body">
+          <div id="cmBoard"></div>
+        </div>
+        <div class="major-card-footer">* Os comunicados publicados aparecem no CB360 Mobile, na página Comunicados, só para os elementos da corporação.</div>
+      </div>
+    </div>
+    <!-- ESTADOS DOS VEÍCULOS (substitui o grupo do Telegram) -->
+    <div id="page-veic-status" class="page" style="display:none;">
+      <div class="major-card last-card">
+        <div class="major-card-header header-red" style="display: flex; align-items: center; gap: 10px;">
+          <i class="fa-solid fa-tower-broadcast"></i>
+          ESTADOS DOS VEÍCULOS
+        </div>
+        <div class="major-card-body">
+          <div id="vslBoard"></div>
+        </div>
+        <div class="major-card-footer">* As atualizações chegam do CB360 Mobile (Status Operacional). Ao abrir esta página ficam marcadas como lidas e o botão do menu deixa de piscar.</div>
+      </div>
     </div>
     <!-- EMPLOYEES 360 MODULE -->
     <!-- MONTHLY SCHEDULES -->

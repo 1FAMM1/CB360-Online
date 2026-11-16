@@ -274,20 +274,6 @@ function makeRowXml(rowNum, emp) {
         return res.status(500).json({error: "Erro ao processar"});
       }
     }
-    // ─── Legenda: HR (09:00 - 19:00) numa linha nova por baixo da legenda do template ─────
-    // O template só tem as legendas antigas; o HR fica na linha 67, coluna G, com o estilo do HA (linha 63).
-    function addLegendHR(worksheet) {
-      const clone = (ref) => JSON.parse(JSON.stringify(worksheet.getCell(ref).style || {}));
-      worksheet.getRow(66).height = worksheet.getRow(64).height || 3.75;
-      const code = worksheet.getCell("G67");
-      code.style = clone("G63");
-      code.value = "HR";
-      code.fill = {type: "pattern", pattern: "solid", fgColor: {argb: "FFB4A7D6"}};
-      ["H", "I", "J", "K"].forEach((col) => { worksheet.getCell(`${col}67`).style = clone(`${col}63`); });
-      try { worksheet.mergeCells("H67:K67"); } catch {}
-      worksheet.getCell("H67").value = "09:00 - 19:00";
-      worksheet.getRow(67).height = worksheet.getRow(63).height || worksheet.getRow(61).height || 15;
-    }
     // ─── Handlers ────────────────────────────────────────────────────────────────
     async function handleMonthlyScales(req, res) {
       const { year, month, employees, workingHours, format = "xlsx" } = req.body;
@@ -422,7 +408,6 @@ function makeRowXml(rowNum, emp) {
         for (let i = 0; i < n; i++) fillEmployeeAtRow(list[i], range.start + i);
         for (let i = n; i < capacity; i++) clearAndHideRow(range.start + i);
       });
-      addLegendHR(worksheet);
       worksheet.pageSetup = {orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
                              margins: {left: 0.25, right: 0.25, top: 0.75, bottom: 0.25, header: 0, footer: 0},};
       if (format !== "pdf") {

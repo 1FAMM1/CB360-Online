@@ -141,8 +141,8 @@
     const COMMON_EMP_TH_STYLE = "border: 1px solid #ccc; border-top: 0px solid #ccc; border-left: 0px solid #ccc; width: 35px; padding: 2px; font-size: 11px; text-align: center; background: #f0f0f0;";
     const COMMON_EMP_TD_STYLE = "border: 1px solid #ccc; border-top: 0px solid #ccc; border-left: 0px solid #ccc; padding: 4px; text-align: center; font-size: 13px; width: 35px;";
     const TEAM_ORDER = ["EQ01", "EQ02", "EQ03", "EQ04", "EQ05", "EQ06", "EQ07", "EQ08", "EQ09", "EQ10","TDNU", "OPC", "EP1", "EP2"];
-    const SHIFT_VALUES = {"D": 12, "N": 12, "FE": 8, "M": 8, "BX": 8, "FOR": 8, "FO": 0, "LC": 8, "LP": 8, "DP": 0, "LN": 8, "FI": 8, "FJ": 8, "HA": 8};
-    const SHIFT_COLORS = {"D": {bg: "#FFFF00", color: "#000000"}, "N": {bg: "#00008B", color: "#FFFFFF"}, "M": {bg: "#D3D3D3", color: "#000000"}, "FR": {bg: "#FFA500", color: "#000000"},
+    const SHIFT_VALUES = {"D": 12, "N": 12, "FE": 8, "M": 8, "HR": 10, "BX": 8, "FOR": 8, "FO": 0, "LC": 8, "LP": 8, "DP": 0, "LN": 8, "FI": 8, "FJ": 8, "HA": 8};
+    const SHIFT_COLORS = {"D": {bg: "#FFFF00", color: "#000000"}, "N": {bg: "#00008B", color: "#FFFFFF"}, "M": {bg: "#D3D3D3", color: "#000000"}, "HR": {bg: "#B4A7D6", color: "#000000"}, "FR": {bg: "#FFA500", color: "#000000"},
                           "FO": {bg: "#92D050", color: "#000000"}, "FE": {bg: "#00B0F0", color: "#000000"}, "BX": {bg: "#FF0000", color: "#FFFFFF"}, "LC": {bg: "#FF0000", color: "#FFFFFF"},
                           "LN": {bg: "#FF0000", color: "#FFFFFF"}, "LP": {bg: "#FF0000", color: "#FFFFFF"}, "FI": {bg: "#FF0000", color: "#FFFFFF"}, "FJ": {bg: "#FF0000", color: "#FFFFFF"},
                           "FOR": {bg: "#808080", color: "#FFFFFF"}, "DP": {bg: "#000000", color: "#FFFFFF"}, "HA": {bg: "#FFB6C1", color: "#000000"}};
@@ -349,7 +349,7 @@
       const legendDiv = document.createElement("div");
       legendDiv.style.cssText = `margin-top: 5px; padding: 12px; background: #f0f8ff; border: 1px solid #4682b4; border-radius: 5px; font-family: 'Segoe UI', sans-serif;
                                  display: inline-block; width: fit-content; margin-left: 5px;vertical-align:top; height:150px;`;
-      const shifts = [ {code: "", desc: "Condutor INEM", special: "driver"}, {code: "", desc: "Outro", special: "other"}, {code: "", desc: "OPTEL", special: "optel"}, {code: "", desc: "EIP", special: "eip"}, {code: "M", desc: "08:00 - 16:00"}, {code: "D", desc: "08:00 - 20:00"}, 
+      const shifts = [ {code: "", desc: "Condutor INEM", special: "driver"}, {code: "", desc: "Outro", special: "other"}, {code: "", desc: "OPTEL", special: "optel"}, {code: "", desc: "EIP", special: "eip"}, {code: "M", desc: "08:00 - 16:00"}, {code: "D", desc: "08:00 - 20:00"}, {code: "HR", desc: "09:00 - 19:00"}, 
                       {code: "N", desc: "20:00 - 08:00"}, {code: "FO", desc: "Folga"}, {code: "FE", desc: "Férias"}, {code: "FOR", desc: "Formação"}, {code: "BX", desc: "Baixa"},
                       {code: "FI", desc: "Falta Injustificada"}, {code: "FJ", desc: "Falta Justificada"}, {code: "LP", desc: "Lic. Parental"}, {code: "LN", desc: "Lic. Nojo"},
                       {code: "LC", desc: "Lic. Casamento"}, {code: "DP", desc: "Dispensa"}, {code: "HA", desc: "Amamentação"}];
@@ -362,7 +362,7 @@
         </div>`;
       };
       let html = `<div style="font-weight:bold;font-size:14px;color:#1e3a8a;margin-bottom:10px;text-align:center;">LEGENDA DE TURNOS</div><div style="display:flex;flex-direction:column;gap:6px;">`;
-      [[0,7],[7,14],[14,18]].forEach(([from, to]) => {
+      [[0,7],[7,14],[14,19]].forEach(([from, to]) => {
         html += `<div style="display:flex;gap:6px;">${shifts.slice(from, to).map(itemHTML).join("")}</div>`;
       });
       html += `</div>`;
@@ -466,7 +466,7 @@
       bgSection.appendChild(sectionTitle("fa-palette", "Cor de fundo"));
       const bgGrid = document.createElement("div");
       bgGrid.style.cssText = "display:grid;grid-template-columns:repeat(5,1fr);gap:5px;";
-      const shiftsList = [{code:"M",desc:"Manhã"},{code:"D",desc:"Dia"},{code:"N",desc:"Noite"},{code:"FR",desc:"Feriado"},{code:"FO",desc:"Folga"},
+      const shiftsList = [{code:"M",desc:"Manhã"},{code:"D",desc:"Dia"},{code:"HR",desc:"09:00 - 19:00"},{code:"N",desc:"Noite"},{code:"FR",desc:"Feriado"},{code:"FO",desc:"Folga"},
                           {code:"FE",desc:"Férias"},{code:"FOR",desc:"Formação"},{code:"BX",desc:"Baixa"},{code:"DP",desc:"Dispensa"},{code:"HA",desc:"Amamentação"},
                           {code:"DRIVER",label:"MOT",desc:"Motorista",bg:DRIVER_BG,color:DRIVER_TEXT},{code:"OTHER",label:"OUT",desc:"Outro Tipo",bg:OTHER_BG,color:OTHER_TEXT},
                           {code:"RESET",desc:"Limpar Cor",bg:"#ffffff",color:"#64748b"}];

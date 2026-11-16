@@ -2,6 +2,286 @@
     FOMIO
     ======================================= */
     /* =======================================================================
+    COMUNICADOS (Online)
+    ======================================================================= */
+    document.addEventListener('click', async function(e) {
+      const btn = e.target.closest('[data-page="page-comunicados"]');
+      if (btn) await loadComunicados();
+    });
+    async function loadComunicados() {
+      window.cmBoardPanel = window.cmBoardPanel || createComunBoard({root: 'cmBoard'});
+      await window.cmBoardPanel.load();
+    }
+    function createComunBoard(cfg) {
+      const BUCKET = 'cb_pdf';
+      const MAX_MB = 15;
+      const S = {rows: [], q: '', file: null, sending: false, confirmDel: null};
+      const root = () => document.getElementById(cfg.root);
+      const corp = () => sessionStorage.getItem('currentCorpOperNr');
+      const token = () => sessionStorage.getItem('authToken');
+      const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+      const encPath = p => p.split('/').map(encodeURIComponent).join('/');
+      const pathOf = url => {
+        if (!url) return null;
+        const m = String(url).match(/\/cb_pdf\/(.+)$/);
+        return m ? decodeURIComponent(m[1].split('?')[0]) : (String(url).startsWith('http') ? null : url);
+      };
+      const fmtDate = d => { if (!d) return '—'; const x = new Date(d); return isNaN(x) ? '—' : x.toLocaleDateString('pt-PT') + ' · ' + x.toLocaleTimeString('pt-PT', {hour: '2-digit', minute: '2-digit'}); };
+      const fmtSize = b => b > 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
+      const safeName = n => String(n || 'comunicado.pdf').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9._-]+/g, '_').replace(/_+/g, '_').slice(-80);
+      const pop = (t, m) => (typeof showPopup === 'function' ? showPopup(t, m) : alert(m));
+      (function css() {
+        if (document.getElementById('cm-css')) return;
+        const st = document.createElement('style');
+        st.id = 'cm-css';
+        st.textContent = `
+      .cm-wrap {display: grid; grid-template-columns: 380px 1fr; gap: 16px; align-items: start;}
+      .cm-card {background: #fff; border: 1px solid #e9ecef; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.05); overflow: hidden;}
+      .cm-card-h {padding: 12px 16px; border-bottom: 1px solid #f1f3f5; background: #fafbfc; font-size: 13px; font-weight: 700; color: #2c3e50; display: flex; align-items: center; gap: 8px;}
+      .cm-card-h span.cm-count {margin-left: auto; font-size: 11px; font-weight: 700; background: #eef2f7; color: #45556a; border-radius: 999px; padding: 2px 9px;}
+      .cm-form {padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 12px;}
+      .cm-lbl {font-size: 11px; font-weight: 700; color: #6c757d; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 5px; display: block;}
+      .cm-in {width: 100%; height: 38px; border: 1px solid #dee2e6; border-radius: 8px; padding: 0 11px; font-size: 13px; color: #2c3e50; box-sizing: border-box; font-family: inherit;}
+      .cm-in:focus {outline: none; border-color: #c62828; box-shadow: 0 0 0 3px rgba(198,40,40,.12);}
+      .cm-drop {border: 2px dashed #d5dbe1; border-radius: 10px; padding: 22px 14px; text-align: center; color: #6c757d; font-size: 12.5px; cursor: pointer !important; transition: all .15s; background: #fcfcfd;}
+      .cm-drop * {cursor: pointer !important;}
+      .cm-drop:hover, .cm-drop.over {border-color: #c62828; background: #fff6f6; color: #c62828;}
+      .cm-drop .cm-ico {font-size: 28px; display: block; margin-bottom: 6px;}
+      .cm-drop b {color: #2c3e50;}
+      .cm-file {display: flex; align-items: center; gap: 10px; border: 1px solid #e9ecef; border-radius: 10px; padding: 9px 11px; background: #fff;}
+      .cm-file .cm-pdf {width: 34px; height: 34px; border-radius: 8px; background: #fdecea; color: #c62828; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0;}
+      .cm-file .cm-fn {flex: 1; min-width: 0;}
+      .cm-file .cm-fn b {display: block; font-size: 12.5px; color: #2c3e50; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+      .cm-file .cm-fn small {font-size: 11px; color: #8a949e;}
+      .cm-x {border: 0; background: #f1f3f5; color: #6c757d; width: 26px; height: 26px; border-radius: 6px; cursor: pointer; font-size: 13px;}
+      .cm-x:hover {background: #fdecea; color: #c62828;}
+      .cm-check {display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: #2c3e50; cursor: pointer;}
+      .cm-check input {width: 15px; height: 15px; accent-color: #c62828; margin: 0; cursor: pointer !important;}
+      .cm-send {height: 40px; border: 0; border-radius: 8px; background: linear-gradient(to right, #8b0000, #c62828); color: #fff; font-weight: 700; font-size: 13px; letter-spacing: .3px; cursor: pointer; box-shadow: 0 2px 6px rgba(198,40,40,.25);}
+      .cm-send:hover {filter: brightness(1.07);}
+      .cm-send:disabled {opacity: .55; cursor: default; filter: none;}
+      .cm-hint {font-size: 11px; color: #8a949e; line-height: 1.4;}
+      .cm-tools {padding: 10px 16px; border-bottom: 1px solid #f1f3f5;}
+      .cm-list {max-height: calc(100vh - 400px); min-height: 200px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #cfd4da transparent;}
+      .cm-list::-webkit-scrollbar {width: 5px;}
+      .cm-list::-webkit-scrollbar-thumb {background: #cfd4da; border-radius: 10px;}
+      .cm-row {display: flex; align-items: center; gap: 12px; padding: 9px 16px;}
+      .cm-row + .cm-row {border-top: 1px solid #f4f5f7;}
+      .cm-row:hover {background: #fafbfc;}
+      .cm-row .cm-pdf {width: 32px; height: 32px; border-radius: 8px; background: #fdecea; color: #c62828; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0;}
+      .cm-row .cm-t {flex: 1; min-width: 0;}
+      .cm-row .cm-t b {display: block; font-size: 13px; color: #2c3e50; line-height: 1.25;}
+      .cm-row .cm-t small {font-size: 11px; color: #8a949e;}
+      .cm-new {font-size: 10px; font-weight: 800; color: #2e7d32; background: #e8f5e9; border-radius: 999px; padding: 1px 7px; margin-left: 6px; vertical-align: 1px;}
+      .cm-a {border: 1px solid #dee2e6; background: #fff; border-radius: 7px; height: 28px; padding: 0 10px; font-size: 12px; font-weight: 600; color: #2c3e50; cursor: pointer; flex-shrink: 0;}
+      .cm-a:hover {border-color: #2c3e50;}
+      .cm-a.del {color: #c62828; border-color: #f1c0c0; background: #fff5f5;}
+      .cm-a.del:hover {background: #ffe9e9;}
+      .cm-a.del.sure {background: #c62828; color: #fff; border-color: #c62828;}
+      .cm-empty {padding: 40px 16px; text-align: center; color: #8a949e; font-size: 13px;}
+      @media (max-width: 1100px) {.cm-wrap {grid-template-columns: 1fr;} .cm-list {max-height: none;}}`;
+        document.head.appendChild(st);
+      })();
+      async function load() {
+        const el = root(); if (!el) return;
+        if (!el.dataset.ready) { el.innerHTML = shell(); bindForm(); el.dataset.ready = '1'; }
+        const list = el.querySelector('.cm-list');
+        list.innerHTML = '<div class="cm-empty">A carregar comunicados…</div>';
+        try {
+          const r = await fetch(`${SUPABASE_URL}/rest/v1/serv_comun?select=*&corp_oper_nr=eq.${corp()}&order=created_at.desc`, {headers: getSupabaseHeaders()});
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          S.rows = await r.json();
+        } catch (e) {
+          console.error('Erro ao carregar comunicados:', e);
+          S.rows = [];
+          list.innerHTML = '<div class="cm-empty">Erro ao carregar comunicados.</div>';
+          return;
+        }
+        renderList();
+      }
+      function shell() {
+        return `
+        <div class="cm-wrap">
+          <div class="cm-card">
+            <div class="cm-card-h">📤 Novo comunicado</div>
+            <div class="cm-form">
+              <div><label class="cm-lbl" for="cmTitle">Título</label>
+                <input id="cmTitle" class="cm-in" maxlength="120" placeholder="Ex.: Ordem de Serviço n.º 12/2026"></div>
+              <div><span class="cm-lbl">Ficheiro PDF</span>
+                <div class="cm-filebox"></div>
+                <input id="cmFile" type="file" accept="application/pdf,.pdf" style="display:none"></div>
+              <label class="cm-check"><input id="cmNotify" type="checkbox" checked> Notificar todos os elementos (push)</label>
+              <button type="button" class="cm-send" id="cmSend">Publicar comunicado</button>
+              <div class="cm-hint">O PDF fica guardado de forma privada e só é visível para os elementos da corporação, na página Comunicados do CB360 Mobile. Máximo ${MAX_MB} MB.</div>
+            </div>
+          </div>
+          <div class="cm-card">
+            <div class="cm-card-h">📄 Comunicados publicados <span class="cm-count">0</span></div>
+            <div class="cm-tools"><input class="cm-in cm-q" placeholder="Procurar comunicado…"></div>
+            <div class="cm-list"></div>
+          </div>
+        </div>`;
+      }
+      function renderFile() {
+        const box = root().querySelector('.cm-filebox');
+        if (!S.file) {
+          box.innerHTML = `<div class="cm-drop"><span class="cm-ico">📎</span><b>Arraste o PDF para aqui</b><br>ou clique para escolher</div>`;
+          const d = box.querySelector('.cm-drop');
+          d.onclick = () => root().querySelector('#cmFile').click();
+          d.ondragover = ev => { ev.preventDefault(); d.classList.add('over'); };
+          d.ondragleave = () => d.classList.remove('over');
+          d.ondrop = ev => { ev.preventDefault(); d.classList.remove('over'); pick(ev.dataTransfer.files[0]); };
+        } else {
+          box.innerHTML = `<div class="cm-file"><span class="cm-pdf">PDF</span><span class="cm-fn"><b>${esc(S.file.name)}</b><small>${fmtSize(S.file.size)}</small></span><button type="button" class="cm-x" title="Remover">✕</button></div>`;
+          box.querySelector('.cm-x').onclick = () => { S.file = null; root().querySelector('#cmFile').value = ''; renderFile(); };
+        }
+      }
+      function pick(f) {
+        if (!f) return;
+        const isPdf = f.type === 'application/pdf' || /\.pdf$/i.test(f.name);
+        if (!isPdf) return pop('popup-danger', 'Só é possível publicar ficheiros PDF.');
+        if (f.size > MAX_MB * 1048576) return pop('popup-danger', `O PDF tem ${fmtSize(f.size)}. O máximo é ${MAX_MB} MB.`);
+        S.file = f;
+        const t = root().querySelector('#cmTitle');
+        if (!t.value.trim()) t.value = f.name.replace(/\.pdf$/i, '').replace(/[_]+/g, ' ').trim();
+        renderFile();
+      }
+      function bindForm() {
+        const el = root();
+        renderFile();
+        el.querySelector('#cmFile').onchange = ev => pick(ev.target.files[0]);
+        el.querySelector('#cmSend').onclick = publish;
+        el.querySelector('.cm-q').oninput = ev => { S.q = ev.target.value.trim().toLowerCase(); renderList(); };
+      }
+      function renderList() {
+        const el = root();
+        el.querySelector('.cm-count').textContent = S.rows.length;
+        const list = el.querySelector('.cm-list');
+        const rows = S.rows.filter(r => !S.q || String(r.comun_title || '').toLowerCase().includes(S.q));
+        if (!rows.length) { list.innerHTML = `<div class="cm-empty">${S.rows.length ? 'Nenhum comunicado corresponde à pesquisa.' : 'Ainda não há comunicados publicados.'}</div>`; return; }
+        const week = Date.now() - 7 * 864e5;
+        list.innerHTML = rows.map((r, i) => {
+          const k = S.rows.indexOf(r);
+          const isNew = r.created_at && new Date(r.created_at).getTime() > week;
+          return `<div class="cm-row">
+            <span class="cm-pdf">PDF</span>
+            <span class="cm-t"><b>${esc(r.comun_title || 'Comunicado')}${isNew ? '<span class="cm-new">NOVO</span>' : ''}</b><small>${fmtDate(r.created_at)}</small></span>
+            <button type="button" class="cm-a" data-view="${k}">👁 Ver</button>
+            <button type="button" class="cm-a del ${S.confirmDel === k ? 'sure' : ''}" data-del="${k}">${S.confirmDel === k ? 'Confirmar?' : '🗑'}</button>
+          </div>`;
+        }).join('');
+        list.querySelectorAll('[data-view]').forEach(b => b.onclick = () => view(S.rows[+b.dataset.view], b));
+        list.querySelectorAll('[data-del]').forEach(b => b.onclick = () => {
+          const k = +b.dataset.del;
+          if (S.confirmDel !== k) { S.confirmDel = k; renderList(); setTimeout(() => { if (S.confirmDel === k) { S.confirmDel = null; renderList(); } }, 4000); return; }
+          S.confirmDel = null; remove(S.rows[k]);
+        });
+      }
+      async function view(r, btn) {
+        const path = pathOf(r.comun_url);
+        const w = window.open('', '_blank');
+        if (btn) { btn.disabled = true; btn.textContent = '…'; }
+        try {
+          let blobUrl = null;
+          if (path) {
+            const res = await fetch(`${SUPABASE_URL}/storage/v1/object/authenticated/${BUCKET}/${encPath(path)}`, {headers: {apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${token()}`}});
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            blobUrl = URL.createObjectURL(new Blob([await res.arrayBuffer()], {type: 'application/pdf'}));
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 120000);
+          } else {
+            blobUrl = r.comun_url;
+          }
+          if (w) w.location.href = blobUrl; else window.open(blobUrl, '_blank');
+        } catch (e) {
+          if (w) w.close();
+          console.error('Erro ao abrir PDF:', e);
+          pop('popup-danger', 'Não foi possível abrir o PDF.');
+        } finally {
+          if (btn) { btn.disabled = false; btn.textContent = '👁 Ver'; }
+        }
+      }
+      async function publish() {
+        if (S.sending) return;
+        const el = root();
+        const title = el.querySelector('#cmTitle').value.trim();
+        const notify = el.querySelector('#cmNotify').checked;
+        if (!title) return pop('popup-danger', 'Indique o título do comunicado.');
+        if (!S.file) return pop('popup-danger', 'Escolha o ficheiro PDF.');
+        const c = corp();
+        if (!c || !token()) return pop('popup-danger', 'Sessão inválida. Volte a iniciar sessão.');
+        const btn = el.querySelector('#cmSend');
+        S.sending = true; btn.disabled = true; btn.textContent = 'A publicar…';
+        const path = `${c}/${Date.now()}_${safeName(S.file.name.replace(/\.pdf$/i, '')) || 'comunicado'}.pdf`;
+        let uploaded = false;
+        try {
+          const up = await fetch(`${SUPABASE_URL}/storage/v1/object/${BUCKET}/${encPath(path)}`, {
+            method: 'POST',
+            headers: {apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${token()}`, 'Content-Type': 'application/pdf', 'x-upsert': 'false'},
+            body: S.file
+          });
+          if (!up.ok) throw new Error('Upload: ' + (await up.text()));
+          uploaded = true;
+          const ins = await fetch(`${SUPABASE_URL}/rest/v1/serv_comun`, {
+            method: 'POST', headers: getSupabaseHeaders(),
+            body: JSON.stringify({corp_oper_nr: c, comun_title: title, comun_url: path, created_at: new Date().toISOString()})
+          });
+          if (!ins.ok) throw new Error('Registo: ' + (await ins.text()));
+          if (notify) notifyAll(c, title);
+          pop('popup-success', notify ? 'Comunicado publicado e elementos notificados!' : 'Comunicado publicado!');
+          S.file = null; el.querySelector('#cmTitle').value = ''; el.querySelector('#cmFile').value = '';
+          renderFile();
+          await load();
+        } catch (e) {
+          console.error('Erro ao publicar comunicado:', e);
+          if (uploaded) {   /* não deixa ficheiros órfãos no Storage */
+            fetch(`${SUPABASE_URL}/storage/v1/object/${BUCKET}/${encPath(path)}`, {method: 'DELETE', headers: {apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${token()}`}}).catch(() => {});
+          }
+          pop('popup-danger', 'Não foi possível publicar o comunicado.');
+        } finally {
+          S.sending = false; btn.disabled = false; btn.textContent = 'Publicar comunicado';
+        }
+      }
+      async function notifyAll(c, title) {
+        const msg = `📄 Novo comunicado: "${title}". Consulte na área de Comunicados.`;
+        try {
+          const r = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${c}&elem_state=eq.true&select=n_int`, {headers: getSupabaseHeaders()});
+          const users = r.ok ? await r.json() : [];
+          if (users.length) {
+            const now = new Date().toISOString();
+            fetch(`${SUPABASE_URL}/rest/v1/user_notifications`, {method: 'POST', headers: getSupabaseHeaders(),
+              body: JSON.stringify(users.map(u => ({n_int: u.n_int, corp_oper_nr: c, title: 'COMUNICADOS', message: msg, is_read: false, created_at: now})))
+            }).catch(e => console.error('Erro notificações:', e));
+          }
+          fetch('https://cb-360-app.vercel.app/api/sendPush', {method: 'POST', headers: cb360PushHeaders(),
+            body: JSON.stringify({recipient_nint: 'geral', tipo: 'aviso', pagina: 'Comunic', sender_name: 'CB360 Online', message_text: msg})
+          }).catch(e => console.error('Erro Push:', e));
+        } catch (e) {
+          console.error('Erro ao notificar elementos:', e);
+        }
+      }
+      async function remove(r) {
+        const path = pathOf(r.comun_url);
+        try {
+          const del = await fetch(`${SUPABASE_URL}/rest/v1/serv_comun?corp_oper_nr=eq.${corp()}&comun_url=eq.${encodeURIComponent(r.comun_url)}`, {
+            method: 'DELETE', headers: {...getSupabaseHeaders(), Prefer: 'return=representation'}
+          });
+          if (!del.ok) throw new Error(await del.text());
+          const gone = await del.json();
+          if (!gone.length) throw new Error('Sem permissão para eliminar (0 linhas).');
+          if (path) {
+            fetch(`${SUPABASE_URL}/storage/v1/object/${BUCKET}/${encPath(path)}`, {method: 'DELETE', headers: {apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${token()}`}})
+              .catch(e => console.error('Erro ao apagar ficheiro:', e));
+          }
+          pop('popup-success', 'Comunicado eliminado.');
+          await load();
+        } catch (e) {
+          console.error('Erro ao eliminar comunicado:', e);
+          pop('popup-danger', 'Não foi possível eliminar o comunicado.');
+        }
+      }
+      return {load};
+    }
+    /* =======================================================================
     ESTADOS DOS VEÍCULOS (Online) — substitui o grupo do Telegram
     ======================================================================= */
     const VSL_POLL_MS = 10000;

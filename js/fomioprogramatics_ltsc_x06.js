@@ -1,78 +1,69 @@
     /* =======================================
     FOMIO
     ======================================= */
-/* =======================================================================
-       ESTADOS DOS VEÍCULOS (Online) — substitui o grupo do Telegram
-       - Lê vehicle_status_log de 10 em 10 s
-       - Enquanto houver mensagens por ler (is_read = false) o botão do menu pisca
-         (createBlinker, igual às Indisponibilidades / Ocorrências ativas) e o título do separador também
-       - Ao abrir a página, as mensagens mostradas passam a lidas
-       Botão do menu: <button class="sidebar-submenu-button" data-page="page-veic-status" data-access="vehicle_status_log">
-       Página: <div id="page-veic-status" class="page"> ... <div id="vslBoard"></div>
-       ======================================================================= */
+    /* =======================================================================
+    ESTADOS DOS VEÍCULOS (Online) — substitui o grupo do Telegram
+    ======================================================================= */
     const VSL_POLL_MS = 10000;
-    const VSL_ACTIONS = {
-      'Saída Und.':                 {label: 'Saída do Quartel',   color: '#e53935', icon: 'fa-truck-fast',          state: 'out'},
-      'Chegada TO':                 {label: 'Chegada ao TO',      color: '#0282fa', icon: 'fa-location-dot',        state: 'to'},
-      'Saída TO':                   {label: 'Saída do TO',        color: '#ef8f00', icon: 'fa-arrow-rotate-left',   state: 'back'},
-      'Chegada Und.':               {label: 'Chegada ao Quartel', color: '#2e7d32', icon: 'fa-warehouse',           state: 'home'},
-      'Retido por Falta de Macas':  {label: 'Retido · Falta de Macas', color: '#4b5563', icon: 'fa-ban',            state: 'held'},
-      'Retido por Aguarda Triagem': {label: 'Retido · Aguarda Triagem', color: '#4b5563', icon: 'fa-ban',           state: 'held'},
-      'Fim de Retenção':            {label: 'Fim de Retenção',    color: '#00897b', icon: 'fa-circle-check',        state: 'to'}
-    };
+    const VSL_POLL_OPEN_MS = 3000;
+    const VSL_ACTIONS = {'Saída Und.': {label: 'Saída do Quartel', color: '#e53935', icon: 'fa-truck-fast', state: 'out'}, 'Chegada TO': {label: 'Chegada ao TO', color: '#0282fa', icon: 'fa-location-dot', state: 'to'},
+                         'Saída TO': {label: 'Saída do TO', color: '#ef8f00', icon: 'fa-arrow-rotate-left', state: 'back'}, 'Chegada Und.': {label: 'Chegada ao Quartel', color: '#2e7d32', icon: 'fa-warehouse', state: 'home'},
+                         'Retido por Falta de Macas':  {label: 'Retido · Falta de Macas', color: '#4b5563', icon: 'fa-ban', state: 'held'}, 'Retido por Aguarda Triagem': {label: 'Retido · Aguarda Triagem', color: '#4b5563', icon: 'fa-ban', state: 'held'},
+                         'Fim de Retenção': {label: 'Fim de Retenção', color: '#00897b', icon: 'fa-circle-check', state: 'to'}
+                        };
     const VSL = {date: null, vehicle: 'todos', rows: [], unread: [], timer: null, lastMaxId: 0, titleTimer: null, baseTitle: document.title};
     const vslEsc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
     const vslCorp = () => sessionStorage.getItem('currentCorpOperNr');
     const vslAct = a => VSL_ACTIONS[a] || {label: a, color: '#6b7280', icon: 'fa-circle-info', state: 'other'};
     const vslPad = n => String(n).padStart(2, '0');
-    const vslToday = () => { const d = new Date(); return `${d.getFullYear()}-${vslPad(d.getMonth() + 1)}-${vslPad(d.getDate())}`; };
-    const vslTime = iso => { const d = new Date(iso); return `${vslPad(d.getHours())}:${vslPad(d.getMinutes())}`; };
+    const vslToday = () => {const d = new Date(); return `${d.getFullYear()}-${vslPad(d.getMonth() + 1)}-${vslPad(d.getDate())}`;};
+    const vslTime = iso => {const d = new Date(iso); return `${vslPad(d.getHours())}:${vslPad(d.getMinutes())}`;};
     const vslPump = m => m ? `${vslPad(Math.floor(m / 60))}h${vslPad(m % 60)}m` : '';
-    const vslPageVisible = () => { const p = document.getElementById('page-veic-status'); return !!(p && p.style.display !== 'none' && p.offsetParent !== null); };
-
+    const vslPageVisible = () => {const p = document.getElementById('page-veic-status'); return !!(p && getComputedStyle(p).display !== 'none' && p.getClientRects().length > 0);};
     /* ---------- estilo ---------- */
     (function vslCss() {
       if (document.getElementById('vsl-css')) return;
       const st = document.createElement('style');
       st.id = 'vsl-css';
       st.textContent = `
-      .vsl {display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: start;}
-      .vsl-card {background: #fff; border: 1px solid #e9ecef; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.05); overflow: hidden;}
-      .vsl-head {display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid #eef0f3; background: #fafbfc;}
-      .vsl-head h4 {margin: 0; font-size: 14px; color: #2c3e50; display: flex; align-items: center; gap: 8px;}
-      .vsl-head .vsl-new {background: #c62828; color: #fff; border-radius: 999px; font-size: 11px; font-weight: 700; padding: 2px 9px;}
-      .vsl-head .vsl-f {margin-left: auto; display: flex; gap: 8px; align-items: center;}
-      .vsl-head input, .vsl-head select {height: 32px; border: 1px solid #dee2e6; border-radius: 8px; padding: 0 9px; font-size: 12.5px; color: #2c3e50; background: #fff; font-family: inherit;}
-      .vsl-head .vsl-today {height: 32px; border: 1px solid #dee2e6; background: #fff; border-radius: 8px; padding: 0 12px; font-size: 12px; font-weight: 600; cursor: pointer;}
-      .vsl-feed {height: calc(100vh - 330px); min-height: 320px; overflow-y: auto; padding: 14px 16px; background: #f6f7f9; display: flex; flex-direction: column; gap: 8px;
-                 scrollbar-width: thin; scrollbar-color: #cfd4da transparent;}
-      .vsl-feed::-webkit-scrollbar {width: 6px;} .vsl-feed::-webkit-scrollbar-thumb {background: #cfd4da; border-radius: 10px;}
-      .vsl-msg {display: flex; gap: 10px; align-items: flex-start; max-width: 640px;}
-      .vsl-av {width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 15px; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,.15);}
-      .vsl-bubble {background: #fff; border: 1px solid #e9ecef; border-radius: 4px 12px 12px 12px; padding: 8px 12px; box-shadow: 0 1px 2px rgba(0,0,0,.04); min-width: 0;}
-      .vsl-msg.unread .vsl-bubble {border-color: #f5c2c0; box-shadow: 0 0 0 3px rgba(198,40,40,.10);}
-      .vsl-l1 {display: flex; align-items: center; gap: 8px; flex-wrap: wrap;}
-      .vsl-l1 b {font-size: 13.5px; color: #1f2d3a; letter-spacing: .2px;}
-      .vsl-pill {font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 999px; color: #fff;}
-      .vsl-tag-new {font-size: 9.5px; font-weight: 800; color: #c62828; letter-spacing: .5px;}
-      .vsl-l2 {display: flex; flex-wrap: wrap; gap: 6px 12px; margin-top: 4px; font-size: 11.5px; color: #6c757d;}
-      .vsl-l2 .chip {background: #f1f3f5; border-radius: 6px; padding: 1px 7px; color: #2c3e50; font-weight: 600;}
-      .vsl-day {align-self: center; font-size: 11px; font-weight: 700; color: #6c757d; background: #e9ecef; border-radius: 999px; padding: 3px 12px; margin: 4px 0;}
-      .vsl-empty {margin: auto; text-align: center; color: #8a949e; font-size: 13px;}
-      .vsl-empty i {display: block; font-size: 30px; color: #cfd4da; margin-bottom: 8px;}
-      .vsl-side-h {padding: 10px 14px; border-bottom: 1px solid #eef0f3; background: #fafbfc; font-size: 13px; font-weight: 700; color: #2c3e50;}
-      .vsl-veh {display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-bottom: 1px solid #f4f5f7; cursor: pointer;}
-      .vsl-veh:hover {background: #fafbfc;}
-      .vsl-veh.sel {background: #fff5f5;}
-      .vsl-veh b {font-size: 12.5px; color: #2c3e50; min-width: 74px;}
-      .vsl-veh .st {font-size: 10.5px; font-weight: 700; border-radius: 999px; padding: 2px 8px; color: #fff; white-space: nowrap;}
-      .vsl-veh small {margin-left: auto; color: #8a949e; font-size: 11px; white-space: nowrap;}
-      .vsl-side-list {max-height: calc(100vh - 330px); overflow-y: auto; scrollbar-width: thin;}
-      .vsl-hidden {display: none;}
-      @media (max-width: 1100px) {.vsl {grid-template-columns: 1fr;}}`;
+        .vsl {display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: start;}
+        .vsl-card {background: #fff; border: 1px solid #e9ecef; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.05); overflow: hidden;}
+        .vsl-head {min-height: 53px; box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid #eef0f3; background: #fafbfc;}
+        .vsl-head h4 {margin: 0; font-size: 14px; color: #2c3e50; display: flex; align-items: center; gap: 8px;}
+        .vsl-head .vsl-new {background: #c62828; color: #fff; border-radius: 999px; font-size: 11px; font-weight: 700; padding: 2px 9px;}
+        .vsl-head .vsl-f {margin-left: auto; display: flex; gap: 8px; align-items: center;}
+        .vsl-head input, .vsl-head select {height: 32px; border: 1px solid #dee2e6; border-radius: 8px; padding: 0 9px; font-size: 12.5px; color: #2c3e50; background: #fff; font-family: inherit;}
+        .vsl-head .vsl-today {height: 32px; border: 1px solid #dee2e6; background: #fff; border-radius: 8px; padding: 0 12px; font-size: 12px; font-weight: 600; cursor: pointer;}
+        .vsl-feed {height: calc(100vh - 330px); min-height: 320px; box-sizing: border-box; overflow-y: auto; padding: 14px 16px; background: #f6f7f9; display: flex; flex-direction: column; gap: 8px;
+                   scrollbar-width: thin; scrollbar-color: #cfd4da transparent;}
+        .vsl-feed::-webkit-scrollbar {width: 6px;} .vsl-feed::-webkit-scrollbar-thumb {background: #cfd4da; border-radius: 10px;}
+        .vsl-msg {display: flex; gap: 10px; align-items: flex-start; max-width: 640px;}
+        .vsl-av {width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 15px; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,.15);}
+        .vsl-bubble {background: #fff; border: 1px solid #e9ecef; border-radius: 4px 12px 12px 12px; padding: 8px 12px; box-shadow: 0 1px 2px rgba(0,0,0,.04); min-width: 0;}
+        .vsl-msg.old {opacity: .5; transition: opacity .15s;} .vsl-msg.old:hover {opacity: 1;}
+        .vsl-msg.unread .vsl-bubble {border-color: #f5c2c0; box-shadow: 0 0 0 3px rgba(198,40,40,.10);}
+        .vsl-l1 {display: flex; align-items: center; gap: 8px; flex-wrap: wrap;}
+        .vsl-l1 b {font-size: 13.5px; color: #1f2d3a; letter-spacing: .2px;}
+        .vsl-pill {font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 999px; color: #fff;}
+        .vsl-tag-new {font-size: 9.5px; font-weight: 800; color: #c62828; letter-spacing: .5px;}
+        .vsl-l2 {display: flex; flex-wrap: wrap; gap: 6px 12px; margin-top: 4px; font-size: 11.5px; color: #6c757d;}
+        .vsl-l2 .chip {background: #f1f3f5; border-radius: 6px; padding: 1px 7px; color: #2c3e50; font-weight: 600;}
+        .vsl-day {align-self: center; font-size: 11px; font-weight: 700; color: #6c757d; background: #e9ecef; border-radius: 999px; padding: 3px 12px; margin: 4px 0;}
+        .vsl-empty {margin: auto; text-align: center; color: #8a949e; font-size: 13px;}
+        .vsl-empty i {display: block; font-size: 30px; color: #cfd4da; margin-bottom: 8px;}
+        .vsl-side-h {height: 53px; box-sizing: border-box; display: flex; align-items: center; gap: 8px; padding: 0 14px; border-bottom: 1px solid #eef0f3; background: #fafbfc; font-size: 13px; font-weight: 700; color: #2c3e50;}
+        .vsl-veh {display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-bottom: 1px solid #f4f5f7; cursor: pointer;}
+        .vsl-veh:hover {background: #fafbfc;}
+        .vsl-veh.sel {background: #fff5f5;}
+        .vsl-veh b {font-size: 12.5px; color: #2c3e50; min-width: 74px;}
+        .vsl-veh .st {font-size: 10.5px; font-weight: 700; border-radius: 999px; padding: 2px 8px; color: #fff; white-space: nowrap;}
+        .vsl-veh small {margin-left: auto; color: #8a949e; font-size: 11px; white-space: nowrap;}
+        .vsl-side-list {height: calc(100vh - 330px); min-height: 320px; box-sizing: border-box; overflow-y: auto; scrollbar-width: thin;}
+        .vsl-hidden {display: none;}
+        @media (max-width: 1100px) {.vsl {grid-template-columns: 1fr;}}
+      `;
       document.head.appendChild(st);
     })();
-
     /* ---------- tabela escondida usada pelo createBlinker (uma linha por mensagem por ler) ---------- */
     function vslEnsureHiddenTable() {
       if (document.getElementById('vsl-unread-tbody')) return;
@@ -82,8 +73,7 @@
       document.body.appendChild(t);
     }
     vslEnsureHiddenTable();
-    let vehicleStatusBlinker = null;   /* criado no arranque, depois de o createBlinker do menu estar carregado */
-
+    let vehicleStatusBlinker = null;
     /* ---------- leitura de 10 em 10 s (corre sempre, mesmo com a página fechada) ---------- */
     async function vslPoll() {
       const corp = vslCorp();
@@ -95,8 +85,7 @@
         const tb = document.getElementById('vsl-unread-tbody');
         if (tb) tb.innerHTML = VSL.unread.map(x => `<tr><td>${x.id}</td></tr>`).join('');
         vslTitle(VSL.unread.length);
-        const maxId = VSL.unread.reduce((m, x) => Math.max(m, x.id), 0);
-        if (vslPageVisible() && (VSL.unread.length || maxId > VSL.lastMaxId)) await vslLoad(true);
+        if (vslPageVisible()) await vslLoad(true);
       } catch (e) {
         console.warn('Estados dos veículos:', e);
       }
@@ -112,17 +101,19 @@
       if (!vehicleStatusBlinker && typeof createBlinker === 'function') {
         vehicleStatusBlinker = createBlinker({pageId: 'page-veic-status', tableId: 'vsl-unread-tbody', blinkClass: 'blink-veic-status-js', primaryColor: '#343A40', blinkColor: '#DC3545'});
       }
-      vslPoll();
-      VSL.timer = setInterval(vslPoll, VSL_POLL_MS);
+      const tick = async () => {
+        await vslPoll();
+        VSL.timer = setTimeout(tick, vslPageVisible() ? VSL_POLL_OPEN_MS : VSL_POLL_MS);
+      };
+      VSL.timer = -1;
+      tick();
     }
     document.addEventListener('DOMContentLoaded', () => setTimeout(vslStart, 1500));
     if (document.readyState !== 'loading') setTimeout(vslStart, 1500);
-
     /* ---------- abrir a página ---------- */
     document.addEventListener('click', e => {
       if (e.target.closest('[data-page="page-veic-status"]')) setTimeout(() => vslLoad(false), 50);
     });
-
     async function vslLoad(silent) {
       const root = document.getElementById('vslBoard'); if (!root) return;
       if (!root.dataset.ready) { vslShell(root); root.dataset.ready = '1'; }
@@ -137,6 +128,7 @@
         if (!r1.ok) throw new Error('HTTP ' + r1.status);
         VSL.rows = await r1.json();
         VSL.fleet = r2.ok ? await r2.json() : [];
+        if (!silent || !VSL.oldIds) VSL.oldIds = new Set(VSL.rows.filter(x => x.is_read).map(x => x.id));
       } catch (e) {
         if (!silent) root.querySelector('.vsl-feed').innerHTML = '<div class="vsl-empty"><i class="fa-solid fa-triangle-exclamation"></i>Não foi possível carregar os estados.</div>';
         return;
@@ -163,7 +155,8 @@
             <div class="vsl-side-h"><i class="fa-solid fa-truck-medical" style="color:#c62828; margin-right:6px;"></i>Onde estão agora</div>
             <div class="vsl-side-list" id="vslFleet"></div>
           </div>
-        </div>`;
+        </div>
+      `;
       root.querySelector('#vslDate').onchange = ev => { VSL.date = ev.target.value || vslToday(); vslLoad(false); };
       root.querySelector('#vslToday').onclick = () => { VSL.date = vslToday(); root.querySelector('#vslDate').value = VSL.date; vslLoad(false); };
       root.querySelector('#vslVeh').onchange = ev => { VSL.vehicle = ev.target.value; vslRender(); };
@@ -172,14 +165,13 @@
       const root = document.getElementById('vslBoard'); if (!root) return;
       const feed = root.querySelector('#vslFeed');
       const nearBottom = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 80;
-      /* filtro de veículos */
       const sel = root.querySelector('#vslVeh');
       const vehs = [...new Set([...VSL.rows.map(x => x.vehicle), ...(VSL.fleet || []).map(x => x.vehicle)])].filter(Boolean).sort();
       const cur = VSL.vehicle;
-      sel.innerHTML = '<option value="todos">Todos os veículos</option>' + vehs.map(v => `<option value="${vslEsc(v)}">${vslEsc(v)}</option>`).join('');
+      const opts = '<option value="todos">Todos os veículos</option>' + vehs.map(v => `<option value="${vslEsc(v)}">${vslEsc(v)}</option>`).join('');
+      if (sel.dataset.opts !== opts) { sel.innerHTML = opts; sel.dataset.opts = opts; }   /* só refaz se mudou (não fecha a lista aberta a cada 10 s) */
       sel.value = vehs.includes(cur) ? cur : 'todos';
       VSL.vehicle = sel.value;
-      /* mensagens */
       const rows = VSL.rows.filter(x => VSL.vehicle === 'todos' || x.vehicle === VSL.vehicle);
       const unreadIds = new Set(VSL.unread.map(x => x.id));
       const nNew = rows.filter(x => !x.is_read || unreadIds.has(x.id)).length;
@@ -197,7 +189,7 @@
             x.km ? `<span class="chip"><i class="fa-solid fa-road" style="margin-right:4px;"></i>${vslEsc(x.km)} km</span>` : '',
             x.pump_minutes ? `<span class="chip"><i class="fa-solid fa-faucet-drip" style="margin-right:4px;"></i>Bomba ${vslPump(x.pump_minutes)}</span>` : ''
           ].join('');
-          return `<div class="vsl-msg ${isNew ? 'unread' : ''}">
+          return `<div class="vsl-msg ${isNew ? 'unread' : ''} ${VSL.oldIds && VSL.oldIds.has(x.id) ? 'old' : ''}">
             <div class="vsl-av" style="background:${a.color}"><i class="fa-solid ${a.icon}"></i></div>
             <div class="vsl-bubble">
               <div class="vsl-l1"><b>${vslEsc(x.vehicle)}</b><span class="vsl-pill" style="background:${a.color}">${vslEsc(a.label)}</span>${isNew ? '<span class="vsl-tag-new">NOVO</span>' : ''}</div>
@@ -207,7 +199,6 @@
         }).join('');
         if (nearBottom || !feed.dataset.scrolled) { feed.scrollTop = feed.scrollHeight; feed.dataset.scrolled = '1'; }
       }
-      /* onde estão agora: último estado do dia; se não houver, o estado da tabela vehicle_status */
       const last = {};
       VSL.rows.forEach(x => { last[x.vehicle] = x; });
       const fleet = root.querySelector('#vslFleet');
@@ -228,7 +219,6 @@
         vslRender();
       });
     }
-    /* com a página aberta, o que está por ler passa a lido (o botão deixa de piscar no próximo ciclo) */
     async function vslMarkRead() {
       if (!vslPageVisible()) return;
       const ids = VSL.rows.filter(x => !x.is_read).map(x => x.id);
@@ -239,10 +229,9 @@
           body: JSON.stringify({is_read: true, read_at: new Date().toISOString(), read_by: sessionStorage.getItem('currentNInt') || null})
         });
         if (!r.ok) return;
-        /* fica destacado como NOVO até à próxima atualização, para o operador ver o que acabou de chegar */
-        setTimeout(() => { VSL.rows.forEach(x => { if (ids.includes(x.id)) { x.is_read = true; x.read_at = new Date().toISOString(); } }); VSL.unread = VSL.unread.filter(x => !ids.includes(x.id));
-                           const tb = document.getElementById('vsl-unread-tbody'); if (tb) tb.innerHTML = VSL.unread.map(x => `<tr><td>${x.id}</td></tr>`).join('');
-                           vslTitle(VSL.unread.length); if (vslPageVisible()) vslRender(); }, 8000);
+        setTimeout(() => {VSL.rows.forEach(x => { if (ids.includes(x.id)) { x.is_read = true; x.read_at = new Date().toISOString(); } }); VSL.unread = VSL.unread.filter(x => !ids.includes(x.id));
+                          const tb = document.getElementById('vsl-unread-tbody'); if (tb) tb.innerHTML = VSL.unread.map(x => `<tr><td>${x.id}</td></tr>`).join('');
+                          vslTitle(VSL.unread.length); if (vslPageVisible()) vslRender(); }, 8000);
       } catch (e) { console.warn('Marcar lidas:', e); }
     }
     /* Notificações push (sendPush): o servidor exige o token da sessão */

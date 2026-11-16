@@ -349,10 +349,10 @@
       const legendDiv = document.createElement("div");
       legendDiv.style.cssText = `margin-top: 5px; padding: 12px; background: #f0f8ff; border: 1px solid #4682b4; border-radius: 5px; font-family: 'Segoe UI', sans-serif;
                                  display: inline-block; width: fit-content; margin-left: 5px;vertical-align:top; height:150px;`;
-      const shifts = [ {code: "", desc: "Condutor INEM", special: "driver"}, {code: "", desc: "Outro", special: "other"}, {code: "", desc: "OPTEL", special: "optel"}, {code: "", desc: "EIP", special: "eip"}, {code: "M", desc: "08:00 - 16:00"}, {code: "D", desc: "08:00 - 20:00"}, {code: "HR", desc: "09:00 - 19:00"}, 
-                      {code: "N", desc: "20:00 - 08:00"}, {code: "FO", desc: "Folga"}, {code: "FE", desc: "Férias"}, {code: "FOR", desc: "Formação"}, {code: "BX", desc: "Baixa"},
-                      {code: "FI", desc: "Falta Injustificada"}, {code: "FJ", desc: "Falta Justificada"}, {code: "LP", desc: "Lic. Parental"}, {code: "LN", desc: "Lic. Nojo"},
-                      {code: "LC", desc: "Lic. Casamento"}, {code: "DP", desc: "Dispensa"}, {code: "HA", desc: "Amamentação"}];
+      const shifts = [ {code: "", desc: "Condutor INEM", special: "driver"}, {code: "", desc: "Outro", special: "other"}, {code: "", desc: "OPTEL", special: "optel"}, {code: "", desc: "EIP", special: "eip"},
+                      {code: "M", desc: "08:00 - 16:00"}, {code: "D", desc: "08:00 - 20:00"}, {code: "N", desc: "20:00 - 08:00"}, {code: "HA", desc: "Amamentação"}, {code: "HR", desc: "09:00 - 19:00"},
+                      {code: "FOR", desc: "Formação"}, {code: "DP", desc: "Dispensa"}, {code: "FO", desc: "Folga"}, {code: "FE", desc: "Férias"}, {code: "BX", desc: "Baixa"},
+                      {code: "FI", desc: "Falta Injustificada"}, {code: "FJ", desc: "Falta Justificada"}, {code: "LN", desc: "Lic. Nojo"}, {code: "LC", desc: "Lic. Casamento"}, {code: "LP", desc: "Lic. Parental"}];
       const itemHTML = (shift) => {        
         const codeBg = shift.special === "driver" ? DRIVER_BG : shift.special === "other" ? OTHER_BG : shift.special === "optel" ? OPTEL_BG : shift.special === "eip" ? EIP_BG : (SHIFT_COLORS[shift.code]?.bg || "#FFFFFF");
         const codeColor = shift.special === "driver" ? DRIVER_TEXT : (SHIFT_COLORS[shift.code]?.color || "#000000");

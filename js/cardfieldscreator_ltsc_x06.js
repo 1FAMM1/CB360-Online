@@ -30,28 +30,54 @@
       if (document.getElementById('ocr-elem-css')) return;
       const st = document.createElement('style'); st.id = 'ocr-elem-css';
       st.textContent = `
-        .wsms-vehicle-card.has-elems {overflow: visible;}
         .ocr-elems {display: flex; flex-direction: column; gap: 8px; padding: 0 10px 10px; position: relative;}
-        .ocr-elems > label {font-size: 11px; font-weight: 600; color: #777; text-transform: uppercase; letter-spacing: .04em;}
+        .ocr-elems-row {display: flex; align-items: center; gap: 8px;}
+        .ocr-elems-row > label {flex-shrink: 0; margin: 0; font-size: 11px; font-weight: 600; color: #777; text-transform: uppercase; letter-spacing: .04em;}
+        .ocr-elems-row .ocr-ms-btn {flex: 0 0 132px; min-width: 0; padding: 0 8px;}
+        .ocr-elems-row .ocr-ms-btn span {overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
         .ocr-ms-btn {width: 100%; height: 34px; border: 1px solid #c8c8c8; border-radius: 6px; background: #fff; text-align: left; padding: 0 10px; font: inherit; font-size: 12.5px;
                      display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #333;}
         .ocr-ms-btn:hover {border-color: #888;}
-        .ocr-chips {display: flex; flex-wrap: wrap; gap: 6px;}
+        .ocr-chips {display: flex; flex-wrap: nowrap; gap: 3px; flex: 1; min-width: 0; overflow: hidden;}
         .ocr-chips:empty {display: none;}
-        .ocr-chip {background: #e8f0fb; color: #1f4e79; border: 1px solid #c5d8f0; border-radius: 999px; padding: 3px 6px 3px 10px; font-size: 11.5px; font-weight: 600; display: inline-flex; gap: 6px; align-items: center;}
-        .ocr-chip button {width: 16px; height: 16px; border: 0; border-radius: 50%; background: #c5d8f0; color: #1f4e79; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; line-height: 1; cursor: pointer; padding: 0;}
-        .ocr-ms-drop {position: absolute; left: 10px; right: 10px; top: 58px; background: #fff; border: 1px solid #c8c8c8; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.18); padding: 6px; z-index: 50; display: none;}
-        .ocr-ms-drop.open {display: block;}
-        .ocr-ms-search {width: 100%; box-sizing: border-box; height: 30px; border: 1px solid #ddd; border-radius: 6px; padding: 0 8px; margin-bottom: 4px; font: inherit; font-size: 12px;}
-        .ocr-ms-list {max-height: 240px; overflow-y: auto;}
-        .ocr-ms-item {display: flex; align-items: center; gap: 8px; padding: 6px; border-radius: 6px; font-size: 12.5px; cursor: pointer; margin: 0; text-transform: none; letter-spacing: 0; font-weight: 400; color: #222;}
+        .ocr-chip {flex-shrink: 0; background: #e8f0fb; color: #1f4e79; border: 1px solid #c5d8f0; border-radius: 999px; padding: 2px 3px 2px 7px; font-size: 11px; font-weight: 700;
+                   display: inline-flex; gap: 4px; align-items: center; white-space: nowrap; cursor: default;}
+        .ocr-chip.more {padding: 2px 7px; background: #f1f3f5; color: #555; border-color: #dcdfe3;}
+        .ocr-chip button {width: 14px; height: 14px; border: 0; border-radius: 50%; background: #c5d8f0; color: #1f4e79; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; line-height: 1; cursor: pointer; padding: 0;}
+        .ocr-ms-drop {position: fixed; z-index: 3000; background: #fff; border: 1px solid #c8c8c8; border-radius: 8px; box-shadow: 0 8px 28px rgba(0,0,0,.22); padding: 6px;
+                      display: none; flex-direction: column; box-sizing: border-box;}
+        .ocr-ms-drop.open {display: flex;}
+        .ocr-ms-search {flex-shrink: 0; width: 100%; box-sizing: border-box; height: 34px; border: 1px solid #ddd; border-radius: 6px; padding: 0 8px; margin-bottom: 4px; font: inherit; font-size: 12px;}
+        .ocr-ms-list {flex: 1; min-height: 0; overflow-y: auto;}
+        .ocr-ms-item {display: flex; align-items: center; gap: 10px; padding: 8px 8px; border-radius: 6px; font-size: 13.5px; cursor: pointer; margin: 0; text-transform: none; letter-spacing: 0; font-weight: 400; color: #222;}
         .ocr-ms-item:hover {background: #f3f6fa;}
-        .ocr-ms-item input {accent-color: #c0392b; margin: 0;}
+        .ocr-ms-item input {accent-color: #c0392b; margin: 0; width: 16px; height: 16px; flex-shrink: 0;}
         .ocr-ms-item i {margin-left: auto; font-style: normal; font-size: 10.5px; color: #999;}
         .ocr-ms-item.dis {color: #aaa; cursor: default;}
         .ocr-ms-empty {padding: 10px; font-size: 12px; color: #888; text-align: center;}`;
       document.head.appendChild(st);
     })();
+    /* a lista abre para baixo do botão; se não houver espaço, abre para cima (como o select do browser) */
+    let ocrOpenDrop = null;
+    function ocrPlaceDrop(drop) {
+      const btn = drop._btn; if (!btn || !drop.classList.contains('open')) return;
+      const r = btn.getBoundingClientRect(), gap = 4, margin = 10, want = 400;
+      const below = window.innerHeight - r.bottom - margin, above = r.top - margin;
+      const down = below >= Math.min(want, 260) || below >= above;
+      const h = Math.max(160, Math.min(want, down ? below : above));
+      const w = Math.min(Math.max(r.width, 320), window.innerWidth - 2 * margin);   /* pelo menos 320 px, mesmo com a combobox estreita */
+      drop.style.width = `${w}px`;
+      drop.style.left = `${Math.max(margin, Math.min(r.left, window.innerWidth - margin - w))}px`;
+      drop.style.maxHeight = `${h}px`;
+      if (down) { drop.style.top = `${r.bottom + gap}px`; drop.style.bottom = 'auto'; }
+      else { drop.style.bottom = `${window.innerHeight - r.top + gap}px`; drop.style.top = 'auto'; }
+    }
+    function ocrCloseDrops() {
+      document.querySelectorAll('.ocr-ms-drop.open').forEach(d => d.classList.remove('open'));
+      ocrOpenDrop = null;
+    }
+    window.addEventListener('resize', () => ocrOpenDrop && ocrPlaceDrop(ocrOpenDrop));
+    window.addEventListener('scroll', () => ocrOpenDrop && ocrPlaceDrop(ocrOpenDrop), true);
     /* quem já está noutra viatura: n_int -> nome da viatura */
     function ocrTakenElsewhere(card) {
       const taken = {};
@@ -67,8 +93,10 @@
       const list = card._elemList || [];
       const byN = Object.fromEntries(list.map(e => [e.n, e.a]));
       const sel = [...card._nints];
-      box.querySelector('.ocr-ms-btn span').textContent = sel.length ? `${sel.length} selecionado${sel.length > 1 ? 's' : ''}` : 'Selecionar elementos…';
-      box.querySelector('.ocr-chips').innerHTML = sel.map(n => `<span class="ocr-chip">${ocrEsc(n)}${byN[n] ? ' · ' + ocrEsc(byN[n]) : ''}<button type="button" data-rm="${ocrEsc(n)}" title="Tirar">×</button></span>`).join('');
+      box.querySelector('.ocr-ms-btn span').textContent = sel.length ? `${sel.length} selecionado${sel.length > 1 ? 's' : ''}` : 'Selecionar…';
+      const chips = box.querySelector('.ocr-chips');
+      chips.innerHTML = sel.map(n => `<span class="ocr-chip" data-chip="${ocrEsc(n)}" title="${ocrEsc(n)}${byN[n] ? ' - ' + ocrEsc(byN[n]) : ''}">${ocrEsc(n)}<button type="button" data-rm="${ocrEsc(n)}" title="Tirar ${ocrEsc(byN[n] || n)}">×</button></span>`).join('');
+      ocrFitChips(chips, byN);
       /* BBs: contados a partir dos elementos; sem ninguém escolhido continua a dar para escrever à mão */
       const bbs = card.querySelector('.major-row input[type="text"]');
       if (bbs) {
@@ -76,8 +104,27 @@
         else if (bbs.readOnly) { bbs.value = ''; bbs.readOnly = false; bbs.style.background = ''; bbs.title = ''; }
       }
     }
+    /* mostra as etiquetas que cabem na linha; as restantes ficam num "+N" (nome ao passar o rato) */
+    function ocrFitChips(chips, byN) {
+      if (!chips) return;
+      chips.querySelectorAll('.ocr-chip.more').forEach(m => m.remove());
+      const all = [...chips.querySelectorAll('.ocr-chip')];
+      all.forEach(c => { c.style.display = ''; });
+      if (!all.length || chips.clientWidth === 0 || chips.scrollWidth <= chips.clientWidth) return;
+      const more = document.createElement('span');
+      more.className = 'ocr-chip more';
+      chips.appendChild(more);
+      let hidden = [];
+      for (let i = all.length - 1; i >= 0 && chips.scrollWidth > chips.clientWidth; i--) {
+        all[i].style.display = 'none';
+        hidden.unshift(all[i].dataset.chip);
+        more.textContent = `+${hidden.length}`;
+      }
+      more.title = hidden.map(n => n + (byN && byN[n] ? ' - ' + byN[n] : '')).join('\n');
+    }
+    window.addEventListener('resize', () => document.querySelectorAll('.wsms-vehicle-card').forEach(c => c._nints && ocrRefreshCard(c)));
     function ocrRenderList(card) {
-      const box = card.querySelector('.ocr-elems');
+      const box = card._drop;
       const q = box.querySelector('.ocr-ms-search').value.trim().toLowerCase();
       const taken = ocrTakenElsewhere(card);
       const list = (card._elemList || []).filter(e => !q || e.n.toLowerCase().includes(q) || e.a.toLowerCase().includes(q));
@@ -92,23 +139,29 @@
       const box = document.createElement('div');
       box.className = 'ocr-elems';
       box.innerHTML = `
-        <label>Elementos</label>
-        <button type="button" class="ocr-ms-btn"><span>Selecionar elementos…</span><b>▾</b></button>
+        <div class="ocr-elems-row"><label>Elementos</label>
+        <button type="button" class="ocr-ms-btn"><span>Selecionar…</span><b>▾</b></button>
+        <div class="ocr-chips"></div></div>
         <div class="ocr-ms-drop"><input type="search" class="ocr-ms-search" placeholder="Procurar n.º ou nome…" autocomplete="off"><div class="ocr-ms-list"></div></div>
-        <div class="ocr-chips"></div>`;
+      `;
       card.appendChild(box);
       const drop = box.querySelector('.ocr-ms-drop');
-      box.querySelector('.ocr-ms-btn').onclick = async () => {
+      document.body.appendChild(drop);              /* fora do cartão: nada a corta */
+      drop._btn = box.querySelector('.ocr-ms-btn');
+      card._drop = drop;
+      drop._btn.onclick = async () => {
         const opening = !drop.classList.contains('open');
-        document.querySelectorAll('.ocr-ms-drop.open').forEach(d => d.classList.remove('open'));
+        ocrCloseDrops();
         if (!opening) return;
         drop.classList.add('open');
+        ocrOpenDrop = drop;
+        ocrPlaceDrop(drop);
         card._elemList = await ocrLoadActiveElements();
         ocrRenderList(card);
-        box.querySelector('.ocr-ms-search').focus();
+        drop.querySelector('.ocr-ms-search').focus();
       };
-      box.querySelector('.ocr-ms-search').oninput = () => ocrRenderList(card);
-      box.addEventListener('change', e => {
+      drop.querySelector('.ocr-ms-search').oninput = () => ocrRenderList(card);
+      drop.addEventListener('change', e => {
         const cb = e.target.closest('input[data-n]'); if (!cb) return;
         if (cb.checked) card._nints.add(cb.dataset.n); else card._nints.delete(cb.dataset.n);
         ocrRefreshCard(card);
@@ -123,8 +176,9 @@
       ocrRefreshCard(card);
     }
     document.addEventListener('click', e => {
-      if (!e.target.closest('.ocr-elems')) document.querySelectorAll('.ocr-ms-drop.open').forEach(d => d.classList.remove('open'));
+      if (!e.target.closest('.ocr-elems') && !e.target.closest('.ocr-ms-drop')) ocrCloseDrops();
     });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') ocrCloseDrops(); });
     /* todos os n.º internos escolhidos nas viaturas, para gravar em occurrences_control.n_int ("205,208,312") */
     function NewOCRcollectNints() {
       const all = [];
@@ -166,6 +220,8 @@
       await populateSingleVehicleSelect(select);
     }
     function NewOCRresetVehicles() {
+      ocrCloseDrops();
+      document.querySelectorAll('body > .ocr-ms-drop').forEach(d => d.remove());
       vehicleContainer.innerHTML = "";
       vehicleCount = 0;
       for (let i = 0; i < 3; i++) {

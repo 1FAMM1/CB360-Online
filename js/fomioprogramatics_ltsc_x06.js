@@ -282,30 +282,17 @@
       return {load};
     }
     /* =======================================================================
-       ESTADOS DOS VEÍCULOS (Online) — substitui o grupo do Telegram
-       - Lê vehicle_status_log de 10 em 10 s
-       - Enquanto houver mensagens por ler (is_read = false) o botão do menu pisca
-         (createBlinker, igual às Indisponibilidades / Ocorrências ativas) e o título do separador também
-       - Ao abrir a página, as mensagens mostradas passam a lidas
-       Botão do menu: <button class="sidebar-submenu-button" data-page="page-veic-status" data-access="Estados dos Veículos">
-       Página: <div id="page-veic-status" class="page"> ... <div id="vslBoard"></div>
-       ======================================================================= */
-    const VSL_POLL_MS = 10000;        /* página fechada: só para o botão piscar */
-    const VSL_POLL_OPEN_MS = 3000;    /* página aberta: chat quase em tempo real (só se o tempo real falhar) */
-    const VSL_POLL_RT_MS = 60000;     /* com o tempo real ligado: só rede de segurança */
-    const VSL_ACTIONS = {
-      'Saída Und.':                 {label: 'Saída do Quartel',   color: '#e53935', icon: 'fa-truck-fast',          state: 'out'},
-      'Chegada TO':                 {label: 'Chegada ao TO',      color: '#0282fa', icon: 'fa-location-dot',        state: 'to'},
-      'Saída TO':                   {label: 'Saída do TO',        color: '#ef8f00', icon: 'fa-arrow-rotate-left',   state: 'back'},
-      'Chegada Und.':               {label: 'Chegada ao Quartel', color: '#2e7d32', icon: 'fa-warehouse',           state: 'home'},
-      'Retido por Falta de Macas':  {label: 'Retido · Falta de Macas', color: '#4b5563', icon: 'fa-ban',            state: 'held'},
-      'Retido por Aguarda Triagem': {label: 'Retido · Aguarda Triagem', color: '#4b5563', icon: 'fa-ban',           state: 'held'},
-      'Fim de Retenção':            {label: 'Fim de Retenção',    color: '#00897b', icon: 'fa-circle-check',        state: 'to'},
-      /* alterações feitas à mão no Online (botão do lápis em "Onde estão agora") */
-      'INOP':                       {label: 'Inoperacional',      color: '#c62828', icon: 'fa-screwdriver-wrench',  state: 'inop'},
-      'Em Parque (manual)':         {label: 'Em Parque',          color: '#2e7d32', icon: 'fa-warehouse',           state: 'home'},
-      'Em Serviço (manual)':        {label: 'Em Serviço',         color: '#ef8f00', icon: 'fa-truck-fast',          state: 'out'}
-    };
+    ESTADOS DOS VEÍCULOS (Online)
+    ======================================================================= */
+    const VSL_POLL_MS = 10000;
+    const VSL_POLL_OPEN_MS = 3000;
+    const VSL_POLL_RT_MS = 60000;
+    const VSL_ACTIONS = {'Saída Und.': {label: 'Saída do Quartel', color: '#e53935', icon: 'fa-truck-fast', state: 'out'}, 'Chegada TO': {label: 'Chegada ao TO', color: '#0282fa', icon: 'fa-location-dot', state: 'to'},
+                         'Saída TO': {label: 'Saída do TO', color: '#ef8f00', icon: 'fa-arrow-rotate-left', state: 'back'}, 'Chegada Und.': {label: 'Chegada ao Quartel', color: '#2e7d32', icon: 'fa-warehouse', state: 'home'},
+                         'Retido por Falta de Macas': {label: 'Retido · Falta de Macas', color: '#4b5563', icon: 'fa-ban', state: 'held'}, 'Retido por Aguarda Triagem': {label: 'Retido · Aguarda Triagem', color: '#4b5563', icon: 'fa-ban', state: 'held'},
+                         'Fim de Retenção': {label: 'Fim de Retenção', color: '#00897b', icon: 'fa-circle-check', state: 'to'}, 'INOP': {label: 'Inoperacional', color: '#c62828', icon: 'fa-screwdriver-wrench', state: 'inop'},
+                         'Em Parque (manual)': {label: 'Em Parque', color: '#2e7d32', icon: 'fa-warehouse', state: 'home'}, 'Em Serviço (manual)': {label: 'Em Serviço', color: '#ef8f00', icon: 'fa-truck-fast', state: 'out'}
+                        };
     const VSL = {date: null, vehicle: 'todos', rows: [], unread: [], timer: null, lastMaxId: 0, titleTimer: null, baseTitle: document.title, rt: {client: null, ch: null, ok: false, retry: null, deb: null}};
     const vslEsc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
     const vslCorp = () => sessionStorage.getItem('currentCorpOperNr');
@@ -316,7 +303,6 @@
     const vslPump = m => m ? `${vslPad(Math.floor(m / 60))}h${vslPad(m % 60)}m` : '';
     const vslSince = iso => { const m = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 60000)); return `${Math.floor(m / 60)}h${vslPad(m % 60)}`; };
     const vslPageVisible = () => { const p = document.getElementById('page-veic-status'); return !!(p && getComputedStyle(p).display !== 'none' && p.getClientRects().length > 0); };
-
     /* ---------- estilo ---------- */
     (function vslCss() {
       if (document.getElementById('vsl-css')) return;
@@ -359,12 +345,11 @@
       .vsl-veh.ovd {background: #fff5f5;}
       .vsl-ovd {flex-basis: 100%; display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: #c62828; white-space: nowrap;}
       .vsl-ovd .sil {margin-left: auto; color: #8a949e; font-weight: 600;}
-      .vsl-veh:not(.ovd) .vsl-ovd {color: #8a949e;}   /* silenciado: fica cinzento */
+      .vsl-veh:not(.ovd) .vsl-ovd {color: #8a949e;}
       .vsl-ovd button {margin-left: auto; border: 1px solid #f5c2c0; background: #fff; color: #c62828; border-radius: 6px; padding: 2px 8px; font-size: 10.5px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; flex-shrink: 0;}
       .vsl-ovd button:hover {background: #c62828; color: #fff;}
       .vsl-side-list {height: calc(100vh - 500px - var(--vslc, 0px)); min-height: 430px; box-sizing: border-box; overflow-y: auto; scrollbar-width: thin;}
       .vsl-hidden {display: none;}
-      /* cartões das viaturas (opção B: faixa com a cor do estado); clicar = alterar estado */
       .vsl-cards {display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 14px;}
       .vsl-vcard {background: #fff; border: 0; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.12); text-align: center; cursor: pointer; padding: 0; font-family: inherit; display: flex; flex-direction: column; transition: transform .12s, box-shadow .12s;}
       .vsl-vcard:hover {transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.15);}
@@ -393,7 +378,6 @@
       @media (max-width: 1100px) {.vsl {grid-template-columns: 1fr;}}`;
       document.head.appendChild(st);
     })();
-
     /* ---------- tabela escondida usada pelo createBlinker (uma linha por mensagem por ler) ---------- */
     function vslEnsureHiddenTable() {
       if (document.getElementById('vsl-unread-tbody')) return;
@@ -403,12 +387,11 @@
       document.body.appendChild(t);
     }
     vslEnsureHiddenTable();
-    let vehicleStatusBlinker = null;   /* criado no arranque, depois de o createBlinker do menu estar carregado */
-
+    let vehicleStatusBlinker = null;
     /* ---------- leitura de 10 em 10 s (corre sempre, mesmo com a página fechada) ---------- */
     async function vslPoll() {
       const corp = vslCorp();
-      if (!corp || !document.querySelector('[data-page="page-veic-status"]')) return;   /* sem sessão ou sem acesso ao botão */
+      if (!corp || !document.querySelector('[data-page="page-veic-status"]')) return;
       try {
         const r = await fetch(`${SUPABASE_URL}/rest/v1/vehicle_status_log?select=id,vehicle,action,created_at&corp_oper_nr=eq.${corp}&is_read=eq.false&order=id.asc&limit=200`, {headers: getSupabaseHeaders()});
         if (!r.ok) return;
@@ -441,9 +424,7 @@
       tick();
       vslRealtime();
     }
-    /* ---------- tempo real: sinal "mudou" enviado pela base de dados (SQL 41) ----------
-       O sinal vai vazio; ao recebê-lo, lê-se a tabela como sempre (com as regras de acesso).
-       Se a ligação cair, volta a ligar sozinha e, entretanto, regressa a atualização de 3 / 10 s. */
+    /* ---------- tempo real: sinal "mudou" enviado pela base de dados (SQL 41) ---------- */
     function vslRealtimeKick() {
       clearTimeout(VSL.rt.deb);
       VSL.rt.deb = setTimeout(() => vslPoll(), 300);
@@ -472,7 +453,6 @@
     function vslRealtime() {
       const go = () => {
         vslRtConnect();
-        /* de 30 em 30 s confirma que a ligação está viva; senão volta a ligar */
         setInterval(() => {
           const rt = VSL.rt;
           if (rt.client && (!rt.ch || rt.ch.state !== 'joined' || !rt.client.realtime.isConnected())) { rt.ok = false; vslRtConnect(); }
@@ -489,12 +469,10 @@
     }
     document.addEventListener('DOMContentLoaded', () => setTimeout(vslStart, 1500));
     if (document.readyState !== 'loading') setTimeout(vslStart, 1500);
-
     /* ---------- abrir a página ---------- */
     document.addEventListener('click', e => {
       if (e.target.closest('[data-page="page-veic-status"]')) setTimeout(() => vslLoad(false), 50);
     });
-
     async function vslLoad(silent) {
       const root = document.getElementById('vslBoard'); if (!root) return;
       if (!root.dataset.ready) { vslShell(root); root.dataset.ready = '1'; }
@@ -505,7 +483,6 @@
         const [r1, r2, r3] = await Promise.all([
           fetch(`${SUPABASE_URL}/rest/v1/vehicle_status_log?select=*&corp_oper_nr=eq.${corp}&created_at=gte.${from.toISOString()}&created_at=lt.${to.toISOString()}&order=created_at.asc&limit=1000`, {headers: getSupabaseHeaders()}),
           fetch(`${SUPABASE_URL}/rest/v1/vehicle_status?select=vehicle,current_status,is_inop&corp_oper_nr=eq.${corp}`, {headers: getSupabaseHeaders()}),
-          /* viaturas em serviço sem estado novo há X horas (SQL 37) */
           fetch(`${SUPABASE_URL}/rest/v1/rpc/cb360_vehicle_overdue_mine`, {method: 'POST', headers: getSupabaseHeaders(), body: '{}'}).catch(() => null)
         ]);
         if (!r1.ok) throw new Error('HTTP ' + r1.status);
@@ -513,7 +490,6 @@
         VSL.fleet = r2.ok ? await r2.json() : [];
         VSL.overdue = {};
         if (r3 && r3.ok) (await r3.json()).forEach(o => { VSL.overdue[o.vehicle] = o; });
-        /* ao entrar (ou mudar de dia): o que já estava lido fica esbatido; o que for lido agora só esbate na próxima entrada */
         if (!silent || !VSL.oldIds) VSL.oldIds = new Set(VSL.rows.filter(x => x.is_read).map(x => x.id));
       } catch (e) {
         if (!silent) root.querySelector('.vsl-feed').innerHTML = '<div class="vsl-empty"><i class="fa-solid fa-triangle-exclamation"></i>Não foi possível carregar os estados.</div>';
@@ -551,12 +527,11 @@
       const root = document.getElementById('vslBoard'); if (!root) return;
       const feed = root.querySelector('#vslFeed');
       const nearBottom = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 80;
-      /* filtro de veículos */
       const sel = root.querySelector('#vslVeh');
       const vehs = [...new Set([...VSL.rows.map(x => x.vehicle), ...(VSL.fleet || []).map(x => x.vehicle)])].filter(Boolean).sort();
       const cur = VSL.vehicle;
       const opts = '<option value="todos">Todos os veículos</option>' + vehs.map(v => `<option value="${vslEsc(v)}">${vslEsc(v)}</option>`).join('');
-      if (sel.dataset.opts !== opts) { sel.innerHTML = opts; sel.dataset.opts = opts; }   /* só refaz se mudou (não fecha a lista aberta a cada 10 s) */
+      if (sel.dataset.opts !== opts) { sel.innerHTML = opts; sel.dataset.opts = opts; }
       sel.value = vehs.includes(cur) ? cur : 'todos';
       VSL.vehicle = sel.value;
       /* mensagens */
@@ -587,7 +562,6 @@
         }).join('');
         if (nearBottom || !feed.dataset.scrolled) { feed.scrollTop = feed.scrollHeight; feed.dataset.scrolled = '1'; }
       }
-      /* onde estão agora: último estado do dia; se não houver, o estado da tabela vehicle_status */
       const last = {};
       VSL.rows.forEach(x => { last[x.vehicle] = x; });
       const fleet = root.querySelector('#vslFleet');
@@ -646,7 +620,6 @@
     function vslRenderCards(root) {
       const box = root.querySelector('#vslCards'); if (!box) return;
       const fleet = VSL.fleet || [];
-      /* último estado de hoje de cada viatura (só quando se está a ver o dia de hoje) */
       const last = {};
       if (VSL.date === vslToday()) VSL.rows.forEach(x => { last[x.vehicle] = x; });
       const html = vslSortVehicles(fleet.map(f => f.vehicle).filter(Boolean)).map(v => {
@@ -662,16 +635,14 @@
                   : (st === 'inop' ? 'Inoperacional' : 'Sem estados hoje');
         return `<button type="button" class="vsl-vcard ${st} ${o && !o.silenced ? 'ovd' : ''}" style="--s:${col}" data-card="${vslEsc(v)}" title="Alterar estado de ${vslEsc(v)}"><span class="h">${lab}</span><span class="ic">${k.icon}</span><span class="cd">${vslEsc(v)}</span><span class="lt">${vslEsc(sub)}</span></button>`;
       }).join('');
-      if (box.dataset.html !== html) {   /* só redesenha quando muda (não pisca a cada 3 s) */
+      if (box.dataset.html !== html) {
         box.innerHTML = html;
         box.dataset.html = html;
         box.querySelectorAll('[data-card]').forEach(b => b.onclick = () => vslOpenStatusModal(b.dataset.card));
       }
-      /* o chat e a lista encolhem a altura dos cartões, para a página não passar do ecrã */
       root.style.setProperty('--vslc', (box.offsetHeight ? box.offsetHeight + 14 : 0) + 'px');
     }
-    /* ---------- alterar estado à mão (substitui o antigo "Vehicle Operational Status") ----------
-       Grava na vehicle_status (como o VeicStat) e deixa registo no chat: "Inoperacional", "Em Parque", "Em Serviço". */
+    /* ---------- alterar estado à mão (substitui o antigo "Vehicle Operational Status") ---------- */
     function vslOpenStatusModal(vehicle) {
       const f = (VSL.fleet || []).find(y => y.vehicle === vehicle) || {};
       const cur = f.is_inop ? 'INOP' : (f.current_status === 'Em Serviço' ? 'Em Serviço (manual)' : 'Em Parque (manual)');
@@ -727,9 +698,8 @@
         if (row && row.id) await fetch(`${SUPABASE_URL}/rest/v1/vehicle_status_log?id=eq.${row.id}`, {
           method: 'PATCH', headers: getSupabaseHeaders(), body: JSON.stringify({is_read: true, read_at: new Date().toISOString(), read_by: nint})
         });
-      } catch (e) { /* o registo é só informativo */ }
+      } catch (e) {}
     }
-    /* com a página aberta, o que está por ler passa a lido (o botão deixa de piscar no próximo ciclo) */
     async function vslMarkRead() {
       if (!vslPageVisible()) return;
       const ids = VSL.rows.filter(x => !x.is_read).map(x => x.id);
@@ -740,7 +710,6 @@
           body: JSON.stringify({is_read: true, read_at: new Date().toISOString(), read_by: sessionStorage.getItem('currentNInt') || null})
         });
         if (!r.ok) return;
-        /* fica destacado como NOVO até à próxima atualização, para o operador ver o que acabou de chegar */
         setTimeout(() => { VSL.rows.forEach(x => { if (ids.includes(x.id)) { x.is_read = true; x.read_at = new Date().toISOString(); } }); VSL.unread = VSL.unread.filter(x => !ids.includes(x.id));
                            const tb = document.getElementById('vsl-unread-tbody'); if (tb) tb.innerHTML = VSL.unread.map(x => `<tr><td>${x.id}</td></tr>`).join('');
                            vslTitle(VSL.unread.length); if (vslPageVisible()) vslRender(); }, 8000);

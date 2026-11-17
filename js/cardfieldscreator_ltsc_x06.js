@@ -10,6 +10,127 @@
     /* ============= VEHICLES ============= */
     const vehicleContainer = document.getElementById('vehicle-container');
     let vehicleCount = 0;    
+    /* ---------- elementos de cada viatura (só os afetos podem enviar fotos/atualizações do terreno, SQL 43) ---------- */
+    let ocrActiveElems = null;
+    function ocrLoadActiveElements() {
+      const corp = String(sessionStorage.getItem('currentCorpOperNr') || '').padStart(4, '0');
+      if (!ocrActiveElems) {
+        ocrActiveElems = fetch(`${SUPABASE_URL}/rest/v1/reg_elems?select=n_int,abv_name&corp_oper_nr=eq.${corp}&elem_state=not.is.false`, {headers: getSupabaseHeaders()})
+          .then(r => (r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status))))
+          .then(list => list.filter(e => e.n_int != null && String(e.n_int).trim() !== '')
+            .map(e => ({n: String(e.n_int).trim(), a: String(e.abv_name || '').trim()}))
+            .sort((x, y) => (parseInt(x.n, 10) || 0) - (parseInt(y.n, 10) || 0) || x.n.localeCompare(y.n)))
+          .catch(err => { console.error('Elementos ativos:', err); ocrActiveElems = null; return []; });
+      }
+      return ocrActiveElems;
+    }
+    const ocrNorm = n => String(n || '').trim().replace(/^0+/, '');
+    const ocrEsc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+    (function ocrElemCss() {
+      if (document.getElementById('ocr-elem-css')) return;
+      const st = document.createElement('style'); st.id = 'ocr-elem-css';
+      st.textContent = `
+        .wsms-vehicle-card.has-elems {overflow: visible;}
+        .ocr-elems {display: flex; flex-direction: column; gap: 8px; padding: 0 10px 10px; position: relative;}
+        .ocr-elems > label {font-size: 11px; font-weight: 600; color: #777; text-transform: uppercase; letter-spacing: .04em;}
+        .ocr-ms-btn {width: 100%; height: 34px; border: 1px solid #c8c8c8; border-radius: 6px; background: #fff; text-align: left; padding: 0 10px; font: inherit; font-size: 12.5px;
+                     display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #333;}
+        .ocr-ms-btn:hover {border-color: #888;}
+        .ocr-chips {display: flex; flex-wrap: wrap; gap: 6px;}
+        .ocr-chips:empty {display: none;}
+        .ocr-chip {background: #e8f0fb; color: #1f4e79; border: 1px solid #c5d8f0; border-radius: 999px; padding: 3px 6px 3px 10px; font-size: 11.5px; font-weight: 600; display: inline-flex; gap: 6px; align-items: center;}
+        .ocr-chip button {width: 16px; height: 16px; border: 0; border-radius: 50%; background: #c5d8f0; color: #1f4e79; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; line-height: 1; cursor: pointer; padding: 0;}
+        .ocr-ms-drop {position: absolute; left: 10px; right: 10px; top: 58px; background: #fff; border: 1px solid #c8c8c8; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.18); padding: 6px; z-index: 50; display: none;}
+        .ocr-ms-drop.open {display: block;}
+        .ocr-ms-search {width: 100%; box-sizing: border-box; height: 30px; border: 1px solid #ddd; border-radius: 6px; padding: 0 8px; margin-bottom: 4px; font: inherit; font-size: 12px;}
+        .ocr-ms-list {max-height: 240px; overflow-y: auto;}
+        .ocr-ms-item {display: flex; align-items: center; gap: 8px; padding: 6px; border-radius: 6px; font-size: 12.5px; cursor: pointer; margin: 0; text-transform: none; letter-spacing: 0; font-weight: 400; color: #222;}
+        .ocr-ms-item:hover {background: #f3f6fa;}
+        .ocr-ms-item input {accent-color: #c0392b; margin: 0;}
+        .ocr-ms-item i {margin-left: auto; font-style: normal; font-size: 10.5px; color: #999;}
+        .ocr-ms-item.dis {color: #aaa; cursor: default;}
+        .ocr-ms-empty {padding: 10px; font-size: 12px; color: #888; text-align: center;}`;
+      document.head.appendChild(st);
+    })();
+    /* quem já está noutra viatura: n_int -> nome da viatura */
+    function ocrTakenElsewhere(card) {
+      const taken = {};
+      document.querySelectorAll('.wsms-vehicle-card').forEach(c => {
+        if (c === card || !c._nints) return;
+        const veh = (c.querySelector('select')?.selectedOptions[0]?.textContent || '').trim() || 'outra viatura';
+        c._nints.forEach(n => { taken[ocrNorm(n)] = veh; });
+      });
+      return taken;
+    }
+    function ocrRefreshCard(card) {
+      const box = card.querySelector('.ocr-elems'); if (!box) return;
+      const list = card._elemList || [];
+      const byN = Object.fromEntries(list.map(e => [e.n, e.a]));
+      const sel = [...card._nints];
+      box.querySelector('.ocr-ms-btn span').textContent = sel.length ? `${sel.length} selecionado${sel.length > 1 ? 's' : ''}` : 'Selecionar elementos…';
+      box.querySelector('.ocr-chips').innerHTML = sel.map(n => `<span class="ocr-chip">${ocrEsc(n)}${byN[n] ? ' · ' + ocrEsc(byN[n]) : ''}<button type="button" data-rm="${ocrEsc(n)}" title="Tirar">×</button></span>`).join('');
+      /* BBs: contados a partir dos elementos; sem ninguém escolhido continua a dar para escrever à mão */
+      const bbs = card.querySelector('.major-row input[type="text"]');
+      if (bbs) {
+        if (sel.length) { bbs.value = String(sel.length).padStart(2, '0'); bbs.readOnly = true; bbs.style.background = '#f1f3f5'; bbs.title = 'Contado a partir dos elementos escolhidos'; }
+        else if (bbs.readOnly) { bbs.value = ''; bbs.readOnly = false; bbs.style.background = ''; bbs.title = ''; }
+      }
+    }
+    function ocrRenderList(card) {
+      const box = card.querySelector('.ocr-elems');
+      const q = box.querySelector('.ocr-ms-search').value.trim().toLowerCase();
+      const taken = ocrTakenElsewhere(card);
+      const list = (card._elemList || []).filter(e => !q || e.n.toLowerCase().includes(q) || e.a.toLowerCase().includes(q));
+      box.querySelector('.ocr-ms-list').innerHTML = list.length ? list.map(e => {
+        const other = taken[ocrNorm(e.n)], on = card._nints.has(e.n);
+        return `<label class="ocr-ms-item${other ? ' dis' : ''}"><input type="checkbox" data-n="${ocrEsc(e.n)}" ${on ? 'checked' : ''} ${other ? 'disabled' : ''}><b>${ocrEsc(e.n)}</b>&nbsp;- ${ocrEsc(e.a)}${other ? `<i>${ocrEsc(other)}</i>` : ''}</label>`;
+      }).join('') : `<div class="ocr-ms-empty">${card._elemList && card._elemList.length ? 'Nenhum elemento encontrado.' : 'Sem elementos ativos (ou ainda a carregar).'}</div>`;
+    }
+    async function ocrAttachElements(card) {
+      card._nints = new Set();
+      card.classList.add('has-elems');
+      const box = document.createElement('div');
+      box.className = 'ocr-elems';
+      box.innerHTML = `
+        <label>Elementos</label>
+        <button type="button" class="ocr-ms-btn"><span>Selecionar elementos…</span><b>▾</b></button>
+        <div class="ocr-ms-drop"><input type="search" class="ocr-ms-search" placeholder="Procurar n.º ou nome…" autocomplete="off"><div class="ocr-ms-list"></div></div>
+        <div class="ocr-chips"></div>`;
+      card.appendChild(box);
+      const drop = box.querySelector('.ocr-ms-drop');
+      box.querySelector('.ocr-ms-btn').onclick = async () => {
+        const opening = !drop.classList.contains('open');
+        document.querySelectorAll('.ocr-ms-drop.open').forEach(d => d.classList.remove('open'));
+        if (!opening) return;
+        drop.classList.add('open');
+        card._elemList = await ocrLoadActiveElements();
+        ocrRenderList(card);
+        box.querySelector('.ocr-ms-search').focus();
+      };
+      box.querySelector('.ocr-ms-search').oninput = () => ocrRenderList(card);
+      box.addEventListener('change', e => {
+        const cb = e.target.closest('input[data-n]'); if (!cb) return;
+        if (cb.checked) card._nints.add(cb.dataset.n); else card._nints.delete(cb.dataset.n);
+        ocrRefreshCard(card);
+      });
+      box.addEventListener('click', e => {
+        const rm = e.target.closest('[data-rm]'); if (!rm) return;
+        card._nints.delete(rm.dataset.rm);
+        ocrRefreshCard(card);
+        if (drop.classList.contains('open')) ocrRenderList(card);
+      });
+      card._elemList = await ocrLoadActiveElements();
+      ocrRefreshCard(card);
+    }
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.ocr-elems')) document.querySelectorAll('.ocr-ms-drop.open').forEach(d => d.classList.remove('open'));
+    });
+    /* todos os n.º internos escolhidos nas viaturas, para gravar em occurrences_control.n_int ("205,208,312") */
+    function NewOCRcollectNints() {
+      const all = [];
+      document.querySelectorAll('.wsms-vehicle-card').forEach(c => (c._nints || []).forEach(n => { if (!all.some(x => ocrNorm(x) === ocrNorm(n))) all.push(n); }));
+      return all.sort((a, b) => (parseInt(a, 10) || 0) - (parseInt(b, 10) || 0)).join(',');
+    }
     async function NewOCRaddVehicle() {
       vehicleCount++;
       const card = document.createElement('div');
@@ -41,6 +162,7 @@
       const today = new Date().toLocaleDateString('sv-SE');
       dateInput.value = today;
       const select = card.querySelector("select");
+      ocrAttachElements(card);
       await populateSingleVehicleSelect(select);
     }
     function NewOCRresetVehicles() {

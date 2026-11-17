@@ -290,8 +290,7 @@
                          'Saída TO': {label: 'Saída do TO', color: '#ef8f00', icon: 'fa-arrow-rotate-left', state: 'back'}, 'Chegada Und.': {label: 'Chegada ao Quartel', color: '#2e7d32', icon: 'fa-warehouse', state: 'home'},
                          'Retido por Falta de Macas': {label: 'Retido · Falta de Macas', color: '#4b5563', icon: 'fa-ban', state: 'held'}, 'Retido por Aguarda Triagem': {label: 'Retido · Aguarda Triagem', color: '#4b5563', icon: 'fa-ban', state: 'held'},
                          'Fim de Retenção': {label: 'Fim de Retenção', color: '#00897b', icon: 'fa-circle-check', state: 'to'}, 'INOP': {label: 'Inoperacional', color: '#c62828', icon: 'fa-screwdriver-wrench', state: 'inop'},
-      'Em Parque (manual)': {label: 'Em Parque', color: '#2e7d32', icon: 'fa-warehouse', state: 'home'},
-      'Em Serviço (manual)': {label: 'Em Serviço', color: '#ef8f00', icon: 'fa-truck-fast', state: 'out'}
+                         'Em Parque (manual)': {label: 'Em Parque', color: '#2e7d32', icon: 'fa-warehouse', state: 'home'}, 'Em Serviço (manual)': {label: 'Em Serviço', color: '#ef8f00', icon: 'fa-truck-fast', state: 'out'}
                         };
     const VSL = {date: null, vehicle: 'todos', rows: [], unread: [], timer: null, lastMaxId: 0, titleTimer: null, baseTitle: document.title};
     const vslEsc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
@@ -316,7 +315,7 @@
         .vsl-head .vsl-f {margin-left: auto; display: flex; gap: 8px; align-items: center;}
         .vsl-head input, .vsl-head select {height: 32px; border: 1px solid #dee2e6; border-radius: 8px; padding: 0 9px; font-size: 12.5px; color: #2c3e50; background: #fff; font-family: inherit;}
         .vsl-head .vsl-today {height: 32px; border: 1px solid #dee2e6; background: #fff; border-radius: 8px; padding: 0 12px; font-size: 12px; font-weight: 600; cursor: pointer;}
-        .vsl-feed {height: calc(100vh - 330px - var(--vslc, 0px)); min-height: 320px; box-sizing: border-box; overflow-y: auto; padding: 14px 16px; background: #f6f7f9; display: flex; flex-direction: column; gap: 8px;
+        .vsl-feed {height: calc(100vh - 500px - var(--vslc, 0px)); min-height: 430px; box-sizing: border-box; overflow-y: auto; padding: 14px 16px; background: #f6f7f9; display: flex; flex-direction: column; gap: 8px;
                    scrollbar-width: thin; scrollbar-color: #cfd4da transparent;}
         .vsl-feed::-webkit-scrollbar {width: 6px;} .vsl-feed::-webkit-scrollbar-thumb {background: #cfd4da; border-radius: 10px;}
         .vsl-msg {display: flex; gap: 10px; align-items: flex-start; max-width: 640px;}
@@ -347,7 +346,7 @@
         .vsl-veh:not(.ovd) .vsl-ovd {color: #8a949e;}
         .vsl-ovd button {margin-left: auto; border: 1px solid #f5c2c0; background: #fff; color: #c62828; border-radius: 6px; padding: 2px 8px; font-size: 10.5px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; flex-shrink: 0;}
         .vsl-ovd button:hover {background: #c62828; color: #fff;}
-        .vsl-side-list {height: calc(100vh - 330px - var(--vslc, 0px)); min-height: 320px; box-sizing: border-box; overflow-y: auto; scrollbar-width: thin;}
+        .vsl-side-list {height: calc(100vh - 500px - var(--vslc, 0px)); min-height: 430px; box-sizing: border-box; overflow-y: auto; scrollbar-width: thin;}
         .vsl-hidden {display: none;}
         .vsl-cards {display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 14px;}
         .vsl-vcard {background: #fff; border: 0; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.12); text-align: center; cursor: pointer; padding: 0; font-family: inherit; display: flex; flex-direction: column; transition: transform .12s, box-shadow .12s;}
@@ -659,9 +658,9 @@
           body: JSON.stringify({is_read: true, read_at: new Date().toISOString(), read_by: sessionStorage.getItem('currentNInt') || null})
         });
         if (!r.ok) return;
-        setTimeout(() => { VSL.rows.forEach(x => { if (ids.includes(x.id)) { x.is_read = true; x.read_at = new Date().toISOString(); } }); VSL.unread = VSL.unread.filter(x => !ids.includes(x.id));
-                           const tb = document.getElementById('vsl-unread-tbody'); if (tb) tb.innerHTML = VSL.unread.map(x => `<tr><td>${x.id}</td></tr>`).join('');
-                           vslTitle(VSL.unread.length); if (vslPageVisible()) vslRender(); }, 8000);
+        setTimeout(() => {VSL.rows.forEach(x => { if (ids.includes(x.id)) { x.is_read = true; x.read_at = new Date().toISOString(); } }); VSL.unread = VSL.unread.filter(x => !ids.includes(x.id));
+                          const tb = document.getElementById('vsl-unread-tbody'); if (tb) tb.innerHTML = VSL.unread.map(x => `<tr><td>${x.id}</td></tr>`).join('');
+                          vslTitle(VSL.unread.length); if (vslPageVisible()) vslRender();}, 8000);
       } catch (e) { console.warn('Marcar lidas:', e); }
     }
     /* Notificações push (sendPush): o servidor exige o token da sessão */

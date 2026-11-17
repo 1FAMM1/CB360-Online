@@ -13,28 +13,39 @@
       return new Date(year, month - 1, day, hours, minutes);
     }
     /* ========== READING AND CHARGING ========== */    
+    /* sem "piscar": as linhas novas são montadas fora da tabela e trocadas de uma vez, só quando algo mudou */
+    let lastActiveOccSig = null;
+    const occEsc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+    function setActiveOccMessage(tbody, html, sig) {
+      if (lastActiveOccSig === sig) return;
+      lastActiveOccSig = sig;
+      tbody.innerHTML = html;
+    }
     async function loadActiveOccurrences() {
       const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const tbody = document.getElementById('active-occurrences-tbody');
       if (!tbody) return;
-      tbody.innerHTML = '';
       try {
         const resp = await fetch(
-          `${SUPABASE_URL}/rest/v1/occurrences_control?select=*,vehicles&corp_oper_nr=eq.${currentCorpOperNr}&status=in.(Em Curso,Em Resolução,Em Conclusão)`, {
+          `${SUPABASE_URL}/rest/v1/occurrences_control?select=*,vehicles&corp_oper_nr=eq.${currentCorpOperNr}&status=in.(Em Curso,Em Resolução,Em Conclusão)&order=id.asc`, {
             headers: getSupabaseHeaders()
           }
         );
         if (!resp.ok) throw new Error(`HTTP error! status: ${resp.status}`);
         const occurrences = await resp.json();
         if (occurrences.length === 0) {
-          tbody.innerHTML = `
+          setActiveOccMessage(tbody, `
         <tr>
           <td colspan="8" style="padding: 20px; text-align: center; color: #6C757D;">
             Não existem ocorrências ativas neste momento.
           </td>
-        </tr>`;
+        </tr>`, 'vazia');
           return;
         }
+        /* nada mudou desde a última leitura: não mexe na tabela */
+        const sig = JSON.stringify(occurrences.map(o => [o.id, o.start_date, o.occorrence, o.local, o.localitie, o.vehicles, o.status]));
+        if (sig === lastActiveOccSig) return;
+        const frag = document.createDocumentFragment();
         occurrences.forEach(occ => {
           const startDate = parseDateTime(occ.start_date);
           let formattedDate = occ.start_date;
@@ -46,28 +57,30 @@
           else if (typeof occ.vehicles === 'string') vehiclesCount = occ.vehicles.split(',').filter(v => v.trim() !== '').length;
           const tr = document.createElement('tr');
           tr.innerHTML = `
-            <td style="text-align: center; border: 1px solid #DEE2E6;">${formattedDate}</td>
-            <td style="text-align: center; border: 1px solid #DEE2E6;">${occ.occorrence}</td>
-            <td style="text-align: center; border: 1px solid #DEE2E6;">${occ.local}</td>
-            <td style="text-align: center; border: 1px solid #DEE2E6;">${occ.localitie}</td>
+            <td style="text-align: center; border: 1px solid #DEE2E6;">${occEsc(formattedDate)}</td>
+            <td style="text-align: center; border: 1px solid #DEE2E6;">${occEsc(occ.occorrence)}</td>
+            <td style="text-align: center; border: 1px solid #DEE2E6;">${occEsc(occ.local)}</td>
+            <td style="text-align: center; border: 1px solid #DEE2E6;">${occEsc(occ.localitie)}</td>
             <td style="text-align: center; border: 1px solid #DEE2E6;">${vehiclesCount}</td>
-            <td style="text-align: center; border: 1px solid #DEE2E6;">${occ.status}</td>
+            <td style="text-align: center; border: 1px solid #DEE2E6;">${occEsc(occ.status)}</td>
             <td style="text-align: center; border: 1px solid #DEE2E6;">
             <button class="btn btn-danger posit-btn" style="font-size: 10px;">POSIT</button>
             </td>        
           `;
-          tbody.appendChild(tr);
           tr.querySelector('.posit-btn').addEventListener('click', () => openPositPopup(occ));
+          frag.appendChild(tr);
         });
+        tbody.replaceChildren(frag);
+        lastActiveOccSig = sig;
       } catch (error) {
         console.error("Erro ao carregar ocorrências ativas:", error);
-        tbody.innerHTML = `
+        setActiveOccMessage(tbody, `
           <tr>
             <td colspan="8" style="padding: 20px; text-align: center; color: red;">
               Erro ao carregar ocorrências
             </td>
           </tr>
-        `;
+        `, 'erro');
       }
     }
     /* ========== POSIT SPECIAL POPUP ========== */

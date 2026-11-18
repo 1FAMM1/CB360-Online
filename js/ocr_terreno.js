@@ -1,12 +1,12 @@
 /* =======================================================================
-   OCORRÊNCIAS ATIVAS · ATUALIZAÇÕES DO TERRENO (substitui o grupo do Telegram)
-   - O telemóvel (Ocorrências em Curso) grava em ocr_field_updates (SQL 42) e as fotos,
-     já tapadas, no bucket privado ocr_photos.
-   - Aqui: tabela por baixo das Ocorrências Ativas + botão VER (modal com a informação,
-     miniaturas, foto em grande e "Reter").
-   - Tempo real pelo sinal "mudou" do canal cb360-ocr-<corporação>; se cair, volta a ler de 15 em 15 s.
-   Só é preciso carregar este ficheiro em main.html (o cartão e o modal criam-se sozinhos).
-   ======================================================================= */
+OCORRÊNCIAS ATIVAS · ATUALIZAÇÕES DO TERRENO (substitui o grupo do Telegram)
+- O telemóvel (Ocorrências em Curso) grava em ocr_field_updates (SQL 42) e as fotos,
+já tapadas, no bucket privado ocr_photos.
+- Aqui: tabela por baixo das Ocorrências Ativas + botão VER (modal com a informação,
+miniaturas, foto em grande e "Reter").
+- Tempo real pelo sinal "mudou" do canal cb360-ocr-<corporação>; se cair, volta a ler de 15 em 15 s.
+Só é preciso carregar este ficheiro em main.html (o cartão e o modal criam-se sozinhos).
+======================================================================= */
 (function () {
   const OFU = {date: null, rows: [], cur: null, urls: {}, lb: {list: [], i: 0}, rt: {client: null, ch: null, ok: false, retry: null, deb: null}, timer: null};
   const BUCKET = 'ocr_photos';
@@ -18,7 +18,6 @@
   const $ = id => document.getElementById(id);
   const fmtDT = iso => { const d = new Date(iso); return `${pad(d.getDate())}/${pad(d.getMonth() + 1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`; };
   const note = (msg, type = 'popup-success') => (typeof showPopup === 'function' ? showPopup(type, msg) : console.log(msg));
-
   /* ----------------------------- estilos ----------------------------- */
   (function css() {
     if ($('ofu-css')) return;
@@ -28,7 +27,7 @@
       #ofu-card .ofu-head-right {margin-left: auto; display: flex; align-items: center; gap: 10px;}
       #ofu-card .ofu-badge {background: #fff; color: #c0392b; border-radius: 999px; padding: 2px 9px; font-size: 11px; font-weight: 800; display: none;}
       #ofu-card .ofu-badge.on {display: inline-block;}
-      #ofu-card .ofu-filter {display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 12px; color: #555; flex-wrap: wrap;}
+      #ofu-card .ofu-filter {display: flex; align-items: center; gap: 10px; margin-bottom: -30px; font-size: 12px; color: #555; flex-wrap: wrap;}
       #ofu-card .ofu-filter input[type=date] {height: 30px; border: 1px solid #c8c8c8; border-radius: 6px; padding: 0 8px; font: inherit;}
       #ofu-tbody tr.unread td {font-weight: 700; background: #fff5f5;}
       #ofu-tbody .ofu-new {background: #c0392b; color: #fff; border-radius: 999px; padding: 1px 7px; font-size: 9.5px; font-weight: 800; margin-left: 6px; letter-spacing: .4px;}
@@ -56,7 +55,6 @@
       #ofu-lightbox .ofu-lb-top a, #ofu-lightbox .ofu-lb-top button {color: #fff; background: rgba(255,255,255,.15); border: 0; border-radius: 6px; padding: 6px 10px; font: inherit; cursor: pointer; text-decoration: none;}`;
     document.head.appendChild(st);
   })();
-
   /* ----------------------------- cartão + modal (criados sozinhos) ----------------------------- */
   function mount() {
     const page = $('page-active_occurrences');
@@ -91,7 +89,6 @@
         </div></div>
       </div>`;
     if (first && first.nextSibling) first.parentNode.insertBefore(card, first.nextSibling); else page.appendChild(card);
-
     const modal = document.createElement('div');
     modal.id = 'ofu-modal';
     modal.innerHTML = `
@@ -114,7 +111,6 @@
       <img id="ofu-lb-img" alt="">
       <button type="button" class="ofu-lb-btn ofu-lb-next" id="ofu-lb-next">›</button>`;
     document.body.appendChild(lb);
-
     $('ofu-date').value = OFU.date = today();
     $('ofu-date').onchange = e => { OFU.date = e.target.value || today(); load(); };
     $('ofu-close').onclick = closeModal;
@@ -131,12 +127,11 @@
     });
     return true;
   }
-
   /* ----------------------------- ler e desenhar a tabela ----------------------------- */
   async function load() {
     if (!mount()) return;
     const from = new Date(OFU.date + 'T00:00:00'), to = new Date(OFU.date + 'T00:00:00'); to.setDate(to.getDate() + 1);
-    const sel = 'id,occurrence_id,occurrence,local,status,message,photos,sender_name,created_at,is_read,read_at,read_by,retain';
+    const sel = 'id,occurrence_id,occurrence,local,status,message,photos,sender_nint,sender_name,created_at,is_read,read_at,read_by,retain';
     try {
       const [r1, r2] = await Promise.all([
         fetch(`${SUPABASE_URL}/rest/v1/ocr_field_updates?select=${sel}&corp_oper_nr=eq.${corp()}&created_at=gte.${from.toISOString()}&created_at=lt.${to.toISOString()}&order=created_at.desc`, {headers: hdr()}),
@@ -146,12 +141,27 @@
       const byId = new Map();
       [...await r2.json(), ...await r1.json()].forEach(x => byId.set(x.id, x));
       OFU.rows = [...byId.values()].sort((a, b) => (a.is_read - b.is_read) || (new Date(b.created_at) - new Date(a.created_at)));
+      await senderNames(OFU.rows);
       draw();
     } catch (e) {
       console.warn('Atualizações do terreno:', e);
       const tb = $('ofu-tbody');
       if (tb && !OFU.rows.length) tb.innerHTML = '<tr><td colspan="7" style="padding: 20px; color: red;">Erro ao carregar as atualizações do terreno</td></tr>';
     }
+  }
+  /* "Enviado por": patente - nome (reg_elems) a partir do n.º interno de quem enviou; sem n.º fica o nome gravado */
+  OFU.names = OFU.names || {};
+  const normN = v => String(v ?? '').trim().replace(/^0+(?=\d)/, '');
+  async function senderNames(rows) {
+    const need = [...new Set(rows.map(x => normN(x.sender_nint)).filter(n => n && !(n in OFU.names)))];
+    if (need.length) {
+      try {
+        const r = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?select=n_int,patent_abv,abv_name&corp_oper_nr=eq.${corp()}&n_int=in.(${need.join(',')})`, {headers: hdr()});
+        if (r.ok) (await r.json()).forEach(e => { OFU.names[normN(e.n_int)] = [e.patent_abv, e.abv_name].filter(Boolean).join(' - '); });
+      } catch (e) { console.warn('Nomes de quem enviou:', e); }
+      need.forEach(n => { if (!(n in OFU.names)) OFU.names[n] = ''; });
+    }
+    rows.forEach(x => { x.sender_label = OFU.names[normN(x.sender_nint)] || x.sender_name || '—'; });
   }
   function draw() {
     const tb = $('ofu-tbody'); if (!tb) return;
@@ -168,13 +178,12 @@
         <td class="l">${esc(x.occurrence || '—')}${x.is_read ? '' : '<span class="ofu-new">NOVO</span>'}${x.retain ? '<span class="ofu-ret">RETIDA</span>' : ''}</td>
         <td class="l">${esc(x.local || '—')}</td>
         <td>${esc(x.status || '—')}</td>
-        <td>${esc(x.sender_name || '—')}</td>
+        <td>${esc(x.sender_label || x.sender_name || '—')}</td>
         <td>${(x.photos || []).length || '—'}</td>
         <td><button class="btn btn-danger" style="font-size: 10px;" data-ofu="${x.id}">VER</button></td>
       </tr>`).join('');
     tb.querySelectorAll('[data-ofu]').forEach(b => b.onclick = () => openModal(Number(b.dataset.ofu)));
   }
-
   /* ----------------------------- links temporários das fotos (bucket privado) ----------------------------- */
   async function signed(paths, expiresIn = 900) {
     const need = paths.filter(p => p && !(OFU.urls[p] && OFU.urls[p].exp > Date.now() + 60000));
@@ -187,7 +196,6 @@
     }
     return paths.map(p => (OFU.urls[p] || {}).url || '');
   }
-
   /* ----------------------------- modal ----------------------------- */
   async function openModal(id) {
     const x = OFU.rows.find(r => r.id === id); if (!x) return;
@@ -198,7 +206,7 @@
         <b>Ocorrência</b><span>${esc(x.occurrence || '—')}</span>
         <b>Local</b><span>${esc(x.local || '—')}</span>
         <b>Estado</b><span>${esc(x.status || '—')}</span>
-        <b>Enviado por</b><span>${esc(x.sender_name || '—')}</span>
+        <b>Enviado por</b><span>${esc(x.sender_label || x.sender_name || '—')}</span>
         <b>Data/Hora</b><span>${new Date(x.created_at).toLocaleString('pt-PT')}</span>
       </div>
       <div><b style="font-size:12px;color:#555;">Descrição</b><div class="ofu-msg">${esc(x.message || 'Sem descrição.')}</div></div>
@@ -243,7 +251,6 @@
       note('Não foi possível alterar o "Reter": ' + e.message, 'popup-danger');
     }
   }
-
   /* ----------------------------- foto em grande ----------------------------- */
   function lbOpen(photos, i) { OFU.lb = {list: photos, i: 0}; $('ofu-lightbox').classList.add('open'); lbShow(i); }
   async function lbShow(i) {
@@ -257,7 +264,6 @@
       $('ofu-lb-img').src = u; $('ofu-lb-dl').href = u;
     } catch (e) { note('Não foi possível abrir a foto.', 'popup-danger'); }
   }
-
   /* ----------------------------- tempo real (sinal do SQL 42) + rede de segurança ----------------------------- */
   function kick() { clearTimeout(OFU.rt.deb); OFU.rt.deb = setTimeout(load, 300); }
   async function rtConnect() {

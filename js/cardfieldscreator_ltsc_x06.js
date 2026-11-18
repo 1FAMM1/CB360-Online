@@ -15,10 +15,10 @@
     function ocrLoadActiveElements() {
       const corp = String(sessionStorage.getItem('currentCorpOperNr') || '').padStart(4, '0');
       if (!ocrActiveElems) {
-        ocrActiveElems = fetch(`${SUPABASE_URL}/rest/v1/reg_elems?select=n_int,abv_name&corp_oper_nr=eq.${corp}&elem_state=not.is.false`, {headers: getSupabaseHeaders()})
+        ocrActiveElems = fetch(`${SUPABASE_URL}/rest/v1/reg_elems?select=n_int,abv_name,patent_abv&corp_oper_nr=eq.${corp}&elem_state=not.is.false`, {headers: getSupabaseHeaders()})
           .then(r => (r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status))))
           .then(list => list.filter(e => e.n_int != null && String(e.n_int).trim() !== '')
-            .map(e => ({n: String(e.n_int).trim(), a: String(e.abv_name || '').trim()}))
+            .map(e => ({n: String(e.n_int).trim(), a: String(e.abv_name || '').trim(), p: String(e.patent_abv || '').trim()}))
             .sort((x, y) => (parseInt(x.n, 10) || 0) - (parseInt(y.n, 10) || 0) || x.n.localeCompare(y.n)))
           .catch(err => { console.error('Elementos ativos:', err); ocrActiveElems = null; return []; });
       }
@@ -52,7 +52,10 @@
         .ocr-ms-item {display: flex; align-items: center; gap: 10px; padding: 8px 8px; border-radius: 6px; font-size: 13.5px; cursor: pointer; margin: 0; text-transform: none; letter-spacing: 0; font-weight: 400; color: #222;}
         .ocr-ms-item:hover {background: #f3f6fa;}
         .ocr-ms-item input {accent-color: #c0392b; margin: 0; width: 16px; height: 16px; flex-shrink: 0;}
-        .ocr-ms-item i {margin-left: auto; font-style: normal; font-size: 10.5px; color: #999;}
+        .ocr-ms-txt {min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
+        .ocr-ms-pat {color: #777; font-weight: 600;}
+        .ocr-ms-item.dis .ocr-ms-pat {color: inherit; font-weight: 400;}
+        .ocr-ms-item i {margin-left: auto; flex-shrink: 0; font-style: normal; font-size: 10.5px; color: #999;}
         .ocr-ms-item.dis {color: #aaa; cursor: default;}
         .ocr-ms-empty {padding: 10px; font-size: 12px; color: #888; text-align: center;}`;
       document.head.appendChild(st);
@@ -65,7 +68,7 @@
       const below = window.innerHeight - r.bottom - margin, above = r.top - margin;
       const down = below >= Math.min(want, 260) || below >= above;
       const h = Math.max(160, Math.min(want, down ? below : above));
-      const w = Math.min(Math.max(r.width, 320), window.innerWidth - 2 * margin);   /* pelo menos 320 px, mesmo com a combobox estreita */
+      const w = Math.min(Math.max(r.width, 340), window.innerWidth - 2 * margin);   /* pelo menos 340 px, mesmo com a combobox estreita */
       drop.style.width = `${w}px`;
       drop.style.left = `${Math.max(margin, Math.min(r.left, window.innerWidth - margin - w))}px`;
       drop.style.maxHeight = `${h}px`;
@@ -91,7 +94,7 @@
     function ocrRefreshCard(card) {
       const box = card.querySelector('.ocr-elems'); if (!box) return;
       const list = card._elemList || [];
-      const byN = Object.fromEntries(list.map(e => [e.n, e.a]));
+      const byN = Object.fromEntries(list.map(e => [e.n, e.a + (e.p ? ' - ' + e.p : '')]));
       const sel = [...card._nints];
       box.querySelector('.ocr-ms-btn span').textContent = sel.length ? `${sel.length} selecionado${sel.length > 1 ? 's' : ''}` : 'Selecionar…';
       const chips = box.querySelector('.ocr-chips');
@@ -127,10 +130,10 @@
       const box = card._drop;
       const q = box.querySelector('.ocr-ms-search').value.trim().toLowerCase();
       const taken = ocrTakenElsewhere(card);
-      const list = (card._elemList || []).filter(e => !q || e.n.toLowerCase().includes(q) || e.a.toLowerCase().includes(q));
+      const list = (card._elemList || []).filter(e => !q || e.n.toLowerCase().includes(q) || e.a.toLowerCase().includes(q) || e.p.toLowerCase().includes(q));
       box.querySelector('.ocr-ms-list').innerHTML = list.length ? list.map(e => {
         const other = taken[ocrNorm(e.n)], on = card._nints.has(e.n);
-        return `<label class="ocr-ms-item${other ? ' dis' : ''}"><input type="checkbox" data-n="${ocrEsc(e.n)}" ${on ? 'checked' : ''} ${other ? 'disabled' : ''}><b>${ocrEsc(e.n)}</b>&nbsp;- ${ocrEsc(e.a)}${other ? `<i>${ocrEsc(other)}</i>` : ''}</label>`;
+        return `<label class="ocr-ms-item${other ? ' dis' : ''}"><input type="checkbox" data-n="${ocrEsc(e.n)}" ${on ? 'checked' : ''} ${other ? 'disabled' : ''}><span class="ocr-ms-txt"><b>${ocrEsc(e.n)}</b> - ${ocrEsc(e.a)}${e.p ? ` - <span class="ocr-ms-pat">${ocrEsc(e.p)}</span>` : ''}</span>${other ? `<i>${ocrEsc(other)}</i>` : ''}</label>`;
       }).join('') : `<div class="ocr-ms-empty">${card._elemList && card._elemList.length ? 'Nenhum elemento encontrado.' : 'Sem elementos ativos (ou ainda a carregar).'}</div>`;
     }
     async function ocrAttachElements(card) {

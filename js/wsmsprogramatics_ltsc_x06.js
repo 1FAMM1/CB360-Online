@@ -150,6 +150,19 @@
       const optelFooter = await getOptelSignature();
       mensagem += optelFooter;
       try {
+        /* ===== GRAVAR O POSIT (histórico no telemóvel, SQL 47) =====
+           não bloqueia o POSIT: se falhar, segue na mesma (estado, push e WhatsApp) */
+        try {
+          const corpPosit = String(sessionStorage.getItem("currentCorpOperNr") || "").padStart(4, "0");
+          const rp = await fetch(`${SUPABASE_URL}/rest/v1/ocr_posits`, {
+            method: "POST",
+            headers: getSupabaseHeaders(),
+            body: JSON.stringify({corp_oper_nr: corpPosit, occurrence_id: Number(currentPositId) || null, occurrence: occorrence || null,
+                                  local: [local, localidade].filter(Boolean).join(', ') || null, status, posit_time: horaPosit, posit: positText,
+                                  demob: !!desmobilizacao, sender_name: optelFooter.replace(/^\s*(OPTEL:\s*)?/, '').trim() || null})
+          });
+          if (!rp.ok) console.warn('Gravar POSIT:', rp.status, await rp.text().catch(() => ''));
+        } catch (e) { console.warn('Gravar POSIT:', e); }
         /* ========== IF CLOSED → DELETE =========== */
         if (status === "Encerrada") {
           const del = await fetch(

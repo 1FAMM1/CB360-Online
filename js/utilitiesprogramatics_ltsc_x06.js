@@ -1371,20 +1371,3 @@
         .observe(document.body, {subtree: true, attributes: true, attributeFilter: ['class']});
       window.nrbqFniStart = start;
     })();
-    </script>
-    </div>
-    <script>
-      (function () {
-        function updateGroupTitles() {
-          document.querySelectorAll('.sidebar-group-title').forEach(t => {
-            let el = t.nextElementSibling, visible = false;
-            while (el && !el.classList.contains('sidebar-group-title')) {
-              if (el.matches('.sidebar-submenu-button') && getComputedStyle(el).display !== 'none') { visible = true; break; }
-              el = el.nextElementSibling;
-            }
-            t.style.display = visible ? '' : 'none';
-          });
-        }
-        document.addEventListener('click', e => { if (e.target.closest('.sidebar-menu-button')) requestAnimationFrame(updateGroupTitles); });
-        window.addEventListener('load', () => setTimeout(updateGroupTitles, 1500));
-      })();

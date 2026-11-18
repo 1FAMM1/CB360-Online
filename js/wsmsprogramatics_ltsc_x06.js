@@ -171,9 +171,22 @@
           );
           if (!upd.ok) throw new Error("Erro ao atualizar status.");
         }
+        /* ======= PUSH PARA TODOS OS ELEMENTOS ======= */
+        /* não bloqueia o POSIT: se a push falhar, a mensagem é copiada na mesma */
+        try {
+          const tk = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
+          let txt = `${occorrence}${local ? ' · ' + local : ''} — POSIT ${horaPosit}: ${positText}${desmobilizacao ? ' · Desmobilização dos meios' : ''}`;
+          if (txt.length > 230) txt = txt.slice(0, 227) + '…';
+          fetch('https://cb-360-app.vercel.app/api/sendPush', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${tk}`},
+            body: JSON.stringify({recipient_nint: 'geral', tipo: 'aviso', pagina: status === 'Encerrada' ? '' : 'OnGoingOcr',
+                                  sender_name: status === 'Encerrada' ? '🚨 POSIT · Ocorrência encerrada' : '🚨 POSIT', message_text: txt})
+          }).catch(e => console.warn('Push POSIT:', e));
+        } catch (e) { console.warn('Push POSIT:', e); }
         /* ============= COPY MESSAGE ============== */
         await navigator.clipboard.writeText(mensagem);
-        showPopup('popup-success', "POSIT criado e copiado! Pode colar no WhatsApp.", true);
+        showPopup('popup-success', "POSIT criado, enviado aos elementos e copiado! Pode colar no WhatsApp.", true);
         setTimeout(closePositPopup, 500);
       } catch (err) {
         console.error("Erro no POSIT:", err);

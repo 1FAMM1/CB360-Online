@@ -1,12 +1,12 @@
 /* =======================================================================
-OCORRÊNCIAS ATIVAS · ATUALIZAÇÕES DO TERRENO (substitui o grupo do Telegram)
-- O telemóvel (Ocorrências em Curso) grava em ocr_field_updates (SQL 42) e as fotos,
-já tapadas, no bucket privado ocr_photos.
-- Aqui: tabela por baixo das Ocorrências Ativas + botão VER (modal com a informação,
-miniaturas, foto em grande e "Reter").
-- Tempo real pelo sinal "mudou" do canal cb360-ocr-<corporação>; se cair, volta a ler de 15 em 15 s.
-Só é preciso carregar este ficheiro em main.html (o cartão e o modal criam-se sozinhos).
-======================================================================= */
+   OCORRÊNCIAS ATIVAS · ATUALIZAÇÕES DO TERRENO (substitui o grupo do Telegram)
+   - O telemóvel (Ocorrências em Curso) grava em ocr_field_updates (SQL 42) e as fotos,
+     já tapadas, no bucket privado ocr_photos.
+   - Aqui: tabela por baixo das Ocorrências Ativas + botão VER (modal com a informação,
+     miniaturas, foto em grande e "Reter").
+   - Tempo real pelo sinal "mudou" do canal cb360-ocr-<corporação>; se cair, volta a ler de 15 em 15 s.
+   Só é preciso carregar este ficheiro em main.html (o cartão e o modal criam-se sozinhos).
+   ======================================================================= */
 (function () {
   const OFU = {date: null, rows: [], cur: null, urls: {}, lb: {list: [], i: 0}, rt: {client: null, ch: null, ok: false, retry: null, deb: null}, timer: null};
   const BUCKET = 'ocr_photos';
@@ -18,6 +18,7 @@ Só é preciso carregar este ficheiro em main.html (o cartão e o modal criam-se
   const $ = id => document.getElementById(id);
   const fmtDT = iso => { const d = new Date(iso); return `${pad(d.getDate())}/${pad(d.getMonth() + 1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`; };
   const note = (msg, type = 'popup-success') => (typeof showPopup === 'function' ? showPopup(type, msg) : console.log(msg));
+
   /* ----------------------------- estilos ----------------------------- */
   (function css() {
     if ($('ofu-css')) return;
@@ -27,7 +28,7 @@ Só é preciso carregar este ficheiro em main.html (o cartão e o modal criam-se
       #ofu-card .ofu-head-right {margin-left: auto; display: flex; align-items: center; gap: 10px;}
       #ofu-card .ofu-badge {background: #fff; color: #c0392b; border-radius: 999px; padding: 2px 9px; font-size: 11px; font-weight: 800; display: none;}
       #ofu-card .ofu-badge.on {display: inline-block;}
-      #ofu-card .ofu-filter {display: flex; align-items: center; gap: 10px; margin-bottom: -30px; font-size: 12px; color: #555; flex-wrap: wrap;}
+      #ofu-card .ofu-filter {display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 12px; color: #555; flex-wrap: wrap;}
       #ofu-card .ofu-filter input[type=date] {height: 30px; border: 1px solid #c8c8c8; border-radius: 6px; padding: 0 8px; font: inherit;}
       #ofu-tbody tr.unread td {font-weight: 700; background: #fff5f5;}
       #ofu-tbody .ofu-new {background: #c0392b; color: #fff; border-radius: 999px; padding: 1px 7px; font-size: 9.5px; font-weight: 800; margin-left: 6px; letter-spacing: .4px;}
@@ -46,6 +47,37 @@ Só é preciso carregar este ficheiro em main.html (o cartão e o modal criam-se
       #ofu-modal .ofu-ret-row {display: flex; align-items: center; gap: 8px; padding: 10px 12px; border: 1px dashed #d4a017; background: #fffbea; border-radius: 8px; font-size: 12px;}
       #ofu-modal .ofu-ret-row input {width: 15px; height: 15px; accent-color: #c0392b;}
       #ofu-modal .ofu-read {font-size: 11px; color: #888;}
+      /* aspeto do modal */
+      #ofu-modal .ofu-box {border-radius: 14px; max-width: 680px;}
+      #ofu-modal .ofu-x {margin-left: auto; width: 28px; height: 28px; border-radius: 50%; border: 0; background: rgba(255,255,255,.18); color: #fff; cursor: pointer; font-size: 14px;}
+      #ofu-modal .ofu-x:hover {background: rgba(255,255,255,.32);}
+      #ofu-modal .ofu-body {padding: 18px 20px; gap: 14px; background: #f4f5f7;}
+      #ofu-modal .ofu-hero {background: #fff; border-radius: 12px; padding: 14px 16px; border-left: 5px solid #c0392b; box-shadow: 0 1px 3px rgba(0,0,0,.06); display: flex; gap: 12px; align-items: flex-start;}
+      #ofu-modal .ofu-hero-ico {flex: none; width: 42px; height: 42px; border-radius: 12px; background: #fdecea; color: #c0392b; display: flex; align-items: center; justify-content: center; font-size: 18px;}
+      #ofu-modal .ofu-hero-main {flex: 1; min-width: 0;}
+      #ofu-modal .ofu-hero-t {font-size: 16px; font-weight: 800; color: #222; line-height: 1.3;}
+      #ofu-modal .ofu-hero-l {margin-top: 4px; font-size: 12.5px; color: #666; display: flex; align-items: center; gap: 6px; text-transform: uppercase; letter-spacing: .02em;}
+      #ofu-modal .ofu-pill {flex: none; padding: 4px 11px; border-radius: 999px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; background: #fef3c7; color: #92400e;}
+      #ofu-modal .ofu-pill.fin {background: #d1fae5; color: #065f46;}
+      #ofu-modal .ofu-facts {display: grid; grid-template-columns: 1fr 1fr; gap: 10px;}
+      #ofu-modal .ofu-fact {background: #fff; border-radius: 10px; padding: 10px 12px; display: flex; gap: 10px; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,.06); min-width: 0;}
+      #ofu-modal .ofu-fact i {color: #c0392b; font-size: 15px; width: 18px; text-align: center;}
+      #ofu-modal .ofu-fact small {display: block; font-size: 10.5px; color: #999; text-transform: uppercase; letter-spacing: .05em; font-weight: 700;}
+      #ofu-modal .ofu-fact span {display: block; font-size: 13px; font-weight: 700; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
+      #ofu-modal .ofu-sec {font-size: 11px; font-weight: 800; color: #888; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;}
+      #ofu-modal .ofu-sec i {color: #c0392b;}
+      #ofu-modal .ofu-msg {background: #fff; border: 0; border-left: 3px solid #c0392b; border-radius: 8px; padding: 12px 14px; font-size: 13.5px; color: #333; line-height: 1.5; box-shadow: 0 1px 3px rgba(0,0,0,.06);}
+      #ofu-modal .ofu-thumbs button {border: 0; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,.15); transition: transform .15s;}
+      #ofu-modal .ofu-thumbs button:hover {transform: scale(1.03);}
+      #ofu-modal .ofu-ret-row {border: 0; background: #fff; border-radius: 10px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(0,0,0,.06); cursor: pointer; gap: 12px;}
+      #ofu-modal .ofu-ret-row input {position: absolute; opacity: 0; pointer-events: none;}
+      #ofu-modal .ofu-sw {flex: none; width: 38px; height: 22px; border-radius: 999px; background: #ccc; position: relative; transition: background .2s;}
+      #ofu-modal .ofu-sw::after {content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: left .2s; box-shadow: 0 1px 2px rgba(0,0,0,.3);}
+      #ofu-modal .ofu-ret-row input:checked + .ofu-sw {background: #d4a017;}
+      #ofu-modal .ofu-ret-row input:checked + .ofu-sw::after {left: 19px;}
+      #ofu-modal .ofu-ret-row small {display: block; color: #888; font-size: 11.5px; margin-top: 2px;}
+      #ofu-modal .ofu-read {display: flex; align-items: center; gap: 6px; color: #2e7d32;}
+      @media (max-width: 560px) {#ofu-modal .ofu-facts {grid-template-columns: 1fr;}}
       #ofu-lightbox {display: none; position: fixed; inset: 0; z-index: 1100; background: rgba(0,0,0,.92); align-items: center; justify-content: center;}
       #ofu-lightbox.open {display: flex;}
       #ofu-lightbox img {max-width: 92vw; max-height: 86vh; border-radius: 6px; box-shadow: 0 6px 24px rgba(0,0,0,.6);}
@@ -55,6 +87,7 @@ Só é preciso carregar este ficheiro em main.html (o cartão e o modal criam-se
       #ofu-lightbox .ofu-lb-top a, #ofu-lightbox .ofu-lb-top button {color: #fff; background: rgba(255,255,255,.15); border: 0; border-radius: 6px; padding: 6px 10px; font: inherit; cursor: pointer; text-decoration: none;}`;
     document.head.appendChild(st);
   })();
+
   /* ----------------------------- cartão + modal (criados sozinhos) ----------------------------- */
   function mount() {
     const page = $('page-active_occurrences');
@@ -89,6 +122,7 @@ Só é preciso carregar este ficheiro em main.html (o cartão e o modal criam-se
         </div></div>
       </div>`;
     if (first && first.nextSibling) first.parentNode.insertBefore(card, first.nextSibling); else page.appendChild(card);
+
     const modal = document.createElement('div');
     modal.id = 'ofu-modal';
     modal.innerHTML = `
@@ -96,6 +130,7 @@ Só é preciso carregar este ficheiro em main.html (o cartão e o modal criam-se
         <div class="wsms-card-header" style="background:#c0392b;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
           <span>ATUALIZAÇÃO DO TERRENO</span>
+          <button type="button" class="ofu-x" id="ofu-x" title="Fechar">✕</button>
         </div>
         <div class="ofu-body" id="ofu-body"></div>
         <div class="wsms-card-footer" style="justify-content: center;">
@@ -111,9 +146,11 @@ Só é preciso carregar este ficheiro em main.html (o cartão e o modal criam-se
       <img id="ofu-lb-img" alt="">
       <button type="button" class="ofu-lb-btn ofu-lb-next" id="ofu-lb-next">›</button>`;
     document.body.appendChild(lb);
+
     $('ofu-date').value = OFU.date = today();
     $('ofu-date').onchange = e => { OFU.date = e.target.value || today(); load(); };
     $('ofu-close').onclick = closeModal;
+    $('ofu-x').onclick = closeModal;
     modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
     $('ofu-lb-close').onclick = () => lb.classList.remove('open');
     lb.addEventListener('click', e => { if (e.target === lb) lb.classList.remove('open'); });
@@ -127,6 +164,7 @@ Só é preciso carregar este ficheiro em main.html (o cartão e o modal criam-se
     });
     return true;
   }
+
   /* ----------------------------- ler e desenhar a tabela ----------------------------- */
   async function load() {
     if (!mount()) return;
@@ -184,6 +222,7 @@ Só é preciso carregar este ficheiro em main.html (o cartão e o modal criam-se
       </tr>`).join('');
     tb.querySelectorAll('[data-ofu]').forEach(b => b.onclick = () => openModal(Number(b.dataset.ofu)));
   }
+
   /* ----------------------------- links temporários das fotos (bucket privado) ----------------------------- */
   async function signed(paths, expiresIn = 900) {
     const need = paths.filter(p => p && !(OFU.urls[p] && OFU.urls[p].exp > Date.now() + 60000));
@@ -196,24 +235,31 @@ Só é preciso carregar este ficheiro em main.html (o cartão e o modal criam-se
     }
     return paths.map(p => (OFU.urls[p] || {}).url || '');
   }
+
   /* ----------------------------- modal ----------------------------- */
   async function openModal(id) {
     const x = OFU.rows.find(r => r.id === id); if (!x) return;
     OFU.cur = x;
     const photos = x.photos || [];
+    const fin = /finaliz|encerr/i.test(x.status || '');
     $('ofu-body').innerHTML = `
-      <div class="ofu-grid">
-        <b>Ocorrência</b><span>${esc(x.occurrence || '—')}</span>
-        <b>Local</b><span>${esc(x.local || '—')}</span>
-        <b>Estado</b><span>${esc(x.status || '—')}</span>
-        <b>Enviado por</b><span>${esc(x.sender_label || x.sender_name || '—')}</span>
-        <b>Data/Hora</b><span>${new Date(x.created_at).toLocaleString('pt-PT')}</span>
+      <div class="ofu-hero">
+        <div class="ofu-hero-ico"><i class="fa-solid fa-fire"></i></div>
+        <div class="ofu-hero-main">
+          <div class="ofu-hero-t">${esc(x.occurrence || '—')}</div>
+          <div class="ofu-hero-l"><i class="fa-solid fa-location-dot"></i>${esc(x.local || '—')}</div>
+        </div>
+        <span class="ofu-pill${fin ? ' fin' : ''}">${esc(x.status || '—')}</span>
       </div>
-      <div><b style="font-size:12px;color:#555;">Descrição</b><div class="ofu-msg">${esc(x.message || 'Sem descrição.')}</div></div>
-      ${photos.length ? `<div><b style="font-size:12px;color:#555;">Fotos (${photos.length})</b><div class="ofu-thumbs" id="ofu-thumbs">${photos.map((p, i) => `<button type="button" data-i="${i}" title="Ver em grande"></button>`).join('')}</div></div>` : ''}
-      <label class="ofu-ret-row"><input type="checkbox" id="ofu-retain" ${x.retain ? 'checked' : ''}>
-        <span><b>Reter</b> — não apagar automaticamente ao fim de 2 anos (pedido das autoridades, processo em curso…)</span></label>
-      <div class="ofu-read" id="ofu-read">${x.is_read ? `Vista ${x.read_by ? 'por ' + esc(x.read_by) + ' ' : ''}${x.read_at ? 'em ' + new Date(x.read_at).toLocaleString('pt-PT') : ''}` : ''}</div>`;
+      <div class="ofu-facts">
+        <div class="ofu-fact"><i class="fa-solid fa-user-shield"></i><div style="min-width:0;"><small>Enviado por</small><span>${esc(x.sender_label || x.sender_name || '—')}</span></div></div>
+        <div class="ofu-fact"><i class="fa-regular fa-clock"></i><div style="min-width:0;"><small>Data / Hora</small><span>${new Date(x.created_at).toLocaleString('pt-PT')}</span></div></div>
+      </div>
+      <div><div class="ofu-sec"><i class="fa-solid fa-align-left"></i>Descrição</div><div class="ofu-msg">${esc(x.message || 'Sem descrição.')}</div></div>
+      ${photos.length ? `<div><div class="ofu-sec"><i class="fa-solid fa-camera"></i>Fotos (${photos.length})</div><div class="ofu-thumbs" id="ofu-thumbs">${photos.map((p, i) => `<button type="button" data-i="${i}" title="Ver em grande"></button>`).join('')}</div></div>` : ''}
+      <label class="ofu-ret-row"><input type="checkbox" id="ofu-retain" ${x.retain ? 'checked' : ''}><span class="ofu-sw"></span>
+        <span><b>Reter</b><small>Não apagar automaticamente ao fim de 2 anos (pedido das autoridades, processo em curso…)</small></span></label>
+      <div class="ofu-read" id="ofu-read">${x.is_read ? `<i class="fa-solid fa-check-double"></i>Vista ${x.read_by ? 'por ' + esc(x.read_by) + ' ' : ''}${x.read_at ? 'em ' + new Date(x.read_at).toLocaleString('pt-PT') : ''}` : ''}</div>`;
     $('ofu-modal').classList.add('open');
     $('ofu-retain').onchange = e => setRetain(x, e.target.checked);
     if (photos.length) {
@@ -251,6 +297,7 @@ Só é preciso carregar este ficheiro em main.html (o cartão e o modal criam-se
       note('Não foi possível alterar o "Reter": ' + e.message, 'popup-danger');
     }
   }
+
   /* ----------------------------- foto em grande ----------------------------- */
   function lbOpen(photos, i) { OFU.lb = {list: photos, i: 0}; $('ofu-lightbox').classList.add('open'); lbShow(i); }
   async function lbShow(i) {
@@ -264,6 +311,7 @@ Só é preciso carregar este ficheiro em main.html (o cartão e o modal criam-se
       $('ofu-lb-img').src = u; $('ofu-lb-dl').href = u;
     } catch (e) { note('Não foi possível abrir a foto.', 'popup-danger'); }
   }
+
   /* ----------------------------- tempo real (sinal do SQL 42) + rede de segurança ----------------------------- */
   function kick() { clearTimeout(OFU.rt.deb); OFU.rt.deb = setTimeout(load, 300); }
   async function rtConnect() {

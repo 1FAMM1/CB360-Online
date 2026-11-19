@@ -7,6 +7,93 @@
       funcionamento. A limpeza dos estilos fica para a fase do CSS.
     ======================================= */
     (() => {
+    /* ----------------------------- estilos ----------------------------- */
+    if (!document.getElementById('saloc-css')) {
+      const css = document.createElement('style');
+      css.id = 'saloc-css';
+      css.textContent = `
+        /* regras vindas dos ficheiros CSS gerais (só usadas neste módulo) */
+        /* - de cards_ltsc_x04.css */
+        .major-card-header.header-blue {background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%); color: #ffffff; border-bottom: 1px solid #000000; padding: 5px 18px; font-size: 12px; font-weight: 600;
+                                        letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px; text-shadow: 0 1px 2px rgba(0,0,0,0.4);}
+        /* - de containers_ltsc_x04.css */
+        .is-transmitting {animation: pulse-live 1s infinite; background-color: #ff4444 !important; color: white !important; border-color: #ff0000 !important; z-index: 10;}
+        .console-dimmed {opacity: 1; pointer-events: none; transition: all 0.5s ease;}
+        /* - de buttons_ltsc_x04.css */
+        .options-btn {padding: 7px 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid #c5c9d1; border-radius: 6px; background-color: #e2e4e9;
+                      color: #2d3748; cursor: pointer; transition: all 0.2s ease; border-bottom: 2px solid #b1b5be;}
+        .options-btn:hover {background-color: #d1d5db; transform: translateY(-1px);}
+        .options-btn.active {background-color: #1e40af; color: #ffffff; border-bottom: 0; transform: translateY(1px); box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);}
+        .options-black-btn {padding: 7px 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; border: 1px solid #000; border-radius: 6px; background-color: #1a1a1a; color: #fff; cursor: pointer;
+                            transition: all 0.2s; border-bottom: 2px solid #000;}
+        .options-black-btn:hover {background-color: #262626; transform: translateY(-1px);}
+        .options-black-btn.active {background-color: #880808; color: #fff; border-bottom: 0; transform: translateY(1px); box-shadow: inset 0 2px 6px rgba(0,0,0,0.5);}
+        .options-yellow-btn {padding: 7px 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; border: 1px solid #d9a406; border-radius: 6px; background-color: #f5b800; color: #453200; cursor: pointer;
+                             transition: all 0.2s; border-bottom: 2px solid #c29200;}
+        .options-yellow-btn:hover {background-color: #ffc800; transform: translateY(-1px);}
+        .options-yellow-btn.active {background-color: #c2410c; color: #fff; border-bottom: 0; transform: translateY(1px); box-shadow: inset 0 2px 5px rgba(0,0,0,0.3);}
+        .options-btn:focus, .options-black-btn:focus, .options-yellow-btn:focus {outline: none !important; box-shadow: none;}
+        .options-btn.active:focus, .options-black-btn.active:focus, .options-yellow-btn.active:focus {box-shadow: inset 0 2px 5px rgba(0,0,0,0.3) !important;}
+        /* - de tables_ltsc_x04.css */
+        .table-elements {width: 100%; border-collapse: collapse;}
+        .table-elements th, .table-elements td {border: 1px solid #bbb; padding: 2px; text-align: center;}
+        .table-elements th {background-color: #f2f2f2;}
+        /* - de dayliplan_ltsc_x04.css */
+        #plandir-layout-wrapper {display: flex; align-items: flex-start; gap: 12px; margin-top: 10px; overflow: visible;}
+        #plandir-left-col {min-width: 0;}
+        #plandir-right-col {width: 500px; flex-shrink: 0; position: -webkit-sticky; position: sticky; top: 10px; height: fit-content; align-self: flex-start; z-index: 0;}
+        .plandir-side-table {width: 100%; border-collapse: collapse; font-size: 12px; border: 1px solid #d0d0d0;}
+        .plandir-side-table th {padding: 6px 8px; text-align: center; background-color: #dcdcdc; color: #444; font-size: 12px; font-weight: 600; letter-spacing: 0.03em; border: 1px solid #b8b8b8;}
+        .plandir-side-table td {border: 1px solid #d0d0d0; padding: 5px 8px; background: #f5f5f5; font-size: 12px;}
+        .plandir-side-table tbody tr:hover td {background-color: #f0f4ff;}
+        .row-highlight-green td {background-color: #dcfce7 !important; color: #15803d !important; font-weight: 600;}
+        .plandir-side-table tbody tr.row-highlight-green:hover td {background-color: #bbf7d0 !important;}
+        .row-pending-red td {background-color: #fee2e2 !important; color: #991b1b !important; transition: all 0.3s ease;}
+        .plandir-shift-header {width: 100%; margin: 5px auto; margin-bottom: 0px; text-align: center; padding: 10px 16px; border-radius: 10px; border: 1px solid #d0d0d0;
+                               background: linear-gradient(to bottom, #ffffff, #f0f0f0); box-shadow: 0 2px 8px rgba(0,0,0,0.1);}
+        .plandir-shift-header .plandir-header-title {font-size: 18px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px;}
+        .plandir-shift-header .plandir-header-date {font-size: 14px; color: #555;}
+        .plandir-status-dot {width: 15px; height: 15px; border-radius: 4px; position: absolute; right: 14px; background: linear-gradient(to bottom, #ef4444 0%, #b91c1c 50%, #991b1b 100%);
+                             box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.2);}
+        .plandir-status-dot.filled {background: linear-gradient(to bottom, #22c55e 0%, #16a34a 50%, #15803d 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.2);}
+        .plandir-status-dot.dot-yellow {background: linear-gradient(to bottom, #facc15 0%, #eab308 50%, #ca8a04 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.2);}
+        .plandir-status-dot.dot-red {background: linear-gradient(to bottom, #ef4444 0%, #b91c1c 50%, #991b1b 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.2);}
+        .plandir-card-title {padding: 8px 14px; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #fff; text-align: center; display: flex; align-items: center;
+                             justify-content: center; position: relative; background: linear-gradient(to bottom, #2a3f6f 0%, #1a2a4a 50%, #152238 100%);
+                             box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -1px 0 rgba(0,0,0,0.2); text-shadow: 0 1px 2px rgba(0,0,0,0.3);}
+        .plandir-card-title.red-variant {background: linear-gradient(to bottom, #b91c1c 0%, #991b1b 50%, #7f1d1d 100%);}
+        .plandir-card-title.green-variant {background: linear-gradient(to bottom, #22c55e 0%, #16a34a 50%, #15803d 100%); margin-top: 0; border-top: 1px solid rgba(255,255,255,0.2);}
+        .plandir-card-title.black-variant {background: linear-gradient(to bottom, #454545 0%, #1a1a1a 50%, #000000 100%); margin-top: 0; border-top: 1px solid rgba(255,255,255,0.15);
+                                           color: #ffffff; text-shadow: 0 1px 2px rgba(0,0,0,0.8);}
+        .plandir-main-card {margin: 10px 0 0 0; max-width: 1200px; border: 1px solid #d0d0d0; border-radius: 10px 10px 0 0; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.06); transform: none !important;
+                            transition: none !important;}
+        .plandir-table {width: 100%; border-collapse: collapse; font-size: 12px;}
+        .plandir-table th {padding: 6px 8px; text-align: center; background-color: #dcdcdc; color: #444; font-size: 12px; font-weight: 600; letter-spacing: 0.03em; border: 1px solid #b8b8b8;}
+        .plandir-table col:nth-child(1) {width: 75px;}
+        .plandir-table col:nth-child(2) {width: 200px;}
+        .plandir-table col:nth-child(3) {width: 300px;}
+        .plandir-table col:nth-child(4) {width: 75px;}
+        .plandir-table col:nth-child(5) {width: 75px;}
+        .plandir-table col:nth-child(6) {width: 75px;}
+        .plandir-table col:nth-child(7) {width: 75px;}
+        .plandir-table col:nth-child(8) {width: 500px;}
+        .plandir-table .special {background-color: #3c3a8c;}
+        .plandir-table td {border: 1px solid #d0d0d0; padding: 0; transition: background 0.1s;}
+        .plandir-table tbody td {background: #f5f5f5;}
+        .plandir-table tbody tr:hover td {background-color: #f0f4ff;}
+        .plandir-table input {width: 100%; padding: 5px 6px; border: none; outline: none; background: transparent; font-size: 12px; font-family: inherit; color: #1a1a1a; transition: background 0.12s;}
+        .plandir-table input:focus {background: #eef3ff; color: #1d4ed8;}
+        .plandir-table td:nth-child(1) input, .plandir-table td:nth-child(4) input, .plandir-table td:nth-child(5) input, .plandir-table td:nth-child(6) input,
+        .plandir-table td:nth-child(7) input {text-align: center;}
+        .plandir-table td:nth-child(2) input, .plandir-table td:nth-child(3) input, .plandir-table td:nth-child(8) input {text-align: left;}
+        .mp-cell, .tas-cell {text-align: center; font-size: 12px; font-weight: 600; color: #bbb; user-select: none;}
+        .plandir-mp-active {background: #dcfce7 !important; color: #15803d !important; font-weight: bold; text-align: center;}
+        .plandir-tas-active {background: #fef9c3 !important; color: #a16207 !important; font-weight: bold; text-align: center;}
+        .plandir-readonly-field {background: #f5f5f5; color: #555;}
+        .plandir-nint-input, .plandir-entrance-input, .plandir-exit-input, .plandir-obs-input {width: 100%;}
+      `;
+      document.head.appendChild(css);
+    }
     const PAGES = {
       'page-saloc': `
         <div class="major-card last-card">

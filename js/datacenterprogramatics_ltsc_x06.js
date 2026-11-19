@@ -16,6 +16,17 @@
     const st = document.createElement('style');
     st.id = 'dc-css';
     st.textContent = `
+      /* regras vindas dos ficheiros CSS gerais (só usadas neste módulo) */
+      /* - de cards_ltsc_x04.css */
+      .transparent-card {border: 2px solid #888; border-radius: 8px; background-color: transparent; padding: 15px; margin: 0 0 0 0;}
+      .transparent-card .card-header {font-weight: bold; font-size: 16px; margin-bottom: 10px;}
+      /* - de tables_ltsc_x04.css */
+      .tab-btn {flex: 1; font-size: 10px; padding: 10px 5px; background: #f1f5f9; border: none; border-right: 1px solid #ddd; cursor: pointer; color: #64748b; font-weight: 600; text-transform: uppercase;
+                transition: all 0.2s;}
+      .tab-btn.active {background: #fff; border-bottom: 2px solid #1e40af; color: #1e40af; font-weight: bold;}
+      .tab-content {display: none; padding: 10px; height: 250px; overflow-y: auto;}
+      .tab-content.active {display: block;}
+      /* - regras próprias do módulo */
       #page-data .major-card-header svg {opacity: .9;}
       #page-data .dc-r {display: flex; align-items: center; gap: 10px; margin-bottom: 3px;}
       #page-data .dc-r > label.f0 {flex-shrink: 0;}

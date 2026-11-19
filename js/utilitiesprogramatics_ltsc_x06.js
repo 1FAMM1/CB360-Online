@@ -35,6 +35,36 @@
     const st = document.createElement('style');
     st.id = 'util-css';
     st.textContent = `
+      /* regras vindas dos ficheiros CSS gerais (só usadas neste módulo) */
+      /* - de buttons_ltsc_x04.css */
+      .button-container {display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 10px; width: 100%; height: 60px;}
+      .epeppi-panel-btn {flex: 1; min-width: 0; height: 52px; padding: 0 4px; border: 1.5px solid #D3D1C7; border-radius: 5px; background: #F1EFE8; color: #5F5E5A; cursor: pointer; font-weight: 500; font-size: 11px;
+                         letter-spacing: 0.04em; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; transition: border-color 0.2s, background 0.2s, color 0.2s; 
+                         overflow: hidden; text-align: center;}
+      .epeppi-panel-btn::before {content: ''; width: 6px; height: 6px; border-radius: 50%; background: #B4B2A9; flex-shrink: 0; transition: background 0.2s, box-shadow 0.2s; margin-bottom: 5px; }
+      .epeppi-panel-btn:hover {border-color: #888780; background: white; color: #2C2C2A;}
+      .epeppi-panel-btn:empty {border-color: transparent; background: transparent; pointer-events: none;}
+      .epeppi-panel-btn.s-monitor {background: #E6F1FB; color: #0C447C;}
+      .epeppi-panel-btn.s-yellow {background: #FAEEDA; color: #633806;}
+      .epeppi-panel-btn.s-orange {background: #FAECE7; color: #712B13;}
+      .epeppi-panel-btn.s-red {background: #FCEBEB; color: #791F1F;}
+      .epeppi-panel-btn.s-critical {background: #A32D2D; color: #FCEBEB;}
+      .epeppi-panel-btn.s-monitor::before, .epeppi-panel-btn.s-yellow::before, .epeppi-panel-btn.s-orange::before, .epeppi-panel-btn.s-red::before,
+      .epeppi-panel-btn.s-critical::before {background: lime; box-shadow: 0 0 6px 2px lime;}
+      .epeppi-panel-btn.inactive::before {background: #E24B4A; box-shadow: 0 0 6px 2px #E24B4A;}
+      /* - de sidebars_ltsc_x04.css */
+      .panel-group-title {font-size: 11px; font-weight: 700; letter-spacing: 1.2px; color: rgba(255,255,255,0.45); text-transform: uppercase; margin: 14px 4px 6px; padding-bottom: 3px; border-bottom: 1px solid rgba(255,255,255,0.10); user-select: none; pointer-events: none;}
+      /* - de utilities_ltsc_x04.css */
+      .data-grid {display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 20px 0;}
+      .elems-container {display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 0 0; justify-content: flex-start;}
+      .btn-elem {font-size: 14px; position: relative; padding: 15px 20px; cursor: pointer; border: 1px; border-radius: 5px; transition: background 0.2s, color 0.2s;}
+      .btn-elem:hover {border-color: #555555; transform: scale(1.05); transition: all 0.3s ease; background: rgba(60, 60, 60, 0.75) !important; color: white !important}
+      .btn-elem::after {content: attr(data-tooltip); position: absolute; bottom: 120%; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, 0.75); color: #fff; padding: 5px 8px; border-radius: 4px;
+                        white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s; font-size: 12px; z-index: 10;}
+      .btn-elem:hover::after {opacity: 1;}
+      /* - de animations_ltsc_x04.css */
+      #ocrReport {display: grid; grid-template-columns: 1fr 1fr; gap: 3px 20px;}
+      /* - regras próprias do módulo */
       #page-utilities .major-card-header svg {opacity: .9;}
       #page-utilities .panel-group-title.first {margin-top: 2px;}
       #page-utilities #ppi-container {margin-top: 20px;}

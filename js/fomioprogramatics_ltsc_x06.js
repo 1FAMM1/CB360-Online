@@ -10,6 +10,15 @@
       const css = document.createElement('style');
       css.id = 'fomio-css';
       css.textContent = `
+        /* regras vindas dos ficheiros CSS gerais (só usadas neste módulo) */
+        /* - de cards_ltsc_x04.css */
+        .major-card-header.header-green {background: linear-gradient(135deg, #27ae60, #1e8449); color: #fff; border-bottom: 1px solid #196f3d; padding: 5px 18px; font-size: 12px; font-weight: 600;
+                                         letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px; text-shadow: 0 1px 2px rgba(0,0,0,0.25);}
+        /* - de containers_ltsc_x04.css */
+        .events-shift-item {display: flex; align-items: flex-end; gap: 8px; margin-bottom: 5px;}
+        .events-shift-item .major-field {flex-direction: row; align-items: center; gap: 6px;}
+        .events-shift-item .major-field label {margin-bottom: 0; white-space: nowrap;}
+        /* - regras próprias do módulo */
         .major-card-header > svg.fo-ico {opacity: .9; vertical-align: middle;}
         .major-card-header > svg.fo-ico9 {opacity: .9;}
         .major-card-header.fo-hflex {display: flex; align-items: center; gap: 10px;}

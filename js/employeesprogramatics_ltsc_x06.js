@@ -11,6 +11,14 @@
       const css = document.createElement('style');
       css.id = 'rh-css';
       css.textContent = `
+        /* regras vindas dos ficheiros CSS gerais (só usadas neste módulo) */
+        /* - de cards_ltsc_x04.css */
+        .major-card-header.header-orange {background: linear-gradient(135deg, #f39c12, #d35400); color: #000; border-bottom: 1px solid #bc4b00; padding: 5px 18px; font-size: 12px; font-weight: 600;
+                                          letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px; text-shadow: 0 1px 2px rgba(0,0,0,0.25);}
+        /* - de buttons_ltsc_x04.css */
+        .btn-toggle {background-color: #f97316; border-bottom: 2px solid #ea580c;}
+        .btn-toggle.active {background-color: #6b7280; border-bottom: 2px solid #4b5563; transform: translateY(1px); box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);}
+        /* - regras próprias do módulo */
         .major-card-header > svg.rh-ico {opacity: .9; vertical-align: middle;}
         .rh-imr6 {margin-right: 6px;}
         .major-card-footer > .rh-note {font-size: 11px; color: #222;}

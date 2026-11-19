@@ -110,7 +110,8 @@
           <table id="ofu-table">
             <thead><tr>
               <th style="width: 110px;">Data/Hora</th>
-              <th style="width: 260px;">Ocorrência</th>
+              <th style="width: 110px;">Nr. OC</th>
+              <th style="width: 240px;">Ocorrência</th>
               <th style="width: 280px;">Local</th>
               <th style="width: 110px;">Estado</th>
               <th style="width: 160px;">Enviado por</th>
@@ -169,7 +170,7 @@
   async function load() {
     if (!mount()) return;
     const from = new Date(OFU.date + 'T00:00:00'), to = new Date(OFU.date + 'T00:00:00'); to.setDate(to.getDate() + 1);
-    const sel = 'id,occurrence_id,occurrence,local,status,message,photos,sender_nint,sender_name,created_at,is_read,read_at,read_by,retain';
+    const sel = 'id,occurrence_id,occurrence,local,status,message,photos,sender_nint,sender_name,created_at,is_read,read_at,read_by,retain,nr_oc';
     try {
       const [r1, r2] = await Promise.all([
         fetch(`${SUPABASE_URL}/rest/v1/ocr_field_updates?select=${sel}&corp_oper_nr=eq.${corp()}&created_at=gte.${from.toISOString()}&created_at=lt.${to.toISOString()}&order=created_at.desc`, {headers: hdr()}),
@@ -184,7 +185,7 @@
     } catch (e) {
       console.warn('Atualizações do terreno:', e);
       const tb = $('ofu-tbody');
-      if (tb && !OFU.rows.length) tb.innerHTML = '<tr><td colspan="7" style="padding: 20px; color: red;">Erro ao carregar as atualizações do terreno</td></tr>';
+      if (tb && !OFU.rows.length) tb.innerHTML = '<tr><td colspan="8" style="padding: 20px; color: red;">Erro ao carregar as atualizações do terreno</td></tr>';
     }
   }
   /* "Enviado por": patente - nome (reg_elems) a partir do n.º interno de quem enviou; sem n.º fica o nome gravado */
@@ -207,12 +208,13 @@
     const badge = $('ofu-badge');
     badge.textContent = `${unread} por ver`; badge.classList.toggle('on', unread > 0);
     if (!OFU.rows.length) {
-      tb.innerHTML = '<tr><td colspan="7" style="padding: 20px; color: #6C757D;">Sem atualizações do terreno neste dia.</td></tr>';
+      tb.innerHTML = '<tr><td colspan="8" style="padding: 20px; color: #6C757D;">Sem atualizações do terreno neste dia.</td></tr>';
       return;
     }
     tb.innerHTML = OFU.rows.map(x => `
       <tr class="${x.is_read ? '' : 'unread'}">
         <td>${fmtDT(x.created_at)}</td>
+        <td>${x.nr_oc ? `<b>${esc(x.nr_oc)}</b>` : '—'}</td>
         <td class="l">${esc(x.occurrence || '—')}${x.is_read ? '' : '<span class="ofu-new">NOVO</span>'}${x.retain ? '<span class="ofu-ret">RETIDA</span>' : ''}</td>
         <td class="l">${esc(x.local || '—')}</td>
         <td>${esc(x.status || '—')}</td>
@@ -247,6 +249,7 @@
         <div class="ofu-hero-ico"><i class="fa-solid fa-fire"></i></div>
         <div class="ofu-hero-main">
           <div class="ofu-hero-t">${esc(x.occurrence || '—')}</div>
+          ${x.nr_oc ? `<div class="ofu-hero-l" style="text-transform:none;"><i class="fa-solid fa-hashtag"></i>Nr. OC <b style="color:#222;">${esc(x.nr_oc)}</b></div>` : ''}
           <div class="ofu-hero-l"><i class="fa-solid fa-location-dot"></i>${esc(x.local || '—')}</div>
         </div>
         <span class="ofu-pill${fin ? ' fin' : ''}">${esc(x.status || '—')}</span>

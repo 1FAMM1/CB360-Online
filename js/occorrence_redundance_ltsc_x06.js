@@ -1,3 +1,29 @@
+    /* =======================================
+    REDUNDÂNCIA DE OCORRÊNCIAS (CB360)
+    - O cartão da página é criado aqui, logo ao carregar; o main.html só tem o
+      <div class="page"> vazio. O corpo e o rodapé continuam a ser preenchidos por
+      renderCb360RedundPage(), como antes.
+    ======================================= */
+    (() => {
+    if (!document.getElementById('redund-css')) {
+      const css = document.createElement('style');
+      css.id = 'redund-css';
+      css.textContent = `
+        #page-cb360-redund .major-card-header.rd-head {display: flex; align-items: center; gap: 10px;}
+        #page-cb360-redund .major-card-header.rd-head > svg {opacity: .9; vertical-align: middle;}
+      `;
+      document.head.appendChild(css);
+    }
+    const page = document.getElementById('page-cb360-redund');
+    if (page) page.innerHTML = `<div class="major-card">
+        <div class="major-card-header rd-head">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 12L19 7.5"/><circle cx="12" cy="12" r="2" fill="currentColor"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg>
+          REDUNDÂNCIA REGISTO DE OCORRÊNCIAS
+        </div>
+        <div class="major-card-body"></div>
+        <div class="major-card-footer"></div>
+      </div>`;
+    })();
     // ==============================================================================
     // == 0. VARIÁVEIS GLOBAIS / CONSTANTES                                       ==
     // ==============================================================================

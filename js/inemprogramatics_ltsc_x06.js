@@ -1,1328 +1,695 @@
-    /* ================================
-    INSERÇÃO VERBETES INEM
-    ================================ */
-    function _inemEnsureFontAwesome() {
-      if (document.getElementById("inem-fa-css")) return;
-      const jaExiste = [...document.querySelectorAll('link[rel="stylesheet"]')].some(l => /font-?awesome/i.test(l.href));
-      if (jaExiste) return;
-      const link = document.createElement("link");
-      link.id = "inem-fa-css";
-      link.rel = "stylesheet";
-      link.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css";
-      document.head.appendChild(link);
-    }
-    const INEM_BUCKET = "inem-verbetes";
-    function inemStorageHeaders(extra = {}) {
-      const h = {...getSupabaseHeaders(), ...extra};
-      if (!extra["Content-Type"]) delete h["Content-Type"];
-      return h;
-    }
-    function inemFileUrl(fileName) {
-      return `${SUPABASE_URL}/storage/v1/object/authenticated/${INEM_BUCKET}/${encodeURIComponent(fileName)}`;
-    }
-    async function inemFetchFile(fileName) {
-      const res = await fetch(inemFileUrl(fileName), {headers: inemStorageHeaders()});
-      if (!res.ok) throw new Error(`Ficheiro indisponível (${res.status})`);
-      return res;
-    }
-    function setInemStatus(td, exists) {
-      td.innerHTML = exists
-        ? '<i class="fa-solid fa-circle-check" style="color:#27ae60"></i>'
-        : '<i class="fa-solid fa-circle-xmark" style="color:#c0392b"></i>';
-      td.style.fontSize = "17px";
-      td.title = exists ? "Ficheiro disponível" : "Ficheiro não encontrado";
-    }
-    /* ─── UTILIZADOR iTeams (só carrega e edita; não vê, não descarrega, não apaga, não exporta) ─── */
-    // Identificado pelo abv_name "iTeams" no reg_elems, igual em todas as corporações.
-    let inemRestrictedCache = null;
-    async function inemIsRestrictedUser(corpOperNr, nInt) {
-      const key = `${corpOperNr}_${nInt}`;
-      if (inemRestrictedCache?.key === key) return inemRestrictedCache.value;
+        /* =======================================================================
+    VERBETES INEM · CONSULTA SAÍDAS INEM | INEM-RESERVA
+    ======================================================================= */
+    (function () {
+    const BUCKET = 'inem-verbetes';
+    const API = 'https://cb360-online.vercel.app/api/inem-entries';
+    const INEM_LOGO = `${SUPABASE_URL}/storage/v1/object/public/cb_logos/INEM_logo.png`;
+    const ITEAMS_LOGO = `${SUPABASE_URL}/storage/v1/object/public/cb_logos/ITEAMS.png`;
+    const MONTHS = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    const UR_TYPES = ['Pausa para Alimentação', 'Falta de Macas', 'Aguarda Triagem', 'Avaria', 'Falta de Tripulação', 'Outro', 'Limpeza'];
+    const COLUMNS = [{key: 'nr_codu', label: 'Nr. CODU', w: 60}, {key: 'alerta', label: 'Alerta', w: 80}, {key: 'vitima', label: 'Vítima', w: 100}, {key: 'morada', label: 'Morada', w: 200},
+                     {key: 'edit', label: 'Editar', w: 36}, {key: 'tas', label: 'TAS', w: 120, red: true}, {key: 'via', label: 'Via', w: 60, red: true},
+                     {key: 'actions', label: 'Verbete', w: 90, red: true}, {key: 'pdfstatus', label: 'Status', w: 50, red: true}];
+    const ST = {rows: [], readOnly: false, roKey: null};
+    const $ = id => document.getElementById(id);
+    const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+    const pad = n => String(n).padStart(2, '0');
+    const corp = () => sessionStorage.getItem('currentCorpOperNr');
+    const fmtDate = d => { if (!d) return ''; const [y, m, dd] = d.split('-'); return `${dd}/${m}/${y}`; };
+    const fileExt = type => type === 'ITeams' ? 'html' : 'pdf';
+    const fileOf = (nr, type) => `ocr_${nr}.${fileExt(type)}`;
+    const storeHdr = (extra = {}) => { const h = {...getSupabaseHeaders(), ...extra}; if (!extra['Content-Type']) delete h['Content-Type']; return h; };
+    const fileUrl = name => `${SUPABASE_URL}/storage/v1/object/authenticated/${BUCKET}/${encodeURIComponent(name)}`;
+    const objUrl = name => `${SUPABASE_URL}/storage/v1/object/${BUCKET}/${encodeURIComponent(name)}`;
+    const TOTALS0 = '<span>TOTAL: 0</span> &nbsp;|&nbsp; <span>ITeams: 0</span> &nbsp;|&nbsp; <span>Verbete: 0</span>';
+    function el(html) { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; }
+    /* ----------------------------- Font Awesome ----------------------------- */
+    function ensureFA() {
+      if ($('inem-fa-css')) return;
+      if ([...document.querySelectorAll('link[rel="stylesheet"]')].some(l => /font-?awesome/i.test(l.href))) return;
+      document.head.appendChild(Object.assign(document.createElement('link'), {id: 'inem-fa-css', rel: 'stylesheet', href: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css'}));
+    }  
+    /* ----------------------------- estilos ----------------------------- */
+    const UR_TABLE_CSS = `
+      .inem-ur-table {width: 100%; border-collapse: collapse; font-size: 12px; color: #333; table-layout: fixed;}
+      .inem-ur-table th, .inem-ur-table td {padding: 8px; border: 1px solid #ddd; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
+      .inem-ur-table thead tr {background: #f0f0f0; border-bottom: 2px solid #ccc;}
+      .inem-ur-table td.v {font-weight: 600; color: #2b6ecb;}
+      .inem-ur-table td.t {font-weight: 600; text-align: right;}
+      .inem-ur-table td.m {text-align: left;}
+      .inem-ur-table tr.tot {background: #f9f9f9; border-top: 2px solid #ccc;}
+      .inem-ur-table tr.tot td {font-weight: bold; text-align: right;}
+      .inem-ur-table tr.tot td.sum {color: #d9534f;}`;
+    (function css() {
+      if ($('inem-css')) return;
+      const st = document.createElement('style');
+      st.id = 'inem-css';
+      st.textContent = `
+        /* página */
+        #inem-entries .inem-filter {display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; font-family: 'Segoe UI', sans-serif; gap: 10px;}
+        #inem-entries .inem-filter > div {display: flex; align-items: center; flex: 1;}
+        #inem-entries .inem-f-codu {gap: 6px;}
+        #inem-entries .inem-f-dates {gap: 8px; justify-content: center;}
+        #inem-entries .inem-filter label {font-weight: bold; font-size: 13px;}
+        #inem-entries .inem-filter input {padding: 5px 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 13px;}
+        #inem-entries .inem-filter input[type=date] {cursor: pointer;}
+        #inem-entries .inem-filter #inem-filter-codu {width: 100px;}
+        #inem-entries .inem-search {padding: 5px 16px; border-radius: 4px; border: none; background: #131a69; color: #fff; font-weight: bold; cursor: pointer; font-size: 13px;}
+        #inem-entries .inem-wrap {overflow: auto; width: 100%; max-height: 500px; scrollbar-width: none; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 8px rgba(0,0,0,0.08);}
+        #inem-entries .inem-wrap::-webkit-scrollbar {display: none;}
+        #inem-entries table {width: 100%; border-collapse: separate; border-spacing: 0; font-family: 'Segoe UI', sans-serif; font-size: 13px;}
+        #inem-entries th {background: #131a69; color: #fff; text-align: center; padding: 8px 6px; font-weight: bold; position: sticky; top: 0; z-index: 2; white-space: nowrap; font-size: 12px;
+                          border-bottom: 1px solid #2a3580; border-left: 1px solid #2a3580;}
+        #inem-entries th.red {background: #9a1515; border-color: #7b0000;}
+        #inem-entries th:first-child {border-left: none; border-top-left-radius: 8px;}
+        #inem-entries th:last-child {border-top-right-radius: 8px;}
+        #inem-entries tbody tr:nth-child(even) {background: #f5f6fa;}
+        #inem-entries tbody tr:nth-child(odd) {background: #fff;}
+        #inem-entries td {border-bottom: 1px solid #ddd; border-left: 1px solid #ddd; padding: 2px 6px; height: 24px; vertical-align: middle; text-align: center; font-size: 13px; font-weight: bold; user-select: text;}
+        #inem-entries td:first-child {border-left: none;}
+        #inem-entries td.nosel {user-select: none;}
+        #inem-entries .inem-acts {display: flex; gap: 3px; justify-content: center; align-items: center;}
+        #inem-entries .inem-acts button {border: none; border-radius: 4px; width: 24px; height: 22px; cursor: pointer; font-size: 12px; display: inline-flex; align-items: center; justify-content: center;
+                                         padding: 0; transition: opacity .15s; color: #fff;}
+        #inem-entries .inem-acts button:hover {opacity: .8;}
+        #inem-entries .inem-acts button:disabled {opacity: .3; cursor: not-allowed; pointer-events: none;}
+        #inem-entries .btn-inem-upload {background: #c0392b;}
+        #inem-entries .btn-inem-download {background: #27ae60;}
+        #inem-entries .btn-inem-view {background: #2980b9;}
+        #inem-entries .btn-inem-delete {background: #444;}
+        #inem-entries .inem-edit {border: none; background: transparent; cursor: pointer; font-size: 14px; padding: 0; line-height: 1; color: #131a69;}
+        #inem-entries td.inem-st {font-size: 17px;}
+        #inem-entries .inem-foot {display: flex; justify-content: space-between; align-items: center; margin-top: 12px;}
+        #inem-entries #inem-totals {font-size: 12px; font-family: 'Segoe UI', sans-serif; color: #888; line-height: 1.6; font-weight: 600;}
+        #inem-entries .inem-foot-btns {display: flex; gap: 8px;}
+        #inem-entries .inem-foot-btns button {color: #fff; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; transition: 0.2s;}
+        #inem-entries .inem-foot-btns button:disabled {opacity: .3; cursor: not-allowed;}
+        #btn-inem-indisp-report {background: #9a1515;}
+        #btn-inem-indisp-report:hover:not(:disabled) {background: #7b0000;}
+        #btn-inem-emitir-xlsx {background: #059669;}
+        #btn-inem-emitir-xlsx:hover:not(:disabled) {opacity: .9;}
+        #btn-inem-emitir {background: #1e293b;}
+        #btn-inem-emitir:hover:not(:disabled) {background: #334155;}
+        @keyframes inemFadeIn {from {opacity: 0;} to {opacity: 1;}}
+        @keyframes inemSlideUp {from {opacity: 0; transform: translateY(28px) scale(0.96);} to {opacity: 1; transform: translateY(0) scale(1);}}
+        @keyframes inemSpin {to {transform: rotate(360deg);}}
+        .inem-ov {position: fixed; inset: 0; background: rgba(10,8,8,0.78); z-index: 10000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);}
+        .inem-dlg {background: #fff; border-radius: 12px; width: 420px; box-shadow: 0 28px 72px rgba(0,0,0,0.45); display: flex; flex-direction: column; overflow: hidden; font-family: 'Segoe UI', sans-serif;}
+        .inem-dlg.sm {width: 360px;}
+        .inem-dlg-head {background: linear-gradient(135deg, #5a0000 0%, #7b0000 45%, #9a0f0f 100%); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+                        color: #fff; font-weight: 700; font-size: 13px;}
+        .inem-dlg-x {border: 1px solid rgba(255,80,80,0.22); background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.8); width: 28px; height: 28px; border-radius: 7px; cursor: pointer; font-size: 14px;}
+        .inem-dlg-body {padding: 18px 20px; display: flex; flex-direction: column; gap: 12px;}
+        .inem-dlg.sm .inem-dlg-body {padding: 20px; gap: 8px; font-size: 13px; color: #333;}
+        .inem-dlg-file {font-weight: 700; color: #7b0000; background: #fff5f5; padding: 6px 10px; border-radius: 6px; border: 1px solid #fecaca;}
+        .inem-row {display: flex; gap: 10px; align-items: flex-end;}
+        .inem-row.top {align-items: stretch;}
+        .inem-fld {display: flex; flex-direction: column; gap: 4px; flex: 1;}
+        .inem-fld.w15 {flex: 1.5;}
+        .inem-fld.w2 {flex: 2;}
+        .inem-fld label {font-size: 11.5px; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: .4px; min-height: 1.2em;}
+        .inem-fld input, .inem-fld select {padding: 7px 10px; border-radius: 6px; border: 1px solid #ddd; font-size: 13px; outline: none; transition: border-color .15s; color: #1a1a1a; background: #fff;
+                                           width: 100%; box-sizing: border-box;}
+        .inem-fld input:focus, .inem-fld select:focus {border-color: #7b0000;}
+        .inem-fld input:disabled {border-color: #eee; color: #666; background: #f5f5f5; cursor: not-allowed;}
+        .inem-fld select.short {max-width: 150px;}
+        .inem-dlg-foot {padding: 12px 20px; display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid #eee; background: #fafafa;}
+        .inem-dlg-foot button {padding: 7px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;}
+        .inem-dlg-foot .no {border: 1px solid #ddd; background: #fff; color: #555;}
+        .inem-dlg-foot .yes {border: none; background: linear-gradient(135deg, #7b0000, #9a0f0f); color: #fff;}
+  
+        #inem-pdf-modal {z-index: 9999; animation: inemFadeIn .22s ease;}
+        #inem-pdf-modal .inem-box {background: #f8f8f8; border-radius: 14px; width: 82vw; height: 90vh; display: flex; flex-direction: column; overflow: hidden;
+                                   box-shadow: 0 28px 72px rgba(0,0,0,0.45), 0 2px 8px rgba(0,0,0,0.18); animation: inemSlideUp .28s cubic-bezier(.22,.68,0,1.2);}
+        #inem-pdf-modal .inem-box.fs {width: 100vw; height: 100vh; border-radius: 0;}
+        #inem-pdf-modal.closing {animation: inemFadeIn .18s ease reverse forwards;}
+        #inem-pdf-modal.closing .inem-box {animation: inemSlideUp .18s ease reverse forwards;}
+        .inem-header {background: linear-gradient(135deg, #5a0000 0%, #7b0000 45%, #9a0f0f 100%); padding: 11px 14px; display: flex; align-items: center; justify-content: space-between;
+                      gap: 10px; flex-shrink: 0; border-bottom: 1px solid rgba(0,0,0,0.2); position: relative;}
+        .inem-header::before {content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255,255,255,0.07) 0%, transparent 100%); pointer-events: none;}
+        .inem-header > div {position: relative; z-index: 1; display: flex; align-items: center;}
+        .inem-hl {gap: 10px; flex: 1; min-width: 0;}
+        .inem-hr {gap: 5px;}
+        .inem-tw {min-width: 0;}
+        .inem-trow {display: flex; align-items: center; gap: 7px; margin-bottom: 2px;}
+        .inem-btn {border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.8); width: 30px; height: 30px; border-radius: 7px; cursor: pointer;
+                   font-size: 14px; display: inline-flex; align-items: center; justify-content: center; transition: background .15s, border-color .15s, transform .1s;}
+        .inem-btn:hover {background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.25); color: #fff;}
+        .inem-btn:active {transform: scale(.91);}
+        .inem-btn.inem-close-btn {border-color: rgba(255,80,80,0.22); font-size: 15px;}
+        .inem-btn.inem-close-btn:hover {background: rgba(180,0,0,0.4); border-color: rgba(255,80,80,0.5);}
+        .inem-print-btn {border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.92); padding: 6px 14px; border-radius: 7px; cursor: pointer;
+                         font-size: 12.5px; font-weight: 600; font-family: 'Segoe UI', sans-serif; letter-spacing: .3px; display: inline-flex; align-items: center; gap: 6px;
+                         transition: background .15s, border-color .15s, transform .1s; position: relative; z-index: 1;}
+        .inem-print-btn:hover {background: rgba(255,255,255,0.22); border-color: rgba(255,255,255,0.38);}
+        .inem-print-btn:active {transform: scale(.96);}
+        .inem-footer {background: linear-gradient(135deg, #5a0000 0%, #7b0000 100%); padding: 9px 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+                      flex-shrink: 0; border-top: 1px solid rgba(0,0,0,0.15); position: relative;}
+        .inem-footer::before {content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, transparent 100%); pointer-events: none;}
+        .inem-footer-info {color: rgba(255,255,255,0.38); font-size: 10.5px; font-family: 'Segoe UI', sans-serif; letter-spacing: .2px; position: relative; z-index: 1;}
+        .inem-logo-box {width: 34px; height: 34px; border-radius: 6px; overflow: hidden; flex-shrink: 0;}
+        .inem-logo-box img {width: 100%; height: 100%; object-fit: cover;}
+        .inem-logo-iteams {height: 22px; flex-shrink: 0; opacity: .85;}
+        .inem-logo-iteams img {height: 100%; width: auto; object-fit: contain; filter: brightness(0) invert(1);}
+        .inem-sep {width: 1px; height: 28px; background: rgba(255,255,255,0.18); flex-shrink: 0;}
+        .inem-title-main {color: #fff; font-weight: 700; font-size: 13px; font-family: 'Segoe UI', sans-serif; letter-spacing: .1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+        .inem-title-sub {color: rgba(255,255,255,0.42); font-size: 10.5px; font-family: 'Segoe UI', sans-serif; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+        .inem-badge {background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.18); border-radius: 5px; padding: 2px 7px; font-size: 10px; font-weight: 700;
+                     font-family: 'Segoe UI', sans-serif; color: rgba(255,255,255,0.85); letter-spacing: .7px; text-transform: uppercase; flex-shrink: 0;}
+        .inem-content {flex: 1; position: relative; overflow: hidden; background: #fff;}
+        .inem-loading {position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: #fff; z-index: 2;
+                       color: #9ca3af; font-size: 12.5px; font-family: 'Segoe UI', sans-serif;}
+        .inem-loading[hidden] {display: none;}
+        .inem-loading .ico {font-size: 48px; opacity: .4; color: #6b7280;}
+        .inem-loading .msg {color: #6b7280; font-size: 15px; font-weight: 600;}
+        .inem-spinner {width: 36px; height: 36px; border: 3px solid #f0e8e8; border-top-color: #8b0000; border-radius: 50%; animation: inemSpin .75s linear infinite;}
+        .inem-content iframe {position: absolute; inset: 0; width: 100%; height: 100%; border: none; opacity: 0; transition: opacity .3s;}
+        .inem-content iframe.on {opacity: 1;}
+        .inem-ur-ov {position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; justify-content: center; align-items: center; z-index: 9999;}
+        .inem-ur {background: #fff; border: 1px solid #ccc; border-radius: 6px; width: 420px; max-width: 90%; box-shadow: 0 4px 15px rgba(0,0,0,0.2); overflow: hidden;}
+        .inem-ur.big {width: 750px;}
+        .inem-ur-head {background: #d9534f; color: #fff; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 600;}
+        .inem-ur-head .x {font-weight: bold; cursor: pointer;}
+        .inem-ur-months {padding: 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;}
+        .inem-ur-months button {background: #f0f0f0; border: 1px solid #ccc; border-radius: 4px; padding: 12px 10px; font-size: 12.5px; font-weight: 600; color: #333; cursor: pointer; text-align: center;}
+        .inem-ur-months button:hover {background: #f0f6ff; border-color: #2b6ecb; color: #2b6ecb;}
+        .inem-ur-months i {color: #2b6ecb; display: block; font-size: 16px; margin-bottom: 4px;}
+        .inem-ur-filters {background: #f9f2f2; padding: 12px 20px; border-bottom: 1px solid #ebccd1; display: flex; gap: 15px; align-items: center; font-size: 12px;}
+        .inem-ur-filters div {display: flex; align-items: center; gap: 6px;}
+        .inem-ur-filters label {font-weight: 600; color: #a94442;}
+        .inem-ur-filters select {padding: 5px 8px; border: 1px solid #ebccd1; border-radius: 4px; font-size: 12px; background: #fff; transition: all 0.2s;}
+        .inem-ur-filters select:focus {border-color: #d9534f; outline: none; box-shadow: 0 0 5px rgba(217,83,79,0.4);}
+        .inem-ur-content {padding: 20px; background: #fff; min-height: 200px; max-height: 380px; overflow-y: auto;}
+        .inem-ur-msg {text-align: center; color: #666; padding: 30px 0;}
+        .inem-ur-msg.err {color: #d9534f;}
+        .inem-ur-msg.load {padding: 40px 0;}
+        .inem-ur-msg.load i {font-size: 24px; color: #2b6ecb; margin-bottom: 10px;}
+        .inem-ur-foot {background: #e5e5e5; padding: 10px 20px; border-top: 1px solid #ccc; display: flex; justify-content: flex-end; align-items: center; gap: 10px;}
+        .inem-ur-foot.split {justify-content: space-between;}
+        .inem-ur-foot div {display: flex; gap: 10px;}
+        .inem-ur-foot button {color: #fff; border: none; padding: 8px 16px; border-radius: 4px; font-weight: 600; cursor: pointer; background: #2b6ecb;}
+        .inem-ur-foot button.close {background: #f0ad4e;}
+        ${UR_TABLE_CSS}
+      `;
+      document.head.appendChild(st);
+    })();  
+    /* ----------------------------- utilizador iTeams ----------------------------- */
+    async function isRestricted() {
+      const key = `${corp()}_${sessionStorage.getItem('currentNInt')}`;
+      if (ST.roKey === key) return ST.readOnly;
       let value = false;
       try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${corpOperNr}&n_int=eq.${nInt}&select=abv_name&limit=1`, {headers: getSupabaseHeaders()});
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${corp()}&n_int=eq.${sessionStorage.getItem('currentNInt')}&select=abv_name&limit=1`, {headers: getSupabaseHeaders()});
         if (!res.ok) throw new Error(await res.text());
         const rows = await res.json();
-        value = String(rows?.[0]?.abv_name || "").trim().toLowerCase() === "iteams";
+        value = String(rows?.[0]?.abv_name || '').trim().toLowerCase() === 'iteams';
       } catch (err) {
-        console.warn("Não foi possível verificar o tipo de utilizador INEM:", err);
+        console.warn('Não foi possível verificar o tipo de utilizador INEM:', err);
       }
-      inemRestrictedCache = {key, value};
+      ST.roKey = key; ST.readOnly = value;
       return value;
+    }  
+    /* ----------------------------- página ----------------------------- */
+    function render() {
+      ensureFA();
+      const page = $('inem-entries');
+      if (!page) return;
+      const today = new Date().toLocaleDateString('sv-SE');
+      page.innerHTML = `
+        <div class="major-card major-last-card" id="inem-entries-registration">
+          <div class="major-card-header">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            CONSULTA SAÍDAS INEM | INEM-RESERVA
+          </div>
+          <div class="major-card-body">
+            <div class="inem-filter">
+              <div class="inem-f-codu"><label>Nr. CODU:</label><input type="text" id="inem-filter-codu" placeholder="ex: 123..."></div>
+              <div class="inem-f-dates">
+                <label>De:</label><input type="date" id="inem-date-from" value="${today}">
+                <label>Até:</label><input type="date" id="inem-date-to" value="${today}">
+                <button class="inem-search"><i class="fa-solid fa-magnifying-glass"></i> Pesquisar</button>
+              </div>
+              <div></div>
+            </div>
+            <div class="inem-wrap">
+              <table>
+                <thead><tr>${COLUMNS.map(c => `<th class="${c.red ? 'red' : ''}" style="min-width:${c.w}px">${c.label}</th>`).join('')}</tr></thead>
+                <tbody id="inem-tbody"></tbody>
+              </table>
+            </div>
+            <div class="inem-foot">
+              <div id="inem-totals">${TOTALS0}</div>
+              <div class="inem-foot-btns">
+                <button id="btn-inem-indisp-report" hidden><i class="fa-solid fa-truck-medical"></i> Relatório Indisponibilidades</button>
+                <button id="btn-inem-emitir-xlsx" hidden><i class="fa-solid fa-file-excel"></i> Exportar Excel</button>
+                <button id="btn-inem-emitir" hidden><i class="fa-solid fa-file-pdf"></i> Emitir Mapa</button>
+              </div>
+            </div>
+          </div>
+          <div class="major-card-footer"></div>
+        </div>`;
+      const codu = $('inem-filter-codu');
+      codu.addEventListener('input', () => codu.value.trim() ? load() : clear());
+      page.querySelectorAll('.inem-filter input').forEach(i => i.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); load(); } }));
+      page.querySelector('.inem-search').addEventListener('click', load);
+      $('btn-inem-indisp-report').addEventListener('click', urPickMonth);
+      $('btn-inem-emitir-xlsx').addEventListener('click', () => exportEntries('xlsx'));
+      $('btn-inem-emitir').addEventListener('click', () => exportEntries('pdf'));
+      $('inem-tbody').addEventListener('click', onTableClick);
+      load();
+    }  
+    function showFootButtons(show) {
+      ['btn-inem-indisp-report', 'btn-inem-emitir-xlsx', 'btn-inem-emitir'].forEach(id => {
+        const b = $(id);
+        if (!b) return;
+        b.hidden = !show;
+        b.disabled = show && ST.readOnly;
+      });
     }
-    /* ─── LOAD ──────────────────────────────────────────── */
-    async function loadInemEntries() {
-      const dateFrom = document.getElementById("inem-date-from")?.value;
-      const dateTo = document.getElementById("inem-date-to")?.value;
-      const codu = document.getElementById("inem-filter-codu")?.value.trim();
-      const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
-      const nInt = sessionStorage.getItem("currentNInt");
-      const isReadOnly = await inemIsRestrictedUser(corpOperNr, nInt);
-      const tbody = document.querySelector("#inem-entries table tbody");
-      const btnEmitirXlsx = document.getElementById("btn-inem-emitir-xlsx");
-      const btnEmitir = document.getElementById("btn-inem-emitir");
-      if (!dateFrom && !dateTo && !codu) {
-        if (tbody) tbody.innerHTML = "";
-        if (btnEmitir) btnEmitir.style.display = "none"; document.getElementById("btn-inem-indisp-report")?.style.setProperty("display", "none");
-        if (btnEmitirXlsx) btnEmitirXlsx.style.display = "none";
-        const totalsEl = document.getElementById("inem-totals");
-        if (totalsEl) totalsEl.innerHTML = `<span>TOTAL: 0</span> &nbsp;|&nbsp; <span>ITeams: 0</span> &nbsp;|&nbsp; <span>Verbete: 0</span>`;
-        return;
-      }
-      let query = `inem_entries?corp_oper_nr=eq.${corpOperNr}`;
-      if (codu) {
-        query += `&nr_codu=ilike.${codu}*`;
-      } else {
-        if (dateFrom) query += `&alert_date=gte.${dateFrom}`;
-        if (dateTo) query += `&alert_date=lte.${dateTo}`;
-      }
-      query += `&order=nr_codu.desc`;
+    function clear() {
+      const tb = $('inem-tbody');
+      if (tb) tb.innerHTML = '';
+      ST.rows = [];
+      showFootButtons(false);
+      const t = $('inem-totals');
+      if (t) t.innerHTML = TOTALS0;
+    }  
+    const statusIcon = ok => ok ? '<i class="fa-solid fa-circle-check" style="color:#27ae60"></i>' : '<i class="fa-solid fa-circle-xmark" style="color:#c0392b"></i>';
+    function setStatus(nr, ok) {
+      document.querySelectorAll(`#inem-tbody tr[data-nr="${CSS.escape(nr)}"] td.inem-st`).forEach(td => {
+        td.innerHTML = statusIcon(ok);
+        td.title = ok ? 'Ficheiro disponível' : 'Ficheiro não encontrado';
+      });
+    }  
+    async function load() {
+      const from = $('inem-date-from')?.value, to = $('inem-date-to')?.value, codu = $('inem-filter-codu')?.value.trim();
+      await isRestricted();
+      if (!from && !to && !codu) return clear();
+      let query = `inem_entries?corp_oper_nr=eq.${corp()}`;
+      if (codu) query += `&nr_codu=ilike.${codu}*`;
+      else { if (from) query += `&alert_date=gte.${from}`; if (to) query += `&alert_date=lte.${to}`; }
+      query += '&order=nr_codu.desc';
       try {
         const data = await supabaseFetch(query);
-        if (!tbody) return;
-        tbody.innerHTML = "";
-        if (btnEmitir) btnEmitir.style.display = "none"; document.getElementById("btn-inem-indisp-report")?.style.setProperty("display", "none");
-        if (btnEmitirXlsx) btnEmitirXlsx.style.display = "none";
+        const tb = $('inem-tbody');
+        if (!tb) return;
+        clear();
         if (!data?.length) return;
-        const COLUMNS = ["nr_codu", "alerta", "vitima", "morada", "edit", "tas", "via", "actions", "pdfstatus"];
-        const existsMap = new Map(
-          await Promise.all(
-            data.map(async item => {
-              if (!item.nr_codu) return [item.nr_codu, false];
-              const ext = item.service_type === "ITeams" ? "html" : "pdf";
-              try {
-                const res = await fetch(inemFileUrl(`ocr_${item.nr_codu}.${ext}`), {method: "HEAD", headers: inemStorageHeaders()});
-                return [item.nr_codu, res.ok];
-              } catch {
-                return [item.nr_codu, false];
-              }
-            })
-          )
-        );
-        data.forEach((item, i) => {
-          const tr = document.createElement("tr");
-          tr.style.background = i % 2 === 0 ? "#fff" : "#f5f6fa";
-          COLUMNS.forEach((key, idx) => {
-            const td = document.createElement("td");
-            const isFirst = idx === 0;
-            Object.assign(td.style, {borderBottom: "1px solid #ddd", borderLeft: isFirst ? "none" : "1px solid #ddd", padding: "2px 6px", height: "24px", verticalAlign: "middle",
-                                     textAlign: "center", fontSize: "13px", fontWeight: "bold", userSelect: "text"});
-            if (key === "nr_codu") {
-              td.textContent = item.nr_codu || "";
-            } else if (key === "alerta") {
-              let alerta = "";
-              if (item.alert_date) {
-                const [y, m, d] = item.alert_date.split("-");
-                alerta = `${d}/${m}/${y}`;
-              }
-              if (item.alert_hour) alerta += (alerta ? "  " : "") + item.alert_hour.slice(0, 5);
-              td.textContent = alerta;
-            } else if (key === "vitima") {
-              const type = item.victim_type || "";
-              const ageType = item.victim_age_type || "";
-              const ageUnit = item.victim_age_unit || "";
-              let vitima = "";
-              if (type) vitima += type;
-              if (ageType) vitima += (vitima ? " - " : "") + ageType;
-              if (ageUnit) vitima += (vitima ? " " : "") + ageUnit;
-              td.textContent = vitima;
-            } else if (key === "morada") {
-              const address = item.victim_address || "";
-              const location = item.victim_location || "";
-              td.textContent = [address, location].filter(Boolean).join(" - ");
-            } else if (key === "tas") {
-              td.textContent = item.tas || "";
-            } else if (key === "via") {
-              td.textContent = item.service_type || "";
-            } else if (key === "actions") {
-              td.classList.add("inem-actions-td");
-              td.style.userSelect = "none";
-              const nrCodu = item.nr_codu || "";
-              const serviceType = item.service_type || "";
-              const btnUp = document.createElement("button");
-              const btnDown = document.createElement("button");
-              const btnView = document.createElement("button");
-              const btnDel = document.createElement("button");
-              btnUp.className = "btn-inem-upload";
-              btnDown.className = "btn-inem-download";
-              btnView.className = "btn-inem-view";
-              btnDel.className = "btn-inem-delete";
-              btnUp.innerHTML = '<i class="fa-solid fa-upload"></i>';
-              btnDown.innerHTML = '<i class="fa-solid fa-download"></i>';
-              btnView.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i>';
-              btnDel.innerHTML = '<i class="fa-solid fa-trash"></i>';
-              btnUp.title = "Upload";
-              btnDown.title = "Download";
-              btnView.title = "Visualizar";
-              btnDel.title = "Eliminar ficheiro";
-              btnUp.dataset.nr = nrCodu;
-              btnDown.dataset.nr = nrCodu;
-              btnView.dataset.nr = nrCodu;
-              btnDel.dataset.nr = nrCodu;
-              btnUp.dataset.type = serviceType;
-              btnDown.dataset.type = serviceType;
-              btnView.dataset.type = serviceType;
-              btnDel.dataset.type = serviceType;
-              btnUp.addEventListener("click", () => inemUploadPdf(btnUp.dataset.nr, btnUp.dataset.type));
-              btnDown.addEventListener("click", () => inemDownloadPdf(btnDown.dataset.nr, btnDown.dataset.type));
-              btnView.addEventListener("click", () => inemViewPdf(btnView.dataset.nr, btnView.dataset.type));
-              btnDel.addEventListener("click", () => inemDeletePdf(btnDel.dataset.nr, btnDel.dataset.type));
-              const gap = document.createElement("div");
-              Object.assign(gap.style, {display: nrCodu ? "flex" : "none", gap: "3px", justifyContent: "center", alignItems: "center"});
-              gap.append(btnUp, btnDown, btnView, btnDel);
-              if (isReadOnly) {
-                [btnDown, btnView, btnDel].forEach(btn => {
-                  btn.disabled = true;
-                  btn.style.opacity = "0.3";
-                  btn.style.cursor = "not-allowed";
-                  btn.style.pointerEvents = "none";
-                });
-              }
-              td.appendChild(gap);
-            } else if (key === "pdfstatus") {
-              td.classList.add("inem-pdf-status-td");
-              if (item.nr_codu) setInemStatus(td, existsMap.get(item.nr_codu));
-            } else if (key === "edit") {
-              td.style.userSelect = "none";
-              const btnEdit = document.createElement("button");
-              btnEdit.innerHTML = '<i class="fa-solid fa-pen"></i>';
-              btnEdit.title = "Editar";
-              Object.assign(btnEdit.style, {border: "none", background: "transparent", cursor: "pointer", fontSize: "14px", padding: "0", lineHeight: "1", color: "#131a69"});
-              btnEdit.addEventListener("click", () => inemEditEntry(item));
-              td.appendChild(btnEdit);
-            }
-            tr.appendChild(td);
-          });
-          tbody.appendChild(tr);
-        });
-        const totalsEl = document.getElementById("inem-totals");
-        if (totalsEl && data?.length) {
-          const total   = data.length;
-          const iteams  = data.filter(d => d.service_type === "ITeams").length;
-          const verbete = data.filter(d => d.service_type !== "ITeams").length;
-          totalsEl.innerHTML = `<span>TOTAL: ${total}</span> &nbsp;|&nbsp; <span>ITeams: ${iteams}</span> &nbsp;|&nbsp; <span>Verbete: ${verbete}</span>`;
-        } else if (totalsEl) {
-          totalsEl.innerHTML = `<span>TOTAL: 0</span> &nbsp;|&nbsp; <span>ITeams: 0</span> &nbsp;|&nbsp; <span>Verbete: 0</span>`;
-        }
-        if (btnEmitirXlsx) {
-          btnEmitirXlsx.style.display = "";
-          if (isReadOnly) {
-            btnEmitirXlsx.disabled = true;
-            btnEmitirXlsx.style.opacity = "0.3";
-            btnEmitirXlsx.style.cursor = "not-allowed";
-          }
-        }
-        const btnIndisp = document.getElementById("btn-inem-indisp-report");
-        if (btnIndisp) {
-          btnIndisp.style.display = "";
-          if (isReadOnly) {
-            btnIndisp.disabled = true;
-            btnIndisp.style.opacity = "0.3";
-            btnIndisp.style.cursor = "not-allowed";
-          }
-        }
-        if (btnEmitir) {
-          btnEmitir.style.display = "";
-          if (isReadOnly) {
-            btnEmitir.disabled = true;
-            btnEmitir.style.opacity = "0.3";
-            btnEmitir.style.cursor = "not-allowed";
-          }
-        }
-      } catch(err) {
-        console.error("Erro ao carregar verbetes INEM:", err);
-        showPopup('popup-danger', "Erro ao carregar verbetes INEM.");
+        ST.rows = data;
+        const exists = new Map(await Promise.all(data.map(async it => {
+          if (!it.nr_codu) return [it.nr_codu, false];
+          try { const r = await fetch(fileUrl(fileOf(it.nr_codu, it.service_type)), {method: 'HEAD', headers: storeHdr()}); return [it.nr_codu, r.ok]; }
+          catch { return [it.nr_codu, false]; }
+        })));
+        const ro = ST.readOnly ? ' disabled' : '';
+        tb.innerHTML = data.map((it, i) => {
+          const nr = it.nr_codu || '';
+          const alerta = [fmtDate(it.alert_date), (it.alert_hour || '').slice(0, 5)].filter(Boolean).join('  ');
+          let vitima = it.victim_type || '';
+          if (it.victim_age_type) vitima += (vitima ? ' - ' : '') + it.victim_age_type;
+          if (it.victim_age_unit) vitima += (vitima ? ' ' : '') + it.victim_age_unit;
+          const morada = [it.victim_address, it.victim_location].filter(Boolean).join(' - ');
+          const acts = nr ? `<div class="inem-acts">
+                <button class="btn-inem-upload" data-act="up" title="Upload"><i class="fa-solid fa-upload"></i></button>
+                <button class="btn-inem-download" data-act="down" title="Download"${ro}><i class="fa-solid fa-download"></i></button>
+                <button class="btn-inem-view" data-act="view" title="Visualizar"${ro}><i class="fa-solid fa-magnifying-glass"></i></button>
+                <button class="btn-inem-delete" data-act="del" title="Eliminar ficheiro"${ro}><i class="fa-solid fa-trash"></i></button></div>` : '';
+          const ok = exists.get(it.nr_codu);
+          return `<tr data-i="${i}" data-nr="${esc(nr)}">
+            <td>${esc(nr)}</td><td>${esc(alerta)}</td><td>${esc(vitima)}</td><td>${esc(morada)}</td>
+            <td class="nosel"><button class="inem-edit" data-act="edit" title="Editar"><i class="fa-solid fa-pen"></i></button></td>
+            <td>${esc(it.tas)}</td><td>${esc(it.service_type)}</td>
+            <td class="nosel">${acts}</td>
+            <td class="inem-st"${nr ? ` title="${ok ? 'Ficheiro disponível' : 'Ficheiro não encontrado'}"` : ''}>${nr ? statusIcon(ok) : ''}</td></tr>`;
+        }).join('');
+        const iteams = data.filter(d => d.service_type === 'ITeams').length;
+        $('inem-totals').innerHTML = `<span>TOTAL: ${data.length}</span> &nbsp;|&nbsp; <span>ITeams: ${iteams}</span> &nbsp;|&nbsp; <span>Verbete: ${data.length - iteams}</span>`;
+        showFootButtons(true);
+      } catch (err) {
+        console.error('Erro ao carregar verbetes INEM:', err);
+        showPopup('popup-danger', 'Erro ao carregar verbetes INEM.');
       }
-    }
-    /* ─── CRIAR TABELA DE DADOS ─────────────────────────────── */
-    function createInemEntriesTable() {
-      _inemEnsureFontAwesome();
-      const container = document.querySelector("#inem-entries .major-card-body");
-      if (!container) return;
-      container.innerHTML = "";
-      const COLUMNS = [{key: "nr_codu", label: "Nr. CODU", width: "60px"}, {key: "alerta", label: "Alerta", width: "80px"}, {key: "vitima", label: "Vítima", width: "100px"},
-                       {key: "morada", label: "Morada", width: "200px"}, {key: "edit", label: "Editar", width: "36px"}, {key: "tas", label: "TAS", width: "120px"}, {key: "via", label: "Via", width: "60px"},
-                       {key: "actions", label: "Verbete", width: "90px"}, {key: "pdfstatus", label: "Status", width: "50px"}];
-      if (!document.getElementById("inem-entries-style")) {
-        const style = document.createElement("style");
-        style.id = "inem-entries-style";
-        style.textContent = `
-          #inem-entries .major-card-body > div::-webkit-scrollbar {display: none;}
-          .btn-inem-upload, .btn-inem-download,
-          .btn-inem-view, .btn-inem-delete {border: none; border-radius: 4px; width: 24px; height: 22px; cursor: pointer; font-size: 12px; display: inline-flex; align-items: center;
-                                            justify-content: center; padding: 0; transition: opacity .15s;}
-          .btn-inem-upload {background: #c0392b; color: #fff;}
-          .btn-inem-download {background: #27ae60; color: #fff;}
-          .btn-inem-view {background: #2980b9; color: #fff;}
-          .btn-inem-delete {background: #444; color: #fff;}
-          .btn-inem-upload:hover, .btn-inem-download:hover, .btn-inem-view:hover, .btn-inem-delete:hover {opacity: .8;}
-          .inem-pdf-status-td {font-size: 18px;}
-        `;
-        document.head.appendChild(style);
-      }
-      const filterWrapper = document.createElement("div");
-      Object.assign(filterWrapper.style, {display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px", fontFamily: "Segoe UI, sans-serif", gap: "10px"});
-      function makeLabel(text) {
-        const lbl = document.createElement("label");
-        lbl.textContent = text;
-        lbl.style.fontWeight = "bold";
-        lbl.style.fontSize = "13px";
-        return lbl;
-      }
-      function makeDate(id) {
-        const input = document.createElement("input");
-        input.type = "date";
-        input.id = id;
-        Object.assign(input.style, {padding: "5px 8px", borderRadius: "4px", border: "1px solid #ccc", cursor: "pointer", fontSize: "13px"});
-        input.addEventListener("keydown", e => {if (e.key === "Enter") {e.preventDefault(); loadInemEntries();}});
-        return input;
-      }
-      function makeCoduInput() {
-        const input = document.createElement("input");
-        input.type = "text";
-        input.id = "inem-filter-codu";
-        input.placeholder = "ex: 123...";
-        Object.assign(input.style, {padding: "5px 8px", borderRadius: "4px", border: "1px solid #ccc", fontSize: "13px", width: "100px"});
-        input.addEventListener("input", () => {
-          const val = input.value.trim();
-          if (!val) {
-            const tbody = document.querySelector("#inem-entries table tbody");
-            if (tbody) tbody.innerHTML = "";
-            const btnEmitir = document.getElementById("btn-inem-emitir");
-            if (btnEmitir) btnEmitir.style.display = "none"; document.getElementById("btn-inem-indisp-report")?.style.setProperty("display", "none");
-            const btnEmitirXlsx = document.getElementById("btn-inem-emitir-xlsx");
-            if (btnEmitirXlsx) btnEmitirXlsx.style.display = "none";
-            const totalsEl = document.getElementById("inem-totals");
-            if (totalsEl) totalsEl.innerHTML = `<span>TOTAL: 0</span> &nbsp;|&nbsp; <span>ITeams: 0</span> &nbsp;|&nbsp; <span>Verbete: 0</span>`;
-            return;
-          }
-          loadInemEntries();
-        });
-        input.addEventListener("keydown", e => {if (e.key === "Enter") {e.preventDefault(); loadInemEntries();}});
-        return input;
-      }
-      const coduGroup = document.createElement("div");
-      Object.assign(coduGroup.style, {display: "flex", alignItems: "center", gap: "6px", flex: "1"});
-      coduGroup.append(makeLabel("Nr. CODU:"), makeCoduInput());
-      const datesGroup = document.createElement("div");
-      Object.assign(datesGroup.style, {display: "flex", alignItems: "center", gap: "8px", flex: "1", justifyContent: "center"});
-      const btnPesquisar = document.createElement("button");
-      btnPesquisar.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> Pesquisar';
-      Object.assign(btnPesquisar.style, {padding: "5px 16px", borderRadius: "4px", border: "none", background: "#131a69", color: "#fff", fontWeight: "bold", cursor: "pointer", fontSize: "13px"});
-      btnPesquisar.addEventListener("click", loadInemEntries);
-      datesGroup.append(makeLabel("De:"), makeDate("inem-date-from"), makeLabel("Até:"), makeDate("inem-date-to"), btnPesquisar);
-      const spacer = document.createElement("div");
-      Object.assign(spacer.style, {flex: "1"});
-      filterWrapper.append(coduGroup, datesGroup, spacer);
-      container.appendChild(filterWrapper);
-      const wrapper = document.createElement("div");
-      Object.assign(wrapper.style, {overflowX: "auto", overflowY: "auto", width: "100%", maxHeight: "500px", scrollbarWidth: "none", msOverflowStyle: "none", borderRadius: "8px", border: "1px solid #ddd",
-                                    boxShadow: "0 2px 8px rgba(0,0,0,0.08)"});
-      const table = document.createElement("table");
-      table.style.cssText = "width: 100%; border-collapse: separate; border-spacing: 0; font-family: Segoe UI, sans-serif; font-size: 13px;";
-      const thead  = document.createElement("thead");
-      const trHead = document.createElement("tr");
-      const redCols = ["tas", "via", "actions", "pdfstatus"];
-      COLUMNS.forEach((col, idx) => {
-        const th = document.createElement("th");
-        th.textContent = col.label;
-        const isFirst = idx === 0;
-        const isLast = idx === COLUMNS.length - 1;
-        const thBg  = redCols.includes(col.key) ? "#9a1515" : "#131a69";
-        const thBorder = redCols.includes(col.key) ? "#7b0000" : "#2a3580";
-        Object.assign(th.style, {borderBottom: `1px solid ${thBorder}`, borderLeft: isFirst ? "none" : `1px solid ${thBorder}`, background: thBg, color: "#fff", textAlign: "center",
-                                 padding: "8px 6px", fontWeight: "bold", position: "sticky", top: "0", zIndex: "2", whiteSpace: "nowrap", fontSize: "12px", minWidth: col.width});
-        if (isFirst) th.style.borderTopLeftRadius = "8px";
-        if (isLast)  th.style.borderTopRightRadius = "8px";
-        trHead.appendChild(th);
-      });
-      thead.appendChild(trHead);
-      table.appendChild(thead);
-      const tbody = document.createElement("tbody");
-      table.appendChild(tbody);
-      wrapper.appendChild(table);
-      container.appendChild(wrapper);
-      const footer = document.createElement("div");
-      Object.assign(footer.style, {display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "12px"});
-      const totalsEl = document.createElement("div");
-      Object.assign(totalsEl.style, {fontSize: "12px", fontFamily: "Segoe UI, sans-serif", color: "#888", lineHeight: "1.6", fontWeight: "600"});
-      totalsEl.id = "inem-totals";
-      totalsEl.innerHTML = `<span>TOTAL: 0</span> &nbsp;|&nbsp; <span>ITeams: 0</span> &nbsp;|&nbsp; <span>Verbete: 0</span>`;
-      footer.appendChild(totalsEl);
-      const btnsRight = document.createElement("div");
-      Object.assign(btnsRight.style, {display: "flex", gap: "8px"});
-      const btnEmitirXlsx = document.createElement("button");
-      btnEmitirXlsx.id = "btn-inem-emitir-xlsx";
-      btnEmitirXlsx.innerHTML = '<i class="fa-solid fa-file-excel"></i> Exportar Excel';
-      Object.assign(btnEmitirXlsx.style, {background: "#059669", color: "#fff", border: "none", padding: "10px 18px", borderRadius: "6px", cursor: "pointer", fontWeight: "600", fontSize: "12px", transition: "0.2s"});
-      btnEmitirXlsx.style.display = "none";
-      btnEmitirXlsx.addEventListener("mouseenter", () => {if (!btnEmitirXlsx.disabled) btnEmitirXlsx.style.opacity = "0.9";});
-      btnEmitirXlsx.addEventListener("mouseleave", () => {if (!btnEmitirXlsx.disabled) btnEmitirXlsx.style.opacity = "1";});
-      btnEmitirXlsx.addEventListener("click", () => exportInemEntriesXlsx());
-      const btnEmitir = document.createElement("button");
-      btnEmitir.id = "btn-inem-emitir";
-      btnEmitir.innerHTML = '<i class="fa-solid fa-file-pdf"></i> Emitir Mapa';
-      Object.assign(btnEmitir.style, {background: "#1e293b", color: "#fff", border: "none", padding: "10px 18px", borderRadius: "6px", cursor: "pointer", fontWeight: "600", fontSize: "12px", transition: "0.2s"});
-      btnEmitir.style.display = "none";
-      btnEmitir.addEventListener("mouseenter", () => btnEmitir.style.background = "#334155");
-      btnEmitir.addEventListener("mouseleave", () => btnEmitir.style.background = "#1e293b");
-      btnEmitir.addEventListener("click", () => exportInemEntriesPDF());
-      const btnIndisp = document.createElement("button");
-      btnIndisp.id = "btn-inem-indisp-report";
-      btnIndisp.innerHTML = '<i class="fa-solid fa-truck-medical"></i> Relatório Indisponibilidades';
-      Object.assign(btnIndisp.style, {background: "#9a1515", color: "#fff", border: "none", padding: "10px 18px", borderRadius: "6px", cursor: "pointer", fontWeight: "600", fontSize: "12px", transition: "0.2s"});
-      btnIndisp.style.display = "none";
-      btnIndisp.addEventListener("mouseenter", () => {if (!btnIndisp.disabled) btnIndisp.style.background = "#7b0000";});
-      btnIndisp.addEventListener("mouseleave", () => {if (!btnIndisp.disabled) btnIndisp.style.background = "#9a1515";});
-      btnIndisp.addEventListener("click", () => openVehicleUnavailabilityMonthSelectModal());
-      btnsRight.append(btnIndisp, btnEmitirXlsx, btnEmitir);
-      footer.appendChild(btnsRight);
-      container.appendChild(footer);
-      const today = new Date().toLocaleDateString('sv-SE');
-      const dateFrom = document.getElementById("inem-date-from");
-      const dateTo = document.getElementById("inem-date-to");
-      if (dateFrom) dateFrom.value = today;
-      if (dateTo) dateTo.value = today;
-      loadInemEntries();
-    }
-    /* ─── EDITAR ────────────────────────────────────────── */
-    function inemEditEntry(item) {
-      _inemEnsureFontAwesome();
-      document.getElementById('inem-edit-modal')?.remove();
-      const overlay = document.createElement('div');
-      overlay.id = 'inem-edit-modal';
-      Object.assign(overlay.style, {position: 'fixed', inset: '0', background: 'rgba(10,8,8,0.78)', zIndex: '10000',  display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)'});
-      const box = document.createElement('div');
-      Object.assign(box.style, {background: '#fff', borderRadius: '12px', width: '420px', boxShadow: '0 28px 72px rgba(0,0,0,0.45)', display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: "'Segoe UI', sans-serif"});
-      const header = document.createElement('div');
-      Object.assign(header.style, {background: 'linear-gradient(135deg, #5a0000 0%, #7b0000 45%, #9a0f0f 100%)', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between'});
-      const headerTitle = document.createElement('div');
-      Object.assign(headerTitle.style, {color: '#fff', fontWeight: '700', fontSize: '13px'});
-      headerTitle.innerHTML = `<i class="fa-solid fa-pen"></i> Editar Verbete - Nr. CODU: ${item.nr_codu}`;
-      const btnClose = document.createElement('button');
-      btnClose.innerHTML = '<i class="fa-solid fa-xmark"></i>';
-      Object.assign(btnClose.style, {border: '1px solid rgba(255,80,80,0.22)', background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.8)', width: '28px', height: '28px', borderRadius: '7px', cursor: 'pointer', fontSize: '14px'});
-      btnClose.onclick = () => overlay.remove();
-      header.append(headerTitle, btnClose);
-      const body = document.createElement('div');
-      Object.assign(body.style, {padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: '12px'});
-      const inputs = {};
-      function makeInput(key, type, options) {
-        let input;
-        if (type === 'select') {
-          input = document.createElement('select');
-          options.forEach(opt => {
-            const option = document.createElement('option');
-            option.value = opt;
-            option.textContent = opt;
-            if ((item[key] || '') === opt) option.selected = true;
-            input.appendChild(option);
-          });
-        } else {
-          input = document.createElement('input');
-          input.type = type;
-          input.value = item[key] || '';
-        }
-        Object.assign(input.style, {padding: '7px 10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '13px', outline: 'none', transition: 'border-color .15s', color: '#1a1a1a', background: '#fff', width: '100%', boxSizing: 'border-box'});
-        input.onfocus = () => input.style.borderColor = '#7b0000';
-        input.onblur = () => input.style.borderColor = '#ddd';
-        inputs[key] = input;
-        return input;
-      }
-      function makeField(key, label, type, options) {
-        const group = document.createElement('div');
-        Object.assign(group.style, {display: 'flex', flexDirection: 'column', gap: '4px'});
-        const lbl = document.createElement('label');
-        lbl.textContent = label;
-        Object.assign(lbl.style, {fontSize: '11.5px', fontWeight: '600', color: '#555', textTransform: 'uppercase', letterSpacing: '.4px'});
-        group.append(lbl, makeInput(key, type, options));
-        return group;
-      }
-      const serviceTypeGroup = document.createElement('div');
-      Object.assign(serviceTypeGroup.style, {display: 'flex', flexDirection: 'column', gap: '4px'});
-      const serviceTypeLbl = document.createElement('label');
-      serviceTypeLbl.textContent = 'Tipo de Documento';
-      Object.assign(serviceTypeLbl.style, {fontSize: '11.5px', fontWeight: '600', color: '#555', textTransform: 'uppercase', letterSpacing: '.4px'});
-      const serviceTypeSelect = document.createElement('select');
-      ['', 'ITeams', 'Verbete'].forEach(opt => {
-        const option = document.createElement('option');
-        option.value = opt;
-        option.textContent = opt;
-        if ((item.service_type === 'ITeams' ? 'ITeams' : 'Verbete') === opt) option.selected = true;
-        serviceTypeSelect.appendChild(option);
-      });
-      Object.assign(serviceTypeSelect.style, {padding: '7px 10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '13px', outline: 'none', transition: 'border-color .15s', color: '#1a1a1a', background: '#fff', width: '100%', boxSizing: 'border-box', maxWidth: '150px'});
-      serviceTypeSelect.onfocus = () => serviceTypeSelect.style.borderColor = '#7b0000';
-      serviceTypeSelect.onblur  = () => serviceTypeSelect.style.borderColor = '#ddd';
-      inputs['service_type'] = serviceTypeSelect;
-      serviceTypeGroup.append(serviceTypeLbl, serviceTypeSelect);
-      body.appendChild(serviceTypeGroup);
-      const row1 = document.createElement('div');
-      Object.assign(row1.style, {display: 'flex', gap: '10px'});
-      const coduField = makeField('nr_codu', 'Nr. CODU', 'text');
-      Object.assign(coduField.style, {flex: '1'});
-      const alertDateField = makeField('alert_date', 'Data Alerta', 'date');
-      Object.assign(alertDateField.style, {flex: '1'});
-      const alertHourField = makeField('alert_hour', 'Hora Alerta', 'time');
-      Object.assign(alertHourField.style, {flex: '1'});
-      row1.append(coduField, alertDateField, alertHourField);
-      body.appendChild(row1);
-      const row2 = document.createElement('div');
-      Object.assign(row2.style, {display: 'flex', gap: '10px', alignItems: 'flex-end'});
-      const victimTypeField = makeField('victim_type', 'Vítima', 'select', ['Masculino', 'Feminino', 'Desconhecido']);
-      Object.assign(victimTypeField.style, {flex: '1.5'});
-      const ageTypeField = makeField('victim_age_type', 'Idade', 'text');
-      Object.assign(ageTypeField.style, {flex: '1'});
-      const ageUnitField = makeField('victim_age_unit', ' ', 'select', ['Anos', 'Meses', 'Dias']);
-      Object.assign(ageUnitField.style, {flex: '1'});
-      row2.append(victimTypeField, ageTypeField, ageUnitField);
-      body.appendChild(row2);
-      body.appendChild(makeField('victim_address', 'Morada', 'text'));
-      body.appendChild(makeField('victim_location', 'Localidade', 'text'));
-      const row3 = document.createElement('div');
-      Object.assign(row3.style, {display: 'flex', gap: '10px', alignItems: 'flex-end'});
-      const tasNintGroup = document.createElement('div');
-      Object.assign(tasNintGroup.style, {display: 'flex', flexDirection: 'column', gap: '4px', flex: '1'});
-      const tasNintLbl = document.createElement('label');
-      tasNintLbl.textContent = 'TAS';
-      Object.assign(tasNintLbl.style, {fontSize: '11.5px', fontWeight: '600', color: '#555', textTransform: 'uppercase', letterSpacing: '.4px'});
-      const tasNintInput = document.createElement('input');
-      tasNintInput.type = 'text';
-      tasNintInput.placeholder = 'N.º Int.';
-      Object.assign(tasNintInput.style, {padding: '7px 10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '13px', outline: 'none', transition: 'border-color .15s', color: '#1a1a1a', background: '#fff', width: '100%', boxSizing: 'border-box'});
-      tasNintInput.onfocus = () => tasNintInput.style.borderColor = '#7b0000';
-      tasNintInput.onblur  = () => tasNintInput.style.borderColor = '#ddd';
-      tasNintGroup.append(tasNintLbl, tasNintInput);
-      const tasNameGroup = document.createElement('div');
-      Object.assign(tasNameGroup.style, {display: 'flex', flexDirection: 'column', gap: '4px', flex: '2'});
-      const tasNameLbl = document.createElement('label');
-      tasNameLbl.textContent = ' ';
-      Object.assign(tasNameLbl.style, {fontSize: '11.5px', fontWeight: '600', color: '#555', textTransform: 'uppercase', letterSpacing: '.4px'});
-      const tasNameInput = document.createElement('input');
-      tasNameInput.type = 'text';
-      tasNameInput.placeholder = 'Nome TAS';
-      tasNameInput.value = item.tas || '';
-      tasNameInput.readOnly = true;
-      tasNameInput.disabled = true;
-      Object.assign(tasNameInput.style, {padding: '7px 10px', borderRadius: '6px', border: '1px solid #eee', fontSize: '13px', outline: 'none', color: '#666', background: '#f5f5f5', width: '100%', boxSizing: 'border-box', cursor: 'not-allowed'});
-      tasNameGroup.append(tasNameLbl, tasNameInput);
+    }  
+    function onTableClick(e) {
+      const b = e.target.closest('button[data-act]');
+      if (!b || b.disabled) return;
+      const it = ST.rows[+b.closest('tr').dataset.i];
+      if (!it) return;
+      const nr = it.nr_codu || '', type = it.service_type || '';
+      ({edit: () => editEntry(it), up: () => upload(nr, type), down: () => download(nr, type), view: () => view(nr, type), del: () => remove(nr, type)})[b.dataset.act]?.();
+    }  
+    /* ----------------------------- editar ----------------------------- */
+    function editEntry(item) {
+      ensureFA();
+      $('inem-edit-modal')?.remove();
+      const opts = (list, cur) => list.map(o => `<option value="${esc(o)}"${o === cur ? ' selected' : ''}>${esc(o)}</option>`).join('');
+      const inp = (key, type) => `<input type="${type}" data-k="${key}" value="${esc(item[key] || '')}">`;
+      const fld = (label, inner, cls = '') => `<div class="inem-fld ${cls}"><label>${label}</label>${inner}</div>`;
+      const ov = el(`
+        <div id="inem-edit-modal" class="inem-ov">
+          <div class="inem-dlg">
+            <div class="inem-dlg-head"><div><i class="fa-solid fa-pen"></i> Editar Verbete - Nr. CODU: ${esc(item.nr_codu)}</div><button class="inem-dlg-x"><i class="fa-solid fa-xmark"></i></button></div>
+            <div class="inem-dlg-body">
+              ${fld('Tipo de Documento', `<select data-k="service_type" class="short">${opts(['', 'ITeams', 'Verbete'], item.service_type === 'ITeams' ? 'ITeams' : 'Verbete')}</select>`)}
+              <div class="inem-row top">${fld('Nr. CODU', inp('nr_codu', 'text'))}${fld('Data Alerta', inp('alert_date', 'date'))}${fld('Hora Alerta', inp('alert_hour', 'time'))}</div>
+              <div class="inem-row">
+                ${fld('Vítima', `<select data-k="victim_type">${opts(['Masculino', 'Feminino', 'Desconhecido'], item.victim_type || '')}</select>`, 'w15')}
+                ${fld('Idade', inp('victim_age_type', 'text'))}
+                ${fld('&nbsp;', `<select data-k="victim_age_unit">${opts(['Anos', 'Meses', 'Dias'], item.victim_age_unit || '')}</select>`)}
+              </div>
+              ${fld('Morada', inp('victim_address', 'text'))}
+              ${fld('Localidade', inp('victim_location', 'text'))}
+              <div class="inem-row">
+                ${fld('TAS', '<input type="text" class="tas-nint" placeholder="N.º Int.">')}
+                ${fld('&nbsp;', `<input type="text" class="tas-name" placeholder="Nome TAS" value="${esc(item.tas || '')}" readonly disabled>`, 'w2')}
+              </div>
+            </div>
+            <div class="inem-dlg-foot"><button class="no">Cancelar</button><button class="yes"><i class="fa-solid fa-floppy-disk"></i> Guardar</button></div>
+          </div>
+        </div>`);
+      const q = s => ov.querySelector(s);
+      const nint = q('.tas-nint'), name = q('.tas-name');
+      const close = () => ov.remove();
+      q('.inem-dlg-x').onclick = close;
+      q('.no').onclick = close;
       if (item.tas) {
-        fetch(`${SUPABASE_URL}/rest/v1/reg_elems?abv_name=eq.${encodeURIComponent(item.tas)}&select=n_int`, {
-          headers: getSupabaseHeaders()
-        })
-          .then(res => res.json())
-          .then(data => {if (data.length > 0) tasNintInput.value = data[0].n_int;})
+        fetch(`${SUPABASE_URL}/rest/v1/reg_elems?abv_name=eq.${encodeURIComponent(item.tas)}&select=n_int`, {headers: getSupabaseHeaders()})
+          .then(r => r.json()).then(d => { if (d.length > 0) nint.value = d[0].n_int; })
           .catch(err => console.error('Erro na busca inicial do TAS:', err));
       }
-      tasNintInput.addEventListener('input', async function() {
-        const val = this.value.trim();
-        if (val.length === 3) {
-          try {
-            const res = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${val}&select=abv_name`, {
-              headers: getSupabaseHeaders()
-            });
-            const data = await res.json();
-            tasNameInput.value = data[0]?.abv_name || '';
-          } catch(err) {tasNameInput.value = '';}
-        } else {
-          tasNameInput.value = '';
-        }
+      nint.addEventListener('input', async () => {
+        const v = nint.value.trim();
+        if (v.length !== 3) { name.value = ''; return; }
+        try {
+          const r = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${encodeURIComponent(v)}&select=abv_name`, {headers: getSupabaseHeaders()});
+          name.value = (await r.json())[0]?.abv_name || '';
+        } catch { name.value = ''; }
       });
-      row3.append(tasNintGroup, tasNameGroup);
-      body.appendChild(row3);
-      const footer = document.createElement('div');
-      Object.assign(footer.style, {padding: '12px 20px', display: 'flex', justifyContent: 'flex-end', gap: '8px', borderTop: '1px solid #eee', background: '#fafafa'});
-      const btnCancel = document.createElement('button');
-      btnCancel.textContent = 'Cancelar';
-      Object.assign(btnCancel.style, {padding: '7px 16px', borderRadius: '6px', border: '1px solid #ddd', background: '#fff', color: '#555', fontSize: '13px', fontWeight: '600', cursor: 'pointer'});
-      btnCancel.onclick = () => overlay.remove();
-      const btnSave = document.createElement('button');
-      btnSave.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar';
-      Object.assign(btnSave.style, {padding: '7px 16px', borderRadius: '6px', border: 'none', background: 'linear-gradient(135deg, #7b0000, #9a0f0f)', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer'});
-      btnSave.onclick = async () => {
+      q('.yes').onclick = async () => {
         const updated = {};
-        const FIELDS = [{key: 'service_type'}, {key: 'nr_codu'}, {key: 'alert_date'}, {key: 'alert_hour'}, {key: 'victim_type'}, {key: 'victim_address'}, {key: 'victim_location'}, {key: 'victim_age_type'}, {key: 'victim_age_unit'}];
-        FIELDS.forEach(f => {
-          updated[f.key] = inputs[f.key].value.trim() || null;
-        });
-        updated['tas'] = tasNameInput.value.trim() || null;
+        ov.querySelectorAll('[data-k]').forEach(i => { updated[i.dataset.k] = i.value.trim() || null; });
+        updated.tas = name.value.trim() || null;
         try {
           const res = await fetch(`${SUPABASE_URL}/rest/v1/inem_entries?id=eq.${item.id}`, {
-            method: "PATCH",
-            headers: {...getSupabaseHeaders(), "Content-Type":"application/json", "Prefer":"return=minimal"},
-            body: JSON.stringify(updated)
+            method: 'PATCH', headers: {...getSupabaseHeaders(), 'Content-Type': 'application/json', 'Prefer': 'return=minimal'}, body: JSON.stringify(updated)
           });
           if (!res.ok) throw new Error(await res.text());
           showPopup('popup-success', 'Verbete atualizado com sucesso.');
-          overlay.remove();
-          loadInemEntries();
-        } catch(err) {
+          close();
+          load();
+        } catch (err) {
           console.error('Erro ao guardar:', err);
           showPopup('popup-danger', 'Erro ao guardar as alterações.');
         }
       };
-      footer.append(btnCancel, btnSave);
-      box.append(header, body, footer);
-      overlay.appendChild(box);
-      //overlay.addEventListener('click', e => {if (e.target === overlay) overlay.remove();});
-      document.body.appendChild(overlay);
+      document.body.appendChild(ov);
+    }  
+    /* ----------------------------- ficheiros ----------------------------- */
+    async function fetchFile(name) {
+      const res = await fetch(fileUrl(name), {headers: storeHdr()});
+      if (!res.ok) throw new Error(`Ficheiro indisponível (${res.status})`);
+      return res;
     }
-    /* ─── UPLOAD ────────────────────────────────────────── */
-    async function inemUploadPdf(nrCodu, serviceType) {
-      if (!nrCodu) return;
-      const isHtml = serviceType === "ITeams";
-      const ext = isHtml ? "html" : "pdf";
-      const mime = isHtml ? "text/html" : "application/pdf";
-      const input = document.createElement("input");
-      input.type = "file";
-      input.accept = isHtml ? "text/html" : "application/pdf";
+    function saveBlob(blob, name) {
+      const url = URL.createObjectURL(blob);
+      const a = Object.assign(document.createElement('a'), {href: url, download: name});
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+    function upload(nr, type) {
+      if (!nr) return;
+      const isHtml = type === 'ITeams';
+      const input = Object.assign(document.createElement('input'), {type: 'file', accept: isHtml ? 'text/html' : 'application/pdf'});
       input.onchange = async () => {
         const file = input.files[0];
         if (!file) return;
-        const fileName = `ocr_${nrCodu}.${ext}`;
         try {
-          const res = await fetch(`${SUPABASE_URL}/storage/v1/object/${INEM_BUCKET}/${encodeURIComponent(fileName)}`, {
-            method: "POST",
-            headers: inemStorageHeaders({"Content-Type": mime, "x-upsert": "true"}),
-            body: file
-          });
+          const res = await fetch(objUrl(fileOf(nr, type)), {method: 'POST', headers: storeHdr({'Content-Type': isHtml ? 'text/html' : 'application/pdf', 'x-upsert': 'true'}), body: file});
           if (!res.ok) throw new Error(await res.text());
-          showPopup('popup-success', `Verbete para a ocorrência <b>${nrCodu}</b> carregado com sucesso.`);
-          document.querySelectorAll("#inem-entries table tbody tr").forEach(tr => {
-            const btnUp = tr.querySelector(".btn-inem-upload");
-            if (btnUp?.dataset.nr === nrCodu) {
-              const statusTd = tr.querySelector(".inem-pdf-status-td");
-              if (statusTd) setInemStatus(statusTd, true);
-            }
-          });
-        } catch(err) {
-          console.error("Erro ao fazer upload:", err);
-          showPopup('popup-danger', "Erro ao carregar o verbete.");
+          showPopup('popup-success', `Verbete para a ocorrência <b>${esc(nr)}</b> carregado com sucesso.`);
+          setStatus(nr, true);
+        } catch (err) {
+          console.error('Erro ao fazer upload:', err);
+          showPopup('popup-danger', 'Erro ao carregar o verbete.');
         }
       };
       input.click();
     }
-    /* ─── DOWNLOAD ──────────────────────────────────────── */
-    async function inemDownloadPdf(nrCodu, serviceType) {
-      if (!nrCodu) return;
-      const ext = serviceType === "ITeams" ? "html" : "pdf";
-      const fileName = `ocr_${nrCodu}.${ext}`;
-      try {
-        const res = await inemFetchFile(fileName);
-        const blob = await res.blob();
-        const blobUrl = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = blobUrl;
-        a.download = fileName;
-        a.click();
-        URL.revokeObjectURL(blobUrl);
-      } catch(err) {
-        showPopup('popup-danger', "Verbete não encontrado.");
-      }
-    }
-    /* ─── VISUALIZAR ────────────────────────────────────── */
-    const INEM_LOGO   = "https://rjkbodfqsvckvnhjwmhg.supabase.co/storage/v1/object/public/cb_logos/INEM_logo.png";
-    const ITEAMS_LOGO = "https://rjkbodfqsvckvnhjwmhg.supabase.co/storage/v1/object/public/cb_logos/ITEAMS.png";
-    const INEM_MODAL_STYLES = `
-      @keyframes inemFadeIn {from {opacity: 0;} to {opacity: 1;}}
-      @keyframes inemSlideUp {from {opacity: 0; transform: translateY(28px) scale(0.96);} to {opacity: 1; transform: translateY(0) scale(1);}}
-      @keyframes inemSpin {to {transform: rotate(360deg);}}
-      #inem-pdf-modal {animation: inemFadeIn .22s ease;}
-      #inem-pdf-modal .inem-box {animation: inemSlideUp .28s cubic-bezier(.22,.68,0,1.2);}
-      .inem-spinner {width: 36px; height: 36px; border: 3px solid #f0e8e8; border-top-color: #8b0000; border-radius: 50%; animation: inemSpin .75s linear infinite;}
-      .inem-btn {border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.8); width: 30px; height: 30px; border-radius: 7px; cursor: pointer;
-                 font-size: 14px; display: inline-flex; align-items: center; justify-content: center;  transition: background .15s, border-color .15s, transform .1s;}
-      .inem-btn:hover  {background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.25); color: #fff;}
-      .inem-btn:active {transform: scale(.91);}
-      .inem-btn.inem-close-btn {border-color: rgba(255,80,80,0.22);}
-      .inem-btn.inem-close-btn:hover {background: rgba(180,0,0,0.4); border-color: rgba(255,80,80,0.5);}
-      .inem-print-btn {border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.92); padding: 6px 14px; border-radius: 7px; cursor: pointer;
-                       font-size: 12.5px; font-weight: 600; font-family: 'Segoe UI', sans-serif; letter-spacing: .3px; display: inline-flex; align-items: center; gap: 6px;
-                       transition: background .15s, border-color .15s, transform .1s;}
-      .inem-print-btn:hover {background: rgba(255,255,255,0.22); border-color: rgba(255,255,255,0.38);}
-      .inem-print-btn:active {transform: scale(.96);}
-      .inem-header {background: linear-gradient(135deg, #5a0000 0%, #7b0000 45%, #9a0f0f 100%); padding: 11px 14px; display: flex; align-items: center; justify-content: space-between;
-                    gap: 10px; flex-shrink: 0; border-bottom: 1px solid rgba(0,0,0,0.2); position: relative;}
-      .inem-header::before {content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255,255,255,0.07) 0%, transparent 100%); pointer-events: none;}
-      .inem-footer {background: linear-gradient(135deg, #5a0000 0%, #7b0000 100%); padding: 9px 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px;
-                    flex-shrink: 0; border-top: 1px solid rgba(0,0,0,0.15); position: relative;}
-      .inem-footer::before {content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, transparent 100%); pointer-events: none;}
-      .inem-logo-box {width: 34px; height: 34px; border-radius: 6px; overflow: hidden; flex-shrink: 0;}
-      .inem-logo-box img {width: 100%; height: 100%; object-fit: cover;}
-      .inem-logo-iteams {height: 22px; flex-shrink: 0; opacity: .85;}
-      .inem-logo-iteams img {height: 100%; width: auto; object-fit: contain; filter: brightness(0) invert(1);}
-      .inem-sep {width: 1px; height: 28px; background: rgba(255,255,255,0.18); flex-shrink: 0;}
-      .inem-title-main {color: #fff; font-weight: 700; font-size: 13px; font-family: 'Segoe UI', sans-serif; letter-spacing: .1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
-      .inem-title-sub {color: rgba(255,255,255,0.42); font-size: 10.5px; font-family: 'Segoe UI', sans-serif; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
-      .inem-badge {background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.18); border-radius: 5px; padding: 2px 7px; font-size: 10px; font-weight: 700;
-                   font-family: 'Segoe UI', sans-serif; color: rgba(255,255,255,0.85); letter-spacing: .7px; text-transform: uppercase; flex-shrink: 0;}
-      .inem-footer-info {color: rgba(255,255,255,0.38); font-size: 10.5px; font-family: 'Segoe UI', sans-serif; letter-spacing: .2px; position: relative; z-index: 1;}
-    `;
-    function _inemInjectStyles() {
-      _inemEnsureFontAwesome();
-      if (document.getElementById('inem-modal-style')) return;
-      const style = document.createElement('style');
-      style.id = 'inem-modal-style';
-      style.textContent = INEM_MODAL_STYLES;
-      document.head.appendChild(style);
-    }
-    function _inemCloseModal(overlay, box) {
-      const fr = overlay.querySelector('iframe');
-      if (fr?.dataset.blobUrl) URL.revokeObjectURL(fr.dataset.blobUrl);
-      box.style.animation = 'inemSlideUp .18s ease reverse forwards';
-      overlay.style.animation = 'inemFadeIn .18s ease reverse forwards';
-      setTimeout(() => overlay.remove(), 180);
-    }
-    function _inemBuildHeader(nrCodu, serviceType, ext, box, overlay) {
-      const header = document.createElement('div');
-      header.className = 'inem-header';
-      const left = document.createElement('div');
-      Object.assign(left.style, {display: 'flex', alignItems: 'center', gap: '10px', flex: '1', minWidth: '0', position: 'relative', zIndex: '1'});
-      const logoInem = document.createElement('div');
-      logoInem.className = 'inem-logo-box';
-      const imgInem = document.createElement('img');
-      imgInem.src = INEM_LOGO;
-      imgInem.alt = 'INEM';
-      logoInem.appendChild(imgInem);
-      const sep1 = document.createElement('div');
-      sep1.className = 'inem-sep';
-      left.append(logoInem, sep1);
-      if (serviceType === 'ITeams') {
-        const logoIt = document.createElement('div');
-        logoIt.className = 'inem-logo-iteams';
-        const imgIt = document.createElement('img');
-        imgIt.src = ITEAMS_LOGO;
-        imgIt.alt = 'iTeams';
-        logoIt.appendChild(imgIt);
-        const sep2 = document.createElement('div');
-        sep2.className = 'inem-sep';
-        left.append(logoIt, sep2);
-      }
-      const titleWrap = document.createElement('div');
-      titleWrap.style.cssText = 'min-width:0';
-      const titleRow = document.createElement('div');
-      Object.assign(titleRow.style, {display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '2px'});
-      const titleMain = document.createElement('div');
-      titleMain.className = 'inem-title-main';
-      titleMain.textContent = serviceType === 'ITeams' ? `Verbete ITeams - ${nrCodu}` : `Verbete INEM - ${nrCodu}`;
-      const badge = document.createElement('span');
-      badge.className = 'inem-badge';
-      badge.textContent = ext.toUpperCase();
-      const titleSub = document.createElement('div');
-      titleSub.className = 'inem-title-sub';
-      titleSub.textContent = `Via ${serviceType} · ocr_${nrCodu}.${ext}`;
-      titleRow.append(titleMain, badge);
-      titleWrap.append(titleRow, titleSub);
-      left.appendChild(titleWrap);
-      const toolbar = document.createElement('div');
-      Object.assign(toolbar.style, {display: 'flex', alignItems: 'center', gap: '5px', position: 'relative', zIndex: '1'});
-      let isFs = false;
-      const btnFs = document.createElement('button');
-      btnFs.className = 'inem-btn';
-      btnFs.innerHTML = '<i class="fa-solid fa-expand"></i>';
-      btnFs.title = 'Ecrã inteiro';
-      btnFs.onclick = () => {
-        isFs = !isFs;
-        Object.assign(box.style, {width: isFs ? '100vw' : '82vw', height: isFs ? '100vh' : '90vh', borderRadius: isFs ? '0' : '14px'});
-        btnFs.innerHTML = isFs ? '<i class="fa-solid fa-compress"></i>' : '<i class="fa-solid fa-expand"></i>';
-        btnFs.title = isFs ? 'Sair de ecrã inteiro' : 'Ecrã inteiro';
+    async function download(nr, type) {
+      if (!nr) return;
+      try { saveBlob(await (await fetchFile(fileOf(nr, type))).blob(), fileOf(nr, type)); }
+      catch { showPopup('popup-danger', 'Verbete não encontrado.'); }
+    }  
+    /* ----------------------------- visualizar ----------------------------- */
+    function view(nr, type) {
+      if (!nr) return;
+      ensureFA();
+      const ext = fileExt(type), name = fileOf(nr, type);
+      $('inem-pdf-modal')?.remove();
+      const ov = el(`
+        <div id="inem-pdf-modal" class="inem-ov">
+          <div class="inem-box">
+            <div class="inem-header">
+              <div class="inem-hl">
+                <div class="inem-logo-box"><img src="${INEM_LOGO}" alt="INEM"></div><div class="inem-sep"></div>
+                ${type === 'ITeams' ? `<div class="inem-logo-iteams"><img src="${ITEAMS_LOGO}" alt="iTeams"></div><div class="inem-sep"></div>` : ''}
+                <div class="inem-tw">
+                  <div class="inem-trow"><div class="inem-title-main">Verbete ${type === 'ITeams' ? 'ITeams' : 'INEM'} - ${esc(nr)}</div><span class="inem-badge">${ext.toUpperCase()}</span></div>
+                  <div class="inem-title-sub">Via ${esc(type)} · ${esc(name)}</div>
+                </div>
+              </div>
+              <div class="inem-hr">
+                <button class="inem-btn fs" title="Ecrã inteiro"><i class="fa-solid fa-expand"></i></button>
+                <button class="inem-btn inem-close-btn" title="Fechar"><i class="fa-solid fa-xmark"></i></button>
+              </div>
+            </div>
+            <div class="inem-content"><div class="inem-loading"><div class="inem-spinner"></div><div>A carregar ficheiro…</div></div><iframe></iframe></div>
+            <div class="inem-footer">
+              <div class="inem-footer-info">INEM · Instituto Nacional de Emergência Médica</div>
+              ${ext === 'html' ? '<button class="inem-print-btn" title="Imprimir verbete"><i class="fa-solid fa-print"></i> Imprimir</button>' : ''}
+            </div>
+          </div>
+        </div>`);
+      const q = s => ov.querySelector(s);
+      const box = q('.inem-box'), iframe = q('iframe'), loading = q('.inem-loading');
+      const close = () => {
+        document.removeEventListener('keydown', onKey);
+        if (iframe.dataset.blobUrl) URL.revokeObjectURL(iframe.dataset.blobUrl);
+        ov.classList.add('closing');
+        setTimeout(() => ov.remove(), 180);
       };
-      const btnClose = document.createElement('button');
-      btnClose.className = 'inem-btn inem-close-btn';
-      btnClose.innerHTML = '<i class="fa-solid fa-xmark"></i>';
-      btnClose.title = 'Fechar';
-      btnClose.style.fontSize = '15px';
-      btnClose.onclick = () => _inemCloseModal(overlay, box);
-      toolbar.append(btnFs, btnClose);
-      header.append(left, toolbar);
-      return { header, btnClose };
-    }
-    function _inemBuildContent(fileName, ext) {
-      const content = document.createElement('div');
-      Object.assign(content.style, {flex: '1', position: 'relative', overflow: 'hidden', background: '#fff'});
-      const loadingEl = document.createElement('div');
-      Object.assign(loadingEl.style, {position: 'absolute', inset: '0', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '14px', background: '#fff', zIndex: '2'});
-      const spinner = document.createElement('div');
-      spinner.className = 'inem-spinner';
-      const loadingText = document.createElement('div');
-      loadingText.textContent = 'A carregar ficheiro…';
-      Object.assign(loadingText.style, {color: '#9ca3af', fontSize: '12.5px', fontFamily: "'Segoe UI', sans-serif"});
-      loadingEl.append(spinner, loadingText);
-      function showNotFound() {
-        loadingEl.innerHTML = '';
-        const icon = document.createElement('div');
-        icon.innerHTML = '<i class="fa-regular fa-file"></i>';
-        Object.assign(icon.style, {fontSize: '48px', opacity: '0.4', color: '#6b7280'});
-        const msg = document.createElement('div');
-        msg.textContent = 'Verbete Indisponível.';
-        Object.assign(msg.style, {color: '#6b7280', fontSize: '15px', fontWeight: '600', fontFamily: "'Segoe UI', sans-serif"});
-        const sub = document.createElement('div');
-        sub.textContent = 'Ainda não foi carregado nenhum verbete para esta ocorrência.';
-        Object.assign(sub.style, {color: '#9ca3af', fontSize: '12.5px', fontFamily: "'Segoe UI', sans-serif"});
-        loadingEl.append(icon, msg, sub);
-      }
-      const iframe = document.createElement('iframe');
-      Object.assign(iframe.style, {position: 'absolute', inset: '0', width: '100%', height: '100%', border: 'none', opacity: '0', transition: 'opacity .3s'});
-      const revealIframe = () => {
-        loadingEl.style.display = 'none';
-        iframe.style.opacity = '1';
+      const onKey = e => { if (e.key === 'Escape') close(); };
+      document.addEventListener('keydown', onKey);
+      q('.inem-close-btn').onclick = close;
+      q('.fs').onclick = function () {
+        const fs = box.classList.toggle('fs');
+        this.innerHTML = `<i class="fa-solid fa-${fs ? 'compress' : 'expand'}"></i>`;
+        this.title = fs ? 'Sair de ecrã inteiro' : 'Ecrã inteiro';
+      };
+      if (q('.inem-print-btn')) q('.inem-print-btn').onclick = () => { try { iframe.contentWindow.print(); } catch { window.print(); } };
+      const reveal = () => { loading.hidden = true; iframe.classList.add('on'); };
+      const notFound = () => {
+        loading.innerHTML = '<div class="ico"><i class="fa-regular fa-file"></i></div><div class="msg">Verbete Indisponível.</div><div>Ainda não foi carregado nenhum verbete para esta ocorrência.</div>';
       };
       if (ext === 'html') {
-        inemFetchFile(fileName)
-          .then(r => r.arrayBuffer())
-          .then(buf => new TextDecoder('windows-1252').decode(buf))
-          .then(html => {
-          iframe.onload = revealIframe;
-          const scrollbarCSS = `<style>::-webkit-scrollbar {width: 10px; height: 6px;} ::-webkit-scrollbar-track {background: #1a0000;}
-                                       ::-webkit-scrollbar-thumb {background: #7b0000; border-radius: 10px;} ::-webkit-scrollbar-thumb:hover {background: #9a0f0f;}</style>`;
-          iframe.srcdoc = scrollbarCSS + html
-            .replace(/window\.print\s*\(\s*\)/g, 'void 0')
-            .replace(/onload\s*=\s*["']?print\s*\(\s*\)["']?/gi, '');
-        })
-          .catch(() => showNotFound());
+        fetchFile(name).then(r => r.arrayBuffer()).then(buf => new TextDecoder('windows-1252').decode(buf)).then(html => {
+          iframe.onload = reveal;
+          iframe.srcdoc = `<style>::-webkit-scrollbar {width: 10px; height: 6px;} ::-webkit-scrollbar-track {background: #1a0000;}
+                           ::-webkit-scrollbar-thumb {background: #7b0000; border-radius: 10px;} ::-webkit-scrollbar-thumb:hover {background: #9a0f0f;}</style>`
+            + html.replace(/window\.print\s*\(\s*\)/g, 'void 0').replace(/onload\s*=\s*["']?print\s*\(\s*\)["']?/gi, '');
+        }).catch(notFound);
       } else {
-        inemFetchFile(fileName)
-          .then(r => r.blob())
-          .then(blob => {
-          const blobUrl = URL.createObjectURL(new Blob([blob], {type: 'application/pdf'}));
-          iframe.dataset.blobUrl = blobUrl;
-          iframe.onload = revealIframe;
-          iframe.src = blobUrl;
-        })
-          .catch(() => showNotFound());
+        fetchFile(name).then(r => r.blob()).then(blob => {
+          const url = URL.createObjectURL(new Blob([blob], {type: 'application/pdf'}));
+          iframe.dataset.blobUrl = url;
+          iframe.onload = reveal;
+          iframe.src = url;
+        }).catch(notFound);
       }
-      content.append(loadingEl, iframe);
-      return {content, iframe};
-    }
-    function _inemBuildFooter(ext, iframe) {
-      const footer = document.createElement('div');
-      footer.className = 'inem-footer';
-      const info = document.createElement('div');
-      info.className = 'inem-footer-info';
-      info.textContent = 'INEM · Instituto Nacional de Emergência Médica';
-      footer.appendChild(info);
-      if (ext === 'html') {
-        const btnPrint = document.createElement('button');
-        btnPrint.className = 'inem-print-btn';
-        btnPrint.innerHTML = '<i class="fa-solid fa-print"></i> Imprimir';
-        btnPrint.title = 'Imprimir verbete';
-        btnPrint.style.position = 'relative';
-        btnPrint.style.zIndex = '1';
-        btnPrint.onclick = () => {
-          try {iframe.contentWindow.print();} catch {window.print();}
-        };
-        footer.appendChild(btnPrint);
-      }
-      return footer;
-    }
-    async function inemViewPdf(nrCodu, serviceType) {
-      if (!nrCodu) return;
-      const ext = serviceType === 'ITeams' ? 'html' : 'pdf';
-      const fileName = `ocr_${nrCodu}.${ext}`;
-      document.getElementById('inem-pdf-modal')?.remove();
-      _inemInjectStyles();
-      const overlay = document.createElement('div');
-      overlay.id = 'inem-pdf-modal';
-      Object.assign(overlay.style, {position: 'fixed', inset: '0', background: 'rgba(10,8,8,0.78)', zIndex: '9999', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)'});
-      const box = document.createElement('div');
-      box.className = 'inem-box';
-      Object.assign(box.style, {background: '#f8f8f8', borderRadius: '14px', width: '82vw', height: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 28px 72px rgba(0,0,0,0.45), 0 2px 8px rgba(0,0,0,0.18)', overflow: 'hidden'});
-      const {header, btnClose} = _inemBuildHeader(nrCodu, serviceType, ext, box, overlay);
-      const {content, iframe} = _inemBuildContent(fileName, ext);
-      const footer = _inemBuildFooter(ext, iframe);
-      box.append(header, content, footer);
-      overlay.appendChild(box);
-      //overlay.addEventListener('click', e => {if (e.target === overlay) _inemCloseModal(overlay, box);});
-      const onKeyDown = e => {
-        if (e.key === 'Escape') {_inemCloseModal(overlay, box); document.removeEventListener('keydown', onKeyDown);}
-      };
-      document.addEventListener('keydown', onKeyDown);
-      document.body.appendChild(overlay);
-    }
-    /* ─── ELIMINAR ──────────────────────────────────────── */
-    async function inemDeletePdf(nrCodu, serviceType) {
-      if (!nrCodu) return;
-      _inemEnsureFontAwesome();
-      const ext = serviceType === "ITeams" ? "html" : "pdf";
-      const fileName = `ocr_${nrCodu}.${ext}`;
-      const confirmed = await new Promise(resolve => {
-        document.getElementById('inem-confirm-modal')?.remove();
-        const overlay = document.createElement('div');
-        overlay.id = 'inem-confirm-modal';
-        Object.assign(overlay.style, {position: 'fixed', inset: '0', background: 'rgba(10,8,8,0.78)', zIndex: '10001', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)'});
-        const box = document.createElement('div');
-        Object.assign(box.style, {background: '#fff', borderRadius: '12px', width: '360px', boxShadow: '0 28px 72px rgba(0,0,0,0.45)', display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: "'Segoe UI', sans-serif"});
-        const header = document.createElement('div');
-        Object.assign(header.style, {background: 'linear-gradient(135deg, #5a0000 0%, #7b0000 45%, #9a0f0f 100%)', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '8px'});
-        const headerTitle = document.createElement('div');
-        Object.assign(headerTitle.style, {color: '#fff', fontWeight: '700', fontSize: '13px'});
-        headerTitle.innerHTML = '<i class="fa-solid fa-trash"></i> Eliminar Verbete';
-        header.appendChild(headerTitle);
-        const body = document.createElement('div');
-        Object.assign(body.style, {padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px'});
-        const msg = document.createElement('div');
-        Object.assign(msg.style, {fontSize: '13px', color: '#333'});
-        msg.textContent = 'Tem a certeza que pretende eliminar o verbete:';
-        const fileNameEl = document.createElement('div');
-        Object.assign(fileNameEl.style, {fontSize: '13px', fontWeight: '700', color: '#7b0000', background: '#fff5f5', padding: '6px 10px', borderRadius: '6px', border: '1px solid #fecaca'});
-        fileNameEl.textContent = fileName;
-        body.append(msg, fileNameEl);
-        const footer = document.createElement('div');
-        Object.assign(footer.style, {padding: '12px 20px', display: 'flex', justifyContent: 'flex-end', gap: '8px', borderTop: '1px solid #eee', background: '#fafafa'});
-        const btnCancel = document.createElement('button');
-        btnCancel.textContent = 'Cancelar';
-        Object.assign(btnCancel.style, {padding: '7px 16px', borderRadius: '6px', border: '1px solid #ddd', background: '#fff', color: '#555', fontSize: '13px', fontWeight: '600', cursor: 'pointer'});
-        const btnConfirm = document.createElement('button');
-        btnConfirm.innerHTML = '<i class="fa-solid fa-trash"></i> Eliminar';
-        Object.assign(btnConfirm.style, {padding: '7px 16px', borderRadius: '6px', border: 'none', background: 'linear-gradient(135deg, #7b0000, #9a0f0f)', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer'});
-        btnCancel.onclick  = () => {overlay.remove(); resolve(false);};
-        btnConfirm.onclick = () => {overlay.remove(); resolve(true);};
-        overlay.addEventListener('click', e => { if (e.target === overlay) {overlay.remove(); resolve(false);}});
-        footer.append(btnCancel, btnConfirm);
-        box.append(header, body, footer);
-        overlay.appendChild(box);
-        document.body.appendChild(overlay);
+      document.body.appendChild(ov);
+    }  
+    /* ----------------------------- eliminar ----------------------------- */
+    function confirmDelete(name) {
+      return new Promise(resolve => {
+        $('inem-confirm-modal')?.remove();
+        const ov = el(`
+          <div id="inem-confirm-modal" class="inem-ov" style="z-index:10001">
+            <div class="inem-dlg sm">
+              <div class="inem-dlg-head"><div><i class="fa-solid fa-trash"></i> Eliminar Verbete</div></div>
+              <div class="inem-dlg-body"><div>Tem a certeza que pretende eliminar o verbete:</div><div class="inem-dlg-file">${esc(name)}</div></div>
+              <div class="inem-dlg-foot"><button class="no">Cancelar</button><button class="yes"><i class="fa-solid fa-trash"></i> Eliminar</button></div>
+            </div>
+          </div>`);
+        const done = v => { ov.remove(); resolve(v); };
+        ov.querySelector('.no').onclick = () => done(false);
+        ov.querySelector('.yes').onclick = () => done(true);
+        ov.addEventListener('click', e => { if (e.target === ov) done(false); });
+        document.body.appendChild(ov);
       });
-      if (!confirmed) return;
-      try {
-        const res = await fetch(`${SUPABASE_URL}/storage/v1/object/${INEM_BUCKET}/${encodeURIComponent(fileName)}`, {
-          method: "DELETE",
-          headers: inemStorageHeaders()
-        });
-        if (!res.ok) throw new Error(await res.text());
-        showPopup('popup-success', "Verbete eliminado com sucesso.");
-        document.querySelectorAll("#inem-entries table tbody tr").forEach(tr => {
-          const btnDel = tr.querySelector(".btn-inem-delete");
-          if (btnDel?.dataset.nr === nrCodu) {
-            const statusTd = tr.querySelector(".inem-pdf-status-td");
-            if (statusTd) setInemStatus(statusTd, false);
-          }
-        });
-      } catch(err) {
-        console.error("Erro ao eliminar:", err);
-        showPopup('popup-danger', "Erro ao eliminar o verbete.");
-      }
     }
-    /* ─── EXPORT XLSX ───────────────────────────────────── */
-    async function exportInemEntriesXlsx() {
-      const rows = _buildInemExportRows();
-      if (!rows.length) return showPopupWarning("Sem dados para exportar.");
-      const btnXlsx = document.getElementById("btn-inem-emitir-xlsx");
-      const originalHtml = btnXlsx.innerHTML;
-      btnXlsx.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> A Exportar...';
-      btnXlsx.disabled = true;
-      showLoadingPopup("A iniciar exportação XLSX...");
+    async function remove(nr, type) {
+      if (!nr) return;
+      ensureFA();
+      const name = fileOf(nr, type);
+      if (!(await confirmDelete(name))) return;
       try {
-        const res = await fetch("https://cb360-online.vercel.app/api/inem-entries", {
-          method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({rows, format: "xlsx", dateFrom: document.getElementById("inem-date-from")?.value, dateTo: document.getElementById("inem-date-to")?.value})
-        });
+        const res = await fetch(objUrl(name), {method: 'DELETE', headers: storeHdr()});
         if (!res.ok) throw new Error(await res.text());
-        updateLoadingPopup("A gerar ficheiro XLSX...");
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        const dateFrom = document.getElementById("inem-date-from")?.value || "";
-        const dateTo = document.getElementById("inem-date-to")?.value || "";
-        function fmtFile(d) {if (!d) return ""; const [y,m,dd] = d.split("-"); return `${dd}-${m}-${y}`;}
-        const sufix = dateFrom === dateTo || !dateTo ? fmtFile(dateFrom) : `${fmtFile(dateFrom)}_a_${fmtFile(dateTo)}`;
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `inem_entries_${sufix}.xlsx`;
-        a.click();
-        URL.revokeObjectURL(url);
-        updateLoadingPopup("Exportação concluída!");
-        showPopup('popup-info', `Mapa serviços INEM/Reserva gerado com sucesso.`);
+        showPopup('popup-success', 'Verbete eliminado com sucesso.');
+        setStatus(nr, false);
       } catch (err) {
-        console.error("Erro ao exportar XLSX:", err);
-        showPopup('popup-danger', "Erro ao exportar XLSX.");
-        updateLoadingPopup("Erro durante a exportação.");
+        console.error('Erro ao eliminar:', err);
+        showPopup('popup-danger', 'Erro ao eliminar o verbete.');
+      }
+    }  
+    /* ----------------------------- exportar (Excel / PDF) ----------------------------- */
+    function exportRows() {
+      return ST.rows.filter(it => it.nr_codu).map(it => ({
+        nr_codu: String(it.nr_codu), alert_date: it.alert_date || '', alert_hour: (it.alert_hour || '').slice(0, 5), victim_type: it.victim_type || '',
+        victim_age_type: it.victim_age_type || '', victim_age_unit: it.victim_age_unit || '', victim_address: it.victim_address || '', victim_location: it.victim_location || '',
+        tas: it.tas || '', service_type: it.service_type || ''
+      }));
+    }
+    async function exportEntries(format) {
+      const rows = exportRows();
+      if (!rows.length) return showPopupWarning('Sem dados para exportar.');
+      const F = format.toUpperCase();
+      const btn = $(format === 'xlsx' ? 'btn-inem-emitir-xlsx' : 'btn-inem-emitir');
+      const original = btn.innerHTML;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${format === 'xlsx' ? 'A Exportar...' : 'A Gerar Mapa...'}`;
+      btn.disabled = true;
+      showLoadingPopup(`A iniciar exportação ${F}...`);
+      const dateFrom = $('inem-date-from')?.value || '', dateTo = $('inem-date-to')?.value || '';
+      try {
+        const res = await fetch(API, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({rows, format, dateFrom, dateTo})});
+        if (!res.ok) throw new Error(await res.text());
+        updateLoadingPopup(`A gerar ficheiro ${F}...`);
+        const f = d => d ? d.split('-').reverse().join('-') : '';
+        const sufix = dateFrom === dateTo || !dateTo ? f(dateFrom) : `${f(dateFrom)}_a_${f(dateTo)}`;
+        saveBlob(await res.blob(), `inem_entries_${sufix}.${format}`);
+        updateLoadingPopup('Exportação concluída!');
+        showPopup('popup-info', 'Mapa serviços INEM/Reserva gerado com sucesso.');
+      } catch (err) {
+        console.error(`Erro ao exportar ${F}:`, err);
+        showPopup('popup-danger', `Erro ao exportar ${F}.`);
+        updateLoadingPopup('Erro durante a exportação.');
       } finally {
         hideLoadingPopup();
-        btnXlsx.innerHTML = originalHtml;
-        btnXlsx.disabled = false;
+        btn.innerHTML = original;
+        btn.disabled = ST.readOnly;
       }
+    }  
+    /* =======================================================================
+       RELATÓRIO DE INDISPONIBILIDADES DOS VEÍCULOS (vehicle_unavailability_history)
+       ======================================================================= */
+    function urOverlay(html) {
+      $('inem-ur-modal')?.remove();
+      const ov = el(`<div id="inem-ur-modal" class="inem-ur-ov">${html}</div>`);
+      document.body.appendChild(ov);
+      return ov;
     }
-    /* ─── EXPORT PDF ────────────────────────────────────── */
-    async function exportInemEntriesPDF() {
-      const rows = _buildInemExportRows();
-      if (!rows.length) return showPopupWarning("Sem dados para exportar.");
-      const btnPdf = document.getElementById("btn-inem-emitir");
-      const originalHtml = btnPdf.innerHTML;
-      btnPdf.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> A Gerar Mapa...';
-      btnPdf.disabled = true;
-      showLoadingPopup("A iniciar exportação PDF...");
+    function urPickMonth() {
+      ensureFA();
+      const ov = urOverlay(`
+        <div class="inem-ur">
+          <div class="inem-ur-head"><span><i class="fa-solid fa-calendar"></i> Selecionar Mês</span><span class="x">✕</span></div>
+          <div class="inem-ur-months">${MONTHS.map((m, i) => `<button data-m="${i + 1}"><i class="fa-regular fa-calendar-days"></i>${m}</button>`).join('')}</div>
+          <div class="inem-ur-foot"><button class="close"><i class="fa-solid fa-power-off"></i>&nbsp;&nbsp;Fechar</button></div>
+        </div>`);
+      ov.querySelector('.x').onclick = ov.querySelector('.close').onclick = () => ov.remove();
+      ov.querySelectorAll('[data-m]').forEach(b => b.onclick = () => urReport(+b.dataset.m));
+    }
+    function urReport(month) {
+      const ov = urOverlay(`
+        <div class="inem-ur big">
+          <div class="inem-ur-head"><span><i class="fa-solid fa-file-lines"></i> Relatório de Indisponibilidades</span><span class="x">✕</span></div>
+          <div class="inem-ur-filters">
+            <div><label for="inem-ur-month">Mês:</label><select id="inem-ur-month">${MONTHS.map((m, i) => `<option value="${i + 1}"${i + 1 === month ? ' selected' : ''}>${m}</option>`).join('')}</select></div>
+            <div><label for="inem-ur-type">Tipo:</label><select id="inem-ur-type"><option value="">Todos os tipos</option>${UR_TYPES.map(t => `<option value="${t}">${t}</option>`).join('')}</select></div>
+          </div>
+          <div class="inem-ur-content" id="inem-ur-content"></div>
+          <div class="inem-ur-foot split">
+            <button class="back"><i class="fa-solid fa-arrow-left"></i>&nbsp;&nbsp;Voltar</button>
+            <div><button class="print"><i class="fa-solid fa-print"></i>&nbsp;&nbsp;Imprimir</button><button class="close"><i class="fa-solid fa-power-off"></i>&nbsp;&nbsp;Fechar</button></div>
+          </div>
+        </div>`);
+      const q = s => ov.querySelector(s);
+      q('.x').onclick = q('.close').onclick = () => ov.remove();
+      q('.back').onclick = urPickMonth;
+      const reload = () => urLoad(+$('inem-ur-month').value, $('inem-ur-type').value);
+      $('inem-ur-month').onchange = $('inem-ur-type').onchange = reload;
+      q('.print').onclick = urPrint;
+      reload();
+    }
+    function minutesOf(txt) {
+      const t = String(txt || '').toLowerCase();
+      const h = t.match(/(\d+)\s*(?:h|hora|horas)/), m = t.match(/(\d+)\s*(?:m|min|minuto|minutos)/);
+      if (h || m) return (h ? +h[1] : 0) * 60 + (m ? +m[1] : 0);
+      const p = t.split(':');
+      return p.length === 2 ? (parseInt(p[0], 10) || 0) * 60 + (parseInt(p[1], 10) || 0) : 0;
+    }
+    async function urLoad(month, type) {
+      const box = $('inem-ur-content');
+      box.innerHTML = '<div class="inem-ur-msg load"><i class="fa-solid fa-spinner fa-spin"></i><p>A carregar dados...</p></div>';
       try {
-        const res = await fetch("https://cb360-online.vercel.app/api/inem-entries", {
-          method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({rows, format: "pdf", dateFrom: document.getElementById("inem-date-from")?.value, dateTo: document.getElementById("inem-date-to")?.value})
-        });
-        if (!res.ok) throw new Error(await res.text());
-        updateLoadingPopup("A gerar ficheiro PDF...");
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        const dateFrom = document.getElementById("inem-date-from")?.value || "";
-        const dateTo = document.getElementById("inem-date-to")?.value || "";
-        function fmtFile(d) {if (!d) return ""; const [y,m,dd] = d.split("-"); return `${dd}-${m}-${y}`;}
-        const sufix = dateFrom === dateTo || !dateTo ? fmtFile(dateFrom) : `${fmtFile(dateFrom)}_a_${fmtFile(dateTo)}`;
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `inem_entries_${sufix}.pdf`;
-        a.click();
-        URL.revokeObjectURL(url);
-        updateLoadingPopup("Exportação concluída!");
-        showPopup('popup-info', `Mapa serviços INEM/Reserva gerado com sucesso.`);
-      } catch (err) {
-        console.error("Erro ao exportar PDF:", err);
-        showPopup('popup-danger', "Erro ao exportar PDF.");
-        updateLoadingPopup("Erro durante a exportação.");
-      } finally {
-        hideLoadingPopup();
-        btnPdf.innerHTML = originalHtml;
-        btnPdf.disabled = false;
-      }
-    }
-    /* ─── HELPER: BUILD ROWS ────────────────────────────── */
-    function _buildInemExportRows() {
-      const rows = [];
-      document.querySelectorAll("#inem-entries table tbody tr").forEach(tr => {
-        const tds = tr.querySelectorAll("td");
-        const nrCodu = tds[0]?.textContent.trim();
-        if (!nrCodu) return;
-        const alertaRaw = tds[1]?.textContent.trim() || "";
-        const alertaParts = alertaRaw.split(/\s+/);
-        let alert_date = "", alert_hour = "";
-        if (alertaParts[0]) {
-          const [d, m, y] = alertaParts[0].split("/");
-          alert_date = `${y}-${m}-${d}`;
-        }
-        if (alertaParts[1]) alert_hour = alertaParts[1];
-        const vit = tds[2]?.textContent.trim() || "";
-        const vitParts = vit.split(" - ");
-        const victim_type = vitParts[0] || "";
-        const ageRaw = vitParts[1] || "";
-        const ageMatch = ageRaw.match(/^(\d+)\s*(.*)$/);
-        const victim_age_type = ageMatch ? ageMatch[1] : ageRaw;
-        const victim_age_unit = ageMatch ? ageMatch[2].trim() : "";
-        const moradaRaw = tds[3]?.textContent.trim() || "";
-        const moradaParts = moradaRaw.split(" - ");
-        const victim_address = moradaParts[0] || "";
-        const victim_location = moradaParts.slice(1).join(" - ") || "";
-        rows.push({nr_codu: nrCodu, alert_date, alert_hour, victim_type, victim_age_type, victim_age_unit, victim_address, victim_location,
-                   tas: tds[5]?.textContent.trim() || "", service_type: tds[6]?.textContent.trim() || ""});});
-      return rows;
-    }
-    /* ─── INICIALIZAÇÃO ─────────────────────────────────── */
-    document.querySelectorAll(".sidebar-menu-button").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const page = btn.dataset.page;
-        if (page === "inem-entries") createInemEntriesTable();
-      });
-    });
-    /* ================================
-    RELATÓRIO DE INDISPONIBILIDADES (veio do WSMS)
-    ================================ */
-    function openVehicleUnavailabilityMonthSelectModal() {
-      let modalOverlay = document.getElementById('cb360-modal-overlay');
-      if (!modalOverlay) {
-        modalOverlay = document.createElement('div');
-        modalOverlay.id = 'cb360-modal-overlay';
-        modalOverlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); display:flex; justify-content:center; align-items:center; z-index:9999;';
-        document.body.appendChild(modalOverlay);
-      }
-      const months = [{id: 1, name: "Janeiro"}, {id: 2, name: "Fevereiro"}, {id: 3, name: "Março"}, {id: 4, name: "Abril"}, {id: 5, name: "Maio" }, {id: 6, name: "Junho"},
-                      {id: 7, name: "Julho"}, {id: 8, name: "Agosto"}, {id: 9, name: "Setembro"}, {id: 10, name: "Outubro"}, {id: 11, name: "Novembro"}, {id: 12, name: "Dezembro"}
-                     ];
-      const btnStyle = 'background:#f0f0f0; border:1px solid #ccc; border-radius:4px; padding:12px 10px; font-size:12.5px; font-weight:600; color:#333; cursor:pointer; text-align:center; transition:filter 0.15s;';
-      let buttonsHtml = '';
-      months.forEach(m => {
-        buttonsHtml += `
-          <button class="goc-month-btn" data-month="${m.id}" data-name="${m.name}" style="${btnStyle}">
-            <i class="fa-regular fa-calendar-days" style="color:#2b6ecb; display:block; font-size:16px; margin-bottom:4px;"></i>
-            ${m.name}
-          </button>
-        `;
-      });
-      modalOverlay.innerHTML = `
-        <div style="background:#fff; border:1px solid #ccc; border-radius:6px; width:420px; box-shadow:0 4px 15px rgba(0,0,0,0.2); overflow:hidden;">
-          <div style="background:#d9534f; color:#fff; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600;">
-            <span><i class="fa-solid fa-calendar"></i> Selecionar Mês</span>
-            <div style="display:flex; gap:8px; cursor:pointer;">
-              <span id="cb360-close-modal" style="font-weight:bold;">✕</span>
-            </div>
-          </div>
-          <div style="padding:20px; display:flex; flex-direction:column; gap:5px; background:#fff;">
-            <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;">
-              ${buttonsHtml}
-            </div>
-          </div>
-          <div style="background:#e5e5e5; padding:10px 20px; border-top:1px solid #ccc; display:flex; justify-content:flex-end; gap:10px;">
-            <button id="cb360-cancel-month" style="background:#f0ad4e; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-solid fa-power-off"></i>&nbsp;&nbsp;Fechar</button>
-          </div>
-        </div>
-      `;
-      const closeModal = () => modalOverlay.remove();
-      document.getElementById('cb360-close-modal').onclick = closeModal;
-      document.getElementById('cb360-cancel-month').onclick = closeModal;
-      modalOverlay.querySelectorAll('.goc-month-btn').forEach(btn => {
-        btn.addEventListener('mouseenter', () => {
-          btn.style.background = '#f0f6ff';
-          btn.style.borderColor = '#2b6ecb';
-          btn.style.color = '#2b6ecb';
-        });
-        btn.addEventListener('mouseleave', () => {
-          btn.style.background = '#f0f0f0';
-          btn.style.borderColor = '#ccc';
-          btn.style.color = '#333';
-        });
-        btn.onclick = () => {
-          const monthId = btn.dataset.month;
-          const monthName = btn.dataset.name;
-          closeModal();
-          openVehicleUnavailabilityReportModal(monthId, monthName);
-        };
-      });
-    }
-    function openVehicleUnavailabilityReportModal(monthId, monthName) {
-      let modalOverlay = document.getElementById('cb360-modal-overlay');
-      if (!modalOverlay) {
-        modalOverlay = document.createElement('div');
-        modalOverlay.id = 'cb360-modal-overlay';
-        modalOverlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); display:flex; justify-content:center; align-items:center; z-index:9999;';
-        document.body.appendChild(modalOverlay);
-      }
-      let styleTag = document.getElementById('cb360-dynamic-focus-style');
-      if (!styleTag) {
-        styleTag = document.createElement('style');
-        styleTag.id = 'cb360-dynamic-focus-style';
-        styleTag.innerHTML = `
-          #cb360-report-content ~ * select:focus, 
-          #cb360-filter-month:focus, 
-          #cb360-filter-type:focus {border-color: #d9534f !important; outline: none !important; box-shadow: 0 0 5px rgba(217, 83, 79, 0.4) !important;}
-        `;
-        document.head.appendChild(styleTag);
-      }
-      const months = [{id: 1, name: "Janeiro"}, {id: 2, name: "Fevereiro"}, {id: 3, name: "Março"}, {id: 4, name: "Abril"}, {id: 5, name: "Maio"}, {id: 6, name: "Junho"},
-                      {id: 7, name: "Julho"}, {id: 8, name: "Agosto"}, {id: 9, name: "Setembro"}, {id: 10, name: "Outubro"}, {id: 11, name: "Novembro"}, {id: 12, name: "Dezembro"}
-                     ];
-      let monthOptions = '';
-      months.forEach(m => {
-        monthOptions += `<option value="${m.id}" ${m.id == monthId ? 'selected' : ''}>${m.name}</option>`;
-      });
-      const typesUnavailability = ["Pausa para Alimentação", "Falta de Macas", "Aguarda Triagem", "Avaria", "Falta de Tripulação", "Outro", "Limpeza"];
-      let typeOptions = '<option value="">Todos os tipos</option>';
-      typesUnavailability.forEach(t => {
-        typeOptions += `<option value="${t}">${t}</option>`;
-      });
-      modalOverlay.innerHTML = `
-        <div style="background:#fff; border:1px solid #ccc; border-radius:6px; width:750px; max-width:90%; box-shadow:0 4px 15px rgba(0,0,0,0.2); overflow:hidden;">
-          <div style="background:#d9534f; color:#fff; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600;">
-            <span><i class="fa-solid fa-file-lines"></i> Relatório de Indisponibilidades</span>
-            <div style="display:flex; gap:8px; cursor:pointer;">
-              <span id="cb360-close-report-modal" style="font-weight:bold;">✕</span>
-            </div>
-          </div>
-          <div style="background:#f9f2f2; padding:12px 20px; border-bottom:1px solid #ebccd1; display:flex; gap:15px; align-items:center; font-size:12px;">
-            <div style="display:flex; align-items:center; gap:6px;">
-              <label for="cb360-filter-month" style="font-weight:600; color:#a94442;">Mês:</label>
-              <select id="cb360-filter-month" style="padding:5px 8px; border:1px solid #ebccd1; border-radius:4px; font-size:12px; background:#fff; transition: all 0.2s;">
-                 ${monthOptions}
-              </select>
-            </div>
-            <div style="display:flex; align-items:center; gap:6px;">
-              <label for="cb360-filter-type" style="font-weight:600; color:#a94442;">Tipo:</label>
-              <select id="cb360-filter-type" style="padding:5px 8px; border:1px solid #ebccd1; border-radius:4px; font-size:12px; background:#fff; transition: all 0.2s;">
-                ${typeOptions}
-              </select>
-            </div>
-          </div>
-          <div style="padding:20px; background:#fff; min-height:200px; max-height:380px; overflow-y:auto;" id="cb360-report-content">
-            <div style="text-align:center; color:#666; padding:40px 0;">
-              <i class="fa-solid fa-spinner fa-spin" style="font-size:24px; color:#2b6ecb; margin-bottom:10px;"></i>
-              <p>A carregar dados...</p>
-            </div>
-          </div>
-          <div style="background:#e5e5e5; padding:10px 20px; border-top:1px solid #ccc; display:flex; justify-content:space-between; align-items:center;">
-            <button id="cb360-back-month" style="background:#2b6ecb; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-solid fa-arrow-left"></i>&nbsp;&nbsp;Voltar</button>
-            <div style="display:flex; gap:10px;">
-              <button id="cb360-print-report" style="background:#2b6ecb; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-solid fa-print"></i>&nbsp;&nbsp;Imprimir</button>
-              <button id="cb360-close-report" style="background:#f0ad4e; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;"><i class="fa-solid fa-power-off"></i>&nbsp;&nbsp;Fechar</button>
-            </div>
-          </div>
-        </div>
-      `;
-      const closeModal = () => modalOverlay.remove();
-      document.getElementById('cb360-close-report-modal').onclick = closeModal;
-      document.getElementById('cb360-close-report').onclick = closeModal;
-      document.getElementById('cb360-back-month').onclick = () => openVehicleUnavailabilityMonthSelectModal();
-      const handleFilterChange = () => {
-        const selectedMonth = document.getElementById('cb360-filter-month').value;
-        const selectedType = document.getElementById('cb360-filter-type').value;
-        const selectedMonthName = months.find(m => m.id == selectedMonth)?.name || monthName;
-        loadReportDataForMonth(selectedMonth, selectedMonthName, selectedType);
-      };
-      document.getElementById('cb360-filter-month').onchange = handleFilterChange;
-      document.getElementById('cb360-filter-type').onchange = handleFilterChange;
-      document.getElementById('cb360-print-report').onclick = async () => {
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
-      let logoUrl = "";
-      try {
-        const respLogo = await fetch(`${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${currentCorpOperNr}&select=logo_url`, {
-          headers: getSupabaseHeaders()
-        });
-        const logoData = await respLogo.json();
-        if (Array.isArray(logoData) && logoData.length > 0) {
-          logoUrl = logoData[0].logo_url || "";
-        }
-      } catch (err) {
-        console.error("Erro ao buscar logo da corporação:", err);
-      }
-      const blackLogoUrl = `${SUPABASE_URL}/storage/v1/object/public/cb_logos/logo_cb_${String(currentCorpOperNr || '').padStart(4, '0')}_Mobile.png`;
-      const currentSelectedMonthName = months.find(m => m.id == document.getElementById('cb360-filter-month').value)?.name || monthName;
-      const content = document.getElementById('cb360-report-content').innerHTML;
-      const printWindow = window.open('', '_blank', 'height=600,width=800');
-      if (!printWindow) {
-        alert("Por favor, permita os pop-ups para conseguir imprimir o relatório.");
-        return;
-      }
-      printWindow.document.open();
-      printWindow.document.write(`
-        <html>
-          <head>
-            <title>Relatório de Indisponibilidades - ${currentSelectedMonthName}</title>
-            <style>
-              @page {size: auto; margin: 10mm;}
-              body {font-family: sans-serif; padding: 10px; margin: 0; color: #333; } 
-              .header {display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #d9534f; padding-bottom: 10px; margin-bottom: 20px; } 
-              .logo {max-height: 60px;} 
-              table {width: 100%; border-collapse: collapse; font-size: 12px;} 
-              th, td {border: 1px solid #ddd; padding: 8px; } 
-              th {background-color: #f0f0f0; text-align: center !important;}
-              td {text-align: left;}
-            </style>
-          </head>
-          <body>
-            <div class="header">
-              <img src="${blackLogoUrl}" alt="Logo Corporação" class="logo" onerror="this.onerror=null; ${logoUrl ? `this.src='${logoUrl}'` : `this.style.display='none'`};">
-              <h2 style="margin: 0; color: #333; font-size: 18px; text-align: right;">Relatório de Indisponibilidades - ${currentSelectedMonthName}</h2>
-            </div>
-            ${content}
-          </body>
-          </html>
-        `);
-        printWindow.document.close();    
-        printWindow.focus();
-        setTimeout(() => {
-          printWindow.print();
-          printWindow.close();
-        }, 600);
-      };
-      loadReportDataForMonth(monthId, monthName, "");
-    }
-    async function loadReportDataForMonth(monthId, monthName, filterType = "") {
-      const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
-      const contentDiv = document.getElementById('cb360-report-content');  
-      try {
-        const currentYear = new Date().getFullYear();
-        const paddedMonth = String(monthId).padStart(2, '0');    
-        const firstDay = `${currentYear}-${paddedMonth}-01`;
-        const lastDayObj = new Date(currentYear, monthId, 0);
-        const lastDay = `${currentYear}-${paddedMonth}-${String(lastDayObj.getDate()).padStart(2, '0')}`;
-        let query = `corp_oper_nr=eq.${currentCorpOperNr}&start_date=gte.${firstDay}&start_date=lte.${lastDay}&order=start_date.desc`;
-        if (filterType) {
-          query += `&motive=eq.${encodeURIComponent(filterType)}`;
-        }    
-        const resp = await fetch(`${SUPABASE_URL}/rest/v1/vehicle_unavailability_history?${query}`, {
-          headers: getSupabaseHeaders()
-        });    
-        const records = await resp.json();
-        if (!resp.ok || !Array.isArray(records)) {
-          console.error("Erro na resposta do Supabase:", records);
-          contentDiv.innerHTML = `<div style="text-align:center; color:#d9534f; padding:30px 0;">Erro ao carregar dados: ${records.message || 'Resposta inválida do servidor.'}</div>`;
+        const year = new Date().getFullYear(), mm = pad(month);
+        let query = `corp_oper_nr=eq.${corp()}&start_date=gte.${year}-${mm}-01&start_date=lte.${year}-${mm}-${pad(new Date(year, month, 0).getDate())}&order=start_date.desc`;
+        if (type) query += `&motive=eq.${encodeURIComponent(type)}`;
+        const resp = await fetch(`${SUPABASE_URL}/rest/v1/vehicle_unavailability_history?${query}`, {headers: getSupabaseHeaders()});
+        const recs = await resp.json();
+        if (!resp.ok || !Array.isArray(recs)) {
+          console.error('Erro na resposta do Supabase:', recs);
+          box.innerHTML = `<div class="inem-ur-msg err">Erro ao carregar dados: ${esc(recs?.message || 'Resposta inválida do servidor.')}</div>`;
           return;
         }
-        if (records.length === 0) {
-          contentDiv.innerHTML = `<div style="text-align:center; color:#666; padding:30px 0;">Nenhum registo encontrado para os filtros selecionados.</div>`;
-          return;
-        }
-        let totalMinutes = 0;
-        records.forEach(r => {
-          const t = (r.total_time || '').toLowerCase();
-          const hoursMatch = t.match(/(\d+)\s*(?:h|hora|horas)/);
-          const minutesMatch = t.match(/(\d+)\s*(?:m|min|minuto|minutos)/);      
-          let hours = 0;
-          let minutes = 0;
-          if (hoursMatch) {
-            hours = parseInt(hoursMatch[1], 10) || 0;
-          }
-          if (minutesMatch) {
-            minutes = parseInt(minutesMatch[1], 10) || 0;
-          }
-          if (!hoursMatch && !minutesMatch && t.includes(':')) {
-            const parts = t.split(':');
-            if (parts.length === 2) {
-              hours = parseInt(parts[0], 10) || 0;
-              minutes = parseInt(parts[1], 10) || 0;
-            }
-          }
-          totalMinutes += (hours * 60) + minutes;
-        });
-        const totalHoursSum = Math.floor(totalMinutes / 60);
-        const totalMinsRem = totalMinutes % 60;
-        const formattedTotalSum = `${String(totalHoursSum).padStart(2, '0')}h${String(totalMinsRem).padStart(2, '0')}m`;
-        let tableHtml = `
-          <table style="width:100%; border-collapse:collapse; font-size:12px; color:#333; table-layout: fixed;">
-            <colgroup>
-              <col style="width: 12%;">
-              <col style="width: 18%;">
-              <col style="width: 18%;">
-              <col style="width: 15%;">
-              <col style="width: 37%;">
-            </colgroup>
-            <thead>
-              <tr style="background:#f0f0f0; border-bottom:2px solid #ccc;">
-                <th style="padding:8px; border:1px solid #ddd; text-align:center;">Veículo</th>
-                <th style="padding:8px; border:1px solid #ddd; text-align:center;">Início</th>
-                <th style="padding:8px; border:1px solid #ddd; text-align:center;">Fim</th>
-                <th style="padding:8px; border:1px solid #ddd; text-align:center;">Tempo Total</th>
-                <th style="padding:8px; border:1px solid #ddd; text-align:center;">Motivo</th>
-              </tr>
-            </thead>
+        if (!recs.length) { box.innerHTML = '<div class="inem-ur-msg">Nenhum registo encontrado para os filtros selecionados.</div>'; return; }
+        const total = recs.reduce((s, r) => s + minutesOf(r.total_time), 0);
+        box.innerHTML = `
+          <table class="inem-ur-table">
+            <colgroup><col style="width:12%"><col style="width:18%"><col style="width:18%"><col style="width:15%"><col style="width:37%"></colgroup>
+            <thead><tr><th>Veículo</th><th>Início</th><th>Fim</th><th>Tempo Total</th><th>Motivo</th></tr></thead>
             <tbody>
-          `;
-          records.forEach(r => {
-            const formatDateToBr = (dateStr) => {
-              if (!dateStr) return '';
-              const parts = dateStr.split('-');
-              if (parts.length === 3) {
-                return `${parts[2]}/${parts[1]}/${parts[0]}`;
-              }
-              return dateStr;
-            };
-            const formattedStartDate = formatDateToBr(r.start_date);
-            const formattedEndDate = formatDateToBr(r.end_date);
-            tableHtml += `
-              <tr style="border-bottom:1px solid #ddd;">
-                <td style="padding:8px; border:1px solid #ddd; font-weight:600; color:#2b6ecb; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${r.vehicle || '-'}</td>
-                <td style="padding:8px; border:1px solid #ddd; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${formattedStartDate} ${r.start_hour || ''}</td>
-                <td style="padding:8px; border:1px solid #ddd; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${formattedEndDate !== '-' ? formattedEndDate : '-'} ${r.end_hour || ''}</td>
-                <td style="padding:8px; border:1px solid #ddd; font-weight:600; text-align:right; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${r.total_time || 'Em aberto'}</td>
-                <td style="padding:8px; border:1px solid #ddd; text-align:left; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${r.motive || '-'}</td>
-              </tr>
-            `;});
-            tableHtml += `
-              <tr style="background:#f9f9f9; border-top:2px solid #ccc;">
-                <td colspan="3" style="padding:8px; border:1px solid #ddd; text-align:right; font-weight:bold;">TOTAL:</td>
-                <td style="padding:8px; border:1px solid #ddd; font-weight:bold; text-align:right; color:#d9534f;">${formattedTotalSum}</td>
-                <td style="padding:8px; border:1px solid #ddd;"></td>
-              </tr>
+              ${recs.map(r => `<tr><td class="v">${esc(r.vehicle || '-')}</td><td>${fmtDate(r.start_date)} ${esc(r.start_hour || '')}</td>
+                <td>${fmtDate(r.end_date)} ${esc(r.end_hour || '')}</td><td class="t">${esc(r.total_time || 'Em aberto')}</td><td class="m">${esc(r.motive || '-')}</td></tr>`).join('')}
+              <tr class="tot"><td colspan="3">TOTAL:</td><td class="sum">${pad(Math.floor(total / 60))}h${pad(total % 60)}m</td><td></td></tr>
             </tbody>
-          </table>
-        `;    
-        contentDiv.innerHTML = tableHtml;    
+          </table>`;
       } catch (e) {
-        console.error("Erro de rede ao carregar relatório:", e);
-        contentDiv.innerHTML = `<div style="text-align:center; color:#d9534f; padding:30px 0;">Erro ao conectar com o servidor.</div>`;
+        console.error('Erro de rede ao carregar relatório:', e);
+        box.innerHTML = '<div class="inem-ur-msg err">Erro ao conectar com o servidor.</div>';
       }
     }
+    async function urPrint() {
+      const c = corp();
+      let logoUrl = '';
+      try {
+        const r = await fetch(`${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${c}&select=logo_url`, {headers: getSupabaseHeaders()});
+        logoUrl = (await r.json())?.[0]?.logo_url || '';
+      } catch (err) {
+        console.error('Erro ao buscar logo da corporação:', err);
+      }
+      const blackLogo = `${SUPABASE_URL}/storage/v1/object/public/cb_logos/logo_cb_${String(c || '').padStart(4, '0')}_Mobile.png`;
+      const title = `Relatório de Indisponibilidades - ${MONTHS[+$('inem-ur-month').value - 1]}`;
+      const w = window.open('', '_blank', 'height=600,width=800');
+      if (!w) return showPopup('popup-danger', 'Por favor, permita os pop-ups para conseguir imprimir o relatório.');
+      w.document.open();
+      w.document.write(`<html><head><title>${title}</title><style>
+        @page {size: auto; margin: 10mm;}
+        body {font-family: sans-serif; padding: 10px; margin: 0; color: #333;}
+        .header {display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #d9534f; padding-bottom: 10px; margin-bottom: 20px;}
+        .logo {max-height: 60px;}
+        h2 {margin: 0; color: #333; font-size: 18px; text-align: right;}
+        .inem-ur-msg {text-align: center; color: #666; padding: 30px 0;}
+        ${UR_TABLE_CSS}
+      </style></head><body>
+        <div class="header"><img src="${blackLogo}" alt="Logo Corporação" class="logo" onerror="this.onerror=null; ${logoUrl ? `this.src='${esc(logoUrl)}'` : `this.style.display='none'`};"><h2>${title}</h2></div>
+        ${$('inem-ur-content').innerHTML}
+      </body></html>`);
+      w.document.close();
+      w.focus();
+      setTimeout(() => { w.print(); w.close(); }, 600);
+    }  
+    /* ----------------------------- arranque ----------------------------- */
+    document.querySelectorAll('.sidebar-menu-button').forEach(btn => btn.addEventListener('click', () => { if (btn.dataset.page === 'inem-entries') render(); }));
+  })();

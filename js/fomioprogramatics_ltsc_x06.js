@@ -1,6 +1,363 @@
     /* =======================================
     FOMIO
+    - As páginas da Gestão Operacional (boas-vindas, escalas, eventos, disponibilidades,
+      serviços de voluntariado, comunicados, estados dos veículos, férias e fardamento)
+      são criadas aqui, logo ao carregar; o main.html só tem os <div class="page"> vazios.
     ======================================= */
+    (() => {
+    /* ----------------------------- estilos ----------------------------- */
+    if (!document.getElementById('fomio-css')) {
+      const css = document.createElement('style');
+      css.id = 'fomio-css';
+      css.textContent = `
+        .major-card-header > svg.fo-ico {opacity: .9; vertical-align: middle;}
+        .major-card-header > svg.fo-ico9 {opacity: .9;}
+        .major-card-header.fo-hflex {display: flex; align-items: center; gap: 10px;}
+        .major-card-footer > .fo-note {font-size: 11px; color: #222;}
+        .major-card-footer > .fo-note.w {color: #fff;}
+        #page-fomio > .major-card > .major-card-body {font-family: 'Segoe UI', sans-serif;}
+        #page-fomio .fo-intro {font-size: 15px; margin-bottom: 20px; color: #333;}
+        #page-fomio .fo-feat {background: linear-gradient(90deg, #e0e0e0, #d6d6d6); padding: 15px 20px; border-left: 5px solid #007bff; border-radius: 6px; margin-bottom: 20px;}
+        #page-fomio .fo-list {margin-bottom: 20px;}
+        #page-fomio .fo-list ul {list-style: none; padding-left: 10px; line-height: 1.8;}
+        #page-fomio .fo-list li {color: #0d630e;}
+        #page-events > .major-card {margin-bottom: 10px;}
+        #page-events .major-card-footer svg {margin-right: 6px; vertical-align: middle;}
+        .fo-imr5 {margin-right: 5px;}
+        /* fardamento */
+        .fo-unif-bar {display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px;}
+        .fo-unif-bar > label {font-size: 12px; font-weight: 600; color: #495057;}
+        .table-responsive-event.fo-h330 {max-height: calc(100vh - 330px); overflow-y: auto;}
+        .table-responsive-event.fo-h290 {max-height: calc(100vh - 290px); overflow-y: auto;}
+        .fo-utbl {width: 100%; border-collapse: collapse; background: #fff;}
+        .fo-utbl > thead {position: sticky; top: 0; z-index: 1;}
+        .fo-utbl > thead th {background: #f1f3f5; padding: 10px 5px; border: 1px solid #dee2e6; font-size: 11px; text-transform: uppercase; color: #495057;}
+        /* serviços de voluntariado */
+        .fo-vin {display: flex !important; flex-direction: row !important; align-items: center; gap: 10px;}
+        .fo-vin > label {margin: 0 !important; font-weight: bold; font-size: 13px; white-space: nowrap;}
+        .fo-mr10 {margin-right: 10px;}
+      `;
+      document.head.appendChild(css);
+    }
+    /* ----------------------------- helpers ----------------------------- */
+    const ICONS = {
+      calendar: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line><path d="M8 14h.01"></path><path d="M12 14h.01"></path><path d="M16 14h.01"></path><path d="M8 18h.01"></path><path d="M12 18h.01"></path><path d="M16 18h.01"></path>',
+      plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+      board: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M10 4v16"/><path d="M14 8h3"/><path d="M14 12h3"/><path d="M14 16h3"/>',
+      calCheck: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line><path d="M9 16l2 2 4-4"></path>',
+      shirt: '<path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"></path>',
+      list: '<line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line>',
+      hand: '<path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"></path><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"></path><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"></path><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"></path>',
+      megaphone: '<path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/>'
+    };
+    /* cls: fo-ico (opacidade + alinhamento) ou fo-ico9 (só opacidade) */
+    const ico = (name, cls = 'fo-ico') => `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="${cls}">${ICONS[name]}</svg>`;
+    const fill = (id, html) => { const p = document.getElementById(id); if (p) p.innerHTML = html; return p; };
+    /* liga um evento a uma função global, chamada sem argumentos (como os antigos on...="f()") */
+    const on = (id, ev, fn) => document.getElementById(id)?.addEventListener(ev, () => window[fn]());
+    const note = (text, white) => `<span class="fo-note${white ? ' w' : ''}">${text}</span>`;
+    /* tabela de fardamento: cabeçalhos [texto, largura] */
+    const unifTable = (bodyId, h, heads) => `<div class="table-responsive-event fo-h${h}">
+        <table class="fo-utbl"><thead><tr>${heads.map(([t, w]) => `<th${w ? ` style="width:${w}px;"` : ''}>${t}</th>`).join('')}</tr></thead>
+          <tbody id="${bodyId}"></tbody></table></div>`;
+    /* campo dos Serviços de Voluntariado em linha: label + controlo */
+
+    /* ----------------------------- páginas ----------------------------- */
+    fill('page-fomio', `<div class="major-card major-last-card">
+        <div class="major-card-header">BEM-VINDO À GESTÃO OPERACIONAL</div>
+        <div class="major-card-body">
+          <p class="fo-intro">
+            A <strong>GESTÃO OPERACIONAL</strong> é o módulo digital responsável pela gestão integral das
+            <strong>Escalas Operacionais</strong> e <strong>Eventos(Prevenções,...)</strong> do seu Corpo de Bombeiros.
+            Este sistema centraliza todo o processo de planeamento, controlo e emissão das escalas,
+            garantindo uma gestão eficiente e transparente dos recursos humanos e operacionais.
+          </p>
+          <div class="fo-feat"><strong>Funcionalidades Principais:</strong></div>
+          <div class="fo-list"><ul>
+            <li>📋 Criação e gestão de escalas mensais</li>
+            <li>👨‍🚒 Gestão de elementos por secção e disponibilidade</li>
+            <li>🧾 Emissão automática das escalas oficiais</li>
+            <li>🗂️ Consulta detalhada das escalas das respetivas <strong>SECÇÕES</strong> e <strong>DECIR</strong></li>
+            <li>⚙️ Ferramentas de verificação e validação antes da emissão</li>
+            <li>📋 Craiação e gestão de eventos</li>
+            <li>👨‍🚒 Gestão de elementos por evento e disponibilidade</li>
+          </ul></div>
+        </div>
+        <div class="major-card-footer"></div>
+      </div>`);
+
+    /* Escalas: os elementos com id mantêm o estilo no próprio elemento, porque o código mexe-lhes */
+    fill('page-scales', `<div class="major-card major-last-card">
+        <div class="major-card-header header-red" id="scales-card-header">${ico('calendar')} ESCALAS DE SERVIÇO POR SECÇÃO</div>
+        <div class="major-card-body">
+          <div id="months-container" style="display: flex; flex-wrap: wrap; gap: 0px; justify-content: center; margin: 0 0 0 0;"></div>
+          <div id="table-container" style="margin: 0 20px 0 20px"></div>
+        </div>
+        <div class="major-card-footer">
+          <div id="save-container" style="display:flex; justify-content:flex-end; margin-top: -20px;">
+            <button id="analyze-button" class="btn btn-clean" style="font-size: 11px; padding: 10px 25px; display: none">🕵️ ANALIZAR</button>
+            <button id="save-button" class="btn btn-add" style="font-size: 11px; padding: 10px 25px; display: none; margin-left: 5px;">💾 GUARDAR</button>
+            <button id="emit-button" class="btn btn-danger" style="font-size: 11px; padding: 10px 25px; display: none; margin-left: 5px;">📄 EMITIR</button>
+          </div>
+        </div>
+      </div>`);
+
+    /* Eventos */
+    fill('page-events', `<div class="major-card">
+        <div class="major-card-header header-red">${ico('plus', 'fo-ico9')} <span>CRIAR NOVO EVENTO</span></div>
+        <div class="major-card-body">
+          <div class="evc">
+            <div class="evc-col">
+              <section class="evc-card">
+                <h5 class="evc-title"><span>1</span>Dados do evento</h5>
+                <div class="evc-grid">
+                  <label class="evc-f evc-span2">Nome do evento<input type="text" id="eventName" placeholder="Ex: Concerto de Verão"></label>
+                  <label class="evc-f">Tipo
+                    <select id="eventType">
+                      <option value="">Selecione...</option>
+                      <option value="PREVENÇÃO">PREVENÇÃO</option>
+                      <option value="TRANSPORTE">TRANSPORTE</option>
+                      <option value="OUTRO">OUTRO</option>
+                    </select>
+                  </label>
+                  <label class="evc-f evc-span3">Localidade / Morada<input type="text" id="eventLocation" placeholder="Cidade ou recinto"></label>
+                  <label class="evc-f">Início<input type="date" id="eventStartDate"></label>
+                  <label class="evc-f">Fim<input type="date" id="eventEndDate"></label>
+                  <span></span>
+                  <label class="evc-f">Operacionais por turno<input type="number" id="operational" min="1" placeholder="Qtd."></label>
+                  <label class="evc-f">Valor hora (€)<input type="number" id="valueHour" step="0.50" placeholder="0.00"></label>
+                </div>
+              </section>
+              <section class="evc-card">
+                <h5 class="evc-title"><span>2</span>Turnos <small id="turno-count">(0 Inseridos)</small></h5>
+                <div class="evc-quick">
+                  <span>Gerar um turno por dia, do início ao fim do evento, das</span>
+                  <input type="time" id="evcQuickStart" value="09:00"><span>às</span><input type="time" id="evcQuickEnd" value="18:00">
+                  <button type="button" class="evc-btn-soft" id="evcGenBtn">⚡ Gerar</button>
+                </div>
+                <div id="shiftsList" class="evc-shifts"></div>
+                <button type="button" class="evc-add" id="evcAddShiftBtn">＋ Adicionar turno</button>
+              </section>
+            </div>
+            <aside class="evc-side">
+              <section class="evc-card evc-summary">
+                <h5 class="evc-title"><span>3</span>Resumo</h5>
+                <div class="evc-sum-name" id="evcSumName">Evento sem nome</div>
+                <div class="evc-sum-type" id="evcSumType">—</div>
+                <div class="evc-sum-row"><span>📍 Local</span><b id="evcSumLoc">—</b></div>
+                <div class="evc-sum-row"><span>📅 Datas</span><b id="evcSumDates">—</b></div>
+                <div class="evc-sum-kpis">
+                  <div><b id="evcSumShifts">0</b><small>Turnos</small></div>
+                  <div><b id="evcSumSlots">0</b><small>Vagas</small></div>
+                  <div><b id="evcSumHours">0h</b><small>Horas/pessoa</small></div>
+                </div>
+                <div class="evc-sum-cost"><span>Custo estimado</span><b id="evcSumCost">0,00 €</b></div>
+                <p class="evc-hint"></p>
+              </section>
+            </aside>
+          </div>
+        </div>
+        <div class="major-card-footer">
+          <button class="btn wsms-btn-green" id="evcSubmitBtn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="14" x2="12" y2="18"/><line x1="10" y1="16" x2="14" y2="16"/>
+            </svg>
+            CRIAR EVENTO
+          </button>
+        </div>
+      </div>`);
+    [['eventName', 'input'], ['eventType', 'change'], ['eventLocation', 'input'], ['eventStartDate', 'change'], ['eventEndDate', 'change'],
+     ['operational', 'input'], ['valueHour', 'input']].forEach(([id, ev]) => on(id, ev, 'evcUpdateSummary'));
+    on('evcGenBtn', 'click', 'evcGenerateShifts');
+    on('evcAddShiftBtn', 'click', 'addShift');
+    on('evcSubmitBtn', 'click', 'submitEvent');
+
+    fill('page-event-disp', `<div class="major-card">
+        <div class="major-card-header header-red fo-hflex">${ico('board', 'fo-ico9')} CONSULTA DE DISPONIBILIDADES</div>
+        <div class="major-card-body"><div id="evBoard"></div></div>
+        <div class="major-card-footer">${note('* Escolha um evento à esquerda para gerir as disponibilidades de cada turno.')}</div>
+      </div>`);
+
+    fill('page-vacations-request', `<div class="major-card last-card">
+        <div class="major-card-header header-red">${ico('calCheck')} GESTÃO DE FÉRIAS VOLUNTARIADO</div>
+        <div class="major-card-body"><div id="vacBoardGO"></div></div>
+        <div class="major-card-footer">${note('* Clique num mês para ver os pedidos. Os dias aprovados ficam como FE na escala do voluntariado.', 1)}</div>
+      </div>`);
+
+    /* Fardamento */
+    fill('page-uniform-orders', `<div class="major-card last-card">
+        <div class="major-card-header header-red">${ico('shirt')} PEDIDOS DE FARDAMENTO</div>
+        <div class="major-card-body">
+          <div class="fo-unif-bar">
+            <label for="unifStateFilter">Estado:</label>
+            <select id="unifStateFilter" style="height:30px; padding:0 8px; font-size:12px; border:1px solid #ced4da; border-radius:4px;">
+              <option value="pendentes">Por tratar (Em Aprovação + Aprovado)</option>
+              <option value="Em Aprovação">Em Aprovação</option>
+              <option value="Aprovado">Aprovado</option>
+              <option value="Entregue">Entregue</option>
+              <option value="Rejeitado">Rejeitado</option>
+              <option value="todos">Todos</option>
+            </select>
+            <input type="text" id="unifSearch" placeholder="Procurar nº ou nome..."
+                   style="height:30px; padding:0 8px; font-size:12px; border:1px solid #ced4da; border-radius:4px; width:200px;">
+          </div>
+          ${unifTable('unifOrdersBody', 330, [['Data', 120], ['Nº Int', 60], ['Nome'], ['Artigos'], ['Estado', 110], ['Ações', 110]])}
+        </div>
+        <div class="major-card-footer">${note('* ✓ Aprovar · ✕ Rejeitar · 📦 Marcar como entregue. O elemento recebe uma notificação na Mobile.')}</div>
+      </div>`);
+    on('unifStateFilter', 'change', 'unifRenderOrders');
+    on('unifSearch', 'input', 'unifRenderOrders');
+    fill('page-uniform-items', `<div class="major-card last-card">
+        <div class="major-card-header header-red">${ico('list')} ARTIGOS DE FARDAMENTO</div>
+        <div class="major-card-body">
+          ${unifTable('unifItemsBody', 290, [['Ordem', 70], ['Artigo'], ['Tamanho', 150], ['Marca', 180], ['Ativo', 60], ['Ações', 90]])}
+        </div>
+        <div class="major-card-footer">${note('* A primeira linha cria um artigo novo. Os artigos desativados deixam de aparecer na Mobile; os pedidos antigos não mudam.', 1)}</div>
+      </div>`);
+
+    /* Serviços de Voluntariado (layout vsx; os estilos vsx-* são injetados mais abaixo, em vsxInjectCss) */
+    const ICO_VS = {truck: '<i class="fa-solid fa-truck-medical"></i>', shield: '<i class="fa-solid fa-shield-halved"></i>'};
+    const vf = (id, label, control, cls = '') => `<div class="vsx-f${cls ? ' ' + cls : ''}"><label for="${id}">${label}</label>${control}</div>`;
+    const vin2 = (id, attrs = '', cls = '') => `<input ${attrs.includes('type=') ? '' : 'type="text" '}id="${id}" class="vsx-in${cls ? ' ' + cls : ''}"${attrs ? ' ' + attrs : ''}>`;
+    const eur = input => `<div class="vsx-eur">${input}</div>`;
+    const num = (id, cls = '', ro = false) => `<input type="number" id="${id}" class="vsx-in${cls ? ' ' + cls : ''}" step="0.50" placeholder="0.00"${ro ? ' readonly tabindex="-1"' : ''}>`;
+    const saveBtn = id => `<button id="${id}" class="btn btn-add"><i class="fa-solid fa-floppy-disk fo-imr5"></i>GUARDAR</button>`;
+    fill('volunteer-services-register', `<div class="major-card last-card">
+        <div class="major-card-header header-red">${ico('hand')} REGISTO DE SERVIÇOS VOLUNTARIADO</div>
+        <div class="major-card-body">
+          <div class="vsx-reg">
+            <div class="vsx-col">
+              <section class="vsx-box">
+                <div class="vsx-box-h"><span class="vsx-n">1</span>Serviço</div>
+                <div class="vsx-grid">
+                  ${vf('vsDate', 'Data do Serviço', '<input type="date" id="vsDate" class="vsx-in">')}
+                  ${vf('vsType', 'Tipo de Serviço', '<select id="vsType" class="vsx-in"><option>Selecione...</option></select>', 'vsx-span2')}
+                  <div class="vsx-f vsx-span3" id="container-vsLocal">
+                    <label for="vsLocal">Local</label>
+                    <div class="vsx-local">
+                      <select id="vsLocal" class="vsx-in"><option>Selecione...</option></select>
+                      <input type="text" id="vsLocalText" class="vsx-in" placeholder="Escreva o local..." style="display: none;">
+                    </div>
+                  </div>
+                  <div class="vsx-f vsx-span3" id="container-vsOtherLocal" style="display: none;">
+                    <label for="vsOtherLocal">Qual?</label>
+                    <input type="text" id="vsOtherLocal" class="vsx-in" placeholder="Escreva o local...">
+                  </div>
+                </div>
+              </section>
+              <section class="vsx-box">
+                <div class="vsx-box-h"><span class="vsx-n">2</span>Valores</div>
+                <div class="vsx-groups">
+                  <div class="vsx-group" data-vsx-group>
+                    <div class="vsx-group-h">${ICO_VS.truck}Transporte de Doentes · INEM · Serviço Geral · Central · EIP</div>
+                    <div class="vsx-grid vsx-grid4">
+                      ${vf('vsValue', 'Valor do serviço', eur(num('vsValue')))}
+                      <div class="vsx-f vsx-span3 vsx-hint">O valor vem da tabela de valores e pode ser ajustado.</div>
+                      ${vf('vsQtdSick', 'Doentes extra', vin2('vsQtdSick', 'placeholder="0"', 'vsx-c'))}
+                      ${vf('vsSickValue', 'Valor', eur(num('vsSickValue', 'vsx-ro', true)))}
+                      ${vf('vsWaitHrs', 'Horas de espera', vin2('vsWaitHrs', 'placeholder="0"', 'vsx-c'))}
+                      ${vf('vsWaitHrsValue', 'Valor', eur(num('vsWaitHrsValue', 'vsx-ro', true)))}
+                    </div>
+                  </div>
+                  <div class="vsx-group" data-vsx-group>
+                    <div class="vsx-group-h">${ICO_VS.shield}Prevenções</div>
+                    <div class="vsx-grid vsx-grid4">
+                      ${vf('vsPrevValueHour', 'Valor hora', eur(num('vsPrevValueHour')))}
+                      ${vf('vsQtdPrevHours', 'Horas', vin2('vsQtdPrevHours', 'placeholder="0"', 'vsx-c'))}
+                      ${vf('vsPrevValue', 'Valor', eur(num('vsPrevValue', 'vsx-ro', true)))}
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </div>
+            <aside class="vsx-box vsx-side">
+              <div class="vsx-box-h"><span class="vsx-n">3</span>Elemento</div>
+              <div class="vsx-elem">
+                <input type="text" id="vsElementNInt" class="vsx-in vsx-nint" placeholder="Nº" maxlength="3" inputmode="numeric">
+                <input type="text" id="vsElementName" class="vsx-in vsx-ro" placeholder="Nome do elemento" readonly tabindex="-1">
+              </div>
+              <div class="vsx-total">
+                <span>Valor a receber</span>
+                <div class="vsx-total-v"><input type="number" id="vsElementValue" step="0.50" placeholder="0.00" readonly><b>€</b></div>
+              </div>
+              <ul class="vsx-steps">
+                <li>Escolha a data e o tipo de serviço.</li>
+                <li>Confirme os valores e preencha as quantidades.</li>
+                <li>Indique o nº interno do elemento e guarde.</li>
+              </ul>
+            </aside>
+          </div>
+        </div>
+        <div class="major-card-footer">${saveBtn('services-save-button')}</div>
+      </div>`);
+    /* Nº Int.: só algarismos, no máximo 3 (como o antigo oninput) */
+    document.getElementById('vsElementNInt')?.addEventListener('input', function() { this.value = this.value.replace(/[^0-9]/g, '').slice(0, 3); });
+
+    const consSel = (id, label, opt = '') => vf(id, label, `<select id="${id}" class="vsx-in">${opt}</select>`);
+    fill('volunteer-services-consulting', `<div class="major-card last-card">
+        <div class="major-card-header header-red">${ico('hand')} CONSULTA DE SERVIÇOS VOLUNTARIADO</div>
+        <div class="major-card-body">
+          <div class="vsx-filters">
+            ${consSel('vsConsYear', 'Ano')}
+            ${consSel('vsConsMonth', 'Mês')}
+            ${consSel('vsConsType', 'Tipo de Serviço', '<option>Todos os Tipos</option>')}
+            ${consSel('vsConsLocal', 'Local do Serviço', '<option>Todos os Locais</option>')}
+            ${consSel('vsConsElement', 'Elemento', '<option value="todos">Todos os Elementos</option>')}
+          </div>
+          <div id="services-table-container"></div>
+          <div id="services-summary-container" style="display: flex; justify-content: flex-end;"></div>
+        </div>
+        <div class="major-card-footer">
+          <div class="major-field fo-mr10"><div class="fo-vin"><label for="vsReportSelect">Tipo de Relatório</label>
+            <select id="vsReportSelect" style="width: 130px; padding: 4px; border: 1px solid #ccc; border-radius: 4px; height: 30px;">
+              <option>&nbsp;</option><option>Simplificado</option><option>Detalhado</option><option>Ambos</option></select></div></div>
+          <button id="vsPDFReport" class="btn btn-danger" style="margin-right: 5px; opacity: 0.5; cursor: not-allowed;"><i class="fa-solid fa-file-pdf fo-imr5"></i>PDF</button>
+          <button id="vsEXCELReport" class="btn btn-success" style="opacity: 0.5; cursor: not-allowed;"><i class="fa-solid fa-file-excel fo-imr5"></i>EXCEL</button>
+        </div>
+      </div>`);
+
+    fill('volunteer-services-values', `<div class="major-card last-card">
+        <div class="major-card-header header-red">${ico('hand')} CONFIGURAÇÃO DE VALORES DE SERVIÇOS VOLUNTARIADO</div>
+        <div class="major-card-body">
+          <div class="vsx-vals">
+            <section class="vsx-box">
+              <div class="vsx-box-h">${ICO_VS.truck}Transporte de Doentes · Longo Curso</div>
+              <div class="vsx-grid vsx-grid4">
+                ${vf('vsLCDesteny', 'Destino', vin2('vsLCDesteny', 'placeholder="Ex.: Lisboa"'), 'vsx-span2')}
+                ${vf('vsLCValue', 'Valor', eur(vin2('vsLCValue', 'placeholder="0.00"')), 'vsx-span2')}
+                ${vf('vsLCESick', 'Doente extra', eur(vin2('vsLCESick', 'placeholder="0.00"')), 'vsx-span2')}
+                ${vf('vsLCEHour', 'Hora de espera', eur(vin2('vsLCEHour', 'placeholder="0.00"')), 'vsx-span2')}
+              </div>
+            </section>
+            <section class="vsx-box">
+              <div class="vsx-box-h">${ICO_VS.shield}Prevenções e Outros Serviços</div>
+              <div class="vsx-grid vsx-grid4">
+                ${vf('vsOType', 'Tipo', vin2('vsOType', 'placeholder="Ex.: INEM, PREVENÇÃO, CENTRAL"'), 'vsx-span4')}
+                ${vf('vsOValue', 'Valor / Valor hora', eur(vin2('vsOValue', 'placeholder="0.00"')), 'vsx-span2')}
+                <div class="vsx-f vsx-span2 vsx-hint">Nas Prevenções o valor é por hora; nos restantes é por serviço.</div>
+              </div>
+            </section>
+          </div>
+          <div class="vsx-box-h vsx-out-h"><i class="fa-solid fa-list-check"></i>Valores configurados</div>
+          <div id="sv-values-table-container"></div>
+        </div>
+        <div class="major-card-footer">${saveBtn('services-values-save-button')}</div>
+      </div>`);
+
+    /* Comunicados e Estados dos Veículos */
+    fill('page-comunicados', `<div class="major-card major-last-card">
+        <div class="major-card-header header-red fo-hflex">${ico('megaphone', 'fo-ico9')} COMUNICADOS</div>
+        <div class="major-card-body"><div id="cmBoard"></div></div>
+        <div class="major-card-footer">* Os comunicados publicados aparecem no CB360 Mobile, na página Comunicados, só para os elementos da corporação.</div>
+      </div>`);
+    fill('page-veic-status', `<div class="major-card last-card">
+        <div class="major-card-header header-red fo-hflex"><i class="fa-solid fa-tower-broadcast"></i> ESTADO OPERACIONAL DE VEÍCULOS</div>
+        <div class="major-card-body"><div id="vslBoard"></div></div>
+        <div class="major-card-footer"></div>
+      </div>`);
+    })();
+    /* ------------------------- fim da construção ------------------------- */
     /* =======================================================================
     COMUNICADOS (Online)
     ======================================================================= */
@@ -2099,7 +2456,7 @@
       .evc-sum-kpis div {background: #f8f9fa; border-radius: 8px; padding: 8px 4px; text-align: center;}
       .evc-sum-kpis b {display: block; font-size: 18px; color: #2c3e50;}
       .evc-sum-kpis small {font-size: 10px; color: #6c757d; text-transform: uppercase; letter-spacing: .3px;}
-      .evc-sum-cost {display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #e8f5e9; border-radius: 8px; font-size: 12px; color: #2e7d32; font-weight: 600; margin-bottom: -8px;}
+      .evc-sum-cost {display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; margin-bottom: -10px; background: #e8f5e9; border-radius: 8px; font-size: 12px; color: #2e7d32; font-weight: 600;}
       .evc-sum-cost b {font-size: 17px;}
       .evc-hint {margin: 10px 0 0; font-size: 11px; color: #8a949e; line-height: 1.4;}
       @media (max-width: 1100px) {.evc {grid-template-columns: 1fr;} .evc-side {position: static;}}
@@ -2982,6 +3339,115 @@
     /* =======================================
     SERVIÇOS VOLUNTARIADO
     ======================================= */
+    /* ============= ESTILO (layout novo) ============= */
+    (function vsxInjectCss() {
+      const old = document.getElementById('vsx-css'); if (old) old.remove();
+      const st = document.createElement('style');
+      st.id = 'vsx-css';
+      st.textContent = `
+      .vsx-reg {display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; align-items: start;}
+      .vsx-col {display: flex; flex-direction: column; gap: 14px; min-width: 0;}
+      .vsx-box {background: #fff; border: 1px solid #e9ecef; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.05); padding: 14px 16px 16px;}
+      .vsx-box-h {display: flex; align-items: center; gap: 9px; font-size: 13px; font-weight: 700; color: #2c3e50; margin-bottom: 12px; text-transform: uppercase; letter-spacing: .4px;}
+      .vsx-box-h i {color: #c62828;}
+      .vsx-out-h {margin: 18px 0 10px;}
+      .vsx-n {width: 22px; height: 22px; border-radius: 50%; background: #c62828; color: #fff; font-size: 11.5px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;}
+      .vsx-grid {display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px;}
+      .vsx-grid4 {grid-template-columns: repeat(4, minmax(0, 1fr));}
+      .vsx-span2 {grid-column: span 2;} .vsx-span3 {grid-column: span 3;} .vsx-span4 {grid-column: span 4;}
+      .vsx-f {display: flex; flex-direction: column; gap: 5px; min-width: 0;}
+      .vsx-f label {font-size: 11px; font-weight: 700; color: #6c757d; text-transform: uppercase; letter-spacing: .3px; margin: 0;}
+      .vsx-in {width: 100% !important; height: 38px !important; border: 1px solid #dee2e6 !important; border-radius: 8px !important; padding: 0 11px !important; font-size: 13px !important; color: #2c3e50; background: #fff; box-sizing: border-box; font-family: inherit;}
+      .vsx-in:focus {outline: none; border-color: #c62828 !important; box-shadow: 0 0 0 3px rgba(198,40,40,.12);}
+      .vsx-in.vsx-c {text-align: center;}
+      .vsx-in.vsx-ro, .vsx-in[readonly] {background: #f6f7f9; color: #45556a; font-weight: 600;}
+      .vsx-in:disabled {background: #f3f4f6; opacity: 1 !important; color: #b0b7bf; cursor: not-allowed;}
+      .vsx-eur {position: relative;}
+      .vsx-eur .vsx-in {padding-right: 26px !important; text-align: right;}
+      .vsx-eur::after {content: '€'; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 12px; font-weight: 700; color: #8a949e; pointer-events: none;}
+      .vsx-local {display: flex; gap: 10px;}
+      .vsx-hint {justify-content: flex-end; font-size: 11.5px; color: #8a949e; padding-bottom: 10px;}
+      .vsx-groups {display: flex; flex-direction: column; gap: 12px;}
+      .vsx-group {border: 1px solid #eef0f3; border-radius: 10px; padding: 12px 14px; background: #fcfcfd; transition: opacity .2s, filter .2s;}
+      .vsx-group.off {opacity: .45; filter: grayscale(.6);}
+      .vsx-group-h {display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: #45556a; margin-bottom: 10px;}
+      .vsx-group-h i {color: #c62828; width: 16px; text-align: center;}
+      .vsx-side {position: sticky; top: 10px;}
+      .vsx-elem {display: grid; grid-template-columns: 70px 1fr; gap: 8px;}
+      .vsx-in.vsx-nint {text-align: center; font-weight: 700; font-size: 15px !important;}
+      .vsx-total {margin-top: 16px; border-radius: 12px; padding: 14px 16px; background: #f6f7f9; border: 1px dashed #d5dbe1; transition: all .2s;}
+      .vsx-total span {font-size: 11px; font-weight: 700; color: #6c757d; text-transform: uppercase; letter-spacing: .4px;}
+      .vsx-total-v {display: flex; align-items: baseline; gap: 6px; margin-top: 4px;}
+      .vsx-total-v input {border: 0 !important; background: transparent !important; width: 100% !important; font-size: 34px !important; font-weight: 800; color: #b0b7bf; padding: 0 !important; height: auto !important; box-shadow: none !important; font-family: inherit;}
+      .vsx-total-v b {font-size: 20px; color: #b0b7bf;}
+      .vsx-total.on {background: linear-gradient(135deg, #e8f5e9, #f4fbf4); border: 1px solid #a5d6a7;}
+      .vsx-total.on input, .vsx-total.on b {color: #1b5e20;}
+      .vsx-steps {margin: 14px 0 0; padding: 0 0 0 18px; font-size: 11.5px; color: #8a949e; line-height: 1.7;}
+      .vsx-vals {display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px;}
+      .vsx-filters {display: flex; flex-wrap: wrap; gap: 10px; padding: 12px 14px; background: #fafbfc; border: 1px solid #eef0f3; border-radius: 12px; margin-bottom: 14px;}
+      .vsx-filters .vsx-f {flex: 1 1 140px;}
+      .vsx-filters .vsx-in {height: 34px !important;}
+      /* tabelas */
+      .vsx-tw {max-height: 460px; overflow: auto; border: 1px solid #e9ecef; border-radius: 12px; background: #fff; scrollbar-width: thin; scrollbar-color: #cfd4da transparent; position: relative; isolation: isolate;}
+      .vsx-tw::-webkit-scrollbar {width: 6px; height: 6px;}
+      .vsx-tw::-webkit-scrollbar-thumb {background: #cfd4da; border-radius: 10px;}
+      .vsx-t {width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12.5px; color: #2c3e50;}
+      .vsx-t thead th {position: sticky; top: 0; z-index: 2; background: #f6f7f9; color: #6c757d; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; padding: 10px; text-align: left; border-bottom: 1px solid #e9ecef; white-space: nowrap;}
+      .vsx-t tbody td {padding: 9px 10px; border-bottom: 1px solid #f1f3f5; vertical-align: middle;}
+      .vsx-t tbody tr:hover td {background: #fafbfc;}
+      .vsx-t .r {text-align: right; white-space: nowrap;} .vsx-t .c {text-align: center;}
+      .vsx-t .muted {color: #b0b7bf;}
+      .vsx-date b {display: block; font-size: 13px;} .vsx-date small {color: #8a949e; font-size: 11px;}
+      .vsx-type {display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 10.5px; font-weight: 700; letter-spacing: .3px; background: #eef2f7; color: #45556a; white-space: nowrap;}
+      .vsx-type.t-transp {background: #e3f2fd; color: #1565c0;} .vsx-type.t-prev {background: #fff3e0; color: #e65100;}
+      .vsx-type.t-inem {background: #fdecea; color: #c62828;} .vsx-type.t-eip {background: #ede7f6; color: #5e35b1;}
+      .vsx-loc {display: block; font-size: 11.5px; color: #8a949e; margin-top: 3px;}
+      .vsx-calc {font-size: 11.5px; color: #6c757d; white-space: nowrap;} .vsx-calc b {color: #2c3e50;}
+      .vsx-who b {display: block;} .vsx-who small {color: #8a949e; font-size: 11px;}
+      .vsx-amount {font-weight: 800; font-size: 13.5px; color: #1b5e20; white-space: nowrap; text-align: right;}
+      .vsx-act {white-space: nowrap; text-align: center;}
+      .vsx-ib {border: 1px solid #dee2e6; background: #fff; width: 30px; height: 28px; border-radius: 7px; cursor: pointer; color: #45556a; font-size: 12px;}
+      .vsx-ib:hover {border-color: #2c3e50; color: #2c3e50;}
+      .vsx-ib.del {color: #c62828; border-color: #f1c0c0; background: #fff5f5;}
+      .vsx-ib.del:hover {background: #ffe9e9;}
+      .vsx-ib + .vsx-ib {margin-left: 5px;}
+      .vsx-empty {padding: 36px 16px !important; text-align: center; color: #8a949e;}
+      /* resumo */
+      .vsx-sum {display: flex; flex-wrap: wrap; align-items: stretch; gap: 12px; width: 100%; margin-top: 14px;}
+      .vsx-kpi {flex: 0 0 auto; min-width: 170px; background: #fff; border: 1px solid #e9ecef; border-left: 4px solid var(--c); border-radius: 10px; padding: 10px 14px; box-shadow: 0 1px 3px rgba(0,0,0,.05);}
+      .vsx-kpi small {display: block; font-size: 10.5px; font-weight: 700; color: #6c757d; text-transform: uppercase; letter-spacing: .4px;}
+      .vsx-kpi b {display: block; font-size: 22px; color: #1f2d3a; margin-top: 2px;}
+      .vsx-sum-r {margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 8px;}
+      .vsx-upd {font-size: 11px; color: #6c757d;} .vsx-upd b {color: #2c3e50;} .vsx-upd .by {color: #c62828;}
+      #validation-card.vsx-valid {margin: 0 !important; border: 1px solid #e9ecef; border-radius: 10px; overflow: hidden; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.05);}
+      #validation-card .major-card-header {padding: 6px 12px !important; font-size: 11px !important; border-radius: 0 !important;}
+      .vsx-valid-b {display: flex; align-items: center; gap: 12px; padding: 9px 12px;}
+      .vsx-valid-b label {display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; cursor: pointer; white-space: nowrap; margin: 0;}
+      .vsx-valid-b input {width: 16px; height: 16px; cursor: pointer; margin: 0;}
+      .vsx-valid-b .ok {color: #2e7d32;} .vsx-valid-b .ko {color: #c62828;}
+      .vsx-btn {border: 0; border-radius: 8px; height: 34px; padding: 0 16px; font-weight: 700; font-size: 12.5px; cursor: pointer; color: #fff; display: inline-flex; align-items: center; gap: 8px;}
+      .vsx-btn.blue {background: #2c3e50;} .vsx-btn.blue:hover {background: #1f2d3a;}
+      .vsx-btn.green {background: #2e7d32;} .vsx-btn.green:hover {background: #1b5e20;}
+      .vsx-btn:disabled {opacity: .55; cursor: not-allowed;}
+      @media (max-width: 1150px) {.vsx-reg {grid-template-columns: 1fr;} .vsx-side {position: static;} .vsx-vals {grid-template-columns: 1fr;}}
+      `;
+      document.head.appendChild(st);
+    })();
+    function vsxRefreshGroups() {
+      document.querySelectorAll('[data-vsx-group]').forEach(g => {
+        const inputs = [...g.querySelectorAll('input')];
+        g.classList.toggle('off', inputs.length > 0 && inputs.every(i => i.disabled));
+      });
+    }
+    function vsxTypeClass(t) {
+      const n = (t || '').toString().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+      if (n.includes('transporte')) return 't-transp';
+      if (n.includes('prevenc')) return 't-prev';
+      if (n.includes('inem')) return 't-inem';
+      if (n.includes('eip')) return 't-eip';
+      return '';
+    }
+    function vsxEsc(v) {return String(v ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));}
     /* ============= INSERÇÃO ============= */
     let vsValuesCache = [];
     async function loadVsValuesCache() {
@@ -3010,7 +3476,7 @@
         const el = document.getElementById(id);
         if (!el) return;
         el.disabled = disabled;
-        el.style.opacity = disabled ? '0.4' : '1';
+        el.style.opacity = '';
         el.style.pointerEvents = disabled ? 'none' : '';
         if (disabled) el.value = '';
       });
@@ -3072,7 +3538,8 @@
           setFieldsState(transportFields, true);
           setFieldsState(prevFields, true);
           break;
-      }    
+      }
+      vsxRefreshGroups();
       calculateGlobalTotal();
     }
     function normalizeText(text) {
@@ -3161,12 +3628,7 @@
       const globalField = document.getElementById('vsElementValue');
       if (globalField) {
         globalField.value = total > 0 ? total.toFixed(2) : '';
-        const baseStyle = "width:100px; text-align:center; font-size:20px !important; height:40px !important;";
-        if (total > 0) {
-          globalField.setAttribute('style', baseStyle + " background:#d4edda !important; border:1.5px solid #28a745 !important; color:#155724 !important;");
-        } else {
-          globalField.setAttribute('style', baseStyle);
-        }
+        globalField.closest('.vsx-total')?.classList.toggle('on', total > 0);
       }
     }
     async function fetchElementName() {
@@ -3306,9 +3768,7 @@
         const el = document.getElementById(id);
         if (!el) return;
         el.value = '';
-        if (id === 'vsElementValue') {
-          el.setAttribute('style', 'width:100px; text-align:center; font-size:20px !important; height:40px !important;');
-        }
+        if (id === 'vsElementValue') el.closest('.vsx-total')?.classList.remove('on');
       });
       document.getElementById('vsLocalText').value = '';
       document.getElementById('vsLocalText').style.display = 'none';
@@ -3345,40 +3805,19 @@
       document.head.appendChild(style);
     }
     const tableHTML = `
-      <div class="no-scrollbar" style="max-height: 500px; overflow-y: auto; margin-top: 15px; border: 1px solid #aaa; border-radius: 4px;">
-        <table style="width:100%; border-collapse: separate; border-spacing: 0; font-family: sans-serif; font-size: 10px; text-align: center; table-layout: fixed;">
-          <colgroup>
-            <col style="width: 70px;">  <col style="width: 180px;"> <col style="width: 100px;">
-            <col style="width: 55px;">  <col style="width: 45px;">  <col style="width: 40px;">
-            <col style="width: 50px;">  <col style="width: 40px;">  <col style="width: 50px;">
-            <col style="width: 40px;">  <col style="width: 50px;">  <col style="width: 110px;">
-            <col style="width: 70px;">  <col style="width: 60px;">
-          </colgroup>
+      <div class="vsx-tw">
+        <table class="vsx-t">
           <thead>
             <tr>
-              <th colspan="3" rowspan="2" style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-bottom:1px solid #aaa; padding:5px;">Data | Tipo de Serviço</th>
-              <th rowspan="3" style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Valor do<br>Serviço</th>
-              <th colspan="3" rowspan="2" style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Prevenções</th>
-              <th colspan="4" style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Transporte de Doentes</th>
-              <th rowspan="3" style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Elemento</th>
-              <th rowspan="3" style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Valor Global<br>a Receber</th>
-              <th rowspan="3" style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Ações</th>
-            </tr>
-            <tr>
-              <th colspan="2" style="position:sticky; top:27px; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:4px;">Doentes Extra</th>
-              <th colspan="2" style="position:sticky; top:27px; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:4px;">Horas Espera</th>
-            </tr>
-            <tr>
-              <th style="position:sticky; top:52px; z-index:10; background-color:#d1d1d1; color:black; border-bottom:1px solid #aaa; padding:5px;">Data do Serviço</th>
-              <th style="position:sticky; top:52px; z-index:10; background-color:#d1d1d1; color:black; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Tipo de Serviço</th>
-              <th style="position:sticky; top:52px; z-index:10; background-color:#d1d1d1; color:black; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Local do Serviço</th>
-              <th style="position:sticky; top:52px; z-index:10; background-color:#d1d1d1; color:black; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Valor/Hora</th>
-              <th style="position:sticky; top:52px; z-index:10; background-color:#d1d1d1; color:black; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Qtd.</th>
-              <th style="position:sticky; top:52px; z-index:10; background-color:#d1d1d1; color:black; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Total</th>
-              <th style="position:sticky; top:52px; z-index:10; background-color:#d1d1d1; color:black; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Qtd.</th>
-              <th style="position:sticky; top:52px; z-index:10; background-color:#d1d1d1; color:black; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Valor</th>
-              <th style="position:sticky; top:52px; z-index:10; background-color:#d1d1d1; color:black; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Qtd.</th>
-              <th style="position:sticky; top:52px; z-index:10; background-color:#d1d1d1; color:black; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:5px;">Valor</th>
+              <th>Data</th>
+              <th>Serviço / Local</th>
+              <th class="r">Valor serviço</th>
+              <th class="r">Prevenção</th>
+              <th class="r">Doentes extra</th>
+              <th class="r">Horas espera</th>
+              <th>Elemento</th>
+              <th class="r">A receber</th>
+              <th class="c">Ações</th>
             </tr>
           </thead>
           <tbody id="table-body"></tbody>
@@ -3450,7 +3889,7 @@
       };
       setButtonsState(true);
       if (!document.getElementById('table-body')) {
-        container.innerHTML = typeof tableHTML !== 'undefined' ? tableHTML : '<div class="no-scrollbar" style="max-height: 500px; overflow-y: auto; margin-top: 15px; border: 1px solid #aaa; border-radius: 4px;"><table style="width:100%; border-collapse: separate; border-spacing: 0;"><tbody id="table-body"></tbody></table></div>';
+        container.innerHTML = tableHTML;
       }
       const tableBody = document.getElementById('table-body');
       tableBody.style.opacity = "0.5";
@@ -3476,32 +3915,30 @@
         tableBody.style.opacity = "1";
         tableBody.innerHTML = '';
         if (data.length === 0) {
-          tableBody.innerHTML = '<tr><td colspan="14" style="padding: 20px; font-size: 13px; text-align: center;">Nenhum registo encontrado para este período ou tipo.</td></tr>';
+          tableBody.innerHTML = '<tr><td colspan="9" class="vsx-empty">Nenhum serviço registado com estes filtros.</td></tr>';
           updateSummary(0, 0);
           return;
         }
         setButtonsState(false);
+        const WD = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
         tableBody.innerHTML = data.map(item => {
-          const tdStyle = `border-bottom: 1px solid #ccc; padding: 6px; font-size: 12px;`;
-          const actBtnStyle = `padding: 3px 7px; font-size: 12px; line-height: 1; margin: 0 2px;`;
+          const d = item.service_date ? new Date(String(item.service_date).slice(0, 10) + 'T12:00') : null;
+          const prev = vsToNum(item.prev_global_value) ? `<span class="vsx-calc">${vsFmtEur(item.prev_value_hour)} × <b>${item.prev_total_hours || 0} h</b></span><br><b>${vsFmtEur(item.prev_global_value)}</b>` : '<span class="muted">—</span>';
+          const sick = vsToNum(item.service_sicks_value) ? `<span class="vsx-calc"><b>${item.service_sicks || 0}</b> doente(s)</span><br><b>${vsFmtEur(item.service_sicks_value)}</b>` : '<span class="muted">—</span>';
+          const wait = vsToNum(item.service_whait_hours_value) ? `<span class="vsx-calc"><b>${item.service_whait_hours || 0} h</b></span><br><b>${vsFmtEur(item.service_whait_hours_value)}</b>` : '<span class="muted">—</span>';
           return `
             <tr>
-              <td style="${tdStyle}">${vsFormatDate(item.service_date)}</td>
-              <td style="${tdStyle} border-left: 1px solid #ccc; text-align: center;">${item.service_type || ''}</td>
-              <td style="${tdStyle} border-left: 1px solid #ccc; text-align: center;">${item.service_local || ''}</td>
-              <td style="${tdStyle} border-left: 1px solid #ccc; text-align: right;">${vsFmtEur(item.service_type_global_value, '0,00')}</td>
-              <td style="${tdStyle} border-left: 1px solid #ccc; text-align: right;">${vsFmtEur(item.prev_value_hour)}</td>
-              <td style="${tdStyle} border-left: 1px solid #ccc; text-align: center;">${item.prev_total_hours || ''}</td>
-              <td style="${tdStyle} border-left: 1px solid #ccc; text-align: right;">${vsFmtEur(item.prev_global_value)}</td>
-              <td style="${tdStyle} border-left: 1px solid #ccc; text-align: center;">${item.service_sicks || ''}</td>
-              <td style="${tdStyle} border-left: 1px solid #ccc; text-align: right;">${vsFmtEur(item.service_sicks_value)}</td>
-              <td style="${tdStyle} border-left: 1px solid #ccc; text-align: center;">${item.service_whait_hours || ''}</td>
-              <td style="${tdStyle} border-left: 1px solid #ccc; text-align: right;">${vsFmtEur(item.service_whait_hours_value)}</td>
-              <td style="${tdStyle} border-left: 1px solid #ccc; text-align: center;">${item.abv_name || ''}</td>
-              <td style="${tdStyle} border-left: 1px solid #ccc; text-align: right; font-weight: bold; font-size: 13px;">${vsFmtEur(item.global_value, '0,00')}</td>
-              <td style="${tdStyle} border-left: 1px solid #ccc; text-align: center; white-space: nowrap;">
-                <button class="btn btn-add vs-btn-edit" data-id="${item.id}" title="Editar" style="${actBtnStyle}"><i class="fa-solid fa-pen-to-square"></i></button>
-                <button class="btn btn-danger vs-btn-delete" data-id="${item.id}" title="Eliminar" style="${actBtnStyle}"><i class="fa-solid fa-trash"></i></button>
+              <td class="vsx-date"><b>${vsFormatDate(item.service_date)}</b><small>${d && !isNaN(d) ? WD[d.getDay()] : ''}</small></td>
+              <td><span class="vsx-type ${vsxTypeClass(item.service_type)}">${vsxEsc(item.service_type || '—')}</span>${item.service_local ? `<span class="vsx-loc"><i class="fa-solid fa-location-dot"></i> ${vsxEsc(item.service_local)}</span>` : ''}</td>
+              <td class="r">${vsToNum(item.service_type_global_value) ? vsFmtEur(item.service_type_global_value) : '<span class="muted">—</span>'}</td>
+              <td class="r">${prev}</td>
+              <td class="r">${sick}</td>
+              <td class="r">${wait}</td>
+              <td class="vsx-who"><b>${vsxEsc(item.abv_name || '')}</b><small>${item.n_int ? 'Nº ' + vsxEsc(item.n_int) : ''}</small></td>
+              <td class="vsx-amount">${vsFmtEur(item.global_value, '0,00')}</td>
+              <td class="vsx-act">
+                <button class="vsx-ib vs-btn-edit" data-id="${item.id}" title="Editar"><i class="fa-solid fa-pen-to-square"></i></button>
+                <button class="vsx-ib del vs-btn-delete" data-id="${item.id}" title="Eliminar"><i class="fa-solid fa-trash"></i></button>
               </td>
             </tr>
           `;
@@ -3515,7 +3952,7 @@
       } catch (err) {
         tableBody.style.opacity = "1";
         console.error('Erro:', err);
-        tableBody.innerHTML = '<tr><td colspan="14" style="padding: 20px; color: red; text-align: center;">Erro ao carregar dados. Verifique a consola.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="9" class="vsx-empty" style="color:#c62828;">Erro ao carregar os serviços. Tente novamente.</td></tr>';
       }
     }
 
@@ -3762,65 +4199,26 @@
       summaryContainer.style.display = "flex";
       summaryContainer.style.flexDirection = "column";
       summaryContainer.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-top: 10px; font-family: sans-serif;">
-          <div style="border: 1px solid #aaa; border-radius: 4px; overflow: hidden; display: flex; height: 28px; align-items: center;">
-            <div style="padding: 0 12px; background-color: #2b6ca3; color: white; font-weight: bold; font-size: 12px; border-right: 1px solid #aaa; line-height: 28px;">
-              Total de Serviços
+        <div class="vsx-sum">
+          <div class="vsx-kpi" style="--c:#2c3e50"><small>Serviços</small><b>${displayCount}</b></div>
+          <div class="vsx-kpi" style="--c:#2e7d32"><small>Valor global</small><b>${displayTotal} €</b></div>
+          <div class="vsx-sum-r">
+            <div id="validation-card" class="vsx-valid" style="display: none;">
+              <div class="major-card-header header-red">
+                <i class="fa-solid fa-stamp" style="margin-right: 6px;"></i>VALIDAÇÃO DO COMANDO
+              </div>
+              <div class="vsx-valid-b">
+                <label class="ok"><input type="checkbox" id="vsValidado">Validado</label>
+                <label class="ko"><input type="checkbox" id="vsNaoValidado">Não validado</label>
+                <button id="btnConfirmarValidacao" class="vsx-btn blue">OK</button>
+              </div>
             </div>
-            <div style="padding: 0 15px; background-color: white; color: darkred; font-weight: bold; font-size: 14px; min-width: 50px; text-align: center; line-height: 28px;">
-              ${displayCount}
+            <div id="direct-send-container" style="display: none;">
+              <button id="btnEnviarVoluntario" class="vsx-btn green"><i class="fa-solid fa-paper-plane"></i>ENVIAR PARA VALIDAÇÃO</button>
             </div>
-          </div>
-          <div style="border: 1px solid #aaa; border-radius: 4px; overflow: hidden; display: flex; height: 28px; align-items: center;">
-            <div style="padding: 0 12px; background-color: #2b6ca3; color: white; font-weight: bold; font-size: 12px; border-right: 1px solid #aaa; line-height: 28px;">
-              Valor Global
-            </div>
-            <div style="padding: 0 15px; background-color: white; color: darkred; font-weight: bold; font-size: 14px; min-width: 120px; text-align: right; line-height: 28px;">
-              ${displayTotal} €
-            </div>
-          </div>    
-        </div>
-        <div id="validation-card" class="major-card card major-last-card" style="display: none; margin: 8px 0 0 0; min-width: 15%; align-self: flex-end; clear: both;">
-          <div class="major-card-header header-red" style="padding: 1px 8px; font-size: 11px;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align: middle; margin-right: 4px;">
-              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a2 2 0 0 1-2.83-2.83l-3.94 3.6z"/>
-              <path d="M11.5 9.5l-7 7l-2 3l3-2l7-7"/><path d="M10 22L13 19"/><path d="M22 10l-3 3"/><path d="M12 12l-6-6"/><circle cx="12" cy="12" r="3"/>
-            </svg>
-            VALIDAÇÃO
-          </div>            
-          <div style="padding: 6px 10px; display: flex; align-items: center; justify-content: flex-end; background: #fff; gap: 8px;">
-            <div style="display: flex; gap: 8px;">
-              <label style="display: flex; align-items: center; cursor: pointer; color: #155724; font-weight: bold; font-size: 12px; white-space: nowrap;">
-                <input type="checkbox" id="vsValidado" style="margin-right: 3px; width: 15px; height: 15px; cursor: pointer;"> 
-                Validado
-              </label>
-              <label style="display: flex; align-items: center; cursor: pointer; color: #721c24; font-weight: bold; font-size: 12px; white-space: nowrap;">
-                <input type="checkbox" id="vsNaoValidado" style="margin-right: 3px; width: 15px; height: 15px; cursor: pointer;"> 
-                Não Validado
-              </label>
-            </div>              
-            <button id="btnConfirmarValidacao" style="background-color: #2b6ca3; color: white; border: none; margin-left: 10px; padding: 4px 8px; border-radius: 3px; font-weight: bold; 
-                                                      cursor: pointer; font-size: 11px;">
-              OK
-            </button>
+            ${lastUpdate ? `<div class="vsx-upd"><i class="fa-solid fa-clock-rotate-left" style="margin-right: 4px;"></i>Última atualização: <b>${vsFormatDateTime(lastUpdate)}</b>${lastUpdateBy ? ` · <b class="by">${vsxEsc(lastUpdateBy)}</b>` : ''}</div>` : ''}
           </div>
         </div>
-        <div id="direct-send-container" style="display: none; margin-top: 10px; align-self: flex-end;">
-          <button id="btnEnviarVoluntario" style="background-color: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; 
-                                                  display: flex; align-items: center; gap: 8px; transition: background 0.2s;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="22" y1="2" x2="11" y2="13"></line>
-              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-            </svg>
-            ENVIAR PARA VALIDAÇÃO
-          </button>
-        </div>
-        ${lastUpdate ? `
-          <div style="align-self: flex-end; margin-top: 6px; font-size: 11px; color: #555; font-family: sans-serif;">
-            <i class="fa-solid fa-clock-rotate-left" style="margin-right: 4px;"></i>
-            Última atualização: <b>${vsFormatDateTime(lastUpdate)}</b>${lastUpdateBy ? ` - <b style="color: #c00;">${lastUpdateBy}</b>` : ''}
-          </div>
-        ` : ''}
       `;
       const cbV = document.getElementById('vsValidado');
       const cbN = document.getElementById('vsNaoValidado');
@@ -3873,8 +4271,6 @@
         btnOk.onclick = () => confirmValidation(cbV, cbN, btnOk);
       }
       if (btnEnviar) {
-        btnEnviar.onmouseover = () => btnEnviar.style.backgroundColor = "#218838";
-        btnEnviar.onmouseout = () => btnEnviar.style.backgroundColor = "#28a745";
         btnEnviar.onclick = () => {
           if(typeof confirmValidation === 'function') {
             confirmValidation(null, null, btnEnviar);
@@ -4243,32 +4639,22 @@
       window.scrollTo({top: 0, behavior: 'smooth'});
     }
     const svValuesTableHTML = `
-      <div style="margin: 10px 0 15px 0;">
-        <div class="no-scrollbar" style="max-height: 400px; overflow-y: auto; border: 1px solid #aaa; border-radius: 4px;">
-          <table style="width:100%; border-collapse: separate; border-spacing: 0; font-family: sans-serif; font-size: 11px; text-align: center; table-layout: fixed;">
-            <colgroup>
-              <col style="width: 180px;">
-              <col style="width: 140px;">
-              <col style="width: 80px;">
-              <col style="width: 80px;">
-              <col style="width: 80px;">
-              <col style="width: 70px;">
-            </colgroup>
-            <thead>
-              <tr>
-                <th style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-bottom:1px solid #aaa; padding:6px;">Tipo</th>
-                <th style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:6px;">Destino</th>
-                <th style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:6px;">Valor</th>
-                <th style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:6px;">Extra Doente</th>
-                <th style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:6px;">Hora Espera</th>
-                <th style="position:sticky; top:0; z-index:10; background-color:#2b6ca3; color:white; border-left:1px solid #aaa; border-bottom:1px solid #aaa; padding:6px;">Ações</th>
-              </tr>
-            </thead>
-            <tbody id="sv-values-table-body">
-              <tr><td colspan="6" style="padding: 20px;">A carregar...</td></tr>
-            </tbody>
-          </table>
-        </div>
+      <div class="vsx-tw" style="max-height: 400px;">
+        <table class="vsx-t">
+          <thead>
+            <tr>
+              <th>Tipo</th>
+              <th>Destino</th>
+              <th class="r">Valor</th>
+              <th class="r">Doente extra</th>
+              <th class="r">Hora de espera</th>
+              <th class="c">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="sv-values-table-body">
+            <tr><td colspan="6" class="vsx-empty">A carregar...</td></tr>
+          </tbody>
+        </table>
       </div>
     `;
     async function loadServiceValuesTable() {
@@ -4287,29 +4673,30 @@
         const data = await response.json();
         tbody.style.opacity = '1';
         if (data.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6" style="padding:20px;">Nenhum registo configurado.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="6" class="vsx-empty">Ainda não há valores configurados.</td></tr>';
           return;
         }
-        const tdStyle = `border-bottom: 1px solid #ccc; padding: 6px; font-size: 12px;`;
+        const eur = v => (v !== null && v !== undefined && v !== '' && vsToNum(v)) ? vsFmtEur(v) : '<span class="muted">—</span>';
+        const isPrev = t => (t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes('prevenc');
         tbody.innerHTML = data.map(item => {
           const itemData = encodeURIComponent(JSON.stringify(item));
           return `
             <tr>
-              <td style="${tdStyle}">${item.type || ''}</td>
-              <td style="${tdStyle} border-left:1px solid #ccc;">${item.desteny || '-'}</td>
-              <td style="${tdStyle} border-left:1px solid #ccc; text-align:right;">${item.value ? item.value + ' €' : '-'}</td>
-              <td style="${tdStyle} border-left:1px solid #ccc; text-align:right;">${item.extra_sick ? item.extra_sick + ' €' : '-'}</td>
-              <td style="${tdStyle} border-left:1px solid #ccc; text-align:right;">${item.extra_hour ? item.extra_hour + ' €' : '-'}</td>
-              <td style="${tdStyle} border-left:1px solid #ccc;">
-                <button onclick="editServiceValue('${itemData}')" class="btn btn-add" style="padding: 3px 7px; font-size: 12px; line-height: 1;" title="Editar"><i class="fa-solid fa-pen-to-square"></i></button>
-                <button onclick="deleteServiceValue(${item.id})" class="btn btn-danger" style="padding: 3px 7px; font-size: 12px; line-height: 1; margin-left: 5px;" title="Eliminar"><i class="fa-solid fa-trash"></i></button>
+              <td><span class="vsx-type ${vsxTypeClass(item.type)}">${vsxEsc(item.type || '')}</span></td>
+              <td>${item.desteny && item.desteny.trim() !== '-' ? vsxEsc(item.desteny) : '<span class="muted">—</span>'}</td>
+              <td class="r"><b>${eur(item.value)}</b>${isPrev(item.type) && vsToNum(item.value) ? ' <small style="color:#8a949e;">/ hora</small>' : ''}</td>
+              <td class="r">${eur(item.extra_sick)}</td>
+              <td class="r">${eur(item.extra_hour)}</td>
+              <td class="vsx-act">
+                <button onclick="editServiceValue('${itemData}')" class="vsx-ib" title="Editar"><i class="fa-solid fa-pen-to-square"></i></button>
+                <button onclick="deleteServiceValue(${item.id})" class="vsx-ib del" title="Eliminar"><i class="fa-solid fa-trash"></i></button>
               </td>
             </tr>
           `;
         }).join('');
       } catch (err) {
         tbody.style.opacity = '1';
-        tbody.innerHTML = '<tr><td colspan="6" style="padding:20px; color:red;">Erro ao carregar dados.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="vsx-empty" style="color:#c62828;">Erro ao carregar os valores.</td></tr>';
       }
     }
     async function deleteServiceValue(id) {

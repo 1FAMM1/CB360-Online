@@ -568,37 +568,7 @@
       <!-- CARD FOMIO 360 -->
       <div id="page-fomio" class="page"></div>
       <!-- CARD EMPLOYEES 360 -->
-      <div id="page-employees" class="page">
-        <div class="major-card major-last-card">
-          <div class="major-card-header">BEM-VINDO À GESTÃO DE RECURSOS HUMANOS</div>
-          <div class="major-card-body" style="font-family: 'Segoe UI', sans-serif;">
-            <p style="font-size: 15px; margin-bottom: 20px; color: #333;">
-              A <strong>GESTÃO DE RECURSOS HUMANOS</strong> é o módulo digital responsável pela gestão integral da
-              <strong>Inserção e Validação</strong> dos elementos afetos às <strong>EQUIPAS DE INEM, SERVIÇO GERAL,
-              SALOC, E EQUIPAS DE INTERVEÇÃO PERMANTENTE.</strong>
-              Este sistema centraliza todo o processo de registo, controlo e e manutenção para o serviço operacional diário, garantindo uma gestão eficiente e transparente 
-              entre recursos humanos e operacionais.
-            </p>
-            <div style="background: linear-gradient(90deg, #e0e0e0, #d6d6d6); padding: 15px 20px; border-left: 5px solid #007bff; border-radius: 6px; margin-bottom: 20px;">
-              <strong>Funcionalidades Principais:</strong>
-            </div>
-            <div style="margin-bottom: 20px;">
-              <ul style="list-style: none; padding-left: 10px; line-height: 1.8;">
-                <li style="color:#0d630e;">📋 Emissão e gestão de escalas mensais.</li>
-                <li style="color:#0d630e;">👨‍🚒 Gestão e confirmação de horas extraordinárias.</li>
-                <li style="color:#0d630e;">🧾 Formulários de Ponto Mensais.</li>
-                <li style="color:#0d630e;">🧾 Gestão e controlo de turnos.</li>
-                <li style="color:#0d630e;">🧾 Gestão e controlo de férias.</li>
-                <li style="color:#0d630e;">🧾 Gestão e controlo salarial.</li>
-              </ul>
-            </div>
-            <div style="text-align: center; font-style: italic; color: #555;">
-              Selecione uma opção no menu lateral para começar a utilizar o sistema.
-            </div>
-          </div>
-          <div class="major-card-footer"></div>
-        </div>
-      </div>
+      <div id="page-employees" class="page"></div>
       <!-- CARD SALOC 360 -->
       <div id="page-saloc" class="page">
         <div class="major-card last-card">
@@ -787,195 +757,22 @@
     <div id="page-veic-status" class="page" style="display:none;"></div>
     <!-- EMPLOYEES 360 MODULE -->
     <!-- MONTHLY SCHEDULES -->
-    <div id="page-employee-scales" class="page">
-      <div class="major-card major-last-card" id="employee-monthly-schedules">
-        <div class="major-card-header header-orange">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-            <line x1="16" y1="2" x2="16" y2="6"/>
-            <line x1="8" y1="2" x2="8" y2="6"/>
-            <line x1="3" y1="10" x2="21" y2="10"/>
-          </svg>
-          ESCALAS MENSAIS
-        </div>
-        <div class="major-card-body">
-          <div id="months-container-scales-employees"></div>
-          <div id="table-container-employees"></div>
-        </div>
-        <div class="major-card-footer">
-          <div id="employee-scales-options" style="display: none; justify-content: flex-end; gap: 10px;">
-            <button id="employees-analyze" class="btn btn-analyze" onclick="analyzeINEMSchedule()"><i class="fa-solid fa-magnifying-glass" style="margin-right: 6px;"></i>Analisar</button>
-            <button id="employees-toggle-bx-btn" class="btn btn-toggle"><i class="fa-solid fa-eye-slash" style="margin-right: 6px;"></i>Ocultar Baixas</button>
-            <button id="employees-clean-btn" class="btn btn-clean"><i class="fa-solid fa-broom" style="margin-right: 6px;"></i>Limpar</button>
-            <button id="employees-save-btn" class="btn btn-add"><i class="fa-solid fa-floppy-disk" style="margin-right: 6px;"></i>Guardar</button>
-            <button id="employees-emit-xlsx-btn" class="btn btn-success"><i class="fa-solid fa-file-excel" style="margin-right: 6px;"></i>EXCEL</button>
-            <button id="employees-emit-pdf-btn" class="btn btn-danger"><i class="fa-solid fa-file-pdf" style="margin-right: 6px;"></i>PDF</button>           
-            <!--<button id="employees-emit-stitch-marker-btn" class="btn btn-success" style="background: #666;">Folhas de Ponto</button>-->
-          </div>
-        </div>
-      </div>
-    </div>
+    <div id="page-employee-scales" class="page"></div>
     <!-- OVERTIME TRACKING -->  
-    <div id="page-employee-extra-hour" class="page">
-      <div class="major-card major-last-card" id="employee-monthly-extra-hour-schedules">
-        <div class="major-card-header header-orange">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
-            <circle cx="12" cy="12" r="10"></circle>
-            <polyline points="12 6 12 12 16 14"></polyline>
-          </svg>
-          CONTROLO DE HORAS EXTAORDINÁRIAS
-        </div>
-        <div class="major-card-body">
-          <div id="months-container-extra-hour-employees"></div>
-          <div id="table-container-extra-hour-employees"></div>
-        </div>
-        <div class="major-card-footer">
-          <div id="employee-extra-hours-options" style="display: none; width: 100%; justify-content: flex-end; gap: 10px;">
-            <button id="employees-extra-save-btn" class="btn btn-add"><i class="fa-solid fa-floppy-disk" style="margin-right: 6px;"></i>Guardar</button>
-            <button id="employees-extra-emit-xlsx-btn" class="btn btn-success"><i class="fa-solid fa-file-excel" style="margin-right: 6px;"></i>EXCEL</button>
-            <button id="employees-extra-emit-pdf-btn" class="btn btn-danger"><i class="fa-solid fa-file-pdf" style="margin-right: 6px;"></i>PDF</button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <div id="page-employee-extra-hour" class="page"></div>
     <!-- INDIVIDUAL RECORDS -->
-    <div id="individual-records" class="page">
-      <div class="major-card major-last-card" id="individual-records-card">
-        <div class="major-card-header header-orange">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
-            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
-            <circle cx="12" cy="7" r="4"></circle>
-          </svg>
-          REGISTOS INDIVIDUAIS
-        </div>
-        <div class="major-card-body"></div>
-        <div class="major-card-footer"></div>
-      </div>
-    </div>
+    <div id="individual-records" class="page"></div>
     <!-- VACATION MANAGEMENT -->  
-    <div id="vacation-scheduling" class="page">
-      <div class="major-card major-last-card" id="vacation-scheduling-card">
-        <div class="major-card-header header-orange">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-            <line x1="16" y1="2" x2="16" y2="6"></line>
-            <line x1="8" y1="2" x2="8" y2="6"></line>
-            <line x1="3" y1="10" x2="21" y2="10"></line>
-            <path d="M9 16l2 2 4-4"></path>
-          </svg>
-          MARCAÇÃO DE FÉRIAS
-        </div>
-        <div class="major-card-body"></div>
-        <div class="major-card-footer"></div>
-      </div>
-    </div>      
-    <div id="vacation-scheduling-map" class="page">
-      <div class="major-card major-last-card" id="vacation-scheduling-map-card">
-        <div class="major-card-header header-orange">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
-            <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
-            <line x1="8" y1="2" x2="8" y2="18"></line>
-            <line x1="16" y1="6" x2="16" y2="22"></line>
-          </svg>
-          MAPA DE FÉRIAS
-        </div>
-        <div class="major-card-body"></div>
-        <div class="major-card-footer"></div>
-      </div>
-    </div>      
-    <div id="priority-scheduling-map" class="page">
-      <div class="major-card major-last-card" id="priority-scheduling-map-card">
-        <div class="major-card-header header-orange">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
-            <path d="m3 16 4 4 4-4"></path>
-            <path d="M7 20V4"></path>
-            <path d="M11 8h10"></path>
-            <path d="M11 12h10"></path>
-            <path d="M11 16h10"></path>
-            <path d="M11 4h10"></path>
-          </svg>
-          PRIORIDADE DE MARCAÇÃO DE FÉRIAS
-        </div>
-        <div class="major-card-body"></div>
-        <div class="major-card-footer"></div>
-      </div>
-    </div>
-    <div id="page-vacations-request-rh" class="page" style="display:none;">
-      <div class="major-card last-card">
-        <div class="major-card-header header-red">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line>
-            <line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line><path d="M9 16l2 2 4-4"></path>
-          </svg>
-          PEDIDOS DE FÉRIAS PROFISSIONAIS
-        </div>
-        <div class="major-card-body">
-          <div id="rhvBoard"></div>
-        </div>
-        <div class="major-card-footer">
-          <span style="font-size: 11px; color: #fff;">* Clique num mês para ver os pedidos. Os dias aprovados vão para a escala dos funcionários.</span>
-        </div>
-      </div>
-    </div>
+    <div id="vacation-scheduling" class="page"></div>
+    <div id="vacation-scheduling-map" class="page"></div>
+    <div id="priority-scheduling-map" class="page"></div>
+    <div id="page-vacations-request-rh" class="page" style="display:none;"></div>
     <!-- UTILITIES -->  
-    <div id="eligibility-subs-shift" class="page">
-      <div class="major-card major-last-card" id="eligibility-subs-shift-card">
-        <div class="major-card-header header-orange">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-            <path d="m9 12 2 2 4-4"></path>
-          </svg>
-          ELEGIBILIDADE PARA SUBSÍDIO DE TURNO
-        </div>
-        <div class="major-card-body"></div>
-        <div class="major-card-footer"></div>
-      </div>
-    </div>      
-    <div id="salary-processing-map" class="page">
-      <div class="major-card major-last-card" id="salary-processing-card">
-        <div class="major-card-header header-orange">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
-            <path d="M19 7a9 9 0 1 0 0 10"></path>
-            <path d="M7 10h12"></path>
-            <path d="M7 14h12"></path>
-          </svg>
-          PROCESSAMENTO SALARIAL
-        </div>
-        <div class="major-card-body"></div>
-        <div class="major-card-footer"></div>
-      </div>
-    </div>      
+    <div id="eligibility-subs-shift" class="page"></div>
+    <div id="salary-processing-map" class="page"></div>
       
-    <div id="annual-eip-shift-map" class="page">
-      <div class="major-card major-last-card" id="annual-eip-shift-card">
-        <div class="major-card-header header-orange">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
-            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-            <circle cx="9" cy="7" r="4"></circle>
-            <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-          </svg>
-          ENQUADRAMENTO ANUAL EIP's
-        </div>
-        <div class="major-card-body"></div>
-        <div class="major-card-footer"></div>
-      </div>
-    </div>
-    <div id="dashboard-rh" class="page">
-      <div class="major-card major-last-card" id="dashboard-rh-card">
-        <div class="major-card-header header-orange">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
-            <rect x="3" y="3" width="7" height="9"></rect>
-            <rect x="14" y="3" width="7" height="5"></rect>
-            <rect x="14" y="12" width="7" height="9"></rect>
-            <rect x="3" y="16" width="7" height="5"></rect>
-          </svg>
-          PAINEL DE GESTÃO RH
-        </div>
-        <div class="major-card-body"></div>
-        <div class="major-card-footer"></div>
-      </div>
-    </div>
+    <div id="annual-eip-shift-map" class="page"></div>
+    <div id="dashboard-rh" class="page"></div>
     <!-- EMPLOYEE REGISTRY --> 
     <div id="employee-registration" class="page">
       <div class="major-card major-last-card" id="employee-registration-card">

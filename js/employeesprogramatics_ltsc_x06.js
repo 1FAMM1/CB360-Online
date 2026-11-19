@@ -1882,6 +1882,7 @@
         if (!employees.length) {showPopup('popup-danger',"Nenhum funcionário encontrado."); return; }
         showLoadingPopup(`A iniciar geração de ${employees.length} folhas...`);
         const workingHours = calculateWorkingHours(year, month).workingHours;
+        await cb360LoadLib('pdflib');
         const {PDFDocument} = PDFLib;
         const mergedPdf = await PDFDocument.create();
         for (let i = 0; i < employees.length; i++) {

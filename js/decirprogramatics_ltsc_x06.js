@@ -1,6 +1,199 @@
     /* =======================================
     DECIR PROGRAMATICS
+    - As páginas DECIR (boas-vindas, configurações, escalas, ECINs, SBAs/OPATs, despesas,
+      registos complementares, auditoria e estatísticas) e os 2 modais de configuração
+      são criados aqui, logo ao carregar; o main.html só tem os <div class="page"> vazios.
     ======================================= */
+    (() => {
+    /* ----------------------------- estilos ----------------------------- */
+    if (!document.getElementById('decir-css')) {
+      const css = document.createElement('style');
+      css.id = 'decir-css';
+      css.textContent = `
+        :is(#page-decir, #decir-main-options, #decir-sca-view, #decir-reg-ecins, #decir-pag-ecins, #decir-anepc-ecins, #decir-audit, #decir-reg-sbaopat, #decir-pag-sbaopat,
+            #decir-anepc-sbaopat, #decir-desp-demage, #decir-desp-meals, #decir-reg-ocorr, #decir-reg-signa, #decir-reg-ref, #decir-reg-lepp, #decir-reg-leveliv,
+            #decir-dashboard) > .major-card > .major-card-body {font-family: 'Segoe UI', sans-serif;}
+        .major-card-header > svg.dec-ico {opacity: .9; vertical-align: middle;}
+        .dec-months {display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 0;}
+        .dec-months.g8 {gap: 8px;}
+        .dec-mt16 {margin-top: 16px;}
+        .global-field-horizontal > .dec-hl {font-size: 12px; font-weight: bold; color: #444;}
+        .global-field-horizontal > .dec-hi {width: 75px;}
+        #decir-main-options #optionName {width: 500px;}
+        #decir-main-options .dec-w200 {width: 200px;}
+        #decir-main-options .wsms-section + .wsms-section {margin-top: 20px;}
+        .decir-modal-body > .decir-row {display: flex; gap: 15px;}
+        .decir-modal-body > .decir-row + .decir-row {margin-top: 15px;}
+        .decir-modal-body > .decir-row > .decir-form-group {flex: 1;}
+        .decir-input-clean {width: 100%; padding: 11px 12px; border: 1.5px solid #d1d1dc; border-radius: 8px; font-size: 14px; font-weight: 500; color: #1e293b; transition: all 0.15s ease; background-color: #fff;}
+        .decir-input-clean:focus {border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); outline: none;}
+        #page-decir .dec-intro {font-size: 15px; margin-bottom: 20px; color: #333;}
+        #page-decir .dec-feat {background: linear-gradient(90deg, #e0e0e0, #d6d6d6); padding: 15px 20px; border-left: 5px solid #007bff; border-radius: 6px; margin-bottom: 20px;}
+        #page-decir .dec-list {margin-bottom: 20px;}
+        #page-decir .dec-list ul {list-style: none; padding-left: 10px; line-height: 1.8;}
+        #page-decir .dec-list li {color: #0d630e;}
+      `;
+      document.head.appendChild(css);
+    }
+    /* ----------------------------- helpers ----------------------------- */
+    const ICONS = {
+      fire: '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>',
+      screen: '<rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line><path d="M6 12l2-2 3 3 4-4 3 3"></path>',
+      clip: '<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M9 14h6"></path><path d="M9 18h6"></path><path d="M12 10h3"></path>',
+      doc: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line>',
+      clock: '<path d="M12 8v4l3 3"></path><path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5"></path>',
+      truck: '<path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1L2 11v5h2"></path><circle cx="6.5" cy="16.5" r="2.5"></circle><circle cx="16.5" cy="16.5" r="2.5"></circle><line x1="18" y1="4" x2="22" y2="8"></line><line x1="22" y1="4" x2="18" y2="8"></line>',
+      mealsEur: '<path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path><line x1="7" y1="2" x2="7" y2="22"></line><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"></path><circle cx="17" cy="17" r="5" fill="white" stroke="currentColor" stroke-width="2"></circle><path d="M19 15.5a2.5 2.5 0 1 0 0 3" stroke-width="1.8"></path><line x1="15.5" y1="17" x2="18.5" y2="17" stroke-width="1.8"></line>',
+      pen: '<path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>',
+      meals: '<path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path><path d="M7 2v20"></path><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"></path>',
+      pin: '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle>',
+      bars: '<line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line>'
+    };
+    const ico = (name, round) => `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"${round ? ' stroke-linecap="round" stroke-linejoin="round"' : ''} class="dec-ico">${ICONS[name]}</svg>`;
+    /* cartão de página: cabeçalho preto com ícone, corpo e rodapé */
+    const card = ({icon, round, title, body = '', footer = '', cls = 'major-card major-last-card', id}) =>
+      `<div class="${cls}"${id ? ` id="${id}"` : ''}>
+        <div class="major-card-header header-black">${ico(icon, round)} ${title}</div>
+        <div class="major-card-body">${body}</div>
+        <div class="major-card-footer">${footer}</div>
+      </div>`;
+    /* campos de valores escondidos (usados nos cálculos) */
+    const hidden = (l1, id1, l2, id2) => `<div class="global-field-horizontal" style="display:none;">
+        <label class="dec-hl">${l1}</label> <input type="text" id="${id1}" class="dec-hi"> <label class="dec-hl">${l2}</label> <input type="text" id="${id2}" class="dec-hi"></div>`;
+    const months = (id, cls = '') => `<div id="${id}" class="dec-months${cls}"></div>`;
+    const box = (id, cls) => `<div id="${id}"${cls ? ` class="${cls}"` : ''}></div>`;
+    /* botões de rodapé: [classe, id, texto] */
+    const BTN = {clean: ['btn-clean', '🧹 Limpar'], save: ['btn-add', '💾 Guardar'], xlsx: ['btn-success', '📊 Excel'], pdf: ['btn-danger', '📄 PDF']};
+    const actions = (id, list, hide) => `<div class="action-buttons" id="${id}"${hide ? ' style="display:none;"' : ''}>${
+      list.map(([k, bid]) => `<button class="btn ${BTN[k][0]}" id="${bid}">${BTN[k][1]}</button>`).join(' ')}</div>`;
+    const fill = (id, html) => { const p = document.getElementById(id); if (p) p.innerHTML = html; return p; };
+
+    /* ----------------------------- páginas ----------------------------- */
+    fill('page-decir', `<div class="major-card major-last-card">
+        <div class="major-card-header">BEM-VINDO À GESTÃO DECIR</div>
+        <div class="major-card-body">
+          <p class="dec-intro">
+            A <strong>GESTÃO DECIR</strong> é o módulo digital responsável pela gestão integral da
+            <strong>Inserção e Validação</strong> dos elementos afetos ao <strong>DISPOSITIVO ESPECIAL DE
+            COMBATE A INCÊNDIOS RURAIS.</strong>
+            Este sistema centraliza todo o processo de registo, controlo e pagamentos aos elementos afetos
+            ao DECIR, garantindo uma gestão eficiente e transparente entre recursos humanos e operacionais.
+          </p>
+          <div class="dec-feat"><strong>Funcionalidades Principais:</strong></div>
+          <div class="dec-list"><ul>
+            <li>📋 Criação e gestão de relatórios para pagamentos</li>
+            <li>👨‍🚒 Gestão e confirmação de pagamentos</li>
+            <li>🧾 Emissão de listas para pagamentos</li>
+            <li>🧾 Emissão de escalas e assinaturas (Ficheiros Oficiais da ANEPC)</li>
+          </ul></div>
+        </div>
+        <div class="major-card-footer"></div>
+      </div>`);
+
+    /* modais de configuração (Atualização de Valores / Configuração de Equipas) */
+    const modal = (id, title, rows, saveId, input) => {
+      const m = document.createElement('div');
+      m.id = id;
+      m.className = 'decir-modal-custom';
+      m.innerHTML = `<div class="decir-modal-content">
+          <div class="decir-modal-header"><h3><i class="fas fa-cog"></i> ${title}</h3><button class="decir-close-btn" data-act="close">✕</button></div>
+          <div class="decir-modal-body">${rows.map(r => `<div class="decir-row">${r.map(([l, fid]) => `<div class="decir-form-group">
+              <label for="${fid}">${l}</label>${input(fid)}</div>`).join('')}</div>`).join('')}</div>
+          <div class="decir-modal-footer">
+            <button type="button" class="decir-btn decir-btn-secondary" data-act="close">Cancelar</button>
+            <button type="button" id="${saveId}" class="decir-btn decir-btn-primary" data-act="save">💾 Gravar Alterações</button>
+          </div>
+        </div>`;
+      return m;
+    };
+    const mValues = modal('modalConfigDecirValues', 'Configuração de Valores DECIR',
+      [[['Valor Diário AMAL (12H)', 'amal_value'], ['Valor Diário ANEPC (12H)', 'anepc_value']], [['Valor Diário OPAT (24H)', 'opat_value'], ['Valor Diário SBAS (24H)', 'sbas_value']]],
+      'btnSaveConfig', fid => `<div class="decir-input-wrapper"><input type="number" id="${fid}" step="0.01" placeholder="0.00"></div>`);
+    const mTeams = modal('modalConfigDecirTeams', 'Configuração de Equipas',
+      [[['Equipas ECIN', 'ecin_value'], ['Equipas ELAC', 'elac_value']], [['OPATS', 'opat_equipas_value'], ['SBAS', 'sbas_equipas_value']]],
+      'btnSaveConfigEquipas', fid => `<input type="number" id="${fid}" step="1" min="0" placeholder="0" class="decir-input-clean">`);
+    mValues.addEventListener('click', e => {
+      const a = e.target.closest('[data-act]')?.dataset.act;
+      if (a === 'close') closeConfigModal();
+      else if (a === 'save') updateDecirValues();
+    });
+    mTeams.addEventListener('click', e => {
+      const a = e.target.closest('[data-act]')?.dataset.act;
+      if (a === 'close') closeConfigDecirTeamsModal();
+      else if (a === 'save') updateDecirTeamsValues();
+    });
+    document.getElementById('decir-main-options')?.before(mValues, mTeams);
+
+    fill('decir-main-options', card({icon: 'fire', title: 'CONFIGURAÇÕES DECIR',
+      body: `<div class="wsms-section">
+          <div class="major-row"><div class="major-field"><label for="optionType">Tipo</label>
+            <select id="optionType"><option value="">Selecione...</option><option value="restaurant">RESTAURANTE</option>
+              <option value="lepp">LOCAL ESTRATÉGICO DE PRÉ-POSICIONAMENTO</option><option value="other">OUTRO</option></select></div></div>
+          <div class="major-row">
+            <div class="major-field"><label for="optionName">Nome</label><input type="text" id="optionName" placeholder="Cidade ou Recinto"></div>
+            <div class="major-field dec-w200"><label for="optionStatus">Estado</label>
+              <select id="optionStatus"><option value="">Selecione...</option><option value="true">ATIVO</option><option value="false">INATIVO</option></select></div>
+            <div class="major-field dec-w200" id="optionDiscountWrapper" style="display: none;"><label for="optionDiscount">Desconto Refeições</label>
+              <select id="optionDiscount"><option value="">Selecione...</option><option value="false">NÃO</option><option value="true">SIM</option></select></div>
+          </div>
+        </div>
+        <div class="wsms-section"><div id="decir-main-options-table-container"></div></div>`,
+      footer: `<div class="action-buttons"><button class="btn btn-add" id="save-main-option-btn">💾 Guardar</button></div>`}));
+
+    fill('decir-sca-view', card({id: 'decir-sca-card', icon: 'screen', title: 'VISUALIZAÇÃO DE ESCALAS DECIR',
+      body: months('months-container-dec-view', ' g8') + box('table-container-dec-view')}));
+
+    /* ECINs */
+    fill('decir-reg-ecins', card({icon: 'clip', title: 'REGISTO DE TURNOS DE ECIN POR ELEMENTO',
+      body: hidden('Valor Amal', 'amal-value-reg', 'Valor Anepc', 'anepc-value-reg') + months('months-container-dec-reg') + box('table-container-dec-reg'),
+      footer: actions('decir-reg-options', [['clean', 'delete-dec-btn'], ['save', 'save-dec-btn'], ['xlsx', 'emit-reg-dec-btn'], ['pdf', 'emit-reg-pdf-btn']])}));
+    fill('decir-pag-ecins', card({cls: 'major-card', icon: 'doc', title: 'RELATÓRIOS PARA PAGAMENTOS MENSAIS ECINs',
+      body: hidden('Valor Amal', 'amal-value-pag', 'Valor Anepc', 'anepc-value-pag') + months('months-container-dec-pag') + box('table-container-dec-pag') + box('table-container-dec-coda33'),
+      footer: actions('decir-pag-options', [['xlsx', 'emit-pag-dec-btn'], ['pdf', 'emit-pag-pdf-btn']]) + actions('decir-coda33-options', [['xlsx', 'emit-coda33-dec-btn'], ['pdf', 'emit-coda33-pdf-btn']])}));
+    fill('decir-anepc-ecins', card({icon: 'doc', title: 'RELATÓRIOS MENSAIS ANEPC ECINs',
+      body: hidden('Valor Amal', 'amal-value-anepc', 'Valor Anepc', 'anepc-value-anepc') + months('months-container-dec-anepc') + box('table-container-dec-anepc'),
+      footer: actions('decir-anepc-options', [['xlsx', 'emit-anepc-dec-btn'], ['pdf', 'emit-anepc-pdf-btn']])}));
+
+    fill('decir-audit', card({icon: 'clock', title: 'AUDITORIA DE LOGS', body: box('table-container-audit-logs'),
+      footer: actions('decir-audit-options', [['xlsx', 'emit-audit-dec-btn'], ['pdf', 'emit-audit-pdf-btn']])}));
+
+    /* SBAs e OPATs */
+    fill('decir-reg-sbaopat', card({icon: 'clip', title: 'REGISTO DE TURNOS DE SBA E OPAT POR ELEMENTO',
+      body: hidden('Valor Amal', 'amal-value-reg', 'Valor Anepc', 'anepc-value-reg') + months('months-container-sbaopat-reg') + box('table-container-sbaopat-reg'),
+      footer: actions('decir-reg-sbaopat-options', [['clean', 'delete-sbaopat-btn'], ['save', 'save-sbaopat-btn'], ['xlsx', 'emit-reg-sbaopat-btn'], ['pdf', 'emit-reg-sbaopat-pdf-btn']])}));
+    fill('decir-pag-sbaopat', card({icon: 'doc', title: 'RELATÓRIOS PARA PAGAMENTOS MENSAIS OPATs e SBAs',
+      body: hidden('Valor SBAS', 'sbas-value-pag', 'Valor OPAT', 'opat-value-pag') + months('months-container-sbaopat-pag') + box('table-container-sbaopat-pag') + box('table-container-sbaopat-coda33'),
+      footer: actions('sbaopat-pag-options', [['xlsx', 'emit-pag-sbaopat-btn'], ['pdf', 'emit-pag-sbaopat-pdf-btn']]) + actions('sbaopat-coda33-options', [['xlsx', 'emit-coda33-sbaopat-btn'], ['pdf', 'emit-coda33-sbaopat-pdf-btn']])}));
+    fill('decir-anepc-sbaopat', card({icon: 'doc', title: 'RELATÓRIOS MENSAIS ANEPC - SBAs E OPATs',
+      body: hidden('Valor Amal', 'amal-value-anepc', 'Valor Anepc', 'anepc-value-anepc') + months('months-container-sbaopat-anepc') + box('table-container-sbaopat-anepc'),
+      footer: actions('decir-anepc-sbaopat-options', [['xlsx', 'emit-anepc-sbaopat-btn'], ['pdf', 'emit-anepc-sbaopat-pdf-btn']])}));
+
+    /* Despesas */
+    fill('decir-desp-demage', card({icon: 'truck', title: 'REGISTO MENSAL DE DESPESAS COM DANOS DECIR',
+      body: months('months-container-dec-desp-demage') + box('table-container-dec-desp-demage', 'dec-mt16'),
+      footer: actions('decir-desp-demage-options', [['xlsx', 'emit-dec-desp-demage-btn'], ['pdf', 'emit-pdf-desp-demage-btn']], true)}));
+    fill('decir-desp-meals', card({icon: 'mealsEur', title: 'REGISTO MENSAL DE DESPESAS COM REFEIÇÕES DECIR',
+      body: months('months-container-dec-desp-meals') + box('table-container-dec-desp-meals', 'dec-mt16'),
+      footer: actions('decir-desp-meals-options', [['xlsx', 'emit-dec-desp-meals-btn'], ['pdf', 'emit-pdf-desp-meals-btn']], true)}));
+
+    /* Registos complementares */
+    fill('decir-reg-ocorr', card({icon: 'fire', title: 'REGISTO MENSAL DE OCORRÊNCIAS DECIR', body: months('months-container-dec-reg-ocorr'),
+      footer: actions('decir-ocorr-options', [['save', 'save-ocorr-btn'], ['xlsx', 'emit-ocorr-dec-btn'], ['pdf', 'emit-ocorr-pdf-btn']])}));
+    fill('decir-reg-signa', card({icon: 'pen', title: 'EMISSÃO FORMULÁRIOS DE ASSINATURAS ANEPC',
+      footer: actions('decir-signa-options', [['xlsx', 'emit-signa-xlsx-btn'], ['pdf', 'emit-signa-pdf-btn']])}));
+    fill('decir-reg-ref', card({icon: 'meals', title: 'REGISTO MENSAL DE REFEIÇÕES DECIR', body: months('months-container-dec-ref') + box('table-container-dec-ref'),
+      footer: actions('decir-ref-options', [['save', 'save-ref-btn'], ['xlsx', 'emit-ref-dec-btn'], ['pdf', 'emit-ref-pdf-btn']])}));
+    fill('decir-reg-lepp', card({icon: 'pin', round: 1, title: 'REGISTO MENSAL DE PRÉ-POSICIONAMENTO EM LOCAIS ESTRATÉGICOS DE PRÉ-POSICIONAMENTO',
+      body: months('months-container-dec-lepp') + box('table-container-dec-lepp'),
+      footer: actions('decir-lepp-options', [['save', 'save-lepp-btn'], ['xlsx', 'emit-lepp-dec-btn'], ['pdf', 'emit-lepp-pdf-btn']], true)}));
+    /* Nível IV: o botão Guardar tem o mesmo id do de cima (save-lepp-btn), como antes; grava com saveLeppLevelIV */
+    fill('decir-reg-leveliv', card({icon: 'pin', round: 1, title: 'DISTRIBUIÇÃO LOCAIS ESTRATÉGICOS DE PRÉ-POSICIONAMENTO DECIR NÍVEL IV',
+      body: box('table-container-dec-leveliv', 'dec-mt16'),
+      footer: actions('decir-leveliv-options', [['save', 'save-lepp-btn'], ['xlsx', 'emit-leveliv-dec-btn'], ['pdf', 'emit-leveliv-pdf-btn']], true)}));
+    document.querySelector('#decir-leveliv-options .btn-add')?.addEventListener('click', () => saveLeppLevelIV());
+
+    fill('decir-dashboard', card({icon: 'bars', title: 'ANÁLISES ESTATÍSTICAS'}));
+    /* ------------------------- fim da construção ------------------------- */
     const DECIR_PDF_MODAL_STYLES = `
       @keyframes decirModalFadeIn {from {opacity: 0;} to {opacity: 1;}}
       @keyframes decirModalSlideUp {from {opacity: 0; transform: translateY(28px) scale(0.97);} to {opacity: 1; transform: translateY(0) scale(1);}}
@@ -6986,3 +7179,8 @@
       box.appendChild(footer);
       document.body.appendChild(overlay);
     }
+
+    /* usadas por window[...] no carregamento das tabelas de registo */
+    window.updateAllDecirValues = updateAllDecirValues;
+    window.updateAllValuesSbaOpat = updateAllValuesSbaOpat;
+    })();

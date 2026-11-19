@@ -43,7 +43,6 @@
     .panel-sidebar-menu-button.active::before {opacity: 1; width: 6px; height: 6px; background: #ff4d5d; box-shadow: 0 0 10px #ff4d5d, 0 0 20px rgba(220, 53, 69, 0.6);}
     .panel-sidebar-menu-button i, .panel-sidebar-menu-button svg {font-size: 16px; opacity: 0.7; transition: 0.3s;}
     .panel-sidebar-menu-button:hover i, .panel-sidebar-menu-button.active i {opacity: 1; color: #dc3545; filter: drop-shadow(0 0 5px rgba(220, 53, 69, 0.5));}
-        .panel-group-title {font-size: 11px; font-weight: 700; letter-spacing: 1.2px; color: rgba(255,255,255,0.45); text-transform: uppercase; margin: 14px 4px 6px; padding-bottom: 3px; border-bottom: 1px solid rgba(255,255,255,0.10); user-select: none; pointer-events: none;}
     /* ================= CONTAINERS ================= */
     .container {width: 100vw; height: 100vh; background-color: #F8F9FA; position: relative; margin: 0; box-shadow: none;}
     .page {display: none;}

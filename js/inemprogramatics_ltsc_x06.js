@@ -356,7 +356,14 @@
       btnEmitir.addEventListener("mouseenter", () => btnEmitir.style.background = "#334155");
       btnEmitir.addEventListener("mouseleave", () => btnEmitir.style.background = "#1e293b");
       btnEmitir.addEventListener("click", () => exportInemEntriesPDF());
-      btnsRight.append(btnEmitirXlsx, btnEmitir);
+      const btnIndisp = document.createElement("button");
+      btnIndisp.id = "btn-inem-indisp-report";
+      btnIndisp.innerHTML = '<i class="fa-solid fa-truck-medical"></i> Relatório Indisponibilidades';
+      Object.assign(btnIndisp.style, {background: "#9a1515", color: "#fff", border: "none", padding: "10px 18px", borderRadius: "6px", cursor: "pointer", fontWeight: "600", fontSize: "12px", transition: "0.2s"});
+      btnIndisp.addEventListener("mouseenter", () => btnIndisp.style.background = "#7b0000");
+      btnIndisp.addEventListener("mouseleave", () => btnIndisp.style.background = "#9a1515");
+      btnIndisp.addEventListener("click", () => openVehicleUnavailabilityMonthSelectModal());
+      btnsRight.append(btnIndisp, btnEmitirXlsx, btnEmitir);
       footer.appendChild(btnsRight);
       container.appendChild(footer);
       const today = new Date().toLocaleDateString('sv-SE');

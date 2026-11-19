@@ -10485,6 +10485,8 @@
     // ---- EXPORT: exportCb360IncidentsToExcel() — exporta as ocorrências atualmente filtradas para .xlsx via vw_cb360_incidents_summary ----
     async function exportCb360IncidentsToExcel() {
       const btn = document.getElementById('cb360-register-export');
+      try { await cb360LoadLib('xlsx'); }
+      catch (err) { console.error(err); showPopup('popup-danger', 'Não foi possível carregar o módulo de Excel. Verifique a ligação e tente novamente.'); return; }
       const internalNumbers = (cb360Pagination.fullData || []).map(o => o.internal_number).filter(Boolean);
       if (!internalNumbers.length) {
         showPopup('popup-danger', 'Não há ocorrências para exportar.');

@@ -385,7 +385,7 @@
           const page = document.getElementById("page-data");
           if (page) {
             const interval = setInterval(() => {
-              if (clickWhenExists(".panel-sidebar-menu-button[onclick*=\"showPanelCardDataCenter('assoc')\"]", page)) {
+              if (clickWhenExists(".panel-sidebar-menu-button[data-panel=\"assoc\"]", page)) {
                 clearInterval(interval);
               }
             }, 50);

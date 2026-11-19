@@ -1,3 +1,2005 @@
+    /* =======================================
+    SALOC PROGRAMATICS
+    - As páginas do SALOC (PPIs, recusas/INOPs, relatórios, dashboard, CREPC Algarve,
+      planeamento diário, SITOP, diversos e consola de alarmes) são criadas aqui, logo ao
+      carregar; o main.html só tem os <div class="page"> vazios.
+    - O HTML foi movido tal e qual (mesmos ids, estilos e on...=""), para não mudar nada no
+      funcionamento. A limpeza dos estilos fica para a fase do CSS.
+    ======================================= */
+    (() => {
+    const PAGES = {
+      'page-saloc': `
+        <div class="major-card last-card">
+          <div class="major-card-header">BEM-VINDO AO SALOC 360</div>
+          <div class="major-card-body" style="font-family: 'Segoe UI', sans-serif;">
+            <p style="font-size: 15px; margin-bottom: 20px; color: #333;">
+              O <strong>SALOC 360</strong> é um sistema digital de gestão operacional diária da
+              <strong>Sala de Operações e Comunicações (SALOC)</strong> do seu Corpo de Bombeiros.
+              Este sistema integra as principais ferramentas de apoio à decisão, planeamento e monitorização das atividades
+              logísticas e operacionais em tempo real.
+            </p>
+            <div style="background: linear-gradient(90deg, #e0e0e0, #d6d6d6); padding: 15px 20px; border-left: 5px solid #dc3545; border-radius: 6px; margin-bottom: 20px;">
+              <strong>Funcionalidades Principais:</strong>
+            </div>
+            <div style="margin-bottom: 20px;">
+              <ul style="list-style: none; padding-left: 10px; line-height: 1.8;">
+                <li style="color:#0d630e;">🗺️ Consulta e gestão dos Planos Prévios de Intervenção (PPI)</li>
+                <li style="color:#0d630e;">📝 Registo e análise de Recusas de Serviços</li>
+                <li style="color:#0d630e;">🚑 Registo e análise de Inoperacionalidades (INEM)</li>
+                <li style="color:#0d630e;">📊 Dashboard de Estatísticas Operacionais</li>
+                <li style="color:#0d630e;">📁 Acesso e Gestão de Documentação Operacional e Interna</li>
+                <li style="color:#0d630e;">📅 Planeamentos Diários e gestão de turnos</li>
+                <li style="color:#0d630e;">📨 Gestão e envio de documentação importante ao COMANDO SUB-REGIONAL</li>
+              </ul>
+            </div>
+            <p style="margin-top: 30px; color: #444;">
+              Estas funcionalidades proporcionam uma visão integrada do estado operacional da corporação,
+              reforçando a capacidade de planeamento, comunicação e resposta coordenada em tempo real.
+            </p>
+            <div style="margin-top: 40px; text-align:center; font-style: italic; color: #6c757d;">
+              Selecione uma opção no menu lateral para começar.
+            </div>
+          </div>
+          <div class="major-card-footer"></div>
+        </div>
+`,
+      'page-ppis': `
+        <div class="major-card major-last-card">
+          <div class="major-card-header">PLANOS PRÉVIOS DE INTERVENÇÃO (PPI) – ALGARVE</div>
+          <div class="major-card-body" style="font-family: 'Segoe UI', sans-serif;">
+            <p style="font-size: 15px; margin-bottom: 20px; color: #333;">
+              O módulo <strong>PPI 360</strong> integra o sistema de gestão e visualização dos
+              <strong>Planos Prévios de Intervenção (PPI)</strong> da região do Algarve,
+              permitindo o acesso rápido e atualizado à informação estratégica de apoio à decisão operacional
+              e à gestão de emergências complexas.
+            </p>
+            <div style="background: linear-gradient(90deg, #e0e0e0, #d6d6d6); padding: 15px 20px; border-left: 5px solid #dc3545; border-radius: 6px; margin-bottom: 20px;">
+              <strong>Planos Disponíveis:</strong>
+            </div>
+            <ul style="list-style: none; padding-left: 20px; line-height: 1.7; font-size: 14.5px;">
+              <!-- <li style="color:#c20c0c;">🛣️ PPI - Autoestrada do Sul (A2) <em>(Em atualização pela ANEPC)</em></li> -->
+              <li style="color:#0d630e;">🛣️ PPI - Via do Infante de Sagres (A22)</li>
+              <li style="color:#0d630e;">✈️ PPI - Aeroporto Internacional Gago Coutinho</li>
+              <li style="color:#0d630e;">🚆 PPI - Linha Ferroviária do Algarve</li>
+            </ul>
+            <div style="background: linear-gradient(90deg, #e0e0e0, #d6d6d6); padding: 15px 20px; border-left: 5px solid #0d630e; border-radius: 6px; margin: 25px 0 20px 0;">
+              <strong>Funcionalidades do Módulo:</strong>
+            </div>
+            <ul style="list-style: none; padding-left: 20px; line-height: 1.7; font-size: 14.5px;">
+              <li style="color:#0d630e;">📍 Consulta geográfica interativa dos PPIs</li>
+              <li style="color:#0d630e;">📑 Acesso a tabelas técnicas e recursos associados</li>
+              <li style="color:#0d630e;">🧭 Identificação de meios e acessos operacionais</li>
+              <li style="color:#0d630e;">🔄 Atualização e integração contínua de dados</li>
+            </ul>
+            <p style="margin-top: 30px; color: #444;">
+              Os PPIs são uma ferramenta fundamental para garantir a resposta coordenada e eficiente em situações
+              de emergência, assegurando o conhecimento prévio do terreno, acessos, riscos e recursos disponíveis.
+            </p>
+            <div style="margin-top: 40px; text-align:center; font-style: italic; color: #6c757d;">
+              Selecione um PPI no menu lateral para visualizar os detalhes.
+            </div>
+          </div>
+          <div class="major-card-footer"></div>
+        </div>
+`,
+      'page-ppia2': `
+      <div class="major-card major-last-card">
+        <div class="major-card-header">PLANO PRÉVIO DE INTERVENÇÃO - AUTO ESTRADA DO SUL - A2</div>
+        <div class="major-card-body">
+          <label style="margin-bottom: 10px; font-size: 14px; font-weight: bold; color: #aaa">⟳ PPI EM ATUALIZAÇÃO PELA ANEPC</label>
+        </div>
+        <div class="major-card-footer"></div>
+      </div>
+`,
+      'page-ppia22': `
+      <div class="major-card major-last-card">
+        <div class="major-card-header header-blue">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;">
+            <path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v9a2 2 0 0 1-2 2h-2"/>
+            <circle cx="9" cy="17" r="2"/>
+            <circle cx="17" cy="17" r="2"/>
+          </svg>
+          <span>PLANO PRÉVIO DE INTERVENÇÃO - VIA DO INFANTE DE SAGRES - A22</span>
+        </div>
+        <div class="major-card-body">
+          <div class="major-row" style="margin: 3px 0 0 0; display: flex; justify-content: center;">
+            <div class="options-main-card" id="ppia22-main-options" style="display: flex; flex-direction: column; align-items: center;">
+              <label style="margin-bottom: 10px; font-size: 14px; font-weight: bold;">Selecione uma Opção</label>
+              <div class="action-buttons" id="ppia22-options" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%; max-width: 400px;">
+                <button id="ppi_a22_by_km" class="btn btn-add options-btn" style="height: 35px; width: 100%;" onclick="consultationGridA22KmType()">Consulta por Km</button>
+                <button id="ppi_a22_by_section" class="btn btn-add options-btn" style="height: 35px; width: 100%;" onclick="consultationGridA22SectionType()">Consulta por Troço</button>
+                <button id="ppi_a22_by_structure" class="btn btn-add options-btn" style="height: 35px; width: 100%;" onclick="consultationGridA22StructureType()">Consulta por Referência</button>
+                <button id="ppi_a22_by_grid" class="btn btn-add options-btn" style="height: 35px; width: 100%;" onclick="consultationGridA22ButtonType()">Consulta por Grelha</button>
+              </div>
+            </div>
+          </div>
+          <div id="ppia22-grid-controls"></div>
+          <div id="ppia22-grid-references"></div>
+          <div id="ppia22-grid-container"></div>          
+          <div id="ppia22-specials-container"></div>
+        </div>
+        <div class="major-card-footer"></div>
+      </div>
+`,
+      'page-ppiaero': `
+      <div class="major-card major-last-card">
+        <div class="major-card-header header-blue">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;">
+            <path d="M17.8 19.2L16 11l3.5-3.5C21 6 21 4 19 4c-2 0-4 2-4 2L7 7.2l-3.5-.5-1.5 1.5 4 2-1 3 2 1 3-1 2 4 1.8-1z"/>
+          </svg>
+          <span>PLANO PRÉVIO DE INTERVENÇÃO - AEROPORTO GAGO COUTINHO</span>
+        </div>
+        <div class="major-card-body">
+          <div id="ppiaero-grid-controls"></div>
+          <div id="ppiaero-grid-info-container"></div>
+          <div id="ppiaero-grid-container"></div>
+        </div>
+        <div class="major-card-footer"></div>
+      </div>
+`,
+      'page-ppilinfer': `
+      <div class="major-card major-last-card">
+        <div class="major-card-header header-blue">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;">
+            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
+            <line x1="4" y1="22" x2="20" y2="22"/>
+          </svg>
+          <span>PLANO PRÉVIO DE INTERVENÇÃO - LINHA FERROVIÁRIA DO ALGARVE</span>
+        </div>
+        <div class="major-card-body">
+          <div class="major-row" style="margin: 3px 0 0 0; display: flex; justify-content: center;">
+            <div class="options-main-card" id="ppilinfer-main-options" style="display: flex; flex-direction: column; align-items: center;">
+              <label style="margin-bottom: 10px; font-size: 14px; font-weight: bold;">Selecione uma Opção</label>
+              <div class="action-buttons" id="ppilinfer-options" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%; max-width: 400px;">
+                <button id="ppi_linfer_by_pkm" class="btn btn-add options-btn" style="height: 35px;" onclick="consultationGridLinFerKmType()">Cosulta por PKm</button>
+                <button id="ppi_linfer_by_section" class="btn btn-add options-btn" style="height: 35px; width: 100%;" onclick="consultationGridLinFerSectionType()">Consulta por Troço</button>
+                <button id="ppi_linfer_by_structure" class="btn btn-add options-btn" style="height: 35px; width: 100%; opacity: 0.6; cursor: not-allowed;" title="Não exitem Pontos de Referência para este PPI." 
+                        onclick="consultationGridLinFerStructureType()" disabled>Consulta por Referência</button>
+                <button id="ppi_linfer_by_grid" class="btn btn-add options-btn" style="height: 35px;" onclick="consultationGridLinFerButtonType()">Consulta por Grelha</button>
+              </div>
+            </div>
+          </div>
+          <div id="ppilinfer-grid-controls"></div>
+          <div id="ppilinfer-grid-references"></div>
+          <div id="ppilinfer-specials-container"></div>
+          <div id="ppilinfer-grid-container"></div>
+        </div>
+        <div class="major-card-footer"></div>
+      </div>
+`,
+      'page-recservdescr': `
+        <div class="major-card major-last-card">
+          <div class="major-card-header">GESTÃO DE RECUSAS DE SERVIÇOS E INOPERACIONALIDADES (INEM)</div>
+          <div class="major-card-body" style="font-family: 'Segoe UI', sans-serif;">
+            <p style="font-size: 15px; margin-bottom: 20px; color: #333;">
+              O módulo <strong>REGOPS 360</strong> centraliza a <strong>gestão de recusas de serviços</strong> e
+              <strong>inoperacionalidades de meios INEM</strong>, permitindo um controlo detalhado e
+              automatizado da disponibilidade operacional das viaturas integradas no
+              protocolo de emergência pré-hospitalar, bem como a recusa de serviços do seu Corpo de Bombeiros.
+            </p>
+            <div style="background: linear-gradient(90deg, #e0e0e0, #d6d6d6); padding: 15px 20px; border-left: 5px solid #dc3545; border-radius: 6px; margin-bottom: 20px;">
+              <strong>Funcionalidades Principais:</strong>
+            </div>
+            <ul style="list-style: none; padding-left: 20px; line-height: 1.7; font-size: 14.5px;">
+              <li style="color:#0d630e;">📝 Registo de Recusas de Serviços</li>
+              <li style="color:#0d630e;">🚑 Registo de Inoperacionalidades (INEM)</li>
+              <li style="color:#0d630e;">📊 Dashboard Gráfico de Estatísticas</li>
+              <li style="color:#c20c0c;">📅 Relatórios Mensais <em>(Brevemente)</em></li>
+            </ul>
+            <div style="background: linear-gradient(90deg, #e0e0e0, #d6d6d6); padding: 15px 20px; border-left: 5px solid #0d630e; border-radius: 6px; margin: 25px 0 20px 0;">
+              <strong>Objetivo do Módulo:</strong>
+            </div>
+            <p style="font-size: 14.5px; color: #444; line-height: 1.6; margin-bottom: 20px;">
+              Este módulo visa garantir o <strong>acompanhamento em tempo real</strong> da disponibilidade operacional,
+              reduzindo o impacto das inoperacionalidades no sistema de resposta pré-hospitalar e recusas de serviços.
+              Permite ainda a análise de padrões, apoio à decisão e criação de relatórios estatísticos.
+            </p>
+            <ul style="list-style: none; padding-left: 20px; line-height: 1.7; font-size: 14.5px;">
+              <li style="color:#0d630e;">📈 Monitorização contínua da disponibilidade operacional do veículo INEM</li>
+              <li style="color:#0d630e;">📋 Monitorização contínua das recusas de serviços</li>
+              <li style="color:#0d630e;">🕓 Histórico de eventos e registos detalhados</li>
+            </ul>
+            <div style="margin-top: 40px; text-align:center; font-style: italic; color: #6c757d;">
+              Selecione uma opção no menu lateral para começar a gestão dos registos.
+            </div>
+          </div>
+          <div class="major-card-footer"></div>
+        </div>
+`,
+      'page-recserv': `
+      <div class="major-card major-last-card">
+        <div class="major-card-header">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;">
+            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M8.5 8.5L15.5 15.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M15.5 8.5L8.5 15.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+          RECUSAS DE SERVIÇOS DE TRANSPORTE DE DOENTES
+        </div>
+        <div class="major-card-body">
+          <div class="major-row">
+            <div class="options-main-card" style="width: 100%;">
+             <h3 style="font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: #444; margin: -12px -12px 15px -12px; padding: 10px 14px; 
+                        background: linear-gradient(90deg, rgba(220,53,69,0.16), rgba(255,255,255,0.03)); border-left: 3px solid rgba(220,53,69,0.9); border-radius: 6px 6px 0 0;
+                        box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);">
+               REGISTO DE RECUSAS DE SERVIÇOS
+              </h3>
+              <div class="major-row" style="margin-bottom: 5px;">
+                <div class="major-field" style="flex-direction: row; align-items: center; gap: 10px;">
+                  <label>Data da Recusa:</label>
+                  <input type="date" id="service_refusal_date" style="width: 120px;">
+                </div>
+                <div class="major-field" style="flex-direction: row; align-items: center; gap: 10px;">
+                  <label>Hora da Recusa:</label>
+                  <input type="time" id="service_refusal_time" style="width: 100px;">
+                </div>
+                <div class="major-field" style="flex-direction: row; align-items: center; gap: 10px;">
+                  <label>Tipo de Serviço:</label>
+                  <select id="service_refusal_type" style="width: 200px;"></select>
+                </div>
+                <div class="major-field" style="flex-direction: row; align-items: center; gap: 10px;">
+                  <label style="min-width: 120px;">Motivo da Recusa:</label>
+                  <select id="service_refusal_motive" style="width: 200px;"></select>
+                </div>
+              </div>
+              <div class="major-row" style="margin-bottom: 5px;">
+                <div class="major-field" style="flex-direction: row; align-items: center; gap: 10px;">
+                  <label>Origem do Serviço:</label>
+                  <input type="text" id="service_refusal_origin" style="width: 200px;">
+                </div>
+                <div class="major-field" style="flex-direction: row; align-items: center; gap: 10px;">
+                  <label>Destino do Serviço:</label>
+                  <input type="text" id="service_refusal_destination" style="width: 200px;">
+                </div>
+              </div>
+              <div class="major-row">
+                <div class="major-field" style="flex-direction: row; align-items: center; gap: 10px;">
+                  <label>Optel de Serviço:</label>
+                  <input type="text" id="service_refusal_optel" style="width: 200px;">
+                </div>
+                <div class="major-field" style="flex-direction: row; align-items: center; gap: 10px;">
+                  <label>Validado por:</label>
+                  <input type="text" id="service_refusal_validation" style="width: 200px;">
+                </div>
+              </div>
+              <div class="action-buttons" id="service-refusal">
+                <button class="btn btn-add" onclick="insertServiceRefusal()">💾 GUARDAR</button>
+              </div>
+            </div>
+          </div>
+          <hr style="margin: 20px 0;">
+          <div class="table-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <div>
+              <h3 style="font-size: 16px; color: #444; margin: 0;">Listagem de Recusas de Serviços</h3>
+            </div>
+            <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+              <label style="font-size: 13px;">Ano:</label>
+              <select id="refusals_year_filter" style="height: 25px; padding: 2px 6px; font-size: 14px;">
+              </select>
+            </div>
+          </div>
+          <div class="table-container" style="margin: 0 0 0 0; height: 285px;">
+            <table id="service-refusals-table">
+              <thead>
+                <tr>
+                  <th style="width: 70px;">Data</th>
+                  <th style="width: 50px;">Hora</th>
+                  <th style="width: 170px;">Tipo</th>
+                  <th style="width: 150px;">Origem</th>
+                  <th style="width: 150px;">Destino</th>
+                  <th style="width: 180px;">Motivo</th>
+                  <th style="width: 120px;">Optel</th>
+                  <th style="width: 120px;">Validação</th>
+                  <td></td>
+                </tr>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="major-card-footer"></div>
+      </div>
+`,
+      'page-ineminop': `
+      <div class="major-card major-last-card">
+        <div class="major-card-header">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;">
+            <path d="M3 13V8C3 6.9 3.9 6 5 6H14C15.1 6 16 6.9 16 8V13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            <circle cx="7" cy="16.5" r="1.5" stroke="currentColor" stroke-width="1.6"/>
+            <circle cx="14" cy="16.5" r="1.5" stroke="currentColor" stroke-width="1.6"/>
+            <path d="M18 6L22 10M22 6L18 10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+          INOPERACIONALIDADES VEÍCULO (INEM)
+        </div>
+        <div class="major-card-body">
+          <div class="major-row">
+            <div class="options-main-card" style="width: 100%;">
+              <h3 style="font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: #444; margin: -12px -12px 15px -12px; padding: 10px 14px;
+                         background: linear-gradient(90deg, rgba(220,53,69,0.18), rgba(255,255,255,0.03)); border-left: 3px solid rgba(220,53,69,0.9); border-radius: 6px 6px 0 0; 
+                         display: flex; align-items: center; gap: 8px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);">
+                REGISTO DE INOPERACIONALIDADES (INEM)
+              </h3>
+              <div class="major-row" style="margin-bottom: 5px;">
+                <div class="major-field" style="flex-direction: row; align-items: center; gap: 10px;">
+                  <label>Data da Inoperacionalidade:</label>
+                  <input type="date" id="ineinop_date" style="width: 120px;">
+                </div>
+                <div class="major-field" style="flex-direction: row; align-items: center; gap: 10px;">
+                  <label>Turno:</label>
+                  <select id="ineinop_shift" style="width: 75px;">
+                    <option>&nbsp;</option>
+                    <option>D</option>
+                    <option>N</option>
+                  </select>
+                </div>
+                <div class="major-field" style="flex-direction: row; align-items: center; gap: 10px;">
+                  <label>Qtd Horas:</label>
+                  <input type="time" id="ineinop_hour_qtd" style="width: 100px;">
+                </div>
+                <div class="major-field" style="flex-direction: row; align-items: center; gap: 10px;">
+                  <label>Motivo da Inopercacionalidade:</label>
+                  <select id="reason_for_ineinop" style="width: 200px;"></select>
+                </div>
+              </div>
+              <div class="major-row" style="margin-bottom: 5px;">
+                <div class="major-field" style="flex-direction: row; align-items: center; gap: 10px;">
+                  <label>Tripulante:</label>
+                  <input type="text" id="ineinop_crew" style="width: 200px;">
+                </div>
+                <div class="major-field" style="flex-direction: row; align-items: center; gap: 10px;">
+                  <label>Optel de Serviço:</label>
+                  <input type="text" id="ineinop_optel" style="width: 200px;">
+                </div>
+                <div class="major-field" style="flex-direction: row; align-items: center; gap: 10px;">
+                  <label>Validado por:</label>
+                  <input type="text" id="ineinop_validation" style="width: 200px;">
+                </div>
+              </div>
+              <div class="action-buttons" id="inem-inop">
+                <button class="btn btn-add" onclick="insertIneInop()">💾 GUARDAR</button>
+              </div>
+            </div>
+          </div>
+          <hr style="margin: 20px 0;">
+          <div class="table-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <div>
+              <h3 style="font-size: 16px; color: #444; margin: 0;">Listagem de Inoperacionalidades (INEM)</h3>
+            </div>
+            <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+              <label style="font-size: 14px;">Ano:</label>
+              <select id="ineinop_year_filter" style="height: 25px; padding: 2px 6px; font-size: 14px;">
+              </select>
+            </div>
+          </div>
+          <div class="table-container" style="margin: 0 0 0 0; height: 300px;">
+            <table id="ineinop-table">
+              <thead>
+                <tr>
+                  <th style="width: 70px;">Data</th>
+                  <th style="width: 50px;">Turno</th>
+                  <th style="width: 50px;">Qtd. Horas</th>
+                  <th style="width: 250px;">Motivo</th>
+                  <th style="width: 250px;">Tripulante</th>
+                  <th style="width: 200px;">Optel</th>
+                  <th style="width: 200px;">Validação</th>
+                  <td></td>
+                </tr>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="major-card-footer"></div>
+      </div>
+`,
+      'page-recinoreports': `
+      <div class="major-card major-last-card">
+        <div class="major-card-header">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;">
+            <path d="M7 3h10l3 3v15H7V3z"/>
+            <path d="M17 3v4h4"/>
+            <path d="M9 17v-4"/>
+            <path d="M12 17v-7"/>
+            <path d="M15 17v-2"/>
+          </svg>
+          RELATÓRIOS MENSAIS DE RECUSAS DE SERVIÇOS E INOPERACIONALIDADES (INEM)
+        </div>
+        <div class="major-card-body">
+          <!-- FILTROS -->
+          <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px; margin-bottom: 18px;">
+            <label style="font-size: 14px;">Mês:</label>
+            <select id="refusal_month_filter" style="width: 130px;"></select>
+            <label style="font-size: 14px; margin-left: 8px;">Ano:</label>
+            <select id="refusal_year_filter" style="width: 80px;"></select>
+          </div>
+          <!-- TABELAS -->
+          <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start;">
+            <!-- TABELA RECUSAS -->
+            <div style="flex: 1; min-width: 220px;">
+              <div style="font-size: 13px; font-weight: 600; color: #fff; background: #dc3545; padding: 7px 12px; border-radius: 6px 6px 0 0; letter-spacing: 0.4px;">
+                🚫 Recusas de Serviço
+              </div>
+              <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                <thead>
+                  <tr style="background: #f1f3f5;">
+                    <th style="padding: 7px 10px; text-align: left; border-bottom: 2px solid #dee2e6; color: #495057;">Tipo de Serviço</th>
+                    <th style="padding: 7px 10px; text-align: center; border-bottom: 2px solid #dee2e6; color: #495057;">Qtd.</th>
+                  </tr>
+                </thead>
+                <tbody id="table-refusals-body">
+                  <tr><td colspan="2" style="text-align:center; padding: 12px; color: #aaa;">A carregar...</td></tr>
+                </tbody>
+                <tfoot>
+                  <tr style="background: #f8f9fa; font-weight: 600;">
+                    <td style="padding: 7px 10px; border-top: 2px solid #dee2e6;">Total</td>
+                    <td id="table-refusals-total" style="padding: 7px 10px; text-align: center; border-top: 2px solid #dee2e6;">0</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            <!-- TABELA INEM D -->
+            <div style="flex: 1; min-width: 320px;">
+              <div style="font-size: 13px; font-weight: 600; color: #fff; background: #198754; padding: 7px 12px; border-radius: 6px 6px 0 0; letter-spacing: 0.4px;">
+                🌤️ Inoperacionalidades INEM — Turno D
+              </div>
+              <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                <thead>
+                  <tr style="background: #f1f3f5;">
+                    <th style="padding: 7px 10px; text-align: center; border-bottom: 2px solid #dee2e6; color: #495057;">Mês</th>
+                    <th style="padding: 7px 10px; text-align: center; border-bottom: 2px solid #dee2e6; color: #495057;">Motivo</th>
+                    <th style="padding: 7px 10px; text-align: center; border-bottom: 2px solid #dee2e6; color: #495057;">Qtd.</th>
+                    <th style="padding: 7px 10px; text-align: center; border-bottom: 2px solid #dee2e6; color: #495057;">Total Horas</th>
+                  </tr>
+                </thead>
+                <tbody id="table-inemD-body">
+                  <tr><td colspan="4" style="text-align:center; padding: 12px; color: #aaa;">A carregar...</td></tr>
+                </tbody>
+                <tfoot>
+                  <tr style="background: #f8f9fa; font-weight: 600;">
+                    <td style="padding: 7px 10px; border-top: 2px solid #dee2e6;">Total</td>
+                    <td style="padding: 7px 10px; border-top: 2px solid #dee2e6;"></td>
+                    <td id="table-inemD-total-qty" style="padding: 7px 10px; text-align: center; border-top: 2px solid #dee2e6;">0</td>
+                    <td id="table-inemD-total-hrs" style="padding: 7px 10px; text-align: center; border-top: 2px solid #dee2e6;">0h 0m</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            <!-- TABELA INEM N -->
+            <div style="flex: 1; min-width: 320px;">
+              <div style="font-size: 13px; font-weight: 600; color: #fff; background: #0d6efd; padding: 7px 12px; border-radius: 6px 6px 0 0; letter-spacing: 0.4px;">
+                🌙 Inoperacionalidades INEM — Turno N
+              </div>
+              <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                <thead>
+                  <tr style="background: #f1f3f5;">
+                    <th style="padding: 7px 10px; text-align: center; border-bottom: 2px solid #dee2e6; color: #495057;">Mês</th>
+                    <th style="padding: 7px 10px; text-align: center; border-bottom: 2px solid #dee2e6; color: #495057;">Motivo</th>
+                    <th style="padding: 7px 10px; text-align: center; border-bottom: 2px solid #dee2e6; color: #495057;">Qtd.</th>
+                    <th style="padding: 7px 10px; text-align: center; border-bottom: 2px solid #dee2e6; color: #495057;">Total Horas</th>
+                  </tr>
+                </thead>
+                <tbody id="table-inemN-body">
+                  <tr><td colspan="4" style="text-align:center; padding: 12px; color: #aaa;">A carregar...</td></tr>
+                </tbody>
+                <tfoot>
+                  <tr style="background: #f8f9fa; font-weight: 600;">
+                    <td style="padding: 7px 10px; border-top: 2px solid #dee2e6;">Total</td>
+                    <td style="padding: 7px 10px; border-top: 2px solid #dee2e6;"></td>
+                    <td id="table-inemN-total-qty" style="padding: 7px 10px; text-align: center; border-top: 2px solid #dee2e6;">0</td>
+                    <td id="table-inemN-total-hrs" style="padding: 7px 10px; text-align: center; border-top: 2px solid #dee2e6;">0h 0m</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="major-card-footer">
+          <div class="action-buttons" id="inem-inop">
+            <button class="btn btn-danger" onclick="insertIneInop()">📄 EMITIR</button>
+          </div>
+        </div>
+      </div>
+`,
+      'page-dashboard': `
+        <div class="major-card major-last-card">
+          <div class="major-card-header" style="display:flex; align-items:center; gap:8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;">
+              <path d="M3 3v18h18"/>
+              <path d="M7 14l3-3 4 4 5-6"/>
+            </svg>
+            DASHBOARD GRÁFICO DE ESTATÍSTICAS
+          </div>
+          <div class="major-card-body">
+            <h4 style="font-size: 14px; font-weight: 600; text-align: center; color: #2c3e50; margin: 0 0 18px 0; padding: 10px 14px; border-left: 4px solid #3498db;
+                       background: linear-gradient(90deg, rgba(52,152,219,0.10), rgba(255,255,255,0.02)); border-radius: 6px; letter-spacing: 0.3px;">
+              Representação Gráfica de Inoperacionalidades INEM e Recusas de Serviços
+            </h4>
+            <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px; margin-bottom: 15px;">
+              <label style="font-size: 14px;">Mês:</label>
+              <select id="dashboard_refusal_month_filter" style="width: 150px;"></select>
+              <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                <label style="font-size: 14px;">Ano:</label>
+                <select id="dashboard_refusal_year_filter" style="width: 70px;"></select>
+              </div>
+            </div>
+            <div style="display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap;">
+              <div style="flex: 1; min-width: 180px; padding: 14px; text-align: center; border-radius: 10px; background: linear-gradient(180deg,#f8f9fa,#eef1f4); box-shadow: 0 2px 6px rgba(0,0,0,0.06); 
+                          border-top: 3px solid #e74c3c;">
+                <div style="font-size: 11px; color: #6c7a89; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px;">Inop. Turno D</div>
+                <div id="sum-inop-d" style="font-size: 32px; font-weight: 700; color: #2c3e50;">0</div>
+              </div>
+              <div style="flex: 1; min-width: 180px; padding: 14px; text-align: center; border-radius: 10px; background: linear-gradient(180deg,#f8f9fa,#eef1f4); box-shadow: 0 2px 6px rgba(0,0,0,0.06); 
+                          border-top: 3px solid #e74c3c;">
+                <div style="font-size: 11px; color: #6c7a89; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px;">Inop. Turno N</div>
+                <div id="sum-inop-n" style="font-size: 32px; font-weight: 700; color: #2c3e50;">0</div>
+              </div>
+              <div style="flex: 1; min-width: 180px; padding: 14px; text-align: center; border-radius: 10px; background: linear-gradient(180deg,#f8f9fa,#eef1f4); box-shadow: 0 2px 6px rgba(0,0,0,0.06); 
+                          border-top: 3px solid #c0392b;">
+                <div style="font-size: 11px; color: #6c7a89; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px;">Total INOP.</div>
+                <div id="sum-inop-total" style="font-size: 32px; font-weight: 700; color: #c0392b;">0</div>
+              </div>
+              <div style="flex: 1; min-width: 180px; padding: 14px; text-align: center; border-radius: 10px; background: linear-gradient(180deg,#f8f9fa,#eef1f4); box-shadow: 0 2px 6px rgba(0,0,0,0.06); 
+                          border-top: 3px solid #e67e22;">
+                <div style="font-size: 11px; color: #6c7a89; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px;">Recusas Total</div>
+                <div id="sum-refusals-total" style="font-size:32px; font-weight:700; color:#e67e22;">0</div>
+              </div>
+            </div>
+            <div style="display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;">
+              <div style="flex: 1; min-width: 250px; padding: 14px; border-radius: 10px; background: linear-gradient(180deg,#f8f9fa,#eef1f4); box-shadow: 0 2px 6px rgba(0,0,0,0.06); border-top: 3px solid #3498db;">
+                <div style="font-size: 11px; text-align: center; margin-bottom: 10px; color: #5f6f7f; text-transform: uppercase;">INOP. Turno D</div>
+                <canvas id="chart-ine-d" style="height: 150px;"></canvas>
+              </div>
+              <div style="flex: 1; min-width: 250px; padding: 14px; border-radius: 10px; background: linear-gradient(180deg,#f8f9fa,#eef1f4); box-shadow: 0 2px 6px rgba(0,0,0,0.06); border-top: 3px solid #3498db;">
+                <div style="font-size: 11px; text-align: center; margin-bottom: 10px; color: #5f6f7f; text-transform: uppercase;">INOP. Turno N</div>
+                <canvas id="chart-ine-n" style="height: 150px;"></canvas>
+              </div>
+              <div style="flex:1; min-width:250px; padding:14px; border-radius:10px; background:linear-gradient(180deg,#f8f9fa,#eef1f4); box-shadow:0 2px 6px rgba(0,0,0,0.06); border-top:3px solid #e74c3c;">
+                <div style="font-size: 11px; text-align: center; margin-bottom: 10px; color: #5f6f7f; text-transform: uppercase;">Total INOP.</div>
+                <canvas id="chart-ine-total" style="height: 150px;"></canvas>
+              </div>
+            </div>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+              <div style="flex: 1; min-width: 250px; padding: 14px; border-radius: 10px; background: linear-gradient(180deg,#f8f9fa,#eef1f4); box-shadow: 0 2px 6px rgba(0,0,0,0.06); border-top: 3px solid #9b59b6;">
+                <div style="font-size: 11px; text-align: center; margin-bottom: 10px; color: #5f6f7f; text-transform: uppercase;">Recusas por Entidade</div>
+                <canvas id="chart-refusals-type" style="height: 150px;"></canvas>
+              </div>
+              <div style="flex: 1; min-width: 250px; padding: 14px; border-radius: 10px; background: linear-gradient(180deg,#f8f9fa,#eef1f4); box-shadow: 0 2px 6px rgba(0,0,0,0.06); border-top: 3px solid #e67e22;">
+                <div style="font-size: 11px; text-align: center; margin-bottom: 10px; color: #5f6f7f; text-transform: uppercase;">Total Recusas</div>
+                <canvas id="chart-refusals-total" style="height: 150px;"></canvas>
+              </div>
+              <div style="flex: 1; min-width: 250px; padding: 14px; border-radius: 10px; background: linear-gradient(180deg,#f8f9fa,#eef1f4); box-shadow: 0 2px 6px rgba(0,0,0,0.06); border-top: 3px solid #95a5a6;">
+                <div style="font-size: 11px; text-align: center; margin-bottom: 10px; color: #5f6f7f; text-transform: uppercase;">
+                  Reservado
+                </div>
+                <canvas style="height: 150px;"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="major-card-footer"></div>
+        </div>
+`,
+      'page-docimport': `
+        <div class="major-card last-card">
+          <div class="major-card-header">GESTÃO DE DOCUMENTAÇÃO OPERACIONAL E INSTITUCIONAL (DOC 360)</div>
+          <div class="major-card-body" style="font-family: 'Segoe UI', sans-serif;">
+            <p style="font-size: 15px; margin-bottom: 20px; color: #333;">
+              O módulo <strong>DOCS 360</strong> é o módulo responsável pela <strong>gestão e comunicação documental</strong> essencial à atividade operacional e administrativa do seu Corpo de Bombeiros.
+              Este sistema integra processos de reporte, planeamento e envio de documentação às entidades competentes, garantindo rigor e rastreabilidade em todas as comunicações oficiais.
+            </p>
+            <div style="background: linear-gradient(90deg, #d5d5d5, #c9c9c9); padding: 15px 20px; border-left: 5px solid #171d8f; border-radius: 6px; margin-bottom: 20px;">
+              <strong>Funcionalidades Principais:</strong>
+            </div>
+            <ul style="padding-left: 25px; line-height: 1.6;">
+              <li style="margin-bottom: 8px;">📄 <strong>Formulários Oficiais CREPC Algarve</strong> – envio e atualização de documentação obrigatória, como <em>MOA</em>, <em>Anexo G2</em> e outros 
+                formulários operacionais.</li>
+              <li style="margin-bottom: 8px;">📅 <strong>Planeamentos Diários</strong> – gestão estruturada de recursos e previsões do serviço diário do CB Faro - Cruz Lusa.</li>
+              <li style="margin-bottom: 8px;">🚒 <strong>Comunicação de Inoperacionalidades e Operacionalidades</strong> – automatização do envio de estados de veículos e equipamentos às entidades 
+                designadas (CREPC, CHEFIAS, COMANDO, etc.).</li>
+            </ul>
+            <div style="margin-top: 40px; text-align:center; font-style: italic; color: #6c757d;">
+              Selecione uma opção no menu lateral para aceder à documentação correspondente.
+            </div>
+          </div>
+          <div class="major-card-footer"></div>
+        </div>
+`,
+      'page-crepcalg': `
+        <div class="major-card major-last-card">
+          <div class="major-card-header" style="display:flex; align-items:center; gap:8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;">
+              <path d="M7 3h10l3 3v15H7V3z"/>
+              <path d="M17 3v4h4"/>
+              <path d="M9 12h6"/>
+              <path d="M9 15h6"/>
+              <path d="M9 18h4"/>
+            </svg>
+            DOCUMENTAÇÃO CREPC ALGARVE
+          </div>
+          <div class="major-card-body">
+            <div id="crepcbtn-container">
+              <div class="major-row" style="margin: 0; display: flex; justify-content: center;">
+                <div class="options-main-card" style="display: flex; flex-direction: column; align-items: center;">
+                  <label style="margin-bottom: 10px; font-size: 14px; font-weight: bold;">Selecione uma Opção</label>
+                  <div class="action-buttons" id="docs-crepc" style="gap: 5px;">
+                    <button id="NewMOABtn" class="btn btn-add options-btn" style="height: 35px;">MOA's</button>
+                    <button class="btn btn-add options-btn" style="height: 35px;" onclick="showbreve()">Anexo G1</button>
+                    <button id="NewAnxG2Btn" class="btn btn-add options-btn" style="height: 35px;">Anexo G2</button>
+                  </div>
+                </div>
+              </div>
+              <!-- MOA (CREPC SUB SUB-MODULE) -->
+              <div id="moa-container" style="margin: 20px 0 0 0; display: none;">
+                <div class="major-card major-last-card" style="margin:0 0 0 0;">
+                  <div class="major-card-header header-black" style="display: flex; justify-content: center;">MEDIDAS OPERACIONAIS DE ANTECIPAÇÃO (MOA)</div>
+                  <div class="major-card-body">
+                    <div class="major-row" style="margin: 0 0 0 0;">
+                      <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                        <label style="font-size: 13px; font-weight: bold;">Selecione o Corpo de Bombeiros:</label>
+                        <select id="moa_cb" style="width: 230px;"></select>
+                      </div>
+                      <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                        <label style="font-size: 13px; font-weight: bold;">Selecione o Dispositivo:</label>
+                        <select id="moa_device_type" style="width: 160px;"></select>
+                      </div>
+                      <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                        <label style="font-size: 13px; font-weight: bold;">Selecione o Estado de Prontidão Especial (EPE):</label>
+                        <select id="moa_epe_type" style="width: 180px;"></select>
+                      </div>
+                    </div>
+                    <div class="major-row" style="margin: 10px 0 0 0; align-items: center;">
+                      <div class="major-field" style="flex-direction: row; align-items: center;">
+                        <label style="font-size: 13px; font-weight: bold; white-space: nowrap;">Indique o período:</label>
+                      </div>
+                      <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                        <label style="font-size: 13px; font-weight: bold;">De:</label>
+                        <input type="date" id="moa_date_init" style="width: 140px;">
+                        <input type="time" id="moa_time_init" style="width: 90px;">
+                        <label style="font-size: 13px; font-weight: bold;">Até:</label>
+                        <input type="date" id="moa_date_end" style="width: 140px;">
+                        <input type="time" id="moa_time_end" style="width: 90px;">
+                        <input type="text" id="moa_gdh_init" style="width: 170px; display: none;">
+                        <input type="text" id="moa_gdh_end" style="width: 170px; display: none;">
+                      </div>
+                    </div>
+                    <div class="grid-1fr">
+                      <div class="options-main-card main-card-left" style="margin: 20px 0 0 0; align-items: flex-start; text-align: left;">
+                        <div class="major-row" style="margin: 5px 0 0 0;">
+                          <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">                            
+                            <label style="font-size: 14px; font-weight: 600; letter-spacing: 0.04em; color: #444; margin: 0 0 10px 0; padding: 8px 12px; 
+                                          background: linear-gradient(90deg, rgba(220,53,69,0.18), rgba(255,255,255,0.03)); border-left: 3px solid rgba(220,53,69,0.9); border-radius: 6px 6px 0 0;
+                                          display: inline-flex; align-items: center; gap: 8px;">Indique as Medidas:</label>
+                          </div>
+                        </div>
+                        <div class="major-row" style="display: flex; align-items: center; margin: 3px 0;">
+                          <label style="width: 280px; display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; white-space: nowrap;">
+                            <input id="moa_eco" type="checkbox" style="width: 17px; height: 17px; cursor: pointer !important;"> Elemento de Comando às operações:</label>
+                          <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px; flex: 1; min-width: 0;">
+                            <select id="moa_eco_sit" style="width: 200px;"></select>
+                            <select id="moa_eco_pront" style="width: 250px;"></select>
+                            <input id="moa_eco_observ" type="text" style="width: 754px;" placeholder="Observações">
+                          </div>
+                        </div>
+                        <div class="major-row" style="display: flex; align-items: center; margin: 3px 0;">
+                          <label style="width: 280px; display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer;">
+                            <input id="moa_ned" type="checkbox" style="width:17px; height:17px; cursor: pointer !important;">Notificação à Entidade Detentora:</label>
+                          <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                            <select id="moa_ned_sit" style="width: 200px; background: #5e5e5e;" disabled></select>
+                            <select id="moa_ned_pront" style="width: 250px;"></select>
+                            <input id="moa_ned_observ" type="text" style="width: 754px;" placeholder="Observações">
+                          </div>
+                        </div>
+                        <div class="major-row" style="display: flex; align-items: center; margin: 3px 0;">
+                        <label style="width: 280px; display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer;">
+                          <input id="moa_oco" type="checkbox" style="width:17px; height:17px; cursor: pointer !important;"> Ofícial / Chefe em ordenança:</label>
+                          <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                            <select id="moa_oco_sit" style="width: 200px;"></select>
+                            <select id="moa_oco_pront" style="width: 250px;"></select>
+                            <input id="moa_oco_observ" type="text" style="width: 754px;" placeholder="Observações">
+                          </div>
+                        </div>
+                        <div class="major-row" style="display: flex; align-items: center; margin: 3px 0;">
+                          <label style="width: 280px; display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer;">
+                            <input id="moa_era" type="checkbox" style="width:17px; height:17px; cursor: pointer !important;"> ERAS Locais:</label>
+                          <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                            <select id="moa_era_sit" style="width: 200px;"></select>
+                            <select id="moa_era_pront" style="width: 250px;"></select>
+                            <input id="moa_era_observ" type="text" style="width: 754px;" placeholder="Observações">
+                          </div>
+                        </div>
+                        <div class="major-row" style="display: flex; align-items: center; margin: 3px 0;">
+                          <label style="width: 280px; display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer;">
+                            <input id="moa_eob" type="checkbox" style="width:17px; height:17px; cursor: pointer !important;"> Equipas de Observação:</label>
+                          <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                            <select id="moa_eob_sit" style="width: 200px;"></select>
+                            <select id="moa_eob_pront" style="width: 250px;"></select>
+                            <input id="moa_eob_observ" type="text" style="width: 754px;" placeholder="Observações">
+                          </div>
+                        </div>
+                        <div class="major-row" style="display: flex; align-items: center; margin: 3px 0;">
+                          <label style="width: 280px; display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer;">
+                            <input id="moa_rsc" type="checkbox" style="width:17px; height:17px; cursor: pointer !important;"> Reforço da SALOC:</label>
+                          <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                            <select id="moa_rsc_sit" style="width: 200px; background: #5e5e5e;" disabled></select>
+                            <select id="moa_rsc_pront" style="width: 250px;"></select>
+                            <input id="moa_rsc_observ" type="text" style="width: 754px;" placeholder="Observações">
+                          </div>
+                        </div>
+                        <div class="major-row" style="display: flex; align-items: center; margin: 3px 0;">
+                        <label style="width: 280px; display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer;">
+                          <input id="moa_mef" type="checkbox" style="width:17px; height:17px; cursor: pointer !important;"> Mobilização do efetivo:</label>
+                          <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                            <select id="moa_mef_sit" style="width: 200px;"></select>
+                            <select id="moa_mef_pront" style="width: 250px; background: #5e5e5e;" disabled></select>
+                            <input id="moa_mef_observ" type="text" style="width: 754px; background: #909090" placeholder="Observações" disabled>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="options-main-card options-main-card-right" style="margin: 10px 0 0 0; align-items: flex-start; text-align: left;">
+                      <div class="major-row" style="margin: 5px 0 0 0;">
+                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                          <label style="font-size: 14px; font-weight: 600; letter-spacing: 0.04em; color: #444; margin: 0 0 10px 0; padding: 8px 12px;
+                                        background: linear-gradient(90deg, rgba(220,53,69,0.18), rgba(255,255,255,0.03)); border-left: 3px solid rgba(220,53,69,0.9); border-radius: 6px 6px 0 0;
+                                        display: inline-flex; align-items: center; gap: 8px;">Reforço de Equipas de Intervenção Extraordinárias:</label>
+                        </div>
+                      </div>
+                      <div class="major-row" style="display: flex; align-items: center; margin: 2px 0;">
+                        <label style="font-size: 15px;"> Tipologia:</label>
+                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                          <input type="text" id="moa_reie_type_01" style="width: 200px;">
+                        </div>
+                        <label style="font-size: 15px;"> Período:</label>
+                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                          <input type="text" id="moa_reie_time_01" style="width: 250px;">
+                        </div>
+                        <label style="font-size: 15px;"> Nº Operacionais:</label>
+                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                          <input type="text" id="moa_reie_nop_01" style="width: 75px; text-align: center;">
+                        </div>
+                        <label style="font-size: 15px;"> Observações:</label>
+                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                          <input type="text" id="moa_reie_obs_01" style="width: 632px;">
+                        </div>
+                      </div>
+                      <div class="major-row" style="display: flex; align-items: center; margin: 2px 0;">
+                        <label style="font-size: 15px;"> Tipologia:</label>
+                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                          <input type="text" id="moa_reie_type_02" style="width: 200px;">
+                        </div>
+                        <label style="font-size: 15px;"> Período:</label>
+                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                          <input type="text" id="moa_reie_time_02" style="width: 250px;">
+                        </div>
+                        <label style="font-size: 15px;"> Nº Operacionais:</label>
+                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                          <input type="text" id="moa_reie_nop_02" style="width: 75px; text-align: center;">
+                        </div>
+                        <label style="font-size: 15px;"> Observações:</label>
+                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                          <input type="text" id="moa_reie_obs_02" style="width: 632px;">
+                        </div>
+                      </div>
+                      <div class="major-row" style="display: flex; align-items: center; margin: 2px 0;">
+                        <label style="font-size: 15px;"> Tipologia:</label>
+                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                          <input type="text" id="moa_reie_type_03" style="width: 200px;">
+                        </div>
+                        <label style="font-size: 15px;"> Período:</label>
+                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                          <input type="text" id="moa_reie_time_03" style="width: 250px;">
+                        </div>
+                        <label style="font-size: 15px;"> Nº Operacionais:</label>
+                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                          <input type="text" id="moa_reie_nop_03" style="width: 75px; text-align: center;">
+                        </div>
+                        <label style="font-size: 15px;"> Observações:</label>
+                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                          <input type="text" id="moa_reie_obs_03" style="width: 632px;">
+                        </div>
+                      </div>
+                        
+                      <div class="major-row" style="margin: 15px 0 0 0;">
+                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                          <label style="font-size: 14px; font-weight: 600; letter-spacing: 0.04em; color: #444; margin: 0 0 10px 0; padding: 8px 12px;
+                                        background: linear-gradient(90deg, rgba(220,53,69,0.18), rgba(255,255,255,0.03)); border-left: 3px solid rgba(220,53,69,0.9); border-radius: 6px 6px 0 0;
+                                        display: inline-flex; align-items: center; gap: 8px;">Outras:</label>
+                        </div>
+                      </div>
+                      <div class="major-row" style="display: flex; align-items: center; margin: 3px 0;">
+                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                          <input type="text" id="moa_otr_type_01" style="width: 350px;">
+                        </div>
+                        <label style="font-size: 15px;"> Período:</label>
+                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                          <input type="text" id="moa_otr_time_01" style="width: 250px;">
+                        </div>
+                        <label style="font-size: 15px;"> Observações:</label>
+                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                          <input type="text" id="moa_otr_obs_01" style="width: 728px;">
+                        </div>
+                      </div>
+                      <div class="major-row" style="display: flex; align-items: center; margin: 2px 0;">
+                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                          <input type="text" id="moa_otr_type_02" style="width: 350px;">
+                        </div>
+                        <label style="font-size: 15px;"> Período:</label>
+                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                          <input type="text" id="moa_otr_time_02" style="width: 250px;">
+                        </div>
+                        <label style="font-size: 15px;"> Observações:</label>
+                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                          <input type="text" id="moa_otr_obs_02" style="width: 728px;">
+                        </div>
+                      </div>
+                      <div class="major-row" style="display: flex; align-items: center; margin: 2px 0;">
+                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                          <input type="text" id="moa_otr_type_03" style="width: 350px;">
+                        </div>
+                        <label style="font-size: 15px;"> Período:</label>
+                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                          <input type="text" id="moa_otr_time_03" style="width: 250px;">
+                        </div>
+                        <label style="font-size: 15px;"> Observações:</label>
+                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                          <input type="text" id="moa_otr_obs_03" style="width: 728px;">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px; margin: 15px 0 0 0;">
+                    <label> OPTEL:</label>
+                    <input type="text" id="moa_optel" style="width: 300px;">
+                  </div>
+                </div>
+                <div class="major-card-footer">
+                  <div class="action-buttons" id="moa-emit" style="gap: 5px;">
+                    <button class="btn btn-danger " id="saveMOABtn" style="height: 35px;">📄 EMITIR</button>
+                  </div>
+                </div>
+              </div>                
+            </div>
+          </div>
+          <!-- G2 (CREPC SUB SUB-MODULE) -->
+          <div id="g2-container" style="margin: 20px 0 0 0; display: none;">
+            <div class="major-card major-last-card" style="margin:0 0 0 0;">
+              <div class="major-card-header header-black" style="display: flex; justify-content: center;">LISTA NOMINAL DE MEIOS DO CB (ANEXO G2)</div>
+              <div class="major-card-body">
+                <div class="major-row" style="margin: 0; display: flex; justify-content: center;">
+                  <div class="options-main-card" style="display: flex; flex-direction: column; align-items: center;">
+                    <label style="margin-bottom: 10px; font-size: 14px; font-weight: bold;">Selecione uma Opção</label>
+                    <div class="action-buttons" id="g2-action-buttons" style="gap: 5px;">
+                      <button class="btn btn-add options-btn oldg2" style="height: 35px;">EM CURSO</button>
+                      <button class="btn btn-add options-btn" style="height: 35px;" id="NewG2Btn">NOVO</button>
+                    </div>
+                  </div>
+                </div>
+                <!-- MISSÕES EM CURSO -->
+                <div id="g2TableContainer" style="display: none; margin-top: 20px;">
+                  <h3>Missões em Curso</h3>
+                  <div class="table-container">
+                    <table id="g2Table">
+                      <thead>
+                        <tr>
+                          <th style="width: 90px;">Nº Sequencial</th>
+                          <th style="width: 100px;">Viatura</th>
+                          <th style="width: 120px;">GDH Acionamento</th>
+                          <th style="width: 350px;">Local de Intervenção</th>
+                          <th style="width: 150px;">Ação</th>
+                        </tr>
+                      </thead>
+                      <tbody></tbody>
+                    </table>
+                  </div>
+                </div>
+                <!-- FORMULÁRIO -->
+                <div id="g2_form_container" style="display: none; margin-top: 20px;">
+                  <div class="major-card major-last-card" style="margin-bottom: 0px;">
+                    <div class="major-card-header header-black" style="display: flex; justify-content: center;">INSERÇÃO DE NOVA LISTA NOMINAL DE MEIOS</div>
+                    <div class="major-card-body">
+                      <div class="major-row" style="margin-top: 5px;">              
+                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                          <label style="font-size: 13px;">Nº Sequencial:</label>
+                          <input type="text" id="g2_seq_number" style="width: 150px; text-align: center; font-size: 14px;">
+                        </div>
+                      </div>
+                      <!-- INTERVENÇÃO (50/50) -->
+                      <div class="table-container" style="margin-top: 10px;">
+                        <table id="g2InterventionTable" style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+                          <thead>
+                            <tr>
+                              <th colspan="2" style="background-color: #721c24; color: #ffffff; text-align: center; padding: 8px 10px; font-weight: bold; font-size: 13px; border: 0;">INTERVENÇÃO</th>
+                            </tr>
+                            <tr>
+                              <th style="width:50%; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">GDH Acionamento</th>
+                              <th style="width:50%; border-top: 1px solid #ccc; padding: 6px;">Local de Intervenção (Concelho/Sub-Região)</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td style="padding: 4px; white-space: nowrap; text-align: center;">
+                                <input type="date" id="g2_gdh_activation_date" style="font-size: 12px; width: 105px; height: 24px; padding: 0 4px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; outline: none; transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;" onfocus="this.style.borderColor='#80bdff'; this.style.boxShadow='0 0 5px rgba(0, 123, 255, 0.25)';" onblur="this.style.borderColor='#ccc'; this.style.boxShadow='none';">
+                                <input type="time" id="g2_gdh_activation_hour" style="font-size: 12px; width: 75px; height: 24px; padding: 0 4px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; outline: none; transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;" onfocus="this.style.borderColor='#80bdff'; this.style.boxShadow='0 0 5px rgba(0, 123, 255, 0.25)';" onblur="this.style.borderColor='#ccc'; this.style.boxShadow='none';">
+                                <input type="text" id="g2_gdh_activation" style="display: none;" readonly tabindex="-1">
+                              </td>
+                              <td style="padding: 4px;">
+                                <input type="text" id="g2_intervention_location" style="font-size: 12px; width: 100%; height: 24px; padding: 0 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; outline: none; transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;" onfocus="this.style.borderColor='#80bdff'; this.style.boxShadow='0 0 5px rgba(0, 123, 255, 0.25)';" onblur="this.style.borderColor='#ccc'; this.style.boxShadow='none';">
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <!-- VEÍCULO (6 colunas com COLGROUP para forçar as larguras) -->
+                      <div class="table-container" style="margin-top: 10px; width: 100%;">
+                        <table id="g2VehicleTable" style="width: 100% !important; border-collapse: collapse; table-layout: fixed !important;">
+                          <colgroup>
+                            <col style="width: 30% !important;">
+                            <col style="width: 8% !important;">
+                            <col style="width: 14% !important;">
+                            <col style="width: 16% !important;">
+                            <col style="width: 16% !important;">
+                            <col style="width: 16% !important;">
+                          </colgroup>
+                          <thead>
+                            <tr>
+                              <th colspan="6" style="background-color: #721c24; color: #ffffff; text-align: center; padding: 8px 10px; font-weight: bold; font-size: 13px; border: 0;">VEÍCULOS</th>
+                            </tr>
+                            <tr>
+                              <th style="border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">Corpo de Bombeiros</th>
+                              <th style="border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">Meios</th>
+                              <th style="border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">ISSI SIRESP (móvel)</th>
+                              <th style="border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">GDH Saída Quartel</th>
+                              <th style="border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">GDH Local Concentração</th>
+                              <th style="border-top: 1px solid #ccc; padding: 6px;">GDH no TO</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td style="padding: 4px;">
+                                <select id="g2_cb" style="font-size: 12px; width: 100%; height: 24px; padding: 0 4px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; outline: none;" onfocus="this.style.borderColor='#80bdff';" onblur="this.style.borderColor='#ccc';">
+                                  <option>0801 - Companhia Sapadores de Faro</option>
+                                  <option>0802 - Corpo de Bombeiros de Lagos</option>
+                                  <option>0803 - Companhia Sapadores de Tavira</option>
+                                  <option>0804 - Corpo de Bombeiros de Vila Real de Sto. António e Castro Marim</option>
+                                  <option>0805 - Corpo de Bombeiros de Faro - Cruz Lusa</option>
+                                  <option>0806 - Corpo de Bombeiros de de Silves</option>
+                                  <option>0807 - Corpo de Bombeiros de Portimão</option>
+                                  <option>0808 - Corpo de Bombeiros Municipais de Loulé</option>
+                                  <option>0809 - Corpo de Bombeiros de São Brás de Alportel</option>
+                                  <option>0810 - Corpo de Bombeiros Municipais de Olhão</option>
+                                  <option>0811 - Corpo de Bombeiros de Monchique</option>
+                                  <option>0812 - Corpo de Bombeiros de Aljezur</option>
+                                  <option>0813 - Corpo de Bombeiros de São Bartolomeu de Messines</option>
+                                  <option>0814 - Corpo de Bombeiros de Albufeira</option>
+                                  <option>0815 - Corpo de Bombeiros de Lagoa</option>
+                                  <option>0816 - Corpo de Bombeiros de Vila do Bispo</option>
+                                  <option>0817 - Corpo de Bombeiros de Alcoutim</option>
+                                </select>
+                              </td>
+                              <td style="padding: 4px;">
+                                <select id="g2_vehicle" style="font-size: 12px; text-align-last: center; width: 100%; height: 24px; padding: 0 2px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; outline: none;" onfocus="this.style.borderColor='#80bdff';" onblur="this.style.borderColor='#ccc';"></select>
+                              </td>
+                              <td style="padding: 4px;">
+                                <input type="text" id="g2_vehicle_issi" style="font-size: 12px; width: 100%; height: 24px; padding: 0 4px; box-sizing: border-box; text-align: center; border: 1px solid #ccc; border-radius: 4px; outline: none;" onfocus="this.style.borderColor='#80bdff';" onblur="this.style.borderColor='#ccc';">
+                              </td>                  
+                              <!-- GDH SAÍDA -->
+                              <td style="padding: 4px;">
+                                <div style="display: flex; gap: 3px;">
+                                  <input type="date" id="g2_gdh_station_departure_date" style="font-size: 12px; width: 58%; height: 24px; padding: 0 2px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; outline: none;">
+                                  <input type="time" id="g2_gdh_station_departure_hour" style="font-size: 12px; width: 42%; height: 24px; padding: 0 2px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; outline: none;">
+                                </div>
+                                <input type="text" id="g2_gdh_station_departure" style="display: none;" readonly tabindex="-1">
+                              </td>                    
+                              <!-- GDH CONCENTRAÇÃO -->
+                              <td style="padding: 4px;">
+                                <div style="display: flex; gap: 3px;">
+                                  <input type="date" id="g2_gdh_assembly_point_date" style="font-size: 12px; width: 58%; height: 24px; padding: 0 2px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; outline: none;">
+                                  <input type="time" id="g2_gdh_assembly_point_hour" style="font-size: 12px; width: 42%; height: 24px; padding: 0 2px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; outline: none;">
+                                </div>
+                                <input type="text" id="g2_gdh_assembly_point" style="display: none;" readonly tabindex="-1">
+                              </td>                    
+                              <!-- GDH TO -->
+                              <td style="padding: 4px;">
+                                <div style="display: flex; gap: 3px;">
+                                  <input type="date" id="g2_gdh_incident_site_date" style="font-size: 12px; width: 58%; height: 24px; padding: 0 2px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; outline: none;">
+                                  <input type="time" id="g2_gdh_incident_site_hour" style="font-size: 12px; width: 42%; height: 24px; padding: 0 2px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; outline: none;">
+                                </div>
+                                <input type="text" id="g2_gdh_incident_site" style="display: none;" readonly tabindex="-1">
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <!-- CHEFE DE EQUIPA (linhas geradas por JS) -->
+                      <div class="table-container" style="margin-top: 10px; ">
+                        <table id="g2LeadersTable" style="width: 100%; border-collapse: collapse;">
+                          <thead>
+                            <tr>
+                              <th colspan="6" style="background-color: #721c24; color: #ffffff; text-align: center; padding: 8px 10px; font-weight: bold; font-size: 13px; border: 0; position: relative;">
+                                CHEFE DE EQUIPA
+                                <button id="addG2LeaderBtn" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background-color: #28a745; color: white; border: none; border-radius: 4px; width: 24px; height: 24px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;">+</button>
+                              </th>
+                            </tr>
+                            <tr>
+                              <th style="width:30px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">ID</th>
+                              <th style="width:40px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">Nº Int.</th>
+                              <th style="width:150px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">Categoria</th>
+                              <th style="width:250px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">Nome</th>
+                              <th style="width:160px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">ISSI SIRESP (móvel)</th>
+                              <th style="width:160px; border-top: 1px solid #ccc; padding: 6px;">Telefone</th>
+                            </tr>
+                          </thead>
+                          <tbody></tbody>
+                        </table>
+                      </div>
+                      <!-- EQUIPA (linhas geradas por JS) -->
+                      <div class="table-container" style="margin-top: 10px;">
+                        <table id="g2CrewTable" style="width: 100%; border-collapse: collapse;">
+                          <thead>
+                            <tr>
+                              <th colspan="9" style="background-color: #721c24; color: #ffffff; text-align: center; padding: 8px 10px; font-weight: bold; font-size: 13px; border: 0; position: relative;">
+                                EQUIPA (INCLUIR O CHEFE DE EQUIPA)
+                                <button id="addG2CrewBtn" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background-color: #28a745; color: white; border: none; border-radius: 4px; width: 24px; height: 24px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;">+</button>
+                              </th>
+                            </tr>
+                            <tr>
+                              <th style="width:40px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">ID</th>
+                              <th style="width:50px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">Nº Int.</th>
+                              <th style="width:110px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">Nº Mec.</th>
+                              <th style="width:150px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">Categoria</th>
+                              <th style="width:200px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">Nome</th>
+                              <th style="width:50px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">SitDisp<br>(E/N/S/G)</th>
+                              <th style="width:100px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">Rede (ID)</th>
+                              <th style="width:180px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">GDH Saída</th>
+                              <th style="width:180px; border-top: 1px solid #ccc; padding: 6px;">GDH Chegada</th>
+                            </tr>
+                          </thead>
+                          <tbody></tbody>
+                        </table>
+                      </div>
+                      <p style="font-size: 15px; color: #666; margin-top: 10px; text-align: center;">SitDisp = Situação no Dispositivo | E = Escalado | N = Não Escalado | S = Substituído | G = Gruata</p>
+                      <div class="major-row" style="display: flex; align-items: center; margin: 15px 0 0 0;">
+                        <div class="major-field" style="display: flex; flex-direction: row; align-items: center; gap: 3px;">
+                          <label style="font-size: 13px;">OPTEL:</label>
+                          <input type="text" id="g2_optel_nint" style="width: 60px; height: 25px !important; box-sizing: border-box; padding: 0; text-align: center; border: 1px solid #ccc; border-radius: 4px;   transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;" onfocus="this.style.setProperty('border-color', '#80bdff', 'important'); this.style.setProperty('box-shadow', '0 0 5px rgba(0, 123, 255, 0.25)', 'important');"  onblur="this.style.setProperty('border-color', '#ccc', 'important'); this.style.setProperty('box-shadow', 'none', 'important');">
+                          <input type="text" id="g2_optel_patent" readonly tabindex="-1" style="width: 75px; height: 25px !important; box-sizing: border-box; padding: 0; text-align: center; border: 1px solid #ccc; border-radius: 4px; background-color: #e9ecef !important; cursor: not-allowed; transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;" onfocus="this.style.setProperty('border-color', '#80bdff', 'important'); this.style.setProperty('box-shadow', '0 0 5px rgba(0, 123, 255, 0.25)', 'important');" onblur="this.style.setProperty('border-color', '#ccc', 'important'); this.style.setProperty('box-shadow', 'none', 'important');">
+                          <input type="text" id="g2_optel_name" readonly tabindex="-1" style="width: 175px; height: 25px !important; box-sizing: border-box; padding: 0; border: 1px solid #ccc; border-radius: 4px; background-color: #e9ecef !important; cursor: not-allowed; transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;" onfocus="this.style.setProperty('border-color', '#80bdff', 'important'); this.style.setProperty('box-shadow', '0 0 5px rgba(0, 123, 255, 0.25)', 'important');" onblur="this.style.setProperty('border-color', '#ccc', 'important'); this.style.setProperty('box-shadow', 'none', 'important');">
+                        </div>
+                      </div>  
+                    </div>
+                    <div class="major-card-footer" style="display: flex; flex-wrap: wrap; justify-content: flex-end;">
+                      <button class="btn btn-danger" id="g2SaveBtn" style="font-size: 12px;">Salvar</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>          
+          </div>  
+        </div>
+        <div class="major-card-footer"></div>
+      </div>
+`,
+      'page-plandir': `
+        <div class="major-card major-last-card">
+          <div class="major-card-header">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;">
+              <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+              <line x1="8" y1="10" x2="16" y2="10"/>
+              <line x1="8" y1="14" x2="16" y2="14"/>
+              <line x1="8" y1="18" x2="12" y2="18"/>
+            </svg>
+            PLANEAMENTOS DIÁRIOS
+          </div>
+          <div class="major-card-body">
+            <div class="major-row" style="margin: 0; display: flex; justify-content: center;">
+              <div class="options-main-card" style="display: flex; flex-direction: column; align-items: center;">
+                <label style="margin-bottom: 10px; font-size: 14px; font-weight: bold;">Selecione um Turno</label>
+                <div class="action-buttons" id="plandir-shift" style="gap: 5px;">
+                  <button class="btn btn-add options-btn" style="height: 35px;" data-shift="D" onclick="loadShift('D')">TURNO "D"</button>
+                  <button class="btn btn-add options-btn" style="height: 35px;" data-shift="N" onclick="loadShift('N')">TURNO "N"</button>
+                  <button class="btn btn-add options-btn" style="height: 35px; background: orange; color: black;" data-shift="LAST" onclick="loadShift('LAST')">ÚLTIMO</button>
+                </div>
+              </div>
+            </div>
+            <div id="plandir-header-container"></div>
+            <div id="plandir-layout-wrapper">
+              <div id="plandir-left-col">
+                <div id="plandir_container"></div>
+              </div>
+              <div id="plandir-right-col" style="display: none;">
+                <div id="plandir-card-container">
+                  <div class="plandir-main-card" style="margin: 10px 0 0 0; width: 500px;">
+                    <div class="plandir-card-title red-variant">ELEMENTOS ESCALADOS</div>
+                    <table class="plandir-side-table">
+                      <thead>
+                        <tr>
+                          <th style="padding: 5px 6px; width: 75px;">Nº Int.</th>
+                          <th style="padding: 5px 6px; width: 150px;">Patente</th>
+                          <th style="padding: 5px 6px; width: 200px;">Nome</th>
+                        </tr>
+                      </thead>
+                      <tbody id="plandir-side-tbody"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="major-card-footer"></div>
+        </div>
+`,
+      'page-inocrepc': `
+      <div class="major-card major-last-card">
+        <div class="major-card-header">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;">
+            <rect x="1" y="10" width="22" height="10" rx="2" ry="2"/>
+            <path d="M4 10V7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3"/>
+            <circle cx="7" cy="20" r="2"/>
+            <circle cx="17" cy="20" r="2"/>
+            <line x1="7" y1="10" x2="7" y2="14"/>
+            <line x1="12" y1="10" x2="12" y2="14"/>
+            <line x1="17" y1="10" x2="17" y2="14"/>
+          </svg>
+          SITUAÇÃO OPERACIONAL DE VEÍCULOS (CREPC)
+        </div>
+        <div class="major-card-body">
+          <div class="major-row" style="margin: 0; display: flex; justify-content: center;">
+            <div class="options-main-card" style="display: flex; flex-direction: column; align-items: center;">
+              <label style="margin-bottom: 10px; font-size: 14px; font-weight: bold;">Selecione uma Opção</label>
+              <div class="action-buttons" id="inop-action-buttons" style="gap: 5px;">
+                <button class="btn btn-add options-btn oldinop" style="height: 35px;">EM CURSO</button>
+                <button class="btn btn-add options-btn" style="height: 35px;" id="NewInopBtn">NOVA</button>
+              </div>
+            </div>
+          </div>
+          <div id="inopsTableContainer" style="display: none; margin-top: 20px;">
+            <h3>Inoperacionalidades em Curso</h3>
+            <div class="table-container">
+              <table id="inopsTable">
+                <thead>
+                  <tr>
+                    <th style="width: 100px;">Veículo</th>
+                    <th style="width: 100px;">GDH INOP</th>
+                    <th style="width: 200px;">Tipo de Avaria</th>
+                    <th style="width: 400px;">Descrição da Avaria</th>
+                    <th style="width: 200px;">OPTEL</th>
+                    <th style="width: 150px;">Ação</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          <div id="sitop_container" style="display: none; margin-top: 20px;">
+            <div class="major-card major-last-card" style="margin-bottom: 0px;">
+              <div class="major-card-header header-black"  style="display: flex; justify-content: center;">INSERÇÃO DE NOVA INOPERACIONALIDADE</div>
+              <div class="major-card-body">
+                <div class="major-row" style="margin-top: 5px;">
+                  <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                    <label style="font-size: 13px;">Corpo de Bombeiros:</label>
+                    <select id="sitop_cb" style="width: 400px;">
+                      <option>0801 - Companhia Sapadores de Faro</option>
+                      <option>0802 - Corpo de Bombeiros de Lagos</option>
+                      <option>0803 - Companhia Sapadores de Tavira</option>
+                      <option>0804 - Corpo de Bombeiros de Vila Real de Sto. António e Castro Marim</option>
+                      <option>0805 - Corpo de Bombeiros de Faro - Cruz Lusa</option>
+                      <option>0806 - Corpo de Bombeiros de de Silves</option>
+                      <option>0807 - Corpo de Bombeiros de Portimão</option>
+                      <option>0808 - Corpo de Bombeiros Municipais de Loulé</option>
+                      <option>0809 - Corpo de Bombeiros de São Brás de Alportel</option>
+                      <option>0810 - Corpo de Bombeiros Municipais de Olhão</option>
+                      <option>0811 - Corpo de Bombeiros de Monchique</option>
+                      <option>0812 - Corpo de Bombeiros de Aljezur</option>
+                      <option>0813 - Corpo de Bombeiros de São Bartolomeu de Messines</option>
+                      <option>0814 - Corpo de Bombeiros de Albufeira</option>
+                      <option>0815 - Corpo de Bombeiros de Lagoa</option>
+                      <option>0816 - Corpo de Bombeiros de Vila do Bispo</option>
+                      <option>0817 - Corpo de Bombeiros de Alcoutim</option>
+                    </select>
+                  </div>
+                  <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                    <label style="font-size: 13px;">Veículo:</label>
+                    <select id="sitop_veíc" style="width: 125px;"></select>
+                  </div>
+                  <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                    <label style="font-size: 13px;">Matrícula:</label>
+                    <input type="text" id="sitop_veíc_registration" style="width: 120px; text-align: center;" readonly tabindex="-1">
+                    <input type="text" id="sitop_gdh_inop" style="width: 120px; text-align: center; display: none;" readonly tabindex="-1">
+                    <input type="text" id="sitop_gdh_op" style="width: 120px; text-align: center; display: none;" readonly tabindex="-1">
+                  </div>
+                </div>  
+                <div class="major-row" style="margin-top: 5px;">      
+                  <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                    <label style="font-size: 13px;">Data:</label>
+                    <input type="date" id="sitop_veíc_date" style="width: 120px;">
+                    <label style="font-size: 13px;">Hora:</label>
+                    <input type="time" id="sitop_veíc_hour" style="width: 100px;">
+                  </div>
+                </div>
+                <div class="major-row" style="margin-top: 5px;">                  
+                  <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                    <label style="font-size: 13px;">Tipo de Avaria:</label>
+                    <select id="sitop_type_failure" style="width: 200px;"></select>
+                  </div>
+                  <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                    <label style="font-size: 13px;">Descrição da Avaria:</label>
+                    <input type="text" id="sitop_failure_description" style="width: 395px;">
+                  </div>
+                  <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                    <label style="font-size: 13px;">NOC:</label>
+                    <input type="text" id="sitop_failure_noc" style="width: 150px; text-align: center;">
+                  </div>
+                </div>
+                <label style="font-weight: bold; font-size: 13px; display: block; margin-top: 15px; margin-bottom: 5px;">
+                  O Veículo indicado faz parte de algum PPI?
+                </label>
+                <div class="checkbox-vertical" style="margin-left: 20px;">
+                  <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; white-space: nowrap;">
+                    <input id="ppi_yes" type="checkbox" style="width: 17px; height: 17px; cursor: pointer !important;"> SIM</label>
+                  <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; white-space: nowrap; margin-left: 15px;">
+                    <input id="ppi_no" type="checkbox" style="width: 17px; height: 17px; cursor: pointer !important;"> NÃO</label>
+                </div>
+                <label style="font-weight: bold; font-size: 13px; display: block; margin-top: 15px; margin-bottom: 5px;">
+                  Qual ou Quais:
+                </label>
+                <div class="checkbox-vertical" style="margin-left: 40px;">
+                  <label style="display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; white-space: nowrap; width: 100px;">
+                    <input type="checkbox" style="width: 17px; height: 17px; cursor: pointer !important;" id="ppi_airport"> Aeroporto</label>
+                  <label style="display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; white-space: nowrap; width: 60px;">
+                    <input type="checkbox" style="width: 17px; height: 17px; cursor: pointer !important;" id="ppi_a22"> A22</label>
+                  <label style="display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; white-space: nowrap; width: 50px;">
+                    <input type="checkbox" style="width: 17px; height: 17px; cursor: pointer !important;" id="ppi_a2"> A2</label>
+                  <label style="display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; white-space: nowrap; width: 190px;">
+                    <input type="checkbox" style="width: 17px; height: 17px; cursor: pointer !important;" id="ppi_linfer"> Linha Férrea do Algarve</label>
+                  <label style="display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; white-space: nowrap; width: 170px;">
+                    <input type="checkbox" style="width: 17px; height: 17px; cursor: pointer !important;" id="ppi_airfield"> Aeródromo Portimão</label>
+                </div>
+                <label style="font-weight: bold; font-size: 13px; display: block; margin-top: 15px; margin-bottom: 5px;">
+                  O Corpo de Bombeiros tem capacidade de substituição por veículo similar?
+                </label>
+                <div class="checkbox-vertical" style="margin-left: 20px;">
+                  <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; white-space: nowrap;">
+                    <input id="ppi_subs_yes" type="checkbox" style="width: 17px; height: 17px; cursor: pointer !important;"> SIM</label>
+                    <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; white-space: nowrap; margin-left: 15px;">
+                      <input id="ppi_subs_no" type="checkbox" style="width: 17px; height: 17px; cursor: pointer !important;"> NÃO</label>
+                </div>
+                <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px; margin-top: 15px;">
+                <label style="font-size: 13px; font-weight: bold; color: #444;">OPTEL:</label>
+                  <input type="text" id="sitop_optel" style="width: 250px;">
+                </div>
+              </div>
+              <div class="major-card-footer" style="display: flex; flex-wrap: wrap; justify-content: flex-end;">
+                <button class="btn btn-danger" id="saveBtn" style="font-size: 12px; width: 25px;">Salvar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="major-card-footer"></div>
+      </div>
+`,
+      'page-hemodialysis': `
+      <div class="major-card">
+        <div class="major-card-header" style="display: flex; align-items: center; gap: 10px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            <polyline points="22 12 18 12 15 19 9 5 6 12 2 12"/>
+          </svg>
+          UTENTES DE HEMODIÁLISE
+        </div>
+        <div class="major-card-body">
+          <div class="major-row" style="margin: 0; display: flex; justify-content: center;">
+            <div class="options-main-card" style="display: flex; flex-direction: column; align-items: center;">
+              <label style="margin-bottom: 10px; font-size: 14px; font-weight: bold;">Selecione uma Opção</label>
+              <div class="action-buttons" id="docs-crepc" style="gap: 5px;">
+                <button id="HemoWeekList" class="btn btn-add options-btn" style="width: 100px; height: 35px;">Listagem Semanal</button>
+                <button id="HemoWAdresses" class="btn btn-add options-btn" style="width: 100px; height: 35px;">Utentes</button>
+                <button id="HemoOther" class="btn btn-add options-btn" style="width: 100px; height: 35px;" onclick="showbreve()">Outros</button>
+              </div>
+            </div>
+          </div>          
+          <div id="hemo-utentdata-card" style="display: none; margin-top: 20px;">
+            <div class="options-main-card">
+              <h3 style="font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: #444; margin: -12px -12px 15px -12px; padding: 5px 14px; 
+                         background: linear-gradient(90deg, rgba(220,53,69,0.16), rgba(255,255,255,0.03)); border-left: 3px solid rgba(220,53,69,0.9); border-radius: 6px 6px 0 0;
+                         box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);">
+               DADOS DO UTENTE
+              </h3>
+              <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+                <label style="font-size: 13px;">Nome do Utente:</label>
+                <input type="text" id="utent_h_name" style="width: 700px;">
+                <label style="font-size: 13px;">Nr. de Utente:</label>
+                <input type="text" id="utent_h_nr" style="width: 150px;">
+              </div>
+              <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px; margin-top: 5px;">
+                <label style="font-size: 13px;">Morada do Utente:</label>
+                <input type="text" id="utent_h_adress" style="width: 550px;">
+                <label style="font-size: 13px;">Localidade:</label>
+                <input type="text" id="utent_h_localitie" style="width: 500px;">
+              </div>
+              <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px; margin-top: 5px;">
+                <label style="font-size: 13px;">Contactos:</label>
+                <input type="text" id="utent_h_contacts" style="width: 300px;">
+              </div>
+              <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px; margin-top: 5px;">
+                <label style="font-size: 13px;">Dias Tratamento:</label>
+                <div style="position: relative; display: inline-block;">
+                  <div id="utent_h_treatment_days_btn" onclick="toggleDaysDropdown()"
+                       style="width: 200px; padding: 4px 8px; border: 1px solid #ccc; border-radius: 3px; cursor: pointer; background: #fff; font-size: 13px; min-height: 28px;">
+                    Selecionar dias...
+                  </div>
+                  <div id="utent_h_treatment_days_dropdown" style="display: none; position: absolute; z-index: 999; background: #fff; border: 1px solid #ccc; border-radius: 4px; 
+                                                                   padding: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); min-width: 160px; text-align: left;">
+                    <label style="display: flex; align-items: center; justify-content: flex-start; gap: 6px; font-size: 13px; padding: 3px 0; cursor: pointer; width: 100%; text-align: left;">
+                      <input type="checkbox" value="SEG" style="width: 16px; height: 16px; margin: 0; cursor: pointer !important; outline: none !important; box-shadow: none !important;">Segunda</label>
+                    <label style="display: flex; align-items: center; justify-content: flex-start; gap: 6px; font-size: 13px; padding: 3px 0; cursor: pointer; width: 100%; text-align: left;">
+                      <input type="checkbox" value="TER" style="width: 16px; height: 16px; margin: 0; cursor: pointer !important; outline: none !important; box-shadow: none !important;">Terça</label>
+                    <label style="display: flex; align-items: center; justify-content: flex-start; gap: 6px; font-size: 13px; padding: 3px 0; cursor: pointer; width: 100%; text-align: left;">
+                      <input type="checkbox" value="QUA" style="width: 16px; height: 16px; margin: 0; cursor: pointer !important; outline: none !important; box-shadow: none !important;">Quarta</label>
+                    <label style="display: flex; align-items: center; justify-content: flex-start; gap: 6px; font-size: 13px; padding: 3px 0; cursor: pointer; width: 100%; text-align: left;">
+                      <input type="checkbox" value="QUI" style="width: 16px; height: 16px; margin: 0; cursor: pointer !important; outline: none !important; box-shadow: none !important;">Quinta</label>
+                    <label style="display: flex; align-items: center; justify-content: flex-start; gap: 6px; font-size: 13px; padding: 3px 0; cursor: pointer; width: 100%; text-align: left;">
+                      <input type="checkbox" value="SEX" style="width: 16px; height: 16px; margin: 0; cursor: pointer !important; outline: none !important; box-shadow: none !important;">Sexta</label>
+                    <label style="display: flex; align-items: center; justify-content: flex-start; gap: 6px; font-size: 13px; padding: 3px 0; cursor: pointer; width: 100%; text-align: left;">
+                      <input type="checkbox" value="SAB" style="width: 16px; height: 16px; margin: 0; cursor: pointer !important; outline: none !important; box-shadow: none !important;">Sábado</label>
+                  </div>
+                </div>
+                <label style="font-size: 13px;">Turno Tratamento:</label>
+                <select id="utent_h_treatment_sift" style="width: 150px;">
+                  <option></option>
+                  <option>07:00-12:00</option>
+                  <option>11:00-17:00</option>
+                  <option>16:00-23:00</option>
+                </select>
+                <label style="font-size: 13px;">Loacal Tratamento:</label>
+                <select id="utent_h_treatment_local" style="width: 200px;">
+                  <option></option>
+                  <option>ULSA Faro</option>
+                  <option>Nephrocare Faro</option>
+                  <option>Outro</option>
+                </select>
+                <label style="font-size: 13px;">Posição:</label>
+                <select id="utent_h_treatment_position" style="width: 200px;">
+                  <option></option>
+                  <option>Sentado</option>
+                  <option>Deitado</option>
+                  <option>Cadeira de Rodas</option>
+                </select>
+              </div>
+              <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px; justify-content: flex-end; margin-top: 15px;">
+                <button id="utent_h_save" class="btn btn-add">💾 GRAVAR</button> 
+              </div>
+            </div>
+          </div>
+          <div id="hemo-utentlist-card" style="display: none; margin-top: 20px;">
+            <div class="options-main-card">
+              <h3 style="font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: #444; margin: -12px -12px 15px -12px; padding: 5px 14px;
+                         background: linear-gradient(90deg, rgba(220,53,69,0.16), rgba(255,255,255,0.03)); border-left: 3px solid rgba(220,53,69,0.9); border-radius: 6px 6px 0 0;
+                         box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);">
+                LISTAGEM DE UTENTES
+              </h3>
+              <div class="hemo-scroll" style="max-height: 500px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #bdc3c7 #f1f1f1;">
+                <table style="width: 100%; border-collapse: collapse;">
+                  <thead style="position: sticky; top: 0; z-index: 1;">
+                    <tr style="background: #1e3a8a; color: #fff;">
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Nome</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Morada</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Localidade</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Contacto</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Nr. Benif.</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Destino</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Dias</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Turno</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Posição</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px; width: 100px;">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="hemo-utentlist-tbody">
+                    <tr><td colspan="9" style="text-align: center; padding: 8px; font-size: 12px; color: #999;">Sem registos</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div id="hemo-week-cards" style="display: none; margin-top: 20px;">
+            <div class="major-row" style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; align-items: stretch; padding: 0;">
+              <div class="options-main-card" style="min-width: 250px; display: flex; flex-direction: column; align-items: center; height: 100%; margin-left: 0;">
+                <div style="font-size: 14px; font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #ddd; padding-bottom: 5px; width: 100%; text-align: center;">
+                  Segundas / Quartas / Sextas
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 15px; width: 100%; max-height: 500px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #bdc3c7 #f1f1f1;">
+                  <div>
+                    <div style="font-size: 13px; font-weight: bold; background: #1e3a8a; color: #fff; padding: 5px 10px; border-radius: 4px 4px 0 0; text-align: center;">
+                      07:00 — 12:00
+                    </div>
+                    <table style="width: 100%; border-collapse: collapse;">
+                      <thead>
+                        <tr style="background: #f0f0f0;">
+                          <th style="padding: 5px; width: 200px; border: 1px solid #ddd; font-size: 12px;">Nome</th>
+                          <th style="padding: 5px; width: 390px; border: 1px solid #ddd; font-size: 12px;">Origem</th>
+                          <th style="padding: 5px; width: 150px; border: 1px solid #ddd; font-size: 12px;">Destino</th>
+                        </tr>
+                      </thead>
+                      <tbody id="hemo-sqx-0700">
+                        <tr><td colspan="3" style="text-align: center; padding: 8px; font-size: 12px; color: #999;">Sem registos</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div>
+                    <div style="font-size: 13px; font-weight: bold; background: #1e3a8a; color: #fff; padding: 5px 10px; border-radius: 4px 4px 0 0; text-align: center;">
+                      11:00 — 17:00
+                    </div>
+                    <table style="width: 100%; border-collapse: collapse;">
+                      <thead>
+                        <tr style="background: #f0f0f0;">
+                          <th style="padding: 5px; width: 200px; border: 1px solid #ddd; font-size: 12px;">Nome</th>
+                          <th style="padding: 5px; width: 390px; border: 1px solid #ddd; font-size: 12px;">Origem</th>
+                          <th style="padding: 5px; width: 150px; border: 1px solid #ddd; font-size: 12px;">Destino</th>
+                        </tr>
+                      </thead>
+                      <tbody id="hemo-sqx-1100">
+                        <tr><td colspan="3" style="text-align: center; padding: 8px; font-size: 12px; color: #999;">Sem registos</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div>
+                    <div style="font-size: 13px; font-weight: bold; background: #1e3a8a; color: #fff; padding: 5px 10px; border-radius: 4px 4px 0 0; text-align: center;">
+                      16:00 — 23:00
+                    </div>
+                    <table style="width: 100%; border-collapse: collapse;">
+                      <thead>
+                        <tr style="background: #f0f0f0;">
+                          <th style="padding: 5px; width: 200px; border: 1px solid #ddd; font-size: 12px;">Nome</th>
+                          <th style="padding: 5px; width: 390px; border: 1px solid #ddd; font-size: 12px;">Origem</th>
+                          <th style="padding: 5px; width: 150px; border: 1px solid #ddd; font-size: 12px;">Destino</th>
+                        </tr>
+                      </thead>
+                      <tbody id="hemo-sqx-1600">
+                        <tr><td colspan="3" style="text-align: center; padding: 8px; font-size: 12px; color: #999;">Sem registos</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <div class="options-main-card" style="min-width: 250px; display: flex; flex-direction: column; align-items: center; height: 100%; margin-right: 0;">
+                <div style="font-size: 14px; font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #ddd; padding-bottom: 5px; width: 100%; text-align: center;">
+                  Terças / Quintas / Sábados
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 15px; width: 100%; max-height: 500px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #bdc3c7 #f1f1f1;">
+                  <div>
+                    <div style="font-size: 13px; font-weight: bold; background: #6b0000; color: #fff; padding: 5px 10px; border-radius: 4px 4px 0 0; text-align: center;">
+                      07:00 — 12:00
+                    </div>
+                    <table style="width: 100%; border-collapse: collapse;">
+                      <thead>
+                        <tr style="background: #f0f0f0;">
+                          <th style="padding: 5px; width: 200px; border: 1px solid #ddd; font-size: 12px;">Nome</th>
+                          <th style="padding: 5px; width: 390px; border: 1px solid #ddd; font-size: 12px;">Origem</th>
+                          <th style="padding: 5px; width: 150px; border: 1px solid #ddd; font-size: 12px;">Destino</th>
+                        </tr>
+                      </thead>
+                      <tbody id="hemo-tqs-0700">
+                        <tr><td colspan="3" style="text-align: center; padding: 8px; font-size: 12px; color: #999;">Sem registos</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div>
+                    <div style="font-size: 13px; font-weight: bold; background: #6b0000; color: #fff; padding: 5px 10px; border-radius: 4px 4px 0 0; text-align: center;">
+                      11:00 — 17:00
+                    </div>
+                    <table style="width: 100%; border-collapse: collapse;">
+                      <thead>
+                        <tr style="background: #f0f0f0;">
+                          <th style="padding: 5px; width: 200px; border: 1px solid #ddd; font-size: 12px;">Nome</th>
+                          <th style="padding: 5px; width: 390px; border: 1px solid #ddd; font-size: 12px;">Origem</th>
+                          <th style="padding: 5px; width: 150px; border: 1px solid #ddd; font-size: 12px;">Destino</th>
+                        </tr>
+                      </thead>
+                      <tbody id="hemo-tqs-1100">
+                        <tr><td colspan="3" style="text-align: center; padding: 8px; font-size: 12px; color: #999;">Sem registos</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div>
+                    <div style="font-size: 13px; font-weight: bold; background: #6b0000; color: #fff; padding: 5px 10px; border-radius: 4px 4px 0 0; text-align: center;">
+                      16:00 — 23:00
+                    </div>
+                    <table style="width: 100%; border-collapse: collapse;">
+                      <thead>
+                        <tr style="background: #f0f0f0;">
+                          <th style="padding: 5px; width: 200px; border: 1px solid #ddd; font-size: 12px;">Nome</th>
+                          <th style="padding: 5px; width: 390px; border: 1px solid #ddd; font-size: 12px;">Origem</th>
+                          <th style="padding: 5px; width: 150px; border: 1px solid #ddd; font-size: 12px;">Destino</th>
+                        </tr>
+                      </thead>
+                      <tbody id="hemo-tqs-1600">
+                        <tr><td colspan="3" style="text-align: center; padding: 8px; font-size: 12px; color: #999;">Sem registos</td></tr>                        
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="major-card-footer">
+          <div id="hemodialysis-options" style="display: none; justify-content: flex-end; gap: 10px;">            
+            <button id="hemodialysis-emit" class="btn btn-danger">📄 EMITIR LISTAGEM</button> 
+          </div>
+        </div>
+      </div>
+`,
+      'page-material-request': `
+      <div class="major-card">
+        <div class="major-card-header" style="display: flex; align-items: center; gap: 10px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
+            <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+            <rect x="9" y="3" width="6" height="4" rx="1"/>
+            <line x1="9" y1="12" x2="15" y2="12"/>
+            <line x1="9" y1="16" x2="13" y2="16"/>
+          </svg>
+          REQUISIÇÃO DE EQUIPAMENTOS
+        </div>
+        <div class="major-card-body">
+          <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <label style="font-size: 13px; white-space: nowrap;">Nome do Requisitante:</label>
+            <input type="text" id="requesting_name" style="flex: 3; min-width: 350px;">
+            <label style="font-size: 13px; white-space: nowrap;">BI/CC/Passaporte:</label>
+            <input type="text" id="requesting_cc" style="flex: 2; min-width: 100px; max-width: 200px;">
+            <label style="font-size: 13px;">-</label>
+            <input type="text" id="requesting_cc_secur" style="flex: 1; min-width: 50px; max-width: 70px;">
+            <label style="font-size: 13px; white-space: nowrap;">Contacto:</label>
+            <input type="text" id="requesting_contact" style="flex: 1; min-width: 100px;">
+          </div>
+          <div class="major-field" style="margin-top: 5px; flex-direction: row; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <label style="font-size: 13px; white-space: nowrap;">Equipamento(s) Requisitado(s):</label>
+            <input type="text" id="requesting_equipment" style="flex: 3; min-width: 150px;">
+          </div>
+          <div class="major-field" style="margin-top: 5px; flex-direction: row; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <label style="font-size: 13px; white-space: nowrap;">Data Entrega:</label>
+            <input type="date" id="delivery_date" style="flex: 1; min-width: 130px; max-width: 150px;">
+            <label style="font-size: 13px; white-space: nowrap;">Previsão de Devolução:</label>
+            <input type="date" id="return_estimate" style="flex: 1; min-width: 130px; max-width: 150px;">                       
+          </div>
+          <div class="major-field" style="margin-top: 5px; flex-direction: row; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <label style="font-size: 13px; white-space: nowrap;">Autorizado Por:</label>
+            <input type="text" id="autoryzed_by" style="flex: 1; min-width: 130px; max-width: 250px;">
+            <label style="font-size: 13px; white-space: nowrap;">OPTEL:</label>
+            <input type="text" id="optel" style="flex: 1; min-width: 130px; max-width: 250px;">                       
+          </div>
+          <div class="major-field" style="margin-top: 5px; flex-direction: row; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <label style="font-size: 13px; white-space: nowrap;">Data Devolução:</label>
+            <input type="date" id="return_date" style="flex: 1; min-width: 130px; max-width: 150px;">
+            <label style="font-size: 13px; white-space: nowrap;">Estado:</label>
+            <input type="text" id="return_status" style="flex: 1; min-width: 100px; max-width: 150px;">                      
+          </div>
+          <div style="margin-top: 20px;">
+            <div class="options-main-card">
+              <h3 style="font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: #444; margin: -12px -12px 15px -12px; padding: 5px 14px;
+                         background: linear-gradient(90deg, rgba(30,58,138,0.13), rgba(255,255,255,0.03)); border-left: 3px solid rgba(30,58,138,0.9); border-radius: 6px 6px 0 0;
+                         box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);">
+                LISTAGEM DE REQUISIÇÕES DE EQUIPAMENTOS
+              </h3>
+              <div style="max-height: 500px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #bdc3c7 #f1f1f1;">
+                <table style="width: 100%; border-collapse: collapse;">
+                  <thead style="position: sticky; top: 0; z-index: 1;">
+                    <tr style="background: #1e3a8a; color: #fff;">
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Nome</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">BI/CC</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Contacto</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Equipamento(s)</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Entrega</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Prev. Devolução</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Autorizado Por</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Estado</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px; width: 80px;">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="equipment-request-tbody">
+                    <tr><td colspan="9" style="text-align:center;padding:8px;font-size:12px;color:#999;">Sem registos</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="major-card-footer">
+          <div id="equipment-request-options" style="justify-content: flex-end; gap: 10px;">
+            <button id="equipment-request-save" class="btn btn-add">💾 GRAVAR</button>
+            <button id="equipment-request-emit" class="btn btn-danger" disabled>📄 EMITIR</button>
+          </div>
+        </div>
+      </div>
+`,
+      'page-fleet-cards': `
+      <div class="major-card">
+        <div class="major-card-header" style="display: flex; align-items: center; gap: 10px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
+            <path d="M3 22V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/>
+            <path d="M3 22h12"/>
+            <path d="M15 8h2a2 2 0 0 1 2 2v6a1 1 0 0 0 2 0v-7l-2-3"/>
+            <line x1="7" y1="10" x2="11" y2="10"/>
+          </svg>
+          CARTÕES FROTA
+        </div>
+        <div class="major-card-body">
+          <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
+            <label style="font-size: 13px;">Veículo:</label>
+            <input type="text" id="veíc_card_name" style="width: 150px;">
+            <label style="font-size: 13px;">Matricula:</label>
+            <input type="text" id="veíc_card_register" style="width: 150px;">
+            <label style="font-size: 13px;">Código Cartão:</label>
+            <input type="text" id="veíc_card_code" style="width: 150px;">
+            <label style="font-size: 13px;">Telemóvel:</label>
+            <input type="text" id="veíc_card_contact" style="width: 150px;">
+          </div>
+          <div style="margin-top: 20px;">
+            <div class="options-main-card">
+              <h3 style="font-size: 13px; font-weight: 6000; letter-spacing: 0.04em; color: #444; margin: -12px -12px 15px -12px; padding: 5px 14px;
+                         background: linear-gradient(90deg, rgba(30,58,138,0.13), rgba(255,255,255,0.03)); border-left: 3px solid rgba(30,58,138,0.9); border-radius: 6px 6px 0 0;
+                         box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);">
+                LISTAGEM DE CARTÕES FROTA
+              </h3>
+              <div style="max-height: 500px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #bdc3c7 #f1f1f1;">
+                <table style="width: 100%; border-collapse: collapse;">
+                  <thead style="position: sticky; top: 0; z-index: 1;">
+                    <tr style="background: #1e3a8a; color: #fff;">
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Veículo</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Matrícula</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Código Cartão</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Contacto</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Estado</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px; width: 120px;">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="fleet-cards-tbody">
+                    <tr><td colspan="5" style="text-align: center; padding: 8px; font-size: 12px; color: #999;">Sem registos</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top: 10px; display: flex; gap: 20px; font-size: 14px; font-weight: 600; color: #444;">
+            <span>Total de Veículos: <span id="fleet-total" style="color: #1e3a8a;">0</span></span>
+            <span>Operacionais: <span id="fleet-operacional" style="color: #16a34a;">0</span></span>
+            <span>Inoperacionais: <span id="fleet-inoperacional" style="color: #dc2626;">0</span></span>
+          </div>
+        </div>
+        <div class="major-card-footer">
+          <div id="card-fleet-options" style="justify-content: flex-end; gap: 10px;">
+            <button id="card-fleet-save" class="btn btn-add">💾 GRAVAR</button>
+            <button id="card-fleet-emit" class="btn btn-danger">📄 EMITIR</button>
+          </div>
+        </div>
+      </div>
+`,
+      'page-contact-list': `
+      <div class="major-card">
+        <div class="major-card-header" style="display: flex; align-items: center; gap: 10px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          LISTA DE CONTACTOS
+        </div>
+        <div class="major-card-body">
+          <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px; margin-bottom: 15px;">
+            <label style="font-size: 13px;">Pesquisar:</label>
+            <div style="position: relative; display: flex; align-items: center;">
+              <input type="text" id="contact-list-search" style="width: 300px; padding-right: 30px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" 
+                   style="position: absolute; right: 8px; color: #aaa; cursor: pointer; pointer-events: none;" title="Pesquisar">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </div>
+          </div>
+          <div class="options-main-card">
+            <h3 style="font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: #444; margin: -12px -12px 15px -12px; padding: 5px 14px; 
+                       background: linear-gradient(90deg, rgba(30,58,138,0.13), rgba(255,255,255,0.03)); border-left: 3px solid rgba(30,58,138,0.9); border-radius: 6px 6px 0 0;
+                       box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);">
+              CONTACTOS INTERNOS
+            </h3>
+            <div style="max-height: 500px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #bdc3c7 #f1f1f1;">
+              <table style="width: 100%; border-collapse: collapse;">
+                <thead style="position: sticky; top: 0; z-index: 1;">
+                  <tr style="background: #1e3a8a; color: #fff;">
+                    <th style="padding: 6px; border: 1px solid #ddd; font-size: 13px;">Nº Int.</th>
+                    <th style="padding: 6px; border: 1px solid #ddd; font-size: 13px;">Patente</th>
+                    <th style="padding: 6px; border: 1px solid #ddd; font-size: 13px;">Nome Completo</th>
+                    <th style="padding: 6px; border: 1px solid #ddd; font-size: 13px;">Telefone</th>
+                    <th style="padding: 6px; border: 1px solid #ddd; font-size: 13px;">Telemóvel</th>
+                    <th style="padding: 6px; border: 1px solid #ddd; font-size: 13px;">Email</th>
+                    <th colspan="2" style="padding: 6px; border: 1px solid #ddd; font-size: 13px; width: 80px;">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="contact-list-tbody">
+                  <tr><td colspan="8" style="text-align:center;padding:8px;font-size:14px;color:#999;">Sem registos</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div style="margin-top: 10px; font-size: 13px; font-weight: 600; color: #444; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+            <span style="background: #1e3a8a; color: #fff; padding: 2px 8px; border-radius: 4px;">Total: <span id="contact-total">0</span></span>
+            <span style="color: #a70c0c; background: #ffebeb; padding: 2px 6px; border-radius: 4px; border: 1px solid #ccc;">Quad. Comando: <span id="contact-qcom">0</span></span>
+            <span style="color: #2c5282; background: #ebf8ff; padding: 2px 6px; border-radius: 4px; border: 1px solid #cbd5e1;">Quad. Ativo: <span id="contact-qativ">0</span></span>
+            <span style="color: #b45309; background: #fffbeb; padding: 2px 6px; border-radius: 4px; border: 1px solid #fef3c7;">Quad. Estagiários: <span id="contact-qest">0</span></span>
+            <span style="color: #15803d; background: #f0fdf4; padding: 2px 6px; border-radius: 4px; border: 1px solid #bbf7d0;">Quad. Espec./Aux.: <span id="contact-qea">0</span></span>
+            <span style="color: #6b21a8; background: #f3e8ff; padding: 2px 6px; border-radius: 4px; border: 1px solid #e9d5ff;">Quad. Reserva: <span id="contact-qres">0</span></span>
+            <span style="color: #4a5568; background: #edf2f7; padding: 2px 6px; border-radius: 4px; border: 1px solid #e2e8f0;">Quad. Honra: <span id="contact-qhr">0</span></span>
+          </div>
+        </div>
+        <div class="major-card-footer">
+          <div style="display: flex; justify-content: flex-end; gap: 10px;">
+            <button id="contact-list-selected-email" class="btn btn-add" disabled style="opacity:0.4; cursor:not-allowed;">✉️ Enviar para Selecionados (<span id="contact-selected-count">0</span>)</button>
+            <button id="contact-list-global-email" class="btn btn-danger">✉️ Enviar para Todos</button>
+            <button id="contact-list-emit" class="btn btn-success">🖨️ Emitir Listagem</button>
+          </div>
+        </div>
+      </div>
+`,
+      'page-attendance-list': `
+      <div class="major-card">
+        <div class="major-card-header" style="display: flex; align-items: center; gap: 10px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+            <line x1="8" y1="14" x2="8.01" y2="14"/>
+            <line x1="12" y1="14" x2="12.01" y2="14"/>
+            <line x1="16" y1="14" x2="16.01" y2="14"/>
+          </svg>
+          LISTA DE COMPARÊNCIAS EM EVENTOS
+        </div>
+        <div class="major-card-body">
+          <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px; margin-bottom: 15px; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <label style="font-size: 13px;">Evento:</label>
+              <input type="text" id="attendance-event-name" style="width: 300px;">
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <label style="font-size: 13px;">Eventos Recentes:</label>
+              <select id="attendance-recent-events" style="width: 300px;">
+                <option></option>
+              </select>
+            </div>
+          </div>
+          <div class="options-main-card">
+            <h3 style="font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: #444; margin: -12px -12px 15px -12px; padding: 5px 14px; 
+                       background: linear-gradient(90deg, rgba(30,58,138,0.13), rgba(255,255,255,0.03)); border-left: 3px solid rgba(30,58,138,0.9); border-radius: 6px 6px 0 0;
+                       box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);">
+              LISTAGEM
+            </h3>
+            <div style="max-height: 500px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #bdc3c7 #f1f1f1;">
+              <table style="width: 100%; border-collapse: collapse;">
+                <thead style="position: sticky; top: 0; z-index: 1;">
+                  <tr style="background: #1e3a8a; color: #fff;">
+                    <th style="padding: 6px; border: 1px solid #ddd; font-size: 13px;">Nº Int.</th>
+                    <th style="padding: 6px; border: 1px solid #ddd; font-size: 13px;">Patente</th>
+                    <th style="padding: 6px; border: 1px solid #ddd; font-size: 13px;">Nome Completo</th>
+                    <th style="padding: 6px; border: 1px solid #ddd; font-size: 13px;">Telefone</th>
+                    <th style="padding: 6px; border: 1px solid #ddd; font-size: 13px;">Telemóvel</th>
+                    <th colspan="2" style="padding: 6px; border: 1px solid #ddd; font-size: 13px; width: 160px;">Comparência</th>                    
+                    <th style="padding: 6px; border: 1px solid #ddd; font-size: 13px; width: 500px;">Motivo de Falta</th>                   
+                  </tr>
+                </thead>
+                <tbody id="attendance-list-tbody">
+                  <tr><td colspan="8" style="text-align:center;padding:8px;font-size:14px;color:#999;">Sem registos</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div style="margin-top: 10px; font-size: 13px; font-weight: 600; color: #444; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+            <span style="background: #1e3a8a; color: #fff; padding: 2px 8px; border-radius: 4px;">Total Contactados: <span id="contact-attendance-total">0</span></span>
+            <span style="color: #166534; background: #dcfce7; padding: 2px 6px; border-radius: 4px; border: 1px solid #bbf7d0;">Comparece: <span id="contact-attendance">0</span></span>
+            <span style="color: #991b1b; background: #fee2e2; padding: 2px 6px; border-radius: 4px; border: 1px solid #fecaca;">Não Comparece: <span id="contact-noattendance">0</span></span>
+          </div>
+        </div>
+        <div class="major-card-footer">
+          <div style="display: flex; justify-content: flex-end; gap: 10px;">
+            <button id="attendance-list-save" class="btn btn-add">💾 Guardar</button>
+            <button id="attendance-list-delete" class="btn btn-danger">🗑️ Eliminar</button>
+            <button id="attendance-list-emit" class="btn btn-success">🖨️ Emitir Listagem</button>
+          </div>
+        </div>
+      </div>
+`,
+      'page-phonebook': `
+      <div class="major-card">
+        <div class="major-card-header" style="display: flex; align-items: center; gap: 10px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.38 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.82a16 16 0 0 0 6.29 6.29l1.88-1.88a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+          </svg>
+          AGENDA TELEFÓNICA
+        </div>
+        <div class="major-card-body">
+          <div style="display: flex; justify-content: flex-start; margin-bottom: 15px;">
+            <button id="phonebook-add" class="btn btn-add">➕ ADICIONAR</button>
+          </div>
+          <div id="phonebook-form-container" class="options-main-card" style="display: none; margin-bottom: 15px;">
+            <h3 style="font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: #444; margin: -12px -12px 15px -12px; padding: 5px 14px;
+                       background: linear-gradient(90deg, rgba(30,58,138,0.13), rgba(255,255,255,0.03)); border-left: 3px solid rgba(30,58,138,0.9); border-radius: 6px 6px 0 0;
+                       box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);">
+              DADOS DO CONTACTO / ENTIDADE
+            </h3>
+            <div class="major-field" style="display: flex; flex-direction: row; align-items: center; gap: 8px;">
+              <label style="font-size: 13px;">Nome / Designação:</label>
+              <input type="text" id="phonebook-name" style="width: 400px;">
+              <label style="font-size: 13px;">Tipo:</label>
+              <select id="phonebook-type" style="width: 130px; padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 13px;">
+                <option value="">Selecionar...</option>
+                <option value="Pessoa">Pessoa</option>
+                <option value="Entidade">Entidade</option>
+                <option value="Serviço">Serviço</option>
+              </select>
+              <label style="font-size: 13px;">Categoria:</label>
+              <select id="phonebook-category" style="width: 160px; padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 13px;">
+                <option value="">Selecionar...</option>
+                <option value="Bombeiros">Bombeiros</option>
+                <option value="GNR">GNR</option>
+                <option value="PSP">PSP</option>
+                <option value="INEM">INEM</option>
+                <option value="Câmara">Câmara</option>
+                <option value="Hospital">Hospital</option>
+                <option value="Outros">Outros</option>
+              </select>
+              <label style="font-size: 13px;">Subcategoria:</label>
+              <input type="text" id="phonebook-subcategory" style="width: 150px;">
+            </div>
+            <div class="major-field" style="display: flex; flex-direction: row; align-items: center; gap: 8px; margin-top: 5px;">
+              <label style="font-size: 13px;">Telefone:</label>
+              <input type="text" id="phonebook-phone" style="width: 130px;">
+              <label style="font-size: 13px;">Telemóvel:</label>
+              <input type="text" id="phonebook-mobile" style="width: 130px;">
+              <label style="font-size: 13px;">Email:</label>
+              <input type="text" id="phonebook-email" style="width: 300px;">
+              <label style="font-size: 13px;">Disponibilidade:</label>
+              <select id="phonebook-availability" style="width: 150px; padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 13px;">
+                <option value="">Selecionar...</option>
+                <option value="24h">24 Horas</option>
+                <option value="Laboral">Horário Laboral</option>
+                <option value="Outro">Outro</option>
+              </select>
+              <label style="font-size: 13px; display: flex; align-items: center; gap: 4px;">
+                <input type="checkbox" id="phonebook-favorite" style="width: 18px; height: 18px; accent-color: #f59e0b; margin: 0; cursor: pointer !important; outline: none !important; box-shadow: none !important;">
+                ⭐ Favorito
+              </label>
+            </div>
+            <div class="major-field" style="display: flex; flex-direction: row; align-items: center; gap: 8px; margin-top: 5px;">
+              <label style="font-size: 13px;">Morada:</label>
+              <input type="text" id="phonebook-address" style="width: 400px;">
+              <label style="font-size: 13px;">Localidade:</label>
+              <input type="text" id="phonebook-locality" style="width: 250px;">
+              <label style="font-size: 13px;">Cód. Postal:</label>
+              <input type="text" id="phonebook-zipcode" style="width: 100px;" placeholder="0000-000">
+              <label style="font-size: 13px;">Notas:</label>
+              <input type="text" id="phonebook-notes" style="width: 350px;">
+            </div>
+            <div style="display: flex; justify-content: flex-end; margin-top: 15px;">
+              <button id="phonebook-save" class="btn btn-success">💾 GRAVAR</button>
+            </div>
+          </div>
+          <div style="margin-top: 0px;">
+            <div class="options-main-card">
+              <h3 style="font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: #444; margin: -12px -12px 15px -12px; padding: 5px 14px;
+                         background: linear-gradient(90deg, rgba(30,58,138,0.13), rgba(255,255,255,0.03)); border-left: 3px solid rgba(30,58,138,0.9); border-radius: 6px 6px 0 0;
+                         box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);">
+                LISTAGEM DE ENTIDADES
+              </h3>
+              <div class="major-field" style="display: flex; flex-direction: row; align-items: center; gap: 8px; margin-bottom: 15px;">
+                <label style="font-size: 13px;">Pesquisar:</label>
+                <div style="position: relative; display: flex; align-items: center;">
+                  <input type="text" id="phonebook-search" style="width: 300px; padding-right: 30px;" placeholder="Nome, categoria, telefone...">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="position: absolute; right: 8px; color: #aaa; cursor: pointer; pointer-events: none;" title="Pesquisar">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                </div>
+              </div>
+              <div style="max-height: 500px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #bdc3c7 #f1f1f1;">
+                <table style="width: 100%; border-collapse: collapse;">
+                  <thead style="position: sticky; top: 0; z-index: 1;">
+                    <tr style="background: #1e3a8a; color: #fff;">
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Fav.</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Nome / Designação</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Tipo</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Categoria</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Telefone</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Telemóvel</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Email</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Disponibilidade</th>
+                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px; width: 120px;">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="phonebook-tbody">
+                    <tr><td colspan="9" style="text-align: center; padding: 8px; font-size: 12px; color: #999;">Sem registos</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top: 10px; display: flex; gap: 20px; font-size: 14px; font-weight: 600; color: #444;">
+            <span>Total de Contactos: <span id="phonebook-total" style="color: #1e3a8a;">0</span></span>
+            <span>Favoritos: <span id="phonebook-favorites" style="color: #f59e0b;">0</span></span>
+          </div>
+        </div>
+        <div class="major-card-footer">
+          <div style="display: flex; justify-content: flex-end; gap: 10px;">
+            <button id="phonebook-delete" class="btn btn-danger" style="display: none;" disabled>🗑️ ELIMINAR</button>
+            <button id="phonebook-emit" class="btn btn-danger">📄 EMITIR</button>
+          </div>
+        </div>
+      </div>
+`,
+      'page-alarm-console': `
+      <div class="major-card">
+        <div class="major-card-header" style="display: flex; align-items: center; gap: 10px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 12L19 7.5"/>
+            <circle cx="12" cy="12" r="2" fill="currentColor"/>
+            <path d="M12 2v4m0 12v4M2 12h4m12 0h4"/>
+          </svg>
+          CONSOLA DE ALARMES INTERNA
+        </div>
+        <div class="major-card-body">
+          <div class="grid-2fr" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="options-main-card" id="cons-indiv" style="display: flex; flex-direction: column; align-items: center; padding: 15px; border: 1px solid rgba(255,255,255,0.05); border-radius: 12px;">
+              <h3 style="font-size: 15px; font-weight: 700; margin: 0 0 15px 0; color: #dc3545; letter-spacing: 1px;">CHAMADA INDIVIDUAL</h3>
+              <label style="margin-bottom: 12px; font-size: 13px; color: #888;">Selecione o Local de Destino:</label>
+              <div class="action-buttons" id="alarm-console-indiv" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;">
+                <button id="ca-indiv-pv"  class="btn btn-add" style="height: 38px; width: 120px; font-size: 11px;">Parque Viaturas</button>
+                <button id="ca-indiv-cc"  class="btn btn-add" style="height: 38px; width: 120px; font-size: 11px;">Contacto Central</button>
+                <button id="ca-indiv-sb"  class="btn btn-add" style="height: 38px; width: 120px; font-size: 11px;">Sala Bombeiro</button>
+                <button id="ca-indiv-gch" class="btn btn-add" style="height: 38px; width: 120px; font-size: 11px;">Gabinete Chefes</button>
+                <button id="ca-indiv-gcm" class="btn btn-add" style="height: 38px; width: 120px; font-size: 11px;">Gabinete Comando</button>
+              </div>
+              <div class="major-field" style="display: flex; align-items: center; gap: 10px; width: 100%; margin-top: 25px;">
+                <label style="font-size: 13px; white-space: nowrap;">Elemento:</label>
+                <select id="ca-indiv-catch" style="flex-grow: 1; height: 32px; background: #1b1e22; border: 1px solid #333; color: white; border-radius: 6px; padding: 0 10px;"></select>
+              </div>
+              <button id="ca-call-indiv" class="btn btn-success" style="height: 42px; width: 100%; margin-top: 20px; font-weight: 700;">INICIAR CHAMADA</button>
+            </div>
+            <div class="options-main-card" id="cons-group" style="display: flex; flex-direction: column; align-items: center; padding: 15px; border: 1px solid rgba(255,255,255,0.05); border-radius: 12px;">
+              <h3 style="font-size: 15px; font-weight: 700; margin: 0 0 15px 0; color: #dc3545; letter-spacing: 1px;">CHAMADA DE GRUPO</h3>
+              <label style="margin-bottom: 12px; font-size: 13px; color: #888;">Selecione o Local de Destino:</label>
+              <div class="action-buttons" id="alarm-console-group" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;">
+                <button id="ca-glob-pv"  class="btn btn-add" style="height: 38px; width: 120px; font-size: 11px;">Parque Viaturas</button>
+                <button id="ca-glob-sb"  class="btn btn-add" style="height: 38px; width: 120px; font-size: 11px;">Sala Bombeiro</button>
+                <button id="ca-glob-sn"  class="btn btn-add" style="height: 38px; width: 120px; font-size: 11px;">Salão Nobre</button>
+                <button id="ca-glob-gch" class="btn btn-add" style="height: 38px; width: 120px; font-size: 11px;">Gabinete Chefes</button>
+                <button id="ca-glob-gcm" class="btn btn-add" style="height: 38px; width: 120px; font-size: 11px;">Gabinete Comando</button>
+              </div>
+              <div class="major-field" style="display: flex; align-items: center; gap: 10px; width: 100%; margin-top: 25px;">
+                <label style="font-size: 13px; white-space: nowrap;">Grupo:</label>
+                <select id="ca-group-catch" style="flex-grow: 1; height: 32px; background: #1b1e22; border: 1px solid #333; color: white; border-radius: 6px; padding: 0 10px;">
+                  <option>&nbsp;</option>
+                  <option>Elementos de Serviço</option>
+                  <option>EIP</option>
+                </select>
+              </div>
+              <button id="ca-call-group" class="btn btn-success" style="height: 42px; width: 100%; margin-top: 20px; font-weight: 700;">INICIAR CHAMADA</button>
+            </div>
+          </div>
+          <div class="options-main-card" id="cons-internal" style="margin: 20px auto 0 auto; max-width: 500px; display: flex; flex-direction: column; align-items: center; padding: 15px; 
+                                                                   border-top: 2px solid #dc3545; background: rgba(220,53,69,0.03); border-radius: 12px;">
+            <h3 style="font-size: 15px; font-weight: 700; margin: 0 0 10px 0;">ALARMES INTERNOS</h3>
+            <div class="action-buttons" style="display: flex; gap: 15px; margin-top: 10px;">
+              <button id="ca-format" class="btn btn-add" style="height: 45px; width: 140px; background: #1b1e22; border: 1px solid #dc3545; color: white;">FORMATURA</button>
+              <button id="ca-alvor" class="btn btn-add" style="height: 45px; width: 140px; background: #1b1e22; border: 1px solid #dc3545; color: white;">ALVORADA</button>
+            </div>
+          </div>
+        </div>
+        <div class="major-card-footer" style="height: 20px;"></div>
+      </div>
+`
+    };
+    Object.entries(PAGES).forEach(([id, html]) => { const p = document.getElementById(id); if (p) p.innerHTML = html; });
+    })();
+    /* ------------------------- fim da construção ------------------------- */
     /* ================================
     SALOC 360
     ================================ */
@@ -2261,11 +4263,19 @@
     function moaEpeType(data) {
       return MOA_EPE_TYPES[String(data.moa_device_type || "").trim().toUpperCase()] || null;
     }
-    async function updateEpeStatus(corpOperNr, epeType, epeLevel, startDate, endDate) {
+    /* Grava o EPE da MOA:
+       - início agora ou já passado -> passa logo a ser o nível atual (epe / start_date / end_date)
+       - início no futuro           -> fica como PRÓXIMO nível (next_*); o Supabase troca-o
+                                       sozinho quando chega a hora (tarefa epe-voltar-monitorizacao) */
+    async function updateEpeStatus(corpOperNr, epeType, epeLevel, startDate, endDate, startAt) {
       if (!epeType || !epeLevel) {
         console.warn("MOA: tipo/nível de EPE não identificado — epe_status não foi alterado.");
         return false;
       }
+      const future = startAt instanceof Date && !isNaN(startAt) && startAt.getTime() > Date.now() + 60 * 1000;
+      const fields = future
+        ? {next_epe: epeLevel, next_start_date: startDate, next_end_date: endDate}
+        : {epe: epeLevel, start_date: startDate, end_date: endDate};
       try {
         const checkRes = await fetch(
           `${SUPABASE_URL}/rest/v1/epe_status?corp_oper_nr=eq.${corpOperNr}&epe_type=eq.${epeType}&select=id`, {
@@ -2279,7 +4289,7 @@
             `${SUPABASE_URL}/rest/v1/epe_status?corp_oper_nr=eq.${corpOperNr}&epe_type=eq.${epeType}`, {
               method: "PATCH",
               headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
-              body: JSON.stringify({epe: epeLevel, start_date: startDate, end_date: endDate})
+              body: JSON.stringify(fields)
             }
           );
           if (!patchRes.ok) throw new Error(`Erro ao atualizar epe_status (${patchRes.status})`);
@@ -2288,12 +4298,13 @@
             `${SUPABASE_URL}/rest/v1/epe_status`, {
               method: "POST",
               headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal"},
-              body: JSON.stringify({corp_oper_nr: corpOperNr, epe_type: epeType, epe: epeLevel, start_date: startDate, end_date: endDate})
+              body: JSON.stringify({corp_oper_nr: corpOperNr, epe_type: epeType,
+                                    ...(future ? {epe: "MONITORIZAÇÃO"} : {}), ...fields})
             }
           );
           if (!postRes.ok) throw new Error(`Erro ao inserir epe_status (${postRes.status})`);
         }
-        return true;
+        return future ? "agendado" : true;
       } catch (err) {
         console.error("Erro em updateEpeStatus:", err);
         return false;
@@ -2338,11 +4349,13 @@
         if (cbName) data.moa_cb = cbName;
         const recipients = await fetchMOARecipients(corpOperNr);
         await sendMOAEmail(data, recipients, corpOperNr);   /* se o email falhar, pára aqui e o EPE não muda */
-        const epeOk = await updateEpeStatus(corpOperNr, moaEpeType(data), extractEpeLevel(data.moa_epe_type), data.moa_gdh_init, data.moa_gdh_end);
+        const startAt = (data.moa_date_init && data.moa_time_init) ? new Date(`${data.moa_date_init}T${data.moa_time_init}`) : null;
+        const epeOk = await updateEpeStatus(corpOperNr, moaEpeType(data), extractEpeLevel(data.moa_epe_type), data.moa_gdh_init, data.moa_gdh_end, startAt);
         if (typeof showPopup === "function")
           showPopup(epeOk ? 'popup-success' : 'popup-warning',
-            epeOk ? `A MOA do dispositivo ${data.moa_device_type} foi enviada!`
-                  : `A MOA foi enviada, mas o estado do EPE não foi atualizado (dispositivo sem EPE associado).`);
+            epeOk === "agendado" ? `A MOA do dispositivo ${data.moa_device_type} foi enviada! O nível entra em vigor a ${data.moa_gdh_init}.`
+            : epeOk ? `A MOA do dispositivo ${data.moa_device_type} foi enviada!`
+                    : `A MOA foi enviada, mas o estado do EPE não foi atualizado (dispositivo sem EPE associado).`);
         window.hideMOAContainer();
         const btnNew = document.getElementById("NewMOABtn");
         if (btnNew) btnNew.classList.remove("active");

@@ -666,9 +666,10 @@
         return '';
       }
     }
-    const classOccorrInput = document.getElementById('class_occorr_input');
-    if (classOccorrInput) {
-      classOccorrInput.addEventListener('input', async (e) => {
+    /* a caixa é criada pelo wsmsprogramatics (depois deste ficheiro), por isso escuta-se no documento */
+    {
+      document.addEventListener('input', async (e) => {
+        if (e.target.id !== 'class_occorr_input') return;
         const classId = e.target.value.trim();
         const descrInput = document.getElementById('occorr_descr_input');
         if (!classId) {

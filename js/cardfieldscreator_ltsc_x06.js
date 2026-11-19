@@ -8,7 +8,7 @@
     NEW OCCURRENCE
     ======================================= */
     /* ============= VEHICLES ============= */
-    const vehicleContainer = document.getElementById('vehicle-container');
+    const vehicleContainerEl = () => document.getElementById('vehicle-container');   /* procura na hora: a página é criada pelo wsmsprogramatics */
     let vehicleCount = 0;    
     /* ---------- elementos de cada viatura (só os afetos podem enviar fotos/atualizações do terreno, SQL 43) ---------- */
     let ocrActiveElems = null;
@@ -225,7 +225,7 @@
           </div>
         </div>
       `;
-      vehicleContainer.appendChild(card);
+      vehicleContainerEl().appendChild(card);
       const dateInput = card.querySelector('input[type="date"]');
       const today = new Date().toLocaleDateString('sv-SE');
       dateInput.value = today;
@@ -236,7 +236,7 @@
     function NewOCRresetVehicles() {
       ocrCloseDrops();
       document.querySelectorAll('body > .ocr-ms-drop').forEach(d => d.remove());
-      vehicleContainer.innerHTML = "";
+      vehicleContainerEl().innerHTML = "";
       vehicleCount = 0;
       for (let i = 0; i < 3; i++) {
         NewOCRaddVehicle();
@@ -246,7 +246,7 @@
     CLOSE OCCURRENCES
     ======================================= */
     /* ========== VEHICLES ============= */
-    const vehiclesContainer = document.getElementById('vehicles-container');
+    const vehiclesContainerEl = () => document.getElementById('vehicles-container');   /* procura na hora: a página é criada pelo wsmsprogramatics */
     let closeVehicleCount = 0;
     async function CloseOCRaddVehicle() {
       closeVehicleCount++;
@@ -311,21 +311,21 @@
           </div>
         </div>
       `;
-      vehiclesContainer.appendChild(card);
+      vehiclesContainerEl().appendChild(card);
       const today = new Date().toLocaleDateString('sv-SE');
       card.querySelectorAll('input[type="date"]').forEach(input => input.value = today);
       const select = card.querySelector("select");
       await populateSingleVehicleSelect(select);
     }
     function CloseOCRresetVehicles() {
-      vehiclesContainer.innerHTML = "";
+      vehiclesContainerEl().innerHTML = "";
       closeVehicleCount = 0;
       for (let i = 0; i < 3; i++) {
         CloseOCRaddVehicle();
       }
     }
     /* ============= VICTIMS ============== */
-    const victimsContainer = document.getElementById('victims-container');
+    const victimsContainerEl = () => document.getElementById('victims-container');   /* procura na hora: a página é criada pelo wsmsprogramatics */
     let victimsCount = 0;
     async function addVictim() {
       victimsCount++;
@@ -362,7 +362,7 @@
           </div>
         </div>
       `;
-      victimsContainer.appendChild(div);
+      victimsContainerEl().appendChild(div);
       await populateSingleVictimSelect(document.getElementById(`victim_${idx}_gender`), 'victim_gender');
       await populateSingleVictimSelect(document.getElementById(`victim_${idx}_age`), 'victim_age');
       await populateSingleVictimSelect(document.getElementById(`victim_${idx}_type`), 'victim_type');
@@ -371,7 +371,7 @@
     async function resetVictims(initialCount = 1) {
       const victimsCard = document.querySelector('.wsms-victims-card');
       if (victimsCard) victimsCard.classList.add('hidden');
-      victimsContainer.innerHTML = "";
+      victimsContainerEl().innerHTML = "";
       victimsCount = 0;
       for (let i = 0; i < initialCount; i++) {
         await addVictim();
@@ -381,7 +381,7 @@
       await resetVictims(1);
     });
     /* = OTHER VEHICLES IN THE OCCURRENCE = */
-    const extrasContainer = document.getElementById('extras-container');
+    const extrasContainerEl = () => document.getElementById('extras-container');   /* procura na hora: a página é criada pelo wsmsprogramatics */
     let extrasCount = 0;
     function addExtra(index = null) {
       extrasCount++;
@@ -407,17 +407,17 @@
           </div>
         </div>
       `;
-      extrasContainer.appendChild(div);
+      extrasContainerEl().appendChild(div);
     }
     function resetExtras() {
       const extrasCard = document.querySelector('.wsms-extras-card');
       if (extrasCard) extrasCard.classList.add('hidden');
-      extrasContainer.innerHTML = "";
+      extrasContainerEl().innerHTML = "";
       extrasCount = 0;
       for (let i = 1; i <= 1; i++) addExtra(i);
     }
     /* ========== DAMAGE CAUSED =========== */
-    const damagesContainer = document.getElementById('damages-container');
+    const damagesContainerEl = () => document.getElementById('damages-container');   /* procura na hora: a página é criada pelo wsmsprogramatics */
     let damagesCount = 0;
     function addDamage(index = null) {
       damagesCount++;
@@ -435,12 +435,12 @@
           </div>
         </div>
       `;
-      damagesContainer.appendChild(div);
+      damagesContainerEl().appendChild(div);
     }
     function resetDamages() {
       const demageCard = document.querySelector('.wsms-demage-card');
       if (demageCard) demageCard.classList.add('hidden');
-      damagesContainer.innerHTML = "";
+      damagesContainerEl().innerHTML = "";
       damagesCount = 0;
       addDamage(1);
     }

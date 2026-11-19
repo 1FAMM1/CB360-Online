@@ -207,6 +207,7 @@
       const userHasAccess = isValid && applyAccessesSafe(accessResult);
       if (userHasAccess) {
         updateSidebarAccess(allowedModules, accessResult.acess);
+        cb360ShowPendingApprovals();
       } else {
         blockAllSidebar();
       }
@@ -227,6 +228,81 @@
         });
       }
     });
+    /* =======================================
+    PEDIDOS EM APROVAÇÃO (aviso ao abrir a main)
+    - Conta o que está "Em Aprovação" e mostra um popup com o número de cada área.
+    - Cada linha só aparece a quem tem acesso a essa página no menu (e só se houver pedidos).
+    - Clicar numa linha abre logo a página respetiva.
+    ======================================= */
+    async function cb360ShowPendingApprovals() {
+      const corp = sessionStorage.getItem('currentCorpOperNr');
+      if (!corp) return;
+      const d = new Date();
+      const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const pend = encodeURIComponent('Em Aprovação');
+      const AREAS = [
+        {label: 'Férias Voluntariado', page: 'page-vacations-request', access: 'Consultar Pedidos', unit: ['pedido', 'pedidos'],
+         query: `ped_vacat?corp_oper_nr=eq.${corp}&vacation_type=eq.Voluntariado&state=eq.${pend}`},
+        {label: 'Férias Profissional', page: 'page-vacations-request-rh', access: 'Pedidos de Férias RH', unit: ['pedido', 'pedidos'],
+         query: `ped_vacat?corp_oper_nr=eq.${corp}&vacation_type=eq.Profissional&state=eq.${pend}`},
+        {label: 'Turnos de Eventos', page: 'page-event-disp', access: 'Consulta Disponibilidades', unit: ['disponibilidade', 'disponibilidades'],
+         query: `event_disp?corp_oper_nr=eq.${corp}&shift_state=eq.${pend}&event_shift_date=gte.${today}`},
+        {label: 'Pedidos de Fardamento', page: 'page-uniform-orders', access: 'Gestão de Pedidos Fardamento', unit: ['pedido', 'pedidos'],
+         query: `uniform_orders?corp_oper_nr=eq.${corp}&status=eq.${pend}`}
+      ];
+      /* o botão do menu (e os menus acima dele) tem de estar visível para este utilizador */
+      const menuBtn = a => document.querySelector(`.sidebar [data-page="${a.page}"][data-access="${a.access}"]`);
+      const canSee = btn => {
+        if (!btn || btn.style.display === 'none' || btn.disabled) return false;
+        for (let n = btn.parentElement; n && !n.classList.contains('sidebar'); n = n.parentElement) {
+          if (n.classList.contains('submenu') || n.classList.contains('sub-submenu')) {
+            const t = n.previousElementSibling;
+            if (t && (t.style.display === 'none' || t.disabled)) return false;
+          }
+        }
+        return true;
+      };
+      const count = async q => {
+        try {
+          const r = await fetch(`${SUPABASE_URL}/rest/v1/${q}&select=id`, {method: 'HEAD', headers: {...getSupabaseHeaders(), 'Prefer': 'count=exact'}});
+          if (!r.ok) return 0;
+          return parseInt((r.headers.get('content-range') || '').split('/')[1], 10) || 0;
+        } catch (e) { return 0; }
+      };
+      const areas = AREAS.filter(a => canSee(menuBtn(a)));
+      if (!areas.length) return;
+      const counts = await Promise.all(areas.map(a => count(a.query)));
+      const items = areas.map((a, i) => ({...a, n: counts[i]})).filter(a => a.n > 0);
+      if (!items.length) return;
+      const modal = document.getElementById('popup-info');
+      const ul = modal?.querySelector('.popup-body ul');
+      if (!ul) return;
+      const total = items.reduce((s, a) => s + a.n, 0);
+      ul.innerHTML = `<li class="pa-title">Tem ${total} ${total === 1 ? 'registo' : 'registos'} à espera de aprovação:</li>` +
+        items.map(a => `<li class="pa-item" data-page="${a.page}" data-access="${a.access}" title="Abrir ${a.label}">
+            <span>${a.label}</span><b>${a.n} ${a.n === 1 ? a.unit[0] : a.unit[1]}</b></li>`).join('');
+      if (!document.getElementById('pa-css')) {
+        const css = document.createElement('style');
+        css.id = 'pa-css';
+        css.textContent = `
+          #popup-info li.pa-title {list-style: none; margin-bottom: 8px;}
+          #popup-info li.pa-item {list-style: none; display: flex; justify-content: space-between; gap: 16px; padding: 7px 10px; margin: 4px 0;
+            border-radius: 6px; background: #fff3e0; border-left: 4px solid #ef6c00; cursor: pointer; transition: background .12s ease;}
+          #popup-info li.pa-item:hover {background: #ffe0b2;}
+          #popup-info li.pa-item b {color: #ef6c00; white-space: nowrap;}
+        `;
+        document.head.appendChild(css);
+      }
+      ul.onclick = e => {
+        const li = e.target.closest('li.pa-item');
+        if (!li) return;
+        closePopup('popup-info');
+        ul.onclick = null;
+        document.querySelector(`.sidebar [data-page="${li.dataset.page}"][data-access="${li.dataset.access}"]`)?.click();
+      };
+      showPopup('popup-info');
+      modal.querySelector('.popup-btn')?.addEventListener('click', () => { ul.onclick = null; }, {once: true});
+    }
     /* =======================================
     MAIN SIDEBAR AND PANEL SIDEBAR
     ======================================= */

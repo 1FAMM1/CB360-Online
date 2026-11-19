@@ -31,6 +31,10 @@
       const st = document.createElement('style'); st.id = 'ocr-elem-css';
       st.textContent = `
         .ocr-elems {display: flex; flex-direction: column; gap: 8px; padding: 0 10px 10px; position: relative;}
+        .ocr-elems-field .ocr-ms-btn {height: 30px; border-radius: 5px; font-size: 12px; padding: 0 9px;}
+        .ocr-elems-field .ocr-ms-btn span {overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
+        .ocr-elems-chips {padding: 0 10px 10px; margin-top: -4px;}
+        .ocr-elems-chips .ocr-chips {flex-wrap: wrap; overflow: visible;}
         .ocr-elems-row {display: flex; align-items: center; gap: 8px;}
         .ocr-elems-row > label {flex-shrink: 0; margin: 0; font-size: 11px; font-weight: 600; color: #777; text-transform: uppercase; letter-spacing: .04em;}
         .ocr-elems-row .ocr-ms-btn {flex: 0 0 132px; min-width: 0; padding: 0 8px;}
@@ -96,10 +100,11 @@
       const list = card._elemList || [];
       const byN = Object.fromEntries(list.map(e => [e.n, e.a + (e.p ? ' - ' + e.p : '')]));
       const sel = [...card._nints];
-      box.querySelector('.ocr-ms-btn span').textContent = sel.length ? `${sel.length} selecionado${sel.length > 1 ? 's' : ''}` : 'Selecionar…';
+      const btnTxt = card.querySelector('.ocr-elems-slot .ocr-ms-btn span');
+      if (btnTxt) btnTxt.textContent = sel.length ? `${sel.length} selecionado${sel.length > 1 ? 's' : ''}` : 'Selecionar…';
       const chips = box.querySelector('.ocr-chips');
       chips.innerHTML = sel.map(n => `<span class="ocr-chip" data-chip="${ocrEsc(n)}" title="${ocrEsc(n)}${byN[n] ? ' - ' + ocrEsc(byN[n]) : ''}">${ocrEsc(n)}<button type="button" data-rm="${ocrEsc(n)}" title="Tirar ${ocrEsc(byN[n] || n)}">×</button></span>`).join('');
-      ocrFitChips(chips, byN);
+      box.style.display = sel.length ? '' : 'none';               /* sem ninguém escolhido, a linha das etiquetas não ocupa espaço */
       /* BBs: contados a partir dos elementos; sem ninguém escolhido continua a dar para escrever à mão */
       const bbs = card.querySelector('.major-row input[type="text"]');
       if (bbs) {
@@ -140,17 +145,17 @@
       card._nints = new Set();
       card.classList.add('has-elems');
       const box = document.createElement('div');
-      box.className = 'ocr-elems';
+      box.className = 'ocr-elems ocr-elems-chips';
       box.innerHTML = `
-        <div class="ocr-elems-row"><label>Elementos</label>
-        <button type="button" class="ocr-ms-btn"><span>Selecionar…</span><b>▾</b></button>
-        <div class="ocr-chips"></div></div>
+        <div class="ocr-chips"></div>
         <div class="ocr-ms-drop"><input type="search" class="ocr-ms-search" placeholder="Procurar n.º ou nome…" autocomplete="off"><div class="ocr-ms-list"></div></div>
       `;
       card.appendChild(box);
+      const slot = card.querySelector('.ocr-elems-slot');
+      slot.innerHTML = `<button type="button" class="ocr-ms-btn"><span>Selecionar…</span><b>▾</b></button>`;
       const drop = box.querySelector('.ocr-ms-drop');
       document.body.appendChild(drop);              /* fora do cartão: nada a corta */
-      drop._btn = box.querySelector('.ocr-ms-btn');
+      drop._btn = slot.querySelector('.ocr-ms-btn');
       card._drop = drop;
       drop._btn.onclick = async () => {
         const opening = !drop.classList.contains('open');
@@ -178,9 +183,11 @@
       card._elemList = await ocrLoadActiveElements();
       ocrRefreshCard(card);
     }
-    document.addEventListener('click', e => {
-      if (!e.target.closest('.ocr-elems') && !e.target.closest('.ocr-ms-drop')) ocrCloseDrops();
-    });
+    document.addEventListener('pointerdown', e => {
+      if (!ocrOpenDrop) return;
+      if (e.target.closest('.ocr-ms-drop') || e.target.closest('.ocr-ms-btn')) return;
+      ocrCloseDrops();
+    }, true);
     document.addEventListener('keydown', e => { if (e.key === 'Escape') ocrCloseDrops(); });
     /* todos os n.º internos escolhidos nas viaturas, para gravar em occurrences_control.n_int ("205,208,312") */
     function NewOCRcollectNints() {
@@ -197,20 +204,24 @@
         <div class="major-row">
           <div class="major-field">
             <label>Data Saída</label>
-            <input type="date" style="width: 140px;">
+            <input type="date" style="width: 118px;">
           </div>
           <div class="major-field">
             <label>Veículo</label>
-            <select style="width: 139px;"><option></option></select>
+            <select style="width: 115px;"><option></option></select>
           </div>
-          <div class="major-field">
+          <div class="major-field" style="display: none;">
             <label>BBs</label>
             <input type="text" placeholder="00" style="width: 85px; text-align: center;" maxlength="2"
                    oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
           </div>
+          <div class="major-field ocr-elems-field" style="flex: 1; min-width: 110px;">
+            <label>Elementos</label>
+            <div class="ocr-elems-slot"></div>
+          </div>
           <div class="major-field">
             <label>Hora Saída</label>
-            <input type="time" style="width: 110px;">
+            <input type="time" style="width: 92px;">
           </div>
         </div>
       `;

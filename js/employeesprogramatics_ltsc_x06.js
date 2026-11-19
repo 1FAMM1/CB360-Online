@@ -1,3 +1,116 @@
+    /* =======================================
+    RECURSOS HUMANOS
+    - As páginas do RH (boas-vindas, escalas mensais, horas extras, registos individuais,
+      férias, subsídio de turno, processamento salarial, EIPs e dashboard) são criadas aqui,
+      logo ao carregar; o main.html só tem os <div class="page"> vazios.
+      O conteúdo de cada cartão continua a ser preenchido pelas funções abaixo, como antes.
+    ======================================= */
+    (() => {
+    /* ----------------------------- estilos ----------------------------- */
+    if (!document.getElementById('rh-css')) {
+      const css = document.createElement('style');
+      css.id = 'rh-css';
+      css.textContent = `
+        .major-card-header > svg.rh-ico {opacity: .9; vertical-align: middle;}
+        .rh-imr6 {margin-right: 6px;}
+        .major-card-footer > .rh-note {font-size: 11px; color: #222;}
+        #page-employees > .major-card > .major-card-body {font-family: 'Segoe UI', sans-serif;}
+        #page-employees .rh-intro {font-size: 15px; margin-bottom: 20px; color: #333;}
+        #page-employees .rh-feat {background: linear-gradient(90deg, #e0e0e0, #d6d6d6); padding: 15px 20px; border-left: 5px solid #007bff; border-radius: 6px; margin-bottom: 20px;}
+        #page-employees .rh-list {margin-bottom: 20px;}
+        #page-employees .rh-list ul {list-style: none; padding-left: 10px; line-height: 1.8;}
+        #page-employees .rh-list li {color: #0d630e;}
+        #page-employees .rh-start {text-align: center; font-style: italic; color: #555;}
+      `;
+      document.head.appendChild(css);
+    }
+    /* ----------------------------- helpers ----------------------------- */
+    const ICONS = {
+      calendar: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+      clock: '<circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline>',
+      user: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>',
+      calCheck: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line><path d="M9 16l2 2 4-4"></path>',
+      map: '<polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line>',
+      sort: '<path d="m3 16 4 4 4-4"></path><path d="M7 20V4"></path><path d="M11 8h10"></path><path d="M11 12h10"></path><path d="M11 16h10"></path><path d="M11 4h10"></path>',
+      shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="m9 12 2 2 4-4"></path>',
+      euro: '<path d="M19 7a9 9 0 1 0 0 10"></path><path d="M7 10h12"></path><path d="M7 14h12"></path>',
+      team: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>',
+      grid: '<rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect>'
+    };
+    const ico = name => `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="rh-ico">${ICONS[name]}</svg>`;
+    const fill = (id, html) => { const p = document.getElementById(id); if (p) p.innerHTML = html; return p; };
+    /* cartão com cabeçalho laranja; o corpo e o rodapé são preenchidos pelas funções do RH */
+    const card = (cardId, icon, title, body = '', footer = '') => `<div class="major-card major-last-card" id="${cardId}">
+        <div class="major-card-header header-orange">${ico(icon)} ${title}</div>
+        <div class="major-card-body">${body}</div>
+        <div class="major-card-footer">${footer}</div>
+      </div>`;
+    /* botão de rodapé: [id, classe, ícone, texto] */
+    const btn = ([id, cls, icon, text]) => `<button id="${id}" class="btn ${cls}"><i class="fa-solid ${icon} rh-imr6"></i>${text}</button>`;
+
+    /* ----------------------------- páginas ----------------------------- */
+    fill('page-employees', `<div class="major-card major-last-card">
+        <div class="major-card-header">BEM-VINDO À GESTÃO DE RECURSOS HUMANOS</div>
+        <div class="major-card-body">
+          <p class="rh-intro">
+            A <strong>GESTÃO DE RECURSOS HUMANOS</strong> é o módulo digital responsável pela gestão integral da
+            <strong>Inserção e Validação</strong> dos elementos afetos às <strong>EQUIPAS DE INEM, SERVIÇO GERAL,
+            SALOC, E EQUIPAS DE INTERVEÇÃO PERMANTENTE.</strong>
+            Este sistema centraliza todo o processo de registo, controlo e e manutenção para o serviço operacional diário, garantindo uma gestão eficiente e transparente
+            entre recursos humanos e operacionais.
+          </p>
+          <div class="rh-feat"><strong>Funcionalidades Principais:</strong></div>
+          <div class="rh-list"><ul>
+            <li>📋 Emissão e gestão de escalas mensais.</li>
+            <li>👨‍🚒 Gestão e confirmação de horas extraordinárias.</li>
+            <li>🧾 Formulários de Ponto Mensais.</li>
+            <li>🧾 Gestão e controlo de turnos.</li>
+            <li>🧾 Gestão e controlo de férias.</li>
+            <li>🧾 Gestão e controlo salarial.</li>
+          </ul></div>
+          <div class="rh-start">
+            Selecione uma opção no menu lateral para começar a utilizar o sistema.
+          </div>
+        </div>
+        <div class="major-card-footer"></div>
+      </div>`);
+
+    /* Escalas mensais e horas extras: as barras de botões têm id e mantêm o estilo no elemento (o código mostra-as/esconde-as) */
+    fill('page-employee-scales', card('employee-monthly-schedules', 'calendar', 'ESCALAS MENSAIS',
+      `<div id="months-container-scales-employees"></div><div id="table-container-employees"></div>`,
+      `<div id="employee-scales-options" style="display: none; justify-content: flex-end; gap: 10px;">
+          ${[['employees-analyze', 'btn-analyze', 'fa-magnifying-glass', 'Analisar'], ['employees-toggle-bx-btn', 'btn-toggle', 'fa-eye-slash', 'Ocultar Baixas'],
+             ['employees-clean-btn', 'btn-clean', 'fa-broom', 'Limpar'], ['employees-save-btn', 'btn-add', 'fa-floppy-disk', 'Guardar'],
+             ['employees-emit-xlsx-btn', 'btn-success', 'fa-file-excel', 'EXCEL'], ['employees-emit-pdf-btn', 'btn-danger', 'fa-file-pdf', 'PDF']].map(btn).join('\n          ')}
+        </div>`));
+    /* Analisar: como o antigo onclick="analyzeINEMSchedule()" (chamada sem argumentos) */
+    document.getElementById('employees-analyze')?.addEventListener('click', () => analyzeINEMSchedule());
+    fill('page-employee-extra-hour', card('employee-monthly-extra-hour-schedules', 'clock', 'CONTROLO DE HORAS EXTAORDINÁRIAS',
+      `<div id="months-container-extra-hour-employees"></div><div id="table-container-extra-hour-employees"></div>`,
+      `<div id="employee-extra-hours-options" style="display: none; width: 100%; justify-content: flex-end; gap: 10px;">
+          ${[['employees-extra-save-btn', 'btn-add', 'fa-floppy-disk', 'Guardar'], ['employees-extra-emit-xlsx-btn', 'btn-success', 'fa-file-excel', 'EXCEL'],
+             ['employees-extra-emit-pdf-btn', 'btn-danger', 'fa-file-pdf', 'PDF']].map(btn).join('\n          ')}
+        </div>`));
+
+    /* Cartões cujo corpo é todo criado pelas funções do RH */
+    [['individual-records', 'individual-records-card', 'user', 'REGISTOS INDIVIDUAIS'],
+     ['vacation-scheduling', 'vacation-scheduling-card', 'calCheck', 'MARCAÇÃO DE FÉRIAS'],
+     ['vacation-scheduling-map', 'vacation-scheduling-map-card', 'map', 'MAPA DE FÉRIAS'],
+     ['priority-scheduling-map', 'priority-scheduling-map-card', 'sort', 'PRIORIDADE DE MARCAÇÃO DE FÉRIAS'],
+     ['eligibility-subs-shift', 'eligibility-subs-shift-card', 'shield', 'ELEGIBILIDADE PARA SUBSÍDIO DE TURNO'],
+     ['salary-processing-map', 'salary-processing-card', 'euro', 'PROCESSAMENTO SALARIAL'],
+     ['annual-eip-shift-map', 'annual-eip-shift-card', 'team', 'ENQUADRAMENTO ANUAL EIP\'s'],
+     ['dashboard-rh', 'dashboard-rh-card', 'grid', 'PAINEL DE GESTÃO RH']
+    ].forEach(([page, cardId, icon, title]) => fill(page, card(cardId, icon, title)));
+
+    /* Pedidos de férias dos profissionais */
+    fill('page-vacations-request-rh', `<div class="major-card last-card">
+        <div class="major-card-header header-red">${ico('calCheck')} PEDIDOS DE FÉRIAS PROFISSIONAIS</div>
+        <div class="major-card-body"><div id="rhvBoard"></div></div>
+        <div class="major-card-footer"><span class="rh-note">* Clique num mês para ver os pedidos. Os dias aprovados vão para a escala dos funcionários.</span></div>
+      </div>`);
+    })();
+    /* ------------------------- fim da construção ------------------------- */
     /* =========================
     FASE 01 - SCALES
     ========================= */
@@ -3743,7 +3856,7 @@
       const titleElem = document.getElementById("priority-map-title");
       if (titleElem) titleElem.innerHTML = `<span class="p-badge-rh">RH</span> PRIORIDADE DE MARCAÇÃO DE FÉRIAS ${priorityYear}`;
       tableBody.innerHTML = `<tr><td colspan="26" style="padding:40px; text-align:center;">⌛ A calcular pontuações de prioridade para ${priorityYear}...</td></tr>`;
-      const weights = {1: [1, 1], 2: [1, 1], 3: [1, 1], 4: [1, 1], 5: [4, 4], 6: [4, 8], 7: [12, 12], 8: [12, 12], 9: [12, 8], 10: [4, 4], 11: [1, 1], 12: [2, 8]};
+      const weights = RHV_PRIORITY_WEIGHTS;
       try {
         const [empRes, shiftRes] = await Promise.all([
           fetch(`${SUPABASE_URL}/rest/v1/reg_employees?corp_oper_nr=eq.${corpOperNr}&function=neq.SEC&function=neq.COM&order=abv_name.asc`, {
@@ -3800,7 +3913,7 @@
         btn.innerText = "⌛ A Gerar Mapa...";
         btn.disabled = true;
       }
-      const weights = {1: [1, 1], 2: [1, 1], 3: [1, 1], 4: [1, 1], 5: [4, 4], 6: [4, 8], 7: [12, 12], 8: [12, 12], 9: [12, 8], 10: [4, 4], 11: [1, 1], 12: [2, 8]};
+      const weights = RHV_PRIORITY_WEIGHTS;
       showLoadingPopup(`A gerar mapa de prioridades de férias para ${priorityYear}...`);
       try {
         const [empRes, shiftRes] = await Promise.all([
@@ -3928,11 +4041,11 @@
             : newState === 'Recusadas'
             ? `As tuas férias profissionais para ${monthName} de ${year} foram recusadas. ❌`
             : `O teu pedido de férias profissionais para ${monthName} de ${year} foi colocado como: ${newState}.`;
-          await fetch(`${SUPABASE_URL}/rest/v1/user_notifications`, {
+          fetch(`${SUPABASE_URL}/rest/v1/user_notifications`, {
             method: 'POST',
             headers: getSupabaseHeaders(),
             body: JSON.stringify({n_int: request.n_int, corp_oper_nr: request.corp_oper_nr, title: "Férias Profissionais", message: msgNotif, is_read: false, created_at: new Date().toISOString()})
-          });
+          }).catch(e => console.error('Erro notificação:', e));   /* não espera */
           try {
             fetch('https://cb-360-app.vercel.app/api/sendPush', {
               method: 'POST',
@@ -4032,31 +4145,90 @@
       const hit = RHV_TEAM_TYPES.find(([prefix]) => t.startsWith(prefix));
       return hit ? hit[1] : null;
     }
+    /* nomes dos grupos para mostrar nos avisos */
+    const RHV_GROUP_LABELS = {EQ: 'Grupo INEM', TDNU: 'Grupo Serviço Geral', OPTEL: 'Central de Telecomunicações', EIP: 'Equipa de Intervenção Permanente'};
+    function rhvGroupLabel(group) {
+      const m = String(group || '').match(/^EIP(\d+)$/);
+      if (m) return `${RHV_GROUP_LABELS.EIP} ${m[1]}`;
+      return RHV_GROUP_LABELS[group] || group;
+    }
+    /* grupo para o limite: nas EIP cada equipa conta à parte (EIP01, EIP02, ...); nas restantes conta o tipo inteiro */
+    function rhvTeamGroup(team) {
+      const type = rhvTeamType(team);
+      if (type !== 'EIP') return type;
+      const n = String(team || '').match(/(\d+)/);
+      return n ? `EIP${String(parseInt(n[1], 10)).padStart(2, '0')}` : 'EIP';
+    }
+    /* pesos do Mapa de Prioridade (pontos por dia de férias, 1.ª e 2.ª quinzena de cada mês) — usado também em loadPriorityData */
+    const RHV_PRIORITY_WEIGHTS = {1: [1, 1], 2: [1, 1], 3: [1, 1], 4: [1, 1], 5: [4, 4], 6: [4, 8], 7: [12, 12], 8: [12, 12], 9: [12, 8], 10: [4, 4], 11: [1, 1], 12: [2, 8]};
+    const rhvKey = n => String(parseInt(n, 10));
+    /* pontos de prioridade de cada funcionário num ano (menos pontos = mais prioridade no ano seguinte) */
+    async function rhvPriorityScores(corp, year) {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?select=n_int,month,day&corp_oper_nr=eq.${corp}&year=eq.${year}&shift=eq.FE`, {headers: getSupabaseHeaders()});
+      if (!r.ok) return null;
+      const map = new Map();
+      (await r.json()).forEach(x => {
+        const w = RHV_PRIORITY_WEIGHTS[Number(x.month)];
+        if (!w) return;
+        const k = rhvKey(x.n_int);
+        map.set(k, (map.get(k) || 0) + (Number(x.day) <= 15 ? w[0] : w[1]));
+      });
+      return map;
+    }
     async function rhvCheckTeamLimit(request) {
       const corp = sessionStorage.getItem('currentCorpOperNr');
       const days = rhvDays(request);
       if (!days.length) return 'ok';
+      const year = Number(request.year), month = Number(request.month);
       const mine = rhvNintVariants(request.n_int);
-      const rEmp = await fetch(`${SUPABASE_URL}/rest/v1/reg_employees?select=team&corp_oper_nr=eq.${corp}&n_int=in.(${mine.map(v => `"${v}"`).join(',')})`, {
+      const myKey = rhvKey(request.n_int);
+      const rEmp = await fetch(`${SUPABASE_URL}/rest/v1/reg_employees?select=n_int,abv_name,team&corp_oper_nr=eq.${corp}&n_int=in.(${mine.map(v => `"${v}"`).join(',')})`, {
         headers: getSupabaseHeaders()
       });
       if (!rEmp.ok) throw new Error("Erro ao ler a equipa do funcionário.");
       const [emp] = await rEmp.json();
       const type = rhvTeamType(emp && emp.team);
-      if (!type) return 'ok';                      /* sem tipo de equipa conhecido: não há limite a verificar */
-      const r = await fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?select=n_int,abv_name,team,day&corp_oper_nr=eq.${corp}&year=eq.${request.year}&month=eq.${request.month}&day=in.(${days.join(',')})&shift=eq.FE`, {
+      if (!type) return 'ok';
+      const group = rhvTeamGroup(emp && emp.team);                      /* sem tipo de equipa conhecido: não há limite a verificar */
+      /* 1) férias já aprovadas (escala) da mesma equipa neste mês */
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/reg_employee_shifts?select=n_int,abv_name,team,day&corp_oper_nr=eq.${corp}&year=eq.${year}&month=eq.${month}&shift=eq.FE`, {
         headers: getSupabaseHeaders()
       });
       if (!r.ok) throw new Error("Erro ao verificar as férias da equipa.");
-      const rows = (await r.json()).filter(x => !mine.includes(String(x.n_int)) && rhvTeamType(x.team) === type);
-      const byDay = {};
-      rows.forEach(x => {
-        byDay[x.day] = byDay[x.day] || new Map();
-        byDay[x.day].set(String(x.n_int), x.abv_name || '');
+      const approved = new Map();                  /* n_int -> {n, name, days:Set} */
+      (await r.json()).filter(x => rhvKey(x.n_int) !== myKey && rhvTeamGroup(x.team) === group).forEach(x => {
+        const k = rhvKey(x.n_int);
+        if (!approved.has(k)) approved.set(k, {n: x.n_int, name: x.abv_name || '', days: new Set()});
+        approved.get(k).days.add(Number(x.day));
       });
+      const reqSet = new Set(days);
+      const byDay = {};
+      approved.forEach((p, k) => p.days.forEach(d => { if (reqSet.has(d)) (byDay[d] = byDay[d] || new Set()).add(k); }));
       const full = Object.keys(byDay).map(Number).filter(d => byDay[d].size >= RHV_MAX_SAME_TIME[type]).sort((a, b) => a - b);
-      if (!full.length) return 'ok';
-      return rhvTeamLimitPopup(request, type, full, byDay);
+      /* 2) outros pedidos ainda em aprovação, da mesma equipa, que se cruzam com este */
+      const pending = new Map();
+      try {
+        const rp = await fetch(`${SUPABASE_URL}/rest/v1/ped_vacat?select=id,n_int,day&corp_oper_nr=eq.${corp}&vacation_type=eq.Profissional&year=eq.${year}&month=eq.${month}&state=eq.${encodeURIComponent('Em Aprovação')}&id=neq.${request.id}`, {headers: getSupabaseHeaders()});
+        const reqs = rp.ok ? (await rp.json()).filter(x => rhvKey(x.n_int) !== myKey && rhvDays(x).some(d => reqSet.has(d))) : [];
+        if (reqs.length) {
+          const vars = [...new Set(reqs.flatMap(x => rhvNintVariants(x.n_int)))];
+          const re = await fetch(`${SUPABASE_URL}/rest/v1/reg_employees?select=n_int,abv_name,team&corp_oper_nr=eq.${corp}&n_int=in.(${vars.map(v => `"${v}"`).join(',')})`, {headers: getSupabaseHeaders()});
+          const emps = re.ok ? await re.json() : [];
+          reqs.forEach(x => {
+            const e = emps.find(y => rhvKey(y.n_int) === rhvKey(x.n_int));
+            if (!e || rhvTeamGroup(e.team) !== group) return;
+            pending.set(rhvKey(x.n_int), {n: x.n_int, name: e.abv_name || '', days: new Set(rhvDays(x))});
+          });
+        }
+      } catch (e) { console.warn('Pedidos pendentes indisponíveis:', e); }
+      /* 3) prioridade: pontos do ano anterior (quem tem menos pontos tem prioridade) */
+      const scores = (pending.size || full.length) ? await rhvPriorityScores(corp, year - 1).catch(() => null) : null;
+      const score = k => scores ? (scores.get(k) || 0) : null;
+      const myScore = score(myKey);
+      const before = [...pending.keys()].filter(k => scores && score(k) < myScore);
+      if (!full.length && !before.length) return 'ok';
+      return rhvTeamLimitPopup({request, type, group, year, month, days, full, me: {n: request.n_int, name: (emp && emp.abv_name) || ''},
+                                approved, pending, before: new Set(before), score, prevYear: year - 1});
     }
     /* feriados do mês (fixos, móveis pela Páscoa e municipal da corporação); o Carnaval é facultativo e conta como dia útil */
     function rhvHolidayDays(year, month) {
@@ -4087,41 +4259,87 @@
       const p2 = n => String(n).padStart(2, '0');
       return out.map(([a, b]) => a === b ? p2(a) : `${p2(a)} a ${p2(b)}`).join(', ');
     }
-    /* popup de consulta: mostra quem já está de férias nesses dias; o RH decide */
-    function rhvTeamLimitPopup(request, type, days, byDay) {
+    /* popup de consulta (linha do mês): pedido, férias já aprovadas da equipa e outros pedidos pendentes com prioridade; o RH decide */
+    function rhvTeamLimitPopup(c) {
       return new Promise(resolve => {
         document.getElementById('rhvLimitOverlay')?.remove();
-        const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        const esc = v => String(v ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
         const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
-        const year = Number(request.year), month = Number(request.month);
-        /* uma linha por elemento, com os dias em períodos (fins de semana e feriados no meio não partem o período) */
-        const people = new Map();
-        days.forEach(d => byDay[d].forEach((name, n) => {
-          if (!people.has(n)) people.set(n, {name, days: []});
-          people.get(n).days.push(d);
-        }));
-        const rows = [...people.entries()]
-          .sort((a, b) => Math.min(...a[1].days) - Math.min(...b[1].days) || Number(a[0]) - Number(b[0]))
-          .map(([n, p]) => `
+        const WD = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+        const {year, month, type} = c;
+        /* ícones SVG (sem emojis) */
+        const svg = (path, size, color, fill) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${fill ? color : 'none'}" stroke="${fill ? 'none' : color}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; flex-shrink:0;">${path}</svg>`;
+        const ICO = {
+          warn: (s, col) => svg('<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>', s, col),
+          star: (s) => svg('<path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z"/>', s, '#f59e0b', true),
+          x: (s) => svg('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>', s, '#fff'),
+          check: (s) => svg('<polyline points="20 6 9 17 4 12"/>', s, '#fff')
+        };
+        const gl = rhvGroupLabel(c.group || type);
+        const nDays = new Date(year, month, 0).getDate();
+        const allDays = Array.from({length: nDays}, (_, i) => i + 1);
+        const hol = rhvHolidayDays(year, month);
+        const bg = d => { const wd = new Date(year, month - 1, d).getDay(); return hol.has(d) ? '#fbe0e0' : (wd === 0 || wd === 6 ? '#fcf3e1' : '#fff'); };
+        const reqSet = new Set(c.days), fullSet = new Set(c.full);
+        const max = RHV_MAX_SAME_TIME[type];
+        const pts = k => { const v = c.score(k); return v === null ? '' : ` · ${v} pts`; };
+        const cell = (color, extra = '') => `<span style="display:block; margin:auto; width:13px; height:13px; border-radius:3px; background:${color}; ${extra}"></span>`;
+        const row = (label, sub, subColor, daySet, colorFn, star) => `
           <tr>
-            <td style="padding:7px 10px; border-bottom:1px solid #eee; white-space:nowrap;"><b>${esc(n)}</b>${p.name ? ' - ' + esc(p.name) : ''}</td>
-            <td style="padding:7px 10px; border-bottom:1px solid #eee; text-align:right; font-weight:700; color:#8b0000; white-space:nowrap;">${rhvPeriods(p.days, year, month)}</td>
-          </tr>`).join('');
+            <td style="padding:7px 10px 7px 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; border-bottom:1px solid #f1f3f5; vertical-align:middle;">
+              <div style="font-weight:700; font-size:12.5px; color:#2c3e50; overflow:hidden; text-overflow:ellipsis;">${label}${star ? ` <span title="Tem prioridade">${ICO.star(13)}</span>` : ''}</div>
+              <div style="font-size:11px; font-weight:600; color:${subColor};">${sub}</div>
+            </td>
+            ${allDays.map(d => `<td style="background:${bg(d)}; border-bottom:1px solid #f1f3f5; padding:0; height:36px;">${daySet.has(d) ? colorFn(d) : ''}</td>`).join('')}
+          </tr>`;
+        const myK = rhvKey(c.me.n);
+        const rows = [
+          row(`${esc(c.me.n)} · ${esc(c.me.name)}`, `Pedido a aprovar${pts(myK)}`, '#ef6c00', reqSet, d => cell(fullSet.has(d) ? '#e53935' : '#ef6c00')),
+          ...[...c.approved.entries()].filter(([, p]) => [...p.days].some(d => reqSet.has(d)))
+            .map(([k, p]) => row(`${esc(p.n)} · ${esc(p.name)}`, `Aprovado${pts(k)}`, '#2e7d32', p.days, d => cell(fullSet.has(d) ? '#e53935' : '#2e7d32'))),
+          ...[...c.pending.entries()]
+            .sort((a, b) => (c.score(a[0]) ?? 0) - (c.score(b[0]) ?? 0))
+            .map(([k, p]) => row(`${esc(p.n)} · ${esc(p.name)}`, `Outro pedido pendente${pts(k)}`, '#7e57c2', p.days,
+                                 d => cell('#7e57c2', reqSet.has(d) ? 'box-shadow:0 0 0 2px #fff, 0 0 0 3.5px #7e57c2;' : ''), c.before.has(k)))
+        ].join('');
+        const head = allDays.map(d => `<th style="background:${bg(d)}; font-size:9.5px; color:#6c757d; font-weight:700; padding:4px 0; line-height:1.25;">${d}<br>${WD[new Date(year, month - 1, d).getDay()]}</th>`).join('');
+        const notes = [];
+        if (c.full.length) notes.push(`<div style="color:#c62828; font-weight:700; display:flex; align-items:center; gap:7px;">${ICO.warn(16, '#c62828')}<span>${c.full.length} dia${c.full.length > 1 ? 's' : ''} acima do limite de ${esc(gl)} (máximo ${max}): ${rhvPeriods(c.full, year, month)}</span></div>`);
+        c.before.forEach(k => {
+          const p = c.pending.get(k);
+          const both = [...p.days].filter(d => reqSet.has(d));
+          notes.push(`<div style="color:#5b3fa0; display:flex; align-items:flex-start; gap:7px;"><span style="margin-top:1px;">${ICO.star(15)}</span><span><b>${esc(p.name || 'Nº ' + p.n)}</b> também pediu férias neste período (${rhvPeriods(both, year, month)}) e <b>tem prioridade</b> sobre <b>${esc(c.me.name || 'Nº ' + c.me.n)}</b>: ${c.score(k)} pts contra ${c.score(myK)} pts em ${c.prevYear}.</span></div>`);
+        });
+        const title = c.full.length ? `Limite de férias atingido · ${esc(gl)}` : `Outro elemento tem prioridade · ${esc(gl)}`;
         const ov = document.createElement('div');
         ov.id = 'rhvLimitOverlay';
         ov.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:10000; display:flex; align-items:center; justify-content:center; padding:20px;';
         ov.innerHTML = `
-          <div style="background:#fff; border-radius:10px; width:100%; max-width:520px; max-height:85vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 20px 50px rgba(0,0,0,.35); font-family:inherit;">
-            <div style="background:linear-gradient(to right,#8b0000,#c62828); color:#fff; padding:14px 18px; font-size:15px; font-weight:700;">⚠️ Limite de férias em ${esc(type)}</div>
-            <div style="padding:14px 18px; overflow-y:auto; font-size:13.5px; color:#333;">
-              <p style="margin:0 0 10px;">Em ${MESES[month - 1]} já ${RHV_MAX_SAME_TIME[type] === 1 ? 'está <b>1</b> elemento' : `estão <b>${RHV_MAX_SAME_TIME[type]}</b> elementos`} de <b>${esc(type)}</b> de férias nos mesmos dias (máximo ${RHV_MAX_SAME_TIME[type]}):</p>
-              <table style="width:100%; border-collapse:collapse; font-size:13px;">${rows}</table>
-              <p style="margin:12px 0 0; color:#666; font-size:12.5px;"><b>Marcar</b> aprova e grava na escala mesmo assim. <b>Rejeitar</b> recusa o pedido.</p>
+          <div style="background:#fff; border-radius:14px; width:100%; max-width:880px; max-height:88vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 20px 50px rgba(0,0,0,.35); font-family:inherit;">
+            <div style="background:linear-gradient(to right,#8b0000,#c62828); color:#fff; padding:14px 20px; display:flex; align-items:center; gap:12px;">
+              <div style="width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,.18); display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0;">${ICO.warn(18, '#fff')}</div>
+              <div><div style="font-size:15px; font-weight:700;">${title}</div>
+                <div style="font-size:12px; opacity:.85;">Máximo ${max} elemento${max > 1 ? 's' : ''} de férias ao mesmo tempo · ${MESES[month - 1]} ${year} · prioridade pelos pontos de ${c.prevYear} (menos pontos = mais prioridade)</div></div>
             </div>
-            <div style="display:flex; gap:8px; justify-content:flex-end; padding:12px 18px; border-top:1px solid #eee; background:#f7f7f7;">
-              <button type="button" data-r="cancel" style="padding:8px 16px; border:1px solid #ccc; background:#fff; border-radius:5px; cursor:pointer; font-weight:600;">Cancelar</button>
-              <button type="button" data-r="reject" style="padding:8px 16px; border:0; background:#e53935; color:#fff; border-radius:5px; cursor:pointer; font-weight:700;">Rejeitar</button>
-              <button type="button" data-r="mark" style="padding:8px 16px; border:0; background:#2e7d32; color:#fff; border-radius:5px; cursor:pointer; font-weight:700;">Marcar</button>
+            <div style="padding:14px 20px; overflow:auto; font-size:13px; color:#2c3e50;">
+              <table style="width:100%; min-width:640px; border-collapse:collapse; table-layout:fixed;">
+                <colgroup><col style="width:200px">${'<col>'.repeat(nDays)}</colgroup>
+                <thead><tr><th></th>${head}</tr></thead>
+                <tbody>${rows}</tbody>
+              </table>
+              <div style="display:flex; flex-wrap:wrap; gap:14px; margin-top:10px; font-size:11.5px; color:#6c757d;">
+                <span><i style="display:inline-block; width:11px; height:11px; border-radius:3px; background:#ef6c00; vertical-align:-1px;"></i> Pedido</span>
+                <span><i style="display:inline-block; width:11px; height:11px; border-radius:3px; background:#2e7d32; vertical-align:-1px;"></i> Já aprovado</span>
+                <span><i style="display:inline-block; width:11px; height:11px; border-radius:3px; background:#7e57c2; vertical-align:-1px;"></i> Outro pedido pendente</span>
+                <span><i style="display:inline-block; width:11px; height:11px; border-radius:3px; background:#e53935; vertical-align:-1px;"></i> Acima do limite</span>
+                <span style="display:inline-flex; align-items:center; gap:4px;">${ICO.star(12)} Tem prioridade</span>
+              </div>
+              <div style="margin-top:12px; display:flex; flex-direction:column; gap:6px; font-size:13px; line-height:1.45; background:#fafbfc; border:1px solid #eef0f3; border-radius:10px; padding:10px 12px;">${notes.join('')}</div>
+            </div>
+            <div style="display:flex; gap:8px; justify-content:flex-end; padding:12px 20px; border-top:1px solid #eee; background:#f7f8f9;">
+              <button type="button" data-r="cancel" style="padding:9px 18px; border:1px solid #ccc; background:#fff; border-radius:7px; cursor:pointer; font-weight:700;">Cancelar</button>
+              <button type="button" data-r="reject" style="padding:9px 18px; border:0; background:#e53935; color:#fff; border-radius:7px; cursor:pointer; font-weight:700; display:inline-flex; align-items:center; gap:6px;">${ICO.x(14)}Rejeitar</button>
+              <button type="button" data-r="mark" style="padding:9px 18px; border:0; background:#2e7d32; color:#fff; border-radius:7px; cursor:pointer; font-weight:700; display:inline-flex; align-items:center; gap:6px;">${ICO.check(15)}Marcar mesmo assim</button>
             </div>
           </div>`;
         const close = r => { ov.remove(); resolve(r); };
@@ -4150,8 +4368,7 @@
           .e-container::-webkit-scrollbar {display: none;}
           .e-table {width: 100%; border-collapse: separate; border-spacing: 0; font-size: 10.5px; table-layout: fixed;}
           .e-table th {position: sticky; top: 0; z-index: 10; background: #f8fafc; border-bottom: 2px solid #94a3b8; border-right: 1px solid #cbd5e1; padding: 8px 2px; text-align: center;}
-          .e-table th:first-child, .e-table td:first-child {position: sticky; left: 0; width: 150px; min-width: 150px; z-index: 11; background: #f1f5f9; border-right: 2px solid #cbd5e1;
-                                                            text-align: left; padding-left: 10px;}
+          .e-table th:first-child, .e-table td:first-child {position: sticky; left: 0; width: 150px; min-width: 150px; z-index: 11; background: #f1f5f9; border-right: 2px solid #cbd5e1; text-align: left; padding-left: 10px;}
           .e-table th:first-child {z-index: 12;}
           .e-table td {border-bottom: 1px solid #cbd5e1; border-right: 1px solid #cbd5e1; padding: 4px; text-align: center; vertical-align: middle; height: 35px;}
           .e-eligible {background-color: #10b981 !important; color: white !important; font-weight: bold; border-radius: 4px; padding: 4px 10px; font-size: 9px;}

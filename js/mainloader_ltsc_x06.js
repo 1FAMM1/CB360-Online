@@ -230,13 +230,22 @@
     });
     /* =======================================
     PEDIDOS EM APROVAÇÃO (aviso ao abrir a main)
+    - Só aparece ao Comando (patent_abv COM, 2COM ou ACOM) que seja administrador (user_role admin) e esteja ativo.
     - Conta o que está "Em Aprovação" e mostra um popup com o número de cada área.
     - Cada linha só aparece a quem tem acesso a essa página no menu (e só se houver pedidos).
     - Clicar numa linha abre logo a página respetiva.
     ======================================= */
     async function cb360ShowPendingApprovals() {
       const corp = sessionStorage.getItem('currentCorpOperNr');
-      if (!corp) return;
+      const nInt = sessionStorage.getItem('currentNInt');
+      if (!corp || !nInt) return;
+      /* só para o Comando (COM, 2COM, ACOM), com perfil de administrador e ativo */
+      try {
+        const ru = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?select=user_role,elem_state,patent_abv&n_int=eq.${encodeURIComponent(nInt)}&corp_oper_nr=eq.${corp}&limit=1`, {headers: getSupabaseHeaders()});
+        if (!ru.ok) return;
+        const u = (await ru.json())[0];
+        if (!u || u.user_role !== 'admin' || u.elem_state !== true || !['COM', '2COM', 'ACOM'].includes(String(u.patent_abv || '').trim().toUpperCase())) return;
+      } catch (e) { return; }
       const d = new Date();
       const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       const pend = encodeURIComponent('Em Aprovação');

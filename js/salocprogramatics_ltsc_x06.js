@@ -91,97 +91,373 @@
         .plandir-tas-active {background: #fef9c3 !important; color: #a16207 !important; font-weight: bold; text-align: center;}
         .plandir-readonly-field {background: #f5f5f5; color: #555;}
         .plandir-nint-input, .plandir-entrance-input, .plandir-exit-input, .plandir-obs-input {width: 100%;}
+        /* - estilos que estavam escritos nos elementos das páginas (style="...") */
+        #page-docimport .sl-1, #page-ppis .sl-1, #page-recservdescr .sl-1, #page-saloc .sl-1 {font-family: 'Segoe UI', sans-serif;}
+        #page-docimport .sl-2, #page-ppis .sl-2, #page-recservdescr .sl-2, #page-saloc .sl-2 {font-size: 15px; margin-bottom: 20px; color: #333;}
+        #page-ppis .sl-3, #page-recservdescr .sl-3, #page-saloc .sl-3 {background: linear-gradient(90deg, #e0e0e0, #d6d6d6); padding: 15px 20px; border-left: 5px solid #dc3545; border-radius: 6px; margin-bottom: 20px;}
+        #page-saloc .sl-4 {margin-bottom: 20px;}
+        #page-saloc .sl-5 {list-style: none; padding-left: 10px; line-height: 1.8;}
+        #page-ppis .sl-6, #page-recservdescr .sl-6, #page-saloc .sl-6 {color:#0d630e;}
+        #page-ppis .sl-7, #page-saloc .sl-7 {margin-top: 30px; color: #444;}
+        #page-docimport .sl-8, #page-ppis .sl-8, #page-recservdescr .sl-8, #page-saloc .sl-8 {margin-top: 40px; text-align:center; font-style: italic; color: #6c757d;}
+        #page-ppis .sl-9, #page-recservdescr .sl-9 {list-style: none; padding-left: 20px; line-height: 1.7; font-size: 14.5px;}
+        #page-ppis .sl-10, #page-recservdescr .sl-10 {color:#c20c0c;}
+        #page-ppis .sl-11, #page-recservdescr .sl-11 {background: linear-gradient(90deg, #e0e0e0, #d6d6d6); padding: 15px 20px; border-left: 5px solid #0d630e; border-radius: 6px; margin: 25px 0 20px 0;}
+        #page-ppia2 .sl-12 {margin-bottom: 10px; font-size: 14px; font-weight: bold; color: #aaa;}
+        #page-crepcalg .sl-13, #page-dashboard .sl-13, #page-ineminop .sl-13, #page-inocrepc .sl-13, #page-plandir .sl-13, #page-ppia22 .sl-13, #page-ppiaero .sl-13, #page-ppilinfer .sl-13, #page-recinoreports .sl-13, #page-recserv .sl-13 {opacity:.9;}
+        #page-ppia22 .sl-14, #page-ppilinfer .sl-14 {margin: 3px 0 0 0; justify-content: center;}
+        #page-crepcalg .sl-15, #page-hemodialysis .sl-15, #page-inocrepc .sl-15, #page-plandir .sl-15, #page-ppia22 .sl-15, #page-ppilinfer .sl-15 {margin-bottom: 10px; font-size: 14px; font-weight: bold;}
+        #page-ppia22 .sl-16, #page-ppilinfer .sl-16 {grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%; max-width: 400px;}
+        #page-ppia22 .sl-17, #page-ppilinfer .sl-17 {height: 35px; width: 100%;}
+        #page-crepcalg .sl-18, #page-inocrepc .sl-18, #page-plandir .sl-18, #page-ppilinfer .sl-18 {height: 35px;}
+        #page-ppilinfer .sl-19 {height: 35px; width: 100%; opacity: 0.6; cursor: not-allowed;}
+        #page-recservdescr .sl-20 {font-size: 14.5px; color: #444; line-height: 1.6; margin-bottom: 20px;}
+        #page-ineminop .sl-21, #page-recserv .sl-21 {width: 100%;}
+        #page-recserv .sl-22 {font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: #444; margin: -12px -12px 15px -12px; padding: 10px 14px; background: linear-gradient(90deg, rgba(220,53,69,0.16), rgba(255,255,255,0.03)); border-left: 3px solid rgba(220,53,69,0.9); border-radius: 6px 6px 0 0; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);}
+        #page-ineminop .sl-23, #page-recserv .sl-23 {margin-bottom: 5px;}
+        #page-ineminop .sl-24, #page-recserv .sl-24 {flex-direction: row; align-items: center; gap: 10px;}
+        #page-crepcalg .sl-25, #page-ineminop .sl-25, #page-inocrepc .sl-25, #page-recserv .sl-25 {width: 120px;}
+        #page-crepcalg .sl-26, #page-ineminop .sl-26, #page-inocrepc .sl-26, #page-phonebook .sl-26, #page-recserv .sl-26 {width: 100px;}
+        #page-crepcalg .sl-27, #page-hemodialysis .sl-27, #page-ineminop .sl-27, #page-inocrepc .sl-27, #page-recserv .sl-27 {width: 200px;}
+        #page-recserv .sl-28 {min-width: 120px;}
+        #page-ineminop .sl-29, #page-recserv .sl-29 {margin: 20px 0;}
+        #page-ineminop .sl-30, #page-recserv .sl-30 {justify-content: space-between; align-items: center; margin-bottom: 10px;}
+        #page-ineminop .sl-31, #page-recserv .sl-31 {font-size: 16px; color: #444; margin: 0;}
+        #page-crepcalg .sl-32, #page-dashboard .sl-32, #page-fleet-cards .sl-32, #page-hemodialysis .sl-32, #page-ineminop .sl-32, #page-inocrepc .sl-32, #page-phonebook .sl-32, #page-recserv .sl-32 {flex-direction: row; align-items: center; gap: 8px;}
+        #page-attendance-list .sl-33, #page-contact-list .sl-33, #page-crepcalg .sl-33, #page-fleet-cards .sl-33, #page-hemodialysis .sl-33, #page-inocrepc .sl-33, #page-material-request .sl-33, #page-phonebook .sl-33, #page-recserv .sl-33 {font-size: 13px;}
+        #page-recserv .sl-34 {margin: 0 0 0 0; height: 285px;}
+        #page-ineminop .sl-35, #page-recserv .sl-35 {width: 70px;}
+        #page-ineminop .sl-36, #page-recserv .sl-36 {width: 50px;}
+        #page-crepcalg .sl-37, #page-recserv .sl-37 {width: 170px;}
+        #page-crepcalg .sl-38, #page-dashboard .sl-38, #page-hemodialysis .sl-38, #page-inocrepc .sl-38, #page-phonebook .sl-38, #page-recserv .sl-38 {width: 150px;}
+        #page-crepcalg .sl-39, #page-recserv .sl-39 {width: 180px;}
+        #page-ineminop .sl-40 {font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: #444; margin: -12px -12px 15px -12px; padding: 10px 14px; background: linear-gradient(90deg, rgba(220,53,69,0.18), rgba(255,255,255,0.03)); border-left: 3px solid rgba(220,53,69,0.9); border-radius: 6px 6px 0 0; align-items: center; gap: 8px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);}
+        #page-ineminop .sl-41 {width: 75px;}
+        #page-dashboard .sl-42, #page-ineminop .sl-42, #page-recinoreports .sl-42 {font-size: 14px;}
+        #page-ineminop .sl-43 {margin: 0 0 0 0; height: 300px;}
+        #page-crepcalg .sl-44, #page-ineminop .sl-44, #page-inocrepc .sl-44, #page-phonebook .sl-44 {width: 250px;}
+        #page-recinoreports .sl-45 {flex-direction: row; align-items: center; gap: 8px; margin-bottom: 18px;}
+        #page-phonebook .sl-46, #page-recinoreports .sl-46 {width: 130px;}
+        #page-recinoreports .sl-47 {font-size: 14px; margin-left: 8px;}
+        #page-recinoreports .sl-48 {gap: 16px; flex-wrap: wrap; align-items: flex-start;}
+        #page-recinoreports .sl-49 {flex: 1; min-width: 220px;}
+        #page-recinoreports .sl-50 {font-size: 13px; font-weight: 600; color: #fff; background: #dc3545; padding: 7px 12px; border-radius: 6px 6px 0 0; letter-spacing: 0.4px;}
+        #page-recinoreports .sl-51 {width: 100%; border-collapse: collapse; font-size: 13px;}
+        #page-recinoreports .sl-52 {background: #f1f3f5;}
+        #page-recinoreports .sl-53 {padding: 7px 10px; text-align: left; border-bottom: 2px solid #dee2e6; color: #495057;}
+        #page-recinoreports .sl-54 {padding: 7px 10px; text-align: center; border-bottom: 2px solid #dee2e6; color: #495057;}
+        #page-recinoreports .sl-55 {text-align:center; padding: 12px; color: #aaa;}
+        #page-recinoreports .sl-56 {background: #f8f9fa; font-weight: 600;}
+        #page-recinoreports .sl-57 {padding: 7px 10px; border-top: 2px solid #dee2e6;}
+        #page-recinoreports .sl-58 {padding: 7px 10px; text-align: center; border-top: 2px solid #dee2e6;}
+        #page-recinoreports .sl-59 {flex: 1; min-width: 320px;}
+        #page-recinoreports .sl-60 {font-size: 13px; font-weight: 600; color: #fff; background: #198754; padding: 7px 12px; border-radius: 6px 6px 0 0; letter-spacing: 0.4px;}
+        #page-recinoreports .sl-61 {font-size: 13px; font-weight: 600; color: #fff; background: #0d6efd; padding: 7px 12px; border-radius: 6px 6px 0 0; letter-spacing: 0.4px;}
+        #page-crepcalg .sl-62, #page-dashboard .sl-62 {align-items:center; gap:8px;}
+        #page-dashboard .sl-63 {font-size: 14px; font-weight: 600; text-align: center; color: #2c3e50; margin: 0 0 18px 0; padding: 10px 14px; border-left: 4px solid #3498db; background: linear-gradient(90deg, rgba(52,152,219,0.10), rgba(255,255,255,0.02)); border-radius: 6px; letter-spacing: 0.3px;}
+        #page-contact-list .sl-64, #page-dashboard .sl-64, #page-phonebook .sl-64 {flex-direction: row; align-items: center; gap: 8px; margin-bottom: 15px;}
+        #page-dashboard .sl-65 {gap: 12px; margin-bottom: 14px; flex-wrap: wrap;}
+        #page-dashboard .sl-66 {flex: 1; min-width: 180px; padding: 14px; text-align: center; border-radius: 10px; background: linear-gradient(180deg,#f8f9fa,#eef1f4); box-shadow: 0 2px 6px rgba(0,0,0,0.06); border-top: 3px solid #e74c3c;}
+        #page-dashboard .sl-67 {font-size: 11px; color: #6c7a89; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px;}
+        #page-dashboard .sl-68 {font-size: 32px; font-weight: 700; color: #2c3e50;}
+        #page-dashboard .sl-69 {flex: 1; min-width: 180px; padding: 14px; text-align: center; border-radius: 10px; background: linear-gradient(180deg,#f8f9fa,#eef1f4); box-shadow: 0 2px 6px rgba(0,0,0,0.06); border-top: 3px solid #c0392b;}
+        #page-dashboard .sl-70 {font-size: 32px; font-weight: 700; color: #c0392b;}
+        #page-dashboard .sl-71 {flex: 1; min-width: 180px; padding: 14px; text-align: center; border-radius: 10px; background: linear-gradient(180deg,#f8f9fa,#eef1f4); box-shadow: 0 2px 6px rgba(0,0,0,0.06); border-top: 3px solid #e67e22;}
+        #page-dashboard .sl-72 {font-size:32px; font-weight:700; color:#e67e22;}
+        #page-dashboard .sl-73 {gap: 12px; margin-bottom: 12px; flex-wrap: wrap;}
+        #page-dashboard .sl-74 {flex: 1; min-width: 250px; padding: 14px; border-radius: 10px; background: linear-gradient(180deg,#f8f9fa,#eef1f4); box-shadow: 0 2px 6px rgba(0,0,0,0.06); border-top: 3px solid #3498db;}
+        #page-dashboard .sl-75 {font-size: 11px; text-align: center; margin-bottom: 10px; color: #5f6f7f; text-transform: uppercase;}
+        #page-dashboard .sl-76 {height: 150px;}
+        #page-dashboard .sl-77 {flex:1; min-width:250px; padding:14px; border-radius:10px; background:linear-gradient(180deg,#f8f9fa,#eef1f4); box-shadow:0 2px 6px rgba(0,0,0,0.06); border-top:3px solid #e74c3c;}
+        #page-dashboard .sl-78 {gap: 12px; flex-wrap: wrap;}
+        #page-dashboard .sl-79 {flex: 1; min-width: 250px; padding: 14px; border-radius: 10px; background: linear-gradient(180deg,#f8f9fa,#eef1f4); box-shadow: 0 2px 6px rgba(0,0,0,0.06); border-top: 3px solid #9b59b6;}
+        #page-dashboard .sl-80 {flex: 1; min-width: 250px; padding: 14px; border-radius: 10px; background: linear-gradient(180deg,#f8f9fa,#eef1f4); box-shadow: 0 2px 6px rgba(0,0,0,0.06); border-top: 3px solid #e67e22;}
+        #page-dashboard .sl-81 {flex: 1; min-width: 250px; padding: 14px; border-radius: 10px; background: linear-gradient(180deg,#f8f9fa,#eef1f4); box-shadow: 0 2px 6px rgba(0,0,0,0.06); border-top: 3px solid #95a5a6;}
+        #page-docimport .sl-82 {background: linear-gradient(90deg, #d5d5d5, #c9c9c9); padding: 15px 20px; border-left: 5px solid #171d8f; border-radius: 6px; margin-bottom: 20px;}
+        #page-docimport .sl-83 {padding-left: 25px; line-height: 1.6;}
+        #page-docimport .sl-84 {margin-bottom: 8px;}
+        #page-crepcalg .sl-85, #page-hemodialysis .sl-85, #page-inocrepc .sl-85, #page-plandir .sl-85 {margin: 0; justify-content: center;}
+        #page-crepcalg .sl-86, #page-hemodialysis .sl-86, #page-inocrepc .sl-86, #page-plandir .sl-86 {flex-direction: column; align-items: center;}
+        #page-crepcalg .sl-87 {margin:0 0 0 0;}
+        #page-crepcalg .sl-88, #page-inocrepc .sl-88 {justify-content: center;}
+        #page-crepcalg .sl-89 {margin: 0 0 0 0;}
+        #page-crepcalg .sl-90 {font-size: 13px; font-weight: bold;}
+        #page-crepcalg .sl-91 {width: 230px;}
+        #page-crepcalg .sl-92 {width: 160px;}
+        #page-crepcalg .sl-93 {margin: 10px 0 0 0; align-items: center;}
+        #page-crepcalg .sl-94 {flex-direction: row; align-items: center;}
+        #page-crepcalg .sl-95 {font-size: 13px; font-weight: bold; white-space: nowrap;}
+        #page-crepcalg .sl-96 {width: 140px;}
+        #page-crepcalg .sl-97 {width: 90px;}
+        #page-crepcalg .sl-98 {margin: 20px 0 0 0; align-items: flex-start; text-align: left;}
+        #page-crepcalg .sl-99 {margin: 5px 0 0 0;}
+        #page-crepcalg .sl-100 {font-size: 14px; font-weight: 600; letter-spacing: 0.04em; color: #444; margin: 0 0 10px 0; padding: 8px 12px; background: linear-gradient(90deg, rgba(220,53,69,0.18), rgba(255,255,255,0.03)); border-left: 3px solid rgba(220,53,69,0.9); border-radius: 6px 6px 0 0; align-items: center; gap: 8px;}
+        #page-crepcalg .sl-101 {align-items: center; margin: 3px 0;}
+        #page-crepcalg .sl-102 {width: 280px; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; white-space: nowrap;}
+        #page-crepcalg .sl-103, #page-inocrepc .sl-103 {width: 17px; height: 17px; cursor: pointer !important;}
+        #page-crepcalg .sl-104 {flex-direction: row; align-items: center; gap: 8px; flex: 1; min-width: 0;}
+        #page-crepcalg .sl-105 {width: 754px;}
+        #page-crepcalg .sl-106 {width: 280px; align-items: center; gap: 8px; font-size: 15px; cursor: pointer;}
+        #page-crepcalg .sl-107 {width:17px; height:17px; cursor: pointer !important;}
+        #page-crepcalg .sl-108 {width: 200px; background: #5e5e5e;}
+        #page-crepcalg .sl-109 {width: 250px; background: #5e5e5e;}
+        #page-crepcalg .sl-110 {width: 754px; background: #909090;}
+        #page-crepcalg .sl-111 {margin: 10px 0 0 0; align-items: flex-start; text-align: left;}
+        #page-crepcalg .sl-112 {align-items: center; margin: 2px 0;}
+        #page-crepcalg .sl-113 {font-size: 15px;}
+        #page-crepcalg .sl-114 {width: 75px; text-align: center;}
+        #page-crepcalg .sl-115 {width: 632px;}
+        #page-crepcalg .sl-116 {margin: 15px 0 0 0;}
+        #page-crepcalg .sl-117 {width: 350px;}
+        #page-crepcalg .sl-118 {width: 728px;}
+        #page-crepcalg .sl-119 {flex-direction: row; align-items: center; gap: 8px; margin: 15px 0 0 0;}
+        #page-crepcalg .sl-120, #page-hemodialysis .sl-120, #page-phonebook .sl-120 {width: 300px;}
+        #page-crepcalg .sl-121, #page-inocrepc .sl-121, #page-plandir .sl-121 {gap: 5px;}
+        #page-crepcalg .sl-122, #page-inocrepc .sl-122 {margin-bottom: 0px;}
+        #page-crepcalg .sl-123, #page-inocrepc .sl-123 {margin-top: 5px;}
+        #page-crepcalg .sl-124 {width: 150px; text-align: center; font-size: 14px;}
+        #page-crepcalg .sl-125 {margin-top: 10px;}
+        #page-crepcalg .sl-126 {width: 100%; border-collapse: collapse; table-layout: fixed;}
+        #page-crepcalg .sl-127 {background-color: #721c24; color: #ffffff; text-align: center; padding: 8px 10px; font-weight: bold; font-size: 13px; border: 0;}
+        #page-crepcalg .sl-128 {width:50%; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;}
+        #page-crepcalg .sl-129 {width:50%; border-top: 1px solid #ccc; padding: 6px;}
+        #page-crepcalg .sl-130 {padding: 4px; white-space: nowrap; text-align: center;}
+        #page-crepcalg .sl-131 {padding: 4px;}
+        #page-crepcalg .sl-132 {margin-top: 10px; width: 100%;}
+        #page-crepcalg .sl-133 {width: 100% !important; border-collapse: collapse; table-layout: fixed !important;}
+        #page-crepcalg .sl-134 {width: 30% !important;}
+        #page-crepcalg .sl-135 {width: 8% !important;}
+        #page-crepcalg .sl-136 {width: 14% !important;}
+        #page-crepcalg .sl-137 {width: 16% !important;}
+        #page-crepcalg .sl-138 {border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;}
+        #page-crepcalg .sl-139 {border-top: 1px solid #ccc; padding: 6px;}
+        #page-crepcalg .sl-140 {gap: 3px;}
+        #page-crepcalg .sl-141 {font-size: 12px; width: 58%; height: 24px; padding: 0 2px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; outline: none;}
+        #page-crepcalg .sl-142 {font-size: 12px; width: 42%; height: 24px; padding: 0 2px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; outline: none;}
+        #page-attendance-list .sl-143, #page-contact-list .sl-143, #page-crepcalg .sl-143, #page-fleet-cards .sl-143, #page-hemodialysis .sl-143, #page-material-request .sl-143, #page-phonebook .sl-143 {width: 100%; border-collapse: collapse;}
+        #page-crepcalg .sl-144 {background-color: #721c24; color: #ffffff; text-align: center; padding: 8px 10px; font-weight: bold; font-size: 13px; border: 0; position: relative;}
+        #page-crepcalg .sl-145 {position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background-color: #28a745; color: white; border: none; border-radius: 4px; width: 24px; height: 24px; font-size: 16px; cursor: pointer; align-items: center; justify-content: center;}
+        #page-crepcalg .sl-146 {width:30px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;}
+        #page-crepcalg .sl-147 {width:40px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;}
+        #page-crepcalg .sl-148 {width:150px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;}
+        #page-crepcalg .sl-149 {width:250px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;}
+        #page-crepcalg .sl-150 {width:160px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;}
+        #page-crepcalg .sl-151 {width:160px; border-top: 1px solid #ccc; padding: 6px;}
+        #page-crepcalg .sl-152 {width:50px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;}
+        #page-crepcalg .sl-153 {width:110px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;}
+        #page-crepcalg .sl-154 {width:200px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;}
+        #page-crepcalg .sl-155 {width:100px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;}
+        #page-crepcalg .sl-156 {width:180px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;}
+        #page-crepcalg .sl-157 {width:180px; border-top: 1px solid #ccc; padding: 6px;}
+        #page-crepcalg .sl-158 {font-size: 15px; color: #666; margin-top: 10px; text-align: center;}
+        #page-crepcalg .sl-159 {align-items: center; margin: 15px 0 0 0;}
+        #page-crepcalg .sl-160 {flex-direction: row; align-items: center; gap: 3px;}
+        #page-crepcalg .sl-161, #page-inocrepc .sl-161 {flex-wrap: wrap; justify-content: flex-end;}
+        #page-plandir .sl-162 {height: 35px; background: orange; color: black;}
+        #page-plandir .sl-163 {margin: 10px 0 0 0; width: 500px;}
+        #page-plandir .sl-164 {padding: 5px 6px; width: 75px;}
+        #page-plandir .sl-165 {padding: 5px 6px; width: 150px;}
+        #page-plandir .sl-166 {padding: 5px 6px; width: 200px;}
+        #page-inocrepc .sl-167, #page-phonebook .sl-167 {width: 400px;}
+        #page-inocrepc .sl-168 {width: 125px;}
+        #page-inocrepc .sl-169 {width: 120px; text-align: center;}
+        #page-inocrepc .sl-170 {width: 395px;}
+        #page-inocrepc .sl-171 {width: 150px; text-align: center;}
+        #page-inocrepc .sl-172 {font-weight: bold; font-size: 13px; margin-top: 15px; margin-bottom: 5px;}
+        #page-inocrepc .sl-173 {margin-left: 20px;}
+        #page-inocrepc .sl-174 {align-items: center; gap: 8px; font-size: 15px; cursor: pointer; white-space: nowrap;}
+        #page-inocrepc .sl-175 {align-items: center; gap: 8px; font-size: 15px; cursor: pointer; white-space: nowrap; margin-left: 15px;}
+        #page-inocrepc .sl-176 {margin-left: 40px;}
+        #page-inocrepc .sl-177 {align-items: center; gap: 8px; font-size: 15px; cursor: pointer; white-space: nowrap; width: 100px;}
+        #page-inocrepc .sl-178 {align-items: center; gap: 8px; font-size: 15px; cursor: pointer; white-space: nowrap; width: 60px;}
+        #page-inocrepc .sl-179 {align-items: center; gap: 8px; font-size: 15px; cursor: pointer; white-space: nowrap; width: 50px;}
+        #page-inocrepc .sl-180 {align-items: center; gap: 8px; font-size: 15px; cursor: pointer; white-space: nowrap; width: 190px;}
+        #page-inocrepc .sl-181 {align-items: center; gap: 8px; font-size: 15px; cursor: pointer; white-space: nowrap; width: 170px;}
+        #page-inocrepc .sl-182 {flex-direction: row; align-items: center; gap: 8px; margin-top: 15px;}
+        #page-inocrepc .sl-183 {font-size: 13px; font-weight: bold; color: #444;}
+        #page-alarm-console .sl-184, #page-attendance-list .sl-184, #page-contact-list .sl-184, #page-fleet-cards .sl-184, #page-hemodialysis .sl-184, #page-material-request .sl-184, #page-phonebook .sl-184 {align-items: center; gap: 10px;}
+        #page-hemodialysis .sl-185 {width: 100px; height: 35px;}
+        #page-hemodialysis .sl-186 {font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: #444; margin: -12px -12px 15px -12px; padding: 5px 14px; background: linear-gradient(90deg, rgba(220,53,69,0.16), rgba(255,255,255,0.03)); border-left: 3px solid rgba(220,53,69,0.9); border-radius: 6px 6px 0 0; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);}
+        #page-hemodialysis .sl-187 {width: 700px;}
+        #page-hemodialysis .sl-188, #page-phonebook .sl-188 {flex-direction: row; align-items: center; gap: 8px; margin-top: 5px;}
+        #page-hemodialysis .sl-189 {width: 550px;}
+        #page-hemodialysis .sl-190 {width: 500px;}
+        #page-hemodialysis .sl-191 {position: relative;}
+        #page-hemodialysis .sl-192 {align-items: center; justify-content: flex-start; gap: 6px; font-size: 13px; padding: 3px 0; cursor: pointer; width: 100%; text-align: left;}
+        #page-hemodialysis .sl-193 {width: 16px; height: 16px; margin: 0; cursor: pointer !important; outline: none !important; box-shadow: none !important;}
+        #page-hemodialysis .sl-194 {flex-direction: row; align-items: center; gap: 8px; justify-content: flex-end; margin-top: 15px;}
+        #page-attendance-list .sl-195, #page-contact-list .sl-195, #page-fleet-cards .sl-195, #page-hemodialysis .sl-195, #page-material-request .sl-195, #page-phonebook .sl-195 {max-height: 500px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #bdc3c7 #f1f1f1;}
+        #page-attendance-list .sl-196, #page-contact-list .sl-196, #page-fleet-cards .sl-196, #page-hemodialysis .sl-196, #page-material-request .sl-196, #page-phonebook .sl-196 {position: sticky; top: 0; z-index: 1;}
+        #page-attendance-list .sl-197, #page-contact-list .sl-197, #page-fleet-cards .sl-197, #page-hemodialysis .sl-197, #page-material-request .sl-197, #page-phonebook .sl-197 {background: #1e3a8a; color: #fff;}
+        #page-fleet-cards .sl-198, #page-hemodialysis .sl-198, #page-material-request .sl-198, #page-phonebook .sl-198 {padding: 6px; border: 1px solid #ddd; font-size: 12px;}
+        #page-hemodialysis .sl-199 {padding: 6px; border: 1px solid #ddd; font-size: 12px; width: 100px;}
+        #page-fleet-cards .sl-200, #page-hemodialysis .sl-200, #page-phonebook .sl-200 {text-align: center; padding: 8px; font-size: 12px; color: #999;}
+        #page-hemodialysis .sl-201 {justify-content: center; gap: 10px; flex-wrap: wrap; align-items: stretch; padding: 0;}
+        #page-hemodialysis .sl-202 {min-width: 250px; flex-direction: column; align-items: center; height: 100%; margin-left: 0;}
+        #page-hemodialysis .sl-203 {font-size: 14px; font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #ddd; padding-bottom: 5px; width: 100%; text-align: center;}
+        #page-hemodialysis .sl-204 {flex-direction: column; gap: 15px; width: 100%; max-height: 500px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #bdc3c7 #f1f1f1;}
+        #page-hemodialysis .sl-205 {font-size: 13px; font-weight: bold; background: #1e3a8a; color: #fff; padding: 5px 10px; border-radius: 4px 4px 0 0; text-align: center;}
+        #page-hemodialysis .sl-206 {background: #f0f0f0;}
+        #page-hemodialysis .sl-207 {padding: 5px; width: 200px; border: 1px solid #ddd; font-size: 12px;}
+        #page-hemodialysis .sl-208 {padding: 5px; width: 390px; border: 1px solid #ddd; font-size: 12px;}
+        #page-hemodialysis .sl-209 {padding: 5px; width: 150px; border: 1px solid #ddd; font-size: 12px;}
+        #page-hemodialysis .sl-210 {min-width: 250px; flex-direction: column; align-items: center; height: 100%; margin-right: 0;}
+        #page-hemodialysis .sl-211 {font-size: 13px; font-weight: bold; background: #6b0000; color: #fff; padding: 5px 10px; border-radius: 4px 4px 0 0; text-align: center;}
+        #page-alarm-console .sl-212, #page-attendance-list .sl-212, #page-contact-list .sl-212, #page-fleet-cards .sl-212, #page-material-request .sl-212, #page-phonebook .sl-212 {opacity:.9; vertical-align: middle;}
+        #page-material-request .sl-213 {flex-direction: row; align-items: center; gap: 8px; flex-wrap: wrap;}
+        #page-alarm-console .sl-214, #page-material-request .sl-214 {font-size: 13px; white-space: nowrap;}
+        #page-material-request .sl-215 {flex: 3; min-width: 350px;}
+        #page-material-request .sl-216 {flex: 2; min-width: 100px; max-width: 200px;}
+        #page-material-request .sl-217 {margin-top: 5px; flex-direction: row; align-items: center; gap: 8px; flex-wrap: wrap;}
+        #page-fleet-cards .sl-218, #page-material-request .sl-218 {margin-top: 20px;}
+        #page-attendance-list .sl-219, #page-contact-list .sl-219, #page-material-request .sl-219, #page-phonebook .sl-219 {font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: #444; margin: -12px -12px 15px -12px; padding: 5px 14px; background: linear-gradient(90deg, rgba(30,58,138,0.13), rgba(255,255,255,0.03)); border-left: 3px solid rgba(30,58,138,0.9); border-radius: 6px 6px 0 0; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);}
+        #page-material-request .sl-220 {padding: 6px; border: 1px solid #ddd; font-size: 12px; width: 80px;}
+        #page-material-request .sl-221 {text-align:center; padding:8px; font-size:12px; color:#999;}
+        #page-attendance-list .sl-222, #page-contact-list .sl-222, #page-fleet-cards .sl-222, #page-material-request .sl-222, #page-phonebook .sl-222 {justify-content: flex-end; gap: 10px;}
+        #page-fleet-cards .sl-223 {font-size: 13px; font-weight: 6000; letter-spacing: 0.04em; color: #444; margin: -12px -12px 15px -12px; padding: 5px 14px; background: linear-gradient(90deg, rgba(30,58,138,0.13), rgba(255,255,255,0.03)); border-left: 3px solid rgba(30,58,138,0.9); border-radius: 6px 6px 0 0; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);}
+        #page-fleet-cards .sl-224, #page-phonebook .sl-224 {padding: 6px; border: 1px solid #ddd; font-size: 12px; width: 120px;}
+        #page-fleet-cards .sl-225, #page-phonebook .sl-225 {margin-top: 10px; gap: 20px; font-size: 14px; font-weight: 600; color: #444;}
+        #page-fleet-cards .sl-226, #page-phonebook .sl-226 {color: #1e3a8a;}
+        #page-fleet-cards .sl-227 {color: #16a34a;}
+        #page-fleet-cards .sl-228 {color: #dc2626;}
+        #page-contact-list .sl-229, #page-phonebook .sl-229 {position: relative; align-items: center;}
+        #page-contact-list .sl-230, #page-phonebook .sl-230 {width: 300px; padding-right: 30px;}
+        #page-contact-list .sl-231, #page-phonebook .sl-231 {position: absolute; right: 8px; color: #aaa; cursor: pointer; pointer-events: none;}
+        #page-attendance-list .sl-232, #page-contact-list .sl-232 {padding: 6px; border: 1px solid #ddd; font-size: 13px;}
+        #page-contact-list .sl-233 {padding: 6px; border: 1px solid #ddd; font-size: 13px; width: 80px;}
+        #page-attendance-list .sl-234, #page-contact-list .sl-234 {text-align:center; padding:8px; font-size:14px; color:#999;}
+        #page-attendance-list .sl-235, #page-contact-list .sl-235 {margin-top: 10px; font-size: 13px; font-weight: 600; color: #444; gap: 10px; flex-wrap: wrap; align-items: center;}
+        #page-attendance-list .sl-236, #page-contact-list .sl-236 {background: #1e3a8a; color: #fff; padding: 2px 8px; border-radius: 4px;}
+        #page-contact-list .sl-237 {color: #a70c0c; background: #ffebeb; padding: 2px 6px; border-radius: 4px; border: 1px solid #ccc;}
+        #page-contact-list .sl-238 {color: #2c5282; background: #ebf8ff; padding: 2px 6px; border-radius: 4px; border: 1px solid #cbd5e1;}
+        #page-contact-list .sl-239 {color: #b45309; background: #fffbeb; padding: 2px 6px; border-radius: 4px; border: 1px solid #fef3c7;}
+        #page-contact-list .sl-240 {color: #15803d; background: #f0fdf4; padding: 2px 6px; border-radius: 4px; border: 1px solid #bbf7d0;}
+        #page-contact-list .sl-241 {color: #6b21a8; background: #f3e8ff; padding: 2px 6px; border-radius: 4px; border: 1px solid #e9d5ff;}
+        #page-contact-list .sl-242 {color: #4a5568; background: #edf2f7; padding: 2px 6px; border-radius: 4px; border: 1px solid #e2e8f0;}
+        #page-attendance-list .sl-243 {flex-direction: row; align-items: center; gap: 8px; margin-bottom: 15px; justify-content: space-between;}
+        #page-attendance-list .sl-244 {align-items: center; gap: 8px;}
+        #page-attendance-list .sl-245 {padding: 6px; border: 1px solid #ddd; font-size: 13px; width: 160px;}
+        #page-attendance-list .sl-246 {padding: 6px; border: 1px solid #ddd; font-size: 13px; width: 500px;}
+        #page-attendance-list .sl-247 {color: #166534; background: #dcfce7; padding: 2px 6px; border-radius: 4px; border: 1px solid #bbf7d0;}
+        #page-attendance-list .sl-248 {color: #991b1b; background: #fee2e2; padding: 2px 6px; border-radius: 4px; border: 1px solid #fecaca;}
+        #page-phonebook .sl-249 {justify-content: flex-start; margin-bottom: 15px;}
+        #page-phonebook .sl-250 {font-size: 13px; align-items: center; gap: 4px;}
+        #page-phonebook .sl-251 {width: 18px; height: 18px; accent-color: #f59e0b; margin: 0; cursor: pointer !important; outline: none !important; box-shadow: none !important;}
+        #page-phonebook .sl-252 {justify-content: flex-end; margin-top: 15px;}
+        #page-phonebook .sl-253 {margin-top: 0px;}
+        #page-phonebook .sl-254 {color: #f59e0b;}
+        #page-alarm-console .sl-255 {grid-template-columns: 1fr 1fr; gap: 20px;}
+        #page-alarm-console .sl-256 {flex-direction: column; align-items: center; padding: 15px; border: 1px solid rgba(255,255,255,0.05); border-radius: 12px;}
+        #page-alarm-console .sl-257 {font-size: 15px; font-weight: 700; margin: 0 0 15px 0; color: #dc3545; letter-spacing: 1px;}
+        #page-alarm-console .sl-258 {margin-bottom: 12px; font-size: 13px; color: #888;}
+        #page-alarm-console .sl-259 {flex-wrap: wrap; justify-content: center; gap: 8px;}
+        #page-alarm-console .sl-260 {height: 38px; width: 120px; font-size: 11px;}
+        #page-alarm-console .sl-261 {align-items: center; gap: 10px; width: 100%; margin-top: 25px;}
+        #page-alarm-console .sl-262 {height: 42px; width: 100%; margin-top: 20px; font-weight: 700;}
+        #page-alarm-console .sl-263 {flex-grow: 1; height: 32px; background: #1b1e22; border: 1px solid #333; color: white; border-radius: 6px; padding: 0 10px;}
+        #page-alarm-console .sl-264 {margin: 20px auto 0 auto; max-width: 500px; flex-direction: column; align-items: center; padding: 15px; border-top: 2px solid #dc3545; background: rgba(220,53,69,0.03); border-radius: 12px;}
+        #page-alarm-console .sl-265 {font-size: 15px; font-weight: 700; margin: 0 0 10px 0;}
+        #page-alarm-console .sl-266 {gap: 15px; margin-top: 10px;}
+        #page-alarm-console .sl-267 {height: 45px; width: 140px; background: #1b1e22; border: 1px solid #dc3545; color: white;}
+        #page-alarm-console .sl-268 {height: 20px;}
       `;
       document.head.appendChild(css);
     }
     const PAGES = {
       'page-saloc': `
+
         <div class="major-card last-card">
           <div class="major-card-header">BEM-VINDO AO SALOC 360</div>
-          <div class="major-card-body" style="font-family: 'Segoe UI', sans-serif;">
-            <p style="font-size: 15px; margin-bottom: 20px; color: #333;">
+          <div class="major-card-body sl-1">
+            <p class="sl-2">
               O <strong>SALOC 360</strong> é um sistema digital de gestão operacional diária da
               <strong>Sala de Operações e Comunicações (SALOC)</strong> do seu Corpo de Bombeiros.
               Este sistema integra as principais ferramentas de apoio à decisão, planeamento e monitorização das atividades
               logísticas e operacionais em tempo real.
             </p>
-            <div style="background: linear-gradient(90deg, #e0e0e0, #d6d6d6); padding: 15px 20px; border-left: 5px solid #dc3545; border-radius: 6px; margin-bottom: 20px;">
+            <div class="sl-3">
               <strong>Funcionalidades Principais:</strong>
             </div>
-            <div style="margin-bottom: 20px;">
-              <ul style="list-style: none; padding-left: 10px; line-height: 1.8;">
-                <li style="color:#0d630e;">🗺️ Consulta e gestão dos Planos Prévios de Intervenção (PPI)</li>
-                <li style="color:#0d630e;">📝 Registo e análise de Recusas de Serviços</li>
-                <li style="color:#0d630e;">🚑 Registo e análise de Inoperacionalidades (INEM)</li>
-                <li style="color:#0d630e;">📊 Dashboard de Estatísticas Operacionais</li>
-                <li style="color:#0d630e;">📁 Acesso e Gestão de Documentação Operacional e Interna</li>
-                <li style="color:#0d630e;">📅 Planeamentos Diários e gestão de turnos</li>
-                <li style="color:#0d630e;">📨 Gestão e envio de documentação importante ao COMANDO SUB-REGIONAL</li>
+            <div class="sl-4">
+              <ul class="sl-5">
+                <li class="sl-6">🗺️ Consulta e gestão dos Planos Prévios de Intervenção (PPI)</li>
+                <li class="sl-6">📝 Registo e análise de Recusas de Serviços</li>
+                <li class="sl-6">🚑 Registo e análise de Inoperacionalidades (INEM)</li>
+                <li class="sl-6">📊 Dashboard de Estatísticas Operacionais</li>
+                <li class="sl-6">📁 Acesso e Gestão de Documentação Operacional e Interna</li>
+                <li class="sl-6">📅 Planeamentos Diários e gestão de turnos</li>
+                <li class="sl-6">📨 Gestão e envio de documentação importante ao COMANDO SUB-REGIONAL</li>
               </ul>
             </div>
-            <p style="margin-top: 30px; color: #444;">
+            <p class="sl-7">
               Estas funcionalidades proporcionam uma visão integrada do estado operacional da corporação,
               reforçando a capacidade de planeamento, comunicação e resposta coordenada em tempo real.
             </p>
-            <div style="margin-top: 40px; text-align:center; font-style: italic; color: #6c757d;">
+            <div class="sl-8">
               Selecione uma opção no menu lateral para começar.
             </div>
           </div>
           <div class="major-card-footer"></div>
         </div>
+
 `,
       'page-ppis': `
+
         <div class="major-card major-last-card">
           <div class="major-card-header">PLANOS PRÉVIOS DE INTERVENÇÃO (PPI) – ALGARVE</div>
-          <div class="major-card-body" style="font-family: 'Segoe UI', sans-serif;">
-            <p style="font-size: 15px; margin-bottom: 20px; color: #333;">
+          <div class="major-card-body sl-1">
+            <p class="sl-2">
               O módulo <strong>PPI 360</strong> integra o sistema de gestão e visualização dos
               <strong>Planos Prévios de Intervenção (PPI)</strong> da região do Algarve,
               permitindo o acesso rápido e atualizado à informação estratégica de apoio à decisão operacional
               e à gestão de emergências complexas.
             </p>
-            <div style="background: linear-gradient(90deg, #e0e0e0, #d6d6d6); padding: 15px 20px; border-left: 5px solid #dc3545; border-radius: 6px; margin-bottom: 20px;">
+            <div class="sl-3">
               <strong>Planos Disponíveis:</strong>
             </div>
-            <ul style="list-style: none; padding-left: 20px; line-height: 1.7; font-size: 14.5px;">
-              <!-- <li style="color:#c20c0c;">🛣️ PPI - Autoestrada do Sul (A2) <em>(Em atualização pela ANEPC)</em></li> -->
-              <li style="color:#0d630e;">🛣️ PPI - Via do Infante de Sagres (A22)</li>
-              <li style="color:#0d630e;">✈️ PPI - Aeroporto Internacional Gago Coutinho</li>
-              <li style="color:#0d630e;">🚆 PPI - Linha Ferroviária do Algarve</li>
+            <ul class="sl-9">
+              <!-- <li class="sl-10">🛣️ PPI - Autoestrada do Sul (A2) <em>(Em atualização pela ANEPC)</em></li> -->
+              <li class="sl-6">🛣️ PPI - Via do Infante de Sagres (A22)</li>
+              <li class="sl-6">✈️ PPI - Aeroporto Internacional Gago Coutinho</li>
+              <li class="sl-6">🚆 PPI - Linha Ferroviária do Algarve</li>
             </ul>
-            <div style="background: linear-gradient(90deg, #e0e0e0, #d6d6d6); padding: 15px 20px; border-left: 5px solid #0d630e; border-radius: 6px; margin: 25px 0 20px 0;">
+            <div class="sl-11">
               <strong>Funcionalidades do Módulo:</strong>
             </div>
-            <ul style="list-style: none; padding-left: 20px; line-height: 1.7; font-size: 14.5px;">
-              <li style="color:#0d630e;">📍 Consulta geográfica interativa dos PPIs</li>
-              <li style="color:#0d630e;">📑 Acesso a tabelas técnicas e recursos associados</li>
-              <li style="color:#0d630e;">🧭 Identificação de meios e acessos operacionais</li>
-              <li style="color:#0d630e;">🔄 Atualização e integração contínua de dados</li>
+            <ul class="sl-9">
+              <li class="sl-6">📍 Consulta geográfica interativa dos PPIs</li>
+              <li class="sl-6">📑 Acesso a tabelas técnicas e recursos associados</li>
+              <li class="sl-6">🧭 Identificação de meios e acessos operacionais</li>
+              <li class="sl-6">🔄 Atualização e integração contínua de dados</li>
             </ul>
-            <p style="margin-top: 30px; color: #444;">
+            <p class="sl-7">
               Os PPIs são uma ferramenta fundamental para garantir a resposta coordenada e eficiente em situações
               de emergência, assegurando o conhecimento prévio do terreno, acessos, riscos e recursos disponíveis.
             </p>
-            <div style="margin-top: 40px; text-align:center; font-style: italic; color: #6c757d;">
+            <div class="sl-8">
               Selecione um PPI no menu lateral para visualizar os detalhes.
             </div>
           </div>
           <div class="major-card-footer"></div>
         </div>
+
 `,
       'page-ppia2': `
+
       <div class="major-card major-last-card">
         <div class="major-card-header">PLANO PRÉVIO DE INTERVENÇÃO - AUTO ESTRADA DO SUL - A2</div>
         <div class="major-card-body">
-          <label style="margin-bottom: 10px; font-size: 14px; font-weight: bold; color: #aaa">⟳ PPI EM ATUALIZAÇÃO PELA ANEPC</label>
+          <label class="sl-12">⟳ PPI EM ATUALIZAÇÃO PELA ANEPC</label>
         </div>
         <div class="major-card-footer"></div>
       </div>
+
 `,
       'page-ppia22': `
+
       <div class="major-card major-last-card">
         <div class="major-card-header header-blue">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;">
+          <svg class="sl-13" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v9a2 2 0 0 1-2 2h-2"/>
             <circle cx="9" cy="17" r="2"/>
             <circle cx="17" cy="17" r="2"/>
@@ -189,14 +465,14 @@
           <span>PLANO PRÉVIO DE INTERVENÇÃO - VIA DO INFANTE DE SAGRES - A22</span>
         </div>
         <div class="major-card-body">
-          <div class="major-row" style="margin: 3px 0 0 0; display: flex; justify-content: center;">
+          <div class="major-row sl-14" style="display: flex;">
             <div class="options-main-card" id="ppia22-main-options" style="display: flex; flex-direction: column; align-items: center;">
-              <label style="margin-bottom: 10px; font-size: 14px; font-weight: bold;">Selecione uma Opção</label>
-              <div class="action-buttons" id="ppia22-options" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%; max-width: 400px;">
-                <button id="ppi_a22_by_km" class="btn btn-add options-btn" style="height: 35px; width: 100%;" onclick="consultationGridA22KmType()">Consulta por Km</button>
-                <button id="ppi_a22_by_section" class="btn btn-add options-btn" style="height: 35px; width: 100%;" onclick="consultationGridA22SectionType()">Consulta por Troço</button>
-                <button id="ppi_a22_by_structure" class="btn btn-add options-btn" style="height: 35px; width: 100%;" onclick="consultationGridA22StructureType()">Consulta por Referência</button>
-                <button id="ppi_a22_by_grid" class="btn btn-add options-btn" style="height: 35px; width: 100%;" onclick="consultationGridA22ButtonType()">Consulta por Grelha</button>
+              <label class="sl-15">Selecione uma Opção</label>
+              <div class="action-buttons sl-16" id="ppia22-options" style="display: grid;">
+                <button id="ppi_a22_by_km" class="btn btn-add options-btn sl-17" onclick="consultationGridA22KmType()">Consulta por Km</button>
+                <button id="ppi_a22_by_section" class="btn btn-add options-btn sl-17" onclick="consultationGridA22SectionType()">Consulta por Troço</button>
+                <button id="ppi_a22_by_structure" class="btn btn-add options-btn sl-17" onclick="consultationGridA22StructureType()">Consulta por Referência</button>
+                <button id="ppi_a22_by_grid" class="btn btn-add options-btn sl-17" onclick="consultationGridA22ButtonType()">Consulta por Grelha</button>
               </div>
             </div>
           </div>
@@ -207,11 +483,13 @@
         </div>
         <div class="major-card-footer"></div>
       </div>
+
 `,
       'page-ppiaero': `
+
       <div class="major-card major-last-card">
         <div class="major-card-header header-blue">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;">
+          <svg class="sl-13" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M17.8 19.2L16 11l3.5-3.5C21 6 21 4 19 4c-2 0-4 2-4 2L7 7.2l-3.5-.5-1.5 1.5 4 2-1 3 2 1 3-1 2 4 1.8-1z"/>
           </svg>
           <span>PLANO PRÉVIO DE INTERVENÇÃO - AEROPORTO GAGO COUTINHO</span>
@@ -223,26 +501,28 @@
         </div>
         <div class="major-card-footer"></div>
       </div>
+
 `,
       'page-ppilinfer': `
+
       <div class="major-card major-last-card">
         <div class="major-card-header header-blue">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;">
+          <svg class="sl-13" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
             <line x1="4" y1="22" x2="20" y2="22"/>
           </svg>
           <span>PLANO PRÉVIO DE INTERVENÇÃO - LINHA FERROVIÁRIA DO ALGARVE</span>
         </div>
         <div class="major-card-body">
-          <div class="major-row" style="margin: 3px 0 0 0; display: flex; justify-content: center;">
+          <div class="major-row sl-14" style="display: flex;">
             <div class="options-main-card" id="ppilinfer-main-options" style="display: flex; flex-direction: column; align-items: center;">
-              <label style="margin-bottom: 10px; font-size: 14px; font-weight: bold;">Selecione uma Opção</label>
-              <div class="action-buttons" id="ppilinfer-options" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%; max-width: 400px;">
-                <button id="ppi_linfer_by_pkm" class="btn btn-add options-btn" style="height: 35px;" onclick="consultationGridLinFerKmType()">Cosulta por PKm</button>
-                <button id="ppi_linfer_by_section" class="btn btn-add options-btn" style="height: 35px; width: 100%;" onclick="consultationGridLinFerSectionType()">Consulta por Troço</button>
-                <button id="ppi_linfer_by_structure" class="btn btn-add options-btn" style="height: 35px; width: 100%; opacity: 0.6; cursor: not-allowed;" title="Não exitem Pontos de Referência para este PPI." 
+              <label class="sl-15">Selecione uma Opção</label>
+              <div class="action-buttons sl-16" id="ppilinfer-options" style="display: grid;">
+                <button id="ppi_linfer_by_pkm" class="btn btn-add options-btn sl-18" onclick="consultationGridLinFerKmType()">Cosulta por PKm</button>
+                <button id="ppi_linfer_by_section" class="btn btn-add options-btn sl-17" onclick="consultationGridLinFerSectionType()">Consulta por Troço</button>
+                <button id="ppi_linfer_by_structure" class="btn btn-add options-btn sl-19" title="Não exitem Pontos de Referência para este PPI." 
                         onclick="consultationGridLinFerStructureType()" disabled>Consulta por Referência</button>
-                <button id="ppi_linfer_by_grid" class="btn btn-add options-btn" style="height: 35px;" onclick="consultationGridLinFerButtonType()">Consulta por Grelha</button>
+                <button id="ppi_linfer_by_grid" class="btn btn-add options-btn sl-18" onclick="consultationGridLinFerButtonType()">Consulta por Grelha</button>
               </div>
             </div>
           </div>
@@ -253,50 +533,54 @@
         </div>
         <div class="major-card-footer"></div>
       </div>
+
 `,
       'page-recservdescr': `
+
         <div class="major-card major-last-card">
           <div class="major-card-header">GESTÃO DE RECUSAS DE SERVIÇOS E INOPERACIONALIDADES (INEM)</div>
-          <div class="major-card-body" style="font-family: 'Segoe UI', sans-serif;">
-            <p style="font-size: 15px; margin-bottom: 20px; color: #333;">
+          <div class="major-card-body sl-1">
+            <p class="sl-2">
               O módulo <strong>REGOPS 360</strong> centraliza a <strong>gestão de recusas de serviços</strong> e
               <strong>inoperacionalidades de meios INEM</strong>, permitindo um controlo detalhado e
               automatizado da disponibilidade operacional das viaturas integradas no
               protocolo de emergência pré-hospitalar, bem como a recusa de serviços do seu Corpo de Bombeiros.
             </p>
-            <div style="background: linear-gradient(90deg, #e0e0e0, #d6d6d6); padding: 15px 20px; border-left: 5px solid #dc3545; border-radius: 6px; margin-bottom: 20px;">
+            <div class="sl-3">
               <strong>Funcionalidades Principais:</strong>
             </div>
-            <ul style="list-style: none; padding-left: 20px; line-height: 1.7; font-size: 14.5px;">
-              <li style="color:#0d630e;">📝 Registo de Recusas de Serviços</li>
-              <li style="color:#0d630e;">🚑 Registo de Inoperacionalidades (INEM)</li>
-              <li style="color:#0d630e;">📊 Dashboard Gráfico de Estatísticas</li>
-              <li style="color:#c20c0c;">📅 Relatórios Mensais <em>(Brevemente)</em></li>
+            <ul class="sl-9">
+              <li class="sl-6">📝 Registo de Recusas de Serviços</li>
+              <li class="sl-6">🚑 Registo de Inoperacionalidades (INEM)</li>
+              <li class="sl-6">📊 Dashboard Gráfico de Estatísticas</li>
+              <li class="sl-10">📅 Relatórios Mensais <em>(Brevemente)</em></li>
             </ul>
-            <div style="background: linear-gradient(90deg, #e0e0e0, #d6d6d6); padding: 15px 20px; border-left: 5px solid #0d630e; border-radius: 6px; margin: 25px 0 20px 0;">
+            <div class="sl-11">
               <strong>Objetivo do Módulo:</strong>
             </div>
-            <p style="font-size: 14.5px; color: #444; line-height: 1.6; margin-bottom: 20px;">
+            <p class="sl-20">
               Este módulo visa garantir o <strong>acompanhamento em tempo real</strong> da disponibilidade operacional,
               reduzindo o impacto das inoperacionalidades no sistema de resposta pré-hospitalar e recusas de serviços.
               Permite ainda a análise de padrões, apoio à decisão e criação de relatórios estatísticos.
             </p>
-            <ul style="list-style: none; padding-left: 20px; line-height: 1.7; font-size: 14.5px;">
-              <li style="color:#0d630e;">📈 Monitorização contínua da disponibilidade operacional do veículo INEM</li>
-              <li style="color:#0d630e;">📋 Monitorização contínua das recusas de serviços</li>
-              <li style="color:#0d630e;">🕓 Histórico de eventos e registos detalhados</li>
+            <ul class="sl-9">
+              <li class="sl-6">📈 Monitorização contínua da disponibilidade operacional do veículo INEM</li>
+              <li class="sl-6">📋 Monitorização contínua das recusas de serviços</li>
+              <li class="sl-6">🕓 Histórico de eventos e registos detalhados</li>
             </ul>
-            <div style="margin-top: 40px; text-align:center; font-style: italic; color: #6c757d;">
+            <div class="sl-8">
               Selecione uma opção no menu lateral para começar a gestão dos registos.
             </div>
           </div>
           <div class="major-card-footer"></div>
         </div>
+
 `,
       'page-recserv': `
+
       <div class="major-card major-last-card">
         <div class="major-card-header">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;">
+          <svg class="sl-13" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
             <path d="M8.5 8.5L15.5 15.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
             <path d="M15.5 8.5L8.5 15.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
@@ -305,48 +589,46 @@
         </div>
         <div class="major-card-body">
           <div class="major-row">
-            <div class="options-main-card" style="width: 100%;">
-             <h3 style="font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: #444; margin: -12px -12px 15px -12px; padding: 10px 14px; 
-                        background: linear-gradient(90deg, rgba(220,53,69,0.16), rgba(255,255,255,0.03)); border-left: 3px solid rgba(220,53,69,0.9); border-radius: 6px 6px 0 0;
-                        box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);">
+            <div class="options-main-card sl-21">
+             <h3 class="sl-22">
                REGISTO DE RECUSAS DE SERVIÇOS
               </h3>
-              <div class="major-row" style="margin-bottom: 5px;">
-                <div class="major-field" style="flex-direction: row; align-items: center; gap: 10px;">
+              <div class="major-row sl-23">
+                <div class="major-field sl-24">
                   <label>Data da Recusa:</label>
-                  <input type="date" id="service_refusal_date" style="width: 120px;">
+                  <input class="sl-25" type="date" id="service_refusal_date">
                 </div>
-                <div class="major-field" style="flex-direction: row; align-items: center; gap: 10px;">
+                <div class="major-field sl-24">
                   <label>Hora da Recusa:</label>
-                  <input type="time" id="service_refusal_time" style="width: 100px;">
+                  <input class="sl-26" type="time" id="service_refusal_time">
                 </div>
-                <div class="major-field" style="flex-direction: row; align-items: center; gap: 10px;">
+                <div class="major-field sl-24">
                   <label>Tipo de Serviço:</label>
-                  <select id="service_refusal_type" style="width: 200px;"></select>
+                  <select class="sl-27" id="service_refusal_type"></select>
                 </div>
-                <div class="major-field" style="flex-direction: row; align-items: center; gap: 10px;">
-                  <label style="min-width: 120px;">Motivo da Recusa:</label>
-                  <select id="service_refusal_motive" style="width: 200px;"></select>
+                <div class="major-field sl-24">
+                  <label class="sl-28">Motivo da Recusa:</label>
+                  <select class="sl-27" id="service_refusal_motive"></select>
                 </div>
               </div>
-              <div class="major-row" style="margin-bottom: 5px;">
-                <div class="major-field" style="flex-direction: row; align-items: center; gap: 10px;">
+              <div class="major-row sl-23">
+                <div class="major-field sl-24">
                   <label>Origem do Serviço:</label>
-                  <input type="text" id="service_refusal_origin" style="width: 200px;">
+                  <input class="sl-27" type="text" id="service_refusal_origin">
                 </div>
-                <div class="major-field" style="flex-direction: row; align-items: center; gap: 10px;">
+                <div class="major-field sl-24">
                   <label>Destino do Serviço:</label>
-                  <input type="text" id="service_refusal_destination" style="width: 200px;">
+                  <input class="sl-27" type="text" id="service_refusal_destination">
                 </div>
               </div>
               <div class="major-row">
-                <div class="major-field" style="flex-direction: row; align-items: center; gap: 10px;">
+                <div class="major-field sl-24">
                   <label>Optel de Serviço:</label>
-                  <input type="text" id="service_refusal_optel" style="width: 200px;">
+                  <input class="sl-27" type="text" id="service_refusal_optel">
                 </div>
-                <div class="major-field" style="flex-direction: row; align-items: center; gap: 10px;">
+                <div class="major-field sl-24">
                   <label>Validado por:</label>
-                  <input type="text" id="service_refusal_validation" style="width: 200px;">
+                  <input class="sl-27" type="text" id="service_refusal_validation">
                 </div>
               </div>
               <div class="action-buttons" id="service-refusal">
@@ -354,29 +636,29 @@
               </div>
             </div>
           </div>
-          <hr style="margin: 20px 0;">
-          <div class="table-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <hr class="sl-29">
+          <div class="table-header sl-30" style="display: flex;">
             <div>
-              <h3 style="font-size: 16px; color: #444; margin: 0;">Listagem de Recusas de Serviços</h3>
+              <h3 class="sl-31">Listagem de Recusas de Serviços</h3>
             </div>
-            <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-              <label style="font-size: 13px;">Ano:</label>
+            <div class="major-field sl-32">
+              <label class="sl-33">Ano:</label>
               <select id="refusals_year_filter" style="height: 25px; padding: 2px 6px; font-size: 14px;">
               </select>
             </div>
           </div>
-          <div class="table-container" style="margin: 0 0 0 0; height: 285px;">
+          <div class="table-container sl-34">
             <table id="service-refusals-table">
               <thead>
                 <tr>
-                  <th style="width: 70px;">Data</th>
-                  <th style="width: 50px;">Hora</th>
-                  <th style="width: 170px;">Tipo</th>
-                  <th style="width: 150px;">Origem</th>
-                  <th style="width: 150px;">Destino</th>
-                  <th style="width: 180px;">Motivo</th>
-                  <th style="width: 120px;">Optel</th>
-                  <th style="width: 120px;">Validação</th>
+                  <th class="sl-35">Data</th>
+                  <th class="sl-36">Hora</th>
+                  <th class="sl-37">Tipo</th>
+                  <th class="sl-38">Origem</th>
+                  <th class="sl-38">Destino</th>
+                  <th class="sl-39">Motivo</th>
+                  <th class="sl-25">Optel</th>
+                  <th class="sl-25">Validação</th>
                   <td></td>
                 </tr>
               </thead>
@@ -387,11 +669,13 @@
         </div>
         <div class="major-card-footer"></div>
       </div>
+
 `,
       'page-ineminop': `
+
       <div class="major-card major-last-card">
         <div class="major-card-header">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;">
+          <svg class="sl-13" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M3 13V8C3 6.9 3.9 6 5 6H14C15.1 6 16 6.9 16 8V13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
             <circle cx="7" cy="16.5" r="1.5" stroke="currentColor" stroke-width="1.6"/>
             <circle cx="14" cy="16.5" r="1.5" stroke="currentColor" stroke-width="1.6"/>
@@ -401,46 +685,44 @@
         </div>
         <div class="major-card-body">
           <div class="major-row">
-            <div class="options-main-card" style="width: 100%;">
-              <h3 style="font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: #444; margin: -12px -12px 15px -12px; padding: 10px 14px;
-                         background: linear-gradient(90deg, rgba(220,53,69,0.18), rgba(255,255,255,0.03)); border-left: 3px solid rgba(220,53,69,0.9); border-radius: 6px 6px 0 0; 
-                         display: flex; align-items: center; gap: 8px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);">
+            <div class="options-main-card sl-21">
+              <h3 class="sl-40" style="display: flex;">
                 REGISTO DE INOPERACIONALIDADES (INEM)
               </h3>
-              <div class="major-row" style="margin-bottom: 5px;">
-                <div class="major-field" style="flex-direction: row; align-items: center; gap: 10px;">
+              <div class="major-row sl-23">
+                <div class="major-field sl-24">
                   <label>Data da Inoperacionalidade:</label>
-                  <input type="date" id="ineinop_date" style="width: 120px;">
+                  <input class="sl-25" type="date" id="ineinop_date">
                 </div>
-                <div class="major-field" style="flex-direction: row; align-items: center; gap: 10px;">
+                <div class="major-field sl-24">
                   <label>Turno:</label>
-                  <select id="ineinop_shift" style="width: 75px;">
+                  <select class="sl-41" id="ineinop_shift">
                     <option>&nbsp;</option>
                     <option>D</option>
                     <option>N</option>
                   </select>
                 </div>
-                <div class="major-field" style="flex-direction: row; align-items: center; gap: 10px;">
+                <div class="major-field sl-24">
                   <label>Qtd Horas:</label>
-                  <input type="time" id="ineinop_hour_qtd" style="width: 100px;">
+                  <input class="sl-26" type="time" id="ineinop_hour_qtd">
                 </div>
-                <div class="major-field" style="flex-direction: row; align-items: center; gap: 10px;">
+                <div class="major-field sl-24">
                   <label>Motivo da Inopercacionalidade:</label>
-                  <select id="reason_for_ineinop" style="width: 200px;"></select>
+                  <select class="sl-27" id="reason_for_ineinop"></select>
                 </div>
               </div>
-              <div class="major-row" style="margin-bottom: 5px;">
-                <div class="major-field" style="flex-direction: row; align-items: center; gap: 10px;">
+              <div class="major-row sl-23">
+                <div class="major-field sl-24">
                   <label>Tripulante:</label>
-                  <input type="text" id="ineinop_crew" style="width: 200px;">
+                  <input class="sl-27" type="text" id="ineinop_crew">
                 </div>
-                <div class="major-field" style="flex-direction: row; align-items: center; gap: 10px;">
+                <div class="major-field sl-24">
                   <label>Optel de Serviço:</label>
-                  <input type="text" id="ineinop_optel" style="width: 200px;">
+                  <input class="sl-27" type="text" id="ineinop_optel">
                 </div>
-                <div class="major-field" style="flex-direction: row; align-items: center; gap: 10px;">
+                <div class="major-field sl-24">
                   <label>Validado por:</label>
-                  <input type="text" id="ineinop_validation" style="width: 200px;">
+                  <input class="sl-27" type="text" id="ineinop_validation">
                 </div>
               </div>
               <div class="action-buttons" id="inem-inop">
@@ -448,28 +730,28 @@
               </div>
             </div>
           </div>
-          <hr style="margin: 20px 0;">
-          <div class="table-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <hr class="sl-29">
+          <div class="table-header sl-30" style="display: flex;">
             <div>
-              <h3 style="font-size: 16px; color: #444; margin: 0;">Listagem de Inoperacionalidades (INEM)</h3>
+              <h3 class="sl-31">Listagem de Inoperacionalidades (INEM)</h3>
             </div>
-            <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-              <label style="font-size: 14px;">Ano:</label>
+            <div class="major-field sl-32">
+              <label class="sl-42">Ano:</label>
               <select id="ineinop_year_filter" style="height: 25px; padding: 2px 6px; font-size: 14px;">
               </select>
             </div>
           </div>
-          <div class="table-container" style="margin: 0 0 0 0; height: 300px;">
+          <div class="table-container sl-43">
             <table id="ineinop-table">
               <thead>
                 <tr>
-                  <th style="width: 70px;">Data</th>
-                  <th style="width: 50px;">Turno</th>
-                  <th style="width: 50px;">Qtd. Horas</th>
-                  <th style="width: 250px;">Motivo</th>
-                  <th style="width: 250px;">Tripulante</th>
-                  <th style="width: 200px;">Optel</th>
-                  <th style="width: 200px;">Validação</th>
+                  <th class="sl-35">Data</th>
+                  <th class="sl-36">Turno</th>
+                  <th class="sl-36">Qtd. Horas</th>
+                  <th class="sl-44">Motivo</th>
+                  <th class="sl-44">Tripulante</th>
+                  <th class="sl-27">Optel</th>
+                  <th class="sl-27">Validação</th>
                   <td></td>
                 </tr>
               </thead>
@@ -480,11 +762,13 @@
         </div>
         <div class="major-card-footer"></div>
       </div>
+
 `,
       'page-recinoreports': `
+
       <div class="major-card major-last-card">
         <div class="major-card-header">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;">
+          <svg class="sl-13" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M7 3h10l3 3v15H7V3z"/>
             <path d="M17 3v4h4"/>
             <path d="M9 17v-4"/>
@@ -495,87 +779,87 @@
         </div>
         <div class="major-card-body">
           <!-- FILTROS -->
-          <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px; margin-bottom: 18px;">
-            <label style="font-size: 14px;">Mês:</label>
-            <select id="refusal_month_filter" style="width: 130px;"></select>
-            <label style="font-size: 14px; margin-left: 8px;">Ano:</label>
+          <div class="major-field sl-45">
+            <label class="sl-42">Mês:</label>
+            <select class="sl-46" id="refusal_month_filter"></select>
+            <label class="sl-47">Ano:</label>
             <select id="refusal_year_filter" style="width: 80px;"></select>
           </div>
           <!-- TABELAS -->
-          <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start;">
+          <div class="sl-48" style="display: flex;">
             <!-- TABELA RECUSAS -->
-            <div style="flex: 1; min-width: 220px;">
-              <div style="font-size: 13px; font-weight: 600; color: #fff; background: #dc3545; padding: 7px 12px; border-radius: 6px 6px 0 0; letter-spacing: 0.4px;">
+            <div class="sl-49">
+              <div class="sl-50">
                 🚫 Recusas de Serviço
               </div>
-              <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+              <table class="sl-51">
                 <thead>
-                  <tr style="background: #f1f3f5;">
-                    <th style="padding: 7px 10px; text-align: left; border-bottom: 2px solid #dee2e6; color: #495057;">Tipo de Serviço</th>
-                    <th style="padding: 7px 10px; text-align: center; border-bottom: 2px solid #dee2e6; color: #495057;">Qtd.</th>
+                  <tr class="sl-52">
+                    <th class="sl-53">Tipo de Serviço</th>
+                    <th class="sl-54">Qtd.</th>
                   </tr>
                 </thead>
                 <tbody id="table-refusals-body">
-                  <tr><td colspan="2" style="text-align:center; padding: 12px; color: #aaa;">A carregar...</td></tr>
+                  <tr><td class="sl-55" colspan="2">A carregar...</td></tr>
                 </tbody>
                 <tfoot>
-                  <tr style="background: #f8f9fa; font-weight: 600;">
-                    <td style="padding: 7px 10px; border-top: 2px solid #dee2e6;">Total</td>
-                    <td id="table-refusals-total" style="padding: 7px 10px; text-align: center; border-top: 2px solid #dee2e6;">0</td>
+                  <tr class="sl-56">
+                    <td class="sl-57">Total</td>
+                    <td class="sl-58" id="table-refusals-total">0</td>
                   </tr>
                 </tfoot>
               </table>
             </div>
             <!-- TABELA INEM D -->
-            <div style="flex: 1; min-width: 320px;">
-              <div style="font-size: 13px; font-weight: 600; color: #fff; background: #198754; padding: 7px 12px; border-radius: 6px 6px 0 0; letter-spacing: 0.4px;">
+            <div class="sl-59">
+              <div class="sl-60">
                 🌤️ Inoperacionalidades INEM — Turno D
               </div>
-              <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+              <table class="sl-51">
                 <thead>
-                  <tr style="background: #f1f3f5;">
-                    <th style="padding: 7px 10px; text-align: center; border-bottom: 2px solid #dee2e6; color: #495057;">Mês</th>
-                    <th style="padding: 7px 10px; text-align: center; border-bottom: 2px solid #dee2e6; color: #495057;">Motivo</th>
-                    <th style="padding: 7px 10px; text-align: center; border-bottom: 2px solid #dee2e6; color: #495057;">Qtd.</th>
-                    <th style="padding: 7px 10px; text-align: center; border-bottom: 2px solid #dee2e6; color: #495057;">Total Horas</th>
+                  <tr class="sl-52">
+                    <th class="sl-54">Mês</th>
+                    <th class="sl-54">Motivo</th>
+                    <th class="sl-54">Qtd.</th>
+                    <th class="sl-54">Total Horas</th>
                   </tr>
                 </thead>
                 <tbody id="table-inemD-body">
-                  <tr><td colspan="4" style="text-align:center; padding: 12px; color: #aaa;">A carregar...</td></tr>
+                  <tr><td class="sl-55" colspan="4">A carregar...</td></tr>
                 </tbody>
                 <tfoot>
-                  <tr style="background: #f8f9fa; font-weight: 600;">
-                    <td style="padding: 7px 10px; border-top: 2px solid #dee2e6;">Total</td>
-                    <td style="padding: 7px 10px; border-top: 2px solid #dee2e6;"></td>
-                    <td id="table-inemD-total-qty" style="padding: 7px 10px; text-align: center; border-top: 2px solid #dee2e6;">0</td>
-                    <td id="table-inemD-total-hrs" style="padding: 7px 10px; text-align: center; border-top: 2px solid #dee2e6;">0h 0m</td>
+                  <tr class="sl-56">
+                    <td class="sl-57">Total</td>
+                    <td class="sl-57"></td>
+                    <td class="sl-58" id="table-inemD-total-qty">0</td>
+                    <td class="sl-58" id="table-inemD-total-hrs">0h 0m</td>
                   </tr>
                 </tfoot>
               </table>
             </div>
             <!-- TABELA INEM N -->
-            <div style="flex: 1; min-width: 320px;">
-              <div style="font-size: 13px; font-weight: 600; color: #fff; background: #0d6efd; padding: 7px 12px; border-radius: 6px 6px 0 0; letter-spacing: 0.4px;">
+            <div class="sl-59">
+              <div class="sl-61">
                 🌙 Inoperacionalidades INEM — Turno N
               </div>
-              <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+              <table class="sl-51">
                 <thead>
-                  <tr style="background: #f1f3f5;">
-                    <th style="padding: 7px 10px; text-align: center; border-bottom: 2px solid #dee2e6; color: #495057;">Mês</th>
-                    <th style="padding: 7px 10px; text-align: center; border-bottom: 2px solid #dee2e6; color: #495057;">Motivo</th>
-                    <th style="padding: 7px 10px; text-align: center; border-bottom: 2px solid #dee2e6; color: #495057;">Qtd.</th>
-                    <th style="padding: 7px 10px; text-align: center; border-bottom: 2px solid #dee2e6; color: #495057;">Total Horas</th>
+                  <tr class="sl-52">
+                    <th class="sl-54">Mês</th>
+                    <th class="sl-54">Motivo</th>
+                    <th class="sl-54">Qtd.</th>
+                    <th class="sl-54">Total Horas</th>
                   </tr>
                 </thead>
                 <tbody id="table-inemN-body">
-                  <tr><td colspan="4" style="text-align:center; padding: 12px; color: #aaa;">A carregar...</td></tr>
+                  <tr><td class="sl-55" colspan="4">A carregar...</td></tr>
                 </tbody>
                 <tfoot>
-                  <tr style="background: #f8f9fa; font-weight: 600;">
-                    <td style="padding: 7px 10px; border-top: 2px solid #dee2e6;">Total</td>
-                    <td style="padding: 7px 10px; border-top: 2px solid #dee2e6;"></td>
-                    <td id="table-inemN-total-qty" style="padding: 7px 10px; text-align: center; border-top: 2px solid #dee2e6;">0</td>
-                    <td id="table-inemN-total-hrs" style="padding: 7px 10px; text-align: center; border-top: 2px solid #dee2e6;">0h 0m</td>
+                  <tr class="sl-56">
+                    <td class="sl-57">Total</td>
+                    <td class="sl-57"></td>
+                    <td class="sl-58" id="table-inemN-total-qty">0</td>
+                    <td class="sl-58" id="table-inemN-total-hrs">0h 0m</td>
                   </tr>
                 </tfoot>
               </table>
@@ -588,114 +872,115 @@
           </div>
         </div>
       </div>
+
 `,
       'page-dashboard': `
+
         <div class="major-card major-last-card">
-          <div class="major-card-header" style="display:flex; align-items:center; gap:8px;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;">
+          <div class="major-card-header sl-62" style="display:flex;">
+            <svg class="sl-13" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
               <path d="M3 3v18h18"/>
               <path d="M7 14l3-3 4 4 5-6"/>
             </svg>
             DASHBOARD GRÁFICO DE ESTATÍSTICAS
           </div>
           <div class="major-card-body">
-            <h4 style="font-size: 14px; font-weight: 600; text-align: center; color: #2c3e50; margin: 0 0 18px 0; padding: 10px 14px; border-left: 4px solid #3498db;
-                       background: linear-gradient(90deg, rgba(52,152,219,0.10), rgba(255,255,255,0.02)); border-radius: 6px; letter-spacing: 0.3px;">
+            <h4 class="sl-63">
               Representação Gráfica de Inoperacionalidades INEM e Recusas de Serviços
             </h4>
-            <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px; margin-bottom: 15px;">
-              <label style="font-size: 14px;">Mês:</label>
-              <select id="dashboard_refusal_month_filter" style="width: 150px;"></select>
-              <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                <label style="font-size: 14px;">Ano:</label>
+            <div class="major-field sl-64">
+              <label class="sl-42">Mês:</label>
+              <select class="sl-38" id="dashboard_refusal_month_filter"></select>
+              <div class="major-field sl-32">
+                <label class="sl-42">Ano:</label>
                 <select id="dashboard_refusal_year_filter" style="width: 70px;"></select>
               </div>
             </div>
-            <div style="display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap;">
-              <div style="flex: 1; min-width: 180px; padding: 14px; text-align: center; border-radius: 10px; background: linear-gradient(180deg,#f8f9fa,#eef1f4); box-shadow: 0 2px 6px rgba(0,0,0,0.06); 
-                          border-top: 3px solid #e74c3c;">
-                <div style="font-size: 11px; color: #6c7a89; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px;">Inop. Turno D</div>
-                <div id="sum-inop-d" style="font-size: 32px; font-weight: 700; color: #2c3e50;">0</div>
+            <div class="sl-65" style="display: flex;">
+              <div class="sl-66">
+                <div class="sl-67">Inop. Turno D</div>
+                <div class="sl-68" id="sum-inop-d">0</div>
               </div>
-              <div style="flex: 1; min-width: 180px; padding: 14px; text-align: center; border-radius: 10px; background: linear-gradient(180deg,#f8f9fa,#eef1f4); box-shadow: 0 2px 6px rgba(0,0,0,0.06); 
-                          border-top: 3px solid #e74c3c;">
-                <div style="font-size: 11px; color: #6c7a89; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px;">Inop. Turno N</div>
-                <div id="sum-inop-n" style="font-size: 32px; font-weight: 700; color: #2c3e50;">0</div>
+              <div class="sl-66">
+                <div class="sl-67">Inop. Turno N</div>
+                <div class="sl-68" id="sum-inop-n">0</div>
               </div>
-              <div style="flex: 1; min-width: 180px; padding: 14px; text-align: center; border-radius: 10px; background: linear-gradient(180deg,#f8f9fa,#eef1f4); box-shadow: 0 2px 6px rgba(0,0,0,0.06); 
-                          border-top: 3px solid #c0392b;">
-                <div style="font-size: 11px; color: #6c7a89; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px;">Total INOP.</div>
-                <div id="sum-inop-total" style="font-size: 32px; font-weight: 700; color: #c0392b;">0</div>
+              <div class="sl-69">
+                <div class="sl-67">Total INOP.</div>
+                <div class="sl-70" id="sum-inop-total">0</div>
               </div>
-              <div style="flex: 1; min-width: 180px; padding: 14px; text-align: center; border-radius: 10px; background: linear-gradient(180deg,#f8f9fa,#eef1f4); box-shadow: 0 2px 6px rgba(0,0,0,0.06); 
-                          border-top: 3px solid #e67e22;">
-                <div style="font-size: 11px; color: #6c7a89; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px;">Recusas Total</div>
-                <div id="sum-refusals-total" style="font-size:32px; font-weight:700; color:#e67e22;">0</div>
+              <div class="sl-71">
+                <div class="sl-67">Recusas Total</div>
+                <div class="sl-72" id="sum-refusals-total">0</div>
               </div>
             </div>
-            <div style="display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;">
-              <div style="flex: 1; min-width: 250px; padding: 14px; border-radius: 10px; background: linear-gradient(180deg,#f8f9fa,#eef1f4); box-shadow: 0 2px 6px rgba(0,0,0,0.06); border-top: 3px solid #3498db;">
-                <div style="font-size: 11px; text-align: center; margin-bottom: 10px; color: #5f6f7f; text-transform: uppercase;">INOP. Turno D</div>
-                <canvas id="chart-ine-d" style="height: 150px;"></canvas>
+            <div class="sl-73" style="display: flex;">
+              <div class="sl-74">
+                <div class="sl-75">INOP. Turno D</div>
+                <canvas class="sl-76" id="chart-ine-d"></canvas>
               </div>
-              <div style="flex: 1; min-width: 250px; padding: 14px; border-radius: 10px; background: linear-gradient(180deg,#f8f9fa,#eef1f4); box-shadow: 0 2px 6px rgba(0,0,0,0.06); border-top: 3px solid #3498db;">
-                <div style="font-size: 11px; text-align: center; margin-bottom: 10px; color: #5f6f7f; text-transform: uppercase;">INOP. Turno N</div>
-                <canvas id="chart-ine-n" style="height: 150px;"></canvas>
+              <div class="sl-74">
+                <div class="sl-75">INOP. Turno N</div>
+                <canvas class="sl-76" id="chart-ine-n"></canvas>
               </div>
-              <div style="flex:1; min-width:250px; padding:14px; border-radius:10px; background:linear-gradient(180deg,#f8f9fa,#eef1f4); box-shadow:0 2px 6px rgba(0,0,0,0.06); border-top:3px solid #e74c3c;">
-                <div style="font-size: 11px; text-align: center; margin-bottom: 10px; color: #5f6f7f; text-transform: uppercase;">Total INOP.</div>
-                <canvas id="chart-ine-total" style="height: 150px;"></canvas>
+              <div class="sl-77">
+                <div class="sl-75">Total INOP.</div>
+                <canvas class="sl-76" id="chart-ine-total"></canvas>
               </div>
             </div>
-            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-              <div style="flex: 1; min-width: 250px; padding: 14px; border-radius: 10px; background: linear-gradient(180deg,#f8f9fa,#eef1f4); box-shadow: 0 2px 6px rgba(0,0,0,0.06); border-top: 3px solid #9b59b6;">
-                <div style="font-size: 11px; text-align: center; margin-bottom: 10px; color: #5f6f7f; text-transform: uppercase;">Recusas por Entidade</div>
-                <canvas id="chart-refusals-type" style="height: 150px;"></canvas>
+            <div class="sl-78" style="display: flex;">
+              <div class="sl-79">
+                <div class="sl-75">Recusas por Entidade</div>
+                <canvas class="sl-76" id="chart-refusals-type"></canvas>
               </div>
-              <div style="flex: 1; min-width: 250px; padding: 14px; border-radius: 10px; background: linear-gradient(180deg,#f8f9fa,#eef1f4); box-shadow: 0 2px 6px rgba(0,0,0,0.06); border-top: 3px solid #e67e22;">
-                <div style="font-size: 11px; text-align: center; margin-bottom: 10px; color: #5f6f7f; text-transform: uppercase;">Total Recusas</div>
-                <canvas id="chart-refusals-total" style="height: 150px;"></canvas>
+              <div class="sl-80">
+                <div class="sl-75">Total Recusas</div>
+                <canvas class="sl-76" id="chart-refusals-total"></canvas>
               </div>
-              <div style="flex: 1; min-width: 250px; padding: 14px; border-radius: 10px; background: linear-gradient(180deg,#f8f9fa,#eef1f4); box-shadow: 0 2px 6px rgba(0,0,0,0.06); border-top: 3px solid #95a5a6;">
-                <div style="font-size: 11px; text-align: center; margin-bottom: 10px; color: #5f6f7f; text-transform: uppercase;">
+              <div class="sl-81">
+                <div class="sl-75">
                   Reservado
                 </div>
-                <canvas style="height: 150px;"></canvas>
+                <canvas class="sl-76"></canvas>
               </div>
             </div>
           </div>
           <div class="major-card-footer"></div>
         </div>
+
 `,
       'page-docimport': `
+
         <div class="major-card last-card">
           <div class="major-card-header">GESTÃO DE DOCUMENTAÇÃO OPERACIONAL E INSTITUCIONAL (DOC 360)</div>
-          <div class="major-card-body" style="font-family: 'Segoe UI', sans-serif;">
-            <p style="font-size: 15px; margin-bottom: 20px; color: #333;">
+          <div class="major-card-body sl-1">
+            <p class="sl-2">
               O módulo <strong>DOCS 360</strong> é o módulo responsável pela <strong>gestão e comunicação documental</strong> essencial à atividade operacional e administrativa do seu Corpo de Bombeiros.
               Este sistema integra processos de reporte, planeamento e envio de documentação às entidades competentes, garantindo rigor e rastreabilidade em todas as comunicações oficiais.
             </p>
-            <div style="background: linear-gradient(90deg, #d5d5d5, #c9c9c9); padding: 15px 20px; border-left: 5px solid #171d8f; border-radius: 6px; margin-bottom: 20px;">
+            <div class="sl-82">
               <strong>Funcionalidades Principais:</strong>
             </div>
-            <ul style="padding-left: 25px; line-height: 1.6;">
-              <li style="margin-bottom: 8px;">📄 <strong>Formulários Oficiais CREPC Algarve</strong> – envio e atualização de documentação obrigatória, como <em>MOA</em>, <em>Anexo G2</em> e outros 
+            <ul class="sl-83">
+              <li class="sl-84">📄 <strong>Formulários Oficiais CREPC Algarve</strong> – envio e atualização de documentação obrigatória, como <em>MOA</em>, <em>Anexo G2</em> e outros 
                 formulários operacionais.</li>
-              <li style="margin-bottom: 8px;">📅 <strong>Planeamentos Diários</strong> – gestão estruturada de recursos e previsões do serviço diário do CB Faro - Cruz Lusa.</li>
-              <li style="margin-bottom: 8px;">🚒 <strong>Comunicação de Inoperacionalidades e Operacionalidades</strong> – automatização do envio de estados de veículos e equipamentos às entidades 
+              <li class="sl-84">📅 <strong>Planeamentos Diários</strong> – gestão estruturada de recursos e previsões do serviço diário do CB Faro - Cruz Lusa.</li>
+              <li class="sl-84">🚒 <strong>Comunicação de Inoperacionalidades e Operacionalidades</strong> – automatização do envio de estados de veículos e equipamentos às entidades 
                 designadas (CREPC, CHEFIAS, COMANDO, etc.).</li>
             </ul>
-            <div style="margin-top: 40px; text-align:center; font-style: italic; color: #6c757d;">
+            <div class="sl-8">
               Selecione uma opção no menu lateral para aceder à documentação correspondente.
             </div>
           </div>
           <div class="major-card-footer"></div>
         </div>
+
 `,
       'page-crepcalg': `
+
         <div class="major-card major-last-card">
-          <div class="major-card-header" style="display:flex; align-items:center; gap:8px;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;">
+          <div class="major-card-header sl-62" style="display:flex;">
+            <svg class="sl-13" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
               <path d="M7 3h10l3 3v15H7V3z"/>
               <path d="M17 3v4h4"/>
               <path d="M9 12h6"/>
@@ -706,241 +991,235 @@
           </div>
           <div class="major-card-body">
             <div id="crepcbtn-container">
-              <div class="major-row" style="margin: 0; display: flex; justify-content: center;">
-                <div class="options-main-card" style="display: flex; flex-direction: column; align-items: center;">
-                  <label style="margin-bottom: 10px; font-size: 14px; font-weight: bold;">Selecione uma Opção</label>
+              <div class="major-row sl-85" style="display: flex;">
+                <div class="options-main-card sl-86" style="display: flex;">
+                  <label class="sl-15">Selecione uma Opção</label>
                   <div class="action-buttons" id="docs-crepc" style="gap: 5px;">
-                    <button id="NewMOABtn" class="btn btn-add options-btn" style="height: 35px;">MOA's</button>
-                    <button class="btn btn-add options-btn" style="height: 35px;" onclick="showbreve()">Anexo G1</button>
-                    <button id="NewAnxG2Btn" class="btn btn-add options-btn" style="height: 35px;">Anexo G2</button>
+                    <button id="NewMOABtn" class="btn btn-add options-btn sl-18">MOA's</button>
+                    <button class="btn btn-add options-btn sl-18" onclick="showbreve()">Anexo G1</button>
+                    <button id="NewAnxG2Btn" class="btn btn-add options-btn sl-18">Anexo G2</button>
                   </div>
                 </div>
               </div>
               <!-- MOA (CREPC SUB SUB-MODULE) -->
               <div id="moa-container" style="margin: 20px 0 0 0; display: none;">
-                <div class="major-card major-last-card" style="margin:0 0 0 0;">
-                  <div class="major-card-header header-black" style="display: flex; justify-content: center;">MEDIDAS OPERACIONAIS DE ANTECIPAÇÃO (MOA)</div>
+                <div class="major-card major-last-card sl-87">
+                  <div class="major-card-header header-black sl-88" style="display: flex;">MEDIDAS OPERACIONAIS DE ANTECIPAÇÃO (MOA)</div>
                   <div class="major-card-body">
-                    <div class="major-row" style="margin: 0 0 0 0;">
-                      <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                        <label style="font-size: 13px; font-weight: bold;">Selecione o Corpo de Bombeiros:</label>
-                        <select id="moa_cb" style="width: 230px;"></select>
+                    <div class="major-row sl-89">
+                      <div class="major-field sl-32">
+                        <label class="sl-90">Selecione o Corpo de Bombeiros:</label>
+                        <select class="sl-91" id="moa_cb"></select>
                       </div>
-                      <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                        <label style="font-size: 13px; font-weight: bold;">Selecione o Dispositivo:</label>
-                        <select id="moa_device_type" style="width: 160px;"></select>
+                      <div class="major-field sl-32">
+                        <label class="sl-90">Selecione o Dispositivo:</label>
+                        <select class="sl-92" id="moa_device_type"></select>
                       </div>
-                      <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                        <label style="font-size: 13px; font-weight: bold;">Selecione o Estado de Prontidão Especial (EPE):</label>
-                        <select id="moa_epe_type" style="width: 180px;"></select>
+                      <div class="major-field sl-32">
+                        <label class="sl-90">Selecione o Estado de Prontidão Especial (EPE):</label>
+                        <select class="sl-39" id="moa_epe_type"></select>
                       </div>
                     </div>
-                    <div class="major-row" style="margin: 10px 0 0 0; align-items: center;">
-                      <div class="major-field" style="flex-direction: row; align-items: center;">
-                        <label style="font-size: 13px; font-weight: bold; white-space: nowrap;">Indique o período:</label>
+                    <div class="major-row sl-93">
+                      <div class="major-field sl-94">
+                        <label class="sl-95">Indique o período:</label>
                       </div>
-                      <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                        <label style="font-size: 13px; font-weight: bold;">De:</label>
-                        <input type="date" id="moa_date_init" style="width: 140px;">
-                        <input type="time" id="moa_time_init" style="width: 90px;">
-                        <label style="font-size: 13px; font-weight: bold;">Até:</label>
-                        <input type="date" id="moa_date_end" style="width: 140px;">
-                        <input type="time" id="moa_time_end" style="width: 90px;">
-                        <input type="text" id="moa_gdh_init" style="width: 170px; display: none;">
-                        <input type="text" id="moa_gdh_end" style="width: 170px; display: none;">
+                      <div class="major-field sl-32">
+                        <label class="sl-90">De:</label>
+                        <input class="sl-96" type="date" id="moa_date_init">
+                        <input class="sl-97" type="time" id="moa_time_init">
+                        <label class="sl-90">Até:</label>
+                        <input class="sl-96" type="date" id="moa_date_end">
+                        <input class="sl-97" type="time" id="moa_time_end">
+                        <input class="sl-37" type="text" id="moa_gdh_init" style="display: none;">
+                        <input class="sl-37" type="text" id="moa_gdh_end" style="display: none;">
                       </div>
                     </div>
                     <div class="grid-1fr">
-                      <div class="options-main-card main-card-left" style="margin: 20px 0 0 0; align-items: flex-start; text-align: left;">
-                        <div class="major-row" style="margin: 5px 0 0 0;">
-                          <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">                            
-                            <label style="font-size: 14px; font-weight: 600; letter-spacing: 0.04em; color: #444; margin: 0 0 10px 0; padding: 8px 12px; 
-                                          background: linear-gradient(90deg, rgba(220,53,69,0.18), rgba(255,255,255,0.03)); border-left: 3px solid rgba(220,53,69,0.9); border-radius: 6px 6px 0 0;
-                                          display: inline-flex; align-items: center; gap: 8px;">Indique as Medidas:</label>
+                      <div class="options-main-card main-card-left sl-98">
+                        <div class="major-row sl-99">
+                          <div class="major-field sl-32">                            
+                            <label class="sl-100" style="display: inline-flex;">Indique as Medidas:</label>
                           </div>
                         </div>
-                        <div class="major-row" style="display: flex; align-items: center; margin: 3px 0;">
-                          <label style="width: 280px; display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; white-space: nowrap;">
-                            <input id="moa_eco" type="checkbox" style="width: 17px; height: 17px; cursor: pointer !important;"> Elemento de Comando às operações:</label>
-                          <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px; flex: 1; min-width: 0;">
-                            <select id="moa_eco_sit" style="width: 200px;"></select>
-                            <select id="moa_eco_pront" style="width: 250px;"></select>
-                            <input id="moa_eco_observ" type="text" style="width: 754px;" placeholder="Observações">
+                        <div class="major-row sl-101" style="display: flex;">
+                          <label class="sl-102" style="display: flex;">
+                            <input class="sl-103" id="moa_eco" type="checkbox"> Elemento de Comando às operações:</label>
+                          <div class="major-field sl-104">
+                            <select class="sl-27" id="moa_eco_sit"></select>
+                            <select class="sl-44" id="moa_eco_pront"></select>
+                            <input class="sl-105" id="moa_eco_observ" type="text" placeholder="Observações">
                           </div>
                         </div>
-                        <div class="major-row" style="display: flex; align-items: center; margin: 3px 0;">
-                          <label style="width: 280px; display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer;">
-                            <input id="moa_ned" type="checkbox" style="width:17px; height:17px; cursor: pointer !important;">Notificação à Entidade Detentora:</label>
-                          <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                            <select id="moa_ned_sit" style="width: 200px; background: #5e5e5e;" disabled></select>
-                            <select id="moa_ned_pront" style="width: 250px;"></select>
-                            <input id="moa_ned_observ" type="text" style="width: 754px;" placeholder="Observações">
+                        <div class="major-row sl-101" style="display: flex;">
+                          <label class="sl-106" style="display: flex;">
+                            <input class="sl-107" id="moa_ned" type="checkbox">Notificação à Entidade Detentora:</label>
+                          <div class="major-field sl-32">
+                            <select class="sl-108" id="moa_ned_sit" disabled></select>
+                            <select class="sl-44" id="moa_ned_pront"></select>
+                            <input class="sl-105" id="moa_ned_observ" type="text" placeholder="Observações">
                           </div>
                         </div>
-                        <div class="major-row" style="display: flex; align-items: center; margin: 3px 0;">
-                        <label style="width: 280px; display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer;">
-                          <input id="moa_oco" type="checkbox" style="width:17px; height:17px; cursor: pointer !important;"> Ofícial / Chefe em ordenança:</label>
-                          <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                            <select id="moa_oco_sit" style="width: 200px;"></select>
-                            <select id="moa_oco_pront" style="width: 250px;"></select>
-                            <input id="moa_oco_observ" type="text" style="width: 754px;" placeholder="Observações">
+                        <div class="major-row sl-101" style="display: flex;">
+                        <label class="sl-106" style="display: flex;">
+                          <input class="sl-107" id="moa_oco" type="checkbox"> Ofícial / Chefe em ordenança:</label>
+                          <div class="major-field sl-32">
+                            <select class="sl-27" id="moa_oco_sit"></select>
+                            <select class="sl-44" id="moa_oco_pront"></select>
+                            <input class="sl-105" id="moa_oco_observ" type="text" placeholder="Observações">
                           </div>
                         </div>
-                        <div class="major-row" style="display: flex; align-items: center; margin: 3px 0;">
-                          <label style="width: 280px; display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer;">
-                            <input id="moa_era" type="checkbox" style="width:17px; height:17px; cursor: pointer !important;"> ERAS Locais:</label>
-                          <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                            <select id="moa_era_sit" style="width: 200px;"></select>
-                            <select id="moa_era_pront" style="width: 250px;"></select>
-                            <input id="moa_era_observ" type="text" style="width: 754px;" placeholder="Observações">
+                        <div class="major-row sl-101" style="display: flex;">
+                          <label class="sl-106" style="display: flex;">
+                            <input class="sl-107" id="moa_era" type="checkbox"> ERAS Locais:</label>
+                          <div class="major-field sl-32">
+                            <select class="sl-27" id="moa_era_sit"></select>
+                            <select class="sl-44" id="moa_era_pront"></select>
+                            <input class="sl-105" id="moa_era_observ" type="text" placeholder="Observações">
                           </div>
                         </div>
-                        <div class="major-row" style="display: flex; align-items: center; margin: 3px 0;">
-                          <label style="width: 280px; display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer;">
-                            <input id="moa_eob" type="checkbox" style="width:17px; height:17px; cursor: pointer !important;"> Equipas de Observação:</label>
-                          <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                            <select id="moa_eob_sit" style="width: 200px;"></select>
-                            <select id="moa_eob_pront" style="width: 250px;"></select>
-                            <input id="moa_eob_observ" type="text" style="width: 754px;" placeholder="Observações">
+                        <div class="major-row sl-101" style="display: flex;">
+                          <label class="sl-106" style="display: flex;">
+                            <input class="sl-107" id="moa_eob" type="checkbox"> Equipas de Observação:</label>
+                          <div class="major-field sl-32">
+                            <select class="sl-27" id="moa_eob_sit"></select>
+                            <select class="sl-44" id="moa_eob_pront"></select>
+                            <input class="sl-105" id="moa_eob_observ" type="text" placeholder="Observações">
                           </div>
                         </div>
-                        <div class="major-row" style="display: flex; align-items: center; margin: 3px 0;">
-                          <label style="width: 280px; display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer;">
-                            <input id="moa_rsc" type="checkbox" style="width:17px; height:17px; cursor: pointer !important;"> Reforço da SALOC:</label>
-                          <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                            <select id="moa_rsc_sit" style="width: 200px; background: #5e5e5e;" disabled></select>
-                            <select id="moa_rsc_pront" style="width: 250px;"></select>
-                            <input id="moa_rsc_observ" type="text" style="width: 754px;" placeholder="Observações">
+                        <div class="major-row sl-101" style="display: flex;">
+                          <label class="sl-106" style="display: flex;">
+                            <input class="sl-107" id="moa_rsc" type="checkbox"> Reforço da SALOC:</label>
+                          <div class="major-field sl-32">
+                            <select class="sl-108" id="moa_rsc_sit" disabled></select>
+                            <select class="sl-44" id="moa_rsc_pront"></select>
+                            <input class="sl-105" id="moa_rsc_observ" type="text" placeholder="Observações">
                           </div>
                         </div>
-                        <div class="major-row" style="display: flex; align-items: center; margin: 3px 0;">
-                        <label style="width: 280px; display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer;">
-                          <input id="moa_mef" type="checkbox" style="width:17px; height:17px; cursor: pointer !important;"> Mobilização do efetivo:</label>
-                          <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                            <select id="moa_mef_sit" style="width: 200px;"></select>
-                            <select id="moa_mef_pront" style="width: 250px; background: #5e5e5e;" disabled></select>
-                            <input id="moa_mef_observ" type="text" style="width: 754px; background: #909090" placeholder="Observações" disabled>
+                        <div class="major-row sl-101" style="display: flex;">
+                        <label class="sl-106" style="display: flex;">
+                          <input class="sl-107" id="moa_mef" type="checkbox"> Mobilização do efetivo:</label>
+                          <div class="major-field sl-32">
+                            <select class="sl-27" id="moa_mef_sit"></select>
+                            <select class="sl-109" id="moa_mef_pront" disabled></select>
+                            <input class="sl-110" id="moa_mef_observ" type="text" placeholder="Observações" disabled>
                           </div>
                         </div>
                       </div>
-                      <div class="options-main-card options-main-card-right" style="margin: 10px 0 0 0; align-items: flex-start; text-align: left;">
-                      <div class="major-row" style="margin: 5px 0 0 0;">
-                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                          <label style="font-size: 14px; font-weight: 600; letter-spacing: 0.04em; color: #444; margin: 0 0 10px 0; padding: 8px 12px;
-                                        background: linear-gradient(90deg, rgba(220,53,69,0.18), rgba(255,255,255,0.03)); border-left: 3px solid rgba(220,53,69,0.9); border-radius: 6px 6px 0 0;
-                                        display: inline-flex; align-items: center; gap: 8px;">Reforço de Equipas de Intervenção Extraordinárias:</label>
+                      <div class="options-main-card options-main-card-right sl-111">
+                      <div class="major-row sl-99">
+                        <div class="major-field sl-32">
+                          <label class="sl-100" style="display: inline-flex;">Reforço de Equipas de Intervenção Extraordinárias:</label>
                         </div>
                       </div>
-                      <div class="major-row" style="display: flex; align-items: center; margin: 2px 0;">
-                        <label style="font-size: 15px;"> Tipologia:</label>
-                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                          <input type="text" id="moa_reie_type_01" style="width: 200px;">
+                      <div class="major-row sl-112" style="display: flex;">
+                        <label class="sl-113"> Tipologia:</label>
+                        <div class="major-field sl-32">
+                          <input class="sl-27" type="text" id="moa_reie_type_01">
                         </div>
-                        <label style="font-size: 15px;"> Período:</label>
-                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                          <input type="text" id="moa_reie_time_01" style="width: 250px;">
+                        <label class="sl-113"> Período:</label>
+                        <div class="major-field sl-32">
+                          <input class="sl-44" type="text" id="moa_reie_time_01">
                         </div>
-                        <label style="font-size: 15px;"> Nº Operacionais:</label>
-                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                          <input type="text" id="moa_reie_nop_01" style="width: 75px; text-align: center;">
+                        <label class="sl-113"> Nº Operacionais:</label>
+                        <div class="major-field sl-32">
+                          <input class="sl-114" type="text" id="moa_reie_nop_01">
                         </div>
-                        <label style="font-size: 15px;"> Observações:</label>
-                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                          <input type="text" id="moa_reie_obs_01" style="width: 632px;">
-                        </div>
-                      </div>
-                      <div class="major-row" style="display: flex; align-items: center; margin: 2px 0;">
-                        <label style="font-size: 15px;"> Tipologia:</label>
-                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                          <input type="text" id="moa_reie_type_02" style="width: 200px;">
-                        </div>
-                        <label style="font-size: 15px;"> Período:</label>
-                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                          <input type="text" id="moa_reie_time_02" style="width: 250px;">
-                        </div>
-                        <label style="font-size: 15px;"> Nº Operacionais:</label>
-                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                          <input type="text" id="moa_reie_nop_02" style="width: 75px; text-align: center;">
-                        </div>
-                        <label style="font-size: 15px;"> Observações:</label>
-                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                          <input type="text" id="moa_reie_obs_02" style="width: 632px;">
+                        <label class="sl-113"> Observações:</label>
+                        <div class="major-field sl-32">
+                          <input class="sl-115" type="text" id="moa_reie_obs_01">
                         </div>
                       </div>
-                      <div class="major-row" style="display: flex; align-items: center; margin: 2px 0;">
-                        <label style="font-size: 15px;"> Tipologia:</label>
-                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                          <input type="text" id="moa_reie_type_03" style="width: 200px;">
+                      <div class="major-row sl-112" style="display: flex;">
+                        <label class="sl-113"> Tipologia:</label>
+                        <div class="major-field sl-32">
+                          <input class="sl-27" type="text" id="moa_reie_type_02">
                         </div>
-                        <label style="font-size: 15px;"> Período:</label>
-                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                          <input type="text" id="moa_reie_time_03" style="width: 250px;">
+                        <label class="sl-113"> Período:</label>
+                        <div class="major-field sl-32">
+                          <input class="sl-44" type="text" id="moa_reie_time_02">
                         </div>
-                        <label style="font-size: 15px;"> Nº Operacionais:</label>
-                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                          <input type="text" id="moa_reie_nop_03" style="width: 75px; text-align: center;">
+                        <label class="sl-113"> Nº Operacionais:</label>
+                        <div class="major-field sl-32">
+                          <input class="sl-114" type="text" id="moa_reie_nop_02">
                         </div>
-                        <label style="font-size: 15px;"> Observações:</label>
-                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                          <input type="text" id="moa_reie_obs_03" style="width: 632px;">
+                        <label class="sl-113"> Observações:</label>
+                        <div class="major-field sl-32">
+                          <input class="sl-115" type="text" id="moa_reie_obs_02">
+                        </div>
+                      </div>
+                      <div class="major-row sl-112" style="display: flex;">
+                        <label class="sl-113"> Tipologia:</label>
+                        <div class="major-field sl-32">
+                          <input class="sl-27" type="text" id="moa_reie_type_03">
+                        </div>
+                        <label class="sl-113"> Período:</label>
+                        <div class="major-field sl-32">
+                          <input class="sl-44" type="text" id="moa_reie_time_03">
+                        </div>
+                        <label class="sl-113"> Nº Operacionais:</label>
+                        <div class="major-field sl-32">
+                          <input class="sl-114" type="text" id="moa_reie_nop_03">
+                        </div>
+                        <label class="sl-113"> Observações:</label>
+                        <div class="major-field sl-32">
+                          <input class="sl-115" type="text" id="moa_reie_obs_03">
                         </div>
                       </div>
                         
-                      <div class="major-row" style="margin: 15px 0 0 0;">
-                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                          <label style="font-size: 14px; font-weight: 600; letter-spacing: 0.04em; color: #444; margin: 0 0 10px 0; padding: 8px 12px;
-                                        background: linear-gradient(90deg, rgba(220,53,69,0.18), rgba(255,255,255,0.03)); border-left: 3px solid rgba(220,53,69,0.9); border-radius: 6px 6px 0 0;
-                                        display: inline-flex; align-items: center; gap: 8px;">Outras:</label>
+                      <div class="major-row sl-116">
+                        <div class="major-field sl-32">
+                          <label class="sl-100" style="display: inline-flex;">Outras:</label>
                         </div>
                       </div>
-                      <div class="major-row" style="display: flex; align-items: center; margin: 3px 0;">
-                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                          <input type="text" id="moa_otr_type_01" style="width: 350px;">
+                      <div class="major-row sl-101" style="display: flex;">
+                        <div class="major-field sl-32">
+                          <input class="sl-117" type="text" id="moa_otr_type_01">
                         </div>
-                        <label style="font-size: 15px;"> Período:</label>
-                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                          <input type="text" id="moa_otr_time_01" style="width: 250px;">
+                        <label class="sl-113"> Período:</label>
+                        <div class="major-field sl-32">
+                          <input class="sl-44" type="text" id="moa_otr_time_01">
                         </div>
-                        <label style="font-size: 15px;"> Observações:</label>
-                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                          <input type="text" id="moa_otr_obs_01" style="width: 728px;">
-                        </div>
-                      </div>
-                      <div class="major-row" style="display: flex; align-items: center; margin: 2px 0;">
-                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                          <input type="text" id="moa_otr_type_02" style="width: 350px;">
-                        </div>
-                        <label style="font-size: 15px;"> Período:</label>
-                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                          <input type="text" id="moa_otr_time_02" style="width: 250px;">
-                        </div>
-                        <label style="font-size: 15px;"> Observações:</label>
-                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                          <input type="text" id="moa_otr_obs_02" style="width: 728px;">
+                        <label class="sl-113"> Observações:</label>
+                        <div class="major-field sl-32">
+                          <input class="sl-118" type="text" id="moa_otr_obs_01">
                         </div>
                       </div>
-                      <div class="major-row" style="display: flex; align-items: center; margin: 2px 0;">
-                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                          <input type="text" id="moa_otr_type_03" style="width: 350px;">
+                      <div class="major-row sl-112" style="display: flex;">
+                        <div class="major-field sl-32">
+                          <input class="sl-117" type="text" id="moa_otr_type_02">
                         </div>
-                        <label style="font-size: 15px;"> Período:</label>
-                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                          <input type="text" id="moa_otr_time_03" style="width: 250px;">
+                        <label class="sl-113"> Período:</label>
+                        <div class="major-field sl-32">
+                          <input class="sl-44" type="text" id="moa_otr_time_02">
                         </div>
-                        <label style="font-size: 15px;"> Observações:</label>
-                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                          <input type="text" id="moa_otr_obs_03" style="width: 728px;">
+                        <label class="sl-113"> Observações:</label>
+                        <div class="major-field sl-32">
+                          <input class="sl-118" type="text" id="moa_otr_obs_02">
+                        </div>
+                      </div>
+                      <div class="major-row sl-112" style="display: flex;">
+                        <div class="major-field sl-32">
+                          <input class="sl-117" type="text" id="moa_otr_type_03">
+                        </div>
+                        <label class="sl-113"> Período:</label>
+                        <div class="major-field sl-32">
+                          <input class="sl-44" type="text" id="moa_otr_time_03">
+                        </div>
+                        <label class="sl-113"> Observações:</label>
+                        <div class="major-field sl-32">
+                          <input class="sl-118" type="text" id="moa_otr_obs_03">
                         </div>
                       </div>
                     </div>
                   </div>
-                  <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px; margin: 15px 0 0 0;">
+                  <div class="major-field sl-119">
                     <label> OPTEL:</label>
-                    <input type="text" id="moa_optel" style="width: 300px;">
+                    <input class="sl-120" type="text" id="moa_optel">
                   </div>
                 </div>
                 <div class="major-card-footer">
-                  <div class="action-buttons" id="moa-emit" style="gap: 5px;">
+                  <div class="action-buttons sl-121" id="moa-emit">
                     <button class="btn btn-danger " id="saveMOABtn" style="height: 35px;">📄 EMITIR</button>
                   </div>
                 </div>
@@ -949,15 +1228,15 @@
           </div>
           <!-- G2 (CREPC SUB SUB-MODULE) -->
           <div id="g2-container" style="margin: 20px 0 0 0; display: none;">
-            <div class="major-card major-last-card" style="margin:0 0 0 0;">
-              <div class="major-card-header header-black" style="display: flex; justify-content: center;">LISTA NOMINAL DE MEIOS DO CB (ANEXO G2)</div>
+            <div class="major-card major-last-card sl-87">
+              <div class="major-card-header header-black sl-88" style="display: flex;">LISTA NOMINAL DE MEIOS DO CB (ANEXO G2)</div>
               <div class="major-card-body">
-                <div class="major-row" style="margin: 0; display: flex; justify-content: center;">
-                  <div class="options-main-card" style="display: flex; flex-direction: column; align-items: center;">
-                    <label style="margin-bottom: 10px; font-size: 14px; font-weight: bold;">Selecione uma Opção</label>
-                    <div class="action-buttons" id="g2-action-buttons" style="gap: 5px;">
-                      <button class="btn btn-add options-btn oldg2" style="height: 35px;">EM CURSO</button>
-                      <button class="btn btn-add options-btn" style="height: 35px;" id="NewG2Btn">NOVO</button>
+                <div class="major-row sl-85" style="display: flex;">
+                  <div class="options-main-card sl-86" style="display: flex;">
+                    <label class="sl-15">Selecione uma Opção</label>
+                    <div class="action-buttons sl-121" id="g2-action-buttons">
+                      <button class="btn btn-add options-btn oldg2 sl-18">EM CURSO</button>
+                      <button class="btn btn-add options-btn sl-18" id="NewG2Btn">NOVO</button>
                     </div>
                   </div>
                 </div>
@@ -968,11 +1247,11 @@
                     <table id="g2Table">
                       <thead>
                         <tr>
-                          <th style="width: 90px;">Nº Sequencial</th>
-                          <th style="width: 100px;">Viatura</th>
-                          <th style="width: 120px;">GDH Acionamento</th>
-                          <th style="width: 350px;">Local de Intervenção</th>
-                          <th style="width: 150px;">Ação</th>
+                          <th class="sl-97">Nº Sequencial</th>
+                          <th class="sl-26">Viatura</th>
+                          <th class="sl-25">GDH Acionamento</th>
+                          <th class="sl-117">Local de Intervenção</th>
+                          <th class="sl-38">Ação</th>
                         </tr>
                       </thead>
                       <tbody></tbody>
@@ -981,35 +1260,35 @@
                 </div>
                 <!-- FORMULÁRIO -->
                 <div id="g2_form_container" style="display: none; margin-top: 20px;">
-                  <div class="major-card major-last-card" style="margin-bottom: 0px;">
-                    <div class="major-card-header header-black" style="display: flex; justify-content: center;">INSERÇÃO DE NOVA LISTA NOMINAL DE MEIOS</div>
+                  <div class="major-card major-last-card sl-122">
+                    <div class="major-card-header header-black sl-88" style="display: flex;">INSERÇÃO DE NOVA LISTA NOMINAL DE MEIOS</div>
                     <div class="major-card-body">
-                      <div class="major-row" style="margin-top: 5px;">              
-                        <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                          <label style="font-size: 13px;">Nº Sequencial:</label>
-                          <input type="text" id="g2_seq_number" style="width: 150px; text-align: center; font-size: 14px;">
+                      <div class="major-row sl-123">              
+                        <div class="major-field sl-32">
+                          <label class="sl-33">Nº Sequencial:</label>
+                          <input class="sl-124" type="text" id="g2_seq_number">
                         </div>
                       </div>
                       <!-- INTERVENÇÃO (50/50) -->
-                      <div class="table-container" style="margin-top: 10px;">
-                        <table id="g2InterventionTable" style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+                      <div class="table-container sl-125">
+                        <table class="sl-126" id="g2InterventionTable">
                           <thead>
                             <tr>
-                              <th colspan="2" style="background-color: #721c24; color: #ffffff; text-align: center; padding: 8px 10px; font-weight: bold; font-size: 13px; border: 0;">INTERVENÇÃO</th>
+                              <th class="sl-127" colspan="2">INTERVENÇÃO</th>
                             </tr>
                             <tr>
-                              <th style="width:50%; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">GDH Acionamento</th>
-                              <th style="width:50%; border-top: 1px solid #ccc; padding: 6px;">Local de Intervenção (Concelho/Sub-Região)</th>
+                              <th class="sl-128">GDH Acionamento</th>
+                              <th class="sl-129">Local de Intervenção (Concelho/Sub-Região)</th>
                             </tr>
                           </thead>
                           <tbody>
                             <tr>
-                              <td style="padding: 4px; white-space: nowrap; text-align: center;">
+                              <td class="sl-130">
                                 <input type="date" id="g2_gdh_activation_date" style="font-size: 12px; width: 105px; height: 24px; padding: 0 4px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; outline: none; transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;" onfocus="this.style.borderColor='#80bdff'; this.style.boxShadow='0 0 5px rgba(0, 123, 255, 0.25)';" onblur="this.style.borderColor='#ccc'; this.style.boxShadow='none';">
                                 <input type="time" id="g2_gdh_activation_hour" style="font-size: 12px; width: 75px; height: 24px; padding: 0 4px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; outline: none; transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;" onfocus="this.style.borderColor='#80bdff'; this.style.boxShadow='0 0 5px rgba(0, 123, 255, 0.25)';" onblur="this.style.borderColor='#ccc'; this.style.boxShadow='none';">
                                 <input type="text" id="g2_gdh_activation" style="display: none;" readonly tabindex="-1">
                               </td>
-                              <td style="padding: 4px;">
+                              <td class="sl-131">
                                 <input type="text" id="g2_intervention_location" style="font-size: 12px; width: 100%; height: 24px; padding: 0 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; outline: none; transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;" onfocus="this.style.borderColor='#80bdff'; this.style.boxShadow='0 0 5px rgba(0, 123, 255, 0.25)';" onblur="this.style.borderColor='#ccc'; this.style.boxShadow='none';">
                               </td>
                             </tr>
@@ -1017,32 +1296,32 @@
                         </table>
                       </div>
                       <!-- VEÍCULO (6 colunas com COLGROUP para forçar as larguras) -->
-                      <div class="table-container" style="margin-top: 10px; width: 100%;">
-                        <table id="g2VehicleTable" style="width: 100% !important; border-collapse: collapse; table-layout: fixed !important;">
+                      <div class="table-container sl-132">
+                        <table class="sl-133" id="g2VehicleTable">
                           <colgroup>
-                            <col style="width: 30% !important;">
-                            <col style="width: 8% !important;">
-                            <col style="width: 14% !important;">
-                            <col style="width: 16% !important;">
-                            <col style="width: 16% !important;">
-                            <col style="width: 16% !important;">
+                            <col class="sl-134">
+                            <col class="sl-135">
+                            <col class="sl-136">
+                            <col class="sl-137">
+                            <col class="sl-137">
+                            <col class="sl-137">
                           </colgroup>
                           <thead>
                             <tr>
-                              <th colspan="6" style="background-color: #721c24; color: #ffffff; text-align: center; padding: 8px 10px; font-weight: bold; font-size: 13px; border: 0;">VEÍCULOS</th>
+                              <th class="sl-127" colspan="6">VEÍCULOS</th>
                             </tr>
                             <tr>
-                              <th style="border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">Corpo de Bombeiros</th>
-                              <th style="border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">Meios</th>
-                              <th style="border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">ISSI SIRESP (móvel)</th>
-                              <th style="border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">GDH Saída Quartel</th>
-                              <th style="border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">GDH Local Concentração</th>
-                              <th style="border-top: 1px solid #ccc; padding: 6px;">GDH no TO</th>
+                              <th class="sl-138">Corpo de Bombeiros</th>
+                              <th class="sl-138">Meios</th>
+                              <th class="sl-138">ISSI SIRESP (móvel)</th>
+                              <th class="sl-138">GDH Saída Quartel</th>
+                              <th class="sl-138">GDH Local Concentração</th>
+                              <th class="sl-139">GDH no TO</th>
                             </tr>
                           </thead>
                           <tbody>
                             <tr>
-                              <td style="padding: 4px;">
+                              <td class="sl-131">
                                 <select id="g2_cb" style="font-size: 12px; width: 100%; height: 24px; padding: 0 4px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; outline: none;" onfocus="this.style.borderColor='#80bdff';" onblur="this.style.borderColor='#ccc';">
                                   <option>0801 - Companhia Sapadores de Faro</option>
                                   <option>0802 - Corpo de Bombeiros de Lagos</option>
@@ -1063,33 +1342,33 @@
                                   <option>0817 - Corpo de Bombeiros de Alcoutim</option>
                                 </select>
                               </td>
-                              <td style="padding: 4px;">
+                              <td class="sl-131">
                                 <select id="g2_vehicle" style="font-size: 12px; text-align-last: center; width: 100%; height: 24px; padding: 0 2px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; outline: none;" onfocus="this.style.borderColor='#80bdff';" onblur="this.style.borderColor='#ccc';"></select>
                               </td>
-                              <td style="padding: 4px;">
+                              <td class="sl-131">
                                 <input type="text" id="g2_vehicle_issi" style="font-size: 12px; width: 100%; height: 24px; padding: 0 4px; box-sizing: border-box; text-align: center; border: 1px solid #ccc; border-radius: 4px; outline: none;" onfocus="this.style.borderColor='#80bdff';" onblur="this.style.borderColor='#ccc';">
                               </td>                  
                               <!-- GDH SAÍDA -->
-                              <td style="padding: 4px;">
-                                <div style="display: flex; gap: 3px;">
-                                  <input type="date" id="g2_gdh_station_departure_date" style="font-size: 12px; width: 58%; height: 24px; padding: 0 2px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; outline: none;">
-                                  <input type="time" id="g2_gdh_station_departure_hour" style="font-size: 12px; width: 42%; height: 24px; padding: 0 2px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; outline: none;">
+                              <td class="sl-131">
+                                <div class="sl-140" style="display: flex;">
+                                  <input class="sl-141" type="date" id="g2_gdh_station_departure_date">
+                                  <input class="sl-142" type="time" id="g2_gdh_station_departure_hour">
                                 </div>
                                 <input type="text" id="g2_gdh_station_departure" style="display: none;" readonly tabindex="-1">
                               </td>                    
                               <!-- GDH CONCENTRAÇÃO -->
-                              <td style="padding: 4px;">
-                                <div style="display: flex; gap: 3px;">
-                                  <input type="date" id="g2_gdh_assembly_point_date" style="font-size: 12px; width: 58%; height: 24px; padding: 0 2px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; outline: none;">
-                                  <input type="time" id="g2_gdh_assembly_point_hour" style="font-size: 12px; width: 42%; height: 24px; padding: 0 2px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; outline: none;">
+                              <td class="sl-131">
+                                <div class="sl-140" style="display: flex;">
+                                  <input class="sl-141" type="date" id="g2_gdh_assembly_point_date">
+                                  <input class="sl-142" type="time" id="g2_gdh_assembly_point_hour">
                                 </div>
                                 <input type="text" id="g2_gdh_assembly_point" style="display: none;" readonly tabindex="-1">
                               </td>                    
                               <!-- GDH TO -->
-                              <td style="padding: 4px;">
-                                <div style="display: flex; gap: 3px;">
-                                  <input type="date" id="g2_gdh_incident_site_date" style="font-size: 12px; width: 58%; height: 24px; padding: 0 2px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; outline: none;">
-                                  <input type="time" id="g2_gdh_incident_site_hour" style="font-size: 12px; width: 42%; height: 24px; padding: 0 2px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; outline: none;">
+                              <td class="sl-131">
+                                <div class="sl-140" style="display: flex;">
+                                  <input class="sl-141" type="date" id="g2_gdh_incident_site_date">
+                                  <input class="sl-142" type="time" id="g2_gdh_incident_site_hour">
                                 </div>
                                 <input type="text" id="g2_gdh_incident_site" style="display: none;" readonly tabindex="-1">
                               </td>
@@ -1098,63 +1377,63 @@
                         </table>
                       </div>
                       <!-- CHEFE DE EQUIPA (linhas geradas por JS) -->
-                      <div class="table-container" style="margin-top: 10px; ">
-                        <table id="g2LeadersTable" style="width: 100%; border-collapse: collapse;">
+                      <div class="table-container sl-125">
+                        <table class="sl-143" id="g2LeadersTable">
                           <thead>
                             <tr>
-                              <th colspan="6" style="background-color: #721c24; color: #ffffff; text-align: center; padding: 8px 10px; font-weight: bold; font-size: 13px; border: 0; position: relative;">
+                              <th class="sl-144" colspan="6">
                                 CHEFE DE EQUIPA
-                                <button id="addG2LeaderBtn" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background-color: #28a745; color: white; border: none; border-radius: 4px; width: 24px; height: 24px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;">+</button>
+                                <button class="sl-145" id="addG2LeaderBtn" style="display: flex;">+</button>
                               </th>
                             </tr>
                             <tr>
-                              <th style="width:30px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">ID</th>
-                              <th style="width:40px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">Nº Int.</th>
-                              <th style="width:150px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">Categoria</th>
-                              <th style="width:250px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">Nome</th>
-                              <th style="width:160px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">ISSI SIRESP (móvel)</th>
-                              <th style="width:160px; border-top: 1px solid #ccc; padding: 6px;">Telefone</th>
+                              <th class="sl-146">ID</th>
+                              <th class="sl-147">Nº Int.</th>
+                              <th class="sl-148">Categoria</th>
+                              <th class="sl-149">Nome</th>
+                              <th class="sl-150">ISSI SIRESP (móvel)</th>
+                              <th class="sl-151">Telefone</th>
                             </tr>
                           </thead>
                           <tbody></tbody>
                         </table>
                       </div>
                       <!-- EQUIPA (linhas geradas por JS) -->
-                      <div class="table-container" style="margin-top: 10px;">
-                        <table id="g2CrewTable" style="width: 100%; border-collapse: collapse;">
+                      <div class="table-container sl-125">
+                        <table class="sl-143" id="g2CrewTable">
                           <thead>
                             <tr>
-                              <th colspan="9" style="background-color: #721c24; color: #ffffff; text-align: center; padding: 8px 10px; font-weight: bold; font-size: 13px; border: 0; position: relative;">
+                              <th class="sl-144" colspan="9">
                                 EQUIPA (INCLUIR O CHEFE DE EQUIPA)
-                                <button id="addG2CrewBtn" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background-color: #28a745; color: white; border: none; border-radius: 4px; width: 24px; height: 24px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;">+</button>
+                                <button class="sl-145" id="addG2CrewBtn" style="display: flex;">+</button>
                               </th>
                             </tr>
                             <tr>
-                              <th style="width:40px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">ID</th>
-                              <th style="width:50px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">Nº Int.</th>
-                              <th style="width:110px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">Nº Mec.</th>
-                              <th style="width:150px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">Categoria</th>
-                              <th style="width:200px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">Nome</th>
-                              <th style="width:50px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">SitDisp<br>(E/N/S/G)</th>
-                              <th style="width:100px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">Rede (ID)</th>
-                              <th style="width:180px; border-top: 1px solid #ccc; border-right: 1px solid #ccc; padding: 6px;">GDH Saída</th>
-                              <th style="width:180px; border-top: 1px solid #ccc; padding: 6px;">GDH Chegada</th>
+                              <th class="sl-147">ID</th>
+                              <th class="sl-152">Nº Int.</th>
+                              <th class="sl-153">Nº Mec.</th>
+                              <th class="sl-148">Categoria</th>
+                              <th class="sl-154">Nome</th>
+                              <th class="sl-152">SitDisp<br>(E/N/S/G)</th>
+                              <th class="sl-155">Rede (ID)</th>
+                              <th class="sl-156">GDH Saída</th>
+                              <th class="sl-157">GDH Chegada</th>
                             </tr>
                           </thead>
                           <tbody></tbody>
                         </table>
                       </div>
-                      <p style="font-size: 15px; color: #666; margin-top: 10px; text-align: center;">SitDisp = Situação no Dispositivo | E = Escalado | N = Não Escalado | S = Substituído | G = Gruata</p>
-                      <div class="major-row" style="display: flex; align-items: center; margin: 15px 0 0 0;">
-                        <div class="major-field" style="display: flex; flex-direction: row; align-items: center; gap: 3px;">
-                          <label style="font-size: 13px;">OPTEL:</label>
+                      <p class="sl-158">SitDisp = Situação no Dispositivo | E = Escalado | N = Não Escalado | S = Substituído | G = Gruata</p>
+                      <div class="major-row sl-159" style="display: flex;">
+                        <div class="major-field sl-160" style="display: flex;">
+                          <label class="sl-33">OPTEL:</label>
                           <input type="text" id="g2_optel_nint" style="width: 60px; height: 25px !important; box-sizing: border-box; padding: 0; text-align: center; border: 1px solid #ccc; border-radius: 4px;   transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;" onfocus="this.style.setProperty('border-color', '#80bdff', 'important'); this.style.setProperty('box-shadow', '0 0 5px rgba(0, 123, 255, 0.25)', 'important');"  onblur="this.style.setProperty('border-color', '#ccc', 'important'); this.style.setProperty('box-shadow', 'none', 'important');">
                           <input type="text" id="g2_optel_patent" readonly tabindex="-1" style="width: 75px; height: 25px !important; box-sizing: border-box; padding: 0; text-align: center; border: 1px solid #ccc; border-radius: 4px; background-color: #e9ecef !important; cursor: not-allowed; transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;" onfocus="this.style.setProperty('border-color', '#80bdff', 'important'); this.style.setProperty('box-shadow', '0 0 5px rgba(0, 123, 255, 0.25)', 'important');" onblur="this.style.setProperty('border-color', '#ccc', 'important'); this.style.setProperty('box-shadow', 'none', 'important');">
                           <input type="text" id="g2_optel_name" readonly tabindex="-1" style="width: 175px; height: 25px !important; box-sizing: border-box; padding: 0; border: 1px solid #ccc; border-radius: 4px; background-color: #e9ecef !important; cursor: not-allowed; transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;" onfocus="this.style.setProperty('border-color', '#80bdff', 'important'); this.style.setProperty('box-shadow', '0 0 5px rgba(0, 123, 255, 0.25)', 'important');" onblur="this.style.setProperty('border-color', '#ccc', 'important'); this.style.setProperty('box-shadow', 'none', 'important');">
                         </div>
                       </div>  
                     </div>
-                    <div class="major-card-footer" style="display: flex; flex-wrap: wrap; justify-content: flex-end;">
+                    <div class="major-card-footer sl-161" style="display: flex;">
                       <button class="btn btn-danger" id="g2SaveBtn" style="font-size: 12px;">Salvar</button>
                     </div>
                   </div>
@@ -1165,11 +1444,13 @@
         </div>
         <div class="major-card-footer"></div>
       </div>
+
 `,
       'page-plandir': `
+
         <div class="major-card major-last-card">
           <div class="major-card-header">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;">
+            <svg class="sl-13" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
               <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
               <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
               <line x1="8" y1="10" x2="16" y2="10"/>
@@ -1179,13 +1460,13 @@
             PLANEAMENTOS DIÁRIOS
           </div>
           <div class="major-card-body">
-            <div class="major-row" style="margin: 0; display: flex; justify-content: center;">
-              <div class="options-main-card" style="display: flex; flex-direction: column; align-items: center;">
-                <label style="margin-bottom: 10px; font-size: 14px; font-weight: bold;">Selecione um Turno</label>
-                <div class="action-buttons" id="plandir-shift" style="gap: 5px;">
-                  <button class="btn btn-add options-btn" style="height: 35px;" data-shift="D" onclick="loadShift('D')">TURNO "D"</button>
-                  <button class="btn btn-add options-btn" style="height: 35px;" data-shift="N" onclick="loadShift('N')">TURNO "N"</button>
-                  <button class="btn btn-add options-btn" style="height: 35px; background: orange; color: black;" data-shift="LAST" onclick="loadShift('LAST')">ÚLTIMO</button>
+            <div class="major-row sl-85" style="display: flex;">
+              <div class="options-main-card sl-86" style="display: flex;">
+                <label class="sl-15">Selecione um Turno</label>
+                <div class="action-buttons sl-121" id="plandir-shift">
+                  <button class="btn btn-add options-btn sl-18" data-shift="D" onclick="loadShift('D')">TURNO "D"</button>
+                  <button class="btn btn-add options-btn sl-18" data-shift="N" onclick="loadShift('N')">TURNO "N"</button>
+                  <button class="btn btn-add options-btn sl-162" data-shift="LAST" onclick="loadShift('LAST')">ÚLTIMO</button>
                 </div>
               </div>
             </div>
@@ -1196,14 +1477,14 @@
               </div>
               <div id="plandir-right-col" style="display: none;">
                 <div id="plandir-card-container">
-                  <div class="plandir-main-card" style="margin: 10px 0 0 0; width: 500px;">
+                  <div class="plandir-main-card sl-163">
                     <div class="plandir-card-title red-variant">ELEMENTOS ESCALADOS</div>
                     <table class="plandir-side-table">
                       <thead>
                         <tr>
-                          <th style="padding: 5px 6px; width: 75px;">Nº Int.</th>
-                          <th style="padding: 5px 6px; width: 150px;">Patente</th>
-                          <th style="padding: 5px 6px; width: 200px;">Nome</th>
+                          <th class="sl-164">Nº Int.</th>
+                          <th class="sl-165">Patente</th>
+                          <th class="sl-166">Nome</th>
                         </tr>
                       </thead>
                       <tbody id="plandir-side-tbody"></tbody>
@@ -1215,11 +1496,13 @@
           </div>
           <div class="major-card-footer"></div>
         </div>
+
 `,
       'page-inocrepc': `
+
       <div class="major-card major-last-card">
         <div class="major-card-header">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9;">
+          <svg class="sl-13" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <rect x="1" y="10" width="22" height="10" rx="2" ry="2"/>
             <path d="M4 10V7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3"/>
             <circle cx="7" cy="20" r="2"/>
@@ -1231,12 +1514,12 @@
           SITUAÇÃO OPERACIONAL DE VEÍCULOS (CREPC)
         </div>
         <div class="major-card-body">
-          <div class="major-row" style="margin: 0; display: flex; justify-content: center;">
-            <div class="options-main-card" style="display: flex; flex-direction: column; align-items: center;">
-              <label style="margin-bottom: 10px; font-size: 14px; font-weight: bold;">Selecione uma Opção</label>
-              <div class="action-buttons" id="inop-action-buttons" style="gap: 5px;">
-                <button class="btn btn-add options-btn oldinop" style="height: 35px;">EM CURSO</button>
-                <button class="btn btn-add options-btn" style="height: 35px;" id="NewInopBtn">NOVA</button>
+          <div class="major-row sl-85" style="display: flex;">
+            <div class="options-main-card sl-86" style="display: flex;">
+              <label class="sl-15">Selecione uma Opção</label>
+              <div class="action-buttons sl-121" id="inop-action-buttons">
+                <button class="btn btn-add options-btn oldinop sl-18">EM CURSO</button>
+                <button class="btn btn-add options-btn sl-18" id="NewInopBtn">NOVA</button>
               </div>
             </div>
           </div>
@@ -1246,12 +1529,12 @@
               <table id="inopsTable">
                 <thead>
                   <tr>
-                    <th style="width: 100px;">Veículo</th>
-                    <th style="width: 100px;">GDH INOP</th>
-                    <th style="width: 200px;">Tipo de Avaria</th>
-                    <th style="width: 400px;">Descrição da Avaria</th>
-                    <th style="width: 200px;">OPTEL</th>
-                    <th style="width: 150px;">Ação</th>
+                    <th class="sl-26">Veículo</th>
+                    <th class="sl-26">GDH INOP</th>
+                    <th class="sl-27">Tipo de Avaria</th>
+                    <th class="sl-167">Descrição da Avaria</th>
+                    <th class="sl-27">OPTEL</th>
+                    <th class="sl-38">Ação</th>
                   </tr>
                 </thead>
                 <tbody></tbody>
@@ -1259,12 +1542,12 @@
             </div>
           </div>
           <div id="sitop_container" style="display: none; margin-top: 20px;">
-            <div class="major-card major-last-card" style="margin-bottom: 0px;">
-              <div class="major-card-header header-black"  style="display: flex; justify-content: center;">INSERÇÃO DE NOVA INOPERACIONALIDADE</div>
+            <div class="major-card major-last-card sl-122">
+              <div class="major-card-header header-black sl-88"  style="display: flex;">INSERÇÃO DE NOVA INOPERACIONALIDADE</div>
               <div class="major-card-body">
-                <div class="major-row" style="margin-top: 5px;">
-                  <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                    <label style="font-size: 13px;">Corpo de Bombeiros:</label>
+                <div class="major-row sl-123">
+                  <div class="major-field sl-32">
+                    <label class="sl-33">Corpo de Bombeiros:</label>
                     <select id="sitop_cb" style="width: 400px;">
                       <option>0801 - Companhia Sapadores de Faro</option>
                       <option>0802 - Corpo de Bombeiros de Lagos</option>
@@ -1285,78 +1568,78 @@
                       <option>0817 - Corpo de Bombeiros de Alcoutim</option>
                     </select>
                   </div>
-                  <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                    <label style="font-size: 13px;">Veículo:</label>
-                    <select id="sitop_veíc" style="width: 125px;"></select>
+                  <div class="major-field sl-32">
+                    <label class="sl-33">Veículo:</label>
+                    <select class="sl-168" id="sitop_veíc"></select>
                   </div>
-                  <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                    <label style="font-size: 13px;">Matrícula:</label>
-                    <input type="text" id="sitop_veíc_registration" style="width: 120px; text-align: center;" readonly tabindex="-1">
-                    <input type="text" id="sitop_gdh_inop" style="width: 120px; text-align: center; display: none;" readonly tabindex="-1">
-                    <input type="text" id="sitop_gdh_op" style="width: 120px; text-align: center; display: none;" readonly tabindex="-1">
+                  <div class="major-field sl-32">
+                    <label class="sl-33">Matrícula:</label>
+                    <input class="sl-169" type="text" id="sitop_veíc_registration" readonly tabindex="-1">
+                    <input class="sl-169" type="text" id="sitop_gdh_inop" style="display: none;" readonly tabindex="-1">
+                    <input class="sl-169" type="text" id="sitop_gdh_op" style="display: none;" readonly tabindex="-1">
                   </div>
                 </div>  
-                <div class="major-row" style="margin-top: 5px;">      
-                  <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                    <label style="font-size: 13px;">Data:</label>
-                    <input type="date" id="sitop_veíc_date" style="width: 120px;">
-                    <label style="font-size: 13px;">Hora:</label>
-                    <input type="time" id="sitop_veíc_hour" style="width: 100px;">
+                <div class="major-row sl-123">      
+                  <div class="major-field sl-32">
+                    <label class="sl-33">Data:</label>
+                    <input class="sl-25" type="date" id="sitop_veíc_date">
+                    <label class="sl-33">Hora:</label>
+                    <input class="sl-26" type="time" id="sitop_veíc_hour">
                   </div>
                 </div>
-                <div class="major-row" style="margin-top: 5px;">                  
-                  <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                    <label style="font-size: 13px;">Tipo de Avaria:</label>
-                    <select id="sitop_type_failure" style="width: 200px;"></select>
+                <div class="major-row sl-123">                  
+                  <div class="major-field sl-32">
+                    <label class="sl-33">Tipo de Avaria:</label>
+                    <select class="sl-27" id="sitop_type_failure"></select>
                   </div>
-                  <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                    <label style="font-size: 13px;">Descrição da Avaria:</label>
-                    <input type="text" id="sitop_failure_description" style="width: 395px;">
+                  <div class="major-field sl-32">
+                    <label class="sl-33">Descrição da Avaria:</label>
+                    <input class="sl-170" type="text" id="sitop_failure_description">
                   </div>
-                  <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                    <label style="font-size: 13px;">NOC:</label>
-                    <input type="text" id="sitop_failure_noc" style="width: 150px; text-align: center;">
+                  <div class="major-field sl-32">
+                    <label class="sl-33">NOC:</label>
+                    <input class="sl-171" type="text" id="sitop_failure_noc">
                   </div>
                 </div>
-                <label style="font-weight: bold; font-size: 13px; display: block; margin-top: 15px; margin-bottom: 5px;">
+                <label class="sl-172" style="display: block;">
                   O Veículo indicado faz parte de algum PPI?
                 </label>
-                <div class="checkbox-vertical" style="margin-left: 20px;">
-                  <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; white-space: nowrap;">
-                    <input id="ppi_yes" type="checkbox" style="width: 17px; height: 17px; cursor: pointer !important;"> SIM</label>
-                  <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; white-space: nowrap; margin-left: 15px;">
-                    <input id="ppi_no" type="checkbox" style="width: 17px; height: 17px; cursor: pointer !important;"> NÃO</label>
+                <div class="checkbox-vertical sl-173">
+                  <label class="sl-174" style="display: inline-flex;">
+                    <input class="sl-103" id="ppi_yes" type="checkbox"> SIM</label>
+                  <label class="sl-175" style="display: inline-flex;">
+                    <input class="sl-103" id="ppi_no" type="checkbox"> NÃO</label>
                 </div>
-                <label style="font-weight: bold; font-size: 13px; display: block; margin-top: 15px; margin-bottom: 5px;">
+                <label class="sl-172" style="display: block;">
                   Qual ou Quais:
                 </label>
-                <div class="checkbox-vertical" style="margin-left: 40px;">
-                  <label style="display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; white-space: nowrap; width: 100px;">
-                    <input type="checkbox" style="width: 17px; height: 17px; cursor: pointer !important;" id="ppi_airport"> Aeroporto</label>
-                  <label style="display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; white-space: nowrap; width: 60px;">
-                    <input type="checkbox" style="width: 17px; height: 17px; cursor: pointer !important;" id="ppi_a22"> A22</label>
-                  <label style="display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; white-space: nowrap; width: 50px;">
-                    <input type="checkbox" style="width: 17px; height: 17px; cursor: pointer !important;" id="ppi_a2"> A2</label>
-                  <label style="display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; white-space: nowrap; width: 190px;">
-                    <input type="checkbox" style="width: 17px; height: 17px; cursor: pointer !important;" id="ppi_linfer"> Linha Férrea do Algarve</label>
-                  <label style="display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; white-space: nowrap; width: 170px;">
-                    <input type="checkbox" style="width: 17px; height: 17px; cursor: pointer !important;" id="ppi_airfield"> Aeródromo Portimão</label>
+                <div class="checkbox-vertical sl-176">
+                  <label class="sl-177" style="display: flex;">
+                    <input class="sl-103" type="checkbox" id="ppi_airport"> Aeroporto</label>
+                  <label class="sl-178" style="display: flex;">
+                    <input class="sl-103" type="checkbox" id="ppi_a22"> A22</label>
+                  <label class="sl-179" style="display: flex;">
+                    <input class="sl-103" type="checkbox" id="ppi_a2"> A2</label>
+                  <label class="sl-180" style="display: flex;">
+                    <input class="sl-103" type="checkbox" id="ppi_linfer"> Linha Férrea do Algarve</label>
+                  <label class="sl-181" style="display: flex;">
+                    <input class="sl-103" type="checkbox" id="ppi_airfield"> Aeródromo Portimão</label>
                 </div>
-                <label style="font-weight: bold; font-size: 13px; display: block; margin-top: 15px; margin-bottom: 5px;">
+                <label class="sl-172" style="display: block;">
                   O Corpo de Bombeiros tem capacidade de substituição por veículo similar?
                 </label>
-                <div class="checkbox-vertical" style="margin-left: 20px;">
-                  <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; white-space: nowrap;">
-                    <input id="ppi_subs_yes" type="checkbox" style="width: 17px; height: 17px; cursor: pointer !important;"> SIM</label>
-                    <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; white-space: nowrap; margin-left: 15px;">
-                      <input id="ppi_subs_no" type="checkbox" style="width: 17px; height: 17px; cursor: pointer !important;"> NÃO</label>
+                <div class="checkbox-vertical sl-173">
+                  <label class="sl-174" style="display: inline-flex;">
+                    <input class="sl-103" id="ppi_subs_yes" type="checkbox"> SIM</label>
+                    <label class="sl-175" style="display: inline-flex;">
+                      <input class="sl-103" id="ppi_subs_no" type="checkbox"> NÃO</label>
                 </div>
-                <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px; margin-top: 15px;">
-                <label style="font-size: 13px; font-weight: bold; color: #444;">OPTEL:</label>
-                  <input type="text" id="sitop_optel" style="width: 250px;">
+                <div class="major-field sl-182">
+                <label class="sl-183">OPTEL:</label>
+                  <input class="sl-44" type="text" id="sitop_optel">
                 </div>
               </div>
-              <div class="major-card-footer" style="display: flex; flex-wrap: wrap; justify-content: flex-end;">
+              <div class="major-card-footer sl-161" style="display: flex;">
                 <button class="btn btn-danger" id="saveBtn" style="font-size: 12px; width: 25px;">Salvar</button>
               </div>
             </div>
@@ -1364,10 +1647,12 @@
         </div>
         <div class="major-card-footer"></div>
       </div>
+
 `,
       'page-hemodialysis': `
+
       <div class="major-card">
-        <div class="major-card-header" style="display: flex; align-items: center; gap: 10px;">
+        <div class="major-card-header sl-184" style="display: flex;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
             <polyline points="22 12 18 12 15 19 9 5 6 12 2 12"/>
@@ -1375,232 +1660,228 @@
           UTENTES DE HEMODIÁLISE
         </div>
         <div class="major-card-body">
-          <div class="major-row" style="margin: 0; display: flex; justify-content: center;">
-            <div class="options-main-card" style="display: flex; flex-direction: column; align-items: center;">
-              <label style="margin-bottom: 10px; font-size: 14px; font-weight: bold;">Selecione uma Opção</label>
+          <div class="major-row sl-85" style="display: flex;">
+            <div class="options-main-card sl-86" style="display: flex;">
+              <label class="sl-15">Selecione uma Opção</label>
               <div class="action-buttons" id="docs-crepc" style="gap: 5px;">
-                <button id="HemoWeekList" class="btn btn-add options-btn" style="width: 100px; height: 35px;">Listagem Semanal</button>
-                <button id="HemoWAdresses" class="btn btn-add options-btn" style="width: 100px; height: 35px;">Utentes</button>
-                <button id="HemoOther" class="btn btn-add options-btn" style="width: 100px; height: 35px;" onclick="showbreve()">Outros</button>
+                <button id="HemoWeekList" class="btn btn-add options-btn sl-185">Listagem Semanal</button>
+                <button id="HemoWAdresses" class="btn btn-add options-btn sl-185">Utentes</button>
+                <button id="HemoOther" class="btn btn-add options-btn sl-185" onclick="showbreve()">Outros</button>
               </div>
             </div>
           </div>          
           <div id="hemo-utentdata-card" style="display: none; margin-top: 20px;">
             <div class="options-main-card">
-              <h3 style="font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: #444; margin: -12px -12px 15px -12px; padding: 5px 14px; 
-                         background: linear-gradient(90deg, rgba(220,53,69,0.16), rgba(255,255,255,0.03)); border-left: 3px solid rgba(220,53,69,0.9); border-radius: 6px 6px 0 0;
-                         box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);">
+              <h3 class="sl-186">
                DADOS DO UTENTE
               </h3>
-              <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-                <label style="font-size: 13px;">Nome do Utente:</label>
-                <input type="text" id="utent_h_name" style="width: 700px;">
-                <label style="font-size: 13px;">Nr. de Utente:</label>
-                <input type="text" id="utent_h_nr" style="width: 150px;">
+              <div class="major-field sl-32">
+                <label class="sl-33">Nome do Utente:</label>
+                <input class="sl-187" type="text" id="utent_h_name">
+                <label class="sl-33">Nr. de Utente:</label>
+                <input class="sl-38" type="text" id="utent_h_nr">
               </div>
-              <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px; margin-top: 5px;">
-                <label style="font-size: 13px;">Morada do Utente:</label>
-                <input type="text" id="utent_h_adress" style="width: 550px;">
-                <label style="font-size: 13px;">Localidade:</label>
-                <input type="text" id="utent_h_localitie" style="width: 500px;">
+              <div class="major-field sl-188">
+                <label class="sl-33">Morada do Utente:</label>
+                <input class="sl-189" type="text" id="utent_h_adress">
+                <label class="sl-33">Localidade:</label>
+                <input class="sl-190" type="text" id="utent_h_localitie">
               </div>
-              <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px; margin-top: 5px;">
-                <label style="font-size: 13px;">Contactos:</label>
-                <input type="text" id="utent_h_contacts" style="width: 300px;">
+              <div class="major-field sl-188">
+                <label class="sl-33">Contactos:</label>
+                <input class="sl-120" type="text" id="utent_h_contacts">
               </div>
-              <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px; margin-top: 5px;">
-                <label style="font-size: 13px;">Dias Tratamento:</label>
-                <div style="position: relative; display: inline-block;">
+              <div class="major-field sl-188">
+                <label class="sl-33">Dias Tratamento:</label>
+                <div class="sl-191" style="display: inline-block;">
                   <div id="utent_h_treatment_days_btn" onclick="toggleDaysDropdown()"
                        style="width: 200px; padding: 4px 8px; border: 1px solid #ccc; border-radius: 3px; cursor: pointer; background: #fff; font-size: 13px; min-height: 28px;">
                     Selecionar dias...
                   </div>
                   <div id="utent_h_treatment_days_dropdown" style="display: none; position: absolute; z-index: 999; background: #fff; border: 1px solid #ccc; border-radius: 4px; 
                                                                    padding: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); min-width: 160px; text-align: left;">
-                    <label style="display: flex; align-items: center; justify-content: flex-start; gap: 6px; font-size: 13px; padding: 3px 0; cursor: pointer; width: 100%; text-align: left;">
-                      <input type="checkbox" value="SEG" style="width: 16px; height: 16px; margin: 0; cursor: pointer !important; outline: none !important; box-shadow: none !important;">Segunda</label>
-                    <label style="display: flex; align-items: center; justify-content: flex-start; gap: 6px; font-size: 13px; padding: 3px 0; cursor: pointer; width: 100%; text-align: left;">
-                      <input type="checkbox" value="TER" style="width: 16px; height: 16px; margin: 0; cursor: pointer !important; outline: none !important; box-shadow: none !important;">Terça</label>
-                    <label style="display: flex; align-items: center; justify-content: flex-start; gap: 6px; font-size: 13px; padding: 3px 0; cursor: pointer; width: 100%; text-align: left;">
-                      <input type="checkbox" value="QUA" style="width: 16px; height: 16px; margin: 0; cursor: pointer !important; outline: none !important; box-shadow: none !important;">Quarta</label>
-                    <label style="display: flex; align-items: center; justify-content: flex-start; gap: 6px; font-size: 13px; padding: 3px 0; cursor: pointer; width: 100%; text-align: left;">
-                      <input type="checkbox" value="QUI" style="width: 16px; height: 16px; margin: 0; cursor: pointer !important; outline: none !important; box-shadow: none !important;">Quinta</label>
-                    <label style="display: flex; align-items: center; justify-content: flex-start; gap: 6px; font-size: 13px; padding: 3px 0; cursor: pointer; width: 100%; text-align: left;">
-                      <input type="checkbox" value="SEX" style="width: 16px; height: 16px; margin: 0; cursor: pointer !important; outline: none !important; box-shadow: none !important;">Sexta</label>
-                    <label style="display: flex; align-items: center; justify-content: flex-start; gap: 6px; font-size: 13px; padding: 3px 0; cursor: pointer; width: 100%; text-align: left;">
-                      <input type="checkbox" value="SAB" style="width: 16px; height: 16px; margin: 0; cursor: pointer !important; outline: none !important; box-shadow: none !important;">Sábado</label>
+                    <label class="sl-192" style="display: flex;">
+                      <input class="sl-193" type="checkbox" value="SEG">Segunda</label>
+                    <label class="sl-192" style="display: flex;">
+                      <input class="sl-193" type="checkbox" value="TER">Terça</label>
+                    <label class="sl-192" style="display: flex;">
+                      <input class="sl-193" type="checkbox" value="QUA">Quarta</label>
+                    <label class="sl-192" style="display: flex;">
+                      <input class="sl-193" type="checkbox" value="QUI">Quinta</label>
+                    <label class="sl-192" style="display: flex;">
+                      <input class="sl-193" type="checkbox" value="SEX">Sexta</label>
+                    <label class="sl-192" style="display: flex;">
+                      <input class="sl-193" type="checkbox" value="SAB">Sábado</label>
                   </div>
                 </div>
-                <label style="font-size: 13px;">Turno Tratamento:</label>
-                <select id="utent_h_treatment_sift" style="width: 150px;">
+                <label class="sl-33">Turno Tratamento:</label>
+                <select class="sl-38" id="utent_h_treatment_sift">
                   <option></option>
                   <option>07:00-12:00</option>
                   <option>11:00-17:00</option>
                   <option>16:00-23:00</option>
                 </select>
-                <label style="font-size: 13px;">Loacal Tratamento:</label>
-                <select id="utent_h_treatment_local" style="width: 200px;">
+                <label class="sl-33">Loacal Tratamento:</label>
+                <select class="sl-27" id="utent_h_treatment_local">
                   <option></option>
                   <option>ULSA Faro</option>
                   <option>Nephrocare Faro</option>
                   <option>Outro</option>
                 </select>
-                <label style="font-size: 13px;">Posição:</label>
-                <select id="utent_h_treatment_position" style="width: 200px;">
+                <label class="sl-33">Posição:</label>
+                <select class="sl-27" id="utent_h_treatment_position">
                   <option></option>
                   <option>Sentado</option>
                   <option>Deitado</option>
                   <option>Cadeira de Rodas</option>
                 </select>
               </div>
-              <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px; justify-content: flex-end; margin-top: 15px;">
+              <div class="major-field sl-194">
                 <button id="utent_h_save" class="btn btn-add">💾 GRAVAR</button> 
               </div>
             </div>
           </div>
           <div id="hemo-utentlist-card" style="display: none; margin-top: 20px;">
             <div class="options-main-card">
-              <h3 style="font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: #444; margin: -12px -12px 15px -12px; padding: 5px 14px;
-                         background: linear-gradient(90deg, rgba(220,53,69,0.16), rgba(255,255,255,0.03)); border-left: 3px solid rgba(220,53,69,0.9); border-radius: 6px 6px 0 0;
-                         box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);">
+              <h3 class="sl-186">
                 LISTAGEM DE UTENTES
               </h3>
-              <div class="hemo-scroll" style="max-height: 500px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #bdc3c7 #f1f1f1;">
-                <table style="width: 100%; border-collapse: collapse;">
-                  <thead style="position: sticky; top: 0; z-index: 1;">
-                    <tr style="background: #1e3a8a; color: #fff;">
-                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Nome</th>
-                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Morada</th>
-                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Localidade</th>
-                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Contacto</th>
-                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Nr. Benif.</th>
-                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Destino</th>
-                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Dias</th>
-                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Turno</th>
-                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Posição</th>
-                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px; width: 100px;">Ações</th>
+              <div class="hemo-scroll sl-195">
+                <table class="sl-143">
+                  <thead class="sl-196">
+                    <tr class="sl-197">
+                      <th class="sl-198">Nome</th>
+                      <th class="sl-198">Morada</th>
+                      <th class="sl-198">Localidade</th>
+                      <th class="sl-198">Contacto</th>
+                      <th class="sl-198">Nr. Benif.</th>
+                      <th class="sl-198">Destino</th>
+                      <th class="sl-198">Dias</th>
+                      <th class="sl-198">Turno</th>
+                      <th class="sl-198">Posição</th>
+                      <th class="sl-199">Ações</th>
                     </tr>
                   </thead>
                   <tbody id="hemo-utentlist-tbody">
-                    <tr><td colspan="9" style="text-align: center; padding: 8px; font-size: 12px; color: #999;">Sem registos</td></tr>
+                    <tr><td class="sl-200" colspan="9">Sem registos</td></tr>
                   </tbody>
                 </table>
               </div>
             </div>
           </div>
           <div id="hemo-week-cards" style="display: none; margin-top: 20px;">
-            <div class="major-row" style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; align-items: stretch; padding: 0;">
-              <div class="options-main-card" style="min-width: 250px; display: flex; flex-direction: column; align-items: center; height: 100%; margin-left: 0;">
-                <div style="font-size: 14px; font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #ddd; padding-bottom: 5px; width: 100%; text-align: center;">
+            <div class="major-row sl-201" style="display: flex;">
+              <div class="options-main-card sl-202" style="display: flex;">
+                <div class="sl-203">
                   Segundas / Quartas / Sextas
                 </div>
-                <div style="display: flex; flex-direction: column; gap: 15px; width: 100%; max-height: 500px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #bdc3c7 #f1f1f1;">
+                <div class="sl-204" style="display: flex;">
                   <div>
-                    <div style="font-size: 13px; font-weight: bold; background: #1e3a8a; color: #fff; padding: 5px 10px; border-radius: 4px 4px 0 0; text-align: center;">
+                    <div class="sl-205">
                       07:00 — 12:00
                     </div>
-                    <table style="width: 100%; border-collapse: collapse;">
+                    <table class="sl-143">
                       <thead>
-                        <tr style="background: #f0f0f0;">
-                          <th style="padding: 5px; width: 200px; border: 1px solid #ddd; font-size: 12px;">Nome</th>
-                          <th style="padding: 5px; width: 390px; border: 1px solid #ddd; font-size: 12px;">Origem</th>
-                          <th style="padding: 5px; width: 150px; border: 1px solid #ddd; font-size: 12px;">Destino</th>
+                        <tr class="sl-206">
+                          <th class="sl-207">Nome</th>
+                          <th class="sl-208">Origem</th>
+                          <th class="sl-209">Destino</th>
                         </tr>
                       </thead>
                       <tbody id="hemo-sqx-0700">
-                        <tr><td colspan="3" style="text-align: center; padding: 8px; font-size: 12px; color: #999;">Sem registos</td></tr>
+                        <tr><td class="sl-200" colspan="3">Sem registos</td></tr>
                       </tbody>
                     </table>
                   </div>
                   <div>
-                    <div style="font-size: 13px; font-weight: bold; background: #1e3a8a; color: #fff; padding: 5px 10px; border-radius: 4px 4px 0 0; text-align: center;">
+                    <div class="sl-205">
                       11:00 — 17:00
                     </div>
-                    <table style="width: 100%; border-collapse: collapse;">
+                    <table class="sl-143">
                       <thead>
-                        <tr style="background: #f0f0f0;">
-                          <th style="padding: 5px; width: 200px; border: 1px solid #ddd; font-size: 12px;">Nome</th>
-                          <th style="padding: 5px; width: 390px; border: 1px solid #ddd; font-size: 12px;">Origem</th>
-                          <th style="padding: 5px; width: 150px; border: 1px solid #ddd; font-size: 12px;">Destino</th>
+                        <tr class="sl-206">
+                          <th class="sl-207">Nome</th>
+                          <th class="sl-208">Origem</th>
+                          <th class="sl-209">Destino</th>
                         </tr>
                       </thead>
                       <tbody id="hemo-sqx-1100">
-                        <tr><td colspan="3" style="text-align: center; padding: 8px; font-size: 12px; color: #999;">Sem registos</td></tr>
+                        <tr><td class="sl-200" colspan="3">Sem registos</td></tr>
                       </tbody>
                     </table>
                   </div>
                   <div>
-                    <div style="font-size: 13px; font-weight: bold; background: #1e3a8a; color: #fff; padding: 5px 10px; border-radius: 4px 4px 0 0; text-align: center;">
+                    <div class="sl-205">
                       16:00 — 23:00
                     </div>
-                    <table style="width: 100%; border-collapse: collapse;">
+                    <table class="sl-143">
                       <thead>
-                        <tr style="background: #f0f0f0;">
-                          <th style="padding: 5px; width: 200px; border: 1px solid #ddd; font-size: 12px;">Nome</th>
-                          <th style="padding: 5px; width: 390px; border: 1px solid #ddd; font-size: 12px;">Origem</th>
-                          <th style="padding: 5px; width: 150px; border: 1px solid #ddd; font-size: 12px;">Destino</th>
+                        <tr class="sl-206">
+                          <th class="sl-207">Nome</th>
+                          <th class="sl-208">Origem</th>
+                          <th class="sl-209">Destino</th>
                         </tr>
                       </thead>
                       <tbody id="hemo-sqx-1600">
-                        <tr><td colspan="3" style="text-align: center; padding: 8px; font-size: 12px; color: #999;">Sem registos</td></tr>
+                        <tr><td class="sl-200" colspan="3">Sem registos</td></tr>
                       </tbody>
                     </table>
                   </div>
                 </div>
               </div>
-              <div class="options-main-card" style="min-width: 250px; display: flex; flex-direction: column; align-items: center; height: 100%; margin-right: 0;">
-                <div style="font-size: 14px; font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #ddd; padding-bottom: 5px; width: 100%; text-align: center;">
+              <div class="options-main-card sl-210" style="display: flex;">
+                <div class="sl-203">
                   Terças / Quintas / Sábados
                 </div>
-                <div style="display: flex; flex-direction: column; gap: 15px; width: 100%; max-height: 500px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #bdc3c7 #f1f1f1;">
+                <div class="sl-204" style="display: flex;">
                   <div>
-                    <div style="font-size: 13px; font-weight: bold; background: #6b0000; color: #fff; padding: 5px 10px; border-radius: 4px 4px 0 0; text-align: center;">
+                    <div class="sl-211">
                       07:00 — 12:00
                     </div>
-                    <table style="width: 100%; border-collapse: collapse;">
+                    <table class="sl-143">
                       <thead>
-                        <tr style="background: #f0f0f0;">
-                          <th style="padding: 5px; width: 200px; border: 1px solid #ddd; font-size: 12px;">Nome</th>
-                          <th style="padding: 5px; width: 390px; border: 1px solid #ddd; font-size: 12px;">Origem</th>
-                          <th style="padding: 5px; width: 150px; border: 1px solid #ddd; font-size: 12px;">Destino</th>
+                        <tr class="sl-206">
+                          <th class="sl-207">Nome</th>
+                          <th class="sl-208">Origem</th>
+                          <th class="sl-209">Destino</th>
                         </tr>
                       </thead>
                       <tbody id="hemo-tqs-0700">
-                        <tr><td colspan="3" style="text-align: center; padding: 8px; font-size: 12px; color: #999;">Sem registos</td></tr>
+                        <tr><td class="sl-200" colspan="3">Sem registos</td></tr>
                       </tbody>
                     </table>
                   </div>
                   <div>
-                    <div style="font-size: 13px; font-weight: bold; background: #6b0000; color: #fff; padding: 5px 10px; border-radius: 4px 4px 0 0; text-align: center;">
+                    <div class="sl-211">
                       11:00 — 17:00
                     </div>
-                    <table style="width: 100%; border-collapse: collapse;">
+                    <table class="sl-143">
                       <thead>
-                        <tr style="background: #f0f0f0;">
-                          <th style="padding: 5px; width: 200px; border: 1px solid #ddd; font-size: 12px;">Nome</th>
-                          <th style="padding: 5px; width: 390px; border: 1px solid #ddd; font-size: 12px;">Origem</th>
-                          <th style="padding: 5px; width: 150px; border: 1px solid #ddd; font-size: 12px;">Destino</th>
+                        <tr class="sl-206">
+                          <th class="sl-207">Nome</th>
+                          <th class="sl-208">Origem</th>
+                          <th class="sl-209">Destino</th>
                         </tr>
                       </thead>
                       <tbody id="hemo-tqs-1100">
-                        <tr><td colspan="3" style="text-align: center; padding: 8px; font-size: 12px; color: #999;">Sem registos</td></tr>
+                        <tr><td class="sl-200" colspan="3">Sem registos</td></tr>
                       </tbody>
                     </table>
                   </div>
                   <div>
-                    <div style="font-size: 13px; font-weight: bold; background: #6b0000; color: #fff; padding: 5px 10px; border-radius: 4px 4px 0 0; text-align: center;">
+                    <div class="sl-211">
                       16:00 — 23:00
                     </div>
-                    <table style="width: 100%; border-collapse: collapse;">
+                    <table class="sl-143">
                       <thead>
-                        <tr style="background: #f0f0f0;">
-                          <th style="padding: 5px; width: 200px; border: 1px solid #ddd; font-size: 12px;">Nome</th>
-                          <th style="padding: 5px; width: 390px; border: 1px solid #ddd; font-size: 12px;">Origem</th>
-                          <th style="padding: 5px; width: 150px; border: 1px solid #ddd; font-size: 12px;">Destino</th>
+                        <tr class="sl-206">
+                          <th class="sl-207">Nome</th>
+                          <th class="sl-208">Origem</th>
+                          <th class="sl-209">Destino</th>
                         </tr>
                       </thead>
                       <tbody id="hemo-tqs-1600">
-                        <tr><td colspan="3" style="text-align: center; padding: 8px; font-size: 12px; color: #999;">Sem registos</td></tr>                        
+                        <tr><td class="sl-200" colspan="3">Sem registos</td></tr>                        
                       </tbody>
                     </table>
                   </div>
@@ -1615,11 +1896,13 @@
           </div>
         </div>
       </div>
+
 `,
       'page-material-request': `
+
       <div class="major-card">
-        <div class="major-card-header" style="display: flex; align-items: center; gap: 10px;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
+        <div class="major-card-header sl-184" style="display: flex;">
+          <svg class="sl-212" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
             <rect x="9" y="3" width="6" height="4" rx="1"/>
             <line x1="9" y1="12" x2="15" y2="12"/>
@@ -1628,62 +1911,60 @@
           REQUISIÇÃO DE EQUIPAMENTOS
         </div>
         <div class="major-card-body">
-          <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <label style="font-size: 13px; white-space: nowrap;">Nome do Requisitante:</label>
-            <input type="text" id="requesting_name" style="flex: 3; min-width: 350px;">
-            <label style="font-size: 13px; white-space: nowrap;">BI/CC/Passaporte:</label>
-            <input type="text" id="requesting_cc" style="flex: 2; min-width: 100px; max-width: 200px;">
-            <label style="font-size: 13px;">-</label>
+          <div class="major-field sl-213">
+            <label class="sl-214">Nome do Requisitante:</label>
+            <input class="sl-215" type="text" id="requesting_name">
+            <label class="sl-214">BI/CC/Passaporte:</label>
+            <input class="sl-216" type="text" id="requesting_cc">
+            <label class="sl-33">-</label>
             <input type="text" id="requesting_cc_secur" style="flex: 1; min-width: 50px; max-width: 70px;">
-            <label style="font-size: 13px; white-space: nowrap;">Contacto:</label>
+            <label class="sl-214">Contacto:</label>
             <input type="text" id="requesting_contact" style="flex: 1; min-width: 100px;">
           </div>
-          <div class="major-field" style="margin-top: 5px; flex-direction: row; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <label style="font-size: 13px; white-space: nowrap;">Equipamento(s) Requisitado(s):</label>
+          <div class="major-field sl-217">
+            <label class="sl-214">Equipamento(s) Requisitado(s):</label>
             <input type="text" id="requesting_equipment" style="flex: 3; min-width: 150px;">
           </div>
-          <div class="major-field" style="margin-top: 5px; flex-direction: row; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <label style="font-size: 13px; white-space: nowrap;">Data Entrega:</label>
+          <div class="major-field sl-217">
+            <label class="sl-214">Data Entrega:</label>
             <input type="date" id="delivery_date" style="flex: 1; min-width: 130px; max-width: 150px;">
-            <label style="font-size: 13px; white-space: nowrap;">Previsão de Devolução:</label>
+            <label class="sl-214">Previsão de Devolução:</label>
             <input type="date" id="return_estimate" style="flex: 1; min-width: 130px; max-width: 150px;">                       
           </div>
-          <div class="major-field" style="margin-top: 5px; flex-direction: row; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <label style="font-size: 13px; white-space: nowrap;">Autorizado Por:</label>
+          <div class="major-field sl-217">
+            <label class="sl-214">Autorizado Por:</label>
             <input type="text" id="autoryzed_by" style="flex: 1; min-width: 130px; max-width: 250px;">
-            <label style="font-size: 13px; white-space: nowrap;">OPTEL:</label>
+            <label class="sl-214">OPTEL:</label>
             <input type="text" id="optel" style="flex: 1; min-width: 130px; max-width: 250px;">                       
           </div>
-          <div class="major-field" style="margin-top: 5px; flex-direction: row; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <label style="font-size: 13px; white-space: nowrap;">Data Devolução:</label>
+          <div class="major-field sl-217">
+            <label class="sl-214">Data Devolução:</label>
             <input type="date" id="return_date" style="flex: 1; min-width: 130px; max-width: 150px;">
-            <label style="font-size: 13px; white-space: nowrap;">Estado:</label>
+            <label class="sl-214">Estado:</label>
             <input type="text" id="return_status" style="flex: 1; min-width: 100px; max-width: 150px;">                      
           </div>
-          <div style="margin-top: 20px;">
+          <div class="sl-218">
             <div class="options-main-card">
-              <h3 style="font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: #444; margin: -12px -12px 15px -12px; padding: 5px 14px;
-                         background: linear-gradient(90deg, rgba(30,58,138,0.13), rgba(255,255,255,0.03)); border-left: 3px solid rgba(30,58,138,0.9); border-radius: 6px 6px 0 0;
-                         box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);">
+              <h3 class="sl-219">
                 LISTAGEM DE REQUISIÇÕES DE EQUIPAMENTOS
               </h3>
-              <div style="max-height: 500px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #bdc3c7 #f1f1f1;">
-                <table style="width: 100%; border-collapse: collapse;">
-                  <thead style="position: sticky; top: 0; z-index: 1;">
-                    <tr style="background: #1e3a8a; color: #fff;">
-                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Nome</th>
-                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">BI/CC</th>
-                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Contacto</th>
-                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Equipamento(s)</th>
-                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Entrega</th>
-                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Prev. Devolução</th>
-                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Autorizado Por</th>
-                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Estado</th>
-                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px; width: 80px;">Ações</th>
+              <div class="sl-195">
+                <table class="sl-143">
+                  <thead class="sl-196">
+                    <tr class="sl-197">
+                      <th class="sl-198">Nome</th>
+                      <th class="sl-198">BI/CC</th>
+                      <th class="sl-198">Contacto</th>
+                      <th class="sl-198">Equipamento(s)</th>
+                      <th class="sl-198">Entrega</th>
+                      <th class="sl-198">Prev. Devolução</th>
+                      <th class="sl-198">Autorizado Por</th>
+                      <th class="sl-198">Estado</th>
+                      <th class="sl-220">Ações</th>
                     </tr>
                   </thead>
                   <tbody id="equipment-request-tbody">
-                    <tr><td colspan="9" style="text-align:center;padding:8px;font-size:12px;color:#999;">Sem registos</td></tr>
+                    <tr><td class="sl-221" colspan="9">Sem registos</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -1691,17 +1972,19 @@
           </div>
         </div>
         <div class="major-card-footer">
-          <div id="equipment-request-options" style="justify-content: flex-end; gap: 10px;">
+          <div class="sl-222" id="equipment-request-options">
             <button id="equipment-request-save" class="btn btn-add">💾 GRAVAR</button>
             <button id="equipment-request-emit" class="btn btn-danger" disabled>📄 EMITIR</button>
           </div>
         </div>
       </div>
+
 `,
       'page-fleet-cards': `
+
       <div class="major-card">
-        <div class="major-card-header" style="display: flex; align-items: center; gap: 10px;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
+        <div class="major-card-header sl-184" style="display: flex;">
+          <svg class="sl-212" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M3 22V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/>
             <path d="M3 22h12"/>
             <path d="M15 8h2a2 2 0 0 1 2 2v6a1 1 0 0 0 2 0v-7l-2-3"/>
@@ -1710,60 +1993,60 @@
           CARTÕES FROTA
         </div>
         <div class="major-card-body">
-          <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px;">
-            <label style="font-size: 13px;">Veículo:</label>
+          <div class="major-field sl-32">
+            <label class="sl-33">Veículo:</label>
             <input type="text" id="veíc_card_name" style="width: 150px;">
-            <label style="font-size: 13px;">Matricula:</label>
+            <label class="sl-33">Matricula:</label>
             <input type="text" id="veíc_card_register" style="width: 150px;">
-            <label style="font-size: 13px;">Código Cartão:</label>
+            <label class="sl-33">Código Cartão:</label>
             <input type="text" id="veíc_card_code" style="width: 150px;">
-            <label style="font-size: 13px;">Telemóvel:</label>
+            <label class="sl-33">Telemóvel:</label>
             <input type="text" id="veíc_card_contact" style="width: 150px;">
           </div>
-          <div style="margin-top: 20px;">
+          <div class="sl-218">
             <div class="options-main-card">
-              <h3 style="font-size: 13px; font-weight: 6000; letter-spacing: 0.04em; color: #444; margin: -12px -12px 15px -12px; padding: 5px 14px;
-                         background: linear-gradient(90deg, rgba(30,58,138,0.13), rgba(255,255,255,0.03)); border-left: 3px solid rgba(30,58,138,0.9); border-radius: 6px 6px 0 0;
-                         box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);">
+              <h3 class="sl-223">
                 LISTAGEM DE CARTÕES FROTA
               </h3>
-              <div style="max-height: 500px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #bdc3c7 #f1f1f1;">
-                <table style="width: 100%; border-collapse: collapse;">
-                  <thead style="position: sticky; top: 0; z-index: 1;">
-                    <tr style="background: #1e3a8a; color: #fff;">
-                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Veículo</th>
-                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Matrícula</th>
-                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Código Cartão</th>
-                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Contacto</th>
-                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Estado</th>
-                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px; width: 120px;">Ações</th>
+              <div class="sl-195">
+                <table class="sl-143">
+                  <thead class="sl-196">
+                    <tr class="sl-197">
+                      <th class="sl-198">Veículo</th>
+                      <th class="sl-198">Matrícula</th>
+                      <th class="sl-198">Código Cartão</th>
+                      <th class="sl-198">Contacto</th>
+                      <th class="sl-198">Estado</th>
+                      <th class="sl-224">Ações</th>
                     </tr>
                   </thead>
                   <tbody id="fleet-cards-tbody">
-                    <tr><td colspan="5" style="text-align: center; padding: 8px; font-size: 12px; color: #999;">Sem registos</td></tr>
+                    <tr><td class="sl-200" colspan="5">Sem registos</td></tr>
                   </tbody>
                 </table>
               </div>
             </div>
           </div>
-          <div style="margin-top: 10px; display: flex; gap: 20px; font-size: 14px; font-weight: 600; color: #444;">
-            <span>Total de Veículos: <span id="fleet-total" style="color: #1e3a8a;">0</span></span>
-            <span>Operacionais: <span id="fleet-operacional" style="color: #16a34a;">0</span></span>
-            <span>Inoperacionais: <span id="fleet-inoperacional" style="color: #dc2626;">0</span></span>
+          <div class="sl-225" style="display: flex;">
+            <span>Total de Veículos: <span class="sl-226" id="fleet-total">0</span></span>
+            <span>Operacionais: <span class="sl-227" id="fleet-operacional">0</span></span>
+            <span>Inoperacionais: <span class="sl-228" id="fleet-inoperacional">0</span></span>
           </div>
         </div>
         <div class="major-card-footer">
-          <div id="card-fleet-options" style="justify-content: flex-end; gap: 10px;">
+          <div class="sl-222" id="card-fleet-options">
             <button id="card-fleet-save" class="btn btn-add">💾 GRAVAR</button>
             <button id="card-fleet-emit" class="btn btn-danger">📄 EMITIR</button>
           </div>
         </div>
       </div>
+
 `,
       'page-contact-list': `
+
       <div class="major-card">
-        <div class="major-card-header" style="display: flex; align-items: center; gap: 10px;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
+        <div class="major-card-header sl-184" style="display: flex;">
+          <svg class="sl-212" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
             <circle cx="9" cy="7" r="4"/>
             <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
@@ -1772,65 +2055,65 @@
           LISTA DE CONTACTOS
         </div>
         <div class="major-card-body">
-          <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px; margin-bottom: 15px;">
-            <label style="font-size: 13px;">Pesquisar:</label>
-            <div style="position: relative; display: flex; align-items: center;">
-              <input type="text" id="contact-list-search" style="width: 300px; padding-right: 30px;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" 
-                   style="position: absolute; right: 8px; color: #aaa; cursor: pointer; pointer-events: none;" title="Pesquisar">
+          <div class="major-field sl-64">
+            <label class="sl-33">Pesquisar:</label>
+            <div class="sl-229" style="display: flex;">
+              <input class="sl-230" type="text" id="contact-list-search">
+              <svg class="sl-231" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" 
+                   title="Pesquisar">
                 <circle cx="11" cy="11" r="8"></circle>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
               </svg>
             </div>
           </div>
           <div class="options-main-card">
-            <h3 style="font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: #444; margin: -12px -12px 15px -12px; padding: 5px 14px; 
-                       background: linear-gradient(90deg, rgba(30,58,138,0.13), rgba(255,255,255,0.03)); border-left: 3px solid rgba(30,58,138,0.9); border-radius: 6px 6px 0 0;
-                       box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);">
+            <h3 class="sl-219">
               CONTACTOS INTERNOS
             </h3>
-            <div style="max-height: 500px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #bdc3c7 #f1f1f1;">
-              <table style="width: 100%; border-collapse: collapse;">
-                <thead style="position: sticky; top: 0; z-index: 1;">
-                  <tr style="background: #1e3a8a; color: #fff;">
-                    <th style="padding: 6px; border: 1px solid #ddd; font-size: 13px;">Nº Int.</th>
-                    <th style="padding: 6px; border: 1px solid #ddd; font-size: 13px;">Patente</th>
-                    <th style="padding: 6px; border: 1px solid #ddd; font-size: 13px;">Nome Completo</th>
-                    <th style="padding: 6px; border: 1px solid #ddd; font-size: 13px;">Telefone</th>
-                    <th style="padding: 6px; border: 1px solid #ddd; font-size: 13px;">Telemóvel</th>
-                    <th style="padding: 6px; border: 1px solid #ddd; font-size: 13px;">Email</th>
-                    <th colspan="2" style="padding: 6px; border: 1px solid #ddd; font-size: 13px; width: 80px;">Ações</th>
+            <div class="sl-195">
+              <table class="sl-143">
+                <thead class="sl-196">
+                  <tr class="sl-197">
+                    <th class="sl-232">Nº Int.</th>
+                    <th class="sl-232">Patente</th>
+                    <th class="sl-232">Nome Completo</th>
+                    <th class="sl-232">Telefone</th>
+                    <th class="sl-232">Telemóvel</th>
+                    <th class="sl-232">Email</th>
+                    <th class="sl-233" colspan="2">Ações</th>
                   </tr>
                 </thead>
                 <tbody id="contact-list-tbody">
-                  <tr><td colspan="8" style="text-align:center;padding:8px;font-size:14px;color:#999;">Sem registos</td></tr>
+                  <tr><td class="sl-234" colspan="8">Sem registos</td></tr>
                 </tbody>
               </table>
             </div>
           </div>
-          <div style="margin-top: 10px; font-size: 13px; font-weight: 600; color: #444; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-            <span style="background: #1e3a8a; color: #fff; padding: 2px 8px; border-radius: 4px;">Total: <span id="contact-total">0</span></span>
-            <span style="color: #a70c0c; background: #ffebeb; padding: 2px 6px; border-radius: 4px; border: 1px solid #ccc;">Quad. Comando: <span id="contact-qcom">0</span></span>
-            <span style="color: #2c5282; background: #ebf8ff; padding: 2px 6px; border-radius: 4px; border: 1px solid #cbd5e1;">Quad. Ativo: <span id="contact-qativ">0</span></span>
-            <span style="color: #b45309; background: #fffbeb; padding: 2px 6px; border-radius: 4px; border: 1px solid #fef3c7;">Quad. Estagiários: <span id="contact-qest">0</span></span>
-            <span style="color: #15803d; background: #f0fdf4; padding: 2px 6px; border-radius: 4px; border: 1px solid #bbf7d0;">Quad. Espec./Aux.: <span id="contact-qea">0</span></span>
-            <span style="color: #6b21a8; background: #f3e8ff; padding: 2px 6px; border-radius: 4px; border: 1px solid #e9d5ff;">Quad. Reserva: <span id="contact-qres">0</span></span>
-            <span style="color: #4a5568; background: #edf2f7; padding: 2px 6px; border-radius: 4px; border: 1px solid #e2e8f0;">Quad. Honra: <span id="contact-qhr">0</span></span>
+          <div class="sl-235" style="display: flex;">
+            <span class="sl-236">Total: <span id="contact-total">0</span></span>
+            <span class="sl-237">Quad. Comando: <span id="contact-qcom">0</span></span>
+            <span class="sl-238">Quad. Ativo: <span id="contact-qativ">0</span></span>
+            <span class="sl-239">Quad. Estagiários: <span id="contact-qest">0</span></span>
+            <span class="sl-240">Quad. Espec./Aux.: <span id="contact-qea">0</span></span>
+            <span class="sl-241">Quad. Reserva: <span id="contact-qres">0</span></span>
+            <span class="sl-242">Quad. Honra: <span id="contact-qhr">0</span></span>
           </div>
         </div>
         <div class="major-card-footer">
-          <div style="display: flex; justify-content: flex-end; gap: 10px;">
+          <div class="sl-222" style="display: flex;">
             <button id="contact-list-selected-email" class="btn btn-add" disabled style="opacity:0.4; cursor:not-allowed;">✉️ Enviar para Selecionados (<span id="contact-selected-count">0</span>)</button>
             <button id="contact-list-global-email" class="btn btn-danger">✉️ Enviar para Todos</button>
             <button id="contact-list-emit" class="btn btn-success">🖨️ Emitir Listagem</button>
           </div>
         </div>
       </div>
+
 `,
       'page-attendance-list': `
+
       <div class="major-card">
-        <div class="major-card-header" style="display: flex; align-items: center; gap: 10px;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
+        <div class="major-card-header sl-184" style="display: flex;">
+          <svg class="sl-212" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
             <line x1="16" y1="2" x2="16" y2="6"/>
             <line x1="8" y1="2" x2="8" y2="6"/>
@@ -1842,87 +2125,85 @@
           LISTA DE COMPARÊNCIAS EM EVENTOS
         </div>
         <div class="major-card-body">
-          <div class="major-field" style="flex-direction: row; align-items: center; gap: 8px; margin-bottom: 15px; justify-content: space-between;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <label style="font-size: 13px;">Evento:</label>
+          <div class="major-field sl-243">
+            <div class="sl-244" style="display: flex;">
+              <label class="sl-33">Evento:</label>
               <input type="text" id="attendance-event-name" style="width: 300px;">
             </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <label style="font-size: 13px;">Eventos Recentes:</label>
+            <div class="sl-244" style="display: flex;">
+              <label class="sl-33">Eventos Recentes:</label>
               <select id="attendance-recent-events" style="width: 300px;">
                 <option></option>
               </select>
             </div>
           </div>
           <div class="options-main-card">
-            <h3 style="font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: #444; margin: -12px -12px 15px -12px; padding: 5px 14px; 
-                       background: linear-gradient(90deg, rgba(30,58,138,0.13), rgba(255,255,255,0.03)); border-left: 3px solid rgba(30,58,138,0.9); border-radius: 6px 6px 0 0;
-                       box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);">
+            <h3 class="sl-219">
               LISTAGEM
             </h3>
-            <div style="max-height: 500px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #bdc3c7 #f1f1f1;">
-              <table style="width: 100%; border-collapse: collapse;">
-                <thead style="position: sticky; top: 0; z-index: 1;">
-                  <tr style="background: #1e3a8a; color: #fff;">
-                    <th style="padding: 6px; border: 1px solid #ddd; font-size: 13px;">Nº Int.</th>
-                    <th style="padding: 6px; border: 1px solid #ddd; font-size: 13px;">Patente</th>
-                    <th style="padding: 6px; border: 1px solid #ddd; font-size: 13px;">Nome Completo</th>
-                    <th style="padding: 6px; border: 1px solid #ddd; font-size: 13px;">Telefone</th>
-                    <th style="padding: 6px; border: 1px solid #ddd; font-size: 13px;">Telemóvel</th>
-                    <th colspan="2" style="padding: 6px; border: 1px solid #ddd; font-size: 13px; width: 160px;">Comparência</th>                    
-                    <th style="padding: 6px; border: 1px solid #ddd; font-size: 13px; width: 500px;">Motivo de Falta</th>                   
+            <div class="sl-195">
+              <table class="sl-143">
+                <thead class="sl-196">
+                  <tr class="sl-197">
+                    <th class="sl-232">Nº Int.</th>
+                    <th class="sl-232">Patente</th>
+                    <th class="sl-232">Nome Completo</th>
+                    <th class="sl-232">Telefone</th>
+                    <th class="sl-232">Telemóvel</th>
+                    <th class="sl-245" colspan="2">Comparência</th>                    
+                    <th class="sl-246">Motivo de Falta</th>                   
                   </tr>
                 </thead>
                 <tbody id="attendance-list-tbody">
-                  <tr><td colspan="8" style="text-align:center;padding:8px;font-size:14px;color:#999;">Sem registos</td></tr>
+                  <tr><td class="sl-234" colspan="8">Sem registos</td></tr>
                 </tbody>
               </table>
             </div>
           </div>
-          <div style="margin-top: 10px; font-size: 13px; font-weight: 600; color: #444; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-            <span style="background: #1e3a8a; color: #fff; padding: 2px 8px; border-radius: 4px;">Total Contactados: <span id="contact-attendance-total">0</span></span>
-            <span style="color: #166534; background: #dcfce7; padding: 2px 6px; border-radius: 4px; border: 1px solid #bbf7d0;">Comparece: <span id="contact-attendance">0</span></span>
-            <span style="color: #991b1b; background: #fee2e2; padding: 2px 6px; border-radius: 4px; border: 1px solid #fecaca;">Não Comparece: <span id="contact-noattendance">0</span></span>
+          <div class="sl-235" style="display: flex;">
+            <span class="sl-236">Total Contactados: <span id="contact-attendance-total">0</span></span>
+            <span class="sl-247">Comparece: <span id="contact-attendance">0</span></span>
+            <span class="sl-248">Não Comparece: <span id="contact-noattendance">0</span></span>
           </div>
         </div>
         <div class="major-card-footer">
-          <div style="display: flex; justify-content: flex-end; gap: 10px;">
+          <div class="sl-222" style="display: flex;">
             <button id="attendance-list-save" class="btn btn-add">💾 Guardar</button>
             <button id="attendance-list-delete" class="btn btn-danger">🗑️ Eliminar</button>
             <button id="attendance-list-emit" class="btn btn-success">🖨️ Emitir Listagem</button>
           </div>
         </div>
       </div>
+
 `,
       'page-phonebook': `
+
       <div class="major-card">
-        <div class="major-card-header" style="display: flex; align-items: center; gap: 10px;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
+        <div class="major-card-header sl-184" style="display: flex;">
+          <svg class="sl-212" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.38 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.82a16 16 0 0 0 6.29 6.29l1.88-1.88a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
           </svg>
           AGENDA TELEFÓNICA
         </div>
         <div class="major-card-body">
-          <div style="display: flex; justify-content: flex-start; margin-bottom: 15px;">
+          <div class="sl-249" style="display: flex;">
             <button id="phonebook-add" class="btn btn-add">➕ ADICIONAR</button>
           </div>
           <div id="phonebook-form-container" class="options-main-card" style="display: none; margin-bottom: 15px;">
-            <h3 style="font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: #444; margin: -12px -12px 15px -12px; padding: 5px 14px;
-                       background: linear-gradient(90deg, rgba(30,58,138,0.13), rgba(255,255,255,0.03)); border-left: 3px solid rgba(30,58,138,0.9); border-radius: 6px 6px 0 0;
-                       box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);">
+            <h3 class="sl-219">
               DADOS DO CONTACTO / ENTIDADE
             </h3>
-            <div class="major-field" style="display: flex; flex-direction: row; align-items: center; gap: 8px;">
-              <label style="font-size: 13px;">Nome / Designação:</label>
-              <input type="text" id="phonebook-name" style="width: 400px;">
-              <label style="font-size: 13px;">Tipo:</label>
+            <div class="major-field sl-32" style="display: flex;">
+              <label class="sl-33">Nome / Designação:</label>
+              <input class="sl-167" type="text" id="phonebook-name">
+              <label class="sl-33">Tipo:</label>
               <select id="phonebook-type" style="width: 130px; padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 13px;">
                 <option value="">Selecionar...</option>
                 <option value="Pessoa">Pessoa</option>
                 <option value="Entidade">Entidade</option>
                 <option value="Serviço">Serviço</option>
               </select>
-              <label style="font-size: 13px;">Categoria:</label>
+              <label class="sl-33">Categoria:</label>
               <select id="phonebook-category" style="width: 160px; padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 13px;">
                 <option value="">Selecionar...</option>
                 <option value="Bombeiros">Bombeiros</option>
@@ -1933,98 +2214,98 @@
                 <option value="Hospital">Hospital</option>
                 <option value="Outros">Outros</option>
               </select>
-              <label style="font-size: 13px;">Subcategoria:</label>
-              <input type="text" id="phonebook-subcategory" style="width: 150px;">
+              <label class="sl-33">Subcategoria:</label>
+              <input class="sl-38" type="text" id="phonebook-subcategory">
             </div>
-            <div class="major-field" style="display: flex; flex-direction: row; align-items: center; gap: 8px; margin-top: 5px;">
-              <label style="font-size: 13px;">Telefone:</label>
-              <input type="text" id="phonebook-phone" style="width: 130px;">
-              <label style="font-size: 13px;">Telemóvel:</label>
-              <input type="text" id="phonebook-mobile" style="width: 130px;">
-              <label style="font-size: 13px;">Email:</label>
-              <input type="text" id="phonebook-email" style="width: 300px;">
-              <label style="font-size: 13px;">Disponibilidade:</label>
+            <div class="major-field sl-188" style="display: flex;">
+              <label class="sl-33">Telefone:</label>
+              <input class="sl-46" type="text" id="phonebook-phone">
+              <label class="sl-33">Telemóvel:</label>
+              <input class="sl-46" type="text" id="phonebook-mobile">
+              <label class="sl-33">Email:</label>
+              <input class="sl-120" type="text" id="phonebook-email">
+              <label class="sl-33">Disponibilidade:</label>
               <select id="phonebook-availability" style="width: 150px; padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 13px;">
                 <option value="">Selecionar...</option>
                 <option value="24h">24 Horas</option>
                 <option value="Laboral">Horário Laboral</option>
                 <option value="Outro">Outro</option>
               </select>
-              <label style="font-size: 13px; display: flex; align-items: center; gap: 4px;">
-                <input type="checkbox" id="phonebook-favorite" style="width: 18px; height: 18px; accent-color: #f59e0b; margin: 0; cursor: pointer !important; outline: none !important; box-shadow: none !important;">
+              <label class="sl-250" style="display: flex;">
+                <input class="sl-251" type="checkbox" id="phonebook-favorite">
                 ⭐ Favorito
               </label>
             </div>
-            <div class="major-field" style="display: flex; flex-direction: row; align-items: center; gap: 8px; margin-top: 5px;">
-              <label style="font-size: 13px;">Morada:</label>
-              <input type="text" id="phonebook-address" style="width: 400px;">
-              <label style="font-size: 13px;">Localidade:</label>
-              <input type="text" id="phonebook-locality" style="width: 250px;">
-              <label style="font-size: 13px;">Cód. Postal:</label>
-              <input type="text" id="phonebook-zipcode" style="width: 100px;" placeholder="0000-000">
-              <label style="font-size: 13px;">Notas:</label>
+            <div class="major-field sl-188" style="display: flex;">
+              <label class="sl-33">Morada:</label>
+              <input class="sl-167" type="text" id="phonebook-address">
+              <label class="sl-33">Localidade:</label>
+              <input class="sl-44" type="text" id="phonebook-locality">
+              <label class="sl-33">Cód. Postal:</label>
+              <input class="sl-26" type="text" id="phonebook-zipcode" placeholder="0000-000">
+              <label class="sl-33">Notas:</label>
               <input type="text" id="phonebook-notes" style="width: 350px;">
             </div>
-            <div style="display: flex; justify-content: flex-end; margin-top: 15px;">
+            <div class="sl-252" style="display: flex;">
               <button id="phonebook-save" class="btn btn-success">💾 GRAVAR</button>
             </div>
           </div>
-          <div style="margin-top: 0px;">
+          <div class="sl-253">
             <div class="options-main-card">
-              <h3 style="font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: #444; margin: -12px -12px 15px -12px; padding: 5px 14px;
-                         background: linear-gradient(90deg, rgba(30,58,138,0.13), rgba(255,255,255,0.03)); border-left: 3px solid rgba(30,58,138,0.9); border-radius: 6px 6px 0 0;
-                         box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);">
+              <h3 class="sl-219">
                 LISTAGEM DE ENTIDADES
               </h3>
-              <div class="major-field" style="display: flex; flex-direction: row; align-items: center; gap: 8px; margin-bottom: 15px;">
-                <label style="font-size: 13px;">Pesquisar:</label>
-                <div style="position: relative; display: flex; align-items: center;">
-                  <input type="text" id="phonebook-search" style="width: 300px; padding-right: 30px;" placeholder="Nome, categoria, telefone...">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="position: absolute; right: 8px; color: #aaa; cursor: pointer; pointer-events: none;" title="Pesquisar">
+              <div class="major-field sl-64" style="display: flex;">
+                <label class="sl-33">Pesquisar:</label>
+                <div class="sl-229" style="display: flex;">
+                  <input class="sl-230" type="text" id="phonebook-search" placeholder="Nome, categoria, telefone...">
+                  <svg class="sl-231" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" title="Pesquisar">
                     <circle cx="11" cy="11" r="8"></circle>
                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                   </svg>
                 </div>
               </div>
-              <div style="max-height: 500px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #bdc3c7 #f1f1f1;">
-                <table style="width: 100%; border-collapse: collapse;">
-                  <thead style="position: sticky; top: 0; z-index: 1;">
-                    <tr style="background: #1e3a8a; color: #fff;">
-                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Fav.</th>
-                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Nome / Designação</th>
-                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Tipo</th>
-                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Categoria</th>
-                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Telefone</th>
-                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Telemóvel</th>
-                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Email</th>
-                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">Disponibilidade</th>
-                      <th style="padding: 6px; border: 1px solid #ddd; font-size: 12px; width: 120px;">Ações</th>
+              <div class="sl-195">
+                <table class="sl-143">
+                  <thead class="sl-196">
+                    <tr class="sl-197">
+                      <th class="sl-198">Fav.</th>
+                      <th class="sl-198">Nome / Designação</th>
+                      <th class="sl-198">Tipo</th>
+                      <th class="sl-198">Categoria</th>
+                      <th class="sl-198">Telefone</th>
+                      <th class="sl-198">Telemóvel</th>
+                      <th class="sl-198">Email</th>
+                      <th class="sl-198">Disponibilidade</th>
+                      <th class="sl-224">Ações</th>
                     </tr>
                   </thead>
                   <tbody id="phonebook-tbody">
-                    <tr><td colspan="9" style="text-align: center; padding: 8px; font-size: 12px; color: #999;">Sem registos</td></tr>
+                    <tr><td class="sl-200" colspan="9">Sem registos</td></tr>
                   </tbody>
                 </table>
               </div>
             </div>
           </div>
-          <div style="margin-top: 10px; display: flex; gap: 20px; font-size: 14px; font-weight: 600; color: #444;">
-            <span>Total de Contactos: <span id="phonebook-total" style="color: #1e3a8a;">0</span></span>
-            <span>Favoritos: <span id="phonebook-favorites" style="color: #f59e0b;">0</span></span>
+          <div class="sl-225" style="display: flex;">
+            <span>Total de Contactos: <span class="sl-226" id="phonebook-total">0</span></span>
+            <span>Favoritos: <span class="sl-254" id="phonebook-favorites">0</span></span>
           </div>
         </div>
         <div class="major-card-footer">
-          <div style="display: flex; justify-content: flex-end; gap: 10px;">
+          <div class="sl-222" style="display: flex;">
             <button id="phonebook-delete" class="btn btn-danger" style="display: none;" disabled>🗑️ ELIMINAR</button>
             <button id="phonebook-emit" class="btn btn-danger">📄 EMITIR</button>
           </div>
         </div>
       </div>
+
 `,
       'page-alarm-console': `
+
       <div class="major-card">
-        <div class="major-card-header" style="display: flex; align-items: center; gap: 10px;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.9; vertical-align: middle;">
+        <div class="major-card-header sl-184" style="display: flex;">
+          <svg class="sl-212" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <circle cx="12" cy="12" r="10"/>
             <path d="M12 12L19 7.5"/>
             <circle cx="12" cy="12" r="2" fill="currentColor"/>
@@ -2033,55 +2314,55 @@
           CONSOLA DE ALARMES INTERNA
         </div>
         <div class="major-card-body">
-          <div class="grid-2fr" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-            <div class="options-main-card" id="cons-indiv" style="display: flex; flex-direction: column; align-items: center; padding: 15px; border: 1px solid rgba(255,255,255,0.05); border-radius: 12px;">
-              <h3 style="font-size: 15px; font-weight: 700; margin: 0 0 15px 0; color: #dc3545; letter-spacing: 1px;">CHAMADA INDIVIDUAL</h3>
-              <label style="margin-bottom: 12px; font-size: 13px; color: #888;">Selecione o Local de Destino:</label>
-              <div class="action-buttons" id="alarm-console-indiv" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;">
-                <button id="ca-indiv-pv"  class="btn btn-add" style="height: 38px; width: 120px; font-size: 11px;">Parque Viaturas</button>
-                <button id="ca-indiv-cc"  class="btn btn-add" style="height: 38px; width: 120px; font-size: 11px;">Contacto Central</button>
-                <button id="ca-indiv-sb"  class="btn btn-add" style="height: 38px; width: 120px; font-size: 11px;">Sala Bombeiro</button>
-                <button id="ca-indiv-gch" class="btn btn-add" style="height: 38px; width: 120px; font-size: 11px;">Gabinete Chefes</button>
-                <button id="ca-indiv-gcm" class="btn btn-add" style="height: 38px; width: 120px; font-size: 11px;">Gabinete Comando</button>
+          <div class="grid-2fr sl-255" style="display: grid;">
+            <div class="options-main-card sl-256" id="cons-indiv" style="display: flex;">
+              <h3 class="sl-257">CHAMADA INDIVIDUAL</h3>
+              <label class="sl-258">Selecione o Local de Destino:</label>
+              <div class="action-buttons sl-259" id="alarm-console-indiv" style="display: flex;">
+                <button id="ca-indiv-pv"  class="btn btn-add sl-260">Parque Viaturas</button>
+                <button id="ca-indiv-cc"  class="btn btn-add sl-260">Contacto Central</button>
+                <button id="ca-indiv-sb"  class="btn btn-add sl-260">Sala Bombeiro</button>
+                <button id="ca-indiv-gch" class="btn btn-add sl-260">Gabinete Chefes</button>
+                <button id="ca-indiv-gcm" class="btn btn-add sl-260">Gabinete Comando</button>
               </div>
-              <div class="major-field" style="display: flex; align-items: center; gap: 10px; width: 100%; margin-top: 25px;">
-                <label style="font-size: 13px; white-space: nowrap;">Elemento:</label>
+              <div class="major-field sl-261" style="display: flex;">
+                <label class="sl-214">Elemento:</label>
                 <select id="ca-indiv-catch" style="flex-grow: 1; height: 32px; background: #1b1e22; border: 1px solid #333; color: white; border-radius: 6px; padding: 0 10px;"></select>
               </div>
-              <button id="ca-call-indiv" class="btn btn-success" style="height: 42px; width: 100%; margin-top: 20px; font-weight: 700;">INICIAR CHAMADA</button>
+              <button id="ca-call-indiv" class="btn btn-success sl-262">INICIAR CHAMADA</button>
             </div>
-            <div class="options-main-card" id="cons-group" style="display: flex; flex-direction: column; align-items: center; padding: 15px; border: 1px solid rgba(255,255,255,0.05); border-radius: 12px;">
-              <h3 style="font-size: 15px; font-weight: 700; margin: 0 0 15px 0; color: #dc3545; letter-spacing: 1px;">CHAMADA DE GRUPO</h3>
-              <label style="margin-bottom: 12px; font-size: 13px; color: #888;">Selecione o Local de Destino:</label>
-              <div class="action-buttons" id="alarm-console-group" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;">
-                <button id="ca-glob-pv"  class="btn btn-add" style="height: 38px; width: 120px; font-size: 11px;">Parque Viaturas</button>
-                <button id="ca-glob-sb"  class="btn btn-add" style="height: 38px; width: 120px; font-size: 11px;">Sala Bombeiro</button>
-                <button id="ca-glob-sn"  class="btn btn-add" style="height: 38px; width: 120px; font-size: 11px;">Salão Nobre</button>
-                <button id="ca-glob-gch" class="btn btn-add" style="height: 38px; width: 120px; font-size: 11px;">Gabinete Chefes</button>
-                <button id="ca-glob-gcm" class="btn btn-add" style="height: 38px; width: 120px; font-size: 11px;">Gabinete Comando</button>
+            <div class="options-main-card sl-256" id="cons-group" style="display: flex;">
+              <h3 class="sl-257">CHAMADA DE GRUPO</h3>
+              <label class="sl-258">Selecione o Local de Destino:</label>
+              <div class="action-buttons sl-259" id="alarm-console-group" style="display: flex;">
+                <button id="ca-glob-pv"  class="btn btn-add sl-260">Parque Viaturas</button>
+                <button id="ca-glob-sb"  class="btn btn-add sl-260">Sala Bombeiro</button>
+                <button id="ca-glob-sn"  class="btn btn-add sl-260">Salão Nobre</button>
+                <button id="ca-glob-gch" class="btn btn-add sl-260">Gabinete Chefes</button>
+                <button id="ca-glob-gcm" class="btn btn-add sl-260">Gabinete Comando</button>
               </div>
-              <div class="major-field" style="display: flex; align-items: center; gap: 10px; width: 100%; margin-top: 25px;">
-                <label style="font-size: 13px; white-space: nowrap;">Grupo:</label>
-                <select id="ca-group-catch" style="flex-grow: 1; height: 32px; background: #1b1e22; border: 1px solid #333; color: white; border-radius: 6px; padding: 0 10px;">
+              <div class="major-field sl-261" style="display: flex;">
+                <label class="sl-214">Grupo:</label>
+                <select class="sl-263" id="ca-group-catch">
                   <option>&nbsp;</option>
                   <option>Elementos de Serviço</option>
                   <option>EIP</option>
                 </select>
               </div>
-              <button id="ca-call-group" class="btn btn-success" style="height: 42px; width: 100%; margin-top: 20px; font-weight: 700;">INICIAR CHAMADA</button>
+              <button id="ca-call-group" class="btn btn-success sl-262">INICIAR CHAMADA</button>
             </div>
           </div>
-          <div class="options-main-card" id="cons-internal" style="margin: 20px auto 0 auto; max-width: 500px; display: flex; flex-direction: column; align-items: center; padding: 15px; 
-                                                                   border-top: 2px solid #dc3545; background: rgba(220,53,69,0.03); border-radius: 12px;">
-            <h3 style="font-size: 15px; font-weight: 700; margin: 0 0 10px 0;">ALARMES INTERNOS</h3>
-            <div class="action-buttons" style="display: flex; gap: 15px; margin-top: 10px;">
-              <button id="ca-format" class="btn btn-add" style="height: 45px; width: 140px; background: #1b1e22; border: 1px solid #dc3545; color: white;">FORMATURA</button>
-              <button id="ca-alvor" class="btn btn-add" style="height: 45px; width: 140px; background: #1b1e22; border: 1px solid #dc3545; color: white;">ALVORADA</button>
+          <div class="options-main-card sl-264" id="cons-internal" style="display: flex;">
+            <h3 class="sl-265">ALARMES INTERNOS</h3>
+            <div class="action-buttons sl-266" style="display: flex;">
+              <button id="ca-format" class="btn btn-add sl-267">FORMATURA</button>
+              <button id="ca-alvor" class="btn btn-add sl-267">ALVORADA</button>
             </div>
           </div>
         </div>
-        <div class="major-card-footer" style="height: 20px;"></div>
+        <div class="major-card-footer sl-268"></div>
       </div>
+
 `
     };
     Object.entries(PAGES).forEach(([id, html]) => { const p = document.getElementById(id); if (p) p.innerHTML = html; });

@@ -1,4 +1,4 @@
-    /* =======================================================================
+ /* =======================================================================
    CENTRO DE DADOS
    - Este ficheiro cria a página toda (logo ao carregar): Corporação, Elementos,
      Veículos e Configuração de Emails. Em main.html só fica
@@ -1269,6 +1269,12 @@
           MOBILE_MODULES = await r.json();
         }
         let locked = new Set();
+        /* módulos desligados para toda a corporação (corporation_data.mobile_modules_off): ficam trancados e sem poder mexer */
+        let corpOff = new Set();
+        try {
+          const rc = await fetch(`${SUPABASE_URL}/rest/v1/corporation_data?select=mobile_modules_off&corp_oper_nr=eq.${sessionStorage.getItem("currentCorpOperNr")}&limit=1`, {headers: getSupabaseHeaders()});
+          if (rc.ok) corpOff = new Set(String((await rc.json())?.[0]?.mobile_modules_off || '').split(',').map(s => s.trim()).filter(Boolean));
+        } catch (e) { console.warn("Módulos da corporação indisponíveis:", e); }
         mobileAccessNint = null;
         if (nInt) {
           const corp = sessionStorage.getItem("currentCorpOperNr");
@@ -1283,17 +1289,35 @@
           return;
         }
         MOBILE_MODULES.forEach(m => {
-          const wrap = document.createElement("label");
-          wrap.style.cssText = "display:flex; align-items:center; gap:8px; margin:3px 0; cursor:pointer;";
+          /* mesma estrutura e medidas das caixas do Online (createCheckbox) */
+          const wrap = document.createElement("div");
+          wrap.className = "access-wrapper";
+          wrap.style.cssText = "margin-bottom: 5px; display: flex; align-items: center; gap: 8px;";
           const cb = document.createElement("input");
           cb.type = "checkbox";
           cb.className = "mobile-access-checkbox";
           cb.value = m.label;
           cb.checked = !locked.has(m.label);
-          cb.style.cssText = "width:18px; height:18px; cursor:pointer;";
+          cb.setAttribute("style", "width: 18px !important; height: 18px !important; cursor: pointer !important; outline: none !important; box-shadow: none !important; appearance: none; -webkit-appearance: checkbox;");
           const txt = document.createElement("span");
+          txt.className = "label-text";
           txt.textContent = m.display_name || m.label;
-          wrap.append(cb, txt);
+          txt.style.cssText = "font-size: 14px; color: #444; cursor: pointer;";
+          txt.addEventListener("click", () => { if (!cb.disabled) cb.click(); });
+          if (corpOff.has(m.label)) {
+            /* mantém o valor do elemento (para quando a corporação voltar a ter o módulo), mas não deixa mexer */
+            cb.disabled = true;
+            cb.style.cursor = "not-allowed";
+            wrap.style.cursor = "not-allowed";
+            wrap.style.opacity = "0.55";
+            wrap.title = "Módulo desligado para a corporação";
+            const tag = document.createElement("small");
+            tag.textContent = "🔒 desligado na corporação";
+            tag.style.cssText = "color:#c62828; font-size:11px;";
+            wrap.append(cb, txt, tag);
+          } else {
+            wrap.append(cb, txt);
+          }
           container.appendChild(wrap);
         });
         container.dataset.ready = '1';

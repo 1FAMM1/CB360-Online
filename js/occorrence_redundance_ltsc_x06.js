@@ -1107,7 +1107,7 @@
         incidentsForMap.forEach(inc => {
           if (inc.coord_x && inc.coord_y) {
             let lat = parseFloat(inc.coord_x);
-            let lng = parseFloat(inc.coord_y);
+            let lng = cb360FixLng(lat, parseFloat(inc.coord_y));
             const coordKey = `${lat.toFixed(5)}_${lng.toFixed(5)}`;
             if (seenCoords[coordKey]) {
               seenCoords[coordKey]++;
@@ -2716,7 +2716,7 @@
         return;
       }
       let lat = parseFloat(inccident?.coord_x);
-      let lng = parseFloat(inccident?.coord_y);
+      let lng = cb360FixLng(lat, parseFloat(inccident?.coord_y));
       if (isNaN(lat) || isNaN(lng)) {
         const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
         try {
@@ -2741,11 +2741,17 @@
       }, 275);  
       updateCoordinateDisplay();
     }
-    function parseCb360Coordinate(value) {
+    /* Portugal (continente, Açores e Madeira) fica todo a Oeste de Greenwich:
+       uma longitude escrita sem direção (sem "W"/"E" nem sinal "-") é tratada como Oeste. */
+    function cb360FixLng(lat, lng) {
+      return (lat >= 29 && lat <= 44 && lng > 0 && lng < 32) ? -lng : lng;
+    }
+    function parseCb360Coordinate(value, isLng = false) {
       if (!value) return NaN;
       const system = document.getElementById('goc-coord-system').value;
       if (system === 'Decimais') {
-        return parseFloat(value);
+        const n = parseFloat(value);
+        return (isLng && n > 0 && !/[EeLl]/.test(String(value))) ? -n : n;
       }
       const dirMatch = value.match(/[NSEWnsew]/);
       const dir = dirMatch ? dirMatch[0].toUpperCase() : null;
@@ -2760,13 +2766,13 @@
         const sec = parseFloat(nums[2]) || 0;
         decimal = deg + (min / 60) + (sec / 3600);
       }
-      if (dir === 'S' || dir === 'W') decimal = -decimal;
+      if (dir === 'S' || dir === 'W' || (isLng && !dir)) decimal = -decimal;
       return decimal;
     }
     function updateCb360Map() {
       if (!cb360LeafletMap || !cb360LeafletMarker) return;
       const lat = parseCb360Coordinate(document.getElementById('goc-coord-x').value);
-      const lng = parseCb360Coordinate(document.getElementById('goc-coord-y').value);
+      const lng = parseCb360Coordinate(document.getElementById('goc-coord-y').value, true);
       if (isNaN(lat) || isNaN(lng)) {
         console.warn('Coordenadas inválidas.');
         return;
@@ -5153,7 +5159,7 @@
           const baseLat = corpBase.lat;
           const baseLon = corpBase.lng;
           const occLat = parseFloat(inc.coord_x);
-          const occLon = parseFloat(inc.coord_y);
+          const occLon = cb360FixLng(occLat, parseFloat(inc.coord_y));
           const routeInfo = await getRoadRouteWithGeometry(baseLat, baseLon, occLat, occLon);
           if (routeInfo) {
             calculatedDistanceText = routeInfo.distanceText;
@@ -5204,7 +5210,7 @@
         }).addTo(window.cb360LocateMap);
         if (inc.coord_x && inc.coord_y) {
           let lat = parseFloat(inc.coord_x);
-          let lng = parseFloat(inc.coord_y);
+          let lng = cb360FixLng(lat, parseFloat(inc.coord_y));
           // Desenhar a rota no mapa se existir geometria disponível
           if (routeCoordinates && routeCoordinates.length > 0) {
             const latLngs = routeCoordinates.map(coord => [coord[1], coord[0]]);

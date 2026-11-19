@@ -63,7 +63,7 @@
       const btnEmitir = document.getElementById("btn-inem-emitir");
       if (!dateFrom && !dateTo && !codu) {
         if (tbody) tbody.innerHTML = "";
-        if (btnEmitir) btnEmitir.style.display = "none";
+        if (btnEmitir) btnEmitir.style.display = "none"; document.getElementById("btn-inem-indisp-report")?.style.setProperty("display", "none");
         if (btnEmitirXlsx) btnEmitirXlsx.style.display = "none";
         const totalsEl = document.getElementById("inem-totals");
         if (totalsEl) totalsEl.innerHTML = `<span>TOTAL: 0</span> &nbsp;|&nbsp; <span>ITeams: 0</span> &nbsp;|&nbsp; <span>Verbete: 0</span>`;
@@ -81,7 +81,7 @@
         const data = await supabaseFetch(query);
         if (!tbody) return;
         tbody.innerHTML = "";
-        if (btnEmitir) btnEmitir.style.display = "none";
+        if (btnEmitir) btnEmitir.style.display = "none"; document.getElementById("btn-inem-indisp-report")?.style.setProperty("display", "none");
         if (btnEmitirXlsx) btnEmitirXlsx.style.display = "none";
         if (!data?.length) return;
         const COLUMNS = ["nr_codu", "alerta", "vitima", "morada", "edit", "tas", "via", "actions", "pdfstatus"];
@@ -212,6 +212,15 @@
             btnEmitirXlsx.style.cursor = "not-allowed";
           }
         }
+        const btnIndisp = document.getElementById("btn-inem-indisp-report");
+        if (btnIndisp) {
+          btnIndisp.style.display = "";
+          if (isReadOnly) {
+            btnIndisp.disabled = true;
+            btnIndisp.style.opacity = "0.3";
+            btnIndisp.style.cursor = "not-allowed";
+          }
+        }
         if (btnEmitir) {
           btnEmitir.style.display = "";
           if (isReadOnly) {
@@ -265,6 +274,7 @@
         input.type = "date";
         input.id = id;
         Object.assign(input.style, {padding: "5px 8px", borderRadius: "4px", border: "1px solid #ccc", cursor: "pointer", fontSize: "13px"});
+        input.addEventListener("keydown", e => {if (e.key === "Enter") {e.preventDefault(); loadInemEntries();}});
         return input;
       }
       function makeCoduInput() {
@@ -279,7 +289,7 @@
             const tbody = document.querySelector("#inem-entries table tbody");
             if (tbody) tbody.innerHTML = "";
             const btnEmitir = document.getElementById("btn-inem-emitir");
-            if (btnEmitir) btnEmitir.style.display = "none";
+            if (btnEmitir) btnEmitir.style.display = "none"; document.getElementById("btn-inem-indisp-report")?.style.setProperty("display", "none");
             const btnEmitirXlsx = document.getElementById("btn-inem-emitir-xlsx");
             if (btnEmitirXlsx) btnEmitirXlsx.style.display = "none";
             const totalsEl = document.getElementById("inem-totals");
@@ -288,6 +298,7 @@
           }
           loadInemEntries();
         });
+        input.addEventListener("keydown", e => {if (e.key === "Enter") {e.preventDefault(); loadInemEntries();}});
         return input;
       }
       const coduGroup = document.createElement("div");
@@ -360,8 +371,9 @@
       btnIndisp.id = "btn-inem-indisp-report";
       btnIndisp.innerHTML = '<i class="fa-solid fa-truck-medical"></i> Relatório Indisponibilidades';
       Object.assign(btnIndisp.style, {background: "#9a1515", color: "#fff", border: "none", padding: "10px 18px", borderRadius: "6px", cursor: "pointer", fontWeight: "600", fontSize: "12px", transition: "0.2s"});
-      btnIndisp.addEventListener("mouseenter", () => btnIndisp.style.background = "#7b0000");
-      btnIndisp.addEventListener("mouseleave", () => btnIndisp.style.background = "#9a1515");
+      btnIndisp.style.display = "none";
+      btnIndisp.addEventListener("mouseenter", () => {if (!btnIndisp.disabled) btnIndisp.style.background = "#7b0000";});
+      btnIndisp.addEventListener("mouseleave", () => {if (!btnIndisp.disabled) btnIndisp.style.background = "#9a1515";});
       btnIndisp.addEventListener("click", () => openVehicleUnavailabilityMonthSelectModal());
       btnsRight.append(btnIndisp, btnEmitirXlsx, btnEmitir);
       footer.appendChild(btnsRight);

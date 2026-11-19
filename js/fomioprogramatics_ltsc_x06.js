@@ -365,6 +365,54 @@
         <div class="major-card-body"><div id="vslBoard"></div></div>
         <div class="major-card-footer"></div>
       </div>`);
+    /* popups deste módulo (antes no main.html): entram antes do #popup-maininfo, como estavam */
+    const addPopup = html => {
+      const t = document.createElement('template');
+      t.innerHTML = html.trim();
+      const ref = document.getElementById('popup-maininfo');
+      if (ref) ref.before(t.content); else document.body.appendChild(t.content);
+    };
+    addPopup(`
+    <div id="popup-analyze" class="popup-modal">
+      <div class="popup-content popup-analyze">
+        <div class="popup-header">
+          <div class="header-content" style="display: flex; align-items: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle;">
+              <circle cx="11" cy="11" r="8" stroke="#ffffff" stroke-width="2"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <h3 style="margin: 0; color: #ffffff; font-size: 13px; font-weight: 850; letter-spacing: 1px;">ANÁLISE DE ESCALA</h3>
+          </div>
+        </div>
+        <div class="popup-body" style="min-height: 100px; max-height: 400px; overflow-y: auto;">
+          <ul><li>Mensagem aqui</li></ul>
+        </div>
+        <div class="popup-footer">
+          <button class="popup-btn popup-danger-btn" onclick="closePopup('popup-analyze')">OK</button>
+        </div>
+      </div>
+    </div>
+    `);
+    addPopup(`
+    <div id="popup-analyze-decir" class="popup-modal">
+      <div class="popup-content popup-analyze" style="width: 800px; max-width: 90vw;">
+        <div class="popup-header">
+          <div class="header-content" style="display: flex; align-items: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle;">
+              <circle cx="11" cy="11" r="8" stroke="#ffffff" stroke-width="2"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <h3 style="margin: 0; color: #ffffff; font-size: 13px; font-weight: 850; letter-spacing: 1px;">ANÁLISE DE TURNOS DECIR</h3>
+          </div>
+        </div>
+        <div class="popup-body" style="min-height: 100px; max-height: 400px; overflow-y: auto;"></div>
+        <div class="popup-footer">
+          <button class="popup-btn" style="background-color: #28a745; margin-right: 8px;" onclick="requestDecirElements()">📋 SOLICITAR</button>
+          <button class="popup-btn popup-danger-btn" onclick="closePopup('popup-analyze-decir')">✕ FECHAR</button>
+        </div>
+      </div>
+    </div>
+    `);
     })();
     /* ------------------------- fim da construção ------------------------- */
     /* =======================================================================

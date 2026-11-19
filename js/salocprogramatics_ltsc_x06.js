@@ -2085,6 +2085,92 @@
 `
     };
     Object.entries(PAGES).forEach(([id, html]) => { const p = document.getElementById(id); if (p) p.innerHTML = html; });
+    /* popups deste módulo (antes no main.html): entram antes do #popup-maininfo, como estavam */
+    const addPopup = html => {
+      const t = document.createElement('template');
+      t.innerHTML = html.trim();
+      const ref = document.getElementById('popup-maininfo');
+      if (ref) ref.before(t.content); else document.body.appendChild(t.content);
+    };
+    addPopup(`
+    <div id="popup-service-type-modal" class="popup-modal popup-warning" tabindex="0">
+      <div class="popup-content" style="min-width: 450px;">
+        <div class="popup-header"><h3>⚠️ TIPO DE SERVIÇO</h3></div>
+        <div class="popup-body">
+          <ul style="list-style:none; padding:0; margin:0;">
+            <li style="list-style:none; margin-bottom: 8px;">
+              <label style="display:flex; align-items:center; gap:8px; cursor:pointer !important;">
+                <input type="radio" name="popup-service-type" value="Extra" style="cursor:pointer !important;"> Extra
+              </label>
+            </li>
+            <li style="list-style:none; margin-bottom: 8px;">
+              <label style="display:flex; align-items:center; gap:8px; cursor:pointer !important;">
+                <input type="radio" name="popup-service-type" value="Reforço" style="cursor:pointer !important;"> Reforço
+              </label>
+            </li>
+            <li style="list-style:none; margin-bottom: 8px; display:flex; align-items:center; gap:8px;">
+              <label style="display:flex; align-items:center; gap:8px; cursor:pointer !important; white-space:nowrap;">
+                <input type="radio" name="popup-service-type" value="Troca de Serviço" style="cursor:pointer !important;"> Troca de Serviço
+              </label>
+              <div id="service-swap-fields" style="display:none; align-items:center; gap:8px;">
+                <label style="white-space:nowrap; line-height:1; display:flex; align-items:center;">| Nº Int.</label>
+                <input type="text" id="service-swap-nint" style="width:50px; padding:4px 6px; border:1px solid #dee2e6; border-radius:4px; font-size:0.85em; text-align:center;">
+                <input type="text" id="service-swap-name" style="width:175px; padding:4px 6px; border:1px solid #dee2e6; border-radius:4px; font-size:0.85em;" readonly disabled>
+              </div>
+            </li>
+            <li style="list-style:none; display:flex; align-items:center; gap:8px;">
+              <label style="display:flex; align-items:center; gap:8px; cursor:pointer !important; white-space:nowrap;">
+                <input type="radio" name="popup-service-type" value="Outro" style="cursor:pointer !important;"> Outro
+              </label>
+              <div id="service-other-fields" style="display:none; align-items:center; gap:8px;">
+                <input type="text" id="service-other-text" style="width:250px; padding:4px 6px; border:1px solid #dee2e6; border-radius:4px; font-size:0.85em;">
+              </div>
+            </li>
+          </ul>
+        </div>
+        <div class="popup-footer" style="gap: 10px;">
+          <button id="popup-service-type-ok-btn" class="popup-btn" style="background-color: #FD7E14;">Confirmar</button>
+          <button id="popup-service-type-cancel-btn" class="popup-btn" style="background-color: #6C757D;">Cancelar</button>
+        </div>
+      </div>
+    </div>
+    `);
+    addPopup(`
+    <div id="popup-hemodialysis-type-modal" class="popup-modal popup-superdanger">
+      <div class="popup-content">
+        <div class="popup-header">
+          <div class="header-content" style="display: flex; align-items: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle;">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <h3 style="margin: 0; color: #ffffff; font-size: 13px; font-weight: 850; letter-spacing: 1px;">TIPO DE FORMULÁRIO</h3>
+          </div>
+        </div>
+        <div class="popup-body">
+          <ul style="list-style:none; padding:0; margin:0;">
+            <li style="list-style:none; margin-bottom: 12px; display:flex; justify-content:center; gap:30px;">
+              <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                <input type="radio" name="popup-hemos-type" value="SALOC" style="cursor:pointer !important;">
+                SALOC
+              </label>
+              <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                <input type="radio" name="popup-hemos-type" value="Veículos" style="cursor:pointer !important;">
+                Veículos
+              </label>
+              <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                <input type="radio" name="popup-hemos-type" value="Ambos" style="cursor:pointer !important;">
+                Ambos
+              </label>
+            </li>
+          </ul>
+        </div>
+        <div class="popup-footer" style="gap: 10px;">
+          <button id="popup-hemos-type-ok-btn" class="popup-btn">Confirmar</button>
+          <button id="popup-hemos-type-cancel-btn" class="popup-btn" style="background-color: #6C757D;">Cancelar</button>
+        </div>
+      </div>
+    </div>
+    `);
     })();
     /* ------------------------- fim da construção ------------------------- */
     /* ================================
@@ -2444,6 +2530,7 @@
         const map = {"page-ppia22":"ppia22","page-ppilinfer":"ppilinfer"};
         const prefix = map[btn.getAttribute("data-page")];
         if (prefix) resetModulePage(prefix);
+        if (btn.getAttribute("data-page") === "page-ppiaero") resetAeroPage();   /* Aeroporto: fecha as tabelas, como nos outros PPI */
       });
     });
     /* ─── ENSURE ABS CONTAINER ───────────────────────────────── */
@@ -2845,21 +2932,9 @@
       td.innerHTML = `${main||""}<span style="${A22_NODE_KM_STYLE}">(${km||""}</span>`; return td;
     }
     /* ─── A22 LOAD DATA ──────────────────────────────────────── */
-    // Carrega tudo em paralelo e mostra os blocos TODOS DE UMA VEZ no fim
+    // Carrega tudo em paralelo; as tabelas que já estão no ecrã são atualizadas no sítio (sem as apagar e voltar a criar)
     async function loadPPIA22All(gridId) {
-      const ids = ["ppia22-grid-references", "ppia22-grid-container", "ppia22-specials-container", "ppia22-abs-note"];
-      const els = ids.map(id => document.getElementById(id)).filter(Boolean);
-      els.forEach(el => { el.style.transition = "none"; el.style.opacity = "0"; });
-      try {
-        await Promise.all([loadPPIA22DataInfoGrid(gridId), loadPPIA22DataSpecials(gridId), loadPPIA22GridSeparated(gridId)]);
-      } finally {
-        requestAnimationFrame(() => {
-          document.querySelectorAll(ids.map(id => "#" + id).join(",")).forEach(el => {
-            el.style.transition = "opacity .15s ease";
-            el.style.opacity = "1";
-          });
-        });
-      }
+      await Promise.all([loadPPIA22DataInfoGrid(gridId), loadPPIA22DataSpecials(gridId), loadPPIA22GridSeparated(gridId)]);
     }
     async function loadPPIA22DataFromButton(buttonId) {
       await loadPPIA22All(buttonId);
@@ -2906,12 +2981,11 @@
     async function loadPPIA22DataFromSection(firstNode, secondNode, sentido) {
       const gridContainer = document.getElementById("ppia22-grid-container");
       const absContainer = ensureAbsContainer("ppia22-abs-note", "ppia22-grid-controls");
-      gridContainer.innerHTML = '';
-      absContainer.innerHTML = '';
       try {
         const data = await fetchFromSupabase("ppia22_data", `ppi_sence=eq.${sentido}`);
         const filtered = data.filter(ppi => ppi.ppi_first_node === firstNode && ppi.ppi_secound_node === secondNode);
         if (!filtered.length) {
+          gridContainer.innerHTML = ''; absContainer.innerHTML = '';
           showPopup('popup-danger', "Nenhuma grelha encontrada para este troço.");
           return;
         }
@@ -2929,14 +3003,13 @@
     async function loadPPIA22DataFromStructure(gridCode) {
       const gridContainer = document.getElementById("ppia22-grid-container");
       const absContainer = ensureAbsContainer("ppia22-abs-note", "ppia22-grid-controls");
-      gridContainer.innerHTML = '';
-      absContainer.innerHTML = '';
       const activeBtn = document.querySelector("#ppia22-grid-controls .btn.active");
       const sentido = activeBtn && activeBtn.id === "km-dir-O-E" ? "OESTE-ESTE" : "ESTE-OESTE";
       try {
         const data = await fetchFromSupabase("ppia22_data", `ppi_sence=eq.${sentido}`);
         const filtered = data.filter(ppi => String(ppi.grid_code || ppi.ppi_grid).trim().toLowerCase() === String(gridCode).trim().toLowerCase());
         if (!filtered.length) {
+          gridContainer.innerHTML = ''; absContainer.innerHTML = '';
           console.warn("Código procurado:", gridCode, "no sentido:", sentido);
           showPopup('popup-danger', `Nenhuma grelha encontrada para a referência ${gridCode} no sentido ${sentido}.`);
           return;
@@ -3090,6 +3163,11 @@
         rowButtons.appendChild(btn);
       });
       container.appendChild(rowButtons);
+    }
+    function resetAeroPage() {
+      document.querySelectorAll("#ppiaero-grid-controls button").forEach(b=>b.classList.remove("active"));
+      const grid=document.getElementById("ppiaero-grid-container"); if(grid) grid.innerHTML="";
+      ["ppiaero-grid-header","ppiaero-grid-info"].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display="none";});
     }
     function handleAeroButtonClick(event, btn, btnData) {
       event.preventDefault();
@@ -3306,21 +3384,9 @@
       "ABCDEFGHIJKLMNOP".split("").forEach(letter=>rowButtons.appendChild(createLinFerGridButtons(letter,specialButtons)));
       container.appendChild(rowButtons);
     }
-    // Carrega tudo em paralelo e mostra os blocos TODOS DE UMA VEZ no fim
+    // Carrega tudo em paralelo; as tabelas que já estão no ecrã são atualizadas no sítio (sem as apagar e voltar a criar)
     async function loadPPILinFerAll(gridId) {
-      const ids = ["ppilinfer-grid-references", "ppilinfer-specials-container", "ppilinfer-grid-container", "ppilinfer-abs-note"];
-      const els = ids.map(id => document.getElementById(id)).filter(Boolean);
-      els.forEach(el => { el.style.transition = "none"; el.style.opacity = "0"; });
-      try {
-        await Promise.all([loadPPILinFerDataInfoGrid(gridId), loadPPILinFerDataSpecials(gridId), loadPPILinFerGridSeparated(gridId)]);
-      } finally {
-        requestAnimationFrame(() => {
-          document.querySelectorAll(ids.map(id => "#" + id).join(",")).forEach(el => {
-            el.style.transition = "opacity .15s ease";
-            el.style.opacity = "1";
-          });
-        });
-      }
+      await Promise.all([loadPPILinFerDataInfoGrid(gridId), loadPPILinFerDataSpecials(gridId), loadPPILinFerGridSeparated(gridId)]);
     }
     async function loadPPILinFerDataFromButton(buttonId) {
       await loadPPILinFerAll(buttonId);
@@ -3370,15 +3436,13 @@
       const specialsContainer = document.getElementById("ppilinfer-specials-container");
       if (!gridContainer) return;
       try {
-        ["ppilinfer-grid-container", "ppilinfer-grid-references", "ppilinfer-specials-container", "ppilinfer-abs-note"]
-          .forEach(id => {const el = document.getElementById(id); if (el) el.innerHTML = "";});
-        gridContainer.innerHTML = '<div style="text-align:center; padding:20px;">A carregar dados do troço...</div>';
         const data = await fetchFromSupabase("ppilinfer_data", `ppi_sence=eq.${encodeURIComponent(sectionStr)}`);
         if (!data || data.length === 0) {
+          ["ppilinfer-grid-references", "ppilinfer-specials-container", "ppilinfer-abs-note"]
+            .forEach(id => {const el = document.getElementById(id); if (el) el.innerHTML = "";});
           gridContainer.innerHTML = '<div class="alert alert-warning">Nenhum dado encontrado para o troço selecionado.</div>';
           return;
         }
-        gridContainer.innerHTML = '';
         for (const ppi of data) {
           const gridId = ppi.grid_id;
           await loadPPILinFerAll(gridId);

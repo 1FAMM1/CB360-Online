@@ -1,7 +1,7 @@
     /* =======================================
     RECURSOS HUMANOS
     - As páginas do RH (boas-vindas, escalas mensais, horas extras, registos individuais,
-      férias, subsídio de turno, processamento salarial, EIPs e dashboard) são criadas aqui,
+      férias, subsídio de turno, processamento salarial, EIPs, dashboard e cadastro) são criadas aqui,
       logo ao carregar; o main.html só tem os <div class="page"> vazios.
       O conteúdo de cada cartão continua a ser preenchido pelas funções abaixo, como antes.
     ======================================= */
@@ -35,7 +35,8 @@
       shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="m9 12 2 2 4-4"></path>',
       euro: '<path d="M19 7a9 9 0 1 0 0 10"></path><path d="M7 10h12"></path><path d="M7 14h12"></path>',
       team: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>',
-      grid: '<rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect>'
+      grid: '<rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect>',
+      userPlus: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" y1="8" x2="19" y2="14"></line><line x1="16" y1="11" x2="22" y2="11"></line>'
     };
     const ico = name => `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="rh-ico">${ICONS[name]}</svg>`;
     const fill = (id, html) => { const p = document.getElementById(id); if (p) p.innerHTML = html; return p; };
@@ -100,7 +101,8 @@
      ['eligibility-subs-shift', 'eligibility-subs-shift-card', 'shield', 'ELEGIBILIDADE PARA SUBSÍDIO DE TURNO'],
      ['salary-processing-map', 'salary-processing-card', 'euro', 'PROCESSAMENTO SALARIAL'],
      ['annual-eip-shift-map', 'annual-eip-shift-card', 'team', 'ENQUADRAMENTO ANUAL EIP\'s'],
-     ['dashboard-rh', 'dashboard-rh-card', 'grid', 'PAINEL DE GESTÃO RH']
+     ['dashboard-rh', 'dashboard-rh-card', 'grid', 'PAINEL DE GESTÃO RH'],
+     ['employee-registration', 'employee-registration-card', 'userPlus', 'CADASTRO DE FUNCIONÁRIOS']
     ].forEach(([page, cardId, icon, title]) => fill(page, card(cardId, icon, title)));
 
     /* Pedidos de férias dos profissionais */

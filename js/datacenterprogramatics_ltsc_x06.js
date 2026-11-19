@@ -1,11 +1,333 @@
+    /* =======================================================================
+   CENTRO DE DADOS
+   - Este ficheiro cria a página toda (logo ao carregar): Corporação, Elementos,
+     Veículos e Configuração de Emails. Em main.html só fica
+     <div id="page-data" class="page"></div>.
+   - Estilos num só bloco (#dc-css); tudo dentro da função.
+   - Globais (o mainloader chama-as depois do login): generateAccessCheckboxes, loadElementsTable.
+   ======================================================================= */
+(function () {
+  const PAGE = document.getElementById('page-data');
+  if (!PAGE) return;
+
+  /* ----------------------------- estilos ----------------------------- */
+  (function css() {
+    if (document.getElementById('dc-css')) return;
+    const st = document.createElement('style');
+    st.id = 'dc-css';
+    st.textContent = `
+      #page-data .major-card-header svg {opacity: .9;}
+      #page-data .dc-r {display: flex; align-items: center; gap: 10px; margin-bottom: 3px;}
+      #page-data .dc-r > label.f0 {flex-shrink: 0;}
+      #page-data input.c {text-align: center;}
+      /* corporação */
+      #page-data .dc-corp {display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap;}
+      #page-data .dc-logo {flex: 0 0 auto; border: 2px solid #ccc; border-radius: 8px; background-color: transparent; padding: 10px; width: 250px;}
+      #page-data .dc-logo .card-header {text-align: center; font-weight: bold; font-size: 16px; margin-bottom: 10px;}
+      #page-data .dc-logo .card-content {text-align: center;}
+      #page-data .dc-logo .img {margin: 10px 0;}
+      #page-data .data-logo {width: 140px; height: 140px; border-radius: 5px; object-fit: cover; border: 1px solid #ccc; background: #888;}
+      #page-data .dc-logo .btns {display: flex; gap: 5px; margin-top: 5px;}
+      #page-data .dc-logo .btns.first {margin-top: 15px;}
+      #page-data .dc-logo .btns .btn {flex: 1;}
+      #page-data #corp-logo-input, #page-data #win_photo_input {display: none;}
+      #page-data .dc-corp-form {flex: 1; max-width: 100%; height: 275px; overflow-y: auto; overflow-x: hidden; padding: 20px;}
+      #page-data .dc-corp-form .dc-r {margin-bottom: 4px;}
+      #page-data .dc-corp-form .dc-r.last {margin-bottom: -5px;}
+      #page-data .dc-corp-form label {font-size: 13px;}
+      #page-data .dc-corp-form input, #page-data .dc-corp-form select {padding: 4px; border: 1px solid #ccc; border-radius: 3px;}
+      #page-data .dc-corp-save {text-align: right; margin-top: 10px;}
+      #page-data .dc-corp-save .btn {padding: 6px 20px; cursor: pointer;}
+      /* elementos */
+      #page-data .dc-search {position: relative; display: flex; align-items: center;}
+      #page-data #win_search_element {width: 300px; padding-right: 30px;}
+      #page-data .dc-search svg {position: absolute; right: 8px; pointer-events: none; color: #aaa;}
+      #page-data #elements-list, #page-data #elements-edit {padding: 0px; margin-top: 20px;}
+      #page-data #elements-list .table-container {height: 500px; margin: 0;}
+      #page-data #elements-container thead tr, #page-data #veícs-container thead tr {height: 40px;}
+      #page-data .dc-edit-title {padding: 16px 20px; border-bottom: 1px solid #eee;}
+      #page-data .dc-edit-title h3 {margin: 0; font-size: 16px;}
+      #page-data #elements-tabs {display: flex; border-bottom: 1px solid #ddd;}
+      #page-data .dc-tabs-body {padding: 20px;}
+      #page-data .dc-main {display: flex; gap: 20px; align-items: flex-start;}
+      #page-data .dc-photo {display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;}
+      #page-data #win_photo_preview {width: 130px; height: 130px; border: 2px dashed #ccc; border-radius: 6px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #fafafa;}
+      #page-data .dc-photo .btn {width: 130px; padding: 6px 0;}
+      #page-data .dc-photo .btn.rm {background: #eee; color: #555;}
+      #page-data .dc-col {flex: 1; display: flex; flex-direction: column; gap: 0;}
+      #page-data .dc-cols {display: flex; gap: 25px; align-items: flex-start; margin-bottom: 25px;}
+      #page-data .dc-boxes {display: flex; gap: 15px; flex-wrap: wrap;}
+      #page-data .dc-box {flex: 1; min-width: 240px; border: 1px solid #ddd; border-radius: 6px; padding: 12px 15px;}
+      #page-data .dc-box > div:first-child {font-size: 14px; font-weight: bold; color: #a70c0c; margin-bottom: 10px;}
+      #page-data .dc-box input {flex: 1; min-width: 0;}
+      #page-data .dc-cred-title {margin-bottom: 15px; font-size: 15px; color: #777;}
+      #page-data .dc-cred-title.mob {margin: 15px 0;}
+      #page-data .dc-acc {display: flex; gap: 60px; flex-wrap: wrap; align-items: flex-start;}
+      #page-data .dc-acc .dc-r {align-items: flex-start;}
+      #page-data .dc-acc .dc-r > label {margin-right: 20px; font-size: 14px; white-space: nowrap;}
+      #page-data .dc-acc .dc-r.ml50 {margin-left: 50px;}
+      #page-data .dc-save {padding: 15px 20px; border-top: 1px solid #eee; text-align: right;}
+      /* veículos */
+      #page-data #panel-veícs .major-card-body {padding: 10px;}
+      #page-data .dc-veic {display: flex; align-items: center; flex-wrap: wrap; margin-bottom: 3px; gap: 5px;}
+      #page-data .dc-veic label {font-size: 12px; color: #555;}
+      #page-data .dc-veic input, #page-data .dc-veic select {padding: 5px; border: 1px solid #ccc; border-radius: 4px;}
+      #page-data .dc-veic input[type=date] {padding: 4px;}
+      #page-data .dc-veic select {background: white;}
+      #page-data #panel-veícs .table-container {height: 403px; margin-top: 5px;}
+      /* emails */
+      #page-data .dc-mail-note {color: red; font-weight: bold; font-style: italic; font-size: 12px;}
+      #page-data .emails-config-container {max-height: 450px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px; background: #fafafa; padding: 10px;}
+      #page-data .emails-config-container .major-card {margin-bottom: 10px;}
+      #page-data .emails-config-container .major-card.mb0 {margin-bottom: 0;}
+      #page-data .dc-mail {display: flex; align-items: center; margin-bottom: 3px; white-space: nowrap; gap: 5px;}
+      #page-data .dc-mail input {width: 100%;}
+    `;
+    document.head.appendChild(st);
+  })();
+
+  /* ----------------------------- peças ----------------------------- */
+  const ICON_USER = '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>';
+  const ICON_MAIL = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 7l9 6 9-6"></path></svg>';
+  const opts = list => list.map(o => `<option>${o}</option>`).join('');
+  const yesNo = '<option value="true">Sim</option><option value="false">Não</option>';
+  const R = (inner, cls = '') => `<div class="major-field"><div class="dc-r${cls ? ' ' + cls : ''}">${inner}</div></div>`;
+  const L = (text, w, f0 = true) => `<label${f0 ? ' class="f0"' : ''}${w ? ` style="width:${w}px"` : ''}>${text}</label>`;
+  const I = (id, style = 'flex:1', extra = '') => `<input type="text" id="${id}" style="${style}"${extra}>`;
+  const D = (id, style = 'width:150px') => `<input type="date" id="${id}" style="${style}">`;
+  const S = (id, style, inner) => `<select id="${id}" style="${style}">${inner}</select>`;
+  /* linha simples "rótulo + caixa que estica" (Outros Dados) */
+  const line = (lw, label, id, type = 'text') => R(L(label, lw) + (type === 'date' ? D(id, 'flex:1; min-width:0') : I(id, lw === 85 ? 'flex:1; min-width:0' : 'flex:1')));
+  const box = (title, rows) => `<div class="dc-box"><div>${title}</div>${rows.map(([l, id, t]) => line(85, l, id, t)).join('')}</div>`;
+  const num = (n, ph) => ` maxlength="${n}" inputmode="numeric" data-num placeholder="${ph}"`;
+  const tel = ph => ` maxlength="16" inputmode="tel" data-tel placeholder="${ph}"`;
+
+  /* emails: ordem, ids e categorias como antes */
+  const MAIL_CARDS = [
+    {key: 'plandir_emit', ids: ['to', 'cc', 'bcc'].map(f => `config_plandir_emit_${f}`), title: 'CONFIGURAÇÃO DE EMAILS PARA EMISSÃO DE PLANEAMENTOS DIÁRIOS.'},
+    {key: 'pointjustif', title: 'CONFIGURAÇÃO DE EMAILS PARA JUSTIFICAÇÃO DE PICAGENS DE PONTO.'},
+    {key: 'solfardam', title: 'CONFIGURAÇÃO DE EMAILS PARA SOLICITAÇÃO DE FARDAMENTO.'},
+    {key: 'sitop_veiculos', title: 'CONFIGURAÇÃO DE EMAILS PARA SITUAÇÃO OPERACIONAL DE VEÍCULOS (CREPC).'},
+    {key: 'moa', title: 'CONFIGURAÇÃO DE EMAILS PARA MEDIDAS OPERACIONAIS DE ANTECIPAÇÃO (CREPC).'},
+    {key: 'bulk', title: 'CONFIGURAÇÃO DE EMAILS PARA ENVIOS EM MASSA (LISTA DE CONTACTOS).'},
+    {key: 'attendance', title: 'CONFIGURAÇÃO DE EMAILS PARA LISTA DE COMPARÊNCIAS.'},
+    {key: 'volunt_verify', title: 'CONFIGURAÇÃO DE EMAILS PARA SERVIÇOS DE VOLUNTARIADO - ENVIO PARA VALIDAÇÃO.'},
+    {key: 'volunt_valid', title: 'CONFIGURAÇÃO DE EMAILS PARA SERVIÇOS DE VOLUNTARIADO - SERVIÇOS VALIDADOS.', mb0: 1},
+    {key: 'volunt_invalid', title: 'CONFIGURAÇÃO DE EMAILS PARA SERVIÇOS DE VOLUNTARIADO - SERVIÇOS COM INCONSISTÊNCIAS.'},
+    {key: 'decir_disp', title: 'CONFIGURAÇÃO DE EMAILS PARA DISPONIBILIDADES DECIR (MENSAGEM WHATSAPP).', mb0: 1, labels: [['Remeter para:', 110], ['Com conhecimento de:', 160]]},
+    {key: 'rh_disp', title: 'CONFIGURAÇÃO DE EMAILS PARA DISPONIBILIDADES DAS ESCALAS INEM / EIP / OPTEL (MENSAGEM WHATSAPP).', mb0: 1, labels: [['Remeter para:', 110], ['Com conhecimento de:', 160]]}
+  ];
+  const MAIL_LABELS = [['Emails Para:', 80], ['Emails com Conhecimento:', 190], ['Emails com Conhecimento (BCC):', 240]];
+  const mailCard = c => {
+    const labels = c.labels || MAIL_LABELS;
+    const ids = c.ids || labels.map((_, i) => `config_${c.key}_mail_${['to', 'cc', 'bcc'][i]}`);
+    return `<div class="major-card${c.mb0 ? ' mb0' : ''}">
+      <div class="major-card-header header-black">${ICON_MAIL}<span>${c.title}</span></div>
+      <div class="major-card-body">${labels.map(([l, w], i) => `<div class="major-field"><div class="dc-mail"><label style="width:${w}px">${l}</label>
+        <input type="text" id="${ids[i]}" placeholder="exemplo@mail.com,exemplo2@mail.com"></div></div>`).join('')}</div>
+      <div class="major-card-footer"><div class="action-buttons" id="config_${c.key}_mail"><button class="btn btn-add" id="config_${c.key}_mail_save">ADICIONAR</button></div></div>
+    </div>`;
+  };
+
+  /* ----------------------------- página ----------------------------- */
+  PAGE.innerHTML = `
+    <div class="major-card major-last-card">
+      <div class="major-card-header">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6"></rect>
+          <line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line>
+          <line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="15" x2="23" y2="15"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="15" x2="4" y2="15"></line></svg>
+        <span>CENTRO DE DADOS</span>
+      </div>
+      <div class="options-panel-container">
+        <div class="panel-sidebar">
+          <button class="panel-sidebar-menu-button active" data-panel="assoc">Corporação</button>
+          <button class="panel-sidebar-menu-button" data-panel="elems">Elementos</button>
+          <button class="panel-sidebar-menu-button" data-panel="veícs">Veículos</button>
+          <button class="panel-sidebar-menu-button" data-panel="mails">Emails Config.</button>
+        </div>
+        <div class="panel-content">
+
+          <div id="panel-assoc" class="panel-card active">
+            <h3>DADOS DA CORPORAÇÃO</h3>
+            <p>Dados Gerais do Corpo de Bombeiros.</p>
+            <div class="dc-corp">
+              <div class="transparent-card dc-logo">
+                <div class="card-header">LOGO</div>
+                <div class="card-content">
+                  <div class="img"><img alt="logo" class="data-logo"></div>
+                  <input type="file" id="corp-logo-input" accept="image/*">
+                  <div class="btns first"><button class="btn btn-success" data-act="logo-pick">ALTERAR</button><button class="btn btn-analyze" data-act="logo-reset">REPOR</button></div>
+                  <div class="btns"><button class="btn btn-danger" data-act="logo-remove">REMOVER</button><button class="btn btn-add" data-act="logo-save">GUARDAR</button></div>
+                </div>
+              </div>
+              <div class="options-main-card dc-corp-form">
+                ${R(L('Nome da Associação:', 0, false) + I('assoc-name'))}
+                ${R(L('Nome do CB:', 0, false) + I('cb-name'))}
+                ${R(L('Morada do CB:', 0, false) + I('assoc-address'))}
+                ${R(L('Localidade:', 0, false) + I('assoc-localidade', 'width:280px') + L('Código-Postal:', 0, false) + I('assoc-cp1', 'width:65px', ' class="c"' + num(4, '0000'))
+                    + '<span>-</span>' + I('assoc-cp2', 'width:50px', ' class="c"' + num(3, '000')))}
+                ${R(L('Distrito:', 0, false) + S('district_select_corp', 'width:175px', '') + L('Concelho:', 0, false) + S('council_select_corp', 'width:250px', '')
+                    + L('Freguesia:', 0, false) + S('parish_select_corp', 'flex:1', ''))}
+                ${R(L('NIF:', 0, false) + I('assoc-nif', 'width:150px', ' class="c"' + num(9, '999999999')) + L('Núm. Operacional:', 0, false)
+                    + I('assoc-operational-nr', 'width:100px', ' class="c"' + num(4, '0000')) + L('Área de Avisos IPMA:', 0, false) + S('assoc-ipma-area', 'flex:1', ''))}
+                ${R(L('Telemovél:', 0, false) + I('assoc-mobile-phone', 'width:150px', ' class="c"' + tel('+351 900 000 000')) + L('Telefone:', 0, false)
+                    + I('assoc-landline-phone', 'width:150px', ' class="c"' + tel('+351 289 000 000')) + L('E-Mail:', 0, false) + I('assoc-email'), 'last')}
+              </div>
+            </div>
+            <div class="dc-corp-save"><button class="btn btn-success" id="dc-save-corp" data-act="corp-save">ATUALIZAR</button></div>
+          </div>
+
+          <div id="panel-elems" class="panel-card">
+            <h3>LISTAGEM DE ELEMENTOS</h3>
+            <p>Adição, Remoção e Edição de elementos.</p>
+            ${R(`<label for="win_search_element">Procurar</label>
+                 <div class="dc-search"><input type="text" id="win_search_element" placeholder="Procurar Elemento">
+                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+                 <div style="flex:1"></div><button class="btn btn-add" data-act="elem-add">ADICIONAR</button>`)}
+            <div class="options-main-card" id="elements-list">
+              <div class="table-container"><table id="elements-container"><thead><tr>
+                <th>Nº Interno</th><th>Nº Mecanográfico</th><th>Patente/Função</th><th>Nome Completo</th><th>Estado</th><th>Ações</th>
+              </tr></thead><tbody></tbody></table></div>
+            </div>
+            <div class="options-main-card" id="elements-edit" style="display:none">
+              <div class="dc-edit-title"><h3>Adicionar elemento</h3></div>
+              <div id="elements-tabs">
+                <button class="tab-btn active" data-tab="mainData">Dados Pessoais</button><button class="tab-btn" data-tab="otherData">Outros Dados</button>
+                <button class="tab-btn" data-tab="appCredencials">Credenciais APP's</button><button class="tab-btn" data-tab="mainAccess">Acessos APP's</button>
+              </div>
+              <div class="dc-tabs-body">
+                <div class="tab-content" id="mainData">
+                  <div class="dc-main">
+                    <div class="dc-photo">
+                      <div id="win_photo_preview">${ICON_USER}</div>
+                      <input type="file" id="win_photo_input" accept="image/*">
+                      <button type="button" class="btn btn-add" data-act="photo-pick">📷 Escolher</button>
+                      <button type="button" class="btn rm" data-act="photo-remove">🗑️ Remover</button>
+                    </div>
+                    <div class="dc-col">
+                      ${R(L('Estado:', 75) + S('win_state', 'width:100px', opts(['&nbsp;', 'Ativo', 'Inativo'])) + '<label style="display:none">Desde:</label>' + D('win_state_from', 'width:150px; display:none')
+                          + L('Tipo:', 30) + S('win_type', 'width:150px', opts(['&nbsp;', 'Administrador', 'Sub-Administrador', 'Utilizador']))
+                          + L('OFOPE:', 40) + S('win_ofope', 'width:150px', opts(['&nbsp;', 'Sim', 'Não'])) + L('Vínculo:', 55) + S('link_type', 'width:150px', opts(['&nbsp;', 'Voluntário', 'Profissional'])))}
+                      ${R(L('Nº Interno:', 75) + I('win_n_int', 'width:60px', ' class="c"') + L('Nº Mecanográfico:', 125) + I('win_n_file', 'width:120px', ' class="c"'))}
+                      ${R(L('Patente:', 75) + S('win_patent', 'width:150px', '') + I('win_patent_abv', 'width:75px', ' class="c" readonly tabindex="-1"')
+                          + L('Secção:', 50) + S('win_section', 'width:110px', opts(['&nbsp;', '1ª Secção', '2ª Secção', '3ª Secção', '4ª Secção']))
+                          + L('Quadro:', 60) + S('win_quad', 'width:110px', opts(['&nbsp;', 'QCOM', 'QATIV', 'QEST', 'QEA', 'QHR', 'QRES'])))}
+                      <div class="major-field"><div class="dc-r" style="display:none">${L('Nome Abreviado:', 100)}${I('win_abv_name')}</div></div>
+                      ${R(L('Nome:', 75) + I('win_full_name'))}
+                      ${R(L('M. Ligeiros:', 75) + S('win_ML', 'width:75px', yesNo) + '<label>M. Pesados:</label>' + S('win_MP', 'width:75px', yesNo) + '<label>TAS:</label>' + S('win_TAS', 'width:75px', yesNo))}
+                    </div>
+                  </div>
+                </div>
+                <div class="tab-content" id="otherData" style="display:none">
+                  <div class="dc-cols">
+                    <div class="dc-col">
+                      ${line(100, 'Morada:', 'win_adress')}${line(100, 'Localidade:', 'win_localitie')}
+                      ${R(L('Código Postal:', 100) + I('win_cpcode01', 'width:70px', ' class="c"') + '<label>-</label>' + I('win_cpcode02', 'width:50px', ' class="c"'))}
+                      ${R(L('D. Nascimento:', 100) + D('win_birth_date') + I('win_age', 'width:100px', ' disabled'))}
+                      ${line(100, 'Naturalidade:', 'win_birthplace')}${line(100, 'NIF:', 'win_nif')}${line(100, 'NIB:', 'win_nib')}
+                    </div>
+                    <div class="dc-col">
+                      ${line(100, 'Nome Pai:', 'win_father_name')}${line(100, 'Nome Mãe:', 'win_mother_name')}${line(100, 'Profissão:', 'win_profession')}${line(100, 'Habilitações:', 'win_education')}
+                      ${R(L('Estado Cívil:', 100) + S('win_civil_state', 'flex:1', opts(['&nbsp;', 'Solteiro', 'Casado', 'União de Facto', 'Divorciado', 'Viúvo'])))}
+                      ${R(L('Grupo Sang.:', 100) + S('win_blood_type', 'width:80px', opts(['&nbsp;', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'])) + '<label>Nº Utente:</label>' + I('win_health_nr'))}
+                      ${R(L('Nº TAT:', 100, false) + I('win_tat_nr', 'flex:1; width:110px') + L('Nº TAS:', 50, false) + I('win_tas_nr', 'flex:1; width:110px'))}
+                    </div>
+                    <div class="dc-col">
+                      ${[['NISS:', 'win_niss'], ['Telefone:', 'win_phone'], ['Telemóvel 1:', 'win_mobile'], ['Telemóvel 2:', 'win_mobile2'], ['T. Emprego:', 'win_work_phone'], ['Email:', 'win_mail'],
+                         ['C. Emerg.:', 'win_emergency_contact']].map(([l, id]) => line(90, l, id)).join('')}
+                    </div>
+                  </div>
+                  <div class="dc-boxes">
+                    ${box('BI / CC', [['Número:', 'win_bicc_number'], ['Arquivo:', 'win_bicc_archive'], ['D. Emissão:', 'win_bicc_issue', 'date'], ['Validade:', 'win_bicc_validate', 'date']])}
+                    ${box('Carta Condução', [['Tipo:', 'win_license_type'], ['Número:', 'win_license_number'], ['Entidade:', 'win_license_entity'], ['D. Emissão:', 'win_license_issue', 'date'],
+                                             ['Validade:', 'win_license_validate', 'date']])}
+                    ${box('Serviço Militar', [['Número:', 'win_military_number'], ['Unidade:', 'win_military_unit'], ['Ano Entrada:', 'win_military_year'], ['Graduação:', 'win_military_rank']])}
+                    ${box('Aeroporto', [['Nº Cartão:', 'win_airport_card'], ['Validade:', 'win_airport_card_validate', 'date'], ['Nº C.C.:', 'win_airport_cc'], ['C.C. Validade:', 'win_airport_cc_validate', 'date']])}
+                  </div>
+                </div>
+                <div class="tab-content" id="appCredencials" style="display:none">
+                  <div class="dc-cred-title">Acessos CB360 Online</div>
+                  ${R('<label>Username:</label>' + I('win_user_name_main') + '<label>Password:</label><input type="password" id="win_password_main" style="flex:1">')}
+                  ${R('<label>Válido até:</label>' + D('win_validate_main', 'width:175px'))}
+                  <div class="dc-cred-title mob">Acessos CB360 Mobile</div>
+                  ${R('<label>Username:</label>' + I('win_user_name_mobile') + '<label>Password:</label><input type="password" id="win_password_mobile" style="flex:1">')}
+                  ${R('<label>Válido até:</label>' + D('win_validate_mobile', 'width:175px'))}
+                </div>
+                <div class="tab-content" id="mainAccess" style="display:none">
+                  <div class="dc-acc">
+                    ${R('<label>💻 Online:</label><div class="checkbox-group" id="access-container"></div>')}
+                    ${R('<label>📱 Mobile:</label><div class="checkbox-group" id="mobile-access-container"></div>', 'ml50')}
+                  </div>
+                </div>
+              </div>
+              <div class="options-main-footer"><div class="dc-save"><button class="btn btn-success" id="elems-saveBtn">💾 Guardar</button></div></div>
+            </div>
+          </div>
+
+          <div id="panel-veícs" class="panel-card">
+            <h3>LISTAGEM DE VEÍCULOS</h3>
+            <p>Adição, Remoção e Edição de Veículos.</p>
+            <div class="major-card">
+              <div class="major-card-header header-black">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"></path>
+                  <circle cx="7" cy="17" r="2"></circle><path d="M9 17h6"></path><circle cx="17" cy="17" r="2"></circle></svg>
+                <span>NOVO VEÍCULO</span>
+              </div>
+              <div class="major-card-body">
+                <div class="major-field">
+                  <div class="dc-veic"><label>NOMENCLATURA:</label><input type="text" id="new-veíc-name" style="width:150px">
+                    <label>MATRÍCULA:</label><input type="text" id="new-veíc-registration" class="c" style="width:110px" placeholder="00-AA-00">
+                    <label>MARCA:</label><input type="text" id="new-veíc-brand" style="width:230px"><label>MODELO:</label><input type="text" id="new-veíc-model" style="width:230px"></div>
+                  <div class="dc-veic"><label>DATA COMPRA:</label><input type="date" id="new-veíc-buy-date" style="width:150px">
+                    <label>DATA MATRÍCULA:</label><input type="date" id="new-veíc-registration-date" style="width:150px">
+                    <label>ESTADO OPERACIONAL:</label><select id="new-veíc-state" style="width:250px">${opts(['&nbsp;', 'Disponível no Quartel', 'Em Serviço', 'Inoperacional'])}</select></div>
+                </div>
+              </div>
+              <div class="major-card-footer"><div class="action-buttons" id="new-veíc-save"><button class="btn btn-add" id="new-veíc-save-update">ADICIONAR</button></div></div>
+            </div>
+            <div class="table-container"><table id="veícs-container"><thead><tr><th>Veículo</th><th>Matrícula</th><th>Estado Operacional</th><th>Ações</th></tr></thead><tbody></tbody></table></div>
+          </div>
+
+          <div id="panel-mails" class="panel-card">
+            <h3>CONFIGURAÇÃO DE EMAILS</h3>
+            <p>Configuração de emails para envio das Situações Operacionais de Veículos e Medidas Operacionais de Antecipação.</p>
+            <p class="dc-mail-note">Os emails inseridsos, deverão ser separados apenas por uma virgula como indicado em exemplo na textbox.</p>
+            <div class="emails-config-container">${MAIL_CARDS.map(mailCard).join('')}</div>
+          </div>
+
+        </div>
+      </div>
+      <div class="major-card-footer"></div>
+    </div>`;
+
+  /* ----------------------------- botões (ex-onclick) e filtros ----------------------------- */
+  const ACTS = {
+    'logo-pick': () => document.getElementById('corp-logo-input').click(), 'logo-reset': () => resetCorpLogo(), 'logo-remove': () => removeCorpLogo(), 'logo-save': () => saveCorpLogo(),
+    'corp-save': () => saveCorporationData(), 'elem-add': () => toggleElementsView(),
+    'photo-pick': () => document.getElementById('win_photo_input').click(), 'photo-remove': () => removePhoto()
+  };
+  PAGE.addEventListener('click', e => {
+    const menu = e.target.closest('.panel-sidebar-menu-button[data-panel]');
+    if (menu) return showPanelCardDataCenter(menu.dataset.panel);
+    const b = e.target.closest('[data-act]');
+    if (b && ACTS[b.dataset.act]) ACTS[b.dataset.act](b);
+  });
+  PAGE.addEventListener('input', e => {
+    const t = e.target;
+    if ('num' in t.dataset) t.value = t.value.replace(/[^0-9]/g, '');
+    else if ('tel' in t.dataset) t.value = t.value.replace(/[^0-9+\s]/g, '');
+  });
+  document.getElementById('win_photo_input').addEventListener('change', e => handlePhotoUpload(e));
+
+/* ================= (a partir daqui, a lógica de antes) ================= */
     /* =======================================
     DATA CENTER
     ======================================= */
     function showPanelCardDataCenter(panelId) {
-      document.querySelectorAll(".panel-card").forEach(el => el.classList.remove("active"));
+      PAGE.querySelectorAll(".panel-card").forEach(el => el.classList.remove("active"));
       document.getElementById(`panel-${panelId}`).classList.add("active");
-      document.querySelectorAll(".panel-sidebar-menu-button").forEach(btn => btn.classList.remove("active"));
-      const activeBtn = document.querySelector(`.panel-sidebar-menu-button[onclick="showPanelCardDataCenter('${panelId}')"]`);
+      PAGE.querySelectorAll(".panel-sidebar-menu-button").forEach(btn => btn.classList.remove("active"));
+      const activeBtn = PAGE.querySelector(`.panel-sidebar-menu-button[data-panel="${panelId}"]`);
       if (activeBtn) activeBtn.classList.add("active");
       if (panelId === "assoc") {
         loadCorporationData();
@@ -18,6 +340,9 @@
       }
       if (panelId === "veícs") {
         loadVehiclesTable();
+      }
+      if (panelId === "mails") {
+        loadMailsConfig();
       }
       const list = document.getElementById("elements-list");
       const edit = document.getElementById("elements-edit");
@@ -157,9 +482,7 @@
     document.addEventListener("DOMContentLoaded", loadCorporationLogo);
     /* ================= SAVE CORPORATION ================= */
     async function saveCorporationData() {
-      const saveButton = document.querySelector(
-        'button[onclick="saveCorporationData()"]'
-      );
+      const saveButton = document.getElementById("dc-save-corp");
       const originalText = saveButton?.textContent || "ATUALIZAR";
       try {
         if (saveButton) {
@@ -1542,9 +1865,7 @@
     document.getElementById("config_sitop_veiculos_mail_save")?.addEventListener("click", saveSitopVeiculosMails);
     document.getElementById("config_moa_mail_save")?.addEventListener("click", saveMoaMails);
     document.getElementById("config_ro_crepc_mail_save")?.addEventListener("click", saveRoCrepcMails);
-    document.addEventListener("click", (e) => {
-      const btn = e.target.closest("button[onclick*=\"showPanelCardDataCenter('mails')\"]");
-      if (btn) {
-        loadMailsConfig();
-      }
-    });
+    /* ---------- globais (o mainloader chama-as depois do login) ---------- */
+    window.generateAccessCheckboxes = generateAccessCheckboxes;
+    window.loadElementsTable = loadElementsTable;
+})();

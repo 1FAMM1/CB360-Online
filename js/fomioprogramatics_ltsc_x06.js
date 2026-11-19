@@ -3402,8 +3402,9 @@
       const st = document.createElement('style');
       st.id = 'vsx-css';
       st.textContent = `
-      .vsx-reg {display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; align-items: start;}
-      .vsx-col {display: flex; flex-direction: column; gap: 14px; min-width: 0;}
+      .vsx-reg {display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 14px 16px; align-items: stretch;}
+      .vsx-col {display: contents;}
+      .vsx-col > .vsx-box:first-child {grid-column: 1 / -1;}
       .vsx-box {background: #fff; border: 1px solid #e9ecef; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.05); padding: 14px 16px 16px;}
       .vsx-box-h {display: flex; align-items: center; gap: 9px; font-size: 13px; font-weight: 700; color: #2c3e50; margin-bottom: 12px; text-transform: uppercase; letter-spacing: .4px;}
       .vsx-box-h i {color: #c62828;}

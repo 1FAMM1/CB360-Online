@@ -36,14 +36,14 @@
         if (occurrences.length === 0) {
           setActiveOccMessage(tbody, `
         <tr>
-          <td colspan="8" style="padding: 20px; text-align: center; color: #6C757D;">
+          <td colspan="9" style="padding: 20px; text-align: center; color: #6C757D;">
             Não existem ocorrências ativas neste momento.
           </td>
         </tr>`, 'vazia');
           return;
         }
         /* nada mudou desde a última leitura: não mexe na tabela */
-        const sig = JSON.stringify(occurrences.map(o => [o.id, o.start_date, o.occorrence, o.local, o.localitie, o.vehicles, o.status]));
+        const sig = JSON.stringify(occurrences.map(o => [o.id, o.start_date, o.occorrence, o.local, o.localitie, o.vehicles, o.status, o.nr_oc]));
         if (sig === lastActiveOccSig) return;
         const frag = document.createDocumentFragment();
         occurrences.forEach(occ => {
@@ -65,9 +65,13 @@
             <td style="text-align: center; border: 1px solid #DEE2E6;">${occEsc(occ.status)}</td>
             <td style="text-align: center; border: 1px solid #DEE2E6;">
             <button class="btn btn-danger posit-btn" style="font-size: 10px;">POSIT</button>
+            </td>
+            <td style="text-align: center; border: 1px solid #DEE2E6;">
+            <button class="btn occ-upd-btn" style="font-size: 10px; background: #2c3e50; color: #fff;" title="Atualizar (Nr. OC)">ATUALIZAR</button>
             </td>        
           `;
           tr.querySelector('.posit-btn').addEventListener('click', () => openPositPopup(occ));
+          tr.querySelector('.occ-upd-btn').addEventListener('click', () => openOccUpdateModal(occ, formattedDate, vehiclesCount));
           frag.appendChild(tr);
         });
         tbody.replaceChildren(frag);
@@ -76,19 +80,115 @@
         console.error("Erro ao carregar ocorrências ativas:", error);
         setActiveOccMessage(tbody, `
           <tr>
-            <td colspan="8" style="padding: 20px; text-align: center; color: red;">
+            <td colspan="9" style="padding: 20px; text-align: center; color: red;">
               Erro ao carregar ocorrências
             </td>
           </tr>
         `, 'erro');
       }
     }
+    /* ========== ATUALIZAR OCORRÊNCIA (Nr. OC) ==========
+       Grava o Nr. OC na ocorrência e copia-o para as atualizações do terreno e os POSIT dela (SQL 48). */
+    function occUpdEnsure() {
+      if (document.getElementById('occ-upd-modal')) return;
+      const st = document.createElement('style');
+      st.textContent = `
+        #occ-upd-modal {display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); justify-content: center; align-items: center; z-index: 1000;}
+        #occ-upd-modal.open {display: flex;}
+        #occ-upd-modal .ou-box {background: #fff; border-radius: 14px; width: 92%; max-width: 620px; max-height: 88vh; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 8px 24px rgba(0,0,0,.3);}
+        #occ-upd-modal .ou-x {margin-left: auto; width: 28px; height: 28px; border-radius: 50%; border: 0; background: rgba(255,255,255,.18); color: #fff; cursor: pointer;}
+        #occ-upd-modal .ou-body {padding: 18px 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background: #f4f5f7; font-size: 13px;}
+        #occ-upd-modal .ou-hero {background: #fff; border-radius: 12px; padding: 14px 16px; border-left: 5px solid #c0392b; box-shadow: 0 1px 3px rgba(0,0,0,.06); display: flex; gap: 12px; align-items: flex-start;}
+        #occ-upd-modal .ou-ico {flex: none; width: 42px; height: 42px; border-radius: 12px; background: #fdecea; color: #c0392b; display: flex; align-items: center; justify-content: center; font-size: 18px;}
+        #occ-upd-modal .ou-t {font-size: 16px; font-weight: 800; color: #222;}
+        #occ-upd-modal .ou-l {margin-top: 4px; font-size: 12.5px; color: #666; text-transform: uppercase;}
+        #occ-upd-modal .ou-pill {margin-left: auto; flex: none; padding: 4px 11px; border-radius: 999px; font-size: 11px; font-weight: 800; text-transform: uppercase; background: #fef3c7; color: #92400e;}
+        #occ-upd-modal .ou-facts {display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;}
+        #occ-upd-modal .ou-fact {background: #fff; border-radius: 10px; padding: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,.06); min-width: 0;}
+        #occ-upd-modal .ou-fact small {display: block; font-size: 10.5px; color: #999; text-transform: uppercase; letter-spacing: .05em; font-weight: 700;}
+        #occ-upd-modal .ou-fact span {display: block; font-weight: 700; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
+        #occ-upd-modal .ou-nr {background: #fff; border-radius: 10px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(0,0,0,.06); display: flex; flex-direction: column; gap: 6px;}
+        #occ-upd-modal .ou-nr label {font-size: 11px; font-weight: 800; color: #888; text-transform: uppercase; letter-spacing: .06em;}
+        #occ-upd-modal .ou-nr input {height: 36px; border: 1px solid #c8c8c8; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; font-weight: 700;}
+        #occ-upd-modal .ou-nr input:focus {outline: none; border-color: #c0392b; box-shadow: 0 0 0 3px rgba(192,57,43,.15);}
+        #occ-upd-modal .ou-nr small {color: #888; font-size: 11.5px;}
+        @media (max-width: 560px) {#occ-upd-modal .ou-facts {grid-template-columns: 1fr 1fr;}}`;
+      document.head.appendChild(st);
+      const m = document.createElement('div');
+      m.id = 'occ-upd-modal';
+      m.innerHTML = `
+        <div class="ou-box">
+          <div class="wsms-card-header" style="background:#c0392b;">
+            <i class="fa-solid fa-pen-to-square"></i><span>ATUALIZAR OCORRÊNCIA</span>
+            <button type="button" class="ou-x" id="ou-x" title="Fechar">✕</button>
+          </div>
+          <div class="ou-body" id="ou-body"></div>
+          <div class="wsms-card-footer" style="justify-content: center; gap: 10px;">
+            <button type="button" class="btn btn-danger" id="ou-cancel" style="width: 30%;">CANCELAR</button>
+            <button type="button" class="btn wsms-btn-green" id="ou-save" style="width: 30%;">GRAVAR</button>
+          </div>
+        </div>`;
+      document.body.appendChild(m);
+      const close = () => m.classList.remove('open');
+      document.getElementById('ou-x').onclick = close;
+      document.getElementById('ou-cancel').onclick = close;
+      m.addEventListener('click', e => { if (e.target === m) close(); });
+    }
+    function openOccUpdateModal(occ, formattedDate, vehiclesCount) {
+      occUpdEnsure();
+      document.getElementById('ou-body').innerHTML = `
+        <div class="ou-hero">
+          <div class="ou-ico"><i class="fa-solid fa-fire"></i></div>
+          <div style="min-width:0;"><div class="ou-t">${occEsc(occ.occorrence || '—')}</div>
+            <div class="ou-l"><i class="fa-solid fa-location-dot"></i> ${occEsc(occ.local || '—')}${occ.localitie ? ' · ' + occEsc(occ.localitie) : ''}</div></div>
+          <span class="ou-pill">${occEsc(occ.status || '—')}</span>
+        </div>
+        <div class="ou-facts">
+          <div class="ou-fact"><small>Data/Hora Alerta</small><span>${occEsc(formattedDate || '—')}</span></div>
+          <div class="ou-fact"><small>Veículos</small><span>${vehiclesCount}</span></div>
+          <div class="ou-fact"><small>Elementos</small><span>${occEsc(occ.elements ?? '—')}</span></div>
+        </div>
+        <div class="ou-nr">
+          <label for="ou-nr-oc">Nr. OC</label>
+          <input type="text" id="ou-nr-oc" maxlength="40" placeholder="N.º da ocorrência" value="${occEsc(occ.nr_oc || '')}">
+          <small>Fica também em todas as atualizações do terreno e POSIT desta ocorrência (guardados 2 anos), e nas que forem enviadas depois.</small>
+        </div>`;
+      const inp = document.getElementById('ou-nr-oc');
+      inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); document.getElementById('ou-save').click(); } };
+      const save = document.getElementById('ou-save');
+      save.disabled = false;
+      save.onclick = async () => {
+        save.disabled = true;
+        try {
+          const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/cb360_set_nr_oc`, {method: 'POST', headers: getSupabaseHeaders(),
+            body: JSON.stringify({p_occurrence_id: occ.id, p_nr_oc: inp.value.trim()})});
+          if (!r.ok) {
+            const t = await r.text().catch(() => '');
+            throw new Error(r.status === 404 ? 'Falta o SQL 48 no Supabase.' : (/"message":"([^"]+)"/.exec(t) || [])[1] || `Erro ${r.status}`);
+          }
+          const res = await r.json().catch(() => ({}));
+          document.getElementById('occ-upd-modal').classList.remove('open');
+          showPopup('popup-success', `Nr. OC gravado.${res && (res.atualizacoes || res.posit) ? ` Atualizado também em ${res.atualizacoes || 0} atualização(ões) do terreno e ${res.posit || 0} POSIT.` : ''}`);
+          lastActiveOccSig = null;
+          loadActiveOccurrences();
+          if (typeof window.ofuReload === 'function') window.ofuReload();
+        } catch (e) {
+          showPopup('popup-danger', 'Não foi possível gravar o Nr. OC: ' + e.message);
+        } finally {
+          save.disabled = false;
+        }
+      };
+      document.getElementById('occ-upd-modal').classList.add('open');
+      setTimeout(() => inp.focus(), 50);
+    }
     /* ========== POSIT SPECIAL POPUP ========== */
     let currentPositId = null;
+    let currentPositNrOc = null;
     let originalPositStatus = null;
     /* ======= OPEN POPUP WITH THE EVENT ======= */
     function openPositPopup(occurrence) {
       currentPositId = occurrence.id;
+      currentPositNrOc = occurrence.nr_oc || null;
       originalPositStatus = occurrence.status;
       document.getElementById('posit-description').value = occurrence.occorrence || '';
       document.getElementById('posit-local').value = occurrence.local || '';
@@ -159,7 +259,7 @@
             headers: getSupabaseHeaders(),
             body: JSON.stringify({corp_oper_nr: corpPosit, occurrence_id: Number(currentPositId) || null, occurrence: occorrence || null,
                                   local: [local, localidade].filter(Boolean).join(', ') || null, status, posit_time: horaPosit, posit: positText,
-                                  demob: !!desmobilizacao, sender_name: optelFooter.replace(/^\s*(OPTEL:\s*)?/, '').trim() || null})
+                                  demob: !!desmobilizacao, sender_name: optelFooter.replace(/^\s*(OPTEL:\s*)?/, '').trim() || null, nr_oc: currentPositNrOc})
           });
           if (!rp.ok) console.warn('Gravar POSIT:', rp.status, await rp.text().catch(() => ''));
         } catch (e) { console.warn('Gravar POSIT:', e); }

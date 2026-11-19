@@ -367,7 +367,7 @@
           const page = document.getElementById("page-utilities");
           if (page) {
             const interval = setInterval(() => {
-              if (clickWhenExists(".panel-sidebar-menu-button[onclick*=\"showPanelCardUtilities('epe')\"]", page, () => {
+              if (clickWhenExists(".panel-sidebar-menu-button[data-panel=\"epe\"]", page, () => {
               if (typeof loadVehiclesFromsessionStorage === "function") loadVehiclesFromsessionStorage();
                 if (typeof loadInfosFromSupabase === "function") loadInfosFromSupabase();
                 if (typeof loadRoutesFromSupabase === "function") loadRoutesFromSupabase();

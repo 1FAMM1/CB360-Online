@@ -12,6 +12,33 @@
       const css = document.createElement('style');
       css.id = 'saloc-css';
       css.textContent = `
+        /* ===== Consola de Alarmes (layout novo, só estilo) ===== */
+        #page-alarm-console .sl-255 {gap: 10px !important;}
+        #page-alarm-console .sl-256, #page-alarm-console .sl-264 {background: #fff !important; border: 1px solid #e9ecef !important; border-radius: 12px !important; box-shadow: 0 1px 3px rgba(0,0,0,.05) !important;
+                     padding: 14px 16px !important; margin: 0 !important; align-items: stretch !important; box-sizing: border-box;}
+        #page-alarm-console .sl-257, #page-alarm-console .sl-265 {display: flex; align-items: center; gap: 9px; margin: 0 0 12px !important; padding: 0 0 8px; border-bottom: 1px solid #eef0f2; font-size: 12.5px !important;
+                     font-weight: 800 !important; color: #2c3e50 !important; letter-spacing: .4px !important; text-transform: uppercase;}
+        #page-alarm-console .sl-257::before, #page-alarm-console .sl-265::before {content: ''; width: 4px; height: 16px; border-radius: 3px; background: #c62828; flex: none;}
+        #page-alarm-console .sl-258, #page-alarm-console .sl-214 {font-size: 11px !important; font-weight: 800 !important; color: #8a949e !important; text-transform: uppercase; letter-spacing: .4px; margin: 0 0 8px !important; text-align: left;}
+        #page-alarm-console .sl-259 {display: grid !important; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px !important; margin: 0 !important;}
+        #page-alarm-console .sl-260 {width: auto !important; height: 46px !important; margin: 0 !important; background: #f8f9fa !important; color: #2c3e50 !important; border: 1px solid #dfe3e7 !important; border-radius: 10px !important;
+                     font-size: 11px !important; font-weight: 800 !important; letter-spacing: .3px; line-height: 1.2; box-shadow: none; transform: none; transition: background .15s, border-color .15s;}
+        #page-alarm-console .sl-260:hover {background: #fdf0ee !important; border-color: #e6b3ad !important;}
+        #page-alarm-console .sl-260.active {background: #2c3e50 !important; color: #fff !important; border-color: #2c3e50 !important;}
+        #page-alarm-console .sl-261 {flex-direction: column; align-items: stretch !important; gap: 0 !important; margin-top: 14px !important;}
+        #page-alarm-console .sl-261 select {height: 34px !important; background: #fff !important; color: #2c3e50 !important; border: 1px solid #c8c8c8 !important; border-radius: 8px !important; font-size: 12.5px; outline: none;}
+        #page-alarm-console .sl-261 select:focus {border-color: #c0392b !important; box-shadow: 0 0 0 2px rgba(192,57,43,.12);}
+        #page-alarm-console .sl-262 {height: 40px !important; margin-top: 12px !important; border: 0 !important; border-radius: 10px !important; background: linear-gradient(180deg,#d64535,#b0281a) !important; color: #fff !important;
+                     font-weight: 800 !important; letter-spacing: .6px; box-shadow: 0 2px 6px rgba(176,40,26,.25); transform: none;}
+        #page-alarm-console .sl-262:hover {filter: brightness(1.06);}
+        #page-alarm-console .sl-264 {max-width: 520px !important; margin: 10px auto 0 !important; display: flex !important;}
+        #page-alarm-console .sl-266 {display: grid !important; grid-template-columns: 1fr 1fr; gap: 8px !important; margin: 0 !important;}
+        #page-alarm-console .sl-267 {width: auto !important; height: 44px !important; margin: 0 !important; background: #2c3e50 !important; color: #fff !important; border: 0 !important; border-left: 4px solid #c62828 !important;
+                     border-radius: 10px !important; font-weight: 800 !important; letter-spacing: .6px; box-shadow: none; transform: none;}
+        #page-alarm-console .sl-267:hover {background: #34495e !important;}
+        #page-alarm-console button:disabled:not(.is-transmitting) {opacity: .55;}
+        #page-alarm-console .sl-260.is-transmitting, #page-alarm-console .sl-262.is-transmitting, #page-alarm-console .sl-267.is-transmitting {background: #ff4444 !important; color: #fff !important; border-color: #ff0000 !important; opacity: 1; filter: none !important; animation: pulse-live 1s infinite !important;}
+
         /* ===== Hemodiálise (layout novo, só estilo) ===== */
         .slx-hemo .sl-185 {width: auto !important; max-width: none !important; flex: none !important;}
         #hemo-utentdata-card > .options-main-card, #hemo-utentlist-card > .options-main-card, .slx-hemo .sl-202, .slx-hemo .sl-210 {background: #fff !important; border: 1px solid #e9ecef !important; border-radius: 12px !important;
@@ -29,7 +56,9 @@
         .slx-hemo .sl-194 {margin-top: 12px !important; padding-top: 10px; border-top: 1px solid #eef0f2;}
         /* tabelas */
         .slx-hemo table.sl-143 {border-collapse: separate !important; border-spacing: 0; width: 100%; border: 1px solid #e3e7eb !important; overflow: hidden;}
-        #hemo-utentlist-card table.sl-143 {border-radius: 10px;}
+        #hemo-utentlist-card .sl-195 {max-height: 340px !important; border: 1px solid #e3e7eb; border-radius: 10px; scrollbar-width: thin; scrollbar-color: #e57373 #fbe9e7;}
+        #hemo-utentlist-card table.sl-143 {border: 0 !important; border-radius: 0; overflow: visible !important;}
+        #hemo-utentlist-card thead.sl-196 th {position: sticky; top: 0; z-index: 2;}
         .slx-hemo .sl-205 + table.sl-143, .slx-hemo .sl-211 + table.sl-143, .slx-hemo .sl-204 table.sl-143 {border-radius: 0 0 10px 10px;}
         .slx-hemo table.sl-143 th {background: #f1f3f5 !important; color: #5b6670 !important; border: 0 !important; border-bottom: 1px solid #e3e7eb !important; font-size: 11px !important; font-weight: 800 !important;
                      text-transform: uppercase; letter-spacing: .4px; padding: 6px 10px !important;}
@@ -813,13 +842,14 @@
             </div>
             <div class="sl-4">
               <ul class="sl-5">
-                <li class="sl-6">🗺️ Consulta e gestão dos Planos Prévios de Intervenção (PPI)</li>
-                <li class="sl-6">📝 Registo e análise de Recusas de Serviços</li>
-                <li class="sl-6">🚑 Registo e análise de Inoperacionalidades (INEM)</li>
+                <li class="sl-6">🗺️ Consulta dos Planos Prévios de Intervenção (A22, Aeroporto e Linha Ferroviária)</li>
+                <li class="sl-6">📝 Registo de Recusas de Serviço e de Inoperacionalidades INEM, com relatórios mensais</li>
                 <li class="sl-6">📊 Dashboard de Estatísticas Operacionais</li>
-                <li class="sl-6">📁 Acesso e Gestão de Documentação Operacional e Interna</li>
-                <li class="sl-6">📅 Planeamentos Diários e gestão de turnos</li>
-                <li class="sl-6">📨 Gestão e envio de documentação importante ao COMANDO SUB-REGIONAL</li>
+                <li class="sl-6">📨 Documentação para o Comando Sub-Regional: MOA, Anexo G1/G2 e Situação Operacional</li>
+                <li class="sl-6">📅 Planeamento Diário e gestão de turnos</li>
+                <li class="sl-6">🚑 Listagem semanal e gestão dos utentes de Hemodiálise</li>
+                <li class="sl-6">📁 Requisição de equipamentos, cartões frota, contactos e listas nominais</li>
+                <li class="sl-6">🔔 Consola de Alarmes Interna (chamadas individuais, de grupo e alarmes)</li>
               </ul>
             </div>
             <p class="sl-7">
@@ -2068,7 +2098,7 @@
 `,
       'page-alarm-console': `
 
-      <div class="major-card">
+      <div class="major-card slx slx-ac">
         <div class="major-card-header sl-184" style="display: flex;">
           <svg class="sl-212" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <circle cx="12" cy="12" r="10"/>

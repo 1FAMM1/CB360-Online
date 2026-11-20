@@ -1,4 +1,4 @@
-    /* =======================================
+/* =======================================
     LOAD MAIN DATA
     ======================================= */
     document.addEventListener('DOMContentLoaded', async () => {      
@@ -229,60 +229,93 @@
       }
     });
     /* =======================================
-    PEDIDOS EM APROVAÇÃO (aviso ao abrir a main)
-    - Só aparece ao Comando (patent_abv COM, 2COM ou ACOM) que seja administrador (user_role admin) e esteja ativo.
-    - Conta o que está "Em Aprovação" e mostra um popup com o número de cada área.
-    - Cada linha só aparece a quem tem acesso a essa página no menu (e só se houver pedidos).
-    - Clicar numa linha abre logo a página respetiva.
+    PEDIDOS EM APROVAÇÃO
+    - Ao abrir a main: popup com o número de pedidos "Em Aprovação" de cada área.
+    - Depois, com a main aberta: aviso no canto (desaparece sozinho) sempre que entra um pedido novo.
+      A base de dados manda um sinal vazio para o canal "cb360-aprov-<corporação>" (SQL 50) e a página
+      volta a contar; se o número subiu, mostra o aviso. De 60 em 60 s também volta a contar (rede).
+    - Só para administradores ativos. CB360_APPROVER_PATENTS limita aos postos de Comando
+      (null = qualquer administrador ativo, para testes).
+    - Cada área só aparece a quem tem essa página no menu. Clicar abre a página.
     ======================================= */
-    async function cb360ShowPendingApprovals() {
-      const corp = sessionStorage.getItem('currentCorpOperNr');
-      const nInt = sessionStorage.getItem('currentNInt');
-      if (!corp || !nInt) return;
-      /* só para o Comando (COM, 2COM, ACOM), com perfil de administrador e ativo */
+    const CB360_APPROVER_PATENTS = null;   /* TESTE: qualquer admin ativo. Só o Comando: ['COM', '2COM', 'ACOM'] */
+    const PA = {areas: [], last: null, rt: {client: null, ch: null, ok: false, retry: null, deb: null}, poll: null};
+    function paCorp() { return String(sessionStorage.getItem('currentCorpOperNr') || '').padStart(4, '0'); }
+    function paToday() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+    function paAllAreas() {
+      const corp = paCorp(), pend = encodeURIComponent('Em Aprovação');
+      return [
+        {key: 'vol', label: 'Férias Voluntariado', icon: '🏖️', page: 'page-vacations-request', access: 'Consultar Pedidos', unit: ['pedido', 'pedidos'],
+         query: () => `ped_vacat?corp_oper_nr=eq.${corp}&vacation_type=eq.Voluntariado&state=eq.${pend}`},
+        {key: 'pro', label: 'Férias Profissional', icon: '🏖️', page: 'page-vacations-request-rh', access: 'Pedidos de Férias RH', unit: ['pedido', 'pedidos'],
+         query: () => `ped_vacat?corp_oper_nr=eq.${corp}&vacation_type=eq.Profissional&state=eq.${pend}`},
+        {key: 'evt', label: 'Turnos de Eventos', icon: '🗓️', page: 'page-event-disp', access: 'Consulta Disponibilidades', unit: ['disponibilidade', 'disponibilidades'],
+         query: () => `event_disp?corp_oper_nr=eq.${corp}&shift_state=eq.${pend}&event_shift_date=gte.${paToday()}`},
+        {key: 'uni', label: 'Pedidos de Fardamento', icon: '👕', page: 'page-uniform-orders', access: 'Gestão de Pedidos Fardamento', unit: ['pedido', 'pedidos'],
+         query: () => `uniform_orders?corp_oper_nr=eq.${corp}&status=eq.${pend}`}
+      ];
+    }
+    function paMenuBtn(a) { return document.querySelector(`.sidebar [data-page="${a.page}"][data-access="${a.access}"]`); }
+    /* o botão do menu (e os menus acima dele) tem de estar visível para este utilizador */
+    function paCanSee(btn) {
+      if (!btn || btn.style.display === 'none' || btn.disabled) return false;
+      for (let n = btn.parentElement; n && !n.classList.contains('sidebar'); n = n.parentElement) {
+        if (n.classList.contains('submenu') || n.classList.contains('sub-submenu')) {
+          const t = n.previousElementSibling;
+          if (t && (t.style.display === 'none' || t.disabled)) return false;
+        }
+      }
+      return true;
+    }
+    async function paIsApprover() {
+      const corp = sessionStorage.getItem('currentCorpOperNr'), nInt = sessionStorage.getItem('currentNInt');
+      if (!corp || !nInt) return false;
       try {
         const ru = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?select=user_role,elem_state,patent_abv&n_int=eq.${encodeURIComponent(nInt)}&corp_oper_nr=eq.${corp}&limit=1`, {headers: getSupabaseHeaders()});
-        if (!ru.ok) return;
+        if (!ru.ok) return false;
         const u = (await ru.json())[0];
-        if (!u || u.user_role !== 'admin' || u.elem_state !== true || !['COM', '2COM', 'ACOM'].includes(String(u.patent_abv || '').trim().toUpperCase())) return;
-      } catch (e) { return; }
-      const d = new Date();
-      const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      const pend = encodeURIComponent('Em Aprovação');
-      const AREAS = [
-        {label: 'Férias Voluntariado', page: 'page-vacations-request', access: 'Consultar Pedidos', unit: ['pedido', 'pedidos'],
-         query: `ped_vacat?corp_oper_nr=eq.${corp}&vacation_type=eq.Voluntariado&state=eq.${pend}`},
-        {label: 'Férias Profissional', page: 'page-vacations-request-rh', access: 'Pedidos de Férias RH', unit: ['pedido', 'pedidos'],
-         query: `ped_vacat?corp_oper_nr=eq.${corp}&vacation_type=eq.Profissional&state=eq.${pend}`},
-        {label: 'Turnos de Eventos', page: 'page-event-disp', access: 'Consulta Disponibilidades', unit: ['disponibilidade', 'disponibilidades'],
-         query: `event_disp?corp_oper_nr=eq.${corp}&shift_state=eq.${pend}&event_shift_date=gte.${today}`},
-        {label: 'Pedidos de Fardamento', page: 'page-uniform-orders', access: 'Gestão de Pedidos Fardamento', unit: ['pedido', 'pedidos'],
-         query: `uniform_orders?corp_oper_nr=eq.${corp}&status=eq.${pend}`}
-      ];
-      /* o botão do menu (e os menus acima dele) tem de estar visível para este utilizador */
-      const menuBtn = a => document.querySelector(`.sidebar [data-page="${a.page}"][data-access="${a.access}"]`);
-      const canSee = btn => {
-        if (!btn || btn.style.display === 'none' || btn.disabled) return false;
-        for (let n = btn.parentElement; n && !n.classList.contains('sidebar'); n = n.parentElement) {
-          if (n.classList.contains('submenu') || n.classList.contains('sub-submenu')) {
-            const t = n.previousElementSibling;
-            if (t && (t.style.display === 'none' || t.disabled)) return false;
-          }
-        }
-        return true;
-      };
-      const count = async q => {
-        try {
-          const r = await fetch(`${SUPABASE_URL}/rest/v1/${q}&select=id`, {method: 'HEAD', headers: {...getSupabaseHeaders(), 'Prefer': 'count=exact'}});
-          if (!r.ok) return 0;
-          return parseInt((r.headers.get('content-range') || '').split('/')[1], 10) || 0;
-        } catch (e) { return 0; }
-      };
-      const areas = AREAS.filter(a => canSee(menuBtn(a)));
-      if (!areas.length) return;
-      const counts = await Promise.all(areas.map(a => count(a.query)));
-      const items = areas.map((a, i) => ({...a, n: counts[i]})).filter(a => a.n > 0);
-      if (!items.length) return;
+        if (!u || u.user_role !== 'admin' || u.elem_state !== true) return false;
+        return !CB360_APPROVER_PATENTS || CB360_APPROVER_PATENTS.includes(String(u.patent_abv || '').trim().toUpperCase());
+      } catch (e) { return false; }
+    }
+    /* só o número (HEAD + count), sem trazer dados; null se falhar */
+    async function paCount(a) {
+      try {
+        const r = await fetch(`${SUPABASE_URL}/rest/v1/${a.query()}&select=id`, {method: 'HEAD', headers: {...getSupabaseHeaders(), 'Prefer': 'count=exact'}});
+        if (!r.ok) return null;
+        const n = parseInt((r.headers.get('content-range') || '').split('/')[1], 10);
+        return Number.isFinite(n) ? n : null;
+      } catch (e) { return null; }
+    }
+    function paOpen(page, access) { document.querySelector(`.sidebar [data-page="${page}"][data-access="${access}"]`)?.click(); }
+    function paCss() {
+      if (document.getElementById('pa-css')) return;
+      const css = document.createElement('style');
+      css.id = 'pa-css';
+      css.textContent = `
+        #popup-info li.pa-title {list-style: none; margin-bottom: 8px;}
+        #popup-info li.pa-item {list-style: none; display: flex; justify-content: space-between; gap: 16px; padding: 7px 10px; margin: 4px 0;
+          border-radius: 6px; background: #fff3e0; border-left: 4px solid #ef6c00; cursor: pointer; transition: background .12s ease;}
+        #popup-info li.pa-item:hover {background: #ffe0b2;}
+        #popup-info li.pa-item b {color: #ef6c00; white-space: nowrap;}
+        #pa-toasts {position: fixed; top: 84px; right: 18px; z-index: 99990; display: flex; flex-direction: column; gap: 8px; pointer-events: none;}
+        .pa-toast {pointer-events: auto; width: 300px; display: flex; align-items: flex-start; gap: 10px; padding: 11px 14px 11px 12px; border-radius: 10px; cursor: pointer;
+          background: #fff; color: #2c3e50; border: 1px solid #f1d3b5; border-left: 5px solid #ef6c00; box-shadow: 0 10px 28px rgba(0,0,0,.22), 0 2px 6px rgba(0,0,0,.12);
+          font-family: 'Segoe UI', sans-serif; animation: paIn .25s ease-out; position: relative; overflow: hidden;}
+        .pa-toast.out {animation: paOut .3s ease-in forwards;}
+        .pa-toast .pa-ico {font-size: 20px; line-height: 1;}
+        .pa-toast .pa-txt {flex: 1; min-width: 0;}
+        .pa-toast .pa-txt b {display: block; font-size: 13px; color: #ef6c00; margin-bottom: 2px;}
+        .pa-toast .pa-txt span {display: block; font-size: 12.5px; line-height: 1.35;}
+        .pa-toast .pa-x {font-size: 15px; color: #9aa3ab; line-height: 1; padding: 0 2px;}
+        .pa-toast .pa-bar {position: absolute; left: 0; bottom: 0; height: 3px; background: #ef6c00; opacity: .55; animation: paBar linear forwards;}
+        @keyframes paIn {from {opacity: 0; transform: translateX(30px);} to {opacity: 1; transform: none;}}
+        @keyframes paOut {to {opacity: 0; transform: translateX(30px);}}
+        @keyframes paBar {from {width: 100%;} to {width: 0;}}
+      `;
+      document.head.appendChild(css);
+    }
+    function paShowPopup(items) {
       const modal = document.getElementById('popup-info');
       const ul = modal?.querySelector('.popup-body ul');
       if (!ul) return;
@@ -290,27 +323,99 @@
       ul.innerHTML = `<li class="pa-title">Tem ${total} ${total === 1 ? 'registo' : 'registos'} à espera de aprovação:</li>` +
         items.map(a => `<li class="pa-item" data-page="${a.page}" data-access="${a.access}" title="Abrir ${a.label}">
             <span>${a.label}</span><b>${a.n} ${a.n === 1 ? a.unit[0] : a.unit[1]}</b></li>`).join('');
-      if (!document.getElementById('pa-css')) {
-        const css = document.createElement('style');
-        css.id = 'pa-css';
-        css.textContent = `
-          #popup-info li.pa-title {list-style: none; margin-bottom: 8px;}
-          #popup-info li.pa-item {list-style: none; display: flex; justify-content: space-between; gap: 16px; padding: 7px 10px; margin: 4px 0;
-            border-radius: 6px; background: #fff3e0; border-left: 4px solid #ef6c00; cursor: pointer; transition: background .12s ease;}
-          #popup-info li.pa-item:hover {background: #ffe0b2;}
-          #popup-info li.pa-item b {color: #ef6c00; white-space: nowrap;}
-        `;
-        document.head.appendChild(css);
-      }
       ul.onclick = e => {
         const li = e.target.closest('li.pa-item');
         if (!li) return;
         closePopup('popup-info');
         ul.onclick = null;
-        document.querySelector(`.sidebar [data-page="${li.dataset.page}"][data-access="${li.dataset.access}"]`)?.click();
+        paOpen(li.dataset.page, li.dataset.access);
       };
       showPopup('popup-info');
       modal.querySelector('.popup-btn')?.addEventListener('click', () => { ul.onclick = null; }, {once: true});
+    }
+    /* aviso no canto: desaparece ao fim de 8 s (ou ao clicar no ✕); clicar no resto abre a página */
+    function paToast(a, diff, total) {
+      paCss();
+      let box = document.getElementById('pa-toasts');
+      if (!box) { box = document.createElement('div'); box.id = 'pa-toasts'; document.body.appendChild(box); }
+      const MS = 8000;
+      const t = document.createElement('div');
+      t.className = 'pa-toast';
+      t.title = `Abrir ${a.label}`;
+      t.innerHTML = `<div class="pa-ico">${a.icon}</div>
+        <div class="pa-txt"><b>${diff === 1 ? (a.unit[0] === 'pedido' ? 'Novo pedido' : 'Nova disponibilidade') : `${diff} ${a.unit[1] === 'pedidos' ? 'novos pedidos' : 'novas disponibilidades'}`}</b>
+        <span>${a.label} · ${total} em aprovação</span></div>
+        <div class="pa-x" title="Fechar">✕</div><div class="pa-bar" style="animation-duration:${MS}ms"></div>`;
+      const close = () => { if (t.classList.contains('out')) return; t.classList.add('out'); setTimeout(() => t.remove(), 300); };
+      t.addEventListener('click', e => { if (!e.target.closest('.pa-x')) paOpen(a.page, a.access); close(); });
+      box.appendChild(t);
+      while (box.children.length > 4) box.firstElementChild.remove();
+      setTimeout(close, MS);
+    }
+    /* volta a contar; avisa das áreas em que o número subiu */
+    async function paRecheck() {
+      if (!PA.areas.length || !PA.last) return;
+      const counts = await Promise.all(PA.areas.map(paCount));
+      PA.areas.forEach((a, i) => {
+        const n = counts[i];
+        if (n === null) return;
+        const before = PA.last[a.key];
+        if (typeof before === 'number' && n > before) paToast(a, n - before, n);
+        PA.last[a.key] = n;
+      });
+    }
+    function paKick() { clearTimeout(PA.rt.deb); PA.rt.deb = setTimeout(paRecheck, 600); }
+    async function paRtConnect() {
+      const rt = PA.rt;
+      clearTimeout(rt.retry);
+      try {
+        if (!rt.client) rt.client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {accessToken: async () => sessionStorage.getItem('authToken')});
+        if (rt.ch) { const old = rt.ch; rt.ch = null; try { await rt.client.removeChannel(old); } catch (_) {} }
+        const ch = rt.client.channel(`cb360-aprov-${paCorp()}`)
+          .on('broadcast', {event: 'mudou'}, paKick)
+          .subscribe(st => {
+            if (rt.ch !== ch) return;
+            if (st === 'SUBSCRIBED') { rt.ok = true; paKick(); return; }
+            rt.ok = false;
+            rt.retry = setTimeout(paRtConnect, 5000);
+          });
+        rt.ch = ch;
+      } catch (e) {
+        console.warn('Pedidos em aprovação (tempo real):', e);
+        rt.ok = false;
+        rt.retry = setTimeout(paRtConnect, 15000);
+      }
+    }
+    function paRealtime() {
+      const go = () => {
+        paRtConnect();
+        setInterval(() => {
+          const rt = PA.rt;
+          if (rt.client && (!rt.ch || rt.ch.state !== 'joined' || !rt.client.realtime.isConnected())) { rt.ok = false; paRtConnect(); }
+        }, 30000);
+      };
+      if (typeof SUPABASE_ANON_KEY === 'undefined') return;
+      if (window.supabase && window.supabase.createClient) return go();
+      const sc = document.createElement('script');
+      sc.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+      sc.onload = go;
+      sc.onerror = () => console.warn('Pedidos em aprovação: biblioteca do Supabase não carregou, fica a contagem de 60 em 60 s.');
+      document.head.appendChild(sc);
+    }
+    async function cb360ShowPendingApprovals() {
+      if (!(await paIsApprover())) return;
+      PA.areas = paAllAreas().filter(a => paCanSee(paMenuBtn(a)));
+      if (!PA.areas.length) return;
+      paCss();
+      const counts = await Promise.all(PA.areas.map(paCount));
+      PA.last = {};
+      PA.areas.forEach((a, i) => { PA.last[a.key] = counts[i]; });
+      const items = PA.areas.map((a, i) => ({...a, n: counts[i] || 0})).filter(a => a.n > 0);
+      if (items.length) paShowPopup(items);
+      /* a partir daqui: avisos de pedidos novos */
+      paRealtime();
+      PA.poll = setInterval(paRecheck, 60000);
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) paKick(); });
     }
     /* =======================================
     MAIN SIDEBAR AND PANEL SIDEBAR

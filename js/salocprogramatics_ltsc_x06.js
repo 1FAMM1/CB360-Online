@@ -1942,7 +1942,7 @@
 `,
       'page-material-request': `
 
-      <div class="major-card major-last-card slx ">
+      <div class="major-card slx ">
         <div class="major-card-header slx-head">
           <svg class="sl-212" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>

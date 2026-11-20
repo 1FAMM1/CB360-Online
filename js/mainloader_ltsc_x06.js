@@ -1,4 +1,4 @@
-/* =======================================
+    /* =======================================
     LOAD MAIN DATA
     ======================================= */
     document.addEventListener('DOMContentLoaded', async () => {      
@@ -440,7 +440,7 @@
           if (main) main.scrollTop = 0;
           page.scrollTop = 0;
           window.scrollTo(0, 0);
-          if (typeof clearFormFields === "function") clearFormFields();
+          if (typeof clearFormFields === "function") clearFormFields(page);
           if (pageId === "volunteer-services-consulting") {
             if (typeof initializeFilters === "function") initializeFilters();
           }
@@ -1262,13 +1262,19 @@
     GENERIC FUNCTIONS
     ======================================= */    
     /* ========== GENERIC CLEAR =========== */   
-    function clearFormFields() {
+    /* Limpa os campos SÓ da página indicada (por defeito, a página aberta) — antes limpava o documento todo,
+       o que estragava os filtros das outras páginas.
+       Os selects de ano/mês (filtros que cada página põe no período atual) e os que têm data-keep não são tocados:
+       a limpeza corria logo a seguir à página os escolher e voltava-os à 1.ª opção. */
+    function clearFormFields(root) {
+      const scope = (root && root.querySelectorAll) ? root : (document.querySelector('.page.active') || document);
+      const keepSel = s => s.dataset.keep !== undefined || /(year|month)/i.test(`${s.id} ${s.name || ''}`);
       const today = getCurrentDateStr();
-      document.querySelectorAll('input[type="text"], input[type="time"]').forEach(i => i.value = '');
-      document.querySelectorAll('select').forEach(s => s.selectedIndex = 0);
-      document.querySelectorAll('input[type="date"]').forEach(i => i.value = today);
-      document.querySelectorAll('textarea').forEach(t => t.value = '');
-      document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+      scope.querySelectorAll('input[type="text"], input[type="time"]').forEach(i => i.value = '');
+      scope.querySelectorAll('select').forEach(s => { if (!keepSel(s)) s.selectedIndex = 0; });
+      scope.querySelectorAll('input[type="date"]').forEach(i => i.value = today);
+      scope.querySelectorAll('textarea').forEach(t => t.value = '');
+      scope.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
       setTimeout(() => {
         const parishSelect = document.getElementById('parish_select');
         if (parishSelect) {

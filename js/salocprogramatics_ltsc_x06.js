@@ -12,6 +12,91 @@
       const css = document.createElement('style');
       css.id = 'saloc-css';
       css.textContent = `
+        /* ===== Hemodiálise (layout novo, só estilo) ===== */
+        .slx-hemo .sl-185 {width: auto !important; max-width: none !important; flex: none !important;}
+        #hemo-utentdata-card > .options-main-card, #hemo-utentlist-card > .options-main-card, .slx-hemo .sl-202, .slx-hemo .sl-210 {background: #fff !important; border: 1px solid #e9ecef !important; border-radius: 12px !important;
+                     box-shadow: 0 1px 3px rgba(0,0,0,.05) !important; padding: 12px 14px !important; box-sizing: border-box;}
+        .slx-hemo .sl-186 {display: flex; align-items: center; gap: 9px; background: none !important; margin: 0 0 10px !important; padding: 0 0 8px !important; font-size: 12.5px !important; font-weight: 800 !important;
+                     color: #2c3e50 !important; letter-spacing: .4px !important; border: 0 !important; border-bottom: 1px solid #eef0f2 !important; text-align: left !important; justify-content: flex-start !important;}
+        .slx-hemo .sl-186::before, .slx-hemo .sl-203::before {content: ''; width: 4px; height: 16px; border-radius: 3px; background: #c62828; flex: none;}
+        #hemo-utentdata-card label.sl-33 {font-size: 11px !important; font-weight: 800 !important; color: #6c757d !important; text-transform: uppercase; letter-spacing: .3px;}
+        #hemo-utentdata-card input[type="text"], #hemo-utentdata-card select, #utent_h_treatment_days_btn {height: 32px !important; min-height: 32px !important; border: 1px solid #c8c8c8 !important; border-radius: 6px !important;
+                     font-size: 12.5px !important; padding: 0 9px !important; box-sizing: border-box; background: #fff; outline: none;}
+        #utent_h_treatment_days_btn {display: flex !important; align-items: center;}
+        #hemo-utentdata-card input[type="text"]:focus, #hemo-utentdata-card select:focus {border-color: #c0392b !important; box-shadow: 0 0 0 2px rgba(192,57,43,.12);}
+        #utent_h_treatment_days_dropdown {border-radius: 10px !important; border-color: #e3e7eb !important; padding: 8px 12px !important; box-shadow: 0 8px 22px rgba(0,0,0,.12) !important;}
+        #utent_h_treatment_days_dropdown input {accent-color: #c0392b;}
+        .slx-hemo .sl-194 {margin-top: 12px !important; padding-top: 10px; border-top: 1px solid #eef0f2;}
+        /* tabelas */
+        .slx-hemo table.sl-143 {border-collapse: separate !important; border-spacing: 0; width: 100%; border: 1px solid #e3e7eb !important; overflow: hidden;}
+        #hemo-utentlist-card table.sl-143 {border-radius: 10px;}
+        .slx-hemo .sl-205 + table.sl-143, .slx-hemo .sl-211 + table.sl-143, .slx-hemo .sl-204 table.sl-143 {border-radius: 0 0 10px 10px;}
+        .slx-hemo table.sl-143 th {background: #f1f3f5 !important; color: #5b6670 !important; border: 0 !important; border-bottom: 1px solid #e3e7eb !important; font-size: 11px !important; font-weight: 800 !important;
+                     text-transform: uppercase; letter-spacing: .4px; padding: 6px 10px !important;}
+        .slx-hemo table.sl-143 td {border: 0 !important; border-bottom: 1px solid #eef0f2 !important; padding: 4px 10px !important; font-size: 12.5px; background: #fff; line-height: 1.35;}
+        .slx-hemo table.sl-143 tbody tr:last-child td {border-bottom: 0 !important;}
+        .slx-hemo table.sl-143 tbody tr:hover td {background: #fdf6f5;}
+        /* listagem semanal */
+        .slx-hemo .sl-203 {display: flex !important; align-items: center; gap: 9px; justify-content: flex-start !important; text-align: left !important; font-size: 12.5px !important; font-weight: 800 !important; color: #2c3e50 !important;
+                     background: none !important; text-transform: uppercase; letter-spacing: .4px; border: 0 !important; border-bottom: 1px solid #eef0f2 !important; padding: 0 0 8px !important; margin: 0 0 10px !important;}
+        .slx-hemo .sl-204 {gap: 8px !important; scrollbar-width: thin; scrollbar-color: #e57373 #fbe9e7;}
+        .slx-hemo .sl-205, .slx-hemo .sl-211 {background: #fff !important; color: #2c3e50 !important; text-align: left !important; border: 1px solid #e3e7eb !important; border-bottom: 0 !important; border-left: 4px solid var(--hc) !important;
+                     border-radius: 10px 10px 0 0 !important; padding: 6px 12px !important; font-size: 12.5px !important; font-weight: 800 !important; margin-top: 0 !important;}
+        .slx-hemo .sl-205 {--hc: #1565c0;} .slx-hemo .sl-211 {--hc: #c62828;}
+        #hemo-utentdata-card, #hemo-utentlist-card, #hemo-week-cards {margin-top: 0 !important;}
+        .slx-hemo > .major-card-body {gap: 8px !important;}
+        #hemo-utentdata-card > .options-main-card, #hemo-utentlist-card > .options-main-card {margin: 0 !important;}
+        .slx-hemo .sl-85 {margin-bottom: 0 !important;}
+        .slx-hemo .sl-201 {margin: 0 !important;}
+        .slx-hemo .sl-202, .slx-hemo .sl-210 {background: #e9ebee !important; border-color: #dcdfe3 !important;}
+        .slx-hemo .sl-202 .sl-203, .slx-hemo .sl-210 .sl-203 {border-bottom-color: #d6d9dd !important;}
+        .slx-hemo .sl-205, .slx-hemo .sl-211 {border-color: #d6d9dd !important;}
+        .slx-hemo .sl-204 table.sl-143 {border-color: #d6d9dd !important;}
+        .slx-hemo .sl-204 table.sl-143 td {font-weight: 600 !important;}
+        #hemo-utentlist-tbody button {width: 26px; height: 22px; margin-top: 0 !important; margin-bottom: 0 !important; padding: 0 !important; border-radius: 6px !important; font-size: 12px !important; transition: filter .15s;}
+        #hemo-utentlist-tbody button[onclick^="editHemoUtent"] {background: #fff !important; border: 1px solid #d0d5da !important;}
+        #hemo-utentlist-tbody button[onclick^="deleteHemoUtent"] {background: #fdecea !important; border: 1px solid #f5c2c0 !important;}
+        #hemo-utentlist-tbody button:hover {filter: brightness(.94);}
+        #hemo-utentdata-card label.sl-33 {white-space: nowrap;}
+        #utent_h_save {background: linear-gradient(180deg,#d64535,#b0281a) !important; color: #fff !important; border: 0 !important; border-radius: 8px !important; height: 34px; padding: 0 20px !important;
+                     font-weight: 800 !important; letter-spacing: .4px; box-shadow: 0 2px 6px rgba(176,40,26,.25) !important;}
+        #utent_h_save:hover {filter: brightness(1.06);}
+
+        /* ===== Dashboard (layout novo, só estilo) ===== */
+        .slx-dash .sl-63 {display: none;}
+        .slx-dash .sl-64 {display: inline-flex !important; flex-direction: row !important; align-self: flex-start; align-items: center; gap: 10px !important; margin: 0 !important; background: #fff; border: 1px solid #e9ecef;
+                          border-radius: 12px; padding: 8px 14px; box-shadow: 0 1px 3px rgba(0,0,0,.05);}
+        .slx-dash .sl-64 .major-field {flex-direction: row !important; align-items: center; gap: 10px; margin: 0 !important;}
+        .slx-dash .sl-64 label {font-size: 11px !important; font-weight: 800 !important; color: #6c757d !important; text-transform: uppercase; letter-spacing: .3px; margin: 0 !important;}
+        .slx-dash .sl-64 select {height: 32px; border: 1px solid #c8c8c8; border-radius: 6px; padding: 0 8px; font-size: 12.5px; background: #fff;}
+        .slx-dash .sl-65, .slx-dash .sl-73, .slx-dash .sl-78 {gap: 10px !important; margin: 0 !important;}
+        .slx-dash .sl-66, .slx-dash .sl-69, .slx-dash .sl-71 {background: #fff !important; border: 1px solid #e9ecef !important; border-left: 4px solid var(--c) !important; border-top: 1px solid #e9ecef !important;
+                          border-radius: 10px !important; box-shadow: 0 1px 3px rgba(0,0,0,.05) !important; text-align: left !important; padding: 10px 16px !important;}
+        .slx-dash .sl-66 {--c: #1565c0;} .slx-dash .sl-69 {--c: #c62828;} .slx-dash .sl-71 {--c: #ef6c00;}
+        .slx-dash .sl-67 {font-size: 10.5px !important; font-weight: 800; color: #6c757d !important; letter-spacing: .4px !important; margin-bottom: 4px !important;}
+        .slx-dash .sl-68, .slx-dash .sl-70, .slx-dash .sl-72 {font-size: 22px !important; line-height: 1.2;}
+        .slx-dash .sl-74, .slx-dash .sl-77, .slx-dash .sl-79, .slx-dash .sl-80, .slx-dash .sl-81 {background: #fff !important; border: 1px solid #e9ecef !important; border-radius: 12px !important;
+                          box-shadow: 0 1px 3px rgba(0,0,0,.05) !important; padding: 0 0 12px !important; overflow: hidden;}
+        .slx-dash .sl-75 {text-align: left !important; font-size: 12px !important; font-weight: 800; color: #2c3e50 !important; letter-spacing: .4px; padding: 10px 14px; margin: 0 0 10px !important;
+                          border-bottom: 1px solid #eef0f2; border-left: 4px solid var(--c, #3498db);}
+        .slx-dash .sl-74 {--c: #3498db;} .slx-dash .sl-77 {--c: #e74c3c;} .slx-dash .sl-79 {--c: #9b59b6;} .slx-dash .sl-80 {--c: #e67e22;} .slx-dash .sl-81 {--c: #95a5a6;}
+        .slx-dash .sl-76 {margin: 0 12px; max-width: calc(100% - 24px);}
+
+        /* ===== Relatórios mensais (layout novo, só estilo) ===== */
+        .slx-rep .sl-45 {display: inline-flex !important; align-self: flex-start; align-items: center; gap: 10px !important; margin: 0 !important; background: #fff; border: 1px solid #e9ecef; border-radius: 12px;
+                         padding: 8px 14px; box-shadow: 0 1px 3px rgba(0,0,0,.05);}
+        .slx-rep .sl-45 label {font-size: 11px !important; font-weight: 800 !important; color: #6c757d !important; text-transform: uppercase; letter-spacing: .3px; margin: 0 !important;}
+        .slx-rep .sl-45 select {height: 32px; border: 1px solid #c8c8c8; border-radius: 6px; padding: 0 8px; font-size: 12.5px; background: #fff;}
+        .slx-rep .sl-48 {gap: 10px !important;}
+        .slx-rep .sl-49, .slx-rep .sl-59 {background: #fff; border: 1px solid #e9ecef; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.05); overflow: hidden;}
+        .slx-rep .sl-50, .slx-rep .sl-60, .slx-rep .sl-61 {background: #fff !important; color: #2c3e50 !important; border-radius: 0 !important; border-bottom: 1px solid #eef0f2; font-size: 12.5px !important;
+                         font-weight: 800 !important; text-transform: uppercase; letter-spacing: .4px !important; padding: 10px 14px !important; border-left: 4px solid var(--c);}
+        .slx-rep .sl-50 {--c: #c62828;} .slx-rep .sl-60 {--c: #2e7d32;} .slx-rep .sl-61 {--c: #1565c0;}
+        .slx-rep .sl-51 th {background: #f1f3f5; color: #5b6670 !important; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .4px; border-bottom: 1px solid #e3e7eb !important; padding: 8px 12px !important;}
+        .slx-rep .sl-51 tbody td {border-bottom: 1px solid #eef0f2; padding: 7px 12px; font-size: 12.5px; color: #2c3e50;}
+        .slx-rep .sl-51 tbody tr:hover td {background: #fdf6f5;}
+        .slx-rep .sl-56 td {background: #f8f9fa; border-top: 1px solid #e3e7eb !important; font-weight: 800; color: #2c3e50; padding: 9px 12px !important;}
+
         /* ===== PPIs (A22, Aeroporto, Linha Férrea): só estilo, mesmas funções e cores de alarme ===== */
         #page-ppia22 > .major-card > .major-card-body, #page-ppiaero > .major-card > .major-card-body, #page-ppilinfer > .major-card > .major-card-body {background: #f4f5f7; padding: 12px 16px; display: flex; flex-direction: column; gap: 10px;}
         /* escolha do tipo de consulta: contentor branco ao centro */
@@ -170,15 +255,15 @@
         /* ===== CREPC Algarve (MOA) e Situação Operacional (layout novo) ===== */
         #page-crepcalg > .major-card > .major-card-body, #page-inocrepc > .major-card > .major-card-body {background: #efefef; padding: 12px 16px;}
         /* botões de opção: dentro de um contentor branco, ao centro */
-        #page-crepcalg .sl-85, #page-inocrepc .sl-85, #page-plandir .sl-85 {justify-content: center !important; margin: 0 !important;}
-        #page-crepcalg .options-main-card.sl-86, #page-inocrepc .options-main-card.sl-86, #page-plandir .options-main-card.sl-86 {display: inline-flex !important; flex-direction: row !important; align-items: center; gap: 10px; background: #fff !important; border: 1px solid #e3e7eb !important;
+        #page-crepcalg .sl-85, #page-inocrepc .sl-85, #page-plandir .sl-85, #page-hemodialysis .sl-85 {justify-content: center !important; margin: 0 !important;}
+        #page-crepcalg .options-main-card.sl-86, #page-inocrepc .options-main-card.sl-86, #page-plandir .options-main-card.sl-86, #page-hemodialysis .options-main-card.sl-86 {display: inline-flex !important; flex-direction: row !important; align-items: center; gap: 10px; background: #fff !important; border: 1px solid #e3e7eb !important;
                      border-radius: 999px !important; padding: 4px 4px 4px 16px !important; margin: 0 !important; box-shadow: 0 1px 4px rgba(0,0,0,.06) !important; width: auto !important;}
-        #page-crepcalg .options-main-card.sl-86 > label, #page-inocrepc .options-main-card.sl-86 > label, #page-plandir .options-main-card.sl-86 > label {margin: 0 !important; font-size: 11px !important; font-weight: 800 !important; color: #8a949e !important; text-transform: uppercase; letter-spacing: .4px; white-space: nowrap;}
-        #page-crepcalg .options-main-card.sl-86 .action-buttons, #page-inocrepc .options-main-card.sl-86 .action-buttons, #page-plandir .options-main-card.sl-86 .action-buttons {gap: 4px !important; margin: 0 !important; justify-content: center !important; display: flex !important;}
-        #page-crepcalg .options-main-card.sl-86 .options-btn, #page-inocrepc .options-main-card.sl-86 .options-btn, #page-plandir .options-main-card.sl-86 .options-btn {height: 30px !important; padding: 0 18px !important; border-radius: 999px !important; border: 0 !important; background: transparent !important; color: #2c3e50 !important;
+        #page-crepcalg .options-main-card.sl-86 > label, #page-inocrepc .options-main-card.sl-86 > label, #page-plandir .options-main-card.sl-86 > label, #page-hemodialysis .options-main-card.sl-86 > label {margin: 0 !important; font-size: 11px !important; font-weight: 800 !important; color: #8a949e !important; text-transform: uppercase; letter-spacing: .4px; white-space: nowrap;}
+        #page-crepcalg .options-main-card.sl-86 .action-buttons, #page-inocrepc .options-main-card.sl-86 .action-buttons, #page-plandir .options-main-card.sl-86 .action-buttons, #page-hemodialysis .options-main-card.sl-86 .action-buttons {gap: 4px !important; margin: 0 !important; justify-content: center !important; display: flex !important;}
+        #page-crepcalg .options-main-card.sl-86 .options-btn, #page-inocrepc .options-main-card.sl-86 .options-btn, #page-plandir .options-main-card.sl-86 .options-btn, #page-hemodialysis .options-main-card.sl-86 .options-btn {height: 30px !important; padding: 0 18px !important; border-radius: 999px !important; border: 0 !important; background: transparent !important; color: #2c3e50 !important;
                      font-size: 12px !important; font-weight: 700 !important; text-transform: none; letter-spacing: 0; box-shadow: none !important; transform: none !important; min-width: 0; width: auto;}
-        #page-crepcalg .options-main-card.sl-86 .options-btn:hover, #page-inocrepc .options-main-card.sl-86 .options-btn:hover, #page-plandir .options-main-card.sl-86 .options-btn:hover {background: #f1f3f5 !important;}
-        #page-crepcalg .options-main-card.sl-86 .options-btn.active, #page-inocrepc .options-main-card.sl-86 .options-btn.active, #page-plandir .options-main-card.sl-86 .options-btn.active {background: #2c3e50 !important; color: #fff !important;}
+        #page-crepcalg .options-main-card.sl-86 .options-btn:hover, #page-inocrepc .options-main-card.sl-86 .options-btn:hover, #page-plandir .options-main-card.sl-86 .options-btn:hover, #page-hemodialysis .options-main-card.sl-86 .options-btn:hover {background: #f1f3f5 !important;}
+        #page-crepcalg .options-main-card.sl-86 .options-btn.active, #page-inocrepc .options-main-card.sl-86 .options-btn.active, #page-plandir .options-main-card.sl-86 .options-btn.active, #page-hemodialysis .options-main-card.sl-86 .options-btn.active {background: #2c3e50 !important; color: #fff !important;}
         #page-plandir .options-main-card.sl-86 .options-btn[data-shift="LAST"]:not(.active) {color: #ef6c00 !important;}
         /* MOA e G2: mesmo espaçamento das Inoperacionalidades */
         #page-crepcalg #moa-container, #page-crepcalg #g2-container {margin-top: 12px !important;}
@@ -973,7 +1058,7 @@
 `,
       'page-recinoreports': `
 
-      <div class="major-card major-last-card">
+      <div class="major-card major-last-card slx slx-rep">
         <div class="major-card-header">
           <svg class="sl-13" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M7 3h10l3 3v15H7V3z"/>
@@ -1083,7 +1168,7 @@
 `,
       'page-dashboard': `
 
-        <div class="major-card major-last-card">
+        <div class="major-card major-last-card slx slx-dash">
           <div class="major-card-header sl-62" style="display:flex;">
             <svg class="sl-13" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
               <path d="M3 3v18h18"/>
@@ -1578,7 +1663,7 @@
 `,
       'page-hemodialysis': `
 
-      <div class="major-card">
+      <div class="major-card slx slx-hemo">
         <div class="major-card-header sl-184" style="display: flex;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
@@ -1648,7 +1733,7 @@
                   <option>11:00-17:00</option>
                   <option>16:00-23:00</option>
                 </select>
-                <label class="sl-33">Loacal Tratamento:</label>
+                <label class="sl-33">Local Tratamento:</label>
                 <select class="sl-27" id="utent_h_treatment_local">
                   <option></option>
                   <option>ULSA Faro</option>

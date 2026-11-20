@@ -98,6 +98,7 @@
         #page-ppia22 .table-elements + .table-elements, #page-ppiaero .table-elements + .table-elements, #page-ppilinfer .table-elements + .table-elements {margin-top: 5px !important;}
         /* linha que faltava entre o Sentido e o 1.º nó do troço */
         /* tabela da grelha: a 2.ª linha começa a meio (células com rowspan), por isso a 1.ª célula dela também leva a linha da esquerda */
+        #page-ppia22 .table-elements td.ppi-span-last, #page-ppiaero .table-elements td.ppi-span-last, #page-ppilinfer .table-elements td.ppi-span-last {border-bottom: 0 !important;}
         #ppia22-grid-references table tr:nth-of-type(2) > td:first-child, #ppilinfer-grid-references table tr:nth-of-type(2) > td:first-child {border-left: 1px solid #e3e7eb !important;}
         /* Situações especiais: um só cartão (título, texto e tabela juntos, só os cantos de fora arredondados) */
         #ppia22-specials-container > div:first-child, #ppilinfer-specials-container > div:first-child {border: 1px solid #f0d97a !important; border-radius: 10px 10px 0 0 !important;}
@@ -2357,7 +2358,7 @@
         const headerRow = createAlarmHeaderRow(refs, means, ppiType, gridId, alarmLevels, ["yellow","orange","red"], ["black","black","white"], [2,2,null]);
         table.createTHead().appendChild(headerRow);
         const tbody = table.createTBody();
-        refs.forEach(ref => {
+        refs.forEach((ref, refIdx) => {
           const firstAlarm  = means.filter(m => m.reference_id === ref.id && m.alarm_level === "1º Alarme" ).sort((a,b)=>(a.display_order??1)-(b.display_order??1));
           const secondAlarm = means.filter(m => m.reference_id === ref.id && m.alarm_level === "2º Alarme" ).sort((a,b)=>(a.display_order??1)-(b.display_order??1));
           const specialAlarm= means.filter(m => m.reference_id === ref.id && m.alarm_level === "Alarme Especial").sort((a,b)=>(a.display_order??1)-(b.display_order??1));
@@ -2369,6 +2370,7 @@
             renderGenericAlarmCells(tr, secondAlarm, i, skipSecond);
             if (i === 0) {
               const tdSpecial = tr.insertCell(); tdSpecial.rowSpan = maxRows; applyTdStyle(tdSpecial, true);
+              if (refIdx === refs.length - 1) tdSpecial.classList.add("ppi-span-last");   /* desce até ao fim da tabela: sem linha em baixo (evita os 2px) */
               tdSpecial.textContent = specialAlarm.map(m => m.means).join(", ") || "-";
             }
           }

@@ -12,6 +12,13 @@
       const css = document.createElement('style');
       css.id = 'saloc-css';
       css.textContent = `
+        /* PPIs: grelha aparece de uma vez, já montada */
+        [id^="page-ppi"] [id$="-grid-references"], [id^="page-ppi"] [id$="-grid-container"], [id^="page-ppi"] [id$="-specials-container"],
+        [id^="page-ppi"] [id$="-grid-info-container"], [id^="page-ppi"] [id$="-abs-note"] {transition: opacity .15s ease-out;}
+        .ppi-busy [id$="-grid-references"], .ppi-busy [id$="-grid-container"], .ppi-busy [id$="-specials-container"],
+        .ppi-busy [id$="-grid-info-container"], .ppi-busy [id$="-abs-note"] {opacity: .15 !important; transition: opacity .1s ease-in !important;}
+
+
         /* ===== Consola de Alarmes (layout novo, só estilo) ===== */
         #page-alarm-console .sl-255 {gap: 10px !important;}
         #page-alarm-console .sl-256, #page-alarm-console .sl-264 {background: #fff !important; border: 1px solid #e9ecef !important; border-radius: 12px !important; box-shadow: 0 1px 3px rgba(0,0,0,.05) !important;
@@ -3023,11 +3030,19 @@
     async function loadPPIA22All(gridId) {
       await Promise.all([loadPPIA22DataInfoGrid(gridId), loadPPIA22DataSpecials(gridId), loadPPIA22GridSeparated(gridId)]);
     }
+    /* mostra a grelha só quando está toda montada (sem aparecer aos bocados) */
+    async function ppiHoldRun(prefix, fn) {
+      const p = document.getElementById(`page-${prefix}`);
+      p?.classList.add("ppi-busy");
+      try { return await fn(); } finally { requestAnimationFrame(() => p?.classList.remove("ppi-busy")); }
+    }
     async function loadPPIA22DataFromButton(buttonId) {
-      await loadPPIA22All(buttonId);
-      const tempContainer = document.getElementById("ppia22-grid-container")?.firstChild;
-      if (tempContainer) createFinalHTable(tempContainer);
-      ppia22ABSNoteTable(ensureAbsContainer("ppia22-abs-note","ppia22-grid-controls"), buttonId);
+      return ppiHoldRun("ppia22", async () => {
+        await loadPPIA22All(buttonId);
+        const tempContainer = document.getElementById("ppia22-grid-container")?.firstChild;
+        if (tempContainer) createFinalHTable(tempContainer);
+        ppia22ABSNoteTable(ensureAbsContainer("ppia22-abs-note","ppia22-grid-controls"), buttonId);
+      });
     }
     async function loadPPIA22DataFromKm(km, sentido) {
       try {
@@ -3266,7 +3281,7 @@
         return;
       }
       btn.classList.add("active");
-      btn.id==="B1" ? loadPPIAeroGridB1(btn.id) : loadPPIAeroGridSeparated(btn.id);
+      ppiHoldRun("ppiaero", () => btn.id==="B1" ? loadPPIAeroGridB1(btn.id) : loadPPIAeroGridSeparated(btn.id));
       ppiaeroHeaderTable(btn.id, btnData.label);
       ppiaeroInfoTable();
     }
@@ -3477,10 +3492,12 @@
       await Promise.all([loadPPILinFerDataInfoGrid(gridId), loadPPILinFerDataSpecials(gridId), loadPPILinFerGridSeparated(gridId)]);
     }
     async function loadPPILinFerDataFromButton(buttonId) {
-      await loadPPILinFerAll(buttonId);
-      const tempContainer=document.getElementById("ppilinfer-grid-container")?.firstChild;
-      if(tempContainer) createFinalHTable(tempContainer);
-      ppiLinFerABSNoteTable(ensureAbsContainer("ppilinfer-abs-note","ppilinfer-grid-controls"), buttonId);
+      return ppiHoldRun("ppilinfer", async () => {
+        await loadPPILinFerAll(buttonId);
+        const tempContainer=document.getElementById("ppilinfer-grid-container")?.firstChild;
+        if(tempContainer) createFinalHTable(tempContainer);
+        ppiLinFerABSNoteTable(ensureAbsContainer("ppilinfer-abs-note","ppilinfer-grid-controls"), buttonId);
+      });
     }
     async function loadPPILinFerDataFromKm(km, sentido) {
       try {

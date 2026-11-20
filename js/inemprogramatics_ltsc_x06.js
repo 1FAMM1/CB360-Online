@@ -1,4 +1,4 @@
-        /* =======================================================================
+    /* =======================================================================
     VERBETES INEM · CONSULTA SAÍDAS INEM | INEM-RESERVA
     ======================================================================= */
     (function () {
@@ -52,21 +52,22 @@
         #inem-entries .inem-f-codu {gap: 6px;}
         #inem-entries .inem-f-dates {gap: 8px; justify-content: center;}
         #inem-entries .inem-filter label {font-weight: bold; font-size: 13px;}
-        #inem-entries .inem-filter input {padding: 5px 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 13px;}
+        #inem-entries .inem-filter input {padding: 5px 8px; border-radius: 6px; border: 1px solid #c8c8c8; font-size: 13px; height: 32px; box-sizing: border-box;}
         #inem-entries .inem-filter input[type=date] {cursor: pointer;}
         #inem-entries .inem-filter #inem-filter-codu {width: 100px;}
-        #inem-entries .inem-search {padding: 5px 16px; border-radius: 4px; border: none; background: #131a69; color: #fff; font-weight: bold; cursor: pointer; font-size: 13px;}
-        #inem-entries .inem-wrap {overflow: auto; width: 100%; max-height: 500px; scrollbar-width: none; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 8px rgba(0,0,0,0.08);}
+        #inem-entries .inem-search {height: 32px; padding: 0 16px; border-radius: 6px; border: none; background: #c0392b; color: #fff; font-weight: bold; cursor: pointer; font-size: 12.5px;}
+        #inem-entries .inem-search:hover {background: #a93226;}
+        #inem-entries .inem-wrap {overflow: auto; width: 100%; max-height: 500px; scrollbar-width: none; border-radius: 10px; border: 1px solid #e3e7eb; box-shadow: 0 1px 3px rgba(0,0,0,0.05); background: #fff;}
         #inem-entries .inem-wrap::-webkit-scrollbar {display: none;}
         #inem-entries table {width: 100%; border-collapse: separate; border-spacing: 0; font-family: 'Segoe UI', sans-serif; font-size: 13px;}
-        #inem-entries th {background: #131a69; color: #fff; text-align: center; padding: 8px 6px; font-weight: bold; position: sticky; top: 0; z-index: 2; white-space: nowrap; font-size: 12px;
-                          border-bottom: 1px solid #2a3580; border-left: 1px solid #2a3580;}
-        #inem-entries th.red {background: #9a1515; border-color: #7b0000;}
+        #inem-entries th {background: #f1f3f5; color: #5b6670; text-align: center; padding: 9px 6px; font-weight: 800; position: sticky; top: 0; z-index: 2; white-space: nowrap; font-size: 11px;
+                          text-transform: uppercase; letter-spacing: .4px; border-bottom: 1px solid #dfe3e8; border-left: 1px solid #e3e7eb;}   /* cabeçalho claro, como as outras tabelas */
+        #inem-entries th.red {background: #fdecea; color: #b71c1c; border-bottom-color: #f5c6c2; border-left-color: #f5c6c2;}
         #inem-entries th:first-child {border-left: none; border-top-left-radius: 8px;}
         #inem-entries th:last-child {border-top-right-radius: 8px;}
         #inem-entries tbody tr:nth-child(even) {background: #f5f6fa;}
         #inem-entries tbody tr:nth-child(odd) {background: #fff;}
-        #inem-entries td {border-bottom: 1px solid #ddd; border-left: 1px solid #ddd; padding: 2px 6px; height: 24px; vertical-align: middle; text-align: center; font-size: 13px; font-weight: bold; user-select: text;}
+        #inem-entries td {border-bottom: 1px solid #eef0f2; border-left: 1px solid #eef0f2; padding: 2px 6px; height: 24px; vertical-align: middle; text-align: center; font-size: 13px; font-weight: bold; user-select: text;}
         #inem-entries td:first-child {border-left: none;}
         #inem-entries td.nosel {user-select: none;}
         #inem-entries .inem-acts {display: flex; gap: 3px; justify-content: center; align-items: center;}

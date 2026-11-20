@@ -1,5 +1,5 @@
     /* =======================================
-    LOAD MAIN DATA
+    LOAD MAIN DATA · VERSÃO AGORA (aprovações: qualquer admin ativo)
     ======================================= */
     document.addEventListener('DOMContentLoaded', async () => {      
       const currentUser = sessionStorage.getItem("currentUserName") || "";
@@ -250,10 +250,20 @@
         {key: 'pro', label: 'Férias Profissional', icon: '🏖️', page: 'page-vacations-request-rh', access: 'Pedidos de Férias RH', unit: ['pedido', 'pedidos'],
          query: () => `ped_vacat?corp_oper_nr=eq.${corp}&vacation_type=eq.Profissional&state=eq.${pend}`},
         {key: 'evt', label: 'Turnos de Eventos', icon: '🗓️', page: 'page-event-disp', access: 'Consulta Disponibilidades', unit: ['disponibilidade', 'disponibilidades'],
-         query: () => `event_disp?corp_oper_nr=eq.${corp}&shift_state=eq.${pend}&event_shift_date=gte.${paToday()}`},
+         query: async () => `event_disp?corp_oper_nr=eq.${corp}&shift_state=eq.${pend}&event_shift_date=gte.${paToday()}${await paEndedEvents(corp)}`},
         {key: 'uni', label: 'Pedidos de Fardamento', icon: '👕', page: 'page-uniform-orders', access: 'Gestão de Pedidos Fardamento', unit: ['pedido', 'pedidos'],
          query: () => `uniform_orders?corp_oper_nr=eq.${corp}&status=eq.${pend}`}
       ];
+    }
+    /* eventos encerrados antes do tempo (is_ended) não contam, mesmo com turnos futuros */
+    async function paEndedEvents(corp) {
+      try {
+        const r = await fetch(`${SUPABASE_URL}/rest/v1/event_list?corp_oper_nr=eq.${corp}&is_ended=eq.true&select=event`, {headers: getSupabaseHeaders()});
+        if (!r.ok) return '';
+        const names = [...new Set((await r.json()).map(e => e.event).filter(Boolean))];
+        if (!names.length) return '';
+        return `&event=not.in.(${names.map(n => encodeURIComponent(`"${String(n).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`)).join(',')})`;
+      } catch (e) { return ''; }
     }
     function paMenuBtn(a) { return document.querySelector(`.sidebar [data-page="${a.page}"][data-access="${a.access}"]`); }
     /* o botão do menu (e os menus acima dele) tem de estar visível para este utilizador */
@@ -281,7 +291,7 @@
     /* só o número (HEAD + count), sem trazer dados; null se falhar */
     async function paCount(a) {
       try {
-        const r = await fetch(`${SUPABASE_URL}/rest/v1/${a.query()}&select=id`, {method: 'HEAD', headers: {...getSupabaseHeaders(), 'Prefer': 'count=exact'}});
+        const r = await fetch(`${SUPABASE_URL}/rest/v1/${await a.query()}&select=id`, {method: 'HEAD', headers: {...getSupabaseHeaders(), 'Prefer': 'count=exact'}});
         if (!r.ok) return null;
         const n = parseInt((r.headers.get('content-range') || '').split('/')[1], 10);
         return Number.isFinite(n) ? n : null;

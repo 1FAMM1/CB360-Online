@@ -12,6 +12,62 @@
       const css = document.createElement('style');
       css.id = 'saloc-css';
       css.textContent = `
+        /* ===== layout novo (caixas numeradas), formulários do SALOC ===== */
+        .slx > .major-card-body {background: #efefef; display: flex; flex-direction: column; gap: 10px; padding: 12px 16px;}
+        .slx-recserv {min-height: 651px;} .slx-ineminop {min-height: 636px;}   /* mesmo tamanho do layout antigo */
+        .slx-recserv > .major-card-body, .slx-ineminop > .major-card-body {flex: 1;}
+        .slx-recserv, .slx-ineminop {display: flex; flex-direction: column;}
+        #page-recserv .slx-tbl.sl-34 {height: 257px;} #page-ineminop .slx-tbl.sl-43 {height: 264px;}   /* caixas novas: tabela mais baixa para a página ficar com a altura de antes */
+        .slx .slx-tbl tbody td:last-child {white-space: nowrap;}
+        .slx-box {background: #fff; border: 1px solid #e9ecef; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.05); padding: 10px 14px 12px; min-width: 0;}
+        .slx-bh {display: flex; align-items: center; gap: 9px; font-size: 12.5px; font-weight: 700; color: #2c3e50; margin-bottom: 8px; text-transform: uppercase; letter-spacing: .4px; min-height: 30px;}
+        .slx-n {width: 22px; height: 22px; border-radius: 50%; background: #c62828; color: #fff; font-size: 11.5px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;}
+        .slx-tools {margin-left: auto; display: flex; align-items: center; gap: 8px; text-transform: none; letter-spacing: 0; font-weight: 600; flex-wrap: wrap; justify-content: flex-end;}
+        .slx-tools label {font-size: 11px; font-weight: 700; color: #6c757d; text-transform: uppercase; margin: 0;}
+        .slx-grid {display: grid; gap: 10px;}
+        .slx-g1 {grid-template-columns: 1fr;} .slx-g2 {grid-template-columns: 1fr 1fr;} .slx-g3 {grid-template-columns: repeat(3, minmax(0, 1fr));}
+        .slx-g4 {grid-template-columns: repeat(4, minmax(0, 1fr));} .slx-g6 {grid-template-columns: repeat(6, minmax(0, 1fr));}
+        .slx-s2 {grid-column: span 2;} .slx-s3 {grid-column: span 3;} .slx-s4 {grid-column: span 4;} .slx-s6 {grid-column: 1 / -1;}
+        .slx-f {display: flex; flex-direction: column; gap: 4px; min-width: 0;}
+        .slx-f > label {font-size: 11px; font-weight: 700; color: #6c757d; text-transform: uppercase; letter-spacing: .3px; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+        .slx .slx-in {width: 100% !important; height: 32px !important; border: 1px solid #c8c8c8 !important; border-radius: 6px !important; padding: 0 9px !important; font-size: 12.5px !important; background: #fff;
+                      color: #333; box-sizing: border-box; outline: none; transition: border-color .15s, box-shadow .15s; max-width: none !important; min-width: 0 !important;}
+        .slx .slx-in:focus {border-color: #c0392b !important; box-shadow: 0 0 0 2px rgba(192,57,43,.12);}
+        .slx .slx-year {width: 90px !important;}
+        .slx .slx-search {width: 260px !important; border-radius: 999px !important;}
+        .slx-act {display: flex; justify-content: flex-end; align-items: flex-end; gap: 8px;}
+        .slx-act .btn {height: 32px;}
+        .slx-two {display: grid; grid-template-columns: 1fr 1.4fr .6fr; gap: 10px;}
+        .slx-cc {display: flex; align-items: center; gap: 6px;} .slx-cc span {color: #8a949e;}
+        .slx-cc input:last-child {width: 70px !important; flex: none;}
+        .slx-fav {display: flex !important; align-items: center; gap: 8px; height: 32px; font-size: 12.5px !important; font-weight: 600 !important; color: #2c3e50 !important; text-transform: none !important; cursor: pointer;}
+        .slx-fav input {width: 16px; height: 16px; accent-color: #c0392b;}
+        .slx-chips {display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px;}
+        .slx-chip {--c: #2c3e50; display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 11px; border-radius: 999px; font-size: 11.5px; font-weight: 700;
+                   background: color-mix(in srgb, var(--c) 10%, white); color: var(--c); border: 1px solid color-mix(in srgb, var(--c) 25%, white); white-space: nowrap;}
+        .slx-chip b {font-size: 12.5px;}
+        .slx-chip.slx-dark {background: #2c3e50; color: #fff; border-color: #2c3e50;}
+        .slx-chip.slx-ok {--c: #2e7d32;} .slx-chip.slx-bad {--c: #c62828;}
+        /* tabelas */
+        .slx .slx-tbl {border: 1px solid #e3e7eb !important; border-radius: 10px; overflow: auto; background: #fff; box-shadow: none !important; margin: 0 !important; padding: 0 !important;}
+        .slx .slx-tbl table {width: 100%; border-collapse: collapse; margin: 0; border: 0;}
+        .slx .slx-tbl thead {position: sticky; top: 0; z-index: 1;}
+        .slx .slx-tbl thead th {background: #f1f3f5 !important; color: #5b6670 !important; border: 0 !important; border-bottom: 1px solid #e3e7eb !important; padding: 9px 10px !important;
+                                font-size: 11px !important; font-weight: 800 !important; text-transform: uppercase; letter-spacing: .4px; text-align: left !important;}
+        .slx .slx-tbl tbody td {border: 0 !important; border-bottom: 1px solid #eef0f2 !important; padding: 7px 10px !important; font-size: 12.5px !important; text-align: left !important; color: #2c3e50; background: #fff;}
+        .slx .slx-tbl tbody tr:hover td {background: #fdf6f5 !important;}
+        .slx .slx-tbl tbody td[colspan] {text-align: center !important; color: #8a949e;}
+        .slx .slx-tbl tbody tr.quadro-header-row td, .slx .slx-tbl tbody tr.quadro-header-row:hover td {background: #fdf3f2 !important; color: #a70c0c !important; font-weight: 800 !important; text-align: left !important;
+                                                                                                           border-left: 3px solid #c62828 !important; font-size: 11.5px !important; letter-spacing: .4px;}
+        .slx .slx-tbl tbody button {border-radius: 6px !important; padding: 3px 9px !important; border: 1px solid transparent !important; font-size: 12px !important; cursor: pointer;}
+        .slx .slx-tbl tbody button[onclick*="Edit"], .slx .slx-tbl tbody button[onclick*="edit"] {background: #f1f3f5 !important; border-color: #d5dbe1 !important; color: #2c3e50 !important;}
+        .slx .slx-tbl tbody button[onclick*="Delete"], .slx .slx-tbl tbody button[onclick*="delete"], .slx .slx-tbl tbody .btn-delete {background: #fff !important; border-color: #f0b8b3 !important; color: #c62828 !important;}
+        .slx .slx-tbl tbody button:hover {filter: brightness(.95);}
+        .slx .slx-tbl tbody input[type="checkbox"], .slx .slx-tbl tbody input[type="radio"] {accent-color: #c0392b;}
+        .slx .slx-tbl tbody input[type="text"] {height: 28px; border: 1px solid #c8c8c8; border-radius: 6px; padding: 0 8px; box-sizing: border-box;}
+        .slx .slx-head {display: flex; align-items: center; gap: 8px;}
+        .slx .slx-head svg {opacity: .9;}
+
         /* regras vindas dos ficheiros CSS gerais (só usadas neste módulo) */
         /* - de cards_ltsc_x04.css */
         .major-card-header.header-blue {background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%); color: #ffffff; border-bottom: 1px solid #000000; padding: 5px 18px; font-size: 12px; font-weight: 600;
@@ -578,8 +634,8 @@
 `,
       'page-recserv': `
 
-      <div class="major-card major-last-card">
-        <div class="major-card-header">
+      <div class="major-card major-last-card slx slx-recserv">
+        <div class="major-card-header slx-head">
           <svg class="sl-13" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
             <path d="M8.5 8.5L15.5 15.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
@@ -588,84 +644,12 @@
           RECUSAS DE SERVIÇOS DE TRANSPORTE DE DOENTES
         </div>
         <div class="major-card-body">
-          <div class="major-row">
-            <div class="options-main-card sl-21">
-             <h3 class="sl-22">
-               REGISTO DE RECUSAS DE SERVIÇOS
-              </h3>
-              <div class="major-row sl-23">
-                <div class="major-field sl-24">
-                  <label>Data da Recusa:</label>
-                  <input class="sl-25" type="date" id="service_refusal_date">
-                </div>
-                <div class="major-field sl-24">
-                  <label>Hora da Recusa:</label>
-                  <input class="sl-26" type="time" id="service_refusal_time">
-                </div>
-                <div class="major-field sl-24">
-                  <label>Tipo de Serviço:</label>
-                  <select class="sl-27" id="service_refusal_type"></select>
-                </div>
-                <div class="major-field sl-24">
-                  <label class="sl-28">Motivo da Recusa:</label>
-                  <select class="sl-27" id="service_refusal_motive"></select>
-                </div>
-              </div>
-              <div class="major-row sl-23">
-                <div class="major-field sl-24">
-                  <label>Origem do Serviço:</label>
-                  <input class="sl-27" type="text" id="service_refusal_origin">
-                </div>
-                <div class="major-field sl-24">
-                  <label>Destino do Serviço:</label>
-                  <input class="sl-27" type="text" id="service_refusal_destination">
-                </div>
-              </div>
-              <div class="major-row">
-                <div class="major-field sl-24">
-                  <label>Optel de Serviço:</label>
-                  <input class="sl-27" type="text" id="service_refusal_optel">
-                </div>
-                <div class="major-field sl-24">
-                  <label>Validado por:</label>
-                  <input class="sl-27" type="text" id="service_refusal_validation">
-                </div>
-              </div>
-              <div class="action-buttons" id="service-refusal">
-                <button class="btn btn-add" onclick="insertServiceRefusal()">💾 GUARDAR</button>
-              </div>
-            </div>
-          </div>
-          <hr class="sl-29">
-          <div class="table-header sl-30" style="display: flex;">
-            <div>
-              <h3 class="sl-31">Listagem de Recusas de Serviços</h3>
-            </div>
-            <div class="major-field sl-32">
-              <label class="sl-33">Ano:</label>
-              <select id="refusals_year_filter" style="height: 25px; padding: 2px 6px; font-size: 14px;">
-              </select>
-            </div>
-          </div>
-          <div class="table-container sl-34">
+          <section class="slx-box"><div class="slx-bh"><span class="slx-n">1</span>Registo da recusa</div><div class="slx-grid slx-g4"><div class="slx-f"><label for="service_refusal_date">Data da recusa</label><input type="date" id="service_refusal_date" class="slx-in"></div><div class="slx-f"><label for="service_refusal_time">Hora da recusa</label><input type="time" id="service_refusal_time" class="slx-in"></div><div class="slx-f"><label for="service_refusal_type">Tipo de serviço</label><select id="service_refusal_type" class="slx-in"></select></div><div class="slx-f"><label for="service_refusal_motive">Motivo da recusa</label><select id="service_refusal_motive" class="slx-in"></select></div><div class="slx-f slx-s2"><label for="service_refusal_origin">Origem do serviço</label><input type="text" id="service_refusal_origin" class="slx-in"></div><div class="slx-f slx-s2"><label for="service_refusal_destination">Destino do serviço</label><input type="text" id="service_refusal_destination" class="slx-in"></div><div class="slx-f"><label for="service_refusal_optel">Optel de serviço</label><input type="text" id="service_refusal_optel" class="slx-in"></div><div class="slx-f"><label for="service_refusal_validation">Validado por</label><input type="text" id="service_refusal_validation" class="slx-in"></div><div class="slx-act slx-s2" id="service-refusal"><button class="btn btn-add slx-save" onclick="insertServiceRefusal()">💾 GUARDAR</button></div></div></section><section class="slx-box"><div class="slx-bh"><span class="slx-n">2</span>Recusas registadas<div class="slx-tools"><label for="refusals_year_filter">Ano</label><select id="refusals_year_filter" class="slx-in slx-year"></select></div></div><div class="table-container sl-34 slx-tbl">
             <table id="service-refusals-table">
-              <thead>
-                <tr>
-                  <th class="sl-35">Data</th>
-                  <th class="sl-36">Hora</th>
-                  <th class="sl-37">Tipo</th>
-                  <th class="sl-38">Origem</th>
-                  <th class="sl-38">Destino</th>
-                  <th class="sl-39">Motivo</th>
-                  <th class="sl-25">Optel</th>
-                  <th class="sl-25">Validação</th>
-                  <td></td>
-                </tr>
-              </thead>
-              <tbody>
-              </tbody>
+              <thead><tr><th style="width:95px">Data</th><th style="width:65px">Hora</th><th>Tipo</th><th>Origem</th><th>Destino</th><th>Motivo</th><th>Optel</th><th>Validação</th><th style="width:44px"></th></tr></thead>
+              <tbody></tbody>
             </table>
-          </div>
+          </div></section>
         </div>
         <div class="major-card-footer"></div>
       </div>
@@ -673,8 +657,8 @@
 `,
       'page-ineminop': `
 
-      <div class="major-card major-last-card">
-        <div class="major-card-header">
+      <div class="major-card major-last-card slx slx-ineminop">
+        <div class="major-card-header slx-head">
           <svg class="sl-13" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M3 13V8C3 6.9 3.9 6 5 6H14C15.1 6 16 6.9 16 8V13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
             <circle cx="7" cy="16.5" r="1.5" stroke="currentColor" stroke-width="1.6"/>
@@ -684,81 +668,12 @@
           INOPERACIONALIDADES VEÍCULO (INEM)
         </div>
         <div class="major-card-body">
-          <div class="major-row">
-            <div class="options-main-card sl-21">
-              <h3 class="sl-40" style="display: flex;">
-                REGISTO DE INOPERACIONALIDADES (INEM)
-              </h3>
-              <div class="major-row sl-23">
-                <div class="major-field sl-24">
-                  <label>Data da Inoperacionalidade:</label>
-                  <input class="sl-25" type="date" id="ineinop_date">
-                </div>
-                <div class="major-field sl-24">
-                  <label>Turno:</label>
-                  <select class="sl-41" id="ineinop_shift">
-                    <option>&nbsp;</option>
-                    <option>D</option>
-                    <option>N</option>
-                  </select>
-                </div>
-                <div class="major-field sl-24">
-                  <label>Qtd Horas:</label>
-                  <input class="sl-26" type="time" id="ineinop_hour_qtd">
-                </div>
-                <div class="major-field sl-24">
-                  <label>Motivo da Inopercacionalidade:</label>
-                  <select class="sl-27" id="reason_for_ineinop"></select>
-                </div>
-              </div>
-              <div class="major-row sl-23">
-                <div class="major-field sl-24">
-                  <label>Tripulante:</label>
-                  <input class="sl-27" type="text" id="ineinop_crew">
-                </div>
-                <div class="major-field sl-24">
-                  <label>Optel de Serviço:</label>
-                  <input class="sl-27" type="text" id="ineinop_optel">
-                </div>
-                <div class="major-field sl-24">
-                  <label>Validado por:</label>
-                  <input class="sl-27" type="text" id="ineinop_validation">
-                </div>
-              </div>
-              <div class="action-buttons" id="inem-inop">
-                <button class="btn btn-add" onclick="insertIneInop()">💾 GUARDAR</button>
-              </div>
-            </div>
-          </div>
-          <hr class="sl-29">
-          <div class="table-header sl-30" style="display: flex;">
-            <div>
-              <h3 class="sl-31">Listagem de Inoperacionalidades (INEM)</h3>
-            </div>
-            <div class="major-field sl-32">
-              <label class="sl-42">Ano:</label>
-              <select id="ineinop_year_filter" style="height: 25px; padding: 2px 6px; font-size: 14px;">
-              </select>
-            </div>
-          </div>
-          <div class="table-container sl-43">
+          <section class="slx-box"><div class="slx-bh"><span class="slx-n">1</span>Registo da inoperacionalidade</div><div class="slx-grid slx-g4"><div class="slx-f"><label for="ineinop_date">Data</label><input type="date" id="ineinop_date" class="slx-in"></div><div class="slx-f"><label for="ineinop_shift">Turno</label><select id="ineinop_shift" class="slx-in"><option>&nbsp;</option><option>D</option><option>N</option></select></div><div class="slx-f"><label for="ineinop_hour_qtd">Qtd. horas</label><input type="time" id="ineinop_hour_qtd" class="slx-in"></div><div class="slx-f"><label for="reason_for_ineinop">Motivo da inoperacionalidade</label><select id="reason_for_ineinop" class="slx-in"></select></div><div class="slx-f slx-s2"><label for="ineinop_crew">Tripulante</label><input type="text" id="ineinop_crew" class="slx-in"></div><div class="slx-f"><label for="ineinop_optel">Optel de serviço</label><input type="text" id="ineinop_optel" class="slx-in"></div><div class="slx-f"><label for="ineinop_validation">Validado por</label><input type="text" id="ineinop_validation" class="slx-in"></div><div class="slx-act slx-s4" id="inem-inop"><button class="btn btn-add slx-save" onclick="insertIneInop()">💾 GUARDAR</button></div></div></section><section class="slx-box"><div class="slx-bh"><span class="slx-n">2</span>Inoperacionalidades registadas<div class="slx-tools"><label for="ineinop_year_filter">Ano</label><select id="ineinop_year_filter" class="slx-in slx-year"></select></div></div><div class="table-container sl-43 slx-tbl">
             <table id="ineinop-table">
-              <thead>
-                <tr>
-                  <th class="sl-35">Data</th>
-                  <th class="sl-36">Turno</th>
-                  <th class="sl-36">Qtd. Horas</th>
-                  <th class="sl-44">Motivo</th>
-                  <th class="sl-44">Tripulante</th>
-                  <th class="sl-27">Optel</th>
-                  <th class="sl-27">Validação</th>
-                  <td></td>
-                </tr>
-              </thead>
-              <tbody>
-              </tbody>
+              <thead><tr><th style="width:95px">Data</th><th style="width:60px">Turno</th><th style="width:90px">Qtd. horas</th><th>Motivo</th><th>Tripulante</th><th>Optel</th><th>Validação</th><th style="width:44px"></th></tr></thead>
+              <tbody></tbody>
             </table>
-          </div>
+          </div></section>
         </div>
         <div class="major-card-footer"></div>
       </div>
@@ -1900,8 +1815,8 @@
 `,
       'page-material-request': `
 
-      <div class="major-card">
-        <div class="major-card-header sl-184" style="display: flex;">
+      <div class="major-card major-last-card slx ">
+        <div class="major-card-header slx-head">
           <svg class="sl-212" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
             <rect x="9" y="3" width="6" height="4" rx="1"/>
@@ -1911,79 +1826,26 @@
           REQUISIÇÃO DE EQUIPAMENTOS
         </div>
         <div class="major-card-body">
-          <div class="major-field sl-213">
-            <label class="sl-214">Nome do Requisitante:</label>
-            <input class="sl-215" type="text" id="requesting_name">
-            <label class="sl-214">BI/CC/Passaporte:</label>
-            <input class="sl-216" type="text" id="requesting_cc">
-            <label class="sl-33">-</label>
-            <input type="text" id="requesting_cc_secur" style="flex: 1; min-width: 50px; max-width: 70px;">
-            <label class="sl-214">Contacto:</label>
-            <input type="text" id="requesting_contact" style="flex: 1; min-width: 100px;">
-          </div>
-          <div class="major-field sl-217">
-            <label class="sl-214">Equipamento(s) Requisitado(s):</label>
-            <input type="text" id="requesting_equipment" style="flex: 3; min-width: 150px;">
-          </div>
-          <div class="major-field sl-217">
-            <label class="sl-214">Data Entrega:</label>
-            <input type="date" id="delivery_date" style="flex: 1; min-width: 130px; max-width: 150px;">
-            <label class="sl-214">Previsão de Devolução:</label>
-            <input type="date" id="return_estimate" style="flex: 1; min-width: 130px; max-width: 150px;">                       
-          </div>
-          <div class="major-field sl-217">
-            <label class="sl-214">Autorizado Por:</label>
-            <input type="text" id="autoryzed_by" style="flex: 1; min-width: 130px; max-width: 250px;">
-            <label class="sl-214">OPTEL:</label>
-            <input type="text" id="optel" style="flex: 1; min-width: 130px; max-width: 250px;">                       
-          </div>
-          <div class="major-field sl-217">
-            <label class="sl-214">Data Devolução:</label>
-            <input type="date" id="return_date" style="flex: 1; min-width: 130px; max-width: 150px;">
-            <label class="sl-214">Estado:</label>
-            <input type="text" id="return_status" style="flex: 1; min-width: 100px; max-width: 150px;">                      
-          </div>
-          <div class="sl-218">
-            <div class="options-main-card">
-              <h3 class="sl-219">
-                LISTAGEM DE REQUISIÇÕES DE EQUIPAMENTOS
-              </h3>
-              <div class="sl-195">
+          <div class="slx-two"><section class="slx-box"><div class="slx-bh"><span class="slx-n">1</span>Requisitante</div><div class="slx-grid slx-g3"><div class="slx-f slx-s3"><label for="requesting_name">Nome do requisitante</label><input type="text" id="requesting_name" class="slx-in"></div><div class="slx-f slx-s2"><label for="requesting_cc">BI / CC / Passaporte</label><div class="slx-cc"><input type="text" id="requesting_cc" class="slx-in"><span>-</span><input type="text" id="requesting_cc_secur" class="slx-in"></div></div><div class="slx-f"><label for="requesting_contact">Contacto</label><input type="text" id="requesting_contact" class="slx-in"></div></div></section><section class="slx-box"><div class="slx-bh"><span class="slx-n">2</span>Equipamento</div><div class="slx-grid slx-g4"><div class="slx-f slx-s4"><label for="requesting_equipment">Equipamento(s) requisitado(s)</label><input type="text" id="requesting_equipment" class="slx-in"></div><div class="slx-f"><label for="delivery_date">Data de entrega</label><input type="date" id="delivery_date" class="slx-in"></div><div class="slx-f"><label for="return_estimate">Previsão de devolução</label><input type="date" id="return_estimate" class="slx-in"></div><div class="slx-f"><label for="autoryzed_by">Autorizado por</label><input type="text" id="autoryzed_by" class="slx-in"></div><div class="slx-f"><label for="optel">OPTEL</label><input type="text" id="optel" class="slx-in"></div></div></section><section class="slx-box"><div class="slx-bh"><span class="slx-n">3</span>Devolução</div><div class="slx-grid slx-g1"><div class="slx-f"><label for="return_date">Data de devolução</label><input type="date" id="return_date" class="slx-in"></div><div class="slx-f"><label for="return_status">Estado</label><input type="text" id="return_status" class="slx-in"></div></div></section></div><section class="slx-box"><div class="slx-bh"><span class="slx-n">4</span>Requisições de equipamentos</div><div class="sl-195 slx-tbl">
                 <table class="sl-143">
-                  <thead class="sl-196">
-                    <tr class="sl-197">
-                      <th class="sl-198">Nome</th>
-                      <th class="sl-198">BI/CC</th>
-                      <th class="sl-198">Contacto</th>
-                      <th class="sl-198">Equipamento(s)</th>
-                      <th class="sl-198">Entrega</th>
-                      <th class="sl-198">Prev. Devolução</th>
-                      <th class="sl-198">Autorizado Por</th>
-                      <th class="sl-198">Estado</th>
-                      <th class="sl-220">Ações</th>
-                    </tr>
-                  </thead>
+                  <thead><tr><th>Nome</th><th>BI/CC</th><th>Contacto</th><th>Equipamento(s)</th><th>Entrega</th><th>Prev. devolução</th><th>Autorizado por</th><th>Estado</th><th style="width:90px">Ações</th></tr></thead>
                   <tbody id="equipment-request-tbody">
                     <tr><td class="sl-221" colspan="9">Sem registos</td></tr>
                   </tbody>
                 </table>
-              </div>
-            </div>
-          </div>
+              </div></section>
         </div>
-        <div class="major-card-footer">
-          <div class="sl-222" id="equipment-request-options">
+        <div class="major-card-footer"><div class="sl-222" id="equipment-request-options">
             <button id="equipment-request-save" class="btn btn-add">💾 GRAVAR</button>
             <button id="equipment-request-emit" class="btn btn-danger" disabled>📄 EMITIR</button>
-          </div>
-        </div>
+          </div></div>
       </div>
 
 `,
       'page-fleet-cards': `
 
-      <div class="major-card">
-        <div class="major-card-header sl-184" style="display: flex;">
+      <div class="major-card major-last-card slx ">
+        <div class="major-card-header slx-head">
           <svg class="sl-212" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M3 22V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/>
             <path d="M3 22h12"/>
@@ -1993,59 +1855,26 @@
           CARTÕES FROTA
         </div>
         <div class="major-card-body">
-          <div class="major-field sl-32">
-            <label class="sl-33">Veículo:</label>
-            <input type="text" id="veíc_card_name" style="width: 150px;">
-            <label class="sl-33">Matricula:</label>
-            <input type="text" id="veíc_card_register" style="width: 150px;">
-            <label class="sl-33">Código Cartão:</label>
-            <input type="text" id="veíc_card_code" style="width: 150px;">
-            <label class="sl-33">Telemóvel:</label>
-            <input type="text" id="veíc_card_contact" style="width: 150px;">
-          </div>
-          <div class="sl-218">
-            <div class="options-main-card">
-              <h3 class="sl-223">
-                LISTAGEM DE CARTÕES FROTA
-              </h3>
-              <div class="sl-195">
+          <section class="slx-box"><div class="slx-bh"><span class="slx-n">1</span>Cartão frota</div><div class="slx-grid slx-g4"><div class="slx-f"><label for="veíc_card_name">Veículo</label><input type="text" id="veíc_card_name" class="slx-in"></div><div class="slx-f"><label for="veíc_card_register">Matrícula</label><input type="text" id="veíc_card_register" class="slx-in"></div><div class="slx-f"><label for="veíc_card_code">Código do cartão</label><input type="text" id="veíc_card_code" class="slx-in"></div><div class="slx-f"><label for="veíc_card_contact">Telemóvel</label><input type="text" id="veíc_card_contact" class="slx-in"></div></div></section><section class="slx-box"><div class="slx-bh"><span class="slx-n">2</span>Cartões frota<div class="slx-tools"><span class="slx-chip">Total <b id="fleet-total">0</b></span><span class="slx-chip slx-ok">Operacionais <b id="fleet-operacional">0</b></span><span class="slx-chip slx-bad">Inoperacionais <b id="fleet-inoperacional">0</b></span></div></div><div class="sl-195 slx-tbl">
                 <table class="sl-143">
-                  <thead class="sl-196">
-                    <tr class="sl-197">
-                      <th class="sl-198">Veículo</th>
-                      <th class="sl-198">Matrícula</th>
-                      <th class="sl-198">Código Cartão</th>
-                      <th class="sl-198">Contacto</th>
-                      <th class="sl-198">Estado</th>
-                      <th class="sl-224">Ações</th>
-                    </tr>
-                  </thead>
+                  <thead><tr><th>Veículo</th><th>Matrícula</th><th>Código cartão</th><th>Contacto</th><th>Estado</th><th style="width:90px">Ações</th></tr></thead>
                   <tbody id="fleet-cards-tbody">
                     <tr><td class="sl-200" colspan="5">Sem registos</td></tr>
                   </tbody>
                 </table>
-              </div>
-            </div>
-          </div>
-          <div class="sl-225" style="display: flex;">
-            <span>Total de Veículos: <span class="sl-226" id="fleet-total">0</span></span>
-            <span>Operacionais: <span class="sl-227" id="fleet-operacional">0</span></span>
-            <span>Inoperacionais: <span class="sl-228" id="fleet-inoperacional">0</span></span>
-          </div>
+              </div></section>
         </div>
-        <div class="major-card-footer">
-          <div class="sl-222" id="card-fleet-options">
+        <div class="major-card-footer"><div class="sl-222" id="card-fleet-options">
             <button id="card-fleet-save" class="btn btn-add">💾 GRAVAR</button>
             <button id="card-fleet-emit" class="btn btn-danger">📄 EMITIR</button>
-          </div>
-        </div>
+          </div></div>
       </div>
 
 `,
       'page-contact-list': `
 
-      <div class="major-card">
-        <div class="major-card-header sl-184" style="display: flex;">
+      <div class="major-card major-last-card slx ">
+        <div class="major-card-header slx-head">
           <svg class="sl-212" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
             <circle cx="9" cy="7" r="4"/>
@@ -2055,64 +1884,36 @@
           LISTA DE CONTACTOS
         </div>
         <div class="major-card-body">
-          <div class="major-field sl-64">
-            <label class="sl-33">Pesquisar:</label>
-            <div class="sl-229" style="display: flex;">
-              <input class="sl-230" type="text" id="contact-list-search">
-              <svg class="sl-231" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" 
-                   title="Pesquisar">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
-            </div>
+          <section class="slx-box"><div class="slx-bh"><span class="slx-n">1</span>Contactos internos<div class="slx-tools"><input type="search" id="contact-list-search" class="slx-in slx-search" placeholder="🔍 Pesquisar nº, patente ou nome..."></div></div><div class="slx-chips">
+            <span class="slx-chip slx-dark">Total <b id="contact-total">0</b></span>
+            <span class="slx-chip" style="--c:#c62828">Q. Comando <b id="contact-qcom">0</b></span>
+            <span class="slx-chip" style="--c:#1565c0">Q. Ativo <b id="contact-qativ">0</b></span>
+            <span class="slx-chip" style="--c:#ef6c00">Q. Estagiários <b id="contact-qest">0</b></span>
+            <span class="slx-chip" style="--c:#2e7d32">Q. Espec./Aux. <b id="contact-qea">0</b></span>
+            <span class="slx-chip" style="--c:#6a1b9a">Q. Reserva <b id="contact-qres">0</b></span>
+            <span class="slx-chip" style="--c:#546e7a">Q. Honra <b id="contact-qhr">0</b></span>
           </div>
-          <div class="options-main-card">
-            <h3 class="sl-219">
-              CONTACTOS INTERNOS
-            </h3>
-            <div class="sl-195">
+          <div class="sl-195 slx-tbl">
               <table class="sl-143">
-                <thead class="sl-196">
-                  <tr class="sl-197">
-                    <th class="sl-232">Nº Int.</th>
-                    <th class="sl-232">Patente</th>
-                    <th class="sl-232">Nome Completo</th>
-                    <th class="sl-232">Telefone</th>
-                    <th class="sl-232">Telemóvel</th>
-                    <th class="sl-232">Email</th>
-                    <th class="sl-233" colspan="2">Ações</th>
-                  </tr>
-                </thead>
+                <thead><tr><th style="width:70px">Nº Int.</th><th style="width:110px">Patente</th><th>Nome completo</th><th>Telefone</th><th>Telemóvel</th><th>Email</th><th colspan="2" style="width:170px">Ações</th></tr></thead>
                 <tbody id="contact-list-tbody">
                   <tr><td class="sl-234" colspan="8">Sem registos</td></tr>
                 </tbody>
               </table>
-            </div>
-          </div>
-          <div class="sl-235" style="display: flex;">
-            <span class="sl-236">Total: <span id="contact-total">0</span></span>
-            <span class="sl-237">Quad. Comando: <span id="contact-qcom">0</span></span>
-            <span class="sl-238">Quad. Ativo: <span id="contact-qativ">0</span></span>
-            <span class="sl-239">Quad. Estagiários: <span id="contact-qest">0</span></span>
-            <span class="sl-240">Quad. Espec./Aux.: <span id="contact-qea">0</span></span>
-            <span class="sl-241">Quad. Reserva: <span id="contact-qres">0</span></span>
-            <span class="sl-242">Quad. Honra: <span id="contact-qhr">0</span></span>
-          </div>
+            </div></section>
         </div>
-        <div class="major-card-footer">
-          <div class="sl-222" style="display: flex;">
+        <div class="major-card-footer"><div class="sl-222" style="display: flex;">
             <button id="contact-list-selected-email" class="btn btn-add" disabled style="opacity:0.4; cursor:not-allowed;">✉️ Enviar para Selecionados (<span id="contact-selected-count">0</span>)</button>
             <button id="contact-list-global-email" class="btn btn-danger">✉️ Enviar para Todos</button>
             <button id="contact-list-emit" class="btn btn-success">🖨️ Emitir Listagem</button>
-          </div>
-        </div>
+          </div></div>
       </div>
 
 `,
       'page-attendance-list': `
 
-      <div class="major-card">
-        <div class="major-card-header sl-184" style="display: flex;">
+      <div class="major-card major-last-card slx ">
+        <div class="major-card-header slx-head">
           <svg class="sl-212" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
             <line x1="16" y1="2" x2="16" y2="6"/>
@@ -2125,179 +1926,46 @@
           LISTA DE COMPARÊNCIAS EM EVENTOS
         </div>
         <div class="major-card-body">
-          <div class="major-field sl-243">
-            <div class="sl-244" style="display: flex;">
-              <label class="sl-33">Evento:</label>
-              <input type="text" id="attendance-event-name" style="width: 300px;">
-            </div>
-            <div class="sl-244" style="display: flex;">
-              <label class="sl-33">Eventos Recentes:</label>
-              <select id="attendance-recent-events" style="width: 300px;">
-                <option></option>
-              </select>
-            </div>
-          </div>
-          <div class="options-main-card">
-            <h3 class="sl-219">
-              LISTAGEM
-            </h3>
-            <div class="sl-195">
+          <section class="slx-box"><div class="slx-bh"><span class="slx-n">1</span>Evento</div><div class="slx-grid slx-g2"><div class="slx-f"><label for="attendance-event-name">Nome do evento</label><input type="text" id="attendance-event-name" class="slx-in"></div><div class="slx-f"><label for="attendance-recent-events">Eventos recentes</label><select id="attendance-recent-events" class="slx-in"><option></option></select></div></div></section><section class="slx-box"><div class="slx-bh"><span class="slx-n">2</span>Listagem<div class="slx-tools"><span class="slx-chip slx-dark">Contactados <b id="contact-attendance-total">0</b></span><span class="slx-chip slx-ok">Comparece <b id="contact-attendance">0</b></span><span class="slx-chip slx-bad">Não comparece <b id="contact-noattendance">0</b></span></div></div><div class="sl-195 slx-tbl">
               <table class="sl-143">
-                <thead class="sl-196">
-                  <tr class="sl-197">
-                    <th class="sl-232">Nº Int.</th>
-                    <th class="sl-232">Patente</th>
-                    <th class="sl-232">Nome Completo</th>
-                    <th class="sl-232">Telefone</th>
-                    <th class="sl-232">Telemóvel</th>
-                    <th class="sl-245" colspan="2">Comparência</th>                    
-                    <th class="sl-246">Motivo de Falta</th>                   
-                  </tr>
-                </thead>
+                <thead><tr><th style="width:70px">Nº Int.</th><th style="width:110px">Patente</th><th>Nome completo</th><th>Telefone</th><th>Telemóvel</th><th colspan="2" style="width:170px">Comparência</th><th>Motivo de falta</th></tr></thead>
                 <tbody id="attendance-list-tbody">
                   <tr><td class="sl-234" colspan="8">Sem registos</td></tr>
                 </tbody>
               </table>
-            </div>
-          </div>
-          <div class="sl-235" style="display: flex;">
-            <span class="sl-236">Total Contactados: <span id="contact-attendance-total">0</span></span>
-            <span class="sl-247">Comparece: <span id="contact-attendance">0</span></span>
-            <span class="sl-248">Não Comparece: <span id="contact-noattendance">0</span></span>
-          </div>
+            </div></section>
         </div>
-        <div class="major-card-footer">
-          <div class="sl-222" style="display: flex;">
+        <div class="major-card-footer"><div class="sl-222" style="display: flex;">
             <button id="attendance-list-save" class="btn btn-add">💾 Guardar</button>
             <button id="attendance-list-delete" class="btn btn-danger">🗑️ Eliminar</button>
             <button id="attendance-list-emit" class="btn btn-success">🖨️ Emitir Listagem</button>
-          </div>
-        </div>
+          </div></div>
       </div>
 
 `,
       'page-phonebook': `
 
-      <div class="major-card">
-        <div class="major-card-header sl-184" style="display: flex;">
+      <div class="major-card major-last-card slx ">
+        <div class="major-card-header slx-head">
           <svg class="sl-212" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.38 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.82a16 16 0 0 0 6.29 6.29l1.88-1.88a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
           </svg>
           AGENDA TELEFÓNICA
         </div>
         <div class="major-card-body">
-          <div class="sl-249" style="display: flex;">
-            <button id="phonebook-add" class="btn btn-add">➕ ADICIONAR</button>
-          </div>
-          <div id="phonebook-form-container" class="options-main-card" style="display: none; margin-bottom: 15px;">
-            <h3 class="sl-219">
-              DADOS DO CONTACTO / ENTIDADE
-            </h3>
-            <div class="major-field sl-32" style="display: flex;">
-              <label class="sl-33">Nome / Designação:</label>
-              <input class="sl-167" type="text" id="phonebook-name">
-              <label class="sl-33">Tipo:</label>
-              <select id="phonebook-type" style="width: 130px; padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 13px;">
-                <option value="">Selecionar...</option>
-                <option value="Pessoa">Pessoa</option>
-                <option value="Entidade">Entidade</option>
-                <option value="Serviço">Serviço</option>
-              </select>
-              <label class="sl-33">Categoria:</label>
-              <select id="phonebook-category" style="width: 160px; padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 13px;">
-                <option value="">Selecionar...</option>
-                <option value="Bombeiros">Bombeiros</option>
-                <option value="GNR">GNR</option>
-                <option value="PSP">PSP</option>
-                <option value="INEM">INEM</option>
-                <option value="Câmara">Câmara</option>
-                <option value="Hospital">Hospital</option>
-                <option value="Outros">Outros</option>
-              </select>
-              <label class="sl-33">Subcategoria:</label>
-              <input class="sl-38" type="text" id="phonebook-subcategory">
-            </div>
-            <div class="major-field sl-188" style="display: flex;">
-              <label class="sl-33">Telefone:</label>
-              <input class="sl-46" type="text" id="phonebook-phone">
-              <label class="sl-33">Telemóvel:</label>
-              <input class="sl-46" type="text" id="phonebook-mobile">
-              <label class="sl-33">Email:</label>
-              <input class="sl-120" type="text" id="phonebook-email">
-              <label class="sl-33">Disponibilidade:</label>
-              <select id="phonebook-availability" style="width: 150px; padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 13px;">
-                <option value="">Selecionar...</option>
-                <option value="24h">24 Horas</option>
-                <option value="Laboral">Horário Laboral</option>
-                <option value="Outro">Outro</option>
-              </select>
-              <label class="sl-250" style="display: flex;">
-                <input class="sl-251" type="checkbox" id="phonebook-favorite">
-                ⭐ Favorito
-              </label>
-            </div>
-            <div class="major-field sl-188" style="display: flex;">
-              <label class="sl-33">Morada:</label>
-              <input class="sl-167" type="text" id="phonebook-address">
-              <label class="sl-33">Localidade:</label>
-              <input class="sl-44" type="text" id="phonebook-locality">
-              <label class="sl-33">Cód. Postal:</label>
-              <input class="sl-26" type="text" id="phonebook-zipcode" placeholder="0000-000">
-              <label class="sl-33">Notas:</label>
-              <input type="text" id="phonebook-notes" style="width: 350px;">
-            </div>
-            <div class="sl-252" style="display: flex;">
-              <button id="phonebook-save" class="btn btn-success">💾 GRAVAR</button>
-            </div>
-          </div>
-          <div class="sl-253">
-            <div class="options-main-card">
-              <h3 class="sl-219">
-                LISTAGEM DE ENTIDADES
-              </h3>
-              <div class="major-field sl-64" style="display: flex;">
-                <label class="sl-33">Pesquisar:</label>
-                <div class="sl-229" style="display: flex;">
-                  <input class="sl-230" type="text" id="phonebook-search" placeholder="Nome, categoria, telefone...">
-                  <svg class="sl-231" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" title="Pesquisar">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                  </svg>
-                </div>
-              </div>
-              <div class="sl-195">
+          <section class="slx-box" id="phonebook-form-container" style="display: none;"><div class="slx-bh"><span class="slx-n">✎</span>Dados do contacto / entidade</div><div class="slx-grid slx-g6"><div class="slx-f slx-s2"><label for="phonebook-name">Nome / designação</label><input type="text" id="phonebook-name" class="slx-in"></div><div class="slx-f"><label for="phonebook-type">Tipo</label><select id="phonebook-type" class="slx-in"><option value="">Selecionar...</option><option value="Pessoa">Pessoa</option><option value="Entidade">Entidade</option><option value="Serviço">Serviço</option></select></div><div class="slx-f"><label for="phonebook-category">Categoria</label><select id="phonebook-category" class="slx-in"><option value="">Selecionar...</option><option value="Bombeiros">Bombeiros</option><option value="GNR">GNR</option><option value="PSP">PSP</option><option value="INEM">INEM</option><option value="Câmara">Câmara</option><option value="Hospital">Hospital</option><option value="Outros">Outros</option></select></div><div class="slx-f"><label for="phonebook-subcategory">Subcategoria</label><input type="text" id="phonebook-subcategory" class="slx-in"></div><div class="slx-f"><label for="phonebook-availability">Disponibilidade</label><select id="phonebook-availability" class="slx-in"><option value="">Selecionar...</option><option value="24h">24 Horas</option><option value="Laboral">Horário Laboral</option><option value="Outro">Outro</option></select></div><div class="slx-f"><label for="phonebook-phone">Telefone</label><input type="text" id="phonebook-phone" class="slx-in"></div><div class="slx-f"><label for="phonebook-mobile">Telemóvel</label><input type="text" id="phonebook-mobile" class="slx-in"></div><div class="slx-f slx-s2"><label for="phonebook-email">Email</label><input type="text" id="phonebook-email" class="slx-in"></div><div class="slx-f slx-s2"><label>&nbsp;</label><label class="slx-fav" for="phonebook-favorite"><input type="checkbox" id="phonebook-favorite"> ⭐ Favorito</label></div><div class="slx-f slx-s2"><label for="phonebook-address">Morada</label><input type="text" id="phonebook-address" class="slx-in"></div><div class="slx-f"><label for="phonebook-locality">Localidade</label><input type="text" id="phonebook-locality" class="slx-in"></div><div class="slx-f"><label for="phonebook-zipcode">Cód. postal</label><input type="text" id="phonebook-zipcode" class="slx-in" placeholder="0000-000"></div><div class="slx-f slx-s2"><label for="phonebook-notes">Notas</label><input type="text" id="phonebook-notes" class="slx-in"></div><div class="slx-act slx-s6"><button id="phonebook-save" class="btn btn-success">💾 GRAVAR</button></div></div></section><section class="slx-box"><div class="slx-bh"><span class="slx-n">1</span>Entidades<div class="slx-tools"><span class="slx-chip slx-dark">Total <b id="phonebook-total">0</b></span><span class="slx-chip" style="--c:#f9a825">⭐ Favoritos <b id="phonebook-favorites">0</b></span><input type="search" id="phonebook-search" class="slx-in slx-search" placeholder="🔍 Nome, categoria, telefone..."><button id="phonebook-add" class="btn btn-add">➕ ADICIONAR</button></div></div><div class="sl-195 slx-tbl">
                 <table class="sl-143">
-                  <thead class="sl-196">
-                    <tr class="sl-197">
-                      <th class="sl-198">Fav.</th>
-                      <th class="sl-198">Nome / Designação</th>
-                      <th class="sl-198">Tipo</th>
-                      <th class="sl-198">Categoria</th>
-                      <th class="sl-198">Telefone</th>
-                      <th class="sl-198">Telemóvel</th>
-                      <th class="sl-198">Email</th>
-                      <th class="sl-198">Disponibilidade</th>
-                      <th class="sl-224">Ações</th>
-                    </tr>
-                  </thead>
+                  <thead><tr><th style="width:50px">Fav.</th><th>Nome / designação</th><th>Tipo</th><th>Categoria</th><th>Telefone</th><th>Telemóvel</th><th>Email</th><th>Disponibilidade</th><th style="width:90px">Ações</th></tr></thead>
                   <tbody id="phonebook-tbody">
                     <tr><td class="sl-200" colspan="9">Sem registos</td></tr>
                   </tbody>
                 </table>
-              </div>
-            </div>
-          </div>
-          <div class="sl-225" style="display: flex;">
-            <span>Total de Contactos: <span class="sl-226" id="phonebook-total">0</span></span>
-            <span>Favoritos: <span class="sl-254" id="phonebook-favorites">0</span></span>
-          </div>
+              </div></section>
         </div>
-        <div class="major-card-footer">
-          <div class="sl-222" style="display: flex;">
+        <div class="major-card-footer"><div class="sl-222" style="display: flex;">
             <button id="phonebook-delete" class="btn btn-danger" style="display: none;" disabled>🗑️ ELIMINAR</button>
             <button id="phonebook-emit" class="btn btn-danger">📄 EMITIR</button>
-          </div>
-        </div>
+          </div></div>
       </div>
 
 `,

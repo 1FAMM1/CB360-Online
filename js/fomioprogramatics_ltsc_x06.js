@@ -36,8 +36,60 @@
         /* fardamento */
         .fo-unif-bar {display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px;}
         .fo-unif-bar > label {font-size: 12px; font-weight: 600; color: #495057;}
-        .table-responsive-event.fo-h330 {max-height: calc(100vh - 330px); overflow-y: auto;}
-        .table-responsive-event.fo-h290 {max-height: calc(100vh - 290px); overflow-y: auto;}
+        .table-responsive-event.fo-h430 {max-height: calc(100vh - 430px); overflow-y: auto;}
+        .table-responsive-event.fo-h410 {max-height: calc(100vh - 410px); overflow-y: auto;}
+        /* fardamento: layout novo (caixas numeradas, como os Serviços de Voluntariado e o WSMS) */
+        .ufx > .major-card-body {background: #efefef; display: flex; flex-direction: column; gap: 10px;}
+        .ufx-kpis {display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;}
+        .ufx-kpi {background: #fff; border: 1px solid #e9ecef; border-left: 4px solid var(--c); border-radius: 10px; padding: 8px 14px; display: flex; gap: 12px; align-items: center; text-align: left; cursor: pointer; font: inherit;}
+        .ufx-kpi:hover {box-shadow: 0 2px 8px rgba(0,0,0,.08);}
+        .ufx-kpi i {width: 34px; height: 34px; border-radius: 50%; background: color-mix(in srgb, var(--c) 14%, white); color: var(--c); display: flex; align-items: center; justify-content: center; font-style: normal; font-size: 15px; font-weight: 800;}
+        .ufx-kpi b {display: block; font-size: 20px; line-height: 1.1; color: #2c3e50;}
+        .ufx-kpi small {font-size: 10.5px; color: #6c757d; text-transform: uppercase; font-weight: 700; letter-spacing: .3px;}
+        .ufx-box {background: #fff; border: 1px solid #e9ecef; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.05); padding: 10px 14px 12px; min-width: 0;}
+        .ufx-bh {display: flex; align-items: center; gap: 9px; font-size: 12.5px; font-weight: 700; color: #2c3e50; margin-bottom: 8px; text-transform: uppercase; letter-spacing: .4px; min-height: 30px;}
+        .ufx-n {width: 22px; height: 22px; border-radius: 50%; background: #c62828; color: #fff; font-size: 11.5px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;}
+        .ufx-count {color: #8a949e; font-weight: 600;}
+        .ufx-tools {margin-left: auto; display: flex; align-items: center; gap: 10px; text-transform: none; letter-spacing: 0;}
+        .ufx-pills {display: flex; gap: 6px; flex-wrap: wrap;}
+        .ufx-pill {height: 28px; padding: 0 14px; border-radius: 999px; border: 1px solid #d5dbe1; background: #fff; color: #2c3e50; font-size: 12px; font-weight: 700; cursor: pointer;}
+        .ufx-pill.on {background: #2c3e50; border-color: #2c3e50; color: #fff;}
+        .ufx-search {height: 30px; width: 220px; border: 1px solid #d5dbe1; border-radius: 999px; padding: 0 12px; font-size: 12px; outline: none;}
+        .ufx-search:focus, .ufx-in:focus {border-color: #c62828 !important; box-shadow: 0 0 0 2px rgba(198,40,40,.12);}
+        .ufx .table-responsive-event {border: 1px solid #e3e7eb; border-radius: 10px; overflow: auto;}
+        .ufx .fo-utbl > thead th {background: #f1f3f5; color: #5b6670; border: 0; border-bottom: 1px solid #e3e7eb; padding: 9px 12px; text-align: left; font-size: 11px; font-weight: 800; letter-spacing: .4px;}
+        .ufx .fo-utbl > tbody td {border: 0 !important; border-bottom: 1px solid #eef0f2 !important; padding: 8px 12px !important; text-align: left !important; vertical-align: middle; font-size: 12.5px; color: #2c3e50;}
+        .ufx .fo-utbl > tbody tr:last-child td {border-bottom: 0 !important;}
+        .ufx .fo-utbl > tbody tr:hover td {background: #fafbfc;}
+        .ufx .fo-utbl td.ufx-empty {text-align: center !important; color: #6c757d; padding: 18px !important;}
+        .ufx-st {display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 700; white-space: nowrap;}
+        .ufx-meta {font-size: 10.5px; color: #8a949e; margin-top: 4px; line-height: 1.35;}
+        .ufx-acts {display: flex; gap: 6px; flex-wrap: nowrap;}
+        .ufx-btn {height: 28px; padding: 0 12px; border-radius: 7px; border: 1px solid transparent; font-size: 11.5px; font-weight: 700; cursor: pointer; white-space: nowrap;}
+        .ufx-ok {background: #2e7d32; color: #fff;}
+        .ufx-ok:hover {background: #256528;}
+        .ufx-del {background: #fff; color: #c62828; border-color: #f0b8b3;}
+        .ufx-del:hover {background: #fdecea;}
+        .ufx-go {background: #1565c0; color: #fff;}
+        .ufx-go:hover {background: #0f4f99;}
+        .ufx-save {background: #fff; color: #c62828; border-color: #f0b8b3;}
+        .ufx-save:hover {background: #c62828; color: #fff;}
+        .ufx-add {background: #2e7d32; color: #fff; height: 34px; padding: 0 16px; align-self: end;}
+        .ufx-add:hover {background: #256528;}
+        .ufx-new {display: grid; grid-template-columns: 90px minmax(0, 2fr) 200px minmax(0, 1fr) auto; gap: 10px; align-items: end;}
+        .ufx-f {display: flex; flex-direction: column; gap: 4px; min-width: 0;}
+        .ufx-f label {font-size: 11px; font-weight: 700; color: #6c757d; text-transform: uppercase; letter-spacing: .3px; margin: 0;}
+        .ufx-in {width: 100%; height: 34px !important; border: 1px solid #d5dbe1 !important; border-radius: 7px !important; padding: 0 10px !important; font-size: 12.5px !important; box-sizing: border-box; background: #fff; outline: none;}
+        .ufx-c {text-align: center;}
+        .ufx .fo-utbl .ufx-in {height: 30px !important;}
+        .ufx-off td {opacity: .55;}
+        .ufx-tag {margin-left: 8px; font-size: 10.5px; font-weight: 700; color: #8a949e; background: #f1f3f5; border-radius: 999px; padding: 1px 8px;}
+        .ufx-sw {position: relative; display: inline-block; width: 38px; height: 20px;}
+        .ufx-sw input {opacity: 0; width: 0; height: 0;}
+        .ufx-sw span {position: absolute; inset: 0; background: #ced4da; border-radius: 999px; cursor: pointer; transition: background .15s;}
+        .ufx-sw span::before {content: ''; position: absolute; width: 16px; height: 16px; left: 2px; top: 2px; background: #fff; border-radius: 50%; transition: transform .15s; box-shadow: 0 1px 2px rgba(0,0,0,.2);}
+        .ufx-sw input:checked + span {background: #2e7d32;}
+        .ufx-sw input:checked + span::before {transform: translateX(18px);}
         .fo-utbl {width: 100%; border-collapse: collapse; background: #fff;}
         .fo-utbl > thead {position: sticky; top: 0; z-index: 1;}
         .fo-utbl > thead th {background: #f1f3f5; padding: 10px 5px; border: 1px solid #dee2e6; font-size: 11px; text-transform: uppercase; color: #495057;}
@@ -195,34 +247,58 @@
       </div>`);
 
     /* Fardamento */
-    fill('page-uniform-orders', `<div class="major-card last-card">
+    fill('page-uniform-orders', `<div class="major-card last-card ufx">
         <div class="major-card-header header-red">${ico('shirt')} PEDIDOS DE FARDAMENTO</div>
         <div class="major-card-body">
-          <div class="fo-unif-bar">
-            <label for="unifStateFilter">Estado:</label>
-            <select id="unifStateFilter" style="height:30px; padding:0 8px; font-size:12px; border:1px solid #ced4da; border-radius:4px;">
-              <option value="pendentes">Por tratar (Em Aprovação + Aprovado)</option>
-              <option value="Em Aprovação">Em Aprovação</option>
-              <option value="Aprovado">Aprovado</option>
-              <option value="Entregue">Entregue</option>
-              <option value="Rejeitado">Rejeitado</option>
-              <option value="todos">Todos</option>
-            </select>
-            <input type="text" id="unifSearch" placeholder="Procurar nº ou nome..."
-                   style="height:30px; padding:0 8px; font-size:12px; border:1px solid #ced4da; border-radius:4px; width:200px;">
+          <div class="ufx-kpis">
+            <button type="button" class="ufx-kpi" style="--c:#ef6c00" data-uf="Em Aprovação"><i>⏳</i><div><b id="ufxKApr">0</b><small>Em aprovação</small></div></button>
+            <button type="button" class="ufx-kpi" style="--c:#1565c0" data-uf="Aprovado"><i>📦</i><div><b id="ufxKEnt">0</b><small>Aprovados por entregar</small></div></button>
+            <button type="button" class="ufx-kpi" style="--c:#2e7d32" data-uf="Entregue"><i>✅</i><div><b id="ufxKDone">0</b><small>Entregues (30 dias)</small></div></button>
+            <button type="button" class="ufx-kpi" style="--c:#c62828" data-uf="Rejeitado"><i>✕</i><div><b id="ufxKRej">0</b><small>Rejeitados (30 dias)</small></div></button>
           </div>
-          ${unifTable('unifOrdersBody', 330, [['Data', 120], ['Nº Int', 60], ['Nome'], ['Artigos'], ['Estado', 110], ['Ações', 110]])}
+          <section class="ufx-box">
+            <div class="ufx-bh"><span class="ufx-n">1</span>Pedidos
+              <div class="ufx-tools">
+                <div class="ufx-pills" id="ufxPills">${[['pendentes', 'Por tratar'], ['Em Aprovação', 'Em aprovação'], ['Aprovado', 'Aprovados'], ['Entregue', 'Entregues'], ['Rejeitado', 'Rejeitados'], ['todos', 'Todos']]
+                  .map(([v, t]) => `<button type="button" class="ufx-pill${v === 'pendentes' ? ' on' : ''}" data-uf="${v}">${t}</button>`).join('')}</div>
+                <select id="unifStateFilter" hidden>${['pendentes', 'Em Aprovação', 'Aprovado', 'Entregue', 'Rejeitado', 'todos'].map(v => `<option value="${v}">${v}</option>`).join('')}</select>
+                <input type="search" id="unifSearch" class="ufx-search" placeholder="🔍 Procurar nº ou nome...">
+              </div>
+            </div>
+            ${unifTable('unifOrdersBody', 430, [['Data', 140], ['Nº Int', 70], ['Elemento', 220], ['Artigos'], ['Estado', 150], ['Ações', 200]])}
+          </section>
         </div>
-        <div class="major-card-footer">${note('* ✓ Aprovar · ✕ Rejeitar · 📦 Marcar como entregue. O elemento recebe uma notificação na Mobile.')}</div>
+        <div class="major-card-footer">${note('* Aprovar · Rejeitar · Marcar como entregue. O elemento recebe uma notificação na Mobile.')}</div>
       </div>`);
     on('unifStateFilter', 'change', 'unifRenderOrders');
     on('unifSearch', 'input', 'unifRenderOrders');
-    fill('page-uniform-items', `<div class="major-card last-card">
+    /* filtros (botões e contadores) mudam o select escondido, que é o que o unifRenderOrders lê */
+    document.getElementById('page-uniform-orders')?.addEventListener('click', e => {
+      const b = e.target.closest('[data-uf]');
+      if (!b) return;
+      document.getElementById('unifStateFilter').value = b.dataset.uf;
+      document.querySelectorAll('#ufxPills .ufx-pill').forEach(p => p.classList.toggle('on', p.dataset.uf === b.dataset.uf));
+      window.unifRenderOrders();
+    });
+    fill('page-uniform-items', `<div class="major-card last-card ufx">
         <div class="major-card-header header-red">${ico('list')} ARTIGOS DE FARDAMENTO</div>
         <div class="major-card-body">
-          ${unifTable('unifItemsBody', 290, [['Ordem', 70], ['Artigo'], ['Tamanho', 150], ['Marca', 180], ['Ativo', 60], ['Ações', 90]])}
+          <section class="ufx-box">
+            <div class="ufx-bh"><span class="ufx-n">1</span>Novo artigo</div>
+            <div class="ufx-new">
+              <div class="ufx-f"><label for="unifOrder_new">Ordem</label><input type="number" id="unifOrder_new" class="ufx-in ufx-c"></div>
+              <div class="ufx-f"><label for="unifLabel_new">Artigo</label><input type="text" id="unifLabel_new" class="ufx-in" placeholder="Ex. Pólo azul" maxlength="80"></div>
+              <div class="ufx-f"><label for="unifSize_new">Tamanho</label><select id="unifSize_new" class="ufx-in"><option value="">Sem tamanho</option><option value="letter">Letra (S, M, L…)</option><option value="numeric">Número</option></select></div>
+              <div class="ufx-f"><label for="unifBrand_new">Marca</label><input type="text" id="unifBrand_new" class="ufx-in" placeholder="Não Aplicável" maxlength="60"></div>
+              <button type="button" class="ufx-btn ufx-add" onclick="unifSaveItem(null)">＋ Adicionar</button>
+            </div>
+          </section>
+          <section class="ufx-box">
+            <div class="ufx-bh"><span class="ufx-n">2</span>Artigos <span class="ufx-count" id="ufxItemsCount"></span></div>
+            ${unifTable('unifItemsBody', 410, [['Ordem', 80], ['Artigo'], ['Tamanho', 180], ['Marca', 200], ['Ativo', 90], ['', 110]])}
+          </section>
         </div>
-        <div class="major-card-footer">${note('* A primeira linha cria um artigo novo. Os artigos desativados deixam de aparecer na Mobile; os pedidos antigos não mudam.', 1)}</div>
+        <div class="major-card-footer">${note('* Os artigos desativados deixam de aparecer na Mobile; os pedidos antigos não mudam.', 1)}</div>
       </div>`);
 
     /* Serviços de Voluntariado (layout vsx; os estilos vsx-* são injetados mais abaixo, em vsxInjectCss) */
@@ -3173,8 +3249,19 @@
              d.toLocaleTimeString('pt-PT', {hour: '2-digit', minute: '2-digit'});
     }
     function unifBadge(state) {
-      const colors = {"Em Aprovação": "#f39c12", "Aprovado": "#0282fa", "Entregue": "#2e7d32", "Rejeitado": "#e53935"};
-      return `<span style="background:${colors[state] || '#7f8c8d'}; color:#fff; padding:3px 8px; border-radius:50px; font-size:11px; white-space:nowrap;">${unifEsc(state)}</span>`;
+      const c = {"Em Aprovação": ['#fff3e0', '#ef6c00'], "Aprovado": ['#e3f2fd', '#1565c0'], "Entregue": ['#e8f5e9', '#2e7d32'], "Rejeitado": ['#fdecea', '#c62828']}[state] || ['#eceff1', '#455a64'];
+      return `<span class="ufx-st" style="background:${c[0]}; color:${c[1]};">${unifEsc(state)}</span>`;
+    }
+    /* espera que a página acabe de abrir (o clearFormFields da página corre no frame seguinte e limpava as linhas já desenhadas) */
+    const unifAfterOpen = () => new Promise(r => requestAnimationFrame(() => setTimeout(r, 0)));
+    /* contadores do topo dos pedidos */
+    function unifKpis() {
+      const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+      const d30 = Date.now() - 30 * 864e5, recent = o => new Date(o.delivery_date || o.approved_date || o.order_date).getTime() >= d30;
+      set('ufxKApr', unifOrdersCache.filter(o => o.status === 'Em Aprovação').length);
+      set('ufxKEnt', unifOrdersCache.filter(o => o.status === 'Aprovado').length);
+      set('ufxKDone', unifOrdersCache.filter(o => o.status === 'Entregue' && recent(o)).length);
+      set('ufxKRej', unifOrdersCache.filter(o => o.status === 'Rejeitado' && recent(o)).length);
     }
     document.addEventListener('click', async function(e) {
       const btn = e.target.closest('.sidebar-sub-submenu-button');
@@ -3188,13 +3275,14 @@
       const tbody = document.getElementById('unifOrdersBody');
       const corp = unifCorp();
       if (!tbody || !corp) return;
-      tbody.innerHTML = `<tr><td colspan="6" style="${UNIF_TH}">A carregar pedidos...</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" class="ufx-empty">A carregar pedidos...</td></tr>`;
       try {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/uniform_orders?select=id,n_int,items,notes,status,order_date,approved_date,delivery_date,delivery_n_int&corp_oper_nr=eq.${corp}&order=order_date.desc&limit=500`, {
           headers: getSupabaseHeaders()
         });
         if (!res.ok) throw new Error(await res.text());
         unifOrdersCache = await res.json();
+        await unifAfterOpen();
         const nInts = [...new Set(unifOrdersCache.flatMap(o => [o.n_int, o.delivery_n_int]).filter(v => v !== null && v !== undefined && v !== ""))];
         unifElemMap = {};
         if (nInts.length) {
@@ -3204,9 +3292,10 @@
           if (rElems.ok) (await rElems.json()).forEach(e => unifElemMap[String(e.n_int)] = e);
         }
         unifRenderOrders();
+        unifKpis();
       } catch (err) {
         console.error("Erro ao carregar pedidos de fardamento:", err);
-        tbody.innerHTML = `<tr><td colspan="6" style="${UNIF_TH} color:red;">Erro ao carregar os pedidos.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="ufx-empty" style="color:#c62828 !important;">Erro ao carregar os pedidos.</td></tr>`;
       }
     }
     /* ========== PEDIDOS: DESENHAR (com filtro) ========== */
@@ -3225,16 +3314,15 @@
         return true;
       });
       if (!rows.length) {
-        tbody.innerHTML = `<tr><td colspan="6" style="${UNIF_TH} color:#666;">Sem pedidos para mostrar.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="ufx-empty">Sem pedidos para mostrar.</td></tr>`;
         return;
       }
-      const btnStyle = 'padding: 4px 8px; border: none; border-radius: 3px; cursor: pointer; font-size: 11px; font-weight: bold; color: #fff;';
       tbody.innerHTML = rows.map(o => {
         const el = unifElemMap[String(o.n_int)] || {};
         const items = (o.items || []).map(i =>
           `<div>${unifEsc(i.quantity)}x <b>${unifEsc(i.articleLabel || i.article)}</b>${i.size && i.size !== 'N/A' ? ' · Tam. ' + unifEsc(i.size) : ''}${i.brand && i.brand !== 'Não Aplicável' ? ' · ' + unifEsc(i.brand) : ''}</div>`
         ).join('');
-        const notes = o.notes ? `<div style="color:#666; font-style:italic; margin-top:3px;">"${unifEsc(o.notes)}"</div>` : '';
+        const notes = o.notes ? `<div style="color:#8a949e; font-style:italic; margin-top:3px;">"${unifEsc(o.notes)}"</div>` : '';
         const meta = [];
         if (o.approved_date) meta.push(`Aprovado ${unifFmtDate(o.approved_date)}`);
         if (o.delivery_date) {
@@ -3243,20 +3331,20 @@
         }
         let actions = '—';
         if (o.status === 'Em Aprovação') {
-          actions = `<button title="Aprovar" onclick="unifSetState(${o.id}, 'Aprovado')" style="${btnStyle} background:#2e7d32;">✓</button>
-                     <button title="Rejeitar" onclick="unifSetState(${o.id}, 'Rejeitado')" style="${btnStyle} background:#e53935;">✕</button>`;
+          actions = `<button title="Aprovar" onclick="unifSetState(${o.id}, 'Aprovado')" class="ufx-btn ufx-ok">✓ Aprovar</button>
+                     <button title="Rejeitar" onclick="unifSetState(${o.id}, 'Rejeitado')" class="ufx-btn ufx-del">✕ Rejeitar</button>`;
         } else if (o.status === 'Aprovado') {
-          actions = `<button title="Marcar como entregue" onclick="unifSetState(${o.id}, 'Entregue')" style="${btnStyle} background:#0282fa;">📦</button>
-                     <button title="Rejeitar" onclick="unifSetState(${o.id}, 'Rejeitado')" style="${btnStyle} background:#e53935;">✕</button>`;
+          actions = `<button title="Marcar como entregue" onclick="unifSetState(${o.id}, 'Entregue')" class="ufx-btn ufx-go">📦 Entregue</button>
+                     <button title="Rejeitar" onclick="unifSetState(${o.id}, 'Rejeitado')" class="ufx-btn ufx-del">✕ Rejeitar</button>`;
         }
         return `
           <tr>
-            <td style="${UNIF_TH}">${unifFmtDate(o.order_date)}</td>
-            <td style="${UNIF_TH}">${unifEsc(o.n_int)}</td>
-            <td style="${UNIF_TH} text-align:left;">${unifEsc(el.patent ? el.patent + ' ' : '')}${unifEsc(el.full_name || '')}</td>
-            <td style="${UNIF_TH} text-align:left;">${items}${notes}</td>
-            <td style="${UNIF_TH}">${unifBadge(o.status)}${meta.length ? `<div style="font-size:10px; color:#777; margin-top:4px;">${meta.join('<br>')}</div>` : ''}</td>
-            <td style="${UNIF_TH}"><div style="display:flex; gap:4px; justify-content:center;">${actions}</div></td>
+            <td>${unifFmtDate(o.order_date)}</td>
+            <td><b>${unifEsc(o.n_int)}</b></td>
+            <td>${el.patent ? `<span style="color:#8a949e;">${unifEsc(el.patent)}</span> ` : ''}${unifEsc(el.full_name || '')}</td>
+            <td>${items}${notes}</td>
+            <td>${unifBadge(o.status)}${meta.length ? `<div class="ufx-meta">${meta.join('<br>')}</div>` : ''}</td>
+            <td><div class="ufx-acts">${actions}</div></td>
           </tr>`;
       }).join('');
     }
@@ -3283,6 +3371,7 @@
         if (!updated) throw new Error("Sem permissão para alterar este pedido.");
         Object.assign(order, updated);
         unifRenderOrders();
+        unifKpis();
         const msg = newState === 'Aprovado' ? 'O teu pedido de fardamento foi aprovado! ✅'
                   : newState === 'Entregue' ? 'O teu pedido de fardamento foi marcado como entregue. 📦'
                   : 'O teu pedido de fardamento foi rejeitado. ❌';
@@ -3307,45 +3396,47 @@
       const tbody = document.getElementById('unifItemsBody');
       const corp = unifCorp();
       if (!tbody || !corp) return;
-      tbody.innerHTML = `<tr><td colspan="6" style="${UNIF_TH}">A carregar artigos...</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" class="ufx-empty">A carregar artigos...</td></tr>`;
       try {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/uniform_items?select=id,code,label,size_type,brand,sort_order,active&corp_oper_nr=eq.${corp}&order=sort_order.asc,label.asc`, {
           headers: getSupabaseHeaders()
         });
         if (!res.ok) throw new Error(await res.text());
         unifItemsCache = await res.json();
+        await unifAfterOpen();
         unifRenderItems();
       } catch (err) {
         console.error("Erro ao carregar artigos:", err);
-        tbody.innerHTML = `<tr><td colspan="6" style="${UNIF_TH} color:red;">Erro ao carregar os artigos.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="ufx-empty" style="color:#c62828 !important;">Erro ao carregar os artigos.</td></tr>`;
       }
     }
     function unifItemRowHTML(it) {
-      const key = it ? it.id : 'new';
-      const inp = 'width:100%; height:28px; padding:0 6px; font-size:12px; border:1px solid #ced4da; border-radius:4px; box-sizing:border-box;';
-      const sizeSel = (v) => `
-        <select id="unifSize_${key}" style="${inp}">
+      const key = it.id;
+      const sizeSel = v => `<select id="unifSize_${key}" class="ufx-in">
           <option value="" ${!v ? 'selected' : ''}>Sem tamanho</option>
           <option value="letter" ${v === 'letter' ? 'selected' : ''}>Letra (S, M, L…)</option>
           <option value="numeric" ${v === 'numeric' ? 'selected' : ''}>Número</option>
         </select>`;
-      const nextOrder = unifItemsCache.reduce((m, x) => Math.max(m, x.sort_order || 0), 0) + 1;
       return `
-        <tr style="${it ? (it.active ? '' : 'opacity:0.55;') : 'background:#fff8e1;'}">
-          <td style="${UNIF_TH}"><input type="number" id="unifOrder_${key}" value="${it ? (it.sort_order ?? 0) : nextOrder}" style="${inp} text-align:center;"></td>
-          <td style="${UNIF_TH}"><input type="text" id="unifLabel_${key}" value="${unifEsc(it ? it.label : '')}" placeholder="${it ? '' : 'Novo artigo...'}" maxlength="80" style="${inp}"></td>
-          <td style="${UNIF_TH}">${sizeSel(it ? it.size_type : '')}</td>
-          <td style="${UNIF_TH}"><input type="text" id="unifBrand_${key}" value="${unifEsc(it ? (it.brand || '') : '')}" placeholder="Não Aplicável" maxlength="60" style="${inp}"></td>
-          <td style="${UNIF_TH}">${it ? `<input type="checkbox" id="unifActive_${key}" ${it.active ? 'checked' : ''} style="width:16px; height:16px; cursor:pointer;">` : ''}</td>
-          <td style="${UNIF_TH}">
-            <button onclick="unifSaveItem(${it ? it.id : 'null'})" style="padding: 4px 10px; border: none; border-radius: 3px; cursor: pointer; font-size: 11px; font-weight: bold; background: ${it ? '#ce1212' : '#2e7d32'}; color: #fff;">${it ? 'Guardar' : 'Adicionar'}</button>
-          </td>
+        <tr class="${it.active ? '' : 'ufx-off'}">
+          <td><input type="number" id="unifOrder_${key}" value="${it.sort_order ?? 0}" class="ufx-in ufx-c"></td>
+          <td><input type="text" id="unifLabel_${key}" value="${unifEsc(it.label)}" maxlength="80" class="ufx-in"></td>
+          <td>${sizeSel(it.size_type)}</td>
+          <td><input type="text" id="unifBrand_${key}" value="${unifEsc(it.brand || '')}" placeholder="Não Aplicável" maxlength="60" class="ufx-in"></td>
+          <td><label class="ufx-sw" title="Ativo na Mobile"><input type="checkbox" id="unifActive_${key}" ${it.active ? 'checked' : ''}><span></span></label></td>
+          <td><button onclick="unifSaveItem(${it.id})" class="ufx-btn ufx-save">Guardar</button></td>
         </tr>`;
     }
     function unifRenderItems() {
       const tbody = document.getElementById('unifItemsBody');
       if (!tbody) return;
-      tbody.innerHTML = unifItemRowHTML(null) + unifItemsCache.map(unifItemRowHTML).join('');
+      /* linha "novo artigo" (caixa 1): limpa e sugere a ordem seguinte */
+      const nextOrder = unifItemsCache.reduce((m, x) => Math.max(m, x.sort_order || 0), 0) + 1;
+      const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+      set('unifOrder_new', nextOrder); set('unifLabel_new', ''); set('unifSize_new', ''); set('unifBrand_new', '');
+      const cnt = document.getElementById('ufxItemsCount');
+      if (cnt) cnt.textContent = `(${unifItemsCache.filter(x => x.active).length} ativos de ${unifItemsCache.length})`;
+      tbody.innerHTML = unifItemsCache.length ? unifItemsCache.map(unifItemRowHTML).join('') : '<tr><td colspan="6" class="ufx-empty">Ainda não há artigos. Crie o primeiro na caixa de cima.</td></tr>';
     }
     /* ========== ARTIGOS: GRAVAR (novo ou existente) ========== */
     function unifMakeCode(label) {

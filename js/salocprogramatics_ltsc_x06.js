@@ -12,6 +12,297 @@
       const css = document.createElement('style');
       css.id = 'saloc-css';
       css.textContent = `
+        /* ===== PPIs (A22, Aeroporto, Linha Férrea): só estilo, mesmas funções e cores de alarme ===== */
+        #page-ppia22 > .major-card > .major-card-body, #page-ppiaero > .major-card > .major-card-body, #page-ppilinfer > .major-card > .major-card-body {background: #f4f5f7; padding: 12px 16px; display: flex; flex-direction: column; gap: 10px;}
+        /* escolha do tipo de consulta: contentor branco ao centro */
+        #page-ppia22 .sl-14, #page-ppilinfer .sl-14 {justify-content: center !important; margin: 0 !important;}
+        #ppia22-main-options, #ppilinfer-main-options {flex-direction: row !important; align-items: center !important; gap: 10px; background: #fff !important; border: 1px solid #e3e7eb !important;
+                     border-radius: 999px !important; padding: 4px 4px 4px 16px !important; box-shadow: 0 1px 4px rgba(0,0,0,.06) !important; width: auto !important; margin: 0 !important;}
+        #ppia22-main-options > label, #ppilinfer-main-options > label {margin: 0 !important; font-size: 11px !important; font-weight: 800 !important; color: #8a949e !important; text-transform: uppercase; letter-spacing: .4px; white-space: nowrap;}
+        #ppia22-options, #ppilinfer-options {display: flex !important; gap: 4px !important; margin: 0 !important; width: auto !important; max-width: none !important;}
+        #ppia22-options .options-btn, #ppilinfer-options .options-btn {flex: none !important; min-width: 0 !important; max-width: none !important;}
+        .ppia22-part1, #ppilinfer-specials-container .ppilinfer-part1 {border: 1px solid #e3e7eb !important; border-top: 0 !important; background: #fff; padding: 8px 12px !important; margin: 0 !important;}
+        #ppia22-options .options-btn, #ppilinfer-options .options-btn {height: 32px !important; width: auto !important; padding: 0 16px !important; border-radius: 999px !important; border: 0 !important; background: transparent !important;
+                     color: #2c3e50 !important; font-size: 12px !important; font-weight: 700 !important; text-transform: none; letter-spacing: 0; box-shadow: none !important; transform: none !important; white-space: nowrap;}
+        #ppia22-options .options-btn:hover:not(:disabled), #ppilinfer-options .options-btn:hover:not(:disabled) {background: #f1f3f5 !important;}
+        #ppia22-options .options-btn:disabled, #ppilinfer-options .options-btn:disabled {opacity: .4; cursor: not-allowed;}
+        /* cartão de pesquisa (sentido/troço + km + Procurar) */
+        #ppia22-grid-controls > .options-main-card, #ppilinfer-grid-controls > .options-main-card {background: #fff !important; border: 1px solid #e9ecef !important; border-radius: 14px !important;
+                     box-shadow: 0 2px 8px rgba(0,0,0,.06) !important; padding: 18px 20px !important; width: 560px !important; max-width: 100%; margin: 0 auto !important; flex-direction: row !important;
+                     flex-wrap: wrap; justify-content: center !important; align-items: center !important; gap: 12px !important;}
+        #ppia22-grid-controls > .options-main-card > label, #ppilinfer-grid-controls > .options-main-card > label {flex-basis: 100%; text-align: center; font-size: 12.5px !important; font-weight: 800 !important;
+                     color: #2c3e50 !important; text-transform: uppercase; letter-spacing: .5px; margin: 0 !important;}
+        #ppia22-grid-controls > .options-main-card > div:has(> .btn), #ppilinfer-grid-controls > .options-main-card > div:has(> .btn) {flex-basis: 100%; display: flex !important; justify-content: center !important; gap: 0 !important;}
+        #ppia22-grid-controls > .options-main-card > div > .btn, #ppilinfer-grid-controls > .options-main-card > div > .btn {width: 200px !important; height: 52px !important; margin: 0 !important; border: 1px solid #c3ccd5 !important;
+                     background: #f1f4f7 !important; color: #1f2d3a !important; box-shadow: none !important; transform: none !important; border-radius: 0 !important; text-transform: none !important;}
+        #ppia22-grid-controls > .options-main-card > div > .btn:first-child, #ppilinfer-grid-controls > .options-main-card > div > .btn:first-child {border-radius: 10px 0 0 10px !important;}
+        #ppia22-grid-controls > .options-main-card > div > .btn:last-child, #ppilinfer-grid-controls > .options-main-card > div > .btn:last-child {border-radius: 0 10px 10px 0 !important; border-left: 0 !important;}
+        #ppia22-grid-controls > .options-main-card > div > .btn.active, #ppilinfer-grid-controls > .options-main-card > div > .btn.active {background: #2c3e50 !important; color: #fff !important; border-color: #2c3e50 !important;}
+        #ppia22-grid-controls > .options-main-card > div > .btn div:last-child, #ppilinfer-grid-controls > .options-main-card > div > .btn div:last-child {opacity: .75;}
+        #ppia22-grid-controls > .options-main-card input, #ppia22-grid-controls > .options-main-card select, #ppilinfer-grid-controls > .options-main-card input,
+        #ppilinfer-grid-controls > .options-main-card select {height: 38px !important; width: 260px !important; border: 1px solid #c8c8c8 !important; border-radius: 8px !important; font-size: 14px !important;
+                     padding: 0 12px !important; box-shadow: none !important; margin: 0 !important;}
+        #ppia22-grid-controls > .options-main-card input:focus, #ppia22-grid-controls > .options-main-card select:focus, #ppilinfer-grid-controls > .options-main-card input:focus,
+        #ppilinfer-grid-controls > .options-main-card select:focus {border-color: #c0392b !important; box-shadow: 0 0 0 3px rgba(192,57,43,.12) !important;}
+        #ppia22-grid-controls .options-black-btn, #ppilinfer-grid-controls .options-black-btn {height: 38px !important; width: auto !important; padding: 0 22px !important; border-radius: 8px !important; background: #c0392b !important;
+                     border: 0 !important; color: #fff !important; font-size: 12.5px !important; font-weight: 800 !important; letter-spacing: .4px; box-shadow: 0 2px 6px rgba(192,57,43,.3) !important; transform: none !important;}
+        #ppia22-grid-controls .options-black-btn:hover, #ppilinfer-grid-controls .options-black-btn:hover {background: #a93226 !important;}
+        /* grelhas (botões 1A…2S / A…P): cada sentido num contentor com risca vermelha */
+        #ppia22-grid-controls:has(.ppi-dir), #ppilinfer-grid-controls:has(.ppi-dir) {gap: 8px; align-items: stretch !important;}
+        .ppi-dir {background: #fff; border: 1px solid #e3e7eb; border-left: 4px solid #c62828; border-radius: 12px; padding: 10px 14px 12px; box-shadow: 0 1px 3px rgba(0,0,0,.05);
+                  display: flex; flex-direction: column; align-items: center;}
+        .ppi-dir > .major-row:not(:has(.btn)) {background: none !important; border: 0 !important; box-shadow: none !important; height: auto !important; text-shadow: none !important; color: #1f2d3a !important;
+                  justify-content: center !important; margin: 0 !important; font-size: 13px !important; font-weight: 800 !important; letter-spacing: .6px !important;}
+        .ppi-dir > .major-row:not(:has(.btn)) + .major-row:not(:has(.btn)) {margin-top: 1px !important; font-size: 11px !important; font-weight: 600 !important; color: #6c757d !important;}
+        .ppi-dir > .major-row:has(.btn) {flex-wrap: wrap; gap: 5px !important; justify-content: center !important; margin: 10px 0 0 !important; width: 100%;}
+        .ppi-dir .btn {width: 56px !important; height: 40px !important; margin: 0 !important; border-radius: 8px !important; border: 1px solid #c3ccd5 !important; background: #f1f4f7 !important;
+                  color: #1f2d3a !important; font-size: 13px !important; font-weight: 800 !important; box-shadow: 0 1px 0 rgba(0,0,0,.06) !important; transform: none !important; padding: 0 !important;
+                  transition: background .12s, border-color .12s;}
+        .ppi-dir .btn:hover {background: #fff !important; border-color: #c0392b !important; color: #c0392b !important;}
+        .ppi-dir .btn.options-yellow-btn {background: #ffe7a0 !important; border-color: #e0ad2b !important; color: #6b4500 !important;}
+        .ppi-dir .btn.options-yellow-btn:hover {background: #ffdb73 !important; color: #6b4500 !important;}
+        .ppi-dir .btn.active, .ppi-dir .btn.active:hover {background: #2c3e50 !important; border-color: #2c3e50 !important; color: #fff !important; box-shadow: 0 2px 6px rgba(44,62,80,.35) !important;}
+        #ppia22-grid-controls:has(.options-yellow-btn)::after, #ppilinfer-grid-controls:has(.options-yellow-btn)::after {content: 'Amarelo = grelhas com meios do seu Corpo de Bombeiros'; font-size: 11px; color: #8a949e;
+                  text-align: center;}
+        /* Aeroporto: mesmas cores de alarme, botões arredondados e o escolhido em destaque */
+        #ppiaero-grid-controls {background: #fff; border: 1px solid #e9ecef; border-radius: 12px; padding: 12px 14px;}
+        #ppiaero-grid-controls > div:first-child {background: none !important; border: 0 !important; box-shadow: none !important; text-shadow: none !important; color: #2c3e50 !important; font-size: 12.5px !important;
+                     font-weight: 800 !important; height: auto !important; margin: 0 0 8px !important; width: auto !important;}
+        #ppiaero-grid-controls .btn {width: 220px !important; height: 40px !important; margin: 0 !important; border-radius: 10px !important; border: 2px solid transparent !important; box-shadow: none !important;
+                     transform: none !important; font-size: 12px !important; font-weight: 800 !important; text-transform: none; opacity: .9;}
+        #ppiaero-grid-controls #A1 {background: #2e7d32 !important;} #ppiaero-grid-controls #A2 {background: #fdd835 !important;} #ppiaero-grid-controls #A3 {background: #fb8c00 !important;}
+        #ppiaero-grid-controls #A4 {background: #e53935 !important;} #ppiaero-grid-controls #B1 {background: #212121 !important; color: #ff5252 !important;}
+        #ppiaero-grid-controls .btn:hover {opacity: 1;}
+        #ppiaero-grid-controls .btn.active {opacity: 1; border-color: #fff !important; box-shadow: 0 0 0 3px #2c3e50 !important;}
+        #ppiaero-grid-controls:has(.btn.active) .btn:not(.active) {opacity: .45;}
+        /* resultados: tabelas e títulos */
+        #page-ppia22 .table-elements, #page-ppiaero .table-elements, #page-ppilinfer .table-elements {border-collapse: separate !important; border-spacing: 0 !important; background: #fff; border: 1px solid #dfe3e8 !important; border-radius: 10px; overflow: hidden; margin: 6px 0 10px !important;}
+        #page-ppia22 .table-elements td, #page-ppiaero .table-elements td, #page-ppilinfer .table-elements td, #page-ppia22 .table-elements th, #page-ppiaero .table-elements th, #page-ppilinfer .table-elements th {border: 0 !important; border-bottom: 1px solid #e3e7eb !important; padding: 7px 10px !important; font-size: 12.5px;}
+        #page-ppia22 .table-elements td + td, #page-ppiaero .table-elements td + td, #page-ppilinfer .table-elements td + td, #page-ppia22 .table-elements th + th, #page-ppiaero .table-elements th + th, #page-ppilinfer .table-elements th + th {border-left: 1px solid #e3e7eb !important;}
+        #page-ppia22 .table-elements tr:last-child td, #page-ppiaero .table-elements tr:last-child td, #page-ppilinfer .table-elements tr:last-child td {border-bottom: 0 !important;}
+        #page-ppia22 .table-elements th, #page-ppiaero .table-elements th, #page-ppilinfer .table-elements th {font-size: 12px !important; font-weight: 800 !important; letter-spacing: .3px;}
+        #page-ppia22 .table-elements th button, #page-ppiaero .table-elements th button, #page-ppilinfer .table-elements th button, #page-ppia22 .table-elements td button, #page-ppiaero .table-elements td button, #page-ppilinfer .table-elements td button {border: 0; border-radius: 6px; background: rgba(255,255,255,.75); padding: 2px 8px; font-size: 14px; cursor: pointer;}
+        #page-ppia22 h3, #page-ppiaero h3, #page-ppilinfer h3 {border-radius: 8px !important; padding: 7px 12px !important; font-size: 13px !important; letter-spacing: .3px; margin: 8px 0 0 !important;}
+        #page-ppia22 .intervention-notice, #page-ppiaero .intervention-notice, #page-ppilinfer .intervention-notice, #page-ppia22 .cumulative-alert, #page-ppiaero .cumulative-alert, #page-ppilinfer .cumulative-alert {border-radius: 10px !important; margin: 0 0 8px !important; font-size: 13.5px !important; padding: 10px 14px !important;}
+        #ppia22-specials-container > div:first-child, #ppilinfer-specials-container > div:first-child {border-radius: 10px 10px 0 0; margin: 0 !important;}
+        #ppiaero-grid-header td {border-radius: 10px !important;}
+        /* espaçamentos de 5px entre blocos do resultado */
+        #page-ppia22 > .major-card > .major-card-body, #page-ppiaero > .major-card > .major-card-body, #page-ppilinfer > .major-card > .major-card-body {gap: 5px !important;}
+        #page-ppia22 .table-elements, #page-ppiaero .table-elements, #page-ppilinfer .table-elements {margin: 0 !important;}
+        #page-ppia22 h3, #page-ppiaero h3, #page-ppilinfer h3 {margin: 0 0 5px !important;}
+        #page-ppia22 .table-elements + h3, #page-ppiaero .table-elements + h3, #page-ppilinfer .table-elements + h3 {margin-top: 5px !important;}
+        #page-ppia22 .intervention-notice, #page-ppiaero .intervention-notice, #page-ppilinfer .intervention-notice, #page-ppia22 .cumulative-alert, #page-ppiaero .cumulative-alert, #page-ppilinfer .cumulative-alert {margin: 0 0 5px !important;}
+        #page-ppia22 [id$="-abs-note"], #page-ppiaero [id$="-abs-note"], #page-ppilinfer [id$="-abs-note"] {margin-top: 0 !important;}
+        #page-ppia22 .ppi-final-table, #page-ppiaero .ppi-final-table, #page-ppilinfer .ppi-final-table {margin-top: 5px !important;}
+        #ppiaero-grid-container > * + *, #ppiaero-grid-info-container > * + * {margin-top: 5px !important;}
+        #page-ppia22 .table-elements + .table-elements, #page-ppiaero .table-elements + .table-elements, #page-ppilinfer .table-elements + .table-elements {margin-top: 5px !important;}
+        /* linha que faltava entre o Sentido e o 1.º nó do troço */
+        /* tabela da grelha: a 2.ª linha começa a meio (células com rowspan), por isso a 1.ª célula dela também leva a linha da esquerda */
+        #ppia22-grid-references table tr:nth-of-type(2) > td:first-child, #ppilinfer-grid-references table tr:nth-of-type(2) > td:first-child {border-left: 1px solid #e3e7eb !important;}
+        /* Situações especiais: um só cartão (título, texto e tabela juntos, só os cantos de fora arredondados) */
+        #ppia22-specials-container > div:first-child, #ppilinfer-specials-container > div:first-child {border: 1px solid #f0d97a !important; border-radius: 10px 10px 0 0 !important;}
+        #ppia22-specials-container .table-elements, #ppilinfer-specials-container .table-elements {border-radius: 0 0 10px 10px !important; border-top: 0 !important; margin: 0 !important;}
+        #ppia22-specials-container .ppia22-part1, #ppilinfer-specials-container [class$="-part1"] {border-bottom: 1px solid #e3e7eb !important;}
+        #ppia22-specials-container .ppia22-data > :last-child, #ppilinfer-specials-container [class$="-data"] > :last-child {border-radius: 0 0 10px 10px !important;}
+        /* sem tabela na 2.ª parte: o texto fecha o cartão (arredondado e sem a linha dupla) */
+        #ppia22-specials-container .ppia22-data > table:not(:has(td)) {display: none !important;}
+        #ppia22-specials-container .ppia22-data:not(:has(td)) .ppia22-part1, #ppia22-specials-container .ppia22-part1:last-child {border-radius: 0 0 10px 10px !important;}
+        /* Linha Férrea: itens das Situações Especiais com as mesmas linhas da A22 */
+        #ppilinfer-specials-container .ppilinfer-data > div {border: 1px solid #e3e7eb !important; border-top: 0 !important; background: #fff; padding: 8px 12px !important; margin: 0 !important;}
+        #ppilinfer-specials-container .ppilinfer-data > div:last-child {border-radius: 0 0 10px 10px !important;}
+        #ppilinfer-specials-container .ppilinfer-data:not(:has(div)) {border: 1px solid #e3e7eb; border-top: 0; border-radius: 0 0 10px 10px; background: #fff; padding: 8px 12px;}
+        #ppia22-specials-container .ppia22-data:not(:has(div, table)) {border: 1px solid #e3e7eb; border-top: 0; border-radius: 0 0 10px 10px; background: #fff; padding: 8px 12px;}
+
+        /* ===== Planeamento Diário (layout novo) ===== */
+        #page-plandir > .major-card > .major-card-body {background: #f4f5f7; padding: 12px 16px; display: flex; flex-direction: column; gap: 8px;}
+        #page-plandir .plandir-shift-header {background: #fff !important; border: 1px solid #e9ecef !important; border-radius: 12px !important; box-shadow: none !important; margin: 0 !important; padding: 10px 16px !important;
+                                             display: flex; align-items: baseline; justify-content: space-between; gap: 12px;}
+        #page-plandir .plandir-shift-header .plandir-header-title {font-size: 14px !important; margin: 0 !important; text-transform: uppercase; letter-spacing: .4px; color: #2c3e50 !important;}
+        #page-plandir .plandir-shift-header .plandir-header-date {font-size: 13px !important; font-weight: 700; color: #2c3e50 !important;}
+        .plandir-kpis {display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;}
+        .plandir-kpi {background: #fff; border: 1px solid #e9ecef; border-left: 4px solid var(--c); border-radius: 10px; padding: 8px 14px; display: flex; gap: 12px; align-items: center;}
+        .plandir-kpi i {width: 34px; height: 34px; border-radius: 50%; background: color-mix(in srgb, var(--c) 14%, white); display: flex; align-items: center; justify-content: center; font-style: normal; font-size: 15px;}
+        .plandir-kpi b {display: block; font-size: 20px; line-height: 1.1; color: #2c3e50;}
+        .plandir-kpi small {font-size: 10.5px; color: #6c757d; text-transform: uppercase; font-weight: 700; letter-spacing: .3px;}
+        #page-plandir #plandir-layout-wrapper {gap: 8px !important; margin: 0 !important;}
+        #page-plandir #plandir-left-col {flex: 1; max-height: max(320px, calc(100vh - 400px)); overflow-y: auto; padding-right: 6px; scrollbar-width: thin; scrollbar-color: #e57373 #fbe9e7;}
+        #page-plandir #plandir-left-col::-webkit-scrollbar {width: 6px;}
+        #page-plandir #plandir-left-col::-webkit-scrollbar-track {background: #fbe9e7; border-radius: 999px;}
+        #page-plandir #plandir-left-col::-webkit-scrollbar-thumb {background: #e57373; border-radius: 999px;}
+        #page-plandir #plandir-left-col::-webkit-scrollbar-thumb:hover {background: #c62828;}
+        #page-plandir #plandir-left-col #plandir-card-container {justify-content: stretch !important;}
+        #page-plandir .plandir-main-card {max-width: none !important; width: 100% !important; margin: 0 0 8px 0 !important; background: #fff; border: 1px solid #e9ecef !important; border-left: 3px solid #c62828 !important;
+                                          border-radius: 10px !important; box-shadow: none !important;}
+        #page-plandir .plandir-card-title {background: linear-gradient(90deg, #fdecea, #fff6f5) !important; color: #b71c1c !important; font-weight: 800 !important; justify-content: flex-start !important; text-align: left !important; font-size: 12px !important; letter-spacing: .5px !important;
+                                           text-shadow: none !important; border: 0 !important; border-bottom: 1px solid #f5c6c2 !important; padding: 9px 40px 9px 12px !important; position: relative;}
+        #page-plandir .plandir-status-dot {width: 12px !important; height: 12px !important; border-radius: 50% !important; top: 50%; transform: translateY(-50%); box-shadow: none !important;}
+        #page-plandir .plandir-table th, #page-plandir .plandir-side-table th, #page-plandir .plandir-table .special th {background: #f1f3f5 !important; color: #5b6670 !important; border: 0 !important;
+                     border-bottom: 1px solid #e3e7eb !important; font-size: 11px !important; font-weight: 800 !important; text-transform: uppercase; letter-spacing: .4px; padding: 6px 8px !important;}
+        #page-plandir .plandir-table td, #page-plandir .plandir-side-table td {border: 0 !important; border-bottom: 1px solid #dfe3e8 !important; background: #fff !important;}
+        #page-plandir .plandir-table td + td, #page-plandir .plandir-side-table td + td {border-left: 1px solid #dfe3e8 !important;}
+        #page-plandir .plandir-table th {border-left: 1px solid #dfe3e8 !important; border-bottom: 1px solid #d5dbe1 !important;}
+        #page-plandir .plandir-table thead tr:first-child th:first-child {border-left: 0 !important;}
+        #page-plandir .plandir-table tbody tr:nth-child(even) td, #page-plandir .plandir-side-table tbody tr:nth-child(even) td {background: #fafbfc !important;}
+        #page-plandir .plandir-table tbody tr:hover td, #page-plandir .plandir-side-table tbody tr:hover td {background: #fdf6f5 !important;}
+        #page-plandir .plandir-table input:focus {background: #fff5f4 !important; color: #2c3e50 !important;}
+        #page-plandir .plandir-table td.plandir-mp-active {background: #e8f5e9 !important;} #page-plandir .plandir-table td.plandir-tas-active {background: #fff8e1 !important;}
+        #page-plandir .plandir-side-table {border: 0 !important;}
+        /* células bloqueadas (preenchidas a partir do n.º interno): cinzento, para se ver que não se editam */
+        #page-plandir .plandir-table td:has(> input[readonly]), #page-plandir .plandir-table tbody tr:hover td:has(> input[readonly]),
+        #page-plandir .plandir-table tbody tr:nth-child(even) td:has(> input[readonly]), #page-plandir .plandir-table td.mp-cell, #page-plandir .plandir-table td.tas-cell,
+        #page-plandir .plandir-table tbody tr:hover td.mp-cell, #page-plandir .plandir-table tbody tr:hover td.tas-cell,
+        #page-plandir .plandir-table tbody tr:nth-child(even) td.mp-cell, #page-plandir .plandir-table tbody tr:nth-child(even) td.tas-cell {background: #eceff1 !important; cursor: not-allowed;}
+        #page-plandir .plandir-table input[readonly] {color: #455a64 !important; cursor: not-allowed; background: transparent !important;}
+        #page-plandir .plandir-table td.mp-cell.plandir-mp-active {background: #dcefdc !important;} #page-plandir .plandir-table td.tas-cell.plandir-tas-active {background: #fff3cd !important;}
+        /* botões Guardar rascunho / Emitir: barra fixa no fundo da coluna */
+        #page-plandir #plandir_container > div:has(#emit-pp) {position: sticky; bottom: 0; z-index: 2; justify-content: center !important; margin: 0 !important; padding: 8px 0 2px; background: #f4f5f7;}   /* sem caixa: o fundo é o do cartão */
+        #page-plandir #draft-pp, #page-plandir #emit-pp {height: 34px; padding: 0 18px !important; border-radius: 8px !important; font-size: 12px !important; font-weight: 700 !important; letter-spacing: .3px !important;
+                     display: inline-flex; align-items: center; gap: 6px; transition: background .15s, box-shadow .15s;}
+        #page-plandir #draft-pp {background: #fff !important; color: #2c3e50 !important; border: 1px solid #c8ced5 !important;}
+        #page-plandir #draft-pp:hover {background: #f1f3f5 !important;}
+        #page-plandir #emit-pp {background: #c0392b !important; color: #fff !important; box-shadow: 0 2px 6px rgba(192,57,43,.3);}
+        #page-plandir #emit-pp:hover {background: #a93226 !important;}
+        #page-plandir #plandir-right-col {width: 360px !important;}
+        #page-plandir #plandir-right-col .plandir-main-card {width: 100% !important;}
+        #page-plandir .plandir-card-title.red-variant {color: #c62828 !important;}
+
+        /* ===== CREPC Algarve (MOA) e Situação Operacional (layout novo) ===== */
+        #page-crepcalg > .major-card > .major-card-body, #page-inocrepc > .major-card > .major-card-body {background: #efefef; padding: 12px 16px;}
+        /* botões de opção: dentro de um contentor branco, ao centro */
+        #page-crepcalg .sl-85, #page-inocrepc .sl-85, #page-plandir .sl-85 {justify-content: center !important; margin: 0 !important;}
+        #page-crepcalg .options-main-card.sl-86, #page-inocrepc .options-main-card.sl-86, #page-plandir .options-main-card.sl-86 {display: inline-flex !important; flex-direction: row !important; align-items: center; gap: 10px; background: #fff !important; border: 1px solid #e3e7eb !important;
+                     border-radius: 999px !important; padding: 4px 4px 4px 16px !important; margin: 0 !important; box-shadow: 0 1px 4px rgba(0,0,0,.06) !important; width: auto !important;}
+        #page-crepcalg .options-main-card.sl-86 > label, #page-inocrepc .options-main-card.sl-86 > label, #page-plandir .options-main-card.sl-86 > label {margin: 0 !important; font-size: 11px !important; font-weight: 800 !important; color: #8a949e !important; text-transform: uppercase; letter-spacing: .4px; white-space: nowrap;}
+        #page-crepcalg .options-main-card.sl-86 .action-buttons, #page-inocrepc .options-main-card.sl-86 .action-buttons, #page-plandir .options-main-card.sl-86 .action-buttons {gap: 4px !important; margin: 0 !important; justify-content: center !important; display: flex !important;}
+        #page-crepcalg .options-main-card.sl-86 .options-btn, #page-inocrepc .options-main-card.sl-86 .options-btn, #page-plandir .options-main-card.sl-86 .options-btn {height: 30px !important; padding: 0 18px !important; border-radius: 999px !important; border: 0 !important; background: transparent !important; color: #2c3e50 !important;
+                     font-size: 12px !important; font-weight: 700 !important; text-transform: none; letter-spacing: 0; box-shadow: none !important; transform: none !important; min-width: 0; width: auto;}
+        #page-crepcalg .options-main-card.sl-86 .options-btn:hover, #page-inocrepc .options-main-card.sl-86 .options-btn:hover, #page-plandir .options-main-card.sl-86 .options-btn:hover {background: #f1f3f5 !important;}
+        #page-crepcalg .options-main-card.sl-86 .options-btn.active, #page-inocrepc .options-main-card.sl-86 .options-btn.active, #page-plandir .options-main-card.sl-86 .options-btn.active {background: #2c3e50 !important; color: #fff !important;}
+        #page-plandir .options-main-card.sl-86 .options-btn[data-shift="LAST"]:not(.active) {color: #ef6c00 !important;}
+        /* MOA e G2: mesmo espaçamento das Inoperacionalidades */
+        #page-crepcalg #moa-container, #page-crepcalg #g2-container {margin-top: 12px !important;}
+        /* ao trocar entre MOA's / G1 / G2, o que está a sair esconde-se logo (não fica por baixo durante o fade) */
+        #page-crepcalg #moa-container[style*="opacity: 0"], #page-crepcalg #g2-container[style*="opacity: 0"] {display: none !important;}
+        /* ===== Anexo G2 (só estilo: tabelas, ids e funções iguais) ===== */
+        #g2-container > .major-card, #g2_form_container > .major-card {background: transparent !important; border: 0 !important; box-shadow: none !important; margin: 0 !important; width: 100% !important;}
+        #g2-container > .major-card > .major-card-body, #g2_form_container > .major-card > .major-card-body {background: transparent !important; padding: 0 !important; display: flex; flex-direction: column; gap: 8px;}
+        #g2-container > .major-card > .major-card-header, #g2_form_container > .major-card > .major-card-header {background: none !important; color: #2c3e50 !important; font-size: 12px !important; font-weight: 800 !important; box-shadow: none !important; border-radius: 0 !important;
+                     padding: 0 0 8px 2px !important; letter-spacing: .4px; text-shadow: none !important; border: 0 !important; justify-content: center;}
+        #g2_form_container > .major-card > .major-card-header {justify-content: flex-start;}
+        #g2-container > .major-card > .major-card-header::before, #g2-container > .major-card > .major-card-header::after {display: none !important;}
+        #g2-container #g2TableContainer, #g2-container #g2_form_container {margin-top: 4px !important;}
+        #g2TableContainer > h3 {display: none;}
+        #g2-container .table-container:not(.g2-list), #g2_form_container .major-row.sl-123 {background: #fff !important; border: 1px solid #e9ecef !important; border-radius: 12px !important; box-shadow: 0 1px 3px rgba(0,0,0,.05) !important;
+                     padding: 10px 14px 12px !important; margin: 0 !important; overflow-x: auto; height: auto !important; max-height: none !important;}
+        #g2_form_container .major-row.sl-123 .major-field {display: flex; flex-direction: column; align-items: flex-start; gap: 4px;}
+        #g2-container table {width: 100% !important; border-collapse: collapse !important; border: 0 !important; margin: 0 !important;}
+        #g2-container th {background: #f1f3f5 !important; color: #5b6670 !important; border: 0 !important; border-bottom: 1px solid #e3e7eb !important; padding: 8px 10px !important; font-size: 11px !important;
+                     font-weight: 800 !important; text-transform: uppercase; letter-spacing: .4px; text-align: left !important;}
+        #g2-container th[colspan] {background: #fff !important; color: #2c3e50 !important; font-size: 12.5px !important; padding: 2px 0 10px !important; border: 0 !important; position: relative;}
+        #g2-container th[colspan]::before {content: ''; display: inline-block; width: 6px; height: 16px; border-radius: 3px; background: #c62828; margin-right: 8px; vertical-align: -3px;}
+        #g2-container td {border: 0 !important; border-bottom: 1px solid #eef0f2 !important; padding: 6px 8px !important; background: #fff !important; font-size: 12.5px; text-align: left !important; vertical-align: middle !important;}
+        /* tabelas do formulário: mesmo aspeto das outras (contorno arredondado, sem linhas verticais) */
+        #g2_form_container .table-container table {border-collapse: separate !important; border-spacing: 0 !important;}
+        #g2-container thead, #g2-container thead th {position: static !important; z-index: auto !important; top: auto !important;}   /* não passa por cima do rodapé */
+        #g2-container thead th[colspan] {position: relative !important;}
+        #g2_form_container #g2_gdh_activation_date {width: 150px !important;} #g2_form_container #g2_gdh_activation_hour {width: 110px !important;}
+        #g2_form_container .table-container thead tr:nth-child(2) th {border-top: 1px solid #e3e7eb !important;}
+        #g2_form_container .table-container thead tr:nth-child(2) th:first-child {border-left: 1px solid #e3e7eb !important; border-top-left-radius: 10px;}
+        #g2_form_container .table-container thead tr:nth-child(2) th:last-child {border-right: 1px solid #e3e7eb !important; border-top-right-radius: 10px;}
+        #g2_form_container .table-container tbody td:first-child {border-left: 1px solid #e3e7eb !important;}
+        #g2_form_container .table-container tbody td:last-child {border-right: 1px solid #e3e7eb !important;}
+        #g2_form_container .table-container tbody tr:last-child td {border-bottom: 1px solid #e3e7eb !important;}
+        #g2_form_container .table-container tbody tr:last-child td:first-child {border-bottom-left-radius: 10px;}
+        #g2_form_container .table-container tbody tr:last-child td:last-child {border-bottom-right-radius: 10px;}
+        #g2_form_container .table-container tbody td:first-child {color: #8a949e; font-weight: 700; text-align: center !important;}
+        #g2_form_container .table-container tbody tr:hover td {background: #fdf6f5 !important;}
+        #g2TableContainer tbody tr:last-child td {border-bottom: 0 !important;}
+        #g2-container td input, #g2-container td select, #g2_form_container .major-row input {height: 30px !important; border: 1px solid #c8c8c8 !important; border-radius: 6px !important; font-size: 12.5px !important;
+                     padding: 0 8px !important; box-sizing: border-box; background-color: #fff; outline: none;}
+        #g2-container td input:focus, #g2-container td select:focus, #g2_form_container .major-row input:focus {border-color: #c0392b !important; box-shadow: 0 0 0 2px rgba(192,57,43,.12) !important;}
+        #g2-container td input[readonly], #g2_form_container input[readonly] {background-color: #eceff1 !important; color: #455a64; cursor: not-allowed;}
+        #g2-container .sl-140 {gap: 6px;}
+        #g2-container #addG2LeaderBtn, #g2-container #addG2CrewBtn {position: absolute !important; right: 0 !important; top: 0 !important; left: auto !important; width: auto !important; min-width: 0 !important; height: 28px !important; line-height: 1 !important; margin: 0 !important; padding: 0 12px 0 10px !important; border-radius: 999px !important; border: 1px solid #f0b8b3 !important; background: #fff !important; white-space: nowrap; transform: none !important;
+                     color: #c62828; font-size: 15px; font-weight: 800; display: inline-flex !important; align-items: center; gap: 4px; cursor: pointer; letter-spacing: 0; text-transform: none;}
+        #g2-container #addG2LeaderBtn::after, #g2-container #addG2CrewBtn::after {content: 'Adicionar linha'; font-size: 11.5px; font-weight: 700;}
+        #g2-container #addG2LeaderBtn:hover, #g2-container #addG2CrewBtn:hover {background: #c62828 !important; color: #fff !important; border-color: #c62828 !important;}
+        /* lista "Missões em curso": igual às outras tabelas (texto à esquerda, sem linhas verticais, botões ao meio) */
+        #g2TableContainer .g2-list {border: 1px solid #e3e7eb !important; border-radius: 10px !important; padding: 0 !important; overflow: hidden;}
+        #g2TableContainer .g2-list th + th, #g2TableContainer .g2-list td + td {border-left: 0 !important;}
+        #g2TableContainer .g2-list td {text-align: left !important; vertical-align: middle !important; padding: 8px 12px !important;}
+        #g2TableContainer .g2-list th {padding: 9px 12px !important;}
+        #g2TableContainer .g2-list td:last-child {text-align: right !important; white-space: nowrap;}
+        #g2TableContainer .g2-list th:last-child {text-align: right !important;}
+        #g2TableContainer .g2-list td:last-child .btn {margin: 0 0 0 6px !important; vertical-align: middle; display: inline-flex; align-items: center;}
+        #g2TableContainer .g2-list td:first-child {font-weight: 700;}
+        #g2-container #g2VehicleTable thead tr:nth-child(2) th {cursor: pointer;}
+        #g2-container #g2VehicleTable thead tr:nth-child(2) th:nth-child(n+4)::after {content: ' ⟳'; color: #c62828; font-weight: 800;}
+        #g2-container #g2InterventionTable td {text-align: left !important;}
+        #g2_form_container .major-row.sl-123 label {font-size: 11px !important; font-weight: 800 !important; color: #6c757d !important; text-transform: uppercase; letter-spacing: .3px;}
+        #g2_form_container .sl-158 {margin: 0 2px; font-size: 11px; color: #8a949e;}
+        #g2_form_container .sl-159 {background: #fff; border: 1px solid #e9ecef; border-radius: 12px; padding: 10px 14px; margin: 0 !important;}
+        #g2_form_container .sl-160 {align-items: center; gap: 8px;}
+        #g2_form_container .sl-160 label {font-size: 11px !important; font-weight: 800 !important; color: #6c757d !important; text-transform: uppercase; margin: 0 6px 0 0 !important;}
+        #g2_form_container > .major-card > .major-card-footer {background: #ddd !important; border-radius: 10px; padding: 10px 14px !important; margin-top: 8px; justify-content: flex-end !important; box-shadow: none !important;}
+        #g2_form_container > .major-card > .major-card-footer::before, #g2_form_container > .major-card > .major-card-footer::after {display: none !important;}
+        #g2SaveBtn {height: 34px; width: auto !important; padding: 0 20px !important; font-size: 12px !important; font-weight: 700;}
+        #g2Table .g2-edit-btn, #g2Table .g2-finalize-btn {height: 28px !important; padding: 0 12px !important; font-size: 11.5px; font-weight: 700; border-radius: 6px;}
+        .slx-lay {display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 8px; align-items: start;}
+        .slx-main {display: flex; flex-direction: column; gap: 8px; min-width: 0;}
+        .slx-sum {background: #fff; border: 1px solid #e9ecef; border-radius: 12px; padding: 14px 16px; position: sticky; top: 8px;}
+        .slx-sum-k {font-size: 11.5px; font-weight: 800; color: #c62828; text-transform: uppercase; letter-spacing: .4px;}
+        .slx-prev {margin: 10px 0 0; padding: 10px 12px; border: 1px dashed #cfd6dd; border-radius: 8px; background: #f8f9fa; font: 12px/1.6 ui-monospace, Consolas, monospace; color: #2c3e50; white-space: pre-wrap; word-break: break-word; min-height: 60px;}
+        .slx-sum-p {font-size: 11px; color: #8a949e; margin: 8px 0 0;}
+        .slx-foot {display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; padding: 10px 14px; background: #ddd; border-radius: 10px;}
+        .slx-foot .btn {height: 34px; width: auto !important; padding: 0 20px !important; font-size: 12px !important; font-weight: 700;}
+        .slx-sub {background: transparent !important; color: #2c3e50 !important; font-size: 12px !important; font-weight: 800 !important; padding: 0 0 8px 2px !important; letter-spacing: .4px; text-shadow: none !important; border: 0 !important;}
+        /* título do formulário (Inserção / Comunicar operacionalidade / G2): risca vermelha + linha fina até ao fim */
+        .slx-sub, #g2_form_container > .major-card > .major-card-header {display: flex !important; align-items: center; gap: 10px; background: none !important; box-shadow: none !important; border: 0 !important;
+                     border-radius: 0 !important; overflow: visible !important; color: #2c3e50 !important; font-size: 13px !important; font-weight: 800 !important; letter-spacing: .6px !important;
+                     text-transform: uppercase; text-shadow: none !important; padding: 4px 2px 10px !important; margin: 0 !important; justify-content: flex-start !important;}
+        .slx-sub::before, #g2_form_container > .major-card > .major-card-header::before {content: '' !important; display: block !important; position: static !important; flex: none; width: 4px !important;
+                     height: 18px !important; border-radius: 3px !important; background: #c62828 !important; box-shadow: none !important;}
+        .slx-sub::after, #g2_form_container > .major-card > .major-card-header::after {content: '' !important; display: block !important; position: static !important; flex: 1; height: 1px !important;
+                     width: auto !important; background: linear-gradient(90deg, #d5dbe1, rgba(213,219,225,0)) !important; border-radius: 0 !important;}
+        .slx-cnt {font-size: 11.5px; color: #8a949e; font-weight: 600;}
+        .slx-scroll {max-height: max(300px, calc(100vh - 470px)); overflow-y: auto; padding-right: 4px;}
+        #inopsTableContainer .slx-scroll {max-height: max(300px, calc(100vh - 330px));}
+        .slx-moa-ctx {grid-template-columns: 1.5fr 1fr 1fr 1.25fr 1.25fr 1fr;}
+        .slx-dt {display: flex; gap: 6px;} .slx-dt input[type="date"] {flex: 1.4;} .slx-dt input[type="time"] {flex: 1;}
+        .slx-meds {display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: start;}
+        .slx-m {border: 1px solid #eef0f2; border-radius: 10px; padding: 8px 12px; display: flex; flex-direction: column; gap: 8px; min-width: 0;}
+        .slx-m.slx-wide {grid-column: 1 / -1;}
+        .slx-m:has(.slx-swi:checked) {border-color: #f0c9c5; background: #fffafa; border-left: 3px solid #c62828;}
+        .slx-m:not(:has(.slx-swi:checked)) .slx-mf {display: none;}
+        .slx-mh {display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: #2c3e50; cursor: pointer; margin: 0; text-transform: none !important; letter-spacing: 0 !important;}
+        .slx-mh small {margin-left: auto; color: #8a949e; font-weight: 500; font-size: 11.5px;}
+        .slx-m:has(.slx-swi:checked) .slx-mh small {display: none;}
+        .slx-swi {position: absolute; opacity: 0; pointer-events: none;}
+        .slx-sw {width: 36px; height: 20px; border-radius: 999px; background: #ced4da; position: relative; flex: none; transition: background .15s;}
+        .slx-sw::before {content: ''; position: absolute; width: 16px; height: 16px; border-radius: 50%; background: #fff; top: 2px; left: 2px; box-shadow: 0 1px 2px rgba(0,0,0,.2); transition: left .15s;}
+        .slx-swi:checked + .slx-sw {background: #c62828;} .slx-swi:checked + .slx-sw::before {left: 18px;}
+        .slx-swi:focus-visible + .slx-sw {outline: 2px solid #c62828; outline-offset: 2px;}
+        .slx-mf {display: grid; grid-template-columns: 1fr 1fr 1.6fr; gap: 8px;}
+        .slx-mf4 {grid-template-columns: 1.2fr 1fr .8fr 1.6fr;}
+        .slx-in-veh {grid-template-columns: 2fr 1fr 1fr;}
+        .slx-in-av {grid-template-columns: 1fr .7fr 1.2fr 2.2fr 1fr;}
+        .slx-two2 {display: grid; grid-template-columns: 1.6fr 1fr; gap: 8px;}
+        .slx-in-sub {grid-template-columns: auto 1fr; align-items: end;}
+        .slx-ppi {display: flex; gap: 10px; align-items: center; flex-wrap: wrap;}
+        .slx-seg {display: inline-flex; border: 1px solid #d5dbe1; border-radius: 8px; overflow: hidden; flex: none;}
+        .slx-seg label {padding: 0 16px; height: 32px; display: flex; align-items: center; font-size: 12.5px; font-weight: 700; background: #fff; cursor: pointer; margin: 0; text-transform: none !important; color: #2c3e50 !important; letter-spacing: 0 !important;}
+        .slx-seg label + label {border-left: 1px solid #d5dbe1;}
+        .slx-seg label:has(input:checked) {background: #c62828; color: #fff !important;}
+        .slx-seg input, .slx-chip2 input {position: absolute; opacity: 0; pointer-events: none;}
+        .slx-chip2 {display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px; border-radius: 999px; border: 1px solid #d5dbe1; background: #fff; font-size: 12.5px; font-weight: 600; cursor: pointer; margin: 0; color: #2c3e50;}
+        .slx-chip2:has(input:checked) {background: #fdecea; border-color: #f0b8b3; color: #b71c1c;}
+        .slx-chip2:has(input:checked)::before {content: '✓';}
+        .slx-ppi:has(#ppi_no:checked) .slx-chip2 {opacity: .45;}
+        .slx-st {display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 700; white-space: nowrap;}
+        .slx-st-warn {background: #fff3e0; color: #ef6c00;} .slx-st-bad {background: #fdecea; color: #c62828;} .slx-st-type {background: #eceff1; color: #37474f;}
+        #inopsTableContainer .validate-btn {height: 28px !important; padding: 0 12px !important; font-size: 11.5px; font-weight: 700; border-radius: 6px;}
+        #moa-container .slx-box, #sitop_container .slx-box, #inopsTableContainer .slx-box {padding: 10px 14px 12px;}
+
         /* ===== layout novo (caixas numeradas), formulários do SALOC ===== */
         .slx > .major-card-body {background: #efefef; display: flex; flex-direction: column; gap: 10px; padding: 12px 16px;}
         .slx-recserv {min-height: 651px;} .slx-ineminop {min-height: 636px;}   /* mesmo tamanho do layout antigo */
@@ -893,7 +1184,7 @@
 `,
       'page-crepcalg': `
 
-        <div class="major-card major-last-card">
+        <div class="major-card major-last-card slx">
           <div class="major-card-header sl-62" style="display:flex;">
             <svg class="sl-13" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
               <path d="M7 3h10l3 3v15H7V3z"/>
@@ -917,229 +1208,14 @@
                 </div>
               </div>
               <!-- MOA (CREPC SUB SUB-MODULE) -->
-              <div id="moa-container" style="margin: 20px 0 0 0; display: none;">
-                <div class="major-card major-last-card sl-87">
-                  <div class="major-card-header header-black sl-88" style="display: flex;">MEDIDAS OPERACIONAIS DE ANTECIPAÇÃO (MOA)</div>
-                  <div class="major-card-body">
-                    <div class="major-row sl-89">
-                      <div class="major-field sl-32">
-                        <label class="sl-90">Selecione o Corpo de Bombeiros:</label>
-                        <select class="sl-91" id="moa_cb"></select>
-                      </div>
-                      <div class="major-field sl-32">
-                        <label class="sl-90">Selecione o Dispositivo:</label>
-                        <select class="sl-92" id="moa_device_type"></select>
-                      </div>
-                      <div class="major-field sl-32">
-                        <label class="sl-90">Selecione o Estado de Prontidão Especial (EPE):</label>
-                        <select class="sl-39" id="moa_epe_type"></select>
-                      </div>
-                    </div>
-                    <div class="major-row sl-93">
-                      <div class="major-field sl-94">
-                        <label class="sl-95">Indique o período:</label>
-                      </div>
-                      <div class="major-field sl-32">
-                        <label class="sl-90">De:</label>
-                        <input class="sl-96" type="date" id="moa_date_init">
-                        <input class="sl-97" type="time" id="moa_time_init">
-                        <label class="sl-90">Até:</label>
-                        <input class="sl-96" type="date" id="moa_date_end">
-                        <input class="sl-97" type="time" id="moa_time_end">
-                        <input class="sl-37" type="text" id="moa_gdh_init" style="display: none;">
-                        <input class="sl-37" type="text" id="moa_gdh_end" style="display: none;">
-                      </div>
-                    </div>
-                    <div class="grid-1fr">
-                      <div class="options-main-card main-card-left sl-98">
-                        <div class="major-row sl-99">
-                          <div class="major-field sl-32">                            
-                            <label class="sl-100" style="display: inline-flex;">Indique as Medidas:</label>
-                          </div>
-                        </div>
-                        <div class="major-row sl-101" style="display: flex;">
-                          <label class="sl-102" style="display: flex;">
-                            <input class="sl-103" id="moa_eco" type="checkbox"> Elemento de Comando às operações:</label>
-                          <div class="major-field sl-104">
-                            <select class="sl-27" id="moa_eco_sit"></select>
-                            <select class="sl-44" id="moa_eco_pront"></select>
-                            <input class="sl-105" id="moa_eco_observ" type="text" placeholder="Observações">
-                          </div>
-                        </div>
-                        <div class="major-row sl-101" style="display: flex;">
-                          <label class="sl-106" style="display: flex;">
-                            <input class="sl-107" id="moa_ned" type="checkbox">Notificação à Entidade Detentora:</label>
-                          <div class="major-field sl-32">
-                            <select class="sl-108" id="moa_ned_sit" disabled></select>
-                            <select class="sl-44" id="moa_ned_pront"></select>
-                            <input class="sl-105" id="moa_ned_observ" type="text" placeholder="Observações">
-                          </div>
-                        </div>
-                        <div class="major-row sl-101" style="display: flex;">
-                        <label class="sl-106" style="display: flex;">
-                          <input class="sl-107" id="moa_oco" type="checkbox"> Ofícial / Chefe em ordenança:</label>
-                          <div class="major-field sl-32">
-                            <select class="sl-27" id="moa_oco_sit"></select>
-                            <select class="sl-44" id="moa_oco_pront"></select>
-                            <input class="sl-105" id="moa_oco_observ" type="text" placeholder="Observações">
-                          </div>
-                        </div>
-                        <div class="major-row sl-101" style="display: flex;">
-                          <label class="sl-106" style="display: flex;">
-                            <input class="sl-107" id="moa_era" type="checkbox"> ERAS Locais:</label>
-                          <div class="major-field sl-32">
-                            <select class="sl-27" id="moa_era_sit"></select>
-                            <select class="sl-44" id="moa_era_pront"></select>
-                            <input class="sl-105" id="moa_era_observ" type="text" placeholder="Observações">
-                          </div>
-                        </div>
-                        <div class="major-row sl-101" style="display: flex;">
-                          <label class="sl-106" style="display: flex;">
-                            <input class="sl-107" id="moa_eob" type="checkbox"> Equipas de Observação:</label>
-                          <div class="major-field sl-32">
-                            <select class="sl-27" id="moa_eob_sit"></select>
-                            <select class="sl-44" id="moa_eob_pront"></select>
-                            <input class="sl-105" id="moa_eob_observ" type="text" placeholder="Observações">
-                          </div>
-                        </div>
-                        <div class="major-row sl-101" style="display: flex;">
-                          <label class="sl-106" style="display: flex;">
-                            <input class="sl-107" id="moa_rsc" type="checkbox"> Reforço da SALOC:</label>
-                          <div class="major-field sl-32">
-                            <select class="sl-108" id="moa_rsc_sit" disabled></select>
-                            <select class="sl-44" id="moa_rsc_pront"></select>
-                            <input class="sl-105" id="moa_rsc_observ" type="text" placeholder="Observações">
-                          </div>
-                        </div>
-                        <div class="major-row sl-101" style="display: flex;">
-                        <label class="sl-106" style="display: flex;">
-                          <input class="sl-107" id="moa_mef" type="checkbox"> Mobilização do efetivo:</label>
-                          <div class="major-field sl-32">
-                            <select class="sl-27" id="moa_mef_sit"></select>
-                            <select class="sl-109" id="moa_mef_pront" disabled></select>
-                            <input class="sl-110" id="moa_mef_observ" type="text" placeholder="Observações" disabled>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="options-main-card options-main-card-right sl-111">
-                      <div class="major-row sl-99">
-                        <div class="major-field sl-32">
-                          <label class="sl-100" style="display: inline-flex;">Reforço de Equipas de Intervenção Extraordinárias:</label>
-                        </div>
-                      </div>
-                      <div class="major-row sl-112" style="display: flex;">
-                        <label class="sl-113"> Tipologia:</label>
-                        <div class="major-field sl-32">
-                          <input class="sl-27" type="text" id="moa_reie_type_01">
-                        </div>
-                        <label class="sl-113"> Período:</label>
-                        <div class="major-field sl-32">
-                          <input class="sl-44" type="text" id="moa_reie_time_01">
-                        </div>
-                        <label class="sl-113"> Nº Operacionais:</label>
-                        <div class="major-field sl-32">
-                          <input class="sl-114" type="text" id="moa_reie_nop_01">
-                        </div>
-                        <label class="sl-113"> Observações:</label>
-                        <div class="major-field sl-32">
-                          <input class="sl-115" type="text" id="moa_reie_obs_01">
-                        </div>
-                      </div>
-                      <div class="major-row sl-112" style="display: flex;">
-                        <label class="sl-113"> Tipologia:</label>
-                        <div class="major-field sl-32">
-                          <input class="sl-27" type="text" id="moa_reie_type_02">
-                        </div>
-                        <label class="sl-113"> Período:</label>
-                        <div class="major-field sl-32">
-                          <input class="sl-44" type="text" id="moa_reie_time_02">
-                        </div>
-                        <label class="sl-113"> Nº Operacionais:</label>
-                        <div class="major-field sl-32">
-                          <input class="sl-114" type="text" id="moa_reie_nop_02">
-                        </div>
-                        <label class="sl-113"> Observações:</label>
-                        <div class="major-field sl-32">
-                          <input class="sl-115" type="text" id="moa_reie_obs_02">
-                        </div>
-                      </div>
-                      <div class="major-row sl-112" style="display: flex;">
-                        <label class="sl-113"> Tipologia:</label>
-                        <div class="major-field sl-32">
-                          <input class="sl-27" type="text" id="moa_reie_type_03">
-                        </div>
-                        <label class="sl-113"> Período:</label>
-                        <div class="major-field sl-32">
-                          <input class="sl-44" type="text" id="moa_reie_time_03">
-                        </div>
-                        <label class="sl-113"> Nº Operacionais:</label>
-                        <div class="major-field sl-32">
-                          <input class="sl-114" type="text" id="moa_reie_nop_03">
-                        </div>
-                        <label class="sl-113"> Observações:</label>
-                        <div class="major-field sl-32">
-                          <input class="sl-115" type="text" id="moa_reie_obs_03">
-                        </div>
-                      </div>
-                        
-                      <div class="major-row sl-116">
-                        <div class="major-field sl-32">
-                          <label class="sl-100" style="display: inline-flex;">Outras:</label>
-                        </div>
-                      </div>
-                      <div class="major-row sl-101" style="display: flex;">
-                        <div class="major-field sl-32">
-                          <input class="sl-117" type="text" id="moa_otr_type_01">
-                        </div>
-                        <label class="sl-113"> Período:</label>
-                        <div class="major-field sl-32">
-                          <input class="sl-44" type="text" id="moa_otr_time_01">
-                        </div>
-                        <label class="sl-113"> Observações:</label>
-                        <div class="major-field sl-32">
-                          <input class="sl-118" type="text" id="moa_otr_obs_01">
-                        </div>
-                      </div>
-                      <div class="major-row sl-112" style="display: flex;">
-                        <div class="major-field sl-32">
-                          <input class="sl-117" type="text" id="moa_otr_type_02">
-                        </div>
-                        <label class="sl-113"> Período:</label>
-                        <div class="major-field sl-32">
-                          <input class="sl-44" type="text" id="moa_otr_time_02">
-                        </div>
-                        <label class="sl-113"> Observações:</label>
-                        <div class="major-field sl-32">
-                          <input class="sl-118" type="text" id="moa_otr_obs_02">
-                        </div>
-                      </div>
-                      <div class="major-row sl-112" style="display: flex;">
-                        <div class="major-field sl-32">
-                          <input class="sl-117" type="text" id="moa_otr_type_03">
-                        </div>
-                        <label class="sl-113"> Período:</label>
-                        <div class="major-field sl-32">
-                          <input class="sl-44" type="text" id="moa_otr_time_03">
-                        </div>
-                        <label class="sl-113"> Observações:</label>
-                        <div class="major-field sl-32">
-                          <input class="sl-118" type="text" id="moa_otr_obs_03">
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="major-field sl-119">
-                    <label> OPTEL:</label>
-                    <input class="sl-120" type="text" id="moa_optel">
-                  </div>
+              <div id="moa-container" style="margin: 0; display: none;">
+                <div class="slx-lay"><div class="slx-main">
+                  <section class="slx-box"><div class="slx-bh"><span class="slx-n">1</span>Contexto</div><div class="slx-grid slx-moa-ctx"><div class="slx-f"><label for="moa_cb">Corpo de Bombeiros</label><select id="moa_cb" class="slx-in"></select></div><div class="slx-f"><label for="moa_device_type">Dispositivo</label><select id="moa_device_type" class="slx-in"></select></div><div class="slx-f"><label for="moa_epe_type">EPE</label><select id="moa_epe_type" class="slx-in"></select></div><div class="slx-f"><label for="moa_date_init">De</label><div class="slx-dt"><input type="date" id="moa_date_init" class="slx-in"><input type="time" id="moa_time_init" class="slx-in"></div></div><div class="slx-f"><label for="moa_date_end">Até</label><div class="slx-dt"><input type="date" id="moa_date_end" class="slx-in"><input type="time" id="moa_time_end" class="slx-in"></div></div><div class="slx-f"><label for="moa_optel">OPTEL</label><input type="text" id="moa_optel" class="slx-in"></div><input type="text" id="moa_gdh_init" style="display: none;"><input type="text" id="moa_gdh_end" style="display: none;"></div></section>
+                  <section class="slx-box"><div class="slx-bh"><span class="slx-n">2</span>Medidas<div class="slx-tools"><span class="slx-cnt" id="moa-count">0 de 9 ativas</span></div></div><div class="slx-scroll"><div class="slx-meds"><div class="slx-m"><label class="slx-mh"><input type="checkbox" id="moa_eco" class="slx-swi"><span class="slx-sw"></span>Elemento de Comando às operações<small>desligada</small></label><div class="slx-mf"><select id="moa_eco_sit" class="slx-in"></select><select id="moa_eco_pront" class="slx-in"></select><input type="text" id="moa_eco_observ" class="slx-in" placeholder="Observações"></div></div><div class="slx-m"><label class="slx-mh"><input type="checkbox" id="moa_ned" class="slx-swi"><span class="slx-sw"></span>Notificação à Entidade Detentora<small>desligada</small></label><div class="slx-mf"><select id="moa_ned_sit" class="slx-in" disabled></select><select id="moa_ned_pront" class="slx-in"></select><input type="text" id="moa_ned_observ" class="slx-in" placeholder="Observações"></div></div><div class="slx-m"><label class="slx-mh"><input type="checkbox" id="moa_oco" class="slx-swi"><span class="slx-sw"></span>Oficial / Chefe em ordenança<small>desligada</small></label><div class="slx-mf"><select id="moa_oco_sit" class="slx-in"></select><select id="moa_oco_pront" class="slx-in"></select><input type="text" id="moa_oco_observ" class="slx-in" placeholder="Observações"></div></div><div class="slx-m"><label class="slx-mh"><input type="checkbox" id="moa_era" class="slx-swi"><span class="slx-sw"></span>ERAS locais<small>desligada</small></label><div class="slx-mf"><select id="moa_era_sit" class="slx-in"></select><select id="moa_era_pront" class="slx-in"></select><input type="text" id="moa_era_observ" class="slx-in" placeholder="Observações"></div></div><div class="slx-m"><label class="slx-mh"><input type="checkbox" id="moa_eob" class="slx-swi"><span class="slx-sw"></span>Equipas de observação<small>desligada</small></label><div class="slx-mf"><select id="moa_eob_sit" class="slx-in"></select><select id="moa_eob_pront" class="slx-in"></select><input type="text" id="moa_eob_observ" class="slx-in" placeholder="Observações"></div></div><div class="slx-m"><label class="slx-mh"><input type="checkbox" id="moa_rsc" class="slx-swi"><span class="slx-sw"></span>Reforço da SALOC<small>desligada</small></label><div class="slx-mf"><select id="moa_rsc_sit" class="slx-in" disabled></select><select id="moa_rsc_pront" class="slx-in"></select><input type="text" id="moa_rsc_observ" class="slx-in" placeholder="Observações"></div></div><div class="slx-m"><label class="slx-mh"><input type="checkbox" id="moa_mef" class="slx-swi"><span class="slx-sw"></span>Mobilização do efetivo<small>desligada</small></label><div class="slx-mf"><select id="moa_mef_sit" class="slx-in"></select><select id="moa_mef_pront" class="slx-in" disabled></select><input type="text" id="moa_mef_observ" class="slx-in" placeholder="Observações" disabled></div></div><div class="slx-m slx-wide"><label class="slx-mh"><input type="checkbox" class="slx-swi"><span class="slx-sw"></span>Reforço de equipas de intervenção extraordinárias<small>desligada</small></label><div class="slx-mf slx-mf4"><input type="text" id="moa_reie_type_01" class="slx-in" placeholder="Tipologia"><input type="text" id="moa_reie_time_01" class="slx-in" placeholder="Período"><input type="text" id="moa_reie_nop_01" class="slx-in" placeholder="N.º operacionais"><input type="text" id="moa_reie_obs_01" class="slx-in" placeholder="Observações"></div><div class="slx-mf slx-mf4"><input type="text" id="moa_reie_type_02" class="slx-in" placeholder="Tipologia"><input type="text" id="moa_reie_time_02" class="slx-in" placeholder="Período"><input type="text" id="moa_reie_nop_02" class="slx-in" placeholder="N.º operacionais"><input type="text" id="moa_reie_obs_02" class="slx-in" placeholder="Observações"></div><div class="slx-mf slx-mf4"><input type="text" id="moa_reie_type_03" class="slx-in" placeholder="Tipologia"><input type="text" id="moa_reie_time_03" class="slx-in" placeholder="Período"><input type="text" id="moa_reie_nop_03" class="slx-in" placeholder="N.º operacionais"><input type="text" id="moa_reie_obs_03" class="slx-in" placeholder="Observações"></div></div><div class="slx-m slx-wide"><label class="slx-mh"><input type="checkbox" class="slx-swi"><span class="slx-sw"></span>Outras<small>desligada</small></label><div class="slx-mf"><input type="text" id="moa_otr_type_01" class="slx-in" placeholder="Medida"><input type="text" id="moa_otr_time_01" class="slx-in" placeholder="Período"><input type="text" id="moa_otr_obs_01" class="slx-in" placeholder="Observações"></div><div class="slx-mf"><input type="text" id="moa_otr_type_02" class="slx-in" placeholder="Medida"><input type="text" id="moa_otr_time_02" class="slx-in" placeholder="Período"><input type="text" id="moa_otr_obs_02" class="slx-in" placeholder="Observações"></div><div class="slx-mf"><input type="text" id="moa_otr_type_03" class="slx-in" placeholder="Medida"><input type="text" id="moa_otr_time_03" class="slx-in" placeholder="Período"><input type="text" id="moa_otr_obs_03" class="slx-in" placeholder="Observações"></div></div></div></div></section>
                 </div>
-                <div class="major-card-footer">
-                  <div class="action-buttons sl-121" id="moa-emit">
-                    <button class="btn btn-danger " id="saveMOABtn" style="height: 35px;">📄 EMITIR</button>
-                  </div>
-                </div>
-              </div>                
-            </div>
+                <aside class="slx-sum"><div class="slx-sum-k">Resumo da MOA</div><pre class="slx-prev" id="moa-prev"></pre><p class="slx-sum-p">Vai por email, com o formulário em PDF, para os destinatários do Centro de Dados.</p></aside></div>
+                <div class="slx-foot" id="moa-emit"><button class="btn btn-danger" id="saveMOABtn">📄 EMITIR MOA</button></div>
+              </div>
           </div>
           <!-- G2 (CREPC SUB SUB-MODULE) -->
           <div id="g2-container" style="margin: 20px 0 0 0; display: none;">
@@ -1157,8 +1233,8 @@
                 </div>
                 <!-- MISSÕES EM CURSO -->
                 <div id="g2TableContainer" style="display: none; margin-top: 20px;">
-                  <h3>Missões em Curso</h3>
-                  <div class="table-container">
+                  <section class="slx-box"><div class="slx-bh"><span class="slx-n">1</span>Missões em curso</div>
+                  <div class="table-container slx-tbl g2-list">
                     <table id="g2Table">
                       <thead>
                         <tr>
@@ -1171,7 +1247,7 @@
                       </thead>
                       <tbody></tbody>
                     </table>
-                  </div>
+                  </div></section>
                 </div>
                 <!-- FORMULÁRIO -->
                 <div id="g2_form_container" style="display: none; margin-top: 20px;">
@@ -1386,6 +1462,12 @@
               </div>
             </div>
             <div id="plandir-header-container"></div>
+            <div class="plandir-kpis" id="plandir-kpis" hidden>
+              <div class="plandir-kpi" style="--c:#c62828"><i>👥</i><div><b id="plandir-k-el">0</b><small>Elementos escalados</small></div></div>
+              <div class="plandir-kpi" style="--c:#1565c0"><i>🚒</i><div><b id="plandir-k-eq">0</b><small>Equipas com elementos</small></div></div>
+              <div class="plandir-kpi" style="--c:#2e7d32"><i>🚑</i><div><b id="plandir-k-tas">0</b><small>TAS</small></div></div>
+              <div class="plandir-kpi" style="--c:#ef6c00"><i>⚠️</i><div><b id="plandir-k-inc">0</b><small>Secções por completar</small></div></div>
+            </div>
             <div id="plandir-layout-wrapper">
               <div id="plandir-left-col">
                 <div id="plandir_container"></div>
@@ -1415,7 +1497,7 @@
 `,
       'page-inocrepc': `
 
-      <div class="major-card major-last-card">
+      <div class="major-card major-last-card slx">
         <div class="major-card-header">
           <svg class="sl-13" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <rect x="1" y="10" width="22" height="10" rx="2" ry="2"/>
@@ -1438,32 +1520,29 @@
               </div>
             </div>
           </div>
-          <div id="inopsTableContainer" style="display: none; margin-top: 20px;">
-            <h3>Inoperacionalidades em Curso</h3>
-            <div class="table-container">
+          <div id="inopsTableContainer" style="display: none; margin-top: 0;">
+            <section class="slx-box"><div class="slx-bh"><span class="slx-n">1</span>Inoperacionalidades em curso</div>
+            <div class="table-container slx-tbl slx-scroll">
               <table id="inopsTable">
                 <thead>
                   <tr>
-                    <th class="sl-26">Veículo</th>
-                    <th class="sl-26">GDH INOP</th>
-                    <th class="sl-27">Tipo de Avaria</th>
-                    <th class="sl-167">Descrição da Avaria</th>
-                    <th class="sl-27">OPTEL</th>
-                    <th class="sl-38">Ação</th>
+                    <th style="width:110px">Veículo</th>
+                    <th style="width:130px">GDH INOP</th>
+                    <th style="width:110px">Há</th>
+                    <th style="width:150px">Tipo de avaria</th>
+                    <th>Descrição da avaria</th>
+                    <th style="width:150px">OPTEL</th>
+                    <th style="width:200px"></th>
                   </tr>
                 </thead>
                 <tbody></tbody>
               </table>
-            </div>
+            </div></section>
           </div>
-          <div id="sitop_container" style="display: none; margin-top: 20px;">
-            <div class="major-card major-last-card sl-122">
-              <div class="major-card-header header-black sl-88"  style="display: flex;">INSERÇÃO DE NOVA INOPERACIONALIDADE</div>
-              <div class="major-card-body">
-                <div class="major-row sl-123">
-                  <div class="major-field sl-32">
-                    <label class="sl-33">Corpo de Bombeiros:</label>
-                    <select id="sitop_cb" style="width: 400px;">
+          <div id="sitop_container" style="display: none; margin-top: 0;">
+            <div class="major-card-header slx-sub">INSERÇÃO DE NOVA INOPERACIONALIDADE</div>
+            <div class="slx-lay"><div class="slx-main">
+              <section class="slx-box"><div class="slx-bh"><span class="slx-n">1</span>Veículo</div><div class="slx-grid slx-in-veh"><div class="slx-f"><label for="sitop_cb">Corpo de Bombeiros</label><select id="sitop_cb" class="slx-in">
                       <option>0801 - Companhia Sapadores de Faro</option>
                       <option>0802 - Corpo de Bombeiros de Lagos</option>
                       <option>0803 - Companhia Sapadores de Tavira</option>
@@ -1481,83 +1560,15 @@
                       <option>0815 - Corpo de Bombeiros de Lagoa</option>
                       <option>0816 - Corpo de Bombeiros de Vila do Bispo</option>
                       <option>0817 - Corpo de Bombeiros de Alcoutim</option>
-                    </select>
-                  </div>
-                  <div class="major-field sl-32">
-                    <label class="sl-33">Veículo:</label>
-                    <select class="sl-168" id="sitop_veíc"></select>
-                  </div>
-                  <div class="major-field sl-32">
-                    <label class="sl-33">Matrícula:</label>
-                    <input class="sl-169" type="text" id="sitop_veíc_registration" readonly tabindex="-1">
-                    <input class="sl-169" type="text" id="sitop_gdh_inop" style="display: none;" readonly tabindex="-1">
-                    <input class="sl-169" type="text" id="sitop_gdh_op" style="display: none;" readonly tabindex="-1">
-                  </div>
-                </div>  
-                <div class="major-row sl-123">      
-                  <div class="major-field sl-32">
-                    <label class="sl-33">Data:</label>
-                    <input class="sl-25" type="date" id="sitop_veíc_date">
-                    <label class="sl-33">Hora:</label>
-                    <input class="sl-26" type="time" id="sitop_veíc_hour">
-                  </div>
-                </div>
-                <div class="major-row sl-123">                  
-                  <div class="major-field sl-32">
-                    <label class="sl-33">Tipo de Avaria:</label>
-                    <select class="sl-27" id="sitop_type_failure"></select>
-                  </div>
-                  <div class="major-field sl-32">
-                    <label class="sl-33">Descrição da Avaria:</label>
-                    <input class="sl-170" type="text" id="sitop_failure_description">
-                  </div>
-                  <div class="major-field sl-32">
-                    <label class="sl-33">NOC:</label>
-                    <input class="sl-171" type="text" id="sitop_failure_noc">
-                  </div>
-                </div>
-                <label class="sl-172" style="display: block;">
-                  O Veículo indicado faz parte de algum PPI?
-                </label>
-                <div class="checkbox-vertical sl-173">
-                  <label class="sl-174" style="display: inline-flex;">
-                    <input class="sl-103" id="ppi_yes" type="checkbox"> SIM</label>
-                  <label class="sl-175" style="display: inline-flex;">
-                    <input class="sl-103" id="ppi_no" type="checkbox"> NÃO</label>
-                </div>
-                <label class="sl-172" style="display: block;">
-                  Qual ou Quais:
-                </label>
-                <div class="checkbox-vertical sl-176">
-                  <label class="sl-177" style="display: flex;">
-                    <input class="sl-103" type="checkbox" id="ppi_airport"> Aeroporto</label>
-                  <label class="sl-178" style="display: flex;">
-                    <input class="sl-103" type="checkbox" id="ppi_a22"> A22</label>
-                  <label class="sl-179" style="display: flex;">
-                    <input class="sl-103" type="checkbox" id="ppi_a2"> A2</label>
-                  <label class="sl-180" style="display: flex;">
-                    <input class="sl-103" type="checkbox" id="ppi_linfer"> Linha Férrea do Algarve</label>
-                  <label class="sl-181" style="display: flex;">
-                    <input class="sl-103" type="checkbox" id="ppi_airfield"> Aeródromo Portimão</label>
-                </div>
-                <label class="sl-172" style="display: block;">
-                  O Corpo de Bombeiros tem capacidade de substituição por veículo similar?
-                </label>
-                <div class="checkbox-vertical sl-173">
-                  <label class="sl-174" style="display: inline-flex;">
-                    <input class="sl-103" id="ppi_subs_yes" type="checkbox"> SIM</label>
-                    <label class="sl-175" style="display: inline-flex;">
-                      <input class="sl-103" id="ppi_subs_no" type="checkbox"> NÃO</label>
-                </div>
-                <div class="major-field sl-182">
-                <label class="sl-183">OPTEL:</label>
-                  <input class="sl-44" type="text" id="sitop_optel">
-                </div>
-              </div>
-              <div class="major-card-footer sl-161" style="display: flex;">
-                <button class="btn btn-danger" id="saveBtn" style="font-size: 12px; width: 25px;">Salvar</button>
+                    </select></div><div class="slx-f"><label for="sitop_veíc">Veículo</label><select id="sitop_veíc" class="slx-in"></select></div><div class="slx-f"><label for="sitop_veíc_registration">Matrícula</label><input type="text" id="sitop_veíc_registration" class="slx-in" readonly tabindex="-1"></div><input type="text" id="sitop_gdh_inop" style="display: none;" readonly tabindex="-1"><input type="text" id="sitop_gdh_op" style="display: none;" readonly tabindex="-1"></div></section>
+              <section class="slx-box"><div class="slx-bh"><span class="slx-n">2</span>Avaria</div><div class="slx-grid slx-in-av"><div class="slx-f"><label for="sitop_veíc_date">Data</label><input type="date" id="sitop_veíc_date" class="slx-in"></div><div class="slx-f"><label for="sitop_veíc_hour">Hora</label><input type="time" id="sitop_veíc_hour" class="slx-in"></div><div class="slx-f"><label for="sitop_type_failure">Tipo de avaria</label><select id="sitop_type_failure" class="slx-in"></select></div><div class="slx-f"><label for="sitop_failure_description">Descrição da avaria</label><input type="text" id="sitop_failure_description" class="slx-in"></div><div class="slx-f"><label for="sitop_failure_noc">NOC</label><input type="text" id="sitop_failure_noc" class="slx-in"></div></div></section>
+              <div class="slx-two2">
+                <section class="slx-box"><div class="slx-bh"><span class="slx-n">3</span>Faz parte de algum PPI?</div><div class="slx-ppi"><div class="slx-seg"><label><input type="checkbox" id="ppi_yes">Sim</label><label><input type="checkbox" id="ppi_no">Não</label></div><label class="slx-chip2"><input type="checkbox" id="ppi_airport">Aeroporto</label><label class="slx-chip2"><input type="checkbox" id="ppi_a22">A22</label><label class="slx-chip2"><input type="checkbox" id="ppi_a2">A2</label><label class="slx-chip2"><input type="checkbox" id="ppi_linfer">Linha Férrea do Algarve</label><label class="slx-chip2"><input type="checkbox" id="ppi_airfield">Aeródromo Portimão</label></div></section>
+                <section class="slx-box"><div class="slx-bh"><span class="slx-n">4</span>Substituição e OPTEL</div><div class="slx-grid slx-in-sub"><div class="slx-f"><label>Veículo similar?</label><div class="slx-seg"><label><input type="checkbox" id="ppi_subs_yes">Sim</label><label><input type="checkbox" id="ppi_subs_no">Não</label></div></div><div class="slx-f"><label for="sitop_optel">OPTEL</label><input type="text" id="sitop_optel" class="slx-in"></div></div></section>
               </div>
             </div>
+            <aside class="slx-sum"><div class="slx-sum-k">Resumo do envio</div><pre class="slx-prev" id="sitop-prev"></pre><p class="slx-sum-p">Vai por email, com o formulário em PDF, para os destinatários do Centro de Dados.</p></aside></div>
+            <div class="slx-foot"><button class="btn btn-danger" id="saveBtn">Emitir Inoperacionalidade</button></div>
           </div>
         </div>
         <div class="major-card-footer"></div>
@@ -2509,6 +2520,14 @@
       document.getElementById("ppia22-grid-controls").style.display = "block";
       ShowA22GridButtons();
     }
+    /* Enter no campo de pesquisa = carregar em Procurar */
+    document.addEventListener("keydown", e => {
+      if (e.key !== "Enter") return;
+      const card = e.target.closest?.("#ppia22-grid-controls > .options-main-card, #ppilinfer-grid-controls > .options-main-card");
+      if (!card || !/^(INPUT|SELECT)$/.test(e.target.tagName)) return;
+      const btn = card.querySelector(".options-black-btn");
+      if (btn) { e.preventDefault(); btn.click(); }
+    });
     /* ─── KM INPUT (shared between A22 and LinFer) ──────────── */
     function createKmInputField({id, placeholder, maxLen, decimalPlaces, style}) {
       const input = document.createElement("input");
@@ -2855,11 +2874,13 @@
                           {label:"SENTIDO ESTE - OESTE",sublabel:"(Vila Real de Santo António - Lagos)",prefix:"2"}];
       const specialButtons = new Set(["1M","1N","1O","1P","1Q","1R","2J","2K","2L","2M","2N","2O","2P"]);
       directions.forEach(dir => {
-        container.append(createA22SenceTitle(dir.label, true), createA22SenceTitle(dir.sublabel, false));
+        const sec = document.createElement("div"); sec.className = "ppi-dir";   /* cada sentido no seu contentor */
+        sec.append(createA22SenceTitle(dir.label, true), createA22SenceTitle(dir.sublabel, false));
         const rowButtons = document.createElement("div"); rowButtons.className = "major-row";
         rowButtons.style.cssText = A22_ROW_STYLE; rowButtons.style.justifyContent = "center";
         for (let i=0; i<19; i++) rowButtons.appendChild(createA22GridButtons(`${dir.prefix}${String.fromCharCode(65+i)}`, specialButtons));
-        container.appendChild(rowButtons);
+        sec.appendChild(rowButtons);
+        container.appendChild(sec);
       });
     }
     /* ─── A22 CELL HELPERS ───────────────────────────────────── */
@@ -3326,12 +3347,13 @@
     function ShowLinFerGridButtons() {
       const container=document.getElementById("ppilinfer-grid-controls"); if(!container) return;
       Object.assign(container.style,{display:"flex",flexDirection:"column",alignItems:"center"}); container.innerHTML="";
+      const sec=document.createElement("div"); sec.className="ppi-dir";   /* grelhas num contentor */
       const titleRow=document.createElement("div"); titleRow.className="major-row"; titleRow.style.cssText=LINFER_TITLE_STYLE;
-      const label=document.createElement("label"); label.textContent="GRELHAS DE ALARME"; titleRow.appendChild(label); container.appendChild(titleRow);
+      const label=document.createElement("label"); label.textContent="GRELHAS DE ALARME"; titleRow.appendChild(label); sec.appendChild(titleRow); container.appendChild(sec);
       const specialButtons=new Set(["F","G","H","I","J","K","L","M","N","O","P"]);
       const rowButtons=document.createElement("div"); rowButtons.className="major-row"; rowButtons.style.cssText=LINFER_ROW_STYLE; rowButtons.style.justifyContent="center";
       "ABCDEFGHIJKLMNOP".split("").forEach(letter=>rowButtons.appendChild(createLinFerGridButtons(letter,specialButtons)));
-      container.appendChild(rowButtons);
+      sec.appendChild(rowButtons);
     }
     // Carrega tudo em paralelo; as tabelas que já estão no ecrã são atualizadas no sítio (sem as apagar e voltar a criar)
     async function loadPPILinFerAll(gridId) {
@@ -4301,6 +4323,26 @@
       const el = document.getElementById(id);
       if (el) el.addEventListener("input", updateMOAGDH);
     });
+    /* resumo lateral da MOA e contador das medidas ligadas (só lê os campos) */
+    function moaSummary() {
+      const box = document.getElementById("moa-container"); if (!box) return;
+      const v = id => (document.getElementById(id)?.value || "").trim();
+      const ms = [...box.querySelectorAll(".slx-m")], on = ms.filter(m => m.querySelector(".slx-swi")?.checked);
+      const cnt = document.getElementById("moa-count"); if (cnt) cnt.textContent = `${on.length} de ${ms.length} ativas`;
+      updateMOAGDH();
+      const lines = [`📋 MOA · ${v("moa_cb") || "—"}`, [v("moa_device_type"), v("moa_epe_type")].filter(Boolean).join(" · "),
+                     v("moa_gdh_init") || v("moa_gdh_end") ? `${v("moa_gdh_init") || "?"} → ${v("moa_gdh_end") || "?"}` : "", ""];
+      on.forEach(m => {
+        const t = m.querySelector(".slx-mh")?.childNodes[2]?.textContent.trim() || "";
+        const vals = [...m.querySelectorAll(".slx-mf select, .slx-mf input")].filter(x => !x.disabled || x.tagName === "SELECT").map(x => (x.tagName === "SELECT" ? x.options[x.selectedIndex]?.text : x.value) || "")
+                     .map(x => x.trim()).filter(x => x && !/^Indique/i.test(x));
+        lines.push(`• ${t}${vals.length ? `: ${vals.join(" · ")}` : ""}`);
+      });
+      if (!on.length) lines.push("Sem medidas ligadas.");
+      const el = document.getElementById("moa-prev"); if (el) el.textContent = lines.filter((x, i) => x || i === 3).join("\n");
+    }
+    ["input", "change"].forEach(ev => document.getElementById("moa-container")?.addEventListener(ev, () => setTimeout(moaSummary, 0)));
+    document.getElementById("NewMOABtn")?.addEventListener("click", () => setTimeout(moaSummary, 50));
     /* ================ EMAIL RECIPIENTS =============== */
     async function fetchMOARecipients(corpOperNr) {
       const categories = ["crepcmoa_mail_to", "crepcmoa_mail_cc", "crepcmoa_mail_bcc"];
@@ -5981,6 +6023,26 @@
         tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#e44; padding:12px;">Erro ao carregar</td></tr>`;
       }
     }
+    /* contadores do planeamento (só leem a grelha) */
+    (function plandirKpis() {
+      const cont = document.getElementById('plandir_container'), box = document.getElementById('plandir-kpis');
+      if (!cont || !box) return;
+      const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+      let t = 0;
+      const upd = () => {
+        const cards = [...cont.querySelectorAll('.plandir-main-card')];
+        box.hidden = !cards.length;
+        if (!cards.length) return;
+        const filled = c => [...c.querySelectorAll('.plandir-nint-input')].filter(i => i.value.trim()).length;
+        set('plandir-k-el', new Set([...cont.querySelectorAll('.plandir-nint-input')].map(i => i.value.trim()).filter(Boolean)).size);
+        set('plandir-k-eq', cards.filter(c => /^EQUIPA/i.test(c.querySelector('.plandir-card-title')?.textContent.trim() || '') && filled(c)).length);
+        set('plandir-k-tas', cont.querySelectorAll('.plandir-tas-active').length);
+        set('plandir-k-inc', cont.querySelectorAll('.plandir-status-dot.dot-red').length);
+      };
+      const later = () => { clearTimeout(t); t = setTimeout(upd, 80); };
+      new MutationObserver(later).observe(cont, {childList: true, subtree: true, attributes: true, attributeFilter: ['class']});
+      cont.addEventListener('input', later);
+    })();
     async function loadShift(shift) {
       const container = document.getElementById('plandir_container');
       const headerContainer = document.getElementById('plandir-header-container');
@@ -6515,7 +6577,7 @@
       saveBtn.textContent = "Emitir Inoperacionalidade";
       saveBtn.classList.remove("btn-success");
       saveBtn.classList.add("btn-danger");
-      saveBtn.style.width ="18%";
+      saveBtn.style.width = "";
     }
     function toggleSitopContainer(forceClose = false) {
       const isVisible = sitopContainer.style.display === "block";
@@ -6575,7 +6637,7 @@
       saveBtn.textContent = "Emitir Operacionalidade";
       saveBtn.classList.remove("btn-danger");
       saveBtn.classList.add("btn-success");
-      saveBtn.style.width = "18%";
+      saveBtn.style.width = "";
     }
     async function fetchCREPCSitopRecipientsFromSupabase(corpOperNr) {
       const categories = ['crepcsitop_mail_to', 'crepcsitop_mail_cc', 'crepcsitop_mail_bcc'];
@@ -6742,6 +6804,30 @@
         saveBtn.disabled = false;
       }
     }
+    /* há quanto tempo (a partir do GDH "DDHHMMMESAA") */
+    function sitopAgo(gdh) {
+      const m = /^(\d{2})(\d{2})(\d{2})([A-Z]{3})(\d{2})$/.exec(String(gdh || '').trim().toUpperCase());
+      const mon = m ? ["JAN","FEV","MAR","ABR","MAI","JUN","JUL","AGO","SET","OUT","NOV","DEZ"].indexOf(m[4]) : -1;
+      if (mon < 0) return null;
+      const d = new Date(2000 + +m[5], mon, +m[1], +m[2], +m[3]);
+      const min = Math.max(0, Math.floor((Date.now() - d) / 60000)), days = Math.floor(min / 1440), h = Math.floor((min % 1440) / 60);
+      return {txt: days ? `há ${days}d ${h}h` : `há ${h}h${String(min % 60).padStart(2, '0')}`, long: days >= 1};
+    }
+    /* resumo lateral do envio (só lê os campos) */
+    function sitopSummary() {
+      const v = id => (document.getElementById(id)?.value || '').trim(), c = id => !!document.getElementById(id)?.checked;
+      const ppis = [['ppi_airport', 'Aeroporto'], ['ppi_a22', 'A22'], ['ppi_a2', 'A2'], ['ppi_linfer', 'Linha Férrea'], ['ppi_airfield', 'Aeródromo Portimão']].filter(([id]) => c(id)).map(([, t]) => t);
+      const isOp = !!v('sitop_gdh_op');
+      const lines = [isOp ? '✅ OPERACIONALIDADE' : '🚨 INOPERACIONALIDADE', v('sitop_cb').split(' - ')[0] + (v('sitop_veíc') ? ` · ${v('sitop_veíc')}` : '') + (v('sitop_veíc_registration') ? ` (${v('sitop_veíc_registration')})` : ''),
+                     v('sitop_gdh_inop') ? `GDH INOP ${v('sitop_gdh_inop')}` : '', isOp ? `GDH OP ${v('sitop_gdh_op')}` : '',
+                     [v('sitop_type_failure'), v('sitop_failure_description')].filter(Boolean).join(': '), v('sitop_failure_noc') ? `NOC ${v('sitop_failure_noc')}` : '',
+                     c('ppi_yes') ? `PPI: ${ppis.join(', ') || 'sim'}` : c('ppi_no') ? 'PPI: não' : '', c('ppi_subs_yes') ? 'Substituição: sim' : c('ppi_subs_no') ? 'Substituição: não' : '',
+                     v('sitop_optel') ? `OPTEL: ${v('sitop_optel')}` : ''].filter(Boolean);
+      const el = document.getElementById('sitop-prev');
+      if (el) el.textContent = lines.join('\n');
+    }
+    ['input', 'change'].forEach(ev => sitopContainer?.addEventListener(ev, () => setTimeout(sitopSummary, 0)));
+    new MutationObserver(() => { if (sitopContainer.style.display === 'block') setTimeout(sitopSummary, 50); }).observe(sitopContainer, {attributes: true, attributeFilter: ['style']});
     /* ================ EVENT LISTENERS ================ */
     sitopVeicHourInput.addEventListener("change", updateSitopGdhInop);
     NewInopBtn.addEventListener("click", () => {
@@ -6772,7 +6858,7 @@
         }
         sitopContainer.style.display = "none";
         inopsTableBody.innerHTML =
-          "<tr><td colspan='5' style='text-align:center;'>Carregando...</td></tr>";
+          "<tr><td colspan='7' style='text-align:center;'>A carregar...</td></tr>";
         try {
             const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
             const res = await fetch(
@@ -6784,17 +6870,19 @@
           inopsTableBody.innerHTML = "";
           if (data.length === 0) {
             inopsTableBody.innerHTML =
-              `<tr><td colspan="6" style="text-align:center;">Não foram encontrados veículos inoperacionais.</td></tr>`;
+              `<tr><td colspan="7" style="text-align:center;">Não foram encontrados veículos inoperacionais.</td></tr>`;
           } else {
             data.forEach(item => {
               const tr = document.createElement("tr");
+              const ago = sitopAgo(item.gdh_inop);
               tr.innerHTML = `
-                <td style="text-align:center;">${item.vehicle || ''}</td>
-                <td style="text-align:center;">${item.gdh_inop || ''}</td>
-                <td style="text-align:center;">${item.failure_type || ''}</td>
+                <td><b>${item.vehicle || ''}</b>${item.registration ? ` <span style="color:#8a949e;">${item.registration}</span>` : ''}</td>
+                <td>${item.gdh_inop || ''}</td>
+                <td>${ago ? `<span class="slx-st ${ago.long ? 'slx-st-bad' : 'slx-st-warn'}">${ago.txt}</span>` : '—'}</td>
+                <td>${item.failure_type ? `<span class="slx-st slx-st-type">${item.failure_type}</span>` : ''}</td>
                 <td>${item.failure_description || ''}</td>
                 <td>${item.optel || ''}</td>
-                <td style="text-align:center;">
+                <td style="text-align:right;">
                   <button class="btn btn-success validate-btn" data-record='${JSON.stringify(item)}' style="height:30px; padding:5px 10px;">Validar Operacionalidade</button>
                 </td>`;
               inopsTableBody.appendChild(tr);

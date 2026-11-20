@@ -245,8 +245,14 @@
       #page-inem-services .ems-types {display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 5px;}
       #page-inem-services .ems-types .wsms-type-opt {padding: 12px 16px; border-width: 2px; border-color: #e9ecef; border-radius: 12px; background: #fff; position: relative; gap: 12px;}
       #page-inem-services .ems-types .wsms-type-opt input[type="checkbox"] {position: absolute; opacity: 0; pointer-events: none;}
-      #page-inem-services .ems-dot {font-style: normal; font-size: 24px; line-height: 1;}
+      #page-inem-services .ems-dot {width: 22px; height: 22px; border-radius: 50%; flex: none; display: inline-block;}
+      #page-inem-services .ems-dot-y {background: #f0b400;}
+      #page-inem-services .ems-dot-r {background: #c62828;}
+      #page-inem-services .theme-inem .ins-n {background: #f0b400; color: #1a2e4a;}
+      #page-inem-services .theme-inem .ems-age input:focus, #page-inem-services .theme-inem .ems-age select:focus {border-color: #f0b400 !important; box-shadow: 0 0 0 2px rgba(240,180,0,.18) !important;}
       #page-inem-services #opt-reserv.active {border-color: #c0392b; background: #fdf0ee;}
+      #page-inem-services #opt-inem.active {border-color: #f0b400; background: #fffbea;}
+      #page-inem-services .theme-inem .ems-ticker {background: #fffbea; border-bottom-color: #f3e3a6;}
       #page-inem-services .ems-types .wsms-type-opt label {font-size: 15px; font-weight: 800; display: flex; flex-direction: column; gap: 2px; color: #2c3e50;}
       #page-inem-services .ems-age {display: flex; gap: 6px;}
       #page-inem-services .ems-age input {flex: 1; min-width: 0;}
@@ -1388,8 +1394,8 @@
         <div class="ems-ticker"><div>⚠️ AVISO: Devido ao incidente ocorrido com o portátil iTeams, informa-se que a partir das 00:00 do dia 27 de Abril, e até resolução do mesmo, todos os serviços emanados pelo INEM, serão efetuados via VERBETE MANUAL, tendo que o OPTEL de serviço efetuar a sua digitalização e upload manual à semelhança do procedimento dos serviços de RESERVA INEM. Pedimos desculpa por qualquer constrangimento. Departamento de Informática. &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div></div>
         <div class="wsms-card-body">
           <div class="wsms-type-row ems-types">
-              <div class="wsms-type-opt ems-type-inem" id="opt-inem"><input type="checkbox" id="alert-inem"><i class="ems-dot">🟡</i><label for="alert-inem">INEM<small>Serviço para o INEM (barra amarela)</small></label></div>
-              <div class="wsms-type-opt" id="opt-reserv"><input type="checkbox" id="alert-reserv"><i class="ems-dot">🔴</i><label for="alert-reserv">Reserva<small>Serviço de reserva (barra vermelha)</small></label></div></div>
+              <div class="wsms-type-opt ems-type-inem" id="opt-inem"><input type="checkbox" id="alert-inem"><i class="ems-dot ems-dot-y"></i><label for="alert-inem">INEM<small>Serviço Emergência Pré-Hospitalar</small></label></div>
+              <div class="wsms-type-opt" id="opt-reserv"><input type="checkbox" id="alert-reserv"><i class="ems-dot ems-dot-r"></i><label for="alert-reserv">Reserva INEM<small>Serviço Emergência Pré-Hospitalar - Reserva</small></label></div></div>
           <div class="ins-grid ems-cols">
             ${box(1, 'Alerta e local', grid('sol-g2', [{id: 'alert-service', label: 'Hora Alerta', type: 'time'}, {id: 'location-service', label: 'Localidade', ph: 'Localidade'}]) +
                 grid('', [{id: 'address-service', label: 'Morada', ph: 'Morada da ocorrência'}, {id: 'reference-address-service', label: 'Ponto de Referência', ph: 'Ponto de referência'}], 'margin-top:10px'))}

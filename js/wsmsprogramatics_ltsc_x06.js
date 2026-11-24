@@ -226,7 +226,7 @@
           #page-inem-services .ems-age {display: flex; gap: 6px;}
           #page-inem-services .ems-age input {flex: 1; min-width: 0;}
           #page-inem-services .ems-age select {flex: 1.2; min-width: 0;}
-          #page-inem-services .ems-sit {width: 100%; height: 84px; resize: none; border: 1px solid #c8c8c8; border-radius: 5px; padding: 8px 9px; font: inherit; font-size: 12px; color: #333; background: #fff; box-sizing: border-box; outline: none; transition: border-color .15s, box-shadow .15s;}
+          #page-inem-services .ems-sit {width: 100%; height: 89px; resize: none; border: 1px solid #c8c8c8; border-radius: 5px; padding: 8px 9px; font: inherit; font-size: 12px; color: #333; background: #fff; box-sizing: border-box; outline: none; transition: border-color .15s, box-shadow .15s;}
           #page-inem-services .ems-sit:focus {border-color: #c0392b; box-shadow: 0 0 0 2px rgba(192,57,43,.12);}   /* igual aos outros campos */
           #page-inem-services .theme-inem .ems-sit:focus {border-color: #f0b400; box-shadow: 0 0 0 2px rgba(240,180,0,.18);}
           #page-inem-services .ems-types .wsms-type-opt label small {font-size: 11.5px; font-weight: 500; color: #6c757d; letter-spacing: 0;}
@@ -1097,7 +1097,7 @@
           const on = type === 'Transporte de Doentes' ? ['exit_hour', 'uls_desteny'] : type === 'INEM' || type === 'Serviço Geral' ? ['solicitation_shift']
                    : type === 'Reforço Piquete' || type === 'DECIR' ? ['solicitation_motive', 'solicitation_shift'] : [];
           LOCKED.forEach(id => { const el = $(id); el.disabled = !on.includes(id); el.style.backgroundColor = el.disabled ? '#e9ecef' : ''; });
-        }
+        }        
         async function send() {
           const v = id => $(id).value.trim();
           const type = v('solicitation_type'), destination = v('uls_desteny'), hourOut = $('exit_hour').value, motive = v('solicitation_motive'), shift = v('solicitation_shift'), date = v('solicitation_date');
@@ -1346,13 +1346,15 @@
                   <div class="wsms-type-opt ems-type-inem" id="opt-inem"><input type="checkbox" id="alert-inem"><i class="ems-dot ems-dot-y"></i><label for="alert-inem">INEM<small>Serviço Emergência Pré-Hospitalar</small></label></div>
                   <div class="wsms-type-opt" id="opt-reserv"><input type="checkbox" id="alert-reserv"><i class="ems-dot ems-dot-r"></i><label for="alert-reserv">Reserva INEM<small>Serviço Emergência Pré-Hospitalar - Reserva</small></label></div></div>
                   <div class="ins-grid ems-cols">
-                  ${box(1, 'Alerta e local', grid('sol-g2', [{id: 'alert-service', label: 'Hora Alerta', type: 'time'}, {id: 'location-service', label: 'Localidade', ph: 'Localidade'}]) +
+                  ${box(1, 'Alerta e local', grid('', [{id: 'alert-service', label: 'Hora Alerta', type: 'time'}], 'grid-template-columns:150px') +
                       grid('', [{id: 'address-service', label: 'Morada', ph: 'Morada da ocorrência'}, {id: 'floor-service', label: 'Andar', ph: 'Andar'}], 'margin-top:10px;grid-template-columns:1fr 90px') +
+                      grid('', [{id: 'location-service', label: 'Localidade', ph: 'Localidade'}], 'margin-top:10px') +
                       grid('', [{id: 'reference-address-service', label: 'Ponto de Referência', ph: 'Ponto de referência'}], 'margin-top:10px'), '', ' id="ems-b1"')}
                   ${box(2, 'Vítima', `<div class="ins-grid sol-g2">${field({id: 'victim-gender-service', label: 'Género', tag: 'select', opts: ['&nbsp;', 'Masc.', 'Fem.', 'Desc.', 'Outro']})}
                       <div class="major-field"><label for="victim-age-service">Idade</label><div class="ems-age"><input type="text" id="victim-age-service" placeholder="00" maxlength="3" data-num="3" class="c" inputmode="numeric">
                         <select id="victim-age-type-service">${options(['&nbsp;', 'Dias', 'Meses', 'Anos'])}</select></div></div></div>
-                      <div class="ins-grid" style="margin-top:10px"><div class="major-field"><label for="situation-service">Situação</label><textarea id="situation-service" class="ems-sit" placeholder="Descreva a situação clínica"></textarea></div></div>`, '', ' id="ems-b2"')}
+                      <div class="ins-grid" style="margin-top:10px"><div class="major-field"><label for="situation-service">Situação</label><textarea id="situation-service" class="ems-sit" placeholder="Descreva a situação clínica"></textarea></div></div>
+                      <div class="ins-grid" style="margin-top:10px">${field({id: 'triage-service', label: 'Triagem CODU', tag: 'select', opts: ['', 'P0', 'P1', 'P2', 'P3', 'P4', 'P5']})}</div>`, '', ' id="ems-b2"')}
                   ${box(3, 'Operacional', grid('', [{id: 'nr-codu-service', label: 'Nr. CODU', ph: '123456789', num: 9, c: 1, attrs: ' inputmode="numeric"'},
                       {id: 'resp-tas-ni', label: 'Nr. TAS', ph: '000', num: 3, c: 1, attrs: ' inputmode="numeric"'}], 'grid-template-columns:150px 90px;justify-content:start') +
                       grid('', [{id: 'resp-tas-name', label: 'Nome TAS', attrs: ' disabled'}, {id: 'observations-service', label: 'Observações', ph: 'Observações adicionais'}], 'margin-top:10px'), '', ' id="ems-b3"')}
@@ -1411,21 +1413,21 @@
           fetch(`${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${corp()}&select=corp_address,default_lat,default_lng&limit=1`, {
             headers: getSupabaseHeaders()
           })
-            .then(r => r.ok ? r.json() : []).then(async d => {
-              const row = d[0] || {};
-              let p = null;
-              if (row.corp_address) {
-                try {
-                  const res = (await tomtomGeocode(`https://api.tomtom.com/search/2/geocode/${encodeURIComponent(row.corp_address)}.json?key=${TOMTOM_KEY}&language=pt-PT&countrySet=PT&limit=1`)).filter(x => x.position);
-                  if (res[0]) p = {lat: res[0].position.lat, lng: res[0].position.lon};
-                } catch (e) { console.warn('Morada da corporação:', e); }
-              }
-              if (!p) {
-                const lat = parseFloat(row.default_lat), lng = parseFloat(row.default_lng);
-                if (isFinite(lat) && isFinite(lng)) p = {lat, lng};
-              }
-              if (p) { base = p; if (!pin) placeBase(15); }
-            }).catch(() => {});
+          .then(r => r.ok ? r.json() : []).then(async d => {
+            const row = d[0] || {};
+            let p = null;
+            if (row.corp_address) {
+              try {
+                const res = (await tomtomGeocode(`https://api.tomtom.com/search/2/geocode/${encodeURIComponent(row.corp_address)}.json?key=${TOMTOM_KEY}&language=pt-PT&countrySet=PT&limit=1`)).filter(x => x.position);
+                if (res[0]) p = {lat: res[0].position.lat, lng: res[0].position.lon};
+              } catch (e) { console.warn('Morada da corporação:', e); }
+            }
+            if (!p) {
+              const lat = parseFloat(row.default_lat), lng = parseFloat(row.default_lng);
+              if (isFinite(lat) && isFinite(lng)) p = {lat, lng};
+            }
+            if (p) { base = p; if (!pin) placeBase(15); }
+          }).catch(() => {});
         }
         const kmBetween = (a, b) => {
           const r = Math.PI / 180;
@@ -1486,8 +1488,8 @@
             const dist = base ? kmBetween(base, p) : 0, found = best.address?.freeformAddress || '';
             const noNr = m && best.type !== 'Point Address';
             mapStatus(dist > 40 ? `⚠️ Fica a ${Math.round(dist)} km da corporação — confirme o pin. (${found})`
-                    : noNr ? `⚠️ O nº ${m[2]} não foi encontrado — pin colocado na rua; arraste-o para o sítio certo. (${found})`
-                    : `${found} ✔ — o link GPS vai na mensagem.`, dist <= 40 && !noNr);
+              : noNr ? `⚠️ O nº ${m[2]} não foi encontrado — pin colocado na rua; arraste-o para o sítio certo. (${found})`
+              : `${found} ✔ — o link GPS vai na mensagem.`, dist <= 40 && !noNr);
           } catch (e) {
             console.warn('Pesquisa de morada:', e);
             mapStatus('Não foi possível pesquisar a morada — clique no mapa para marcar o local.', false);
@@ -1587,11 +1589,13 @@
           if (`${val('address-service')}|${val('location-service')}` === pickedKey) return;
           mapLocate(false);
         }));
-        
-        
-        
-        document.querySelector('button[data-page="page-inem-services"]')?.addEventListener('click', () => setTimeout(() => {
-          if (!map) return mapInit();
+
+
+
+
+
+      document.querySelector('button[data-page="page-inem-services"]')?.addEventListener('click', () => setTimeout(() => {
+        if (!map) return mapInit();
           map.invalidateSize();
           mapReset();
         }, 300));
@@ -1652,6 +1656,8 @@
         });
         const REQ = [['alert-service', 'Hora Alerta'], ['address-service', 'Morada'], ['location-service', 'Localidade'], ['victim-gender-service', 'Género da Vítima'], ['victim-age-service', 'Idade da Vítima'],
                      ['victim-age-type-service', 'Tipo de Idade'], ['situation-service', 'Situação'], ['nr-codu-service', 'Nr. CODU'], ['resp-tas-name', 'Nr. TAS']];
+        const TRIAGE_BALLS = {P0: '⚫', P1: '🔴', P2: '🟠🟡', P3: '🟡🟢🔵', P4: '🟢🔵', P5: '⚪'};
+        const triageText = t => t ? `PRIORIDADE ${t.replace(/^P/, '')} ${TRIAGE_BALLS[t] || ''}`.trim() : '';
         async function send() {
           const miss = [...(!inem.checked && !reserv.checked ? ['Tipo de Serviço (INEM ou Reserva)'] : []), ...REQ.filter(([id]) => !$(id)?.value?.trim()).map(([, l]) => l)];
           if (miss.length) return showPopup('popup-danger', `<strong>PREENCHA OS CAMPOS OBRIGATÓRIOS:</strong><br><br><ul style="margin:0;padding:0;">${miss.map(f => `<li style="list-style:none;">• ${f}</li>`).join('')}</ul>`);
@@ -1662,6 +1668,7 @@
           const realAddr = instAuto && address === instAuto.name ? instAuto.street : address;
           const gender = $('victim-gender-service').value || '', age = g('victim-age-service'), ageType = $('victim-age-type-service').value || '';
           const situation = g('situation-service'), nrCODU = g('nr-codu-service'), tasName = g('resp-tas-name'), obs = g('observations-service');
+          const triage = g('triage-service');
           let message = `${reserv.checked ? '*🚨⚠️ SERVIÇO INEM-Reserva ⚠️🚨*' : '*🚨⚠️ SERVIÇO INEM ⚠️🚨*'}\n\n`;
           if (nrCODU) message += `*Nr. CODU:* ${nrCODU}\n`;
           if (hourAlert) message += `*Hora Alerta:* ${hourAlert}\n`;
@@ -1669,6 +1676,7 @@
           if (ref) message += `*Ponto Ref.:* ${ref}\n`;
           if (gender || age) message += `*Vítima:* ${gender}${age ? `, ${age} ${ageType}` : ''}\n`;
           if (situation) message += `*Situação:* ${situation}\n`;
+          if (triage) message += `*Triagem CODU:* ${triageText(triage)}\n`;
           if (obs) message += `*Observações:* ${obs}\n\n`;
           const gps = gpsLink();
           if (gps) message += `*Localização GPS:* ${gps}`;

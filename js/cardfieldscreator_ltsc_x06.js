@@ -264,7 +264,7 @@
           <div class="major-row" style="margin-bottom: -10px;">
             <div class="major-field major-field--fixed">
               <label>Dt. Ch. TO</label>
-              <input type="date" style="width: 110px;">
+              <input type="date" style="width: 100px;">
             </div>
             <div class="major-field major-field--fixed">
               <label>Hr. Ch. TO</label>
@@ -274,7 +274,7 @@
           <div class="major-row" style="margin-bottom: -10px;">
             <div class="major-field major-field--fixed">
               <label>Dt. Sd. TO</label>
-              <input type="date" style="width: 110px;">
+              <input type="date" style="width: 100px;">
             </div>
             <div class="major-field major-field--fixed">
               <label>Hr. Sd. TO</label>
@@ -284,29 +284,34 @@
           <div class="major-row" style="margin-bottom: -10px;">
             <div class="major-field major-field--fixed">
               <label>Dt. Ch. Und.</label>
-              <input type="date" style="width: 110px;">
+              <input type="date" style="width: 100px;">
             </div>
             <div class="major-field major-field--fixed">
               <label>Hr. Ch. Und.</label>
               <input type="time" style="width: 90px;">
             </div>
+          </div>
+          <div class="major-row" style="margin-bottom: -10px;">
             <div class="major-field major-field--fixed">
               <label>Kms.</label>
-              <input type="text" placeholder="0" style="width: 65px; text-align: center;" maxlength="5"
-                     oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,5)">
+              <input type="text" placeholder="0" style="width: 65px; text-align: center;" maxlength="5" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,5)">
             </div>
           </div>
-          <div class="major-row" style="margin-bottom: 10px;">
+          <div class="major-row" style="margin-bottom: -10px;">
             <div class="major-field major-field--fixed">
               <label>Tempo de Bomba</label>
               <div style="display: flex; align-items: center; gap: 6px;">
                 <span style="font-size: 11px; font-weight: 600; color: #777; text-transform: uppercase; letter-spacing: 0.06em;">Hr:</span>
-                <input type="text" placeholder="0" style="width: 55px; text-align: center;" maxlength="3"
-                       oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)">
+                <input type="text" placeholder="0" style="width: 55px; text-align: center;" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)">
                 <span style="font-size: 11px; font-weight: 600; color: #777; text-transform: uppercase; letter-spacing: 0.06em;">Min:</span>
-                <input type="text" placeholder="0" style="width: 55px; text-align: center;" maxlength="2"
-                       oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
+                <input type="text" placeholder="0" style="width: 55px; text-align: center;" maxlength="2" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
               </div>
+            </div>
+          </div>
+          <div class="major-row" style="margin-bottom: 10px;">
+            <div class="major-field major-field--fixed">
+              <label>Observações</label>
+              <input type="text" class="vehclsocr-observacoes" placeholder="Observações..." maxlength="200">
             </div>
           </div>
         </div>

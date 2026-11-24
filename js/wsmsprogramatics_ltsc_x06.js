@@ -1,4 +1,4 @@
-/* =======================================================================
+    /* =======================================================================
     WSMS 360 · COMUNICAÇÃO WSMS
     ======================================================================= */
     (function () {
@@ -311,27 +311,40 @@
           #page_close_occurrence .cls-g-nr {grid-template-columns: 240px 1fr;}
           #page_close_occurrence .cls-info {height: 32px; display: flex; align-items: center; padding: 0 12px; border-radius: 6px; background: #f4f6f8; border: 1px solid #e3e7eb; color: #8a949e; font-size: 12.5px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;}
           #page_close_occurrence .cls-info.ok {color: #2c3e50; background: #eef7ee; border-color: #cfe6cf;}
-          #page_close_occurrence .cls-thead, #page_close_occurrence #vehicles-container .wsms-card-mini {display: grid; grid-template-columns: 150px 1fr 1fr 1.05fr .75fr 70px 150px; gap: 8px; align-items: center;}
-          #page_close_occurrence .cls-thead {background: #f1f3f5; border: 1px solid #e3e7eb; border-radius: 10px 10px 0 0; padding: 8px 12px; font-size: 11px; font-weight: 800; color: #5b6670; text-transform: uppercase; letter-spacing: .4px;}
-          #page_close_occurrence .cls-thead span:nth-child(4) {grid-column: span 2;}
-          #page_close_occurrence .cls-thead span:nth-child(5) {display: none;}
+          #page_close_occurrence .cls-thead,
+          #page_close_occurrence #vehicles-container .wsms-card-mini {display: grid; grid-template-columns: 160px 220px 220px 220px 91px 166px minmax(180px, 1fr); gap: 0; align-items: stretch;}
+          #page_close_occurrence .cls-thead {background: #f1f3f5; border: 1px solid #e3e7eb; border-radius: 10px 10px 0 0; padding: 0 12px; font-size: 11px; font-weight: 800; color: #5b6670; text-transform: uppercase; letter-spacing: .4px;}
+          #page_close_occurrence .cls-thead > span {padding: 9px 8px; border-left: 1px solid #d8dde2; display: flex; align-items: center; justify-content: center; text-align: center;}
+          #page_close_occurrence .cls-thead > span:first-child {border-left: 0; padding-left: 0;}
+          #page_close_occurrence .cls-thead > span:last-child {padding-right: 0;}
           #page_close_occurrence #vehicles-container {display: block; margin: 0; border: 1px solid #e3e7eb; border-top: 0; border-radius: 0 0 10px 10px; overflow: hidden; background: #fff;}
           #page_close_occurrence #vehicles-container:empty {display: none;}
-          #page_close_occurrence #vehicles-container .wsms-card-mini {margin: 0 !important; padding: 6px 12px !important; border: 0 !important; border-bottom: 1px solid #eef0f2 !important; border-radius: 0 !important; box-shadow: none !important; background: #fff !important;}
+          #page_close_occurrence #vehicles-container .wsms-card-mini {margin: 0 !important; padding: 0 12px !important; border: 0 !important; border-bottom: 1px solid #e3e7eb !important; border-radius: 0 !important; box-shadow: none !important; background: #fff !important;}
           #page_close_occurrence #vehicles-container .wsms-card-mini:last-child {border-bottom: 0 !important;}
           #page_close_occurrence #vehicles-container .wsms-card-mini > .field-card-title {display: none;}
-          #page_close_occurrence #vehicles-container .wsms-card-mini > div:not(.field-card-title), #page_close_occurrence #vehicles-container .major-row:nth-child(4) {display: contents !important;}
-          #page_close_occurrence #vehicles-container .major-row {margin: 0 !important; padding: 0 !important; display: flex !important; gap: 6px; min-width: 0;}
+          #page_close_occurrence #vehicles-container .wsms-card-mini > div:not(.field-card-title) {display: contents !important;}
+          #page_close_occurrence #vehicles-container .major-row {margin: 0 !important; padding: 6px 8px !important; border-left: 1px solid #d8dde2; display: flex !important; flex-wrap: nowrap !important; align-items: center; gap: 8px; min-width: 0; box-sizing: border-box;}
+          #page_close_occurrence #vehicles-container .major-row:first-child {border-left: 0; padding-left: 0 !important;}
+          #page_close_occurrence #vehicles-container .major-row:last-child {padding-right: 0 !important;}
+          #page_close_occurrence #vehicles-container .major-row:last-child .major-field {flex: 1 1 auto;}
+          #page_close_occurrence #vehicles-container .major-row:last-child input {width: 100% !important;}
           #page_close_occurrence #vehicles-container .major-field {margin: 0 !important; min-width: 0; flex: 1 1 0;}
           #page_close_occurrence #vehicles-container .major-field label {display: none !important;}
           #page_close_occurrence #vehicles-container input, #page_close_occurrence #vehicles-container select {width: 100% !important; min-width: 0; box-sizing: border-box;}
-          #page_close_occurrence #vehicles-container input[type="date"] {flex: 1.35;}
-          #page_close_occurrence #vehicles-container .major-row:last-child .major-field > div {gap: 4px !important;}
-          #page_close_occurrence #vehicles-container .major-row:last-child span {font-size: 0 !important;}
+          #page_close_occurrence #vehicles-container input[type="date"] {flex: none; width: 110px !important;}
+          #page_close_occurrence #vehicles-container input[type="time"] {flex: none; width: 85px !important;}
+          #page_close_occurrence #vehicles-container .major-field:has(> input[type="date"]) {flex: none;}
+          #page_close_occurrence #vehicles-container .major-field:has(> input[type="time"]) {flex: none;}
+          #page_close_occurrence #vehicles-container .major-row:nth-child(6) .major-field > div {gap: 4px;}
+          #page_close_occurrence #vehicles-container .major-row:nth-child(6) span {display: none;}
+          #page_close_occurrence #vehicles-container .major-row:nth-child(6) .major-field {flex: 1 1 auto;}
+          #page_close_occurrence #vehicles-container .major-row:nth-child(6) .major-field > div {display: flex; width: 100%;}
+          #page_close_occurrence #vehicles-container .major-row:nth-child(6) input {flex: 1 1 0; width: auto !important; text-align: center;}
           #page_close_occurrence .cls-tabs {display: flex; gap: 8px; flex-wrap: wrap;}
           #page_close_occurrence .cls-pill {height: 32px; padding: 0 14px; border-radius: 8px; border: 1px solid #d5dbe1; background: #fff; color: #2c3e50; font-size: 12.5px; font-weight: 700; cursor: pointer;}
           #page_close_occurrence .cls-pill.on {background: #c62828; border-color: #c62828; color: #fff;}
-          #page_close_occurrence .cls-panels > .wsms-section:not(.hidden), #page_close_occurrence .cls-panels .grid-2fr {margin-top: 10px;}
+          #page_close_occurrence .cls-panels > .wsms-section:not(.hidden),
+          #page_close_occurrence .cls-panels .grid-2fr {margin-top: 10px;}
           #page_close_occurrence .cls-top {margin-bottom: -10px;}
           #page_close_occurrence .field-card-title.bar {display: flex; justify-content: space-between; align-items: center;}
           #page_close_occurrence .field-card-title .btn {height: 22px; padding: 0 10px; font-size: 11px;}
@@ -958,7 +971,7 @@
             <div class="wsms-card-body"><div class="ins-main">
             ${box(1, 'Ocorrência', `<div class="ins-grid cls-g-nr">${field({id: 'close_nr_occurrence', label: 'Nr. Ocorrência', ph: 'Ex. 20251234567', c: 1, num: 11})}
                   <div class="major-field"><label>&nbsp;</label><div class="cls-info" id="cls-info">Indique o Nr. da ocorrência</div></div></div>`)}
-            ${box(2, 'Tempos dos veículos', `<div class="cls-thead"><span>Veículo</span><span>Chegada TO</span><span>Saída TO</span><span>Chegada unidade</span><span></span><span>Kms</span><span>Bomba (h / min)</span></div>
+                  ${box(2, 'Tempos dos veículos', `<div class="cls-thead"><span>Veículo</span><span>Chegada TO</span><span>Saída TO</span><span>Chegada unidade</span><span>Kms</span><span>Bomba (h / min)</span><span>Observações</span></div>
                   <div id="vehicles-container"></div>`,
                   `<button id="add-close-vehicle-btn" class="btn wsms-btn-blue" data-act="vehicle">${svg('plus', 13).replace('<svg ', '<svg class="bi" ')}ADICIONAR</button>`)}
             <div class="ins-box cls-extra"><div class="ins-bh"><span class="ins-n">3</span>Dados adicionais</div>

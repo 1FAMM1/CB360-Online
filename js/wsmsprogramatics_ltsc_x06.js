@@ -1476,20 +1476,33 @@
             const enc = encodeURIComponent;
             const m = street.match(/^(.*?)[,\s]+(\d+\s?[A-Za-z]?)$/);
             const name = m ? m[1].trim() : street;
-            const bias = base ? `&lat=${base.lat}&lon=${base.lng}&radius=40000` : '';
+            const bias = base ? `&lat=${base.lat}&lon=${base.lng}${!city ? '&radius=80000' : ''}` : '';
             const key = `key=${TOMTOM_KEY}&language=pt-PT`;
             const tries = [];
             if (street && city) {
+              tries.push(`https://api.tomtom.com/search/2/geocode/${enc(`${street}, ${city}`)}.json?${key}&countrySet=PT&limit=5${bias}`);
               if (m) tries.push(`https://api.tomtom.com/search/2/structuredGeocode.json?${key}&countryCode=PT&streetName=${enc(name)}&streetNumber=${enc(m[2].replace(/\s/g, ''))}&municipality=${enc(city)}`);
               tries.push(`https://api.tomtom.com/search/2/structuredGeocode.json?${key}&countryCode=PT&streetName=${enc(name)}&municipality=${enc(city)}`);
+            } else {
+              tries.push(`https://api.tomtom.com/search/2/geocode/${enc([street, city].filter(Boolean).join(', '))}.json?${key}&countrySet=PT&limit=5${bias}`);
             }
-            tries.push(`https://api.tomtom.com/search/2/geocode/${enc([street, city].filter(Boolean).join(', '))}.json?${key}&countrySet=PT&limit=5${bias}`);
             let d = [], errs = 0;
             for (const url of tries) {
               try { d = (await tomtomGeocode(url)).filter(x => x.position); }
               catch (e) { errs++; d = []; console.warn('Geocoding:', e); }
               if (seq !== reqSeq) return;
               if (d.length) break;
+            }
+            if (!d.length) {
+              const osm = await nominatim(`q=${enc([street, city].filter(Boolean).join(', '))}`, city);
+              if (seq !== reqSeq) return;
+              if (osm.length) {
+                d = [{
+                  position: {lat: parseFloat(osm[0].lat), lon: parseFloat(osm[0].lon)},
+                  type: 'Street',
+                  address: {freeformAddress: osm[0].display_name}
+                }];
+              }
             }
             if (!d.length && errs === tries.length) throw new Error('Todas as tentativas de geocoding falharam');
             if (!d.length) {
@@ -1501,9 +1514,9 @@
             mapPlace(p.lat, p.lng, 'search', 17);
             const dist = base ? kmBetween(base, p) : 0, found = best.address?.freeformAddress || '';
             const noNr = m && best.type !== 'Point Address';
-            mapStatus(dist > 40 ? `⚠️ Fica a ${Math.round(dist)} km da corporação — confirme o pin. (${found})`
+            mapStatus(dist > 80 ? `⚠️ Fica a ${Math.round(dist)} km da corporação — confirme o pin. (${found})`
               : noNr ? `⚠️ O nº ${m[2]} não foi encontrado — pin colocado na rua; arraste-o para o sítio certo. (${found})`
-              : `${found} ✔ — o link GPS vai na mensagem.`, dist <= 40 && !noNr);
+              : `${found} ✔ — o link GPS vai na mensagem.`, dist <= 80 && !noNr);
           } catch (e) {
             console.warn('Pesquisa de morada:', e);
             mapStatus('Não foi possível pesquisar a morada — clique no mapa para marcar o local.', false);
@@ -1530,8 +1543,12 @@
           if (sugCache.has(key)) { sugItems = sugCache.get(key); return renderSug(); }
           sugAbort?.abort(); sugAbort = new AbortController();
           const my = ++sugSeq;
-          const p = new URLSearchParams({key: TOMTOM_KEY, typeahead: 'true', countrySet: 'PT', language: 'pt-PT', limit: '10'});
-          if (base) { p.set('lat', base.lat); p.set('lon', base.lng); p.set('radius', '40000'); }
+          const p = new URLSearchParams({key: TOMTOM_KEY, typeahead: 'true', countrySet: 'PT', language: 'pt-PT', limit: '15'});
+          if (base) {
+            p.set('lat', base.lat);
+            p.set('lon', base.lng);
+            if (!city) p.set('radius', '80000');
+          }
           let d = [];
           try {
             const r = await fetch(`https://api.tomtom.com/search/2/search/${encodeURIComponent(city ? `${q}, ${city}` : q)}.json?${p}`, {signal: sugAbort.signal});
@@ -1539,11 +1556,23 @@
           } catch (e) { if (e.name === 'AbortError') return; d = []; }
           if (my !== sugSeq) return;
           const okNum = n => /^\d{1,4}[A-Za-z]?$/.test(n || '');
-          sugItems = d.filter(x => ['POI', 'Point Address', 'Address Range', 'Street', 'Cross Street'].includes(x.type) && x.position).slice(0, 6).map(x => {
+          const allowedTypes = ['POI', 'Point Address', 'Address Range', 'Street', 'Cross Street', 'Geography', 'Locality', 'Neighborhood'];
+          sugItems = d.filter(x => allowedTypes.includes(x.type) && x.position).slice(0, 8).map(x => {
             const a = x.address || {}, isPoi = x.type === 'POI';
-            const street = [a.streetName, okNum(a.streetNumber) ? a.streetNumber : ''].filter(Boolean).join(', ');
-            return {street, city: a.municipality || a.localName || '', poi: isPoi ? (x.poi?.name || '') : '', lat: x.position.lat, lng: x.position.lon,
-                    l1: isPoi ? (x.poi?.name || street) : (street || a.freeformAddress || ''), l2: a.freeformAddress || ''};
+            const street = [a.streetName, okNum(a.streetNumber) ? a.streetNumber : ''].filter(Boolean).join(', ');            
+            const muni = a.municipality || '';
+            const sub = a.municipalitySubdivision || a.localName || '';
+            const localidade = (!sub || (muni && norm(sub).includes(norm(muni)))) ? (muni || sub) : sub;
+            const fallbackLabel = sub || a.freeformAddress || '';
+            return {
+              street: street || fallbackLabel,
+              city: localidade,
+              poi: isPoi ? (x.poi?.name || '') : '',
+              lat: x.position.lat,
+              lng: x.position.lon,
+              l1: isPoi ? (x.poi?.name || street) : (street || fallbackLabel),
+              l2: a.freeformAddress || ''
+            };
           });
           renderSug();
           if (sugItems.length) sugCache.set(key, sugItems);
@@ -1582,8 +1611,8 @@
             refAuto = '';
             instAuto = null;
           }
-          if (q.length < 8) return hideSug();
-          sugT = setTimeout(() => suggest(q).catch(() => hideSug()), 700);
+          if (q.length < 5) return hideSug();
+          sugT = setTimeout(() => suggest(q).catch(() => hideSug()), 450);
         });
         addrEl.addEventListener('keydown', e => {
           if (sug.hidden) return;
@@ -1591,20 +1620,18 @@
             e.preventDefault();
             sugIdx = (sugIdx + (e.key === 'ArrowDown' ? 1 : -1) + sugItems.length) % sugItems.length;
             markSug();
-          } else if (e.key === 'Enter' && sugIdx >= 0) { e.preventDefault(); pickSug(sugItems[sugIdx]); }
+          } else if (e.key === 'Enter' && sugIdx >= 0) {e.preventDefault(); pickSug(sugItems[sugIdx]);}
           else if (e.key === 'Escape') hideSug();
         });
         sug.addEventListener('mousedown', e => {
-          const it = e.target.closest('.ems-sug-i');
-          if (it) { e.preventDefault(); pickSug(sugItems[+it.dataset.i]); }
-        });
+            const it = e.target.closest('.ems-sug-i');
+            if (it) {e.preventDefault(); pickSug(sugItems[+it.dataset.i]);}
+          });
         addrEl.addEventListener('blur', () => setTimeout(hideSug, 150));
         ['address-service', 'location-service'].forEach(id => $(id).addEventListener('change', () => {
-          if (`${val('address-service')}|${val('location-service')}` === pickedKey) return;
-          mapLocate(false);
-        }));
-
-
+        if (`${val('address-service')}|${val('location-service')}` === pickedKey) return;
+        mapLocate(false);
+      }));        
 
 
 

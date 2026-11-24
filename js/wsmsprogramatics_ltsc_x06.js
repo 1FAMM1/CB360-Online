@@ -244,6 +244,20 @@
           #page-inem-services .leaflet-control-layers-list label > span {display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: #2c3e50; white-space: nowrap;}
           #page-inem-services .leaflet-control-layers-selector {width: auto !important; height: auto !important; margin: 0 !important; position: static !important; flex: none; cursor: pointer;}
           #page-inem-services .leaflet-control-layers-base label + label {margin-top: 4px;}
+          .ems-triage { display: flex; align-items: center; gap: 10px; }
+          #page-inem-services .ems-triage select { width: 90px !important; flex: none; }
+          #triage-dots { display: flex; gap: 4px; align-items: center; min-width: 50px; }
+          #triage-dots i { width: 14px; height: 14px; border-radius: 50%; display: block; }
+          #triage-dots { display: flex; gap: 4px; align-items: center; }
+          #page-inem-services #triage-dots { display: flex; gap: 4px; align-items: center; min-width: 0 !important; }
+          #page-inem-services .ems-triage { gap: 8px; }
+          #page-inem-services .ems-vmer { display: none; align-items: center; gap: 10px; margin-left: 0; font-size: 12px; font-weight: 600; color: #444; }
+          #page-inem-services .ems-vmer label { display: flex; align-items: center; gap: 5px; margin: 0; cursor: pointer !important; text-transform: none; letter-spacing: 0; white-space: nowrap; }
+          #page-inem-services .ems-vmer input,
+          #page-inem-services .ems-vmer input:hover,
+          #page-inem-services .ems-vmer input:focus,
+          #page-inem-services .ems-vmer input:focus-visible,
+          #page-inem-services .ems-vmer input:active { width: 17px !important; height: 17px; margin: 0; accent-color: #c0392b; cursor: pointer !important; border: 0 !important; outline: none !important; box-shadow: none !important; }
           #page-indisp .ind-card {min-height: 370px;}
           #page-indisp .ind-g-new {grid-template-columns: 1fr 1fr 1fr 2fr 1fr;}
           #page-indisp .ind-g-end {grid-template-columns: 1fr 2fr 1fr 1fr;}
@@ -398,7 +412,7 @@
                         ['📋', 'Solicitação de Disponibilidades', 'comunicação direta com os elementos, para recolha de disponibilidades operacionais.'],
                         ['🚒', 'Indisponibilidade de Veículos', 'registo rápido e envio automático do estado dos meios às entidades competentes.'],
                         ['📊', 'Informação do Estado da Grelha Intermunicipal', 'atualização e consulta imediata da disponibilidade municipal de recursos.'],
-                        ['🚑', 'Serviços EMS', 'Disponibilização via WSMS de serviços de Emergência Médica, facilitando asu melhor percepção de escrita.'],
+                        ['🚑', 'Serviços EMS', 'Disponibilização via WSMS de serviços de Emergência Médica, facilitando a sua melhor percepção de escrita.'],
                         ['⛈️', 'Avisos METEO', 'Automatização de avisos meteorológicos via IPMA, com envio automático via WSMS, para mobilização de elementos, para eventos extremos.']];
       mount('page-wsms', `
         <div class="major-card major-last-card">
@@ -1347,18 +1361,18 @@
                   <div class="wsms-type-opt" id="opt-reserv"><input type="checkbox" id="alert-reserv"><i class="ems-dot ems-dot-r"></i><label for="alert-reserv">Reserva INEM<small>Serviço Emergência Pré-Hospitalar - Reserva</small></label></div></div>
                   <div class="ins-grid ems-cols">
                   ${box(1, 'Alerta e local', grid('', [{id: 'alert-service', label: 'Hora Alerta', type: 'time'}], 'grid-template-columns:150px') +
-                      grid('', [{id: 'address-service', label: 'Morada', ph: 'Morada da ocorrência'}, {id: 'floor-service', label: 'Andar', ph: 'Andar'}], 'margin-top:10px;grid-template-columns:1fr 90px') +
-                      grid('', [{id: 'location-service', label: 'Localidade', ph: 'Localidade'}], 'margin-top:10px') +
-                      grid('', [{id: 'reference-address-service', label: 'Ponto de Referência', ph: 'Ponto de referência'}], 'margin-top:10px'), '', ' id="ems-b1"')}
+                    grid('', [{id: 'address-service', label: 'Morada', ph: 'Morada da ocorrência'}, {id: 'floor-service', label: 'Andar', ph: 'Andar'}], 'margin-top:10px;grid-template-columns:1fr 90px') +
+                    grid('', [{id: 'location-service', label: 'Localidade', ph: 'Localidade'}], 'margin-top:10px') +
+                    grid('', [{id: 'reference-address-service', label: 'Ponto de Referência', ph: 'Ponto de referência'}], 'margin-top:10px'), '', ' id="ems-b1"')}
                   ${box(2, 'Vítima', `<div class="ins-grid sol-g2">${field({id: 'victim-gender-service', label: 'Género', tag: 'select', opts: ['&nbsp;', 'Masc.', 'Fem.', 'Desc.', 'Outro']})}
-                      <div class="major-field"><label for="victim-age-service">Idade</label><div class="ems-age"><input type="text" id="victim-age-service" placeholder="00" maxlength="3" data-num="3" class="c" inputmode="numeric">
+                    <div class="major-field"><label for="victim-age-service">Idade</label><div class="ems-age"><input type="text" id="victim-age-service" placeholder="00" maxlength="3" data-num="3" class="c" inputmode="numeric">
                         <select id="victim-age-type-service">${options(['&nbsp;', 'Dias', 'Meses', 'Anos'])}</select></div></div></div>
-                      <div class="ins-grid" style="margin-top:10px"><div class="major-field"><label for="situation-service">Situação</label><textarea id="situation-service" class="ems-sit" placeholder="Descreva a situação clínica"></textarea></div></div>
-                      <div class="ins-grid" style="margin-top:10px">${field({id: 'triage-service', label: 'Triagem CODU', tag: 'select', opts: ['', 'P0', 'P1', 'P2', 'P3', 'P4', 'P5']})}</div>`, '', ' id="ems-b2"')}
+                    <div class="ins-grid" style="margin-top:10px"><div class="major-field"><label for="situation-service">Situação</label><textarea id="situation-service" class="ems-sit" placeholder="Descreva a situação clínica"></textarea></div></div>
+                    <div class="ins-grid" style="margin-top:10px"><div class="major-field"><label for="triage-service">Triagem CODU</label><div class="ems-triage"><select id="triage-service">${options(['', 'P0', 'P1', 'P2', 'P3', 'P4', 'P5'])}</select><div id="triage-dots"></div><div class="ems-vmer" id="vmer-box"><span>VMER:</span><label>Sim <input type="checkbox" id="vmer-sim"></label><label>Não <input type="checkbox" id="vmer-nao"></label></div></div></div></div>`, '', ' id="ems-b2"')}
                   ${box(3, 'Operacional', grid('', [{id: 'nr-codu-service', label: 'Nr. CODU', ph: '123456789', num: 9, c: 1, attrs: ' inputmode="numeric"'},
-                      {id: 'resp-tas-ni', label: 'Nr. TAS', ph: '000', num: 3, c: 1, attrs: ' inputmode="numeric"'}], 'grid-template-columns:150px 90px;justify-content:start') +
-                      grid('', [{id: 'resp-tas-name', label: 'Nome TAS', attrs: ' disabled'}, {id: 'observations-service', label: 'Observações', ph: 'Observações adicionais'}], 'margin-top:10px'), '', ' id="ems-b3"')}
-                      ${box(4, 'Georreferenciação', `<div id="ems-map"></div><div class="ins-map-st" id="ems-map-st"></div>`, '', ' id="ems-b4"')}
+                    {id: 'resp-tas-ni', label: 'Nr. TAS', ph: '000', num: 3, c: 1, attrs: ' inputmode="numeric"'}], 'grid-template-columns:150px 90px;justify-content:start') +
+                    grid('', [{id: 'resp-tas-name', label: 'Nome TAS', attrs: ' disabled'}, {id: 'observations-service', label: 'Observações', ph: 'Observações adicionais'}], 'margin-top:10px'), '', ' id="ems-b3"')}
+                    ${box(4, 'Georreferenciação', `<div id="ems-map"></div><div class="ins-map-st" id="ems-map-st"></div>`, '', ' id="ems-b4"')}
                 </div>
             </div>
             <div class="wsms-card-footer">${button('wsms-btn-send', 'send', 'ENVIAR SERVIÇO', 'send')}</div>
@@ -1657,7 +1671,19 @@
         const REQ = [['alert-service', 'Hora Alerta'], ['address-service', 'Morada'], ['location-service', 'Localidade'], ['victim-gender-service', 'Género da Vítima'], ['victim-age-service', 'Idade da Vítima'],
                      ['victim-age-type-service', 'Tipo de Idade'], ['situation-service', 'Situação'], ['nr-codu-service', 'Nr. CODU'], ['resp-tas-name', 'Nr. TAS']];
         const TRIAGE_BALLS = {P0: '⚫', P1: '🔴', P2: '🟠🟡', P3: '🟡🟢🔵', P4: '🟢🔵', P5: '⚪'};
-        const triageText = t => t ? `PRIORIDADE ${t.replace(/^P/, '')} ${TRIAGE_BALLS[t] || ''}`.trim() : '';
+        const triageText = t => t ? `*PRIORIDADE ${t.replace(/^P/, '')}* ${TRIAGE_BALLS[t] || ''}`.trim() : '';
+        const TRIAGE_CSS = {P0: ['#000'], P1: ['#e53935'], P2: ['#fb8c00', '#fdd835'], P3: ['#fdd835', '#43a047', '#1e88e5'], P4: ['#43a047', '#1e88e5'], P5: ['#d0d0d0']};
+        const triageSel = $('triage-service'), triageDots = $('triage-dots');
+        const showDots = () => { triageDots.innerHTML = (TRIAGE_CSS[triageSel.value] || []).map(c => `<i style="background:${c}"></i>`).join(''); };
+        const vmerBox = $('vmer-box'), vmerSim = $('vmer-sim'), vmerNao = $('vmer-nao');
+        const showVmer = () => {
+          const p1 = triageSel.value === 'P1';
+          vmerBox.style.display = p1 ? 'flex' : 'none';
+          if (!p1) vmerSim.checked = vmerNao.checked = false;
+        };
+        vmerSim.addEventListener('change', () => { if (vmerSim.checked) vmerNao.checked = false; });
+        vmerNao.addEventListener('change', () => { if (vmerNao.checked) vmerSim.checked = false; });
+        triageSel.addEventListener('change', () => { showDots(); showVmer(); });       
         async function send() {
           const miss = [...(!inem.checked && !reserv.checked ? ['Tipo de Serviço (INEM ou Reserva)'] : []), ...REQ.filter(([id]) => !$(id)?.value?.trim()).map(([, l]) => l)];
           if (miss.length) return showPopup('popup-danger', `<strong>PREENCHA OS CAMPOS OBRIGATÓRIOS:</strong><br><br><ul style="margin:0;padding:0;">${miss.map(f => `<li style="list-style:none;">• ${f}</li>`).join('')}</ul>`);
@@ -1675,9 +1701,11 @@
           if (fullAddress || locality) message += `*Local:* ${fullAddress}${fullAddress && locality ? ' - ' : ''}${locality}\n`;
           if (ref) message += `*Ponto Ref.:* ${ref}\n`;
           if (gender || age) message += `*Vítima:* ${gender}${age ? `, ${age} ${ageType}` : ''}\n`;
-          if (situation) message += `*Situação:* ${situation}\n`;
+          if (situation) message += `*Situação:* ${situation}\n\n`;
           if (triage) message += `*Triagem CODU:* ${triageText(triage)}\n`;
-          if (obs) message += `*Observações:* ${obs}\n\n`;
+          const vmerTxt = vmerSim.checked ? 'VMER a caminho/no local' : vmerNao.checked ? 'VMER Indisponível' : '';
+          const obsFull = [vmerTxt, obs].filter(Boolean).join(' - ');
+          if (obsFull) message += `*Observações:* ${obsFull}\n\n`;
           const gps = gpsLink();
           if (gps) message += `*Localização GPS:* ${gps}`;
           const now = new Date();
@@ -1697,6 +1725,8 @@
             showPopup('popup-danger', 'Erro ao copiar ou guardar registo.');
           }
           clearFormFields();
+          showDots();
+          showVmer();
           mapReset();
           pickedKey = '';
           selectedType = '';

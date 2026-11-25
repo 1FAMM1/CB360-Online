@@ -1,4 +1,4 @@
-    /* =======================================================================
+        /* =======================================================================
     WSMS 360 · COMUNICAÇÃO WSMS
     ======================================================================= */
     (function () {
@@ -226,7 +226,7 @@
           #page-inem-services .ems-age {display: flex; gap: 6px;}
           #page-inem-services .ems-age input {flex: 1; min-width: 0;}
           #page-inem-services .ems-age select {flex: 1.2; min-width: 0;}
-          #page-inem-services .ems-sit {width: 100%; height: 89px; resize: none; border: 1px solid #c8c8c8; border-radius: 5px; padding: 8px 9px; font: inherit; font-size: 12px; color: #333; background: #fff; box-sizing: border-box; outline: none; transition: border-color .15s, box-shadow .15s;}
+          #page-inem-services .ems-sit {width: 100%; height: 148px; resize: none; border: 1px solid #c8c8c8; border-radius: 5px; padding: 8px 9px; font: inherit; font-size: 12px; color: #333; background: #fff; box-sizing: border-box; outline: none; transition: border-color .15s, box-shadow .15s;}
           #page-inem-services .ems-sit:focus {border-color: #c0392b; box-shadow: 0 0 0 2px rgba(192,57,43,.12);}   /* igual aos outros campos */
           #page-inem-services .theme-inem .ems-sit:focus {border-color: #f0b400; box-shadow: 0 0 0 2px rgba(240,180,0,.18);}
           #page-inem-services .ems-types .wsms-type-opt label small {font-size: 11.5px; font-weight: 500; color: #6c757d; letter-spacing: 0;}
@@ -898,7 +898,6 @@
           const out = $('wsms_output');
           if (out) out.value = message;
           if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(message).catch(() => {});
-          /* push geral para a Mobile: abre "Ocorrências em Curso"; não espera pelo envio */
           const pushText = alertType === 'Plano Prévio de Intervenção'
             ? `🚨 Ativação do ${ppiType}${alertLevel ? ` (${alertLevel})` : ''}${ppiGrid ? ` · Grelha ${ppiGrid}` : ''}`
             : `🚨 ${descrOccorr || 'Nova ocorrência'}${localitie || localOccorr ? ` · ${[localitie, localOccorr].filter(Boolean).join(', ')}` : ''}${vehicles.length ? ` · ${vehicles.map(x => x.split('|')[0]).join(', ')}` : ''}`;
@@ -1361,7 +1360,8 @@
                   <div class="wsms-type-opt" id="opt-reserv"><input type="checkbox" id="alert-reserv"><i class="ems-dot ems-dot-r"></i><label for="alert-reserv">Reserva INEM<small>Serviço Emergência Pré-Hospitalar - Reserva</small></label></div></div>
                   <div class="ins-grid ems-cols">
                   ${box(1, 'Alerta e local', grid('', [{id: 'alert-service', label: 'Hora Alerta', type: 'time'}], 'grid-template-columns:150px') +
-                    grid('', [{id: 'address-service', label: 'Morada', ph: 'Morada da ocorrência'}, {id: 'floor-service', label: 'Andar', ph: 'Andar'}], 'margin-top:10px;grid-template-columns:1fr 90px') +
+                    grid('', [{id: 'address-service', label: 'Morada', ph: 'Morada da ocorrência'}], 'margin-top:10px') +
+                    grid('', [{id: 'door-service', label: 'Nr. Porta', ph: 'Nº', c: 1, attrs: ' maxlength="6" autocomplete="off"'}, {id: 'floor-service', label: 'Andar', ph: 'Andar'}], 'margin-top:10px;grid-template-columns:1fr 1fr') +
                     grid('', [{id: 'location-service', label: 'Localidade', ph: 'Localidade'}], 'margin-top:10px') +
                     grid('', [{id: 'reference-address-service', label: 'Ponto de Referência', ph: 'Ponto de referência'}], 'margin-top:10px'), '', ' id="ems-b1"')}
                   ${box(2, 'Vítima', `<div class="ins-grid sol-g2">${field({id: 'victim-gender-service', label: 'Género', tag: 'select', opts: ['&nbsp;', 'Masc.', 'Fem.', 'Desc.', 'Outro']})}
@@ -1380,10 +1380,6 @@
         `,
         {send: () => send()});
         if (!page) return;
-        
-        
-        
-        /* ---------- mapa à direita + link GPS ---------- */
         let map = null, pin = null, pinSrc = '', lastReq = 0, reqSeq = 0, base = null;
         const val = id => $(id)?.value?.trim() || '';
         const mapStatus = (txt, ok) => { const el = $('ems-map-st'); if (el) { el.textContent = txt; el.classList.toggle('ok', !!ok); } };
@@ -1460,14 +1456,41 @@
           const d = r.ok ? await r.json() : [];
           return d.filter(x => inCity(x, city));
         }
+        let ttDownUntil = 0;
+        const ttDown = () => Date.now() < ttDownUntil;
+        const markTTDown = st => {
+          if (st !== 403 && st !== 429) return;
+          ttDownUntil = Date.now() + 30 * 60 * 1000;
+          console.warn(`[geo] TomTom recusou (${st}) — a usar o Geoapify durante 30 min`);
+        };
         async function tomtomGeocode(url) {
+          if (ttDown()) throw new Error('TomTom indisponível (quota)');
           const r = await fetch(url);
-          if (!r.ok) throw new Error(`TomTom HTTP ${r.status}`);
+          if (!r.ok) { markTTDown(r.status); throw new Error(`TomTom HTTP ${r.status}`); }
           return (await r.json()).results || [];
+        }
+        const GEOAPIFY_KEY = 'ac1b5754cd2741699e1fc82d6c795622';
+        async function geoapify(kind, text, limit = 8) {
+          if (!GEOAPIFY_KEY || !text) return [];
+          const p = new URLSearchParams({text, apiKey: GEOAPIFY_KEY, lang: 'pt', limit: String(limit), filter: 'countrycode:pt', format: 'json'});
+          if (base) p.set('bias', `proximity:${base.lng},${base.lat}`);
+          try {
+            const r = await fetch(`https://api.geoapify.com/v1/geocode/${kind}?${p}`);
+            if (!r.ok) { console.warn('[geo] Geoapify HTTP', r.status); return []; }
+            return ((await r.json()).results || []).filter(x => isFinite(x.lat) && isFinite(x.lon)).map(x => ({
+              type: x.housenumber ? 'Point Address' : x.result_type === 'amenity' && x.name ? 'POI' : x.street ? 'Street' : 'Geography',
+              position: {lat: x.lat, lon: x.lon},
+              poi: x.result_type === 'amenity' && x.name ? {name: x.name} : undefined,
+              address: {streetName: x.street || '', streetNumber: x.housenumber || '', municipality: x.county || x.city || '',
+                        municipalitySubdivision: x.village || x.suburb || x.hamlet || (x.city && x.city !== x.county ? x.city : '') || x.district || '', freeformAddress: x.formatted || ''},
+              src: 'geoapify'
+            }));
+          } catch (e) { console.warn('[geo] Geoapify:', e); return []; }
         }
         async function mapLocate(manual) {
           mapInit();
-          const street = val('address-service'), city = val('location-service');
+          const rawStreet = val('address-service'), door = val('door-service'), city = val('location-service');
+          const street = door && !/\d+\s?[A-Za-z]?$/.test(rawStreet) ? `${rawStreet}, ${door}` : rawStreet;
           if (!street && !city) { if (manual) showPopup('popup-danger', 'Indique a morada e a localidade.'); return; }
           if (!manual && !(street && city)) return;
           const seq = ++reqSeq;
@@ -1479,20 +1502,51 @@
             const bias = base ? `&lat=${base.lat}&lon=${base.lng}${!city ? '&radius=80000' : ''}` : '';
             const key = `key=${TOMTOM_KEY}&language=pt-PT`;
             const tries = [];
+            const num = m ? m[2].replace(/\s/g, '') : '';
             if (street && city) {
-              tries.push(`https://api.tomtom.com/search/2/geocode/${enc(`${street}, ${city}`)}.json?${key}&countrySet=PT&limit=5${bias}`);
-              if (m) tries.push(`https://api.tomtom.com/search/2/structuredGeocode.json?${key}&countryCode=PT&streetName=${enc(name)}&streetNumber=${enc(m[2].replace(/\s/g, ''))}&municipality=${enc(city)}`);
+              const gp = `${key}&countrySet=PT&limit=10${base ? `&lat=${base.lat}&lon=${base.lng}` : ''}`;
+              if (m) {
+                tries.push(`https://api.tomtom.com/search/2/geocode/${enc(`${name} ${num}, ${city}`)}.json?${gp}`);
+                if (baseMunicipality && norm(baseMunicipality) !== norm(city)) tries.push(`https://api.tomtom.com/search/2/geocode/${enc(`${name} ${num}, ${baseMunicipality}`)}.json?${gp}`);
+                tries.push(`https://api.tomtom.com/search/2/structuredGeocode.json?${key}&countryCode=PT&streetName=${enc(name)}&streetNumber=${enc(num)}&municipality=${enc(city)}`);
+                if (baseMunicipality && norm(baseMunicipality) !== norm(city))
+                  tries.push(`https://api.tomtom.com/search/2/structuredGeocode.json?${key}&countryCode=PT&streetName=${enc(name)}&streetNumber=${enc(num)}&municipality=${enc(baseMunicipality)}&municipalitySubdivision=${enc(city)}`);
+                tries.push(`https://api.tomtom.com/search/2/search/${enc(`${name} ${num}, ${city}`)}.json?${key}&countrySet=PT&typeahead=true&limit=50${base ? `&lat=${base.lat}&lon=${base.lng}` : ''}`);
+              } else {
+                tries.push(`https://api.tomtom.com/search/2/geocode/${enc(`${street}, ${city}`)}.json?${key}&countrySet=PT&limit=5${bias}`);
+              }
               tries.push(`https://api.tomtom.com/search/2/structuredGeocode.json?${key}&countryCode=PT&streetName=${enc(name)}&municipality=${enc(city)}`);
             } else {
               tries.push(`https://api.tomtom.com/search/2/geocode/${enc([street, city].filter(Boolean).join(', '))}.json?${key}&countrySet=PT&limit=5${bias}`);
             }
-            let d = [], errs = 0;
+            const ADDR_TYPES = ['Point Address', 'Address Range', 'Street', 'Cross Street'];
+            const GEN = /\b(rua|r|avenida|av|travessa|tv|trav|largo|lg|estrada|est|praceta|pct|praca|pc|caminho|sitio|beco|calcada|alameda|urbanizacao|urb|bairro|quinta|azinhaga|vila|rotunda|da|de|do|das|dos|e)\b\.?/g;
+            const core = t => norm(t).replace(/[.,]/g, ' ').replace(GEN, ' ').replace(/\s+/g, ' ').trim();
+            const nameCore = core(name);
+            const sameStreet = x => {
+              if (!m) return true;
+              const c = core(x.address?.streetName || '');
+              if (!c || !nameCore) return false;
+              return c === nameCore || c.includes(nameCore) || nameCore.includes(c) || similarity(nameCore, c) >= 0.8;
+            };
+            const score = x => !m ? 1 : (x.type === 'Point Address' && norm(x.address?.streetNumber) === norm(num) && sameStreet(x)) ? 3
+              : (x.type === 'Address Range' && sameStreet(x)) ? 2 : sameStreet(x) ? 1 : 0;
+            let d = [], errs = 0, bestHit = null, bestScore = -1;
             for (const url of tries) {
-              try { d = (await tomtomGeocode(url)).filter(x => x.position); }
-              catch (e) { errs++; d = []; console.warn('Geocoding:', e); }
+              let res = [];
+              try { res = (await tomtomGeocode(url)).filter(x => x.position && (!m || ADDR_TYPES.includes(x.type))); }
+              catch (e) { errs++; console.warn('Geocoding:', e); }
               if (seq !== reqSeq) return;
-              if (d.length) break;
+              for (const x of res) { const sc = score(x); if (sc > bestScore) { bestScore = sc; bestHit = x; } }
+              if (bestScore >= 3 || (!m && bestHit)) break;
             }
+            if (bestScore < 3 && !(bestHit && !m)) {   /* TomTom não encontrou a porta (ou sem quota) → Geoapify */
+              const ga = (await geoapify('search', m ? `${name} ${num}, ${city}` : [street, city].filter(Boolean).join(', '), 5))
+                .filter(x => !m || ADDR_TYPES.includes(x.type));
+              if (seq !== reqSeq) return;
+              for (const x of ga) { const sc = score(x); if (sc > bestScore) { bestScore = sc; bestHit = x; } }
+            }
+            if (bestHit && bestScore > 0) d = [bestHit];
             if (!d.length) {
               const osm = await nominatim(`q=${enc([street, city].filter(Boolean).join(', '))}`, city);
               if (seq !== reqSeq) return;
@@ -1513,7 +1567,7 @@
             const best = d[0], p = {lat: best.position.lat, lng: best.position.lon};
             mapPlace(p.lat, p.lng, 'search', 17);
             const dist = base ? kmBetween(base, p) : 0, found = best.address?.freeformAddress || '';
-            const noNr = m && best.type !== 'Point Address';
+            const noNr = m && !(best.type === 'Point Address' || best.type === 'Address Range');
             mapStatus(dist > 80 ? `⚠️ Fica a ${Math.round(dist)} km da corporação — confirme o pin. (${found})`
               : noNr ? `⚠️ O nº ${m[2]} não foi encontrado — pin colocado na rua; arraste-o para o sítio certo. (${found})`
               : `${found} ✔ — o link GPS vai na mensagem.`, dist <= 80 && !noNr);
@@ -1528,7 +1582,7 @@
         addrEl.parentElement.style.position = 'relative';
         addrEl.parentElement.appendChild(sug);
         addrEl.setAttribute('autocomplete', 'off');
-        let sugT = 0, sugAbort = null, sugItems = [], sugIdx = -1, pickedKey = '', sugSeq = 0, refAuto = '';
+        let sugT = 0, sugAbort = null, sugItems = [], sugIdx = -1, pickedKey = '', sugSeq = 0, refAuto = '', locAuto = '', doorAuto = '';
         const INST = /\b(psp|gnr|policia|camara municipal|junta de freguesia|bombeiros|capitania|tribunal|financas|seguranca social|esquadra|posto territorial|hospital|centro de saude|cruz vermelha|protecao civil|aima)\b/;
         let instAuto = null;
         const sugCache = new Map();
@@ -1538,44 +1592,524 @@
           sug.innerHTML = sugItems.map((s, i) => `<div class="ems-sug-i" data-i="${i}"><b>${esc(s.l1)}</b><small>${esc(s.l2)}</small></div>`).join('');
           sug.hidden = !sugItems.length; sugIdx = -1;
         }
-        async function suggest(q) {
-          const city = val('location-service'), key = `${city}|${norm(q)}`;
-          if (sugCache.has(key)) { sugItems = sugCache.get(key); return renderSug(); }
-          sugAbort?.abort(); sugAbort = new AbortController();
-          const my = ++sugSeq;
-          const p = new URLSearchParams({key: TOMTOM_KEY, typeahead: 'true', countrySet: 'PT', language: 'pt-PT', limit: '15'});
-          if (base) {
-            p.set('lat', base.lat);
-            p.set('lon', base.lng);
-            if (!city) p.set('radius', '80000');
-          }
-          let d = [];
-          try {
-            const r = await fetch(`https://api.tomtom.com/search/2/search/${encodeURIComponent(city ? `${q}, ${city}` : q)}.json?${p}`, {signal: sugAbort.signal});
-            d = r.ok ? (await r.json()).results || [] : [];
-          } catch (e) { if (e.name === 'AbortError') return; d = []; }
-          if (my !== sugSeq) return;
-          const okNum = n => /^\d{1,4}[A-Za-z]?$/.test(n || '');
-          const allowedTypes = ['POI', 'Point Address', 'Address Range', 'Street', 'Cross Street', 'Geography', 'Locality', 'Neighborhood'];
-          sugItems = d.filter(x => allowedTypes.includes(x.type) && x.position).slice(0, 8).map(x => {
-            const a = x.address || {}, isPoi = x.type === 'POI';
-            const street = [a.streetName, okNum(a.streetNumber) ? a.streetNumber : ''].filter(Boolean).join(', ');            
-            const muni = a.municipality || '';
-            const sub = a.municipalitySubdivision || a.localName || '';
-            const localidade = (!sub || (muni && norm(sub).includes(norm(muni)))) ? (muni || sub) : sub;
-            const fallbackLabel = sub || a.freeformAddress || '';
-            return {
-              street: street || fallbackLabel,
-              city: localidade,
-              poi: isPoi ? (x.poi?.name || '') : '',
-              lat: x.position.lat,
-              lng: x.position.lon,
-              l1: isPoi ? (x.poi?.name || street) : (street || fallbackLabel),
-              l2: a.freeformAddress || ''
-            };
+        const SUG_DEBUG = false;
+        const dbg = (...a) => {
+          if (SUG_DEBUG) console.log('[sug]', ...a);
+        };
+        const FIX_POI_ADDRESS = true;
+        const pinCache = new Map();
+        let baseMunicipality = null;
+        const parishCache = new Map();
+        let municipalityParishes = null;
+        let parishesPromise = null;
+        let ttNext = 0;
+        const TT_GAP = 250;
+        const PARISH_LS = 'cb360_parish_cache';
+        const ANCHOR_LS = 'cb360_parish_anchors';
+        const MAX_PARISH_CACHE = 500;
+        const MAX_ANCHORS = 600;
+        let knownAnchors = [];
+        let anchorsDirty = false;
+        try {
+          Object.entries(JSON.parse(localStorage.getItem(PARISH_LS) || '{}')).forEach(([k, v]) => {
+            if (v) parishCache.set(k, v);
           });
-          renderSug();
-          if (sugItems.length) sugCache.set(key, sugItems);
+        } catch (_) {}
+        try {
+          const saved = JSON.parse(localStorage.getItem(ANCHOR_LS) || '[]');
+          if (Array.isArray(saved)) knownAnchors = saved;
+        } catch (_) {}
+        const saveParishCache = () => {
+          try {
+            const entries = [...parishCache].filter(([, v]) => v).slice(-MAX_PARISH_CACHE);
+            localStorage.setItem(PARISH_LS, JSON.stringify(Object.fromEntries(entries)));
+          } catch (_) {}
+        };
+        const saveAnchors = () => {
+          if (!anchorsDirty) return;
+          anchorsDirty = false;
+          try {
+            localStorage.setItem(ANCHOR_LS, JSON.stringify(knownAnchors));
+          } catch (_) {}
+        };
+        const learnAnchor = it => {
+          if (!it.parish || !it.streetName) return;
+          const s = norm(it.streetName);
+          const exists = knownAnchors.some(a => a.s === s && a.p === it.parish && Math.hypot((a.lat - it.lat) * 111, (a.lng - it.lng) * 92) < 0.15);
+          if (exists) return;
+          knownAnchors.push({s, p: it.parish, lat: +it.lat.toFixed(5), lng: +it.lng.toFixed(5)});
+          if (knownAnchors.length > MAX_ANCHORS) knownAnchors.shift();
+          anchorsDirty = true;
+        };
+        const pinKey = (lat, lng) => `${lat.toFixed(5)},${lng.toFixed(5)}`;
+        async function tt(url, signal) {
+          for (let attempt = 0; attempt < 2; attempt++) {
+            if (ttDown()) return null;
+            const now = Date.now();
+            const start = Math.max(now, ttNext);
+            ttNext = start + TT_GAP;
+            if (start > now) await new Promise(r => setTimeout(r, start - now));
+            if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+            const r = await fetch(url, signal ? {signal} : undefined);
+            if (r.status === 429) {
+              await new Promise(res => setTimeout(res, 800));
+              continue;
+            }
+            if (r.status === 403) markTTDown(403);
+            if (!r.ok) console.warn('[sug] TomTom failed', r.status);
+            return r.ok ? r.json() : null;
+          }
+          console.warn('[sug] TomTom 429 persistent');
+          markTTDown(429);
+          return null;
+        }
+        function lev(a, b) {
+          if (a === b) return 0;
+          if (!a.length) return b.length;
+          if (!b.length) return a.length;
+          let prev = Array.from({length: b.length + 1}, (_, i) => i);
+          for (let i = 1; i <= a.length; i++) {
+            const cur = [i];
+            for (let j = 1; j <= b.length; j++) {
+              cur[j] = Math.min(
+                prev[j] + 1,
+                cur[j - 1] + 1,
+                prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
+              );
+            }
+            prev = cur;
+          }
+          return prev[b.length];
+        }
+        function similarity(queryName, name) {
+          const a = norm(queryName);
+          const b = norm(name);
+          if (!a || !b) return 0;
+          if (a === b) return 1;
+          const levScore = 1 - lev(a, b) / Math.max(a.length, b.length);
+          const contains = (` ${b} `).includes(` ${a} `) ? 0.95 : 0;
+          const prefix = (a.length >= 3 && b.startsWith(a)) ? 0.9 + 0.05 * (a.length / b.length) : 0;
+          const significant = t => t.split(/\s+/).filter(w => w.length >= 3);
+          const queryTokens = significant(a);
+          const nameTokens = significant(b);
+          let tokenScore = 0;
+          if (queryTokens.length && nameTokens.length) {
+            const matches = (w, t) => w === t || (w.length >= 5 && t.length >= 5 && lev(w, t) <= 1);
+            const m = queryTokens.filter(w => nameTokens.some(t => matches(w, t))).length;
+            tokenScore = 0.9 * (m / queryTokens.length) * (m / nameTokens.length);
+          }
+          return Math.max(levScore, prefix, tokenScore, contains);
+        }
+        async function ensureBase() {
+          if (base && isFinite(base.lat) && isFinite(base.lng)) return base;
+          try {
+            const r = await fetch(
+              `${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${corp()}&select=corp_address,default_lat,default_lng&limit=1`, {
+                headers: getSupabaseHeaders()
+              }
+            );
+            const d = r.ok ? await r.json() : [];
+            const row = d[0] || {};
+            if (row.corp_address) {
+              const res = (await tomtomGeocode(
+                `https://api.tomtom.com/search/2/geocode/${encodeURIComponent(row.corp_address)}.json?key=${TOMTOM_KEY}&language=pt-PT&countrySet=PT&limit=1`
+              )).filter(x => x.position);
+              if (res[0]) {
+                base = {lat: res[0].position.lat, lng: res[0].position.lon};
+                baseMunicipality = res[0].address?.municipality || null;
+              }
+            }
+            if (!base) {
+              const lat = parseFloat(row.default_lat);
+              const lng = parseFloat(row.default_lng);
+              if (isFinite(lat) && isFinite(lng)) base = {lat, lng};
+            }
+          } catch (_) {}
+          return base;
+        }
+        async function ensureBaseMunicipality() {
+          if (baseMunicipality) return baseMunicipality;
+          const b = await ensureBase();
+          if (!b) return null;
+          try {
+            const j = await tt(
+              `https://api.tomtom.com/search/2/reverseGeocode/${b.lat.toFixed(5)},${b.lng.toFixed(5)}.json?key=${TOMTOM_KEY}&language=pt-PT`
+            );
+            baseMunicipality = j?.addresses?.[0]?.address?.municipality || null;
+          } catch (_) {}
+          return baseMunicipality;
+        }
+        async function getMunicipalityParishes() {
+          if (Array.isArray(municipalityParishes) && municipalityParishes.length) return municipalityParishes;
+          if (parishesPromise) return parishesPromise;
+          parishesPromise = (async () => {
+            try {
+              const b = await ensureBase();
+              await ensureBaseMunicipality();
+              if (!b) return [];
+              const municipalityNorm = norm(baseMunicipality || '');
+              const lsKey = `cb360_freg_${municipalityNorm}`;
+              try {
+                const cached = JSON.parse(localStorage.getItem(lsKey) || 'null');
+                if (Array.isArray(cached) && cached.length) {
+                  municipalityParishes = cached;
+                  return cached;
+                }
+              } catch (_) {}
+              const names = new Map();
+              const add = a => {
+                if (!a) return;
+                if (municipalityNorm && norm(a.municipality || '') !== municipalityNorm) return;
+                const n = String(a.municipalitySubdivision || a.localName || '').trim();
+                if (!n || n.length < 3 || /^\d{4}/.test(n) || norm(n) === municipalityNorm) return;
+                names.set(norm(n), n);
+              };
+              const terms = ['União das Freguesias', 'Freguesia', `Freguesia ${baseMunicipality || ''}`.trim()];
+              for (const t of terms) {
+                const p = new URLSearchParams({key: TOMTOM_KEY, typeahead: 'true', countrySet: 'PT', language: 'pt-PT', idxSet: 'Geo', lat: String(b.lat), lon: String(b.lng), radius: '25000', limit: '30'});
+                try {
+                  const j = await tt(`https://api.tomtom.com/search/2/search/${encodeURIComponent(t)}.json?${p}`);
+                  (j?.results || []).forEach(x => add(x.address));
+                } catch (_) {}
+              }
+              const cosLat = Math.cos((b.lat * Math.PI) / 180) || 1;
+              for (const deg of [0, 45, 90, 135, 180, 225, 270, 315]) {
+                const rad = (deg * Math.PI) / 180;
+                const lat = b.lat + (8 * Math.sin(rad)) / 110.57;
+                const lng = b.lng + (8 * Math.cos(rad)) / (111.32 * cosLat);
+                try {
+                  const j = await tt(
+                    `https://api.tomtom.com/search/2/reverseGeocode/${lat.toFixed(5)},${lng.toFixed(5)}.json?key=${TOMTOM_KEY}&language=pt-PT`
+                  );
+                  add(j?.addresses?.[0]?.address);
+                } catch (_) {}
+              }
+              const parishes = [...names.values()].slice(0, 10);
+              if (parishes.length) {
+                municipalityParishes = parishes;
+                try {
+                  localStorage.setItem(lsKey, JSON.stringify(parishes));
+                } catch (_) {}
+              }
+              return parishes;
+            } catch (_) {
+              return [];
+            } finally {
+              parishesPromise = null;
+            }
+          })();
+          return parishesPromise;
+        }
+        async function getParishAt(lat, lng) {
+          const k = `${lat.toFixed(4)},${lng.toFixed(4)}`;
+          if (parishCache.has(k)) return parishCache.get(k);
+          const pos = `${lat.toFixed(5)},${lng.toFixed(5)}`;
+          const attempt = async extra => {
+            try {
+              const j = await tt(
+                `https://api.tomtom.com/search/2/reverseGeocode/${pos}.json?key=${TOMTOM_KEY}&language=pt-PT${extra}`
+              );
+              const a = j?.addresses?.[0]?.address || {};
+              return a.municipalitySubdivision || a.localName || '';
+            } catch (_) {
+              return '';
+            }
+          }; 
+          let name = await attempt('&entityType=MunicipalitySubdivision');
+          if (!name) name = await attempt('&radius=500');
+          parishCache.set(k, name);
+          if (name) saveParishCache();
+          return name;
+        }
+        async function getAddressAtPin(lat, lng) {
+          const k = pinKey(lat, lng);
+          if (pinCache.has(k)) return pinCache.get(k);
+          let out = null;
+          try {
+            const j = await tt(
+                    `https://api.tomtom.com/search/2/reverseGeocode/${k}.json?key=${TOMTOM_KEY}&language=pt-PT&radius=60`
+            );
+            const a = j?.addresses?.[0]?.address;
+            if (a?.streetName) {
+              out = {street: a.streetName, number: /^\d{1,4}[A-Za-z]?$/.test(a.streetNumber || '') ? a.streetNumber : '', freeform: (a.freeformAddress || '').replace(/\s*\([^)]*\)/g, '').trim(),
+                     subdivision: a.municipalitySubdivision || ''};
+            }
+          } catch (_) {}
+          pinCache.set(k, out);
+          return out;
+        }
+        async function suggest(q) {
+          dbg('call:', JSON.stringify(q));
+          await ensureBase();
+          await ensureBaseMunicipality();
+          const city = (val('location-service') || '').trim();
+          const area = city || baseMunicipality || '';
+          const key = `${area}|${norm(q)}`;
+          if (sugCache.has(key)) {
+            sugItems = sugCache.get(key);
+            return renderSug();
+          }
+          sugAbort?.abort();
+          sugAbort = new AbortController();
+          const my = ++sugSeq;
+          dbg('area=', JSON.stringify(area), 'baseMunicipality=', baseMunicipality, 'base=', JSON.stringify(base));
+          await new Promise(r => setTimeout(r, 250));
+          if (my !== sugSeq) {
+            dbg('DISCARDED in debounce (sugSeq changed: my=' + my + ', now=' + sugSeq + ')');
+            return;
+          }
+          const areaNorm = norm(area);
+          const queryStreet = q.split(',')[0].replace(/\s+\d+\s*[A-Za-z]?\s*$/, '').trim() || q;
+          let failures = 0;
+          const inArea = x => {
+            if (!area) return true;
+            const a = x.address || {};
+            if (city) {
+              return norm(
+                [a.municipality, a.municipalitySubdivision, a.localName, a.freeformAddress].filter(Boolean).join(' ')
+              ).includes(areaNorm);
+            }
+            return norm(a.municipality || '') === areaNorm;
+          };
+          const fetchTomTom = async (queryText, limit = '50', radius = null) => {
+            const p = new URLSearchParams({key: TOMTOM_KEY, typeahead: 'true', countrySet: 'PT', language: 'pt-PT', limit});
+            if (base) {
+              p.set('lat', base.lat);
+              p.set('lon', base.lng);
+              if (radius) p.set('radius', radius);
+            }
+            const j = await tt(
+              `https://api.tomtom.com/search/2/search/${encodeURIComponent(queryText)}.json?${p}`,
+              sugAbort.signal
+            );
+            if (!j) {
+              failures++;
+              return [];
+            }
+            return j.results || [];
+          };
+          const fetchStreets = async (queryText, radius, limit = '100') => {
+            const p = new URLSearchParams({key: TOMTOM_KEY, typeahead: 'true', countrySet: 'PT', language: 'pt-PT', limit});
+            if (base) {
+              p.set('lat', base.lat);
+              p.set('lon', base.lng);
+              if (radius) p.set('radius', radius);
+            }
+            const j = await tt(
+              `https://api.tomtom.com/search/2/geocode/${encodeURIComponent(queryText)}.json?${p}`,
+              sugAbort.signal
+            );
+            if (!j) {
+              failures++;
+              return [];
+            }
+            return j.results || [];
+          };
+          const distKm = (lat, lng) => {
+            if (!base) return 0;
+            const cos = Math.cos(base.lat * Math.PI / 180);
+            return Math.hypot((lat - base.lat) * 110.57, (lng - base.lng) * 111.32 * cos);
+          };
+          const buildL2 = it => {
+            const loc = it.parish || it.city || '';
+            return (loc && !norm(it.baseSub).includes(norm(loc))) ? `${it.baseSub} — ${loc}` : it.baseSub;
+          };
+          const applyPoiFix = (it, r) => {
+            if (!r || norm(r.street) === norm(it.streetName)) return;
+            dbg('POI', it.poi, '| TomTom address:', it.street, '| street at pin:', r.street, r.number);
+            it.streetOriginal = it.street;
+            it.streetName = r.street;
+            it.streetNumber = r.number || '';
+            it.street = [r.street, r.number].filter(Boolean).join(', ');
+            if (r.freeform) it.baseSub = r.freeform;
+            if (r.subdivision && norm(r.subdivision) !== norm(baseMunicipality || '')) {
+              it.parish = r.subdivision;
+              it.city = r.subdivision;
+            }
+            it.l2 = buildL2(it);
+          };
+          const applyCache = it => {
+            if (!it.parish) {
+              const p = parishCache.get(`${it.lat.toFixed(4)},${it.lng.toFixed(4)}`);
+              if (p && norm(p) !== norm(baseMunicipality || '')) {
+                it.parish = p;
+                it.city = p;
+                it.l2 = buildL2(it);
+              }
+            }
+            if (FIX_POI_ADDRESS && it.poi) applyPoiFix(it, pinCache.get(pinKey(it.lat, it.lng)));
+          };
+          const dedupe = items => {
+            const seen = new Set();
+            return items.filter(it => {
+              const dk = `${norm(it.l1)}|${norm(it.parish || it.city)}`;
+              if (seen.has(dk)) return false;
+              seen.add(dk);
+              return true;
+            });
+          };
+          const formatResults = list => {
+            const validNumber = n => /^\d{1,4}[A-Za-z]?$/.test(n || '');
+            const allowedTypes = ['POI', 'Point Address', 'Address Range', 'Street', 'Cross Street', 'Geography', 'Locality', 'Neighborhood'];
+            const isVia = /^(rua|r\.|av|avenida|travessa|tv\.|largo|lg\.|estrada|en\s?\d|em\s?\d|caminho|sitio|sítio|urbanizacao|urbanização|praceta|pct\.|bairr)/i.test(q.trim());
+            const qNorm = norm(q);
+            const qWords = qNorm.split(/\s+/).filter(w => w.length >= 3);
+            const parts = q.split(',');
+            const qMain = parts[0].replace(/\s+\d+\s*[A-Za-z]?\s*$/, '').trim();
+            const localityHint = norm(parts.slice(1).join(' '));
+            const mapped = [];
+            for (const x of list) {
+              if (!allowedTypes.includes(x.type) || !x.position) continue;
+              if (!inArea(x)) continue;
+              const a = x.address || {};
+              const isPoi = x.type === 'POI';
+              const street = [a.streetName, validNumber(a.streetNumber) ? a.streetNumber : ''].filter(Boolean).join(', ');
+              const municipality = a.municipality || '';
+              const subdivision = a.municipalitySubdivision || a.localName || '';
+              const locality = (!subdivision || (municipality && norm(subdivision).includes(norm(municipality))))
+                ? (municipality || subdivision)
+                : subdivision;
+              const fallbackLabel = subdivision || a.freeformAddress || '';
+              const l1 = isPoi ? (x.poi?.name || street) : (street || fallbackLabel);
+              const baseSub = (a.freeformAddress || '').replace(/\s*\([^)]*\)/g, '').trim();
+              const l1Norm = norm(l1);
+              const l1Words = l1Norm.split(/\s+/).filter(w => w.length >= 3);
+              const strongMatch = l1Norm === qNorm || (!isPoi && norm(street) === qNorm) || (l1Words.length > 0 && l1Words.every(w => qNorm.includes(w))) || (qWords.length > 0 && qWords.every(w => l1Norm.includes(w)));
+              const exact = l1Norm === qNorm || (!isPoi && norm(a.streetName || '') === qNorm);
+              let rank;
+              if (exact) rank = 0;
+              else if (strongMatch) rank = 1;
+              else rank = 2;
+              if (isVia && isPoi) rank = 3;
+              const nameForSimilarity = isPoi ? (x.poi?.name || l1) : (a.streetName || l1);
+              const it = {sim: similarity(qMain, nameForSimilarity), streetName: a.streetName || '', streetNumber: (!isPoi && validNumber(a.streetNumber)) ? a.streetNumber : '', street: street || fallbackLabel, city: locality, poi: isPoi ? (x.poi?.name || '') : '', 
+                          lat: x.position.lat, lng: x.position.lon, l1, baseSub, parish: (subdivision && norm(subdivision) !== norm(municipality)) ? subdivision : '', rank, dist: distKm(x.position.lat, x.position.lon)};
+              it.l2 = buildL2(it);
+              applyCache(it);
+              mapped.push(it);
+            }
+            mapped.forEach(learnAnchor);
+            const anchors = [
+              ...mapped.filter(i => i.parish && i.streetName),
+              ...knownAnchors.map(a => ({streetName: a.s, parish: a.p, lat: a.lat, lng: a.lng}))
+            ];
+            for (const it of mapped) {
+              if (it.parish || !it.streetName) continue;
+              let nearest = null;
+              let nearestDist = 1.5;
+              for (const o of anchors) {
+                if (norm(o.streetName) !== norm(it.streetName)) continue;
+                const d = Math.hypot((o.lat - it.lat) * 111, (o.lng - it.lng) * 92);
+                if (d < nearestDist) {
+                  nearest = o;
+                  nearestDist = d;
+                }
+              }
+              if (nearest) {
+                it.parish = nearest.parish;
+                it.city = nearest.parish;
+                it.l2 = buildL2(it);
+              }
+            }
+            saveAnchors();
+            let candidates = mapped;
+            if (mapped.length) {
+              const best = Math.max(...mapped.map(i => i.sim));
+              if (best >= 0.5) candidates = mapped.filter(i => i.sim >= Math.max(0.5, best - 0.08));
+            }
+            if (localityHint) {
+              const matching = candidates.filter(i => norm(`${i.parish} ${i.city} ${i.baseSub}`).includes(localityHint));
+              if (matching.length) candidates = matching;
+            }
+            candidates.sort((a, b) => (Math.round(b.sim * 50) - Math.round(a.sim * 50)) || (a.rank - b.rank) || (a.dist - b.dist));
+            const withParish = candidates.filter(i => i.parish);
+            const filtered = candidates.filter(i => i.parish || !withParish.some(o => norm(o.l1) === norm(i.l1) && Math.hypot((o.lat - i.lat) * 111, (o.lng - i.lng) * 92) < 1.5));
+            const seen = new Set();
+            const out = [];
+            for (const it of filtered) {
+              const dk = `${norm(it.l1)}|${norm(it.parish || it.city)}|${it.lat.toFixed(2)},${it.lng.toFixed(2)}`;
+              if (seen.has(dk)) continue;
+              seen.add(dk);
+              out.push(it);
+            }
+            return out.slice(0, 15);
+          };
+          const enrich = async items => {
+            const toEnrich = items.filter(it => !it.parish && !it.poi).slice(0, 4);
+            const poiItems = FIX_POI_ADDRESS ? items.filter(it => it.poi).slice(0, 3) : [];
+            if (!toEnrich.length && !poiItems.length) return;
+            await Promise.all([
+              ...toEnrich.map(async it => {
+                const p = await getParishAt(it.lat, it.lng);
+                if (p && norm(p) !== norm(baseMunicipality || '')) {
+                  it.parish = p;
+                  it.city = p;
+                  learnAnchor(it);
+                }
+                it.l2 = buildL2(it);
+              }),
+              ...poiItems.map(async it => {
+                applyPoiFix(it, await getAddressAtPin(it.lat, it.lng));
+              })
+            ]);
+            if (my !== sugSeq) return;
+            saveAnchors();
+            sugItems.forEach(applyCache);
+            sugItems = dedupe(sugItems);
+            renderSug();
+            if (sugItems.length && !failures) sugCache.set(key, sugItems);
+          };
+          try {
+            const calls = [fetchTomTom(area ? `${q}, ${area}` : q, '50', city ? null : '40000')];
+            if (!city) calls.push(fetchStreets(queryStreet, '25000'));
+            const settled = await Promise.allSettled(calls);
+            if (my !== sugSeq) return;
+            const allResults = [];
+            for (const r of settled) {
+              if (r.status === 'fulfilled' && Array.isArray(r.value)) allResults.push(...r.value);
+            }
+            sugItems = formatResults(allResults);
+            dbg('phase1: received', allResults.length, '| inside area', allResults.filter(inArea).length, '| showing', sugItems.length, '| failures', failures);
+            if (allResults.length) {
+              dbg('sample', allResults.slice(0, 3).map(x => x.type + ' | ' + x.address?.freeformAddress + ' | muni=' + x.address?.municipality));
+            }
+            renderSug();
+            enrich(sugItems);
+            if (!city && !sugItems.length && !ttDown()) {   /* procurar por freguesia só se a 1ª pesquisa não trouxe nada */
+              const parishNames = new Map();
+              for (const x of allResults) {
+                const a = x.address || {};
+                const p = a.municipalitySubdivision || a.localName || '';
+                if (p && inArea(x) && norm(p) !== norm(a.municipality || '')) parishNames.set(norm(p), p);
+              }
+              const parishes = await getMunicipalityParishes();
+              for (const p of parishes) {
+                if (!parishNames.has(norm(p))) parishNames.set(norm(p), p);
+              }
+              if (my !== sugSeq) return;
+              const phase2 = await Promise.allSettled(
+                [...parishNames.values()].slice(0, 8).map(p => fetchStreets(`${q}, ${p}`, null, '8'))
+              );
+              if (my !== sugSeq) return;
+              for (const r of phase2) {
+                if (r.status === 'fulfilled' && Array.isArray(r.value)) allResults.push(...r.value);
+              }
+              sugItems = formatResults(allResults);
+              renderSug();
+            }
+            if (!sugItems.length) {   /* TomTom sem resultados ou sem quota → Geoapify */
+              const ga = await geoapify('autocomplete', area ? `${q}, ${area}` : q, 10);
+              if (my !== sugSeq) return;
+              if (ga.length) { allResults.push(...ga); sugItems = formatResults(allResults); renderSug(); }
+            }
+            if (sugItems.length && !failures) sugCache.set(key, sugItems);
+            enrich(sugItems);
+          } catch (e) {
+            if (e.name !== 'AbortError') {
+              console.error('[sug] ERROR:', e);
+              hideSug();
+            }
+          }
         }
         function pickSug(s) {
           mapInit();
@@ -1591,18 +2125,30 @@
             addrEl.value = city && !norm(name).includes(norm(city)) ? `${name} ${city}` : name;
             instAuto = {name: addrEl.value, street: s.street || s.l2};
           } else {
-            addrEl.value = s.street || s.l2 || addrEl.value;
+            addrEl.value = (s.streetNumber && s.streetName) ? s.streetName : (s.street || s.l2 || addrEl.value);
             if (s.poi) { refEl.value = s.poi; refAuto = s.poi; }
           }
+          const doorEl = $('door-service');
+          if (s.streetNumber && !inst) { doorEl.value = s.streetNumber; doorAuto = s.streetNumber; }
+          else if (doorAuto && doorEl.value.trim() === doorAuto) { doorEl.value = ''; doorAuto = ''; }
+          locAuto = s.city || '';
           if (s.city) $('location-service').value = s.city;
           pickedKey = `${val('address-service')}|${val('location-service')}`;
           hideSug();
           reqSeq++;
           mapPlace(s.lat, s.lng, 'search', 17);
+          if (!s.streetNumber && val('door-service')) locateDoor();
           const dist = base ? kmBetween(base, s) : 0;
           if (dist > 40) mapStatus(`⚠️ Fica a ${Math.round(dist)} km da corporação — confirme o pin.`, false);
         }
-        addrEl.addEventListener('input', () => {
+        addrEl.addEventListener('input', e => {
+          if (pickedKey && e.inputType?.startsWith('delete')) {
+            const locEl = $('location-service');
+            if (locAuto && locEl.value.trim() === locAuto) locEl.value = '';
+            $('door-service').value = '';
+            $('floor-service').value = '';
+            locAuto = ''; doorAuto = ''; pickedKey = '';
+          }
           clearTimeout(sugT);
           const q = addrEl.value.trim();
           if (!q) {
@@ -1610,6 +2156,8 @@
             if (refAuto && refEl.value.trim() === refAuto) refEl.value = '';
             refAuto = '';
             instAuto = null;
+            $('door-service').value = '';
+            $('floor-service').value = '';
           }
           if (q.length < 5) return hideSug();
           sugT = setTimeout(() => suggest(q).catch(() => hideSug()), 450);
@@ -1629,12 +2177,21 @@
           });
         addrEl.addEventListener('blur', () => setTimeout(hideSug, 150));
         ['address-service', 'location-service'].forEach(id => $(id).addEventListener('change', () => {
-        if (`${val('address-service')}|${val('location-service')}` === pickedKey) return;
-        mapLocate(false);
-      }));        
-
-
-
+          if (`${val('address-service')}|${val('location-service')}` === pickedKey) return;
+          mapLocate(false);
+        }));
+        
+        let doorT = 0;
+        const locateDoor = () => {
+          clearTimeout(doorT);
+          if (!val('address-service') || !val('location-service')) return;
+          doorT = setTimeout(() => mapLocate(false), 600);
+        };
+        $('door-service').addEventListener('input', locateDoor);
+        $('door-service').addEventListener('change', () => {
+          clearTimeout(doorT);
+          if (val('address-service') && val('location-service')) mapLocate(false);
+        });
       document.querySelector('button[data-page="page-inem-services"]')?.addEventListener('click', () => setTimeout(() => {
         if (!map) return mapInit();
           map.invalidateSize();
@@ -1717,8 +2274,10 @@
           if (inem.checked && !selectedType) return openTypePopup();
           const g = id => $(id)?.value?.trim() || '';
           const hourAlert = $('alert-service').value || '', address = g('address-service'), floor = g('floor-service'), locality = g('location-service'), ref = g('reference-address-service');
-          const fullAddress = [address, floor].filter(Boolean).join(', ');
-          const realAddr = instAuto && address === instAuto.name ? instAuto.street : address;
+          const door = g('door-service');
+          const streetFull = door && !/\d+\s?[A-Za-z]?$/.test(address) ? `${address}, ${door}` : address;
+          const fullAddress = [streetFull, floor].filter(Boolean).join(', ');
+          const realAddr = instAuto && address === instAuto.name ? instAuto.street : streetFull;
           const gender = $('victim-gender-service').value || '', age = g('victim-age-service'), ageType = $('victim-age-type-service').value || '';
           const situation = g('situation-service'), nrCODU = g('nr-codu-service'), tasName = g('resp-tas-name'), obs = g('observations-service');
           const triage = g('triage-service');

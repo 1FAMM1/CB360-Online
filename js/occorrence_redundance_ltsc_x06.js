@@ -11,6 +11,60 @@
       css.textContent = `
         #page-cb360-redund .major-card-header.rd-head {display: flex; align-items: center; gap: 10px;}
         #page-cb360-redund .major-card-header.rd-head > svg {opacity: .9; vertical-align: middle;}
+
+        /* ===== Redundância · lista (layout novo, só estilo; ids e funções iguais) ===== */
+        #page-cb360-redund > .major-card > .major-card-body {background: #efefef; padding: 12px 14px !important;}
+        #page-cb360-redund > .major-card > .major-card-footer:empty {display: none;}
+        #page-cb360-redund #cb360-filters {background: #fff; border: 1px solid #e9ecef; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.05); padding: 12px 14px !important; gap: 10px !important;}
+        #page-cb360-redund #cb360-filters label {font-size: 11px !important; font-weight: 800 !important; color: #6c757d; text-transform: uppercase; letter-spacing: .3px;}
+        #page-cb360-redund #cb360-filters > div {gap: 8px 12px !important;}
+        #page-cb360-redund #cb360-filters > div > div {margin-right: 0 !important;}
+        #page-cb360-redund #cb360-filters input, #page-cb360-redund #cb360-filters select, #page-cb360-redund #cb360-page-size {height: 30px !important; line-height: 28px !important; border: 1px solid #c8c8c8 !important; border-radius: 6px !important;
+                     font-size: 12px !important; background: #fff; color: #2c3e50; box-shadow: none;}
+        #page-cb360-redund #cb360-filters input:focus, #page-cb360-redund #cb360-filters select:focus {border-color: #c0392b !important; box-shadow: 0 0 0 2px rgba(192,57,43,.12) !important;}
+        /* Dia / Mês / Ano em pills */
+        #page-cb360-redund #cb360-filters > div > div:has(> .cb360-period-toggle) {background: #f1f3f5; border-radius: 999px; padding: 3px; gap: 2px;}
+        #page-cb360-redund .cb360-period-toggle {height: 26px !important; line-height: 26px !important; border: 0 !important; border-radius: 999px !important; background: transparent !important; color: #2c3e50 !important;
+                     padding: 0 16px !important; font-size: 12px !important; font-weight: 800 !important; transition: background .15s;}
+        #page-cb360-redund .cb360-period-toggle:hover {background: #e4e7ea !important;}
+        #page-cb360-redund .cb360-period-toggle.active {background: #2c3e50 !important; color: #fff !important;}
+        #page-cb360-redund #cb360-btn-search {color: #c0392b !important; font-size: 24px !important;}
+        #page-cb360-redund #cb360-btn-search:hover {background: #fdecea !important;}
+        /* tabela */
+        #page-cb360-redund #cb360-table-container {margin-top: 10px !important; background: #fff; border: 1px solid #e3e7eb !important; border-radius: 12px !important; box-shadow: 0 1px 3px rgba(0,0,0,.05) !important;
+                     scrollbar-width: thin; scrollbar-color: #e57373 #fbe9e7;}
+        #page-cb360-redund #cb360-table-container::-webkit-scrollbar-thumb {background: #e57373 !important; border-color: #fbe9e7 !important;}
+        #page-cb360-redund #cb360-table-container::-webkit-scrollbar-track {background: #fbe9e7 !important;}
+        #page-cb360-redund #cb360-tabela-ocorrencias th {background: #f1f3f5 !important; color: #5b6670 !important; border: 0 !important; border-bottom: 1px solid #e3e7eb !important; font-size: 10.5px !important;
+                     font-weight: 800 !important; text-transform: uppercase; letter-spacing: .3px; padding: 8px 5px !important;}
+        #page-cb360-redund #cb360-tabela-ocorrencias th i {color: #5b6670 !important;}
+        #page-cb360-redund #cb360-tabela-ocorrencias td {border: 0 !important; border-bottom: 1px solid #eef0f2 !important; padding-top: 6px !important; padding-bottom: 6px !important;}
+        #page-cb360-redund #cb360-tabela-ocorrencias tbody tr:last-child td {border-bottom: 0 !important;}
+        #page-cb360-redund #cb360-tabela-ocorrencias tbody tr:hover td {background-color: #fdf6f5;}
+        #page-cb360-redund #cb360-tabela-ocorrencias td[colspan] {padding: 22px !important; color: #8a949e !important;}
+        /* estado em chip (a cor continua a vir de STATUS_COLORS) */
+        #page-cb360-redund .cb360-status-chip {display: inline-block; min-width: 92px; padding: 3px 10px; border-radius: 999px; font-size: 10.5px; font-weight: 800; color: #2c3e50; line-height: 1.3;}
+        #page-cb360-redund #cb360-input-species {width: 210px !important;}
+        #page-cb360-redund #cb360-input-alert-source {width: 170px !important;}
+        #page-cb360-redund #cb360-input-report {width: 130px !important;}
+        #page-cb360-redund #cb360-input-search {width: 230px !important;}
+        /* paginação e rodapé */
+        #page-cb360-redund #cb360-table-footer {padding-top: 10px !important;}
+        #page-cb360-redund #cb360-register-counter {font-size: 12px !important; color: #6c757d !important;}
+        #page-cb360-redund #cb360-page-prev, #page-cb360-redund #cb360-page-next {background: #fff !important; border: 1px solid #dfe3e7 !important; border-radius: 7px !important; padding: 4px 10px !important; color: #2c3e50;}
+        #page-cb360-redund #cb360-page-prev:hover, #page-cb360-redund #cb360-page-next:hover {background: #f4f6f8 !important;}
+        #page-cb360-redund #cb360-page-indicator {color: #2c3e50 !important;}
+        #page-cb360-redund #cb360-table-footer > div:last-child {margin: 12px 0 0 !important; background: #fff; border: 1px solid #e9ecef; border-radius: 12px; padding: 10px 14px; box-shadow: 0 1px 3px rgba(0,0,0,.05);}
+        #page-cb360-redund #cb360-register-export {font-size: 11px !important; font-weight: 800 !important; color: #6c757d !important; text-transform: uppercase; letter-spacing: .4px; border: 1px solid #dfe3e7; border-radius: 8px; padding: 6px 12px;}
+        #page-cb360-redund #cb360-register-export:hover {background: #f4f6f8;}
+        #page-cb360-redund #cb360-table-footer > div:last-child > div:last-child {justify-content: flex-end !important;}
+        #page-cb360-redund #cb360-table-footer button[id^="cb360-btn-"] {height: 36px; padding: 0 20px !important; border-radius: 8px !important; font-size: 12px !important; font-weight: 800 !important; letter-spacing: .3px;
+                     transition: filter .15s, background .15s;}
+        #page-cb360-redund #cb360-btn-ocorrence-list, #page-cb360-redund #cb360-btn-print {background: #fff !important; color: #2c3e50 !important; border: 1px solid #d0d5da !important;}
+        #page-cb360-redund #cb360-btn-ocorrence-list:hover, #page-cb360-redund #cb360-btn-print:hover {background: #f4f6f8 !important;}
+        #page-cb360-redund #cb360-btn-close {background: #2c3e50 !important; color: #fff !important;}
+        #page-cb360-redund #cb360-btn-new {background: linear-gradient(180deg,#d64535,#b0281a) !important; color: #fff !important; box-shadow: 0 2px 6px rgba(176,40,26,.25);}
+        #page-cb360-redund #cb360-btn-close:hover, #page-cb360-redund #cb360-btn-new:hover {filter: brightness(1.08);}
       `;
       document.head.appendChild(css);
     }
@@ -426,7 +480,7 @@
               <input type="text" id="cb360-input-search" style="${selectStyle} width:250px;">
             </div>
             <div style="display:flex; align-items:center;">
-              <button id="cb360-toggle-dia" class="cb360-period-toggle" data-period="dia" style="padding:0 14px; height:25px; line-height:23px; box-sizing:border-box; border:1px solid #2b6ecb; background:#2b6ecb; color:#fff; font-size:12.5px; font-weight:600; cursor:pointer; border-radius:4px 0 0 4px;" onclick="setDateFilter('day')"><i class="fa fa-indent fa-sm"></i> Dia</button>
+              <button id="cb360-toggle-dia" class="cb360-period-toggle active" data-period="dia" style="padding:0 14px; height:25px; line-height:23px; box-sizing:border-box; border:1px solid #2b6ecb; background:#2b6ecb; color:#fff; font-size:12.5px; font-weight:600; cursor:pointer; border-radius:4px 0 0 4px;" onclick="setDateFilter('day')"><i class="fa fa-indent fa-sm"></i> Dia</button>
               <button id="cb360-toggle-mes" class="cb360-period-toggle" data-period="mes" style="padding:0 14px; height:25px; line-height:23px; box-sizing:border-box; border:1px solid #ccc; border-left:none; background:#fff; color:#333; font-size:12.5px; font-weight:600; cursor:pointer;" onclick="setDateFilter('month')"><i class="fa fa-list-ul fa-sm"></i> Mês</button>
               <button id="cb360-toggle-ano" class="cb360-period-toggle" data-period="ano" style="padding:0 14px; height:25px; line-height:23px; box-sizing:border-box; border:1px solid #ccc; border-left:none; background:#fff; color:#333; font-size:12.5px; font-weight:600; cursor:pointer; border-radius:0 4px 4px 0;" onclick="setDateFilter('year')"><i class="fa fa-list fa-sm"></i> Ano</button>
             </div>
@@ -590,6 +644,7 @@
       document.querySelectorAll('.cb360-period-toggle').forEach(btn => {
         btn.addEventListener('click', () => {
           document.querySelectorAll('.cb360-period-toggle').forEach(b => {
+            b.classList.toggle('active', b === btn);
             b.style.background = '#fff';
             b.style.color = '#333';
             b.style.borderColor = '#ccc';
@@ -746,7 +801,7 @@
             <td style="${cellPadding}; padding-left: 10px; ${br} color:#2b6ecb; text-align:left; font-size: 12px; font-weight: 700;">${oc.caller || ''}</td>
             <td style="${cellPadding}; ${br} text-align:center; font-size: 12px; font-weight: 500;">${oc.address || ''}</td>
             <td style="${cellPadding}; ${br} text-align:center; font-size: 12px; font-weight: 500;">${oc.classification || ''}</td>            
-            <td style="${cellPadding}; ${br} background:${statusColor}; text-align:center; font-size:11px; font-weight:600;">${oc.status || ''}</td>            
+            <td class="cb360-status-cell" style="${cellPadding}; ${br} text-align:center; font-size:11px; font-weight:600;"><span class="cb360-status-chip" style="background:${statusColor};">${oc.status || ''}</span></td>            
             <td class="cb360-vehicle-cell" data-internal="${oc.internal_number || ''}" style="${cellPadding}; ${br} text-align:center; vertical-align:middle; font-size: 15px; font-weight: 600; cursor:${counts.vehicles ? 'pointer' : 'default'};">
               <div style="display: inline-flex; align-items: center; vertical-align:middle; justify-content: center; gap: 4px;">${counts.vehicles} <i class="fa-solid fa-truck" style="font-size:15px; vertical-align:middle; color: ${hasVehicleRegistration ? '#d9534f' : 'inherit'};"></i></div>
             </td>
@@ -935,6 +990,7 @@
         const btn = document.getElementById(id);
         if (!btn) return;
         const active = key === period;
+        btn.classList.toggle('active', active);
         btn.style.background = active ? '#2b6ecb' : '#fff';
         btn.style.color = active ? '#fff' : '#333';
         btn.style.borderColor = active ? '#2b6ecb' : '#ccc';

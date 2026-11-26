@@ -29,6 +29,94 @@
         #page-employees .rh-list ul {list-style: none; padding-left: 10px; line-height: 1.8;}
         #page-employees .rh-list li {color: #0d630e;}
         #page-employees .rh-start {text-align: center; font-style: italic; color: #555;}
+
+        /* ===== Restantes páginas do RH (layout novo, só estilo) ===== */
+        #annual-eip-shift-map > .major-card > .major-card-body, #eligibility-subs-shift > .major-card > .major-card-body, #priority-scheduling-map > .major-card > .major-card-body, #vacation-scheduling-map > .major-card > .major-card-body, #salary-processing-map > .major-card > .major-card-body, #individual-records > .major-card > .major-card-body, #vacation-scheduling > .major-card > .major-card-body, #dashboard-rh > .major-card > .major-card-body, #employee-registration > .major-card > .major-card-body, #page-vacations-request-rh > .major-card > .major-card-body {background: #efefef;}
+        /* mapas anuais (EIPs, Subsídio de Turno, Prioridade, Férias, Processamento Salarial) */
+        #annual-eip-shift-map [class$="-wrapper"], #eligibility-subs-shift [class$="-wrapper"], #priority-scheduling-map [class$="-wrapper"], #vacation-scheduling-map [class$="-wrapper"], #salary-processing-map [class$="-wrapper"] {background: transparent !important; padding: 0 !important; box-shadow: none !important; border: 0 !important;}
+        #annual-eip-shift-map [class$="-title"], #eligibility-subs-shift [class$="-title"], #priority-scheduling-map [class$="-title"], #vacation-scheduling-map [class$="-title"], #salary-processing-map [class$="-title"] {display: flex; align-items: center; gap: 8px; color: #2c3e50 !important; font-size: 13px !important; font-weight: 800 !important; letter-spacing: .4px;}
+        #annual-eip-shift-map [class*="badge-rh"], #eligibility-subs-shift [class*="badge-rh"], #priority-scheduling-map [class*="badge-rh"], #vacation-scheduling-map [class*="badge-rh"], #salary-processing-map [class*="badge-rh"], #individual-records [class*="badge-rh"], #vacation-scheduling [class*="badge-rh"] {background: #c62828 !important; color: #fff !important; border-radius: 5px !important;}
+        #annual-eip-shift-map select, #eligibility-subs-shift select, #priority-scheduling-map select, #vacation-scheduling-map select, #salary-processing-map select, #individual-records select, #vacation-scheduling select {height: 30px; padding: 0 10px !important; border: 1px solid #c8c8c8 !important; border-radius: 8px !important; background: #fff !important; color: #2c3e50; font-weight: 700; box-shadow: none !important;}
+        #annual-eip-shift-map select:focus, #eligibility-subs-shift select:focus, #priority-scheduling-map select:focus, #vacation-scheduling-map select:focus, #salary-processing-map select:focus, #individual-records select:focus, #vacation-scheduling select:focus {border-color: #c0392b !important; box-shadow: 0 0 0 2px rgba(192,57,43,.12) !important; outline: none;}
+        #annual-eip-shift-map [class$="-container"], #eligibility-subs-shift [class$="-container"], #priority-scheduling-map [class$="-container"], #vacation-scheduling-map [class$="-container"], #salary-processing-map [class$="-container"] {background: #fff !important; border: 1px solid #e3e7eb !important; border-radius: 12px !important; box-shadow: 0 1px 3px rgba(0,0,0,.05);
+                     scrollbar-width: thin !important; scrollbar-color: #e57373 #fbe9e7;}
+        #annual-eip-shift-map [class$="-container"]::-webkit-scrollbar, #eligibility-subs-shift [class$="-container"]::-webkit-scrollbar, #priority-scheduling-map [class$="-container"]::-webkit-scrollbar, #vacation-scheduling-map [class$="-container"]::-webkit-scrollbar, #salary-processing-map [class$="-container"]::-webkit-scrollbar {display: block !important; width: 8px; height: 8px;}
+        #annual-eip-shift-map [class$="-container"]::-webkit-scrollbar-thumb, #eligibility-subs-shift [class$="-container"]::-webkit-scrollbar-thumb, #priority-scheduling-map [class$="-container"]::-webkit-scrollbar-thumb, #vacation-scheduling-map [class$="-container"]::-webkit-scrollbar-thumb, #salary-processing-map [class$="-container"]::-webkit-scrollbar-thumb {background: #e57373; border-radius: 8px;}
+        #annual-eip-shift-map thead th, #eligibility-subs-shift thead th, #priority-scheduling-map thead th, #vacation-scheduling-map thead th, #salary-processing-map thead th {background: #f1f3f5 !important; color: #5b6670 !important; border-color: #e3e7eb !important; font-weight: 800 !important; text-transform: uppercase; letter-spacing: .3px;}
+        #annual-eip-shift-map thead th[class*="total"], #annual-eip-shift-map thead th[class*="score"], #eligibility-subs-shift thead th[class*="total"], #eligibility-subs-shift thead th[class*="score"], #priority-scheduling-map thead th[class*="total"], #priority-scheduling-map thead th[class*="score"], #vacation-scheduling-map thead th[class*="total"], #vacation-scheduling-map thead th[class*="score"], #salary-processing-map thead th[class*="total"], #salary-processing-map thead th[class*="score"] {background: #2c3e50 !important; color: #fff !important;}
+        #annual-eip-shift-map tbody td, #eligibility-subs-shift tbody td, #priority-scheduling-map tbody td, #vacation-scheduling-map tbody td, #salary-processing-map tbody td {border-color: #eef0f2 !important;}
+        #annual-eip-shift-map tbody tr:hover > td, #eligibility-subs-shift tbody tr:hover > td, #priority-scheduling-map tbody tr:hover > td, #vacation-scheduling-map tbody tr:hover > td, #salary-processing-map tbody tr:hover > td {background-color: #fdf6f5;}
+        /* botões: o último do rodapé (Emitir Mapa) é o principal, a vermelho; os outros brancos */
+        #annual-eip-shift-map [class$="-footer"] button, #eligibility-subs-shift [class$="-footer"] button, #priority-scheduling-map [class$="-footer"] button, #vacation-scheduling-map [class$="-footer"] button, #salary-processing-map [class$="-footer"] button {height: 34px; padding: 0 16px !important; border-radius: 8px !important; font-size: 12px !important; font-weight: 800 !important; box-shadow: none !important;
+                     background: #fff !important; color: #2c3e50 !important; border: 1px solid #d0d5da !important; transform: none !important; transition: background .15s, filter .15s;}
+        #annual-eip-shift-map [class$="-footer"] button:hover, #eligibility-subs-shift [class$="-footer"] button:hover, #priority-scheduling-map [class$="-footer"] button:hover, #vacation-scheduling-map [class$="-footer"] button:hover, #salary-processing-map [class$="-footer"] button:hover {background: #f4f6f8 !important;}
+        #annual-eip-shift-map [class$="-footer"] button:last-child, #eligibility-subs-shift [class$="-footer"] button:last-child, #priority-scheduling-map [class$="-footer"] button:last-child, #vacation-scheduling-map [class$="-footer"] button:last-child, #salary-processing-map [class$="-footer"] button:last-child {background: linear-gradient(180deg,#d64535,#b0281a) !important; color: #fff !important; border: 0 !important; box-shadow: 0 2px 6px rgba(176,40,26,.25) !important;}
+        #annual-eip-shift-map [class$="-footer"] button:last-child:hover, #eligibility-subs-shift [class$="-footer"] button:last-child:hover, #priority-scheduling-map [class$="-footer"] button:last-child:hover, #vacation-scheduling-map [class$="-footer"] button:last-child:hover, #salary-processing-map [class$="-footer"] button:last-child:hover {filter: brightness(1.06);}
+        #annual-eip-shift-map [class$="-footer"] button:not(:last-child) .fa-file-excel, #eligibility-subs-shift [class$="-footer"] button:not(:last-child) .fa-file-excel, #priority-scheduling-map [class$="-footer"] button:not(:last-child) .fa-file-excel, #vacation-scheduling-map [class$="-footer"] button:not(:last-child) .fa-file-excel, #salary-processing-map [class$="-footer"] button:not(:last-child) .fa-file-excel {color: #1e7e34;}
+        /* Registos Individuais e Marcação de Férias */
+        #individual-records .major-card-body > div:first-child, #vacation-scheduling .major-card-body > div:first-child {border-radius: 12px !important; border: 1px solid #e9ecef !important; box-shadow: 0 1px 3px rgba(0,0,0,.05) !important;}
+        #individual-records label, #vacation-scheduling label {color: #5b6670 !important;}
+        #individual-records input:not([type="checkbox"]):not([type="radio"]), #vacation-scheduling input:not([type="checkbox"]):not([type="radio"]) {border: 1px solid #c8c8c8 !important; border-radius: 6px !important; box-shadow: none !important;}
+        #individual-records input:focus, #vacation-scheduling input:focus {border-color: #c0392b !important; box-shadow: 0 0 0 2px rgba(192,57,43,.12) !important; outline: none;}
+        #individual-records .btn, #vacation-scheduling .btn, #employee-registration .btn, #dashboard-rh .btn {border-radius: 8px !important; font-weight: 800 !important; box-shadow: none !important; transform: none !important;}
+        #vacation-scheduling #holiday-add-period-btn, #vacation-scheduling #holiday-preview-btn, #vacation-scheduling #holiday-pdf-btn {background: #fff !important; color: #2c3e50 !important; border: 1px solid #d0d5da !important;}
+        #vacation-scheduling #holiday-save-btn {background: linear-gradient(180deg,#d64535,#b0281a) !important; color: #fff !important; border: 0 !important; box-shadow: 0 2px 6px rgba(176,40,26,.25) !important;}
+        #vacation-scheduling .holiday-period-card {border-radius: 12px !important; border-color: #e9ecef !important; background: #fff !important; box-shadow: 0 1px 3px rgba(0,0,0,.05) !important;}
+        #vacation-scheduling .holiday-card-title {color: #2c3e50 !important;}
+        /* DashBoard e Cadastro: emblemas "RH" e botão Guardar no padrão novo */
+        #dashboard-rh .dash-badge-rh, #employee-registration .reg-badge-rh, #employee-registration .reg-form-header-badge {background: #c62828 !important; color: #fff !important; border-radius: 5px !important;}
+        #employee-registration .reg-form-header {background: #2c3e50 !important;}
+        #employee-registration #reg-save-btn {background: linear-gradient(180deg,#d64535,#b0281a) !important; color: #fff !important; border: 0 !important; box-shadow: 0 2px 6px rgba(176,40,26,.25) !important;}
+        #employee-registration #reg-save-btn:hover {filter: brightness(1.06);}
+        #employee-registration input:focus, #employee-registration select:focus, #dashboard-rh select:focus {border-color: #c0392b !important; box-shadow: 0 0 0 2px rgba(192,57,43,.12) !important; outline: none;}
+        /* página de entrada do RH (como a da SALOC) */
+        #page-employees .rh-feat {background: #fff !important; border: 1px solid #e9ecef; border-left: 4px solid #c62828 !important; border-radius: 10px !important; color: #2c3e50;}
+        #page-employees .rh-list li {color: #2c3e50 !important;}
+
+        /* ===== Escalas Mensais e Horas Extra (layout novo, só estilo; ids e funções iguais) ===== */
+        #page-employee-scales > .major-card > .major-card-body, #page-employee-extra-hour > .major-card > .major-card-body {background: #efefef;}
+        /* seletor de ano + meses: container branco centrado, meses em pills */
+        #page-employee-scales [id^="months-container"] > div, #page-employee-extra-hour [id^="months-container"] > div {background: #fff; border: 1px solid #e3e7eb; border-radius: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.05); padding: 12px 16px !important;
+                     width: fit-content; margin: 0 auto; gap: 10px !important;}
+        #page-employee-scales [id^="months-container"] > div > div:first-child label, #page-employee-extra-hour [id^="months-container"] > div > div:first-child label {font-size: 11px; font-weight: 800 !important; color: #6c757d; text-transform: uppercase; letter-spacing: .4px;}
+        #page-employee-scales [id^="months-container"] select, #page-employee-extra-hour [id^="months-container"] select {height: 30px; padding: 0 10px !important; border: 1px solid #c8c8c8 !important; border-radius: 8px !important; font-weight: 700; color: #2c3e50;}
+        #page-employee-scales [id^="months-container"] > div > div:last-child, #page-employee-extra-hour [id^="months-container"] > div > div:last-child {display: grid !important; grid-template-columns: repeat(6, 104px); gap: 6px !important; max-width: none !important;}
+        #page-employee-scales [id^="months-container"] .btn, #page-employee-extra-hour [id^="months-container"] .btn {width: auto !important; height: 34px !important; margin: 0 !important; border-radius: 999px !important; background: #f4f6f8 !important; color: #2c3e50 !important;
+                     border: 1px solid #dfe3e7 !important; box-shadow: none !important; font-size: 12px !important; font-weight: 800 !important; letter-spacing: .3px; transform: none !important;
+                     transition: background .15s, border-color .15s, color .15s;}
+        #page-employee-scales [id^="months-container"] .btn:hover, #page-employee-extra-hour [id^="months-container"] .btn:hover {background: #fdf0ee !important; border-color: #e6b3ad !important; color: #b71c1c !important;}
+        #page-employee-scales [id^="months-container"] .btn.active, #page-employee-extra-hour [id^="months-container"] .btn.active {background: #2c3e50 !important; border-color: #2c3e50 !important; color: #fff !important;}
+        /* título da escala: barra vermelha à esquerda + linha que desvanece (como na SALOC) */
+        #page-employee-scales #table-host > h3, [id^="table-container"] > h3, [id^="table-container"] h3:first-child, #page-employee-extra-hour #table-host > h3, [id^="table-container"] > h3, [id^="table-container"] h3:first-child {display: flex; align-items: center; gap: 10px; background: none !important; color: #2c3e50 !important;
+                     height: auto !important; line-height: 1.2 !important; margin: 14px 0 8px !important; font-size: 13px !important; font-weight: 800; letter-spacing: .5px; text-align: left !important;}
+        #page-employee-scales #table-host > h3::before, [id^="table-container"] > h3::before, #page-employee-extra-hour #table-host > h3::before, [id^="table-container"] > h3::before {content: ''; width: 4px; height: 18px; border-radius: 3px; background: #c62828; flex: none;}
+        #page-employee-scales #table-host > h3::after, [id^="table-container"] > h3::after, #page-employee-extra-hour #table-host > h3::after, [id^="table-container"] > h3::after {content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, #d9dde2, transparent);}
+        /* tabela: card branco, scroll fino vermelho, cabeçalho claro (os dias de fim de semana/feriado mantêm a cor) */
+        #page-employee-scales .table-container, #page-employee-extra-hour .table-container {background: #fff; border: 1px solid #e3e7eb; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.05); scrollbar-width: thin; scrollbar-color: #e57373 #fbe9e7;}
+        #page-employee-scales table.employees-table, table, #page-employee-extra-hour table.employees-table, table {border-collapse: separate !important; border-spacing: 0;}
+        #page-employee-scales th[style*="rgb(240, 240, 240)"], #page-employee-extra-hour th[style*="rgb(240, 240, 240)"] {background: #f1f3f5 !important; color: #5b6670 !important; font-weight: 800 !important; font-size: 10.5px !important; text-transform: uppercase; letter-spacing: .2px;}
+        #page-employee-scales th, #page-employee-extra-hour th {border-color: #e3e7eb !important;}
+        #page-employee-scales tbody td, #page-employee-extra-hour tbody td {border-color: #e9ecef !important;}
+        #page-employee-scales tr.data-row:hover > td:nth-child(-n+4), #page-employee-extra-hour tr.data-row:hover > td:nth-child(-n+4) {background: #fdf6f5 !important;}
+        #page-employee-scales tr.team-separator-row > td, #page-employee-extra-hour tr.team-separator-row > td {font-size: 11.5px; letter-spacing: .8px !important;}
+        #page-employee-scales tr.team-separator-row button, #page-employee-extra-hour tr.team-separator-row button {border-radius: 6px !important; width: 22px !important; height: 22px !important; line-height: 1;}
+        /* caixas de informação e legenda: cards brancos */
+        #page-employee-scales #info-host, #page-employee-extra-hour #info-host {gap: 10px; margin-top: 10px;}
+        #page-employee-scales #info-host > div, #page-employee-extra-hour #info-host > div {background: #fff !important; border: 1px solid #e9ecef !important; border-radius: 12px !important; box-shadow: 0 1px 3px rgba(0,0,0,.05); margin: 0 !important; height: auto !important; min-height: 150px;}
+        #page-employee-scales #info-host strong[style*="#1e3a8a"], #page-employee-extra-hour #info-host strong[style*="#1e3a8a"] {color: #5b6670 !important; font-size: 11px; text-transform: uppercase; letter-spacing: .3px;}
+        #page-employee-scales #info-host strong[style*="#1e3a8a"] i, #page-employee-extra-hour #info-host strong[style*="#1e3a8a"] i {color: #c62828;}
+        #page-employee-scales #info-host > div > div[style*="color:#1e3a8a"]:first-child, #page-employee-extra-hour #info-host > div > div[style*="color:#1e3a8a"]:first-child {color: #2c3e50 !important; font-size: 12px !important; font-weight: 800 !important; letter-spacing: .5px; text-align: left !important;
+                     border-bottom: 1px solid #eef0f2; padding-bottom: 7px;}
+        #page-employee-scales #info-host > div > div > div > div[style*="width:140px"], #page-employee-extra-hour #info-host > div > div > div > div[style*="width:140px"] {border-color: #e3e7eb !important; border-radius: 7px !important; background: #f8f9fa !important;}
+        /* botões do rodapé */
+        #page-employee-scales .major-card-footer .btn, #page-employee-extra-hour .major-card-footer .btn {height: 34px; padding: 0 16px !important; border-radius: 8px !important; font-size: 12px !important; font-weight: 800 !important; letter-spacing: .2px; box-shadow: none !important;
+                     transform: none !important; background: #fff !important; color: #2c3e50 !important; border: 1px solid #d0d5da !important; transition: background .15s, filter .15s;}
+        #page-employee-scales .major-card-footer .btn:hover, #page-employee-extra-hour .major-card-footer .btn:hover {background: #f4f6f8 !important;}
+        #page-employee-scales .major-card-footer .btn.btn-success i, #page-employee-extra-hour .major-card-footer .btn.btn-success i {color: #1e7e34;}
+        #page-employee-scales .major-card-footer .btn.btn-danger i, #page-employee-extra-hour .major-card-footer .btn.btn-danger i {color: #c62828;}
+        #page-employee-scales .major-card-footer .btn.btn-toggle.active, #page-employee-extra-hour .major-card-footer .btn.btn-toggle.active {background: #2c3e50 !important; color: #fff !important; border-color: #2c3e50 !important;}
+        #page-employee-scales .major-card-footer .btn.btn-add, #page-employee-extra-hour .major-card-footer .btn.btn-add {background: linear-gradient(180deg,#d64535,#b0281a) !important; color: #fff !important; border: 0 !important; box-shadow: 0 2px 6px rgba(176,40,26,.25) !important;}
+        #page-employee-scales .major-card-footer .btn.btn-add:hover, #page-employee-extra-hour .major-card-footer .btn.btn-add:hover {filter: brightness(1.06);}
       `;
       document.head.appendChild(css);
     }
@@ -2755,7 +2843,7 @@
       mainWrapper.style.cssText = `display: flex; flex-direction: column; margin-top: -20px; gap: 5px; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;`;      
       const titleSection = document.createElement("div");
       titleSection.style.cssText = `display: flex; align-items: center; margin-bottom: 10px; gap: 8px; font-size: 16px; font-weight: 800; color: #1e293b;`;
-      titleSection.innerHTML = `<span style="background: #1e293b; color: #fff; padding: 2px 7px; border-radius: 4px; font-size: 10px;">RH</span> MARCAÇÃO DE FÉRIAS`;      
+      titleSection.innerHTML = `<span style="background: #c62828; color: #fff; padding: 2px 7px; border-radius: 5px; font-size: 10px;">RH</span> MARCAÇÃO DE FÉRIAS`;      
       const selectorSection = document.createElement("div");
       selectorSection.style.cssText = `display: flex; align-items: center; gap: 15px; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);`;      
       const label = document.createElement("label");
@@ -5610,7 +5698,7 @@
         overlay.innerHTML = `
           <div style="background:#fff; border-radius:10px; padding:32px; max-width:420px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.3); font-family:'Inter',sans-serif;">
             <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
-              <span style="background:#1e293b; color:#fff; padding:2px 7px; border-radius:4px; font-size:10px; font-weight:800;">RH</span>
+              <span style="background:#c62828; color:#fff; padding:2px 7px; border-radius:5px; font-size:10px; font-weight:800;">RH</span>
               <span style="font-size:15px; font-weight:800; color:#1e293b;">ENQUADRAMENTO EIPs</span>
             </div>
             <p style="color:#475569; font-size:13px; line-height:1.6; margin-bottom:8px;">

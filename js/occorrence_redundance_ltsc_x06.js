@@ -45,20 +45,14 @@
         #cb360-incident-wrapper #goc-state-badge {border-radius: 6px 0 0 6px !important; height: 26px !important; line-height: 26px !important; padding: 0 10px !important; font-weight: 800 !important;}
         #cb360-incident-wrapper #goc-state {border-radius: 0 6px 6px 0;}
         #cb360-incident-wrapper .goc-row[style*="#eef4fb"] {background: #f4f6f8 !important; border-radius: 8px !important;}
-        #cb360-incident-wrapper #goc-btn-refresh-map {background: #2c3e50 !important; border-radius: 6px !important; height: 26px !important; font-weight: 700;}
+        #cb360-incident-wrapper #goc-btn-refresh-map {border-radius: 6px !important; height: 26px !important; font-weight: 700;}
         #cb360-incident-wrapper #goc-sms-block {border-top-color: #eef0f2 !important;}
         #cb360-incident-wrapper #goc-sms-block input {accent-color: #c0392b;}
         #cb360-incident-wrapper #goc-bar-summary {background: #fff !important; border-bottom: 1px solid #e9ecef !important;}
         #cb360-incident-wrapper #goc-call-logs-block {background: #f4f6f8 !important; border-top: 1px solid #e9ecef;}
         /* botões do rodapé (a visibilidade continua a ser controlada pelo código) */
+        #cb360-incident-wrapper .major-card-footer button:hover, #page-cb360-redund #cb360-table-footer button[id^="cb360-btn-"]:hover {filter: brightness(1.08);}
         #cb360-incident-wrapper .major-card-footer button {border-radius: 8px !important; height: 34px !important; font-size: 12px !important; font-weight: 800 !important; letter-spacing: .2px; transition: filter .15s, background .15s;}
-        #cb360-incident-wrapper #goc-btn-add-posit, #cb360-incident-wrapper #goc-btn-print-export, #cb360-incident-wrapper #goc-btn-reports, #cb360-incident-wrapper #goc-btn-docs {
-                     background: #fff !important; color: #2c3e50 !important; border: 1px solid #d0d5da !important;}
-        #cb360-incident-wrapper #goc-btn-add-posit:hover, #cb360-incident-wrapper #goc-btn-print-export:hover, #cb360-incident-wrapper #goc-btn-reports:hover, #cb360-incident-wrapper #goc-btn-docs:hover {background: #f4f6f8 !important;}
-        #cb360-incident-wrapper #goc-btn-alerts, #cb360-incident-wrapper #goc-btn-decline {background: #fdecea !important; color: #b71c1c !important; border: 1px solid #f5c2c0 !important;}
-        #cb360-incident-wrapper #goc-btn-save-sado {background: #fff !important; color: #b0281a !important; border: 1px solid #e6a49b !important;}
-        #cb360-incident-wrapper #goc-btn-save {background: linear-gradient(180deg,#d64535,#b0281a) !important; color: #fff !important; box-shadow: 0 2px 6px rgba(176,40,26,.25);}
-        #cb360-incident-wrapper #goc-btn-close {background: #2c3e50 !important; color: #fff !important;}
         #cb360-incident-wrapper #goc-btn-save:hover, #cb360-incident-wrapper #goc-btn-close:hover, #cb360-incident-wrapper #goc-btn-alerts:hover, #cb360-incident-wrapper #goc-btn-decline:hover {filter: brightness(1.06);}
         /* ===== Redundância · abas Meios, Vítimas, Comunicações, Resumo, Fita do Tempo, SMS (só estilo) ===== */
         #cb360-incident-wrapper .goc-tab-content table {border-color: #e3e7eb !important; border-radius: 10px; overflow: hidden;}
@@ -71,11 +65,8 @@
         /* títulos de secção (eram azuis) */
         #cb360-incident-wrapper .goc-tab-content [style*="color:#2b6ecb"]:not(button):not(a):not(i), #cb360-incident-wrapper .goc-tab-content [style*="color: #2b6ecb"]:not(button):not(a):not(i), #cb360-incident-wrapper .goc-tab-content [style*="color: rgb(43, 110, 203)"]:not(button):not(a):not(i) {color: #2c3e50 !important; font-weight: 800 !important;}
         #cb360-incident-wrapper .goc-tab-content i[style*="color:#2b6ecb"], #cb360-incident-wrapper .goc-tab-content i[style*="color: #2b6ecb"], #cb360-incident-wrapper .goc-tab-content i[style*="color: rgb(43, 110, 203)"] {color: #c0392b !important;}
-        /* botões: azul ativo → escuro; verde → vermelho (ação principal); cantos arredondados */
+        /* botões: cores de origem (do próprio botão), cantos arredondados */
         #cb360-incident-wrapper .goc-tab-content button {border-radius: 8px !important; font-weight: 700;}
-        #cb360-incident-wrapper .goc-tab-content button[style*="background:#2b6ecb"], #cb360-incident-wrapper .goc-tab-content button[style*="background: #2b6ecb"], #cb360-incident-wrapper .goc-tab-content button[style*="background: rgb(43, 110, 203)"], #cb360-incident-wrapper .goc-tab-content button[style*="background: rgb(43, 110, 203)"] {background: #2c3e50 !important; border-color: #2c3e50 !important; color: #fff !important;}
-        #cb360-incident-wrapper .goc-tab-content button[style*="background:#5cb85c"], #cb360-incident-wrapper .goc-tab-content button[style*="background: #5cb85c"], #cb360-incident-wrapper .goc-tab-content button[style*="background: rgb(92, 184, 92)"], #cb360-incident-wrapper .goc-tab-content button[style*="background: rgb(92, 184, 92)"] {background: linear-gradient(180deg,#d64535,#b0281a) !important; border-color: #b0281a !important; color: #fff !important;}
-        #cb360-incident-wrapper .goc-tab-content button[style*="background:#5bc0de"], #cb360-incident-wrapper .goc-tab-content button[style*="background: #5bc0de"], #cb360-incident-wrapper .goc-tab-content button[style*="background: rgb(91, 192, 222)"], #cb360-incident-wrapper .goc-tab-content button[style*="background: rgb(91, 192, 222)"] {background: #fff !important; color: #2c3e50 !important; border: 1px solid #d0d5da !important;}
         #cb360-incident-wrapper .goc-tab-content .goc-summary-subtab, #cb360-incident-wrapper .goc-tab-content button[class*="subtab"], #cb360-incident-wrapper .goc-tab-content button[id*="-tab-"] {border-radius: 999px !important;}
         /* campos */
         #cb360-incident-wrapper .goc-tab-content input:not([type="checkbox"]):not([type="radio"]), #cb360-incident-wrapper .goc-tab-content select, #cb360-incident-wrapper .goc-tab-content textarea {border: 1px solid #c8c8c8 !important; border-radius: 6px !important; box-shadow: none !important;}
@@ -97,10 +88,6 @@
         .rd-modal input[type="checkbox"], .rd-modal input[type="radio"] {accent-color: #c0392b;}
         .rd-modal [style*="color:#2b6ecb"]:not(button):not(a):not(i), .rd-modal [style*="color: #2b6ecb"]:not(button):not(a):not(i), .rd-modal [style*="color: rgb(43, 110, 203)"]:not(button):not(a):not(i) {color: #2c3e50 !important;}
         .rd-modal button {border-radius: 8px !important; font-weight: 700;}
-        .rd-modal button[style*="background:#2b6ecb"], .rd-modal button[style*="background: #2b6ecb"], .rd-modal button[style*="background: rgb(43, 110, 203)"], .rd-modal button[style*="background: rgb(43, 110, 203)"] {background: #2c3e50 !important; border-color: #2c3e50 !important; color: #fff !important;}
-        .rd-modal button[style*="background:#5cb85c"], .rd-modal button[style*="background: #5cb85c"], .rd-modal button[style*="background: rgb(92, 184, 92)"], .rd-modal button[style*="background: rgb(92, 184, 92)"] {background: linear-gradient(180deg,#d64535,#b0281a) !important; border-color: #b0281a !important; color: #fff !important;}
-        .rd-modal button[style*="background:#f0ad4e"], .rd-modal button[style*="background: #f0ad4e"], .rd-modal button[style*="background: rgb(240, 173, 78)"] {background: #fff !important; color: #2c3e50 !important; border: 1px solid #d0d5da !important;}
-        .rd-modal button[style*="background:#5bc0de"], .rd-modal button[style*="background: #5bc0de"], .rd-modal button[style*="background: rgb(91, 192, 222)"] {background: #fff !important; color: #2c3e50 !important; border: 1px solid #d0d5da !important;}
         .rd-modal div[style*="background:#2b6ecb"] button, .rd-modal div[style*="background: #2b6ecb"] button, .rd-modal div[style*="background: rgb(43, 110, 203)"] button {background: transparent !important; border: 0 !important; color: #fff !important;}
         /* ===== Redundância · lista (layout novo, só estilo; ids e funções iguais) ===== */
         #page-cb360-redund > .major-card > .major-card-body {background: #efefef; padding: 12px 14px !important;}
@@ -151,11 +138,6 @@
         #page-cb360-redund #cb360-table-footer > div:last-child > div:last-child {justify-content: flex-end !important;}
         #page-cb360-redund #cb360-table-footer button[id^="cb360-btn-"] {height: 36px; padding: 0 20px !important; border-radius: 8px !important; font-size: 12px !important; font-weight: 800 !important; letter-spacing: .3px;
                      transition: filter .15s, background .15s;}
-        #page-cb360-redund #cb360-btn-ocorrence-list, #page-cb360-redund #cb360-btn-print {background: #fff !important; color: #2c3e50 !important; border: 1px solid #d0d5da !important;}
-        #page-cb360-redund #cb360-btn-ocorrence-list:hover, #page-cb360-redund #cb360-btn-print:hover {background: #f4f6f8 !important;}
-        #page-cb360-redund #cb360-btn-close {background: #2c3e50 !important; color: #fff !important;}
-        #page-cb360-redund #cb360-btn-new {background: linear-gradient(180deg,#d64535,#b0281a) !important; color: #fff !important; box-shadow: 0 2px 6px rgba(176,40,26,.25);}
-        #page-cb360-redund #cb360-btn-close:hover, #page-cb360-redund #cb360-btn-new:hover {filter: brightness(1.08);}
       `;
       document.head.appendChild(css);
     }

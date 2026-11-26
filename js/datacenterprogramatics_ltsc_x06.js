@@ -116,12 +116,14 @@
       #page-data .dc-r, #page-data .dc-veic, #page-data .dc-mail {gap: 8px; margin-bottom: 6px;}
       /* botões */
       #page-data .btn {transform: none !important; box-shadow: none; border-radius: 8px !important; font-weight: 800 !important; letter-spacing: .4px; border-bottom-width: 0;}
-      #page-data .btn-success, #page-data .btn-add {background: linear-gradient(180deg,#d64535,#b0281a) !important; color: #fff !important; border: 0 !important; box-shadow: 0 2px 6px rgba(176,40,26,.25) !important;}
-      #page-data .btn-success:hover, #page-data .btn-add:hover {filter: brightness(1.06);}
-      #page-data .btn-analyze, #page-data .btn-danger, #page-data .dc-photo .btn, #page-data .dc-logo .btn-success {background: #fff !important; color: #2c3e50 !important; border: 1px solid #d0d5da !important;
-                      box-shadow: none !important;}
-      #page-data .btn-danger, #page-data .dc-photo .btn.rm {color: #b71c1c !important;}
-      #page-data .btn-analyze:hover, #page-data .btn-danger:hover, #page-data .dc-photo .btn:hover, #page-data .dc-logo .btn-success:hover {border-color: #e6b3ad !important; background: #fdf6f5 !important;}
+      .btn:has(> i.fa-solid) {gap: 6px;}   /* ícone + texto nos botões */
+      /* botões: forma nova, cores de origem */
+      #page-data .btn-success {background: #28a745 !important; color: #fff !important; border: 0 !important; box-shadow: 0 1px 3px rgba(0,0,0,.15) !important;}
+      #page-data .btn-add {background: #3354a1 !important; color: #fff !important; border: 0 !important; box-shadow: 0 1px 3px rgba(0,0,0,.15) !important;}
+      #page-data .btn-analyze {background: #5b2d8e !important; color: #fff !important; border: 0 !important; box-shadow: 0 1px 3px rgba(0,0,0,.15) !important;}
+      #page-data .btn-danger {background: #dc3545 !important; color: #fff !important; border: 0 !important; box-shadow: 0 1px 3px rgba(0,0,0,.15) !important;}
+      #page-data .dc-photo .btn.rm {background: #eee !important; color: #555 !important; border: 0 !important; box-shadow: none !important;}
+      #page-data .btn-success:hover, #page-data .btn-add:hover, #page-data .btn-analyze:hover, #page-data .btn-danger:hover, #page-data .dc-photo .btn.rm:hover {filter: brightness(1.08);}
       #page-data .dc-corp-save .btn, #page-data .dc-save .btn, #page-data .action-buttons .btn, #page-data [data-act="elem-add"] {height: 34px; padding: 0 22px; font-size: 11.5px;}
       /* corporação */
       #page-data .dc-corp {gap: 10px;}
@@ -131,7 +133,6 @@
       #page-data .dc-logo .card-header::before {content: ''; width: 4px; height: 14px; border-radius: 3px; background: #c62828;}
       #page-data .data-logo {border-radius: 12px; border: 1px solid #e3e7eb; background: #f8f9fa;}
       #page-data .dc-logo .btns .btn {height: 30px; font-size: 10.5px; padding: 0;}
-      #page-data .dc-logo .btns:last-child .btn-add {background: linear-gradient(180deg,#d64535,#b0281a) !important;}
       #page-data .dc-corp-form {padding: 14px 16px;}
       #page-data .dc-corp-form label {font-size: 10.5px;}
       #page-data .dc-corp-save {margin-top: 0;}
@@ -301,8 +302,8 @@
                     <div class="dc-photo">
                       <div id="win_photo_preview">${ICON_USER}</div>
                       <input type="file" id="win_photo_input" accept="image/*">
-                      <button type="button" class="btn btn-add" data-act="photo-pick">📷 Escolher</button>
-                      <button type="button" class="btn rm" data-act="photo-remove">🗑️ Remover</button>
+                      <button type="button" class="btn btn-add" data-act="photo-pick"><i class="fa-solid fa-camera"></i> Escolher</button>
+                      <button type="button" class="btn rm" data-act="photo-remove"><i class="fa-solid fa-trash-can"></i> Remover</button>
                     </div>
                     <div class="dc-col">
                       ${R(L('Estado:', 75) + S('win_state', 'width:100px', opts(['&nbsp;', 'Ativo', 'Inativo'])) + '<label style="display:none">Desde:</label>' + D('win_state_from', 'width:150px; display:none')
@@ -355,12 +356,12 @@
                 </div>
                 <div class="tab-content" id="mainAccess" style="display:none">
                   <div class="dc-acc">
-                    ${R('<label>💻 Online:</label><div class="checkbox-group" id="access-container"></div>')}
-                    ${R('<label>📱 Mobile:</label><div class="checkbox-group" id="mobile-access-container"></div>', 'ml50')}
+                    ${R('<label><i class="fa-solid fa-laptop"></i> Online:</label><div class="checkbox-group" id="access-container"></div>')}
+                    ${R('<label><i class="fa-solid fa-mobile-screen"></i> Mobile:</label><div class="checkbox-group" id="mobile-access-container"></div>', 'ml50')}
                   </div>
                 </div>
               </div>
-              <div class="options-main-footer"><div class="dc-save"><button class="btn btn-success" id="elems-saveBtn">💾 Guardar</button></div></div>
+              <div class="options-main-footer"><div class="dc-save"><button class="btn btn-success" id="elems-saveBtn"><i class="fa-solid fa-floppy-disk"></i> Guardar</button></div></div>
             </div>
           </div>
 
@@ -1000,7 +1001,7 @@
               padding:8px 10px;font-size:12px;border-left:2px solid #d81c1c;
               letter-spacing:0.05em;cursor:pointer;user-select:none;">
               <span style="float:right;font-size:16px;" class="toggle-icon">▶</span>
-              🔹 ${quadro.title} (${elems.length})
+              <i class="fa-solid fa-diamond"></i> ${quadro.title} (${elems.length})
             </td>
           `;
           tbody.appendChild(headerTr);
@@ -1014,8 +1015,8 @@
               <td style="text-align:center">${row.full_name ?? ""}</td>
               <td style="text-align:center; color: ${row.elem_state ? 'green' : 'red'}">${row.elem_state ? 'ATIVO' : 'INATIVO'}</td>
               <td style="text-align:center">
-                <button class="btn-action">✏️</button>
-                <button class="btn-delete">🗑️</button>
+                <button class="btn-action"><i class="fa-solid fa-pen"></i></button>
+                <button class="btn-delete"><i class="fa-solid fa-trash-can"></i></button>
               </td>
             `;
             tr.querySelector(".btn-action").addEventListener("click", () => openEditCard(row));
@@ -1177,7 +1178,7 @@
       }
       const typeVal = document.getElementById("win_type").value;
       if (!typeVal) {
-        showPopup('popup-danger', "⚠️ Selecione o tipo de utilizador (Administrador / Sub-Administrador / Utilizador).");
+        showPopup('popup-danger', "<i class='fa-solid fa-triangle-exclamation'></i> Selecione o tipo de utilizador (Administrador / Sub-Administrador / Utilizador).");
         return;
       }
       const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
@@ -1198,12 +1199,12 @@
           const found = await checkUser.json();
           const other = found.find(u => u.corp_oper_nr !== corpOperNr || !nintVariants(nInt).includes(String(u.n_int)));
           if (other) {
-            showPopup('popup-danger', "⚠️ O username Online já está a ser usado por outro utilizador.\nPor favor introduza outro.");
+            showPopup('popup-danger', "<i class='fa-solid fa-triangle-exclamation'></i> O username Online já está a ser usado por outro utilizador.\nPor favor introduza outro.");
             return;
           }
           existingUser = found[0] || await loadUserLogin(nInt, corpOperNr);
           if (!existingUser && !passwordVal) {
-            showPopup('popup-danger', "⚠️ Para criar o acesso Online tem de definir uma password.");
+            showPopup('popup-danger', "<i class='fa-solid fa-triangle-exclamation'></i> Para criar o acesso Online tem de definir uma password.");
             return;
           }
         }
@@ -1217,12 +1218,12 @@
           const variants = nintVariants(nInt);
           const otherMob = foundMob.find(u => u.corp_oper_nr !== corpOperNr || !variants.includes(String(u.nint_corp)));
           if (otherMob) {
-            showPopup('popup-danger', "⚠️ O username Mobile já está a ser usado por outro utilizador.\nPor favor introduza outro.");
+            showPopup('popup-danger', "<i class='fa-solid fa-triangle-exclamation'></i> O username Mobile já está a ser usado por outro utilizador.\nPor favor introduza outro.");
             return;
           }
           existingMobile = foundMob[0] || await loadMobileLogin(nInt, corpOperNr);
           if (!existingMobile && !mobPassVal) {
-            showPopup('popup-danger', "⚠️ Para criar o acesso Mobile tem de definir uma password.");
+            showPopup('popup-danger', "<i class='fa-solid fa-triangle-exclamation'></i> Para criar o acesso Mobile tem de definir uma password.");
             return;
           }
         }
@@ -1310,7 +1311,7 @@
         await saveMobileAccesses(nInt, corpOperNr);
         document.getElementById("win_password_main").value = "";
         document.getElementById("win_password_mobile").value = "";
-        showPopup('popup-success', currentEditId ? "✅ Elemento editado com sucesso!" : "✅ Elemento adicionado com sucesso!");
+        showPopup('popup-success', currentEditId ? "<i class='fa-solid fa-circle-check'></i> Elemento editado com sucesso!" : "<i class='fa-solid fa-circle-check'></i> Elemento adicionado com sucesso!");
         toggleElementsView();
         loadElementsTable();        
       } catch (err) {
@@ -1401,7 +1402,7 @@
             wrap.style.opacity = "0.55";
             wrap.title = "Módulo desligado para a corporação";
             const tag = document.createElement("small");
-            tag.textContent = "🔒 desligado na corporação";
+            tag.innerHTML = "<i class='fa-solid fa-lock'></i> desligado na corporação";
             tag.style.cssText = "color:#c62828; font-size:11px;";
             wrap.append(cb, txt, tag);
           } else {
@@ -1717,13 +1718,13 @@
           const tdAction = document.createElement("td");
           tdAction.style.textAlign = "center";
           const editBtn = document.createElement("button");
-          editBtn.textContent = "✏️";
+          editBtn.innerHTML = "<i class='fa-solid fa-pen'></i>";
           editBtn.classList.add("btn-action");
           editBtn.style.marginRight = "5px";
           editBtn.addEventListener("click", () => fillVehicleForm(row));
           tdAction.appendChild(editBtn);
           const deleteBtn = document.createElement("button");
-          deleteBtn.textContent = "🗑️";
+          deleteBtn.innerHTML = "<i class='fa-solid fa-trash-can'></i>";
           deleteBtn.classList.add("btn-delete");
           deleteBtn.addEventListener("click", () => deleteVehicle(row.id, row.vehicle));
           tdAction.appendChild(deleteBtn);

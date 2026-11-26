@@ -1637,6 +1637,20 @@
         const parishCache = new Map();
         let municipalityParishes = null;
         let parishesPromise = null;
+        let parishesOfficial = false;   /* true quando a lista veio da parishes_select (freguesias de 2025) */
+        /* converte o nome que o TomTom/Geoapify dá para o nome oficial da lista do CB360; '' se não for uma freguesia atual
+           (ex.: "União das Freguesias de Conceição e Estoi" já não existe desde 2025 → '') */
+        function toOfficialParish(n) {
+          n = String(n || '').trim();
+          if (!n) return '';
+          if (!parishesOfficial || !Array.isArray(municipalityParishes) || !municipalityParishes.length) return n;
+          const k = norm(n).replace(/^(uniao das freguesias de|uniao de freguesias de|freguesia de)\s+/, '');
+          const hit = municipalityParishes.find(o => norm(o) === norm(n) || norm(o) === k);
+          if (hit) return hit;
+          if (/^uniao (das|de) freguesias/.test(norm(n))) return '';
+          if (k.length < 4) return '';
+          return municipalityParishes.find(o => norm(o).length >= 4 && (k.includes(norm(o)) || norm(o).includes(k))) || '';
+        }
         let ttNext = 0;
         const TT_GAP = 250;
         const PARISH_LS = 'cb360_parish_cache';
@@ -1784,6 +1798,24 @@
               if (!b) return [];
               const municipalityNorm = norm(baseMunicipality || '');
               const lsKey = `cb360_freg_${municipalityNorm}`;
+              /* 1º a lista oficial do CB360 (councils_select → parishes_select, só ativas): sem gastar pedidos ao TomTom */
+              if (baseMunicipality) {
+                try {
+                  const cr = await fetch(`${SUPABASE_URL}/rest/v1/councils_select?select=id&council=ilike.${encodeURIComponent(baseMunicipality)}`, {headers: getSupabaseHeaders()});
+                  const cid = cr.ok ? (await cr.json())?.[0]?.id : null;
+                  if (cid) {
+                    const pr = await fetch(`${SUPABASE_URL}/rest/v1/parishes_select?select=parish&council_id=eq.${cid}&active=eq.true`, {headers: getSupabaseHeaders()});
+                    const list = pr.ok ? [...new Set((await pr.json()).map(x => String(x.parish || '').trim()).filter(Boolean))] : [];
+                    if (list.length) {
+                      municipalityParishes = list;
+                      parishesOfficial = true;
+                      try { localStorage.setItem(lsKey, JSON.stringify(list)); } catch (_) {}
+                      return list;
+                    }
+                  }
+                } catch (e) { console.warn('[geo] freguesias do Supabase:', e); }
+              }
+              /* recurso: o que ficou guardado no browser ou a descoberta pelo TomTom (como antes) */
               try {
                 const cached = JSON.parse(localStorage.getItem(lsKey) || 'null');
                 if (Array.isArray(cached) && cached.length) {
@@ -1837,8 +1869,11 @@
         }
         async function getParishAt(lat, lng) {
           const k = `${lat.toFixed(4)},${lng.toFixed(4)}`;
-          const isMuni = n => !n || norm(n) === norm(baseMunicipality || '');
-          if (parishCache.has(k) && !isMuni(parishCache.get(k))) return parishCache.get(k);   /* ignora o que ficou guardado só com o concelho */
+          await getMunicipalityParishes().catch(() => {});
+          let muniAt = '';   /* concelho do ponto: a lista oficial só vale para o concelho da corporação */
+          const off = n => (muniAt && norm(muniAt) !== norm(baseMunicipality || '')) ? n : toOfficialParish(n);
+          const isMuni = n => !n || norm(n) === norm(muniAt || baseMunicipality || '') || !off(n);
+          if (parishCache.has(k) && toOfficialParish(parishCache.get(k))) return toOfficialParish(parishCache.get(k));   /* ignora o que ficou guardado só com o concelho */
           const pos = `${lat.toFixed(5)},${lng.toFixed(5)}`;
           const attempt = async extra => {
             try {
@@ -1846,6 +1881,7 @@
                 `https://api.tomtom.com/search/2/reverseGeocode/${pos}.json?key=${TOMTOM_KEY}&language=pt-PT${extra}`
               );
               const a = j?.addresses?.[0]?.address || {};
+              if (a.municipality) muniAt = a.municipality;
               return a.municipalitySubdivision || a.localName || '';
             } catch (_) {
               return '';
@@ -1858,11 +1894,13 @@
             try {
               const r = await fetch(`https://api.geoapify.com/v1/geocode/reverse?lat=${lat}&lon=${lng}&lang=pt&format=json&apiKey=${GEOAPIFY_KEY}`);
               const x = r.ok ? (await r.json()).results?.[0] : null;
+              if (x && !muniAt && x.county) muniAt = x.county;
               const g = x && (x.village || x.suburb || x.hamlet || (x.city && x.city !== x.county ? x.city : '') || x.district || '');
               if (g && !isMuni(g)) name = g;
             } catch (_) {}
           }
           if (isMuni(name)) return '';   /* não guarda falhas: na próxima pesquisa volta a tentar */
+          name = off(name);
           parishCache.set(k, name);
           saveParishCache();
           return name;
@@ -1888,6 +1926,7 @@
           dbg('call:', JSON.stringify(q));
           await ensureBase();
           await ensureBaseMunicipality();
+          await getMunicipalityParishes().catch(() => {});   /* lista oficial (2025) antes de mostrar freguesias */
           const city = (val('location-service') || '').trim();
           const area = city || baseMunicipality || '';
           const key = `${area}|${norm(q)}`;
@@ -2032,7 +2071,7 @@
               if (isVia && isPoi) rank = 3;
               const nameForSimilarity = isPoi ? (x.poi?.name || l1) : (a.streetName || l1);
               const it = {sim: similarity(qMain, nameForSimilarity), streetName: a.streetName || '', streetNumber: (!isPoi && validNumber(a.streetNumber)) ? a.streetNumber : '', street: street || fallbackLabel, city: locality, poi: isPoi ? (x.poi?.name || '') : '', 
-                          lat: x.position.lat, lng: x.position.lon, l1, baseSub, parish: (subdivision && norm(subdivision) !== norm(municipality)) ? subdivision : '', rank, dist: distKm(x.position.lat, x.position.lon)};
+                          lat: x.position.lat, lng: x.position.lon, l1, baseSub, parish: (subdivision && norm(subdivision) !== norm(municipality)) ? (norm(municipality) === norm(baseMunicipality || '') ? toOfficialParish(subdivision) : subdivision) : '', rank, dist: distKm(x.position.lat, x.position.lon)};
               it.other = outsideMuni(x);
               it.l2 = buildL2(it);
               applyCache(it);
@@ -2055,9 +2094,10 @@
                   nearestDist = d;
                 }
               }
-              if (nearest) {
-                it.parish = nearest.parish;
-                it.city = nearest.parish;
+              const np = nearest ? toOfficialParish(nearest.parish) : '';
+              if (np) {
+                it.parish = np;
+                it.city = np;
                 it.l2 = buildL2(it);
               }
             }

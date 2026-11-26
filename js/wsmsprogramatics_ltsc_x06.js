@@ -237,6 +237,10 @@
           #page-inem-services #ems-b3 {grid-area: b3;}
           #page-inem-services #ems-b4 {grid-area: b4; display: flex; flex-direction: column;}
           #page-inem-services #ems-map {flex: 1; min-height: 240px; border: 1px solid #e3e7eb; border-radius: 8px; position: relative; z-index: 0;}
+          #page-inem-services .ems-map-hint {position: absolute; z-index: 1000; transform: translate(12px, -50%); background: rgba(44,62,80,.92); color: #fff; font-size: 12px; font-weight: 600;
+                     padding: 5px 10px; border-radius: 6px; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity .15s; box-shadow: 0 2px 8px rgba(0,0,0,.2);}
+          #page-inem-services .ems-map-hint.show {opacity: 1;}
+          #page-inem-services .ems-map-hint i {margin-right: 5px;}
           #page-inem-services .ins-map-st {margin-top: 6px; font-size: 11.5px; line-height: 1.3; color: #8a949e;}
           #page-inem-services .ins-map-st.ok {color: #2e7d32; font-weight: 700;}
           #page-inem-services .ins-grid:not(.ems-cols):not(.sol-g2) {grid-template-columns: 1fr;}
@@ -1404,13 +1408,13 @@
         function placeBase(zoom) {
           if (!map || !base) return;
           mapPlace(base.lat, base.lng, 'base', zoom);
-          mapStatus('Pin na corporação — escreva a morada ou clique no mapa. Sem localização, a mensagem segue sem link GPS.', false);
+          mapStatus('Pin na corporação — escreva a morada ou faça duplo clique no mapa. Sem localização, a mensagem segue sem link GPS.', false);
         }
         function mapReset() {
           if (pin && map) map.removeLayer(pin);
           pin = null; pinSrc = '';
           if (map && base) return placeBase(15);
-          mapStatus('Sem localização no mapa — a mensagem segue sem link GPS. Escreva a morada ou clique no mapa.', false);
+          mapStatus('Sem localização no mapa — a mensagem segue sem link GPS. Escreva a morada ou faça duplo clique no mapa.', false);
         }
         const gpsLink = () => {
           if (!pin || pinSrc === 'base') return '';
@@ -1420,7 +1424,8 @@
         function mapInit() {
           const el = $('ems-map');
           if (map || !el || typeof L === 'undefined') return;
-          map = L.map(el).setView([39.5, -8.0], 6);
+          /* sem zoom por duplo clique: o duplo clique serve para mudar o local do pin */
+          map = L.map(el, {doubleClickZoom: false}).setView([39.5, -8.0], 6);
           const ruas = L.tileLayer(`https://api.tomtom.com/map/1/tile/basic/main/{z}/{x}/{y}.png?key=${TOMTOM_KEY}`, {attribution: '&copy; TomTom', maxZoom: 22}).addTo(map);
           /* satélite: OrtoSat 2023 da DGT (30 cm, Portugal continental, WMS público) por cima da Esri, que fica por baixo como recurso
              (ilhas, fora de Portugal ou se o serviço da DGT falhar) */
@@ -1437,7 +1442,22 @@
             map.setMaxZoom(sat ? 19 : 22);
             if (sat && map.getZoom() > 19) map.setZoom(19);
           });
-          map.on('click', e => mapPlace(e.latlng.lat, e.latlng.lng, 'manual'));
+          /* o pin só muda com duplo clique (um clique por engano já não o tira do sítio); um clique mostra só a dica junto ao rato */
+          const hint = L.DomUtil.create('div', 'ems-map-hint', el);
+          hint.innerHTML = '<i class="fa-solid fa-computer-mouse"></i> Duplo clique para mudar o local';
+          let hintT = 0, hintH = 0;
+          const hideHint = () => { clearTimeout(hintT); clearTimeout(hintH); hint.classList.remove('show'); };
+          map.on('click', e => {
+            hideHint();
+            hintT = setTimeout(() => {   /* espera um pouco: se for o 1.º clique de um duplo clique, não chega a aparecer */
+              hint.style.left = `${e.containerPoint.x}px`;
+              hint.style.top = `${e.containerPoint.y}px`;
+              hint.classList.add('show');
+              hintH = setTimeout(hideHint, 1800);
+            }, 280);
+          });
+          map.on('dblclick', e => { hideHint(); mapPlace(e.latlng.lat, e.latlng.lng, 'manual'); });
+          map.on('movestart zoomstart', hideHint);
           new ResizeObserver(() => map.invalidateSize()).observe(el);
           mapReset();
           fetch(`${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${corp()}&select=corp_address,default_lat,default_lng&limit=1`, {
@@ -1596,7 +1616,7 @@
             if (!d.length && errs === tries.length) throw new Error('Todas as tentativas de geocoding falharam');
             if (!d.length) {
               if (pinSrc === 'search') mapReset();
-              mapStatus(`Morada não encontrada${city ? ` em ${city}` : ''} — clique no mapa para marcar o local.`, false);
+              mapStatus(`Morada não encontrada${city ? ` em ${city}` : ''} — faça duplo clique no mapa para marcar o local.`, false);
               return;
             }
             const best = d[0], p = {lat: best.position.lat, lng: best.position.lon};
@@ -1608,7 +1628,7 @@
               : `${found} ✔ — o link GPS vai na mensagem.`, dist <= 80 && !noNr);
           } catch (e) {
             console.warn('Pesquisa de morada:', e);
-            mapStatus('Não foi possível pesquisar a morada — clique no mapa para marcar o local.', false);
+            mapStatus('Não foi possível pesquisar a morada — faça duplo clique no mapa para marcar o local.', false);
           }
         }
         const TOMTOM_KEY = 'V2c5G1lkxCRzwZTFVKUv3rYUmV3wviqo';

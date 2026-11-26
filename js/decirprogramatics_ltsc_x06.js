@@ -1,8 +1,5 @@
     /* =======================================
-    DECIR PROGRAMATICS
-    - As páginas DECIR (boas-vindas, configurações, escalas, ECINs, SBAs/OPATs, despesas,
-      registos complementares, auditoria e estatísticas) e os 2 modais de configuração
-      são criados aqui, logo ao carregar; o main.html só tem os <div class="page"> vazios.
+    DECIR PROGRAMATICS (CB360)
     ======================================= */
     (() => {
     /* ----------------------------- estilos ----------------------------- */

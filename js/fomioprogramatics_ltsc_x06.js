@@ -1,8 +1,5 @@
     /* =======================================
-    FOMIO
-    - As páginas da Gestão Operacional (boas-vindas, escalas, eventos, disponibilidades,
-      serviços de voluntariado, comunicados, estados dos veículos, férias e fardamento)
-      são criadas aqui, logo ao carregar; o main.html só tem os <div class="page"> vazios.
+    FOMIO (CB360)
     ======================================= */
     (() => {
     /* ----------------------------- estilos ----------------------------- */
@@ -1832,6 +1829,29 @@
         calculateVolunteersRowTotal(tr, section, daysInMonth);
       });
     }
+    /* ─── ESTADO DA ESCALA DO MÊS (reg_serv_scales_status) ─────
+       GUARDAR (qualquer secção) -> is_validated = false (cria a linha do mês se não existir;
+                                    se o mês já estava emitido, a base de dados mantém-no emitido)
+       EMITIR (Emissão Escalas)  -> is_validated = true, com data/hora e quem emitiu
+       O mobile e a "Consultar Escalas" só mostram o mês depois de emitido. */
+    async function setServScaleStatus(year, month, validated) {
+      const row = {corp_oper_nr: String(getCorpId()), year: Number(year), month: Number(month), is_validated: !!validated,
+                   validated_at: validated ? new Date().toISOString() : null,
+                   validated_by: validated ? (sessionStorage.getItem("currentUserDisplay") || sessionStorage.getItem("currentUserName") || null) : null};
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/reg_serv_scales_status?on_conflict=corp_oper_nr,year,month`, {
+        method: "POST",
+        headers: {...getSupabaseHeaders(), "Content-Type": "application/json", "Prefer": "resolution=merge-duplicates,return=minimal"},
+        body: JSON.stringify(row)
+      });
+      if (!res.ok) throw new Error(`Estado da escala não atualizado (${res.status}): ${await res.text()}`);
+    }
+    async function isServScaleValidated(year, month) {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/reg_serv_scales_status?select=is_validated&corp_oper_nr=eq.${encodeURIComponent(getCorpId())}&year=eq.${Number(year)}&month=eq.${Number(month)}&limit=1`,
+                              {headers: getSupabaseHeaders()});
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      return Array.isArray(data) && data.length > 0 && data[0].is_validated === true;
+    }
     /* ─── FUNÇÃO PRINCIPAL DA TABELA (FOMIO) ─────────────────── */
     async function createMonthTable(containerId, year, month, data) {
       currentTableData = data;
@@ -1841,6 +1861,19 @@
       container.style.opacity = "0.5";
       await new Promise(r => setTimeout(r, 150));
       container.innerHTML = "";
+      /* Consultar Escalas: só mostra o mês depois de emitido */
+      if (currentSection === "Consultar Escalas") {
+        let ok = false, err = false;
+        try { ok = await isServScaleValidated(year, month); } catch (e) { console.error("Estado da escala:", e); err = true; }
+        if (!ok) {
+          const nome = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"][month - 1] || "";
+          container.innerHTML = `<div style="margin:10px auto;max-width:560px;background:#fff;border:1px solid #e9ecef;border-radius:12px;padding:18px 20px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05);">
+            <div style="font-size:13px;font-weight:800;color:#2c3e50;letter-spacing:.4px;text-transform:uppercase;margin-bottom:6px;">ℹ️ Informação</div>
+            <div style="font-size:13px;color:#5b6670;">${err ? "Não foi possível verificar a emissão da escala. Tente novamente mais tarde." : `A escala de ${nome} ${year} ainda não foi emitida.`}</div></div>`;
+          container.style.opacity = "1";
+          return;
+        }
+      }
       createTableHeaders(container, year, month, currentSection);
       const wrapper = createTableWrapper(container);
       const table = createTableStructure(wrapper);
@@ -2451,6 +2484,8 @@
           const savedMap = await fetchSavedData(currentSection, selectedYear, monthIndex);
           const changes = currentSection === "Emissão Escala" ? diffFixedRowsChanges(table, savedMap) : diffTableChanges(table, savedMap);
           await saveChanges({...changes, section:currentSection, year:selectedYear, month:monthIndex});
+          /* o mês fica "por emitir" (se já estava emitido, continua emitido) */
+          try { await setServScaleStatus(selectedYear, monthIndex, false); } catch (e) { console.error(e); }
           showPopup('popup-success', "Escala gravada com sucesso!");
         } catch (err) {
           console.error(err); 
@@ -2482,6 +2517,8 @@
         const corp_oper_nr = getCorpId();
         const nomeMes = MONTH_NAMES_PT[parseInt(monthIndex) - 1];
         showLoadingPopup(`A gerar escala de serviço de ${nomeMes} ${selectedYear}...`);
+        /* ───────── ESTADO: EMITIDA (o mobile e a Consultar Escalas passam a mostrar o mês) ───────── */
+        await setServScaleStatus(selectedYear, monthIndex, true);
         /* ───────── NOTIFICAÇÕES ───────── */
         try {
           const respUsers = await fetch(

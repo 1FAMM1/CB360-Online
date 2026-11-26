@@ -173,13 +173,15 @@
                       line-height: 1.4; box-shadow: 0 1px 3px rgba(0,0,0,.05);}
       #page-utilities .options-main-card {background: #fff; border: 1px solid #e9ecef; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.05); padding: 12px 14px; min-height: 0;}
       #page-utilities .options-main-card:focus-within {border-color: #e6b3ad;}
+      .btn:has(> i.fa-solid) {gap: 6px;}   /* ícone + texto nos botões */
       /* botões */
       #page-utilities .btn {transform: none !important; box-shadow: none; border-radius: 8px !important; font-weight: 800 !important; letter-spacing: .4px;}
-      #page-utilities .btn-success {background: linear-gradient(180deg,#d64535,#b0281a) !important; color: #fff !important; border: 0 !important; height: 34px; padding: 0 22px; font-size: 11.5px;
-                      box-shadow: 0 2px 6px rgba(176,40,26,.25) !important;}
+      #page-utilities .btn-success {background: #28a745 !important; color: #fff !important; border: 0 !important; height: 34px; padding: 0 22px; font-size: 11.5px;
+                      box-shadow: 0 1px 3px rgba(0,0,0,.15) !important;}
       #page-utilities .btn-success:hover {filter: brightness(1.06);}
-      #page-utilities .btn-danger, #page-utilities .btn-add {background: #fff !important; color: #2c3e50 !important; border: 1px solid #d0d5da !important;}
-      #page-utilities .btn-danger:hover, #page-utilities .btn-add:hover {border-color: #e6b3ad !important; color: #b71c1c !important;}
+      #page-utilities .btn-danger {background: #dc3545 !important; color: #fff !important; border: 0 !important; box-shadow: 0 1px 3px rgba(0,0,0,.15) !important;}
+      #page-utilities .btn-add {background: #3354a1 !important; color: #fff !important; border: 0 !important; box-shadow: 0 1px 3px rgba(0,0,0,.15) !important;}
+      #page-utilities .btn-danger:hover, #page-utilities .btn-add:hover {filter: brightness(1.08);}
       #page-utilities .action-buttons.act, #page-utilities .action-buttons.act.cma, #page-utilities #sendMails .action-buttons {margin: 0; display: flex; justify-content: flex-end;}
       /* EPE / PPI */
       #page-utilities .data-grid {margin: 0; gap: 10px; grid-template-columns: repeat(3, minmax(0, 1fr));}
@@ -201,15 +203,14 @@
       #page-utilities .epeppi-panel-btn:empty {visibility: visible; background: #fafbfc !important; border: 1px dashed #e3e7eb; box-shadow: none; pointer-events: none;}
       #page-utilities .epeppi-panel-btn:empty::before {display: none;}
       /* informações relevantes */
-      #page-utilities .add-info {margin: 0; align-self: flex-start; background: #fff !important; color: #b71c1c !important; border: 1px solid #e6b3ad !important; box-shadow: none !important;}
-      #page-utilities .add-info:hover {background: #fdecea !important;}
+      #page-utilities .add-info {margin: 0; align-self: flex-start;}
       #page-utilities #info-container {gap: 10px;}
       #page-utilities #info-container:empty {display: none;}
       #page-utilities .ri-card {padding: 12px 14px;}
       #page-utilities .ri-head {background: transparent; margin: 0 0 10px; padding: 0 0 8px; border-radius: 0; border-bottom: 1px solid #eef0f2; color: #2c3e50; font-size: 12px; letter-spacing: .4px;}
       #page-utilities .ri-head > span::before {content: ''; display: inline-block; width: 4px; height: 14px; border-radius: 3px; background: #c62828; margin-right: 8px; vertical-align: -2px;}
-      #page-utilities .ri-head button {background: #fff; color: #b71c1c; border: 1px solid #e6b3ad; border-radius: 999px; padding: 3px 10px; font-size: 10px; font-weight: 800;}
-      #page-utilities .ri-head button:hover {background: #fdecea;}
+      #page-utilities .ri-head button {background: #dc3545; color: #fff; border: 0; border-radius: 6px; padding: 3px 10px; font-size: 10px; font-weight: 800;}
+      #page-utilities .ri-head button:hover {filter: brightness(1.08);}
       #page-utilities .ri-row {margin-bottom: 8px;}
       #page-utilities .ri-row label, #page-utilities .cma-fields label {font-size: 10.5px; font-weight: 800; color: #6c757d; text-transform: uppercase; letter-spacing: .3px;}
       #page-utilities .ri-row input, #page-utilities .ri-row textarea {border: 1px solid #c8c8c8; border-radius: 6px; font-size: 12.5px;}
@@ -629,12 +630,12 @@
     const box = $('elems-container');
     const msg = t => { box.classList.remove('list'); box.style.display = 'block'; box.innerHTML = `<div class="msg">${t}</div>`; };
     try {
-      if (!corp()) return msg('⚠️ Nenhuma corporação selecionada. Selecione uma corporação para visualizar os elementos.');
+      if (!corp()) return msg('<i class="fa-solid fa-triangle-exclamation"></i> Nenhuma corporação selecionada. Selecione uma corporação para visualizar os elementos.');
       const res = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?select=*&corp_oper_nr=eq.${corp() || '0805'}`, {method: 'GET', headers: getSupabaseHeaders()});
       if (!res.ok) throw new Error(`Erro Supabase: ${res.status}`);
       const elems = (await res.json()).filter(e => { const v = parseInt(e.n_int, 10); return !((v >= 900 && v <= 999) || (v >= 9000 && v <= 9999)); })
         .sort((a, b) => { const x = a.n_int ?? '', y = b.n_int ?? ''; return !isNaN(x) && !isNaN(y) ? Number(x) - Number(y) : x.toString().localeCompare(y.toString(), 'pt', {numeric: true}); });
-      if (!elems.length) return msg('🚫 Não existem elementos registados para esta corporação.');
+      if (!elems.length) return msg('<i class="fa-solid fa-ban"></i> Não existem elementos registados para esta corporação.');
       box.innerHTML = '';
       box.style.display = '';
       box.classList.add('list');

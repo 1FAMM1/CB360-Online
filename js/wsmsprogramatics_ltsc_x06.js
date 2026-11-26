@@ -1,4 +1,4 @@
-    /* ======================================================================= 
+    /* =======================================================================
     WSMS 360 · COMUNICAÇÃO WSMS
     ======================================================================= */
     (function () {
@@ -1054,6 +1054,8 @@
             if (d2 || t2) lines.push(`*GDH Sd TO:* ${vehicle} | ${formatWSMSGDH(d2, t2)}`);
             if (d3 || t3 || kms) lines.push(`*GDH Ch Und:* ${vehicle} | ${formatWSMSGDH(d3, t3)}${kms ? ` | ${kms} Kms` : ''}`);
             if (ph || pm) lines.push(`*TEMPO BOMBA:* ${ph || '00'} Hrs. ${pm || '00'} Mins.`);
+            const vobs = c.querySelector('.vehclsocr-observacoes')?.value?.trim();
+            if (vobs) lines.push(`*OBS:* ${vehicle} | ${vobs}`);
             return lines.join('\n');
           }).filter(Boolean);
           if (vehicleBlocks.length) sections.push(vehicleBlocks.join('\n\n'));
@@ -1802,7 +1804,8 @@
         }
         async function getParishAt(lat, lng) {
           const k = `${lat.toFixed(4)},${lng.toFixed(4)}`;
-          if (parishCache.has(k)) return parishCache.get(k);
+          const isMuni = n => !n || norm(n) === norm(baseMunicipality || '');
+          if (parishCache.has(k) && !isMuni(parishCache.get(k))) return parishCache.get(k);   /* ignora o que ficou guardado só com o concelho */
           const pos = `${lat.toFixed(5)},${lng.toFixed(5)}`;
           const attempt = async extra => {
             try {
@@ -1816,9 +1819,19 @@
             }
           }; 
           let name = await attempt('&entityType=MunicipalitySubdivision');
-          if (!name) name = await attempt('&radius=500');
+          if (isMuni(name)) name = await attempt('&radius=500');
+          /* o TomTom não tem a freguesia em muitas zonas rurais (devolve só o concelho) → pergunta ao Geoapify (OpenStreetMap) */
+          if (isMuni(name) && GEOAPIFY_KEY) {
+            try {
+              const r = await fetch(`https://api.geoapify.com/v1/geocode/reverse?lat=${lat}&lon=${lng}&lang=pt&format=json&apiKey=${GEOAPIFY_KEY}`);
+              const x = r.ok ? (await r.json()).results?.[0] : null;
+              const g = x && (x.village || x.suburb || x.hamlet || (x.city && x.city !== x.county ? x.city : '') || x.district || '');
+              if (g && !isMuni(g)) name = g;
+            } catch (_) {}
+          }
+          if (isMuni(name)) return '';   /* não guarda falhas: na próxima pesquisa volta a tentar */
           parishCache.set(k, name);
-          if (name) saveParishCache();
+          saveParishCache();
           return name;
         }
         async function getAddressAtPin(lat, lng) {
@@ -2134,6 +2147,15 @@
           locAuto = s.city || '';
           if (s.city) $('location-service').value = s.city;
           pickedKey = `${val('address-service')}|${val('location-service')}`;
+          /* escolheu antes de a freguesia chegar (ficou só o concelho): procura-a e troca a Localidade, se o operador ainda não a mudou */
+          if (!s.parish && !inst) {
+            const was = val('location-service');
+            getParishAt(s.lat, s.lng).then(p => {
+              if (!p || val('location-service') !== was) return;
+              $('location-service').value = p; locAuto = p;
+              pickedKey = `${val('address-service')}|${p}`;
+            }).catch(() => {});
+          }
           hideSug();
           reqSeq++;
           mapPlace(s.lat, s.lng, 'search', 17);

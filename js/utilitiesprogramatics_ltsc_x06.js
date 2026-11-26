@@ -162,6 +162,110 @@
       #page-utilities #mail-attachments-list {display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;}
       #page-utilities #sendMails {margin: 5px 0 0 0;}
       #page-utilities #sendMails .action-buttons {margin: 10px 0 -10px 0;}
+      /* ===== layout novo (só estilo; ids e funções iguais) ===== */
+      #page-utilities .options-panel-container {background: #efefef; padding: 12px; gap: 12px; align-items: flex-start;}
+      #page-utilities .panel-sidebar {width: 230px; flex: 0 0 230px; background: #fff; backdrop-filter: none; border: 1px solid #e9ecef; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.05); padding: 8px; position: sticky; top: 0;}
+      #page-utilities .panel-group-title {color: #8a949e; font-size: 10px; font-weight: 800; letter-spacing: .6px; border-bottom: 0; margin: 10px 8px 4px; padding: 0;}
+      #page-utilities .panel-group-title.first {margin-top: 4px;}
+      #page-utilities .panel-sidebar-menu-button {height: 34px; margin: 0 0 2px; padding: 0 12px; border: 0; border-radius: 8px; background: transparent; color: #2c3e50; font-size: 12px; font-weight: 600; gap: 0; box-shadow: none;
+                      transition: background .15s, color .15s;}
+      #page-utilities .panel-sidebar-menu-button::before, #page-utilities .panel-sidebar-menu-button::after {display: none;}
+      #page-utilities .panel-sidebar-menu-button:hover {background: #f4f6f8; color: #b71c1c; transform: none; border: 0;}
+      #page-utilities .panel-sidebar-menu-button.active {background: #fdecea; color: #b71c1c; font-weight: 800; border: 0; box-shadow: inset 3px 0 0 #c62828; padding-left: 12px;}
+      #page-utilities .panel-content {background: transparent; overflow: visible; min-width: 0;}
+      #page-utilities .panel-card {background: transparent; padding: 0; min-height: 0; animation: none;}
+      #page-utilities .panel-card.active {display: flex; flex-direction: column; gap: 10px;}
+      #page-utilities .panel-card > h3 {display: flex; align-items: center; gap: 9px; margin: 0; padding: 12px 14px 2px; background: #fff; border: 1px solid #e9ecef; border-bottom: 0; border-radius: 12px 12px 0 0;
+                      font-size: 13px; font-weight: 800; color: #2c3e50; letter-spacing: .4px;}
+      #page-utilities .panel-card > h3::before {content: ''; width: 4px; height: 16px; border-radius: 3px; background: #c62828; flex-shrink: 0;}
+      #page-utilities .panel-card > p {margin: -10px 0 0; padding: 0 14px 11px 27px; background: #fff; border: 1px solid #e9ecef; border-top: 0; border-radius: 0 0 12px 12px; font-size: 12px; color: #6c757d;
+                      line-height: 1.4; box-shadow: 0 1px 3px rgba(0,0,0,.05);}
+      #page-utilities .options-main-card {background: #fff; border: 1px solid #e9ecef; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.05); padding: 12px 14px; min-height: 0;}
+      #page-utilities .options-main-card:focus-within {border-color: #e6b3ad;}
+      /* botões */
+      #page-utilities .btn {transform: none !important; box-shadow: none; border-radius: 8px !important; font-weight: 800 !important; letter-spacing: .4px;}
+      #page-utilities .btn-success {background: linear-gradient(180deg,#d64535,#b0281a) !important; color: #fff !important; border: 0 !important; height: 34px; padding: 0 22px; font-size: 11.5px;
+                      box-shadow: 0 2px 6px rgba(176,40,26,.25) !important;}
+      #page-utilities .btn-success:hover {filter: brightness(1.06);}
+      #page-utilities .btn-danger, #page-utilities .btn-add {background: #fff !important; color: #2c3e50 !important; border: 1px solid #d0d5da !important;}
+      #page-utilities .btn-danger:hover, #page-utilities .btn-add:hover {border-color: #e6b3ad !important; color: #b71c1c !important;}
+      #page-utilities .action-buttons.act, #page-utilities .action-buttons.act.cma, #page-utilities #sendMails .action-buttons {margin: 0; display: flex; justify-content: flex-end;}
+      /* EPE / PPI */
+      #page-utilities .data-grid {margin: 0; gap: 10px; grid-template-columns: repeat(3, minmax(0, 1fr));}
+      #page-utilities #ppi-container {margin-top: 0;}
+      #page-utilities .epe-card {height: auto; margin: 0;}
+      #page-utilities .epe-card > .data-value, #page-utilities .cma-name {display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 800; color: #2c3e50; text-transform: uppercase; letter-spacing: .4px;
+                      border-bottom: 1px solid #eef0f2; padding-bottom: 8px; margin-bottom: 10px;}
+      #page-utilities .epe-card > .data-value::before {content: ''; width: 4px; height: 14px; border-radius: 3px; background: #c62828; flex-shrink: 0;}
+      #page-utilities .cma-name > span::before {content: ''; display: inline-block; width: 4px; height: 14px; border-radius: 3px; background: #c62828; margin-right: 8px; vertical-align: -2px;}
+      #page-utilities .button-container {height: auto; margin: 0; gap: 6px;}
+      #page-utilities .epeppi-panel-btn {height: 40px; border-radius: 10px; border: 1px solid #dfe3e7; font-size: 10.5px; font-weight: 800; letter-spacing: .3px; gap: 3px; background: #f8f9fa; color: #5b6670;}
+      #page-utilities .epeppi-panel-btn::before {width: 6px; height: 6px; margin: 0; background: #c8cdd2; box-shadow: none;}
+      #page-utilities .epeppi-panel-btn[data-active="false"] {background: #f8f9fa !important; color: #5b6670 !important;}
+      #page-utilities .epeppi-panel-btn.inactive::before {background: #c8cdd2; box-shadow: none;}
+      #page-utilities .epeppi-panel-btn[data-active="true"] {border-color: transparent; box-shadow: 0 2px 6px rgba(0,0,0,.12);}
+      #page-utilities .epeppi-panel-btn[data-active="true"]::before {background: #fff; box-shadow: 0 0 0 2px rgba(255,255,255,.35);}
+      #page-utilities .epeppi-panel-btn:hover {border-color: #e6b3ad; color: #b71c1c;}
+      #page-utilities .epeppi-panel-btn[data-active="true"]:hover {color: inherit; filter: brightness(1.04);}
+      #page-utilities .epeppi-panel-btn:empty {visibility: hidden;}
+      /* informações relevantes */
+      #page-utilities .add-info {margin: 0; align-self: flex-start; background: #fff !important; color: #b71c1c !important; border: 1px solid #e6b3ad !important; box-shadow: none !important;}
+      #page-utilities .add-info:hover {background: #fdecea !important;}
+      #page-utilities #info-container {gap: 10px;}
+      #page-utilities #info-container:empty {display: none;}
+      #page-utilities .ri-card {padding: 12px 14px;}
+      #page-utilities .ri-head {background: transparent; margin: 0 0 10px; padding: 0 0 8px; border-radius: 0; border-bottom: 1px solid #eef0f2; color: #2c3e50; font-size: 12px; letter-spacing: .4px;}
+      #page-utilities .ri-head > span::before {content: ''; display: inline-block; width: 4px; height: 14px; border-radius: 3px; background: #c62828; margin-right: 8px; vertical-align: -2px;}
+      #page-utilities .ri-head button {background: #fff; color: #b71c1c; border: 1px solid #e6b3ad; border-radius: 999px; padding: 3px 10px; font-size: 10px; font-weight: 800;}
+      #page-utilities .ri-head button:hover {background: #fdecea;}
+      #page-utilities .ri-row {margin-bottom: 8px;}
+      #page-utilities .ri-row label, #page-utilities .cma-fields label {font-size: 10.5px; font-weight: 800; color: #6c757d; text-transform: uppercase; letter-spacing: .3px;}
+      #page-utilities .ri-row input, #page-utilities .ri-row textarea {border: 1px solid #c8c8c8; border-radius: 6px; font-size: 12.5px;}
+      #page-utilities .ri-btns {margin-top: 10px;}
+      #page-utilities .ri-btns .btn {height: 30px; padding: 0 14px; font-size: 11px;}
+      /* linhas de campos (cortes de vias, constrangimentos, relatórios) */
+      #page-utilities #routes-container, #page-utilities #no-hosp {gap: 5px; padding: 0; margin: 0;}
+      #page-utilities #ocrReport {gap: 5px 22px; padding: 0; margin: 0;}
+      #page-utilities .nl {gap: 6px;}
+      #page-utilities .nl > label {min-width: 26px; font-size: 11px; font-weight: 800; color: #8a949e;}
+      #page-utilities .nl input, #page-utilities .nl select {height: 30px; padding: 0 9px; border: 1px solid #c8c8c8; border-radius: 6px; font-size: 12px; background: #fff;}
+      #page-utilities .nl input:focus, #page-utilities .nl select:focus, #page-utilities .ri-row input:focus, #page-utilities .ri-row textarea:focus, #page-utilities .cma-fields input:focus,
+      #page-utilities .cma-fields select:focus, #page-utilities #notification-to:focus, #page-utilities #notification-message:focus {border-color: #c62828 !important; box-shadow: 0 0 0 2px rgba(198,40,40,.12); outline: none;}
+      #page-utilities .nl input[type=text]:not(:placeholder-shown) {background: #fffdf5; border-color: #e0c98a;}
+      #page-utilities .nh-head {margin-bottom: 4px; padding: 0 0 6px; border-bottom: 1px solid #eef0f2;}
+      #page-utilities .nh-head > div {font-size: 10.5px; font-weight: 800; color: #5b6670; letter-spacing: .4px;}
+      #page-utilities .nh-head .box div {background: #f1f3f5; color: #5b6670; border-radius: 999px; font-size: 10.5px;}
+      #page-utilities .nh-pair {gap: 4px;}
+      /* centros de meios aéreos */
+      #page-utilities #cma-container {gap: 10px; grid-template-columns: repeat(3, minmax(0, 1fr));}
+      #page-utilities .cma-sw > span {background: #cfd4da;}
+      #page-utilities .cma-sw input:checked + span {background: #2e7d32;}
+      #page-utilities .cma-img {flex: 0 0 110px; background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px;}
+      #page-utilities .cma-fields {gap: 6px;}
+      #page-utilities .cma-fields label {width: 82px;}
+      #page-utilities .cma-fields input, #page-utilities .cma-fields select {height: 28px; border: 1px solid #c8c8c8; border-radius: 6px;}
+      #page-utilities .cma-fields input:disabled, #page-utilities .cma-fields select:disabled {background: #f4f6f8; color: #9aa3ad; border-color: #e3e7eb;}
+      /* disponibilidade de elementos */
+      #page-utilities #elems-container.list {gap: 6px; padding: 0;}
+      #page-utilities .btn-elem {min-width: 54px; height: 36px; padding: 0 12px; border-radius: 9px; border: 1px solid transparent; font-size: 12.5px; font-weight: 800;}
+      #page-utilities .btn-elem[style*="rgb(158, 158, 158)"] {background: #f1f3f5 !important; color: #5b6670 !important; border-color: #dfe3e7;}
+      #page-utilities .btn-elem[style*="background-color: green"] {background: #2e7d32 !important; color: #fff !important;}
+      #page-utilities .btn-elem[style*="background-color: red"] {background: #fdecea !important; color: #b71c1c !important; border-color: #f3c1bc; cursor: not-allowed;}
+      #page-utilities .btn-elem:hover {transform: none; box-shadow: 0 2px 6px rgba(0,0,0,.12);}
+      #page-utilities .btn-elem[style*="rgb(158, 158, 158)"]:hover {background: #fdf0ee !important; color: #b71c1c !important; border-color: #e6b3ad;}
+      #page-utilities .btn-elem[style*="background-color: green"]:hover {background: #27692b !important; color: #fff !important;}
+      #page-utilities .btn-elem[style*="background-color: red"]:hover {background: #fdecea !important; color: #b71c1c !important; box-shadow: none;}
+      /* notificações e emails */
+      #page-utilities .nt-to > label, #page-utilities .nt-msg > label {font-size: 10.5px; font-weight: 800; color: #6c757d; letter-spacing: .3px;}
+      #page-utilities #notification-to {height: 30px; border: 1px solid #c8c8c8; border-radius: 6px;}
+      #page-utilities #notification-message {border-color: #c8c8c8;}
+      #page-utilities .nt-note {margin-top: 10px;}
+      #page-utilities .nt-note label {color: #b71c1c;}
+      #page-utilities .ml-card {margin-top: 0; padding: 0; border-color: #e9ecef; box-shadow: 0 1px 3px rgba(0,0,0,.05);}
+      #page-utilities .ml-type {border-radius: 999px; height: 28px; padding: 0 14px; font-weight: 700; color: #2c3e50; border-color: #d5dbe1;}
+      #page-utilities .ml-type.on {background: #2c3e50; border-color: #2c3e50; color: #fff; font-weight: 800;}
+      #page-utilities .ml-band {background: #f8f9fa; color: #8a949e; font-weight: 800;}
+      #page-utilities #mail-message:focus {border-color: #c62828;}
     `;
     document.head.appendChild(st);
   })();

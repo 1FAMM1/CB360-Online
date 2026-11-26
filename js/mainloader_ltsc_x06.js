@@ -1783,8 +1783,9 @@
     AJUSTE DAS TABELAS AO ECRÃ
     - As zonas com scroll que têm tabelas passam a crescer até ao espaço livre entre o sítio onde começam e o rodapé
       (descontando tudo o que vem a seguir no mesmo cartão: legendas, totais, rodapé com os botões).
+    - Mede a tabela inteira e tira só o que o cartão passa do rodapé (não conta espaço vazio do cartão).
     - Ajusta logo antes do ecrã ser pintado (sem esticar e depois encolher ao mudar de mês).
-    - Se o cartão mudar de tamanho depois (botões que aparecem, legendas), volta a ajustar. O cartão perde a margem de baixo.
+    - Se o cartão ou a tabela mudarem de tamanho depois (grupos que abrem, botões que aparecem, legendas), volta a ajustar. O cartão perde a margem de baixo.
     - Só crescem até à última linha: se a tabela for mais pequena, fica do tamanho dela.
     - Vale para todas as páginas (SALOC, RH, FOMIO, DECIR...). Para excluir uma zona: data-no-fit no elemento.
     ======================================= */
@@ -1794,7 +1795,8 @@
       const st = document.createElement('style');
       st.textContent = '.major-card.fit-card{margin-bottom:0 !important;} .main-content .table-container{transition-property:opacity,background-color,box-shadow,border-color !important;}';
       (document.head || document.documentElement).appendChild(st);
-      const ro = window.ResizeObserver ? new ResizeObserver(() => schedule()) : null;
+      let roRaf = 0;
+      const ro = window.ResizeObserver ? new ResizeObserver(() => { if (busy || roRaf) return; roRaf = requestAnimationFrame(() => { roRaf = 0; if (!busy) fitTables(); }); }) : null;
       const isScrollY = el => { const o = getComputedStyle(el).overflowY; return o === 'auto' || o === 'scroll'; };
       function fitTables() {
         raf = 0;
@@ -1813,16 +1815,20 @@
           if (el.closest('.popup-modal, .modal, [role="dialog"]')) return;
           el.dataset.fitDone = '1';
           el.style.transitionProperty = 'opacity, background-color, box-shadow, border-color';
-          const r = el.getBoundingClientRect();
-          if (!r.height && !r.width) return;   /* escondida */
-          /* reserva tudo o que vem a seguir no cartão (legendas, totais, botões...): o cartão inteiro cabe acima do rodapé */
+          if (!el.getClientRects().length) return;   /* escondida */
+          if (!t.dataset.fitObs) { t.dataset.fitObs = '1'; ro?.observe(t); }   /* linhas que aparecem/desaparecem (ex.: grupos que abrem) */
           const card = el.closest('.major-card');
           if (card && !card.classList.contains('fit-card')) { card.classList.add('fit-card'); ro?.observe(card); }
-          const below = card ? Math.max(0, card.getBoundingClientRect().bottom - r.bottom) : 0;
-          const top = r.top - mr.top + main.scrollTop;        /* posição como se a página estivesse no topo */
-          const avail = Math.floor((limit - mr.top) - top - below - GAP);
+          /* mede a tabela inteira (sem limite) e vê quanto o cartão passa do rodapé; tira só isso.
+             Assim não conta espaço vazio do cartão (ex.: altura mínima) e o resultado é sempre o mesmo, sem ir crescendo aos poucos */
+          const st0 = el.scrollTop, mst0 = main.scrollTop;
           el.style.height = 'auto';
-          el.style.maxHeight = `${Math.max(MIN_H, avail)}px`;
+          el.style.maxHeight = 'none';
+          const natural = el.getBoundingClientRect().height;
+          const over = (card || el).getBoundingClientRect().bottom + main.scrollTop + GAP - limit;   /* como se a página estivesse no topo */
+          el.style.maxHeight = `${Math.max(Math.min(MIN_H, Math.ceil(natural)), Math.floor(natural - over))}px`;
+          el.scrollTop = st0;
+          if (main.scrollTop !== mst0) main.scrollTop = mst0;
         });
         page.querySelectorAll('[data-fit-done]').forEach(e => { delete e.dataset.fitDone; });
         busy = false;

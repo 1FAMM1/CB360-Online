@@ -1417,8 +1417,21 @@
           if (map || !el || typeof L === 'undefined') return;
           map = L.map(el).setView([39.5, -8.0], 6);
           const ruas = L.tileLayer(`https://api.tomtom.com/map/1/tile/basic/main/{z}/{x}/{y}.png?key=${TOMTOM_KEY}`, {attribution: '&copy; TomTom', maxZoom: 22}).addTo(map);
-          const satelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {attribution: 'Tiles &copy; Esri', maxNativeZoom: 18, maxZoom: 19});
+          /* satélite: OrtoSat 2023 da DGT (30 cm, Portugal continental, WMS público) por cima da Esri, que fica por baixo como recurso
+             (ilhas, fora de Portugal ou se o serviço da DGT falhar) */
+          const esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {attribution: 'Tiles &copy; Esri', maxNativeZoom: 18, maxZoom: 19});
+          const ortosat = L.tileLayer.wms('https://ortos.dgterritorio.gov.pt/wms/ortosat2023', {layers: 'ortoSat2023-CorVerdadeira', format: 'image/png', transparent: true,
+            version: '1.3.0', attribution: 'OrtoSat 2023 &copy; DGT', maxZoom: 19});
+          /* nomes das ruas por cima do satélite (camada transparente do TomTom, só com os nomes), como o "híbrido" do Google */
+          const nomes = L.tileLayer(`https://api.tomtom.com/map/1/tile/labels/main/{z}/{x}/{y}.png?key=${TOMTOM_KEY}`, {maxZoom: 19, zIndex: 5});
+          const satelite = L.layerGroup([esri, ortosat, nomes]);
           L.control.layers({'Mapa': ruas, 'Satélite': satelite}, null, {position: 'topright', collapsed: false}).addTo(map);
+          /* o OrtoSat tem 30 cm por píxel: acima do zoom 19 só ficaria esticado (pixelizado), por isso o satélite pára no 19 */
+          map.on('baselayerchange', e => {
+            const sat = e.layer === satelite;
+            map.setMaxZoom(sat ? 19 : 22);
+            if (sat && map.getZoom() > 19) map.setZoom(19);
+          });
           map.on('click', e => mapPlace(e.latlng.lat, e.latlng.lng, 'manual'));
           new ResizeObserver(() => map.invalidateSize()).observe(el);
           mapReset();

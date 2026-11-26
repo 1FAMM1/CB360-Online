@@ -1,10 +1,5 @@
  /* =======================================================================
-   CENTRO DE DADOS
-   - Este ficheiro cria a página toda (logo ao carregar): Corporação, Elementos,
-     Veículos e Configuração de Emails. Em main.html só fica
-     <div id="page-data" class="page"></div>.
-   - Estilos num só bloco (#dc-css); tudo dentro da função.
-   - Globais (o mainloader chama-as depois do login): generateAccessCheckboxes, loadElementsTable.
+   CENTRO DE DADOS (CB360)
    ======================================================================= */
 (function () {
   const PAGE = document.getElementById('page-data');
@@ -93,6 +88,100 @@
       #page-data .emails-config-container .major-card.mb0 {margin-bottom: 0;}
       #page-data .dc-mail {display: flex; align-items: center; margin-bottom: 3px; white-space: nowrap; gap: 5px;}
       #page-data .dc-mail input {width: 100%;}
+      /* ===== layout novo (só estilo; ids e funções iguais) ===== */
+      #page-data .options-panel-container {background: #efefef; padding: 12px; gap: 12px; align-items: stretch;}
+      #page-data .panel-sidebar {width: 230px; flex: 0 0 230px; background: #fff; backdrop-filter: none; border: 1px solid #e9ecef; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.05); padding: 8px;
+                      align-self: stretch; box-sizing: border-box;}
+      #page-data .panel-sidebar-menu-button {height: 34px; margin: 0 0 2px; padding: 0 12px; border: 0; border-radius: 8px; background: transparent; color: #2c3e50; font-size: 12px; font-weight: 600; gap: 0;
+                      box-shadow: none; transition: background .15s, color .15s;}
+      #page-data .panel-sidebar-menu-button::before, #page-data .panel-sidebar-menu-button::after {display: none;}
+      #page-data .panel-sidebar-menu-button:hover {background: #f4f6f8; color: #b71c1c; transform: none; border: 0;}
+      #page-data .panel-sidebar-menu-button.active {background: #fdecea; color: #b71c1c; font-weight: 800; border: 0; box-shadow: inset 3px 0 0 #c62828; padding-left: 12px;}
+      #page-data .panel-content {background: transparent; overflow: visible; min-width: 0;}
+      #page-data .panel-card {background: transparent; padding: 0; min-height: 0; animation: none;}
+      #page-data .panel-card.active {display: flex; flex-direction: column; gap: 10px;}
+      #page-data .panel-card > h3 {display: flex; align-items: center; gap: 9px; margin: 0; padding: 12px 14px 2px; background: #fff; border: 1px solid #e9ecef; border-bottom: 0; border-radius: 12px 12px 0 0;
+                      font-size: 13px; font-weight: 800; color: #2c3e50; letter-spacing: .4px;}
+      #page-data .panel-card > h3::before {content: ''; width: 4px; height: 16px; border-radius: 3px; background: #c62828; flex-shrink: 0;}
+      #page-data .panel-card > h3 + p {margin: -10px 0 0; padding: 0 14px 11px 27px; background: #fff; border: 1px solid #e9ecef; border-top: 0; border-radius: 0 0 12px 12px; font-size: 12px; color: #6c757d;
+                      line-height: 1.4; box-shadow: 0 1px 3px rgba(0,0,0,.05);}
+      #page-data .dc-mail-note {margin: 0; padding: 8px 12px; background: #fdecea; border: 1px solid #f3c1bc; border-radius: 10px; color: #b71c1c; font-size: 11.5px; font-style: normal;}
+      #page-data .options-main-card, #page-data .transparent-card.dc-logo {background: #fff; border: 1px solid #e9ecef; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.05);}
+      /* campos */
+      #page-data label {font-size: 10.5px; font-weight: 800; color: #6c757d; text-transform: uppercase; letter-spacing: .3px;}
+      #page-data input:not([type=checkbox]):not([type=radio]):not([type=file]), #page-data select {height: 30px; box-sizing: border-box; padding: 0 9px; border: 1px solid #c8c8c8; border-radius: 6px;
+                      font-size: 12.5px; background-color: #fff;}
+      #page-data input:not([type=checkbox]):not([type=radio]):focus, #page-data select:focus {border-color: #c62828; box-shadow: 0 0 0 2px rgba(198,40,40,.12); outline: none;}
+      #page-data input[readonly], #page-data input:disabled {background: #f4f6f8; color: #6c757d;}
+      #page-data .dc-r, #page-data .dc-veic, #page-data .dc-mail {gap: 8px; margin-bottom: 6px;}
+      /* botões */
+      #page-data .btn {transform: none !important; box-shadow: none; border-radius: 8px !important; font-weight: 800 !important; letter-spacing: .4px; border-bottom-width: 0;}
+      #page-data .btn-success, #page-data .btn-add {background: linear-gradient(180deg,#d64535,#b0281a) !important; color: #fff !important; border: 0 !important; box-shadow: 0 2px 6px rgba(176,40,26,.25) !important;}
+      #page-data .btn-success:hover, #page-data .btn-add:hover {filter: brightness(1.06);}
+      #page-data .btn-analyze, #page-data .btn-danger, #page-data .dc-photo .btn, #page-data .dc-logo .btn-success {background: #fff !important; color: #2c3e50 !important; border: 1px solid #d0d5da !important;
+                      box-shadow: none !important;}
+      #page-data .btn-danger, #page-data .dc-photo .btn.rm {color: #b71c1c !important;}
+      #page-data .btn-analyze:hover, #page-data .btn-danger:hover, #page-data .dc-photo .btn:hover, #page-data .dc-logo .btn-success:hover {border-color: #e6b3ad !important; background: #fdf6f5 !important;}
+      #page-data .dc-corp-save .btn, #page-data .dc-save .btn, #page-data .action-buttons .btn, #page-data [data-act="elem-add"] {height: 34px; padding: 0 22px; font-size: 11.5px;}
+      /* corporação */
+      #page-data .dc-corp {gap: 10px;}
+      #page-data .dc-logo {width: 230px; padding: 12px 14px;}
+      #page-data .dc-logo .card-header {font-size: 12px; font-weight: 800; color: #2c3e50; letter-spacing: .4px; text-align: left; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #eef0f2;
+                      padding-bottom: 8px; margin-bottom: 10px;}
+      #page-data .dc-logo .card-header::before {content: ''; width: 4px; height: 14px; border-radius: 3px; background: #c62828;}
+      #page-data .data-logo {border-radius: 12px; border: 1px solid #e3e7eb; background: #f8f9fa;}
+      #page-data .dc-logo .btns .btn {height: 30px; font-size: 10.5px; padding: 0;}
+      #page-data .dc-logo .btns:last-child .btn-add {background: linear-gradient(180deg,#d64535,#b0281a) !important;}
+      #page-data .dc-corp-form {padding: 14px 16px;}
+      #page-data .dc-corp-form label {font-size: 10.5px;}
+      #page-data .dc-corp-save {margin-top: 0;}
+      /* elementos */
+      #page-data #elements-list, #page-data #elements-edit {margin-top: 0;}
+      #page-data #elements-list {padding: 12px 14px;}
+      #page-data #win_search_element {width: 300px;}
+      #page-data .table-container {border: 1px solid #d3d8dd; border-radius: 10px; box-shadow: none; scrollbar-width: thin; scrollbar-color: #cfd4da transparent;}
+      #page-data .table-container thead, #page-data .table-container th {background: #f1f3f5 !important;}
+      #page-data .table-container th {color: #5b6670 !important; font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .3px; border-color: #d3d8dd !important;}
+      #page-data .table-container td {border-color: #d3d8dd !important; font-size: 12.5px;}
+      #page-data .table-container tbody tr:nth-child(even) {background-color: transparent;}
+      #page-data .table-container tbody tr:hover {background-color: #fdf6f5;}
+      #page-data .table-container td[colspan] {border-left: 0 !important;}
+      #page-data .table-container tbody tr:not(:has(~ tr:not([style*="display: none"]))) > td {border-bottom: 0 !important;}
+      #page-data #elements-edit {padding: 0; overflow: hidden;}
+      #page-data .dc-edit-title {padding: 12px 16px; border-bottom: 1px solid #eef0f2;}
+      #page-data .dc-edit-title h3 {display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 800; color: #2c3e50; text-transform: uppercase; letter-spacing: .4px; border: 0; padding: 0;}
+      #page-data .dc-edit-title h3::before {content: ''; width: 4px; height: 16px; border-radius: 3px; background: #c62828;}
+      #page-data #elements-tabs {display: inline-flex; align-self: flex-start; gap: 2px; margin: 12px 16px 0; padding: 3px; background: #f1f3f5; border: 0; border-radius: 999px;}
+      #page-data #elements-tabs .tab-btn {flex: none; height: 28px; padding: 0 16px; border: 0; border-radius: 999px; background: transparent; color: #2c3e50; font-size: 11px; font-weight: 800; letter-spacing: .3px;}
+      #page-data #elements-tabs .tab-btn:hover {background: #e4e7ea;}
+      #page-data #elements-tabs .tab-btn.active {background: #2c3e50; color: #fff; border: 0;}
+      #page-data .dc-tabs-body {padding: 14px 16px;}
+      #page-data #win_photo_preview {border: 2px dashed #d3d8dd; border-radius: 12px; background: #f8f9fa;}
+      #page-data .dc-photo .btn {height: 30px; font-size: 11px;}
+      #page-data .dc-box {background: #fff; border: 1px solid #e9ecef; border-radius: 12px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(0,0,0,.05);}
+      #page-data .dc-box > div:first-child {display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 800; color: #2c3e50; text-transform: uppercase; letter-spacing: .4px;
+                      border-bottom: 1px solid #eef0f2; padding-bottom: 8px;}
+      #page-data .dc-box > div:first-child::before {content: ''; width: 4px; height: 14px; border-radius: 3px; background: #c62828;}
+      #page-data .dc-cred-title {display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 800; color: #2c3e50; text-transform: uppercase; letter-spacing: .4px;}
+      #page-data .dc-cred-title::before {content: ''; width: 4px; height: 14px; border-radius: 3px; background: #c62828;}
+      #page-data .dc-save {border-top: 1px solid #eef0f2; padding: 12px 16px;}
+      #page-data .options-main-footer {background: transparent;}
+      /* cartões dentro dos painéis (Novo Veículo, Emails) */
+      #page-data .panel-card .major-card {background: #fff; border: 1px solid #e9ecef; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.05); overflow: hidden; margin: 0;}
+      #page-data .panel-card .major-card-header.header-black {text-shadow: none; box-shadow: none; background: #fff; color: #2c3e50; border-bottom: 1px solid #eef0f2; padding: 10px 14px; font-size: 12px; font-weight: 800; letter-spacing: .4px;
+                      display: flex; align-items: center; gap: 8px;}
+      #page-data .panel-card .major-card-header.header-black::before {content: ''; position: static; width: 4px; height: 14px; border-radius: 3px; background: #c62828; flex-shrink: 0;}
+      #page-data .panel-card .major-card-header.header-black svg {display: none;}
+      #page-data .panel-card .major-card-body {background: #fff; padding: 12px 14px;}
+      #page-data .panel-card .major-card-footer {background: #fff; border-top: 1px solid #eef0f2; box-shadow: none; padding: 10px 14px;}
+      #page-data .panel-card .major-card-footer::before {display: none;}
+      #page-data #panel-veícs .table-container {margin-top: 0;}
+      #page-data .emails-config-container {background: transparent; border: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; scrollbar-width: thin; scrollbar-color: #cfd4da transparent;}
+      #page-data .emails-config-container .major-card, #page-data .emails-config-container .major-card.mb0 {margin: 0; flex-shrink: 0;}
+      /* emails: a lista ocupa o espaço até ao fundo do menu lateral (scroll lá dentro) */
+      #page-data .panel-content:has(> #panel-mails.active) {position: relative;}
+      #page-data #panel-mails.active {position: absolute; inset: 0;}
+      #page-data #panel-mails .emails-config-container {flex: 1 1 0; min-height: 0; max-height: none;}
     `;
     document.head.appendChild(st);
   })();

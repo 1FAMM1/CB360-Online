@@ -211,7 +211,7 @@
           #page-solicitation .sol-card {min-height: 401px;}
           #page-inem-services .ems-card {min-height: 585px;}   /* mesmo tamanho do layout antigo */
           #page-inem-services .ems-card > .wsms-card-body {padding: 12px 16px;}
-          #page-inem-services .ems-types {display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 5px;}
+          #page-inem-services .ems-types {display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: -15px;}   /* o corpo do card tem gap de 20px: fica a 5px dos blocos, igual ao espaço entre blocos */
           #page-inem-services .ems-types .wsms-type-opt {padding: 12px 16px; border-width: 2px; border-color: #e9ecef; border-radius: 12px; background: #fff; position: relative; gap: 12px;}
           #page-inem-services .ems-types .wsms-type-opt input[type="checkbox"] {position: absolute; opacity: 0; pointer-events: none;}
           #page-inem-services .ems-dot {width: 22px; height: 22px; border-radius: 50%; flex: none; display: inline-block;}
@@ -240,6 +240,11 @@
           #page-inem-services .ins-map-st {margin-top: 6px; font-size: 11.5px; line-height: 1.3; color: #8a949e;}
           #page-inem-services .ins-map-st.ok {color: #2e7d32; font-weight: 700;}
           #page-inem-services .ins-grid:not(.ems-cols):not(.sol-g2) {grid-template-columns: 1fr;}
+          /* blocos 1 a 4 bloqueados até escolher INEM ou Reserva INEM */
+          #page-inem-services .ems-cols {position: relative;}
+          #page-inem-services .ems-cols.ems-locked > * {opacity: .45; filter: grayscale(.6); pointer-events: none; user-select: none; transition: opacity .2s;}
+          #page-inem-services .ems-cols.ems-locked::before {content: '🔒  Selecione INEM ou Reserva INEM para preencher o serviço'; position: absolute; z-index: 1000; top: 50%; left: 50%;
+                     transform: translate(-50%, -50%); background: #2c3e50; color: #fff; font-size: 13px; font-weight: 700; padding: 10px 18px; border-radius: 999px; box-shadow: 0 6px 18px rgba(0,0,0,.2); white-space: nowrap; pointer-events: none;}
           #page-inem-services .leaflet-control-layers-list label {display: block; margin: 0; cursor: pointer;}
           #page-inem-services .leaflet-control-layers-list label > span {display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: #2c3e50; white-space: nowrap;}
           #page-inem-services .leaflet-control-layers-selector {width: auto !important; height: auto !important; margin: 0 !important; position: static !important; flex: none; cursor: pointer;}
@@ -1910,8 +1915,11 @@
                 [a.municipality, a.municipalitySubdivision, a.localName, a.freeformAddress].filter(Boolean).join(' ')
               ).includes(areaNorm);
             }
-            return norm(a.municipality || '') === areaNorm;
+            /* sem localidade: o concelho da corporação e também os concelhos vizinhos (até 30 km), que aparecem depois */
+            if (norm(a.municipality || '') === areaNorm) return true;
+            return !!(base && x.position && distKm(x.position.lat, x.position.lon) <= 30);
           };
+          const outsideMuni = x => !city && !!baseMunicipality && norm(x.address?.municipality || '') !== norm(baseMunicipality);
           const fetchTomTom = async (queryText, limit = '50', radius = null) => {
             const p = new URLSearchParams({key: TOMTOM_KEY, typeahead: 'true', countrySet: 'PT', language: 'pt-PT', limit});
             if (base) {
@@ -2025,6 +2033,7 @@
               const nameForSimilarity = isPoi ? (x.poi?.name || l1) : (a.streetName || l1);
               const it = {sim: similarity(qMain, nameForSimilarity), streetName: a.streetName || '', streetNumber: (!isPoi && validNumber(a.streetNumber)) ? a.streetNumber : '', street: street || fallbackLabel, city: locality, poi: isPoi ? (x.poi?.name || '') : '', 
                           lat: x.position.lat, lng: x.position.lon, l1, baseSub, parish: (subdivision && norm(subdivision) !== norm(municipality)) ? subdivision : '', rank, dist: distKm(x.position.lat, x.position.lon)};
+              it.other = outsideMuni(x);
               it.l2 = buildL2(it);
               applyCache(it);
               mapped.push(it);
@@ -2062,7 +2071,7 @@
               const matching = candidates.filter(i => norm(`${i.parish} ${i.city} ${i.baseSub}`).includes(localityHint));
               if (matching.length) candidates = matching;
             }
-            candidates.sort((a, b) => (Math.round(b.sim * 50) - Math.round(a.sim * 50)) || (a.rank - b.rank) || (a.dist - b.dist));
+            candidates.sort((a, b) => (Math.round(b.sim * 50) - Math.round(a.sim * 50)) || ((a.other ? 1 : 0) - (b.other ? 1 : 0)) || (a.rank - b.rank) || (a.dist - b.dist));
             const withParish = candidates.filter(i => i.parish);
             const filtered = candidates.filter(i => i.parish || !withParish.some(o => norm(o.l1) === norm(i.l1) && Math.hypot((o.lat - i.lat) * 111, (o.lng - i.lng) * 92) < 1.5));
             const seen = new Set();
@@ -2243,6 +2252,7 @@
           if (val('address-service') && val('location-service')) mapLocate(false);
         });
       document.querySelector('button[data-page="page-inem-services"]')?.addEventListener('click', () => setTimeout(() => {
+        resetEms();
         if (!map) return mapInit();
           map.invalidateSize();
           mapReset();
@@ -2262,6 +2272,19 @@
         `;
         document.body.appendChild(modal);
         const inem = $('alert-inem'), reserv = $('alert-reserv'), optInem = $('opt-inem'), optReserv = $('opt-reserv');
+        /* limpa e bloqueia o serviço: depois de enviar e ao entrar pela sidebar */
+        function resetEms() {
+          clearFormFields($('page-inem-services'));
+          showDots();
+          showVmer();
+          mapReset();
+          pickedKey = '';
+          selectedType = '';
+          radios().forEach(r => { r.checked = false; });
+          inem.checked = false;
+          reserv.checked = false;
+          updateTypeSelection();
+        }
         let selectedType = '';
         const radios = () => document.querySelectorAll('input[name="popup-inem-type"]');
         function openTypePopup() { radios().forEach(r => { r.checked = false; }); selectedType = ''; modal.classList.add('show'); }
@@ -2270,6 +2293,13 @@
         function updateTypeSelection() {
           optInem.classList.toggle('active', inem.checked);
           optReserv.classList.toggle('active', reserv.checked);
+          const cols = inem.closest('.wsms-card')?.querySelector('.ems-cols');
+          if (cols) {
+            const on = inem.checked || reserv.checked;
+            cols.classList.toggle('ems-locked', !on);
+            cols.inert = !on;   /* também bloqueia o Tab e o teclado */
+            if (on && typeof map !== 'undefined' && map) setTimeout(() => map.invalidateSize(), 50);
+          }
           const c = inem.closest('.wsms-card');
           c.classList.toggle('theme-inem', inem.checked);
           c.querySelector('.wsms-card-header-ems span').textContent = reserv.checked ? 'SERVIÇOS DE EMERGÊNCIA PRÉ-HOSPITALAR · RESERVA' : inem.checked ? 'SERVIÇOS DE EMERGÊNCIA PRÉ-HOSPITALAR · INEM' : 'SERVIÇOS DE EMERGÊNCIA PRÉ-HOSPITALAR';
@@ -2291,6 +2321,7 @@
           setTimeout(() => { setNow(); $('address-service')?.focus(); }, 100);
         });
         $('popup-inem-type-cancel-btn').addEventListener('click', () => { inem.checked = false; updateTypeSelection(); closeTypePopup(); });
+        updateTypeSelection();   /* começa bloqueado */
         $('resp-tas-ni').addEventListener('input', async function () {
           const ni = this.value.trim(), name = $('resp-tas-name');
           if (ni.length < 3) { name.value = ''; return; }
@@ -2360,16 +2391,7 @@
             console.error(err);
             showPopup('popup-danger', 'Erro ao copiar ou guardar registo.');
           }
-          clearFormFields();
-          showDots();
-          showVmer();
-          mapReset();
-          pickedKey = '';
-          selectedType = '';
-          radios().forEach(r => { r.checked = false; });
-          inem.checked = false;
-          reserv.checked = false;
-          updateTypeSelection();
+          resetEms();
         }
       })();
       /* =======================================================================

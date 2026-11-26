@@ -1,8 +1,5 @@
     /* =======================================
     REDUNDÂNCIA DE OCORRÊNCIAS (CB360)
-    - O cartão da página é criado aqui, logo ao carregar; o main.html só tem o
-      <div class="page"> vazio. O corpo e o rodapé continuam a ser preenchidos por
-      renderCb360RedundPage(), como antes.
     ======================================= */
     (() => {
     if (!document.getElementById('redund-css')) {
@@ -11,6 +8,18 @@
       css.textContent = `
         #page-cb360-redund .major-card-header.rd-head {display: flex; align-items: center; gap: 10px;}
         #page-cb360-redund .major-card-header.rd-head > svg {opacity: .9; vertical-align: middle;}
+        /* tabelas de Meios, Vítimas, Comunicações e Resumo (overflow visível na tabela para os cabeçalhos ficarem fixos): contorno arredondado na cor das linhas (sem sombra), linhas da grelha um pouco mais escuras */
+        :is(#goc-vehicles-wrap, #goc-firefighters-wrap, #goc-victims-wrap, #goc-comm-vehicles-wrap, #goc-comm-firefighters-wrap, #goc-summary-vehicles-wrap, #goc-summary-firefighters-wrap, #goc-summary-arrival-wrap, #goc-summary-attendance-wrap) {border: 1px solid #d3d8dd !important; box-shadow: none !important; border-radius: 10px !important;}
+        #goc-summary-arrival-wrap {border-bottom: 0 !important; border-radius: 10px 10px 0 0 !important;}
+        /* barras de scroll finas e claras, como nos outros módulos */
+        #page-cb360-redund *, #cb360-incident-wrapper, #cb360-incident-wrapper * {scrollbar-width: thin; scrollbar-color: #cfd4da transparent;}
+        #goc-summary-arrival-wrap + div {border: 1px solid #d3d8dd !important; border-radius: 0 0 10px 10px !important; background: #f8f9fa !important;}
+        #cb360-incident-wrapper .goc-tab-content :is(#goc-vehicles-wrap, #goc-firefighters-wrap, #goc-victims-wrap, #goc-comm-vehicles-wrap, #goc-comm-firefighters-wrap, #goc-summary-vehicles-wrap, #goc-summary-firefighters-wrap, #goc-summary-arrival-wrap, #goc-summary-attendance-wrap) :is(th, td) {border-color: #d3d8dd !important;}
+        #cb360-incident-wrapper .goc-tab-content :is(#goc-vehicles-wrap, #goc-firefighters-wrap, #goc-victims-wrap, #goc-comm-vehicles-wrap, #goc-comm-firefighters-wrap, #goc-summary-vehicles-wrap, #goc-summary-firefighters-wrap, #goc-summary-arrival-wrap, #goc-summary-attendance-wrap) table {border: 0 !important; border-radius: 0 !important; overflow: visible !important;}
+        #cb360-incident-wrapper .goc-tab-content :is(#goc-vehicles-wrap, #goc-firefighters-wrap, #goc-victims-wrap, #goc-comm-vehicles-wrap, #goc-comm-firefighters-wrap, #goc-summary-vehicles-wrap, #goc-summary-firefighters-wrap, #goc-summary-arrival-wrap, #goc-summary-attendance-wrap) tr > :first-child {border-left: 0 !important;}
+        #cb360-incident-wrapper .goc-tab-content :is(#goc-vehicles-wrap, #goc-firefighters-wrap, #goc-victims-wrap, #goc-comm-vehicles-wrap, #goc-comm-firefighters-wrap, #goc-summary-vehicles-wrap, #goc-summary-firefighters-wrap, #goc-summary-arrival-wrap, #goc-summary-attendance-wrap) tr > :last-child {border-right: 0 !important;}
+        #cb360-incident-wrapper .goc-tab-content :is(#goc-vehicles-wrap, #goc-firefighters-wrap, #goc-victims-wrap, #goc-comm-vehicles-wrap, #goc-comm-firefighters-wrap, #goc-summary-vehicles-wrap, #goc-summary-firefighters-wrap, #goc-summary-arrival-wrap, #goc-summary-attendance-wrap) thead tr:first-child > * {border-top: 0 !important;}
+        #cb360-incident-wrapper .goc-tab-content :is(#goc-vehicles-wrap, #goc-firefighters-wrap, #goc-victims-wrap, #goc-comm-vehicles-wrap, #goc-comm-firefighters-wrap, #goc-summary-vehicles-wrap, #goc-summary-firefighters-wrap, #goc-summary-arrival-wrap, #goc-summary-attendance-wrap) tbody tr:last-child > td {border-bottom: 0 !important;}
 
         /* ===== Redundância · formulário Novo/Editar (só estilo; ids, funções e mostrar/esconder iguais) ===== */
         #cb360-incident-wrapper > .major-card-body {background: #efefef !important;}
@@ -112,15 +121,16 @@
         #page-cb360-redund #cb360-btn-search {color: #c0392b !important; font-size: 24px !important;}
         #page-cb360-redund #cb360-btn-search:hover {background: #fdecea !important;}
         /* tabela */
-        #page-cb360-redund #cb360-table-container {margin-top: 10px !important; background: #fff; border: 1px solid #e3e7eb !important; border-radius: 12px !important; box-shadow: 0 1px 3px rgba(0,0,0,.05) !important;
-                     scrollbar-width: thin; scrollbar-color: #e57373 #fbe9e7;}
-        #page-cb360-redund #cb360-table-container::-webkit-scrollbar-thumb {background: #e57373 !important; border-color: #fbe9e7 !important;}
-        #page-cb360-redund #cb360-table-container::-webkit-scrollbar-track {background: #fbe9e7 !important;}
-        #page-cb360-redund #cb360-tabela-ocorrencias th {background: #f1f3f5 !important; color: #5b6670 !important; border: 0 !important; border-bottom: 1px solid #e3e7eb !important; font-size: 10.5px !important;
+        #page-cb360-redund #cb360-table-container {margin-top: 10px !important; background: #fff; border: 1px solid #d3d8dd !important; border-radius: 10px !important; box-shadow: none !important;
+                     scrollbar-width: thin; scrollbar-color: #cfd4da transparent;}
+        #page-cb360-redund #cb360-table-container::-webkit-scrollbar-thumb {background: #cfd4da !important; border-color: transparent !important;}
+        #page-cb360-redund #cb360-table-container::-webkit-scrollbar-track {background: transparent !important;}
+        #page-cb360-redund #cb360-tabela-ocorrencias th {background: #f1f3f5 !important; color: #5b6670 !important; border: 0 !important; border-right: 1px solid #d3d8dd !important; border-bottom: 1px solid #d3d8dd !important; font-size: 10.5px !important;
                      font-weight: 800 !important; text-transform: uppercase; letter-spacing: .3px; padding: 8px 5px !important;}
         #page-cb360-redund #cb360-tabela-ocorrencias th i {color: #5b6670 !important;}
-        #page-cb360-redund #cb360-tabela-ocorrencias td {border: 0 !important; border-bottom: 1px solid #eef0f2 !important; padding-top: 6px !important; padding-bottom: 6px !important;}
+        #page-cb360-redund #cb360-tabela-ocorrencias td {border: 0 !important; border-right: 1px solid #d3d8dd !important; border-bottom: 1px solid #d3d8dd !important; padding-top: 6px !important; padding-bottom: 6px !important;}
         #page-cb360-redund #cb360-tabela-ocorrencias tbody tr:last-child td {border-bottom: 0 !important;}
+        #page-cb360-redund #cb360-tabela-ocorrencias tr > :last-child {border-right: 0 !important;}
         #page-cb360-redund #cb360-tabela-ocorrencias tbody tr:hover td {background-color: #fdf6f5;}
         #page-cb360-redund #cb360-tabela-ocorrencias td[colspan] {padding: 22px !important; color: #8a949e !important;}
         /* estado em chip (a cor continua a vir de STATUS_COLORS) */
@@ -214,8 +224,47 @@
       const headers = init.headers
         ? { ...baseHeaders, ...init.headers }
         : baseHeaders;
+      const method = String(init.method || 'GET').toUpperCase();
+      if (method !== 'GET') { cb360RefCache.clear(); cb360Warm.clear(); return fetch(url, { ...init, headers }); }
+      /* listas de referência (viaturas, bombeiros ativos, países): guardadas 2 min, as janelas abrem sem esperar por elas */
+      if (CB360_REF_RE.test(url)) {
+        const hit = cb360RefCache.get(url);
+        if (hit && Date.now() - hit.t < 120000) return hit.p.then(cb360ToResponse);
+        const p = fetch(url, { ...init, headers }).then(cb360FromResponse);
+        cb360RefCache.set(url, {p, t: Date.now()});
+        p.then(r => { if (!r.ok) cb360RefCache.delete(url); }, () => cb360RefCache.delete(url));
+        return p.then(cb360ToResponse);
+      }
+      /* pedido já lançado antes (cb360WarmUp): usa esse em vez de pedir outra vez; só serve uma vez */
+      const warm = cb360Warm.get(url);
+      if (warm && Date.now() - warm.t < 8000) { cb360Warm.delete(url); return warm.p.then(cb360ToResponse); }
       return fetch(url, { ...init, headers });
     }    
+    const CB360_REF_RE = /\/rest\/v1\/(countries\?select=iso_code,name,display_label|vehicle_status\?select=vehicle,vehicle_registration,is_inop&|reg_elems\?select=n_int,full_name,patent_abv&corp_oper_nr=eq\.[^&]*&elem_state=eq\.true&type_quad)/;
+    const cb360RefCache = new Map();
+    const cb360Warm = new Map();
+    const cb360FromResponse = r => r.text().then(body => ({ok: r.ok, status: r.status, statusText: r.statusText, headers: [...r.headers.entries()], body}));
+    const cb360ToResponse = d => new Response([101, 204, 205, 304].includes(d.status) ? null : d.body, {status: d.status, statusText: d.statusText, headers: d.headers});
+    /* lança já pedidos que a janela vai fazer mais à frente, para não ficarem uns à espera dos outros */
+    function cb360WarmUp(urls) {
+      urls.filter(Boolean).forEach(url => {
+        if (CB360_REF_RE.test(url)) { supaFetch(url, {method: 'GET'}).catch(() => {}); return; }
+        const w = cb360Warm.get(url);
+        if (w && Date.now() - w.t < 8000) return;
+        const p = fetch(url, {headers: getSupabaseHeaders()}).then(cb360FromResponse);
+        p.catch(() => cb360Warm.delete(url));
+        cb360Warm.set(url, {p, t: Date.now()});
+      });
+    }
+    /* pedidos "in.(...)" partidos em blocos e feitos em paralelo: o URL nunca fica gigante, mesmo com muitas ocorrências */
+    async function cb360FetchIn(build, ids, size = 150) {
+      const list = [...new Set((ids || []).filter(Boolean))];
+      if (!list.length) return [];
+      const parts = [];
+      for (let i = 0; i < list.length; i += size) parts.push(list.slice(i, i + size).join(','));
+      const res = await Promise.all(parts.map(part => supaFetch(build(part), {method: 'GET'}).then(r => (r.ok ? r.json() : [])).catch(() => [])));
+      return res.flat();
+    }
     // ==============================================================================
     // == 1. EVENTOS GLOBAIS                                                      ==
     // ==============================================================================
@@ -370,15 +419,20 @@
     async function fetchCb360ResourceCounts(internalNumbers) {
       if (!internalNumbers.length) return {};
       try {
-        const list = internalNumbers.filter(Boolean).join(',');
-        if (!list) return {};
-        const url = `${SUPABASE_URL}/rest/v1/cb360_dispatch_vehicles?internal_number=in.(${list})&select=internal_number,vehicle,km_start,km_end,cb_departure_time,scene_arrival_time,cb_arrival_date,cb_arrival_time,cb360_dispatch_crew(id,n_int)`;
-        const response = await supaFetch(url, { method: 'GET' });
+        const nums = internalNumbers.filter(Boolean);
+        if (!nums.length) return {};
+        /* os 4 pedidos que só dependem das ocorrências vão em paralelo (antes eram feitos um a seguir ao outro) */
+        const [dispatchData, victimsData, externalFirefightersData, externalMeansData] = await Promise.all([
+          cb360FetchIn(l => `${SUPABASE_URL}/rest/v1/cb360_dispatch_vehicles?internal_number=in.(${l})&select=internal_number,vehicle,km_start,km_end,cb_departure_time,scene_arrival_time,cb_arrival_date,cb_arrival_time,cb360_dispatch_crew(id,n_int)`, nums),
+          cb360FetchIn(l => `${SUPABASE_URL}/rest/v1/cb360_victims?internal_number=in.(${l})&select=internal_number,patient_name`, nums),
+          cb360FetchIn(l => `${SUPABASE_URL}/rest/v1/cb360_report_means_firefighters?internal_number=in.(${l})&select=internal_number,num_firefighters`, nums),
+          cb360FetchIn(l => `${SUPABASE_URL}/rest/v1/cb360_report_means?internal_number=in.(${l})&select=internal_number,type,quantity,num_operational`, nums)
+        ]);
         const counts = {};
         const vehicleCodes = new Set();
         const crewCodes = new Set();
-        if (response.ok) {
-          const data = await response.json();
+        {
+          const data = dispatchData;
           data.forEach(row => {
             const key = row.internal_number;
             if (!counts[key]) counts[key] = {vehicles: 0, crew: 0, victims: 0, vehicleDetails: [], crewDetails: [], firstDeparture: null, firstArrival: null, lastReturn: null, lastReturnDate: null};
@@ -401,12 +455,13 @@
             });
           });
         }
+        /* dados das viaturas e dos bombeiros: os dois em paralelo */
+        const [vehiclesData, crewInfoData] = await Promise.all([
+          cb360FetchIn(l => `${SUPABASE_URL}/rest/v1/vehicle_status?vehicle=in.(${l})&select=vehicle,vehicle_registration,vehicle_brand,vehicle_model`, [...vehicleCodes]),
+          cb360FetchIn(l => `${SUPABASE_URL}/rest/v1/reg_elems?n_int=in.(${l})&select=n_int,n_file,full_name,patent_abv`, [...crewCodes])
+        ]);
         if (vehicleCodes.size) {
-          const codesList = Array.from(vehicleCodes).join(',');
-          const vehiclesUrl = `${SUPABASE_URL}/rest/v1/vehicle_status?vehicle=in.(${codesList})&select=vehicle,vehicle_registration,vehicle_brand,vehicle_model`;
-          const vehiclesResponse = await supaFetch(vehiclesUrl, { method: 'GET' });
-          if (vehiclesResponse.ok) {
-            const vehiclesData = await vehiclesResponse.json();
+          {
             const vehicleInfoMap = {};
             vehiclesData.forEach(v => { vehicleInfoMap[v.vehicle] = v; });
             Object.values(counts).forEach(entry => {
@@ -420,11 +475,7 @@
           }
         }
         if (crewCodes.size) {
-          const crewCodesList = Array.from(crewCodes).join(',');
-          const crewInfoUrl = `${SUPABASE_URL}/rest/v1/reg_elems?n_int=in.(${crewCodesList})&select=n_int,n_file,full_name,patent_abv`;
-          const crewInfoResponse = await supaFetch(crewInfoUrl, { method: 'GET' });
-          if (crewInfoResponse.ok) {
-            const crewInfoData = await crewInfoResponse.json();
+          {
             const crewInfoMap = {};
             crewInfoData.forEach(c => { crewInfoMap[c.n_int] = c; });
             Object.values(counts).forEach(entry => {
@@ -437,10 +488,7 @@
             });
           }
         }
-        const victimsUrl = `${SUPABASE_URL}/rest/v1/cb360_victims?internal_number=in.(${list})&select=internal_number,patient_name`;
-        const victimsResponse = await supaFetch(victimsUrl, { method: 'GET' });
-        if (victimsResponse.ok) {
-          const victimsData = await victimsResponse.json();
+        {
           victimsData.forEach(row => {
             const key = row.internal_number;
             if (!counts[key]) counts[key] = {vehicles: 0, crew: 0, victims: 0, vehicleDetails: [], crewDetails: [], victimDetails: [], firstArrival: null, lastReturn: null, lastReturnDate: null};
@@ -449,10 +497,7 @@
             counts[key].victimDetails.push({patientName: row.patient_name || 'Sem nome'});
           });
         }
-        const externalFirefightersUrl = `${SUPABASE_URL}/rest/v1/cb360_report_means_firefighters?internal_number=in.(${list})&select=internal_number,num_firefighters`;
-        const externalFirefightersResponse = await supaFetch(externalFirefightersUrl, { method: 'GET' });
-        if (externalFirefightersResponse.ok) {
-          const externalFirefightersData = await externalFirefightersResponse.json();
+        {
           externalFirefightersData.forEach(row => {
             const key = row.internal_number;
             if (!counts[key]) counts[key] = {vehicles: 0, crew: 0, victims: 0, vehicleDetails: [], crewDetails: [], firstArrival: null, lastReturn: null, lastReturnDate: null};
@@ -460,10 +505,7 @@
             counts[key].crew += Number(row.num_firefighters) || 0;
           });
         }
-        const externalMeansUrl = `${SUPABASE_URL}/rest/v1/cb360_report_means?internal_number=in.(${list})&select=internal_number,type,quantity,num_operational`;
-        const externalMeansResponse = await supaFetch(externalMeansUrl, { method: 'GET' });
-        if (externalMeansResponse.ok) {
-          const externalMeansData = await externalMeansResponse.json();
+        {
           externalMeansData.forEach(row => {
             const key = row.internal_number;
             if (!counts[key]) counts[key] = {vehicles: 0, crew: 0, victims: 0, vehicleDetails: [], crewDetails: [], firstArrival: null, lastReturn: null, lastReturnDate: null};
@@ -495,11 +537,12 @@
           const isOutside = filters.aap === 'Fora' ? 'true' : 'false';
           url += `&outside_area=eq.${isOutside}`;
         }
-        const [response, reportsMap] = await Promise.all([
-          supaFetch(url, { method: 'GET' }),
-          fetchCb360ReportsMap()
-        ]);
+        const response = await supaFetch(url, { method: 'GET' });
         let data = response.ok ? await response.json() : [];
+        /* relatórios só das ocorrências encontradas (antes vinham todos os relatórios de sempre, em cada pesquisa) */
+        const reportsMap = {};
+        (await cb360FetchIn(l => `${SUPABASE_URL}/rest/v1/cb360_incident_reports?internal_number=in.(${l})&select=*`, data.map(d => d.internal_number)))
+          .forEach(rep => { reportsMap[rep.internal_number] = rep; });
         data.forEach(item => {
           item.report = reportsMap[item.internal_number] || null;
         });
@@ -967,7 +1010,14 @@
       });
     }
     // ---- SEARCH: searchCb360Incidents ----
+    function cb360PrefetchRefs() {
+      const corpNr = sessionStorage.getItem("currentCorpOperNr");
+      cb360WarmUp([`${SUPABASE_URL}/rest/v1/vehicle_status?select=vehicle,vehicle_registration,is_inop&order=vehicle.asc`,
+                   corpNr ? `${SUPABASE_URL}/rest/v1/reg_elems?select=n_int,full_name,patent_abv&corp_oper_nr=eq.${corpNr}&elem_state=eq.true&type_quad=not.is.null&type_quad=neq.&order=n_int.asc` : null,
+                   `${SUPABASE_URL}/rest/v1/countries?select=iso_code,name,display_label&order=name.asc`]);
+    }
     async function searchCb360Incidents() {
+      cb360PrefetchRefs();
       await ensureCb360ClassOcorrReportMap();
       await ensureCb360ClassOcorrDescMap();
       const filters = {search: document.getElementById('cb360-input-search').value.trim(),   periodFrom: document.getElementById('cb360-input-period-from').value, periodTo: document.getElementById('cb360-input-period-to').value, 
@@ -975,49 +1025,30 @@
                        state: document.getElementById('cb360-select-state').value, aap: document.getElementById('cb360-input-aap').value, report: document.getElementById('cb360-input-report').value
                       };
       const incidents = await fetchCb360Incidents(filters);
-      const resourceCounts = await fetchCb360ResourceCounts(incidents.map(oc => oc.internal_number));
       const internalNumbers = incidents.map(oc => oc.internal_number).filter(Boolean);
       const respMemberIds = [...new Set(incidents.map(oc => oc.resp_member_id).filter(Boolean))];
-      const [allExpensesResults, reportsMap, respMap] = await Promise.all([
-      Promise.all(incidents.map(async oc => {
-        const expenses = await fetchCb360ReportExpenses(oc.internal_number);
-        return { internalNumber: oc.internal_number, expenses };
-      })),
-      (async () => {
-        if (internalNumbers.length === 0) return {};
-        try {
-          const numbersQuery = internalNumbers.join(',');
-          const response = await supaFetch(`${SUPABASE_URL}/rest/v1/cb360_incident_reports?internal_number=in.(${numbersQuery})`);
-          if (!response.ok) return {};
-          const data = await response.json();
-          const map = {};
-          data.forEach(rep => { map[rep.internal_number] = rep; });
-          return map;
-        } catch (err) {
-          console.error('Erro ao carregar relatórios para a tabela:', err);
-          return {};
-        }
-      })(),
-      (async () => {
-        if (respMemberIds.length === 0) return {};
-        try {
-          const idsQuery = respMemberIds.join(',');
-          const response = await supaFetch(`${SUPABASE_URL}/rest/v1/reg_elems?n_int=in.(${idsQuery})&select=n_int,full_name,patent_abv`);
-          if (!response.ok) return {};
-          const data = await response.json();
-          const map = {};
-          data.forEach(r => { map[r.n_int] = `${r.n_int} - ${r.full_name || ''} - ${r.patent_abv || ''}`; });
-          return map;
-        } catch (err) {
-          console.error('Erro ao carregar responsáveis de relatório:', err);
-          return {};
-        }
-      })()
+      const corpNr = sessionStorage.getItem("currentCorpOperNr");
+      /* tudo em paralelo; despesas num só pedido (antes era 1 pedido por ocorrência) e relatórios reaproveitados da pesquisa */
+      const [resourceCounts, expensesRows, respMap] = await Promise.all([
+        fetchCb360ResourceCounts(incidents.map(oc => oc.internal_number)),
+        cb360FetchIn(l => `${SUPABASE_URL}/rest/v1/cb360_report_expenses?internal_number=in.(${l})&corp_oper_nr=eq.${corpNr}&select=*&order=id.asc`, internalNumbers),
+        (async () => {
+          if (respMemberIds.length === 0) return {};
+          try {
+            const map = {};
+            (await cb360FetchIn(l => `${SUPABASE_URL}/rest/v1/reg_elems?n_int=in.(${l})&select=n_int,full_name,patent_abv`, respMemberIds))
+              .forEach(r => { map[r.n_int] = `${r.n_int} - ${r.full_name || ''} - ${r.patent_abv || ''}`; });
+            return map;
+          } catch (err) {
+            console.error('Erro ao carregar responsáveis de relatório:', err);
+            return {};
+          }
+        })()
       ]);
+      const reportsMap = {};
+      incidents.forEach(oc => { if (oc.report) reportsMap[oc.internal_number] = oc.report; });
       const expensesMap = {};
-      allExpensesResults.forEach(res => {
-        expensesMap[res.internalNumber] = res.expenses;
-      });
+      expensesRows.sort((a, b) => (a.id ?? 0) - (b.id ?? 0)).forEach(e => { (expensesMap[e.internal_number] = expensesMap[e.internal_number] || []).push(e); });
       incidents.forEach(oc => {
         if (!resourceCounts[oc.internal_number]) {
           resourceCounts[oc.internal_number] = { vehicles: 0, crew: 0, victims: 0 };
@@ -4383,6 +4414,13 @@
     async function renderCb360ModalDispatch(vehicle = null) {
       const page = document.getElementById('page-cb360-redund');
       if (!page || document.getElementById('goc-modal-dispatch-overlay')) return;
+      {
+        const corpNr = sessionStorage.getItem("currentCorpOperNr"), curNr = document.getElementById('goc-internal-nr')?.value;
+        cb360WarmUp([`${SUPABASE_URL}/rest/v1/vehicle_status?select=vehicle,vehicle_registration,is_inop&order=vehicle.asc`,
+                     corpNr ? `${SUPABASE_URL}/rest/v1/reg_elems?select=n_int,full_name,patent_abv&corp_oper_nr=eq.${corpNr}&elem_state=eq.true&type_quad=not.is.null&type_quad=neq.&order=n_int.asc` : null,
+                     `${SUPABASE_URL}/rest/v1/cb360_incidents?corp_oper_nr=eq.${corpNr}&is_closed=eq.false&internal_number=neq.${curNr}&select=internal_number`,
+                     vehicle && vehicle.id ? `${SUPABASE_URL}/rest/v1/cb360_dispatch_crew` + `?dispatch_vehicle_id=eq.${vehicle.id}` + `&corp_oper_nr=eq.${corpNr}` : null]);
+      }
       const overlay = document.createElement('div');
       overlay.id = 'goc-modal-dispatch-overlay';
       overlay.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(0,0,0,0.35); z-index:200; align-items:center; justify-content:center;'; overlay.classList.add('rd-modal');
@@ -4704,6 +4742,7 @@
               throw new Error("Veículo gravado, mas falhou a guarnição: " + (msg || r.status));
             }
           }
+          closeCb360DispatchModal();   /* fecha logo; o resto (recarregar tabelas) continua por trás */
           showPopup('popup-success', `Despacho gravado com sucesso!`);
           const refreshResponse = await supaFetch(`${SUPABASE_URL}/rest/v1/cb360_dispatch_vehicles?corp_oper_nr=eq.${vehicleData.corp_oper_nr}&internal_number=eq.${vehicleData.internal_number}&select=*,cb360_dispatch_crew(*)&order=id.asc&cb360_dispatch_crew.order=id.asc`);
           if (refreshResponse.ok) {
@@ -4755,6 +4794,10 @@
     // ---- 6.4 INSERIR / EDITAR BOMBEIRO INDIVIDUAL (modais à parte do Despacho) ----
     // OPEN: openCb360InsertFirefighterModal()
     async function openCb360InsertFirefighterModal() {
+      {
+        const corpNr = sessionStorage.getItem("currentCorpOperNr"), curNr = document.getElementById('goc-internal-nr')?.value;
+        cb360WarmUp([`${SUPABASE_URL}/rest/v1/cb360_incidents?corp_oper_nr=eq.${corpNr}&is_closed=eq.false&internal_number=neq.${curNr}&select=internal_number`]);
+      }
       const page = document.getElementById('page-cb360-redund');
       if (!page || document.getElementById('goc-firefighter-modal-overlay')) return;
       const overlay = document.createElement('div');
@@ -4923,6 +4966,7 @@
           showPopup('popup-danger', "Erro ao gravar os bombeiros.");
           return;
         }
+        closeCb360InsertFirefighterModal();   /* fecha logo; o resto (recarregar tabelas) continua por trás */
         const refreshed = await fetchDispatchData(internalNumber);
         cb360ResourcesVehicles = refreshed.map(mean => ({
           id: String(mean.id), vehicle: mean.vehicle || '', crew: mean.cb360_dispatch_crew?.length || 0, departureDateCB: mean.cb_departure_date || '', departureTimeCB: mean.cb_departure_time || '',
@@ -5100,6 +5144,7 @@
           alert('Erro ao gravar as alterações.');
           return;
         }
+        closeCb360EditFirefighterModal();   /* fecha logo; o resto (recarregar tabelas) continua por trás */
         const internalNumber = document.getElementById('goc-internal-nr')?.value;
         const refreshed = await fetchDispatchData(internalNumber);
         cb360ResourcesVehicles = refreshed.map(mean => ({
@@ -6129,10 +6174,10 @@
           showPopup('popup-danger', 'Erro ao gravar a vítima.');
           return;
         }
+        closeCb360VictimModal();   /* fecha logo; a tabela é recarregada por trás */
         cb360ResourcesVictims = await fetchCb360Victims(internalNumber);
         renderCb360VictimsTable();
         showPopup('popup-success', existingVictim ? 'Vítima atualizada com sucesso!' : 'Vítima adicionada com sucesso!');
-        closeCb360VictimModal();
       } catch (err) {
         console.error('Erro crítico ao gravar vítima:', err);
         showPopup('popup-danger', 'Erro de rede ao gravar a vítima.');

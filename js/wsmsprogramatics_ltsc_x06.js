@@ -1531,7 +1531,18 @@
               if (!c || !nameCore) return false;
               return c === nameCore || c.includes(nameCore) || nameCore.includes(c) || similarity(nameCore, c) >= 0.8;
             };
-            const score = x => !m ? 1 : (x.type === 'Point Address' && norm(x.address?.streetNumber) === norm(num) && sameStreet(x)) ? 3
+            /* mesmo sítio: se a rua veio das sugestões, a porta tem de ficar perto do pin dessa rua (≤ 2 km);
+               senão, tem de ser da localidade escrita ou do concelho da corporação (evita "Rua de Faro 50" em Olhão) */
+            const anchor = (pin && pickedKey && pickedKey === `${rawStreet}|${city}`) ? pin.getLatLng() : null;
+            const nearOK = x => {
+              const p = {lat: x.position.lat, lng: x.position.lon};
+              if (anchor) return kmBetween({lat: anchor.lat, lng: anchor.lng}, p) <= 2;
+              const a = x.address || {}, txt = norm([a.municipality, a.municipalitySubdivision, a.localName, a.freeformAddress].filter(Boolean).join(' '));
+              const inCityTxt = city && txt.includes(norm(city));
+              const inMuni = baseMunicipality && norm(a.municipality || '') === norm(baseMunicipality);
+              return (inCityTxt || inMuni || (!city && !baseMunicipality)) && (!base || kmBetween(base, p) <= 30);
+            };
+            const score = x => !nearOK(x) ? 0 : !m ? 1 : (x.type === 'Point Address' && norm(x.address?.streetNumber) === norm(num) && sameStreet(x)) ? 3
               : (x.type === 'Address Range' && sameStreet(x)) ? 2 : sameStreet(x) ? 1 : 0;
             let d = [], errs = 0, bestHit = null, bestScore = -1;
             for (const url of tries) {
@@ -1549,6 +1560,10 @@
               for (const x of ga) { const sc = score(x); if (sc > bestScore) { bestScore = sc; bestHit = x; } }
             }
             if (bestHit && bestScore > 0) d = [bestHit];
+            if (m && anchor && bestScore < 2) {   /* porta não encontrada nesta rua: o pin fica onde estava */
+              mapStatus(`⚠️ O nº ${m[2]} não foi encontrado — o pin ficou na rua escolhida; arraste-o para a porta certa.`, false);
+              return;
+            }
             if (!d.length) {
               const osm = await nominatim(`q=${enc([street, city].filter(Boolean).join(', '))}`, city);
               if (seq !== reqSeq) return;

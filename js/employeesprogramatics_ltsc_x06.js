@@ -49,24 +49,26 @@
         /* botões: o último do rodapé (Emitir Mapa) é o principal, a vermelho; os outros brancos */
         #annual-eip-shift-map [class$="-footer"] button, #eligibility-subs-shift [class$="-footer"] button, #priority-scheduling-map [class$="-footer"] button, #vacation-scheduling-map [class$="-footer"] button, #salary-processing-map [class$="-footer"] button {height: 34px; padding: 0 16px !important; border-radius: 8px !important; font-size: 12px !important; font-weight: 800 !important; box-shadow: none !important;
                      background: #fff !important; color: #2c3e50 !important; border: 1px solid #d0d5da !important; transform: none !important; transition: background .15s, filter .15s;}
-        #annual-eip-shift-map [class$="-footer"] button:hover, #eligibility-subs-shift [class$="-footer"] button:hover, #priority-scheduling-map [class$="-footer"] button:hover, #vacation-scheduling-map [class$="-footer"] button:hover, #salary-processing-map [class$="-footer"] button:hover {background: #f4f6f8 !important;}
-        #annual-eip-shift-map [class$="-footer"] button:last-child, #eligibility-subs-shift [class$="-footer"] button:last-child, #priority-scheduling-map [class$="-footer"] button:last-child, #vacation-scheduling-map [class$="-footer"] button:last-child, #salary-processing-map [class$="-footer"] button:last-child {background: linear-gradient(180deg,#d64535,#b0281a) !important; color: #fff !important; border: 0 !important; box-shadow: 0 2px 6px rgba(176,40,26,.25) !important;}
-        #annual-eip-shift-map [class$="-footer"] button:last-child:hover, #eligibility-subs-shift [class$="-footer"] button:last-child:hover, #priority-scheduling-map [class$="-footer"] button:last-child:hover, #vacation-scheduling-map [class$="-footer"] button:last-child:hover, #salary-processing-map [class$="-footer"] button:last-child:hover {filter: brightness(1.06);}
-        #annual-eip-shift-map [class$="-footer"] button:not(:last-child) .fa-file-excel, #eligibility-subs-shift [class$="-footer"] button:not(:last-child) .fa-file-excel, #priority-scheduling-map [class$="-footer"] button:not(:last-child) .fa-file-excel, #vacation-scheduling-map [class$="-footer"] button:not(:last-child) .fa-file-excel, #salary-processing-map [class$="-footer"] button:not(:last-child) .fa-file-excel {color: #1e7e34;}
+        #annual-eip-shift-map [class$="-footer"] button:hover, #eligibility-subs-shift [class$="-footer"] button:hover, #priority-scheduling-map [class$="-footer"] button:hover, #vacation-scheduling-map [class$="-footer"] button:hover, #salary-processing-map [class$="-footer"] button:hover {filter: brightness(1.12);}
+        #annual-eip-shift-map [class$="-footer"] button, #eligibility-subs-shift [class$="-footer"] button, #priority-scheduling-map [class$="-footer"] button, #vacation-scheduling-map [class$="-footer"] button, #salary-processing-map [class$="-footer"] button {background: #1e293b !important; color: #fff !important; border: 0 !important;}
+        #annual-eip-shift-map [class$="-footer"] button[style*="#059669"], #eligibility-subs-shift [class$="-footer"] button[style*="#059669"], #priority-scheduling-map [class$="-footer"] button[style*="#059669"], #vacation-scheduling-map [class$="-footer"] button[style*="#059669"], #salary-processing-map [class$="-footer"] button[style*="#059669"] {background: #059669 !important;}
+        #annual-eip-shift-map [class$="-footer"] button i, #eligibility-subs-shift [class$="-footer"] button i, #priority-scheduling-map [class$="-footer"] button i, #vacation-scheduling-map [class$="-footer"] button i, #salary-processing-map [class$="-footer"] button i {color: inherit !important;}
         /* Registos Individuais e Marcação de Férias */
         #individual-records .major-card-body > div:first-child, #vacation-scheduling .major-card-body > div:first-child {border-radius: 12px !important; border: 1px solid #e9ecef !important; box-shadow: 0 1px 3px rgba(0,0,0,.05) !important;}
         #individual-records label, #vacation-scheduling label {color: #5b6670 !important;}
         #individual-records input:not([type="checkbox"]):not([type="radio"]), #vacation-scheduling input:not([type="checkbox"]):not([type="radio"]) {border: 1px solid #c8c8c8 !important; border-radius: 6px !important; box-shadow: none !important;}
         #individual-records input:focus, #vacation-scheduling input:focus {border-color: #c0392b !important; box-shadow: 0 0 0 2px rgba(192,57,43,.12) !important; outline: none;}
         #individual-records .btn, #vacation-scheduling .btn, #employee-registration .btn, #dashboard-rh .btn {border-radius: 8px !important; font-weight: 800 !important; box-shadow: none !important; transform: none !important;}
-        #vacation-scheduling #holiday-add-period-btn, #vacation-scheduling #holiday-preview-btn, #vacation-scheduling #holiday-pdf-btn {background: #fff !important; color: #2c3e50 !important; border: 1px solid #d0d5da !important;}
-        #vacation-scheduling #holiday-save-btn {background: linear-gradient(180deg,#d64535,#b0281a) !important; color: #fff !important; border: 0 !important; box-shadow: 0 2px 6px rgba(176,40,26,.25) !important;}
+        /* botões: forma nova, cores de origem (Adicionar Período azul e PDF cinza-azulado vêm do próprio botão) */
+        #vacation-scheduling #holiday-preview-btn {background: #2c2c2c !important; color: #fff !important; border: 0 !important;}
+        #vacation-scheduling #holiday-save-btn {background: #3354a1 !important; color: #fff !important; border: 0 !important;}
+        #vacation-scheduling #holiday-add-period-btn, #vacation-scheduling #holiday-pdf-btn {border: 0 !important;}
         #vacation-scheduling .holiday-period-card {border-radius: 12px !important; border-color: #e9ecef !important; background: #fff !important; box-shadow: 0 1px 3px rgba(0,0,0,.05) !important;}
         #vacation-scheduling .holiday-card-title {color: #2c3e50 !important;}
         /* DashBoard e Cadastro: emblemas "RH" e botão Guardar no padrão novo */
         #dashboard-rh .dash-badge-rh, #employee-registration .reg-badge-rh, #employee-registration .reg-form-header-badge {background: #c62828 !important; color: #fff !important; border-radius: 5px !important;}
         #employee-registration .reg-form-header {background: #2c3e50 !important;}
-        #employee-registration #reg-save-btn {background: linear-gradient(180deg,#d64535,#b0281a) !important; color: #fff !important; border: 0 !important; box-shadow: 0 2px 6px rgba(176,40,26,.25) !important;}
+        #employee-registration #reg-save-btn {background: #1e293b !important; color: #fff !important; border: 0 !important;}
         #employee-registration #reg-save-btn:hover {filter: brightness(1.06);}
         #employee-registration input:focus, #employee-registration select:focus, #dashboard-rh select:focus {border-color: #c0392b !important; box-shadow: 0 0 0 2px rgba(192,57,43,.12) !important; outline: none;}
         /* página de entrada do RH (como a da SALOC) */
@@ -110,13 +112,16 @@
         #page-employee-scales #info-host > div > div > div > div[style*="width:140px"], #page-employee-extra-hour #info-host > div > div > div > div[style*="width:140px"] {border-color: #e3e7eb !important; border-radius: 7px !important; background: #f8f9fa !important;}
         /* botões do rodapé */
         #page-employee-scales .major-card-footer .btn, #page-employee-extra-hour .major-card-footer .btn {height: 34px; padding: 0 16px !important; border-radius: 8px !important; font-size: 12px !important; font-weight: 800 !important; letter-spacing: .2px; box-shadow: none !important;
-                     transform: none !important; background: #fff !important; color: #2c3e50 !important; border: 1px solid #d0d5da !important; transition: background .15s, filter .15s;}
-        #page-employee-scales .major-card-footer .btn:hover, #page-employee-extra-hour .major-card-footer .btn:hover {background: #f4f6f8 !important;}
-        #page-employee-scales .major-card-footer .btn.btn-success i, #page-employee-extra-hour .major-card-footer .btn.btn-success i {color: #1e7e34;}
-        #page-employee-scales .major-card-footer .btn.btn-danger i, #page-employee-extra-hour .major-card-footer .btn.btn-danger i {color: #c62828;}
-        #page-employee-scales .major-card-footer .btn.btn-toggle.active, #page-employee-extra-hour .major-card-footer .btn.btn-toggle.active {background: #2c3e50 !important; color: #fff !important; border-color: #2c3e50 !important;}
-        #page-employee-scales .major-card-footer .btn.btn-add, #page-employee-extra-hour .major-card-footer .btn.btn-add {background: linear-gradient(180deg,#d64535,#b0281a) !important; color: #fff !important; border: 0 !important; box-shadow: 0 2px 6px rgba(176,40,26,.25) !important;}
-        #page-employee-scales .major-card-footer .btn.btn-add:hover, #page-employee-extra-hour .major-card-footer .btn.btn-add:hover {filter: brightness(1.06);}
+                     transform: none !important; color: #fff !important; border: 0 !important; transition: background .15s, filter .15s;}
+        #page-employee-scales .major-card-footer .btn:hover, #page-employee-extra-hour .major-card-footer .btn:hover {filter: brightness(1.08);}
+        /* cores de origem */
+        #page-employee-scales .major-card-footer .btn.btn-analyze, #page-employee-extra-hour .major-card-footer .btn.btn-analyze {background: #5b2d8e !important;}
+        #page-employee-scales .major-card-footer .btn.btn-toggle, #page-employee-extra-hour .major-card-footer .btn.btn-toggle {background: #f97316 !important;}
+        #page-employee-scales .major-card-footer .btn.btn-toggle.active, #page-employee-extra-hour .major-card-footer .btn.btn-toggle.active {background: #6b7280 !important;}
+        #page-employee-scales .major-card-footer .btn.btn-clean, #page-employee-extra-hour .major-card-footer .btn.btn-clean {background: #2c2c2c !important;}
+        #page-employee-scales .major-card-footer .btn.btn-add, #page-employee-extra-hour .major-card-footer .btn.btn-add {background: #3354a1 !important;}
+        #page-employee-scales .major-card-footer .btn.btn-success, #page-employee-extra-hour .major-card-footer .btn.btn-success {background: #28a745 !important;}
+        #page-employee-scales .major-card-footer .btn.btn-danger, #page-employee-extra-hour .major-card-footer .btn.btn-danger {background: #dc3545 !important;}
       `;
       document.head.appendChild(css);
     }

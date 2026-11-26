@@ -1,14 +1,5 @@
-    /* =======================================================================
-   UTILITÁRIOS · CONSOLA DE UTILITÁRIOS
-   - Este ficheiro cria a página toda (logo ao carregar): menu lateral, painéis,
-     EPE/PPI, informações, cortes de vias, CMA, disponibilidade de elementos,
-     constrangimentos hospitalares, relatórios em falta, notificações e emails.
-     Em main.html só fica <div id="page-utilities" class="page"></div>.
-   - Os painéis que antes eram criados no cardfieldscreator passaram para aqui.
-   - Notificações e Emails: os botões chamam as funções do notificatons_ltsc_x06.js.
-   - Globais (o mainloader chama-as ao abrir a página): loadInfosFromSupabase, loadRoutesFromSupabase,
-     loadCMAsFromSupabase, loadElemsButtons, loadNoHospFromSupabase, loadocrReportsFromSupabase.
-   - No fim: Ficha NRBQ (FNI), já no formato de especificação.
+   /* =======================================================================
+   UTILITÁRIOS · CONSOLA DE UTILITÁRIOS (CB360)
    ======================================================================= */
 (function () {
   const page = document.getElementById('page-utilities');

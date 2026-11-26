@@ -97,6 +97,36 @@
         .fo-vin {display: flex !important; flex-direction: row !important; align-items: center; gap: 10px;}
         .fo-vin > label {margin: 0 !important; font-weight: bold; font-size: 13px; white-space: nowrap;}
         .fo-mr10 {margin-right: 10px;}
+        /* ===== Escalas de Serviço (layout novo, só estilo; ids e funções iguais) ===== */
+        #page-scales > .major-card > .major-card-body {background: #efefef;}
+        #page-scales #months-container > div {background: #fff; border: 1px solid #e3e7eb; border-radius: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.05); padding: 12px 16px !important; width: fit-content; margin: 0 auto; gap: 10px !important;}
+        #page-scales #months-container > div > div:first-child {margin-bottom: 0 !important;}
+        #page-scales #months-container label {font-size: 11px; font-weight: 800 !important; color: #6c757d; text-transform: uppercase; letter-spacing: .4px;}
+        #page-scales #months-container select {height: 30px; padding: 0 10px !important; border: 1px solid #c8c8c8 !important; border-radius: 8px !important; font-weight: 700; color: #2c3e50;}
+        #page-scales #months-container > div > div:last-child {display: grid !important; grid-template-columns: repeat(6, 104px); gap: 6px !important; max-width: none !important; justify-content: center;}
+        #page-scales #months-container .btn {width: auto !important; height: 34px !important; margin: 0 !important; border-radius: 999px !important; background: #f4f6f8 !important; color: #2c3e50 !important;
+                     border: 1px solid #dfe3e7 !important; box-shadow: none !important; font-size: 12px !important; font-weight: 800 !important; letter-spacing: .3px; transform: none !important;
+                     transition: background .15s, border-color .15s, color .15s;}
+        #page-scales #months-container .btn:hover {background: #fdf0ee !important; border-color: #e6b3ad !important; color: #b71c1c !important;}
+        #page-scales #months-container .btn.active {background: #2c3e50 !important; border-color: #2c3e50 !important; color: #fff !important;}
+        #page-scales #table-container > h2:first-child, #page-scales #table-container h2 {background: #fff !important; border: 1px solid #e9ecef; border-radius: 12px; color: #2c3e50; font-size: 14px !important; letter-spacing: .8px;
+                     padding: 10px !important; box-shadow: 0 1px 3px rgba(0,0,0,.05);}
+        #page-scales .table-container {background: #fff; border: 1px solid #e3e7eb; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.05); scrollbar-width: thin; scrollbar-color: #e57373 #fbe9e7;}
+        #page-scales #table-container table {border-collapse: separate !important; border-spacing: 0;}
+        #page-scales #table-container th[style*="rgb(240, 240, 240)"] {background: #f1f3f5 !important; color: #5b6670 !important; font-weight: 800 !important; font-size: 10.5px !important; text-transform: uppercase;}
+        #page-scales #table-container th {border-color: #e3e7eb !important;}
+        #page-scales #table-container tbody td {border-color: #e9ecef !important;}
+        /* botões: GUARDAR vermelho (principal), EMITIR escuro, ANALIZAR branco */
+        #page-scales #save-container .btn {height: 34px; border-radius: 8px !important; font-weight: 800 !important; box-shadow: none !important; transform: none !important;}
+        #page-scales #analyze-button {background: #fff !important; color: #2c3e50 !important; border: 1px solid #d0d5da !important;}
+        #page-scales #save-button {background: linear-gradient(180deg,#d64535,#b0281a) !important; color: #fff !important; border: 0 !important; box-shadow: 0 2px 6px rgba(176,40,26,.25) !important;}
+        #page-scales #emit-button {background: #2c3e50 !important; color: #fff !important; border: 0 !important;}
+        /* Eventos e Serviços de Voluntariado: ação principal a vermelho, relatórios brancos */
+        #page-events #evcSubmitBtn, #services-save-button, #services-values-save-button {background: linear-gradient(180deg,#d64535,#b0281a) !important; color: #fff !important; border: 0 !important;
+                     border-radius: 8px !important; box-shadow: 0 2px 6px rgba(176,40,26,.25) !important; font-weight: 800 !important;}
+        #page-events #evcSubmitBtn:hover, #services-save-button:hover, #services-values-save-button:hover {filter: brightness(1.06);}
+        #vsPDFReport, #vsEXCELReport {background: #fff !important; color: #2c3e50 !important; border: 1px solid #d0d5da !important; border-radius: 8px !important; font-weight: 800 !important;}
+        #vsPDFReport i {color: #c62828;} #vsEXCELReport i {color: #1e7e34;}
       `;
       document.head.appendChild(css);
     }

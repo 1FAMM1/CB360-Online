@@ -1,10 +1,5 @@
     /* =======================================
-    SALOC PROGRAMATICS
-    - As páginas do SALOC (PPIs, recusas/INOPs, relatórios, dashboard, CREPC Algarve,
-      planeamento diário, SITOP, diversos e consola de alarmes) são criadas aqui, logo ao
-      carregar; o main.html só tem os <div class="page"> vazios.
-    - O HTML foi movido tal e qual (mesmos ids, estilos e on...=""), para não mudar nada no
-      funcionamento. A limpeza dos estilos fica para a fase do CSS.
+    SALOC PROGRAMATICS (CB360)
     ======================================= */
     (() => {
     /* ----------------------------- estilos ----------------------------- */
@@ -63,7 +58,7 @@
         .slx-hemo .sl-194 {margin-top: 12px !important; padding-top: 10px; border-top: 1px solid #eef0f2;}
         /* tabelas */
         .slx-hemo table.sl-143 {border-collapse: separate !important; border-spacing: 0; width: 100%; border: 1px solid #e3e7eb !important; overflow: hidden;}
-        #hemo-utentlist-card .sl-195 {max-height: 340px !important; border: 1px solid #e3e7eb; border-radius: 10px; scrollbar-width: thin; scrollbar-color: #e57373 #fbe9e7;}
+        #hemo-utentlist-card .sl-195 {max-height: 340px; border: 1px solid #e3e7eb; border-radius: 10px; scrollbar-width: thin; scrollbar-color: #e57373 #fbe9e7;}
         #hemo-utentlist-card table.sl-143 {border: 0 !important; border-radius: 0; overflow: visible !important;}
         #hemo-utentlist-card thead.sl-196 th {position: sticky; top: 0; z-index: 2;}
         .slx-hemo .sl-205 + table.sl-143, .slx-hemo .sl-211 + table.sl-143, .slx-hemo .sl-204 table.sl-143 {border-radius: 0 0 10px 10px;}
@@ -89,9 +84,9 @@
         .slx-hemo .sl-205, .slx-hemo .sl-211 {border-color: #d6d9dd !important;}
         .slx-hemo .sl-204 table.sl-143 {border-color: #d6d9dd !important;}
         .slx-hemo .sl-204 table.sl-143 td {font-weight: 600 !important;}
-        #hemo-utentlist-tbody button {width: 26px; height: 22px; margin-top: 0 !important; margin-bottom: 0 !important; padding: 0 !important; border-radius: 6px !important; font-size: 12px !important; transition: filter .15s;}
-        #hemo-utentlist-tbody button[onclick^="editHemoUtent"] {background: #fff !important; border: 1px solid #d0d5da !important;}
-        #hemo-utentlist-tbody button[onclick^="deleteHemoUtent"] {background: #fdecea !important; border: 1px solid #f5c2c0 !important;}
+        #hemo-utentlist-tbody button {height: 24px; margin-top: 0 !important; margin-bottom: 0 !important; padding: 3px 9px !important; border-radius: 6px !important; font-size: 12px !important; transition: filter .15s;}
+        #hemo-utentlist-tbody button[onclick^="editHemoUtent"] {background: #f1f3f5 !important; border: 1px solid #d5dbe1 !important; color: #2c3e50 !important;}
+        #hemo-utentlist-tbody button[onclick^="deleteHemoUtent"] {background: #fff !important; border: 1px solid #f0b8b3 !important; color: #c62828 !important;}
         #hemo-utentlist-tbody button:hover {filter: brightness(.94);}
         #hemo-utentdata-card label.sl-33 {white-space: nowrap;}
         #utent_h_save {background: linear-gradient(180deg,#d64535,#b0281a) !important; color: #fff !important; border: 0 !important; border-radius: 8px !important; height: 34px; padding: 0 20px !important;
@@ -276,12 +271,16 @@
         #page-plandir .plandir-table tbody tr:nth-child(even) td.mp-cell, #page-plandir .plandir-table tbody tr:nth-child(even) td.tas-cell {background: #eceff1 !important; cursor: not-allowed;}
         #page-plandir .plandir-table input[readonly] {color: #455a64 !important; cursor: not-allowed; background: transparent !important;}
         #page-plandir .plandir-table td.mp-cell.plandir-mp-active {background: #dcefdc !important;} #page-plandir .plandir-table td.tas-cell.plandir-tas-active {background: #fff3cd !important;}
+        /* forma nova em todos os botões .btn do SALOC (cores de origem mantidas) */
+        :is(#page-saloc,#page-ppis,#page-ppiaero,#page-ppia22,#page-ppilinfer,#page-ineminop,#page-recserv,#page-recservdescr,#page-recinoreports,#page-inocrepc,#page-crepcalg,#page-plandir,#page-dashboard,#page-docimport,#page-phonebook,#page-contact-list,#page-material-request,#page-fleet-cards,#page-hemodialysis,#page-alarm-console,#page-attendance-list) .btn {border-radius: 8px !important; border-bottom: 0 !important; transform: none !important; box-shadow: 0 1px 3px rgba(0,0,0,.15) !important;}
+        :is(#page-saloc,#page-ppis,#page-ppiaero,#page-ppia22,#page-ppilinfer,#page-ineminop,#page-recserv,#page-recservdescr,#page-recinoreports,#page-inocrepc,#page-crepcalg,#page-plandir,#page-dashboard,#page-docimport,#page-phonebook,#page-contact-list,#page-material-request,#page-fleet-cards,#page-hemodialysis,#page-alarm-console,#page-attendance-list) .btn:hover {filter: brightness(1.08); transform: none !important;}
+        .btn:has(> i.fa-solid) {gap: 6px;}
         /* botões Guardar rascunho / Emitir: barra fixa no fundo da coluna */
         #page-plandir #plandir_container > div:has(#emit-pp) {position: sticky; bottom: 0; z-index: 2; justify-content: center !important; margin: 0 !important; padding: 8px 0 2px; background: #f4f5f7;}   /* sem caixa: o fundo é o do cartão */
         #page-plandir #draft-pp, #page-plandir #emit-pp {height: 34px; padding: 0 18px !important; border-radius: 8px !important; font-size: 12px !important; font-weight: 700 !important; letter-spacing: .3px !important;
                      display: inline-flex; align-items: center; gap: 6px; transition: background .15s, box-shadow .15s;}
-        #page-plandir #draft-pp {background: #fff !important; color: #2c3e50 !important; border: 1px solid #c8ced5 !important;}
-        #page-plandir #draft-pp:hover {background: #f1f3f5 !important;}
+        #page-plandir #draft-pp {background: #3354a1 !important; color: #fff !important; border: 0 !important;}   /* cor de origem (btn-add) */
+        #page-plandir #draft-pp:hover {filter: brightness(1.08);}
         #page-plandir #emit-pp {background: #c0392b !important; color: #fff !important; box-shadow: 0 2px 6px rgba(192,57,43,.3);}
         #page-plandir #emit-pp:hover {background: #a93226 !important;}
         #page-plandir #plandir-right-col {width: 360px !important;}
@@ -849,14 +848,14 @@
             </div>
             <div class="sl-4">
               <ul class="sl-5">
-                <li class="sl-6">🗺️ Consulta dos Planos Prévios de Intervenção (A22, Aeroporto e Linha Ferroviária)</li>
-                <li class="sl-6">📝 Registo de Recusas de Serviço e de Inoperacionalidades INEM, com relatórios mensais</li>
-                <li class="sl-6">📊 Dashboard de Estatísticas Operacionais</li>
-                <li class="sl-6">📨 Documentação para o Comando Sub-Regional: MOA, Anexo G1/G2 e Situação Operacional</li>
-                <li class="sl-6">📅 Planeamento Diário e gestão de turnos</li>
-                <li class="sl-6">🚑 Listagem semanal e gestão dos utentes de Hemodiálise</li>
-                <li class="sl-6">📁 Requisição de equipamentos, cartões frota, contactos e listas nominais</li>
-                <li class="sl-6">🔔 Consola de Alarmes Interna (chamadas individuais, de grupo e alarmes)</li>
+                <li class="sl-6"><i class="fa-solid fa-map"></i> Consulta dos Planos Prévios de Intervenção (A22, Aeroporto e Linha Ferroviária)</li>
+                <li class="sl-6"><i class="fa-solid fa-pen-to-square"></i> Registo de Recusas de Serviço e de Inoperacionalidades INEM, com relatórios mensais</li>
+                <li class="sl-6"><i class="fa-solid fa-chart-column"></i> Dashboard de Estatísticas Operacionais</li>
+                <li class="sl-6"><i class="fa-solid fa-envelope-open-text"></i> Documentação para o Comando Sub-Regional: MOA, Anexo G1/G2 e Situação Operacional</li>
+                <li class="sl-6"><i class="fa-solid fa-calendar-days"></i> Planeamento Diário e gestão de turnos</li>
+                <li class="sl-6"><i class="fa-solid fa-truck-medical"></i> Listagem semanal e gestão dos utentes de Hemodiálise</li>
+                <li class="sl-6"><i class="fa-solid fa-folder"></i> Requisição de equipamentos, cartões frota, contactos e listas nominais</li>
+                <li class="sl-6"><i class="fa-solid fa-bell"></i> Consola de Alarmes Interna (chamadas individuais, de grupo e alarmes)</li>
               </ul>
             </div>
             <p class="sl-7">
@@ -887,18 +886,18 @@
             </div>
             <ul class="sl-9">
               <!-- <li class="sl-10">🛣️ PPI - Autoestrada do Sul (A2) <em>(Em atualização pela ANEPC)</em></li> -->
-              <li class="sl-6">🛣️ PPI - Via do Infante de Sagres (A22)</li>
-              <li class="sl-6">✈️ PPI - Aeroporto Internacional Gago Coutinho</li>
-              <li class="sl-6">🚆 PPI - Linha Ferroviária do Algarve</li>
+              <li class="sl-6"><i class="fa-solid fa-road"></i> PPI - Via do Infante de Sagres (A22)</li>
+              <li class="sl-6"><i class="fa-solid fa-plane"></i> PPI - Aeroporto Internacional Gago Coutinho</li>
+              <li class="sl-6"><i class="fa-solid fa-train"></i> PPI - Linha Ferroviária do Algarve</li>
             </ul>
             <div class="sl-11">
               <strong>Funcionalidades do Módulo:</strong>
             </div>
             <ul class="sl-9">
-              <li class="sl-6">📍 Consulta geográfica interativa dos PPIs</li>
-              <li class="sl-6">📑 Acesso a tabelas técnicas e recursos associados</li>
-              <li class="sl-6">🧭 Identificação de meios e acessos operacionais</li>
-              <li class="sl-6">🔄 Atualização e integração contínua de dados</li>
+              <li class="sl-6"><i class="fa-solid fa-location-dot"></i> Consulta geográfica interativa dos PPIs</li>
+              <li class="sl-6"><i class="fa-solid fa-file-lines"></i> Acesso a tabelas técnicas e recursos associados</li>
+              <li class="sl-6"><i class="fa-solid fa-compass"></i> Identificação de meios e acessos operacionais</li>
+              <li class="sl-6"><i class="fa-solid fa-arrows-rotate"></i> Atualização e integração contínua de dados</li>
             </ul>
             <p class="sl-7">
               Os PPIs são uma ferramenta fundamental para garantir a resposta coordenada e eficiente em situações
@@ -1020,10 +1019,10 @@
               <strong>Funcionalidades Principais:</strong>
             </div>
             <ul class="sl-9">
-              <li class="sl-6">📝 Registo de Recusas de Serviços</li>
-              <li class="sl-6">🚑 Registo de Inoperacionalidades (INEM)</li>
-              <li class="sl-6">📊 Dashboard Gráfico de Estatísticas</li>
-              <li class="sl-10">📅 Relatórios Mensais <em>(Brevemente)</em></li>
+              <li class="sl-6"><i class="fa-solid fa-pen-to-square"></i> Registo de Recusas de Serviços</li>
+              <li class="sl-6"><i class="fa-solid fa-truck-medical"></i> Registo de Inoperacionalidades (INEM)</li>
+              <li class="sl-6"><i class="fa-solid fa-chart-column"></i> Dashboard Gráfico de Estatísticas</li>
+              <li class="sl-10"><i class="fa-solid fa-calendar-days"></i> Relatórios Mensais <em>(Brevemente)</em></li>
             </ul>
             <div class="sl-11">
               <strong>Objetivo do Módulo:</strong>
@@ -1034,9 +1033,9 @@
               Permite ainda a análise de padrões, apoio à decisão e criação de relatórios estatísticos.
             </p>
             <ul class="sl-9">
-              <li class="sl-6">📈 Monitorização contínua da disponibilidade operacional do veículo INEM</li>
-              <li class="sl-6">📋 Monitorização contínua das recusas de serviços</li>
-              <li class="sl-6">🕓 Histórico de eventos e registos detalhados</li>
+              <li class="sl-6"><i class="fa-solid fa-chart-line"></i> Monitorização contínua da disponibilidade operacional do veículo INEM</li>
+              <li class="sl-6"><i class="fa-solid fa-clipboard-list"></i> Monitorização contínua das recusas de serviços</li>
+              <li class="sl-6"><i class="fa-solid fa-clock-rotate-left"></i> Histórico de eventos e registos detalhados</li>
             </ul>
             <div class="sl-8">
               Selecione uma opção no menu lateral para começar a gestão dos registos.
@@ -1058,7 +1057,7 @@
           RECUSAS DE SERVIÇOS DE TRANSPORTE DE DOENTES
         </div>
         <div class="major-card-body">
-          <section class="slx-box"><div class="slx-bh"><span class="slx-n">1</span>Registo da recusa</div><div class="slx-grid slx-g4"><div class="slx-f"><label for="service_refusal_date">Data da recusa</label><input type="date" id="service_refusal_date" class="slx-in"></div><div class="slx-f"><label for="service_refusal_time">Hora da recusa</label><input type="time" id="service_refusal_time" class="slx-in"></div><div class="slx-f"><label for="service_refusal_type">Tipo de serviço</label><select id="service_refusal_type" class="slx-in"></select></div><div class="slx-f"><label for="service_refusal_motive">Motivo da recusa</label><select id="service_refusal_motive" class="slx-in"></select></div><div class="slx-f slx-s2"><label for="service_refusal_origin">Origem do serviço</label><input type="text" id="service_refusal_origin" class="slx-in"></div><div class="slx-f slx-s2"><label for="service_refusal_destination">Destino do serviço</label><input type="text" id="service_refusal_destination" class="slx-in"></div><div class="slx-f"><label for="service_refusal_optel">Optel de serviço</label><input type="text" id="service_refusal_optel" class="slx-in"></div><div class="slx-f"><label for="service_refusal_validation">Validado por</label><input type="text" id="service_refusal_validation" class="slx-in"></div><div class="slx-act slx-s2" id="service-refusal"><button class="btn btn-add slx-save" onclick="insertServiceRefusal()">💾 GUARDAR</button></div></div></section><section class="slx-box"><div class="slx-bh"><span class="slx-n">2</span>Recusas registadas<div class="slx-tools"><label for="refusals_year_filter">Ano</label><select id="refusals_year_filter" class="slx-in slx-year"></select></div></div><div class="table-container sl-34 slx-tbl">
+          <section class="slx-box"><div class="slx-bh"><span class="slx-n">1</span>Registo da recusa</div><div class="slx-grid slx-g4"><div class="slx-f"><label for="service_refusal_date">Data da recusa</label><input type="date" id="service_refusal_date" class="slx-in"></div><div class="slx-f"><label for="service_refusal_time">Hora da recusa</label><input type="time" id="service_refusal_time" class="slx-in"></div><div class="slx-f"><label for="service_refusal_type">Tipo de serviço</label><select id="service_refusal_type" class="slx-in"></select></div><div class="slx-f"><label for="service_refusal_motive">Motivo da recusa</label><select id="service_refusal_motive" class="slx-in"></select></div><div class="slx-f slx-s2"><label for="service_refusal_origin">Origem do serviço</label><input type="text" id="service_refusal_origin" class="slx-in"></div><div class="slx-f slx-s2"><label for="service_refusal_destination">Destino do serviço</label><input type="text" id="service_refusal_destination" class="slx-in"></div><div class="slx-f"><label for="service_refusal_optel">Optel de serviço</label><input type="text" id="service_refusal_optel" class="slx-in"></div><div class="slx-f"><label for="service_refusal_validation">Validado por</label><input type="text" id="service_refusal_validation" class="slx-in"></div><div class="slx-act slx-s2" id="service-refusal"><button class="btn btn-add slx-save" onclick="insertServiceRefusal()"><i class="fa-solid fa-floppy-disk"></i> GUARDAR</button></div></div></section><section class="slx-box"><div class="slx-bh"><span class="slx-n">2</span>Recusas registadas<div class="slx-tools"><label for="refusals_year_filter">Ano</label><select id="refusals_year_filter" class="slx-in slx-year"></select></div></div><div class="table-container sl-34 slx-tbl">
             <table id="service-refusals-table">
               <thead><tr><th style="width:95px">Data</th><th style="width:65px">Hora</th><th>Tipo</th><th>Origem</th><th>Destino</th><th>Motivo</th><th>Optel</th><th>Validação</th><th style="width:44px"></th></tr></thead>
               <tbody></tbody>
@@ -1082,7 +1081,7 @@
           INOPERACIONALIDADES VEÍCULO (INEM)
         </div>
         <div class="major-card-body">
-          <section class="slx-box"><div class="slx-bh"><span class="slx-n">1</span>Registo da inoperacionalidade</div><div class="slx-grid slx-g4"><div class="slx-f"><label for="ineinop_date">Data</label><input type="date" id="ineinop_date" class="slx-in"></div><div class="slx-f"><label for="ineinop_shift">Turno</label><select id="ineinop_shift" class="slx-in"><option>&nbsp;</option><option>D</option><option>N</option></select></div><div class="slx-f"><label for="ineinop_hour_qtd">Qtd. horas</label><input type="time" id="ineinop_hour_qtd" class="slx-in"></div><div class="slx-f"><label for="reason_for_ineinop">Motivo da inoperacionalidade</label><select id="reason_for_ineinop" class="slx-in"></select></div><div class="slx-f slx-s2"><label for="ineinop_crew">Tripulante</label><input type="text" id="ineinop_crew" class="slx-in"></div><div class="slx-f"><label for="ineinop_optel">Optel de serviço</label><input type="text" id="ineinop_optel" class="slx-in"></div><div class="slx-f"><label for="ineinop_validation">Validado por</label><input type="text" id="ineinop_validation" class="slx-in"></div><div class="slx-act slx-s4" id="inem-inop"><button class="btn btn-add slx-save" onclick="insertIneInop()">💾 GUARDAR</button></div></div></section><section class="slx-box"><div class="slx-bh"><span class="slx-n">2</span>Inoperacionalidades registadas<div class="slx-tools"><label for="ineinop_year_filter">Ano</label><select id="ineinop_year_filter" class="slx-in slx-year"></select></div></div><div class="table-container sl-43 slx-tbl">
+          <section class="slx-box"><div class="slx-bh"><span class="slx-n">1</span>Registo da inoperacionalidade</div><div class="slx-grid slx-g4"><div class="slx-f"><label for="ineinop_date">Data</label><input type="date" id="ineinop_date" class="slx-in"></div><div class="slx-f"><label for="ineinop_shift">Turno</label><select id="ineinop_shift" class="slx-in"><option>&nbsp;</option><option>D</option><option>N</option></select></div><div class="slx-f"><label for="ineinop_hour_qtd">Qtd. horas</label><input type="time" id="ineinop_hour_qtd" class="slx-in"></div><div class="slx-f"><label for="reason_for_ineinop">Motivo da inoperacionalidade</label><select id="reason_for_ineinop" class="slx-in"></select></div><div class="slx-f slx-s2"><label for="ineinop_crew">Tripulante</label><input type="text" id="ineinop_crew" class="slx-in"></div><div class="slx-f"><label for="ineinop_optel">Optel de serviço</label><input type="text" id="ineinop_optel" class="slx-in"></div><div class="slx-f"><label for="ineinop_validation">Validado por</label><input type="text" id="ineinop_validation" class="slx-in"></div><div class="slx-act slx-s4" id="inem-inop"><button class="btn btn-add slx-save" onclick="insertIneInop()"><i class="fa-solid fa-floppy-disk"></i> GUARDAR</button></div></div></section><section class="slx-box"><div class="slx-bh"><span class="slx-n">2</span>Inoperacionalidades registadas<div class="slx-tools"><label for="ineinop_year_filter">Ano</label><select id="ineinop_year_filter" class="slx-in slx-year"></select></div></div><div class="table-container sl-43 slx-tbl">
             <table id="ineinop-table">
               <thead><tr><th style="width:95px">Data</th><th style="width:60px">Turno</th><th style="width:90px">Qtd. horas</th><th>Motivo</th><th>Tripulante</th><th>Optel</th><th>Validação</th><th style="width:44px"></th></tr></thead>
               <tbody></tbody>
@@ -1119,7 +1118,7 @@
             <!-- TABELA RECUSAS -->
             <div class="sl-49">
               <div class="sl-50">
-                🚫 Recusas de Serviço
+                <i class="fa-solid fa-ban"></i> Recusas de Serviço
               </div>
               <table class="sl-51">
                 <thead>
@@ -1142,7 +1141,7 @@
             <!-- TABELA INEM D -->
             <div class="sl-59">
               <div class="sl-60">
-                🌤️ Inoperacionalidades INEM — Turno D
+                <i class="fa-solid fa-sun"></i> Inoperacionalidades INEM — Turno D
               </div>
               <table class="sl-51">
                 <thead>
@@ -1169,7 +1168,7 @@
             <!-- TABELA INEM N -->
             <div class="sl-59">
               <div class="sl-61">
-                🌙 Inoperacionalidades INEM — Turno N
+                <i class="fa-solid fa-moon"></i> Inoperacionalidades INEM — Turno N
               </div>
               <table class="sl-51">
                 <thead>
@@ -1197,7 +1196,7 @@
         </div>
         <div class="major-card-footer">
           <div class="action-buttons" id="inem-inop">
-            <button class="btn btn-danger" onclick="insertIneInop()">📄 EMITIR</button>
+            <button class="btn btn-danger" onclick="insertIneInop()"><i class="fa-solid fa-file-lines"></i> EMITIR</button>
           </div>
         </div>
       </div>
@@ -1291,10 +1290,10 @@
               <strong>Funcionalidades Principais:</strong>
             </div>
             <ul class="sl-83">
-              <li class="sl-84">📄 <strong>Formulários Oficiais CREPC Algarve</strong> – envio e atualização de documentação obrigatória, como <em>MOA</em>, <em>Anexo G2</em> e outros 
+              <li class="sl-84"><i class="fa-solid fa-file-lines"></i> <strong>Formulários Oficiais CREPC Algarve</strong> – envio e atualização de documentação obrigatória, como <em>MOA</em>, <em>Anexo G2</em> e outros 
                 formulários operacionais.</li>
-              <li class="sl-84">📅 <strong>Planeamentos Diários</strong> – gestão estruturada de recursos e previsões do serviço diário do CB Faro - Cruz Lusa.</li>
-              <li class="sl-84">🚒 <strong>Comunicação de Inoperacionalidades e Operacionalidades</strong> – automatização do envio de estados de veículos e equipamentos às entidades 
+              <li class="sl-84"><i class="fa-solid fa-calendar-days"></i> <strong>Planeamentos Diários</strong> – gestão estruturada de recursos e previsões do serviço diário do CB Faro - Cruz Lusa.</li>
+              <li class="sl-84"><i class="fa-solid fa-fire"></i> <strong>Comunicação de Inoperacionalidades e Operacionalidades</strong> – automatização do envio de estados de veículos e equipamentos às entidades 
                 designadas (CREPC, CHEFIAS, COMANDO, etc.).</li>
             </ul>
             <div class="sl-8">
@@ -1337,7 +1336,7 @@
                   <section class="slx-box"><div class="slx-bh"><span class="slx-n">2</span>Medidas<div class="slx-tools"><span class="slx-cnt" id="moa-count">0 de 9 ativas</span></div></div><div class="slx-scroll"><div class="slx-meds"><div class="slx-m"><label class="slx-mh"><input type="checkbox" id="moa_eco" class="slx-swi"><span class="slx-sw"></span>Elemento de Comando às operações<small>desligada</small></label><div class="slx-mf"><select id="moa_eco_sit" class="slx-in"></select><select id="moa_eco_pront" class="slx-in"></select><input type="text" id="moa_eco_observ" class="slx-in" placeholder="Observações"></div></div><div class="slx-m"><label class="slx-mh"><input type="checkbox" id="moa_ned" class="slx-swi"><span class="slx-sw"></span>Notificação à Entidade Detentora<small>desligada</small></label><div class="slx-mf"><select id="moa_ned_sit" class="slx-in" disabled></select><select id="moa_ned_pront" class="slx-in"></select><input type="text" id="moa_ned_observ" class="slx-in" placeholder="Observações"></div></div><div class="slx-m"><label class="slx-mh"><input type="checkbox" id="moa_oco" class="slx-swi"><span class="slx-sw"></span>Oficial / Chefe em ordenança<small>desligada</small></label><div class="slx-mf"><select id="moa_oco_sit" class="slx-in"></select><select id="moa_oco_pront" class="slx-in"></select><input type="text" id="moa_oco_observ" class="slx-in" placeholder="Observações"></div></div><div class="slx-m"><label class="slx-mh"><input type="checkbox" id="moa_era" class="slx-swi"><span class="slx-sw"></span>ERAS locais<small>desligada</small></label><div class="slx-mf"><select id="moa_era_sit" class="slx-in"></select><select id="moa_era_pront" class="slx-in"></select><input type="text" id="moa_era_observ" class="slx-in" placeholder="Observações"></div></div><div class="slx-m"><label class="slx-mh"><input type="checkbox" id="moa_eob" class="slx-swi"><span class="slx-sw"></span>Equipas de observação<small>desligada</small></label><div class="slx-mf"><select id="moa_eob_sit" class="slx-in"></select><select id="moa_eob_pront" class="slx-in"></select><input type="text" id="moa_eob_observ" class="slx-in" placeholder="Observações"></div></div><div class="slx-m"><label class="slx-mh"><input type="checkbox" id="moa_rsc" class="slx-swi"><span class="slx-sw"></span>Reforço da SALOC<small>desligada</small></label><div class="slx-mf"><select id="moa_rsc_sit" class="slx-in" disabled></select><select id="moa_rsc_pront" class="slx-in"></select><input type="text" id="moa_rsc_observ" class="slx-in" placeholder="Observações"></div></div><div class="slx-m"><label class="slx-mh"><input type="checkbox" id="moa_mef" class="slx-swi"><span class="slx-sw"></span>Mobilização do efetivo<small>desligada</small></label><div class="slx-mf"><select id="moa_mef_sit" class="slx-in"></select><select id="moa_mef_pront" class="slx-in" disabled></select><input type="text" id="moa_mef_observ" class="slx-in" placeholder="Observações" disabled></div></div><div class="slx-m slx-wide"><label class="slx-mh"><input type="checkbox" class="slx-swi"><span class="slx-sw"></span>Reforço de equipas de intervenção extraordinárias<small>desligada</small></label><div class="slx-mf slx-mf4"><input type="text" id="moa_reie_type_01" class="slx-in" placeholder="Tipologia"><input type="text" id="moa_reie_time_01" class="slx-in" placeholder="Período"><input type="text" id="moa_reie_nop_01" class="slx-in" placeholder="N.º operacionais"><input type="text" id="moa_reie_obs_01" class="slx-in" placeholder="Observações"></div><div class="slx-mf slx-mf4"><input type="text" id="moa_reie_type_02" class="slx-in" placeholder="Tipologia"><input type="text" id="moa_reie_time_02" class="slx-in" placeholder="Período"><input type="text" id="moa_reie_nop_02" class="slx-in" placeholder="N.º operacionais"><input type="text" id="moa_reie_obs_02" class="slx-in" placeholder="Observações"></div><div class="slx-mf slx-mf4"><input type="text" id="moa_reie_type_03" class="slx-in" placeholder="Tipologia"><input type="text" id="moa_reie_time_03" class="slx-in" placeholder="Período"><input type="text" id="moa_reie_nop_03" class="slx-in" placeholder="N.º operacionais"><input type="text" id="moa_reie_obs_03" class="slx-in" placeholder="Observações"></div></div><div class="slx-m slx-wide"><label class="slx-mh"><input type="checkbox" class="slx-swi"><span class="slx-sw"></span>Outras<small>desligada</small></label><div class="slx-mf"><input type="text" id="moa_otr_type_01" class="slx-in" placeholder="Medida"><input type="text" id="moa_otr_time_01" class="slx-in" placeholder="Período"><input type="text" id="moa_otr_obs_01" class="slx-in" placeholder="Observações"></div><div class="slx-mf"><input type="text" id="moa_otr_type_02" class="slx-in" placeholder="Medida"><input type="text" id="moa_otr_time_02" class="slx-in" placeholder="Período"><input type="text" id="moa_otr_obs_02" class="slx-in" placeholder="Observações"></div><div class="slx-mf"><input type="text" id="moa_otr_type_03" class="slx-in" placeholder="Medida"><input type="text" id="moa_otr_time_03" class="slx-in" placeholder="Período"><input type="text" id="moa_otr_obs_03" class="slx-in" placeholder="Observações"></div></div></div></div></section>
                 </div>
                 <aside class="slx-sum"><div class="slx-sum-k">Resumo da MOA</div><pre class="slx-prev" id="moa-prev"></pre><p class="slx-sum-p">Vai por email, com o formulário em PDF, para os destinatários do Centro de Dados.</p></aside></div>
-                <div class="slx-foot" id="moa-emit"><button class="btn btn-danger" id="saveMOABtn">📄 EMITIR MOA</button></div>
+                <div class="slx-foot" id="moa-emit"><button class="btn btn-danger" id="saveMOABtn"><i class="fa-solid fa-file-lines"></i> EMITIR MOA</button></div>
               </div>
           </div>
           <!-- G2 (CREPC SUB SUB-MODULE) -->
@@ -1586,10 +1585,10 @@
             </div>
             <div id="plandir-header-container"></div>
             <div class="plandir-kpis" id="plandir-kpis" hidden>
-              <div class="plandir-kpi" style="--c:#c62828"><i>👥</i><div><b id="plandir-k-el">0</b><small>Elementos escalados</small></div></div>
-              <div class="plandir-kpi" style="--c:#1565c0"><i>🚒</i><div><b id="plandir-k-eq">0</b><small>Equipas com elementos</small></div></div>
-              <div class="plandir-kpi" style="--c:#2e7d32"><i>🚑</i><div><b id="plandir-k-tas">0</b><small>TAS</small></div></div>
-              <div class="plandir-kpi" style="--c:#ef6c00"><i>⚠️</i><div><b id="plandir-k-inc">0</b><small>Secções por completar</small></div></div>
+              <div class="plandir-kpi" style="--c:#c62828"><i><i class="fa-solid fa-users"></i></i><div><b id="plandir-k-el">0</b><small>Elementos escalados</small></div></div>
+              <div class="plandir-kpi" style="--c:#1565c0"><i><i class="fa-solid fa-fire"></i></i><div><b id="plandir-k-eq">0</b><small>Equipas com elementos</small></div></div>
+              <div class="plandir-kpi" style="--c:#2e7d32"><i><i class="fa-solid fa-truck-medical"></i></i><div><b id="plandir-k-tas">0</b><small>TAS</small></div></div>
+              <div class="plandir-kpi" style="--c:#ef6c00"><i><i class="fa-solid fa-triangle-exclamation"></i></i><div><b id="plandir-k-inc">0</b><small>Secções por completar</small></div></div>
             </div>
             <div id="plandir-layout-wrapper">
               <div id="plandir-left-col">
@@ -1786,7 +1785,7 @@
                 </select>
               </div>
               <div class="major-field sl-194">
-                <button id="utent_h_save" class="btn btn-add">💾 GRAVAR</button> 
+                <button id="utent_h_save" class="btn btn-add"><i class="fa-solid fa-floppy-disk"></i> GRAVAR</button> 
               </div>
             </div>
           </div>
@@ -1941,7 +1940,7 @@
         </div>
         <div class="major-card-footer">
           <div id="hemodialysis-options" style="display: none; justify-content: flex-end; gap: 10px;">            
-            <button id="hemodialysis-emit" class="btn btn-danger">📄 EMITIR LISTAGEM</button> 
+            <button id="hemodialysis-emit" class="btn btn-danger"><i class="fa-solid fa-file-lines"></i> EMITIR LISTAGEM</button> 
           </div>
         </div>
       </div>
@@ -1970,8 +1969,8 @@
               </div></section>
         </div>
         <div class="major-card-footer"><div class="sl-222" id="equipment-request-options">
-            <button id="equipment-request-save" class="btn btn-add">💾 GRAVAR</button>
-            <button id="equipment-request-emit" class="btn btn-danger" disabled>📄 EMITIR</button>
+            <button id="equipment-request-save" class="btn btn-add"><i class="fa-solid fa-floppy-disk"></i> GRAVAR</button>
+            <button id="equipment-request-emit" class="btn btn-danger" disabled><i class="fa-solid fa-file-lines"></i> EMITIR</button>
           </div></div>
       </div>
 
@@ -1999,8 +1998,8 @@
               </div></section>
         </div>
         <div class="major-card-footer"><div class="sl-222" id="card-fleet-options">
-            <button id="card-fleet-save" class="btn btn-add">💾 GRAVAR</button>
-            <button id="card-fleet-emit" class="btn btn-danger">📄 EMITIR</button>
+            <button id="card-fleet-save" class="btn btn-add"><i class="fa-solid fa-floppy-disk"></i> GRAVAR</button>
+            <button id="card-fleet-emit" class="btn btn-danger"><i class="fa-solid fa-file-lines"></i> EMITIR</button>
           </div></div>
       </div>
 
@@ -2018,7 +2017,7 @@
           LISTA DE CONTACTOS
         </div>
         <div class="major-card-body">
-          <section class="slx-box"><div class="slx-bh"><span class="slx-n">1</span>Contactos internos<div class="slx-tools"><input type="search" id="contact-list-search" class="slx-in slx-search" placeholder="🔍 Pesquisar nº, patente ou nome..."></div></div><div class="slx-chips">
+          <section class="slx-box"><div class="slx-bh"><span class="slx-n">1</span>Contactos internos<div class="slx-tools"><input type="search" id="contact-list-search" class="slx-in slx-search" placeholder="Pesquisar nº, patente ou nome..."></div></div><div class="slx-chips">
             <span class="slx-chip slx-dark">Total <b id="contact-total">0</b></span>
             <span class="slx-chip" style="--c:#c62828">Q. Comando <b id="contact-qcom">0</b></span>
             <span class="slx-chip" style="--c:#1565c0">Q. Ativo <b id="contact-qativ">0</b></span>
@@ -2037,9 +2036,9 @@
             </div></section>
         </div>
         <div class="major-card-footer"><div class="sl-222" style="display: flex;">
-            <button id="contact-list-selected-email" class="btn btn-add" disabled style="opacity:0.4; cursor:not-allowed;">✉️ Enviar para Selecionados (<span id="contact-selected-count">0</span>)</button>
-            <button id="contact-list-global-email" class="btn btn-danger">✉️ Enviar para Todos</button>
-            <button id="contact-list-emit" class="btn btn-success">🖨️ Emitir Listagem</button>
+            <button id="contact-list-selected-email" class="btn btn-add" disabled style="opacity:0.4; cursor:not-allowed;"><i class="fa-solid fa-envelope"></i> Enviar para Selecionados (<span id="contact-selected-count">0</span>)</button>
+            <button id="contact-list-global-email" class="btn btn-danger"><i class="fa-solid fa-envelope"></i> Enviar para Todos</button>
+            <button id="contact-list-emit" class="btn btn-success"><i class="fa-solid fa-print"></i> Emitir Listagem</button>
           </div></div>
       </div>
 
@@ -2070,9 +2069,9 @@
             </div></section>
         </div>
         <div class="major-card-footer"><div class="sl-222" style="display: flex;">
-            <button id="attendance-list-save" class="btn btn-add">💾 Guardar</button>
-            <button id="attendance-list-delete" class="btn btn-danger">🗑️ Eliminar</button>
-            <button id="attendance-list-emit" class="btn btn-success">🖨️ Emitir Listagem</button>
+            <button id="attendance-list-save" class="btn btn-add"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
+            <button id="attendance-list-delete" class="btn btn-danger"><i class="fa-solid fa-trash-can"></i> Eliminar</button>
+            <button id="attendance-list-emit" class="btn btn-success"><i class="fa-solid fa-print"></i> Emitir Listagem</button>
           </div></div>
       </div>
 
@@ -2087,7 +2086,7 @@
           AGENDA TELEFÓNICA
         </div>
         <div class="major-card-body">
-          <section class="slx-box" id="phonebook-form-container" style="display: none;"><div class="slx-bh"><span class="slx-n">✎</span>Dados do contacto / entidade</div><div class="slx-grid slx-g6"><div class="slx-f slx-s2"><label for="phonebook-name">Nome / designação</label><input type="text" id="phonebook-name" class="slx-in"></div><div class="slx-f"><label for="phonebook-type">Tipo</label><select id="phonebook-type" class="slx-in"><option value="">Selecionar...</option><option value="Pessoa">Pessoa</option><option value="Entidade">Entidade</option><option value="Serviço">Serviço</option></select></div><div class="slx-f"><label for="phonebook-category">Categoria</label><select id="phonebook-category" class="slx-in"><option value="">Selecionar...</option><option value="Bombeiros">Bombeiros</option><option value="GNR">GNR</option><option value="PSP">PSP</option><option value="INEM">INEM</option><option value="Câmara">Câmara</option><option value="Hospital">Hospital</option><option value="Outros">Outros</option></select></div><div class="slx-f"><label for="phonebook-subcategory">Subcategoria</label><input type="text" id="phonebook-subcategory" class="slx-in"></div><div class="slx-f"><label for="phonebook-availability">Disponibilidade</label><select id="phonebook-availability" class="slx-in"><option value="">Selecionar...</option><option value="24h">24 Horas</option><option value="Laboral">Horário Laboral</option><option value="Outro">Outro</option></select></div><div class="slx-f"><label for="phonebook-phone">Telefone</label><input type="text" id="phonebook-phone" class="slx-in"></div><div class="slx-f"><label for="phonebook-mobile">Telemóvel</label><input type="text" id="phonebook-mobile" class="slx-in"></div><div class="slx-f slx-s2"><label for="phonebook-email">Email</label><input type="text" id="phonebook-email" class="slx-in"></div><div class="slx-f slx-s2"><label>&nbsp;</label><label class="slx-fav" for="phonebook-favorite"><input type="checkbox" id="phonebook-favorite"> ⭐ Favorito</label></div><div class="slx-f slx-s2"><label for="phonebook-address">Morada</label><input type="text" id="phonebook-address" class="slx-in"></div><div class="slx-f"><label for="phonebook-locality">Localidade</label><input type="text" id="phonebook-locality" class="slx-in"></div><div class="slx-f"><label for="phonebook-zipcode">Cód. postal</label><input type="text" id="phonebook-zipcode" class="slx-in" placeholder="0000-000"></div><div class="slx-f slx-s2"><label for="phonebook-notes">Notas</label><input type="text" id="phonebook-notes" class="slx-in"></div><div class="slx-act slx-s6"><button id="phonebook-save" class="btn btn-success">💾 GRAVAR</button></div></div></section><section class="slx-box"><div class="slx-bh"><span class="slx-n">1</span>Entidades<div class="slx-tools"><span class="slx-chip slx-dark">Total <b id="phonebook-total">0</b></span><span class="slx-chip" style="--c:#f9a825">⭐ Favoritos <b id="phonebook-favorites">0</b></span><input type="search" id="phonebook-search" class="slx-in slx-search" placeholder="🔍 Nome, categoria, telefone..."><button id="phonebook-add" class="btn btn-add">➕ ADICIONAR</button></div></div><div class="sl-195 slx-tbl">
+          <section class="slx-box" id="phonebook-form-container" style="display: none;"><div class="slx-bh"><span class="slx-n"><i class="fa-solid fa-pen"></i></span>Dados do contacto / entidade</div><div class="slx-grid slx-g6"><div class="slx-f slx-s2"><label for="phonebook-name">Nome / designação</label><input type="text" id="phonebook-name" class="slx-in"></div><div class="slx-f"><label for="phonebook-type">Tipo</label><select id="phonebook-type" class="slx-in"><option value="">Selecionar...</option><option value="Pessoa">Pessoa</option><option value="Entidade">Entidade</option><option value="Serviço">Serviço</option></select></div><div class="slx-f"><label for="phonebook-category">Categoria</label><select id="phonebook-category" class="slx-in"><option value="">Selecionar...</option><option value="Bombeiros">Bombeiros</option><option value="GNR">GNR</option><option value="PSP">PSP</option><option value="INEM">INEM</option><option value="Câmara">Câmara</option><option value="Hospital">Hospital</option><option value="Outros">Outros</option></select></div><div class="slx-f"><label for="phonebook-subcategory">Subcategoria</label><input type="text" id="phonebook-subcategory" class="slx-in"></div><div class="slx-f"><label for="phonebook-availability">Disponibilidade</label><select id="phonebook-availability" class="slx-in"><option value="">Selecionar...</option><option value="24h">24 Horas</option><option value="Laboral">Horário Laboral</option><option value="Outro">Outro</option></select></div><div class="slx-f"><label for="phonebook-phone">Telefone</label><input type="text" id="phonebook-phone" class="slx-in"></div><div class="slx-f"><label for="phonebook-mobile">Telemóvel</label><input type="text" id="phonebook-mobile" class="slx-in"></div><div class="slx-f slx-s2"><label for="phonebook-email">Email</label><input type="text" id="phonebook-email" class="slx-in"></div><div class="slx-f slx-s2"><label>&nbsp;</label><label class="slx-fav" for="phonebook-favorite"><input type="checkbox" id="phonebook-favorite"> <i class="fa-solid fa-star" style="color:#f5b301"></i> Favorito</label></div><div class="slx-f slx-s2"><label for="phonebook-address">Morada</label><input type="text" id="phonebook-address" class="slx-in"></div><div class="slx-f"><label for="phonebook-locality">Localidade</label><input type="text" id="phonebook-locality" class="slx-in"></div><div class="slx-f"><label for="phonebook-zipcode">Cód. postal</label><input type="text" id="phonebook-zipcode" class="slx-in" placeholder="0000-000"></div><div class="slx-f slx-s2"><label for="phonebook-notes">Notas</label><input type="text" id="phonebook-notes" class="slx-in"></div><div class="slx-act slx-s6"><button id="phonebook-save" class="btn btn-success"><i class="fa-solid fa-floppy-disk"></i> GRAVAR</button></div></div></section><section class="slx-box"><div class="slx-bh"><span class="slx-n">1</span>Entidades<div class="slx-tools"><span class="slx-chip slx-dark">Total <b id="phonebook-total">0</b></span><span class="slx-chip" style="--c:#f9a825"><i class="fa-solid fa-star" style="color:#f5b301"></i> Favoritos <b id="phonebook-favorites">0</b></span><input type="search" id="phonebook-search" class="slx-in slx-search" placeholder="Nome, categoria, telefone..."><button id="phonebook-add" class="btn btn-add"><i class="fa-solid fa-plus"></i> ADICIONAR</button></div></div><div class="sl-195 slx-tbl">
                 <table class="sl-143">
                   <thead><tr><th style="width:50px">Fav.</th><th>Nome / designação</th><th>Tipo</th><th>Categoria</th><th>Telefone</th><th>Telemóvel</th><th>Email</th><th>Disponibilidade</th><th style="width:90px">Ações</th></tr></thead>
                   <tbody id="phonebook-tbody">
@@ -2097,8 +2096,8 @@
               </div></section>
         </div>
         <div class="major-card-footer"><div class="sl-222" style="display: flex;">
-            <button id="phonebook-delete" class="btn btn-danger" style="display: none;" disabled>🗑️ ELIMINAR</button>
-            <button id="phonebook-emit" class="btn btn-danger">📄 EMITIR</button>
+            <button id="phonebook-delete" class="btn btn-danger" style="display: none;" disabled><i class="fa-solid fa-trash-can"></i> ELIMINAR</button>
+            <button id="phonebook-emit" class="btn btn-danger"><i class="fa-solid fa-file-lines"></i> EMITIR</button>
           </div></div>
       </div>
 
@@ -2178,7 +2177,7 @@
     addPopup(`
     <div id="popup-service-type-modal" class="popup-modal popup-warning" tabindex="0">
       <div class="popup-content" style="min-width: 450px;">
-        <div class="popup-header"><h3>⚠️ TIPO DE SERVIÇO</h3></div>
+        <div class="popup-header"><h3><i class="fa-solid fa-triangle-exclamation"></i> TIPO DE SERVIÇO</h3></div>
         <div class="popup-body">
           <ul style="list-style:none; padding:0; margin:0;">
             <li style="list-style:none; margin-bottom: 8px;">
@@ -2409,7 +2408,7 @@
     }
     function createAudioButton(type, gridId, level, occurrenceType = null, customTitle = null) {
       const btn = document.createElement("button");
-      btn.textContent = "🔊"; btn.title = customTitle || `Toque rápido ${level}`; btn.style.cursor = "pointer";
+      btn.innerHTML = "<i class='fa-solid fa-volume-high'></i>"; btn.title = customTitle || `Toque rápido ${level}`; btn.style.cursor = "pointer";
       btn.onclick = e => {e.stopPropagation(); playGenericSirene(type, gridId, level, occurrenceType);};
       return btn;
     }
@@ -3771,7 +3770,7 @@
             <td>${item.reason_for_refusal}</td>
             <td>${item.optel_refusal}</td>
             <td>${item.validated_refusal}</td>
-            <td style="width: 10px;"><button class="btn-delete" onclick="deleteServiceRefusal('${item.id}')">🗑️</button></td>
+            <td style="width: 10px;"><button class="btn-delete" onclick="deleteServiceRefusal('${item.id}')"><i class="fa-solid fa-trash-can"></i></button></td>
           `;
           tbody.appendChild(tr);
         });
@@ -3935,7 +3934,7 @@
             <td>${item.ineinop_crew}</td>
             <td>${item.optel_refusal}</td>
             <td>${item.validated_refusal}</td>
-            <td style="width: 10px;"><button class="btn-delete" onclick="deleteIneInop('${item.id}')">🗑️</button></td>
+            <td style="width: 10px;"><button class="btn-delete" onclick="deleteIneInop('${item.id}')"><i class="fa-solid fa-trash-can"></i></button></td>
           `;
           tbody.appendChild(tr);
         });
@@ -4264,11 +4263,11 @@
           });
           totalH += Math.floor(totalM / 60);
           totalM = totalM % 60;
-          return `🕒 ${totalH} Hrs. ${totalM} Mts.`;
+          return `<i class="fa-solid fa-clock"></i> ${totalH} Hrs. ${totalM} Mts.`;
         };
-        document.getElementById("sum-inop-d").textContent = sumTimes(inemData.filter(r => (r.ineinop_shift || "").toUpperCase() === "D"));
-        document.getElementById("sum-inop-n").textContent = sumTimes(inemData.filter(r => (r.ineinop_shift || "").toUpperCase() === "N"));
-        document.getElementById("sum-inop-total").textContent = sumTimes(inemData);
+        document.getElementById("sum-inop-d").innerHTML = sumTimes(inemData.filter(r => (r.ineinop_shift || "").toUpperCase() === "D"));
+        document.getElementById("sum-inop-n").innerHTML = sumTimes(inemData.filter(r => (r.ineinop_shift || "").toUpperCase() === "N"));
+        document.getElementById("sum-inop-total").innerHTML = sumTimes(inemData);
         const refusalsRes = await fetch(`${SUPABASE_URL}/rest/v1/service_refusals?select=refusal_date&corp_oper_nr=eq.${corpOperNr}`, {
           headers: getSupabaseHeaders()
         });
@@ -4280,7 +4279,7 @@
           const matchMonth = targetMonth === "ALL" || d.getMonth() === parseInt(targetMonth);
           return matchYear && matchMonth;
         });
-        document.getElementById("sum-refusals-total").textContent = `🤒 ${refusalsData.length}`;    
+        document.getElementById("sum-refusals-total").innerHTML = `<i class="fa-solid fa-ban"></i> ${refusalsData.length}`;    
       } catch (e) {
         console.error("❌ Erro ao atualizar cards resumo:", e);
       }
@@ -5468,6 +5467,8 @@
     const tableConfig = [{rows: 1, special: false, title: "OFOPE"}, {rows: 1, special: false, title: "CHEFE DE SERVIÇO"}, {rows: 1, special: false, title: "OPTEL"},
                      {rows: 5, special: true, title: "EQUIPA 01"}, {rows: 5, special: false, title: "EQUIPA 02"}, {rows: 2, special: false, title: "LOGÍSTICA"},
                      {rows: 3, special: false, title: "INEM"}, {rows: 3, special: false, title: "INEM - Reserva"}, {rows: 10, special: false, title: "SERVIÇO GERAL"}];
+    /* turno D: o grupo OFOPE não existe (só no turno N) */
+    const planTableConfig = shift => tableConfig.filter(cfg => !(cfg.title === "OFOPE" && shift === "D"));
     const DECIR_MODE_TEAMS = {"1_ecin": ["EQUIPA 01"], "1_ecin_1_elac": ["EQUIPA 01", "LOGÍSTICA"], "2_ecin_1_elac": ["EQUIPA 01", "EQUIPA 02", "LOGÍSTICA"]};
     function createInputCell({type = 'text', readonly = false, className = '', tabindex = 0}) {
       return `<td><input type="${type}" class="${className}" ${readonly ? 'readonly' : ''} tabindex="${tabindex}"></td>`;
@@ -5867,7 +5868,7 @@
       const draftBtn = document.createElement('button');
       draftBtn.id = 'draft-pp';
       draftBtn.className = 'btn btn-add';
-      draftBtn.textContent = '💾 GUARDAR RASCUNHO';
+      draftBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> GUARDAR RASCUNHO';
       btnStyle(draftBtn);
       draftBtn.addEventListener('click', async () => {
         if (draftBtn.disabled || emitBtn.disabled) return;
@@ -5892,7 +5893,7 @@
         } finally {
           draftBtn.disabled = false;
           emitBtn.disabled = false;
-          draftBtn.textContent = '💾 GUARDAR RASCUNHO';
+          draftBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> GUARDAR RASCUNHO';
           draftBtn.style.opacity = '1';
           draftBtn.style.cursor = 'pointer';
           emitBtn.style.opacity = '1';
@@ -5902,7 +5903,7 @@
       const emitBtn = document.createElement('button');
       emitBtn.id = 'emit-pp';
       emitBtn.className = 'btn btn-success';
-      emitBtn.textContent = '📤 EMITIR PLANEAMENTO';
+      emitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> EMITIR PLANEAMENTO';
       btnStyle(emitBtn);
       emitBtn.addEventListener('click', async () => {
         if (emitBtn.disabled || draftBtn.disabled) return;
@@ -5931,7 +5932,7 @@
         } finally {
           emitBtn.disabled = false;
           draftBtn.disabled = false;
-          emitBtn.textContent = '📤 EMITIR PLANEAMENTO';
+          emitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> EMITIR PLANEAMENTO';
           emitBtn.style.opacity = '1';
           emitBtn.style.cursor = 'pointer';
           draftBtn.style.opacity = '1';
@@ -6221,7 +6222,7 @@
           }
           header = createPlanDirHeader('LAST', formattedHeader);
           if (header && headerContainer) headerContainer.appendChild(header); // ← ALTERADO
-          container.insertAdjacentHTML('beforeend', tableConfig.map(cfg => createTable(cfg.rows, cfg.special, cfg.title)).join(''));
+          container.insertAdjacentHTML('beforeend', planTableConfig(originalShift).map(cfg => createTable(cfg.rows, cfg.special, cfg.title)).join(''));
           try {
             const res2 = await fetch(`${SUPABASE_URL}/rest/v1/fomio_teams?select=*&corp_oper_nr=eq.${corpOperNr}`, {method: 'GET', headers: getSupabaseHeaders()});
             const allMembers = await res2.json();
@@ -6272,7 +6273,7 @@
       } else {
         header = createPlanDirHeader(shift);
         if (header && headerContainer) headerContainer.appendChild(header);
-        container.insertAdjacentHTML('beforeend', tableConfig.map(cfg => createTable(cfg.rows, cfg.special, cfg.title)).join(''));
+        container.insertAdjacentHTML('beforeend', planTableConfig(shift).map(cfg => createTable(cfg.rows, cfg.special, cfg.title)).join(''));
         const draftMembers = await loadDraft(shift, corpOperNr);
         if (draftMembers) {
           const teamNameMap = {"ofope": "OFOPE", "chefe_servico": "CHEFE DE SERVIÇO", "optel": "OPTEL", "equipa_01": "EQUIPA 01", "equipa_02": "EQUIPA 02", "logistica": "LOGÍSTICA",
@@ -7120,7 +7121,7 @@
         .forEach(cb => cb.checked = false);
       document.getElementById("utent_h_treatment_days_btn").textContent = "Selecionar dias...";
       const saveBtn = document.getElementById("utent_h_save");
-      if (saveBtn) {delete saveBtn.dataset.editId; saveBtn.textContent = "💾 GRAVAR";}
+      if (saveBtn) {delete saveBtn.dataset.editId; saveBtn.innerHTML = "<i class='fa-solid fa-floppy-disk'></i> GRAVAR";}
     });    
     /* ===== LOAD, EMIT HEMODIALYSIS LIST =====*/
     async function loadHemoWeekList() {
@@ -7193,7 +7194,7 @@
     });
     async function emitHemoWeekList(type) {
       try {
-        showLoadingPopup("🔄 A preparar listagem...");
+        showLoadingPopup("A preparar listagem...");
         const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const fields = ["utent_name", "utent_adress", "utent_desteny", "utent_shift", "utent_shift_days", "utent_niss", "utent_localitie", "utent_contact", "utent_position"].join(",");
         const response = await fetch(
@@ -7203,7 +7204,7 @@
         );
         if (!response.ok) throw new Error("Erro ao carregar dados do banco de dados.");
         const data = await response.json();
-        updateLoadingPopup("📊 A gerar Listagem de Hemodiálises...");
+        updateLoadingPopup("A gerar Listagem de Hemodiálises...");
         const res = await fetch("https://cb360-online.vercel.app/api/various_convert_and_send", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -7228,11 +7229,11 @@
         header.className = 'various-header';
         header.innerHTML = `
           <div style="display:flex;align-items:center;gap:10px;flex:1;position:relative;z-index:1;">
-            <div style="color:#fff;font-weight:700;font-size:13px;">📋 Listagem de Diversos</div>
+            <div style="color:#fff;font-weight:700;font-size:13px;"><i class="fa-solid fa-clipboard-list"></i> Listagem de Diversos</div>
           </div>
           <div style="display:flex;gap:5px;position:relative;z-index:1;">
-            <button class="various-btn" id="various-pdf-fullscreen" title="Ecrã inteiro">⛶</button>
-            <button class="various-btn various-close-btn" id="various-pdf-close" title="Fechar">✕</button>
+            <button class="various-btn" id="various-pdf-fullscreen" title="Ecrã inteiro"><i class="fa-solid fa-expand"></i></button>
+            <button class="various-btn various-close-btn" id="various-pdf-close" title="Fechar"><i class="fa-solid fa-xmark"></i></button>
           </div>
         `;
         const content = document.createElement('div');
@@ -7245,7 +7246,7 @@
         footer.className = 'various-footer';
         footer.innerHTML = `
           <div class="various-footer-info">Documento gerado com sucesso</div>
-          <button class="various-print-btn" id="various-pdf-print">🖨️ Imprimir</button>
+          <button class="various-print-btn" id="various-pdf-print"><i class="fa-solid fa-print"></i> Imprimir</button>
         `;
         box.append(header, content, footer);
         overlay.appendChild(box);
@@ -7299,8 +7300,8 @@
             <td style="padding:5px;border:1px solid #ccc;font-size:13px;text-align:center;">${utent.utent_shift || ""}</td>
             <td style="padding:5px;border:1px solid #ccc;font-size:13px;text-align:center;">${utent.utent_position || ""}</td>
             <td style="padding:5px;border:1px solid #ccc;text-align:center;">
-              <button onclick="editHemoUtent(${utent.id})" style="background:#1e3a8a;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;margin-right:3px;">✏️</button>
-              <button onclick="deleteHemoUtent(${utent.id})" style="background:#dc2626;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;">🗑️</button>
+              <button onclick="editHemoUtent(${utent.id})" style="background:#1e3a8a;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;margin-right:3px;"><i class="fa-solid fa-pen"></i></button>
+              <button onclick="deleteHemoUtent(${utent.id})" style="background:#dc2626;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;"><i class="fa-solid fa-trash-can"></i></button>
             </td>
           `;
           tbody.appendChild(tr);
@@ -7353,7 +7354,7 @@
         const checkedDays = selectedDays.filter(d => d).join(", ");
         document.getElementById("utent_h_treatment_days_btn").textContent = checkedDays || "Selecionar dias...";
         document.getElementById("utent_h_save").dataset.editId = id;
-        document.getElementById("utent_h_save").textContent = "💾 ATUALIZAR";
+        document.getElementById("utent_h_save").innerHTML = "<i class='fa-solid fa-floppy-disk'></i> ATUALIZAR";
         document.getElementById("hemo-utentdata-card").scrollIntoView({behavior: "smooth"});
       } catch (err) {
         console.error("Erro ao editar utente:", err);
@@ -7457,7 +7458,7 @@
         console.error("Erro ao guardar utente:", err);
         showPopup('popup-danger', "Erro ao guardar: " + err.message);
       } finally {
-        if (saveBtn) {saveBtn.disabled = false; saveBtn.textContent = "💾 GRAVAR";}
+        if (saveBtn) {saveBtn.disabled = false; saveBtn.innerHTML = "<i class='fa-solid fa-floppy-disk'></i> GRAVAR";}
       }
     }
     /* ===== DOM HEMODIALYSIS ===== */
@@ -7496,7 +7497,7 @@
         btn.removeAttribute("onclick");
         btn.addEventListener("click", async () => {
           try {
-            showLoadingPopup("🔄 A preparar Formulário de Formação...");
+            showLoadingPopup("A preparar Formulário de Formação...");
             const res = await fetch("https://cb360-online.vercel.app/api/various_convert_and_send", {
               method: "POST",
               headers: {"Content-Type": "application/json"},
@@ -7518,11 +7519,11 @@
             header.className = 'various-header';
             header.innerHTML = `
               <div style="display:flex;align-items:center;gap:10px;flex:1;position:relative;z-index:1;">
-                <div style="color:#fff;font-weight:700;font-size:13px;">📋 Formulário de Formação</div>
+                <div style="color:#fff;font-weight:700;font-size:13px;"><i class="fa-solid fa-clipboard-list"></i> Formulário de Formação</div>
               </div>
               <div style="display:flex;gap:5px;position:relative;z-index:1;">
-                <button class="various-btn" id="various-pdf-fullscreen" title="Ecrã inteiro">⛶</button>
-                <button class="various-btn various-close-btn" id="various-pdf-close" title="Fechar">✕</button>
+                <button class="various-btn" id="various-pdf-fullscreen" title="Ecrã inteiro"><i class="fa-solid fa-expand"></i></button>
+                <button class="various-btn various-close-btn" id="various-pdf-close" title="Fechar"><i class="fa-solid fa-xmark"></i></button>
               </div>
             `;
             const content = document.createElement('div');
@@ -7535,7 +7536,7 @@
             footer.className = 'various-footer';
             footer.innerHTML = `
               <div class="various-footer-info">Documento gerado com sucesso</div>
-              <button class="various-print-btn" id="various-pdf-print">🖨️ Imprimir</button>
+              <button class="various-print-btn" id="various-pdf-print"><i class="fa-solid fa-print"></i> Imprimir</button>
             `;
             box.append(header, content, footer);
             overlay.appendChild(box);
@@ -7566,7 +7567,7 @@
     /* ===== EQUIPMENT REQUEST INIT ===== */
     document.querySelector('.sidebar-sub-submenu-button[data-page="page-material-request"]')?.addEventListener("click", () => {
       equipmentRequestEditId = null;
-      document.getElementById("equipment-request-save").innerHTML = "💾 GRAVAR";
+      document.getElementById("equipment-request-save").innerHTML = "<i class='fa-solid fa-floppy-disk'></i> GRAVAR";
       ["requesting_name", "requesting_cc", "requesting_cc_secur", "requesting_contact", "requesting_equipment", "autoryzed_by", "optel", "return_status"]
         .forEach(id => document.getElementById(id).value = "");
       setTimeout(() => {
@@ -7612,8 +7613,8 @@
             <td style="${tdStyle}">${item.autotized_by || ""}</td>
             <td style="${tdStyle}">${item.status || ""}</td>
             <td style="${tdStyle}">
-              <button onclick="equipmentRequestEdit(${item.id})" style="background:#1e3a8a;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;margin-right:3px;">✏️</button>
-              <button onclick="equipmentRequestDelete(${item.id})" style="background:#dc2626;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;">🗑️</button>
+              <button onclick="equipmentRequestEdit(${item.id})" style="background:#1e3a8a;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;margin-right:3px;"><i class="fa-solid fa-pen"></i></button>
+              <button onclick="equipmentRequestDelete(${item.id})" style="background:#dc2626;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;"><i class="fa-solid fa-trash-can"></i></button>
             </td>
           `;
           tr.addEventListener("mouseover", () => tr.style.background = "#c8d8f5");
@@ -7652,7 +7653,7 @@
         document.getElementById("return_date").value = item.return_date || "";
         document.getElementById("return_status").value = item.status || "";
         equipmentRequestEditId = id;
-        document.getElementById("equipment-request-save").innerHTML = "💾 ATUALIZAR";
+        document.getElementById("equipment-request-save").innerHTML = "<i class='fa-solid fa-floppy-disk'></i> ATUALIZAR";
         document.getElementById("requesting_name").focus();
       } catch (err) {
         console.error("Erro ao editar requisição:", err);
@@ -7746,7 +7747,7 @@
         showPopup("popup-danger", "Erro ao guardar: " + err.message);
       } finally {
         saveBtn.disabled = false;
-        saveBtn.innerHTML = "💾 GRAVAR";
+        saveBtn.innerHTML = "<i class='fa-solid fa-floppy-disk'></i> GRAVAR";
       }
     }
     document.getElementById("equipment-request-save")?.addEventListener("click", equipmentRequestSave);
@@ -7765,7 +7766,7 @@
         return;
       }
       try {
-        showLoadingPopup("🔄 A preparar requisição...");
+        showLoadingPopup("A preparar requisição...");
         const res = await fetch("https://cb360-online.vercel.app/api/various_convert_and_send", {
           method: "POST",
           headers: {"Content-Type": "application/json"},
@@ -7781,7 +7782,7 @@
         ["requesting_name", "requesting_cc", "requesting_cc_secur", "requesting_contact", "requesting_equipment", "delivery_date", "return_estimate", "autoryzed_by", "optel", "return_date", "return_status"]
           .forEach(id => document.getElementById(id).value = "");
         equipmentRequestEditId = null;
-        document.getElementById("equipment-request-save").innerHTML = "💾 GRAVAR";
+        document.getElementById("equipment-request-save").innerHTML = "<i class='fa-solid fa-floppy-disk'></i> GRAVAR";
         document.getElementById("equipment-request-emit").disabled = true;
         document.getElementById("equipment-request-emit").style.opacity = "0.4";
         document.getElementById("equipment-request-emit").style.cursor = "not-allowed";
@@ -7798,11 +7799,11 @@
         header.className = 'various-header';
         header.innerHTML = `
           <div style="display:flex;align-items:center;gap:10px;flex:1;position:relative;z-index:1;">
-            <div style="color:#fff;font-weight:700;font-size:13px;">📋 Requisição de Equipamento</div>
+            <div style="color:#fff;font-weight:700;font-size:13px;"><i class="fa-solid fa-clipboard-list"></i> Requisição de Equipamento</div>
           </div>
           <div style="display:flex;gap:5px;position:relative;z-index:1;">
-            <button class="various-btn" id="various-pdf-fullscreen" title="Ecrã inteiro">⛶</button>
-            <button class="various-btn various-close-btn" id="various-pdf-close" title="Fechar">✕</button>
+            <button class="various-btn" id="various-pdf-fullscreen" title="Ecrã inteiro"><i class="fa-solid fa-expand"></i></button>
+            <button class="various-btn various-close-btn" id="various-pdf-close" title="Fechar"><i class="fa-solid fa-xmark"></i></button>
           </div>
         `;
         const content = document.createElement('div');
@@ -7815,7 +7816,7 @@
         footer.className = 'various-footer';
         footer.innerHTML = `
           <div class="various-footer-info">Documento gerado com sucesso</div>
-            <button class="various-print-btn" id="various-pdf-print">🖨️ Imprimir</button>
+            <button class="various-print-btn" id="various-pdf-print"><i class="fa-solid fa-print"></i> Imprimir</button>
           `;
         box.append(header, content, footer);
         overlay.appendChild(box);
@@ -7837,7 +7838,7 @@
     /* ===== FLEET CARDS INIT ===== */
     document.querySelector('.sidebar-sub-submenu-button[data-page="page-fleet-cards"]')?.addEventListener("click", () => {
       fleetEditId = null;
-      document.getElementById("card-fleet-save").innerHTML = "💾 GRAVAR";
+      document.getElementById("card-fleet-save").innerHTML = "<i class='fa-solid fa-floppy-disk'></i> GRAVAR";
       ["veíc_card_name", "veíc_card_register", "veíc_card_code", "veíc_card_contact"]
         .forEach(id => document.getElementById(id).value = "");
       loadFleetCardsTable();
@@ -7877,8 +7878,8 @@
               ${isInop ? "Inoperacional" : "Operacional"}
             </td>
             <td style="${tdStyle}">
-              <button onclick="fleetCardEdit(${item.id})" style="background:#1e3a8a;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;margin-right:3px;">✏️</button>
-              <button onclick="fleetCardDelete(${item.id})" style="background:#dc2626;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;">🗑️</button>
+              <button onclick="fleetCardEdit(${item.id})" style="background:#1e3a8a;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;margin-right:3px;"><i class="fa-solid fa-pen"></i></button>
+              <button onclick="fleetCardDelete(${item.id})" style="background:#dc2626;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;"><i class="fa-solid fa-trash-can"></i></button>
             </td>
           `;
           tr.addEventListener("mouseover", () => tr.style.background = "#c8d8f5");
@@ -7918,7 +7919,7 @@
         document.getElementById("veíc_card_code").value = item.card_code || "";
         document.getElementById("veíc_card_contact").value = item.contact || "";
         fleetEditId = id;
-        document.getElementById("card-fleet-save").innerHTML = "💾 ATUALIZAR";
+        document.getElementById("card-fleet-save").innerHTML = "<i class='fa-solid fa-floppy-disk'></i> ATUALIZAR";
         document.getElementById("veíc_card_name").focus();
       } catch (err) {
         console.error("Erro ao editar cartão frota:", err);
@@ -7989,14 +7990,14 @@
         showPopup("popup-danger", "Erro ao guardar: " + err.message);
       } finally {
         saveBtn.disabled = false;
-        saveBtn.innerHTML = "💾 GRAVAR";
+        saveBtn.innerHTML = "<i class='fa-solid fa-floppy-disk'></i> GRAVAR";
       }
     }
     document.getElementById("card-fleet-save")?.addEventListener("click", fleetCardSave);
     /* ===== FLEET CARDS EMIT ===== */
     document.getElementById("card-fleet-emit")?.addEventListener("click", async () => {
       try {
-        showLoadingPopup("🔄 A preparar listagem...");
+        showLoadingPopup("A preparar listagem...");
         const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/fleet_cards?corp_oper_nr=eq.${corpOperNr}&order=vehicle.asc`, {
@@ -8004,7 +8005,7 @@
           }
         );
         const data = await response.json();
-        updateLoadingPopup("📊 A gerar Listagem Cartões Frota...");
+        updateLoadingPopup("A gerar Listagem Cartões Frota...");
         const res = await fetch("https://cb360-online.vercel.app/api/various_convert_and_send", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -8026,11 +8027,11 @@
         header.className = 'various-header';
         header.innerHTML = `
           <div style="display:flex;align-items:center;gap:10px;flex:1;position:relative;z-index:1;">
-            <div style="color:#fff;font-weight:700;font-size:13px;">📋 Cartões Frota</div>
+            <div style="color:#fff;font-weight:700;font-size:13px;"><i class="fa-solid fa-clipboard-list"></i> Cartões Frota</div>
           </div>
           <div style="display:flex;gap:5px;position:relative;z-index:1;">
-            <button class="various-btn" id="various-pdf-fullscreen" title="Ecrã inteiro">⛶</button>
-            <button class="various-btn various-close-btn" id="various-pdf-close" title="Fechar">✕</button>
+            <button class="various-btn" id="various-pdf-fullscreen" title="Ecrã inteiro"><i class="fa-solid fa-expand"></i></button>
+            <button class="various-btn various-close-btn" id="various-pdf-close" title="Fechar"><i class="fa-solid fa-xmark"></i></button>
           </div>
         `;
         const content = document.createElement('div');
@@ -8043,7 +8044,7 @@
         footer.className = 'various-footer';
         footer.innerHTML = `
           <div class="various-footer-info">Documento gerado com sucesso</div>
-          <button class="various-print-btn" id="various-pdf-print">🖨️ Imprimir</button>
+          <button class="various-print-btn" id="various-pdf-print"><i class="fa-solid fa-print"></i> Imprimir</button>
         `;
         box.append(header, content, footer);
         overlay.appendChild(box);
@@ -8195,7 +8196,7 @@
           headerTr.className = "quadro-header-row";
           headerTr.innerHTML = `
             <td colspan="8" style="background: #ffebeb; color: #a70c0c; font-weight: bold; text-align: left; padding: 8px 10px; font-size: 13px; border: 1px solid #ccc; border-left: 2px solid #d81c1c; letter-spacing: 0.05em;">
-              🔹 ${quadro.title} (${elemDoQuadro.length})
+              <i class="fa-solid fa-diamond"></i> ${quadro.title} (${elemDoQuadro.length})
             </td>
           `;
           tbody.appendChild(headerTr);
@@ -8213,11 +8214,11 @@
               <td style="${tdStyle}; font-weight:bold; color: blue;">${item.email || ""}</td>
               <td style="${tdStyle}; width: 75px; text-align: center; white-space: nowrap;">
                 <input type="checkbox" class="contact-row-checkbox contact-email-cb" data-email="${emailTarget}" style="margin-right: 6px; vertical-align: middle; width: 18px; height: 18px; cursor: pointer !important;">
-                <button onclick="contactEmail('${emailTarget}')" style="background:#d81c1c; color:#fff; border:none; border-radius:4px; padding:4px 8px; cursor:pointer; font-size:14px; vertical-align: middle;">✉️</button>
+                <button onclick="contactEmail('${emailTarget}')" style="background:#d81c1c; color:#fff; border:none; border-radius:4px; padding:4px 8px; cursor:pointer; font-size:14px; vertical-align: middle;"><i class="fa-solid fa-envelope"></i></button>
               </td>
               <td style="${tdStyle} width: 75px; text-align: center; white-space: nowrap;">
                 <input type="checkbox" class="contact-row-checkbox contact-sms-cb" disabled data-phone="${phoneTarget}" style="margin-right: 6px; vertical-align: middle; width: 18px; height: 18px; cursor: pointer !important;">
-                <button onclick="showbreve()" style="background:#27ae60; color:#fff; border:none; border-radius:4px; padding:4px 8px; cursor:pointer; font-size:14px; vertical-align: middle;">💬</button>
+                <button onclick="showbreve()" style="background:#27ae60; color:#fff; border:none; border-radius:4px; padding:4px 8px; cursor:pointer; font-size:14px; vertical-align: middle;"><i class="fa-solid fa-comment"></i></button>
               </td>
             `;
             tr.addEventListener("mouseover", () => tr.style.background = "#c8d8f5");
@@ -8303,7 +8304,7 @@
         <div class="contact-email-input-box" style="padding: 6px 10px; align-items: center; gap: 8px;">
           <input type="file" id="contact-email-attachment" style="display:none;">
           <button type="button" onclick="document.getElementById('contact-email-attachment').click()" 
-                                style="background:#1e3a8a; color:#fff; border:none; border-radius:4px; padding:5px 12px; font-size:12px; cursor:pointer; white-space:nowrap;">📎 Escolher Ficheiro</button>
+                                style="background:#1e3a8a; color:#fff; border:none; border-radius:4px; padding:5px 12px; font-size:12px; cursor:pointer; white-space:nowrap;"><i class="fa-solid fa-paperclip"></i> Escolher Ficheiro</button>
           <span id="contact-attachment-name" style="font-size:12px; color:#64748b; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
             Nenhum ficheiro selecionado
           </span>
@@ -8358,15 +8359,15 @@
       overlay.innerHTML = `
         <div class="contact-email-card">
           <div class="contact-email-header">
-            <span>✉️ Escrever E-mail para o Contacto</span>
-            <button style="background:none; border:none; color:#fff; cursor:pointer; font-size:14px;" id="contact-email-close">✕</button>
+            <span><i class="fa-solid fa-envelope"></i> Escrever E-mail para o Contacto</span>
+            <button style="background:none; border:none; color:#fff; cursor:pointer; font-size:14px;" id="contact-email-close"><i class="fa-solid fa-xmark"></i></button>
           </div>
           <div class="contact-email-body">
             <div class="contact-email-field">
               <label>Para:</label>
               <div class="contact-email-input-box" style="background: #e2e8f0;">
                 <input type="text" class="contact-email-input" value="${email}" readonly id="contact-email-to" style="color: #475569; font-weight: 500;">
-                <button class="contact-email-btn-copy" id="contact-email-copy" title="Copiar Destinatário">📋</button>
+                <button class="contact-email-btn-copy" id="contact-email-copy" title="Copiar Destinatário"><i class="fa-solid fa-clipboard-list"></i></button>
               </div>
             </div>
             <div class="contact-email-field">
@@ -8380,7 +8381,7 @@
              <textarea class="contact-email-textarea" id="contact-email-body-text" placeholder="Escreva a sua mensagem aqui..."></textarea>
             </div>
             ${ATTACHMENT_FIELD_HTML}
-            <button class="contact-email-btn-action" id="contact-email-send"><span>🚀 Enviar E-mail</span></button>
+            <button class="contact-email-btn-action" id="contact-email-send"><span><i class="fa-solid fa-paper-plane"></i> Enviar E-mail</span></button>
           </div>
         </div>
       `;
@@ -8392,8 +8393,8 @@
         const emailInput = document.getElementById('contact-email-to');
         emailInput.select();
         navigator.clipboard.writeText(emailInput.value);
-        this.textContent = "✅";
-        setTimeout(() => {this.textContent = "📋";}, 1500);
+        this.innerHTML = "<i class='fa-solid fa-circle-check'></i>";
+        setTimeout(() => {this.innerHTML = "<i class='fa-solid fa-clipboard-list'></i>";}, 1500);
       };
       document.getElementById('contact-email-send').onclick = async function() {
         const to = document.getElementById('contact-email-to').value;
@@ -8404,7 +8405,7 @@
           showPopup('popup-danger', "Por favor, preencha o assunto e o corpo da mensagem.");
           return;
         }
-        btn.disabled = true; btn.style.background = "#64748b"; btn.style.cursor = "not-allowed"; btn.innerHTML = `<span>⏳ A enviar...</span>`;
+        btn.disabled = true; btn.style.background = "#64748b"; btn.style.cursor = "not-allowed"; btn.innerHTML = `<span><i class="fa-solid fa-hourglass-half"></i> A enviar...</span>`;
         try {
           const {corpOperNr, corpName, logoUrl, senderName} = await _getEmailCommonData();
           const attachment = await _readAttachment();
@@ -8427,7 +8428,7 @@
         } catch (err) {
           console.error("Erro:", err);
           showPopup('popup-danger', `Falha no envio: ${err.message}`);
-          btn.disabled = false; btn.style.background = "#d81c1c"; btn.style.cursor = "pointer"; btn.innerHTML = `<span>🚀 Enviar E-mail</span>`;
+          btn.disabled = false; btn.style.background = "#d81c1c"; btn.style.cursor = "pointer"; btn.innerHTML = `<span><i class="fa-solid fa-paper-plane"></i> Enviar E-mail</span>`;
         }
       };
     }
@@ -8457,8 +8458,8 @@
       overlay.innerHTML = `
         <div class="contact-email-card">
           <div class="contact-email-header">
-            <span>✉️ Este e-mail vai ser enviado para ${emails.length} destinatários</span>
-            <button style="background:none; border:none; color:#fff; cursor:pointer; font-size:14px;" id="contact-email-close">✕</button>
+            <span><i class="fa-solid fa-envelope"></i> Este e-mail vai ser enviado para ${emails.length} destinatários</span>
+            <button style="background:none; border:none; color:#fff; cursor:pointer; font-size:14px;" id="contact-email-close"><i class="fa-solid fa-xmark"></i></button>
           </div>
           <div class="contact-email-body">
             <div class="contact-email-field">
@@ -8472,7 +8473,7 @@
               <textarea class="contact-email-textarea" id="contact-email-body-text" placeholder="Escreva a sua mensagem aqui..."></textarea>
             </div>
             ${ATTACHMENT_FIELD_HTML}
-            <button class="contact-email-btn-action" id="contact-email-send"><span>🚀 Enviar para Todos</span></button>
+            <button class="contact-email-btn-action" id="contact-email-send"><span><i class="fa-solid fa-paper-plane"></i> Enviar para Todos</span></button>
           </div>
         </div>
       `;
@@ -8489,7 +8490,7 @@
           showPopup('popup-danger', "Por favor, preencha o assunto e o corpo da mensagem.");
           return;
         }
-        btn.disabled = true; btn.style.background = "#64748b"; btn.style.cursor = "not-allowed"; btn.innerHTML = `<span>⏳ A enviar...</span>`;
+        btn.disabled = true; btn.style.background = "#64748b"; btn.style.cursor = "not-allowed"; btn.innerHTML = `<span><i class="fa-solid fa-hourglass-half"></i> A enviar...</span>`;
         try {
           const [{corpOperNr, corpName, logoUrl, senderName}, bulk, corpContacts] = await Promise.all([_getEmailCommonData(), salocGetBulkRecipients(), _getPLANDIREmailCommonData(sessionStorage.getItem("currentCorpOperNr"))]);
           const attachment = await _readAttachment();
@@ -8508,7 +8509,7 @@
         } catch (err) {
           console.error("Erro:", err);
           showPopup('popup-danger', `Falha no envio: ${err.message}`);
-          btn.disabled = false; btn.style.background = "#d81c1c"; btn.style.cursor = "pointer"; btn.innerHTML = `<span>🚀 Enviar para Todos</span>`;
+          btn.disabled = false; btn.style.background = "#d81c1c"; btn.style.cursor = "pointer"; btn.innerHTML = `<span><i class="fa-solid fa-paper-plane"></i> Enviar para Todos</span>`;
         }
       };
     });
@@ -8537,8 +8538,8 @@
       overlay.innerHTML = `
         <div class="contact-email-card">
           <div class="contact-email-header">
-            <span>✉️ Este e-mail vai ser enviado para ${emails.length} destinatários</span>
-            <button style="background:none; border:none; color:#fff; cursor:pointer; font-size:14px;" id="contact-email-close">✕</button>
+            <span><i class="fa-solid fa-envelope"></i> Este e-mail vai ser enviado para ${emails.length} destinatários</span>
+            <button style="background:none; border:none; color:#fff; cursor:pointer; font-size:14px;" id="contact-email-close"><i class="fa-solid fa-xmark"></i></button>
           </div>
           <div class="contact-email-body">
             <div class="contact-email-field">
@@ -8552,7 +8553,7 @@
               <textarea class="contact-email-textarea" id="contact-email-body-text" placeholder="Escreva a sua mensagem aqui..."></textarea>
             </div>
             ${ATTACHMENT_FIELD_HTML}
-            <button class="contact-email-btn-action" id="contact-email-send"><span>🚀 Enviar para Selecionados</span></button>
+            <button class="contact-email-btn-action" id="contact-email-send"><span><i class="fa-solid fa-paper-plane"></i> Enviar para Selecionados</span></button>
           </div>
         </div>
       `;
@@ -8569,7 +8570,7 @@
           showPopup('popup-danger', "Por favor, preencha o assunto e o corpo da mensagem.");
           return;
         }
-        btn.disabled = true; btn.style.background = "#64748b"; btn.style.cursor = "not-allowed"; btn.innerHTML = `<span>⏳ A enviar...</span>`;
+        btn.disabled = true; btn.style.background = "#64748b"; btn.style.cursor = "not-allowed"; btn.innerHTML = `<span><i class="fa-solid fa-hourglass-half"></i> A enviar...</span>`;
         try {
           const [{corpOperNr, corpName, logoUrl, senderName}, bulk, corpContacts] = await Promise.all([_getEmailCommonData(), salocGetBulkRecipients(), _getPLANDIREmailCommonData(sessionStorage.getItem("currentCorpOperNr"))]);
           const attachment = await _readAttachment();
@@ -8592,7 +8593,7 @@
         } catch (err) {
           console.error("Erro:", err);
           showPopup('popup-danger', `Falha no envio: ${err.message}`);
-          btn.disabled = false; btn.style.background = "#d81c1c"; btn.style.cursor = "pointer"; btn.innerHTML = `<span>🚀 Enviar para Selecionados</span>`;
+          btn.disabled = false; btn.style.background = "#d81c1c"; btn.style.cursor = "pointer"; btn.innerHTML = `<span><i class="fa-solid fa-paper-plane"></i> Enviar para Selecionados</span>`;
         }
       };
     });
@@ -8604,7 +8605,7 @@
         return;
       }
       try {
-        showLoadingPopup("🔄 A preparar listagem...");
+        showLoadingPopup("A preparar listagem...");
         const {corpName} = await _getEmailCommonData();
         const quadDef = [{code: "QCOM", title: "QUADRO DE COMANDO"}, {code: "QATIV", title: "QUADRO ATIVO"}, {code: "QEST", title: "QUADRO DE ESTAGIÁRIOS"},
                          {code: "QEA", title: "QUADRO DE ESPECIALISTAS E AUXILIARES"}, {code: "QRES", title: "QUADRO DE RESERVA"}, {code: "QHR", title: "QUADRO DE HONRA"}];
@@ -8615,7 +8616,7 @@
           allElements.push({type_quad: row.dataset.typeQuad || "", n_int: row.children[0]?.textContent.trim(), patent: row.children[1]?.textContent.trim(), full_name: row.children[2]?.textContent.trim(), 
                             phone: row.children[3]?.textContent.trim(), mobile_phone: row.children[4]?.textContent.trim(), email: row.children[5]?.textContent.trim()});});
         const quad = quadDef.map(q => ({code: q.code, elements: allElements.filter(el => el.type_quad === q.code)}));
-        updateLoadingPopup("📊 A gerar Listagem de Contactos...");
+        updateLoadingPopup("A gerar Listagem de Contactos...");
         const response = await fetch("https://cb360-online.vercel.app/api/various_convert_and_send", {
           method: "POST",
           headers: {"Content-Type": "application/json"},
@@ -8637,11 +8638,11 @@
         header.className = 'various-header';
         header.innerHTML = `
           <div style="display:flex;align-items:center;gap:10px;flex:1;position:relative;z-index:1;">
-            <div style="color:#fff;font-weight:700;font-size:13px;">📋 Listagem de Contactos</div>
+            <div style="color:#fff;font-weight:700;font-size:13px;"><i class="fa-solid fa-clipboard-list"></i> Listagem de Contactos</div>
           </div>
           <div style="display:flex;gap:5px;position:relative;z-index:1;">
-            <button class="various-btn" id="various-pdf-fullscreen" title="Ecrã inteiro">⛶</button>
-            <button class="various-btn various-close-btn" id="various-pdf-close" title="Fechar">✕</button>
+            <button class="various-btn" id="various-pdf-fullscreen" title="Ecrã inteiro"><i class="fa-solid fa-expand"></i></button>
+            <button class="various-btn various-close-btn" id="various-pdf-close" title="Fechar"><i class="fa-solid fa-xmark"></i></button>
           </div>
         `;
         const content = document.createElement('div');
@@ -8654,7 +8655,7 @@
         footer.className = 'various-footer';
         footer.innerHTML = `
           <div class="various-footer-info">Documento gerado com sucesso</div>
-          <button class="various-print-btn" id="various-pdf-print">🖨️ Imprimir</button>
+          <button class="various-print-btn" id="various-pdf-print"><i class="fa-solid fa-print"></i> Imprimir</button>
         `;
         box.append(header, content, footer);
         overlay.appendChild(box);
@@ -8694,7 +8695,7 @@
             const tr = motive.closest("tr");
             const name = tr?.children[2]?.textContent.trim() || "desconhecido";
             e.target.checked = false;
-            showPopup('popup-danger', `⚠️ O elemento <strong>${name}</strong> tem motivo de não comparência por preencher!`);
+            showPopup('popup-danger', `<i class="fa-solid fa-triangle-exclamation"></i> O elemento <strong>${name}</strong> tem motivo de não comparência por preencher!`);
             const modal = document.getElementById('popup-danger');
             if (modal) {
               const observer = new MutationObserver(() => {
@@ -8793,7 +8794,7 @@
             <td colspan="8" style="background:#ffebeb;color:#a70c0c;font-weight:bold;text-align:left;
                 padding:8px 10px;font-size:13px;border:1px solid #ccc;border-left:2px solid #d81c1c;
                 letter-spacing:0.05em;">
-              🔹 ${quadro.title} (${elems.length})
+              <i class="fa-solid fa-diamond"></i> ${quadro.title} (${elems.length})
             </td>
           `;
           tbody.appendChild(headerTr);
@@ -8873,7 +8874,7 @@
         return;
       }
       try {
-        showLoadingPopup("🔄 A preparar listagem...");
+        showLoadingPopup("A preparar listagem...");
         const [{corpName, logoUrl, senderName}, corpContacts, attRecipients] = await Promise.all([
           _getEmailCommonData(),
           _getPLANDIREmailCommonData(sessionStorage.getItem("currentCorpOperNr")),
@@ -8898,7 +8899,7 @@
           });
         });
         const quad = quadDef.map(q => ({code: q.code, elements: allElements.filter(el => el.type_quad === q.code)}));
-        updateLoadingPopup("📊 A gerar Lista de Comparências...");
+        updateLoadingPopup("A gerar Lista de Comparências...");
         const response = await fetch("https://cb360-online.vercel.app/api/various_convert_and_send", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -8922,11 +8923,11 @@
         header.className = 'various-header';
         header.innerHTML = `
           <div style="display:flex;align-items:center;gap:10px;flex:1;position:relative;z-index:1;">
-            <div style="color:#fff;font-weight:700;font-size:13px;">📋 Lista de Comparências - ${eventName}</div>
+            <div style="color:#fff;font-weight:700;font-size:13px;"><i class="fa-solid fa-clipboard-list"></i> Lista de Comparências - ${eventName}</div>
           </div>
           <div style="display:flex;gap:5px;position:relative;z-index:1;">
-            <button class="various-btn" id="various-pdf-fullscreen" title="Ecrã inteiro">⛶</button>
-            <button class="various-btn various-close-btn" id="various-pdf-close" title="Fechar">✕</button>
+            <button class="various-btn" id="various-pdf-fullscreen" title="Ecrã inteiro"><i class="fa-solid fa-expand"></i></button>
+            <button class="various-btn various-close-btn" id="various-pdf-close" title="Fechar"><i class="fa-solid fa-xmark"></i></button>
           </div>
         `;
         const content = document.createElement('div');
@@ -8939,7 +8940,7 @@
         footer.className = 'various-footer';
         footer.innerHTML = `
           <div class="various-footer-info">Documento gerado com sucesso</div>
-          <button class="various-print-btn" id="various-pdf-print">🖨️ Imprimir</button>
+          <button class="various-print-btn" id="various-pdf-print"><i class="fa-solid fa-print"></i> Imprimir</button>
         `;
         box.append(header, content, footer);
         overlay.appendChild(box);
@@ -9039,7 +9040,7 @@
         showPopup('popup-danger', "Erro ao guardar: " + err.message);
       } finally {
         saveBtn.disabled = false;
-        saveBtn.textContent = "💾 Guardar";
+        saveBtn.innerHTML = "<i class='fa-solid fa-floppy-disk'></i> Guardar";
       }
     });
     /* ===== CARREGAR EVENTOS RECENTES ===== */
@@ -9160,7 +9161,7 @@
     /* ===== PHONEBOOK INIT ===== */
     document.querySelector('.sidebar-sub-submenu-button[data-page="page-phonebook"]')?.addEventListener("click", () => {
       phonebookEditId = null;
-      document.getElementById("phonebook-save").innerHTML = "💾 GRAVAR";
+      document.getElementById("phonebook-save").innerHTML = "<i class='fa-solid fa-floppy-disk'></i> GRAVAR";
       ["phonebook-name", "phonebook-subcategory", "phonebook-phone", "phonebook-mobile", "phonebook-email", "phonebook-address", "phonebook-locality", "phonebook-zipcode", "phonebook-notes"]
         .forEach(id => {const el = document.getElementById(id); if (el) el.value = "";});
       document.getElementById("phonebook-type").value = "";
@@ -9212,7 +9213,7 @@
         sorted.forEach(item => {
           const tr = document.createElement("tr");
           tr.innerHTML = `
-            <td style="${tdStyle}">${item.is_favorite ? "⭐" : ""}</td>
+            <td style="${tdStyle}">${item.is_favorite ? "<i class='fa-solid fa-star' style='color:#f5b301'></i>" : ""}</td>
             <td style="${tdStyle} text-align:left; font-weight:bold;">${item.name || ""}</td>
             <td style="${tdStyle}">${item.contact_type || ""}</td>
             <td style="${tdStyle}">${item.category || ""}</td>
@@ -9221,8 +9222,8 @@
             <td style="${tdStyle}">${item.email || ""}</td>
             <td style="${tdStyle}">${item.availability || ""}</td>
             <td style="${tdStyle}">
-              <button onclick="phonebookEdit(${item.id})" style="background:#1e3a8a;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;margin-right:3px;">✏️</button>
-              <button onclick="phonebookDelete(${item.id})" style="background:#dc2626;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;">🗑️</button>
+              <button onclick="phonebookEdit(${item.id})" style="background:#1e3a8a;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;margin-right:3px;"><i class="fa-solid fa-pen"></i></button>
+              <button onclick="phonebookDelete(${item.id})" style="background:#dc2626;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;"><i class="fa-solid fa-trash-can"></i></button>
             </td>
           `;
           tr.addEventListener("mouseover", () => tr.style.background = "#c8d8f5");
@@ -9266,7 +9267,7 @@
         document.getElementById("phonebook-zipcode").value = item.zipcode || "";
         document.getElementById("phonebook-notes").value = item.notes || "";    
         phonebookEditId = id;
-        document.getElementById("phonebook-save").innerHTML = "💾 ATUALIZAR";
+        document.getElementById("phonebook-save").innerHTML = "<i class='fa-solid fa-floppy-disk'></i> ATUALIZAR";
         document.getElementById("phonebook-delete").disabled = false;
         document.getElementById("phonebook-name").focus();    
       } catch (err) {
@@ -9288,7 +9289,7 @@
         if (!response.ok) throw new Error("Erro ao eliminar registo");
         showPopup("popup-success", "Contacto eliminado com sucesso!");
         phonebookEditId = null;
-        document.getElementById("phonebook-save").innerHTML = "💾 GRAVAR";
+        document.getElementById("phonebook-save").innerHTML = "<i class='fa-solid fa-floppy-disk'></i> GRAVAR";
         document.getElementById("phonebook-delete").disabled = true;
         ["phonebook-name", "phonebook-subcategory", "phonebook-phone", "phonebook-mobile", "phonebook-email", "phonebook-address", "phonebook-locality", "phonebook-zipcode", "phonebook-notes"]
           .forEach(id => {const el = document.getElementById(id); if (el) el.value = "";});
@@ -9359,14 +9360,14 @@
         showPopup("popup-danger", "Erro ao guardar: " + err.message);
       } finally {
         saveBtn.disabled = false;
-        saveBtn.innerHTML = phonebookEditId !== null ? "💾 ATUALIZAR" : "💾 GRAVAR";
+        saveBtn.innerHTML = phonebookEditId !== null ? "<i class='fa-solid fa-floppy-disk'></i> ATUALIZAR" : "<i class='fa-solid fa-floppy-disk'></i> GRAVAR";
       }
     }
     /* ===== EVENT LISTENERS PRINCIPAIS ===== */
     document.getElementById("phonebook-save")?.addEventListener("click", phonebookSave);
     document.getElementById("phonebook-add")?.addEventListener("click", () => {
       phonebookEditId = null;
-      document.getElementById("phonebook-save").innerHTML = "💾 GRAVAR";
+      document.getElementById("phonebook-save").innerHTML = "<i class='fa-solid fa-floppy-disk'></i> GRAVAR";
       document.getElementById("phonebook-delete").disabled = true;
       ["phonebook-name", "phonebook-subcategory", "phonebook-phone", "phonebook-mobile", "phonebook-email", "phonebook-address", "phonebook-locality", "phonebook-zipcode", "phonebook-notes"]
         .forEach(id => {const el = document.getElementById(id); if (el) el.value = "";});

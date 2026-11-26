@@ -409,6 +409,7 @@
     let __driverMenuCell = null;
     let globalDraggedRow = null;
     let _bxHidden = false;
+    let __scalesPrefetch = null;
     function toLocalYMD(date) {
       return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
     }
@@ -904,19 +905,23 @@
         const monthEnd = `${year}-${String(month).padStart(2, "0")}-${lastDay}`;
         const url = `${SUPABASE_URL}/rest/v1/reg_employees?select=n_int,abv_name,function,team,entry_date,exit_date&corp_oper_nr=eq.${corpOperNr}&function=not.in.(COM,SEC)` +
                     `&or=(entry_date.is.null,entry_date.lte.${monthEnd})&or=(exit_date.is.null,exit_date.gte.${monthStart})`;
-        const response = await fetch(url, {headers: getSupabaseHeaders()});
+        const isJanuary = month === 1;
+        /* tudo em paralelo (antes eram 4 pedidos um a seguir ao outro); os dados do fim de semana dos meses vizinhos
+           e a preferência das baixas, que a tabela precisa a seguir, também começam já */
+        __scalesPrefetch = {key: `${year}-${month}`, weekend: loadWeekendAdjacentData(year, month), bx: loadBXPreference(year, month)};
+        const [response, acumResponse, extraHoursResponse, shiftsResult] = await Promise.all([
+          fetch(url, {headers: getSupabaseHeaders()}),
+          isJanuary ? Promise.resolve(null) : fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month - 1}`, {headers: getSupabaseHeaders()}),
+          fetch(`${SUPABASE_URL}/rest/v1/reg_employees_extra_hours?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`, {headers: getSupabaseHeaders()}),
+          loadScalesShifts(year, month)
+        ]);
         if (!response.ok) { const body = await response.text(); console.error("Erro Supabase:", response.status, body); throw new Error("Erro ao carregar profissionais"); }
         const data = await response.json();
         if (!Array.isArray(data)) return [];
-        const isJanuary = month === 1;
         const accumulatedMap = {}, extraHoursMap = {};
-        if (!isJanuary) {
-          const acumResponse = await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_acumul?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month - 1}`, {headers: getSupabaseHeaders()});
-          if (acumResponse.ok) (await acumResponse.json()).forEach(item => { accumulatedMap[item.n_int] = item.total_accumulated || 0; });
-        }
-        const extraHoursResponse = await fetch(`${SUPABASE_URL}/rest/v1/reg_employees_extra_hours?corp_oper_nr=eq.${corpOperNr}&year=eq.${year}&month=eq.${month}`, {headers: getSupabaseHeaders()});
+        if (acumResponse && acumResponse.ok) (await acumResponse.json()).forEach(item => { accumulatedMap[item.n_int] = item.total_accumulated || 0; });
         if (extraHoursResponse.ok) (await extraHoursResponse.json()).forEach(item => { extraHoursMap[item.n_int] = (extraHoursMap[item.n_int] || 0) + item.qtd_hours; });
-        const {shifts, employeeData} = await loadScalesShifts(year, month);
+        const {shifts, employeeData} = shiftsResult;
         data.forEach(emp => {
           if (employeeData && Object.keys(employeeData).length > 0) {
             const ed = employeeData[emp.n_int];
@@ -1554,13 +1559,16 @@
         });
         paintWeekendHeaders(table, year, month, daysInMonth);
         paintHolidaysOnTable(tbody, table, year, month, daysInMonth, holidayMap);
-        await loadWeekendAdjacentData(year, month);
+        const pf = __scalesPrefetch && __scalesPrefetch.key === `${year}-${month}` ? __scalesPrefetch : null;
+        await (pf ? pf.weekend : loadWeekendAdjacentData(year, month));
         applyWeekendSpecialColors(tbody, year, month);
       }
       const temp = document.createElement("div"); temp.style.cssText = infoHost.style.cssText;
       displayWorkingHoursInfo(temp, year, month); displayShiftsLegend(temp, year, month);
       infoHost.replaceChildren(...temp.childNodes);
-      _bxHidden = await loadBXPreference(year, month);
+      const pfBx = __scalesPrefetch && __scalesPrefetch.key === `${year}-${month}` ? __scalesPrefetch : null;
+      _bxHidden = await (pfBx ? pfBx.bx : loadBXPreference(year, month));
+      if (pfBx) __scalesPrefetch = null;   /* usado uma vez; ao reabrir o mês volta a pedir (dados sempre atuais) */
       const btnBX = document.getElementById("employees-toggle-bx-btn");
       if (btnBX) {
         btnBX.innerHTML = _bxHidden

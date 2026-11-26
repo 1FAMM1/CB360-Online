@@ -56,6 +56,33 @@
         #page-decir .dec-list {margin-bottom: 20px;}
         #page-decir .dec-list ul {list-style: none; padding-left: 10px; line-height: 1.8;}
         #page-decir .dec-list li {color: #0d630e;}
+        /* ===== Gestão DECIR (layout novo, só estilo; cabeçalho escuro do módulo mantido) ===== */
+        .page[id^="decir-"] > .major-card > .major-card-body {background: #efefef;}
+        /* ano + meses: container branco centrado, meses em pills */
+        .page[id^="decir-"] [id^="months-container-"] > div {background: #fff; border: 1px solid #e3e7eb; border-radius: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.05); padding: 12px 16px !important; width: fit-content; margin: 0 auto; gap: 10px !important;}
+        .page[id^="decir-"] [id^="months-container-"] label {font-size: 11px; font-weight: 800 !important; color: #6c757d; text-transform: uppercase; letter-spacing: .4px;}
+        .page[id^="decir-"] [id^="months-container-"] select {height: 30px; padding: 0 10px !important; border: 1px solid #c8c8c8 !important; border-radius: 8px !important; font-weight: 700; color: #2c3e50;}
+        .page[id^="decir-"] [id^="months-container-"] > div > div:last-child {gap: 6px !important;}
+        .page[id^="decir-"] [id^="months-container-"] .btn {width: 104px !important; height: 34px !important; margin: 0 !important; border-radius: 999px !important; background: #f4f6f8 !important; color: #2c3e50 !important;
+                     border: 1px solid #dfe3e7 !important; box-shadow: none !important; font-size: 12px !important; font-weight: 800 !important; letter-spacing: .3px; transform: none !important;
+                     transition: background .15s, border-color .15s, color .15s;}
+        .page[id^="decir-"] [id^="months-container-"] .btn:hover {background: #fdf0ee !important; border-color: #e6b3ad !important; color: #b71c1c !important;}
+        .page[id^="decir-"] [id^="months-container-"] .btn.active {background: #2c3e50 !important; border-color: #2c3e50 !important; color: #fff !important;}
+        /* cabeçalhos de tabela azul-escuros → claros (o DashBoard DECIR fica como está) */
+        .page[id^="decir-"]:not(#decir-dashboard) th[style*="rgb(19, 26, 105)"], .page[id^="decir-"]:not(#decir-dashboard) .main-options-table th, .page[id^="decir-"] .signa-inner-table thead th, #decir-lepp-wrapper table thead th, #decir-reg-ocorr th.ocorr-sub-header {
+                     background: #f1f3f5 !important; color: #5b6670 !important; border-color: #e3e7eb !important; font-weight: 800 !important; text-transform: uppercase; letter-spacing: .3px;
+                     box-shadow: inset 0 -1px 0 #e3e7eb !important;}
+        .page[id^="decir-"]:not(#decir-dashboard) th[style*="rgb(19, 26, 105)"] *, .page[id^="decir-"]:not(#decir-dashboard) .main-options-table th * {color: inherit !important;}
+        .page[id^="decir-"] .main-options-table {border-radius: 10px; overflow: hidden; border: 1px solid #e3e7eb;}
+        .page[id^="decir-"] h2[style*="rgb(255, 204, 204)"], .page[id^="decir-"] h2[style*="#ffcccc"] {background: #fff !important; border: 1px solid #e9ecef; border-radius: 12px; color: #2c3e50;
+                     font-size: 14px !important; letter-spacing: .8px; padding: 10px !important; box-shadow: 0 1px 3px rgba(0,0,0,.05);}
+        #decir-reg-ocorr th.ocorr-sub-header {background: #f8f9fa !important; font-weight: 700 !important; text-transform: none !important;}
+        .page[id^="decir-"] [id^="table-container-"] {scrollbar-width: thin; scrollbar-color: #e57373 #fbe9e7;}
+        /* botões do rodapé: Guardar vermelho; Excel/PDF brancos com ícone de cor */
+        .page[id^="decir-"] .major-card-footer .btn {height: 34px; border-radius: 8px !important; font-weight: 800 !important; box-shadow: none !important; transform: none !important;}
+        .page[id^="decir-"] .major-card-footer .btn.btn-add {background: linear-gradient(180deg,#d64535,#b0281a) !important; color: #fff !important; border: 0 !important; box-shadow: 0 2px 6px rgba(176,40,26,.25) !important;}
+        .page[id^="decir-"] .major-card-footer .btn.btn-success, .page[id^="decir-"] .major-card-footer .btn.btn-danger {background: #fff !important; color: #2c3e50 !important; border: 1px solid #d0d5da !important;}
+        .page[id^="decir-"] .major-card-footer .btn.btn-success:hover, .page[id^="decir-"] .major-card-footer .btn.btn-danger:hover {background: #f4f6f8 !important;}
       `;
       document.head.appendChild(css);
     }

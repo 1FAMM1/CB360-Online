@@ -1778,3 +1778,69 @@
       }
       return {load, reset() { S.loaded = false; S.month = null; }};
     }
+
+    /* =======================================
+    AJUSTE DAS TABELAS AO ECRÃ
+    - As zonas com scroll que têm tabelas passam a crescer até ao espaço livre entre o sítio onde começam e o rodapé
+      (descontando tudo o que vem a seguir no mesmo cartão: legendas, totais, rodapé com os botões).
+    - Ajusta logo antes do ecrã ser pintado (sem esticar e depois encolher ao mudar de mês).
+    - Se o cartão mudar de tamanho depois (botões que aparecem, legendas), volta a ajustar. O cartão perde a margem de baixo.
+    - Só crescem até à última linha: se a tabela for mais pequena, fica do tamanho dela.
+    - Vale para todas as páginas (SALOC, RH, FOMIO, DECIR...). Para excluir uma zona: data-no-fit no elemento.
+    ======================================= */
+    (() => {
+      const MIN_H = 250, GAP = 12;
+      let raf = 0, busy = false;
+      const st = document.createElement('style');
+      st.textContent = '.major-card.fit-card{margin-bottom:0 !important;} .main-content .table-container{transition-property:opacity,background-color,box-shadow,border-color !important;}';
+      (document.head || document.documentElement).appendChild(st);
+      const ro = window.ResizeObserver ? new ResizeObserver(() => schedule()) : null;
+      const isScrollY = el => { const o = getComputedStyle(el).overflowY; return o === 'auto' || o === 'scroll'; };
+      function fitTables() {
+        raf = 0;
+        const main = document.querySelector('.main-content');
+        const page = main && main.querySelector('.page.active');
+        if (!page) return;
+        const mr = main.getBoundingClientRect();
+        const padB = parseFloat(getComputedStyle(main).paddingBottom) || 0;
+        const foot = document.querySelector('.status-bar');
+        const limit = Math.min(mr.bottom - padB, foot ? foot.getBoundingClientRect().top : Infinity);
+        busy = true;
+        page.querySelectorAll('table').forEach(t => {
+          let el = t.parentElement;
+          while (el && el !== page && !isScrollY(el)) el = el.parentElement;
+          if (!el || el === page || el.dataset.noFit !== undefined || el.dataset.fitDone === '1') return;
+          if (el.closest('.popup-modal, .modal, [role="dialog"]')) return;
+          el.dataset.fitDone = '1';
+          el.style.transitionProperty = 'opacity, background-color, box-shadow, border-color';
+          const r = el.getBoundingClientRect();
+          if (!r.height && !r.width) return;   /* escondida */
+          /* reserva tudo o que vem a seguir no cartão (legendas, totais, botões...): o cartão inteiro cabe acima do rodapé */
+          const card = el.closest('.major-card');
+          if (card && !card.classList.contains('fit-card')) { card.classList.add('fit-card'); ro?.observe(card); }
+          const below = card ? Math.max(0, card.getBoundingClientRect().bottom - r.bottom) : 0;
+          const top = r.top - mr.top + main.scrollTop;        /* posição como se a página estivesse no topo */
+          const avail = Math.floor((limit - mr.top) - top - below - GAP);
+          el.style.height = 'auto';
+          el.style.maxHeight = `${Math.max(MIN_H, avail)}px`;
+        });
+        page.querySelectorAll('[data-fit-done]').forEach(e => { delete e.dataset.fitDone; });
+        busy = false;
+      }
+      const schedule = () => { if (busy || raf) return; raf = requestAnimationFrame(() => setTimeout(fitTables, 60)); };
+      const now = () => { if (!busy) fitTables(); schedule(); };
+      window.addEventListener('resize', schedule);
+      document.addEventListener('click', e => { if (e.target.closest('.sidebar, [data-page]')) setTimeout(schedule, 120); }, true);
+      /* reajusta quando aparece conteúdo novo na página (tabela, legenda, totais...), mas não ao escrever nas células */
+      const startObs = () => new MutationObserver(muts => {
+        for (const m of muts) {
+          if (m.type === 'attributes') { if (m.target.classList?.contains('page')) return now(); continue; }
+          const t = m.target;
+          if (t.nodeType !== 1 || t.closest('td, th, .popup-modal')) continue;
+          if (!t.closest('.main-content')) continue;
+          if ([...m.addedNodes, ...m.removedNodes].some(n => n.nodeType === 1)) return now();
+        }
+      }).observe(document.body, {childList: true, subtree: true, attributes: true, attributeFilter: ['class']});
+      if (document.body) startObs(); else document.addEventListener('DOMContentLoaded', startObs);
+      window.cb360FitTables = schedule;
+    })();

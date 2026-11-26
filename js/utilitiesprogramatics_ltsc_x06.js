@@ -1,6 +1,6 @@
-   /* =======================================================================
-   UTILITÁRIOS · CONSOLA DE UTILITÁRIOS (CB360)
-   ======================================================================= */
+    /* =======================================================================
+    UTILITÁRIOS · CONSOLA DE UTILITÁRIOS (CB360)
+    ======================================================================= */
 (function () {
   const page = document.getElementById('page-utilities');
   if (!page) return;
@@ -154,8 +154,8 @@
       #page-utilities #sendMails {margin: 5px 0 0 0;}
       #page-utilities #sendMails .action-buttons {margin: 10px 0 -10px 0;}
       /* ===== layout novo (só estilo; ids e funções iguais) ===== */
-      #page-utilities .options-panel-container {background: #efefef; padding: 12px; gap: 12px; align-items: flex-start;}
-      #page-utilities .panel-sidebar {width: 230px; flex: 0 0 230px; background: #fff; backdrop-filter: none; border: 1px solid #e9ecef; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.05); padding: 8px; position: sticky; top: 0;}
+      #page-utilities .options-panel-container {background: #efefef; padding: 12px; gap: 12px; align-items: stretch;}
+      #page-utilities .panel-sidebar {width: 230px; flex: 0 0 230px; background: #fff; backdrop-filter: none; border: 1px solid #e9ecef; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.05); padding: 8px; align-self: stretch; box-sizing: border-box;}
       #page-utilities .panel-group-title {color: #8a949e; font-size: 10px; font-weight: 800; letter-spacing: .6px; border-bottom: 0; margin: 10px 8px 4px; padding: 0;}
       #page-utilities .panel-group-title.first {margin-top: 4px;}
       #page-utilities .panel-sidebar-menu-button {height: 34px; margin: 0 0 2px; padding: 0 12px; border: 0; border-radius: 8px; background: transparent; color: #2c3e50; font-size: 12px; font-weight: 600; gap: 0; box-shadow: none;
@@ -190,15 +190,16 @@
       #page-utilities .epe-card > .data-value::before {content: ''; width: 4px; height: 14px; border-radius: 3px; background: #c62828; flex-shrink: 0;}
       #page-utilities .cma-name > span::before {content: ''; display: inline-block; width: 4px; height: 14px; border-radius: 3px; background: #c62828; margin-right: 8px; vertical-align: -2px;}
       #page-utilities .button-container {height: auto; margin: 0; gap: 6px;}
-      #page-utilities .epeppi-panel-btn {height: 40px; border-radius: 10px; border: 1px solid #dfe3e7; font-size: 10.5px; font-weight: 800; letter-spacing: .3px; gap: 3px; background: #f8f9fa; color: #5b6670;}
+      #page-utilities .epeppi-panel-btn {height: 50px; border-radius: 10px; border: 1px solid #dfe3e7; font-size: 10.5px; font-weight: 800; letter-spacing: .3px; gap: 3px; background: #f8f9fa; color: #5b6670;}
       #page-utilities .epeppi-panel-btn::before {width: 6px; height: 6px; margin: 0; background: #c8cdd2; box-shadow: none;}
       #page-utilities .epeppi-panel-btn[data-active="false"] {background: #f8f9fa !important; color: #5b6670 !important;}
-      #page-utilities .epeppi-panel-btn.inactive::before {background: #c8cdd2; box-shadow: none;}
+      #page-utilities .epeppi-panel-btn.inactive::before {background: #E24B4A; box-shadow: 0 0 6px 2px #E24B4A;}
       #page-utilities .epeppi-panel-btn[data-active="true"] {border-color: transparent; box-shadow: 0 2px 6px rgba(0,0,0,.12);}
-      #page-utilities .epeppi-panel-btn[data-active="true"]::before {background: #fff; box-shadow: 0 0 0 2px rgba(255,255,255,.35);}
+      #page-utilities .epeppi-panel-btn[data-active="true"]::before {background: lime; box-shadow: 0 0 6px 2px lime;}
       #page-utilities .epeppi-panel-btn:hover {border-color: #e6b3ad; color: #b71c1c;}
       #page-utilities .epeppi-panel-btn[data-active="true"]:hover {color: inherit; filter: brightness(1.04);}
-      #page-utilities .epeppi-panel-btn:empty {visibility: hidden;}
+      #page-utilities .epeppi-panel-btn:empty {visibility: visible; background: #fafbfc !important; border: 1px dashed #e3e7eb; box-shadow: none; pointer-events: none;}
+      #page-utilities .epeppi-panel-btn:empty::before {display: none;}
       /* informações relevantes */
       #page-utilities .add-info {margin: 0; align-self: flex-start; background: #fff !important; color: #b71c1c !important; border: 1px solid #e6b3ad !important; box-shadow: none !important;}
       #page-utilities .add-info:hover {background: #fdecea !important;}

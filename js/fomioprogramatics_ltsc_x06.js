@@ -113,14 +113,17 @@
         #page-scales #table-container th[style*="rgb(240, 240, 240)"] {background: #f1f3f5 !important; color: #5b6670 !important; font-weight: 800 !important; font-size: 10.5px !important; text-transform: uppercase;}
         #page-scales #table-container th {border-color: #e3e7eb !important;}
         #page-scales #table-container tbody td {border-color: #e9ecef !important;}
-        /* botões: GUARDAR vermelho (principal), EMITIR escuro, ANALIZAR branco */
+      .btn:has(> i.fa-solid) {gap: 6px;}   /* ícone + texto nos botões */
+        /* botões: forma nova, cores de origem (ANALIZAR preto, GUARDAR azul, EMITIR vermelho) */
         #page-scales #save-container .btn {height: 34px; border-radius: 8px !important; font-weight: 800 !important; box-shadow: none !important; transform: none !important;}
-        #page-scales #analyze-button {background: #fff !important; color: #2c3e50 !important; border: 1px solid #d0d5da !important;}
-        #page-scales #save-button {background: linear-gradient(180deg,#d64535,#b0281a) !important; color: #fff !important; border: 0 !important; box-shadow: 0 2px 6px rgba(176,40,26,.25) !important;}
-        #page-scales #emit-button {background: #2c3e50 !important; color: #fff !important; border: 0 !important;}
-        /* Eventos e Serviços de Voluntariado: ação principal a vermelho, relatórios brancos */
-        #page-events #evcSubmitBtn, #services-save-button, #services-values-save-button {background: linear-gradient(180deg,#d64535,#b0281a) !important; color: #fff !important; border: 0 !important;
-                     border-radius: 8px !important; box-shadow: 0 2px 6px rgba(176,40,26,.25) !important; font-weight: 800 !important;}
+        #page-scales #analyze-button {background: #2c2c2c !important; color: #fff !important; border: 0 !important; box-shadow: 0 1px 3px rgba(0,0,0,.15) !important;}
+        #page-scales #save-button {background: #3354a1 !important; color: #fff !important; border: 0 !important; box-shadow: 0 1px 3px rgba(0,0,0,.15) !important;}
+        #page-scales #emit-button {background: #dc3545 !important; color: #fff !important; border: 0 !important; box-shadow: 0 1px 3px rgba(0,0,0,.15) !important;}
+        #page-scales #save-container .btn:hover {filter: brightness(1.08);}
+        /* Eventos e Serviços de Voluntariado: forma nova, cores de origem (submeter verde, guardar azul) */
+        #page-events #evcSubmitBtn {background: #27ae60 !important; color: #fff !important; border: 0 !important; border-radius: 8px !important; box-shadow: 0 1px 3px rgba(0,0,0,.15) !important; font-weight: 800 !important;}
+        #services-save-button, #services-values-save-button {background: #3354a1 !important; color: #fff !important; border: 0 !important;
+                     border-radius: 8px !important; box-shadow: 0 1px 3px rgba(0,0,0,.15) !important; font-weight: 800 !important;}
         #page-events #evcSubmitBtn:hover, #services-save-button:hover, #services-values-save-button:hover {filter: brightness(1.06);}
         #vsPDFReport, #vsEXCELReport {background: #fff !important; color: #2c3e50 !important; border: 1px solid #d0d5da !important; border-radius: 8px !important; font-weight: 800 !important;}
         #vsPDFReport i {color: #c62828;} #vsEXCELReport i {color: #1e7e34;}
@@ -162,13 +165,13 @@
           </p>
           <div class="fo-feat"><strong>Funcionalidades Principais:</strong></div>
           <div class="fo-list"><ul>
-            <li>📋 Criação e gestão de escalas mensais</li>
-            <li>👨‍🚒 Gestão de elementos por secção e disponibilidade</li>
-            <li>🧾 Emissão automática das escalas oficiais</li>
-            <li>🗂️ Consulta detalhada das escalas das respetivas <strong>SECÇÕES</strong> e <strong>DECIR</strong></li>
-            <li>⚙️ Ferramentas de verificação e validação antes da emissão</li>
-            <li>📋 Craiação e gestão de eventos</li>
-            <li>👨‍🚒 Gestão de elementos por evento e disponibilidade</li>
+            <li><i class="fa-solid fa-clipboard-list"></i> Criação e gestão de escalas mensais</li>
+            <li><i class="fa-solid fa-helmet-safety"></i> Gestão de elementos por secção e disponibilidade</li>
+            <li><i class="fa-solid fa-file-invoice"></i> Emissão automática das escalas oficiais</li>
+            <li><i class="fa-solid fa-folder-open"></i> Consulta detalhada das escalas das respetivas <strong>SECÇÕES</strong> e <strong>DECIR</strong></li>
+            <li><i class="fa-solid fa-gear"></i> Ferramentas de verificação e validação antes da emissão</li>
+            <li><i class="fa-solid fa-clipboard-list"></i> Craiação e gestão de eventos</li>
+            <li><i class="fa-solid fa-helmet-safety"></i> Gestão de elementos por evento e disponibilidade</li>
           </ul></div>
         </div>
         <div class="major-card-footer"></div>
@@ -183,9 +186,9 @@
         </div>
         <div class="major-card-footer">
           <div id="save-container" style="display:flex; justify-content:flex-end; margin-top: -20px;">
-            <button id="analyze-button" class="btn btn-clean" style="font-size: 11px; padding: 10px 25px; display: none">🕵️ ANALIZAR</button>
-            <button id="save-button" class="btn btn-add" style="font-size: 11px; padding: 10px 25px; display: none; margin-left: 5px;">💾 GUARDAR</button>
-            <button id="emit-button" class="btn btn-danger" style="font-size: 11px; padding: 10px 25px; display: none; margin-left: 5px;">📄 EMITIR</button>
+            <button id="analyze-button" class="btn btn-clean" style="font-size: 11px; padding: 10px 25px; display: none"><i class="fa-solid fa-magnifying-glass-chart"></i> ANALIZAR</button>
+            <button id="save-button" class="btn btn-add" style="font-size: 11px; padding: 10px 25px; display: none; margin-left: 5px;"><i class="fa-solid fa-floppy-disk"></i> GUARDAR</button>
+            <button id="emit-button" class="btn btn-danger" style="font-size: 11px; padding: 10px 25px; display: none; margin-left: 5px;"><i class="fa-solid fa-file-export"></i> EMITIR</button>
           </div>
         </div>
       </div>`);
@@ -221,7 +224,7 @@
                 <div class="evc-quick">
                   <span>Gerar um turno por dia, do início ao fim do evento, das</span>
                   <input type="time" id="evcQuickStart" value="09:00"><span>às</span><input type="time" id="evcQuickEnd" value="18:00">
-                  <button type="button" class="evc-btn-soft" id="evcGenBtn">⚡ Gerar</button>
+                  <button type="button" class="evc-btn-soft" id="evcGenBtn"><i class="fa-solid fa-bolt"></i> Gerar</button>
                 </div>
                 <div id="shiftsList" class="evc-shifts"></div>
                 <button type="button" class="evc-add" id="evcAddShiftBtn">＋ Adicionar turno</button>
@@ -232,8 +235,8 @@
                 <h5 class="evc-title"><span>3</span>Resumo</h5>
                 <div class="evc-sum-name" id="evcSumName">Evento sem nome</div>
                 <div class="evc-sum-type" id="evcSumType">—</div>
-                <div class="evc-sum-row"><span>📍 Local</span><b id="evcSumLoc">—</b></div>
-                <div class="evc-sum-row"><span>📅 Datas</span><b id="evcSumDates">—</b></div>
+                <div class="evc-sum-row"><span><i class="fa-solid fa-location-dot"></i> Local</span><b id="evcSumLoc">—</b></div>
+                <div class="evc-sum-row"><span><i class="fa-solid fa-calendar-days"></i> Datas</span><b id="evcSumDates">—</b></div>
                 <div class="evc-sum-kpis">
                   <div><b id="evcSumShifts">0</b><small>Turnos</small></div>
                   <div><b id="evcSumSlots">0</b><small>Vagas</small></div>
@@ -278,10 +281,10 @@
         <div class="major-card-header header-red">${ico('shirt')} PEDIDOS DE FARDAMENTO</div>
         <div class="major-card-body">
           <div class="ufx-kpis">
-            <button type="button" class="ufx-kpi" style="--c:#ef6c00" data-uf="Em Aprovação"><i>⏳</i><div><b id="ufxKApr">0</b><small>Em aprovação</small></div></button>
-            <button type="button" class="ufx-kpi" style="--c:#1565c0" data-uf="Aprovado"><i>📦</i><div><b id="ufxKEnt">0</b><small>Aprovados por entregar</small></div></button>
-            <button type="button" class="ufx-kpi" style="--c:#2e7d32" data-uf="Entregue"><i>✅</i><div><b id="ufxKDone">0</b><small>Entregues (30 dias)</small></div></button>
-            <button type="button" class="ufx-kpi" style="--c:#c62828" data-uf="Rejeitado"><i>✕</i><div><b id="ufxKRej">0</b><small>Rejeitados (30 dias)</small></div></button>
+            <button type="button" class="ufx-kpi" style="--c:#ef6c00" data-uf="Em Aprovação"><i><i class="fa-solid fa-hourglass-half"></i></i><div><b id="ufxKApr">0</b><small>Em aprovação</small></div></button>
+            <button type="button" class="ufx-kpi" style="--c:#1565c0" data-uf="Aprovado"><i><i class="fa-solid fa-box"></i></i><div><b id="ufxKEnt">0</b><small>Aprovados por entregar</small></div></button>
+            <button type="button" class="ufx-kpi" style="--c:#2e7d32" data-uf="Entregue"><i><i class="fa-solid fa-circle-check"></i></i><div><b id="ufxKDone">0</b><small>Entregues (30 dias)</small></div></button>
+            <button type="button" class="ufx-kpi" style="--c:#c62828" data-uf="Rejeitado"><i><i class="fa-solid fa-xmark"></i></i><div><b id="ufxKRej">0</b><small>Rejeitados (30 dias)</small></div></button>
           </div>
           <section class="ufx-box">
             <div class="ufx-bh"><span class="ufx-n">1</span>Pedidos
@@ -289,7 +292,7 @@
                 <div class="ufx-pills" id="ufxPills">${[['pendentes', 'Por tratar'], ['Em Aprovação', 'Em aprovação'], ['Aprovado', 'Aprovados'], ['Entregue', 'Entregues'], ['Rejeitado', 'Rejeitados'], ['todos', 'Todos']]
                   .map(([v, t]) => `<button type="button" class="ufx-pill${v === 'pendentes' ? ' on' : ''}" data-uf="${v}">${t}</button>`).join('')}</div>
                 <select id="unifStateFilter" hidden>${['pendentes', 'Em Aprovação', 'Aprovado', 'Entregue', 'Rejeitado', 'todos'].map(v => `<option value="${v}">${v}</option>`).join('')}</select>
-                <input type="search" id="unifSearch" class="ufx-search" placeholder="🔍 Procurar nº ou nome...">
+                <input type="search" id="unifSearch" class="ufx-search" placeholder="Procurar nº ou nome...">
               </div>
             </div>
             ${unifTable('unifOrdersBody', 430, [['Data', 140], ['Nº Int', 70], ['Elemento', 220], ['Artigos'], ['Estado', 150], ['Ações', 200]])}
@@ -510,8 +513,8 @@
         </div>
         <div class="popup-body" style="min-height: 100px; max-height: 400px; overflow-y: auto;"></div>
         <div class="popup-footer">
-          <button class="popup-btn" style="background-color: #28a745; margin-right: 8px;" onclick="requestDecirElements()">📋 SOLICITAR</button>
-          <button class="popup-btn popup-danger-btn" onclick="closePopup('popup-analyze-decir')">✕ FECHAR</button>
+          <button class="popup-btn" style="background-color: #28a745; margin-right: 8px;" onclick="requestDecirElements()"><i class="fa-solid fa-clipboard-list"></i> SOLICITAR</button>
+          <button class="popup-btn popup-danger-btn" onclick="closePopup('popup-analyze-decir')"><i class="fa-solid fa-xmark"></i> FECHAR</button>
         </div>
       </div>
     </div>
@@ -620,7 +623,7 @@
         return `
         <div class="cm-wrap">
           <div class="cm-card">
-            <div class="cm-card-h">📤 Novo comunicado</div>
+            <div class="cm-card-h"><i class="fa-solid fa-paper-plane"></i> Novo comunicado</div>
             <div class="cm-form">
               <div><label class="cm-lbl" for="cmTitle">Título</label>
                 <input id="cmTitle" class="cm-in" maxlength="120" placeholder="Ex.: Ordem de Serviço n.º 12/2026"></div>
@@ -633,7 +636,7 @@
             </div>
           </div>
           <div class="cm-card">
-            <div class="cm-card-h">📄 Comunicados publicados <span class="cm-count">0</span></div>
+            <div class="cm-card-h"><i class="fa-solid fa-file-lines"></i> Comunicados publicados <span class="cm-count">0</span></div>
             <div class="cm-tools"><input class="cm-in cm-q" placeholder="Procurar comunicado…"></div>
             <div class="cm-list"></div>
           </div>
@@ -642,14 +645,14 @@
       function renderFile() {
         const box = root().querySelector('.cm-filebox');
         if (!S.file) {
-          box.innerHTML = `<div class="cm-drop"><span class="cm-ico">📎</span><b>Arraste o PDF para aqui</b><br>ou clique para escolher</div>`;
+          box.innerHTML = `<div class="cm-drop"><span class="cm-ico"><i class="fa-solid fa-paperclip"></i></span><b>Arraste o PDF para aqui</b><br>ou clique para escolher</div>`;
           const d = box.querySelector('.cm-drop');
           d.onclick = () => root().querySelector('#cmFile').click();
           d.ondragover = ev => { ev.preventDefault(); d.classList.add('over'); };
           d.ondragleave = () => d.classList.remove('over');
           d.ondrop = ev => { ev.preventDefault(); d.classList.remove('over'); pick(ev.dataTransfer.files[0]); };
         } else {
-          box.innerHTML = `<div class="cm-file"><span class="cm-pdf">PDF</span><span class="cm-fn"><b>${esc(S.file.name)}</b><small>${fmtSize(S.file.size)}</small></span><button type="button" class="cm-x" title="Remover">✕</button></div>`;
+          box.innerHTML = `<div class="cm-file"><span class="cm-pdf">PDF</span><span class="cm-fn"><b>${esc(S.file.name)}</b><small>${fmtSize(S.file.size)}</small></span><button type="button" class="cm-x" title="Remover"><i class="fa-solid fa-xmark"></i></button></div>`;
           box.querySelector('.cm-x').onclick = () => { S.file = null; root().querySelector('#cmFile').value = ''; renderFile(); };
         }
       }
@@ -683,8 +686,8 @@
           return `<div class="cm-row">
             <span class="cm-pdf">PDF</span>
             <span class="cm-t"><b>${esc(r.comun_title || 'Comunicado')}${isNew ? '<span class="cm-new">NOVO</span>' : ''}</b><small>${fmtDate(r.created_at)}</small></span>
-            <button type="button" class="cm-a" data-view="${k}">👁 Ver</button>
-            <button type="button" class="cm-a del ${S.confirmDel === k ? 'sure' : ''}" data-del="${k}">${S.confirmDel === k ? 'Confirmar?' : '🗑'}</button>
+            <button type="button" class="cm-a" data-view="${k}"><i class="fa-solid fa-eye"></i> Ver</button>
+            <button type="button" class="cm-a del ${S.confirmDel === k ? 'sure' : ''}" data-del="${k}">${S.confirmDel === k ? 'Confirmar?' : '<i class="fa-solid fa-trash-can"></i>'}</button>
           </div>`;
         }).join('');
         list.querySelectorAll('[data-view]').forEach(b => b.onclick = () => view(S.rows[+b.dataset.view], b));
@@ -714,7 +717,7 @@
           console.error('Erro ao abrir PDF:', e);
           pop('popup-danger', 'Não foi possível abrir o PDF.');
         } finally {
-          if (btn) { btn.disabled = false; btn.textContent = '👁 Ver'; }
+          if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-eye"></i> Ver'; }
         }
       }
       async function publish() {
@@ -1123,9 +1126,9 @@
     const VSL_AMB = ['ABSC', 'ABCI', 'ABTM', 'ABTD', 'VDTD'];
     function vslVehicleKind(code) {
       const t = String(code).split('-')[0];
-      if (VSL_AMB.includes(t)) return {cls: 't-amb', icon: '🚑'};
-      if (t.startsWith('V')) return {cls: 't-fire', icon: '🚒'};
-      return {cls: 't-other', icon: '🚗'};
+      if (VSL_AMB.includes(t)) return {cls: 't-amb', icon: '<i class="fa-solid fa-truck-medical"></i>'};
+      if (t.startsWith('V')) return {cls: 't-fire', icon: '<i class="fa-solid fa-fire"></i>'};
+      return {cls: 't-other', icon: '<i class="fa-solid fa-car"></i>'};
     }
     function vslSortVehicles(list) {
       return [...list].sort((a, b) => {
@@ -2257,9 +2260,9 @@
         if (dayIssues.length > 0) issues.push(`Dia ${d}: ${dayIssues.join(" | ")}`);
       }
       if (issues.length === 0) {
-        showPopup('popup-success', "✅ Todos os dias têm a dotação mínima assegurada.");
+        showPopup('popup-success', "<i class='fa-solid fa-circle-check'></i> Todos os dias têm a dotação mínima assegurada.");
       } else {
-        showPopup('popup-analyze', "<b>⚠️ Dias com dotação insuficiente:</b>" + "<div style='max-height:200px; overflow-y:auto; margin: 10px 0; font-weight: bold;'>" + issues.join("<br>") + "</div>" +
+        showPopup('popup-analyze', "<b><i class='fa-solid fa-triangle-exclamation'></i> Dias com dotação insuficiente:</b>" + "<div style='max-height:200px; overflow-y:auto; margin: 10px 0; font-weight: bold;'>" + issues.join("<br>") + "</div>" +
                   "<small>ℹ️ A análise é efetuada com base nas diferenciações registadas para cada elemento e nas dotações mínimas necessárias ao funcionamento da Grelha Municipal e demais necessidades operacionais do Corpo de Bombeiros.</small>"
                  );
       }
@@ -2361,19 +2364,19 @@
       }
       const modeLabel = {'1_ecin': '1 ECIN', '1_ecin_1_elac': '1 ECIN + 1 ELAC', 'brigada': 'Brigada'}[mode] || mode;
       if (issuesAbsents.length === 0 && issuesChiefs.length === 0) {
-        showPopup('popup-success', `✅ Dotação mínima assegurada para <b>${modeLabel}</b>.`);
+        showPopup('popup-success', `<i class="fa-solid fa-circle-check"></i> Dotação mínima assegurada para <b>${modeLabel}</b>.`);
       } else {
         const popupDecir = document.getElementById('popup-analyze-decir');
         if (popupDecir) {
           const absentsSection = issuesAbsents.length > 0
-            ? `<b>🚫 Turnos por Preencher / Excessos:</b><br>${issuesAbsents.join("<br>")}`
+            ? `<b><i class="fa-solid fa-ban"></i> Turnos por Preencher / Excessos:</b><br>${issuesAbsents.join("<br>")}`
             : "";
           const chiefsSection = issuesChiefs.length > 0
-            ? `<br><br><b>🚫 Turnos sem Graduados:</b><br>${issuesChiefs.join("<br>")}<br><br><small>ℹ️ A alteração aos graduados é facultativa mas aconselhável.</small>`
+            ? `<br><br><b><i class="fa-solid fa-ban"></i> Turnos sem Graduados:</b><br>${issuesChiefs.join("<br>")}<br><br><small><i class="fa-solid fa-circle-info"></i> A alteração aos graduados é facultativa mas aconselhável.</small>`
             : "";
           popupDecir.querySelector('.popup-body').innerHTML = `
             <ul style="list-style:none; padding:0; margin:0;">
-              <li><span style="font-size:20px;">•</span> <b>⚠️ Turnos DECIR por Preencher e/ou Turnos com excessos. (${modeLabel})</b></li>
+              <li><span style="font-size:20px;">•</span> <b><i class="fa-solid fa-triangle-exclamation"></i> Turnos DECIR por Preencher e/ou Turnos com excessos. (${modeLabel})</b></li>
               <li style="margin-left: 14px;"><small>Dotação: ${limits.minMP} Motoristas + ${minBBs} Bombeiros (Total: ${limits.minTotal} Elementos.)</small></li>
               <li>
                 <div style='max-height:200px; overflow-y:auto; margin: 10px 0; font-weight: bold;'>
@@ -2496,7 +2499,7 @@
             td.removeAttribute('data-original-val');
           });
           saveBtn.disabled = false;
-          saveBtn.textContent = "💾 GUARDAR";
+          saveBtn.innerHTML = "<i class='fa-solid fa-floppy-disk'></i> GUARDAR";
         }
       });
     }
@@ -2677,7 +2680,7 @@
         <input type="date" class="shift-date" value="${date}" title="Data" onchange="evcUpdateSummary()">
         <input type="time" class="shift-start-time" value="${start}" title="Início" onchange="evcUpdateSummary()">
         <input type="time" class="shift-end-time" value="${end}" title="Fim" onchange="evcUpdateSummary()">
-        <button type="button" class="evc-del" onclick="removeShift(this)" title="Remover turno">✕</button>
+        <button type="button" class="evc-del" onclick="removeShift(this)" title="Remover turno"><i class="fa-solid fa-xmark"></i></button>
       `;
       container.appendChild(div);
       container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
@@ -3029,10 +3032,10 @@
               <input type="text" class="vb-search" placeholder="Procurar evento ou local…" value="${esc(S.q)}">
             </div>
             <div class="vb-kpis">
-              ${kpi('#c62828', '📣', active.length, 'Eventos ativos')}
-              ${kpi('#ef6c00', '⏳', pend, 'Disponibilidades por tratar')}
-              ${kpi('#1565c0', '🧩', open, 'Turnos com vagas')}
-              ${kpi('#2e7d32', '✓', appr, 'Operacionais aprovados')}
+              ${kpi('#c62828', '<i class="fa-solid fa-bullhorn"></i>', active.length, 'Eventos ativos')}
+              ${kpi('#ef6c00', '<i class="fa-solid fa-hourglass-half"></i>', pend, 'Disponibilidades por tratar')}
+              ${kpi('#1565c0', '<i class="fa-solid fa-puzzle-piece"></i>', open, 'Turnos com vagas')}
+              ${kpi('#2e7d32', '<i class="fa-solid fa-check"></i>', appr, 'Operacionais aprovados')}
             </div>
             <div class="evb-layout">
               <div class="evb-list">${list.length ? list.map(evCard).join('') : '<div class="evb-empty">Sem eventos para mostrar.</div>'}</div>
@@ -3053,7 +3056,7 @@
         return `<div class="evb-ev ${S.sel === ev.event ? 'sel' : ''} ${ph === 'ended' ? 'ended' : ''}" data-ev="${esc(ev.event)}" style="--c:${typeColor(ev.event_type)}">
           ${st.pend ? `<span class="evb-pend" title="${st.pend} por tratar">${st.pend}</span>` : ''}
           <div class="evb-ev-top"><span class="evb-ev-name" title="${esc(ev.event)}">${esc(ev.event)}</span><span class="evb-type">${esc(ev.event_type || '—')}</span></div>
-          <div class="evb-ev-meta"><span>📅 ${dates}</span>${ev.location ? `<span>📍 ${esc(ev.location)}</span>` : ''}${ph === 'now' ? '<span style="color:#2e7d32;font-weight:700;">● A decorrer</span>' : ''}</div>
+          <div class="evb-ev-meta"><span><i class="fa-solid fa-calendar-days"></i> ${dates}</span>${ev.location ? `<span><i class="fa-solid fa-location-dot"></i> ${esc(ev.location)}</span>` : ''}${ph === 'now' ? '<span style="color:#2e7d32;font-weight:700;">● A decorrer</span>' : ''}</div>
           <div class="evb-bar ${st.nec && st.act >= st.nec ? 'full' : ''}"><span style="width:${pct}%"></span></div>
           <div class="evb-ev-foot"><span>${st.shifts} turno${st.shifts === 1 ? '' : 's'}</span><span>${st.act}/${st.nec} vagas preenchidas</span></div>
         </div>`;
@@ -3078,7 +3081,7 @@
                 <span>Vagas: <b>${st.act}/${st.nec}</b></span>
               </div>
             </div>
-            <div class="evb-dact"><button type="button" class="evb-del" title="Eliminar o evento, os turnos e as disponibilidades">🗑️ Eliminar evento</button></div>
+            <div class="evb-dact"><button type="button" class="evb-del" title="Eliminar o evento, os turnos e as disponibilidades"><i class="fa-solid fa-trash-can"></i> Eliminar evento</button></div>
           </div>`;
         if (!days.length) return head + '<div class="evb-empty">Este evento ainda não tem turnos.</div>';
         return head + `<div class="evb-days">${days.map(d => `
@@ -3093,7 +3096,7 @@
           .sort((a, b) => ['a', 'p', 'r'].indexOf(ST[a.shift_state] || 'p') - ['a', 'p', 'r'].indexOf(ST[b.shift_state] || 'p'));
         const vcls = full ? 'full' : (nec && act / nec < .5 ? 'low' : '');
         return `<div class="evb-shift">
-          <div class="evb-shift-head"><span class="evb-time">🕒 ${esc(s.event_shift)}</span><span class="evb-vagas ${vcls}">${full ? 'Completo' : 'Vagas'} ${act}/${nec}</span></div>
+          <div class="evb-shift-head"><span class="evb-time"><i class="fa-solid fa-clock"></i> ${esc(s.event_shift)}</span><span class="evb-vagas ${vcls}">${full ? 'Completo' : 'Vagas'} ${act}/${nec}</span></div>
           <div class="evb-bar ${full ? 'full' : ''}"><span style="width:${nec ? Math.min(100, act / nec * 100) : 0}%"></span></div>
           <div class="evb-people">${people.length ? people.map(d => {
             const k = ST[d.shift_state] || 'p', e = S.elems[d.n_int] || S.elems[String(parseInt(d.n_int, 10))] || {};
@@ -3103,8 +3106,8 @@
               <span class="evb-avatar">${esc(initials(e.full_name || d.n_int))}</span>
               <span class="evb-pname"><b>${esc(e.full_name || 'Nº ' + d.n_int)}</b><small>Nº ${esc(d.n_int)}${e.patent ? ' · ' + esc(e.patent) : ''}</small></span>
               <span class="vb-state ${blocked ? '' : k}" ${blocked ? 'style="background:#f1f3f5;color:#6c757d;"' : ''}>${label}</span>
-              <button type="button" class="vb-btn ok" data-id="${d.id}" data-s="Aprovado" title="Aprovar" ${k === 'a' || blocked ? 'disabled' : ''}>✓</button>
-              <button type="button" class="vb-btn no" data-id="${d.id}" data-s="Não Aprovado" title="Não aprovar" ${k === 'r' ? 'disabled' : ''}>✕</button>
+              <button type="button" class="vb-btn ok" data-id="${d.id}" data-s="Aprovado" title="Aprovar" ${k === 'a' || blocked ? 'disabled' : ''}><i class="fa-solid fa-check"></i></button>
+              <button type="button" class="vb-btn no" data-id="${d.id}" data-s="Não Aprovado" title="Não aprovar" ${k === 'r' ? 'disabled' : ''}><i class="fa-solid fa-xmark"></i></button>
             </div>`;
           }).join('') : '<div class="evb-none">Ninguém se disponibilizou ainda.</div>'}</div>
         </div>`;
@@ -3398,11 +3401,11 @@
         }
         let actions = '—';
         if (o.status === 'Em Aprovação') {
-          actions = `<button title="Aprovar" onclick="unifSetState(${o.id}, 'Aprovado')" class="ufx-btn ufx-ok">✓ Aprovar</button>
-                     <button title="Rejeitar" onclick="unifSetState(${o.id}, 'Rejeitado')" class="ufx-btn ufx-del">✕ Rejeitar</button>`;
+          actions = `<button title="Aprovar" onclick="unifSetState(${o.id}, 'Aprovado')" class="ufx-btn ufx-ok"><i class="fa-solid fa-check"></i> Aprovar</button>
+                     <button title="Rejeitar" onclick="unifSetState(${o.id}, 'Rejeitado')" class="ufx-btn ufx-del"><i class="fa-solid fa-xmark"></i> Rejeitar</button>`;
         } else if (o.status === 'Aprovado') {
-          actions = `<button title="Marcar como entregue" onclick="unifSetState(${o.id}, 'Entregue')" class="ufx-btn ufx-go">📦 Entregue</button>
-                     <button title="Rejeitar" onclick="unifSetState(${o.id}, 'Rejeitado')" class="ufx-btn ufx-del">✕ Rejeitar</button>`;
+          actions = `<button title="Marcar como entregue" onclick="unifSetState(${o.id}, 'Entregue')" class="ufx-btn ufx-go"><i class="fa-solid fa-box"></i> Entregue</button>
+                     <button title="Rejeitar" onclick="unifSetState(${o.id}, 'Rejeitado')" class="ufx-btn ufx-del"><i class="fa-solid fa-xmark"></i> Rejeitar</button>`;
         }
         return `
           <tr>
@@ -3949,7 +3952,7 @@
       const btn = document.getElementById('services-save-button');
       const originalText = btn.innerHTML;
       btn.disabled = true;
-      btn.innerHTML = '⏳ A guardar...';
+      btn.innerHTML = '<i class="fa-solid fa-hourglass-half"></i> A guardar...';
       try {
         const checkUrl = `${SUPABASE_URL}/rest/v1/reg_volunteer_services?service_date=eq.${payload.service_date}&service_type=eq.${encodeURIComponent(payload.service_type)}&n_int=eq.${payload.n_int}&corp_oper_nr=eq.${payload.corp_oper_nr}&select=id`;
         const checkRes = await fetch(checkUrl, {headers: getSupabaseHeaders()});

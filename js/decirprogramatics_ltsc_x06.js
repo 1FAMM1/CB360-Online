@@ -77,8 +77,10 @@
         .page[id^="decir-"] [id^="table-container-"] {scrollbar-width: thin; scrollbar-color: #e57373 #fbe9e7;}
         /* botões do rodapé: Guardar vermelho; Excel/PDF brancos com ícone de cor */
         .page[id^="decir-"] .major-card-footer .btn {height: 34px; border-radius: 8px !important; font-weight: 800 !important; box-shadow: none !important; transform: none !important;}
-        .page[id^="decir-"] .major-card-footer .btn.btn-add {background: linear-gradient(180deg,#d64535,#b0281a) !important; color: #fff !important; border: 0 !important; box-shadow: 0 2px 6px rgba(176,40,26,.25) !important;}
-        .page[id^="decir-"] .major-card-footer .btn.btn-success, .page[id^="decir-"] .major-card-footer .btn.btn-danger {background: #fff !important; color: #2c3e50 !important; border: 1px solid #d0d5da !important;}
+      .btn:has(> i.fa-solid) {gap: 6px;}   /* ícone + texto nos botões */
+        .page[id^="decir-"] .major-card-footer .btn.btn-add {background: #3354a1 !important; color: #fff !important; border: 0 !important; box-shadow: 0 1px 3px rgba(0,0,0,.15) !important;}
+        .page[id^="decir-"] .major-card-footer .btn.btn-success {background: #28a745 !important; color: #fff !important; border: 0 !important; box-shadow: 0 1px 3px rgba(0,0,0,.15) !important;}
+        .page[id^="decir-"] .major-card-footer .btn.btn-danger {background: #dc3545 !important; color: #fff !important; border: 0 !important; box-shadow: 0 1px 3px rgba(0,0,0,.15) !important;}
         .page[id^="decir-"] .major-card-footer .btn.btn-success:hover, .page[id^="decir-"] .major-card-footer .btn.btn-danger:hover {background: #f4f6f8 !important;}
       `;
       document.head.appendChild(css);
@@ -111,7 +113,7 @@
     const months = (id, cls = '') => `<div id="${id}" class="dec-months${cls}"></div>`;
     const box = (id, cls) => `<div id="${id}"${cls ? ` class="${cls}"` : ''}></div>`;
     /* botões de rodapé: [classe, id, texto] */
-    const BTN = {clean: ['btn-clean', '🧹 Limpar'], save: ['btn-add', '💾 Guardar'], xlsx: ['btn-success', '📊 Excel'], pdf: ['btn-danger', '📄 PDF']};
+    const BTN = {clean: ['btn-clean', '<i class="fa-solid fa-broom"></i> Limpar'], save: ['btn-add', '<i class="fa-solid fa-floppy-disk"></i> Guardar'], xlsx: ['btn-success', '<i class="fa-solid fa-file-excel"></i> Excel'], pdf: ['btn-danger', '<i class="fa-solid fa-file-pdf"></i> PDF']};
     const actions = (id, list, hide) => `<div class="action-buttons" id="${id}"${hide ? ' style="display:none;"' : ''}>${
       list.map(([k, bid]) => `<button class="btn ${BTN[k][0]}" id="${bid}">${BTN[k][1]}</button>`).join(' ')}</div>`;
     const fill = (id, html) => { const p = document.getElementById(id); if (p) p.innerHTML = html; return p; };
@@ -129,10 +131,10 @@
           </p>
           <div class="dec-feat"><strong>Funcionalidades Principais:</strong></div>
           <div class="dec-list"><ul>
-            <li>📋 Criação e gestão de relatórios para pagamentos</li>
-            <li>👨‍🚒 Gestão e confirmação de pagamentos</li>
-            <li>🧾 Emissão de listas para pagamentos</li>
-            <li>🧾 Emissão de escalas e assinaturas (Ficheiros Oficiais da ANEPC)</li>
+            <li><i class="fa-solid fa-clipboard-list"></i> Criação e gestão de relatórios para pagamentos</li>
+            <li><i class="fa-solid fa-helmet-safety"></i> Gestão e confirmação de pagamentos</li>
+            <li><i class="fa-solid fa-file-invoice"></i> Emissão de listas para pagamentos</li>
+            <li><i class="fa-solid fa-file-invoice"></i> Emissão de escalas e assinaturas (Ficheiros Oficiais da ANEPC)</li>
           </ul></div>
         </div>
         <div class="major-card-footer"></div>
@@ -144,12 +146,12 @@
       m.id = id;
       m.className = 'decir-modal-custom';
       m.innerHTML = `<div class="decir-modal-content">
-          <div class="decir-modal-header"><h3><i class="fas fa-cog"></i> ${title}</h3><button class="decir-close-btn" data-act="close">✕</button></div>
+          <div class="decir-modal-header"><h3><i class="fas fa-cog"></i> ${title}</h3><button class="decir-close-btn" data-act="close"><i class="fa-solid fa-xmark"></i></button></div>
           <div class="decir-modal-body">${rows.map(r => `<div class="decir-row">${r.map(([l, fid]) => `<div class="decir-form-group">
               <label for="${fid}">${l}</label>${input(fid)}</div>`).join('')}</div>`).join('')}</div>
           <div class="decir-modal-footer">
             <button type="button" class="decir-btn decir-btn-secondary" data-act="close">Cancelar</button>
-            <button type="button" id="${saveId}" class="decir-btn decir-btn-primary" data-act="save">💾 Gravar Alterações</button>
+            <button type="button" id="${saveId}" class="decir-btn decir-btn-primary" data-act="save"><i class="fa-solid fa-floppy-disk"></i> Gravar Alterações</button>
           </div>
         </div>`;
       return m;
@@ -186,7 +188,7 @@
           </div>
         </div>
         <div class="wsms-section"><div id="decir-main-options-table-container"></div></div>`,
-      footer: `<div class="action-buttons"><button class="btn btn-add" id="save-main-option-btn">💾 Guardar</button></div>`}));
+      footer: `<div class="action-buttons"><button class="btn btn-add" id="save-main-option-btn"><i class="fa-solid fa-floppy-disk"></i> Guardar</button></div>`}));
 
     fill('decir-sca-view', card({id: 'decir-sca-card', icon: 'screen', title: 'VISUALIZAÇÃO DE ESCALAS DECIR',
       body: months('months-container-dec-view', ' g8') + box('table-container-dec-view')}));
@@ -294,16 +296,16 @@
       header.className = 'decir-pdf-header';
       header.innerHTML = `
         <div class="decir-pdf-header-left">
-          <div class="decir-pdf-icon">📄</div>
+          <div class="decir-pdf-icon"><i class="fa-solid fa-file-lines"></i></div>
           <div>
             <div class="decir-pdf-title">DECIR — Visualização de Documento</div>
             <div class="decir-pdf-subtitle">${fileName}.pdf</div>
           </div>
         </div>
         <div class="decir-pdf-header-btns">
-          <button class="decir-pdf-btn" id="decir-pdf-fullscreen" title="Ecrã inteiro">⛶ Expandir</button>
-          <button class="decir-pdf-btn decir-pdf-btn-download" id="decir-pdf-download" title="Descarregar">⬇️ Descarregar</button>
-          <button class="decir-pdf-btn decir-pdf-btn-close" id="decir-pdf-close" title="Fechar">✕ Fechar</button>
+          <button class="decir-pdf-btn" id="decir-pdf-fullscreen" title="Ecrã inteiro"><i class="fa-solid fa-expand"></i> Expandir</button>
+          <button class="decir-pdf-btn decir-pdf-btn-download" id="decir-pdf-download" title="Descarregar"><i class="fa-solid fa-download"></i> Descarregar</button>
+          <button class="decir-pdf-btn decir-pdf-btn-close" id="decir-pdf-close" title="Fechar"><i class="fa-solid fa-xmark"></i> Fechar</button>
         </div>
       `;
       /* ── Content ── */
@@ -317,7 +319,7 @@
       footer.className = 'decir-pdf-footer';
       footer.innerHTML = `
         <div class="decir-pdf-footer-info">Documento gerado com sucesso</div>
-        <button class="decir-pdf-print-btn" id="decir-pdf-print">🖨️ Imprimir</button>
+        <button class="decir-pdf-print-btn" id="decir-pdf-print"><i class="fa-solid fa-print"></i> Imprimir</button>
       `; 
       box.append(header, content, footer);
       overlay.appendChild(box);
@@ -327,7 +329,7 @@
       document.getElementById('decir-pdf-fullscreen').onclick = () => {
         isFs = !isFs;
         Object.assign(box.style, {width: isFs ? '100vw' : '82vw', height: isFs ? '100vh' : '90vh', borderRadius: isFs ? '0' : '16px'});
-        document.getElementById('decir-pdf-fullscreen').textContent = isFs ? '⛶ Reduzir' : '⛶ Expandir';
+        document.getElementById('decir-pdf-fullscreen').innerHTML = isFs ? '<i class="fa-solid fa-compress"></i> Reduzir' : '<i class="fa-solid fa-expand"></i> Expandir';
       };
       /* ── Download ── */
       document.getElementById('decir-pdf-download').onclick = () => {
@@ -478,7 +480,7 @@
         showPopup('popup-danger', "Erro ao ligar ao servidor.");
       } finally {
         btn.disabled = false;
-        btn.innerText = "💾 Gravar Alterações";
+        btn.innerHTML = "<i class='fa-solid fa-floppy-disk'></i> Gravar Alterações";
       }
     }
     /* ─── SIDEBAR BUTTON — MODAL TEANS CONFIG ─────────────────────── */
@@ -537,7 +539,7 @@
       const btn = document.getElementById('btnSaveConfigEquipas');
       const originalText = btn.textContent;
       btn.disabled = true;
-      btn.textContent = "⏳ A gravar...";
+      btn.innerHTML = "<i class='fa-solid fa-hourglass-half'></i> A gravar...";
       try {
         const payload = {corp_oper_nr: corp, mode: mode, opat_qtd: opatQty, sbas_qtd: sbasQty};
         
@@ -833,7 +835,7 @@
       const msg = document.createElement("div");
       Object.assign(msg.style, {textAlign: "center", color: "#131a69", fontFamily: "Segoe UI, sans-serif"});
       msg.innerHTML = `
-        <div style="font-size: 40px; margin-bottom: 12px;">🚧</div>
+        <div style="font-size: 40px; margin-bottom: 12px;"><i class="fa-solid fa-person-digging"></i></div>
         <div style="font-size: 16px; font-weight: 700; letter-spacing: 0.5px;">ESTA FUNCIONALIDADE ESTARÁ DISPONÍVEL BREVEMENTE</div>
         <div style="font-size: 12px; margin-top: 8px; color: #555;">REGISTO DE DESPESAS COM DANOS DECIR - ${MONTH_NAMES_UPPER[month-1]} ${year}</div>
       `;
@@ -1246,9 +1248,9 @@
           tr.appendChild(tdStatus);
           const tdDiscount = document.createElement("td"); tdDiscount.textContent = item.type === "lepp" ? (item.discount_meals ? "SIM" : "NÃO") : "—"; tr.appendChild(tdDiscount);
           const tdActions = document.createElement("td");
-          const editBtn = document.createElement("button"); editBtn.textContent = "✏️"; editBtn.title = "Editar"; editBtn.className = "main-options-action-btn";
+          const editBtn = document.createElement("button"); editBtn.innerHTML = "<i class='fa-solid fa-pen'></i>"; editBtn.title = "Editar"; editBtn.className = "main-options-action-btn";
           editBtn.addEventListener("click", () => editDecirMainOption(item));
-          const deleteBtn = document.createElement("button"); deleteBtn.textContent = "🗑️"; deleteBtn.title = "Eliminar"; deleteBtn.className = "main-options-action-btn";
+          const deleteBtn = document.createElement("button"); deleteBtn.innerHTML = "<i class='fa-solid fa-trash-can'></i>"; deleteBtn.title = "Eliminar"; deleteBtn.className = "main-options-action-btn";
           deleteBtn.addEventListener("click", () => deleteDecirMainOption(item.id));
           tdActions.appendChild(editBtn); tdActions.appendChild(deleteBtn); tr.appendChild(tdActions);
           tbody.appendChild(tr);
@@ -1273,7 +1275,7 @@
         discountWrapper.style.display = "none";
       }
       const saveBtn = document.getElementById("save-main-option-btn");
-      if (saveBtn) saveBtn.textContent = "💾 Atualizar";
+      if (saveBtn) saveBtn.innerHTML = "<i class='fa-solid fa-floppy-disk'></i> Atualizar";
     }
     /* ─── GUARDAR (criar ou atualizar) ───────────────────────── */
     async function saveDecirMainOption() {
@@ -1320,9 +1322,9 @@
         await loadDecirMainOptions();
       } catch (err) {
         console.error(err);
-        showPopup('popup-danger', "❌ Erro ao gravar: " + err.message);
+        showPopup('popup-danger', "<i class='fa-solid fa-circle-xmark'></i> Erro ao gravar: " + err.message);
       } finally {
-        if (btn) { btn.disabled = false; btn.textContent = editingOptionId ? "💾 Atualizar" : "💾 Guardar"; }
+        if (btn) { btn.disabled = false; btn.innerHTML = editingOptionId ? "<i class='fa-solid fa-floppy-disk'></i> Atualizar" : "<i class='fa-solid fa-floppy-disk'></i> Guardar"; }
       }
     }
     /* ─── ELIMINAR ────────────────────────────────────────────── */
@@ -1337,7 +1339,7 @@
         await loadDecirMainOptions();
       } catch (err) {
         console.error(err);
-        showPopup('popup-danger', "❌ Erro ao eliminar: " + err.message);
+        showPopup('popup-danger', "<i class='fa-solid fa-circle-xmark'></i> Erro ao eliminar: " + err.message);
       }
     }
     /* ─── RESET: limpa o formulário ──────────────────────────── */
@@ -1349,7 +1351,7 @@
       document.getElementById("optionDiscount").value = "";
       document.getElementById("optionDiscountWrapper").style.display = "none";
       const saveBtn = document.getElementById("save-main-option-btn");
-      if (saveBtn) saveBtn.textContent = "💾 Guardar";
+      if (saveBtn) saveBtn.innerHTML = "<i class='fa-solid fa-floppy-disk'></i> Guardar";
     }
     document.getElementById("save-main-option-btn")?.addEventListener("click", saveDecirMainOption);
     /* ─── TABELA: VISUALIZAÇÃO ESCALAS DECIR ─────────────────── */
@@ -2031,7 +2033,7 @@
         }
       } catch (err) {
         console.error(`Erro ao apagar tabela ${tableName}:`, err);
-        showPopup('popup-danger', "❌ Erro ao apagar: " + err.message);
+        showPopup('popup-danger', "<i class='fa-solid fa-circle-xmark'></i> Erro ao apagar: " + err.message);
       }
     }
     /* ─── IMPLEMENTAÇÕES ESPECÍFICAS DE LIMPEZA ────────────────────── */
@@ -2802,9 +2804,9 @@
         showPopup('popup-success', "Ocorrências gravadas com sucesso!");
       } catch(err) {
         console.error(err);
-        showPopup('popup-danger', "❌ Erro ao gravar: " + err.message);
+        showPopup('popup-danger', "<i class='fa-solid fa-circle-xmark'></i> Erro ao gravar: " + err.message);
       } finally {
-        if (btn) {btn.disabled = false; btn.textContent = "💾 Guardar";}
+        if (btn) {btn.disabled = false; btn.innerHTML = "<i class='fa-solid fa-floppy-disk'></i> Guardar";}
       }
     }
     /* ─── LOAD REFEIÇÕES (DECIR) ─────────────────────────────── */
@@ -2963,7 +2965,7 @@
         };
         const tdDay = makeTd(true, false);
         if (locked) {
-          tdDay.textContent = String(d).padStart(2, "0") + " 🔒";
+          tdDay.innerHTML = String(d).padStart(2, "0") + " <i class='fa-solid fa-lock'></i>";
           tdDay.style.fontSize = "10px";
         } else {
           tdDay.textContent = String(d).padStart(2, "0");
@@ -3062,9 +3064,9 @@
         showPopup('popup-success', "Refeições gravadas com sucesso!");
       } catch(err) {
         console.error(err);
-        showPopup('popup-danger', "❌ Erro ao gravar: " + err.message);
+        showPopup('popup-danger', "<i class='fa-solid fa-circle-xmark'></i> Erro ao gravar: " + err.message);
       } finally {
-        if (btn) {btn.disabled = false; btn.textContent = "💾 Guardar";}
+        if (btn) {btn.disabled = false; btn.innerHTML = "<i class='fa-solid fa-floppy-disk'></i> Guardar";}
       }
     }
     /* ─── VEÍCULOS LEPP (pré-carregados) ────────────────────── */
@@ -3307,7 +3309,7 @@
             tdDay.rowSpan = 2;
             tdDay.style.fontWeight = "bold";
             if (locked) {
-              tdDay.textContent = String(d).padStart(2, "0") + " 🔒";
+              tdDay.innerHTML = String(d).padStart(2, "0") + " <i class='fa-solid fa-lock'></i>";
               tdDay.style.fontSize = "10px";
             } else {
               tdDay.textContent = String(d).padStart(2, "0");
@@ -3386,9 +3388,9 @@
         showPopup('popup-success', "LEPP gravado com sucesso!");
       } catch (err) {
         console.error(err);
-        showPopup('popup-danger', "❌ Erro ao gravar: " + err.message);
+        showPopup('popup-danger', "<i class='fa-solid fa-circle-xmark'></i> Erro ao gravar: " + err.message);
       } finally {
-        if (btn) {btn.disabled = false; btn.textContent = "💾 Guardar";}
+        if (btn) {btn.disabled = false; btn.innerHTML = "<i class='fa-solid fa-floppy-disk'></i> Guardar";}
       }
     }
     /* ─── FUNÇÕES GLOBAIS SIGNA (DECIR) ─────────────────────── */
@@ -3566,7 +3568,7 @@
       const loadBtn = document.createElement("button");
       loadBtn.className = "signa-load-btn"; loadBtn.textContent = "⟳ Carregar Elementos";
       const formatBtn = document.createElement("button");
-      formatBtn.className = "signa-format-btn"; formatBtn.textContent = "⚡ Formatar Equipas";
+      formatBtn.className = "signa-format-btn"; formatBtn.innerHTML = "<i class='fa-solid fa-bolt'></i> Formatar Equipas";
       if (!isMultiTeam) dateRow.append(lbl1, inp1, lbl2, inp2, loadBtn, formatBtn);
       else dateRow.append(lbl1, inp1, loadBtn, formatBtn);
       const modeSpacer = document.createElement("div");
@@ -3704,8 +3706,8 @@
           const shiftOk = dragData.valueType === "ED" ? shift === "day" : dragData.valueType === "EN" ? shift === "night" : true;
           const dayOk = isMultiTeam ? true : dragData.day === turnoDay;
           if (!shiftOk || !dayOk) {
-            const msg = !dayOk ? `⛔ Elemento do Dia ${dragData.day} não pode ser colocado no Dia ${turnoDay}!`
-                               : `⛔ Elemento ${dragData.valueType} não pode ser colocado neste turno!`;
+            const msg = !dayOk ? `<i class="fa-solid fa-ban"></i> Elemento do Dia ${dragData.day} não pode ser colocado no Dia ${turnoDay}!`
+                               : `<i class="fa-solid fa-ban"></i> Elemento ${dragData.valueType} não pode ser colocado neste turno!`;
             showPopup('popup-danger', msg);
             dragData = null;
             return;
@@ -3747,7 +3749,7 @@
         tdClear.style.width = "16px";
         const clearBtn = document.createElement("span");
         clearBtn.className = "signa-clear-btn";
-        clearBtn.textContent = "✕";
+        clearBtn.innerHTML = "<i class='fa-solid fa-xmark'></i>";
         clearBtn.addEventListener("click", () => {
           const nint = parseInt(zone.dataset.nint, 10);
           const vt = zone.dataset.valueType;
@@ -3838,7 +3840,7 @@
             eqGrid.className = "signa-shift-grid";
             eqGrid.append(
               signaBuildTurnoBlock(`${date1} | DIA`, `<i class="fa-solid fa-sun"></i> 08:00 → 20:00`, ["CE","MO"], "day", String(team), "elac", makePositionRow),
-              signaBuildTurnoBlock(`${date1} | NOITE`, `🌙 20:00 → 08:00`, ["CE","MO"], "night", String(team), "elac", makePositionRow)
+              signaBuildTurnoBlock(`${date1} | NOITE`, `<i class="fa-solid fa-moon"></i> 20:00 → 08:00`, ["CE","MO"], "night", String(team), "elac", makePositionRow)
             );
             tablesDiv.appendChild(eqGrid);
           }
@@ -4086,8 +4088,8 @@
             const elemsData = await supabaseFetch(`reg_elems?n_int=in.(${allNInts.join(",")})&corp_oper_nr=eq.${corp}&select=n_int,abv_name,patent,n_file,MP,full_name`);
             const elemsMap = Object.fromEntries(elemsData.map(e => [String(e.n_int).padStart(3,"0"), e]));
             sidebarList.innerHTML = "";
-            renderDayGroups(data1, elemsMap, "1", `📅 Dia: 1 — ${formatDatePT(inp1.value)}`);
-            if (!isSameDay) renderDayGroups(data2, elemsMap, "2", `📅 Dia: 2 — ${formatDatePT(inp2.value)}`);
+            renderDayGroups(data1, elemsMap, "1", `<i class="fa-solid fa-calendar-days"></i> Dia: 1 — ${formatDatePT(inp1.value)}`);
+            if (!isSameDay) renderDayGroups(data2, elemsMap, "2", `<i class="fa-solid fa-calendar-days"></i> Dia: 2 — ${formatDatePT(inp2.value)}`);
             setTimeout(() => markAlreadyFilledAsUsed(true), 50);
           } catch(err) {
             console.error(err);
@@ -4110,7 +4112,7 @@
           const elemsData = await supabaseFetch(`reg_elems?n_int=in.(${allNInts.join(",")})&corp_oper_nr=eq.${corp}&select=n_int,abv_name,patent,n_file,MP,full_name`);
           const elemsMap = Object.fromEntries(elemsData.map(e => [String(e.n_int).padStart(3,"0"), e]));
           sidebarList.innerHTML = "";
-          renderDayGroups(data1, elemsMap, "1", `📅 ${formatDatePT(inp1.value)}`);
+          renderDayGroups(data1, elemsMap, "1", `<i class="fa-solid fa-calendar-days"></i> ${formatDatePT(inp1.value)}`);
           setTimeout(() => markAlreadyFilledAsUsed(false), 50);
         } catch(err) {
           console.error(err);
@@ -4198,7 +4200,7 @@
       } catch (err) {
         hideLoadingPopup();
         console.error("Erro:", err);
-        showPopup('popup-danger', "❌ Erro: " + err.message);
+        showPopup('popup-danger', "<i class='fa-solid fa-circle-xmark'></i> Erro: " + err.message);
       }
     };
     document.getElementById("emit-signa-xlsx-btn")?.addEventListener("click", () => emitSigna("xlsx"));
@@ -4581,7 +4583,7 @@
       } catch (err) {
         hideLoadingPopup();
         console.error(err);
-        showPopup('popup-danger', "❌ Erro ao gerar ficheiro: " + err.message);
+        showPopup('popup-danger', "<i class='fa-solid fa-circle-xmark'></i> Erro ao gerar ficheiro: " + err.message);
       } finally {
         loader.restore();
       }
@@ -4687,7 +4689,7 @@
       }
       const card = document.createElement("div"); card.className = "alert-card";
       const cardTitle = document.createElement("div"); cardTitle.className = "alert-card-title";
-      cardTitle.innerHTML = `🚨 ESTADOS DE ALERTAS DO SIOPS PARA DECIR`;
+      cardTitle.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ESTADOS DE ALERTAS DO SIOPS PARA DECIR`;
       card.appendChild(cardTitle);
       const layout = document.createElement("div"); layout.className = "alert-layout";
       const tableWrap = document.createElement("div");
@@ -4843,7 +4845,7 @@
       }
       const card = document.createElement("div"); card.className = "lepp-card";
       const cardTitle = document.createElement("div"); cardTitle.className = "lepp-card-title";
-      cardTitle.innerHTML = `🔥 LOCAIS ESTRATÉGICOS DE PRÉ-POSICIONAMENTO`; card.appendChild(cardTitle);
+      cardTitle.innerHTML = `<i class="fa-solid fa-fire"></i> LOCAIS ESTRATÉGICOS DE PRÉ-POSICIONAMENTO`; card.appendChild(cardTitle);
       const layout = document.createElement("div"); layout.className = "lepp-layout";
       const tableWrap = document.createElement("div");
       const table = document.createElement("table"); table.className = "lepp-stats-table";
@@ -5032,7 +5034,7 @@
       }
       const card = document.createElement("div"); card.className = "ocorr-stats-card";
       const cardTitle = document.createElement("div"); cardTitle.className = "ocorr-stats-title";
-      cardTitle.innerHTML = `⚡ ATIVAÇÕES PARA OCORRÊNCIAS`; card.appendChild(cardTitle);
+      cardTitle.innerHTML = `<i class="fa-solid fa-bolt"></i> ATIVAÇÕES PARA OCORRÊNCIAS`; card.appendChild(cardTitle);
       const layout = document.createElement("div"); layout.className = "ocorr-stats-layout";
       const tableWrap = document.createElement("div");
       const table = document.createElement("table"); table.className = "ocorr-stats-table";
@@ -5177,7 +5179,7 @@
       }
       const card = document.createElement("div"); card.className = "meals-card";
       const cardTitle = document.createElement("div"); cardTitle.className = "meals-card-title";
-      cardTitle.innerHTML = `🍽️ REFEIÇÕES SERVIDAS`; card.appendChild(cardTitle);
+      cardTitle.innerHTML = `<i class="fa-solid fa-utensils"></i> REFEIÇÕES SERVIDAS`; card.appendChild(cardTitle);
       const layout = document.createElement("div"); layout.className = "meals-layout";
       const tableWrap = document.createElement("div");
       const table = document.createElement("table"); table.className = "meals-table";
@@ -5394,7 +5396,7 @@
       const podiumSection = document.createElement("div");
       const podiumTitle = document.createElement("div");
       podiumTitle.className = "podium-section-title";
-      podiumTitle.innerHTML = "🥇 TOP 10";
+      podiumTitle.innerHTML = "<i class='fa-solid fa-medal'></i> TOP 10";
       const podiumGrid = document.createElement("div");
       podiumGrid.className = "podium-grid";
       podiumSection.append(podiumTitle, podiumGrid);
@@ -5420,7 +5422,7 @@
       thankYouWrapper.appendChild(thankYouMsg);
       const revealBtn = document.createElement("button");
       revealBtn.className = "podium-reveal-btn";
-      revealBtn.textContent = "🎬 Apresentar Pódio";
+      revealBtn.innerHTML = "<i class='fa-solid fa-film'></i> Apresentar Pódio";
       podiumSection.insertBefore(revealBtn, podiumGrid);
       container.appendChild(podiumSection);
       container.appendChild(lowerPodiumSection);
@@ -5468,12 +5470,12 @@
             photoEl.onerror = () => {
               const ph = document.createElement("div");
               ph.className = "podium-photo-placeholder";
-              ph.textContent = "👤";
+              ph.innerHTML = "<i class='fa-solid fa-user'></i>";
               photoEl.replaceWith(ph);
             };
           } else {
             photoEl.className = "podium-photo-placeholder";
-            photoEl.textContent = "👤";
+            photoEl.innerHTML = "<i class='fa-solid fa-user'></i>";
           }
           const name = document.createElement("div");
           name.className = "podium-name";
@@ -5495,7 +5497,7 @@
           `;
           const medal = document.createElement("div");
           medal.className = "podium-medal";
-          medal.textContent = ["🥇", "🥈", "🥉"][idx];
+          medal.innerHTML = ['<i class="fa-solid fa-medal" style="color:#d4af37"></i>', '<i class="fa-solid fa-medal" style="color:#a8a9ad"></i>', '<i class="fa-solid fa-medal" style="color:#cd7f32"></i>'][idx];
           card.append(badge, medal, photoEl, name, ni, stats);
           podiumGrid.appendChild(card);
         });
@@ -5528,13 +5530,13 @@
           `;
           const medal = document.createElement("div");
           medal.className = "podium-medal";
-          medal.textContent = "🎖️";
+          medal.innerHTML = "<i class='fa-solid fa-award'></i>";
           card.append(badge, medal, name, ni, stats);
           lowerPodiumSection.appendChild(card);
           card.style.opacity = 0;
           card.style.pointerEvents = "none";
         });
-        thankYouMsg.textContent = `🎉 OBRIGADO PELA VOSSA COLABORAÇÃO!!! ATÉ AO DECIR ${parseInt(year) + 1}`;
+        thankYouMsg.innerHTML = `<i class="fa-solid fa-champagne-glasses"></i> OBRIGADO PELA VOSSA COLABORAÇÃO!!! ATÉ AO DECIR ${parseInt(year) + 1}`;
         revealBtn.onclick = async () => {
           revealBtn.disabled = true;
           revealBtn.style.transition = "opacity 0.5s ease, transform 0.5s ease";
@@ -5602,7 +5604,7 @@
         };
       } catch (err) {
         console.error(err);
-        podiumGrid.innerHTML = `<div class="dash-empty">❌ Erro ao carregar dados</div>`;
+        podiumGrid.innerHTML = `<div class="dash-empty"><i class="fa-solid fa-circle-xmark"></i> Erro ao carregar dados</div>`;
       }
     }
     async function updateDecirPodiumCard(year) {
@@ -5742,7 +5744,7 @@
       header.className = "dash-header";
       const title = document.createElement("div");
       title.className = "dash-title";
-      title.innerHTML = `🏆 Dashboard Operacional <span>DECIR</span>`;
+      title.innerHTML = `<i class="fa-solid fa-trophy"></i> Dashboard Operacional <span>DECIR</span>`;
       const yearSelect = document.createElement("select");
       yearSelect.className = "dash-year-select";
       const currentYear = new Date().getFullYear();

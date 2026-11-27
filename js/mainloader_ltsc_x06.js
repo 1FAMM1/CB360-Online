@@ -39,9 +39,12 @@
     })();
     /* =======================================
     PÁGINAS DE ENTRADA DOS MÓDULOS (modelo único)
-    - cb360Welcome({title, intro, items: [[ícone FA, título, descrição, data-page, data-access], ...], label})
-      devolve o cartão "BEM-VINDO" com a apresentação e as funções em cartões.
+    - cb360Welcome({title, intro, items, label}) devolve o cartão "BEM-VINDO" com a apresentação e as funções em cartões.
+      items: [[ícone FA, título, descrição, data-page, data-access, sub?], ...]
+      (data-page '' também serve: botões do menu sem página própria)
     - Clicar numa função abre a mesma opção do menu lateral (só se o utilizador a tiver no menu).
+    - Funções com submenu (sub = lista no mesmo formato): o cartão abre o submenu do menu lateral e mostra,
+      nesta mesma página, os cartões das opções desse submenu (com "Voltar").
     ======================================= */
     (() => {
       if (window.cb360Welcome) return;
@@ -54,27 +57,50 @@
         .cbw-grid {display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 8px;}
         .cbw-item {display: flex; gap: 12px; align-items: flex-start; background: #fff; border: 1px solid #e9ecef; border-radius: 10px; padding: 10px 12px;
                    transition: border-color .15s, box-shadow .15s;}
-        .cbw-item[data-page] {cursor: pointer;}
-        .cbw-item[data-page]:hover {border-color: #c62828; box-shadow: 0 2px 8px rgba(0,0,0,.08);}
+        .cbw-item[data-page], .cbw-item[data-sub] {cursor: pointer;}
+        .cbw-item[data-page]:hover, .cbw-item[data-sub]:hover {border-color: #c62828; box-shadow: 0 2px 8px rgba(0,0,0,.08);}
         .cbw-item.cbw-off {cursor: default; opacity: .5;}
         .cbw-item.cbw-off:hover {border-color: #e9ecef; box-shadow: none;}
+        .cbw-item.cbw-hide {display: none;}
         .cbw-ico {flex: 0 0 34px; height: 34px; border-radius: 9px; background: #eef1f4; color: #2c3e50; display: flex; align-items: center; justify-content: center; font-size: 15px;}
         .cbw-item b {display: block; font-size: 13px; color: #2c3e50; margin-bottom: 2px;}
         .cbw-item span {display: block; font-size: 12px; color: #6c757d; line-height: 1.4;}
+        .cbw-item b .fa-angle-right {margin-left: 6px; font-size: 11px; color: #9aa3ab;}
+        .cbw-subhead {display: flex; align-items: center; gap: 12px; margin: 0 0 10px;}
+        .cbw-subhead .cbw-title {margin: 0;}
+        .cbw-back {height: 30px; padding: 0 12px; border: 1px solid #d0d5da; border-radius: 8px; background: #fff; color: #2c3e50; font-size: 12px; font-weight: 700; cursor: pointer;
+                   display: inline-flex; align-items: center; gap: 6px;}
+        .cbw-back:hover {border-color: #c62828; color: #c62828;}
       `;
       document.head.appendChild(css);
       const esc = v => String(v ?? '').replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+      const link = (page, access) => page != null ? ` data-page="${esc(page)}" data-access="${esc(access || '')}"` : '';
+      const card = ([ico, t, d, page, access, sub], k) => `<div class="cbw-item"${link(page, access)}${sub ? ` data-sub="${k}"` : ''}>
+              <div class="cbw-ico"><i class="fa-solid ${ico}"></i></div><div><b>${t}${sub ? '<i class="fa-solid fa-angle-right"></i>' : ''}</b><span>${d}</span></div></div>`;
       window.cb360Welcome = ({title, intro, items, label = 'Funcionalidades'}) => `<div class="major-card major-last-card">
           <div class="major-card-header">${title}</div>
-          <div class="major-card-body">
-            <p class="cbw-intro">${intro}</p>
-            <div class="cbw-title">${label}</div>
-            <div class="cbw-grid">${items.map(([ico, t, d, page, access]) => `<div class="cbw-item"${page ? ` data-page="${esc(page)}" data-access="${esc(access || '')}"` : ''}>
-              <div class="cbw-ico"><i class="fa-solid ${ico}"></i></div><div><b>${t}</b><span>${d}</span></div></div>`).join('')}</div>
+          <div class="major-card-body cbw-root">
+            <div class="cbw-view" data-v="main">
+              <p class="cbw-intro">${intro}</p>
+              <div class="cbw-title">${label}</div>
+              <div class="cbw-grid">${items.map(card).join('')}</div>
+            </div>
+            ${items.map(([ico, t, d, , , sub], k) => sub ? `<div class="cbw-view" data-v="${k}" hidden>
+              <div class="cbw-subhead"><button type="button" class="cbw-back"><i class="fa-solid fa-arrow-left"></i>Voltar</button><div class="cbw-title">${t}</div></div>
+              <p class="cbw-intro">${d}</p>
+              <div class="cbw-grid">${sub.map(x => card(x)).join('')}</div>
+            </div>` : '').join('')}
           </div>
           <div class="major-card-footer"></div>
         </div>`;
-      const menuBtn = el => document.querySelector(`.sidebar [data-page="${CSS.escape(el.dataset.page)}"][data-access="${CSS.escape(el.dataset.access)}"]`);
+      /* botão do menu correspondente ao cartão: pela página + acesso; se não houver, pelo acesso + nome do botão */
+      const menuBtn = el => {
+        const acc = CSS.escape(el.dataset.access || '');
+        const b = document.querySelector(`.sidebar [data-page="${CSS.escape(el.dataset.page)}"][data-access="${acc}"]`);
+        if (b) return b;
+        const name = (el.querySelector('b')?.textContent || '').trim().toLowerCase();
+        return [...document.querySelectorAll(`.sidebar [data-access="${acc}"]`)].find(x => x.textContent.trim().toLowerCase() === name) || null;
+      };
       const canSee = btn => {
         if (!btn || btn.style.display === 'none' || btn.disabled) return false;
         for (let n = btn.parentElement; n && !n.classList.contains('sidebar'); n = n.parentElement) {
@@ -83,13 +109,117 @@
         }
         return true;
       };
-      /* funções a que o utilizador não tem acesso ficam esbatidas (atualiza sempre que se usa o menu) */
-      const sync = () => document.querySelectorAll('.cbw-item[data-page]').forEach(el => el.classList.toggle('cbw-off', !canSee(menuBtn(el))));
+      /* ---------- PÁGINA INICIAL (Menu Principal) ---------- */
+      const homeCss = document.createElement('style');
+      homeCss.id = 'cbh-css';
+      homeCss.textContent = `
+        .cbh-hero {display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px 24px; margin: 0 0 18px; padding: 20px 24px;
+                   border-radius: 12px; color: #fff; background: linear-gradient(120deg, #2c3e50 0%, #34495e 60%, #3d566e 100%); box-shadow: 0 4px 14px rgba(44,62,80,.18);}
+        .cbh-hello {font-size: 22px; font-weight: 800; letter-spacing: .2px;}
+        .cbh-date {margin-top: 4px; font-size: 13px; opacity: .8;}
+        .cbh-tag {display: flex; align-items: center; gap: 12px; max-width: 520px; font-size: 13px; line-height: 1.5; opacity: .92;}
+        .cbh-tag i {flex: 0 0 auto; font-size: 26px; color: #ff8a80;}
+        .cbh-intro {margin: 0 0 18px; max-width: 1100px; font-size: 14px; line-height: 1.65; color: #2c3e50;}
+        .cbh-wait .cbw-grid {visibility: hidden;}
+        .cbh .cbw-grid {grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; margin-bottom: 22px;}
+        .cbh .cbw-item {padding: 14px 16px; align-items: center;}
+        .cbh .cbw-ico {flex-basis: 42px; height: 42px; border-radius: 11px; background: #fdecea; color: #c62828; font-size: 18px;}
+        .cbh .cbw-item b {font-size: 14px;}
+        .cbh-pillars {display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; padding-top: 16px; border-top: 1px solid #e3e6ea;}
+        .cbh-pillar {display: flex; gap: 10px; align-items: flex-start;}
+        .cbh-pillar i {flex: 0 0 auto; width: 20px; margin-top: 2px; color: #c62828; text-align: center;}
+        .cbh-pillar b {display: block; font-size: 12.5px; color: #2c3e50;}
+        .cbh-pillar span {display: block; font-size: 12px; color: #6c757d; line-height: 1.45;}
+      `;
+      document.head.appendChild(homeCss);
+      const HOME_MODS = [
+        ["fa-euro-sign", "Gestão DECIR", "Escalas, registos de turnos, pagamentos e ficheiros oficiais da ANEPC dos elementos do DECIR.", "page-decir", "Gestão DECIR"],
+        ["fa-fire", "Gestão Operacional", "Escalas de serviço, eventos e prevenções, serviços remunerados, comunicados e estados dos veículos.", "page-fomio", "Gestão Operacional"],
+        ["fa-users", "Recursos Humanos", "Escalas mensais, horas extra, registos individuais, férias e processamento salarial.", "page-employees", "Recursos Humanos"],
+        ["fa-file-medical", "Registos INEM", "Verbetes INEM: registo e consulta dos serviços das equipas INEM.", "inem-entries", "Verbetes INEM"],
+        ["fa-phone-volume", "SALOC 360", "Sala de Operações: PPI, recusas e inoperacionalidades, documentação, ocorrências e alarmes.", "page-saloc", "SALOC"],
+        ["fa-comment-dots", "Comunicações WSMS", "Mensagens operacionais com formato único, enviadas automaticamente às entidades.", "page-wsms", "Comunicação WSMS"],
+        ["fa-gears", "Utilitários", "Níveis EPE e PPI, FNI, relatórios de ocorrência e notificações às equipas.", "page-utilities", "Utilitários"],
+        ["fa-database", "Data Center", "Dados da corporação, elementos, veículos, acessos e configuração de emails.", "page-data", "Data Center"]
+      ];
+      const HOME_PILLARS = [
+        ["fa-bolt", "Tempo real", "Ocorrências, indisponibilidades e notificações atualizam sozinhas em todos os postos."],
+        ["fa-layer-group", "Tudo num só sistema", "Da escala ao pagamento, do alarme ao relatório: os dados são inseridos uma vez."],
+        ["fa-mobile-screen", "Online e Mobile", "O CB360 Mobile leva escalas, pedidos e notificações a cada elemento."],
+        ["fa-shield-halved", "Dados protegidos", "Cada corporação vê apenas os seus dados; cada utilizador, apenas o que lhe foi atribuído."]
+      ];
+      const hello = () => {
+        const h = new Date().getHours();
+        const n = (sessionStorage.getItem('currentUserDisplay') || '').trim().split(/\s+/).filter(Boolean);
+        const name = n.length > 1 ? `${n[0]} ${n[n.length - 1]}` : (n[0] || '');
+        return `${h < 6 ? 'Boa noite' : h < 13 ? 'Bom dia' : h < 20 ? 'Boa tarde' : 'Boa noite'}${name ? `, ${esc(name)}` : ''}`;
+      };
+      const renderHome = () => {
+        const pg = document.getElementById('page-main');
+        if (!pg || pg.querySelector('.cbh')) return;
+        pg.innerHTML = `<div class="major-card major-last-card">
+          <div class="major-card-header">BEM-VINDO AO SISTEMA CB360 ONLINE</div>
+          <div class="major-card-body cbw-root cbh cbh-wait">
+            <div class="cbw-view" data-v="main">
+              <div class="cbh-hero">
+                <div><div class="cbh-hello">${hello()}</div>
+                  <div class="cbh-date">${new Date().toLocaleDateString('pt-PT', {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'}).replace(/^./, c => c.toUpperCase())}</div></div>
+                <div class="cbh-tag"><i class="fa-solid fa-fire-flame-curved"></i>
+                  <span>Transição digital ao serviço da proteção e socorro.</span></div>
+              </div>
+              <p class="cbh-intro">O <strong>CB360 Online</strong> é a plataforma de gestão integrada do Corpo de Bombeiros, concebida para apoiar o comando, a Sala de Operações e os serviços administrativos.
+                Reúne num único sistema a <strong>atividade operacional</strong>, as <strong>escalas e os recursos humanos</strong>, o <strong>DECIR</strong>, os <strong>registos INEM</strong> e as <strong>comunicações</strong>:
+                cada informação é registada uma única vez, fica disponível em tempo real para quem dela precisa e os relatórios e ficheiros oficiais são gerados automaticamente.
+                Com controlo rigoroso de acessos e total rastreabilidade, apoia a tomada de decisão do comando e liberta os operacionais para o que realmente importa: <strong>o socorro</strong>.</p>
+              <div class="cbw-title">Módulos</div>
+              <div class="cbw-grid">${HOME_MODS.map(card).join('')}</div>
+              <div class="cbh-pillars">${HOME_PILLARS.map(([i, t, d]) => `<div class="cbh-pillar"><i class="fa-solid ${i}"></i><div><b>${t}</b><span>${d}</span></div></div>`).join('')}</div>
+            </div>
+          </div>
+          <div class="major-card-footer"></div>
+        </div>`;
+      };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', renderHome); else renderHome();
+      const show = (root, v) => root.querySelectorAll(':scope > .cbw-view').forEach(x => { x.hidden = x.dataset.v !== String(v); });
+      /* cartão com sub-lista: fica ativo se o utilizador vir o botão do submenu OU alguma das opções dele */
+      const subItems = el => [...(el.closest('.cbw-root')?.querySelectorAll(`:scope > .cbw-view[data-v="${el.dataset.sub}"] .cbw-item[data-page]`) || [])];
+      const allowed = el => canSee(menuBtn(el)) || (el.dataset.sub != null && subItems(el).some(x => canSee(menuBtn(x))));
+      /* só aparecem as funções que a corporação tem (allowed_modules) E a que o utilizador tem acesso (igual ao menu) */
+      const corpHas = el => {
+        const mods = window.cb360CorpModules;
+        if (!Array.isArray(mods) || !mods.length) return true;
+        const has = x => !x.dataset.access || mods.includes(x.dataset.access);
+        return has(el) || (el.dataset.sub != null && subItems(el).some(has));
+      };
+      const sync = () => {
+        document.querySelectorAll('.cbw-item[data-page]').forEach(el => el.classList.toggle('cbw-hide', !corpHas(el) || !allowed(el)));
+        const h = document.querySelector('#page-main .cbh');
+        if (h) { h.classList.remove('cbh-wait'); const t = h.querySelector('.cbh-hello'); if (t) t.innerHTML = hello(); }
+      };
+      window.cb360WelcomeSync = sync;   /* chamado também quando os acessos do utilizador ficam aplicados */
       document.addEventListener('click', e => {
-        if (e.target.closest('.sidebar')) { setTimeout(sync, 0); return; }
-        const it = e.target.closest('.cbw-item[data-page]');
+        const sb = e.target.closest('.sidebar [data-page]');
+        if (sb) {
+          setTimeout(() => {
+            sync();
+            /* no menu: botão de submenu da mesma página -> mostra os cartões desse submenu; botão do módulo -> página inicial */
+            const root = document.querySelector('.page.active .cbw-root');
+            if (!root) return;
+            const it = [...root.querySelectorAll('.cbw-view[data-v="main"] .cbw-item[data-sub]')].find(x => menuBtn(x) === sb);
+            show(root, it && sb.classList.contains('active') ? it.dataset.sub : 'main');
+          }, 0);
+          return;
+        }
+        const back = e.target.closest('.cbw-back');
+        if (back) { show(back.closest('.cbw-root'), 'main'); return; }
+        const it = e.target.closest('.cbw-item');
         if (!it || it.classList.contains('cbw-off')) return;
-        const btn = menuBtn(it);
+        const btn = it.dataset.page != null ? menuBtn(it) : null;
+        if (it.dataset.sub != null) {
+          if (btn && canSee(btn) && btn.dataset.page === it.dataset.page && !btn.classList.contains('active')) btn.click();   /* abre o submenu do lado esquerdo */
+          show(it.closest('.cbw-root'), it.dataset.sub);
+          return;
+        }
         if (canSee(btn)) btn.click();
       });
     })();
@@ -295,6 +425,7 @@
       }
       /* ================= FLUXO CORRETO ================= */
       const allowedModules = await loadCorporationHeader();
+      window.cb360CorpModules = allowedModules.map(m => m.trim()).filter(Boolean);
       const currentFullName = sessionStorage.getItem("currentUserDisplay");
       const currentCorpOperNr = sessionStorage.getItem("currentCorpOperNr");
       const isValid = await checkUserValidity(currentFullName);
@@ -302,9 +433,11 @@
       const userHasAccess = isValid && applyAccessesSafe(accessResult);
       if (userHasAccess) {
         updateSidebarAccess(allowedModules, accessResult.acess);
+        window.cb360WelcomeSync?.();
         cb360ShowPendingApprovals();
       } else {
         blockAllSidebar();
+        window.cb360WelcomeSync?.();
       }
       await loadNotifications();
       startNotifPolling();

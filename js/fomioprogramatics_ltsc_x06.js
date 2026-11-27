@@ -3183,7 +3183,7 @@
       }
     });
     /* ====== PARECER DO CHEFE DE SECÇÃO ======
-       favorável -> 'Em Aprovação' (segue para o Comando) · desfavorável -> 'Recusadas' (fecha). O elemento é avisado nos dois casos (aviso gravado pela BD, push daqui). */
+       favorável ou desfavorável -> 'Em Aprovação': segue sempre para o Comando decidir (SQL 61). O elemento é avisado nos dois casos (aviso gravado pela BD, push daqui). */
     async function vacatChiefOpinion(row, favorable) {
       try {
         const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/cb360_vacat_chief_opinion`, {
@@ -3198,7 +3198,7 @@
         const when = `${MONTHS[(res?.month || row.month) - 1] || row.month} de ${res?.year || row.year}`;
         const msgNotif = favorable
           ? `O chefe de secção deu parecer favorável às tuas férias de voluntariado de ${when}. O pedido segue para validação do Comando. 👍`
-          : `O chefe de secção deu parecer desfavorável às tuas férias de voluntariado de ${when}. O pedido foi recusado. ❌`;
+          : `O chefe de secção deu parecer desfavorável às tuas férias de voluntariado de ${when}. A decisão final é do Comando.`;
         const nInt = res?.n_int ?? row.n_int;   /* o aviso (sino) é gravado pela base de dados (SQL 59); aqui só a push */
         try {
           fetch('https://cb-360-app.vercel.app/api/sendPush', {
@@ -3206,7 +3206,7 @@
             body: JSON.stringify({recipient_nint: Number(nInt), tipo: 'aviso', pagina: 'SolVacat', sender_name: "Gestão de Férias", message_text: msgNotif})
           }).catch(e => console.error('Erro Push:', e));
         } catch (e) { console.error("Erro no Push de férias:", e); }
-        showPopup('popup-success', favorable ? 'Parecer favorável registado. O pedido segue para o Comando.' : 'Parecer desfavorável registado. O pedido foi recusado.');
+        showPopup('popup-success', favorable ? 'Parecer favorável registado. O pedido segue para o Comando.' : 'Parecer desfavorável registado. O pedido segue para o Comando.');
       } catch (err) {
         console.error('Parecer do chefe de secção:', err);
         showPopup('popup-danger', err.message || String(err));

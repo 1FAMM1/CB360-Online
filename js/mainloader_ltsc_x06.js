@@ -1910,7 +1910,7 @@
       const ST_LABEL = {p: 'Em aprovação', a: 'Aprovadas', r: 'Recusadas', w: 'Aguarda parecer'};
       /* PARECER DO CHEFE DE SECÇÃO (só quando cfg.chief existe = Voluntariado; SQL 58)
          - chefe de secção (não admin): vê só os pedidos da sua secção e dá parecer aos que aguardam
-         - restantes (Comando/admin): aguarda parecer -> sem opções; parecer negativo -> sem opções; favorável -> aprovar/recusar */
+         - restantes (Comando/admin): aguarda parecer -> sem opções; depois do parecer (favorável ou desfavorável) -> aprovar/recusar (SQL 61) */
       const sameN = (a, b) => String(a ?? '').replace(/^0+/, '') === String(b ?? '').replace(/^0+/, '');
       const chiefOnly = () => !!(cfg.chief && S.me && S.me.is_section_chief && S.me.user_role !== 'admin');
       const elemOf = x => S.elems[x.n_int] || S.elems[String(parseInt(x.n_int, 10))] || {};
@@ -2073,7 +2073,6 @@
               ? `<button type="button" class="vb-btn ok op" data-op="1" data-id="${x.id}" title="Parecer favorável">✓ Favorável</button>
                  <button type="button" class="vb-btn no op" data-op="0" data-id="${x.id}" title="Parecer desfavorável">✕ Desfavorável</button>`
               : '<span class="vb-note">Aguarda parecer do chefe de secção</span>';
-            else if (x.chief_opinion === 'Desfavorável') acts = '<span class="vb-note neg">Chefe de secção deu parecer negativo</span>';
             else if (chiefOnly()) acts = k === 'p' ? '<span class="vb-note" style="color:#6c757d">Com o Comando para validação</span>' : '';
           }
           return `<tr>

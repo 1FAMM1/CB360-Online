@@ -125,8 +125,10 @@
         #services-save-button, #services-values-save-button {background: #3354a1 !important; color: #fff !important; border: 0 !important;
                      border-radius: 8px !important; box-shadow: 0 1px 3px rgba(0,0,0,.15) !important; font-weight: 800 !important;}
         #page-events #evcSubmitBtn:hover, #services-save-button:hover, #services-values-save-button:hover {filter: brightness(1.06);}
-        #vsPDFReport, #vsEXCELReport {background: #fff !important; color: #2c3e50 !important; border: 1px solid #d0d5da !important; border-radius: 8px !important; font-weight: 800 !important;}
-        #vsPDFReport i {color: #c62828;} #vsEXCELReport i {color: #1e7e34;}
+        /* PDF e EXCEL com as cores de origem (vermelho / verde), no formato novo */
+        #vsPDFReport, #vsEXCELReport {color: #fff !important; border: 0 !important; border-radius: 8px !important; font-weight: 800 !important;}
+        #vsPDFReport {background: #dc3545 !important;} #vsEXCELReport {background: #28a745 !important;}
+        #vsPDFReport i, #vsEXCELReport i {color: #fff;}
       `;
       document.head.appendChild(css);
     }
@@ -1863,22 +1865,27 @@
       currentTableData = data;
       const container = $(containerId);
       if (!container) return;
-      container.style.transition = "opacity 0.5s";
-      container.style.opacity = "0.5";
-      await new Promise(r => setTimeout(r, 150));
+      /* tudo o que vem do Supabase é lido ANTES de mexer na tabela; depois a tabela é desenhada de uma só vez.
+         Antes: a tabela apagava-se (e esbatia), aparecia o título, depois os dias, depois a escala (por partes e a piscar). */
+      const my = createMonthTable.seq = (createMonthTable.seq || 0) + 1;
+      const sectionToLoad = currentSection === "Consultar Escalas" ? "Emissão Escala" : currentSection;
+      let ok = true, err = false;
+      const [validated, savedMap] = await Promise.all([
+        currentSection === "Consultar Escalas" ? isServScaleValidated(year, month).catch(e => { console.error("Estado da escala:", e); err = true; return false; }) : true,
+        loadSavedData(sectionToLoad, year, month)
+      ]);
+      ok = !!validated;
+      if (my !== createMonthTable.seq) return;   /* entretanto foi pedido outro mês */
+      container.style.transition = "";
+      container.style.opacity = "1";
       container.innerHTML = "";
       /* Consultar Escalas: só mostra o mês depois de emitido */
-      if (currentSection === "Consultar Escalas") {
-        let ok = false, err = false;
-        try { ok = await isServScaleValidated(year, month); } catch (e) { console.error("Estado da escala:", e); err = true; }
-        if (!ok) {
-          const nome = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"][month - 1] || "";
-          container.innerHTML = `<div style="margin:10px auto;max-width:560px;background:#fff;border:1px solid #e9ecef;border-radius:12px;padding:18px 20px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05);">
-            <div style="font-size:13px;font-weight:800;color:#2c3e50;letter-spacing:.4px;text-transform:uppercase;margin-bottom:6px;">ℹ️ Informação</div>
-            <div style="font-size:13px;color:#5b6670;">${err ? "Não foi possível verificar a emissão da escala. Tente novamente mais tarde." : `A escala de ${nome} ${year} ainda não foi emitida.`}</div></div>`;
-          container.style.opacity = "1";
-          return;
-        }
+      if (currentSection === "Consultar Escalas" && !ok) {
+        const nome = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"][month - 1] || "";
+        container.innerHTML = `<div style="margin:10px auto;max-width:560px;background:#fff;border:1px solid #e9ecef;border-radius:12px;padding:18px 20px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05);">
+          <div style="font-size:13px;font-weight:800;color:#2c3e50;letter-spacing:.4px;text-transform:uppercase;margin-bottom:6px;">ℹ️ Informação</div>
+          <div style="font-size:13px;color:#5b6670;">${err ? "Não foi possível verificar a emissão da escala. Tente novamente mais tarde." : `A escala de ${nome} ${year} ainda não foi emitida.`}</div></div>`;
+        return;
       }
       createTableHeaders(container, year, month, currentSection);
       const wrapper = createTableWrapper(container);
@@ -1886,8 +1893,6 @@
       const daysInMonth = new Date(year, month, 0).getDate();
       const holidays = getPortugalHolidays(year);
       updateScalesDayHeaders(table, year, month, daysInMonth, holidays);
-      const sectionToLoad = currentSection === "Consultar Escalas" ? "Emissão Escala" : currentSection;
-      const savedMap = await loadSavedData(sectionToLoad, year, month);
       const tbody = table.querySelector("tbody");
       const isEscala = currentSection === "Emissão Escala" || currentSection === "Consultar Escalas";
       if (isEscala) createFixedRows(tbody, data, savedMap, year, month, daysInMonth, currentSection, calculateVolunteersRowTotal, calculateColumnTotals, holidays);

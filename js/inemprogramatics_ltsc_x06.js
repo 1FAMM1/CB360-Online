@@ -285,24 +285,23 @@
     }  
     async function load() {
       const from = $('inem-date-from')?.value, to = $('inem-date-to')?.value, codu = $('inem-filter-codu')?.value.trim();
-      await isRestricted();
-      if (!from && !to && !codu) return clear();
+      const roP = isRestricted();   /* em paralelo com a pesquisa (antes era um a seguir ao outro) */
+      if (!from && !to && !codu) { await roP; return clear(); }
+      const my = ST.loadSeq = (ST.loadSeq || 0) + 1;
       let query = `inem_entries?corp_oper_nr=eq.${corp()}`;
       if (codu) query += `&nr_codu=ilike.${codu}*`;
       else { if (from) query += `&alert_date=gte.${from}`; if (to) query += `&alert_date=lte.${to}`; }
       query += '&order=nr_codu.desc';
       try {
-        const data = await supabaseFetch(query);
+        const [data] = await Promise.all([supabaseFetch(query), roP]);
+        if (my !== ST.loadSeq) return;   /* entretanto foi feita outra pesquisa */
         const tb = $('inem-tbody');
         if (!tb) return;
         clear();
         if (!data?.length) return;
         ST.rows = data;
-        const exists = new Map(await Promise.all(data.map(async it => {
-          if (!it.nr_codu) return [it.nr_codu, false];
-          try { const r = await fetch(fileUrl(fileOf(it.nr_codu, it.service_type)), {method: 'HEAD', headers: storeHdr()}); return [it.nr_codu, r.ok]; }
-          catch { return [it.nr_codu, false]; }
-        })));
+        /* a tabela aparece logo; o "ficheiro existe?" de cada linha preenche-se a seguir (antes a tabela esperava
+           por um pedido por linha, todos, antes de aparecer) */
         const ro = ST.readOnly ? ' disabled' : '';
         tb.innerHTML = data.map((it, i) => {
           const nr = it.nr_codu || '';
@@ -316,17 +315,28 @@
                 <button class="btn-inem-download" data-act="down" title="Download"${ro}><i class="fa-solid fa-download"></i></button>
                 <button class="btn-inem-view" data-act="view" title="Visualizar"${ro}><i class="fa-solid fa-magnifying-glass"></i></button>
                 <button class="btn-inem-delete" data-act="del" title="Eliminar ficheiro"${ro}><i class="fa-solid fa-trash"></i></button></div>` : '';
-          const ok = exists.get(it.nr_codu);
           return `<tr data-i="${i}" data-nr="${esc(nr)}">
             <td>${esc(nr)}</td><td>${esc(alerta)}</td><td>${esc(vitima)}</td><td>${esc(morada)}</td>
             <td class="nosel"><button class="inem-edit" data-act="edit" title="Editar"><i class="fa-solid fa-pen"></i></button></td>
             <td>${esc(it.tas)}</td><td>${esc(it.service_type)}</td>
             <td class="nosel">${acts}</td>
-            <td class="inem-st"${nr ? ` title="${ok ? 'Ficheiro disponível' : 'Ficheiro não encontrado'}"` : ''}>${nr ? statusIcon(ok) : ''}</td></tr>`;
+            <td class="inem-st"${nr ? ' title="A verificar o ficheiro…"' : ''}>${nr ? '<i class="fa-solid fa-spinner fa-spin" style="color:#9aa3ab"></i>' : ''}</td></tr>`;
         }).join('');
         const iteams = data.filter(d => d.service_type === 'ITeams').length;
         $('inem-totals').innerHTML = `<span>TOTAL: ${data.length}</span> &nbsp;|&nbsp; <span>ITeams: ${iteams}</span> &nbsp;|&nbsp; <span>Verbete: ${data.length - iteams}</span>`;
         showFootButtons(true);
+        /* estado dos ficheiros: até 8 pedidos de cada vez, a preencher a coluna à medida que chegam */
+        const todo = [...new Map(data.filter(it => it.nr_codu).map(it => [it.nr_codu, it])).values()];
+        let next = 0;
+        const worker = async () => {
+          while (next < todo.length && my === ST.loadSeq) {
+            const it = todo[next++];
+            let ok = false;
+            try { ok = (await fetch(fileUrl(fileOf(it.nr_codu, it.service_type)), {method: 'HEAD', headers: storeHdr()})).ok; } catch { ok = false; }
+            if (my === ST.loadSeq) setStatus(it.nr_codu, ok);
+          }
+        };
+        Promise.all(Array.from({length: Math.min(8, todo.length)}, worker));
       } catch (err) {
         console.error('Erro ao carregar verbetes INEM:', err);
         showPopup('popup-danger', 'Erro ao carregar verbetes INEM.');

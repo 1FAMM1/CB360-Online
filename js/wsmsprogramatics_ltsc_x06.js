@@ -1195,10 +1195,10 @@
             <div class="wsms-card-header">${svg('warn')}<span>INDISPONIBILIDADE DE VEÍCULOS</span></div>
             <div class="wsms-card-body"><div class="ins-main">
               ${box(1, 'Nova indisponibilidade', grid('ind-g-new', NEW) + `<div class="ind-act">${button('wsms-btn-send', 'phone', 'ENVIAR INDISPONIBILIDADE', 'new')}</div>`)}
-              ${box(3, 'Fim de indisponibilidade', grid('ind-g-end', END) + `<div class="ind-act">${button('wsms-btn-green', 'phone', 'ENVIAR DISPONIBILIDADE', 'end')}</div>`, '', ' id="availability-card" hidden')}
               ${box(2, 'Veículos indisponíveis', `<div class="tbl-box"><div class="table-container"><table id="active-unavailability-table"><thead id="ind-thead"></thead><tbody id="active-unavailability-tbody"></tbody></table></div></div>`,
                     `<div class="ind-tabs"><button type="button" class="occ-pill on" data-ind="act">Ativas (0)</button><button type="button" class="occ-pill" data-ind="fin">Finalizadas</button>
                      <button type="button" class="occ-pill ind-rl" data-act="reload" title="Atualizar lista">⟳</button></div>`)}
+              ${box(3, 'Fim de indisponibilidade', grid('ind-g-end', END) + `<div class="ind-act">${button('wsms-btn-green', 'phone', 'ENVIAR DISPONIBILIDADE', 'end')}</div>`, '', ' id="availability-card" hidden')}
             </div></div>
           </div>
         `,

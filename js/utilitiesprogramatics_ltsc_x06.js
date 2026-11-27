@@ -920,8 +920,8 @@
           #nrbqFni .nf-scroll::-webkit-scrollbar-thumb:hover {background: var(--nf-red-dark);}
           #nrbqFni .nf-scroll::-webkit-scrollbar-button {display: none; height: 0;}
           @supports not selector(::-webkit-scrollbar) {#nrbqFni .nf-scroll {scrollbar-width: thin; scrollbar-color: var(--nf-red) #eceff2;}}
-          #nrbqFni .nf-sec {background: #fff; border: 1px solid var(--nf-line); border-radius: 12px; margin-bottom: 10px; overflow: hidden;}
-          #nrbqFni .nf-sec-head {display: flex; align-items: center; gap: 10px; padding: 11px 14px; cursor: pointer; user-select: none;}
+          #nrbqFni .nf-sec {background: #fff; border: 1px solid var(--nf-line); border-radius: 12px; margin-bottom: 5px; overflow: hidden;}
+          #nrbqFni .nf-sec-head {display: flex; align-items: center; gap: 10px; padding: 7px 14px; cursor: pointer; user-select: none;}
           #nrbqFni .nf-sec-head:hover {background: #fafbfc;}
           #nrbqFni .nf-sec-icon {width: 32px; height: 32px; border-radius: 9px; background: var(--nf-red-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0;}
           #nrbqFni .nf-sec-icon .material-icons {font-size: 18px; color: var(--nf-red);}

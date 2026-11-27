@@ -1405,6 +1405,14 @@
       const container = document.getElementById(containerId);
       if (!container) return;
       const rowsData = Array.isArray(data) ? data : [];
+      /* o que falta do Supabase (fins de semana vizinhos e preferência das baixas) é esperado ANTES de apagar a tabela:
+         o mês anterior fica à vista até o novo estar completo, e a tabela aparece de uma só vez (já com as cores certas) */
+      const pf = __scalesPrefetch && __scalesPrefetch.key === `${year}-${month}` ? __scalesPrefetch : null;
+      const [, bxPref] = await Promise.all([
+        data && data._shifts ? (pf ? pf.weekend : loadWeekendAdjacentData(year, month)) : null,
+        pf ? pf.bx : loadBXPreference(year, month)
+      ]);
+      if (pf) __scalesPrefetch = null;   /* usado uma vez; ao reabrir o mês volta a pedir (dados sempre atuais) */
       let tableHost = container.querySelector("#table-host");
       let infoHost = container.querySelector("#info-host");
       if (!tableHost || !infoHost) {
@@ -1564,16 +1572,12 @@
         });
         paintWeekendHeaders(table, year, month, daysInMonth);
         paintHolidaysOnTable(tbody, table, year, month, daysInMonth, holidayMap);
-        const pf = __scalesPrefetch && __scalesPrefetch.key === `${year}-${month}` ? __scalesPrefetch : null;
-        await (pf ? pf.weekend : loadWeekendAdjacentData(year, month));
         applyWeekendSpecialColors(tbody, year, month);
       }
       const temp = document.createElement("div"); temp.style.cssText = infoHost.style.cssText;
       displayWorkingHoursInfo(temp, year, month); displayShiftsLegend(temp, year, month);
       infoHost.replaceChildren(...temp.childNodes);
-      const pfBx = __scalesPrefetch && __scalesPrefetch.key === `${year}-${month}` ? __scalesPrefetch : null;
-      _bxHidden = await (pfBx ? pfBx.bx : loadBXPreference(year, month));
-      if (pfBx) __scalesPrefetch = null;   /* usado uma vez; ao reabrir o mês volta a pedir (dados sempre atuais) */
+      _bxHidden = bxPref;
       const btnBX = document.getElementById("employees-toggle-bx-btn");
       if (btnBX) {
         btnBX.innerHTML = _bxHidden

@@ -6320,8 +6320,7 @@
             const inputRef = this;
             let dataArr = [];
             try {
-              const res = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${this.value}`, {headers: getSupabaseHeaders()});
-              dataArr = await res.json();
+              dataArr = [await salocElemByNInt(this.value)].filter(Boolean);
               updateRowFields(row, dataArr[0], shift);
             } catch (err) {
               console.error('Erro reg_elems:', err);
@@ -6559,9 +6558,7 @@
       const nameField = document.getElementById('service-swap-name');
       if (input.value.length === 3) {
         try {
-          const res = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?n_int=eq.${input.value}`, {headers: getSupabaseHeaders()});
-          const data = await res.json();
-          nameField.value = data[0]?.abv_name || '';
+          nameField.value = (await salocElemByNInt(input.value))?.abv_name || '';
         } catch (err) {
           console.error('Erro:', err);
           nameField.value = '';
@@ -6587,6 +6584,20 @@
     blockShiftButtons();    
     /* grava o rascunho do turno num só pedido (SQL 54: apagar + gravar juntos, nunca fica meio rascunho).
        Devolve true se gravou. Sem o SQL 54 na base, grava como antes (apagar + equipa a equipa). */
+    /* elementos da corporação: 1 pedido para todos (guardado 2 min pela memória partilhada do mainloader), em vez de
+       1 pedido por cada n.º interno escrito no Planeamento (e esse pedido nem filtrava pela corporação) */
+    async function salocElemByNInt(nInt) {
+      const corp = sessionStorage.getItem("currentCorpOperNr");
+      const key = String(nInt || '').padStart(3, '0');
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?corp_oper_nr=eq.${corp}&select=*`, {headers: getSupabaseHeaders()});
+        if (!res.ok) throw new Error(await res.text());
+        return (await res.json()).find(e => String(e.n_int).padStart(3, '0') === key) || null;
+      } catch (err) {
+        console.error('Erro reg_elems:', err);
+        return null;
+      }
+    }
     async function saveDraft(shift) {
       const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
       if (!corpOperNr || !shift || shift === 'LAST') return false;

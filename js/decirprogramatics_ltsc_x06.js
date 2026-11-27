@@ -577,7 +577,8 @@
                            monthNames: DECIR_MONTH_NAMES, blockedMonths: [], loadDataFunc: async (y, m) => m, createTableFunc: (cId, y, m, d) => createDecirDespMealsTable(cId, y, m + 4)}},
       "decir-reg-ecins": {tableId: "table-container-dec-reg", optionsId: "decir-reg-options", monthsId: "months-container-dec-reg",
                           generic: {containerId: "months-container-dec-reg", tableContainerId: "table-container-dec-reg", yearSelectId: "year-dec-reg", optionsContainerId: "decir-reg-options",
-                          monthNames: DECIR_MONTH_NAMES, blockedMonths:[], loadDataFunc: async (y, m) => loadDecirRegData(y, m + 4), createTableFunc: (cId, y, m, d) => createDecirRegTable(cId, y, m + 4, d), 
+                          monthNames: DECIR_MONTH_NAMES, blockedMonths:[], loadDataFunc: async (y, m) => (await Promise.all([loadDecirRegData(y, m + 4), decirPrefetchRows("decir_reg_pag_ecin", y, m + 4).catch(() => null)]))[0],
+                          createTableFunc: (cId, y, m, d) => createDecirRegTable(cId, y, m + 4, d), 
                           loadByMonthFunc: async (y, m) => window.loadDecirByMonth?.(y, m + 4)}},
       "decir-pag-ecins": {tableId: "table-container-dec-pag", optionsId: "decir-pag-options", monthsId: "months-container-dec-pag",
                           extra: ["table-container-dec-coda33","decir-coda33-options","decir-payment-totals"],
@@ -591,7 +592,8 @@
                             createTableFunc: (cId, y, m, d) => createDecirAnepcTable(cId, y, m + 4, d.elems, d.turnos)}},
       "decir-reg-sbaopat": {tableId: "table-container-sbaopat-reg", optionsId: "decir-reg-sbaopat-options", monthsId: "months-container-sbaopat-reg",
                             generic: {containerId: "months-container-sbaopat-reg", tableContainerId: "table-container-sbaopat-reg", yearSelectId: "year-sbaopat-reg", optionsContainerId: "decir-reg-sbaopat-options",
-                            monthNames: DECIR_MONTH_NAMES, blockedMonths:[], loadDataFunc: async (y, m) => loadDecirRegData(y, m + 4), createTableFunc: (cId, y, m, d) => createSbaOpatRegTable(cId, y, m + 4, d), 
+                            monthNames: DECIR_MONTH_NAMES, blockedMonths:[], loadDataFunc: async (y, m) => (await Promise.all([loadDecirRegData(y, m + 4), decirPrefetchRows("decir_reg_pag_opatsba", y, m + 4).catch(() => null)]))[0],
+                            createTableFunc: (cId, y, m, d) => createSbaOpatRegTable(cId, y, m + 4, d), 
                             loadByMonthFunc: async (y, m) => window.loadSbaOpatByMonth?.(y, m + 4)}},
       "decir-pag-sbaopat": {tableId: "table-container-sbaopat-pag", optionsId: "sbaopat-pag-options", monthsId: "months-container-sbaopat-pag",
                             extra: ["table-container-sbaopat-coda33", "sbaopat-coda33-options", "sbaopat-payment-totals"],
@@ -749,14 +751,27 @@
     /* ═══════════════════════════════════════════════════════════════
     MOTOR GENÉRICO DE CARREGAMENTO DE DADOS (DECIR / SBA / OPAT)
     ═══════════════════════════════════════════════════════════════ */
+    /* Registos por Elemento: os turnos do mês são pedidos ao mesmo tempo que a lista de elementos e a tabela só é
+       desenhada quando os dois chegaram (antes: um a seguir ao outro, e a tabela aparecia vazia e só depois enchia) */
+    const decirRowsPrefetch = new Map();
+    function decirPrefetchRows(tableName, year, month) {
+      const corpId = typeof getCorpId === "function" ? getCorpId() : "";
+      const p = fetchAllRows(`${tableName}?select=*&year=eq.${year}&month=eq.${month}&corp_oper_nr=eq.${corpId}`);
+      p.catch(() => {});
+      decirRowsPrefetch.set(`${tableName}|${year}|${month}`, p);
+      return p;
+    }
     async function genericDataLoader({
       tableName, containerSelector, buildCharMap, updateTotalsFn, year, month
     }) {
       try {
         const corpId = typeof getCorpId === "function" ? getCorpId() : "";
-        const data = await fetchAllRows(
+        const pk = `${tableName}|${year}|${month}`;
+        const pre = decirRowsPrefetch.get(pk);
+        decirRowsPrefetch.delete(pk);
+        const data = await (pre || fetchAllRows(
           `${tableName}?select=*&year=eq.${year}&month=eq.${month}&corp_oper_nr=eq.${corpId}`
-        );
+        ));
         if (!data.length) return;
         const map = buildCharMap(data);
         const container = document.querySelector(containerSelector);
@@ -1408,6 +1423,8 @@
     async function createDecirViewTable(containerId, year, month, data) {
       const container = document.getElementById(containerId) || $(containerId);
       if (!container) return;
+      /* lê a escala ANTES de limpar a tabela: o mês anterior fica à vista até o novo estar pronto (sem piscar) */
+      const savedMap = await loadDecirViewSavedData(year, month);
       container.innerHTML = "";
       createDecirViewHeaders(container, year, month, "DECIR");
       const wrapper = decirMakeWrapper(container);
@@ -1415,7 +1432,6 @@
       const daysInMonth = new Date(year, month, 0).getDate();
       const holidays = getPortugalHolidays(year);
       updateDECIRDayHeaders(table, year, month, daysInMonth, holidays);
-      const savedMap = await loadDecirViewSavedData(year, month);
       const tbody = table.querySelector("tbody");
       data.forEach(item => {
         const nIntStr = String(item.n_int).padStart(3,"0");
@@ -2343,19 +2359,24 @@
     async function handleDecirCodA33Button() {
       const tableContainer = $("table-container-dec-coda33");
       const emitBtn = $("emit-coda33-dec-btn");
-      if (emitBtn) emitBtn.style.display = "block";
-      if (tableContainer) tableContainer.style.display = "block";
       const year = parseInt($("year-dec-pag")?.value || new Date().getFullYear(), 10);
+      /* troca para o A33 de uma só vez: esconde o mês e mostra o A33 ANTES de desenhar a tabela (o ajuste da altura já mede o ecrã final) */
+      const show = () => {
+        ["table-container-dec-pag", "decir-pag-options", "decir-payment-totals"].forEach(id => { const el = $(id); if (el) el.style.display = "none"; });
+        const opt = $("decir-coda33-options"); if (opt) opt.style.display = "flex";
+        if (emitBtn) emitBtn.style.display = "block"; if (tableContainer) tableContainer.style.display = "block";
+      };
       try {
-        const elements = await loadDecirCodA33Elements(year, 1);
         const months = [4, 5, 6, 7, 8, 9, 10];
         const turnosPorMes = {};
-        const allShifts = await Promise.all(months.map(m => loadDecirShiftsByNI(year, m)));
+        const [elements, allShifts] = await Promise.all([loadDecirCodA33Elements(year, 1), Promise.all(months.map(m => loadDecirShiftsByNI(year, m)))]);
         allShifts.forEach((t, i) => { turnosPorMes[months[i]] = t; });
         if (!elements.length) {
           tableContainer.innerHTML = "<p>Nenhum elemento encontrado.</p>";
+          show();
           return;
         }
+        show();
         createDecirCodA33Table("table-container-dec-coda33", year, elements, turnosPorMes);
       } catch (err) {
         console.error("Erro no COD.A33:", err);
@@ -2364,22 +2385,27 @@
     async function handleSbaOpatCodA33Button() {
       const tableContainer = $("table-container-sbaopat-coda33");
       const emitBtn = $("emit-coda33-sbaopat-btn");
-      if (emitBtn) emitBtn.style.display = "block";
-      if (tableContainer) tableContainer.style.display = "block";
       const year = parseInt($("year-sbaopat-pag")?.value || new Date().getFullYear(), 10);
+      const show = () => {
+        ["table-container-sbaopat-pag", "sbaopat-pag-options", "sbaopat-payment-totals"].forEach(id => { const el = $(id); if (el) el.style.display = "none"; });
+        const opt = $("sbaopat-coda33-options"); if (opt) opt.style.display = "flex";
+        if (emitBtn) emitBtn.style.display = "block"; if (tableContainer) tableContainer.style.display = "block";
+      };
       try {
         const elements = await loadSbaOpatCodA33Elements(year, 1);
         const months = [4, 5, 6, 7, 8, 9, 10];
         const turnosSbasPorMes = {};
         const turnosOpatPorMes = {};
-        const allSbas = await Promise.all(months.map(m => loadSbaOpatShiftsByNI(year, m, "sba")));
-        const allOpat = await Promise.all(months.map(m => loadSbaOpatShiftsByNI(year, m, "opat")));
+        const [allSbas, allOpat] = await Promise.all([Promise.all(months.map(m => loadSbaOpatShiftsByNI(year, m, "sba"))),
+                                                      Promise.all(months.map(m => loadSbaOpatShiftsByNI(year, m, "opat")))]);
         allSbas.forEach((t, i) => { turnosSbasPorMes[months[i]] = t; });
         allOpat.forEach((t, i) => { turnosOpatPorMes[months[i]] = t; });
         if (!elements.length) {
           tableContainer.innerHTML = "<p>Nenhum elemento encontrado.</p>";
+          show();
           return;
         }
+        show();
         createSbaOpatCodA33Table("table-container-sbaopat-coda33", year, elements, turnosSbasPorMes, turnosOpatPorMes);
       } catch (err) {
         console.error("Erro no COD.A33 SBA/OPAT:", err);

@@ -1,4 +1,43 @@
     /* =======================================
+    MEMÓRIA PARTILHADA (2 min) PARA DADOS QUE QUASE NUNCA MUDAM
+    - Leituras (GET) aos dados da corporação, aos emails configurados e aos elementos ficam guardadas 2 minutos:
+      abrir 10 páginas/escalas seguidas faz 1 pedido de cada (antes: 1 por página, ou 1 por pessoa).
+    - Se ESTE PC gravar/alterar/apagar numa destas tabelas, a memória dessa tabela apaga-se logo (próxima leitura vem fresca).
+    - Noutro PC, uma alteração chega aqui no máximo 2 minutos depois.
+    ======================================= */
+    (() => {
+      if (window.cb360RefCache) return;
+      const TABLES = /\/rest\/v1\/(corporation_data|mails_config|reg_elems)\?/;
+      const TTL = 120000, MAX = 300;
+      const mem = new Map();   /* url -> {t, p: Promise<{status, headers, body}>} */
+      const orig = window.fetch.bind(window);
+      const tableOf = u => (String(u).match(/\/rest\/v1\/([\w]+)/) || [])[1];
+      window.fetch = function (input, init = {}) {
+        const url = typeof input === 'string' ? input : input?.url || String(input);
+        const method = String(init.method || (typeof input === 'object' && input?.method) || 'GET').toUpperCase();
+        if (method !== 'GET' && method !== 'HEAD') {
+          const t = tableOf(url);
+          if (t) for (const k of mem.keys()) if (tableOf(k) === t) mem.delete(k);
+          return orig(input, init);
+        }
+        const h = init.headers || {};
+        const special = (h.Prefer || h.prefer || h.Range || h.range) || method === 'HEAD';
+        if (!TABLES.test(url) || special || typeof input !== 'string') return orig(input, init);
+        const hit = mem.get(url);
+        if (!hit || Date.now() - hit.t > TTL) {
+          const p = orig(input, init).then(async r => {
+            const x = {status: r.status, headers: [...r.headers.entries()], body: await r.text()};
+            if (!r.ok) mem.delete(url);   /* erros não ficam guardados */
+            return x;
+          }).catch(e => { mem.delete(url); throw e; });
+          mem.set(url, {t: Date.now(), p});
+          if (mem.size > MAX) mem.delete(mem.keys().next().value);
+        }
+        return mem.get(url)?.p.then(x => new Response(x.body, {status: x.status, headers: x.headers})) ?? orig(input, init);
+      };
+      window.cb360RefCache = {clear: () => mem.clear()};
+    })();
+    /* =======================================
     LOAD MAIN DATA · VERSÃO AGORA (aprovações: qualquer admin ativo)
     ======================================= */
     document.addEventListener('DOMContentLoaded', async () => {      
@@ -1681,7 +1720,10 @@
       const root = () => document.getElementById(cfg.root);
       async function load() {
         const el = root(); if (!el) return;
-        if (!S.loaded) el.innerHTML = '<div class="vb-loading">A carregar pedidos...</div>';
+        /* com o painel já à vista (ex.: mudar de ano), fica o que está até chegarem os dados novos: não desaparece */
+        const board = el.querySelector('.vb');
+        if (!board) el.innerHTML = '<div class="vb-loading">A carregar pedidos...</div>';
+        else board.style.cursor = 'progress';
         const corp = sessionStorage.getItem('currentCorpOperNr');
         try {
           const r = await fetch(`${SUPABASE_URL}/rest/v1/ped_vacat?select=id,n_int,year,month,day,state&corp_oper_nr=eq.${corp}&vacation_type=eq.${encodeURIComponent(cfg.type)}&year=eq.${S.year}&order=month.asc,n_int.asc`, {headers: getSupabaseHeaders()});
@@ -1747,10 +1789,21 @@
             <div class="vb-panel">${panel()}</div>
           </div>`;
         el.querySelectorAll('[data-y]').forEach(b => b.onclick = () => { S.year += Number(b.dataset.y); S.month = null; S.loaded = false; load(); });
-        el.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { S.filter = b.dataset.f; render(); });
-        el.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { S.month = Number(b.dataset.m); render(); });
+        /* mudar de filtro ou de mês só troca o que muda (painel de baixo), em vez de redesenhar tudo */
+        const repanel = () => { const p = el.querySelector('.vb-panel'); p.innerHTML = panel(); bindPanel(); };
+        el.querySelectorAll('[data-f]').forEach(b => b.onclick = () => {
+          S.filter = b.dataset.f;
+          el.querySelectorAll('[data-f]').forEach(x => x.classList.toggle('on', x.dataset.f === S.filter));
+          repanel();
+        });
+        el.querySelectorAll('[data-m]').forEach(b => b.onclick = () => {
+          S.month = Number(b.dataset.m);
+          S._key = `${S.year}-${S.month}`;
+          el.querySelectorAll('[data-m]').forEach(x => x.classList.toggle('sel', Number(x.dataset.m) === S.month));
+          repanel();
+        });
         const search = el.querySelector('.vb-search');
-        search.oninput = () => { S.q = search.value; const p = el.querySelector('.vb-panel'); p.innerHTML = panel(); bindPanel(); };
+        search.oninput = () => { S.q = search.value; repanel(); };
         bindPanel();
         if (keepR) vbRestoreScroll(el, sameMonth ? keepR : keepR.filter(x => !x.sel));
       }

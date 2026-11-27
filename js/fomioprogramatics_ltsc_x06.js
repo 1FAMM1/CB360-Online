@@ -22,11 +22,6 @@
         .major-card-footer > .fo-note {font-size: 11px; color: #222;}
         .major-card-footer > .fo-note.w {color: #fff;}
         #page-fomio > .major-card > .major-card-body {font-family: 'Segoe UI', sans-serif;}
-        #page-fomio .fo-intro {font-size: 15px; margin-bottom: 20px; color: #333;}
-        #page-fomio .fo-feat {background: linear-gradient(90deg, #e0e0e0, #d6d6d6); padding: 15px 20px; border-left: 5px solid #007bff; border-radius: 6px; margin-bottom: 20px;}
-        #page-fomio .fo-list {margin-bottom: 20px;}
-        #page-fomio .fo-list ul {list-style: none; padding-left: 10px; line-height: 1.8;}
-        #page-fomio .fo-list li {color: #0d630e;}
         #page-events > .major-card {margin-bottom: 10px;}
         #page-events .major-card-footer svg {margin-right: 6px; vertical-align: middle;}
         .fo-imr5 {margin-right: 5px;}
@@ -80,7 +75,6 @@
         .ufx-c {text-align: center;}
         .ufx .fo-utbl .ufx-in {height: 30px !important;}
         .ufx-off td {opacity: .55;}
-        .ufx-tag {margin-left: 8px; font-size: 10.5px; font-weight: 700; color: #8a949e; background: #f1f3f5; border-radius: 999px; padding: 1px 8px;}
         .ufx-sw {position: relative; display: inline-block; width: 38px; height: 20px;}
         .ufx-sw input {opacity: 0; width: 0; height: 0;}
         .ufx-sw span {position: absolute; inset: 0; background: #ced4da; border-radius: 999px; cursor: pointer; transition: background .15s;}
@@ -156,28 +150,17 @@
     /* campo dos Serviços de Voluntariado em linha: label + controlo */
 
     /* ----------------------------- páginas ----------------------------- */
-    fill('page-fomio', `<div class="major-card major-last-card">
-        <div class="major-card-header">BEM-VINDO À GESTÃO OPERACIONAL</div>
-        <div class="major-card-body">
-          <p class="fo-intro">
-            A <strong>GESTÃO OPERACIONAL</strong> é o módulo digital responsável pela gestão integral das
-            <strong>Escalas Operacionais</strong> e <strong>Eventos(Prevenções,...)</strong> do seu Corpo de Bombeiros.
-            Este sistema centraliza todo o processo de planeamento, controlo e emissão das escalas,
-            garantindo uma gestão eficiente e transparente dos recursos humanos e operacionais.
-          </p>
-          <div class="fo-feat"><strong>Funcionalidades Principais:</strong></div>
-          <div class="fo-list"><ul>
-            <li><i class="fa-solid fa-clipboard-list"></i> Criação e gestão de escalas mensais</li>
-            <li><i class="fa-solid fa-helmet-safety"></i> Gestão de elementos por secção e disponibilidade</li>
-            <li><i class="fa-solid fa-file-invoice"></i> Emissão automática das escalas oficiais</li>
-            <li><i class="fa-solid fa-folder-open"></i> Consulta detalhada das escalas das respetivas <strong>SECÇÕES</strong> e <strong>DECIR</strong></li>
-            <li><i class="fa-solid fa-gear"></i> Ferramentas de verificação e validação antes da emissão</li>
-            <li><i class="fa-solid fa-clipboard-list"></i> Craiação e gestão de eventos</li>
-            <li><i class="fa-solid fa-helmet-safety"></i> Gestão de elementos por evento e disponibilidade</li>
-          </ul></div>
-        </div>
-        <div class="major-card-footer"></div>
-      </div>`);
+    fill('page-fomio', cb360Welcome({title: "BEM-VINDO À GESTÃO OPERACIONAL",
+      intro: "A <strong>GESTÃO OPERACIONAL</strong> é o módulo responsável pelas <strong>escalas de serviço</strong>, pelos <strong>eventos e prevenções</strong> e pelos pedidos dos elementos à corporação, do planeamento à emissão.",
+      items: [
+        ["fa-calendar-days", "Escalas de Serviço", "Escalas mensais da DECIR e das secções, análise antes da emissão, emissão oficial e consulta.", "page-fomio", "Escalas"],
+        ["fa-calendar-check", "Eventos/Prevenções", "Criação de eventos e disponibilidades dos elementos para cada turno.", "page-fomio", "Eventos"],
+        ["fa-hand-holding-dollar", "Serviços Remunerados", "Registo e consulta dos serviços remunerados do voluntariado e configuração dos valores.", "page-fomio", "Serviços de Voluntariado"],
+        ["fa-bullhorn", "Comunicados", "Comunicados internos aos elementos da corporação.", "page-comunicados", "Comunicados"],
+        ["fa-truck-fast", "Estados dos Veículos", "Saídas, chegadas e retenções dos veículos, em tempo real.", "page-veic-status", "Estados dos Veículos"],
+        ["fa-umbrella-beach", "Pedidos de Férias", "Aprovação dos pedidos de férias do voluntariado.", "page-fomio", "Pedidos de Férias"],
+        ["fa-shirt", "Pedidos de Fardamento", "Pedidos de fardamento dos elementos e gestão dos artigos.", "page-fomio", "Pedidos de Fardamento"]
+      ]}));
 
     /* Escalas: os elementos com id mantêm o estilo no próprio elemento, porque o código mexe-lhes */
     fill('page-scales', `<div class="major-card major-last-card">
@@ -884,8 +867,6 @@
       .vsl-vcard.inop {background: #fdf3f3;}
       .vsl-vcard.ovd {box-shadow: 0 0 0 2px #c62828, 0 1px 3px rgba(0,0,0,.12);}
       .vsl-vcard.ovd .lt {color: #c62828; font-weight: 700;}
-      .vsl-edit {border: 0; background: none; color: #8a949e; cursor: pointer; padding: 2px 4px; font-size: 12px; border-radius: 5px;}
-      .vsl-edit:hover {background: #eef0f3; color: #c62828;}
       .vsl-modal {position: fixed; inset: 0; z-index: 3000; background: rgba(0,0,0,.4); display: flex; align-items: center; justify-content: center; padding: 20px;}
       .vsl-modal-box {background: #fff; border-radius: 12px; width: 100%; max-width: 360px; overflow: hidden; box-shadow: 0 12px 32px rgba(0,0,0,.25);}
       .vsl-modal-h {background: linear-gradient(to right, #8b0000, #c62828); color: #fff; padding: 12px 16px; font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 8px;}
@@ -4046,8 +4027,6 @@
       const style = document.createElement('style');
       style.id = 'hide-scrollbar-style';
       style.innerHTML = `
-        .no-scrollbar::-webkit-scrollbar {display: none;}
-        .no-scrollbar {-ms-overflow-style: none; scrollbar-width: none;}
       `;
       document.head.appendChild(style);
     }

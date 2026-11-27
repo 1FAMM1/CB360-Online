@@ -38,6 +38,62 @@
       window.cb360RefCache = {clear: () => mem.clear()};
     })();
     /* =======================================
+    PÁGINAS DE ENTRADA DOS MÓDULOS (modelo único)
+    - cb360Welcome({title, intro, items: [[ícone FA, título, descrição, data-page, data-access], ...], label})
+      devolve o cartão "BEM-VINDO" com a apresentação e as funções em cartões.
+    - Clicar numa função abre a mesma opção do menu lateral (só se o utilizador a tiver no menu).
+    ======================================= */
+    (() => {
+      if (window.cb360Welcome) return;
+      const css = document.createElement('style');
+      css.id = 'cbw-css';
+      css.textContent = `
+        .cbw-intro {margin: 0 0 14px; font-size: 14px; line-height: 1.6; color: #2c3e50;}
+        .cbw-title {display: flex; align-items: center; gap: 9px; margin: 0 0 10px; font-size: 13px; font-weight: 800; color: #2c3e50; letter-spacing: .4px; text-transform: uppercase;}
+        .cbw-title::before {content: ''; width: 4px; height: 16px; border-radius: 3px; background: #c62828;}
+        .cbw-grid {display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 8px;}
+        .cbw-item {display: flex; gap: 12px; align-items: flex-start; background: #fff; border: 1px solid #e9ecef; border-radius: 10px; padding: 10px 12px;
+                   transition: border-color .15s, box-shadow .15s;}
+        .cbw-item[data-page] {cursor: pointer;}
+        .cbw-item[data-page]:hover {border-color: #c62828; box-shadow: 0 2px 8px rgba(0,0,0,.08);}
+        .cbw-item.cbw-off {cursor: default; opacity: .5;}
+        .cbw-item.cbw-off:hover {border-color: #e9ecef; box-shadow: none;}
+        .cbw-ico {flex: 0 0 34px; height: 34px; border-radius: 9px; background: #eef1f4; color: #2c3e50; display: flex; align-items: center; justify-content: center; font-size: 15px;}
+        .cbw-item b {display: block; font-size: 13px; color: #2c3e50; margin-bottom: 2px;}
+        .cbw-item span {display: block; font-size: 12px; color: #6c757d; line-height: 1.4;}
+      `;
+      document.head.appendChild(css);
+      const esc = v => String(v ?? '').replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+      window.cb360Welcome = ({title, intro, items, label = 'Funcionalidades'}) => `<div class="major-card major-last-card">
+          <div class="major-card-header">${title}</div>
+          <div class="major-card-body">
+            <p class="cbw-intro">${intro}</p>
+            <div class="cbw-title">${label}</div>
+            <div class="cbw-grid">${items.map(([ico, t, d, page, access]) => `<div class="cbw-item"${page ? ` data-page="${esc(page)}" data-access="${esc(access || '')}"` : ''}>
+              <div class="cbw-ico"><i class="fa-solid ${ico}"></i></div><div><b>${t}</b><span>${d}</span></div></div>`).join('')}</div>
+          </div>
+          <div class="major-card-footer"></div>
+        </div>`;
+      const menuBtn = el => document.querySelector(`.sidebar [data-page="${CSS.escape(el.dataset.page)}"][data-access="${CSS.escape(el.dataset.access)}"]`);
+      const canSee = btn => {
+        if (!btn || btn.style.display === 'none' || btn.disabled) return false;
+        for (let n = btn.parentElement; n && !n.classList.contains('sidebar'); n = n.parentElement) {
+          if ((n.classList.contains('submenu') || n.classList.contains('sub-submenu')) && n.previousElementSibling &&
+              (n.previousElementSibling.style.display === 'none' || n.previousElementSibling.disabled)) return false;
+        }
+        return true;
+      };
+      /* funções a que o utilizador não tem acesso ficam esbatidas (atualiza sempre que se usa o menu) */
+      const sync = () => document.querySelectorAll('.cbw-item[data-page]').forEach(el => el.classList.toggle('cbw-off', !canSee(menuBtn(el))));
+      document.addEventListener('click', e => {
+        if (e.target.closest('.sidebar')) { setTimeout(sync, 0); return; }
+        const it = e.target.closest('.cbw-item[data-page]');
+        if (!it || it.classList.contains('cbw-off')) return;
+        const btn = menuBtn(it);
+        if (canSee(btn)) btn.click();
+      });
+    })();
+    /* =======================================
     LOAD MAIN DATA · VERSÃO AGORA (aprovações: qualquer admin ativo)
     ======================================= */
     document.addEventListener('DOMContentLoaded', async () => {      

@@ -93,17 +93,6 @@
           .wsms-type-opt input[type="checkbox"] {width: 14px; height: 14px; accent-color: #c0392b; cursor: pointer !important; margin: 0;}
           .wsms-type-opt label {font-size: 12px; font-weight: 600; color: #444; cursor: pointer; letter-spacing: 0.03em;}
           #ipma-alerts {display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;}
-          .ipma-card {border-radius: 12px; padding: 16px 16px 14px 16px; font-size: 13px; display: flex; flex-direction: column; justify-content: space-between; min-height: 160px; position: relative; background: #ffffff; border: 1px solid rgba(0,0,0,0.06); border-left: 6px solid; box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: all 0.18s ease;}
-          .ipma-card:hover {transform: translateY(-4px); box-shadow: 0 8px 18px rgba(0,0,0,0.12);}
-          .ipma-green {border-left-color: #43a047; background: linear-gradient(180deg, #f4fbf4 0%, #ffffff 100%);}
-          .ipma-yellow {border-left-color: #fbc02d; background: linear-gradient(180deg, #fffdf3 0%, #ffffff 100%);}
-          .ipma-orange {border-left-color: #fb8c00; background: linear-gradient(180deg, #fff7f0 0%, #ffffff 100%);}
-          .ipma-red {border-left-color: #e53935; background: linear-gradient(180deg, #fff3f3 0%, #ffffff 100%);}
-          .ipma-title {font-weight: 700; font-size: 14px; margin-bottom: 6px; color: #1a1a1a; letter-spacing: 0.3px;}
-          .ipma-time {font-size: 11px; color: #888; margin-top: 6px;}
-          .ipma-card button {align-self: flex-end; margin-top: 12px; padding: 0 12px; font-size: 11px; font-weight: 600; border: none; border-radius: 6px; background: linear-gradient(135deg, #2980b9, #1f5f8a); color: #fff; cursor: pointer; height: 26px; letter-spacing: 0.04em; transition: all 0.15s ease;}
-          .ipma-card button:hover {transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0,0,0,0.15);}
-          .ipma-card button:active {transform: scale(0.97);}
           .wsms-btn-send {background: #c0392b; color: #fff; border: none; border-radius: 6px; padding: 0 22px; height: 32px; font-size: 12px; font-weight: 600; letter-spacing: 0.05em; cursor: pointer; transition: background 0.15s;}
           .wsms-btn-send:hover {background: #a93226;}
           .wsms-btn-send:active {background: #922b21; transform: scale(0.98);}
@@ -125,14 +114,7 @@
           .wsms-pg .occ-pill.on {background: #2c3e50; border-color: #2c3e50; color: #fff;}
           .wsms-pg td.empty {padding: 20px; color: #6C757D;}
           .wsms-pg td.empty.err {color: red;}
-          .wsms-pg .wsms-send-row {display: flex; justify-content: flex-end; margin-bottom: 50px;}
           .wsms-pg textarea.wsms-ta {width: 100%; resize: vertical; border: 1px solid #c8c8c8; border-radius: 5px; padding: 8px; font-size: 12px; box-sizing: border-box;}
-          #page-wsms .major-card-body {font-family: 'Segoe UI', sans-serif;}
-          #page-wsms .intro {font-size: 15px; margin-bottom: 20px; color: #333;}
-          #page-wsms .feat-title {background: linear-gradient(90deg, #d5d5d5, #c9c9c9); padding: 15px 20px; border-left: 5px solid #171d8f; border-radius: 6px; margin-bottom: 20px;}
-          #page-wsms ul {padding-left: 25px; line-height: 1.6;}
-          #page-wsms li {margin-bottom: 8px;}
-          #page-wsms .outro {margin-top: 40px; text-align: center; font-style: italic; color: #6c757d;}
           #page-active_occurrences .posit-btn, #page-active_occurrences .occ-upd-btn {font-size: 10px;}
           #page-active_occurrences .occ-kpis {display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; align-items: center;}
           #page-active_occurrences .occ-kpi {background: #fff; border: 1px solid #e9ecef; border-left: 4px solid var(--c); border-radius: 10px; padding: 8px 14px; display: flex; gap: 12px; align-items: center;}
@@ -414,28 +396,18 @@
       /* =======================================================================
       BEM-VINDO
       ======================================================================= */
-      const FEATURES = [['🚨', 'Ocorrências em Curso', 'visualização dinâmica e em tempo real de todas as ocorrências ativas.'],
-                        ['📝', 'Nova ou Alteração de Ocorrência', 'criação e atualização de ocorrências com fluxos simplificados e validados automaticamente.'],
-                        ['✅', 'Encerramento de Ocorrências', 'finalização estruturada de registos com histórico e rastreabilidade total.'],
-                        ['📋', 'Solicitação de Disponibilidades', 'comunicação direta com os elementos, para recolha de disponibilidades operacionais.'],
-                        ['🚒', 'Indisponibilidade de Veículos', 'registo rápido e envio automático do estado dos meios às entidades competentes.'],
-                        ['📊', 'Informação do Estado da Grelha Intermunicipal', 'atualização e consulta imediata da disponibilidade municipal de recursos.'],
-                        ['🚑', 'Serviços EMS', 'Disponibilização via WSMS de serviços de Emergência Médica, facilitando a sua melhor percepção de escrita.'],
-                        ['⛈️', 'Avisos METEO', 'Automatização de avisos meteorológicos via IPMA, com envio automático via WSMS, para mobilização de elementos, para eventos extremos.']];
-      mount('page-wsms', `
-        <div class="major-card major-last-card">
-          <div class="major-card-header">BEM-VINDO À COMUNICAÇÃO WSMS</div>
-          <div class="major-card-body">
-            <p class="intro">O módulo <strong>COMUNICAÇÃO WSMS</strong> foi desenvolvido para garantir uma <strong>gestão simplificada, eficaz e de máxima precisão</strong> nas comunicações operacionais do seu Corpo de Bombeiros.
-              Desenvolvido para garantir <strong>simplicidade, eficácia e máxima precisão</strong>, este sistema assegura que todas as comunicações sigam um formato padronizado, reduzindo erros e otimizando o fluxo
-              informativo entre as entidades competentes, de forma automatizada e integrada.</p>
-            <div class="feat-title"><strong>Funcionalidades Principais:</strong></div>
-            <ul>${FEATURES.map(([i, t, d]) => `<li>${i} <strong>${t}</strong> – ${d}</li>`).join('')}</ul>
-            <div class="outro">Utilize o menu lateral para aceder às ferramentas de gestão e comunicação do módulo WSMS.</div>
-          </div>
-          <div class="major-card-footer"></div>
-        </div>
-      `);
+      mount('page-wsms', cb360Welcome({title: "BEM-VINDO À COMUNICAÇÃO WSMS",
+        intro: "O módulo <strong>COMUNICAÇÃO WSMS</strong> garante que as comunicações operacionais seguem sempre o mesmo formato: <strong>menos erros, mais rapidez</strong> e envio às entidades competentes de forma automatizada.",
+        items: [
+          ["fa-fire", "Ocorrências em Curso", "Ocorrências ativas em tempo real, com POSIT e atualizações do terreno.", "page-active_occurrences", "Ocorrências em Curso"],
+          ["fa-pen", "Inserir/Alterar Ocorrência", "Criação e atualização de ocorrências, com validação automática.", "page_insert_occurrence", "Inserir/Alterar Ocorrência"],
+          ["fa-lock", "Encerrar Ocorrência", "Encerramento com histórico e rastreabilidade.", "page_close_occurrence", "Encerrar Ocorrência"],
+          ["fa-clipboard-list", "Solicitar Disponibilidades", "Pedido de disponibilidades aos elementos.", "page-solicitation", "Solicitar Disponibilidades"],
+          ["fa-triangle-exclamation", "Indisponibilidade de Veículos", "Indisponibilidades e fim de indisponibilidade, com mensagem pronta a enviar.", "page-indisp", "Indisponibilidade Veículos"],
+          ["fa-table-cells", "Grelha do Município", "Estado da grelha intermunicipal de meios.", "page-municipality-grid", "Info. Grelha Município"],
+          ["fa-truck-medical", "SMS Pré-Hospitalar", "Serviços INEM com morada, mapa, freguesia oficial e mensagem formatada.", "page-inem-services", "Serviços EMS"],
+          ["fa-cloud-showers-heavy", "Avisos METEO", "Avisos do IPMA e mobilização de elementos para fenómenos extremos.", "page-weather-warnings", "Avisos METEO"]
+        ]}));
       /* =======================================================================
       OCORRÊNCIAS EM CURSO (+ POSIT + Nr. OC)
       ======================================================================= */

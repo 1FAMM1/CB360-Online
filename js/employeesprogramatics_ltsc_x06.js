@@ -23,11 +23,6 @@
         .rh-imr6 {margin-right: 6px;}
         .major-card-footer > .rh-note {font-size: 11px; color: #222;}
         #page-employees > .major-card > .major-card-body {font-family: 'Segoe UI', sans-serif;}
-        #page-employees .rh-intro {font-size: 15px; margin-bottom: 20px; color: #333;}
-        #page-employees .rh-feat {padding: 15px 20px; margin-bottom: 20px;}
-        #page-employees .rh-list {margin-bottom: 20px;}
-        #page-employees .rh-list ul {list-style: none; padding-left: 10px; line-height: 1.8;}
-        #page-employees .rh-start {text-align: center; font-style: italic; color: #555;}
 
         /* ===== Restantes páginas do RH (layout novo, só estilo) ===== */
         #annual-eip-shift-map > .major-card > .major-card-body, #eligibility-subs-shift > .major-card > .major-card-body, #priority-scheduling-map > .major-card > .major-card-body, #vacation-scheduling-map > .major-card > .major-card-body, #salary-processing-map > .major-card > .major-card-body, #individual-records > .major-card > .major-card-body, #vacation-scheduling > .major-card > .major-card-body, #dashboard-rh > .major-card > .major-card-body, #employee-registration > .major-card > .major-card-body, #page-vacations-request-rh > .major-card > .major-card-body {background: #efefef;}
@@ -70,8 +65,6 @@
         #employee-registration #reg-save-btn:hover {filter: brightness(1.06);}
         #employee-registration input:focus, #employee-registration select:focus, #dashboard-rh select:focus {border-color: #c0392b !important; box-shadow: 0 0 0 2px rgba(192,57,43,.12) !important; outline: none;}
         /* página de entrada do RH (como a da SALOC) */
-        #page-employees .rh-feat {background: #fff !important; border: 1px solid #e9ecef; border-left: 4px solid #c62828 !important; border-radius: 10px !important; color: #2c3e50;}
-        #page-employees .rh-list li {color: #2c3e50 !important;}
 
         /* ===== Escalas Mensais e Horas Extra (layout novo, só estilo; ids e funções iguais) ===== */
         #page-employee-scales > .major-card > .major-card-body, #page-employee-extra-hour > .major-card > .major-card-body {background: #efefef;}
@@ -149,31 +142,16 @@
     const btn = ([id, cls, icon, text]) => `<button id="${id}" class="btn ${cls}"><i class="fa-solid ${icon} rh-imr6"></i>${text}</button>`;
 
     /* ----------------------------- páginas ----------------------------- */
-    fill('page-employees', `<div class="major-card major-last-card">
-        <div class="major-card-header">BEM-VINDO À GESTÃO DE RECURSOS HUMANOS</div>
-        <div class="major-card-body">
-          <p class="rh-intro">
-            A <strong>GESTÃO DE RECURSOS HUMANOS</strong> é o módulo digital responsável pela gestão integral da
-            <strong>Inserção e Validação</strong> dos elementos afetos às <strong>EQUIPAS DE INEM, SERVIÇO GERAL,
-            SALOC, E EQUIPAS DE INTERVEÇÃO PERMANTENTE.</strong>
-            Este sistema centraliza todo o processo de registo, controlo e e manutenção para o serviço operacional diário, garantindo uma gestão eficiente e transparente
-            entre recursos humanos e operacionais.
-          </p>
-          <div class="rh-feat"><strong>Funcionalidades Principais:</strong></div>
-          <div class="rh-list"><ul>
-            <li>📋 Emissão e gestão de escalas mensais.</li>
-            <li>👨‍🚒 Gestão e confirmação de horas extraordinárias.</li>
-            <li>🧾 Formulários de Ponto Mensais.</li>
-            <li>🧾 Gestão e controlo de turnos.</li>
-            <li>🧾 Gestão e controlo de férias.</li>
-            <li>🧾 Gestão e controlo salarial.</li>
-          </ul></div>
-          <div class="rh-start">
-            Selecione uma opção no menu lateral para começar a utilizar o sistema.
-          </div>
-        </div>
-        <div class="major-card-footer"></div>
-      </div>`);
+    fill('page-employees', cb360Welcome({title: "BEM-VINDO À GESTÃO DE RECURSOS HUMANOS",
+      intro: "A <strong>GESTÃO DE RECURSOS HUMANOS</strong> é o módulo responsável pelos profissionais das <strong>equipas de INEM, Serviço Geral, SALOC e Equipas de Intervenção Permanente</strong>: escalas, horas extra, ponto, férias e processamento salarial.",
+      items: [
+        ["fa-calendar-days", "Escalas Mensais", "Escalas dos profissionais (INEM, Serviço Geral, SALOC e EIP), com análise e emissão.", "page-employee-scales", "Escalas Mensais"],
+        ["fa-business-time", "Controlo de Horas Extra", "Registo e confirmação das horas extraordinárias.", "page-employee-extra-hour", "Controlo de Horas Extras"],
+        ["fa-id-card", "Registos Individuais", "Folhas de ponto mensais e registos de cada funcionário.", "individual-records", "Registos Individuais"],
+        ["fa-umbrella-beach", "Gestão de Férias", "Pedidos, marcação, mapa de férias e mapa de prioridade.", "page-employees", "Gestão de Férias"],
+        ["fa-toolbox", "Utilitários", "Elegibilidade do subsídio de turno, processamento salarial, enquadramento anual das EIP e dashboard.", "page-employees", "Utilitários RH"],
+        ["fa-user-plus", "Cadastro de Funcionários", "Ficha de cada funcionário: função, equipa e datas de entrada e saída.", "employee-registration", "Cadastro de Funcionários"]
+      ]}));
 
     /* Escalas mensais e horas extras: as barras de botões têm id e mantêm o estilo no elemento (o código mostra-as/esconde-as) */
     fill('page-employee-scales', card('employee-monthly-schedules', 'calendar', 'ESCALAS MENSAIS',
@@ -6260,10 +6238,6 @@
                                font-weight: 600; color: #1e293b; background: rgba(255,255,255,0.85); backdrop-filter: blur(8px); cursor: pointer; outline: none;
                                transition: border-color 0.2s, box-shadow 0.2s; box-shadow: 0 2px 8px rgba(99,102,241,0.08);}
           .dash-filter-select:focus {border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.15);}
-          .dash-filter-btn {padding: 8px 18px; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; border: none; border-radius: 10px; font-family: 'Plus Jakarta Sans', sans-serif;
-                            font-size: 13px; font-weight: 700; cursor: pointer; transition: opacity 0.2s, transform 0.15s; box-shadow: 0 4px 12px rgba(99,102,241,0.3);}
-          .dash-filter-btn:hover {opacity: 0.9; transform: translateY(-1px);}
-          .dash-filter-btn:active {transform: translateY(0);}
           .dash-cards {display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;}
           @media (max-width: 1200px) {.dash-cards {grid-template-columns: repeat(2, 1fr);}}
           @media (max-width: 600px) {.dash-cards {grid-template-columns: 1fr;}}

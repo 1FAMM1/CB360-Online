@@ -48,11 +48,6 @@
         .decir-modal-body > .decir-row > .decir-form-group {flex: 1;}
         .decir-input-clean {width: 100%; padding: 11px 12px; border: 1.5px solid #d1d1dc; border-radius: 8px; font-size: 14px; font-weight: 500; color: #1e293b; transition: all 0.15s ease; background-color: #fff;}
         .decir-input-clean:focus {border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); outline: none;}
-        #page-decir .dec-intro {font-size: 15px; margin-bottom: 20px; color: #333;}
-        #page-decir .dec-feat {background: linear-gradient(90deg, #e0e0e0, #d6d6d6); padding: 15px 20px; border-left: 5px solid #007bff; border-radius: 6px; margin-bottom: 20px;}
-        #page-decir .dec-list {margin-bottom: 20px;}
-        #page-decir .dec-list ul {list-style: none; padding-left: 10px; line-height: 1.8;}
-        #page-decir .dec-list li {color: #0d630e;}
         /* ===== Gestão DECIR (layout novo, só estilo; cabeçalho escuro do módulo mantido) ===== */
         .page[id^="decir-"] > .major-card > .major-card-body {background: #efefef;}
         /* ano + meses: container branco centrado, meses em pills */
@@ -119,26 +114,18 @@
     const fill = (id, html) => { const p = document.getElementById(id); if (p) p.innerHTML = html; return p; };
 
     /* ----------------------------- páginas ----------------------------- */
-    fill('page-decir', `<div class="major-card major-last-card">
-        <div class="major-card-header">BEM-VINDO À GESTÃO DECIR</div>
-        <div class="major-card-body">
-          <p class="dec-intro">
-            A <strong>GESTÃO DECIR</strong> é o módulo digital responsável pela gestão integral da
-            <strong>Inserção e Validação</strong> dos elementos afetos ao <strong>DISPOSITIVO ESPECIAL DE
-            COMBATE A INCÊNDIOS RURAIS.</strong>
-            Este sistema centraliza todo o processo de registo, controlo e pagamentos aos elementos afetos
-            ao DECIR, garantindo uma gestão eficiente e transparente entre recursos humanos e operacionais.
-          </p>
-          <div class="dec-feat"><strong>Funcionalidades Principais:</strong></div>
-          <div class="dec-list"><ul>
-            <li><i class="fa-solid fa-clipboard-list"></i> Criação e gestão de relatórios para pagamentos</li>
-            <li><i class="fa-solid fa-helmet-safety"></i> Gestão e confirmação de pagamentos</li>
-            <li><i class="fa-solid fa-file-invoice"></i> Emissão de listas para pagamentos</li>
-            <li><i class="fa-solid fa-file-invoice"></i> Emissão de escalas e assinaturas (Ficheiros Oficiais da ANEPC)</li>
-          </ul></div>
-        </div>
-        <div class="major-card-footer"></div>
-      </div>`);
+    fill('page-decir', cb360Welcome({title: "BEM-VINDO À GESTÃO DECIR",
+      intro: "A <strong>GESTÃO DECIR</strong> é o módulo responsável pela inserção e validação dos elementos afetos ao <strong>Dispositivo Especial de Combate a Incêndios Rurais</strong>: escalas, registos de turnos, pagamentos e ficheiros oficiais da ANEPC.",
+      items: [
+        ["fa-gear", "Configurações", "Valores de pagamento (AMAL, ANEPC, OPAT e SBA), equipas, restaurantes e LEPPs.", "page-decir", "Configurações DECIR"],
+        ["fa-calendar-days", "Consulta de Escalas", "Escalas DECIR de cada mês, só de leitura.", "decir-sca-view", "Ver Escalas"],
+        ["fa-sack-dollar", "Controlo Financeiro ECINs", "Registo de turnos por elemento, núcleo financeiro (com o Cod. A33) e relatórios ANEPC.", "page-decir", "Gestão Financeira ECINs"],
+        ["fa-people-group", "Controlo Financeiro OPATs e SBAs", "Registo por elemento, núcleo financeiro e relatórios ANEPC das OPAT e SBA.", "page-decir", "Gestão Financeira SBAs e OPATs"],
+        ["fa-receipt", "Gestão de Despesas", "Despesas com danos e com refeições.", "page-decir", "Gestão Despesas"],
+        ["fa-folder-plus", "Registos Complementares", "Ocorrências, assinaturas e refeições diárias, pré-posicionamentos e EPE níveis III e IV.", "page-decir", "Registos Complementares"],
+        ["fa-clock-rotate-left", "Auditoria de Logs", "Histórico de alterações: quem mudou o quê e quando.", "decir-audit", "Auditoria de Logs"],
+        ["fa-chart-column", "Dados Estatísticos", "Dashboard com turnos, ocorrências e alertas do dispositivo.", "decir-dashboard", "DashBoard DECIR"]
+      ]}));
 
     /* modais de configuração (Atualização de Valores / Configuração de Equipas) */
     const modal = (id, title, rows, saveId, input) => {
@@ -7082,10 +7069,7 @@
           @keyframes levelivModalIn{from{opacity:0; transform:translateY(12px);}to{opacity:1; transform:none;}}
           .leveliv-modal-header{background:#7a0c16; color:#fff; padding:18px 20px; text-align:center; display:flex; justify-content:center; align-items:center;}
           .leveliv-modal-header-left{display:flex; flex-direction:column; align-items:center; width:100%;}
-          .leveliv-modal-subtitle{font-size:11px; opacity:.75; text-transform:uppercase; letter-spacing:.6px; margin-bottom:4px;}
           .leveliv-modal-title{font-size:20px; font-weight:700; color:#fff;}
-          .leveliv-modal-close{width:34px; height:34px; border:none; border-radius:50%; background:rgba(255,255,255,.15); color:#fff; font-size:20px; cursor:pointer; transition:.2s;}
-          .leveliv-modal-close:hover{background:#d13c3c;}
           .leveliv-modal-body{padding:20px 20px 20px;}
           .leveliv-calendar-weekdays{display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-top:4px; margin-bottom:16px;}
           .leveliv-calendar-weekdays span{text-align:center; font-size:11px; font-weight:700; color:#666; letter-spacing:.3px;}

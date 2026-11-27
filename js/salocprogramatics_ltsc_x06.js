@@ -137,7 +137,7 @@
         #ppia22-main-options > label, #ppilinfer-main-options > label {margin: 0 !important; font-size: 11px !important; font-weight: 800 !important; color: #8a949e !important; text-transform: uppercase; letter-spacing: .4px; white-space: nowrap;}
         #ppia22-options, #ppilinfer-options {display: flex !important; gap: 4px !important; margin: 0 !important; width: auto !important; max-width: none !important;}
         #ppia22-options .options-btn, #ppilinfer-options .options-btn {flex: none !important; min-width: 0 !important; max-width: none !important;}
-        .ppia22-part1, #ppilinfer-specials-container .ppilinfer-part1 {border: 1px solid #e3e7eb !important; border-top: 0 !important; background: #fff; padding: 8px 12px !important; margin: 0 !important;}
+        .ppia22-part1 {border: 1px solid #e3e7eb !important; border-top: 0 !important; background: #fff; padding: 8px 12px !important; margin: 0 !important;}
         #ppia22-options .options-btn, #ppilinfer-options .options-btn {height: 32px !important; width: auto !important; padding: 0 16px !important; border-radius: 999px !important; border: 0 !important; background: transparent !important;
                      color: #2c3e50 !important; font-size: 12px !important; font-weight: 700 !important; text-transform: none; letter-spacing: 0; box-shadow: none !important; transform: none !important; white-space: nowrap;}
         #ppia22-options .options-btn:hover:not(:disabled), #ppilinfer-options .options-btn:hover:not(:disabled) {background: #f1f3f5 !important;}
@@ -530,7 +530,6 @@
                              justify-content: center; position: relative; background: linear-gradient(to bottom, #2a3f6f 0%, #1a2a4a 50%, #152238 100%);
                              box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -1px 0 rgba(0,0,0,0.2); text-shadow: 0 1px 2px rgba(0,0,0,0.3);}
         .plandir-card-title.red-variant {background: linear-gradient(to bottom, #b91c1c 0%, #991b1b 50%, #7f1d1d 100%);}
-        .plandir-card-title.green-variant {background: linear-gradient(to bottom, #22c55e 0%, #16a34a 50%, #15803d 100%); margin-top: 0; border-top: 1px solid rgba(255,255,255,0.2);}
         .plandir-card-title.black-variant {background: linear-gradient(to bottom, #454545 0%, #1a1a1a 50%, #000000 100%); margin-top: 0; border-top: 1px solid rgba(255,255,255,0.15);
                                            color: #ffffff; text-shadow: 0 1px 2px rgba(0,0,0,0.8);}
         .plandir-main-card {margin: 10px 0 0 0; max-width: 1200px; border: 1px solid #d0d0d0; border-radius: 10px 10px 0 0; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.06); transform: none !important;
@@ -560,17 +559,6 @@
         .plandir-readonly-field {background: #f5f5f5; color: #555;}
         .plandir-nint-input, .plandir-entrance-input, .plandir-exit-input, .plandir-obs-input {width: 100%;}
         /* - estilos que estavam escritos nos elementos das páginas (style="...") */
-        #page-docimport .sl-1, #page-ppis .sl-1, #page-recservdescr .sl-1, #page-saloc .sl-1 {font-family: 'Segoe UI', sans-serif;}
-        #page-docimport .sl-2, #page-ppis .sl-2, #page-recservdescr .sl-2, #page-saloc .sl-2 {font-size: 15px; margin-bottom: 20px; color: #333;}
-        #page-ppis .sl-3, #page-recservdescr .sl-3, #page-saloc .sl-3 {background: linear-gradient(90deg, #e0e0e0, #d6d6d6); padding: 15px 20px; border-left: 5px solid #dc3545; border-radius: 6px; margin-bottom: 20px;}
-        #page-saloc .sl-4 {margin-bottom: 20px;}
-        #page-saloc .sl-5 {list-style: none; padding-left: 10px; line-height: 1.8;}
-        #page-ppis .sl-6, #page-recservdescr .sl-6, #page-saloc .sl-6 {color:#0d630e;}
-        #page-ppis .sl-7, #page-saloc .sl-7 {margin-top: 30px; color: #444;}
-        #page-docimport .sl-8, #page-ppis .sl-8, #page-recservdescr .sl-8, #page-saloc .sl-8 {margin-top: 40px; text-align:center; font-style: italic; color: #6c757d;}
-        #page-ppis .sl-9, #page-recservdescr .sl-9 {list-style: none; padding-left: 20px; line-height: 1.7; font-size: 14.5px;}
-        #page-ppis .sl-10, #page-recservdescr .sl-10 {color:#c20c0c;}
-        #page-ppis .sl-11, #page-recservdescr .sl-11 {background: linear-gradient(90deg, #e0e0e0, #d6d6d6); padding: 15px 20px; border-left: 5px solid #0d630e; border-radius: 6px; margin: 25px 0 20px 0;}
         #page-ppia2 .sl-12 {margin-bottom: 10px; font-size: 14px; font-weight: bold; color: #aaa;}
         #page-crepcalg .sl-13, #page-dashboard .sl-13, #page-ineminop .sl-13, #page-inocrepc .sl-13, #page-plandir .sl-13, #page-ppia22 .sl-13, #page-ppiaero .sl-13, #page-ppilinfer .sl-13, #page-recinoreports .sl-13, #page-recserv .sl-13 {opacity:.9;}
         #page-ppia22 .sl-14, #page-ppilinfer .sl-14 {margin: 3px 0 0 0; justify-content: center;}
@@ -579,31 +567,15 @@
         #page-ppia22 .sl-17, #page-ppilinfer .sl-17 {height: 35px; width: 100%;}
         #page-crepcalg .sl-18, #page-inocrepc .sl-18, #page-plandir .sl-18, #page-ppilinfer .sl-18 {height: 35px;}
         #page-ppilinfer .sl-19 {height: 35px; width: 100%; opacity: 0.6; cursor: not-allowed;}
-        #page-recservdescr .sl-20 {font-size: 14.5px; color: #444; line-height: 1.6; margin-bottom: 20px;}
-        #page-ineminop .sl-21, #page-recserv .sl-21 {width: 100%;}
-        #page-recserv .sl-22 {font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: #444; margin: -12px -12px 15px -12px; padding: 10px 14px; background: linear-gradient(90deg, rgba(220,53,69,0.16), rgba(255,255,255,0.03)); border-left: 3px solid rgba(220,53,69,0.9); border-radius: 6px 6px 0 0; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);}
-        #page-ineminop .sl-23, #page-recserv .sl-23 {margin-bottom: 5px;}
-        #page-ineminop .sl-24, #page-recserv .sl-24 {flex-direction: row; align-items: center; gap: 10px;}
         #page-crepcalg .sl-25, #page-ineminop .sl-25, #page-inocrepc .sl-25, #page-recserv .sl-25 {width: 120px;}
         #page-crepcalg .sl-26, #page-ineminop .sl-26, #page-inocrepc .sl-26, #page-phonebook .sl-26, #page-recserv .sl-26 {width: 100px;}
         #page-crepcalg .sl-27, #page-hemodialysis .sl-27, #page-ineminop .sl-27, #page-inocrepc .sl-27, #page-recserv .sl-27 {width: 200px;}
-        #page-recserv .sl-28 {min-width: 120px;}
-        #page-ineminop .sl-29, #page-recserv .sl-29 {margin: 20px 0;}
-        #page-ineminop .sl-30, #page-recserv .sl-30 {justify-content: space-between; align-items: center; margin-bottom: 10px;}
-        #page-ineminop .sl-31, #page-recserv .sl-31 {font-size: 16px; color: #444; margin: 0;}
         #page-crepcalg .sl-32, #page-dashboard .sl-32, #page-fleet-cards .sl-32, #page-hemodialysis .sl-32, #page-ineminop .sl-32, #page-inocrepc .sl-32, #page-phonebook .sl-32, #page-recserv .sl-32 {flex-direction: row; align-items: center; gap: 8px;}
         #page-attendance-list .sl-33, #page-contact-list .sl-33, #page-crepcalg .sl-33, #page-fleet-cards .sl-33, #page-hemodialysis .sl-33, #page-inocrepc .sl-33, #page-material-request .sl-33, #page-phonebook .sl-33, #page-recserv .sl-33 {font-size: 13px;}
         #page-recserv .sl-34 {margin: 0 0 0 0; height: 285px;}
-        #page-ineminop .sl-35, #page-recserv .sl-35 {width: 70px;}
-        #page-ineminop .sl-36, #page-recserv .sl-36 {width: 50px;}
-        #page-crepcalg .sl-37, #page-recserv .sl-37 {width: 170px;}
         #page-crepcalg .sl-38, #page-dashboard .sl-38, #page-hemodialysis .sl-38, #page-inocrepc .sl-38, #page-phonebook .sl-38, #page-recserv .sl-38 {width: 150px;}
-        #page-crepcalg .sl-39, #page-recserv .sl-39 {width: 180px;}
-        #page-ineminop .sl-40 {font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: #444; margin: -12px -12px 15px -12px; padding: 10px 14px; background: linear-gradient(90deg, rgba(220,53,69,0.18), rgba(255,255,255,0.03)); border-left: 3px solid rgba(220,53,69,0.9); border-radius: 6px 6px 0 0; align-items: center; gap: 8px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);}
-        #page-ineminop .sl-41 {width: 75px;}
         #page-dashboard .sl-42, #page-ineminop .sl-42, #page-recinoreports .sl-42 {font-size: 14px;}
         #page-ineminop .sl-43 {margin: 0 0 0 0; height: 300px;}
-        #page-crepcalg .sl-44, #page-ineminop .sl-44, #page-inocrepc .sl-44, #page-phonebook .sl-44 {width: 250px;}
         #page-recinoreports .sl-45 {flex-direction: row; align-items: center; gap: 8px; margin-bottom: 18px;}
         #page-phonebook .sl-46, #page-recinoreports .sl-46 {width: 130px;}
         #page-recinoreports .sl-47 {font-size: 14px; margin-left: 8px;}
@@ -641,44 +613,12 @@
         #page-dashboard .sl-79 {flex: 1; min-width: 250px; padding: 14px; border-radius: 10px; background: linear-gradient(180deg,#f8f9fa,#eef1f4); box-shadow: 0 2px 6px rgba(0,0,0,0.06); border-top: 3px solid #9b59b6;}
         #page-dashboard .sl-80 {flex: 1; min-width: 250px; padding: 14px; border-radius: 10px; background: linear-gradient(180deg,#f8f9fa,#eef1f4); box-shadow: 0 2px 6px rgba(0,0,0,0.06); border-top: 3px solid #e67e22;}
         #page-dashboard .sl-81 {flex: 1; min-width: 250px; padding: 14px; border-radius: 10px; background: linear-gradient(180deg,#f8f9fa,#eef1f4); box-shadow: 0 2px 6px rgba(0,0,0,0.06); border-top: 3px solid #95a5a6;}
-        #page-docimport .sl-82 {background: linear-gradient(90deg, #d5d5d5, #c9c9c9); padding: 15px 20px; border-left: 5px solid #171d8f; border-radius: 6px; margin-bottom: 20px;}
-        #page-docimport .sl-83 {padding-left: 25px; line-height: 1.6;}
-        #page-docimport .sl-84 {margin-bottom: 8px;}
         #page-crepcalg .sl-85, #page-hemodialysis .sl-85, #page-inocrepc .sl-85, #page-plandir .sl-85 {margin: 0; justify-content: center;}
         #page-crepcalg .sl-86, #page-hemodialysis .sl-86, #page-inocrepc .sl-86, #page-plandir .sl-86 {flex-direction: column; align-items: center;}
         #page-crepcalg .sl-87 {margin:0 0 0 0;}
         #page-crepcalg .sl-88, #page-inocrepc .sl-88 {justify-content: center;}
-        #page-crepcalg .sl-89 {margin: 0 0 0 0;}
-        #page-crepcalg .sl-90 {font-size: 13px; font-weight: bold;}
-        #page-crepcalg .sl-91 {width: 230px;}
-        #page-crepcalg .sl-92 {width: 160px;}
-        #page-crepcalg .sl-93 {margin: 10px 0 0 0; align-items: center;}
-        #page-crepcalg .sl-94 {flex-direction: row; align-items: center;}
-        #page-crepcalg .sl-95 {font-size: 13px; font-weight: bold; white-space: nowrap;}
-        #page-crepcalg .sl-96 {width: 140px;}
         #page-crepcalg .sl-97 {width: 90px;}
-        #page-crepcalg .sl-98 {margin: 20px 0 0 0; align-items: flex-start; text-align: left;}
-        #page-crepcalg .sl-99 {margin: 5px 0 0 0;}
-        #page-crepcalg .sl-100 {font-size: 14px; font-weight: 600; letter-spacing: 0.04em; color: #444; margin: 0 0 10px 0; padding: 8px 12px; background: linear-gradient(90deg, rgba(220,53,69,0.18), rgba(255,255,255,0.03)); border-left: 3px solid rgba(220,53,69,0.9); border-radius: 6px 6px 0 0; align-items: center; gap: 8px;}
-        #page-crepcalg .sl-101 {align-items: center; margin: 3px 0;}
-        #page-crepcalg .sl-102 {width: 280px; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; white-space: nowrap;}
-        #page-crepcalg .sl-103, #page-inocrepc .sl-103 {width: 17px; height: 17px; cursor: pointer !important;}
-        #page-crepcalg .sl-104 {flex-direction: row; align-items: center; gap: 8px; flex: 1; min-width: 0;}
-        #page-crepcalg .sl-105 {width: 754px;}
-        #page-crepcalg .sl-106 {width: 280px; align-items: center; gap: 8px; font-size: 15px; cursor: pointer;}
-        #page-crepcalg .sl-107 {width:17px; height:17px; cursor: pointer !important;}
-        #page-crepcalg .sl-108 {width: 200px; background: #5e5e5e;}
-        #page-crepcalg .sl-109 {width: 250px; background: #5e5e5e;}
-        #page-crepcalg .sl-110 {width: 754px; background: #909090;}
-        #page-crepcalg .sl-111 {margin: 10px 0 0 0; align-items: flex-start; text-align: left;}
-        #page-crepcalg .sl-112 {align-items: center; margin: 2px 0;}
-        #page-crepcalg .sl-113 {font-size: 15px;}
-        #page-crepcalg .sl-114 {width: 75px; text-align: center;}
-        #page-crepcalg .sl-115 {width: 632px;}
-        #page-crepcalg .sl-116 {margin: 15px 0 0 0;}
         #page-crepcalg .sl-117 {width: 350px;}
-        #page-crepcalg .sl-118 {width: 728px;}
-        #page-crepcalg .sl-119 {flex-direction: row; align-items: center; gap: 8px; margin: 15px 0 0 0;}
         #page-crepcalg .sl-120, #page-hemodialysis .sl-120, #page-phonebook .sl-120 {width: 300px;}
         #page-crepcalg .sl-121, #page-inocrepc .sl-121, #page-plandir .sl-121 {gap: 5px;}
         #page-crepcalg .sl-122, #page-inocrepc .sl-122 {margin-bottom: 0px;}
@@ -726,23 +666,6 @@
         #page-plandir .sl-164 {padding: 5px 6px; width: 75px;}
         #page-plandir .sl-165 {padding: 5px 6px; width: 150px;}
         #page-plandir .sl-166 {padding: 5px 6px; width: 200px;}
-        #page-inocrepc .sl-167, #page-phonebook .sl-167 {width: 400px;}
-        #page-inocrepc .sl-168 {width: 125px;}
-        #page-inocrepc .sl-169 {width: 120px; text-align: center;}
-        #page-inocrepc .sl-170 {width: 395px;}
-        #page-inocrepc .sl-171 {width: 150px; text-align: center;}
-        #page-inocrepc .sl-172 {font-weight: bold; font-size: 13px; margin-top: 15px; margin-bottom: 5px;}
-        #page-inocrepc .sl-173 {margin-left: 20px;}
-        #page-inocrepc .sl-174 {align-items: center; gap: 8px; font-size: 15px; cursor: pointer; white-space: nowrap;}
-        #page-inocrepc .sl-175 {align-items: center; gap: 8px; font-size: 15px; cursor: pointer; white-space: nowrap; margin-left: 15px;}
-        #page-inocrepc .sl-176 {margin-left: 40px;}
-        #page-inocrepc .sl-177 {align-items: center; gap: 8px; font-size: 15px; cursor: pointer; white-space: nowrap; width: 100px;}
-        #page-inocrepc .sl-178 {align-items: center; gap: 8px; font-size: 15px; cursor: pointer; white-space: nowrap; width: 60px;}
-        #page-inocrepc .sl-179 {align-items: center; gap: 8px; font-size: 15px; cursor: pointer; white-space: nowrap; width: 50px;}
-        #page-inocrepc .sl-180 {align-items: center; gap: 8px; font-size: 15px; cursor: pointer; white-space: nowrap; width: 190px;}
-        #page-inocrepc .sl-181 {align-items: center; gap: 8px; font-size: 15px; cursor: pointer; white-space: nowrap; width: 170px;}
-        #page-inocrepc .sl-182 {flex-direction: row; align-items: center; gap: 8px; margin-top: 15px;}
-        #page-inocrepc .sl-183 {font-size: 13px; font-weight: bold; color: #444;}
         #page-alarm-console .sl-184, #page-attendance-list .sl-184, #page-contact-list .sl-184, #page-fleet-cards .sl-184, #page-hemodialysis .sl-184, #page-material-request .sl-184, #page-phonebook .sl-184 {align-items: center; gap: 10px;}
         #page-hemodialysis .sl-185 {width: 100px; height: 35px;}
         #page-hemodialysis .sl-186 {font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: #444; margin: -12px -12px 15px -12px; padding: 5px 14px; background: linear-gradient(90deg, rgba(220,53,69,0.16), rgba(255,255,255,0.03)); border-left: 3px solid rgba(220,53,69,0.9); border-radius: 6px 6px 0 0; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);}
@@ -772,48 +695,10 @@
         #page-hemodialysis .sl-210 {min-width: 250px; flex-direction: column; align-items: center; height: 100%; margin-right: 0;}
         #page-hemodialysis .sl-211 {font-size: 13px; font-weight: bold; background: #6b0000; color: #fff; padding: 5px 10px; border-radius: 4px 4px 0 0; text-align: center;}
         #page-alarm-console .sl-212, #page-attendance-list .sl-212, #page-contact-list .sl-212, #page-fleet-cards .sl-212, #page-material-request .sl-212, #page-phonebook .sl-212 {opacity:.9; vertical-align: middle;}
-        #page-material-request .sl-213 {flex-direction: row; align-items: center; gap: 8px; flex-wrap: wrap;}
         #page-alarm-console .sl-214, #page-material-request .sl-214 {font-size: 13px; white-space: nowrap;}
-        #page-material-request .sl-215 {flex: 3; min-width: 350px;}
-        #page-material-request .sl-216 {flex: 2; min-width: 100px; max-width: 200px;}
-        #page-material-request .sl-217 {margin-top: 5px; flex-direction: row; align-items: center; gap: 8px; flex-wrap: wrap;}
-        #page-fleet-cards .sl-218, #page-material-request .sl-218 {margin-top: 20px;}
-        #page-attendance-list .sl-219, #page-contact-list .sl-219, #page-material-request .sl-219, #page-phonebook .sl-219 {font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: #444; margin: -12px -12px 15px -12px; padding: 5px 14px; background: linear-gradient(90deg, rgba(30,58,138,0.13), rgba(255,255,255,0.03)); border-left: 3px solid rgba(30,58,138,0.9); border-radius: 6px 6px 0 0; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);}
-        #page-material-request .sl-220 {padding: 6px; border: 1px solid #ddd; font-size: 12px; width: 80px;}
         #page-material-request .sl-221 {text-align:center; padding:8px; font-size:12px; color:#999;}
         #page-attendance-list .sl-222, #page-contact-list .sl-222, #page-fleet-cards .sl-222, #page-material-request .sl-222, #page-phonebook .sl-222 {justify-content: flex-end; gap: 10px;}
-        #page-fleet-cards .sl-223 {font-size: 13px; font-weight: 6000; letter-spacing: 0.04em; color: #444; margin: -12px -12px 15px -12px; padding: 5px 14px; background: linear-gradient(90deg, rgba(30,58,138,0.13), rgba(255,255,255,0.03)); border-left: 3px solid rgba(30,58,138,0.9); border-radius: 6px 6px 0 0; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);}
-        #page-fleet-cards .sl-224, #page-phonebook .sl-224 {padding: 6px; border: 1px solid #ddd; font-size: 12px; width: 120px;}
-        #page-fleet-cards .sl-225, #page-phonebook .sl-225 {margin-top: 10px; gap: 20px; font-size: 14px; font-weight: 600; color: #444;}
-        #page-fleet-cards .sl-226, #page-phonebook .sl-226 {color: #1e3a8a;}
-        #page-fleet-cards .sl-227 {color: #16a34a;}
-        #page-fleet-cards .sl-228 {color: #dc2626;}
-        #page-contact-list .sl-229, #page-phonebook .sl-229 {position: relative; align-items: center;}
-        #page-contact-list .sl-230, #page-phonebook .sl-230 {width: 300px; padding-right: 30px;}
-        #page-contact-list .sl-231, #page-phonebook .sl-231 {position: absolute; right: 8px; color: #aaa; cursor: pointer; pointer-events: none;}
-        #page-attendance-list .sl-232, #page-contact-list .sl-232 {padding: 6px; border: 1px solid #ddd; font-size: 13px;}
-        #page-contact-list .sl-233 {padding: 6px; border: 1px solid #ddd; font-size: 13px; width: 80px;}
         #page-attendance-list .sl-234, #page-contact-list .sl-234 {text-align:center; padding:8px; font-size:14px; color:#999;}
-        #page-attendance-list .sl-235, #page-contact-list .sl-235 {margin-top: 10px; font-size: 13px; font-weight: 600; color: #444; gap: 10px; flex-wrap: wrap; align-items: center;}
-        #page-attendance-list .sl-236, #page-contact-list .sl-236 {background: #1e3a8a; color: #fff; padding: 2px 8px; border-radius: 4px;}
-        #page-contact-list .sl-237 {color: #a70c0c; background: #ffebeb; padding: 2px 6px; border-radius: 4px; border: 1px solid #ccc;}
-        #page-contact-list .sl-238 {color: #2c5282; background: #ebf8ff; padding: 2px 6px; border-radius: 4px; border: 1px solid #cbd5e1;}
-        #page-contact-list .sl-239 {color: #b45309; background: #fffbeb; padding: 2px 6px; border-radius: 4px; border: 1px solid #fef3c7;}
-        #page-contact-list .sl-240 {color: #15803d; background: #f0fdf4; padding: 2px 6px; border-radius: 4px; border: 1px solid #bbf7d0;}
-        #page-contact-list .sl-241 {color: #6b21a8; background: #f3e8ff; padding: 2px 6px; border-radius: 4px; border: 1px solid #e9d5ff;}
-        #page-contact-list .sl-242 {color: #4a5568; background: #edf2f7; padding: 2px 6px; border-radius: 4px; border: 1px solid #e2e8f0;}
-        #page-attendance-list .sl-243 {flex-direction: row; align-items: center; gap: 8px; margin-bottom: 15px; justify-content: space-between;}
-        #page-attendance-list .sl-244 {align-items: center; gap: 8px;}
-        #page-attendance-list .sl-245 {padding: 6px; border: 1px solid #ddd; font-size: 13px; width: 160px;}
-        #page-attendance-list .sl-246 {padding: 6px; border: 1px solid #ddd; font-size: 13px; width: 500px;}
-        #page-attendance-list .sl-247 {color: #166534; background: #dcfce7; padding: 2px 6px; border-radius: 4px; border: 1px solid #bbf7d0;}
-        #page-attendance-list .sl-248 {color: #991b1b; background: #fee2e2; padding: 2px 6px; border-radius: 4px; border: 1px solid #fecaca;}
-        #page-phonebook .sl-249 {justify-content: flex-start; margin-bottom: 15px;}
-        #page-phonebook .sl-250 {font-size: 13px; align-items: center; gap: 4px;}
-        #page-phonebook .sl-251 {width: 18px; height: 18px; accent-color: #f59e0b; margin: 0; cursor: pointer !important; outline: none !important; box-shadow: none !important;}
-        #page-phonebook .sl-252 {justify-content: flex-end; margin-top: 15px;}
-        #page-phonebook .sl-253 {margin-top: 0px;}
-        #page-phonebook .sl-254 {color: #f59e0b;}
         #page-alarm-console .sl-255 {grid-template-columns: 1fr 1fr; gap: 20px;}
         #page-alarm-console .sl-256 {flex-direction: column; align-items: center; padding: 15px; border: 1px solid rgba(255,255,255,0.05); border-radius: 12px;}
         #page-alarm-console .sl-257 {font-size: 15px; font-weight: 700; margin: 0 0 15px 0; color: #dc3545; letter-spacing: 1px;}
@@ -832,85 +717,25 @@
       document.head.appendChild(css);
     }
     const PAGES = {
-      'page-saloc': `
+      'page-saloc': cb360Welcome({title: "BEM-VINDO AO SALOC 360",
+        intro: "O <strong>SALOC 360</strong> é o sistema de gestão operacional diária da <strong>Sala de Operações e Comunicações</strong>: apoio à decisão, planeamento e monitorização das atividades logísticas e operacionais em tempo real.",
+        items: [
+          ["fa-map", "Planos Prévios de Intervenção", "Consulta dos PPI da A22, do Aeroporto de Faro e da Linha Férrea.", "page-ppis", "Planos Prévios de Intervenção"],
+          ["fa-pen-to-square", "Registos Recusas/INOPS", "Recusas de serviço e inoperacionalidades INEM, relatórios mensais e dashboard.", "page-recservdescr", "Registos Recusas/INOPS"],
+          ["fa-folder-open", "Documentação Importante", "CREPC Algarve (MOA, Anexos G1/G2 e situação operacional), planeamento diário e SITOP de veículos.", "page-docimport", "Documentação Importante"],
+          ["fa-box-archive", "Diversos", "Hemodiálises, formação, requisição de equipamentos, cartões frota, contactos, listas nominais e agenda telefónica.", "page-saloc", "Diversos"],
+          ["fa-server", "Ocorrências (Redundância)", "Registo de ocorrências em redundância: vítimas, veículos, elementos e comunicações.", "page-cb360-redund", "Redundância Ocorrências"],
+          ["fa-bell", "Consola de Alarmes", "Chamadas individuais, de grupo e alarmes internos.", "page-alarm-console", "Consola de Alarmes"]
+        ]}),
 
-        <div class="major-card last-card">
-          <div class="major-card-header">BEM-VINDO AO SALOC 360</div>
-          <div class="major-card-body sl-1">
-            <p class="sl-2">
-              O <strong>SALOC 360</strong> é um sistema digital de gestão operacional diária da
-              <strong>Sala de Operações e Comunicações (SALOC)</strong> do seu Corpo de Bombeiros.
-              Este sistema integra as principais ferramentas de apoio à decisão, planeamento e monitorização das atividades
-              logísticas e operacionais em tempo real.
-            </p>
-            <div class="sl-3">
-              <strong>Funcionalidades Principais:</strong>
-            </div>
-            <div class="sl-4">
-              <ul class="sl-5">
-                <li class="sl-6"><i class="fa-solid fa-map"></i> Consulta dos Planos Prévios de Intervenção (A22, Aeroporto e Linha Ferroviária)</li>
-                <li class="sl-6"><i class="fa-solid fa-pen-to-square"></i> Registo de Recusas de Serviço e de Inoperacionalidades INEM, com relatórios mensais</li>
-                <li class="sl-6"><i class="fa-solid fa-chart-column"></i> Dashboard de Estatísticas Operacionais</li>
-                <li class="sl-6"><i class="fa-solid fa-envelope-open-text"></i> Documentação para o Comando Sub-Regional: MOA, Anexo G1/G2 e Situação Operacional</li>
-                <li class="sl-6"><i class="fa-solid fa-calendar-days"></i> Planeamento Diário e gestão de turnos</li>
-                <li class="sl-6"><i class="fa-solid fa-truck-medical"></i> Listagem semanal e gestão dos utentes de Hemodiálise</li>
-                <li class="sl-6"><i class="fa-solid fa-folder"></i> Requisição de equipamentos, cartões frota, contactos e listas nominais</li>
-                <li class="sl-6"><i class="fa-solid fa-bell"></i> Consola de Alarmes Interna (chamadas individuais, de grupo e alarmes)</li>
-              </ul>
-            </div>
-            <p class="sl-7">
-              Estas funcionalidades proporcionam uma visão integrada do estado operacional da corporação,
-              reforçando a capacidade de planeamento, comunicação e resposta coordenada em tempo real.
-            </p>
-            <div class="sl-8">
-              Selecione uma opção no menu lateral para começar.
-            </div>
-          </div>
-          <div class="major-card-footer"></div>
-        </div>
+      'page-ppis': cb360Welcome({title: "PLANOS PRÉVIOS DE INTERVENÇÃO (PPI) – ALGARVE",
+        intro: "O <strong>PPI 360</strong> dá acesso rápido aos <strong>Planos Prévios de Intervenção</strong> do Algarve: mapa interativo, tabelas técnicas, meios e acessos de cada plano.", label: "Planos disponíveis",
+        items: [
+          ["fa-road", "PPI A22", "Via do Infante de Sagres.", "page-ppia22", "PPI A22"],
+          ["fa-plane", "PPI Aeroporto de Faro", "Aeroporto Internacional Gago Coutinho.", "page-ppiaero", "PPI Aeroporto de Faro"],
+          ["fa-train", "PPI Linha Férrea", "Linha Ferroviária do Algarve.", "page-ppilinfer", "PPI Linha Férrea"]
+        ]}),
 
-`,
-      'page-ppis': `
-
-        <div class="major-card major-last-card">
-          <div class="major-card-header">PLANOS PRÉVIOS DE INTERVENÇÃO (PPI) – ALGARVE</div>
-          <div class="major-card-body sl-1">
-            <p class="sl-2">
-              O módulo <strong>PPI 360</strong> integra o sistema de gestão e visualização dos
-              <strong>Planos Prévios de Intervenção (PPI)</strong> da região do Algarve,
-              permitindo o acesso rápido e atualizado à informação estratégica de apoio à decisão operacional
-              e à gestão de emergências complexas.
-            </p>
-            <div class="sl-3">
-              <strong>Planos Disponíveis:</strong>
-            </div>
-            <ul class="sl-9">
-              <!-- <li class="sl-10">🛣️ PPI - Autoestrada do Sul (A2) <em>(Em atualização pela ANEPC)</em></li> -->
-              <li class="sl-6"><i class="fa-solid fa-road"></i> PPI - Via do Infante de Sagres (A22)</li>
-              <li class="sl-6"><i class="fa-solid fa-plane"></i> PPI - Aeroporto Internacional Gago Coutinho</li>
-              <li class="sl-6"><i class="fa-solid fa-train"></i> PPI - Linha Ferroviária do Algarve</li>
-            </ul>
-            <div class="sl-11">
-              <strong>Funcionalidades do Módulo:</strong>
-            </div>
-            <ul class="sl-9">
-              <li class="sl-6"><i class="fa-solid fa-location-dot"></i> Consulta geográfica interativa dos PPIs</li>
-              <li class="sl-6"><i class="fa-solid fa-file-lines"></i> Acesso a tabelas técnicas e recursos associados</li>
-              <li class="sl-6"><i class="fa-solid fa-compass"></i> Identificação de meios e acessos operacionais</li>
-              <li class="sl-6"><i class="fa-solid fa-arrows-rotate"></i> Atualização e integração contínua de dados</li>
-            </ul>
-            <p class="sl-7">
-              Os PPIs são uma ferramenta fundamental para garantir a resposta coordenada e eficiente em situações
-              de emergência, assegurando o conhecimento prévio do terreno, acessos, riscos e recursos disponíveis.
-            </p>
-            <div class="sl-8">
-              Selecione um PPI no menu lateral para visualizar os detalhes.
-            </div>
-          </div>
-          <div class="major-card-footer"></div>
-        </div>
-
-`,
       'page-ppia2': `
 
       <div class="major-card major-last-card">
@@ -1004,47 +829,15 @@
       </div>
 
 `,
-      'page-recservdescr': `
+      'page-recservdescr': cb360Welcome({title: "GESTÃO DE RECUSAS DE SERVIÇOS E INOPERACIONALIDADES (INEM)",
+        intro: "O <strong>REGOPS 360</strong> centraliza as <strong>recusas de serviços</strong> e as <strong>inoperacionalidades dos meios INEM</strong>, com histórico, estatísticas e relatórios mensais.",
+        items: [
+          ["fa-ban", "Recusas de Serviços", "Registo das recusas de serviço da corporação.", "page-recserv", "Recusas de Serviços"],
+          ["fa-truck-medical", "Inoperacionalidades INEM", "Registo das inoperacionalidades dos meios INEM.", "page-ineminop", "Inoperacionalidades INEM"],
+          ["fa-file-lines", "Relatórios Mensais", "Relatórios mensais das recusas e inoperacionalidades.", "page-recinoreports", "Relatórios Mensais"],
+          ["fa-chart-column", "Dashboard", "Estatísticas gráficas por mês e por ano.", "page-dashboard", "DashBoard"]
+        ]}),
 
-        <div class="major-card major-last-card">
-          <div class="major-card-header">GESTÃO DE RECUSAS DE SERVIÇOS E INOPERACIONALIDADES (INEM)</div>
-          <div class="major-card-body sl-1">
-            <p class="sl-2">
-              O módulo <strong>REGOPS 360</strong> centraliza a <strong>gestão de recusas de serviços</strong> e
-              <strong>inoperacionalidades de meios INEM</strong>, permitindo um controlo detalhado e
-              automatizado da disponibilidade operacional das viaturas integradas no
-              protocolo de emergência pré-hospitalar, bem como a recusa de serviços do seu Corpo de Bombeiros.
-            </p>
-            <div class="sl-3">
-              <strong>Funcionalidades Principais:</strong>
-            </div>
-            <ul class="sl-9">
-              <li class="sl-6"><i class="fa-solid fa-pen-to-square"></i> Registo de Recusas de Serviços</li>
-              <li class="sl-6"><i class="fa-solid fa-truck-medical"></i> Registo de Inoperacionalidades (INEM)</li>
-              <li class="sl-6"><i class="fa-solid fa-chart-column"></i> Dashboard Gráfico de Estatísticas</li>
-              <li class="sl-10"><i class="fa-solid fa-calendar-days"></i> Relatórios Mensais <em>(Brevemente)</em></li>
-            </ul>
-            <div class="sl-11">
-              <strong>Objetivo do Módulo:</strong>
-            </div>
-            <p class="sl-20">
-              Este módulo visa garantir o <strong>acompanhamento em tempo real</strong> da disponibilidade operacional,
-              reduzindo o impacto das inoperacionalidades no sistema de resposta pré-hospitalar e recusas de serviços.
-              Permite ainda a análise de padrões, apoio à decisão e criação de relatórios estatísticos.
-            </p>
-            <ul class="sl-9">
-              <li class="sl-6"><i class="fa-solid fa-chart-line"></i> Monitorização contínua da disponibilidade operacional do veículo INEM</li>
-              <li class="sl-6"><i class="fa-solid fa-clipboard-list"></i> Monitorização contínua das recusas de serviços</li>
-              <li class="sl-6"><i class="fa-solid fa-clock-rotate-left"></i> Histórico de eventos e registos detalhados</li>
-            </ul>
-            <div class="sl-8">
-              Selecione uma opção no menu lateral para começar a gestão dos registos.
-            </div>
-          </div>
-          <div class="major-card-footer"></div>
-        </div>
-
-`,
       'page-recserv': `
 
       <div class="major-card major-last-card slx slx-recserv">
@@ -1277,33 +1070,14 @@
         </div>
 
 `,
-      'page-docimport': `
+      'page-docimport': cb360Welcome({title: "GESTÃO DE DOCUMENTAÇÃO OPERACIONAL E INSTITUCIONAL (DOCS 360)",
+        intro: "O <strong>DOCS 360</strong> trata da <strong>documentação operacional</strong> enviada às entidades competentes: reporte, planeamento e estados dos meios, com rigor e rastreabilidade.",
+        items: [
+          ["fa-file-lines", "CREPC Algarve", "MOA, Anexos G1/G2 e situação operacional.", "page-crepcalg", "CREPC Algarve"],
+          ["fa-calendar-days", "Planeamento Diário", "Planeamento dos turnos D e N, rascunho e emissão.", "page-plandir", "Planeamento Diário"],
+          ["fa-fire", "SITOP de Veículos", "Inoperacionalidades e operacionalidades dos veículos às entidades.", "page-inocrepc", "Sitop de Veículos"]
+        ]}),
 
-        <div class="major-card last-card">
-          <div class="major-card-header">GESTÃO DE DOCUMENTAÇÃO OPERACIONAL E INSTITUCIONAL (DOC 360)</div>
-          <div class="major-card-body sl-1">
-            <p class="sl-2">
-              O módulo <strong>DOCS 360</strong> é o módulo responsável pela <strong>gestão e comunicação documental</strong> essencial à atividade operacional e administrativa do seu Corpo de Bombeiros.
-              Este sistema integra processos de reporte, planeamento e envio de documentação às entidades competentes, garantindo rigor e rastreabilidade em todas as comunicações oficiais.
-            </p>
-            <div class="sl-82">
-              <strong>Funcionalidades Principais:</strong>
-            </div>
-            <ul class="sl-83">
-              <li class="sl-84"><i class="fa-solid fa-file-lines"></i> <strong>Formulários Oficiais CREPC Algarve</strong> – envio e atualização de documentação obrigatória, como <em>MOA</em>, <em>Anexo G2</em> e outros 
-                formulários operacionais.</li>
-              <li class="sl-84"><i class="fa-solid fa-calendar-days"></i> <strong>Planeamentos Diários</strong> – gestão estruturada de recursos e previsões do serviço diário do CB Faro - Cruz Lusa.</li>
-              <li class="sl-84"><i class="fa-solid fa-fire"></i> <strong>Comunicação de Inoperacionalidades e Operacionalidades</strong> – automatização do envio de estados de veículos e equipamentos às entidades 
-                designadas (CREPC, CHEFIAS, COMANDO, etc.).</li>
-            </ul>
-            <div class="sl-8">
-              Selecione uma opção no menu lateral para aceder à documentação correspondente.
-            </div>
-          </div>
-          <div class="major-card-footer"></div>
-        </div>
-
-`,
       'page-crepcalg': `
 
         <div class="major-card major-last-card slx">

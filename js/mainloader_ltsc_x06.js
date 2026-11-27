@@ -1780,7 +1780,7 @@
     ===================================================================== */
     (function vbInjectCss() {
       const old = document.getElementById('vb-css');
-      if (old && old.dataset.v === '2') return;
+      if (old && old.dataset.v === '3') return;
       if (old) old.remove();
       const css = `
       .vb {font-size: 13px; color: #2c3e50;}
@@ -1794,7 +1794,7 @@
       .vb-chip i {width: 8px; height: 8px; border-radius: 50%; display: inline-block;}
       .vb-chip.on {background: #2c3e50; color: #fff; border-color: #2c3e50;}
       .vb-search {margin-left: auto; height: 32px; border: 1px solid #dee2e6; border-radius: 8px; padding: 0 10px; font-size: 12.5px; min-width: 220px;}
-      .vb-kpis {display: grid; grid-template-columns: repeat(4, minmax(140px, 1fr)); gap: 10px; margin-bottom: 14px;}
+      .vb-kpis {display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 14px;}
       .vb-kpi {background: #fff; border: 1px solid #e9ecef; border-radius: 10px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.05); border-left: 4px solid var(--c);}
       .vb-kpi-ico {width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--c) 14%, #fff); color: var(--c); font-size: 17px; flex-shrink: 0;}
       .vb-kpi b {display: block; font-size: 22px; line-height: 1.1; color: #1f2d3a;}
@@ -1845,11 +1845,18 @@
       .vb-cell {display: block; margin: 0 auto; width: 18px; height: 18px; border-radius: 5px;}
       .vb-cell.p {background: linear-gradient(135deg, #ffb74d, #ef6c00);}
       .vb-cell.a {background: linear-gradient(135deg, #66bb6a, #2e7d32);}
+      .vb-cell.w {background: linear-gradient(135deg, #b39ddb, #5e35b1);}
       .vb-cell.r {background: repeating-linear-gradient(45deg, #ef9a9a 0 3px, #e53935 3px 6px); opacity: .75;}
       .vb-state {display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap;}
       .vb-state.p {background: #fff3e0; color: #e65100;}
       .vb-state.a {background: #e8f5e9; color: #2e7d32;}
       .vb-state.r {background: #ffebee; color: #c62828;}
+      .vb-state.w {background: #ede7f6; color: #5e35b1;}
+      .vb-op {margin-top: 4px; font-size: 10.5px; font-weight: 600; white-space: nowrap;}
+      .vb-op.pos {color: #2e7d32;} .vb-op.neg {color: #c62828;}
+      .vb-note {display: inline-block; min-width: 170px; max-width: 200px; white-space: normal; font-size: 11px; font-weight: 600; line-height: 1.3; color: #5e35b1;}
+      .vb-note.neg {color: #c62828;}
+      .vb-btn.op {width: auto; padding: 0 9px; font-size: 11.5px; gap: 5px;}
       .vb-grid .vb-act {padding: 6px 14px; white-space: nowrap; text-align: center; width: 1%; min-width: 100px; box-sizing: border-box;}
       .vb-act .vb-btn + .vb-btn {margin-left: 6px;}
       .vb-btn {border: 0; border-radius: 6px; width: 30px; height: 28px; padding: 0; font-size: 14px; font-weight: 700; cursor: pointer; color: #fff; display: inline-flex; align-items: center; justify-content: center;}
@@ -1871,17 +1878,25 @@
       `;
       const st = document.createElement('style');
       st.id = 'vb-css';
-      st.dataset.v = '2';
+      st.dataset.v = '3';
       st.textContent = css;
       document.head.appendChild(st);
     })();
     function createVacBoard(cfg) {
       const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
       const WD = ['D','S','T','Q','Q','S','S'];
-      const ST = {'Em Aprovação': 'p', 'Aprovadas': 'a', 'Recusadas': 'r'};
-      const ST_LABEL = {p: 'Em aprovação', a: 'Aprovadas', r: 'Recusadas'};
+      const ST = {'Em Aprovação': 'p', 'Aprovadas': 'a', 'Recusadas': 'r', 'Aguarda Parecer': 'w'};
+      const ST_LABEL = {p: 'Em aprovação', a: 'Aprovadas', r: 'Recusadas', w: 'Aguarda parecer'};
+      /* PARECER DO CHEFE DE SECÇÃO (só quando cfg.chief existe = Voluntariado; SQL 58)
+         - chefe de secção (não admin): vê só os pedidos da sua secção e dá parecer aos que aguardam
+         - restantes (Comando/admin): aguarda parecer -> sem opções; parecer negativo -> sem opções; favorável -> aprovar/recusar */
+      const sameN = (a, b) => String(a ?? '').replace(/^0+/, '') === String(b ?? '').replace(/^0+/, '');
+      const chiefOnly = () => !!(cfg.chief && S.me && S.me.is_section_chief && S.me.user_role !== 'admin');
+      const elemOf = x => S.elems[x.n_int] || S.elems[String(parseInt(x.n_int, 10))] || {};
+      const myChiefRow = x => !!(cfg.chief && S.me && S.me.is_section_chief && S.me.section && elemOf(x).section === S.me.section && !sameN(x.n_int, S.me.n_int));
+      const actionable = x => { const k = stKey(x); return k === 'w' ? myChiefRow(x) : (k === 'p' && !chiefOnly()); };
       const now = new Date();
-      const S = {year: now.getFullYear(), month: null, filter: 'all', q: '', rows: [], elems: {}, loaded: false};
+      const S = {year: now.getFullYear(), month: null, filter: 'all', q: '', rows: [], elems: {}, loaded: false, me: null};
       const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
       const days = r => String(r.day || '').split(',').map(d => parseInt(d, 10)).filter(d => !isNaN(d)).sort((a, b) => a - b);
       const stKey = r => ST[r.state] || 'p';
@@ -1915,16 +1930,21 @@
         else board.style.cursor = 'progress';
         const corp = sessionStorage.getItem('currentCorpOperNr');
         try {
-          const r = await fetch(`${SUPABASE_URL}/rest/v1/ped_vacat?select=id,n_int,year,month,day,state&corp_oper_nr=eq.${corp}&vacation_type=eq.${encodeURIComponent(cfg.type)}&year=eq.${S.year}&order=month.asc,n_int.asc`, {headers: getSupabaseHeaders()});
+          if (cfg.chief && !S.me) {
+            const rm = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?select=n_int,section,is_section_chief,user_role&corp_oper_nr=eq.${corp}&n_int=eq.${encodeURIComponent(sessionStorage.getItem('currentNInt') || '')}&limit=1`, {headers: getSupabaseHeaders()});
+            S.me = rm.ok ? ((await rm.json())[0] || {}) : {};
+          }
+          const r = await fetch(`${SUPABASE_URL}/rest/v1/ped_vacat?select=id,n_int,year,month,day,state${cfg.chief ? ',chief_opinion,chief_name,chief_at' : ''}&corp_oper_nr=eq.${corp}&vacation_type=eq.${encodeURIComponent(cfg.type)}&year=eq.${S.year}&order=month.asc,n_int.asc`, {headers: getSupabaseHeaders()});
           if (!r.ok) throw new Error(await r.text());
           S.rows = (await r.json()).map(x => ({...x, id: Number(x.id), year: Number(x.year), month: Number(x.month)}));
           const missing = [...new Set(S.rows.map(x => x.n_int))].filter(n => !S.elems[n]);
           if (missing.length) {
-            const re = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?select=n_int,full_name,abv_name,patent&corp_oper_nr=eq.${corp}&n_int=in.(${missing.join(',')})`, {headers: getSupabaseHeaders()});
+            const re = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?select=n_int,full_name,abv_name,patent${cfg.chief ? ',section' : ''}&corp_oper_nr=eq.${corp}&n_int=in.(${missing.join(',')})`, {headers: getSupabaseHeaders()});
             if (re.ok) (await re.json()).forEach(e => { S.elems[e.n_int] = e; S.elems[String(parseInt(e.n_int, 10))] = e; });
           }
+          if (chiefOnly()) S.rows = S.rows.filter(myChiefRow);   /* chefe: só a sua secção */
           if (S.month === null) {
-            const pend = S.rows.find(x => stKey(x) === 'p') || S.rows[0];
+            const pend = S.rows.find(actionable) || S.rows[0];
             S.month = pend ? pend.month : (S.year === now.getFullYear() ? now.getMonth() + 1 : 1);
           }
           S.loaded = true;
@@ -1954,10 +1974,11 @@
           <div class="vb">
             <div class="vb-toolbar">
               <div class="vb-year"><button type="button" data-y="-1" title="Ano anterior">‹</button><span>${S.year}</span><button type="button" data-y="1" title="Ano seguinte">›</button></div>
-              <div class="vb-chips">${chip('all', 'Todos')}${chip('p', 'Em aprovação', '#ef6c00')}${chip('a', 'Aprovadas', '#2e7d32')}${chip('r', 'Recusadas', '#e53935')}</div>
+              <div class="vb-chips">${chip('all', 'Todos')}${cfg.chief ? chip('w', 'Aguarda parecer', '#5e35b1') : ''}${chip('p', 'Em aprovação', '#ef6c00')}${chip('a', 'Aprovadas', '#2e7d32')}${chip('r', 'Recusadas', '#e53935')}</div>
               <input type="text" class="vb-search" placeholder="Procurar nº ou nome…" value="${esc(S.q)}">
             </div>
             <div class="vb-kpis">
+              ${cfg.chief ? kpi('#5e35b1', '✎', cnt('w'), 'Aguarda parecer') : ''}
               ${kpi('#ef6c00', '⏳', cnt('p'), 'Em aprovação')}
               ${kpi('#2e7d32', '✓', cnt('a'), 'Aprovadas')}
               ${kpi('#e53935', '✕', cnt('r'), 'Recusadas')}
@@ -1965,13 +1986,13 @@
             </div>
             <div class="vb-months">
               ${MONTHS.map((n, i) => {
-                const m = i + 1, list = byMonth(m), p = list.filter(x => stKey(x) === 'p').length;
+                const m = i + 1, list = byMonth(m), p = list.filter(actionable).length, w = list.filter(x => stKey(x) === 'w').length;
                 const a = list.filter(x => stKey(x) === 'a').length, r = list.filter(x => stKey(x) === 'r').length, t = list.length || 1;
                 return `<div class="vb-month ${list.length ? '' : 'empty'} ${S.month === m ? 'sel' : ''}" data-m="${m}">
                   ${p ? `<span class="vb-pend" title="${p} por tratar">${p}</span>` : ''}
                   <div class="vb-mname">${n}</div>
                   <div class="vb-mcount">${list.length ? `${list.length} pedido${list.length > 1 ? 's' : ''}` : 'Sem pedidos'}</div>
-                  <div class="vb-mbar">${list.length ? `<span style="width:${a / t * 100}%;background:#2e7d32"></span><span style="width:${p / t * 100}%;background:#ef6c00"></span><span style="width:${r / t * 100}%;background:#e53935"></span>` : ''}</div>
+                  <div class="vb-mbar">${list.length ? `<span style="width:${a / t * 100}%;background:#2e7d32"></span><span style="width:${(list.filter(x => stKey(x) === 'p').length) / t * 100}%;background:#ef6c00"></span><span style="width:${w / t * 100}%;background:#5e35b1"></span><span style="width:${r / t * 100}%;background:#e53935"></span>` : ''}</div>
                 </div>`;
               }).join('')}
             </div>
@@ -2007,6 +2028,7 @@
             <h4>${MONTHS[m - 1]} ${y}</h4>
             <span class="vb-sub">${list.length} pedido${list.length === 1 ? '' : 's'}${S.filter !== 'all' ? ` · ${ST_LABEL[S.filter].toLowerCase()}` : ''}</span>
             <div class="vb-legend">
+              ${cfg.chief ? '<span><i style="background:linear-gradient(135deg,#b39ddb,#5e35b1)"></i>Aguarda parecer</span>' : ''}
               <span><i style="background:linear-gradient(135deg,#ffb74d,#ef6c00)"></i>Em aprovação</span>
               <span><i style="background:linear-gradient(135deg,#66bb6a,#2e7d32)"></i>Aprovada</span>
               <span><i style="background:repeating-linear-gradient(45deg,#ef9a9a 0 3px,#e53935 3px 6px)"></i>Recusada</span>
@@ -2020,16 +2042,25 @@
         const limit = cfg.overlapLimit || 0;
         const thead = `<tr><th class="vb-who">Elemento</th>${cols.map(d => `<th class="vb-day ${cls(d)}" title="${esc(hol.get(d) || '')}"><b>${d}</b>${WD[new Date(y, m - 1, d).getDay()]}</th>`).join('')}<th style="padding:0 10px; width:1%;">Estado</th><th class="vb-act">Ações</th></tr>`;
         const body = list.map(x => {
-          const e = S.elems[x.n_int] || S.elems[String(parseInt(x.n_int, 10))] || {}, k = stKey(x), ds = new Set(days(x));
+          const e = elemOf(x), k = stKey(x), ds = new Set(days(x));
+          const dt = x.chief_at ? new Date(x.chief_at).toLocaleDateString('pt-PT', {day: '2-digit', month: '2-digit'}) : '';
+          const op = cfg.chief && x.chief_opinion ? `<div class="vb-op ${x.chief_opinion === 'Favorável' ? 'pos' : 'neg'}">Parecer ${x.chief_opinion === 'Favorável' ? 'favorável' : 'desfavorável'}${x.chief_name ? ' · ' + esc(x.chief_name) : ''}${dt ? ' · ' + dt : ''}</div>` : '';
+          let acts = `<button type="button" class="vb-btn ok" data-id="${x.id}" data-s="Aprovadas" title="Aprovar" ${k === 'a' ? 'disabled' : ''}>✓</button>
+              <button type="button" class="vb-btn no" data-id="${x.id}" data-s="Recusadas" title="Recusar" ${k === 'r' ? 'disabled' : ''}>✕</button>`;
+          if (cfg.chief) {
+            if (k === 'w') acts = myChiefRow(x)
+              ? `<button type="button" class="vb-btn ok op" data-op="1" data-id="${x.id}" title="Parecer favorável">✓ Favorável</button>
+                 <button type="button" class="vb-btn no op" data-op="0" data-id="${x.id}" title="Parecer desfavorável">✕ Desfavorável</button>`
+              : '<span class="vb-note">Aguarda parecer do chefe de secção</span>';
+            else if (x.chief_opinion === 'Desfavorável') acts = '<span class="vb-note neg">Chefe de secção deu parecer negativo</span>';
+            else if (chiefOnly()) acts = k === 'p' ? '<span class="vb-note" style="color:#6c757d">Com o Comando para validação</span>' : '';
+          }
           return `<tr>
             <td class="vb-who"><div class="vb-name">${esc(e.full_name || 'Nº ' + x.n_int)}</div><div class="vb-meta">Nº ${esc(x.n_int)}${e.patent ? ' · ' + esc(e.patent) : ''}</div>
               <div class="vb-days">${groupDays([...ds])} <small>· ${ds.size} dia${ds.size === 1 ? '' : 's'}</small></div></td>
             ${cols.map(d => `<td class="vb-day ${cls(d)}">${ds.has(d) ? `<span class="vb-cell ${k}" title="${d}/${m} · ${ST_LABEL[k]}"></span>` : ''}</td>`).join('')}
-            <td style="padding:0 10px; text-align:center; width:1%;"><span class="vb-state ${k}" id="${cfg.badgeId(x.id)}">${esc(x.state)}</span></td>
-            <td class="vb-act">
-              <button type="button" class="vb-btn ok" data-id="${x.id}" data-s="Aprovadas" title="Aprovar" ${k === 'a' ? 'disabled' : ''}>✓</button>
-              <button type="button" class="vb-btn no" data-id="${x.id}" data-s="Recusadas" title="Recusar" ${k === 'r' ? 'disabled' : ''}>✕</button>
-            </td>
+            <td style="padding:4px 10px; text-align:center; width:1%;"><span class="vb-state ${k}" id="${cfg.badgeId(x.id)}">${esc(x.state)}</span>${op}</td>
+            <td class="vb-act">${acts}</td>
           </tr>`;
         }).join('');
         const total = `<tr class="vb-total"><td class="vb-who">Por dia</td>${cols.map(d => {
@@ -2064,6 +2095,10 @@
           if (!row) return;
           const tr = b.closest('tr');
           if (tr) { tr.classList.add('vb-saving'); const act = tr.querySelector('.vb-act'); if (act) act.innerHTML = '<span class="vb-spin"></span>'; }
+          if (b.dataset.op != null) {   /* parecer do chefe de secção */
+            try { await cfg.chief.opinion(row, b.dataset.op === '1'); } finally { load(); }
+            return;
+          }
           try { await cfg.setState(id, b.dataset.s, row.year, row.month); }
           finally {
             const badge = document.getElementById(cfg.badgeId(id));

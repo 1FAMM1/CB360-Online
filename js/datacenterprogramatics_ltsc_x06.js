@@ -310,7 +310,7 @@
                           + L('Quadro:', 60) + S('win_quad', 'width:110px', opts(['&nbsp;', 'QCOM', 'QATIV', 'QEST', 'QEA', 'QHR', 'QRES'])))}
                       <div class="major-field"><div class="dc-r" style="display:none">${L('Nome Abreviado:', 100)}${I('win_abv_name')}</div></div>
                       ${R(L('Nome:', 75) + I('win_full_name'))}
-                      ${R(L('M. Ligeiros:', 75) + S('win_ML', 'width:75px', yesNo) + '<label>M. Pesados:</label>' + S('win_MP', 'width:75px', yesNo) + '<label>TAS:</label>' + S('win_TAS', 'width:75px', yesNo))}
+                      ${R(L('M. Ligeiros:', 75) + S('win_ML', 'width:75px', yesNo) + '<label>M. Pesados:</label>' + S('win_MP', 'width:75px', yesNo) + '<label>TAS:</label>' + S('win_TAS', 'width:75px', yesNo) + '<label>Chefe de Secção:</label>' + S('win_section_chief', 'width:75px', opts(['&nbsp;', 'Sim', 'Não'])))}
                     </div>
                   </div>
                 </div>
@@ -1037,7 +1037,7 @@
       }
     }
     function clearEditForm() {
-      const ids = ["win_state", "win_state_from", "win_type", "win_ofope", "win_n_int", "win_n_file", "win_patent", "win_patent_abv", "win_section", "win_quad", "win_abv_name", "win_full_name", "win_MP", 
+      const ids = ["win_state", "win_state_from", "win_type", "win_ofope", "win_section_chief", "win_n_int", "win_n_file", "win_patent", "win_patent_abv", "win_section", "win_quad", "win_abv_name", "win_full_name", "win_MP", 
                    "win_ML", "win_TAS", "win_nif", "win_niss", "win_nib", "win_phone", "win_mobile", "win_mail", "win_user_name_main", "win_password_main", "win_user_name_mobile", "win_password_mobile", "win_validate_main", "win_validate_mobile", "link_type"];
       ids.forEach(id => {
         const el = document.getElementById(id);
@@ -1126,6 +1126,9 @@
       }
       if (document.getElementById("win_ofope")) {
         document.getElementById("win_ofope").value = row.is_ofope ? "Sim" : "Não";
+      }
+      if (document.getElementById("win_section_chief")) {
+        document.getElementById("win_section_chief").value = row.is_section_chief ? "Sim" : "Não";
       }      
       toggleStateDateVisibility();      
       const roleMap = {admin: "Administrador", subadmin: "Sub-Administrador", user: "Utilizador"};
@@ -1238,7 +1241,7 @@
                             abv_name: (document.getElementById("win_abv_name")?.value || "").trim() || buildAbvName(fullName), full_name: fullName, photo_url: photoUrl, 
                             ML: document.getElementById("win_ML").value === "true", MP: document.getElementById("win_MP").value === "true", TAS: document.getElementById("win_TAS").value === "true", 
                             section: document.getElementById("win_section").value, type_quad: document.getElementById("win_quad").value,  phone: document.getElementById("win_phone").value, 
-                            mobile_phone: document.getElementById("win_mobile").value, email: document.getElementById("win_mail").value,  is_ofope: document.getElementById("win_ofope").value === "Sim", 
+                            mobile_phone: document.getElementById("win_mobile").value, email: document.getElementById("win_mail").value,  is_ofope: document.getElementById("win_ofope").value === "Sim", is_section_chief: document.getElementById("win_section_chief")?.value === "Sim", 
                             elem_state: document.getElementById("win_state").value === "Ativo", inactive_from: document.getElementById("win_state").value === "Inativo" ? document.getElementById("win_state_from").value : null, link_type: document.getElementById("link_type")?.value || null,
                             acess: document.querySelector('.access-checkbox') ? Array.from(document.querySelectorAll('.access-checkbox:checked')).map(cb => cb.value).join(", ") : undefined, corp_oper_nr: corpOperNr, last_updated: new Date().toISOString(),
                             user_role: mapUserRole()

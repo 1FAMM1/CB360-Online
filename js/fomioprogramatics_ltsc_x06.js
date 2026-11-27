@@ -3186,7 +3186,7 @@
        stage: 'pedido' | 'parecer' | 'decisao'. Corre em segundo plano: quem chama não espera.
        A base de dados devolve numa só ida os destinatários (PARA/CC), os dados do pedido e da corporação;
        o email sai pela API send_email. keepalive: o envio termina mesmo que se mude de página ou feche a app. */
-    function cb360VacatMail(id, stage, supaUrl, supaHeaders, mailHeaders) {
+    function cb360VacatMail(id, stage, supaUrl, supaHeaders, mailHeaders, onData) {
       (async () => {
         try {
           const r = await fetch(`${supaUrl}/rest/v1/rpc/cb360_vacat_mail`, {
@@ -3194,6 +3194,7 @@
           });
           if (!r.ok) return;
           const d = await r.json();
+          if (d && onData) { try { onData(d); } catch (e) { console.warn(e); } }
           if (!d || !Array.isArray(d.to) || !d.to.length) return;
           const q = d.req || {}, c = d.corp || {};
           const M = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
@@ -3316,7 +3317,21 @@
             console.error("Erro no Push de férias:", e);
           }
           if (newState === 'Aprovadas' || newState === 'Recusadas') {
-            cb360VacatMail(id, 'decisao', SUPABASE_URL, getSupabaseHeaders(), cb360PushHeaders());   /* email: elemento, CC secção + chefe */
+            /* email: elemento, CC secção + chefe · e o(s) chefe(s) da secção recebem também aviso (sino) + push (SQL 63) */
+            cb360VacatMail(id, 'decisao', SUPABASE_URL, getSupabaseHeaders(), cb360PushHeaders(), d => {
+              const q = d.req || {}, who = q.abv_name || q.full_name || `Nº ${q.n_int}`;
+              const msgChief = `O Comando ${newState === 'Aprovadas' ? 'aprovou' : 'recusou'} as férias de voluntariado de ${who} (${monthName} de ${year}).`;
+              (d.chief_nints || []).forEach(cn => {
+                fetch(`${SUPABASE_URL}/rest/v1/user_notifications`, {
+                  method: 'POST', headers: getSupabaseHeaders(),
+                  body: JSON.stringify({n_int: cn, corp_oper_nr: request.corp_oper_nr, title: "Gestão de Férias", message: msgChief, is_read: false, created_at: new Date().toISOString()})
+                }).catch(e => console.warn('Aviso ao chefe:', e));
+                fetch('https://cb-360-app.vercel.app/api/sendPush', {
+                  method: 'POST', headers: cb360PushHeaders(),
+                  body: JSON.stringify({recipient_nint: Number(cn), tipo: 'aviso', pagina: 'VacatParecer', sender_name: "Gestão de Férias", message_text: msgChief})
+                }).catch(e => console.warn('Push ao chefe:', e));
+              });
+            });
           }
           if (badge) {
             const cls = getVacatiosStatusClass(newState);

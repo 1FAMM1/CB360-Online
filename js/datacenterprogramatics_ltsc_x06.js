@@ -27,52 +27,47 @@
       #page-data .dc-r > label.f0 {flex-shrink: 0;}
       #page-data input.c {text-align: center;}
       /* corporação */
-      #page-data .dc-corp {display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap;}
-      #page-data .dc-logo {flex: 0 0 auto; border: 2px solid #ccc; border-radius: 8px; background-color: transparent; padding: 10px; width: 250px;}
-      #page-data .dc-logo .card-header {text-align: center; font-weight: bold; font-size: 16px; margin-bottom: 10px;}
+      #page-data .dc-corp {display: flex; align-items: flex-start; flex-wrap: wrap;}
+      #page-data .dc-logo {flex: 0 0 auto; border: 2px solid #ccc; border-radius: 8px; background-color: transparent;}
       #page-data .dc-logo .card-content {text-align: center;}
       #page-data .dc-logo .img {margin: 10px 0;}
-      #page-data .data-logo {width: 140px; height: 140px; border-radius: 5px; object-fit: cover; border: 1px solid #ccc; background: #888;}
+      #page-data .data-logo {width: 140px; height: 140px; object-fit: cover;}
       #page-data .dc-logo .btns {display: flex; gap: 5px; margin-top: 5px;}
       #page-data .dc-logo .btns.first {margin-top: 15px;}
       #page-data .dc-logo .btns .btn {flex: 1;}
       #page-data #corp-logo-input, #page-data #win_photo_input {display: none;}
-      #page-data .dc-corp-form {flex: 1; max-width: 100%; height: 275px; overflow-y: auto; overflow-x: hidden; padding: 20px;}
+      #page-data .dc-corp-form {flex: 1; max-width: 100%; height: 275px; overflow-y: auto; overflow-x: hidden;}
       #page-data .dc-corp-form .dc-r {margin-bottom: 4px;}
       #page-data .dc-corp-form .dc-r.last {margin-bottom: -5px;}
-      #page-data .dc-corp-form label {font-size: 13px;}
       #page-data .dc-corp-form input, #page-data .dc-corp-form select {padding: 4px; border: 1px solid #ccc; border-radius: 3px;}
-      #page-data .dc-corp-save {text-align: right; margin-top: 10px;}
+      #page-data .dc-corp-save {text-align: right;}
       #page-data .dc-corp-save .btn {padding: 6px 20px; cursor: pointer;}
       /* elementos */
       #page-data .dc-search {position: relative; display: flex; align-items: center;}
-      #page-data #win_search_element {width: 300px; padding-right: 30px;}
+      #page-data #win_search_element {padding-right: 30px;}
       #page-data .dc-search svg {position: absolute; right: 8px; pointer-events: none; color: #aaa;}
-      #page-data #elements-list, #page-data #elements-edit {padding: 0px; margin-top: 20px;}
+      #page-data #elements-list, #page-data #elements-edit {padding: 0px;}
       #page-data #elements-list .table-container {height: 500px; margin: 0;}
       #page-data #elements-container thead tr, #page-data #veícs-container thead tr {height: 40px;}
-      #page-data .dc-edit-title {padding: 16px 20px; border-bottom: 1px solid #eee;}
-      #page-data .dc-edit-title h3 {margin: 0; font-size: 16px;}
-      #page-data #elements-tabs {display: flex; border-bottom: 1px solid #ddd;}
-      #page-data .dc-tabs-body {padding: 20px;}
+      #page-data .dc-edit-title h3 {margin: 0;}
+      #page-data #elements-tabs {border-bottom: 1px solid #ddd;}
       #page-data .dc-main {display: flex; gap: 20px; align-items: flex-start;}
       #page-data .dc-photo {display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;}
-      #page-data #win_photo_preview {width: 130px; height: 130px; border: 2px dashed #ccc; border-radius: 6px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #fafafa;}
+      #page-data #win_photo_preview {width: 130px; height: 130px; display: flex; align-items: center; justify-content: center; overflow: hidden;}
       #page-data .dc-photo .btn {width: 130px; padding: 6px 0;}
-      #page-data .dc-photo .btn.rm {background: #eee; color: #555;}
       #page-data .dc-col {flex: 1; display: flex; flex-direction: column; gap: 0;}
       #page-data .dc-cols {display: flex; gap: 25px; align-items: flex-start; margin-bottom: 25px;}
       #page-data .dc-boxes {display: flex; gap: 15px; flex-wrap: wrap;}
-      #page-data .dc-box {flex: 1; min-width: 240px; border: 1px solid #ddd; border-radius: 6px; padding: 12px 15px;}
-      #page-data .dc-box > div:first-child {font-size: 14px; font-weight: bold; color: #a70c0c; margin-bottom: 10px;}
+      #page-data .dc-box {flex: 1; min-width: 240px;}
+      #page-data .dc-box > div:first-child {margin-bottom: 10px;}
       #page-data .dc-box input {flex: 1; min-width: 0;}
-      #page-data .dc-cred-title {margin-bottom: 15px; font-size: 15px; color: #777;}
+      #page-data .dc-cred-title {margin-bottom: 15px;}
       #page-data .dc-cred-title.mob {margin: 15px 0;}
       #page-data .dc-acc {display: flex; gap: 60px; flex-wrap: wrap; align-items: flex-start;}
       #page-data .dc-acc .dc-r {align-items: flex-start;}
       #page-data .dc-acc .dc-r > label {margin-right: 20px; font-size: 14px; white-space: nowrap;}
       #page-data .dc-acc .dc-r.ml50 {margin-left: 50px;}
-      #page-data .dc-save {padding: 15px 20px; border-top: 1px solid #eee; text-align: right;}
+      #page-data .dc-save {text-align: right;}
       /* veículos */
       #page-data #panel-veícs .major-card-body {padding: 10px;}
       #page-data .dc-veic {display: flex; align-items: center; flex-wrap: wrap; margin-bottom: 3px; gap: 5px;}
@@ -80,10 +75,10 @@
       #page-data .dc-veic input, #page-data .dc-veic select {padding: 5px; border: 1px solid #ccc; border-radius: 4px;}
       #page-data .dc-veic input[type=date] {padding: 4px;}
       #page-data .dc-veic select {background: white;}
-      #page-data #panel-veícs .table-container {height: 403px; margin-top: 5px;}
+      #page-data #panel-veícs .table-container {height: 403px;}
       /* emails */
-      #page-data .dc-mail-note {color: red; font-weight: bold; font-style: italic; font-size: 12px;}
-      #page-data .emails-config-container {max-height: 450px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px; background: #fafafa; padding: 10px;}
+      #page-data .dc-mail-note {font-weight: bold;}
+      #page-data .emails-config-container {max-height: 450px; overflow-y: auto; border-radius: 8px;}
       #page-data .emails-config-container .major-card {margin-bottom: 10px;}
       #page-data .emails-config-container .major-card.mb0 {margin-bottom: 0;}
       #page-data .dc-mail {display: flex; align-items: center; margin-bottom: 3px; white-space: nowrap; gap: 5px;}

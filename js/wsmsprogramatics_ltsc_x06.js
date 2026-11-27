@@ -76,7 +76,6 @@
         st.id = 'wsms-css';
         st.textContent = `
           .wsms-card.theme-inem .wsms-card-header-ems svg {animation: pulse-red-inem 2s infinite;}
-          .wsms-card-header-ems {background: #c0392b; color: #fff; padding: 9px 18px; font-size: 12px; font-weight: 600; letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px; text-shadow: 0 1px 2px rgba(0,0,0,0.25);}
           .wsms-card-header-ems {background: #c0392b; color: #fff; padding: 5px 18px; font-size: 12px; font-weight: 600; letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px; text-shadow: 0 1px 2px rgba(0,0,0,0.25); position: relative; overflow: hidden; z-index: 0;}
           .wsms-type-row {display: flex; gap: 10px;}
           .wsms-type-opt {display: flex; align-items: center; gap: 7px; padding: 6px 16px; border: 1px solid #d0d0d0; border-radius: 6px; background: #f9f9f9; cursor: pointer; transition: border-color 0.15s, background 0.15s; user-select: none;}
@@ -135,7 +134,6 @@
           #page-wsms li {margin-bottom: 8px;}
           #page-wsms .outro {margin-top: 40px; text-align: center; font-style: italic; color: #6c757d;}
           #page-active_occurrences .posit-btn, #page-active_occurrences .occ-upd-btn {font-size: 10px;}
-          #page-active_occurrences .occ-upd-btn {background: #2c3e50; color: #fff;}
           #page-active_occurrences .occ-kpis {display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; align-items: center;}
           #page-active_occurrences .occ-kpi {background: #fff; border: 1px solid #e9ecef; border-left: 4px solid var(--c); border-radius: 10px; padding: 8px 14px; display: flex; gap: 12px; align-items: center;}
           #page-active_occurrences .occ-bar {display: flex; align-items: center; gap: 8px; margin: 0;}
@@ -230,7 +228,7 @@
           #page-inem-services .ems-sit:focus {border-color: #c0392b; box-shadow: 0 0 0 2px rgba(192,57,43,.12);}   /* igual aos outros campos */
           #page-inem-services .theme-inem .ems-sit:focus {border-color: #f0b400; box-shadow: 0 0 0 2px rgba(240,180,0,.18);}
           #page-inem-services .ems-types .wsms-type-opt label small {font-size: 11.5px; font-weight: 500; color: #6c757d; letter-spacing: 0;}
-          #page-inem-services .ems-cols {grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px;}
+          #page-inem-services .ems-cols {gap: 5px;}
           #page-inem-services .ems-cols {grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 2fr); grid-template-areas: "b1 b2 b4" "b3 b3 b4";}
           #page-inem-services #ems-b1 {grid-area: b1;}
           #page-inem-services #ems-b2 {grid-area: b2;}
@@ -259,7 +257,7 @@
           #page-inem-services .leaflet-control-layers-base label + label {margin-top: 4px;}
           .ems-triage { display: flex; align-items: center; gap: 10px; }
           #page-inem-services .ems-triage select { width: 90px !important; flex: none; }
-          #triage-dots { display: flex; gap: 4px; align-items: center; min-width: 50px; }
+          #triage-dots { min-width: 50px; }
           #triage-dots i { width: 14px; height: 14px; border-radius: 50%; display: block; }
           #triage-dots { display: flex; gap: 4px; align-items: center; }
           #page-inem-services #triage-dots { display: flex; gap: 4px; align-items: center; min-width: 0 !important; }
@@ -290,9 +288,6 @@
           #page-solicitation .sol-stp button:hover {background: #e9ecef;}
           #page-solicitation .sol-prev {margin: 10px 0 0; padding: 10px 12px; border: 1px dashed #cfd6dd; border-radius: 8px; background: #f8f9fa; font: 12.5px/1.6 ui-monospace, Consolas, monospace; color: #2c3e50; white-space: pre-wrap; word-break: break-word;}
           .wsms-pg .sol-g2 {grid-template-columns: 1fr 1fr;}
-          .wsms-pg .ins-grid input, .wsms-pg .ins-grid select {width: 100% !important; min-width: 0; box-sizing: border-box;}
-          .wsms-pg .ins-grid .major-field {min-width: 0; margin: 0;}
-          .wsms-pg .ins-grid .major-field label {white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
           #page_insert_occurrence .ins-card {min-height: 776px; display: flex; flex-direction: column;}   /* mesmo tamanho do layout antigo (2 cartões) */
           #page_insert_occurrence .ins-card .wsms-card-body {padding: 12px 16px; flex: 1;}
           .wsms-pg .ins-layout {display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: 5px; align-items: stretch;}

@@ -129,7 +129,7 @@
         .slx-rep .sl-56 td {background: #f8f9fa; border-top: 1px solid #e3e7eb !important; font-weight: 800; color: #2c3e50; padding: 9px 12px !important;}
 
         /* ===== PPIs (A22, Aeroporto, Linha Férrea): só estilo, mesmas funções e cores de alarme ===== */
-        #page-ppia22 > .major-card > .major-card-body, #page-ppiaero > .major-card > .major-card-body, #page-ppilinfer > .major-card > .major-card-body {background: #f4f5f7; padding: 12px 16px; display: flex; flex-direction: column; gap: 10px;}
+        #page-ppia22 > .major-card > .major-card-body, #page-ppiaero > .major-card > .major-card-body, #page-ppilinfer > .major-card > .major-card-body {background: #f4f5f7; padding: 12px 16px; display: flex; flex-direction: column;}
         /* escolha do tipo de consulta: contentor branco ao centro */
         #page-ppia22 .sl-14, #page-ppilinfer .sl-14 {justify-content: center !important; margin: 0 !important;}
         #ppia22-main-options, #ppilinfer-main-options {flex-direction: row !important; align-items: center !important; gap: 10px; background: #fff !important; border: 1px solid #e3e7eb !important;
@@ -192,15 +192,15 @@
         #ppiaero-grid-controls .btn.active {opacity: 1; border-color: #fff !important; box-shadow: 0 0 0 3px #2c3e50 !important;}
         #ppiaero-grid-controls:has(.btn.active) .btn:not(.active) {opacity: .45;}
         /* resultados: tabelas e títulos */
-        #page-ppia22 .table-elements, #page-ppiaero .table-elements, #page-ppilinfer .table-elements {border-collapse: separate !important; border-spacing: 0 !important; background: #fff; border: 1px solid #dfe3e8 !important; border-radius: 10px; overflow: hidden; margin: 6px 0 10px !important;}
+        #page-ppia22 .table-elements, #page-ppiaero .table-elements, #page-ppilinfer .table-elements {border-collapse: separate !important; border-spacing: 0 !important; background: #fff; border: 1px solid #dfe3e8 !important; border-radius: 10px; overflow: hidden;}
         #page-ppia22 .table-elements td, #page-ppiaero .table-elements td, #page-ppilinfer .table-elements td, #page-ppia22 .table-elements th, #page-ppiaero .table-elements th, #page-ppilinfer .table-elements th {border: 0 !important; border-bottom: 1px solid #e3e7eb !important; padding: 7px 10px !important; font-size: 12.5px;}
         #page-ppia22 .table-elements td + td, #page-ppiaero .table-elements td + td, #page-ppilinfer .table-elements td + td, #page-ppia22 .table-elements th + th, #page-ppiaero .table-elements th + th, #page-ppilinfer .table-elements th + th {border-left: 1px solid #e3e7eb !important;}
         #page-ppia22 .table-elements tr:last-child td, #page-ppiaero .table-elements tr:last-child td, #page-ppilinfer .table-elements tr:last-child td {border-bottom: 0 !important;}
         #page-ppia22 .table-elements th, #page-ppiaero .table-elements th, #page-ppilinfer .table-elements th {font-size: 12px !important; font-weight: 800 !important; letter-spacing: .3px;}
         #page-ppia22 .table-elements th button, #page-ppiaero .table-elements th button, #page-ppilinfer .table-elements th button, #page-ppia22 .table-elements td button, #page-ppiaero .table-elements td button, #page-ppilinfer .table-elements td button {border: 0; border-radius: 6px; background: rgba(255,255,255,.75); padding: 2px 8px; font-size: 14px; cursor: pointer;}
-        #page-ppia22 h3, #page-ppiaero h3, #page-ppilinfer h3 {border-radius: 8px !important; padding: 7px 12px !important; font-size: 13px !important; letter-spacing: .3px; margin: 8px 0 0 !important;}
-        #page-ppia22 .intervention-notice, #page-ppiaero .intervention-notice, #page-ppilinfer .intervention-notice, #page-ppia22 .cumulative-alert, #page-ppiaero .cumulative-alert, #page-ppilinfer .cumulative-alert {border-radius: 10px !important; margin: 0 0 8px !important; font-size: 13.5px !important; padding: 10px 14px !important;}
-        #ppia22-specials-container > div:first-child, #ppilinfer-specials-container > div:first-child {border-radius: 10px 10px 0 0; margin: 0 !important;}
+        #page-ppia22 h3, #page-ppiaero h3, #page-ppilinfer h3 {border-radius: 8px !important; padding: 7px 12px !important; font-size: 13px !important; letter-spacing: .3px;}
+        #page-ppia22 .intervention-notice, #page-ppiaero .intervention-notice, #page-ppilinfer .intervention-notice, #page-ppia22 .cumulative-alert, #page-ppiaero .cumulative-alert, #page-ppilinfer .cumulative-alert {border-radius: 10px !important; font-size: 13.5px !important; padding: 10px 14px !important;}
+        #ppia22-specials-container > div:first-child, #ppilinfer-specials-container > div:first-child {margin: 0 !important;}
         #ppiaero-grid-header td {border-radius: 10px !important;}
         /* espaçamentos de 5px entre blocos do resultado */
         #page-ppia22 > .major-card > .major-card-body, #page-ppiaero > .major-card > .major-card-body, #page-ppilinfer > .major-card > .major-card-body {gap: 5px !important;}
@@ -509,7 +509,7 @@
         /* - de dayliplan_ltsc_x04.css */
         #plandir-layout-wrapper {display: flex; align-items: flex-start; gap: 12px; margin-top: 10px; overflow: visible;}
         #plandir-left-col {min-width: 0;}
-        #plandir-right-col {width: 500px; flex-shrink: 0; position: -webkit-sticky; position: sticky; top: 10px; height: fit-content; align-self: flex-start; z-index: 0;}
+        #plandir-right-col {width: 500px; flex-shrink: 0; position: sticky; top: 10px; height: fit-content; align-self: flex-start; z-index: 0;}
         .plandir-side-table {width: 100%; border-collapse: collapse; font-size: 12px; border: 1px solid #d0d0d0;}
         .plandir-side-table th {padding: 6px 8px; text-align: center; background-color: #dcdcdc; color: #444; font-size: 12px; font-weight: 600; letter-spacing: 0.03em; border: 1px solid #b8b8b8;}
         .plandir-side-table td {border: 1px solid #d0d0d0; padding: 5px 8px; background: #f5f5f5; font-size: 12px;}

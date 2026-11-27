@@ -3518,8 +3518,6 @@
         const style = document.createElement("style");
         style.id = "signa-style";
         style.textContent = `
-          .signa-wrapper {display: flex; gap: 10px; font-family: 'Segoe UI', sans-serif;}
-          .signa-tables {flex: 1; min-width: 0;}
           .signa-sidebar {width: 500px; flex-shrink: 0; margin-top: 12px;}
           .signa-wrapper {display: flex; gap: 10px; margin-top:15px; font-family: 'Segoe UI', sans-serif;}
           .signa-tables-wrapper {flex: 1; min-width: 0; max-height: 630px; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; scrollbar-color: #cbd5e1 #f1f5f9;}

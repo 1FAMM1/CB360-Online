@@ -57,64 +57,56 @@
       #ocrReport {display: grid; grid-template-columns: 1fr 1fr; gap: 3px 20px;}
       /* - regras próprias do módulo */
       #page-utilities .major-card-header svg {opacity: .9;}
-      #page-utilities .panel-group-title.first {margin-top: 2px;}
-      #page-utilities #ppi-container {margin-top: 20px;}
       #page-utilities .act {margin: 15px 0 0 0;}
       #page-utilities .act.cma {margin: 20px 0 0 0;}
       #page-utilities .in5 {margin: 5px 0 0 0;}
       /* EPE / PPI */
-      #page-utilities .epe-card {height: 170px; margin: -10px 0 0 0;}
       #page-utilities .epe-card > .data-value {font-size: 16px; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-bottom: 12px; font-weight: bold;}
       /* informações relevantes */
       #page-utilities .add-info {margin-bottom: 20px; font-weight: bold;}
-      #page-utilities #info-container {display: grid; grid-template-columns: 1fr 1fr; gap: 20px;}
-      #page-utilities .ri-card {padding: 15px; background: #fdfdfd; border: 1px solid #e0e0e0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); position: relative;}
-      #page-utilities .ri-head {background: #343a40; margin: -15px -15px 15px -15px; padding: 8px 15px; border-radius: 8px 8px 0 0; font-weight: bold; color: #fff; display: flex;
-                                justify-content: space-between; align-items: center; font-size: 12px; letter-spacing: 1px;}
-      #page-utilities .ri-head button {background: #dc3545; border: none; color: #fff; border-radius: 4px; padding: 2px 8px; cursor: pointer; font-size: 10px; font-weight: bold;}
-      #page-utilities .ri-row {display: flex; align-items: center; margin-bottom: 12px;}
+      #page-utilities #info-container {display: grid; grid-template-columns: 1fr 1fr;}
+      #page-utilities .ri-card {background: #fdfdfd; border: 1px solid #e0e0e0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); position: relative;}
+      #page-utilities .ri-head {font-weight: bold; display: flex; justify-content: space-between; align-items: center;}
+      #page-utilities .ri-head button {cursor: pointer;}
+      #page-utilities .ri-row {display: flex; align-items: center;}
       #page-utilities .ri-row.top {align-items: flex-start;}
       #page-utilities .ri-row label {width: 60px; font-weight: bold; font-size: 13px; color: #444; margin: 0;}
       #page-utilities .ri-row.top label {margin-top: 8px;}
       #page-utilities .ri-row input {flex: 1; padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; outline: none;}
       #page-utilities .ri-row textarea {flex: 1; height: 80px; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px; resize: none; outline: none; font-family: inherit;}
-      #page-utilities .ri-btns {display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px;}
-      #page-utilities .ri-btns .btn {padding: 5px 12px; font-size: 11px;}
+      #page-utilities .ri-btns {display: flex; gap: 10px; justify-content: flex-end;}
       /* linhas numeradas (vias, hospitais, relatórios) */
-      #page-utilities .nl {display: flex; align-items: center; gap: 5px; width: 100%; padding: 1px 0;}
-      #page-utilities .nl > label {font-weight: bold; min-width: 25px; color: #444; margin: 0; font-size: 13px;}
-      #page-utilities .nl input, #page-utilities .nl select {padding: 4px; border: 1px solid #ccc; border-radius: 4px; outline: none; font-size: 12px; height: 28px; box-sizing: border-box;}
+      #page-utilities .nl {display: flex; align-items: center; width: 100%; padding: 1px 0;}
+      #page-utilities .nl > label {margin: 0;}
+      #page-utilities .nl input, #page-utilities .nl select {outline: none; box-sizing: border-box;}
       #page-utilities .nl input[type=date], #page-utilities .nl input[type=time] {color: #666;}
       #page-utilities #routes-container {display: flex; flex-direction: column; gap: 2px; padding: 2px; margin: 5px 0 0 0;}
-      #page-utilities #ocrReport {display: grid; grid-template-columns: 1fr 1fr; gap: 2px 25px; padding: 2px; margin: 5px 0 0 0;}
+      #page-utilities #ocrReport {display: grid; grid-template-columns: 1fr 1fr;}
       #page-utilities #ocrReport input[type=date] {padding: 3px;}
       #page-utilities #ocrReport select {font-weight: 600; cursor: pointer; background-color: white;}
       #page-utilities #no-hosp {display: flex; flex-direction: column; gap: 2px; padding: 2px; margin: 5px 0 0 0;}
       #page-utilities #no-hosp input {font-size: 11px;}
-      #page-utilities .nh-head {display: flex; gap: 5px; align-items: center; padding: 2px 0; margin-bottom: 2px; text-transform: uppercase;}
-      #page-utilities .nh-head > div {text-align: center; font-size: 12px; font-weight: bold; color: #1f4b91;}
+      #page-utilities .nh-head {display: flex; gap: 5px; align-items: center; text-transform: uppercase;}
+      #page-utilities .nh-head > div {text-align: center;}
       #page-utilities .nh-head .box {display: flex; justify-content: center;}
-      #page-utilities .nh-head .box div {background: #d1d9e6; border-radius: 3px; width: 100%; padding: 2px 0; text-align: center; font-size: 12px; font-weight: bold; color: #1f4b91; box-sizing: border-box;}
-      #page-utilities .nh-pair {display: flex; gap: 2px;}
+      #page-utilities .nh-head .box div {width: 100%; padding: 2px 0; text-align: center; font-weight: bold; box-sizing: border-box;}
+      #page-utilities .nh-pair {display: flex;}
       /* centros de meios aéreos */
-      #page-utilities #cma-container {gap: 10px;}
       #page-utilities .cma-name {font-size: 16px; font-weight: bold; margin-bottom: 12px; border-bottom: 1px solid #ddd; padding-bottom: 5px; display: flex; justify-content: space-between; align-items: center;}
       #page-utilities .cma-sw {position: relative; display: inline-block; width: 46px; height: 24px;}
       #page-utilities .cma-sw input {opacity: 0; width: 0; height: 0;}
-      #page-utilities .cma-sw > span {position: absolute; cursor: pointer; inset: 0; background: #ff3b30; transition: .3s; border-radius: 24px;}
+      #page-utilities .cma-sw > span {position: absolute; cursor: pointer; inset: 0; transition: .3s; border-radius: 24px;}
       #page-utilities .cma-sw > span > span {position: absolute; height: 18px; width: 18px; left: 3px; bottom: 3px; background: white; transition: .3s; border-radius: 50%;}
-      #page-utilities .cma-sw input:checked + span {background: #28c840;}
       #page-utilities .cma-sw input:checked + span > span {transform: translateX(22px);}
       #page-utilities .cma-body {display: flex; gap: 15px; align-items: flex-start;}
-      #page-utilities .cma-img {flex: 0 0 125px; background: #f9f9f9; padding: 5px; border-radius: 4px; border: 1px solid #ddd;}
+      #page-utilities .cma-img {padding: 5px;}
       #page-utilities .cma-img img {object-fit: contain; width: 100%; height: 80px;}
-      #page-utilities .cma-fields {flex: 1; display: flex; flex-direction: column; gap: 8px;}
+      #page-utilities .cma-fields {flex: 1; display: flex; flex-direction: column;}
       #page-utilities .cma-fields > div {display: flex; align-items: center;}
-      #page-utilities .cma-fields label {width: 90px; font-weight: bold; font-size: 11px; margin-bottom: 0;}
-      #page-utilities .cma-fields input, #page-utilities .cma-fields select {flex: 1; padding: 4px; border: 1px solid #ccc; border-radius: 3px; outline: none; font-size: 12px; background: #fff; color: #000;}
-      #page-utilities .cma-fields input:disabled, #page-utilities .cma-fields select:disabled {background: #f3f3f3; color: #999;}
+      #page-utilities .cma-fields label {font-weight: bold; font-size: 11px; margin-bottom: 0;}
+      #page-utilities .cma-fields input, #page-utilities .cma-fields select {flex: 1; padding: 4px; outline: none; font-size: 12px; background: #fff; color: #000;}
       /* elementos */
-      #page-utilities #elems-container.list {display: flex; flex-wrap: wrap; justify-content: left; padding: 5px;}
+      #page-utilities #elems-container.list {display: flex; flex-wrap: wrap; justify-content: left;}
       #page-utilities #elems-container .msg {padding: 10px; font-size: 16px; color: #333;}
       /* notificações */
       #page-utilities .nt-to {flex-direction: row; align-items: center; gap: 8px;}
@@ -126,16 +118,13 @@
       #page-utilities #notification-message {flex: 1; min-height: 200px; padding: 8px 10px; border-radius: 8px; border: 1px solid #ddd; font-size: 13px; font-family: 'Segoe UI', sans-serif;
                                              resize: vertical; box-sizing: border-box; outline: none; transition: border-color .15s;}
       #page-utilities #notification-message:focus {border-color: #7b0000;}
-      #page-utilities .nt-note {margin-top: 20px;}
-      #page-utilities .nt-note label {font-size: 11px; color: red;}
+      #page-utilities .nt-note label {font-size: 11px;}
       /* emails */
-      #page-utilities .ml-card {margin-top: -5px; background: #fff; border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.06);}
+      #page-utilities .ml-card {background: #fff; border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden;}
       #page-utilities .ml-types {padding: 10px 16px; display: flex; gap: 6px; border-bottom: 1px solid #eee; flex-wrap: wrap; align-items: center;}
       #page-utilities .ml-cap {font-size: 11px; font-weight: 600; color: #999; text-transform: uppercase; letter-spacing: 0.06em; margin-right: 4px;}
-      #page-utilities .ml-type {display: inline-flex; align-items: center; background: transparent; border: 1px solid #ddd; border-radius: 8px; padding: 4px 12px; font-size: 12px; color: #666;
-                                cursor: pointer; font-family: inherit;}
-      #page-utilities .ml-type.on {background: #7b000012; border-color: #7b000055; color: #7b0000; font-weight: 500;}
-      #page-utilities .ml-band {font-size: 10px; font-weight: 600; color: #aaa; text-transform: uppercase; letter-spacing: 0.08em; padding: 6px 16px; background: #fafafa; border-bottom: 1px solid #eee; border-top: 1px solid #eee;}
+      #page-utilities .ml-type {display: inline-flex; align-items: center; background: transparent; border: 1px solid #ddd; font-size: 12px; cursor: pointer; font-family: inherit;}
+      #page-utilities .ml-band {font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; padding: 6px 16px; border-bottom: 1px solid #eee; border-top: 1px solid #eee;}
       #page-utilities .ml-line {display: flex; align-items: center; border-bottom: 1px solid #eee; padding: 0 16px; min-height: 44px; gap: 10px;}
       #page-utilities .ml-line label, #page-utilities .ml-box > label {font-size: 11px; font-weight: 600; color: #999; text-transform: uppercase; letter-spacing: 0.06em; margin: 0;}
       #page-utilities .ml-line label {min-width: 36px;}
@@ -145,7 +134,7 @@
       #page-utilities .ml-box > label {display: block; margin-bottom: 8px;}
       #page-utilities #mail-message {width: 100%; min-height: 160px; border: 1px solid #ddd; border-radius: 8px; background: #fafafa; font-size: 13px; font-family: 'Segoe UI', sans-serif; color: #222;
                                      resize: vertical; padding: 10px 12px; box-sizing: border-box; outline: none; transition: border-color .15s;}
-      #page-utilities #mail-message:focus {border-color: #7b0000; background: #fff;}
+      #page-utilities #mail-message:focus {background: #fff;}
       #page-utilities .ml-att {display: flex; align-items: center; gap: 10px;}
       #page-utilities .ml-att .btn {font-size: 12px; padding: 4px 12px;}
       #page-utilities #mail-attachments {display: none;}

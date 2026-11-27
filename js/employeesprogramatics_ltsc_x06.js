@@ -24,10 +24,9 @@
         .major-card-footer > .rh-note {font-size: 11px; color: #222;}
         #page-employees > .major-card > .major-card-body {font-family: 'Segoe UI', sans-serif;}
         #page-employees .rh-intro {font-size: 15px; margin-bottom: 20px; color: #333;}
-        #page-employees .rh-feat {background: linear-gradient(90deg, #e0e0e0, #d6d6d6); padding: 15px 20px; border-left: 5px solid #007bff; border-radius: 6px; margin-bottom: 20px;}
+        #page-employees .rh-feat {padding: 15px 20px; margin-bottom: 20px;}
         #page-employees .rh-list {margin-bottom: 20px;}
         #page-employees .rh-list ul {list-style: none; padding-left: 10px; line-height: 1.8;}
-        #page-employees .rh-list li {color: #0d630e;}
         #page-employees .rh-start {text-align: center; font-style: italic; color: #555;}
 
         /* ===== Restantes páginas do RH (layout novo, só estilo) ===== */
@@ -47,8 +46,7 @@
         #annual-eip-shift-map tbody td, #eligibility-subs-shift tbody td, #priority-scheduling-map tbody td, #vacation-scheduling-map tbody td, #salary-processing-map tbody td {border-color: #eef0f2 !important;}
         #annual-eip-shift-map tbody tr:hover > td, #eligibility-subs-shift tbody tr:hover > td, #priority-scheduling-map tbody tr:hover > td, #vacation-scheduling-map tbody tr:hover > td, #salary-processing-map tbody tr:hover > td {background-color: #fdf6f5;}
         /* botões: o último do rodapé (Emitir Mapa) é o principal, a vermelho; os outros brancos */
-        #annual-eip-shift-map [class$="-footer"] button, #eligibility-subs-shift [class$="-footer"] button, #priority-scheduling-map [class$="-footer"] button, #vacation-scheduling-map [class$="-footer"] button, #salary-processing-map [class$="-footer"] button {height: 34px; padding: 0 16px !important; border-radius: 8px !important; font-size: 12px !important; font-weight: 800 !important; box-shadow: none !important;
-                     background: #fff !important; color: #2c3e50 !important; border: 1px solid #d0d5da !important; transform: none !important; transition: background .15s, filter .15s;}
+        #annual-eip-shift-map [class$="-footer"] button, #eligibility-subs-shift [class$="-footer"] button, #priority-scheduling-map [class$="-footer"] button, #vacation-scheduling-map [class$="-footer"] button, #salary-processing-map [class$="-footer"] button {height: 34px; padding: 0 16px !important; border-radius: 8px !important; font-size: 12px !important; font-weight: 800 !important; box-shadow: none !important; transform: none !important; transition: background .15s, filter .15s;}
         #annual-eip-shift-map [class$="-footer"] button:hover, #eligibility-subs-shift [class$="-footer"] button:hover, #priority-scheduling-map [class$="-footer"] button:hover, #vacation-scheduling-map [class$="-footer"] button:hover, #salary-processing-map [class$="-footer"] button:hover {filter: brightness(1.12);}
         #annual-eip-shift-map [class$="-footer"] button, #eligibility-subs-shift [class$="-footer"] button, #priority-scheduling-map [class$="-footer"] button, #vacation-scheduling-map [class$="-footer"] button, #salary-processing-map [class$="-footer"] button {background: #1e293b !important; color: #fff !important; border: 0 !important;}
         #annual-eip-shift-map [class$="-footer"] button[style*="#059669"], #eligibility-subs-shift [class$="-footer"] button[style*="#059669"], #priority-scheduling-map [class$="-footer"] button[style*="#059669"], #vacation-scheduling-map [class$="-footer"] button[style*="#059669"], #salary-processing-map [class$="-footer"] button[style*="#059669"] {background: #059669 !important;}
@@ -6253,7 +6251,7 @@
         s.innerHTML = `
           @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
           .dash-title {font-size: 16px; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; font-family: 'Inter', sans-serif; color: #1e293b;}
-          .dash-badge-rh {background: #1e293b; color: #fff; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-family: 'Inter', sans-serif; color: #1e293b;}
+          .dash-badge-rh {font-family: 'Inter', sans-serif;}
           .dash-wrapper {font-family: 'Plus Jakarta Sans', sans-serif; color: #1e293b; background: linear-gradient(135deg, #f0f4ff 0%, #fafbff 60%, #f0f7f4 100%); padding: 24px;
                          border-radius: 16px; min-height: 100%;}
           .dash-filters {display: flex; align-items: center; gap: 12px; margin-bottom: 24px; flex-wrap: wrap;}

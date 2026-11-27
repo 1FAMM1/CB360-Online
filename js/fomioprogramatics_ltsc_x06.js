@@ -3182,6 +3182,65 @@
         await window.vacBoardGOPanel.load();
       }
     });
+    /* ====== EMAIL DAS FÉRIAS DO VOLUNTARIADO (SQL 62) ======
+       stage: 'pedido' | 'parecer' | 'decisao'. Corre em segundo plano: quem chama não espera.
+       A base de dados devolve numa só ida os destinatários (PARA/CC), os dados do pedido e da corporação;
+       o email sai pela API send_email. keepalive: o envio termina mesmo que se mude de página ou feche a app. */
+    function cb360VacatMail(id, stage, supaUrl, supaHeaders, mailHeaders) {
+      (async () => {
+        try {
+          const r = await fetch(`${supaUrl}/rest/v1/rpc/cb360_vacat_mail`, {
+            method: 'POST', headers: supaHeaders, keepalive: true, body: JSON.stringify({p_id: id, p_stage: stage})
+          });
+          if (!r.ok) return;
+          const d = await r.json();
+          if (!d || !Array.isArray(d.to) || !d.to.length) return;
+          const q = d.req || {}, c = d.corp || {};
+          const M = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+          const e = v => String(v ?? '').replace(/[&<>"']/g, ch => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[ch]));
+          const ds = String(q.day || '').split(',').map(x => parseInt(x, 10)).filter(x => !isNaN(x)).sort((a, b) => a - b), rg = [];
+          for (let i = 0; i < ds.length; i++) { let j = i; while (j + 1 < ds.length && ds[j + 1] === ds[j] + 1) j++; rg.push(i === j ? `${ds[i]}` : `${ds[i]} a ${ds[j]}`); i = j; }
+          const per = `${M[(q.month || 1) - 1]} de ${q.year}`, name = q.full_name || q.abv_name || `Nº ${q.n_int}`;
+          const who = `<strong>${e(name)}</strong> (Nº ${e(q.n_int)}${q.section ? `, ${e(q.section)}` : ''})`;
+          const h = new Date().getHours(), greet = h < 13 ? 'Bom dia' : h < 20 ? 'Boa tarde' : 'Boa noite';
+          const fav = q.chief_opinion === 'Favorável';
+          const dt = q.chief_at ? new Date(q.chief_at).toLocaleDateString('pt-PT') : '';
+          let subject, lead;
+          if (stage === 'pedido') {
+            subject = `Pedido de Férias (Voluntariado) - ${name} - ${per}`;
+            lead = q.state === 'Aguarda Parecer'
+              ? `Informa-se que ${who} apresentou um pedido de férias de voluntariado, que aguarda o parecer do chefe de secção.`
+              : `Informa-se que ${who}${q.by_chief ? ', chefe de secção,' : ''} apresentou um pedido de férias de voluntariado, para decisão do Comando.`;
+          } else if (stage === 'parecer') {
+            subject = `Parecer ${fav ? 'Favorável' : 'Desfavorável'} - Férias de ${name} - ${per}`;
+            lead = `O chefe de secção <strong>${e(q.chief_name || '')}</strong> deu parecer <strong>${fav ? 'favorável' : 'desfavorável'}</strong> ao pedido de férias de voluntariado de ${who}. O pedido segue para decisão do Comando.`;
+          } else {
+            const ok = q.state === 'Aprovadas';
+            subject = `Férias ${ok ? 'Aprovadas' : 'Recusadas'} - ${name} - ${per}`;
+            lead = `Informa-se que o Comando <strong>${ok ? 'aprovou' : 'recusou'}</strong> o pedido de férias de voluntariado de ${who}.${ok ? ' Os dias ficam registados como FE na escala do voluntariado.' : ''}`;
+          }
+          const row = (k, v) => `<tr><td style="padding:6px 14px 6px 0;color:#64748b;white-space:nowrap;vertical-align:top;">${k}</td><td style="padding:6px 0;"><strong>${v}</strong></td></tr>`;
+          const body = `${greet},<br><br>${lead}<br><br>
+            <table style="border-collapse:collapse;font-size:14px;">
+              ${row('Elemento', `${e(name)} · Nº ${e(q.n_int)}${q.patent ? ' · ' + e(q.patent) : ''}`)}
+              ${q.section ? row('Secção', e(q.section)) : ''}
+              ${row('Período', e(per))}
+              ${row('Dias', `${e(rg.join(', '))} (${ds.length} dia${ds.length === 1 ? '' : 's'})`)}
+              ${q.chief_opinion ? row('Parecer do chefe', `${fav ? 'Favorável' : 'Desfavorável'}${q.chief_name ? ' · ' + e(q.chief_name) : ''}${dt ? ' · ' + dt : ''}`) : ''}
+              ${row('Estado', e(q.state))}
+            </table><br>
+            Com os melhores cumprimentos,<br>
+            <span style="font-family:Arial;font-size:10px;color:gray;">Este email foi processado automaticamente por: CB360</span>`;
+          await fetch('https://cb360-online.vercel.app/api/send_email', {
+            method: 'POST', headers: mailHeaders, keepalive: true,
+            body: JSON.stringify({recipients: d.to, ccRecipients: d.cc || [], bccRecipients: [], emailSubject: subject, emailBody: body,
+                                  title: c.cb_name || '', subtitle: 'Gestão de Férias · Voluntariado', logoUrl: c.logo_url || '', corpName: c.cb_name || '',
+                                  corpAddress: c.corp_address || '', corpCp: c.corp_cp || '', corpLocalitie: c.corp_localitie || '',
+                                  corpPhoneMobile: c.corp_phone_mobile || '', corpPhoneLandline: c.corp_phone_landline || '', corpEmail: c.corp_email || ''})
+          });
+        } catch (err) { console.warn('Email das férias:', err); }
+      })();
+    }
     /* ====== PARECER DO CHEFE DE SECÇÃO ======
        favorável ou desfavorável -> 'Em Aprovação': segue sempre para o Comando decidir (SQL 61). O elemento é avisado nos dois casos (aviso gravado pela BD, push daqui). */
     async function vacatChiefOpinion(row, favorable) {
@@ -3206,6 +3265,7 @@
             body: JSON.stringify({recipient_nint: Number(nInt), tipo: 'aviso', pagina: 'SolVacat', sender_name: "Gestão de Férias", message_text: msgNotif})
           }).catch(e => console.error('Erro Push:', e));
         } catch (e) { console.error("Erro no Push de férias:", e); }
+        cb360VacatMail(row.id, 'parecer', SUPABASE_URL, getSupabaseHeaders(), cb360PushHeaders());   /* email: Comando, CC elemento + secção */
         showPopup('popup-success', favorable ? 'Parecer favorável registado. O pedido segue para o Comando.' : 'Parecer desfavorável registado. O pedido segue para o Comando.');
       } catch (err) {
         console.error('Parecer do chefe de secção:', err);
@@ -3254,6 +3314,9 @@
             }).catch(e => console.error('Erro Push:', e));   /* não espera pelo envio */
           } catch (e) {
             console.error("Erro no Push de férias:", e);
+          }
+          if (newState === 'Aprovadas' || newState === 'Recusadas') {
+            cb360VacatMail(id, 'decisao', SUPABASE_URL, getSupabaseHeaders(), cb360PushHeaders());   /* email: elemento, CC secção + chefe */
           }
           if (badge) {
             const cls = getVacatiosStatusClass(newState);

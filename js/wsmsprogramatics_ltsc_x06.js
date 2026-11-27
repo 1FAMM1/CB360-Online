@@ -243,6 +243,10 @@
           #page-inem-services .ems-map-hint i {margin-right: 5px;}
           #page-inem-services .ins-map-st {margin-top: 6px; font-size: 11.5px; line-height: 1.3; color: #8a949e;}
           #page-inem-services .ins-map-st.ok {color: #2e7d32; font-weight: 700;}
+          #page-inem-services .ems-map-freg {margin-top: 4px; font-size: 12px; line-height: 1.3; color: #2c3e50; font-weight: 600;}
+          #page-inem-services .ems-map-freg:empty {display: none;}
+          #page-inem-services .ems-map-freg i {color: #c62828; margin-right: 5px;}
+          #page-inem-services .ems-map-freg small {color: #8a949e; font-weight: 500; margin-left: 4px;}
           #page-inem-services .ins-grid:not(.ems-cols):not(.sol-g2) {grid-template-columns: 1fr;}
           /* blocos 1 a 4 bloqueados até escolher INEM ou Reserva INEM */
           #page-inem-services .ems-cols {position: relative;}
@@ -1383,7 +1387,7 @@
                   ${box(3, 'Operacional', grid('', [{id: 'nr-codu-service', label: 'Nr. CODU', ph: '123456789', num: 9, c: 1, attrs: ' inputmode="numeric"'},
                     {id: 'resp-tas-ni', label: 'Nr. TAS', ph: '000', num: 3, c: 1, attrs: ' inputmode="numeric"'}], 'grid-template-columns:150px 90px;justify-content:start') +
                     grid('', [{id: 'resp-tas-name', label: 'Nome TAS', attrs: ' disabled'}, {id: 'observations-service', label: 'Observações', ph: 'Observações adicionais'}], 'margin-top:10px'), '', ' id="ems-b3"')}
-                    ${box(4, 'Georreferenciação', `<div id="ems-map"></div><div class="ins-map-st" id="ems-map-st"></div>`, '', ' id="ems-b4"')}
+                    ${box(4, 'Georreferenciação', `<div id="ems-map"></div><div class="ins-map-st" id="ems-map-st"></div><div class="ems-map-freg" id="ems-map-freg"></div>`, '', ' id="ems-b4"')}
                 </div>
             </div>
             <div class="wsms-card-footer">${button('wsms-btn-send', 'send', 'ENVIAR SERVIÇO', 'send')}</div>
@@ -1399,11 +1403,28 @@
           if (pin) pin.setLatLng([lat, lng]);
           else {
             pin = L.marker([lat, lng], {draggable: true}).addTo(map);
-            pin.on('dragend', () => { pinSrc = 'manual'; mapStatus('Pin ajustado à mão ✔ — o link GPS vai na mensagem.', true); });
+            pin.on('dragend', () => { pinSrc = 'manual'; mapStatus('Pin ajustado à mão ✔ — o link GPS vai na mensagem.', true); showFreg(); });
           }
           pinSrc = src;
+          showFreg();
           if (zoom) map.setView([lat, lng], zoom);
           mapStatus(src === 'manual' ? 'Pin colocado à mão ✔ — o link GPS vai na mensagem.' : 'Morada localizada ✔ — o link GPS vai na mensagem.', true);
+        }
+        /* freguesia e concelho onde está o pin, pelos limites oficiais da CAOP 2025 (Supabase), por baixo do mapa */
+        let fregSeq = 0;
+        const caopCache = new Map();
+        let caopOff = 0;   /* até quando não se pergunta à CAOP (depois de um 404) */
+        async function showFreg() {
+          const el = $('ems-map-freg');
+          if (!el) return;
+          const my = ++fregSeq;
+          if (!pin || pinSrc === 'base') { el.innerHTML = ''; return; }
+          const p = pin.getLatLng();
+          const c = await caopAt(p.lat, p.lng);
+          if (my !== fregSeq) return;
+          /* fora do Continente (ilhas, Espanha, mar) a CAOP do Continente não responde: não mostra nada */
+          el.innerHTML = !c?.dtmnfr ? ''
+            : `<i class="fa-solid fa-location-dot"></i>Freguesia: ${esc(c.designacao || c.freguesia)}<small>(${esc(c.municipio)})</small>`;
         }
         function placeBase(zoom) {
           if (!map || !base) return;
@@ -1413,6 +1434,7 @@
         function mapReset() {
           if (pin && map) map.removeLayer(pin);
           pin = null; pinSrc = '';
+          showFreg();
           if (map && base) return placeBase(15);
           mapStatus('Sem localização no mapa — a mensagem segue sem link GPS. Escreva a morada ou faça duplo clique no mapa.', false);
         }
@@ -1887,9 +1909,68 @@
           })();
           return parishesPromise;
         }
+        /* CAOP 2025 (DGT) no Supabase: diz a freguesia oficial de um ponto, sem gastar pedidos ao TomTom.
+           Devolve {dtmnfr, freguesia, designacao, municipio, distrito}, {} se o ponto não for do Continente,
+           ou null se a pesquisa falhar (aí usa-se o TomTom/Geoapify como antes) */
+        function caopAt(lat, lng, retry = 1) {
+          if (Date.now() < caopOff || !isFinite(lat) || !isFinite(lng)) return Promise.resolve(null);
+          const k = `${lat.toFixed(5)},${lng.toFixed(5)}`;
+          if (!caopCache.has(k)) {
+            caopCache.set(k, fetch(`${SUPABASE_URL}/rest/v1/rpc/caop_locate`, {method: 'POST', headers: getSupabaseHeaders(), body: JSON.stringify({p_lat: lat, p_lng: lng})})
+              .then(async r => {
+                if (r.ok) return (await r.json())?.[0] || {};
+                console.warn('[caop] caop_locate falhou:', r.status, await r.text().catch(() => ''));
+                if (r.status === 404) caopOff = Date.now() + 60000;   /* função ainda não existe nesta base: volta a tentar daqui a 1 min */
+                return null;
+              })
+              .catch(e => { console.warn('[caop] caop_locate falhou:', e); return null; })
+              .then(async res => {
+                if (res) return res;
+                caopCache.delete(k);
+                if (retry > 0 && Date.now() >= caopOff) { await new Promise(r => setTimeout(r, 700)); return caopAt(lat, lng, retry - 1); }
+                return null;
+              }));
+          }
+          return caopCache.get(k);
+        }
+        /* vários pontos num só pedido; o que já está em memória não volta a ser pedido.
+           Se a função ainda não existir (SQL 52b por correr), pergunta ponto a ponto como antes */
+        let caopManyOff = false;
+        async function caopMany(points) {
+          const keyOf = ([lat, lng]) => `${lat.toFixed(5)},${lng.toFixed(5)}`;
+          const ok = points.filter(([lat, lng]) => isFinite(lat) && isFinite(lng));
+          const missing = [...new Map(ok.filter(pt => !caopCache.has(keyOf(pt))).map(pt => [keyOf(pt), pt])).values()].slice(0, 50);
+          if (missing.length > 1 && !caopManyOff && Date.now() >= caopOff) {
+            const req = fetch(`${SUPABASE_URL}/rest/v1/rpc/caop_locate_many`, {method: 'POST', headers: getSupabaseHeaders(), body: JSON.stringify({p_points: missing})})
+              .then(async r => {
+                if (r.ok) return r.json();
+                if (r.status === 404) caopManyOff = true;
+                console.warn('[caop] caop_locate_many falhou:', r.status);
+                return null;
+              })
+              .catch(e => { console.warn('[caop] caop_locate_many falhou:', e); return null; });
+            missing.forEach((pt, i) => caopCache.set(keyOf(pt), req.then(rows => {
+              if (!rows) { caopCache.delete(keyOf(pt)); return caopAt(pt[0], pt[1]); }
+              return rows.find(x => x.i === i) || {};
+            })));
+          }
+          return Promise.all(points.map(([lat, lng]) => caopAt(lat, lng)));
+        }
+        /* nome da freguesia CAOP como aparece na lista do CB360 (parishes_select), se for do concelho da corporação */
+        const caopName = c => {
+          /* só aceita nomes iguais (sem acentos/maiúsculas): a CAOP já é o nome oficial, e uma comparação "parecida"
+             podia trocar "Estoi" pela antiga "União das Freguesias de Conceição e Estoi" */
+          const own = !baseMunicipality || norm(c.municipio) === norm(baseMunicipality);
+          const list = (own && parishesOfficial && Array.isArray(municipalityParishes)) ? municipalityParishes : [];
+          const strip = n => norm(n).replace(/^(uniao das freguesias de|uniao de freguesias de|freguesia de)\s+/, '');
+          const keys = [c.designacao, c.freguesia].filter(Boolean).flatMap(n => [norm(n), strip(n)]);
+          return list.find(o => keys.includes(norm(o)) || keys.includes(strip(o))) || c.designacao || c.freguesia || '';
+        };
         async function getParishAt(lat, lng) {
           const k = `${lat.toFixed(4)},${lng.toFixed(4)}`;
           await getMunicipalityParishes().catch(() => {});
+          const c = await caopAt(lat, lng);
+          if (c?.dtmnfr) return caopName(c);   /* limites oficiais: vale mais do que o TomTom e não gasta pedidos */
           let muniAt = '';   /* concelho do ponto: a lista oficial só vale para o concelho da corporação */
           const off = n => (muniAt && norm(muniAt) !== norm(baseMunicipality || '')) ? n : toOfficialParish(n);
           const isMuni = n => !n || norm(n) === norm(muniAt || baseMunicipality || '') || !off(n);
@@ -2144,7 +2225,21 @@
             }
             return out.slice(0, 15);
           };
+          /* CAOP para todas as sugestões num só pedido (caop_locate_many); corrige também a freguesia que o TomTom deu */
+          const caopFill = async items => {
+            const res = await caopMany(items.map(it => [it.lat, it.lng]));
+            items.forEach((it, i) => {
+              const c = res[i];
+              if (!c?.dtmnfr) return;
+              const p = caopName(c);
+              if (!p || norm(p) === norm(it.parish || '')) return;
+              it.parish = p;
+              it.city = p;
+              it.l2 = buildL2(it);
+            });
+          };
           const enrich = async items => {
+            await caopFill(items);
             const toEnrich = items.filter(it => !it.parish && !it.poi).slice(0, 4);
             const poiItems = FIX_POI_ADDRESS ? items.filter(it => it.poi).slice(0, 3) : [];
             if (!toEnrich.length && !poiItems.length) return;
@@ -2179,6 +2274,9 @@
               if (r.status === 'fulfilled' && Array.isArray(r.value)) allResults.push(...r.value);
             }
             sugItems = formatResults(allResults);
+            /* espera pela CAOP (um só pedido; no máximo 0,4 s) para a lista já aparecer com as freguesias certas */
+            await Promise.race([caopFill(sugItems), new Promise(r => setTimeout(r, 400))]);
+            if (my !== sugSeq) return;
             dbg('phase1: received', allResults.length, '| inside area', allResults.filter(inArea).length, '| showing', sugItems.length, '| failures', failures);
             if (allResults.length) {
               dbg('sample', allResults.slice(0, 3).map(x => x.type + ' | ' + x.address?.freeformAddress + ' | muni=' + x.address?.municipality));

@@ -574,6 +574,26 @@
         return `&event=not.in.(${names.map(n => encodeURIComponent(`"${String(n).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`)).join(',')})`;
       } catch (e) { return ''; }
     }
+    /* chefe de secção (SQL 58/59): pedidos de férias do voluntariado da sua secção por dar parecer */
+    function paChiefArea() {
+      return {key: 'chief', label: 'Parecer de Férias (Voluntariado)', icon: '📝', page: 'page-vacations-request', access: 'Consultar Pedidos',
+              unit: ['pedido', 'pedidos'], pendLabel: 'por dar parecer',
+              count: async () => {
+                const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/cb360_vacat_chief_list`, {method: 'POST', headers: getSupabaseHeaders(), body: JSON.stringify({p_year: new Date().getFullYear()})});
+                if (!r.ok) return null;
+                return (await r.json()).filter(x => x.state === 'Aguarda Parecer').length;
+              }};
+    }
+    async function paIsChief() {
+      const corp = sessionStorage.getItem('currentCorpOperNr'), nInt = sessionStorage.getItem('currentNInt');
+      if (!corp || !nInt) return false;
+      try {
+        const r = await fetch(`${SUPABASE_URL}/rest/v1/reg_elems?select=is_section_chief,elem_state&n_int=eq.${encodeURIComponent(nInt)}&corp_oper_nr=eq.${corp}&limit=1`, {headers: getSupabaseHeaders()});
+        if (!r.ok) return false;
+        const u = (await r.json())[0];
+        return !!(u && u.is_section_chief && u.elem_state !== false);
+      } catch (e) { return false; }
+    }
     function paMenuBtn(a) { return document.querySelector(`.sidebar [data-page="${a.page}"][data-access="${a.access}"]`); }
     /* o botão do menu (e os menus acima dele) tem de estar visível para este utilizador */
     function paCanSee(btn) {
@@ -599,6 +619,7 @@
     }
     /* só o número (HEAD + count), sem trazer dados; null se falhar */
     async function paCount(a) {
+      if (a.count) { try { return await a.count(); } catch (e) { return null; } }
       try {
         const r = await fetch(`${SUPABASE_URL}/rest/v1/${await a.query()}&select=id`, {method: 'HEAD', headers: {...getSupabaseHeaders(), 'Prefer': 'count=exact'}});
         if (!r.ok) return null;
@@ -639,7 +660,7 @@
       const ul = modal?.querySelector('.popup-body ul');
       if (!ul) return;
       const total = items.reduce((s, a) => s + a.n, 0);
-      ul.innerHTML = `<li class="pa-title">Tem ${total} ${total === 1 ? 'registo' : 'registos'} à espera de aprovação:</li>` +
+      ul.innerHTML = `<li class="pa-title">Tem ${total} ${total === 1 ? 'registo' : 'registos'} à espera de decisão:</li>` +
         items.map(a => `<li class="pa-item" data-page="${a.page}" data-access="${a.access}" title="Abrir ${a.label}">
             <span>${a.label}</span><b>${a.n} ${a.n === 1 ? a.unit[0] : a.unit[1]}</b></li>`).join('');
       ul.onclick = e => {
@@ -663,7 +684,7 @@
       t.title = `Abrir ${a.label}`;
       t.innerHTML = `<div class="pa-ico">${a.icon}</div>
         <div class="pa-txt"><b>${diff === 1 ? (a.unit[0] === 'pedido' ? 'Novo pedido' : 'Nova disponibilidade') : `${diff} ${a.unit[1] === 'pedidos' ? 'novos pedidos' : 'novas disponibilidades'}`}</b>
-        <span>${a.label} · ${total} em aprovação</span></div>
+        <span>${a.label} · ${total} ${a.pendLabel || 'em aprovação'}</span></div>
         <div class="pa-x" title="Fechar">✕</div><div class="pa-bar" style="animation-duration:${MS}ms"></div>`;
       const close = () => { if (t.classList.contains('out')) return; t.classList.add('out'); setTimeout(() => t.remove(), 300); };
       t.addEventListener('click', e => { if (!e.target.closest('.pa-x')) paOpen(a.page, a.access); close(); });
@@ -685,8 +706,8 @@
     }
     function paKick() { clearTimeout(PA.deb); PA.deb = setTimeout(paRecheck, 600); }
     async function cb360ShowPendingApprovals() {
-      if (!(await paIsApprover())) return;
-      PA.areas = paAllAreas().filter(a => paCanSee(paMenuBtn(a)));
+      const [approver, chief] = await Promise.all([paIsApprover(), paIsChief()]);
+      PA.areas = [...(approver ? paAllAreas() : []), ...(chief ? [paChiefArea()] : [])].filter(a => paCanSee(paMenuBtn(a)));
       if (!PA.areas.length) return;
       paCss();
       const counts = await Promise.all(PA.areas.map(paCount));

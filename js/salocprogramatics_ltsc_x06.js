@@ -129,19 +129,8 @@
         .slx-rep .sl-56 td {background: #f8f9fa; border-top: 1px solid #e3e7eb !important; font-weight: 800; color: #2c3e50; padding: 9px 12px !important;}
 
         /* ===== PPIs (A22, Aeroporto, Linha Férrea): só estilo, mesmas funções e cores de alarme ===== */
-        #page-ppia22 > .major-card > .major-card-body, #page-ppiaero > .major-card > .major-card-body, #page-ppilinfer > .major-card > .major-card-body {background: #f4f5f7; padding: 12px 16px; display: flex; flex-direction: column;}
-        /* escolha do tipo de consulta: contentor branco ao centro */
-        #page-ppia22 .sl-14, #page-ppilinfer .sl-14 {justify-content: center !important; margin: 0 !important;}
-        #ppia22-main-options, #ppilinfer-main-options {flex-direction: row !important; align-items: center !important; gap: 10px; background: #fff !important; border: 1px solid #e3e7eb !important;
-                     border-radius: 999px !important; padding: 4px 4px 4px 16px !important; box-shadow: 0 1px 4px rgba(0,0,0,.06) !important; width: auto !important; margin: 0 !important;}
-        #ppia22-main-options > label, #ppilinfer-main-options > label {margin: 0 !important; font-size: 11px !important; font-weight: 800 !important; color: #8a949e !important; text-transform: uppercase; letter-spacing: .4px; white-space: nowrap;}
-        #ppia22-options, #ppilinfer-options {display: flex !important; gap: 4px !important; margin: 0 !important; width: auto !important; max-width: none !important;}
-        #ppia22-options .options-btn, #ppilinfer-options .options-btn {flex: none !important; min-width: 0 !important; max-width: none !important;}
+        #page-ppia22 > .major-card > .major-card-body, #page-ppiaero > .major-card > .major-card-body, #page-ppilinfer > .major-card > .major-card-body {background: #efefef; padding: 12px 16px; display: flex; flex-direction: column;}
         .ppia22-part1 {border: 1px solid #e3e7eb !important; border-top: 0 !important; background: #fff; padding: 8px 12px !important; margin: 0 !important;}
-        #ppia22-options .options-btn, #ppilinfer-options .options-btn {height: 32px !important; width: auto !important; padding: 0 16px !important; border-radius: 999px !important; border: 0 !important; background: transparent !important;
-                     color: #2c3e50 !important; font-size: 12px !important; font-weight: 700 !important; text-transform: none; letter-spacing: 0; box-shadow: none !important; transform: none !important; white-space: nowrap;}
-        #ppia22-options .options-btn:hover:not(:disabled), #ppilinfer-options .options-btn:hover:not(:disabled) {background: #f1f3f5 !important;}
-        #ppia22-options .options-btn:disabled, #ppilinfer-options .options-btn:disabled {opacity: .4; cursor: not-allowed;}
         /* cartão de pesquisa (sentido/troço + km + Procurar) */
         #ppia22-grid-controls > .options-main-card, #ppilinfer-grid-controls > .options-main-card {background: #fff !important; border: 1px solid #e9ecef !important; border-radius: 14px !important;
                      box-shadow: 0 2px 8px rgba(0,0,0,.06) !important; padding: 18px 20px !important; width: 560px !important; max-width: 100%; margin: 0 auto !important; flex-direction: row !important;
@@ -183,7 +172,7 @@
         /* Aeroporto: mesmas cores de alarme, botões arredondados e o escolhido em destaque */
         #ppiaero-grid-controls {background: #fff; border: 1px solid #e9ecef; border-radius: 12px; padding: 12px 14px;}
         #ppiaero-grid-controls > div:first-child {background: none !important; border: 0 !important; box-shadow: none !important; text-shadow: none !important; color: #2c3e50 !important; font-size: 12.5px !important;
-                     font-weight: 800 !important; height: auto !important; margin: 0 0 8px !important; width: auto !important;}
+                     font-weight: 800 !important; height: auto !important; margin: 0 auto 8px !important; width: auto !important; max-width: none !important;}
         #ppiaero-grid-controls .btn {width: 220px !important; height: 40px !important; margin: 0 !important; border-radius: 10px !important; border: 2px solid transparent !important; box-shadow: none !important;
                      transform: none !important; font-size: 12px !important; font-weight: 800 !important; text-transform: none; opacity: .9;}
         #ppiaero-grid-controls #A1 {background: #2e7d32 !important;} #ppiaero-grid-controls #A2 {background: #fdd835 !important;} #ppiaero-grid-controls #A3 {background: #fb8c00 !important;}
@@ -290,16 +279,17 @@
         /* ===== CREPC Algarve (MOA) e Situação Operacional (layout novo) ===== */
         #page-crepcalg > .major-card > .major-card-body, #page-inocrepc > .major-card > .major-card-body {background: #efefef; padding: 12px 16px;}
         /* botões de opção: dentro de um contentor branco, ao centro */
-        #page-crepcalg .sl-85, #page-inocrepc .sl-85, #page-plandir .sl-85, #page-hemodialysis .sl-85 {justify-content: center !important; margin: 0 !important;}
-        #page-crepcalg .options-main-card.sl-86, #page-inocrepc .options-main-card.sl-86, #page-plandir .options-main-card.sl-86, #page-hemodialysis .options-main-card.sl-86 {display: inline-flex !important; flex-direction: row !important; align-items: center; gap: 10px; background: #fff !important; border: 1px solid #e3e7eb !important;
+        #page-crepcalg .sl-85, #page-inocrepc .sl-85, #page-plandir .sl-85, #page-ppia22 .sl-85, #page-ppilinfer .sl-85, #page-hemodialysis .sl-85 {justify-content: center !important; margin: 0 !important;}
+        #page-crepcalg .options-main-card.sl-86, #page-inocrepc .options-main-card.sl-86, #page-plandir .options-main-card.sl-86, #page-ppia22 .options-main-card.sl-86, #page-ppilinfer .options-main-card.sl-86, #page-hemodialysis .options-main-card.sl-86 {display: inline-flex !important; flex-direction: row !important; align-items: center; gap: 10px; background: #fff !important; border: 1px solid #e3e7eb !important;
                      border-radius: 999px !important; padding: 4px 4px 4px 16px !important; margin: 0 !important; box-shadow: 0 1px 4px rgba(0,0,0,.06) !important; width: auto !important;}
-        #page-crepcalg .options-main-card.sl-86 > label, #page-inocrepc .options-main-card.sl-86 > label, #page-plandir .options-main-card.sl-86 > label, #page-hemodialysis .options-main-card.sl-86 > label {margin: 0 !important; font-size: 11px !important; font-weight: 800 !important; color: #8a949e !important; text-transform: uppercase; letter-spacing: .4px; white-space: nowrap;}
-        #page-crepcalg .options-main-card.sl-86 .action-buttons, #page-inocrepc .options-main-card.sl-86 .action-buttons, #page-plandir .options-main-card.sl-86 .action-buttons, #page-hemodialysis .options-main-card.sl-86 .action-buttons {gap: 4px !important; margin: 0 !important; justify-content: center !important; display: flex !important;}
-        #page-crepcalg .options-main-card.sl-86 .options-btn, #page-inocrepc .options-main-card.sl-86 .options-btn, #page-plandir .options-main-card.sl-86 .options-btn, #page-hemodialysis .options-main-card.sl-86 .options-btn {height: 30px !important; padding: 0 18px !important; border-radius: 999px !important; border: 0 !important; background: transparent !important; color: #2c3e50 !important;
+        #page-crepcalg .options-main-card.sl-86 > label, #page-inocrepc .options-main-card.sl-86 > label, #page-plandir .options-main-card.sl-86 > label, #page-ppia22 .options-main-card.sl-86 > label, #page-ppilinfer .options-main-card.sl-86 > label, #page-hemodialysis .options-main-card.sl-86 > label {margin: 0 !important; font-size: 11px !important; font-weight: 800 !important; color: #8a949e !important; text-transform: uppercase; letter-spacing: .4px; white-space: nowrap;}
+        #page-crepcalg .options-main-card.sl-86 .action-buttons, #page-inocrepc .options-main-card.sl-86 .action-buttons, #page-plandir .options-main-card.sl-86 .action-buttons, #page-ppia22 .options-main-card.sl-86 .action-buttons, #page-ppilinfer .options-main-card.sl-86 .action-buttons, #page-hemodialysis .options-main-card.sl-86 .action-buttons {gap: 4px !important; margin: 0 !important; justify-content: center !important; display: flex !important;}
+        #page-crepcalg .options-main-card.sl-86 .options-btn, #page-inocrepc .options-main-card.sl-86 .options-btn, #page-plandir .options-main-card.sl-86 .options-btn, #page-ppia22 .options-main-card.sl-86 .options-btn, #page-ppilinfer .options-main-card.sl-86 .options-btn, #page-hemodialysis .options-main-card.sl-86 .options-btn {height: 30px !important; padding: 0 18px !important; border-radius: 999px !important; border: 0 !important; background: transparent !important; color: #2c3e50 !important;
                      font-size: 12px !important; font-weight: 700 !important; text-transform: none; letter-spacing: 0; box-shadow: none !important; transform: none !important; min-width: 0; width: auto;}
-        #page-crepcalg .options-main-card.sl-86 .options-btn:hover, #page-inocrepc .options-main-card.sl-86 .options-btn:hover, #page-plandir .options-main-card.sl-86 .options-btn:hover, #page-hemodialysis .options-main-card.sl-86 .options-btn:hover {background: #f1f3f5 !important;}
-        #page-crepcalg .options-main-card.sl-86 .options-btn.active, #page-inocrepc .options-main-card.sl-86 .options-btn.active, #page-plandir .options-main-card.sl-86 .options-btn.active, #page-hemodialysis .options-main-card.sl-86 .options-btn.active {background: #2c3e50 !important; color: #fff !important;}
+        #page-crepcalg .options-main-card.sl-86 .options-btn:hover, #page-inocrepc .options-main-card.sl-86 .options-btn:hover, #page-plandir .options-main-card.sl-86 .options-btn:hover, #page-ppia22 .options-main-card.sl-86 .options-btn:hover, #page-ppilinfer .options-main-card.sl-86 .options-btn:hover, #page-hemodialysis .options-main-card.sl-86 .options-btn:hover {background: #f1f3f5 !important;}
+        #page-crepcalg .options-main-card.sl-86 .options-btn.active, #page-inocrepc .options-main-card.sl-86 .options-btn.active, #page-plandir .options-main-card.sl-86 .options-btn.active, #page-ppia22 .options-main-card.sl-86 .options-btn.active, #page-ppilinfer .options-main-card.sl-86 .options-btn.active, #page-hemodialysis .options-main-card.sl-86 .options-btn.active {background: #2c3e50 !important; color: #fff !important;}
         #page-plandir .options-main-card.sl-86 .options-btn[data-shift="LAST"]:not(.active) {color: #ef6c00 !important;}
+        #page-ppilinfer .options-main-card.sl-86 .options-btn:disabled {opacity: .4; cursor: not-allowed;}
         /* MOA e G2: mesmo espaçamento das Inoperacionalidades */
         #page-crepcalg #moa-container, #page-crepcalg #g2-container {margin-top: 12px !important;}
         /* ao trocar entre MOA's / G1 / G2, o que está a sair esconde-se logo (não fica por baixo durante o fade) */
@@ -561,12 +551,8 @@
         /* - estilos que estavam escritos nos elementos das páginas (style="...") */
         #page-ppia2 .sl-12 {margin-bottom: 10px; font-size: 14px; font-weight: bold; color: #aaa;}
         #page-crepcalg .sl-13, #page-dashboard .sl-13, #page-ineminop .sl-13, #page-inocrepc .sl-13, #page-plandir .sl-13, #page-ppia22 .sl-13, #page-ppiaero .sl-13, #page-ppilinfer .sl-13, #page-recinoreports .sl-13, #page-recserv .sl-13 {opacity:.9;}
-        #page-ppia22 .sl-14, #page-ppilinfer .sl-14 {margin: 3px 0 0 0; justify-content: center;}
         #page-crepcalg .sl-15, #page-hemodialysis .sl-15, #page-inocrepc .sl-15, #page-plandir .sl-15, #page-ppia22 .sl-15, #page-ppilinfer .sl-15 {margin-bottom: 10px; font-size: 14px; font-weight: bold;}
-        #page-ppia22 .sl-16, #page-ppilinfer .sl-16 {grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%; max-width: 400px;}
-        #page-ppia22 .sl-17, #page-ppilinfer .sl-17 {height: 35px; width: 100%;}
-        #page-crepcalg .sl-18, #page-inocrepc .sl-18, #page-plandir .sl-18, #page-ppilinfer .sl-18 {height: 35px;}
-        #page-ppilinfer .sl-19 {height: 35px; width: 100%; opacity: 0.6; cursor: not-allowed;}
+        #page-crepcalg .sl-18, #page-inocrepc .sl-18, #page-plandir .sl-18, #page-ppia22 .sl-18, #page-ppilinfer .sl-18 {height: 35px;}
         #page-crepcalg .sl-25, #page-ineminop .sl-25, #page-inocrepc .sl-25, #page-recserv .sl-25 {width: 120px;}
         #page-crepcalg .sl-26, #page-ineminop .sl-26, #page-inocrepc .sl-26, #page-phonebook .sl-26, #page-recserv .sl-26 {width: 100px;}
         #page-crepcalg .sl-27, #page-hemodialysis .sl-27, #page-ineminop .sl-27, #page-inocrepc .sl-27, #page-recserv .sl-27 {width: 200px;}
@@ -759,14 +745,14 @@
           <span>PLANO PRÉVIO DE INTERVENÇÃO - VIA DO INFANTE DE SAGRES - A22</span>
         </div>
         <div class="major-card-body">
-          <div class="major-row sl-14" style="display: flex;">
-            <div class="options-main-card" id="ppia22-main-options" style="display: flex; flex-direction: column; align-items: center;">
+          <div class="major-row sl-85" style="display: flex;">
+            <div class="options-main-card sl-86" id="ppia22-main-options" style="display: flex;">
               <label class="sl-15">Selecione uma Opção</label>
-              <div class="action-buttons sl-16" id="ppia22-options" style="display: grid;">
-                <button id="ppi_a22_by_km" class="btn btn-add options-btn sl-17" onclick="consultationGridA22KmType()">Consulta por Km</button>
-                <button id="ppi_a22_by_section" class="btn btn-add options-btn sl-17" onclick="consultationGridA22SectionType()">Consulta por Troço</button>
-                <button id="ppi_a22_by_structure" class="btn btn-add options-btn sl-17" onclick="consultationGridA22StructureType()">Consulta por Referência</button>
-                <button id="ppi_a22_by_grid" class="btn btn-add options-btn sl-17" onclick="consultationGridA22ButtonType()">Consulta por Grelha</button>
+              <div class="action-buttons" id="ppia22-options">
+                <button id="ppi_a22_by_km" class="btn btn-add options-btn sl-18" onclick="consultationGridA22KmType()">Consulta por Km</button>
+                <button id="ppi_a22_by_section" class="btn btn-add options-btn sl-18" onclick="consultationGridA22SectionType()">Consulta por Troço</button>
+                <button id="ppi_a22_by_structure" class="btn btn-add options-btn sl-18" onclick="consultationGridA22StructureType()">Consulta por Referência</button>
+                <button id="ppi_a22_by_grid" class="btn btn-add options-btn sl-18" onclick="consultationGridA22ButtonType()">Consulta por Grelha</button>
               </div>
             </div>
           </div>
@@ -808,13 +794,13 @@
           <span>PLANO PRÉVIO DE INTERVENÇÃO - LINHA FERROVIÁRIA DO ALGARVE</span>
         </div>
         <div class="major-card-body">
-          <div class="major-row sl-14" style="display: flex;">
-            <div class="options-main-card" id="ppilinfer-main-options" style="display: flex; flex-direction: column; align-items: center;">
+          <div class="major-row sl-85" style="display: flex;">
+            <div class="options-main-card sl-86" id="ppilinfer-main-options" style="display: flex;">
               <label class="sl-15">Selecione uma Opção</label>
-              <div class="action-buttons sl-16" id="ppilinfer-options" style="display: grid;">
-                <button id="ppi_linfer_by_pkm" class="btn btn-add options-btn sl-18" onclick="consultationGridLinFerKmType()">Cosulta por PKm</button>
-                <button id="ppi_linfer_by_section" class="btn btn-add options-btn sl-17" onclick="consultationGridLinFerSectionType()">Consulta por Troço</button>
-                <button id="ppi_linfer_by_structure" class="btn btn-add options-btn sl-19" title="Não exitem Pontos de Referência para este PPI." 
+              <div class="action-buttons" id="ppilinfer-options">
+                <button id="ppi_linfer_by_pkm" class="btn btn-add options-btn sl-18" onclick="consultationGridLinFerKmType()">Consulta por PKm</button>
+                <button id="ppi_linfer_by_section" class="btn btn-add options-btn sl-18" onclick="consultationGridLinFerSectionType()">Consulta por Troço</button>
+                <button id="ppi_linfer_by_structure" class="btn btn-add options-btn sl-18" title="Não existem Pontos de Referência para este PPI." 
                         onclick="consultationGridLinFerStructureType()" disabled>Consulta por Referência</button>
                 <button id="ppi_linfer_by_grid" class="btn btn-add options-btn sl-18" onclick="consultationGridLinFerButtonType()">Consulta por Grelha</button>
               </div>
@@ -2399,21 +2385,31 @@
       }
       return absContainer;
     }
+    /* PPI: escolha do tipo de consulta (padrão SALOC: as opções ficam visíveis, a escolhida fica ativa;
+       trocar de opção limpa a consulta anterior) */
+    function ppiPickOption(prefix, btnId) {
+      document.querySelectorAll(`#${prefix}-options .options-btn`).forEach(b => b.classList.toggle("active", b.id === btnId));
+      ["grid-controls", "grid-references", "grid-container", "specials-container"].forEach(k => {
+        const el = document.getElementById(`${prefix}-${k}`);
+        if (el) { el.innerHTML = ""; el.style.display = ""; }
+      });
+      document.getElementById(`${prefix}-abs-note`)?.remove();
+    }
     /* =============== PPI A22 =============== */
     function consultationGridA22KmType() {
-      document.getElementById("ppia22-main-options").style.display = "none";
+      ppiPickOption("ppia22", "ppi_a22_by_km");
       ShowA22KmControls();
     }
     function consultationGridA22SectionType() {
-      document.getElementById("ppia22-main-options").style.display = "none";
+      ppiPickOption("ppia22", "ppi_a22_by_section");
       ShowA22SectionControls();
     }
     function consultationGridA22StructureType() {
-      document.getElementById("ppia22-main-options").style.display = "none";
+      ppiPickOption("ppia22", "ppi_a22_by_structure");
       ShowA22StructureControls();
     }
     function consultationGridA22ButtonType() {
-      document.getElementById("ppia22-main-options").style.display = "none";
+      ppiPickOption("ppia22", "ppi_a22_by_grid");
       document.getElementById("ppia22-grid-controls").style.display = "block";
       ShowA22GridButtons();
     }
@@ -3225,15 +3221,15 @@
     }
     /* ===== PPI LINHA FÉRREA DO ALGARVE ===== */
     function consultationGridLinFerKmType() {
-      document.getElementById("ppilinfer-main-options").style.display="none";
+      ppiPickOption("ppilinfer", "ppi_linfer_by_pkm");
       ShowLinFerPKmControls();
     }
     function consultationGridLinFerSectionType() {
-      document.getElementById("ppilinfer-main-options").style.display="none";
+      ppiPickOption("ppilinfer", "ppi_linfer_by_section");
       ShowLinFerSectionControls();
     }
     function consultationGridLinFerButtonType() {
-      document.getElementById("ppilinfer-main-options").style.display="none";
+      ppiPickOption("ppilinfer", "ppi_linfer_by_grid");
       document.getElementById("ppilinfer-grid-controls").style.display="block";
       ShowLinFerGridButtons();
     }

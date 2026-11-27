@@ -3233,7 +3233,7 @@
             <span style="font-family:Arial;font-size:10px;color:gray;">Este email foi processado automaticamente por: CB360</span>`;
           await fetch('https://cb360-online.vercel.app/api/send_email', {
             method: 'POST', headers: mailHeaders, keepalive: true,
-            body: JSON.stringify({recipients: d.to, ccRecipients: d.cc || [], bccRecipients: [], emailSubject: subject, emailBody: body,
+            body: JSON.stringify({recipients: d.to, ccRecipients: d.cc || [], bccRecipients: [], emailSubject: subject, emailBody: body.replace(/\n\s*/g, ''),
                                   title: c.cb_name || '', subtitle: 'Gestão de Férias · Voluntariado', logoUrl: c.logo_url || '', corpName: c.cb_name || '',
                                   corpAddress: c.corp_address || '', corpCp: c.corp_cp || '', corpLocalitie: c.corp_localitie || '',
                                   corpPhoneMobile: c.corp_phone_mobile || '', corpPhoneLandline: c.corp_phone_landline || '', corpEmail: c.corp_email || ''})

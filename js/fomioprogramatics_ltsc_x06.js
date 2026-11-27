@@ -806,7 +806,8 @@
     ======================================================================= */
     const VSL_POLL_MS = 10000;
     const VSL_POLL_OPEN_MS = 3000;
-    const VSL_POLL_RT_MS = 60000;
+    const VSL_POLL_RT_MS = 300000;   /* com o sinal ligado, a leitura é só reserva */
+    const vslRtOk = () => VSL.rtHub ? VSL.rtHub.ok() : VSL.rt.ok;
     const VSL_ACTIONS = {'Saída Und.': {label: 'Saída do Quartel', color: '#e53935', icon: 'fa-truck-fast', state: 'out'}, 'Chegada TO': {label: 'Chegada ao TO', color: '#0282fa', icon: 'fa-location-dot', state: 'to'},
                          'Saída TO': {label: 'Saída do TO', color: '#ef8f00', icon: 'fa-arrow-rotate-left', state: 'back'}, 'Chegada Und.': {label: 'Chegada ao Quartel', color: '#2e7d32', icon: 'fa-warehouse', state: 'home'},
                          'Retido por Falta de Macas': {label: 'Retido · Falta de Macas', color: '#4b5563', icon: 'fa-ban', state: 'held'}, 'Retido por Aguarda Triagem': {label: 'Retido · Aguarda Triagem', color: '#4b5563', icon: 'fa-ban', state: 'held'},
@@ -938,7 +939,7 @@
       }
       const tick = async () => {
         await vslPoll();
-        VSL.timer = setTimeout(tick, VSL.rt.ok ? VSL_POLL_RT_MS : (vslPageVisible() ? VSL_POLL_OPEN_MS : VSL_POLL_MS));
+        VSL.timer = setTimeout(tick, vslRtOk() ? VSL_POLL_RT_MS : (vslPageVisible() ? VSL_POLL_OPEN_MS : VSL_POLL_MS));
       };
       VSL.timer = -1;
       tick();
@@ -971,6 +972,8 @@
       }
     }
     function vslRealtime() {
+      /* ligação partilhada do mainloader (cb360RT): uma só ligação para todo o Online */
+      if (window.cb360RT) { VSL.rtHub = window.cb360RT.on('estados', vslRealtimeKick); return; }
       const go = () => {
         vslRtConnect();
         setInterval(() => {
@@ -982,7 +985,7 @@
       if (typeof SUPABASE_ANON_KEY === 'undefined') { console.warn('Estados dos veículos: SUPABASE_ANON_KEY não existe, fica a atualização de 3 / 10 s.'); return; }
       if (window.supabase && window.supabase.createClient) return go();
       const sc = document.createElement('script');
-      sc.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+      sc.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js';
       sc.onload = go;
       sc.onerror = () => console.warn('Estados dos veículos: biblioteca do Supabase não carregou, fica a atualização de 3 / 10 s.');
       document.head.appendChild(sc);

@@ -5888,8 +5888,8 @@
             showPopup('popup-danger', 'Não foi possível determinar o turno.');
             return;
           }
-          await saveDraft(shift);
-          showPopup('popup-success', 'Rascunho guardado com sucesso!');
+          if (await saveDraft(shift)) showPopup('popup-success', 'Rascunho guardado com sucesso!');
+          else showPopup('popup-danger', 'ERRO! O rascunho não foi guardado. Verifique a ligação e tente novamente.');
         } finally {
           draftBtn.disabled = false;
           emitBtn.disabled = false;
@@ -6585,32 +6585,38 @@
       }
     }
     blockShiftButtons();    
+    /* grava o rascunho do turno num só pedido (SQL 54: apagar + gravar juntos, nunca fica meio rascunho).
+       Devolve true se gravou. Sem o SQL 54 na base, grava como antes (apagar + equipa a equipa). */
     async function saveDraft(shift) {
       const corpOperNr = sessionStorage.getItem("currentCorpOperNr");
-      if (!corpOperNr || !shift || shift === 'LAST') return;
+      if (!corpOperNr || !shift || shift === 'LAST') return false;
       const tables = collectTableData();
       const teamNameMap = {"OFOPE": "ofope", "CHEFE DE SERVIÇO": "chefe_servico", "OPTEL": "optel", "EQUIPA 01": "equipa_01", "EQUIPA 02": "equipa_02", "LOGÍSTICA": "logistica",
                            "INEM": "inem", "INEM - Reserva": "inem_reserva", "SERVIÇO GERAL": "servico_geral"};
+      const rows = [];
+      for (const table of tables) {
+        const team_name = teamNameMap[table.title];
+        if (!team_name) continue;
+        table.rows.filter(r => r.n_int || r.patente || r.nome || r.entrada || r.saida || r.MP || r.TAS || r.obs)
+          .forEach(r => rows.push({team_name, shift, n_int: r.n_int || '', patente: r.patente || '', abv_name: r.nome || '', h_entrance: r.entrada || '',
+                                   h_exit: r.saida || '', MP: !!r.MP, TAS: !!r.TAS, observ: r.obs || '', corp_oper_nr: corpOperNr}));
+      }
       try {
-        await fetch(`${SUPABASE_URL}/rest/v1/fomio_draft?corp_oper_nr=eq.${corpOperNr}&shift=eq.${shift}`, {
-          method: "DELETE", 
-          headers: getSupabaseHeaders()
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/fomio_draft_save`, {
+          method: "POST", headers: getSupabaseHeaders(), body: JSON.stringify({p_corp: corpOperNr, p_shift: shift, p_rows: rows})
         });
-        for (let table of tables) {
-          const team_name = teamNameMap[table.title];
-          if (!team_name) continue;
-          const nonEmptyRows = table.rows.filter(r => r.n_int || r.patente || r.nome || r.entrada || r.saida || r.MP || r.TAS || r.obs);
-          if (nonEmptyRows.length > 0) {
-            await fetch(`${SUPABASE_URL}/rest/v1/fomio_draft`, {
-              method: "POST",
-              headers: getSupabaseHeaders(),
-              body: JSON.stringify(nonEmptyRows.map(r => ({team_name, shift, n_int: r.n_int || '', patente: r.patente || '', abv_name: r.nome || '', h_entrance: r.entrada || '', 
-                                                           h_exit: r.saida || '', MP: !!r.MP, TAS: !!r.TAS, observ: r.obs || '', corp_oper_nr: corpOperNr})))
-            });
-          }
-        }
+        if (res.ok) return true;
+        if (res.status !== 404) { console.error('❌ Erro ao guardar draft:', await res.text()); return false; }
+        /* SQL 54 ainda não corrido: forma antiga */
+        const del = await fetch(`${SUPABASE_URL}/rest/v1/fomio_draft?corp_oper_nr=eq.${corpOperNr}&shift=eq.${shift}`, {method: "DELETE", headers: getSupabaseHeaders()});
+        if (!del.ok) { console.error('❌ Erro ao guardar draft:', await del.text()); return false; }
+        if (!rows.length) return true;
+        const ins = await fetch(`${SUPABASE_URL}/rest/v1/fomio_draft`, {method: "POST", headers: getSupabaseHeaders(), body: JSON.stringify(rows)});
+        if (!ins.ok) { console.error('❌ Erro ao guardar draft:', await ins.text()); return false; }
+        return true;
       } catch (err) {
         console.error('❌ Erro ao guardar draft:', err);
+        return false;
       }
     }
     async function loadDraft(shift, corpOperNr) {

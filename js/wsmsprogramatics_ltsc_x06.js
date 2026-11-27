@@ -702,7 +702,14 @@
           await occurrencesBlinker.update();
         }
         refresh();
-        setInterval(refresh, 10000);
+        /* atualiza pelo sinal "mudou" do canal cb360-ocorr-<corporação> (SQL 53): quase na hora e sem pedidos com o ecrã parado.
+           Sem o sinal ligado, de 10 em 10 s como antes; com o sinal ligado, só de 2 em 2 min por segurança (e só com a janela à vista). */
+        const rtOcc = window.cb360RT?.on('ocorr', refresh);
+        const tick = () => {
+          if (!rtOcc?.ok() || !document.hidden) refresh();
+          setTimeout(tick, rtOcc?.ok() ? 120000 : 10000);
+        };
+        setTimeout(tick, 10000);
       })();
       /* =======================================================================
       INSERIR / ALTERAR OCORRÊNCIA
@@ -1331,7 +1338,13 @@
         }
         document.addEventListener('DOMContentLoaded', () => {
           loadActive();
-          setInterval(loadActive, 10000);
+          /* mesmo esquema das ocorrências: sinal do canal cb360-indisp-<corporação> (SQL 53) e reserva de 2 min / 10 s */
+          const rtInd = window.cb360RT?.on('indisp', loadActive);
+          const tick = () => {
+            if (!rtInd?.ok() || !document.hidden) loadActive();
+            setTimeout(tick, rtInd?.ok() ? 120000 : 10000);
+          };
+          setTimeout(tick, 10000);
         });
       })();
       /* =======================================================================
@@ -1446,6 +1459,7 @@
         function mapInit() {
           const el = $('ems-map');
           if (map || !el || typeof L === 'undefined') return;
+          if (!TOMTOM_KEY) { loadMapKeys().then(() => { if (TOMTOM_KEY) mapInit(); }); return; }   /* espera pelas chaves */
           /* sem zoom por duplo clique: o duplo clique serve para mudar o local do pin */
           map = L.map(el, {doubleClickZoom: false}).setView([39.5, -8.0], 6);
           const ruas = L.tileLayer(`https://api.tomtom.com/map/1/tile/basic/main/{z}/{x}/{y}.png?key=${TOMTOM_KEY}`, {attribution: '&copy; TomTom', maxZoom: 22}).addTo(map);
@@ -1531,8 +1545,24 @@
           if (!r.ok) { markTTDown(r.status); throw new Error(`TomTom HTTP ${r.status}`); }
           return (await r.json()).results || [];
         }
-        const GEOAPIFY_KEY = 'ac1b5754cd2741699e1fc82d6c795622';
+        /* chaves do TomTom e do Geoapify da corporação: vêm do Supabase (SQL 56, função cb360_map_keys), já não estão no código.
+           Cada corporação tem as suas (limites e custos próprios); sem chaves próprias usa as "default". */
+        let TOMTOM_KEY = '', GEOAPIFY_KEY = '';
+        let mapKeys = null;
+        function loadMapKeys() {
+          return mapKeys || (mapKeys = fetch(`${SUPABASE_URL}/rest/v1/rpc/cb360_map_keys`, {method: 'POST', headers: getSupabaseHeaders(), body: '{}'})
+            .then(async r => {
+              if (!r.ok) throw new Error(`HTTP ${r.status}`);
+              const k = (await r.json())?.[0] || {};
+              TOMTOM_KEY = k.tomtom_key || '';
+              GEOAPIFY_KEY = k.geoapify_key || '';
+              if (!TOMTOM_KEY) console.warn('[mapa] sem chave TomTom para esta corporação (SQL 56)');
+            })
+            .catch(e => { console.warn('[mapa] chaves do mapa não carregaram:', e); mapKeys = null; }));
+        }
+        loadMapKeys();
         async function geoapify(kind, text, limit = 8) {
+          await loadMapKeys();
           if (!GEOAPIFY_KEY || !text) return [];
           const p = new URLSearchParams({text, apiKey: GEOAPIFY_KEY, lang: 'pt', limit: String(limit), filter: 'countrycode:pt', format: 'json'});
           if (base) p.set('bias', `proximity:${base.lng},${base.lat}`);
@@ -1550,6 +1580,7 @@
           } catch (e) { console.warn('[geo] Geoapify:', e); return []; }
         }
         async function mapLocate(manual) {
+          await loadMapKeys();
           mapInit();
           const rawStreet = val('address-service'), door = val('door-service'), city = val('location-service');
           const street = door && !/\d+\s?[A-Za-z]?$/.test(rawStreet) ? `${rawStreet}, ${door}` : rawStreet;
@@ -1653,7 +1684,6 @@
             mapStatus('Não foi possível pesquisar a morada — faça duplo clique no mapa para marcar o local.', false);
           }
         }
-        const TOMTOM_KEY = 'V2c5G1lkxCRzwZTFVKUv3rYUmV3wviqo';
         const addrEl = $('address-service'), sug = document.createElement('div');
         sug.id = 'ems-sug'; sug.hidden = true;
         addrEl.parentElement.style.position = 'relative';
@@ -1793,6 +1823,7 @@
         }
         async function ensureBase() {
           if (base && isFinite(base.lat) && isFinite(base.lng)) return base;
+          await loadMapKeys();
           try {
             const r = await fetch(
               `${SUPABASE_URL}/rest/v1/corporation_data?corp_oper_nr=eq.${corp()}&select=corp_address,default_lat,default_lng&limit=1`, {
@@ -1832,6 +1863,7 @@
         }
         async function getMunicipalityParishes() {
           if (Array.isArray(municipalityParishes) && municipalityParishes.length) return municipalityParishes;
+          await loadMapKeys();
           if (parishesPromise) return parishesPromise;
           parishesPromise = (async () => {
             try {
@@ -1967,6 +1999,7 @@
           return list.find(o => keys.includes(norm(o)) || keys.includes(strip(o))) || c.designacao || c.freguesia || '';
         };
         async function getParishAt(lat, lng) {
+          await loadMapKeys();
           const k = `${lat.toFixed(4)},${lng.toFixed(4)}`;
           await getMunicipalityParishes().catch(() => {});
           const c = await caopAt(lat, lng);
@@ -2007,6 +2040,7 @@
           return name;
         }
         async function getAddressAtPin(lat, lng) {
+          await loadMapKeys();
           const k = pinKey(lat, lng);
           if (pinCache.has(k)) return pinCache.get(k);
           let out = null;
@@ -2025,6 +2059,7 @@
         }
         async function suggest(q) {
           dbg('call:', JSON.stringify(q));
+          await loadMapKeys();
           await ensureBase();
           await ensureBaseMunicipality();
           await getMunicipalityParishes().catch(() => {});   /* lista oficial (2025) antes de mostrar freguesias */

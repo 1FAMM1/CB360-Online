@@ -214,8 +214,7 @@
       await loadNotifications();
       startNotifPolling();
       initNotifDropdown();
-      generateAccessCheckboxes();
-      loadElementsTable();
+      generateAccessCheckboxes();   /* a tabela dos elementos (Data Center) carrega ao abrir o painel, já não no login */
       /* ============== LOGOUT ============== */
       const logoutBtn = document.getElementById("logoutBtn");
       if (logoutBtn) {
@@ -229,17 +228,99 @@
       }
     });
     /* =======================================
+    TEMPO REAL PARTILHADO (cb360RT)
+    - Uma só ligação ao Supabase Realtime para todo o Online (antes cada módulo abria a sua).
+    - A base de dados manda um sinal vazio "mudou" para o canal "cb360-<nome>-<corporação>" quando a tabela muda
+      (SQL 41 estados, 50 aprovações, 53 ocorrências / indisponibilidades / notificações). O sinal não leva dados:
+      quem o recebe volta a ler a lista pelas regras de acesso de sempre (RLS).
+    - cb360RT.on('nome', fn): fn corre quando chega o sinal, quando a ligação (re)liga (para apanhar o que se perdeu)
+      e quando o operador volta à janela depois de 30 s fora. Devolve {ok()}: true enquanto o canal está ligado.
+      Com ok() = false, cada módulo mantém a sua leitura periódica de reserva.
+    - Biblioteca com versão fixa (não muda sozinha quando sai uma versão nova).
+    ======================================= */
+    window.cb360RT = window.cb360RT || (() => {
+      const LIB = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js';
+      const subs = new Map();
+      let libP = null, client = null, hiddenAt = 0;
+      const corp = () => String(sessionStorage.getItem('currentCorpOperNr') || '').padStart(4, '0');
+      function lib() {
+        if (window.supabase?.createClient) return Promise.resolve(window.supabase);
+        if (typeof SUPABASE_ANON_KEY === 'undefined') return Promise.reject(new Error('SUPABASE_ANON_KEY não existe'));
+        return libP || (libP = new Promise((res, rej) => {
+          const sc = document.createElement('script');
+          sc.src = LIB;
+          sc.onload = () => window.supabase?.createClient ? res(window.supabase) : rej(new Error('biblioteca do Supabase sem createClient'));
+          sc.onerror = () => { libP = null; sc.remove(); rej(new Error('biblioteca do Supabase não carregou')); };
+          document.head.appendChild(sc);
+        }));
+      }
+      async function getClient() {
+        if (client) return client;
+        const sb = await lib();
+        return client || (client = sb.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {accessToken: async () => sessionStorage.getItem('authToken')}));
+      }
+      function fire(s) {
+        clearTimeout(s.deb);
+        s.deb = setTimeout(() => s.fns.forEach(fn => { try { fn(); } catch (e) { console.warn('[tempo real]', s.topic, e); } }), 300);
+      }
+      async function connect(s) {
+        if (s.busy) return;
+        s.busy = true;
+        clearTimeout(s.retry);
+        try {
+          const c = await getClient();
+          if (s.ch) { const old = s.ch; s.ch = null; try { await c.removeChannel(old); } catch (_) {} }
+          const ch = c.channel(s.topic)
+            .on('broadcast', {event: 'mudou'}, () => fire(s))
+            .subscribe(st => {
+              if (s.ch !== ch) return;
+              s.busy = false;
+              if (st === 'SUBSCRIBED') { s.ok = true; fire(s); return; }
+              s.ok = false;
+              clearTimeout(s.retry);
+              s.retry = setTimeout(() => connect(s), 5000);
+            });
+          s.ch = ch;
+        } catch (e) {
+          console.warn('[tempo real]', s.topic, e.message || e);
+          s.ok = false;
+          s.busy = false;
+          s.retry = setTimeout(() => connect(s), 15000);
+        }
+      }
+      function on(name, fn) {
+        const topic = `cb360-${name}-${corp()}`;
+        let s = subs.get(topic);
+        if (!s) { s = {topic, fns: new Set(), ch: null, ok: false, busy: false, retry: null, deb: null}; subs.set(topic, s); connect(s); }
+        s.fns.add(fn);
+        return {ok: () => s.ok};
+      }
+      /* vigia: canal caído ou ligação perdida (PC a dormir, rede) -> volta a ligar */
+      setInterval(() => {
+        if (!client) return;
+        const up = client.realtime.isConnected();
+        subs.forEach(s => { if (!s.busy && (!up || !s.ch || s.ch.state !== 'joined')) { s.ok = false; connect(s); } });
+      }, 30000);
+      /* voltar à janela depois de 30 s fora: atualiza tudo (pode ter perdido sinais enquanto o PC dormia) */
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) { hiddenAt = Date.now(); return; }
+        if (hiddenAt && Date.now() - hiddenAt > 30000) subs.forEach(fire);
+        hiddenAt = 0;
+      });
+      return {on, client: getClient};
+    })();
+    /* =======================================
     PEDIDOS EM APROVAÇÃO
     - Ao abrir a main: popup com o número de pedidos "Em Aprovação" de cada área.
     - Depois, com a main aberta: aviso no canto (desaparece sozinho) sempre que entra um pedido novo.
       A base de dados manda um sinal vazio para o canal "cb360-aprov-<corporação>" (SQL 50) e a página
-      volta a contar; se o número subiu, mostra o aviso. De 60 em 60 s também volta a contar (rede).
+      volta a contar; se o número subiu, mostra o aviso. Sem o sinal ligado, volta a contar de 60 em 60 s (rede).
     - Só para administradores ativos. CB360_APPROVER_PATENTS limita aos postos de Comando
       (null = qualquer administrador ativo, para testes).
     - Cada área só aparece a quem tem essa página no menu. Clicar abre a página.
     ======================================= */
     const CB360_APPROVER_PATENTS = null;   /* TESTE: qualquer admin ativo. Só o Comando: ['COM', '2COM', 'ACOM'] */
-    const PA = {areas: [], last: null, rt: {client: null, ch: null, ok: false, retry: null, deb: null}, poll: null};
+    const PA = {areas: [], last: null, deb: null, poll: null};
     function paCorp() { return String(sessionStorage.getItem('currentCorpOperNr') || '').padStart(4, '0'); }
     function paToday() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
     function paAllAreas() {
@@ -374,44 +455,7 @@
         PA.last[a.key] = n;
       });
     }
-    function paKick() { clearTimeout(PA.rt.deb); PA.rt.deb = setTimeout(paRecheck, 600); }
-    async function paRtConnect() {
-      const rt = PA.rt;
-      clearTimeout(rt.retry);
-      try {
-        if (!rt.client) rt.client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {accessToken: async () => sessionStorage.getItem('authToken')});
-        if (rt.ch) { const old = rt.ch; rt.ch = null; try { await rt.client.removeChannel(old); } catch (_) {} }
-        const ch = rt.client.channel(`cb360-aprov-${paCorp()}`)
-          .on('broadcast', {event: 'mudou'}, paKick)
-          .subscribe(st => {
-            if (rt.ch !== ch) return;
-            if (st === 'SUBSCRIBED') { rt.ok = true; paKick(); return; }
-            rt.ok = false;
-            rt.retry = setTimeout(paRtConnect, 5000);
-          });
-        rt.ch = ch;
-      } catch (e) {
-        console.warn('Pedidos em aprovação (tempo real):', e);
-        rt.ok = false;
-        rt.retry = setTimeout(paRtConnect, 15000);
-      }
-    }
-    function paRealtime() {
-      const go = () => {
-        paRtConnect();
-        setInterval(() => {
-          const rt = PA.rt;
-          if (rt.client && (!rt.ch || rt.ch.state !== 'joined' || !rt.client.realtime.isConnected())) { rt.ok = false; paRtConnect(); }
-        }, 30000);
-      };
-      if (typeof SUPABASE_ANON_KEY === 'undefined') return;
-      if (window.supabase && window.supabase.createClient) return go();
-      const sc = document.createElement('script');
-      sc.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-      sc.onload = go;
-      sc.onerror = () => console.warn('Pedidos em aprovação: biblioteca do Supabase não carregou, fica a contagem de 60 em 60 s.');
-      document.head.appendChild(sc);
-    }
+    function paKick() { clearTimeout(PA.deb); PA.deb = setTimeout(paRecheck, 600); }
     async function cb360ShowPendingApprovals() {
       if (!(await paIsApprover())) return;
       PA.areas = paAllAreas().filter(a => paCanSee(paMenuBtn(a)));
@@ -422,10 +466,11 @@
       PA.areas.forEach((a, i) => { PA.last[a.key] = counts[i]; });
       const items = PA.areas.map((a, i) => ({...a, n: counts[i] || 0})).filter(a => a.n > 0);
       if (items.length) paShowPopup(items);
-      /* a partir daqui: avisos de pedidos novos */
-      paRealtime();
-      PA.poll = setInterval(paRecheck, 60000);
-      document.addEventListener('visibilitychange', () => { if (!document.hidden) paKick(); });
+      /* a partir daqui: avisos de pedidos novos, pelo sinal "mudou" (SQL 50). Sem sinal ligado, volta a contar de 60 em 60 s;
+         com sinal ligado, só de 10 em 10 min por segurança. Voltar à janela já é tratado pelo cb360RT. */
+      const rt = window.cb360RT?.on('aprov', paKick);
+      const tick = () => { if (!document.hidden || !rt?.ok()) paRecheck(); PA.poll = setTimeout(tick, rt?.ok() ? 600000 : 60000); };
+      PA.poll = setTimeout(tick, rt ? 600000 : 60000);
     }
     /* =======================================
     MAIN SIDEBAR AND PANEL SIDEBAR
@@ -788,7 +833,18 @@
     DATA LOADING FIELDS
     ======================================= */
     /* ============= VEHICLES ============= */
+    /* a lista de veículos era pedida 4 vezes ao entrar (uma por caixa de escolha): agora 1 pedido, partilhado durante 60 s */
+    let vehiclesListP = null, vehiclesListT = 0;
     async function fetchVehiclesFromSupabase() {
+      if (!vehiclesListP || Date.now() - vehiclesListT > 60000) {
+        vehiclesListT = Date.now();
+        vehiclesListP = fetchVehiclesFromSupabaseNow();
+      }
+      const list = await vehiclesListP;
+      if (!list) { vehiclesListP = null; return []; }   /* falhou: lista vazia e o próximo pede outra vez */
+      return list.slice();
+    }
+    async function fetchVehiclesFromSupabaseNow() {
       try {
         const response = await fetch(`${SUPABASE_URL}/rest/v1/vehicle_status?select=vehicle`, {
           headers: getSupabaseHeaders()
@@ -798,7 +854,7 @@
         return vehicles.map(vehicle => vehicle.vehicle);
       } catch (error) {
         console.error('Erro ao carregar veículos do Supabase:', error);
-        return fallbackVehicles;
+        return null;   /* antes: fallbackVehicles, que não existe em lado nenhum (dava erro) */
       }
     }
     async function populateSingleVehicleSelect(select) {

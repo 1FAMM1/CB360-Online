@@ -53,10 +53,16 @@
     /* =======================================
     NOTIFICATIONS
     ======================================= */
-    async function fetchUnread() {
+    /* notificações gerais (para todos) só dos últimos 60 dias: sem isto, a lista crescia para sempre e era lida a cada minuto.
+       As pessoais (para mim) contam sempre enquanto não forem lidas. Da lista de quem já leu, só interessa saber se fui eu. */
+    const NOTIF_GERAIS_DIAS = 60;
+    async function fetchUnread(cols = "*") {
       const {nInt, corpNr} = session();
+      const since = new Date(Date.now() - NOTIF_GERAIS_DIAS * 86400000).toISOString();
       const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/business_notifications?corp_oper_nr=eq.${corpNr}&or=(and(n_int_to.eq.${nInt},readed.eq.false),n_int_to.is.null)&select=*,business_notifications_read(n_int)&order=created_at.desc`, {
+        `${SUPABASE_URL}/rest/v1/business_notifications?corp_oper_nr=eq.${corpNr}` +
+        `&or=(and(n_int_to.eq.${nInt},readed.eq.false),and(n_int_to.is.null,created_at.gte.${encodeURIComponent(since)}))` +
+        `&select=${cols},business_notifications_read(n_int)&business_notifications_read.n_int=eq.${encodeURIComponent(nInt)}&order=created_at.desc`, {
         headers: getSupabaseHeaders()
       });
       if (!res.ok) throw new Error(await res.text());
@@ -72,13 +78,24 @@
     }
     async function loadNotifications() {
       try {
-        setNotifCount((await fetchUnread()).length);
+        setNotifCount((await fetchUnread("id,n_int_to,readed")).length);   /* para o número só bastam estas colunas */
       } catch(err) {
         console.error("Erro ao carregar notificações:", err);
       }
     }
+    /* o sino atualiza pelo sinal "mudou" do canal cb360-notif-<corporação> (SQL 53). Sem o sinal ligado, de 60 em 60 s como antes;
+       com o sinal ligado, só de 10 em 10 min por segurança. Voltar à janela já é tratado pelo cb360RT. */
+    let notifStarted = false;
     function startNotifPolling() {
-      setInterval(loadNotifications, 60000);
+      if (notifStarted) return;
+      notifStarted = true;
+      let deb = null;
+      const rt = window.cb360RT?.on('notif', () => { clearTimeout(deb); deb = setTimeout(loadNotifications, 400); });
+      const tick = () => {
+        if (!rt?.ok() || !document.hidden) loadNotifications();
+        setTimeout(tick, rt?.ok() ? 600000 : 60000);
+      };
+      setTimeout(tick, rt ? 600000 : 60000);
     }
     function initNotifDropdown() {
       const btn = $("notifBtn");

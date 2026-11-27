@@ -854,11 +854,8 @@
 
   /* ----------------------------- globais e arranque ----------------------------- */
   Object.assign(window, {loadInfosFromSupabase, loadRoutesFromSupabase, loadCMAsFromSupabase, loadElemsButtons, loadNoHospFromSupabase, loadocrReportsFromSupabase});
+  /* os dados dos Utilitários carregam ao abrir a página (mainloader + epeLoad abaixo), já não no login */
   document.addEventListener('DOMContentLoaded', () => {
-    epeLoad();
-    loadRoutesFromSupabase();
-    loadCMAsFromSupabase();
-    loadElemsButtons();
     document.querySelectorAll('.sidebar-menu-button').forEach(btn => btn.addEventListener('click', () => { if (btn.dataset.page === 'page-utilities') epeLoad(); }));
   });
 })();

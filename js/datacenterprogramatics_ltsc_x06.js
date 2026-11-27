@@ -745,12 +745,8 @@
         return null;
       }
     }   
-    /* ================= LOAD INIT ================= */
-    document.addEventListener("DOMContentLoaded", async () => {
-      setTimeout(async () => {
-        await loadCorporationData();
-      }, 500);
-    });
+    /* ================= LOAD INIT =================
+       Os dados da associação carregam ao abrir o Data Center (painel "assoc"), já não no login. */
     /* ===== Fotos dos elementos: bucket privado "elem-photos" (pasta por corporação) =====
        photo_url pode ser o link antigo (http..., bucket público cb_logos) ou o caminho novo "0805/0805_205.jpg". */
     const ELEM_PHOTO_BUCKET = "elem-photos";
@@ -1608,8 +1604,7 @@
       return data[0] || null;
     }
     document.addEventListener("DOMContentLoaded", () => {
-      initTabs();
-      loadElementsTable();
+      initTabs();   /* a tabela dos elementos carrega ao abrir o painel "elems", já não no login */
       document.getElementById("elems-saveBtn").addEventListener("click", saveElement);
       document.getElementById("win_state").addEventListener("change", toggleStateDateVisibility);
       document.getElementById("win_full_name")?.addEventListener("input", function () {
@@ -1811,10 +1806,8 @@
         showPopup('popup-danger', "Erro ao remover veículo.");
       }
     }
-    /* ================= INITIAL LOAD ================= */
-    document.addEventListener("DOMContentLoaded", () => {
-      loadVehiclesTable();
-    });
+    /* ================= INITIAL LOAD =================
+       A tabela dos veículos carrega ao abrir o painel "veícs", já não no login. */
     /* =======================================
     EMAIL's FUNCTIONS
     ======================================= */

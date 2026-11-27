@@ -4,7 +4,7 @@
      já tapadas, no bucket privado ocr_photos.
    - Aqui: tabela por baixo das Ocorrências Ativas + botão VER (modal com a informação,
      miniaturas, foto em grande e "Reter").
-   - Tempo real pelo sinal "mudou" do canal cb360-ocr-<corporação>; se cair, volta a ler de 15 em 15 s.
+   - Tempo real pelo sinal "mudou" do canal cb360-ocr-<corporação> (ligação partilhada cb360RT); se cair, volta a ler de 15 em 15 s.
    Só é preciso carregar este ficheiro em main.html (o cartão e o modal criam-se sozinhos).
    ======================================================================= */
    (function () {
@@ -334,8 +334,11 @@
     function start() {
       if (OFU.timer) return;
       load();
-      const tick = () => { if (!document.hidden) load(); OFU.timer = setTimeout(tick, OFU.rt.ok ? 60000 : 15000); };
+      const rtOk = () => OFU.rtHub ? OFU.rtHub.ok() : OFU.rt.ok;
+      const tick = () => { if (!document.hidden) load(); OFU.timer = setTimeout(tick, rtOk() ? 300000 : 15000); };
       OFU.timer = setTimeout(tick, 15000);
+      /* ligação partilhada do mainloader (cb360RT): uma só ligação para todo o Online */
+      if (window.cb360RT) { OFU.rtHub = window.cb360RT.on('ocr', kick); return; }
       const go = () => {
         rtConnect();
         setInterval(() => { const rt = OFU.rt; if (rt.client && (!rt.ch || rt.ch.state !== 'joined' || !rt.client.realtime.isConnected())) { rt.ok = false; rtConnect(); } }, 30000);
@@ -343,7 +346,7 @@
       if (typeof SUPABASE_ANON_KEY === 'undefined') return;
       if (window.supabase && window.supabase.createClient) return go();
       const sc = document.createElement('script');
-      sc.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+      sc.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js';
       sc.onload = go;
       document.head.appendChild(sc);
     }

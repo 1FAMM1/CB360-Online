@@ -1274,7 +1274,11 @@
       const toggleButtons = (showSave, showEmit, showAnalyze = false) => {
         if (analyzeBtn) analyzeBtn.style.display = showAnalyze ? "inline-block" : "none";
         if (saveBtn) saveBtn.style.display = showSave ? "inline-block" : "none";
-        if (emitBtn) emitBtn.style.display = showEmit ? "inline-block" : "none";
+        /* EMITIR só para administradores (o botão só aparece depois de confirmado) */
+        if (emitBtn) {
+          emitBtn.style.display = "none";
+          if (showEmit) fomioIsAdmin().then(ok => { if (ok && currentSection === "Emissão Escala") emitBtn.style.display = "inline-block"; });
+        }
       };
       const DECIR_HIDDEN_MONTHS = [0, 1, 2, 3, 10, 11];
       MONTH_NAMES_PT.forEach((month, index) => {
@@ -2511,7 +2515,23 @@
         }
       });
     }
+    /* administrador = reg_elems.user_role "admin" (ou "superadmin"); lido uma vez por sessão da página */
+    let fomioAdminP = null;
+    function fomioIsAdmin() {
+      if (fomioAdminP) return fomioAdminP;
+      const corp = sessionStorage.getItem("currentCorpOperNr"), nInt = sessionStorage.getItem("currentNInt");
+      if (!corp || !nInt) return Promise.resolve(false);
+      fomioAdminP = fetch(`${SUPABASE_URL}/rest/v1/reg_elems?select=user_role&n_int=eq.${encodeURIComponent(nInt)}&corp_oper_nr=eq.${encodeURIComponent(corp)}&limit=1`, {headers: getSupabaseHeaders()})
+        .then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
+        .then(rows => ["admin", "superadmin"].includes(String(rows?.[0]?.user_role || "").trim().toLowerCase()))
+        .catch(err => { console.warn("Perfil do utilizador (EMITIR):", err); fomioAdminP = null; return false; });
+      return fomioAdminP;
+    }
     async function initScaleEmission() {
+      if (!(await fomioIsAdmin())) {
+        showPopup('popup-danger', "Só os administradores podem emitir a escala.");
+        return;
+      }
       const table = document.querySelector(".month-table tbody");
       if (!table) return;
       const saveBtn = $("save-button-emissao");
